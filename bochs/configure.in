@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.221 2003-08-10 16:03:56 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.222 2003-08-17 23:40:38 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2173,6 +2173,8 @@ if test "$with_term" = yes; then
   old_LIBS="$LIBS"
   LIBS="$LIBS $GUI_LINK_OPTS_TERM"
   AC_CHECK_FUNCS(color_set, AC_DEFINE(BX_HAVE_COLOR_SET, 1))
+  AC_CHECK_FUNCS(mvhline, AC_DEFINE(BX_HAVE_MVHLINE, 1))
+  AC_CHECK_FUNCS(mvvline, AC_DEFINE(BX_HAVE_MVVLINE, 1))
   LIBS="$old_LIBS"
 fi
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.30 2003-06-28 08:04:31 vruppert Exp $
+// $Id: term.cc,v 1.31 2003-08-17 23:40:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -460,13 +460,19 @@ bx_term_gui_c::flush(void)
 bx_term_gui_c::clear_screen(void)
 {
   clear();
+#if BX_HAVE_COLOR_SET
   color_set(7, NULL);
+#endif
+#if BX_HAVE_MVHLINE
   if (LINES > (int)text_rows) {
     mvhline(text_rows, 0, ACS_HLINE, text_cols);
   }
+#endif
+#if BX_HAVE_MVVLINE
   if (COLS > (int)text_cols) {
     mvvline(0, text_cols, ACS_VLINE, text_rows);
   }
+#endif
   if ((LINES > (int)text_rows) && (COLS > (int)text_cols)) {
     mvaddch(text_rows, text_cols, ACS_LRCORNER);
   }
@@ -718,13 +724,19 @@ bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsign
   if (fheight > 0) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
+#if BX_HAVE_COLOR_SET
     color_set(7, NULL);
+#endif
+#if BX_HAVE_MVHLINE
     if (LINES > (int)text_rows) {
       mvhline(text_rows, 0, ACS_HLINE, text_cols);
     }
+#endif
+#if BX_HAVE_MVVLINE
     if (COLS > (int)text_cols) {
       mvvline(0, text_cols, ACS_VLINE, text_rows);
     }
+#endif
     if ((LINES > (int)text_rows) && (COLS > (int)text_cols)) {
       mvaddch(text_rows, text_cols, ACS_LRCORNER);
     }
