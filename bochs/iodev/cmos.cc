@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.35 2003-01-05 19:43:09 vruppert Exp $
+// $Id: cmos.cc,v 1.36 2003-01-05 21:40:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.35 2003-01-05 19:43:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.36 2003-01-05 21:40:07 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -747,21 +747,18 @@ bx_cmos_c::update_timeval()
      ((BX_CMOS_THIS s.reg[REG_SEC] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_SEC] & 0x0f);
   time_calendar.tm_sec = val_bin;
-  BX_INFO(("sec bin = %d", val_bin));
 
   // update minutes
   val_bin =
      ((BX_CMOS_THIS s.reg[REG_MIN] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_MIN] & 0x0f);
   time_calendar.tm_min = val_bin;
-  BX_INFO(("min bin = %d", val_bin));
 
   // update hours
   val_bin =
      ((BX_CMOS_THIS s.reg[REG_HOUR] >> 4) * 10) +
      (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
   time_calendar.tm_hour = val_bin;
-  BX_INFO(("hour bin = %d", val_bin));
 
   // update day of the month
   val_bin =
