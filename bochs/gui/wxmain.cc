@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.31 2002-09-04 12:29:04 bdenney Exp $
+// $Id: wxmain.cc,v 1.32 2002-09-04 14:09:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -294,7 +294,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuLog->Enable (ID_Log_PrefsDevice, FALSE);  // not implemented
 
   CreateStatusBar();
-  SetStatusText( "Welcome to wxWindows!" );
+  SetStatusText("");
 
   CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
   wxToolBar *tb = GetToolBar();
