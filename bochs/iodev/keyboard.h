@@ -36,6 +36,11 @@
 #  define BX_KEY_THIS this->
 #endif
 
+#define MOUSE_MODE_RESET  10
+#define MOUSE_MODE_STREAM 11
+#define MOUSE_MODE_REMOTE 12
+#define MOUSE_MODE_WRAP   13
+
 extern bx_keyb_c bx_keyboard;
 
 class bx_keyb_c : public logfunctions {
@@ -63,16 +68,19 @@ private:
 
   struct {
     struct {
-      /* status bits */
-      Boolean pare;
-      Boolean tim;
-      Boolean auxb;
-      Boolean keyl;
-      Boolean c_d; /* 1=command to port 64h, 0=data to port 60h */
-      Boolean sysf;
-      Boolean inpb;
-      Boolean outb;
+      /* status bits matching the status port*/
+      Boolean pare; // Bit7, 1= parity error from keyboard/mouse - ignored.
+      Boolean tim;  // Bit6, 1= timeout from keyboard - ignored.
+      Boolean auxb; // Bit5, 1= mouse data waiting for CPU to read.
+      Boolean keyl; // Bit4, 1= keyswitch in lock position - ignored.
+      Boolean c_d; /*  Bit3, 1=command to port 64h, 0=data to port 60h */
+      Boolean sysf; // Bit2,
+      Boolean inpb; // Bit1,
+      Boolean outb; // Bit0, 1= keyboard data or mouse data ready for CPU
+                    //       check aux to see which. Or just keyboard
+                    //       data before AT style machines
 
+      /* internal to our version of the keyboard controller */
       Boolean scan_convert;
       Boolean kbd_clock_enabled;
       Boolean aux_clock_enabled;
@@ -94,12 +102,13 @@ private:
       Bit8u   resolution_cpmm; // resolution in counts per mm
       Bit8u   scaling;
       Bit8u   mode;
+      Bit8u   saved_mode;  // the mode prior to entering wrap mode
       Boolean enable;
 
       Bit8u get_status_byte ()
 	{
-	  Bit8u ret = 0;
-	  // we're always in stream mode (right?)
+	  // top bit is 0 , bit 6 is 1 if remote mode.
+	  Bit8u ret = (mode == MOUSE_MODE_REMOTE) ? 0x40 : 0;
 	  ret |= (enable << 5);
 	  ret |= (scaling == 1) ? 0 : (1 << 4);
 	  ret |= ((button_status & 0x1) << 2);

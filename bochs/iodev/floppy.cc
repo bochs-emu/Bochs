@@ -1231,7 +1231,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
       return(0);
     }
   }
-  BX_INFO(("opened %s with readonly=%d\n", path, media->write_protected));
+  BX_INFO(("opened %s with readonly=%d", path, media->write_protected));
 
 #if BX_WITH_MACOS
   if (!strcmp(bx_options.floppya.path, SuperDrive))
