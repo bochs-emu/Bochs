@@ -66,6 +66,7 @@ CHMOD=chmod
 CHOWN=chown
 GZIP=gzip
 GUNZIP=gunzip
+ZIP=zip
 
 @SUFFIX_LINE@
 
@@ -320,10 +321,13 @@ v6workspace:
 win32_snap:
 	sh .conf.win32-vcpp
 	unzip $(V6WORKSPACE_ZIP)
-	make tar
+	make zip
 
 tar:
 	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; tar cf - $$NAME | $(GZIP) > $$NAME.tar.gz); ls -l ../$$NAME.tar.gz
+
+zip:
+	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(ZIP) $$NAME.zip -r $$NAME); ls -l ../$$NAME.zip
 
 clean:
 	@RMCOMMAND@ *.o
