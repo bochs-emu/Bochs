@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigagui.h,v 1.3 2003-02-21 15:06:16 cisc Exp $
+// $Id: amigagui.h,v 1.4 2003-04-04 22:27:47 nicholai Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <exec/types.h>
@@ -46,6 +46,7 @@ int input_error = -1;
 LONG pmap[256];
 ULONG cmap[256];
 static UWORD *emptypointer;
+char verstr[256];
 
 struct TextAttr vgata = {
         "vga.font",

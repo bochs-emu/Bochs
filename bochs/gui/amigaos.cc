@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.12 2003-02-21 15:06:18 cisc Exp $
+// $Id: amigaos.cc,v 1.13 2003-04-04 22:27:47 nicholai Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -160,19 +160,21 @@ bx_bool
 open_screen(void)
 {
 
-  	ULONG id = INVALID_ID;
+	ULONG id = INVALID_ID;
 
 	char *scrmode;
 	struct DrawInfo *screen_drawinfo = NULL;
 
 	struct ScreenModeRequester *smr;
-	
+		
 	static struct EmulLibEntry    GATEDispatcherFunc=
 	{
 		TRAP_LIB, 0, (void (*)(void))DispatcherFunc
 	};
 
 	struct Hook screenreqhook = { 0, 0, (ULONG(*)())&GATEDispatcherFunc, (ULONG(*)())screenreqfunc, 0 };
+
+	sprintf (verstr, "Bochs x86 Emulator %s", VER_STRING);
 
 
 	if(bx_options.Ofullscreen->get ())
@@ -208,18 +210,19 @@ open_screen(void)
 			}
 		}
 
-  		h = GetCyberIDAttr(CYBRIDATTR_HEIGHT, id);
+		h = GetCyberIDAttr(CYBRIDATTR_HEIGHT, id);
 		w = GetCyberIDAttr(CYBRIDATTR_WIDTH, id);
 		d = GetCyberIDAttr(CYBRIDATTR_DEPTH, id);
 
 	//sprintf(scrmode, "%d", id);
 	//setenv("env:bochs/screenmode", scrmode, 1);
-		  
+			  
 
 	screen = OpenScreenTags(NULL,
 	  SA_Width, w,
 	  SA_Height, h,
 	  SA_Depth, d,
+	  SA_Title, verstr,
 	  SA_DisplayID, id,
 	  SA_ShowTitle, FALSE,
 	  SA_Type, PUBLICSCREEN,
@@ -233,7 +236,8 @@ open_screen(void)
 			 WA_CustomScreen,(int)screen,
 			 WA_Width,w,
 			 WA_Height,h,
-			 WA_IDCMP,	IDCMP_RAWKEY | IDCMP_GADGETUP,
+	         WA_Title, verstr,
+			 WA_IDCMP,	IDCMP_RAWKEY | IDCMP_GADGETUP | IDCMP_INACTIVEWINDOW,
 			 WA_ReportMouse, TRUE,
 			 WA_RMBTrap, TRUE,
 			 WA_Backdrop,TRUE,
@@ -259,7 +263,8 @@ open_screen(void)
 	  window = OpenWindowTags(NULL,
 			 WA_Width,w,
 			 WA_Height,h,
-			 WA_IDCMP,	IDCMP_RAWKEY | IDCMP_GADGETUP | IDCMP_CHANGEWINDOW,
+			 WA_Title, verstr,
+			 WA_IDCMP,	IDCMP_RAWKEY | IDCMP_GADGETUP | IDCMP_CHANGEWINDOW | IDCMP_INACTIVEWINDOW,
 			 WA_RMBTrap, TRUE,
 			 WA_DepthGadget, TRUE,
 			 WA_ReportMouse, TRUE,
@@ -268,10 +273,10 @@ open_screen(void)
 			 TAG_DONE);
 
 			 UnlockPubScreen(NULL,pub_screen);
-   }
-   else
-   	BX_PANIC(("Amiga: Couldn't lock the public screen"));
-   }
+	}
+	else
+	BX_PANIC(("Amiga: Couldn't lock the public screen"));
+	}
 
 	if (!window)
 		BX_PANIC(("Amiga: Couldn't open the window"));
@@ -306,52 +311,52 @@ open_screen(void)
 
 	 white = ObtainBestPen(window->WScreen->ViewPort.ColorMap, 0xffffffff, 0xffffffff, 0xffffffff, NULL);
 	 black = ObtainBestPen(window->WScreen->ViewPort.ColorMap, 0x00000000, 0x00000000, 0x00000000, NULL);
-	 
+		 
 }
 
   void
 bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 					 unsigned headerbar_y)
 {
-  
-  x_tilesize = tilewidth;
-  y_tilesize = tileheight;
+	  
+	x_tilesize = tilewidth;
+	y_tilesize = tileheight;
 
-  bx_headerbar_y = headerbar_y;
+	bx_headerbar_y = headerbar_y;
 
-  IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 39);
-  if (IntuitionBase == NULL)
+	IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 39);
+	if (IntuitionBase == NULL)
 	BX_PANIC(("Amiga: Failed to open intuition.library v39 or later!"));
-  if (IntuitionBase->LibNode.lib_Version == 50 && IntuitionBase->LibNode.lib_Revision < 5)
+	if (IntuitionBase->LibNode.lib_Version == 50 && IntuitionBase->LibNode.lib_Revision < 5)
 	BX_PANIC(("Amiga: intuition.library v50 needs to be revision 5 or higher!"));
 
 
-  GfxBase = (struct GfxBase *)OpenLibrary("graphics.library", 39);
-  if (GfxBase == NULL)
+	GfxBase = (struct GfxBase *)OpenLibrary("graphics.library", 39);
+	if (GfxBase == NULL)
 	BX_PANIC(("Amiga: Failed to open graphics.library v39 or later!"));
 
-  GadToolsBase = OpenLibrary("gadtools.library", 37);
-  if (GadToolsBase == NULL)
+	GadToolsBase = OpenLibrary("gadtools.library", 37);
+	if (GadToolsBase == NULL)
 	BX_PANIC(("Amiga: Failed to open gadtools.library v37 or later!"));
-  if (GadToolsBase->lib_Version == 50 && GadToolsBase->lib_Revision < 3)
+	if (GadToolsBase->lib_Version == 50 && GadToolsBase->lib_Revision < 3)
 	BX_PANIC(("Amiga: gadtools.library v50 needs to be revision 3 or higher!"));
 
-  CyberGfxBase = OpenLibrary("cybergraphics.library", 40);
-  if (CyberGfxBase == NULL)
+	CyberGfxBase = OpenLibrary("cybergraphics.library", 40);
+	if (CyberGfxBase == NULL)
 	BX_PANIC(("Amiga: Failed to open cybergraphics.library v40 or later!"));
 
-  AslBase = OpenLibrary("asl.library", 38);
-  if (AslBase == NULL)
+	AslBase = OpenLibrary("asl.library", 38);
+	if (AslBase == NULL)
 	BX_PANIC(("Amiga: Failed to open asl.library v38 or later!"));
 
-  DiskfontBase = OpenLibrary("diskfont.library", 38);
-  if (DiskfontBase == NULL)
-   	BX_PANIC(("Amiga: Failed to open diskfont.library v38 or later!"));
+	DiskfontBase = OpenLibrary("diskfont.library", 38);
+	if (DiskfontBase == NULL)
+	BX_PANIC(("Amiga: Failed to open diskfont.library v38 or later!"));
 
 	open_screen();
 	setup_inputhandler();
-  /*
-  if (bx_options.private_colormap) {
+	/*
+	if (bx_options.private_colormap) {
 	fprintf(stderr, "# WARNING: Amiga: private_colormap option ignored.\n");
 	}*/
 }
@@ -385,6 +390,7 @@ bx_amigaos_gui_c::handle_events(void)
 				toggle_mouse_enable();
 				break;
 			}
+
 			if(imCode <= 101)
 				key_event = raw_to_bochs[imCode];
 			if(imCode >= 128)
@@ -395,6 +401,11 @@ bx_amigaos_gui_c::handle_events(void)
 
 		case GADGETUP:
 			((void (*)()) bx_header_gadget[gad->GadgetID]->UserData)();
+			break;
+
+		case IDCMP_INACTIVEWINDOW:
+			if(bx_options.Omouse_enabled->get ())
+				toggle_mouse_enable();
 			break;
 
 		case IDCMP_CHANGEWINDOW:
@@ -565,7 +576,7 @@ bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 				bx_header_gadget[i]->LeftEdge -= xdiff;
 		}
 	
-	bx_xchanged = TRUE;
+		bx_xchanged = TRUE;
 	
 	}
 }
@@ -614,43 +625,43 @@ bx_amigaos_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsign
   unsigned
 bx_amigaos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
-struct NewGadget ng;
+	struct NewGadget ng;
 
-ng.ng_TopEdge    = bx_bordertop;
-ng.ng_Width      = bx_header_image[bmap_id].Width;
-ng.ng_Height     = bx_header_image[bmap_id].Height;
-ng.ng_VisualInfo = vi;
-ng.ng_TextAttr   = &vgata;
-ng.ng_GadgetID   = bx_headerbar_entries;
-ng.ng_GadgetText = (UBYTE *)"";
-ng.ng_Flags      = 0;
+	ng.ng_TopEdge    = bx_bordertop;
+	ng.ng_Width      = bx_header_image[bmap_id].Width;
+	ng.ng_Height     = bx_header_image[bmap_id].Height;
+	ng.ng_VisualInfo = vi;
+	ng.ng_TextAttr   = &vgata;
+	ng.ng_GadgetID   = bx_headerbar_entries;
+	ng.ng_GadgetText = (UBYTE *)"";
+	ng.ng_Flags      = 0;
 
-ng.ng_UserData = f;
+	ng.ng_UserData = f;
 
-if (alignment == BX_GRAVITY_LEFT)
-{
-	ng.ng_LeftEdge   = bx_headernext_left;
-	bx_headernext_left += ng.ng_Width;
-}
-else
-{
-	ng.ng_LeftEdge   = window->Width - bx_headernext_right - ng.ng_Width;
-	bx_headernext_right += ng.ng_Width;
-}
+	if (alignment == BX_GRAVITY_LEFT)
+	{
+		ng.ng_LeftEdge   = bx_headernext_left;
+		bx_headernext_left += ng.ng_Width;
+	}
+	else
+	{
+		ng.ng_LeftEdge   = window->Width - bx_headernext_right - ng.ng_Width;
+		bx_headernext_right += ng.ng_Width;
+	}
 
-bx_gadget_handle = bx_header_gadget[bx_headerbar_entries] =
-	CreateGadget(BUTTON_KIND, bx_gadget_handle, &ng,
-					GT_Underscore, '_',
-					TAG_END);
+	bx_gadget_handle = bx_header_gadget[bx_headerbar_entries] =
+		CreateGadget(BUTTON_KIND, bx_gadget_handle, &ng,
+						GT_Underscore, '_',
+						TAG_END);
 
-bx_gadget_handle->GadgetType |= GTYP_BOOLGADGET;
-bx_gadget_handle->Flags |= GFLG_GADGIMAGE | GFLG_GADGHNONE;
-bx_gadget_handle->GadgetRender = &bx_header_image[bmap_id];
-bx_gadget_handle->UserData = f;
+	bx_gadget_handle->GadgetType |= GTYP_BOOLGADGET;
+	bx_gadget_handle->Flags |= GFLG_GADGIMAGE | GFLG_GADGHNONE;
+	bx_gadget_handle->GadgetRender = &bx_header_image[bmap_id];
+	bx_gadget_handle->UserData = f;
 
 
-bx_headerbar_entries++;
-return(bx_headerbar_entries - 1);
+	bx_headerbar_entries++;
+	return(bx_headerbar_entries - 1);
 }
 
  
