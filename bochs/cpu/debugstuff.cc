@@ -1002,11 +1002,6 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
   void
 BX_CPU_C::atexit(void)
 {
-  if (protected_mode()) BX_INFO(("protected mode\n" ));
-  else if (v8086_mode()) BX_INFO(("v8086 mode\n" ));
-  else BX_INFO(("real mode\n"));
-  BX_INFO(("CS.d_b = %u bit\n",
-    BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.d_b ? 32 : 16 ));
   if (protected_mode()) BX_INFO(("protected mode\n"));
   else if (v8086_mode()) BX_INFO(("v8086 mode\n"));
   else BX_INFO(("real mode\n"));
