@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.101 2003-11-25 22:46:20 cbothamy Exp $
+// $Id: rombios.c,v 1.102 2003-11-25 22:56:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.101 $";
-static char bios_date_string[] = "$Date: 2003-11-25 22:46:20 $";
+static char bios_cvs_version_string[] = "$Revision: 1.102 $";
+static char bios_date_string[] = "$Date: 2003-11-25 22:56:11 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.101 2003-11-25 22:46:20 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.102 2003-11-25 22:56:11 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1556,7 +1556,6 @@ bios_printf(action, s)
     // do {} while (1);
 ASM_START
     HALT2(__LINE__)
-    hlt
 ASM_END
     }
 }
@@ -7732,6 +7731,7 @@ int13_eltorito:
 ;- INT18h -
 ;----------
 int18_handler: ;; Boot Failure routing
+  hlt
   HALT(__LINE__)
   iret
 
@@ -7756,7 +7756,7 @@ int19_relocated: ;; Boot function, relocated
   ;; bl contains the boot drive
   ;; ax contains the boot segment or 0 if failure
 
-  test       ax, ax  ;; id ax is 0 call int18
+  test       ax, ax  ;; if ax is 0 call int18
   jz         int18_handler
 
   mov dl,    bl      ;; set drive so guest os find it
