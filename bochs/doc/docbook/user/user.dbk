@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.36 2002-03-24 02:44:18 bdenney Exp $
+$Id: user.dbk,v 1.37 2002-03-27 18:41:45 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1633,6 +1633,65 @@ If the platform is not detected properly, you might need to use
 the configure shortcut script, <filename>.conf.amigaos</filename>.
 </para>
 </section> <!-- end Amiga/MorphOS -->
+
+<section><title>Compiling with the RFB interface</title>
+<para>
+Don Becker's RFB interface allows you to view the Bochs display with the
+AT&amp;T's <ulink url="http://www.uk.research.att.com/vnc/">VNC Viewer</ulink>.
+The protocol used between a VNC server and a VNC viewer is called RFB.
+Because the RFB code in Bochs is written with portable network socket and POSIX
+thread code, it can be compiled on many platforms.  No additional libraries
+are required.  To try it, type:
+<screen>
+  configure --with-rfb
+  make
+</screen>
+</section>
+
+<section><title>Compiling with the SDL interface</title>
+<para>
+Dave Poirier has written an SDL interface for Bochs.  Simple DirectMedia
+Layer, or SDL, is a cross-platform multimedia library distributed from
+<ulink url="http://libsdl.org">libsdl.org</ulink>.  SDL supports 
+Win32, Linux, IRIX, MacOS, MacOS X, BeOS, and AmigaOS.
+</para>
+
+<para>
+To compile Bochs with the SDL interface you need to download the SDL
+development library.  Either get the development library for your platform,
+or download the sources and compile it yourself.  Then, go into the 
+Bochs directory and type:
+<screen>
+  configure --with-sdl
+  make
+</screen>
+</para>
+<note><para>
+This has only been tested on Linux at the time this documentation was written.
+</para></note>
+
+<para>
+To compile in Microsoft VC++, you have to configure on a different system.
+Here's the procedure:
+<screen>
+- On a machine that can run shell scripts, such as Cygwin, run
+    configure --target=pentium-windows --with-sdl
+    make win32_snap
+- Copy the resulting ZIP file to your Windows box and unzip it.
+- Load up workspace called bochs.dsw in VC++ 6.0
+- Double click "gui files"
+- Remove gui/win32.cpp from the project, and add gui/sdl.cpp instead.
+- Edit the settings of "gui files".  Under C/C++ tab, category=preprocessor,
+  additional include directories, add the directory where SDL/SDL.h can be
+  found.
+- Edit the settings of the "bochs files" project.  Under the Link tab,
+  category=General, add SDL.lib to object/library modules list.  Then in
+  category=Input, add the path of SDL.lib to additional library path.  Click
+  ok.
+- Select Build:Build Bochs.exe
+</screen>
+</para>
+<section>
 
 <section><title>Building an RPM on Linux</title>
 <para>
