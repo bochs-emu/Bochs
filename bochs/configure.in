@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.205 2003-05-04 12:57:16 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.206 2003-05-06 20:15:31 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -150,6 +150,7 @@ AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
 AC_CHECK_MEMBER(struct sockaddr_in.sin_len, AC_DEFINE(BX_HAVE_SOCKADDR_IN_SIN_LEN), , [#include <sys/socket.h>
 #include <netinet/in.h> ])
 AC_CHECK_FUNCS(mkstemp, AC_DEFINE(BX_HAVE_MKSTEMP))
+AC_CHECK_HEADER(sys/mman.h, AC_DEFINE(BX_HAVE_SYS_MMAN_H))
 
 dnl As of autoconf 2.53, the standard largefile test fails for Linux/gcc.
 dnl It does not put the largefiles arguments into CFLAGS, even though Linux/gcc

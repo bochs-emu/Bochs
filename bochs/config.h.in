@@ -197,6 +197,7 @@
 #define BX_HAVE_GETTIMEOFDAY 0
 #define BX_HAVE_REALTIME_USEC (BX_HAVE_GETTIMEOFDAY || defined(WIN32))
 #define BX_HAVE_MKSTEMP 0
+#define BX_HAVE_SYS_MMAN_H 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
 // gui. If people try to enable it elsewhere, give a compile error after the
