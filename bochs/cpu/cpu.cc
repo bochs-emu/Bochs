@@ -110,6 +110,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
 
 main_cpu_loop:
+  //bx_printf ("in %s at %04x:%08x\n", name, sregs[BX_SEG_REG_CS].selector.value, EIP);
 
   // ???
   BX_CPU_THIS_PTR EXT = 0;
@@ -248,7 +249,6 @@ repeat_not_done:
       REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
       //BX_TICK1();
-      CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event) {
 #endif
@@ -275,9 +275,10 @@ repeat_done:
     REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
     //BX_TICK1();
-    CHECK_MAX_INSTRUCTIONS(max_instr_count);
 
 debugger_check:
+
+    CHECK_MAX_INSTRUCTIONS(max_instr_count);
 
 #if BX_DEBUGGER
     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
