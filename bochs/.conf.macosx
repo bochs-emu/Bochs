@@ -8,7 +8,7 @@
 # those paths to the environment variables.
 
 set echo
-CFLAGS="-pipe -O3 -I/sw/include -finline-functions -falign-loops=16 -falign-jumps=16 -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -fprefetch-loop-arrays -fmove-all-movables $CFLAGS"
+CFLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer -finline-functions -falign-loops=16 -falign-jumps=16 -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -fprefetch-loop-arrays -fmove-all-movables $CFLAGS"
 CPPFLAGS=""
 CXXFLAGS="$CFLAGS"
 LDFLAGS="-L/sw/lib"
