@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.35 2001-11-11 04:55:14 bdenney Exp $
+// $Id: dbg_main.cc,v 1.36 2001-11-28 18:38:32 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -679,6 +679,20 @@ bx_dbg_trace_off_command(void)
 {
   BX_CPU(dbg_cpu)->trace = 0;
   fprintf (stderr, "Tracing disabled for %s\n", BX_CPU(dbg_cpu)->name);
+}
+
+void
+bx_dbg_trace_reg_on_command(void)
+{
+  BX_CPU(dbg_cpu)->trace_reg = 1;
+  fprintf (stderr, "Register-Tracing enabled for %s\n", BX_CPU(dbg_cpu)->name);
+}
+
+void
+bx_dbg_trace_reg_off_command(void)
+{
+  BX_CPU(dbg_cpu)->trace_reg = 0;
+  fprintf (stderr, "Register-Tracing disabled for %s\n", BX_CPU(dbg_cpu)->name);
 }
 
 void
@@ -2080,7 +2094,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     // from here. (eks)
     if( BX_CPU(dbg_cpu)->trace_reg )
 	    fprintf( stderr,
-		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u, af=%u, zf=%u, sf=%u, of=%u, tf=%u, if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
+		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
 		BX_CPU(which_cpu)->gen_reg[0],
 		BX_CPU(which_cpu)->gen_reg[1],
 		BX_CPU(which_cpu)->gen_reg[2],
@@ -2089,11 +2103,12 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 		BX_CPU(which_cpu)->gen_reg[5],
 		BX_CPU(which_cpu)->gen_reg[6],
 		BX_CPU(which_cpu)->gen_reg[7],
-		BX_CPU(which_cpu)->eflags.cf,
-		BX_CPU(which_cpu)->eflags.af,
-		BX_CPU(which_cpu)->eflags.zf,
-		BX_CPU(which_cpu)->eflags.sf,
-		BX_CPU(which_cpu)->eflags.of,
+		!!BX_CPU(which_cpu)->get_CF(),
+		!!BX_CPU(which_cpu)->get_AF(),
+		!!BX_CPU(which_cpu)->get_ZF(),
+		!!BX_CPU(which_cpu)->get_SF(),
+		!!BX_CPU(which_cpu)->get_OF(),
+		!!BX_CPU(which_cpu)->get_PF(),
 		BX_CPU(which_cpu)->eflags.tf,
 		BX_CPU(which_cpu)->eflags.if_,
 		BX_CPU(which_cpu)->eflags.df,
