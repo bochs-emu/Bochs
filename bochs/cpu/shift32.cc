@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: shift32.cc,v 1.7 2002-09-06 21:54:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,7 +66,7 @@ BX_CPU_C::SHLD_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     /* set eflags:
@@ -115,7 +115,7 @@ BX_CPU_C::SHRD_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     /* set eflags:
@@ -165,7 +165,7 @@ BX_CPU_C::ROL_Ed(BxInstruction_t *i)
         BX_WRITE_32BIT_REG(i->rm, result_32);
         }
       else {
-        write_RMW_virtual_dword(result_32);
+        Write_RMW_virtual_dword(result_32);
         }
 
       /* set eflags:
@@ -211,7 +211,7 @@ BX_CPU_C::ROR_Ed(BxInstruction_t *i)
         BX_WRITE_32BIT_REG(i->rm, result_32);
         }
       else {
-        write_RMW_virtual_dword(result_32);
+        Write_RMW_virtual_dword(result_32);
         }
 
       /* set eflags:
@@ -266,7 +266,7 @@ BX_CPU_C::RCL_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     /* set eflags:
@@ -318,7 +318,7 @@ BX_CPU_C::RCR_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     /* set eflags:
@@ -364,7 +364,7 @@ BX_CPU_C::SHL_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHL32);
@@ -404,7 +404,7 @@ BX_CPU_C::SHR_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHR32);
@@ -449,7 +449,7 @@ BX_CPU_C::SAR_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     /* set eflags:

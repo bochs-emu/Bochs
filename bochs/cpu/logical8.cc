@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: logical8.cc,v 1.6 2002-09-06 21:54:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_CPU_C::XOR_EbGb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result);
     }
   else {
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_XOR8);
@@ -131,7 +131,7 @@ BX_CPU_C::XOR_EbIb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result);
     }
   else {
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_XOR8);
@@ -162,7 +162,7 @@ BX_CPU_C::OR_EbIb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result);
     }
   else {
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
@@ -191,7 +191,7 @@ BX_CPU_C::NOT_Eb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result_8);
     }
   else {
-    write_RMW_virtual_byte(result_8);
+    Write_RMW_virtual_byte(result_8);
     }
 }
 
@@ -221,7 +221,7 @@ BX_CPU_C::OR_EbGb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result);
     }
   else {
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
@@ -299,7 +299,7 @@ BX_CPU_C::AND_EbGb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result);
     }
   else {
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
@@ -376,7 +376,7 @@ BX_CPU_C::AND_EbIb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result);
     }
   else {
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);

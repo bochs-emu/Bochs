@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: logical16.cc,v 1.6 2002-09-06 21:54:57 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ BX_CPU_C::XOR_EwGw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
@@ -134,7 +134,7 @@ BX_CPU_C::XOR_EwIw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
@@ -165,7 +165,7 @@ BX_CPU_C::OR_EwIw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_OR16);
@@ -193,7 +193,7 @@ BX_CPU_C::NOT_Ew(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 }
 
@@ -223,7 +223,7 @@ BX_CPU_C::OR_EwGw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_OR16);
@@ -301,7 +301,7 @@ BX_CPU_C::AND_EwGw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
@@ -374,7 +374,7 @@ BX_CPU_C::AND_EwIw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);

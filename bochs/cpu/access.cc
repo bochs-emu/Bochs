@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.21 2002-09-06 19:21:55 yakovlev Exp $
+// $Id: access.cc,v 1.22 2002-09-06 21:54:55 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -620,9 +620,7 @@ accessOK:
           if (hostPageAddr) {
             hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
             *data = *hostAddr;
-            BX_CPU_THIS_PTR address_xlation.paddress1 =
-              BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
-            //BX_CPU_THIS_PTR address_xlation.pages = 1;
+            BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
             return;
             }
           }
@@ -678,9 +676,7 @@ accessOK:
             if (hostPageAddr) {
               hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
               ReadHostWordFromLittleEndian(hostAddr, *data);
-              BX_CPU_THIS_PTR address_xlation.paddress1 =
-                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
-              BX_CPU_THIS_PTR address_xlation.pages = 1;
+              BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
               return;
               }
             }
@@ -734,9 +730,7 @@ accessOK:
             if (hostPageAddr) {
               hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
               ReadHostDWordFromLittleEndian(hostAddr, *data);
-              BX_CPU_THIS_PTR address_xlation.paddress1 =
-                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
-              BX_CPU_THIS_PTR address_xlation.pages = 1;
+              BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
               return;
               }
             }
@@ -758,9 +752,16 @@ BX_CPU_C::write_RMW_virtual_byte(Bit8u val8)
 {
   BX_INSTR_MEM_DATA(BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE);
 
-  // address_xlation.pages must be 1
-  BX_CPU_THIS_PTR mem->writePhysicalPage(this,
-      BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val8);
+  if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
+    // Pages > 2 means it stores a host address for direct access.
+    Bit8u * hostAddr = (Bit8u *) BX_CPU_THIS_PTR address_xlation.pages;
+    * hostAddr = val8;
+    }
+  else {
+    // address_xlation.pages must be 1
+    BX_CPU_THIS_PTR mem->writePhysicalPage(this,
+        BX_CPU_THIS_PTR address_xlation.paddress1, 1, &val8);
+    }
 }
 
   void
@@ -768,7 +769,12 @@ BX_CPU_C::write_RMW_virtual_word(Bit16u val16)
 {
   BX_INSTR_MEM_DATA(BX_CPU_THIS_PTR address_xlation.paddress1, 2, BX_WRITE);
 
-  if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
+  if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
+    // Pages > 2 means it stores a host address for direct access.
+    Bit16u *hostAddr = (Bit16u *) BX_CPU_THIS_PTR address_xlation.pages;
+    WriteHostWordToLittleEndian(hostAddr, val16);
+    }
+  else if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
       BX_CPU_THIS_PTR mem->writePhysicalPage(this,
           BX_CPU_THIS_PTR address_xlation.paddress1, 2, &val16);
     }
@@ -792,7 +798,12 @@ BX_CPU_C::write_RMW_virtual_dword(Bit32u val32)
 {
   BX_INSTR_MEM_DATA(BX_CPU_THIS_PTR address_xlation.paddress1, 4, BX_WRITE);
 
-  if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
+  if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
+    // Pages > 2 means it stores a host address for direct access.
+    Bit32u *hostAddr = (Bit32u *) BX_CPU_THIS_PTR address_xlation.pages;
+    WriteHostDWordToLittleEndian(hostAddr, val32);
+    }
+  else if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
     BX_CPU_THIS_PTR mem->writePhysicalPage(this,
         BX_CPU_THIS_PTR address_xlation.paddress1, 4, &val32);
     }

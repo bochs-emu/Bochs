@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: logical32.cc,v 1.6 2002-09-06 21:54:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ BX_CPU_C::XOR_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
@@ -135,7 +135,7 @@ BX_CPU_C::XOR_EdId(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
@@ -165,7 +165,7 @@ BX_CPU_C::OR_EdId(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
@@ -192,7 +192,7 @@ BX_CPU_C::NOT_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 }
 
@@ -221,7 +221,7 @@ BX_CPU_C::OR_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
@@ -296,7 +296,7 @@ BX_CPU_C::AND_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
@@ -368,7 +368,7 @@ BX_CPU_C::AND_EdId(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, result_32);
       }
     else {
-      write_RMW_virtual_dword(result_32);
+      Write_RMW_virtual_dword(result_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: shift8.cc,v 1.6 2002-09-06 21:54:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ BX_CPU_C::ROL_Eb(BxInstruction_t *i)
       BX_WRITE_8BIT_REG(i->rm, result_8);
       }
     else {
-      write_RMW_virtual_byte(result_8);
+      Write_RMW_virtual_byte(result_8);
       }
 
     /* set eflags:
@@ -119,7 +119,7 @@ BX_CPU_C::ROR_Eb(BxInstruction_t *i)
       BX_WRITE_8BIT_REG(i->rm, result_8);
       }
     else {
-      write_RMW_virtual_byte(result_8);
+      Write_RMW_virtual_byte(result_8);
       }
 
     /* set eflags:
@@ -170,7 +170,7 @@ BX_CPU_C::RCL_Eb(BxInstruction_t *i)
       BX_WRITE_8BIT_REG(i->rm, result_8);
       }
     else {
-      write_RMW_virtual_byte(result_8);
+      Write_RMW_virtual_byte(result_8);
       }
 
     /* set eflags:
@@ -218,7 +218,7 @@ BX_CPU_C::RCR_Eb(BxInstruction_t *i)
       BX_WRITE_8BIT_REG(i->rm, result_8);
       }
     else {
-      write_RMW_virtual_byte(result_8);
+      Write_RMW_virtual_byte(result_8);
       }
 
     /* set eflags:
@@ -267,7 +267,7 @@ BX_CPU_C::SHL_Eb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result_8);
     }
   else {
-    write_RMW_virtual_byte(result_8);
+    Write_RMW_virtual_byte(result_8);
     }
 
   SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SHL8);
@@ -308,7 +308,7 @@ BX_CPU_C::SHR_Eb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result_8);
     }
   else {
-    write_RMW_virtual_byte(result_8);
+    Write_RMW_virtual_byte(result_8);
     }
 
   SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SHR8);
@@ -365,7 +365,7 @@ BX_CPU_C::SAR_Eb(BxInstruction_t *i)
     BX_WRITE_8BIT_REG(i->rm, result_8);
     }
   else {
-    write_RMW_virtual_byte(result_8);
+    Write_RMW_virtual_byte(result_8);
     }
 
   /* set eflags:

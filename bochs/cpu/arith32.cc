@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.7 2001-11-17 22:22:03 bdenney Exp $
+// $Id: arith32.cc,v 1.8 2002-09-06 21:54:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,7 +79,7 @@ BX_CPU_C::ADD_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, sum_32);
       }
     else {
-      write_RMW_virtual_dword(sum_32);
+      Write_RMW_virtual_dword(sum_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
@@ -161,7 +161,7 @@ BX_CPU_C::ADC_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, sum_32);
       }
     else {
-      write_RMW_virtual_dword(sum_32);
+      Write_RMW_virtual_dword(sum_32);
       }
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, sum_32, BX_INSTR_ADC32,
@@ -258,7 +258,7 @@ BX_CPU_C::SBB_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, diff_32);
       }
     else {
-      write_RMW_virtual_dword(diff_32);
+      Write_RMW_virtual_dword(diff_32);
       }
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, diff_32, BX_INSTR_SBB32,
@@ -353,7 +353,7 @@ BX_CPU_C::SBB_EdId(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, diff_32);
       }
     else {
-      write_RMW_virtual_dword(diff_32);
+      Write_RMW_virtual_dword(diff_32);
       }
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, diff_32, BX_INSTR_SBB32,
@@ -386,7 +386,7 @@ BX_CPU_C::SUB_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, diff_32);
       }
     else {
-      write_RMW_virtual_dword(diff_32);
+      Write_RMW_virtual_dword(diff_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
@@ -588,7 +588,7 @@ BX_CPU_C::XADD_EdGd(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, sum_32);
       }
     else {
-      write_RMW_virtual_dword(sum_32);
+      Write_RMW_virtual_dword(sum_32);
       /* and write destination into source */
       BX_WRITE_32BIT_REG(i->nnn, op1_32);
       }
@@ -626,7 +626,7 @@ BX_CPU_C::ADD_EdId(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, sum_32);
       }
     else {
-      write_RMW_virtual_dword(sum_32);
+      Write_RMW_virtual_dword(sum_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
@@ -660,7 +660,7 @@ BX_CPU_C::ADC_EdId(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, sum_32);
       }
     else {
-      write_RMW_virtual_dword(sum_32);
+      Write_RMW_virtual_dword(sum_32);
       }
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, sum_32, BX_INSTR_ADC32,
@@ -692,7 +692,7 @@ BX_CPU_C::SUB_EdId(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, diff_32);
       }
     else {
-      write_RMW_virtual_dword(diff_32);
+      Write_RMW_virtual_dword(diff_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
@@ -745,7 +745,7 @@ BX_CPU_C::NEG_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, diff_32);
       }
     else {
-      write_RMW_virtual_dword(diff_32);
+      Write_RMW_virtual_dword(diff_32);
       }
 
     SET_FLAGS_OSZAPC_32(op1_32, 0, diff_32, BX_INSTR_NEG32);
@@ -773,7 +773,7 @@ BX_CPU_C::INC_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, op1_32);
       }
     else {
-      write_RMW_virtual_dword(op1_32);
+      Write_RMW_virtual_dword(op1_32);
       }
 
     SET_FLAGS_OSZAP_32(0, 0, op1_32, BX_INSTR_INC32);
@@ -801,7 +801,7 @@ BX_CPU_C::DEC_Ed(BxInstruction_t *i)
       BX_WRITE_32BIT_REG(i->rm, op1_32);
       }
     else {
-      write_RMW_virtual_dword(op1_32);
+      Write_RMW_virtual_dword(op1_32);
       }
 
     SET_FLAGS_OSZAP_32(0, 0, op1_32, BX_INSTR_DEC32);
@@ -838,7 +838,7 @@ BX_CPU_C::CMPXCHG_EdGd(BxInstruction_t *i)
         BX_WRITE_32BIT_REG(i->rm, op2_32);
         }
       else {
-        write_RMW_virtual_dword(op2_32);
+        Write_RMW_virtual_dword(op2_32);
         }
       }
     else {
@@ -877,7 +877,7 @@ BX_CPU_C::CMPXCHG8B(BxInstruction_t *i)
       // ZF = 1
       set_ZF(1);
       // dest <-- src
-      write_RMW_virtual_dword(ECX);
+      Write_RMW_virtual_dword(ECX);
       write_virtual_dword(i->seg, i->rm_addr, &EBX);
       }
     else {

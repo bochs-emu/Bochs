@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: shift16.cc,v 1.7 2002-09-06 21:54:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,7 +78,7 @@ BX_CPU_C::SHLD_EwGw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     /* set eflags:
@@ -137,7 +137,7 @@ BX_CPU_C::SHRD_EwGw(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     /* set eflags:
@@ -189,7 +189,7 @@ BX_CPU_C::ROL_Ew(BxInstruction_t *i)
         BX_WRITE_16BIT_REG(i->rm, result_16);
         }
       else {
-        write_RMW_virtual_word(result_16);
+        Write_RMW_virtual_word(result_16);
         }
 
       /* set eflags:
@@ -237,7 +237,7 @@ BX_CPU_C::ROR_Ew(BxInstruction_t *i)
         BX_WRITE_16BIT_REG(i->rm, result_16);
         }
       else {
-        write_RMW_virtual_word(result_16);
+        Write_RMW_virtual_word(result_16);
         }
 
       /* set eflags:
@@ -299,7 +299,7 @@ BX_CPU_C::RCL_Ew(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     /* set eflags:
@@ -348,7 +348,7 @@ BX_CPU_C::RCR_Ew(BxInstruction_t *i)
 	BX_WRITE_16BIT_REG(i->rm, result_16);
 	}
       else {
-	write_RMW_virtual_word(result_16);
+	Write_RMW_virtual_word(result_16);
         }
 
       /* set eflags:
@@ -397,7 +397,7 @@ BX_CPU_C::SHL_Ew(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHL16);
@@ -440,7 +440,7 @@ BX_CPU_C::SHR_Ew(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHR16);
@@ -498,7 +498,7 @@ BX_CPU_C::SAR_Ew(BxInstruction_t *i)
       BX_WRITE_16BIT_REG(i->rm, result_16);
       }
     else {
-      write_RMW_virtual_word(result_16);
+      Write_RMW_virtual_word(result_16);
       }
 
     /* set eflags:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.34 2002-09-06 19:21:55 yakovlev Exp $
+// $Id: cpu.h,v 1.35 2002-09-06 21:54:57 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -891,9 +891,16 @@ public: // for now...
   struct {
     Bit32u  paddress1;  // physical address after translation of 1st len1 bytes of data
     Bit32u  paddress2;  // physical address after translation of 2nd len2 bytes of data
-    Bit32u  len1;       // number of bytes in page 1
-    Bit32u  len2;       // number of bytes in page 2
-    unsigned pages;     // number of pages access spans (1 or 2)
+    Bit32u  len1;       // Number of bytes in page 1
+    Bit32u  len2;       // Number of bytes in page 2
+    Bit32u  pages;      // Number of pages access spans (1 or 2).  Also used
+                        //   for the case when a native host pointer is
+                        //   available for the R-M-W instructions.  The host
+                        //   pointer is stuffed here.  Since this field has
+                        //   to be checked anyways (and thus cached), if it
+                        //   is greated than 2 (the maximum possible for
+                        //   normal cases) it is a native pointer and is used
+                        //   for a direct write access.
     } address_xlation;
 
   // for lazy flags processing
@@ -1469,6 +1476,10 @@ public: // for now...
   BX_SMF void write_RMW_virtual_byte(Bit8u val8);
   BX_SMF void write_RMW_virtual_word(Bit16u val16);
   BX_SMF void write_RMW_virtual_dword(Bit32u val32);
+
+#define Write_RMW_virtual_byte(val8)   write_RMW_virtual_byte(val8)
+#define Write_RMW_virtual_word(val16)  write_RMW_virtual_word(val16)
+#define Write_RMW_virtual_dword(val32) write_RMW_virtual_dword(val32)
 
   BX_SMF void access_linear(Bit32u address, unsigned length, unsigned pl,
                      unsigned rw, void *data);
