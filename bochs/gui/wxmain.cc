@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.36 2002-09-05 13:38:44 bdenney Exp $
+// $Id: wxmain.cc,v 1.37 2002-09-05 16:01:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -249,6 +249,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // init variables
   sim_thread = NULL;
   start_bochs_times = 0;
+  closing = false;
 
   // set up the gui
   menuConfiguration = new wxMenu;
@@ -311,7 +312,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuLog->Enable (ID_Log_PrefsDevice, FALSE);  // not implemented
 
   CreateStatusBar();
-  SetStatusText("");
 
   CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
   wxToolBar *tb = GetToolBar();
@@ -345,6 +345,12 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   SetSizer (sz);
 
   thePanel = panel;
+}
+
+MyFrame::~MyFrame ()
+{
+  wxLogDebug ("MyFrame destructor");
+  theFrame = NULL;
 }
 
 void MyFrame::OnConfigNew(wxCommandEvent& WXUNUSED(event))
@@ -632,6 +638,7 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnQuit(wxCommandEvent& event)
 {
+  closing = true;
   Close( TRUE );
   OnKillSim (event);
 #if 0
@@ -651,12 +658,14 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
   switch (change) {
     case Start:  // running
+      wxLogStatus ("Starting Bochs simulation");
       menuSimulate->Enable (ID_Simulate_Start, FALSE);
       menuSimulate->Enable (ID_Simulate_PauseResume, TRUE);
       menuSimulate->Enable (ID_Simulate_Stop, TRUE);
       menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
       break;
     case Stop: // not running
+      wxLogStatus ("Simulation stopped");
       menuSimulate->Enable (ID_Simulate_Start, TRUE);
       menuSimulate->Enable (ID_Simulate_PauseResume, FALSE);
       menuSimulate->Enable (ID_Simulate_Stop, FALSE);
@@ -668,11 +677,11 @@ void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
 		    wxOK | wxICON_INFORMATION);
       break;
     case Pause: // pause
-      SetStatusText ("Pausing the Bochs simulation");
+      wxLogStatus ("Pausing simulation");
       menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Resume");
       break;
     case Resume: // resume
-      SetStatusText ("Resuming the Bochs simulation");
+      wxLogStatus ("Resuming simulation");
       menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
       break;
   }
@@ -711,7 +720,6 @@ void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
 	  "Already Running", wxOK | wxICON_ERROR);
 	return;
   }
-  wxLogStatus ("Starting a Bochs simulation");
   start_bochs_times++;
   if (start_bochs_times>1) {
 	wxMessageBox (
@@ -1158,9 +1166,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 
 void *
 SimThread::Entry (void)
-{     
-  int argc=1;
-  char *argv[] = {"bochs"};
+{
   // run all the rest of the Bochs simulator code.  This function will
   // run forever, unless a "kill_bochs_request" is issued.  The shutdown
   // procedure is as follows:
@@ -1178,15 +1184,21 @@ SimThread::Entry (void)
   wxLogDebug ("in SimThread, starting at bx_continue_after_config_interface");
   static jmp_buf context;  // this must not go out of scope. maybe static not needed
   if (setjmp (context) == 0) {
-	SIM->set_quit_context (&context);
+    SIM->set_quit_context (&context);
+    int argc=1;
+    char *argv[] = {"bochs"};
     bx_continue_after_config_interface (argc, argv);
     wxLogDebug ("in SimThread, bx_continue_after_config_interface exited normally");
   } else {
     wxLogDebug ("in SimThread, bx_continue_after_config_interface exited by longjmp");
   }
-  wxMutexGuiEnter();
-  theFrame->simStatusChanged (theFrame->Stop, true);
-  wxMutexGuiLeave();
+  // it is possible that the whole interface has already been shut down.
+  // If so, we must end immediately.
+  if (!theFrame->IsClosing ()) {
+    wxMutexGuiEnter();
+    theFrame->simStatusChanged (theFrame->Stop, true);
+    wxMutexGuiLeave();
+  }
   return NULL;
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.19 2002-09-05 07:48:39 bdenney Exp $
+// $Id: wxmain.h,v 1.20 2002-09-05 16:01:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -127,9 +127,15 @@ private:
 class MyFrame: public wxFrame
 {
   MyPanel *panel;
+  // closing is set as soon as the Close(TRUE) is called.  This informs any
+  // actions that may occur after the closing of the frame, so that they can
+  // quit A.S.A.P.
+  bool closing;
 public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
+  ~MyFrame();
   enum StatusChange { Start, Stop, Pause, Resume };
+  bool IsClosing () { return closing; }
   void simStatusChanged (StatusChange change, Boolean popupNotify=false);
   void OnConfigNew(wxCommandEvent& event);
   void OnConfigRead(wxCommandEvent& event);
