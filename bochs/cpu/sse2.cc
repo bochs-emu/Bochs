@@ -1090,12 +1090,31 @@ void BX_CPU_C::MOVDQU_VdqWdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F 70 */
 void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSHUFD_VdqWdqIb: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op, result;
+  Bit16u order = i->Ib();
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  result.xmm32u(0) = op.xmm32u(order & 0x3);
+  result.xmm32u(1) = op.xmm32u((order >> 2) & 0x3);
+  result.xmm32u(2) = op.xmm32u((order >> 4) & 0x3);
+  result.xmm32u(3) = op.xmm32u((order >> 6) & 0x3);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PSHUFD_VdqWdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);

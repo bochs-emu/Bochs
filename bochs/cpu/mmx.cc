@@ -570,7 +570,7 @@ void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
   MMXUW0(result) = SelectMmxWord(op, order);
   MMXUW1(result) = SelectMmxWord(op, order >> 2);
   MMXUW2(result) = SelectMmxWord(op, order >> 4);
-  MMXUW3(result) = SelectMmxWord(op, order >> 5);
+  MMXUW3(result) = SelectMmxWord(op, order >> 6);
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
