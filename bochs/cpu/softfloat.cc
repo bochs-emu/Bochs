@@ -853,14 +853,12 @@ static float32 addFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
 
     if ((aExp == 0) && aSig) {
         if (get_DAZ(status)) {
-            aExp = 0;
             aSig = 0;
         }
         else float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
         if (get_DAZ(status)) {
-            bExp = 0;
             bSig = 0;
         }
         else float_raise(status, float_flag_denormal);
@@ -940,14 +938,12 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
 
     if ((aExp == 0) && aSig) {
         if (get_DAZ(status)) {
-            aExp = 0;
             aSig = 0;
         }
         else float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
         if (get_DAZ(status)) {
-            bExp = 0;
             bSig = 0;
         }
         else float_raise(status, float_flag_denormal);
@@ -1549,7 +1545,8 @@ int float32_unordered(float32 a, float32 b, float_status_t &status)
 
     if (aClass == float_denormal || bClass == float_denormal) 
     {
-        float_raise(status, float_flag_denormal);
+        if (! get_DAZ(status))
+            float_raise(status, float_flag_denormal);
     }
 
     return 0;
@@ -1911,14 +1908,12 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
 
     if ((aExp == 0) && aSig) {
         if (get_DAZ(status)) {
-            aExp = 0;
             aSig = 0;
         }
         else float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
         if (get_DAZ(status)) {
-            bExp = 0;
             bSig = 0;
         }
         else float_raise(status, float_flag_denormal);
@@ -1997,14 +1992,12 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
 
     if ((aExp == 0) && aSig) {
         if (get_DAZ(status)) {
-            aExp = 0;
             aSig = 0;
         }
         else float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
         if (get_DAZ(status)) {
-            bExp = 0;
             bSig = 0;
         }
         else float_raise(status, float_flag_denormal);
@@ -2595,7 +2588,8 @@ int float64_unordered(float64 a, float64 b, float_status_t &status)
 
     if (aClass == float_denormal || bClass == float_denormal) 
     {
-        float_raise(status, float_flag_denormal);
+        if (! get_DAZ(status))
+            float_raise(status, float_flag_denormal);
     }
 
     return 0;
