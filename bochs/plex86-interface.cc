@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.4 2003-01-02 17:05:47 kevinlawton Exp $
+//// $Id: plex86-interface.cc,v 1.5 2003-01-08 17:22:06 kevinlawton Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -30,7 +30,7 @@
 
 unsigned     plex86State = 0;
 int          plex86FD = -1;
-Bit8u       *plex86MemPtr = 0;
+static Bit8u       *plex86MemPtr = 0;
 size_t       plex86MemSize = 0;
 Bit8u       *plex86PrintBuffer = 0;
 guest_cpu_t *plex86GuestCPU = 0;
@@ -101,73 +101,6 @@ plex86CpuInfo(BX_CPU_C *cpu)
   return(1); // OK.
 }
 
-  Bit8u *
-plex86AllocateMemory(unsigned nMegs)
-{
-  Bit8u *ptr;
-
-  plex86MemSize = nMegs * 1024 * 1024;
-
-  if (plex86FD < 0) {
-    // If the plex86 File Descriptor has not been opened yet.
-    if ( !openFD() ) {
-      return(0);
-      }
-    }
-
-  // Allocate memory from the host OS for the virtual physical memory.
-  fprintf(stderr, "plex86: allocating %dMB of physical memory in VM.\n", nMegs);
-  if (ioctl(plex86FD, PLEX86_ALLOCVPHYS, nMegs) == -1) {
-    perror("ioctl ALLOCVPHYS: ");
-    plex86TearDown();
-    return(0);
-    }
-  plex86State |= Plex86StateMemAllocated;
-
-  // Map guest virtual physical memory into user address space and zero it.
-  fprintf(stderr, "plex86: mapping virtualized physical memory into monitor.\n");
-  ptr = (Bit8u*) mmap(NULL, plex86MemSize, PROT_READ | PROT_WRITE,
-      MAP_SHARED, plex86FD, 0);
-  if (ptr == (void *) -1) {
-    perror("mmap of physical pages");
-    plex86TearDown();
-    return(0);
-    }
-  plex86State |= Plex86StateMMapPhyMem;
-
-  plex86MemPtr = ptr;
-  // No need to zero physical memory.  It's zeroed by the plex86 module.
-
-  // Create a memory mapping of the monitor's print buffer into
-  // user memory.  This is used for efficient printing of info that
-  // the monitor prints out.
-  fprintf(stderr, "plex86: mapping monitor print buffer into user mem.\n");
-  plex86PrintBuffer = (Bit8u*) mmap(NULL, 4096, PROT_READ,
-      MAP_SHARED, plex86FD, plex86MemSize + 0*4096);
-  if (plex86PrintBuffer == (void *) -1) {
-    perror("mmap of monitor print buffer");
-    plex86TearDown();
-    return(0);
-    }
-  plex86State |= Plex86StateMMapPrintBuffer;
-
-  // Create a memory mapping of the monitor's guest_cpu structure into
-  // user memory.  This is used for passing the guest_cpu state between
-  // user and kernel/monitor space.
-  fprintf(stderr, "plex86: mapping guest_cpu structure into user mem.\n");
-  plex86GuestCPU = (guest_cpu_t *) mmap(NULL, 4096, PROT_READ | PROT_WRITE,
-      MAP_SHARED, plex86FD, plex86MemSize + 1*4096);
-  if (plex86GuestCPU == (void *) -1) {
-    perror("mmap of guest_cpu structure");
-    plex86TearDown();
-    return(0);
-    }
-  plex86State |= Plex86StateMMapGuestCPU;
-  // No need to zero guest_cpu structure.  Kernel module does that.
-
-  return(ptr);
-}
-
   unsigned
 plex86TearDown(void)
 {
@@ -186,10 +119,6 @@ plex86TearDown(void)
 
   if ( plex86State & Plex86StateMMapPhyMem ) {
     fprintf(stderr, "plex86: unmapping guest physical memory.\n");
-    if (munmap(plex86MemPtr, plex86MemSize) != 0) {
-      perror ("munmap of guest physical memory");
-      return(0); // Failed.
-      }
     }
   plex86State &= ~Plex86StateMMapPhyMem;
 
@@ -491,4 +420,76 @@ copyPlex86DescriptorToBochs(BX_CPU_C *cpu,
   dword1 = dwordPtr[0];
   dword2 = dwordPtr[1];
   cpu->parse_descriptor(dword1, dword2, bochsDesc);
+}
+
+  unsigned
+plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
+{
+  plex86IoctlRegisterMem_t ioctlMsg;
+
+  if (plex86FD < 0) {
+    // If the plex86 File Descriptor has not been opened yet.
+    if ( !openFD() ) {
+      return(0); // Error.
+      }
+    }
+
+  if (bytes & 0x3fffff) {
+    // Memory size must be multiple of 4Meg.
+    fprintf(stderr, "plex86: RegisterGuestMemory: memory size of %u bytes"
+                    "is not a 4Meg increment.\n", bytes);
+    return(0); // Error.
+    }
+  if ( ((unsigned)vector) & 0xfff ) {
+    // Memory vector must be page aligned.
+    fprintf(stderr, "plex86: RegisterGuestMemory: vector not page aligned.");
+    return(0); // Error.
+    }
+  ioctlMsg.nMegs = bytes >> 20;
+  ioctlMsg.vector = vector;
+  if (ioctl(plex86FD, PLEX86_REGISTER_MEMORY, &ioctlMsg) == -1) {
+    return(0); // Error.
+    }
+  plex86MemSize = bytes;
+
+  /* For now... */
+plex86State |= Plex86StateMemAllocated;
+plex86State |= Plex86StateMMapPhyMem;
+
+  // Create a memory mapping of the monitor's print buffer into
+  // user memory.  This is used for efficient printing of info that
+  // the monitor prints out.
+  fprintf(stderr, "plex86: mapping monitor print buffer into user mem.\n");
+  plex86PrintBuffer = (Bit8u*) mmap(NULL, 4096, PROT_READ,
+      MAP_SHARED, plex86FD, plex86MemSize + 0*4096);
+  if (plex86PrintBuffer == (void *) -1) {
+    perror("mmap of monitor print buffer");
+    plex86TearDown();
+    return(0);
+    }
+  plex86State |= Plex86StateMMapPrintBuffer;
+
+  // Create a memory mapping of the monitor's guest_cpu structure into
+  // user memory.  This is used for passing the guest_cpu state between
+  // user and kernel/monitor space.
+  fprintf(stderr, "plex86: mapping guest_cpu structure into user mem.\n");
+  plex86GuestCPU = (guest_cpu_t *) mmap(NULL, 4096, PROT_READ | PROT_WRITE,
+      MAP_SHARED, plex86FD, plex86MemSize + 1*4096);
+  if (plex86GuestCPU == (void *) -1) {
+    perror("mmap of guest_cpu structure");
+    plex86TearDown();
+    return(0);
+    }
+  plex86State |= Plex86StateMMapGuestCPU;
+  // No need to zero guest_cpu structure.  Kernel module does that.
+
+  fprintf(stderr, "plex86: RegisterGuestMemory: %uMB succeeded.\n",
+          ioctlMsg.nMegs);
+  return(1); // OK.
+}
+
+  unsigned
+plex86UnregisterGuestMemory(Bit8u *vector, unsigned bytes)
+{
+  return(1); // OK.
 }
