@@ -1,0 +1,92 @@
+----------------------------------------------------------------------
+Patch name: patch.os2-boot-dhenriquez
+Author: Diego Henriquez
+Date: Sat Nov 15 01:16:51 CET 2003
+Status: unknown
+
+Detailed description:
+
+I found this when browsing archive of the ml. It's supposed
+to help with os2 booting.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.149
+diff -u -r1.149 cpu.h
+--- cpu/cpu.h	13 Nov 2003 21:17:31 -0000	1.149
++++ cpu/cpu.h	14 Nov 2003 17:19:36 -0000
+@@ -1238,6 +1238,12 @@
+ 
+   bx_address prev_esp;
+ 
++  // For OS/2 boot
++  Bit16u   exceptionCS;
++  Bit16u   exceptionSS;
++  bx_bool  exceptionCHK;
++
++
+ #define BX_INHIBIT_INTERRUPTS 0x01
+ #define BX_INHIBIT_DEBUG      0x02
+   // What events to inhibit at any given time.  Certain instructions
+Index: cpu/ctrl_xfer_pro.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/ctrl_xfer_pro.cc,v
+retrieving revision 1.23
+diff -u -r1.23 ctrl_xfer_pro.cc
+--- cpu/ctrl_xfer_pro.cc	17 Aug 2003 18:15:04 -0000	1.23
++++ cpu/ctrl_xfer_pro.cc	14 Nov 2003 17:19:41 -0000
+@@ -787,6 +787,10 @@
+           Bit32u   parameter_dword[32];
+           Bit32u   temp_ESP;
+ 
++          BX_CPU_THIS_PTR exceptionCHK = 1;                                                  // Help for OS2
++          BX_CPU_THIS_PTR exceptionCS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value; // Help for OS2
++          BX_CPU_THIS_PTR exceptionSS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value; // Help for OS2
++
+ //BX_INFO(("CALL: Call Gate: to more priviliged level"));
+ 
+           // get new SS selector for new privilege level from TSS
+@@ -966,13 +970,14 @@
+             push_32(return_EIP);
+             }
+ 
++          BX_CPU_THIS_PTR exceptionCHK = 0;   
+           return;
+           }
+ 
+         // CALL GATE TO SAME PRIVILEGE
+         else {
+           Bit32u temp_ESP;
+-
++ 
+ //BX_INFO(("CALL: Call Gate: to same priviliged level"));
+           if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+             temp_ESP = ESP;
+Index: cpu/exception.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/exception.cc,v
+retrieving revision 1.35
+diff -u -r1.35 exception.cc
+--- cpu/exception.cc	28 Aug 2003 00:10:40 -0000	1.35
++++ cpu/exception.cc	14 Nov 2003 17:19:45 -0000
+@@ -982,6 +982,11 @@
+       BX_CPU_THIS_PTR assert_RF ();
+       break;
+     case 14: // page fault
++      if (BX_CPU_THIS_PTR exceptionCHK) { // for OS/2
++          BX_CPU_THIS_PTR exceptionCHK = 0;
++          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR exceptionCS;
++          BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR exceptionSS;
++      }
+       push_error = 1;
+       exception_type = BX_ET_PAGE_FAULT;
+       // ??? special format error returned
