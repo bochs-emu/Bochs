@@ -99,68 +99,40 @@ bx_devices_c::init(void)
 {
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
-#if BX_USE_UM_SMF
   unmapped = &bx_unmapped;
-#else
-  unmapped = new bx_unmapped_c();
-#endif
   unmapped->init(this);
 
 #if BX_PCI_SUPPORT
   // PCI logic (i440FX)
-#if BX_USE_PCI_SMF
   pci = & bx_pci;
-#else
-  pci = new bx_pci_c();
-#endif
   pci->init(this);
   pci->reset();
 #endif
 
 
   // CMOS RAM & RTC
-#if BX_USE_CMOS_SMF
   cmos = &bx_cmos;
-#else
-  cmos = new bx_cmos_c();
-#endif
   cmos->init(this);
   cmos->reset();
 
   /*--- HARD DRIVE ---*/
-#if BX_USE_HD_SMF
   hard_drive = &bx_hard_drive;
-#else
-  hard_drive = new bx_hard_drive_c();
-#endif
   hard_drive->init(this, cmos);
 
   //--- FLOPPY ---
-#if BX_USE_FD_SMF
   floppy = &bx_floppy;
-#else
-  floppy = new bx_floppy_ctrl_c();
-#endif
   floppy->init(this, cmos);
   floppy->reset(BX_RESET_HARDWARE);
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
-#if BX_USE_SB16_SMF
   sb16 = &bx_sb16;
-#else
-  sb16 = new bx_sb16_c();
-#endif
   sb16->init(this);
 #endif
 
 #if BX_SUPPORT_VGA
   /*--- VGA adapter ---*/
-#if BX_USE_VGA_SMF
   vga = & bx_vga;
-#else
-  vga = new bx_vga_c();
-#endif
   vga->init(this, cmos);
 #else
   /*--- HGA adapter ---*/
@@ -168,59 +140,31 @@ bx_devices_c::init(void)
 #endif
 
   /*--- 8259A PIC ---*/
-#if BX_USE_PIC_SMF
   pic = & bx_pic;
-#else
-  pic = new bx_pic_c();
-#endif
   pic->init(this);
 
   /*--- 8254 PIT ---*/
-#if BX_USE_PIT_SMF
   pit = & bx_pit;
-#else
-  pit = new bx_pit_c();
-#endif
   pit->init(this);
 
 
-#if BX_USE_DMA_SMF
   dma = &bx_dma;
-#else
-  dma = new bx_dma_c();
-#endif
   dma->init(this);
 
-#if BX_USE_KEY_SMF
   keyboard = &bx_keyboard;
-#else
-  keyboard = new bx_keyb_c();
-#endif
   keyboard->init(this, cmos);
 
   /*--- PARALLEL PORT ---*/
-#if BX_USE_PAR_SMF
   parallel = &bx_parallel;
-#else
-  parallel = new bx_parallel_c();
-#endif
   parallel->init(this);
 
   /*--- SERIAL PORT ---*/
-#if BX_USE_SER_SMF
   serial = &bx_serial;
-#else
-  serial = new bx_serial_c();
-#endif
   serial->init(this);
 
 #if BX_NE2K_SUPPORT
   // NE2000 NIC
-#if BX_USE_NE2K_SMF
   ne2k = &bx_ne2k;
-#else
-  ne2k = new bx_ne2k_c();
-#endif
   ne2k->init(this);
 #endif  // #if BX_NE2K_SUPPORT
 
@@ -233,11 +177,11 @@ bx_devices_c::init(void)
 
   // system hardware
   register_io_read_handler( this,
-                            read_handler,
+                            &read_handler,
                             0x0092,
                             "Port 92h System Control" );
   register_io_write_handler(this,
-                            write_handler,
+                            &write_handler,
                             0x0092,
                             "Port 92h System Control" );
 
