@@ -157,7 +157,7 @@ static void processMouseXY( int x, int y, int windows_state, int implied_state_c
   if ( old_bx_state!=mouse_button_state)
   {
     /* Make up for missing message */
-    genlog->info( "&&&missing mouse state change\r\n");
+    BX_INFO(( "&&&missing mouse state change\r\n"));
     EnterCriticalSection( &stInfo.keyCS);
     enq_mouse_event();
     mouse_button_state=old_bx_state;

@@ -33,6 +33,8 @@ extern "C" {
 #include "linux/signal.h"
 }
 
+#define LOG_THIS genlog->
+
 // Use this to hold a pointer to the instruction since
 // we can't pass this to the FPU emulation routines, which
 // will ultimately call routines here.
@@ -155,7 +157,7 @@ fpu_verify_area(unsigned what, void *ptr, unsigned n)
   void
 FPU_printall(void)
 {
-  genlog->panic("FPU_printall\n");
+  BX_PANIC(("FPU_printall\n"));
 }
 
 
@@ -179,7 +181,7 @@ fpu_get_user(void *ptr, unsigned len)
       BX_CPU.read_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
-      genlog->panic("fpu_get_user: len=%u\n", len);
+      BX_PANIC(("fpu_get_user: len=%u\n", len));
     }
   return(val32);
 }
@@ -205,7 +207,7 @@ fpu_put_user(unsigned val, void *ptr, unsigned len)
       BX_CPU.write_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
-      genlog->panic("fpu_put_user: len=%u\n", len);
+      BX_PANIC(("fpu_put_user: len=%u\n", len));
     }
 }
 
@@ -223,28 +225,28 @@ math_abort(struct info *info, unsigned int signal)
     case SIGFPE:
       if (BX_CPU.cr0.ne == 0) {
         // MSDOS compatibility external interrupt (IRQ13)
-        genlog->panic("math_abort: MSDOS compatibility not supported yet\n");
+        BX_PANIC ("math_abort: MSDOS compatibility not supported yet\n");
         }
       BX_CPU.exception(BX_MF_EXCEPTION, 0, 0);
       // execution does not reach here
 
     case SIGILL:
-      genlog->panic("math_abort: SIGILL not implemented yet.\n");
+      BX_PANIC ("math_abort: SIGILL not implemented yet.\n");
       break;
     case SIGSEGV:
-      genlog->panic("math_abort: SIGSEGV not implemented yet.\n");
+      BX_PANIC ("math_abort: SIGSEGV not implemented yet.\n");
       break;
     }
 
 #else
   UNUSED(signal);
-  genlog->panic("math_abort: CPU<4 not supported yet\n");
+  BX_INFO("math_abort: CPU<4 not supported yet\n");
 #endif
 }
 
   int
 printk(const char * fmt, ...)
 {
-  genlog->info("printk not complete: %s\n", fmt);
+  BX_INFO(("printk not complete: %s\n", fmt));
   return(0); // for now
 }

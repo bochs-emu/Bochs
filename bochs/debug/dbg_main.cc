@@ -315,10 +315,10 @@ process_sim2:
 
 
   if (bx_debug_rc_fname[0] == '\0') {
-    genlog->info("Warning: no rc file specified.\n", argv[0]);
+    BX_INFO(("Warning: no rc file specified.\n", argv[0]));
     }
   else {
-    genlog->info("%s: using rc file '%s'.\n", argv[0], bx_debug_rc_fname);
+    BX_INFO (("%s: using rc file '%s'.\n", argv[0], bx_debug_rc_fname));
     // if there's an error, the user will know about it before proceeding
     (void) bx_nest_infile(bx_debug_rc_fname);
     }
@@ -371,7 +371,7 @@ process_sim2:
   void
 bx_dbg_usage(void)
 {
-  genlog->info("usage: %s [-rc path] [-sim1 ... ] [-sim2 ... ]\n", argv0);
+  fprintf (stderr, "usage: %s [-rc path] [-sim1 ... ] [-sim2 ... ]\n", argv0);
 }
 
 

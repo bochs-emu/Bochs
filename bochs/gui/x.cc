@@ -321,8 +321,8 @@ if (bx_options.private_colormap) {
   dimension_x = columns * font_width;
   dimension_y = rows * font_height + headerbar_y;
 
-genlog->info("font_width = %u\n", (unsigned) font_width);
-genlog->info("font_height = %u\n", (unsigned) font_height);
+BX_INFO(("font_width = %u\n", (unsigned) font_width));
+BX_INFO(("font_height = %u\n", (unsigned) font_height));
 
   /* create opaque window */
   win = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
@@ -383,7 +383,7 @@ genlog->info("font_height = %u\n", (unsigned) font_height);
   black_pixel = col_vals[0];
   white_pixel = col_vals[15];
 
-  genlog->info("default_depth = %d\n", default_depth);
+  BX_INFO(("default_depth = %d\n", default_depth));
 
   //select_visual();
 
@@ -469,12 +469,12 @@ genlog->info("font_height = %u\n", (unsigned) font_height);
   XMapWindow(bx_x_display, win);
   XSync(bx_x_display, /* no discard */ 0);
 
-  genlog->info("waiting for MapNotify\n");
+  BX_INFO(("waiting for MapNotify\n"));
   while (1) {
     XNextEvent(bx_x_display, &report);
     if (report.type == MapNotify) break;
     }
-  genlog->info("MapNotify found.\n");
+  BX_INFO(("MapNotify found.\n"));
 
 {
   char *imagedata;
@@ -577,17 +577,17 @@ bx_gui_c::handle_events(void)
       break;
 
     case ConfigureNotify:
-//genlog->info("ConfigureNotify Xevent\n");
+      BX_INFO(("ConfigureNotify Xevent\n"));
       show_headerbar();
       break;
 
     case ButtonPress:
       button_event = (XButtonEvent *) &report;
-//genlog->info("xxx: buttonpress\n");
+//BX_INFO(("xxx: buttonpress\n");
       if (button_event->y < BX_HEADER_BAR_Y) {
-//genlog->info("xxx:   in headerbar\n");
+//BX_INFO("xxx:   in headerbar\n");
         if (mouse_update) {
-//genlog->info("xxx:   mouse_update=1\n");
+//BX_INFO(("xxx:   mouse_update=1\n"));
           send_keyboard_mouse_status();
           mouse_update = 0;
           }
@@ -599,28 +599,28 @@ bx_gui_c::handle_events(void)
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-//genlog->info("xxx:   x,y=(%d,%d)\n", current_x, current_y);
+//BX_INFO(("xxx:   x,y=(%d,%d)\n", current_x, current_y));
       switch (button_event->button) {
         case Button1:
-//genlog->info("xxx:   button1\n");
+//BX_INFO(("xxx:   button1\n"));
           mouse_button_state |= 0x01;
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
-//genlog->info("xxx:   button2\n");
+//BX_INFO(("xxx:   button2\n"));
 
 	      // (mch) Hack for easier mouse handling (toggle mouse enable)
 	      mouse_handler();
 	      if (bx_options.mouse_enabled) {
-		    genlog->info("[x] Mouse enabled\n");
+		    BX_INFO(("[x] Mouse enabled\n"));
 		    mouse_enable_x = current_x;
 		    mouse_enable_y = current_y;
 		    disable_cursor();
 		    // Move the cursor to a 'safe' place
 		    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 	      } else {
-		    genlog->info("[x] Mouse disabled\n");
+		    BX_INFO(("[x] Mouse disabled\n"));
 		    enable_cursor();
 		    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
 	      }
@@ -630,7 +630,7 @@ bx_gui_c::handle_events(void)
           //mouse_update = 0;
           break;
         case Button3:
-//genlog->info("xxx:   button3\n");
+//BX_INFO(("xxx:   button3\n"));
           mouse_button_state |= 0x02;
           send_keyboard_mouse_status();
           mouse_update = 0;
@@ -640,11 +640,11 @@ bx_gui_c::handle_events(void)
 
     case ButtonRelease:
       button_event = (XButtonEvent *) &report;
-//genlog->info("xxx: buttonrelease\n");
+//BX_INFO(("xxx: buttonrelease\n"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-//genlog->info("xxx:   in headerbar\n");
+//BX_INFO(("xxx:   in headerbar\n"));
         if (mouse_update) {
-//genlog->info("xxx:   mouse_update=1\n");
+//BX_INFO(("xxx:   mouse_update=1\n"));
           send_keyboard_mouse_status();
           mouse_update = 0;
           }
@@ -656,22 +656,22 @@ bx_gui_c::handle_events(void)
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-//genlog->info("xxx:   x,y=(%d,%d)\n", current_x, current_y);
+//BX_INFO(("xxx:   x,y=(%d,%d)\n", current_x, current_y));
       switch (button_event->button) {
         case Button1:
-//genlog->info("xxx:   button1\n");
+//BX_INFO(("xxx:   button1\n"));
           mouse_button_state &= ~0x01;
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
-//genlog->info("xxx:   button2\n");
+//BX_INFO(("xxx:   button2\n"));
           //mouse_button_state &= ~;
           //send_keyboard_mouse_status();
           //mouse_update = 0;
           break;
         case Button3:
-//genlog->info("xxx:   button3\n");
+//BX_INFO(("xxx:   button3\n"));
           mouse_button_state &= ~0x02;
           send_keyboard_mouse_status();
           mouse_update = 0;
@@ -698,34 +698,34 @@ bx_gui_c::handle_events(void)
       current_x = pointer_event->x;
       current_y = pointer_event->y;
       mouse_update = 1;
-//genlog->info("xxx: motionNotify x,y=(%d,%d)\n", current_x, current_y);
+//BX_INFO(("xxx: motionNotify x,y=(%d,%d)\n", current_x, current_y));
       break;
 
     case EnterNotify:
       enter_event = (XEnterWindowEvent *) &report;
       prev_x = current_x = enter_event->x;
       prev_y = current_y = enter_event->y;
-//genlog->info("xxx: enterNotify x,y=(%d,%d)\n", current_x, current_y);
+//BX_INFO(("xxx: enterNotify x,y=(%d,%d)\n", current_x, current_y));
       break;
 
     case LeaveNotify:
       leave_event = (XLeaveWindowEvent *) &report;
       prev_x = current_x = -1;
       prev_y = current_y = -1;
-//genlog->info("xxx: LeaveNotify x,y set to -1\n");
+//BX_INFO(("xxx: LeaveNotify x,y set to -1\n"));
       break;
 
     case MapNotify:
       /* screen needs redraw, since X would have tossed previous
        * requests before window mapped
        */
-//genlog->info("xxx: mapnotify: found\n");
+//BX_INFO(("xxx: mapnotify: found\n"));
       //retval = 1;
       break;
 
     default:
 	  // (mch) Ignore...
-	  // genlog->info("xxx: default Xevent type\n");
+	  // BX_INFO(("xxx: default Xevent type\n"));
       /* all events selected by StructureNotifyMask are thrown away here,
        * since nothing is done with them */
       break;
@@ -733,7 +733,7 @@ bx_gui_c::handle_events(void)
   } /* end while */
 
   if (mouse_update) {
-    //genlog->info("xxx: bottom, send status\n");
+    //BX_INFO(("xxx: bottom, send status\n"));
     send_keyboard_mouse_status();
     }
 }
@@ -742,8 +742,8 @@ bx_gui_c::handle_events(void)
   void
 send_keyboard_mouse_status(void)
 {
-//genlog->info("xxx: prev=(%d,%d) curr=(%d,%d)\n",
-//  prev_x, prev_y, current_x, current_y);
+//BX_INFO(("xxx: prev=(%d,%d) curr=(%d,%d)\n",
+//  prev_x, prev_y, current_x, current_y));
 
   if ( (prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) {
     int dx, dy;
@@ -753,7 +753,7 @@ send_keyboard_mouse_status(void)
     dy = -(current_y - prev_y - warp_dy);
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 
-//genlog->info("xxx: MOUSE_MOTION: dx=%d, dy=%d\n", (int) dx, (int) dy);
+//BX_INFO(("xxx: MOUSE_MOTION: dx=%d, dy=%d\n", (int) dx, (int) dy));
     bx_devices.keyboard->mouse_motion( dx, dy, mouse_button_state);
     //if (warped) {
     //  prev_x = current_x = -1;
@@ -1240,7 +1240,7 @@ headerbar_click(int x, int y)
   void
 bx_gui_c::exit(void)
 {
-  genlog->info("Note: X11: bx_gui_c::exit() not implemented yet.\n");
+  BX_INFO(("Note: X11: bx_gui_c::exit() not implemented yet.\n"));
 }
 
 static void warp_cursor (int dx, int dy)
