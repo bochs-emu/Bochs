@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.5 2002-03-14 21:44:45 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.6 2002-03-15 15:04:29 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -392,3 +392,5 @@ extern bx_simulator_interface_c *SIM;
 
 extern void siminterface_init ();
 extern int bx_continue_after_control_panel (int argc, char *argv[]);
+
+#include "hacks.h"
