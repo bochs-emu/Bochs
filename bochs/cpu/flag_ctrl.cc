@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.14 2002-10-24 21:05:42 bdenney Exp $
+// $Id: flag_ctrl.cc,v 1.15 2003-03-13 00:49:20 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -153,7 +153,17 @@ BX_CPU_C::PUSHF_Fv(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    push_64(read_eflags() & 0x00fcffff);
+    if (i->os32L()) {
+      push_64(read_eflags() & 0x00fcffff);
+      }
+    else
+      {
+      Bit16u flags16;
+
+      flags16 = read_flags();
+      write_virtual_word(BX_SEG_REG_SS, RSP-2, &flags16);
+      RSP -= 2;
+      }
     }
   else
 #endif
@@ -180,13 +190,28 @@ BX_CPU_C::POPF_Fv(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
       Bit64u flags64;
 
-      pop_64(&flags64);
-      flags32 = flags64;
-      changeMask |= 0x240000; // ID,AC
-      if (CPL==0)
-        changeMask |= (3<<12); // IOPL
-      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-        changeMask |= (1<<9); // IF
+      if (i->os32L()) {
+        pop_64(&flags64);
+        flags32 = flags64;
+        changeMask |= 0x240000; // ID,AC
+        if (CPL==0)
+          changeMask |= (3<<12); // IOPL
+        if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+          changeMask |= (1<<9); // IF
+        }
+      else
+        {
+        Bit16u flags16;
+
+        read_virtual_word(BX_SEG_REG_SS, RSP, &flags16);
+
+        RSP += 2;
+        flags32 = flags16;
+        if (CPL==0)
+          changeMask |= (3<<12); // IOPL
+        if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+          changeMask |= (1<<9); // IF
+        }
       }
     else
 #endif  // #if BX_SUPPORT_X86_64
