@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.102 2003-08-04 09:14:01 akrisak Exp $
+// $Id: dbg_main.cc,v 1.103 2003-08-04 13:36:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2627,11 +2627,13 @@ bx_dbg_info_registers_command(int which_regs_mask)
       reg = cpu.gs.sel;
       dbg_printf ( "gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
     }
-//#if BX_SUPPORT_FPU == 1
-//    if (which_regs_mask & BX_INFO_FPU_REGS) {
-//      BX_CPU(i)->fpu_print_regs ();
-//    }
-//#endif
+/*
+#if BX_SUPPORT_FPU == 1
+    if (which_regs_mask & BX_INFO_FPU_REGS) {
+      BX_CPU(i)->print_state_FPU ();
+    }
+#endif
+*/
   }
 }
 

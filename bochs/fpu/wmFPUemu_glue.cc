@@ -126,8 +126,7 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
 static double sigh_scale_factor = pow(2.0, -31.0);
 static double sigl_scale_factor = pow(2.0, -63.0);
 
-void
-BX_CPU_C::print_state_FPU()
+void BX_CPU_C::print_state_FPU()
 {
   Bit32u reg;
   reg = i387.cwd;
