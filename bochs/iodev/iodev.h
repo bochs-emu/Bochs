@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.26 2002-10-24 03:47:10 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.27 2002-10-24 03:50:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -345,38 +345,36 @@ private:
   Boolean is_parallel_enabled ();
   };
 
+
+
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
-
-#include "iodev/cmos.h"
-#include "iodev/unmapped.h"
-#include "iodev/biosdev.h"
 #if BX_SUPPORT_VGA
 #  include "iodev/vga.h"
 #else
 #  include "iodev/hga.h"
 #endif
-
-#include "iodev/pic.h"
-#include "iodev/floppy.h"
-#include "iodev/dma.h"
-#include "iodev/parallel.h"
-#include "iodev/serial.h"
-#include "iodev/keyboard.h"
-#include "iodev/harddrv.h"
-
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
 #endif
-
+#include "iodev/biosdev.h"
+#include "iodev/cmos.h"
+#include "iodev/dma.h"
+#include "iodev/floppy.h"
+#include "iodev/harddrv.h"
 #if BX_IODEBUG_SUPPORT
 #   include "iodev/iodebug.h"
 #endif
+#include "iodev/keyboard.h"
+#include "iodev/parallel.h"
+#include "iodev/pic.h"
 #include "iodev/pit.h"
 #include "iodev/pit_wrap.h"
+#include "iodev/serial.h"
 #if BX_SUPPORT_SB16
 #  include "iodev/sb16.h"
 #endif
+#include "iodev/unmapped.h"
 #include "iodev/eth.h"
 #include "iodev/ne2k.h"
 #include "iodev/guest2host.h"
