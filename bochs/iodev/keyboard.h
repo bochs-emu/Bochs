@@ -140,9 +140,7 @@ private:
 	    break;
 
 	  default:
-#define LOG_THIS bx_keyboard.
-	    BX_PANIC(("mouse: invalid resolution_cpmm"));
-#undef LOG_THIS
+	    bx_keyboard.panic("mouse: invalid resolution_cpmm");
 	  };
 	  return ret;
 	}
