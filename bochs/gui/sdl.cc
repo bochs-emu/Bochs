@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.54 2004-08-15 19:27:14 vruppert Exp $
+// $Id: sdl.cc,v 1.55 2004-11-06 17:03:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -622,78 +622,7 @@ void bx_sdl_gui_c::graphics_tile_update(
 
   switch (vga_bpp)
   {
-    case 32:
-      {
-        Uint32 *snapshot32 = (Uint32 *)snapshot;
-        do
-        {
-          buf_row = buf;
-          j = tilewidth;
-          do
-          {
-            *buf++ = *snapshot32++;
-          } while( --j );
-          buf = buf_row + disp;
-        } while( --i);
-      }
-      break;
-    case 24:
-      {
-        do
-        {
-          buf_row = buf;
-          j = tilewidth;
-          do
-          {
-            buf[0] = snapshot[0];
-            buf[0] |= (snapshot[1] << 8);
-            buf[0] |= (snapshot[2] << 16);
-            buf++;
-            snapshot+=3;
-          } while( --j );
-          buf = buf_row + disp;
-        } while( --i);
-      }
-      break;
-    case 16:
-      {
-        Uint16 *snapshot16 = (Uint16 *)snapshot;
-        do
-        {
-          buf_row = buf;
-          j = tilewidth;
-          do
-          {
-            buf[0] = (snapshot16[0] & 0x001f) << 3;
-            buf[0] |= (snapshot16[0] & 0x07e0) << 5;
-            buf[0] |= (snapshot16[0] & 0xf800) << 8;
-            buf++;
-            snapshot16++;
-          } while( --j );
-          buf = buf_row + disp;
-        } while( --i);
-      }
-      break;
-    case 15:
-      {
-        Uint16 *snapshot16 = (Uint16 *)snapshot;
-        do
-        {
-          buf_row = buf;
-          j = tilewidth;
-          do
-          {
-            buf[0] = (snapshot16[0] & 0x001f) << 3;
-            buf[0] |= (snapshot16[0] & 0x03e0) << 6;
-            buf[0] |= (snapshot16[0] & 0x7c00) << 9;
-            buf++;
-            snapshot16++;
-          } while( --j );
-          buf = buf_row + disp;
-        } while( --i);
-      }
-      break;
-    default: /* 8 bpp */
+    case 8: /* 8 bpp */
       do
       {
         buf_row = buf;
@@ -704,6 +633,10 @@ void bx_sdl_gui_c::graphics_tile_update(
         } while( --j );
         buf = buf_row + disp;
       } while( --i);
+      break;
+    default:
+      BX_PANIC(("%u bpp modes handled by new graphics API", vga_bpp));
+      return;
   }
 }
 

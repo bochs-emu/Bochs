@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.73 2004-10-24 20:04:51 vruppert Exp $
+// $Id: wx.cc,v 1.74 2004-11-06 17:03:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -109,7 +109,9 @@ struct {
 wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
 unsigned long num_events = 0;
+#if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
+#endif
 
 
 //////////////////////////////////////////////////////////////
@@ -1094,70 +1096,12 @@ bx_wx_gui_c::clear_screen(void)
 static void 
 UpdateScreen(unsigned char *newBits, int x, int y, int width, int height) 
 {
-  Bit16u *newBits16 = (Bit16u *)newBits;
-
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen got lock. wxScreen=%p", wxScreen)));
   if(wxScreen != NULL) {
     switch (vga_bpp) {
-      case 32:
-        for(int i = 0; i < height; i++) {
-          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
-          for(int c = 0; c < width; c++) {
-            unsigned pixel = ((i * width) + c) * 4;
-            pwxScreen[0] = newBits[pixel+2];
-            pwxScreen[1] = newBits[pixel+1];
-            pwxScreen[2] = newBits[pixel];
-            pwxScreen += 3;
-          }
-          y++;
-          if(y >= wxScreenY) break;
-        }
-        break;
-      case 24:
-        for(int i = 0; i < height; i++) {
-          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
-          for(int c = 0; c < width; c++) {
-            unsigned pixel = ((i * width) + c) * 3;
-            pwxScreen[0] = newBits[pixel+2];
-            pwxScreen[1] = newBits[pixel+1];
-            pwxScreen[2] = newBits[pixel];
-            pwxScreen += 3;
-          }
-          y++;
-          if(y >= wxScreenY) break;
-        }
-        break;
-      case 16:
-        for(int i = 0; i < height; i++) {
-          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
-          for(int c = 0; c < width; c++) {
-            unsigned pixel = (i * width) + c;
-            pwxScreen[0] = (newBits16[pixel] & 0xF800) >> 8;
-            pwxScreen[1] = (newBits16[pixel] & 0x07e0) >> 3;
-            pwxScreen[2] = (newBits16[pixel] & 0x001f) << 3;
-            pwxScreen += 3;
-          }
-          y++;
-          if(y >= wxScreenY) break;
-        }
-        break;
-      case 15:
-        for(int i = 0; i < height; i++) {
-          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
-          for(int c = 0; c < width; c++) {
-            unsigned pixel = (i * width) + c;
-            pwxScreen[0] = (newBits16[pixel] & 0x7c00) >> 7;
-            pwxScreen[1] = (newBits16[pixel] & 0x03e0) >> 2;
-            pwxScreen[2] = (newBits16[pixel] & 0x001f) << 3;
-            pwxScreen += 3;
-          }
-          y++;
-          if(y >= wxScreenY) break;
-        }
-        break;
-      default: /* 8 bpp */
+      case 8: /* 8 bpp */
         for(int i = 0; i < height; i++) {
           char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
           for(int c = 0; c < width; c++) {
@@ -1170,6 +1114,10 @@ UpdateScreen(unsigned char *newBits, int x, int y, int width, int height)
           y++;
           if(y >= wxScreenY) break;
         }
+        break;
+      default:
+        BX_PANIC(("%u bpp modes handled by new graphics API", vga_bpp));
+        return;
     }
   } else {
     IFDBG_VGA (wxLogDebug (wxT ("UpdateScreen with null wxScreen")));

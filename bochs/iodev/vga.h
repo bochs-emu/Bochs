@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.43 2004-08-24 10:15:56 vruppert Exp $
+// $Id: vga.h,v 1.44 2004-11-06 17:03:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,6 +23,25 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+
+// Make colour
+#define MAKE_COLOUR(red, red_shiftfrom, red_shiftto, red_mask, \
+                    green, green_shiftfrom, green_shiftto, green_mask, \
+                    blue, blue_shiftfrom, blue_shiftto, blue_mask) \
+( \
+ ((((red_shiftto) > (red_shiftfrom)) ? \
+  (red) << ((red_shiftto) - (red_shiftfrom)) : \
+  (red) >> ((red_shiftfrom) - (red_shiftto))) & \
+  (red_mask)) | \
+ ((((green_shiftto) > (green_shiftfrom)) ? \
+  (green) << ((green_shiftto) - (green_shiftfrom)) : \
+  (green) >> ((green_shiftfrom) - (green_shiftto))) & \
+  (green_mask)) | \
+ ((((blue_shiftto) > (blue_shiftfrom)) ? \
+  (blue) << ((blue_shiftto) - (blue_shiftfrom)) : \
+  (blue) >> ((blue_shiftfrom) - (blue_shiftto))) & \
+  (blue_mask)) \
+)
 
 #if BX_SUPPORT_VBE
   #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB 4
