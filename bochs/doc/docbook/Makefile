@@ -1,33 +1,28 @@
-all:
-	#generate postscript files
-	docbook2ps user.dbk
-	docbook2ps documentation.dbk
-	docbook2ps development.dbk
+SECTIONS=user documentation development
+EXTRA_INSTALL_LIST=README alldocs.html
+REMOTE_HOST=shell.sf.net
+REMOTE_PATH=/home/groups/b/bo/bochs/htdocs/tmp/docbooktest
+SSH_PATH=ssh
 
-	#generate pdf file (probably overkill)
-	docbook2pdf user.dbk
-	docbook2pdf documentation.dbk
-	docbook2pdf development.dbk
+all: $(SECTIONS)
 
-	#generate html files
-	#each book needs it own directory 
-	# or there will be a naming conflict 
-	mkdir user
-	docbook2html -o user user.dbk
+# this assumes that for each section [S], there is a subdirectory called
+# [S] and the main file to render is [S]/[S].dbk.
+$(SECTIONS)::
+	# render the docbook for each section
+	cd $@; docbook2ps $@.dbk
+	cd $@; docbook2pdf $@.dbk
+	cd $@; docbook2html $@.dbk
 
-	mkdir documentation
-	docbook2html -o documentation documentation.dbk
-
-	mkdir development
-	docbook2html -o development development.dbk
+webinst: 
+	@echo Installing documentation on $(REMOTE_PATH)
+	if test "`whoami`" = bryce; then sfuser=bdenney; \
+	else sfuser=`whoami`; fi; \
+	tar cf - $(SECTIONS) $(EXTRA_INSTALL_LIST) | \
+	  ssh -x $$sfuser@$(REMOTE_HOST) "cd $(REMOTE_PATH) && tar xvf -"
 
 clean:
-	#remove html files
-	rm -rf user
-	rm -rf documentation
-	rm -rf development
-	
-	#remove all other generated files
-	rm *.ps
-	rm *.pdf
-	rm *.out
+	#remove generated files
+	for S in $(SECTIONS); do \
+	  rm -f $$S/*.html $$S/*.ps $$S/*.pdf $$S/*.out; \
+	done
