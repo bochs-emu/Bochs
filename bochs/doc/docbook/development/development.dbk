@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.15 2005-03-28 08:56:06 vruppert Exp $
+$Id: development.dbk,v 1.16 2005-03-31 17:11:01 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -109,9 +109,9 @@ overwrite it.
 </para>
 
 <screen>
-  export CVSROOT=":ext:<replaceable>sfusername</replaceable>@cvs.bochs.sourceforge.net:/cvsroot/bochs"
+  export CVSROOT=":ext:<replaceable>sfusername</replaceable>@cvs.sourceforge.net:/cvsroot/bochs"
   cvs -z3 checkout bochs
-  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  <replaceable>sfusername</replaceable>@cvs.sourceforge.net's password:        <replaceable><--type your password</replaceable>
 </screen>
 
 <para>
@@ -276,6 +276,10 @@ as an example.
 <section id="sb16-emulation-basics"> <!-- start of SB16 section-->
 
 <title>Sound Blaster 16 Emulation</title>
+<note><para>
+  A little more up-to-date version of the user related part of this section is
+  available in the <ulink url="../user/sb16-emulation.html">user guide</ulink>.
+</para></note>
 <para>
 Sound Blaster 16 (SB16) emulation for Bochs was written and donated by
 Josef Drexler, who has a
@@ -1623,7 +1627,7 @@ In the README file you have to update version number and date. Add some
 information about new features if necessary.
 <screen>
 Bochs x86 Pentium+ Emulator
-Updated: : Fri Mar 25 10:33:15 CET 2005
+Updated: Fri Mar 25 10:33:15 CET 2005
 Version: 2.2.pre2
 </screen>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
@@ -1718,7 +1722,7 @@ then run make.
 unzip ~/bochs-2.2.pre2.zip
 make
 </screen>
-That gives an installer called 'Bochs-2.2.pre2.exe'. Test and upload.
+That gives an installer called <filename>Bochs-2.2.pre2.exe</filename>. Test and upload it.
 </para>
 </section>
 <section><title>Building the release on Linux</title>
@@ -1727,8 +1731,8 @@ Do a clean checkout using anonymous cvs, so that the source tarball
 will be all set up for anonymous cvs.  First I'll create a clean
 directory called "clean-anon".
 <screen>
-cvs -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs login
-cvs -z3 -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs \
+cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs login
+cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs \
   checkout -d clean-anon bochs
 </screen>
 Start with clean-anon which tracks the CVS head.  Change its sticky tag
