@@ -1,0 +1,312 @@
+$Id: PARAM_TREE.txt,v 1.1 2003-03-15 17:51:36 bdenney Exp $
+
+I'm trying to organize the parameters into a tree structure instead of
+a huge flat list.  Once the parameter code is improved, I hope to use
+parameters to implement save/restore, and to give access to device
+state from within the debugger.
+-Bryce
+
+
+Notes:
+- get rid of bx_id enumerated type and parameter id numbers (e.g.
+  BXP_FLOPPYA_PATH) These id numbers are ok for scalar parameters like
+  "memory size in megabytes" but very bad for parameters of replicated 
+  devices, like com1,2,3,4, ata1,2,3,4, with master and slave, etc.  The only
+  reason that we have id numbers at all is to be able to find the pointer to a
+  parameter.  In a tree structure, the parameters will be found by name
+  instead.
+- when creating a bx_param_c object, specify the parent object.  The
+  parent must be bx_list_c type.  In the constructor, the child is
+  added to the parent's list of children, and (optionally) the child
+  keeps a pointer to the parent.
+- parameters can then be located by their position in the tree, for
+  example: memory.rom.address.  That means to find the bx_list_c called
+  "memory" in the list of top level objects, then get the bx_list_c called
+  "rom" in memory's list of children, then get the child called "address"
+  in rom's list of children.
+- alternative notation: memory/rom/address, ata>1>slave>cylinders,
+  memory'optional_rom'path
+
+- parameters have additional information inside them, like the name,
+  description, min, max, initial value.  Do we need a way to name
+  this stuff?  Invent syntax.... PARAM'FIELD means field FIELD of parameter
+  PARAM. 
+    memory.ram.size = 32
+    memory.ram.size'type = BXT_PARAM_NUM
+    memory.ram.size'max = 4
+    memory.ram.size'min = 256
+    memory.ram.size'initial_value = 256
+    memory.ram.size'parent refers to parameter memory.ram
+    memory.ram'parent refers to parameter memory
+    etc.
+  I'm not sure if this will ever be needed.
+- also I don't know if any form of relative pathname would be useful/needed.
+  If so, probably using slash notation and ".."'s would look the most
+  familiar to people.
+- we need to be able to handle arrays of objects, but I think it can be
+  done with just another list with names 0, 1, 2, 3, etc.
+    floppy
+    floppy.cmd_delay=50
+    floppy.0.devtype=1
+    floppy.0.path=/dev/fd0
+    floppy.1.devtype=1
+    floppy.1.path=/dev/fd1
+- I have written all the parameter names in "C variable name" style, 
+  lowercase with underscores instead of spaces.  But for display purposes
+  it may be k
+
+
+Proposed organizion of parameters into a tree
+
+memory
+  ram
+    size              BXP_MEM_SIZE,
+  rom                 
+    address           BXP_ROM_ADDRESS,
+    path              BXP_ROM_PATH,
+    vga_rom_path      BXP_VGA_ROM_PATH,
+  optional_rom
+    0
+      path              BXP_OPTROM1_PATH,
+      addr              BXP_OPTROM1_ADDRESS,
+    1
+      path              BXP_OPTROM2_PATH,
+      addr              BXP_OPTROM2_ADDRESS,
+    2
+      path              BXP_OPTROM3_PATH,
+      addr              BXP_OPTROM3_ADDRESS,
+    3
+      path              BXP_OPTROM4_PATH,
+      addr              BXP_OPTROM4_ADDRESS,
+
+cmos
+  path              BXP_CMOS_PATH,
+  image             BXP_CMOS_IMAGE,
+  time0             BXP_CMOS_TIME0,
+
+pit                   
+  realtime            BXP_REALTIME_PIT,
+
+floppy
+  cmd_delay           BXP_FLOPPY_CMD_DELAY,
+  0                     BXP_FLOPPYA,
+    devtype             BXP_FLOPPYA_DEVTYPE,
+    path                BXP_FLOPPYA_PATH,
+    type                BXP_FLOPPYA_TYPE,
+    status              BXP_FLOPPYA_STATUS,
+  1                     BXP_FLOPPYB,
+    devtype             BXP_FLOPPYB_DEVTYPE,
+    path                BXP_FLOPPYB_PATH,
+    type                BXP_FLOPPYB_TYPE,
+    status              BXP_FLOPPYB_STATUS,
+
+ata
+  new_drive_support    BXP_NEWHARDDRIVESUPPORT,
+  0
+    menu (for some reason, I had a separate object for menu)
+    present             BXP_ATA0_PRESENT,
+    ioaddr1             BXP_ATA0_IOADDR1,
+    ioaddr2             BXP_ATA0_IOADDR2,
+    irq                 BXP_ATA0_IRQ,
+    master              BXP_ATA0_MASTER
+      present           BXP_ATA0_MASTER_PRESENT
+      type              BXP_ATA0_MASTER_TYPE
+      path              BXP_ATA0_MASTER_PATH
+      cylinders         BXP_ATA0_MASTER_CYLINDERS
+      heads             BXP_ATA0_MASTER_HEADS
+      spt               BXP_ATA0_MASTER_SPT
+      status            BXP_ATA0_MASTER_STATUS
+      model             BXP_ATA0_MASTER_MODEL
+      biosdetect        BXP_ATA0_MASTER_BIOSDETECT
+      translation       BXP_ATA0_MASTER_TRANSLATION
+    slave
+      (same options as master)
+  1
+    (same options as ata.0)
+  2
+    (same options as ata.0)
+  3
+    (same options as ata.0)
+
+serial
+  0
+    enabled        BXP_COM1_ENABLED
+    path           BXP_COM1_PATH
+  1
+    enabled        BXP_COM2_ENABLED
+    path           BXP_COM2_PATH
+  2
+    enabled        BXP_COM3_ENABLED
+    path           BXP_COM3_PATH
+  3
+    enabled        BXP_COM4_ENABLED
+    path           BXP_COM4_PATH
+
+usb
+  1
+    enabled          BXP_USB1_ENABLED,
+    ioaddr           BXP_USB1_IOADDR,
+    irq              BXP_USB1_IRQ,
+
+parallel
+  0
+    enabled           BXP_PARPORT1_ENABLED,
+    outfile           BXP_PARPORT1_OUTFILE,
+  1
+    enabled           BXP_PARPORT2_ENABLED,
+    outfile           BXP_PARPORT2_OUTFILE,
+
+ne2k
+  0                   BXP_NE2K,
+    present           BXP_NE2K_PRESENT,
+    ioaddr            BXP_NE2K_IOADDR,
+    irq               BXP_NE2K_IRQ,
+    macaddr           BXP_NE2K_MACADDR,
+    ethmod            BXP_NE2K_ETHMOD,
+    ethdev            BXP_NE2K_ETHDEV,
+    script            BXP_NE2K_SCRIPT,
+
+sb16                BXP_SB16,
+  present           BXP_SB16_PRESENT,
+  midifile          BXP_SB16_MIDIFILE,
+  wavefile          BXP_SB16_WAVEFILE,
+  logfile           BXP_SB16_LOGFILE,
+  midimode          BXP_SB16_MIDIMODE,
+  wavemode          BXP_SB16_WAVEMODE,
+  loglevel          BXP_SB16_LOGLEVEL,
+  dmatimer          BXP_SB16_DMATIMER,
+
+pci
+  i440fx_support        BXP_I440FX_SUPPORT,
+
+# experiment with how to organize the configurable parameters versus
+# the variables in the device itself.  Try putting the configurable
+# parameters into keyboard.conf.*
+keyboard              BXP_KEYBOARD,
+  conf
+    type                BXP_KBD_TYPE,
+    serial_delay        BXP_KBD_SERIAL_DELAY,
+    paste_delay         BXP_KBD_PASTE_DELAY,
+    use_mapping         BXP_KEYBOARD_USEMAPPING,
+    map                 BXP_KEYBOARD_MAP,
+    enable_mouse        BXP_MOUSE_ENABLED,
+    user_shortcut       BXP_USER_SHORTCUT,
+  pare                BXP_KBD_PARE,
+  tim                 BXP_KBD_TIM,
+  auxb                BXP_KBD_AUXB,
+  keyl                BXP_KBD_KEYL,
+  c_d                 BXP_KBD_C_D,
+  sysf                BXP_KBD_SYSF,
+  inpb                BXP_KBD_INPB,
+  outb                BXP_KBD_OUTB,
+  timer_pending       BXP_KBD_TIMER_PENDING,
+  irq1_req            BXP_KBD_IRQ1_REQ,
+  irq12_req           BXP_KBD_IRQ12_REQ,
+
+cpu
+  0                   BXP_CPU_PARAMETERS,
+    general_regs
+      eax             BXP_CPU_EAX,
+      ebx             BXP_CPU_EBX,
+      ecx             BXP_CPU_ECX,
+      edx             BXP_CPU_EDX,
+      ebp             BXP_CPU_EBP,
+      esi             BXP_CPU_ESI,
+      edi             BXP_CPU_EDI,
+      esp             BXP_CPU_ESP,
+      eip             BXP_CPU_EIP,
+    segment
+      cs              BXP_CPU_SEG_CS,
+      ds              BXP_CPU_SEG_DS,
+      ss              BXP_CPU_SEG_SS,
+      es              BXP_CPU_SEG_ES,
+      fs              BXP_CPU_SEG_FS,
+      gs              BXP_CPU_SEG_GS,
+    memory_management
+      ldtr            BXP_CPU_SEG_LDTR,
+      tr              BXP_CPU_SEG_TR,
+      gdtr
+        base          BXP_CPU_GDTR_BASE,
+        limit         BXP_CPU_GDTR_LIMIT,
+      idtr
+        base          BXP_CPU_IDTR_BASE,
+        limit         BXP_CPU_IDTR_LIMIT,
+    eflags            BXP_CPU_EFLAGS,
+      id              BXP_CPU_EFLAGS_ID,
+      vip             BXP_CPU_EFLAGS_VIP,
+      vif             BXP_CPU_EFLAGS_VIF,
+      ac              BXP_CPU_EFLAGS_AC,
+      vm              BXP_CPU_EFLAGS_VM,
+      rf              BXP_CPU_EFLAGS_RF,
+      nt              BXP_CPU_EFLAGS_NT,
+      iopl            BXP_CPU_EFLAGS_IOPL,
+      of              BXP_CPU_EFLAGS_OF,
+      df              BXP_CPU_EFLAGS_DF,
+      if              BXP_CPU_EFLAGS_IF,
+      tf              BXP_CPU_EFLAGS_TF,
+      sf              BXP_CPU_EFLAGS_SF,
+      zf              BXP_CPU_EFLAGS_ZF,
+      af              BXP_CPU_EFLAGS_AF,
+      pf              BXP_CPU_EFLAGS_PF,
+      cf              BXP_CPU_EFLAGS_CF,
+    debug
+      dr0             BXP_CPU_DR0,
+      dr1             BXP_CPU_DR1,
+      dr2             BXP_CPU_DR2,
+      dr3             BXP_CPU_DR3,
+      dr6             BXP_CPU_DR6,
+      dr7             BXP_CPU_DR7,
+    control
+      cr0             BXP_CPU_CR0,
+      cr1             BXP_CPU_CR1,
+      cr2             BXP_CPU_CR2,
+      cr3             BXP_CPU_CR3,
+      cr4             BXP_CPU_CR4,
+  1
+    (same parameters for cpus 1...15)
+
+config_menus                      
+  main                BXP_MENU_MAIN,
+  memory              BXP_MENU_MEMORY,
+  interface           BXP_MENU_INTERFACE,
+  disk                BXP_MENU_DISK,
+  ser_par             BXP_MENU_SERIAL_PARALLEL,
+  sound               BXP_MENU_SOUND,
+  misc                BXP_MENU_MISC,
+  runtime             BXP_MENU_RUNTIME,
+
+boot_params          
+  boot_drive           BXP_BOOTDRIVE,
+  floppy_sig_check     BXP_FLOPPYSIGCHECK,
+  load32bitos          BXP_LOAD32BITOS,
+    which              BXP_LOAD32BITOS_WHICH,
+    path               BXP_LOAD32BITOS_PATH,
+    iolog              BXP_LOAD32BITOS_IOLOG,
+    initrd             BXP_LOAD32BITOS_INITRD,
+
+time
+  system_clock_sync   BXP_SYSTEM_CLOCK_SYNC,
+  ips                 BXP_IPS,
+  max_ips             BXP_MAX_IPS,
+  vga_update_interval BXP_VGA_UPDATE_INTERVAL,
+
+display
+  config_interface     BXP_SEL_CONFIG_INTERFACE,
+  display_library     BXP_SEL_DISPLAY_LIBRARY,
+  ask_for_pathname    BXP_ASK_FOR_PATHNAME,   // what the heck is this?
+  private_colormap   BXP_PRIVATE_COLORMAP,
+  full_screen        BXP_FULLSCREEN,
+  screen_mode        BXP_SCREENMODE,
+
+general
+  start_mode          BXP_BOCHS_START,
+  text_snapshot_check BXP_TEXT_SNAPSHOT_CHECK,
+
+log
+  filename               BXP_LOG_FILENAME,
+  prefix                 BXP_LOG_PREFIX,
+  debugger_filename      BXP_DEBUGGER_LOG_FILENAME,
+
+debugger
+  running             BXP_DEBUG_RUNNING,
+
