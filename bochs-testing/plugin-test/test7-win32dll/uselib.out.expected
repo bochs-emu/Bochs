@@ -1,0 +1,15 @@
+start
+loading module1
+loading module from VARIES{xxx}
+handle is VARIES{xxx}
+module_init function is at VARIES{xxx}
+Calling module_init
+module1 init for main version uselib-test6-1.0
+register_module was called by module 'module1'
+loading module from VARIES{xxx}
+handle is VARIES{xxx}
+module_init function is at VARIES{xxx}
+Calling module_init
+module2 init for main version uselib-test6-1.0
+register_module was called by module 'module2'
+stop
