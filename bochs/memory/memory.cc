@@ -257,8 +257,6 @@ BX_MEM_C::read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_READ(a20addr, len);
-  if ((addr & 0xfee00000) == 0xfee00000)
-    bx_printf ("read_physical from APIC address %08x\n", addr);
 
 #if BX_DEBUGGER
   // (mch) Check for physical read break points, TODO
