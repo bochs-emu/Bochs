@@ -1,3 +1,7 @@
+#ifndef WIN32
+#  error This test is specific to Windows/cygwin/mingw.  Turn back now!
+#endif
+
 #include <windows.h>
 #include <stdio.h>
 #define MAIN_DLL_EXPORT
