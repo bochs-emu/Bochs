@@ -1,0 +1,29 @@
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure.in,v
+retrieving revision 1.64
+diff -u -r1.64 configure.in
+--- configure.in	5 Mar 2002 15:58:59 -0000	1.64
++++ configure.in	6 Mar 2002 19:40:20 -0000
+@@ -13,6 +13,21 @@
+ changequote(<<, >>)
+ changequote([, ])
+ 
++dnl Detect host and target
++AC_CANONICAL_HOST
++AC_CANONICAL_TARGET
++
++case "$target" in
++  i[56]86-pc-cygwin)
++    ADD_FLAGS="-mno-cygwin -DWIN32 -march=pentium -mpentium"
++    ;;
++  *-pc-cygwin)
++    ADD_FLAGS="-mno-cygwin -DWIN32"
++    ;;
++esac
++CFLAGS="$CFLAGS $ADD_FLAGS"
++CXXFLAGS="$CXXFLAGS $ADD_FLAGS"
++
+ AC_PROG_CC
+ AC_PROG_CXX
+ AC_PROG_MAKE_SET
