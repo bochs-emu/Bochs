@@ -208,6 +208,7 @@ extern Bit8u DTPageDirty[];
 typedef class logfunctions {
 	char *prefix;
 	int type;
+	int onoff[5];
 	class iofunctions *logio;
 public:
 	logfunctions(void);
@@ -228,7 +229,6 @@ class iofunctions {
 	int showtick,magic;
 	FILE *logfd;
 	class logfunctions *log;
-	int onoff[5];
 	void init(void);
 	void flush(void);
 	char *getlevel(int i) {

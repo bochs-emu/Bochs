@@ -115,10 +115,6 @@ iofunctions::init(void) {
 	log = new logfunc_t(this);
 	LOG_THIS setprefix("[IO  ]");
 	LOG_THIS settype(IOLOG);
-	onoff[LOGLEV_DEBUG]=0;
-	onoff[LOGLEV_ERROR]=1;
-	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
-	onoff[LOGLEV_INFO]=1;
 	BX_DEBUG(("Init(log file: '%s').\n",logfn));
 }
 
@@ -186,9 +182,6 @@ iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
 	assert (this != NULL);
 	assert (logfd != NULL);
 
-	if(!onoff[l]) 
-		return;
-
 	if( showtick )
 		fprintf(logfd, "%011lld ", bx_pc_system.time_ticks());
 
@@ -246,6 +239,10 @@ logfunctions::logfunctions(void)
 		io = new iofunc_t(stderr);
 	}
 	setio(io);
+	onoff[LOGLEV_DEBUG]=0;
+	onoff[LOGLEV_ERROR]=1;
+	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
+	onoff[LOGLEV_INFO]=1;
 }
 
 logfunctions::logfunctions(iofunc_t *iofunc)
@@ -253,6 +250,10 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 	setprefix("[GEN ]");
 	settype(GENLOG);
 	setio(iofunc);
+	onoff[LOGLEV_DEBUG]=0;
+	onoff[LOGLEV_ERROR]=1;
+	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
+	onoff[LOGLEV_INFO]=1;
 }
 
 logfunctions::~logfunctions(void)
@@ -286,6 +287,9 @@ logfunctions::info(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
+	if(!onoff[LOGLEV_INFO])
+		return;
+
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
 	va_end(ap);
@@ -300,6 +304,9 @@ logfunctions::error(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
+	if(!onoff[LOGLEV_ERROR])
+		return;
+
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
 	va_end(ap);
@@ -313,9 +320,13 @@ logfunctions::panic(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
-	va_start(ap, fmt);
-	this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
-	va_end(ap);
+	if(onoff[LOGLEV_PANIC]) { // XXX to return or not to return?
+
+		va_start(ap, fmt);
+		this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
+		va_end(ap);
+
+	}
 
 #if !BX_PANIC_IS_FATAL
   return;
@@ -342,6 +353,9 @@ logfunctions::ldebug(char *fmt, ...)
 
 	assert (this != NULL);
 	assert (this->logio != NULL);
+
+	if(!onoff[LOGLEV_DEBUG])
+		return;
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
