@@ -180,9 +180,8 @@ iofunctions::init_log(int fd)
 	assert (magic==MAGIC_LOGNUM);
 	FILE *tmpfd;
 	if( (tmpfd = fdopen(fd,"w")) == NULL ) {
-		fprintf(stderr, "Couldn't open fd %d as a stream for writing\n",
-			fd);
-		return;
+	  BX_PANIC(("Couldn't open fd %d as a stream for writing\n", fd));
+	  return;
 	}
 
 	init_log(tmpfd);
@@ -463,7 +462,6 @@ main(int argc, char *argv[])
   }
 #endif
 
-  fprintf(stderr,"genlog is at 0x%x\n",genlog);
   return(0);
 }
 
