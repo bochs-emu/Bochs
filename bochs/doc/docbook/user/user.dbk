@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.130 2003-10-29 01:00:28 cbothamy Exp $
+$Id: user.dbk,v 1.131 2003-10-30 10:14:07 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -33,7 +33,7 @@ This is the top level file for the Bochs Users Manual.
 <section id="whatisbochs"><title>What is Bochs?</title>
 <para>
 Bochs is a program that simulates a complete Intel x86 computer.  It 
-can be configured to act like a 286, 386, 486, Pentium, or Pentium Pro.
+can be configured to act like a <!--286,--> 386, 486, Pentium, or Pentium Pro.
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
 VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
@@ -4444,7 +4444,7 @@ write to bochs-announce-request or bochs-developers-request.  Don't forget the
 
 <chapter id="howto"><title>Tips and Techniques</title>
 
-<section id="diskimagehowto"><title>How to make a disk image</title>
+<section id="diskimagehowto"><title>How to make a simple disk image</title>
 <para>
 This was contributed by Greg Alexander in October 2001.
 </para>
@@ -4469,30 +4469,45 @@ producing DOS partitions (i.e. a linux install disk.)
 
 </para>
 
-<screen>
-1) Create a flat image
+<section><title>
+Create a flat image
+</title>
 
+<para>
 Option 1: Using the unix dd utility :
+</para>
 
+<para>
 You will need to know the geometry of the disk you want to
 create. You have to compute the disk sector count :
 
+<screen>
 Sectors = Cylinders * Heads * SectorsPerTrack
+</screen>
+</para>
 
+<para>
 Use the dd command to create your file :
 
+<screen>
 dd if=/dev/zero of=teaching.img bs=512 count=Sectors 
+</screen>
 (replace Sectors with the number you computed at the
 previous step).
+</para>
 
+<para>
 When you'll update your configuration file, please
-fill in tyhe same cylinders, heads and sector per
+fill in the same cylinders, heads and sector per
 track values.
+</para>
 
 
+<para>
 Option 2: Run `bximage` to create a disk image file.  
 You will be greeted with the following prompt:
 
+<screen>
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
@@ -4500,27 +4515,36 @@ You will be greeted with the following prompt:
 
 Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] 
+</screen>
+</para>
 
 
+<para>
 Since we are creating a hard disk image, accept the default of hd by
 pressing <command>Enter</command> or typing 'hd' and pressing
 <command>Enter</command>. Next bximage will ask for the type of
 hd to create :
 
-
+<screen>
 What kind of image should I create?
 Please type flat, sparse or growing. [flat] 
+</screen>
+</para>
 
 
+<para>
 We want to create a simple flat image, so accept the default
 by pressing <command>Enter</command>.  Then, bximage will ask 
 for the size of the disk image you want to create, in Megabytes:
 
-
+<screen>
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 
+</screen>
+</para>
 
 
+<para>
 Enter the size of the hard disk you want to create, and press
 <command>Enter</command>. 
 Bochs will give you some information about the image it is creating, and
@@ -4528,7 +4552,7 @@ ask you for a filename to use for the file it is creating.  I told it to
 use the default of 10 megabytes, and was given the following information
 along with the prompt for a filename:
 
-
+<screen>
 [10] 10
 
 I will create a hard disk image with
@@ -4540,8 +4564,11 @@ I will create a hard disk image with
 
 What should I name the image?
 [c.img] 
+</screen>
+</para>
 
 
+<para>
 At this point, type in the filename you want to use for the image.  The
 default of "c.img" is appropriate if this will be your only hard disk
 image.  After you have typed in the name of the filename you want to
@@ -4552,75 +4579,114 @@ to your .bochsrc file when you want to use this disk image.  I named my
 10 Megabyte image "teaching.img" and the output of bximage looked like
 this:
 
-
+<screen>
 [c.img] teaching.img
 
 Writing: [..........] Done.
 
 I wrote 10321920 bytes to teaching.img.
+</screen>
+</para>
 
+<para>
 The following line should appear in your bochsrc:
+<screen>
   diskc: file="teaching.img", cyl=20, heads=16, spt=63
+</screen>
+</para>
 
 
+<para>
 At this point, a file called "teaching.img" was created in my current
 directory and is ready to be used as an image file for a bochs session.
+</para>
+</section>
 
+<section>
+<title>
+Partition and format your image file.
+</title>
 
-2.) Partition and format your image file.
-
+<para>
 Option 1: Using FreeDOS (Advantages: Creates a MBR on the partition.)
+</para>
 
+<para>
 First, you need to edit the .bochsrc file that bochs uses for
 configuration information.  Open the file .bochsrc with a text editor. 
 Remove any lines in the file beginning with "diskc:".  Add the "diskc:"
 line that was displayed when you ran bximage to the .bochsrc file in the
 same place that you removed the old "diskc:" lines from.
+</para>
 
+<para>
 Also, you need to download or create a FreeDOS (or DOS, or Windows, or
 linux) disk image.  Modify the "floppya:" line in your .bochsrc file to point
 at the downloaded FreeDOS image and change its status to "status=inserted".
+</para>
 
+<para>
 Save and close your .bochsrc.  Now run bochs.  (see: "Running bochs from
 the command line.")
+</para>
 
+<para>
 Use the standard FreeDOS commands fdisk and format to format your hard
 drive image.  You must make the image bootable to be able to boot
 without a hard drive.  However, creating a bootable disk image is best
 done with a boot disk from the OS you intend to install on the image.
+</para>
 
 
-
+<para>
 Option 2: Using mtools (Disadvantages: cannot create bootable images
 without a MBR image)
+</para>
 
+<para>
 Use a text editor to add the following line to the file ~/.mtoolsrc:
+</para>
 
 
+<screen>
 drive c: file="<replaceable>path</replaceable>/filename.img" partition=1
+</screen>
 
 
+<para>
 Save and close .mtoolsrc.  Next, execute the following commands to
 create a partition table for the drive image:
+</para>
 
 
+<screen>
 mpartition -I -s <replaceable>spt</replaceable> -t <replaceable>cyl</replaceable> -h <replaceable>heads</replaceable> c:
 mpartition -cpv -s <replaceable>spt</replaceable> -t <replaceable>cyl</replaceable> -h <replaceable>heads</replaceable> c:
+</screen>
 
+<para>
 For example, for my 10 meg drive, I used:
+<screen>
 mpartition -I -s 63 -t 20 -h 16 c:
 mpartition -cpv -s 63 -t 20 -h 16 c:
+</screen>
+</para>
 
 
+<para>
 Next, format the partition you just created using the mformat command:
 
-
+<screen>
 mformat c:
+</screen>
+</para>
 
 
+<para>
 And you now have a formatted disk image containing a single DOS
 partition.
-</screen>
+</para>
+</section>
 </section> <!-- end of Unix: How to make a disk image -->
 
 <section id="mtools"><title>Use mtools to manipulate disk images</title>
@@ -6199,7 +6265,7 @@ in lba order.
 <section><title>image creation</title>
 <para>
 Flat disk images can be created with the bximage utility
-(see <xref linkend="diskimagehowto"> for more information).
+(see <xref linkend="using-bximage"> for more information).
 </para>
 </section>
 <section><title>path</title>
@@ -6334,7 +6400,8 @@ compiled in, or an additional DLL linked to Bochs.
 <section><title>image creation</title>
 <para>
 Sparse disk images must be created with the bximage utility
-(see <xref linkend="diskimagehowto"> for more information).
+(see <xref linkend="using-bximage"> for more information).
+Be sure to enter "sparse" when selecting the image type.
 </para>
 </section>
 <section><title>path</title>
@@ -6346,7 +6413,7 @@ substracting 1 from the last character (must be a digit)
 </section>
 <section><title>external tools</title>
 <para>
-No external tools support Sparse disk images yet.
+No external tool support Sparse disk images yet.
 </para>
 </section>
 <section><title>typical use</title>
@@ -6524,8 +6591,9 @@ Only vmware version 3 disk image files are supported.
     suffix to the flat image name.
 </para>
 <para>
-    The disk size of the redolog can grow up to the total disk
-    size plus a small overhead (about 3% for a 32MiB disk, 
+    File size of the redolog can grow up to the total disk
+    size plus a small overhead due to internal data managment
+    (about 3% for a 32MiB disk, 
     less than 0.5% for a 2GiB disk).
 </para>
 <para>
@@ -6543,20 +6611,21 @@ Only vmware version 3 disk image files are supported.
 <note>
 <para>
     In this mode, the flat file is always open in read-only mode,
-    so it can safely be stored on a read-only medium (for example cdrom).
+    so it can safely be stored on a read-only medium (for example on a cdrom).
 </para>
 </note>
 </section>
 <section><title>image creation</title>
 <para>
-    The flat image must previously be created with bximage.
+The flat disk images must be created with the bximage utility
+(see <xref linkend="using-bximage"> for more information).
     The growing redolog is created automatically if needed.
 </para>
 </section>
 <section><title>path</title>
 <para>
     The "path" option of the ataX-xxx directive in the configuration file
-    must be the flat image name. The redolog name is set with the "journal"
+    must be the flat image name. The redolog name can be set with the "journal"
     option of the same directive.
     If not set, the redolog name is created by adding the
     ".redolog" suffix to the flat image name.
@@ -6610,36 +6679,45 @@ Only vmware version 3 disk image files are supported.
 <para>
 </para>
 <section><title>description</title>
-<para>
-&FIXME; to be completed
-    <screen>
-    This modes defines a growing disk image. 
-    These growing disk images must be created with the bximage
-    utility.
-    The disk size of these disk image can grow up to the total disk
-    size plus a small overhead (about 3% for a 32MiB disk).
-    These disk images can not be read by standard external tools.
-    </screen>
-</para>
+    <para>
+    Growing disk images start as a small files, and 
+    grow whenever new data is written to them. 
+    </para>
+    <para>
+    Once a sector is 
+    written in the growing file, subsequent writes to the same
+    sector will happen in place.
+    </para>
+    <para>
+    File size of Growing disk images can go up to the total disk
+    size plus a small overhead due to internal data managment.
+    (about 3% for a 32MiB disk, 
+    less than 0.5% for a 2GiB disk).
+    </para>
 </section>
 <section><title>image creation</title>
 <para>
-&FIXME; to be completed
+Growing disk images must be created with the bximage utility
+(see <xref linkend="using-bximage"> for more information).
+Be sure to enter "growing" when selecting the image type.
 </para>
 </section>
 <section><title>path</title>
 <para>
-&FIXME; to be completed
+    The "path" option of the ataX-xxx directive in the configuration file
+    must be the growing image name. 
 </para>
 </section>
 <section><title>external tools</title>
 <para>
-&FIXME; to be completed
+No external tool support Growing disk images yet.
 </para>
 </section>
 <section><title>typical use</title>
 <para>
-&FIXME; to be completed
+Growing disk images can be used whenever you want to maximize disk space. 
+However, please note that Bochs will not check if enough disk space is available
+before writing new data. If no disk space is available, a panic will occur.
 </para>
 </section>
 <section><title>limitations</title>
@@ -6654,44 +6732,88 @@ Only vmware version 3 disk image files are supported.
 </para>
 <section><title>description</title>
 <para>
-&FIXME; to be completed
-<screen>
-    This mode defines a volatile disk image. It is 
-    based on a read-only flat image, associated with a 
-    temporary growing redolog. 
-    This redolog is dynamically created at runtime.
-    This redolog is deleted when Bochs closes (win32)
-    or after it has been created (unix).
-    All writes go to the redolog, the reads come from the 
+    Volatile disks are always-rollbacked disk images. 
+    An volatile disk is based on a read-only flat image
+    (see <xref linkend="harddisk-mode-flat">), associated with 
+    a growing temporary redolog, that contains all changes (writes)
+    made to the flat image content. All data written to
+    the  disk image are lost at the end of the Bochs
+    session.
+</para>
+<para>
+    The redolog is dynamically created at runtime, when
+    Bochs starts, and is deleted when Bochs closes (win32)
+    or just after it has been created (unix).
+</para>
+<para>
+    All writes go to the redolog, reads are done from the 
     redolog if previously written, or from the flat file
     otherwise.
-    The filename in the configuration file must be the flat
-    image name, the redolog name is dynamically created.
-    The filename in the configuration file must be the flat
-    image name, the redolog name is dynamically created.
-    The flat image must previously be created with bximage.
-</screen>
 </para>
+<para>
+    If unspecified with the "journal" option of the ataX-xxx directive,
+    the redolog file name is created by adding a ".redolog" 
+    suffix to the flat image name.
+</para>
+<para>
+    File size of the redolog can grow up to the total disk
+    size plus a small overhead due to internal data managment
+    (about 3% for a 32MiB disk, 
+    less than 0.5% for a 2GiB disk).
+</para>
+<para>
+    After a run, the redolog is not any more present, so the changes 
+    are discarded.
+</para>
+<note>
+<para>
+    In this mode, the flat file is always open in read-only mode,
+    so it can safely be stored on a read-only medium (for example on a cdrom).
+</para>
+</note>
 </section>
 <section><title>image creation</title>
 <para>
-&FIXME; to be completed
+The flat disk images must be created with the bximage utility
+(see <xref linkend="using-bximage"> for more information).
+    The growing redolog is created automatically.
 </para>
 </section>
 <section><title>path</title>
 <para>
-&FIXME; to be completed
+    The "path" option of the ataX-xxx directive in the configuration file
+    must be the flat image name. The redolog name can be set with the "journal"
+    option of the same directive.
+    If not set, the redolog name is created by adding the
+    ".redolog" suffix to the flat image name.
+    A random suffix is also appended to the redolog name.
 </para>
 </section>
 <section><title>external tools</title>
 <para>
-&FIXME; to be completed
+    See <xref linkend="harddisk-mode-flat-tools"> for tools
+    to access the flat disk image content.
 </para>
 </section>
 <section><title>typical use</title>
 <para>
+&FIXME; can be completed
+</para>
+<section><title>Repeatable simulations</title>
+<para>
 &FIXME; to be completed
 </para>
+</section>
+<section><title>Multiple Bochs instances</title>
+<para>
+&FIXME; to be completed
+</para>
+</section>
+<section><title>Harddisk Image on a Read-Only Medium</title>
+<para>
+&FIXME; to be completed
+</para>
+</section>
 </section>
 <section><title>limitations</title>
 <para>
@@ -6791,6 +6913,11 @@ Only vmware version 3 disk image files are supported.
 </section>
 -->
 
+</section>
+
+<section id="using-bximage"><title>Using the bximage tool</title>
+<para>
+</para>
 </section>
 
 <section id="using-bxcommit"><title>Using the bxcommit tool</title>
@@ -9279,7 +9406,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.130 2003-10-29 01:00:28 cbothamy Exp $
+        $Id: user.dbk,v 1.131 2003-10-30 10:14:07 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
