@@ -164,6 +164,9 @@ bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
 bx_sdl.dll: $(GUI_OBJS_SDL) 
 	$(CXX) $(CXXFLAGS) -shared -o bx_sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL)
 
+bx_rfb.dll: $(GUI_OBJS_RFB) 
+	$(CXX) $(CXXFLAGS) -shared -o bx_rfb.dll $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_RFB)
+
 # no need to build DLLs for beos.o
 # no need to build DLLs for x.o
 
