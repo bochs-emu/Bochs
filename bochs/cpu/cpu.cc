@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.25 2002-03-20 23:50:23 bdenney Exp $
+// $Id: cpu.cc,v 1.25.4.1 2002-09-10 17:27:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,10 @@
 
 #if BX_USE_CPU_SMF
 #define this (BX_CPU(0))
+#endif
+
+#if BX_EXTERNAL_DEBUGGER
+#include "cpu/extdb.h"
 #endif
 
 //unsigned counter[2] = { 0, 0 };
@@ -194,7 +198,7 @@ async_events_processed:
     }
   }
 #endif  // #if BX_DEBUGGER
-  
+
 #if BX_INSTR_SPY
   {
     int n=0;
@@ -204,6 +208,12 @@ async_events_processed:
       fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\n", n, bx_pc_system.time_ticks (), cs, eip, fetch_ptr);
     }
     n++;
+  }
+#endif
+
+#if BX_EXTERNAL_DEBUGGER
+  if (regs.debug_state != debug_run) {
+    bx_external_debugger(this);
   }
 #endif
 
@@ -442,7 +452,11 @@ handle_async_event:
     // for one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
     while (1) {
-      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
+      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_){
+        break;
+        }
+      if (BX_CPU_THIS_PTR async_event == 0) {
+        BX_INFO(("decode: reset detected in halt state"));
         break;
         }
       BX_TICK1();
