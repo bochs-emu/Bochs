@@ -83,6 +83,24 @@ What works right now (September 2002):
   Both dialog boxes are updated periodically during simulation.
 
 To do:
+- configure script must be able to check that wxwindows is actually 
+  installed.
+- if you stop and start a second simulation, tons of parameters get 
+  redefined and it's a big mess.
+- now that ParamDialog works, I may rewrite some of the other dialogs 
+  as subclasses of ParamDialog.  This would lead to more compact code,
+  and fewer bugs.
+- configure time dialog
+  - need to think about dialog layout 
+  - setting of IPS (controls how much time the PIT associates with each 
+    instruction for purposes of sending timer interrupts).  How can we
+    name this?  instructions per simulated second.
+  - enable realtime pit, realtime pit settings (?)
+  - enable/disable X windows idle hack
+  - report instructions per wall clock second in real time
+- decide which settings can be adjusted at runtime, and figure out how
+  to disable the others.  Do we need a set_enable() on the parameters
+  themselves?
 - the power button has always "turned off" the power.  Make it also
   turn ON the power.  I think a few little green LEDs are in order.
 - floppy config screen: on win32, both not present and ejected are selected
