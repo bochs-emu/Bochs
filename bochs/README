@@ -37,18 +37,26 @@ will help at merge time.
 
 
 TO DO:
-- make X11 gui into a plugin
 - toplevel makefile does "make -C subdir libsomething.a" which does
   not cause the plugins in that directory to be remade.  Maybe it
   should do make -C subdir all
 - it looks like each plugin's plugin_init gets called twice, once
   when plugin_load calls plugin_init_one, and then again in
   plugin_init_all.  Shouldn't we just call it once?
+- wxWindows gui as a plugin will not start up.  Normally wxWindows
+  takes over your main() function and inserts its own app init code.
+  We'll have to figure out what that app init code does and put it
+  in plugin_init.
+- Bryce is experimenting with using classes with virtual functions
+  to make the plugin interface cleaner.  He doesn't know yet if it 
+  will be an improvement or not.
 
 DONE:
 - applied patch.plugins5
 - all gui references to I/O devices are turned into macros now
 - updated makefile dependencies now that plugin.h is in there
+- 5 guis are converted to plugins
+- 8 I/O devices are converted to plugins
 
 -----------------------------------------------
 random notes:
@@ -65,6 +73,27 @@ so the constructor must be called as the module loads.  For any
 device that needs to be initialized with new operator, I may need
 to add a static method to the class that can call the constructor.
 
+class heirarchy:
+ logfunctions
+ - bx_devmodel_c
+   - bx_keyb_stub_c
+     - bx_keyb_c
+
+bx_devmodel_c is an abstract class that defines standard functions that all
+devices should define, like init and reset.  Each method is defined as empty
+in bx_devmodel_c so that child classes can choose to implement them or not.
+
+bx_keyb_stub_c declares the methods that code outside the keyboard would need
+to call, such as mouse_motion, gen_scancode, etc.  It declares these methods
+virtual, and provides a minimal definition for each that just does a panic.   A
+global variable pluginKeyboard initially points to an instance of
+bx_keyb_stub_c so that if you forget/fail to load the load the keyboard plugin,
+you will see these panics when the methods are called.
+
+bx_keyb_c is the real keyboard code.  In its constructor, it changes 
+pluginKeyboard to point to "this".  This is equivalent to installing all
+the plugin callbacks associated with the keyboard.  It also works in
+nonplugin code, which is a plus. 
 
 ------------------------------------------
 References
