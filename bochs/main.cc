@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.220 2003-01-29 15:01:09 cbothamy Exp $
+// $Id: main.cc,v 1.221 2003-02-05 18:19:03 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2141,6 +2141,32 @@ bx_init_hardware()
   }
 
   io->set_log_prefix(bx_options.log.Oprefix->getptr());
+
+  // Output to the log file the cpu settings
+  // This will by handy for bug reports
+  BX_INFO(("Bochs x86 Emulator %s", VER_STRING));
+  BX_INFO(("  %s", REL_STRING));
+  BX_INFO(("System configuration"));
+  BX_INFO(("  processors: %d",BX_SMP_PROCESSORS));
+  BX_INFO(("  A20 line support: %s",BX_SUPPORT_A20?"yes":"no"));
+  BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
+  BX_INFO(("CPU configuration"));
+  BX_INFO(("  level: %d",BX_CPU_LEVEL));
+  BX_INFO(("  fpu support: %s",BX_SUPPORT_FPU?"yes":"no"));
+  BX_INFO(("  paging support: %s, tlb enabled: %s",BX_SUPPORT_PAGING?"yes":"no",BX_USE_TLB?"yes":"no"));
+  BX_INFO(("  mmx support: %s",BX_SUPPORT_MMX?"yes":"no"));
+  BX_INFO(("  sse support: %s",BX_SUPPORT_SSE==2?"2":BX_SUPPORT_SSE==1?"1":"no"));
+  BX_INFO(("  v8086 mode support: %s",BX_SUPPORT_V8086_MODE?"yes":"no"));
+  BX_INFO(("  PAE support: %s",BX_SupportPAE?"yes":"no"));
+  BX_INFO(("  PGE support: %s",BX_SupportGlobalPages?"yes":"no"));
+  BX_INFO(("  PSE support: %s",BX_SUPPORT_4MEG_PAGES?"yes":"no"));
+  BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
+  BX_INFO(("  SEP support: %s",BX_SUPPORT_SEP?"yes":"no"));
+  BX_INFO(("Optimization configuration"));
+  BX_INFO(("  Guest2HostTLB support: %s",BX_SupportGuest2HostTLB?"yes":"no"));
+  BX_INFO(("  RepeatSpeedups support: %s",BX_SupportRepeatSpeedups?"yes":"no"));
+  BX_INFO(("  Icache support: %s",BX_SupportICache?"yes":"no"));
+  BX_INFO(("  Host Asm support: %s",BX_SupportHostAsms?"yes":"no"));
 
   // set up memory and CPU objects
 #if BX_SUPPORT_APIC
