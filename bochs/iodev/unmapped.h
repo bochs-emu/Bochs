@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.6 2002-04-01 21:53:23 cbothamy Exp $
+// $Id: unmapped.h,v 1.7 2002-04-01 21:57:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,9 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-#define BX_BIOS_MESSAGE_SIZE 80
 
 
 #if BX_USE_UM_SMF
