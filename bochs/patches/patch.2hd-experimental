@@ -6,6 +6,9 @@ Date: Thu May  3 11:38:16 EDT 2001
 Detailed description:
 
 THIS IS EXPERIMENTAL CODE.  Back up your disk images before trying it!
+With this version of the patch installed, you should put both diskc and 
+diskd lines into your .bochsrc.  Eventually, I'll fix up rombios.c to
+behave correctly with either 1 or 2 disks.
 
   This is a first attempt at allowing "diskd" to work.  This patch
   does the following:
