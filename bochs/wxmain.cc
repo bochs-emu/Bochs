@@ -66,8 +66,8 @@ public:
   void OnExit ();
   // called by the siminterface code, with the pointer to the Bochs thread
   // in the thisptr arg.
-  static int SiminterfaceCallback (void *thisptr, int code);
-  int SiminterfaceCallback2 (int code);
+  static BxEvent *SiminterfaceCallback (void *thisptr, BxEvent *event);
+  BxEvent *SiminterfaceCallback2 (BxEvent *event);
   // methods to coordinate synchronous response mailbox
   void ClearSyncResponse ();
   void SendSyncResponse (BxEvent *);
@@ -86,7 +86,7 @@ void OnStartBochs(wxCommandEvent& event);
 void OnPauseBochs(wxCommandEvent& event);
 void OnResumeBochs(wxCommandEvent& event);
 void OnKillBochs(wxCommandEvent& event);
-void OnBochs2GuiSyncEvent(wxCommandEvent& event);
+void OnBochs2GuiEvent(wxCommandEvent& event);
 int HandleAskParam (BxEvent *event);
 int StartBochsThread ();
 
@@ -109,7 +109,7 @@ ID_StartBochs,
 ID_PauseBochs,
 ID_ResumeBochs,
 ID_KillBochs,
-ID_Bochs2Gui_Sync_Event,
+ID_Bochs2Gui_Event,
 };
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
@@ -119,18 +119,10 @@ EVT_MENU(ID_StartBochs, MyFrame::OnStartBochs)
 EVT_MENU(ID_PauseBochs, MyFrame::OnPauseBochs)
 EVT_MENU(ID_ResumeBochs, MyFrame::OnResumeBochs)
 EVT_MENU(ID_KillBochs, MyFrame::OnKillBochs)
-EVT_MENU(ID_Bochs2Gui_Sync_Event, MyFrame::OnBochs2GuiSyncEvent)
+EVT_MENU(ID_Bochs2Gui_Event, MyFrame::OnBochs2GuiEvent)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(MyApp)
-
-#if 1
-// stupid hack to make response available to siminterface
-BxEvent *bochs2gui_last_response;
-BxEvent *get_bochs2gui_last_response () {
-  return bochs2gui_last_response;
-}
-#endif
 
 bool MyApp::OnInit()
 {
@@ -167,11 +159,14 @@ wxSize& size)
   SetStatusText( "Welcome to wxWindows!" );
 }
 
-void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
+void MyFrame::OnQuit(wxCommandEvent& event)
 {
   Close( TRUE );
+  OnKillBochs (event);
+#if 0
   if (SIM)
 	SIM->quit_sim(0);  // give bochs a chance to shut down
+#endif
 }
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
@@ -220,8 +215,9 @@ void MyFrame::OnResumeBochs(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnKillBochs(wxCommandEvent& WXUNUSED(event))
 {
-  // use crit section to ensure safe use of bochs_thread pointer.
-  wxCriticalSectionLocker lock(bochs_thread_lock);
+  // DON'T use a critical section here.  Delete implicitly calls
+  // OnBochsThreadExit, which also tries to lock bochs_thread_lock.
+  // If we grab the lock at this level, deadlock results.
   if (bochs_thread) {
 	SetStatusText ("Killing the Bochs simulation");
 	bochs_thread->Delete ();
@@ -261,21 +257,42 @@ MyFrame::HandleAskParam (BxEvent *event)
 }
 
 void 
-MyFrame::OnBochs2GuiSyncEvent (wxCommandEvent& event)
+MyFrame::OnBochs2GuiEvent (wxCommandEvent& event)
 {
   fprintf (wxlog, "received a bochs event in the GUI thread\n");
   BxEvent *be = (BxEvent *) event.GetEventObject ();
   fprintf (wxlog, "event type = %d\n", (int) be->type);
+  // all cases should return.  sync event handlers MUST send back a 
+  // response.
   switch (be->type) {
   case BX_SYNC_EVT_ASK_PARAM:
-    be->u.param.success = HandleAskParam (be);
-    break;
+    be->retcode = HandleAskParam (be);
+    // sync must return something; just return a copy of the event.
+    bochs_thread->SendSyncResponse(be);
+	return;
+  case BX_ASYNC_EVT_SHUTDOWN_GUI:
+	fprintf (wxlog, "control panel is exiting\n");
+	fflush (wxlog);
+    Close (TRUE);
+	wxExit ();
+	return;
+  case BX_ASYNC_EVT_LOG_MSG:
+    fprintf (wxlog, "log msg: level=%d, prefix='%s', msg='%s'\n",
+	  be->u.logmsg.level,
+	  be->u.logmsg.prefix,
+	  be->u.logmsg.msg);
+	fflush (wxlog);
+    return;
   default:
-    fprintf (wxlog, "OnBochs2GuiSyncEvent: event type %d ignored\n", (int)be->type);
+    fprintf (wxlog, "OnBochs2GuiEvent: event type %d ignored\n", (int)be->type);
+	// assume it's a synchronous event and send back a response, to avoid
+	// potential deadlock.
+    bochs_thread->SendSyncResponse(be);
+	return;
   }
   // it is critical to send a response back eventually since the Bochs thread
-  // is blocking.  For now, just send it right back.
-  bochs_thread->SendSyncResponse(be);
+  // is blocking.
+  wxASSERT_MSG (0, "switch stmt should have returned");
 }
 
 /////////////// bochs thread
@@ -287,11 +304,22 @@ BochsThread::Entry (void)
   char *argv[] = {"bochs"};
   fprintf (wxlog, "in BochsThread, starting at bx_continue_after_control_panel\n");
   // run all the rest of the Bochs simulator code.  This function will
-  // never exit unless we invent some kind of signal that the GUI sends
-  // that causes bochs to drop out of its cpu loop.  Presently there is
-  // no such signal so it will never quit.
+  // run forever, unless a "kill_bochs_request" is issued.  The procedure
+  // is as follows:
+  //   - user selects "Kill Bochs" or GUI decides to kill bochs
+  //   - GUI calls bochs_thread->Delete ()
+  //   - Bochs continues to run until the next time it reaches SIM->periodic().
+  //   - SIM->periodic() sends a synchronous tick event to the GUI, which
+  //     finally calls TestDestroy() and realizes it needs to stop.  It
+  //     sets the sync event return code to -1.  SIM->periodic() sets the
+  //     kill_bochs_request flag in cpu #0.
+  //   - cpu loop notices kill_bochs_request and returns to main.cc:
+  //     bx_continue_after_control_panel(), which notices the
+  //     kill_bochs_request and returns back to this Entry() function.
+  //   - Entry() exits and the thread stops. Whew.
   bx_continue_after_control_panel (argc, argv);
   fprintf (wxlog, "in BochsThread, bx_continue_after_control_panel exited\n");
+  fflush (wxlog);
   return NULL;
 }
 
@@ -347,83 +375,65 @@ MyFrame::HandleVgaGuiButton (bx_id param)
 // so that the siminterface can call this function when it needs to contact
 // the gui.  It will always be called with a pointer to the BochsThread
 // as the first argument.
-int
-BochsThread::SiminterfaceCallback (void *thisptr, int code)
+BxEvent *
+BochsThread::SiminterfaceCallback (void *thisptr, BxEvent *event)
 {
   BochsThread *me = (BochsThread *)thisptr;
-  // call the normal method (non-static) now that we know the this pointer.
-  int ret = me->SiminterfaceCallback2 (code);
-  // FIXME: kind of stupid to use notify_return instead of normal return.
-  // Not sure why I ever did it.
-  SIM->notify_return (ret);
-  return 0;
+  // call the normal non-static method now that we know the this pointer.
+  return me->SiminterfaceCallback2 (event);
 }
 
 // callback function for Bochs-generated events.  This is called from
 // the Bochs thread, not the GUI thread.  So any GUI actions must be
 // done after getting the gui mutex.
-int
-BochsThread::SiminterfaceCallback2 (int code)
+BxEvent *
+BochsThread::SiminterfaceCallback2 (BxEvent *event)
 {
-  fprintf (wxlog, "SiminterfaceCallback with code=%d\n", code);
-  switch (code)
+  fprintf (wxlog, "SiminterfaceCallback with event type=%d\n", (int)event->type);
+  event->retcode = 0;  // default return code
+  int async = 1;
+  switch (event->type)
   {
-  case NOTIFY_CODE_LOGMSG:
-    fprintf (wxlog, "logmsg callback");
-    break;
-  case NOTIFY_CODE_VGA_GUI_BUTTON:
-    {
-      fprintf (wxlog, "vga button pressed\n");
-	  int which = SIM->notify_get_int_arg (0);
-	  // this was the BochsThread implementation.
-	  //return HandleVgaGuiButton (which);
-	  // build an event that describes what is going on, and post it to
-	  // the GUI event queue.  The GUI event handler will process the event
-	  // and then call BochsThread::SyncEventRespond (event).  This will 
-	  // supply the response so that the Bochs thread can return.
-	  BxEvent *be = new BxEvent ();
-	  be->type = BX_SYNC_EVT_ASK_PARAM;
-	  be->u.param.id = which?  BXP_FLOPPYA_PATH : BXP_FLOPPYB_PATH;
-	  wxCommandEvent event (wxEVT_COMMAND_MENU_SELECTED, ID_Bochs2Gui_Sync_Event);
-	  event.SetEventObject ((wxObject *)be);
-	  ClearSyncResponse ();
-	  fprintf (wxlog, "Sending a Bochs ask_param event to the window\n");
-	  wxPostEvent (frame, event);
-	  fflush (wxlog);
-	  // now wait forever for the GUI to post a response.
-	  BxEvent *response = NULL;
-	  while (response == NULL) {
-	    response = GetSyncResponse ();
-		if (!response) {
-		  fprintf (wxlog, "no sync response yet, waiting\n");
-		  this->Sleep(500);
-        }
-	  }
-	  wxASSERT (response != NULL);
-	  // FIXME: stupid hack to make response available to siminterface.  Should
-	  // probably be the return value or something.
-	  bochs2gui_last_response = response;
-	  fflush (wxlog);
-	  return 0;
-	}
+  case BX_SYNC_EVT_ASK_PARAM:
+  case BX_SYNC_EVT_TICK:
+    ClearSyncResponse ();  // must be before postevent.
+    async = 0;
 	break;
-  case NOTIFY_CODE_SHUTDOWN:
-    {
-	  // assume bochs has already had its change to shut down.
-	  // this will just shut down the gui.
-	  fprintf (wxlog, "control panel is exiting\n");
-	  frame->Close (TRUE);
-	  wxExit ();
+  }
+
+  // tick event must be handled right here in the bochs thread.
+  if (event->type == BX_SYNC_EVT_TICK) {
+	if (TestDestroy ()) {
+	  // tell simulator to quit
+	  event->retcode = -1;
 	}
-  case -1: // what code?
-    {
-	  // synchronous event from Bochs to control panel.  Post the event to
-	  // the GUI event queue, then wait for a response in the mailbox.
+	SendSyncResponse (event);
+	return event;
+  }
+
+  //encapsulate the bxevent in a wxwindows event
+  wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Bochs2Gui_Event);
+  wxevent.SetEventObject ((wxEvent *)event);
+  fprintf (wxlog, "Sending an event to the window\n");
+  fflush (wxlog);
+  wxPostEvent (frame, wxevent);
+  // if it is an asynchronous event, return immediately
+  if (async) return NULL;
+  fprintf (wxlog, "SiminterfaceCallback2: synchronous event; waiting for response\n");
+  // now wait forever for the GUI to post a response.
+  BxEvent *response = NULL;
+  while (response == NULL) {
+	response = GetSyncResponse ();
+	if (!response) {
+	  fprintf (wxlog, "no sync response yet, waiting\n");
+	  fflush (wxlog);
+	  this->Sleep(500);
 	}
   }
-  return 0;
+  wxASSERT (response != NULL);
+  fflush (wxlog);
+  return response;
 }
-
 
 void 
 BochsThread::ClearSyncResponse ()
