@@ -1,4 +1,4 @@
-# Copyright (C) 2001  MandrakeSoft S.A.
+# Copyright (C) 2002  MandrakeSoft S.A.
 #
 #   MandrakeSoft S.A.
 #   43, rue d'Aboukir
@@ -144,7 +144,8 @@ gui.o: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../instrument/stubs/instrument.h ../gui/bitmaps/floppya.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h \
  ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
- ../gui/bitmaps/snapshot.h ../gui/bitmaps/configbutton.h
+ ../gui/bitmaps/snapshot.h ../gui/bitmaps/configbutton.h \
+ ../gui/bitmaps/cdromd.h
 keymap.o: keymap.@CPP_SUFFIX@ ../bochs.h keymap.h
 macintosh.o: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
