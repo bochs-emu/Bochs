@@ -1,0 +1,4 @@
+test1-static
+
+Use libtool to build module1 as a static library, and then use it in
+uselib.cc.

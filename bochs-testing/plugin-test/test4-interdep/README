@@ -1,0 +1,17 @@
+test4-interdep
+
+Can one module reference objects in another module? Yes.
+
+module1 exports module_name and operate(int,int).
+module2 exports n_operations and operation_occurred().
+
+uselib.cc uses symbols and functions from both modules.
+Module1 calls operation_occurred() in module2.
+
+To do this, module2 must be built first.  Then module1 is linked
+against module2 so that the missing symbols are available.  Then,
+uselib is linked against both.
+
+This shows that we can chain libraries.  I haven't seen any way to
+resolve a circular dependency, where mod1 depends on mod2 and vice 
+versa, in win32 DLLs.  Probably those are not supported.

@@ -1,0 +1,8 @@
+test3
+
+Add a second module
+
+module1 exports module_name and operate(int,int).
+module2 exports n_operations
+
+Both are used in uselib.cc.  They don't use each other's symbols.

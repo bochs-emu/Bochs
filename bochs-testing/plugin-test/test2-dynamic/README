@@ -1,0 +1,38 @@
+test2-dynamic
+
+In this directory I use the same source code as test1-static, but 
+I try to build a shared library instead.  To build a shared library
+for libmodule1.la, first I add the -rpath variable.  This makes libtool
+attempt to build shared libraries, but it gives this warning:
+
+libtool: link: warning: undefined symbols not allowed in i686-pc-cygwin shared libraries
+
+Then it proceeds to build only static libraries.  So I add -no-undefined to
+the link of libmodule1.la.  This makes it actually build a shared library.
+When it does the libtool install step, I see that these files were installed:
+
+-rwxr-xr-x    1 bryce    unknown    668055 Oct 11 02:40 bin/cygmodule1-0.dll
+-rw-r--r--    1 bryce    unknown       664 Oct 11 02:40 lib/libmodule1.a
+-rw-r--r--    1 bryce    unknown      2946 Oct 11 02:40 lib/libmodule1.dll.a
+-rw-r--r--    1 bryce    unknown       728 Oct 11 02:40 lib/libmodule1.la
+
+File types are
+bin/cygmodule1-0.dll: MS Windows PE Intel 80386 console DLL
+lib/libmodule1.a:     current ar archive
+lib/libmodule1.dll.a: current ar archive
+lib/libmodule1.la:    ASCII English text
+
+But, trying to link with this shared library fails.
+
+libtool g++ -Wall -g -o uselib uselib.cc libmodule1.la
+g++ -Wall -g -o .libs/uselib uselib.cc  .libs/libimp-cygmodule1-0.a -Wl,--rpath -Wl,/home/bryce/plugin-test/test2-dynamic/lib
+Warning: resolving _module_name by linking to __imp__module_name (auto-import)
+fu000001.o(.idata$3+0xc): undefined reference to `_libs_libimp_cygmodule1_0_a_iname'
+nmth000000.o(.idata$4+0x0): undefined reference to `_nm__module_name'
+collect2: ld returned 1 exit status
+make: *** [uselib] Error 1
+
+Then I finally read about __declspec(dllexport) and __declspec(dllimport).
+When compiling the module I add __declspec(dllexport) on data and functions.
+When using the module, the prototypes for say __declspec(dllimport).
+Now it works!
