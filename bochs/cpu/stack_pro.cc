@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: stack_pro.cc,v 1.7 2002-09-15 01:00:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -129,6 +129,24 @@ BX_CPU_C::push_32(Bit32u value32)
     return;
     }
 }
+
+#if BX_SUPPORT_X86_64
+  void
+BX_CPU_C::push_64(Bit64u value64)
+{
+  /* 64bit stack size: pushes use SS:RSP, assume protected mode  */
+  if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, RSP, 8)) {
+    BX_PANIC(("push_64(): push outside stack limits"));
+    /* #SS(0) */
+    }
+
+  write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
+  RSP -= 8;
+  /* will return after error anyway */
+  return;
+}
+#endif  // #if BX_SUPPORT_X86_64
+
 #endif /* BX_CPU_LEVEL >= 3 */
 
   void
@@ -192,6 +210,25 @@ BX_CPU_C::pop_32(Bit32u *value32_ptr)
   else
     SP += 4;
 }
+
+#if BX_SUPPORT_X86_64
+  void
+BX_CPU_C::pop_64(Bit64u *value64_ptr)
+{
+  if ( !can_pop(8) ) {
+    BX_PANIC(("pop_64(): can't pop from stack"));
+    exception(BX_SS_EXCEPTION, 0, 0);
+    return;
+    }
+
+  /* access within limits */
+
+  read_virtual_qword(BX_SEG_REG_SS, RSP, value64_ptr);
+
+  RSP += 8;
+}
+#endif  // #if BX_SUPPORT_X86_64
+
 #endif
 
 

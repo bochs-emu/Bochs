@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.9 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: stack32.cc,v 1.10 2002-09-15 01:00:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,6 +37,13 @@
 #endif
 
 
+#if BX_SUPPORT_X86_64==0
+// Make life easier for merging 64&32-bit code.
+#define RBP EBP
+#endif
+
+
+
   void
 BX_CPU_C::POP_Ed(BxInstruction_t *i)
 {
@@ -45,7 +52,7 @@ BX_CPU_C::POP_Ed(BxInstruction_t *i)
   pop_32(&val32);
 
   if (i->mod == 0xc0) {
-    BX_WRITE_32BIT_REG(i->rm, val32);
+    BX_WRITE_32BIT_REGZ(i->rm, val32);
     }
   else {
     // Note: there is one little weirdism here.  When 32bit addressing
@@ -63,7 +70,11 @@ BX_CPU_C::POP_Ed(BxInstruction_t *i)
   void
 BX_CPU_C::PUSH_ERX(BxInstruction_t *i)
 {
+#if BX_SUPPORT_X86_64
+  push_32(BX_CPU_THIS_PTR gen_reg[i->nnn].dword.erx);
+#else
   push_32(BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx);
+#endif
 }
 
   void
@@ -72,7 +83,11 @@ BX_CPU_C::POP_ERX(BxInstruction_t *i)
   Bit32u erx;
 
   pop_32(&erx);
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR gen_reg[i->nnn].dword.erx = erx;
+#else
   BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx = erx;
+#endif
 }
 
 
@@ -441,7 +456,7 @@ BX_CPU_C::ENTER_IwIb(BxInstruction_t *i)
     } /* if (level > 0) ... */
 
   if (i->os_32)
-    EBP = frame_ptr32;
+    RBP = frame_ptr32;
   else
     BP = frame_ptr32;
 
@@ -504,7 +519,7 @@ BX_CPU_C::LEAVE(BxInstruction_t *i)
     Bit32u temp32;
 
     pop_32(&temp32);
-    EBP = temp32;
+    RBP = temp32;
     }
   else
 #endif

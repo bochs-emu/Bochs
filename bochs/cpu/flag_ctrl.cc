@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.9 2002-09-12 18:10:40 bdenney Exp $
+// $Id: flag_ctrl.cc,v 1.10 2002-09-15 01:00:19 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,6 +151,12 @@ BX_CPU_C::PUSHF_Fv(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    push_64(read_eflags() & 0x00fcffff);
+    }
+  else
+#endif
   if (i->os_32) {
     push_32(read_eflags() & 0x00fcffff);
     }
@@ -168,7 +174,7 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
 
 #if BX_CPU_LEVEL >= 3
   if (v8086_mode()) {
-    if (BX_CPU_THIS_PTR get_IOPL () < 3) {
+    if (BX_CPU_THIS_PTR get_IOPL() < 3) {
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -183,6 +189,22 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
       }
     }
 
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    Bit64u eflags_tmp;
+
+    pop_64(&eflags_tmp);
+
+    eflags_tmp &= 0x00277fd7;
+    if (!real_mode()) {
+      write_eflags(eflags_tmp, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL(), 0, 0);
+      }
+    else { /* real mode */
+      write_eflags(eflags_tmp, /* change IOPL? */ 1, /* change IF? */ 1, 0, 0);
+      }
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->os_32) {
     Bit32u eflags_tmp;
 
@@ -204,7 +226,7 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
     pop_16(&flags);
 
     if (!real_mode()) {
-      write_flags(flags, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL ());
+      write_flags(flags, /* change IOPL? */ CPL==0, /* change IF? */ CPL<=BX_CPU_THIS_PTR get_IOPL());
       }
     else { /* real mode */
       write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);

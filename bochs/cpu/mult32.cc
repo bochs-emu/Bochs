@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: mult32.cc,v 1.7 2002-09-15 01:00:19 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,6 +35,11 @@
 
 
 
+#if BX_SUPPORT_X86_64==0
+#define RAX EAX
+#define RDX EDX
+#endif
+
 
   void
 BX_CPU_C::MUL_EAXEd(BxInstruction_t *i)
@@ -61,8 +66,8 @@ BX_CPU_C::MUL_EAXEd(BxInstruction_t *i)
 
     /* now write product back to destination */
 
-    EAX = product_32l;
-    EDX = product_32h;
+    RAX = product_32l;
+    RDX = product_32h;
 
     /* set eflags:
      * MUL affects the following flags: C,O
@@ -99,8 +104,8 @@ BX_CPU_C::IMUL_EAXEd(BxInstruction_t *i)
 
     /* now write product back to destination */
 
-    EAX = product_32l;
-    EDX = product_32h;
+    RAX = product_32l;
+    RDX = product_32h;
 
     /* set eflags:
      * IMUL affects the following flags: C,O
@@ -154,8 +159,8 @@ BX_CPU_C::DIV_EAXEd(BxInstruction_t *i)
 
     /* now write quotient back to destination */
 
-    EAX = quotient_32l;
-    EDX = remainder_32;
+    RAX = quotient_32l;
+    RDX = remainder_32;
 }
 
 
@@ -193,8 +198,8 @@ BX_CPU_C::IDIV_EAXEd(BxInstruction_t *i)
 
     /* now write quotient back to destination */
 
-    EAX = quotient_32l;
-    EDX = remainder_32;
+    RAX = quotient_32l;
+    RDX = remainder_32;
 }
 
 
@@ -224,7 +229,7 @@ BX_CPU_C::IMUL_GdEdId(BxInstruction_t *i)
     product_64 = ((Bit64s) op2_32) * ((Bit64s) op3_32);
 
     /* now write product back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, product_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, product_32);
 
     /* set eflags:
      * IMUL affects the following flags: C,O
@@ -267,7 +272,7 @@ BX_CPU_C::IMUL_GdEd(BxInstruction_t *i)
     product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
 
     /* now write product back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, product_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, product_32);
 
     /* set eflags:
      * IMUL affects the following flags: C,O

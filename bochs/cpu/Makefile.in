@@ -51,16 +51,10 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # been synced yet.
 OBJS32 = \
 	ctrl_xfer_pro.o \
-	flag_ctrl_pro.o \
 	segment_ctrl_pro.o \
-	stack_pro.o \
 	paging.o \
-	debugstuff.o \
 	arith32.o \
-	mult32.o \
-	stack32.o \
 	bit.o \
-	flag_ctrl.o \
 	io.o \
 	string.o \
 	$(EXT_DEBUG_OBJS) \
@@ -104,6 +98,12 @@ OBJSXX = \
 	exception.o \
 	proc_ctrl.o \
 	lazy_flags.o \
+	stack_pro.o \
+	flag_ctrl_pro.o \
+	stack32.o \
+	debugstuff.o \
+	flag_ctrl.o \
+	mult32.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
