@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.10 2002-10-17 17:29:08 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.11 2002-10-17 21:44:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,11 +126,32 @@ class bx_keyb_stub_c : public bx_devmodel_c {
   }
 };
 
+class bx_hard_drive_stub_c : public bx_devmodel_c {
+  public:
+  virtual void   close_harddrive(void) {
+    STUBFUNC(HD, close_harddrive);
+  }
+  virtual void   init() {
+    STUBFUNC(HD, init);
+  }
+  virtual void   reset(unsigned type) {
+    STUBFUNC(HD, reset);
+  }
+  virtual Bit32u   get_device_handle(Bit8u channel, Bit8u device) {
+    STUBFUNC(HD, get_device_handle); return 0;
+  }
+  virtual Bit32u   get_first_cd_handle(void) {
+    STUBFUNC(HD, get_first_cd_handle); return 0;
+  }
+  virtual unsigned get_cd_media_status(Bit32u handle) {
+    STUBFUNC(HD, get_cd_media_status); return 0;
+  }
+  virtual unsigned set_cd_media_status(Bit32u handle, unsigned status) {
+    STUBFUNC(HD, set_cd_media_status); return 0;
+  }
+};
+
 extern bx_keyb_stub_c pluginKeyboardStub;
-
-
-
-
 
 class bx_devices_c : public logfunctions {
 public:
@@ -163,7 +184,6 @@ public:
   bx_pit_c         *pit;
   bx_ioapic_c      *ioapic;
 #if !BX_PLUGINS
-  //bx_keyb_c   *keyboard;
   bx_dma_c         *dma;
   bx_unmapped_c    *unmapped;
   bx_biosdev_c     *biosdev;
@@ -172,7 +192,6 @@ public:
   bx_floppy_ctrl_c *floppy;
   bx_parallel_c    *parallel;
   bx_serial_c      *serial;
-  bx_hard_drive_c  *hard_drive;
   bx_pic_c         *pic;
 #endif
   bx_sb16_c        *sb16;
@@ -241,7 +260,6 @@ private:
 #  include "iodev/hga.h"
 #endif
 #include "iodev/floppy.h"
-#include "iodev/harddrv.h"
 #include "iodev/parallel.h"
 #include "iodev/serial.h"
 #include "iodev/dma.h"
@@ -249,6 +267,7 @@ private:
 #include "iodev/keyboard.h"
 
 #endif // #if !BX_PLUGINS
+#include "iodev/harddrv.h"
 
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"

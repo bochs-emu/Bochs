@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.46.2.1 2002-10-08 17:16:32 cbothamy Exp $
+// $Id: cdrom.cc,v 1.46.2.2 2002-10-17 21:44:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,10 +33,6 @@
 
 
 #include "bochs.h"
-
-#if BX_PLUGINS
-#include "harddrv.h"
-#endif
 
 #define LOG_THIS /* no SMF tricks here, not needed */
 
@@ -212,7 +208,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.46.2.1 2002-10-08 17:16:32 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.46.2.2 2002-10-17 21:44:40 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.5 2002-10-10 17:04:35 bdenney Exp $
+// $Id: harddrv.cc,v 1.77.2.6 2002-10-17 21:44:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,11 +32,7 @@
 
 #include "bochs.h"
 
-#if BX_PLUGINS
-#include "harddrv.h"
-#endif
-
-#define LOG_THIS bx_hard_drive.
+#define LOG_THIS theHardDrive->
 
 // WARNING: dangerous options!
 // These options provoke certain kinds of errors for testing purposes when they
@@ -54,12 +50,6 @@
 #define INDEX_PULSE_CYCLE 10
 
 #define PACKET_SIZE 12
-
-bx_hard_drive_c bx_hard_drive;
-#if BX_USE_HD_SMF
-#define this (&bx_hard_drive)
-#endif
-
 
 static unsigned max_multiple_sectors  = 0; // was 0x3f
 static unsigned curr_multiple_sectors = 0; // was 0x3f
@@ -103,10 +93,12 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 
 
 #if BX_PLUGINS
+bx_hard_drive_c *theHardDrive = NULL;
 
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
+  theHardDrive = new bx_hard_drive_c ();
   return(0); // Success
 }
 
@@ -114,25 +106,18 @@ plugin_init(plugin_t *plugin, int argc, char *argv[])
 plugin_fini(void)
 {
 }
-
+#else
+bx_hard_drive_c *theHardDrive = new bx_hard_drive_c ();
+bx_hard_drive_stub_c *pluginHardDrive = NULL;
 #endif
 
 
 bx_hard_drive_c::bx_hard_drive_c(void)
 {
-
-#if BX_PLUGINS
     pluginHardDrive = this;
-    pluginHDReadHandler = read_handler;
-    pluginHDWriteHandler = write_handler;
-    pluginHDGetFirstCDHandle = get_first_cd_handle;
-    pluginHDGetDeviceHandle = get_device_handle;
-    pluginHDGetCDMediaStatus = get_cd_media_status;
-    pluginHDSetCDMediaStatus = set_cd_media_status;
-    pluginHDCloseHarddrive = close_harddrive;
-
+#if BX_PLUGINS
     // Register plugin basic entry points
-    BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_HARDDRV);
+    BX_REGISTER_DEVICE_DEVMODEL(this, BX_PLUGIN_HARDDRV);
 
 #endif
 
@@ -196,7 +181,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.5 2002-10-10 17:04:35 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.6 2002-10-17 21:44:42 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {

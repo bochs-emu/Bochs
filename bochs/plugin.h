@@ -29,17 +29,17 @@ extern logfunctions  *pluginlog;
 extern "C" {
 #endif
 
-#define BX_PLUGIN_UNMAPPED "UNMAPPED"
-#define BX_PLUGIN_BIOSDEV  "BIOSDEV"
-#define BX_PLUGIN_CMOS     "CMOS RAM"
-#define BX_PLUGIN_VGA      "VGA"
-#define BX_PLUGIN_FLOPPY   "FLOPPY"
-#define BX_PLUGIN_PARALLEL "PARALLEL"
-#define BX_PLUGIN_SERIAL   "SERIAL"
-#define BX_PLUGIN_KEYBOARD "KEYBOARD"
-#define BX_PLUGIN_HARDDRV  "HARDDRIVE"
-#define BX_PLUGIN_DMA      "DMA"
-#define BX_PLUGIN_PIC      "PIC"
+#define BX_PLUGIN_UNMAPPED "unmapped"
+#define BX_PLUGIN_BIOSDEV  "biosdev"
+#define BX_PLUGIN_CMOS     "cmos"
+#define BX_PLUGIN_VGA      "vga"
+#define BX_PLUGIN_FLOPPY   "floppy"
+#define BX_PLUGIN_PARALLEL "parallel"
+#define BX_PLUGIN_SERIAL   "serial"
+#define BX_PLUGIN_KEYBOARD "keyboard"
+#define BX_PLUGIN_HARDDRV  "harddrv"
+#define BX_PLUGIN_DMA      "dma"
+#define BX_PLUGIN_PIC      "pic"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 #define BX_REGISTER_DEVICE_DEVMODEL pluginRegisterDeviceDevmodel
@@ -48,6 +48,7 @@ extern "C" {
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); bx_init_plugins();}
 #define BX_RESET_DEVICES(type) {bx_devices.reset(type); bx_reset_plugins(type);}
+#define BX_LOAD_PLUGIN(name,type) {bx_load_plugin(name,type);}
 
 #define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
 #define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
@@ -74,16 +75,6 @@ extern "C" {
 
 #define BX_FLOPPY_PRESENT() (pluginDevicePresent(BX_PLUGIN_FLOPPY))
 
-#define BX_HD_READ_HANDLER(a, b, c) pluginHDReadHandler(pluginHardDrive, b, c)
-#define BX_HD_WRITE_HANDLER(a, b, c, d) pluginHDWriteHandler(pluginHardDrive, b, c, d)
-#define BX_HD_GET_FIRST_CD_HANDLE() pluginHDGetFirstCDHandle()
-#define BX_HD_GET_DEVICE_HANDLE(a,b) pluginHDGetDeviceHandle(a,b)
-#define BX_HD_GET_CD_MEDIA_STATUS(handle) pluginHDGetCDMediaStatus(handle)
-#define BX_HD_SET_CD_MEDIA_STATUS(handle, status)  pluginHDSetCDMediaStatus(handle, status)
-#define BX_HD_CLOSE_HARDDRIVE()  pluginHDCloseHarddrive()
-
-#define BX_HARD_DRIVE_PRESENT() (pluginDevicePresent(BX_PLUGIN_HARDDRV))
-
 #define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
 #define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
@@ -106,7 +97,7 @@ extern "C" {
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
 #define BX_RESET_DEVICES(type) {bx_devices.reset(type); }
-
+#define BX_LOAD_PLUGIN(name,type)
 #define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e)
 #define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e)
 #define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) bx_devices.register_default_io_read_handler(b,c,d)
@@ -134,22 +125,6 @@ extern "C" {
     (bx_devices.floppy->set_media_status(drive, status))
 
 #define BX_FLOPPY_PRESENT() (bx_devices.floppy)
-
-#define BX_HD_READ_HANDLER(a, b, c) \
-    (bx_devices.hard_drive->read_handler(a, b, c))
-#define BX_HD_WRITE_HANDLER(a, b, c, d) \
-    (bx_devices.hard_drive->write_handler(a, b, c, d))
-#define BX_HD_GET_FIRST_CD_HANDLE() \
-    (bx_devices.hard_drive->get_first_cd_handle())
-#define BX_HD_GET_DEVICE_HANDLE(a,b) \
-    (bx_devices.hard_drive->get_device_handle(a,b))
-#define BX_HD_GET_CD_MEDIA_STATUS(handle) \
-    (bx_devices.hard_drive->get_cd_media_status(handle))
-#define BX_HD_SET_CD_MEDIA_STATUS(handle, status) \
-    (bx_devices.hard_drive->set_cd_media_status(handle, status))
-#define BX_HD_CLOSE_HARDDRIVE()  bx_devices.hard_drive->close_harddrive()
-
-#define BX_HARD_DRIVE_PRESENT() (bx_devices.hard_drive)
 
 #define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
@@ -179,8 +154,8 @@ extern "C" {
 
 
 
+///////// keyboard macros
 extern class bx_keyb_stub_c *pluginKeyboard;
-
 #define DEV_mouse_motion(dx, dy, state) \
     (pluginKeyboard->mouse_motion(dx, dy, state))
 #define DEV_kbd_gen_scancode(scancode) \
@@ -194,6 +169,24 @@ extern class bx_keyb_stub_c *pluginKeyboard;
 #define DEV_mouse_enabled_changed(val) \
     (pluginKeyboard->mouse_enabled_changed(val))
 
+///////// hard drive macros
+extern class bx_hard_drive_stub_c *pluginHardDrive;
+#define BX_HD_READ_HANDLER(a, b, c) \
+    (bx_hard_drive_c::read_handler(a, b, c))
+#define BX_HD_WRITE_HANDLER(a, b, c, d) \
+    (bx_hard_drive_c::write_handler(a, b, c, d))
+#define BX_HD_GET_FIRST_CD_HANDLE() \
+    (pluginHardDrive->get_first_cd_handle())
+#define BX_HD_GET_DEVICE_HANDLE(a,b) \
+    (pluginHardDrive->get_device_handle(a,b))
+#define BX_HD_GET_CD_MEDIA_STATUS(handle) \
+    (pluginHardDrive->get_cd_media_status(handle))
+#define BX_HD_SET_CD_MEDIA_STATUS(handle, status) \
+    (pluginHardDrive->set_cd_media_status(handle, status))
+#define BX_HD_CLOSE_HARDDRIVE()  pluginHardDrive->close_harddrive()
+#define BX_HARD_DRIVE_PRESENT() (pluginHardDrive)
+
+
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
@@ -203,8 +196,16 @@ typedef void   (*ioWriteHandler_t)(void *, Bit32u, Bit32u, unsigned);
 
 #define MAX_ARGC 10
 
+enum plugintype_t {
+  PLUGTYPE_NULL=100,
+  PLUGTYPE_CORE,
+  PLUGTYPE_OPTIONAL,
+  PLUGTYPE_USER
+};
+
 typedef struct _plugin_t
 {
+    plugintype_t type;
     int  initialized;
     lt_dlhandle handle;
     int  argc;
@@ -220,6 +221,7 @@ extern plugin_t *plugins;
 typedef struct _device_t
 {
     const char *name;
+    plugin_t *plugin;
     void (*device_init_mem)(BX_MEM_C *);
     void (*device_init_dev)();
     void (*device_reset)(unsigned);
@@ -236,7 +238,7 @@ typedef struct _device_t
 extern device_t *devices;
 
 void plugin_startup (void);
-void plugin_load (char *name, char *args);
+void plugin_load (char *name, char *args, plugintype_t);
 plugin_t *plugin_unload (plugin_t *plugin);
 void plugin_init_all (void);
 void plugin_fini_all (void);
@@ -308,16 +310,6 @@ extern unsigned (* pluginDMAGetTC)(void);
 extern unsigned (* pluginDMAGetTC)(void);
 extern void     (* pluginDMARaiseHLDA)(void);
 
-/* === Hard drive / floppy port sharing hack === */
-extern class bx_hard_drive_c *pluginHardDrive;  // some macros require this
-extern Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len);
-extern void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len);
-extern Bit32u   (* pluginHDGetFirstCDHandle)(void);
-extern Bit32u   (* pluginHDGetDeviceHandle)(Bit8u, Bit8u);
-extern unsigned (* pluginHDGetCDMediaStatus)(Bit32u);
-extern unsigned (* pluginHDSetCDMediaStatus)(Bit32u, unsigned);
-extern void     (* pluginHDCloseHarddrive)(void);
-
 /* === Floppy stuff ===*/
 extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);
 extern unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status);
@@ -351,6 +343,7 @@ void plugin_abort (void);
 
 // called from bochs main (hack)
 extern int bx_load_plugins ();
+int bx_load_plugin (const char *name, plugintype_t type);
 extern void bx_init_plugins (void);
 extern void bx_reset_plugins (unsigned);
 

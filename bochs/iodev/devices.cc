@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.10 2002-10-10 13:10:49 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.11 2002-10-17 21:44:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,7 +53,6 @@ bx_devices_c::bx_devices_c(void)
   cmos = NULL;
   vga = NULL;
   floppy = NULL;
-  hard_drive = NULL;
   parallel = NULL;
   serial = NULL;
   //keyboard = NULL;
@@ -89,7 +88,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.10 2002-10-10 13:10:49 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.11 2002-10-17 21:44:41 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -166,10 +165,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   floppy = &bx_floppy;
   floppy->init();
 
-  /*--- HARD DRIVE ---*/
-  hard_drive = &bx_hard_drive;
-  hard_drive->init();
-
   /*--- PARALLEL PORT ---*/
   parallel = &bx_parallel;
   parallel->init();
@@ -178,15 +173,19 @@ bx_devices_c::init(BX_MEM_C *newmem)
   serial = &bx_serial;
   serial->init();
 
-  /*--- KEYBOARD ---*/
-  pluginKeyboard->init();
-
   /*--- 8259A PIC ---*/
   pic = & bx_pic;
   pic->init();
 
 #endif
 
+  /*--- HARD DRIVE ---*/
+  BX_LOAD_PLUGIN (BX_PLUGIN_HARDDRV, PLUGTYPE_CORE);
+  pluginHardDrive->init();
+
+  /*--- KEYBOARD ---*/
+  BX_LOAD_PLUGIN (BX_PLUGIN_KEYBOARD, PLUGTYPE_CORE);
+  pluginKeyboard->init();
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
@@ -280,12 +279,12 @@ bx_devices_c::reset(unsigned type)
 #endif
 
   floppy->reset(type);
-  hard_drive->reset(type);
   parallel->reset(type);
   serial->reset(type);
-  pluginKeyboard->reset(type);
   pic->reset(type);
 #endif
+  pluginHardDrive->reset(type);
+  pluginKeyboard->reset(type);
 
 #if BX_SUPPORT_SB16
   sb16->reset(type);
@@ -373,8 +372,6 @@ bx_devices_c::timer_handler(void *this_ptr)
   void
 bx_devices_c::timer()
 {
-  unsigned retval;
-
 #if (BX_USE_NEW_PIT==0)
   if ( pit->periodic( BX_IODEV_HANDLER_PERIOD ) ) {
     // This is a hack to make the IRQ0 work

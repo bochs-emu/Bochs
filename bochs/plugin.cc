@@ -48,7 +48,6 @@ void     (* pluginDMASetDRQ)(unsigned channel, Boolean val) = 0;
 unsigned (* pluginDMAGetTC)(void) = 0;
 void     (* pluginDMARaiseHLDA)(void) = 0;
 
-bx_hard_drive_c *pluginHardDrive = 0;
 Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len) = 0;
 void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len) = 0;
 Bit32u   (* pluginHDGetDeviceHandle)(Bit8u, Bit8u) = 0;
@@ -101,6 +100,8 @@ static void plugin_init_one(plugin_t *plugin);
 
 device_t *devices = NULL;      /* Head of the linked list of registered devices  */
 
+plugin_t *current_plugin_context = NULL;
+
 #if BX_PLUGINS
 // When compiling with plugins, plugin.cc will provide the pluginKeyboard
 // pointer.  At first it will point to the stub so that calls to the methods
@@ -108,6 +109,8 @@ device_t *devices = NULL;      /* Head of the linked list of registered devices 
 // bx_keyb_c object by plugin_init of the keyboard plugin.
 bx_keyb_stub_c pluginKeyboardStub;
 bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
+bx_hard_drive_stub_c pluginHardDriveStub;
+bx_hard_drive_stub_c *pluginHardDrive = &pluginHardDriveStub;
 #else
 // When plugins are turned off, the device will provide the pluginKeyboard
 // pointer instead.  It will be initialized to point to a real bx_keyb_c
@@ -205,53 +208,6 @@ builtinDMAGetTC(void)
 builtinDMARaiseHLDA(void)
 {
   pluginlog->panic("builtinDMARaiseHLDA called, no DMA plugin loaded?");
-}
-
-  static Bit32u
-builtinHDReadHandler(void* ptr, Bit32u address, unsigned io_len)
-{
-  pluginlog->panic("builtinHDReadHandler called, no Harddisk plugin loaded?");
-  return 0;
-}
-
-  static void
-builtinHDWriteHandler(void* ptr, Bit32u address, Bit32u value, unsigned io_len)
-{
-  pluginlog->panic("builtinHDWriteHandler called, no Harddisk plugin loaded?");
-}
-
-  static Bit32u   
-builtinHDGetFirstCDHandle(void)
-{
-  pluginlog->panic("builtinHDGetFirstCDHandle called, no Harddisk plugin loaded?");
-  return 0;
-}
-
-  static Bit32u   
-builtinHDGetDeviceHandle(Bit8u, Bit8u)
-{
-  pluginlog->panic("builtinHDGetDeviceHandle called, no Harddisk plugin loaded?");
-  return 0;
-}
-
-  static unsigned 
-builtinHDGetCDMediaStatus(Bit32u)
-{
-  pluginlog->panic("builtinCDGetMediaStatus called, no Harddisk plugin loaded?");
-  return 0;
-}
-
-  static unsigned 
-builtinHDSetCDMediaStatus(Bit32u, unsigned) 
-{
-  pluginlog->panic("builtinHDSetCDMediaStatus called, no Harddisk plugin loaded?");
-  return 0;
-}
-
-  static void 
-builtinHDCloseHarddrive (void) 
-{
-  pluginlog->panic("builtinHDCloseHarddrive called, no Harddisk plugin loaded?");
 }
 
   static void
@@ -456,16 +412,12 @@ plugin_init_all (void)
             *arg_ptr++ = '\0';
         }
 
-#if 0
-// BBD: plugin_init has already been called by plugin_load, so I commented
-// this call.
         /* initialize the plugin */
         if (plugin->plugin_init (plugin, plugin->argc, plugin->argv))
         {
             pluginlog->panic("Plugin initialization failed for %s", plugin->name);
             plugin_abort();
         }
-#endif
 
         plugin->initialized = 1;
     }
@@ -539,7 +491,7 @@ plugin_fini_all (void)
 }
 
   void
-plugin_load (char *name, char *args)
+plugin_load (char *name, char *args, plugintype_t type)
 {
     plugin_t *plugin;
 
@@ -549,14 +501,22 @@ plugin_load (char *name, char *args)
       BX_PANIC (("malloc plugin_t failed"));
     }
 
+    plugin->type = type;
     plugin->name = name;
     plugin->args = args;
     plugin->initialized = 0;
+
+    // Set context so that any devices that the plugin registers will
+    // be able to see which plugin created them.  The registration will
+    // be called from either dlopen (global constructors) or plugin_init.
+    BX_ASSERT (current_plugin_context == NULL);
+    current_plugin_context = plugin;
 
     plugin->handle = lt_dlopen (name);
     fprintf (stderr, "lt_dlhandle is %p\n", plugin->handle);
     if (!plugin->handle)
     {
+      current_plugin_context = NULL;
       BX_PANIC (("dlopen failed for module '%s': %s", name, lt_dlerror ()));
       free (plugin);
       return;
@@ -598,6 +558,11 @@ plugin_load (char *name, char *args)
 
     plugin_init_one(plugin);
 
+    // check that context didn't change.  This should only happen if we
+    // need a reentrant plugin_load.
+    BX_ASSERT (current_plugin_context == plugin);
+    current_plugin_context = NULL;
+
     return;
 }
 
@@ -625,14 +590,6 @@ plugin_startup(void)
   pluginDMASetDRQ    = builtinDMASetDRQ;
   pluginDMAGetTC     = builtinDMAGetTC;
   pluginDMARaiseHLDA = builtinDMARaiseHLDA;
-
-  pluginHDReadHandler  = builtinHDReadHandler;
-  pluginHDWriteHandler = builtinHDWriteHandler;
-  pluginHDGetFirstCDHandle = builtinHDGetFirstCDHandle;
-  pluginHDGetDeviceHandle = builtinHDGetDeviceHandle;
-  pluginHDGetCDMediaStatus = builtinHDGetCDMediaStatus;
-  pluginHDSetCDMediaStatus = builtinHDSetCDMediaStatus;
-  pluginHDCloseHarddrive = builtinHDCloseHarddrive;
 
   pluginVGARedrawArea  = builtinVGARedrawArea;
   pluginVGAMemRead     = builtinVGAMemRead;
@@ -689,6 +646,8 @@ void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
     }
 
     device->name = name;
+    BX_ASSERT(current_plugin_context != NULL);
+    device->plugin = current_plugin_context;
     device->use_devmodel_interface = 0;
     device->device_init_mem = init1;
     device->device_init_dev = init2;
@@ -696,6 +655,21 @@ void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
     device->device_load_state = load;
     device->device_save_state = save;
     device->next = NULL;
+
+    // Don't add every kind of device to the list.
+    switch (device->plugin->type)
+    {
+      case PLUGTYPE_CORE:
+	// Core devices are present whether or not we are using plugins, so
+	// they are managed by code iodev/devices.cc and should not be
+	// managed by the plugin system.
+	return; // Do not add core devices to the devices list.
+      case PLUGTYPE_OPTIONAL:
+      case PLUGTYPE_USER:
+      default:
+	// The plugin system will manage optional and user devices only.
+	break;
+    }
 
     if (!devices)
     {
@@ -725,7 +699,10 @@ void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
     }
 
     device->name = name;
+    BX_ASSERT (devmodel != NULL);
     device->devmodel = devmodel;
+    BX_ASSERT(current_plugin_context != NULL);
+    device->plugin = current_plugin_context;
     device->use_devmodel_interface = 1;
     device->device_init_mem = NULL;  // maybe should use 1 to detect any use?
     device->device_init_dev = NULL;
@@ -733,6 +710,22 @@ void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
     device->device_load_state = NULL;
     device->device_save_state = NULL;
     device->next = NULL;
+
+    // Don't add every kind of device to the list.
+    switch (device->plugin->type)
+    {
+      case PLUGTYPE_CORE:
+	// Core devices are present whether or not we are using plugins, so
+	// they are managed by the same code in iodev/devices.cc whether
+	// plugins are on or off.  
+	return; // Do not add core devices to the devices list.
+      case PLUGTYPE_OPTIONAL:
+      case PLUGTYPE_USER:
+      default:
+	// The plugin system will manage optional and user devices only.
+	break;
+    }
+
 
     if (!devices)
     {
@@ -748,13 +741,6 @@ void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
             temp = temp->next;
 
         temp->next = device;
-    }
-    // BBD hack
-    if (devmodel) {
-      device->use_devmodel_interface = 1;
-      device->devmodel = devmodel;
-    } else {
-      device->use_devmodel_interface = 0;
     }
 }
 
@@ -779,12 +765,13 @@ Boolean pluginDevicePresent(char *name)
 /************************************************************************/
 
 #define PLUGIN_PATH ""
-int bx_load_plugin (const char *format, const char *name)
+#define PLUGIN_FILENAME_FORMAT "lib%s.la"
+int bx_load_plugin (const char *name, plugintype_t type)
 {
   char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
-  sprintf (buf, format, name);
+  sprintf (buf, PLUGIN_FILENAME_FORMAT, name);
   sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
-  plugin_load (plugin_filename, "");
+  plugin_load (plugin_filename, "", type);
   lt_dlhandle handle = lt_dlopen (plugin_filename);
   if (!handle) {
     pluginlog->error("could not open plugin %s", plugin_filename);
@@ -808,18 +795,15 @@ int bx_load_plugins (void)
   plugin_startup();
 
 #if BX_PLUGINS
-  const char *format = "lib%s.la";
-  bx_load_plugin(format, "unmapped");
-  bx_load_plugin(format, "biosdev");
-  bx_load_plugin(format, "cmos");
-  bx_load_plugin(format, "dma");
-  bx_load_plugin(format, "pic");
-  bx_load_plugin(format, "vga");
-  bx_load_plugin(format, "floppy");
-  bx_load_plugin(format, "parallel");
-  bx_load_plugin(format, "serial");
-  bx_load_plugin(format, "keyboard");
-  bx_load_plugin(format, "harddrv");
+  bx_load_plugin(BX_PLUGIN_UNMAPPED, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_BIOSDEV, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_CMOS, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_DMA, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_PIC, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_VGA, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_FLOPPY, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_PARALLEL, PLUGTYPE_OPTIONAL);
+  bx_load_plugin(BX_PLUGIN_SERIAL, PLUGTYPE_OPTIONAL);
 
 
   // quick and dirty gui plugin selection
@@ -845,14 +829,15 @@ int bx_load_plugins (void)
     fprintf (stderr, "--> ");
     if (!fgets (line, sizeof(line), stdin)) break;
   } while (sscanf (line, "%d", &which) != 1 || !(which>=0 && which<imax));
-  bx_load_plugin (format, gui_names[which]);
+  bx_load_plugin (gui_names[which], PLUGTYPE_OPTIONAL);
 
   if (bx_gui == NULL) {
     BX_PANIC (("No gui has been loaded.  It is not safe to continue. Exiting."));
     exit(1);
   }
 
-  plugin_init_all();
+  //// each one has already been init'ed by bx_load_plugin
+  //plugin_init_all();
 #else
   pluginlog->info("plugins deactivated");
 #endif
