@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.189 2002-11-21 19:26:06 bdenney Exp $
+// $Id: main.cc,v 1.190 2002-11-23 12:35:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1700,7 +1700,7 @@ bx_init_main (int argc, char *argv[])
   {
     CFBundleRef mainBundle;
     CFURLRef libDir;
-    char libDirPath[4096];
+    char libDirPath[MAXPATHLEN];
     if(!isatty(STDIN_FILENO))
     {
       // there is no stdin/stdout so disable the text-based config interface.
@@ -1716,13 +1716,13 @@ bx_init_main (int argc, char *argv[])
     libDir = CFBundleCopyAuxiliaryExecutableURL( mainBundle, CFSTR("lib"));
     BX_ASSERT(libDir != NULL);
     // translate this to a unix style full path
-    if(!CFURLGetFileSystemRepresentation(libDir, true, libDirPath, 4096))
+    if(!CFURLGetFileSystemRepresentation(libDir, true, (UInt8 *)libDirPath, MAXPATHLEN))
     {
       BX_PANIC(("Unable to work out ltdl library path within bochs bundle! (Most likely path too long!)"));
       return -1;
     }
     setenv("LTDL_LIBRARY_PATH", libDirPath, 1);
-    BX_INFO (("now my LTDL_LIBRARY_PATH is %s", libDirPath));
+    BX_INFO (("now my LTDL_LIBRARY_PATH is %s", getenv("LTDL_LIBRARY_PATH")));
     CFRelease(libDir);
   }
 #elif BX_HAVE_GETENV && BX_HAVE_SETENV
