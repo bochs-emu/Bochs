@@ -59,6 +59,10 @@ Changes in 2.0 (December 2002):
   - FIXME
 
 - configuration interface
+  - wxWindows config interface now allows you to change every bochsrc
+    option using menus and dialog boxes.  There is also the beginning of
+    a wxWindows graphical debugger, but it needs a lot of work before it
+    will be useful.
   - renamed "control.cc" to "textconfig.cc"
 
 - display libraries
@@ -82,6 +86,313 @@ Changes in 2.0 (December 2002):
     that connects to Bochs is distributed in 
     build/win32/tattam-external-debugger.zip in binary form.
 - 
+
+
+----list of closed bugs since 1.4.1----
+We don't want a line of changelog for each of these, but it 
+should help us to remember what has been fixed, and summarize.
+If someone wants a list of 176 bug fixes they can go to source
+forge.  We should categorize and summarize them rather than 
+simply list them all.
+
+Also, some are closed with no resolution, so we can't be totally
+sure that they all have been fixed!
+
+bug [ 622769 ] bx_shadow_param needs 64 bit support
+bug [ 654123 ] $BXSHARE not working in win32
+bug [ 653861 ] Win32 build bug
+bug [ 653868 ] change $BXBIOS to $BXSHARE
+bug [ 653015 ] OSX: w/ plugins dlcompat is required
+bug [ 648385 ] rpm dependency errors: glibc_2.3 not found
+bug [ 652957 ] install docbook docs instead of HTML
+bug [ 642031 ] FATAL: Keyboard RESET error:993
+bug [ 653016 ] bios makefile should not rm bioses
+bug [ 545414 ] wxwin: drive change dialogs need work
+bug [ 627826 ] wx: can you do all runtime things?
+bug [ 652358 ] wx: middle button before sim freezes
+bug [ 613976 ] wxWindows: need config time dialog
+bug [ 528018 ] linux/X11 files always installed
+bug [ 642324 ] MacOSX: Silent failure when run from GUI
+bug [ 648579 ] Mac OSX >>PANIC<< FPU_printall
+bug [ 651508 ] not all configurd hd devices are usable
+bug [ 534546 ] CMOS read error
+bug [ 624317 ] wx: debug console never discards lines
+bug [ 616139 ] wx: boot hd/cd must be in ata0 interface
+bug [ 625645 ] Font causes PANIC
+bug [ 644209 ] Password for RedHat
+bug [ 632034 ] win32: mingw plugins fail
+bug [ 614724 ] SDL can get stuck in full screen mode
+bug [ 618974 ] 32bpp fails:XAllocColorCells error
+bug [ 646438 ] display+configuration lib. setting bugs
+bug [ 643238 ] PANIC: SuSE 8.1 Kernel needs Pentim+
+bug [ 645500 ] Bug in Mac OS X CD-ROM source
+bug [ 493761 ] Win98se install ends with div 0 error
+bug [ 629810 ] int 16/ah=01 broken?
+bug [ 634621 ] Access to A: frozes simulation
+bug [ 628198 ] update makefile dependencies
+bug [ 640581 ] control-C handling fails with -pthread
+bug [ 640800 ] rombios.c error
+bug [ 639873 ] get_first_cd_handle called before init
+bug [ 625696 ] text config menu: default can be wrong
+bug [ 640014 ] WinNT doesn't boot anymore in 2.0.pre1
+bug [ 642598 ] >>PANIC<< numerical parameter GDTR base
+bug [ 628955 ] wx: with x86-64, can't simulate
+bug [ 640867 ] solaris needs -lm to compile
+bug [ 640829 ] macosx: osacompile requires local access
+bug [ 625878 ] reset doesn't reset something(?)
+bug [ 630865 ] CDRom icon in toolbar initiall 'ejected'
+bug [ 626840 ] no 'sin_len' in 'struct sockaddr_in'
+bug [ 640549 ] dbg fails if wx configured but not on
+bug [ 638600 ] need default plugin search path
+bug [ 635223 ] VGA tiles array access out of bounds
+bug [ 639016 ] win32: osdep.h should not #define off_t
+bug [ 638481 ] PCI broken on big-endian systems
+bug [ 627223 ] check that debug: action=ACTION works
+bug [ 628783 ] current CVS compilation fails at MS-VC6
+bug [ 614171 ] update all bioses before release
+bug [ 638110 ] sb16 plugin crashes if not enabled
+bug [ 638552 ] rename plugin libs to avoid conflicts
+bug [ 628663 ] double panic from cmos get_timeval
+bug [ 629606 ] BX_WITH_TERM affects ^C handling
+bug [ 531063 ] crash when CD enabled but not present
+bug [ 629615 ] keybord not initialized properly
+bug [ 632169 ] no docs for TUN/TAP
+bug [ 625901 ] rename control to textconfig
+bug [ 628806 ] debug: x/c prints unprintable chars
+bug [ 628667 ] don't build plugin for wxdialog, wxmain
+bug [ 624853 ] Dos crashes with 256 heads disk
+bug [ 628957 ] realtime pit spits out lots of printfs
+bug [ 626261 ] About Box is awkwardly outdated
+bug [ 628662 ] rename "VGA library" to display library
+bug [ 628646 ] configure --disable-vga doesn't build
+bug [ 628645 ] oldpit broken by plugin merge
+bug [ 628643 ] iodebug broken by plugin merge
+bug [ 627996 ] CDROM and other compile errors on OSX
+bug [ 623152 ] MacOSX: Triple Exception Booting win95
+bug [ 626357 ] Mac OS X make fails at insert_cdrom
+bug [ 626412 ] in text snapshot, remove extra spaces
+bug [ 625676 ] VC++ do not support S_ISBLK
+bug [ 529781 ] strange colors with vbebios and other
+bug [ 622786 ] change unimplemented SSE instr to panic
+bug [ 623831 ] .conf.macosx broken
+bug [ 623618 ] win32: bximage and niclist quit too fast
+bug [ 619528 ] Double-Clicking Bochs fails to Run
+bug [ 622782 ] interpreting cmdline is a mess
+bug [ 619885 ] on beos, fd_set not found
+bug [ 620989 ] logical8.cc fails to compile
+bug [ 487758 ] bximage fails on file creation >2048meg
+bug [ 619220 ] wx: g_main_iterate: main loop already...
+bug [ 493981 ] resetting/cd-rom bug
+bug [ 619320 ] wx: clicking mouse enable btn different
+bug [ 615617 ] wxWindows port won't compile in cygwin
+bug [ 619285 ] wx: restart causes timer reregistration
+bug [ 619283 ] SDL: os mouse pointer leaves the window
+bug [ 554949 ] INACCESSIBLE_BOOT_DEVICE on NT4 install
+bug [ 431804 ] [Wheel] mouse doesn't seem to work
+bug [ 619076 ] wx: all wxChoices need wxADJUST_MINSIZE
+bug [ 619074 ] wx: ATA interface editor too tall
+bug [ 618462 ] wx: 256 color modes not working properly
+bug [ 618388 ] Unable to boot under MacOS X
+bug [ 561181 ] Error in CPU core of Bochs 1.4
+bug [ 618697 ] trace-reg-on has bugs
+bug [ 597737 ] info gdt broken: incorrect segment length
+bug [ 614192 ] sdl keyboard inconsistent on platforms
+bug [ 618178 ] include "pic.h" in pci.cc
+bug [ 539764 ] MacOS/MacOS X missing headerbar icons
+bug [ 616154 ] wx: link, resource, compile flags
+bug [ 613975 ] wxWindows: params redefined on restart
+bug [ 561156 ] --with-x11 does not work on OS X
+bug [ 529585 ] MDK8.0 install problem
+bug [ 594723 ] MacOSX: Doesn't compile --with-debugger
+bug [ 572104 ] VC++: parameter list not sufficiently different
+bug [ 614175 ] infinite panic loop if bochsrc buggy
+bug [ 613393 ] solaris: term compile missing color_set
+bug [ 613390 ] solaris: rfb compile needs -lsocket
+bug [ 538815 ] cannot preprocess bios with gcc 2.96
+bug [ 420671 ] X11 gui generates too many useless packets
+bug [ 601166 ] CMOS Problem @ "0x0F Index 0x05 data"
+bug [ 541452 ] Compile problem with MS nmake
+bug [ 595232 ] POPFD()
+bug [ 565393 ] Invalid Opcode Exception not called
+bug [ 536556 ] Logfile messages
+bug [ 433002 ] Windows Nt wont start installing
+bug [ 461762 ] multiple processors but only one FPU
+bug [ 427327 ] 00147166095 [CPU ] UndefinedOpcode: 1ff
+bug [ 435620 ] Solaris install dies as client
+bug [ 424589 ] bochs: panic, RDMSR: not implemented yet
+bug [ 487212 ] Clock in the emulator?
+bug [ 606349 ] POPFD(): - prevents win31 from running
+bug [ 500197 ] Win 98 boot failure
+bug [ 566804 ] screen real-estate and NT + clones
+bug [ 518917 ] EGA seems to clip 8 lines at bot. screen
+bug [ 515252 ] Crashes when running in bogus memory
+bug [ 543274 ] Linux system headers are in makefile
+bug [ 502492 ] configure fails with enternal script err
+bug [ 497242 ] New BIOS (in 1.3) and System Commander
+bug [ 609373 ] OSX STILL DOESN"T COMPILE W/ CDROM!!!!!!
+bug [ 593340 ] socklen_t test broken.
+bug [ 612741 ] VBE mem conflicts w/ local APIC address
+bug [ 612880 ] write_virtual_dword addr ffffe370, crash
+bug [ 442555 ] booting Gemini Nucleus
+bug [ 594714 ] Carbon GUI doesn't compile under MacOSX
+bug [ 594718 ] MacOSX: Carbon GUI doesn't compile
+bug [ 555100 ] current cvs botched number of parms
+bug [ 535854 ] commandline param --help is unsupported
+bug [ 599050 ] Missing dependency
+bug [ 422457 ] mouse mode not supported
+bug [ 430444 ] PCI is very broken
+bug [ 455885 ] Text mode vga colors aren't updated.
+bug [ 587291 ] Invalid LES opcode -> Bochs loop
+bug [ 593413 ] FreeLoader fails since Bochs 1.4
+bug [ 571988 ] Boot Real floppy
+bug [ 562025 ] coding error
+bug [ 538356 ] win32 resize needs cleanup
+bug [ 530797 ] win32: gui doesn't free bitmaps
+bug [ 429079 ] can't type some key combos
+bug [ 553024 ] POST: PIC init too late, INTs lost
+bug [ 455282 ] [VGA ] unsupported io write to port 3d0
+bug [ 537332 ] kbd: OUTB set and command 0xaa encounter
+bug [ 434638 ] Cursor too big under AIX
+bug [ 553377 ] Minix 2 no longer works with Bochs 1.4
+bug [ 549559 ] floppy drive infinite loop
+bug [ 583803 ] VGA - scan line width
+bug [ 586283 ] Mac OS X, will not "make"
+bug [ 574127 ] Fail to boot isolinux multiboot CD
+bug [ 582499 ] Reset Function inoperative
+bug [ 491835 ] Bochs fails on BeOS emulation on floppy?
+bug [ 467891 ] [HD ] Odd byte count to ATAPI command
+bug [ 580247 ] CD supp. in 1.4.1 not compiling for OSX
+bug [ 481170 ] beos cdrom support
+bug [ 533889 ] 80x43 text mode non-functional
+bug [ 533112 ] compile error in gui/siminterface.h
+bug [ 452275 ] fprem emulation bug
+bug [ 575301 ] Operator precedence bug
+bug [ 575349 ] Mac OS X cdrom_interface compile error
+bug [ 430982 ] HD lost ?
+bug [ 549452 ] bochsrc manpage belongs in section 5
+bug [ 419415 ] netbsd 1.5 rescue disk won't boot
+bug [ 503154 ] Very slow when no network activity
+bug [ 555562 ] gui.cc includes X windows headers
+bug [ 549821 ] warning proc_ctrl.cc line 1273: left-shift count >= type width
+
+feature [ 621298 ] id descending order by default
+feature [ 427349 ] win32 installer package
+feature [ 617963 ] "Plugin" devices
+feature [ 650366 ] bochs1.4.1, 2.0 2 b ported 2 OS X on G4?
+feature [ 625718 ] log serial output to a file
+feature [ 629068 ] make a way to log debug output to file
+feature [ 618601 ] MacOS X packaging
+feature [ 648812 ] Specify bochsrc on command line
+feature [ 589384 ] support to add other ROM images
+feature [ 640888 ] add default for BXBIOS env variable
+feature [ 641059 ] Speed
+feature [ 423108 ] add network device via 2.4 TUN feature
+feature [ 632434 ] Cocoa Port using SDL
+feature [ 624077 ] extended bios
+feature [ 428688 ] plugin architecture
+feature [ 624508 ] DOS Navigator keyboard support
+feature [ 627997 ] GUI for OSX
+feature [ 495560 ] Int 15h 0xE820 - BIOS mem map or 0xE801
+feature [ 624507 ] PCI NIC + NetWare
+feature [ 623520 ] Logging in with Ctrl Alt Del
+feature [ 579722 ] Ability to send keypresses
+feature [ 545484 ] XGA/Video 7 mode
+feature [ 447048 ] vesa 2.0 compliance
+feature [ 545613 ] ips calculator
+feature [ 615353 ] Bochs Win32 Integration...
+feature [ 422143 ] check out plex86 curses.cc
+feature [ 425559 ] support >1 IDE controller
+feature [ 515334 ] LBA (extended int 13h) Not Supported
+feature [ 552233 ] EBIOS Support Int 13 func 41-48
+feature [ 539045 ] MacOS X binaries
+feature [ 535365 ] batch build Bochs with different options
+feature [ 528874 ] remote gdb protocol support
+feature [ 500370 ] Emulation in foreground automatically
+feature [ 518163 ] SVGA, dos floppy, macos X binaries
+feature [ 490999 ] bochs.app/videocard use
+feature [ 500371 ] Ability to emulate 8088 etc.
+feature [ 493453 ] Windows CE for x86
+feature [ 486274 ] The Hurd on bochs
+feature [ 543271 ] Allow some native x86 instructions
+feature [ 434691 ] com port emulation on x86 machines
+feature [ 502240 ] Is it hangs up? or not?
+feature [ 423053 ] too many configure options
+feature [ 457060 ] Win98 instalation:1436 minutes left
+feature [ 510226 ] Optimizing
+feature [ 497073 ] Plex86 development
+feature [ 545834 ] Mac OS X
+feature [ 461921 ] cr4, paging extensions flag
+feature [ 530510 ] better MSVC handling
+feature [ 543689 ] bochs for pocket pc platform
+feature [ 431169 ] Text cursor visibility
+feature [ 450209 ] boot from real disk?
+feature [ 450209 ] boot from real disk?
+feature [ 603820 ] support for serial console
+feature [ 501694 ] cr2 value shown when bochs panics
+feature [ 609720 ] Disassembler...
+feature [ 578468 ] command line option for automatic run
+feature [ 547876 ] console mode interface
+feature [ 564097 ] mount cdrom file image
+feature [ 423361 ] need for support reboot
+feature [ 538579 ] SVGA Emulation
+feature [ 500368 ] Possibility to cut text output
+
+patch [ 650066 ] use standard lib directory
+patch [ 635021 ] floppy cleanup
+patch [ 645559 ] Set ownership in RPM package
+patch [ 643874 ] MacOSX: diskimage.pl fix
+patch [ 642397 ] Applescript:Fix to handle spaces in path
+patch [ 609616 ] remote GDB stub
+patch [ 626146 ] Patches for win32 nmake
+patch [ 623030 ] making bochs compile with DJGPP
+patch [ 632278 ] Carbon.cc Detabbing
+patch [ 635009 ] rpm -> rpmbuild
+patch [ 627804 ] Mode-sensitive disassembly
+patch [ 628967 ] Fix missing ss(0) exception
+patch [ 629157 ] MacOSX Carbon Plugin Cleanup
+patch [ 630863 ] Fix and integrate MacOSX cdrom
+patch [ 626373 ] About Box Patch
+patch [ 624337 ] Script to launch OSX from GUI
+patch [ 624323 ] Carbon UI Patchup and Polishing
+patch [ 543580 ] NetBSD and --enable-cdrom
+patch [ 525966 ] vga readability patch
+patch [ 618071 ] Cleaned up MacOSX Application Icon
+patch [ 424445 ] apply patches from NetBSD ports
+patch [ 579972 ] support for -D_FILE_OFFSET_BITS=64
+patch [ 549248 ] Fix Carbon key & menu handling
+patch [ 549679 ] Even more Mac OS X fun
+patch [ 426240 ] include Bochs-RFB from psyon.org
+patch [ 455763 ] Cursor trail with DOS Edit/Minix vi
+patch [ 466403 ] make text colors more accurate
+patch [ 414229 ] panic-is-fatal
+patch [ 597587 ] Extended 8 general registers to 64 bits.
+patch [ 558422 ] Spool parallel output
+patch [ 613359 ] danish keymap file
+patch [ 590426 ] additions to the MAC OS X build scripts
+patch [ 605815 ] more disasm functions
+patch [ 600433 ] serial and cmos print incorrect panics
+patch [ 598545 ] lfb-vbe, missing linear graphics mode
+patch [ 548866 ] Fix Carbon build
+patch [ 592081 ] Bug: typo in VBE code
+patch [ 567606 ] make bochsrc more portable
+patch [ 593018 ] On Unix-systems, look for /etc/bochsrc
+patch [ 583002 ] RdDd(), DdRd(), RdTd(), TdRd() and Ms()
+patch [ 593019 ] A unix-style cmdline-interface to bochs
+patch [ 563605 ] sysenter/sysexit
+patch [ 563604 ] more complete apic stuff
+patch [ 563606 ] sysenter/sysexit pt 2of3
+patch [ 563609 ] init.cc needed for new apic.cc
+patch [ 563607 ] sysenter/sysexit pt 3of3
+patch [ 590421 ] additions to the MAC OS X build scripts
+patch [ 539678 ] ne2k odd count causes PANIC
+patch [ 580063 ] support for -D_FILE_OFFSET_BITS=64
+patch [ 551811 ] Location for files breaks FHS
+patch [ 537146 ] Two changes to bcd instructions
+patch [ 551109 ] PATCH: Add EIP to log file timestamp
+
+------
+
+
 
 -------------------------------------------------------------------------
 Changes in 1.4.1 (June 22, 2002):
