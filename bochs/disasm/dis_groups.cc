@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.3 2001-10-03 13:10:37 bdenney Exp $
+// $Id: dis_groups.cc,v 1.4 2002-08-12 14:39:40 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,9 +41,34 @@ bx_disassemble_c::STi(void) {dis_sprintf("*** STi() unfinished ***");}
 
 // Debug, Test, and Control Register stuff
   void
-bx_disassemble_c::RdDd(void) {dis_sprintf("*** RdDd() unfinished ***");}
+bx_disassemble_c::RdDd(void)
+{
+  Bit8u mod_rm_byte, mod, opcode, rm;
+  mod_rm_byte = fetch_byte();
+  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+  // only reg32 operand is valid
+  if (mod != 0x3) {
+    dis_sprintf("Invalid Opcode");
+    }
+  else {
+    dis_sprintf("%s, DR%u", general_32bit_reg_name[rm], opcode);
+    }
+}
+
   void
-bx_disassemble_c::DdRd(void) {dis_sprintf("*** DdRd() unfinished ***");}
+bx_disassemble_c::DdRd(void)
+{
+  Bit8u mod_rm_byte, mod, opcode, rm;
+  mod_rm_byte = fetch_byte();
+  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+  // only reg32 operand is valid
+  if (mod != 0x3) {
+    dis_sprintf("Invalid Opcode");
+    }
+  else {
+    dis_sprintf("DR%u, %s", opcode, general_32bit_reg_name[rm]);
+    }
+}
 
   void
 bx_disassemble_c::RdCd(void)
@@ -78,14 +103,53 @@ bx_disassemble_c::CdRd(void)
 }
 
   void
-bx_disassemble_c::RdTd(void) {dis_sprintf("*** RdTd() unfinished ***");}
-  void
-bx_disassemble_c::TdRd(void) {dis_sprintf("*** TdRd() unfinished ***");}
+bx_disassemble_c::RdTd(void)
+{
+  Bit8u mod_rm_byte, mod, opcode, rm;
+  mod_rm_byte = fetch_byte();
+  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+  // only reg32 operand is valid and tr3 or above
+  if (mod != 0x3 || opcode < 3) {
+    dis_sprintf("Invalid Opcode");
+    }
+  else {
+    dis_sprintf("TR%u, %s", opcode, general_32bit_reg_name[rm]);
+    }
+}
 
+  void
+bx_disassemble_c::TdRd(void)
+{
+  Bit8u mod_rm_byte, mod, opcode, rm;
+  mod_rm_byte = fetch_byte();
+  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+  // only reg32 operand is valid and tr3 or above
+  if (mod != 0x3 || opcode < 3) {
+    dis_sprintf("Invalid Opcode");
+    }
+  else {
+    dis_sprintf("%s, TR%u", general_32bit_reg_name[rm], opcode);
+    }
+}
+
+
+  void
+bx_disassemble_c::Ms(void)
+{
+  Bit8u mod_rm_byte, mod, opcode, rm;
+  mod_rm_byte = peek_byte();
+  BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+  // only memory operand is valid
+  if (mod == 0x3) {
+    dis_sprintf("Invalid Opcode");
+    fetch_byte();
+    }
+  else {
+    decode_exgx(BX_NO_REG_TYPE, BX_NO_REG_TYPE);
+    }
+}
 
 // Other un-implemented operand signatures
-  void
-bx_disassemble_c::Ms(void) {dis_sprintf("*** Ms() unfinished ***");}
   void
 bx_disassemble_c::XBTS(void) {dis_sprintf("*** XBTS() unfinished ***");}
   void
