@@ -146,6 +146,19 @@ error: action=report
 info: action=report
 debug: action=ignore
 
+
+#=======================================================================
+# PARPORT1:
+# This defines a parallel (printer) port.  When turned on, the emulated
+# printer port sends characters printed by the guest OS into an output file.
+#
+# Examples:
+#   parport1: enable=1, file="parport.out"
+#   parport1: enable=0
+#=======================================================================
+parport1: enable=0
+
+
 #=======================================================================
 # SB16:
 # This defines the SB16 sound emulation. It can have several of the

@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.25 2001-10-03 13:10:37 bdenney Exp $
+// $Id: siminterface.h,v 1.26 2001-11-12 02:35:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.25 2001-10-03 13:10:37 bdenney Exp $
+ * $Id: siminterface.h,v 1.26 2001-11-12 02:35:09 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -76,6 +76,7 @@ typedef enum {
   BXP_MENU_MEMORY,
   BXP_MENU_INTERFACE,
   BXP_MENU_DISK,
+  BXP_MENU_PARALLEL,
   BXP_MENU_SOUND,
   BXP_MENU_MISC,
   BXP_MENU_RUNTIME,
@@ -97,6 +98,10 @@ typedef enum {
   BXP_SB16_LOGLEVEL,
   BXP_SB16_DMATIMER,
   BXP_SB16,
+  BXP_PARPORT1_ENABLE,
+  BXP_PARPORT1_OUTFILE,
+  BXP_PARPORT2_ENABLE,
+  BXP_PARPORT2_OUTFILE,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
