@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.108 2003-01-08 21:37:00 japj Exp $
+$Id: user.dbk,v 1.109 2003-01-16 21:41:00 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -5292,14 +5292,56 @@ dlx login:
 <section id="bios-tips"> 
 <title>Bios Tips</title>
         <section> 
-        <title>CD Boot error codes</title>
+        <title>Booting from cdroms</title>
+        <para>
+A bootable cdrom has a special layout that is detected by the
+bios boot loader code, and executed if it conforms the specifications.
+This layout is called "El Torito Bootable CD-ROM Format Specification"
+and has been published by Phoenix and IBM. A copy of this spec is on 
+Bochs tech specs page at http://bochs.sourceforge.net/techdata.html.
+        </para>
+        <para>
+El Torito specifies 3 ways to have a bootable cd :
+<itemizedlist>
+<listitem>
+<para>floppy emulation boot : a standard floppy image is burnt inside the cd.
+In this case the bios has to redirect all first floppy accesses to this 
+image, the real floppy drive becoming the second one
+</para></listitem>
+<listitem><para>
+a "no emulation" boot : in this case the bios is instructed to load an 
+arbitrary number of sectors straight into memory, and execute it
+</para></listitem>
+<listitem><para>
+Harddisk emulation : a hard disk image in burnt inside the cd. The 
+Bios has to redirect all hard disk accesses to that image. The rel hard disks
+are still available, with bios numbers #81 and up.
+</para></listitem>
+</itemizedlist>
+
+In Bochs 2.0, Harddisk emulation is not implemented in the BIOS.
+There are also subtilities about multiple boot-images cdroms, that are
+not handled by Bochs.
+        </para>
+
+        <para>
+However our bios may be more strict than real pc bioses, I don't know.
+But I would definitely be interested to know of any cd that can boot
+on real hardware, but does not in Bochs.
+        </para>
+
         <para>
 When failing to boot from CDROM, the bios outputs 
 the reason of the failure as
 an error code, in the log file, and on the screen.
-Here are the meaning of the errors:
+        </para>
+
+        <para>
+Here is a summary of what can happen when booting from the cd.
+        </para>
 
 <table><title>CD Boot error codes</title>
+
 <tgroup cols=2 align=left colsep=1 rowsep=1>
 <thead>
  <row>
@@ -5323,7 +5365,61 @@ Here are the meaning of the errors:
 </tbody>
 </tgroup>
 </table>
-        </para>
+
+<para>
+<screen>
+0x01 no atapi device found
+0x02 no atapi cdrom found
+</screen>
+
+For the first two errors, an ata-*: type=cdrom is probably missing
+from the configuration file. This is what you get if no cdrom has
+been defined in Bochs conf file.
+</para>
+
+<para>
+<screen>
+0x03 can not read cd - BRVD
+</screen>
+
+For this error, the cdrom support has not been compiled in Bochs, 
+or Bochs could not open the file or device. This is what you get if
+Bochs is not able to read the cd.
+</para>
+
+<para>
+<screen>
+0x04 cd is not eltorito (BRVD)
+0x05 cd is not eltorito (ISO TAG)
+0x06 cd is not eltorito (ELTORITO TAG)
+</screen>
+
+For these errors, the data has been read from the cd, but
+the cd does not conform to the El Torito specification. This
+is what you get if the cd is not bootable.
+</para>
+
+<para>
+<screen>
+0x08 boot catalog : bad header
+0x09 boot catalog : bad platform
+0x0A boot catalog : bad signature
+0x0B boot catalog : bootable flag not set
+</screen>
+
+now the cd is eltorito, but the boot catalog is currupt, or
+the cd was made to boot on a ppc system. This should not happen
+for a x86 bootable cd.
+</para>
+
+<para>
+<screen>
+0x07 can not read cd - boot catalog
+0x0C can not read cd - boot image
+</screen>
+here, specific part of the cd could not be read. This should
+definitely not happen.
+</para>
         </section>
 
         <section> 
