@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.47 2002-04-08 01:19:35 instinc Exp $
+// $Id: rombios.c,v 1.48 2002-04-08 01:41:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1051,10 +1051,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.47 $";
-static char bios_date_string[] = "$Date: 2002-04-08 01:19:35 $";
+static char bios_cvs_version_string[] = "$Revision: 1.48 $";
+static char bios_date_string[] = "$Date: 2002-04-08 01:41:59 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.47 2002-04-08 01:19:35 instinc Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.48 2002-04-08 01:41:59 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -9969,6 +9969,132 @@ mp_config_irqs:
   db 3,0,0,0,0,13,4,13
   db 3,0,0,0,0,14,4,14
   db 3,0,0,0,0,15,4,15
+#elif (BX_SMP_PROCESSORS==8)
+// define the Intel MP Configuration Structure for 4 processors at
+// APIC ID 0,1,2,3.  I/O APIC at ID=4.
+.align 16
+mp_config_table:
+  db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
+  dw (mp_config_end-mp_config_table)  ;; table length
+  db 4 ;; spec rev
+  db 0x2e ;; checksum
+  .ascii "BOCHSCPU"     ;; OEM id = "BOCHSCPU"
+  db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
+  db 0x20, 0x20, 0x20, 0x20 
+  db 0x20, 0x20, 0x20, 0x20
+  dw 0,0 ;; oem table ptr
+  dw 0 ;; oem table size
+  dw 22 ;; entry count
+  dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
+  dw 0 ;; extended table length
+  db 0 ;; extended table checksum
+  db 0 ;; reserved
+mp_config_proc0:
+  db 0 ;; entry type=processor
+  db 0 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 3 ;; cpu flags: bootstrap cpu
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc1:
+  db 0 ;; entry type=processor
+  db 1 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc2:
+  db 0 ;; entry type=processor
+  db 2 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc3:
+  db 0 ;; entry type=processor
+  db 3 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc4:
+  db 0 ;; entry type=processor
+  db 4 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc5:
+  db 0 ;; entry type=processor
+  db 5 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc6:
+  db 0 ;; entry type=processor
+  db 6 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc7:
+  db 0 ;; entry type=processor
+  db 7 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_isa_bus:
+  db 1 ;; entry type=bus
+  db 0 ;; bus ID
+  db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
+mp_config_ioapic:
+  db 2 ;; entry type=I/O APIC
+  db 0x11 ;; apic id=2. linux will set.
+  db 0x11 ;; I/O APIC version number
+  db 1 ;; flags=1=enabled
+  dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
+mp_config_irqs:
+  db 3 ;; entry type=I/O interrupt
+  db 0 ;; interrupt type=vectored interrupt
+  db 0,0 ;; flags po=0, el=0 (linux uses as default)
+  db 0 ;; source bus ID is ISA
+  db 0 ;; source bus IRQ
+  db 0x11 ;; destination I/O APIC ID, Linux can't address it but won't need to
+  db 0 ;; destination I/O APIC interrrupt in
+  ;; repeat pattern for interrupts 0-15
+  db 3,0,0,0,0,1,0x11,1
+  db 3,0,0,0,0,2,0x11,2
+  db 3,0,0,0,0,3,0x11,3
+  db 3,0,0,0,0,4,0x11,4
+  db 3,0,0,0,0,5,0x11,5
+  db 3,0,0,0,0,6,0x11,6
+  db 3,0,0,0,0,7,0x11,7
+  db 3,0,0,0,0,8,0x11,8
+  db 3,0,0,0,0,9,0x11,9
+  db 3,0,0,0,0,10,0x11,10
+  db 3,0,0,0,0,11,0x11,11
+  db 3,0,0,0,0,12,0x11,12
+  db 3,0,0,0,0,13,0x11,13
+  db 3,0,0,0,0,14,0x11,14
+  db 3,0,0,0,0,15,0x11,15
 #else
 #  error Sorry, rombios only has configurations for 1, 2, or 4 processors.
 #endif  // if (BX_SMP_PROCESSORS==...)
