@@ -32,12 +32,13 @@ Detailed description:
     - update .bochsrc with new option
     - handle modes in harddrive.cc
     - update iodev/Makefile.in
+    - update bximage to create sparse disks
 
   Still to do :
-    - update bximage (add a command line switch) to create sparse disks
-    - update bximage (add a command line switch) to create growable disks
-    - update bximage (add a command line switch) to create split disks
-    - check availablity of zlib for win32
+    - update bximage to create growable disks
+    - update bximage to create split disks
+    - add command line switches to bximage
+    - check availability of zlib for win32
     - check for zlib in ./configure
     - implement redolog class
     - implement additionnal mode undoable
@@ -48,12 +49,12 @@ Detailed description:
     - implement additionnal mode z-volatile
     - handle new "mode" option in wxwindow config interface
     - update user doc (see misc.txt)
-    - update bximage  to convert/commit various modes
+    - update bximage to convert/commit various modes
 
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
-  cvs checked out on Tue Mar  4 09:51:39 CET 2003
+  cvs checked out on DATE, release version VER
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -64,7 +65,7 @@ RCS file: /cvsroot/bochs/bochs/.bochsrc,v
 retrieving revision 1.66
 diff -u -r1.66 .bochsrc
 --- .bochsrc	9 Feb 2003 18:59:18 -0000	1.66
-+++ .bochsrc	4 Mar 2003 17:59:42 -0000
++++ .bochsrc	5 Mar 2003 00:22:33 -0000
 @@ -150,7 +150,7 @@
  # ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
  # 
@@ -120,7 +121,7 @@ RCS file: /cvsroot/bochs/bochs/bochs.h,v
 retrieving revision 1.120
 diff -u -r1.120 bochs.h
 --- bochs.h	26 Feb 2003 02:41:29 -0000	1.120
-+++ bochs.h	4 Mar 2003 17:59:42 -0000
++++ bochs.h	5 Mar 2003 00:22:35 -0000
 @@ -49,6 +49,8 @@
  #include <stdio.h>
  #include <stdlib.h>
@@ -136,7 +137,7 @@ RCS file: /cvsroot/bochs/bochs/config.h.in,v
 retrieving revision 1.107
 diff -u -r1.107 config.h.in
 --- config.h.in	2 Mar 2003 23:59:02 -0000	1.107
-+++ config.h.in	4 Mar 2003 17:59:42 -0000
++++ config.h.in	5 Mar 2003 00:22:37 -0000
 @@ -285,15 +285,8 @@
  
  #define BX_GDBSTUB 0
@@ -161,7 +162,7 @@ RCS file: /cvsroot/bochs/bochs/configure,v
 retrieving revision 1.202
 diff -u -r1.202 configure
 --- configure	2 Mar 2003 23:59:03 -0000	1.202
-+++ configure	4 Mar 2003 17:59:48 -0000
++++ configure	5 Mar 2003 00:23:34 -0000
 @@ -1,5 +1,5 @@
  #! /bin/sh
 -# From configure.in Id: configure.in,v 1.201 2003/02/21 14:40:59 cisc Exp .
@@ -242,7 +243,7 @@ RCS file: /cvsroot/bochs/bochs/configure.in,v
 retrieving revision 1.202
 diff -u -r1.202 configure.in
 --- configure.in	2 Mar 2003 23:59:08 -0000	1.202
-+++ configure.in	4 Mar 2003 17:59:49 -0000
++++ configure.in	5 Mar 2003 00:23:40 -0000
 @@ -684,22 +684,22 @@
  AC_SUBST(IOAPIC_OBJS)
  AC_SUBST(APIC_OBJS)
@@ -279,7 +280,7 @@ RCS file: /cvsroot/bochs/bochs/main.cc,v
 retrieving revision 1.223
 diff -u -r1.223 main.cc
 --- main.cc	13 Feb 2003 15:51:12 -0000	1.223
-+++ main.cc	4 Mar 2003 17:59:51 -0000
++++ main.cc	5 Mar 2003 00:23:50 -0000
 @@ -195,6 +195,7 @@
          switch (val) {
            case BX_ATA_DEVICE_DISK:
@@ -446,7 +447,7 @@ RCS file: /cvsroot/bochs/bochs/doc/docbook/misc.txt,v
 retrieving revision 1.21
 diff -u -r1.21 misc.txt
 --- doc/docbook/misc.txt	15 Dec 2002 18:00:28 -0000	1.21
-+++ doc/docbook/misc.txt	4 Mar 2003 17:59:52 -0000
++++ doc/docbook/misc.txt	5 Mar 2003 00:23:54 -0000
 @@ -476,3 +476,70 @@
  copied the expected image to a.img and continued.
  
@@ -524,7 +525,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
 retrieving revision 1.94
 diff -u -r1.94 siminterface.cc
 --- gui/siminterface.cc	6 Feb 2003 23:16:55 -0000	1.94
-+++ gui/siminterface.cc	4 Mar 2003 17:59:52 -0000
++++ gui/siminterface.cc	5 Mar 2003 00:23:56 -0000
 @@ -442,14 +442,17 @@
  
  char *floppy_status_names[] = { "ejected", "inserted", NULL };
@@ -551,7 +552,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
 retrieving revision 1.99
 diff -u -r1.99 siminterface.h
 --- gui/siminterface.h	6 Feb 2003 23:16:54 -0000	1.99
-+++ gui/siminterface.h	4 Mar 2003 17:59:53 -0000
++++ gui/siminterface.h	5 Mar 2003 00:24:00 -0000
 @@ -199,6 +199,14 @@
    BXP_ATA2_SLAVE_TYPE,
    BXP_ATA3_MASTER_TYPE,
@@ -611,7 +612,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
 retrieving revision 1.40
 diff -u -r1.40 Makefile.in
 --- iodev/Makefile.in	3 Mar 2003 17:39:16 -0000	1.40
-+++ iodev/Makefile.in	4 Mar 2003 17:59:54 -0000
++++ iodev/Makefile.in	5 Mar 2003 00:24:06 -0000
 @@ -92,6 +92,7 @@
  
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
@@ -2213,7 +2214,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
 retrieving revision 1.96
 diff -u -r1.96 harddrv.cc
 --- iodev/harddrv.cc	2 Mar 2003 23:59:10 -0000	1.96
-+++ iodev/harddrv.cc	4 Mar 2003 17:59:56 -0000
++++ iodev/harddrv.cc	5 Mar 2003 00:24:19 -0000
 @@ -31,12 +31,14 @@
  
  
@@ -3011,43 +3012,12 @@ RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
 retrieving revision 1.19
 diff -u -r1.19 harddrv.h
 --- iodev/harddrv.h	2 Mar 2003 23:59:11 -0000	1.19
-+++ iodev/harddrv.h	4 Mar 2003 17:59:56 -0000
-@@ -64,6 +64,7 @@
-       unsigned sectors;
- };
++++ iodev/harddrv.h	5 Mar 2003 00:24:20 -0000
+@@ -24,6 +24,24 @@
+ //  License along with this library; if not, write to the Free Software
+ //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  
-+// FLAT MODE
- class default_image_t : public device_image_t
- {
-   public:
-@@ -87,10 +88,10 @@
- 
-   private:
-       int fd;
--      
-+
- };
- 
--#if BX_SPLIT_HD_SUPPORT
-+// CONCAT MODE
- class concat_image_t : public device_image_t
- {
-   public:
-@@ -135,7 +136,96 @@
-       int fd;     // fd to use for reads and writes
-       off_t thismin, thismax; // byte offset boundary of this image
- };
--#endif /* BX_SPLIT_HD_SUPPORT */
-+
-+// SPARSE MODE
-+class sparse_image_t : public device_image_t
-+{
-+
-+// Format of a sparse file:
-+// 256 byte header, containing details such as page size and number of pages
-+// Page indirection table, mapping virtual pages to physical pages within file
-+// Physical pages till end of file
-+
++// SPARSE IMAGES HEADER
 +#define SPARSE_HEADER_MAGIC  (0x02468ace)
 +#define SPARSE_HEADER_VERSION  1
 +#define HEADER_SIZE        (256) // Plenty of room for later
@@ -3062,6 +3032,47 @@ diff -u -r1.19 harddrv.h
 +
 +   uint32  padding[60];
 + } sparse_header_t;
++
++#ifndef INCLUDE_ONLY_HD_HEADERS
++
+ typedef enum _sense {
+       SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
+       SENSE_UNIT_ATTENTION = 6
+@@ -64,6 +82,7 @@
+       unsigned sectors;
+ };
+ 
++// FLAT MODE
+ class default_image_t : public device_image_t
+ {
+   public:
+@@ -87,10 +106,10 @@
+ 
+   private:
+       int fd;
+-      
++
+ };
+ 
+-#if BX_SPLIT_HD_SUPPORT
++// CONCAT MODE
+ class concat_image_t : public device_image_t
+ {
+   public:
+@@ -135,7 +154,81 @@
+       int fd;     // fd to use for reads and writes
+       off_t thismin, thismax; // byte offset boundary of this image
+ };
+-#endif /* BX_SPLIT_HD_SUPPORT */
++
++// SPARSE MODE
++class sparse_image_t : public device_image_t
++{
++
++// Format of a sparse file:
++// 256 byte header, containing details such as page size and number of pages
++// Page indirection table, mapping virtual pages to physical pages within file
++// Physical pages till end of file
 +
 +  public:
 +      // Default constructor
@@ -3131,10 +3142,11 @@ diff -u -r1.19 harddrv.h
  
  #if EXTERNAL_DISK_SIMULATOR
  #include "external-disk-simulator.h"
-@@ -367,3 +457,4 @@
+@@ -367,3 +460,5 @@
  #endif
  
    };
++#endif // INCLUDE_ONLY_SPARSE_HEADER
 +
 Index: iodev/iodev.h
 ===================================================================
@@ -3142,7 +3154,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
 retrieving revision 1.31
 diff -u -r1.31 iodev.h
 --- iodev/iodev.h	2 Mar 2003 23:59:11 -0000	1.31
-+++ iodev/iodev.h	4 Mar 2003 17:59:56 -0000
++++ iodev/iodev.h	5 Mar 2003 00:24:21 -0000
 @@ -397,6 +397,7 @@
  #include "iodev/dma.h"
  #include "iodev/floppy.h"
@@ -3157,37 +3169,45 @@ RCS file: /cvsroot/bochs/bochs/misc/bximage.c,v
 retrieving revision 1.17
 diff -u -r1.17 bximage.c
 --- misc/bximage.c	26 Nov 2002 11:21:31 -0000	1.17
-+++ misc/bximage.c	4 Mar 2003 17:59:56 -0000
++++ misc/bximage.c	5 Mar 2003 00:24:22 -0000
 @@ -1,4 +1,4 @@
 -/* 
 +/*
   * misc/bximage.c
-  * $Id: patch.harddisk-modes,v 1.2 2003-03-04 22:08:52 cbothamy Exp $
+  * $Id: patch.harddisk-modes,v 1.3 2003-03-05 00:31:07 cbothamy Exp $
   *
-@@ -16,6 +16,18 @@
+@@ -16,6 +16,15 @@
  #endif
  #include "config.h"
  
-+#if BX_SPARSE_HD_SUPPORT
 +#include <string.h>
 +
 +#define uint8   Bit8u
 +#define uint16  Bit16u
 +#define uint32  Bit32u
 +
-+#define INCLUDE_ONLY_SPARSE_HEADER 1
++#define INCLUDE_ONLY_HD_HEADERS 1
 +#include "../iodev/harddrv.h"
 +
-+#endif // BX_SPARSE_HD_SUPPORT
-+
  char *EOF_ERR = "ERROR: End of input";
- char *rcsid = "$Id: patch.harddisk-modes,v 1.2 2003-03-04 22:08:52 cbothamy Exp $";
+ char *rcsid = "$Id: patch.harddisk-modes,v 1.3 2003-03-05 00:31:07 cbothamy Exp $";
  char *divider = "========================================================================";
-@@ -190,12 +202,41 @@
+@@ -30,6 +39,11 @@
+ char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
+ int fdsize_n_choices = 5;
+ 
++/* menu data for choosing disk mode */
++char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat or sparse. [flat] ";
++                char *hdmode_choices[] = {"flat", "sparse" };
++int hdmode_n_choices = 2;
++
+ void myexit (int code)
+ {
+ #ifdef WIN32
+@@ -190,12 +204,105 @@
    return 0;
  }
  
-+#if BX_SPARSE_HD_SUPPORT
 +// fileset is like memset but for a file handle
 +void fileset(FILE * fp, int c, size_t n)
 +{
@@ -3212,39 +3232,38 @@ diff -u -r1.17 bximage.c
 + }
 +
 +}
-+#endif
 +
- /* produce the image file */
--int make_image (Bit64u sec, char *filename)
-+int make_image (Bit64u sec, char *filename, int sparse)
- {
--  FILE *fp;
-+ FILE *fp;
-   char buffer[1024];
--
-+#if BX_SPARSE_HD_SUPPORT
-+  Bit64u numpages;
-+#endif
-   // check if it exists before trashing someone's disk image
-   fp = fopen (filename, "r");
-   if (fp) {
-@@ -203,7 +244,7 @@
-     sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. [no] ", filename);
-     if (ask_yn (buffer, 0, &confirm) < 0)
-       fatal (EOF_ERR);
--    if (!confirm) 
-+    if (!confirm)
-       fatal ("ERROR: Aborted");
-     fclose (fp);
-   }
-@@ -221,27 +262,69 @@
- 
-   printf ("\nWriting: [");
- 
--  /*
-+#if BX_SPARSE_HD_SUPPORT
-+ if (sparse)
-+ {
++/* produce a flat image file */
++int make_flat_image(FILE *fp, Bit64u sec)
++{
++   /*
++   * seek to sec*512-1 and write a single character.
++   * can't just do: fseek(fp, 512*sec-1, SEEK_SET)
++   * because 512*sec may be too large for signed int.
++   */
++   while (sec > 0)
++   {
++     /* temp <-- min(sec, 4194303)
++     * 4194303 is (int)(0x7FFFFFFF/512)
++     */
++     long temp = ((sec < 4194303) ? sec : 4194303);
++     fseek(fp, 512*temp, SEEK_CUR);
++     sec -= temp;
++   }
++
++   fseek(fp, -1, SEEK_CUR);
++   if (fputc('\0', fp) == EOF)
++   {
++     fclose (fp);
++     fatal ("ERROR: The disk image is not complete!");
++   }
++   return 0;
++}
++
++/* produce a sparse image file */
++int make_sparse_image(FILE *fp, Bit64u sec)
++{
++   Bit64u numpages;
 +   sparse_header_t header;
 +   size_t  sizesofar;
 +   size_t  padtopagesize;
@@ -3278,24 +3297,45 @@ diff -u -r1.17 bximage.c
 +   padtopagesize = header.pagesize - (sizesofar & (header.pagesize - 1));
 +
 +   fileset(fp, 0, padtopagesize);
-+ }
-+#endif
 +
-+ if (!sparse)
-+ {
-+   /*
-    * seek to sec*512-1 and write a single character.
-    * can't just do: fseek(fp, 512*sec-1, SEEK_SET)
-    * because 512*sec may be too large for signed int.
-    */
++   return 0;
++}
++
+ /* produce the image file */
+-int make_image (Bit64u sec, char *filename)
++int make_image (Bit64u sec, char *filename, int (*write_image)(FILE*, Bit64u) )
+ {
+-  FILE *fp;
++ FILE *fp;
+   char buffer[1024];
+-
++ 
+   // check if it exists before trashing someone's disk image
+   fp = fopen (filename, "r");
+   if (fp) {
+@@ -203,7 +310,7 @@
+     sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. [no] ", filename);
+     if (ask_yn (buffer, 0, &confirm) < 0)
+       fatal (EOF_ERR);
+-    if (!confirm) 
++    if (!confirm)
+       fatal ("ERROR: Aborted");
+     fclose (fp);
+   }
+@@ -221,27 +328,8 @@
+ 
+   printf ("\nWriting: [");
+ 
+-  /*
+-   * seek to sec*512-1 and write a single character.
+-   * can't just do: fseek(fp, 512*sec-1, SEEK_SET)
+-   * because 512*sec may be too large for signed int.
+-   */
 -  while (sec > 0)
 -  {
 -    /* temp <-- min(sec, 4194303)
-+   while (sec > 0)
-+   {
-+     /* temp <-- min(sec, 4194303)
-      * 4194303 is (int)(0x7FFFFFFF/512)
-      */
+-     * 4194303 is (int)(0x7FFFFFFF/512)
+-     */
 -    long temp = ((sec < 4194303) ? sec : 4194303);
 -    fseek(fp, 512*temp, SEEK_CUR);
 -    sec -= temp;
@@ -3307,41 +3347,58 @@ diff -u -r1.17 bximage.c
 -    fclose (fp);
 -    fatal ("ERROR: The disk image is not complete!");
 -  }
-+     long temp = ((sec < 4194303) ? sec : 4194303);
-+     fseek(fp, 512*temp, SEEK_CUR);
-+     sec -= temp;
-+   }
-+
-+   fseek(fp, -1, SEEK_CUR);
-+   if (fputc('\0', fp) == EOF)
-+   {
-+     fclose (fp);
-+     fatal ("ERROR: The disk image is not complete!");
-+   }
-+ }
++  if( (*write_image)(fp, sec) != 0)
++     fatal ("ERROR: while writing disk image!");
  
    printf ("] Done.\n");
    fclose (fp);
-@@ -254,6 +337,7 @@
+@@ -254,18 +342,26 @@
    Bit64s sectors = 0;
    char filename[256];
    char bochsrc_line[256];
-+ int sparse = 0;
++
++  int (*write_function)(FILE*, Bit64u)=NULL;
++ 
    print_banner ();
    filename[0] = 0;
    if (ask_menu (fdhd_menu, fdhd_n_choices, fdhd_choices, 1, &hd) < 0)
-@@ -273,6 +357,10 @@
+     fatal (EOF_ERR);
+   if (hd) {
+     int hdsize, cyl, heads=16, spt=63;
++    int mode;
++
++    if (ask_menu (hdmode_menu, hdmode_n_choices, hdmode_choices, 0, &mode) < 0)
++      fatal (EOF_ERR);
++
+     if (ask_int ("\nEnter the hard disk size in megabytes, between 1 and 32255\n[10] ", 1, 32255, 10, &hdsize) < 0)
+       fatal (EOF_ERR);
+     cyl = (int) (hdsize*1024.0*1024.0/16.0/63.0/512.0);
+     assert (cyl < 65536);
+     sectors = cyl*heads*spt;
+-    printf ("\nI will create a hard disk image with\n");
++    printf ("\nI will create a '%s' hard disk image with\n", hdmode_choices[mode]);
+     printf ("  cyl=%d\n", cyl);
+     printf ("  heads=%d\n", heads);
+     printf ("  sectors per track=%d\n", spt);
+@@ -273,7 +369,16 @@
      printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
      if (ask_string ("\nWhat should I name the image?\n[c.img] ", "c.img", filename) < 0)
        fatal (EOF_ERR);
-+#if BX_SPARSE_HD_SUPPORT
-+   if (ask_yn ("\nShould I create a sparse image?\nPlease type yes or no. [no] ", 0, &sparse) < 0)
-+      fatal (EOF_ERR);
-+#endif //BX_SPARSE_HD_SUPPORT
-     sprintf (bochsrc_line, "ata0-master: type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d", filename, cyl, heads, spt);
+-    sprintf (bochsrc_line, "ata0-master: type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d", filename, cyl, heads, spt);
++
++    sprintf (bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s, cylinders=%d, heads=%d, spt=%d", filename, hdmode_choices[mode], cyl, heads, spt);
++
++    switch (mode) {
++      case 1:
++        write_function=make_sparse_image;
++        break;
++      default:
++        write_function=make_flat_image;
++      }
    } else {
      int fdsize, cyl=0, heads=0, spt=0;
-@@ -285,7 +373,7 @@
+     char *name = NULL;
+@@ -285,7 +390,7 @@
      case 2: name="1_2"; cyl=80; heads=2; spt=15; break;   /* 1.2 meg */
      case 3: name="1_44"; cyl=80; heads=2; spt=18; break;   /* 1.44 meg */
      case 4: name="2_88"; cyl=80; heads=2; spt=36; break;   /* 2.88 meg */
@@ -3350,12 +3407,19 @@ diff -u -r1.17 bximage.c
        fatal ("ERROR: fdsize out of range");
      }
      sectors = cyl*heads*spt;
-@@ -303,13 +391,13 @@
+@@ -298,18 +403,20 @@
+     if (ask_string ("\nWhat should I name the image?\n[a.img] ", "a.img", filename) < 0)
+       fatal (EOF_ERR);
+     sprintf (bochsrc_line, "floppya: %s=\"%s\", status=inserted", name, filename);
++
++    write_function=make_flat_image;
+   }
+   if (sectors < 1)
      fatal ("ERROR: Illegal disk size!");
    if (strlen (filename) < 1)
      fatal ("ERROR: Illegal filename");
 -  make_image (sectors, filename);
-+  make_image (sectors, filename, sparse);
++  make_image (sectors, filename, write_function);
    printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
    printf ("\nThe following line should appear in your bochsrc:\n");
    printf ("  %s\n", bochsrc_line);
@@ -3366,8 +3430,8 @@ diff -u -r1.17 bximage.c
 +  // even though we leave via 'myexit' just above
    return 0;
  }
---- /dev/null	Fri Oct 18 15:15:18 2002
-+++ iodev/vmware3.cc	Tue Mar  4 16:15:02 2003
+--- /dev/null	2003-02-09 00:55:40.000000000 +0100
++++ iodev/vmware3.cc	2003-03-05 00:14:44.000000000 +0100
 @@ -0,0 +1,392 @@
 +/*
 + * This file provides support for VMWare's virtual disk image
@@ -3761,8 +3825,8 @@ diff -u -r1.17 bximage.c
 +    delete[] images;
 +    current = 0;
 +}
---- /dev/null	Fri Oct 18 15:15:18 2002
-+++ iodev/vmware3.h	Tue Mar  4 13:28:27 2003
+--- /dev/null	2003-02-09 00:55:40.000000000 +0100
++++ iodev/vmware3.h	2003-03-05 00:14:44.000000000 +0100
 @@ -0,0 +1,95 @@
 +/*
 + * This file provides the interface for using VMWare's virtual
