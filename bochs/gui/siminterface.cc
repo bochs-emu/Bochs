@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.31.2.13 2002-03-18 02:46:32 bdenney Exp $
+// $Id: siminterface.cc,v 1.31.2.14 2002-03-18 20:13:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.13 2002-03-18 02:46:32 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.14 2002-03-18 20:13:45 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -73,16 +73,13 @@ public:
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
   virtual char *get_floppy_type_name (int type);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
-  virtual BxEvent* LOCAL_notify (BxEvent *event);
-  virtual int LOCAL_log_msg (const char *prefix, int level, char *msg);
-  virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
-  virtual int vga_gui_button_pressed (bx_id which);
-  virtual int notify_get_int_arg (int which);
-  virtual char *notify_get_string_arg (int which);
+  virtual BxEvent* sim_to_gui_event (BxEvent *event);
+  virtual int log_msg (const char *prefix, int level, char *msg);
+  virtual int ask_param (bx_id which);
   virtual int get_enabled () { return enabled; }
   virtual void set_enabled (int enabled) { this->enabled = enabled; }
   // ask the user for a pathname
-  virtual int ask_pathname (char *filename, int maxlen, char *prompt, char *the_default);
+  virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
 };
@@ -237,7 +234,7 @@ bx_real_sim_c::quit_sim (int code) {
   // tell the control panel to shut down
   BxEvent *event = new BxEvent ();
   event->type = BX_ASYNC_EVT_SHUTDOWN_GUI;
-  LOCAL_notify (event);
+  sim_to_gui_event (event);
   // set something that will cause the cpu loop to exit.
   // or use setjmp/longjmp, or something.
   //FIXME!
@@ -329,7 +326,7 @@ bx_real_sim_c::set_notify_callback (sim_interface_callback_t func, void *arg)
 }
 
 BxEvent *
-bx_real_sim_c::LOCAL_notify (BxEvent *event)
+bx_real_sim_c::sim_to_gui_event (BxEvent *event)
 {
   if (callback == NULL) {
     BX_ERROR (("notify called, but no callback function is registered"));
@@ -341,7 +338,7 @@ bx_real_sim_c::LOCAL_notify (BxEvent *event)
 
 // returns 0 for continue, 1 for alwayscontinue, 2 for die.
 int 
-bx_real_sim_c::LOCAL_log_msg (const char *prefix, int level, char *msg)
+bx_real_sim_c::log_msg (const char *prefix, int level, char *msg)
 {
   BxEvent *be = new BxEvent ();
   be->type = BX_ASYNC_EVT_LOG_MSG;
@@ -349,19 +346,9 @@ bx_real_sim_c::LOCAL_log_msg (const char *prefix, int level, char *msg)
   be->u.logmsg.level = level;
   be->u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
-  BxEvent *response = LOCAL_notify (be);
+  BxEvent *response = sim_to_gui_event (be);
   //fprintf (stderr, "notify returned %d\n", val);
   return (response == NULL) ? -1 : 0;
-}
-
-// called by control panel (control.cc) to retrieve args.  FIXME: YUCK!
-int
-bx_real_sim_c::log_msg_2 (char *prefix, int *level, char *msg, int len)
-{
-  strncpy (prefix, notify_string_args[0], len);
-  *level= notify_int_args[1];
-  strncpy (msg, notify_string_args[2], len);
-  return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -374,8 +361,8 @@ bx_object_c::bx_object_c (bx_id id)
   this->type = BXT_OBJECT;
 }
 
-void 
-bx_object_c::set_type (Bit8u type)
+void
+bx_object_c::set_type (bx_objtype type)
 {
   this->type = type;
 }
@@ -499,6 +486,16 @@ bx_param_string_c::bx_param_string_c (bx_id id,
   this->options = new bx_param_num_c (BXP_NULL,
       "stringoptions", NULL, 0, BX_MAX_INT, 0);
   set (initial_val);
+}
+
+bx_param_filename_c::bx_param_filename_c (bx_id id,
+    char *name,
+    char *description,
+    char *initial_val,
+    int maxsize)
+  : bx_param_string_c (id, name, description, initial_val, maxsize)
+{
+  get_options()->set (BX_IS_FILENAME);
 }
 
 bx_param_string_c::~bx_param_string_c ()
@@ -651,43 +648,38 @@ bx_list_c::set_parent (bx_param_c *parent)
   this->parent = parent;
 }
 
-// called by code in gui.cc when the user clicks on a headerbar button.
-// Create a synchronous ASK_PARAM event, send it to the GUI and wait for
-// the response.
+// Called by simulator whenever it needs the user to choose a new value
+// for a registered parameter.  Create a synchronous ASK_PARAM event, 
+// send it to the GUI, and wait for the response.  The GUI will call the
+// set() method on the parameter if the user changes the value.
 int 
-bx_real_sim_c::vga_gui_button_pressed (bx_id param)
+bx_real_sim_c::ask_param (bx_id param)
 {
+  bx_param_c *paramptr = SIM->get_param(param);
+  BX_ASSERT (paramptr != NULL);
   // create appropriate event
   BxEvent *event = new BxEvent ();
   event->type = BX_SYNC_EVT_ASK_PARAM;
-  event->u.param.id = param;
-  BxEvent *response = LOCAL_notify (event);
+  event->u.param.param = paramptr;
+  BxEvent *response = sim_to_gui_event (event);
   return response->retcode;
 }
 
-int 
-bx_real_sim_c::notify_get_int_arg (int which)
-{
-  return notify_int_args[which];
-}
-
-char *
-bx_real_sim_c::notify_get_string_arg (int which)
-{
-  return notify_string_args[which];
-}
-
 int
-bx_real_sim_c::ask_pathname (char *filename, int maxlen, char *prompt, char *the_default)
+bx_real_sim_c::ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags)
 {
+  // implement using ASK_PARAM on a newly created param.  I can't use
+  // ask_param because I don't intend to register this param.
   BxEvent event;
-  event.type = BX_SYNC_EVT_ASK_FILENAME;
-  event.u.askfile.result = filename;
-  event.u.askfile.result_len = maxlen;
-  event.u.askfile.the_default = the_default;
-  event.u.askfile.prompt = prompt;
-  BxEvent *response = LOCAL_notify (&event);
+  bx_param_string_c param (BXP_NULL, "filename", prompt, the_default, maxlen);
+  flags |= param.BX_IS_FILENAME;
+  param.get_options()->set (flags);
+  event.type = BX_SYNC_EVT_ASK_PARAM;
+  event.u.param.param = &param;
+  BxEvent *response = sim_to_gui_event (&event);
   BX_ASSERT ((response == &event));
+  if (event.retcode >= 0)
+    memcpy (filename, param.getptr(), maxlen);
   return event.retcode;
 }
 
@@ -698,7 +690,7 @@ bx_real_sim_c::periodic ()
   // particular, notice if the thread has been asked to die.
   BxEvent *tick = new BxEvent ();
   tick->type = BX_SYNC_EVT_TICK;
-  BxEvent *response = LOCAL_notify (tick);
+  BxEvent *response = sim_to_gui_event (tick);
   int retcode = response->retcode;
   BX_ASSERT (response == tick);
   delete tick;
