@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.23 2001-11-21 02:33:05 bdenney Exp $
+// $Id: rombios.c,v 1.24 2001-11-26 07:26:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,8 +73,6 @@
 //
 // int1a:
 //   f03/f05 are not complete - just CLC for now
-//
-// int16_function: default case ?
 
 // NOTES:
 // 990104:
@@ -245,6 +243,7 @@ static void           set_kbd_command_byte();
 static void           int09_function();
 static void           int13_function();
 static void           int13_diskette_function();
+static void           int14_function();
 static void           int15_function();
 static void           int16_function();
 static void           int17_function();
@@ -274,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.23 $";
-static char bios_date_string[] = "$Date: 2001-11-21 02:33:05 $";
+static char bios_cvs_version_string[] = "$Revision: 1.24 $";
+static char bios_date_string[] = "$Date: 2001-11-26 07:26:55 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.23 2001-11-21 02:33:05 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.24 2001-11-26 07:26:55 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -999,6 +998,82 @@ debugger_off()
 
 
   void
+int14_function(regs, ds, iret_addr)
+  pusha_regs_t regs; // regs pushed from PUSHA instruction
+  Bit16u ds; // previous DS:, DS set to 0x0000 by asm wrapper
+  iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
+{
+  Bit16u addr,timer,val16;
+  Bit8u timeout;
+
+  #asm
+  sti
+  #endasm
+
+  addr = read_word(0x0040, 2 * regs.u.r16.dx);
+  timeout = read_byte(0x0040, 0x007C + regs.u.r16.dx);
+  if ((regs.u.r16.dx < 4) && (addr > 0)) {
+    switch (regs.u.r8.ah) {
+      case 0:
+	outb(addr+3, inb(addr+3) | 0x80);
+	if (regs.u.r8.al & 0xE0 == 0) {
+	  outb(addr, 0x17);
+	  outb(addr+1, 0x04);
+	} else {
+	  val16 = 0x600 >> ((regs.u.r8.al & 0xE0) >> 5);
+	  outb(addr, val16 & 0xFF);
+	  outb(addr+1, val16 >> 8);
+	  }
+	outb(addr+3, regs.u.r8.al & 0x1F);
+	regs.u.r8.ah = inb(addr+5);
+	regs.u.r8.al = inb(addr+6);
+	ClearCF(iret_addr.flags);
+	break;
+      case 1:
+	timer = read_word(0x0040, 0x006C);
+	while (((inb(addr+5) & 0x60) != 0x60) && (timeout)) {
+	  val16 = read_word(0x0040, 0x006C);
+	  if (val16 != timer) {
+	    timer = val16;
+	    timeout--;
+	    }
+	  }
+	if (timeout) outb(addr, regs.u.r8.al);
+	regs.u.r8.ah = inb(addr+5);
+	if (!timeout) regs.u.r8.ah |= 0x80;
+	ClearCF(iret_addr.flags);
+	break;
+      case 2:
+	timer = read_word(0x0040, 0x006C);
+	while (((inb(addr+5) & 0x01) == 0) && (timeout)) {
+	  val16 = read_word(0x0040, 0x006C);
+	  if (val16 != timer) {
+	    timer = val16;
+	    timeout--;
+	    }
+	  }
+	if (timeout) {
+	  regs.u.r8.ah = 0;
+	  regs.u.r8.al = inb(addr);
+	} else {
+	  regs.u.r8.ah = inb(addr+5);
+	  }
+	ClearCF(iret_addr.flags);
+	break;
+      case 3:
+	regs.u.r8.ah = inb(addr+5);
+	regs.u.r8.al = inb(addr+6);
+	ClearCF(iret_addr.flags);
+	break;
+      default:
+	SetCF(iret_addr.flags); // Unsupported
+      }
+  } else {
+    SetCF(iret_addr.flags); // Unsupported
+    }
+}
+
+  void
 int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS;
 {
@@ -1013,7 +1088,7 @@ int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
   Bit8u   base23_16;
   Bit16u  ss;
   Bit8u   ret, mouse_data1, mouse_data2, mouse_data3;
-  Bit8u   comm_byte;
+  Bit8u   comm_byte, mf2_state;
 
   switch (GET_AH()) {
     case 0x24: /* A20 Control */
@@ -1028,11 +1103,17 @@ int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
       break;
 
     case 0x4f:
-      /* keyboard intercept, ignore */
-      SET_CF();
+      /* keyboard intercept */
 #if BX_CPU < 2
       SET_AH(UNSUPPORTED_FUNCTION);
+#else
+      if (GET_AL() == 0xE0) {
+	mf2_state = read_byte(0x0040, 0x96);
+	write_byte(0x0040, 0x96, mf2_state | 0x01);
+	SET_AL(inb(0x60));
+	}
 #endif
+      SET_CF();
       break;
 
     case 0x87:
@@ -1483,14 +1564,37 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       break;
 
     case 0x02: /* get shift flag status */
-      /*AL = 0;*/
       shift_flags = read_byte(0x0040, 0x17);
       SET_AL(shift_flags);
       break;
 
+    case 0x10: /* read MF-II keyboard input */
+
+      if ( !dequeue_key(&scan_code, &ascii_code, 1) ) {
+        panic("KBD: int16h: out of keyboard input");
+        }
+      if (ascii_code == 0) ascii_code = 0xE0;
+      AX = (scan_code << 8) | ascii_code;
+      break;
+
+    case 0x11: /* check MF-II keyboard status */
+      if ( !dequeue_key(&scan_code, &ascii_code, 0) ) {
+        SET_ZF();
+        return;
+        }
+      if (ascii_code == 0) ascii_code = 0xE0;
+      AX = (scan_code << 8) | ascii_code;
+      CLEAR_ZF();
+      break;
+
+    case 0x12: /* get extended keyboard status */
+      shift_flags = read_byte(0x0040, 0x17);
+      SET_AL(shift_flags);
+      shift_flags = read_byte(0x0040, 0x18);
+      SET_AH(shift_flags);
+      break;
+
     default:
-      /*bx_cpu.set_ZF(1);*/
-      /* ??? */
       printf("KBD: unsupported int 16h function %02x\n", GET_AH());
     }
 }
@@ -1628,6 +1732,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX;
 {
   Bit8u scancode, asciicode, shift_flags;
+  Bit8u mf2_flags, mf2_state, led_flags;
 
   //
   // DS has been set to F000 before call
@@ -1643,20 +1748,31 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
 
 
   shift_flags = read_byte(0x0040, 0x17);
+  mf2_flags = read_byte(0x0040, 0x18);
+  mf2_state = read_byte(0x0040, 0x96);
+  led_flags = read_byte(0x0040, 0x97);
+  asciicode = 0;
 
   switch (scancode) {
     case 0x3a: /* Caps Lock press */
       shift_flags |= 0x40;
       write_byte(0x0040, 0x17, shift_flags);
+      mf2_flags |= 0x40;
+      write_byte(0x0040, 0x18, mf2_flags);
+      led_flags |= 0x04;
+      write_byte(0x0040, 0x97, led_flags);
       break;
     case 0xba: /* Caps Lock release */
-      shift_flags &= ~0x40;
-      write_byte(0x0040, 0x17, shift_flags);
+      mf2_flags &= ~0x40;
+      write_byte(0x0040, 0x18, mf2_flags);
       break;
 
     case 0x2a: /* L Shift press */
+      shift_flags &= ~0x40;
       shift_flags |= 0x02;
       write_byte(0x0040, 0x17, shift_flags);
+      led_flags &= ~0x04;
+      write_byte(0x0040, 0x97, led_flags);
       break;
     case 0xaa: /* L Shift release */
       shift_flags &= ~0x02;
@@ -1664,39 +1780,98 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
 
     case 0x36: /* R Shift press */
+      shift_flags &= ~0x40;
       shift_flags |= 0x01;
       write_byte(0x0040, 0x17, shift_flags);
+      led_flags &= ~0x04;
+      write_byte(0x0040, 0x97, led_flags);
       break;
     case 0xb6: /* R Shift release */
       shift_flags &= ~0x01;
       write_byte(0x0040, 0x17, shift_flags);
       break;
 
-    case 0x1d: /* L Cttrl press */
+    case 0x1d: /* Ctrl press */
       shift_flags |= 0x04;
       write_byte(0x0040, 0x17, shift_flags);
+      if (mf2_state & 0x01) {
+	mf2_flags |= 0x04;
+      } else {
+	mf2_flags |= 0x01;
+	}
+      write_byte(0x0040, 0x18, mf2_flags);
       break;
-    case 0x9d: /* L Cttrl release */
+    case 0x9d: /* Ctrl release */
       shift_flags &= ~0x04;
       write_byte(0x0040, 0x17, shift_flags);
+      if (mf2_state & 0x01) {
+	mf2_flags &= ~0x04;
+      } else {
+	mf2_flags &= ~0x01;
+	}
+      write_byte(0x0040, 0x18, mf2_flags);
       break;
 
-    case 0x38: /* L Alt press */
+    case 0x38: /* Alt press */
       shift_flags |= 0x08;
       write_byte(0x0040, 0x17, shift_flags);
+      if (mf2_state & 0x01) {
+	mf2_flags |= 0x08;
+      } else {
+	mf2_flags |= 0x02;
+	}
+      write_byte(0x0040, 0x18, mf2_flags);
       break;
-    case 0xb8: /* L Alt release */
+    case 0xb8: /* Alt release */
       shift_flags &= ~0x08;
       write_byte(0x0040, 0x17, shift_flags);
+      if (mf2_state & 0x01) {
+	mf2_flags &= ~0x08;
+      } else {
+	mf2_flags &= ~0x02;
+	}
+      write_byte(0x0040, 0x18, mf2_flags);
       break;
 
     case 0x45: /* Num Lock press */
-      shift_flags |= 0x20;
-      write_byte(0x0040, 0x17, shift_flags);
+      if ((mf2_state & 0x01) == 0) {
+	mf2_flags |= 0x20;
+	write_byte(0x0040, 0x18, mf2_flags);
+	if (shift_flags & 0x20) {
+	  shift_flags &= ~0x20;
+	  led_flags &= ~0x02;
+	} else {
+	  shift_flags |= 0x20;
+	  led_flags |= 0x02;
+	  }
+	write_byte(0x0040, 0x17, shift_flags);
+	write_byte(0x0040, 0x97, led_flags);
+	}
       break;
     case 0xc5: /* Num Lock release */
-      shift_flags &= ~0x20;
+      if ((mf2_state & 0x01) == 0) {
+	mf2_flags &= ~0x20;
+	write_byte(0x0040, 0x18, mf2_flags);
+	}
+      break;
+
+    case 0x46: /* Scroll Lock press */
+      mf2_flags |= 0x10;
+      write_byte(0x0040, 0x18, mf2_flags);
+      if (shift_flags & 0x10) {
+	shift_flags &= ~0x10;
+	led_flags &= ~0x01;
+      } else {
+	shift_flags |= 0x10;
+	led_flags |= 0x01;
+	}
       write_byte(0x0040, 0x17, shift_flags);
+      write_byte(0x0040, 0x97, led_flags);
+      break;
+
+    case 0xc6: /* Scroll Lock release */
+      mf2_flags &= ~0x10;
+      write_byte(0x0040, 0x18, mf2_flags);
       break;
 
     default:
@@ -1734,6 +1909,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       enqueue_key(scancode, asciicode);
       break;
     }
+  mf2_state &= ~0x01;
 }
 
   void
@@ -3294,8 +3470,8 @@ int17_function(regs, ds, iret_addr)
   Bit16u ds; // previous DS:, DS set to 0x0000 by asm wrapper
   iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
 {
-  Bit16u addr;
-  Bit8u timeout,val8;
+  Bit16u addr,timeout;
+  Bit8u val8;
 
   #asm
   sti
@@ -3303,22 +3479,27 @@ int17_function(regs, ds, iret_addr)
 
   if ((regs.u.r8.ah < 3) && (regs.u.r16.dx == 0)) {
     addr = read_word(0x0040, 0x0008);
-    timeout = read_byte(0x0040, 0x0078);
+    timeout = read_byte(0x0040, 0x0078) << 8;
     if (regs.u.r8.ah == 0) {
       outb(addr, regs.u.r8.al);
       val8 = inb(addr+2);
-      val8 |= 0x01;
-      outb(addr+2, val8); // send strobe
-      // one microsecond pause should be here
-      outb(addr+2, val8 & 0xFE);
-      while ((timeout--) && ((inb(addr+1) & 0x40) == 0x40)) {}
-    }
+      outb(addr+2, val8 | 0x01); // send strobe
+      #asm
+      nop
+      #endasm
+      outb(addr+2, val8 & ~0x01);
+      while (((inb(addr+1) & 0x40) == 0x40) && (timeout)) {
+	timeout--;
+	}
+      }
     if (regs.u.r8.ah == 1) {
       val8 = inb(addr+2);
-      val8 &= 0xFB;
-      outb(addr+2, val8); // send init
+      outb(addr+2, val8 & ~0x04); // send init
+      #asm
+      nop
+      #endasm
       outb(addr+2, val8 | 0x04);
-    }
+      }
     regs.u.r8.ah = inb(addr+1);
     val8 = (~regs.u.r8.ah & 0x48);
     regs.u.r8.ah &= 0xB7;
@@ -4341,8 +4522,9 @@ post_default_ints:
   mov  0x0418, al /* keyboard shift flags, set 2 */
   mov  0x0419, al /* keyboard alt-numpad work area */
   mov  0x0471, al /* keyboard ctrl-break flag */
-  mov  0x0496, al /* keyboard status flags 3 */
   mov  0x0497, al /* keyboard status flags 4 */
+  mov  al, #0x10
+  mov  0x0496, al /* keyboard status flags 3 */
 
 
   /* keyboard head of buffer pointer */
@@ -4405,12 +4587,7 @@ post_default_ints:
   mov ax, #0x0000
   mov ds, ax
   mov 0x408, #0x378 ; Parallel I/O address, port 1
-  mov 0x40A, AX ; Parallel I/O address, port 2
-  mov 0x40C, AX ; Parallel I/O address, port 3
   mov 0x478, #0x14 ; Parallel printer 1 timeout
-  mov 0x479, AL ; Parallel printer 2 timeout
-  mov 0x47A, AL ; Parallel printer 3 timeout
-  mov 0x47B, AL ; Parallel printer 4 timeout
   mov AX, 0x410   ; Equipment word bits 14..15 determing # parallel ports
   and AX, #0x3fff
   or  AX, #0x4000 ; one parallel port
@@ -4419,17 +4596,11 @@ post_default_ints:
   ;; Serial setup
   SET_INT_VECTOR(0x0C, #0xF000, #dummy_iret_handler)
   SET_INT_VECTOR(0x14, #0xF000, #int14_handler)
-  ;; assuming AX==0, DS==0 from above
-  mov 0x400, AX   ; Serial I/O address, port 1
-  mov 0x402, AX   ; Serial I/O address, port 2
-  mov 0x404, AX   ; Serial I/O address, port 3
-  mov 0x406, AX   ; Serial I/O address, port 4
-  mov 0x47C, AL   ; Serial 1 timeout
-  mov 0x47D, AL   ; Serial 2 timeout
-  mov 0x47E, AL   ; Serial 3 timeout
-  mov 0x47F, AL   ; Serial 4 timeout
+  mov 0x400, #0x03F8   ; Serial I/O address, port 1
+  mov 0x47C, #0x0a   ; Serial 1 timeout
   mov AX, 0x410   ; Equipment word bits 9..11 determing # serial ports
-  and AX, #0xf1ff ; clear bits 9..11 for now (zero ports)
+  and AX, #0xf1ff
+  or  AX, #0x0200 ; one serial port
   mov 0x410, AX
 
   ;; CMOS RTC
@@ -4581,7 +4752,13 @@ db 0x00
 ;----------
 .org 0xe739 ; INT 14h Serial Communications Service Entry Point
 int14_handler:
-  ;; ??? should post message here
+  push ds
+  pusha
+  mov  ax, #0x0000
+  mov  ds, ax
+  call _int14_function
+  popa
+  pop  ds
   iret
 
 
