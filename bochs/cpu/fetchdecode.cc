@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.32 2002-11-13 21:35:17 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.33 2002-11-13 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -219,6 +219,10 @@ static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
    MOVAPS_VpsWps  (0f 28) = MOVAPD_VpdWpd  (66 0f 28)
    MOVAPS_WpsVps  (0f 29) = MOVAPD_WpdVpd  (66 0f 29)
    MOVNTPS_MdqVps (0f 2b) = MOVNTPD_MdqVpd (66 0f 2b)
+   MOVLPS_VpsMq   (0f 12) = MOVLPD_VsdMq   (66 0f 12)
+   MOVLPS_MqVps   (0f 13) = MOVLPD_MqVsd   (66 0f 13)
+   MOVHPS_VpsMq   (0f 16) = MOVHPD_VpdMq   (66 0f 16)
+   MOVHPS_MqVps   (0f 17) = MOVHPD_MqVpd   (66 0f 17)
 */
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f10[4] = {
@@ -237,14 +241,14 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f11[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f12[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVLPS_VpsMq },
-  /* 66 */  { 0, &BX_CPU_C::MOVLPD_VsdMq },
+  /* 66 */  { 0, &BX_CPU_C::MOVLPS_VpsMq },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f13[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVLPS_MqVps },
-  /* 66 */  { 0, &BX_CPU_C::MOVLPD_MqVsd },
+  /* 66 */  { 0, &BX_CPU_C::MOVLPS_MqVps },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
@@ -265,14 +269,14 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f15[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f16[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVHPS_VpsMq },
-  /* 66 */  { 0, &BX_CPU_C::MOVHPD_VpdMq },
+  /* 66 */  { 0, &BX_CPU_C::MOVHPS_VpsMq },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f17[4] = {
   /* -- */  { 0, &BX_CPU_C::MOVHPS_MqVps },
-  /* 66 */  { 0, &BX_CPU_C::MOVHPD_MqVpd },
+  /* 66 */  { 0, &BX_CPU_C::MOVHPS_MqVps },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
