@@ -75,8 +75,7 @@ NONINLINE_OBJS = \
 	load32bitOShack.o \
 	state_file.o \
 	pc_system.o \
-	snprintf.o \
-	strtoull.o
+	osdep.o
 
 EXTERN_ENVIRONMENT_OBJS = \
 	main.o \
