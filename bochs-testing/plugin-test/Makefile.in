@@ -1,10 +1,10 @@
 SUBDIRS = test1-static test2-dynamic test3-twomodules test4-interdep test5-execsymbols test6-ltdlopen
 
-build_libltdl:
-	cd libltdl; make all
-
 all: build_libltdl
 	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make all; echo Leaving $$i;); done
+
+build_libltdl:
+	cd libltdl; make all
 
 test: all
 	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make test; echo Leaving $$i;); done
