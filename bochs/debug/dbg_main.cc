@@ -684,8 +684,8 @@ int timebp_queue_size = 0;
 void
 bx_dbg_timebp_command(Boolean absolute, Bit64u time)
 {
-      long long diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
-      long long abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
+      Bit64u diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
+      Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
 
       if (diff < 0) {
         fprintf(stderr, "Request for time break point in the past. I can't let you do that.\n");
@@ -918,7 +918,7 @@ struct playback_entry_t
 };
 
 static playback_entry_t playback_entry;
-static long long last_playback_time = 0;
+static Bit64u last_playback_time = 0;
 static int playback_timer_index = -1;
 
 void
@@ -1184,7 +1184,7 @@ enter_playback_entry()
 	    return;
       }
 
-      long long diff = time - last_playback_time;
+      Bit64u diff = time - last_playback_time;
       last_playback_time = time;
 
       if (diff < 0) {
@@ -1426,20 +1426,21 @@ bx_dbg_watch(int read, Bit32u address)
 {
       if (read == -1) {
 	    // print watch point info
-	    for (int i = 0; i < num_read_watchpoints; i++) {
+	    int i;
+	    for (i = 0; i < num_read_watchpoints; i++) {
 		  Bit8u buf[2];
 		  if (BX_MEM(0)->dbg_fetch_mem(read_watchpoint[i], 2, buf))
 			fprintf(stderr, "read   %08x   (%04x)\n", read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
 		  else
 			fprintf(stderr, "read   %08x   (read error)\n", read_watchpoint[i]);
 	    }
-	    for (int i = 0; i < num_write_watchpoints; i++) {
-		  Bit8u buf[2];
-		  if (BX_MEM(0)->dbg_fetch_mem(write_watchpoint[i], 2, buf))
-			fprintf(stderr, "write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
-		  else
-			fprintf(stderr, "write  %08x   (read error)\n", write_watchpoint[i]);
-	    }
+		for (i = 0; i < num_write_watchpoints; i++) {
+			Bit8u buf[2];
+			if (BX_MEM(0)->dbg_fetch_mem(write_watchpoint[i], 2, buf))
+				fprintf(stderr, "write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+			else
+				fprintf(stderr, "write  %08x   (read error)\n", write_watchpoint[i]);
+		}
       } else {
 	    if (read) {
 		  if (num_read_watchpoints == MAX_READ_WATCHPOINTS) {
