@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.26 2003-05-10 22:25:52 kevinlawton Exp $
+// $Id: ctrl_xfer32.cc,v 1.27 2003-08-17 18:15:04 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -592,7 +592,7 @@ done:
 BX_CPU_C::IRET32(bxInstruction_c *i)
 {
 BailBigRSP("IRET32");
-  Bit32u eip, ecs_raw, eflags;
+//  Bit32u eip, ecs_raw, eflags;
 
   invalidate_prefetch_q();
 
@@ -613,19 +613,24 @@ BailBigRSP("IRET32");
     goto done;
     }
 #endif
+#if BX_CPU_LEVEL >= 5
+  /*this feature discribed in pentium docs*/
+  if  (iret32_real(i))
+    goto done;
+#endif
 
-  BX_ERROR(("IRET32 called when you're not in vm8086 mode or protected mode."));
-  BX_ERROR(("IRET32 may not be implemented right, since it doesn't check anything."));
+//  BX_ERROR(("IRET32 called when you're not in vm8086 mode or protected mode."));
+  BX_ERROR(("IRET32 may not be implemented right."));
   BX_PANIC(("Please report that you have found a test case for BX_CPU_C::IRET32."));
 
-    pop_32(&eip);
-    pop_32(&ecs_raw);
-    pop_32(&eflags);
+//    pop_32(&eip);
+//    pop_32(&ecs_raw);
+//    pop_32(&eflags);
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
-    EIP = eip;
+//    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
+//    EIP = eip;
     //FIXME: this should do (eflags & 0x257FD5) | (EFLAGS | 0x1A0000)
-    write_eflags(eflags, /* change IOPL? */ 1, /* change IF? */ 1, 0, 1);
+//    write_eflags(eflags, /* change IOPL? */ 1, /* change IF? */ 1, 0, 1);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,

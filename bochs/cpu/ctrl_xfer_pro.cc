@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.22 2003-03-02 23:59:09 cbothamy Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.23 2003-08-17 18:15:04 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1376,7 +1376,35 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 }
 #endif
 
+#if BX_CPU_LEVEL >= 5
+  bx_bool BX_CPP_AttrRegparmN(1)
+BX_CPU_C::iret32_real(bxInstruction_c *i)
+{ Bit32u eip, ecs, efl;
 
+  if (ESP + 12 > 0xffff)
+  { BX_PANIC(("iretd: to 12 bytes of stack not within stack limits"));
+    exception(BX_SS_EXCEPTION, 0, 0);
+    return 0;
+  }
+  access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + ESP, 
+                4, CPL == 3, BX_READ, &eip);
+  if (eip > 0xffff)
+  { BX_PANIC(("iretd: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+    return 0;
+  }
+  pop_32(&eip);
+  pop_32(&ecs);
+  pop_32(&efl);
+  ecs &= 0xffff;
+  efl = (efl & 0x257fd5) | ( read_eflags() & 0x1a0000);
+  
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u)ecs);
+  EIP = eip;
+  writeEFlags(efl, 0xffffffff);
+  return 1;
+}
+#endif
 
 #if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(1)
