@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.80 2002-12-07 16:52:06 cbothamy Exp $
+// $Id: wxmain.cc,v 1.81 2002-12-07 19:43:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -569,22 +569,18 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
     devices[bootDevices] = wxT("First floppy drive");
     dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
   }
-#ifdef __GNUC__
-#warning wxwindows interface will only allow booting from hard disk if it is on ATA0 master
-#endif
-  if (ata0_mpres->get() && ata0_mtype->get() == BX_ATA_DEVICE_DISK) {
+  bx_param_c *firsthd = SIM->get_first_hd ();
+  if (firsthd != NULL) {
     devices[bootDevices] = wxT("First hard drive");
     dev_id[bootDevices++] = BX_BOOT_DISKC;
   }
-#ifdef __GNUC__
-#warning wxwindows interface will only allow booting from cdrom if it is on ATA0 slave
-#endif
-  if (ata0_spres->get() && ata0_stype->get() == BX_ATA_DEVICE_CDROM) {
+  bx_param_c *firstcd = SIM->get_first_cdrom ();
+  if (firstcd != NULL) {
     devices[bootDevices] = wxT("CD-ROM drive");
     dev_id[bootDevices++] = BX_BOOT_CDROM;
   }
   if (bootDevices == 0) {
-    wxMessageBox( "All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, the first hard drive, or the CD-ROM.", "None enabled", wxOK | wxICON_ERROR );
+    wxMessageBox( "All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, a hard drive, or a CD-ROM.", "None enabled", wxOK | wxICON_ERROR );
     return;
   }
   int which = wxGetSingleChoiceIndex ("Select the device to boot from", "Boot Device", bootDevices, devices);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.88 2002-12-06 19:34:32 bdenney Exp $
+// $Id: siminterface.cc,v 1.89 2002-12-07 19:43:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -99,7 +99,14 @@ public:
     // maybe need to check if something has been initialized yet?
     bx_gui->handle_events ();
   }
-  bx_param_c *get_first_cdrom ();
+  // find first hard drive or cdrom
+  bx_param_c *get_first_atadevice (Bit32u search_type);
+  bx_param_c *get_first_cdrom () {
+    return get_first_atadevice (BX_ATA_DEVICE_CDROM);
+  }
+  bx_param_c *get_first_hd () {
+    return get_first_atadevice (BX_ATA_DEVICE_DISK);
+  }
 #if BX_DEBUGGER
   virtual void debug_break ();
   virtual void debug_interpret_cmd (char *cmd);
@@ -628,15 +635,14 @@ void bx_real_sim_c::refresh_ci () {
 }
 
 bx_param_c *
-bx_real_sim_c::get_first_cdrom ()
-{
+bx_real_sim_c::get_first_atadevice (Bit32u search_type) {
   for (int channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (!bx_options.ata[channel].Opresent->get ())
       continue;
     for (int slave=0; slave<2; slave++) {
       Bit32u present = bx_options.atadevice[channel][slave].Opresent->get ();
       Bit32u type = bx_options.atadevice[channel][slave].Otype->get ();
-      if (present && (type == BX_ATA_DEVICE_CDROM)) {
+      if (present && (type == search_type)) {
 	return bx_options.atadevice[channel][slave].Omenu;
       }
     }
