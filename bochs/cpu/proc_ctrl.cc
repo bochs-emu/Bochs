@@ -1033,7 +1033,9 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
       model = 1; // Pentium Pro
       stepping = 3; // ???
       features |= (1<<4);   // implement TSC
+#  if BX_SUPPORT_APIC
       features |= (1<<9);   // APIC on chip
+#  endif
 #  if BX_SUPPORT_FPU
       features |= 0x01;     // has FPU
 #  endif

@@ -145,6 +145,7 @@ AC_ARG_ENABLE(cpu-level,
        exit 1
        ;;
    esac
+   bx_cpu_level=$enableval
    if test "$bx_procs" -gt 1 -a "$enableval" -lt 6; then
      echo "ERROR: with >1 processor, use --enable-cpu-level=6"
      exit 1
@@ -156,10 +157,12 @@ AC_ARG_ENABLE(cpu-level,
       AC_MSG_RESULT(6)
       AC_DEFINE(BX_CPU_LEVEL, 6)
       AC_DEFINE(BX_CPU_LEVEL_HACKED, 6)
+      bx_cpu_level=6
     else
       AC_MSG_RESULT(5)
       AC_DEFINE(BX_CPU_LEVEL, 5)
       AC_DEFINE(BX_CPU_LEVEL_HACKED, 5)
+      bx_cpu_level=5
     fi
   ]
   )
@@ -239,8 +242,8 @@ AC_ARG_ENABLE(apic,
    fi
    ],
   [
-    if test "$bx_procs" -gt 1; then
-      # enable APIC by default, if processors>1
+    if test "$bx_procs" -gt 1 -o "$bx_cpu_level" -gt 5; then
+      # enable APIC by default, if processors>1 or if cpulevel>5
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_APIC_SUPPORT, 1)
       IOAPIC_OBJS='ioapic.o'
