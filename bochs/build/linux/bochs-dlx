@@ -2,12 +2,6 @@
 BOCHS=/usr/local/bin/bochs
 DLXPATH=/usr/local/bochs/dlxlinux
 
-cat <<EOF
-------------------------------------------------------
-Starting DLX Linux in the Bochs x86 Emulator
-------------------------------------------------------
-EOF
-
 echo -n "Checking for bochs binary..."
 if test ! -x $BOCHS; then
   echo FAILED
@@ -24,13 +18,7 @@ fi
 echo ok
 echo Entering $DLXPATH
 cd $DLXPATH
+echo Running bochs
 
 # ok now try it
 $BOCHS
-
-cat <<EOF
-------------------------------------------------------
-DLX Linux is finished.  Log information is written to
-$DLXPATH/bochsout.txt.
-------------------------------------------------------
-EOF
