@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.128 2005-02-02 19:12:43 vruppert Exp $
+// $Id: rombios.c,v 1.129 2005-02-05 23:10:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -913,10 +913,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.128 $";
-static char bios_date_string[] = "$Date: 2005-02-02 19:12:43 $";
+static char bios_cvs_version_string[] = "$Revision: 1.129 $";
+static char bios_date_string[] = "$Date: 2005-02-05 23:10:52 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.128 2005-02-02 19:12:43 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.129 2005-02-05 23:10:52 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -942,47 +942,47 @@ static char CVSID[] = "$Id: rombios.c,v 1.128 2005-02-02 19:12:43 vruppert Exp $
 #define BX_PANIC(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
 
 #if DEBUG_ATA
-#  define BX_DEBUG_ATA(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_ATA(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_ATA(a...)
 #endif
 #if DEBUG_INT13_HD
-#  define BX_DEBUG_INT13_HD(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT13_HD(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT13_HD(a...)
 #endif
 #if DEBUG_INT13_CD
-#  define BX_DEBUG_INT13_CD(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT13_CD(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT13_CD(a...)
 #endif
 #if DEBUG_INT13_ET
-#  define BX_DEBUG_INT13_ET(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT13_ET(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT13_ET(a...)
 #endif
 #if DEBUG_INT13_FL
-#  define BX_DEBUG_INT13_FL(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT13_FL(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT13_FL(a...)
 #endif
 #if DEBUG_INT15
-#  define BX_DEBUG_INT15(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT15(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT15(a...)
 #endif
 #if DEBUG_INT16
-#  define BX_DEBUG_INT16(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT16(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT16(a...)
 #endif
 #if DEBUG_INT1A
-#  define BX_DEBUG_INT1A(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT1A(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT1A(a...)
 #endif
 #if DEBUG_INT74
-#  define BX_DEBUG_INT74(a...) BX_DEBUG(##a)
+#  define BX_DEBUG_INT74(a...) BX_DEBUG(a)
 #else
 #  define BX_DEBUG_INT74(a...)
 #endif
@@ -7496,7 +7496,7 @@ int1a_function(regs, ds, iret_addr)
 {
   Bit8u val8;
 
-  BX_DEBUG_INT1A("int1a: AX=%04x BX=%04x CX=%04x DX=%04x DS=%04x\n", regs.u.r16.ax, regs.u.r16.bx, regs.u.r16.cx, regs.u.r16.dx, DS);
+  BX_DEBUG_INT1A("int1a: AX=%04x BX=%04x CX=%04x DX=%04x DS=%04x\n", regs.u.r16.ax, regs.u.r16.bx, regs.u.r16.cx, regs.u.r16.dx, ds);
 
   ASM_START
   sti
@@ -10294,7 +10294,7 @@ static Bit8u vgafont8[128*8]=
 };
 
 ASM_START
-.org 0xd000
+.org 0xcc00
 // bcc-generated data will be placed here
 
 // For documentation of this config structure, look on developer.intel.com and
