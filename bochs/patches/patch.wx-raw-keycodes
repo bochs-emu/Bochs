@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 THIS IS A PATCH FOR WXWINDOWS, NOT FOR BOCHS
 ----------------------------------------------------------------------
-Patch name: patch.wx-raw-keycodes
+Patch name: patch.wx-raw-keycodes  $Revision: 1.1.2.5 $
 Author: Bryce Denney <bryce@tlw.com>
 Date: Sat Apr  6 17:22:36  2002
 
@@ -43,6 +43,10 @@ Apply patch to what version:
 Instructions:
   To patch, go to main wxGTK-2.3.2 directory.
   Type "patch -p1 < THIS_PATCH_FILE".
+Notes:
+  If you do not have the complete wxwindows source tree (all ports), you will
+  get warnings when you try to apply the patch.  For example, if you downloaded
+  wxMSW, then expect some warnings when it cannot find src/gtk/window.cpp.
 ----------------------------------------------------------------------
 diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
 --- wxGTK-2.3.2-orig/src/gtk/window.cpp	Mon Dec 10 14:07:06 2001
