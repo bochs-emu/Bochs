@@ -86,6 +86,8 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
   fpu_cpu_ptr = this;
   current_i387 = &(BX_CPU_THIS_PTR the_i387);
 
+  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+
 #if 0
   addr_modes.default_mode = VM86;
   addr_modes.default_mode = 0; // FPU_CS == __USER_CS && FPU_DS == __USER_DS
@@ -93,7 +95,8 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
   addr_modes.default_mode = PM16;
 #endif
   if (protected_mode()) {
-    addr_modes.default_mode = SEG32;
+    if (is_32) addr_modes.default_mode = SEG32;
+    else addr_modes.default_mode = PM16;
     }
   else if (v8086_mode()) {
     addr_modes.default_mode = VM86;
@@ -107,7 +110,6 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
   // Mark if instruction used opsize or addrsize prefixes
   // Actually, addr_modes.override.address_size is not used,
   // could delete that code.
-  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   if (i->as32B() == is_32)
     addr_modes.override.address_size = 0;
   else
