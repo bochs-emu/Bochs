@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.77 2002-11-04 23:56:55 cbothamy Exp $
+// $Id: rombios.c,v 1.78 2002-11-07 21:57:27 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -930,10 +930,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.77 $";
-static char bios_date_string[] = "$Date: 2002-11-04 23:56:55 $";
+static char bios_cvs_version_string[] = "$Revision: 1.78 $";
+static char bios_date_string[] = "$Date: 2002-11-07 21:57:27 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.77 2002-11-04 23:56:55 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.78 2002-11-07 21:57:27 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1560,155 +1560,165 @@ ASM_END
 // keyboard_init
 //--------------------------------------------------------------------------
 // this file is based on LinuxBIOS implementation of keyboard.c
+// could convert to #asm to gain space
   void
 keyboard_init()
 {
-	Bit16u max;
+    Bit16u max;
 
-	/* ------------------- controller side ----------------------*/
-	/* send cmd = 0xAA, self test 8042 */
-	outb(0x64, 0xaa);
+    /* clear buffers before testing */
+    max=0xffff;
+    while(--max > 0) {
+      if (inb(0x64) & 0x01) inb(0x60);
+      if ((inb(0x64) & 0x02) == 0) break;
+      }
+    if (max==0x0)
+        keyboard_panic(990);
 
-	/* empty input buffer or any other command/data will be lost */
-	max=0xffff;
-	while ( (inb(0x64) & 0x02) && (max--!=0))
-		outb(0x80, 0x00);
-	if (max==0x0)
-		keyboard_panic(00);
+    /* ------------------- controller side ----------------------*/
+    /* send cmd = 0xAA, self test 8042 */
+    outb(0x64, 0xaa);
 
-	/* empty output buffer or any other command/data will be lost */
-	max=0xffff;
-	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
-		outb(0x80, 0x01);
-	if (max==0x0)
-		keyboard_panic(01);
+    /* empty input buffer or any other command/data will be lost */
+    max=0xffff;
+    while ( (inb(0x64) & 0x02) && (--max>0))
+        outb(0x80, 0x00);
+    if (max==0x0)
+        keyboard_panic(00);
 
-	/* read self-test result, 0x55 should be returned form 0x60 */
-	if ((inb(0x60) != 0x55)){
-		keyboard_panic(991);
-	}
+    /* empty output buffer or any other command/data will be lost */
+    max=0xffff;
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
+        outb(0x80, 0x01);
+    if (max==0x0)
+        keyboard_panic(01);
 
-	/* send cmd = 0xAA, keyboard interface test */
-	outb(0x64,0xab);
+    /* read self-test result, 0x55 should be returned form 0x60 */
+    if ((inb(0x60) != 0x55)){
+        keyboard_panic(991);
+    }
 
-	/* empty input buffer or any other command/data will be lost */
-	max=0xffff;
-	while ((inb(0x64) & 0x02) && (max--!=0))
-		outb(0x80, 0x10);
-	if (max==0x0)
-		keyboard_panic(10);
+    /* send cmd = 0xAA, keyboard interface test */
+    outb(0x64,0xab);
 
-	/* empty output buffer or any other command/data will be lost */
-	max=0xffff;
-	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
-		outb(0x80, 0x11);
-	if (max==0x0)
-		keyboard_panic(11);
+    /* empty input buffer or any other command/data will be lost */
+    max=0xffff;
+    while ((inb(0x64) & 0x02) && (--max>0))
+        outb(0x80, 0x10);
+    if (max==0x0)
+        keyboard_panic(10);
 
-	/* read keyboard interface test result, */
-	/* 0x00 should be returned form 0x60 */
-	if ((inb(0x60) != 0x00)) {
-		keyboard_panic(992);
-	}
+    /* empty output buffer or any other command/data will be lost */
+    max=0xffff;
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
+        outb(0x80, 0x11);
+    if (max==0x0)
+        keyboard_panic(11);
 
-	/* Enable Keyboard clock */
-	outb(0x64,0xae);
-	outb(0x64,0xa8);
+    /* read keyboard interface test result, */
+    /* 0x00 should be returned form 0x60 */
+    if ((inb(0x60) != 0x00)) {
+        keyboard_panic(992);
+    }
 
-	/* ------------------- keyboard side ------------------------*/
-	/* reset kerboard and self test  (keyboard side) */
-	outb(0x60, 0xff);
+    /* Enable Keyboard clock */
+    outb(0x64,0xae);
+    outb(0x64,0xa8);
 
-	/* empty inut buffer or any other command/data will be lost */
-	max=0xffff;
-	while ((inb(0x64) & 0x02) && (max--!=0))
-		outb(0x80, 0x20);
-	if (max==0x0)
-		keyboard_panic(20);
+    /* ------------------- keyboard side ------------------------*/
+    /* reset kerboard and self test  (keyboard side) */
+    outb(0x60, 0xff);
 
-	/* empty output buffer or any other command/data will be lost */
-	max=0xffff;
-	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
-		outb(0x80, 0x21);
-	if (max==0x0)
-		keyboard_panic(21);
+    /* empty inut buffer or any other command/data will be lost */
+    max=0xffff;
+    while ((inb(0x64) & 0x02) && (--max>0))
+        outb(0x80, 0x20);
+    if (max==0x0)
+        keyboard_panic(20);
 
-	/* keyboard should return ACK */
-	if ((inb(0x60) != 0xfa)) {
-		keyboard_panic(993);
-	}
+    /* empty output buffer or any other command/data will be lost */
+    max=0xffff;
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
+        outb(0x80, 0x21);
+    if (max==0x0)
+        keyboard_panic(21);
 
-	max=0xffff;
-	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
-		outb(0x80, 0x31);
-	if (max==0x0)
-		keyboard_panic(31);
+    /* keyboard should return ACK */
+    if ((inb(0x60) != 0xfa)) {
+        keyboard_panic(993);
+    }
 
-	if ((inb(0x60) != 0xaa)) {
-		keyboard_panic(994);
-	}
+    max=0xffff;
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
+        outb(0x80, 0x31);
+    if (max==0x0)
+        keyboard_panic(31);
 
-	/* Disable keyboard */
-	outb(0x60, 0xf5);
+    if ((inb(0x60) != 0xaa)) {
+        keyboard_panic(994);
+    }
 
-	/* empty inut buffer or any other command/data will be lost */
-	max=0xffff;
-	while ((inb(0x64) & 0x02) && (max--!=0))
-		outb(0x80, 0x40);
-	if (max==0x0)
-		keyboard_panic(40);
+    /* Disable keyboard */
+    outb(0x60, 0xf5);
 
-	/* empty output buffer or any other command/data will be lost */
-	max=0xffff;
-	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
-		outb(0x80, 0x41);
-	if (max==0x0)
-		keyboard_panic(41);
+    /* empty inut buffer or any other command/data will be lost */
+    max=0xffff;
+    while ((inb(0x64) & 0x02) && (--max>0))
+        outb(0x80, 0x40);
+    if (max==0x0)
+        keyboard_panic(40);
 
-	/* keyboard should return ACK */
-	if ((inb(0x60) != 0xfa)) {
-		keyboard_panic(995);
-	}
+    /* empty output buffer or any other command/data will be lost */
+    max=0xffff;
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
+        outb(0x80, 0x41);
+    if (max==0x0)
+        keyboard_panic(41);
 
-	/* Write Keyboard Mode */
-	outb(0x64, 0x60);
-	max=0xffff;
-	while ((inb(0x64) & 0x02) && (max--!=0))
-		outb(0x80, 0x50);
-	if (max==0x0)
-		keyboard_panic(50);
+    /* keyboard should return ACK */
+    if ((inb(0x60) != 0xfa)) {
+        keyboard_panic(995);
+    }
 
-	/* send cmd: scan code convert, disable mouse, enable IRQ 1 */
-	outb(0x60, 0x61);
-	max=0xffff;
-	while ((inb(0x64) & 0x02) && (max--!=0))
-		outb(0x80, 0x60);
-	if (max==0x0)
-		keyboard_panic(60);
+    /* Write Keyboard Mode */
+    outb(0x64, 0x60);
+    max=0xffff;
+    while ((inb(0x64) & 0x02) && (--max>0))
+        outb(0x80, 0x50);
+    if (max==0x0)
+        keyboard_panic(50);
 
-	/* Enable keyboard */
-	outb(0x60, 0xf4);
+    /* send cmd: scan code convert, disable mouse, enable IRQ 1 */
+    outb(0x60, 0x61);
+    max=0xffff;
+    while ((inb(0x64) & 0x02) && (--max>0))
+        outb(0x80, 0x60);
+    if (max==0x0)
+        keyboard_panic(60);
 
-	/* empty inut buffer or any other command/data will be lost */
-	max=0xffff;
-	while ((inb(0x64) & 0x02) && (max--!=0))
-		outb(0x80, 0x70);
-	if (max==0x0)
-		keyboard_panic(70);
+    /* Enable keyboard */
+    outb(0x60, 0xf4);
 
-	/* empty output buffer or any other command/data will be lost */
-	max=0xffff;
-	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
-		outb(0x80, 0x71);
-	if (max==0x0)
-		keyboard_panic(70);
+    /* empty inut buffer or any other command/data will be lost */
+    max=0xffff;
+    while ((inb(0x64) & 0x02) && (--max>0))
+        outb(0x80, 0x70);
+    if (max==0x0)
+        keyboard_panic(70);
 
-	/* keyboard should return ACK */
-	if ((inb(0x60) != 0xfa)) {
-		keyboard_panic(996);
-	}
+    /* empty output buffer or any other command/data will be lost */
+    max=0xffff;
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
+        outb(0x80, 0x71);
+    if (max==0x0)
+        keyboard_panic(70);
 
-	outb(0x80, 0x77);
+    /* keyboard should return ACK */
+    if ((inb(0x60) != 0xfa)) {
+        keyboard_panic(996);
+    }
+
+    outb(0x80, 0x77);
 
 }
 
@@ -1719,7 +1729,7 @@ keyboard_init()
 keyboard_panic(status)
   Bit16u status;
 {
-  BX_PANIC("Keyboard RESET error:%04x\n",status);
+  BX_PANIC("Keyboard RESET error:%u\n",status);
 }
 
 //--------------------------------------------------------------------------
@@ -2357,7 +2367,7 @@ Bit16u device;
 
 // 8.2.1 (b) -- wait for BSY
   max=0xff;
-  while(max--!=0) {
+  while(--max>0) {
     Bit8u status = inb(iobase1+ATA_CB_STAT);
     if ((status & ATA_CB_STAT_BSY) != 0) break;
   }
@@ -2377,7 +2387,7 @@ Bit16u device;
 
 // 8.2.1 (h) -- wait for not BSY
       max=0xff;
-      while(max--!=0) {
+      while(--max>0) {
         Bit8u status = inb(iobase1+ATA_CB_STAT);
         if ((status & ATA_CB_STAT_BSY) == 0) break;
         }
@@ -2386,7 +2396,7 @@ Bit16u device;
 
 // 8.2.1 (i) -- wait for DRDY
   max=0xfff;
-  while(max--!=0) {
+  while(--max>0) {
     Bit8u status = inb(iobase1+ATA_CB_STAT);
       if ((status & ATA_CB_STAT_RDY) != 0) break;
   }
@@ -8498,8 +8508,9 @@ no_serial:
 .org 0xe05b ; POST Entry Point
 post:
 
-  ;; first reset the DMA controllers
   xor ax, ax
+
+  ;; first reset the DMA controllers
   out 0x0d,al
   out 0xda,al
 
