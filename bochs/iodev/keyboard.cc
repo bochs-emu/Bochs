@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.84 2004-02-15 00:03:16 vruppert Exp $
+// $Id: keyboard.cc,v 1.85 2004-04-08 21:21:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.84 2004-02-15 00:03:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.85 2004-04-08 21:21:22 cbothamy Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -455,11 +455,13 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             }
             break;
           case 0xd1: // write output port
-            BX_DEBUG(("write output port with value %02xh",
-                (unsigned) value));
+            BX_DEBUG(("write output port with value %02xh", (unsigned) value));
+	    BX_DEBUG(("write output port : %sable A20",(value & 0x02)?"en":"dis"));
             BX_SET_ENABLE_A20( (value & 0x02) != 0 );
-            if (!(value & 0x01))
-				BX_PANIC(("IO write: processor reset requested!"));
+            if (!(value & 0x01)) {
+	        BX_INFO(("write output port : processor reset requested!"));
+                bx_pc_system.ResetCpus( BX_RESET_HARDWARE);
+            }
             break;
           case 0xd4: // Write to mouse
             // I don't think this enables the AUX clock
@@ -643,15 +645,10 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
           BX_PANIC(("io write 0x64: command = %02xh", (unsigned) value));
           break;
 
-        case 0xfe: // System Reset, transition to real mode
-          BX_INFO(("system reset"));
-          bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
-	  {
-	  for (int i=0; i<BX_SMP_PROCESSORS; i++) 
-            BX_CPU(i)->reset(BX_RESET_HARDWARE);
-	  }
-          // Use bx_pc_system if necessary bx_cpu.reset_cpu();
-          // bx_pc_system.ResetSignal( PCS_SET );
+        case 0xfe: // System (cpu?) Reset, transition to real mode
+          BX_INFO(("io write 0x64: command 0xfe: reset cpu"));
+          //bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
+          bx_pc_system.ResetCpus( BX_RESET_HARDWARE );
           break;
 
         default:
