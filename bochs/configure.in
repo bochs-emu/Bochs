@@ -427,16 +427,34 @@ AC_ARG_ENABLE(disasm,
   )
 AC_SUBST(DISASM_VAR)
 
-AC_CHECK_LIB(readline, 
-  readline,
-  [
-    if test "$bx_debugger" = 1; then
-      # only add readline library if debugger is on
-      AC_DEFINE(HAVE_LIBREADLINE, 1)
-      READLINE_LIB='-lreadline'
-    fi
-  ]
-)
+AC_MSG_CHECKING(whether to use readline)
+AC_ARG_ENABLE(readline,
+  [ --enable-readline                     use readline library with debugger],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+     want_readline=yes
+   else
+     AC_MSG_RESULT(no)
+     want_readline=no
+   fi],
+  [ # default is yes
+    AC_MSG_RESULT(yes)
+    want_readline=yes ]
+ )
+
+
+if test "$want_readline" = yes; then
+  AC_CHECK_LIB(readline, 
+    readline,
+    [
+      if test "$bx_debugger" = 1; then
+	# only add readline library if debugger is on
+	AC_DEFINE(HAVE_LIBREADLINE, 1)
+	READLINE_LIB='-lreadline'
+      fi
+    ]
+  )
+fi
   AC_SUBST(READLINE_LIB)
 
 AC_CHECK_HEADER(readline/history.h,
