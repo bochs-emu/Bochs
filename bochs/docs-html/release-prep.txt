@@ -8,25 +8,35 @@ copy into docs-html/changelog.html
 update docs-html/cvs-status.html
 
 building it:
+export VERSION=1.2.1
+export TAG=REL_1_2_1_FINAL
+export DIR=bochs-1.2.1
+
+
 source: 
-  cvs tag REL_1_2_BASE
-  cvs checkout -r REL_1_2_BASE -d bochs-1.2 bochs
-  tar czvf bochs-1.2.tar.gz bochs-1.2
+  cvs export -r$TAG -d$DIR bochs
+  tar czvf bochs-$VERSION.tar.gz $DIR
 
 win32 makefiles:
-  sh .conf.win32-vcpp
-  zip bochs-win32makefiles-1.2.zip  bochs-1.2/config.h bochs-1.2/Makefile bochs-1.2/*/Makefile bochs-1.2/*/*/Makefile
+  rm -rf $DIR
+  tar xzvf bochs-$VERSION.tar.gz
+  (cd $DIR && sh .conf.win32-vcpp)
+  zip bochs-win32makefiles-$VERSION.zip  bochs-$VERSION/config.h bochs-$VERSION/Makefile bochs-$VERSION/*/Makefile bochs-$VERSION/*/*/Makefile
+  rm -rf $DIR
 
 mac makefiles:
-  sh .conf.macos
-  zip bochs-macos-1.2.zip  bochs-1.2/config.h bochs-1.2/Makefile bochs-1.2/*/Makefile bochs-1.2/*/*/Makefile
+  rm -rf $DIR
+  tar xzvf bochs-$VERSION.tar.gz
+  (cd $DIR && sh .conf.macos)
+  zip bochs-macos-$VERSION.zip  bochs-$VERSION/config.h bochs-$VERSION/Makefile bochs-$VERSION/*/Makefile bochs-$VERSION/*/*/Makefile
+  rm -rf $DIR
+
+Linux RPM:
+  rm -rf $DIR
+  tar xzvf bochs-$VERSION.tar.gz
+  su
+  (cd $DIR && ./configure && make rpm)
 
 win32 binary:
   for windows, no automation yet.  Look at old package and copy new files in.
-
-RPM:
-  cvs export -r REL_1_2_BASE -d bochs-1.2 bochs
-  su root
-  configure
-  make rpm
 
