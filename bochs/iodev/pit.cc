@@ -368,7 +368,7 @@ bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
           BX_PIT_THIS s.timer[1].input_latch_value = 0;
           BX_PIT_THIS s.timer[1].input_latch_toggle = 0;
           BX_PIT_THIS s.timer[1].bcd_mode    = bcd_mode;
-          if ( mode!=2 || bcd_mode!=0 )
+          if ( (mode!=3 && mode!=2 && mode!=0) || bcd_mode!=0 )
             bx_panic("pit: outp(43h): comm 7, mode %02x, bcd %02x unhandled\n",
               (unsigned) mode, bcd_mode);
           break;
@@ -387,7 +387,7 @@ bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
           BX_PIT_THIS s.timer[2].input_latch_value = 0;
           BX_PIT_THIS s.timer[2].input_latch_toggle = 0;
           BX_PIT_THIS s.timer[2].bcd_mode    = bcd_mode;
-          if ( (mode!=3 && mode!=2) || bcd_mode!=0 )
+          if ( (mode!=3 && mode!=2 && mode!=0) || bcd_mode!=0 )
             bx_panic("pit: outp(43h): comm Bh, mode %02x, bcd %02x unhandled\n",
               (unsigned) mode, bcd_mode);
           break;
