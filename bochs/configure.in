@@ -21,8 +21,44 @@ AC_CHECK_SIZEOF(unsigned short)
 AC_CHECK_SIZEOF(unsigned int)
 AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
+AC_CHECK_SIZEOF(int *)
 AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
+AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
+AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
 
+AC_MSG_CHECKING(if compiler allows empty structs)
+AC_TRY_COMPILE([], [typedef struct { } junk;], 
+    AC_MSG_RESULT(yes),
+    [
+      AC_DEFINE(BX_NO_EMPTY_STRUCTS)
+      AC_MSG_RESULT(no)
+    ])
+
+AC_MSG_CHECKING(if compiler allows __attribute__)
+AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
+    AC_MSG_RESULT(yes),
+    [
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_NO_ATTRIBUTES)
+    ])
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(for hash_map.h)
+AC_TRY_COMPILE([#include <hash_map.h>], [],
+   [
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(BX_HAVE_HASH_MAP)
+   ], AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(if compiler allows blank labels)
+AC_TRY_COMPILE([], [ { label1: } ],
+    AC_MSG_RESULT(yes),
+    [
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_NO_BLANK_LABELS)
+    ])
+AC_LANG_RESTORE
 
 AC_MSG_CHECKING(for cpu level)
 AC_ARG_ENABLE(cpu-level,
@@ -214,15 +250,19 @@ AC_ARG_ENABLE(debugger,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_DEBUGGER, 1)
     DEBUGGER_VAR='$(DEBUGGER_LIB)'
+    bx_debugger=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_DEBUGGER, 0)
     DEBUGGER_VAR=''
-   fi],
+    bx_debugger=0
+   fi
+   ],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_DEBUGGER, 0)
     DEBUGGER_VAR=''
+    bx_debugger=0
     ]
   )
 AC_SUBST(DEBUGGER_VAR)
@@ -236,13 +276,23 @@ AC_ARG_ENABLE(disasm,
     DISASM_VAR='$(DISASM_LIB)'
    else
     AC_MSG_RESULT(no)
+    if test "$bx_debugger" = 1; then
+      echo "ERROR: debugger is enabled, so --enable-disasm is required"
+      exit 1
+    fi
     AC_DEFINE(BX_DISASM, 0)
     DISASM_VAR=''
    fi],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_DISASM, 0)
-    DISASM_VAR=''
+    if test "$bx_debugger" = 1; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_DISASM, 1)
+      DISASM_VAR='$(DISASM_LIB)'
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_DISASM, 0)
+      DISASM_VAR=''
+    fi
     ]
   )
 AC_SUBST(DISASM_VAR)
