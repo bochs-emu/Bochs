@@ -1,7 +1,3 @@
-#define errmsg(x) printf(x)
-
-#define DEBUG 1
-
 /*
  *Emulator of an Intel 8254/82C54 Programmable Interval Timer.
  *
@@ -24,7 +20,10 @@
  *  write?
  */
 
-class pit_82C54 {
+#include "bochs.h"
+#define LOG_THIS this->
+
+class pit_82C54 : public logfunctions {
 
 private:
 
@@ -100,7 +99,7 @@ private:
 	thisctr.count_LSB_latched=1;
 	thisctr.count_MSB_latched=1;
       case MSByte_multiple:
-	errmsg("Unknown behavior when latching during 2-part read.");
+	BX_ERROR(("Unknown behavior when latching during 2-part read."));
 	//I guess latching and resetting to LSB first makes sense;
 	thisctr.read_state=LSByte_multiple;
 	thisctr.outlatch=thisctr.count & 0xFFFF;
@@ -108,7 +107,7 @@ private:
 	thisctr.count_MSB_latched=1;
 	break;
       default:
-	errmsg("Unknown read mode found during latch command.");
+	BX_ERROR(("Unknown read mode found during latch command."));
 	break;
       }
     }
@@ -180,7 +179,7 @@ public:
 
   void clock(Bit8u cnum) {
     if(cnum>MAX_COUNTER) {
-      errmsg("Counter number too high in clock");
+      BX_ERROR(("Counter number too high in clock");
     } else {
       counter_type & thisctr = counter[cnum];
       switch(thisctr.mode) {
@@ -207,7 +206,7 @@ public:
 	    thisctr.null_count=0;
 	    set_OUT(thisctr,0);
 	    if(thisctr.write_state==MSByte_multiple) {
-	      errmsg("Undefined behavior when loading a half loaded count.");
+	      BX_ERROR(("Undefined behavior when loading a half loaded count.")));
 	    }
 	  } else {
 	    decrement(thisctr);
@@ -224,13 +223,13 @@ public:
 	    thisctr.count=thisctr.inlatch;
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
-	      errmsg("ERROR: count of 1 is invalid in pit mode 2.");
+	      BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2.");
 	    }
 	    if(!thisctr.OUT) {
 	      set_OUT(thisctr,1);
 	    }
 	    if(thisctr.write_state==MSByte_multiple) {
-	      errmsg("Undefined behavior when loading a half loaded count.");
+	      BX_ERROR(("Undefined behavior when loading a half loaded count.")));
 	    }
 	    thisctr.first_pass=0;
 	  } else {
@@ -253,7 +252,7 @@ public:
 	    thisctr.state_bit_1=thisctr.inlatch & 0x1;
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
-	      errmsg("Count of 1 is invalid in pit mode 3.");
+	      BX_ERROR(("Count of 1 is invalid in pit mode 3."));
 	    }
 	    if(!thisctr.OUT) {
 	      set_OUT(thisctr,1);
@@ -261,7 +260,7 @@ public:
 	      set_OUT(thisctr,0);
 	    }
 	    if(thisctr.write_state==MSByte_multiple) {
-	      errmsg("Undefined behavior when loading a half loaded count.");
+	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
 	    }
 	    thisctr.state_bit_2=0;
 	    thisctr.first_pass=0;
@@ -291,7 +290,7 @@ public:
 	    thisctr.count=thisctr.inlatch;
 	    thisctr.null_count=0;
 	    if(thisctr.write_state==MSByte_multiple) {
-	      errmsg("Undefined behavior when loading a half loaded count.");
+	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
 	    }
 	    thisctr.first_pass=1;
 	  } else {
@@ -315,7 +314,7 @@ public:
 	    thisctr.count=thisctr.inlatch;
 	    thisctr.null_count=0;
 	    if(thisctr.write_state==MSByte_multiple) {
-	      errmsg("Undefined behavior when loading a half loaded count.");
+	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
 	    }
 	    thisctr.first_pass=1;
 	  } else {
@@ -331,7 +330,7 @@ public:
 	thisctr.triggerGATE=0;
 	break;
       default:
-	errmsg("Mode not implemented.");
+	BX_ERROR(("Mode not implemented."));
 	thisctr.triggerGATE=0;
 	break;
       }
@@ -346,13 +345,13 @@ public:
 
   Bit8u read(Bit8u address) {
     if(address>MAX_ADDRESS) {
-      errmsg("Counter address incorrect in data read.");
+      BX_ERROR(("Counter address incorrect in data read."));
     } else if(address==CONTROL_ADDRESS) {
       //Read from control word register;
       /* This might be okay.  If so, 0 seems the most logical
        *  return value from looking at the docs.
        */
-      errmsg("Read from control word register not defined.");
+      BX_ERROR(("Read from control word register not defined."));
       return 0;
     } else {
       //Read from a counter;
@@ -361,7 +360,7 @@ public:
 	//Latched Status Read;
 	if(thisctr.count_MSB_latched &&
 	   (thisctr.read_state==MSByte_multiple) ) {
-	  errmsg("Undefined output when status latched and count half read.");
+	  BX_ERROR(("Undefined output when status latched and count half read."));
 	} else {
 	  thisctr.status_latched=0;
 	  return thisctr.status_latch;
@@ -406,7 +405,7 @@ public:
 
   void write(Bit8u address, Bit8u data) {
     if(address>MAX_ADDRESS) {
-      errmsg("Counter address incorrect in data write.");
+      BX_ERROR(("Counter address incorrect in data write."));
     } else if(address==CONTROL_ADDRESS) {
       Bit8u SC, RW, M, BCD;
       controlword=data;
@@ -473,7 +472,7 @@ public:
 	    thisctr.write_state=LSByte_multiple;
 	    break;
 	  default:
-	    errmsg("RW field invalid in control word write.");
+	    BX_ERROR(("RW field invalid in control word write."));
 	    break;
 	  }
 	  //All modes except mode 0 have initial output of 1.;
@@ -505,7 +504,7 @@ public:
 	thisctr.count_written=1;
 	break;
       default:
-	errmsg("write counter in invalid write state.");
+	BX_ERROR(("write counter in invalid write state."));
 	break;
       }
       switch(thisctr.mode) {
@@ -532,7 +531,7 @@ public:
 
   void set_GATE(Bit8u cnum, bool data) {
     if(cnum>MAX_COUNTER) {
-      errmsg("Counter number incorrect in 82C54 set_GATE");
+      BX_ERROR(("Counter number incorrect in 82C54 set_GATE"));
     } else {
       counter_type & thisctr = counter[cnum];
       if((!thisctr.GATE)&&data) {
@@ -559,7 +558,7 @@ public:
 
   bool read_OUT(Bit8u cnum) {
     if(cnum>MAX_COUNTER) {
-      errmsg("Counter number incorrect in 82C54 read_OUT");
+      BX_ERROR(("Counter number incorrect in 82C54 read_OUT"));
       return 0;
     } else {
       return counter[cnum].OUT;
