@@ -19,6 +19,8 @@ Detailed description:
   I have tested the changes with X11/Linux, SDL, wxGTK and win32. The changes
   in the other guis are not tested yet.
 
+  The changes are checked in now (April 20th).
+
 Patch was created with:
   diff -u
 Apply patch to what version:
