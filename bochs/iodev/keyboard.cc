@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.56 2002-06-23 00:01:01 bdenney Exp $
+// $Id: keyboard.cc,v 1.57 2002-06-30 18:08:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.56 2002-06-23 00:01:01 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.57 2002-06-30 18:08:02 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.56 2002-06-23 00:01:01 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.57 2002-06-30 18:08:02 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -1091,7 +1091,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 bx_keyb_c::periodic( Bit32u   usec_delta )
 {
   static int multiple=0;
-  static int count_before_paste=0;
+  static unsigned count_before_paste=0;
   Bit8u   retval;
 
   UNUSED( usec_delta );
@@ -1495,7 +1495,7 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
     BX_DEBUG(("[mouse] Dx=%d Dy=%d", delta_x, delta_y));
 #endif  /* ifdef VERBOSE_KBD_DEBUG */
 
-  if( (delta_x==0) && (delta_y==0) && (BX_KEY_THIS s.mouse.button_status == button_state & 0x3) ) {
+  if( (delta_x==0) && (delta_y==0) && (BX_KEY_THIS s.mouse.button_status == (button_state & 0x3) ) ) {
     BX_DEBUG(("Ignoring useless mouse_motion call:\n"));
     BX_DEBUG(("This should be fixed in the gui code.\n"));
     return;
