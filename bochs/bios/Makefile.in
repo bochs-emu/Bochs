@@ -91,5 +91,5 @@ biosconfig.h: ../config.h
 rombios.o: rombios.c biosconfig.h
 	gcc -E rombios.c | $(TOOLS86) -E > _rombios_.c
 	$(BCC_CC1) -o rombios.s -c -D__i86__ -0 _rombios_.c
-	./dataseghack
+	csh ./dataseghack
 	$(AS86) rombios.s -o rombios.o -u -w -0 -j -s as86-sym.txt
