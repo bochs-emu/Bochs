@@ -742,6 +742,12 @@ AC_ARG_WITH(term,
   [  --with-term                       textmode terminal environment],
   )
 
+AC_ARG_WITH(rfb,
+  [  --with-rfb                        use RFB protocol, works with VNC viewer],
+  )
+
+AC_MSG_CHECKING(for gui library to use)
+
 dnl // make sure X Windows is default if no other chosen
 if (test "$with_x11" != yes) && \
    (test "$with_beos" != yes) && \
@@ -749,6 +755,7 @@ if (test "$with_x11" != yes) && \
    (test "$with_nogui" != yes) && \
    (test "$with_win32_vcpp" != yes) && \
    (test "$with_term" != yes) && \
+   (test "$with_rfb" != yes) && \
    (test "$with_macos" != yes); then
   with_x11=yes
 fi
@@ -775,18 +782,27 @@ CD_UP_ONE="echo done"
 CD_UP_TWO="echo done"
 
 if test "$with_x11" = yes; then
+  AC_MSG_RESULT(X windows)
   AC_DEFINE(BX_WITH_X11, 1)
   GUI_OBJS='$(GUI_OBJS_X11)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
 elif test "$with_win32" = yes; then
+  AC_MSG_RESULT(win32)
   AC_DEFINE(BX_WITH_WIN32, 1)
   GUI_OBJS='$(GUI_OBJS_WIN32)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32)'
 elif test "$with_beos" = yes; then
+  AC_MSG_RESULT(beos)
   AC_DEFINE(BX_WITH_BEOS, 1)
   GUI_OBJS='$(GUI_OBJS_BEOS)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
+elif test "$with_rfb" = yes; then
+  AC_MSG_RESULT(rfb)
+  AC_DEFINE(BX_WITH_RFB, 1)
+  GUI_OBJS='$(GUI_OBJS_RFB)'
+  GUI_LINK_OPTS='$(GUI_LINK_OPTS_RFB)'
 elif test "$with_win32_vcpp" = yes; then
+  AC_MSG_RESULT(win32-vcpp)
   AC_DEFINE(BX_WITH_WIN32, 1)
   GUI_OBJS='$(GUI_OBJS_WIN32)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'
@@ -815,16 +831,19 @@ elif test "$with_win32_vcpp" = yes; then
   AC_DEFINE(BX_NO_ATTRIBUTES, 1)
   AC_DEFINE(BX_HAVE_HASH_MAP, 0)
 elif test "$with_macos" = yes; then
+  AC_MSG_RESULT(macos)
   AC_DEFINE(BX_WITH_MACOS, 1)
   AC_DEFINE(BX_HAVE_STRDUP, 0)
   GUI_OBJS='$(GUI_OBJS_MACOS)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
 elif test "$with_term" = yes; then
+  AC_MSG_RESULT(term)
   AC_DEFINE(BX_WITH_TERM, 1)
   GUI_OBJS='$(GUI_OBJS_TERM)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_TERM)'
   use_curses=yes
 else
+  AC_MSG_RESULT(none)
   AC_DEFINE(BX_WITH_NOGUI, 1)
   GUI_OBJS='$(GUI_OBJS_NOGUI)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
@@ -839,6 +858,19 @@ if test "$use_curses" = yes; then
     exit 1
   fi
 fi
+
+if test "$with_rfb" = yes; then
+  # if RFB, check if pthread library is available
+  AC_CHECK_LIB(pthread, 
+    pthread_create,
+    [],
+    [
+      echo ERROR: --with-rfb requires the pthread library, which could not be found.
+      exit 1
+    ]
+  )
+fi
+
 
 
 AC_SUBST(GUI_OBJS)

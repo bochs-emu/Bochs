@@ -69,6 +69,7 @@ X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS) -lX11
 GUI_LINK_OPTS_BEOS = -lbe
+GUI_LINK_OPTS_RFB = -lpthread
 GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lwinmm -lcomdlg32 -lcomctl32
 GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
   comdlg32.lib comctl32.lib wsock32.lib
