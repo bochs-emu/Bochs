@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.98 2003-08-09 22:17:38 cbothamy Exp $
+// $Id: siminterface.cc,v 1.99 2003-08-17 20:50:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1196,6 +1196,7 @@ bx_param_string_c::bx_param_string_c (bx_id id,
   this->val = new char[maxsize];
   this->initial_val = new char[maxsize];
   this->handler = NULL;
+  this->enable_handler = NULL;
   this->maxsize = maxsize;
   strncpy (this->val, initial_val, maxsize);
   strncpy (this->initial_val, initial_val, maxsize);
