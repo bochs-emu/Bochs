@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.10 2002-03-15 16:45:10 vruppert Exp $
+// $Id: sdl.cc,v 1.11 2002-03-16 11:30:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -332,9 +332,16 @@ void bx_gui_c::text_update(
   prev_cursor_y = cursor_y;
 }
 
-  void
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  return 0;
+}
+
+  int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
+  return 0;
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.37 2002-03-15 17:10:58 bdenney Exp $
+// $Id: gui.cc,v 1.38 2002-03-16 11:30:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,10 +43,6 @@
 
 #if BX_WITH_X11
 #include <X11/Xlib.h>
-#endif
-
-#ifdef WIN32
-#include <windows.h>
 #endif
 
 bx_gui_c   bx_gui;
@@ -283,14 +279,12 @@ bx_gui_c::copy_handler(void)
     BX_INFO(( "copy button failed, mode not implemented"));
     return;
   }
-  // copy to clipboard using gui dependent code.
-#if ( defined(WIN32) || BX_WITH_X11)
-  set_clipboard_text(text_snapshot, len);
-#else
-  FILE *fp = fopen("copy.txt", "w");
-  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
-  fclose(fp);
-#endif
+  if (!set_clipboard_text(text_snapshot, len)) {
+    // platform specific code failed, use portable code instead
+    FILE *fp = fopen("copy.txt", "w");
+    fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+    fclose(fp);
+  }
   free(text_snapshot);
 }
 
@@ -300,16 +294,25 @@ bx_gui_c::snapshot_handler(void)
 {
   char *text_snapshot;
   Bit32u len;
+  char filename[BX_PATHNAME_LEN];
+  int flag;
   if (make_text_snapshot (&text_snapshot, &len) < 0) {
     BX_ERROR(( "snapshot button failed, mode not implemented"));
     return;
   }
-  FILE *fp = fopen("snapshot.txt", "w");
-  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
-  fclose(fp);
-  free(text_snapshot);
   // I wish I had a dialog box!!!
-  BX_INFO (("copied text snapshot to snapshot.txt"));
+  flag = 0; // 0 = no dialog present / 1 = OK / -1 = Cancel
+  if (!flag) { // use standard filename if dialog is not present
+    strcpy(filename, "snapshot.txt");
+    flag = 1;
+  }
+  if (flag == 1) {
+    FILE *fp = fopen(filename, "wb");
+    fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+    fclose(fp);
+    BX_INFO (("copied text snapshot to %s", filename));
+  }
+  free(text_snapshot);
 }
 
 // Read ASCII chars from the system clipboard and paste them into bochs.
@@ -323,29 +326,10 @@ bx_gui_c::paste_handler(void)
     BX_ERROR (("keyboard_mapping disabled, so paste cannot work"));
     return;
   }
-#ifdef WIN32
-  HANDLE hMem = GetClipboardData (CF_TEXT);
-  if (!OpenClipboard(NULL)) {
-    BX_ERROR (("paste: could not open clipboard"));
+  if (!get_clipboard_text(&bytes, &nbytes)) {
+    BX_ERROR (("paste not implemented on this platform"));
     return;
   }
-  HGLOBAL hg = GetClipboardData(CF_TEXT);
-  char *data = (char *)GlobalLock(hg);
-  nbytes = strlen(data);
-  bytes = (Bit8u *)malloc (nbytes+1);
-  BX_INFO (("found %d bytes on the clipboard", nbytes));
-  memcpy (bytes, data, nbytes+1);
-  BX_INFO (("first byte is 0x%02x", bytes[0]));
-  GlobalUnlock(hg);
-  CloseClipboard();
-
-#elif BX_WITH_X11
-  extern Display *bx_x_display;
-  bytes = (Bit8u *)XFetchBytes (bx_x_display, &nbytes);
-#else
-  BX_ERROR (("paste not implemented on this platform"));
-  return;
-#endif
   BX_INFO (("pasting %d bytes", nbytes));
   bx_devices.keyboard->paste_bytes (bytes, nbytes);
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.24 2002-03-15 16:45:09 vruppert Exp $
+// $Id: gui.h,v 1.25 2002-03-16 11:30:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,7 +46,8 @@ public:
   static unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
   static void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
   static void show_headerbar(void);
-  static void set_clipboard_text(char *snapshot, Bit32u len);
+  static int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
+  static int set_clipboard_text(char *snapshot, Bit32u len);
 
   // The following function(s) are defined already, and your
   // GUI code calls them

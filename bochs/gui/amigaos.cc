@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.6 2002-03-15 16:45:09 vruppert Exp $
+// $Id: amigaos.cc,v 1.7 2002-03-16 11:30:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -429,9 +429,16 @@ for (i=0; i<nchars*2; i+=2)
     previ = cursori;
 }
 
-  void
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  return 0;
+}
+
+  int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
+  return 0;
 }
 
 

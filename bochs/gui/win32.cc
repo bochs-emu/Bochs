@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.27 2002-03-15 16:45:10 vruppert Exp $
+// $Id: win32.cc,v 1.28 2002-03-16 11:30:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -769,7 +769,27 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   LeaveCriticalSection(&stInfo.drawCS);
 }
 
-  void
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  if (OpenClipboard(stInfo.hwnd)) {
+    HGLOBAL hg = GetClipboardData(CF_TEXT);
+    char *data = (char *)GlobalLock(hg);
+    *nbytes = strlen(data);
+    *bytes = (Bit8u *)malloc (*nbytes+1);
+    BX_INFO (("found %d bytes on the clipboard", *nbytes));
+    memcpy (*bytes, data, *nbytes+1);
+    BX_INFO (("first byte is 0x%02x", *bytes[0]));
+    GlobalUnlock(hg);
+    CloseClipboard();
+    return 1;
+  } else {
+    BX_ERROR (("paste: could not open clipboard"));
+    return 0;
+  }
+}
+
+  int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   if (OpenClipboard(stInfo.hwnd)) {
@@ -779,6 +799,10 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
     SetClipboardData(CF_TEXT, hMem);
     CloseClipboard();
     GlobalFree(hMem);
+    return 1;
+  } else {
+    BX_ERROR (("copy: could not open clipboard"));
+    return 0;
   }
 }
 

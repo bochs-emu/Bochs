@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.12 2002-03-15 16:45:10 vruppert Exp $
+// $Id: term.cc,v 1.13 2002-03-16 11:30:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -418,9 +418,16 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	mvaddch(cursor_y,cursor_x,new_text[(cursor_y*80+cursor_x)*2]);
 }
 
-  void
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  return 0;
+}
+
+  int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
+  return 0;
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.35 2002-03-15 16:45:10 vruppert Exp $
+// $Id: x.cc,v 1.36 2002-03-16 11:30:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1044,13 +1044,22 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   XFlush(bx_x_display);
 }
 
-  void
+  int
+bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+{
+  extern Display *bx_x_display;
+  *bytes = (Bit8u *)XFetchBytes (bx_x_display, nbytes);
+  return 1;
+}
+
+  int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   extern Display *bx_x_display;
   // this writes data to the clipboard.
   BX_INFO (("storing %d bytes to X windows clipboard", len));
   XStoreBytes (bx_x_display, (char *)text_snapshot, len);
+  return 1;
 }
 
 
