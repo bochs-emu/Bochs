@@ -1,0 +1,395 @@
+diff -urN clean/iodev/eth.cc bochs-tap/iodev/eth.cc
+--- clean/iodev/eth.cc	Wed Dec 12 17:49:26 2001
++++ bochs-tap/iodev/eth.cc	Fri Mar  8 17:12:47 2002
+@@ -45,6 +45,8 @@
+   this->type = type;
+ }
+ 
++#define ETH_TAP 1
++
+ #ifdef ETH_NULL
+ extern class bx_null_locator_c bx_null_match;
+ #endif
+@@ -57,6 +59,9 @@
+ #ifdef ETH_WIN32
+ extern class bx_win32_locator_c bx_win32_match;
+ #endif
++#ifdef ETH_TAP
++extern class bx_tap_locator_c bx_tap_match;
++#endif
+ #ifdef ETH_TEST
+ extern bx_test_match;
+ #endif
+@@ -103,6 +108,12 @@
+   {
+     if (!strcmp(type, "linux"))    
+       ptr = (eth_locator_c *) &bx_linux_match;
++  }
++#endif
++#ifdef ETH_TAP
++  {
++    if (!strcmp(type, "tap"))    
++      ptr = (eth_locator_c *) &bx_tap_match;
+   }
+ #endif
+ #ifdef ETH_WIN32
+diff -urN clean/iodev/eth_tap.cc bochs-tap/iodev/eth_tap.cc
+--- clean/iodev/eth_tap.cc	Wed Dec 31 19:00:00 1969
++++ bochs-tap/iodev/eth_tap.cc	Fri Mar  8 17:12:54 2002
+@@ -0,0 +1,356 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.ethertap,v 1.1 2002-03-08 22:14:55 bdenney Exp $
++/////////////////////////////////////////////////////////////////////////
++//
++//  Copyright (C) 2001  MandrakeSoft S.A.
++//
++//    MandrakeSoft S.A.
++//    43, rue d'Aboukir
++//    75002 Paris - France
++//    http://www.linux-mandrake.com/
++//    http://www.mandrakesoft.com/
++//
++//  This library is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU Lesser General Public
++//  License as published by the Free Software Foundation; either
++//  version 2 of the License, or (at your option) any later version.
++//
++//  This library is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++//  Lesser General Public License for more details.
++//
++//  You should have received a copy of the GNU Lesser General Public
++//  License along with this library; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++
++// eth_tap.cc  - TAP interface
++//
++// Example configuration:
++//   ifconfig tap0 10.0.0.123 up
++//   route add -host 10.0.0.124 gw 10.0.0.123
++// Testing:
++//   in one window, cat /dev/tap0
++//   in another window, ping 10.0.0.124
++//   you should see data coming out of /dev/tap0 with each ping.
++
++#include "bochs.h"
++#define LOG_THIS bx_ne2k.
++
++#include <signal.h>
++#include <sys/param.h>
++#include <sys/ioctl.h>
++#include <sys/poll.h>
++#include <sys/time.h>
++#include <sys/resource.h>
++#include <asm/types.h>
++#include <sys/socket.h>
++#include <sys/uio.h>
++#include <sys/wait.h>
++#include <linux/netlink.h>
++#include <linux/if.h>
++#include <assert.h>
++#include <fcntl.h>
++#include <errno.h>
++
++#define TAP_VIRTUAL_HW_ADDR             0xDEADBEEF
++#define BX_ETH_TAP_LOGGING 1
++#define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
++
++int check_netdev( char *ifname );
++int tap_open( char *intf_name, int *sigio_capable );
++
++//
++//  Define the class. This is private to this module
++//
++class bx_tap_pktmover_c : public eth_pktmover_c {
++public:
++  bx_tap_pktmover_c(const char *netif, const char *macaddr,
++		     eth_rx_handler_t rxh,
++		     void *rxarg);
++  void sendpkt(void *buf, unsigned io_len);
++private:
++  int fd;
++  int rx_timer_index;
++  static void rx_timer_handler(void *);
++  void rx_timer ();
++  FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
++};
++
++
++//
++//  Define the static class that registers the derived pktmover class,
++// and allocates one on request.
++//
++class bx_tap_locator_c : public eth_locator_c {
++public:
++  bx_tap_locator_c(void) : eth_locator_c("tap") {}
++protected:
++  eth_pktmover_c *allocate(const char *netif, const char *macaddr,
++			   eth_rx_handler_t rxh,
++			   void *rxarg) {
++    return (new bx_tap_pktmover_c(netif, macaddr, rxh, rxarg));
++  }
++} bx_tap_match;
++
++
++//
++// Define the methods for the bx_tap_pktmover derived class
++//
++
++// the constructor
++bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif, 
++				       const char *macaddr,
++				       eth_rx_handler_t rxh,
++				       void *rxarg)
++{
++  int sigio_capable;
++  int flags;
++  fd = tap_open ("tap0", &sigio_capable);
++  if (fd < 0) {
++    BX_PANIC (("tap_open failed on tap0"));
++    return;
++  }
++
++  sigio_capable=0; // try: stop using async.
++/* setup O_ASYNC, O_NONBLOCK */
++if( (flags = fcntl( fd, F_GETFL)) == -1 ) {
++  BX_PANIC (("getflags on tap device failed"));
++}
++flags |= O_NONBLOCK | (sigio_capable? O_ASYNC : 0);
++if( fcntl( fd, F_SETFL, flags ) == -1 ) {
++  BX_PANIC (("could not set tap device flags"));
++}
++
++BX_INFO (("opened tap0 device"));
++
++#if BX_ETH_TAP_LOGGING
++  // Start the rx poll 
++  this->rx_timer_index = 
++    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
++				1, 1); // continuous, active
++  this->rxh   = rxh;
++  this->rxarg = rxarg;
++  // eventually Bryce wants txlog to dump in pcap format so that
++  // tcpdump -r FILE can read it and interpret packets.
++  txlog = fopen ("ne2k-tx.log", "wb");
++  if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
++  txlog_txt = fopen ("ne2k-txdump.txt", "wb");
++  if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
++  fprintf (txlog_txt, "tap packetmover readable log file\n");
++  fprintf (txlog_txt, "net IF = %s\n", netif);
++  fprintf (txlog_txt, "MAC address = ");
++  for (int i=0; i<6; i++) 
++    fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
++  fprintf (txlog_txt, "\n--\n");
++  fflush (txlog_txt);
++
++  rxlog = fopen ("ne2k-rx.log", "wb");
++  if (!rxlog) BX_PANIC (("open ne2k-rx.log failed"));
++  rxlog_txt = fopen ("ne2k-rxdump.txt", "wb");
++  if (!rxlog_txt) BX_PANIC (("open ne2k-rxdump.txt failed"));
++  fprintf (rxlog_txt, "tap packetmover readable log file\n");
++  fprintf (rxlog_txt, "net IF = %s\n", netif);
++  fprintf (rxlog_txt, "MAC address = ");
++  for (int i=0; i<6; i++) 
++    fprintf (rxlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
++  fprintf (rxlog_txt, "\n--\n");
++  fflush (rxlog_txt);
++
++#endif
++}
++
++void
++bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
++{
++  Bit8u txbuf[BX_PACKET_BUFSIZ];
++  txbuf[0] = 0;
++  txbuf[1] = 0;
++  memcpy (txbuf+2, buf, io_len);
++  unsigned int size = write (fd, txbuf, io_len+2);
++  if (size != io_len+2) {
++    perror("write");
++    BX_PANIC (("write on tap device failed"));
++  } else {
++    BX_INFO (("wrote %d bytes + 2 byte pad on tap", io_len));
++  }
++#if BX_ETH_TAP_LOGGING
++  BX_DEBUG (("sendpkt length %u", io_len));
++  // dump raw bytes to a file, eventually dump in pcap format so that
++  // tcpdump -r FILE can interpret them for us.
++  int n = fwrite (buf, io_len, 1, txlog);
++  if (n != 1) BX_ERROR (("fwrite to txlog failed", io_len));
++  // dump packet in hex into an ascii log file
++  fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
++  Bit8u *charbuf = (Bit8u *)buf;
++  for (n=0; n<io_len; n++) {
++    if (((n % 16) == 0) && n>0)
++      fprintf (txlog_txt, "\n");
++    fprintf (txlog_txt, "%02x ", charbuf[n]);
++  }
++  fprintf (txlog_txt, "\n--\n");
++  // flush log so that we see the packets as they arrive w/o buffering
++  fflush (txlog);
++  fflush (txlog_txt);
++#endif
++}
++
++void bx_tap_pktmover_c::rx_timer_handler (void *this_ptr)
++{
++  bx_tap_pktmover_c *class_ptr = (bx_tap_pktmover_c *) this_ptr;
++  class_ptr->rx_timer();
++}
++
++void bx_tap_pktmover_c::rx_timer ()
++{
++  int nbytes;
++  Bit8u buf[BX_PACKET_BUFSIZ];
++  Bit8u *rxbuf;
++  if (fd<0) return;
++  nbytes = read (fd, buf, sizeof(buf));
++
++  // hack: discard first two bytes
++  rxbuf = buf+2;
++  nbytes-=2;
++  
++  // hack: TAP device likes to create an ethernet header which has
++  // the same source and destination address FE:FD:00:00:00:00.
++  // Change the dest address to FE:FD:00:00:00:01.
++  rxbuf[5] = 1;
++
++  if (nbytes>0)
++    BX_INFO (("tap read returned %d bytes", nbytes));
++  if (nbytes<0) {
++    if (errno != EAGAIN)
++      BX_ERROR (("tap read error: %s", strerror(errno)));
++    return;
++  }
++#if BX_ETH_TAP_LOGGING
++  if (nbytes > 0) {
++    BX_DEBUG (("receive packet length %u", nbytes));
++    // dump raw bytes to a file, eventually dump in pcap format so that
++    // tcpdump -r FILE can interpret them for us.
++    int n = fwrite (rxbuf, nbytes, 1, rxlog);
++    if (n != 1) BX_ERROR (("fwrite to rxlog failed", nbytes));
++    // dump packet in hex into an ascii log file
++    fprintf (rxlog_txt, "NE2K received a packet, length %u\n", nbytes);
++    for (n=0; n<nbytes; n++) {
++      if (((n % 16) == 0) && n>0)
++	fprintf (rxlog_txt, "\n");
++      fprintf (rxlog_txt, "%02x ", rxbuf[n]);
++    }
++    fprintf (rxlog_txt, "\n--\n");
++    // flush log so that we see the packets as they arrive w/o buffering
++    fflush (rxlog);
++    fflush (rxlog_txt);
++  }
++#endif
++  BX_DEBUG(("eth_tap: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
++  (*rxh)(rxarg, rxbuf, nbytes);
++}
++
++
++/* TAP interface code, grabbed from Mac-On-Linux project */
++int check_netdev( char *ifname )
++{
++struct ifreq    ifr;
++int             fd;
++int             ret=-1;
++
++if( (fd = socket( AF_INET, SOCK_DGRAM, 0 )) < 0 )
++return -1;
++
++memset( &ifr, 0, sizeof(ifr) );
++strncpy( ifr.ifr_name, ifname, sizeof(ifr.ifr_name) );
++if( ioctl( fd, SIOCGIFFLAGS, &ifr ) < 0 ){
++perror("SIOCGIFFLAGS");
++goto out;
++}
++if( !(ifr.ifr_flags & IFF_RUNNING ) ){
++printf("---> The network interface '%s' is not configured!\n", ifname); 
++goto out;
++}
++#if 0
++if( (ifr.ifr_flags & IFF_NOARP ) ){
++printf("WARNING: Turning on ARP for device '%s'.\n", ifname);
++ifr.ifr_flags &= ~IFF_NOARP;
++if( ioctl( fd, SIOCSIFFLAGS, &ifr ) < 0 ) {
++perror("SIOCSIFFLAGS");
++goto out;
++}
++}
++#else
++#warning dont turn on arp
++#endif
++ret = 0;
++out:
++close(fd);
++return ret;
++}
++
++
++
++int tap_open(char *intf_name, int *sigio_capable )
++{
++struct sockaddr_nl nladdr;
++int fd, tapnum=0;
++char buf[16];
++
++if( intf_name ) {
++if( sscanf(intf_name, "tap%d", &tapnum)==1 ) {
++if( tapnum<0 || tapnum>15 ) {
++printf("Invalid tap device %s. Using tap0 instead\n", intf_name );
++intf_name = NULL;
++tapnum = 0;
++}
++} else {
++printf("Bad tapdevice interface '%s'\n", intf_name );
++printf("Using default tap device (tap0)\n");
++intf_name = NULL;
++}
++}
++if( !intf_name ) {
++sprintf(buf, "tap0");
++intf_name = buf;
++}
++
++/* verify that the device is up and running */
++if( check_netdev( intf_name ) )
++return -1;
++
++#if 0
++// method from Maconlinux: socket/bind
++if( (fd = socket( PF_NETLINK, SOCK_RAW, NETLINK_TAPBASE+tapnum )) < 0 ) {
++perror("socket");
++printf("Does the kernel lack netlink support (CONFIG_NETLINK)?\n");
++return -1;
++}
++memset( &nladdr, 0, sizeof(nladdr) );
++nladdr.nl_family = AF_NETLINK;
++nladdr.nl_groups = ~0;
++nladdr.nl_pid = TAP_VIRTUAL_HW_ADDR;
++/* nladdr.nl_pid = getpid(); */
++if( bind( fd, (struct sockaddr*)&nladdr, sizeof(nladdr) ) < 0 ) {
++perror("bind");
++close( fd );
++return -1;
++}
++#else
++  fd = open ("/dev/tap0", O_RDWR);
++  if (fd < 0) {
++    return -1;
++  }
++#endif
++
++//BBD   is->eth_addr[0] = is->eth_addr[1] = 0;
++//BBD   *(ulong*)&is->eth_addr[2] = TAP_VIRTUAL_HW_ADDR;
++/* *(ulong*)&is->eth_addr[2] = getpid(); */
++
++//BBD   is->net_dev = fd;
++//BBD   is->packet_pad = TAP_PACKET_PAD;
++*sigio_capable = 1;
++//BBD   snprintf(is->drv_name, sizeof(is->drv_name), "tap-<tap%d>", tapnum );
++return fd;
++}
++
++
