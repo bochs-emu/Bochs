@@ -1,0 +1,14 @@
+plugin-test
+Bryce Denney
+
+This is a series of simple programs that test your platform for shared 
+library support.  The tests start from something trivial that should 
+work everywhere, and gradually add one feature at a time, until at 
+the end (not done yet) it should test all of the shared library 
+features that Bochs needs to support plugins.
+
+test1-static: build a static library and link against it
+test2-dynamic: with same code, build a shared library and link against it
+test3-twomodules: build 2 shared libs and link against them
+test4-interdep: build 2 shared libs, one depends on the other, and link
+test5-execsymbols: can a shared lib can access a symbol from the executable?
