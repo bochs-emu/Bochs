@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.71 2003-05-03 16:09:39 vruppert Exp $
+// $Id: vga.cc,v 1.72 2003-05-06 17:10:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1149,8 +1149,10 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 #endif
           if (prev_memory_mapping != BX_VGA_THIS s.graphics_ctrl.memory_mapping)
             needs_update = 1;
-          if (prev_graphics_alpha != BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
+          if (prev_graphics_alpha != BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
             needs_update = 1;
+            old_iHeight = 0;
+          }
           break;
         case 7: /* Color Don't Care */
           BX_VGA_THIS s.graphics_ctrl.color_dont_care = value & 0x0f;
@@ -1196,7 +1198,8 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             needs_update = 1;
             break;
           case 0x18:
-            BX_VGA_THIS s.line_compare = BX_VGA_THIS s.CRTC.reg[0x18];
+            BX_VGA_THIS s.line_compare &= 0x300;
+            BX_VGA_THIS s.line_compare |= BX_VGA_THIS s.CRTC.reg[0x18];
             needs_update = 1;
             break;
           case 0x0A:
@@ -1443,7 +1446,7 @@ bx_vga_c::update(void)
                     if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
                     bit_no = 7 - (x % 8);
                     if (y > line_compare) {
-                      byte_offset = start_addr + x / 8 +
+                      byte_offset = x / 8 +
                         ((y - line_compare - 1) * BX_VGA_THIS s.line_offset);
                     } else {
                       byte_offset = start_addr + x / 8 +
@@ -1988,9 +1991,10 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
         const Bit8u set_reset = BX_VGA_THIS s.graphics_ctrl.set_reset;
         const Bit8u enable_set_reset = BX_VGA_THIS s.graphics_ctrl.enable_set_reset;
         /* perform rotate on CPU data in case its needed */
-        value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
-                (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
-
+        if (BX_VGA_THIS s.graphics_ctrl.data_rotate) {
+          value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
+                  (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
+        }
         new_val[0] = BX_VGA_THIS s.graphics_ctrl.latch[0] & ~bitmask;
         new_val[1] = BX_VGA_THIS s.graphics_ctrl.latch[1] & ~bitmask;
         new_val[2] = BX_VGA_THIS s.graphics_ctrl.latch[2] & ~bitmask;
@@ -2164,9 +2168,10 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
         const Bit8u set_reset = BX_VGA_THIS s.graphics_ctrl.set_reset;
 
         /* perform rotate on CPU data */
-        value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
-                (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
-
+        if (BX_VGA_THIS s.graphics_ctrl.data_rotate) {
+          value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
+                  (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
+        }
         new_val[0] = BX_VGA_THIS s.graphics_ctrl.latch[0] & ~bitmask;
         new_val[1] = BX_VGA_THIS s.graphics_ctrl.latch[1] & ~bitmask;
         new_val[2] = BX_VGA_THIS s.graphics_ctrl.latch[2] & ~bitmask;
