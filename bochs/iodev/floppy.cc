@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.70 2004-02-07 14:34:34 vruppert Exp $
+// $Id: floppy.cc,v 1.71 2004-02-08 10:25:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.70 2004-02-07 14:34:34 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.71 2004-02-08 10:25:50 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -476,13 +476,17 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
 #if BX_DMA_FLOPPY_IO
     case 0x3F2: /* diskette controller digital output register */
-      motor_on_drive1 = value & 0x20;
       motor_on_drive0 = value & 0x10;
+      motor_on_drive1 = value & 0x20;
       /* set status bar conditions for Floppy 0 and Floppy 1 */
-      if (BX_FD_THIS s.statusbar_id[0] >= 0)
-        bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[0], motor_on_drive0);
-      if (BX_FD_THIS s.statusbar_id[1] >= 0)
-        bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[1], motor_on_drive1);
+      if (BX_FD_THIS s.statusbar_id[0] >= 0) {
+        if (motor_on_drive0 != (BX_FD_THIS s.DOR & 0x10))
+          bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[0], motor_on_drive0);
+      }
+      if (BX_FD_THIS s.statusbar_id[1] >= 0) {
+        if (motor_on_drive1 != (BX_FD_THIS s.DOR & 0x20))
+          bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[1], motor_on_drive1);
+      }
       dma_and_interrupt_enable = value & 0x08;
       if (!dma_and_interrupt_enable)
         BX_DEBUG(("DMA and interrupt capabilities disabled"));

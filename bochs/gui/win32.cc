@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.72 2004-02-07 14:34:34 vruppert Exp $
+// $Id: win32.cc,v 1.73 2004-02-08 10:25:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -130,6 +130,7 @@ static unsigned bx_hb_separator;
 #define SIZE_OF_SB_ELEMENT        30
 #define SIZE_OF_SB_FIRST_ELEMENT 192
 long SB_Edges[BX_MAX_STATUSITEMS+2];
+char SB_Text[BX_MAX_STATUSITEMS][10];
 
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
@@ -784,7 +785,7 @@ VOID UIThread(PVOID pvoid) {
   _endthread();
 }
 
-void SetStatusText(int Num, const char *Text)
+void SetStatusText(int Num, const char *Text, bx_bool active)
 {
   char StatText[MAX_PATH];
 
@@ -794,30 +795,39 @@ void SetStatusText(int Num, const char *Text)
     StatText[0] = 9;  // Center the rest
   }
   lstrcpy(StatText+1, Text);
-  SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
+  if (active)
+    SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
+  else {
+    lstrcpy(SB_Text[Num], StatText);
+    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (long)SB_Text[Num]);
+  }
   UpdateWindow(hwndSB);
 }
 
 void 
 bx_win32_gui_c::statusbar_setitem(int element, bx_bool active)
 {
-  if (element < BX_MAX_STATUSITEMS) {
-    if (active)
-      SetStatusText(element+1, statusitem_text[element]);
-    else
-      SetStatusText(element+1, "");
+  if (element < 0) {
+    for (int i = 0; i < statusitem_count; i++) {
+      SetStatusText(i+1, statusitem_text[i], active);
+    }
+  } else if (element < statusitem_count) {
+    SetStatusText(element+1, statusitem_text[element], active);
   }
 }
 
-LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+  DRAWITEMSTRUCT *lpdis;
+  char *sbtext;
 
   switch (iMsg) {
   case WM_CREATE:
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     if (mouseCaptureMode)
-      SetStatusText(0, "Press F12 to release mouse");
+      SetStatusText(0, "Press F12 to release mouse", TRUE);
     else
-      SetStatusText(0, "F12 enables mouse");
+      SetStatusText(0, "F12 enables mouse", TRUE);
     return 0;
 
   case WM_COMMAND:
@@ -842,6 +852,17 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_SIZE:
     SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+    break;
+
+  case WM_DRAWITEM:
+    lpdis = (DRAWITEMSTRUCT *)lParam;
+    if (lpdis->hwndItem == hwndSB) {
+      sbtext = (char *)lpdis->itemData;
+      SetBkMode(lpdis->hDC, TRANSPARENT);
+      SetTextColor(lpdis->hDC, 0x00808080);
+      DrawText(lpdis->hDC, sbtext+1, lstrlen(sbtext)-1, &lpdis->rcItem, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+      return TRUE;
+    }
     break;
 
   }
@@ -936,9 +957,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
       SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
       cursorWarped();
       if (mouseCaptureMode)
-        SetStatusText(0, "Press F12 to release mouse");
+        SetStatusText(0, "Press F12 to release mouse", TRUE);
       else
-        SetStatusText(0, "F12 enables mouse");
+        SetStatusText(0, "F12 enables mouse", TRUE);
     } else {
       EnterCriticalSection(&stInfo.keyCS);
       enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_PRESSED);

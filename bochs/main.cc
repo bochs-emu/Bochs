@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.265 2004-02-06 22:27:59 danielg4 Exp $
+// $Id: main.cc,v 1.266 2004-02-08 10:25:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2396,6 +2396,8 @@ bx_begin_simulation (int argc, char *argv[])
 
   // update headerbar buttons since drive status can change during init
   bx_gui->update_drive_status_buttons ();
+  // iniialize statusbar and set all items inactive
+  bx_gui->statusbar_setitem(-1, 0);
 
   // The set handler for mouse_enabled does not actually update the gui
   // until init_done is set.  This forces the set handler to be called,
