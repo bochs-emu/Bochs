@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.14 2002-08-29 23:18:10 bdenney Exp $
+// $Id: wxmain.cc,v 1.15 2002-08-30 06:06:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -145,10 +145,11 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Sim2CI_Event, MyFrame::OnSim2CIEvent)
   EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
-  EVT_TOOL(ID_Toolbar_CdromD, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Edit_Cdrom, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Reset, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Power, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Copy, MyFrame::OnToolbarClick)
@@ -180,6 +181,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append( ID_Edit_FD_1, "Floppy Disk &1..." );
   menuEdit->Append( ID_Edit_HD_0, "Hard Disk 0..." );
   menuEdit->Append( ID_Edit_HD_1, "Hard Disk 1..." );
+  menuEdit->Append( ID_Edit_Cdrom, "Cdrom..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Vga, "&VGA..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
@@ -230,7 +232,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
   BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, "Change Floppy A");
   BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, "Change Floppy B");
-  BX_ADD_TOOL(ID_Toolbar_CdromD, cdromd_xpm, "Change CDROM");
+  BX_ADD_TOOL(ID_Edit_Cdrom, cdromd_xpm, "Change CDROM");
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, "Reset the system");
   BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, "Turn power on/off");
 
@@ -325,11 +327,13 @@ void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can
   // only be edited if it was enabled at boot time.
-  bx_param_c *floppy;
-  floppy = SIM->get_param(BXP_FLOPPYA);
-  menuEdit->Enable (ID_Edit_FD_0, canConfigure || floppy->get_enabled ());
-  floppy = SIM->get_param(BXP_FLOPPYB);
-  menuEdit->Enable (ID_Edit_FD_1, canConfigure || floppy->get_enabled ());
+  bx_param_c *param;
+  param = SIM->get_param(BXP_FLOPPYA);
+  menuEdit->Enable (ID_Edit_FD_0, canConfigure || param->get_enabled ());
+  param = SIM->get_param(BXP_FLOPPYB);
+  menuEdit->Enable (ID_Edit_FD_1, canConfigure || param->get_enabled ());
+  param = SIM->get_param(BXP_CDROMD);
+  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || param->get_enabled ());
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
@@ -584,12 +588,14 @@ MyFrame::OnOtherEvent (wxCommandEvent& event)
   switch (id) {
     case ID_Edit_HD_0: editHDConfig (0); break;
     case ID_Edit_HD_1: editHDConfig (1); break;
+    case ID_Edit_Cdrom: editCdromConfig (); break;
   }
 }
 
 bool
 MyFrame::editFloppyValidate (FloppyConfigDialog *dialog)
 {
+  // haven't done anything with this 'feature'
   return true;
 }
 
@@ -609,13 +615,20 @@ void MyFrame::editFloppyConfig (int drive)
     wxLogError ("floppy params have wrong type");
     return;
   }
-  dlg.AddRadio ("Not Present", "none");
+  dlg.AddRadio ("Not Present", "");
   dlg.AddRadio ("Ejected", "none");
   dlg.AddRadio ("Physical floppy drive /dev/fd0", "/dev/fd0");
   dlg.AddRadio ("Physical floppy drive /dev/fd1", "/dev/fd1");
   dlg.SetCapacity (disktype->get () - disktype->get_min ());
   dlg.SetFilename (fname->getptr ());
   dlg.SetValidateFunc (editFloppyValidate);
+  if (disktype->get() == BX_FLOPPY_NONE) {
+    dlg.SetRadio (0);
+  } else if (!strcmp ("none", fname->getptr ())) {
+    dlg.SetRadio (1);
+  } else {
+    // otherwise the SetFilename() should have done the right thing.
+  }
   int n = dlg.ShowModal ();
   printf ("floppy config returned %d\n", n);
   if (n==0) {
@@ -623,6 +636,8 @@ void MyFrame::editFloppyConfig (int drive)
     printf ("capacity = %d (%s)\n", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
     fname->set (dlg.GetFilename ());
     disktype->set (disktype->get_min () + dlg.GetCapacity ());
+    if (dlg.GetRadio () == 0)
+      disktype->set (BX_FLOPPY_NONE);
   }
 }
 
@@ -636,13 +651,13 @@ void MyFrame::editHDConfig (int drive)
   bx_param_num_c *cyl = (bx_param_num_c *) list->get(1);
   bx_param_num_c *heads = (bx_param_num_c *) list->get(2);
   bx_param_num_c *spt = (bx_param_num_c *) list->get(3);
-  if (fname->get_type () != BXT_PARAM_STRING
-      || cyl->get_type () != BXT_PARAM_NUM 
-      || heads->get_type () != BXT_PARAM_NUM 
-      || spt->get_type() != BXT_PARAM_NUM) {
-    wxLogError ("HD params have wrong type");
-    return;
-  }
+  bx_param_bool_c *present = (bx_param_bool_c *)
+    SIM->get_param (drive==0? BXP_DISKC_PRESENT : BXP_DISKD_PRESENT);
+  wxASSERT (fname->get_type () == BXT_PARAM_STRING
+      && cyl->get_type () == BXT_PARAM_NUM 
+      && heads->get_type () == BXT_PARAM_NUM 
+      && spt->get_type() == BXT_PARAM_NUM
+      && present->get_type() == BXT_PARAM_BOOL);
   dlg.SetFilename (fname->getptr ());
   dlg.SetGeomRange (0, cyl->get_min(), cyl->get_max ());
   dlg.SetGeomRange (1, heads->get_min(), heads->get_max ());
@@ -650,6 +665,7 @@ void MyFrame::editHDConfig (int drive)
   dlg.SetGeom (0, cyl->get ());
   dlg.SetGeom (1, heads->get ());
   dlg.SetGeom (2, spt->get ());
+  dlg.SetEnable (present->get ());
   int n = dlg.ShowModal ();
   printf ("HD config returned %d\n", n);
   if (n==0) {
@@ -658,7 +674,61 @@ void MyFrame::editHDConfig (int drive)
     cyl->set (dlg.GetGeom (0));
     heads->set (dlg.GetGeom (1));
     spt->set (dlg.GetGeom (2));
-    printf ("cyl=%d heads=%d spt=%d\n", cyl->get(), heads->get(), spt->get());
+    present->set (dlg.GetEnable ());
+    printf ("present=%d cyl=%d heads=%d spt=%d\n", present->get (), cyl->get(), heads->get(), spt->get());
+    if (present->get ()) {
+      bx_param_bool_c *cdromd = (bx_param_bool_c*)
+	SIM->get_param(BXP_CDROM_PRESENT);
+      if (cdromd->get ()) {
+	wxString msg;
+	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
+	    BX_HARD_DISK1_NAME, BX_CDROM_NAME, BX_CDROM_NAME);
+	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
+	cdromd->set (0);
+      }
+    }
+  }
+}
+
+void MyFrame::editCdromConfig ()
+{
+  CdromConfigDialog dlg (this, -1);
+  dlg.SetDriveName (BX_CDROM_NAME);
+  bx_param_filename_c *fname = 
+    (bx_param_filename_c*) SIM->get_param(BXP_CDROM_PATH);
+  bx_param_bool_c *present =
+    (bx_param_bool_c*) SIM->get_param(BXP_CDROM_PRESENT);
+  bx_param_enum_c *status =
+    (bx_param_enum_c*) SIM->get_param(BXP_CDROM_STATUS);
+  wxASSERT (fname->get_type () == BXT_PARAM_STRING
+      && present->get_type () == BXT_PARAM_BOOL
+      && status->get_type () == BXT_PARAM_ENUM);
+  dlg.AddRadio ("Physical CD-ROM drive /dev/cdrom", "/dev/cdrom");
+  dlg.SetEnable (present->get () ? TRUE : FALSE);
+  dlg.SetFilename (fname->getptr ());
+  dlg.SetEjected (status->get () == BX_EJECTED);
+  int n = dlg.ShowModal ();
+  printf ("cdrom config returned %d\n", n);
+  if (n==0) {
+    char buffer[1024];
+    strncpy (buffer, dlg.GetFilename (), sizeof(buffer));
+    fname->set (buffer);    ///// doing something illegal?
+    present->set (dlg.GetEnable ());
+    status->set (dlg.GetEjected () ? BX_EJECTED : BX_INSERTED);
+    printf ("filename is '%s'\n", dlg.GetFilename ());
+    printf ("enabled=%d ejected=%d\n", present->get(), status->get());
+    // cdrom and hard disk D cannot both be enabled.
+    if (present->get ()) {
+      bx_param_bool_c *diskd = (bx_param_bool_c*)
+	SIM->get_param(BXP_DISKD_PRESENT);
+      if (diskd->get ()) {
+	wxString msg;
+	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
+	    BX_CDROM_NAME, BX_HARD_DISK1_NAME, BX_HARD_DISK1_NAME);
+	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
+	diskd->set (0);
+      }
+    }
   }
 }
 
@@ -678,7 +748,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
       // floppy config dialog box
       editFloppyConfig (1);
       break;
-    case ID_Toolbar_CdromD: which = BX_TOOLBAR_CDROMD; break;
+    case ID_Edit_Cdrom: which = BX_TOOLBAR_CDROMD; break;
     case ID_Toolbar_Copy: which = BX_TOOLBAR_COPY; break;
     case ID_Toolbar_Paste: which = BX_TOOLBAR_PASTE; break;
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;

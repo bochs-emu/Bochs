@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.9 2002-08-29 23:28:52 bdenney Exp $
+// $Id: wxdialog.h,v 1.10 2002-08-30 06:06:36 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -11,6 +11,7 @@
 ////////////////////////////////////////////////////////////////////
 #define MSG_NO_HELP "No help is available yet."
 #define MSG_NO_HELP_CAPTION "No help"
+#define MSG_ENABLED "Enabled"
 #define BTNLABEL_HELP "Help"
 #define BTNLABEL_CANCEL "Cancel"
 #define BTNLABEL_OK "Ok"
@@ -147,9 +148,9 @@ private:
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
   wxStaticText *instr;
-#define MAX_RBTNS 4
-  wxRadioButton *rbtn[MAX_RBTNS];
-  char *equivalentFilename[MAX_RBTNS];
+#define FLOPPY_MAX_RBTNS 4
+  wxRadioButton *rbtn[FLOPPY_MAX_RBTNS];
+  char *equivalentFilename[FLOPPY_MAX_RBTNS];
   int n_rbtns;
   wxRadioButton *diskImageRadioBtn;
   wxTextCtrl *filename;
@@ -224,15 +225,92 @@ public:
   HDConfigDialog(wxWindow* parent, wxWindowID id);
   void OnEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetFilename (const char *f);
-  char *GetFilename ();
+  void SetFilename (const char *f) { filename->SetValue (wxString (f)); }
+  char *GetFilename () { return (char *)filename->GetValue().c_str (); }
   void SetDriveName (const char *name);
   void SetGeom (int n, int value);
   int GetGeom (int n) { return geom[n]->GetValue (); }
   void SetGeomRange (int n, int min, int max) { geom[n]->SetRange (min, max); }
   float UpdateMegs ();
-  void SetEnable (bool val) { enable->SetValue (val); }
+  void EnableChanged ();
+  void SetEnable (bool val) { enable->SetValue (val); EnableChanged (); }
   bool GetEnable () { return enable->GetValue (); }
   void EnterSize ();
 DECLARE_EVENT_TABLE()
 };
+
+////////////////////////////////////////////////////////////////////
+// CdromConfigDialog is a modal dialog box that asks the user
+// what physical device or disk image should be used for cdrom 
+// emulation.
+//
+// +-----Configure CDROM-------------------------------------------+
+// |                                                               |
+// | +-- Device -----------------------------------------------+   |
+// | |                                                         |   |
+// | |  [ ] Enable Emulated CD-ROM                             |   |
+// | |                                                         |   |
+// | +---------------------------------------------------------+   |
+// |                                                               |
+// | +-- Media: Where does the data come from? ----------------+   |
+// | |                                                         |   |
+// | | Bochs can use a physical CD-ROM drive as the data       |   |
+// | | source, or use an image file.                           |   |
+// | |                                                         |   |
+// | |  [X]  Ejected                                           |   |
+// | |  [ ]  Physical CD-ROM drive /dev/cdrom                  |   |
+// | |  [ ]  Disk image file: [____________________] [Browse]  |   |
+// | |                                                         |   |
+// | |                                        [ Create Image ] |   |
+// | +---------------------------------------------------------+   |
+// |                                                               |
+// |                                    [ Help ] [ Cancel ] [ Ok ] |
+// +---------------------------------------------------------------+
+//
+// To use this dialog:
+// After constructor, use SetEnabled(), SetFilename() to fill in the
+// disk image filename, AddRadio() to add radio buttons (the disk
+// image file radio button will be added automatically).  Then call
+// ShowModal() to display it.  Return value is 0 for ok or -1 for
+// cancel.  After ShowModal() returns, use GetFilename() and
+// GetEnabled().
+
+class CdromConfigDialog: public wxDialog
+{
+public:
+#define CDROM_CONFIG_TITLE "Configure %s"
+#define CDROM_CONFIG_DISKIMG "Use disk image: "
+// prompt disabled because I can't figure out what text would make
+// the most sense here.  If one of the answers is "Ejected" then what
+// is the question?
+//#define CDROM_CONFIG_PROMPT "Where should the emulated CD-ROM find its data?"
+private:
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *vertSizer, *fileSizer, *buttonSizer;
+  wxStaticBoxSizer *dBoxSizer, *mBoxSizer;
+  //wxStaticText *prompt;
+  wxCheckBox *enable;
+  wxTextCtrl *filename;
+  wxRadioButton *diskImageRadioBtn;
+#define CDROM_MAX_RBTNS 2
+  wxRadioButton *rbtn[CDROM_MAX_RBTNS];
+  char *equivalentFilename[CDROM_MAX_RBTNS];
+  int n_rbtns;
+public:
+  CdromConfigDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void SetFilename (const char *f);
+  char *GetFilename ();
+  void SetDriveName (const char *name);
+  void EnableChanged ();
+  void SetEnable (bool val) { enable->SetValue (val); EnableChanged (); }
+  bool GetEnable () { return enable->GetValue (); }
+  void AddRadio (const char *descr, char *path);
+  // rbtn[0] will always be the "ejected" button
+  void SetEjected (bool val) { if (val) rbtn[0]->SetValue (TRUE); }
+  bool GetEjected () { return rbtn[0]->GetValue (); }
+DECLARE_EVENT_TABLE()
+};
+

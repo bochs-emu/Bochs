@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.10 2002-08-29 23:28:52 bdenney Exp $
+// $Id: wxdialog.cc,v 1.11 2002-08-30 06:06:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -231,8 +231,8 @@ FloppyConfigDialog::FloppyConfigDialog(
 
 void FloppyConfigDialog::AddRadio (char *description, char *filename)
 {
-  if (n_rbtns >= MAX_RBTNS) {
-    wxLogError ("AddRadio failed: increase MAX_RBTNS in wxdialog.h");
+  if (n_rbtns >= FLOPPY_MAX_RBTNS) {
+    wxLogError ("AddRadio failed: increase FLOPPY_MAX_RBTNS in wxdialog.h");
     return;
   }
   rbtn[n_rbtns] = new wxRadioButton (this, -1, description);
@@ -308,9 +308,11 @@ void FloppyConfigDialog::SetFilename (const char *f) {
     }
   }
   filename->SetValue (f); 
+  diskImageRadioBtn->SetValue (TRUE);
 }
 
-char *FloppyConfigDialog::GetFilename ()
+char *
+FloppyConfigDialog::GetFilename ()
 {
   int n = GetRadio ();
   if (n < n_rbtns) {
@@ -418,7 +420,7 @@ HDConfigDialog::HDConfigDialog(
 {
   static char *geomNames[] = HD_CONFIG_GEOM_NAMES;
   vertSizer = new wxBoxSizer (wxVERTICAL);
-  enable = new wxCheckBox (this, ID_Enable, "Enabled");
+  enable = new wxCheckBox (this, ID_Enable, MSG_ENABLED);
   enable->SetValue (TRUE);
   hsizer[0] = new wxBoxSizer (wxHORIZONTAL);
   hsizer[1] = new wxBoxSizer (wxHORIZONTAL);
@@ -504,24 +506,12 @@ void HDConfigDialog::Init()
 {
 }
 
-void HDConfigDialog::SetFilename (const char *f) {
-  if (!strcmp (f, "none")) {
-    enable->SetValue (FALSE);
-    // trick event handler into updating the state
-    printf ("sending fake ID_Enable event to OnEvent\n");
-    wxCommandEvent fakeCheckboxEvent;
-    fakeCheckboxEvent.SetId (ID_Enable);
-    OnEvent (fakeCheckboxEvent);
-  }
-  filename->SetValue (wxString (f));
-}
-
-char *HDConfigDialog::GetFilename ()
+void HDConfigDialog::EnableChanged ()
 {
-  if (enable->GetValue ())
-    return (char *)filename->GetValue().c_str ();
-  else
-    return "none";
+  bool en = enable->GetValue ();
+  filename->Enable (en);
+  for (int i=0; i<3; i++) geom[i]->Enable (en);
+  computeGeom->Enable (en);
 }
 
 void HDConfigDialog::OnEvent(wxCommandEvent& event)
@@ -554,12 +544,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
       }
       break;
     case ID_Enable:
-      {
-	bool en = enable->GetValue ();
-        filename->Enable (en);
-	for (int i=0; i<3; i++) geom[i]->Enable (en);
-	computeGeom->Enable (en);
-      }
+      EnableChanged ();
       break;
     case wxOK:
       // probably should validate before allowing ok
@@ -600,6 +585,213 @@ void HDConfigDialog::EnterSize ()
 }
 
 void HDConfigDialog::ShowHelp ()
+{
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+}
+
+//////////////////////////////////////////////////////////////////////
+// CdromConfigDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   vertSizer: 
+//     box labeled "Device":
+//       enable = enable checkbox
+//     box labeled "Media":
+//       "Where should the emulated CD-ROM find its data?"
+//       ejected radio button (added by constructor)
+//       use physical radio buttons (added by calls to AddRadio)
+//       fileSizer:
+//         use disk image radio button
+//         filename = text control
+//         browse button
+//     buttonSizer:
+//       help
+//       cancel
+//       create image
+//       ok
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(CdromConfigDialog, wxDialog)
+  EVT_BUTTON(-1, CdromConfigDialog::OnEvent)
+  EVT_CHECKBOX(-1, CdromConfigDialog::OnEvent)
+  EVT_TEXT(-1, CdromConfigDialog::OnEvent)
+END_EVENT_TABLE()
+
+
+CdromConfigDialog::CdromConfigDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  n_rbtns = 0;
+  // top level objects
+  wxStaticBox *dBox = new wxStaticBox (this, -1, "Device");
+  dBoxSizer = new wxStaticBoxSizer (dBox, wxVERTICAL);
+  wxStaticBox *mBox = new wxStaticBox (this, -1, "Media");
+  mBoxSizer = new wxStaticBoxSizer (mBox, wxVERTICAL);
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+
+  // add top level objects to vertSizer
+  vertSizer = new wxBoxSizer (wxVERTICAL);
+  vertSizer->Add (dBoxSizer, 0, wxALL|wxGROW, 10);
+  vertSizer->Add (mBoxSizer, 0, wxALL|wxGROW, 10);
+  vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT|wxTOP, 10);
+
+  // device box contents
+  enable = new wxCheckBox (this, ID_Enable, MSG_ENABLED);
+  enable->SetValue (TRUE);
+  dBoxSizer->Add (enable, 0, wxALL, 5);
+
+  // media box contents
+  //prompt = new wxStaticText (this, -1, CDROM_CONFIG_PROMPT);
+  //mBoxSizer->Add (prompt, 0, wxTOP|wxLEFT|wxGROW, 10);
+  AddRadio ("Ejected", "none");   // that's always an option!
+  // ... wait for more calls to AddRadio before Init()
+
+  // create fileSizer & contents, but don't add yet
+  fileSizer = new wxBoxSizer (wxHORIZONTAL);
+  diskImageRadioBtn = new wxRadioButton (this, -1, CDROM_CONFIG_DISKIMG);
+  fileSizer->Add (diskImageRadioBtn, 0);
+  filename = new wxTextCtrl (this, ID_FilenameText);
+  filename->SetSize (300, filename->GetSize ().GetHeight ());
+  fileSizer->Add (filename, 1, wxLEFT, 5);
+  wxButton *btn = new wxButton (this, ID_Browse, "<--Browse");
+  fileSizer->Add (btn, 0, wxALL, 5);
+  // create buttonSizer & contents but don't add yet
+  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, ID_Create, BTNLABEL_CREATE_IMG);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+}
+
+void CdromConfigDialog::Init()
+{
+  // add top level components to vertSizer
+  mBoxSizer->Add (fileSizer, 0, wxLEFT, 20);
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(vertSizer);
+  vertSizer->Fit (this);
+  wxSize size = vertSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+void CdromConfigDialog::SetDriveName (const char *name)
+{
+  wxString text;
+  text.Printf (CDROM_CONFIG_TITLE, name);
+  SetTitle (text);
+}
+
+// called from outside the object
+void CdromConfigDialog::EnableChanged ()
+{
+  bool en = enable->GetValue ();
+  //prompt->Enable (en);
+  filename->Enable (en);
+  for (int i=0; i<n_rbtns; i++)
+    rbtn[i]->Enable (en);
+  diskImageRadioBtn->Enable (en);
+}
+
+void CdromConfigDialog::SetFilename (const char *f) {
+  for (int i=0; i<n_rbtns; i++) {
+    if (!strcmp (f, equivalentFilename[i])) {
+      rbtn[i]->SetValue (TRUE);
+      return;
+    }
+  }
+  filename->SetValue (wxString (f));
+}
+
+char *
+CdromConfigDialog::GetFilename ()
+{
+  if (enable->GetValue ()) {
+    // check radio buttons
+    for (int i=0; i<n_rbtns; i++) {
+      if (rbtn[i]->GetValue ())
+	return equivalentFilename[i];
+    }
+    // if it wasn't any of the other radio buttons, it certainly should
+    // be the last one.  That's what radio buttons do!
+    wxASSERT (diskImageRadioBtn->GetValue ());
+  }
+  return (char *)filename->GetValue().c_str ();
+}
+
+void 
+CdromConfigDialog::AddRadio (const char *description, char *filename)
+{
+  if (n_rbtns >= CDROM_MAX_RBTNS) {
+    wxLogError ("AddRadio failed: increase CDROM_MAX_RBTNS in wxdialog.h");
+    return;
+  }
+  rbtn[n_rbtns] = new wxRadioButton (this, -1, description);
+  equivalentFilename[n_rbtns] = filename;
+  mBoxSizer->Add (rbtn[n_rbtns], 0, wxLEFT, 20);
+  n_rbtns++;
+}
+
+void CdromConfigDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("you pressed button id=%d\n", id);
+  switch (id) {
+    case ID_Create:
+      {
+	int sectors = 650*1024*1024/512;
+	char name[1024];
+	strncpy (name, filename->GetValue ().c_str (), sizeof(name));
+	if (CreateImage (1, sectors, name)) {
+	  wxString msg;
+	  msg.Printf ("Created a %d megabyte CD-ROM image called '%s'.",
+	      sectors*512, name);
+	  wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION);
+	}
+      }
+      break;
+    case ID_FilenameText:
+      // when you type into the filename field, ensure that the radio
+      // button associated with that field is chosen.
+      diskImageRadioBtn->SetValue (enable->GetValue ());
+      break;
+    case ID_Enable:
+      EnableChanged ();  // enable/disable fields that depend on this
+      break;
+    case wxOK:
+      // probably should validate before allowing ok
+      EndModal (0);
+      break;
+    case ID_Browse:
+      {
+      long style = wxOPEN;
+      wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
+      if (fdialog->ShowModal () == wxID_OK)
+	SetFilename (fdialog->GetPath().c_str ());
+      }
+      break;
+    case wxID_CANCEL:
+      EndModal (-1);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void CdromConfigDialog::ShowHelp ()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }

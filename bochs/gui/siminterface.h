@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.51 2002-08-29 20:13:05 bdenney Exp $
+// $Id: siminterface.h,v 1.52 2002-08-30 06:06:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -248,6 +248,14 @@ typedef enum {
   LOGLEV_PANIC,
   N_LOGLEV
 } bx_log_levels;
+
+// types of reset
+#define BX_RESET_SOFTWARE 10
+#define BX_RESET_HARDWARE 11
+
+//cdrom
+#define BX_EJECTED   10
+#define BX_INSERTED  11
 
 ///////////////////////////////////////////////////////////////////
 // event structures for communication between simulator and CI
