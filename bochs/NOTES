@@ -997,3 +997,124 @@ until Calibrating delay loop, but apparantly the timer interrupt is
 not getting set up within linux.
 
 getting closer!
+
+Once I had success in getting the I/O APIC and local APICs to boot SMP
+until they got to disk detection (hda), then they would say "lost interrupt"
+every 2 minutes or so.  I'm trying to implement the irr/isr business 
+described in the DevGuide3, but having trouble with interrupts that
+are acknowledged but never EOI'd.  After tracing it, it turns out that
+this particular interrupt that was never EOId was triggered by the
+I/O APIC -> local APIC -> cpu path, but then went to a vector 0x51 that
+ended up in do_8259A_IRQ, clearly intended for a pic.  Well the fact is
+that I have stuck all the external interrupts onto the PIC and also the
+I/O APIC.  I did this because of the linux bootup message:
+
+MP-BIOS bug: 8254 timer not connected to IO-APIC
+ 
+So I connected it!  I made the PIC code run as usual, and also call up 
+the I/O APIC whenever the I/O devices called pic->trigger_irq.  But this
+was failing too.  I think the IOAPIC was interrupting the processor
+before linux wanted it to, because it was in logical mode with
+all 0's in the destination.  So even though the interrupt was unmasked,
+this should not have delivered the interrupt.  I worked on deliver
+very recently to try to improve this.
+
+implement local apic interrupts to self, all but self, etc. and maybe
+this will be fixed.
+
+The timer interrupt seems to be fine, and everything looks good until
+hda: lost interrupt.
+ida is using int14. break on int14s and look what's going on.
+vbreak 0x10:0xc0108b4c
+
+It does look like some int14s are coming through and being 
+acknowledged.  So I'm not sure what the driver needs and isn't getting.
+Possible that the timer is taking so many cycles in this simulation that
+it's got no halted time left for other interrupts?  I don't think so though.
+
+got a new message: ide0: unexpected interrupt, status=0x41, count=1
+
+Try breaking in the function that says hda: lost interrupt.
+ide_timer_expiry
+vbreak 0x10:0xc014f44c
+ide_probe_init
+vbreak 0x10:0xc015bf18
+
+but it's never breaking there.
+
+from tracing on a working (old) version of bochs, I see that the driver
+for the semi-IDE hard drive has the following interrupt patterns:
+
+"disk: Interrupt masked {DISK}" many times, very close together
+a long break, like 50million ticks
+disk: Raising interrupt {DISK}     one time only
+10million tick break
+disk: Interrupt masked {DISK}  three times (every 4 million or so)
+then a 40 million tick break
+then lots of disk: Raising interrupt {DISK} as it reads the partition 
+table and mounts disks.
+
+
+
+step to second Raising interrupt (harddrv.cc:2222) and then tracing the
+two simulations.
+
+Before it reached the second "raising interrupt" it set up an IOAPIC
+entry[14] with vector 0xb1, but destination was 0, dest_mode=1.  This
+means that the IOAPIC would not forward any such interrupts.
+
+The IOAPIC received the int14, but I didn't see if it delivered the
+interrupt to the processor or the pic did.
+
+right after "raising interrupt" it is in various ide functions. I'm not
+sure how.  stepped outware until ide_do_request, where we were apparantly
+at this line (ide.c:1216):
+    if (hwif->irq != masked_irq)
+      enable_irq(hwif->irq);
+within enable_irq, it finds that the depth==1, so it calls enable_8259A_irq.
+Here's the difference!
+in the SMP simulation, it called enable_edge_ioapic_irq instead!
+ha!
+
+Tracing the ioapic code......
+
+enable_edge_ioapic_irq:
+c010dc9c: 53: push EBX
+c010dc9d: 8b5c2408: mov EBX, |MOD1|REG3|RM4| |SS0|IND4|BASE4| SS:[ESP + 08]
+c010dca1: 89da: mov |MOD3|REG3|RM2| EDX, EBX
+c010dca3: c1e205: shl |MOD3|REG4|RM2| EDX, #05
+c010dca6: 8b8a00a01bc0: mov ECX, |MOD2|REG1|RM2| DS:[EDX + c01ba000]
+c010dcac: 89c8: mov |MOD3|REG1|RM0| EAX, ECX
+c010dcae: 83e00c: and |MOD3|REG4|RM0| EAX, #0c
+c010dcb1: 83f804: cmp |MOD3|REG7|RM0| EAX, #04
+c010dcb4: 7515: jnz +#15
+c010dcb6: 83c908: or |MOD3|REG1|RM1| ECX, #08
+c010dcb9: 898a00a01bc0: mov |MOD2|REG1|RM2| DS:[EDX + c01ba000], ECX
+c010dcbf: 8b049de08519c0: mov EAX, |MOD0|REG0|RM4| |SS2|IND3|BASE5| DS:[c01985e0 + EBX<<2]
+c010dcc6: e841f7ffff: call fffff741
+c010dccb: 53: push EBX
+c010dccc: e873fcffff: call fffffc73
+c010dcd1: 83c404: add |MOD3|REG0|RM4| ESP, #04
+c010dcd4: 5b: pop EBX
+c010dcd5: c3: ret_near
+
+it skipped over the send_IPI_self crap from the inline function self_IPI,
+then goes right to enable_IO_APIC_irq.
+
+Note: ioapic really has 8 bit id field. in phys mode only 59:56 are used
+but in logical mode all 8 are used.  I fixed my model for next time.  It
+went and enabled entry[14] on the I/O APIC, but I have a feeling it will
+never trigger the CPU because the ioapic model doesn't have memory!
+
+The important feature that the I/O APIC is missing is that it remembers
+interrupts that occur when the int is unmasked but there is no 
+destination APIC to send to.  Linux requires this!
+
+Tracing the 8259 PIC code......
+Haven't traced the "enable_8259A_irq" route too much, but I see that it
+ends up pretty quickly in do_ide0_request.  I wonder if the IOAPIC code
+ever gets there...  return from ide_get_queue, unplug_device???, then
+IRQ0x0e_interrupt.  So the PIC's mask bit for int14 just went off, and
+it signalled an interrupt, unlike my dumb IOAPIC.
+
+
