@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.7 2002-10-25 02:50:06 bdenney Exp $
+# $Id: batch-build.perl,v 1.8 2002-10-25 12:23:35 bdenney Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -42,6 +42,8 @@ $TEST_IODEV = 1;
 $TEST_PCI = 1;
 $TEST_X86_64 = 1;
 $TEST_SSE = 1;
+$TEST_PLUGINS = 1;
+$TEST_DEVICES = 1;
 
 $pwd = `pwd`;
 chop $pwd;
@@ -55,16 +57,57 @@ if ($TEST_STANDARD) {
   add_configuration ('dbg',
     '--enable-debugger');
 }
+
+if ($TEST_PLUGINS) {
+add_configuration ('plug',
+  '--enable-plugins');
+add_configuration ('plug-d',
+  '--enable-plugins --enable-debugger');
+add_configuration ('plug-allgui',
+  '--enable-plugins --with-all-libs');
+add_configuration ('plug-allgui-d',
+  '--enable-plugins --with-all-libs --enable-debugger');
+add_configuration ('plug-smp',
+  '--enable-plugins --enable-processors=2');
+add_configuration ('plug-smp-d',
+  '--enable-plugins --enable-processors=2 --enable-debugger');
+add_configuration ('plug-x86-64',
+  '--enable-plugins --enable-x86-64');
+add_configuration ('plug-wx',
+  '--enable-plugins --with-wx');
+}
+
+if ($TEST_DEVICES) {
+add_configuration ('alldev',
+  '--enable-ne2000 --enable-pci --enable-dc2300-vlb-ide --enable-port-e9-hack --enable-cdrom --enable-iodebug');
+add_configuration ('oldpit',
+  '--disable-new-pit');
+add_configuration ('rtpit',
+  '--enable-realtime-pit');
+add_configuration ('ne2000',
+  '--enable-ne2000');
+add_configuration ('pci',
+  '--enable-pci');
+add_configuration ('dc2300-vlb-ide',
+  '--enable-dc2300-vlb-ide');
+add_configuration ('port-e9-hack',
+  '--enable-port-e9-hack');
+add_configuration ('novga',
+  '--disable-vga');
+add_configuration ('cdrom',
+  '--enable-cdrom');
+add_configuration ('gdbstub',
+  '--enable-gdbstub');
+add_configuration ('iodebug',
+  '--enable-iodebug');
+}
+
 if ($TEST_GUIS) {
   # test with various gui options
   add_configuration ('wx',
     '--with-wx');
   add_configuration ('wx-d',
     '--with-wx --enable-debugger');
-  add_configuration ('nogui',
-    '--with-nogui');
-  add_configuration ('nogui-d',
-    '--with-nogui --enable-debugger');
   add_configuration ('sdl',
     '--with-sdl');
   add_configuration ('sdl-d',
@@ -77,6 +120,10 @@ if ($TEST_GUIS) {
     '--with-rfb');
   add_configuration ('rfb-d',
     '--with-rfb --enable-debugger');
+  add_configuration ('nogui',
+    '--with-nogui');
+  add_configuration ('nogui-d',
+    '--with-nogui --enable-debugger');
 }
 
 if ($TEST_CPU) {
@@ -101,8 +148,8 @@ add_configuration ('globalpg',
   '--enable-global-pages');
 add_configuration ('icache',
   '--enable-icache');
-add_configuration ('cpuopt',
-  '--enable-4meg-pages --enable-pae --enable-guest2host-tlb --enable-repeat-speedups --enable-global-pages --enable-icache');
+add_configuration ('cpuall',
+  '--enable-4meg-pages --enable-pae --enable-global-pages --enable-all-optimizations');
 }
 
 if ($TEST_SMP) {
@@ -111,10 +158,10 @@ add_configuration ('smp2',
   '--enable-processors=2');
 add_configuration ('smp2-d',
   '--enable-processors=2 --enable-debugger');
-add_configuration ('smp2-wx',
-  '--enable-processors=2 --with-wx');
-add_configuration ('smp2-wx-d',
-  '--enable-processors=2 --with-wx --enable-debugger');
+add_configuration ('smp4-wx',
+  '--enable-processors=4 --with-wx');
+add_configuration ('smp4-wx-d',
+  '--enable-processors=4 --with-wx --enable-debugger');
 }
 
 if ($TEST_X86_64) {
@@ -139,14 +186,6 @@ add_configuration ('sse2-dbg',
   '--enable-sse=2 --enable-debugger');
 add_configuration ('sse2-x86-64-wx-d',
   '--enable-sse=2 --enable-x86-64 --with-wx --enable-debugger');
-}
-
-if ($TEST_PCI) {
-# test pci
-add_configuration ('pci',
-  '--enable-pci');
-add_configuration ('pci-d',
-  '--enable-pci --enable-debugger');
 }
 
 my $nohup = 0;
