@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.10 2002-10-09 07:03:32 bdenney Exp $
+// $Id: main.cc,v 1.156.2.11 2002-10-17 17:29:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 	bx_gui->mouse_enabled_changed (val!=0);
 	// FIXME: while adding plugin support, I'm not going to bother
 	// with this function for now.
-        //bx_keyboard.mouse_enabled_changed (val!=0);
+	DEV_mouse_enabled_changed (val!=0);
       }
       break;
     case BXP_NE2K_VALID:
@@ -170,7 +170,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       break;
     case BXP_KBD_PASTE_DELAY:
       if ((set) && (SIM->get_init_done ())) {
-        BX_KBD_PASTE_DELAY_CHANGED ();
+        DEV_kbd_paste_delay_changed ();
         }
       break;
     case BXP_ATA0_MASTER_TYPE:

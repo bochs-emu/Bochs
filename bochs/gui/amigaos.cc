@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.8.4.3 2002-10-09 00:22:14 bdenney Exp $
+// $Id: amigaos.cc,v 1.8.4.4 2002-10-17 17:29:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -68,7 +68,7 @@ MyInputHandler(void)
         case IECODE_LBUTTON:
     	{
         	mouse_button_state |= 0x01;
-        	BX_EVENT_MOUSE_MOTION(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
         	
 			return NULL;
     	}
@@ -76,28 +76,28 @@ MyInputHandler(void)
     	case (IECODE_LBUTTON | IECODE_UP_PREFIX):
     	{
         	mouse_button_state &= ~0x01;
-        	BX_EVENT_MOUSE_MOTION(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
 			return NULL;
     	}
 
         case IECODE_RBUTTON:
     	{
             mouse_button_state |= 0x02;
-        	BX_EVENT_MOUSE_MOTION(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
 			return NULL;
     	}
 
     	case (IECODE_RBUTTON | IECODE_UP_PREFIX):
     	{
             mouse_button_state &= 0x01;
-        	BX_EVENT_MOUSE_MOTION(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
 			return NULL;
     	}
         }
 
         if (event->ie_Class == IECLASS_RAWMOUSE)
     	{
-        	BX_EVENT_MOUSE_MOTION(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
         	return NULL;
     	}
 
@@ -362,7 +362,7 @@ bx_amigaos_gui_c::handle_events(void)
             if(imCode >= 128)
              	key_event = raw_to_bochs[imCode-128] | BX_KEY_RELEASED;
             if(key_event)
-        		BX_EVENT_GEN_SCANCODE(key_event);
+        		DEV_kbd_gen_scancode(key_event);
      		break;
 
         case GADGETUP:

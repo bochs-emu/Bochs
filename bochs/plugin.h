@@ -181,16 +181,18 @@ extern "C" {
 
 extern class bx_keyb_stub_c *pluginKeyboard;
 
-#define BX_EVENT_MOUSE_MOTION(dx, dy, state) \
+#define DEV_mouse_motion(dx, dy, state) \
     (pluginKeyboard->mouse_motion(dx, dy, state))
-#define BX_EVENT_GEN_SCANCODE(scancode) \
+#define DEV_kbd_gen_scancode(scancode) \
     (pluginKeyboard->gen_scancode(scancode))
-#define BX_EVENT_PUT_SCANCODE(scancode, count) \
+#define DEV_kbd_put_scancode(scancode, count) \
     (pluginKeyboard->put_scancode(scancode, count))
-#define BX_KBD_PASTE_BYTES(bytes, count) \
+#define DEV_kbd_paste_bytes(bytes, count) \
     (pluginKeyboard->paste_bytes(bytes,count))
-#define BX_KBD_PASTE_DELAY_CHANGED() \
+#define DEV_kbd_paste_delay_changed() \
     (pluginKeyboard->paste_delay_changed())
+#define DEV_mouse_enabled_changed(val) \
+    (pluginKeyboard->mouse_enabled_changed(val))
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>

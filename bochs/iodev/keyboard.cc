@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.9 2002-10-17 16:16:42 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.10 2002-10-17 17:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,19 +55,19 @@
 #include "keyboard.h"
 #endif
 
-#define LOG_THIS  pluginKeyboard->
+#define LOG_THIS  theKeyboard->
 #define VERBOSE_KBD_DEBUG 0
 
-bx_keyb_c *theKeyboard;
 
 #if BX_PLUGINS
+bx_keyb_c *theKeyboard = NULL;
+
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
   // Before this plugin was loaded, pluginKeyboard pointed to a stub.
   // Now make it point to the real thing.
   theKeyboard = new bx_keyb_c ();
-  pluginKeyboard = theKeyboard;
   return(0); // Success
 }
 
@@ -79,7 +79,8 @@ plugin_fini(void)
 #else
 // When plugins are turned off, provide the pluginKeyboard pointer which every
 // other object will use to reference this object.
-bx_keyb_stub_c *pluginKeyboard = new bx_keyb_c ();
+bx_keyb_c *theKeyboard = new bx_keyb_c ();
+bx_keyb_stub_c *pluginKeyboard = NULL;
 
 // NOTE: It would be possible to put pluginKeyboard in plugin.cc all the time,
 // but when I did that I had a strange linking problem.  I tried to rely on the
@@ -98,6 +99,9 @@ bx_keyb_c::bx_keyb_c(void)
   // constructor
   put("KBD");
   settype(KBDLOG);
+  // install this object as the keyboard object, so that other devices
+  // will call our keyboard methods.
+  pluginKeyboard = this;
 #if BX_PLUGINS
   // Register plugin basic entry points
   BX_REGISTER_DEVICE_DEVMODEL (this, BX_PLUGIN_KEYBOARD);
@@ -141,7 +145,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.9 2002-10-17 16:16:42 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.10 2002-10-17 17:29:08 bdenney Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");
@@ -710,11 +714,11 @@ bx_keyb_c::service_paste_buf ()
     } else {
       BX_DEBUG (("pasting character 0x%02x. baseKey is %04x", byte, entry->baseKey));
       if (entry->modKey != BX_KEYMAP_UNKNOWN)
-        BX_EVENT_GEN_SCANCODE(entry->modKey);
-      BX_EVENT_GEN_SCANCODE(entry->baseKey);
-      BX_EVENT_GEN_SCANCODE(entry->baseKey | BX_KEY_RELEASED);
+        BX_KEY_THIS gen_scancode (entry->modKey);
+      BX_KEY_THIS gen_scancode (entry->baseKey);
+      BX_KEY_THIS gen_scancode (entry->baseKey | BX_KEY_RELEASED);
       if (entry->modKey != BX_KEYMAP_UNKNOWN)
-        BX_EVENT_GEN_SCANCODE(entry->modKey | BX_KEY_RELEASED);
+        BX_KEY_THIS gen_scancode (entry->modKey | BX_KEY_RELEASED);
     }
     BX_KEY_THIS pastebuf_ptr++;
   }
@@ -1547,11 +1551,11 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
 
 void
 bx_keyb_c::mouse_enabled_changed(bool enabled) {
-  if(BX_KEY_THIS s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy) {
+  if(s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy) {
     create_mouse_packet(1);
   }
-  BX_KEY_THIS s.mouse.delayed_dx=0;
-  BX_KEY_THIS s.mouse.delayed_dy=0;
+  s.mouse.delayed_dx=0;
+  s.mouse.delayed_dy=0;
   BX_DEBUG(("Keyboard mouse disable called."));
 }
 

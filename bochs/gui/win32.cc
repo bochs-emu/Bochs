@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.44.2.3 2002-10-09 00:22:14 bdenney Exp $
+// $Id: win32.cc,v 1.44.2.4 2002-10-17 17:29:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -684,19 +684,19 @@ void bx_win32_gui_c::handle_events(void) {
     QueueEvent* queue_event=deq_key_event();
     if ( ! queue_event)
       break;
-    // Bypass BX_EVENT_GEN_SCANCODE so we may enter
+    // Bypass DEV_kbd_gen_scancode so we may enter
     //  a scancode directly
-    // BX_EVENT_GEN_SCANCODE(deq_key_event());
+    // DEV_kbd_gen_scancode(deq_key_event());
     key = queue_event->key_event;
     if ( key==MOUSE_MOTION)
     {
-      BX_EVENT_MOUSE_MOTION( queue_event->mouse_x,
+      DEV_mouse_motion( queue_event->mouse_x,
         queue_event->mouse_y, queue_event->mouse_button_state);
     }
     // Check for mouse buttons first
     else if ( key & MOUSE_PRESSED) {
       // printf("# click!\n");
-      BX_EVENT_MOUSE_MOTION( 0, 0, LOWORD(key));
+      DEV_mouse_motion( 0, 0, LOWORD(key));
     }
     else if (key & HEADERBAR_CLICKED) {
       headerbar_click(LOWORD(key));
@@ -708,17 +708,17 @@ void bx_win32_gui_c::handle_events(void) {
         // This makes the "AltGr" key on European keyboards work
 	if (key==0x138) {
           scancode = 0x9d; // left control key released
-          BX_EVENT_PUT_SCANCODE(&scancode, 1);
+          DEV_kbd_put_scancode(&scancode, 1);
 	}
         // Its an extended key
         scancode = 0xE0;
-        BX_EVENT_PUT_SCANCODE(&scancode, 1);
+        DEV_kbd_put_scancode(&scancode, 1);
       }
       // Its a key
       scancode = LOBYTE(LOWORD(key));
       // printf("# key = %d, scancode = %d\n",key,scancode);
       if (key & BX_KEY_RELEASED) scancode |= 0x80;
-      BX_EVENT_PUT_SCANCODE(&scancode, 1);
+      DEV_kbd_put_scancode(&scancode, 1);
     }
   }
   LeaveCriticalSection(&stInfo.keyCS);

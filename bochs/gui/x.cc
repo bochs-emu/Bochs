@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49.2.7 2002-10-09 00:22:14 bdenney Exp $
+// $Id: x.cc,v 1.49.2.8 2002-10-17 17:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -827,7 +827,7 @@ send_keyboard_mouse_status(void)
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 
 //BX_INFO(("xxx: MOUSE_MOTION: dx=%d, dy=%d", (int) dx, (int) dy));
-    BX_EVENT_MOUSE_MOTION (dx, dy, mouse_button_state);
+    DEV_mouse_motion (dx, dy, mouse_button_state);
     //if (warped) {
     //  prev_x = current_x = -1;
     //  prev_y = current_y = -1;
@@ -1022,7 +1022,7 @@ xkeypress(KeySym keysym, int press_release)
   if (press_release)
     key_event |= BX_KEY_RELEASED;
 
-  BX_EVENT_GEN_SCANCODE(key_event);
+  DEV_kbd_gen_scancode(key_event);
 }
 
 

@@ -119,6 +119,16 @@ TO DO:
     one instance of the stub class lying around, which will be used if none of
     the implementation plugins is loaded.  Either an optional plugin or a
     user plugin can fill in these slots.
+  - make a list of plugins sorted into categories.
+    - required plugins
+      - pic
+      - cmos
+      - dma
+      - unmapped
+      - keyboard: because it has 6 functions that are reference by other
+        modules.
+    - optional: serial, parallel, floppy, vga, biosdev, cmos, harddrv
+  - add plugin load code as the module is needed.
 
 - how do we locate plugins on the disk?
   - fortunately, the LTDL library takes care of searching a list of paths.

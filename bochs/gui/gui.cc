@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.8 2002-10-10 04:58:54 bdenney Exp $
+// $Id: gui.cc,v 1.49.4.9 2002-10-17 17:29:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -387,7 +387,7 @@ bx_gui_c::paste_handler(void)
     return;
   }
   BX_INFO (("pasting %d bytes", nbytes));
-  BX_KBD_PASTE_BYTES(bytes, nbytes);
+  DEV_kbd_paste_bytes (bytes, nbytes);
 }
 
 
@@ -453,11 +453,11 @@ bx_gui_c::userbutton_handler(void)
       }
     i = 0;
     while (i < len) {
-      BX_EVENT_GEN_SCANCODE(shortcut[i++]);
+      DEV_kbd_gen_scancode(shortcut[i++]);
     }
     i--;
     while (i >= 0) {
-      BX_EVENT_GEN_SCANCODE(shortcut[i--] | BX_KEY_RELEASED);
+      DEV_kbd_gen_scancode(shortcut[i--] | BX_KEY_RELEASED);
     }
   }
 }

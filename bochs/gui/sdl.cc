@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.23.2.6 2002-10-09 00:22:14 bdenney Exp $
+// $Id: sdl.cc,v 1.23.2.7 2002-10-17 17:29:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -590,7 +590,7 @@ void bx_sdl_gui_c::handle_events(void)
 
       case SDL_MOUSEMOTION:
 	new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02));
-	BX_EVENT_MOUSE_MOTION(
+	DEV_mouse_motion(
 	    sdl_event.motion.xrel,
 	    -sdl_event.motion.yrel,
 	    new_mousebuttons );
@@ -634,7 +634,7 @@ void bx_sdl_gui_c::handle_events(void)
 	if( sdl_fullscreen_toggle == 0 )
 	  new_mousebuttons &= 0x03;
 	// send motion information
-	BX_EVENT_MOUSE_MOTION(
+	DEV_mouse_motion(
 	    new_mousex - old_mousex,
 	    -(new_mousey - old_mousey),
 	    new_mousebuttons );
@@ -665,7 +665,7 @@ void bx_sdl_gui_c::handle_events(void)
 	key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
 	BX_DEBUG (("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
 	if( key_event == BX_KEY_UNHANDLED ) break;
-	BX_EVENT_GEN_SCANCODE( key_event );
+	DEV_kbd_gen_scancode( key_event );
 	break;
 
       case SDL_KEYUP:
@@ -677,7 +677,7 @@ void bx_sdl_gui_c::handle_events(void)
 	  // convert sym->bochs code
 	  key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
 	  if( key_event == BX_KEY_UNHANDLED ) break;
-	  BX_EVENT_GEN_SCANCODE( key_event | BX_KEY_RELEASED );
+	  DEV_kbd_gen_scancode( key_event | BX_KEY_RELEASED );
 	}
 	break;
 

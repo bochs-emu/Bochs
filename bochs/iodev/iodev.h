@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.9 2002-10-10 13:10:52 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.10 2002-10-17 17:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,6 +120,9 @@ class bx_keyb_stub_c : public bx_devmodel_c {
   }
   virtual void paste_delay_changed () {
     STUBFUNC(keyboard, paste_delay_changed);
+  }
+  virtual void mouse_enabled_changed(bool enabled) {
+    STUBFUNC(keyboard, mouse_enabled_changed);
   }
 };
 

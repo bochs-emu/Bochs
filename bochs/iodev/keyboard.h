@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.17.4.4 2002-10-17 16:16:44 bdenney Exp $
+// $Id: keyboard.h,v 1.17.4.5 2002-10-17 17:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,11 +61,11 @@ public:
 
   // update the paste delay based on bx_options.Okeyboard_paste_delay
   virtual void     paste_delay_changed ();
+  virtual void     mouse_enabled_changed(bool enabled);
 
 private:
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
   BX_KEY_SMF void     service_paste_buf ();
-  BX_KEY_SMF void     mouse_enabled_changed(bool enabled);
   BX_KEY_SMF void     create_mouse_packet(bool force_enq);
   BX_KEY_SMF void     mouse_button(unsigned mouse_state);
   BX_KEY_SMF int      SaveState( class state_file *fd );

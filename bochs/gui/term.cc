@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.21.4.5 2002-10-09 00:22:14 bdenney Exp $
+// $Id: term.cc,v 1.21.4.6 2002-10-17 17:29:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -77,21 +77,21 @@ do_scan(int key_event, int shift, int ctrl, int alt)
 		  ctrl?"(ctrl)":"",
 		  alt?"(alt)":""));
 	if(shift)
-		BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L);
+		DEV_kbd_gen_scancode(BX_KEY_SHIFT_L);
 	if(ctrl)
-		BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L);
+		DEV_kbd_gen_scancode(BX_KEY_CTRL_L);
 	if(alt)
-		BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L);
-	BX_EVENT_GEN_SCANCODE(key_event);
+		DEV_kbd_gen_scancode(BX_KEY_ALT_L);
+	DEV_kbd_gen_scancode(key_event);
 	key_event |= BX_KEY_RELEASED;
 
-	BX_EVENT_GEN_SCANCODE(key_event);
+	DEV_kbd_gen_scancode(key_event);
 	if(alt)
-		BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L|BX_KEY_RELEASED);
+		DEV_kbd_gen_scancode(BX_KEY_ALT_L|BX_KEY_RELEASED);
 	if(ctrl)
-		BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L|BX_KEY_RELEASED);
+		DEV_kbd_gen_scancode(BX_KEY_CTRL_L|BX_KEY_RELEASED);
 	if(shift)
-		BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L|BX_KEY_RELEASED);
+		DEV_kbd_gen_scancode(BX_KEY_SHIFT_L|BX_KEY_RELEASED);
 }
 
 Bit32u 

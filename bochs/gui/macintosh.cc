@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.13.4.3 2002-10-09 00:22:14 bdenney Exp $
+// $Id: macintosh.cc,v 1.13.4.4 2002-10-17 17:29:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -394,11 +394,11 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
 	else
 	{		
 		if (event->modifiers & shiftKey)
-			BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L | keyState);
+			DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | keyState);
 		if (event->modifiers & controlKey)
-			BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L | keyState);
+			DEV_kbd_gen_scancode(BX_KEY_CTRL_L | keyState);
 		if (event->modifiers & optionKey)
-			BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L | keyState);
+			DEV_kbd_gen_scancode(BX_KEY_ALT_L | keyState);
 		
 		key = (event->message & keyCodeMask) >> 8;
 		
@@ -409,14 +409,14 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
 		// statement!
 		
 		if (trans > 0)
-			BX_EVENT_GEN_SCANCODE(trans | keyState);
+			DEV_kbd_gen_scancode(trans | keyState);
 
 		if (event->modifiers & shiftKey)
-			BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
+			DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
 		if (event->modifiers & controlKey)
-			BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+			DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
 		if (event->modifiers & optionKey)
-			BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L | BX_KEY_RELEASED);
+			DEV_kbd_gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
 	}		
 }
 
@@ -731,7 +731,7 @@ void bx_amigaos_gui_c::handle_events(void)
 		dx = mousePt.h - prevPt.h;
 		dy = prevPt.v - mousePt.v;
 		
-		BX_EVENT_MOUSE_MOTION(dx, dy, mouse_button_state);
+		DEV_mouse_motion(dx, dy, mouse_button_state);
 		
 		if (!cursorVisible)
 		{
