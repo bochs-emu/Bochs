@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.62 2002-09-16 17:00:16 bdenney Exp $
+// $Id: siminterface.cc,v 1.63 2002-09-17 04:47:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -615,6 +615,9 @@ bx_param_num_c::bx_param_num_c (bx_id id,
   this->val.number = initial_val;
   this->handler = NULL;
   this->base = default_base;
+  // dependent_list must be initialized before the set(),
+  // because set calls update_dependents().
+  dependent_list = NULL;
   set (initial_val);
 }
 
@@ -665,6 +668,16 @@ bx_param_num_c::set (Bit32s newval)
   }
   if (val.number < min || val.number > max) 
     BX_PANIC (("numerical parameter %s was set to %d, which is out of range %d to %d", get_name (), val.number, min, max));
+  if (dependent_list != NULL) update_dependents ();
+}
+
+void bx_param_num_c::update_dependents ()
+{
+  if (dependent_list) {
+    int en = val.number? 1 : 0;
+    for (int i=0; i<dependent_list->get_size (); i++)
+      dependent_list->get (i)->set_enabled (en);
+  }
 }
 
 bx_shadow_num_c::bx_shadow_num_c (bx_id id,
@@ -790,19 +803,7 @@ bx_param_bool_c::bx_param_bool_c (bx_id id,
   : bx_param_num_c (id, name, description, 0, 1, initial_val)
 {
   set_type (BXT_PARAM_BOOL);
-  // dependent_list must be initialized before the set(),
-  // because set calls update_dependents().
-  dependent_list = NULL;
   set (initial_val);
-}
-
-void bx_param_bool_c::update_dependents ()
-{
-  if (dependent_list) {
-    int en = val.number? 1 : 0;
-    for (int i=0; i<dependent_list->get_size (); i++)
-      dependent_list->get (i)->set_enabled (en);
-  }
 }
 
 bx_shadow_bool_c::bx_shadow_bool_c (bx_id id,

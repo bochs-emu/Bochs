@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.65 2002-09-16 15:28:18 bdenney Exp $
+// $Id: siminterface.h,v 1.66 2002-09-17 04:47:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -681,6 +681,12 @@ typedef Bit32s (*param_event_handler)(class bx_param_c *, int set, Bit32s val);
 
 class bx_param_num_c : public bx_param_c {
   static Bit32u default_base;
+  // The dependent_list is initialized to NULL.  If dependent_list is modified
+  // to point to a bx_list_c of other parameters, the set() method of
+  // bx_param_bool_c will enable those parameters when this bool is true, and
+  // disable them when this bool is false.
+  bx_list_c *dependent_list;
+  void update_dependents ();
 protected:
   Bit32s min, max, initial_val;
   union _uval_ {
@@ -699,6 +705,11 @@ public:
       Bit32s min, Bit32s max, Bit32s initial_val);
   void reset ();
   void set_handler (param_event_handler handler);
+  bx_list_c *get_dependent_list () { return dependent_list; }
+  void set_dependent_list (bx_list_c *l) {
+    dependent_list = l; 
+    update_dependents ();
+  }
   virtual Bit32s get ();
   virtual void set (Bit32s val);
   void set_base (int base) { this->base = base; }
@@ -758,23 +769,11 @@ class bx_param_bool_c : public bx_param_num_c {
   // many boolean variables are used to enable/disable modules.  In the
   // user interface, the enable variable should enable/disable all the
   // other parameters associated with that module.
-  // The dependent_list is initialized to NULL.  If dependent_list is modified
-  // to point to a bx_list_c of other parameters, the set() method of
-  // bx_param_bool_c will enable those parameters when this bool is true, and
-  // disable them when this bool is false.
-  bx_list_c *dependent_list;
-  void update_dependents ();
 public:
   bx_param_bool_c (bx_id id, 
       char *name,
       char *description,
       Bit32s initial_val);
-  bx_list_c *get_dependent_list () { return dependent_list; }
-  void set_dependent_list (bx_list_c *l) {
-    dependent_list = l; 
-    update_dependents ();
-  }
-  void set (Bit32s val) { bx_param_num_c::set (val); update_dependents (); }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
