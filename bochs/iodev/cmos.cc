@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.36 2003-01-05 21:40:07 vruppert Exp $
+// $Id: cmos.cc,v 1.37 2003-04-25 21:48:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,6 +65,15 @@ bx_cmos_c *theCmosDevice = NULL;
 #define  REG_IBM_CENTURY_BYTE        0x32  /* alternatives */
 #define  REG_IBM_PS2_CENTURY_BYTE    0x37  /* alternatives */
 
+// Bochs CMOS map (to be completed)
+//
+// Idx  Len   Description
+// 0x15   2   Base memory in 1k
+// 0x17   2   Memory size above 1M in 1k
+// 0x30   2   Memory size above 1M in 1k
+// 0x34   2   Memory size above 16M in 64k
+//
+
 // check that BX_NUM_CMOS_REGS is 64 or 128
 #if (BX_NUM_CMOS_REGS == 64)
 #elif (BX_NUM_CMOS_REGS == 128)
@@ -109,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.36 2003-01-05 21:40:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.37 2003-04-25 21:48:11 cbothamy Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
