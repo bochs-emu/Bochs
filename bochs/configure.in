@@ -6,7 +6,7 @@ AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="1.2.cvs"
+VERSION="1.3.cvs"
 VER_STRING="cvs-snapshot"
 REL_STRING=""
 
