@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.69 2002-10-16 14:04:41 cbothamy Exp $
+// $Id: rombios.c,v 1.70 2002-10-19 17:08:17 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -133,11 +133,11 @@
 #define DEBUG_ROMBIOS      0
 
 #define DEBUG_ATA          0
-#define DEBUG_INT13_HD     1
+#define DEBUG_INT13_HD     0
 #define DEBUG_INT13_CD     0
 #define DEBUG_INT13_ET     0
 #define DEBUG_INT13_FL     0
-#define DEBUG_INT15        0
+#define DEBUG_INT15        1
 #define DEBUG_INT16        0
 #define DEBUG_INT74        0
 
@@ -764,6 +764,30 @@ typedef struct {
   } pusha_regs_t;
 
 typedef struct {
+ union {
+  struct {
+    Bit32u edi, esi, ebp, esp;
+    Bit32u ebx, edx, ecx, eax;
+    } r32;
+  struct {
+    Bit16u di, filler1, si, filler2, bp, filler3, sp, filler4;
+    Bit16u bx, filler5, dx, filler6, cx, filler7, ax, filler8;
+    } r16;
+  struct {
+    Bit32u filler[4];
+    Bit8u  bl, bh; 
+    Bit16u filler1;
+    Bit8u  dl, dh; 
+    Bit16u filler2;
+    Bit8u  cl, ch;
+    Bit16u filler3;
+    Bit8u  al, ah;
+    Bit16u filler4;
+    } r8;
+  } u;
+} pushad_regs_t;
+
+typedef struct {
   union {
     struct {
       Bit16u flags;
@@ -881,10 +905,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.69 $";
-static char bios_date_string[] = "$Date: 2002-10-16 14:04:41 $";
+static char bios_cvs_version_string[] = "$Revision: 1.70 $";
+static char bios_date_string[] = "$Date: 2002-10-19 17:08:17 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.69 2002-10-16 14:04:41 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.70 2002-10-19 17:08:17 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3042,15 +3066,14 @@ int14_function(regs, ds, iret_addr)
 }
 
   void
-int15_function(EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX, ES, DS, FLAGS)
-  Bit32u EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX;
+int15_function(regs, ES, DS, FLAGS)
+  pushad_regs_t regs; // REGS pushed via pushad
   Bit16u ES, DS, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit8u  mouse_flags_1, mouse_flags_2;
   Bit16u mouse_driver_seg;
   Bit16u mouse_driver_offset;
-  Bit8u  in_byte;
   Bit8u  response, prev_command_byte;
   Boolean prev_a20_enable;
   Bit16u  base15_00;
@@ -3058,40 +3081,32 @@ int15_function(EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX, ES, DS, FLAGS)
   Bit16u  ss;
   Bit8u   ret, mouse_data1, mouse_data2, mouse_data3;
   Bit8u   comm_byte, mf2_state;
-  Bit32u extended_memory_size=0; // 64bits long
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX;
-  DI = EDI;
-  SI = ESI;
-  BP = EBP;
-  SP = ESP;
-  BX = EBX;
-  DX = EDX;
-  CX = ECX;
-  AX = EAX;
+  Bit32u  extended_memory_size=0; // 64bits long
+  Bit16u  CX;
 
-BX_DEBUG_INT15("int15 AX=%04x\n",AX);
+BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
 
-  switch (GET_AH()) {
+  switch (regs.u.r8.ah) {
     case 0x24: /* A20 Control */
-      BX_INFO("int15: Func 24h, subfunc %02xh, A20 gate control not supported\n", (unsigned) GET_AL());
+      BX_INFO("int15: Func 24h, subfunc %02xh, A20 gate control not supported\n", (unsigned) regs.u.r8.al);
       SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
       break;
 
     case 0x41:
       SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
       break;
 
     case 0x4f:
       /* keyboard intercept */
 #if BX_CPU < 2
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
 #else
-      if (GET_AL() == 0xE0) {
+      if (regs.u.r8.al == 0xE0) {
 	mf2_state = read_byte(0x0040, 0x96);
 	write_byte(0x0040, 0x96, mf2_state | 0x01);
-	SET_AL(inb(0x60));
+	regs.u.r8.al = inb(0x60);
 	}
 #endif
       SET_CF();
@@ -3099,7 +3114,7 @@ BX_DEBUG_INT15("int15 AX=%04x\n",AX);
 
     case 0x52:    // removable media eject
       CLEAR_CF();
-      SET_AH(0);  // "ok ejection may proceed"
+      regs.u.r8.ah = 0;  // "ok ejection may proceed"
       break;
 
     case 0x87:
@@ -3134,33 +3149,34 @@ BX_DEBUG_INT15("int15 AX=%04x\n",AX);
 // check for access rights of source & dest here
 
       // Initialize GDT descriptor
-      base15_00 = (ES << 4) + SI;
+      base15_00 = (ES << 4) + regs.u.r16.si;
       base23_16 = ES >> 12;
       if (base15_00 < (ES<<4))
         base23_16++;
-      write_word(ES, SI+0x08+0, 47);       // limit 15:00 = 6 * 8bytes/descriptor
-      write_word(ES, SI+0x08+2, base15_00);// base 15:00
-      write_byte(ES, SI+0x08+4, base23_16);// base 23:16
-      write_byte(ES, SI+0x08+5, 0x93);     // access
-      write_word(ES, SI+0x08+6, 0x0000);   // base 31:24/reserved/limit 19:16
+      write_word(ES, regs.u.r16.si+0x08+0, 47);       // limit 15:00 = 6 * 8bytes/descriptor
+      write_word(ES, regs.u.r16.si+0x08+2, base15_00);// base 15:00
+      write_byte(ES, regs.u.r16.si+0x08+4, base23_16);// base 23:16
+      write_byte(ES, regs.u.r16.si+0x08+5, 0x93);     // access
+      write_word(ES, regs.u.r16.si+0x08+6, 0x0000);   // base 31:24/reserved/limit 19:16
 
       // Initialize CS descriptor
-      write_word(ES, SI+0x20+0, 0xffff);// limit 15:00 = normal 64K limit
-      write_word(ES, SI+0x20+2, 0x0000);// base 15:00
-      write_byte(ES, SI+0x20+4, 0x000f);// base 23:16
-      write_byte(ES, SI+0x20+5, 0x9b);  // access
-      write_word(ES, SI+0x20+6, 0x0000);// base 31:24/reserved/limit 19:16
+      write_word(ES, regs.u.r16.si+0x20+0, 0xffff);// limit 15:00 = normal 64K limit
+      write_word(ES, regs.u.r16.si+0x20+2, 0x0000);// base 15:00
+      write_byte(ES, regs.u.r16.si+0x20+4, 0x000f);// base 23:16
+      write_byte(ES, regs.u.r16.si+0x20+5, 0x9b);  // access
+      write_word(ES, regs.u.r16.si+0x20+6, 0x0000);// base 31:24/reserved/limit 19:16
 
       // Initialize SS descriptor
       ss = get_SS();
       base15_00 = ss << 4;
       base23_16 = ss >> 12;
-      write_word(ES, SI+0x28+0, 0xffff);   // limit 15:00 = normal 64K limit
-      write_word(ES, SI+0x28+2, base15_00);// base 15:00
-      write_byte(ES, SI+0x28+4, base23_16);// base 23:16
-      write_byte(ES, SI+0x28+5, 0x93);     // access
-      write_word(ES, SI+0x28+6, 0x0000);   // base 31:24/reserved/limit 19:16
+      write_word(ES, regs.u.r16.si+0x28+0, 0xffff);   // limit 15:00 = normal 64K limit
+      write_word(ES, regs.u.r16.si+0x28+2, base15_00);// base 15:00
+      write_byte(ES, regs.u.r16.si+0x28+4, base23_16);// base 23:16
+      write_byte(ES, regs.u.r16.si+0x28+5, 0x93);     // access
+      write_word(ES, regs.u.r16.si+0x28+6, 0x0000);   // base 31:24/reserved/limit 19:16
 
+      CX = regs.u.r16.cx;
 ASM_START
       // Compile generates locals offset info relative to SP.
       // Get CX (word count) from stack.
@@ -3227,23 +3243,21 @@ real_mode:
 ASM_END
 
       set_enable_a20(prev_a20_enable);
-      SET_AH(0);
+      regs.u.r8.ah = 0;
       CLEAR_CF();
       break;
 
 
     case 0x88: /* extended memory size */
 #if BX_CPU < 2
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
       SET_CF();
 #else
       /* ??? change this back later... */
       /* number of 1K blocks of extended memory, subtract off 1st 1Meg */
       // AX = bx_mem.get_memory_in_k() - 1024;
-      in_byte = inb_cmos(0x30);
-      SET_AL(in_byte);
-      in_byte = inb_cmos(0x31);
-      SET_AH(in_byte);
+      regs.u.r8.al = inb_cmos(0x30);
+      regs.u.r8.ah = inb_cmos(0x31);
       CLEAR_CF();
 #endif
       break;
@@ -3259,18 +3273,18 @@ ASM_END
     case 0xbf:
       BX_INFO("*** int 15h function AH=bf not yet supported!\n");
       SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
       break;
 
     case 0xC0:
 #if 0
       SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
       break;
 #endif
       CLEAR_CF();
-      SET_AH(0);
-      BX =  BIOS_CONFIG_TABLE;
+      regs.u.r8.ah = 0;
+      regs.u.r16.bx =  BIOS_CONFIG_TABLE;
       ES = 0xF000;
       break;
 
@@ -3280,7 +3294,7 @@ ASM_END
       CLEAR_CF();
 #else
       SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
 #endif
       break;
 
@@ -3298,12 +3312,12 @@ ASM_END
 
 #if BX_USE_PS2_MOUSE < 1
       SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
 #else
-      switch (GET_AL()) {
+      switch (regs.u.r8.al) {
         case 0: // Disable/Enable Mouse
 BX_DEBUG_INT15("case 0:\n");
-          switch (GET_BH()) {
+          switch (regs.u.r8.bh) {
             case 0: // Disable Mouse
 BX_DEBUG_INT15("case 0: disable mouse\n");
               inhibit_mouse_int_and_events(); // disable IRQ12 and packets
@@ -3312,46 +3326,14 @@ BX_DEBUG_INT15("case 0: disable mouse\n");
                 ret = get_mouse_data(&mouse_data1);
                 if ( (ret == 0) || (mouse_data1 == 0xFA) ) {
                   CLEAR_CF();
-                  SET_AH(0);
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+                  regs.u.r8.ah = 0;
                   return;
                   }
                 }
 
               // error
               SET_CF();
-              SET_AH(ret);
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+              regs.u.r8.ah = ret;
               return;
               break;
 
@@ -3361,23 +3343,7 @@ BX_DEBUG_INT15("case 1: enable mouse\n");
               if ( (mouse_flags_2 & 0x80) == 0 ) {
                 BX_DEBUG_INT15("INT 15h C2 Enable Mouse, no far call handler\n");
                 SET_CF();  // error
-                SET_AH(5); // no far call installed
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+                regs.u.r8.ah = 5; // no far call installed
                 return;
                 }
               inhibit_mouse_int_and_events(); // disable IRQ12 and packets
@@ -3387,66 +3353,18 @@ BX_DEBUG_INT15("case 1: enable mouse\n");
                 if ( (ret == 0) && (mouse_data1 == 0xFA) ) {
                   enable_mouse_int_and_events(); // turn IRQ12 and packet generation on
                   CLEAR_CF();
-                  SET_AH(0);
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+                  regs.u.r8.ah = 0;
                   return;
                   }
                 }
               SET_CF();
-              SET_AH(ret);
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+              regs.u.r8.ah = ret;
               return;
 
             default: // invalid subfunction
-              BX_DEBUG_INT15("INT 15h C2 AL=0, BH=%02x\n", (unsigned) GET_BH());
+              BX_DEBUG_INT15("INT 15h C2 AL=0, BH=%02x\n", (unsigned) regs.u.r8.bh);
               SET_CF();  // error
-              SET_AH(1); // invalid subfunction
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+              regs.u.r8.ah = 1; // invalid subfunction
               return;
             }
           break;
@@ -3454,11 +3372,11 @@ BX_DEBUG_INT15("case 1: enable mouse\n");
         case 1: // Reset Mouse
         case 5: // Initialize Mouse
 BX_DEBUG_INT15("case 1 or 5:\n");
-          if (GET_AL() == 5) {
-            if (GET_BH() != 3)
-              BX_PANIC("INT 15h C2 AL=5, BH=%02x\n", (unsigned) GET_BH());
+          if (regs.u.r8.al == 5) {
+            if (regs.u.r8.bh != 3)
+              BX_PANIC("INT 15h C2 AL=5, BH=%02x\n", (unsigned) regs.u.r8.bh);
             mouse_flags_2 = read_byte(ebda_seg, 0x0027);
-            mouse_flags_2 = (mouse_flags_2 & 0x00) | GET_BH();
+            mouse_flags_2 = (mouse_flags_2 & 0x00) | regs.u.r8.bh;
             mouse_flags_1 = 0x00;
             write_byte(ebda_seg, 0x0026, mouse_flags_1);
             write_byte(ebda_seg, 0x0027, mouse_flags_2);
@@ -3478,25 +3396,9 @@ BX_DEBUG_INT15("case 1 or 5:\n");
                   // turn IRQ12 and packet generation on
                   enable_mouse_int_and_events();
                   CLEAR_CF();
-                  SET_AH(0);
-                  SET_BL(mouse_data1);
-                  SET_BH(mouse_data2);
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+                  regs.u.r8.ah = 0;
+                  regs.u.r8.bl = mouse_data1;
+                  regs.u.r8.bh = mouse_data2;
                   return;
                   }
                 }
@@ -3505,28 +3407,12 @@ BX_DEBUG_INT15("case 1 or 5:\n");
 
           // error
           SET_CF();
-          SET_AH(ret);
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
+          regs.u.r8.ah = ret;
           return;
 
         case 2: // Set Sample Rate
 BX_DEBUG_INT15("case 2:\n");
-          switch (GET_BH()) {
+          switch (regs.u.r8.bh) {
             case 0: //  10 reports/sec
             case 1: //  20 reports/sec
             case 2: //  40 reports/sec
@@ -3535,10 +3421,10 @@ BX_DEBUG_INT15("case 2:\n");
             case 5: // 100 reports/sec (default)
             case 6: // 200 reports/sec
               CLEAR_CF();
-              SET_AH(0);
+              regs.u.r8.ah = 0;
               break;
             default:
-              BX_PANIC("INT 15h C2 AL=2, BH=%02x\n", (unsigned) GET_BH());
+              BX_PANIC("INT 15h C2 AL=2, BH=%02x\n", (unsigned) regs.u.r8.bh);
             }
           break;
 
@@ -3550,19 +3436,19 @@ BX_DEBUG_INT15("case 3:\n");
           //      2 = 100 dpi, 4 counts per millimeter
           //      3 = 200 dpi, 8 counts per millimeter
           CLEAR_CF();
-          SET_AH(0);
+          regs.u.r8.ah = 0;
           break;
 
         case 4: // Get Device ID
 BX_DEBUG_INT15("case 4:\n");
           CLEAR_CF();
-          SET_AH(0);
-          SET_BH(0);
+          regs.u.r8.ah = 0;
+          regs.u.r8.bh = 0;
           break;
 
         case 6: // Return Status & Set Scaling Factor...
 BX_DEBUG_INT15("case 6:\n");
-          switch (GET_BH()) {
+          switch (regs.u.r8.bh) {
             case 0: // Return Status
               comm_byte = inhibit_mouse_int_and_events(); // disable IRQ12 and packets
               ret = send_to_mouse_ctrl(0xE9); // get mouse info command
@@ -3578,27 +3464,11 @@ BX_DEBUG_INT15("case 6:\n");
                       ret = get_mouse_data(&mouse_data3);
                       if ( ret == 0 ) {
                         CLEAR_CF();
-                        SET_AH(0);
-                        SET_BL(mouse_data1);
-                        SET_CL(mouse_data2);
-                        SET_DL(mouse_data3);
+                        regs.u.r8.ah = 0;
+                        regs.u.r8.bl = mouse_data1;
+                        regs.u.r8.cl = mouse_data2;
+                        regs.u.r8.dl = mouse_data3;
                         set_kbd_command_byte(comm_byte); // restore IRQ12 and serial enable
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
                         return;
                         }
                       }
@@ -3608,82 +3478,66 @@ BX_DEBUG_INT15("case 6:\n");
 
               // error
               SET_CF();
-              SET_AH(ret);
+              regs.u.r8.ah = ret;
               set_kbd_command_byte(comm_byte); // restore IRQ12 and serial enable
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
               return;
 
             case 1: // Set Scaling Factor to 1:1
               CLEAR_CF();
-              SET_AH(0);
+              regs.u.r8.ah = 0;
               break;
 
             default:
-              BX_PANIC("INT 15h C2 AL=6, BH=%02x\n", (unsigned) GET_BH());
+              BX_PANIC("INT 15h C2 AL=6, BH=%02x\n", (unsigned) regs.u.r8.bh);
             }
           break;
 
         case 7: // Set Mouse Handler Address
 BX_DEBUG_INT15("case 7:\n");
           mouse_driver_seg = ES;
-          mouse_driver_offset = BX;
+          mouse_driver_offset = regs.u.r16.bx;
           write_word(ebda_seg, 0x0022, mouse_driver_offset);
           write_word(ebda_seg, 0x0024, mouse_driver_seg);
           mouse_flags_2 = read_byte(ebda_seg, 0x0027);
           mouse_flags_2 |= 0x80;
           write_byte(ebda_seg, 0x0027, mouse_flags_2);
           CLEAR_CF();
-          SET_AH(0);
+          regs.u.r8.ah = 0;
           break;
 
         default:
 BX_DEBUG_INT15("case default:\n");
-          SET_AH(1); // invalid function
+          regs.u.r8.ah = 1; // invalid function
           SET_CF();
         }
 #endif
       break;
 
     case 0xe8:
-        switch(GET_AL())
+        switch(regs.u.r8.al)
         {
          case 0x20: // coded by osmaker aka K.J.
-            if(EDX == 0x534D4150)
+            if(regs.u.r32.edx == 0x534D4150)
             {
-                switch(BX)
+                switch(regs.u.r16.bx)
                 {
                     case 0:
-                        write_word(ES, DI, 0x00);
-                        write_word(ES, DI+2, 0x00);
-                        write_word(ES, DI+4, 0x00);
-                        write_word(ES, DI+6, 0x00);
+                        write_word(ES, regs.u.r16.di, 0x00);
+                        write_word(ES, regs.u.r16.di+2, 0x00);
+                        write_word(ES, regs.u.r16.di+4, 0x00);
+                        write_word(ES, regs.u.r16.di+6, 0x00);
 
-                        write_word(ES, DI+8, 0xFC00);
-                        write_word(ES, DI+10, 0x0009);
-                        write_word(ES, DI+12, 0x0000);
-                        write_word(ES, DI+14, 0x0000);
+                        write_word(ES, regs.u.r16.di+8, 0xFC00);
+                        write_word(ES, regs.u.r16.di+10, 0x0009);
+                        write_word(ES, regs.u.r16.di+12, 0x0000);
+                        write_word(ES, regs.u.r16.di+14, 0x0000);
 
-                        write_word(ES, DI+16, 0x1);
-                        write_word(ES, DI+18, 0x0);
+                        write_word(ES, regs.u.r16.di+16, 0x1);
+                        write_word(ES, regs.u.r16.di+18, 0x0);
 
-                        EBX = 1;
-                        EAX = 0x534D4150;
-                        ECX = 0x14;
+                        regs.u.r32.ebx = 1;
+                        regs.u.r32.eax = 0x534D4150;
+                        regs.u.r32.ecx = 0x14;
                         CLEAR_CF();
                         return;
                         break;
@@ -3707,25 +3561,25 @@ BX_DEBUG_INT15("case default:\n");
                             extended_memory_size *= 1024;
                         }
 
-                        write_word(ES, DI, 0x0000);
-                        write_word(ES, DI+2, 0x0010);
-                        write_word(ES, DI+4, 0x0000);
-                        write_word(ES, DI+6, 0x0000);
+                        write_word(ES, regs.u.r16.di, 0x0000);
+                        write_word(ES, regs.u.r16.di+2, 0x0010);
+                        write_word(ES, regs.u.r16.di+4, 0x0000);
+                        write_word(ES, regs.u.r16.di+6, 0x0000);
 
-                        write_word(ES, DI+8, extended_memory_size);
+                        write_word(ES, regs.u.r16.di+8, extended_memory_size);
                         extended_memory_size >>= 16;
-                        write_word(ES, DI+10, extended_memory_size);
+                        write_word(ES, regs.u.r16.di+10, extended_memory_size);
                         extended_memory_size >>= 16;
-                        write_word(ES, DI+12, extended_memory_size);
+                        write_word(ES, regs.u.r16.di+12, extended_memory_size);
                         extended_memory_size >>= 16;
-                        write_word(ES, DI+14, extended_memory_size);
+                        write_word(ES, regs.u.r16.di+14, extended_memory_size);
 
-                        write_dword(ES, DI+16, 0x1);
-                        write_word(ES, DI+18, 0x0);
+                        write_dword(ES, regs.u.r16.di+16, 0x1);
+                        write_word(ES, regs.u.r16.di+18, 0x0);
 
-                        EBX = 0;
-                        EAX = 0x534D4150;
-                        ECX = 0x14;
+                        regs.u.r32.ebx = 0;
+                        regs.u.r32.eax = 0x534D4150;
+                        regs.u.r32.ecx = 0x14;
                         CLEAR_CF();
                         return;
                         break;
@@ -3737,48 +3591,30 @@ BX_DEBUG_INT15("case default:\n");
             break;
 
         case 0x01: // coded by Hartmut Birr
-          in_byte = inb_cmos(0x34);
-          SET_AL(in_byte);
-          in_byte = inb_cmos(0x35);
-          SET_AH(in_byte);
-          if(AX)
+          regs.u.r8.al = inb_cmos(0x34);
+          regs.u.r8.ah = inb_cmos(0x35);
+          if(regs.u.r16.ax)
           {
-            BX = AX;
-            AX = 0x3c00;
-            CX = AX;
-            DX = BX;
+            regs.u.r16.bx = regs.u.r16.ax;
+            regs.u.r16.ax = 0x3c00;
+            regs.u.r16.cx = regs.u.r16.ax;
+            regs.u.r16.dx = regs.u.r16.bx;
             CLEAR_CF();
             break;
           }
-          SET_AH(0xe8);
-          SET_AL(0x01);
+          regs.u.r8.ah = 0xe8;
+          regs.u.r8.al = 0x01;
           break;
        }
        break;
 
     default:
       BX_INFO("*** int 15h function AX=%04x, BX=%04x not yet supported!\n",
-        (unsigned) AX, (unsigned) BX);
+        (unsigned) regs.u.r16.ax, (unsigned) regs.u.r16.bx);
       SET_CF();
-      SET_AH(UNSUPPORTED_FUNCTION);
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
       break;
     }
-  EDI &= 0xFFFF0000;
-  ESI &= 0xFFFF0000;
-  EBP &= 0xFFFF0000;
-  ESP &= 0xFFFF0000;
-  EBX &= 0xFFFF0000;
-  EDX &= 0xFFFF0000;
-  ECX &= 0xFFFF0000;
-  EAX &= 0xFFFF0000;
-  EDI |= DI;
-  ESI |= SI;
-  EBP |= BP;
-  ESP |= SP;
-  EBX |= BX;
-  EDX |= DX;
-  ECX |= CX;
-  EAX |= AX;
 }
 
 
