@@ -251,7 +251,7 @@ public:
  *      register and any of the following values: a base register, an
  *      index register, a scaling factor, and a displacement.
  * X  - Memory addressed by the DS:rSI register pair.
- * Y  - Memory addressed by the DS:rDI register pair.
+ * Y  - Memory addressed by the ES:rDI register pair.
  */   
 
 /* 
@@ -265,16 +265,16 @@ public:
  * dq - Double-quadword, regardless of operand-size attribute.
  * p  - 32-bit or 48-bit pointer, depending on operand-size attribute.
  * pd - 128-bit packed double-precision floating-point data.
- * pi - Quadword MMX technology register (e.g. mm0)
+ * pi - Quadword MMX technology register (packed integer)
  * ps - 128-bit packed single-precision floating-point data.
  * q  - Quadword, regardless of operand-size attribute.
  * s  - 6-byte or 10-byte pseudo-descriptor.
+ * si - Doubleword integer register (scalar integer)
  * ss - Scalar element of a 128-bit packed single-precision floating data.
  * sd - Scalar element of a 128-bit packed double-precision floating data.
- * si - Doubleword integer register (e.g., eax)
  * v  - Word, doubleword or quadword, depending on operand-size attribute.
  * w  - Word, regardless of operand-size attribute.
- * w  - A word if the effective operand size is 16 bits, or a doubleword 
+ * z  - A word if the effective operand size is 16 bits, or a doubleword 
  *      if the effective operand size is 32 or 64 bits.
  */
 
@@ -308,10 +308,6 @@ public:
  // string instructions
  void OP_X (unsigned);
  void OP_Y (unsigned);
-
- // string instructions (ES based)
- void OP_Xe(unsigned);
- void OP_Ye(unsigned);
 
  // mmx/xmm
  void OP_P (unsigned);

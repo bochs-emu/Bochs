@@ -119,13 +119,9 @@ struct BxDisasmOpcodeInfo_t
 
  // string instructions
 #define Xb  &disassembler::OP_X,  B_MODE
-#define Xbe &disassembler::OP_Xe, B_MODE
 #define Yb  &disassembler::OP_Y,  B_MODE
-#define Ybe &disassembler::OP_Ye, B_MODE
 #define Xv  &disassembler::OP_X,  V_MODE
-#define Xve &disassembler::OP_Xe, V_MODE
 #define Yv  &disassembler::OP_Y,  V_MODE
-#define Yve &disassembler::OP_Ye, V_MODE
 
  // immediate
 #define I1 &disassembler::I1, 0
@@ -2312,18 +2308,18 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* A1 */  { "mov",       0, eAX,  Ov, XX },
   /* A2 */  { "mov",       0,  Ob,  AL, XX },
   /* A3 */  { "mov",       0,  Ov, eAX, XX },
-  /* A4 */  { "movsb",     0, Ybe,  Xb, XX },
-  /* A5 */  { "movs",      0, Yve,  Xv, XX },
-  /* A6 */  { "cmpsb",     0, Ybe,  Xb, XX },
-  /* A7 */  { "cmps",      0, Yve,  Xv, XX },
+  /* A4 */  { "movsb",     0,  Yb,  Xb, XX },
+  /* A5 */  { "movs",      0,  Yv,  Xv, XX },
+  /* A6 */  { "cmpsb",     0,  Yb,  Xb, XX },
+  /* A7 */  { "cmps",      0,  Yv,  Xv, XX },
   /* A8 */  { "test",      0,  AL,  Ib, XX },
   /* A9 */  { "test",      0, eAX,  Iv, XX },
-  /* AA */  { "stosb",     0, Ybe,  AL, XX },
-  /* AB */  { "stos",      0, Yve, eAX, XX },
+  /* AA */  { "stosb",     0,  Yb,  AL, XX },
+  /* AB */  { "stos",      0,  Yv, eAX, XX },
   /* AC */  { "lodsb",     0,  AL,  Xb, XX },
   /* AD */  { "lods",      0, eAX,  Xv, XX },
-  /* AE */  { "scasb",     0, Ybe,  AL, XX },
-  /* AF */  { "scas",      0, Yve, eAX, XX },
+  /* AE */  { "scasb",     0,  Yb,  AL, XX },
+  /* AF */  { "scas",      0,  Yv, eAX, XX },
   /* B0 */  { "mov",       0,  AL,  Ib, XX },
   /* B1 */  { "mov",       0,  CL,  Ib, XX },
   /* B2 */  { "mov",       0,  DL,  Ib, XX },

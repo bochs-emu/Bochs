@@ -100,46 +100,7 @@ void disassembler::OP_X (unsigned attr)
     dis_sprintf("%s:(%s)", seg, esi);
 }
 
-void disassembler::OP_Xe (unsigned attr)
-{
-  const char *esi;
-
-  if (i32bit_addrsize)
-    esi = general_32bit_reg_name[eSI_REG];
-  else
-    esi = general_16bit_reg_name[eSI_REG];
-  
-  print_datasize(attr);
-
-  if (intel_mode)
-    dis_sprintf("%s:[%s]", segment_name[ES_REG], esi);
-  else
-    dis_sprintf("%s:(%s)", segment_name[ES_REG], esi);
-}
-
 void disassembler::OP_Y (unsigned attr)
-{
-  const char *edi, *seg;
-
-  if (i32bit_addrsize)
-    edi = general_32bit_reg_name[eDI_REG];
-  else
-    edi = general_16bit_reg_name[eDI_REG];
-  
-  if (seg_override)
-    seg = seg_override;
-  else
-    seg = segment_name[DS_REG];
-
-  print_datasize(attr);
-
-  if (intel_mode)
-    dis_sprintf("%s:[%s]", seg, edi);
-  else
-    dis_sprintf("%s:(%s)", seg, edi);
-}
-
-void disassembler::OP_Ye (unsigned attr)
 {
   const char *edi;
 
