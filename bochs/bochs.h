@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.106 2002-11-03 17:17:09 vruppert Exp $
+// $Id: bochs.h,v 1.107 2002-11-11 17:09:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -510,6 +510,10 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 
 #if ( BX_PROVIDE_DEVICE_MODELS==1 )
 BOCHSAPI extern bx_devices_c   bx_devices;
+#endif
+
+#if BX_GUI_SIGHANDLER
+extern bx_bool bx_gui_sighandler;
 #endif
 
 // This value controls how often each I/O device's periodic() method

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.55 2002-11-09 06:41:34 vruppert Exp $
+// $Id: gui.cc,v 1.56 2002-11-11 17:09:57 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -497,11 +497,14 @@ void
 bx_gui_c::init_signal_handlers ()
 {
 #if BX_GUI_SIGHANDLER
-  Bit32u mask = bx_gui->get_sighandler_mask ();
-  for (Bit32u sig=0; sig<32; sig++)
+  if (bx_gui_sighandler) 
   {
-    if (mask & (1<<sig))
-      signal (sig, bx_signal_handler);
+    Bit32u mask = bx_gui->get_sighandler_mask ();
+    for (Bit32u sig=0; sig<32; sig++)
+    {
+      if (mask & (1<<sig))
+        signal (sig, bx_signal_handler);
+    }
   }
 #endif
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.176 2002-11-09 20:51:39 vruppert Exp $
+// $Id: main.cc,v 1.177 2002-11-11 17:09:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -57,6 +57,9 @@ extern "C" {
 void alarm(int);
 #endif
 
+#if BX_GUI_SIGHANDLER
+bx_bool bx_gui_sighandler = 0;
+#endif
 
 #if BX_PROVIDE_DEVICE_MODELS==1
 // some prototypes from iodev/
@@ -1700,6 +1703,16 @@ bx_bool load_and_init_display_lib () {
   if (!strcmp (gui_name, "x")) 
     PLUG_load_plugin (x, PLUGTYPE_OPTIONAL);
 #endif
+
+#if BX_GUI_SIGHANDLER
+  // set the flag for guis requiring a GUI sighandler.
+  // useful when guis are compiled as plugins
+  // only term for now
+  if (!strcmp (gui_name, "term")) {
+    bx_gui_sighandler = 1;
+    }
+#endif
+
   BX_ASSERT (bx_gui != NULL);
   return true;
 }
@@ -3462,10 +3475,12 @@ bx_signal_handler( int signum)
     return;
   }
 #if BX_GUI_SIGHANDLER
-  // GUI signal handler gets first priority, if the mask says it's wanted
-  if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
-    bx_gui->sighandler (signum);
-    return;
+  if (bx_gui_sighandler) {
+    // GUI signal handler gets first priority, if the mask says it's wanted
+    if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
+      bx_gui->sighandler (signum);
+      return;
+    }
   }
 #endif
 
@@ -3484,9 +3499,11 @@ bx_signal_handler( int signum)
 #endif
 
 #if BX_GUI_SIGHANDLER
-  if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
-    bx_gui->sighandler (signum);
-    return;
+  if (bx_gui_sighandler) {
+    if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
+      bx_gui->sighandler (signum);
+      return;
+    }
   }
 #endif
   BX_PANIC(("SIGNAL %u caught", signum));
