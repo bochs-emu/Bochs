@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.215 2002-12-23 10:30:13 cbothamy Exp $
+// $Id: main.cc,v 1.216 2002-12-24 09:14:54 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3715,7 +3715,7 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
       io->getaction(logfunctions::get_default_action (LOGLEV_INFO)));
   fprintf (fp, "debug: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_DEBUG)));
-  fprintf (fp, "debug: action=%s\n",
+  fprintf (fp, "pass: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_PASS)));
   return 0;
 }
