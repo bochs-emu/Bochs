@@ -2,7 +2,7 @@
 Patch name: patch.fpu-64bit-addresses 
 Author: ???
 Date: ???
-Status: applied top main code
+Status: applied to the main code
 
 Detailed description:
 	64bit address support for FPU emulation
