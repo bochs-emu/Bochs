@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.66 2002-09-26 09:00:52 mlerwill Exp $
+// $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.66 2002-09-26 09:00:52 mlerwill Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.66 2002-09-26 09:00:52 mlerwill Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -186,41 +186,45 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   cmos->s.reg[0x14] |= 0x04;
 
 #if BX_WITH_WX
-  // register shadow params (Experimental, not a complete list by far)
-  bx_list_c *list = new bx_list_c (BXP_KBD_PARAMETERS, "Keyboard State", "", 20);
-  list->add (new bx_shadow_bool_c (BXP_KBD_IRQ1_REQ, 
-	"Keyboard IRQ1 requested: ", 
-	&BX_KEY_THIS s.kbd_controller.irq1_requested));
-  list->add (new bx_shadow_bool_c (BXP_KBD_IRQ12_REQ,
-	"Keyboard IRQ12 requested: ", 
-	&BX_KEY_THIS s.kbd_controller.irq12_requested));
-  list->add (new bx_shadow_num_c (BXP_KBD_TIMER_PENDING,
-      "Keyboard timer pending: ", 
-      &BX_KEY_THIS s.kbd_controller.timer_pending));
-  list->add (new bx_shadow_bool_c (BXP_KBD_PARE,
-      "Keyboard PARE", 
-      &BX_KEY_THIS s.kbd_controller.pare));
-  list->add (new bx_shadow_bool_c (BXP_KBD_TIM,
-      "Keyboard TIM", 
-      &BX_KEY_THIS s.kbd_controller.tim));
-  list->add (new bx_shadow_bool_c (BXP_KBD_AUXB,
-      "Keyboard AUXB", 
-      &BX_KEY_THIS s.kbd_controller.auxb));
-  list->add (new bx_shadow_bool_c (BXP_KBD_KEYL,
-      "Keyboard KEYL", 
-      &BX_KEY_THIS s.kbd_controller.keyl));
-  list->add (new bx_shadow_bool_c (BXP_KBD_C_D,
-      "Keyboard C_D", 
-      &BX_KEY_THIS s.kbd_controller.c_d));
-  list->add (new bx_shadow_bool_c (BXP_KBD_SYSF,
-      "Keyboard SYSF", 
-      &BX_KEY_THIS s.kbd_controller.sysf));
-  list->add (new bx_shadow_bool_c (BXP_KBD_INPB,
-      "Keyboard INPB", 
-      &BX_KEY_THIS s.kbd_controller.inpb));
-  list->add (new bx_shadow_bool_c (BXP_KBD_OUTB,
-      "Keyboard OUTB", 
-      &BX_KEY_THIS s.kbd_controller.outb));
+  static Boolean first_time = 1;
+  if (first_time) {
+    first_time = 0;
+    // register shadow params (Experimental, not a complete list by far)
+    bx_list_c *list = new bx_list_c (BXP_KBD_PARAMETERS, "Keyboard State", "", 20);
+    list->add (new bx_shadow_bool_c (BXP_KBD_IRQ1_REQ, 
+	  "Keyboard IRQ1 requested: ", 
+	  &BX_KEY_THIS s.kbd_controller.irq1_requested));
+    list->add (new bx_shadow_bool_c (BXP_KBD_IRQ12_REQ,
+	  "Keyboard IRQ12 requested: ", 
+	  &BX_KEY_THIS s.kbd_controller.irq12_requested));
+    list->add (new bx_shadow_num_c (BXP_KBD_TIMER_PENDING,
+	"Keyboard timer pending: ", 
+	&BX_KEY_THIS s.kbd_controller.timer_pending));
+    list->add (new bx_shadow_bool_c (BXP_KBD_PARE,
+	"Keyboard PARE", 
+	&BX_KEY_THIS s.kbd_controller.pare));
+    list->add (new bx_shadow_bool_c (BXP_KBD_TIM,
+	"Keyboard TIM", 
+	&BX_KEY_THIS s.kbd_controller.tim));
+    list->add (new bx_shadow_bool_c (BXP_KBD_AUXB,
+	"Keyboard AUXB", 
+	&BX_KEY_THIS s.kbd_controller.auxb));
+    list->add (new bx_shadow_bool_c (BXP_KBD_KEYL,
+	"Keyboard KEYL", 
+	&BX_KEY_THIS s.kbd_controller.keyl));
+    list->add (new bx_shadow_bool_c (BXP_KBD_C_D,
+	"Keyboard C_D", 
+	&BX_KEY_THIS s.kbd_controller.c_d));
+    list->add (new bx_shadow_bool_c (BXP_KBD_SYSF,
+	"Keyboard SYSF", 
+	&BX_KEY_THIS s.kbd_controller.sysf));
+    list->add (new bx_shadow_bool_c (BXP_KBD_INPB,
+	"Keyboard INPB", 
+	&BX_KEY_THIS s.kbd_controller.inpb));
+    list->add (new bx_shadow_bool_c (BXP_KBD_OUTB,
+	"Keyboard OUTB", 
+	&BX_KEY_THIS s.kbd_controller.outb));
+  }
 #endif
 }
 
