@@ -997,7 +997,7 @@ bx_dbg_print_string_command(Bit32u start_addr)
       for (int i = 0; ; i++) {
 	    Bit32u paddr;
 	    Bit32u paddr_valid;
-	    Bit8u buf[0];
+	    Bit8u buf[1];
 	    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(start_addr+i, &paddr, &paddr_valid);
 	    if (paddr_valid) {
 		  if (BX_MEM[0]->dbg_fetch_mem(paddr, 1, buf)) {
@@ -1184,6 +1184,33 @@ bx_dbg_print_stack_command(int nwords)
 	}
 }
 
+#if !BX_CONTEXT_SUPPORT
+
+static char *BX_CONTEXT_SUPPORT_ERR = "context not implemented because BX_CONTEXT_SUPPORT=0\n";
+char*
+bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
+{
+  static Boolean first = true;
+  if (first) {
+    fprintf (stderr, BX_CONTEXT_SUPPORT_ERR);
+    first = false;
+  }
+  return "unknown context";
+}
+
+void
+bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
+{
+  fprintf (stderr, BX_CONTEXT_SUPPORT_ERR);
+}
+
+#else   /* if BX_CONTEXT_SUPPORT == 1 */
+
+/* Haven't figured out how to port this code to OSF1 cxx compiler.
+   Until a more portable solution is found, at least make it easy
+   to disable the template code:  just set BX_CONTEXT_SUPPORT=0
+   in config.h */
+
 #include <hash_map.h>
 #include <set.h>
 
@@ -1334,6 +1361,7 @@ bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
 	    cntx->add_symbol(sym);
       }
 }
+#endif
 
 int num_write_watchpoints = 0;
 int num_read_watchpoints = 0;
@@ -1342,7 +1370,7 @@ Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 Boolean watchpoint_continue = 0;
 
 void
-bx_dbg_watch(Boolean read, Bit32u address)
+bx_dbg_watch(int read, Bit32u address)
 {
       if (read == -1) {
 	    // print watch point info
@@ -1380,7 +1408,7 @@ bx_dbg_watch(Boolean read, Bit32u address)
 }
 
 void
-bx_dbg_unwatch(Boolean read, Bit32u address)
+bx_dbg_unwatch(int read, Bit32u address)
 {
       if (read == -1) {
 	    // unwatch all
@@ -2744,13 +2772,13 @@ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   else if ( !strcmp(symbol, "gs") ) {
     is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_GS, val);
     }
-	else if ( !strcmp(symbol, "cpu") ) {
-		  if (!(val >= 0 && val < APIC_MAX_ID) || (apic_index[val] == NULL)) {
-				fprintf (stderr, "invalid cpu id number\n");
-			  return;
-			}
-		  dbg_cpu = val;
-	  }
+  else if ( !strcmp(symbol, "cpu") ) {
+      if ((val >= APIC_MAX_ID) || (apic_index[val] == NULL)) {
+        fprintf (stderr, "invalid cpu id number\n");
+        return;
+      }
+      dbg_cpu = val;
+    }
   else if ( !strcmp(symbol, "synchronous_dma") ) {
     bx_guard.async.dma = !val;
     return;
@@ -3127,7 +3155,7 @@ bx_dbg_maths_expression_command(char *expr)
         res = data1+data2;
         fprintf(stderr," %x + %x = %x ",data1,data2,res);
         data1 = res;
-	break;
+  break;
       case '-':  
         res = data1-data2;
         fprintf(stderr," %x - %x = %x ",data1,data2,res);
@@ -3501,7 +3529,7 @@ bx_dbg_info_tss_command(bx_num_range n) {
 }
 
 bx_num_range 
-make_num_range (Bit32u from, Bit32u to)
+make_num_range (Bit64s from, Bit64s to)
 {
   bx_num_range x;
   x.from = from;
