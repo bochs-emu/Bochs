@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.71 2004-01-05 22:18:01 cbothamy Exp $
+// $Id: wxdialog.cc,v 1.72 2004-10-03 09:11:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -27,7 +27,7 @@
 #include "gui/siminterface.h"    // interface to the simulator
 #include "bxversion.h"           // get version string
 #include "wxdialog.h"            // custom dialog boxes
-#include "wxmain.h"              // wxwindows shared stuff
+#include "wxmain.h"              // wxwidgets shared stuff
 
 //////////////////////////////////////////////////////////////////////
 // constants, prototypes
@@ -1879,9 +1879,9 @@ CpuRegistersDialog::CopyParamToGui ()
 // however long it takes, and returns to the input loop when the command
 // is done.  A control-C can stop a command prematurely.
 //
-// To extend this into wxWindows multithreaded space, I will create a
+// To extend this into wxWidgets multithreaded space, I will create a
 // synchronous event called BX_SYNC_GET_DBG_COMMAND which is sent from
-// the simulation thread to wxWindows.  When the user chooses a debugger
+// the simulation thread to wxWidgets.  When the user chooses a debugger
 // action (step, continue, breakpoint, etc.) the simulation awakens and
 // interprets the event by calling a function in bx_debug/dbg_main.cc.
 //
@@ -1893,7 +1893,7 @@ CpuRegistersDialog::CopyParamToGui ()
 // input loop model is good.  Create a debugger input loop, possibly in
 // siminterface.
 // in the simulation thread.  This loop waits for a command from the 
-// wxWindows debugger
+// wxWidgets debugger
 //
 // For example, if you press the "Step" button 5
 // times, with each click it should call bx_dbg_stepN_command(1) in the
@@ -1909,7 +1909,7 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
       break;
 #if BX_DEBUGGER
   case ID_Debug_Stop:
-      wxLogDebug ("wxWindows triggered a break");
+      wxLogDebug ("wxWidgets triggered a break");
       theFrame->DebugBreak ();
       break;
     case ID_Debug_Continue:
@@ -2011,7 +2011,7 @@ int GetTextCtrlInt (wxTextCtrl *ctrl,
 
 bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
   // try to configure the dialog to show hidden files
-  wxConfigBase::Get() -> Write(wxT("/wxWindows/wxFileDialog/ShowHidden"), true);
+  wxConfigBase::Get() -> Write(wxT("/wxWidgets/wxFileDialog/ShowHidden"), true);
   wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), wxString(), style);
   if (fdialog->ShowModal () == wxID_OK)
     text->SetValue (fdialog->GetPath ());

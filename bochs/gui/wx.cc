@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.71 2004-08-15 19:27:14 vruppert Exp $
+// $Id: wx.cc,v 1.72 2004-10-03 09:11:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
-// wxWindows VGA display for Bochs.  wx.cc implements a custom
+// wxWidgets VGA display for Bochs.  wx.cc implements a custom
 // wxPanel called a MyPanel, which has methods to display
 // text and VGA graphics on the panel.  Normally, a MyPanel
 // is instantiated within a MyFrame created by wxmain.cc, but
@@ -10,14 +10,14 @@
 //
 // The separation between wxmain.cc and wx.cc is as follows:
 // - wxmain.cc implements a Bochs configuration interface (CI),
-//   which is the wxWindows equivalent of textconfig.cc. wxmain creates
+//   which is the wxWidgets equivalent of textconfig.cc. wxmain creates
 //   a frame with several menus and a toolbar, and allows the user to
 //   choose the machine configuration and start the simulation.  Note
 //   that wxmain.cc does NOT include bochs.h.  All interactions
 //   between the CI and the simulator are through the siminterface
 //   object.
-// - wx.cc implements a VGA display screen using wxWindows.  It is 
-//   is the wxWindows equivalent of x.cc, win32.cc, macos.cc, etc.
+// - wx.cc implements a VGA display screen using wxWidgets.  It is 
+//   is the wxWidgets equivalent of x.cc, win32.cc, macos.cc, etc.
 //   wx.cc includes bochs.h and has access to all Bochs devices.
 //   The VGA panel accepts only paint, key, and mouse events.  As it
 //   receives events, it builds BxEvents and places them into a 
@@ -146,7 +146,7 @@ MyPanel::~MyPanel ()
   thePanel = NULL;
 }
 
-void MyPanel::OnTimer(wxCommandEvent& WXUNUSED(event))
+void MyPanel::OnTimer(wxTimerEvent& WXUNUSED(event))
 {
   IFDBG_VGA(wxLogDebug (wxT ("timer")));
   if (needRefresh) {
@@ -168,7 +168,7 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
     wxPoint pt = GetClientAreaOrigin();
     wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
     IFDBG_VGA(wxLogDebug (wxT ("drawBitmap")));
-    dc.DrawBitmap(screenImage.ConvertToBitmap(), pt.x, pt.y, FALSE);
+    dc.DrawBitmap(wxBitmap(screenImage), pt.x, pt.y, FALSE);
   }
   needRefresh = false;
 }
@@ -737,10 +737,10 @@ bx_bool
 MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 {
   // Use raw codes if they are available.  Raw codes are a nonstandard addition
-  // to the wxWindows library.  At present, the only way to use the "RAW_CODES"
-  // mode is to apply Bryce's "patch.wx-raw-keycodes" patch to the wxWindows
+  // to the wxWidgets library.  At present, the only way to use the "RAW_CODES"
+  // mode is to apply Bryce's "patch.wx-raw-keycodes" patch to the wxWidgets
   // sources and recompile.  This patch, or something like it, should appear in
-  // future wxWindows versions.
+  // future wxWidgets versions.
 
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
   return fillBxKeyEvent_MSW (wxev, bxev, release);
@@ -1486,7 +1486,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen)));
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
   if ((bpp == 8) || (bpp == 15) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
-    if (bpp == 32) BX_INFO(("wxWindows ignores bit 24..31 in 32bpp mode"));
+    if (bpp == 32) BX_INFO(("wxWidgets ignores bit 24..31 in 32bpp mode"));
     vga_bpp = bpp;
   }
   else
@@ -1507,7 +1507,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update gave up lock. wxScreen=%p", wxScreen)));
   // Note: give up wxScreen_lock before calling SetClientSize.  I did
   // this because I was sometimes seeing thread deadlock in win32, apparantly 
-  // related to wxStreen_lock.  The wxWindows GUI thread was sitting in OnPaint
+  // related to wxStreen_lock.  The wxWidgets GUI thread was sitting in OnPaint
   // trying to get the wxScreen_lock, and the simulation thread was stuck in some
   // native win32 function called by SetClientSize (below).  As with many
   // thread problems, it happened sporadically so it's hard to prove that this
@@ -1638,7 +1638,7 @@ bx_wx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
       // buf will be freed in bx_keyb_c::paste_bytes or 
       // bx_keyb_c::service_paste_buf, using delete [].
     } else {
-      BX_ERROR (("paste: could not open wxWindows clipboard"));
+      BX_ERROR (("paste: could not open wxWidgets clipboard"));
     }
     wxTheClipboard->Close ();
   }

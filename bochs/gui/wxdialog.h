@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.53 2003-09-09 16:41:25 vruppert Exp $
+// $Id: wxdialog.h,v 1.54 2004-10-03 09:11:28 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
-// wxWindows dialogs for Bochs
+// wxWidgets dialogs for Bochs
 
 #include <wx/spinctrl.h>
 
@@ -467,7 +467,7 @@ private:
   bool runtime;
 protected:
   wxBoxSizer *mainSizer, *buttonSizer;
-  // hash table that maps the ID of a wxWindows control (e.g. wxChoice,
+  // hash table that maps the ID of a wxWidgets control (e.g. wxChoice,
   // wxTextCtrl) to the associated ParamStruct object.  Data in the hash table
   // is of ParamStruct*.
   wxHashTable *idHash;
@@ -523,7 +523,7 @@ DECLARE_EVENT_TABLE()
 // enable different groups like debug, FPU, MMX registers.  Certainly if you
 // interrupt the simulation, these would be updated.  we could update
 // periodically during simulation if it was useful.  If we get the debugger
-// integrated with wxwindows, you could single step and update the cpu
+// integrated with wxwidgets, you could single step and update the cpu
 // registers, with regs that change marked in a different color.  Modeless
 // dialog.
 // 
@@ -624,7 +624,7 @@ Everything else in here is a comment!
 
 Here are some quick sketches of what different parts of the interface
 could look like.  None of these is implemented yet, and everything is
-open for debate.  Whoever writes the wxwindows code for any of these
+open for debate.  Whoever writes the wxwidgets code for any of these
 screens gets several thousand votes!
 
 

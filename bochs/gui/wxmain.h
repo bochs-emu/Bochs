@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.45 2004-07-09 21:40:49 vruppert Exp $
+// $Id: wxmain.h,v 1.46 2004-10-03 09:11:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////
-// This file defines variables and classes that the wxWindows .cc files 
+// This file defines variables and classes that the wxWidgets .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
 
 // forward class declaration so that each class can have a pointer to 
@@ -140,7 +140,7 @@ public:
   ~MyPanel();
   void OnKeyDown(wxKeyEvent& event);
   void OnKeyUp(wxKeyEvent& event);
-  void OnTimer(wxCommandEvent& event);
+  void OnTimer(wxTimerEvent& event);
   void OnPaint(wxPaintEvent& event);
   void OnMouse(wxMouseEvent& event);
   void MyRefresh ();
