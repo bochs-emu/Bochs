@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.183 2002-11-16 22:50:51 bdenney Exp $
+// $Id: main.cc,v 1.184 2002-11-18 02:32:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1686,7 +1686,9 @@ bx_init_main (int argc, char *argv[])
     }
     arg++;
   }
-#if BX_PLUGINS && BX_WITH_CARBON
+#if BX_PLUGINS
+  // set a default plugin path, in case the user did not specify one
+#if BX_WITH_CARBON
   // if there is no stdin, then we must create our own LTDL_LIBRARY_PATH.
   // also if there is no LTDL_LIBRARY_PATH, but we have a bundle since we're here
   // This is here so that it is available whenever --with-carbon is defined but
@@ -1720,7 +1722,18 @@ bx_init_main (int argc, char *argv[])
     BX_INFO (("now my LTDL_LIBRARY_PATH is %s", libDirPath));
     CFRelease(libDir);
   }
+#elif BX_HAVE_GETENV && BX_HAVE_SETENV
+  if (getenv("LTDL_LIBRARY_PATH") != NULL) {
+    BX_INFO (("LTDL_LIBRARY_PATH is set to '%s'", getenv("LTDL_LIBRARY_PATH")));
+  } else {
+    BX_INFO (("LTDL_LIBRARY_PATH not set. using compile time default '%s'", 
+	  BX_PLUGIN_PATH));
+    setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
+  }
+#else
+  // we don't have getenv or setenv.  Do nothing.
 #endif
+#endif  /* if BX_PLUGINS */
 
 #if !BX_USE_CONFIG_INTERFACE
   // this allows people to get quick start behavior by default
