@@ -21,7 +21,20 @@ Changes to next release:
   - fixed ET bit mismatch between CR0 and SMSW instruction
 
 - FPU
-  - fixed #NM exception on when FPU is disabled for FPU opcodes
+  - totally rewritten all FPU code based on softfloat library 
+    (Stanislav Shwartsman)
+  - significantly improved accuracy of floating point all
+    floating point instructions.
+  - implemented all missed P6 and PNI floating point instructions.
+  - hundreds of bug fixes in FPU code.
+
+  TODO:
+    ! Unmasked underflow/overflow should correct the result 
+      by magic number for all operations, including float32 
+      and float64.
+    ! set SW_C1 according to PRECISION_UP or PRECISION_DOWN 
+      conditions.
+    ! improve performance of transcendential instructions.
 
 - Disassembler
   - fixed MOV opcode 0x88, has exchanged the operands (h.johansson)
@@ -83,6 +96,14 @@ Changes to next release:
   [924428] ET bit mismatch between CR0 and MSW
 
 - these S.F. bugs were closed 
+  #477043 math_abort panic in RH 7.1
+  #634371 Floating point problems
+  #681138 // is not valid in C
+  #643300 cpuid feature flag 15, cmov and fcmov
+  #913697 missing division by 0 exeption in fpu emuation
+  #923682 FSTENV/FINIT problems
+  #923855 FPTAN doesn't work right with full NPX stack
+  #924379 ET bit mismatch between CR0 and MSW 
   #716116 Direct floppy access
   #962919 Mac: iodev/cdrom.cc disordered
   #954751 Two FPU.CPP in project

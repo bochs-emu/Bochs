@@ -1,7 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.8 2004-04-09 15:34:59 sshwarts Exp $
-/////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2004  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -22,6 +20,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -29,17 +28,39 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
+#define UPDATE_LAST_OPCODE       1
+#define CHECK_PENDING_EXCEPTIONS 1
+
+
 #if BX_SUPPORT_FPU
-void BX_CPU_C::prepareFPU(void)
+void BX_CPU_C::prepareFPU(bxInstruction_c *i, 
+	bx_bool check_pending_exceptions, bx_bool update_last_instruction)
 {
-  if (BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts) {
+  if (BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts)
     exception(BX_NM_EXCEPTION, 0, 0);
+
+  if (check_pending_exceptions)
+    BX_CPU_THIS_PTR FPU_check_pending_exceptions();
+
+  if (update_last_instruction)
+  {
+    BX_CPU_THIS_PTR the_i387.foo = ((Bit32u)(i->b1()) << 8) | (Bit32u)(i->modrm());
+    BX_CPU_THIS_PTR the_i387.fcs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+    BX_CPU_THIS_PTR the_i387.fip = BX_CPU_THIS_PTR prev_eip;
+
+    if (! i->modC0()) {
+         BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
+         BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
+    } else {
+         BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+         BX_CPU_THIS_PTR the_i387.fdp = 0;
+    }
   }
 }
 
 void BX_CPU_C::FPU_check_pending_exceptions(void)
 {
-  if(FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
+  if(BX_CPU_THIS_PTR the_i387.get_partial_status() & FPU_SW_Summary)
   {
     if (BX_CPU_THIS_PTR cr0.ne == 0)
     {
@@ -51,1206 +72,394 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
       exception(BX_MF_EXCEPTION, 0, 0);
   }
 }
-#endif
 
-void BX_CPU_C::FLD_STi(bxInstruction_c *i)
+int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+    if (protected_mode())  /* Protected Mode */
+    {
+        if (i->os32L() || i->os64L())
+        {
+            Bit32u tmp;
 
-  fpu_execute(i);
-#else
-  BX_INFO(("FLD_STi: required FPU, configure --enable-fpu"));
-#endif
+            tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_control_word();
+            write_virtual_dword(i->seg(), RMAddr(i), &tmp);
+            tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_status_word();
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x04, &tmp);
+            tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_tag_word();
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x08, &tmp);
+            tmp = (BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x0c, &tmp);
+            tmp  = (BX_CPU_THIS_PTR the_i387.fcs & 0xffff) |
+                          ((Bit32u)(BX_CPU_THIS_PTR the_i387.foo)) << 16;
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x10, &tmp);
+            tmp = (BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x14, &tmp);
+            tmp = 0xffff0000 | (BX_CPU_THIS_PTR the_i387.fds);
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x18, &tmp);
+
+            return 0x1c;
+        }
+        else /* Protected Mode - 16 bit */
+        {
+            Bit16u tmp;
+
+            tmp = BX_CPU_THIS_PTR the_i387.get_control_word();
+            write_virtual_word(i->seg(), RMAddr(i), &tmp);
+            tmp = BX_CPU_THIS_PTR the_i387.get_status_word();
+            write_virtual_word(i->seg(), RMAddr(i) + 0x02, &tmp);
+            tmp = BX_CPU_THIS_PTR the_i387.get_tag_word();
+            write_virtual_word(i->seg(), RMAddr(i) + 0x04, &tmp);
+            tmp = (BX_CPU_THIS_PTR the_i387.fip) & 0xffff;
+            write_virtual_word(i->seg(), RMAddr(i) + 0x06, &tmp);
+            tmp = (BX_CPU_THIS_PTR the_i387.fcs);
+            write_virtual_word(i->seg(), RMAddr(i) + 0x08, &tmp);
+            tmp = (BX_CPU_THIS_PTR the_i387.fdp) & 0xffff;
+            write_virtual_word(i->seg(), RMAddr(i) + 0x0a, &tmp);
+            tmp = (BX_CPU_THIS_PTR the_i387.fds);
+            write_virtual_word(i->seg(), RMAddr(i) + 0x0c, &tmp);
+
+            return 0x0e;
+        }
+    }
+    else   /* Real or V86 Mode */
+    {
+        Bit32u fp_ip = ((Bit32u)(BX_CPU_THIS_PTR the_i387.fcs) << 4) +
+              (BX_CPU_THIS_PTR the_i387.fip);
+        Bit32u fp_dp = ((Bit32u)(BX_CPU_THIS_PTR the_i387.fds) << 4) +
+              (BX_CPU_THIS_PTR the_i387.fdp);
+
+        if (i->os32L() || i->os64L())
+        {
+            Bit32u tmp;
+        
+            tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_control_word();
+            write_virtual_dword(i->seg(), RMAddr(i), &tmp);
+            tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_status_word();
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x04, &tmp);
+            tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_tag_word();
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x08, &tmp);
+            tmp = 0xffff0000 | (fp_ip & 0xffff);
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x0c, &tmp);
+            tmp = ((fp_ip & 0xffff0000) >> 4) |
+                          (BX_CPU_THIS_PTR the_i387.foo & 0x7ff);
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x10, &tmp);
+            tmp = 0xffff0000 | (fp_dp & 0xffff);
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x14, &tmp);
+            tmp = (fp_dp & 0xffff0000) >> 4;
+            write_virtual_dword(i->seg(), RMAddr(i) + 0x18, &tmp);
+
+            return 0x1c;
+        }
+        else  /* Real or V86 Mode - 16 bit */
+        {
+            Bit16u tmp;
+
+            tmp = BX_CPU_THIS_PTR the_i387.get_control_word();
+            write_virtual_word(i->seg(), RMAddr(i), &tmp);
+            tmp = BX_CPU_THIS_PTR the_i387.get_status_word();
+            write_virtual_word(i->seg(), RMAddr(i) + 0x02, &tmp);
+            tmp = BX_CPU_THIS_PTR the_i387.get_tag_word();
+            write_virtual_word(i->seg(), RMAddr(i) + 0x04, &tmp);
+            tmp = fp_ip & 0xffff;
+            write_virtual_word(i->seg(), RMAddr(i) + 0x06, &tmp);
+            tmp = (Bit16u)(((fp_ip & 0xf0000) >> 4) |
+                          (BX_CPU_THIS_PTR the_i387.foo & 0x7ff));
+            write_virtual_word(i->seg(), RMAddr(i) + 0x08, &tmp);
+            tmp = fp_dp & 0xffff;
+            write_virtual_word(i->seg(), RMAddr(i) + 0x0a, &tmp);
+            tmp = (Bit16u)((fp_dp & 0xf0000) >> 4);
+            write_virtual_word(i->seg(), RMAddr(i) + 0x0c, &tmp);
+
+            return 0x0e;
+        }       
+    }   
 }
 
-void BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
+int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+    int offset;
 
-  fpu_execute(i);
-#else
-  BX_INFO(("FLD_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
+    if (protected_mode())  /* Protected Mode */
+    {
+        if (i->os32L() || i->os64L())
+        {
+            Bit32u tmp;
+
+            read_virtual_dword(i->seg(), RMAddr(i), &tmp);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x04, &tmp);
+            BX_CPU_THIS_PTR the_i387.swd = tmp & 0xffff;
+            BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x07;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x08, &tmp);
+            BX_CPU_THIS_PTR the_i387.twd = tmp & 0xffff;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x0c, &tmp);
+            BX_CPU_THIS_PTR the_i387.fip = tmp;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x10, &tmp);
+            BX_CPU_THIS_PTR the_i387.fcs = tmp & 0xffff;
+            BX_CPU_THIS_PTR the_i387.foo = (tmp >> 16) & 0x07ff;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x14, &tmp);
+            BX_CPU_THIS_PTR the_i387.fdp = tmp;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x18, &tmp);
+            BX_CPU_THIS_PTR the_i387.fds = tmp & 0xffff;
+            offset = 0x1c;
+        }
+        else /* Protected Mode - 16 bit */
+        {
+            Bit16u tmp;
+
+            read_virtual_word(i->seg(), RMAddr(i), &tmp);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x2, &tmp);
+            BX_CPU_THIS_PTR the_i387.swd = tmp;
+            BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x07;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x04, &tmp);
+            BX_CPU_THIS_PTR the_i387.twd = tmp;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x06, &tmp);
+            BX_CPU_THIS_PTR the_i387.fip = tmp & 0xffff;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x08, &tmp);
+            BX_CPU_THIS_PTR the_i387.fcs = tmp;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x0a, &tmp);
+            BX_CPU_THIS_PTR the_i387.fdp = tmp & 0xffff;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x0c, &tmp);
+            BX_CPU_THIS_PTR the_i387.fds = tmp;
+            /* opcode is defined to be zero */
+            BX_CPU_THIS_PTR the_i387.foo = 0;
+            offset = 0x0e;
+        }
+    }
+    else   /* Real or V86 Mode */
+    {
+        Bit32u fp_ip = 0, fp_dp = 0;
+
+        if (i->os32L() || i->os64L())
+        {
+            Bit32u tmp;
+
+            read_virtual_dword(i->seg(), RMAddr(i), &tmp);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x04, &tmp);
+            BX_CPU_THIS_PTR the_i387.swd = tmp & 0xffff;
+            BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x07;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x08, &tmp);
+            BX_CPU_THIS_PTR the_i387.twd = tmp & 0xffff;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x0c, &tmp);
+            fp_ip = tmp & 0xffff;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x10, &tmp);
+            fp_ip = fp_ip | ((tmp & 0x0ffff000) << 4);
+            BX_CPU_THIS_PTR the_i387.fip = fp_ip;
+            BX_CPU_THIS_PTR the_i387.foo = tmp & 0x07ff;
+            BX_CPU_THIS_PTR the_i387.fcs = 0;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x14, &tmp);
+            fp_dp = tmp & 0xffff;
+            read_virtual_dword(i->seg(), RMAddr(i) + 0x18, &tmp);
+            fp_dp = fp_dp | ((tmp & 0x0ffff000) << 4);
+            BX_CPU_THIS_PTR the_i387.fdp = fp_dp;
+            BX_CPU_THIS_PTR the_i387.fds = 0;
+            offset = 0x1c;
+        }
+        else  /* Real or V86 Mode - 16 bit */
+        {
+            Bit16u tmp;
+
+            read_virtual_word(i->seg(), RMAddr(i), &tmp);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x2, &tmp);
+            BX_CPU_THIS_PTR the_i387.swd = tmp;
+            BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x07;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x04, &tmp);
+            BX_CPU_THIS_PTR the_i387.twd = tmp;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x06, &tmp);
+            fp_ip = tmp & 0xffff;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x08, &tmp);
+            fp_ip = fp_ip | ((tmp & 0xf000) << 4);
+            BX_CPU_THIS_PTR the_i387.fip = fp_ip;
+            BX_CPU_THIS_PTR the_i387.foo = tmp & 0x07ff;
+            BX_CPU_THIS_PTR the_i387.fcs = 0;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x0a, &tmp);
+            fp_dp = tmp & 0xffff;
+            read_virtual_word(i->seg(), RMAddr(i) + 0x0c, &tmp);
+            fp_dp = fp_dp | ((tmp & 0xf000) << 4);
+            BX_CPU_THIS_PTR the_i387.fdp = fp_dp;
+            BX_CPU_THIS_PTR the_i387.fds = 0;
+            offset = 0x0e;
+        }
+    }
+
+    /* check for unmasked exceptions */
+    if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
+    {
+        /* set the B and ES bits in the status-word */
+        FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
+    }
+    else
+    {
+        /* clear the B and ES bits in the status-word */
+        FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
+    }
+
+    return offset;
 }
-
-void BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLD_DOUBLE_REAL: required FPU, configure --enable-fpu"));
 #endif
-}
 
-void BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLD_EXTENDED_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FILD_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FILD_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FILD_QWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FLDENV(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLDENV: required FPU, configure --enable-fpu"));
-#endif
-}
-
+/* D9 /5 */
 void BX_CPU_C::FLDCW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+  BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  Bit16u cwd;
+  read_virtual_word(i->seg(), RMAddr(i), &cwd);
+  FPU_CONTROL_WORD = cwd;
 
-  fpu_execute(i);
+  /* check for unmasked exceptions */
+  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
+  {
+      /* set the B and ES bits in the status-word */
+      FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
+  }
+  else
+  {
+      /* clear the B and ES bits in the status-word */
+      FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
+  }
 #else
   BX_INFO(("FLDCW: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FLD1(bxInstruction_c *i) 
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLD1: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FLDL2T(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLDL2T: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FLDL2E(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLDL2E: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FLDPI(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLDPI: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FLDLG2(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLDLG2: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FLDLN2(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLDLN2: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FLDZ(bxInstruction_c *i)                      
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FLDZ: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FBLD_PACKED_BCD: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FST_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FST_STi: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSTP_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSTP_STi: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FST_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSTP_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSTP_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FST_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSTP_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSTP_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSTP_EXTENDED_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIST_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISTP_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FISTP_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIST_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISTP_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FISTP_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FISTP_QWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FNSTENV(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FNSTENV: required FPU, configure --enable-fpu"));
-#endif
-}
-
+/* D9 /7 */
 void BX_CPU_C::FNSTCW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  Bit16u cwd = BX_CPU_THIS_PTR the_i387.get_control_word();
+  write_virtual_word(i->seg(), RMAddr(i), &cwd);
 #else
   BX_INFO(("FNSTCW: required FPU, configure --enable-fpu"));
 #endif
 }
 
+/* DD /7 */
 void BX_CPU_C::FNSTSW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  Bit16u swd = BX_CPU_THIS_PTR the_i387.get_status_word();
+  write_virtual_word(i->seg(), RMAddr(i), &swd);
 #else
   BX_INFO(("FNSTSW: required FPU, configure --enable-fpu"));
 #endif
 }
 
+/* DF E0 */
 void BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  AX = BX_CPU_THIS_PTR the_i387.get_status_word();
 #else
   BX_INFO(("FNSTSW_AX: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FBSTP_PACKED_BCD: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISTTP16(bxInstruction_c *i)
-{
-#if BX_SUPPORT_PNI
-  BX_PANIC(("FISTTP16: instruction still not implemented"));
-#else
-  BX_INFO(("FISTTP16: required PNI, configure --enable-pni"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FISTTP32(bxInstruction_c *i)
-{
-#if BX_SUPPORT_PNI
-  BX_PANIC(("FISTTP32: instruction still not implemented"));
-#else
-  BX_INFO(("FISTTP32: required PNI, configure --enable-pni"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FISTTP64(bxInstruction_c *i)
-{
-#if BX_SUPPORT_PNI
-  BX_PANIC(("FISTTP64: instruction still not implemented"));
-#else
-  BX_INFO(("FISTTP64: required PNI, configure --enable-pni"));
-  UndefinedOpcode(i);
-#endif
-}
-
+/* DD /4 */
 void BX_CPU_C::FRSTOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+  BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  int offset = fpu_load_environment(i);
 
-  fpu_execute(i);
+  /* read all registers in stack order. */
+  for(int n=0;n<8;n++)
+  {
+     floatx80 tmp;
+
+     // read register only if its tag is not empty
+     if (! IS_TAG_EMPTY(n))
+     {
+         read_virtual_tword(i->seg(), RMAddr(i) + offset + n*10, &tmp);
+         BX_WRITE_FPU_REG(tmp, n);
+     }
+  }
 #else
   BX_INFO(("FRSTOR: required FPU, configure --enable-fpu"));
 #endif
 }
 
+/* DD /6 */
 void BX_CPU_C::FNSAVE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
 
-  fpu_execute(i);
+  int offset = fpu_save_environment(i);
+
+  /* save all registers in stack order. */
+  for(int n=0;n<8;n++)
+  {
+     floatx80 stn = BX_READ_FPU_REG(n);
+     write_virtual_tword(i->seg(), RMAddr(i) + offset + n*10, &stn);
+  }
+
+  BX_CPU_THIS_PTR the_i387.init();
 #else
   BX_INFO(("FNSAVE: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)
+/* 9B E2 */
+void BX_CPU_C::FNCLEX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
 
-  fpu_execute(i);
+  FPU_PARTIAL_STATUS &= ~(FPU_SW_Backward|FPU_SW_Summary|FPU_SW_Stack_Fault|FPU_SW_Precision|
+		   FPU_SW_Underflow|FPU_SW_Overflow|FPU_SW_Zero_Div|FPU_SW_Denormal_Op|
+		   FPU_SW_Invalid);
+
+  // do not update last fpu instruction pointer
 #else
-  BX_INFO(("FADD_ST0_STj: required FPU, configure --enable-fpu"));
+  BX_INFO(("FNCLEX: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
+/* DB E3 */
+void BX_CPU_C::FNINIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  BX_CPU_THIS_PTR the_i387.init();
 #else
-  BX_INFO(("FADD_STi_ST0: required FPU, configure --enable-fpu"));
+  BX_INFO(("FNINIT: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FADDP_STi_ST0(bxInstruction_c *i)
+/* D9 /4 */
+void BX_CPU_C::FLDENV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
+  BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  fpu_load_environment(i);
 #else
-  BX_INFO(("FADDP_STi_ST0: required FPU, configure --enable-fpu"));
+  BX_INFO(("FLDENV: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FADD_SINGLE_REAL(bxInstruction_c *i)
+/* D9 /6 */
+void BX_CPU_C::FNSTENV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FADD_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FADD_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FADD_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIADD_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIADD_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIADD_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIADD_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FMUL_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FMUL_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FMUL_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FMULP_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FMULP_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FMUL_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FMUL_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FMUL_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FMUL_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIMUL_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIMUL_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIMUL_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIMUL_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUB_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUB_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUBR_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUBR_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUB_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUBR_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUBP_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUBP_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUBRP_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUBRP_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUB_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUB_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUBR_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUBR_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUB_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUB_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSUBR_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSUBR_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISUB_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FISUB_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISUBR_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FISUBR_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISUB_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FISUB_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FISUBR_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FISUBR_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIV_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIV_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIVR_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIVR_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIV_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIVR_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIVP_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIVP_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIVRP_STi_ST0(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIVRP_STi_ST0: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIV_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIV_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIVR_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIVR_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIV_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIV_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDIVR_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDIVR_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIDIV_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIDIV_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIDIVR_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIDIVR_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIDIV_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIDIV_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FIDIVR_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FIDIVR_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOM_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOM_STi: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOMP_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOMP_STi: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOMI_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOMIP_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOMIP_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FUCOMI_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FUCOMIP_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FUCOMIP_ST0_STj: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FUCOM_STi: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FUCOMP_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FUCOMP_STi: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOM_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOMP_SINGLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOMP_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOM_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOMP_DOUBLE_REAL(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOMP_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FICOM_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FICOMP_WORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FICOMP_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FICOM_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FICOMP_DWORD_INTEGER(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FICOMP_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOMPP(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOMPP: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FUCOMPP(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FUCOMPP: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCMOVB_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVB_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FCMOVE_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVE_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FCMOVBE_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVBE_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FCMOVU_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVU_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FCMOVNB_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVNB_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FCMOVNE_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVNE_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FCMOVNBE_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVNBE_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FCMOVNU_ST0_STj(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU && (BX_CPU_LEVEL == 6)
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCMOVNU_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::FXCH_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+  fpu_save_environment(i);
 #else
-  BX_INFO(("FXCH_STi: required FPU, configure --enable-fpu"));
+  BX_INFO(("FNSTENV: required FPU, configure --enable-fpu"));
 #endif
 }
 
+/* D9 D0 */
 void BX_CPU_C::FNOP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
+  BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
 
   // Perform no FPU operation. This instruction takes up space in the
   // instruction stream but does not affect the FPU or machine
@@ -1260,255 +469,53 @@ void BX_CPU_C::FNOP(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FCHS(bxInstruction_c *i)
+void BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+  BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
 
-  fpu_execute(i);
+  // FPU performs no specific operation and no internal x87 states
+  // are affected
 #else
-  BX_INFO(("FCHS: required FPU, configure --enable-fpu"));
+  BX_INFO(("legacy FPU opcodes: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FABS(bxInstruction_c *i)
-{
+
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
 
-  fpu_execute(i);
-#else
-  BX_INFO(("FABS: required FPU, configure --enable-fpu"));
-#endif
-}
+#include <math.h>
 
-void BX_CPU_C::FTST(bxInstruction_c *i)
+void BX_CPU_C::print_state_FPU()
 {
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+  static double scale_factor = pow(2.0, -63.0);
 
-  fpu_execute(i);
-#else
-  BX_INFO(("FTST: required FPU, configure --enable-fpu"));
-#endif
+  Bit32u reg;
+  reg = BX_CPU_THIS_PTR the_i387.cwd;
+  fprintf(stderr, "control word: 0x%04x\n", reg);
+  reg = BX_CPU_THIS_PTR the_i387.swd;
+  fprintf(stderr, "status word:  0x%04x\n", reg);
+  reg = BX_CPU_THIS_PTR the_i387.twd;
+  fprintf(stderr, "tag word:     0x%04x\n", reg);
+  reg = BX_CPU_THIS_PTR the_i387.foo;
+  fprintf(stderr, "operand:      0x%04x\n", reg);
+  reg = BX_CPU_THIS_PTR the_i387.fip & 0xffffffff;
+  fprintf(stderr, "fip:          0x%08x\n", reg);
+  reg = BX_CPU_THIS_PTR the_i387.fcs;
+  fprintf(stderr, "fcs:          0x%04x\n", reg);
+  reg = BX_CPU_THIS_PTR the_i387.fdp & 0xffffffff;
+  fprintf(stderr, "fdp:          0x%08x\n", reg);
+  reg = BX_CPU_THIS_PTR the_i387.fds;
+  fprintf(stderr, "fds:          0x%04x\n", reg);
+
+  // print stack too
+  for (int i=0; i<8; i++) {
+    const floatx80 &fp = BX_FPU_REG(i);
+    double f = pow(2.0, ((0x7fff & fp.exp) - 0x3fff));
+    if (fp.exp & 0x8000) f = -f;
+    f *= fp.fraction*scale_factor;
+    fprintf(stderr, "st(%d):        %.10f (raw 0x%04x:%08x%08x)\n", i, 
+          f, fp.exp & 0xffff, fp.fraction >> 32, fp.fraction & 0xffffffff);
+  }
 }
-
-void BX_CPU_C::FXAM(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FXAM: required FPU, configure --enable-fpu"));
 #endif
-}
-
-void BX_CPU_C::F2XM1(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("F2XM1: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FYL2X(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FYL2X: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FPTAN(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FPTAN: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FPATAN(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FPATAN: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FXTRACT(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FXTRACT: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FPREM1(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FPREM1: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FDECSTP(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FDECSTP: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FINCSTP(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FINCSTP: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FPREM(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FPREM: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FYL2XP1(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FYL2XP1: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSQRT(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSQRT: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSINCOS(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSINCOS: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FRNDINT(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FRNDINT: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSCALE(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSCALE: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FSIN(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FSIN: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FCOS(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FCOS: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FNCLEX(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FNCLEX: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FNINIT(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FNINIT: required FPU, configure --enable-fpu"));
-#endif
-}
-
-void BX_CPU_C::FFREE_STi(bxInstruction_c *i)
-{
-#if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
-
-  fpu_execute(i);
-#else
-  BX_INFO(("FFREE_STi: required FPU, configure --enable-fpu"));
-#endif
-}
