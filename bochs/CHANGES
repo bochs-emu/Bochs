@@ -56,7 +56,51 @@ Changes in 2.0 (December 2002):
     - FIXME
 
 - ROM BIOS
-  - FIXME
+  - improve compile process. Now bioses for 1, 2, 4 and 8 processors 
+    are built at the same time (Bryce)
+  - fixes to be able to compile the bios with gcc2 or gcc3 (Jeroen and
+    Christophe)
+  - changes on boot signature check (Christophe):
+    - never done for cdroms
+    - always done for hard-disks
+    - conditional for floppies
+  - add keyboard int16 functions 0x09 (get keyboard functionality) and 
+    0x0a (get keyboard id) (Christophe)
+  - fix bug [ 629810 ] int 16/ah=01 broken? Enable interrupt on entering
+    int16 handler (Christophe)
+  - new keyboard init in POST (patch from Adam Sulmicki)
+  - flush input and output keyboard buffer before keyboard self test
+    (Volker and Christophe)
+  - fix bug [ 547603 ] kbd up/down arrows in dos install (Christophe)
+  - fix bug [ 549815 ] bios wrongly loads CS,ES.  CS and ES are set to 0
+    before the bootloader code is called. (Christophe)
+  - PCI functions support (Volker) :
+    - BIOS32 service directory
+    - real mode PCI int1a functions 
+    - protected mode PCI int1a functions 
+  - fix reset for MS-DOS and Win95 (Volker)
+  - 360K floppy support (Volker)
+  - enhanced ata/atapi support (Christophe) :
+    - 4 channels / 8 devices
+    - device auto detection (with help from Adam Sulmicki)
+    - EDD3.0 
+    - 32bits device access
+    - optional disk translation "large", "r-echs" or "lba" (up to 8.4GiB)
+  - re-enable harddisk controller interrupt after reads/writes. 
+    Win95 can now use native access to harddisks and cdroms. (Volker)
+  - shutdown status handling (cmos index 0x0f) (Christophe) :
+    - fix bug [ 601166 ] CMOS Problem @ "0x0F Index 0x05 data". After reset
+      execution will resume by a jump to [0x40:0x67] if the shutdown status 
+      is 5 
+    - the bios don't panic any more if the shutdown status is 9
+  - two parallel ports detection in POST (Volker)
+  - two serial ports detection in POST (Volker)
+  - add int15 extended memory function 0xe820 (patch from osmaker) and
+    0xe801 (patch from Hartmut Birr)
+  - fix return values on some int15 functions (Bryce)
+  - fix int70 handler overlapping int08 handler (Christophe)
+  - simplify 8 processors BIOS for operating systems which don't do 
+    paranoia/sanity checks (Zwane)
 
 - configuration interface
   - wxWindows config interface now allows you to change every bochsrc
