@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.118 2004-09-25 17:21:09 vruppert Exp $
+// $Id: rombios.c,v 1.119 2004-10-02 12:27:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -916,10 +916,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.118 $";
-static char bios_date_string[] = "$Date: 2004-09-25 17:21:09 $";
+static char bios_cvs_version_string[] = "$Revision: 1.119 $";
+static char bios_date_string[] = "$Date: 2004-10-02 12:27:09 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.118 2004-09-25 17:21:09 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.119 2004-10-02 12:27:09 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8895,6 +8895,25 @@ pcibios_init_sel_reg:
   pop eax
   ret
   
+pcibios_init_set_elcr:
+  push ax
+  push cx
+  mov  dx, #0x04d0
+  test al, #0x08
+  jz   is_master_pic
+  inc  dx
+  and  al, #0x07
+is_master_pic:
+  mov  cl, al
+  mov  bl, #0x01
+  shl  bl, cl
+  in   al, dx
+  or   al, bl
+  out  dx, al
+  pop  cx
+  pop  ax
+  ret
+
 pcibios_init:
   push ds
   push bp
@@ -8974,6 +8993,7 @@ pci_test_int_pin:
   out  dx, al
   inc  bx
   mov  [bp-2], bx
+  call pcibios_init_set_elcr
 pirq_found:
   mov  bh, [si]
   mov  bl, [si+1]
