@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.86 2002-03-03 06:03:29 bdenney Exp $
+// $Id: main.cc,v 1.87 2002-03-03 06:10:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -131,6 +131,18 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       break;
     case BXP_PARPORT2_ENABLE:
       SIM->get_param (BXP_PARPORT2_OUTFILE)->set_enabled (val!=0);
+      break;
+    case BXP_COM1_PRESENT:
+      SIM->get_param (BXP_COM1_PATH)->set_enabled (val!=0);
+      break;
+    case BXP_COM2_PRESENT:
+      SIM->get_param (BXP_COM2_PATH)->set_enabled (val!=0);
+      break;
+    case BXP_COM3_PRESENT:
+      SIM->get_param (BXP_COM3_PATH)->set_enabled (val!=0);
+      break;
+    case BXP_COM4_PRESENT:
+      SIM->get_param (BXP_COM4_PATH)->set_enabled (val!=0);
       break;
     case BXP_SB16_PRESENT:
       if (set) {
@@ -404,44 +416,50 @@ void bx_init_options ()
 
   // com1 options
   bx_options.com1.Opresent = new bx_param_bool_c (BXP_COM1_PRESENT,
-						  "com1:present",
-						  "Controls whether com1 is installed or not",
+						  "Enable serial port #1 (COM1)",
+						  "",
 						  0);
 
   bx_options.com1.Odev = new bx_param_string_c (BXP_COM1_PATH,
+						 "Pathname of the serial device for COM1",
 						 "",
-						 "Pathname of the serial device",
 						 "", BX_PATHNAME_LEN);
+  bx_options.com1.Opresent->set_handler (bx_param_handler);
+#if 0
   // com2 options
   bx_options.com2.Opresent = new bx_param_bool_c (BXP_COM2_PRESENT,
-						  "com2:present",
+						  "Enable serial port #2 (COM1)",
 						  "Controls whether com2 is installed or not",
 						  0);
 
   bx_options.com2.Odev = new bx_param_string_c (BXP_COM2_PATH,
 						 "",
-						 "Pathname of the serial device",
+						 "",
 						 "", BX_PATHNAME_LEN);
+  bx_options.com2.Opresent->set_handler (bx_param_handler);
   // com3 options
   bx_options.com3.Opresent = new bx_param_bool_c (BXP_COM3_PRESENT,
-						  "com3:present",
-						  "Controls whether com3 is installed or not",
+						  "Enable serial port #3 (COM1)",
+						  "",
 						  0);
 
   bx_options.com3.Odev = new bx_param_string_c (BXP_COM3_PATH,
+						 "Pathname of the serial device for COM3",
 						 "",
-						 "Pathname of the serial device",
 						 "", BX_PATHNAME_LEN);
+  bx_options.com3.Opresent->set_handler (bx_param_handler);
   // com4 options
   bx_options.com4.Opresent = new bx_param_bool_c (BXP_COM4_PRESENT,
-						  "com4:present",
-						  "Controls whether com4 is installed or not",
+						  "Enable serial port #4 (COM1)",
+						  "",
 						  0);
 
   bx_options.com4.Odev = new bx_param_string_c (BXP_COM4_PATH,
+						 "Pathname of the serial device for COM4",
 						 "",
-						 "Pathname of the serial device",
 						 "", BX_PATHNAME_LEN);
+  bx_options.com4.Opresent->set_handler (bx_param_handler);
+#endif
 
   // cdrom options
   bx_options.cdromd.Opresent = new bx_param_bool_c (BXP_CDROM_PRESENT,
@@ -533,9 +551,17 @@ void bx_init_options ()
     bx_options.par1.Ooutfile,
     //bx_options.par2.Oenable,
     //bx_options.par2.Ooutfile,
+    bx_options.com1.Opresent,
+    bx_options.com1.Odev,
+    //bx_options.com2.Opresent,
+    //bx_options.com2.Odev,
+    //bx_options.com3.Opresent,
+    //bx_options.com3.Odev,
+    //bx_options.com4.Opresent,
+    //bx_options.com4.Odev,
     NULL
   };
-  menu = new bx_list_c (BXP_MENU_PARALLEL, "Bochs Parallel Port Options", "parportmenu", parport_init_list);
+  menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL, "Serial and Parallel Port Options", "serial_parallel_menu", parport_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
   bx_options.rom.Opath = new bx_param_string_c (BXP_ROM_PATH,

@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.41 2002-01-27 21:55:27 vruppert Exp $
+// $Id: control.cc,v 1.42 2002-03-03 06:10:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.41 2002-01-27 21:55:27 vruppert Exp $
+ * $Id: control.cc,v 1.42 2002-03-03 06:10:04 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -293,7 +293,7 @@ static char *startup_options_prompt =
 "4. Memory options\n"
 "5. Interface options\n"
 "6. Disk options\n"
-"7. Parallel port options\n"
+"7. Serial or Parallel port options\n"
 "8. Sound Blaster 16 options\n"
 "9. NE2000 network card options\n"
 "10. Other options\n"
@@ -451,7 +451,7 @@ int bx_control_panel (int menu)
 	 case 4: do_menu (BXP_MENU_MEMORY); break;
 	 case 5: do_menu (BXP_MENU_INTERFACE); break;
 	 case 6: do_menu (BXP_MENU_DISK); break;
-	 case 7: do_menu (BXP_MENU_PARALLEL); break;
+	 case 7: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
 	 case 8: do_menu (BXP_SB16); break;
 	 case 9: do_menu (BXP_NE2K); break;
 	 case 10: do_menu (BXP_MENU_MISC); break;
