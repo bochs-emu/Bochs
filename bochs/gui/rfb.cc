@@ -233,7 +233,7 @@ void ServerThreadInit(void *indata)
 	sai.sin_family      = AF_INET;
 	sai.sin_port        = htons(rfbPort);
 	if(bind(sServer, (struct sockaddr *)&sai, sizeof(sai)) == -1) {
-		BX_EROR(( "could not bind socket."));
+		BX_ERROR(( "could not bind socket."));
 		goto end_of_thread;
 	}
 	if(listen(sServer, SOMAXCONN) == -1) {
