@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.214 2002-12-21 17:27:42 bdenney Exp $
+// $Id: main.cc,v 1.215 2002-12-23 10:30:13 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3786,7 +3786,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
   fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
-  fprintf (fp, "realtime_pit: %d\n", bx_options.Orealtime_pit->get ());
+  fprintf (fp, "pit: realtime=%d\n", bx_options.Orealtime_pit->get ());
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
