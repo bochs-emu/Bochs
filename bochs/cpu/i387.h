@@ -41,7 +41,7 @@ struct i387_t
     unsigned char tos;
     unsigned char no_update;
     unsigned char rm;
-    unsigned align8;
+    unsigned char align8;
 
     Bit64u st_space[16]; // 8*16 bytes per FP-reg (aligned) = 128 bytes
 };
