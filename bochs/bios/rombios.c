@@ -253,8 +253,10 @@ static Boolean        set_enable_a20();
 static void           debugger_on();
 static void           debugger_off();
 static void           keyboard_panic();
+static void           boot_failure_msg();
+static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.9 2001-05-31 15:23:10 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.10 2001-05-31 20:36:05 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -807,6 +809,24 @@ cli()
 keyboard_panic()
 {
   panic("Keyboard RESET error\n");
+}
+
+  void
+boot_failure_msg(drive)
+  Bit16u drive;
+{
+  if (drive < 0x80) {
+    bios_printf(0, "Boot Failure!  I could not read floppy drive %d.\n", drive);
+  } else {
+    drive &= 0x7f;
+    bios_printf(0, "Boot Failure!  I could not read hard disk %d.\n", drive);
+  }
+}
+
+void
+nmi_handler_msg()
+{
+  bios_printf(0, "NMI Handler called\n");
 }
 
 void
@@ -3384,8 +3404,10 @@ int19_loadsector:
   jc  bootstrap_problem
   JMP_AP(0x0000, 0x7c00)
 bootstrap_problem:
+  xor dh,dh
+  push dx
+  call _boot_failure_msg
   int #0x18 ;; Boot failure
-  HALT(__LINE__)
   iret
 
 ;----------
@@ -4356,6 +4378,7 @@ notrom:
 
 
 .org 0xe2c3 ; NMI Handler Entry Point
+  call _nmi_handler_msg
   HALT(__LINE__)
   iret
 
