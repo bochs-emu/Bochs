@@ -48,12 +48,6 @@ TO DO BEFORE MERGE:
   and make it consistent.  Bryce would like some feedback on this, and
   then maybe some help with the massive search&replace that may follow.
 
-- (assigned to Christophe)
-  apply patch patch.rename-default-iodev, or something like it
-  also should we do something about this?
-  "// FIXME, we want to make sure that there is a default handler there" 
-  in iodev/devices.cc
-
 - (assigned to Bryce)
   some plugins require multiple object files, like harddrv needs cdrom, 
   and keyboard needs scancodes.  In fact on win32 which is really picky
@@ -73,10 +67,6 @@ TO DO BEFORE MERGE:
 
 TO DO BEFORE RELEASE 2.0:
 - convert remaining devices
-
-- (assigned to Christophe)
-  initialize some field of the keyboard in init() functions, now that
-  the memset is gone.
 
 - #warnings should have #ifdef __GNUC__ or something around them so that
   Psyon doesn't have to manually remove them.

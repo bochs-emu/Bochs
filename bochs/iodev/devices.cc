@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34.2.27 2002-10-24 07:36:38 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.28 2002-10-24 12:36:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,22 +86,26 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.27 2002-10-24 07:36:38 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.28 2002-10-24 12:36:58 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
   num_read_handles = 0;
   num_write_handles = 0;
 
-  /* default read/write handler */
-  default_read_handler_id = -1;
-  default_write_handler_id = -1;
-
   /* set unused elements to appropriate values */
   for (i=0; i < BX_MAX_IO_DEVICES; i++) {
     io_read_handler[i].funct  = NULL;
     io_write_handler[i].funct = NULL;
     }
+
+  /* set no-default handlers, will be overwritten by the real default handler */
+  io_read_handler[BX_DEFAULT_IO_DEVICE].handler_name  = "Default";
+  io_read_handler[BX_DEFAULT_IO_DEVICE].funct         = &default_read_handler;
+  io_read_handler[BX_DEFAULT_IO_DEVICE].this_ptr      = NULL;
+  io_write_handler[BX_DEFAULT_IO_DEVICE].handler_name = "Default";
+  io_write_handler[BX_DEFAULT_IO_DEVICE].funct        = &default_write_handler;
+  io_write_handler[BX_DEFAULT_IO_DEVICE].this_ptr     = NULL;
 
   /* set handlers to the default one */
   for (i=0; i < 0x10000; i++) {
@@ -342,6 +346,26 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
     }
 }
 
+
+// This defines a no-default read handler, 
+// so Bochs does not segfault if unmapped is not loaded
+  Bit32u
+bx_devices_c::default_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+{
+  UNUSED(this_ptr);
+  BX_PANIC(("No default io-read handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
+  return 0xffffffff;
+}
+
+// This defines a no-default write handler, 
+// so Bochs does not segfault if unmapped is not loaded
+  void
+bx_devices_c::default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+{
+  UNUSED(this_ptr);
+  BX_PANIC(("No default io-write handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
+}
+
   void
 bx_devices_c::timer_handler(void *this_ptr)
 {
@@ -447,15 +471,11 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
   /* change table to reflect new handler id for that address */
   if (read_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
     // another handler is already registered for that address
-
-    // if it is not the Unmapped port handler, bail
-    if ( strcmp( io_read_handler[read_handler_id[addr]].handler_name, "Unmapped" ) ) {
-      BX_INFO(("IO device address conflict(read) at IO address %Xh",
-        (unsigned) addr));
-      BX_INFO(("  conflicting devices: %s & %s",
-        io_read_handler[handle].handler_name, io_read_handler[read_handler_id[addr]].handler_name));
-      return false; // address not available, return false.
-      }
+    BX_ERROR(("IO device address conflict(read) at IO address %Xh",
+      (unsigned) addr));
+    BX_ERROR(("  conflicting devices: %s & %s",
+      io_read_handler[handle].handler_name, io_read_handler[read_handler_id[addr]].handler_name));
+    return false; // address not available, return false.
     }
   read_handler_id[addr] = handle;
   return true; // address mapped successfully
@@ -491,15 +511,11 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
   /* change table to reflect new handler id for that address */
   if (write_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
     // another handler is already registered for that address
- 
-    // if it is not the Unmapped port handler, bail
-    if ( strcmp( io_write_handler[write_handler_id[addr]].handler_name, "Unmapped" ) ) {
-      BX_INFO(("IO device address conflict(write) at IO address %Xh",
-        (unsigned) addr));
-      BX_INFO(("  conflicting devices: %s & %s",
-        io_write_handler[handle].handler_name, io_write_handler[write_handler_id[addr]].handler_name));
-      return false; //unable to map iodevice.
-      }
+    BX_ERROR(("IO device address conflict(write) at IO address %Xh",
+      (unsigned) addr));
+    BX_ERROR(("  conflicting devices: %s & %s",
+      io_write_handler[handle].handler_name, io_write_handler[write_handler_id[addr]].handler_name));
+    return false; //unable to map iodevice.
     }
   write_handler_id[addr] = handle;
   return true; // done!
@@ -520,8 +536,8 @@ bx_devices_c::register_default_io_read_handler( void *this_ptr, bx_read_handler_
   /* handle is fixed to the default I/O device */
   handle = BX_DEFAULT_IO_DEVICE;
 
-  if (io_read_handler[handle].funct != NULL) {
-    BX_INFO(("Default io read handler already registered '%s'",io_read_handler[handle].handler_name));
+  if (strcmp(io_read_handler[handle].handler_name, "Default")) {
+    BX_ERROR(("Default io read handler already registered '%s'",io_read_handler[handle].handler_name));
     return false;
     }
 
@@ -543,8 +559,8 @@ bx_devices_c::register_default_io_write_handler( void *this_ptr, bx_write_handle
   /* handle is fixed to the MAX */
   handle = BX_DEFAULT_IO_DEVICE;
 
-  if (io_write_handler[handle].funct != NULL) {
-    BX_INFO(("Default io write handler already registered '%s'",io_write_handler[handle].handler_name));
+  if (strcmp(io_write_handler[handle].handler_name, "Default")) {
+    BX_ERROR(("Default io write handler already registered '%s'",io_write_handler[handle].handler_name));
     return false;
     }
 

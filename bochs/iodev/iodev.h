@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.28 2002-10-24 07:36:39 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.29 2002-10-24 12:36:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -331,9 +331,6 @@ private:
     } io_write_handler[BX_MAX_IO_DEVICES];
   unsigned              num_write_handles;
 
-  signed int            default_read_handler_id;
-  signed int            default_write_handler_id;
-
   // more for informative purposes, the names of the devices which
   // are use each of the IRQ 0..15 lines are stored here
   const char *irq_handler_name[BX_MAX_IRQS];
@@ -342,6 +339,9 @@ private:
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
   BX_DEV_SMF Bit32u port92_read(Bit32u address, unsigned io_len);
   BX_DEV_SMF void   port92_write(Bit32u address, Bit32u value, unsigned io_len);
+
+  static Bit32u default_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
   int timer_handle;
   Boolean is_serial_enabled ();
