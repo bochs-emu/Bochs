@@ -3001,7 +3001,19 @@ void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSRLDQ_WdqIb: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
+  Bit8u shift = i->Ib();
+
+  result.xmm64u(0) = 0;
+  result.xmm64u(1) = 0;
+
+  for(unsigned j=shift; j<16; j++)
+  {
+    result.xmmubyte(j-shift) = op1.xmmubyte(j);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->rm(), result);
 #else
   BX_INFO(("PSRLDQ_WdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -3028,12 +3040,25 @@ void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F 73 Grp14 111 */
 void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSLLDQ_WdqIb: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
+  Bit8u shift = i->Ib();
+
+  result.xmm64u(0) = 0;
+  result.xmm64u(1) = 0;
+
+  for(unsigned j=shift; j<16; j++)
+  {
+    result.xmmubyte(j) = op1.xmmubyte(j-shift);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->rm(), result);
 #else
   BX_INFO(("PSLLDQ_WdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
