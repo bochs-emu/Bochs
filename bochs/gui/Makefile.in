@@ -40,7 +40,7 @@ LIBS = @LIBS@
 X_CFLAGS = @X_CFLAGS@
 BEOS_CFLAGS = -Wno-multichar
 RFB_CFLAGS =
-SDL_CFLAGS =
+SDL_CFLAGS = `sdl-config --cflags`
 RANLIB = @RANLIB@
 
 GUI_OBJS_X11  = x.o
