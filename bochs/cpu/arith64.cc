@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.7 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: arith64.cc,v 1.8 2002-09-23 14:25:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -719,7 +719,7 @@ BX_CPU_C::CMP_EqId(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, diff_64;
 
-    op2_64 = i->Id();
+    op2_64 = (Bit32s) i->Id();
 
     /* op1_64 is a register or memory reference */
     if (i->modC0()) {
