@@ -350,6 +350,7 @@
 #define BX_WITH_RFB 0
 #define BX_WITH_AMIGAOS 0
 #define BX_WITH_SDL 0
+#define BX_WITH_WX 0
 
 
 // Roland Mainz's idle hack is presently specific to X11. If people try to

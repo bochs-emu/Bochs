@@ -69,6 +69,7 @@ if (test "$with_sdl" != yes) && \
    (test "$with_rfb" != yes) && \
    (test "$with_amigaos" != yes) && \
    (test "$with_carbon" != yes) && \
+   (test "$with_wx" != yes) && \
    (test "$with_macos" != yes); then
   # use DEFAULT_GUI.  Set the appropriate variable.
   # DEFAULT_GUI must be set to one of the names above.  Otherwise, no
@@ -1012,6 +1013,10 @@ AC_ARG_WITH(sdl,
   [  --with-sdl                        use SDL libraries],
   )
 
+AC_ARG_WITH(wx,
+  [  --with-wx                         use wxWindows libraries],
+  )
+
 dnl // DASH is option prefix for your platform
 dnl // SLASH is directory for your platform
 dnl // CXXFP is C++ File Prefix; the flag that tells the compiler
@@ -1106,9 +1111,16 @@ elif test "$with_term" = yes; then
   GUI_OBJS='$(GUI_OBJS_TERM)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_TERM)'
   use_curses=yes
+elif test "$with_wx" = yes; then
+  AC_MSG_RESULT(wxWindows)
+  AC_DEFINE(BX_WITH_WX, 1)
+  GUI_OBJS='$(GUI_OBJS_WX)'
+  GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
 else
   AC_MSG_RESULT(none)
   AC_DEFINE(BX_WITH_NOGUI, 1)
+  CFLAGS="$CFLAGS `wx-config --cflags`"
+  CXXFLAGS="$CFLAGS `wx-config --cxxflags`"
   GUI_OBJS='$(GUI_OBJS_NOGUI)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
 fi
