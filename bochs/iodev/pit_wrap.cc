@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.20 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pit_wrap.cc,v 1.21 2002-09-01 15:38:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -403,6 +403,13 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   Boolean prev_timer0_out = BX_PIT_THIS s.timer.read_OUT(0);
   Boolean want_interrupt = 0;
   Bit32u ticks_delta = 0;
+
+#ifdef BX_SCHEDULED_DIE_TIME
+  if (bx_pc_system.time_ticks() > BX_SCHEDULED_DIE_TIME) {
+    BX_ERROR (("ticks exceeded scheduled die time, quitting"));
+    BX_EXIT (2);
+  }
+#endif
 
 #if BX_USE_REALTIME_PIT
   ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));

@@ -620,4 +620,10 @@ typedef unsigned int Boolean;
 #define BX_CDROM_NAME "CD-ROM"
 #endif
 
+// This is handy for certain performance testing purposes, but otherwise
+// totally useless.  If you define BX_SCHEDULED_DIE_TIME then it enables code
+// in bx_pit_c::periodic that will cause Bochs to exit() after a certain number
+// of instructions.
+//#define BX_SCHEDULED_DIE_TIME 1162230000   // end of redhat6.0 boot
+
 #endif  // _BX_CONFIG_H
