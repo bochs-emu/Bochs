@@ -31,7 +31,7 @@
 #include "bochs.h"
 
 
-
+#define VERBOSE_KBD_DEBUG 0
 
 
 #define MOUSE_MODE_RESET  10
@@ -528,11 +528,11 @@ bx_panic("kbd: OUTB set and command 0x%02x encountered\n", value);
           break;
 
         case 0xfe: // System Reset, transition to real mode
-          if (bx_dbg.keyboard)
-            bx_printf("KBD: system reset\n");
-          bx_panic("system reset via KBD ctrl command FEh\n");
+          bx_printf("KBD: system reset\n");
+          bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
+          BX_CPU.reset(BX_RESET_HARDWARE);
           // Use bx_pc_system if necessary bx_cpu.reset_cpu();
-          bx_pc_system.ResetSignal( PCS_SET );
+          // bx_pc_system.ResetSignal( PCS_SET );
           break;
 
         default:
@@ -642,59 +642,35 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_GRAVE:         scancode = 0x29; break;
 
     case BX_KEY_BACKSPACE:     scancode = 0x0e; break;
+    case BX_KEY_KP_ENTER:
     case BX_KEY_ENTER:         scancode = 0x1c; break;
     case BX_KEY_TAB:           scancode = 0x0f; break;
 
     case BX_KEY_LEFT:
-      //fprintf(stderr,"# Grey left-arrow key not on 83-key keyboard\n");
-      scancode = 0x4b; break;
-    case BX_KEY_RIGHT:
-      //fprintf(stderr,"# Grey right-arrow key not on 83-key keyboard\n");
-      scancode = 0x4d; break;
-    case BX_KEY_UP:
-      //fprintf(stderr,"# Grey up-arrow key not on 83-key keyboard\n");
-      scancode = 0x48; break;
-    case BX_KEY_DOWN:
-      //fprintf(stderr,"# Grey down-arrow key not on 83-key keyboard\n");
-      scancode = 0x50; break;
-
     case BX_KEY_KP_LEFT:       scancode = 0x4b; break;
+    case BX_KEY_RIGHT:
     case BX_KEY_KP_RIGHT:      scancode = 0x4d; break;
+    case BX_KEY_UP:
     case BX_KEY_KP_UP:         scancode = 0x48; break;
+    case BX_KEY_DOWN:
     case BX_KEY_KP_DOWN:       scancode = 0x50; break;
 
     case BX_KEY_INSERT:
-      fprintf(stderr,"# Grey insert key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_DELETE:
-      fprintf(stderr,"# Grey delete key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_HOME:
-      fprintf(stderr,"# Grey home key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_END:
-      fprintf(stderr,"# Grey end key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_PAGE_UP:
-      fprintf(stderr,"# Grey page-up key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_PAGE_DOWN:
-      fprintf(stderr,"# Grey page-down key not on 83-key keyboard\n");
-      return;
-
     case BX_KEY_KP_INSERT:        scancode = 0x52; break;
+    case BX_KEY_DELETE:
     case BX_KEY_KP_DELETE:        scancode = 0x53; break;
+    case BX_KEY_HOME:
     case BX_KEY_KP_HOME:          scancode = 0x47; break;
+    case BX_KEY_END:
     case BX_KEY_KP_END:           scancode = 0x4f; break;
+    case BX_KEY_PAGE_UP:
     case BX_KEY_KP_PAGE_UP:       scancode = 0x49; break;
+    case BX_KEY_PAGE_DOWN:
     case BX_KEY_KP_PAGE_DOWN:     scancode = 0x51; break;
 
     case BX_KEY_KP_ADD:           scancode = 0x4e; break;
     case BX_KEY_KP_SUBTRACT:      scancode = 0x4a; break;
     case BX_KEY_KP_5:             scancode = 0x4c; break;
-    case BX_KEY_KP_ENTER:
-      fprintf(stderr,"# Grey Enter key not on 83-key keyboard\n");
-      return;
     case BX_KEY_KP_MULTIPLY:
       fprintf(stderr,"# Grey Multiply key not on 83-key keyboard\n");
       return;
@@ -979,7 +955,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       break;
 
     case 0xf2:  // identify keyboard
-      bx_printf("KBD: indentify keyboard command received\n");
+      bx_printf("KBD: identify keyboard command received\n");
       kbd_enQ(0xFA); // AT sends ACK, MFII sends ACK+ABh+41h
       return;
       break;
@@ -1044,7 +1020,11 @@ case 0xd3:
   return;
 
     default:
-      bx_panic("KBD: kbd_ctrl_to_kbd(): got value of %02x\n",
+			/* XXX fix this properly:
+			http://panda.cs.ndsu.nodak.edu/~achapwes/PICmicro/mouse/mouse.html
+			http://sourceforge.net/tracker/index.php?func=detail&aid=422457&group_id=12580&atid=112580
+			 */
+      bx_printf("KBD: kbd_ctrl_to_kbd(): got value of %02x\n",
         (unsigned) value);
       kbd_enQ(0xFA); /* send ACK ??? */
       return;
@@ -1242,6 +1222,17 @@ bx_printf("  aux_clock_enabled = %u\n",
 	    bx_printf("[mouse] Mouse disabled (stream mode)\n");
       break;
 
+    case 0xf6: // Set Defaults
+      BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
+      BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
+      BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
+      BX_KEY_THIS s.mouse.enable          = 0;
+      BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_STREAM;
+      controller_enQ(0xFA, 1); // ACK
+      if (bx_dbg.mouse)
+	    bx_printf("[mouse] Set Defaults\n");
+      break;
+
     case 0xff: // Reset
       BX_KEY_THIS s.mouse.sample_rate     = 100; /* reports per second (default) */
       BX_KEY_THIS s.mouse.resolution_cpmm = 4; /* 4 counts per millimeter (default) */
@@ -1279,6 +1270,7 @@ bx_printf("  aux_clock_enabled = %u\n",
       //ECh Reset Wrap Mode
       //EEh Set Wrap Mode
       //F0h Set Remote Mode (polling mode, i.e. not stream mode.)
+      //FEh Resend
       bx_panic("MOUSE: kbd_ctrl_to_mouse(%02xh)\n", (unsigned) value);
     }
  }
@@ -1303,8 +1295,10 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
   if ( (delta_y < -1) || (delta_y > 1) )
     delta_y /= 2;
 
-  //fprintf(stderr, "# MOUSE: Dx=%d Dy=%d\n",
-  //  delta_x, delta_y);
+#ifdef VERBOSE_KBD_DEBUG
+  if (delta_x != 0 || delta_y != 0)
+    bx_printf("[mouse] Dx=%d Dy=%d\n", delta_x, delta_y);
+#endif  /* ifdef VERBOSE_KBD_DEBUG */
 
   b1 = (button_state & 0x0f) | 0x08; // bit3 always set
 
