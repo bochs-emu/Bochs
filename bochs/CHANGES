@@ -1,9 +1,10 @@
-
-I've marked several items with FIXME so that we can check the details.
+I've marked several items with FIXME to remind us to check things or 
+fill in blanks.
 -Bryce
 
 REMINDER(bryce): add instructions for setting up networking to the docbook docs.
 REMINDER(bryce): add Christophe's instructions for keymapping to docbook.
+REMINDER(bryce): merge Volker's changes list to this file.
 
 Compile instructions for sdl, after we apply patch.check-platform.
 For most platforms:
