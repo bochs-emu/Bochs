@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.90 2002-12-13 20:06:07 bdenney Exp $
+$Id: user.dbk,v 1.91 2002-12-13 20:08:55 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -21,8 +21,8 @@ This is the top level file for the Bochs Users Manual.
    <authorgroup>
    <author><firstname>Kevin</firstname><surname>Lawton</surname></author>
    <author><firstname>Bryce</firstname><surname>Denney</surname></author>
-   <author><firstname>N. David</firstname><surname>Guarneri</surname></editor>
-   <author><firstname>Christophe</firstname><surname>Bothamy</surname></editor>
+   <author><firstname>N. David</firstname><surname>Guarneri</surname></author>
+   <author><firstname>Christophe</firstname><surname>Bothamy</surname></author>
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
    </authorgroup>
 </bookinfo>
