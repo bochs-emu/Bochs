@@ -47,6 +47,7 @@ class bx_pic_c;
 class bx_hard_drive_c;
 class bx_sb16_c;
 class bx_pci_c;
+class bx_ioapic_c;
 class bx_ne2k_c;
 class bx_g2h_c;
 
@@ -88,6 +89,7 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
+  bx_ioapic_c      *ioapic;
   bx_pci_c         *pci;
   bx_pit_c         *pit;
   bx_keyb_c        *keyboard;
@@ -140,6 +142,9 @@ private:
 #  include "iodev/vga.h"
 #else
 #  include "iodev/hga.h"
+#endif
+#if BX_APIC_SUPPORT
+#  include "iodev/ioapic.h"
 #endif
 #include "iodev/cmos.h"
 #include "iodev/dma.h"

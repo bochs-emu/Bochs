@@ -116,6 +116,13 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pci->reset();
 #endif
 
+#if BX_APIC_SUPPORT
+  // I/O APIC 82093AA
+  ioapic = new bx_ioapic_c ();
+  ioapic->init ();
+  ioapic->set_id (BX_IOAPIC_DEFAULT_ID);
+#endif
+
 
   // CMOS RAM & RTC
 #if BX_USE_CMOS_SMF

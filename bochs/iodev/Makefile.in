@@ -67,7 +67,8 @@ BX_HW_IODEV_OBJS = \
   @NE2K_OBJS@ \
   @CDROM_OBJS@ \
   @SB16_OBJS@ \
-  $(MCH_OBJS)
+  $(MCH_OBJS) \
+  ioapic.o
 
 
 BX_IODEV_OBJS = $(BX_HW_IODEV_OBJS)
