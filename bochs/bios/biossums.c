@@ -53,6 +53,18 @@ byte chksum_pcmp_calc_value( byte* data, long offset );
 byte chksum_pcmp_get_value(  byte* data, long offset );
 void chksum_pcmp_set_value(  byte* data, long offset, byte value );
 
+
+#define _PIR_LEN         6
+#define _PIR_CHKSUM     31
+
+#define _PIR_MINHDR     32
+
+long chksum__pir_get_offset( byte *data, long offset );
+byte chksum__pir_calc_value( byte* data, long offset );
+byte chksum__pir_get_value(  byte* data, long offset );
+void chksum__pir_set_value(  byte* data, long offset, byte value );
+
+
 byte bios_data[LEN_BIOS_DATA];
 
 
@@ -143,6 +155,29 @@ int main( int argc, char* argv[] ) {
   }
   if( hits >= 2 ) {
     printf( "Warning! Multiple PCMP headers. No checksum set." );
+  }
+  if( hits ) {
+    printf( "\n" );
+  }
+
+
+  hits   = 0;
+  offset = 0L;
+  while( (tmp_offset = chksum__pir_get_offset( bios_data, offset )) != -1L ) {
+    offset  = tmp_offset;
+    cur_val = chksum__pir_get_value(  bios_data, offset );
+    new_val = chksum__pir_calc_value( bios_data, offset );
+    printf( "\n\n$PIR header at:     0x%4lX\n", offset  );
+    printf( "Current checksum:     0x%02X\n",   cur_val );
+    printf( "Calculated checksum:  0x%02X\n  ",  new_val );
+    hits++;
+  }
+  if( hits == 1 && cur_val != new_val ) {
+    printf( "Setting checksum." );
+    chksum__pir_set_value( bios_data, offset, new_val );
+  }
+  if( hits >= 2 ) {
+    printf( "Warning! Multiple $PIR headers. No checksum set." );
   }
   if( hits ) {
     printf( "\n" );
@@ -384,5 +419,60 @@ void chksum_pcmp_set_value( byte* data, long offset, byte value ) {
 
   check( offset + PCMP_CHKSUM <= MAX_OFFSET, "PCMP checksum out of bounds" );
   *( data + offset + PCMP_CHKSUM ) = value;
+}
+
+
+byte chksum__pir_calc_value( byte* data, long offset ) {
+
+  int   i;
+  int   len;
+  byte  sum;
+
+  check( offset + _PIR_MINHDR <= MAX_OFFSET, "$PIR header out of bounds" );
+  len  =   *( data + offset + _PIR_LEN )      + \
+         ( *( data + offset + _PIR_LEN + 1 ) << 8 );
+  check( offset + len <= MAX_OFFSET, "$PIR header-length out of bounds" );
+  sum = 0;
+  for( i = 0; i < len; i++ ) {
+    if( i != _PIR_CHKSUM ) {
+      sum = sum + *( data + offset + i );
+    }
+  }
+  sum = -sum;
+  return( sum );
+}
+
+
+long chksum__pir_get_offset( byte* data, long offset ) {
+
+  long result = -1L;
+
+  offset = offset + 0x0F;
+  offset = offset & ~( 0x0F );
+  while( offset + 16 < MAX_OFFSET ) {
+    offset = offset + 16;
+    if( *( data + offset + 0 ) == '$' && \
+        *( data + offset + 1 ) == 'P' && \
+        *( data + offset + 2 ) == 'I' && \
+        *( data + offset + 3 ) == 'R' ) {
+      result = offset;
+      break;
+    }
+  }
+  return( result );
+}
+
+
+byte chksum__pir_get_value( byte* data, long offset ) {
+
+  check( offset + _PIR_CHKSUM <= MAX_OFFSET, "$PIR checksum out of bounds" );
+  return(  *( data + offset + _PIR_CHKSUM ) );
+}
+
+
+void chksum__pir_set_value( byte* data, long offset, byte value ) {
+
+  check( offset + _PIR_CHKSUM <= MAX_OFFSET, "$PIR checksum out of bounds" );
+  *( data + offset + _PIR_CHKSUM ) = value;
 }
 

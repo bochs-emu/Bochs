@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.239 2004-01-13 19:21:20 mcb30 Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.240 2004-01-15 02:08:34 danielg4 Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -780,19 +780,81 @@ AC_ARG_ENABLE(pci,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_PCI_SUPPORT, 1)
+    pci=1
     PCI_OBJ='pci.o pci2isa.o pcivga.o'
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_PCI_SUPPORT, 0)
+    pci=0
     PCI_OBJ=''
    fi],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_PCI_SUPPORT, 0)
+    pci=0
     PCI_OBJ=''
     ]
   )
 AC_SUBST(PCI_OBJ)
+
+#
+# PCI host device support
+#
+AC_MSG_CHECKING(for PCI host device mapping support)
+AC_ARG_ENABLE(pcidev,
+  [  --enable-pcidev                   enable PCI host device mapping support],
+  [
+    if test "$enableval" = "yes"; then
+      AC_MSG_RESULT(yes)
+      if test "$pci" != "1"; then
+        AC_MSG_ERROR([PCI host device mapping requires PCI support])
+      fi
+      case "$target" in
+        *-pc-linux*)
+          AC_MSG_NOTICE([Linux detected as host for PCI host device mapping])
+          linux_version=`uname -r`
+	  case "$linux_version" in
+		2.4*)
+	  		PCIDEV_MODULE_MAKE_ALL="all-kernel24"
+			KERNEL_MODULE_SUFFIX="o"
+          	;;
+		2.6*)
+	  		PCIDEV_MODULE_MAKE_ALL="all-kernel26"
+			KERNEL_MODULE_SUFFIX="ko"
+		;;
+		*)
+			AC_MSG_ERROR([Linux kernel 2.4 or 2.6 is required])
+		;;
+	  esac
+	  KERNELDIR="/lib/modules/$linux_version/build"
+	  LSMOD="lsmod"
+	  INSMOD="insmod"
+	  RMMOD="rmmod"
+	  DEPMOD="depmod"
+	  AC_SUBST(KERNELDIR)
+	  AC_SUBST(LSMOD)
+	  AC_SUBST(INSMOD)
+	  AC_SUBST(RMMOD)
+	  AC_SUBST(DEPMOD)
+	  AC_SUBST(PCIDEV_MODULE_MAKE_ALL)
+	  AC_SUBST(KERNEL_MODULE_SUFFIX)
+        ;;
+        *)
+          AC_MSG_ERROR([PCI host device mapping requires Linux as host])
+        ;;
+      esac
+      AC_DEFINE(BX_PCI_DEV_SUPPORT, 1)
+      PCI_OBJ="$PCI_OBJ pcidev.o"
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_PCI_DEV_SUPPORT, 0)
+    fi
+  ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_PCI_DEV_SUPPORT, 0)
+  ]
+)
 
 AC_MSG_CHECKING(for limited USB support)
 AC_ARG_ENABLE(usb,
@@ -1850,6 +1912,7 @@ EXE=""
 COMMAND_SEPARATOR="&& \\"
 CD_UP_ONE="echo done"
 CD_UP_TWO="echo done"
+CD_UP_THREE="echo done"
 
 INSTALL_TARGET=install_unix
 INSTALL_LIST_FOR_PLATFORM=
@@ -2179,6 +2242,7 @@ case "$target" in
     COMMAND_SEPARATOR=""
     CD_UP_ONE="cd .."
     CD_UP_TWO="cd ..\.."
+    CD_UP_THREE="cd ..\..\.."
     have_gettimeofday=0  # even though it may exist in build environment
     AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     AC_DEFINE(inline, __inline)
@@ -2512,6 +2576,7 @@ AC_SUBST(PLUGIN_LIBNAME_TRANSFORMATION)
 AC_SUBST(COMMAND_SEPARATOR)
 AC_SUBST(CD_UP_ONE)
 AC_SUBST(CD_UP_TWO)
+AC_SUBST(CD_UP_THREE)
 AC_SUBST(VERSION)
 AC_SUBST(VER_STRING)
 AC_SUBST(REL_STRING)
@@ -2533,4 +2598,5 @@ AC_OUTPUT(Makefile iodev/Makefile bx_debug/Makefile bios/Makefile \
 	 fpu/Makefile doc/docbook/Makefile \
 	 build/linux/bochs-dlx \
 	 bxversion.h build/macosx/Info.plist \
-	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi)
+	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
+	 host/linux/pcidev/Makefile)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.104 2004-01-14 23:09:31 cbothamy Exp $
+// $Id: rombios.c,v 1.105 2004-01-15 02:08:34 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.104 $";
-static char bios_date_string[] = "$Date: 2004-01-14 23:09:31 $";
+static char bios_cvs_version_string[] = "$Revision: 1.105 $";
+static char bios_date_string[] = "$Date: 2004-01-15 02:08:34 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.104 2004-01-14 23:09:31 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.105 2004-01-15 02:08:34 danielg4 Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8600,8 +8600,75 @@ pci_real_select_reg:
   mov dx, #0x0cf8
   out dx,  eax
   ret
-#endif
+  
+.align 16
+pci_routing_table_structure:
+  db 0x24, 0x50, 0x49, 0x52  ;; "$PIR" signature
+  db 0, 1 ;; version
+  dw 32 + (4 * 16) ;; table size
+  db 0 ;; PCI interrupt router bus
+  db 0x8 ;; PCI interrupt router DevFunc
+  dw 0x0000 ;; PCI exclusive IRQs 
+  dw 0x8086 ;; compatible PCI interrupt router vendor ID
+  dw 0x122e ;; compatible PCI interrupt router device ID
+  dw 0,0 ;; Miniport data
+  db 0,0,0,0,0,0,0,0,0,0,0 ;; reserved
+  db 0x97 ;; checksum
+  ;; first slot entry: 440FX
+  db 0 ;; pci bus number
+  db 0 ;; pci device number (bit 7-3)
+  db 0x60 ;; link value INTA#: pointer into PCI2ISA config space
+  dw 0xdef8 ;; IRQ bitmap INTA# 
+  db 0x61 ;; link value INTB#
+  dw 0xdef8 ;; IRQ bitmap INTB# 
+  db 0x62 ;; link value INTC#
+  dw 0xdef8 ;; IRQ bitmap INTC# 
+  db 0x63 ;; link value INTD#
+  dw 0xdef8 ;; IRQ bitmap INTD#
+  db 0 ;; physical slot (0 = embedded)
+  db 0 ;; reserved
+  ;; second slot entry: PCI-to-ISA
+  db 0 ;; pci bus number
+  db 0x08 ;; pci device number (bit 7-3)
+  db 0x61 ;; link value INTA#
+  dw 0xdef8 ;; IRQ bitmap INTA# 
+  db 0x62 ;; link value INTB#
+  dw 0xdef8 ;; IRQ bitmap INTB# 
+  db 0x63 ;; link value INTC#
+  dw 0xdef8 ;; IRQ bitmap INTC# 
+  db 0x60 ;; link value INTD#
+  dw 0xdef8 ;; IRQ bitmap INTD#
+  db 0 ;; physical slot (0 = embedded)
+  db 0 ;; reserved
+  ;; 3th slot entry: PCI VGA
+  db 0 ;; pci bus number
+  db 0x10 ;; pci device number (bit 7-3)
+  db 0x62 ;; link value INTA#
+  dw 0xdef8 ;; IRQ bitmap INTA# 
+  db 0x63 ;; link value INTB#
+  dw 0xdef8 ;; IRQ bitmap INTB# 
+  db 0x60 ;; link value INTC#
+  dw 0xdef8 ;; IRQ bitmap INTC# 
+  db 0x61 ;; link value INTD#
+  dw 0xdef8 ;; IRQ bitmap INTD#
+  db 1 ;; physical slot (0 = embedded)
+  db 0 ;; reserved
+  ;; 4th slot entry: a PCI device 
+  db 0 ;; pci bus number
+  db 0x18 ;; pci device number (bit 7-3)
+  db 0x63 ;; link value INTA#
+  dw 0xdef8 ;; IRQ bitmap INTA# 
+  db 0x60 ;; link value INTB#
+  dw 0xdef8 ;; IRQ bitmap INTB# 
+  db 0x61 ;; link value INTC#
+  dw 0xdef8 ;; IRQ bitmap INTC# 
+  db 0x62 ;; link value INTD#
+  dw 0xdef8 ;; IRQ bitmap INTD#
+  db 2 ;; physical slot (0 = embedded)
+  db 0 ;; reserved
+#endif // BX_PCIBIOS
 
+use16 386
 detect_parport:
   push dx
   add  dx, #2

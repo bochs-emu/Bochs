@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.114 2004-01-13 19:21:21 mcb30 Exp $
+// $Id: siminterface.h,v 1.115 2004-01-15 02:08:34 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -374,6 +374,9 @@ typedef enum {
   BXP_NE2K_ETHDEV,
   BXP_NE2K_SCRIPT,
   BXP_NE2K,
+  BXP_PCIDEV_VENDOR,
+  BXP_PCIDEV_DEVICE,
+  BXP_PCIDEV,
   BXP_SB16_PRESENT,
   BXP_SB16_MIDIFILE,
   BXP_SB16_WAVEFILE,

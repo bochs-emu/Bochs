@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.257 2004-01-13 19:21:20 mcb30 Exp $
+// $Id: main.cc,v 1.258 2004-01-15 02:08:34 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1216,6 +1216,27 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
 
+  // pcidev options
+  bx_options.pcidev.Ovendor = new bx_param_num_c(BXP_PCIDEV_VENDOR,
+      "PCI Vendor ID",
+      "The vendor ID of the host PCI device to map",
+      0, 0xffff,
+      0xffff); // vendor id 0xffff = no pci device present
+  bx_options.pcidev.Odevice = new bx_param_num_c(BXP_PCIDEV_DEVICE,
+      "PCI Device ID",
+      "The device ID of the host PCI device to map",
+      0, 0xffff,
+      0x0);
+  /*
+  bx_param_c *pcidev_init_list[] = {
+    bx_options.pcidev.Ovendor,
+    bx_options.pcidev.Odevice,
+    NULL
+  };
+  menu = new bx_list_c (BXP_PCIDEV, "Host PCI Device Mapping Configuration", "", pcidev_init_list);
+  menu->get_options ()->set (menu->SHOW_PARENT);
+  */
+
   // NE2K options
   bx_options.ne2k.Opresent = new bx_param_bool_c (BXP_NE2K_PRESENT,
       "Enable NE2K NIC emulation",
@@ -1685,6 +1706,10 @@ void bx_reset_options ()
   bx_options.ne2k.Oethdev->reset();
   bx_options.ne2k.Oscript->reset();
 
+  // pcidev
+  bx_options.pcidev.Ovendor->reset();
+  bx_options.pcidev.Odevice->reset();
+  
   // SB16
   bx_options.sb16.Opresent->reset();
   bx_options.sb16.Omidifile->reset();
@@ -3865,6 +3890,28 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: i440FXSupport directive malformed.", context));
       }
     }
+  else if (!strcmp(params[0], "pcidev")) {
+    if (num_params != 3) {
+      PARSE_ERR(("%s: pcidev directive malformed.", context));
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "vendor=", 7)) {
+        if ( (params[i][7] == '0') && (toupper(params[i][8]) == 'X') )
+          bx_options.pcidev.Ovendor->set (strtoul (&params[i][7], NULL, 16));
+        else
+          bx_options.pcidev.Ovendor->set (strtoul (&params[i][7], NULL, 10));
+      }
+      else if (!strncmp(params[i], "device=", 7)) {
+        if ( (params[i][7] == '0') && (toupper(params[i][8]) == 'X') )
+          bx_options.pcidev.Odevice->set (strtoul (&params[i][7], NULL, 16));
+        else
+          bx_options.pcidev.Odevice->set (strtoul (&params[i][7], NULL, 10));
+      }
+      else {
+        BX_ERROR(("%s: unknown parameter for pcidev ignored.", context));
+      }
+    }
+  }
   else if (!strcmp(params[0], "newharddrivesupport")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: newharddrivesupport directive malformed.", context));

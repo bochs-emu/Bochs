@@ -259,6 +259,7 @@
 #define BX_USE_PCI_SMF     1  // PCI
 #define BX_USE_P2I_SMF     1  // PCI-to-ISA bridge
 #define BX_USE_PCIVGA_SMF  1  // PCI-VGA
+#define BX_USE_PCIDEV_SMF  1  // PCI-DEV
 #define BX_USE_PCIUSB_SMF  1  // USB hub
 #define BX_USE_PCIPNIC_SMF 1  // PCI pseudo NIC
 #define BX_USE_NE2K_SMF    1  // NE2K
@@ -276,7 +277,8 @@
    || !BX_USE_SB16_SMF || !BX_USE_DEV_SMF || !BX_USE_PCI_SMF \
    || !BX_USE_P2I_SMF || !BX_USE_PCIVGA_SMF || !BX_USE_PCIUSB_SMF \
    || !BX_USE_PCIPNIC_SMF \
-   || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF || !BX_USE_GAME_SMF)
+   || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF || !BX_USE_GAME_SMF \
+   || !BX_USE_PCIDEV_SMF)
 #error You must use SMF to have plugins
 #endif
 
@@ -691,6 +693,13 @@ typedef
 
 // Experimental VGA on PCI
 #define BX_PCI_VGA_SUPPORT 1
+
+// Experimental host PCI device mapping
+#define BX_PCI_DEV_SUPPORT 0
+	
+#if (BX_PCI_DEV_SUPPORT && !BX_PCI_SUPPORT)
+#error To enable PCI host device mapping, you must also enable PCI
+#endif
 
 // limited USB on PCI
 #define BX_PCI_USB_SUPPORT 0

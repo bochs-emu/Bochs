@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.27 2003-03-02 23:59:12 cbothamy Exp $
+// $Id: memory.cc,v 1.28 2004-01-15 02:08:35 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,6 +47,15 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   bx_iodebug_c::mem_write(cpu, addr, len, data);
 #endif
 
+  struct memory_handler_struct *memory_handler = memory_handlers[addr >> 20];
+  while (memory_handler) {
+	  if (memory_handler->begin <= addr &&
+		memory_handler->end >= addr &&
+	  	memory_handler->write_handler(addr, len, data, memory_handler->write_param))
+		  return;
+	  memory_handler = memory_handler->next;
+  }
+  
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
 
@@ -241,8 +250,16 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c::mem_read(cpu, addr, len, data);
 #endif
+ 
+  struct memory_handler_struct *memory_handler = memory_handlers[addr >> 20];
+  while (memory_handler) {
+	  if (memory_handler->begin <= addr &&
+		memory_handler->end >= addr &&
+	  	memory_handler->read_handler(addr, len, data, memory_handler->read_param))
+		  return;
+	  memory_handler = memory_handler->next;
+  }
   
-
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
 

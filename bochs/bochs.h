@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.129 2004-01-13 19:21:17 mcb30 Exp $
+// $Id: bochs.h,v 1.130 2004-01-15 02:08:34 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -298,6 +298,7 @@ enum {
   CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
   UNMAPLOG, SERRLOG, BIOSLOG, PIT81LOG, PIT82LOG, IODEBUGLOG, PCI2ISALOG,
   PLUGINLOG, EXTFPUIRQLOG , PCIVGALOG, PCIUSBLOG, VTIMERLOG, STIMERLOG,
+  PCIDEVLOG,
   PCIPNICLOG
 };
 
@@ -575,6 +576,11 @@ typedef struct {
   } bx_ne2k_options;
 
 typedef struct {
+  bx_param_num_c *Ovendor;
+  bx_param_num_c *Odevice;
+  } bx_pcidev_options;
+
+typedef struct {
 // These options are used for a special hack to load a
 // 32bit OS directly into memory, so it can be run without
 // any of the 16bit real mode or BIOS assistance.  This
@@ -658,6 +664,7 @@ typedef struct BOCHSAPI {
   bx_param_string_c *Oscreenmode;
 #endif
   bx_param_bool_c   *Oi440FXSupport;
+  bx_pcidev_options pcidev;
   bx_cmos_options   cmos;
   bx_clock_options  clock;
   bx_ne2k_options   ne2k;

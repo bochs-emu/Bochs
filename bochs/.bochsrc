@@ -609,6 +609,11 @@ keyboard_mapping: enabled=0, map=
 usb1: enabled=1, ioaddr=0xFF80, irq=10
 #text_snapshot_check: enable
 
+#-------------------------
+# PCI host device mapping
+#-------------------------
+#pcidev: vendor=0x1234, device=0x5678
+
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
 # examples.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.21 2004-01-13 19:21:21 mcb30 Exp $
+// $Id: plugin.h,v 1.22 2004-01-15 02:08:34 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -38,6 +38,7 @@ extern "C" {
 #define BX_PLUGIN_NE2K      "ne2k"
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
 #define BX_PLUGIN_PCIVGA    "pcivga"
+#define BX_PLUGIN_PCIDEV    "pcidev"
 #define BX_PLUGIN_PCIUSB    "pciusb"
 #define BX_PLUGIN_PCIPNIC   "pcipnic"
 #define BX_PLUGIN_GAMEPORT  "gameport"
@@ -53,6 +54,12 @@ extern "C" {
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
+#define DEV_unregister_ioread_handler(b,c,d,e)  pluginUnregisterIOReadHandler(b,c,d,e)
+#define DEV_unregister_iowrite_handler(b,c,d,e) pluginUnregisterIOWriteHandler(b,c,d,e)
+#define DEV_register_ioread_handler_range(b,c,d,e,f,g)  pluginRegisterIOReadHandlerRange(b,c,d,e,f,g)
+#define DEV_register_iowrite_handler_range(b,c,d,e,f,g) pluginRegisterIOWriteHandlerRange(b,c,d,e,f,g)
+#define DEV_unregister_ioread_handler_range(b,c,d,e,f)  pluginUnregisterIOReadHandlerRange(b,c,d,e,f)
+#define DEV_unregister_iowrite_handler_range(b,c,d,e,f) pluginUnregisterIOWriteHandlerRange(b,c,d,e,f)
 #define DEV_register_default_ioread_handler(b,c,d,e) pluginRegisterDefaultIOReadHandler(b,c,d,e)
 #define DEV_register_default_iowrite_handler(b,c,d,e) pluginRegisterDefaultIOWriteHandler(b,c,d,e)
 
@@ -159,6 +166,8 @@ extern "C" {
 ///////// PCI macros
 #define DEV_register_pci_handlers(b,c,d,e,f) \
   (bx_devices.pluginPciBridge->register_pci_handlers(b,c,d,e,f))
+#define DEV_find_free_devfunc() \
+  (bx_devices.pluginPciBridge->find_free_devfunc())
 #define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
 #define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
 #define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()
@@ -167,6 +176,11 @@ extern "C" {
 #define DEV_ne2k_print_info(file,page,reg,brief) \
     bx_devices.pluginNE2kDevice->print_info(file,page,reg,brief)
 
+//////// Memory macros
+#define DEV_register_memory_handlers(rh,rp,wh,wp,b,e) \
+    bx_devices.mem->registerMemoryHandlers(rh,rp,wh,wp,b,e)
+#define DEV_unregister_memory_handlers(rh,wh,b,e) \
+    bx_devices.mem->unregisterMemoryHandlers(rh,wh,b,e)
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
@@ -217,6 +231,18 @@ BOCHSAPI extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_
                                 unsigned base, const char *name, Bit8u mask);
 BOCHSAPI extern int (*pluginRegisterIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                                  unsigned base, const char *name, Bit8u mask);
+BOCHSAPI extern int (*pluginUnregisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
+                                unsigned base, Bit8u mask);
+BOCHSAPI extern int (*pluginUnregisterIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
+                                 unsigned base, Bit8u mask);
+BOCHSAPI extern int (*pluginRegisterIOReadHandlerRange)(void *thisPtr, ioReadHandler_t callback,
+                                unsigned base, unsigned end, const char *name, Bit8u mask);
+BOCHSAPI extern int (*pluginRegisterIOWriteHandlerRange)(void *thisPtr, ioWriteHandler_t callback,
+                                 unsigned base, unsigned end, const char *name, Bit8u mask);
+BOCHSAPI extern int (*pluginUnregisterIOReadHandlerRange)(void *thisPtr, ioReadHandler_t callback,
+                                unsigned begin, unsigned end, Bit8u mask);
+BOCHSAPI extern int (*pluginUnregisterIOWriteHandlerRange)(void *thisPtr, ioWriteHandler_t callback,
+                                 unsigned begin, unsigned end, Bit8u mask);
 BOCHSAPI extern int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
                                 const char *name, Bit8u mask);
 BOCHSAPI extern int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
@@ -298,6 +324,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcivga)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcidev)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pciusb)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)

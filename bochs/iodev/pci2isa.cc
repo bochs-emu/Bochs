@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.10 2003-07-31 19:51:42 vruppert Exp $
+// $Id: pci2isa.cc,v 1.11 2004-01-15 02:08:35 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,6 +110,9 @@ bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.pci_conf[0x4e] = 0x03;
   BX_P2I_THIS s.pci_conf[0x4f] = 0x00;
   BX_P2I_THIS s.pci_conf[0x60] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x61] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x62] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x63] = 0x80;
   BX_P2I_THIS s.pci_conf[0x69] = 0x02;
   BX_P2I_THIS s.pci_conf[0x70] = 0x80;
   BX_P2I_THIS s.pci_conf[0x76] = 0x0c;

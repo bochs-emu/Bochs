@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.41 2003-09-10 16:34:56 vruppert Exp $
+// $Id: misc_mem.cc,v 1.42 2004-01-15 02:08:37 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -9,6 +9,8 @@
 //    75002 Paris - France
 //    http://www.linux-mandrake.com/
 //    http://www.mandrakesoft.com/
+//
+//  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -57,6 +59,8 @@ BX_MEM_C::BX_MEM_C(void)
   actual_vector = NULL;
   len    = 0;
   megabytes = 0;
+
+  memory_handlers = NULL;
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
@@ -117,6 +121,8 @@ BX_MEM_C::~BX_MEM_C(void)
     delete [] actual_vector;
     actual_vector = NULL;
     vector = NULL;
+    delete [] memory_handlers;
+    memory_handlers = NULL;
     }
   else {
     BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!", BX_SIM_ID));
@@ -129,7 +135,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.41 2003-09-10 16:34:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.42 2004-01-15 02:08:37 danielg4 Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -139,6 +145,9 @@ BX_MEM_C::init_memory(int memsize)
     alloc_vector_aligned (memsize, BX_MEM_VECTOR_ALIGN);
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
+    BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
+    for (int idx = 0; idx < 1024 * 1024; idx++)
+	    BX_MEM_THIS memory_handlers[idx] = NULL;
     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
     }
 
@@ -397,4 +406,64 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
 
     return(retAddr);
     }
+}
+
+
+/*
+ * One needs to provide both a read_handler and a write_handler.
+ * XXX: maybe we should check for overlapping memory handlers
+ */
+  bx_bool 
+BX_MEM_C::registerMemoryHandlers(memory_handler_t read_handler, void *read_param, 
+		memory_handler_t write_handler, void *write_param, 
+		unsigned long begin_addr, unsigned long end_addr)
+{
+	if (end_addr < begin_addr)
+		return false;
+	if (!read_handler)
+		return false;
+	if (!write_handler)
+		return false;
+	for (int page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+		struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
+		memory_handler->next = memory_handlers[page_idx];
+		memory_handlers[page_idx] = memory_handler;
+		memory_handler->read_handler = read_handler;
+		memory_handler->write_handler = write_handler;
+		memory_handler->read_param = read_param;
+		memory_handler->write_param = write_param;
+		memory_handler->begin = begin_addr;
+		memory_handler->end = end_addr;
+	}
+	return true;
+}
+
+
+  bx_bool 
+BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler, 
+		unsigned long begin_addr, unsigned long end_addr)
+{
+	bx_bool ret = true;
+	for (int page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+		struct memory_handler_struct *memory_handler = memory_handlers[page_idx];
+		struct memory_handler_struct *prev = NULL;
+		while (memory_handler && 
+				memory_handler->read_handler != read_handler &&
+			       	memory_handler->write_handler != write_handler && 
+				memory_handler->begin != begin_addr && 
+				memory_handler->end != end_addr) {
+			prev = memory_handler;
+			memory_handler = memory_handler->next;
+		}
+		if (!memory_handler) {
+			ret = false; // we should have found it
+			continue; // anyway, try the other pages
+		}
+		if (prev)
+			prev->next = memory_handler->next;
+		else
+			memory_handlers[page_idx] = memory_handler->next;
+		delete memory_handler;
+	}
+	return ret;
 }

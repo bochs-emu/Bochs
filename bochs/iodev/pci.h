@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.14 2003-01-23 19:31:27 vruppert Exp $
+// $Id: pci.h,v 1.15 2004-01-15 02:08:35 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,6 +60,7 @@ public:
                                         bx_pci_read_handler_t f1,
                                         bx_pci_write_handler_t f2,
                                         Bit8u devfunc, const char *name);
+  virtual Bit8u find_free_devfunc();
   virtual void   print_i440fx_state(void);
   virtual Bit8u rd_memType (Bit32u addr);
   virtual Bit8u wr_memType (Bit32u addr);

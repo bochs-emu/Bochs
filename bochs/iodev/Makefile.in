@@ -62,6 +62,8 @@ NETLOW_OBJS = @NETLOW_OBJS@
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
+PCIDEV_CXXFLAGS = -I../host/linux/pcidev
+
 OBJS_THAT_CANNOT_BE_PLUGINS = \
   devices.o \
   pit.o pit82c54.o pit_wrap.o \
@@ -112,9 +114,15 @@ libiodev.a: $(NONPLUGIN_OBJS)
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
+pcidev.o : %.o : %.@CPP_SUFFIX@
+	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(PCIDEV_CXXFLAGS) @CXXFP@$< @OFP@$@
+
 ##### building plugins with libtool
 %.lo: %.@CPP_SUFFIX@
 	$(LIBTOOL) --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+
+pcidev.lo : %.lo : %.@CPP_SUFFIX@
+	$(LIBTOOL) --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(PCIDEV_CXXFLAGS) $< -o $@
 
 libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
@@ -596,6 +604,20 @@ pcivga.o: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
+pcidev.o: pcidev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
+  ../cpu/lazy_flags.h ../cpu/apic.h ../cpu/i387.h ../cpu/xmm.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
+  ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
+  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pcivga.h ../iodev/vga.h \
+  ../iodev/ioapic.h ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h \
+  ../iodev/floppy.h ../iodev/harddrv.h ../iodev/cdrom.h \
+  ../iodev/vmware3.h ../iodev/keyboard.h ../iodev/parallel.h \
+  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
+  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
+  ../iodev/slowdown_timer.h ../iodev/extfpuirq.h ../iodev/gameport.h \
+  ../instrument/stubs/instrument.h
 pic.o: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
@@ -1227,6 +1249,20 @@ pcivga.lo: pcivga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/deb
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
+pcidev.lo: pcidev.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
+  ../cpu/lazy_flags.h ../cpu/apic.h ../cpu/i387.h ../cpu/xmm.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
+  ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
+  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pcivga.h ../iodev/vga.h \
+  ../iodev/ioapic.h ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h \
+  ../iodev/floppy.h ../iodev/harddrv.h ../iodev/cdrom.h \
+  ../iodev/vmware3.h ../iodev/keyboard.h ../iodev/parallel.h \
+  ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
+  ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
+  ../iodev/slowdown_timer.h ../iodev/extfpuirq.h ../iodev/gameport.h \
+  ../instrument/stubs/instrument.h
 pic.lo: pic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
   ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
