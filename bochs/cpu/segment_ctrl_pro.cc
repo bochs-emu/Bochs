@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.25 2003-05-10 22:25:55 kevinlawton Exp $
+// $Id: segment_ctrl_pro.cc,v 1.26 2003-08-15 13:18:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -462,12 +462,12 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
       case 7: // 286 trap gate
         /* word count only used for call gate */
         temp->u.gate286.word_count = dword2 & 0x1f;
-        temp->u.gate286.dest_selector = dword1 >> 16;;
+        temp->u.gate286.dest_selector = dword1 >> 16;
         temp->u.gate286.dest_offset   = dword1 & 0xffff;
         temp->valid = 1;
         break;
       case 5: // 286/386 task gate
-        temp->u.taskgate.tss_selector = dword1 >> 16;;
+        temp->u.taskgate.tss_selector = dword1 >> 16;
         temp->valid = 1;
         break;
 
@@ -493,7 +493,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
       case 15: // 386 trap gate
         // word count only used for call gate
         temp->u.gate386.dword_count   = dword2 & 0x1f;
-        temp->u.gate386.dest_selector = dword1 >> 16;;
+        temp->u.gate386.dest_selector = dword1 >> 16;
         temp->u.gate386.dest_offset   = (dword2 & 0xffff0000) |
                                         (dword1 & 0x0000ffff);
         temp->valid = 1;

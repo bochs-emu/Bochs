@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.38 2003-07-31 15:29:34 vruppert Exp $
+// $Id: cmos.cc,v 1.39 2003-08-15 13:18:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.38 2003-07-31 15:29:34 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.39 2003-08-15 13:18:53 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -502,13 +502,13 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        break;
 
      case REG_DIAGNOSTIC_STATUS:
-       BX_DEBUG(("write register 0x0e: 0x%02x", (unsigned) value));;
+       BX_DEBUG(("write register 0x0e: 0x%02x", (unsigned) value));
        break;
 
      case REG_SHUTDOWN_STATUS:
        switch (value) {
        case 0x00: /* proceed with normal POST (soft reset) */
-         BX_DEBUG(("Reg 0Fh(00): shutdown action = normal POST"));;
+         BX_DEBUG(("Reg 0Fh(00): shutdown action = normal POST"));
          break;
        case 0x01: /* shutdown after memory size check */
          BX_DEBUG(("Reg 0Fh(01): request to change shutdown action"
@@ -530,7 +530,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         "to flush keyboard (issue EOI) and jump via 40h:0067h."));
          break;
        case 0x06:
-         BX_DEBUG(("Reg 0Fh(06): Shutdown after memory test !"));;
+         BX_DEBUG(("Reg 0Fh(06): Shutdown after memory test !"));
          break;
        case 0x07: /* reset (after failed test in virtual mode) */
          BX_DEBUG(("Reg 0Fh(07): request to change shutdown action "
