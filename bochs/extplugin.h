@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extplugin.h,v 1.2 2002-10-24 21:04:29 bdenney Exp $
+// $Id: extplugin.h,v 1.3 2002-11-15 18:09:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // extplugin.h
@@ -17,7 +17,7 @@
 #ifndef __EXTPLUGIN_H
 #define __EXTPLUGIN_H
 
-#include <ltdl.h>
+#include "ltdl.h"
 
 enum plugintype_t {
   PLUGTYPE_NULL=100,
