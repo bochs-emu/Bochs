@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.1 2002-04-18 00:59:20 bdenney Exp $
+// $Id: eth_tuntap.cc,v 1.2 2002-04-30 13:33:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -96,12 +96,13 @@
 #include <sys/wait.h>
 #include <linux/netlink.h>
 #include <linux/if.h>
+#include <linux/if_tun.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
 
-#define TAP_VIRTUAL_HW_ADDR             0xDEADBEEF
-#define BX_ETH_TAP_LOGGING 0
+#define TUNTAP_VIRTUAL_HW_ADDR             0xDEADBEEF
+#define BX_ETH_TUNTAP_LOGGING 0
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
 int tun_alloc(char *dev);
@@ -128,20 +129,20 @@ private:
 //  Define the static class that registers the derived pktmover class,
 // and allocates one on request.
 //
-class bx_tap_locator_c : public eth_locator_c {
+class bx_tuntap_locator_c : public eth_locator_c {
 public:
-  bx_tap_locator_c(void) : eth_locator_c("tap") {}
+  bx_tuntap_locator_c(void) : eth_locator_c("tuntap") {}
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
 			   void *rxarg) {
     return (new bx_tuntap_pktmover_c(netif, macaddr, rxh, rxarg));
   }
-} bx_tap_match;
+} bx_tuntap_match;
 
 
 //
-// Define the methods for the bx_tap_pktmover derived class
+// Define the methods for the bx_tuntap_pktmover derived class
 //
 
 // the constructor
@@ -152,13 +153,13 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 {
   int flags;
   char filename[BX_PATHNAME_LEN];
-  if (strncmp (netif, "tap", 3) != 0) {
-    BX_PANIC (("eth_tuntap: interface name (%s) must be tap0..tap15", netif));
+  if (strncmp (netif, "tun", 3) != 0) {
+    BX_PANIC (("eth_tuntap: interface name (%s) must be tun", netif));
   }
 #ifdef NEVERDEF
-  sprintf (filename, "/dev/%s", netif);
+  sprintf (filename, "/dev/net/%s", netif);
 
-  // check if the TAP devices is running, and turn on ARP.  This is based
+  // check if the TUN/TAP devices is running, and turn on ARP.  This is based
   // on code from the Mac-On-Linux project. http://http://www.maconlinux.org/
   int sock = socket( AF_INET, SOCK_DGRAM, 0 );
   if (sock < 0) {
@@ -201,11 +202,11 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 
   /* set O_ASYNC flag so that we can poll with read() */
   if ((flags = fcntl( fd, F_GETFL)) < 0) {
-    BX_PANIC (("getflags on tap device: %s", strerror (errno)));
+    BX_PANIC (("getflags on tun device: %s", strerror (errno)));
   }
   flags |= O_NONBLOCK;
   if (fcntl( fd, F_SETFL, flags ) < 0) {
-    BX_PANIC (("set tap device flags: %s", strerror (errno)));
+    BX_PANIC (("set tun device flags: %s", strerror (errno)));
   }
 
   BX_INFO (("eth_tuntap: opened %s device", netif));
@@ -216,14 +217,14 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 				1, 1); // continuous, active
   this->rxh   = rxh;
   this->rxarg = rxarg;
-#if BX_ETH_TAP_LOGGING
+#if BX_ETH_TUNTAP_LOGGING
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
   txlog = fopen ("ne2k-tx.log", "wb");
   if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
   txlog_txt = fopen ("ne2k-txdump.txt", "wb");
   if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
-  fprintf (txlog_txt, "tap packetmover readable log file\n");
+  fprintf (txlog_txt, "tuntap packetmover readable log file\n");
   fprintf (txlog_txt, "net IF = %s\n", netif);
   fprintf (txlog_txt, "MAC address = ");
   for (int i=0; i<6; i++) 
@@ -235,7 +236,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
   if (!rxlog) BX_PANIC (("open ne2k-rx.log failed"));
   rxlog_txt = fopen ("ne2k-rxdump.txt", "wb");
   if (!rxlog_txt) BX_PANIC (("open ne2k-rxdump.txt failed"));
-  fprintf (rxlog_txt, "tap packetmover readable log file\n");
+  fprintf (rxlog_txt, "tuntap packetmover readable log file\n");
   fprintf (rxlog_txt, "net IF = %s\n", netif);
   fprintf (rxlog_txt, "MAC address = ");
   for (int i=0; i<6; i++) 
@@ -256,18 +257,18 @@ bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   memcpy (txbuf+2, buf, io_len);
   unsigned int size = write (fd, txbuf, io_len+2);
   if (size != io_len+2) {
-    BX_PANIC (("write on tap device: %s", strerror (errno)));
+    BX_PANIC (("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_INFO (("wrote %d bytes + 2 byte pad on tap", io_len));
+    BX_INFO (("wrote %d bytes + 2 byte pad on tuntap", io_len));
   }
 #endif
   unsigned int size = write (fd, buf, io_len);
   if (size != io_len) {
-    BX_PANIC (("write on tap device: %s", strerror (errno)));
+    BX_PANIC (("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_INFO (("wrote %d bytes on tap", io_len));
+    BX_INFO (("wrote %d bytes on tuntap", io_len));
   }
-#if BX_ETH_TAP_LOGGING
+#if BX_ETH_TUNTAP_LOGGING
   BX_DEBUG (("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
@@ -310,19 +311,19 @@ void bx_tuntap_pktmover_c::rx_timer ()
   rxbuf=buf;
 #endif
 
-  // hack: TAP device likes to create an ethernet header which has
+  // hack: TUN/TAP device likes to create an ethernet header which has
   // the same source and destination address FE:FD:00:00:00:00.
   // Change the dest address to FE:FD:00:00:00:01.
   rxbuf[5] = 1;
 
   if (nbytes>0)
-    BX_INFO (("tap read returned %d bytes", nbytes));
+    BX_INFO (("tuntap read returned %d bytes", nbytes));
   if (nbytes<0) {
     if (errno != EAGAIN)
-      BX_ERROR (("tap read error: %s", strerror(errno)));
+      BX_ERROR (("tuntap read error: %s", strerror(errno)));
     return;
   }
-#if BX_ETH_TAP_LOGGING
+#if BX_ETH_TUNTAP_LOGGING
   if (nbytes > 0) {
     BX_DEBUG (("receive packet length %u", nbytes));
     // dump raw bytes to a file, eventually dump in pcap format so that
@@ -351,25 +352,6 @@ void bx_tuntap_pktmover_c::rx_timer ()
 }
 
 
-#include <stdio.h>
-#include <signal.h>
-#include <sys/param.h>
-#include <sys/ioctl.h>
-#include <sys/poll.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <asm/types.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <sys/wait.h>
-#include <linux/netlink.h>
-#include <linux/if.h>
-#include <linux/version.h>
-#include <linux/if_tun.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
   int tun_alloc(char *dev)
   {
       struct ifreq ifr;
@@ -385,7 +367,6 @@ void bx_tuntap_pktmover_c::rx_timer ()
        *
        *        IFF_NO_PI - Do not provide packet information  
        */ 
-      //ifr.ifr_flags = IFF_TUN; 
       ifr.ifr_flags = IFF_TAP | IFF_NO_PI; 
       if( *dev )
          strncpy(ifr.ifr_name, dev, IFNAMSIZ);

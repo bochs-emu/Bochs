@@ -381,6 +381,7 @@ screenmode: name="sample"
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
 # ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+# ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0
 
 #=======================================================================
 # KEYBOARD_MAPPING:
