@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.168 2002-10-27 21:25:32 cbothamy Exp $
+// $Id: main.cc,v 1.169 2002-10-29 20:18:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -910,7 +910,7 @@ void bx_init_options ()
   bx_options.Oscreenmode->set_handler (bx_param_string_handler);
 #endif
   static char *config_interface_list[] = {
-    "control",
+    "textconfig",
 #if BX_WITH_WX
     "wx",
 #endif
@@ -1406,7 +1406,7 @@ int main (int argc, char *argv[]) {
     // If one exists, start it.  If not, just begin.
     bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
     char *ci_name = ci_param->get_choice (ci_param->get ());
-    if (!strcmp(ci_name, "control")) {
+    if (!strcmp(ci_name, "textconfig")) {
       init_text_config_interface ();
     }
 #if BX_WITH_WX

@@ -7,7 +7,7 @@
 # The configuration interface is a series of menus or dialog boxes that
 # allows you to change all the settings that control Bochs's behavior.
 # There are two choices of configuration interface: a text mode version
-# called "control" and a graphical version called "wx".  The text
+# called "textconfig" and a graphical version called "wx".  The text
 # mode version uses stdin/stdout and is always compiled in.  The graphical
 # version is only available when you use "--with-wx" on the configure 
 # command.  If you do not write a config_interface line, Bochs will 
@@ -16,7 +16,7 @@
 # NOTE: if you use the "wx" configuration interface, you must also use
 # the "wx" display library.
 #=======================================================================
-#config_interface: control
+#config_interface: textconfig
 #config_interface: wx
 
 #=======================================================================

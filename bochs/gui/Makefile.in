@@ -68,7 +68,7 @@ GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o
 GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
-OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o control.o
+OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o textconfig.o
 OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
 
 NONPLUGIN_OBJS = @GUI_NON_PLUGIN_OBJS@
@@ -130,7 +130,7 @@ dist-clean: clean
 amigaos.lo: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
- ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
+ ../pc_system.h ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \
  ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
@@ -142,7 +142,7 @@ amigaos.lo: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
 beos.lo: beos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -153,7 +153,7 @@ beos.lo: beos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
 carbon.lo: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -161,11 +161,11 @@ carbon.lo: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.
  ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h icon_bochs.h ../font/vga.bitmap.h
-control.lo: control.@CPP_SUFFIX@ ../config.h ../osdep.h control.h siminterface.h
+textconfig.lo: textconfig.@CPP_SUFFIX@ ../config.h ../osdep.h textconfig.h siminterface.h
 gui.lo: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -181,7 +181,7 @@ gui.lo: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
 keymap.lo: keymap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -192,7 +192,7 @@ keymap.lo: keymap.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.
 macintosh.lo: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
- ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
+ ../pc_system.h ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \
  ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
@@ -204,7 +204,7 @@ macintosh.lo: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
 nogui.lo: nogui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -215,7 +215,7 @@ nogui.lo: nogui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h 
 rfb.lo: rfb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -227,7 +227,7 @@ rfb.lo: rfb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
 sdl.lo: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -238,7 +238,7 @@ sdl.lo: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
 siminterface.lo: siminterface.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
- ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
+ ../pc_system.h ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \
  ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
@@ -250,7 +250,7 @@ siminterface.lo: siminterface.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
 term.lo: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -261,7 +261,7 @@ term.lo: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
 win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -272,7 +272,7 @@ win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h 
 x.lo: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \

@@ -117,7 +117,7 @@ lexer.c: lexer.l
 crc.o: crc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -128,7 +128,7 @@ crc.o: crc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
 dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
- ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
+ ../pc_system.h ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \
  ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
@@ -140,7 +140,7 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
 linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
@@ -151,7 +151,7 @@ linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
 sim2.o: sim2.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
  ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
  ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
  ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
