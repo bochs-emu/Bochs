@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.1 2004-02-09 22:23:48 danielg4 Exp $
+// $Id: soundosx.cc,v 1.2 2004-02-18 18:54:21 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -177,7 +177,9 @@ int bx_sound_osx_c::openwaveoutput(char *device)
     AudioUnitInitialize (WaveOutputUnit);
 
     // Set up a callback function to generate output to the output unit
-    AudioUnitInputCallback input = { inputProc: MyRenderer, inputProcRefCon: (void *) this };
+    AudioUnitInputCallback input;
+    input.inputProc = MyRenderer;
+    input.inputProcRefCon = (void *) this;
     AudioUnitSetProperty (WaveOutputUnit, kAudioUnitProperty_SetInputCallback, 
         kAudioUnitScope_Global, 0, &input, sizeof(input));
 #endif
