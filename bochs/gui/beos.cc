@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.11 2001-10-03 13:10:37 bdenney Exp $
+// $Id: beos.cc,v 1.12 2001-12-07 18:52:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,12 +39,13 @@
 #include <string.h>
 
 #include "bochs.h"
-// #include "icon_bochs.h"
+//#include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 
 #define LOG_THIS bx_gui.
 
 #define PAD_NEAREST(n, quantum) (( ((n) + ((quantum) - 1)) / (n) ) * (n))
+
 
 
 class BochsApplication : public BApplication {
@@ -118,9 +119,13 @@ static unsigned dimension_x, dimension_y;
 //static unsigned imDepth, imWide, imBPP;
 
 // current cursor coordinates
+//IRA=> Start
+static BPoint current;
+static BPoint previous;
+static Bit8u mouse_button_state = 0;
+//IRA=> End
 //static int prev_x=-1, prev_y=-1;
 //static int current_x=-1, current_y=-1;
-//static Bit8u mouse_button_state = 0;
 
 static unsigned prev_block_cursor_x=0;
 static unsigned prev_block_cursor_y=0;
@@ -279,6 +284,31 @@ bx_gui_c::handle_events(void)
     key = deq_key_event();
     bx_devices.keyboard->gen_scancode(key);
     }
+//IRA=> Start
+  if (aView) {
+      unsigned long buttons;
+      aView->LockLooper();
+	  aView->GetMouse(&current, &buttons, false);    
+	  aView->UnlockLooper();
+
+	  Bit8u newstate = 0; //please note: 2nd and 3rd button are mapped the same
+	  if (buttons & B_PRIMARY_MOUSE_BUTTON)
+	     newstate |= 0x01;
+	  if (buttons & B_SECONDARY_MOUSE_BUTTON)
+	     newstate |= 0x02;
+	  if (buttons & B_TERTIARY_MOUSE_BUTTON)
+	     newstate |= 0x02;
+	  
+	  if (current != previous || 
+	  	  mouse_button_state != newstate) {
+	    int dx = (int)(current.x - previous.x) *2;
+	    int dy = -(int)((current.y - previous.y) *2);
+	    bx_devices.keyboard->mouse_motion( dx, dy, newstate);
+	    mouse_button_state = newstate;
+	    previous = current;
+      }
+   }
+//IRA=> End
 }
 
   void
@@ -429,11 +459,10 @@ BochsApplication::BochsApplication()
   aWindow->Show();
 }
 
-
 //void set_palette_entry(long i,rgb_color c);
 
 BochsWindow::BochsWindow(BRect frame)
-        : BWindow(frame, "Bochs", B_TITLED_WINDOW, B_NOT_RESIZABLE)
+        : BWindow(frame, "BeBochs V1.3.pre compiled Bernd Korz", B_TITLED_WINDOW, B_NOT_RESIZABLE)
 {
 }
 
@@ -516,6 +545,7 @@ void  BochsView::MouseUp(BPoint point)
   UNUSED(point);
   // currently a place holder function
   BX_DEBUG(( "mouseup()" ));
+  BView::MouseUp(point);
 }
 
 void  BochsView::MouseMoved(BPoint point,
@@ -1143,7 +1173,27 @@ bx_gui_c::exit(void)
   fprintf(stderr, "# WARNING: BEOS: bx_gui_c::exit() not implemented yet.\n");
 }
 
+//IRA=> Start
+// This is called whenever the mouse_enabled parameter changes.  It
+// can change because of a gui event such as clicking on the mouse-enable
+// bitmap or pressing the middle button, or from the control panel.
+// In all those cases, setting the parameter value will get you here.
+
   void
 bx_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
+  BX_DEBUG (("mouse_enabled=%d, BeOS specific code", val?1:0));
+  if (val) {
+    BX_INFO(("[x] Mouse on"));
+//    mouse_enable_x = current_x;
+//    mouse_enable_y = current_y;
+    be_app->HideCursor();
+    // Move the cursor to a 'safe' place
+//    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
+  } else {
+    BX_INFO(("[x] Mouse off"));
+    be_app->ShowCursor();
+//    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
+  }
 }
+//IRA=> End
