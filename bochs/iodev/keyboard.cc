@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.53 2002-03-27 16:42:54 bdenney Exp $
+// $Id: keyboard.cc,v 1.54 2002-04-11 00:28:55 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.53 2002-03-27 16:42:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.54 2002-04-11 00:28:55 instinc Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.53 2002-03-27 16:42:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.54 2002-04-11 00:28:55 instinc Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -413,6 +413,11 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             controller_enQ(value, 1);
             break;
 
+	  case 0xd2:
+	    // Queue in keyboard output buffer
+	    controller_enQ(value, 0);
+	    break;
+
           default:
             BX_PANIC(("=== unsupported write to port 60h(lastcomm=%02x): %02x",
               (unsigned) BX_KEY_THIS s.kbd_controller.last_comm, (unsigned) value));
@@ -559,8 +564,15 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
           break;
 
         case 0xd2: // write keyboard output buffer
+	  BX_DEBUG(("io write 0x64: write keyboard output buffer"));
+	  BX_KEY_THIS s.kbd_controller.expecting_port60h = 1;
+	  break;
         case 0xdd: // Disable A20 Address Line
+	  BX_SET_ENABLE_A20(0);
+	  break;
         case 0xdf: // Enable A20 Address Line
+	  BX_SET_ENABLE_A20(1);
+	  break;
         case 0xc1: // Continuous Input Port Poll, Low
         case 0xc2: // Continuous Input Port Poll, High
         case 0xe0: // Read Test Inputs
