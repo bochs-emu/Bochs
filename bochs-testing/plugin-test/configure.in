@@ -42,6 +42,7 @@ AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(LDFLAGS)
+AC_SUBST(LIBS)
 AC_SUBST(LT_LDFLAGS)
 
 AC_OUTPUT(config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile test6-ltdlopen/Makefile)
