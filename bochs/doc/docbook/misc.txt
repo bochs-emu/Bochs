@@ -1,10 +1,4 @@
-<<<<<<< misc.txt
-$Id: misc.txt,v 1.24 2003-05-03 16:37:17 cbothamy Exp $
-=======
-$Id: misc.txt,v 1.24 2003-05-03 16:37:17 cbothamy Exp $
->>>>>>> 1.21.8.1
-
-Testing testing....
+$Id: misc.txt,v 1.25 2003-05-03 16:39:35 cbothamy Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
