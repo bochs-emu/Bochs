@@ -206,13 +206,13 @@ Detailed change log follows.
   - add support for AMD's x86-64 instruction set.  To enable, configure with
     --enable-x86-64.  The AMD x86-64 support is about 90% complete and is
     still experimental.  We've implemented the core x86-64 instruction set and
-    the changes to the rest of bochs necessary to operate in long mode, but
+    the changes to the rest of Bochs necessary to operate in long mode, but
     we've still to implement checking for canonical 64 bit addresses. The code
     has been tested on a limited number of test programs.  It has been able to
-    successfully boot the x86-64 kernel, but hasn't quite been able to run a
-    64 bit userland application yet.  It has also successfully run a DOS based
-    64 bit protected mode test application. (Peter Tattam, with merge/bugfix
-    help from Kevin Lawton and Bryce Denney)
+    successfully boot a x86-64 Linux kernel and run a 64 bit userland
+    application.  It has also successfully run a DOS based 64 bit protected
+    mode test application. (Peter Tattam, with merge/bugfix help from Kevin
+    Lawton and Bryce Denney)
   - add MMX support. To enable, configure with --enable-mmx. 
     (Stanislav Shwartsman)
   - add SSE and SSE2 support. To enable, configure with --enable-sse=1
