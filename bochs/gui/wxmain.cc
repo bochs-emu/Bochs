@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.101 2003-10-24 15:39:57 vruppert Exp $
+// $Id: wxmain.cc,v 1.102 2004-02-10 20:30:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -475,6 +475,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuLog->Enable (ID_Log_View, FALSE);  // not implemented
 
   CreateStatusBar();
+  wxStatusBar *sb = GetStatusBar();
+  sb->SetFieldsCount(12);
+  const int sbwidth[12] = {160, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, -1};
+  sb->SetStatusWidths(12, sbwidth);
 
   CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
   wxToolBar *tb = GetToolBar();
