@@ -40,6 +40,16 @@ extern "C" {
 }
 #endif
 
+#ifdef __sun
+extern "C" {
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/cdio.h>
+#define BX_CD_FRAMESIZE CDROM_BLK_2048
+}
+#endif /* __sun */
+
 #ifdef __OpenBSD__
 // Here is a diff for cdrom.cc which adds support for OpenBSD.
 //
@@ -174,7 +184,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
      DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC, NULL, 0, NULL, 0, &iBytesReturned, NULL);       */
 	 return true;
   }
-#elif __linux__
+#elif __linux__ || defined(__sun)
   {
   struct cdrom_tochdr tochdr;
   if (ioctl(fd, CDROMREADTOCHDR, &tochdr))
@@ -218,7 +228,11 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
   // Lead out track
   struct cdrom_tocentry tocentry;
   tocentry.cdte_format = (msf) ? CDROM_MSF : CDROM_LBA;
+#ifdef CDROM_LEADOUT 
+  tocentry.cdte_track = CDROM_LEADOUT;
+#else
   tocentry.cdte_track = 0xaa;
+#endif
   if (ioctl(fd, CDROMREADTOCENTRY, &tocentry))
     bx_panic("cdrom: read_toc: READTOCENTRY lead-out failed.\n");
   buf[len++] = 0; // Reserved
@@ -340,8 +354,20 @@ cdrom_interface::capacity()
 {
   // Return CD-ROM capacity.  I believe you want to return
   // the number of bytes of capacity the actual media has.
+#ifdef __sun
+  {
+    struct stat buf = {0};
 
-#ifdef __linux__
+    if (fd < 0) {
+      bx_panic("cdrom: capacity: file not open.\n");
+    } 
+    
+    if( fstat(fd, &buf) != 0 )
+      bx_panic("cdrom: capacity: stat() failed.\n");
+  
+    return(buf.st_size);
+  }  
+#elif __linux__
   {
   // I just looked through the Linux kernel source to see
   // what it does with the ATAPI capacity command, and reversed
