@@ -12,6 +12,187 @@
 <CENTER><H1>ChangeLog</H1></CENTER>
 <HR>
 
+<a name="v1.4">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.4.tar.gz">Version 1.4</a> (March 27, 2002)
+</h2>
+<ul>
+<li> ROM BIOS
+<ul>
+  <li> Boot from CDROM!  Christophe Bothamy added partial El Torito support in
+    rombios.c, which allows Bochs to boot cdroms.  Booting from win2k or winXP
+    cdrom is not supported yet.  The default BIOS includes El Torito functions.
+    the boot line must say "cdrom".
+    Example:
+      boot: cdrom
+  <li> implementation of int13 diskette function 5 (format track) (Volker)
+  <li> initialisation of PIC and DMA-2 added to POST code (Volker)
+</ul>
+<li> configure script (Bryce Denney)
+<ul>
+  <li> the configure script now detects your platform and provides a default
+    GUI and the required compiler flags.  All supported platforms should
+    compile with simply "configure" and "make".
+  <li> default guis by platform: 
+  <ul>
+     <li> win32/windows/cygwin: win32 gui
+     <li> MacOS X: carbon gui
+     <li> MacOS 9 or earlier: macos gui
+     <li> BeOS: beos gui
+     <li> AmigaOS: amigaos gui
+     <li> all other platforms: X windows gui
+  </ul>
+  <li> compile arguments supplied by configure script
+  <ul>
+    <li> win32: too many to list here; see documentation
+    <li> cygwin: -mno-cygwin -DWIN32
+    <li> MacOS X: -fpascal-strings -fno-common -arch ppc -Wno-four-char-constants
+	           -Wno-unknown-pragmas -Dmacintosh
+  </ul>
+  <li> the --with-GUINAME configure option is only needed if you want to override
+    the default GUI.  This is the only way to use the Term, RFB, and SDL
+    GUIs.
+</ul>
+<li> VGA
+<ul>
+  <li> added VESA BIOS Extensions code by Jeroen Janssen (banked mode only, LFB
+	support in patches)
+  <li> vga memory read/write functions in text mode fixed
+  <li> implementation of CGA mode 320*200*4 (patch from Sebastien Bechet)
+</ul>
+<li> VGA BIOS
+<ul>
+  <li> updated Christophe Bothamy's LGPL VGA BIOS to version 0.3a.  This consists
+    of a bug fix for function ah=13 and VBE support by Jeroen Janssen.
+</ul>
+<li> networking
+<ul>
+  <li> chipmem read/write limit fixed (Mike Lerwill)
+  <li> writing a byte in 16-bit mode now possible (Mike Lerwill)
+  <li> new ethertap interface for Linux, which allows Bochs to talk to 
+    the local machine and the internet (Bryce Denney)
+  <li> NE2000 is now enabled by default on Win32, Cygwin, and Linux compiles
+    in the .conf.* scripts and release binaries.
+  <li> fix check for auto transmit disable, which was checking the wrong bit
+    (Peter Tattam)
+  <li> Win32 only
+  <ul>
+    <li> niclist.exe has been revised to work on more Windows versions, and it
+      suggests a usable ne2k line (Dean Payne)
+    <li> fix timeout setting so that ne2000 does not slow down the whole
+      simulation (Don Becker)
+    <li> bug fix: be able to handle multiple packets that arrive at once
+      (Mike Lerwill)
+  </ul>
+</ul>
+<li> GUI changes
+<ul>
+  <li> cdrom button: click this to notify Bochs when you changed the CDROM (Volker)
+  <li> snapshot button: saves the text on the Bochs screen into a file called
+    snapshot.txt (Volker)
+  <li> copy button: on Win32 and X windows, copy the text on the Bochs screen
+    to the clipboard (Volker)
+  <li> paste button: on Win32 and X windows, paste the characters on the 
+    clipboard into the Bochs window.  This requires keyboard_mapping to
+    be enabled. (Bryce Denney)
+  <li> improved text mode cursor for Win32, X11, and SDL (Volker)
+  <li> new SDL interface (Dave Poirier, debugging by Christophe, Volker, Bryce)
+    SDL is a graphics library that has works on many platforms.  This interface
+    is experimental, and is missing a few features of the standard Bochs
+    interfaces: extended keys (arrows, keypad).
+  <li> MacOS X: add MacOS X carbonized event handlers by Jeremy Parsons
+  <li> X windows: when not enough colors can be allocated, force use of 
+    private colormap (Bryce Denney)
+  <li> bug #490570 fixed: OUTB set and command 0xaa encountered (Dave Poirier)
+</ul>
+<li> keyboard
+<ul>
+  <li> completed keyboard emulation with the implementation of the three scancodes
+    sets (mf1, mf2, mf3) with or without translation. This is based on Ludovic 
+    Lange's plex86 keyboard patch. (Christophe Bothamy)
+  <li> added a "keyboard_type" option, that defines the answer to an "identify 
+    keybord" request to the keyboard controller. The available values are
+    "xt","at","mf".  (Christophe Bothamy)
+  <li> added an optional keyboard_mapping option that enables to use your
+    country specific keyboard with Bochs.  If enabled, the keymap file must be 
+    specified in bochsrc.  The available keymaps are US, German, Spanish and
+    French for PCs running X11.  Contributions are welcomed.  (Christophe
+    Bothamy)
+  <li> added Windows(tm) key definitions (Volker Ruppert)
+  <li> added paste button, which causes the emulated keyboard to type characters
+    from the system clipboard.  This only works when keyboard_mapping is
+    enabled. (Bryce Denney)
+</ul>
+<li> cdrom
+<ul>
+  <li> bug fix: win32 could not read a cdrom image file
+  <li> eject cd support for linux (patch from Petr Stehlik)
+  <li> BeOS fixes
+  <li> changing cdrom media is possible now with CDROM button
+</ul>
+<li> sound blaster(tm) emulation (Volker)
+<ul>
+  <li> you can use --enable-sb16=freebsd now
+  <li> 16-bit DMA controller added
+  <li> 16-bit mode of the SB16 implemented (output to file works)
+</ul>
+<li> floppy drive (Volker Ruppert)
+<ul>
+  <li> implementation of the floppy command 'format track'
+  <li> implementation of read / write operations with MT=0
+  <li> behaviour of a few floppy commands fixed
+  <li> floppy reset behaviour fixed
+  <li> lots of other fixes
+</ul>
+<li> fixed bug [ #468340 ] pic:slave: OCW3 not implemented.  Now the slave PIC
+<ul>
+  supports all the modes that the master PIC does, and nobody will see this
+  message again.
+</ul>
+<li> serial port (by Volker Ruppert unless noted)
+<ul>
+  <li> improved IRQ handling
+  <li> now Windows 95 serial driver works correctly
+  <li> fixed the return value of the MCR (loopback bit)
+  <li> interrupt reasons LSR change and MSR change implemented
+  <li> the number of data bits is considered when sending data
+  <li> all serial port changes are tested in loopback mode only
+  <li> serial port emulation fixed for FreeBSD and OpenBSD (Stu Grossman)
+  <li> fix receiver poll frequency so that it doesn't slow emulation (Stu Grossman)
+</ul>
+<li> Bochs debugger
+<ul>
+  <li> when tracing, print the instruction just before it is executed, instead
+    of just after (Greg Alexander)
+  <li> after a triple-fault panic, you can now return to the debugger
+</ul>
+<li> symmetric multiprocessor (SMP) simulation
+<ul>
+  <li> no more panic if you read the EOI register
+  <li> fixed default destination format in local APIC
+  <li> fix SMP instruction tracing in bochs debugger
+  <li> fix deadlock when debugger enabled and all processors HLT
+  <li> MSR support added by Zwane Mwaikambo
+</ul>
+<li> simulation of interrupts is more accurate (Volker)
+<ul>
+  <li> implemented edge triggered interrupt mode
+  <li> added functions raise_irq() and lower_irq()
+</ul>
+<li> programmable interrupt timer (Greg Alexander)
+<ul>
+  <li> fixed the PIT gate and improved the PIT printing options
+  <li> experimental real-time PIT
+</ul>
+<li> parallel port improvements (Volker Ruppert)
+<li> bug fix: hard disk errors caused by overflowing imul in the BIOS code.  
+  Sebastian Bechet and Peter Tattam tracked it down and fixed it.
+<li> fix some memory leaks (patch from Darko Tominac)
+<li> Double-Word IO is supported for ATA devices
+<li> fix bash-specific syntax in install-x11-fonts script
+<li> print stack_return_from_v86 error only the first 100 times
+</ul>
+
 <a name="v1.3">
 <h2>
 <a href="http://prdownloads.sourceforge.net/bochs/bochs-1.3.tar.gz">Version 1.3</a> (December 10, 2001)
