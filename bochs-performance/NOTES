@@ -74,7 +74,12 @@ bochs031	21.69user 0.33system 0:22.49elapsed
 ../bochs030	17.69user 0.25system 0:18.27elapsed
 ../bochs031	21.80user 0.29system 0:22.58elapsed
 
-name           seconds   Percent performance of 3/25/2000 snapshot
+
+Results from a short Linux-x86 test:
+
+                         % performance
+                         compared to
+name           seconds   3/25/2000    What is it
 ../bochs000	22.28	 82.00     1.2: no args
 ../bochs001	21.89	 83.46     1.2: turn off SMF for CPU only, improvement
 ../bochs002	22.35	 81.74     1.2: turn off SMF for all, reduction!!
@@ -103,3 +108,41 @@ name           seconds   Percent performance of 3/25/2000 snapshot
 ../bochs092	19.03    96.01     cvs, use bx_mem and bx_cpu instead of array
 ../bochs093	19.12    95.55     use bx_mem and bx_cpu instead of array
 ../bochs094	27.63    66.12     use bx_mem and bx_cpu instead of array, 4proc
+
+Result from a longer Linux-alpha test.
+Workload:
+  boot DLX linux
+  find / > /dev/null
+  cd /
+  tar czvf - `find etc var lib` > /dev/null
+  reboot
+
+
+                   Performance
+                   relative to
+Binary     Seconds   1.1.2     Description
+--------   ------    -------   ----------------------------------
+bochs000   490.10    85.23%    1.2: no args
+bochs001   467.61    89.33%    1.2: turn off SMF for CPU only (WHY BETTER!?)
+bochs002   527.61    79.17%    1.2: turn off SMF for all
+bochs004   472.87    88.34%    1.2: --with-nogui
+bochs005   490.86    85.10%    1.2: --enable-debugger
+bochs006   660.06    63.29%    1.2: cdrom, sb16, debugger
+bochs006a  486.59    85.85%    1.2: cdrom
+bochs006b  716.34    58.31%    1.2: sb16=linux
+bochs006c  497.91    83.90%    1.2: cdrom, sb16=linux
+bochs006d  493.88    84.58%    1.2: none, same as bochs000
+bochs006e  691.04    60.45%    1.2: cdrom, debugger
+bochs006f  648.44    64.42%    1.2: sb16=linux, debugger
+bochs007   466.31    89.58%    1.2: compiled out log code, helped a tiny bit
+bochs008   947.19    44.10%    1.2: CFLAGS="", no optimization, bad
+bochs008a  488.01    85.60%    1.2: -O2 without -g
+bochs008b  500.74    83.42%    1.2: -O6 didn't help a bit
+bochs010   499.31    83.66%    1.2: 2 processors
+bochs011   662.13    63.09%    1.2: 2 processors + debugger
+bochs015   554.39    75.35%    1.2: 4 processors
+bochs016   693.52    60.23%    1.2: 4 processors + debugger
+bochs020   417.76   100.00%    1.1.2: with no args
+bochs021   552.67    75.58%    1.1.2: --enable-debugger
+bochs091   450.86    92.65%    cvs: stay-in-cpu-loop-for-1proc
+bochs092   417.04   100.17%    cvs: no-cpu-array-for-1proc     (CURRENT)
