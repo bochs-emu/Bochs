@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.87 2004-12-05 20:23:38 vruppert Exp $
+// $Id: win32.cc,v 1.88 2004-12-06 21:12:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,8 +88,8 @@ static QueueEvent keyevents[SCANCODE_BUFSIZE];
 static unsigned head=0, tail=0;
 static int mouse_button_state = 0;
 static int ms_xdelta=0, ms_ydelta=0, ms_zdelta=0;
-static int ms_lastx=0, ms_lasty=0, ms_lastz=0;
-static int ms_savedx=0, ms_savedy=0, ms_savedz=0;
+static int ms_lastx=0, ms_lasty=0;
+static int ms_savedx=0, ms_savedy=0;
 static BOOL mouseCaptureMode, mouseCaptureNew, mouseToggleReq;
 static unsigned long workerThread = 0;
 static DWORD workerThreadID = 0;
@@ -479,10 +479,9 @@ static void processMouseXY( int x, int y, int z, int windows_state, int implied_
   }
   ms_ydelta=ms_savedy-y;
   ms_xdelta=x-ms_savedx;
-  ms_zdelta=z-ms_savedz;
+  ms_zdelta=z;
   ms_lastx=x;
   ms_lasty=y;
-  ms_lastz=z;
   if ( bx_state!=mouse_button_state)
   {
     EnterCriticalSection( &stInfo.keyCS);
@@ -499,7 +498,6 @@ static void resetDelta()
   EnterCriticalSection( &stInfo.mouseCS);
   ms_savedx=ms_lastx;
   ms_savedy=ms_lasty;
-  ms_savedz=ms_lastz;
   ms_ydelta=ms_xdelta=ms_zdelta=0;
   LeaveCriticalSection( &stInfo.mouseCS);
 }
@@ -514,7 +512,6 @@ static void cursorWarped()
   ms_lasty=stretched_y/2;
   ms_savedx=ms_lastx;
   ms_savedy=ms_lasty;
-  ms_savedz=ms_lastz;
   LeaveCriticalSection( &stInfo.mouseCS);
 }
 
@@ -995,7 +992,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_MOUSEWHEEL:
     if (!mouseModeChange) {
-      processMouseXY( 0, 0, HIWORD(wParam), 0, 0);
+      // WM_MOUSEWHEEL returns x and y relative to the main screen.
+      // WM_MOUSEMOVE below returns x and y relative to the current view.
+      RECT rect;
+      GetWindowRect(stInfo.simWnd, &rect);
+      processMouseXY( LOWORD(lParam) - rect.left, HIWORD(lParam) - rect.top, (Bit16s) HIWORD(wParam) / 120, LOWORD(wParam), 0);
     }
     return 0;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.93 2004-12-05 20:23:38 vruppert Exp $
+// $Id: keyboard.cc,v 1.94 2004-12-06 21:12:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.93 2004-12-05 20:23:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.94 2004-12-06 21:12:11 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1488,9 +1488,7 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
     BX_KEY_THIS s.mouse.delayed_dy+=256;
     }
 
-  b4 = (Bit8u) BX_KEY_THIS s.mouse.delayed_dz & 0x07;
-  if (BX_KEY_THIS s.mouse.delayed_dz < 0)
-    b4 |= 0xF8;
+  b4 = (Bit8u) -BX_KEY_THIS s.mouse.delayed_dz;
 
   mouse_enQ_packet(b1, b2, b3, b4);
 }
@@ -1555,7 +1553,7 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_s
     return;
   }
 
-  if(BX_KEY_THIS s.mouse.button_status != (button_state & 0x7)) {
+  if ((BX_KEY_THIS s.mouse.button_status != (button_state & 0x7)) || delta_z) {
     force_enq=1;
   }
 
@@ -1565,12 +1563,10 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_s
   if(delta_y>255) delta_y=255;
   if(delta_x<-256) delta_x=-256;
   if(delta_y<-256) delta_y=-256;
-  if(delta_z == 120) delta_z = 1;
-  if(delta_z == 65416) delta_z = -1;
 
   BX_KEY_THIS s.mouse.delayed_dx+=delta_x;
   BX_KEY_THIS s.mouse.delayed_dy+=delta_y;
-  BX_KEY_THIS s.mouse.delayed_dz+=delta_z;
+  BX_KEY_THIS s.mouse.delayed_dz = delta_z;
 
   if((BX_KEY_THIS s.mouse.delayed_dx>255)||
      (BX_KEY_THIS s.mouse.delayed_dx<-256)||

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.86 2004-11-06 17:03:43 vruppert Exp $
+// $Id: x.cc,v 1.87 2004-12-06 21:12:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,7 +104,7 @@ static unsigned imDepth, imWide, imBPP;
 
 // current cursor coordinates
 static int prev_x=-1, prev_y=-1;
-static int current_x=-1, current_y=-1;
+static int current_x=-1, current_y=-1, current_z=0;
 static unsigned mouse_button_state = 0;
 static bx_bool CTRL_pressed = 0;
 
@@ -753,6 +753,7 @@ bx_x_gui_c::handle_events(void)
 
   while (XPending(bx_x_display) > 0)  {
     XNextEvent(bx_x_display, &report);
+    current_z = 0;
     switch  (report.type) {
 
     case Expose:
@@ -860,6 +861,16 @@ bx_x_gui_c::handle_events(void)
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
+        case Button4:
+          current_z = 1;
+          send_keyboard_mouse_status();
+          mouse_update = 0;
+          break;
+        case Button5:
+          current_z = -1;
+          send_keyboard_mouse_status();
+          mouse_update = 0;
+          break;
         }
       break;
 
@@ -923,16 +934,17 @@ send_keyboard_mouse_status(void)
 	BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
 			prev_x, prev_y, current_x, current_y));
 
-  if ( (prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) {
-    int dx, dy;
+  if (((prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) ||
+     (current_z != 0)) {
+    int dx, dy, dz;
 
     // (mch) consider warping here
     dx = current_x - prev_x - warp_dx;
     dy = -(current_y - prev_y - warp_dy);
+    dz = current_z;
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 
-//BX_INFO(("xxx: MOUSE_MOTION: dx=%d, dy=%d", (int) dx, (int) dy));
-    DEV_mouse_motion (dx, dy, mouse_button_state);
+    DEV_mouse_motion_ext (dx, dy, dz, mouse_button_state);
     //if (warped) {
     //  prev_x = current_x = -1;
     //  prev_y = current_y = -1;
