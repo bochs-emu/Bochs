@@ -1136,7 +1136,6 @@ elif test "$with_wx" = yes; then
   # wxwindows is the only one without control.o in GUI_OBJS
   GUI_OBJS='$(GUI_OBJS_WX)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
-  NONINLINE_VAR="$NONINLINE_VAR wxmain.o"
 else
   AC_MSG_RESULT(none)
   AC_DEFINE(BX_WITH_NOGUI, 1)
