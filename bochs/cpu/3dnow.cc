@@ -24,19 +24,73 @@
 
 #if BX_SUPPORT_3DNOW
 
+#include "softfloat.h"
+
+static void prepare_softfloat_status_word
+	(softfloat_status_word_t &status_word, int rounding_mode)
+{
+  status.float_detect_tininess = float_tininess_before_rounding;
+  status.float_exception_flags = 0; // clear exceptions before execution
+  status.float_nan_handling_mode = float_first_operand_nan;
+  status.float_rounding_mode = rounding_mode;
+  status.flush_underflow_to_zero = 0;
+}
+
 void BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFPNACC_PqQq: 3DNow! instruction still not implemented"));
 }
 
+/* 0F 0F /r 0C */
 void BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PI2FW_PqQq: 3DNow! instruction still not implemented"));
+  BxPackedMmxRegister result, op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+  }
+
+  softfloat_status_word_t status_word;
+  prepare_softfloat_status_word(status_word, float_round_to_zero);
+
+  MMXUD0(result) = 
+        int32_to_float32((Bit32s)(MMXSW0(op)), status_word);
+  MMXUD1(result) = 
+        int32_to_float32((Bit32s)(MMXSW2(op)), status_word);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
 }
 
+/* 0F 0F /r 0D */
 void BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PI2FD_PqQq: 3DNow! instruction still not implemented"));
+  BxPackedMmxRegister result, op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+  }
+
+  softfloat_status_word_t status_word;
+  prepare_softfloat_status_word(status_word, float_round_to_zero);
+
+  MMXUD0(result) = 
+        int32_to_float32(MMXSD0(op), status_word);
+  MMXUD1(result) = 
+        int32_to_float32(MMXSD1(op), status_word);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
 }
 
 void BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
@@ -44,9 +98,30 @@ void BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
   BX_PANIC(("PF2IW_PqQq: 3DNow! instruction still not implemented"));
 }
 
+/* 0F 0F /r 1D */
 void BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 {
-  BX_PANIC(("PF2ID_PqQq: 3DNow! instruction still not implemented"));
+  BxPackedMmxRegister result, op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+  }
+
+  softfloat_status_word_t status_word;
+  prepare_softfloat_status_word(status_word, float_round_to_zero);
+
+  MMXSD0(result) = 
+        float32_to_int32_round_to_zero(MMXUD0(op), status_word);
+  MMXSD1(result) = 
+        float32_to_int32_round_to_zero(MMXUD1(op), status_word);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
 }
 
 void BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
