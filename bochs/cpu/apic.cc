@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.30 2003-01-22 21:43:34 cbothamy Exp $
+// $Id: apic.cc,v 1.31 2004-02-12 00:56:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -38,8 +38,9 @@ void bx_generic_apic_c::init ()
 void bx_local_apic_c::update_msr_apicbase(Bit32u newbase)
 {
   Bit64u val64;
-  val64 = newbase << 12; /* push the APIC base address to bits 12:35 */
-  val64 += cpu->msr.apicbase & 0x0900; /* don't modify other apicbase or reserved bits */
+  val64 = newbase ;
+  val64 <<= 12; /* push the APIC base address to bits 12:35 */
+  val64 |= cpu->msr.apicbase & 0x0900; /* don't modify other apicbase or reserved bits */
   cpu->msr.apicbase = val64;
 }
 

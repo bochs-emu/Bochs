@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.50 2004-01-29 17:49:03 mcb30 Exp $
+// $Id: init.cc,v 1.51 2004-02-12 00:56:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.50 2004-01-29 17:49:03 mcb30 Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.51 2004-02-12 00:56:21 cbothamy Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -836,7 +836,9 @@ BX_CPU_C::reset(unsigned source)
 /* initialise MSR registers to defaults */
 #if BX_CPU_LEVEL >= 5
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
-  BX_CPU_THIS_PTR msr.apicbase = (APIC_BASE_ADDR << 12) + 0x900;
+  BX_CPU_THIS_PTR msr.apicbase = APIC_BASE_ADDR;
+  BX_CPU_THIS_PTR msr.apicbase <<= 12;
+  BX_CPU_THIS_PTR msr.apicbase |= 0x900;
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR msr.lme = BX_CPU_THIS_PTR msr.lma = 0;
 #endif
