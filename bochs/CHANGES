@@ -37,6 +37,8 @@ Changes in 1.2.1 (FILL IN THE DATE):
 - win32 now defaults to having mouse capture mode turned off.  For new users,
   it would be distressing for their mouse cursor to disappear until they
   pressed F12.
+- added script called "install-x11-fonts" which should help people install
+  the VGA font on X windows systems, if it isn't already there.
 
 Changes in 1.2 (6/3/2001):
 - [ #427259 ] rombios HALT calls don't print
