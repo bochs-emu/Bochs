@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.84 2002-11-09 14:12:10 cbothamy Exp $
+// $Id: siminterface.h,v 1.85 2002-11-14 05:14:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1084,27 +1084,27 @@ public:
 #define BX_ATA_TRANSLATION_AUTO      4
 #define BX_ATA_TRANSLATION_LAST      4
 
-extern char *bochs_start_names[];
-extern int n_bochs_start_names;
-extern char *floppy_type_names[];
-extern int floppy_type_n_sectors[];
-extern int n_floppy_type_names;
-extern char *floppy_status_names[];
-extern int n_floppy_status_names;
-extern char *floppy_bootdisk_names[];
-extern int n_floppy_bootdisk_names;
-extern char *loader_os_names[];
-extern int n_loader_os_names;
-extern char *keyboard_type_names[];
-extern int n_keyboard_type_names;
-extern char *atadevice_type_names[];
-extern int n_atadevice_type_names;
-extern char *atadevice_status_names[];
-extern int n_atadevice_status_names;
-extern char *atadevice_biosdetect_names[];
-extern int n_atadevice_biosdetect_names;
-extern char *atadevice_translation_names[];
-extern int n_atadevice_translation_names;
+BOCHSAPI extern char *bochs_start_names[];
+BOCHSAPI extern int n_bochs_start_names;
+BOCHSAPI extern char *floppy_type_names[];
+BOCHSAPI extern int floppy_type_n_sectors[];
+BOCHSAPI extern int n_floppy_type_names;
+BOCHSAPI extern char *floppy_status_names[];
+BOCHSAPI extern int n_floppy_status_names;
+BOCHSAPI extern char *floppy_bootdisk_names[];
+BOCHSAPI extern int n_floppy_bootdisk_names;
+BOCHSAPI extern char *loader_os_names[];
+BOCHSAPI extern int n_loader_os_names;
+BOCHSAPI extern char *keyboard_type_names[];
+BOCHSAPI extern int n_keyboard_type_names;
+BOCHSAPI extern char *atadevice_type_names[];
+BOCHSAPI extern int n_atadevice_type_names;
+BOCHSAPI extern char *atadevice_status_names[];
+BOCHSAPI extern int n_atadevice_status_names;
+BOCHSAPI extern char *atadevice_biosdetect_names[];
+BOCHSAPI extern int n_atadevice_biosdetect_names;
+BOCHSAPI extern char *atadevice_translation_names[];
+BOCHSAPI extern int n_atadevice_translation_names;
 
 typedef struct {
   bx_param_enum_c *Odevtype;
@@ -1276,4 +1276,4 @@ typedef struct BOCHSAPI {
 #endif
 } bx_startup_flags_t;
 
-extern bx_startup_flags_t BOCHSAPI bx_startup_flags;
+BOCHSAPI extern bx_startup_flags_t bx_startup_flags;
