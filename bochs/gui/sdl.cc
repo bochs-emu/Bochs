@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.44 2004-02-13 21:45:28 vruppert Exp $
+// $Id: sdl.cc,v 1.45 2004-02-15 17:12:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,15 +56,6 @@ static bx_sdl_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(sdl)
 
 #define LOG_THIS theGui->
-
-#define _SDL_DEBUG_ME_
-
-#ifdef _SDL_DEBUG_ME_
-void we_are_here(void)
-{
-  return;
-}
-#endif
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 const Uint32 status_led_green = 0x00ff0000;
@@ -823,7 +814,8 @@ void bx_sdl_gui_c::handle_events(void)
 	  break;
 	}
 	//fprintf (stderr, "processing relative mouse event\n");
-	new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02));
+        new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02)
+                            |((sdl_event.motion.state<<1)&0x04));
 	DEV_mouse_motion(
 	    sdl_event.motion.xrel,
 	    -sdl_event.motion.yrel,
@@ -837,8 +829,9 @@ void bx_sdl_gui_c::handle_events(void)
 	break;
 
       case SDL_MOUSEBUTTONDOWN:
-	if( (sdl_event.button.button == SDL_BUTTON_MIDDLE)
-	    && (sdl_fullscreen_toggle == 0) )
+        if( (sdl_event.button.button == SDL_BUTTON_MIDDLE)
+            && ((SDL_GetModState() & KMOD_CTRL) > 0)
+            && (sdl_fullscreen_toggle == 0) )
 	{
 	  if( sdl_grab == 0 )
 	  {
@@ -869,7 +862,7 @@ void bx_sdl_gui_c::handle_events(void)
 	  ((mouse_state<<1)&0x04) ;
 	// filter out middle button if not fullscreen
 	if( sdl_fullscreen_toggle == 0 )
-	  new_mousebuttons &= 0x03;
+	  new_mousebuttons &= 0x07;
 	// send motion information
 	DEV_mouse_motion(
 	    new_mousex - old_mousex,
@@ -1256,7 +1249,6 @@ void bx_sdl_gui_c::show_headerbar(void)
   } while( --rowsleft );
   SDL_UpdateRect( sdl_screen, 0,0,res_x,headerbar_height);
 
-  we_are_here();
   // go thru the bitmaps and display the active ones
   while( bitmapscount-- )
   {
