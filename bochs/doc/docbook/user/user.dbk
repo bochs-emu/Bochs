@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.9 2001-09-20 03:27:07 bdenney Exp $
+$Id: user.dbk,v 1.10 2001-10-06 04:29:09 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1246,9 +1246,7 @@ windows.
       <entry>--with-nogui</entry>
       <entry>no</entry>
       <entry>No native GUI, just use blank stubs.  This is if you don't
-	  care about having video output, but are just running tests.
-	  This option may not be up-to-date, but can be made so
-	  easily.</entry>
+	  care about having video output, but are just running tests. </entry>
     </row>
   </tbody>
 </tgroup>
