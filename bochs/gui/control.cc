@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.37 2001-11-10 00:40:40 bdenney Exp $
+// $Id: control.cc,v 1.38 2001-11-10 03:12:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.37 2001-11-10 00:40:40 bdenney Exp $
+ * $Id: control.cc,v 1.38 2001-11-10 03:12:44 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -364,7 +364,7 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
      cdromop.Opath->getptr (), cdromop.Opresent->get ()?"":"not ",
      cdromop.Oinserted->get ()?"inserted":"ejected");
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
-      ips->get (),
+      /* ips->get (), */
       SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
       SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled");
 }
