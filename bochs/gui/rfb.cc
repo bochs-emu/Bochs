@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.33 2004-04-09 10:25:55 vruppert Exp $
+// $Id: rfb.cc,v 1.34 2004-04-11 18:04:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -24,10 +24,9 @@
 // RFB still to do :
 // - properly handle SetPixelFormat, including big/little-endian flag
 // - depth > 8bpp support
-// - on-board vga card font support instead of vgafont.h
 // - dimension update support
 // - optional compression support
-// - bottom leds support
+// - status bar text support
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -46,6 +45,7 @@ public:
   bx_rfb_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
+  void statusbar_setitem(int element, bx_bool active);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -137,6 +137,11 @@ static unsigned long  rfbCursorX = 0;
 static unsigned long  rfbCursorY = 0;
 static unsigned long  rfbOriginLeft  = 0;
 static unsigned long  rfbOriginRight = 0;
+static unsigned  rfbStatusbarY = 18;
+static unsigned rfbStatusitemPos[12] = {
+  0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
+};
+static bx_bool rfbStatusitemActive[12];
 
 static unsigned int text_rows=25, text_cols=80;
 static unsigned int font_height=16, font_width=8;
@@ -199,7 +204,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
 
   rfbHeaderbarY = headerbar_y;
   rfbDimensionX = 640;
-  rfbDimensionY = 480 + rfbHeaderbarY;
+  rfbDimensionY = 480 + rfbHeaderbarY + rfbStatusbarY;
   rfbStretchedX = rfbDimensionX;
   rfbStretchedY = rfbDimensionY;
   rfbTileX      = tilewidth;
@@ -261,6 +266,35 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
 #endif
   }
   if (timeout < 0) BX_PANIC(("timeout! no client present"));
+}
+
+void rfbSetStatus(int element, bx_bool active)
+{
+  char *newBits, color;
+  int xleft, xsize;
+
+  rfbStatusitemActive[element] = active;
+  xleft = rfbStatusitemPos[element] + 2;
+  xsize = rfbStatusitemPos[element+1] - xleft - 1;
+  newBits = (char *)malloc(((xsize / 8) + 1) * (rfbStatusbarY - 2));
+  memset(newBits, 0, ((xsize / 8) + 1) * (rfbStatusbarY - 2));
+  for (unsigned i=0; i<(rfbStatusbarY - 2); i++) {
+    newBits[((xsize / 8) + 1) * i] = 0;
+  }
+  color = active?0xa0:0xf0;
+  DrawBitmap(xleft, rfbDimensionY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2, newBits, color, true);
+  free(newBits);
+}
+
+void bx_rfb_gui_c::statusbar_setitem(int element, bx_bool active)
+{
+  if (element < 0) {
+    for (unsigned i = 0; i < statusitem_count; i++) {
+      rfbSetStatus(i+1, active);
+    }
+  } else if ((unsigned)element < statusitem_count) {
+    rfbSetStatus(element+1, active);
+  }
 }
 
 #ifdef WIN32
@@ -609,7 +643,7 @@ void bx_rfb_gui_c::flush(void)
 // clear the area that defines the headerbar.
 void bx_rfb_gui_c::clear_screen(void)
 {
-    memset(&rfbScreen[rfbDimensionX * rfbHeaderbarY], 0, rfbDimensionX * (rfbDimensionY - rfbHeaderbarY));
+    memset(&rfbScreen[rfbDimensionX * rfbHeaderbarY], 0, rfbDimensionX * (rfbDimensionY - rfbHeaderbarY - rfbStatusbarY));
 }
 
 
@@ -859,8 +893,8 @@ unsigned bx_rfb_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, vo
 
 void bx_rfb_gui_c::show_headerbar(void)
 {
-  char *newBits;
-  unsigned int i, xorigin;
+  char *newBits, value;
+  unsigned int i, xorigin, addr;
 
   newBits = (char *)malloc(rfbDimensionX * rfbHeaderbarY);
   memset(newBits, 0, (rfbDimensionX * rfbHeaderbarY));
@@ -874,6 +908,20 @@ void bx_rfb_gui_c::show_headerbar(void)
     DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim, rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap, (char)0xf0, false);
   }
   free(newBits);
+  newBits = (char *)malloc(rfbDimensionX * rfbStatusbarY / 8);
+  memset(newBits, 0, (rfbDimensionX * rfbStatusbarY / 8));
+  for (i = 1; i < 12; i++) {
+    addr = rfbStatusitemPos[i] / 8;
+    value = 1 << (rfbStatusitemPos[i] % 8);
+    for (unsigned j=1; j<rfbStatusbarY; j++) {
+      newBits[(rfbDimensionX * j / 8) + addr] = value;
+    }
+  }
+  DrawBitmap(0, rfbDimensionY - rfbStatusbarY, rfbDimensionX, rfbStatusbarY, newBits, (char)0xf0, false);
+  free(newBits);
+  for (i = 1; i <= statusitem_count; i++) {
+    rfbSetStatus(i, rfbStatusitemActive[i]);
+  }
 }
 
 
@@ -892,7 +940,18 @@ void bx_rfb_gui_c::show_headerbar(void)
 
 void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
+    unsigned int xorigin;
+
+    if (bmap_id == rfbHeaderbarBitmaps[hbar_id].index) return;
     rfbHeaderbarBitmaps[hbar_id].index = bmap_id;
+    if (rfbHeaderbarBitmaps[hbar_id].alignment == BX_GRAVITY_LEFT) {
+      xorigin = rfbHeaderbarBitmaps[hbar_id].xorigin;
+    } else {
+      xorigin = rfbDimensionX - rfbHeaderbarBitmaps[hbar_id].xorigin;
+    }
+    DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].xdim,
+               rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].ydim,
+               rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, (char)0xf0, true);
 }
 
 
