@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.14 2002-05-10 10:56:04 vruppert Exp $
+// $Id: pci.cc,v 1.15 2002-05-30 07:33:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -45,13 +45,28 @@ bx_pci_c bx_pci;
 
 bx_pci_c::bx_pci_c(void)
 {
-	put("PCI");
-	settype(PCILOG);
+  unsigned i;
+
+  put("PCI");
+  settype(PCILOG);
+
+  BX_PCI_THIS num_pci_handles = 0;
+
+  /* set unused elements to appropriate values */
+  for (i=0; i < BX_MAX_PCI_DEVICES; i++) {
+    BX_PCI_THIS pci_handler[i].read  = NULL;
+    BX_PCI_THIS pci_handler[i].write = NULL;
+    }
+
+  for (i=0; i < 0x100; i++) {
+    BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
+    }
 }
 
 bx_pci_c::~bx_pci_c(void)
 {
-	BX_INFO(("Exit."));
+  // nothing for now
+  BX_DEBUG(("Exit."));
 }
 
 
@@ -73,6 +88,9 @@ bx_pci_c::init(bx_devices_c *d)
       d->register_io_write_handler(this, write_handler, i, "i440FX");
       }
 
+    BX_PCI_THIS register_pci_handlers(this, pci_read_handler, pci_write_handler,
+                                      0x00, "440FX Host bridge");
+
     for (unsigned i=0; i<256; i++)
       BX_PCI_THIS s.i440fx.array[i] = 0x0;
     }
@@ -87,6 +105,9 @@ bx_pci_c::init(bx_devices_c *d)
   void
 bx_pci_c::reset(void)
 {
+  BX_PCI_THIS s.i440fx.confAddr = 0;
+  BX_PCI_THIS s.i440fx.confData = 0;
+
   BX_PCI_THIS s.i440fx.array[0x04] = 0x06;
   BX_PCI_THIS s.i440fx.array[0x05] = 0x00;
   BX_PCI_THIS s.i440fx.array[0x06] = 0x80;
@@ -144,29 +165,23 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
     case 0x0CFE:
     case 0x0CFF:
       {
-      Bit32u val440fx, retMask;
-      // PMC is bus 0 / device 0 / function 0
-      if ((BX_PCI_THIS s.i440fx.confAddr & 0x80FFFF00) == 0x80000000) {
-        val440fx = BX_PCI_THIS s.i440fx.confData >> ((address & 0x3)*8);
+      Bit32u handle, retval;
+      Bit8u devfunc, regnum;
 
-        switch (io_len) {
-          case 1:
-            retMask = 0xFF; break;
-          case 2:
-            retMask = 0xFFFF; break;
-          case 4:
-            retMask = 0xFFFFFFFF; break;
-          default:
-            retMask = 0xFFFFFFFF; break;
-          }
-        val440fx = (val440fx & retMask);
-	BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x",
-		  (Bit8u)(BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x3),
-		  val440fx));
-        return val440fx;
+      if ((BX_PCI_THIS s.i440fx.confAddr & 0x80FF0000) == 0x80000000) {
+        devfunc = (BX_PCI_THIS s.i440fx.confAddr >> 8) & 0xff;
+        regnum = (BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x03);
+        handle = BX_PCI_THIS pci_handler_id[devfunc];
+        if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES))
+          retval = (* BX_PCI_THIS pci_handler[handle].read)
+                     (BX_PCI_THIS pci_handler[handle].this_ptr, regnum, io_len);
+        else
+          retval = 0xFFFFFFFF;
         }
       else
-        return 0xFFFFFFFF;
+        retval = 0xFFFFFFFF;
+      BX_PCI_THIS s.i440fx.confData = retval;
+      return retval;
       }
     }
 
@@ -198,20 +213,16 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0xCF8:
       {
-      Bit8u idx440fx;
       // confAddr accepts a dword value only
       if (io_len == 4) {
         BX_PCI_THIS s.i440fx.confAddr = value;
-	if ((value & 0x80FFFF00) == 0x80000000) {
-	  idx440fx = (Bit8u)(value & 0xFC);
-	  memcpy(&BX_PCI_THIS s.i440fx.confData, &BX_PCI_THIS s.i440fx.array[idx440fx], 4);
-	  BX_DEBUG(("440FX PMC register 0x%02x selected", idx440fx));
-	  }
-	else {
-	  BX_PCI_THIS s.i440fx.confData = 0xFFFFFFFF;
-	  BX_DEBUG(("440FX request for bus 0x%02x device 0x%02x function 0x%02x",
-		    (value >> 16) & 0xFF, (value >> 11) & 0x1F, (value >> 8) & 0x07));
-	  }
+        if ((value & 0x80FFFF00) == 0x80000000) {
+          BX_DEBUG(("440FX PMC register 0x%02x selected", value & 0xfc));
+          }
+        else if ((value & 0x80000000) == 0x80000000) {
+          BX_DEBUG(("440FX request for bus 0x%02x device 0x%02x function 0x%02x",
+                    (value >> 16) & 0xFF, (value >> 11) & 0x1F, (value >> 8) & 0x07));
+          }
         }
       }
       break;
@@ -221,38 +232,98 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0xCFE:
     case 0xCFF:
       {
-      Bit8u max_len, idx440fx;
+      Bit32u handle;
+      Bit8u devfunc, regnum;
 
-      idx440fx = (Bit8u)((BX_PCI_THIS s.i440fx.confAddr & 0xFC) + (address & 0x3));
-      max_len = 4 - (address & 0x3);
-      if (io_len < max_len) max_len = io_len;
-      if ((BX_PCI_THIS s.i440fx.confAddr & 0x80FFFF00) == 0x80000000) {
-        for (unsigned i=0; i<max_len; i++) {
-          switch (idx440fx+i) {
-            case 0x00:
-            case 0x01:
-            case 0x02:
-            case 0x03:
-            case 0x06:
-            case 0x08:
-            case 0x09:
-            case 0x0a:
-            case 0x0b:
-            case 0x0e:
-              break;
-            default:
-              BX_PCI_THIS s.i440fx.array[idx440fx+i] = (value >> (i*8)) & 0xFF;
-	      BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x",
-			idx440fx, (value >> (i*8)) & 0xFF));
+      if ((BX_PCI_THIS s.i440fx.confAddr & 0x80FF0000) == 0x80000000) {
+        devfunc = (BX_PCI_THIS s.i440fx.confAddr >> 8) & 0xff;
+        regnum = (BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x03);
+        handle = BX_PCI_THIS pci_handler_id[devfunc];
+        if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
+          if (((regnum>=4) && (regnum<=7)) || (regnum==12) || (regnum==13) || (regnum>14)) {
+            (* BX_PCI_THIS pci_handler[handle].write)
+               (BX_PCI_THIS pci_handler[handle].this_ptr, regnum, value, io_len);
+            BX_PCI_THIS s.i440fx.confData = value << (8 * (address & 0x03));
             }
+          else
+            BX_DEBUG(("read only register, write ignored"));
           }
-	memcpy(&BX_PCI_THIS s.i440fx.confData, &BX_PCI_THIS s.i440fx.array[idx440fx], 4);
         }
       }
       break;
 
     default:
       BX_PANIC(("IO write to port 0x%x", (unsigned) address));
+    }
+}
+
+
+  // static pci configuration space read callback handler
+  // redirects to non-static class handler to avoid virtual functions
+
+  Bit32u
+bx_pci_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+{
+#if !BX_USE_PCI_SMF
+  bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
+
+  return( class_ptr->pci_read(address, io_len) );
+}
+
+
+  Bit32u
+bx_pci_c::pci_read(Bit8u address, unsigned io_len)
+{
+#else
+  UNUSED(this_ptr);
+#endif // !BX_USE_PCI_SMF
+
+  Bit32u val440fx = 0;
+
+  if (io_len <= 4) {
+    memcpy(&val440fx, &BX_PCI_THIS s.i440fx.array[address], io_len);
+    BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x", address, val440fx));
+    return val440fx;
+    }
+  else
+    return(0xffffffff);
+}
+
+
+  // static pci configuration space write callback handler
+  // redirects to non-static class handler to avoid virtual functions
+
+  void
+bx_pci_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+{
+#if !BX_USE_PCI_SMF
+  bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
+
+  class_ptr->pci_write(address, value, io_len);
+}
+
+  void
+bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
+{
+#else
+  UNUSED(this_ptr);
+#endif // !BX_USE_PCI_SMF
+
+  Bit8u value8;
+
+  if (io_len <= 4) {
+    for (unsigned i=0; i<io_len; i++) {
+      value8 = (value >> (i*8)) & 0xFF;
+      switch (address+i) {
+        case 0x06:
+        case 0x0c:
+          break;
+        default:
+          BX_PCI_THIS s.i440fx.array[address+i] = value8;
+          BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address,
+                    value8));
+        }
+      }
     }
 }
 
@@ -383,16 +454,16 @@ bx_pci_c::print_i440fx_state()
 {
   int  i;
 
-  BX_INFO(( "i440fxConfAddr:0x%08x", BX_PCI_THIS s.i440fx.confAddr ));
-  BX_INFO(( "i440fxConfData:0x%08x", BX_PCI_THIS s.i440fx.confData ));
+  BX_DEBUG(( "i440fxConfAddr:0x%08x", BX_PCI_THIS s.i440fx.confAddr ));
+  BX_DEBUG(( "i440fxConfData:0x%08x", BX_PCI_THIS s.i440fx.confData ));
 
 #ifdef DUMP_FULL_I440FX
   for (i=0; i<256; i++) {
-    BX_INFO(( "i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.array[i] ));
+    BX_DEBUG(( "i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.array[i] ));
     }
 #else /* DUMP_FULL_I440FX */
   for (i=0x59; i<0x60; i++) {
-    BX_INFO(( "i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.array[i] ));
+    BX_DEBUG(( "i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.array[i] ));
     }
 #endif /* DUMP_FULL_I440FX */
 }
@@ -414,4 +485,33 @@ bx_pci_c::i440fx_fetch_ptr(Bit32u addr)
     }
   else
     return (&BX_PCI_THIS devices->mem->vector[addr]);
+}
+
+
+  Boolean
+bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
+                                 bx_pci_write_handler_t f2, Bit8u devfunc,
+                                 const char *name)
+{
+  unsigned handle;
+
+  /* first check if device/function is available */
+  if (BX_PCI_THIS pci_handler_id[devfunc] == BX_MAX_PCI_DEVICES) {
+    if (BX_PCI_THIS num_pci_handles >= BX_MAX_PCI_DEVICES) {
+      BX_INFO(("too many PCI devices installed."));
+      BX_PANIC(("  try increasing BX_MAX_PCI_DEVICES"));
+      return false;
+      }
+    handle = BX_PCI_THIS num_pci_handles++;
+    BX_PCI_THIS pci_handler[handle].read  = f1;
+    BX_PCI_THIS pci_handler[handle].write = f2;
+    BX_PCI_THIS pci_handler[handle].this_ptr = this_ptr;
+    BX_PCI_THIS pci_handler_id[devfunc] = handle;
+    BX_INFO(("%s present at device %d, function %d", name, devfunc >> 3,
+             devfunc & 0x07));
+    return true; // device/function mapped successfully
+    }
+  else {
+    return false; // device/function not available, return false.
+    }
 }
