@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.15 2001-10-03 13:10:37 bdenney Exp $
+// $Id: win32.cc,v 1.16 2001-10-08 00:38:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -411,9 +411,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
     SetTimer (hwnd, 1, 330, NULL);
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     if (mouseCaptureMode)
-      SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
+      SetWindowText(hwnd, "Bochs for Windows      [F12 to release mouse]");
     else
-      SetWindowText(hwnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
+      SetWindowText(hwnd, "Bochs for Windows      [F12 enables mouse]");
     return 0;
 
   case WM_TIMER:
