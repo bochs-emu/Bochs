@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.81 2002-10-25 11:44:35 bdenney Exp $
+// $Id: dbg_main.cc,v 1.82 2002-10-25 20:04:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2158,9 +2158,9 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 	    dbg_printf (
 		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
 		BX_CPU(which_cpu)->get_EAX (),
-		BX_CPU(which_cpu)->get_EBX (),
 		BX_CPU(which_cpu)->get_ECX (),
 		BX_CPU(which_cpu)->get_EDX (),
+		BX_CPU(which_cpu)->get_EBX (),
 		BX_CPU(which_cpu)->get_ESP (),
 		BX_CPU(which_cpu)->get_EBP (),
 		BX_CPU(which_cpu)->get_ESI (),
