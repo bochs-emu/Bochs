@@ -1,0 +1,47 @@
+diff -ur bochs/gui/svga.cc bochs-svga/gui/svga.cc
+--- bochs/gui/svga.cc	Thu Nov 21 01:05:52 2002
++++ bochs-svga/gui/svga.cc	Thu Nov 21 19:10:26 2002
+@@ -105,7 +105,6 @@
+   gl_setwritemode(FONT_COMPRESSED);
+   
+   keyboard_init();
+-  keyboard_translatekeys(DONT_CATCH_CTRLC);
+   keyboard_seteventhandler((__keyboard_handler) keyboard_handler);
+ 
+   vga_setmousesupport(1);
+@@ -310,10 +309,7 @@
+ 
+ void keyboard_handler(int scancode, int press)
+ {
+-    if (scancode == SCANCODE_F12) {
+-        keyboard_close();
+-        vga_setmode(TEXT);
+-    } else {
++    if (scancode != SCANCODE_F12) {
+ 	int bx_key = vga_to_bx_key(scancode);
+ 	Bit32u key_state;
+ 		
+@@ -324,6 +320,23 @@
+ 	}
+ 	
+ 	DEV_kbd_gen_scancode(bx_key | key_state);
++    } else {
++	int mode;
++	int pal[256 * 3];
++	
++	BX_INFO(("F12 pressed"));
++	// remember old values and switch to text mode
++	mode = vga_getcurrentmode();
++	vga_getpalvec(0, 256, pal);
++        keyboard_close();
++        vga_setmode(TEXT);
++	// show runtime options menu, which uses stdin/stdout	
++	SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
++	// restore to previous state
++	keyboard_init();
++	keyboard_seteventhandler((__keyboard_handler) keyboard_handler);
++	vga_setmode(mode);
++	vga_setpalvec(0, 256, pal);
+     }
+ }
+ 
