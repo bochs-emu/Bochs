@@ -3327,6 +3327,12 @@ lt_dlsym (handle, symbol)
       return 0;
     }
 
+  if (!handle->loader)
+    {
+      LT_DLMUTEX_SETERROR (LT_DLSTRERROR (INVALID_LOADER));
+      return 0;
+    }
+
   lensym = LT_STRLEN (symbol) + LT_STRLEN (handle->loader->sym_prefix)
 					+ LT_STRLEN (handle->info.name);
 
