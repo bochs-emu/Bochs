@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.44 2002-07-08 11:49:47 cbothamy Exp $
+// $Id: dbg_main.cc,v 1.45 2002-08-01 21:10:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1357,14 +1357,20 @@ context_t::get_symbol_entry(Bit32u ip)
 {
       symbol_entry_t probe;
       probe.start = ip;
+      // find the first symbol whose address is greater than ip.
+      if (syms->empty ()) return 0;
       set<symbol_entry_t*>::iterator iter = syms->upper_bound(&probe);
-      if (iter == syms->end())
-	    return 0;
-      else if (iter == syms->begin())
-	    return 0;
-      else {
-	    iter--;
-	    return *iter;
+      if (iter == syms->end()) {
+	// return the last symbol
+	return *iter;
+      } else if (iter == syms->begin()) {
+	// ip is before the first symbol.  Return no symbol.
+	return 0;
+      } else {
+	// return previous symbol, so that the reported address is
+	// prev_symbol+offset.
+	iter--;
+	return *iter;
       }
 }
 
@@ -1378,10 +1384,15 @@ char*
 bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
       static char buf[80];
+#if 0
+      // bbd: I don't see why we shouldn't allow symbol lookups on
+      // segments with a nonzero base.  I need to trace user 
+      // processes in Linux, which have a base of 0xc0000000.
       if (base != 0) {
-	    snprintf (buf, 80, "non-zero base");
-	    return buf;
+	snprintf (buf, 80, "non-zero base");
+	return buf;
       }
+#endif
       // Look up this context
       context_t* cntx = context_t::get_context(context);
       if (!cntx) {
@@ -1400,6 +1411,16 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
       }
       snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
       return buf;
+}
+
+char*
+bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
+{
+  // in 16-bit code, the segment selector and offset are combined into a
+  // 20-bit linear address = (segment selector<<4) + offset.
+  eip &= 0xffff;
+  cs &= 0xffff;
+  return bx_dbg_symbolic_address (0, eip+(cs<<4), 0);
 }
 
 void
@@ -2122,9 +2143,10 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
       }
     else {
-      fprintf(stderr, "%04x:%04x: ", 
+      fprintf(stderr, "%04x:%04x (%s): ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
-	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
+	      bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].selector.value));
       }
     for (unsigned j=0; j<ilen; j++)
       fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
