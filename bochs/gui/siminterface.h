@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.22.2.8 2002-03-17 08:50:19 bdenney Exp $
+// $Id: siminterface.h,v 1.22.2.9 2002-03-18 02:46:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.8 2002-03-17 08:50:19 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.9 2002-03-18 02:46:32 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -114,6 +114,7 @@ typedef enum {
   BXP_KEYBOARD_USEMAPPING,
   BXP_KEYBOARD_MAP,
   BXP_KEYBOARD,
+  BXP_ASK_FOR_PATHNAME,   // for general file selection dialog
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -140,6 +141,7 @@ typedef enum {
   BX_ASYNC_EVT_LOG_MSG,           // simulator -> cpanel
   BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> cpanel
   BX_SYNC_EVT_ASK_PARAM,          // simulator -> cpanel -> simulator
+  BX_SYNC_EVT_ASK_FILENAME,       // simulator -> cpanel -> simulator
   BX_SYNC_EVT_TICK,               // simulator -> cpanel, wait for response.
   BX_ASYNC_EVT_SHUTDOWN_GUI,      // simulator -> cpanel
 } BxEventType;
@@ -163,10 +165,17 @@ typedef struct {
       Bit8u buttons;
     } mouse;
     struct {
-      // type is BX_EVT_GET_PARAM, BX_EVT_SET_PARAM, BX_EVT_ASK
+      // type is BX_EVT_GET_PARAM, BX_EVT_SET_PARAM
       bx_id id;         // id number of parameter
       AnyParamVal val;
     } param;
+	struct {
+	  // type is BX_SYNC_EVT_ASK_FILENAME
+	  char *result;
+	  int result_len;
+	  char *the_default;
+	  char *prompt;
+	} askfile;
     struct {
       // type is BX_EVT_LOG_MSG
       Bit8u level;
@@ -462,6 +471,8 @@ public:
 
   virtual int get_enabled () {return -1;}
   virtual void set_enabled (int enabled) {}
+  // ask the user for a pathname
+  virtual int ask_pathname (char *filename, int maxlen, char *prompt, char *the_default) {return -1;}
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic () {}
 };

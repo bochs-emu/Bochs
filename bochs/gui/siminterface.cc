@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.31.2.12 2002-03-17 08:57:02 bdenney Exp $
+// $Id: siminterface.cc,v 1.31.2.13 2002-03-18 02:46:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.12 2002-03-17 08:57:02 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.13 2002-03-18 02:46:32 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -81,6 +81,8 @@ public:
   virtual char *notify_get_string_arg (int which);
   virtual int get_enabled () { return enabled; }
   virtual void set_enabled (int enabled) { this->enabled = enabled; }
+  // ask the user for a pathname
+  virtual int ask_pathname (char *filename, int maxlen, char *prompt, char *the_default);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
 };
@@ -673,6 +675,20 @@ char *
 bx_real_sim_c::notify_get_string_arg (int which)
 {
   return notify_string_args[which];
+}
+
+int
+bx_real_sim_c::ask_pathname (char *filename, int maxlen, char *prompt, char *the_default)
+{
+  BxEvent event;
+  event.type = BX_SYNC_EVT_ASK_FILENAME;
+  event.u.askfile.result = filename;
+  event.u.askfile.result_len = maxlen;
+  event.u.askfile.the_default = the_default;
+  event.u.askfile.prompt = prompt;
+  BxEvent *response = LOCAL_notify (&event);
+  BX_ASSERT ((response == &event));
+  return event.retcode;
 }
 
 void
