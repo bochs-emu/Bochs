@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.55 2001-11-12 18:28:07 bdenney Exp $
+// $Id: bochs.h,v 1.56 2001-12-12 10:43:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -593,6 +593,10 @@ typedef struct {
 #define BX_BOOT_FLOPPYA 0
 #define BX_BOOT_DISKC   1
 
+#define BX_KBD_XT_TYPE        0
+#define BX_KBD_AT_TYPE        1
+#define BX_KBD_MF_TYPE        2 
+
 typedef struct {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
@@ -608,6 +612,7 @@ typedef struct {
   bx_param_num_c    *Obootdrive;  //0=floppya, 0x80=diskc
   bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
+  bx_param_enum_c   *Okeyboard_type;
   bx_param_num_c    *Ofloppy_command_delay;
   bx_param_num_c    *Oips;
   bx_param_bool_c   *Omouse_enabled;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.79 2001-11-12 02:35:09 bdenney Exp $
+// $Id: main.cc,v 1.80 2001-12-12 10:43:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,6 +82,7 @@ bx_options_t bx_options = {
   NULL,                                  // boot drive
   NULL,                               // vga update interval
   NULL,  // default keyboard serial path delay (usec)
+  NULL,  // default keyboard type
   NULL,  // default floppy command delay (usec)
   NULL,    // ips
   NULL,    // default mouse_enabled
@@ -707,7 +708,6 @@ void bx_init_options ()
   bx_options.load32bitOSImage.OwhichOS->set_handler (bx_param_handler);
   bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
 
-
   // other
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "keyboard_serial_delay",
@@ -736,6 +736,17 @@ void bx_init_options ()
       "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
       0, BX_MAX_INT,
       0);
+
+  // keyboard type
+  bx_options.Okeyboard_type = new bx_param_enum_c (BXP_KBD_TYPE,
+      "Keyboard type",
+      "Keyboard type",
+      keyboard_type_names,
+      BX_KBD_MF_TYPE,
+      BX_KBD_XT_TYPE);
+  bx_options.Okeyboard_type->set_format ("Keyboard type: %s");
+  bx_options.Okeyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
+
   bx_param_c *other_init_list[] = {
     bx_options.Okeyboard_serial_delay,
       bx_options.Ofloppy_command_delay,
@@ -744,6 +755,7 @@ void bx_init_options ()
       bx_options.cmos.Opath,
       bx_options.cmos.Otime0,
       SIM->get_param (BXP_LOAD32BITOS),
+      bx_options.Okeyboard_type,
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
@@ -1773,6 +1785,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.load32bitOSImage.Oinitrd->set (strdup(&params[4][7]));
       }
     }
+  else if (!strcmp(params[0], "keyboard_type")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: keyboard_type directive: wrong # args.", context));
+      }
+    if(strcmp(params[1],"xt")==0){
+      bx_options.Okeyboard_type->set (BX_KBD_XT_TYPE);
+      }
+    else if(strcmp(params[1],"at")==0){
+      bx_options.Okeyboard_type->set (BX_KBD_AT_TYPE);
+      }
+    else if(strcmp(params[1],"mf")==0){
+      bx_options.Okeyboard_type->set (BX_KBD_MF_TYPE);
+      }
+    else{
+      BX_PANIC(("%s: keyboard_type directive: wrong arg %s.", context,params[1]));
+      }
+    }
 
   else {
     BX_PANIC(( "%s: directive '%s' not understood", context, params[0]));
@@ -1994,6 +2023,8 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "newharddrivesupport: enabled=%d\n", bx_options.OnewHardDriveSupport->get ());
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
   bx_write_log_options (fp, &bx_options.log);
+  fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get ()==BX_KBD_XT_TYPE?"xt":
+                                       bx_options.Okeyboard_type->get ()==BX_KBD_AT_TYPE?"at":"mf");
   fclose (fp);
   return 0;
 }
