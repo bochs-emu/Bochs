@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.115 2003-02-07 22:01:23 cbothamy Exp $
+$Id: user.dbk,v 1.116 2003-02-27 14:13:51 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -7928,6 +7928,240 @@ Some bugs i've found
         The only known issue is to set the IPS to, at least, a value of 10000000.
         </para>
 </section>
+
+
+<section id="guest-osr5">
+<title>SCO OpenServer 5.0.5</title>
+<para>
+Contributed by Carl Sopchak
+</para>
+
+<para>
+You must read the message regarding software licenses in
+<xref linkend="thirdparty"> before you install SCO OpenServer 5.0.5 as a guest operating system in Bochs.
+</para>
+
+<para>
+Back in April and May of 2002, I did some work on Bochs 
+in order to get it to install and boot SCO's OpenServer 5.0.5 (OSR5).
+Since that time, I have had several e-mails asking about this error message
+or that.  The newsgroup posts done at the time had all of the information that I knew,
+so I pointed people there.  (I had not used Bochs since...) 
+In February of 2003, I got another such e-mail.
+Since the sender indicated they were willing to pay me to get this going for them,
+I agreed to spend a few hours on it (for free, which is not common :-}).  Subsequently,
+I decided to document this once and for all.  (I did not charge anyone anything, this time...)
+</para>
+
+<para>
+Note: These steps were originally used with Bochs 1.4.1 (or thereabouts, 
+since I was using CVS heavily at the time).  It is possible (likely) that later versions of Bochs
+are more tolerant/bug free, and this install may be abbreviated.  However, I have not tried
+to streamline it at all.
+</para>
+
+<para>
+These steps were performed and confirmed using Bochs version 2.0.2, and SCO OpenServer version 5.0.5.
+The host OS was Red Hat Linux 8.0.
+</para>
+
+<para>
+First, I downloaded the tarball, and extracted the source tree.  I decided to use the tarball
+instead of the RPM so that I knew what options were compiled in, etc.
+<screen>
+linux-$ tar -xzvf bochs-2.0.2.tar.gz
+</screen>
+</para>
+
+<para>
+Next, I configured and compiled Bochs...
+<screen>
+linux-$ cd bochs-2.0.2
+linux-$ ./configure --enable-cdrom --enable-ne2000 --enable-host-specific-asms
+linux-$ make
+</screen>
+The --enable-host-specific-asms should only be used if the host OS is an Intel x86 based OS.
+</para>
+
+<para>
+I then created my disk image:
+<screen>
+linux-$ ./bximage
+========================================================================
+                                bximage
+                  Disk Image Creation Tool for Bochs
+        $Id: user.dbk,v 1.116 2003-02-27 14:13:51 cbothamy Exp $
+========================================================================
+
+Do you want to create a floppy disk image or a hard disk image?
+Please type hd or fd. [hd] hd
+
+Enter the hard disk size in megabytes, between 1 and 32255
+[10] 2048
+
+I will create a hard disk image with
+  cyl=4161
+  heads=16
+  sectors per track=63
+  total sectors=4194288
+  total size=2047.99 megabytes
+
+What should I name the image?
+[c.img] hd0.img
+
+Writing: [] Done.
+
+I wrote 2147475456 bytes to hd0.img.
+
+The following line should appear in your .bochsrc:
+  ata0-master: type=disk, path="hd0.img", cylinders=4161, heads=16, spt=63
+</screen>
+</para>
+
+<para>
+I then created my .bochsrc file.  I did this via the interactive portion of Bochs, with the
+end result as follows:
+<programlisting>
+floppya: 1_44="/dev/fd0", status=inserted
+floppyb: 1_44="b.img", status=inserted
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, path="hd0.img", cylinders=4161, heads=16, spt=63, translation=auto, biosdetect=auto, model="Generic 1234"
+ata0-slave: type=cdrom, path="/dev/cdrom", status=inserted, biosdetect=auto, model="Generic 1234"
+ata1: enabled=0
+ata2: enabled=0
+ata3: enabled=0
+romimage: file=bios/BIOS-bochs-latest, address=0xf0000
+vgaromimage: bios/VGABIOS-elpin-2.40
+megs: 64
+parport1: enabled=1, file="lp.pipe"
+com1: enabled=0
+# no sb16
+boot: cdrom
+floppy_bootsig_check: disabled=0
+vga_update_interval: 300000
+keyboard_serial_delay: 250
+keyboard_paste_delay: 100000
+floppy_command_delay: 500
+ips: 3000000
+pit: realtime=1
+text_snapshot_check: 0
+mouse: enabled=0
+private_colormap: enabled=0
+i440fxsupport: enabled=0
+time0: 0
+# no ne2k
+newharddrivesupport: enabled=1
+# no loader
+log: osr5.log
+logprefix: %t-%e-%i%d
+debugger_log: -
+panic: action=ask
+error: action=report
+info: action=report
+debug: action=ignore
+pass: action=fatal
+keyboard_mapping: enabled=0, map=
+keyboard_type: mf
+user_shortcut: keys=none
+config_interface: textconfig
+display_library: x
+</programlisting>
+Some important things to note are that you want to boot from the cdrom, and you do NOT want the ne2000
+card configured initially.  (We'll add that later...)
+</para>
+
+<para>
+At this point, Bochs is ready to roll!  Insert the OSR5 install CD into the drive, and start Bochs.
+You should soon see the SCO "boot:" prompt:
+<screen>
+SCO OpenServer(TM) Release 5
+
+boot
+: defbootstr disable=fdi,dptr
+</screen>
+
+Note the disable= parameter that you need.  These two SCO drivers cause the install to fail, so they
+need to be disabled for the install boot.  You will not need this once OSR5 is installed.
+</para>
+
+<para>
+During the install of OSR5, there are two default configuration answers that need to be changed.
+For the hard disk setup, you should turn bad tracking off, since it's unnecessary on an emulated disk.
+(It won't hurt to do it, it will just take a VERY long time!)
+For the network setup, change the network card to Deferred.  You can change other settings, if you so
+desire.  However, I would do the initial install with as little configured as you can get away with, then
+add whatever else is needed (one step at a time) after the initial install completes.
+</para>
+
+<para>
+Let the install copy the files.  Go get lunch.  Take a nap.  Go have dinner... 
+This can take a LONG time.  On my Pentium 4 1.7GHz system, this
+step took just over eight hours!  (BTW, it was MUCH longer in version 1.4.1.  Great job, guys!)
+</para>
+
+<para>
+After the install finishes, you will need to change the following lines in .bochsrc file:
+<programlisting>
+ne2k: ioaddr=0x280, irq=10, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+boot: c
+</programlisting>
+Obviously, if you're not using Linux, the ethmode and ethdev values on the ne2k line will be different.
+Also, since Bochs uses "raw" network card access, you'll have to "setuid root" on the Bochs executable:
+<screen>
+linux-$ chown root bochs
+linux-$ chmod u+s bochs
+</screen>
+(If there is a way to give a "normal user" CAP_NET_RAW capability, that would be an alternative.
+I don't know how to do that...)
+Restart Bochs.  Now, you can just press Enter at the OSR5 boot: prompt, because the offending
+drivers have been linked out of the kernel.
+</para>
+
+<para>
+Before you configure the network card,  I'd strongly suggest getting the latest "nat" driver from SCO.  
+Version 5.0.5b of this driver, according to the SCO web site, "correct[s] possible system lockup 
+under high load due to internal buffer overflow."  The driver can be found 
+<ulink url="ftp://ftp.caldera.com/pub/openserver5/drivers/OSR505/network/nat">here</ulink>.
+To get the Disk Image file into SCO, I downloaded the VOL.000.000 file to my linux box,
+and used tar to get it on to a floppy:
+<screen>
+linux-$ tar -cvf /dev/fd0 VOL.000.000
+</screen>
+I then used tar within OSR5 to move it from the floppy to the /tmp directory:
+<screen>
+osr5-# cd /tmp
+osr5-# tar -xvf /dev/fd0135ds18
+</screen>
+You can then use 'custom' to install the driver from the image file.
+You will then want to use 'scoadmin network' to configure the network card.  Choose 
+the Novell NE2000 card, and set the parameters to match the ne2k: line in the .bochsrc file.
+DO NOT have OSR5 look for the card, as Bochs may likely crash. (It did in version 1.4.1.)
+</para>
+
+<para>
+You can also configure a printer, if you want.  Using the spoolpipe utility that I wrote
+(which can be found in Bochs's misc directory), you can print from OSR5 through the parallel 
+port, and you'll hardly notice
+that the printing is going through an extra layer of operating system!  
+(You could also set up a printer using network printing, if the printer is not on the host machine...)
+</para>
+
+<para>
+Obviously, dont forget to apply the release supplements and other patches that are considered 
+"must haves" for OSR5: rs505a, oss600a, oss497b (others?).  
+</para>
+
+<para>
+That's about as far as I have got.  I played around with OSR5 within Bochs a bit, but I 
+can by no means say that I did any kind of real testing, let alone exhaustive testing.
+</para>
+
+<para>
+And of course, YMMV!  :-)
+</para>
+
+</section>
+
 </chapter>
 
 
