@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.5 2004-11-06 17:03:43 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.6 2004-12-29 10:43:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -1019,9 +1019,9 @@ bx_svga_cirrus_c::svga_modeupdate(void)
 bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
 {
   if (BX_CIRRUS_THIS hw_cursor.size &&
-      (xc < BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size) &&
+      (xc < (unsigned)(BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size)) &&
       (xc+X_TILESIZE > BX_CIRRUS_THIS hw_cursor.x) &&
-      (yc < BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size) &&
+      (yc < (unsigned)(BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size)) &&
       (yc+Y_TILESIZE > BX_CIRRUS_THIS hw_cursor.y)) {
     int i;
     unsigned w, h, pitch, cx, cy, cx0, cy0, cx1, cy1;
@@ -1034,9 +1034,10 @@ bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinf
 
     cx0 = BX_CIRRUS_THIS hw_cursor.x > xc ? BX_CIRRUS_THIS hw_cursor.x : xc;
     cy0 = BX_CIRRUS_THIS hw_cursor.y > yc ? BX_CIRRUS_THIS hw_cursor.y : yc;
-    cx1 = BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size < xc+X_TILESIZE ? BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size : xc+X_TILESIZE;
-    cy1 = BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size < yc+Y_TILESIZE ? BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size : yc+Y_TILESIZE;
+    cx1 = (unsigned)(BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size) < xc+X_TILESIZE ? BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size : xc+X_TILESIZE;
+    cy1 = (unsigned)(BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size) < yc+Y_TILESIZE ? BX_CIRRUS_THIS hw_cursor.y+BX_CIRRUS_THIS hw_cursor.size : yc+Y_TILESIZE;
 
+    if (info->bpp == 15) info->bpp = 16;
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
                info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
     plane0_ptr = BX_CIRRUS_THIS vidmem + BX_CIRRUS_THIS memsize - 16384;
