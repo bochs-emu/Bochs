@@ -35,6 +35,8 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
 - you can now change the cdrom at runtime.  To notify Bochs that you have
   changed it, you must click the (new) cdrom icon on the header bar.
   (Volker Ruppert)
+- snapshot button works now!  Clicking on snapshot creates a file
+  snapshot.txt that shows whatever is on the screen. (Volker Ruppert)
 
 
 -------------------------------------------------------------------------
