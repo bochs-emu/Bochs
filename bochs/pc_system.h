@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.8 2001-10-03 13:10:37 bdenney Exp $
+// $Id: pc_system.h,v 1.9 2001-12-18 13:14:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -162,6 +162,8 @@ public:
 
   void dma_write8(Bit32u phy_addr, unsigned channel);
   void dma_read8(Bit32u phy_addr, unsigned channel);
+  void dma_write16(Bit32u phy_addr, unsigned channel);
+  void dma_read16(Bit32u phy_addr, unsigned channel);
 
   Bit32u  inp(Bit16u addr, unsigned io_len);
   void    outp(Bit16u addr, Bit32u value, unsigned io_len);
