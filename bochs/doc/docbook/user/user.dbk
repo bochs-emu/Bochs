@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.112 2003-01-27 23:56:34 cbothamy Exp $
+$Id: user.dbk,v 1.113 2003-01-28 00:37:11 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1824,14 +1824,15 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-sb16={<option>dummy, win, linux</option>}</entry>
+      <entry>--enable-sb16={<option>dummy, win, linux, freebsd</option>}</entry>
       <entry>no</entry>
       <entry>
-      Enable Sound Blaster emulation.  SB16 output is only supported for
-      Windows or Linux.  The <constant>dummy</constant> option means to support
+      Enable Sound Blaster emulation.  SB16 output is only supported on
+      Windows, Linux and FreeBSD host systems.  
+      The <constant>dummy</constant> option means to support
       an SB16, but don't use an output device.  So for example, you might use
-      <option>--enable-sb16=linux</option>. See <xref linkend="sb16-emulation">
-      for more info.
+      <option>--enable-sb16=linux</option> on a linux host. 
+      See <xref linkend="sb16-emulation"> for more info.
       </entry>
     </row>
     <row>
