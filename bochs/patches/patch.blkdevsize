@@ -1,9 +1,13 @@
 ----------------------------------------------------------------------
 Patch name: patch.blkdevsize
-Author: Ph. Marek
+Author: Ph. Marek, updated by cbothamy
 Date: June 26th 2002
 
 Detailed description:
+I added a configure check so the code will be included only
+on system that supports it.
+
+Original Detailed description:
 I'm currently working to get bochs to support block devices (eg. /dev/hda) as 
 harddisks.  I downloaded the current release
 http://prdownloads.sourceforge.net/bochs/bochs-1.4.tar.gz
@@ -14,46 +18,18 @@ Here's a patch to get the detection working.
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
-  cvs checked out on June 26th 2002
+  cvs checked out on July 04th 2002
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-Index: iodev/harddrv.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
-retrieving revision 1.56
-diff -u -r1.56 harddrv.cc
---- iodev/harddrv.cc	4 May 2002 16:00:40 -0000	1.56
-+++ iodev/harddrv.cc	26 Jun 2002 16:37:46 -0000
-@@ -2829,6 +2829,20 @@
-     if (ret) {
- 	  BX_PANIC(("fstat() returns error!"));
-     }
-+    if (S_ISBLK(stat_buf.st_mode))
-+    {
-+/* it's a block device. st_size will be 0, so set it to the correct size. */
-+      if (ioctl(fd_table[i],BLKGETSIZE,&(stat_buf.st_size))==-1)
-+        BX_PANIC(("size of block device %s can't be read",pathname));
-+      if (stat_buf.st_size > (0x7ffffff/512))
-+      {
-+       BX_ERROR(("size of disk image is too big, rounded down"));
-+        stat_buf.st_size=0x7ffffe00; /* maximum size without overflow */
-+      }
-+      else
-+        stat_buf.st_size*=512; /* returned value is sectors */
-+      /* what about an overflow here? should possibly use fstat64 */
-+    }
-     if ((stat_buf.st_size % 512) != 0) {
-       BX_PANIC(("size of disk image must be multiple of 512 bytes"));
-     }
 Index: bochs.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/bochs.h,v
-retrieving revision 1.66
-diff -u -r1.66 bochs.h
---- bochs.h	26 Jun 2002 14:42:34 -0000	1.66
-+++ bochs.h	26 Jun 2002 16:37:46 -0000
+retrieving revision 1.69
+diff -u -r1.69 bochs.h
+--- bochs.h	28 Jun 2002 21:34:30 -0000	1.69
++++ bochs.h	4 Jul 2002 10:36:41 -0000
 @@ -58,6 +58,7 @@
  #else
  #  ifndef WIN32
@@ -62,3 +38,170 @@ diff -u -r1.66 bochs.h
  #  endif
  #  include <sys/types.h>
  #  include <sys/stat.h>
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.50
+diff -u -r1.50 config.h.in
+--- config.h.in	5 Jun 2002 03:59:30 -0000	1.50
++++ config.h.in	4 Jul 2002 10:36:44 -0000
+@@ -207,6 +207,7 @@
+ #define BX_HAVE_NANOSLEEP 0
+ #define BX_HAVE_ABORT 0
+ #define BX_HAVE_SOCKLEN_T 0
++#define BX_HAVE_BLKGETSIZE 0
+ 
+ // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
+ // gui. If people try to enable it elsewhere, give a compile error after the
+Index: configure
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure,v
+retrieving revision 1.81
+diff -u -r1.81 configure
+--- configure	6 Jun 2002 15:42:10 -0000	1.81
++++ configure	4 Jul 2002 10:37:02 -0000
+@@ -843,7 +843,7 @@
+   --enable-new-pit                  use Greg Alexander's new PIT model
+   --enable-slowdown                 use Greg Alexander's slowdown timer
+   --enable-idle-hack                use Roland Mainz's idle hack
+-  --enable-processors               select number of processors (1,2,4)
++  --enable-processors               select number of processors (1,2,4,8)
+   --enable-cpu-level                select cpu level (3,4,5,6)
+   --enable-dynamic                  enable dynamic translation support
+   --enable-fetchdecode-cache        enable fetchdecode-cache support
+@@ -7557,6 +7557,62 @@
+ 
+ fi
+ 
++echo "$as_me:$LINENO: checking whether BLKGETSIZE is declared" >&5
++echo $ECHO_N "checking whether BLKGETSIZE is declared... $ECHO_C" >&6
++if test "${ac_cv_have_decl_BLKGETSIZE+set}" = set; then
++  echo $ECHO_N "(cached) $ECHO_C" >&6
++else
++  cat >conftest.$ac_ext <<_ACEOF
++#line $LINENO "configure"
++#include "confdefs.h"
++#include <sys/mount.h>
++
++#ifdef F77_DUMMY_MAIN
++#  ifdef __cplusplus
++     extern "C"
++#  endif
++   int F77_DUMMY_MAIN() { return 1; }
++#endif
++int
++main ()
++{
++#ifndef BLKGETSIZE
++  char *p = (char *) BLKGETSIZE;
++#endif
++
++  ;
++  return 0;
++}
++_ACEOF
++rm -f conftest.$ac_objext
++if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
++  (eval $ac_compile) 2>&5
++  ac_status=$?
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } &&
++         { ac_try='test -s conftest.$ac_objext'
++  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
++  (eval $ac_try) 2>&5
++  ac_status=$?
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); }; }; then
++  ac_cv_have_decl_BLKGETSIZE=yes
++else
++  echo "$as_me: failed program was:" >&5
++cat conftest.$ac_ext >&5
++ac_cv_have_decl_BLKGETSIZE=no
++fi
++rm -f conftest.$ac_objext conftest.$ac_ext
++fi
++echo "$as_me:$LINENO: result: $ac_cv_have_decl_BLKGETSIZE" >&5
++echo "${ECHO_T}$ac_cv_have_decl_BLKGETSIZE" >&6
++if test $ac_cv_have_decl_BLKGETSIZE = yes; then
++  cat >>confdefs.h <<\_ACEOF
++#define BX_HAVE_BLKGETSIZE 1
++_ACEOF
++
++fi
++
+ 
+ echo "$as_me:$LINENO: checking for struct timeval" >&5
+ echo $ECHO_N "checking for struct timeval... $ECHO_C" >&6
+@@ -7987,7 +8043,7 @@
+        ;;
+      *)
+        echo " "
+-       echo "WARNING: processors != 1,2,4 can work, but you need to modify rombios.c manually"
++       echo "WARNING: processors != 1,2,4,8 can work, but you need to modify rombios.c manually"
+        echo "$as_me:$LINENO: result: $enable_val" >&5
+ echo "${ECHO_T}$enable_val" >&6
+        cat >>confdefs.h <<\_ACEOF
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure.in,v
+retrieving revision 1.82
+diff -u -r1.82 configure.in
+--- configure.in	6 Jun 2002 15:42:11 -0000	1.82
++++ configure.in	4 Jul 2002 10:37:05 -0000
+@@ -103,6 +103,7 @@
+ AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
+ AC_CHECK_FUNCS(abort, AC_DEFINE(BX_HAVE_ABORT))
+ AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/socket.h>])
++AC_CHECK_DECL(BLKGETSIZE, AC_DEFINE(BX_HAVE_BLKGETSIZE), , [#include <sys/mount.h>])
+ 
+ AC_MSG_CHECKING(for struct timeval)
+ AC_TRY_COMPILE([#include <sys/time.h>],
+@@ -215,7 +216,7 @@
+ 
+ AC_MSG_CHECKING(for number of processors)
+ AC_ARG_ENABLE(processors,
+-  [  --enable-processors               select number of processors (1,2,4)],
++  [  --enable-processors               select number of processors (1,2,4,8)],
+   [case "$enableval" in
+      1)
+        AC_MSG_RESULT(1)
+@@ -246,7 +247,7 @@
+        ;;
+      *)
+        echo " "
+-       echo "WARNING: processors != [1,2,4] can work, but you need to modify rombios.c manually"
++       echo "WARNING: processors != [1,2,4,8] can work, but you need to modify rombios.c manually"
+        AC_MSG_RESULT($enable_val)
+        AC_DEFINE(BX_SMP_PROCESSORS, $enable_val)
+        AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.59
+diff -u -r1.59 harddrv.cc
+--- iodev/harddrv.cc	29 Jun 2002 08:54:11 -0000	1.59
++++ iodev/harddrv.cc	4 Jul 2002 10:37:15 -0000
+@@ -2830,6 +2830,23 @@
+     if (ret) {
+ 	  BX_PANIC(("fstat() returns error!"));
+     }
++#if BX_HAVE_BLKGETSIZE
++    // On some systems we can use block devices as harddrives. Get the size
++    if (S_ISBLK(stat_buf.st_mode))
++    {
++      // it's a block device. st_size will be 0, so set it to the correct size. 
++      if (ioctl(fd_table[i],BLKGETSIZE,&(stat_buf.st_size))==-1)
++        BX_PANIC(("size of block device %s can't be read",pathname));
++      if (stat_buf.st_size > (0x7ffffff/512))
++      {
++       BX_ERROR(("size of disk image is too big, rounded down"));
++        stat_buf.st_size=0x7ffffe00; // maximum size without overflow
++      }
++      else
++        stat_buf.st_size*=512; // returned value is sectors
++      // what about an overflow here? should possibly use fstat64 
++    }
++#endif
+     if ((stat_buf.st_size % 512) != 0) {
+       BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+     }
