@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_mul.c                                                              |
- |  $Id: reg_u_mul.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_u_mul.c,v 1.4 2003-05-15 16:04:27 sshwarts Exp $
  |                                                                           |
  | Core multiplication routine                                               |
  |                                                                           |
@@ -31,7 +31,7 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
   u32 lh, ll, th, tl;
 
 #ifdef PARANOID
-  if ( ! (a->sigh & 0x80000000) || ! (b->sigh & 0x80000000) )
+  if (! (a->sigh & 0x80000000) || ! (b->sigh & 0x80000000))
     {
       EXCEPTION(EX_INTERNAL|0x205);
     }
@@ -50,7 +50,7 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
   tl = mi;
   th = mi >> 32;
   lh += tl;
-  if ( tl > lh )
+  if (tl > lh)
     mu ++;
   mu += th;
 
@@ -59,7 +59,7 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
   tl = mi;
   th = mi >> 32;
   lh += tl;
-  if ( tl > lh )
+  if (tl > lh)
     mu ++;
   mu += th;
 
@@ -68,15 +68,20 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
   ml += ll;
 
   expon -= EXP_BIAS-1;
-  if ( expon <= EXP_WAY_UNDER )
+  if (expon <= EXP_WAY_UNDER)
     expon = EXP_WAY_UNDER;
+    
+  /* if the addition of signed 16-bit values overflowed, substitute
+    the maximum positive exponent to force FPU_round to produce overflow */
+  if (expon > 0x7FFE)
+      expon = 0x7FFE;
 
   c->exp = expon;
 
-  if ( ! (mu & BX_CONST64(0x8000000000000000)) )
+  if (! (mu & BX_CONST64(0x8000000000000000)))
     {
       mu <<= 1;
-      if ( ml & BX_CONST64(0x8000000000000000) )
+      if (ml & BX_CONST64(0x8000000000000000))
 	mu |= 1;
       ml <<= 1;
       c->exp --;
@@ -85,12 +90,11 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
   ll = ml;
   lh = ml >> 32;
 
-  if ( ll )
+  if (ll)
     lh |= 1;
 
   c->sigl = mu;
   c->sigh = mu >> 32;
 
   return FPU_round(c, lh, 0, cw, sign);
-  
 }

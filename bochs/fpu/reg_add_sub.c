@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_add_sub.c                                                            |
- |  $Id: reg_add_sub.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_add_sub.c,v 1.5 2003-05-15 16:04:26 sshwarts Exp $
  |                                                                           |
  | Functions to add or subtract two registers and put the result in a third. |
  |                                                                           |
@@ -44,7 +44,7 @@ int FPU_add(FPU_REG const *b, u_char tagb, int deststnr, u16 control_w)
   u_char saved_sign = getsign(dest);
   int diff, tag, expa, expb;
   
-  if ( !(taga | tagb) )
+  if (!(taga | tagb))
     {
       expa = exponent(a);
       expb = exponent(b);
@@ -76,7 +76,7 @@ int FPU_add(FPU_REG const *b, u_char tagb, int deststnr, u16 control_w)
 	    {
 	      tag = FPU_u_sub(a, b, dest, control_w, signa, expa, expb);
 	    }
-	  else if ( diff < 0 )
+	  else if (diff < 0)
 	    {
 	      tag = FPU_u_sub(b, a, dest, control_w, signb, expb, expa);
 	    }
@@ -90,7 +90,7 @@ int FPU_add(FPU_REG const *b, u_char tagb, int deststnr, u16 control_w)
 	    }
 	}
 
-      if ( tag < 0 )
+      if (tag < 0)
 	{
 	  setsign(dest, saved_sign);
 	  return tag;
@@ -99,18 +99,18 @@ int FPU_add(FPU_REG const *b, u_char tagb, int deststnr, u16 control_w)
       return tag;
     }
 
-  if ( taga == TAG_Special )
+  if (taga == TAG_Special)
     taga = FPU_Special(a);
-  if ( tagb == TAG_Special )
+  if (tagb == TAG_Special)
     tagb = FPU_Special(b);
 
-  if ( ((taga == TAG_Valid) && (tagb == TW_Denormal))
+  if (((taga == TAG_Valid) && (tagb == TW_Denormal))
 	    || ((taga == TW_Denormal) && (tagb == TAG_Valid))
-	    || ((taga == TW_Denormal) && (tagb == TW_Denormal)) )
+	    || ((taga == TW_Denormal) && (tagb == TW_Denormal)))
     {
       FPU_REG x, y;
 
-      if ( denormal_operand() < 0 )
+      if (denormal_operand() < 0)
 	return FPU_Exception;
 
       FPU_to_exp16(a, &x);
@@ -122,9 +122,9 @@ int FPU_add(FPU_REG const *b, u_char tagb, int deststnr, u16 control_w)
       goto valid_add;
     }
 
-  if ( (taga == TW_NaN) || (tagb == TW_NaN) )
+  if ((taga == TW_NaN) || (tagb == TW_NaN))
     {
-      if ( deststnr == 0 )
+      if (deststnr == 0)
 	return real_2op_NaN(b, tagb, deststnr, a);
       else
 	return real_2op_NaN(a, taga, deststnr, a);
@@ -152,7 +152,7 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
   taga = FPU_gettag0();
 
   deststnr = 0;
-  if ( flags & LOADED )
+  if (flags & LOADED)
     {
       b = rm;
       tagb = flags & 0x0f;
@@ -163,14 +163,14 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
       b = &st(rmint);
       tagb = FPU_gettagi(rmint);
 
-      if ( flags & DEST_RM )
+      if (flags & DEST_RM)
 	deststnr = rmint;
     }
 
   signa = getsign(a);
   signb = getsign(b);
 
-  if ( flags & REV )
+  if (flags & REV)
     {
       signa ^= SIGN_NEG;
       signb ^= SIGN_NEG;
@@ -179,7 +179,7 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
   dest = &st(deststnr);
   saved_sign = getsign(dest);
 
-  if ( !(taga | tagb) )
+  if (!(taga | tagb))
     {
       expa = exponent(a);
       expb = exponent(b);
@@ -200,7 +200,7 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
 	    }
 	}
 
-      switch ( (((int)signa)*2 + signb) / SIGN_NEG )
+      switch ((((int)signa)*2 + signb) / SIGN_NEG)
 	{
 	case 0: /* P - P */
 	case 3: /* N - N */
@@ -209,7 +209,7 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
 	      /* |a| > |b| */
 	      tag = FPU_u_sub(a, b, dest, control_w, signa, expa, expb);
 	    }
-	  else if ( diff == 0 )
+	  else if (diff == 0)
 	    {
 	      FPU_copy_to_regi(&CONST_Z, TAG_Zero, deststnr);
 
@@ -236,7 +236,7 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
 	  return -1;
 #endif
 	}
-      if ( tag < 0 )
+      if (tag < 0)
 	{
 	  setsign(dest, saved_sign);
 	  return tag;
@@ -245,18 +245,18 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
       return tag;
     }
 
-  if ( taga == TAG_Special )
+  if (taga == TAG_Special)
     taga = FPU_Special(a);
-  if ( tagb == TAG_Special )
+  if (tagb == TAG_Special)
     tagb = FPU_Special(b);
 
-  if ( ((taga == TAG_Valid) && (tagb == TW_Denormal))
+  if (((taga == TAG_Valid) && (tagb == TW_Denormal))
 	    || ((taga == TW_Denormal) && (tagb == TAG_Valid))
-	    || ((taga == TW_Denormal) && (tagb == TW_Denormal)) )
+	    || ((taga == TW_Denormal) && (tagb == TW_Denormal)))
     {
       FPU_REG x, y;
 
-      if ( denormal_operand() < 0 )
+      if (denormal_operand() < 0)
 	return FPU_Exception;
 
       FPU_to_exp16(a, &x);
@@ -269,10 +269,10 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
       goto valid_subtract;
     }
 
-  if ( (taga == TW_NaN) || (tagb == TW_NaN) )
+  if ((taga == TW_NaN) || (tagb == TW_NaN))
     {
       FPU_REG const *d1, *d2;
-      if ( flags & REV )
+      if (flags & REV)
 	{
 	  d1 = b;
 	  d2 = a;
@@ -282,9 +282,9 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
 	  d1 = a;
 	  d2 = b;
 	}
-      if ( flags & LOADED )
+      if (flags & LOADED)
 	return real_2op_NaN(b, tagb, deststnr, d1);
-      if ( flags & DEST_RM )
+      if (flags & DEST_RM)
 	return real_2op_NaN(a, taga, deststnr, d2);
       else
 	return real_2op_NaN(b, tagb, deststnr, d2);
@@ -296,15 +296,15 @@ int FPU_sub(int flags, FPU_REG *rm, u16 control_w)
 
 
 static
-int add_sub_specials(FPU_REG const *a, u_char taga, u_char signa,
+int add_sub_specials_core(FPU_REG const *a, u_char taga, u_char signa,
 		     FPU_REG const *b, u_char tagb, u_char signb,
 		     FPU_REG *dest, int deststnr, u16 control_w)
 {
-  if ( ((taga == TW_Denormal) || (tagb == TW_Denormal))
-       && (denormal_operand() < 0) )
+  if (((taga == TW_Denormal) || (tagb == TW_Denormal))
+       && (denormal_operand() < 0))
     return FPU_Exception;
 
-  if (taga == TAG_Zero)
+  if (taga == TAG_Zero && tagb != TW_Infinity)
     {
       if (tagb == TAG_Zero)
 	{
@@ -312,7 +312,7 @@ int add_sub_specials(FPU_REG const *a, u_char taga, u_char signa,
 	  u_char different_signs = signa ^ signb;
 
 	  FPU_copy_to_regi(a, TAG_Zero, deststnr);
-	  if ( different_signs )
+	  if (different_signs)
 	    {
 	      /* Signs are different. */
 	      /* Sign of answer depends upon rounding mode. */
@@ -326,29 +326,29 @@ int add_sub_specials(FPU_REG const *a, u_char taga, u_char signa,
       else
 	{
 	  reg_copy(b, dest);
-	  if ( (tagb == TW_Denormal) && (b->sigh & 0x80000000) )
+	  if ((tagb == TW_Denormal) && (b->sigh & 0x80000000))
 	    {
 	      /* A pseudoDenormal, convert it. */
 	      addexponent(dest, 1);
 	      tagb = TAG_Valid;
 	    }
-	  else if ( tagb > TAG_Empty )
+	  else if (tagb > TAG_Empty)
 	    tagb = TAG_Special;
 	  setsign(dest, signb);  /* signb may differ from the sign of b. */
 	  FPU_settagi(deststnr, tagb);
 	  return tagb;
 	}
     }
-  else if (tagb == TAG_Zero)
+  else if (tagb == TAG_Zero && taga != TW_Infinity)
     {
       reg_copy(a, dest);
-      if ( (taga == TW_Denormal) && (a->sigh & 0x80000000) )
+      if ((taga == TW_Denormal) && (a->sigh & 0x80000000))
 	{
 	  /* A pseudoDenormal */
 	  addexponent(dest, 1);
 	  taga = TAG_Valid;
 	}
-      else if ( taga > TAG_Empty )
+      else if (taga > TAG_Empty)
 	taga = TAG_Special;
       setsign(dest, signa);  /* signa may differ from the sign of a. */
       FPU_settagi(deststnr, taga);
@@ -356,7 +356,7 @@ int add_sub_specials(FPU_REG const *a, u_char taga, u_char signa,
     }
   else if (taga == TW_Infinity)
     {
-      if ( (tagb != TW_Infinity) || (signa == signb) )
+      if ((tagb != TW_Infinity) || (signa == signb))
 	{
 	  FPU_copy_to_regi(a, TAG_Special, deststnr);
 	  setsign(dest, signa);  /* signa may differ from the sign of a. */
@@ -379,3 +379,46 @@ int add_sub_specials(FPU_REG const *a, u_char taga, u_char signa,
   return FPU_Exception;
 }
 
+static
+int add_sub_specials(FPU_REG const *a, u_char taga, u_char signa,
+                     FPU_REG const *b, u_char tagb, u_char signb,
+                     FPU_REG *dest, int deststnr, u16 control_w)
+{
+    int tag = add_sub_specials_core(a, taga, signa, b, tagb, signb, dest, deststnr, control_w);
+    int sign = dest->exp < 0;
+    FPU_REG unrounded;
+    
+    /* no adjustment needed for add/sub zero with full precision */
+    if ((control_w & CW_PC) == PR_64_BITS)
+        if (taga == TAG_Zero || tagb == TAG_Zero) return tag;
+        
+    /* no adjustment needed for zero result */
+    if (tag == TAG_Zero) return tag;
+        
+    /* no adjustment needed for infinity result */
+    if (tag == TW_Infinity) return tag;
+        
+    /* no adjustment needed for real indefinite result */
+    if (dest->exp & 0x7FFF == 0x7FFF)
+        if (dest->sigh == 0xC0000000)
+            if (dest->sigl == 0)
+                return tag;
+                
+     unrounded = *dest;
+     dest->exp &= 0x7FFF;
+     dest->exp -= EXTENDED_Ebias;
+                
+     /* if denormal, some adjustments are required before passing to FPU_round */
+     if ((dest->sigh & 0x80000000) == 0) 
+     {
+         dest->exp++;
+         tag = FPU_round (dest, 0, 0, control_w, sign);
+         if ((dest->sigh & 0x80000000) == 0) 
+             dest->exp--;
+         if ((dest->exp & 0x7FFF) == 0) 
+             if (dest->exp != unrounded.exp || dest->sigh != unrounded.sigh || dest->sigl != unrounded.sigl)
+                 EXCEPTION(EX_Underflow);
+     }
+     else tag = FPU_round (dest, 0, 0, control_w, sign);
+     return tag;
+}
