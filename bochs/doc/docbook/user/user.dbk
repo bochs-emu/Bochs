@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.106 2003-01-05 00:59:52 cbothamy Exp $
+$Id: user.dbk,v 1.107 2003-01-06 02:49:45 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1050,6 +1050,14 @@ The tag tells which release you want, and it can be one of the following:
     </thead>
     <tbody>
       <row>
+        <entry>2.0.1 (bugfix1)</entry>
+        <entry>REL_2_0_1_FINAL</entry>
+      </row>
+      <row>
+        <entry>2.0</entry>
+        <entry>REL_2_0_FINAL</entry>
+      </row>
+      <row>
         <entry>1.4.1 (bugfix1)</entry>
         <entry>REL_1_4_1_FINAL</entry>
       </row>
@@ -1068,10 +1076,6 @@ The tag tells which release you want, and it can be one of the following:
       <row>
         <entry>1.2</entry>
         <entry>REL_1_2_FINAL</entry>
-      </row>
-      <row>
-        <entry>1.1 (bugfix1)</entry>
-        <entry>REL_1_1_BASE</entry>
       </row>
       <row>
         <entry>1.1.2 (bugfix3)</entry>
