@@ -83,10 +83,10 @@ bx_serial_c::bx_serial_c(void)
   // ctl-C will be delivered to the serial port
   term_new.c_iflag |= IGNBRK;
   term_new.c_iflag &= ~BRKINT;
-#endif
-  term_new.c_iflag |= IXOFF;
-  tcsetattr(0, TCSAFLUSH, &term_new);
-#endif
+#endif    /* !def TRUE_CTLC */
+  //term_new.c_iflag |= IXOFF;
+  //tcsetattr(0, TCSAFLUSH, &term_new);
+#endif   /* def __FreeBSD__ */
   // nothing for now
 #if USE_RAW_SERIAL
   raw = new serial_raw("/dev/cua0", SIGUSR1);
