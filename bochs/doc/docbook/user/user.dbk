@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.121 2003-08-01 16:09:53 vruppert Exp $
+$Id: user.dbk,v 1.122 2003-08-02 15:20:53 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1827,7 +1827,7 @@ turn it off.
       The <constant>dummy</constant> option means to support
       an SB16, but don't use an output device.  So for example, you might use
       <option>--enable-sb16=linux</option> on a linux host. 
-      See <xref linkend="sb16-emulation"> for more info.
+      See section <link linkend="sb16-emulation">Sound Blaster 16 Emulation</link> for more info.
       </entry>
     </row>
     <row>
@@ -3555,7 +3555,7 @@ Examples:
 </screen>
 This defines the keyboard shortcut to be sent when you press the "user"
 button in the headerbar. The shortcut string can be a combination of
-these key names: "alt", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
+these key names: "alt", "bksp", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
 Up to 3 keys can be pressed at a time.
 </para>
 </section>
@@ -3571,7 +3571,8 @@ Up to 3 keys can be pressed at a time.
 <para>
 This section is a detailed description for configuring Sound Blaster 16 from
 source.  I you have a binary and all you need to know is what to put in your
-.bochsrc file, see <xref linkend="sb16line">.
+.bochsrc file, see keyword <link linkend="sb16line">sb16</link> in the bochsrc
+section.
 </para>
 <para>
 Sound Blaster 16 (SB16) emulation for Bochs was written and donated by
@@ -3690,37 +3691,32 @@ misc/sb16. You can compile it or download the
 executable for DOS. It currently supports the following commands:
 </para>
 
-<para>
-&FIXME; number, six numbers, some numbers, and filename below should be in tags
-</para>
-
 <programlisting>
--i number: shows the selected emulator info string,
-        e.g. sb16ctrl -i 3 to show how many patch translations are active
+<command>-i number</command>        shows the selected emulator info string,
+                 e.g. sb16ctrl -i 3 to show how many patch translations are active
 
--t six numbers: loads a translation into the translation table. The
-        numbers are:
-        OldBankMSB,OldBankLSB,OldProgram,NewBankMSB,NewBankLSB,NewProgram
-        All values can be 0..127 or 255. 255 for Old values means <emphasis>match
-        any</emphasis> and for New values means <emphasis>don't change</emphasis>,
-        e.g. sb16ctrl -t 255,255,0,255,255,32
-        to change patch 0 (Piano) to patch 32 (Acoustic Bass)
+<command>-t six numbers</command>   loads a translation into the translation table. The
+                 numbers are:
+                 OldBankMSB,OldBankLSB,OldProgram,NewBankMSB,NewBankLSB,NewProgram
+                 All values can be 0..127 or 255. 255 for Old values means <emphasis>match
+                 any</emphasis> and for New values means <emphasis>don't change</emphasis>,
+                 e.g. sb16ctrl -t 255,255,0,255,255,32
+                 to change patch 0 (Piano) to patch 32 (Acoustic Bass)
 
--r: Reset the patch translation table
-        e.g. sb16ctrl -r
+<command>-r</command>               Reset the patch translation table e.g. sb16ctrl -r
 
--m some numbers: Upload the given numbers to the midi output device. Note
-        that it should be a complete midi message, and also that it is
-        subject to patch translation.
-        e.g. sb16ctrl -m 0x80,64,0
-        to send a note-off message to channel 0.
+<command>-m some numbers</command>  Upload the given numbers to the midi output device. Note
+                 that it should be a complete midi message, and also that it is
+                 subject to patch translation.
+                 e.g. sb16ctrl -m 0x80,64,0
+                 to send a note-off message to channel 0.
 
--f filename: Reads in a file and executes the commands in it. These have
-        the same format as the above commands, except that they don't have
-        the dash "-" in front of them.
-        Comment lines are supported and start with a hash sign "#".
+<command>-f filename</command>      Reads in a file and executes the commands in it. These have
+                 the same format as the above commands, except that they don't have
+                 the dash "-" in front of them.
+                 Comment lines are supported and start with a hash sign "#".
 
--h: Show a brief summary of the commands.
+<command>-h</command>               Show a brief summary of the commands.
 </programlisting>
 
 <para>
@@ -3983,7 +3979,6 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 - using the control panel
 - the graphical elements in bochs window
 - using plugins ?
-- rules to find the bochsrc file
 - Resources for users
 testing status page: tells what has been tried and who got it working
 search on bochs web site
@@ -4024,6 +4019,19 @@ from the file.
 </para>
 </section>
 
+<section id="search-order"><title>Search order for the configuration file</title>
+<para>
+If no configuration file is specified on the command line and config file loading
+is not disabled, Bochs searches for a default configuration file. This is the search order:
+<screen>
+1. <command>.bochsrc</command> in the current directory
+2. <command>bochsrc</command> in the current directory
+3. <command>bochsrc.txt</command> in the current directory
+4. (Unix only) <command>.bochsrc</command> in the user's home directory
+5. (Unix only) <command>bochsrc</command> in the <emphasis>/etc</emphasis> directory
+</screen>
+</para>
+</section>
 </chapter>
 
 <chapter id="common-problems"><title>Common problems and what to do about them (Troubleshooting)</title>
@@ -5980,7 +5988,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.121 2003-08-01 16:09:53 vruppert Exp $
+      $Id: user.dbk,v 1.122 2003-08-02 15:20:53 vruppert Exp $
 ========================================================================
 
 What is the flat image name?
@@ -6023,11 +6031,47 @@ Shall I remove the redolog afterwards?
              <para>
              </para>
           </section>
-          <section id="guest-freedos"><title>FreeDOS</title>
-             <para>
-             </para>
-          </section>
-          <section id="guest-gnu"><title>GNU (Also known as GNU/Hurd)</title>
+<section id="guest-freedos"><title>FreeDOS Beta 8</title>
+<para>
+This has been contributed by Volker Ruppert 
+
+<screen>
+1. Download FDB8_144.DSK and base1.zip from www.freedos.org
+2. Unpack base1.zip to a local directory
+3. Create harddisk image with bximage (e.g. c.img with 10 MB)
+4. Create floppy image 'base1.img' with bximage
+5. Set up mtools.conf to access the new floppy image
+6. Copy the installation files from the local directory to the floppy using mcopy
+
+7. Set up Bochs for the FreeDOS installation:
+
+   boot: a
+   floppya: 1_44=FDB8_144.DSK, status=inserted
+   floppyb: 1_44=base1.img, status=inserted
+   ata0-master: type=disk, path=c.img, cylinders=20, heads=16, spt=63
+
+8. Unfortunately the format command fails here if it is called from the install
+   program. So I chose this way to prepare the main installation:
+
+   a. Start bochs and select 'Clean Boot [4]' in the install menu
+   b. Partition the harddisk with fdisk
+   c. After the reboot select 'Clean Boot [4]' again
+   d. Format the harddisk with 'format c: /s'
+   e. Press the reset button to reboot and select 'Mini Install [0]'
+
+7. Follow the instructions of the installation program. The source for the
+   installation is 'b:\'. After completing the installation you have to copy
+   the config.sys and autoexec.bat from the FreeDOS directory (e.g. C:\FDOS)
+   to 'c:\'.
+
+8. Quit Bochs and change the boot drive to 'c'. FreeDOS should boot from harddisk
+   without errors.
+
+9. I haven't tried the mouse or cdrom features inside of FreeDOS yet.
+</screen>
+</para>
+</section>
+<section id="guest-gnu"><title>GNU (Also known as GNU/Hurd)</title>
 
 <section>
 <title>Installing GNU</title>
@@ -8407,7 +8451,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.121 2003-08-01 16:09:53 vruppert Exp $
+        $Id: user.dbk,v 1.122 2003-08-02 15:20:53 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
