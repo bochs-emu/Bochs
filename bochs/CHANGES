@@ -1,25 +1,53 @@
-Changes in 2.1 (January 1, 2004):
+Changes in 2.1 (January 9, 2004):
 
-- Stanislav's changes...
-  --------------------------------------------------------------------------
+Brief summary :
+- New disassembler
+- 3DNow/SSE/SSE2/PNI instruction support
+- Vmware3/Sparse/Undoable/Growing harddisk images support
+- No more X11 vga font required
+
+Detailed change log :
+
 - CPU
-  - added emulation of AMD 3DNow! instructions set.
-  - added emulation of SSE/SSE2 floating point instructions.
-  - added P4 CPU support to CPUID instruction.
-  - fixed implementation of FXSAVE/FXRSTOR instructions.
-  - bugfix: unallowed lock prefix cases must cause #UD exception.
+  - added emulation of AMD 3DNow! instructions set. (Stanislav Shwartsman)
+    Bochs now could decode all AMD 3DNow! instructions. 
+    Most of instructions still not implemented, but the basis already presents.
+    Configure --enable-3dnow to enable 3DNow! support.
+    Notes : 
+      - These instructions are not implemented yet:
+	PFPNACC_PqQq, PF2IW_PqQq, PFNACC_PqQq, PFCMPGE_PqQq, PFMIN_PqQq,
+	PFRCP_PqQq, PFRSQRT_PqQq, PFSUB_PqQq, PFADD_PqQq, PFCMPGT_PqQq,
+	PFMAX_PqQq, PFRCPIT1_PqQq, PFRSQIT1_PqQq, PFSUBR_PqQq, PFACC_PqQq,
+	PFCMPEQ_PqQq, PFMUL_PqQq, PFRCPIT2_PqQq
+     - CPUID does not report 3DNow! instruction set.
+  - added emulation of SSE/SSE2 floating point instructions. (Stanislav)
+    All SSE/SSE2 floating point instructions are fully implemented using 
+    free softfloat library (including DAZ support and floating point
+    exceptions). Correctness of the emulation checked with heavily random 
+    testing. 
+  - added emulation of SSE3 (PNI) instructions (Stanislav)
+    Currently only 3 PNI opcodes still not implemented:
+	FISTTP m16int, FISTTP m32int, FISTTP m64int
+  - added P4 CPU support to CPUID instruction. (Stanislav)
+  - fixed implementation of FXSAVE/FXRSTOR instructions. (Stanislav)
+  - bugfix: unallowed lock prefix cases must cause #UD exception. (Stanislav)
   - fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
-    in 32bit mode.
+    in 32bit mode. (Stanislav)
   - fixed fetchdecode64 bug caused wrong decoding of opcodes containing
-    BxImmediate_IvIw or BxImmediate_IwIb in x86-64.
+    BxImmediate_IvIw or BxImmediate_IwIb in x86-64. (Stanislav)
   - fixed bug in int01 (opcode 0xF1) emulation. (Vitaly Vorobyov)
-  - fixed bug in x86 debugger with dr0-dr3 registers (Vitaly Vorobyov)
+  - fixed bug in x86 debugger with dr0-dr3 registers (Vitaly)
   - fixed bug with mov to/from dr register in v86mode.
     (now exception is generated (according to Intel documentation)
-    instead of panic) (Vitaly Vorobyov)
+    instead of panic) (Vitaly)
   - fixed stack limit checking, now message is generated as BX_DEBUG,
-    rather then BX_PANIC, and exception code is executed. (Vitaly Vorobyov)
-  - instrumentation code updated.
+    rather then BX_PANIC, and exception code is executed. (Vitaly)
+  - instrumentation code updated. (Stanislav)
+  - fix flaw in IO bitmap permission of TSS (Christophe Bothamy)
+  - cpu resets on triple fault (Christophe)
+  - remove calculation on cr3 in dtranslate_linear to increase
+    emulation speed (Conn Clark)
+  - numerous x86-64 fixes (Peter Tattam)
 
 - FPU
   - hundreds of bugfixes in FPU emulation after checking of the emulation
@@ -29,221 +57,179 @@ Changes in 2.1 (January 1, 2004):
         - floatx80_to_float64, floatx80_round_to_int
         - floatx80_add,        floatx80_sub, 
         - floatx80_mul,        floatx80_div
-  - 64-bit addressing support for x86-64 mode (Christophe Bothamy)
-  - implemented FCMOVcc instructions
+  - 64-bit addressing support for x86-64 mode (Peter)
+  - implemented FCMOVcc instructions (Stanislav)
+  - fixed 64bit addresses FPU problem (Peter)
 
 - Disassembler
-  - replaced Bochs disassember. new table-based disassembler fully supports
+  - replaced Bochs disassember. New table-based disassembler fully supports
     all IA-32 instruction sets including FPU/MMX/XMM/SSE/SSE2/SSE3 opcodes.
+    (Stanislav)
 
-
-More Details:
-
-[+] Added emulation of AMD 3DNow! instructions set.
-
-  Bochs now could decode all AMD 3DNow! instructions. 
-  Most of instructions still not implemented, but the basis already presents.
-  Configure --enable-3dnow to enable 3DNow! support.
-
-  TODO: 
-
-     Close all still not implemented instructions:
-
-	PFPNACC_PqQq, PF2IW_PqQq, PFNACC_PqQq, PFCMPGE_PqQq, PFMIN_PqQq,
-	PFRCP_PqQq, PFRSQRT_PqQq, PFSUB_PqQq, PFADD_PqQq, PFCMPGT_PqQq,
-	PFMAX_PqQq, PFRCPIT1_PqQq, PFRSQIT1_PqQq, PFSUBR_PqQq, PFACC_PqQq,
-	PFCMPEQ_PqQq, PFMUL_PqQq, PFRCPIT2_PqQq
- 
-     CPUID still could not report 3DNow! instruction set.
-
-[+] Added emulation of SSE/SSE2 floating point instructions
-
-  All SSE/SSE2 floating point instructions are fully implemented using 
-  free softfloat library (including DAZ support and floating point
-  exceptions). Correctness of the emulation checked with heavily random 
-  testing. 
-
-[+] Added emulation of SSE3 (PNI) instructions
-
-  Currently only 3 PNI opcodes still not implemented:
-
-	FISTTP m16int, FISTTP m32int, FISTTP m64int
-
-Patches applied:
-
-- applied disassembler fixes for by Dirk Thierbach
-- applied FPU 64-bit addressing patch
-- applied CPU fixes patch by Vitaly Vorobyov
- [x] fixed bug in int01 (opcode 0xF1) emulation
- [x] fixed bug in x86 debugger with dr0-dr3 registers
- [x] fixed bug with mov to/from dr register in v86mode 
-     (now exception is generated (according to Intel documentation)
-     instead of panic)
- [x] fixed stack limit checking, now message is generated as BX_DEBUG,
-     rather then BX_PANIC, and exception code is executed
-  --------------------------------------------------------------------------
-
-- Christophe's changes...
-  --------------------------------------------------------------------------
-- cpu
-  - fix flaw in IO bitmap permission of TSS
-  - cpu resets on triple fault
-  - remove calculation on cr3 in dtranslate_linear (contributed by Conn Clark)
-- I/O devices
-  - harddisks 
-    - per device selectable Harddisk modes :
-      - undoable, volatile, growing disks support
-      - sparse disks support (contributed by justinSB)
-      - vmware3 disks support (contributed by Sharvil Nanavati)
-    - fix non detection of hard drives by minix2
-    - implement atapi command 0xA8 read (12)
-    - mode sense command updated (contributed by Hartmut Birr)
-  - sb16 
-    - opl2 support enhanced (contributed by James E. Flemer)
-  - ne2k
-    - tap support for FreeBSD (contributed by Ronald Klop and Gen Otsuji)
-    - fix when booting with grub (contributed by Keir Fraser)
-  - add experimental PCI VGA card (contributed by Mike Nordell)
-  - include slowdown timer as a runtime option
-- display libraries
-  - X11
-    - onboard vgacard charmap usage (no need for external X11 vga font any more)
-    - vgacard charmap change support
-    - fix black stripes on partial exposes (contributed by Dirk Thierbach)
-    - headerbar redraw optimizations (contributed by Dirk Thierbach)
-- support tools
-  - bximage : added support for 
-    - growing disks
-    - sparse disks (contributed by justinSB)
-  - created bxcommit tool for undoable disk images
-- Rombios :
-  - fixed int15 function e801 (get memory size)
-  - added int75_handler for FPU Dos Exceptions
-  - added support for ElTorito Harddisk emulation
-- MacOS port
-  - small configure fixes
-- documentation
-  - user documentation updated and extended :
-    - disk modes
-    - LBA translation 
-    - cdboot error codes
-    - SCO OpenServer install section (contributed by Carl Sopchak)
-    - MacOS-X DMG install guide (contributed by Aard Vark)
-    - update Win98 install guide (contributed by Dirk Thierbach)
-  --------------------------------------------------------------------------
-
-- Volker's changes...
-  --------------------------------------------------------------------------
 - I/O devices
   - general
     - i/o access mask implemented, unallowed cases are now handled in the devices
-      code and cause a BX_ERROR
-  - vga
-    - color depth 15, 16, 24 and 32 bpp supported by VBE (based on a patch from
+      code and cause a BX_ERROR (Volker Ruppert)
+    - include slowdown timer as a runtime option (Christophe)
+    - netBSD : fix serial, ethernet, cdrom (fredb, uebayasi and David Laight)
+  - VGA
+    - color depth 15, 16, 24 and 32 bpp supported by VBE (Volker and
       Christopher Nelson for 32 bpp on win32). Supported by sdl, x, win32 and wx.
-    - SVGA mode 0x6A (800x600x4bpp) implemented
-    - new CGA graphics modes 640x200x1bpp and 160x100x4bpp (text mode 80x100)
-    - raster operations AND, OR and XOR in write mode 2 (based on SF patch #707931)
-    - 'split screen' in standard VGA graphics mode implemented (based on
-      SF patch #707931)
-    - 'double scan' and 'double width' now handled in the VGA code
-    - more accurate emulation of the horizontal and vertical retrace
+    - SVGA mode 0x6A (800x600x4bpp) implemented (Volker)
+    - new CGA graphics modes 640x200x1bpp and 160x100x4bpp (text mode 80x100) (Volker)
+    - raster operations AND, OR and XOR in write mode 2 (based on SF patch #707931) (Volker)
+    - 'split screen' in standard VGA graphics mode implemented (Volker)
+    - 'double scan' and 'double width' now handled in the VGA code (Volker)
+    - more accurate emulation of the horizontal and vertical retrace (Volker)
     - changeable start address and variable line length supported by all
-      graphics modes
-    - VBE: preserve video memory feature implemented
+      graphics modes (Volker)
+    - VBE: preserve video memory feature implemented (Volker)
     - additional text mode features prepared (handled in the display library
-      code)
+      code) (Volker)
+  - PCI
+    - add experimental PCI VGA card (Mike Nordell)
+    - add experimental PCI USB card (Ben Lunt)
+  - Harddisks 
+    - per device selectable harddisk modes :
+      - undoable, volatile, growing disks support (Christophe)
+      - sparse disks support (justinSB)
+      - vmware3 disks support (Sharvil Nanavati)
+    - fix non detection of hard drives by minix2 (Christophe)
+    - implement atapi command 0xA8 read (12)  (Christophe)
+    - mode sense command updated (Hartmut Birr)
+  - sb16 
+    - opl2 support enhanced (James E. Flemer)
+  - ne2k
+    - tap support for FreeBSD (Ronald Klop and Gen Otsuji)
+    - fix when booting with grub (Keir Fraser)
   - cmos
-    - date/time change support added
-    - UIP bit and divider chain reset implemented
+    - date/time change support added (Volker)
+    - UIP bit and divider chain reset implemented (Volker)
+    - initial time can now be set to local time or utc (Christophe, Daniel Gimpelevich)
   - keyboard
-    - keyboard reset function (0xff) now resets the keyboard
+    - keyboard reset function (0xff) now resets the keyboard (Volker)
   - gameport
     - new standard PC gameport device (real joystick connected on Linux and
-      win32 only). Enable it with --enable-gameport or the SB16 emulation
+      win32 only). Enable it with --enable-gameport or the SB16 emulation (Volker)
   - serial
-    - FIFO emulation (UART type 16550A) implemented
-- general
-  - fixes for compilation with MSVC (patch from Andrew Zabolotny)
-  - fixes for cross-compilation (patch from Jeroen Janssen)
-  - win32 nsis installer script updates
+    - FIFO emulation (UART type 16550A) implemented (Volker)
+  - floppies 
+    - 160k,180k,320k floppies support (Ben Lunt)
+
+- display libraries
+  - X11
+    - onboard vgacard charmap usage (no need for external X11 vga font any more) (Christophe)
+    - vgacard charmap change support (Christophe)
+    - fix black stripes on partial exposes (Dirk Thierbach)
+    - headerbar redraw optimizations (Dirk Thierbach)
+    - external font files and their installation mechanism removed (Volker)
+    - belgian keymap support (Wouter Verhelst, Eric Brasseur)
+  - win32 + wx + x: new application/window icon (bochs.ico / icon_bochs.xpm) (Volker)
+  - sdl + win32 + wx + x: new textmode features: variable line length,
+    char width switch, horizontal and vertical pel panning (Volker)
+  - win32 + wxMSW: key event handling rewritten (Volker)
+  - win32: status bar at the bottom of the simulation window added (Volker)
+  - wxMSW: resource problems fixed - wx dll plugin works now without errors (Volker)
+  - term: variable line length and cursor enable/disable feature implemented (Volker)
+  - rfb
+    - textmode: charmap change, better cursor emulation, variable line length (Volker)
+    - headerbar works now (power, reset and user button are okay) (Volker)
+    - key event handling rewritten (Volker)
+    - Bochs-RFB waits up to 30 seconds for a client connection. The emulation
+      starts after connecting the client. (Volker)
+  - carbon: Alt/Ctrl/Shift key handling rewritten & SysRq/Ctrl-Break key support added
+    (Daniel)
+ 
 - configuration interface
-  - wx configuration dialogs improved
-  - gui dialogs as an extension of the textconfig interface on win32 added
+  - gui dialogs as an extension of the textconfig interface on win32 added (Volker)
     * ask dialog
     * save text snapshot
     * user button shortcut
     * floppy image change
-- display libraries
-  - win32 + wx + x: new application/window icon (bochs.ico / icon_bochs.xpm)
-  - sdl + win32 + wx + x: new textmode features: variable line length,
-    char width switch, horizontal and vertical pel panning
-  - win32 + wxMSW: key event handling rewritten
-  - win32: status bar at the bottom of the simulation window added
-  - wxMSW: resource problems fixed - wx dll plugin works now without errors
-  - x: external font files and their installation mechanism removed
-  - term: variable line length and cursor enable/disable feature implemented
-  - rfb
-    - textmode: charmap change, better cursor emulation, variable line length
-    - headerbar works now (power, reset and user button are okay)
-    - key event handling rewritten
-    - Bochs-RFB waits up to 30 seconds for a client connection. The emulation
-      starts after connecting the client.
-- documentation
-  - user documentation updated and extended:
-    - improved section "What does Bochs need"
-    - command line arguments
-    - search order for the configuration file
-    - the configuration interface 'textconfig'
-    - FreeDOS Beta 8 installation instructions
-  - already ported and obsolete parts of the old documentation removed
-  --------------------------------------------------------------------------
+  - wxwindows configuration dialogs improved (Volker, Christophe)
 
-- Peter's changes...
-  - fix 64bit addresses FPU problem
-  - numerous x86-64 fixes
+- support tools
+  - bximage : added support for 
+    - growing disks (Christophe)
+    - sparse disks (justinSB)
+  - created bxcommit tool for undoable disk images (Christophe)
+
+- System BIOS :
+  - fixed int15 function e801 (get memory size) (Christophe)
+  - added int75_handler for FPU Dos Exceptions (Christophe)
+  - added int16 function 0a (Get Keyboard ID) (Volker)
+  - added support for ElTorito Harddisk-on-CD emulation (Christophe)
+  - fixed ATA/Serial ioport conflict (Daniel)
+
+- VGA BIOS : updated to version 0.4c (Christophe)
+
+- configure script/compile/porting to other OSes/installation
+  - fixes for compilation with MSVC (Andrew Zabolotny)
+  - fixes for cross-compilation (Jeroen Janssen)
+  - win32 nsis installer script updates (Volker)
+  - small configure fixes for MacOS (Christophe)
+  - optimizations & compile fixes for MacOS/X (Daniel)
+
+- configuration files. The following options have been deprecated :
+  diskc, diskd, cdromd, time0, pit, newharddrivesupport.
+
+- documentation
+  - already ported and obsolete parts of the old documentation removed (Volker)
+  - user documentation updated and extended :
+    - improved section "What does Bochs need" (Volker)
+    - command line arguments (Volker)
+    - search order for the configuration file (Volker)
+    - the configuration interface 'textconfig' (Volker)
+    - FreeDOS Beta 8 installation instructions (Volker)
+    - disk modes (Christophe)
+    - LBA translation  (Christophe)
+    - cdboot error codes (Christophe)
+    - SCO OpenServer install section (Carl Sopchak)
+    - MacOS-X DMG install guide (Aard Vark)
+    - update Win98 install guide (Dirk Thierbach)
 
 - SF patches applied
-  #658950  Bug in FPU                                                  (???)
-  #678117  build fail due to bad SGML punctuation                      (???)
+  #658950  Bug in FPU                                                  (Anonymous)
+  #678117  build fail due to bad SGML punctuation                      (Anonymous)
   #671873  minimal USB support (UHCI)                                  (Ben Lunt)
   #682539  Fix CapsLock and NumLock behavior                           (rock at gimp.org)
   #720776  REX MOVB immediate broken for x86_64                        (Arnd Bergmann)
   #729450  new keymap x11-pc-be.map                                    (Wouter Verhelst)
-  #735990  Limited patches for VC++                                    (???)
+  #735990  Limited patches for VC++                                    (Anonymous)
   #742670  fix library dependencies in GUI plugins                     (Robert Millan)
   #742782  LFB bugfix                                                  (Jan L. Hauffa)
   #748414  load32bitOShack bug                                         (kyriazis at nvidia.com)
-  #830079  Fix bochs's application error if unsupported key pressed    (???)
+  #830079  Fix bochs's application error if unsupported key pressed    (Anonymous)
   #724466  enable building with CC=gcc-3.2 CXX=g++-3.2; dist-clean adds(Leonard Norrgard)
-  #834962  Fixed drawing graphics is broken                            (???)
-  #838401  Fixed redrawing of ToolBar on Win32GUI                      (???)
-  #850236  Fixed accessing DVD-ROM with direct device access on Win32  (???)
+  #834962  Fixed drawing graphics is broken                            (Anonymous)
+  #838401  Fixed redrawing of ToolBar on Win32GUI                      (Anonymous)
+  #850236  Fixed accessing DVD-ROM with direct device access on Win32  (Anonymous)
   #847822  Bochs crash when exmining memory that crosses page boundary (ortal at jungo.com)
 
 - SF patches partially applied
-  #707931  Support EGA/VGA write mode 2 and others                     (???)
+  #707931  Support EGA/VGA write mode 2 and others                     (Anonymous)
            already applied: disable IME, split screen, write mode 2,
            BIOS INT16h/AH=05h
-  #856506  Patch to fix compile-time iodev/cd-rom.cc error             (alden.dima at nist.gov)
+  #856506/#856510  Patch to fix compile-time iodev/cd-rom.cc error     (alden.dima at nist.gov)
            Correct patch provided in SF bug report #843433
-  #856510  Missing patch file for 856506                               (alden.dima at nist.gov)
-           supplied patch would have broken the code
 
 - patches applied
-  - patch.highmem by Zwane Mwaikambo (memory allocation)
-  - patch.floppy-160k-180k-320k-benlunt by Ben Lunt (exotic floppies)
-  - patch.perf-regparm-cclark by Conn Clark (performance)
+  - patch.highmem  (memory allocation) (Zwane Mwaikambo)
+  - patch.floppy-160k-180k-320k-benlunt (exotic floppies) (Ben Lunt)
+  - patch.perf-regparm-cclark (performance) (Conn Clark)
 
-- patches by X, Y, and Z were added...
-// CB : I think Bryce meant patches that were applied to the main trunk here
-	added rombios patch by Dirk Thierbach
-	added rombios patch by Kory Markevich
-	added patches collection by Vitaly Vorobyov
+- new patches present in the patches directory :
+        patch.pipelined-asm-cclark
+        patch.mingw-resources
+        patch.v8086-exception.lightcone
+        patch.pit-vitaly-vorobyov
+        patch.rombios-vitaly-vorobyov
+        patch.win32-vitaly-vorobyov
+        patch.win32-new-files-vitaly-vorobyov.tgz
+        patch.rombios.markevich
+        patch.rombios.dirk.thierbach
 
-- these S.F. bugs were fixed 
-// CB : I ran the request on SF, these bugs have definitely been closed 
-// since 2.0.2). There might have been others, during 2.0 to 2.0.2 times
+- these S.F. bugs were closed 
    #865354 ">>PANIC<< CRA: divider chain control 0x07" in Linux 1.1
    #725796 configure script bug 
    #859768 cpuid
