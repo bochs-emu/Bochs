@@ -490,6 +490,7 @@ typedef struct {
 
 
 typedef enum {
+  APIC_TYPE_NONE,
   APIC_TYPE_IOAPIC,
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
@@ -565,7 +566,7 @@ public:
   BX_CPU_C *cpu;
   virtual void hwreset ();
   virtual void init ();
-  static BX_CPU_C *get_cpu (Bit8u id);
+  BX_CPU_C *get_cpu (Bit8u id);
   void set_id (Bit8u newid);   // redefine to set cpu->name
   virtual char *get_name();
   virtual void write (Bit32u addr, Bit32u *data, unsigned len);
