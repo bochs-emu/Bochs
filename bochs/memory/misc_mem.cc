@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.15 2001-10-03 13:10:38 bdenney Exp $
+// $Id: misc_mem.cc,v 1.16 2001-11-11 05:07:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,7 +68,6 @@ BX_MEM_C::BX_MEM_C(size_t memsize)
   vector = new Bit8u[memsize];
   len    = memsize;
   megabytes = len / (1024*1024);
-  BX_INFO(("Init(%uB == %.2f)",memsize, megabytes));
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
@@ -91,7 +90,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.15 2001-10-03 13:10:38 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.16 2001-11-11 05:07:05 bdenney Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -100,7 +99,7 @@ BX_MEM_C::init_memory(int memsize)
     BX_MEM_THIS vector = new Bit8u[memsize];
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
-    BX_INFO(("%.2fMB", memsize, (float)(BX_MEM_THIS megabytes) ));
+    BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
     }
   // initialize all memory to 0x00
   memset(BX_MEM_THIS vector, 0x00, BX_MEM_THIS len);
