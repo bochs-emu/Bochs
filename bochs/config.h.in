@@ -372,10 +372,10 @@
 // activate the __declspec(dllimport) instead.
 #if defined(WIN32) || defined(__CYGWIN__)
 #  if BX_PLUGINS && defined(BX_PLUGGABLE)
-#    warning I will import DLL symbols from Bochs main program.
+//   #warning I will import DLL symbols from Bochs main program.
 #    define BOCHSAPI __declspec(dllimport) 
 #  else
-#    warning I will export DLL symbols.
+//   #warning I will export DLL symbols.
 #    define BOCHSAPI __declspec(dllexport) 
 #  endif
 #endif
