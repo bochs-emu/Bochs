@@ -1,54 +1,5 @@
+#include <stdio.h>
 #include "disasm.h"
-
-extern const char *general_16bit_reg_name[8];
-extern const char *general_32bit_reg_name[8];
-
-static const char *sreg_mod01_rm32[8] = {
-    "ds", "ds", "ds", "ds", "??", "ss", "ds", "ds"
-};
-
-static const char *sreg_mod10_rm32[8] = {
-    "ds", "ds", "ds", "ds", "??", "ss", "ds", "ds"
-};
-
-static const char *sreg_mod00_base32[8] = {
-    "ds", "ds", "ds", "ds", "ss", "ds", "ds", "ds"
-};
-
-static const char *sreg_mod01_base32[8] = {
-    "ds", "ds", "ds", "ds", "ss", "ss", "ds", "ds"
-};
-
-static const char *sreg_mod10_base32[8] = {
-    "ds", "ds", "ds", "ds", "ss", "ss", "ds", "ds"
-};
-
-static const char *sreg_mod00_rm16[8] = {
-    "ds", "ds", "ss", "ss", "ds", "ds", "ds", "ds"
-};
-
-static const char *sreg_mod01_rm16[8] = {
-    "ds", "ds", "ss", "ss", "ds", "ds", "ss", "ds"
-};
-
-static const char *sreg_mod10_rm16[8] = {
-    "ds", "ds", "ss", "ss", "ds", "ds", "ss", "ds"
-};
-
-static const char *intel_index16[8] = {
-    "bx+si", 
-    "bx+di", 
-    "bp+si", 
-    "bp+di", 
-    "si", 
-    "di", 
-    "bp", 
-    "bx"
-};
-
-static const char *index_name32[8] = {
-    "eax", "ecx", "edx", "ebx", "???", "ebp", "esi", "edi"
-};
 
 void disassembler::decode_modrm()
 {
@@ -74,32 +25,32 @@ void disassembler::decode_modrm()
             break;
           case 1:
             /* reg, 8-bit displacement, sign extend */
-            resolve_modrm = &disassembler::resolve32_mod1;
+            resolve_modrm = &disassembler::resolve32_mod1or2;
             displacement.displ32 = (Bit8s) fetch_byte();
             break;
           case 2:
             /* reg, 32-bit displacement */
-            resolve_modrm = &disassembler::resolve32_mod2;
+            resolve_modrm = &disassembler::resolve32_mod1or2;
             displacement.displ32 = fetch_dword();
             break;
         } /* switch (mod) */
       } /* if (rm != 4) */
       else { /* rm == 4, s-i-b byte follows */
         sib = fetch_byte();
-        BX_DECODE_SIB(sib, scale, index, base);
+        BX_DECODE_SIB(sib, scale, sib_index, sib_base);
 
         switch (mod) {
           case 0:
             resolve_modrm = &disassembler::resolve32_mod0_rm4;
-            if (base == 5)
+            if (sib_base == 5)
               displacement.displ32 = fetch_dword();
             break;
           case 1:
-            resolve_modrm = &disassembler::resolve32_mod1_rm4;
-            displacement.displ8 = fetch_byte();
+            resolve_modrm = &disassembler::resolve32_mod1or2_rm4;
+            displacement.displ32 = (Bit8s) fetch_byte();
             break;
           case 2:
-            resolve_modrm = &disassembler::resolve32_mod2_rm4;
+            resolve_modrm = &disassembler::resolve32_mod1or2_rm4;
             displacement.displ32 = fetch_dword();
             break;
         }
@@ -116,11 +67,11 @@ void disassembler::decode_modrm()
         break;
       case 1:
         /* reg, 8-bit displacement, sign extend */
-        resolve_modrm = &disassembler::resolve16_mod1;
+        resolve_modrm = &disassembler::resolve16_mod1or2;
         displacement.displ16 = (Bit8s) fetch_byte();
         break;
       case 2:
-        resolve_modrm = &disassembler::resolve16_mod2;
+        resolve_modrm = &disassembler::resolve16_mod1or2;
         displacement.displ16 = fetch_word();
         break;
       case 3:
@@ -129,6 +80,103 @@ void disassembler::decode_modrm()
 
     } /* switch (mod) ... */
   }
+}
+
+void disassembler::resolve16_mod0(unsigned mode)
+{
+  const char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = sreg_mod00_rm16[rm];
+
+  if(rm == 6)
+    print_memory_access16(mode, seg, NULL, displacement.displ16);
+  else
+    print_memory_access16(mode, seg, index16[rm], 0);
+}
+
+void disassembler::resolve16_mod1or2(unsigned mode)
+{
+  const char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = sreg_mod01or10_rm16[rm];
+
+  print_memory_access16(mode, seg, index16[rm], displacement.displ16);
+}
+
+void disassembler::resolve32_mod0(unsigned mode)
+{
+  const char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = segment_name[DS_REG];
+
+  if (rm == 5) /* no reg, 32-bit displacement */
+    print_memory_access32(mode, seg, NULL, NULL, 0, displacement.displ32);
+  else
+    print_memory_access32(mode, seg, general_32bit_reg_name[rm], NULL, 0, 0);
+}
+
+void disassembler::resolve32_mod1or2(unsigned mode)
+{
+  const char *seg;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = sreg_mod01or10_rm32[rm];
+
+  print_memory_access32(mode, seg, 
+      general_32bit_reg_name[rm], NULL, 0, displacement.displ32);
+}
+
+void disassembler::resolve32_mod0_rm4(unsigned mode)
+{
+  const char *seg, *base = NULL, *index = NULL;
+  Bit32u disp32 = 0;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = sreg_mod00_base32[sib_base];
+
+  if (sib_base != 5)
+    base = general_32bit_reg_name[sib_base];
+  
+  if (sib_index != 4)
+  {
+    index = index_name32[sib_index];
+  }
+
+  if (sib_base == 5)
+    disp32 = displacement.displ32;
+    
+  print_memory_access32(mode, seg, base, index, scale, disp32);
+}
+
+void disassembler::resolve32_mod1or2_rm4(unsigned mode)
+{
+  const char *seg, *index = NULL;
+
+  if (seg_override)
+    seg = seg_override;
+  else
+    seg = sreg_mod01or10_base32[sib_base];
+
+  if (sib_index != 4)
+  {
+    index = index_name32[sib_index];
+  }
+
+  print_memory_access32(mode, seg,
+      general_32bit_reg_name[sib_base], index, scale, displacement.displ32);
 }
 
 void disassembler::print_datasize(unsigned mode)
@@ -154,13 +202,12 @@ void disassembler::print_datasize(unsigned mode)
       dis_sprintf("qword ptr ");
       break;
     case O_MODE:
-      dis_sprintf("oword ptr ");
+      dis_sprintf("dqword ptr ");
       break;
     case T_MODE:
-      dis_sprintf("tword ptr ");
+      dis_sprintf("tbyte ptr ");
       break;
     case P_MODE:
-      // ???
       break;
     case S_MODE:
       break;
@@ -169,212 +216,132 @@ void disassembler::print_datasize(unsigned mode)
   };
 }
 
-void disassembler::resolve16_mod0(unsigned mode)
+void disassembler::print_memory_access16(int datasize, 
+                const char *seg, const char *index, Bit16u disp)
 {
-  const char *mod_rm_seg_reg;
+  print_datasize(datasize);
 
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod00_rm16[rm];
-
-  print_datasize(mode);
-
-  if(rm == 6)
+  if (intel_mode)
   {
-    dis_sprintf("[%s:0x%x]", mod_rm_seg_reg, (unsigned) displacement.displ16);
+    if (index == NULL)
+    {
+      dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+    }
+    else
+    {
+      if (disp != 0)
+        dis_sprintf("%s:[%s+0x%x]", seg, index, (unsigned) disp);
+      else
+        dis_sprintf("%s:[%s]", seg, index);
+    }
   }
   else
   {
-    dis_sprintf("%s:[%s]", mod_rm_seg_reg, intel_index16[rm]);
+    if (index == NULL)
+    {
+      dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+    }
+    else
+    {
+      if (disp != 0)
+        dis_sprintf("%s:0x%x(%s,1)", seg, (unsigned) disp, index);
+      else
+        dis_sprintf("%s:(%s,1)", seg, index);
+    }
   }
 }
 
-void disassembler::resolve16_mod1(unsigned mode)
+void disassembler::print_memory_access32(int datasize, 
+                const char *seg, const char *base, const char *index, int scale, Bit32u disp)
 {
-  const char *mod_rm_seg_reg;
-
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod01_rm16[rm];
-
-  print_datasize(mode);
-
-  if (displacement.displ16)
-  {
-    dis_sprintf("%s:[%s+0x%x]", mod_rm_seg_reg, 
-              intel_index16[rm], (unsigned) displacement.displ16);
-  }
-  else
-  {
-    dis_sprintf("%s:[%s]", mod_rm_seg_reg, intel_index16[rm]);
-  }
-}
-
-void disassembler::resolve16_mod2(unsigned mode)
-{
-  const char *mod_rm_seg_reg;
-
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod10_rm16[rm];
-
-  print_datasize(mode);
-
-  if (displacement.displ16)
-  {
-    dis_sprintf("%s:[%s+0x%x]", mod_rm_seg_reg, 
-              intel_index16[rm], (unsigned) displacement.displ16);
-  }
-  else
-  {
-    dis_sprintf("%s:[%s]", mod_rm_seg_reg, intel_index16[rm]);
-  }
-}
-
-void disassembler::resolve32_mod0(unsigned mode)
-{
-  const char *mod_rm_seg_reg;
-
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = "ds";
-
-  print_datasize(mode);
- 
- if (rm == 5) { /* no reg, 32-bit displacement */
-    dis_sprintf("[%s:0x%x]", mod_rm_seg_reg, displacement.displ32);
- }
- else {
-    dis_sprintf("%s:[%s]", mod_rm_seg_reg, general_32bit_reg_name[rm]);
- }
-}
-
-void disassembler::resolve32_mod1(unsigned mode)
-{
-  const char *mod_rm_seg_reg;
-
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod01_rm32[rm];
-
-  print_datasize(mode);
+  print_datasize(datasize);
   
-  /* reg, 8-bit displacement, sign extend */
-  if (displacement.displ32)
+  if (intel_mode)
   {
-    dis_sprintf("%s:[%s+0x%x]", mod_rm_seg_reg,
-              general_32bit_reg_name[rm], (unsigned) displacement.displ32);
+    if (base == NULL)
+    {
+      if (index == NULL)
+      {
+        dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+      }
+      else
+      {
+        if (scale != 0)
+        {
+          if (disp != 0)
+            dis_sprintf("%s:[%s*%d+0x%x]", seg, index, 1<<scale, (unsigned) disp);
+          else
+            dis_sprintf("%s:[%s*%d]", seg, index, 1<<scale);
+        }
+        else
+        {
+          if (disp != 0)
+            dis_sprintf("%s:[%s+0x%x]", seg, index, (unsigned) disp);
+          else
+            dis_sprintf("%s:[%s]", seg, index);
+        }
+      }
+    }
+    else
+    {
+      if (index == NULL)
+      {
+        if (disp != 0)
+          dis_sprintf("%s:[%s+0x%x]", seg, base, (unsigned) disp);
+        else
+          dis_sprintf("%s:[%s]", seg, base);
+      }
+      else
+      {
+        if (scale != 0)
+        {
+          if (disp != 0)
+            dis_sprintf("%s:[%s+%s*%d+0x%x]", seg, base, index, 1<<scale, (unsigned) disp);
+          else
+            dis_sprintf("%s:[%s+%s*%d]", seg, base, index, 1<<scale);
+        }
+        else
+        {
+          if (disp != 0)
+            dis_sprintf("%s:[%s+%s+0x%x]", seg, base, index, (unsigned) disp);
+          else
+            dis_sprintf("%s:[%s+%s]", seg, base, index);
+        }
+      }
+    }
   }
   else
   {
-    dis_sprintf("%s:[%s]", mod_rm_seg_reg, general_32bit_reg_name[rm]);
+    if (base == NULL)
+    {
+      if (index == NULL)
+      {
+        dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+      }
+      else
+      {
+        if (disp != 0)
+          dis_sprintf("%s:0x%x(,%s,%d)", seg, (unsigned) disp, index, 1<<scale);
+        else
+          dis_sprintf("%s:(,%s,%d)", seg, index, 1<<scale);
+      }
+    }
+    else
+    {
+      if (index == NULL)
+      {
+        if (disp != 0)
+          dis_sprintf("%s:0x%x(%s)", seg, (unsigned) disp, base);
+        else
+          dis_sprintf("%s:[%s]", seg, base);
+      }
+      else
+      {
+        if (disp != 0)
+          dis_sprintf("%s:0x%x(%s,%s,%d)", seg, (unsigned) disp, base, index, 1<<scale);
+        else
+          dis_sprintf("%s:(%s,%s,%d)", seg, base, index, 1<<scale);
+      }
+    }
   }
 }
-
-void disassembler::resolve32_mod2(unsigned mode)
-{
-  const char *mod_rm_seg_reg;
- 
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod10_rm32[rm];
-
-  print_datasize(mode);
-
-  /* reg, 32-bit displacement */
-  if (displacement.displ32)
-  {
-    dis_sprintf("%s:[%s+0x%x]", mod_rm_seg_reg,
-           general_32bit_reg_name[rm], (unsigned) displacement.displ32);
-  }
-  else
-  {
-    dis_sprintf("%s:[%s]", mod_rm_seg_reg, general_32bit_reg_name[rm]);
-  }
-}
-
-void disassembler::resolve32_mod0_rm4(unsigned mode)
-{
-  const char *mod_rm_seg_reg;
-
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod00_base32[base];
-
-  print_datasize(mode);
-
-  dis_sprintf("%s:[", mod_rm_seg_reg);
-  if (base != 5)
-    dis_sprintf("%s+", general_32bit_reg_name[base]);
-
-  if (index != 4)
-  {
-    dis_sprintf("%s", index_name32[index]);
-    if (scale)
-      dis_sprintf("*%u", 1 << scale);
-    if (base == 5) dis_sprintf("+");
-  }
-
-  if (base == 5)
-    dis_sprintf("0x%x", (unsigned) displacement.displ32);
-
-  dis_sprintf("]");
-}
-
-void disassembler::resolve32_mod1_rm4(unsigned mode)
-{
-  const char *mod_rm_seg_reg;
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod01_base32[base];
-
-  print_datasize(mode);
-
-  dis_sprintf("%s:[%s", mod_rm_seg_reg, general_32bit_reg_name[base]);
-
-  if (index != 4)
-  {
-    dis_sprintf("+%s", index_name32[index]);
-    if (scale)
-      dis_sprintf("*%u", 1 << scale);
-  }
-
-  if (displacement.displ8)
-    dis_sprintf("+0x%x", (unsigned) displacement.displ8);
- 
-  dis_sprintf("]");
-}
-
-void disassembler::resolve32_mod2_rm4(unsigned mode)
-{
-  const char *mod_rm_seg_reg;
-  if (seg_override)
-    mod_rm_seg_reg = seg_override;
-  else
-    mod_rm_seg_reg = sreg_mod10_base32[base];
-
-  print_datasize(mode);
-
-  dis_sprintf("%s:[%s", mod_rm_seg_reg, general_32bit_reg_name[base]);
-
-  if (index != 4)
-  {
-    dis_sprintf("+%s", index_name32[index]);
-    if (scale)
-      dis_sprintf("*%u", 1 << scale);
-  }
-
-  if (displacement.displ32)
-    dis_sprintf("+0x%x", (unsigned) displacement.displ32);
-
-  dis_sprintf("]");
-}
-

@@ -75,10 +75,6 @@ static const unsigned char instruction_has_modrm[512] = {
  *
  *      66h - operand size override prefix
  *      67h - address size override prefix
- *
- *  For each instruction, one prefix may be used from each of these groups
- *  and  be  placed  in any order. Using redundant prefixes (more than one
- *  prefix from a group) is reserved and will cause undefined behaviour.
  */
 
 unsigned disassembler::disasm(bx_bool is_32, 
@@ -216,14 +212,31 @@ unsigned disassembler::disasm(bx_bool is_32,
   // print opcode
   dis_sprintf("%s ", entry->Opcode);
 
-  (this->*entry->Operand1)(entry->Op1Attr);
-  if (entry->Operand2 != &disassembler::XX)
+  if (intel_mode)
+  {
+    (this->*entry->Operand1)(entry->Op1Attr);
+    if (entry->Operand2 != &disassembler::XX) {
         dis_sprintf(", ");
-  (this->*entry->Operand2)(entry->Op2Attr);
-  if (entry->Operand3 != &disassembler::XX)
+       (this->*entry->Operand2)(entry->Op2Attr);
+    }
+    if (entry->Operand3 != &disassembler::XX) {
         dis_sprintf(", ");
-  (this->*entry->Operand3)(entry->Op3Attr);
-
+        (this->*entry->Operand3)(entry->Op3Attr);
+    }
+  } 
+  else
+  {
+    if (entry->Operand3 != &disassembler::XX) {                                         
+      (this->*entry->Operand3)(entry->Op3Attr);
+      dis_sprintf(", ");
+    }
+    if (entry->Operand2 != &disassembler::XX) {
+      (this->*entry->Operand2)(entry->Op2Attr);
+      dis_sprintf(", ");
+    }
+    (this->*entry->Operand1)(entry->Op1Attr);
+  }
+ 
   return(instruction - instruction_begin);
 }
 

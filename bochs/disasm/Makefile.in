@@ -48,7 +48,8 @@ RANLIB = @RANLIB@
 BX_OBJS = \
   dis_decode.o \
   dis_groups.o \
-  resolve.o
+  resolve.o    \
+  syntax.o
 
 BX_INCLUDES = disasm.h
 
@@ -83,3 +84,4 @@ dist-clean: clean
 dis_decode.o: dis_decode.@CPP_SUFFIX@ disasm.h ../config.h dis_tables.h
 dis_groups.o: dis_groups.@CPP_SUFFIX@ disasm.h ../config.h
 resolve.o: resolve.@CPP_SUFFIX@ disasm.h ../config.h
+syntax.o: syntax.@CPP_SUFFIX@ disasm.h ../config.h

@@ -22,18 +22,17 @@
 }
 
 // will be used in future
-#define IF_8086       0x00000000        /* 8086 instruction */
-#define IF_186        0x00000000        /* 186+ instruction */
-#define IF_286        0x00000000        /* 286+ instruction */
-#define IF_386        0x00000000        /* 386+ instruction */
-#define IF_387        0x00000000        /* 387+ FPU instruction */
-#define IF_486        0x00000000        /* 486+ instruction */
-#define IF_PENTIUM    0x00000000        /* Pentium instruction */
-#define IF_P6         0x00000000        /* P6 instruction */
-#define IF_KATMAI     0x00000000        /* Katmai instruction */
-#define IF_WILLAMETTE 0x00000000        /* Willamette instruction */
-#define IF_PRESCOTT   0x00000000        /* Prescott instruction */
-#define IF_X86_64     0x00000000        /* x86-64 specific instruction */
+#define IA_8086       0x00000000        /* 8086 instruction */
+#define IA_286        0x00000000        /* 286+ instruction */
+#define IA_386        0x00000000        /* 386+ instruction */
+#define IA_FPU        0x00000000
+#define IA_486        0x00000000        /* 486+ instruction */
+#define IA_PENTIUM    0x00000000        /* Pentium instruction */
+#define IA_P6         0x00000000        /* P6 instruction */
+#define IA_KATMAI     0x00000000        /* Katmai instruction */
+#define IA_WILLAMETTE 0x00000000        /* Willamette instruction */
+#define IA_PRESCOTT   0x00000000        /* Prescott instruction */
+#define IA_X86_64     0x00000000        /* x86-64 specific instruction */
 
 #define IF_ARITHMETIC 0x00000000        /* arithmetic instruction */
 #define IF_LOGIC      0x00000000        /* logic instruction */
@@ -101,8 +100,6 @@ enum {
 #define P_MODE  0x8
 #define S_MODE  0x9
 
-#define ES_SEG 0x80
-
 class disassembler;
 
 typedef void (disassembler::*BxDisasmPtr_t) (unsigned attr);
@@ -110,18 +107,41 @@ typedef void (disassembler::*BxDisasmResolveModrmPtr_t) (unsigned attr);
 
 class disassembler {
 public:
-  disassembler() {}
+  disassembler() { set_syntax_intel(); }
   unsigned disasm(bx_bool is_32, Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf);
 
+  void set_syntax_att();
+  void set_syntax_intel();
+
 private:
+  bx_bool intel_mode;
+
+  const char **general_16bit_reg_name;
+  const char **general_8bit_reg_name;
+  const char **general_32bit_reg_name;
+
+  const char **segment_name;
+
+  const char **index16;
+  const char **index_name32;
+
+  const char *sreg_mod01or10_rm32[8];
+
+  const char *sreg_mod00_base32[8];
+  const char *sreg_mod01or10_base32[8];
+
+  const char *sreg_mod00_rm16[8];
+  const char *sreg_mod01or10_rm16[8];
+
+private:
+
   bx_bool i32bit_opsize;
   bx_bool i32bit_addrsize;
 
   Bit8u  modrm, mod, nnn, rm;
-  Bit8u  sib, scale, index, base;
+  Bit8u  sib, scale, sib_index, sib_base;
 
   union {
-     Bit8u  displ8;
      Bit16u displ16;
      Bit32u displ32;
   } displacement;
@@ -170,6 +190,24 @@ private:
   void dis_sprintf(char *fmt, ...);
   void decode_modrm();
 
+  void resolve16_mod0    (unsigned mode);
+  void resolve16_mod1or2 (unsigned mode);
+
+  void resolve32_mod0    (unsigned mode);
+  void resolve32_mod1or2 (unsigned mode);
+
+  void resolve32_mod0_rm4    (unsigned mode);
+  void resolve32_mod1or2_rm4 (unsigned mode);
+
+  void initialize_modrm_segregs();
+
+  void print_datasize (unsigned mode);
+
+  void print_memory_access16(int datasize,
+          const char *seg, const char *index, Bit16u disp);
+  void print_memory_access32(int datasize,
+          const char *seg, const char *base, const char *index, int scale, Bit32u disp);
+
 public:
 
 /* 
@@ -213,7 +251,7 @@ public:
  *      register and any of the following values: a base register, an
  *      index register, a scaling factor, and a displacement.
  * X  - Memory addressed by the DS:rSI register pair.
- * Y  - Memory addressed by the ES:rDI register pair.
+ * Y  - Memory addressed by the DS:rDI register pair.
  */   
 
 /* 
@@ -243,18 +281,18 @@ public:
  void XX (unsigned) {}
 
  // fpu
- void ST0 (unsigned) { dis_sprintf("st(0)"); }
+ void ST0 (unsigned);
  void STj (unsigned);
 
  // general/segment register
- void Rd (unsigned);
  void Rw (unsigned);
+ void Rd (unsigned);
  void Sw (unsigned);
 
  // control/debug register
- void Cd (unsigned) { dis_sprintf("cr%d", nnn); }
- void Dd (unsigned) { dis_sprintf("db%d", nnn); }
- void Td (unsigned) { dis_sprintf("tr%d", nnn); }
+ void Cd (unsigned);
+ void Dd (unsigned);
+ void Td (unsigned);
 
  // segment register (implicit)
  void OP_SEG (unsigned);
@@ -271,6 +309,10 @@ public:
  void OP_X (unsigned);
  void OP_Y (unsigned);
 
+ // string instructions (ES based)
+ void OP_Xe(unsigned);
+ void OP_Ye(unsigned);
+
  // mmx/xmm
  void OP_P (unsigned);
  void OP_Q (unsigned);
@@ -278,7 +320,7 @@ public:
  void OP_V (unsigned);
 
  // immediate
- void  I1 (unsigned) { dis_sprintf("1"); }
+ void  I1 (unsigned);
  void  Ib (unsigned);
  void  Iw (unsigned); 
  void  Id (unsigned);
@@ -305,23 +347,6 @@ public:
  // jump
  void  Jb (unsigned);
  void  Jv (unsigned);
-
-private:
-
- void resolve16_mod0 (unsigned mode);
- void resolve16_mod1 (unsigned mode);
- void resolve16_mod2 (unsigned mode);
-
- void resolve32_mod0 (unsigned mode);
- void resolve32_mod1 (unsigned mode);
- void resolve32_mod2 (unsigned mode);
-
- void resolve32_mod0_rm4 (unsigned mode);
- void resolve32_mod1_rm4 (unsigned mode);
- void resolve32_mod2_rm4 (unsigned mode);
-
- void print_datasize (unsigned mode);
-
 };
 
 #endif

@@ -58,6 +58,9 @@ Changes to next release:
   - fixed INS opcode 0x6D, had wrong operand size (Stanislav)
   - fixed disassembly for repeatable instructions (Stanislav)
   - fixed sign-extended immediate opcodes (Stanislav)
+  - fixed MOVSS/MOVSD instructions opcode names (Stanislav)
+  - fixed NEG instruction opcode name (Stanislav)
+  - fixed floating point instructions arguments (Stanislav)
 
 - I/O devices
   - general
@@ -171,6 +174,9 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+ #1071199 dBaseII cause prefetch: RIP > CS limit 
+ #1070812 typecast error while compiling wx.cc
+ #1068786 FSINCOS Cos value wrong at 90 degrees 
   #675248 Panic: EIP > limit on win98 install
   #829793 [CPU ] prefetch: RIP > CS.limit
  #1034059 >>PANIC<< prefetch: running in bogus memory

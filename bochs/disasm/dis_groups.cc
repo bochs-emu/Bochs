@@ -1,51 +1,12 @@
 #include <stdio.h>
-#include <assert.h>
 #include "disasm.h"
 
 #if BX_DEBUGGER
 #include "../bx_debug/debug.h"
 #endif
 
-//////////////////
-// Intel STYLE
-//////////////////
-
-static const char *general_8bit_reg_name[8] = {
-    "al",  "cl",  "dl",  "bl",  "ah",  "ch",  "dh",  "bh"
-};
-
-const char *general_16bit_reg_name[8] = {
-    "ax",  "cx",  "dx",  "bx",  "sp",  "bp",  "si",  "di"
-};
-
-const char *general_32bit_reg_name[8] = {
-    "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi"
-};
-
-static const char *segment_name[8] = {
-    "es",  "cs",  "ss",  "ds",  "fs",  "gs",  "??",  "??"
-};
-
-static const char *mmx_reg_name[8] = {
-    "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7"
-};
-
-static const char *xmm_reg_name[8] = 
-{
-    "xmm0", 
-    "xmm1", 
-    "xmm2", 
-    "xmm3", 
-    "xmm4", 
-    "xmm5", 
-    "xmm6", 
-    "xmm7"
-};
-
 void disassembler::reg32 (unsigned attr)
 {
-  assert(attr < 8);
-
   if (i32bit_opsize)
     dis_sprintf("%s", general_32bit_reg_name[attr]);
   else
@@ -54,34 +15,36 @@ void disassembler::reg32 (unsigned attr)
 
 void disassembler::reg16 (unsigned attr)
 {
-  assert(attr < 8);
   dis_sprintf("%s", general_16bit_reg_name[attr]);
 }
 
 void disassembler::reg8 (unsigned attr)
 {
-  assert(attr < 8);
   dis_sprintf("%s", general_8bit_reg_name[attr]);
 }
 
 void disassembler::OP_SEG (unsigned attr)
 {
-  assert(attr < 8);
   dis_sprintf("%s", segment_name[attr]);
 }
 
 void disassembler::OP_MEM (unsigned attr)
 {
- if(mod == 3)
+  if(mod == 3)
     dis_sprintf("(bad)");
- else
+  else
     (this->*resolve_modrm)(attr);
 }
 
 void disassembler::OP_Q (unsigned attr)
 {
   if (mod == 3)
-    dis_sprintf("%s", mmx_reg_name[rm]);
+  {
+    if (intel_mode)
+      dis_sprintf  ("mm%d", rm);
+    else
+      dis_sprintf("%%mm%d", rm);
+  }
   else
     (this->*resolve_modrm)(attr);
 }
@@ -89,19 +52,30 @@ void disassembler::OP_Q (unsigned attr)
 void disassembler::OP_W (unsigned attr)
 {
   if (mod == 3)
-    dis_sprintf("%s", xmm_reg_name[rm]);
+  {
+    if (intel_mode)
+      dis_sprintf  ("xmm%d", rm);
+    else
+      dis_sprintf("%%xmm%d", rm);
+  }
   else
     (this->*resolve_modrm)(attr);
 }
 
 void disassembler::OP_V (unsigned attr)
 {
-  dis_sprintf("%s", xmm_reg_name[nnn]);
+  if (intel_mode)
+    dis_sprintf  ("xmm%d", nnn);
+  else
+    dis_sprintf("%%xmm%d", nnn);
 }
 
 void disassembler::OP_P (unsigned attr)
 {
-  dis_sprintf("%s", mmx_reg_name[nnn]);
+  if (intel_mode)
+    dis_sprintf  ("mm%d", nnn);
+  else
+    dis_sprintf("%%mm%d", nnn);
 }
 
 void disassembler::OP_X (unsigned attr)
@@ -109,25 +83,38 @@ void disassembler::OP_X (unsigned attr)
   const char *esi, *seg;
 
   if (i32bit_addrsize)
-    esi = "esi";
+    esi = general_32bit_reg_name[eSI_REG];
   else
-    esi = "si";
+    esi = general_16bit_reg_name[eSI_REG];
   
-  if (attr & ES_SEG)
-  {
-    seg = "es";
-  }
+  if (seg_override)
+    seg = seg_override;
   else
-  {
-    if (seg_override)
-      seg = seg_override;
-    else
-      seg = "ds";
-  }
+    seg = segment_name[DS_REG];
 
-  print_datasize(attr & 0x7F);
+  print_datasize(attr);
 
-  dis_sprintf("%s:[%s]", seg, esi);
+  if (intel_mode)
+    dis_sprintf("%s:[%s]", seg, esi);
+  else
+    dis_sprintf("%s:(%s)", seg, esi);
+}
+
+void disassembler::OP_Xe (unsigned attr)
+{
+  const char *esi;
+
+  if (i32bit_addrsize)
+    esi = general_32bit_reg_name[eSI_REG];
+  else
+    esi = general_16bit_reg_name[eSI_REG];
+  
+  print_datasize(attr);
+
+  if (intel_mode)
+    dis_sprintf("%s:[%s]", segment_name[ES_REG], esi);
+  else
+    dis_sprintf("%s:(%s)", segment_name[ES_REG], esi);
 }
 
 void disassembler::OP_Y (unsigned attr)
@@ -135,25 +122,38 @@ void disassembler::OP_Y (unsigned attr)
   const char *edi, *seg;
 
   if (i32bit_addrsize)
-    edi = "edi";
+    edi = general_32bit_reg_name[eDI_REG];
   else
-    edi = "di";
+    edi = general_16bit_reg_name[eDI_REG];
   
-  if (attr & ES_SEG)
-  {
-    seg = "es";
-  }
+  if (seg_override)
+    seg = seg_override;
   else
-  {
-    if (seg_override)
-      seg = seg_override;
-    else
-      seg = "ds";
-  }
+    seg = segment_name[DS_REG];
 
-  print_datasize(attr & 0x7F);
+  print_datasize(attr);
 
-  dis_sprintf("%s:[%s]", seg, edi);
+  if (intel_mode)
+    dis_sprintf("%s:[%s]", seg, edi);
+  else
+    dis_sprintf("%s:(%s)", seg, edi);
+}
+
+void disassembler::OP_Ye (unsigned attr)
+{
+  const char *edi;
+
+  if (i32bit_addrsize)
+    edi = general_32bit_reg_name[eDI_REG];
+  else
+    edi = general_16bit_reg_name[eDI_REG];
+  
+  print_datasize(attr);
+
+  if (intel_mode)
+    dis_sprintf("%s:[%s]", segment_name[ES_REG], edi);
+  else
+    dis_sprintf("%s:(%s)", segment_name[ES_REG], edi);
 }
 
 void disassembler::Ob (unsigned attr)
@@ -163,7 +163,7 @@ void disassembler::Ob (unsigned attr)
   if (seg_override)
     seg = seg_override;
   else
-    seg = "ds";
+    seg = segment_name[DS_REG];
 
   if (i32bit_addrsize) {
     Bit32u imm32 = fetch_dword();
@@ -182,7 +182,7 @@ void disassembler::Ov (unsigned attr)
   if (seg_override)
     seg = seg_override;
   else
-    seg = "ds";
+    seg = segment_name[DS_REG];
 
   if (i32bit_addrsize) {
     Bit32u imm32 = fetch_dword();
@@ -206,7 +206,7 @@ void disassembler::Jb (unsigned attr)
     }
     else // Symbol not found
 #endif
-    dis_sprintf("0x%x", (unsigned) (imm8+db_eip));
+      dis_sprintf(".+0x%x", (unsigned) (imm8+db_eip));
   }
   else
   {
@@ -217,7 +217,7 @@ void disassembler::Jb (unsigned attr)
     }
     else // Symbol not found
  #endif
-    dis_sprintf("0x%x", (unsigned) ((imm8+db_eip) & 0xFFFF));
+    dis_sprintf(".+0x%x", (unsigned) ((imm8+db_eip) & 0xFFFF));
   }
 }
 
@@ -233,7 +233,7 @@ void disassembler::Jv (unsigned attr)
     }
     else // Symbol not found
 #endif
-    dis_sprintf("0x%x", (unsigned) (imm32+db_eip));
+      dis_sprintf(".+0x%x", (unsigned) (imm32+db_eip));
   }
   else
   {
@@ -246,7 +246,7 @@ void disassembler::Jv (unsigned attr)
     }
     else // Symbol not found
 #endif
-      dis_sprintf("0x%x", (unsigned) ((imm16+db_eip) & 0xFFFF));
+      dis_sprintf(".+0x%x", (unsigned) ((imm16+db_eip) & 0xFFFF));
   }
 }
 
@@ -323,12 +323,12 @@ void disassembler::Gd (unsigned attr)
 
 void disassembler::Rd (unsigned attr)
 {
-    dis_sprintf("%s", general_32bit_reg_name[rm]);
+  dis_sprintf("%s", general_32bit_reg_name[rm]);
 }
 
 void disassembler::Rw (unsigned attr)
 {
-    dis_sprintf("%s", general_16bit_reg_name[rm]);
+  dis_sprintf("%s", general_16bit_reg_name[rm]);
 }
 
 void disassembler::Sw (unsigned attr) 
@@ -336,19 +336,36 @@ void disassembler::Sw (unsigned attr)
   dis_sprintf("%s", segment_name[nnn]);
 }
 
+void disassembler::I1 (unsigned) 
+{ 
+  if (intel_mode)
+    dis_sprintf ("1");
+  else
+    dis_sprintf("$1");
+}
+
 void disassembler::Ib (unsigned attr) 
 {
-  dis_sprintf("0x%x", (unsigned) fetch_byte());
+  if (intel_mode)
+    dis_sprintf ("0x%x", (unsigned) fetch_byte());
+  else
+    dis_sprintf("$0x%x", (unsigned) fetch_byte());
 }
 
 void disassembler::Iw (unsigned attr) 
 {
-  dis_sprintf("0x%x", (unsigned) fetch_word());
+  if (intel_mode)
+    dis_sprintf ("0x%x", (unsigned) fetch_word());
+  else
+    dis_sprintf("$0x%x", (unsigned) fetch_word());
 }
 
 void disassembler::Id (unsigned attr) 
 {
-  dis_sprintf("0x%x", (unsigned) fetch_dword());
+  if (intel_mode)
+    dis_sprintf ("0x%x", (unsigned) fetch_dword());
+  else
+    dis_sprintf("$0x%x", (unsigned) fetch_dword());
 }
 
 void disassembler::Iv (unsigned attr) 
@@ -364,14 +381,61 @@ void disassembler::sIb(unsigned attr)
   if (i32bit_opsize)
   {
     Bit32u imm32 = (Bit8s) fetch_byte();
-    dis_sprintf("0x%x", (unsigned) imm32);
+    if (intel_mode)
+      dis_sprintf ("0x%x", (unsigned) imm32);
+    else
+      dis_sprintf("$0x%x", (unsigned) imm32);
   }
   else
   {
     Bit16u imm16 = (Bit8s) fetch_byte();
-    dis_sprintf("0x%x", (unsigned) imm16);
+    if (intel_mode)
+      dis_sprintf ("0x%x", (unsigned) imm16);
+    else
+      dis_sprintf("$0x%x", (unsigned) imm16);
   }
 }
 
 // floating point
-void disassembler::STj (unsigned attr) { dis_sprintf("st(%d)", rm); }
+void disassembler::ST0 (unsigned attr)
+{ 
+  if (intel_mode)
+    dis_sprintf  ("st(0)");
+  else
+    dis_sprintf("%%st(0)");
+}
+
+void disassembler::STj (unsigned attr) 
+{ 
+  if (intel_mode)
+    dis_sprintf  ("st(%d)", rm);
+  else
+    dis_sprintf("%%st(%d)", rm);
+}
+
+// control register
+void disassembler::Cd (unsigned attr) 
+{ 
+  if (intel_mode)
+    dis_sprintf  ("cr%d", nnn);
+  else
+    dis_sprintf("%%cr%d", nnn);
+}
+
+// debug register
+void disassembler::Dd (unsigned attr) 
+{
+  if (intel_mode)
+    dis_sprintf  ("db%d", nnn);
+  else
+    dis_sprintf("%%db%d", nnn);
+}
+
+// test registers
+void disassembler::Td (unsigned attr)
+{
+  if (intel_mode)
+    dis_sprintf  ("tr%d", nnn);
+  else
+    dis_sprintf("%%tr%d", nnn);
+}
