@@ -16,7 +16,6 @@ set echo
 	    --enable-sb16=win
 
 unset echo
-exit
 
 # Fix up all makefiles so that nmake can handle them.
 for i in `find . -name Makefile`; do
