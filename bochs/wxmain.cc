@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.14 2002-03-25 01:44:43 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.15 2002-03-25 03:58:31 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -85,11 +85,30 @@ public:
 private:
 };
 
-class MyFrame: public wxFrame
+class MyPanel: public wxPanel
 {
 public:
+  MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = "panel")
+      : wxPanel (parent, id, pos, size, style, name)
+    { wxLogDebug ("MyPanel constructor"); }
+  void OnKeyDown(wxKeyEvent& event);
+  void OnKeyUp(wxKeyEvent& event);
+  void OnPaint(wxPaintEvent& event);
+private:
+  DECLARE_EVENT_TABLE()
+};
+
+BEGIN_EVENT_TABLE(MyPanel, wxPanel)
+  EVT_KEY_DOWN(MyPanel::OnKeyDown)
+  EVT_KEY_UP(MyPanel::OnKeyUp)
+  EVT_PAINT(MyPanel::OnPaint)
+END_EVENT_TABLE()
+
+class MyFrame: public wxFrame
+{
+  MyPanel *panel;
+public:
 MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
-void OnPaint(wxPaintEvent& event);
 void OnQuit(wxCommandEvent& event);
 void OnAbout(wxCommandEvent& event);
 void OnStartSim(wxCommandEvent& event);
@@ -97,8 +116,6 @@ void OnPauseResumeSim(wxCommandEvent& event);
 void OnKillSim(wxCommandEvent& event);
 void OnSim2GuiEvent(wxCommandEvent& event);
 void OnToolbarClick(wxCommandEvent& event);
-void OnKeyDown(wxKeyEvent& event);
-void OnKeyUp(wxKeyEvent& event);
 int HandleAskParam (BxEvent *event);
 int HandleAskParamString (bx_param_string_c *param);
 
@@ -153,10 +170,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
   EVT_MENU(ID_Sim2Gui_Event, MyFrame::OnSim2GuiEvent)
-  EVT_PAINT(MyFrame::OnPaint)
   EVT_MENU(IDM_TOOLBAR_POWER, MyFrame::OnToolbarClick)
-  EVT_KEY_DOWN(MyFrame::OnKeyDown)
-  EVT_KEY_UP(MyFrame::OnKeyUp)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(MyApp)
@@ -171,6 +185,7 @@ static unsigned long wxCursorX = 0;
 static unsigned long wxCursorY = 0;
 //hack alert
 static MyFrame *theFrame = NULL;
+static MyPanel *thePanel = NULL;
 
 wxCriticalSection event_thread_lock;
 
@@ -276,6 +291,15 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   currentX += 34;
 
   tb->Realize();
+
+  // create a MyPanel that covers the whole frame
+  panel = new MyPanel (this, -1);
+  wxGridSizer *sz = new wxGridSizer (1, 1);
+  sz->Add (panel, 0, wxGROW);
+  SetAutoLayout (TRUE);
+  SetSizer (sz);
+
+  thePanel = panel;
 }
 
 void MyFrame::OnQuit(wxCommandEvent& event)
@@ -519,13 +543,13 @@ MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
   wxASSERT_MSG (0, "switch stmt should have returned");
 }
 
-void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event))
+void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 	//PrepareDC(dc);
 
 	wxCriticalSectionLocker lock(wxScreen_lock);
-	wxLogDebug ("OnPaint called with wxScreen = %p", wxScreen);
+	wxLogDebug ("MyPanel::OnPaint called with wxScreen = %p", wxScreen);
 	if(wxScreen != NULL) {
 	  wxPoint pt = GetClientAreaOrigin();
 	  wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
@@ -539,8 +563,9 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 
 }
 
-void MyFrame::OnKeyDown(wxKeyEvent& event)
+void MyPanel::OnKeyDown(wxKeyEvent& event)
 {
+  wxLogDebug ("key down %d", event.m_keyCode);
 	wxCriticalSectionLocker lock(event_thread_lock);
 	if(num_events < MAX_EVENTS) {
 		event_queue[num_events].type = BX_ASYNC_EVT_KEY_PRESS;
@@ -549,8 +574,9 @@ void MyFrame::OnKeyDown(wxKeyEvent& event)
 	}
 }
 
-void MyFrame::OnKeyUp(wxKeyEvent& event)
+void MyPanel::OnKeyUp(wxKeyEvent& event)
 {
+  wxLogDebug ("key up %d", event.m_keyCode);
 	wxCriticalSectionLocker lock(event_thread_lock);
 	if(num_events < MAX_EVENTS) {
 		event_queue[num_events].type = BX_ASYNC_EVT_KEY_RELEASE;
@@ -847,6 +873,8 @@ char wxAsciiKey[0x5f] = {
 void press_key(Bit16u key, int press_release)
 {
 	Bit32u key_event;
+
+	wxLogDebug ("press_key (key=%d, press_release=%d)", (int)key, (int)press_release);
 	
 	if(key >= WXK_SPACE && key < WXK_DELETE) {
 		key_event = wxAsciiKey[key - WXK_SPACE];
@@ -934,6 +962,7 @@ void press_key(Bit16u key, int press_release)
 			return;
 		}
 	}
+	wxLogDebug ("press_key: after remapping, key=%d", key_event);
 	if(press_release == BX_ASYNC_EVT_KEY_RELEASE) key_event |= BX_KEY_RELEASED;
 	bx_devices.keyboard->gen_scancode(key_event);
 }
@@ -1031,7 +1060,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	}
 
 	wxPaintEvent event;
-	wxPostEvent (theFrame, event);
+	wxPostEvent (thePanel, event);
 }
 
 
