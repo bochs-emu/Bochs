@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.31 2002-10-11 01:11:11 kevinlawton Exp $
+// $Id: access.cc,v 1.32 2002-10-11 13:55:26 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1163,22 +1163,50 @@ accessOK:
   void
 BX_CPU_C::readVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
 {
+  // Read Double Quadword.
+  Bit64u *qwords = (Bit64u*) data;
+
+  read_virtual_qword(s, offset+0, &qwords[0]);
+  read_virtual_qword(s, offset+8, &qwords[1]);
 }
 
   void
 BX_CPU_C::readVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
 {
+  // Read Double Quadword; access must be aligned on 16-byte boundary.
+  Bit64u *qwords = (Bit64u*) data;
+
+  // If double quadword access is unaligned, #GP(0).
+  if (offset & 0xf)
+    exception(BX_GP_EXCEPTION, 0, 0);
+
+  read_virtual_qword(s, offset+0, &qwords[0]);
+  read_virtual_qword(s, offset+8, &qwords[1]);
 }
 
   void
 BX_CPU_C::writeVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
 {
+  // Write Double Quadword.
+  Bit64u *qwords = (Bit64u*) data;
+
+  write_virtual_qword(s, offset+0, &qwords[0]);
+  write_virtual_qword(s, offset+8, &qwords[1]);
 }
 
 
   void
 BX_CPU_C::writeVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
 {
+  // Write Double Quadword; access must be aligned on 16-byte boundary.
+  Bit64u *qwords = (Bit64u*) data;
+
+  // If double quadword access is unaligned, #GP(0).
+  if (offset & 0xf)
+    exception(BX_GP_EXCEPTION, 0, 0);
+
+  write_virtual_qword(s, offset+0, &qwords[0]);
+  write_virtual_qword(s, offset+8, &qwords[1]);
 }
 
 #endif  // #if BX_SUPPORT_SSE
