@@ -1,22 +1,43 @@
+bochs (1.3pre1-1) unstable; urgency=low
+
+  * Update for 1.3pre1 
+
+ -- Rob Lemley <rjlemley@valinux.com>  Wed, 28 Nov 2001 16:47:25 -0800
+
+bochs (1.2.1cvs20011128-1) unstable; urgency=low
+
+  * Update from cvs
+  * Package now installs in /usr like a good package should
+
+ -- Rob Lemley <rjlemley@calypsoblue.org>  Wed, 28 Nov 2001 16:39:35 -0800
+
+bochs (1.2.1cvs20010917-1) unstable; urgency=low
+
+  * Added files to docs
+  * Run mkfontdir after installation to update the font
+  * Added some documentation RE common errors to the README.Debian file
+
+ -- Rob Lemley <rjlemley@calypsoblue.org>  Mon, 17 Sep 2001 16:09:50 -0700
+
 bochs (1.2.1-2) unstable; urgency=low
 
   * Added bochs-dlx stuff. This may be separated out into its own
     package at some point 
 
- -- Rob Lemley <rjlemley@debian>  Tue, 12 Jun 2001 19:47:05 -0700
+ -- Rob Lemley <rjlemley@calypsoblue.org>  Tue, 12 Jun 2001 19:47:05 -0700
 
 bochs (1.2.1-1) unstable; urgency=low
 
   * New upstream release.
 
- -- Rob Lemley <rjlemley@debian>  Tue, 12 Jun 2001 17:57:51 -0700
+ -- Rob Lemley <rjlemley@calypsoblue.org>  Tue, 12 Jun 2001 17:57:51 -0700
 
 bochs (1.2-3) unstable; urgency=low
 
   * Moved debian dir to build dir
   * Fixed rules file to work with potato
 
- -- Rob Lemley <rjlemley@debian>  Mon, 11 Jun 2001 21:33:06 -0700
+ -- Rob Lemley <rjlemley@calypsoblue.org>  Mon, 11 Jun 2001 21:33:06 -0700
 
 bochs (1.2-2) unstable; urgency=low
 
