@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.165 2002-11-14 18:45:41 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.166 2002-11-16 13:43:38 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1847,6 +1847,7 @@ esac
 case $target in 
   *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw*)
 	if test "$bx_plugins" = 1; then 
+	  AC_CHECK_LIB(mingwex, opendir, LIBS="$LIBS -lmingwex")
 	  # set variables for building DLL plugins
 	  PRIMARY_TARGET=".win32_dll_plugin_target"
 	  PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
