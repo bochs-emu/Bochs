@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.4 2003-12-26 13:53:40 vruppert Exp $
+// $Id: gameport.cc,v 1.5 2003-12-29 21:48:56 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -45,11 +45,13 @@
 
 #elif defined(WIN32)
 
+#ifndef JOY_BUTTON1
 #define JOY_BUTTON1 1
 #define JOY_BUTTON2 2
-#define JOYSTICKID1 0
-
 UINT STDCALL joyGetPos(UINT, LPJOYINFO);
+#endif
+
+#define JOYSTICKID1 0
 
 #endif
 
