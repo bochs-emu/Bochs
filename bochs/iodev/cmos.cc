@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.43 2003-10-02 11:33:41 danielg4 Exp $
+// $Id: cmos.cc,v 1.44 2003-12-27 13:43:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.43 2003-10-02 11:33:41 danielg4 Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.44 2003-12-27 13:43:41 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -453,8 +453,10 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
        unsigned dcc;
        dcc = (value >> 4) & 0x07;
-       if (dcc != 0x02) {
-       BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
+       if ((dcc & 0x06) == 0x06) {
+         BX_INFO(("CRA: divider chain RESET"));
+       } else if (dcc != 0x02) {
+         BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
        }
        BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x80;
        BX_CMOS_THIS s.reg[REG_STAT_A] |= (value & 0x7f);
@@ -651,6 +653,10 @@ bx_cmos_c::one_second_timer_handler(void *this_ptr)
   void
 bx_cmos_c::one_second_timer()
 {
+  // divider chain reset - RTC stopped
+  if ((BX_CMOS_THIS s.reg[REG_STAT_A] & 0x60) == 0x60)
+    return;
+
   // update internal time/date buffer
   BX_CMOS_THIS s.timeval++;
 
