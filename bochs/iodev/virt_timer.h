@@ -1,10 +1,11 @@
 
 #define BX_USE_VIRTUAL_TIMERS 0
+#define BX_VIRTUAL_TIMERS_REALTIME 0
 
 #define BX_MAX_VIRTUAL_TIMERS (15+BX_SMP_PROCESSORS)
 #define BX_NULL_VIRTUAL_TIMER_HANDLE 10000
 
-#define BX_MAX_VIRTUAL_TIME (100000)
+#define BX_MAX_VIRTUAL_TIME (0x7fffffff)
 
 class bx_virt_timer_c {
  private:
@@ -26,24 +27,21 @@ class bx_virt_timer_c {
   unsigned   numTimers;  // Number of currently allocated timers.
 
   //Variables for the timer subsystem:
-  Bit64u current_virtual_time;
-  Bit64u next_event_time;
+  Bit64u current_timers_time;
+  Bit64u timers_next_event_time;
+
+  Bit64u last_sequential_time;
+  bx_bool in_timer_handler;
 
   //Variables for the time sync subsystem:
-  Bit64u last_ips_time;
-  Bit64u last_virtual_time;
-  Bit64u last_host_time;
+  Bit64u virtual_next_event_time;
+  Bit64u current_virtual_time;
 
-  Bit64u initial_ips_time;
-  Bit64u initial_virtual_time;
-  Bit64u initial_host_time;
+  int system_timer_id;
 
-  Bit64u next_virtual_time;
-  Bit64u next_ips_time;
-
-  Bit64u virtual_time_calls;
-
+  //Whether or not to use virtual timers.
   bx_bool use_virtual_timers;
+  bx_bool virtual_timers_realtime;
 
   // A special null timer is always inserted in the timer[0] slot.  This
   // make sure that at least one timer is always active, and that the
@@ -53,11 +51,27 @@ class bx_virt_timer_c {
   static void nullTimer(void* this_ptr);
 
 
-  Bit64u get_next_event_time(void);
+  //Cycle count until the next timer handler needs to be called.
+  void update_next_virtual_event_time(void){
+    return timers_next_event_time + current_timers_time - current_virtual_time;
+  }
 
+  //Step the given number of cycles, optionally calling any timer handlers.
   void periodic(Bit64u time_passed);
 
+
+  //Called when next_event_time changes.
+  void next_event_time_update(void);
+
+  //Called to advance the virtual time.
+  // calls periodic as needed.
+  void advance_virtual_time(Bit64u time_passed);
+
+  //The real timer handler.
+  void timer_handler();
+
  public:
+
 
   //Get the current virtual time.
   //  This may return the same value on subsequent calls.
@@ -65,7 +79,7 @@ class bx_virt_timer_c {
 
   //Get the current virtual time.
   //  This will return a monotonically increasing value.
-  // MUST NOT be called from within a timer interrupt.
+  // MUST NOT be called from within a timer handler.
   Bit64u time_usec_sequential(void);
 
   //Register a timer handler to go off after a given interval.
@@ -85,6 +99,10 @@ class bx_virt_timer_c {
 
   //deactivate (but don't unregister) a currently registered timer.
   void   deactivate_timer( unsigned timer_index );
+
+
+  //Timer handler passed to pc_system
+  void pc_system_timer_handler(void* this_ptr);
 
 }
 
