@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.50 2003-01-28 16:56:59 vruppert Exp $
+// $Id: devices.cc,v 1.51 2003-02-18 03:38:03 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.50 2003-01-28 16:56:59 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.51 2003-02-18 03:38:03 yakovlev Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -201,6 +201,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
   /*--- 8254 PIT ---*/
   pit = & bx_pit;
   pit->init();
+
+  bx_virt_timer.init();
 
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.init();
