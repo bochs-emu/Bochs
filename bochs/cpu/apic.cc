@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.39 2005-02-08 18:41:27 sshwarts Exp $
+// $Id: apic.cc,v 1.40 2005-02-13 18:36:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -893,7 +893,7 @@ void bx_local_apic_c::periodic_smf(void *this_ptr)
 void bx_local_apic_c::periodic(void) // KPL: changed prototype
 {
   if (!timer_active) {
-    BX_PANIC(("%s: bx_local_apic_c::periodic called, timer_active==0", cpu->name));
+    BX_ERROR(("%s: bx_local_apic_c::periodic called, timer_active==0", cpu->name));
     return;
   }
   BX_DEBUG(("%s: bx_local_apic_c::periodic called", cpu->name));
