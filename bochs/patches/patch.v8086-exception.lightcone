@@ -1,0 +1,121 @@
+----------------------------------------------------------------------
+Patch name: patch.v8086-exception.lightcone
+Author: LightCone
+Date: Thu Aug  7 2003
+Status: Proposed 
+
+Detailed description:
+This is a reformat of SF patch #704181 CPU interrupt function
+
+Here is what the author wrote:
+ Since the bug of bochs-2.0.win32 was found and
+ corrected, it reports. cpu/exception.cpp of src : Within
+ an interrupt() function, when present is the V8086 mode,
+ a bug is in the portion which processes 386 (286)
+ int/trap gate. From the V8086 mode, this portion is
+ performed, when it is going to execute an int imm
+ command. The portion in which push_32 () is called in
+ the state of VM=1 is still a mistake. Although this
+ push_32 () tends to write in to the stack of a protected
+ mode, if it is still VM=1 of EFLAGS, the
+ write_virtual_dword() function called out of push_32 () will
+ take out a segment protection exception. After
+ performing clear_VM() etc., it is necessary to make it
+ call push_32 () correctly, since EFLAGS is saved locally.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on Thu Aug  7 2003
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/exception.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/exception.cc,v
+retrieving revision 1.33
+diff -u -r1.33 exception.cc
+--- cpu/exception.cc	26 Feb 2003 02:48:12 -0000	1.33
++++ cpu/exception.cc	7 Aug 2003 09:02:24 -0000
+@@ -637,9 +637,23 @@
+           // set RPL of CS to CPL
+           load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
+           EIP = gate_dest_offset;
++          
++          // Modified by LightCone
++          Bit32u old_EFLAGS= read_eflags();
++          bx_bool bV8086Mode= v8086_mode();
++
++          // if INTERRUPT GATE set IF to 0
++          if ( !(gate_descriptor.type & 1) ) {// even is int-gate
++            BX_CPU_THIS_PTR clear_IF ();
++            }
++          BX_CPU_THIS_PTR clear_TF ();
++          BX_CPU_THIS_PTR clear_VM ();
++          BX_CPU_THIS_PTR clear_RF ();
++          BX_CPU_THIS_PTR clear_NT ();
++
+ 
+           if (gate_descriptor.type>=14) { // 386 int/trap gate
+-            if (v8086_mode()) {
++            if (bV8086Mode) {
+               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+@@ -653,46 +667,43 @@
+               BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
+               BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
+               }
++
+             // push long pointer to old stack onto new stack
+             push_32(old_SS);
+             push_32(old_ESP);
+ 
+             // push EFLAGS
+-            push_32(read_eflags());
++            push_32(old_EFLAGS);
+ 
+             // push long pointer to return address onto new stack
+             push_32(old_CS);
+             push_32(old_EIP);
+ 
+-            if ( is_error_code )
++            if ( is_error_code ) {
+               push_32(error_code);
++              }
+             }
+           else { // 286 int/trap gate
+-            if (v8086_mode()) {
++            if (bV8086Mode) {
+               BX_PANIC(("286 int/trap gate, VM"));
+               }
++
+             // push long pointer to old stack onto new stack
+             push_16(old_SS);
+             push_16(old_ESP); // ignores upper 16bits
+ 
+             // push FLAGS
+-            push_16(read_flags());
++            push_16((Bit16u)old_EFLAGS);
+ 
+             // push return address onto new stack
+             push_16(old_CS);
+             push_16(old_EIP); // ignores upper 16bits
+ 
+-            if ( is_error_code )
++            if ( is_error_code ) {
+               push_16(error_code);
++              }
+             }
+ 
+-          // if INTERRUPT GATE set IF to 0
+-          if ( !(gate_descriptor.type & 1) ) // even is int-gate
+-            BX_CPU_THIS_PTR clear_IF ();
+-          BX_CPU_THIS_PTR clear_TF ();
+-          BX_CPU_THIS_PTR clear_VM ();
+-          BX_CPU_THIS_PTR clear_RF ();
+-          BX_CPU_THIS_PTR clear_NT ();
+           return;
+           }
+ 
