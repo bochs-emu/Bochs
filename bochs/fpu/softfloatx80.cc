@@ -46,7 +46,7 @@ Bit16s floatx80_to_int16(floatx80 a, float_status_t &status)
 
    Bit32s v32 = floatx80_to_int32(a, status);
 
-   if ((v32 > (Bit32s) BX_MAX_BIT16S) || (v32 < (Bit32s) BX_MIN_BIT16S))
+   if ((v32 > 32767) || (v32 < -32768))
    {
         float_raise(status, float_flag_invalid);
         return int16_indefinite;
@@ -74,7 +74,7 @@ Bit16s floatx80_to_int16_round_to_zero(floatx80 a, float_status_t &status)
 
    Bit32s v32 = floatx80_to_int32_round_to_zero(a, status);
 
-   if ((v32 > (Bit32s) BX_MAX_BIT16S) || (v32 < (Bit32s) BX_MIN_BIT16S))
+   if ((v32 > 32767) || (v32 < -32768))
    {
         float_raise(status, float_flag_invalid);
         return int16_indefinite;
