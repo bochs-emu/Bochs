@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile,v 1.12 2002-11-20 18:51:01 bdenney Exp $
+# $Id: Makefile,v 1.13 2002-12-05 20:53:13 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -57,5 +57,5 @@ webinst: all
 clean:
 	#remove generated files
 	for S in $(SECTIONS); do \
-	  rm -f $$S/*.html $$S/*.ps $$S/*.pdf $$S/*.out; \
+	  rm -f $$S/*.html $$S/*.htm $$S/*.ps $$S/*.pdf $$S/*.out; \
 	done
