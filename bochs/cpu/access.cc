@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.14 2002-09-03 04:54:28 kevinlawton Exp $
+// $Id: access.cc,v 1.15 2002-09-04 08:59:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -255,7 +255,6 @@ BX_CPU_C::strseg(bx_segment_reg_t *seg)
 }
 
 
-extern unsigned priv_check[];
 
 
 
@@ -282,34 +281,20 @@ accessOK:
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
-          Bit32u combined_access;
+          Bit32u accessBits;
 
           // See if the TLB entry privilege level allows us write access
           // from this CPL.
-          combined_access = BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
-          if (combined_access & 1) { // TLB has seen a write already.
-            unsigned privIndex;
-            privIndex =
-#if BX_CPU_LEVEL >= 4
-              (BX_CPU_THIS_PTR cr0.wp<<4) | // bit 4
-#endif
-              (pl<<3) |                     // bit 3
-              (combined_access & 0x07);     // bit 2,1,0
-                                            // Let bit0 slide through since
-                                            // we know it's 1 (W) from the
-                                            // check above.
-            if ( priv_check[privIndex] ) {
-              // Current write access has privilege.
-              Bit32u hostPageAddr;
-              Bit8u *hostAddr;
-              hostPageAddr =
-                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
-                  0xfffffff8;
-              if (hostPageAddr) {
-                hostAddr = (Bit8u*) (hostPageAddr + pageOffset);
-                *hostAddr = *data;
-                return;
-                }
+          accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+          if ( accessBits & (1 << (2 | pl)) ) {
+            // Current write access has privilege.
+            Bit32u hostPageAddr;
+            Bit8u *hostAddr;
+            hostPageAddr = accessBits & 0xfffff000;
+            if (hostPageAddr) {
+              hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
+              *hostAddr = *data;
+              return;
               }
             }
           }
@@ -349,35 +334,21 @@ accessOK:
           tlbIndex = BX_TLB_INDEX_OF(laddr);
           lpf = laddr & 0xfffff000;
           if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
-            Bit32u combined_access;
+            Bit32u accessBits;
+
             // See if the TLB entry privilege level allows us write access
             // from this CPL.
-  
-            combined_access =
-                BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
-            if (combined_access & 1) { // TLB has seen a write already.
-              unsigned privIndex;
-              privIndex =
-#if BX_CPU_LEVEL >= 4
-                (BX_CPU_THIS_PTR cr0.wp<<4) | // b4
-#endif
-                (pl<<3) |                     // b3
-                (combined_access & 0x07);     // b{2,1,0}
-                                              // Let b0 slide through since
-                                              // we know it's 1 (W) from the
-                                              // check above.
-              if ( priv_check[privIndex] ) {
-                // Current write access has privilege.
-                Bit32u  hostPageAddr;
-                Bit16u *hostAddr;
-                hostPageAddr =
-                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
-                    0xfffffff8;
-                if (hostPageAddr) {
-                  hostAddr = (Bit16u*) (hostPageAddr + pageOffset);
-                  *hostAddr = *data;
-                  return;
-                  }
+            accessBits =
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+            if ( accessBits & (1 << (2 | pl)) ) {
+              // Current write access has privilege.
+              Bit32u  hostPageAddr;
+              Bit16u *hostAddr;
+              hostPageAddr = accessBits & 0xfffff000;
+              if (hostPageAddr) {
+                hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+                *hostAddr = *data;
+                return;
                 }
               }
             }
@@ -418,35 +389,21 @@ accessOK:
           tlbIndex = BX_TLB_INDEX_OF(laddr);
           lpf = laddr & 0xfffff000;
           if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
-            Bit32u combined_access;
+            Bit32u accessBits;
+
             // See if the TLB entry privilege level allows us write access
             // from this CPL.
-  
-            combined_access =
-                BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
-            if (combined_access & 1) { // TLB has seen a write already.
-              unsigned privIndex;
-              privIndex =
-#if BX_CPU_LEVEL >= 4
-                (BX_CPU_THIS_PTR cr0.wp<<4) | // b4
-#endif
-                (pl<<3) |                     // b3
-                (combined_access & 0x07);     // b{2,1,0}
-                                              // Let b0 slide through since
-                                              // we know it's 1 (W) from the
-                                              // check above.
-              if ( priv_check[privIndex] ) {
-                // Current write access has privilege.
-                Bit32u  hostPageAddr;
-                Bit32u *hostAddr;
-                hostPageAddr =
-                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
-                    0xfffffff8;
-                if (hostPageAddr) {
-                  hostAddr = (Bit32u*) (hostPageAddr + pageOffset);
-                  *hostAddr = *data;
-                  return;
-                  }
+            accessBits =
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+            if ( accessBits & (1 << (2 | pl)) ) {
+              // Current write access has privilege.
+              Bit32u  hostPageAddr;
+              Bit32u *hostAddr;
+              hostPageAddr = accessBits & 0xfffff000;
+              if (hostPageAddr) {
+                hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+                *hostAddr = *data;
+                return;
                 }
               }
             }
@@ -488,15 +445,15 @@ accessOK:
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
-          if ( ((BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access>>2) & 1)
-               == pl ) {
+          Bit32u accessBits;
+
+          accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+          if ( accessBits & (1<<pl) ) { // Read this pl OK.
             Bit32u hostPageAddr;
             Bit8u *hostAddr;
-            hostPageAddr =
-                BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
-                0xfffffff8;
+            hostPageAddr = accessBits & 0xfffff000;
             if (hostPageAddr) {
-              hostAddr = (Bit8u*) (hostPageAddr + pageOffset);
+              hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
               *data = *hostAddr;
               return;
               }
@@ -542,14 +499,15 @@ accessOK:
           if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
             // See if the TLB entry privilege level allows us read access
             // from this CPL.
-            if ( ((BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access>>2) & 1)
-                 == pl ) {
+            Bit32u accessBits;
+
+            accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+            if ( accessBits & (1<<pl) ) { // Read this pl OK.
               Bit32u hostPageAddr;
               Bit16u *hostAddr;
-              hostPageAddr =
-                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access & 0xfffffff8;
+              hostPageAddr = accessBits & 0xfffff000;
               if (hostPageAddr) {
-                hostAddr = (Bit16u*) (hostPageAddr + pageOffset);
+                hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
                 *data = *hostAddr;
                 return;
                 }
@@ -596,14 +554,15 @@ accessOK:
           if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
             // See if the TLB entry privilege level allows us read access
             // from this CPL.
-            if ( ((BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access>>2) & 1)
-                 == pl ) {
+            Bit32u accessBits;
+
+            accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+            if ( accessBits & (1<<pl) ) { // Read this pl OK.
               Bit32u hostPageAddr;
               Bit32u *hostAddr;
-              hostPageAddr =
-                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access & 0xfffffff8;
+              hostPageAddr = accessBits & 0xfffff000;
               if (hostPageAddr) {
-                hostAddr = (Bit32u*) (hostPageAddr + pageOffset);
+                hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
                 *data = *hostAddr;
                 return;
                 }
@@ -650,37 +609,23 @@ accessOK:
         tlbIndex = BX_TLB_INDEX_OF(laddr);
         lpf = laddr & 0xfffff000;
         if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
-          Bit32u combined_access;
+          Bit32u accessBits;
 
           // See if the TLB entry privilege level allows us write access
           // from this CPL.
-          combined_access = BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
-          if (combined_access & 1) { // TLB has seen a write already.
-            unsigned privIndex;
-            privIndex =
-#if BX_CPU_LEVEL >= 4
-              (BX_CPU_THIS_PTR cr0.wp<<4) | // bit 4
-#endif
-              (pl<<3) |                     // bit 3
-              (combined_access & 0x07);     // bit 2,1,0
-                                            // Let bit0 slide through since
-                                            // we know it's 1 (W) from the
-                                            // check above.
-            if ( priv_check[privIndex] ) {
-              // Current write access has privilege.
-              Bit32u hostPageAddr;
-              Bit8u *hostAddr;
-              hostPageAddr =
-                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
-                  0xfffffff8;
-              if (hostPageAddr) {
-                hostAddr = (Bit8u*) (hostPageAddr + pageOffset);
-                *data = *hostAddr;
-                BX_CPU_THIS_PTR address_xlation.paddress1 =
-                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
-                //BX_CPU_THIS_PTR address_xlation.pages = 1;
-                return;
-                }
+          accessBits = BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+          if ( accessBits & (1 << (2 | pl)) ) {
+            // Current write access has privilege.
+            Bit32u hostPageAddr;
+            Bit8u *hostAddr;
+            hostPageAddr = accessBits & 0xfffff000;
+            if (hostPageAddr) {
+              hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
+              *data = *hostAddr;
+              BX_CPU_THIS_PTR address_xlation.paddress1 =
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
+              //BX_CPU_THIS_PTR address_xlation.pages = 1;
+              return;
               }
             }
           }
@@ -728,38 +673,24 @@ accessOK:
           tlbIndex = BX_TLB_INDEX_OF(laddr);
           lpf = laddr & 0xfffff000;
           if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
-            Bit32u combined_access;
+            Bit32u accessBits;
+
             // See if the TLB entry privilege level allows us write access
             // from this CPL.
-  
-            combined_access =
-                BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
-            if (combined_access & 1) { // TLB has seen a write already.
-              unsigned privIndex;
-              privIndex =
-#if BX_CPU_LEVEL >= 4
-                (BX_CPU_THIS_PTR cr0.wp<<4) | // b4
-#endif
-                (pl<<3) |                     // b3
-                (combined_access & 0x07);     // b{2,1,0}
-                                              // Let b0 slide through since
-                                              // we know it's 1 (W) from the
-                                              // check above.
-              if ( priv_check[privIndex] ) {
-                // Current write access has privilege.
-                Bit32u  hostPageAddr;
-                Bit16u *hostAddr;
-                hostPageAddr =
-                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
-                    0xfffffff8;
-                if (hostPageAddr) {
-                  hostAddr = (Bit16u*) (hostPageAddr + pageOffset);
-                  *data = *hostAddr;
-                  BX_CPU_THIS_PTR address_xlation.paddress1 =
-                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
-                  BX_CPU_THIS_PTR address_xlation.pages = 1;
-                  return;
-                  }
+            accessBits =
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+            if ( accessBits & (1 << (2 | pl)) ) {
+              // Current write access has privilege.
+              Bit32u  hostPageAddr;
+              Bit16u *hostAddr;
+              hostPageAddr = accessBits & 0xfffff000;
+              if (hostPageAddr) {
+                hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+                *data = *hostAddr;
+                BX_CPU_THIS_PTR address_xlation.paddress1 =
+                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
+                BX_CPU_THIS_PTR address_xlation.pages = 1;
+                return;
                 }
               }
             }
@@ -805,38 +736,24 @@ accessOK:
           tlbIndex = BX_TLB_INDEX_OF(laddr);
           lpf = laddr & 0xfffff000;
           if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
-            Bit32u combined_access;
+            Bit32u accessBits;
+
             // See if the TLB entry privilege level allows us write access
             // from this CPL.
-  
-            combined_access =
-                BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
-            if (combined_access & 1) { // TLB has seen a write already.
-              unsigned privIndex;
-              privIndex =
-#if BX_CPU_LEVEL >= 4
-                (BX_CPU_THIS_PTR cr0.wp<<4) | // b4
-#endif
-                (pl<<3) |                     // b3
-                (combined_access & 0x07);     // b{2,1,0}
-                                              // Let b0 slide through since
-                                              // we know it's 1 (W) from the
-                                              // check above.
-              if ( priv_check[privIndex] ) {
-                // Current write access has privilege.
-                Bit32u  hostPageAddr;
-                Bit32u *hostAddr;
-                hostPageAddr =
-                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
-                    0xfffffff8;
-                if (hostPageAddr) {
-                  hostAddr = (Bit32u*) (hostPageAddr + pageOffset);
-                  *data = *hostAddr;
-                  BX_CPU_THIS_PTR address_xlation.paddress1 =
-                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
-                  BX_CPU_THIS_PTR address_xlation.pages = 1;
-                  return;
-                  }
+            accessBits =
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits;
+            if ( accessBits & (1 << (2 | pl)) ) {
+              // Current write access has privilege.
+              Bit32u  hostPageAddr;
+              Bit32u *hostAddr;
+              hostPageAddr = accessBits & 0xfffff000;
+              if (hostPageAddr) {
+                hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+                *data = *hostAddr;
+                BX_CPU_THIS_PTR address_xlation.paddress1 =
+                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
+                BX_CPU_THIS_PTR address_xlation.pages = 1;
+                return;
                 }
               }
             }

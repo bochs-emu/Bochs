@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.11 2002-09-03 15:56:24 bdenney Exp $
+// $Id: paging.cc,v 1.12 2002-09-04 08:59:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,10 +28,6 @@
 
 #if 0
   // - what should the reserved bits in the error code be ?
-  // - move CR0.wp bit in lookup table to cache.  Then dump
-  //   cache whenever it is changed.  This eliminates the
-  //   extra calculation and shifting.
-  // - change BX_READ and BX_WRITE to 0,1 ???
 #endif
 
 
@@ -321,7 +317,7 @@
 #warning "Move priv_check to CPU fields, or init.cc"
 #endif
 
-unsigned priv_check[BX_PRIV_CHECK_SIZE];
+static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 
 
@@ -351,6 +347,18 @@ BX_CPU_C::CR3_change(Bit32u value32)
   // flush TLB even if value does not change
   TLB_flush();
   BX_CPU_THIS_PTR cr3 = value32;
+}
+
+  void
+BX_CPU_C::pagingWPChanged(void)
+{
+  // Since our TLB contains markings dependent on the previous value
+  // of CR0.WP, clear the cache and start over.
+  TLB_clear();
+#ifndef _MSC_VER
+#warning "duplicate with disable_paging etc?"
+// maybe just do pagingCR0Changed()
+#endif
 }
 
   void
@@ -469,9 +477,9 @@ BX_CPU_C::dtranslate_linear(Bit32u laddress, unsigned pl, unsigned rw)
 {
   Bit32u   lpf, ppf, poffset, TLB_index, error_code, paddress;
   Bit32u   pde, pde_addr;
-  unsigned priv_index;
   Boolean  isWrite;
-  Bit32u   combined_access, new_combined_access;
+  Bit32u   accessBits, combined_access;
+  unsigned priv_index;
 
   lpf       = laddress & 0xfffff000; // linear page frame
   poffset   = laddress & 0x00000fff; // physical offset
@@ -481,31 +489,10 @@ BX_CPU_C::dtranslate_linear(Bit32u laddress, unsigned pl, unsigned rw)
   isWrite = (rw>=BX_WRITE); // write or r-m-w
 
   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == lpf) {
-    paddress        = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
-    combined_access = BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access;
-    priv_index =
-#if BX_CPU_LEVEL >= 4
-      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
-#endif
-      (pl<<3) |                      // bit 3
-      (combined_access & 0x06) |     // bit 2,1
-      isWrite;                       // bit 0
-
-    if (priv_check[priv_index]) {
-      // Operation has proper privilege.
-      // If our TLB entry has _not_ been used with a write before, we need
-      // to update the PDE.A/PTE.{A,D} fields with a re-walk.
-      new_combined_access = combined_access | isWrite;
-      if (new_combined_access == combined_access) {
-        // A/D bits already up-to-date
-        return(paddress);
-        }
-
-      // If we have only seen reads for this TLB entry, but the
-      // permissions must be writeable, we must make sure the
-      // dirty bit (D) is set.  To do this we must rewalk the page
-      // tables to find the PTE and to give a chance to pick up updated info.
-      goto pageTableWalk;  // for clarity and in case of future mods
+    paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
+    accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
+    if (accessBits & (1 << ((isWrite<<1) | pl)) ) {
+      return(paddress);
       }
 
     // The current access does not have permission according to the info
@@ -633,8 +620,25 @@ pageTableWalk:
 
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access =
-      combined_access | isWrite;
+
+// 1 << ((W<<1) | U)
+// b0: Read  Sys   OK
+// b1: Read  User  OK
+// b2: Write Sys   OK
+// b3: Write User  OK
+  if ( combined_access & 4 ) { // User
+    accessBits = 0x3; // User priv; read from {user,sys} OK.
+    if ( isWrite ) { // Current operation is a write (Dirty bit updated)
+      accessBits |= 0xc; // write from {user,sys} OK.
+      }
+    }
+  else { // System
+    accessBits = 0x1; // System priv; read from {sys} OK.
+    if ( isWrite ) { // Current operation is a write (Dirty bit updated)
+      accessBits |= 4; // write from {sys} OK.
+      }
+    }
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 
 #if BX_SupportGuest2HostTLB
   {
@@ -642,18 +646,8 @@ pageTableWalk:
   hostPageAddr = (Bit32u) BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(ppf), rw);
   if (hostPageAddr) {
     // No veto; a host address was returned.
-#if 0
-    if (hostPageAddr & 0x7) {
-      BX_PANIC( ("Paging.cc: guest->host code, & 7 sanity check failed!") );
-      }
-#endif
-    // Host addresses of the beginning of each page must be aligned to
-    // at least 8-byte boundaries, so we can use the 'combined_access'
-    // field to store them.  Note that for now, such addresses don't need
-    // to be 4k page aligned, so finaly addreses are generated with
-    // '+' and not '|'.
-    BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access |=
-      (hostPageAddr);
+    // Host addresses are now always 4k page aligned.
+    BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits |= hostPageAddr;
     }
   // Else leave the host address component zero (NULL) to signal no
   // valid host address; use long path.
@@ -683,8 +677,8 @@ BX_CPU_C::itranslate_linear(Bit32u laddress, unsigned pl)
 {
   Bit32u   lpf, ppf, poffset, TLB_index, error_code, paddress;
   Bit32u   pde, pde_addr;
+  Bit32u   accessBits, combined_access;
   unsigned priv_index;
-  Bit32u   combined_access;
 
   lpf       = laddress & 0xfffff000; // linear page frame
   poffset   = laddress & 0x00000fff; // physical offset
@@ -692,18 +686,9 @@ BX_CPU_C::itranslate_linear(Bit32u laddress, unsigned pl)
 
 
   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == lpf) {
-    paddress        = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
-    combined_access = BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access;
-    priv_index =
-#if BX_CPU_LEVEL >= 4
-      (BX_CPU_THIS_PTR cr0.wp<<4) |   // bit 4
-#endif
-      (pl<<3) |                       // bit 3
-      (combined_access & 0x06);       // bit 2,1
-                                      // bit 0 == 0
-
-    if (priv_check[priv_index]) {
-      // Operation has proper privilege.
+    paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
+    accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
+    if (accessBits & (1 << pl) ) {
       return(paddress);
       }
 
@@ -824,8 +809,19 @@ pageTableWalk:
 
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access = combined_access;
 
+// 1 << ((W<<1) | U)
+// b0: Read  Sys   OK
+// b1: Read  User  OK
+// b2: Write Sys   OK
+// b3: Write User  OK
+  if ( combined_access & 4 ) { // User
+    accessBits = 0x3; // User priv; read from {user,sys} OK.
+    }
+  else { // System
+    accessBits = 0x1; // System priv; read from {sys} OK.
+    }
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 
 #if BX_SupportGuest2HostTLB
   {
@@ -834,18 +830,8 @@ pageTableWalk:
       BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(ppf), BX_READ);
   if (hostPageAddr) {
     // No veto; a host address was returned.
-#if 0
-    if (hostPageAddr & 0x7) {
-      BX_PANIC( ("Paging.cc: guest->host code, & 7 sanity check failed!") );
-      }
-#endif
-    // Host addresses of the beginning of each page must be aligned to
-    // at least 8-byte boundaries, so we can use the 'combined_access'
-    // field to store them.  Note that for now, such addresses don't need
-    // to be 4k page aligned, so finaly addreses are generated with
-    // '+' and not '|'.
-    BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access |=
-      (hostPageAddr);
+    // Host addresses are now always 4k page aligned.
+    BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits |= hostPageAddr;
     }
   }
 #endif  // BX_SupportGuest2HostTLB

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.26 2002-09-03 04:54:28 kevinlawton Exp $
+// $Id: cpu.h,v 1.27 2002-09-04 08:59:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -525,7 +525,7 @@ typedef struct {
   typedef struct {
     Bit32u lpf; // linear page frame
     Bit32u ppf; // physical page frame
-    Bit32u combined_access;
+    Bit32u accessBits;
     } bx_TLB_entry;
 #endif  // #if BX_USE_TLB
 
@@ -1481,6 +1481,7 @@ public: // for now...
   BX_SMF void enable_paging(void);
   BX_SMF void disable_paging(void);
   BX_SMF void CR3_change(Bit32u value32);
+  BX_SMF void pagingWPChanged(void);
   BX_SMF void reset(unsigned source);
 
   BX_SMF void jump_protected(BxInstruction_t *, Bit16u cs, Bit32u disp32);
