@@ -156,7 +156,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0xCF8:
       BX_PCI_THIS s.i440fx.confAddr = value;
-      BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
+      BX_ERROR(("440FX IO write to port %04x of %04x, len %02x ",
                 address, value, io_len));
       break;
 
@@ -177,7 +177,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | (value & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
+        BX_ERROR(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }
@@ -198,7 +198,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 8) & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
+        BX_ERROR(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }
@@ -219,7 +219,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 16) & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
+        BX_ERROR(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }
@@ -238,7 +238,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 24) & dMask);
-        BX_INFO(("440FX IO write to port %04x of %04x, len %02x ",
+        BX_ERROR(("440FX IO write to port %04x of %04x, len %02x ",
                   address, value, io_len));
         }
      }

@@ -95,7 +95,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.28 2001-08-31 16:06:32 fries Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.29 2001-08-31 22:02:29 fries Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1416,12 +1416,9 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
 		BX_PANIC(("initialize drive parameters issued to non-disk"));
           // sets logical geometry of specified drive
-          BX_INFO(("initialize drive params"));
-          BX_INFO(("  sector count = %u",
-            (unsigned) BX_SELECTED_CONTROLLER.sector_count));
-          BX_INFO(("  drive select = %u",
-            (unsigned) BX_HD_THIS drive_select));
-          BX_INFO(("  head number = %u",
+          BX_DEBUG(("init drive params: sec=%u, drive sel=%u, head=%u",
+            (unsigned) BX_SELECTED_CONTROLLER.sector_count,
+            (unsigned) BX_HD_THIS drive_select,
             (unsigned) BX_SELECTED_CONTROLLER.head_no));
           if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.Opresent->get ()) {
             BX_PANIC(("init drive params: drive != 0"));

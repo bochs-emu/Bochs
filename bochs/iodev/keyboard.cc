@@ -57,7 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.29 2001-08-24 13:48:05 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.30 2001-08-31 22:02:29 fries Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,7 +92,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.29 2001-08-24 13:48:05 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.30 2001-08-31 22:02:29 fries Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -935,7 +935,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
   if (BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write) {
     BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 0;
     BX_KEY_THIS s.kbd_internal_buffer.led_status = value;
-    BX_INFO(("LED status set to %02x",
+    BX_DEBUG(("LED status set to %02x",
       (unsigned) BX_KEY_THIS s.kbd_internal_buffer.led_status));
     kbd_enQ(0xFA); // send ACK %%%
     return;
@@ -1035,7 +1035,7 @@ case 0xd3:
 			http://panda.cs.ndsu.nodak.edu/~achapwes/PICmicro/mouse/mouse.html
 			http://sourceforge.net/tracker/index.php?func=detail&aid=422457&group_id=12580&atid=112580
 			 */
-      BX_INFO(("kbd_ctrl_to_kbd(): got value of %02x",
+      BX_ERROR(("kbd_ctrl_to_kbd(): got value of %02x",
         (unsigned) value));
       kbd_enQ(0xFA); /* send ACK ??? */
       return;

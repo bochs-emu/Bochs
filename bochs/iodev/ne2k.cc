@@ -37,7 +37,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.18 2001-06-27 20:27:49 fries Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.19 2001-08-31 22:02:29 fries Exp $"));
 	// nothing for now
 }
 
@@ -224,7 +224,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  BX_INFO(("out-of-bounds chipmem read, %04X", address));
+  BX_ERROR(("out-of-bounds chipmem read, %04X", address));
 
   return (0xff);
 }
@@ -240,7 +240,7 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
     if (io_len == 2)
       BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
   } else
-    BX_INFO(("out-of-bounds chipmem write, %04X", address));
+    BX_ERROR(("out-of-bounds chipmem write, %04X", address));
 }
 
 //
@@ -1160,7 +1160,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.18 2001-06-27 20:27:49 fries Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.19 2001-08-31 22:02:29 fries Exp $"));
   BX_NE2K_THIS devices = d;
 
 

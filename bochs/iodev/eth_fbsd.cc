@@ -142,30 +142,31 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   struct bpf_program bp;
   u_int v;
 
+  put("BPF");
   memcpy(fbsd_macaddr, macaddr, 6);
 
   do {
     (void)sprintf(device, "/dev/bpf%d", n++);
     this->bpf_fd = open(device, O_RDWR);
-	BX_INFO(("tried %s, returned %d (%s)",device,this->bpf_fd,strerror(errno)));
+	BX_DEBUG(("tried %s, returned %d (%s)",device,this->bpf_fd,strerror(errno)));
 	if(errno == EACCES)
 		break;
   } while (this->bpf_fd == -1);
   
   if (this->bpf_fd == -1) {
-    BX_INFO(("eth_freebsd: could not open packet filter"));
+    BX_ERROR(("eth_freebsd: could not open packet filter"));
     return;
   }
 
   if (ioctl(this->bpf_fd, BIOCVERSION, (caddr_t)&bv) < 0) {
-    BX_INFO(("eth_freebsd: could not retrieve bpf version"));
+    BX_ERROR(("eth_freebsd: could not retrieve bpf version"));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
   }
   if (bv.bv_major != BPF_MAJOR_VERSION ||
       bv.bv_minor < BPF_MINOR_VERSION) {
-    BX_INFO(("eth_freebsd: bpf version mismatch"));
+    BX_ERROR(("eth_freebsd: bpf version mismatch"));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
