@@ -2,6 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
+AC_REVISION([[$Id: configure.in,v 1.83 2002-07-16 12:08:38 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
