@@ -18,7 +18,7 @@ and other OS's, all on your workstation.
 	tar xzvf $RPM_SOURCE_DIR/bochs.tar.gz
 %build
 	cd $RPM_BUILD_DIR/bochs
-	CONFIGURE_ARGS="--prefix=/usr --mandir=/usr/bochs/man"
+	CONFIGURE_ARGS="--prefix=/usr --mandir=/usr/man"
 	export CONFIGURE_ARGS
 	sh .conf.linux
 	make
@@ -38,7 +38,8 @@ and other OS's, all on your workstation.
 	/usr/bochs/@SEDVERSION@
 	/usr/bochs/dlxlinux
 	/usr/bochs/latest
-	/usr/bochs/man/man1/*
+	/usr/man/man1/bochs*
+	/usr/man/man1/bximage*
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs
 %post
