@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.17 2002-01-18 16:33:47 vruppert Exp $
+// $Id: dma.cc,v 1.18 2002-05-11 13:42:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ bx_dma_c::~bx_dma_c(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.17 2002-01-18 16:33:47 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.18 2002-05-11 13:42:52 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -240,21 +240,11 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
     case 0x008c:
     case 0x008d:
     case 0x008e:
-      BX_ERROR(("read: extra page register 0x%04x unsupported", (unsigned) address));
+      BX_DEBUG(("read: extra page register 0x%04x unsupported", (unsigned) address));
       return(0);
-
-    case 0x00d2:
-    case 0x00d4:
-    case 0x00d6:
-    case 0x00d8:
-    case 0x00dc:
-    case 0x00de:
-      BX_ERROR(("read: unsupported address=%04x", (unsigned) address));
-      return(0);
-      break;
 
     default:
-      BX_PANIC(("read: unsupported address=%04x", (unsigned) address));
+      BX_ERROR(("read: unsupported address=%04x", (unsigned) address));
       return(0);
     }
 }
@@ -501,7 +491,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x008C:
     case 0x008D:
     case 0x008E:
-      BX_ERROR(("write: extra page register 0x%04x unsupported", (unsigned) address));
+      BX_DEBUG(("write: extra page register 0x%04x unsupported", (unsigned) address));
       return;
       break;
 
