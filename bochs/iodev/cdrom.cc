@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.35 2002-07-29 16:42:01 vruppert Exp $
+// $Id: cdrom.cc,v 1.36 2002-07-30 06:25:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -210,7 +210,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.35 2002-07-29 16:42:01 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.36 2002-07-30 06:25:57 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -410,8 +410,59 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
     }
 
   if (using_file) {
-    BX_ERROR (("WARNING: read_toc on a file is not implemented, just returning length=1"));
-    *length = 1;
+    if ((start_track != 1) && (start_track != 0xaa))
+      return false;
+
+    buf[2] = 1;
+    buf[3] = 1;
+
+    int len = 4;
+    if (start_track == 1) {
+      buf[len++] = 0; // Reserved
+      buf[len++] = 0x14; // ADR, control
+      buf[len++] = 1; // Track number
+      buf[len++] = 0; // Reserved
+
+      // Start address
+      if (msf) {
+        buf[len++] = 0; // reserved
+        buf[len++] = 0; // minute
+        buf[len++] = 2; // second
+        buf[len++] = 0; // frame
+      } else {
+        buf[len++] = 0;
+        buf[len++] = 0;
+        buf[len++] = 0;
+        buf[len++] = 0; // logical sector 0
+      }
+    }
+
+    // Lead out track
+    buf[len++] = 0; // Reserved
+    buf[len++] = 0x16; // ADR, control
+    buf[len++] = 0xaa; // Track number
+    buf[len++] = 0; // Reserved
+
+    uint32 blocks = capacity();
+
+    // Start address
+    if (msf) {
+      buf[len++] = 0; // reserved
+      buf[len++] = (uint8)(((blocks + 150) / 75) / 60); // minute
+      buf[len++] = (uint8)(((blocks + 150) / 75) % 60); // second
+      buf[len++] = (uint8)((blocks + 150) % 75); // frame;
+    } else {
+      buf[len++] = (blocks >> 24) & 0xff;
+      buf[len++] = (blocks >> 16) & 0xff;
+      buf[len++] = (blocks >> 8) & 0xff;
+      buf[len++] = (blocks >> 0) & 0xff;
+    }
+
+    buf[0] = ((len-2) >> 8) & 0xff;
+    buf[1] = (len-2) & 0xff;
+
+    *length = len;
+
     return true;
   }
   // all these implementations below are the platform-dependent code required
