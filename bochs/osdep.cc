@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.13 2003-03-11 17:30:20 vruppert Exp $
+// $Id: osdep.cc,v 1.14 2003-05-06 20:28:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -234,6 +234,18 @@ char *bx_strrev(char *str)
   return str;
 }
 #endif  /* !BX_HAVE_STRREV */
+
+#if !BX_HAVE_MKSTEMP
+int bx_mkstemp(char *tpl)
+{
+  mktemp(tpl);
+  return ::open(tpl, O_RDWR | O_CREAT | O_TRUNC
+#  ifdef O_BINARY
+            | O_BINARY
+#  endif
+              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+}
+#endif // !BX_HAVE_MKSTEMP
 
 //////////////////////////////////////////////////////////////////////
 // Missing library functions, implemented for MacOS only

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.15 2003-01-10 22:32:46 cbothamy Exp $
+// $Id: osdep.h,v 1.16 2003-05-06 20:28:13 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,18 @@ extern "C" {
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
 #endif  /* ifnndef __MINGW32__ */
+
 #endif   /* WIN32 */
+
+// Missing defines for open
+#ifndef S_IRUSR
+#define S_IRUSR 0400
+#define S_IWUSR 0200
+#define S_IRGRP 0040
+#define S_IWGRP 0020
+#define S_IROTH 0004
+#define S_IWOTH 0002
+#endif   /* S_IRUSR */
 
 //////////////////////////////////////////////////////////////////////
 // Missing library functions.
@@ -105,6 +116,11 @@ extern "C" {
 #if !BX_HAVE_SOCKLEN_T
 // needed on MacOS X 10.1
 typedef int socklen_t;
+#endif
+
+#if !BX_HAVE_MKSTEMP
+#define mkstemp bx_mkstemp
+  extern int bx_mkstemp(char *tpl);
 #endif
 
 //////////////////////////////////////////////////////////////////////
