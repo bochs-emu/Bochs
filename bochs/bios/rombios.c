@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.78 2002-11-07 21:57:27 cbothamy Exp $
+// $Id: rombios.c,v 1.79 2002-11-14 20:04:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,10 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-/* includes a subset of config.h that can be compiled by bcc, and applies
-   to this file */
-#include "biosconfig.h"
 
 // ROM BIOS for use with Bochs/Plex x86 emulation environment
 
@@ -930,10 +926,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.78 $";
-static char bios_date_string[] = "$Date: 2002-11-07 21:57:27 $";
+static char bios_cvs_version_string[] = "$Revision: 1.79 $";
+static char bios_date_string[] = "$Date: 2002-11-14 20:04:37 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.78 2002-11-07 21:57:27 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.79 2002-11-14 20:04:37 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)

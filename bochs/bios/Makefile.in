@@ -51,13 +51,12 @@ LOCAL_CXXFLAGS =
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
-bios: rombios.bin
+bios: BIOS-bochs-latest BIOS-bochs-2-processors BIOS-bochs-4-processors BIOS-bochs-8-processors 
 
 clean:
 	@RMCOMMAND@ *.o
 	@RMCOMMAND@ *.a
 	@RMCOMMAND@ _rombios_.c
-	@RMCOMMAND@ biosconfig.h
 	@RMCOMMAND@ as86-sym.txt
 	@RMCOMMAND@ ld86-sym.txt
 	@RMCOMMAND@ rombios.txt
@@ -70,17 +69,33 @@ bios-clean:
 	@RMCOMMAND@ *.s
 	@RMCOMMAND@ rombios.bin
 	@RMCOMMAND@ _rombios_.c
+	@RMCOMMAND@ BIOS-bochs-*
 
-rombios.bin: rombios.c biosconfig.h
-	gcc -E $< > _rombios_.c
-#	cat _rombios.c | sed -e "s/##asm/#asm/g" -e "s/##endasm/#endasm/g" > _rombios_.c
-#	bcc-cc1 -o rombios.s -c -D__i86__ -0 _rombios_.c
+BIOS-bochs-latest: rombios.c
+	gcc -DBX_SMP_PROCESSORS=1 -E $< > _rombios_.c
 	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
-	as86 _rombios_.s -b rombios.bin -u- -w- -g -0 -j -O -l rombios.txt
-	ls -l rombios.bin
+	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	mv tmp.bin BIOS-bochs-latest
 
-biosconfig.h: ../config.h
-	@RMCOMMAND@ biosconfig.h
-	echo '// This file generated automatically by bios/Makefile using config.h' > biosconfig.h
-	grep '#define.*SMP_PROCESSORS' ../config.h >> biosconfig.h
+BIOS-bochs-2-processors: rombios.c
+	gcc -DBX_SMP_PROCESSORS=2 -E $< > _rombios_.c
+	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
+	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
+	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	mv tmp.bin BIOS-bochs-2-processors
+
+BIOS-bochs-4-processors: rombios.c
+	gcc -DBX_SMP_PROCESSORS=4 -E $< > _rombios_.c
+	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
+	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
+	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	mv tmp.bin BIOS-bochs-4-processors
+
+BIOS-bochs-8-processors: rombios.c
+	gcc -DBX_SMP_PROCESSORS=8 -E $< > _rombios_.c
+	bcc -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
+	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
+	as86 _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
+	mv tmp.bin BIOS-bochs-8-processors
+
