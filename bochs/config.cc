@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.28 2005-01-08 19:55:54 vruppert Exp $
+// $Id: config.cc,v 1.29 2005-01-24 17:22:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -916,13 +916,13 @@ void bx_init_options ()
                 BXP_USBx_ENABLED(i+1),
                 strdup(name), 
                 strdup(descr), 
-                (i==0)?1 : 0);  // only enable the first by default
+                0);
         bx_options.usb[i].Oioaddr = new bx_param_num_c (
                 BXP_USBx_IOADDR(i+1),
                 "I/O Address",
                 "I/O base adress of USB hub",
                 0, 0xffe0,
-                (i==0)?0xff80 : 0);
+                0);
         bx_options.usb[i].Oport1 = new bx_param_string_c (
                 BXP_USBx_PORT1(i+1), 
                 "port #1 device", 
