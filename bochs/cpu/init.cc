@@ -46,7 +46,7 @@ BX_CPU_C::BX_CPU_C()
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.12 2001-06-27 20:27:48 fries Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.13 2001-08-10 18:42:24 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -555,7 +555,11 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR EXT = 0;
   //BX_INTR = 0;
 
+#if BX_SUPPORT_PAGING
+#if BX_USE_TLB
   TLB_init();
+#endif // BX_USE_TLB
+#endif // BX_SUPPORT_PAGING
 
   BX_CPU_THIS_PTR bytesleft = 0;
   BX_CPU_THIS_PTR fetch_ptr = NULL;

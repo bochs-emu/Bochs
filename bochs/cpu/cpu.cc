@@ -577,12 +577,15 @@ BX_CPU_C::prefetch(void)
     BX_PANIC(("prefetch: EIP > CS.limit"));
     }
 
+#if BX_SUPPORT_PAGING
   if (BX_CPU_THIS_PTR cr0.pg) {
     // aligned block guaranteed to be all in one page, same A20 address
     new_phy_addr = itranslate_linear(new_linear_addr, CPL==3);
     new_phy_addr = A20ADDR(new_phy_addr);
     }
-  else {
+  else
+#endif // BX_SUPPORT_PAGING
+    {
     new_phy_addr = A20ADDR(new_linear_addr);
     }
 

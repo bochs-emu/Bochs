@@ -211,7 +211,7 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     BX_PANIC(("task_switch(): TR not valid"));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
     }
-
+#if BX_SUPPORT_PAGING
   // Check that old TSS, new TSS, and all segment descriptors
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.pg) {
@@ -227,6 +227,7 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // ??? fix RW above
     // ??? touch old/new TSS descriptors here when necessary.
     }
+#endif // BX_SUPPORT_PAGING
 
   // Need to fetch all new registers and temporarily store them.
 
