@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.34 2002-10-25 11:44:33 bdenney Exp $
+// $Id: logio.cc,v 1.35 2002-10-27 13:20:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,7 +87,8 @@ iofunctions::init_log(const char *fn)
 			log->ldebug ("Opened log file '%s'.", fn );
 		} else {
 			// in constructor, genlog might not exist yet, so do it the safe way.
-		  	log->ldebug("Couldn't open log file: %s", fn);
+		  	log->error("Couldn't open log file: %s, using stderr instead", fn);
+		  	newfd = stderr;
 		}
 	}
 	logfd = newfd;
