@@ -1,0 +1,595 @@
+----------------------------------------------------------------------
+Patch name: patch.pic-irqhandling
+Author: Volker Ruppert
+Date: Sun Jan 27 17:57:00 CET 2002
+
+Detailed description:
+  This patch implements the edge triggered mode of the PIC.
+  The new functions are raise_irq() and lower_irq(). All devices
+  that use an IRQ will be modified with this patch. I have changed
+  all trigger_irq() calls to raise_irq() and looked for the conditions
+  to call lower_irq(). Most of them I found in the documentation, others
+  (timer, keyboard and mouse) I have added after a lot of tests. Linux
+  (kernel 2.2.18) and Windows 95 are working without problems with this
+  patch.
+
+  Here a short description of the edge triggered mode:
+
+  An interrupt request will be recognized by a low to high transition of the
+  IR input. The IR input can remain high without generating another interrupt.
+  The IR input must remain high until the CPU acknowledges the interrupt. To
+  generate a new IRQ the line must be driven low before.
+
+  TODO:
+  
+  - the IOAPIC handling is not modified by this patch
+  - the timer IRQ handling is not correct
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -urN ../bochs/iodev/cmos.cc ./iodev/cmos.cc
+--- ../bochs/iodev/cmos.cc	Sat Jan 26 11:00:08 2002
++++ ./iodev/cmos.cc	Sat Jan 26 11:06:10 2002
+@@ -251,7 +251,7 @@
+       // all bits of Register C are cleared after a read occurs.
+       if (BX_CMOS_THIS s.cmos_mem_address == 0x0c) {
+         BX_CMOS_THIS s.reg[0x0c] = 0x00;
+-        BX_CMOS_THIS devices->pic->untrigger_irq(8);
++        BX_CMOS_THIS devices->pic->lower_irq(8);
+         }
+       return(ret8);
+       break;
+@@ -513,7 +513,7 @@
+   // update status register C
+   if (BX_CMOS_THIS s.reg[0x0b] & 0x40) {
+     BX_CMOS_THIS s.reg[0x0c] |= 0xc0; // Interrupt Request, Periodic Int
+-    BX_CMOS_THIS devices->pic->trigger_irq(8);
++    BX_CMOS_THIS devices->pic->raise_irq(8);
+     }
+ }
+ 
+@@ -542,7 +542,7 @@
+   // update status register C
+   if (BX_CMOS_THIS s.reg[0x0b] & 0x10) {
+     BX_CMOS_THIS s.reg[0x0c] |= 0x90; // Interrupt Request, Update Ended
+-    BX_CMOS_THIS devices->pic->trigger_irq(8);
++    BX_CMOS_THIS devices->pic->raise_irq(8);
+     }
+ 
+   // compare CMOS user copy of time/date to alarm time/date here
+@@ -566,7 +566,7 @@
+       }
+     if (alarm_match) {
+       BX_CMOS_THIS s.reg[0x0c] |= 0xa0; // Interrupt Request, Alarm Int
+-      BX_CMOS_THIS devices->pic->trigger_irq(8);
++      BX_CMOS_THIS devices->pic->raise_irq(8);
+       }
+     }
+ }
+diff -urN ../bochs/iodev/devices.cc ./iodev/devices.cc
+--- ../bochs/iodev/devices.cc	Tue Dec 18 14:12:45 2001
++++ ./iodev/devices.cc	Sun Jan 27 16:47:47 2002
+@@ -301,18 +301,18 @@
+ 
+ #if (BX_USE_NEW_PIT==0)
+   if ( pit->periodic( TIMER_DELTA ) ) {
+-    pic->trigger_irq(0);
++    // This is a hack to make the IRQ0 work
++    pic->lower_irq(0);
++    pic->raise_irq(0);
+     }
+ #endif
+ 
+   retval = keyboard->periodic( TIMER_DELTA );
+-  if (retval & 0x01) {
+-    if (bx_dbg.keyboard)
+-      BX_INFO(("keyboard: interrupt(1)"));
+-    pic->trigger_irq(1);
+-    }
++  if (retval & 0x01)
++    pic->raise_irq(1);
++
+   if (retval & 0x02)
+-    pic->trigger_irq(12);
++    pic->raise_irq(12);
+ 
+ #if BX_SUPPORT_APIC
+   // update local APIC timers
+diff -urN ../bochs/iodev/floppy.cc ./iodev/floppy.cc
+--- ../bochs/iodev/floppy.cc	Wed Jan 23 21:23:07 2002
++++ ./iodev/floppy.cc	Wed Jan 23 21:43:41 2002
+@@ -315,7 +315,7 @@
+         BX_FD_THIS s.result_index = 0;
+         BX_FD_THIS s.result[0] = value;
+         BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
+-        BX_FD_THIS devices->pic->untrigger_irq(6);
++        BX_FD_THIS devices->pic->lower_irq(6);
+         BX_FD_THIS s.pending_irq = 0;
+         }
+       return(value);
+@@ -737,7 +737,7 @@
+           // 4 result bytes are unused
+           BX_FD_THIS s.pending_command = 0;
+           BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-          BX_FD_THIS devices->pic->trigger_irq(6);
++          BX_FD_THIS devices->pic->raise_irq(6);
+           BX_FD_THIS s.pending_irq = 1;
+           return;
+           }
+@@ -753,7 +753,7 @@
+           // 4 result bytes are unused
+           BX_FD_THIS s.pending_command = 0;
+           BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-          BX_FD_THIS devices->pic->trigger_irq(6);
++          BX_FD_THIS devices->pic->raise_irq(6);
+           BX_FD_THIS s.pending_irq = 1;
+           return;
+           }
+@@ -821,7 +821,7 @@
+ 
+         BX_FD_THIS s.pending_command = 0;
+         BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-        BX_FD_THIS devices->pic->trigger_irq(6);
++        BX_FD_THIS devices->pic->raise_irq(6);
+         BX_FD_THIS s.pending_irq = 1;
+         return;
+       }
+@@ -845,7 +845,7 @@
+ 
+         BX_FD_THIS s.pending_command = 0;
+         BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+-        BX_FD_THIS devices->pic->trigger_irq(6);
++        BX_FD_THIS devices->pic->raise_irq(6);
+         BX_FD_THIS s.pending_irq = 1;
+         return;
+         }
+@@ -1036,7 +1036,7 @@
+       /* write ready, not busy */
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
+       BX_FD_THIS s.status_reg0 = 0x20 | drive;
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       BX_FD_THIS s.pending_irq = 1;
+       goto reset_changeline;
+       break;
+@@ -1046,7 +1046,7 @@
+       /* write ready, not busy */
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
+       BX_FD_THIS s.status_reg0 = 0x20 | drive;
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       BX_FD_THIS s.pending_irq = 1;
+       goto reset_changeline;
+       break;
+@@ -1057,7 +1057,7 @@
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO;
+       BX_FD_THIS s.status_reg0 = 0x20 | drive;
+       BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       BX_FD_THIS s.pending_irq = 1;
+       break;
+ 
+@@ -1069,7 +1069,7 @@
+       /* read ready, busy */
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+       BX_FD_THIS s.status_reg0 = 0x20 | drive;
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       BX_FD_THIS s.pending_irq = 1;
+       break;
+ 
+@@ -1077,7 +1077,7 @@
+       reset(BX_RESET_SOFTWARE);
+       BX_FD_THIS s.pending_command = 0;
+       BX_FD_THIS s.status_reg0 = 0xc0;
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       BX_FD_THIS s.pending_irq = 1;
+       break;
+ 
+@@ -1132,7 +1132,7 @@
+         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+         }
+ 
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
+       }
+     else { // more data to transfer
+@@ -1198,7 +1198,7 @@
+       BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
+       BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
+       // 4 result bytes are unused
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       BX_FD_THIS s.pending_irq = 1;
+       bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
+       }
+@@ -1229,7 +1229,7 @@
+ 
+     BX_FD_THIS s.pending_command = 0;
+     BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
+-    BX_FD_THIS devices->pic->trigger_irq(6);
++    BX_FD_THIS devices->pic->raise_irq(6);
+     return;
+     }
+     floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+@@ -1258,7 +1258,7 @@
+         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+         }
+ 
+-      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS devices->pic->raise_irq(6);
+       bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
+       }
+     else { // more data to transfer
+diff -urN ../bochs/iodev/harddrv.cc ./iodev/harddrv.cc
+--- ../bochs/iodev/harddrv.cc	Sun Jan 20 13:38:35 2002
++++ ./iodev/harddrv.cc	Tue Jan 22 18:07:34 2002
+@@ -732,7 +732,7 @@
+         BX_SELECTED_CONTROLLER.status.index_pulse_count = 0;
+         }
+       }
+-      if (address == 0x1f7) BX_HD_THIS devices->pic->untrigger_irq(14);
++      if (address == 0x1f7) BX_HD_THIS devices->pic->lower_irq(14);
+       goto return_value8;
+       break;
+ 
+@@ -2578,7 +2578,7 @@
+ 	    Bit32u irq = 14;  // always 1st IDE controller
+ 	    // for second controller, you would want irq 15
+ 		BX_DEBUG(("Raising interrupt %d {%s}", irq, DEVICE_TYPE_STRING));
+-	    BX_HD_THIS devices->pic->trigger_irq(irq);
++	    BX_HD_THIS devices->pic->raise_irq(irq);
+       } else {
+ 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
+ 		  BX_INFO(("Interrupt masked {%s}", DEVICE_TYPE_STRING));
+diff -urN ../bochs/iodev/keyboard.cc ./iodev/keyboard.cc
+--- ../bochs/iodev/keyboard.cc	Sun Jan 27 01:41:38 2002
++++ ./iodev/keyboard.cc	Sun Jan 27 01:52:29 2002
+@@ -295,8 +295,8 @@
+           (BX_KEY_THIS s.kbd_controller.sysf << 2)  |
+           (BX_KEY_THIS s.kbd_controller.inpb << 1)  |
+           BX_KEY_THIS s.kbd_controller.outb;
+-    BX_KEY_THIS devices->pic->untrigger_irq(1);
+-    BX_KEY_THIS devices->pic->untrigger_irq(12);
++    BX_KEY_THIS devices->pic->lower_irq(1);
++    BX_KEY_THIS devices->pic->lower_irq(12);
+     RETURN(val);
+     }
+ 
+diff -urN ../bochs/iodev/ne2k.cc ./iodev/ne2k.cc
+--- ../bochs/iodev/ne2k.cc	Fri Jan 25 21:31:00 2002
++++ ./iodev/ne2k.cc	Fri Jan 25 21:45:22 2002
+@@ -207,7 +207,7 @@
+       BX_NE2K_THIS s.remote_bytes == 0) {
+     BX_NE2K_THIS s.ISR.rdma_done = 1;
+     if (BX_NE2K_THIS s.IMR.rdma_inte) {
+-      BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++      BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+     }
+   }
+ }
+@@ -306,7 +306,7 @@
+ 	if (BX_NE2K_THIS s.remote_bytes == 0) {
+ 	    BX_NE2K_THIS s.ISR.rdma_done = 1;
+ 	    if (BX_NE2K_THIS s.IMR.rdma_inte) {
+-		BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++		BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+ 	    }
+ 	}
+     break;
+@@ -349,7 +349,7 @@
+     if (BX_NE2K_THIS s.remote_bytes == 0) {
+       BX_NE2K_THIS s.ISR.rdma_done = 1;
+       if (BX_NE2K_THIS s.IMR.rdma_inte) {
+-	  BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++	  BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+       }
+     }
+     break;
+@@ -546,7 +546,7 @@
+               (BX_NE2K_THIS s.IMR.tx_inte << 1) |
+               (BX_NE2K_THIS s.IMR.rx_inte));
+     if (value == 0)
+-      BX_NE2K_THIS devices->pic->untrigger_irq(BX_NE2K_THIS s.base_irq);
++      BX_NE2K_THIS devices->pic->lower_irq(BX_NE2K_THIS s.base_irq);
+     break;
+ 
+   case 0x8:  // RSAR0
+@@ -947,7 +947,7 @@
+   // Generate an interrupt if not masked and not one in progress
+   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
+     BX_NE2K_THIS s.ISR.pkt_tx = 1;
+-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+   }
+   BX_NE2K_THIS s.tx_timer_active = 0;
+ }
+@@ -1226,7 +1226,7 @@
+   BX_NE2K_THIS s.ISR.pkt_rx = 1;
+ 
+   if (BX_NE2K_THIS s.IMR.rx_inte) {
+-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
++    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+   }
+ 
+ }
+diff -urN ../bochs/iodev/parallel.cc ./iodev/parallel.cc
+--- ../bochs/iodev/parallel.cc	Fri Jan 18 17:33:07 2002
++++ ./iodev/parallel.cc	Tue Jan 22 17:32:22 2002
+@@ -104,7 +104,7 @@
+       fflush (OUTPUT);
+       }
+     if (BX_PAR_THIS s.CONTROL.irq == 1) {
+-      BX_PAR_THIS devices->pic->trigger_irq(7);
++      BX_PAR_THIS devices->pic->raise_irq(7);
+       }
+     BX_PAR_THIS s.STATUS.ack = 0;
+     BX_PAR_THIS s.STATUS.busy = 1;
+@@ -157,7 +157,7 @@
+ 	  if (BX_PAR_THIS s.STATUS.ack == 0) {
+ 	    BX_PAR_THIS s.STATUS.ack = 1;
+             if (BX_PAR_THIS s.CONTROL.irq == 1) {
+-              BX_PAR_THIS devices->pic->untrigger_irq(7);
++              BX_PAR_THIS devices->pic->lower_irq(7);
+ 	      }
+ 	    }
+ 	  if (BX_PAR_THIS initmode == 1) {
+diff -urN ../bochs/iodev/pic.cc ./iodev/pic.cc
+--- ../bochs/iodev/pic.cc	Sat Jan 26 13:03:55 2002
++++ ./iodev/pic.cc	Sun Jan 27 16:56:59 2002
+@@ -520,21 +520,49 @@
+   return;
+ }
+ 
+-// new IRQ signal handling routines (under construction)
++// new IRQ signal handling routines
+ 
+   void
+ bx_pic_c::lower_irq(unsigned irq_no)
+ {
+-  UNUSED(irq_no);
++  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
++    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
++    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 0;
++    BX_PIC_THIS s.master_pic.irr &= ~(1 << irq_no);
++    if ((BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr) == 0) {
++      BX_SET_INTR(0);
++      BX_PIC_THIS s.master_pic.INT = 0;
++    }
++  } else if ((irq_no > 7) && (irq_no <= 15) &&
++             (BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
++    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
++    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 0;
++    BX_PIC_THIS s.slave_pic.irr &= ~(1 << (irq_no - 8));
++    if ((BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr) == 0) {
++      BX_PIC_THIS s.slave_pic.INT = 0;
++      lower_irq(2);
++    }
++  }
+ }
+ 
+   void
+ bx_pic_c::raise_irq(unsigned irq_no)
+ {
+-  UNUSED(irq_no);
++  if ((irq_no <= 7) && (!BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
++    BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
++    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 1;
++    BX_PIC_THIS s.master_pic.irr |= (1 << irq_no);
++    service_master_pic();
++  } else if ((irq_no > 7) && (irq_no <= 15) &&
++             (!BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
++    BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
++    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 1;
++    BX_PIC_THIS s.slave_pic.irr |= (1 << (irq_no - 8));
++    service_slave_pic();
++  }
+ }
+ 
+-// current IRQ handling routines
++// old IRQ handling routines (unused)
+ 
+   void
+ bx_pic_c::trigger_irq(unsigned irq_no)
+@@ -695,9 +723,8 @@
+           BX_DEBUG(("slave: signalling IRQ(%u)",
+             (unsigned) 8 + irq));
+         BX_PIC_THIS s.slave_pic.INT = 1;
+-        BX_PIC_THIS s.master_pic.irr |= 0x04; /* request IRQ 2 on master pic */
++        raise_irq(2); /* request IRQ 2 on master pic */
+         BX_PIC_THIS s.slave_pic.irq = irq;
+-        service_master_pic();
+         return;
+         } /* if (unmasked_requests & ... */
+       } /* for (irq=7 ... */
+@@ -723,6 +750,7 @@
+     }
+   else { /* IRQ2 = slave pic IRQ8..15 */
+     BX_PIC_THIS s.slave_pic.INT = 0;
++    BX_PIC_THIS s.master_pic.IRQ_line[2] = 0;
+     irq    = BX_PIC_THIS s.slave_pic.irq;
+     vector = irq + BX_PIC_THIS s.slave_pic.interrupt_offset;
+     BX_PIC_THIS s.slave_pic.isr |= (1 << BX_PIC_THIS s.slave_pic.irq);
+diff -urN ../bochs/iodev/pit_wrap.cc ./iodev/pit_wrap.cc
+--- ../bochs/iodev/pit_wrap.cc	Thu Oct 11 15:01:27 2001
++++ ./iodev/pit_wrap.cc	Sun Jan 27 16:52:29 2002
+@@ -131,7 +131,9 @@
+   BX_DEBUG(("pit: entering timer handler"));
+ 
+   if(time_passed32 && periodic(time_passed32)) {
+-    bx_pic.trigger_irq(0);
++    // This is a hack to make the IRQ0 work
++    bx_pic.lower_irq(0);
++    bx_pic.raise_irq(0);
+   }
+   BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
+   if(time_passed ||
+@@ -243,7 +245,9 @@
+   BX_DEBUG(("pit: entering write handler"));
+ 
+   if(time_passed32 && periodic(time_passed32)) {
+-    bx_pic.trigger_irq(0);
++    // This is a hack to make the IRQ0 work
++    bx_pic.lower_irq(0);
++    bx_pic.raise_irq(0);
+   }
+   BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
+ 
+@@ -347,7 +351,6 @@
+   Boolean
+ bx_pit_c::periodic( Bit32u   usec_delta )
+ {
+-  Bit32u i=0;
+   Boolean prev_timer0_out = BX_PIT_THIS s.timer.read_OUT(0);
+   Boolean want_interrupt = 0;
+   Bit32u ticks_delta=(Bit32u)(USEC_TO_TICKS((Bit64u)(usec_delta)));
+diff -urN ../bochs/iodev/sb16.cc ./iodev/sb16.cc
+--- ../bochs/iodev/sb16.cc	Fri Jan 25 21:31:42 2002
++++ ./iodev/sb16.cc	Fri Jan 25 21:48:36 2002
+@@ -321,7 +321,7 @@
+ 
+       if (DSP.irqpending != 0)
+ 	{
+-	  BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
++	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+ 	  writelog(WAVELOG(4), "DSP reset: IRQ untriggered");
+ 	}
+       if (DSP.dma.mode != 0)
+@@ -855,7 +855,7 @@
+ 	  DSP.dataout.put(0xaa);
+ 	  DSP.irqpending = 1;
+ 	  MIXER.reg[0x82] |= 1; // reg 82 shows the kind of IRQ
+-	  BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQ);
++	  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
+ 	  break;
+ 
+ 	  // unknown command
+@@ -997,7 +997,7 @@
+       writelog( WAVELOG(4), "8-bit DMA or SBMIDI IRQ acknowledged");
+       if (MIXER.reg[0x82] == 0) {
+         DSP.irqpending = 0;
+-        BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
++        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+       }
+     }
+ 
+@@ -1020,7 +1020,7 @@
+       MIXER.reg[0x82] &= (~0x02);
+       if (MIXER.reg[0x82] == 0) {
+         DSP.irqpending = 0;
+-        BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
++        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+       }
+       writelog( WAVELOG(4), "16-bit DMA IRQ acknowledged");
+     }
+@@ -1145,7 +1145,7 @@
+  else
+     MIXER.reg[0x82] |= 2;
+ 
+-  BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQ);
++  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
+   DSP.irqpending = 1;
+ 
+   //if auto-DMA, reinitialize
+@@ -1430,7 +1430,7 @@
+ 	  if (BX_SB16_IRQMPU != -1)
+ 	    {
+ 	      MIXER.reg[0x82] |= 4;
+-	      BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQMPU);
++	      BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQMPU);
+ 	    }
+ 	  break;
+ 
+@@ -1493,7 +1493,7 @@
+ 	MPU.irqpending = 0;
+ 	MIXER.reg[0x82] &= (~4);
+ 	if (MIXER.reg[0x82] == 0)
+-	  BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQMPU);
++	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQMPU);
+ 	writelog(MIDILOG(4), "MPU IRQ acknowledged");
+       }
+ 
+diff -urN ../bochs/iodev/serial.cc ./iodev/serial.cc
+--- ../bochs/iodev/serial.cc	Sun Jan 20 17:35:32 2002
++++ ./iodev/serial.cc	Mon Jan 21 20:33:36 2002
+@@ -272,7 +272,7 @@
+         if ((BX_SER_THIS s[0].tx_interrupt == 0) &&
+             (BX_SER_THIS s[0].ls_interrupt == 0) &&
+             (BX_SER_THIS s[0].ms_interrupt == 0)) {
+-          BX_SER_THIS devices->pic->untrigger_irq(4);
++          BX_SER_THIS devices->pic->lower_irq(4);
+         }
+         BX_SER_THIS s[0].rx_interrupt = 0;
+         BX_SER_THIS s[0].rx_ipending = 0;
+@@ -315,7 +315,7 @@
+       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
+           (BX_SER_THIS s[0].ls_interrupt == 0) &&
+           (BX_SER_THIS s[0].ms_interrupt == 0)) {
+-        BX_SER_THIS devices->pic->untrigger_irq(4);
++        BX_SER_THIS devices->pic->lower_irq(4);
+       }
+ 
+       BX_SER_THIS s[0].tx_interrupt = 0;
+@@ -359,7 +359,7 @@
+       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
+           (BX_SER_THIS s[0].tx_interrupt == 0) &&
+           (BX_SER_THIS s[0].ms_interrupt == 0)) {
+-        BX_SER_THIS devices->pic->untrigger_irq(4);
++        BX_SER_THIS devices->pic->lower_irq(4);
+       }
+       BX_SER_THIS s[0].ls_interrupt = 0;
+       BX_SER_THIS s[0].ls_ipending = 0;
+@@ -382,7 +382,7 @@
+       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
+           (BX_SER_THIS s[0].tx_interrupt == 0) &&
+           (BX_SER_THIS s[0].ls_interrupt == 0)) {
+-        BX_SER_THIS devices->pic->untrigger_irq(4);
++        BX_SER_THIS devices->pic->lower_irq(4);
+       }
+       BX_SER_THIS s[0].ms_interrupt = 0;
+       BX_SER_THIS s[0].ms_ipending = 0;
+@@ -459,7 +459,7 @@
+           if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
+               (BX_SER_THIS s[0].ls_interrupt == 0) &&
+               (BX_SER_THIS s[0].ms_interrupt == 0)) {
+-            BX_SER_THIS devices->pic->untrigger_irq(4);
++            BX_SER_THIS devices->pic->lower_irq(4);
+           }
+           BX_SER_THIS s[0].tx_interrupt = 0;
+           BX_SER_THIS s[0].tx_ipending = 0;
+@@ -516,7 +516,7 @@
+         }
+         }
+         if (gen_int == 1)
+-          BX_SER_THIS devices->pic->trigger_irq(4);
++          BX_SER_THIS devices->pic->raise_irq(4);
+       }
+       break;
+ 
+@@ -708,7 +708,7 @@
+   }
+ 
+   if (gen_int) {
+-    BX_SER_THIS devices->pic->trigger_irq(4);
++    BX_SER_THIS devices->pic->raise_irq(4);
+   }
+ }
+ 
+@@ -777,7 +777,7 @@
+         BX_SER_THIS s[0].rx_empty = 0;
+         if (BX_SER_THIS s[0].int_enable.rxdata_enable) {
+           BX_SER_THIS s[0].rx_interrupt = 1;
+-          BX_SER_THIS devices->pic->trigger_irq(4);
++          BX_SER_THIS devices->pic->raise_irq(4);
+         } else {
+           BX_SER_THIS s[0].rx_ipending = 1;
+         }
