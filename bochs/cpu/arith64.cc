@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.18 2004-08-14 20:00:23 sshwarts Exp $
+// $Id: arith64.cc,v 1.19 2004-08-14 20:09:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -631,7 +631,7 @@ BX_CPU_C::NEG_Eq(bxInstruction_c *i)
       Write_RMW_virtual_qword(diff_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, 0, diff_64, BX_INSTR_NEG64);
+    SET_FLAGS_OSZAPC_S1_64(op1_64, diff_64, BX_INSTR_NEG64);
 }
 
   void

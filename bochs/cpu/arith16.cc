@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.32 2004-08-14 20:00:22 sshwarts Exp $
+// $Id: arith16.cc,v 1.33 2004-08-14 20:09:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -646,9 +646,8 @@ BX_CPU_C::NEG_Ew(bxInstruction_c *i)
     Write_RMW_virtual_word(diff_16);
     }
 
-  SET_FLAGS_OSZAPC_16(op1_16, 0, diff_16, BX_INSTR_NEG16);
+  SET_FLAGS_OSZAPC_S1_16(op1_16, diff_16, BX_INSTR_NEG16);
 }
-
 
   void
 BX_CPU_C::INC_Ew(bxInstruction_c *i)
