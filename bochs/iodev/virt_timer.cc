@@ -74,7 +74,7 @@ bx_virt_timer_c::~bx_virt_timer_c( void )
 
 
 
-const Bit64u bx_pc_system_c::NullTimerInterval = BX_MAX_VIRTUAL_TIME;
+const Bit64u bx_virt_timer_c::NullTimerInterval = BX_MAX_VIRTUAL_TIME;
 
 void
 bx_virt_timer_c::nullTimer(void* this_ptr) {
@@ -306,6 +306,22 @@ bx_virt_timer_c::init(void) {
   register_timer(this, nullTimer, NullTimerInterval, 1, 1, "Null Timer");
 
   system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler, BX_MAX_VIRTUAL_TIME, 0, 1, "Virtual Timer");
+
+  //Real time variables:
+  last_real_time=GET_VIRT_REALTIME64_USEC()+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
+  total_real_usec=0;
+  last_realtime_delta=0;
+  //System time variables:
+  last_usec;
+  usec_per_second = USEC_PER_SECOND;
+  stored_delta=0;
+  last_system_usec=0;
+  em_last_realtime=0;
+  //Virtual timer variables:
+  total_ticks=0;
+  last_realtime_ticks=0;
+  ticks_per_second = USEC_PER_SECOND;
+
 }
 
 void
