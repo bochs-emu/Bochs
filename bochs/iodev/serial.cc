@@ -89,7 +89,7 @@ bx_serial_c::bx_serial_c(void)
 #endif   /* def __FreeBSD__ */
   // nothing for now
 #if USE_RAW_SERIAL
-  raw = new serial_raw("/dev/cua0", SIGUSR1);
+  this->raw = new serial_raw("/dev/cua0", SIGUSR1);
 #endif // USE_RAW_SERIAL
 }
 
@@ -242,9 +242,8 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 	     (unsigned) address,
              (unsigned) io_len));
 
-  if (bx_dbg.serial)
-    BX_INFO(("serial register read from address 0x%x - ",
-	      (unsigned) address));
+  BX_DEBUG(("serial register read from address 0x%x - ",
+	    (unsigned) address));
 
   switch (address) {
     case 0x03F8: /* receive buffer, or divisor latch LSB if DLAB set */
@@ -354,9 +353,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
   }
 
-  if (bx_dbg.serial)
-    BX_INFO(("val =  0x%x",
-	      (unsigned) val));
+  BX_DEBUG(("val =  0x%x", (unsigned) val));
 
   return(val);
 }
@@ -387,8 +384,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
     BX_PANIC(("serial: io write to address %08x len=%u",
              (unsigned) address, (unsigned) io_len));
 
-  if (bx_dbg.serial)
-    BX_INFO(("serial: write to address: 0x%x = 0x%x",
+  BX_DEBUG(("serial: write to address: 0x%x = 0x%x",
 	      (unsigned) address, (unsigned) value));
 
   switch (address) {
@@ -497,9 +493,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		      (int) (1000000.0 / (BX_SER_THIS s[0].baudrate / 4)),
 				      0); /* not continuous */
 	}
-	if (bx_dbg.serial) {
-	  BX_INFO(("serial: baud rate set - %d", BX_SER_THIS s[0].baudrate));
-	}
+	BX_DEBUG(("serial: baud rate set - %d", BX_SER_THIS s[0].baudrate));
       }
       BX_SER_THIS s[0].line_cntl.dlab = (value & 0x80) >> 7;
       break;
