@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.44 2004-01-18 11:58:06 vruppert Exp $
+// $Id: serial.cc,v 1.45 2004-01-25 13:01:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -186,7 +186,7 @@ bx_serial_c::init(void)
       BX_SER_THIS s[i].baudrate = 115200;
 
       for (unsigned addr=ports[i]; addr<(unsigned)(ports[i]+8); addr++) {
-        BX_DEBUG(("register read/write: 0x%04x",addr));
+        BX_DEBUG(("com%d register read/write: 0x%04x",i+1, addr));
         DEV_register_ioread_handler(this, read_handler, addr, name, 1);
         DEV_register_iowrite_handler(this, write_handler, addr, name, 1);
       }
@@ -196,8 +196,8 @@ bx_serial_c::init(void)
       if (strlen(bx_options.com[i].Odev->getptr ()) > 0) {
         BX_SER_THIS s[i].tty_id = open(bx_options.com[i].Odev->getptr (), O_RDWR|O_NONBLOCK,600);
         if (BX_SER_THIS s[i].tty_id < 0)
-          BX_PANIC(("open of com%d (%s) failed\n", i, bx_options.com[i].Odev->getptr ()));
-        BX_DEBUG(("com%d tty_id: %d", i, BX_SER_THIS s[i].tty_id));
+          BX_PANIC(("open of com%d (%s) failed\n", i+1, bx_options.com[i].Odev->getptr ()));
+        BX_DEBUG(("com%d tty_id: %d", i+1, BX_SER_THIS s[i].tty_id));
         tcgetattr(BX_SER_THIS s[i].tty_id, &BX_SER_THIS s[i].term_orig);
         bcopy((caddr_t) &BX_SER_THIS s[i].term_orig, (caddr_t) &BX_SER_THIS s[i].term_new, sizeof(struct termios));
         cfmakeraw(&BX_SER_THIS s[i].term_new);
@@ -549,10 +549,10 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             if (BX_SER_THIS s[port].tx_fifo_end < 16) {
               BX_SER_THIS s[port].tx_fifo[BX_SER_THIS s[port].tx_fifo_end++] = value & bitmask;
             } else {
-              BX_ERROR(("com1: transmit FIFO overflow"));
+              BX_ERROR(("com%d: transmit FIFO overflow", port+1));
             }
           } else {
-            BX_ERROR(("write to tx hold register when not empty"));
+            BX_ERROR(("com%d: write to tx hold register when not empty", port+1));
           }
         }
       }
@@ -649,7 +649,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case BX_SER_FCR: /* FIFO control register */
       if (!BX_SER_THIS s[port].fifo_cntl.enable && (value & 0x01)) {
-        BX_INFO(("FIFO enabled"));
+        BX_INFO(("com%d: FIFO enabled", port+1));
         BX_SER_THIS s[port].rx_fifo_end = 0;
         BX_SER_THIS s[port].tx_fifo_end = 0;
       }
@@ -681,7 +681,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SER_THIS s[port].line_cntl.stick_parity != (value & 0x20) >> 5) {
             if (((value & 0x20) >> 5) &&
                 ((value & 0x8) >> 3))
-              BX_PANIC(("sticky parity set and parity enabled"));
+              BX_PANIC(("com%d: sticky parity set and parity enabled", port+1));
         BX_SER_THIS s[port].raw->set_parity_mode(((value & 0x8) >> 3),
                                                  ((value & 0x10) >> 4) ? P_EVEN : P_ODD);
       }
@@ -710,7 +710,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                       (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5)),
                                       0); /* not continuous */
         }
-        BX_DEBUG(("baud rate set - %d", BX_SER_THIS s[port].baudrate));
+        BX_DEBUG(("com%d: baud rate set - %d", port+1, BX_SER_THIS s[port].baudrate));
       }
       BX_SER_THIS s[port].line_cntl.dlab = (value & 0x80) >> 7;
       break;
@@ -764,11 +764,11 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case BX_SER_LSR: /* Line status register */
-      BX_ERROR(("write to line status register ignored"));
+      BX_ERROR(("com%d: write to line status register ignored", port+1));
       break;
 
     case BX_SER_MSR: /* MODEM status register */
-      BX_ERROR(("write to MODEM status register ignored"));
+      BX_ERROR(("com%d: write to MODEM status register ignored", port+1));
       break;
 
     case BX_SER_SCR: /* scratch register */
@@ -790,7 +790,7 @@ bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
 
   if (BX_SER_THIS s[port].fifo_cntl.enable) {
     if (BX_SER_THIS s[port].rx_fifo_end == 16) {
-      BX_ERROR(("com%d: receive FIFO overflow", port + 1));
+      BX_ERROR(("com%d: receive FIFO overflow", port+1));
       BX_SER_THIS s[port].line_status.overrun_error = 1;
       raise_interrupt(port, BX_SER_INT_RXLSTAT);
     } else {
@@ -821,7 +821,7 @@ bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
     }
   } else {
     if (BX_SER_THIS s[port].line_status.rxdata_ready == 1) {
-      BX_ERROR(("com%d: overrun error", port + 1));
+      BX_ERROR(("com%d: overrun error", port+1));
       BX_SER_THIS s[port].line_status.overrun_error = 1;
       raise_interrupt(port, BX_SER_INT_RXLSTAT);
     }
@@ -863,10 +863,10 @@ bx_serial_c::tx_timer(void)
   } else {
 #if USE_RAW_SERIAL
     if (!BX_SER_THIS s[port].raw->ready_transmit())
-      BX_PANIC(("Not ready to transmit"));
+      BX_PANIC(("com%d: not ready to transmit", port+1));
     BX_SER_THIS s[port].raw->transmit(BX_SER_THIS s[port].tsrbuffer);
 #elif defined(SERIAL_ENABLE)
-    BX_DEBUG(("write: '%c'", BX_SER_THIS s[port].tsrbuffer));
+    BX_DEBUG(("com%d: write: '%c'", port+1, BX_SER_THIS s[port].tsrbuffer));
     if (BX_SER_THIS s[port].tty_id >= 0) {
       write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
     }
@@ -952,7 +952,7 @@ bx_serial_c::rx_timer(void)
     if ((rdy = BX_SER_THIS s[port].raw->ready_receive())) {
       data = BX_SER_THIS s[port].raw->receive();
       if (data == C_BREAK) {
-        BX_DEBUG(("got BREAK"));
+        BX_DEBUG(("com%d: got BREAK", port+1));
         BX_SER_THIS s[port].line_status.break_int = 1;
         rdy = 0;
       }
@@ -962,7 +962,7 @@ bx_serial_c::rx_timer(void)
 #elif defined(SERIAL_ENABLE)
     if ((BX_SER_THIS s[port].tty_id >= 0) && (select(BX_SER_THIS s[port].tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
       (void) read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
-      BX_DEBUG(("read: '%c'",chbuf));
+      BX_DEBUG(("com%d: read: '%c'", port+1, chbuf));
 #else
     if (0) {
 #endif
