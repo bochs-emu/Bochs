@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.20 2001-06-19 04:55:01 bdenney Exp $
+ * $Id: siminterface.cc,v 1.21 2001-06-19 05:01:46 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -122,7 +122,7 @@ bx_real_sim_c::bx_real_sim_c ()
 {
   callback = NULL;
   notify_return_val = -1;
-  for (int i=0; i<NOTIFY_TYPE_STRING; i++) {
+  for (int i=0; i<BX_NOTIFY_MAX_ARGS; i++) {
     notify_int_args[i] = -1;
     notify_string_args[i] = NULL;
   }
