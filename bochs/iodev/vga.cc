@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.90 2003-10-31 15:49:29 vruppert Exp $
+// $Id: vga.cc,v 1.91 2003-11-01 10:28:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -765,26 +765,6 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
     return;
 
   switch (address) {
-    case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
-      BX_VGA_THIS s.CRTC.address = value & 0x7f;
-      if (BX_VGA_THIS s.CRTC.address > 0x18)
-        BX_DEBUG(("write: invalid CRTC register 0x%02x selected",
-          (unsigned) BX_VGA_THIS s.CRTC.address));
-      break;
-
-    case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
-      if (BX_VGA_THIS s.CRTC.address > 0x18) {
-        BX_DEBUG(("write: invalid CRTC register 0x%02x ignored",
-          (unsigned) BX_VGA_THIS s.CRTC.address));
-        return;
-      }
-      BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
-#if !defined(VGA_TRACE_FEATURE)
-      BX_DEBUG(("mono CRTC Reg[%u] = %02x",
-          (unsigned) BX_VGA_THIS s.CRTC.address, (unsigned) value));
-#endif
-      break;
-
     case 0x03ba: /* Feature Control (monochrome emulation modes) */
 #if !defined(VGA_TRACE_FEATURE)
       BX_DEBUG(("io write 3ba: feature control: ignoring"));
@@ -1148,6 +1128,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         }
       break;
 
+    case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
       BX_VGA_THIS s.CRTC.address = value & 0x7f;
       if (BX_VGA_THIS s.CRTC.address > 0x18)
@@ -1155,6 +1136,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           (unsigned) BX_VGA_THIS s.CRTC.address));
       break;
 
+    case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* CRTC Registers (color emulation modes) */
       if (BX_VGA_THIS s.CRTC.address > 0x18) {
         BX_DEBUG(("write: invalid CRTC register 0x%02x ignored",
@@ -1770,36 +1752,6 @@ bx_vga_c::update(void)
         break;
 
       case 2: // B0000 .. B7FFF
-	iWidth = 8*80;	// TODO: should use font size
-	iHeight = 16*25;
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
-	{
-	  bx_gui->dimension_update(iWidth, iHeight, 16, 8);
-	  old_iWidth = iWidth;
-	  old_iHeight = iHeight;
-	}
-        /* pass old text snapshot & new VGA memory contents */
-        start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
-        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) |
-                          BX_VGA_THIS s.CRTC.reg[0x0f]);
-        if (cursor_address < start_address) {
-          cursor_x = 0xffff;
-          cursor_y = 0xffff;
-          }
-        else {
-          cursor_x = ((cursor_address - start_address)/2) % 80;
-          cursor_y = ((cursor_address - start_address)/2) / 80;
-          }
-        bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
-                          &BX_VGA_THIS s.vga_memory[start_address],
-                           cursor_x, cursor_y, tm_info, 25);
-        // screen updated, copy new VGA memory contents into text snapshot
-        memcpy(BX_VGA_THIS s.text_snapshot,
-              &BX_VGA_THIS s.vga_memory[start_address],
-               2*80*25);
-        BX_VGA_THIS s.vga_mem_updated = 0;
-        break;
-
       case 3: // B8000 .. BFFFF
         unsigned VDE, MSL, rows, cWidth;
 
