@@ -108,49 +108,51 @@ TO DO:
 
 - how do we know what plugins should be available when we start Bochs?
   - we can have core plugins, optional plugins, and user plugins.
-    - (V2.0) For the core plugins, Bochs will assume they are available and
-      panic if they are not.  A core plugin is always loaded during
-      startup, and initialized in bx_devices::init() just as it would
-      be if plugins were turned off.  Core modules should be used for
-      devices where initialization order is important.
-
+    - (V2.0) core plugin: These are so fundamental that Bochs won't even
+      initialize  without them, for example the CMOS.  The user can substitute
+      his own equivalent plugin to replace the CMOS, but he cannot say "Don't
+      load the CMOS at all."  Core plugins are initialized and reset explictly
+      by code in iodev/devices.cc, since the initialization order for some of
+      them is critical.  They are currently NOT added to the device list in
+      pluginRegisterDevice and pluginRegisterDeviceDevmodel, so that the plugin
+      system does not call init() and reset().  If a core plugin cannot
+      be found, Bochs will panic.
       In the bochsrc we can provide a way for the user to REPLACE a core plugin
       with a different plugin that implements the same C++ interface, but there
       is no way to ask bochs to NOT load a core plugin.  I'm not sure how to
       configure the replacement plugin--this may have to be added later.
       Bochsrc line: 
         replace_core_plugin: old=pic, new=mypic
-    - (V2.0) Optional plugins are plugins that Bochs knows about at compile
-      time.  Any information needed to configure the plugin is compiled into
-      the Bochs binary, so the device can be configured even before loading the
-      plugin.  Then, when we initialize hardware, if the device is enabled then
-      the plugin will actually be loaded.  Bochs will panic if an optional
-      plugin cannot be loaded.
-    - (Later?) A user plugin is one that Bochs does NOT know about at compile
-      time.  In order to configure it, the user must first ask Bochs to load
-      it, either with a bochsrc line like 'plugin_load: NAME', or through the
-      configuration interface.  Once the plugin is loaded, Bochs can figure out
-      how to configure the device and display a menu or dialog so that the user
-      can edit its options.  We will need to dream up some kind of bochsrc
-      syntax so that you can pass parameters to the plugin as well.  User
-      plugins may not be supported until after v2.0.
+    - (V2.0) optional plugin: These can be loaded or not without affecting
+      Bochs's ability to start up and simulate.  Initialization and reset for
+      all optional plugins are handled by bx_init_plugins() and
+      bx_reset_plugins(), which are now called from bx_devices_c::init() and
+      bx_devices_c::reset().  Bochs knows how to configure optional plugins at
+      compile time, and they   are loaded only if the configuration settings
+      enables the device.  Examples: serial, parallel, ne2k.  See the call to
+      is_serial_enabled() in iodev/devices.cc.  There are some plugins that you
+      wouldn't ever want to leave out, like vga.  Maybe the term "optional" is
+      not clear and I need to think of a better name.  Bochs will panic if an
+      optional plugin cannot be found.  If the plugin was compiled, then
+      it should be available at runtime too!
+    - (Later?) user plugin: These are plugins that Bochs does not know anything
+      about at compile time.  The user asks Bochs to load a plugin using just
+      its filename.  It loads the plugin and (somehow) gets information about
+      what settings the user can configure.  The settings are adjusted by
+      either bochsrc lines or the user interface, and then the device can be
+      used.  I'm missing some details here because I haven't thought through it
+      all the way.  User plugins may not be supported until after v2.0.
   - some devices, such as the GUI, PIT, SB, and NE2000, have several different
     possible implementations.  In this case, all implementations should be
-    children of a single stub class which produces errors or panics if it
-    is called, depending on the importance of the device.  There is always
-    one instance of the stub class lying around, which will be used if none of
-    the implementation plugins is loaded.  Either an optional plugin or a
-    user plugin can fill in these slots.
+    children of a single stub class.  The stub's methods produce errors or
+    panics if they are called, depending on the importance of the device.
+    There is always one instance of the stub class lying around, which will be
+    used if none of the implementation plugins is loaded.  Either an optional
+    plugin or a user plugin can fill in these slots.
   - make a list of plugins sorted into categories (FIRST TRY)
-    - core plugins
-      - pic
-      - cmos
-      - dma
-      - unmapped
-      - keyboard: because it has 6 functions that are reference by other
-        modules.
-    - optional: serial, parallel, floppy, vga, biosdev, cmos, harddrv
-  - add plugin load code as the module is needed.
+    - core plugins: unmapped, biosdev, cmos, dma, pic, vga
+    - optional: floppy, harddrv, keyboard, serial, parallel
+    - user: none yet
 
 - how do we locate plugins on the disk?
   - fortunately, the LTDL library takes care of searching a list of paths.
