@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.65 2004-02-10 23:47:29 danielg4 Exp $
+// $Id: devices.cc,v 1.66 2004-04-08 21:23:41 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.65 2004-02-10 23:47:29 danielg4 Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.66 2004-04-08 21:23:41 cbothamy Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -386,17 +386,15 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_DEV_SMF
-  bx_bool bx_cpu_reset;
 
-  BX_DEBUG(("port92h write of %02x partially supported!!!",
-    (unsigned) value));
+  BX_DEBUG(("port92h write of %02x partially supported!!!", (unsigned) value));
   BX_DEBUG(("A20: set_enable_a20() called"));
   BX_SET_ENABLE_A20( (value & 0x02) >> 1 );
   BX_DEBUG(("A20: now %u", (unsigned) BX_GET_ENABLE_A20()));
-  bx_cpu_reset  = (value & 0x01); /* high speed reset */
-  if (bx_cpu_reset) {
-    BX_PANIC(("PORT 92h write: CPU reset requested!"));
-    }
+  if (value & 0x01) { /* high speed reset */
+    BX_INFO(("iowrite to port0x92 : reset resquested"));
+    bx_pc_system.ResetCpus(BX_RESET_HARDWARE);
+  }
 }
 
 
