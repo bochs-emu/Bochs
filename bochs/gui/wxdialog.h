@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.23 2002-09-03 17:48:21 bdenney Exp $
+// $Id: wxdialog.h,v 1.24 2002-09-04 12:29:04 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -118,12 +118,12 @@ DECLARE_EVENT_TABLE()
 // To use this dialog:
 // After constructor, use AddRadio () to add radio buttons, SetFilename()
 // to fill in the disk image filename, SetCapacity() to set the capacity. 
-// Then call ShowModal() to display it.  Return value is wxOK or wxCANCEL.
-// If you set a validation function, then it will be called
-// when ok is pressed, and will get a chance to veto the "Ok" if it
-// returns false.  After ShowModal() returns, use GetFilename and
-// GetCapacity to see what the user did.  If the validation function
-// sets parameters, this may be unnecessary.
+// Then call ShowModal() to display it.  Return value is wxID_OK or
+// wxID_CANCEL.  If you set a validation function, then it will be called when
+// ok is pressed, and will get a chance to veto the "Ok" if it returns false.
+// After ShowModal() returns, use GetFilename and GetCapacity to see what the
+// user did.  If the validation function sets parameters, this may be
+// unnecessary.
 //
 // Volker reminded me that I wasn't paying much attention to
 // the distinction between configuring the device (pre-boot) and 
@@ -296,7 +296,7 @@ DECLARE_EVENT_TABLE()
 // After constructor, use SetEnabled(), SetFilename() to fill in the
 // disk image filename, AddRadio() to add radio buttons (the disk
 // image file radio button will be added automatically).  Then call
-// ShowModal() to display it.  Return value is wxOK or wxCANCEL.
+// ShowModal() to display it.  Return value is wxID_OK or wxID_CANCEL.
 // After ShowModal() returns, use GetFilename() and
 // GetEnabled().
 
@@ -363,8 +363,8 @@ DECLARE_EVENT_TABLE()
 // After constructor, use AddConn() to add values to the choice box 
 // called "Connection to the OS".  Then use SetEnable, SetIO, SetIrq, SetMac,
 // SetConn, SetNic, and SetDebug to fill in the current values.  Then call
-// ShowModal(), which will return wxOK or wxCANCEL.  Then use the Get* methods
-// to retrieve the values that were chosen.
+// ShowModal(), which will return wxID_OK or wxID_CANCEL.  Then use the Get*
+// methods to retrieve the values that were chosen.
 class NetConfigDialog: public wxDialog
 {
 private:
@@ -446,7 +446,7 @@ DECLARE_EVENT_TABLE()
 // To use this dialog:
 // After constructor, use SetSize(), SetBios(), SetBiosAddr(), SetVgaBios(),
 // SetRom(), SetRomAddr() to set the initial values.  Then call ShowModal()
-// which will return wxOK or wxCANCEL.  Use the Get* equivalent methods
+// which will return wxID_OK or wxID_CANCEL.  Use the Get* equivalent methods
 // to find out the value from each field.
 class ConfigMemoryDialog: public wxDialog
 {
@@ -523,7 +523,7 @@ DECLARE_EVENT_TABLE()
 // value for each choice field.  The eventtype is 0 to LOG_OPTS_N_TYPES-1,
 // representing the types listed in LOG_OPTS_NAMES.  The choice field is 0 to
 // LOG_OPTS_N_CHOICES-1, representing the actions listed in LOG_OPTS_CHOICES.
-// Then call ShowModal(), which will return wxOK or wxCANCEL.  Afterward,
+// Then call ShowModal(), which will return wxID_OK or wxID_CANCEL.  Afterward,
 // the GetAction(eventtype) method will tell what was selected in each
 // choice box.  
 class LogOptionsDialog: public wxDialog

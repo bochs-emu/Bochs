@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.30 2002-09-03 19:04:17 bdenney Exp $
+// $Id: wxmain.cc,v 1.31 2002-09-04 12:29:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -416,7 +416,7 @@ void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
     dlg.SetRomAddr (rom, optromAddr[rom]->get ());
   }
   int n = dlg.ShowModal ();
-  if (n == wxOK) {
+  if (n == wxID_OK) {
     char buf[1024];
     megs->set (dlg.GetSize ());
     safeWxStrcpy (buf, dlg.GetBios (), sizeof (buf));
@@ -492,7 +492,7 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
   dlg.SetPhys (device->getptr ());
   dlg.SetScript (script->getptr ());
   int n = dlg.ShowModal ();
-  if (n==wxOK) {
+  if (n==wxID_OK) {
     present->set (dlg.GetEnable ());
     io->set (dlg.GetIO ());
     irq->set (dlg.GetIrq ());
@@ -600,7 +600,7 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
       dlg.SetAction (level, LOG_OPTS_NO_CHANGE);
   }
   int n = dlg.ShowModal ();   // show the dialog!
-  if (n == wxOK) {
+  if (n == wxID_OK) {
     for (int level=0; level < SIM->get_max_log_level (); level++) {
       // ask the dialog what action the user chose for this type of event
       int action = dlg.GetAction (level);

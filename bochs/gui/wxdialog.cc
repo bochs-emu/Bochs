@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.24 2002-09-03 17:48:20 bdenney Exp $
+// $Id: wxdialog.cc,v 1.25 2002-09-04 12:29:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -337,7 +337,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       // probably should validate before allowing ok
       if (validate!=NULL && !(*validate)(this))
 	return;  // validation failed, don't leave yet
-      EndModal (wxOK);
+      EndModal (wxID_OK);
       break;
     case ID_Browse:
       BrowseTextCtrl (filename);
@@ -362,7 +362,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       }
       break;
     case wxID_CANCEL:
-      EndModal (wxCANCEL);
+      EndModal (wxID_CANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -550,13 +550,13 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
       break;
     case wxOK:
       // probably should validate before allowing ok
-      EndModal (wxOK);
+      EndModal (wxID_OK);
       break;
     case ID_Browse:
       BrowseTextCtrl (filename);
       break;
     case wxID_CANCEL:
-      EndModal (wxCANCEL);
+      EndModal (wxID_CANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -750,13 +750,13 @@ void CdromConfigDialog::OnEvent(wxCommandEvent& event)
       break;
     case wxOK:
       // probably should validate before allowing ok
-      EndModal (wxOK);
+      EndModal (wxID_OK);
       break;
     case ID_Browse:
       BrowseTextCtrl (filename);
       break;
     case wxID_CANCEL:
-      EndModal (wxCANCEL);
+      EndModal (wxID_CANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -965,12 +965,12 @@ void NetConfigDialog::OnEvent(wxCommandEvent& event)
 	unsigned char tmp[6];
 	if (GetMac (tmp)) {
 	  // mac address was legal
-	  EndModal (wxOK);
+	  EndModal (wxID_OK);
 	}
       }
       break;
     case wxID_CANCEL:
-      EndModal (wxCANCEL);
+      EndModal (wxID_CANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -1132,10 +1132,10 @@ void LogOptionsDialog::OnEvent(wxCommandEvent& event)
       wxMessageBox ("The advanced dialog is not implemented yet.");
       break;
     case wxOK:
-      EndModal (wxOK);
+      EndModal (wxID_OK);
       break;
     case wxID_CANCEL:
-      EndModal (wxCANCEL);
+      EndModal (wxID_CANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -1337,10 +1337,10 @@ void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
 	  if (!valid) return;
 	}
       }
-      EndModal (wxOK);
+      EndModal (wxID_OK);
       break;
     case wxID_CANCEL:
-      EndModal (wxCANCEL);
+      EndModal (wxID_CANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
@@ -1631,10 +1631,10 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
   switch (id) {
     case wxOK:
       if (CommitChanges ())
-        EndModal (wxOK);
+        EndModal (wxID_OK);
       break;
     case wxID_CANCEL:
-      EndModal (wxCANCEL);
+      EndModal (wxID_CANCEL);
       break;
     case wxHELP:
       ShowHelp(); 
