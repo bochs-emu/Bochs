@@ -66,7 +66,7 @@ static unsigned mouse_button_state = 0;
 static int ms_xdelta=0, ms_ydelta=0;
 static int ms_lastx=0, ms_lasty=0;
 static int ms_savedx=0, ms_savedy=0;
-static BOOL mouseCaptureMode = TRUE;
+static BOOL mouseCaptureMode = FALSE;
 static unsigned long workerThread = NULL;
 static DWORD workerThreadID = 0;
 
@@ -369,7 +369,7 @@ VOID UIThread(PVOID pvoid) {
     ShowWindow (stInfo.hwnd, SW_SHOW);
     UpdateWindow (stInfo.hwnd);
 
-    ShowCursor(FALSE);
+    ShowCursor(!mouseCaptureMode);
     GetWindowRect(stInfo.hwnd, &wndRect);
     SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
       wndRect.top + stretched_y/2 + y_edge + y_caption);
@@ -404,8 +404,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
 
   switch (iMsg) {
   case WM_CREATE:
-    SetWindowText(hwnd, "Bochs for Windows - Display          [Press F12 to release mouse capture]");
     SetTimer (hwnd, 1, 330, NULL);
+    if (mouseCaptureMode)
+      SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
+    else
+      SetWindowText(hwnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
     return 0;
 
   case WM_TIMER:
@@ -482,14 +485,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
     if (wParam == VK_F12) {
       mouseCaptureMode = !mouseCaptureMode;
       ShowCursor(!mouseCaptureMode);
+      ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
       GetWindowRect(hwnd, &wndRect);
       SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
                    wndRect.top + stretched_y/2 + y_edge + y_caption);
       cursorWarped();
       if (mouseCaptureMode)
-	SetWindowText(hwnd, "Bochs for Windows - Display          [Press F12 to release mouse capture]");
+	SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
       else
-	SetWindowText(hwnd, "Bochs for Windows - Display");
+	SetWindowText(hwnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
     } else {
       EnterCriticalSection(&stInfo.keyCS);
       enq_key_event(HIWORD (lParam) & 0xFF, BX_KEY_PRESSED);
