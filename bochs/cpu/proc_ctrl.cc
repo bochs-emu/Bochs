@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.22 2002-06-19 15:49:07 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.23 2002-07-25 13:30:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1202,8 +1202,8 @@ BX_CPU_C::RDMSR(BxInstruction_t *i)
 		*/
 		case BX_MSR_APICBASE:
 			/* we return low 32 bits in EAX, and high in EDX */
-			EAX = BX_CPU_THIS_PTR msr.apicbase & 0xff;
-			EDX = BX_CPU_THIS_PTR msr.apicbase >> 32;
+			EAX = Bit32u(BX_CPU_THIS_PTR msr.apicbase & 0xffffffff);
+			EDX = Bit32u(BX_CPU_THIS_PTR msr.apicbase >> 32);
 			BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", EDX, EAX));
 			return;
 			
