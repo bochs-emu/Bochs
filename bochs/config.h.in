@@ -606,4 +606,12 @@ typedef unsigned int Boolean;
 // I/O Interface to debug
 #define BX_IODEBUG_SUPPORT 0
 
+#ifdef WIN32
+#define BX_FLOPPY0_NAME "Disk A:"
+#define BX_FLOPPY1_NAME "Disk B:"
+#else
+#define BX_FLOPPY0_NAME "Disk 0"
+#define BX_FLOPPY1_NAME "Disk 1"
+#endif
+
 #endif  // _BX_CONFIG_H
