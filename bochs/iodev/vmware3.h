@@ -39,7 +39,14 @@ class vmware3_image_t : public device_image_t
   private:
       static const off_t INVALID_OFFSET = (off_t)-1;
 
-      typedef struct _COW_Header {
+#if (_MSC_VER<1300)
+#pragma pack(push, 1)
+#endif
+      typedef
+#if (_MSC_VER>=1300)
+             __declspec(align(1))
+#endif
+        struct _COW_Header {
           char     id[4];
           unsigned header_version;
           unsigned flags;
@@ -65,7 +72,14 @@ class vmware3_image_t : public device_image_t
           char     PAD2[8];
           unsigned vmware_version;
           char     PAD3[364];
-      } COW_Header __attribute__((packed));
+      } COW_Header
+#if !defined(_MSC_VER)
+        __attribute__((packed))
+#endif
+      ;
+#if (_MSC_VER<1300)
+#pragma pack(pop)
+#endif
 
       struct COW_Image {
           int fd;

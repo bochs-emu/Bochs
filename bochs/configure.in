@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.213 2003-05-30 08:57:25 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.214 2003-06-06 19:57:25 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1689,6 +1689,7 @@ AC_SUBST(NONINLINE_VAR)
 AC_SUBST(INLINE_VAR)
 AC_SUBST(EXTERNAL_DEPENDENCY)
 AC_SUBST(EXT_DEBUG_OBJS)
+AC_SUBST(RC_CMD)
 
 
 AC_ARG_WITH(x11,
@@ -1856,7 +1857,12 @@ if test "$with_sdl" = yes; then
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
   if test "$with_win32" != yes; then
     case $target in
+      *-pc-windows*)
+         RC_CMD="rc /fo"
+         EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
+         ;;
       *-cygwin* | *-mingw32*)
+         RC_CMD="windres -o "
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
          ;;
     esac
@@ -1894,9 +1900,12 @@ if test "$with_win32" = yes; then
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WIN32)"
   case $target in
     *-pc-windows*)
+       RC_CMD="rc /fo"
+       EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32_VCPP)"
        ;;
     *-cygwin* | *-mingw32*)
+       RC_CMD="windres -o "
        EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32)"
        ;;
@@ -2041,7 +2050,7 @@ case "$target" in
     CC="cl"
     CXX="$CC"
     #C_OPT="/Zi"   # for debugging
-    C_OPT="/O2"   # optimize for speed
+    C_OPT="/Ox"   # optimize for speed
     CFLAGS="/nologo /G6 /MT /W3 /GX /DNDEBUG /DWIN32 /D_WINDOWS $C_OPT"
     CXXFLAGS="$CFLAGS"
     DASH="/"
@@ -2077,6 +2086,9 @@ case "$target" in
     AC_DEFINE(HAVE_LIBREADLINE, 0)
     AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
     AC_DEFINE(BX_HAVE_DLFCN_H, 0)
+    AC_DEFINE(BX_HAVE_MKSTEMP, 0)
+    AC_DEFINE(BX_HAVE_SYS_MMAN_H, 0)
+    AC_DEFINE(HAVE_ETHERTAP, 0)
     ;;
   *-beos*)
     PRIMARY_TARGET=.bochs_beos_target
