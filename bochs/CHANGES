@@ -3,8 +3,7 @@ TO DO LIST:
 - (DONE) check logs in debug
 - check logs in cpu (Bryce is working on this)
 - check logs in gui
-  - (DONE) carbon.cc
-- check logs in iodev (Christophe is working on this)
+- check logs in iodev (Christophe is working on this, done biosdev to dma)
 - (DONE) check logs in main directory
   - (DONE) check logs of configure.in
   - (DONE) Makefile.in
@@ -248,7 +247,8 @@ I'm listing them here to remind us about them:
   - rewrote pc_system timers (Kevin)
     - FIXME add detail
   - biosdev
-    - FIXME
+    - this new device handles the panic/error/info/debug messages sent 
+      by the Bios and VGABios.  It was previously done in the unmapped device. 
   - cdrom
     - implementation of the function READ TOC for cdrom image files. (Volker)
     - function capacity() for win32 fixed. Now it returns the number of blocks
@@ -257,16 +257,15 @@ I'm listing them here to remind us about them:
       ASPI version uses the cdrom drives in the system's order. Drive letters
       are not used by ASPI. (Volker)
     - fix physical CD change at runtime (Bryce)
-    - FIXME
   - cmos
-    - FIXME
+    - fix panic when WinXP read port 70h (Christophe)
+    - add ps/2 style century at index 37 to allow WinXP to boot. (Bryce)
   - dma
     - DMA register and unregister functions for DMA channels added and macros
       for DMA functions defined. The changes are based on the Plex86 functions.
       (Volker)
     - implementation of the DMA controller reset (Volker)
     - the value of the command register must be always 0x00 (BX_ERROR fixed)
-    - FIXME
   - floppy (Volker)
     - added support for 360k floppy images
     - the skip flag (SK) in command 'read sector' is ignored now
