@@ -163,7 +163,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
 	// allocate low level driver
 #ifdef LOWLEVEL_CDROM
-	BX_HD_THIS s[1].cdrom.cd = new LOWLEVEL_CDROM(bx_options.cdromd.Odev->getptr ());
+	BX_HD_THIS s[1].cdrom.cd = new LOWLEVEL_CDROM(bx_options.cdromd.Opath->getptr ());
 #endif
 
 #ifdef LOWLEVEL_CDROM
