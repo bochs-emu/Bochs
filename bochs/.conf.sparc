@@ -19,7 +19,11 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure
+../clean/configure --enable-cdrom \
+	--enable-ne2000 \
+	--enable-vbe \
+	--enable-all-optimizations 
+
 #./configure --enable-fpu
 #./configure
 #./configure --enable-instrumentation
