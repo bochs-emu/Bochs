@@ -1972,7 +1972,8 @@ cygwin* | mingw* | pw32*)
   need_lib_prefix=no
   case $GCC,$host_os in
   yes,cygwin*)
-    library_names_spec='$libname.dll.a'
+	# BBD hack: force it to use .dll for LTDL_SHLIB_EXT
+    library_names_spec='$libname.dll'
     soname_spec='`echo ${libname} | sed -e 's/^lib/cyg/'``echo ${release} | sed -e 's/[[.]]/-/g'`${versuffix}.dll'
     postinstall_cmds='dlpath=`bash 2>&1 -c '\''. $dir/${file}i;echo \$dlname'\''`~
       dldir=$destdir/`dirname \$dlpath`~
