@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.65 2002-09-24 23:52:54 bdenney Exp $
+// $Id: keyboard.cc,v 1.66 2002-09-26 09:00:52 mlerwill Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.65 2002-09-24 23:52:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.66 2002-09-26 09:00:52 mlerwill Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.65 2002-09-24 23:52:54 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.66 2002-09-26 09:00:52 mlerwill Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -1454,39 +1454,39 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
   b1 = (button_state & 0x0f) | 0x08; // bit3 always set
 
   if ( (delta_x>=0) && (delta_x<=255) ) {
-    b2 = delta_x;
+    b2 = (Bit8u) delta_x;
     BX_KEY_THIS s.mouse.delayed_dx-=delta_x;
     }
   else if ( delta_x > 255 ) {
-    b2 = 0xff;
+    b2 = (Bit8u) 0xff;
     BX_KEY_THIS s.mouse.delayed_dx-=255;
     }
   else if ( delta_x >= -256 ) {
-    b2 = delta_x;
+    b2 = (Bit8u) delta_x;
     b1 |= 0x10;
     BX_KEY_THIS s.mouse.delayed_dx-=delta_x;
     }
   else {
-    b2 = 0x00;
+    b2 = (Bit8u) 0x00;
     b1 |= 0x10;
     BX_KEY_THIS s.mouse.delayed_dx+=256;
     }
 
   if ( (delta_y>=0) && (delta_y<=255) ) {
-    b3 = delta_y;
+    b3 = (Bit8u) delta_y;
     BX_KEY_THIS s.mouse.delayed_dy-=delta_y;
     }
   else if ( delta_y > 255 ) {
-    b3 = 0xff;
+    b3 = (Bit8u) 0xff;
     BX_KEY_THIS s.mouse.delayed_dy-=255;
     }
   else if ( delta_y >= -256 ) {
-    b3 = delta_y;
+    b3 = (Bit8u) delta_y;
     b1 |= 0x20;
     BX_KEY_THIS s.mouse.delayed_dy-=delta_y;
     }
   else {
-    b3 = 0x00;
+    b3 = (Bit8u) 0x00;
     b1 |= 0x20;
     BX_KEY_THIS s.mouse.delayed_dy+=256;
     }
