@@ -365,7 +365,8 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
               BX_INFO(("write output port with value %02xh\n",
                 (unsigned) value));
             BX_SET_ENABLE_A20( (value & 0x02) != 0 );
-            if (!(value & 0x01)) BX_PANIC(("IO write: processor reset requested!\n"));
+            if (!(value & 0x01))
+				BX_PANIC(("IO write: processor reset requested!\n"));
             break;
           case 0xd4: // Write to mouse
             // I don't think this enables the AUX clock

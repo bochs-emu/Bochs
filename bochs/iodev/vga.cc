@@ -603,7 +603,7 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
     case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* CRTC Registers (color emulation modes) */
       if (BX_VGA_THIS s.CRTC.address > 0x18)
-        BX_INFO(("vga_io_read: 3d5: address = %02xh\n",
+        BX_DEBUG(("vga_io_read: 3d5: address = %02xh\n",
           (unsigned) BX_VGA_THIS s.CRTC.address));
       RETURN(BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]);
       break;
@@ -613,7 +613,7 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
     case 0x03cb: /* not sure but OpenBSD reads it a lot */
     case 0x03c8: /* */
     default:
-      BX_PANIC(("*** io read from vga port %x\n", (unsigned) address));
+      BX_INFO(("*** io read from vga port %x\n", (unsigned) address));
       RETURN(0); /* keep compiler happy */
     }
 

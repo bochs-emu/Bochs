@@ -72,8 +72,7 @@ BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
 #if BX_CPU_LEVEL >= 2
 //  unsigned prev_errno;
 
-  if (bx_dbg.interrupts)
-    BX_INFO(("interrupt(): vector = %u, INT = %u, EXT = %u\n",
+  BX_DEBUG(("interrupt(): vector = %u, INT = %u, EXT = %u\n",
       (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT));
 
 BX_CPU_THIS_PTR save_cs  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
@@ -99,13 +98,11 @@ BX_CPU_THIS_PTR save_esp = ESP;
     // interrupt vector must be within IDT table limits,
     // else #GP(vector number*8 + 2 + EXT)
     if ( (vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
-      if (bx_dbg.interrupts) {
-        BX_INFO(("IDT.limit = %04x\n", (unsigned) BX_CPU_THIS_PTR idtr.limit));
-        BX_INFO(("IDT.base  = %06x\n", (unsigned) BX_CPU_THIS_PTR idtr.base));
-        BX_INFO(("interrupt vector must be within IDT table limits\n"));
-        BX_INFO(("bailing\n"));
-        }
-      BX_INFO(("interrupt(): vector > idtr.limit\n"));
+      BX_DEBUG(("IDT.limit = %04x\n", (unsigned) BX_CPU_THIS_PTR idtr.limit));
+      BX_DEBUG(("IDT.base  = %06x\n", (unsigned) BX_CPU_THIS_PTR idtr.base));
+      BX_DEBUG(("interrupt vector must be within IDT table limits\n"));
+      BX_DEBUG(("bailing\n"));
+      BX_DEBUG(("interrupt(): vector > idtr.limit\n"));
 
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
       }
@@ -120,7 +117,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
     parse_descriptor(dword1, dword2, &gate_descriptor);
 
     if ( (gate_descriptor.valid==0) || gate_descriptor.segment) {
-      BX_PANIC(("interrupt(): gate descriptor is not valid sys seg\n"));
+      BX_DEBUG(("interrupt(): gate descriptor is not valid sys seg\n"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
       }
 
@@ -132,7 +129,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
       case 15: // 386 trap gate
         break;
       default:
-        BX_INFO(("interrupt(): gate.type(%u) != {5,6,7,14,15}\n",
+        BX_DEBUG(("interrupt(): gate.type(%u) != {5,6,7,14,15}\n",
           (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
         return;
@@ -142,14 +139,14 @@ BX_CPU_THIS_PTR save_esp = ESP;
     // else #GP(vector * 8 + 2 + EXT)
     if (is_INT  &&  (gate_descriptor.dpl < CPL)) {
 /* ??? */
-      BX_INFO(("interrupt(): is_INT && (dpl < CPL)\n"));
+      BX_DEBUG(("interrupt(): is_INT && (dpl < CPL)\n"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
       return;
       }
 
     // Gate must be present, else #NP(vector * 8 + 2 + EXT)
     if (gate_descriptor.p == 0) {
-      BX_INFO(("interrupt(): p == 0\n"));
+      BX_DEBUG(("interrupt(): p == 0\n"));
       exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
       }
 
@@ -252,13 +249,13 @@ BX_CPU_THIS_PTR save_esp = ESP;
              cs_descriptor.segment==0 ||
              cs_descriptor.u.segment.executable==0 ||
              cs_descriptor.dpl>CPL ) {
-          BX_INFO(("interrupt(): not code segment\n"));
+          BX_DEBUG(("interrupt(): not code segment\n"));
           exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
           }
 
         // segment must be present, else #NP(selector + EXT)
         if ( cs_descriptor.p==0 ) {
-          BX_PANIC(("interrupt(): segment not present\n"));
+          BX_DEBUG(("interrupt(): segment not present\n"));
           exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
           }
 
@@ -271,8 +268,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
           bx_selector_t   ss_selector;
           int bytes;
 
-          if (bx_dbg.interrupts)
-            BX_INFO(("interrupt(): INTERRUPT TO INNER PRIVILEGE\n"));
+          BX_DEBUG(("interrupt(): INTERRUPT TO INNER PRIVILEGE\n"));
 
           // check selector and descriptor for new stack in current TSS
           get_SS_ESP_from_TSS(cs_descriptor.dpl,
@@ -453,8 +449,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
           else
             temp_ESP = SP;
 
-          if (bx_dbg.interrupts)
-            BX_INFO(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE\n"));
+          BX_DEBUG(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE\n"));
 
           // Current stack limits must allow pushing 6|8 bytes, else #SS(0)
           if (gate_descriptor.type >= 14) { // 386 gate
@@ -472,7 +467,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
           if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache,
                          temp_ESP, bytes) ) {
-            BX_INFO(("interrupt(): stack doesn't have room\n"));
+            BX_DEBUG(("interrupt(): stack doesn't have room\n"));
             exception(BX_SS_EXCEPTION, 0, 0);
             }
 
@@ -517,12 +512,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
           }
 
         // else #GP(CS selector + ext)
-        BX_INFO(("interrupt: bad descriptor\n"));
-        BX_INFO(("c_ed=%u, descriptor.dpl=%u, CPL=%u\n",
+        BX_DEBUG(("interrupt: bad descriptor\n"));
+        BX_DEBUG(("c_ed=%u, descriptor.dpl=%u, CPL=%u\n",
           (unsigned) cs_descriptor.u.segment.c_ed,
           (unsigned) cs_descriptor.dpl,
           (unsigned) CPL));
-        BX_INFO(("cs.segment = %u\n", (unsigned) cs_descriptor.segment));
+        BX_DEBUG(("cs.segment = %u\n", (unsigned) cs_descriptor.segment));
         exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
         break;
 
@@ -580,8 +575,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
 
   UNUSED(is_INT);
 
-  if (bx_dbg.exceptions)
-    BX_INFO(("exception(%02x h)\n", (unsigned) vector));
+  BX_DEBUG(("exception(%02x h)\n", (unsigned) vector));
 
   // if not initial error, restore previous register values from
   // previous attempt to handle exception
