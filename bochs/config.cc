@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.6 2004-07-10 11:05:29 vruppert Exp $
+// $Id: config.cc,v 1.7 2004-07-18 17:18:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -790,7 +790,6 @@ void bx_init_options ()
     SIM->get_param (BXP_ATA3_MASTER),
     SIM->get_param (BXP_ATA3_SLAVE),
 #endif
-    SIM->get_param (BXP_NEWHARDDRIVESUPPORT),
     SIM->get_param (BXP_BOOTDRIVE),
     SIM->get_param (BXP_FLOPPYSIGCHECK),
     NULL
@@ -1621,7 +1620,6 @@ void bx_init_options ()
       bx_options.Omouse_enabled,
       bx_options.OfloppySigCheck,
       bx_options.Ofloppy_command_delay,
-      bx_options.OnewHardDriveSupport,
       bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS
       bx_options.Ofullscreen,
@@ -3683,7 +3681,6 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_clock_options (fp, &bx_options.clock);
   bx_write_ne2k_options (fp, &bx_options.ne2k);
   bx_write_pnic_options (fp, &bx_options.pnic);
-  fprintf (fp, "newharddrivesupport: enabled=%d\n", bx_options.OnewHardDriveSupport->get ());
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
   bx_write_log_options (fp, &bx_options.log);
   bx_write_keyboard_options (fp, &bx_options.keyboard);
