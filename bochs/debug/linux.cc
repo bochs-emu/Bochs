@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "bochs.h"
 
+#define LOG_THIS genlog->
+
 // for Linux segment numbers
 // these numbers are from <asm/segment.h>
 #define KERNEL_CS 0x10
@@ -9,7 +11,7 @@
   void
 bx_dbg_info_linux_command (void)
 {
-  bx_printf ("Info linux\n");
+  BX_INFO (("Info linux\n"));
   bx_dbg_cpu_t cpu;
   bx_dbg_callback[0].get_cpu(&cpu);
 

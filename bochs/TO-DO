@@ -9,4 +9,3 @@ SMP Bochs To Do List
     and then increment ticks by the required amount.  But check that the
     ticks are really programmed right.
   - check if #define BX_MEM(x) (bx_mem_array[x]) is the right thing
-  - get it working with BX_USE_SMF=1 when there's only one processor 

@@ -85,7 +85,6 @@
 #define BX_32BIT_REG_EDI 7
 
 
-#ifdef BX_IN_CPU_METHOD
 // access to 8 bit general registers
 #define AL (BX_CPU_THIS_PTR gen_reg[0].word.byte.rl)
 #define CL (BX_CPU_THIS_PTR gen_reg[1].word.byte.rl)
@@ -123,7 +122,6 @@
 
 // access to 32 bit instruction pointer
 #define EIP BX_CPU_THIS_PTR eip
-#endif //ifdef BX_IN_CPU_METHOD
 
 #define BX_READ_8BIT_REG(index)  (((index) < 4) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
@@ -398,11 +396,18 @@ typedef struct BxInstruction_tag {
   unsigned ilen; // instruction length
   unsigned os_32, as_32; // OperandSize/AddressSize is 32bit
   unsigned flags_in, flags_out; // flags needed, flags modified
+
+#if BX_USE_CPU_SMF
+  void (*ResolveModrm)(BxInstruction_tag *);
+  void (*execute)(BxInstruction_tag *);
+#else
   void (BX_CPU_C::*ResolveModrm)(BxInstruction_tag *);
+  void (BX_CPU_C::*execute)(BxInstruction_tag *);
+#endif
+
 #if BX_DYNAMIC_TRANSLATION
   BxVoidFPtr_t DTResolveModrm;
 #endif
-  void (BX_CPU_C::*execute)(BxInstruction_tag *);
 #if BX_DYNAMIC_TRANSLATION
   unsigned DTAttr;
   Bit8u *   (*DTFPtr)(Bit8u *, BxInstruction_tag *);
@@ -410,7 +415,11 @@ typedef struct BxInstruction_tag {
 #endif
   } BxInstruction_t;
 
+#if BX_USE_CPU_SMF
+typedef void (*BxExecutePtr_t)(BxInstruction_t *);
+#else
 typedef void (BX_CPU_C::*BxExecutePtr_t)(BxInstruction_t *);
+#endif
 
 
 #if BX_DYNAMIC_TRANSLATION
@@ -595,19 +604,25 @@ public:
 extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 
 
-#if BX_USE_SMF == 0
-// normal member functions. In methods of the class BX_CPU_C, you must use
-// the "this" pointer.  Outside the class, you need to use "BX_CPU." again.
-// To distinguish, check BX_IN_CPU_METHOD, which is defined to be 1 at
-// the top of every file in the cpu subdir.
+#if BX_USE_CPU_SMF == 0
+// normal member functions.  This can ONLY be used within BX_CPU_C classes.
+// Anyone on the outside should use the BX_CPU macro (defined in bochs.h) 
+// instead.
 #  define BX_CPU_THIS_PTR  this->
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
+// with normal member functions, calling a member fn pointer looks like
+// object->*(fnptr)(arg, ...);
+// Since this is different from when SMF=1, encapsulate it in a macro.
+#  define BX_CPU_CALL_METHOD(func, args) \
+    (this->*((BxExecutePtr_t) (func))) args
 #else
-   // static member functions, reference through global variable.
+// static member functions.  With SMF, there is only one CPU by definition.
 #  define BX_CPU_THIS_PTR  BX_CPU(0)->
 #  define BX_SMF           static
 #  define BX_CPU_C_PREFIX
+#  define BX_CPU_CALL_METHOD(func, args) \
+    ((BxExecutePtr_t) (func)) args
 #endif
 
 typedef void (*BxDTShim_t)(void);
@@ -793,8 +808,9 @@ public: // for now...
   BX_SMF Boolean get_CF(void);
 
   // constructors & destructors...
-  BX_CPU_C(BX_MEM_C *addrspace);
+  BX_CPU_C();
   ~BX_CPU_C(void);
+  void init (BX_MEM_C *addrspace);
 
   // prototypes for CPU instructions...
   BX_SMF void ADD_EbGb(BxInstruction_t *);
@@ -1491,7 +1507,6 @@ public: // for now...
 
 extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 
-#ifdef BX_IN_CPU_METHOD
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CX(Bit16u cx) { CX = cx; };
@@ -1518,7 +1533,6 @@ BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_AX(void) { return(AX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BX(void) { return(BX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_CX(void) { return(CX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DX(void) { return(DX); };
-#endif //ifdef BX_IN_CPU_METHOD
 
 
 #if BX_CPU_LEVEL >= 2

@@ -21,7 +21,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -32,13 +31,19 @@
 #define BX_DEVICE_ID     3
 #define BX_STEPPING_ID   0
 
-BX_CPU_C::BX_CPU_C(BX_MEM_C *addrspace)
+BX_CPU_C::BX_CPU_C()
 #if BX_APIC_SUPPORT
    : local_apic (this)
 #endif
 {
-  // BX_CPU_C constructor
+  // in case of SMF, you cannot reference any member data
+  // in the constructor because the only access to it is via
+  // global variables which aren't initialized quite yet.
+}
 
+void BX_CPU_C::init(BX_MEM_C *addrspace)
+{
+  // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_APIC_SUPPORT
   local_apic.init ();

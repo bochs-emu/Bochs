@@ -24,10 +24,12 @@
 
 
 
-#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_USE_CPU_SMF
+#define this (BX_CPU(0))
+#endif
 
 
   void
@@ -47,8 +49,7 @@ BX_CPU_C::POP_Ed(BxInstruction_t *i)
     // the address.
     if (i->as_32 && (i->mod!=0xc0) && (i->rm==4) && (i->base==4)) {
       // call method on BX_CPU_C object
-      BxExecutePtr_t func = i->ResolveModrm;
-      (this->*func) (i);
+      BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
       }
     write_virtual_dword(i->seg, i->rm_addr, &val32);
     }

@@ -151,10 +151,11 @@ extern "C" {
 
 #endif
 
-// check that in an SMP simulation, BX_USE_SMF=0 and BX_USE_APIC_SMF=0.
+// you can't use static member functions on the CPU, if there are going
+// to be 2 cpus.  Check this early on.
 #if (BX_SMP_PROCESSORS>1)
-#  if (BX_USE_SMF!=0 || BX_USE_APIC_SMF!=0)
-#    error For SMP simulation, BX_USE_SMF and BX_USE_APIC_SMF must be 0.
+#  if (BX_USE_CPU_SMF!=0)
+#    error For SMP simulation, BX_USE_CPU_SMF must be 0.
 #  endif
 #endif
 

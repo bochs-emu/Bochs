@@ -23,7 +23,6 @@
 
 
 
-#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -137,7 +136,7 @@ BX_CPU_C::debug(Bit32u offset)
   dbg_xlate_linear2phy(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + offset,
                        &phy_addr, &valid);
   if (valid) {
-    mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
+    BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
     isize = bx_disassemble.disasm(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
                         instr_buf, char_buf);
     for (unsigned j=0; j<isize; j++)
@@ -959,7 +958,7 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
   UNUSED(argv);
 
 #if 0
-#warning hardcoding mem[0] and cpu[0]
+#warning hardcoding BX_CPU_THIS_PTR mem[0] and cpu[0]
   callback->setphymem           = BX_MEM(0)->dbg_set_mem;
   callback->getphymem           = BX_MEM(0)->dbg_fetch_mem;
   callback->xlate_linear2phy    = BX_CPU(0)->dbg_xlate_linear2phy;
@@ -1006,14 +1005,14 @@ BX_CPU_C::atexit(void)
   else if (v8086_mode()) BX_INFO(("v8086 mode\n" ));
   else BX_INFO(("real mode\n"));
   BX_INFO(("CS.d_b = %u bit\n",
-    sregs[BX_SREG_CS].cache.u.segment.d_b ? 32 : 16 ));
+    BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.d_b ? 32 : 16 ));
   if (protected_mode()) BX_INFO(("protected mode\n"));
   else if (v8086_mode()) BX_INFO(("v8086 mode\n"));
   else BX_INFO(("real mode\n"));
   BX_INFO(("CS.d_b = %u bit\n",
-    sregs[BX_SREG_CS].cache.u.segment.d_b ? 32 : 16));
+    BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.d_b ? 32 : 16));
   BX_INFO(("SS.d_b = %u bit\n",
-    sregs[BX_SREG_SS].cache.u.segment.d_b ? 32 : 16));
+    BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.d_b ? 32 : 16));
 
-  debug(prev_eip);
+  debug(BX_CPU_THIS_PTR prev_eip);
 }

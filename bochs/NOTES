@@ -422,3 +422,20 @@ this function to see what's up.
 I know it's not that the TSC returns the same value each time or something,
 but I'm sure it behaves differently from a clock in a real system.
 I'm sure I can chase it down since I have the code.
+
+
+What is the cost of SMF?
+With SMF=0, the call to
+BX_CPU(processor)->cpu_loop(quantum);   in main generates this code
+        pushl bx_mem_array
+        pushl %eax
+.LCFI152:
+        call init__8bx_cpu_cP8bx_mem_c
+(note that in this compile processor was always zero)
+
+With SMF=1, the same call looks like
+        pushl $5
+        call cpu_loop__8bx_cpu_ci
+so it's saving the push of the "this" pointer in every single function call.
+
+At least it works both ways now so we can measure.

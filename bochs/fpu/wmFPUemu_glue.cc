@@ -34,6 +34,9 @@ extern "C" {
 }
 
 #define LOG_THIS genlog->
+#if BX_USE_CPU_SMF
+#define this (BX_CPU(0))
+#endif
 
 // Use this to hold a pointer to the instruction since
 // we can't pass this to the FPU emulation routines, which
@@ -94,7 +97,7 @@ BX_CPU_C::fpu_execute(BxInstruction_t *i)
   // Mark if instruction used opsize or addrsize prefixes
   // Actually, addr_modes.override.address_size is not used,
   // could delete that code.
-  is_32 = sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   if (i->as_32 == is_32)
     addr_modes.override.address_size = 0;
   else
@@ -112,14 +115,13 @@ access_limit = 0xff;
 
   // fill in orig eip here in offset
   // fill in CS in selector
-  entry_sel_off.offset = prev_eip;
-  entry_sel_off.selector =
-    sregs[BX_SEG_REG_CS].selector.value;
+  entry_sel_off.offset = BX_CPU_THIS_PTR prev_eip;
+  entry_sel_off.selector = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
 // should set these fields to 0 if mem operand not used
   data_address = (void *) i->rm_addr;
   data_sel_off.offset = i->rm_addr;
-  data_sel_off.selector = sregs[i->seg].selector.value;
+  data_sel_off.selector = BX_CPU_THIS_PTR sregs[i->seg].selector.value;
 
   math_emulate2(addr_modes, i->modrm, i->b1, data_address,
                 data_sel_off, entry_sel_off);

@@ -46,7 +46,9 @@
 //  * processors=4, bootstrap=2, ioapic_id=4
 #define BX_SMP_PROCESSORS 1
 #define BX_BOOTSTRAP_PROCESSOR 0
-#define BX_IOAPIC_DEFAULT_ID 1
+// choose IOAPIC id to be equal to the number of processors.  This leaves
+// one space for each processor to have an ID, starting with 0.
+#define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
 #define BX_ADDRESS_SPACES 1
 // controls how many instances of BX_MEM_C are created.  For
@@ -132,13 +134,6 @@
 #define BX_TLB_INDEX_OF(lpf) (((lpf) & 0x003ff000) >> 12)
 
 
-// Use Static Member Funtions to eliminate 'this' pointer passing
-// If you want the efficiency of 'C', you can make all the
-// members of the C++ CPU class to be static.
-
-#define BX_USE_SMF 0
-
-
 // Compile in support for DMA & FLOPPY IO.  You'll need this
 // if you plan to use the floppy drive emulation.  But if
 // you're environment doesn't require it, you can change
@@ -188,6 +183,13 @@
 #define BX_NUM_CMOS_REGS 64
 //#define BX_NUM_CMOS_REGS 128
 
+// Use Static Member Funtions to eliminate 'this' pointer passing
+// If you want the efficiency of 'C', you can make all the
+// members of the C++ CPU class to be static.
+// This defaults to 1 since it should improve performance, but when
+// SMP mode is enabled, it will be turned off by configure.
+
+#define BX_USE_CPU_SMF 1
 
 // Use static member functions in IO DEVice emulation modules.
 // For efficiency, use C like functions for IO handling,
@@ -205,7 +207,6 @@
 #define BX_USE_FD_SMF   1  // Floppy
 #define BX_USE_KEY_SMF  1  // Keyboard
 #define BX_USE_PAR_SMF  1  // Parallel
-#define BX_USE_APIC_SMF 0  // APIC
 #define BX_USE_PIC_SMF  1  // PIC
 #define BX_USE_PIT_SMF  1  // PIT
 #define BX_USE_SER_SMF  1  // Serial

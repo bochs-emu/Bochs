@@ -82,16 +82,23 @@ AC_ARG_ENABLE(processors,
        AC_DEFINE(BX_SMP_PROCESSORS, 2)
        AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
        AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 2)
+       AC_DEFINE(BX_USE_CPU_SMF, 0)
        ;;
      4)
        AC_MSG_RESULT(4)
        AC_DEFINE(BX_SMP_PROCESSORS, 4)
        AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 2)
        AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 4)
+       AC_DEFINE(BX_USE_CPU_SMF, 0)
        ;;
      *)
        echo " "
        echo "WARNING: processors != [1,2,4] can work, but you need to modify rombios.c manually"
+       AC_MSG_RESULT($enable_val)
+       AC_DEFINE(BX_SMP_PROCESSORS, $enable_val)
+       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
+       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, $enable_val)
+       AC_DEFINE(BX_USE_CPU_SMF, 0)
        ;;
    esac
    bx_procs="$enableval"

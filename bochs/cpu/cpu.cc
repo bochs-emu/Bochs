@@ -23,11 +23,10 @@
 
 
 
-#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_USE_SMF
+#if BX_USE_CPU_SMF
 #define this (BX_CPU(0))
 #endif
 
@@ -193,8 +192,7 @@ async_events_processed:
   if (ret) {
     if (i.ResolveModrm) {
       // call method on BX_CPU_C object
-      BxExecutePtr_t func = i.ResolveModrm;
-      (this->*func) (&i);
+      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
       }
     BX_CPU_THIS_PTR fetch_ptr += i.ilen;
     BX_CPU_THIS_PTR bytesleft -= i.ilen;
@@ -205,8 +203,7 @@ repeat_loop:
       if (i.attr & BxRepeatableZF) {
         if (i.as_32) {
           if (ECX != 0) {
-	    BxExecutePtr_t func = i.execute;
-	    (this->*func) (&i);
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             ECX -= 1;
             }
           if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
@@ -216,8 +213,7 @@ repeat_loop:
           }
         else {
           if (CX != 0) {
-	    BxExecutePtr_t func = i.execute;
-	    (this->*func) (&i);
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             CX -= 1;
             }
           if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
@@ -229,8 +225,7 @@ repeat_loop:
       else { // normal repeat, no concern for ZF
         if (i.as_32) {
           if (ECX != 0) {
-	    BxExecutePtr_t func = i.execute;
-	    (this->*func) (&i);
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             ECX -= 1;
             }
           if (ECX == 0) goto repeat_done;
@@ -238,8 +233,7 @@ repeat_loop:
           }
         else { // 16bit addrsize
           if (CX != 0) {
-	    BxExecutePtr_t func = i.execute;
-	    (this->*func) (&i);
+            BX_CPU_CALL_METHOD(i.execute, (&i));
             CX -= 1;
             }
           if (CX == 0) goto repeat_done;
@@ -271,8 +265,7 @@ repeat_done:
     else {
       // non repeating instruction
       BX_CPU_THIS_PTR eip += i.ilen;
-      BxExecutePtr_t func = i.execute;
-      (this->*func) (&i);
+      BX_CPU_CALL_METHOD(i.execute, (&i));
       }
 
     BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
@@ -373,8 +366,7 @@ static Bit8u FetchBuffer[16];
     if (ret==0)
       BX_PANIC(("fetchdecode: cross boundary: ret==0\n"));
     if (i.ResolveModrm) {
-      BxExecutePtr_t func = i.ResolveModrm;
-      (this->*func) (&i);
+      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
       }
     remain = i.ilen - remain;
 

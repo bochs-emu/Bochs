@@ -450,8 +450,10 @@ bx_bochs_init(int argc, char *argv[])
   bx_mem_array[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
   bx_mem_array[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i) = new BX_CPU_C (bx_mem_array[0]);
+    BX_CPU(i) = new BX_CPU_C ();
+    BX_CPU(i)->init (bx_mem_array[0]);
 #if BX_APIC_SUPPORT
+    // assign apic ID from the index of this loop
     BX_CPU(i)->local_apic.set_id (i);
 #endif
     BX_CPU(i)->reset(BX_RESET_HARDWARE);
