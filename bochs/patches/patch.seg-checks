@@ -1,0 +1,438 @@
+----------------------------------------------------------------------
+Patch name: patch.seg-checks
+Author: Kevin Lawton <kevinlawton2001@yahoo.com>
+Date: Tue, 27 Aug 2002 15:47:14 -0700 (PDT)
+
+Detailed description:
+Here's some pretty simple mods that speed things up some.
+The memory access routines in access.cc now skip the segment
+type check if they've seen the same R or W operation on that
+segment before, plus do their limit check if the access check
+is not needed.  This eliminates the call to write_virtual_checks()
+and read_virtual_check() for most cases.
+
+The limit check is a little faster as well.
+
+There is a field in each segment cache called "valid".  Since
+this was always loaded with 0 or 1 when the segment is reloaded
+or invalidated due to a context change, this made for an easy
+place to store a couple extra bits to record when a read and
+a write access to that seg has occurred.  Other code that
+sets "valid" to 0 or 1 wipes out the R&W bits, which is good,
+since at least one new access check must occur before succeeding
+accesses can eliminate it.
+
+I'll let you folks benchmark the difference.  One test
+prog I ran gained 6%, but I'm not sure if it's register
+intensive (and thus wouldn't gain much) vs memory access
+intensive.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/access.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/access.cc,v
+retrieving revision 1.12
+diff -u -r1.12 access.cc
+--- cpu/access.cc	3 Oct 2001 13:10:37 -0000	1.12
++++ cpu/access.cc	27 Aug 2002 22:28:19 -0000
+@@ -38,14 +38,12 @@
+ 
+ 
+ 
+-
+   void
+ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
+                                unsigned length)
+ {
+   Bit32u upper_limit;
+ 
+-
+   if ( protected_mode() ) {
+     if ( seg->cache.valid==0 ) {
+       BX_ERROR(("seg = %s", BX_CPU_THIS_PTR strseg(seg)));
+@@ -81,6 +79,16 @@
+           exception(int_number(seg), 0, 0);
+           return;
+           }
++        if (seg->cache.u.segment.limit_scaled >= 3) {
++          // Mark cache as being OK type for succeeding writes.  The limit
++          // checks still needs to be done though, but is more simple.  We
++          // could probably also optimize that out with a flag for the case
++          // when limit is the maximum 32bit value.  Limit should accomodate
++          // at least a dword, since we subtract from it in the simple
++          // limit check in other functions, and we don't want the value to roll.
++          // Only normal segments (not expand down) are handled this way.
++          seg->cache.valid |= SegAccessWOK;
++          }
+         break;
+ 
+       case 6: case 7: /* read write, expand down */
+@@ -109,6 +117,10 @@
+       if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
+       else exception(BX_GP_EXCEPTION, 0, 0);
+       }
++    if (seg->cache.u.segment.limit_scaled >= 3) {
++      // Mark cache as being OK type for succeeding writes.  See notes above.
++      seg->cache.valid |= SegAccessWOK;
++      }
+     }
+ }
+ 
+@@ -118,7 +130,6 @@
+ {
+   Bit32u upper_limit;
+ 
+-
+   if ( protected_mode() ) {
+     if ( seg->cache.valid==0 ) {
+       BX_ERROR(("seg = %s", BX_CPU_THIS_PTR strseg(seg)));
+@@ -148,6 +159,11 @@
+           exception(int_number(seg), 0, 0);
+           return;
+           }
++        if (seg->cache.u.segment.limit_scaled >= 3) {
++          // Mark cache as being OK type for succeeding writes.  See notes for
++          // write checks; similar code.
++          seg->cache.valid |= SegAccessROK;
++          }
+         break;
+ 
+       case 2: case 3: /* read/write */
+@@ -157,6 +173,11 @@
+           exception(int_number(seg), 0, 0);
+           return;
+           }
++        if (seg->cache.u.segment.limit_scaled >= 3) {
++          // Mark cache as being OK type for succeeding writes.  See notes for
++          // write checks; similar code.
++          seg->cache.valid |= SegAccessROK;
++          }
+         break;
+ 
+       case 4: case 5: /* read only, expand down */
+@@ -206,6 +227,11 @@
+       if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
+       else exception(BX_GP_EXCEPTION, 0, 0);
+       }
++    if (seg->cache.u.segment.limit_scaled >= 3) {
++      // Mark cache as being OK type for succeeding writes.  See notes for
++      // write checks; similar code.
++      seg->cache.valid |= SegAccessROK;
++      }
+     return;
+     }
+ }
+@@ -238,13 +264,19 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 1);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 1, BX_WRITE);
++  if (seg->cache.valid & SegAccessWOK) {
++    if (offset <= seg->cache.u.segment.limit_scaled) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 1, BX_WRITE);
+ 
+-  // all checks OK
+-  access_linear(laddr, 1, CPL==3, BX_WRITE, (void *) data);
++      // all checks OK
++      access_linear(laddr, 1, CPL==3, BX_WRITE, (void *) data);
++      return;
++      }
++    }
++  write_virtual_checks(seg, offset, 1);
++  goto accessOK;
+ }
+ 
+   void
+@@ -254,13 +286,19 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 2);
++  if (seg->cache.valid & SegAccessWOK) {
++    if (offset < seg->cache.u.segment.limit_scaled) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 2, BX_WRITE);
+ 
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 2, BX_WRITE);
+-
+-  // all checks OK
+-  access_linear(laddr, 2, CPL==3, BX_WRITE, (void *) data);
++      // all checks OK
++      access_linear(laddr, 2, CPL==3, BX_WRITE, (void *) data);
++      return;
++      }
++    }
++  write_virtual_checks(seg, offset, 2);
++  goto accessOK;
+ }
+ 
+   void
+@@ -270,13 +308,19 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 4);
++  if (seg->cache.valid & SegAccessWOK) {
++    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 4, BX_WRITE);
+ 
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 4, BX_WRITE);
+-
+-  // all checks OK
+-  access_linear(laddr, 4, CPL==3, BX_WRITE, (void *) data);
++      // all checks OK
++      access_linear(laddr, 4, CPL==3, BX_WRITE, (void *) data);
++      return;
++      }
++    }
++  write_virtual_checks(seg, offset, 4);
++  goto accessOK;
+ }
+ 
+   void
+@@ -286,13 +330,19 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  read_virtual_checks(seg, offset, 1);
++  if (seg->cache.valid & SegAccessROK) {
++    if (offset <= seg->cache.u.segment.limit_scaled) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 1, BX_READ);
+ 
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 1, BX_READ);
+-
+-  // all checks OK
+-  access_linear(laddr, 1, CPL==3, BX_READ, (void *) data);
++      // all checks OK
++      access_linear(laddr, 1, CPL==3, BX_READ, (void *) data);
++      return;
++      }
++    }
++  read_virtual_checks(seg, offset, 1);
++  goto accessOK;
+ }
+ 
+ 
+@@ -303,13 +353,19 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  read_virtual_checks(seg, offset, 2);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 2, BX_READ);
++  if (seg->cache.valid & SegAccessROK) {
++    if (offset < seg->cache.u.segment.limit_scaled) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 2, BX_READ);
+ 
+-  // all checks OK
+-  access_linear(laddr, 2, CPL==3, BX_READ, (void *) data);
++      // all checks OK
++      access_linear(laddr, 2, CPL==3, BX_READ, (void *) data);
++      return;
++      }
++    }
++  read_virtual_checks(seg, offset, 2);
++  goto accessOK;
+ }
+ 
+ 
+@@ -320,13 +376,19 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  read_virtual_checks(seg, offset, 4);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 4, BX_READ);
++  if (seg->cache.valid & SegAccessROK) {
++    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 4, BX_READ);
+ 
+-  // all checks OK
+-  access_linear(laddr, 4, CPL==3, BX_READ, (void *) data);
++      // all checks OK
++      access_linear(laddr, 4, CPL==3, BX_READ, (void *) data);
++      return;
++      }
++    }
++  read_virtual_checks(seg, offset, 4);
++  goto accessOK;
+ }
+ 
+ //////////////////////////////////////////////////////////////
+@@ -341,23 +403,29 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 1);
++  if (seg->cache.valid & SegAccessWOK) {
++    if (offset <= seg->cache.u.segment.limit_scaled) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 1, BX_READ);
+ 
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 1, BX_READ);
+-
+-  // all checks OK
++      // all checks OK
+ #if BX_CPU_LEVEL >= 3
+-  if (BX_CPU_THIS_PTR cr0.pg)
+-    access_linear(laddr, 1, CPL==3, BX_RW, (void *) data);
+-  else
++      if (BX_CPU_THIS_PTR cr0.pg)
++        access_linear(laddr, 1, CPL==3, BX_RW, (void *) data);
++      else
+ #endif
+-    {
+-    BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
+-    BX_INSTR_LIN_READ(laddr, laddr, 1);
+-    BX_INSTR_LIN_WRITE(laddr, laddr, 1);
+-    BX_CPU_THIS_PTR mem->read_physical(this, laddr, 1, (void *) data);
++        {
++        BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
++        BX_INSTR_LIN_READ(laddr, laddr, 1);
++        BX_INSTR_LIN_WRITE(laddr, laddr, 1);
++        BX_CPU_THIS_PTR mem->read_physical(this, laddr, 1, (void *) data);
++        }
++      return;
++      }
+     }
++  write_virtual_checks(seg, offset, 1);
++  goto accessOK;
+ }
+ 
+ 
+@@ -368,23 +436,29 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 2);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 2, BX_READ);
++  if (seg->cache.valid & SegAccessWOK) {
++    if (offset < seg->cache.u.segment.limit_scaled) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 2, BX_READ);
+ 
+-  // all checks OK
++      // all checks OK
+ #if BX_CPU_LEVEL >= 3
+-  if (BX_CPU_THIS_PTR cr0.pg)
+-    access_linear(laddr, 2, CPL==3, BX_RW, (void *) data);
+-  else
++      if (BX_CPU_THIS_PTR cr0.pg)
++        access_linear(laddr, 2, CPL==3, BX_RW, (void *) data);
++      else
+ #endif
+-    {
+-    BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
+-    BX_INSTR_LIN_READ(laddr, laddr, 2);
+-    BX_INSTR_LIN_WRITE(laddr, laddr, 2);
+-    BX_CPU_THIS_PTR mem->read_physical(this, laddr, 2, data);
++        {
++        BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
++        BX_INSTR_LIN_READ(laddr, laddr, 2);
++        BX_INSTR_LIN_WRITE(laddr, laddr, 2);
++        BX_CPU_THIS_PTR mem->read_physical(this, laddr, 2, data);
++        }
++      return;
++      }
+     }
++  write_virtual_checks(seg, offset, 2);
++  goto accessOK;
+ }
+ 
+   void
+@@ -394,23 +468,29 @@
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 4);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 4, BX_READ);
++  if (seg->cache.valid & SegAccessWOK) {
++    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
++accessOK:
++      laddr = seg->cache.u.segment.base + offset;
++      BX_INSTR_MEM_DATA(laddr, 4, BX_READ);
+ 
+-  // all checks OK
++      // all checks OK
+ #if BX_CPU_LEVEL >= 3
+-  if (BX_CPU_THIS_PTR cr0.pg)
+-    access_linear(laddr, 4, CPL==3, BX_RW, (void *) data);
+-  else
++      if (BX_CPU_THIS_PTR cr0.pg)
++        access_linear(laddr, 4, CPL==3, BX_RW, (void *) data);
++      else
+ #endif
+-    {
+-    BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
+-    BX_INSTR_LIN_READ(laddr, laddr, 4);
+-    BX_INSTR_LIN_WRITE(laddr, laddr, 4);
+-    BX_CPU_THIS_PTR mem->read_physical(this, laddr, 4, data);
++        {
++        BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
++        BX_INSTR_LIN_READ(laddr, laddr, 4);
++        BX_INSTR_LIN_WRITE(laddr, laddr, 4);
++        BX_CPU_THIS_PTR mem->read_physical(this, laddr, 4, data);
++        }
++      return;
++      }
+     }
++  write_virtual_checks(seg, offset, 4);
++  goto accessOK;
+ }
+ 
+   void
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.22
+diff -u -r1.22 cpu.h
+--- cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
++++ cpu/cpu.h	27 Aug 2002 22:28:24 -0000
+@@ -347,7 +347,13 @@
+ 
+ 
+ typedef struct {
+-  Boolean valid;         /* 0 = invalid, 1 = valid */
++
++#define SegValidCache 0x1
++#define SegAccessROK  0x2
++#define SegAccessWOK  0x4
++  Boolean valid;         // Holds above values, Or'd together.  Used to
++                         // hold only 0 or 1.
++
+   Boolean p;             /* present */
+   Bit8u   dpl;           /* descriptor privilege level 0..3 */
+   Boolean segment;       /* 0 = system/gate, 1 = data/code segment */
