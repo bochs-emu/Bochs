@@ -79,7 +79,7 @@ bx_options_t bx_options = {
   0,          // default i440FXSupport
   {NULL, 0},  // cmos path, cmos image boolean
   { 0, 0, 0, {0,0,0,0,0,0}, NULL, NULL }, // ne2k
-  0,          // newHardDriveSupport
+  1,          // newHardDriveSupport
   { 0, NULL, NULL, NULL } // load32bitOSImage hack stuff
   };
 
