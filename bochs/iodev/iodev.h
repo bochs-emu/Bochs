@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.36 2003-07-31 15:29:34 vruppert Exp $
+// $Id: iodev.h,v 1.37 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -212,6 +212,9 @@ class BOCHSAPI bx_pic_stub_c : public bx_devmodel_c {
   }
   virtual Bit8u IAC(void) {
     STUBFUNC(pic, IAC); return 0;
+  }
+  virtual void show_pic_state(void) {
+    STUBFUNC(pic, show_pic_state);
   }
 };
 

@@ -83,6 +83,9 @@
 // adds support for the GNU readline library in the debugger command 
 // prompt.
 
+#define HAVE_LOCALE_H 0
+// Define to 1 if you have <locale.h>
+
 // I rebuilt the code which provides timers to IO devices.
 // Setting this to 1 will introduce a little code which
 // will panic out if cases which shouldn't happen occur.
@@ -821,8 +824,17 @@ typedef
 // set if your compiler does not allow label at the end of a {} block
 #define BX_NO_BLANK_LABELS 0
 
-// set if you don't have <hash_map.h>, used in debug/dbg_main.c
+// set if you don't have <hash_map>, used in debug/dbg_main.c
 #define BX_HAVE_HASH_MAP 0
+
+// set if you don't have <hash_map.h>, used in debug/dbg_main.c
+#define BX_HAVE_HASH_MAP_H 0
+
+// set if you don't have <set>, used in debug/dbg_main.c
+#define BX_HAVE_SET 0
+
+// set if you don't have <set.h>, used in debug/dbg_main.c
+#define BX_HAVE_SET_H 0
 
 // Support x86 hardware debugger registers and facilites.
 // These are the debug facilites offered by the x86 architecture,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.18 2003-08-01 10:14:48 akrisak Exp $
+// $Id: debug.h,v 1.19 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,6 +56,24 @@ unsigned long crc32(unsigned char *buf, int len);
 extern "C" {
 #endif
 
+typedef enum 
+{
+ rAL, rBL, rCL, rDL, 
+ rAH, rBH, rCH, rDH, 
+ rAX, rBX, rCX, rDX, 
+ rEAX, rEBX, rECX, rEDX, 
+ rSI, rDI, rESI, rEDI, 
+ rBP, rEBP, rSP, rESP, 
+ rIP, rEIP
+} Regs;
+
+typedef enum
+{
+  bkRegular,
+  bkAtIP,
+  bkStepOver
+} BreakpointKind;
+
 // Flex defs
 extern int bxlex(void);
 extern char *bxtext;  // Using the pointer option rather than array
@@ -72,8 +90,15 @@ typedef struct {
 } bx_num_range;
 #define EMPTY_ARG (-1)
 
+Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
+Bit32u bx_dbg_get_reg_value(Regs reg);
+void bx_dbg_set_reg_value (Regs reg, Bit32u value);
+Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
+void bx_dbg_step_over_command(void);
 bx_num_range make_num_range (Bit64s from, Bit64s to);
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
+char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
+Bit32u bx_dbg_get_symbol_value(char *Symbol);
 void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
 void bx_dbg_trace_on_command(void);
 void bx_dbg_trace_off_command(void);
@@ -97,7 +122,7 @@ void bx_dbg_modebp_command(char*); /* BW */
 void bx_dbg_where_command(void);
 void bx_dbg_print_string_command(Bit32u addr);
 void bx_dbg_show_command(char*); /* BW */
-void enter_playback_entry();
+void enter_playback_entry(void);
 void bx_dbg_print_stack_command(int nwords);
 void bx_dbg_watch(int read, Bit32u address);
 void bx_dbg_unwatch(int read, Bit32u address);
@@ -105,9 +130,17 @@ void bx_dbg_continue_command(void);
 void bx_dbg_stepN_command(bx_dbg_icount_t count);
 void bx_dbg_set_command(char *p1, char *p2, char *p3);
 void bx_dbg_del_breakpoint_command(unsigned handle);
-void bx_dbg_vbreakpoint_command(bx_bool specific, Bit32u cs, Bit32u eip);
-void bx_dbg_lbreakpoint_command(bx_bool specific, Bit32u laddress);
-void bx_dbg_pbreakpoint_command(bx_bool specific, Bit32u paddress);
+void bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable);
+bx_bool bx_dbg_en_dis_pbreak (unsigned handle, bx_bool enable);
+bx_bool bx_dbg_en_dis_lbreak (unsigned handle, bx_bool enable);
+bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable);
+bx_bool bx_dbg_del_pbreak(unsigned handle);
+bx_bool bx_dbg_del_lbreak (unsigned handle);
+bx_bool bx_dbg_del_vbreak (unsigned handle);
+int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, Bit32u eip);
+int bx_dbg_lbreakpoint_command(BreakpointKind bk, Bit32u laddress);
+int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
+int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
@@ -120,7 +153,9 @@ void bx_dbg_info_gdt_command(bx_num_range);
 void bx_dbg_info_ldt_command(bx_num_range);
 void bx_dbg_info_tss_command(bx_num_range);
 void bx_dbg_info_control_regs_command(void);
+void bx_dbg_info_flags(void);
 void bx_dbg_info_linux_command(void);
+void bx_dbg_info_symbols_command(char *Symbol);
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
                     Bit32u addr, bx_bool addr_passed, int simulator);
 void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
@@ -129,18 +164,17 @@ void bx_dbg_query_command(char *);
 void bx_dbg_take_command(char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
 void bx_dbg_set_cpu_command(void);
-void bx_dbg_disassemble_command(bx_num_range);
+void bx_dbg_disassemble_command(const char *,bx_num_range);
 void bx_dbg_instrument_command(char *);
 void bx_dbg_loader_command(char *);
 void bx_dbg_doit_command(unsigned);
 void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
-void bx_dbg_maths_command(char *command, int data1, int data2);
-void bx_dbg_maths_expression_command(char *expr);
-void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
 extern bx_bool watchpoint_continue;
-void bx_dbg_linux_syscall ();
+void bx_dbg_linux_syscall (void);
 void bx_dbg_info_ne2k(int page, int reg);
+void bx_dbg_info_pic(void);
 void bx_dbg_help_command(char* command);
+void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_info_ivt_command(bx_num_range);
 #ifdef __cplusplus
 }
@@ -235,6 +269,7 @@ typedef struct {
       Bit32u cs;  // only use 16 bits
       Bit32u eip;
       unsigned bpoint_id;
+      bx_bool enabled;
       } vir[BX_DBG_MAX_VIR_BPOINTS];
 #endif
 
@@ -243,6 +278,7 @@ typedef struct {
     struct {
       Bit32u addr;
       unsigned bpoint_id;
+      bx_bool enabled;
       } lin[BX_DBG_MAX_LIN_BPOINTS];
 #endif
 
@@ -251,6 +287,7 @@ typedef struct {
     struct {
       Bit32u addr;
       unsigned bpoint_id;
+      bx_bool enabled;
       } phy[BX_DBG_MAX_PHY_BPOINTS];
 #endif
     } iaddr;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.6 2003-02-13 15:04:09 sshwarts Exp $
+// $Id: instrument.cc,v 1.7 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ void bxInstrumentation::bx_instr_new_instruction()
   {
     char disasm_tbuf[512];	// buffer for instruction disassembly
     unsigned length = opcode_size, n;
-    bx_disassemble.disasm(is32, 0, opcode, disasm_tbuf);
+    bx_disassemble.disasm(is32, 0, 0, opcode, disasm_tbuf);
     if(length != 0)	
     {
       fprintf(stderr, "----------------------------------------------------------\n");

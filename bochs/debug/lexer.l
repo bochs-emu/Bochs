@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.11 2003-08-01 10:14:48 akrisak Exp $
+// $Id: lexer.l,v 1.12 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -19,28 +19,34 @@ static char    *lex_input_ptr = NULL;
 static unsigned lex_input_size = 0;
 %}
 
+%x EXAMINE
+%x DISASM
 
 %%
-[ \t]+          ; // eat up whitespace
+<*>[ \t]+       ; // eat up whitespace
 set             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET); }
 dis             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIS); }
 on              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ON); }
 off             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_OFF); }
 crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
-c               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
+c               |
+cont            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
 stepi           |
 step            |
-si              |
 s               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEPN); }
-vb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VBREAKPOINT); }
+next            |
+n               |
+p               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEP_OVER); }
+blist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_BREAK); }
+vb              |
 vbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VBREAKPOINT); }
-lb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LBREAKPOINT); }
+lb              |
 lbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LBREAKPOINT); }
-pb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
+break           |
+b               |
+pb              |
 pbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
 info            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO); }
-break           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
-b               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
 program         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PROGRAM); }
 cr		|
 creg		|
@@ -49,6 +55,7 @@ r		|
 reg		|
 registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
 fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
+cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }
 all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
 idt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }
 ivt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IVT); }
@@ -58,27 +65,27 @@ tss		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TSS); }
 dirty           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIRTY); }
 linux           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LINUX); }
 dump_cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DUMP_CPU); }
-delete          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
-del             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
+delete          |
+del             |
 d               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
-quit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
+bpe             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ENABLE_BREAKPOINT); }
+bpd             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISABLE_BREAKPOINT); }
+quit            |
+exit            |
 q               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
-x               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
-xp              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
+x               |
+xp              { BEGIN(EXAMINE); bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
 setpmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SETPMEM); }
 query           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUERY); }
 pending         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PENDING); }
 take            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TAKE); }
 dma             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DMA); }
 irq             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IRQ); }
+pic             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PIC); }
 set_cpu         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET_CPU); }
+u               |
 disas           |
-disassemble     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
-maths           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MATHS); }
-add             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ADD); }
-sub             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SUB); }
-mul             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MUL); }
-div             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIV); }
+disassemble     { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
 instrument      { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INSTRUMENT); }
 start           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_START); }
 stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
@@ -104,6 +111,8 @@ write           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITE); }
 continue        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
 show            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SHOW); }
 load-symbols    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOL); }
+symbols         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLS); }
+slist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_SYMBOLS); }
 global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
 where           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WHERE); }
 print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
@@ -116,27 +125,69 @@ addr-info       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO_ADDRESS); }
 ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
+al              { bxlval.reg=rAL; return (BX_TOKEN_REG_AL);}
+bl              { bxlval.reg=rBL; return (BX_TOKEN_REG_BL);}
+cl              { bxlval.reg=rCL; return (BX_TOKEN_REG_CL);}
+dl              { bxlval.reg=rDL; return (BX_TOKEN_REG_DL);}
+ah              { bxlval.reg=rAH; return (BX_TOKEN_REG_AH);}
+bh              { bxlval.reg=rBH; return (BX_TOKEN_REG_BH);}
+ch              { bxlval.reg=rCH; return (BX_TOKEN_REG_CH);}
+dh              { bxlval.reg=rDH; return (BX_TOKEN_REG_DH);}
+ax              { bxlval.reg=rAX; return (BX_TOKEN_REG_AX);}
+bx              { bxlval.reg=rBX; return (BX_TOKEN_REG_BX);}
+cx              { bxlval.reg=rCX; return (BX_TOKEN_REG_CX);}
+dx              { bxlval.reg=rDX; return (BX_TOKEN_REG_DX);}
+eax             { bxlval.reg=rEAX; return (BX_TOKEN_REG_EAX);}
+ebx             { bxlval.reg=rEBX; return (BX_TOKEN_REG_EBX);}
+ecx             { bxlval.reg=rECX; return (BX_TOKEN_REG_ECX);}
+edx             { bxlval.reg=rEDX; return (BX_TOKEN_REG_EDX);}
+si              { bxlval.reg=rSI; return (BX_TOKEN_REG_SI);}
+di              { bxlval.reg=rDI; return (BX_TOKEN_REG_DI);}
+bp              { bxlval.reg=rBP; return (BX_TOKEN_REG_BP);}
+sp              { bxlval.reg=rSP; return (BX_TOKEN_REG_SP);}
+ip              { bxlval.reg=rIP; return (BX_TOKEN_REG_IP);}
+esi             { bxlval.reg=rESI; return (BX_TOKEN_REG_ESI);}
+edi             { bxlval.reg=rEDI; return (BX_TOKEN_REG_EDI);}
+ebp             { bxlval.reg=rEBP; return (BX_TOKEN_REG_EBP);}
+esp             { bxlval.reg=rESP; return (BX_TOKEN_REG_ESP);}
+eip             { bxlval.reg=rEIP; return (BX_TOKEN_REG_EIP);}
 cs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CS); }
 es              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ES); }
 ss              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SS); }
 ds              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DS); }
 fs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FS); }
 gs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GS); }
+flags           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FLAGS); }
 force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
-v2l             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_V2L); }
 help            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
+\?              |
+calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
+<EXAMINE>\/[0-9]+                 { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+<EXAMINE>\/[0-9]*[mxduotcsibhwg]+ { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+<DISASM>\/[0-9]+        { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISFORMAT); }
+"+"             { return ('+'); }
+"-"             { return ('-'); }
+"*"             { return ('*'); }
+"/"             { return ('/'); }
+">>"            { return (BX_TOKEN_RSHIFT); }
+"<<"            { return (BX_TOKEN_LSHIFT); }
+"&"             { return ('&'); }
+"|"             { return ('|'); }
+"^"             { return ('^'); }
+"!"             { return ('!'); }
+"("             { return ('('); }
+")"             { return (')'); }
+\'[^\'\n]*\'    |
 \"[^\"\n]*\"    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STRING); }
-\/[0-9]*[xduotcsibhwg][xduotcsibhwg] { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
-\/[0-9]*[xduotcsibhwg]              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
-\/[0-9]+                           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
 0x[0-9a-fA-F]+  { bxlval.uval = strtoul(bxtext+2, NULL, 16); return(BX_TOKEN_NUMERIC); }
 0[0-7]+         { bxlval.uval = strtoul(bxtext+1, NULL, 8); return(BX_TOKEN_NUMERIC); }
 [0-9]+L         { bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
 [0-9]+          { bxlval.uval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_NUMERIC); }
 $[a-zA-Z_][a-zA-Z0-9_]* { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLNAME); }
-\n              { return('\n'); }
+<*>\n           { return('\n'); }
 [#][^\n]*    ; // eat up comments '//'
 .               { return(bxtext[0]); }
+<EXAMINE,DISASM>. { BEGIN(INITIAL); unput(*bxtext); }
 %%
 
 // [A-Za-z_][A-Za-z0-9_]*   { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GENERIC); }

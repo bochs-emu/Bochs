@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.31 2003-07-31 19:51:42 vruppert Exp $
+// $Id: pic.cc,v 1.32 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -167,7 +167,7 @@ bx_pic_c::read(Bit32u address, unsigned io_len)
     clear_highest_interrupt(& BX_PIC_THIS s.master_pic);
     BX_PIC_THIS s.master_pic.polled = 0;
     service_master_pic();
-    return BX_PIC_THIS s.master_pic.irq;  // Return the current irq requested
+    return io_len==1?BX_PIC_THIS s.master_pic.irq:(BX_PIC_THIS s.master_pic.irq)<<8|(BX_PIC_THIS s.master_pic.irq);  // Return the current irq requested
   }
 
   if((address == 0xa0 || address == 0xa1) && BX_PIC_THIS s.slave_pic.polled) {
@@ -175,7 +175,7 @@ bx_pic_c::read(Bit32u address, unsigned io_len)
     clear_highest_interrupt(& BX_PIC_THIS s.slave_pic);
     BX_PIC_THIS s.slave_pic.polled = 0;
     service_slave_pic();
-    return BX_PIC_THIS s.slave_pic.irq;  // Return the current irq requested
+    return io_len==1?BX_PIC_THIS s.slave_pic.irq:(BX_PIC_THIS s.slave_pic.irq)<<8|(BX_PIC_THIS s.slave_pic.irq);  // Return the current irq requested
   }
 
 
@@ -859,8 +859,12 @@ bx_pic_c::IAC(void)
   void
 bx_pic_c::show_pic_state(void)
 {
-BX_INFO(("s.master_pic.imr = %02x", BX_PIC_THIS s.master_pic.imr));
-BX_INFO(("s.master_pic.isr = %02x", BX_PIC_THIS s.master_pic.isr));
-BX_INFO(("s.master_pic.irr = %02x", BX_PIC_THIS s.master_pic.irr));
-BX_INFO(("s.master_pic.irq = %02x", BX_PIC_THIS s.master_pic.irq));
+dbg_printf("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
+dbg_printf("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
+dbg_printf("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
+dbg_printf("s.master_pic.irq = %02x\n", BX_PIC_THIS s.master_pic.irq);
+dbg_printf("s.slave_pic.imr = %02x\n", BX_PIC_THIS s.slave_pic.imr);
+dbg_printf("s.slave_pic.isr = %02x\n", BX_PIC_THIS s.slave_pic.isr);
+dbg_printf("s.slave_pic.irr = %02x\n", BX_PIC_THIS s.slave_pic.irr);
+dbg_printf("s.slave_pic.irq = %02x\n", BX_PIC_THIS s.slave_pic.irq);
 }

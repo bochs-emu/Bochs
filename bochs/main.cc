@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.231 2003-08-01 01:20:00 cbothamy Exp $
+// $Id: main.cc,v 1.232 2003-08-04 16:03:08 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,6 +28,10 @@
 #include "bochs.h"
 #include <assert.h>
 #include "state_file.h"
+
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
 
 #if BX_WITH_SDL
 // since SDL redefines main() to SDL_main(), we must include SDL.h so that the
@@ -1525,6 +1529,10 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 #endif
 
 int bxmain () {
+#ifdef HAVE_LOCALE_H
+  // Initialize locale (for isprint() and other functions)
+  setlocale (LC_ALL, "");
+#endif
   bx_user_quit = 0;
   bx_init_siminterface ();   // create the SIM object
   static jmp_buf context;
@@ -1806,7 +1814,7 @@ bx_init_main (int argc, char *argv[])
       // there is no stdin/stdout so disable the text-based config interface.
       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
       char cwd[MAXPATHLEN];
-      getwd (cwd);
+      getcwd (cwd);
       BX_INFO (("Now my working directory is %s", cwd));
       // if it was started from command line, there could be some args still.
       for (int a=0; a<argc; a++) {

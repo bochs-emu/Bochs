@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.8 2002-10-25 11:44:35 bdenney Exp $
+// $Id: disasm.h,v 1.9 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@
 class bx_disassemble_c : public logfunctions {
 public:
   bx_disassemble_c(void);
-  unsigned disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf);
+  unsigned disasm(bx_bool is_32, Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf);
 
 private:
   bx_bool db_32bit_opsize;
@@ -48,6 +48,7 @@ private:
   bx_bool db_rep_prefix;
   bx_bool db_repne_prefix;
   Bit32u db_eip;
+  Bit32u db_base;
   Bit8u *instruction_begin;  // keep track of where instruction starts
   Bit8u *instruction;        // for fetching of next byte of instruction
 
@@ -133,6 +134,8 @@ private:
   void XBTS(void);
   void IBTS(void);
   void Mp(void);
+  void Mq(void);
+  void Mb(void);
   void EvIb(void);
   void GvEb(void);
   void GvMa(void);
@@ -183,7 +186,6 @@ private:
   void El(void);
   void STi_ST(void);
   void Eq(void);
-  void Av(void);
   void eAXEv(void);
   void Ep(void);
   };

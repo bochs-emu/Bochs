@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.9 2003-08-03 16:44:53 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.10 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -154,6 +154,18 @@ bx_disassemble_c::Ms(void)
 bx_disassemble_c::Mp(void)
 {
     GvMp();
+}
+
+  void
+bx_disassemble_c::Mq(void)
+{
+ Ms();
+}
+
+void
+bx_disassemble_c::Mb(void)
+{
+ Ms();
 }
 
   void
@@ -412,22 +424,6 @@ bx_disassemble_c::GvEb(void)
     decode_gxex(BX_GENERAL_16BIT_REG, BX_GENERAL_8BIT_REG);
 }
 
-
-  void
-bx_disassemble_c::Av(void)
-{
-  if (db_32bit_opsize) {
-    Bit32s imm32;
-    imm32 = (Bit32s) fetch_dword();
-    dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
-    }
-  else {
-    Bit16s imm16;
-    imm16 = (Bit16s) fetch_word();
-    dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
-    }
-}
-
   void
 bx_disassemble_c::Eb(void)
 {
@@ -525,6 +521,13 @@ bx_disassemble_c::Jv(void)
     Bit32s imm32; /* JMP rel32 is signed */
 
     imm32 = (Bit32s) fetch_dword();
+#if BX_DEBUGGER
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm32 + db_eip), db_base);
+    if(Sym) {
+      dis_sprintf("%s", Sym);
+    }
+    else // Symbol not found
+#endif
     dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
     }
   else
@@ -533,6 +536,13 @@ bx_disassemble_c::Jv(void)
     Bit16s imm16; /* JMP rel16 is signed */
 
     imm16 = (Bit16s) fetch_word();
+#if BX_DEBUGGER
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm16 + db_eip) & 0xFFFF), db_base);
+    if(Sym) {
+      dis_sprintf("%s", Sym);
+    }
+    else // Symbol not found
+#endif
     dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
     }
 }
@@ -596,11 +606,25 @@ bx_disassemble_c::Jb(void)
   imm8 = (Bit8s) fetch_byte();
 #if BX_CPU_LEVEL > 2
   if (db_32bit_opsize) {
+#if BX_DEBUGGER
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm8 + db_eip), db_base);
+    if(Sym) {
+      dis_sprintf("%s", Sym);
+    }
+    else // Symbol not found
+#endif
     dis_sprintf("%08x", (unsigned) (imm8 + db_eip));
     }
   else
 #endif
   {
+#if BX_DEBUGGER
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm8 + db_eip) & 0xFFFF), db_base);
+    if(Sym) {
+      dis_sprintf("%s", Sym);
+    }
+    else // Symbol not found
+ #endif
     dis_sprintf("%04x", (unsigned) ((imm8 + db_eip) & 0xFFFF));
   }
 }

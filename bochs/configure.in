@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.219 2003-07-13 23:30:55 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.220 2003-08-04 16:03:08 akrisak Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -248,11 +248,29 @@ AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;],
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(for hash_map)
+AC_TRY_COMPILE([#include <hash_map>], [],
+   [
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(BX_HAVE_HASH_MAP)
+   ], AC_MSG_RESULT(no))
 AC_MSG_CHECKING(for hash_map.h)
 AC_TRY_COMPILE([#include <hash_map.h>], [],
    [
      AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_HASH_MAP)
+     AC_DEFINE(BX_HAVE_HASH_MAP_H)
+   ], AC_MSG_RESULT(no))
+AC_MSG_CHECKING(for set)
+AC_TRY_COMPILE([#include <set>], [],
+   [
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(BX_HAVE_SET)
+   ], AC_MSG_RESULT(no))
+AC_MSG_CHECKING(for set.h)
+AC_TRY_COMPILE([#include <set.h>], [],
+   [
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(BX_HAVE_SET_H)
    ], AC_MSG_RESULT(no))
 AC_LANG_RESTORE
 

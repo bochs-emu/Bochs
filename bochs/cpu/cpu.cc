@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.79 2003-06-07 19:16:52 vruppert Exp $
+// $Id: cpu.cc,v 1.80 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -672,8 +672,8 @@ BX_CPU_C::handleAsyncEvent(void)
       if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
                                        BX_HWDebugInstruction)) ) {
         // Add to the list of debug events thus far.
-        BX_CPU_THIS_PTR debug_trap |= dr6_bits;
         BX_CPU_THIS_PTR async_event = 1;
+        BX_CPU_THIS_PTR debug_trap |= dr6_bits;
         // If debug events are not inhibited on this boundary,
         // fire off a debug fault.  Otherwise handle it on the next
         // boundary. (becomes a trap)
@@ -695,7 +695,11 @@ BX_CPU_C::handleAsyncEvent(void)
   if ( !(BX_CPU_INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
-         BX_CPU_THIS_PTR get_TF ()) )
+         BX_CPU_THIS_PTR get_TF () 
+#if BX_X86_DEBUGGER
+         || (BX_CPU_THIS_PTR dr7 & 0xff)
+#endif
+        ))
     BX_CPU_THIS_PTR async_event = 0;
 
   return 0; // Continue executing cpu_loop.
@@ -762,8 +766,7 @@ BX_CPU_C::prefetch(void)
   BX_CPU_THIS_PTR eipPageBias = - eipPageOffset0;
   BX_CPU_THIS_PTR eipPageWindowSize = 4096; // FIXME:
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
-  BX_CPU_THIS_PTR eipFetchPtr =
-      BX_CPU_THIS_PTR mem->getHostMemAddr(this, BX_CPU_THIS_PTR pAddrA20Page,
+  BX_CPU_THIS_PTR eipFetchPtr=BX_CPU_THIS_PTR mem->getHostMemAddr(this, BX_CPU_THIS_PTR pAddrA20Page,
                                           BX_READ);
 
   // Sanity checks
@@ -921,7 +924,8 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
       if (BX_CPU_THIS_PTR guard_found.icount!=0) {
         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
-          if ( (bx_guard.iaddr.vir[i].cs  == cs) &&
+          if ( bx_guard.iaddr.vir[i].enabled &&
+               (bx_guard.iaddr.vir[i].cs  == cs) &&
                (bx_guard.iaddr.vir[i].eip == eip) ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
@@ -935,7 +939,8 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
       if (BX_CPU_THIS_PTR guard_found.icount!=0) {
         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
-          if ( bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr ) {
+          if (bx_guard.iaddr.lin[i].enabled && 
+              (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr) ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint
@@ -956,7 +961,8 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       // Not pretty.
       if (valid && (BX_CPU_THIS_PTR guard_found.icount!=0)) {
         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
-          if ( bx_guard.iaddr.phy[i].addr == phy ) {
+          if ( bx_guard.iaddr.phy[i].enabled && 
+               (bx_guard.iaddr.phy[i].addr == phy) ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.10 2002-10-25 11:44:40 bdenney Exp $
+// $Id: pic.h,v 1.11 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,6 +76,7 @@ public:
   virtual void   lower_irq(unsigned irq_no);
   virtual void   raise_irq(unsigned irq_no);
   virtual Bit8u  IAC(void);
+  virtual void   show_pic_state(void);
 
 private:
   struct {
@@ -92,6 +93,5 @@ private:
 
   BX_PIC_SMF void   service_master_pic(void);
   BX_PIC_SMF void   service_slave_pic(void);
-  BX_PIC_SMF void   show_pic_state(void);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
   };

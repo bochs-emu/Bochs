@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.122 2003-07-28 13:55:20 vruppert Exp $
+// $Id: bochs.h,v 1.123 2003-08-04 16:03:01 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,6 +77,7 @@ extern "C" {
 #include <ctype.h>
 #include <string.h>
 #include <fcntl.h>
+#include <limits.h>
 #ifdef macintosh
 #  define SuperDrive "[fd:]"
 #endif

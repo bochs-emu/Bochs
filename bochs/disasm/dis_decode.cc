@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.13 2003-01-21 13:23:47 cbothamy Exp $
+// $Id: dis_decode.cc,v 1.14 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -324,7 +324,7 @@ index_name32[7] =  "EDI";
 
 
   unsigned
-bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
+bx_disassemble_c::disasm(bx_bool is_32, Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf)
 {
   int byte_count;
   Bit8u next_byte;
@@ -333,6 +333,7 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
   db_32bit_opsize = is_32;
   db_32bit_addrsize = is_32;
   db_eip = ip;
+  db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
   instruction_begin = instruction = instr;
 
   seg_override = NULL;
@@ -396,7 +397,7 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
               case 0x04: dis_sprintf("smsw "); Ew(); goto done;
               case 0x05: invalid_opcode(); goto done;
               case 0x06: dis_sprintf("lmsw "); Ew(); goto done;
-              case 0x07: invalid_opcode(); goto done;
+              case 0x07: dis_sprintf("invlpg "); Mb(); goto done;
               default: BX_PANIC(("debugger: invalid opcode")); goto done;
               }
 
@@ -408,8 +409,8 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
           case 0x07: invalid_opcode(); goto done;
           case 0x08: dis_sprintf("invd"); goto done;
           case 0x09: dis_sprintf("wbinvd"); goto done;
-	  case 0x0A:
-	  case 0x0B:
+	  case 0x0A: invalid_opcode(); goto done;
+          case 0x0B: dis_sprintf("ud2"); goto done;
 	  case 0x0C:
 	  case 0x0D:
 	  case 0x0E:
@@ -423,7 +424,25 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
 	  case 0x15:
 	  case 0x16:
 	  case 0x17:
-	  case 0x18:
+	  case 0x18: /* Group 16 */
+            mod_rm_byte = peek_byte();
+            BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+            if(mod&3!=3) { // only mem allowed
+             invalid_opcode(); goto done;
+            }
+
+            switch (opcode) {
+              case 0x00: dis_sprintf("prefetchnta "); Mb(); goto done;
+              case 0x01: dis_sprintf("prefetcht0 "); Mb(); goto done;
+              case 0x02: dis_sprintf("prefetcht1 "); Mb(); goto done;
+              case 0x03: dis_sprintf("prefetcht2 "); Mb(); goto done;
+              case 0x04: 
+              case 0x05: 
+              case 0x06: 
+              case 0x07: invalid_opcode(); goto done;
+              default: BX_PANIC(("debugger: invalid opcode")); goto done;
+              }
+
 	  case 0x19:
 	  case 0x1A:
 	  case 0x1B:
@@ -449,12 +468,13 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
           case 0x2E:
           case 0x2F: invalid_opcode(); goto done;
 
-          case 0x30:
-	  case 0x31:
-	  case 0x32:
-	  case 0x33:
-	  case 0x34:
-	  case 0x35:
+          case 0x30: dis_sprintf("wrmsr"); goto done;
+	  case 0x31: dis_sprintf("rdtsc"); goto done;
+	  case 0x32: dis_sprintf("rdmsr"); goto done;
+	  case 0x33: dis_sprintf("rdpmc"); goto done;
+	  case 0x34: dis_sprintf("sysenter"); goto done;
+	  case 0x35: dis_sprintf("sysexit"); goto done;
+
 	  case 0x36:
 	  case 0x37:
 	  case 0x38:
@@ -466,22 +486,22 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
 	  case 0x3E:
 	  case 0x3F: invalid_opcode(); goto done;
 
-          case 0x40:
-	  case 0x41:
-	  case 0x42:
-	  case 0x43:
-	  case 0x44:
-	  case 0x45:
-	  case 0x46:
-	  case 0x47:
-	  case 0x48:
-	  case 0x49:
-	  case 0x4A:
-	  case 0x4B:
-	  case 0x4C:
-	  case 0x4D:
-	  case 0x4E:
-	  case 0x4F: invalid_opcode(); goto done;
+          case 0x40: dis_sprintf("cmovo "); GvEv(); goto done;
+	  case 0x41: dis_sprintf("cmovno "); GvEv(); goto done;
+	  case 0x42: dis_sprintf("cmovc "); GvEv(); goto done;
+	  case 0x43: dis_sprintf("cmovnc "); GvEv(); goto done;
+	  case 0x44: dis_sprintf("cmovz "); GvEv(); goto done;
+	  case 0x45: dis_sprintf("cmovnz "); GvEv(); goto done;
+	  case 0x46: dis_sprintf("cmovna "); GvEv(); goto done;
+	  case 0x47: dis_sprintf("cmova "); GvEv(); goto done;
+	  case 0x48: dis_sprintf("cmovs "); GvEv(); goto done;
+	  case 0x49: dis_sprintf("cmovns "); GvEv(); goto done;
+	  case 0x4A: dis_sprintf("cmovp "); GvEv(); goto done;
+	  case 0x4B: dis_sprintf("cmovnp "); GvEv(); goto done;
+	  case 0x4C: dis_sprintf("cmovl "); GvEv(); goto done;
+	  case 0x4D: dis_sprintf("cmovnl "); GvEv(); goto done;
+	  case 0x4E: dis_sprintf("cmovng "); GvEv(); goto done;
+	  case 0x4F: dis_sprintf("cmovg "); GvEv(); goto done;
 
           case 0x50:
 	  case 0x51:
@@ -570,7 +590,7 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
 
           case 0xA0: dis_sprintf("push fs"); goto done;
           case 0xA1: dis_sprintf("pop fs"); goto done;
-          case 0xA2: invalid_opcode(); goto done;
+          case 0xA2: dis_sprintf("cpuid"); goto done;
           case 0xA3: dis_sprintf("bt "); EvGv(); goto done;
           case 0xA4: dis_sprintf("shld "); EvGv(); dis_sprintf(", "); Ib(); goto done;
           case 0xA5: dis_sprintf("shld "); EvGv(); dis_sprintf(", CL"); goto done;
@@ -578,11 +598,40 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
           case 0xA7: dis_sprintf("cmpxchg "); IBTS(); goto done;
           case 0xA8: dis_sprintf("push gs"); goto done;
           case 0xA9: dis_sprintf("pop gs"); goto done;
-          case 0xAA: invalid_opcode(); goto done;
+          case 0xAA: dis_sprintf("rsm"); goto done;
           case 0xAB: dis_sprintf("bts "); EvGv(); goto done;
           case 0xAC: dis_sprintf("shrd "); EvGv(); dis_sprintf(", "); Ib(); goto done;
           case 0xAD: dis_sprintf("shrd "); EvGv(); dis_sprintf(", CL"); goto done;
-          case 0xAE: invalid_opcode(); goto done;
+          case 0xAE:  /* Group 15 */
+            mod_rm_byte = peek_byte();
+            BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+            if(mod&3==3) {
+              switch (opcode) {
+                case 0x00:
+                case 0x01:
+                case 0x02:
+                case 0x03: 
+                case 0x04: invalid_opcode(); goto done;
+                case 0x05: dis_sprintf("lfence"); goto done;
+                case 0x06: dis_sprintf("mfence"); goto done;
+                case 0x07: dis_sprintf("sfence"); goto done;
+                default: BX_PANIC(("debugger: invalid opcode")); goto done;
+                }
+            }
+            else {
+              switch (opcode) {
+                case 0x00: dis_sprintf("fxsave"); goto done;
+                case 0x01: dis_sprintf("fxstor"); goto done;
+                case 0x02: dis_sprintf("ldmxcsr"); goto done;
+                case 0x03: dis_sprintf("stmxcsr"); goto done;
+                case 0x04: 
+                case 0x05: 
+                case 0x06: invalid_opcode(); goto done;
+                case 0x07: dis_sprintf("clflush"); goto done;
+                default: BX_PANIC(("debugger: invalid opcode")); goto done;
+                }
+            }
+
           case 0xAF: dis_sprintf("imul "); GvEv(); goto done;
 
           case 0xB0: dis_sprintf("cmpxchg "); EbGb(); goto done;
@@ -609,7 +658,6 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
               case 0x07: dis_sprintf("btc "); EvIb(); goto done;
               default: BX_PANIC(("debugger: invalid opcode")); goto done;
               }
-
           case 0xBB: dis_sprintf("btc "); EvGv(); goto done;
           case 0xBC: dis_sprintf("bsf "); GvEv(); goto done;
           case 0xBD: dis_sprintf("bsr "); GvEv(); goto done;
@@ -622,8 +670,25 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
           case 0xC3:
           case 0xC4:
           case 0xC5:
-          case 0xC6:
-          case 0xC7: invalid_opcode(); goto done;
+          case 0xC6: invalid_opcode(); goto done;
+          case 0xC7: /* Group 9 */
+            mod_rm_byte = peek_byte();
+            BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
+            if(mod&3==3) {// no regs allowed
+              invalid_opcode(); goto done;
+            }
+
+            switch (opcode) {
+              case 0x00: invalid_opcode(); goto done;
+              case 0x01: dis_sprintf("cmpxchg8b "); Mq(); goto done;
+              case 0x02:
+              case 0x03: 
+              case 0x04: 
+              case 0x05: 
+              case 0x06: 
+              case 0x07: invalid_opcode(); goto done;
+              default: BX_PANIC(("debugger: invalid opcode")); goto done;
+              }
           case 0xC8: dis_sprintf("bswap "); eAX(); goto done;
           case 0xC9: dis_sprintf("bswap "); eCX(); goto done;
           case 0xCA: dis_sprintf("bswap "); eDX(); goto done;
@@ -938,8 +1003,20 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
       case 0x99: dis_sprintf("cwd"); goto done;
       case 0x9A: dis_sprintf("call "); Ap(); goto done;
       case 0x9B: dis_sprintf("wait"); goto done;
-      case 0x9C: dis_sprintf("pushf"); goto done;
-      case 0x9D: dis_sprintf("popf"); goto done;
+      case 0x9C: 
+        if (db_32bit_opsize) 
+          dis_sprintf("pushfd"); 
+        else
+          dis_sprintf("pushf"); 
+        goto done;
+
+      case 0x9D: 
+        if (db_32bit_opsize) 
+          dis_sprintf("popfd"); 
+        else
+          dis_sprintf("popf"); 
+        goto done;
+
       case 0x9E: dis_sprintf("sahf"); goto done;
       case 0x9F: dis_sprintf("lahf"); goto done;
 
@@ -1056,21 +1133,26 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
           default: BX_PANIC(("debugger: invalid opcode")); goto done;
           }
 
-      case 0xC2: dis_sprintf("ret_near "); Iw(); goto done;
-      case 0xC3: dis_sprintf("ret_near"); goto done;
+      case 0xC2: dis_sprintf("retn "); Iw(); goto done;
+      case 0xC3: dis_sprintf("retn"); goto done;
       case 0xC4: dis_sprintf("les "); GvMp(); goto done;
       case 0xC5: dis_sprintf("lds "); GvMp(); goto done;
       case 0xC6: dis_sprintf("mov "); EbIb(); goto done;
       case 0xC7: dis_sprintf("mov "); EvIv(); goto done;
       case 0xC8: dis_sprintf("enter "); Iw(); dis_sprintf(", "); Ib(); goto done;
       case 0xC9: dis_sprintf("leave"); goto done;
-      case 0xCA: dis_sprintf("ret_far "); Iw(); goto done;
-      case 0xCB: dis_sprintf("ret_far"); goto done;
+      case 0xCA: dis_sprintf("retf "); Iw(); goto done;
+      case 0xCB: dis_sprintf("retf"); goto done;
       case 0xCC: dis_sprintf("int3"); goto done;
       case 0xCD: dis_sprintf("int "); Ib(); goto done;
       case 0xCE: dis_sprintf("into"); goto done;
-      case 0xCF: dis_sprintf("iret"); goto done;
-
+      case 0xCF: 
+        if (db_32bit_opsize) {
+         dis_sprintf("iretd"); goto done;
+        }
+        else {
+         dis_sprintf("iret"); goto done;
+        }
 
       case 0xD0: /* Group 2 Eb,1 */
         mod_rm_byte = peek_byte();
@@ -1442,7 +1524,7 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
       case 0xE5: dis_sprintf("in "); eAX(); dis_sprintf(", "); Ib(); goto done;
       case 0xE6: dis_sprintf("out "); Ib(); dis_sprintf(", AL"); goto done;
       case 0xE7: dis_sprintf("out "); Ib(); dis_sprintf(", "); eAX(); goto done;
-      case 0xE8: dis_sprintf("call "); Av(); goto done;
+      case 0xE8: dis_sprintf("call "); Jv(); goto done;
       case 0xE9: dis_sprintf("jmp "); Jv(); goto done;
       case 0xEA: dis_sprintf("jmp "); Ap(); goto done;
       case 0xEB: dis_sprintf("jmp "); Jb(); goto done;
@@ -1454,7 +1536,7 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
       case 0xF0: /* LOCK */
         dis_sprintf("LOCK: ");
         break;
-      case 0xF1: invalid_opcode(); goto done;
+      case 0xF1: dis_sprintf("int1"); goto done;
       case 0xF2: /* REPNE/REPNZ */
         db_repne_prefix = 1;
         dis_sprintf("REPNE: ");

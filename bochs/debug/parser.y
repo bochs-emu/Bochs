@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.9 2003-08-01 10:14:48 akrisak Exp $
+// $Id: parser.y,v 1.10 2003-08-04 16:03:09 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -8,10 +8,6 @@
 #include "debug.h"
 
 #if BX_DEBUGGER
-/*
-NOTE: The #if comes from parser.y.  The makefile will add the matching #endif
-at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
-*/
 
 // %left '-' '+'
 // %left '*' '/'
@@ -25,21 +21,59 @@ at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
   Bit32u   uval;
   Bit64u   ulval;
   bx_num_range   uval_range;
+  Regs     reg;
   }
+
+// Common registers
+%type<reg> BX_TOKEN_COMMON_REG
+%type<reg> BX_TOKEN_INDEX_REG
+%type<reg> BX_TOKEN_PTR_REG
+%type<reg> BX_TOKEN_NONSEG_REG
+%token<reg> BX_TOKEN_REG_AL
+%token<reg> BX_TOKEN_REG_BL
+%token<reg> BX_TOKEN_REG_CL
+%token<reg> BX_TOKEN_REG_DL
+%token<reg> BX_TOKEN_REG_AH
+%token<reg> BX_TOKEN_REG_BH
+%token<reg> BX_TOKEN_REG_CH
+%token<reg> BX_TOKEN_REG_DH
+%token<reg> BX_TOKEN_REG_AX
+%token<reg> BX_TOKEN_REG_BX
+%token<reg> BX_TOKEN_REG_CX
+%token<reg> BX_TOKEN_REG_DX
+%token<reg> BX_TOKEN_REG_EAX
+%token<reg> BX_TOKEN_REG_EBX
+%token<reg> BX_TOKEN_REG_ECX
+%token<reg> BX_TOKEN_REG_EDX
+%token<reg> BX_TOKEN_REG_SI
+%token<reg> BX_TOKEN_REG_DI
+%token<reg> BX_TOKEN_REG_BP
+%token<reg> BX_TOKEN_REG_SP
+%token<reg> BX_TOKEN_REG_IP
+%token<reg> BX_TOKEN_REG_ESI
+%token<reg> BX_TOKEN_REG_EDI
+%token<reg> BX_TOKEN_REG_EBP
+%token<reg> BX_TOKEN_REG_ESP
+%token<reg> BX_TOKEN_REG_EIP
 
 %token <sval> BX_TOKEN_CONTINUE
 %token <sval> BX_TOKEN_STEPN
+%token <sval> BX_TOKEN_STEP_OVER
 %token <sval> BX_TOKEN_NEXT_STEP
 %token <sval> BX_TOKEN_SET
 %token <sval> BX_TOKEN_DEBUGGER
+%token <sval> BX_TOKEN_LIST_BREAK
 %token <sval> BX_TOKEN_VBREAKPOINT
 %token <sval> BX_TOKEN_LBREAKPOINT
 %token <sval> BX_TOKEN_PBREAKPOINT
 %token <sval> BX_TOKEN_DEL_BREAKPOINT
+%token <sval> BX_TOKEN_ENABLE_BREAKPOINT
+%token <sval> BX_TOKEN_DISABLE_BREAKPOINT
 %token <sval> BX_TOKEN_INFO
 %token <sval> BX_TOKEN_QUIT
 %token <sval> BX_TOKEN_PROGRAM
 %token <sval> BX_TOKEN_REGISTERS
+%token <sval> BX_TOKEN_CPU
 %token <sval> BX_TOKEN_FPU
 %token <sval> BX_TOKEN_ALL
 %token <sval> BX_TOKEN_IDT
@@ -51,6 +85,7 @@ at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
 %token <sval> BX_TOKEN_CONTROL_REGS
 %token <sval> BX_TOKEN_EXAMINE
 %token <sval> BX_TOKEN_XFORMAT
+%token <sval> BX_TOKEN_DISFORMAT
 %token <sval> BX_TOKEN_SETPMEM
 %token <sval> BX_TOKEN_SYMBOLNAME
 %token <sval> BX_TOKEN_QUERY
@@ -88,6 +123,8 @@ at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
 %token <sval> BX_TOKEN_WRITE
 %token <sval> BX_TOKEN_SHOW
 %token <sval> BX_TOKEN_SYMBOL
+%token <sval> BX_TOKEN_SYMBOLS
+%token <sval> BX_TOKEN_LIST_SYMBOLS
 %token <sval> BX_TOKEN_GLOBAL
 %token <sval> BX_TOKEN_WHERE
 %token <sval> BX_TOKEN_PRINT_STRING
@@ -100,6 +137,7 @@ at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
 %token <ulval> BX_TOKEN_LONG_NUMERIC
 %token <sval> BX_TOKEN_INFO_ADDRESS
 %token <sval> BX_TOKEN_NE2000
+%token <sval> BX_TOKEN_PIC
 %token <sval> BX_TOKEN_PAGE
 %token <sval> BX_TOKEN_CS
 %token <sval> BX_TOKEN_ES
@@ -107,20 +145,24 @@ at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
 %token <sval> BX_TOKEN_DS
 %token <sval> BX_TOKEN_FS
 %token <sval> BX_TOKEN_GS
+%token <sval> BX_TOKEN_FLAGS
 %token <sval> BX_TOKEN_ALWAYS_CHECK
-%token <sval> BX_TOKEN_MATHS
-%token <sval> BX_TOKEN_ADD
-%token <sval> BX_TOKEN_SUB
-%token <sval> BX_TOKEN_MUL
-%token <sval> BX_TOKEN_DIV
-%token <sval> BX_TOKEN_V2L
 %token <sval> BX_TOKEN_TRACEREGON
 %token <sval> BX_TOKEN_TRACEREGOFF
 %token <sval> BX_TOKEN_HELP
+%token <sval> BX_TOKEN_CALC
+%token BX_TOKEN_RSHIFT
+%token BX_TOKEN_LSHIFT
 %token <sval> BX_TOKEN_IVT
 %type <uval> segment_register
 %type <uval> optional_numeric
 %type <uval_range> numeric_range optional_numeric_range
+%type <ulval> vexpression
+%type <ulval> expression
+
+%left '+' '-' '|' '^'
+%left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
+%left NOT NEG
 
 %start command
 
@@ -128,11 +170,17 @@ at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
 command:
       continue_command
     | stepN_command
+    | step_over_command
     | set_command
+    | set_reg_command
     | breakpoint_command
     | info_command
+    | blist_command
+    | slist_command
     | dump_cpu_command
     | delete_command
+    | bpe_command
+    | bpd_command
     | quit_command
     | examine_command
     | setpmem_command
@@ -144,7 +192,6 @@ command:
     | loader_command
     | doit_command
     | crc_command
-    | maths_command
     | trace_on_command
     | trace_off_command
     | ptime_command
@@ -159,10 +206,10 @@ command:
     | where_command
     | print_string_command
     | cosim_commands
-    | v2l_command
     | trace_reg_on_command
     | trace_reg_off_command
     | help_command
+    | calc_command
     | 
     | '\n'
       {
@@ -417,6 +464,14 @@ stepN_command:
         }
     ;
 
+step_over_command:
+      BX_TOKEN_STEP_OVER '\n'
+        {
+        bx_dbg_step_over_command();
+        free($1);
+        }
+    ;
+
 set_command:
       BX_TOKEN_SET BX_TOKEN_DIS BX_TOKEN_ON '\n'
         {
@@ -438,38 +493,64 @@ set_command:
 breakpoint_command:
       BX_TOKEN_VBREAKPOINT '\n'
         {
-        bx_dbg_vbreakpoint_command(0, 0, 0);
+        bx_dbg_vbreakpoint_command(bkAtIP, 0, 0);
         free($1);
         }
-    | BX_TOKEN_VBREAKPOINT BX_TOKEN_NUMERIC ':' BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_VBREAKPOINT vexpression ':' expression '\n'
         {
-        bx_dbg_vbreakpoint_command(1, $2, $4);
+        bx_dbg_vbreakpoint_command(bkRegular, $2, $4);
         free($1);
         }
     | BX_TOKEN_LBREAKPOINT '\n'
         {
-        bx_dbg_lbreakpoint_command(0, 0);
+        bx_dbg_lbreakpoint_command(bkAtIP, 0);
         free($1);
         }
-    | BX_TOKEN_LBREAKPOINT BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_LBREAKPOINT expression '\n'
         {
-        bx_dbg_lbreakpoint_command(1, $2);
+        bx_dbg_lbreakpoint_command(bkRegular, $2);
         free($1);
+        }
+    | BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING '\n'
+        {
+        bx_dbg_lbreakpoint_symbol_command($2);
+        free($1);free($2);
         }
     | BX_TOKEN_PBREAKPOINT '\n'
         {
-        bx_dbg_pbreakpoint_command(0, 0);
+        bx_dbg_pbreakpoint_command(bkAtIP, 0);
         free($1);
         }
-    | BX_TOKEN_PBREAKPOINT BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_PBREAKPOINT expression '\n'
         {
-        bx_dbg_pbreakpoint_command(1, $2);
+        bx_dbg_pbreakpoint_command(bkRegular, $2);
         free($1);
         }
-    | BX_TOKEN_PBREAKPOINT '*' BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_PBREAKPOINT '*' expression '\n'
         {
-        bx_dbg_pbreakpoint_command(1, $3);
+        bx_dbg_pbreakpoint_command(bkRegular, $3);
         free($1);
+        }
+    ;
+
+blist_command:
+      BX_TOKEN_LIST_BREAK '\n'
+        {
+        bx_dbg_info_bpoints_command();
+        free($1);
+        }
+    ;
+
+slist_command:
+      BX_TOKEN_LIST_SYMBOLS '\n'
+        {
+        bx_dbg_info_symbols_command(0);
+        free($1);
+        }
+    | BX_TOKEN_LIST_SYMBOLS BX_TOKEN_STRING '\n'
+        {
+        bx_dbg_info_symbols_command($2);
+        free($1);free($2);
         }
     ;
 
@@ -477,6 +558,11 @@ info_command:
       BX_TOKEN_INFO BX_TOKEN_PBREAKPOINT '\n'
         {
         bx_dbg_info_bpoints_command();
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
+        {
+        bx_dbg_dump_cpu_command();
         free($1); free($2);
         }
     | BX_TOKEN_INFO BX_TOKEN_PROGRAM '\n'
@@ -529,10 +615,25 @@ info_command:
         bx_dbg_info_tss_command($3);
         free($1); free($2);
         }
+    | BX_TOKEN_INFO BX_TOKEN_FLAGS '\n'
+        {
+        bx_dbg_info_flags();
+        free($1); free($2);
+        }
     | BX_TOKEN_INFO BX_TOKEN_LINUX '\n'
         {
         bx_dbg_info_linux_command();
         free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_SYMBOLS '\n'
+        {
+        bx_dbg_info_symbols_command(0);
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_SYMBOLS BX_TOKEN_STRING '\n'
+        {
+        bx_dbg_info_symbols_command($3);
+        free($1); free($2); free($3);
         }
     | BX_TOKEN_INFO BX_TOKEN_CONTROL_REGS '\n'
         {
@@ -554,6 +655,11 @@ info_command:
         free($1); free($2); free($3); free($5);
         bx_dbg_info_ne2k($4, $6);
         }
+    | BX_TOKEN_INFO BX_TOKEN_PIC '\n'
+        {
+        bx_dbg_info_pic();
+        free($1); free($2);
+        }
     ;
 
 optional_numeric :
@@ -565,19 +671,14 @@ optional_numeric_range:
   | numeric_range;
 
 numeric_range :
-  BX_TOKEN_NUMERIC
+  expression
   {
     $$ = make_num_range ($1, $1);
   }
   | 
-  BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC
+  expression expression
   {
     $$ = make_num_range ($1, $2);
-  }
-  | 
-  BX_TOKEN_NUMERIC ':' BX_TOKEN_NUMERIC
-  {
-    $$ = make_num_range ($1, $3);
   };
    
 
@@ -597,6 +698,21 @@ delete_command:
         }
     ;
 
+bpe_command:
+      BX_TOKEN_ENABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'
+       {
+        bx_dbg_en_dis_breakpoint_command($2, 1);
+        free($1);
+       }
+    ;
+bpd_command:
+      BX_TOKEN_DISABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'
+       {
+        bx_dbg_en_dis_breakpoint_command($2, 0);
+        free($1);
+       }
+    ;
+
 quit_command:
       BX_TOKEN_QUIT '\n'
         {
@@ -607,7 +723,7 @@ quit_command:
 
 
 examine_command:
-      BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'
         {
         bx_dbg_examine_command($1, $2,1, $3,1, 0);
 #if BX_NUM_SIMULATORS >= 2
@@ -623,7 +739,7 @@ examine_command:
 #endif
         free($1); free($2);
         }
-    | BX_TOKEN_EXAMINE BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_EXAMINE expression '\n'
         {
         //FIXME HanishKVC This method of hunting thro all the 
         //      simulators may be better than using 2 calls if 
@@ -696,8 +812,13 @@ set_cpu_command:
 disassemble_command:
       BX_TOKEN_DISASSEMBLE optional_numeric_range '\n'
         {
-        bx_dbg_disassemble_command($2);
+        bx_dbg_disassemble_command(NULL, $2);
         free($1);
+        }
+    | BX_TOKEN_DISASSEMBLE BX_TOKEN_DISFORMAT optional_numeric_range '\n'
+        {
+        bx_dbg_disassemble_command($2, $3);
+	free($1); free($2);
         }
     ;
 
@@ -748,41 +869,6 @@ crc_command:
         }
     ;
 
-maths_command:
-      BX_TOKEN_MATHS BX_TOKEN_ADD BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
-        {
-        bx_dbg_maths_command($2, $3, $4);
-        free($1); free($2);
-        }
-    | BX_TOKEN_MATHS BX_TOKEN_SUB BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
-        {
-        bx_dbg_maths_command($2, $3, $4);
-        free($1); free($2);
-        }
-    | BX_TOKEN_MATHS BX_TOKEN_MUL BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
-        {
-        bx_dbg_maths_command($2, $3, $4);
-        free($1); free($2);
-        }
-    | BX_TOKEN_MATHS BX_TOKEN_DIV BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
-        {
-        bx_dbg_maths_command($2, $3, $4);
-        free($1); free($2);
-        }
-    | BX_TOKEN_MATHS BX_TOKEN_STRING '\n'
-        {
-        bx_dbg_maths_expression_command($2);
-        free($1); free($2);
-        }
-
-v2l_command:
-      BX_TOKEN_V2L segment_register ':' BX_TOKEN_NUMERIC '\n'
-        {
-        bx_dbg_v2l_command($2, $4);
-        free($1);
-        }
-    ;
-
 trace_reg_on_command:
       BX_TOKEN_TRACEREGON '\n'
         {
@@ -812,4 +898,103 @@ help_command:
          }
     ;
 
+calc_command:
+   BX_TOKEN_CALC expression '\n'
+     {
+     bx_dbg_calc_command($2);
+     free($1);
+     }
+;
+
+BX_TOKEN_COMMON_REG:
+     BX_TOKEN_REG_AL
+   | BX_TOKEN_REG_BL
+   | BX_TOKEN_REG_CL
+   | BX_TOKEN_REG_DL
+   | BX_TOKEN_REG_AH
+   | BX_TOKEN_REG_BH
+   | BX_TOKEN_REG_CH
+   | BX_TOKEN_REG_DH
+   | BX_TOKEN_REG_AX
+   | BX_TOKEN_REG_BX
+   | BX_TOKEN_REG_CX
+   | BX_TOKEN_REG_DX
+   | BX_TOKEN_REG_EAX
+   | BX_TOKEN_REG_EBX
+   | BX_TOKEN_REG_ECX
+   | BX_TOKEN_REG_EDX
+   { $$=$1; }
+;
+
+BX_TOKEN_INDEX_REG:
+     BX_TOKEN_REG_SI
+   | BX_TOKEN_REG_DI
+   | BX_TOKEN_REG_ESI
+   | BX_TOKEN_REG_EDI
+   { $$=$1; }
+;
+
+BX_TOKEN_PTR_REG:
+     BX_TOKEN_REG_BP
+   | BX_TOKEN_REG_SP
+   | BX_TOKEN_REG_IP
+   | BX_TOKEN_REG_EBP
+   | BX_TOKEN_REG_ESP
+   | BX_TOKEN_REG_EIP
+   { $$=$1; }
+;
+
+BX_TOKEN_NONSEG_REG:
+     BX_TOKEN_COMMON_REG
+   | BX_TOKEN_INDEX_REG
+   | BX_TOKEN_PTR_REG
+   { $$=$1; }
+;
+
+/* Arithmetic expression for vbreak command */
+vexpression:
+     BX_TOKEN_NUMERIC                { $$ = $1; }
+   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
+   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1); }
+   | segment_register                { $$ = bx_dbg_get_selector_value($1); }
+   | vexpression '+' vexpression     { $$ = $1 + $3; }
+   | vexpression '-' vexpression     { $$ = $1 - $3; }
+   | vexpression '*' vexpression     { $$ = $1 * $3; }
+   | vexpression '/' vexpression     { $$ = $1 / $3; }
+   | vexpression BX_TOKEN_RSHIFT vexpression { $$ = $1 >> $3; }
+   | vexpression BX_TOKEN_LSHIFT vexpression { $$ = $1 << $3; }
+   | vexpression '|' vexpression     { $$ = $1 | $3; }
+   | vexpression '^' vexpression     { $$ = $1 ^ $3; }
+   | vexpression '&' vexpression     { $$ = $1 & $3; }
+   | '!' vexpression %prec NOT       { $$ = !$2; }
+   | '-' vexpression %prec NEG       { $$ = -$2; }
+   | '(' vexpression ')'             { $$ = $2; }
+;
+
+/* Same as vexpression but includes the ':' operator - used in most commands */
+expression:
+     BX_TOKEN_NUMERIC                { $$ = $1; }
+   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
+   | BX_TOKEN_STRING                 { $$ = bx_dbg_get_symbol_value($1); free($1);}
+   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1);}
+   | segment_register                { $$ = bx_dbg_get_selector_value($1);}
+   | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
+   | expression '+' expression       { $$ = $1 + $3; }
+   | expression '-' expression       { $$ = $1 - $3; }
+   | expression '*' expression       { $$ = $1 * $3; }
+   | expression '/' expression       { $$ = $1 / $3; }
+   | expression BX_TOKEN_RSHIFT expression { $$ = $1 >> $3; }
+   | expression BX_TOKEN_LSHIFT expression { $$ = $1 << $3; }
+   | expression '|' expression       { $$ = $1 | $3; }
+   | expression '^' expression       { $$ = $1 ^ $3; }
+   | expression '&' expression       { $$ = $1 & $3; }
+   | '!' expression %prec NOT        { $$ = !$2; }
+   | '-' expression %prec NEG        { $$ = -$2; }
+   | '(' expression ')'              { $$ = $2; }
+;
+
+set_reg_command: 
+     BX_TOKEN_REGISTERS BX_TOKEN_NONSEG_REG '=' expression '\n'
+     { bx_dbg_set_reg_value($2, $4); }
+;
 %%
