@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.27 2003-03-02 23:59:10 cbothamy Exp $
+// $Id: dma.cc,v 1.28 2003-03-09 14:03:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.27 2003-03-02 23:59:10 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.28 2003-03-09 14:03:32 vruppert Exp $"));
 
   /* 8237 DMA controller */
 
@@ -343,7 +343,7 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
   // static IO port write callback handler
   // redirects to non-static class handler to avoid virtual functions
 
-  void BX_CPP_AttrRegparmN(3)
+  void
 bx_dma_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_DMA_SMF
