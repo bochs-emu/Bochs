@@ -81,6 +81,8 @@ ac_help="$ac_help
   --with-rfb                        use RFB protocol, works with VNC viewer"
 ac_help="$ac_help
   --with-amigaos                      use MorphOS (Amiga)"
+ac_help="$ac_help
+  --enable-iodebug                  enable I/O interface to debug"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -3981,6 +3983,38 @@ EOF
 
     
   
+fi
+
+
+
+
+echo $ac_n "checking for I/O Interface to the debugger""... $ac_c" 1>&6
+echo "configure:3991: checking for I/O interface to the debugger" >&5
+# Check whether --enable-iodebug or --disable-iodebug was given.
+if test "${enable_iodebug+set}" = set; then
+  enableval="$enable_iodebug"
+  if test "$enableval" = yes; then
+    echo "$ac_t""yes" 1>&6
+    cat >> confdefs.h <<\EOF
+#define BX_IODEBUG_SUPPORT 1
+EOF
+
+    IODEBUG_OBJ='iodebug.o'
+   else
+    echo "$ac_t""no" 1>&6
+    cat >> confdefs.h <<\EOF
+#define BX_IODEBUG_SUPPORT 0
+EOF
+
+    IODEBUG_OBJ=''
+   fi
+else
+   echo "$ac_t""no" 1>&6
+   cat >> confsdefs.h <<\EOF
+#define BX_IODEBUG_SUPPORT 0
+EOF
+
+   IODEBUG_OBJ=''
 fi
 
 
