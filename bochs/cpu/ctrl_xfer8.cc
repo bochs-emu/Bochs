@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.7 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: ctrl_xfer8.cc,v 1.8 2002-09-14 17:29:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,41 +32,61 @@
 
 
 
+#if BX_SUPPORT_X86_64==0
+// Make life a little easier for the 64/32-bit merge.
+#define RCX ECX
+#define RIP EIP
+#endif
 
 
   void
 BX_CPU_C::JCXZ_Jb(BxInstruction_t *i)
 {
-  Bit32u temp_ECX;
 
-  if (i->as_32)
-    temp_ECX = ECX;
-  else
-    temp_ECX = CX;
-
-  if ( temp_ECX == 0 ) {
-    Bit32u new_EIP;
-
-    new_EIP = EIP + (Bit32s) i->Id;
-    if (i->os_32==0)
-      new_EIP &= 0x0000ffff;
-#if BX_CPU_LEVEL >= 2
-    if (protected_mode()) {
-      if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        BX_PANIC(("jcxz_jb: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-        }
+  if (i->as_64) {
+    if ( RCX == 0 ) {
+      RIP += (Bit32s) i->Id;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
       }
 #endif
-    EIP = new_EIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
-    revalidate_prefetch_q();
     }
-#if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
-    }
+    Bit32u temp_ECX;
+
+    if (i->as_32)
+      temp_ECX = ECX;
+    else
+      temp_ECX = CX;
+
+    if ( temp_ECX == 0 ) {
+      Bit32u new_EIP;
+
+      new_EIP = EIP + (Bit32s) i->Id;
+      if (i->os_32==0)
+        new_EIP &= 0x0000ffff;
+#if BX_CPU_LEVEL >= 2
+      if (protected_mode()) {
+        if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
+          BX_PANIC(("jcxz_jb: offset outside of CS limits"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+          }
+        }
 #endif
+      EIP = new_EIP;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+  }
 }
 
 
@@ -74,119 +94,167 @@ BX_CPU_C::JCXZ_Jb(BxInstruction_t *i)
   void
 BX_CPU_C::LOOPNE_Jb(BxInstruction_t *i)
 {
-  Bit32u count, new_EIP;
+  if (i->as_64) {
+
+    if ( ((--RCX)!=0) && (get_ZF()==0) ) {
+
+      RIP += (Bit32s) i->Id;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+  else {
+    Bit32u count, new_EIP;
 
 #if BX_CPU_LEVEL >= 3
-  if (i->as_32)
-    count = ECX;
-  else
+    if (i->as_32)
+      count = ECX;
+    else
 #endif /* BX_CPU_LEVEL >= 3 */
-    count = CX;
+      count = CX;
 
-  count--;
-  if ( (count!=0) && (get_ZF()==0) ) {
+    count--;
+    if ( (count!=0) && (get_ZF()==0) ) {
 
-    new_EIP = EIP + (Bit32s) i->Id;
-    if (i->os_32==0)
-      new_EIP &= 0x0000ffff;
-    if (protected_mode()) {
-      if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-        BX_PANIC(("loopne_jb: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+      new_EIP = EIP + (Bit32s) i->Id;
+      if (i->os_32==0)
+        new_EIP &= 0x0000ffff;
+      if (protected_mode()) {
+        if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+          BX_PANIC(("loopne_jb: offset outside of CS limits"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+          }
         }
+      EIP = new_EIP;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
       }
-    EIP = new_EIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
-    revalidate_prefetch_q();
-    }
 #if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
-    }
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
 #endif
 
-  if (i->as_32)
-    ECX--;
-  else
-    CX--;
+    if (i->as_32)
+      RCX = ECX - 1;  // zero extend
+    else
+      CX--;
+    }
 }
 
   void
 BX_CPU_C::LOOPE_Jb(BxInstruction_t *i)
 {
-  Bit32u count, new_EIP;
+  if (i->as_64) {
+
+    if ( ((--RCX)!=0) && (get_ZF()) ) {
+
+      RIP += (Bit32s) i->Id;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+  else {
+    Bit32u count, new_EIP;
 
 #if BX_CPU_LEVEL >= 3
-  if (i->as_32)
-    count = ECX;
-  else
+    if (i->as_32)
+      count = ECX;
+    else
 #endif /* BX_CPU_LEVEL >= 3 */
-    count = CX;
+      count = CX;
 
-  count--;
-  if ( (count!=0) && get_ZF()) {
+    count--;
+    if ( (count!=0) && get_ZF()) {
 
-    new_EIP = EIP + (Bit32s) i->Id;
-    if (i->os_32==0)
-      new_EIP &= 0x0000ffff;
-    if (protected_mode()) {
-      if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-        BX_PANIC(("loope_jb: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+      new_EIP = EIP + (Bit32s) i->Id;
+      if (i->os_32==0)
+        new_EIP &= 0x0000ffff;
+      if (protected_mode()) {
+        if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+          BX_PANIC(("loope_jb: offset outside of CS limits"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+          }
         }
+      EIP = new_EIP;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
       }
-    EIP = new_EIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
-    revalidate_prefetch_q();
-    }
 #if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
-    }
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
 #endif
 
-  if (i->as_32)
-    ECX--;
-  else
-    CX--;
+    if (i->as_32)
+      RCX = ECX - 1;   // zero extend
+    else
+      CX--;
+    }
 }
 
   void
 BX_CPU_C::LOOP_Jb(BxInstruction_t *i)
 {
-  Bit32u count, new_EIP;
+  if (i->as_64) {
+
+    if ( ((--RCX)!=0) ) {
+
+      RIP += (Bit32s) i->Id;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      revalidate_prefetch_q();
+      }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
+#endif
+    }
+  else {
+    Bit32u count, new_EIP;
 
 #if BX_CPU_LEVEL >= 3
-  if (i->as_32)
-    count = ECX;
-  else
+    if (i->as_32)
+      count = ECX;
+    else
 #endif /* BX_CPU_LEVEL >= 3 */
-    count = CX;
+      count = CX;
 
-  count--;
-  if (count != 0) {
+    count--;
+    if (count != 0) {
 
-    new_EIP = EIP + (Bit32s) i->Id;
-    if (i->os_32==0)
-      new_EIP &= 0x0000ffff;
-    if (protected_mode()) {
-      if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-        BX_PANIC(("loop_jb: offset outside of CS limits"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+      new_EIP = EIP + (Bit32s) i->Id;
+      if (i->os_32==0)
+        new_EIP &= 0x0000ffff;
+      if (protected_mode()) {
+        if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+          BX_PANIC(("loop_jb: offset outside of CS limits"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+          }
         }
+      EIP = new_EIP;
+      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      revalidate_prefetch_q();
       }
-    EIP = new_EIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
-    revalidate_prefetch_q();
-    }
 #if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
-    }
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      }
 #endif
 
-  if (i->as_32)
-    ECX--;
-  else
-    CX--;
+    if (i->as_32)
+      RCX = ECX - 1;         // zero extend
+    else
+      CX--;
+    }
 }

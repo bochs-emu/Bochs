@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.8 2002-09-06 21:54:57 kevinlawton Exp $
+// $Id: data_xfer16.cc,v 1.9 2002-09-14 17:29:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,11 @@
   void
 BX_CPU_C::MOV_RXIw(BxInstruction_t *i)
 {
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR gen_reg[i->nnn].word.rx = i->Iw;
+#else
   BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx = i->Iw;
+#endif
 }
 
   void
@@ -46,8 +50,13 @@ BX_CPU_C::XCHG_RXAX(BxInstruction_t *i)
   Bit16u temp16;
 
   temp16 = AX;
+#if BX_SUPPORT_X86_64
+  AX = BX_CPU_THIS_PTR gen_reg[i->nnn].word.rx;
+  BX_CPU_THIS_PTR gen_reg[i->nnn].word.rx = temp16;
+#else
   AX = BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
   BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx = temp16;
+#endif
 }
 
 
@@ -100,7 +109,7 @@ BX_CPU_C::MOV_EwSw(BxInstruction_t *i)
   if (i->mod == 0xc0) {
     // ??? BX_WRITE_16BIT_REG(mem_addr, seg_reg);
     if ( i->os_32 ) {
-      BX_WRITE_32BIT_REG(i->rm, seg_reg);
+      BX_WRITE_32BIT_REGZ(i->rm, seg_reg);
       }
     else {
       BX_WRITE_16BIT_REG(i->rm, seg_reg);
@@ -157,17 +166,17 @@ BX_CPU_C::LEA_GwM(BxInstruction_t *i)
 BX_CPU_C::MOV_AXOw(BxInstruction_t *i)
 {
   Bit16u temp_16;
-  Bit32u addr_32;
+  bx_address addr;
 
-  addr_32 = i->Id;
+  addr = i->Id;
 
   /* read from memory address */
 
   if (!BX_NULL_SEG_REG(i->seg)) {
-    read_virtual_word(i->seg, addr_32, &temp_16);
+    read_virtual_word(i->seg, addr, &temp_16);
     }
   else {
-    read_virtual_word(BX_SEG_REG_DS, addr_32, &temp_16);
+    read_virtual_word(BX_SEG_REG_DS, addr, &temp_16);
     }
 
   /* write to register */
@@ -179,19 +188,19 @@ BX_CPU_C::MOV_AXOw(BxInstruction_t *i)
 BX_CPU_C::MOV_OwAX(BxInstruction_t *i)
 {
   Bit16u temp_16;
-  Bit32u addr_32;
+  bx_address addr;
 
-  addr_32 = i->Id;
+  addr = i->Id;
 
   /* read from register */
   temp_16 = AX;
 
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg)) {
-    write_virtual_word(i->seg, addr_32, &temp_16);
+    write_virtual_word(i->seg, addr, &temp_16);
     }
   else {
-    write_virtual_word(BX_SEG_REG_DS, addr_32, &temp_16);
+    write_virtual_word(BX_SEG_REG_DS, addr, &temp_16);
     }
 }
 
@@ -223,7 +232,7 @@ BX_CPU_C::MOVZX_GwEb(BxInstruction_t *i)
   Bit8u  op2_8;
 
   if (i->mod == 0xc0) {
-    op2_8 = BX_READ_8BIT_REG(i->rm);
+    op2_8 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -265,7 +274,7 @@ BX_CPU_C::MOVSX_GwEb(BxInstruction_t *i)
   Bit8u op2_8;
 
   if (i->mod == 0xc0) {
-    op2_8 = BX_READ_8BIT_REG(i->rm);
+    op2_8 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
     }
   else {
     /* pointer, segment address pair */

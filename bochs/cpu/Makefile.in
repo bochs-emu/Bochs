@@ -50,7 +50,6 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # are not used for the x86-64 compile because they have not
 # been synced yet.
 OBJS32 = \
-	exception.o \
 	ctrl_xfer_pro.o \
 	flag_ctrl_pro.o \
 	segment_ctrl_pro.o \
@@ -60,10 +59,7 @@ OBJS32 = \
 	debugstuff.o \
 	arith32.o \
 	mult32.o \
-	data_xfer32.o \
 	stack32.o \
-	ctrl_xfer8.o \
-	data_xfer16.o \
 	bit.o \
 	flag_ctrl.o \
 	io.o \
@@ -104,6 +100,10 @@ OBJSXX = \
 	logical32.o \
 	arith16.o \
 	segment_ctrl.o \
+	ctrl_xfer8.o \
+	data_xfer16.o \
+	data_xfer32.o \
+	exception.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.51 2002-09-13 21:08:54 kevinlawton Exp $
+// $Id: cpu.h,v 1.52 2002-09-14 17:29:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -668,6 +668,9 @@ typedef struct BxInstruction_tag {
   Bit64u   Iq; // for MOV Rx,imm64
   unsigned os_64, as_64; // OperandSize/AddressSize is 64bit (overrides os_32/as_32)
   unsigned extend8bit;
+#else
+  static const unsigned os_64=0, as_64=0; // x86-32: hardcode to 0.
+  //static const unsigned extend8bit=0;     // x86-32: hardcode to 0.
 #endif
   unsigned ilen; // instruction length
   unsigned flags_in, flags_out; // flags needed, flags modified
