@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.41 2004-08-18 21:29:06 sshwarts Exp $
+// $Id: arith32.cc,v 1.42 2004-08-18 21:38:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -143,7 +143,6 @@ BX_CPU_C::ADD_EAXId(bxInstruction_c *i)
 
   op1_32 = EAX;
   op2_32 = i->Id();
-
   sum_32 = op1_32 + op2_32;
 
   RAX = sum_32;
@@ -277,6 +276,8 @@ BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
 
   RAX = diff_32;
 
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, 
+	       (temp_CF) ? BX_INSTR_SBB32 : BX_INSTR_SUB32);
 }
 
   void
