@@ -106,7 +106,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
        if (call_debugger != NULL) debug_loaded = 2;
      }
      if (debug_loaded == 2) {
-       bx_vga.timer();
+       DEV_vga_refresh();
        call_debugger(&regs,cpu->mem->vector,cpu->mem->len);
      }
 }

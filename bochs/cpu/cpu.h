@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.110 2002-10-28 18:36:53 yakovlev Exp $
+// $Id: cpu.h,v 1.111 2002-11-04 05:27:25 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1544,7 +1544,9 @@ union {
   //Bit32s daddr_upper;    // upper bits must be canonical  (-virtmax --> + virtmax)
   // instruction upper 32 bits - not used any longer
   //Bit32s iaddr_upper;    // upper bits must be canonical  (-virtmax --> + virtmax)
+#endif
 
+#if BX_EXTERNAL_DEBUGGER
   void ask (int level, const char *prefix, const char *fmt, va_list ap);
 #endif
 

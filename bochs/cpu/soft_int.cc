@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.12 2002-09-28 00:54:05 kevinlawton Exp $
+// $Id: soft_int.cc,v 1.13 2002-11-04 05:27:26 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,6 +94,10 @@ BX_CPU_C::INT1(bxInstruction_c *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_int;
+#endif
+
+#if BX_EXTERNAL_DEBUGGER
+  trap_debugger(0);
 #endif
 
   interrupt(1, 1, 0, 0);
