@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.269 2005-02-09 22:00:27 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.270 2005-02-12 10:37:24 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -708,7 +708,7 @@ AC_ARG_ENABLE(compressed-hd,
     AC_DEFINE(BX_COMPRESSED_HD_SUPPORT, 0)
    fi],
   [
-    AC_MSG_RESULT(yes)
+    AC_MSG_RESULT(no)
     AC_DEFINE(BX_COMPRESSED_HD_SUPPORT, 0)
     ]
   )
@@ -1506,7 +1506,7 @@ AC_ARG_ENABLE(vbe,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_VBE, 1)
-    if test "$pci" == "1"; then
+    if test "$pci" = 1; then
       AC_DEFINE(BX_SUPPORT_PCIVGA, 1)
     fi
    else
@@ -1525,7 +1525,7 @@ AC_ARG_ENABLE(clgd54xx,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_CLGD54XX, 1)
-    if test "$pci" == "1"; then
+    if test "$pci" = 1; then
       AC_DEFINE(BX_SUPPORT_CLGD54XX_PCI, 1)
     fi
    else
