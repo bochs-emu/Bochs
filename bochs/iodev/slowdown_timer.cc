@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.14 2003-08-19 00:10:38 cbothamy Exp $
+// $Id: slowdown_timer.cc,v 1.15 2003-08-20 06:26:27 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,6 +35,9 @@
 #define usectosec(a) ((a)/SECINUSEC)
 #define sectousec(a) ((a)*SECINUSEC)
 #define nsectousec(a) ((a)/1000)
+
+#define MSECINUSEC 1000
+#define usectomsec(a) ((a)/MSECINUSEC)
 
 #if BX_HAVE_USLEEP
 #  define Qval 1000
@@ -142,10 +145,13 @@ bx_slowdown_timer_c::handle_timer() {
   if(wanttime > (totaltime+REALTIME_Q)) {
 #if BX_HAVE_USLEEP
     usleep(s.Q);
-#else
+#elif BX_HAVE_MSLEEP
+    msleep(usectomsec(s.Q));
+#elif BX_HAVE_SLEEP
     sleep(usectosec(s.Q));
-#endif
-    //delay(wanttime-totaltime);
+#else
+#error do not know have to sleep
+#endif    //delay(wanttime-totaltime);
     /*alternatively: delay(Q);
      * This works okay because we share the delay between
      * two time quantums.

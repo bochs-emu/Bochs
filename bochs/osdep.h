@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.18 2003-06-07 19:16:51 vruppert Exp $
+// $Id: osdep.h,v 1.19 2003-08-20 06:26:27 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,6 +157,16 @@ typedef long ssize_t ;
 #if BX_HAVE_REALTIME_USEC
 // 64-bit time in useconds.
 extern Bit64u bx_get_realtime64_usec (void);
+#endif
+
+#ifdef WIN32
+#undef BX_HAVE_MSLEEP
+#define BX_HAVE_MSLEEP 1
+#ifndef __MINGW32__
+#define msleep(msec)	_sleep(msec)
+#else
+#define msleep(msec)	Sleep(msec)
+#endif
 #endif
 
 #ifdef __cplusplus

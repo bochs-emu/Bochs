@@ -909,4 +909,7 @@ typedef
 // of instructions.
 //#define BX_SCHEDULED_DIE_TIME 1162230000   // end of redhat6.0 boot
 
+
+#define BX_HAVE_MSLEEP 0
+
 #endif  // _BX_CONFIG_H
