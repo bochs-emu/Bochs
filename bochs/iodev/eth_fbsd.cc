@@ -147,7 +147,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   do {
     (void)sprintf(device, "/dev/bpf%d", n++);
     this->bpf_fd = open(device, O_RDWR);
-	BX_INFO(("tried %s, returned %d",device,this->bpf_fd));
+	BX_INFO(("tried %s, returned %d (%s)",device,this->bpf_fd,strerror(errno)));
 	if(errno == EACCES)
 		break;
   } while (this->bpf_fd == -1);
