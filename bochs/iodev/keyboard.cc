@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.77 2003-06-02 20:36:30 vruppert Exp $
+// $Id: keyboard.cc,v 1.78 2003-06-07 18:41:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.77 2003-06-02 20:36:30 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.78 2003-06-07 18:41:07 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -734,17 +734,15 @@ bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
 }
 
   void
-bx_keyb_c::gen_scancode(Bit32u   key)
+bx_keyb_c::gen_scancode(Bit32u key)
 {
   unsigned char *scancode;
   Bit8u  i;
 
-  BX_DEBUG(( "gen_scancode %lld %x", bx_pc_system.time_ticks(), key));
+  BX_DEBUG(( "gen_scancode(): BX_KEY %d %s", key & 0x7ffffff, (key & 0x80000000)?"released":"pressed"));
 
   if (!BX_KEY_THIS s.kbd_controller.scancodes_translate)
 	BX_DEBUG(("keyboard: gen_scancode with scancode_translate cleared"));
-
-  BX_DEBUG(("gen_scancode(): scancode: %08x", (unsigned) key));
 
   // Ignore scancode if keyboard clock is driven low
   if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled==0)
@@ -768,8 +766,8 @@ bx_keyb_c::gen_scancode(Bit32u   key)
       if (scancode[i] == 0xF0)
         escaped=0x80;
       else {
+	BX_DEBUG(("gen_scancode(): writing translated %02x",translation8042[scancode[i] ] | escaped));
         kbd_enQ(translation8042[scancode[i] ] | escaped );
-	BX_DEBUG(("keyboard: writing translated %02x",translation8042[scancode[i] ] | escaped));
         escaped=0x00;
       }
     }
@@ -777,8 +775,8 @@ bx_keyb_c::gen_scancode(Bit32u   key)
   else {
     // Send raw data
     for (i=0; i<strlen( (const char *)scancode ); i++) {
+      BX_DEBUG(("gen_scancode(): writing raw %02x",scancode[i]));
       kbd_enQ( scancode[i] );
-      BX_DEBUG(("keyboard: writing raw %02x",scancode[i]));
     }
   }
 }
@@ -898,11 +896,11 @@ bx_keyb_c::kbd_enQ_imm(Bit8u val)
 
 
   void
-bx_keyb_c::kbd_enQ(Bit8u   scancode)
+bx_keyb_c::kbd_enQ(Bit8u scancode)
 {
   int tail;
 
-  BX_DEBUG(("enQ(%02x)", (unsigned) scancode));
+  BX_DEBUG(("kbd_enQ(0x%02x)", (unsigned) scancode));
 
   if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= BX_KBD_ELEMENTS) {
     BX_INFO(("internal keyboard buffer full, ignoring scancode.(%02x)",
@@ -911,7 +909,7 @@ bx_keyb_c::kbd_enQ(Bit8u   scancode)
     }
 
   /* enqueue scancode in multibyte internal keyboard buffer */
-  BX_DEBUG(("enQ: putting scancode %02x in internal buffer",
+  BX_DEBUG(("kbd_enQ: putting scancode 0x%02x in internal buffer",
       (unsigned) scancode));
   tail = (BX_KEY_THIS s.kbd_internal_buffer.head + BX_KEY_THIS s.kbd_internal_buffer.num_elements) %
    BX_KBD_ELEMENTS;
@@ -920,7 +918,7 @@ bx_keyb_c::kbd_enQ(Bit8u   scancode)
 
   if (!BX_KEY_THIS s.kbd_controller.outb && BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) {
     activate_timer();
-	BX_DEBUG(("activating timer..."));
+    BX_DEBUG(("activating timer..."));
     return;
     }
 //BX_DEBUG(( "# not activating timer...");
