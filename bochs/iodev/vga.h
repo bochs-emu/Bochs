@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.20 2002-10-25 11:44:41 bdenney Exp $
+// $Id: vga.h,v 1.20.2.1 2003-01-03 00:29:33 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,6 +116,7 @@ public:
   virtual void   set_update_interval (unsigned interval);
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
+  virtual Bit8u  get_actl_palette_idx(Bit8u index);
 
 private:
 
