@@ -41,7 +41,7 @@
 //
 //   The config line in .bochsrc should look something like:
 //
-//  ne2k: ioaddr=0x280, irq=10, mac=00:a:b:c:1:2, ethmod=fbsd, ethdev=fxp0
+//  ne2k: ioaddr=0x280, irq=9, mac=00:a:b:c:1:2, ethmod=fbsd, ethdev=fxp0
 //
 
 #include "bochs.h"
