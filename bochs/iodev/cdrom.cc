@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.71 2004-08-23 09:39:45 vruppert Exp $
+// $Id: cdrom.cc,v 1.72 2004-08-30 10:47:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -521,7 +521,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.71 2004-08-23 09:39:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.72 2004-08-30 10:47:09 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -631,6 +631,10 @@ cdrom_interface::insert_cdrom(char *dev)
     hFile=CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL); 
     if (hFile !=(void *)0xFFFFFFFF)
       fd=1;
+    if (!using_file) {
+      DWORD lpBytesReturned;
+      DeviceIoControl(hFile, IOCTL_STORAGE_LOAD_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+    }
   }
 #elif defined(__APPLE__)
       if(strcmp(path, "drive") == 0)

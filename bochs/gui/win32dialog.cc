@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.22 2004-06-05 08:40:24 vruppert Exp $
+// $Id: win32dialog.cc,v 1.23 2004-08-30 10:47:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -234,7 +234,9 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       }
       break;
     case WM_CLOSE:
-      cdromop.Opath->set(origpath);
+      if (lstrcmp(cdromop.Opath->getptr(), origpath)) {
+        cdromop.Opath->set(origpath);
+      }
       EndDialog(hDlg, -1);
       break;
     case WM_COMMAND:
@@ -252,19 +254,21 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             GetDlgItemText(hDlg, IDCDROM1, path, MAX_PATH);
             if (lstrlen(path)) {
               cdromop.Ostatus->set(BX_INSERTED);
+              if (lstrcmp(path, cdromop.Opath->getptr())) {
+                cdromop.Opath->set(path);
+              }
             } else {
               cdromop.Ostatus->set(BX_EJECTED);
-              lstrcpy(path, "none");
             }
           } else {
             cdromop.Ostatus->set(BX_EJECTED);
-            lstrcpy(path, "none");
           }
-          cdromop.Opath->set(path);
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:
-          cdromop.Opath->set(origpath);
+          if (lstrcmp(cdromop.Opath->getptr(), origpath)) {
+            cdromop.Opath->set(origpath);
+          }
           EndDialog(hDlg, -1);
           break;
       }
@@ -450,7 +454,9 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
       break;
     case WM_CLOSE:
       for (device=1; device<devcount; device++) {
-        cdromop[device].Opath->set(origpath[device]);
+        if (lstrcmp(cdromop[device].Opath->getptr(), origpath[device])) {
+          cdromop[device].Opath->set(origpath[device]);
+        }
       }
       EndDialog(hDlg, BX_CI_RT_QUIT);
       break;
@@ -534,15 +540,15 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                     GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
                     if (lstrlen(path)) {
                       cdromop[device].Ostatus->set(BX_INSERTED);
+                      if (lstrcmp(path, cdromop[device].Opath->getptr())) {
+                        cdromop[device].Opath->set(path);
+                      }
                     } else {
                       cdromop[device].Ostatus->set(BX_EJECTED);
-                      lstrcpy(path, "none");
                     }
                   } else {
                     cdromop[device].Ostatus->set(BX_EJECTED);
-                    lstrcpy(path, "none");
                   }
-                  cdromop[device].Opath->set(path);
                 }
               }
               if (changed & 0x02) {
@@ -591,7 +597,9 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
               break;
             case IDCANCEL:
               for (device=1; device<devcount; device++) {
-                cdromop[device].Opath->set(origpath[device]);
+                if (lstrcmp(cdromop[device].Opath->getptr(), origpath[device])) {
+                  cdromop[device].Opath->set(origpath[device]);
+                }
               }
               EndDialog(hDlg, BX_CI_RT_QUIT);
               break;
