@@ -81,7 +81,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.18 2001-08-31 16:06:32 fries Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.19 2001-09-26 00:19:44 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -871,7 +871,7 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     BX_INFO(("direction=%s", (direction==FROM_FLOPPY)? "from" : "to"));
     }
 
-#ifdef macintosh
+#if BX_WITH_MACOS
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
     {
@@ -882,7 +882,7 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     }
 
   if (direction == FROM_FLOPPY) {
-#ifdef macintosh
+#if BX_WITH_MACOS
     if (!strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
       ret = fd_read((char *) buffer, offset, bytes);
     else
