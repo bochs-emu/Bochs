@@ -182,6 +182,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 #   biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
 #   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
+#   journal=    optional filename of the redolog for (z-)undoable and (z-)volatile disks
 #   
 # Point this at a hard disk image file, cdrom iso file, or physical cdrom
 # device.  To create a hard disk image, try running bximage.  It will help you

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.21 2003-08-01 01:20:00 cbothamy Exp $
+// $Id: harddrv.h,v 1.22 2003-09-22 23:32:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -64,7 +64,10 @@
 
 #define REDOLOG_PAGE_NOT_ALLOCATED (0xffffffff)
 
-#define REDOLOG_EXTENSION ".redolog"
+#define UNDOABLE_REDOLOG_EXTENSION ".redolog"
+#define UNDOABLE_REDOLOG_EXTENSION_LENGTH (strlen(UNDOABLE_REDOLOG_EXTENSION))
+#define VOLATILE_REDOLOG_EXTENSION ".XXXXXX"
+#define VOLATILE_REDOLOG_EXTENSION_LENGTH (strlen(VOLATILE_REDOLOG_EXTENSION))
 
  typedef struct
  {
@@ -386,7 +389,7 @@ class undoable_image_t : public device_image_t
 {
   public:
       // Contructor
-      undoable_image_t(Bit64u size);
+      undoable_image_t(Bit64u size, const char* redolog_name);
 
       // Open a image. Returns non-negative if successful.
       int open (const char* pathname);
@@ -407,9 +410,10 @@ class undoable_image_t : public device_image_t
       ssize_t write (const void* buf, size_t count);
 
   private:
-      redolog_t *redolog;
-      default_image_t *ro_disk;
-      Bit64u    size;
+      redolog_t       *redolog;       // Redolog instance
+      default_image_t *ro_disk;       // Read-only flat disk instance
+      Bit64u          size;           
+      char            *redolog_name;  // Redolog name
 };
 
 
@@ -418,7 +422,7 @@ class volatile_image_t : public device_image_t
 {
   public:
       // Contructor
-      volatile_image_t(Bit64u size);
+      volatile_image_t(Bit64u size, const char* redolog_name);
 
       // Open a image. Returns non-negative if successful.
       int open (const char* pathname);
@@ -439,10 +443,11 @@ class volatile_image_t : public device_image_t
       ssize_t write (const void* buf, size_t count);
 
   private:
-      redolog_t       *redolog;
-      default_image_t *ro_disk;
-      Bit64u          size;
-      char            *redolog_name;
+      redolog_t       *redolog;       // Redolog instance
+      default_image_t *ro_disk;       // Read-only flat disk instance
+      Bit64u          size;           
+      char            *redolog_name;  // Redolog name
+      char            *redolog_temp;  // Redolog temporary file name
 };
 
 
@@ -488,7 +493,7 @@ class z_undoable_image_t : public device_image_t
 {
   public:
       // Contructor
-      z_undoable_image_t(Bit64u size);
+      z_undoable_image_t(Bit64u size, const char* redolog_name);
 
       // Open a image. Returns non-negative if successful.
       int open (const char* pathname);
@@ -509,9 +514,10 @@ class z_undoable_image_t : public device_image_t
       ssize_t write (const void* buf, size_t count);
 
   private:
-      redolog_t    *redolog;
-      z_ro_image_t *ro_disk;
-      Bit64u       size;
+      redolog_t       *redolog;       // Redolog instance
+      z_ro_image_t    *ro_disk;       // Read-only compressed flat disk instance
+      Bit64u          size;           
+      char            *redolog_name;  // Redolog name
 };
 
 // Z-VOLATILE MODE
@@ -519,7 +525,7 @@ class z_volatile_image_t : public device_image_t
 {
   public:
       // Contructor
-      z_volatile_image_t(Bit64u size);
+      z_volatile_image_t(Bit64u size, const char* redolog_name);
 
       // Open a image. Returns non-negative if successful.
       int open (const char* pathname);
@@ -540,10 +546,11 @@ class z_volatile_image_t : public device_image_t
       ssize_t write (const void* buf, size_t count);
 
   private:
-      redolog_t    *redolog;
-      z_ro_image_t *ro_disk;
-      Bit64u       size;
-      char         *redolog_name;
+      redolog_t       *redolog;       // Redolog instance
+      z_ro_image_t    *ro_disk;       // Read-only compressed flat disk instance
+      Bit64u          size;           
+      char            *redolog_name;  // Redolog name
+      char            *redolog_temp;  // Redolog temporary file name
 };
 
 #endif

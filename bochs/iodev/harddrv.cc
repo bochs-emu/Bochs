@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.110 2003-09-17 12:19:34 cbothamy Exp $
+// $Id: harddrv.cc,v 1.111 2003-09-22 23:32:23 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.110 2003-09-17 12:19:34 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.111 2003-09-22 23:32:23 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -297,7 +297,8 @@ bx_hard_drive_c::init(void)
           case BX_ATA_MODE_UNDOABLE:
             BX_INFO(("HD on ata%d-%d: '%s' 'undoable' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
-            channels[channel].drives[device].hard_drive = new undoable_image_t(disk_size);
+            channels[channel].drives[device].hard_drive = new undoable_image_t(disk_size,
+                            bx_options.atadevice[channel][device].Ojournal->getptr());
             break;
 
           case BX_ATA_MODE_GROWING:
@@ -309,20 +310,23 @@ bx_hard_drive_c::init(void)
           case BX_ATA_MODE_VOLATILE:
             BX_INFO(("HD on ata%d-%d: '%s' 'volatile' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
-            channels[channel].drives[device].hard_drive = new volatile_image_t(disk_size);
+            channels[channel].drives[device].hard_drive = new volatile_image_t(disk_size,
+                            bx_options.atadevice[channel][device].Ojournal->getptr());
             break;
 
 #if BX_COMPRESSED_HD_SUPPORT
           case BX_ATA_MODE_Z_UNDOABLE:
             BX_INFO(("HD on ata%d-%d: '%s' 'z-undoable' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
-            channels[channel].drives[device].hard_drive = new z_undoable_image_t(disk_size);
+            channels[channel].drives[device].hard_drive = new z_undoable_image_t(disk_size,
+                            bx_options.atadevice[channel][device].Ojournal->getptr());
             break;
 
           case BX_ATA_MODE_Z_VOLATILE:
             BX_INFO(("HD on ata%d-%d: '%s' 'z-volatile' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
-            channels[channel].drives[device].hard_drive = new z_volatile_image_t(disk_size);
+            channels[channel].drives[device].hard_drive = new z_volatile_image_t(disk_size,
+                            bx_options.atadevice[channel][device].Ojournal->getptr());
             break;
 #endif //BX_COMPRESSED_HD_SUPPORT
 
@@ -4417,7 +4421,9 @@ growing_image_t::growing_image_t(Bit64u _size)
 
 int growing_image_t::open (const char* pathname)
 {
-        return redolog->open(pathname,REDOLOG_SUBTYPE_GROWING,size);
+        int filedes = redolog->open(pathname,REDOLOG_SUBTYPE_GROWING,size);
+        BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
+        return filedes;
 }
 
 void growing_image_t::close ()
@@ -4445,32 +4451,51 @@ ssize_t growing_image_t::write (const void* buf, size_t count)
 
 /*** undoable_image_t function definitions ***/
 
-undoable_image_t::undoable_image_t(Bit64u _size)
+undoable_image_t::undoable_image_t(Bit64u _size, const char* _redolog_name)
 {
         redolog = new redolog_t();
         ro_disk = new default_image_t();
         size = _size;
+        redolog_name = NULL;
+        if (_redolog_name != NULL) {
+          if (strcmp(_redolog_name,"") != 0) {
+            redolog_name = strdup(_redolog_name);
+          }
+        }
 }
 
 int undoable_image_t::open (const char* pathname)
 {
-        char *redolog_name;
+        char *logname=NULL;
 
         if (ro_disk->open(pathname, O_RDONLY)<0)
                 return -1;
 
-        redolog_name = (char*)malloc(strlen(pathname) + strlen(REDOLOG_EXTENSION) + 1);
-        sprintf (redolog_name, "%s%s", pathname, REDOLOG_EXTENSION);
-        if (redolog->open(redolog_name,REDOLOG_SUBTYPE_UNDOABLE,size) < 0)
+        // if redolog name was set 
+        if ( redolog_name != NULL) {
+                if ( strcmp(redolog_name, "") != 0 ) {
+                        logname = (char*)malloc(strlen(redolog_name) + 1);
+                        strcpy (logname, redolog_name);
+                }
+        }
+
+        // Otherwise we make up the redolog filename from the pathname
+        if ( logname == NULL) {
+                logname = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
+                sprintf (logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
+        }
+
+        if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE,size) < 0)
         {
-                if (redolog->create(redolog_name, REDOLOG_SUBTYPE_UNDOABLE, size) < 0)
+                if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, size) < 0)
                 {
-                        BX_PANIC(("Can't open or create redolog %s",redolog_name));
+                        BX_PANIC(("Can't open or create redolog '%s'",logname));
                         return -1;
                 }
         }
 
-        free(redolog_name);
+        BX_INFO(("'undoable' disk opened: ro-file is '%s', redolog is '%s'", pathname, logname));
+        free(logname);
 
         return 0;
 }
@@ -4479,6 +4504,9 @@ void undoable_image_t::close ()
 {
         redolog->close();
         ro_disk->close();
+
+        if (redolog_name!=NULL)
+          free(redolog_name);
 }
 
 off_t undoable_image_t::lseek (off_t offset, int whence)
@@ -4504,40 +4532,63 @@ ssize_t undoable_image_t::write (const void* buf, size_t count)
 
 /*** volatile_image_t function definitions ***/
 
-volatile_image_t::volatile_image_t(Bit64u _size)
+volatile_image_t::volatile_image_t(Bit64u _size, const char* _redolog_name)
 {
         redolog = new redolog_t();
         ro_disk = new default_image_t();
         size = _size;
+        redolog_temp = NULL;
         redolog_name = NULL;
+        if (_redolog_name != NULL) {
+          if (strcmp(_redolog_name,"") != 0) {
+            redolog_name = strdup(_redolog_name);
+          }
+        }
 }
 
 int volatile_image_t::open (const char* pathname)
 {
         int filedes;
+        const char *logname=NULL;
 
         if (ro_disk->open(pathname, O_RDONLY)<0)
                 return -1;
 
-        redolog_name = (char*)malloc(strlen(pathname) + strlen(".XXXXXX") + 1);
-        sprintf (redolog_name, "%s%s", pathname, ".XXXXXX");
+        // if redolog name was set 
+        if ( redolog_name != NULL) {
+                if ( strcmp(redolog_name, "") != 0 ) {
+                        logname = redolog_name;
+                }
+        }
 
-        filedes = mkstemp (redolog_name);
+        // otherwise use pathname as template
+        if (logname == NULL) {
+                logname = pathname;
+        }
+
+        redolog_temp = (char*)malloc(strlen(logname) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
+        sprintf (redolog_temp, "%s%s", logname, VOLATILE_REDOLOG_EXTENSION);
+
+        filedes = mkstemp (redolog_temp);
 
         if (filedes < 0)
         {
-                BX_PANIC(("Can't create volatile redolog"));
+                BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
                 return -1;
         }
         if (redolog->create(filedes, REDOLOG_SUBTYPE_VOLATILE, size) < 0)
         {
-                BX_PANIC(("Can't create volatile redolog"));
+                BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
                 return -1;
         }
         
 #if (!defined(WIN32)) && !BX_WITH_MACOS
-        unlink(redolog_name);
+        // on unix it is legal to delete an open file
+        unlink(redolog_temp);
 #endif
+
+        BX_INFO(("'volatile' disk opened: ro-file is '%s', redolog is '%s'", pathname, redolog_temp));
+
         return 0;
 }
 
@@ -4547,9 +4598,14 @@ void volatile_image_t::close ()
         ro_disk->close();
 
 #if defined(WIN32) || BX_WITH_MACOS
-        unlink(redolog_name);
+        // on non-unix we have to wait till the file is closed to delete it
+        unlink(redolog_temp);
 #endif
-        free(redolog_name);
+        if (redolog_temp!=NULL)
+          free(redolog_temp);
+
+        if (redolog_name!=NULL)
+          free(redolog_name);
 }
 
 off_t volatile_image_t::lseek (off_t offset, int whence)
@@ -4636,32 +4692,52 @@ ssize_t z_ro_image_t::write (const void* buf, size_t count)
 
 /*** z_undoable_image_t function definitions ***/
 
-z_undoable_image_t::z_undoable_image_t(Bit64u _size)
+z_undoable_image_t::z_undoable_image_t(Bit64u _size, const char* _redolog_name)
 {
         redolog = new redolog_t();
         ro_disk = new z_ro_image_t();
         size = _size;
+
+        redolog_name = NULL;
+        if (_redolog_name != NULL) {
+          if (strcmp(_redolog_name,"") != 0) {
+            redolog_name = strdup(_redolog_name);
+          }
+        }
 }
 
 int z_undoable_image_t::open (const char* pathname)
 {
-        char *redolog_name;
+        char *logname=NULL;
 
         if (ro_disk->open(pathname)<0)
                 return -1;
 
-        redolog_name = (char*)malloc(strlen(pathname) + strlen(REDOLOG_EXTENSION) + 1);
-        sprintf (redolog_name, "%s%s", pathname, REDOLOG_EXTENSION);
-        if (redolog->open(redolog_name,REDOLOG_SUBTYPE_UNDOABLE,size) < 0)
+        // If redolog name was set 
+        if ( redolog_name != NULL) {
+                if ( strcmp(redolog_name, "") != 0) {
+                        logname = (char*)malloc(strlen(redolog_name) + 1);
+                        strcpy (logname, redolog_name);
+                }
+        }
+
+        // Otherwise we make up the redolog filename from the pathname
+        if ( logname == NULL) {
+                logname = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
+                sprintf (logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
+        }
+
+        if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE,size) < 0)
         {
-                if (redolog->create(redolog_name, REDOLOG_SUBTYPE_UNDOABLE, size) < 0)
+                if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, size) < 0)
                 {
-                        BX_PANIC(("Can't open or create redolog %s",redolog_name));
+                        BX_PANIC(("Can't open or create redolog '%s'",logname));
                         return -1;
                 }
         }
 
-        free(redolog_name);
+        BX_INFO(("'z-undoable' disk opened, z-ro-file is '%s', redolog is '%s'", pathname, logname));
+        free(logname);
 
         return 0;
 }
@@ -4670,6 +4746,9 @@ void z_undoable_image_t::close ()
 {
         redolog->close();
         ro_disk->close();
+
+        if (redolog_name!=NULL)
+          free(redolog_name);
 }
 
 off_t z_undoable_image_t::lseek (off_t offset, int whence)
@@ -4695,40 +4774,64 @@ ssize_t z_undoable_image_t::write (const void* buf, size_t count)
 
 /*** z_volatile_image_t function definitions ***/
 
-z_volatile_image_t::z_volatile_image_t(Bit64u _size)
+z_volatile_image_t::z_volatile_image_t(Bit64u _size, const char* _redolog_name)
 {
         redolog = new redolog_t();
         ro_disk = new z_ro_image_t();
         size = _size;
+
+        redolog_temp = NULL;
         redolog_name = NULL;
+        if (_redolog_name != NULL) {
+          if (strcmp(_redolog_name,"") != 0) {
+            redolog_name = strdup(_redolog_name);
+          }
+        }
 }
 
 int z_volatile_image_t::open (const char* pathname)
 {
         int filedes;
+        const char *logname=NULL;
 
         if (ro_disk->open(pathname)<0)
                 return -1;
 
-        redolog_name = (char*)malloc(strlen(pathname) + strlen(".XXXXXX") + 1);
-        sprintf (redolog_name, "%s%s", pathname, ".XXXXXX");
+        // if redolog name was set 
+        if ( redolog_name != NULL) {
+                if ( strcmp(redolog_name, "") !=0 ) {
+                        logname = redolog_name;
+                }
+        }
 
-        filedes = mkstemp (redolog_name);
+        // otherwise use pathname as template
+        if (logname == NULL) {
+                logname = pathname;
+        }
+
+        redolog_temp = (char*)malloc(strlen(logname) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
+        sprintf (redolog_temp, "%s%s", logname, VOLATILE_REDOLOG_EXTENSION);
+
+        filedes = mkstemp (redolog_temp);
 
         if (filedes < 0)
         {
-                BX_PANIC(("Can't create volatile redolog"));
+                BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
                 return -1;
         }
         if (redolog->create(filedes, REDOLOG_SUBTYPE_VOLATILE, size) < 0)
         {
-                BX_PANIC(("Can't create volatile redolog"));
+                BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
                 return -1;
         }
         
 #if (!defined(WIN32)) && !BX_WITH_MACOS
-        unlink(redolog_name);
+        // on unix it is legal to delete an open file
+        unlink(redolog_temp);
 #endif
+
+        BX_INFO(("'z-volatile' disk opened: z-ro-file is '%s', redolog is '%s'", pathname, redolog_temp));
+
         return 0;
 }
 
@@ -4738,9 +4841,15 @@ void z_volatile_image_t::close ()
         ro_disk->close();
 
 #if defined(WIN32) || BX_WITH_MACOS
-        unlink(redolog_name);
+        // on non-unix we have to wait till the file is closed to delete it
+        unlink(redolog_temp);
 #endif
-        free(redolog_name);
+
+        if (redolog_temp!=NULL)
+          free(redolog_temp);
+
+        if (redolog_name!=NULL)
+          free(redolog_name);
 }
 
 off_t z_volatile_image_t::lseek (off_t offset, int whence)
