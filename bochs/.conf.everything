@@ -1,0 +1,25 @@
+./configure \
+  --enable-processors=2  \
+  --enable-x86-64 \
+  --enable-ne2000 \
+  --enable-pci \
+  --enable-dc2300-vlb-ide \
+  --enable-4meg-pages \
+  --enable-pae \
+  --enable-guest2host-tlb \
+  --enable-repeat-speedups \
+  --enable-icache \
+  --enable-global-pages \
+  --enable-host-specific-asms \
+  --enable-ignore-bad-msr \
+  --enable-port-e9-hack \
+  --enable-debugger \
+  --enable-disasm \
+  --enable-vbe \
+  --enable-mmx \
+  --enable-fpu \
+  --enable-sse=2 \
+  --enable-x86-debugger \
+  --enable-cdrom \
+  --enable-sb16=linux \
+  --enable-iodebug
