@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.43 2002-08-13 10:31:51 vruppert Exp $
+$Id: user.dbk,v 1.44 2002-08-13 13:50:54 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -977,6 +977,18 @@ The tag tells which release you want, and it can be one of the following:
       </row>
     </thead>
     <tbody>
+      <row>
+	<entry>1.4.1 (bugfix1)</entry>
+	<entry>REL_1_4_1_FINAL</entry>
+      </row>
+      <row>
+	<entry>1.4</entry>
+	<entry>REL_1_4_FINAL</entry>
+      </row>
+      <row>
+	<entry>1.3</entry>
+	<entry>REL_1_3_FINAL</entry>
+      </row>
       <row>
 	<entry>1.2.1 (bugfix1)</entry>
 	<entry>REL_1_2_1_FINAL</entry>
@@ -3081,7 +3093,7 @@ will get 2 copies of every announcement.
 
 <section id="bochs-cvs"><title>bochs-cvs mailing list</title>
 <para>
-This is the cvs commit mailinglist (a unified diff email will get send
+This is the cvs commit mailinglist (a unified diff email will be sent
 whenever someone does a checkin in the bochs cvs repository).
 </para>
 
