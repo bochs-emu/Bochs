@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.24 2002-11-09 20:51:40 vruppert Exp $
+// $Id: pci.cc,v 1.25 2002-11-14 20:02:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -284,7 +284,9 @@ bx_pci_c::pci_read(Bit8u address, unsigned io_len)
   Bit32u val440fx = 0;
 
   if (io_len <= 4) {
-    memcpy(&val440fx, &BX_PCI_THIS s.i440fx.pci_conf[address], io_len);
+    for (unsigned i=0; i<io_len; i++) {
+      val440fx |= (BX_PCI_THIS s.i440fx.pci_conf[address+i] << (i*8));
+    }
     BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x", address, val440fx));
     return val440fx;
     }
