@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.107 2004-01-28 19:13:37 vruppert Exp $
+// $Id: rombios.c,v 1.108 2004-02-09 16:48:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,12 +104,8 @@
 //     - f02/03/04 should set current cyl,etc in BDA  (?)
 //     - rewrite int13_relocated & clean up int13 entry code
 //
-//   int1a:
-//     - f03/f05 are not complete - just CLC for now (?)
-//
 //   NOTES:
 //   - NMI access (bit7 of addr written to 70h)
-//   - timer ISR should deal with floppy counter and turn floppy motor off
 //
 //   ATA driver
 //   - should handle the "don't detect" bit (cmos regs 0x3b & 0x3c)
@@ -147,6 +143,7 @@
 #define BX_CALL_INT15_4F 1
 #define BX_USE_EBDA      1
 #define BX_SUPPORT_FLOPPY 1
+#define BX_FLOPPY_ON_CNT 37   // 2 seconds
 #define BX_PCIBIOS       1
 
 #define BX_USE_ATADRV    1
@@ -928,10 +925,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.107 $";
-static char bios_date_string[] = "$Date: 2004-01-28 19:13:37 $";
+static char bios_cvs_version_string[] = "$Revision: 1.108 $";
+static char bios_date_string[] = "$Date: 2004-02-09 16:48:50 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.107 2004-01-28 19:13:37 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.108 2004-02-09 16:48:50 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1162,7 +1159,6 @@ ASM_START
 ASM_END
 }
 #endif
-
 
   void
 outb(port, val)
@@ -6253,6 +6249,9 @@ floppy_drive_recal(drive)
   dor |= drive;
   outb(0x03f2, dor);
 
+  // reset the disk motor timeout value of INT 08
+  write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
+
   // check port 3f4 for drive readiness
   val8 = inb(0x3f4);
   if ( (val8 & 0xf0) != 0x80 )
@@ -6315,7 +6314,6 @@ floppy_drive_exists(drive)
   else
     return(1);
 }
-
 
 #if BX_SUPPORT_FLOPPY
   void
@@ -6486,6 +6484,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         dor |= drive;
         outb(0x03f2, dor);
 
+        // reset the disk motor timeout value of INT 08
+        write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
+
         // check port 3f4 for drive readiness
         val8 = inb(0x3f4);
         if ( (val8 & 0xf0) != 0x80 )
@@ -6630,6 +6631,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         dor |= 0x0c;
         dor |= drive;
         outb(0x03f2, dor);
+
+        // reset the disk motor timeout value of INT 08
+        write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
 
         // check port 3f4 for drive readiness
         val8 = inb(0x3f4);
@@ -6805,6 +6809,10 @@ BX_DEBUG_INT13_FL("floppy f05\n");
       dor |= 0x0c;
       dor |= drive;
       outb(0x03f2, dor);
+
+      // reset the disk motor timeout value of INT 08
+      write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
+
       // check port 3f4 for drive readiness
       val8 = inb(0x3f4);
       if ( (val8 & 0xf0) != 0x80 )
@@ -9605,6 +9613,23 @@ int08_handler:
   push ds
   xor ax, ax
   mov ds, ax
+
+  ;; time to turn off drive(s)?
+  mov  al,0x0440
+  or   al,al
+  jz   int08_floppy_off
+  dec  al
+  mov  0x0440,al
+  jnz  int08_floppy_off
+  ;; turn motor(s) off
+  push dx
+  mov  dx,#0x03f2
+  in   al,dx
+  and  al,#0xcf
+  out  dx,al
+  pop  dx
+int08_floppy_off:
+
   mov eax, 0x046c ;; get ticks dword
   inc eax
 
