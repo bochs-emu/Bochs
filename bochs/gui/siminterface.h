@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.116 2004-01-29 18:50:32 vruppert Exp $
+// $Id: siminterface.h,v 1.117 2004-02-04 19:54:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1450,7 +1450,7 @@ BOCHSAPI extern bx_simulator_interface_c *SIM;
 BOCHSAPI extern void bx_init_siminterface ();
 BOCHSAPI extern int bx_init_main (int argc, char *argv[]);
 
-#ifdef __WXMSW__
+#if defined(__WXMSW__) || defined(WIN32)
 // Just to provide HINSTANCE, etc. in files that have not included bochs.h.
 // I don't like this at all, but I don't see a way around it.
 #include <windows.h>
@@ -1461,6 +1461,9 @@ typedef struct BOCHSAPI {
   // standard argc,argv
   int argc;
   char **argv;
+#ifdef WIN32
+  char initial_dir[MAX_PATH];
+#endif
 #ifdef __WXMSW__
   // these are only used when compiling with wxWindows.  This gives us a
   // place to store the data that was passed to WinMain.
