@@ -42,6 +42,7 @@ void bx_generic_apic_c::set_id (Bit8u newid) {
 char *
 bx_generic_apic_c::get_name () {
   bx_panic ("get_name called on bx_generic_apic_c base class\n");
+  return NULL;
 }
 
 Boolean
@@ -108,10 +109,12 @@ void bx_generic_apic_c::untrigger_irq (unsigned num, unsigned from)
 
 Boolean bx_generic_apic_c::match_logical_addr (Bit8u address) {
   bx_panic ("match_logical_addr called on base class\n");
+  return false;
 }
 
 bx_apic_type_t bx_generic_apic_c::get_type () {
   bx_panic ("get_type called on base class");
+  return APIC_TYPE_NONE;
 }
 
 Bit32u
@@ -247,9 +250,10 @@ bx_local_apic_c::init ()
 }
 
 BX_CPU_C 
-bx_local_apic_c::*get_cpu (Bit8u id)
+*bx_local_apic_c::get_cpu (Bit8u id)
 {
   bx_assert (id < APIC_MAX_ID);
+  return cpu;
 }
 
 bx_local_apic_c::~bx_local_apic_c(void)
