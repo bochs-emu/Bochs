@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.7 2002-06-02 11:53:49 vruppert Exp $
+// $Id: dma.h,v 1.8 2002-06-16 15:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,6 @@
 #define _PCDMA_H
 
 
-
 #if BX_USE_DMA_SMF
 #  define BX_DMA_SMF  static
 #  define BX_DMA_THIS bx_dma.
@@ -47,8 +46,19 @@ public:
   ~bx_dma_c(void);
 
   BX_DMA_SMF void     init(bx_devices_c *);
-  BX_DMA_SMF void     DRQ(unsigned channel, Boolean val);
-  BX_DMA_SMF void     raise_HLDA(bx_pc_system_c *pc_sys);
+  BX_DMA_SMF void     raise_HLDA(void);
+  BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
+  BX_DMA_SMF unsigned get_TC(void);
+
+  BX_DMA_SMF unsigned registerDMA8Channel(unsigned channel,
+    void (* dmaRead)(Bit8u *data_byte),
+    void (* dmaWrite)(Bit8u *data_byte),
+    const char *name);
+  BX_DMA_SMF unsigned registerDMA16Channel(unsigned channel,
+    void (* dmaRead)(Bit16u *data_word),
+    void (* dmaWrite)(Bit16u *data_word),
+    const char *name);
+  BX_DMA_SMF unsigned unregisterDMAChannel(unsigned channel);
 
 private:
 
@@ -61,6 +71,9 @@ private:
   BX_DMA_SMF void control_HRQ(Boolean ma_sl);
 
   struct {
+    Boolean DRQ[4];  // DMA Request
+    Boolean DACK[4]; // DMA Acknowlege
+
     Boolean mask[4];
     Boolean flip_flop;
     Bit8u   status_reg;
@@ -79,8 +92,19 @@ private:
       Bit16u  base_count;
       Bit16u  current_count;
       Bit8u   page_reg;
+      Boolean used;
       } chan[4]; /* DMA channels 0..3 */
     } s[2];  // state information DMA-1 / DMA-2
+
+  Boolean HLDA;    // Hold Acknowlege
+  Boolean TC;      // Terminal Count
+
+  struct {
+    void (* dmaRead8)(Bit8u *data_byte);
+    void (* dmaWrite8)(Bit8u *data_byte);
+    void (* dmaRead16)(Bit16u *data_word);
+    void (* dmaWrite16)(Bit16u *data_word);
+    } h[4]; // DMA read and write handlers
 
   bx_devices_c *devices;
   };

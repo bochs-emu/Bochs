@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.13 2002-04-03 01:56:26 bdenney Exp $
+// $Id: iodev.h,v 1.14 2002-06-16 15:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -89,12 +89,6 @@ public:
   Bit32u inp(Bit16u addr, unsigned io_len);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len);
 
-  void dma_write8(unsigned channel, Bit8u *data);
-  void dma_read8(unsigned channel, Bit8u *data);
-  void dma_write16(unsigned channel, Bit16u *data);
-  void dma_read16(unsigned channel, Bit16u *data);
-  void drq(unsigned channel, Boolean val);
-  void raise_hlda(void);
   static void timer_handler(void *);
   void timer(void);
 

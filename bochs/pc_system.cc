@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.17 2001-12-26 14:56:15 vruppert Exp $
+// $Id: pc_system.cc,v 1.18 2002-06-16 15:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -56,13 +56,7 @@ bx_pc_system_c::bx_pc_system_c(void)
   num_cpu_ticks_in_period = num_cpu_ticks_left = (Bit32u) -1;
   m_ips = 0.0L;
 
-  for (unsigned int i=0; i < 8; i++) {
-    DRQ[i] = 0;
-    DACK[i] = 0;
-    }
-  TC = 0;
   HRQ = 0;
-  HLDA = 0;
 
   enable_a20 = 1;
   //set_INTR (0);
@@ -88,102 +82,11 @@ bx_pc_system_c::init_ips(Bit32u ips)
 }
 
   void
-bx_pc_system_c::raise_HLDA(void)
-{
-  HLDA = 1;
-  bx_devices.raise_hlda();
-  HLDA = 0;
-}
-
-  void
-bx_pc_system_c::set_DRQ(unsigned channel, Boolean val)
-{
-  if (channel > 7)
-    BX_PANIC(("set_DRQ() channel > 7"));
-  DRQ[channel] = val;
-  bx_devices.drq(channel, val);
-}
-
-  void
 bx_pc_system_c::set_HRQ(Boolean val)
 {
   HRQ = val;
   if (val)
     BX_CPU(0)->async_event = 1;
-  else
-    HLDA = 0; // ??? needed?
-}
-
-  void
-bx_pc_system_c::set_TC(Boolean val)
-{
-  TC = val;
-}
-
-  void
-bx_pc_system_c::set_DACK(unsigned channel, Boolean val)
-{
-  DACK[channel] = val;
-}
-
-
-  void
-bx_pc_system_c::dma_write8(Bit32u phy_addr, unsigned channel, Boolean verify)
-{
-  // DMA controlled xfer of byte from I/O to Memory
-
-  Bit8u data_byte;
-
-  bx_devices.dma_write8(channel, &data_byte);
-  if (!verify) {
-    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 1, &data_byte);
-
-    BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
-    }
-}
-
-
-  void
-bx_pc_system_c::dma_read8(Bit32u phy_addr, unsigned channel)
-{
-  // DMA controlled xfer of byte from Memory to I/O
-
-  Bit8u data_byte;
-
-  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 1, &data_byte);
-  bx_devices.dma_read8(channel, &data_byte);
-
-  BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
-}
-
-
-  void
-bx_pc_system_c::dma_write16(Bit32u phy_addr, unsigned channel, Boolean verify)
-{
-  // DMA controlled xfer of word from I/O to Memory
-
-  Bit16u data_word;
-
-  bx_devices.dma_write16(channel, &data_word);
-  if (!verify) {
-    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 2, &data_word);
-
-    BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
-    }
-}
-
-
-  void
-bx_pc_system_c::dma_read16(Bit32u phy_addr, unsigned channel)
-{
-  // DMA controlled xfer of word from Memory to I/O
-
-  Bit16u data_word;
-
-  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 2, &data_word);
-  bx_devices.dma_read16(channel, &data_word);
-
-  BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.19 2002-04-09 20:12:39 bdenney Exp $
+// $Id: sb16.cc,v 1.20 2002-06-16 15:02:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -270,9 +270,9 @@ void bx_sb16_c::dsp_dmatimer (void *this_ptr)
 	 (This->dsp.dma.count > 0) ) ||
        (This->output->waveready() == BX_SOUND_OUTPUT_OK) ) {
     if (DSP.dma.bits == 8)
-      bx_pc_system.set_DRQ(BX_SB16_DMAL, 1);
+      BX_DMA_SET_DRQ(BX_SB16_DMAL, 1);
     else
-      bx_pc_system.set_DRQ(BX_SB16_DMAH, 1);
+      BX_DMA_SET_DRQ(BX_SB16_DMAH, 1);
     }
 }
 
@@ -1166,7 +1166,7 @@ void bx_sb16_c::dsp_dmadone()
 // and write = from soundcard to application (input)
 void bx_sb16_c::dma_read8(Bit8u *data_byte)
 {
-  bx_pc_system.set_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
+  BX_DMA_SET_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
 
   if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
     writelog( WAVELOG(5), "Received 8-bit DMA %2x, %d remaining ",
@@ -1181,7 +1181,7 @@ void bx_sb16_c::dma_read8(Bit8u *data_byte)
 
 void bx_sb16_c::dma_write8(Bit8u *data_byte)
 {
-  bx_pc_system.set_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
+  BX_DMA_SET_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
 
   DSP.dma.count--;
 
@@ -1197,7 +1197,7 @@ void bx_sb16_c::dma_write8(Bit8u *data_byte)
 
 void bx_sb16_c::dma_read16(Bit16u *data_word)
 {
-  bx_pc_system.set_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
+  BX_DMA_SET_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
 
   if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
     writelog( WAVELOG(5), "Received 16-bit DMA %4x, %d remaining ",
@@ -1216,7 +1216,7 @@ void bx_sb16_c::dma_write16(Bit16u *data_word)
 {
   Bit8u byte1, byte2;
 
-  bx_pc_system.set_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
+  BX_DMA_SET_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
 
   DSP.dma.count--;
 
@@ -1286,7 +1286,9 @@ void bx_sb16_c::mixer_writeregister(Bit32u value)
 
 void bx_sb16_c::set_irq_dma()
 {
+  static Boolean isInitialized=0;
   int newirq;
+  int oldDMA8, oldDMA16;
 
   // set the IRQ according to the value in mixer register 0x80
   switch (MIXER.reg[0x80]) 
@@ -1319,6 +1321,7 @@ void bx_sb16_c::set_irq_dma()
     }
 
   // set the 8 bit DMA
+  oldDMA8=BX_SB16_DMAL;
   switch (MIXER.reg[0x81] & 0x0f)
     {
     case 1: 
@@ -1338,7 +1341,18 @@ void bx_sb16_c::set_irq_dma()
       MIXER.reg[0x81] |= (1 << BX_SB16_DMAL);
     }
 
+  // Unregister the previous DMA if initialized
+  if ( (isInitialized) && (oldDMA8 != BX_SB16_DMAL) ) {
+    BX_UNREGISTER_DMA_CHANNEL(oldDMA8);
+  }
+
+  // And register the new 8bits DMA Channel
+  if ( (!isInitialized) || (oldDMA8 != BX_SB16_DMAL) ) {
+    BX_REGISTER_DMA8_CHANNEL(BX_SB16_DMAL, bx_sb16.dma_read8, bx_sb16.dma_write8, "SB16");
+  }
+
   // and the 16 bit DMA
+  oldDMA16=BX_SB16_DMAH;
   switch (MIXER.reg[0x81] >> 4)
     {
     case 0:
@@ -1361,6 +1375,21 @@ void bx_sb16_c::set_irq_dma()
       // MIXER.reg[0x81] |= (1 << BX_SB16_DMAH);
       // no default 16 bit channel!
     }
+
+  // Unregister the previous DMA if initialized
+  if ( (isInitialized) && (oldDMA16 != 0) && (oldDMA16 != BX_SB16_DMAH) ) {
+    BX_UNREGISTER_DMA_CHANNEL(oldDMA16);
+  }
+
+  // And register the new 16bits DMA Channel
+  if ( (BX_SB16_DMAH != 0) && (oldDMA16 != BX_SB16_DMAH) ) {
+    BX_REGISTER_DMA16_CHANNEL(BX_SB16_DMAH, bx_sb16.dma_read16, bx_sb16.dma_write16, "SB16");
+  }
+
+  // If not already initialized
+  if(!isInitialized) {
+    isInitialized=1;
+  }
 
   writelog(BOTHLOG(4), "Resources set to I%d D%d H%d", 
 	   BX_SB16_IRQ, BX_SB16_DMAL, BX_SB16_DMAH);
