@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.27 2003-05-11 15:07:53 vruppert Exp $
+// $Id: term.cc,v 1.28 2003-05-15 19:00:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -59,6 +59,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(term)
 #define LOG_THIS theGui->
 
 bx_bool initialized = 0;
+static unsigned int text_cols = 80, text_rows = 25;
 
 static short curses_color[8] = {
   /* 0 */ COLOR_BLACK,
@@ -184,6 +185,7 @@ bx_term_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned
 	nodelay(stdscr, TRUE);
 	noecho();
 
+#if BX_HAVE_COLOR_SET
 	if (has_colors()) {
 		for (int i=0; i<COLORS; i++) {
 			for (int j=0; j<COLORS; j++) {
@@ -191,6 +193,7 @@ bx_term_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned
 			}
 		}
 	}
+#endif
 
 	if (bx_options.Oprivate_colormap->get ())
 		BX_ERROR(("WARNING: private_colormap option ignored."));
@@ -437,7 +440,17 @@ bx_term_gui_c::flush(void)
 	void
 bx_term_gui_c::clear_screen(void)
 {
-	clear();
+  clear();
+  color_set(7, NULL);
+  if (LINES > (int)text_rows) {
+    mvhline(text_rows, 0, ACS_HLINE, text_cols);
+  }
+  if (COLS > (int)text_cols) {
+    mvvline(0, text_cols, ACS_VLINE, text_rows);
+  }
+  if ((LINES > (int)text_rows) && (COLS > (int)text_cols)) {
+    mvaddch(text_rows, text_cols, ACS_LRCORNER);
+  }
 }
 
 int
@@ -465,6 +478,12 @@ get_term_char(Bit8u vga_char[])
 		case 0x19: term_char = ACS_DARROW; break;
 		case 0x1a: term_char = ACS_RARROW; break;
 		case 0x1b: term_char = ACS_LARROW; break;
+		case 0x81: term_char = 0xfc; break;
+		case 0x84: term_char = 0xe4; break;
+		case 0x94: term_char = 0xf6; break;
+		case 0x8e: term_char = 0xc4; break;
+		case 0x99: term_char = 0xd6; break;
+		case 0x9a: term_char = 0xdc; break;
 		case 0xc4:
 		case 0xcd: term_char = ACS_HLINE; break;
 		case 0xb3:
@@ -491,7 +510,14 @@ get_term_char(Bit8u vga_char[])
 		case 0xb1: term_char = ACS_CKBOARD; break;
 		case 0xb2: term_char = ACS_BOARD; break;
 		case 0xdb: term_char = ACS_BLOCK; break;
-		default: term_char = vga_char[0];
+		case 0xe1: term_char = 0xdf; break;
+		default:
+		  if (vga_char[0] < 0x80) {
+		    term_char = vga_char[0];
+		  } else {
+		    BX_DEBUG(("vga char ignored: 0x%02x", vga_char[0]));
+		    term_char = ' ';
+		  }
 	}
 	return term_char;
 }
@@ -520,41 +546,71 @@ bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned long cursor_x, unsigned long cursor_y,
 	bx_vga_tminfo_t tm_info, unsigned nrows)
 {
-	UNUSED(tm_info);
-	chtype ch;
+  unsigned char *old_line, *new_line, *new_start;
+  unsigned char cAttr;
+  unsigned int hchars, rows, x, y;
+  chtype ch;
+  bx_bool force_update = 0;
 
-	unsigned ncols = 4000/nrows/2;
-	// XXX There has GOT to be a better way of doing this
-	for(int i=0;i<4001;i+=2) {
-		if ((old_text[i] != new_text[i]) ||
-		    (old_text[i+1] != new_text[i+1])) {
-#if BX_HAVE_COLOR_SET
-			if (has_colors()) {
-				color_set(get_color_pair(new_text[i+1]), NULL);
-			}
-#endif
-			ch = get_term_char(&new_text[i]);
-			if ((new_text[i+1] & 0x08) > 0) ch |= A_BOLD;
-			if ((new_text[i+1] & 0x80) > 0) ch |= A_REVERSE;
-			mvaddch((i/2)/ncols,(i/2)%ncols, ch);
-		}
-	}
+  UNUSED(nrows);
 
-	if(cursor_x>0)
-		cursor_x--;
-	else {
-		cursor_x=79;
-		cursor_y--;
-	}
+  if(charmap_updated) {
+    force_update = 1;
+    charmap_updated = 0;
+  }
+
+  new_start = new_text;
+  rows = text_rows;
+  y = 0;
+  do {
+    hchars = text_cols;
+    new_line = new_text;
+    old_line = old_text;
+    x = 0;
+    do {
+      if (force_update || (old_text[0] != new_text[0])
+          || (old_text[1] != new_text[1])) {
 #if BX_HAVE_COLOR_SET
-	if (has_colors()) {
-		color_set(get_color_pair(new_text[(cursor_y*80+cursor_x)*2+1]), NULL);
-	}
+        if (has_colors()) {
+          color_set(get_color_pair(new_text[1]), NULL);
+        }
 #endif
-	ch = get_term_char(&new_text[(cursor_y*80+cursor_x)*2]);
-	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) ch |= A_BOLD;
-	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x80) > 0) ch |= A_REVERSE;
-	mvaddch(cursor_y, cursor_x, ch);
+        ch = get_term_char(&new_text[0]);
+        if ((new_text[1] & 0x08) > 0) ch |= A_BOLD;
+        if ((new_text[1] & 0x80) > 0) ch |= A_REVERSE;
+        mvaddch(y, x, ch);
+      }
+      x++;
+      new_text+=2;
+      old_text+=2;
+    } while (--hchars);
+    y++;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+  } while (--rows);
+
+  if ((cursor_x<text_cols) && (cursor_y<text_rows)
+      && (tm_info.cs_start <= tm_info.cs_end)) {
+    if(cursor_x>0)
+      cursor_x--;
+    else {
+      cursor_x=COLS-1;
+      cursor_y--;
+    }
+    cAttr = new_start[cursor_y*tm_info.line_offset+cursor_x*2+1];
+#if BX_HAVE_COLOR_SET
+    if (has_colors()) {
+      color_set(get_color_pair(cAttr), NULL);
+    }
+#endif
+    ch = get_term_char(&new_start[cursor_y*tm_info.line_offset+cursor_x*2]);
+    if ((cAttr & 0x08) > 0) ch |= A_BOLD;
+    if ((cAttr & 0x80) > 0) ch |= A_REVERSE;
+    mvaddch(cursor_y, cursor_x, ch);
+    curs_set(2);
+  } else {
+    curs_set(0);
+  }
 }
 
   int
@@ -623,10 +679,20 @@ bx_term_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 	void
 bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
-	UNUSED(x);
-	UNUSED(y);
-	UNUSED(fheight);
-	UNUSED(fwidth);
+  if (fheight > 0) {
+    text_cols = x / fwidth;
+    text_rows = y / fheight;
+    color_set(7, NULL);
+    if (LINES > (int)text_rows) {
+      mvhline(text_rows, 0, ACS_HLINE, text_cols);
+    }
+    if (COLS > (int)text_cols) {
+      mvvline(0, text_cols, ACS_VLINE, text_rows);
+    }
+    if ((LINES > (int)text_rows) && (COLS > (int)text_cols)) {
+      mvaddch(text_rows, text_cols, ACS_LRCORNER);
+    }
+  }
 }
 
 
