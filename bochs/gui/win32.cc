@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.48 2002-12-26 18:24:40 vruppert Exp $
+// $Id: win32.cc,v 1.49 2002-12-29 18:39:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -376,12 +376,11 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
 VOID UIThread(PVOID pvoid) {
   MSG msg;
   HDC hdc;
-  WNDCLASSEX wndclass;
+  WNDCLASS wndclass;
   RECT wndRect, wndRect2;
 
   workerThreadID = GetCurrentThreadId();
 
-  wndclass.cbSize = sizeof (wndclass);
   wndclass.style = CS_HREDRAW | CS_VREDRAW;
   wndclass.lpfnWndProc = mainWndProc;
   wndclass.cbClsExtra = 0;
@@ -393,9 +392,8 @@ VOID UIThread(PVOID pvoid) {
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szAppName;
 
-  RegisterClassEx (&wndclass);
+  RegisterClass (&wndclass);
 
-  wndclass.cbSize = sizeof (wndclass);
   wndclass.style = CS_HREDRAW | CS_VREDRAW;
   wndclass.lpfnWndProc = simWndProc;
   wndclass.cbClsExtra = 0;
@@ -407,7 +405,7 @@ VOID UIThread(PVOID pvoid) {
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = "SIMWINDOW";
 
-  RegisterClassEx (&wndclass);
+  RegisterClass (&wndclass);
 
   stInfo.mainWnd = CreateWindow (szAppName,
                      szWindowName,
@@ -1240,8 +1238,8 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
 //Note: it is also possible to program the VGA controller to have the
 //high bit for the foreground color enable blinking characters.
 
-	COLORREF crFore = SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
-	COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
+	COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx((cColor>>4)&0xf)));
+	COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx(cColor&0xf)));
 	BitBlt (MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
 		  ptOrg.y, dwRop);
 	SetBkColor(MemoryDC, crBack);
@@ -1333,8 +1331,8 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
 //Note: it is also possible to program the VGA controller to have the
 //high bit for the foreground color enable blinking characters.
 
-  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(cColor&0xf));
-  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
+  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx(cColor&0xf)));
+  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx((cColor>>4)&0xf)));
   str[0]=c;
   str[1]=0;
 
