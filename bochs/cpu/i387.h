@@ -28,7 +28,8 @@
 //
 // Minimal i387 structure
 //
-struct i387_t {
+struct i387_t 
+{
     Bit32s cwd;		 // control word
     Bit32s swd;		 // status word
     Bit32s twd;		 // tag word
@@ -36,12 +37,13 @@ struct i387_t {
     Bit32s fcs;
     Bit32s foo;
     Bit32s fos;
-    Bit32s align32;
-    Bit64u st_space[16]; // 8*16 bytes per FP-reg (aligned) = 128 bytes
+
     unsigned char tos;
     unsigned char no_update;
     unsigned char rm;
     unsigned align8;
+
+    Bit64u st_space[16]; // 8*16 bytes per FP-reg (aligned) = 128 bytes
 };
 
 // Endian  Host byte order         Guest (x86) byte order
