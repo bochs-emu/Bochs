@@ -154,7 +154,8 @@ bx_pc_system_c::dma_read8(Bit32u phy_addr, unsigned channel)
   void
 bx_pc_system_c::set_INTR(Boolean value)
 {
-  bx_printf ("pc_system: Setting INTR=%d on bootstrap processor %d\n", (int)value, BX_BOOTSTRAP_PROCESSOR);
+  if (bx_dbg.interrupts)
+    bx_printf ("pc_system: Setting INTR=%d on bootstrap processor %d\n", (int)value, BX_BOOTSTRAP_PROCESSOR);
   //INTR = value;
   int cpu = BX_BOOTSTRAP_PROCESSOR;
   BX_CPU[cpu]->set_INTR(value);
