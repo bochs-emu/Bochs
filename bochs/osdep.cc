@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.12 2003-01-10 22:32:44 cbothamy Exp $
+// $Id: osdep.cc,v 1.13 2003-03-11 17:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -307,8 +307,7 @@ Bit64u bx_get_realtime64_usec (void) {
   mytime=(Bit64u)thetime.tv_sec*(Bit64u)1000000+(Bit64u)thetime.tv_usec;
   return mytime;
 }
-#  else
-#    if BX_WITH_WIN32
+#  elif defined(WIN32)
 Bit64u last_realtime64_top = 0;
 Bit64u last_realtime64_bottom = 0;
 Bit64u bx_get_realtime64_usec (void) {
@@ -322,6 +321,5 @@ Bit64u bx_get_realtime64_usec (void) {
     (new_bottom          & BX_CONST64(0x00000000FFFFFFFF));
   return interim_realtime64*(BX_CONST64(1000));
 }
-#    endif
 #  endif
 #endif
