@@ -7,11 +7,85 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.0.1</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.0.2</font><BR><BR>
+
+Version 2.0.2 is a bugfix version based on 2.0.1.  This is the last
+planned bugfix release in the 2.0.x series.  The changes are listed
+below:
+<ul>
+<li> fix possible segfault in wxWindows (Volker Ruppert)
+<li> fix instrumentation (Stanislav Shwartsman)
+<li> fix cdrom read_toc() function for *BSD (Keith Matthew Jones)
+<li> fix NetBSD boot from cdrom (Christophe Bothamy)
+<li> fix cmos checksum (Volker)
+<li> fix "refresh bit" behaviour in pit (Volker)
+<li> fix .bochsrc parsing (Volker)
+<li> fix vga resize/redraw problems (Volker)
+<li> fix compilation issues on Irix and Tru64 (Christophe)
+<li> fix MMX/SSE bugs (Stanislav, Peter Tattam)
+</ul>
+
+<BR>
+<B>BOCHS BINARIES</B><BR>
+<i>All binaries include Bochs plus a 10 mb disk image of DLX Linux to get you started.</i>
+<UL>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/Bochs-2.0.2.exe">Windows Installer for x86 machines (2.8meg)</A>, includes bochsdbg.exe with debugger enabled </li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.2.win32-bin.zip">ZIP
+containing Windows binaries for x86 machines (2.8meg)</A>.  Use the installer if
+you can.
+<li><IMG SRC="/icons/compressed.gif" ALT="[RPM]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.2.i386.rpm">RPM Binary for all RPM-based Linux x86 Distributions (3.3m)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[DMG]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/Bochs-2.0.2.dmg">DMG file for MacOSX (2.6m)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[DMG]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.2.ppc-macos.sit"></a>(coming soon) SIT file with binaries for MacOS 9</li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[DMG]"> <A
+HREF="http://osdn.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.2.beos.pkg"></a>(coming soon) PKG file for BeOS (x86)</A></li>
+</ul>
+
+<BR><BR>
+<B>BOCHS SOURCE</B><BR>
+Because Bochs is a cross-platform application, it can be compiled for
+many platforms in addition to the ones for which binaries are provided.
+If your platform can run the configure script, you can use the tarball.
+If you're running Linux and your system can read RPMs, you can 
+build Bochs using a source RPM.  If you're compiling for Win32 with 
+Microsoft VC++, the ZIP file contains sources that have already been 
+configured for you so you can go directly to the compile step.  For
+detailed compile instructions see the 
+<a href="/doc/docbook/user/book1.htm">User Guide</a>.
+
+<UL>
+<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.2.tar.gz">GZIPPED TARBALL file containing source code (3.1meg)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.2.src.rpm">RPM Source (3.1meg)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.2.win32-src.zip">ZIP containing source code configured for Win32/VC++ (3.6meg)</A></li>
+</ul>
+<B>NOTE:</b> We depend on volunteers to provide binaries for most platforms.
+If your platform is missing, you can compile from sources or use a binary from
+a previous version.  To get your binary onto our site, contact 
+<a href="http://sourceforge.net/sendmessage.php?touser=185114">Bryce</a>.
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.0.1</font><BR><BR>
 
 <b>Bochs 2.0.1</b> (January 4, 2003)
 Version 2.0.1 is a bugfix version based on 2.0.  Among other things, this
-version fixes some compile probleems, the text mode colors, an FPU bug, and the
+version fixes some compile problems, the text mode colors, an FPU bug, and the
 problems with saving a corrupt configuration file.  
 ( <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/bochs/bochs/CHANGES?rev=HEAD&content-type=text/vnd.viewcvs-markup"> Details </a> ) <p>
 
