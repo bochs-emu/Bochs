@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.48 2002-02-03 20:49:43 vruppert Exp $
+// $Id: harddrv.cc,v 1.49 2002-02-07 17:43:06 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.48 2002-02-03 20:49:43 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.49 2002-02-07 17:43:06 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -350,6 +350,18 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 }
 
 
+#define GOTO_RETURN_VALUE  if(io_len==4){\
+                             goto return_value32;\
+                             }\
+                           else if(io_len==2){\
+                             value16=(Bit16u)value32;\
+                             goto return_value16;\
+                             }\
+                           else{\
+                             value8=(Bit8u)value32;\
+                             goto return_value8;\
+                             }
+                           
 
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions
@@ -389,15 +401,24 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       switch (BX_SELECTED_CONTROLLER.current_command) {
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
-          if (io_len != 2) {
-            BX_PANIC(("non-word IO read from %04x",
+          if (io_len == 1) {
+            BX_PANIC(("byte IO read from %04x",
                      (unsigned) address));
             }
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
             BX_PANIC(("IO read(1f0): buffer_index >= 512"));
-          value16  = BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index];
-          value16 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] << 8);
-          BX_SELECTED_CONTROLLER.buffer_index += 2;
+
+          value32 = 0L;
+          switch(io_len){
+            case 4:
+              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] << 24);
+              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] << 16);
+            case 2:
+              value32 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] << 8);
+              value32 |=  BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index];
+            }
+
+          BX_SELECTED_CONTROLLER.buffer_index += io_len;
 
           // if buffer completely read
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512) {
@@ -435,27 +456,27 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	      if (!calculate_logical_address(&logical_sector)) {
 	        BX_ERROR(("multi-sector read reached invalid sector %u, aborting", logical_sector));
 		command_aborted (BX_SELECTED_CONTROLLER.current_command);
-	        goto return_value16;
+	        GOTO_RETURN_VALUE ;
 	      }
 	      ret = BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
               if (ret < 0) {
                 BX_ERROR(("could not lseek() hard drive image file"));
 		command_aborted (BX_SELECTED_CONTROLLER.current_command);
-	        goto return_value16;
+	        GOTO_RETURN_VALUE ;
 	      }
 	      ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
               if (ret < 512) {
                 BX_ERROR(("logical sector was %u", (unsigned) logical_sector));
                 BX_ERROR(("could not read() hard drive image file at byte %d", logical_sector*512));
 		command_aborted (BX_SELECTED_CONTROLLER.current_command);
-	        goto return_value16;
+	        GOTO_RETURN_VALUE ;
 	      }
 
               BX_SELECTED_CONTROLLER.buffer_index = 0;
 	      raise_interrupt();
 	    }
 	  }
-	  goto return_value16;
+	  GOTO_RETURN_VALUE ;
           break;
 
         case 0xec:    // IDENTIFY DEVICE
@@ -489,15 +510,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	      if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
 		    BX_INFO(("Read all drive ID Bytes ..."));
               }
-	    if (io_len == 1) {
-		  value8 = (Bit8u)value32;
-		  goto return_value8;
-	    } else if (io_len == 2) {
-		  value16 = (Bit16u)value32;
-		  goto return_value16;
-	    } else {
-		  goto return_value32;
-            }
+            GOTO_RETURN_VALUE;
 	  }
           else
             BX_PANIC(("IO read(1f0h): current command is %02xh",
@@ -589,15 +602,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 			      raise_interrupt();
 			}
 		  }
-		  if (io_len == 1) {
-			value8 = (Bit8u)value32;
-			goto return_value8;
-		  } else if (io_len == 2) {
-			value16 = (Bit16u)value32;
-			goto return_value16;
-		  } else {
-			goto return_value32;
-		  }
+                  GOTO_RETURN_VALUE;
 		  break;
 	    }
 
@@ -854,16 +859,24 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
   switch (address) {
     case 0x1f0:
-      if (io_len != 2) {
-        BX_PANIC(("non-word IO read from %04x", (unsigned) address));
+      if (io_len == 1) {
+        BX_PANIC(("byte IO read from %04x", (unsigned) address));
         }
       switch (BX_SELECTED_CONTROLLER.current_command) {
         case 0x30: // WRITE SECTORS
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
             BX_PANIC(("IO write(1f0): buffer_index >= 512"));
-          BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index] = value;
-          BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (value >> 8);
-          BX_SELECTED_CONTROLLER.buffer_index += 2;
+
+          switch(io_len){
+            case 4:
+              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+3] = (Bit8u)(value >> 24);
+              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+2] = (Bit8u)(value >> 16);
+            case 2:
+              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (Bit8u)(value >> 8);
+              BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index]   = (Bit8u) value;
+            }
+
+          BX_SELECTED_CONTROLLER.buffer_index += io_len;
 
           /* if buffer completely writtten */
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512) {
@@ -2367,7 +2380,7 @@ bx_hard_drive_c::identify_drive(unsigned drive)
 
   // Word 48: 0000h = cannot perform dword IO
   //          0001h = can    perform dword IO
-  BX_SELECTED_HD.id_drive[48] = 0;
+  BX_SELECTED_HD.id_drive[48] = 1;
 
   // Word 49: Capabilities
   //   15-10: 0 = reserved
