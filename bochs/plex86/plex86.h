@@ -1,5 +1,5 @@
 /************************************************************************
- * $Id: plex86.h,v 1.6 2003-01-10 04:27:51 kevinlawton Exp $
+ * $Id: plex86.h,v 1.7 2004-09-11 15:39:53 vruppert Exp $
  ************************************************************************
  *
  *  plex86: run multiple x86 operating systems concurrently
@@ -156,7 +156,7 @@ typedef struct {
  *  ioctl() names.
  */
 
-#if defined(__linux__) || defined(__NetBSD__) || defined(__FreeBSD__)
+#if defined(__linux__) || defined(__NetBSD__) || defined(__NetBSD_kernel__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #ifdef __linux__
 #include <asm/ioctl.h>
 #else

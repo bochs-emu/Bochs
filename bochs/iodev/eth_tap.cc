@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.19 2004-09-05 10:30:18 vruppert Exp $
+// $Id: eth_tap.cc,v 1.20 2004-09-11 15:39:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -102,9 +102,9 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
-#if defined(__FreeBSD__) || defined(__APPLE__)  // Should be fixed for other *BSD
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)  // Should be fixed for other *BSD
 #include <net/if.h>
-#else
+#elif defined(__linux__)
 #include <asm/types.h>
 #include <linux/netlink.h>
 #include <linux/if.h>
@@ -271,7 +271,7 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   Bit8u txbuf[BX_PACKET_BUFSIZ];
   txbuf[0] = 0;
   txbuf[1] = 0;
-#if defined(__FreeBSD__) || defined(__APPLE__)  // Should be fixed for other *BSD
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)  // Should be fixed for other *BSD
   memcpy (txbuf, buf, io_len);
   unsigned int size = write (fd, txbuf, io_len);
   if (size != io_len) {
@@ -320,7 +320,7 @@ void bx_tap_pktmover_c::rx_timer ()
   nbytes = read (fd, buf, sizeof(buf));
 
   // hack: discard first two bytes
-#if defined(__FreeBSD__) || defined(__APPLE__)  // Should be fixed for other *BSD
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)  // Should be fixed for other *BSD
   rxbuf = buf;
 #else
   rxbuf = buf+2;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.6 2004-09-05 10:30:19 vruppert Exp $
+// $Id: soundlnx.h,v 1.7 2004-09-11 15:39:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 // This file (SOUNDLNX.H) written and donated by Josef Drexler
 
 
-#if (defined(linux) || defined(__FreeBSD__))
+#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
 
 #define BX_SOUND_LINUX_BUFSIZE   BX_SOUND_OUTPUT_WAVEPACKETSIZE
 
