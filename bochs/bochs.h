@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.57 2001-12-14 17:55:51 cbothamy Exp $
+// $Id: bochs.h,v 1.58 2002-01-30 10:30:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -598,6 +598,7 @@ typedef struct {
 
 #define BX_BOOT_FLOPPYA 0
 #define BX_BOOT_DISKC   1
+#define BX_BOOT_CDROM   2
 
 #define BX_KBD_XT_TYPE        0
 #define BX_KBD_AT_TYPE        1

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.84 2002-01-02 09:57:58 vruppert Exp $
+// $Id: main.cc,v 1.85 2002-01-30 10:30:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -434,12 +434,12 @@ void bx_init_options ()
 
   bx_options.Obootdrive = new bx_param_enum_c (BXP_BOOTDRIVE,
       "bootdrive",
-      "Boot A or C",
+      "Boot A, C or CD",
       floppy_bootdisk_names,
       BX_BOOT_FLOPPYA,
       BX_BOOT_FLOPPYA);
   bx_options.Obootdrive->set_format ("Boot from: %s drive");
-  bx_options.Obootdrive->set_ask_format ("Boot from floppy drive or hard drive? [%s] ");
+  bx_options.Obootdrive->set_ask_format ("Boot from floppy drive, hard drive or cdrom ? [%s] ");
   // disk menu
   bx_param_c *disk_menu_init_list[] = {
     SIM->get_param (BXP_FLOPPYA),
@@ -1414,8 +1414,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.Obootdrive->set (BX_BOOT_FLOPPYA);
     } else if (!strcmp(params[1], "c")) {
       bx_options.Obootdrive->set (BX_BOOT_DISKC);
+    } else if (!strcmp(params[1], "cdrom")) {
+      bx_options.Obootdrive->set (BX_BOOT_CDROM);
     } else {
-      BX_PANIC(("%s: boot directive with unknown boot device '%s'.  use 'a' or 'c'.", context, params[1]));
+      BX_PANIC(("%s: boot directive with unknown boot device '%s'.  use 'a', 'c' or 'cdrom'.", context, params[1]));
       }
     }
   else if (!strcmp(params[0], "log")) {

@@ -104,10 +104,12 @@ diskc: file="30M.sample", cyl=615, heads=6, spt=17
 
 #=======================================================================
 # BOOT:
-# This defines your boot drive.  You can either boot from 'a' or 'c'.
+# This defines your boot drive.  
+# You can either boot from 'a', 'c' or 'cdrom'
 # Examples:
 #   boot: c
 #   boot: a
+#   boot: cdrom
 #=======================================================================
 #boot: a
 boot: c

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.45 2002-01-29 17:20:11 vruppert Exp $
+// $Id: harddrv.cc,v 1.46 2002-01-30 10:30:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.45 2002-01-29 17:20:11 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.46 2002-01-30 10:30:52 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -290,13 +290,28 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     }
 
 
-    if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) {
+    // Set the "non-extended" boot device. This will default to DISKC if cdrom
+    if ( bx_options.Obootdrive->get () != BX_BOOT_FLOPPYA) {
       // system boot sequence C:, A:
       cmos->s.reg[0x2d] &= 0xdf;
       }
     else { // 'a'
       // system boot sequence A:, C:
       cmos->s.reg[0x2d] |= 0x20;
+      }
+
+    // Set the "extended" boot device, byte 0x3D (needed for cdrom booting)
+    if ( bx_options.Obootdrive->get () == BX_BOOT_FLOPPYA) {
+      // system boot sequence A:
+      cmos->s.reg[0x3d] = 0x01;
+      }
+    else if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) { 
+      // system boot sequence C:
+      cmos->s.reg[0x3d] = 0x02;
+      }
+    else if ( bx_options.Obootdrive->get () == BX_BOOT_CDROM) { 
+      // system boot sequence cdrom
+      cmos->s.reg[0x3d] = 0x03;
       }
     }
 

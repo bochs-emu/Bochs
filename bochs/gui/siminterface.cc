@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.38 2001-12-22 20:58:25 vruppert Exp $
+// $Id: siminterface.cc,v 1.39 2002-01-30 10:30:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.38 2001-12-22 20:58:25 vruppert Exp $
+ * $Id: siminterface.cc,v 1.39 2002-01-30 10:30:52 cbothamy Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -256,8 +256,8 @@ char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", NULL };
 int n_floppy_type_names = 5;
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
 int n_floppy_status_names = 2;
-char *floppy_bootdisk_names[] = { "floppy", "hard", NULL };
-int n_floppy_bootdisk_names = 2;
+char *floppy_bootdisk_names[] = { "floppy", "hard","cdrom", NULL };
+int n_floppy_bootdisk_names = 3;
 char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
 int n_loader_os_names = 3;
 char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
