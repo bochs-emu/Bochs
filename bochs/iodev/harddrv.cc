@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.56 2002-05-04 16:00:40 cbothamy Exp $
+// $Id: harddrv.cc,v 1.57 2002-06-26 16:45:27 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.56 2002-05-04 16:00:40 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.57 2002-06-26 16:45:27 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -2828,6 +2828,20 @@ int concat_image_t::open (const char* pathname0)
     int ret = fstat(fd_table[i], &stat_buf);
     if (ret) {
 	  BX_PANIC(("fstat() returns error!"));
+    }
+    if (S_ISBLK(stat_buf.st_mode))
+    {
+/* it's a block device. st_size will be 0, so set it to the correct size. */
+      if (ioctl(fd_table[i],BLKGETSIZE,&(stat_buf.st_size))==-1)
+        BX_PANIC(("size of block device %s can't be read",pathname));
+      if (stat_buf.st_size > (0x7ffffff/512))
+      {
+       BX_ERROR(("size of disk image is too big, rounded down"));
+        stat_buf.st_size=0x7ffffe00; /* maximum size without overflow */
+      }
+      else
+        stat_buf.st_size*=512; /* returned value is sectors */
+      /* what about an overflow here? should possibly use fstat64 */
     }
     if ((stat_buf.st_size % 512) != 0) {
       BX_PANIC(("size of disk image must be multiple of 512 bytes"));

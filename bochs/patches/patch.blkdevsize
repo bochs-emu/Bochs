@@ -1,0 +1,64 @@
+----------------------------------------------------------------------
+Patch name: patch.blkdevsize
+Author: Ph. Marek
+Date: June 26th 2002
+
+Detailed description:
+I'm currently working to get bochs to support block devices (eg. /dev/hda) as 
+harddisks.  I downloaded the current release
+http://prdownloads.sourceforge.net/bochs/bochs-1.4.tar.gz
+and found that size detection doesn't work.
+
+Here's a patch to get the detection working.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on June 26th 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.56
+diff -u -r1.56 harddrv.cc
+--- iodev/harddrv.cc	4 May 2002 16:00:40 -0000	1.56
++++ iodev/harddrv.cc	26 Jun 2002 16:37:46 -0000
+@@ -2829,6 +2829,20 @@
+     if (ret) {
+ 	  BX_PANIC(("fstat() returns error!"));
+     }
++    if (S_ISBLK(stat_buf.st_mode))
++    {
++/* it's a block device. st_size will be 0, so set it to the correct size. */
++      if (ioctl(fd_table[i],BLKGETSIZE,&(stat_buf.st_size))==-1)
++        BX_PANIC(("size of block device %s can't be read",pathname));
++      if (stat_buf.st_size > (0x7ffffff/512))
++      {
++       BX_ERROR(("size of disk image is too big, rounded down"));
++        stat_buf.st_size=0x7ffffe00; /* maximum size without overflow */
++      }
++      else
++        stat_buf.st_size*=512; /* returned value is sectors */
++      /* what about an overflow here? should possibly use fstat64 */
++    }
+     if ((stat_buf.st_size % 512) != 0) {
+       BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+     }
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.66
+diff -u -r1.66 bochs.h
+--- bochs.h	26 Jun 2002 14:42:34 -0000	1.66
++++ bochs.h	26 Jun 2002 16:37:46 -0000
+@@ -58,6 +58,7 @@
+ #else
+ #  ifndef WIN32
+ #    include <sys/time.h>
++#    include <sys/mount.h>
+ #  endif
+ #  include <sys/types.h>
+ #  include <sys/stat.h>

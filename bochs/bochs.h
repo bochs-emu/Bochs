@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.66 2002-06-26 14:42:34 cbothamy Exp $
+// $Id: bochs.h,v 1.67 2002-06-26 16:45:27 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,6 +58,7 @@ extern "C" {
 #else
 #  ifndef WIN32
 #    include <sys/time.h>
+#    include <sys/mount.h>
 #  endif
 #  include <sys/types.h>
 #  include <sys/stat.h>
