@@ -1,4 +1,4 @@
-./configure --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
+./configure --enable-cpu-level=6 --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
 
 
 
@@ -403,6 +403,68 @@ hit 8 times then it crashes
 The Bochs pit.cc model does not support mode 0 in timer 2.
 Any reason why not?
 
+changed CPU_LEVEL to 6, pentium pro.  This (with my SMP rombios) 
+gets me into the SMP initialization.  Add stub device at 
+APIC I/O addresses.
+
+hard to read all the debug output as it flashes by
+step to 50 million and see what is happening. no luck.
+per-CPU timeslice cutoff: 1.58 usecs.
+CPU15: Intel Pentium Pro stepping 03
+Getting VERSION: ffffffff
+Getting VERSION: ffffffff
+Getting LVT0: ffffffff
+Getting LVT1: ffffffff
+setup_APIC_clock() called
+calibrating APIC timer...
+... 181501 CPU clocks in 1 timer chip tick
+... 0 APIC bus clocks in 1 timer chip tick
+... CPU clock speed is 18.1501 MHz
+... system bus clock speed is 0 MHz
+CPU map: 8003
+Booting processor 0 eip 2000
+Setting warm reset code and vector
+1.
+2.
+3.
+Asserting INIT.
+Deasserting INIT.
+After Startup.
+Before Callout 0.
+After Callout 0
+--- then freezes for 5 seconds! waiting for processor to start up via APIC.
+--- Finally it says:
+Not responding.
+CPU has booted.
+Booting processor 1 eip 2000
+Setting warm reset code and vector
+1.
+2.
+3.
+Asserting INIT.
+Deasserting INIT.
+After Startup.
+Before Callout 1.
+After Callout 1.
+Not responding.
+CPU has booted.
+Before bogomips.
+Total of 3 processors activated (18.07 BogoMIPS).
+Before bogocount - setting activated=1.
+Boot done.
+enabling symmetric IO mode... ...done.
+ENABLING IO-APIC IRQs
+no explicit IRQ entries, using default mptable
+...changing IO-APIC physical APIC ID to 2...
+Kernel panic: could not set ID
+
+--- then freezes for 5 seconds! waiting for processor to start up via APIC.
+--- Finally it says:
+Not responding.
+CPU has booted.
+
+unaligned read of APIC at 0xc01b4956, seems to be in sched_init function
+
 -----
 RTLINUX
 booted rtlinux
@@ -422,3 +484,44 @@ this function to see what's up.
 I know it's not that the TSC returns the same value each time or something,
 but I'm sure it behaves differently from a clock in a real system.
 I'm sure I can chase it down since I have the code.
+
+
+up to "After callout 0"
+
+APIC model
+----------
+in CPUID bit 9 indicates on-chip APIC
+can be disabled by MSR
+pentium 4, local APICs and I/O APICs talked via system bus
+pentium 6, talk via APIC bus
+APIC addresses are on page 7-23 of IA32-sdg-3
+
+now it's trying to contact other processors via its local APIC.
+kernel says: Asserting INIT.
+53201427 APIC 0x01 sending interrupt to destination APIC 0x02
+53201427 low word of APIC 0x01 ICR = 0xc500
+
+kernel says: Deasserting INIT.
+53207334 APIC 0x01 sending interrupt to destination APIC 0x02
+53207334 low word of APIC 0x01 ICR = 0x8500
+
+kernel says: Sending STARTUP #1.
+53214931 APIC 0x01 sending interrupt to destination APIC 0x02
+53214931 low word of APIC 0x01 ICR = 0x0602
+
+kernel says: Sending STARTUP #2.
+53233832 APIC 0x01 sending interrupt to destination APIC 0x02
+53233832 low word of APIC 0x01 ICR = 0x0602
+
+There is an APIC algorithm to determine the bootstrap processor, but
+I don't see any use in implementing it.  The ID of the bootstrap processor
+needs to be consistent with the MPC table in BIOS, which means it's
+got to be predetermined.  So it seems ok to just hardcode the APIC ID of
+the boostrap processor and make it consistent with rombios.c.  Then
+when the different processor objects are starting up, the init code
+can check if the processor is the BSP or not.  The BSP will start up at
+f000:fff0 as usual and the others will basically execute a halt as they
+wait for a SIPI from the bootstrap guy.
+
+First, however, I need to be able to compile without static member 
+functions on the CPU.
