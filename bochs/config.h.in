@@ -25,8 +25,9 @@
 // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
 ///////////////////////////////////////////////////////////////////
 
-#define BX_SIMULATE_SMP 0
+#define BX_SIMULATE_SMP 1
 #define BX_SMP_PROCESSORS 2
+#define BX_APIC_SUPPORT 1
 
 #define BX_DEBUG_LINUX 1
 // if simulating Linux, this provides a few more debugging options
@@ -168,6 +169,7 @@
 #define BX_USE_FD_SMF   1  // Floppy
 #define BX_USE_KEY_SMF  1  // Keyboard
 #define BX_USE_PAR_SMF  1  // Parallel
+#define BX_USE_APIC_SMF 0  // APIC
 #define BX_USE_PIC_SMF  1  // PIC
 #define BX_USE_PIT_SMF  1  // PIT
 #define BX_USE_SER_SMF  1  // Serial
