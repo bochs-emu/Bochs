@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.37 2003-05-18 15:38:58 vruppert Exp $
+// $Id: sdl.cc,v 1.38 2003-06-10 20:22:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ unsigned half_res_x, half_res_y;
 int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
-int text_cols = 80, text_rows = 25;
+static unsigned int text_cols = 80, text_rows = 25;
 Bit8u h_panning = 0, v_panning = 0;
 int fontwidth = 8, fontheight = 16;
 unsigned tilewidth, tileheight;
@@ -277,7 +277,8 @@ void bx_sdl_gui_c::text_update(
 {
   unsigned char *pfont_row, *old_line, *new_line;
   unsigned long x,y;
-  int rows,hchars,fontrows,fontpixels;
+  unsigned int curs, hchars;
+  int rows,fontrows,fontpixels;
   int fgcolor_ndx;
   int bgcolor_ndx;
   Uint32 fgcolor;
@@ -311,6 +312,12 @@ void bx_sdl_gui_c::text_update(
     disp = sdl_fullscreen->pitch/4;
     buf_row = (Uint32 *)sdl_fullscreen->pixels;
   }
+  // first invalidate character at previous cursor location
+  if ( (prev_cursor_y < text_rows) && (prev_cursor_x < text_cols) ) {
+    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  }
+
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
@@ -352,8 +359,7 @@ void bx_sdl_gui_c::text_update(
       // check if char needs to be updated
       if(forceUpdate || (old_text[0] != new_text[0])
 	  || (old_text[1] != new_text[1])
-	  || ((y == cursor_y) && (x == cursor_x))
-	  || ((y == prev_cursor_y) && (x == prev_cursor_x)) )
+	  || ((y == cursor_y) && (x == cursor_x)) )
       {
 
 	// Get Foreground/Background pixel colors
