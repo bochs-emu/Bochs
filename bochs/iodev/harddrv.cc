@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.75 2002-09-23 21:11:51 cbothamy Exp $
+// $Id: harddrv.cc,v 1.76 2002-09-24 20:02:00 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.75 2002-09-23 21:11:51 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.76 2002-09-24 20:02:00 kevinlawton Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -330,6 +330,14 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     }
   }
 
+#if BX_PDC20230C_VLBIDE_SUPPORT
+      BX_HD_THIS pdc20230c.prog_mode = 0;
+      BX_HD_THIS pdc20230c.prog_count = 0;
+      BX_HD_THIS pdc20230c.p1f3_value = 0;
+      BX_HD_THIS pdc20230c.p1f4_value = 0;
+#endif
+
+
   // generate CMOS values for hard drive if not using a CMOS image
   if (!bx_options.cmos.OcmosImage->get ()) {
     cmos->s.reg[0x12] = 0x00; // start out with: no drive 0, no drive 1
@@ -481,10 +489,68 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
     BX_PANIC(("Unable to find ATA channel, ioport=0x%04x", address));
     }
 
+#if BX_PDC20230C_VLBIDE_SUPPORT
+// pdc20230c is only available for first ata channel
+if (channel == 0) {
+
+  // Detect the switch to programming mode
+  if (!BX_HD_THIS pdc20230c.prog_mode) {
+    switch (port) {
+      case 0x02:
+        if ((BX_HD_THIS pdc20230c.prog_count == 0) || (BX_HD_THIS pdc20230c.prog_count > 2)) {
+          BX_HD_THIS pdc20230c.prog_count++;
+        }
+	else {
+          BX_HD_THIS pdc20230c.prog_count=0;
+	}
+	break;
+      case 0x16:
+        if ((BX_HD_THIS pdc20230c.prog_count == 1) || (BX_HD_THIS pdc20230c.prog_count == 2)) {
+	  BX_HD_THIS pdc20230c.prog_count++;
+	}
+	else {
+          BX_HD_THIS pdc20230c.prog_count=0;
+	}
+	break;
+      default:
+	BX_HD_THIS pdc20230c.prog_count=0;
+    }
+
+    if (BX_HD_THIS pdc20230c.prog_count == 5) {
+      BX_HD_THIS pdc20230c.prog_mode = 1;
+      BX_SELECTED_CONTROLLER(channel).sector_count &= 0x7f;
+      BX_INFO(("Promise VLB-IDE DC2300: Switching to Programming mode"));
+    }
+  }
+
+  // Returns value when in programming mode
+  if (BX_HD_THIS pdc20230c.prog_mode) {
+    switch (port) {
+      case 0x05:
+	// Leave programming mode
+        BX_HD_THIS pdc20230c.prog_mode = 0;
+        BX_INFO(("Promise VLB-IDE DC2300: Leaving Programming mode"));
+	// Value will be sent be normal code
+        break;
+      case 0x03:
+	// Special programming register
+        value32 = BX_HD_THIS pdc20230c.p1f3_value;
+        GOTO_RETURN_VALUE ;
+        break;
+      case 0x04:
+	// Special programming register
+        value32 = BX_HD_THIS pdc20230c.p1f4_value;
+        GOTO_RETURN_VALUE ;
+        break;
+    }
+  }
+}
+#endif
+
   if (io_len>1 && port!=0x00) {
     BX_PANIC(("non-byte IO read to %04x", (unsigned) address));
     }
-
+  
   switch (port) {
     case 0x00: // hard disk data (16bit) 0x1f0
       if (BX_SELECTED_CONTROLLER(channel).status.drq == 0) {
@@ -952,6 +1018,26 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   if (channel == BX_MAX_ATA_CHANNEL) {
     BX_PANIC(("Unable to find ATA channel, ioport=0x%04x", address));
     }
+
+#if BX_PDC20230C_VLBIDE_SUPPORT
+// pdc20230c is only available for first ata channel
+if (channel == 0) {
+  BX_HD_THIS pdc20230c.prog_count = 0;
+
+  if (BX_HD_THIS pdc20230c.prog_mode != 0) {
+    switch (port) {
+      case 0x03:
+	BX_HD_THIS pdc20230c.p1f3_value = value;
+	return;
+        break;
+      case 0x04:
+	BX_HD_THIS pdc20230c.p1f4_value = value;
+	return;
+        break;
+    }
+  }
+}
+#endif
 
   if (io_len>1 && port!=0x00) {
     BX_PANIC(("non-byte IO write to %04x", (unsigned) address));

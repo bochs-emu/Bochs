@@ -580,6 +580,9 @@ typedef
 // limited i440FX PCI support
 #define BX_PCI_SUPPORT 0
 
+// Promise VLBIDE DC2300 Support
+#define BX_PDC20230C_VLBIDE_SUPPORT 0
+
 // dynamic translation (future: not supported yet)
 #define BX_DYNAMIC_TRANSLATION 0
 #define BX_DYNAMIC_CPU_I386    0

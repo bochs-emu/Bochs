@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.14 2002-09-22 20:56:12 cbothamy Exp $
+// $Id: harddrv.h,v 1.15 2002-09-24 20:02:00 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,7 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
 
 typedef enum _sense {
       SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
@@ -348,6 +347,16 @@ private:
     Bit8u  irq;
 
     } channels[BX_MAX_ATA_CHANNEL];
+
+#if BX_PDC20230C_VLBIDE_SUPPORT
+// pdc20630c is only available for 1st ata channel
+  struct pdc20630c_t {
+    Boolean prog_mode;
+    Bit8u   prog_count;
+    Bit32u  p1f3_value;
+    Bit32u  p1f4_value;
+    } pdc20230c;
+#endif
 
   bx_devices_c *devices;
   };

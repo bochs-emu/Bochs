@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.125 2002-09-24 18:00:21 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.126 2002-09-24 20:01:59 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -529,6 +529,22 @@ AC_ARG_ENABLE(pci,
     ]
   )
 AC_SUBST(PCI_OBJ)
+
+AC_MSG_CHECKING(for Promise DC2300 VLB-IDE support)
+AC_ARG_ENABLE(dc2300-vlb-ide,
+  [  --enable-dc2300-vlb-ide           enable Promise DC2300 VLB-IDE support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_PDC20230C_VLBIDE_SUPPORT, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_PDC20230C_VLBIDE_SUPPORT, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_PDC20230C_VLBIDE_SUPPORT, 0)
+    ]
+  )
 
 
 support_pse=0
