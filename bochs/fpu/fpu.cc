@@ -46,7 +46,7 @@ BX_CPU_C::ESC0(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC0 not implemented\n");
+  genlog->info("ESC0 not implemented\n");
 #endif
 }
 
@@ -59,7 +59,7 @@ BX_CPU_C::ESC1(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC1 not implemented\n");
+  genlog->info("ESC1 not implemented\n");
 #endif
 }
 
@@ -72,7 +72,7 @@ BX_CPU_C::ESC2(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC2 not implemented\n");
+  genlog->info("ESC2 not implemented\n");
 #endif
 }
 
@@ -89,7 +89,7 @@ BX_CPU_C::ESC3(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC3 not implemented\n");
+  genlog->info("ESC3 not implemented\n");
 #endif
 }
 
@@ -102,7 +102,7 @@ BX_CPU_C::ESC4(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC4 not implemented\n");
+  genlog->info("ESC4 not implemented\n");
 #endif
 }
 
@@ -115,7 +115,7 @@ BX_CPU_C::ESC5(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC5 not implemented\n");
+  genlog->info("ESC5 not implemented\n");
 #endif
 }
 
@@ -128,7 +128,7 @@ BX_CPU_C::ESC6(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC6 not implemented\n");
+  genlog->info("ESC6 not implemented\n");
 #endif
 }
 
@@ -141,7 +141,7 @@ BX_CPU_C::ESC7(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC7 not implemented\n");
+  genlog->info("ESC7 not implemented\n");
 #endif
 }
 
@@ -162,7 +162,7 @@ BX_CPU_C::FWAIT(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("FWAIT: no FPU\n");
+  genlog->info("FWAIT: no FPU\n");
 #endif
 
 #endif

@@ -276,8 +276,8 @@ bx_devices_c::port92_read(Bit32u address, unsigned io_len)
     bx_panic("devices.c: port 92h: io read from address %08x, len=%u\n",
              (unsigned) address, (unsigned) io_len);
 
-  bx_printf("devices: port92h read partially supported!!!\n");
-  bx_printf("devices:   returning %02x\n", (unsigned) (BX_GET_ENABLE_A20() << 1));
+  genlog->info("devices: port92h read partially supported!!!\n");
+  genlog->info("devices:   returning %02x\n", (unsigned) (BX_GET_ENABLE_A20() << 1));
   return(BX_GET_ENABLE_A20() << 1);
 }
 
@@ -303,11 +303,11 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
     bx_panic("devices.c: port 92h: io read from address %08x, len=%u\n",
              (unsigned) address, (unsigned) io_len);
 
-  bx_printf("devices: port92h write of %02x partially supported!!!\n",
+  genlog->info("devices: port92h write of %02x partially supported!!!\n",
     (unsigned) value);
-bx_printf("devices: A20: set_enable_a20() called\n");
+genlog->info("devices: A20: set_enable_a20() called\n");
   BX_SET_ENABLE_A20( (value & 0x02) >> 1 );
-  bx_printf("A20: now %u\n", (unsigned) BX_GET_ENABLE_A20());
+  genlog->info("A20: now %u\n", (unsigned) BX_GET_ENABLE_A20());
   bx_cpu_reset  = (value & 0x01); /* high speed reset */
   if (bx_cpu_reset) {
     bx_panic("PORT 92h write: CPU reset requested!\n");
@@ -334,7 +334,7 @@ bx_devices_c::timer()
   retval = keyboard->periodic( TIMER_DELTA );
   if (retval & 0x01) {
     if (bx_dbg.keyboard)
-      bx_printf("keyboard: interrupt(1)\n");
+      genlog->info("keyboard: interrupt(1)\n");
     pic->trigger_irq(1);
     }
   if (retval & 0x02)
@@ -401,13 +401,13 @@ bx_devices_c::unregister_irq(unsigned irq, const char *name)
     }
 
   if (!irq_handler_name[irq]) {
-    bx_printf("IO device %s tried to unregister IRQ %d, not registered\n",
+    genlog->info("IO device %s tried to unregister IRQ %d, not registered\n",
 	      name, irq);
     return;
   }
 
   if (strcmp(irq_handler_name[irq], name)) {
-    bx_printf("IRQ %u not registered to %s but to %s\n", irq,
+    genlog->info("IRQ %u not registered to %s but to %s\n", irq,
       name, irq_handler_name[irq]);
     return;
     }
@@ -430,7 +430,7 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
   if (handle >= num_read_handles) {
     /* no existing handle found, create new one */
     if (num_read_handles >= BX_MAX_IO_DEVICES) {
-      bx_printf("too many IO devices installed.\n");
+      genlog->info("too many IO devices installed.\n");
       bx_panic("  try increasing BX_MAX_IO_DEVICES\n");
       }
     num_read_handles++;
@@ -444,7 +444,7 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
     // another handler is already registered for that address
     // if it is not the Unmapped port handler, bail
     if ( strcmp( io_read_handler[read_handler_id[addr]].handler_name, "Unmapped" ) ) {
-      bx_printf("IO device address conflict(read) at IO address %Xh\n",
+      genlog->info("IO device address conflict(read) at IO address %Xh\n",
         (unsigned) addr);
       bx_panic("  conflicting devices: %s & %s\n",
         io_read_handler[handle].handler_name, io_read_handler[read_handler_id[addr]].handler_name);
@@ -471,7 +471,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
   if (handle >= num_write_handles) {
     /* no existing handle found, create new one */
     if (num_write_handles >= BX_MAX_IO_DEVICES) {
-      bx_printf("too many IO devices installed.\n");
+      genlog->info("too many IO devices installed.\n");
       bx_panic("  try increasing BX_MAX_IO_DEVICES\n");
       }
     num_write_handles++;
@@ -485,7 +485,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
     // another handler is already registered for that address
     // if it is not the Unmapped port handler, bail
     if ( strcmp( io_write_handler[write_handler_id[addr]].handler_name, "Unmapped" ) ) {
-      bx_printf("IO device address conflict(write) at IO address %Xh\n",
+      genlog->info("IO device address conflict(write) at IO address %Xh\n",
         (unsigned) addr);
       bx_panic("  conflicting devices: %s & %s\n",
         io_write_handler[handle].handler_name, io_write_handler[write_handler_id[addr]].handler_name);

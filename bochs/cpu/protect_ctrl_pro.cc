@@ -34,12 +34,12 @@
   void
 BX_CPU_C::enter_protected_mode(void)
 {
-// bx_printf("processor switching into PROTECTED mode!!!\n");
+// genlog->info("processor switching into PROTECTED mode!!!\n");
 // debug(BX_CPU_THIS_PTR prev_eip);
   if (v8086_mode()) bx_panic("protect_ctrl: v8086 mode unsupported\n");
 
   if (bx_dbg.reset)
-    bx_printf("processor switching into PROTECTED mode!!!\n");
+    genlog->info("processor switching into PROTECTED mode!!!\n");
 
 if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl!=0 || BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl!=0 )
   bx_panic("enter_protected_mode: CS or SS rpl != 0\n");
@@ -50,12 +50,12 @@ if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl!=0 || BX_CPU_THIS_PTR sre
 BX_CPU_C::enter_real_mode(void)
 {
 // ???
-// bx_printf("processor switching into REAL mode!!!\n");
+// genlog->info("processor switching into REAL mode!!!\n");
 // debug(BX_CPU_THIS_PTR prev_eip);
   if (v8086_mode()) bx_panic("protect_ctrl: v8086 mode unsupported\n");
 
   if (bx_dbg.reset)
-    bx_printf("processor switching into REAL mode!!!\n");
+    genlog->info("processor switching into REAL mode!!!\n");
 
 if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl!=0 || BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl!=0 )
   bx_panic("enter_real_mode: CS or SS rpl != 0\n");

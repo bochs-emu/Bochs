@@ -66,7 +66,7 @@ BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
 //  unsigned prev_errno;
 
   if (bx_dbg.interrupts)
-    bx_printf("interrupt(): vector = %u, INT = %u, EXT = %u\n",
+    genlog->info("interrupt(): vector = %u, INT = %u, EXT = %u\n",
       (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT);
 
 BX_CPU_THIS_PTR save_cs  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
@@ -93,12 +93,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
     // else #GP(vector number*8 + 2 + EXT)
     if ( (vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
       if (bx_dbg.interrupts) {
-        bx_printf("IDT.limit = %04x\n", (unsigned) BX_CPU_THIS_PTR idtr.limit);
-        bx_printf("IDT.base  = %06x\n", (unsigned) BX_CPU_THIS_PTR idtr.base);
-        bx_printf("interrupt vector must be within IDT table limits\n");
-        bx_printf("bailing\n");
+        genlog->info("IDT.limit = %04x\n", (unsigned) BX_CPU_THIS_PTR idtr.limit);
+        genlog->info("IDT.base  = %06x\n", (unsigned) BX_CPU_THIS_PTR idtr.base);
+        genlog->info("interrupt vector must be within IDT table limits\n");
+        genlog->info("bailing\n");
         }
-      bx_printf("interrupt(): vector > idtr.limit\n");
+      genlog->info("interrupt(): vector > idtr.limit\n");
 
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
       }
@@ -125,7 +125,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
       case 15: // 386 trap gate
         break;
       default:
-        bx_printf("interrupt(): gate.type(%u) != {5,6,7,14,15}\n",
+        genlog->info("interrupt(): gate.type(%u) != {5,6,7,14,15}\n",
           (unsigned) gate_descriptor.type);
         exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
         return;
@@ -135,14 +135,14 @@ BX_CPU_THIS_PTR save_esp = ESP;
     // else #GP(vector * 8 + 2 + EXT)
     if (is_INT  &&  (gate_descriptor.dpl < CPL)) {
 /* ??? */
-      bx_printf("interrupt(): is_INT && (dpl < CPL)\n");
+      genlog->info("interrupt(): is_INT && (dpl < CPL)\n");
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
       return;
       }
 
     // Gate must be present, else #NP(vector * 8 + 2 + EXT)
     if (gate_descriptor.p == 0) {
-      bx_printf("interrupt(): p == 0\n");
+      genlog->info("interrupt(): p == 0\n");
       exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
       }
 
@@ -245,7 +245,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
              cs_descriptor.segment==0 ||
              cs_descriptor.u.segment.executable==0 ||
              cs_descriptor.dpl>CPL ) {
-          bx_printf("interrupt(): not code segment\n");
+          genlog->info("interrupt(): not code segment\n");
           exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
           }
 
@@ -265,7 +265,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
           int bytes;
 
           if (bx_dbg.interrupts)
-            bx_printf("interrupt(): INTERRUPT TO INNER PRIVILEGE\n");
+            genlog->info("interrupt(): INTERRUPT TO INNER PRIVILEGE\n");
 
           // check selector and descriptor for new stack in current TSS
           get_SS_ESP_from_TSS(cs_descriptor.dpl,
@@ -447,7 +447,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
             temp_ESP = SP;
 
           if (bx_dbg.interrupts)
-            bx_printf("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE\n");
+            genlog->info("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE\n");
 
           // Current stack limits must allow pushing 6|8 bytes, else #SS(0)
           if (gate_descriptor.type >= 14) { // 386 gate
@@ -465,7 +465,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
           if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache,
                          temp_ESP, bytes) ) {
-            bx_printf("interrupt(): stack doesn't have room\n");
+            genlog->info("interrupt(): stack doesn't have room\n");
             exception(BX_SS_EXCEPTION, 0, 0);
             }
 
@@ -510,12 +510,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
           }
 
         // else #GP(CS selector + ext)
-        bx_printf("interrupt: bad descriptor\n");
-        bx_printf("c_ed=%u, descriptor.dpl=%u, CPL=%u\n",
+        genlog->info("interrupt: bad descriptor\n");
+        genlog->info("c_ed=%u, descriptor.dpl=%u, CPL=%u\n",
           (unsigned) cs_descriptor.u.segment.c_ed,
           (unsigned) cs_descriptor.dpl,
           (unsigned) CPL);
-        bx_printf("cs.segment = %u\n", (unsigned) cs_descriptor.segment);
+        genlog->info("cs.segment = %u\n", (unsigned) cs_descriptor.segment);
         exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
         break;
 
@@ -574,7 +574,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
   UNUSED(is_INT);
 
   if (bx_dbg.exceptions)
-    bx_printf("exception(%02x h)\n", (unsigned) vector);
+    genlog->info("exception(%02x h)\n", (unsigned) vector);
 
   // if not initial error, restore previous register values from
   // previous attempt to handle exception
@@ -741,7 +741,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
     prev_errno = BX_CPU_THIS_PTR errorno;
     BX_CPU_THIS_PTR interrupt(vector, 0, push_error, error_code);
 //    if (BX_CPU_THIS_PTR errorno > prev_errno) {
-//      bx_printf("segment_exception(): errorno changed\n");
+//      genlog->info("segment_exception(): errorno changed\n");
 //      longjmp(jmp_buf_env, 1); // go back to main decode loop
 //      return;
 //      }

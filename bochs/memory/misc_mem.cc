@@ -35,7 +35,7 @@
   Bit32u
 BX_MEM_C::get_memory_in_k(void)
 {
-  bx_printf("(%u) get_memory_in_k() = %u\n", BX_SIM_ID, (unsigned)
+  genlog->info("(%u) get_memory_in_k() = %u\n", BX_SIM_ID, (unsigned)
     (BX_MEM_THIS megabytes * 1024));
 
   return(BX_MEM_THIS megabytes * 1024);
@@ -59,8 +59,8 @@ BX_MEM_C::BX_MEM_C(void)
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(size_t memsize)
 {
-  bx_printf("(%u) BX_MEM_C::BX_MEM_C(size_t) called\n", BX_SIM_ID);
-  bx_printf("(%u)   memsize = %u\n", BX_SIM_ID, (unsigned) memsize);
+  genlog->info("(%u) BX_MEM_C::BX_MEM_C(size_t) called\n", BX_SIM_ID);
+  genlog->info("(%u)   memsize = %u\n", BX_SIM_ID, (unsigned) memsize);
   vector = new Bit8u[memsize];
   len    = memsize;
   megabytes = len / (1024*1024);
@@ -76,7 +76,7 @@ BX_MEM_C::~BX_MEM_C(void)
     delete this->vector;
     }
   else {
-    bx_printf("(%u)   memory not freed as it wasn't allocated!\n", BX_SIM_ID);
+    genlog->info("(%u)   memory not freed as it wasn't allocated!\n", BX_SIM_ID);
     }
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
@@ -91,8 +91,8 @@ BX_MEM_C::init_memory(int memsize)
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
-    bx_printf("(%u) BX_MEM_C::init_memory(int): allocating memory.\n", BX_SIM_ID);
-    bx_printf("(%u)   memsize = %u\n", BX_SIM_ID, (unsigned) memsize);
+    genlog->info("(%u) BX_MEM_C::init_memory(int): allocating memory.\n", BX_SIM_ID);
+    genlog->info("(%u)   memsize = %u\n", BX_SIM_ID, (unsigned) memsize);
     BX_MEM_THIS vector = new Bit8u[memsize];
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
@@ -108,7 +108,7 @@ BX_MEM_C::init_memory(int memsize)
   memset(BX_MEM.dbg_dirty_pages, 0, sizeof(BX_MEM.dbg_dirty_pages));
 
   if (BX_MEM.megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
-    bx_printf("Error: memory larger than dirty page table can handle\n");
+    genlog->info("Error: memory larger than dirty page table can handle\n");
     bx_panic("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS\n");
     }
 #endif
@@ -169,13 +169,13 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   close(fd);
 #if BX_PCI_SUPPORT
   if (bx_options.i440FXSupport)
-    bx_printf("(%u) load_ROM: ROM BIOS in i440FX RAM '%s', size=%u read into memory at %08x\n",
+    genlog->info("(%u) load_ROM: ROM BIOS in i440FX RAM '%s', size=%u read into memory at %08x\n",
             BX_SIM_ID, path, (unsigned) stat_buf.st_size, (unsigned) romaddress);
   else
-    bx_printf("(%u)  load_ROM: ROM BIOS '%s', size=%u read into memory at %08x\n",
+    genlog->info("(%u)  load_ROM: ROM BIOS '%s', size=%u read into memory at %08x\n",
             BX_SIM_ID, path, (unsigned) stat_buf.st_size, (unsigned) romaddress);
 #else  // #if BX_PCI_SUPPORT
-  bx_printf("(%u) load_ROM: ROM BIOS '%s', size=%u read into memory at %08x\n",
+  genlog->info("(%u) load_ROM: ROM BIOS '%s', size=%u read into memory at %08x\n",
           BX_SIM_ID, path, (unsigned) stat_buf.st_size, (unsigned) romaddress);
 #endif // #if BX_PCI_SUPPORT
 }
@@ -204,12 +204,12 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
         switch (bx_pci.rd_memType (addr)) {
           case 0x0:  // Fetch from ShadowRAM
             *buf = BX_MEM.vector[addr];
-//          bx_printf ("Fetching from ShadowRAM %08x, len %u !\n", (unsigned)addr, (unsigned)len);
+//          genlog->info("Fetching from ShadowRAM %08x, len %u !\n", (unsigned)addr, (unsigned)len);
             break;
 
           case 0x1:  // Fetch from ROM
             *buf = bx_pci.s.i440fx.shadow[(addr - 0xC0000)];
-//          bx_printf ("Fetching from ROM %08x, Data %02x \n", (unsigned)addr, *buf);
+//          genlog->info("Fetching from ROM %08x, Data %02x \n", (unsigned)addr, *buf);
             break;
           default:
             bx_panic("dbg_fetch_mem: default case\n");

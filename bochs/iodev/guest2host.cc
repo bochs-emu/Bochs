@@ -72,7 +72,7 @@ bx_g2h_c::aquire_channel(bx_g2h_callback_t f)
       }
     }
 
-  bx_printf("g2h: attempt to aquire channel: maxed out\n");
+  genlog->info("g2h: attempt to aquire channel: maxed out\n");
   return(BX_G2H_ERROR); // No more free channels
 }
 
@@ -121,7 +121,7 @@ bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr,
     bx_panic("g2h: IO write not dword.\n");
 
   if ( (bx_g2h.s.packet_count==0) && (val32!=BX_G2H_MAGIC) ) {
-    bx_printf("g2h: IO W: Not magic header.\n");
+    genlog->info("g2h: IO W: Not magic header.\n");
     return;
     }
   bx_g2h.s.guest_packet[bx_g2h.s.packet_count++] = val32;

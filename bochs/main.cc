@@ -56,19 +56,7 @@ bx_pc_system_c bx_pc_system;
 class state_file state_stuff("state_file.out", "options");
 #endif
 
-
-FILE *bx_logfd = NULL; /* for logging bx_printf() messages */
-
-
-
-
-
-
 bx_debug_t bx_dbg;
-
-
-
-
 
 bx_options_t bx_options = {
   { "", BX_FLOPPY_NONE, BX_EJECTED },
@@ -97,12 +85,224 @@ bx_options_t bx_options = {
 static char bochsrc_path[512];
 static char logfilename[512] = "-";
 
+
 static void parse_line_unformatted(char *line);
 static void parse_line_formatted(int num_params, char *params[]);
 static void parse_bochsrc(void);
 
+#if 1
 
-  int
+
+void
+iofunctions::flush(void) {
+	if(logfd && magic == MAGIC_LOGNUM) {
+		fflush(logfd);
+	}
+}
+
+void
+iofunctions::init(void) {
+	magic=MAGIC_LOGNUM;
+	showtick = 1;
+	logfd = NULL;
+	init_log(stderr);
+}
+
+void
+iofunctions::init_log(char *fn)
+{
+	logfd = stderr;
+	logfn = "/dev/stderr";
+	if( strcmp( fn, "-" ) ) {
+		logfd = fopen(fn, "w");
+		if(magic == MAGIC_LOGNUM && logfd != NULL) {
+			logfn = strdup(fn);
+			out( IOLOG, INFO, "[IO  ]", "opened log file '%s'.\n", fn );
+		} else {
+			out( IOLOG, INFO, "[IO  ]", "log file '%s' not there?\n", fn);
+			logfd = NULL;
+			logfn = "(none)";
+		}
+	}
+}
+
+void
+iofunctions::init_log(FILE *fs)
+{
+	logfd = fs;
+
+	if(fs == stderr) {
+		logfn = "/dev/stderr";
+	} else if(fs == stdout) { 
+		logfn = "/dev/stdout";
+	} else {
+		logfn = "(unknown)";
+	}
+}
+
+void
+iofunctions::init_log(int fd)
+{
+	FILE *tmpfd;
+	if( (tmpfd = fdopen(fd,"w")) == NULL ) {
+		fprintf(stderr, "Couldn't open fd %d as a stream for writing\n",
+			fd);
+		return;
+	}
+
+	init_log(tmpfd);
+	return;
+};
+
+//  iofunctions::out( class, level, prefix, fmt, ap)
+//  DO NOT nest out() from ::info() and the like.
+//    fmt and ap retained for direct printinf from iofunctions only!
+
+FILE *
+iofunctions::out(int f, int l, char *prefix, char *fmt, ...)
+{
+	va_list ap;
+	FILE *filst;
+
+	/* Unfortunately, this can get called before being instantiated. */
+	if(this == NULL || magic != MAGIC_LOGNUM) {
+		filst = stderr;
+		fprintf(filst, "[IO  ] Warning! (this:'0x%x') io::out called before init()\n", this);
+		fprintf(filst, "[IO  ] ");
+	} else {
+
+		if( logfd != NULL) {
+			filst = logfd;
+			if( showtick ) {
+				fprintf(filst, "%010lld ", bx_pc_system.time_ticks());
+			}
+
+			//fprintf(filst, "(%d,%d)->(%s,%s) ", f,l,getclass(f),getlevel(l));
+		} else {
+			filst = stderr;
+			fprintf(filst, "[IO  ] Warning! (this:'0x%x') io::out called with no logfd\n", this);
+			fprintf(filst, "[IO  ] ");
+		}
+		if(prefix != NULL) {
+			fprintf(filst, "%s ", prefix);
+		}
+	}
+	va_start(ap, fmt);
+	vfprintf(filst, fmt, ap);
+	va_end(ap);
+	fflush(filst);
+	return filst;
+}
+
+iofunctions::iofunctions(char *fn)
+{
+	init();
+	init_log(fn);
+	out( IOLOG, INFO, "[IO  ]", "Output log initialized: '%s'.\n", logfn);
+}
+
+iofunctions::iofunctions(int fd)
+{
+	init();
+	init_log(fd);
+	out( IOLOG, INFO, "[IO  ]" , "Output log initialized: '%s'.\n", logfn );
+}
+	
+iofunctions::iofunctions(void)
+{
+	this->init();
+}
+
+iofunctions::~iofunctions(void)
+{
+	this->magic=0;
+	this->flush();
+}
+
+logfunctions::logfunctions(void)
+{
+	setprefix("[GEN ]", __FILE__, __LINE__);
+	settype(GENLOG);
+	setio(io);
+}
+
+void
+logfunctions::setio(iofunc_t *i)
+{
+	this->logio = i;
+	return;
+}
+	
+void
+logfunctions::setprefix(char *p,char *file, int line)
+{
+	//fprintf(stderr,"(this:0x%x) file:line -> %s,%d prefix:%s\n",this,file,line,p);
+	this->prefix=p;
+	return;
+}
+
+void
+logfunctions::settype(int t)
+{
+	type=t;
+	return;
+}
+
+void
+logfunctions::info(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	fs = this->logio->out(this->type,INFO,this->prefix, "%s", "");
+
+	va_start(ap, fmt);
+	vfprintf(fs,fmt,ap);
+	va_end(ap);
+}
+void
+logfunctions::error(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	fs = this->logio->out(this->type,ERROR,this->prefix, "%s", "");
+
+	va_start(ap, fmt);
+	vfprintf(fs,fmt,ap);
+	va_end(ap);
+}
+void
+logfunctions::panic(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	fs = this->logio->out(this->type,PANIC,this->prefix, "%s", "");
+
+	va_start(ap, fmt);
+	vfprintf(fs,fmt,ap);
+	va_end(ap);
+}
+void
+logfunctions::ldebug(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	fs = this->logio->out(this->type,DEBUG,this->prefix, "%s", "");
+
+	va_start(ap, fmt);
+	vfprintf(fs,fmt,ap);
+	va_end(ap);
+}
+	
+#endif
+
+iofunc_t *io;
+logfunc_t *genlog;
+
+int
 main(int argc, char *argv[])
 {
 #if BX_DEBUGGER
@@ -157,16 +357,7 @@ bx_bochs_init(int argc, char *argv[])
 
   bx_pc_system.init_ips(bx_options.ips);
 
-  if (!strcmp(logfilename, "-")) {
-    bx_logfd = stderr;
-    }
-  else {
-    bx_logfd = fopen(logfilename, "w");
-    if (!bx_logfd) {
-      fprintf(stderr, "could not open log file '%s'\n", logfilename);
-      exit(1);
-      }
-    }
+  io->init_log(logfilename);
 
 #if BX_DEBUGGER == 0
   // debugger will do this work, if enabled
@@ -184,7 +375,7 @@ bx_bochs_init(int argc, char *argv[])
   bx_pc_system.start_timers();
 #endif
 
-  bx_printf ("bx_bochs_init is setting signal handlers\n");
+  genlog->info("bx_bochs_init is setting signal handlers\n");
 // if not using debugger, then we can take control of SIGINT.
 // If using debugger, it needs control of this.
 #if BX_DEBUGGER==0
@@ -236,25 +427,6 @@ bx_init_debug(void)
 }
 
 
-
-  void
-bx_printf(char *fmt, ...)
-{
-  va_list ap;
-
-  if (bx_logfd) {
-    fprintf(bx_logfd, "%lld ", bx_pc_system.time_ticks());
-
-    va_start(ap, fmt);
-    vfprintf(bx_logfd, fmt, ap);
-    va_end(ap);
-    }
-
-  fflush(bx_logfd);
-}
-
-
-
   void
 bx_atexit(void)
 {
@@ -271,18 +443,12 @@ bx_atexit(void)
   BX_CPU.atexit();
 #endif
 
-  if (bx_logfd) {
 #if BX_PCI_SUPPORT
     if (bx_options.i440FXSupport) {
-      bx_devices.pci->print_i440fx_state(bx_logfd);
+      bx_devices.pci->print_i440fx_state();
       }
 #endif
-    fprintf(stderr, "bochs exited, log file was '%s'\n",
-      logfilename);
-    fflush(bx_logfd);
-    fclose(bx_logfd);
-    bx_logfd = NULL;
-    }
+    genlog->info("bochs exited, log file was '%s'\n", logfilename);
 }
 
 
@@ -295,20 +461,11 @@ bx_panic(char *fmt, ...)
   static Boolean dbg_exit_called = 0;
 #endif
 
-  if (bx_logfd) {
-    fprintf(bx_logfd, "bochs: panic, ");
+    genlog->info("bochs: panic, ");
 
     va_start(ap, fmt);
-    vfprintf(bx_logfd, fmt, ap);
+    vfprintf(stderr, fmt, ap);
     va_end(ap);
-   } else {
-     /* panic message is critical to knowing what went wrong. print to
-       stderr instead */
-     fprintf(stderr, "bochs: panic, ");
-     va_start(ap, fmt);
-     vfprintf(stderr, fmt, ap);
-     va_end(ap);
-   }
 
 #if !BX_PANIC_IS_FATAL
   return;
@@ -376,10 +533,10 @@ parse_bochsrc(void)
       return;
       }
     else
-      bx_printf("using rc file '%s'.\n", bochsrc_path);
+      genlog->info("using rc file '%s'.\n", bochsrc_path);
     }
   else
-    bx_printf("using rc file '%s'.\n", bochsrc_path);
+    genlog->info("using rc file '%s'.\n", bochsrc_path);
 
 #else
   // try opening file bochsrc only in current directory for win32
@@ -930,3 +1087,4 @@ bx_signal_handler( int signum)
 
   bx_panic("SIGNAL %u caught\n", signum);
 }
+

@@ -41,14 +41,14 @@ typedef struct {
 
 
 
-class bx_pci_c {
+class bx_pci_c : logfunctions {
 
 public:
   bx_pci_c(void);
   ~bx_pci_c(void);
   BX_PCI_SMF void   init(bx_devices_c *);
   BX_PCI_SMF void   reset(void);
-  BX_PCI_SMF void   print_i440fx_state( FILE *fd );
+  BX_PCI_SMF void   print_i440fx_state( );
   BX_PCI_SMF Bit32u rd_memType (Bit32u addr);
   BX_PCI_SMF Bit32u wr_memType (Bit32u addr);
   BX_PCI_SMF Bit8u* i440fx_fetch_ptr(Bit32u addr);

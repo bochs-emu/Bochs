@@ -215,7 +215,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  bx_printf("ne2k: out-of-bounds chipmem read, %04X\n", address);
+  genlog->info("ne2k: out-of-bounds chipmem read, %04X\n", address);
 
   return (0xff);
 }
@@ -231,7 +231,7 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
     if (io_len == 2)
       BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
   } else
-    bx_printf("ne2k: out-of-bounds chipmem read, %04X\n", address);
+    genlog->info("ne2k: out-of-bounds chipmem read, %04X\n", address);
 }
 
 //
@@ -274,7 +274,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     break;
 
   default:
-    bx_printf("ne2k: asic read invalid address %04x", (unsigned) offset);
+    genlog->info("ne2k: asic read invalid address %04x", (unsigned) offset);
     break;
   }
 
@@ -379,12 +379,12 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0xa:  // reserved
-    bx_printf("ne2k: reserved read - page 0, 0xa\n");
+    genlog->info("ne2k: reserved read - page 0, 0xa\n");
     return (0xff);
     break;
 
   case 0xb:  // reserved
-    bx_printf("ne2k: reserved read - page 0, 0xb\n");
+    genlog->info("ne2k: reserved read - page 0, 0xb\n");
     return (0xff);
     break;
     
@@ -499,7 +499,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xc:  // RCR
     // Check if the reserved bits are set
     if (value & 0xc0)
-      bx_printf("ne2k: RCR write, reserved bits set\n");
+      genlog->info("ne2k: RCR write, reserved bits set\n");
 
     // Set all other bit-fields
     BX_NE2K_THIS s.RCR.errors_ok = ((value & 0x01) == 0x01);
@@ -511,7 +511,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 
     // Monitor bit is a little suspicious...
     if (value & 0x20)
-      bx_printf("ne2k: RCR write, monitor bit set!\n");
+      genlog->info("ne2k: RCR write, monitor bit set!\n");
     break;
 
   case 0xd:  // TCR
@@ -521,7 +521,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 
     // Test loop mode (not supported)
     if (value & 0x06) {
-      bx_printf("ne2k: TCR write, loop mode not supported");
+      genlog->info("ne2k: TCR write, loop mode not supported");
       BX_NE2K_THIS s.TCR.loop_cntl = (value & 0x6) >> 1;
     } else {
       BX_NE2K_THIS s.TCR.loop_cntl = 0;
@@ -547,9 +547,9 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     // It is questionable to set longaddr and auto_rx, since they
     // aren't supported on the ne2000. Print a warning and continue
     if (value & 0x04)
-      bx_printf("ne2k: DCR write - LAS set ???\n");
+      genlog->info("ne2k: DCR write - LAS set ???\n");
     if (value & 0x10)
-      bx_printf("ne2k: DCR write - AR set ???\n");
+      genlog->info("ne2k: DCR write - AR set ???\n");
 
     // Set other values.
     BX_NE2K_THIS s.DCR.wdsize   = ((value & 0x01) == 0x01);
@@ -712,7 +712,7 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   case 0x9:
   case 0xa:
   case 0xb:
-    bx_printf("ne2k: reserved read - page 2, 0x%02x\n", (unsigned) offset);
+    genlog->info("ne2k: reserved read - page 2, 0x%02x\n", (unsigned) offset);
     return (0xff);
     break;
 
@@ -765,7 +765,7 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
   // affect internal operation, but let them through for now
   // and print a warning.
   if (offset != 0)
-    bx_printf("ne2k: page 2 write ?\n");
+    genlog->info("ne2k: page 2 write ?\n");
 
   switch (offset) {
   case 0x0:  // CR
@@ -1182,7 +1182,7 @@ bx_ne2k_c::init(bx_devices_c *d)
 						this);
     
     if (BX_NE2K_THIS ethdev == NULL) {
-      bx_printf("ne2k: could not find eth module %s - using null instead\n",
+      genlog->info("ne2k: could not find eth module %s - using null instead\n",
 		bx_options.ne2k.ethmod);
       
       BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,

@@ -219,8 +219,8 @@ if (bx_options.private_colormap) {
   // width = columns * font_width;
   // height = rows * font_height;
 
-bx_printf("font_width = %u\n", (unsigned) font_width);
-bx_printf("font_height = %u\n", (unsigned) font_height);
+genlog->info("font_width = %u\n", (unsigned) font_width);
+genlog->info("font_height = %u\n", (unsigned) font_height);
 
   // Create pixmap of depth 1 (bitmap) for icon
   // icon_pixmap = XCreateBitmapFromData(bx_x_display, win,

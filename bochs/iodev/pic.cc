@@ -125,7 +125,7 @@ bx_pic_c::read(Bit32u address, unsigned io_len)
              (unsigned) io_len);
 
   if (bx_dbg.pic)
-    bx_printf("pic: IO read from %04x\n", (unsigned) address);
+    genlog->info("pic: IO read from %04x\n", (unsigned) address);
 
   /*
    8259A PIC
@@ -134,35 +134,35 @@ bx_pic_c::read(Bit32u address, unsigned io_len)
   switch (address) {
     case 0x20:
       if (BX_PIC_THIS s.master_pic.read_reg_select) { /* ISR */
-        if (bx_dbg.pic) bx_printf("pic: read master ISR = %02x\n",
+        if (bx_dbg.pic) genlog->info("pic: read master ISR = %02x\n",
 	                  (unsigned) BX_PIC_THIS s.master_pic.isr);
 	return(BX_PIC_THIS s.master_pic.isr);
 	}
       else { /* IRR */
-        if (bx_dbg.pic) bx_printf("pic: read master IRR = %02x\n",
+        if (bx_dbg.pic) genlog->info("pic: read master IRR = %02x\n",
 	                  (unsigned) BX_PIC_THIS s.master_pic.irr);
 	return(BX_PIC_THIS s.master_pic.irr);
 	}
       break;
     case 0x21:
-      if (bx_dbg.pic) bx_printf("pic: read master IMR = %02x\n",
+      if (bx_dbg.pic) genlog->info("pic: read master IMR = %02x\n",
                         (unsigned) BX_PIC_THIS s.master_pic.imr);
       return(BX_PIC_THIS s.master_pic.imr);
       break;
     case 0xA0:
       if (BX_PIC_THIS s.slave_pic.read_reg_select) { /* ISR */
-        if (bx_dbg.pic) bx_printf("pic: read slave ISR = %02x\n",
+        if (bx_dbg.pic) genlog->info("pic: read slave ISR = %02x\n",
                           (unsigned) BX_PIC_THIS s.slave_pic.isr);
 	return(BX_PIC_THIS s.slave_pic.isr);
 	}
       else { /* IRR */
-        if (bx_dbg.pic) bx_printf("pic: read slave IRR = %02x\n",
+        if (bx_dbg.pic) genlog->info("pic: read slave IRR = %02x\n",
                           (unsigned) BX_PIC_THIS s.slave_pic.irr);
 	return(BX_PIC_THIS s.slave_pic.irr);
 	}
       break;
     case 0xA1:
-      if (bx_dbg.pic) bx_printf("pic: read slave IMR = %02x\n",
+      if (bx_dbg.pic) genlog->info("pic: read slave IMR = %02x\n",
                         (unsigned) BX_PIC_THIS s.slave_pic.imr);
       return(BX_PIC_THIS s.slave_pic.imr);
       break;
@@ -198,7 +198,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
              (unsigned) io_len);
 
   if (bx_dbg.pic)
-    bx_printf("pic: IO write to %04x = %02x\n",
+    genlog->info("pic: IO write to %04x = %02x\n",
       (unsigned) address, (unsigned) value);
 
   /*
@@ -209,12 +209,12 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x20:
       if (value & 0x10) { /* initialization command 1 */
 	    // (mch) Ignore...
-	    // bx_printf("pic:master: init command 1 found %02x\n", (unsigned) value);
+	    // genlog->info("pic:master: init command 1 found %02x\n", (unsigned) value);
         if (bx_dbg.pic) {
-          bx_printf("pic:master: init command 1 found\n");
-          bx_printf("            requires 4 = %u\n",
+          genlog->info("pic:master: init command 1 found\n");
+          genlog->info("            requires 4 = %u\n",
             (unsigned) (value & 0x01) );
-          bx_printf("            cascade mode: [0=cascade,1=single] %u\n",
+          genlog->info("            cascade mode: [0=cascade,1=single] %u\n",
             (unsigned) ((value & 0x02) >> 1));
           }
         BX_PIC_THIS s.master_pic.init.in_init = 1;
@@ -296,7 +296,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xC6: // 6 5 4 3 2 1 0 7
         case 0xC7: // 7 6 5 4 3 2 1 0
           // ignore for now
-          bx_printf("pic: IRQ lowest command 0x%x\n", value);
+          genlog->info("pic: IRQ lowest command 0x%x\n", value);
           break;
 
         default:
@@ -312,15 +312,15 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PIC_THIS s.master_pic.interrupt_offset = value & 0xf8;
             BX_PIC_THIS s.master_pic.init.byte_expected = 3;
 	    if (bx_dbg.pic) {
-		  bx_printf("pic:master: init command 2 = %02x\n", (unsigned) value);
-		  bx_printf("            offset = INT %02x\n",
+		  genlog->info("pic:master: init command 2 = %02x\n", (unsigned) value);
+		  genlog->info("            offset = INT %02x\n",
 			    BX_PIC_THIS s.master_pic.interrupt_offset);
 	    }
             return;
             break;
           case 3:
 	    if (bx_dbg.pic)
-		  bx_printf("pic:master: init command 3 = %02x\n", (unsigned) value);
+		  genlog->info("pic:master: init command 3 = %02x\n", (unsigned) value);
             if (BX_PIC_THIS s.master_pic.init.requires_4) {
               BX_PIC_THIS s.master_pic.init.byte_expected = 4;
 	      }
@@ -331,13 +331,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           case 4:
 	    if (bx_dbg.pic) {
-		  bx_printf("pic:master: init command 4 = %02x\n", (unsigned) value);
-		  if (value & 0x02) bx_printf("pic:        auto EOI\n");
-		  else bx_printf("pic: normal EOI interrupt\n");
+		  genlog->info("pic:master: init command 4 = %02x\n", (unsigned) value);
+		  if (value & 0x02) genlog->info("pic:        auto EOI\n");
+		  else genlog->info("pic: normal EOI interrupt\n");
 	    }
 	    if (value & 0x01) {
 		  if (bx_dbg.pic)
-			bx_printf("pic:        80x86 mode\n");
+			genlog->info("pic:        80x86 mode\n");
 	    } else
 		  bx_panic("pic:        not 80x86 mode\n");
             BX_PIC_THIS s.master_pic.init.in_init = 0;
@@ -350,7 +350,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
       /* normal operation */
       if (bx_dbg.pic)
-        bx_printf("pic: setting master pic IMR to %02x\n", value);
+        genlog->info("pic: setting master pic IMR to %02x\n", value);
       BX_PIC_THIS s.master_pic.imr = value;
       service_master_pic();
       return;
@@ -359,10 +359,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0xA0:
       if (value & 0x10) { /* initialization command 1 */
         if (bx_dbg.pic) {
-          bx_printf("pic:slave: init command 1 found\n");
-          bx_printf("           requires 4 = %u\n",
+          genlog->info("pic:slave: init command 1 found\n");
+          genlog->info("           requires 4 = %u\n",
             (unsigned) (value & 0x01) );
-          bx_printf("           cascade mode: [0=cascade,1=single] %u\n",
+          genlog->info("           cascade mode: [0=cascade,1=single] %u\n",
             (unsigned) ((value & 0x02) >> 1));
           }
         BX_PIC_THIS s.slave_pic.init.in_init = 1;
@@ -395,7 +395,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         else if (special_mask == 0x03) { /* set specific mask */
           BX_PIC_THIS s.slave_pic.special_mask = 1;
           service_slave_pic();
-          bx_printf("pic:slave: OCW3 not implemented (%02x)\n",
+          genlog->info("pic:slave: OCW3 not implemented (%02x)\n",
             (unsigned) value);
           }
         return;
@@ -444,15 +444,15 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PIC_THIS s.slave_pic.interrupt_offset = value & 0xf8;
             BX_PIC_THIS s.slave_pic.init.byte_expected = 3;
 	    if (bx_dbg.pic) {
-		  bx_printf("pic:slave: init command 2 = %02x\n", (unsigned) value);
-		  bx_printf("           offset = INT %02x\n",
+		  genlog->info("pic:slave: init command 2 = %02x\n", (unsigned) value);
+		  genlog->info("           offset = INT %02x\n",
 			    BX_PIC_THIS s.slave_pic.interrupt_offset);
 	    }
             return;
             break;
           case 3:
 		if (bx_dbg.pic)
-		      bx_printf("pic:slave: init command 3 = %02x\n", (unsigned) value);
+		      genlog->info("pic:slave: init command 3 = %02x\n", (unsigned) value);
             if (BX_PIC_THIS s.slave_pic.init.requires_4) {
               BX_PIC_THIS s.slave_pic.init.byte_expected = 4;
 	      }
@@ -463,13 +463,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           case 4:
 		if (bx_dbg.pic) {
-		      bx_printf("pic:slave: init command 4 = %02x\n", (unsigned) value);
-		      if (value & 0x02) bx_printf("pic:       auto EOI\n");
-		      else bx_printf("pic: normal EOI interrupt\n");
+		      genlog->info("pic:slave: init command 4 = %02x\n", (unsigned) value);
+		      if (value & 0x02) genlog->info("pic:       auto EOI\n");
+		      else genlog->info("pic: normal EOI interrupt\n");
 		}
 		if (value & 0x01) {
 		      if (bx_dbg.pic)
-			    bx_printf("pic:       80x86 mode\n");
+			    genlog->info("pic:       80x86 mode\n");
 		} else bx_panic("pic: not 80x86 mode\n");
             BX_PIC_THIS s.slave_pic.init.in_init = 0;
             return;
@@ -481,7 +481,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
       /* normal operation */
       if (bx_dbg.pic)
-        bx_printf("pic: setting slave pic IMR to %02x\n", value);
+        genlog->info("pic: setting slave pic IMR to %02x\n", value);
       BX_PIC_THIS s.slave_pic.imr = value;
       service_slave_pic();
       return;
@@ -502,7 +502,7 @@ bx_pic_c::trigger_irq(unsigned irq_no)
 #endif
 
   if (bx_dbg.pic)
-    bx_printf("trigger_irq(%d decimal)\n", (unsigned) irq_no);
+    genlog->info("trigger_irq(%d decimal)\n", (unsigned) irq_no);
 
   if (irq_no <= 7) {
     irq_no_bitmask = 1 << irq_no;
@@ -527,7 +527,7 @@ bx_pic_c::untrigger_irq(unsigned irq_no)
 #endif
 
   if (bx_dbg.pic)
-    bx_printf("untrigger_irq(%d decimal)\n", (unsigned) irq_no);
+    genlog->info("untrigger_irq(%d decimal)\n", (unsigned) irq_no);
 
   if (irq_no <= 7) {
     irq_no_bitmask = 1 << irq_no;
@@ -588,7 +588,7 @@ bx_pic_c::service_master_pic(void)
         continue;
       if (unmasked_requests & (1 << irq)) {
         if (bx_dbg.pic)
-          bx_printf("pic: signalling IRQ(%u)\n",
+          genlog->info("pic: signalling IRQ(%u)\n",
             (unsigned) irq);
         BX_PIC_THIS s.master_pic.irr &= ~(1 << irq);
         /*??? do for slave too: BX_PIC_THIS s.master_pic.isr |=  (1 << irq);*/
@@ -632,7 +632,7 @@ bx_pic_c::service_slave_pic(void)
     for (irq=0; irq<lowest_priority_irq; irq++) {
       if (unmasked_requests & (1 << irq)) {
         if (bx_dbg.pic)
-          bx_printf("pic(slave): signalling IRQ(%u)\n",
+          genlog->info("pic(slave): signalling IRQ(%u)\n",
             (unsigned) 8 + irq);
         BX_PIC_THIS s.slave_pic.irr &= ~(1 << irq);
         BX_PIC_THIS s.slave_pic.INT = 1;
@@ -681,8 +681,8 @@ bx_pic_c::IAC(void)
   void
 bx_pic_c::show_pic_state(void)
 {
-bx_printf("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
-bx_printf("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
-bx_printf("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
-bx_printf("s.master_pic.irq = %02x\n", BX_PIC_THIS s.master_pic.irq);
+genlog->info("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
+genlog->info("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
+genlog->info("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
+genlog->info("s.master_pic.irq = %02x\n", BX_PIC_THIS s.master_pic.irq);
 }

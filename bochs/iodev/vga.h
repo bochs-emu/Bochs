@@ -44,7 +44,7 @@
 
 
 
-class bx_vga_c {
+class bx_vga_c : logfunctions {
 public:
 
   bx_vga_c(void);

@@ -170,7 +170,7 @@ inc_one:
     // adapter ROM     C0000 .. DFFFF
     // ROM BIOS memory E0000 .. FFFFF
     // (ignore write)
-    //bx_printf("ROM lock %08x: len=%u\n",
+    //genlog->info("ROM lock %08x: len=%u\n",
     //  (unsigned) a20addr, (unsigned) len);
 #if BX_PCI_SUPPORT == 0
 #if BX_SHADOW_RAM
@@ -187,7 +187,7 @@ inc_one:
         ((a20addr >= 0xC0000) && (a20addr <= 0xFFFFF))) {
       switch (bx_pci.wr_memType(a20addr & 0xFC000)) {
         case 0x0:   // Writes to ShadowRAM
-//        bx_printf ("Writing to ShadowRAM %08x, len %u ! \n", (unsigned) a20addr, (unsigned) len);
+//        genlog->info("Writing to ShadowRAM %08x, len %u ! \n", (unsigned) a20addr, (unsigned) len);
           BX_MEM.vector[a20addr] = *data_ptr;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
@@ -195,7 +195,7 @@ inc_one:
 
         case 0x1:   // Writes to ROM, Inhibit
 //        bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)] = *data_ptr;
-//        bx_printf ("Writing to ROM %08x, Data %02x ! \n", (unsigned) a20addr, *data_ptr);
+//        genlog->info("Writing to ROM %08x, Data %02x ! \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
         default:
           bx_panic("write_physical: default case\n");
@@ -374,12 +374,12 @@ inc_one:
       switch (bx_pci.rd_memType(a20addr & 0xFC000)) {
         case 0x0:   // Read from ShadowRAM
           *data_ptr = BX_MEM.vector[a20addr];
-          bx_printf ("Reading from ShadowRAM %08x, Data %02x \n", (unsigned) a20addr, *data_ptr);
+          genlog->info("Reading from ShadowRAM %08x, Data %02x \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
 
         case 0x1:   // Read from ROM
           *data_ptr = bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)];
-          //bx_printf ("Reading from ROM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
+          //genlog->info("Reading from ROM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
           goto inc_one;
         default:
           bx_panic("::read_physical: default case\n");
@@ -413,12 +413,12 @@ inc_one:
             switch (bx_pci.rd_memType(a20addr & 0xFC000)) {
               case 0x0:   // Read from ROM
                 *data_ptr = BX_MEM.vector[a20addr];
-                //bx_printf ("Reading from ROM %08x, Data %02x \n", (unsigned) a20addr, *data_ptr);
+                //genlog->info("Reading from ROM %08x, Data %02x \n", (unsigned) a20addr, *data_ptr);
                 break;
 
               case 0x1:   // Read from Shadow RAM
                 *data_ptr = bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)];
-                bx_printf ("Reading from ShadowRAM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
+                genlog->info("Reading from ShadowRAM %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
                 break;
               default:
                 bx_panic("read_physical: default case\n");
@@ -427,7 +427,7 @@ inc_one:
           }
         else {
           *data_ptr = BX_MEM.vector[a20addr];
-          bx_printf ("Reading from Norm %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
+          genlog->info("Reading from Norm %08x, Data %02x  \n", (unsigned) a20addr, *data_ptr);
           }
         }
       else

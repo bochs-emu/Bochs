@@ -111,16 +111,16 @@ state_file::state_file (const char *name, const char *options)
 {
 UNUSED(name);
 UNUSED(options);
-  bx_printf("state_file::state_file()\n");
+  genlog->info("state_file::state_file()\n");
 }
 
 state_file::state_file (FILE *f)
 {
 UNUSED(f);
-  bx_printf("state_file::state_file(FILE *)\n");
+  genlog->info("state_file::state_file(FILE *)\n");
 }
 
 state_file::~state_file()
 {
-  bx_printf("state_file::~state_file()\n");
+  genlog->info("state_file::~state_file()\n");
 }

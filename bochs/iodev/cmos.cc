@@ -100,7 +100,7 @@ bx_cmos_c::init(bx_devices_c *d)
   else if (bx_options.cmos.time0 != 0)
           BX_CMOS_THIS s.timeval = bx_options.cmos.time0;
 
-  bx_printf("[cmos] Setting initial clock to: %s",
+  genlog->info("[cmos] Setting initial clock to: %s",
     ctime(&(BX_CMOS_THIS s.timeval)));
 
   update_clock();
@@ -134,7 +134,7 @@ bx_cmos_c::init(bx_devices_c *d)
       bx_panic("CMOS: error reading cmos file.\n");
       }
     close(fd);
-    bx_printf("CMOS: successfuly read from image file '%s'.\n",
+    genlog->info("CMOS: successfuly read from image file '%s'.\n",
       bx_options.cmos.path);
     }
   else {
@@ -221,7 +221,7 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
              (unsigned) address, (unsigned) io_len);
 
   if (bx_dbg.cmos)
-    bx_printf("CMOS read of CMOS register 0x%x\n",
+    genlog->info("CMOS read of CMOS register 0x%x\n",
       (unsigned) BX_CMOS_THIS s.cmos_mem_address);
 
 
@@ -272,7 +272,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
              (unsigned) address, (unsigned) io_len);
 
   if (bx_dbg.cmos)
-    bx_printf("CMOS write to address: 0x%x = 0x%x\n",
+    genlog->info("CMOS write to address: 0x%x = 0x%x\n",
       (unsigned) address, (unsigned) value);
 
 
@@ -302,7 +302,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x07: // day of the month
         case 0x08: // month
         case 0x09: // year
-          //bx_printf("CMOS: write reg %02xh: value = %02xh\n",
+          //genlog->info("CMOS: write reg %02xh: value = %02xh\n",
           //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
           BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
           return;
@@ -417,39 +417,39 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0x0e: // diagnostic status
-          bx_printf("CMOS: write register 0Eh: %02x\n", (unsigned) value);
+          genlog->info("CMOS: write register 0Eh: %02x\n", (unsigned) value);
           break;
 
 	case 0x0f: // shutdown status
           switch (value) {
             case 0x00: /* proceed with normal POST (soft reset) */
               if (bx_dbg.reset)
-                bx_printf("CMOS: Reg 0F set to 0: shutdown action = normal POST\n");
+                genlog->info("CMOS: Reg 0F set to 0: shutdown action = normal POST\n");
               break;
             case 0x02: /* shutdown after memory test */
               if (bx_dbg.reset)
-                bx_printf("CMOS: Reg 0Fh: request to change shutdown action"
+                genlog->info("CMOS: Reg 0Fh: request to change shutdown action"
                              " to shutdown after memory test\n");
               break;
             case 0x03:
-              bx_printf ("CMOS: Reg 0Fh(03) : Shutdown after memory test !\n");
+              genlog->info("CMOS: Reg 0Fh(03) : Shutdown after memory test !\n");
               break;
             case 0x04: /* jump to disk bootstrap routine */
-              bx_printf("CMOS: Reg 0Fh: request to change shutdown action "
+              genlog->info("CMOS: Reg 0Fh: request to change shutdown action "
                              "to jump to disk bootstrap routine.\n");
               break;
             case 0x06:
-              bx_printf ("CMOS: Reg 0Fh(06) : Shutdown after memory test !\n");
+              genlog->info("CMOS: Reg 0Fh(06) : Shutdown after memory test !\n");
               break;
             case 0x09: /* return to BIOS extended memory block move
                        (interrupt 15h, func 87h was in progress) */
               if (bx_dbg.reset)
-                bx_printf("CMOS: Reg 0Fh: request to change shutdown action "
+                genlog->info("CMOS: Reg 0Fh: request to change shutdown action "
                              "to return to BIOS extended memory block move.\n");
               break;
             case 0x0a: /* jump to DWORD pointer at 40:67 */
               if (bx_dbg.reset)
-                bx_printf("CMOS: Reg 0Fh: request to change shutdown action"
+                genlog->info("CMOS: Reg 0Fh: request to change shutdown action"
                              " to jump to DWORD at 40:67\n");
               break;
             default:
@@ -460,7 +460,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          bx_printf("CMOS: write reg %02xh: value = %02xh\n",
+          genlog->info("CMOS: write reg %02xh: value = %02xh\n",
             (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
           break;
         }

@@ -259,15 +259,15 @@ debugger_check:
     if (BX_CPU_THIS_PTR break_point) {
 	  switch (BX_CPU_THIS_PTR break_point) {
 		case BREAK_POINT_TIME:
-		      bx_printf("[%lld] Caught time breakpoint\n", bx_pc_system.time_ticks());
+		      genlog->info("[%lld] Caught time breakpoint\n", bx_pc_system.time_ticks());
 		      BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
 		      return;
 		case BREAK_POINT_READ:
-		      bx_printf("[%lld] Caught read watch point\n", bx_pc_system.time_ticks());
+		      genlog->info("[%lld] Caught read watch point\n", bx_pc_system.time_ticks());
 		      BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
 		      return;
 		case BREAK_POINT_WRITE:
-		      bx_printf("[%lld] Caught write watch point\n", bx_pc_system.time_ticks());
+		      genlog->info("[%lld] Caught write watch point\n", bx_pc_system.time_ticks());
 		      BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
 		      return;
 		default:
@@ -278,13 +278,13 @@ debugger_check:
     // (mch) Magic break point support
     if (BX_CPU_THIS_PTR magic_break) {
 	  if (bx_dbg.magic_break_enabled) {
-		bx_printf("Stopped on MAGIC BREAKPOINT\n");
+		genlog->info("Stopped on MAGIC BREAKPOINT\n");
 		BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
 		return;
 	  } else {
 		BX_CPU_THIS_PTR magic_break = 0;
 		BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
-		bx_printf("Ignoring MAGIC BREAKPOINT\n");
+		genlog->info("Ignoring MAGIC BREAKPOINT\n");
 	  }
     }
 #endif
@@ -418,7 +418,7 @@ handle_async_event:
 
     // NOTE: similar code in ::take_irq()
     vector = BX_IAC(); // may set INTR with next interrupt
-    //if (bx_dbg.interrupts) bx_printf("decode: interrupt %u\n",
+    //if (bx_dbg.interrupts) genlog->info("decode: interrupt %u\n",
     //                                   (unsigned) vector);
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT   = 1; /* external event */
@@ -584,7 +584,7 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   // (not the one generating the mode switch).
   if (BX_CPU_THIS_PTR mode_break && 
       (BX_CPU_THIS_PTR debug_vm != BX_CPU_THIS_PTR eflags.vm)) {
-    bx_printf("Caught vm mode switch breakpoint\n");
+    genlog->info("Caught vm mode switch breakpoint\n");
     BX_CPU_THIS_PTR debug_vm = BX_CPU_THIS_PTR eflags.vm;
     BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
     return 1;

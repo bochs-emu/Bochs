@@ -30,13 +30,27 @@
 #define BX_DEVICE_ID     3
 #define BX_STEPPING_ID   0
 
-
-
 BX_CPU_C::BX_CPU_C(void)
 {
   // BX_CPU_C constructor
+  char cpu[6];
+  snprintf(cpu, 7, "[CPU%d]",BX_SIM_ID);
 
-  bx_printf("(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
+  // XXX !!! Warning !!! This class appears to be initialized first, so I am
+  //                     using this fact to initialize logging here.
+  //                     It is highly likely this is a bad assumption.
+  //                     How do I do this the 'right' way?
+
+  io = new iofunc_t("/dev/stderr");
+  genlog = new logfunc_t();
+  genlog->setio(io);
+
+  // end !!! Warning !!!
+
+  BX_CPU_THIS_PTR setio(io);
+  BX_CPU_THIS_PTR setprefix(cpu, __FILE__, __LINE__);
+
+  BX_CPU_THIS_PTR info( "(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
      you can assume there's always a base & index register used.  For
@@ -171,7 +185,7 @@ fprintf(stderr, "&DTReadRMW8vShim is %x\n", (unsigned) &DTReadRMW8vShim);
 
 BX_CPU_C::~BX_CPU_C(void)
 {
-  bx_printf("(%u)BX_CPU_C::~BX_CPU_C(void) called\n", BX_SIM_ID);
+  BX_CPU_THIS_PTR info("(%u)BX_CPU_C::~BX_CPU_C(void) called\n", BX_SIM_ID);
   BX_INSTR_SHUTDOWN();
 }
 

@@ -81,7 +81,7 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
     }
 
   if ( new_eip & 0xffff0000 ) {
-    bx_printf("IRET to V86-mode: ignoring upper 16-bits\n");
+    genlog->info("IRET to V86-mode: ignoring upper 16-bits\n");
     new_eip = new_eip & 0xffff;
     }
 
@@ -119,13 +119,13 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   void
 BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
 {
-  //bx_printf("stack_return_from_v86:\n");
+  //genlog->info("stack_return_from_v86:\n");
   exception(BX_GP_EXCEPTION, 0, 0);
 
 #if 0
   if (IOPL != 3) {
     // trap to virtual 8086 monitor
-    bx_printf("stack_return_from_v86: IOPL != 3\n");
+    genlog->info("stack_return_from_v86: IOPL != 3\n");
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
@@ -277,23 +277,23 @@ BX_CPU_C::init_v8086_mode(void)
   void
 BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32)
 {
-  bx_printf("stack_return_to_v86: VM bit set in EFLAGS stack image\n");
+  genlog->info("stack_return_to_v86: VM bit set in EFLAGS stack image\n");
   v8086_message();
 }
 
   void
 BX_CPU_C::stack_return_from_v86(void)
 {
-  bx_printf("stack_return_from_v86:\n");
+  genlog->info("stack_return_from_v86:\n");
   v8086_message();
 }
 
   void
 BX_CPU_C::v8086_message(void)
 {
-  bx_printf("Program compiled with BX_SUPPORT_V8086_MODE = 0\n");
-  bx_printf("You need to rerun the configure script and recompile\n");
-  bx_printf("  to use virtual-8086 mode features.\n");
+  genlog->info("Program compiled with BX_SUPPORT_V8086_MODE = 0\n");
+  genlog->info("You need to rerun the configure script and recompile\n");
+  genlog->info("  to use virtual-8086 mode features.\n");
   bx_panic("Bummer!\n");
 }
 #endif // BX_SUPPORT_V8086_MODE

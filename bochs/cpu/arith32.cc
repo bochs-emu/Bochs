@@ -533,14 +533,14 @@ BX_CPU_C::CDQ(BxInstruction_t *i)
   void
 BX_CPU_C::CMPXCHG_XBTS(BxInstruction_t *i)
 {
-  bx_printf("CMPXCHG_XBTS:\n");
+  genlog->info("CMPXCHG_XBTS:\n");
   UndefinedOpcode(i);
 }
 
   void
 BX_CPU_C::CMPXCHG_IBTS(BxInstruction_t *i)
 {
-  bx_printf("CMPXCHG_IBTS:\n");
+  genlog->info("CMPXCHG_IBTS:\n");
   UndefinedOpcode(i);
 }
 
@@ -851,12 +851,12 @@ BX_CPU_C::CMPXCHG8B(BxInstruction_t *i)
 {
 #if (BX_CPU_LEVEL >= 5) || (BX_CPU_LEVEL_HACKED >= 5)
   if (i->mod != 0xc0) {
-    bx_printf("CMPXCHG8B: dest is reg: #UD\n");
+    genlog->info("CMPXCHG8B: dest is reg: #UD\n");
     UndefinedOpcode(i);
     }
   bx_panic("CMPXCHG8B: not implemented yet\n");
 #else
-  bx_printf("CMPXCHG8B: not implemented yet\n");
+  genlog->info("CMPXCHG8B: not implemented yet\n");
   UndefinedOpcode(i);
 #endif
 }

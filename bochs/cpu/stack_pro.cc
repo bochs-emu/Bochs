@@ -140,7 +140,7 @@ BX_CPU_C::pop_16(Bit16u *value16_ptr)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if ( !can_pop(2) ) {
-      bx_printf("pop_16(): can't pop from stack\n");
+      genlog->info("pop_16(): can't pop from stack\n");
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
       }
@@ -261,11 +261,11 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
       }
 
     if (esp < bytes) {
-      bx_printf("can_push(): expand-up: esp < N\n");
+      genlog->info("can_push(): expand-up: esp < N\n");
       return(0);
       }
     if ((esp-1) > descriptor->u.segment.limit_scaled) {
-      bx_printf("can_push(): expand-up: SP > limit\n");
+      genlog->info("can_push(): expand-up: SP > limit\n");
       return(0);
       }
     /* all checks pass */

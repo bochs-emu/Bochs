@@ -242,7 +242,7 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
              (unsigned) io_len);
 
   if (bx_dbg.pit)
-    bx_printf("pit: io read from port %04x\n", (unsigned) address);
+    genlog->info("pit: io read from port %04x\n", (unsigned) address);
 
   switch (address) {
     case 0x40: /* timer 0 - system ticks */
@@ -298,7 +298,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
              (unsigned) io_len);
 
   if (bx_dbg.pit)
-    bx_printf("pit: write to port %04x = %02x\n",
+    genlog->info("pit: write to port %04x = %02x\n",
       (unsigned) address, (unsigned) value);
 
   switch (address) {
@@ -323,7 +323,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
       mode     = (value >> 1) & 0x07;
       bcd_mode = value & 0x01;
 #if 0
-bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
+genlog->info("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
   (unsigned) command, (unsigned) mode, (unsigned) bcd_mode);
 #endif
 
@@ -359,7 +359,7 @@ bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
 
         case 0x5: /* timer 1: LSB mode */
         case 0x6: /* timer 1: MSB mode */
-          bx_printf("pit: outp(43h): command %02xh unhandled (ignored)\n",
+          genlog->info("pit: outp(43h): command %02xh unhandled (ignored)\n",
             (unsigned) command);
           break;
         case 0x7: /* timer 1: 16-bit mode */
@@ -407,7 +407,7 @@ bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
           break;
 #endif
         case 0x0c: case 0x0d: case 0x0e: case 0x0f:
-          bx_printf("pit: ignoring 8254 command %u\n", (unsigned) command);
+          genlog->info("pit: ignoring 8254 command %u\n", (unsigned) command);
           break;
 
         default: /* 0xc & 0xf */
@@ -448,14 +448,14 @@ bx_pit_c::write_count_reg( Bit8u   value, unsigned timerid )
         BX_PIT_THIS s.timer[timerid].input_latch_toggle = 1;
         xfer_complete = 0;
         if (bx_dbg.pit)
-          bx_printf("pit: BX_PIT_THIS s.timer[timerid] write L = %02x\n", (unsigned) value);
+          genlog->info("pit: BX_PIT_THIS s.timer[timerid] write L = %02x\n", (unsigned) value);
         }
       else {
         BX_PIT_THIS s.timer[timerid].input_latch_value |= (value << 8);
         BX_PIT_THIS s.timer[timerid].input_latch_toggle = 0;
         xfer_complete = 1;
         if (bx_dbg.pit)
-          bx_printf("pit: BX_PIT_THIS s.timer[timerid] write H = %02x\n", (unsigned) value);
+          genlog->info("pit: BX_PIT_THIS s.timer[timerid] write H = %02x\n", (unsigned) value);
         }
       break;
 
@@ -463,14 +463,14 @@ bx_pit_c::write_count_reg( Bit8u   value, unsigned timerid )
       BX_PIT_THIS s.timer[timerid].input_latch_value = (value << 8);
       xfer_complete = 1;
       if (bx_dbg.pit)
-        bx_printf("pit: BX_PIT_THIS s.timer[timerid] write H = %02x\n", (unsigned) value);
+        genlog->info("pit: BX_PIT_THIS s.timer[timerid] write H = %02x\n", (unsigned) value);
       break;
 
     case BX_PIT_LATCH_MODE_LSB: /* write1=LSB, MSB=0 */
       BX_PIT_THIS s.timer[timerid].input_latch_value = value;
       xfer_complete = 1;
       if (bx_dbg.pit)
-        bx_printf("pit: BX_PIT_THIS s.timer[timerid] write L = %02x\n", (unsigned) value);
+        genlog->info("pit: BX_PIT_THIS s.timer[timerid] write L = %02x\n", (unsigned) value);
       break;
 
     default:
@@ -554,7 +554,7 @@ bx_pit_c::read_counter( unsigned timerid )
     }
   else { /* direct unlatched read */
     counter_value = BX_PIT_THIS s.timer[timerid].counter;
-bx_printf("CV=%04x\n", (unsigned) BX_PIT_THIS s.timer[timerid].counter);
+genlog->info("CV=%04x\n", (unsigned) BX_PIT_THIS s.timer[timerid].counter);
     }
 
   switch (BX_PIT_THIS s.timer[timerid].latch_mode) {
@@ -590,7 +590,7 @@ bx_pit_c::latch( unsigned timerid )
 {
   /* subsequent counter latch commands are ignored until value read out */
   if (BX_PIT_THIS s.timer[timerid].output_latch_full) {
-    bx_printf("pit: pit(%u) latch: output latch full, ignoring\n",
+    genlog->info("pit: pit(%u) latch: output latch full, ignoring\n",
               timerid);
     return;
     }
@@ -598,7 +598,7 @@ bx_pit_c::latch( unsigned timerid )
   BX_PIT_THIS s.timer[timerid].output_latch_value = BX_PIT_THIS s.timer[timerid].counter;
 
   if (bx_dbg.pit)
-    bx_printf("pit: latch_value = %lu\n", BX_PIT_THIS s.timer[timerid].output_latch_value);
+    genlog->info("pit: latch_value = %lu\n", BX_PIT_THIS s.timer[timerid].output_latch_value);
   BX_PIT_THIS s.timer[timerid].output_latch_toggle = 0;
   BX_PIT_THIS s.timer[timerid].output_latch_full   = 1;
 }
@@ -685,7 +685,7 @@ bx_pit_c::start(unsigned timerid)
   else {
     period_hz = 1193182 / BX_PIT_THIS s.timer[timerid].counter_max;
     }
-  bx_printf("timer%u period set to %lu hz\n", timerid, period_hz);
+  genlog->info("timer%u period set to %lu hz\n", timerid, period_hz);
 
 
   switch (BX_PIT_THIS s.timer[timerid].mode) {
@@ -818,13 +818,13 @@ bx_pit_c::periodic( Bit32u   usec_delta )
             // counter expired, reload
             BX_PIT_THIS s.timer[i].counter = BX_PIT_THIS s.timer[i].counter_max;
             BX_PIT_THIS s.timer[i].OUT     = !BX_PIT_THIS s.timer[i].OUT;
-            //bx_printf("CV: reload t%u to %04x\n", (unsigned) i, (unsigned)
+            //genlog->info("CV: reload t%u to %04x\n", (unsigned) i, (unsigned)
             //  BX_PIT_THIS s.timer[i].counter);
             }
           else {
             // decrement counter by elapsed useconds
             BX_PIT_THIS s.timer[i].counter -= (Bit16u ) ( 2*usec_delta );
-            //bx_printf("CV: dec count to %04x\n",
+            //genlog->info("CV: dec count to %04x\n",
             //          (unsigned) BX_PIT_THIS s.timer[i].counter);
             }
           break;

@@ -245,6 +245,6 @@ math_abort(struct info *info, unsigned int signal)
   int
 printk(const char * fmt, ...)
 {
-  bx_printf("printk not complete: %s\n", fmt);
+  genlog->info("printk not complete: %s\n", fmt);
   return(0); // for now
 }

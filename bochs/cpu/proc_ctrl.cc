@@ -35,7 +35,7 @@ BX_CPU_C::UndefinedOpcode(BxInstruction_t *i)
   if (i->b1 != 0x63) {
     // Windows hits the ARPL command a bunch of times.
     // Too much spew...
-    bx_printf("UndefinedOpcode: %02x causes exception 6\n",
+    genlog->info("UndefinedOpcode: %02x causes exception 6\n",
               (unsigned) i->b1);
     }
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -55,14 +55,14 @@ BX_CPU_C::HLT(BxInstruction_t *i)
     bx_panic("HALT instruction encountered\n");
 
   if (CPL!=0) {
-    bx_printf("HLT(): CPL!=0\n");
+    genlog->info("HLT(): CPL!=0\n");
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
 
   if ( ! BX_CPU_THIS_PTR eflags.if_ ) {
     fprintf(stderr, "WARNING: HLT instruction with IF=0!\n");
-    bx_printf("WARNING: HLT instruction with IF=0!\n");
+    genlog->info("WARNING: HLT instruction with IF=0!\n");
     }
 
   // stops instruction execution and places the processor in a
@@ -112,7 +112,7 @@ BX_CPU_C::CLTS(BxInstruction_t *i)
 
   // #GP(0) if CPL is not 0
   if (CPL!=0) {
-    bx_printf("CLTS(): CPL!=0\n");
+    genlog->info("CLTS(): CPL!=0\n");
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
@@ -125,16 +125,16 @@ BX_CPU_C::CLTS(BxInstruction_t *i)
   void
 BX_CPU_C::INVD(BxInstruction_t *i)
 {
-  bx_printf("---------------\n");
-  bx_printf("- INVD called -\n");
-  bx_printf("---------------\n");
+  genlog->info("---------------\n");
+  genlog->info("- INVD called -\n");
+  genlog->info("---------------\n");
 
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      bx_printf("INVD: CPL!=0\n");
+      genlog->info("INVD: CPL!=0\n");
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -147,14 +147,14 @@ BX_CPU_C::INVD(BxInstruction_t *i)
   void
 BX_CPU_C::WBINVD(BxInstruction_t *i)
 {
-  bx_printf("WBINVD: (ignoring)\n");
+  genlog->info("WBINVD: (ignoring)\n");
 
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      bx_printf("WBINVD: CPL!=0\n");
+      genlog->info("WBINVD: CPL!=0\n");
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -195,7 +195,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
 
   val_32 = BX_READ_32BIT_REG(i->rm);
   if (bx_dbg.dreg)
-    bx_printf("MOV_DdRd: DR[%u]=%08xh unhandled\n",
+    genlog->info("MOV_DdRd: DR[%u]=%08xh unhandled\n",
       (unsigned) i->nnn, (unsigned) val_32);
 
   switch (i->nnn) {
@@ -219,7 +219,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 4
       if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
         // Debug extensions on
-        bx_printf("MOV_DdRd: access to DR4 causes #UD\n");
+        genlog->info("MOV_DdRd: access to DR4 causes #UD\n");
         UndefinedOpcode(i);
         }
 #endif
@@ -245,7 +245,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 4
       if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
         // Debug extensions (CR4.DE) on
-        bx_printf("MOV_DdRd: access to DR5 causes #UD\n");
+        genlog->info("MOV_DdRd: access to DR5 causes #UD\n");
         UndefinedOpcode(i);
         }
 #endif
@@ -304,7 +304,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
   Bit32u val_32;
 
   if (v8086_mode()) {
-    bx_printf("MOV_RdDd: v8086 mode causes #GP\n");
+    genlog->info("MOV_RdDd: v8086 mode causes #GP\n");
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
@@ -314,13 +314,13 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
     }
 
   if (protected_mode() && (CPL!=0)) {
-    bx_printf("MOV_RdDd: CPL!=0 causes #GP\n");
+    genlog->info("MOV_RdDd: CPL!=0 causes #GP\n");
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
 
   if (bx_dbg.dreg)
-    bx_printf("MOV_RdDd: DR%u not implemented yet\n", i->nnn);
+    genlog->info("MOV_RdDd: DR%u not implemented yet\n", i->nnn);
 
   switch (i->nnn) {
     case 0: // DR0
@@ -343,7 +343,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 4
       if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
         // Debug extensions on
-        bx_printf("MOV_RdDd: access to DR4 causes #UD\n");
+        genlog->info("MOV_RdDd: access to DR4 causes #UD\n");
         UndefinedOpcode(i);
         }
 #endif
@@ -357,7 +357,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 4
       if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4 & 0x00000008) ) {
         // Debug extensions on
-        bx_printf("MOV_RdDd: access to DR5 causes #UD\n");
+        genlog->info("MOV_RdDd: access to DR5 causes #UD\n");
         UndefinedOpcode(i);
         }
 #endif
@@ -386,7 +386,7 @@ BX_CPU_C::LMSW_Ew(BxInstruction_t *i)
 
   if ( protected_mode() ) {
     if ( CPL != 0 ) {
-      bx_printf("LMSW: CPL != 0, CPL=%u\n", (unsigned) CPL);
+      genlog->info("LMSW: CPL != 0, CPL=%u\n", (unsigned) CPL);
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -490,7 +490,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
 
   switch (i->nnn) {
     case 0: // CR0 (MSW)
-      // bx_printf("MOV_CdRd:CR0: R32 = %08x\n @CS:EIP %04x:%04x ",
+      // genlog->info("MOV_CdRd:CR0: R32 = %08x\n @CS:EIP %04x:%04x ",
       //   (unsigned) val_32,
       //   (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
       //   (unsigned) BX_CPU_THIS_PTR eip);
@@ -501,14 +501,14 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       bx_panic("MOV_CdRd: CR1 not implemented yet\n");
       break;
     case 2: /* CR2 */
-      bx_printf("MOV_CdRd: CR2 not implemented yet\n");
+      genlog->info("MOV_CdRd: CR2 not implemented yet\n");
       if (bx_dbg.creg)
-        bx_printf("MOV_CdRd: CR2 = reg\n");
+        genlog->info("MOV_CdRd: CR2 = reg\n");
       BX_CPU_THIS_PTR cr2 = val_32;
       break;
     case 3: // CR3
       if (bx_dbg.creg)
-        bx_printf("MOV_CdRd:(%08x)\n", (unsigned) val_32);
+        genlog->info("MOV_CdRd:(%08x)\n", (unsigned) val_32);
       // Reserved bits take on value of MOV instruction
       CR3_change(val_32);
       BX_INSTR_TLB_CNTRL(BX_INSTR_MOV_CR3, val_32);
@@ -522,7 +522,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
 
-      bx_printf("MOV_CdRd: ignoring write to CR4 of 0x%08x\n",
+      genlog->info("MOV_CdRd: ignoring write to CR4 of 0x%08x\n",
         val_32);
       if (val_32) {
         bx_panic("MOV_CdRd: (CR4) write of 0x%08x\n",
@@ -574,7 +574,7 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
     case 0: // CR0 (MSW)
       val_32 = BX_CPU_THIS_PTR cr0.val32;
 #if 0
-      bx_printf("MOV_RdCd:CR0: R32 = %08x\n @CS:EIP %04x:%04x\n",
+      genlog->info("MOV_RdCd:CR0: R32 = %08x\n @CS:EIP %04x:%04x\n",
         (unsigned) val_32,
         (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
         (unsigned) BX_CPU_THIS_PTR eip);
@@ -586,21 +586,21 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
       break;
     case 2: /* CR2 */
       if (bx_dbg.creg)
-        bx_printf("MOV_RdCd: CR2\n");
+        genlog->info("MOV_RdCd: CR2\n");
       val_32 = BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
       if (bx_dbg.creg)
-        bx_printf("MOV_RdCd: reading CR3\n");
+        genlog->info("MOV_RdCd: reading CR3\n");
       val_32 = BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL == 3
       val_32 = 0;
-      bx_printf("MOV_RdCd: read of CR4 causes #UD\n");
+      genlog->info("MOV_RdCd: read of CR4 causes #UD\n");
       UndefinedOpcode(i);
 #else
-      bx_printf("MOV_RdCd: read of CR4\n");
+      genlog->info("MOV_RdCd: read of CR4\n");
       val_32 = BX_CPU_THIS_PTR cr4;
 #endif
       break;
@@ -621,7 +621,7 @@ BX_CPU_C::MOV_TdRd(BxInstruction_t *i)
   bx_panic("MOV_TdRd:\n");
 #else
   // Pentium+ does not have TRx.  They were redesigned using the MSRs.
-  bx_printf("MOV_TdRd: causes #UD\n");
+  genlog->info("MOV_TdRd: causes #UD\n");
   UndefinedOpcode(i);
 #endif
 }
@@ -635,7 +635,7 @@ BX_CPU_C::MOV_RdTd(BxInstruction_t *i)
   bx_panic("MOV_RdTd:\n");
 #else
   // Pentium+ does not have TRx.  They were redesigned using the MSRs.
-  bx_printf("MOV_RdTd: causes #UD\n");
+  genlog->info("MOV_RdTd: causes #UD\n");
   UndefinedOpcode(i);
 #endif
 }
@@ -673,7 +673,7 @@ bx_panic("LOADALL: handle CR0.val32\n");
   BX_CPU_THIS_PTR cr0.em = (msw & 0x01); msw >>= 1;
   BX_CPU_THIS_PTR cr0.ts = (msw & 0x01);
 
-  //bx_printf("LOADALL: pe=%u, mp=%u, em=%u, ts=%u\n",
+  //genlog->info("LOADALL: pe=%u, mp=%u, em=%u, ts=%u\n",
   //  (unsigned) BX_CPU_THIS_PTR cr0.pe, (unsigned) BX_CPU_THIS_PTR cr0.mp,
   //  (unsigned) BX_CPU_THIS_PTR cr0.em, (unsigned) BX_CPU_THIS_PTR cr0.ts);
 
@@ -770,7 +770,7 @@ bx_panic("LOADALL: handle CR0.val32\n");
       bx_panic("loadall: ldtr.valid=0\n");
       }
     if (BX_CPU_THIS_PTR ldtr.cache.segment) { /* not a system segment */
-      bx_printf("         AR byte = %02x\n", (unsigned) access);
+      genlog->info("         AR byte = %02x\n", (unsigned) access);
       bx_panic("loadall: LDTR descriptor cache loaded with non system segment\n");
       }
     if ( BX_CPU_THIS_PTR ldtr.cache.type != 2 ) {
@@ -841,7 +841,7 @@ bx_panic("LOADALL: handle CR0.val32\n");
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cs_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = (cs_raw & 0x03); cs_raw >>= 2;
 
-  //bx_printf("LOADALL: setting cs.selector.rpl to %u\n",
+  //genlog->info("LOADALL: setting cs.selector.rpl to %u\n",
   //  (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl);
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (cs_raw & 0x01); cs_raw >>= 1;
@@ -889,17 +889,17 @@ bx_panic("LOADALL: handle CR0.val32\n");
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p          = (access & 0x01);
 
 #if 0
-    bx_printf("cs.dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl);
-    bx_printf("ss.dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl);
-    bx_printf("BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR ds.cache.dpl);
-    bx_printf("BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR es.cache.dpl);
-    bx_printf("LOADALL: setting cs.selector.rpl to %u\n",
+    genlog->info("cs.dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl);
+    genlog->info("ss.dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl);
+    genlog->info("BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR ds.cache.dpl);
+    genlog->info("BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].dpl = %02x\n", (unsigned) BX_CPU_THIS_PTR es.cache.dpl);
+    genlog->info("LOADALL: setting cs.selector.rpl to %u\n",
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl);
-    bx_printf("LOADALL: setting ss.selector.rpl to %u\n",
+    genlog->info("LOADALL: setting ss.selector.rpl to %u\n",
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl);
-    bx_printf("LOADALL: setting ds.selector.rpl to %u\n",
+    genlog->info("LOADALL: setting ds.selector.rpl to %u\n",
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl);
-    bx_printf("LOADALL: setting es.selector.rpl to %u\n",
+    genlog->info("LOADALL: setting es.selector.rpl to %u\n",
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl);
 #endif
 
@@ -953,7 +953,7 @@ bx_panic("LOADALL: handle CR0.val32\n");
 
 #if 0
   if (access)
-      bx_printf("LOADALL: GDTR access bits not 0 (%02x).\n",
+      genlog->info("LOADALL: GDTR access bits not 0 (%02x).\n",
         (unsigned) access);
 #endif
 
@@ -1099,7 +1099,7 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 #endif
 
   //if (BX_CPU_THIS_PTR cr0.ts)
-  //  bx_printf("MOV_CdRd:CR0.TS set 0x%x\n", (unsigned) val_32);
+  //  genlog->info("MOV_CdRd:CR0.TS set 0x%x\n", (unsigned) val_32);
 
   if (prev_pe==0 && BX_CPU_THIS_PTR cr0.pe) {
     enter_protected_mode();

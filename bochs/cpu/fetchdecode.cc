@@ -1867,7 +1867,7 @@ modrm_done:
           }
         break;
       default:
-bx_printf("b1 was %x\n", b1);
+genlog->info("b1 was %x\n", b1);
         bx_panic("fetchdecode: imm_mode = %u\n", imm_mode);
       }
     }
@@ -1884,10 +1884,10 @@ bx_printf("b1 was %x\n", b1);
 BxError(BxInstruction_t *i)
 {
   // extern void dump_core();
-  bx_printf("BxError: instruction with op1=0x%x\n", i->b1);
-  bx_printf("nnn was %u\n", i->nnn);
+  genlog->info("BxError: instruction with op1=0x%x\n", i->b1);
+  genlog->info("nnn was %u\n", i->nnn);
 
-  bx_printf("WARNING: Encountered an unknown instruction (signalling illegal instruction):\n");
+  genlog->info("WARNING: Encountered an unknown instruction (signalling illegal instruction):\n");
   // dump_core();
 
   BX_CPU_THIS_PTR UndefinedOpcode(i);

@@ -314,10 +314,10 @@ process_sim2:
 
 
   if (bx_debug_rc_fname[0] == '\0') {
-    fprintf(stderr, "%s: Warning: no rc file specified.\n", argv[0]);
+    genlog->info("Warning: no rc file specified.\n", argv[0]);
     }
   else {
-    fprintf(stderr, "%s: using rc file '%s'.\n", argv[0], bx_debug_rc_fname);
+    genlog->info("%s: using rc file '%s'.\n", argv[0], bx_debug_rc_fname);
     // if there's an error, the user will know about it before proceeding
     (void) bx_nest_infile(bx_debug_rc_fname);
     }
@@ -370,7 +370,7 @@ process_sim2:
   void
 bx_dbg_usage(void)
 {
-  fprintf(stderr, "usage: %s [-rc path] [-sim1 ... ] [-sim2 ... ]\n", argv0);
+  genlog->info("usage: %s [-rc path] [-sim1 ... ] [-sim2 ... ]\n", argv0);
 }
 
 
@@ -2344,7 +2344,7 @@ bx_dbg_dump_cpu_command(void)
 
 #if BX_PCI_SUPPORT
   if (bx_options.i440FXSupport) {
-    bx_devices.pci->print_i440fx_state(stderr);
+    bx_devices.pci->print_i440fx_state();
     }
 #endif
 

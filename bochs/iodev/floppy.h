@@ -44,7 +44,7 @@ typedef struct {
   unsigned type;
   } floppy_t;
 
-class bx_floppy_ctrl_c {
+class bx_floppy_ctrl_c : logfunctions {
 public:
 
   bx_floppy_ctrl_c(void);

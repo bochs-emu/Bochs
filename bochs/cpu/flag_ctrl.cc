@@ -70,7 +70,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if (CPL > IOPL) {
-      //bx_printf("CLI: CPL > IOPL\n"); /* ??? */
+      //genlog->info("CLI: CPL > IOPL\n"); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -78,7 +78,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode()) {
     if (IOPL != 3) {
-      //bx_printf("CLI: IOPL != 3\n"); /* ??? */
+      //genlog->info("CLI: IOPL != 3\n"); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -95,7 +95,7 @@ BX_CPU_C::STI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if (CPL > IOPL) {
-      //bx_printf("STI: CPL > IOPL\n"); /* ??? */
+      //genlog->info("STI: CPL > IOPL\n"); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -103,7 +103,7 @@ BX_CPU_C::STI(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode()) {
     if (IOPL != 3) {
-      //bx_printf("STI: IOPL != 3\n"); /* ??? */
+      //genlog->info("STI: IOPL != 3\n"); /* ??? */
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -163,7 +163,7 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 3
   if (v8086_mode()) {
     if (IOPL < 3) {
-      //bx_printf("popf_fv: IOPL < 3\n");
+      //genlog->info("popf_fv: IOPL < 3\n");
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }

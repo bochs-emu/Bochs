@@ -107,7 +107,7 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
 #endif
     case 0x03df:
 	  retval = 0xffffffff;
-      /* bx_printf("unsupported IO read from port %04x (CGA)\n", address);*/
+      /* genlog->info("unsupported IO read from port %04x (CGA)\n", address);*/
       break;
     case 0x023a:
     case 0x02f8: /* UART */
@@ -130,7 +130,7 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
     case 0x03fd: /* UART */
     case 0x17c6:
 	  retval = 0xffffffff;
-      /* bx_printf("unsupported IO read from port %04x\n", address); */
+      /* genlog->info("unsupported IO read from port %04x\n", address); */
       break;
     default:
 	  retval = 0xffffffff;
@@ -141,17 +141,17 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
 	  switch (io_len) {
 	  case 1:
 		  retval = (Bit8u)retval;
-		  bx_printf("unmapped: 8-bit read from %04x = %02x\n", address, retval);
+		  genlog->info("unmapped: 8-bit read from %04x = %02x\n", address, retval);
 		  break;
 	  case 2:
 		  retval = (Bit16u)retval;
-		  bx_printf("unmapped: 16-bit read from %04x = %04x\n", address, retval);
+		  genlog->info("unmapped: 16-bit read from %04x = %04x\n", address, retval);
 		  break;
 	  case 4:
-		  bx_printf("unmapped: 32-bit read from %04x = %08x\n", address, retval);
+		  genlog->info("unmapped: 32-bit read from %04x = %08x\n", address, retval);
 		  break;
 	  default:
-		  bx_printf("unmapped: ??-bit read from %04x = %x\n", address, retval);
+		  genlog->info("unmapped: ??-bit read from %04x = %x\n", address, retval);
 	  }
   return retval;
 }
@@ -190,7 +190,7 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x80: // diagnostic test port to display progress of POST
-      //bx_printf("Diagnostic port 80h: write = %02xh\n", (unsigned) value);
+      //genlog->info("Diagnostic port 80h: write = %02xh\n", (unsigned) value);
       BX_UM_THIS s.port80 = value;
       break;
 
@@ -229,7 +229,7 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3eb:
     case 0x3ec:
     case 0x3ed:
-	    // bx_printf("unsupported IO write to port %04x of %02x\n",
+	    // genlog->info("unsupported IO write to port %04x of %02x\n",
 	    // address, value);
       break;
     case 0xfedc:
@@ -244,12 +244,12 @@ fprintf(stderr, "# DEBUGGER = %u\n", (unsigned) bx_dbg.debugger);
       if ( BX_UM_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
         BX_UM_THIS s.bios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        bx_printf("BIOS message: %s\n", BX_UM_THIS s.bios_message);
+        genlog->info("BIOS message: %s", BX_UM_THIS s.bios_message);
         }
       else if ((value & 0xff) == '\n') {
         BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i ] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        bx_printf("BIOS message: %s\n", BX_UM_THIS s.bios_message);
+        genlog->info("BIOS message: %s", BX_UM_THIS s.bios_message);
         }
       break;
 
@@ -260,16 +260,16 @@ fprintf(stderr, "# DEBUGGER = %u\n", (unsigned) bx_dbg.debugger);
   if (bx_dbg.unsupported_io)
 	  switch (io_len) {
 	  case 1:
-		  bx_printf("unmapped: 8-bit write to %04x = %02x\n", address, value);
+		  genlog->info("unmapped: 8-bit write to %04x = %02x\n", address, value);
 		  break;
 	  case 2:
-		  bx_printf("unmapped: 16-bit write to %04x = %04x\n", address, value);
+		  genlog->info("unmapped: 16-bit write to %04x = %04x\n", address, value);
 		  break;
 	  case 4:
-		  bx_printf("unmapped: 32-bit write to %04x = %08x\n", address, value);
+		  genlog->info("unmapped: 32-bit write to %04x = %08x\n", address, value);
 		  break;
 	  default:
-		  bx_printf("unmapped: ??-bit write to %04x = %x\n", address, value);
+		  genlog->info("unmapped: ??-bit write to %04x = %x\n", address, value);
 		  break;
 	  }
 }

@@ -57,7 +57,7 @@ BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
 
     /* ??? */
     if ( (op1_32 < bound_min) || (op1_32 > bound_max) ) {
-      bx_printf("BOUND: fails bounds test\n");
+      genlog->info("BOUND: fails bounds test\n");
       exception(5, 0, 0);
       }
     }
@@ -72,7 +72,7 @@ BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
 
     /* ??? */
     if ( (op1_16 < bound_min) || (op1_16 > bound_max) ) {
-      bx_printf("BOUND: fails bounds test\n");
+      genlog->info("BOUND: fails bounds test\n");
       exception(5, 0, 0);
       }
     }
@@ -125,7 +125,7 @@ BX_CPU_C::INT_Ib(BxInstruction_t *i)
   imm8 = i->Ib;
 
   if (v8086_mode() && (IOPL<3)) {
-    //bx_printf("int_ib: v8086: IOPL<3\n");
+    //genlog->info("int_ib: v8086: IOPL<3\n");
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
@@ -133,7 +133,7 @@ BX_CPU_C::INT_Ib(BxInstruction_t *i)
 if ( (imm8 == 0x21) && (AH == 0x4c) ) {
   fprintf(stderr, "#(%u) INT 21/4C called AL=0x%02x, BX=0x%04x\n", BX_SIM_ID,
           (unsigned) AL, (unsigned) BX);
-  bx_printf("INT 21/4C called AL=0x%02x, BX=0x%04x\n", (unsigned) AL, (unsigned) BX);
+  genlog->info("INT 21/4C called AL=0x%02x, BX=0x%04x\n", (unsigned) AL, (unsigned) BX);
   }
 #endif
 

@@ -324,7 +324,7 @@ BX_CPU_C::ENTER_IwIb(BxInstruction_t *i)
 /* ??? */
 if (level) bx_panic("enter(): level > 0\n");
 //if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os_32==0) {
-//  bx_printf("enter(): stacksize!=opsize: I'm unsure of the code for this\n");
+//  genlog->info("enter(): stacksize!=opsize: I'm unsure of the code for this\n");
 //  bx_panic("         The Intel manuals are a mess on this one!\n");
 //  }
 

@@ -315,7 +315,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 BX_CPU_C::enable_paging(void)
 {
   TLB_flush();
-  if (bx_dbg.paging) bx_printf("enable_paging():\n");
+  if (bx_dbg.paging) genlog->info("enable_paging():\n");
 //fprintf(stderr, "#(%u)enable_paging():-------------------------\n", BX_SIM_ID);
 }
 
@@ -323,15 +323,15 @@ BX_CPU_C::enable_paging(void)
 BX_CPU_C::disable_paging(void)
 {
   TLB_flush();
-  if (bx_dbg.paging) bx_printf("disable_paging():\n");
+  if (bx_dbg.paging) genlog->info("disable_paging():\n");
 }
 
   void
 BX_CPU_C::CR3_change(Bit32u value32)
 {
   if (bx_dbg.paging) {
-    bx_printf("CR3_change(): flush TLB cache\n");
-    bx_printf("Page Directory Base %08x\n", (unsigned) value32);
+    genlog->info("CR3_change(): flush TLB cache\n");
+    genlog->info("Page Directory Base %08x\n", (unsigned) value32);
     }
 
   // flush TLB even if value does not change
@@ -419,7 +419,7 @@ BX_CPU_C::INVLPG(BxInstruction_t* i)
 
   // Operand must not be a register
   if (i->mod == 0xc0) {
-    bx_printf("INVLPG: op is a register");
+    genlog->info("INVLPG: op is a register");
     UndefinedOpcode(i);
     }
   // Can not be executed in v8086 mode
@@ -429,7 +429,7 @@ BX_CPU_C::INVLPG(BxInstruction_t* i)
   // Protected instruction: CPL0 only
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      bx_printf("INVLPG: CPL!=0\n");
+      genlog->info("INVLPG: CPL!=0\n");
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -924,8 +924,8 @@ BX_CPU_C::disable_paging(void)
   void
 BX_CPU_C::CR3_change(Bit32u value32)
 {
-  bx_printf("CR3_change(): flush TLB cache\n");
-  bx_printf("Page Directory Base %08x\n", (unsigned) value32);
+  genlog->info("CR3_change(): flush TLB cache\n");
+  genlog->info("Page Directory Base %08x\n", (unsigned) value32);
 }
 
 

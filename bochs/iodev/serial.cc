@@ -112,11 +112,11 @@ bx_serial_c::init(bx_devices_c *d)
 #if defined (USE_TTY_HACK)
   tty_id = tty_alloc("Bx Serial Console, Your Window to the 8250");
   if (tty_id > 0)
-    bx_printf("TTY Allocated fd = %d\n", tty_get_fd(tty_id));
+    genlog->info("TTY Allocated fd = %d\n", tty_get_fd(tty_id));
   else
-    bx_printf("TTY allocation failed\n");
+    genlog->info("TTY allocation failed\n");
 #else
-  bx_printf("TTY not used, serial port is not connected\n");
+  genlog->info("TTY not used, serial port is not connected\n");
 #endif
 
   /*
@@ -240,7 +240,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
              (unsigned) io_len);
 
   if (bx_dbg.serial)
-    bx_printf("serial register read from address 0x%x - ",
+    genlog->info("serial register read from address 0x%x - ",
 	      (unsigned) address);
 
   switch (address) {
@@ -352,7 +352,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
   }
 
   if (bx_dbg.serial)
-    bx_printf("val =  0x%x\n",
+    genlog->info("val =  0x%x\n",
 	      (unsigned) val);
 
   return(val);
@@ -385,7 +385,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
              (unsigned) address, (unsigned) io_len);
 
   if (bx_dbg.serial)
-    bx_printf("serial: write to address: 0x%x = 0x%x\n",
+    genlog->info("serial: write to address: 0x%x = 0x%x\n",
 	      (unsigned) address, (unsigned) value);
 
   switch (address) {
@@ -418,7 +418,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		 (int) (1000000.0 / (BX_SER_THIS s[0].baudrate / 8)),
 				      0); /* not continuous */
 	} else {
-	  bx_printf("serial: write to tx hold register when not empty\n");
+	  genlog->info("serial: write to tx hold register when not empty\n");
 	}
       }
       break;
@@ -495,7 +495,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 				      0); /* not continuous */
 	}
 	if (bx_dbg.serial) {
-	  bx_printf("serial: baud rate set - %d\n", BX_SER_THIS s[0].baudrate);
+	  genlog->info("serial: baud rate set - %d\n", BX_SER_THIS s[0].baudrate);
 	}
       }
       BX_SER_THIS s[0].line_cntl.dlab = (value & 0x80) >> 7;
@@ -640,7 +640,7 @@ bx_serial_c::rx_timer(void)
     if ((rdy = BX_SER_THIS raw->ready_receive())) {
       data = BX_SER_THIS raw->receive();
       if (data == C_BREAK) {
-	    bx_printf("[serial] Got BREAK\n");
+	    genlog->info("[serial] Got BREAK\n");
 	    BX_SER_THIS s[0].line_status.break_int = 1;
 	    rdy = 0;
       }

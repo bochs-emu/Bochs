@@ -133,7 +133,7 @@ BX_CPU_C::LAR_GvEw(BxInstruction_t *i)
 
   if (descriptor.valid==0) {
     set_ZF(0);
-    //bx_printf("lar(): descriptor valid bit cleared\n");
+    //genlog->info("lar(): descriptor valid bit cleared\n");
     return;
     }
 
@@ -177,7 +177,7 @@ BX_CPU_C::LAR_GvEw(BxInstruction_t *i)
         break;
       default: /* rest not accepted types to LAR */
         set_ZF(0);
-        bx_printf("lar(): not accepted type\n");
+        genlog->info("lar(): not accepted type\n");
         return;
         break;
       }
@@ -394,7 +394,7 @@ BX_CPU_C::LLDT_Ew(BxInstruction_t *i)
 
     // #GP(selector) if the selector operand does not point into GDT
     if (selector.ti != 0) {
-      bx_printf("LLDT: selector.ti != 0\n");
+      genlog->info("LLDT: selector.ti != 0\n");
       exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
       }
 
@@ -415,18 +415,18 @@ BX_CPU_C::LLDT_Ew(BxInstruction_t *i)
     if ( (descriptor.valid==0) ||
         descriptor.segment  ||
         (descriptor.type!=2) ) {
-      bx_printf("lldt: doesn't point to an LDT descriptor!\n");
+      genlog->info("lldt: doesn't point to an LDT descriptor!\n");
       exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
       }
 
     /* #NP(selector) if LDT descriptor is not present */
     if (descriptor.p==0) {
-      bx_printf("lldt: LDT descriptor not present!\n");
+      genlog->info("lldt: LDT descriptor not present!\n");
       exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
       }
 
     if (descriptor.u.ldt.limit < 7) {
-      bx_printf("lldt: ldtr.limit < 7\n");
+      genlog->info("lldt: ldtr.limit < 7\n");
       }
 
     BX_CPU_THIS_PTR ldtr.selector = selector;
@@ -563,7 +563,7 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
   /* if selector null, clear ZF and done */
   if ( (raw_selector & 0xfffc) == 0 ) {
     set_ZF(0);
-    bx_printf("VERR: null selector\n");
+    genlog->info("VERR: null selector\n");
     return;
     }
 
@@ -575,7 +575,7 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
   if ( !fetch_raw_descriptor2(&selector, &dword1, &dword2) ) {
     /* not within descriptor table */
     set_ZF(0);
-    bx_printf("VERR: not in table\n");
+    genlog->info("VERR: not in table\n");
     return;
     }
 
@@ -583,13 +583,13 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
 
   if ( descriptor.segment==0 ) { /* system or gate descriptor */
     set_ZF(0); /* inaccessible */
-    bx_printf("VERR: system descriptor\n");
+    genlog->info("VERR: system descriptor\n");
     return;
     }
 
   if ( descriptor.valid==0 ) {
     set_ZF(0);
-    bx_printf("VERR: valid bit cleared\n");
+    genlog->info("VERR: valid bit cleared\n");
     return;
     }
 
@@ -599,32 +599,32 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
     if ( descriptor.u.segment.c_ed &&
          descriptor.u.segment.r_w) {
       set_ZF(1); /* accessible */
-      bx_printf("VERR: conforming code, OK\n");
+      genlog->info("VERR: conforming code, OK\n");
       return;
       }
     if ( descriptor.u.segment.r_w==0 ) {
       set_ZF(0); /* inaccessible */
-      bx_printf("VERR: code not readable\n");
+      genlog->info("VERR: code not readable\n");
       return;
       }
     /* readable, non-conforming code segment */
     if ( (descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl) ) {
       set_ZF(0); /* inaccessible */
-      bx_printf("VERR: non-coforming code not withing priv level\n");
+      genlog->info("VERR: non-coforming code not withing priv level\n");
       return;
       }
     set_ZF(1); /* accessible */
-    bx_printf("VERR: code seg readable\n");
+    genlog->info("VERR: code seg readable\n");
     return;
     }
   else { /* data segment */
     if ( (descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl) ) {
       set_ZF(0); /* not accessible */
-      bx_printf("VERR: data seg not withing priv level\n");
+      genlog->info("VERR: data seg not withing priv level\n");
       return;
       }
     set_ZF(1); /* accessible */
-    bx_printf("VERR: data segment OK\n");
+    genlog->info("VERR: data segment OK\n");
     return;
     }
 }
@@ -658,7 +658,7 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
   /* if selector null, clear ZF and done */
   if ( (raw_selector & 0xfffc) == 0 ) {
     set_ZF(0);
-    bx_printf("VERW: null selector\n");
+    genlog->info("VERW: null selector\n");
     return;
     }
 
@@ -670,7 +670,7 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
   if ( !fetch_raw_descriptor2(&selector, &dword1, &dword2) ) {
     /* not within descriptor table */
     set_ZF(0);
-    bx_printf("VERW: not in table\n");
+    genlog->info("VERW: not in table\n");
     return;
     }
 
@@ -679,13 +679,13 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
   /* rule out system segments & code segments */
   if ( descriptor.segment==0 || descriptor.u.segment.executable ) {
     set_ZF(0);
-    bx_printf("VERW: system seg or code\n");
+    genlog->info("VERW: system seg or code\n");
     return;
     }
 
   if ( descriptor.valid==0 ) {
     set_ZF(0);
-    bx_printf("VERW: valid bit cleared\n");
+    genlog->info("VERW: valid bit cleared\n");
     return;
     }
 
@@ -693,16 +693,16 @@ BX_CPU_C::VERW_Ew(BxInstruction_t *i)
   if ( descriptor.u.segment.r_w ) { /* writable */
     if ( (descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl) ) {
       set_ZF(0); /* not accessible */
-      bx_printf("VERW: writable data seg not within priv level\n");
+      genlog->info("VERW: writable data seg not within priv level\n");
       return;
       }
     set_ZF(1); /* accessible */
-    bx_printf("VERW: data seg writable\n");
+    genlog->info("VERW: data seg writable\n");
     return;
     }
 
   set_ZF(0); /* not accessible */
-  bx_printf("VERW: data seg not writable\n");
+  genlog->info("VERW: data seg not writable\n");
   return;
 }
 

@@ -40,7 +40,7 @@ BX_CPU_C::LES_GvMp(BxInstruction_t *i)
 {
   if (i->mod == 0xc0) {
     // (BW) NT seems to use this when booting.
-    bx_printf("invalid use of LES, must use memory reference!\n");
+    genlog->info("invalid use of LES, must use memory reference!\n");
     UndefinedOpcode(i);
     }
 

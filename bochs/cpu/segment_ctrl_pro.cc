@@ -95,12 +95,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
         }
       else { /* LDT */
         if (BX_CPU_THIS_PTR ldtr.cache.valid==0) { /* ??? */
-          bx_printf("load_seg_reg: LDT invalid\n");
+          genlog->info("load_seg_reg: LDT invalid\n");
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
         if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
-          bx_printf("load_seg_reg ss: LDT: index > limit\n");
+          genlog->info("load_seg_reg ss: LDT: index > limit\n");
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
@@ -112,7 +112,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       /* selector's RPL must = CPL, else #GP(selector) */
       if (rpl != CPL) {
-        bx_printf("load_seg_reg(): rpl != CPL\n");
+        genlog->info("load_seg_reg(): rpl != CPL\n");
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -120,7 +120,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       parse_descriptor(dword1, dword2, &descriptor);
 
       if (descriptor.valid==0) {
-        bx_printf("load_seg_reg(): valid bit cleared\n");
+        genlog->info("load_seg_reg(): valid bit cleared\n");
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -129,19 +129,19 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if ( (descriptor.segment==0) ||
            descriptor.u.segment.executable ||
            descriptor.u.segment.r_w==0 ) {
-        bx_printf("load_seg_reg(): not writable data segment\n");
+        genlog->info("load_seg_reg(): not writable data segment\n");
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         }
 
       /* DPL in the AR byte must equal CPL else #GP(selector) */
       if (descriptor.dpl != CPL) {
-        bx_printf("load_seg_reg(): dpl != CPL\n");
+        genlog->info("load_seg_reg(): dpl != CPL\n");
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         }
 
       /* segment must be marked PRESENT else #SS(selector) */
       if (descriptor.p == 0) {
-        bx_printf("load_seg_reg(): not present\n");
+        genlog->info("load_seg_reg(): not present\n");
         exception(BX_SS_EXCEPTION, new_value & 0xfffc, 0);
         }
 
@@ -197,7 +197,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       if (ti == 0) { /* GDT */
         if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
-          bx_printf("load_seg_reg: GDT: %s: index(%04x) > limit(%06x)\n",
+          genlog->info("load_seg_reg: GDT: %s: index(%04x) > limit(%06x)\n",
             BX_CPU_THIS_PTR strseg(seg), (unsigned) index, (unsigned) BX_CPU_THIS_PTR gdtr.limit);
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
@@ -209,12 +209,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
         }
       else { /* LDT */
         if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-          bx_printf("load_seg_reg: LDT invalid\n");
+          genlog->info("load_seg_reg: LDT invalid\n");
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
         if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
-          bx_printf("load_seg_reg ds,es: LDT: index > limit\n");
+          genlog->info("load_seg_reg ds,es: LDT: index > limit\n");
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
@@ -227,7 +227,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       parse_descriptor(dword1, dword2, &descriptor);
 
       if (descriptor.valid==0) {
-        bx_printf("load_seg_reg(): valid bit cleared\n");
+        genlog->info("load_seg_reg(): valid bit cleared\n");
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -236,7 +236,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if ( descriptor.segment==0 ||
            (descriptor.u.segment.executable==1 &&
             descriptor.u.segment.r_w==0) ) {
-        bx_printf("load_seg_reg(): not data or readable code\n");
+        genlog->info("load_seg_reg(): not data or readable code\n");
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -246,7 +246,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if ( descriptor.u.segment.executable==0 ||
            descriptor.u.segment.c_ed==0 ) {
         if ((rpl > descriptor.dpl) || (CPL > descriptor.dpl)) {
-          bx_printf("load_seg_reg: RPL & CPL must be <= DPL\n");
+          genlog->info("load_seg_reg: RPL & CPL must be <= DPL\n");
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
           return;
           }
@@ -254,7 +254,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       /* segment must be marked PRESENT else #NP(selector) */
       if (descriptor.p == 0) {
-        bx_printf("load_seg_reg: segment not present\n");
+        genlog->info("load_seg_reg: segment not present\n");
         exception(BX_NP_EXCEPTION, new_value & 0xfffc, 0);
         return;
         }
@@ -516,12 +516,12 @@ BX_CPU_C::fetch_raw_descriptor(bx_selector_t *selector,
 {
   if (selector->ti == 0) { /* GDT */
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
-bx_printf("-----------------------------------\n");
-bx_printf("selector->index*8 + 7 = %u\n", (unsigned) selector->index*8 + 7);
-bx_printf("gdtr.limit = %u\n", (unsigned) BX_CPU_THIS_PTR gdtr.limit);
-      bx_printf("fetch_raw_descriptor: GDT: index > limit\n");
+genlog->info("-----------------------------------\n");
+genlog->info("selector->index*8 + 7 = %u\n", (unsigned) selector->index*8 + 7);
+genlog->info("gdtr.limit = %u\n", (unsigned) BX_CPU_THIS_PTR gdtr.limit);
+      genlog->info("fetch_raw_descriptor: GDT: index > limit\n");
 debug(BX_CPU_THIS_PTR prev_eip);
-bx_printf("-----------------------------------\n");
+genlog->info("-----------------------------------\n");
       exception(exception_no, selector->value & 0xfffc, 0);
       return;
       }

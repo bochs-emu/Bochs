@@ -40,10 +40,13 @@ bx_pci_c bx_pci;
 
 bx_pci_c::bx_pci_c(void)
 {
+	setio(io);
+	setprefix("[PCI ]", __FILE__, __LINE__);
 }
 
 bx_pci_c::~bx_pci_c(void)
 {
+	this->info("pci signing off\n");
 }
 
 
@@ -118,7 +121,7 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
         default:
           retMask = 0xFFFFFFFF; break;
         }
-      bx_printf("440FX IO read from port: %04x, len: %02x, data: %04x\n",
+      genlog->info("440FX IO read from port: %04x, len: %02x, data: %04x\n",
                 address, io_len, (val440fx & retMask));
       return (val440fx & retMask);
       }
@@ -152,7 +155,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0xCF8:
       BX_PCI_THIS s.i440fx.confAddr = value;
-      bx_printf("440FX IO write to port %04x of %04x, len %02x \n",
+      genlog->info("440FX IO write to port %04x of %04x, len %02x \n",
                 address, value, io_len);
       break;
 
@@ -173,7 +176,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | (value & dMask);
-        bx_printf("440FX IO write to port %04x of %04x, len %02x \n",
+        genlog->info("440FX IO write to port %04x of %04x, len %02x \n",
                   address, value, io_len);
         }
      }
@@ -194,7 +197,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 8) & dMask);
-        bx_printf("440FX IO write to port %04x of %04x, len %02x \n",
+        genlog->info("440FX IO write to port %04x of %04x, len %02x \n",
                   address, value, io_len);
         }
      }
@@ -215,7 +218,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 16) & dMask);
-        bx_printf("440FX IO write to port %04x of %04x, len %02x \n",
+        genlog->info("440FX IO write to port %04x of %04x, len %02x \n",
                   address, value, io_len);
         }
      }
@@ -234,7 +237,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_PCI_THIS s.i440fx.confAddr & 0x80000000) {
         idx = (BX_PCI_THIS s.i440fx.confAddr & 0xFC);
         BX_PCI_THIS s.i440fx.array[idx] = (BX_PCI_THIS s.i440fx.array[idx] & ~dMask) | ((value << 24) & dMask);
-        bx_printf("440FX IO write to port %04x of %04x, len %02x \n",
+        genlog->info("440FX IO write to port %04x of %04x, len %02x \n",
                   address, value, io_len);
         }
      }
@@ -368,22 +371,22 @@ bx_pci_c::wr_memType (Bit32u addr)
 }
 
   void
-bx_pci_c::print_i440fx_state( FILE *fd )
+bx_pci_c::print_i440fx_state()
 {
 #ifdef DUMP_FULL_I440FX
   int  i;
 #endif /* DUMP_FULL_I440FX */
 
-  fprintf( fd, "i440fxConfAddr:0x%x\n", BX_PCI_THIS s.i440fx.confAddr );
-  fprintf( fd, "i440fxConfData:0x%x\n", BX_PCI_THIS s.i440fx.confData );
+  this->info( "i440fxConfAddr:0x%x\n", BX_PCI_THIS s.i440fx.confAddr );
+  this->info( "i440fxConfData:0x%x\n", BX_PCI_THIS s.i440fx.confData );
 
 #ifdef DUMP_FULL_I440FX
   for (i=0; i<256; i++) {
-    fprintf( fd, "i440fxArray%02x:0x%x\n", i, BX_PCI_THIS s.i440fx.array[i] );
+    info( "i440fxArray%02x:0x%x\n", i, BX_PCI_THIS s.i440fx.array[i] );
     }
 #else /* DUMP_FULL_I440FX */
-  fprintf( fd, "i440fxArray58:0x%x\n", BX_PCI_THIS s.i440fx.array[0x58] );
-  fprintf( fd, "i440fxArray5c:0x%x\n", BX_PCI_THIS s.i440fx.array[0x5c] );
+  this->info( "i440fxArray58:0x%x\n", BX_PCI_THIS s.i440fx.array[0x58] );
+  this->info( "i440fxArray5c:0x%x\n", BX_PCI_THIS s.i440fx.array[0x5c] );
 #endif /* DUMP_FULL_I440FX */
 }
 

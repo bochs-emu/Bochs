@@ -202,6 +202,81 @@ extern Bit8u DTPageDirty[];
 #  define BX_DYN_DIRTY_PAGE(page)
 #endif
 
+#define MAGIC_LOGNUM 0x12345678
+
+class iofunctions {
+
+	int showtick,magic;
+	FILE *logfd;
+	void init(void);
+	void flush(void);
+	char *getlevel(int i) {
+		static char *loglevel[] = {
+			"DEBUG",
+			"INFO",
+			"PANIC",
+			"ERROR",
+		};
+		return loglevel[i];
+	}
+// Log Level defines
+#define DEBUG 0
+#define INFO  1
+#define PANIC 2
+#define ERROR 3
+	char *getclass(int i) {
+		char *logclass[] = {
+			"IO ",
+			"FD ",
+			"GEN",
+		};
+		return logclass[i];
+	}
+
+// Log Class defines
+#define IOLOG 0
+#define FDLOG 1
+#define GENLOG 2
+
+
+public:
+	iofunctions(void);
+	iofunctions(FILE *);
+	iofunctions(int);
+	iofunctions(char *);
+	~iofunctions(void);
+
+	FILE *out(int facility,int level,char *pre, char *fmt, ...);
+
+	void init_log(char *fn);
+	void init_log(int fd);
+	void init_log(FILE *fs);
+protected:
+	// FILE *logfd;
+	char *logfn;
+	//int showtick;
+};
+
+typedef class iofunctions iofunc_t;
+
+typedef class logfunctions {
+	char *prefix;
+	int type;
+	iofunc_t *logio;
+public:
+	logfunctions(void);
+
+	void info(char *fmt, ...);
+	void error(char *fmt, ...);
+	void panic(char *fmt, ...);
+	void ldebug(char *fmt, ...);
+	void setprefix(char *, char *, int );
+	void settype(int);
+	void setio(iofunc_t *);
+} logfunc_t;
+
+extern iofunc_t *io;
+extern logfunc_t *genlog;
 
 #include "state_file.h"
 
@@ -261,7 +336,6 @@ typedef struct {
   } bx_debug_t;
 
 void bx_signal_handler (int signum);
-void bx_printf(char *fmt, ...);
 void bx_panic(char *fmt, ...);
 void bx_atexit(void);
 extern bx_debug_t bx_dbg;
