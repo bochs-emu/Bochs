@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.159 2005-01-08 19:55:54 vruppert Exp $
+$Id: user.dbk,v 1.160 2005-02-13 19:28:41 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1312,7 +1312,10 @@ DLX Linux screenshot.
 <row><entry>dlxlinux/hd10meg.img </entry> <entry> disk image file (10 meg) </entry> </row>
 <row><entry>dlxlinux\start.bat </entry> <entry> Run this BAT file to try out DLX Linux inside Bochs! </entry> </row>
 <row><entry>dlxlinux\testform.txt </entry> <entry> Form for reporting success or failure </entry> </row>
-<row><entry>doc\index.html </entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
+<row>
+  <entry>doc\index.html</entry>
+  <entry>a local copy of all Bochs documentation (<ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">online copy</ulink>)</entry>
+</row>
 <row><entry>keymaps\*.map </entry> <entry>keymap tables (on Windows used for the paste feature only) </entry> </row>
 </tbody>
 </tgroup>
@@ -1790,7 +1793,7 @@ and use them all, by configuring with --with-all-libs.
 <note>
 <para>
 The concept of platform detection and default GUIs was added in Bochs 1.4.
-In Bochs 1.3 and before, the X11 gui was always the default.
+In Bochs 1.3 and before, the X11 GUI was always the default.
 </para>
 </note>
 
@@ -1921,11 +1924,9 @@ In Bochs 1.3 and before, the X11 gui was always the default.
     </row>
     <row>
       <entry>--with-wx</entry>
-      <entry>wxWidgets is a cross-platform C++ user interface library which
-      you can download for free at <ulink url="http://wxwidgets.org/">wxwidgets.org</ulink>.  The wxWidgets
-      port of Bochs provides both a graphical configuration interface (for
-      editing bochsrc options) and a display.  It was written by Bryce Denney,
-      Don Becker, Dave Poirier, and Volker Ruppert.
+      <entry>
+        Enable support for wxWidgets configuration and display interface;
+        see <xref linkend="compile-wx">.
       </entry>
     </row>
     <row>
@@ -2025,12 +2026,12 @@ turn it off.
       <entry>--enable-config-interface</entry>
       <entry>yes</entry>
       <entry>
-      Enables configuration menus when you first start Bochs.  The menus let
-      you read in a bochsrc file, edit some options, and save the new bochsrc
-      before starting the simulation.  Also enables a runtime menu which lets
-      you change certain settings during simulation.  See the config_interface
-      option in bochsrc for how to select between the text interface and
-      wxWidgets.
+      Enable configuration menus when you first start Bochs. The menus let you
+      read in a <filename>bochsrc</filename> file, edit some options, and save
+      the new <filename>bochsrc</filename> before starting the simulation. Also
+      enables a runtime menu which lets you change certain settings during
+      simulation. See the <link linkend="bochsopt-configinterface">config_interface option</link>
+      for how to select between the text interface and wxWidgets.
       </entry>
     </row>
     <row>
@@ -2068,19 +2069,28 @@ turn it off.
       </entry>
     </row>
     <row>
+      <entry>--enable-pnic</entry>
+      <entry>no</entry>
+      <entry>Enable PCI pseudo NIC (network card) support.</entry>
+    </row>
+    <row>
       <entry>--enable-vbe</entry>
-      <entry>yes</entry>
+      <entry>no</entry>
       <entry>Use VGA BIOS Extensions (VBE) by Jeroen Janssen.  To take
       advantage of the VBE, you must tell Bochs to use the LGPL'd VGA BIOS
-      version 0.4c or higher in the vgaromimage line of your bochsrc file.
+      version 0.4c or higher as <link linkend="bochsopt-vgaromimage">vgaromimage option</link> in your <filename>bochsrc</filename> file.
       </entry>
+    </row>
+    <row>
+      <entry>--enable-clgd54xx</entry>
+      <entry>no</entry>
+      <entry>Enable Cirrus Logic GD54xx (CL-GD54xx) video card support.</entry>
     </row>
     <row>
       <entry>--enable-fpu</entry>
       <entry>yes</entry>
-      <entry>If you want to compile bochs to make use of the FPU emulator
-          written by Bill Metzenthen (the one used by the Linux kernel),
-          use this option.
+      <entry>If you want to compile Bochs to make use of the FPU emulator
+          written by Stanislav Shwartsman, use this option.
       </entry>
     </row>
     <row>
@@ -2088,7 +2098,7 @@ turn it off.
       <entry>no</entry>
       <entry>
       Plugins are shared libraries that can be loaded on demand.  Example: the
-      serial device is implemented as a plugin.  In UNIX, the serial plugin is
+      serial device is implemented as a plugin.  In Unix, the serial plugin is
       called libbx_serial.so.  When Bochs reads its configuration file, if the
       serial device is enabled it loads libbx_serial.so.  See the Features
       section for supported platforms.
@@ -2170,11 +2180,6 @@ turn it off.
       <entry>--enable-sep</entry>
       <entry>no</entry>
       <entry>SYSENTER/SYSEXIT support</entry>
-    </row>
-    <row>
-      <entry>--enable-pnic</entry>
-      <entry>no</entry>
-      <entry>enable pseudo NIC support</entry>
     </row>
     <row>
       <entry>--enable-compressed-hd</entry>
@@ -2365,14 +2370,14 @@ turn it off.
       <entry>--enable-time0=n</entry>
       <entry>no</entry>
       <entry>
-      Start CMOS clock at at time0 of n instead of using time().  You likely
+      Start CMOS clock at at time0 of <replaceable>n</replaceable> instead of using time(). You likely
       don't want this option.  When debugging, it is very helpful to have
       deterministic execution, and the clock is something that can skew
       determinism.  If you supply this option, pass it a value returned by the
       time(NULL) call, relating to the time you want bochs to start the CMOS
       clock from.  For instance, '--enable-time0=917385580'.  If you use this
       option but don't provide a value, configure uses a default value.  Note
-      that the <link linkend="bochsopt-time0">time0 option</link> in .bochsrc will override this value.  Without this
+      that the <link linkend="bochsopt-time0">time0 option</link> in <filename>bochsrc</filename> will override this value.  Without this
       option, the CMOS clock uses a time0 based on the value of time(NULL),
       which is probably what you want.
       </entry>
@@ -2702,7 +2707,7 @@ the configure shortcut script, <filename>.conf.amigaos</filename>.
   Dave Poirier has written an SDL interface for Bochs. Simple DirectMedia
   Layer, or SDL, is a cross-platform multimedia library distributed from
   <ulink url="http://libsdl.org/">libsdl.org</ulink>. SDL is available
-  for many platforms including Win32, Linux, IRIX, MacOS, MacOS X, BeOS,
+  for many platforms including Win32, Linux, BSD, IRIX, MacOS, MacOS X, BeOS,
   and AmigaOS.
 </para>
 <para>
@@ -2743,6 +2748,29 @@ Here's the procedure:
 </screen>
 </para>
 </section><!-- end compile-sdl -->
+
+<section id="compile-wx">
+<title>Compiling with the wxWidgets interface</title>
+<para>
+  wxWidgets is a cross-platform C++ user interface library which
+  you can download for free at <ulink url="http://wxwidgets.org/">wxwidgets.org</ulink>.
+  The wxWidgets port of Bochs provides both a graphical configuration interface (for
+  editing <filename>bochsrc</filename> options) and a display. It was written by Bryce Denney,
+  Don Becker, Dave Poirier, and Volker Ruppert.
+<screen>
+  configure --with-wx
+  make
+</screen>
+</para>
+<para>
+  If you want Bochs to use a wxWidgets installation not in your path (but installed
+  somewhere else), you need to set the WX_CONFIG environment variable to the
+  proper wx-config script, before running configure (example for csh):
+<screen>
+  setenv WX_CONFIG '/home/compile/wx/bin/wx-config'
+</screen>
+</para>
+</section>
 
 <section><title>Building an RPM on Linux</title>
 <para>
@@ -2898,7 +2926,7 @@ For other arguments, see section <link linkend="commandline">Command line argume
 
 <para>
 Starting with version 1.3, you can use environment variables in
-the bochsrc file, for example: 
+the <filename>bochsrc</filename> file, for example:
 <screen>
   floppya: 1_44="$IMAGES/bootdisk.img", status=inserted
   boot: floppy
@@ -2933,19 +2961,6 @@ Put this on top of your config file if the global configuration is stored in /et
 The section below lists all the supported <filename>bochsrc</filename> options.
 </para>
 
-<section><title>romimage</title>
-<para>
-Examples:
-<screen>
-  romimage: file=bios/BIOS-bochs-latest, address=0xf0000
-</screen>
-The ROM BIOS controls what the PC does when it first powers on.  Normally, you
-can use a precompiled BIOS in the source or binary distribution called
-<filename>BIOS-bochs-latest</filename>.  The ROM BIOS is usually loaded
-starting at address 0xf0000, and it is exactly 64k long.
-</para>
-</section>
-
 <section><title>megs</title>
 <para>
 Examples:
@@ -2955,6 +2970,19 @@ Examples:
 </screen>
 Set this to the default number of megabytes of memory you want to emulate.  The
 default is 32, since most operating systems won't need more than that.
+</para>
+</section>
+
+<section><title>romimage</title>
+<para>
+Example:
+<screen>
+  romimage: file=bios/BIOS-bochs-latest, address=0xf0000
+</screen>
+The ROM BIOS controls what the PC does when it first powers on.  Normally, you
+can use a precompiled BIOS in the source or binary distribution called
+<filename>BIOS-bochs-latest</filename>.  The ROM BIOS is usually loaded
+starting at address 0xf0000, and it is exactly 64k long.
 </para>
 </section>
 
@@ -2983,17 +3011,31 @@ in the simulation, that can be retrieved by the boot loader
 </para>
 </section>
 
-<section><title>vgaromimage</title>
+<section id="bochsopt-vgaromimage"><title>vgaromimage</title>
 <para>
 Examples:
 <screen>
   vgaromimage: file=bios/VGABIOS-elpin-2.40
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 </screen>
-You also need to load a VGA ROM BIOS at 0xC0000.  
+You also need to load a VGA ROM BIOS at 0xC0000.
 </para>
 <para> A VGA BIOS file from Elpin Systems, Inc. is provided in the source and binary distributions.</para>
 <para> A free LGPL'd VGA BIOS is also provided in the source and binary distributions.</para>
+</section>
+
+<section id="bochsopt-vga">
+<title>vga</title>
+<para>
+Examples:
+<screen>
+  vga: extension=cirrus
+  vga: extension=vbe
+</screen>
+Here you can specify the display extension to be used. With the value
+'none' you can use standard VGA with no extension. Other supported
+values are 'vbe' for Bochs VBE and 'cirrus' for Cirrus SVGA support.
+</para>
 </section>
 
 <section id="bochsopt-floppyab"><title>floppya/floppyb</title>
@@ -3008,18 +3050,25 @@ Examples:
   floppyb: 1_2=/dev/fd0, status=inserted
 720K  3.5" Floppy:
   floppya: 720k=/usr/local/bochs/images/win95.img, status=inserted
+auto-detect:
+  floppya: image=floppy.img, status=inserted
 </screen>
-
 Floppya is the first drive, and floppyb is the second drive. If you're booting
 from a floppy, floppya should point to a bootable disk.  To read from a disk
 image, write the name of the image file.  In many operating systems Bochs can
 read directly from a raw floppy drive.  For raw disk access, use the device
 name (Unix systems) or the drive letter and a colon (Windows systems).
-
+</para>
+<para>
+Following floppy disk types are supported: 2_88, 1_44, 1_2, 720k, 360k, 320k, 180k,
+160k, as well as "image" to let Bochs auto-detect the type of floppy disk (does only
+work with images, not with raw floppy drives).
+</para>
+<para>
 You can set the initial status of the media to <constant>ejected</constant> 
 or <constant>inserted</constant>.  Usually you will want to use 
 <constant>inserted</constant>.  In fact Bryce can't think of any reason
-to ever write <constant>ejected</constant> in your bochsrc.
+to ever write <constant>ejected</constant> in your <filename>bochsrc</filename>.
 </para>
 </section>
 
@@ -3205,7 +3254,7 @@ The check is enabled by default.
 </para>
 </section>
 
-<section><title>config_interface</title>
+<section id="bochsopt-configinterface"><title>config_interface</title>
 <para>
 The configuration interface is a series of menus or dialog boxes that
 allows you to edit all the settings that control Bochs' behavior.
@@ -3285,6 +3334,7 @@ the "wx" display library.
 Examples:
 <screen>
   log: bochsout.txt
+  log: -
   log: /dev/tty               (Unix only)
   log: /dev/null              (Unix only)
   log: nul                    (win32 only)
@@ -3597,7 +3647,7 @@ This defines the parameters of the clock inside Bochs:
 </para>
 <para><command>sync</command></para>
 <para>
-TO BE COMPLETED (see Greg explaination in bug #536329)
+TO BE COMPLETED (see Greg's explanation in <ulink url="http://sourceforge.net/tracker/?group_id=12580&amp;atid=362580&amp;func=detail&amp;aid=536329">feature request #536329</ulink>)
 </para>
 <para><command>time0</command></para>
 <para>
@@ -3650,7 +3700,9 @@ mouse usage at runtime (see <link linkend="headerbar">headerbar</link>).
   The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
   on PS/2), 'serial', 'serial_wheel' (one com port requires setting
   'mode=mouse', see <link linkend="bochsopt-com">com option</link>) and
-  'usb' (3-button mouse on USB port #1 - requires PCI and USB support).
+  'usb' (3-button mouse - one of the USB ports must be connected with the
+  'mouse' device, see <link linkend="bochsopt-usb1">usb1 option</link> -
+  requires PCI and USB support).
 </para>
 </section>
 
@@ -3674,11 +3726,11 @@ Examples:
   i440fxsupport: enabled=1
   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
 </screen>
-This option controls the usage of the i440FX PCI chipset. You can also
+This option controls the presence of the i440FX PCI chipset. You can also
 specify the devices connected to PCI slots. Up to 5 slots are available.
 These devices are currently supported: ne2k, pcivga, pcidev and pcipnic.
-If Bochs is compiled with Cirrus SVGA support you'll have the choice 'cirrus'
-instead of 'pcivga'.
+If Bochs is compiled with Cirrus SVGA support you'll have the additional
+choice 'cirrus'.
 </para>
 </section>
 
@@ -3707,16 +3759,24 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 </para>
 </section>
 
-<section><title>usb1</title>
+<section id="bochsopt-usb1"><title>usb1</title>
 <para>
 Example:
 <screen>
-  usb1: enabled=1, ioaddr=0xFF80
+  usb1: enabled=1, ioaddr=0xFF80, port1=mouse, port2=keypad
 </screen>
-Controls the presence of the USB root hub which is a part of the i440FX PCI
-chipset. If you enable USB and use the mouse option 'type=usb' you'll have
-a 3-button mouse connected to port #1. PCI support must be enabled, too.
+This option controls the presence of the USB root hub which is a part of the i440FX PCI
+chipset.
 </para>
+<para>
+With the port<replaceable>X</replaceable> option you can connect devices
+to the hub (currently supported: 'mouse' and 'keypad'). If you connect
+the mouse to one of the ports and use the <link linkend="bochsopt-mouse">mouse option</link>
+'type=usb' you'll have a 3-button USB mouse.
+</para>
+<note><para>
+PCI support must be enabled.
+</para></note>
 </section>
 
 <section id="bochsopt-gdbstub">
@@ -4365,7 +4425,7 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 <row><entry>BX_KEY_INT_STOP</entry><entry> Internet - stop </entry></row>
 <row><entry>BX_KEY_INT_MAIL</entry><entry> Internet - mail </entry></row>
 <row><entry>BX_KEY_INT_SEARCH</entry><entry> Internet - search </entry></row>
-<row><entry>BX_KEY_INT_FAV</entry><entry> Internet - fovorites </entry></row>
+<row><entry>BX_KEY_INT_FAV</entry><entry>Internet - favorites</entry></row>
 <row><entry>BX_KEY_INT_HOME</entry><entry> Internet - home </entry></row>
 <row><entry>BX_KEY_POWER_MYCOMP</entry><entry> Powerkeys - my computer </entry></row>
 <row><entry>BX_KEY_POWER_CALC</entry><entry> Powerkeys - calculator </entry></row>
@@ -7509,14 +7569,17 @@ Shall I remove the redolog afterwards?
 Please see the <ulink url="http://minix1.hampshire.edu/faq/bxmxhowto.html">Minix on Bochs on Windows How-To</ulink> by Al Woodhull.
                   </para>
         </section>
+
           <section id="guest-openbsd"><title>OpenBSD</title>
              <para>
              </para>
           </section>
+
           <section id="guest-freebsd"><title>FreeBSD</title>
              <para>
              </para>
           </section>
+
 <section id="guest-freedos"><title>FreeDOS Beta 8</title>
 <para>
 This has been contributed by Volker Ruppert 
@@ -7557,6 +7620,7 @@ This has been contributed by Volker Ruppert
 </screen>
 </para>
 </section>
+
 <section id="guest-gnu"><title>GNU (Also known as GNU/Hurd)</title>
 
 <section>
@@ -8004,7 +8068,7 @@ You should end up with something similar to the following listing:
 
 <para>
 Create a hard disk image file.  For example, for a 62M disk with
-the following settings in '.bochsrc':
+the following settings in <filename>bochsrc</filename>:
 </para>
 
 <programlisting>
@@ -8016,7 +8080,7 @@ use (940 * 8 * 17 * 512bytes-per-sector = 127840):
 </programlisting>
 
 <para>
-Setup your '.bochsrc' file.  For example:
+Setup your <filename>bochsrc</filename> file. For example:
 </para>
 
 <programlisting>
@@ -8025,7 +8089,7 @@ Setup your '.bochsrc' file.  For example:
   ata0-master: type=disk, path=62M.img, cylinders=940, heads=8, spt=17
   floppya: 1_44=1.44, status=inserted
   vgaromimage: file=bios/VGABIOS-lgpl-latest
-  romimage: file=bios/BIOS-bochs-latest # use newest one
+  romimage: file=bios/BIOS-bochs-latest, address=0xf0000
   log: ./bochs.out
   vga_update_interval: 300000
   keyboard_serial_delay: 200
@@ -8036,8 +8100,8 @@ Setup your '.bochsrc' file.  For example:
 You'll also need a floppy image file, sort of a working file,
 which you copy the distribution files into, one by one, as
 they are needed.  This is the file you point the 'floppya:'
-directive in the '.bochsrc' file to.  Copy the Win'95 boot disk
-to your floppy working file ('1.44' in the '.bochsrc' example):
+directive in the <filename>bochsrc</filename> file to.  Copy the Win'95 boot disk
+to your floppy working file ('1.44' in the <filename>bochsrc</filename> example):
 </para>
 
 <programlisting>
@@ -8594,59 +8658,8 @@ to
   DEVICE=JDISP.SYS /HS=OFF
                    ^^^^^^^
 </screen>
-                        </para>
-        </section>
-        <section>
-                <title>VLB-IDE support</title>
-                        <para>
-                You can enable Bochs VLB-IDE 
-                <footnote>
-                <para>
-                Unfortunately, don't expect any performance increase if you enable VLB-IDE support.
-                </para>
-                </footnote>
-                support
-                <footnote>
-                <para>
-                This used to be the only way to get 32 bits disk acess from Win95. 
-                Now that Volker Ruppert has fixed that bug, this VLB-IDE feature is almost useless.
-                </para>
-                </footnote>
-                by configuring with Promise DC2300 VLB 
-                (with <command>./configure --enable-dc2300-vlb-ide</command>)
-                or Tekram DC280E VLB support
-                <footnote>
-                <para>
-                Tekram DC280E VLB support may need an additional patch applied to the source tree
-                (found in patches/patch.tekram-dc280e-vlb-ide)
-                </para>
-                </footnote>
-                (with <command>./configure --enable-dc280e-vlb-ide</command>).
-                After recompiling bochs (see instructions on compiling <xref linkend="compiling">),
-                you may install Win95 specific drivers for those cards.
-                        </para>
-                        <para>
-                Those drivers can be found on the net. Look for the following files:
-                <itemizedlist>
-                      <listitem>
-                      <para>
-                      <ulink url="ftp://ftp.pipeline.com.au/drivers/hard_drive_controllers/P2300W95.ZIP"> 
-                      ftp://ftp.pipeline.com.au/drivers/hard_drive_controllers/P2300W95.ZIP 
-                      </ulink>
-                      for Promise DC2300
-                      </para>
-                      </listitem>
-                      <listitem>
-                      <para>
-                      <ulink url="http://www.tekram.com.tw/Storageftp/IDE/DC-2X0/DC-280X/DC-280E/Driver%26AP/DC280EU.ZIP">
-                      http://www.tekram.com.tw/Storageftp/IDE/DC-2X0/DC-280X/DC-280E/Driver%26AP/DC280EU.ZIP 
-                      </ulink>
-                      for Tekram DC280E
-                      </para>
-                      </listitem>
-                </itemizedlist>
-                        </para>
-        </section>
+</para>
+</section>
 </section>
 
 <section id="guest-winnt4">
