@@ -7,11 +7,6 @@ ideal. I intend to fix this as soon as I have time.
 
 Some gotchas....
 
-The dlx-linux files are installed owned by root. If you want to run bochs-dlx
-as a normal user (probably not a bad idea), you will need to chown at least
-bochsout.txt and hd10meg.img. Bochs-dlx does not run unless you do this, or
-run as root.
-
 I still have problems with the vga font on occasion. It is included in the
 package and mkfontdir is run, but I still needed to restart X in order to
 get bochs to run the first time.
