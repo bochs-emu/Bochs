@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: bochs-mmx.patch 
 Author: Stanislav Shwartsman
-Date: 01/09/2002
+Date: September 1, 2002
 
 Detailed description: MMX instruction set support
 
@@ -15,7 +15,7 @@ Apply patch to what version:
   cvs checked out on DATE, release version VER
 Instructions:
   To patch, go to main bochs directory.
-  Type "patch -p0 < THIS_PATCH_FILE".
+  Type "patch -p1 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 diff -r -u -N bochs-1.4.1/cpu/access.cc bochs-1.4.1-mmx-release/cpu/access.cc
 --- bochs-1.4.1/cpu/access.cc	2001-10-03 15:10:38.000000000 +0200
@@ -2719,3 +2719,15 @@ diff -r -u -N bochs-1.4.1/fpu/wmFPUemu_glue.cc bochs-1.4.1-mmx-release/fpu/wmFPU
  
  #if 0
    addr_modes.default_mode = VM86;
+
+diff -r -u -N bochs-1.4.1/cpu/Makefile.in bochs-1.4.1-mmx-release/cpu/Makefile.in
+--- bochs-1.4.1/cpu/Makefile.in	2001-09-15 08:55:14.000000000 +0200
++++ bochs-1.4.1-mmx-release/cpu/Makefile.in	2002-08-24 19:28:36.000000000 +0200
+@@ -91,6 +91,7 @@
+ 	soft_int.o \
+ 	string.o \
+ 	bcd.o \
++	mmx.o \
+ 	$(APIC_OBJS)
+ 
+ BX_INCLUDES = ../bochs.h ../config.h
