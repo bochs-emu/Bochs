@@ -382,7 +382,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
       temp->u.segment.limit_scaled = temp->u.segment.limit;
 
     temp->valid    = 1;
-    BX_CPU_THIS_PTR check_seg_limit_scaled ("unknown", temp->u.segment.limit_scaled);
     }
   else { // system & gate segment descriptors
     switch ( temp->type ) {
@@ -454,7 +453,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
                  (unsigned) temp->type));
         temp->valid    = 0;
       }
-      BX_CPU_THIS_PTR check_seg_limit_scaled ("unknown", temp->u.tss386.limit_scaled);
     }
 }
 
