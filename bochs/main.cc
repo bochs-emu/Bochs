@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.119 2002-08-26 11:37:55 bdenney Exp $
+// $Id: main.cc,v 1.120 2002-08-26 15:31:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,7 @@
 #include <assert.h>
 #include "state_file.h"
 
-int enable_control_panel = 1;
+int enable_config_interface = 1;
 int bochsrc_include_count = 0;
 
 extern "C" {
@@ -1098,8 +1098,8 @@ int main (int argc, char *argv[])
   bx_init_siminterface ();
   bx_init_main (argc, argv);
   bx_do_text_config_interface (argc, argv);
-  bx_control_panel (BX_CPANEL_INIT);
-  bx_continue_after_control_panel (argc, argv);
+  bx_config_interface (BX_CI_INIT);
+  bx_continue_after_config_interface (argc, argv);
 }
 #endif
 
@@ -1149,7 +1149,7 @@ bx_init_main (int argc, char *argv[])
      argc = 1; // ignore all other args.
      setupWorkingDirectory (argv[0]);
      // there is no stdin/stdout so disable the text-based config interface.
-     enable_control_panel = 0;
+     enable_config_interface = 0;
    }
    // if it was started from command line, there could be some args still.
    for (int a=0; a<argc; a++) {
@@ -1192,9 +1192,9 @@ bx_do_text_config_interface (int argc, char *argv[])
        ((!strcmp ("-nocontrolpanel", argv[1]))
         || (!strcmp ("-nocp", argv[1]))
         || (!strncmp ("-q", argv[1], 2)))) {
-    // skip the control panel
+    // skip the configuration interface
     arg++;
-    enable_control_panel = 0;
+    enable_config_interface = 0;
     if ((argc > 2) && (!strcmp(argv[1], "-qf"))) {
       bochsrc = argv[arg];
       arg++;
@@ -1204,11 +1204,11 @@ bx_do_text_config_interface (int argc, char *argv[])
       arg += 2;
     }
   }
-#if !BX_USE_CONTROL_PANEL
-  enable_control_panel = 0;
+#if !BX_USE_CONFIG_INTERFACE
+  enable_config_interface = 0;
 #endif
 
-  if (!enable_control_panel || BX_WITH_WX) {
+  if (!enable_config_interface || BX_WITH_WX) {
     /* parse configuration file and command line arguments */
     if (bochsrc == NULL) bochsrc = bx_find_bochsrc ();
     if (bochsrc)
@@ -1242,21 +1242,21 @@ bx_do_text_config_interface (int argc, char *argv[])
     exit (1);
   }
 
-  if (enable_control_panel) {
-    // update log actions before starting control panel
+  if (enable_config_interface) {
+    // update log actions before starting configuration interface
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
       io->set_log_action (level, action);
     }
-    // Display the pre-simulation control panel.
+    // Display the pre-simulation configuration interface.
 #if !BX_WITH_WX
-    bx_control_panel (BX_CPANEL_START_MENU);
+    bx_config_interface (BX_CI_START_MENU);
 #endif
   }
 }
 
 int
-bx_continue_after_control_panel (int argc, char *argv[])
+bx_continue_after_config_interface (int argc, char *argv[])
 {
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
@@ -1317,8 +1317,8 @@ bx_read_configuration (char *rcfile)
     BX_ERROR (("reading from %s failed", rcfile));
     return -1;
   }
-  // update log actions if control panel is enabled
-  if (enable_control_panel) {
+  // update log actions if configuration interface is enabled
+  if (enable_config_interface) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
       io->set_log_action (level, action);
@@ -1344,8 +1344,8 @@ bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-#if !BX_USE_CONTROL_PANEL
-  if (!enable_control_panel) {
+#if !BX_USE_CONFIG_INTERFACE
+  if (!enable_config_interface) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
       if (action == ACT_ASK) action = ACT_FATAL;

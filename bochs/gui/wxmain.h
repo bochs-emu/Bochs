@@ -1,4 +1,8 @@
-// this file should be included only by wx.cc and wxmain.cc.
+/////////////////////////////////////////////////////////////////
+// $Id: wxmain.h,v 1.4 2002-08-26 15:31:23 bdenney Exp $
+/////////////////////////////////////////////////////////////////
+// This file defines variables and classes that the wxWindows .cc files 
+// share.  It should be included only by wx.cc and wxmain.cc.  
 
 // forward class declaration so that each class can have a pointer to 
 // the others.
@@ -14,7 +18,7 @@ extern MyPanel *thePanel;
 extern unsigned long num_events;
 extern BxEvent event_queue[MAX_EVENTS];
 
-// to show debug messages, change these defines to x.  To hide them,
+// to compile in debug messages, change these defines to x.  To remove them,
 // change the defines to return nothing.
 #define IFDBG_VGA(x) /* nothing */
 //#define IFDBG_VGA(x) x
@@ -56,7 +60,7 @@ public:
   void OnStartSim(wxCommandEvent& event);
   void OnPauseResumeSim(wxCommandEvent& event);
   void OnKillSim(wxCommandEvent& event);
-  void OnSim2GuiEvent(wxCommandEvent& event);
+  void OnSim2CuiEvent(wxCommandEvent& event);
   void OnToolbarClick(wxCommandEvent& event);
   int HandleAskParam (BxEvent *event);
   int HandleAskParamString (bx_param_string_c *param);

@@ -840,7 +840,8 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-control-panel           turns on/off control panel
+  --enable-config-interface        turns on/off configuration interface
+  --enable-control-panel           Deprecated. Use --enable-config-interface.
   --enable-new-pit                  use Greg Alexander's new PIT model
   --enable-slowdown                 use Greg Alexander's slowdown timer
   --enable-idle-hack                use Roland Mainz's idle hack
@@ -7768,6 +7769,40 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+echo "$as_me:$LINENO: checking for configuration interface" >&5
+echo $ECHO_N "checking for configuration interface... $ECHO_C" >&6
+# Check whether --enable-config-interface or --disable-config-interface was given.
+if test "${enable_config_interface+set}" = set; then
+  enableval="$enable_config_interface"
+  if test "$enableval" = yes; then
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_USE_CONFIG_INTERFACE 1
+_ACEOF
+
+   else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_USE_CONFIG_INTERFACE 0
+_ACEOF
+
+   fi
+else
+
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_USE_CONFIG_INTERFACE 1
+_ACEOF
+
+
+
+fi;
+
+# continue to support --enable-control-panel and make it do the same
+# as before.
 echo "$as_me:$LINENO: checking for control panel" >&5
 echo $ECHO_N "checking for control panel... $ECHO_C" >&6
 # Check whether --enable-control-panel or --disable-control-panel was given.
@@ -7777,14 +7812,14 @@ if test "${enable_control_panel+set}" = set; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_USE_CONTROL_PANEL 1
+#define BX_USE_CONFIG_INTERFACE 1
 _ACEOF
 
    else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_USE_CONTROL_PANEL 0
+#define BX_USE_CONFIG_INTERFACE 0
 _ACEOF
 
    fi
@@ -7793,13 +7828,12 @@ else
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_USE_CONTROL_PANEL 1
+#define BX_USE_CONFIG_INTERFACE 1
 _ACEOF
 
 
 
 fi;
-
 
 
 echo "$as_me:$LINENO: checking for new PIT model" >&5
@@ -11615,7 +11649,7 @@ s,@X_CFLAGS@,$X_CFLAGS,;t t
 s,@X_PRE_LIBS@,$X_PRE_LIBS,;t t
 s,@X_LIBS@,$X_LIBS,;t t
 s,@X_EXTRA_LIBS@,$X_EXTRA_LIBS,;t t
-s,@BX_USE_CONTROL_PANEL@,$BX_USE_CONTROL_PANEL,;t t
+s,@BX_USE_CONFIG_INTERFACE@,$BX_USE_CONFIG_INTERFACE,;t t
 s,@BX_USE_NEW_PIT@,$BX_USE_NEW_PIT,;t t
 s,@BX_USE_SLOWDOWN_TIMER@,$BX_USE_SLOWDOWN_TIMER,;t t
 s,@SLOWDOWN_OBJS@,$SLOWDOWN_OBJS,;t t

@@ -1,7 +1,6 @@
 /////////////////////////////////////////////////////////////////
-//
-// gui/wx.cc
-// $Id: wx.cc,v 1.6 2002-08-25 15:51:45 vruppert Exp $
+// $Id: wx.cc,v 1.7 2002-08-26 15:31:21 bdenney Exp $
+/////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
 // wxPanel called a MyPanel, which has methods to display
@@ -10,6 +9,13 @@
 // this is not a requirement.
 //
 // The separation between wxmain.cc and wx.cc is as follows:
+// - wxmain.cc implements a Bochs configuration user interface (CUI),
+//   which is the wxWindows equivalent of control.cc.  wxmain creates
+//   a frame with several menus and a toolbar, and allows the user to
+//   choose the machine configuration and start the simulation.  Note
+//   that wxmain.cc does NOT include bochs.h.  All interactions
+//   between the CUI and the simulator are through the siminterface
+//   object.
 // - wx.cc implements a VGA display screen using wxWindows.  It is 
 //   is the wxWindows equivalent of x.cc, win32.cc, macos.cc, etc.
 //   wx.cc includes bochs.h and has access to all Bochs devices.
@@ -18,10 +24,6 @@
 //   thread-safe BxEvent queue.  The simulation thread periodically
 //   processes events from the BxEvent queue (bx_gui_c::handle_events)
 //   and notifies the appropriate emulated I/O device.
-// - wxmain.cc implements a Bochs configuration interface, which is
-//   the wxWindows equivalent of control.cc.  wxmain creates a 
-//   frame with several menus and a toolbar, and allows the user to
-//   choose the machine configuration and start the simulation.
 //
 /////////////////////////////////////////////////////////////////
 
@@ -993,6 +995,9 @@ This is basically the old wx.cc from June 2001.
 In March 2002, when Psyon and I started working on wxWindows again,
 the wx.cc was crashing and I didn't understand why.  So I started
 over again in wxmain.cc, and we hacked it until it worked.
+
+In this old code I had started working on separate parameter editors for
+each bx_param_* type, and I expect to need that again.
 */
 
 
@@ -1118,9 +1123,9 @@ MyFrame::StartBochsThread ()
 int 
 MyFrame::ReadConfiguration (int ask_name)
 {
-  char oldrc_cstr[CPANEL_PATH_LEN];
+  char oldrc_cstr[CI_PATH_LENGTH];
   int found_default = 1;
-  if (SIM->get_default_rc (oldrc_cstr, CPANEL_PATH_LEN) < 0) {
+  if (SIM->get_default_rc (oldrc_cstr, CI_PATH_LENGTH) < 0) {
     found_default = 0;
     oldrc_cstr[0] = 0;
   }
@@ -1142,9 +1147,9 @@ MyFrame::ReadConfiguration (int ask_name)
 int 
 MyFrame::WriteConfiguration (int ask_name)
 {
-  char oldrc_cstr[CPANEL_PATH_LEN];
+  char oldrc_cstr[CI_PATH_LENGTH];
   int found_default = 1;
-  if (SIM->get_default_rc (oldrc_cstr, CPANEL_PATH_LEN) < 0) {
+  if (SIM->get_default_rc (oldrc_cstr, CI_PATH_LENGTH) < 0) {
     found_default = 0;
     oldrc_cstr[0] = 0;
   }
@@ -1318,7 +1323,7 @@ BochsThread::Entry (void)
 {
   int argc=1;
   char *argv[] = {"bochs"};
-  bx_continue_after_control_panel (argc, argv);
+  bx_continue_after_config_interface (argc, argv);
   return NULL;
 }
 

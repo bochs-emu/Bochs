@@ -1,64 +1,16 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.54 2002-08-09 06:16:43 vruppert Exp $
+// $Id: control.cc,v 1.55 2002-08-26 15:31:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-/*
- * gui/control.cc
- * $Id: control.cc,v 1.54 2002-08-09 06:16:43 vruppert Exp $
- *
- * This is code for a text-mode control panel.  Note that this file
- * does NOT include bochs.h.  Instead, it does all of its contact with
- * the simulator through an object called SIM, defined in siminterface.cc
- * and siminterface.h.  This separation adds an extra layer of method
- * calls before any work can be done, but the benefit is that the compiler
- * enforces the rules.  I can guarantee that control.cc doesn't call any
- * I/O device objects directly, for example, because the bx_devices symbol
- * isn't even defined in this context.
- *
-
-Musings by Bryce:
-
-Now that there are some capabilities here, start moving toward the desired
-model of separation of gui and simulator.  Design a method-call interface
-between objects which could later be turned into a network protocol.  
-
-Most messages go from the control panel to bochs, with bochs sending a response
-back.  Examples: turn on debug event logging for the PIC, or set IPS to
-1.5million.  Others kinds of messages go from bochs to the control panel.
-Example: errors such as "disk image not found", status information such as the
-current CPU state.
-
-But because of the nature of a control panel, most information flows from
-the control panel to Bochs.  I think we can take advantage of this to
-simplify the protocol.  The GUI can ask bochs to do things and get a 
-response back.  Bochs can tell the GUI something, but will not get a
-response back.
-
-The control panel should exist before the Bochs simulator starts, so that the
-user can get their settings right before booting up a simulator.  Once
-bochs has begun, some settings can no longer be changed, such as how much
-memory there is.  Others can be changed at any time, like the value of IPS
-or the name of the floppy disk images.  If you had the bochs simulator
-as a shared library, the GUI could let you choose which version of the
-simulator library to load (one with debugging or SMP support or not, 
-for example).
-
-When the control panel connects to Bochs, each needs to learn what the other
-can do.  Some versions of Bochs will have cdrom support, others will not.
-Design a simple and general way for the two parties to describe what they
-can do, so that the GUI can grey-out some menu choices, and Bochs knows
-what the GUI can handle.  I think Bochs should provide a list of 
-capabilities in something like the form of:
-  typedef struct { Bit16u id; String name; } bx_capability_t;
-Only the negotiation of capabilities uses the string name, and for everything
-else the 16-bit id is used (use htons() if sending over network).  Each
-capability is like a function that can be called on the remote object, 
-and each function needs an input list and a return value.
-
-Hmm.... This sounds like reinventing function calls.  Next I'm going to
-say we need to implement prototypes and type checking.  Why not just
-write a compiler!
-*/
+// This is code for a text-mode configuration interfac.  Note that this file
+// does NOT include bochs.h.  Instead, it does all of its contact with
+// the simulator through an object called SIM, defined in siminterface.cc
+// and siminterface.h.  This separation adds an extra layer of method
+// calls before any work can be done, but the benefit is that the compiler
+// enforces the rules.  I can guarantee that control.cc doesn't call any
+// I/O device objects directly, for example, because the bx_devices symbol
+// isn't even defined in this context.
+//
 
 #include "config.h"
 
@@ -72,12 +24,12 @@ extern "C" {
 #include "control.h"
 #include "siminterface.h"
 
-#define CPANEL_PATH_LEN 512
+#define CI_PATH_LENGTH 512
 
 #define BX_INSERTED 11
 
 /* functions for changing particular options */
-void bx_control_panel_init ();
+void bx_config_interface_init ();
 int bx_read_rc (char *rc);
 int bx_write_rc (char *rc);
 void bx_log_options (int individual);
@@ -105,11 +57,11 @@ clean_string (char *s0)
 void
 double_percent (char *s, int max_len)
 {
-  char d[CPANEL_PATH_LEN];
+  char d[CI_PATH_LENGTH];
   int  i=0,j=0;
 
-  if (max_len>CPANEL_PATH_LEN)
-    max_len=CPANEL_PATH_LEN;
+  if (max_len>CI_PATH_LENGTH)
+    max_len=CI_PATH_LENGTH;
 
   max_len--;
 
@@ -271,7 +223,7 @@ ask_string (char *prompt, char *the_default, char *out)
 
 /******************************************************************/
 
-static char *ask_about_control_panel =
+static char *ask_about_config_interface =
 "\n"
 "This version of Bochs has a prototype configuration interface.  Would\n"
 "you like to try it?\n"
@@ -375,8 +327,8 @@ static char *runtime_menu_prompt =
 "\n"
 "Please choose one:  [12] ";
 
-char *menu_prompt_list[BX_CPANEL_N_MENUS] = {
-  ask_about_control_panel,
+char *menu_prompt_list[BX_CI_N_MENUS] = {
+  ask_about_config_interface,
   startup_menu_prompt,
   startup_options_prompt,
   NULL,
@@ -391,7 +343,7 @@ char *menu_prompt_list[BX_CPANEL_N_MENUS] = {
   fprintf (stderr, "ERROR: choice %d not implemented\n", choice);
 
 #define BAD_OPTION(menu,choice) \
-  do {fprintf (stderr, "ERROR: control panel menu %d has no choice %d\n", menu, choice); \
+  do {fprintf (stderr, "ERROR: menu %d has no choice %d\n", menu, choice); \
       assert (0); } while (0)
 
 void build_runtime_options_prompt (char *format, char *buf, int size)
@@ -450,16 +402,16 @@ void askparam (bx_id id)
   param->text_ask (stdin, stderr);
 }
 
-int bx_control_panel (int menu)
+int bx_config_interface (int menu)
 {
  Bit32u choice;
  while (1) {
   switch (menu)
   {
-   case BX_CPANEL_INIT:
-     bx_control_panel_init ();
+   case BX_CI_INIT:
+     bx_config_interface_init ();
      return 0;
-   case BX_CPANEL_START_MENU:
+   case BX_CI_START_MENU:
      {
        static int read_rc = 0;
        Bit32u default_choice = 1;
@@ -467,7 +419,7 @@ int bx_control_panel (int menu)
        if (ask_uint (startup_menu_prompt, 1, 5, default_choice, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 1: if (bx_read_rc (NULL) >= 0) read_rc=1; break;
-	 case 2: bx_control_panel (BX_CPANEL_START_OPTS); break;
+	 case 2: bx_config_interface (BX_CI_START_OPTS); break;
 	 case 3: bx_write_rc (NULL); break;
 	 case 4: return 0;   // return from menu
 	 case 5: SIM->quit_sim (1); return -1;
@@ -475,19 +427,19 @@ int bx_control_panel (int menu)
        }
      }
      break;
-   case BX_CPANEL_START_OPTS:
+   case BX_CI_START_OPTS:
      {
-       char prompt[CPANEL_PATH_LEN];
-       char oldpath[CPANEL_PATH_LEN];
-       char oldprefix[CPANEL_PATH_LEN];
+       char prompt[CI_PATH_LENGTH];
+       char oldpath[CI_PATH_LENGTH];
+       char oldprefix[CI_PATH_LENGTH];
        int  retval;
 
-       retval = SIM->get_log_file (oldpath, CPANEL_PATH_LEN);
+       retval = SIM->get_log_file (oldpath, CI_PATH_LENGTH);
        assert (retval >= 0);
-       double_percent(oldpath,CPANEL_PATH_LEN);
-       retval = SIM->get_log_prefix (oldprefix, CPANEL_PATH_LEN);
+       double_percent(oldpath,CI_PATH_LENGTH);
+       retval = SIM->get_log_prefix (oldprefix, CI_PATH_LENGTH);
        assert (retval >= 0);
-       double_percent(oldprefix,CPANEL_PATH_LEN);
+       double_percent(oldprefix,CI_PATH_LENGTH);
 
        sprintf (prompt, startup_options_prompt, oldpath, oldprefix);
        if (ask_uint (prompt, 0, 11, 0, &choice, 10) < 0) return -1;
@@ -508,7 +460,7 @@ int bx_control_panel (int menu)
        }
      }
      break;
-   case BX_CPANEL_RUNTIME:
+   case BX_CI_RUNTIME:
      char prompt[1024];
      bx_floppy_options floppyop;
      bx_cdrom_options cdromop;
@@ -540,14 +492,14 @@ int bx_control_panel (int menu)
        case 11: NOT_IMPLEMENTED (choice); break;
        case 12: fprintf (stderr, "Continuing simulation\n"); return 0;
        case 13:
-	 fprintf (stderr, "You chose quit on the control panel.\n");
+	 fprintf (stderr, "You chose quit on the configuration interface.\n");
 	 SIM->quit_sim (1);
 	 return -1;
        default: fprintf (stderr, "Menu choice %d not implemented.\n", choice);
      }
      break;
    default:
-     assert (menu >=0 && menu < BX_CPANEL_N_MENUS);
+     assert (menu >=0 && menu < BX_CI_N_MENUS);
      fprintf (stderr, "--THIS IS A SAMPLE MENU, NO OPTIONS ARE IMPLEMENTED EXCEPT #0--\n");
      if (ask_uint (menu_prompt_list[menu], 0, 99, 0, &choice, 10) < 0) return -1;
      if (choice == 0) return 0;
@@ -620,10 +572,10 @@ void bx_log_options (int individual)
 int bx_read_rc (char *rc)
 {
   if (rc && SIM->read_rc (rc) >= 0) return 0;
-  char oldrc[CPANEL_PATH_LEN];
-  if (SIM->get_default_rc (oldrc, CPANEL_PATH_LEN) < 0)
+  char oldrc[CI_PATH_LENGTH];
+  if (SIM->get_default_rc (oldrc, CI_PATH_LENGTH) < 0)
     strcpy (oldrc, "none");
-  char newrc[CPANEL_PATH_LEN];
+  char newrc[CI_PATH_LENGTH];
   while (1) {
     if (ask_string ("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc) < 0) return -1;
     if (!strcmp (newrc, "none")) return -1;
@@ -634,12 +586,12 @@ int bx_read_rc (char *rc)
 
 int bx_write_rc (char *rc)
 {
-  char oldrc[CPANEL_PATH_LEN], newrc[CPANEL_PATH_LEN];
+  char oldrc[CI_PATH_LENGTH], newrc[CI_PATH_LENGTH];
   if (rc == NULL) {
-    if (SIM->get_default_rc (oldrc, CPANEL_PATH_LEN) < 0)
+    if (SIM->get_default_rc (oldrc, CI_PATH_LENGTH) < 0)
       strcpy (oldrc, "none");
   } else {
-    strncpy (oldrc, rc, CPANEL_PATH_LEN);
+    strncpy (oldrc, rc, CI_PATH_LENGTH);
   }
   while (1) {
     if (ask_string ("Save configuration to what file?  To cancel, type 'none'.\n[%s] ", oldrc, newrc) < 0) return -1;
@@ -672,7 +624,7 @@ char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug"
 int log_action_n_choices = 4 + (BX_DEBUGGER?1:0);
 
 BxEvent *
-control_panel_notify_callback (void *unused, BxEvent *event)
+config_interface_notify_callback (void *unused, BxEvent *event)
 {
   event->retcode = -1;
   switch (event->type)
@@ -722,9 +674,9 @@ ask:
   assert (0); // switch statement should return
 }
 
-void bx_control_panel_init () {
-  //fprintf (stderr, "bx_control_panel_init()\n");
-  SIM->set_notify_callback (control_panel_notify_callback, NULL);
+void bx_config_interface_init () {
+  //fprintf (stderr, "bx_config_interface_init()\n");
+  SIM->set_notify_callback (config_interface_notify_callback, NULL);
 }
 
 /////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
-//
-// gui/wxmain.cc
-// $Id: wxmain.cc,v 1.7 2002-08-25 20:35:19 vruppert Exp $
+/////////////////////////////////////////////////////////////////
+// $Id: wxmain.cc,v 1.8 2002-08-26 15:31:22 bdenney Exp $
+/////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -8,12 +8,20 @@
 // main.cc are called in a separate thread to initialize and run the Bochs
 // simulator.  
 //
-// The wxWindows port of the VGA display is implemented in wx.cc.  The
-// separation between wxmain.cc and wx.cc is as follows:
-// - wxmain.cc implements a Bochs configuration interface, which is
-//   the wxWindows equivalent of control.cc.  wxmain creates a 
-//   frame with several menus and a toolbar, and allows the user to
-//   choose the machine configuration and start the simulation.
+// Most ports to different platforms implement only the VGA window and
+// toolbar buttons.  The wxWindows port is the first to implement both
+// the VGA display and the configuration interface, so the boundaries
+// between them are somewhat blurry.  See the extensive comments at
+// the top of siminterface for the rationale behind this separation.
+//
+// The separation between wxmain.cc and wx.cc is as follows:
+// - wxmain.cc implements a Bochs configuration user interface (CUI),
+//   which is the wxWindows equivalent of control.cc.  wxmain creates
+//   a frame with several menus and a toolbar, and allows the user to
+//   choose the machine configuration and start the simulation.  Note
+//   that wxmain.cc does NOT include bochs.h.  All interactions
+//   between the CUI and the simulator are through the siminterface
+//   object.
 // - wx.cc implements a VGA display screen using wxWindows.  It is 
 //   is the wxWindows equivalent of x.cc, win32.cc, macos.cc, etc.
 //   wx.cc includes bochs.h and has access to all Bochs devices.
@@ -23,6 +31,7 @@
 //   processes events from the BxEvent queue (bx_gui_c::handle_events)
 //   and notifies the appropriate emulated I/O device.
 //
+//////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////
 // includes
@@ -86,7 +95,7 @@ enum
   ID_Log_Prefs,
   ID_Log_PrefsDevice,
   ID_Help_About,
-  ID_Sim2Gui_Event,
+  ID_Sim2Cui_Event,
   // ids for Bochs toolbar
   ID_Toolbar_FloppyA,
   ID_Toolbar_FloppyB,
@@ -110,6 +119,11 @@ class MyApp: public wxApp
 virtual bool OnInit();
 };
 
+// SimThread is the thread in which the Bochs simulator runs.  It is created
+// by MyFrame::OnStartSim().  The SimThread::Entry() function calls a
+// function in main.cc called bx_continue_after_config_interface() which
+// initializes the devices and starts up the simulation.  All events from
+// the simulator
 class SimThread: public wxThread
 {
   MyFrame *frame;
@@ -155,7 +169,7 @@ bool MyApp::OnInit()
 }
 
 //////////////////////////////////////////////////////////////////////
-// MyFrame: the main frame for the Bochs application
+// MyFrame: the top level frame for the Bochs application
 //////////////////////////////////////////////////////////////////////
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
@@ -166,7 +180,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_Start, MyFrame::OnStartSim)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
-  EVT_MENU(ID_Sim2Gui_Event, MyFrame::OnSim2GuiEvent)
+  EVT_MENU(ID_Sim2Cui_Event, MyFrame::OnSim2CuiEvent)
   // toolbar events
   EVT_TOOL(ID_Toolbar_FloppyA, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_FloppyB, MyFrame::OnToolbarClick)
@@ -399,8 +413,9 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
 	  newval = (char *)tdialog->GetValue().c_str ();
 	dialog = tdialog; // so I can delete it
   }
-  // newval points to memory inside the dialg.  As soon as dialog is deleted, newval points
-  // to junk.  So be sure to copy the text out before deleting it!
+  // newval points to memory inside the dialog.  As soon as dialog is deleted,
+  // newval points to junk.  So be sure to copy the text out before deleting
+  // it!
   if (newval && strlen(newval)>0) {
 	// change floppy path to this value.
 	wxLogDebug ("Setting param %s to '%s'", param->get_name (), newval);
@@ -430,7 +445,7 @@ MyFrame::HandleAskParam (BxEvent *event)
   wxASSERT (event->type == BX_SYNC_EVT_ASK_PARAM);
 
   bx_param_c *param = event->u.param.param;
-  Raise ();  // bring control panel to front so that you will see the dialog
+  Raise ();  // bring window to front so that you will see the dialog
   switch (param->get_type ())
   {
   case BXT_PARAM_STRING:
@@ -451,7 +466,7 @@ MyFrame::HandleAskParam (BxEvent *event)
   case BXP_DISKD_PATH:
   case BXP_CDROM_PATH:
 	{
-	  Raise();  // bring the control panel to front so dialog shows
+	  Raise();  // bring window to front so dialog shows
 	  char *msg;
 	  if (param==BXP_FLOPPYA_PATH || param==BXP_FLOPPYB_PATH)
 	    msg = "Choose new floppy disk image file";
@@ -486,11 +501,11 @@ MyFrame::HandleAskParam (BxEvent *event)
   return -1;  // could not display
 }
 
-// This is called when a Sim2Gui event is discovered on the GUI thread's
-// event queue.  (It got there via wxPostEvent in SiminterfaceCallback2, 
-// which is executed in the simulator Thread.)
+// This is called when a Sim2Cui event from the simulator thread is discovered
+// on the GUI thread's event queue.  (It got there via wxPostEvent in
+// SiminterfaceCallback2, which is executed in the simulator Thread.)
 void 
-MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
+MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
 {
   static wxString choices[] = { "Continue", "Continue and Disable", "Die" };
   int choice;
@@ -511,7 +526,7 @@ MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
     wxLogDebug ("after SendSyncResponse");
 	return;
   case BX_ASYNC_EVT_SHUTDOWN_GUI:
-	wxLogDebug ("control panel is exiting");
+	wxLogDebug ("configuration interface is exiting");
     Close (TRUE);
 	wxExit ();
 	return;
@@ -531,7 +546,7 @@ MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
     wxMutexGuiLeave();
     return;
   default:
-    wxLogDebug ("OnSim2GuiEvent: event type %d ignored", (int)be->type);
+    wxLogDebug ("OnSim2CuiEvent: event type %d ignored", (int)be->type);
 	// assume it's a synchronous event and send back a response, to avoid
 	// potential deadlock.
     sim_thread->SendSyncResponse(be);
@@ -578,10 +593,10 @@ SimThread::Entry (void)
 {     
   int argc=1;
   char *argv[] = {"bochs"};
-  wxLogDebug ("in SimThread, starting at bx_continue_after_control_panel");
+  wxLogDebug ("in SimThread, starting at bx_continue_after_config_interface");
   // run all the rest of the Bochs simulator code.  This function will
-  // run forever, unless a "kill_bochs_request" is issued.  The procedure
-  // is as follows:
+  // run forever, unless a "kill_bochs_request" is issued.  The shutdown
+  // procedure is as follows:
   //   - user selects "Kill Simulation" or GUI decides to kill bochs
   //   - GUI calls sim_thread->Delete ()
   //   - sim continues to run until the next time it reaches SIM->periodic().
@@ -590,11 +605,11 @@ SimThread::Entry (void)
   //     sets the sync event return code to -1.  SIM->periodic() sets the
   //     kill_bochs_request flag in cpu #0.
   //   - cpu loop notices kill_bochs_request and returns to main.cc:
-  //     bx_continue_after_control_panel(), which notices the
+  //     bx_continue_after_config_interface(), which notices the
   //     kill_bochs_request and returns back to this Entry() function.
   //   - Entry() exits and the thread stops. Whew.
-  bx_continue_after_control_panel (argc, argv);
-  wxLogDebug ("in SimThread, bx_continue_after_control_panel exited");
+  bx_continue_after_config_interface (argc, argv);
+  wxLogDebug ("in SimThread, bx_continue_after_config_interface exited");
   return NULL;
 }
 
@@ -608,11 +623,13 @@ SimThread::OnExit ()
   SIM->set_notify_callback (NULL, NULL);
 }
 
-// This function is declared static so that I can get a usable function
-// pointer for it.  The function pointer is passed to SIM->set_notify_callback
-// so that the siminterface can call this function when it needs to contact
-// the gui.  It will always be called with a pointer to the SimThread
-// as the first argument.
+// Event handler function for BxEvents coming from the simulator.
+// This function is declared static so that I can get a usable
+// function pointer for it.  The function pointer is passed to
+// SIM->set_notify_callback so that the siminterface can call this
+// function when it needs to contact the gui.  It will always be
+// called with a pointer to the SimThread as the first argument, and
+// it will be called from the simulator thread, not the GUI thread.
 BxEvent *
 SimThread::SiminterfaceCallback (void *thisptr, BxEvent *event)
 {
@@ -651,11 +668,14 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
   }
 
   //encapsulate the bxevent in a wxwindows event
-  wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Sim2Gui_Event);
+  wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Sim2Cui_Event);
   wxevent.SetEventObject ((wxEvent *)event);
   wxLogDebug ("Sending an event to the window");
   wxPostEvent (frame, wxevent);
   if (event->type == BX_ASYNC_EVT_LOG_MSG) {
+	// wait until the GUI thread has processed the event and changed
+	// retcode.  bbd: This is a strange case. Shouldn't this just be
+	// called a sync event?
     event->retcode = -1;
     while (event->retcode == -1) this->Sleep(500);
     return event;

@@ -1,42 +1,90 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.46 2002-08-25 08:31:16 vruppert Exp $
+// $Id: siminterface.h,v 1.47 2002-08-26 15:31:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-/*
- * gui/siminterface.h
- * $Id: siminterface.h,v 1.46 2002-08-25 08:31:16 vruppert Exp $
- *
- * Interface to the simulator, currently only used by control.cc.
- * The base class bx_simulator_interface_c, contains only virtual functions
- * and it defines the interface that control.cc is allowed to use.
- * In siminterface.cc, a class called bx_real_sim_c is defined with
- * bx_simulator_interface_c as its parent class.  Bx_real_sim_c 
- * implements each of the functions.  The separation into parent class
- * and child class leaves the possibility of making a different child
- * class that talks to the simulator in a different way (networking
- * for example).
- *
- */
+// Before I can describe what this file is for, I have to make the
+// distinction between a configuration interface (CI) and the VGA display
+// window (VGAW).  I will try to avoid the term 'GUI' because it is unclear 
+// if that means CI or VGAW, and because not all interfaces are graphical 
+// anyway.
+//
+// The traditional Bochs screen is a window with a large VGA display panel and
+// a series of buttons (floppy, cdrom, snapshot, power).  Over the years, we
+// have collected many implementations of the VGAW for different environments
+// and platforms; each implementation is in a separate file under gui/*:
+// x.cc, win32.cc, beos.cc, macintosh.cc, etc.  The files gui.h and gui.cc
+// define the platform independent part of the VGAW, leaving about 15 methods
+// of the bx_gui_c class undefined.  The platform dependent file must 
+// implement the remaining 15 methods.
+//
+// The configuration interface is relatively new, started by Bryce Denney in
+// June 2001.  The CI is intended to allow the user to edit a variety of
+// configuration and runtime options.  Some options, such as memory size or
+// enabling the ethernet card, should only be changed before the simulation
+// begins; others, such as floppy disk image, instructions per second, and
+// logging options can be safely changed at runtime.  The CI allows the user to
+// make these changes.  Before the CI existed, only a few things could be
+// changed at runtime, all linked to clicking on the VGAW buttons.
+//
+// At the time that the CI was conceived, we were still debating what form the
+// user interface part would take: stdin/stdout menus, a graphical application
+// with menus and dialogs running in a separate thread, or even a tiny web
+// server that you can connect to with a web browser.  As a result the CI was
+// designed so that implementation of the user interface can be easily
+// replaced.  To this end, we kept the CI in two distinct parts: the CUI (user
+// interface of the configuration interface) which displays menus and allows
+// the user to edit settings, and the siminterface that communicates between
+// the bochs simulator code and the CUI code.  The first CUI was a series of
+// text mode menus implemented in control.cc.
+//
+// The siminterface is the glue between the CUI and the simulator.  There is
+// just one global instance of the siminterface object, which can be referred
+// to by the global variable
+//   bx_simulator_interface_c *SIM;
+// The base class bx_simulator_interface_c, contains only virtual functions
+// and it defines the interface that the CUI is allowed to use.  In
+// siminterface.cc, a class called bx_real_sim_c is defined with
+// bx_simulator_interface_c as its parent class.  Bx_real_sim_c implements each
+// of the functions.  The separation into parent class and child class leaves
+// the possibility of making a different child class that talks to the
+// simulator in a different way (networking for example).  At the moment this
+// abstraction is serving no specific purpose, so it might be removed in the
+// future.
+//
+// An important part of the siminterface implementation is the use of
+// parameter classes, or bx_param_*.  The parameter classes are
+// described below, where they are declared.  Search for 
+// "parameter classes".
+//
+// Also the siminterface.h header file declares data structures for
+// certain events that pass between the siminterface and the CUI.
+// Search for "event structures" below for details.
 
+
+
+//////////////////////////////////////////////////////
 // BX_UI_TEXT should be set to 1 when the text mode configuration interface
 // is compiled in.  This gives each type of parameter a text_print and text_ask
 // method (defined in gui/control.cc) so that you can call text_ask() on any
 // kind of parameter to ask the user to edit the value.
 //
-// I have been considering whether to use the same strategy for the wxWindows
-// interface, but I'm not sure if I like it.  One problem is that in order to
-// declare member functions that are useful for wxWindows, the wxWindows header
-// files would have to be included before the param object definitions.  That
-// means that all the wxwindows headers would have be included when compiling
-// every single bochs file.  One of the things I like about the separation
-// between the simulator and GUI is that the two halves can be compiled without
-// any knowledge of the other.  Bochs doesn't include <wx.h>, and the wxwindows
-// code doesn't include <bochs.h>.  Aside from making compiles faster, this
-// enforces the use of the interface so it keeps the interface clean (important
-// when we may have multiple GUI implementations for example).  This argues
-// for keeping GUI-specific structures out of the simulator interface.  It
-// certainly works well for the text interface, but that's because FILE* is
-// standard and portable.
+// I have been considering whether to use the same strategy for the
+// wxWindows interface, but I'm not sure if I like it.  One problem is
+// that in order to declare member functions that are useful for
+// wxWindows, the wxWindows header files would have to be included
+// before the param object definitions.  That means that all the
+// wxwindows headers would have be included when compiling every
+// single bochs file.  One of the things I like about the separation
+// between the simulator and CUI is that the two parts can be
+// compiled without any knowledge of the other.  Bochs doesn't include
+// <wx.h>, and the wxwindows code doesn't need to include <bochs.h>.
+// (Never mind that it does at the moment!)  Aside from making
+// compiles faster, this enforces the use of the interface so it keeps
+// the interface clean (important when we may have multiple UI
+// implementations for example).  This argues for keeping UI-specific
+// structures out of the simulator interface.  It certainly works ok
+// for the text interface, but that's because FILE* is standard and
+// portable.
 #define BX_UI_TEXT (!BX_WITH_WX)
 
 //////////////////////////////////////////////////////
@@ -52,6 +100,8 @@ typedef enum {
   BXT_LIST
 } bx_objtype;
 
+// list if parameter id values.  The actual values are not important;
+// it's only important that they all be different from each other.
 typedef enum {
   BXP_NULL = 101,
   BXP_IPS,
@@ -188,8 +238,64 @@ typedef enum {
 } bx_log_levels;
 
 ///////////////////////////////////////////////////////////////////
-// event structure for communication between simulator and gui
+// event structures for communication between simulator and CUI
 ///////////////////////////////////////////////////////////////////
+// Because the CUI (user interface of the configuration interface) 
+// might be in a different thread or even a different process, we pass
+// events encoded in data structures to it instead of just calling
+// functions.  Each type of event is declared as a different
+// structure, and then all those structures are squished into a
+// union in BxEvent.  (BTW, this is almost exactly how X windows
+// event structs work.)
+//
+// These are simple structs, unblemished by C++ methods and tricks.
+// No matter what event type it is, we allocate a BxEvent for each
+// one, as opposed to trying to save a few bytes on small events by
+// allocating only the bytes necessary for it.  This makes it easy and
+// fast to store events in a queue, like this
+//   BxEvent event_queue[MAX_EVENTS];
+//
+// Events come in two varieties: synchronous and asynchronous.  We
+// have to worry about sync and async events because the CUI and the
+// simulation may be running in different threads.  An async event is
+// the simplest.  Whichever thread originates the event just builds
+// the data structure, sends it, and then continues with its business.
+// Async events can go in either direction.  Synchronous events
+// require the other thread to "respond" before the originating thread
+// can continue.  It's like a function with a return value; you can't
+// continue until you get the return value back.
+//
+// Examples:
+//
+// async event: In the wxWindows implementation, both the CUI and the
+// VGAW operate in the wxWindows GUI thread.  When the user presses a
+// key, wxWindows sends a wxKeyEvent to the VGAW event handler code in
+// wx.cc.  The VGAW handler then builds a BxEvent with
+// type=BX_ASYNC_EVT_KEY, and fills in the bx_key and raw_scancode
+// fields.  The asynchronous event is placed on the event_queue for
+// the simulator, then the VGAW handler returns.  (With wxWindows and
+// many other graphical libaries, the event handler must return
+// quickly because the window will not be updated until it's done.)
+// Some time later, the simulator reaches the point where it checks
+// for new events from the user (actually controlled by
+// bx_keyb_c::periodic() in iodev/keyboard.cc) and calls
+// bx_gui.handle_events().  Then all the events in the queue are
+// processed by the simulator.  There is no "response" sent back to
+// the originating thread.
+//
+// sync event: Sometimes the simulator reaches a point where it needs
+// to ask the user how to proceed.  In this case, the simulator sends
+// a synchronous event because it requires a response before it can 
+// continue.  It builds an event structure, perhaps with type
+// BX_SYNC_EVT_ASK_PARAM, sends it to the user interface 
+// using the event handler function defined by set_notify_callback(),
+// and pauses the simulation.  The user interface asks the user the
+// question, and puts the answer into the BxEvent.retcode field.  The
+// event handler function returns the modified BxEvent with retcode
+// filled in, and the simulation continues.  The details of this
+// transaction can be complicated if the simulation and CUI are not
+// in the same thread, but the behavior is as described.
+//
 
 ///// types and definitions used in event structures
 
@@ -197,17 +303,17 @@ typedef enum {
 
 typedef enum {
   __ALL_EVENTS_BELOW_ARE_SYNCHRONOUS__ = 2000,
-  BX_SYNC_EVT_GET_PARAM,          // cpanel -> simulator -> cpanel
-  BX_SYNC_EVT_ASK_PARAM,          // simulator -> cpanel -> simulator
-  BX_SYNC_EVT_TICK,               // simulator -> cpanel, wait for response.
+  BX_SYNC_EVT_GET_PARAM,          // CUI -> simulator -> CUI
+  BX_SYNC_EVT_ASK_PARAM,          // simulator -> CUI -> simulator
+  BX_SYNC_EVT_TICK,               // simulator -> CUI, wait for response.
   __ALL_EVENTS_BELOW_ARE_ASYNC__,
-  BX_ASYNC_EVT_KEY,               // vga gui -> simulator
-  BX_ASYNC_EVT_MOUSE,             // vga gui -> simulator
-  BX_ASYNC_EVT_SET_PARAM,         // cpanel -> simulator
-  BX_ASYNC_EVT_LOG_MSG,           // simulator -> cpanel
-  BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> cpanel
-  BX_ASYNC_EVT_SHUTDOWN_GUI,      // simulator -> cpanel
-  BX_ASYNC_EVT_TOOLBAR            // cpanel -> simulator
+  BX_ASYNC_EVT_KEY,               // vga window -> simulator
+  BX_ASYNC_EVT_MOUSE,             // vga window -> simulator
+  BX_ASYNC_EVT_SET_PARAM,         // CUI -> simulator
+  BX_ASYNC_EVT_LOG_MSG,           // simulator -> CUI
+  BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> CUI
+  BX_ASYNC_EVT_SHUTDOWN_GUI,      // simulator -> CUI
+  BX_ASYNC_EVT_TOOLBAR            // CUI -> simulator
 } BxEventType;
 
 typedef union {
@@ -216,22 +322,24 @@ typedef union {
 } AnyParamVal;
 
 // Define substructures which make up the interior of BxEvent.  The
-// substructures, such as BxKeyEvent or BxMouseEvent, should never be allocated
-// on their own.  They are only intended to be used within the union in the
-// BxEvent structure.
+// substructures, such as BxKeyEvent or BxMouseEvent, should never be
+// allocated on their own.  They are only intended to be used within
+// the union in the BxEvent structure.
 
 // Event type: BX_SYNC_EVT_TICK
+//
 // A tick event is synchronous, sent from the simulator to the GUI.  The
 // event doesn't do anything visible.  Primarily it gives the GUI a chance
 // to tell the simulator to quit, if necessary.  There may be other uses
-// for the tick, such as giving some kind of regular status report or
-// mentioning watched values that changed, but so far it's just for 
-// that one thing.  There is no data associated with a tick event.
+// for the tick in the future, such as giving some kind of regular
+// status report or mentioning watched values that changed, but so far
+// it's just for that one thing.  There is no data associated with a
+// tick event.
 
 // Event type: BX_ASYNC_EVT_KEY
-// (unused)
-// A key event can be sent from the GUI to the Bochs simulator.  It is
-// asynchronous.
+//
+// A key event can be sent from the VGA window to the Bochs simulator.  
+// It is asynchronous.
 typedef struct {
   // what was pressed?  This is a BX_KEY_* value.  For key releases,
   // BX_KEY_RELEASED is ORed with the base BX_KEY_*.
@@ -240,10 +348,10 @@ typedef struct {
 } BxKeyEvent;
 
 // Event type: BX_ASYNC_EVT_MOUSE
-// (unused)
-// A mouse event can be sent from the GUI to the Bochs simulator.  It is
-// asynchronous.  Currently not used, but when Psyon's wxwindows gui is
-// integrated, we will need mouse events.
+//
+// A mouse event can be sent from the VGA window to the Bochs
+// simulator.  It is asynchronous.  Currently unused because mouse
+// events aren't implemented in our wxWindows code yet.
 typedef struct {
   // type is BX_EVT_MOUSE
   Bit16u x, y;             // coordinate (vga screen?)
@@ -253,16 +361,18 @@ typedef struct {
 } BxMouseEvent;
 
 // Event type: BX_SYNC_EVT_GET_PARAM, BX_ASYNC_EVT_SET_PARAM
-// (unused)
-// Parameter set/get events are initiated by the GUI, since Bochs can always
-// access the parameters directly.  So far, I haven't used this type.  In
-// the GUI I just call SIM->get_param(parameter_id) to get a pointer to the
-// bx_param_c object and then call the get/set methods.  This is okay for
-// configuration since bochs is not running.  However it could be dangerous
-// for the GUI thread to poke around in Bochs structures while the thread is
-// running.  For these cases, I may have to be more careful: build parameter
-// change events in the GUI and place them on Bochs's event queue to be
-// processed during SIM->periodic() or something.
+//
+// Parameter set/get events are initiated by the CUI, since Bochs can
+// always access the parameters directly.  So far, I haven't used
+// these event types.  In the CUI I just call
+// SIM->get_param(parameter_id) to get a pointer to the bx_param_c
+// object and then call the get/set methods.  This is okay for
+// configuration since bochs is not running.  However it could be
+// dangerous for the GUI thread to poke around in Bochs structures
+// while the thread is running.  For these cases, I may have to be
+// more careful and actually build get/set events and place them on
+// Bochs's event queue to be processed during SIM->periodic() or
+// something.
 typedef struct {
   // type is BX_EVT_GET_PARAM, BX_EVT_SET_PARAM
   class bx_param_c *param;         // pointer to param structure
@@ -270,8 +380,8 @@ typedef struct {
 } BxParamEvent;
 
 // Event type: BX_SYNC_EVT_ASK_PARAM
-// Syncronous event sent from the simulator to the GUI.  This tells the
-// GUI to ask the user to choose the value of a parameter.  The GUI may 
+// Synchronous event sent from the simulator to the CUI.  This tells the
+// CUI to ask the user to choose the value of a parameter.  The CUI may 
 // need to discover the type of parameter so that it can use the right
 // kind of graphical display.  The BxParamEvent is used for these events
 // too.
@@ -280,34 +390,36 @@ typedef struct {
 // types.
 
 // Event type: BX_ASYNC_EVT_VALUE_CHANGED
-// (unused)
-// Asynchronous event sent from the simulator to the GUI, telling it that
+// 
+// Asynchronous event sent from the simulator to the CUI, telling it that
 // some value that it (hopefully) cares about has changed.  This isn't
 // being used yet, but a good example is in a debugger interface, you might
 // want to maintain a reasonably current display of the PC or some other
-// simulation state.  The GUI would set some kind of event mask (which
+// simulation state.  The CUI would set some kind of event mask (which
 // doesn't exist now of course) and then when certain values change, the
-// simulator would send this event so that the GUI can update.  We may need
+// simulator would send this event so that the CUI can update.  We may need
 // some kind of "flow control" since the simulator will be able to produce
-// new events much faster than the gui can handle them.
+// new events much faster than the gui can accept them.
 
 // Event type: BX_ASYNC_EVT_LOG_MSG
-// Asynchronous event from the simulator to the GUI.  When a BX_PANIC,
+//
+// Asynchronous event from the simulator to the CUI.  When a BX_PANIC,
 // BX_ERROR, BX_INFO, or BX_DEBUG is found in the simulator code, this 
-// event type can be used to inform the GUI of the condition.  There is
-// no point in sending messages to the GUI that will not be displayed; these
+// event type can be used to inform the CUI of the condition.  There is
+// no point in sending messages to the CUI that will not be displayed; these
 // would only slow the simulation.  So we will need some mechanism for 
-// choosing what kinds of events will be delivered to the GUI.  Normally,
+// choosing what kinds of events will be delivered to the CUI.  Normally,
 // you wouldn't want to look at the log unless something is going wrong.
 // At that point, you might want to open up a window to watch the debug
-// messages from one device only.
+// messages from one or two devices only.
 //
-// Idea: Except for panics that require user attention to continue, it might be
-// most efficient to just append log messages to a file.  When the user wants
-// to look at the log messages, the gui can reopen the file (read only), skip
-// to the end, and look backward for a reasonable number of lines to display
-// (200?).  This allows it to skip over huge bursts of log entries without
-// allocating memory, synchronizing threads, etc. for each.
+// Idea: Except for panics that require user attention to continue, it
+// might be most efficient to just append log messages to a file.
+// When the user wants to look at the log messages, the gui can reopen
+// the file (read only), skip to the end, and look backward for a
+// reasonable number of lines to display (200?).  This allows it to
+// skip over huge bursts of log entries without allocating memory,
+// synchronizing threads, etc. for each.
 typedef struct {
   // type is BX_EVT_LOG_MSG
   Bit8u level;
@@ -316,7 +428,7 @@ typedef struct {
 } BxLogMsgEvent;
 
 // Event type: BX_EVT_TOOLBAR
-// Asynchronous event from the GUI to the simulator, sent when the user
+// Asynchronous event from the VGAW to the simulator, sent when the user
 // clicks on a toolbar button.  This may one day become something more 
 // general, like a command event, but at the moment it's only needed for
 // the toolbar events.
@@ -342,6 +454,34 @@ typedef struct {
 
 
 ////////////////////////////////////////////////////////////////////
+// parameter classes: bx_param_c and family
+////////////////////////////////////////////////////////////////////
+//
+// All variables that can be configured through the CI are declared as
+// "parameters" or objects of type bx_param_*.  There is a bx_param_*
+// class for each type of data that the user would need to see and
+// edit, e.g. integer, boolean, enum, string, filename, or list of
+// other parameters.  The purpose of the bx_param_* class, in addition
+// to storing the parameter's value, is to hold the name, description,
+// and constraints on the value.  The bx_param_* class should hold
+// everything that the CUI would need to display the value and allow
+// the user to modify it.  For integer parameters, the minimum and
+// maximum allowed value can be defined, and the base in which it
+// should be displayed and interpreted.  For enums, the
+// bx_param_enum_c structure includes the list of values which the
+// parameter can have.
+//
+// Also, some parameter classes support get/set callback functions to
+// allow arbitrary code to be executed when the parameter is get/set. 
+// An example of where this is useful: if you disable the NE2K card,
+// the set() handler for that parameter can tell the user interface
+// that the NE2K's irq, I/O address, and mac address should be
+// disabled (greyed out, hidden, or made inaccessible).  The get/set
+// methods can also check if the set() value is acceptable using
+// whatever means and override it.
+//
+// The parameter concept is similar to the use of parameters in JavaBeans.
+
 class bx_object_c {
 private:
   bx_id id;
@@ -445,9 +585,10 @@ class bx_param_string_c : public bx_param_c {
   char separator;
 public:
   enum {
-    BX_RAW_BYTES = 1,          // need binary text editor, like MAC addr
-	BX_IS_FILENAME = 2,        // 1=yes it's a filename, 0=not a filename.
-	                           // Some guis have a file browser.
+    BX_RAW_BYTES = 1,          // use binary text editor, like MAC addr
+	BX_IS_FILENAME = 2,    // 1=yes it's a filename, 0=not a filename.
+	                       // Some guis have a file browser. This
+			       // bit suggests that they use it.
 	BX_SAVE_FILE_DIALOG = 4    // Use save dialog opposed to open file dialog
   } bx_string_opt_bits;
   bx_param_string_c (bx_id id,
@@ -469,7 +610,7 @@ public:
 #endif
 };
 
-// declare a filename class.  It is identical to a string, except that
+// Declare a filename class.  It is identical to a string, except that
 // it initializes the options differently.  This is just a shortcut
 // for declaring a string param and setting the options with BX_IS_FILENAME.
 class bx_param_filename_c : public bx_param_string_c {
@@ -505,10 +646,11 @@ private:
 public:
   enum {
     // When a bx_list_c is displayed as a menu, SHOW_PARENT controls whether or
-    // not the menu shows "0. Return to previous menu" or not.
+    // not the menu shows a "Return to parent menu" choice or not.
     BX_SHOW_PARENT = (1<<0),
     // Some lists are best displayed shown as menus, others as a series of
-    // related questions.  
+    // related questions.  This bit suggests to the CUI that the
+    // series of questions format is preferred.
     BX_SERIES_ASK = (1<<1)
   } bx_listopt_bits;
   //bx_list_c (bx_id id, int maxsize);
@@ -578,7 +720,9 @@ struct bx_cdrom_options
 
 
 ////////////////////////////////////////////////////////////////////
-extern int bx_main (int argc, char *argv[]);
+// base class simulator interface, contains just virtual functions.
+// I'm not longer sure that having a base class is going to be of any
+// use... -Bryce
 
 class bx_simulator_interface_c {
 public:
@@ -602,8 +746,8 @@ public:
   // to call BX_EXIT(exitcode).  That is defined to call 
   // SIM->quit_sim(exitcode).  The quit_sim function first calls
   // the cleanup functions in bochs so that it can destroy windows
-  // and free up memory, then sends a notify message to the control 
-  // panel telling it that bochs has stopped.
+  // and free up memory, then sends a notify message to the CUI 
+  // telling it that bochs has stopped.
   virtual void quit_sim (int code) {}
 
   virtual int get_default_rc (char *path, int len) {return -1;}
@@ -617,27 +761,29 @@ public:
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out) {return -1;}
   virtual char *get_floppy_type_name (int type) {return NULL;}
 
-  // The control panel calls set_notify_callback to register an event 
-  // handler.  This handler is for events which are generated by Bochs
-  // or the Bochs controller vga screen.  For example, if the simulator
-  // hits a panic and wants a dialog box to appear, it would use the
-  // sim_interface_callback to ask the control panel to display a dialog.
-  // At present, the standard floppy disk buttons, power button, etc are under
-  // control of Bochs, NOT the control panel.  Bochs uses the callback to tell
-  // the control panel that one of these buttons has been pressed.
+  // The CUI calls set_notify_callback to register its event handler function.
+  // This event handler function is called whenever the simulator needs to
+  // send an event to the CUI.  For example, if the simulator hits a panic and
+  // wants to ask the user how to proceed, it would call the CUI event handler
+  // to ask the CUI to display a dialog.
+  //
+  // NOTE: At present, the standard VGAW buttons (floppy, snapshot, power,
+  // etc.) are displayed and handled by gui.cc, not by the CI or siminterface.
+  // gui.cc uses its own callback functions to implement the behavior of
+  // the buttons.  Some of these implementations call the siminterface.
   typedef BxEvent* (*sim_interface_callback_t)(void *theclass, BxEvent *event);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg) {}
 
-  // send an event from the simulator to the GUI.
-  virtual BxEvent* sim_to_gui_event (BxEvent *event) {return NULL;}
+  // send an event from the simulator to the CUI.
+  virtual BxEvent* sim_to_cui_event (BxEvent *event) {return NULL;}
 
-  // this "notify arg" passing is very ugly and Bryce needs to clean it up!
+  // called from simulator when it hits serious errors, to ask if the user
+  // wants to continue or not
   virtual int log_msg (const char *prefix, int level, char *msg) {return -1;}
-  // called by gui.cc event handler when a button is pressed.
+
+  // tell the CUI to ask the user for the value of a parameter.
   virtual int ask_param (bx_id param) {return -1;}
 
-  virtual int get_enabled () {return -1;}
-  virtual void set_enabled (int enabled) {}
   // ask the user for a pathname
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags) {return -1;}
   // called at a regular interval, currently by the keyboard handler.
@@ -648,4 +794,4 @@ extern bx_simulator_interface_c *SIM;
 
 extern void bx_init_siminterface ();
 extern void bx_init_main (int argc, char *argv[]);
-extern int bx_continue_after_control_panel (int argc, char *argv[]);
+extern int bx_continue_after_config_interface (int argc, char *argv[]);

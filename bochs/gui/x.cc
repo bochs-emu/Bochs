@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.44 2002-08-09 06:16:43 vruppert Exp $
+// $Id: x.cc,v 1.45 2002-08-26 15:31:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -571,7 +571,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
 // This is called whenever the mouse_enabled parameter changes.  It
 // can change because of a gui event such as clicking on the mouse-enable
-// bitmap or pressing the middle button, or from the control panel.
+// bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
   void
 bx_gui_c::mouse_enabled_changed_specific (Boolean val)

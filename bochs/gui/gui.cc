@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.44 2002-08-25 12:32:54 vruppert Exp $
+// $Id: gui.cc,v 1.45 2002-08-26 15:31:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -384,8 +384,8 @@ bx_gui_c::paste_handler(void)
   void
 bx_gui_c::config_handler(void)
 {
-#if BX_USE_CONTROL_PANEL && !BX_WITH_WX
-  bx_control_panel (BX_CPANEL_RUNTIME);
+#if BX_USE_CONFIG_INTERFACE && !BX_WITH_WX
+  bx_config_interface (BX_CI_RUNTIME);
 #else
   BX_ERROR(( "# CONFIG callback (unimplemented)." ));
 #endif

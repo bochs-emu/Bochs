@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.16 2002-04-20 07:19:35 vruppert Exp $
+// $Id: beos.cc,v 1.17 2002-08-26 15:31:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1194,7 +1194,7 @@ bx_gui_c::exit(void)
 //IRA=> Start
 // This is called whenever the mouse_enabled parameter changes.  It
 // can change because of a gui event such as clicking on the mouse-enable
-// bitmap or pressing the middle button, or from the control panel.
+// bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
 
   void
