@@ -1,0 +1,134 @@
+----------------------------------------------------------------------
+Patch name: patches/patch.harddrive-32GiB-win32-hartmut
+Author: Hartmut Birr (uploaded by cbothamy)
+Date: 28 oct 2002
+
+Detailed description:
+This patch changes the offset for the lseeks within the disk image class 
+from byte to sector units.
+This patch also adds support for disk up to 32GiB under Win32 (NTFS only).
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 28 oct 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.87
+diff -u -r1.87 harddrv.cc
+--- iodev/harddrv.cc	27 Oct 2002 21:25:33 -0000	1.87
++++ iodev/harddrv.cc	28 Oct 2002 21:35:19 -0000
+@@ -724,7 +724,7 @@
+ 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+ 	        GOTO_RETURN_VALUE ;
+ 	      }
+-	      ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
++	      ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector, SEEK_SET);
+               if (ret < 0) {
+                 BX_ERROR(("could not lseek() hard drive image file"));
+ 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+@@ -1212,7 +1212,7 @@
+ #if TEST_WRITE_BEYOND_END==2
+ 	    logical_sector += 100000;
+ #endif
+-	    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
++	    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector, SEEK_SET);
+             if (ret < 0) {
+               BX_ERROR(("could not lseek() hard drive image file at byte %lu", logical_sector * 512));
+ 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+@@ -1896,7 +1896,7 @@
+ #if TEST_READ_BEYOND_END==3
+ 	  logical_sector += 100000;
+ #endif
+-	  ret=BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
++	  ret=BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector, SEEK_SET);
+           if (ret < 0) {
+             BX_ERROR (("could not lseek() hard drive image file, aborting"));
+ 	    command_aborted(channel, value);
+@@ -3127,17 +3127,40 @@
+ 
+ off_t default_image_t::lseek (off_t offset, int whence)
+ {
+-      return ::lseek(fd, offset, whence);
++#ifdef WIN32
++      LARGE_INTEGER pos;
++      DWORD dwResult;
++      pos.u.LowPart = offset << 9;
++      pos.u.HighPart = offset >> 23;
++      dwResult = SetFilePointer((HANDLE)_get_osfhandle(fd), pos.u.LowPart, &pos.u.HighPart, whence);
++      return dwResult == 0xffffffff && GetLastError() != NO_ERROR ? -1 : 0;
++#else     
++      return ::lseek(fd, offset * 512, whence);
++#endif
+ }
+ 
+ ssize_t default_image_t::read (void* buf, size_t count)
+ {
++#ifdef WIN32
++      DWORD dwResult;
++      BOOL bResult;
++      bResult = ReadFile((HANDLE)_get_osfhandle(fd), buf, count, &dwResult, NULL);
++      return bResult ? count : 0;
++#else       
+       return ::read(fd, buf, count);
++#endif      
+ }
+ 
+ ssize_t default_image_t::write (const void* buf, size_t count)
+ {
++#ifdef WIN32
++      DWORD dwResult;
++      BOOL bResult;
++      bResult = WriteFile((HANDLE)_get_osfhandle(fd), buf, count, &dwResult, NULL);
++      return bResult ? count : 0;
++#else      
+       return ::write(fd, buf, count);
++#endif      
+ }
+ 
+ #if BX_SPLIT_HD_SUPPORT
+@@ -3195,9 +3218,9 @@
+     if ((stat_buf.st_size % 512) != 0) {
+       BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+     }
+-    length_table[i] = stat_buf.st_size;
+-    start_offset_table[i] = start_offset;
+-    start_offset += stat_buf.st_size;
++    length_table[i] = stat_buf.st_size / 512;
++    start_offset_table[i] = start_offset / 512;
++    start_offset += stat_buf.st_size / 512;
+     increment_string (pathname);
+   }
+   // start up with first image selected
+@@ -3219,8 +3242,6 @@
+ 
+ off_t concat_image_t::lseek (off_t offset, int whence)
+ {
+-  if ((offset % 512) != 0) 
+-    BX_PANIC( ("lseek HD with offset not multiple of 512"));
+   BX_DEBUG(("concat_image_t.lseek(%d)", whence));
+   // is this offset in this disk image?
+   if (offset < thismin) {
+@@ -3256,7 +3277,7 @@
+   }
+ 
+   seek_was_last_op = 1;
+-  return ::lseek(fd, offset, whence);
++  return ::lseek(fd, offset * 512, whence);
+ }
+ 
+ ssize_t concat_image_t::read (void* buf, size_t count)
+@@ -3329,7 +3350,7 @@
+ 
+ off_t dll_image_t::lseek (off_t offset, int whence)
+ {
+-      vblk = offset >> 9;
++      vblk = offset;
+       return 0;
+ }
+ 
