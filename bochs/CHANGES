@@ -5,7 +5,7 @@ TO DO LIST:
 - check logs in gui
   - (DONE) carbon.cc
   - everything else
-- check logs in iodev (Christophe is working on this, done biosdev to keyboard)
+- check logs in iodev (Christophe is working on this, done biosdev to pic)
 - (DONE) check logs in main directory
   - (DONE) check logs of configure.in
   - (DONE) Makefile.in
@@ -307,7 +307,7 @@ I'm listing them here to remind us about them:
     - distinguish between floppy drive type and media type
   - hard drive
     - missing conditions for lower_irq() added (Volker)
-    - several noncritical pancis replaced with BX_ERRORS and the controller
+    - several noncritical panics replaced with BX_ERRORS and the controller
       returns an error code until we implement the features (Volker)
     - applied patch from Carl Sopchak for booting  sco openserver
     - allow disk block access only if concatenated images are not used
@@ -321,7 +321,7 @@ I'm listing them here to remind us about them:
     - "inquiry" atapi command results corrected (Volker)
     - check for incomplete devices configuration before starting the
       simulation (Bryce)
-    - implemented the different bios disk translation scheme (Christophe)
+    - implemented the different bios disk translation schemes (Christophe)
   - keyboard and mouse
     - add commands 0xd2, 0xdd and 0xdf (Dave)
     - fix bug [ 613975 ] wxWindows: params redefined on restart (Bryce)
@@ -332,10 +332,11 @@ I'm listing them here to remind us about them:
   - NE2000
     - function reset() clears the IRQ line (Volker)
     - added TUN/TAP interface (Renzo Davoli, Christophe)
-    - FIXME
+    - fix DOS based packet drivers that use an odd count for the NE2000 DMA (Peter)
+    - changed "TCR write, reserved bits set" panic into an error, fixes
+      networking with debian image (Bryce)
   - parallel
     - parport1 enable/disable support added (Volker)
-    - FIXME
   - PCI (Volker)
     - implementation of the PCI device register mechanism
     - PCI memory handling moved to the memory code
@@ -343,7 +344,11 @@ I'm listing them here to remind us about them:
       PCI on big-endian machines are fixed now (SF bug #638481).
     - implementation of the PCI-to-ISA bridge started (still incomplete)
   - PIC
-    - FIXME
+    - fixed detection of single mode and level senistive mode in ICW1 (Volker)
+    - fixed handling of rotate_on_autoeoi for master PIC (Volker)
+    - irq mask is now cleared on initialization (Dave)
+    - fixed lockup during mouse movements during win98 install. (patch from 
+      Wilfried Weissmann)
   - PIT
     - Added realtime PIT support (Greg)
   - Sound Blaster 16
