@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.30 2003-06-05 18:18:14 vruppert Exp $
+// $Id: vga.h,v 1.31 2003-06-30 18:53:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,16 +26,16 @@
 
 #if BX_SUPPORT_VBE
   #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB 4
-  
+
   #define VBE_DISPI_BANK_ADDRESS          0xA0000
   #define VBE_DISPI_BANK_SIZE_KB          64
-  
+
   #define VBE_DISPI_MAX_XRES              1024
   #define VBE_DISPI_MAX_YRES              768
-  
+
   #define VBE_DISPI_IOPORT_INDEX          0xFF80
   #define VBE_DISPI_IOPORT_DATA           0xFF81
-  
+
   #define VBE_DISPI_INDEX_ID              0x0
   #define VBE_DISPI_INDEX_XRES            0x1
   #define VBE_DISPI_INDEX_YRES            0x2
@@ -46,20 +46,21 @@
   #define VBE_DISPI_INDEX_VIRT_HEIGHT     0x7
   #define VBE_DISPI_INDEX_X_OFFSET        0x8
   #define VBE_DISPI_INDEX_Y_OFFSET        0x9
-    
+
   #define VBE_DISPI_ID0                   0xB0C0
   #define VBE_DISPI_ID1                   0xB0C1
-    
-  #define VBE_DISPI_BPP_8                 0x0
-  #define VBE_DISPI_BPP_4                 0x4
-// The following is not support yet, but just for reference available.  
-//  #define VBE_DISPI_BPP_RGB565            0x1
-//  #define VBE_DISPI_BPP_RGB555            0x2
+  #define VBE_DISPI_ID2                   0xB0C2
+
+  #define VBE_DISPI_BPP_4                 0x04
+  #define VBE_DISPI_BPP_8                 0x08
+  #define VBE_DISPI_BPP_16                0x10
+  #define VBE_DISPI_BPP_24                0x18
+  #define VBE_DISPI_BPP_32                0x20
 
   #define VBE_DISPI_DISABLED              0x00
   #define VBE_DISPI_ENABLED               0x01
   #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
-  
+
   
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB		(VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)  
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES 	(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)  
@@ -233,7 +234,7 @@ private:
     Bit8u vga_memory[256 * 1024];
     Bit8u text_snapshot[32 * 1024]; // current text snapshot
     Bit8u rgb[3 * 256];
-    Bit8u tile[X_TILESIZE * Y_TILESIZE];
+    Bit8u tile[X_TILESIZE * Y_TILESIZE * 4]; /**< Currently allocates the tile as large as needed. */
     Bit16u charmap_address;
     bx_bool x_dotclockdiv2;
     bx_bool y_doublescan;
@@ -247,11 +248,14 @@ private:
     Bit16u  vbe_bank;
     bx_bool vbe_enabled;
     Bit16u  vbe_curindex;
-    Bit32u  vbe_visable_screen_size; // in bytes
-    Bit16u  vbe_offset_x;
-    Bit16u  vbe_offset_y;
+    Bit32u  vbe_visable_screen_size; /**< in bytes */
+    Bit16u  vbe_offset_x;		 /**< Virtual screen x start (in pixels) */ 
+    Bit16u  vbe_offset_y;		 /**< Virtual screen y start (in pixels) */
     Bit16u  vbe_virtual_xres;
     Bit16u  vbe_virtual_yres;
+    Bit16u	vbe_line_byte_width; /**< For dealing with bpp>8, this is they width of a line in bytes. */
+    Bit32u	vbe_virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
+    Bit8u	vbe_bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
 #endif    
     } s;  // state information
 
@@ -264,6 +268,7 @@ private:
 #endif
 
 #if BX_SUPPORT_VBE
+
 #if !BX_USE_VGA_SMF
   Bit32u vbe_read(Bit32u address, unsigned io_len);
   void   vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);

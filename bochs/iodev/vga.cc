@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.78 2003-06-10 16:26:19 vruppert Exp $
+// $Id: vga.cc,v 1.79 2003-06-30 18:53:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -267,7 +267,7 @@ bx_vga_c::init(void)
   }    
   BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
   BX_VGA_THIS s.vbe_xres=640;
-  BX_VGA_THIS s.vbe_yres=400;
+  BX_VGA_THIS s.vbe_yres=480;
   BX_VGA_THIS s.vbe_bpp=8;
   BX_VGA_THIS s.vbe_bank=0;
   BX_VGA_THIS s.vbe_enabled=0;
@@ -275,7 +275,10 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.vbe_offset_x=0;
   BX_VGA_THIS s.vbe_offset_y=0;
   BX_VGA_THIS s.vbe_virtual_xres=640;
-  BX_VGA_THIS s.vbe_virtual_yres=400;
+  BX_VGA_THIS s.vbe_virtual_yres=480;
+  BX_VGA_THIS s.vbe_bpp_multiplier=1;
+  BX_VGA_THIS s.vbe_virtual_start=0;
+  BX_VGA_THIS s.vbe_line_byte_width=640;
 
   
   BX_INFO(("VBE Bochs Display Extension Enabled"));
@@ -1309,39 +1312,146 @@ bx_vga_c::update(void)
     // specific VBE code display update code
     // this is partly copied/modified from the 320x200x8 update more below
     unsigned xc, yc, xti, yti;
-    Bit8u color;
-    unsigned r, c;
-    unsigned long byte_offset;
-    unsigned long pixely, pixelx;
+    unsigned r;
+    unsigned long pixely, bmp_ofs_y, tile_ofs_y;
 
-    iWidth=BX_VGA_THIS s.vbe_xres;
-    iHeight=BX_VGA_THIS s.vbe_yres;
+    if (BX_VGA_THIS s.vbe_bpp == VBE_DISPI_BPP_32)
+    {
+      Bit32u *vidmem = (Bit32u *)(&BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_virtual_start]);
+      Bit32u *tile   = (Bit32u *)(BX_VGA_THIS s.tile);
+      Bit16u width  =  BX_VGA_THIS s.vbe_virtual_xres;
 
-    // incl virtual xres correction
-    Bit32u start_offset = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_virtual_xres)) + BX_VGA_THIS s.vbe_offset_x;
+      Bit32u *vidptr, *tileptr;
 
-    yti = 0;
-    for (yc=0; yc<iHeight; yc+=Y_TILESIZE) {
-      xti = 0;
-      for (xc=0; xc<iWidth; xc+=X_TILESIZE) {
-        if (GET_TILE_UPDATED (xti, yti)) {
-          for (r=0; r<Y_TILESIZE; r++) {
-            pixely = yc + r;
-            for (c=0; c<X_TILESIZE; c++) {
-              pixelx = xc + c;
-              // incl virtual xres correction
-              byte_offset = (pixely*(BX_VGA_THIS s.vbe_virtual_xres)) + (pixelx);
-              color = BX_VGA_THIS s.vbe_memory[start_offset + byte_offset];
-              BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
+      iWidth=BX_VGA_THIS s.vbe_xres;
+      iHeight=BX_VGA_THIS s.vbe_yres;
+
+      for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++)
+      {
+        for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++)
+        {
+          if (GET_TILE_UPDATED (xti, yti))
+          {
+            for (r=0; r<Y_TILESIZE; r++)
+            {
+              pixely    = yc + r;
+              // calc offsets into video and tile memory
+              bmp_ofs_y = pixely*width;
+              tile_ofs_y = r*X_TILESIZE;
+              // get offsets so that we do less calc in the inner loop
+              vidptr = &vidmem[bmp_ofs_y+xc];
+              tileptr = &tile[tile_ofs_y];
+              memmove(tileptr, vidptr, X_TILESIZE<<2);
             }
+            SET_TILE_UPDATED (xti, yti, 0);
+            bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
           }
-          SET_TILE_UPDATED (xti, yti, 0);
-          bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
         }
-        xti++;
       }
-      yti++;
     }
+    else if (BX_VGA_THIS s.vbe_bpp == VBE_DISPI_BPP_24)
+    {
+      Bit8u *vidmem = &BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_virtual_start];
+      Bit8u *tile   =  BX_VGA_THIS s.tile;
+      Bit16u width  =  BX_VGA_THIS s.vbe_virtual_xres*3;
+
+      Bit8u *vidptr, *tileptr;
+
+      iWidth=BX_VGA_THIS s.vbe_xres;
+      iHeight=BX_VGA_THIS s.vbe_yres;
+
+      for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++)
+      {
+        for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++)
+        {
+          if (GET_TILE_UPDATED (xti, yti))
+          {
+            for (r=0; r<Y_TILESIZE; r++)
+            {
+              pixely    = yc + r;
+              // calc offsets into video and tile memory
+              bmp_ofs_y = pixely*width;
+              tile_ofs_y = r*X_TILESIZE*3;
+              // get offsets so that we do less calc in the inner loop
+              vidptr = &vidmem[bmp_ofs_y+xc*3];
+              tileptr = &tile[tile_ofs_y];
+              memmove(tileptr, vidptr, X_TILESIZE*3);
+            }
+            SET_TILE_UPDATED (xti, yti, 0);
+            bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+          }
+        }
+      }
+    }
+    else if (BX_VGA_THIS s.vbe_bpp == VBE_DISPI_BPP_16)
+    {
+      Bit16u *vidmem = (Bit16u *)(&BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_virtual_start]);
+      Bit16u *tile   = (Bit16u *)(BX_VGA_THIS s.tile);
+      Bit16u width  =  BX_VGA_THIS s.vbe_virtual_xres;
+
+      Bit16u *vidptr, *tileptr;
+
+      iWidth=BX_VGA_THIS s.vbe_xres;
+      iHeight=BX_VGA_THIS s.vbe_yres;
+
+      for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++)
+      {
+        for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++)
+        {
+          if (GET_TILE_UPDATED (xti, yti))
+          {
+            for (r=0; r<Y_TILESIZE; r++)
+            {
+              pixely    = yc + r;
+              // calc offsets into video and tile memory
+              bmp_ofs_y = pixely*width;
+              tile_ofs_y = r*X_TILESIZE;
+              // get offsets so that we do less calc in the inner loop
+              vidptr = &vidmem[bmp_ofs_y+xc];
+              tileptr = &tile[tile_ofs_y];
+              memmove(tileptr, vidptr, X_TILESIZE<<1);
+            }
+            SET_TILE_UPDATED (xti, yti, 0);
+            bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+          }
+        }
+      }
+    }
+    else /* Update 8bpp mode */
+    {
+      Bit8u *vidmem = &BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_virtual_start]; 
+      Bit8u *tile   =  BX_VGA_THIS s.tile;
+      Bit16u width  =  BX_VGA_THIS s.vbe_virtual_xres;
+
+      Bit8u *vidptr, *tileptr;
+
+      iWidth=BX_VGA_THIS s.vbe_xres;
+      iHeight=BX_VGA_THIS s.vbe_yres;
+
+      for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++)
+      {
+        for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++)
+        {
+          // If the tile has not been updated, copy it into the tile buffer for update  
+          if (GET_TILE_UPDATED (xti, yti)) {
+            for (r=0; r<Y_TILESIZE; r++) {
+              // actual video y coord is tile_y + y
+              pixely = yc + r;
+              // calc offsets into video and tile memory
+              bmp_ofs_y = pixely*width;
+              tile_ofs_y = r*X_TILESIZE;
+              // get offsets so that we do less calc in the inner loop
+              vidptr = &vidmem[bmp_ofs_y+xc];
+              tileptr = &tile[tile_ofs_y];
+              memmove(tileptr, vidptr, X_TILESIZE);
+            }
+            SET_TILE_UPDATED (xti, yti, 0);
+            bx_gui->graphics_tile_update(BX_VGA_THIS s.tile, xc, yc);
+          }
+        }
+      }
+    }
+
     old_iWidth = iWidth;
     old_iHeight = iHeight;
     BX_VGA_THIS s.vga_mem_updated = 0;
@@ -2494,25 +2604,23 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   }
   
   // only update the UI when writing 'onscreen'
-    if (offset < BX_VGA_THIS s.vbe_visable_screen_size)
+  if (offset < BX_VGA_THIS s.vbe_visable_screen_size)
   {
     // incl virtual xres correction
-    Bit32u start_offset = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_virtual_xres)) + BX_VGA_THIS s.vbe_offset_x;
+    Bit32u start_offset = BX_VGA_THIS s.vbe_virtual_start;
+
     offset=offset-start_offset;
-    
-    y_tileno = (offset / BX_VGA_THIS s.vbe_virtual_xres) / Y_TILESIZE;
-    
+
+    y_tileno = ((offset / BX_VGA_THIS s.vbe_bpp_multiplier) / BX_VGA_THIS s.vbe_virtual_xres) / Y_TILESIZE;
+
     // FIXME: need virtual_xres!=xres correction for x?
-    x_tileno = (offset % BX_VGA_THIS s.vbe_virtual_xres) / X_TILESIZE;
-    
+    x_tileno = ((offset / BX_VGA_THIS s.vbe_bpp_multiplier) % BX_VGA_THIS s.vbe_virtual_xres) / X_TILESIZE;
+
     if ((y_tileno < BX_NUM_Y_TILES) && (x_tileno < BX_NUM_X_TILES))
     {
       BX_VGA_THIS s.vga_mem_updated = 1;
       SET_TILE_UPDATED (x_tileno, y_tileno, 1);
     }
-/*    else
-    BX_INFO(("VBE_mem_write out of tile update array y %d, x %d\n",y_tileno,x_tileno));
-*/
   }  
 }
 
@@ -2626,225 +2734,278 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
 //  BX_INFO(("VBE_write %x = %x (len %x)", address, value, io_len));
   
-  if (address==VBE_DISPI_IOPORT_INDEX)
+  switch(address)
   {
-    // index register
-    
-    BX_VGA_THIS s.vbe_curindex = (Bit16u) value;
-  }
-  else
-  {
+    // index register    
+    case VBE_DISPI_IOPORT_INDEX:
+
+      BX_VGA_THIS s.vbe_curindex = (Bit16u) value;
+      break;
+
     // data register
     // FIXME: maybe do some 'sanity' checks on received data?
-    
-    switch (BX_VGA_THIS s.vbe_curindex)
-    {
-      case VBE_DISPI_INDEX_ID: // Display Interface ID check
+    case VBE_DISPI_IOPORT_DATA:
+      switch (BX_VGA_THIS s.vbe_curindex)
       {
-      	if ( (value == VBE_DISPI_ID0) ||
-      	     (value == VBE_DISPI_ID1))
-      	{
-      	  // allow backwards compatible with previous dispi bioses
-      	  
-      	  BX_VGA_THIS s.vbe_cur_dispi=value;
-      	}
-      	else
+        case VBE_DISPI_INDEX_ID: // Display Interface ID check
         {
-          BX_PANIC(("VBE unknown Display Interface %x",value));
-        }
+          if ( (value == VBE_DISPI_ID0) ||
+               (value == VBE_DISPI_ID1) ||
+               (value == VBE_DISPI_ID2) )
+          {
+            // allow backwards compatible with previous dispi bioses
+            BX_VGA_THIS s.vbe_cur_dispi=value;
+          }
+          else
+          {
+            BX_PANIC(("VBE unknown Display Interface %x",value));
+          }
 
-        // make sure we don't flood the logfile
-        static int count=0;
-        if (count < 100)
-        {
-          count++;
-          BX_INFO(("VBE known Display Interface %x",value));
-        }
-      } break;
-      
-      case VBE_DISPI_INDEX_XRES: // set xres
-      {
-        // check that we don't set xres during vbe enabled
-        if (!BX_VGA_THIS s.vbe_enabled)
-        {
-          // check for within max xres range
-          if (value <= VBE_DISPI_MAX_XRES)
+          // make sure we don't flood the logfile
+          static int count=0;
+          if (count < 100)
           {
-            BX_VGA_THIS s.vbe_xres=(Bit16u) value;
+            count++;
+            BX_INFO(("VBE known Display Interface %x",value));
+          }
+        } break;
+
+        case VBE_DISPI_INDEX_XRES: // set xres
+        {
+          // check that we don't set xres during vbe enabled
+          if (!BX_VGA_THIS s.vbe_enabled)
+          {
+            // check for within max xres range
+            if (value <= VBE_DISPI_MAX_XRES)
+            {
+              BX_VGA_THIS s.vbe_xres=(Bit16u) value;
+              BX_INFO(("VBE set xres (%d)",value));
+            }
+            else
+            {
+              BX_INFO(("VBE set xres more then max xres (%d)",value));
+            }
           }
           else
           {
-            BX_INFO(("VBE set xres more then max xres (%d)",value));
+            BX_INFO(("VBE set xres during vbe enabled!"));
           }
-        }
-        else
+        } break;
+
+        case VBE_DISPI_INDEX_YRES: // set yres
         {
-          BX_INFO(("VBE set xres during vbe enabled!"));
-        }
-      } break;
-      
-      case VBE_DISPI_INDEX_YRES: // set yres
-      {
-        // check that we don't set yres during vbe enabled
-        if (!BX_VGA_THIS s.vbe_enabled)
-        {
-          // check for within max yres range
-          if (value <= VBE_DISPI_MAX_YRES)
+          // check that we don't set yres during vbe enabled
+          if (!BX_VGA_THIS s.vbe_enabled)
           {
-            BX_VGA_THIS s.vbe_yres=(Bit16u) value;
+            // check for within max yres range
+            if (value <= VBE_DISPI_MAX_YRES)
+            {
+              BX_VGA_THIS s.vbe_yres=(Bit16u) value;
+              BX_INFO(("VBE set yres (%d)",value));
+            }
+            else
+            {
+              BX_INFO(("VBE set yres more then max yres (%d)",value));
+            }
           }
           else
           {
-            BX_INFO(("VBE set yres more then max yres (%d)",value));
+            BX_INFO(("VBE set yres during vbe enabled!"));
           }
-        }
-        else
+        } break;
+
+        case VBE_DISPI_INDEX_BPP: // set bpp
         {
-          BX_INFO(("VBE set yres during vbe enabled!"));
-        }
-      } break;
-  
-      case VBE_DISPI_INDEX_BPP: // set bpp
-      {
-        // check that we don't set bpp during vbe enabled
-        if (!BX_VGA_THIS s.vbe_enabled)
-        {
-          // check for correct bpp range
-          if ((value == VBE_DISPI_BPP_4) || (value == VBE_DISPI_BPP_8))
+          // check that we don't set bpp during vbe enabled
+          if (!BX_VGA_THIS s.vbe_enabled)
           {
-            BX_VGA_THIS s.vbe_bpp=(Bit16u) value;
+            // for backward compatiblity
+            if (value == 0) value = VBE_DISPI_BPP_8;
+            // check for correct bpp range
+            if ((value == VBE_DISPI_BPP_4) || (value == VBE_DISPI_BPP_8) || (value == VBE_DISPI_BPP_16) ||
+                (value == VBE_DISPI_BPP_24) || (value == VBE_DISPI_BPP_32))
+            {
+              BX_VGA_THIS s.vbe_bpp=(Bit16u) value;
+              BX_INFO(("VBE set bpp (%d)",value));
+            }
+            else
+            {
+              BX_INFO(("VBE set bpp with unknown bpp (%d)",value));
+            }
           }
           else
           {
-            BX_INFO(("VBE set bpp with unknown bpp (%d)",value));
+            BX_INFO(("VBE set bpp during vbe enabled!"));
           }
-        }
-        else
+        } break;
+
+        case VBE_DISPI_INDEX_BANK: // set bank
         {
-          BX_INFO(("VBE set bpp during vbe enabled!"));
-        }
-      } break;
-        
-      case VBE_DISPI_INDEX_BANK: // set bank
-      {
-        value=value & 0xff ; // FIXME lobyte = vbe bank A?
-        
-        // check for max bank nr
-        if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB /64))
+          value=value & 0xff ; // FIXME lobyte = vbe bank A?
+
+          // check for max bank nr
+          if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB /64))
+          {
+            BX_DEBUG(("VBE set bank to %d", value));
+            BX_VGA_THIS s.vbe_bank=value;
+          }
+          else
+          {
+            BX_INFO(("VBE set invalid bank (%d)",value));
+          }
+        } break;
+
+        case VBE_DISPI_INDEX_ENABLE: // enable video
         {
-          BX_INFO(("VBE set bank to %d", value));
-          BX_VGA_THIS s.vbe_bank=value;
-        }
-        else
+          if (value)
+          {
+            unsigned depth=0;
+
+            // setup virtual resolution to be the same as current reso      
+            BX_VGA_THIS s.vbe_virtual_yres=BX_VGA_THIS s.vbe_yres;
+            BX_VGA_THIS s.vbe_virtual_xres=BX_VGA_THIS s.vbe_xres;
+
+            // reset offset
+            BX_VGA_THIS s.vbe_offset_x=0;
+            BX_VGA_THIS s.vbe_offset_y=0;
+            BX_VGA_THIS s.vbe_virtual_start=0;
+
+            // FIXME: VBE allows for *not* clearing the screen when setting a mode
+            switch((BX_VGA_THIS s.vbe_bpp))
+            {
+              // Default pixel sizes
+              case VBE_DISPI_BPP_8: 
+                BX_VGA_THIS s.vbe_bpp_multiplier = 1;
+                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres;
+                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres));
+                depth=8;
+                break;
+
+              case VBE_DISPI_BPP_4: 
+                BX_VGA_THIS s.vbe_bpp_multiplier = 0;
+                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres;
+                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres));
+                depth=4;
+                break;
+
+              case VBE_DISPI_BPP_16: 
+                BX_VGA_THIS s.vbe_bpp_multiplier = 2; 
+                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres * 2;
+                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) * 2;
+                depth=16;
+                break;        	          
+
+              case VBE_DISPI_BPP_24: 
+                BX_VGA_THIS s.vbe_bpp_multiplier = 3; 
+                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres * 3;
+                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) * 3;
+                depth=24;
+                break;        	          
+
+              case VBE_DISPI_BPP_32: 
+                BX_VGA_THIS s.vbe_bpp_multiplier = 4; 
+                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres << 2;
+                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) << 2;
+                depth=32;
+                break;        	          
+            }
+
+            BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp, BX_VGA_THIS s.vbe_visable_screen_size));
+
+            memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
+
+            bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
+          }
+          else
+          {
+            BX_INFO(("VBE disabling"));
+          }     
+          BX_VGA_THIS s.vbe_enabled=(bx_bool) value; 
+        } break;
+
+        case VBE_DISPI_INDEX_X_OFFSET:
         {
-          BX_INFO(("VBE set invalid bank (%d)",value));
-        }
-      } break;
-      
-      case VBE_DISPI_INDEX_ENABLE: // enable video
-      {
-        if (value)
-        {
-          // setup virtual resolution to be the same as current reso      
-          BX_VGA_THIS s.vbe_virtual_yres=BX_VGA_THIS s.vbe_yres;
-          BX_VGA_THIS s.vbe_virtual_xres=BX_VGA_THIS s.vbe_xres;
-          
-          // reset offset
-          BX_VGA_THIS s.vbe_offset_x=0;
-          BX_VGA_THIS s.vbe_offset_y=0;
-          
-          // FIXME: VBE allows for *not* clearing the screen when setting a mode
-          // FIXME: make dependant on bpp (currently only 8bpp = 1byte)
-          BX_VGA_THIS s.vbe_visable_screen_size = (BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres) * 1;
-          memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
-          
-          BX_INFO(("VBE enabling x %d, y %d, bpp %d (0=8bpp, 4=4bpp)", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
-          bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);
-        }
-        else
-        {
-          BX_INFO(("VBE disabling"));
-        }     
-        BX_VGA_THIS s.vbe_enabled=(bx_bool) value;
-      } break;
-      
-      case VBE_DISPI_INDEX_X_OFFSET:
-      {
-//     	BX_INFO(("VBE offset x %x",value));
-      	BX_VGA_THIS s.vbe_offset_x=(Bit16u)value;
+          // BX_INFO(("VBE offset x %x",value));
+          BX_VGA_THIS s.vbe_offset_x=(Bit16u)value;
+
+          BX_VGA_THIS s.vbe_virtual_start = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_line_byte_width)) +
+                                             ((BX_VGA_THIS s.vbe_offset_x) * (BX_VGA_THIS s.vbe_bpp_multiplier));
 
           BX_VGA_THIS s.vga_mem_updated = 1;
           for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
             for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
               SET_TILE_UPDATED (xti, yti, 1);
-              }
             }
-      } break;
+          }
+        } break;
 
-      case VBE_DISPI_INDEX_Y_OFFSET:
-      {
-//     	BX_INFO(("VBE offset y %x",value));
-      	BX_VGA_THIS s.vbe_offset_y=(Bit16u)value;
+        case VBE_DISPI_INDEX_Y_OFFSET:
+        {
+          // BX_INFO(("VBE offset y %x",value));
+          BX_VGA_THIS s.vbe_offset_y=(Bit16u)value;
+          BX_VGA_THIS s.vbe_virtual_start = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_line_byte_width)) +
+                                             ((BX_VGA_THIS s.vbe_offset_x) * (BX_VGA_THIS s.vbe_bpp_multiplier));
 
           BX_VGA_THIS s.vga_mem_updated = 1;
           for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
             for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
               SET_TILE_UPDATED (xti, yti, 1);
-              }
             }
-      } break;
+          }
+        } break;
 
-      case VBE_DISPI_INDEX_VIRT_WIDTH:
-      {
-      	BX_INFO(("VBE requested virtual width %x",value));
-      	
-      	// calculate virtual width & height dimensions
-      	// req:
-      	//   virt_width > xres
-      	//   virt_height >=yres
-      	//   virt_width*virt_height < MAX_VIDEO_MEMORY
-      	
-      	// basicly 2 situations
-      	
-      	// situation 1: 
-      	//   MAX_VIDEO_MEMORY / virt_width >= yres
-      	//        adjust result height
-      	//   else
-      	//        adjust result width based upon virt_height=yres
-      	Bit16u new_width=value;
-      	Bit16u new_height=sizeof(BX_VGA_THIS s.vbe_memory) / new_width;
-      	if (new_height >=BX_VGA_THIS s.vbe_yres)
-      	{
-      	  // we have a decent virtual width & new_height
-      	  BX_INFO(("VBE decent virtual height %x",new_height));
-      	}
-      	else
-      	{
-          // no decent virtual height: adjust width & height
-          new_height=BX_VGA_THIS s.vbe_yres;
-          new_width=sizeof(BX_VGA_THIS s.vbe_memory) / new_height;
-          
-          BX_INFO(("VBE recalc virtual width %x height %x",new_width, new_height));
-      	}
-      	
-      	BX_VGA_THIS s.vbe_virtual_xres=new_width;
-      	BX_VGA_THIS s.vbe_virtual_yres=new_height;
-      	
-      	
-      } break;
-/*      
-      case VBE_DISPI_INDEX_VIRT_HEIGHT:
-      {
-      	BX_INFO(("VBE virtual height %x",value));
-      	
-      } break;
-*/  
-      default:
-      {
-        BX_PANIC(("VBE unknown data write index 0x%x",BX_VGA_THIS s.vbe_curindex));
-      } break;      
-    }        
-  }
+        case VBE_DISPI_INDEX_VIRT_WIDTH:
+        {
+          BX_INFO(("VBE requested virtual width %x",value));
+
+          // calculate virtual width & height dimensions
+          // req:
+          //   virt_width > xres
+          //   virt_height >=yres
+          //   virt_width*virt_height < MAX_VIDEO_MEMORY
+
+          // basicly 2 situations
+
+          // situation 1: 
+          //   MAX_VIDEO_MEMORY / virt_width >= yres
+          //        adjust result height
+          //   else
+          //        adjust result width based upon virt_height=yres
+          Bit16u new_width=value;
+          Bit16u new_height=(sizeof(BX_VGA_THIS s.vbe_memory) * BX_VGA_THIS s.vbe_bpp_multiplier) / new_width;
+          if (new_height >=BX_VGA_THIS s.vbe_yres)
+          {
+            // we have a decent virtual width & new_height
+            BX_INFO(("VBE decent virtual height %x",new_height));
+          }
+          else
+          {
+            // no decent virtual height: adjust width & height
+            new_height=BX_VGA_THIS s.vbe_yres;
+            new_width=(sizeof(BX_VGA_THIS s.vbe_memory) * BX_VGA_THIS s.vbe_bpp_multiplier) / new_height;
+
+            BX_INFO(("VBE recalc virtual width %x height %x",new_width, new_height));
+          }
+
+          BX_VGA_THIS s.vbe_virtual_xres=new_width;
+          BX_VGA_THIS s.vbe_virtual_yres=new_height;
+
+        } break;
+	/*      
+        case VBE_DISPI_INDEX_VIRT_HEIGHT:
+        {
+          BX_INFO(("VBE virtual height %x",value));
+
+        } break;
+	*/  
+        default:
+        {
+          BX_PANIC(("VBE unknown data write index 0x%x",BX_VGA_THIS s.vbe_curindex));
+        } break;      
+      }        
+      break;
+	  
+  } // end switch address
 }
 
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.72 2003-06-28 08:04:31 vruppert Exp $
+// $Id: x.cc,v 1.73 2003-06-30 18:53:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,6 +89,7 @@ static Window win;
 static GC gc, gc_inv, gc_headerbar, gc_headerbar_inv;
 static unsigned font_width, font_height;
 static unsigned dimension_x=0, dimension_y=0;
+static unsigned vga_bpp=8;
 
 static XImage *ximage = NULL;
 static unsigned imDepth, imWide, imBPP;
@@ -1275,71 +1276,178 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   unsigned color, offset;
   Bit8u b0, b1, b2, b3;
 
-  for (y=0; y<y_tilesize; y++) {
-    for (x=0; x<x_tilesize; x++) {
-      //XPutPixel(ximage, x, y, col_vals[tile[y*x_tilesize + x]]);
-      color = col_vals[tile[y*x_tilesize + x]];
-      switch (imBPP) {
-        case 8:  // 8 bits per pixel
-          ximage->data[imWide*y + x] = color;
-          break;
-
-        case 16: // 16 bits per pixel
-          offset = imWide*y + 2*x;
-          b0 = color >> 0;
-          b1 = color >> 8;
-          if (ximage->byte_order == LSBFirst) {
-            ximage->data[offset + 0] = b0;
-            ximage->data[offset + 1] = b1;
-            }
-          else { // MSBFirst
-            ximage->data[offset + 0] = b1;
-            ximage->data[offset + 1] = b0;
-            }
-          break;
-
-        case 24: // 24 bits per pixel
-          offset = imWide*y + 3*x;
-          b0 = color >> 0;
-          b1 = color >> 8;
-          b2 = color >> 16;
-          if (ximage->byte_order == LSBFirst) {
-            ximage->data[offset + 0] = b0;
-            ximage->data[offset + 1] = b1;
-            ximage->data[offset + 2] = b2;
-            }
-          else { // MSBFirst
-            ximage->data[offset + 0] = b2;
-            ximage->data[offset + 1] = b1;
-            ximage->data[offset + 2] = b0;
-            }
-          break;
-
-        case 32: // 32 bits per pixel
+  switch (vga_bpp) {
+    case 32:  // 32 bits per pixel
+      for (y=0; y<y_tilesize; y++) {
+        for (x=0; x<x_tilesize; x++) {
           offset = imWide*y + 4*x;
-          b0 = color >> 0;
-          b1 = color >> 8;
-          b2 = color >> 16;
-          b3 = color >> 24;
           if (ximage->byte_order == LSBFirst) {
-            ximage->data[offset + 0] = b0;
-            ximage->data[offset + 1] = b1;
-            ximage->data[offset + 2] = b2;
-            ximage->data[offset + 3] = b3;
+            ximage->data[offset + 0] = tile[(y*x_tilesize + x)*4];
+            ximage->data[offset + 1] = tile[(y*x_tilesize + x)*4 + 1];
+            ximage->data[offset + 2] = tile[(y*x_tilesize + x)*4 + 2];
+            ximage->data[offset + 3] = tile[(y*x_tilesize + x)*4 + 3];
             }
           else { // MSBFirst
-            ximage->data[offset + 0] = b3;
-            ximage->data[offset + 1] = b2;
-            ximage->data[offset + 2] = b1;
-            ximage->data[offset + 3] = b0;
+            ximage->data[offset + 0] = tile[(y*x_tilesize + x)*4 + 3];
+            ximage->data[offset + 1] = tile[(y*x_tilesize + x)*4 + 2];
+            ximage->data[offset + 2] = tile[(y*x_tilesize + x)*4 + 1];
+            ximage->data[offset + 3] = tile[(y*x_tilesize + x)*4];
             }
-          break;
-        default:
-          BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented",
-            (unsigned) imBPP));
-          break;
+          }
         }
-      }
+      break;
+    case 24:  // 24 bits per pixel
+      for (y=0; y<y_tilesize; y++) {
+        for (x=0; x<x_tilesize; x++) {
+          switch (imBPP) {
+            case 24:  // 24 bits per pixel
+              offset = imWide*y + 3*x;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = tile[(y*x_tilesize + x)*3];
+                ximage->data[offset + 1] = tile[(y*x_tilesize + x)*3 + 1];
+                ximage->data[offset + 2] = tile[(y*x_tilesize + x)*3 + 2];
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = tile[(y*x_tilesize + x)*3 + 2];
+                ximage->data[offset + 1] = tile[(y*x_tilesize + x)*3 + 1];
+                ximage->data[offset + 2] = tile[(y*x_tilesize + x)*3];
+                }
+              break;
+            case 32:  // 32 bits per pixel
+              offset = imWide*y + 4*x;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = tile[(y*x_tilesize + x)*3];
+                ximage->data[offset + 1] = tile[(y*x_tilesize + x)*3 + 1];
+                ximage->data[offset + 2] = tile[(y*x_tilesize + x)*3 + 2];
+                ximage->data[offset + 3] = 0;
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = 0;
+                ximage->data[offset + 1] = tile[(y*x_tilesize + x)*3 + 2];
+                ximage->data[offset + 2] = tile[(y*x_tilesize + x)*3 + 1];
+                ximage->data[offset + 3] = tile[(y*x_tilesize + x)*3];
+                }
+              break;
+            }
+          }
+        }
+      break;
+    case 16:  // 16 bits per pixel
+      for (y=0; y<y_tilesize; y++) {
+        for (x=0; x<x_tilesize; x++) {
+          switch (imBPP) {
+            case 16:  // 16 bits per pixel
+              offset = imWide*y + 2*x;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = tile[(y*x_tilesize + x)*2];
+                ximage->data[offset + 1] = tile[(y*x_tilesize + x)*2 + 1];
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = tile[(y*x_tilesize + x)*2 + 1];
+                ximage->data[offset + 1] = tile[(y*x_tilesize + x)*2];
+                }
+              break;
+            case 24:  // 24 bits per pixel
+              offset = imWide*y + 3*x;
+              b0 = tile[(y*x_tilesize + x)*2] << 3;
+              b1 = ((tile[(y*x_tilesize + x)*2] & 0xE0) >> 3) | (tile[(y*x_tilesize + x)*2 + 1] << 5);
+              b2 = tile[(y*x_tilesize + x)*2 + 1] & 0xF8;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = b0;
+                ximage->data[offset + 1] = b1;
+                ximage->data[offset + 2] = b2;
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = b2;
+                ximage->data[offset + 1] = b1;
+                ximage->data[offset + 2] = b0;
+                }
+              break;
+            case 32:  // 32 bits per pixel
+              offset = imWide*y + 4*x;
+              b0 = tile[(y*x_tilesize + x)*2] << 3;
+              b1 = ((tile[(y*x_tilesize + x)*2] & 0xE0) >> 3) | (tile[(y*x_tilesize + x)*2 + 1] << 5);
+              b2 = tile[(y*x_tilesize + x)*2 + 1] & 0xF8;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = b0;
+                ximage->data[offset + 1] = b1;
+                ximage->data[offset + 2] = b2;
+                ximage->data[offset + 3] = 0;
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = 0;
+                ximage->data[offset + 1] = b2;
+                ximage->data[offset + 2] = b1;
+                ximage->data[offset + 3] = b0;
+                }
+              break;
+            }
+          }
+        }
+      break;
+    default:  // 8 bits per pixel
+      for (y=0; y<y_tilesize; y++) {
+        for (x=0; x<x_tilesize; x++) {
+          color = col_vals[tile[y*x_tilesize + x]];
+          switch (imBPP) {
+            case 8:  // 8 bits per pixel
+              ximage->data[imWide*y + x] = color;
+              break;
+            case 16: // 16 bits per pixel
+              offset = imWide*y + 2*x;
+              b0 = color >> 0;
+              b1 = color >> 8;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = b0;
+                ximage->data[offset + 1] = b1;
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = b1;
+                ximage->data[offset + 1] = b0;
+                }
+              break;
+            case 24: // 24 bits per pixel
+              offset = imWide*y + 3*x;
+              b0 = color >> 0;
+              b1 = color >> 8;
+              b2 = color >> 16;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = b0;
+                ximage->data[offset + 1] = b1;
+                ximage->data[offset + 2] = b2;
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = b2;
+                ximage->data[offset + 1] = b1;
+                ximage->data[offset + 2] = b0;
+                }
+              break;
+            case 32: // 32 bits per pixel
+              offset = imWide*y + 4*x;
+              b0 = color >> 0;
+              b1 = color >> 8;
+              b2 = color >> 16;
+              b3 = color >> 24;
+              if (ximage->byte_order == LSBFirst) {
+                ximage->data[offset + 0] = b0;
+                ximage->data[offset + 1] = b1;
+                ximage->data[offset + 2] = b2;
+                ximage->data[offset + 3] = b3;
+                }
+              else { // MSBFirst
+                ximage->data[offset + 0] = b3;
+                ximage->data[offset + 1] = b2;
+                ximage->data[offset + 2] = b1;
+                ximage->data[offset + 3] = b0;
+                }
+              break;
+            default:
+              BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented",
+                (unsigned) imBPP));
+              break;
+            }
+          }
+        }
     }
   XPutImage(bx_x_display, win, gc, ximage, 0, 0, x0, y0+bx_headerbar_y,
             x_tilesize, y_tilesize);
@@ -1375,8 +1483,10 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
   void
 bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  if (bpp > 8) {
+  if (bpp > imBPP) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  } else {
+    vga_bpp = bpp;
   }
   if (fheight > 0) {
     font_height = fheight;
