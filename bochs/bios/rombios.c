@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.124 2004-12-20 17:00:19 vruppert Exp $
+// $Id: rombios.c,v 1.125 2005-01-02 09:45:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -912,10 +912,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.124 $";
-static char bios_date_string[] = "$Date: 2004-12-20 17:00:19 $";
+static char bios_cvs_version_string[] = "$Revision: 1.125 $";
+static char bios_date_string[] = "$Date: 2005-01-02 09:45:37 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.124 2004-12-20 17:00:19 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.125 2005-01-02 09:45:37 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3610,10 +3610,8 @@ int15_function_mouse(regs, ES, DS, FLAGS)
   Bit8u  mouse_flags_1, mouse_flags_2;
   Bit16u mouse_driver_seg;
   Bit16u mouse_driver_offset;
-  Bit8u  response, prev_command_byte;
-  bx_bool prev_a20_enable;
-  Bit8u   ret, mouse_data1, mouse_data2, mouse_data3;
-  Bit8u   comm_byte, mf2_state;
+  Bit8u  comm_byte, prev_command_byte;
+  Bit8u  ret, mouse_data1, mouse_data2, mouse_data3;
 
 BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
 
@@ -3828,8 +3826,26 @@ BX_DEBUG_INT15("case 6:\n");
               return;
 
             case 1: // Set Scaling Factor to 1:1
-              CLEAR_CF();
-              regs.u.r8.ah = 0;
+            case 2: // Set Scaling Factor to 2:1
+              comm_byte = inhibit_mouse_int_and_events(); // disable IRQ12 and packets
+              if (regs.u.r8.bh == 1) {
+                ret = send_to_mouse_ctrl(0xE6);
+              } else {
+                ret = send_to_mouse_ctrl(0xE7);
+              }
+              if (ret == 0) {
+                get_mouse_data(&mouse_data1);
+                ret = (mouse_data1 != 0xFA);
+              }
+              if (ret == 0) {
+                CLEAR_CF();
+                regs.u.r8.ah = 0;
+              } else {
+                // error
+                SET_CF();
+                regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+              }
+              set_kbd_command_byte(comm_byte); // restore IRQ12 and serial enable
               break;
 
             default:
