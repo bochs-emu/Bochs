@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.110 2002-09-16 20:23:38 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.111 2002-09-16 20:39:32 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1253,11 +1253,7 @@ SLASH="/"
 CXXFP=""
 CFP=""
 OFP="-o "
-# (KPL) Changed following. Loader was not finding symbols between
-# cpu and cpu64 directory due to circular dependencies.
 MAKELIB="ar rv \$@"
-#MAKELIB="ld -i -o \$@"
-#RANLIB="echo"
 RMCOMMAND="rm -f "
 LINK="\$(CXX) -o \$@ \$(CXXFLAGS)"
 EXE=""
@@ -1725,7 +1721,7 @@ AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
 
 AC_OUTPUT(Makefile iodev/Makefile debug/Makefile bios/Makefile \
-	 cpu/Makefile cpu64/Makefile memory/Makefile gui/Makefile \
+	 cpu/Makefile memory/Makefile gui/Makefile \
 	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 dynamic/Makefile \
          fpu/Makefile install-x11-fonts build/linux/bochs-dlx \
