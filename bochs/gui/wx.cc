@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.15 2002-09-05 13:38:42 bdenney Exp $
+// $Id: wx.cc,v 1.16 2002-09-05 15:13:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -577,7 +577,7 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 	  case 187: bx_key = BX_KEY_EQUALS;        break; // =+
 	  case 188: bx_key = BX_KEY_COMMA;         break; // ,<
 	  case 189: bx_key = BX_KEY_MINUS;         break; // -_
-	  case 190: bx_key = BX_KEY_MINUS;         break; // .>
+	  case 190: bx_key = BX_KEY_PERIOD;        break; // .>
 	  case 191: bx_key = BX_KEY_SLASH;         break; // /?
 	  case 192: bx_key = BX_KEY_GRAVE;         break; // `~
 	  case 219: bx_key = BX_KEY_LEFT_BRACKET;  break; // [{
