@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.26 2002-03-13 18:33:00 japj Exp $
+// $Id: vga.cc,v 1.27 2002-03-13 19:01:39 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2314,6 +2314,10 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
       {
         if (value)
         {
+          // FIXME: VBE allows for *not* clearing the screen when setting a mode
+          // FIXME: make dependant on bpp (currently only 8bpp = 1byte)
+          memset(BX_VGA_THIS s.vbe_memory, 0, (BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres));
+          
           BX_INFO(("VBE enabling x %d, y %d, bpp %d (0=8bpp)", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
           bx_gui.dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);
         }
