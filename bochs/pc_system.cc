@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.28 2002-10-06 14:55:06 kevinlawton Exp $
+// $Id: pc_system.cc,v 1.29 2002-10-06 17:29:22 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -273,7 +273,12 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
     ticks = MinAllowableTimerPeriod;
     }
 
-  i = numTimers;
+  for (i=0; i < numTimers; i++) {
+    if (timer[i].inUse == 0)
+      break;
+    }
+
+  timer[i].inUse      = 1;
   timer[i].period     = ticks;
   timer[i].timeToFire = (ticksTotal + Bit64u(currCountdownPeriod-currCountdown)) +
                         ticks;
@@ -294,7 +299,9 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
       }
     }
 
-  numTimers++; // One new timer installed.
+  // If we didn't find a free slot, increment the bound, numTimers.
+  if (i==numTimers)
+    numTimers++; // One new timer installed.
 
   // Return timer id.
   return(i);
@@ -499,11 +506,32 @@ bx_pc_system_c::deactivate_timer( unsigned i )
 }
 
   unsigned
-bx_pc_system_c::unregisterTimer(int i)
+bx_pc_system_c::unregisterTimer(int timerIndex)
 {
+  unsigned i = (unsigned) timerIndex;
+
+#if BX_TIMER_DEBUG
+  if (i >= numTimers)
+    BX_PANIC(("unregisterTimer: timer %u OOB", i));
+  if (i == 0)
+    BX_PANIC(("unregisterTimer: timer 0 is the nullTimer!"));
+  if (timer[i].inUse == 0)
+    BX_PANIC(("unregisterTimer: timer %u is not in-use!", i));
+#endif
+
   if (timer[i].active) {
     BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[i].id));
     return(0); // Fail.
     }
- return(1); // OK
+
+  // Reset timer fields for good measure.
+  timer[i].inUse      = 0; // No longer registered.
+  timer[i].period     = Bit64s(-1); // Max value (invalid)
+  timer[i].timeToFire = Bit64s(-1); // Max value (invalid)
+  timer[i].continuous = 0;
+  timer[i].funct      = NULL;
+  timer[i].this_ptr   = NULL;
+  memset(timer[i].id, 0, BxMaxTimerIDLen);
+
+  return(1); // OK
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.18 2002-10-06 14:55:06 kevinlawton Exp $
+// $Id: pc_system.h,v 1.19 2002-10-06 17:29:22 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,6 +53,7 @@ private:
   // ===============================
 
   struct {
+    Boolean inUse;      // Timer slot is in-use (currently registered).
     Bit64u  period;     // Timer periodocity in cpu ticks.
     Bit64u  timeToFire; // Time to fire next (in absolute ticks).
     Boolean active;     // 0=inactive, 1=active.
