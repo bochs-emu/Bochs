@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.56 2004-11-16 19:19:13 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.57 2004-11-28 08:54:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.56 2004-11-16 19:19:13 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.57 2004-11-28 08:54:59 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -442,6 +442,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
           return(NULL);
         case 0x1:   // Write to ShadowRAM
           retAddr = (Bit8u *) & vector[a20Addr];
+          break;
         default:
           BX_PANIC(("getHostMemAddr(): default case"));
           return(0);
