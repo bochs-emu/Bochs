@@ -1,0 +1,82 @@
+<html>
+<body bgcolor="white" text="black" link="blue" alink="darkgray" vlink="darkgray">
+<big><b><center>I/O Interface to bochs debugger</center></b></big>
+
+
+<p>
+<b>Compiling bochs with support</b>
+<blockquote>
+<pre>
+./configure --enable-iodebug
+make
+</pre>
+Other optional fields may be added to the <cite>./configure</cite> line, see
+bochs documentations for all the informations.
+</blockquote>
+
+
+
+<p>
+<b>Using the I/O Interface to the debugger</b>
+<blockquote>
+<pre>
+port range:  0x8A00 - 0x8A02
+</pre>
+<p>
+Port <b>0x8A00</b> servers as command register.  You can use it to enable the
+i/o interface, change which data register is active, etc.
+<p>
+Port <b>0x8A01</b> is used as data register for the memory monitoring.
+<p>
+Port <b>0x8A02</b> is used as data register for breakpoints/watchpoints.
+</blockquote>
+
+
+
+<p>
+<b>Commands supported by the 0x8A00 port</b>
+<blockquote>
+<i>note: all accesses must be done using word</i><br>
+<i>note2: reading this register will return 0x8A00 if currently activated, otherwise 0</i>
+<pre>0x8A00</pre>
+<p>
+Used to enable the device.  Any I/O to the debug module before this command is
+sent is sent will simply be ignored.
+<p>
+<pre>0x8A01</pre>
+<p>
+Selects register 0: Memory monitoring range start address (inclusive)
+<p>
+<pre>0x8A02</pre>
+<p>
+Selects register 1: Memory monitoring range end address (exclusive)
+<p>
+<pre>0x8A80</pre>
+<p>
+Enable address range memory monitoring as indicated by register 0 and 1 and clears both registers
+<p>
+<pre>0x8AFF</pre>
+<p>
+Disable the I/O interface to the debugger and the memory monitoring functions.
+</blockquote>
+
+
+
+
+<p>
+<b>Access to port 0x8A01</b>
+<blockquote>
+<i>(write-only)</i>
+<p>
+All accesses to this port must be done using words.  Writing to this port will
+shift to the left by 16 the current value of the register and add the provided
+value to it.
+<pre>
+i.e:    reg0 = 0x01234567
+        
+	out port: 0x8A01 data: 0xABCD
+
+	reg0 = 0x4567ABCD
+</pre>
+
+</body></html>
