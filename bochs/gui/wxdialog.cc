@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.6 2002-08-29 20:13:05 bdenney Exp $
+// $Id: wxdialog.cc,v 1.7 2002-08-29 20:41:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -210,7 +210,8 @@ FloppyConfigDialog::FloppyConfigDialog(
   // contents of buttonSizer
   btn = new wxButton (this, wxHELP, "Help");
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxCANCEL, "Cancel");
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, "Cancel");
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, ID_Create, "Create Image");
   buttonSizer->Add (btn, 0, wxALL, 5);
@@ -352,7 +353,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       // overwrite=1.
       CreateImage ();
       break;
-    case wxCANCEL:
+    case wxID_CANCEL:
       EndModal (-1);
       break;
     case wxHELP:
@@ -486,7 +487,8 @@ HDConfigDialog::HDConfigDialog(
   // contents of buttonSizer
   btn = new wxButton (this, wxHELP, "Help");
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxCANCEL, "Cancel");
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, "Cancel");
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, wxOK, "Ok");
   buttonSizer->Add (btn, 0, wxALL, 5);
@@ -582,7 +584,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
 	SetFilename (fdialog->GetPath().c_str ());
       }
       break;
-    case wxCANCEL:
+    case wxID_CANCEL:
       EndModal (-1);
       break;
     case wxHELP:
