@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.190 2002-11-23 12:35:42 bdenney Exp $
+// $Id: main.cc,v 1.191 2002-11-23 13:26:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1415,6 +1415,27 @@ static void setupWorkingDirectory (char *path)
 }
 #endif
 
+// In some situations, there is no way to display stdin/stdout.  In that case
+// running the text configure interface is useless and confusing because the
+// program will either quit instantly or freeze.  Instead just show a message
+// telling the user what they should do instead.  If the text console is
+// ok to use, this function should return true.  If not, it should display
+// a warning and return false.
+bx_bool ensure_text_console_exists ()
+{
+#if BX_WITH_SDL && defined(WIN32)
+  // insert Win32 way of displaying a message dialog
+  // win32dialog ("Please run Bochs by clicking on the ___ instead, or run from the command line with -q");
+  // return false;
+#endif
+#if BX_WITH_CARBON
+  // insert Carbon way of displaying a message dialog
+  // carbondialog ("Please run Bochs by clicking on the ___ instead, or run from the command line with -q");
+  // return false;
+#endif
+  return true;
+}
+
 int bxmain () {
   bx_init_siminterface ();   // create the SIM object
   static jmp_buf context;
@@ -1427,7 +1448,9 @@ int bxmain () {
     bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
     char *ci_name = ci_param->get_choice (ci_param->get ());
     if (!strcmp(ci_name, "textconfig")) {
-      init_text_config_interface ();
+      if (!ensure_text_console_exists ()) 
+	SIM->quit_sim (1);
+      init_text_config_interface ();   // in textconfig.h
     }
 #if BX_WITH_WX
     else if (!strcmp(ci_name, "wx")) {
