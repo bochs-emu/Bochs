@@ -1,59 +1,62 @@
 #ifndef BX_I387_RELATED_EXTENSIONS_H
 #define BX_I387_RELATED_EXTENSIONS_H
 
-/* Get data sizes from config.h generated from simulator's
- * configure script
- */
-#include "config.h"
-typedef Bit8u  u8; /* for FPU only */
-typedef Bit8s  s8;
-typedef Bit16u u16;
-typedef Bit16s s16;
-typedef Bit32u u32;
-typedef Bit32s s32;
-typedef Bit64u u64;
-typedef Bit64s s64;
+#if BX_SUPPORT_FPU
+
+//
+// Minimal i387 structure
+//
+struct i387_t {
+    Bit32s cwd;		 // control word
+    Bit32s swd;		 // status word
+    Bit32s twd;		 // tag word
+    Bit32s fip;
+    Bit32s fcs;
+    Bit32s foo;
+    Bit32s fos;
+    Bit32s aligment;	 
+    Bit64u st_space[16]; // 8*16 bytes per FP-reg (aligned) = 128 bytes
+    unsigned char tos;
+    unsigned char no_update;
+    unsigned char rm;
+    unsigned char alimit;
+};
+
+// Endian  Host byte order         Guest (x86) byte order
+// ======================================================
+// Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
+// Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
+//
+// Legend: F - fraction/mmx
+//         E - exponent
+//         A - aligment
 
 #ifdef BX_BIG_ENDIAN
 struct BxFpuRegister {
-  u16 aligment1, aligment2, aligment3;
-  s16 exp;   /* Signed quantity used in internal arithmetic. */
-  u32 sigh;
-  u32 sigl;
+  Bit16u aligment1, aligment2, aligment3;
+  Bit16s exp;   /* Signed quantity used in internal arithmetic. */
+  Bit32u sigh;
+  Bit32u sigl;
 } GCC_ATTRIBUTE((aligned(16), packed));
 #else
 struct BxFpuRegister {
-  u32 sigl;
-  u32 sigh;
-  s16 exp;   /* Signed quantity used in internal arithmetic. */
-  u16 aligment1, aligment2, aligment3;
+  Bit32u sigl;
+  Bit32u sigh;
+  Bit16s exp;   /* Signed quantity used in internal arithmetic. */
+  Bit16u aligment1, aligment2, aligment3;
 } GCC_ATTRIBUTE((aligned(16), packed));
 #endif
 
-//
-// Minimal i387 structure, pruned from the linux headers.  Only
-// the fields which were necessary are included.
-//
-struct BxFpuRegisters {
-    s32      cwd;
-    s32      swd;
-    s32      twd;
-    s32      fip;
-    s32      fcs;
-    s32      foo;
-    s32      fos;
-    u32      fill0; /* to make sure the following aligns on an 8byte boundary */
-    u64      st_space[16];   /* 8*16 bytes per FP-reg (aligned) = 128 bytes */
-    unsigned char   tos;
-    unsigned char   no_update;
-    unsigned char   rm;
-    unsigned char   alimit;
-};
-
 #define BX_FPU_REG(index) \
-    (BX_CPU_THIS_PTR the_i387.soft.st_space[index*2])
+    (BX_CPU_THIS_PTR the_i387.st_space[index*2])
+
+#define FPU_PARTIAL_STATUS     (BX_CPU_THIS_PTR the_i387.swd)
+#define FPU_TWD                (BX_CPU_THIS_PTR the_i387.twd)
+#define FPU_TOS                (BX_CPU_THIS_PTR the_i387.tos)
+
 
 #if BX_SUPPORT_MMX
+
 typedef union {
   Bit8u u8;
   Bit8s s8;
@@ -147,63 +150,34 @@ typedef union {
 //         E - exponent
 //         A - aligment
 
-typedef struct
-{
 #ifdef BX_BIG_ENDIAN
+struct bx_mmx_reg_t {
    Bit16u aligment1, aligment2, aligment3; 
-   Bit16u exp;      /* 4 bytes: FP register exponent, 
-                                   set to 0xffff by all MMX instructions */
+   Bit16u exp; /* 2 byte FP-reg exponent */
    BxPackedMmxRegister packed_mmx_register;
+} GCC_ATTRIBUTE((aligned(16), packed));
 #else
+struct bx_mmx_reg_t {
    BxPackedMmxRegister packed_mmx_register;
-   Bit16u exp;      /* 4 bytes: FP register exponent, 
-                                   set to 0xffff by all MMX instructions */
+   Bit16u exp; /* 2 byte FP reg exponent */
    Bit16u aligment1, aligment2, aligment3; 
+} GCC_ATTRIBUTE((aligned(16), packed));
 #endif
-} BxMmxRegister;
 
-/* to be compatible with fpu register file */
-struct BxMmxRegisters
-{
-   Bit32u      cwd; /* fpu control word */
-   Bit32u      swd; /* fpu status  word */
-   Bit32u      twd; /* fpu tag     word */
-   Bit32u      fip;
-   Bit32u      fcs;
-   Bit32u      foo;
-   Bit32u      fos;
-   Bit32u      alignment;
-   BxMmxRegister mmx[8];   
-   unsigned char tos; /* top-of-stack */
-   unsigned char no_update;
-   unsigned char rm;
-   unsigned char alimit;
-};
-#endif /* BX_SUPPORT_MMX */
+#define BX_MMX_REG(index) 						\
+    (((bx_mmx_reg_t*)(BX_CPU_THIS_PTR the_i387.st_space))[index])
 
-typedef union FpuMmxRegisters
-{
-    struct BxFpuRegisters soft;
-#if BX_SUPPORT_MMX
-    struct BxMmxRegisters mmx;
-#endif
-} i387_t;
+#define BX_READ_MMX_REG(index) 						\
+    ((BX_MMX_REG(index)).packed_mmx_register)
 
-#if BX_SUPPORT_MMX || BX_SUPPORT_SSE != 0
-
-#define FPU_TWD                (BX_CPU_THIS_PTR the_i387.soft.twd)
-#define FPU_SWD                (BX_CPU_THIS_PTR the_i387.soft.swd)
-#define FPU_TOS                (BX_CPU_THIS_PTR the_i387.soft.tos)
-
-#define BX_READ_MMX_REG(index) \
-    (BX_CPU_THIS_PTR the_i387.mmx.mmx[index].packed_mmx_register)
-
-#define BX_WRITE_MMX_REG(index, value)                                  \
-{                                                                       \
-   BX_CPU_THIS_PTR the_i387.mmx.mmx[index].packed_mmx_register = value; \
-   BX_CPU_THIS_PTR the_i387.mmx.mmx[index].exp = 0xffff;                \
+#define BX_WRITE_MMX_REG(index, value)            			\
+{                                 					\
+   (BX_MMX_REG(index)).packed_mmx_register = value;			\
+   (BX_MMX_REG(index)).exp = 0xffff;       				\
 }                                                      
 
-#endif
+#endif 		/* BX_SUPPORT_MMX */
+
+#endif		/* BX_SUPPORT_FPU */
 
 #endif

@@ -85,16 +85,16 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BxPackedXmmRegister xmm;
-  Bit16u twd = BX_CPU_THIS_PTR the_i387.soft.twd, tag_byte = 0;
-  Bit16u status_w = BX_CPU_THIS_PTR the_i387.soft.swd;
-  Bit16u tos = BX_CPU_THIS_PTR the_i387.soft.tos;
+  Bit16u twd = BX_CPU_THIS_PTR the_i387.twd, tag_byte = 0;
+  Bit16u status_w = BX_CPU_THIS_PTR the_i387.swd;
+  Bit16u tos = BX_CPU_THIS_PTR the_i387.tos;
   unsigned index;
 
   BX_INFO(("FXSAVE: save FPU/MMX/SSE state"));
 
 #define SW_TOP (0x3800)
 
-  xmm.xmm16u(0) = (BX_CPU_THIS_PTR the_i387.soft.cwd);
+  xmm.xmm16u(0) = (BX_CPU_THIS_PTR the_i387.cwd);
   xmm.xmm16u(1) = (status_w & ~SW_TOP & 0xffff) | ((tos << 11) & SW_TOP);
 
   if(twd & 0x0003 != 0x0003) tag_byte |= 0x0100;
@@ -174,9 +174,9 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
   
-  BX_CPU_THIS_PTR the_i387.soft.cwd = xmm.xmm16u(0);
-  BX_CPU_THIS_PTR the_i387.soft.swd = xmm.xmm16u(1);
-  BX_CPU_THIS_PTR the_i387.soft.tos = (xmm.xmm16u(1) >> 11) & 0x07;
+  BX_CPU_THIS_PTR the_i387.cwd = xmm.xmm16u(0);
+  BX_CPU_THIS_PTR the_i387.swd = xmm.xmm16u(1);
+  BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
 
   /* FOO/FPU IP restore still not implemented */
 
@@ -270,7 +270,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
       }
   }
 
-  BX_CPU_THIS_PTR the_i387.soft.twd = (twd >> 2);
+  BX_CPU_THIS_PTR the_i387.twd = (twd >> 2);
 
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
@@ -646,16 +646,6 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_PANIC(("MASKMOVQ_PqPRq: SSE instruction still not implemented"));
-#else
-  BX_INFO(("MASKMOVQ_PqPRq: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
 void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
@@ -862,8 +852,8 @@ void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
   MMXUQ(mm) = op.xmm64u(0);
 
   FPU_TWD  = 0;
-  FPU_TOS  = 0;        /* Each time an MMX instruction is */
-  FPU_SWD &= 0xc7ff;   /*      executed, the TOS value is set to 000b */
+  FPU_TOS  = 0;       
+//FPU_PARTIAL_STATUS &= 0xc7ff;
 
   BX_WRITE_MMX_REG(i->rm(), mm);
 #else
@@ -884,8 +874,8 @@ void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
   op.xmm64u(1) = 0;
 
   FPU_TWD  = 0;
-  FPU_TOS  = 0;        /* Each time an MMX instruction is */
-  FPU_SWD &= 0xc7ff;   /*      executed, the TOS value is set to 000b */
+  FPU_TOS  = 0;
+//FPU_PARTIAL_STATUS &= 0xc7ff;
 
   BX_WRITE_XMM_REG(i->rm(), op);
 #else

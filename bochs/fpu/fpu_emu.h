@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.8 2002-12-11 12:54:19 cbothamy Exp $
+ |  $Id: fpu_emu.h,v 1.9 2003-04-12 21:02:07 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -30,7 +30,6 @@
 #include "fpu_asm.h"
 #define	Const(x)	$##x
 #else
-#include <asm/types.h>
 #define	Const(x)	x
 #endif
 
@@ -81,7 +80,6 @@
 #include "fpu_system.h"
 
 #include <asm/sigcontext.h>   /* for struct _fpstate */
-#include <asm/math_emu.h>
 #include <linux/linkage.h>
 
 /*

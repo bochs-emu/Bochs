@@ -25,10 +25,9 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-#if BX_SUPPORT_MMX || BX_SUPPORT_SSE != 0
+#if BX_SUPPORT_MMX || BX_SUPPORT_SSE 
 
-Bit8s  BX_CPP_AttrRegparmN(1)
-SaturateWordSToByteS(Bit16s value)
+Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
 {
 /*
   SaturateWordSToByteS   converts   a signed 16-bit value to a
@@ -41,8 +40,7 @@ SaturateWordSToByteS(Bit16s value)
   return value;
 }
 
-Bit16s  BX_CPP_AttrRegparmN(1)
-SaturateDwordSToWordS(Bit32s value)
+Bit16s BX_CPP_AttrRegparmN(1) SaturateDwordSToWordS(Bit32s value)
 {
 /*
   SaturateDwordSToWordS  converts  a  signed 32-bit value to a
@@ -56,8 +54,7 @@ SaturateDwordSToWordS(Bit32s value)
   return value;
 }
 
-Bit8u  BX_CPP_AttrRegparmN(1)
-SaturateWordSToByteU(Bit16s value)
+Bit8u BX_CPP_AttrRegparmN(1) SaturateWordSToByteU(Bit16s value)
 {
 /*
   SaturateWordSToByteU  converts a signed 16-bit value to an
@@ -70,8 +67,7 @@ SaturateWordSToByteU(Bit16s value)
   return value;
 }
 
-Bit16u  BX_CPP_AttrRegparmN(1)
-SaturateDwordSToWordU(Bit32s value)
+Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit32s value)
 {
 /*
   SaturateDwordSToWordU  converts  a signed 32-bit value
@@ -107,12 +103,12 @@ void BX_CPU_C::prepareMMX(void)
     exception(BX_UD_EXCEPTION, 0, 0);
 
   /* check SW_Summary bit for a pending FPU exceptions */
-  if(FPU_SWD & 0x0080)
+  if(FPU_PARTIAL_STATUS & 0x0080)
     exception(BX_MF_EXCEPTION, 0, 0);
 
   FPU_TWD = 0;
   FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
-  FPU_SWD &= 0xc7ff; 
+//FPU_PARTIAL_STATUS &= 0xc7ff; 
 }
 
 #endif
@@ -1951,6 +1947,17 @@ void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else  
   BX_INFO(("PSADBW_PqQq: required SSE, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F F7 */
+void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_PANIC(("MASKMOVQ_PqPRq: SSE instruction still not implemented"));
+#else
+  BX_INFO(("MASKMOVQ_PqPRq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }

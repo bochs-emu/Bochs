@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_div.c                                                              |
- |  $Id: reg_u_div.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_u_div.c,v 1.3 2003-04-12 21:02:07 sshwarts Exp $
  |                                                                           |
  | Divide one FPU_REG by another and put the result in a destination FPU_REG.|
  |                                                                           |
@@ -22,7 +22,6 @@
 #include "exception.h"
 #include "fpu_emu.h"
 #include "control_w.h"
-#include <asm/types.h>
 
 
 int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,

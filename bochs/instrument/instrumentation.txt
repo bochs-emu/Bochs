@@ -213,3 +213,5 @@ Feature requests:
 
 1. BX_INSTR_CNEAR_BRANCH_NOT_TAKEN callback should have an additional 
    'not taken' new_EIP parameter.
+
+2. BX_INSTR_WRMSR callback

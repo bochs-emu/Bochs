@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: errors.c,v 1.5 2003-04-12 21:02:06 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -19,7 +19,6 @@
  +---------------------------------------------------------------------------*/
 
 #include <linux/signal.h>
-#include <asm/uaccess.h>
 #include <stdio.h>
 
 #include "fpu_emu.h"

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
- |  $Id: load_store.c,v 1.4 2002-12-12 15:28:43 cbothamy Exp $
+ |  $Id: load_store.c,v 1.5 2003-04-12 21:02:07 sshwarts Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |
@@ -18,8 +18,6 @@
  |    Emulator static data may change when user memory is accessed, due to   |
  |    other processes using the emulator while swapping is in progress.      |
  +---------------------------------------------------------------------------*/
-
-#include <asm/uaccess.h>
 
 #include "fpu_system.h"
 #include "exception.h"

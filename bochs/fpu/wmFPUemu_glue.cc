@@ -146,19 +146,19 @@ void
 BX_CPU_C::fpu_print_regs()
 {
   Bit32u reg;
-  reg = i387.soft.cwd;
+  reg = i387.cwd;
   fprintf(stderr, "cwd            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-  reg = i387.soft.swd;
+  reg = i387.swd;
   fprintf(stderr, "swd            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-  reg = i387.soft.twd;
+  reg = i387.twd;
   fprintf(stderr, "twd            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-  reg = i387.soft.fip;
+  reg = i387.fip;
   fprintf(stderr, "fip            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-  reg = i387.soft.fcs;
+  reg = i387.fcs;
   fprintf(stderr, "fcs            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-  reg = i387.soft.foo;
+  reg = i387.foo;
   fprintf(stderr, "foo            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-  reg = i387.soft.fos;
+  reg = i387.fos;
   fprintf(stderr, "fos            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
   // print stack too
   for (int i=0; i<8; i++) {

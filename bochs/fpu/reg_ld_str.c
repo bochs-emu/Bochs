@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.7 2003-03-04 21:46:49 cbothamy Exp $
+ |  $Id: reg_ld_str.c,v 1.8 2003-04-12 21:02:07 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -19,8 +19,6 @@
  +---------------------------------------------------------------------------*/
 
 #include "fpu_emu.h"
-
-#include <asm/uaccess.h>
 
 #include "fpu_system.h"
 #include "exception.h"
@@ -96,13 +94,9 @@ FPU_load_extended(long double *s, int stnr)
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, s, 10);
-#ifndef USE_WITH_CPU_SIM
-  __copy_from_user(sti_ptr, s, 10);
-#else
   FPU_get_user(sti_ptr->sigl, (u32*)(((u8*)s)+0));
   FPU_get_user(sti_ptr->sigh, (u32*)(((u8*)s)+4));
   FPU_get_user(sti_ptr->exp,  (u16*)(((u8*)s)+8));
-#endif
   RE_ENTRANT_CHECK_ON;
 
   return FPU_tagof(sti_ptr);
@@ -257,9 +251,6 @@ FPU_load_int64(s64 *_s)
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, _s, 8);
-#ifndef USE_WITH_CPU_SIM
-  copy_from_user(&s,_s,8);
-#else
   {
   u32 chunk0, chunk1;
   FPU_get_user(chunk0, (u32*)(((u8*)_s)+0));
@@ -267,7 +258,6 @@ FPU_load_int64(s64 *_s)
   s = chunk0;
   s |= (((u64)chunk1) << 32);
   }
-#endif
   RE_ENTRANT_CHECK_ON;
 
   if (s == 0)
@@ -942,12 +932,8 @@ FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d)
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_WRITE,(void *)d,8);
-#ifndef USE_WITH_CPU_SIM
-  copy_to_user(d, &tll, 8);
-#else
   FPU_put_user((u32) tll,       (u32*)(((u8 *)d)+0));
   FPU_put_user((u32) (tll>>32), (u32*)(((u8 *)d)+4));
-#endif
   RE_ENTRANT_CHECK_ON;
 
   return 1;
@@ -1325,11 +1311,6 @@ frstor(fpu_addr_modes addr_modes, u_char *data_address)
   /* Copy all registers in stack order. */
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ,s,80);
-#ifndef USE_WITH_CPU_SIM
-  __copy_from_user(register_base+offset, s, other);
-  if ( offset )
-    __copy_from_user(register_base, s+other, offset);
-#else
   {
   FPU_REG *fpu_reg_p;
 
@@ -1352,7 +1333,6 @@ frstor(fpu_addr_modes addr_modes, u_char *data_address)
     offset -= sizeof(FPU_REG);
     }
   }
-#endif
   RE_ENTRANT_CHECK_ON;
 
   for ( i = 0; i < 8; i++ )
@@ -1409,20 +1389,16 @@ u_char  BX_CPP_AttrRegparmN(2)
       control_word |= 0xffff0040;
       partial_status = status_word() | 0xffff0000;
       fpu_tag_word |= 0xffff0000;
-      I387.soft.fcs &= ~0xf8000000;
-      I387.soft.fos |= 0xffff0000;
+      i387.fcs &= ~0xf8000000;
+      i387.fos |= 0xffff0000;
 #endif /* PECULIAR_486 */
-#ifndef USE_WITH_CPU_SIM
-      __copy_to_user(d, &control_word, 7*4);
-#else
-      FPU_put_user((u32) I387.soft.cwd, (u32*)(((u8 *)d)+0));
-      FPU_put_user((u32) I387.soft.swd, (u32*)(((u8 *)d)+4));
-      FPU_put_user((u32) I387.soft.twd, (u32*)(((u8 *)d)+8));
-      FPU_put_user((u32) I387.soft.fip, (u32*)(((u8 *)d)+12));
-      FPU_put_user((u32) I387.soft.fcs, (u32*)(((u8 *)d)+16));
-      FPU_put_user((u32) I387.soft.foo, (u32*)(((u8 *)d)+20));
-      FPU_put_user((u32) I387.soft.fos, (u32*)(((u8 *)d)+24));
-#endif
+      FPU_put_user((u32) i387.cwd, (u32*)(((u8 *)d)+0));
+      FPU_put_user((u32) i387.swd, (u32*)(((u8 *)d)+4));
+      FPU_put_user((u32) i387.twd, (u32*)(((u8 *)d)+8));
+      FPU_put_user((u32) i387.fip, (u32*)(((u8 *)d)+12));
+      FPU_put_user((u32) i387.fcs, (u32*)(((u8 *)d)+16));
+      FPU_put_user((u32) i387.foo, (u32*)(((u8 *)d)+20));
+      FPU_put_user((u32) i387.fos, (u32*)(((u8 *)d)+24));
       RE_ENTRANT_CHECK_ON;
       d += 0x1c;
     }
@@ -1446,11 +1422,6 @@ fsave(fpu_addr_modes addr_modes, u_char *data_address)
   FPU_verify_area(VERIFY_WRITE,d,80);
 
   /* Copy all registers in stack order. */
-#ifndef USE_WITH_CPU_SIM
-  __copy_to_user(d, register_base+offset, other);
-  if ( offset )
-    __copy_to_user(d+other, register_base, offset);
-#else
   {
   FPU_REG *fpu_reg_p;
 
@@ -1473,7 +1444,6 @@ fsave(fpu_addr_modes addr_modes, u_char *data_address)
     offset -= sizeof(FPU_REG);
     }
   }
-#endif
   RE_ENTRANT_CHECK_ON;
 
   finit();
