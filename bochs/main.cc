@@ -324,6 +324,10 @@ logfunctions::panic(char *fmt, ...)
 
 		va_start(ap, fmt);
 		this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
+#if BX_PANIC_IS_FATAL
+		// we're about to crash anyway, so we should print the 
+		// panic to stderr so that it's easy to find.
+#endif    
 		va_end(ap);
 
 	}
@@ -459,8 +463,10 @@ bx_bochs_init(int argc, char *argv[])
 
   bx_pc_system.init_ips(bx_options.ips);
 
-  if(logfilename[0]!='-')
-  	io->init_log(logfilename);
+  if(logfilename[0]!='-') {
+    BX_INFO (("all further messages will go to %s\n", logfilename));
+    io->init_log(logfilename);
+  }
 
 #if BX_DEBUGGER == 0
   // debugger will do this work, if enabled
@@ -606,7 +612,9 @@ parse_bochsrc(int argc)
 	fprintf (stderr, "double-click on the start.bat script.\n");
 #elif !defined(macintosh)
 	fprintf (stderr, "\nFor UNIX installations, try running \"bochs-dlx\" for a demo.  This script\n");
-	fprintf (stderr, "goes into the /usr/local/bochs/dlxlinux directory and starts bochs.\n");
+	fprintf (stderr, "is basically equivalent to typing:\n");
+	fprintf (stderr, "   cd /usr/local/bochs/dlxlinux\n");
+	fprintf (stderr, "   bochs\n");
 #endif
 	exit(1);
       }
@@ -894,7 +902,7 @@ parse_line_formatted(int num_params, char *params[])
       }
     bx_options.ips = atol(params[1]);
     if (bx_options.ips < 200000) {
-      fprintf(stderr, ".bochsrc: WARNING: ips is AWEFULLY low!\n");
+      fprintf(stderr, ".bochsrc: WARNING: ips is AWFULLY low!\n");
       }
     }
 
@@ -1145,7 +1153,7 @@ bx_signal_handler( int signum)
   extern unsigned long ips_count;
 
   if (signum == SIGALRM ) {
-    printf("ips = %lu\n", ips_count);
+    BX_INFO((("ips = %lu\n", ips_count));
     ips_count = 0;
 #ifndef __MINGW32__
     signal(SIGALRM, bx_signal_handler);

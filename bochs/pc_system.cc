@@ -79,7 +79,7 @@ bx_pc_system_c::init_ips(Bit32u ips)
 {
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
-  BX_INFO(("ips = %u\n", (unsigned) ips));
+  BX_DEBUG(("ips = %u\n", (unsigned) ips));
 }
 
   void
