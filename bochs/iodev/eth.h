@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.12 2003-04-26 14:48:45 cbothamy Exp $
+// $Id: eth.h,v 1.13 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,8 @@
 //  eth.h  - see eth_null.cc for implementation details
 
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
+
+static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
 int execute_script(char *name, char* arg1);
 

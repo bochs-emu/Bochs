@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.h,v 1.6 2002-10-25 11:44:39 bdenney Exp $
+// $Id: eth_packetmaker.h,v 1.7 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -14,7 +14,6 @@
 static const Bit8u internal_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
-static const Bit8u broadcast_mac[]={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
 static const Bit8u ethtype_arp[]={0x08, 0x06, 0x00};
 static const Bit8u ethtype_ip[]={0x08, 0x00, 0x00};
 static const Bit8u prot_udp=17;

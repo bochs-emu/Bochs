@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.15 2004-09-05 10:30:18 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.16 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,61 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 // eth_tuntap.cc  - TUN/TAP interface by Renzo Davoli <renzo@cs.unibo.it>
-//
-// WARNING: These instructions were written for ethertap, not TUN/TAP.
-//
-// Here's how to get this working.  On the host machine:
-//    $ su root
-//    # /sbin/insmod ethertap
-//    Using /lib/modules/2.2.14-5.0/net/ethertap.o
-//    # mknod /dev/tap0 c 36 16          # if not already there
-//    # /sbin/ifconfig tap0 10.0.0.1
-//    # /sbin/route add -host 10.0.0.2 gw 10.0.0.1
-//
-// Now you have a tap0 device which you can on the ifconfig output.  The
-// tap0 interface has the IP address of 10.0.0.1.  The bochs machine will have
-// the IP address 10.0.0.2.
-//
-// Compile a bochs version from March 8, 2002 or later with --enable-ne2000.
-// Add this ne2k line to your .bochsrc to activate the tap device.
-//   ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
-// Don't change the mac or ethmod!
-//
-// Boot up DLX Linux in Bochs.  Log in as root and then type the following
-// commands to set up networking:
-//   # ifconfig eth0 10.0.0.2
-//   # route add -net 10.0.0.0
-//   # route add default gw 10.0.0.1
-// Now you should be able to ping from guest OS to your host machine, if
-// you give its IP number.  I'm still having trouble with pings from the
-// host machine to the guest, so something is still not right.  Symptoms: I
-// ping from the host to the guest's IP address 10.0.0.2.  With tcpdump I can
-// see the ping going to Bochs, and then the ping reply coming from Bochs.
-// But the ping program itself does not see the responses....well every
-// once in a while it does, like 1 in 60 pings.
-//
-// host$ ping 10.0.0.2
-// PING 10.0.0.2 (10.0.0.2) from 10.0.0.1 : 56(84) bytes of data.
-// 
-// Netstat output:
-// 20:29:59.018776 fe:fd:0:0:0:0 fe:fd:0:0:0:1 0800 98: 10.0.0.1 > 10.0.0.2: icmp: echo request
-//      4500 0054 2800 0000 4001 3ea7 0a00 0001
-//      0a00 0002 0800 09d3 a53e 0400 9765 893c
-//      3949 0000 0809 0a0b 0c0d 0e0f 1011 1213
-//      1415 1617 1819
-// 20:29:59.023017 fe:fd:0:0:0:1 fe:fd:0:0:0:0 0800 98: 10.0.0.2 > 10.0.0.1: icmp: echo reply
-//      4500 0054 004a 0000 4001 665d 0a00 0002
-//      0a00 0001 0000 11d3 a53e 0400 9765 893c
-//      3949 0000 0809 0a0b 0c0d 0e0f 1011 1213
-//      1415 1617 1819
-//
-// I suspect it may be related to the fact that ping 10.0.0.1 from the 
-// host also doesn't work.  Why wouldn't the host respond to its own IP 
-// address on the tap0 device?
-//
-// Theoretically, if you set up packet forwarding (with masquerading) on the
-// host, you should be able to get Bochs talking to anyone on the internet.
-// 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE 
@@ -141,7 +86,9 @@ private:
   int rx_timer_index;
   static void rx_timer_handler(void *);
   void rx_timer ();
+#if BX_ETH_TUNTAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
+#endif
 };
 
 
@@ -361,7 +308,9 @@ void bx_tuntap_pktmover_c::rx_timer ()
   // hack: TUN/TAP device likes to create an ethernet header which has
   // the same source and destination address FE:FD:00:00:00:00.
   // Change the dest address to FE:FD:00:00:00:01.
-  rxbuf[5] = 1;
+  if (memcmp(&rxbuf[0], broadcast_macaddr, 6)) {
+    rxbuf[5] = 1;
+  }
 
 #ifdef __APPLE__	//FIXME:hack
   if (nbytes>14)

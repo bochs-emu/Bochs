@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.6 2004-09-11 11:26:41 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.7 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -30,7 +30,6 @@
 // handler to send/receive packets
 /////////////////////////////////////////////////////////////////////////
 
-static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 static const Bit8u default_host_ipv4addr[4] = {192,168,10,1};
 static const Bit8u subnetmask_ipv4addr[4] = {0xff,0xff,0xff,0x00};
 static const Bit8u default_guest_ipv4addr[4] = {192,168,10,2};

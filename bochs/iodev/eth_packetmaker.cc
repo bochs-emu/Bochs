@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.11 2004-09-05 10:30:18 vruppert Exp $
+// $Id: eth_packetmaker.cc,v 1.12 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -112,7 +112,7 @@ bx_bool
 eth_ETHmaker::ishandler(const eth_packet& outpacket) {
   if((outpacket.len>=60) &&
      ( (!memcmp(outpacket.buf, external_mac, 6))
-       || (!memcmp(outpacket.buf, broadcast_mac, 6)) ) &&
+       || (!memcmp(outpacket.buf, broadcast_macaddr, 6)) ) &&
      ( (!memcmp(outpacket.buf+12, ethtype_arp, 2)) ||
        (!memcmp(outpacket.buf+12, ethtype_ip, 2)) ) &&
      (outpacket.len<PACKET_BUF_SIZE)
@@ -152,7 +152,7 @@ eth_ARPmaker::ishandler(const eth_packet& outpacket) {
      (!memcmp(outpacket.buf+12, ethtype_arp, 2)) &&
      (outpacket.len<PACKET_BUF_SIZE) &&
      ( (!memcmp(outpacket.buf, external_mac, 6))
-       || (!memcmp(outpacket.buf, broadcast_mac, 6)) ) &&
+       || (!memcmp(outpacket.buf, broadcast_macaddr, 6)) ) &&
      (!memcmp(outpacket.buf+38, external_ip, 4))
      ) {
     return 1;

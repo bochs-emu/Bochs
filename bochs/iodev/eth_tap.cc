@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.20 2004-09-11 15:39:52 vruppert Exp $
+// $Id: eth_tap.cc,v 1.21 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -114,7 +114,7 @@
 #include <errno.h>
 
 #define TAP_VIRTUAL_HW_ADDR             0xDEADBEEF
-#define BX_ETH_TAP_LOGGING 1
+#define BX_ETH_TAP_LOGGING 0
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
 //
@@ -131,7 +131,9 @@ private:
   int rx_timer_index;
   static void rx_timer_handler(void *);
   void rx_timer ();
+#if BX_ETH_TAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
+#endif
 };
 
 
@@ -327,11 +329,13 @@ void bx_tap_pktmover_c::rx_timer ()
   nbytes-=2;
 #endif
   
+#if defined(__linux__)
   // hack: TAP device likes to create an ethernet header which has
   // the same source and destination address FE:FD:00:00:00:00.
   // Change the dest address to FE:FD:00:00:00:01.
-#if defined(__linux__)
-  rxbuf[5] = 1;
+  if (memcmp(&rxbuf[0], broadcast_macaddr, 6)) {
+    rxbuf[5] = 1;
+  }
 #endif
 
   if (nbytes>0)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.17 2004-09-05 10:30:18 vruppert Exp $
+// $Id: eth_linux.cc,v 1.18 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -262,7 +262,6 @@ bx_linux_pktmover_c::rx_timer(void)
   Bit8u rxbuf[BX_PACKET_BUFSIZ]; 
   struct sockaddr_ll sll;
   socklen_t fromlen;
-//static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
   if (this->fd == -1)
     return;
@@ -281,7 +280,7 @@ bx_linux_pktmover_c::rx_timer(void)
   if (memcmp(sll.sll_addr, this->linux_macaddr, 6) == 0)
     return;
   // let through broadcast, multicast, and our mac address
-//  if ((memcmp(rxbuf, bcast_addr, 6) == 0) || (memcmp(rxbuf, this->linux_macaddr, 6) == 0) || rxbuf[0] & 0x01) {
+//  if ((memcmp(rxbuf, broadcast_macaddr, 6) == 0) || (memcmp(rxbuf, this->linux_macaddr, 6) == 0) || rxbuf[0] & 0x01) {
     BX_DEBUG(("eth_linux: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
     (*rxh)(rxarg, rxbuf, nbytes);
 //  }

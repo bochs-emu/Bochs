@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.68 2004-09-10 11:54:46 vruppert Exp $
+// $Id: ne2k.cc,v 1.69 2004-09-18 12:35:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1184,7 +1184,6 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   unsigned char pkthdr[4];
   unsigned char *pktbuf = (unsigned char *) buf;
   unsigned char *startptr;
-  static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
   BX_DEBUG(("rx_frame with length %d", io_len));
 
@@ -1227,7 +1226,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
   // Do address filtering if not in promiscuous mode
   if (! BX_NE2K_THIS s.RCR.promisc) {
-    if (!memcmp(buf, bcast_addr, 6)) {
+    if (!memcmp(buf, broadcast_macaddr, 6)) {
       if (!BX_NE2K_THIS s.RCR.broadcast) {
 	return;
       }
@@ -1305,7 +1304,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.68 2004-09-10 11:54:46 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.69 2004-09-18 12:35:13 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
