@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.73 2005-03-17 20:50:37 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.74 2005-03-29 21:59:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -812,8 +812,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
   /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
-  /* 0F 34 */  { 0, &BX_CPU_C::BxError },
-  /* 0F 35 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 34 */  { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
+  /* 0F 35 */  { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */  { 0, &BX_CPU_C::BxError },
   /* 0F 37 */  { 0, &BX_CPU_C::BxError },
   /* 0F 38 */  { 0, &BX_CPU_C::BxError },
@@ -1334,8 +1334,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
   /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
-  /* 0F 34 */  { 0, &BX_CPU_C::BxError },
-  /* 0F 35 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 34 */  { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
+  /* 0F 35 */  { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */  { 0, &BX_CPU_C::BxError },
   /* 0F 37 */  { 0, &BX_CPU_C::BxError },
   /* 0F 38 */  { 0, &BX_CPU_C::BxError },
@@ -1856,8 +1856,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 31 */  { 0, &BX_CPU_C::RDTSC },
   /* 0F 32 */  { 0, &BX_CPU_C::RDMSR },
   /* 0F 33 */  { 0, &BX_CPU_C::RDPMC },
-  /* 0F 34 */  { 0, &BX_CPU_C::BxError },
-  /* 0F 35 */  { 0, &BX_CPU_C::BxError },
+  /* 0F 34 */  { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
+  /* 0F 35 */  { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */  { 0, &BX_CPU_C::BxError },
   /* 0F 37 */  { 0, &BX_CPU_C::BxError },
   /* 0F 38 */  { 0, &BX_CPU_C::BxError },

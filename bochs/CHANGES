@@ -33,7 +33,7 @@ Changes in 2.2.pre2 (March 25, 2005):
     generate #GP(0) (Stanislav)
   - several protected mode fixes by Kevin Lawton
 
-- CPU (x86-64) (Stanislav)
+- CPU (x86-64)
   - fetchdecode fixes for x86-64 and 3DNow! (Stanislav)
   - fixed CF flag handling for SHL instruction in x86-64 mode (Stanislav)
   - implemented CR8 register (aliased to APIC.TPR[7:4]) (Stanislav)
@@ -43,10 +43,10 @@ Changes in 2.2.pre2 (March 25, 2005):
     in long mode (Avi Kivity)
   - ignore segment bases for all segments (except FS and GS) in long
     mode (Avi Kivity)
+  - allow SYSENTER/SYSEXIT instructions together with x86-64 (Stanislav)
 
-- FPU
+- FPU (Stanislav Shwartsman)
   - totally rewritten all FPU code based on softfloat library 
-    (Stanislav Shwartsman)
   - significantly improved accuracy of all floating point
     instructions.
   - implemented all missed P6 and PNI floating point instructions.
