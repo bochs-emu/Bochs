@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.33 2005-04-05 17:57:31 vruppert Exp $
+// $Id: dma.cc,v 1.34 2005-04-06 21:09:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.33 2005-04-05 17:57:31 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.34 2005-04-06 21:09:16 vruppert Exp $"));
 
   /* 8237 DMA controller */
 
@@ -142,8 +142,8 @@ bx_dma_c::init(void)
     for (j=0; j < 4; j++) {
       BX_DMA_THIS s[i].DRQ[j] = 0;
       BX_DMA_THIS s[i].DACK[j] = 0;
-      }
     }
+  }
   BX_DMA_THIS HLDA = 0;
   BX_DMA_THIS TC = 0;
 
@@ -151,20 +151,19 @@ bx_dma_c::init(void)
   for (i=0x0000; i<=0x000F; i++) {
     DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 1);
     DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 3);
-    }
+  }
 
-  // 00081..008F
-  for (i=0x0081; i<=0x008F; i++) {
+  // 00080..008F
+  for (i=0x0080; i<=0x008F; i++) {
     DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 1);
     DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 3);
-    }
+  }
 
   // 000C0..00DE
   for (i=0x00C0; i<=0x00DE; i+=2) {
     DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 1);
     DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 3);
-    }
-
+  }
 
   for (i=0; i<2; i++) {
     for (c=0; c<4; c++) {
@@ -178,8 +177,9 @@ bx_dma_c::init(void)
       BX_DMA_THIS s[i].chan[c].current_count = 0;
       BX_DMA_THIS s[i].chan[c].page_reg = 0;
       BX_DMA_THIS s[i].chan[c].used = 0;
-      }
     }
+  }
+  memset(&BX_DMA_THIS ext_page_reg[0], 0, 16);
   BX_DMA_THIS s[1].chan[0].used = 1; // cascade channel in use
   BX_INFO(("channel 4 used by cascade"));
 }
@@ -311,6 +311,7 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
       channel = channelindex[address - 0x89];
       return BX_DMA_THIS s[1].chan[channel].page_reg;
 
+    case 0x0080:
     case 0x0084:
     case 0x0085:
     case 0x0086:
@@ -318,8 +319,8 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
     case 0x008c:
     case 0x008d:
     case 0x008e:
-      BX_DEBUG(("read: extra page register 0x%04x unsupported", (unsigned) address));
-      return 0;
+      BX_DEBUG(("read: extra page register 0x%04x (unused)", (unsigned) address));
+      return BX_DMA_THIS ext_page_reg[address & 0x0f];
 
     case 0x0f: // DMA-1: undocumented: read all mask bits
     case 0xde: // DMA-2: undocumented: read all mask bits
@@ -538,6 +539,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DEBUG(("DMA-2: page register %d = %02x", channel + 4, (unsigned) value));
       break;
 
+    case 0x0080:
     case 0x0084:
     case 0x0085:
     case 0x0086:
@@ -545,7 +547,8 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x008c:
     case 0x008d:
     case 0x008e:
-      BX_DEBUG(("write: extra page register 0x%04x unsupported", (unsigned) address));
+      BX_DEBUG(("write: extra page register 0x%04x (unused)", (unsigned) address));
+      BX_DMA_THIS ext_page_reg[address & 0x0f] = value;
       break;
 
     default:

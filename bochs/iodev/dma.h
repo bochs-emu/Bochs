@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.16 2005-04-05 17:57:32 vruppert Exp $
+// $Id: dma.h,v 1.17 2005-04-06 21:09:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -99,6 +99,8 @@ private:
 
   bx_bool HLDA;    // Hold Acknowlege
   bx_bool TC;      // Terminal Count
+
+  Bit8u   ext_page_reg[16]; // Extra page registers (unused)
 
   struct {
     void (* dmaRead8)(Bit8u *data_byte);
