@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.6 2001-09-15 06:56:21 bdenney Exp $
+$Id: user.dbk,v 1.7 2001-09-15 16:27:26 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -531,14 +531,153 @@ home directory.
 
 <para>
 For those familiar with CVS software, you can also obtain the sources for any
-version using CVS.  See the CVS instructions<footnote>
-<para>
-&FIXME; section doesn't exist yet
+version using CVS.  See the <link linkend="get-src-cvs">CVS instructions</link> for details.
 </para>
-</footnote>
-for details.
-
 </section>  <!-- End of Installation:Downloading Bochs section -->
+
+<section id="get-src-cvs"><title>Tracking the source code with CVS</title>
+<para>
+CVS, or Concurrent Version System, is a software development tool that helps
+to keep track of the different revisions of each file.  It is used by many
+open source (and commercial) projects to allow multiple developers to share
+their changes to the source code.  The Bochs source code and documentation 
+are available using CVS<footnote>
+<para>
+You can download CVS software and documentation from 
+<ulink url="http://www.cvshome.org">www.cvshome.org</ulink>.
+</para>
+</footnote>.
+</para>
+
+<para>
+When you have CVS installed, the first step is to do a login and checkout.  The
+initial checkout command is long and ugly, but usually you only have to do it
+once.  The example below shows the CVS checkout process in UNIX.  On the
+Windows platform, you can use CVS within Cygwin<footnote>
+<para>
+Cygwin is an open source UNIX-like environment for Windows platforms,
+available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
+</para>
+</footnote>.
+
+<figure><title>Checking out Bochs in CVS</title>
+<screen>
+  user$ <command>cvs -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs login</command>
+  (Logging in to anonymous@cvs.bochs.sourceforge.net)
+  CVS password:    <replaceable>(there is no password, just press Enter)</replaceable>
+  user$ <command>cvs -z3 -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
+  cvs server: Updating bochs
+  U bochs/.bochsrc
+  U bochs/.conf.AIX.4.3.1
+  U bochs/.conf.beos-x86-R4
+  U bochs/.conf.macos
+     .
+     .   <lineannotation>(This might take a few minutes, depending on your network connection.)</lineannotation>
+     .
+  U bochs/patches/patch.seg-limit-real
+  user$ <command>cd bochs</command>
+  user$ <command>ls</command>
+  Bochs.proj.hqx  bxversion.h   fpu/                osdep.cc
+  CHANGES         config.h.in   gui/                osdep.h
+  COPYING         configure*    install-x11-fonts*  patches/
+  CVS/            configure.in  instrument/         pc_system.cc
+  Makefile.in     cpu/          iodev/              pc_system.h
+  README          debug/        load32bitOShack.cc  state_file.cc
+  TESTFORM.txt    disasm/       logio.cc            state_file.h
+  bios/           doc/          macintosh.txt       win32.txt
+  bochs.h         docs-html/    main.cc
+  bochs.rsrc.hqx  dynamic/      memory/
+  build/          font/         misc/
+  user$ _
+</screen>
+</figure>
+</para>
+
+
+<tip>
+<para>
+If you have write access to the Bochs CVS tree, the checkout
+command is different for you.  See the Developers Guide<footnote>
+<para>
+&FIXME; not written yet.  For now, look at http://sourceforge.net/cvs/?group_id=12580 for instructions. See "Developer CVS access using SSH."
+</para>
+</footnote> for details.
+</para>
+</tip>
+
+<tip>
+<para>
+If you use remote CVS for other projects, you might have set
+the environment variable <varname>CVS_RSH</varname>.  For this
+type of CVS checkout to work, the <varname>CVS_RSH</varname> variable
+should either be empty or set to <constant>rsh</constant>.
+</para>
+</tip>
+
+<para>
+The CVS checkout process (above) gives you a directory called bochs that
+contains the very latest source code.  I will refer to this directory
+as &bochsdir;.  In each subdirectory directory there's also a
+directory called "CVS" which tells the cvs software where the code was checked
+out, what version you have, and where to go for future updates.
+</para>
+
+<section><title>Getting the Latest Version</title>
+<para>
+Most developers use CVS to always give them the latest source code.  The
+minute that any developer checks in a change, they are available to you
+with CVS.  You just have to type <command>cvs update</command> in the 
+&bochsdir; directory, and CVS will retrieve any files that have been changed 
+since you did a checkout.  If you update regularly, each update takes a short
+time because it only downloads the files that changed.  
+</para>
+<para>
+The <command>cvs update</command> command tells you if any new files have
+been downloaded from the server, and it also tells you if you have modified
+any of the CVS-controlled files.  As it checks through the source directories,
+it will list files that have changed with a single letter before the name
+that tells the status of that file.
+<screen>
+  ?   "unknown"  This file is in your local copy, but CVS does not know 
+                 anything about it.  For example, when you compile Bochs,
+                 any files created during the build process appear as ?.
+  U   "update"   cvs downloaded a new version of this file because it changed
+                 on the server
+  P   same as U, as far as I can tell
+  M   "modified" You have changed this file on your disk, so it no longer
+                 matches the version on the server.  This is not a problem.
+  C   "conflict" You have changed this file on your disk, but this change
+                 conflicts with a change that was checked in.  Conflicts
+                 occur when two people change the same line of code in
+                 different ways.  You need to edit the conflicting file(s)
+                 and clean it up by hand.  Or, sometimes it's easiest to 
+                 discard your own edits and just download a fresh copy,
+                 by deleting the conflicting file and running cvs update again.
+</screen>
+</para>
+
+<para>
+If you have been using cvs update with "sticky tags" to retrieve other
+versions, described later, cvs will remember which version you were looking at.
+In this case, a <command>cvs update</command> will keep your sources consistent
+with that version.  If you want to get back to looking at the
+latest code again, add the <command>-A</command> option.
+This clears the sticky tags.
+</para>
+
+<!-- maybe we should mention cvs -d as well. -->
+
+</section>
+
+<section><title>Getting a Release Version</title>
+<para>
+a
+</para>
+</section>
+
+
+</section> <!-- End of Installation:Getting the source code with CVS -->
+
 
 <section><title>Installing a Binary</title>
 
