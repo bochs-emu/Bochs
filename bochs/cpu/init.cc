@@ -34,12 +34,16 @@
 
 
 BX_CPU_C::BX_CPU_C(BX_MEM_C *addrspace)
+#if BX_APIC_SUPPORT
    : local_apic (this)
+#endif
 {
   // BX_CPU_C constructor
 
   BX_CPU_THIS_PTR set_INTR (0);
+#if BX_APIC_SUPPORT
   local_apic.init ();
+#endif
 
   bx_printf("(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
 
@@ -566,6 +570,7 @@ BX_CPU_C::reset(unsigned source)
   dynamic_init();
 #endif
 
+#if (BX_SMP_PROCESSORS > 1)
   // notice if I'm the bootstrap processor.  If not, do the equivalent of
   // a HALT instruction.
   int apic_id = local_apic.get_id ();
@@ -579,6 +584,7 @@ BX_CPU_C::reset(unsigned source)
     debug_trap |= 0x80000000;
     async_event = 1;
   }
+#endif
 }
 
 
