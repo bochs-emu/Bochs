@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.27 2001-12-05 20:16:09 bdenney Exp $
+$Id: user.dbk,v 1.28 2001-12-08 18:05:49 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1585,8 +1585,7 @@ adjust the configure options.  Then, type:
 <screen>
   su root
   Password:     <replaceable>type root password</replaceable>
-  sh .conf.linux
-  make rpm
+  ./build/redhat/make-rpm
 </screen>
 
 When this command completes, you will have a source RPM and a binary RPM
