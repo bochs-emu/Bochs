@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  wm_sqrt.c                                                                |
- |  $Id: wm_sqrt.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: wm_sqrt.c,v 1.4 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Fixed point arithmetic square root evaluation.                            |
  |                                                                           |
@@ -100,7 +100,7 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
 #ifdef PARANOID
       if ( (n->sigh != 0xffffffff) && (n->sigl != 0xffffffff) )
 	{
-	  EXCEPTION(EX_INTERNAL|0x213);
+	  INTERNAL(0x213);
 	}
 #endif
       /* We know the answer here. */
@@ -155,7 +155,7 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
 #ifdef PARANOID
       if ( (diff >> 32) != 0 )
 	{
-	  EXCEPTION(EX_INTERNAL|0x207);
+	  INTERNAL(0x207);
 	}
 #endif
 
@@ -255,7 +255,7 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
 #ifdef PARANOID
       if ( ((s32)work32 > 3*ERR_MARGIN) || ((s32)work32 < -3*ERR_MARGIN) )
 	{
-	  EXCEPTION(EX_INTERNAL|0x214);
+	  INTERNAL(0x214);
 	}
 #endif
 
@@ -315,7 +315,7 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
 #ifdef PARANOID
   if ( ((s32)work32 > 4*3*ERR_MARGIN) || ((s32)work32 < -4*3*ERR_MARGIN) )
     {
-      EXCEPTION(EX_INTERNAL|0x215);
+      INTERNAL(0x215);
     }
 #endif
 

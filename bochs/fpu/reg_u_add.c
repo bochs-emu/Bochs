@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_add.c                                                              |
- |  $Id: reg_u_add.c,v 1.4 2003-04-20 19:20:08 sshwarts Exp $
+ |  $Id: reg_u_add.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Add two valid (TAG_Valid) FPU_REG numbers, of the same sign, and put the  |
  |   result in a destination FPU_REG.                                        |
@@ -52,7 +52,7 @@ int  FPU_u_add(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *answ,
 #ifdef PARANOID
   if (!(arg1->sigh & 0x80000000) || !(arg2->sigh & 0x80000000))
     {
-      EXCEPTION(EX_INTERNAL|0x201);
+      INTERNAL(0x201);
       return -1;
     }
 #endif

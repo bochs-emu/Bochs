@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.15 2003-10-03 17:39:04 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.16 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -867,7 +867,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 #ifdef PARANOID
       else
 	{
-	  EXCEPTION(EX_INTERNAL|0x164);
+	  INTERNAL(0x164);
 	  return 0;
 	}
 #endif
@@ -892,7 +892,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, bx_address single)
 #ifdef PARANOID
   else
     {
-      EXCEPTION(EX_INTERNAL|0x163);
+      INTERNAL(0x163);
       return 0;
     }
 #endif

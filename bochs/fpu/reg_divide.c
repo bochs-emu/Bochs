@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_divide.c                                                             |
- |  $Id: reg_divide.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_divide.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Divide one FPU_REG by another and put the result in a destination FPU_REG.|
  |                                                                           |
@@ -201,7 +201,7 @@ int FPU_div(int flags, FPU_REG *rm, int control_w)
 #ifdef PARANOID
   else
     {
-      EXCEPTION(EX_INTERNAL|0x102);
+      INTERNAL(0x102);
       return FPU_Exception;
     }
 #endif /* PARANOID */

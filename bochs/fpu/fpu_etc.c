@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_etc.c                                                                |
- |  $Id: fpu_etc.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: fpu_etc.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Implement a few FPU instructions.                                         |
  |                                                                           |
@@ -85,7 +85,7 @@ static void ftst_(FPU_REG *st0_ptr, u_char st0tag)
 	  break;
 	default:
 	  setcc(SW_C0|SW_C2|SW_C3);   /* Operand is not comparable */ 
-	  EXCEPTION(EX_INTERNAL|0x14);
+	  INTERNAL(0x14);
 	  break;
 	}
       break;

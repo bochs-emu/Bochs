@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.15 2003-10-03 17:39:04 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.16 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -154,10 +154,6 @@ typedef struct { overrides override;
 #define VM86      SIXTEEN
 #define PM16      (SIXTEEN | PROTECTED)
 #define SEG32     PROTECTED
-
-#ifndef USE_WITH_CPU_SIM
-extern u_char const data_sizes_16[32];
-#endif
 
 #define fpu_register(x)  ( * ((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * (x & 7) )))
 #define	st(x)      ( * ((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * ((FPU_tos+x) & 7) )))

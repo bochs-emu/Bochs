@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_div.c                                                              |
- |  $Id: reg_u_div.c,v 1.4 2003-04-20 19:20:08 sshwarts Exp $
+ |  $Id: reg_u_div.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Divide one FPU_REG by another and put the result in a destination FPU_REG.|
  |                                                                           |
@@ -46,7 +46,7 @@ int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,
 #ifdef PARANOID
   if (!(b->sigh & 0x80000000))
     {
-      EXCEPTION(EX_INTERNAL|0x202);
+      INTERNAL(0x202);
     }
 #endif
 
@@ -122,7 +122,7 @@ int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,
 #ifdef PARANOID
       if (work32 != 1)
 	{
-	  EXCEPTION(EX_INTERNAL|0x203);
+	  INTERNAL(0x203);
 	}
 #endif
 
@@ -137,7 +137,7 @@ int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,
 #ifdef PARANOID
       if ((accum64 >> 32))
 	{
-	  EXCEPTION(EX_INTERNAL|0x203);
+	  INTERNAL(0x203);
 	}
 #endif
     }
@@ -177,7 +177,7 @@ int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,
 #ifdef PARANOID
       if (work32 != 1)
 	{
-	  EXCEPTION(EX_INTERNAL|0x203);
+	  INTERNAL(0x203);
 	}
 #endif
 
@@ -194,7 +194,7 @@ int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,
 #ifdef PARANOID
       if ((accum64 >> 32))
 	{
-	  EXCEPTION(EX_INTERNAL|0x203);
+	  INTERNAL(0x203);
 	}
 #endif
     }
@@ -214,7 +214,7 @@ int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,
 	  /* No overflow should be possible here */
 	  if (rat1 == 0)
 	    {
-	      EXCEPTION(EX_INTERNAL|0x203);
+	      INTERNAL(0x203);
 	    }
 	}
 #endif

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  exception.h                                                              |
- |  $Id: exception.h,v 1.4 2003-07-31 17:39:24 sshwarts Exp $
+ |  $Id: exception.h,v 1.5 2003-10-04 12:32:55 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992    W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
  |                       Australia.  E-mail   billm@vaxc.cc.monash.edu.au    |
@@ -17,7 +17,6 @@
 #define FPU_BUSY        (0x8000)   /* FPU busy bit (8087 compatibility) */
 #define EX_ErrorSummary (0x0080)   /* Error summary status */
 /* Special exceptions: */
-#define	EX_INTERNAL	(0x8000)	/* Internal error in wm-FPU-emu */
 #define EX_StackOver	(0x0041|SW_C1)	/* stack overflow */
 #define EX_StackUnder	(0x0041)	/* stack underflow */
 /* Exception flags: */
@@ -32,5 +31,6 @@
 #define PRECISION_LOST_DOWN  (EX_Precision)
 
 #define EXCEPTION(x)    FPU_exception(x)
+#define INTERNAL(x)     FPU_internal(x)
 
 #endif /* _EXCEPTION_H_ */

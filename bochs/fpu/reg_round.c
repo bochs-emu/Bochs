@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_round.c                                                              |
- |  $Id: reg_round.c,v 1.5 2003-05-15 16:11:29 sshwarts Exp $
+ |  $Id: reg_round.c,v 1.6 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Rounding/truncation/etc for FPU basic arithmetic functions.               |
  |                                                                           |
@@ -234,7 +234,7 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
       /* With the precision control bits set to 01 "(reserved)", a real 80486
 	 behaves as if the precision control bits were set to 11 "64 bits" */
 #ifdef PARANOID
-	EXCEPTION(EX_INTERNAL|0x236);
+	INTERNAL(0x236);
 	return -1;
 #endif
 #endif
@@ -295,7 +295,7 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 	      break;
 
 	    default:
-	      EXCEPTION(EX_INTERNAL|0x231);
+	      INTERNAL(0x231);
 	      return -1;
 	    }
 	}
@@ -366,7 +366,7 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 	      break;
 
 	    default:
-	      EXCEPTION(EX_INTERNAL|0x231);
+	      INTERNAL(0x231);
 	      return -1;
 	    }
 	}
@@ -439,7 +439,7 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 	      break;
 
 	    default:
-	      EXCEPTION(EX_INTERNAL|0x231);
+	      INTERNAL(0x231);
 	      return -1;
 	    }
 	}
@@ -449,7 +449,7 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 
     default:
 #ifdef PARANOID
-	EXCEPTION(EX_INTERNAL|0x230);
+	INTERNAL(0x230);
 	return -1;
 #endif
       break;
@@ -473,7 +473,7 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 	{
 	  if (x->exp != EXP_UNDER+1)
 	    {
-	      EXCEPTION(EX_INTERNAL|0x234);
+	      INTERNAL(0x234);
 	    }
 	  if ((x->sigh == 0) && (x->sigl == 0))
 	    {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_proto.h,v 1.10 2003-08-01 09:32:33 sshwarts Exp $
+// $Id: fpu_proto.h,v 1.11 2003-10-04 12:32:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,6 +38,7 @@
 extern void Un_impl(void);
 extern void FPU_illegal(void);
 asmlinkage void FPU_exception(int n);
+asmlinkage void FPU_internal(int n);
 extern int real_1op_NaN(FPU_REG *a);
 extern int real_2op_NaN(FPU_REG const *b, u_char tagb, int deststnr,
 			FPU_REG const *defaultNaN);
@@ -166,5 +167,5 @@ extern int FPU_mul(FPU_REG const *b, u_char tagb, int deststnr, int control_w);
 extern int FPU_div(int flags, FPU_REG *regrm, int control_w); // bbd: changed arg2 from int to FPU_REG*
 /* reg_convert.c */
 extern int FPU_to_exp16(FPU_REG const *a, FPU_REG *x) BX_CPP_AttrRegparmN(2);
-#endif /* _FPU_PROTO_H */
 
+#endif /* _FPU_PROTO_H */

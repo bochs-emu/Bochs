@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_compare.c                                                            |
- |  $Id: reg_compare.c,v 1.5 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: reg_compare.c,v 1.6 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Compare two floating point registers                                      |
  |                                                                           |
@@ -201,7 +201,7 @@ int FPU_compare_st_data(FPU_REG const *loaded_data, u_char loaded_tag)
 	break;
 #ifdef PARANOID
       default:
-	EXCEPTION(EX_INTERNAL|0x121);
+	INTERNAL(0x121);
 	f = SW_C3 | SW_C2 | SW_C0;
 	break;
 #endif /* PARANOID */
@@ -253,7 +253,7 @@ static int compare_st_st(int nr)
 	break;
 #ifdef PARANOID
       default:
-	EXCEPTION(EX_INTERNAL|0x122);
+	INTERNAL(0x122);
 	f = SW_C3 | SW_C2 | SW_C0;
 	break;
 #endif /* PARANOID */
@@ -310,7 +310,7 @@ static int compare_u_st_st(int nr)
 	break;
 #ifdef PARANOID
       default:
-	EXCEPTION(EX_INTERNAL|0x123);
+	INTERNAL(0x123);
 	f = SW_C3 | SW_C2 | SW_C0;
 	break;
 #endif /* PARANOID */

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_atan.c                                                              |
- |  $Id: poly_atan.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: poly_atan.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Compute the arctan of a FPU_REG, using a polynomial approximation.        |
  |                                                                           |
@@ -121,7 +121,7 @@ void	poly_atan(FPU_REG *st0_ptr, u_char st0_tag,
 		 (argSignif.lsw == 0) && (argSignif.midw == 0) &&
 		 (argSignif.msw == 0x80000000) ) )
 	    {
-	      EXCEPTION(EX_INTERNAL|0x104);  /* There must be a logic error */
+	      INTERNAL(0x104);  /* There must be a logic error */
 	      return;
 	    }
 #endif /* PARANOID */

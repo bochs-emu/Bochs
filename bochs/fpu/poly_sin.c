@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_sin.c                                                               |
- |  $Id: poly_sin.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: poly_sin.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  |  Computation of an approximation of the sin function and the cosine       |
  |  function by a polynomial.                                                |
@@ -198,7 +198,7 @@ void	poly_sine(FPU_REG *st0_ptr)
   if ( (exponent(&result) >= 0)
       && (significand(&result) > BX_CONST64(0x8000000000000000)) )
     {
-      EXCEPTION(EX_INTERNAL|0x150);
+      INTERNAL(0x150);
     }
 #endif /* PARANOID */
 
@@ -391,7 +391,7 @@ void	poly_cos(FPU_REG *st0_ptr)
   if ( (exponent(&result) >= 0)
       && (significand(&result) > BX_CONST64(0x8000000000000000)) )
     {
-      EXCEPTION(EX_INTERNAL|0x151);
+      INTERNAL(0x151);
     }
 #endif /* PARANOID */
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_sub.c                                                              |
- |  $Id: reg_u_sub.c,v 1.5 2003-05-15 16:11:29 sshwarts Exp $
+ |  $Id: reg_u_sub.c,v 1.6 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Core floating point subtraction routine.                                  |
  |                                                                           |
@@ -39,7 +39,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
 #ifdef PARANOID
   if (ediff < 0)
     {
-      EXCEPTION(EX_INTERNAL|0x206);
+      INTERNAL(0x206);
       return -1;
     }
 #endif
@@ -49,7 +49,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
 #ifdef PARANOID
   if (!(arg1->sigh & 0x80000000) || !(arg2->sigh & 0x80000000))
     {
-      EXCEPTION(EX_INTERNAL|0x209);
+      INTERNAL(0x209);
       return -1;
     }
 #endif
@@ -147,7 +147,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
   if (borrow)
     {
       /* This can only occur if the code is bugged */
-      EXCEPTION(EX_INTERNAL|0x212);
+      INTERNAL(0x212);
       return -1;
     }
 #endif
@@ -184,7 +184,7 @@ int  FPU_u_sub(const FPU_REG *arg1, const FPU_REG *arg2, FPU_REG *dest,
 	  if (extent != 0x80000000)
 	    {
 	      /* This can only occur if the code is bugged */
-	      EXCEPTION(EX_INTERNAL|0x210);
+	      INTERNAL(0x210);
 	      return -1;
 	    }
 	  dest->sigh = extent;

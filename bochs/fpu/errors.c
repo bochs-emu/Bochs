@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.11 2003-08-28 19:25:23 sshwarts Exp $
+ |  $Id: errors.c,v 1.12 2003-10-04 12:32:55 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -156,7 +156,6 @@ static struct {
   { EX_ZeroDiv, "divide by zero" },
   { EX_Denormal, "denormalized operand" },
   { EX_Invalid, "invalid operation" },
-  { EX_INTERNAL, "INTERNAL BUG in "FPU_VERSION },
   { 0, NULL }
 };
 
@@ -209,68 +208,36 @@ static struct {
 	      0x171  in fpu_tags.c
 	      0x172  in fpu_tags.c
 	      0x180  in reg_convert.c
-       0x2nn  in an *.S file:
-              0x201  in reg_u_add.S
-              0x202  in reg_u_div.S
-              0x203  in reg_u_div.S
-              0x204  in reg_u_div.S
-              0x205  in reg_u_mul.S
-              0x206  in reg_u_sub.S
-              0x207  in wm_sqrt.S
-	      0x208  in reg_div.S
-              0x209  in reg_u_sub.S
-              0x210  in reg_u_sub.S
-              0x211  in reg_u_sub.S
-              0x212  in reg_u_sub.S
-	      0x213  in wm_sqrt.S
-	      0x214  in wm_sqrt.S
-	      0x215  in wm_sqrt.S
-	      0x220  in reg_norm.S
-	      0x221  in reg_norm.S
-	      0x230  in reg_round.S
-	      0x231  in reg_round.S
-	      0x232  in reg_round.S
-	      0x233  in reg_round.S
-	      0x234  in reg_round.S
-	      0x235  in reg_round.S
-	      0x236  in reg_round.S
-	      0x240  in div_Xsig.S
-	      0x241  in div_Xsig.S
-	      0x242  in div_Xsig.S
 */
+
+void FPU_internal(int type)
+{
+   printk("FPU emulator: Internal error type 0x%04x\n", type);
+}
 
 void FPU_exception(int n)
 {
   int i, int_type;
 
   int_type = 0;         /* Needed only to stop compiler warnings */
-  if ( n & EX_INTERNAL )
-    {
-      int_type = n - EX_INTERNAL;
-      n = EX_INTERNAL;
-      /* Set lots of exception bits! */
-      FPU_partial_status |= (SW_Exc_Mask | SW_Summary | SW_Backward);
-    }
-  else
-    {
-      /* Extract only the bits which we use to set the status word */
-      n &= (SW_Exc_Mask);
-      /* Set the corresponding exception bit */
-      FPU_partial_status |= n;
-      /* Set summary bits iff exception isn't masked */
-      if ( FPU_partial_status & ~FPU_control_word & CW_Exceptions )
+
+  /* Extract only the bits which we use to set the status word */
+  n &= (SW_Exc_Mask);
+  /* Set the corresponding exception bit */
+  FPU_partial_status |= n;
+  /* Set summary bits iff exception isn't masked */
+  if (FPU_partial_status & ~FPU_control_word & CW_Exceptions)
 	FPU_partial_status |= (SW_Summary | SW_Backward);
-      if ( n & (SW_Stack_Fault | EX_Precision) )
-	{
-	  if ( !(n & SW_C1) )
-	    /* This bit distinguishes over- from underflow for a stack fault,
-	       and roundup from round-down for precision loss. */
-	    FPU_partial_status &= ~SW_C1;
-	}
-    }
+  if (n & (SW_Stack_Fault | EX_Precision))
+  {
+      if (!(n & SW_C1))
+        /* This bit distinguishes over- from underflow for a stack fault,
+             and roundup from round-down for precision loss. */
+        FPU_partial_status &= ~SW_C1;
+  }
 
   RE_ENTRANT_CHECK_OFF;
-  if ( (~FPU_control_word & n & CW_Exceptions) || (n == EX_INTERNAL) )
+  if (~FPU_control_word & n & CW_Exceptions)
     {
       /* Get a name string for error reporting */
       for (i=0; exception_names[i].type; i++)
@@ -285,11 +252,6 @@ void FPU_exception(int n)
 	}
       else
 	printk("FPU emulator: Unknown Exception: 0x%04x!\n", n);
-      
-      if ( n == EX_INTERNAL )
-	{
-	  printk("FPU emulator: Internal error type 0x%04x\n", int_type);
-	}
 
       /*
        * The 80486 generates an interrupt on the next non-control FPU
@@ -411,7 +373,7 @@ int real_2op_NaN(FPU_REG const *b, u_char tagb,
   else
     {
       signalling = 0;
-      EXCEPTION(EX_INTERNAL|0x113);
+      INTERNAL(0x113);
       x = &CONST_QNaN;
     }
 #endif /* PARANOID */

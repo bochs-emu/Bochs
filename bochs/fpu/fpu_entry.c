@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.16 2003-08-01 16:57:59 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.17 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -395,7 +395,7 @@ do_the_FPU_interrupt:
           FPU_illegal();
           goto FPU_instruction_done;
         default:
-          EXCEPTION(EX_INTERNAL|0x111);
+          INTERNAL(0x111);
           goto FPU_instruction_done;
         }
       (*st_instr_table[(int) instr_index])();

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_mul.c                                                              |
- |  $Id: reg_u_mul.c,v 1.5 2003-05-15 16:11:29 sshwarts Exp $
+ |  $Id: reg_u_mul.c,v 1.6 2003-10-04 12:32:56 sshwarts Exp $
  |                                                                           |
  | Core multiplication routine                                               |
  |                                                                           |
@@ -33,7 +33,7 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
 #ifdef PARANOID
   if (! (a->sigh & 0x80000000) || ! (b->sigh & 0x80000000))
     {
-      EXCEPTION(EX_INTERNAL|0x205);
+      INTERNAL(0x205);
     }
 #endif
 
