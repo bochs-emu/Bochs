@@ -1043,9 +1043,17 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
       features |= 0x01;
 #  endif
 
-#else
+#elif BX_CPU_LEVEL == 6
       family = 6;
-      bx_panic("CPUID: not implemented for > 5\n");
+      model = 1; // Pentium Pro
+      stepping = 3; // ???
+      features |= (1<<4);   // implement TSC
+      features |= (1<<9);   // APIC on chip
+#  if BX_SUPPORT_FPU
+      features |= 0x01;     // has FPU
+#  endif
+#else
+      bx_panic("CPUID: not implemented for > 6\n");
 #endif
 
       EAX = (family <<8) | (model<<4) | stepping;
@@ -1139,7 +1147,7 @@ BX_CPU_C::RDTSC(BxInstruction_t *i)
     Bit64u ticks = bx_pc_system.time_ticks ();
     EAX = (Bit32u) (ticks & 0xffffffff);
     EDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
-    bx_printf ("RDTSC: returning EDX:EAX = %08x:%08x\n", EDX, EAX);
+    //bx_printf ("RDTSC: returning EDX:EAX = %08x:%08x\n", EDX, EAX);
   } else {
     // not allowed to use RDTSC!
     exception (BX_GP_EXCEPTION, 0, 0);
