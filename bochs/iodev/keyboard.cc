@@ -1020,7 +1020,11 @@ case 0xd3:
   return;
 
     default:
-      bx_panic("KBD: kbd_ctrl_to_kbd(): got value of %02x\n",
+			/* XXX fix this properly:
+			http://panda.cs.ndsu.nodak.edu/~achapwes/PICmicro/mouse/mouse.html
+			http://sourceforge.net/tracker/index.php?func=detail&aid=422457&group_id=12580&atid=112580
+			 */
+      bx_printf("KBD: kbd_ctrl_to_kbd(): got value of %02x\n",
         (unsigned) value);
       kbd_enQ(0xFA); /* send ACK ??? */
       return;
