@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.12 2002-08-30 07:03:49 bdenney Exp $
+// $Id: wxdialog.cc,v 1.13 2002-08-30 22:52:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -607,7 +607,6 @@ void HDConfigDialog::ShowHelp ()
 //     buttonSizer:
 //       help
 //       cancel
-//       create image
 //       ok
 
 // all events go to OnEvent method
@@ -663,8 +662,6 @@ CdromConfigDialog::CdromConfigDialog(
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, ID_Create, BTNLABEL_CREATE_IMG);
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, wxOK, BTNLABEL_OK);
   buttonSizer->Add (btn, 0, wxALL, 5);
@@ -747,19 +744,6 @@ void CdromConfigDialog::OnEvent(wxCommandEvent& event)
   int id = event.GetId ();
   printf ("you pressed button id=%d\n", id);
   switch (id) {
-    case ID_Create:
-      {
-	int sectors = 650*1024*1024/512;
-	char name[1024];
-	strncpy (name, filename->GetValue ().c_str (), sizeof(name));
-	if (CreateImage (1, sectors, name)) {
-	  wxString msg;
-	  msg.Printf ("Created a %d megabyte CD-ROM image called '%s'.",
-	      sectors*512, name);
-	  wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION);
-	}
-      }
-      break;
     case ID_FilenameText:
       // when you type into the filename field, ensure that the radio
       // button associated with that field is chosen.
