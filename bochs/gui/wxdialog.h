@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.35 2002-09-20 12:40:13 bdenney Exp $
+// $Id: wxdialog.h,v 1.36 2002-09-20 17:53:14 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -42,7 +42,7 @@ int GetTextCtrlInt (wxTextCtrl *text, bool *valid = NULL, bool complain=false, w
 bool BrowseTextCtrl (wxTextCtrl *text,
     wxString prompt="Choose a file",
     long style=wxOPEN);
-wxChoice *makeLogOptionChoiceBox (wxWindow *parent, wxWindowID id, int evtype, int choiceWidth);
+wxChoice *makeLogOptionChoiceBox (wxWindow *parent, wxWindowID id, int evtype, bool includeNoChange = false);
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
@@ -546,10 +546,7 @@ private:
 #define LOG_OPTS_CHOICES { "ignore", "log", "ask user", "end simulation", "no change" }
 #define LOG_OPTS_N_CHOICES_NORMAL 4
 #define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
-#define LOG_OPTS_NO_CHANGE 5   // index of "no change"
-// LOG_OPTS_CHOICES is the index of the longest string in LOG_OPTS_CHOICES
-// array, used to determine dialog geometry
-#define LOG_OPTS_LONGEST_CHOICE 3   // "end simulation" is longest
+#define LOG_OPTS_NO_CHANGE 4   // index of "no change"
 // normally all choices are available for all event types. The exclude 
 // expression allows some choices to be eliminated if they don't make any 
 // sense.  For example, it would be stupid to ignore a panic.
@@ -591,7 +588,7 @@ DECLARE_EVENT_TABLE()
 // | you could ask for debug and info events from the        |
 // | keyboard to be reported.                                |
 // |                                                         |
-// |                      [Apply defaults for all devices]   |
+// |                        [Use defaults for all devices]   |
 // |                                                         |
 // | +---------------------------------------------------+-+ |
 // | |Device    Debug     Info      Error      Panic     |^| |
@@ -617,7 +614,7 @@ private:
 "to be reported."
 #define ADVLOG_OPTS_TYPE_NAMES { "Debug", "Info", "Error", "Panic" }
 #define ADVLOG_OPTS_N_TYPES 4
-#define ADVLOG_DEFAULTS "Apply defaults for all devices"
+#define ADVLOG_DEFAULTS "Use defaults for all devices"
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
   wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
@@ -626,13 +623,19 @@ private:
   wxGridSizer *gridSizer;
   wxTextCtrl *logfile;
   wxButton *applyDefault;
-  wxChoice *action[LOG_OPTS_N_TYPES];
+  // 2d array of wxChoice pointers. Each wxChoice* is action[dev][type].
+  wxChoice*  **action;
 public:
   AdvancedLogOptionsDialog(wxWindow* parent, wxWindowID id);
+  ~AdvancedLogOptionsDialog();
   void OnEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   void SetLogfile (wxString f) { logfile->SetValue (f); }
   wxString GetLogfile () { return logfile->GetValue (); }
+  void CopyParamToGui ();
+  void CopyGuiToParam ();
+  void SetAction (int dev, int evtype, int act);
+  int GetAction (int dev, int evtype);
 DECLARE_EVENT_TABLE()
 };
 
@@ -1146,7 +1149,7 @@ all the devices.
 | you could ask for debug and info events from the        |
 | keyboard to be reported.                                |
 |                                                         |
-|                      [Apply defaults for all devices]   |
+|                        [Use defaults for all devices]   |
 +-------------------------------------------------------+-+
 |  Device    Debug     Info      Error      Panic       |^|
 |  --------  --------  -------   --------   ---------   |||
@@ -1195,7 +1198,52 @@ devices at once.
 |                                                         |
 |                              [ Help ] [ Cancel ] [ Ok ] |
 +---------------------------------------------------------+
+
++---- Configure events -------------------------------------+
+|  __________    ____________                               |
+| | Default  \  | Per Device \                              |
+| |           \------------------------------------------+  |
+| |                                                      |  |
+| | Event log file [_______________________] [Browse]    |  |
+| |                                                      |  |
+| | How should Bochs respond to each type of event?      |  |
+| |                                                      |  |
+| |            Debug events: [ignore]                    |  |
+| |             Info events: [ignore]                    |  |
+| |            Error events: [report]                    |  |
+| |            Panic events: [ask   ]                    |  |
+| |                                                      |  |
+| | For additional control over how each device responds |  |
+| | to events, click the "Per Device" tab above.         |  |
+| |                                                      |  |
+| +------------------------------------------------------+  |
+|                                [ Help ] [ Cancel ] [ Ok ] |
++-----------------------------------------------------------+
                                                            
++---- Configure events -------------------------------------+
+|  __________    ____________                               |
+| | Default  \  | Per Device \                              |
+| +-------------|             \--------------------------+  |
+| |                                                      |  |
+| | This table determines how Bochs will respond to each |  |
+| | kind of event coming from a particular source.  For  |  |
+| | example if you are having problems with the keyboard,|  |
+| | you could ask for debug and info events from the     |  |
+| | keyboard to be reported.                             |  |
+| |                                                      |  |
+| | +------------------------------------------------+-+ |  |
+| | |Device   Debug    Info     Error      Panic     |^| |  |
+| | |-------- -------- -------  --------   --------- ||| |  |
+| | |Keyboard [ignore] [ignore] [report]   [report]  ||| |  |
+| | |VGA      [ignore] [ignore] [report]   [report]  ||| |  |
+| | |NE2000   [ignore] [ignore] [report]   [report]  ||| |  |
+| | |Sound    [ignore] [ignore] [report]   [report]  |v| |  |
+| | +--------------------------------------------------+ |  |
+| |                      [Set defaults for all devices]  |  |
+| +------------------------------------------------------+  |
+|                                [ Help ] [ Cancel ] [ Ok ] |
++-----------------------------------------------------------+
+
 
 
 ////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.51 2002-09-19 04:52:03 bdenney Exp $
+// $Id: wxmain.cc,v 1.52 2002-09-20 17:53:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -625,7 +625,8 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   // will not destroy the settings for individual devices.  You would only
   // start to see "no change" if you've been messing around in the advanced
   // menu already.
-  for (int level=0; level<SIM->get_max_log_level(); level++) {
+  int level, nlevel = SIM->get_max_log_level();
+  for (level=0; level<nlevel; level++) {
     int mod = 0;
     int first = SIM->get_log_action (mod, level);
     bool consensus = true;
@@ -647,13 +648,14 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
     char buf[1024];
     safeWxStrcpy (buf, dlg.GetLogfile (), sizeof (buf));
     logfile->set (buf);
-    for (int level=0; level < SIM->get_max_log_level (); level++) {
+    for (level=0; level<nlevel; level++) {
       // ask the dialog what action the user chose for this type of event
       int action = dlg.GetAction (level);
       if (action != LOG_OPTS_NO_CHANGE) {
+	// set new default
+        SIM->set_default_log_action (level, action);
 	// apply that action to all modules (devices)
-	for (int i=0; i<SIM->get_n_log_modules (); i++)
-	  SIM->set_log_action (i, level, action);
+	SIM->set_log_action (-1, level, action);
       }
     }
   }

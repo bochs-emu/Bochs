@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.40 2002-09-20 12:40:13 bdenney Exp $
+// $Id: wxdialog.cc,v 1.41 2002-09-20 17:53:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1027,8 +1027,6 @@ LogOptionsDialog::LogOptionsDialog(
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   static char *names[] = LOG_OPTS_TYPE_NAMES;
-  static char *choices[] = LOG_OPTS_CHOICES;
-  static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
   SetTitle (LOG_OPTS_TITLE);
   vertSizer = new wxBoxSizer (wxVERTICAL);
   // top level objects
@@ -1051,41 +1049,12 @@ LogOptionsDialog::LogOptionsDialog(
   wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   logfileSizer->Add (btn, 0, wxALL, 5);
 
-  // figure out how wide the wxChoice boxes need to be for longest string
-  int choiceWidth;
-#if 1
-  // Calculate length of longest choice, to help decide how wide the 
-  // wxChoice controls should be.  Otherwise they are sized according to
-  // the initial choice string, which may not be the longest.
-  wxString longest (choices[LOG_OPTS_LONGEST_CHOICE]);
-  wxClientDC dc (this);
-  wxCoord w, h;
-  dc.GetTextExtent (longest, &w, &h);
-  wxLogDebug ("extent of '%s' is %d,%d", longest.c_str (), w, h);
-  choiceWidth = w * 3 / 2;   // 50% wider than longest string
-#else
-  choiceWidth = 150;  // hardcoded width, yuck.
-#endif
   // gridSizer contents
   gridSizer->AddGrowableCol (1);
   for (int evtype=0; evtype<LOG_OPTS_N_TYPES; evtype++) {
     gridSizer->Add (new wxStaticText (this, -1, names[evtype]), 0, wxALL, 5);
-    gridSizer->Add (action[evtype] = new wxChoice (this, -1), 1, wxALL|wxGROW, 5);
-    // fill in the choices in the wxChoice field
-    int lastChoice = 0;  // remember the index of the last choice
-    for (int choice=0; choice<LOG_OPTS_N_CHOICES_NORMAL; choice++) {
-      // the exclude expression allows some choices to not be available
-      // for some times.  For example, it would be stupid to ignore a panic.
-      if (!LOG_OPTS_EXCLUDE (evtype, choice)) {
-        action[evtype]->Append (choices[choice], &integers[choice]);
-	// the client data is an int* that points to the choice number.
-	// This is what will be returned by GetAction().
-	lastChoice++;
-      }
-    }
-    wxSize sizenow = action[evtype]->GetSize ();
-    action[evtype]->SetSizeHints (choiceWidth, sizenow.GetHeight ());
-    action[evtype]->SetSelection (lastChoice-1);
+    action[evtype] = makeLogOptionChoiceBox (this, -1, evtype, true);
+    gridSizer->Add (action[evtype], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 5);
   }
 
   // buttonSizer contents
@@ -1134,6 +1103,7 @@ void LogOptionsDialog::SetAction (int evtype, int a) {
 int LogOptionsDialog::GetAction (int evtype) {
   int sel = action[evtype]->GetSelection (); 
   int *ptrToChoice = (int*)action[evtype]->GetClientData (sel);
+  wxASSERT (ptrToChoice != NULL);
   return *ptrToChoice;
 }
 
@@ -1205,7 +1175,6 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
-  static char *choices[] = LOG_OPTS_CHOICES;
   //static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
   static char *names[] = ADVLOG_OPTS_TYPE_NAMES;
   SetTitle (ADVLOG_OPTS_TITLE);
@@ -1217,7 +1186,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   vertSizer->Add (text, 0, wxALL, 10);
   applyDefault = new wxButton (this, ID_ApplyDefault, ADVLOG_DEFAULTS);
   vertSizer->Add (applyDefault, 0, wxALL|wxALIGN_RIGHT, 10);
-  scrollWin = new wxScrolledWindow (this, -1, wxDefaultPosition, wxSize (400, 300));
+  scrollWin = new wxScrolledWindow (this, -1);
   vertSizer->Add (scrollWin, 1, wxALL|wxGROW, 10);
   buttonSizer = new wxBoxSizer (wxHORIZONTAL);
   vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
@@ -1229,22 +1198,6 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   logfileSizer->Add (logfile);
   wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   logfileSizer->Add (btn, 0, wxALL, 5);
-
-  // figure out how wide the wxChoice boxes need to be for longest string
-  int choiceWidth;
-#if 1
-  // Calculate length of longest choice, to help decide how wide the 
-  // wxChoice controls should be.  Otherwise they are sized according to
-  // the initial choice string, which may not be the longest.
-  wxString longest (choices[LOG_OPTS_LONGEST_CHOICE]);
-  wxClientDC dc (this);
-  wxCoord w, h;
-  dc.GetTextExtent (longest, &w, &h);
-  wxLogDebug ("extent of '%s' is %d,%d", longest.c_str (), w, h);
-  choiceWidth = w * 3 / 2;   // 50% wider than longest string
-#else
-  choiceWidth = 150;  // hardcoded width, yuck.
-#endif
 
   // to get the scrollWin geometry right, first build everything on a wxPanel,
   // with gridSizer as the main sizer.
@@ -1261,49 +1214,41 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   }
   // add rows of choice boxes, one for each device
   int devmax = SIM->get_n_log_modules (); 
+  action = new wxChoice** [devmax];   // array of pointers
   for (int dev=0; dev<devmax; dev++) {
+    action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
     // name of device in first column
     gridSizer->Add (new wxStaticText (scrollPanel, -1, SIM->get_prefix (dev)));
     // wxChoice in every other column
     for (type=0; type < typemax; type++) {
-      wxChoice *choice = makeLogOptionChoiceBox (scrollPanel, -1, type, choiceWidth);
-      gridSizer->Add (choice, 1, wxALL|wxGROW, 2);
+      action[dev][type] = makeLogOptionChoiceBox (scrollPanel, -1, type);
+      gridSizer->Add (action[dev][type], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 2);
     }
   }
   scrollPanel->SetAutoLayout (TRUE);
   scrollPanel->SetSizer (gridSizer);
   gridSizer->Fit (scrollPanel);
   gridSizer->SetSizeHints (scrollPanel);
+  wxSize size = scrollPanel->GetBestSize ();
+  // now we know how big the panel wants to be, and we can set the scrollbar
+  // and scrollWin size accordingly
 
   // finally set up the scroll window outside
-  wxSize size = scrollPanel->GetBestSize ();
   scrollWin->SetScrollbars (1, 1, size.GetWidth (), size.GetHeight ());
 
-#if 0
-  for (int evtype=0; evtype<LOG_OPTS_N_TYPES; evtype++) {
-    scrollWin->Add (new wxStaticText (this, -1, names[evtype]), 0, wxALL, 5);
-    scrollWin->Add (action[evtype] = new wxChoice (this, -1), 1, wxALL|wxGROW, 5);
-    // fill in the choices in the wxChoice field
-    int lastChoice = 0;  // remember the index of the last choice
-    for (int choice=0; choice<LOG_OPTS_N_CHOICES_NORMAL; choice++) {
-      // the exclude expression allows some choices to not be available
-      // for some times.  For example, it would be stupid to ignore a panic.
-      if (!LOG_OPTS_EXCLUDE (evtype, choice)) {
-        action[evtype]->Append (choices[choice], &integers[choice]);
-	// the client data is an int* that points to the choice number.
-	// This is what will be returned by GetAction().
-	lastChoice++;
-      }
-    }
-    wxSize sizenow = action[evtype]->GetSize ();
-    action[evtype]->SetSizeHints (choiceWidth, sizenow.GetHeight ());
-    action[evtype]->SetSelection (lastChoice-1);
-  }
-#endif
+  // now that we know the desired width of the panel, use it to set the
+  // width of the scrollWin.  I tried several things before arriving at 
+  // a solution, and I'll list them for educational purposes.
+  //
+  // failure #1: this had no effect at all. sizer took precedence.
+  //   scrollWin->SetSize (500, 500);
+  // failure #2: this changed scrollWin size but sizer was not notified so
+  //             the overall window didn't expand to make space for it.
+  //  scrollWin->SetSizeHints (500, 500);
+  // success: tell the sizer to change the scrollWin's size, and it works
+  vertSizer->SetItemMinSize (scrollWin, size.GetWidth()+30, 400);
 
   // buttonSizer contents
-  btn = new wxButton (this, ID_Advanced, BTNLABEL_ADVANCED);
-  buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
@@ -1313,8 +1258,14 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   buttonSizer->Add (btn, 0, wxALL, 5);
 }
 
+AdvancedLogOptionsDialog::~AdvancedLogOptionsDialog()
+{
+#warning must clean up my 2d array
+}
+
 void AdvancedLogOptionsDialog::Init()
 {
+  CopyParamToGui ();
   // lay it out!
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
@@ -1326,31 +1277,59 @@ void AdvancedLogOptionsDialog::Init()
   Center ();
 }
 
-#if 0
-void AdvancedLogOptionsDialog::SetAction (int evtype, int a) {
-  // find the choice whose client data matches "a".
+void AdvancedLogOptionsDialog::CopyParamToGui () {
+  bx_param_string_c *logfile = SIM->get_param_string (BXP_LOG_FILENAME);
+  SetLogfile (wxString (logfile->getptr ()));
+  // copy log action settings from siminterface to gui
+  int dev, ndev = SIM->get_n_log_modules ();
+  int type, ntype = SIM->get_max_log_level ();
+  for (dev=0; dev<ndev; dev++) {
+    for (type=0; type<ntype; type++) {
+      SetAction (dev, type, SIM->get_log_action (dev, type));
+    }
+  }
+}
+
+void AdvancedLogOptionsDialog::CopyGuiToParam () {
+  char buf[1024];
+  safeWxStrcpy (buf, GetLogfile (), sizeof (buf));
+  bx_param_string_c *logfile = SIM->get_param_string (BXP_LOG_FILENAME);
+  logfile->set (buf);
+  // copy log action settings from gui to siminterface
+  int dev, ndev = SIM->get_n_log_modules ();
+  int type, ntype = SIM->get_max_log_level ();
+  for (dev=0; dev<ndev; dev++) {
+    for (type=0; type<ntype; type++) {
+      SIM->set_log_action (dev, type, GetAction (dev, type));
+    }
+  }
+}
+
+void AdvancedLogOptionsDialog::SetAction (int dev, int evtype, int act) {
+  // find the choice whose client data matches "act".
   int *ptr;
-  //wxLogDebug ("SetAction type=%d a=%d", evtype, a);
-  for (int i=0; i < action[evtype]->GetCount (); i++) {
-    //wxLogDebug ("reading action[%d]->GetClientData(%d)", evtype, i);
-    ptr = (int*) action[evtype]->GetClientData (i);
+  wxLogDebug ("SetAction dev=%d type=%d act=%d", dev, evtype, act);
+  wxChoice *control = action[dev][evtype];
+  for (int i=0; i < control->GetCount (); i++) {
+    wxLogDebug ("reading action[%d][%d]->GetClientData(%d)", dev, evtype, i);
+    ptr = (int*) control->GetClientData (i);
     if (ptr == NULL) continue;
-    if (a == *ptr) {  // found it!
-      action[evtype]->SetSelection (i);
+    if (act == *ptr) {  // found it!
+      control->SetSelection (i);
       return;
     }
   }
   // this can happen if one of the choices that is excluded by
   // ADVLOG_OPTS_EXCLUDE() is used, for example.
-  wxLogDebug ("SetAction type=%d a=%d not found", evtype, a);
+  wxLogDebug ("warning: SetAction type=%d act=%d not found", evtype, act);
 }
 
-int AdvancedLogOptionsDialog::GetAction (int evtype) {
-  int sel = action[evtype]->GetSelection (); 
-  int *ptrToChoice = (int*)action[evtype]->GetClientData (sel);
+int AdvancedLogOptionsDialog::GetAction (int dev, int evtype) {
+  int sel = action[dev][evtype]->GetSelection (); 
+  int *ptrToChoice = (int*)action[dev][evtype]->GetClientData (sel);
+  wxASSERT (ptrToChoice != NULL);
   return *ptrToChoice;
 }
-#endif
 
 void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
 {
@@ -1360,10 +1339,19 @@ void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
     case ID_Browse:
       BrowseTextCtrl (logfile);
       break;
-    case ID_Advanced:
-      wxMessageBox ("The advanced dialog is not implemented yet.");
+    case ID_ApplyDefault: {
+      int lev, nlev = SIM->get_max_log_level ();
+      // copy default settings to every device
+      for (lev=0; lev<nlev; lev++) {
+	int action = SIM->get_default_log_action (lev);
+	int dev, ndev = SIM->get_n_log_modules ();
+	for (dev=0; dev<ndev; dev++) 
+	  SetAction (dev, lev, action);
+      }
       break;
+      }
     case wxID_OK:
+      CopyGuiToParam ();
       EndModal (wxID_OK);
       break;
     case wxID_CANCEL:
@@ -2402,13 +2390,15 @@ bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
 wxChoice *makeLogOptionChoiceBox (wxWindow *parent,
     wxWindowID id,
     int evtype,
-    int choiceWidth)
+    bool includeNoChange)
 {
   static char *choices[] = LOG_OPTS_CHOICES;
-  static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
-  wxChoice *control = new wxChoice (parent, id);
+  static int integers[LOG_OPTS_N_CHOICES] = {0, 1, 2, 3, 4};
+  static const wxString stupid[2] = { "little1", "little2" };
+  wxChoice *control = new wxChoice (parent, id, wxDefaultPosition, wxDefaultSize);
   int lastChoice = 0;  // remember index of last choice
-  for (int choice=0; choice<LOG_OPTS_N_CHOICES_NORMAL; choice++) {
+  int nchoice = includeNoChange? LOG_OPTS_N_CHOICES : LOG_OPTS_N_CHOICES_NORMAL;
+  for (int choice=0; choice<nchoice; choice++) {
     // the exclude expression allows some choices to not be available
     // for some times.  For example, it would be stupid to ignore a panic.
     if (!LOG_OPTS_EXCLUDE (evtype, choice)) {
@@ -2418,8 +2408,6 @@ wxChoice *makeLogOptionChoiceBox (wxWindow *parent,
       lastChoice++;
     }
   }
-  wxSize sizenow = control->GetSize ();
-  control->SetSizeHints (choiceWidth, sizenow.GetHeight ());
   control->SetSelection (lastChoice-1);
   return control;
 }
