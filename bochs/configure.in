@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.182 2002-12-11 21:38:37 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.183 2002-12-12 11:07:13 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1855,8 +1855,17 @@ AC_SUBST(WX_CXXFLAGS)
 
 # modify settings based on target platform
 case "$target" in
+  *-macosx*)
+    AC_DEFINE(BX_HAVE_STRDUP, 0)
+    ;;
   *-macos*)
     AC_DEFINE(BX_HAVE_STRDUP, 0)
+    AC_DEFINE(BX_PLUGINS, 0)
+    AC_DEFINE(BX_HAVE_DLFCN_H, 0)
+    AC_DEFINE(BX_HAVE_SOCKLEN_T, 0)
+    AC_DEFINE(BX_HAVE_SELECT, 0)
+    AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
+    AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     ;;
   *-pc-windows*)
     INSTALL_TARGET='install_win32'
