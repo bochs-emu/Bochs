@@ -1,0 +1,78 @@
+----------------------------------------------------------------------
+Patch name: patch.mem-realign
+Author: Bryce Denney
+Date: Tue Sep  3 12:59:35  2002
+
+Detailed description:
+Some of Kevin's optimizations depend on the memory vector being 
+aligned on an 8-byte boundary, so he added a BX_PANIC if the
+alignment was wrong.  On win32, I ran into this panic so here's an
+attempt to guarantee that the vector starts on an 8-bit boundary.
+
+Maybe there's a better way, but this appears to work.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+
+Index: memory/misc_mem.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/memory/misc_mem.cc,v
+retrieving revision 1.27
+diff -u -b -r1.27 misc_mem.cc
+--- memory/misc_mem.cc	3 Sep 2002 16:44:33 -0000	1.27
++++ memory/misc_mem.cc	3 Sep 2002 16:52:26 -0000
+@@ -65,16 +65,17 @@
+   // BX_MEM_C constructor
+ BX_MEM_C::BX_MEM_C(size_t memsize)
+ {
+-  vector = new Bit8u[memsize];
++  // Alloc 8 extra bytes so that the realignment operation is safe.
++  vector = new Bit8u[memsize+8];
+   len    = memsize;
+   megabytes = len / (1024*1024);
+-  if ( ((unsigned) vector) & 0x7 ) {
++  while (7 & ((unsigned) vector)) {
+     // Memory needs to be at least aligned to 8-byte boundaries for
+     // the TLB method of storing the host page address in the same
+     // field as 'combined_access' because the bottom 3 bits are used
+     // to cache access values.
+-    delete [] vector;
+-    BX_PANIC( ("BX_MEM_C constructor: memory not suitably aligned.") );
++    BX_DEBUG (("memory vector %p not aligned right; bumping up vector by 1", vector));
++    vector++;
+     }
+ }
+ #endif // #if BX_PROVIDE_CPU_MEMORY
+@@ -104,15 +105,19 @@
+ 
+   if (BX_MEM_THIS vector == NULL) {
+     // memory not already allocated, do now...
+-    BX_MEM_THIS vector = new Bit8u[memsize];
++    // Alloc 8 extra bytes so that the realignment operation is safe.
++    BX_MEM_THIS vector = new Bit8u[memsize+8];
++    while (7 & ((unsigned) vector)) {
++      // Memory needs to be at least aligned to 8-byte boundaries for
++      // the TLB method of storing the host page address in the same
++      // field as 'combined_access' because the bottom 3 bits are used
++      // to cache access values.
++      BX_DEBUG (("memory vector %p not aligned right; bumping up vector by 1", vector));
++      vector++;
++    }
+     BX_MEM_THIS len    = memsize;
+     BX_MEM_THIS megabytes = memsize / (1024*1024);
+     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
+-    if ( ((unsigned) vector) & 0x7 ) {
+-      // See note above, similar check.
+-      delete [] vector;
+-      BX_PANIC( ("BX_MEM_C constructor: memory not suitably aligned.") );
+-      }
+     }
+   // initialize all memory to 0x00
+   memset(BX_MEM_THIS vector, 0x00, BX_MEM_THIS len);
