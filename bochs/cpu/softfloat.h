@@ -50,6 +50,19 @@ typedef Bit32u float32, Float32;
 typedef Bit64u float64, Float64;
 
 /*----------------------------------------------------------------------------
+| Software IEC/IEEE floating-point class.
+*----------------------------------------------------------------------------*/
+typedef enum {
+    float_negative_zero,
+    float_positive_zero,
+    float_NaN,
+    float_negative_inf,
+    float_positive_inf,
+    float_denormal,
+    float_normalized,
+} float_class_t;
+
+/*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point underflow tininess-detection mode.
 *----------------------------------------------------------------------------*/
 enum {
@@ -90,7 +103,6 @@ enum float_exception_flag_t {
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point ordering relations
 *----------------------------------------------------------------------------*/
-
 enum {
     float_relation_less      = -1,
     float_relation_equal     =  0,
@@ -162,6 +174,7 @@ int float32_unordered(float32, float32, float_status_t &status);
 int float32_compare(float32, float32, float_status_t &status);
 int float32_compare_quiet(float32, float32, float_status_t &status);
 
+float_class_t float32_class(float32);
 int float32_is_signaling_nan(float32);
 int float32_is_zero(float32);
 
@@ -196,5 +209,6 @@ int float64_unordered(float64, float64, float_status_t &status);
 int float64_compare(float64, float64, float_status_t &status);
 int float64_compare_quiet(float64, float64, float_status_t &status);
 
+float_class_t float64_class(float64);
 int float64_is_signaling_nan(float64);
 int float64_is_zero(float64);
