@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.74 2002-10-04 23:01:56 bdenney Exp $
+// $Id: dbg_main.cc,v 1.75 2002-10-04 23:16:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3608,7 +3608,7 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
   int base = ((lo >> 16) & 0xffff)
              | ((hi << 16) & 0xff0000)
              | (hi & 0xff000000);
-  int limit = (lo & 0xffff);
+  int limit = (hi & 0x000f0000) | (lo & 0xffff);
   int segment = (lo >> 16) & 0xffff;
   int offset = (lo & 0xffff) | (hi & 0xffff0000);
   int type = (hi >> 8) & 0x0f;
@@ -3652,7 +3652,7 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
   } else {
     dbg_printf ( "base address=%p\n", base);
     dbg_printf ( "G=granularity=%d\n", g);
-    dbg_printf ( "limit=0x%x %s (see G)\n", limit, g?"4K-byte units" : "bytes");
+    dbg_printf ( "limit=0x%05x %s (see G)\n", limit, g?"4K-byte units" : "bytes");
     dbg_printf ( "AVL=available to OS=%d\n", avl);
   }
   dbg_printf ( "P=present=%d\n", present);
@@ -3664,14 +3664,14 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
     // either a code or a data segment. bit 11 (type file MSB) then says 
     // 0=data segment, 1=code seg
     if (type&8) {
-      dbg_printf ( "Code segment, linearaddr=%08x, len=%04x %s, %s%s%s, %d-bit addrs\n", 
+      dbg_printf ( "Code segment, linearaddr=%08x, len=%05x %s, %s%s%s, %d-bit addrs\n", 
 	base, limit, g ? "* 4Kbytes" : "bytes",
 	(type&2)? "Execute/Read" : "Execute-Only",
 	(type&4)? ", Conforming" : "",
 	(type&1)? ", Accessed" : "",
 	d_b? 32 : 16);
     } else {
-      dbg_printf ( "Data segment, linearaddr=%08x, len=%04x %s, %s%s%s\n",
+      dbg_printf ( "Data segment, linearaddr=%08x, len=%05x %s, %s%s%s\n",
 	base, limit, g ? "* 4Kbytes" : "bytes",
 	(type&2)? "Read/Write" : "Read-Only",
 	(type&4)? ", Expand-down" : "",
@@ -3694,8 +3694,7 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
       switch (type) {
 	case 1: case 3:  // 16-bit TSS
 	case 9: case 11: // 32-bit TSS
-	  limit = (hi&0x000f0000) | (lo&0xffff);
-	  dbg_printf ( "at %08x, length 0x%x", base, limit);
+	  dbg_printf ( "at %08x, length 0x%05x", base, limit);
 	  break;
 	case 2:
 	  // it's an LDT. not much to print.
