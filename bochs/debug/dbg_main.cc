@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.96 2002-12-07 14:57:51 cbothamy Exp $
+// $Id: dbg_main.cc,v 1.97 2002-12-14 08:11:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2325,6 +2325,12 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
   }
 #endif  // #if BX_DISASM
   }
+#if 0
+  // print the TSC value for every CPU
+  for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
+    dbg_printf ("TSC[%d] = %lld\n", sim, BX_CPU(sim)->tsc);
+  }
+#endif
 }
 
 
