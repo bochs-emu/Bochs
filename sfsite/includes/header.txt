@@ -61,6 +61,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br><br><center><b>Development</b></center>
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="getinvolved.html" class="sidebar">Get Involved</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="/cgi-bin/lxr/source" class="sidebar">Source code XREF</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Patches&url=http://sourceforge.net/tracker/qmrkatideq312580ampgroup_ideq12580ampfunceqbrowse" class="sidebar">Patches</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="techdata.html" class="sidebar">Tech Specs Pages</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580" class="sidebar">CVS Write Access</a>
