@@ -1,0 +1,123 @@
+----------------------------------------------------------------------
+Patch name: patch.guess-flp-img-size
+Author: Tal Benavidor
+Date: June 11, 2002
+
+Detailed description:
+
+This is from [ #567595 ] guess floppy type from image file length.
+Bryce remade the patch because it was corrupted by the SF upload somehow.
+http://sourceforge.net/tracker/index.php?func=detail&aid=567595&group_id=12580&atid=312580
+
+  this patch adds the ability to specify floppy image file name,
+  without giving the floppy type (720, 1_44...).
+  bochs will automatically determine the floppy type from the image size.
+  example line from .bochsrc:
+    floppya: image=a.img, status=inserted
+  in the above example, a.img must already exist before bochs starts.
+
+  in linux (and probably other unixes) you may do:
+    floppya: image=/dev/fd0, status=inserted
+
+  the problem is that a floppy should be in the drive when bochs starts.
+  if you do
+    floppya: image=/dev/fd0, status=ejected.
+  and there is no floppy in the drive, bochs will panic.
+
+  it doesn't seem to work on win2k (didn't check winnt) - after fseeking to
+  the end of \\.\a: , ftell() returns 0.
+
+
+Patch was created with:
+  diff -U 3 bochs-1.4/main.cc bochs-1.4.work/main.cc -p
+
+Apply patch to what version:
+  release version 1.4
+
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.144
+diff -u -r1.144 main.cc
+--- main.cc	22 Sep 2002 20:56:11 -0000	1.144
++++ main.cc	23 Sep 2002 04:12:04 -0000
+@@ -1900,6 +1900,48 @@
+   }
+ }
+ 
++/*
++ * this supports the "floppyx: image=" option.
++ * the functions returns the type of the floppy
++ * image (1.44, 360, etc.), based on the image file size.
++ */
++int get_floppy_type_from_image(const char *filename)
++{
++  long file_size;
++  FILE *fp = fopen(filename, "rb");
++  if (!fp)
++  {
++    BX_PANIC(("could not open image file '%s'.", filename));
++    return BX_FLOPPY_NONE;
++  }
++
++  fseek(fp, 0, SEEK_END);  // TODO: check if return value != 0
++  file_size = ftell(fp);
++  fclose(fp);
++
++
++  switch (file_size)
++  {
++  case 737280:
++    return BX_FLOPPY_720K;
++
++  case 1228800:
++    return BX_FLOPPY_1_2;
++
++  case 1474560:
++  case 1720320:
++  case 1763328:
++    return BX_FLOPPY_1_44;
++
++  case 2949120:
++    return BX_FLOPPY_2_88;
++
++  default:
++    BX_PANIC(("could not determine floppy type from image file '%s'.", filename));
++    return BX_FLOPPY_NONE;
++  }
++}
++
+   static void
+ parse_line_formatted(char *context, int num_params, char *params[])
+ {
+@@ -1945,6 +1987,12 @@
+ 	bx_options.floppya.Opath->set (&params[i][5]);
+         bx_options.floppya.Otype->set (BX_FLOPPY_360K);
+         }
++     else if (!strncmp(params[i], "image=", 6)) {
++       /* "image=" means we should get floppy type from image */
++       bx_options.floppya.Opath->set (&params[i][6]);
++       bx_options.floppya.Otype->set (
++           get_floppy_type_from_image(&params[i][6]) );
++       }
+       else if (!strncmp(params[i], "status=ejected", 14)) {
+         bx_options.floppya.Ostatus->set (BX_EJECTED);
+         }
+@@ -1979,6 +2027,12 @@
+       else if (!strncmp(params[i], "360k=", 5)) {
+ 	bx_options.floppyb.Opath->set (&params[i][5]);
+         bx_options.floppyb.Otype->set (BX_FLOPPY_360K);
++        }
++      else if (!strncmp(params[i], "image=", 6)) {
++        /* "image=" means we should get floppy type from image */
++        bx_options.floppyb.Opath->set (&params[i][6]);
++        bx_options.floppyb.Otype->set (
++            get_floppy_type_from_image(&params[i][6]) );
+         }
+       else if (!strncmp(params[i], "status=ejected", 14)) {
+         bx_options.floppyb.Ostatus->set (BX_EJECTED);
