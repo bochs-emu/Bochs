@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.27.2.3 2002-10-08 17:16:31 cbothamy Exp $
+// $Id: pc_system.cc,v 1.27.2.4 2002-10-09 00:21:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -231,7 +231,7 @@ bx_pc_system_c::exit(void)
 
   BX_INFO(("Last time is %d", BX_GET_CMOS_TIMEVAL(bx_devices.)));
 
-  bx_gui->exit();
+  if (bx_gui) bx_gui->exit();
 }
 
 
