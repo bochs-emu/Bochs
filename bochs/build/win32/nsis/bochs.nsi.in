@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.9 2005-03-15 19:18:08 vruppert Exp $
+; $Id: bochs.nsi.in,v 1.10 2005-03-20 14:29:23 vruppert Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -8,7 +8,8 @@
 ;
 ; Based on Example Script by Joost Verburg
 ; also original BOCHS script by Robert (segra)
-; 
+; updated for NSIS 2.03 by Volker Ruppert
+;
 ;---------------------
 ;Include Modern UI
 
@@ -33,16 +34,8 @@
 
   ;General
   Name "${NAME}"
-  Icon "bochs.ico"
   OutFile Bochs-${VERSION}.exe
   SetOverwrite on
-
-  ;License dialog
-  LicenseText "Scroll down to see the rest of the agreement."
-  LicenseData ${SRCDIR}\COPYING.txt
-
-  ;Component-select dialog
-  ComponentText "Check the components you want to install and uncheck the components you don't want to install. Click Next to continue."
 
   ; Installation Types
   InstType "Normal"
@@ -50,10 +43,30 @@
 
   ;Folder-select dialog
   InstallDir $PROGRAMFILES\Bochs-${VERSION}
-  DirText "Setup will install ${NAME} in the following folder.$\r$\n$\r$\nTo install in this folder, click Install. To install in a different folder, click Browse and select another folder." " "
 
-  ;Uninstaller
-  UninstallText "This will uninstall ${NAME} from your system."
+;--------------------------------
+;Interface Settings
+
+  !define MUI_ABORTWARNING
+  !define MUI_COMPONENTSPAGE_NODESC
+  !define MUI_ICON "bochs.ico"
+  !define MUI_UNICON "unbochs.ico"
+
+;--------------------------------
+;Pages
+
+  !insertmacro MUI_PAGE_LICENSE ${SRCDIR}\COPYING.txt
+  !insertmacro MUI_PAGE_COMPONENTS
+  !insertmacro MUI_PAGE_DIRECTORY
+  !insertmacro MUI_PAGE_INSTFILES
+  
+  !insertmacro MUI_UNPAGE_CONFIRM
+  !insertmacro MUI_UNPAGE_INSTFILES
+  
+;--------------------------------
+;Languages
+ 
+  !insertmacro MUI_LANGUAGE "English"
 
 ;--------------------------------
 ;Installer Sections
@@ -142,7 +155,7 @@ Section "Add Bochs to the Start Menu and Desktop" SecIcons
                  "$INSTDIR"
 
   CreateShortCut "${PGDIR}\Uninstall Bochs.lnk" \
-                 "$INSTDIR\Uninstall.exe"
+                 "$INSTDIR\Uninstall.exe" "" "$INSTDIR\unbochs.ico" "0"
 
   ; Create shortcut to DLX Linux if it was installed
   IfFileExists "$INSTDIR\dlxlinux\*" 0 no
