@@ -146,6 +146,12 @@ void bx_iodebug_c::write( Bit32u addr, Bit32u dvalue, unsigned int io_len )
       bx_iodebug_s.registers[1] = 0;
       break;
 
+#if BX_DEBUGGER
+    case( 0x8AE0 ):
+      bx_guard.interrupt_requested=1;
+      break;
+#endif
+
     case( 0x8AFF ):
       bx_iodebug_s.enabled = 0;
 //      fprintf( stderr, "IODEBUG device deactivated\n");
