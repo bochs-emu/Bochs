@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.88 2002-11-18 17:16:07 vruppert Exp $
+// $Id: siminterface.h,v 1.89 2002-11-19 09:27:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1260,6 +1260,7 @@ public:
     is_sim_thread_func = func;
   }
   virtual bool is_sim_thread () {return true;}
+  virtual bool is_wx_selected () {return false;}
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;

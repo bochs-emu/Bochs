@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.84 2002-11-19 05:54:25 bdenney Exp $
+// $Id: siminterface.cc,v 1.85 2002-11-19 09:27:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -112,6 +112,8 @@ public:
   virtual int begin_simulation (int argc, char *argv[]);
   virtual void set_sim_thread_func (is_sim_thread_func_t func) {}
   virtual bool is_sim_thread ();
+  bool wxsel;
+  virtual bool is_wx_selected () { return wxsel; }
 };
 
 bx_param_c *
@@ -198,6 +200,7 @@ bx_real_sim_c::bx_real_sim_c ()
   ci_callback = NULL;
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
+  wxsel = false;
   
   enabled = 1;
   int i;
@@ -302,19 +305,19 @@ bx_real_sim_c::quit_sim (int code) {
     longjmp (*quit_context, 1);
     BX_PANIC (("in bx_real_sim_c::quit_sim, longjmp should never return"));
   }
-#if BX_WITH_WX
-  // in wxWindows, the whole simulator is running in a separate thread.
-  // our only job is to end the thread as soon as possible, NOT to shut
-  // down the whole application with an exit.
-  BX_CPU(0)->async_event = 1;
-  BX_CPU(0)->kill_bochs_request = 1;
-  // the cpu loop will exit very soon after this condition is set.
-#else
-  // just a single thread.  Use exit() to stop the application.
-  if (!code)
-    BX_PANIC (("Quit simulation command"));
-  ::exit (0);
-#endif
+  if (SIM->is_wx_selected ()) {
+    // in wxWindows, the whole simulator is running in a separate thread.
+    // our only job is to end the thread as soon as possible, NOT to shut
+    // down the whole application with an exit.
+    BX_CPU(0)->async_event = 1;
+    BX_CPU(0)->kill_bochs_request = 1;
+    // the cpu loop will exit very soon after this condition is set.
+  } else {
+    // just a single thread.  Use exit() to stop the application.
+    if (!code)
+      BX_PANIC (("Quit simulation command"));
+    ::exit (0);
+  }
 }
 
 int
@@ -592,14 +595,14 @@ bx_real_sim_c::create_disk_image (
 }
 
 void bx_real_sim_c::refresh_ci () {
-#if BX_WITH_WX
-  // presently, only wxWindows interface uses these events
-  // It's an async event, so allocate a pointer and send it.
-  // The event will be freed by the recipient.
-  BxEvent *event = new BxEvent ();
-  event->type = BX_ASYNC_EVT_REFRESH;
-  sim_to_ci_event (event);
-#endif
+  if (SIM->is_wx_selected ()) {
+    // presently, only wxWindows interface uses these events
+    // It's an async event, so allocate a pointer and send it.
+    // The event will be freed by the recipient.
+    BxEvent *event = new BxEvent ();
+    event->type = BX_ASYNC_EVT_REFRESH;
+    sim_to_ci_event (event);
+  }
 }
 
 bx_param_c *
@@ -650,18 +653,18 @@ char *bx_real_sim_c::debug_get_next_command ()
 
 void bx_real_sim_c::debug_puts (const char *text)
 {
-#if BX_WITH_WX
-  // send message to the wxWindows debugger
-  BxEvent *event = new BxEvent ();
-  event->type = BX_ASYNC_EVT_DBG_MSG;
-  event->u.logmsg.msg = text;
-  sim_to_ci_event (event);
-  // the event will be freed by the recipient
-#else
-  // text mode debugger: just write to console
-  fputs (text, stderr);
-  delete [] (char *)text;
-#endif
+  if (SIM->is_wx_selected ()) {
+    // send message to the wxWindows debugger
+    BxEvent *event = new BxEvent ();
+    event->type = BX_ASYNC_EVT_DBG_MSG;
+    event->u.logmsg.msg = text;
+    sim_to_ci_event (event);
+    // the event will be freed by the recipient
+  } else {
+    // text mode debugger: just write to console
+    fputs (text, stderr);
+    delete [] (char *)text;
+  }
 }
 #endif
 
@@ -689,6 +692,10 @@ bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
     BX_PANIC (("siminterface does not support loading one configuration interface and then calling another"));
     return -1;
   }
+  if (!strcmp (name, "wx")) 
+    wxsel = true;
+  else
+    wxsel = false;
   return (*ci_callback)(ci_callback_data, command);
 }
 
@@ -966,7 +973,7 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
 
 Bit64s
 bx_shadow_num_c::get64 () {
-  Bit64u current;
+  Bit64u current = 0;
   switch (varsize) {
     case 8: current = *(val.p8bit);  break;
     case 16: current = *(val.p16bit);  break;
@@ -987,7 +994,7 @@ bx_shadow_num_c::get64 () {
 void
 bx_shadow_num_c::set (Bit64s newval)
 {
-  Bit64u tmp;
+  Bit64u tmp = 0;
   if (newval < min || newval > max)
     BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), newval, min, max));
   switch (varsize) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.88 2002-11-19 05:47:44 bdenney Exp $
+// $Id: dbg_main.cc,v 1.89 2002-11-19 09:27:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,6 @@ static char bx_debug_rc_fname[BX_MAX_PATH];
 static char tmp_buf[512];
 static char *tmp_buf_ptr;
 static char *argv0 = NULL;
-
 
 #if BX_NUM_SIMULATORS >= 2
 #define BX_DBG_IO_JOURNAL_SIZE        1024
@@ -383,7 +382,6 @@ process_sim2:
   BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
 #endif
 
-
   // (mch) Moved from main.cc
   DEV_init_devices();
   DEV_reset_devices(BX_RESET_HARDWARE);
@@ -400,10 +398,10 @@ process_sim2:
       0);
 
   // setup Ctrl-C handler
-#if !BX_WITH_WX
-  signal(SIGINT, bx_debug_ctrlc_handler);
-  BX_INFO (("set SIGINT handler to bx_debug_ctrlc_handler"));
-#endif
+  if (!SIM->is_wx_selected ()) {
+    signal(SIGINT, bx_debug_ctrlc_handler);
+    BX_INFO (("set SIGINT handler to bx_debug_ctrlc_handler"));
+  }
 
   // Print disassembly of the first instruction...  you wouldn't think it
   // would have to be so hard.  First initialize guard_found, since it is used
@@ -506,8 +504,7 @@ bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
     }
-#if BX_WITH_WX
-  if (bx_infile_stack_index == 0) {
+  if (SIM->is_wx_selected() && bx_infile_stack_index == 0) {
     // wait for wxWindows to send another debugger command
     charptr_ret = SIM->debug_get_next_command ();
     if (charptr_ret) {
@@ -522,8 +519,8 @@ bx_get_command(void)
       // shutting down
     }
   }
-#elif HAVE_LIBREADLINE
-  if (bx_infile_stack_index == 0) {
+#if HAVE_LIBREADLINE
+  else if (bx_infile_stack_index == 0) {
     charptr_ret = readline (prompt);
     // beware, returns NULL on end of file
     if (charptr_ret && strlen(charptr_ret) > 0) {
@@ -533,16 +530,15 @@ bx_get_command(void)
       free (charptr_ret);
       charptr_ret = &tmp_buf[0];
     }
-  } else {
+  }
+#endif
+  else if (bx_infile_stack_index == 0) {
+    dbg_printf ( "%s", prompt);
+  }
+  if (bx_infile_stack_index != 0) {
     charptr_ret = fgets(tmp_buf, 512,
       bx_infile_stack[bx_infile_stack_index].fp);
   }
-#else
-  if (bx_infile_stack_index == 0)
-    dbg_printf ( "%s", prompt);
-  charptr_ret = fgets(tmp_buf, 512,
-    bx_infile_stack[bx_infile_stack_index].fp);
-#endif
   if (charptr_ret == NULL) {
     // see if error was due to EOF condition
     if (feof(bx_infile_stack[bx_infile_stack_index].fp)) {
@@ -650,18 +646,18 @@ bxerror(char *s)
 bx_debug_ctrlc_handler(int signum)
 {
   UNUSED(signum);
-#if BX_WITH_WX
-  // in a multithreaded environment, a signal such as SIGINT can be sent to all
-  // threads.  This function is only intended to handle signals in the
-  // simulator thread.  It will simply return if called from any other thread.
-  // Otherwise the BX_PANIC() below can be called in multiple threads at
-  // once, leading to multiple threads trying to display a dialog box,
-  // leading to GUI deadlock.
-  if (!SIM->is_sim_thread ()) {
-    BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
-    return;
+  if (SIM->is_wx_selected ()) {
+    // in a multithreaded environment, a signal such as SIGINT can be sent to all
+    // threads.  This function is only intended to handle signals in the
+    // simulator thread.  It will simply return if called from any other thread.
+    // Otherwise the BX_PANIC() below can be called in multiple threads at
+    // once, leading to multiple threads trying to display a dialog box,
+    // leading to GUI deadlock.
+    if (!SIM->is_sim_thread ()) {
+      BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
+      return;
+    }
   }
-#endif
   BX_INFO(("Ctrl-C detected in signal handler."));
 
   signal(SIGINT, bx_debug_ctrlc_handler);
