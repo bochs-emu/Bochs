@@ -109,6 +109,7 @@ used.  If you tried out the feature, move the X to the "works" or
 
                   Not       Works    
 		  tested    ok      Fails   Comments?
+keyboard           [ ]      [ ]     [ ]     [__]
 floppy disk        [X]      [ ]     [ ]     [__]
 raw floppy disk    [X]      [ ]     [ ]     [__]
 hard disk          [X]      [ ]     [ ]     [__]
