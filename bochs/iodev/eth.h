@@ -72,6 +72,9 @@ private:
 
 // Define the known pktmover modules
 #define ETH_NULL  1
+#ifdef BX_USE_ETH_ARPBACK
+#  define ETH_ARPBACK 1
+#endif
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 #define ETH_FBSD  1
 #endif

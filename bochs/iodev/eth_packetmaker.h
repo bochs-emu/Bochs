@@ -4,6 +4,8 @@
 
 #include "../config.h"
 
+#ifdef ETH_ARPBACK
+
 #define PACKET_BUF_SIZE 2048
 static const Bit8u internal_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
@@ -124,5 +126,6 @@ private:
 };
 
 
+#endif // ETH_ARPBACK
 #endif // _ETH_PACKETMAKER_H_
 

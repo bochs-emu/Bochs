@@ -28,6 +28,9 @@
 // rfc0903: rarp
 
 #include "bochs.h"
+
+#ifdef ETH_ARPBACK
+
 #include "crc32.h"
 #include "eth_packetmaker.h"
 #define LOG_THIS bx_ne2k.
@@ -197,4 +200,6 @@ void bx_arpback_pktmover_c::rx_timer (void)
     (*rxh)(rxarg, buf, io_len);
   }
 }
+
+#endif
 
