@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.153 2003-12-29 20:26:05 sshwarts Exp $
+// $Id: cpu.h,v 1.154 2003-12-29 21:24:35 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1855,7 +1855,6 @@ union {
 
   BX_SMF void FWAIT(bxInstruction_c *);
 
-#undef FSCALE
   BX_SMF void FLD_STi(bxInstruction_c *);  
   BX_SMF void FLD_SINGLE_REAL(bxInstruction_c *);
   BX_SMF void FLD_DOUBLE_REAL(bxInstruction_c *);
@@ -2008,6 +2007,7 @@ union {
   BX_SMF void FSQRT(bxInstruction_c *);
   BX_SMF void FSINCOS(bxInstruction_c *);
   BX_SMF void FRNDINT(bxInstruction_c *);
+#undef FSCALE            // <sys/param.h> is #included on Mac OS X from bochs.h
   BX_SMF void FSCALE(bxInstruction_c *);
   BX_SMF void FSIN(bxInstruction_c *);
   BX_SMF void FCOS(bxInstruction_c *);
