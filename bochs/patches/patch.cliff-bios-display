@@ -1,0 +1,241 @@
+Index: bios/rombios.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bios/rombios.c,v
+retrieving revision 1.14
+diff -u -r1.14 rombios.c
+--- bios/rombios.c	2001/06/13 07:06:10	1.14
++++ bios/rombios.c	2001/11/18 06:31:16
+@@ -256,16 +256,24 @@
+ static void           boot_failure_msg();
+ static void           nmi_handler_msg();
+ static void           print_bios_banner();
+-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.14 2001/06/13 07:06:10 bdenney Exp $";
+ 
++static char CVSID[] = "$Id: rombios.c,v 1.14 2001/06/13 07:06:10 bdenney Exp $";
++/* Offset to skip the CVS $Id: prefix */ 
++#define bios_version_string  (CVSID + 4)
++
++#define BIOS_PRINTF_HALT     1
++#define BIOS_PRINTF_SCREEN   2
++#define BIOS_PRINTF_DEBUG    4
++#define BIOS_PRINTF_DEBHALT  (BIOS_PRINTF_DEBUG | BIOS_PRINTF_HALT)
++
+ #define DEBUG_ROMBIOS 0
+ 
+ #if DEBUG_ROMBIOS
+-#  define printf(format, p...) bios_printf(0, format, ##p)
+-#  define panic(format, p...)  bios_printf(1, format, ##p)
++#  define printf(format, p...) bios_printf(BIOS_PRINTF_DEBUG, format, ##p)
++#  define panic(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
+ #else
+ #  define printf(format, p...)
+-#  define panic(format, p...)  bios_printf(1, format, ##p)
++#  define panic(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
+ #endif
+ 
+ 
+@@ -712,18 +720,50 @@
+ }
+ 
+   void
+-put_int(val, width, neg)
++wrch(c)
++  Bit8u  c;
++{
++  #asm
++  push bp
++  mov  bp, sp
++
++  push bx
++  mov  ah, #$0e
++  mov  al, 4[bp]
++  xor  bx,bx
++  int  #$10
++  pop  bx
++
++  pop  bp
++  #endasm
++}
++ 
++  void
++send(action, c)
++  Bit16u action;
++  Bit8u  c;
++{
++  if (action & BIOS_PRINTF_DEBUG) outb(0xfff0, c);
++  if (action & BIOS_PRINTF_SCREEN) {
++    if (c == '\n') wrch('\r');
++    wrch(c);
++    }
++}
++
++  void
++put_int(action, val, width, neg)
++  Bit16u action;
+   short val, width;
+   Boolean neg;
+ {
+   short nval = UDIV16(val, 10);
+   if (nval)
+-    put_int(nval, width - 1, neg);
++    put_int(action, nval, width - 1, neg);
+   else {
+-    while (--width > 0) outb(0xfff0, ' ');
+-    if (neg) outb(0xfff0, '-');
++    while (--width > 0) send(action, ' ');
++    if (neg) send(action, '-');
+   }
+-  outb(0xfff0, val - (nval * 10) + '0');
++  send(action, val - (nval * 10) + '0');
+ }
+ 
+ //--------------------------------------------------------------------------
+@@ -733,8 +773,8 @@
+ //   supported (or %02x, %04x, etc).
+ //--------------------------------------------------------------------------
+   void
+-bios_printf(bomb, s)
+-  Boolean bomb;
++bios_printf(action, s)
++  Bit16u action;
+   Bit8u *s;
+ {
+   Bit8u c, format_char;
+@@ -758,39 +798,45 @@
+       if ( (c>='0') && (c<='9') ) {
+         format_width = (format_width * 10) + (c - '0');
+         }
+-      else if (c == 'x') {
++      else {
+         arg_ptr++; // increment to next arg
+         arg = read_word(arg_seg, arg_ptr);
+-        if (format_width == 0)
+-          format_width = 4;
+-        for (i=format_width-1; i>=0; i--) {
+-          nibble = (arg >> (4 * i)) & 0x000f;
+-          if (nibble <= 9)
+-            outb(0xfff0, nibble + '0');
++        if (c == 'x') {
++          if (format_width == 0)
++            format_width = 4;
++          for (i=format_width-1; i>=0; i--) {
++            nibble = (arg >> (4 * i)) & 0x000f;
++            if (nibble <= 9)
++              send(action, nibble + '0');
++            else
++              send(action, (nibble - 10) + 'A');
++            }
++          in_format = 0;
++          }
++        else if (c == 'd') {
++          if (arg & 0x8000)
++            put_int(action, -arg, format_width - 1, 1);
+           else
+-            outb(0xfff0, (nibble - 10) + 'A');
++            put_int(action, arg, format_width, 0);
+           }
+-        in_format = 0;
+-        }
+-      else if (c == 'd') {
+-        arg_ptr++; // increment to next arg
+-        arg = read_word(arg_seg, arg_ptr);
+-        if (arg & 0x8000)
+-          put_int(-arg, format_width - 1, 1);
++        else if (c == 's') {
++          bios_printf(action & (~BIOS_PRINTF_HALT), arg);
++          }
++        else if (c == 'c') {
++          send(action, arg);
++	  }
+         else
+-          put_int(arg, format_width, 0);
++          panic("bios_printf: unknown format\n");
+         in_format = 0;
+         }
+-      else
+-        panic("bios_printf: unknown format\n");
+       }
+     else {
+-      outb(0xfff0, c);
++      send(action, c);
+       }
+     s ++;
+     }
+ 
+-  if (bomb) {
++  if (action & BIOS_PRINTF_HALT) {
+ #asm
+     HALT(__LINE__)
+ #endasm
+@@ -816,24 +862,31 @@
+   Bit16u drive;
+ {
+   if (drive < 0x80) {
+-    bios_printf(0, "Boot Failure!  I could not read floppy drive %d.\n", drive);
++    bios_printf(BIOS_PRINTF_DEBUG, "Boot Failure!  I could not read floppy drive %d.\n", drive);
+   } else {
+     drive &= 0x7f;
+-    bios_printf(0, "Boot Failure!  I could not read hard disk %d.\n", drive);
++    bios_printf(BIOS_PRINTF_DEBUG, "Boot Failure!  I could not read hard disk %d.\n", drive);
+   }
+ }
+ 
+ void
+ nmi_handler_msg()
++{
++  bios_printf(BIOS_PRINTF_DEBUG, "NMI Handler called\n");
++}
++
++void
++log_bios_start()
+ {
+-  bios_printf(0, "NMI Handler called\n");
++  bios_printf(BIOS_PRINTF_DEBUG, "%s\n", bios_version_string);
+ }
+ 
+ void
+ print_bios_banner()
+ {
+-  bios_printf(0, bios_version_string);
+-  bios_printf(0, "\n");
++  bios_printf(BIOS_PRINTF_SCREEN, "Bochs BIOS%s\n", bios_version_string);
++  bios_printf(BIOS_PRINTF_SCREEN, "Test: x234=%3x, d-123=%d, c=%c, s=%s\n",
++	      0x1234, -123, '!', "ok");
+ }
+ 
+ 
+@@ -3973,6 +4026,8 @@
+   mov  ds, ax
+   mov  ss, ax
+ 
++  call _log_bios_start
++
+   ;; zero out BIOS data area (40:00..40:ff)
+   mov  es, ax
+   mov  cx, #0x0080 ;; 128 words
+@@ -4029,6 +4084,7 @@
+ 
+   ;; System Services
+   SET_INT_VECTOR(0x15, #0xF000, #int15_handler)
++
+   mov ax, #0x0000       ; mov EBDA seg into 40E
+   mov ds, ax
+   mov 0x40E, #EBDA_SEG
+@@ -4182,6 +4238,8 @@
+   out  0x21, AL ;master pic: all IRQs unmasked
+   out  0xA1, AL ;slave  pic: all IRQs unmasked
+ 
++  call _print_bios_banner
++
+   ;;
+   ;; Hard Drive setup
+   ;;
+@@ -4191,8 +4249,6 @@
+   ;; Floppy setup
+   ;;
+   call floppy_drive_post
+-
+-  call _print_bios_banner
+ 
+   int  #0x19
+   //JMP_EP(0x0064) ; INT 19h location
