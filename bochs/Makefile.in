@@ -119,6 +119,7 @@ MDEFINES = CC="$(CC)" CXX="$(CXX)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" \
 
 
 NONINLINE_OBJS = \
+	logio.o \
 	main.o \
 	load32bitOShack.o \
 	state_file.o \
