@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.42 2002-03-03 06:10:04 bdenney Exp $
+// $Id: control.cc,v 1.43 2002-03-10 10:19:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.42 2002-03-03 06:10:04 bdenney Exp $
+ * $Id: control.cc,v 1.43 2002-03-10 10:19:32 vruppert Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -74,6 +74,8 @@ extern "C" {
 
 #define CPANEL_PATH_LEN 512
 
+#define BX_INSERTED 11
+
 /* functions for changing particular options */
 void bx_control_panel_init ();
 int bx_read_rc (char *rc);
@@ -104,7 +106,7 @@ clean_string (char *s0)
 int 
 ask_uint (char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
-  int n = max + 1;
+  Bit32u n = max + 1;
   char buffer[1024];
   char *clean;
   int illegal;
@@ -373,13 +375,13 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
     SIM->get_floppy_options (i, &floppyop);
     sprintf (buffer[i], "%s, size=%s, %s", floppyop.Opath->getptr (),
       SIM->get_floppy_type_name (floppyop.Otype->get ()),
-      (floppyop.Oinitial_status->get () == 11)? "inserted" : "ejected");
+      (floppyop.Oinitial_status->get () == BX_INSERTED)? "inserted" : "ejected");
     if (!floppyop.Opath->getptr ()[0]) strcpy (buffer[i], "none");
   }
   SIM->get_cdrom_options (0, &cdromop);
   sprintf (buffer[2], "%s, %spresent, %s",
     cdromop.Opath->getptr (), cdromop.Opresent->get ()?"":"not ",
-    (cdromop.Oinserted->get () == 11)?"inserted":"ejected");
+    (cdromop.Oinserted->get () == BX_INSERTED)? "inserted" : "ejected");
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
       /* ips->get (), */
       SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
@@ -796,7 +798,6 @@ bx_param_enum_c::text_ask (FILE *fpin, FILE *fpout)
   char *prompt = get_ask_format ();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    char buffer[512];
     fprintf (fpout, "%s = ", get_name ());
     text_print (fpout);
     fprintf (fpout, "\n");
