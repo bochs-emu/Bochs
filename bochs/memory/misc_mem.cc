@@ -187,6 +187,8 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
 BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   if ( (addr + len) > BX_MEM.len ) {
+    bx_printf("dbg_fetch_mem out of range. %p > %p\n",
+      addr+len, BX_MEM.len);
     return(0); // error, beyond limits of memory
     }
   for (; len>0; len--) {
