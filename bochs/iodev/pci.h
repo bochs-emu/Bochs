@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.8 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pci.h,v 1.9 2002-08-31 12:24:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,7 +45,6 @@ typedef struct {
   Bit32u confAddr;
   Bit32u confData;
   Bit8u  pci_conf[256];
-  Bit8u  shadow[4*16*4096];     // 256k of memory
   } bx_def440fx_t;
 
 
@@ -63,9 +62,6 @@ public:
   BX_PCI_SMF void   print_i440fx_state( );
   BX_PCI_SMF Bit32u rd_memType (Bit32u addr);
   BX_PCI_SMF Bit32u wr_memType (Bit32u addr);
-  BX_PCI_SMF Bit8u* i440fx_fetch_ptr(Bit32u addr);
-  BX_PCI_SMF int    load_ROM(int fd, Bit32u offset, Bit32u size);
-  BX_PCI_SMF Bit8u  mem_read(Bit32u offset);
 
 private:
   bx_devices_c *devices;

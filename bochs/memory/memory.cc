@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.16 2002-08-17 09:23:42 vruppert Exp $
+// $Id: memory.cc,v 1.17 2002-08-31 12:24:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -239,7 +239,7 @@ inc_one:
       switch (bx_devices.pci->wr_memType(a20addr & 0xFC000)) {
         case 0x0:   // Writes to ShadowRAM
 //        BX_INFO(("Writing to ShadowRAM %08x, len %u ! ", (unsigned) a20addr, (unsigned) len));
-          vector[a20addr] = *data_ptr;
+          shadow[a20addr - 0xc0000] = *data_ptr;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           BX_DYN_DIRTY_PAGE(a20addr >> 12);
           goto inc_one;
@@ -472,12 +472,12 @@ inc_one:
     else {
       switch (bx_devices.pci->rd_memType(a20addr & 0xFC000)) {
         case 0x0:   // Read from ShadowRAM
-          *data_ptr = vector[a20addr];
+          *data_ptr = shadow[a20addr - 0xc0000];
           BX_INFO(("Reading from ShadowRAM %08x, Data %02x ", (unsigned) a20addr, *data_ptr));
           goto inc_one;
 
         case 0x1:   // Read from ROM
-          *data_ptr = BX_PCI_MEM_READ(a20addr - 0xc0000);
+          *data_ptr = vector[a20addr];
           //BX_INFO(("Reading from ROM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
           goto inc_one;
         default:
@@ -557,7 +557,7 @@ inc_one:
                 break;
 
               case 0x1:   // Read from Shadow RAM
-                *data_ptr = BX_PCI_MEM_READ(a20addr - 0xc0000);
+                *data_ptr = shadow[a20addr - 0xc0000];
                 BX_INFO(("Reading from ShadowRAM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
                 break;
               default:

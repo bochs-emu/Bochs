@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.32 2002-06-06 23:03:09 yakovlev Exp $
+// $Id: cpu.cc,v 1.33 2002-08-31 12:24:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -740,7 +740,7 @@ BX_CPU_C::prefetch(void)
 #if BX_PCI_SUPPORT
   if ((new_phy_addr >= 0x000C0000) && (new_phy_addr <= 0x000FFFFF)) {
     BX_CPU_THIS_PTR bytesleft = 0x4000 - (new_phy_addr & 0x3FFF);
-    BX_CPU_THIS_PTR fetch_ptr = bx_devices.pci->i440fx_fetch_ptr(new_phy_addr);
+    BX_CPU_THIS_PTR fetch_ptr = BX_CPU_THIS_PTR mem->pci_fetch_ptr(new_phy_addr);
   } else {
     BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
     BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
@@ -773,7 +773,7 @@ BX_CPU_C::revalidate_prefetch_q(void)
 #if BX_PCI_SUPPORT
     if ((new_phy_addr >= 0x000C0000) && (new_phy_addr <= 0x000FFFFF)) {
       BX_CPU_THIS_PTR bytesleft = 0x4000 - (new_phy_addr & 0x3FFF);
-      BX_CPU_THIS_PTR fetch_ptr = bx_devices.pci->i440fx_fetch_ptr(new_phy_addr);
+      BX_CPU_THIS_PTR fetch_ptr = BX_CPU_THIS_PTR mem->pci_fetch_ptr(new_phy_addr);
       }
     else {
       BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;

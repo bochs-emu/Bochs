@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pci.cc,v 1.19 2002-08-31 12:24:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,10 +60,6 @@ bx_pci_c::bx_pci_c(void)
 
   for (i=0; i < 0x100; i++) {
     BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
-  }
-
-  for (i=0; i<0x40000; i++) {
-    BX_PCI_THIS s.i440fx.shadow[i] = 0xff;
   }
 }
 
@@ -470,37 +466,6 @@ bx_pci_c::print_i440fx_state()
     BX_DEBUG(( "i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.pci_conf[i] ));
     }
 #endif /* DUMP_FULL_I440FX */
-}
-
-  Bit8u*
-bx_pci_c::i440fx_fetch_ptr(Bit32u addr)
-{
-  if (bx_options.Oi440FXSupport->get ()) {
-    switch (rd_memType (addr)) {
-      case 0x0:   // Read from ShadowRAM
-        return (&BX_PCI_THIS devices->mem->vector[addr]);
-
-      case 0x1:   // Read from ROM
-        return (&BX_PCI_THIS s.i440fx.shadow[(addr - 0xc0000)]);
-      default:
-        BX_PANIC(("i440fx_fetch_ptr(): default case"));
-        return(0);
-      }
-    }
-  else
-    return (&BX_PCI_THIS devices->mem->vector[addr]);
-}
-
-int
-bx_pci_c::load_ROM(int fd, Bit32u offset, Bit32u size)
-{
-  return read(fd, (bx_ptr_t) &bx_pci.s.i440fx.shadow[offset], size);
-}
-
-  Bit8u
-bx_pci_c::mem_read(Bit32u offset)
-{
-  return (BX_PCI_THIS s.i440fx.shadow[offset]);
 }
 
   Boolean

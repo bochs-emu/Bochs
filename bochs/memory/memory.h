@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: memory.h,v 1.7 2002-08-31 12:24:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,6 +45,9 @@ public:
   Bit8u   *vector;
   size_t  len;
   size_t  megabytes;  // (len in Megabytes)
+#if BX_PCI_SUPPORT
+  Bit8u   shadow[4*16*4096]; // 256k of memory
+#endif
 #if BX_DEBUGGER
   unsigned char dbg_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
   Bit32u dbg_count_dirty_pages () {
@@ -60,6 +63,9 @@ public:
   BX_MEM_SMF void    write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
+#if BX_PCI_SUPPORT
+  BX_MEM_SMF Bit8u*  pci_fetch_ptr(Bit32u addr);
+#endif
   BX_MEM_SMF Boolean dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF Boolean dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF Boolean dbg_crc32(
