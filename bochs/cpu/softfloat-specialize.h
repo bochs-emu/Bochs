@@ -32,8 +32,6 @@ these four paragraphs for those parts of this code that are retained.
  *            Stanislav Shwartsman (gate@fidonet.org.il)
  * ==========================================================================*/ 
 
-typedef int flag;
-
 /*----------------------------------------------------------------------------
 | Raises the exceptions specified by `flags'.  Floating-point traps can be
 | defined here if desired.  It is currently not possible for such a trap
@@ -89,7 +87,7 @@ BX_CPP_INLINE int get_flush_underflow_to_zero(float_status_t &status)
 *----------------------------------------------------------------------------*/
 
 typedef struct {
-    flag sign;
+    int sign;
     Bit64u hi, lo;
 } commonNaNT;
 
@@ -127,7 +125,7 @@ BX_CPP_INLINE Bit16s extractFloat32Exp(float32 a)
 | Returns the sign bit of the single-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE flag extractFloat32Sign(float32 a)
+BX_CPP_INLINE int extractFloat32Sign(float32 a)
 {
     return a>>31;
 }
@@ -143,7 +141,7 @@ BX_CPP_INLINE flag extractFloat32Sign(float32 a)
 | significand.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float32 packFloat32(flag zSign, Bit16s zExp, Bit32u zSig)
+BX_CPP_INLINE float32 packFloat32(int zSign, Bit16s zExp, Bit32u zSig)
 {
     return (((Bit32u) zSign)<<31) + (((Bit32u) zExp)<<23) + zSig;
 }
@@ -202,7 +200,7 @@ BX_CPP_INLINE float32 commonNaNToFloat32(commonNaNT a)
 
 static float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status)
 {
-    flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
+    int aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
 
     aIsNaN = float32_is_nan(a);
     aIsSignalingNaN = float32_is_signaling_nan(a);
@@ -265,7 +263,7 @@ BX_CPP_INLINE Bit16s extractFloat64Exp(float64 a)
 | Returns the sign bit of the double-precision floating-point value `a'.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE flag extractFloat64Sign(float64 a)
+BX_CPP_INLINE int extractFloat64Sign(float64 a)
 {
     return a>>63;
 }
@@ -281,7 +279,7 @@ BX_CPP_INLINE flag extractFloat64Sign(float64 a)
 | significand.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float64 packFloat64(flag zSign, Bit16s zExp, Bit64u zSig)
+BX_CPP_INLINE float64 packFloat64(int zSign, Bit16s zExp, Bit64u zSig)
 {
     return (((Bit64u) zSign)<<63) + (((Bit64u) zExp)<<52) + zSig;
 }
@@ -340,7 +338,7 @@ BX_CPP_INLINE float64 commonNaNToFloat64(commonNaNT a)
 
 static float64 propagateFloat64NaN(float64 a, float64 b, float_status_t &status)
 {
-    flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
+    int aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
 
     aIsNaN = float64_is_nan(a);
     aIsSignalingNaN = float64_is_signaling_nan(a);
@@ -418,6 +416,19 @@ BX_CPP_INLINE int extractFloatx80Sign(floatx80 a)
 }
 
 /*----------------------------------------------------------------------------
+| Packs the sign `zSign', exponent `zExp', and significand `zSig' into an
+| extended double-precision floating-point value, returning the result.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE floatx80 packFloatx80(int zSign, Bit32s zExp, Bit64u zSig)
+{
+    floatx80 z;
+    z.fraction = zSig;
+    z.exp = (((Bit16u) zSign)<<15) + zExp;
+    return z;
+}
+
+/*----------------------------------------------------------------------------
 | Returns 1 if the extended double-precision floating-point value `a' is a
 | NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
@@ -476,7 +487,7 @@ BX_CPP_INLINE floatx80 commonNaNToFloatx80(commonNaNT a)
 
 static floatx80 propagateFloatx80NaN(floatx80 a, floatx80 b, float_status_t &status)
 {
-    flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
+    int aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
 
     aIsNaN = floatx80_is_nan(a);
     aIsSignalingNaN = floatx80_is_signaling_nan(a);

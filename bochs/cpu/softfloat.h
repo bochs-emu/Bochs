@@ -131,7 +131,7 @@ int get_float_rounding_mode(float_status_t &status);
 | Routine to raise any or all of the software IEC/IEEE floating-point
 | exception flags.
 *----------------------------------------------------------------------------*/
-void float_raise(float_status_t &status, int);
+void float_raise(float_status_t &status, int exceptions);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE integer-to-floating-point conversion routines.
