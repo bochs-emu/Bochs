@@ -56,7 +56,7 @@ extern "C" {
 #define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(b,c,d,e) pluginRegisterDefaultIOWriteHandler(b,c,d,e)
 
 #define BX_REGISTER_IRQ(b,c) pluginRegisterIRQ(b,c)
-#define BX_UNREGISTER_IRQ(b) pluginUnregisterIRQ(b)
+#define BX_UNREGISTER_IRQ(b,c) pluginUnregisterIRQ(b,c)
 
 #else
 
@@ -70,7 +70,7 @@ extern "C" {
 #define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) bx_devices.register_default_io_read_handler(b,c,d)
 #define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(b,c,d,e) bx_devices.register_default_io_write_handler(b,c,d)
 #define BX_REGISTER_IRQ(b,c) bx_devices.register_irq(b,c)
-#define BX_UNREGISTER_IRQ(b) bx_devices.unregister_irq(b)
+#define BX_UNREGISTER_IRQ(b,c) bx_devices.unregister_irq(b,c)
 
 #endif // #if BX_PLUGINS
 
@@ -130,7 +130,7 @@ extern "C" {
 #define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
   (bx_devices.pluginDmaDevice->registerDMA16Channel(channel, dmaRead, dmaWrite, name))
 #define BX_UNREGISTER_DMA_CHANNEL(channel) \
-  (bx_devices.pluginDmaDevice->unregisterDMAChannel(channel, dmaRead, dmaWrite, name))
+  (bx_devices.pluginDmaDevice->unregisterDMAChannel(channel))
 #define BX_DMA_SET_DRQ(channel, val) \
   (bx_devices.pluginDmaDevice->set_DRQ(channel, val))
 #define BX_DMA_GET_TC() \

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.23.2.3 2002-10-23 21:08:05 bdenney Exp $
+// $Id: sb16.cc,v 1.23.2.4 2002-10-23 21:52:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -219,22 +219,22 @@ void bx_sb16_c::init(void)
 
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
-    BX_SB16_THIS devices->register_io_read_handler(this,
-       &read_handler, addr, "SB16");
-    BX_SB16_THIS devices->register_io_write_handler(this,
-       &write_handler, addr, "SB16");
+    BX_REGISTER_IOREAD_HANDLER(this,
+       &read_handler, addr, "SB16", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this,
+       &write_handler, addr, "SB16", 7);
     }
   for (addr=BX_SB16_IOMPU; addr<BX_SB16_IOMPU+BX_SB16_IOMPULEN; addr++) {
-    BX_SB16_THIS devices->register_io_read_handler(this,
-       &read_handler, addr, "SB16");
-    BX_SB16_THIS devices->register_io_write_handler(this,
-       &write_handler, addr, "SB16");
+    BX_REGISTER_IOREAD_HANDLER(this,
+       &read_handler, addr, "SB16", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this,
+       &write_handler, addr, "SB16", 7);
     }
   for (addr=BX_SB16_IOADLIB; addr<BX_SB16_IOADLIB+BX_SB16_IOADLIBLEN; addr++) {
-    BX_SB16_THIS devices->register_io_read_handler(this,
-       read_handler, addr, "SB16");
-    BX_SB16_THIS devices->register_io_write_handler(this,
-       write_handler, addr, "SB16");
+    BX_REGISTER_IOREAD_HANDLER(this,
+       read_handler, addr, "SB16", 7);
+    BX_REGISTER_IOWRITE_HANDLER(this,
+       write_handler, addr, "SB16", 7);
     }
 
   writelog(BOTHLOG(3),
@@ -1334,10 +1334,10 @@ void bx_sb16_c::set_irq_dma()
   if (newirq != BX_SB16_IRQ)   // a different IRQ was set
     {
       if (BX_SB16_IRQ > 0)
-	BX_SB16_THIS devices->unregister_irq(BX_SB16_IRQ, "SB16");
+	BX_UNREGISTER_IRQ(BX_SB16_IRQ, "SB16");
 
       BX_SB16_IRQ = newirq;
-      BX_SB16_THIS devices->register_irq(BX_SB16_IRQ, "SB16");
+      BX_REGISTER_IRQ(BX_SB16_IRQ, "SB16");
     }
 
   // set the 8 bit DMA
