@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.188 2002-11-20 19:34:50 bdenney Exp $
+// $Id: main.cc,v 1.189 2002-11-21 19:26:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -966,6 +966,9 @@ void bx_init_options ()
 #if BX_WITH_SDL
     "sdl",
 #endif
+#if BX_WITH_SVGA
+    "svga",
+#endif
 #if BX_WITH_TERM
     "term",
 #endif
@@ -1820,6 +1823,10 @@ bx_bool load_and_init_display_lib () {
 #if BX_WITH_SDL
   if (!strcmp (gui_name, "sdl")) 
     PLUG_load_plugin (sdl, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_SVGA
+  if (!strcmp (gui_name, "svga")) 
+    PLUG_load_plugin (svga, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_TERM
   if (!strcmp (gui_name, "term")) 

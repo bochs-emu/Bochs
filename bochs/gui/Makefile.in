@@ -58,6 +58,7 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMEN
 
 GUI_OBJS_X11  = x.o
 GUI_OBJS_SDL = sdl.o
+GUI_OBJS_SVGA = svga.o
 GUI_OBJS_BEOS = beos.o
 GUI_OBJS_WIN32 = win32.o
 GUI_OBJS_MACOS = macintosh.o
@@ -235,6 +236,17 @@ sdl.lo: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h icon_bochs.h sdl.h
+svga.lo: svga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
+ ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
+ ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h \
+ ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
+ ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
+ ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
+ ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
+ ../instrument/stubs/instrument.h icon_bochs.h
 siminterface.lo: siminterface.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \

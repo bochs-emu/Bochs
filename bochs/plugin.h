@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.9 2002-11-20 19:44:05 bdenney Exp $
+// $Id: plugin.h,v 1.10 2002-11-21 19:26:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -305,6 +305,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(macintosh)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(nogui)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(rfb)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sdl)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(svga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(term)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(win32)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(wx)
