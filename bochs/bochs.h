@@ -41,9 +41,14 @@ extern "C" {
 #  include <io.h>
 #endif
 #include <time.h>
-#ifdef macintosh
+#if BX_WITH_MACOS
 #  include <types.h>
 #  include <stat.h>
+#elif BX_WITH_CARBON
+#  include <Carbon/Carbon.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <sys/param.h> /* for MAXPATHLEN */
 #  include <utime.h>
 #else
 #  ifndef WIN32
@@ -56,7 +61,6 @@ extern "C" {
 #include <string.h>
 #include <fcntl.h>
 #ifdef macintosh
-#  include "macutils.h"
 #  define SuperDrive "[fd:]"
 #endif
 }
