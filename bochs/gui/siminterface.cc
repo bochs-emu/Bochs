@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.10 2001-06-11 14:03:35 bdenney Exp $
+ * $Id: siminterface.cc,v 1.11 2001-06-11 20:51:15 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -251,6 +251,7 @@ int
 bx_real_sim_c::get_disk_options (int drive, bx_disk_options *out)
 {
   *out = (drive==0)? bx_options.diskc : bx_options.diskd;
+  return 0;
 }
 
 int
@@ -266,6 +267,7 @@ bx_real_sim_c::get_cdrom_options (int drive, bx_cdrom_options *out)
 {
   BX_ASSERT (drive == 0);
   *out = bx_options.cdromd;
+  return 0;
 }
 
 int 
@@ -273,6 +275,7 @@ bx_real_sim_c::set_cdrom_options (int drive, bx_cdrom_options *out)
 {
   BX_ASSERT (drive == 0);
   bx_options.cdromd = *out;
+  return 0;
 }
 
 int 
@@ -398,9 +401,10 @@ bx_real_sim_c::notify_return (int retcode)
 int
 bx_real_sim_c::LOCAL_notify (int code)
 {
-  if (callback == NULL)
+  if (callback == NULL) {
     BX_ERROR (("notify called, but no callback function is registered"));
-  else {
+    return -1;
+  } else {
     notify_return_val = -999;
     (*callback)(code);
     if (notify_return_val == -999)

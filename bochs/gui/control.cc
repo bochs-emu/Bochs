@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.12 2001-06-11 14:07:54 bdenney Exp $
+ * $Id: control.cc,v 1.13 2001-06-11 20:51:15 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -415,8 +415,6 @@ int bx_control_panel (int menu)
      }
    case BX_CPANEL_START_MENU:
      {
-       char rc[CPANEL_PATH_LEN];
-       char *choice_disabled = "Choice 1 not allowed because the default bochsrc file was not found.";
        static int read_rc = 0;
        int default_choice = 1;
        default_choice = read_rc ? 4 : 1;
@@ -679,10 +677,10 @@ static void bx_print_log_action_table ()
   fprintf (stderr, "                 Debug      Info       Error       Panic\n");
   fprintf (stderr, "ID    Device     Action     Action     Action      Action\n");
   fprintf (stderr, "----  ---------  ---------  ---------  ----------  ----------\n");
-  int i, imax=SIM->get_n_log_modules ();
-  for (int i=0; i<imax; i++) {
+  int i, j, imax=SIM->get_n_log_modules ();
+  for (i=0; i<imax; i++) {
     fprintf (stderr, "%3d.  %s ", i, SIM->get_prefix (i));
-    for (int j=0; j<SIM->get_max_log_level (); j++) {
+    for (j=0; j<SIM->get_max_log_level (); j++) {
       fprintf (stderr, "%10s ", SIM->get_action_name (SIM->get_log_action (i, j)));
     }
     fprintf (stderr, "\n");
@@ -854,6 +852,8 @@ int control_panel_notify_callback (int code)
   default:
     fprintf (stderr, "Control panel: notify callback called with unknown code %04x\n", code);
   }
+  // error if we fall through the case
+  return -1;
 }
 
 void bx_control_panel_init () {
