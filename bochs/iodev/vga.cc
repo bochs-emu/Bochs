@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.80 2003-07-01 16:07:59 vruppert Exp $
+// $Id: vga.cc,v 1.81 2003-07-09 20:15:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1383,7 +1383,8 @@ bx_vga_c::update(void)
         }
       }
     }
-    else if (BX_VGA_THIS s.vbe_bpp == VBE_DISPI_BPP_16)
+    else if ((BX_VGA_THIS s.vbe_bpp == VBE_DISPI_BPP_15) ||
+             (BX_VGA_THIS s.vbe_bpp == VBE_DISPI_BPP_16))
     {
       Bit16u *vidmem = (Bit16u *)(&BX_VGA_THIS s.vbe_memory[BX_VGA_THIS s.vbe_virtual_start]);
       Bit16u *tile   = (Bit16u *)(BX_VGA_THIS s.tile);
@@ -2822,8 +2823,8 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             // for backward compatiblity
             if (value == 0) value = VBE_DISPI_BPP_8;
             // check for correct bpp range
-            if ((value == VBE_DISPI_BPP_4) || (value == VBE_DISPI_BPP_8) || (value == VBE_DISPI_BPP_16) ||
-                (value == VBE_DISPI_BPP_24) || (value == VBE_DISPI_BPP_32))
+            if ((value == VBE_DISPI_BPP_4) || (value == VBE_DISPI_BPP_8) || (value == VBE_DISPI_BPP_15) ||
+                (value == VBE_DISPI_BPP_16) || (value == VBE_DISPI_BPP_24) || (value == VBE_DISPI_BPP_32))
             {
               BX_VGA_THIS s.vbe_bpp=(Bit16u) value;
               BX_INFO(("VBE set bpp (%d)",value));
@@ -2887,7 +2888,14 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
                 depth=4;
                 break;
 
-              case VBE_DISPI_BPP_16: 
+              case VBE_DISPI_BPP_15:
+                BX_VGA_THIS s.vbe_bpp_multiplier = 2; 
+                BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres * 2;
+                BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) * 2;
+                depth=15;
+                break;        	          
+
+              case VBE_DISPI_BPP_16:
                 BX_VGA_THIS s.vbe_bpp_multiplier = 2; 
                 BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres * 2;
                 BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres)) * 2;
