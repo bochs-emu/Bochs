@@ -1,0 +1,22 @@
+Index: cpu/exception.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/exception.cc,v
+retrieving revision 1.9
+diff -u -r1.9 exception.cc
+--- cpu/exception.cc	2001/10/03 13:10:37	1.9
++++ cpu/exception.cc	2001/11/06 20:07:57
+@@ -79,6 +79,14 @@
+   BX_DEBUG(("interrupt(): vector = %u, INT = %u, EXT = %u",
+       (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT));
+ 
++#if BX_DEBUGGER
++  if (BX_CPU_THIS_PTR trace) {
++    fprintf (stderr, "Interrupt, vector = %u, INT = %u, EXT = %u",
++	      (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT);
++  }
++#endif
++
++
+ BX_CPU_THIS_PTR save_cs  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+ BX_CPU_THIS_PTR save_ss  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+ BX_CPU_THIS_PTR save_eip = EIP;
