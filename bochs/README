@@ -1,3 +1,51 @@
+BRANCH_PLUGINS
+
+This branch is a place to experiment with Bochs plugins.  Bryce created
+the branch on October 4, 2002 and checked in patch.plugins3 with
+minor changes to get it to compile.  Plugins3 was a patch from 
+December 2001 that copied in some of the plugin architecture from
+plex86.  Here are the comments from that patch:
+
+> Patch name: patch.plugins3
+> Author: Bryce Denney
+> Date: Wed Dec 12 17:56:11 EST 2001
+> 
+> This patch replaces the Bochs keyboard with a slightly modified version
+> of the plex86 keyboard device, which is implemented as a plugin.  This
+> is sort of a proof of concept, rather than anything that I'm about to
+> check in.  It uses GNU libtool to compile the plex86 keyboard code into
+> a shared library, and installs that shared library in
+> /tmp/bochslib/libplex-keyboard.so.  Then the new code in plugin.cc (which
+> is adapted from the plex86 plugin code) loads the libplex-keyboard library
+> during initialization and installs the plex86 keyboard instead of the
+> bochs keyboard.
+> 
+> I chose the keyboard because it takes about 2 seconds to test that it's
+> basically working, and because the bochs and plex86 implementations hadn't
+> changed very much since they split.
+> 
+> If you look at plex-keyboard.cc and plex-keyboard.h, it is fundamentally the
+> same as the current plex86 code.  I have changed lots of names from bx_* to
+> plex_* just to reduce confusion and mayhem when I was compiling with both
+> kbd implementations.  I didn't change anything except to get it to compile.
+
+There's a lot to do, but I think it will help to have a branch to work in.
+Christophe and I will probably be working on plugins together, and I
+didn't want to have to pass patches back and forth, with rejects and all.
+
+The branch is called BRANCH_PLUGINS.  There is a normal tag called
+BRANCH_PLUGINS_BASE that marks the point where the branch began.  This
+will help at merge time.
+
+It's too early to even fill in the to do list, but here it is:
+
+TO DO:
+
+
+DONE:
+
+
+------------------------------------------------
 Bochs x86 Pentium Emulator
 Updated: Wed Mar 27 20:02:41  2002
 Version: 1.4
