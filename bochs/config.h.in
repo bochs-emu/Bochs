@@ -442,6 +442,14 @@
 
 #endif
 
+// now that Bit32u and Bit64u exist, defined bx_address
+#if BX_SUPPORT_X86_64
+typedef Bit64u bx_address;
+#else
+typedef Bit32u bx_address;
+#endif
+
+
 
 #define BX_MAX_UINT 4294967295
 #define BX_MAX_INT 2147483647

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.102 2002-10-11 01:11:11 kevinlawton Exp $
+// $Id: cpu.h,v 1.103 2002-10-13 22:38:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,13 +31,6 @@
 #include <setjmp.h>
 
 #include "cpu/lazy_flags.h"
-
-#if BX_SUPPORT_X86_64
-typedef Bit64u bx_address;
-#else
-typedef Bit32u bx_address;
-#endif
-
 
 #define BX_SREG_ES    0
 #define BX_SREG_CS    1
