@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.24 2001-11-06 17:14:33 fries Exp $
+// $Id: ne2k.cc,v 1.25 2001-11-06 20:30:09 fries Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.24 2001-11-06 17:14:33 fries Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.25 2001-11-06 20:30:09 fries Exp $"));
 	// nothing for now
 }
 
@@ -1108,7 +1108,8 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
   BX_DEBUG(("rx_frame with length %d", io_len));
 
-  if ((BX_NE2K_THIS s.CR.start == 0) ||
+
+  if ((BX_NE2K_THIS s.CR.stop != 0) ||
       (BX_NE2K_THIS s.page_start == 0) ||
       (BX_NE2K_THIS s.TCR.loop_cntl != 0)) {
 
@@ -1216,7 +1217,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.24 2001-11-06 17:14:33 fries Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.25 2001-11-06 20:30:09 fries Exp $"));
   BX_NE2K_THIS devices = d;
 
 
