@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.50 2002-09-05 02:31:24 kevinlawton Exp $
+// $Id: dbg_main.cc,v 1.51 2002-09-05 19:40:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -388,6 +388,7 @@ process_sim2:
 
   // setup Ctrl-C handler
   signal(SIGINT, bx_debug_ctrlc_handler);
+  BX_INFO (("set SIGINT handler to bx_debug_ctrlc_handler"));
 
   // Print disassembly of the first instruction...  you wouldn't think it
   // would have to be so hard.  First initialize guard_found, since it is used
@@ -610,6 +611,18 @@ bxerror(char *s)
 bx_debug_ctrlc_handler(int signum)
 {
   UNUSED(signum);
+#if BX_WITH_WX
+  // in a multithreaded environment, a signal such as SIGINT can be sent to all
+  // threads.  This function is only intended to handle signals in the
+  // simulator thread.  It will simply return if called from any other thread.
+  // Otherwise the BX_PANIC() below can be called in multiple threads at
+  // once, leading to multiple threads trying to display a dialog box,
+  // leading to GUI deadlock.
+  if (!isSimThread ()) {
+    BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
+    return;
+  }
+#endif
   BX_INFO(("Ctrl-C detected in signal handler."));
 
   signal(SIGINT, bx_debug_ctrlc_handler);
@@ -630,8 +643,7 @@ bx_dbg_exit(int code)
 #endif
 
   bx_atexit();
-
-  exit(code);
+  BX_EXIT(1);
 }
 
 
