@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.76 2003-04-25 00:23:21 cbothamy Exp $
+// $Id: keyboard.cc,v 1.77 2003-06-02 20:36:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.76 2003-04-25 00:23:21 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.77 2003-06-02 20:36:30 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1090,10 +1090,9 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       return;
       break;
 
-    case 0xf4:  // flush scancodes buffer and modes, then enable keyboard
-      resetinternals(0);
-      kbd_enQ(0xFA); // send ACK
+    case 0xf4:  // enable keyboard
       BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled = 1;
+      kbd_enQ(0xFA); // send ACK
       return;
       break;
 
@@ -1133,6 +1132,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 
     case 0xff:  // reset: internal keyboard reset and afterwards the BAT
       BX_DEBUG(("reset command received"));
+      resetinternals(1);
       kbd_enQ(0xFA); // send ACK
       kbd_enQ(0xAA); // BAT test passed
       return;
