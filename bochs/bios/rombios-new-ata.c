@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios-new-ata.c,v 1.3 2002-08-19 17:08:09 cbothamy Exp $
+// $Id: rombios-new-ata.c,v 1.4 2002-09-05 08:18:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -876,10 +876,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.3 $";
-static char bios_date_string[] = "$Date: 2002-08-19 17:08:09 $";
+static char bios_cvs_version_string[] = "$Revision: 1.4 $";
+static char bios_date_string[] = "$Date: 2002-09-05 08:18:30 $";
 
-static char CVSID[] = "$Id: rombios-new-ata.c,v 1.3 2002-08-19 17:08:09 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios-new-ata.c,v 1.4 2002-09-05 08:18:30 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1853,27 +1853,31 @@ void ata_detect( )
   Bit8u  hdcount, cdcount, device, type;
   Bit8u  buffer[0x0200];
 
-#if BX_MAX_ATA_INTERFACES >= 1
+#if BX_MAX_ATA_INTERFACES > 0
   write_byte(ebda_seg,&EbdaData->ata.channels[0].iface,ATA_IFACE_ISA);
   write_word(ebda_seg,&EbdaData->ata.channels[0].iobase1,0x1f0);
   write_word(ebda_seg,&EbdaData->ata.channels[0].iobase2,0x3f0);
   write_byte(ebda_seg,&EbdaData->ata.channels[0].irq,14);
-#elif BX_MAX_ATA_INTERFACES >= 2
+#endif
+#if BX_MAX_ATA_INTERFACES > 1
   write_byte(ebda_seg,&EbdaData->ata.channels[1].iface,ATA_IFACE_ISA);
   write_word(ebda_seg,&EbdaData->ata.channels[1].iobase1,0x170);
   write_word(ebda_seg,&EbdaData->ata.channels[1].iobase2,0x370);
   write_byte(ebda_seg,&EbdaData->ata.channels[1].irq,15);
-#elif BX_MAX_ATA_INTERFACES >= 3
+#endif
+#if BX_MAX_ATA_INTERFACES > 2
   write_byte(ebda_seg,&EbdaData->ata.channels[2].iface,ATA_IFACE_ISA);
   write_word(ebda_seg,&EbdaData->ata.channels[2].iobase1,0x1e8);
   write_word(ebda_seg,&EbdaData->ata.channels[2].iobase2,0x3e8);
   write_byte(ebda_seg,&EbdaData->ata.channels[2].irq,12);
-#elif BX_MAX_ATA_INTERFACES >= 4
+#endif
+#if BX_MAX_ATA_INTERFACES > 3
   write_byte(ebda_seg,&EbdaData->ata.channels[3].iface,ATA_IFACE_ISA);
   write_word(ebda_seg,&EbdaData->ata.channels[3].iobase1,0x168);
   write_word(ebda_seg,&EbdaData->ata.channels[3].iobase2,0x368);
   write_byte(ebda_seg,&EbdaData->ata.channels[3].irq,11);
-#else
+#endif
+#if BX_MAX_ATA_INTERFACES > 4
 #error Please fill the ATA interface informations
 #endif
 
@@ -1943,7 +1947,8 @@ void ata_detect( )
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_HD);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].mode, ATA_MODE_PIO16);
 
-      ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE, 1, 0, 0, 0, 0L, get_SS(),buffer);
+      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE, 1, 0, 0, 0, 0L, get_SS(),buffer) !=0 )
+        BX_PANIC("ata-detect: Failed to detect ATA device\n");
 
       removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
       mode      = read_byte(get_SS(),buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
@@ -1991,7 +1996,8 @@ void ata_detect( )
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_CDROM);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].mode, ATA_MODE_PIO16);
 
-      ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE_PACKET, 1, 0, 0, 0, 0L, get_SS(),buffer);
+      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE_PACKET, 1, 0, 0, 0, 0L, get_SS(),buffer) != 0)
+        BX_PANIC("ata-detect: Failed to detect ATAPI device\n");
 
       type      = read_byte(get_SS(),buffer+1) & 0x1f;
       removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
