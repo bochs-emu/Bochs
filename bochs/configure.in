@@ -1066,34 +1066,34 @@ if test "$with_x11" = yes; then
     exit 1
   fi
   AC_DEFINE(BX_WITH_X11, 1)
-  GUI_OBJS='$(GUI_OBJS_X11)'
+  GUI_OBJS='$(GUI_OBJS_X11) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
 elif test "$with_beos" = yes; then
   AC_MSG_RESULT(beos)
   AC_DEFINE(BX_WITH_BEOS, 1)
-  GUI_OBJS='$(GUI_OBJS_BEOS)'
+  GUI_OBJS='$(GUI_OBJS_BEOS) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
 elif test "$with_sdl" = yes; then
   AC_MSG_RESULT(sdl)
   CFLAGS="$CFLAGS \`sdl-config --cflags\`"
   AC_DEFINE(BX_WITH_SDL, 1)
-  GUI_OBJS='$(GUI_OBJS_SDL)'
+  GUI_OBJS='$(GUI_OBJS_SDL) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_SDL)'
 elif test "$with_rfb" = yes; then
   AC_MSG_RESULT(rfb)
   AC_DEFINE(BX_WITH_RFB, 1)
-  GUI_OBJS='$(GUI_OBJS_RFB)'
+  GUI_OBJS='$(GUI_OBJS_RFB) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_RFB)'
 elif test "$with_amigaos" = yes; then
   AC_MSG_RESULT(amigaos)
   AC_DEFINE(BX_WITH_AMIGAOS, 1)
-  GUI_OBJS='$(GUI_OBJS_AMIGAOS)'
+  GUI_OBJS='$(GUI_OBJS_AMIGAOS) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_AMIGAOS)'
 elif test "$with_win32" = yes; then
   AC_MSG_RESULT(win32)
   AC_DEFINE(BX_WITH_WIN32, 1)
-  GUI_OBJS='$(GUI_OBJS_WIN32)'
+  GUI_OBJS='$(GUI_OBJS_WIN32) control.o'
   case $target in
     *-pc-windows*)
        GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'  # native libs for win gui
@@ -1107,31 +1107,33 @@ elif test "$with_win32" = yes; then
 elif test "$with_macos" = yes; then
   AC_MSG_RESULT(macos)
   AC_DEFINE(BX_WITH_MACOS, 1)
-  GUI_OBJS='$(GUI_OBJS_MACOS)'
+  GUI_OBJS='$(GUI_OBJS_MACOS) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
 elif test "$with_carbon" = yes; then
   AC_MSG_RESULT(carbon)
   AC_DEFINE(BX_WITH_CARBON, 1)
-  GUI_OBJS='$(GUI_OBJS_CARBON)'
+  GUI_OBJS='$(GUI_OBJS_CARBON) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_CARBON)'
   PRIMARY_TARGET=bochs.app/.build   # only for carbon application
 elif test "$with_term" = yes; then
   AC_MSG_RESULT(term)
   AC_DEFINE(BX_WITH_TERM, 1)
-  GUI_OBJS='$(GUI_OBJS_TERM)'
+  GUI_OBJS='$(GUI_OBJS_TERM) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_TERM)'
   use_curses=yes
 elif test "$with_wx" = yes; then
   AC_MSG_RESULT(wxWindows)
   AC_DEFINE(BX_WITH_WX, 1)
+  CFLAGS="$CFLAGS `wx-config --cflags`"
+  CXXFLAGS="$CFLAGS `wx-config --cxxflags`"
+  # wxwindows is the only one without control.o in GUI_OBJS
   GUI_OBJS='$(GUI_OBJS_WX)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
+  NONINLINE_VAR="$NONINLINE_VAR wxmain.o"
 else
   AC_MSG_RESULT(none)
   AC_DEFINE(BX_WITH_NOGUI, 1)
-  CFLAGS="$CFLAGS `wx-config --cflags`"
-  CXXFLAGS="$CFLAGS `wx-config --cxxflags`"
-  GUI_OBJS='$(GUI_OBJS_NOGUI)'
+  GUI_OBJS='$(GUI_OBJS_NOGUI) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
 fi
 
