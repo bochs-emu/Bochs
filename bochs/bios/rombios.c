@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.84 2002-12-09 13:23:05 bdenney Exp $
+// $Id: rombios.c,v 1.85 2002-12-13 16:26:17 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.84 $";
-static char bios_date_string[] = "$Date: 2002-12-09 13:23:05 $";
+static char bios_cvs_version_string[] = "$Revision: 1.85 $";
+static char bios_date_string[] = "$Date: 2002-12-13 16:26:17 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.84 2002-12-09 13:23:05 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.85 2002-12-13 16:26:17 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1581,14 +1581,19 @@ keyboard_init()
     while ( (inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x00);
 
     /* flush incoming keys */
-    max=0x1000;
+    max=0x2000;
     while (--max > 0) {
         outb(0x80, 0x00);
         if (inb(0x64) & 0x01) {
             inb(0x60);
-            max = 0x1000;
+            max = 0x2000;
             }
         }
+  
+    // Due to timer issues, and if the IPS setting is > 15000000, 
+    // the incoming keys might not be flushed here. That will
+    // cause a panic a few lines below.  See sourceforge bug report :
+    // [ 642031 ] FATAL: Keyboard RESET error:993
 
     /* ------------------- controller side ----------------------*/
     /* send cmd = 0xAA, self test 8042 */
@@ -1722,7 +1727,10 @@ keyboard_init()
 keyboard_panic(status)
   Bit16u status;
 {
-  BX_PANIC("Keyboard RESET error:%u\n",status);
+  // If you're getting a 993 keyboard panic here, 
+  // please see the comment in keyboard_init
+  
+  BX_PANIC("Keyboard error:%u\n",status);
 }
 
 //--------------------------------------------------------------------------
