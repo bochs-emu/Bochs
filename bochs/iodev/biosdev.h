@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.6 2002-04-01 21:53:23 cbothamy Exp $
+// $Id: biosdev.h,v 1.1 2002-04-01 21:53:23 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -25,42 +25,41 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
 #define BX_BIOS_MESSAGE_SIZE 80
 
 
-#if BX_USE_UM_SMF
-#  define BX_UM_SMF  static
-#  define BX_UM_THIS bx_unmapped.
+#if BX_USE_BIOS_SMF
+#  define BX_BIOS_SMF  static
+#  define BX_BIOS_THIS bx_biosdev.
 #else
-#  define BX_UM_SMF
-#  define BX_UM_THIS this->
+#  define BX_BIOS_SMF
+#  define BX_BIOS_THIS this->
 #endif
 
 
-
-class bx_unmapped_c : public logfunctions {
+class bx_biosdev_c {
 public:
-  bx_unmapped_c(void);
-  ~bx_unmapped_c(void);
-  BX_UM_SMF void   init(bx_devices_c *d);
+  bx_biosdev_c(void);
+  ~bx_biosdev_c(void);
+
+  BX_BIOS_SMF void init(bx_devices_c *d);
 
 private:
 
-  static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#if !BX_USE_UM_SMF
-  Bit32u read(Bit32u address, unsigned io_len);
+#if !BX_USE_BIOS_SMF
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
   struct {
-    Bit8u port80;
-    Bit8u port8e;
+    Bit8u bios_message[BX_BIOS_MESSAGE_SIZE];
+    unsigned int bios_message_i;
+
+    Bit8u vgabios_message[BX_BIOS_MESSAGE_SIZE];
+    unsigned int vgabios_message_i;
     } s;  // state information
 
   bx_devices_c *devices;
   };
 
-extern bx_unmapped_c bx_unmapped;
+extern bx_biosdev_c bx_biosdev;

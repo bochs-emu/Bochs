@@ -220,6 +220,7 @@
 //       multiple instances of a device class
 
 #define BX_USE_HD_SMF   1  // Hard drive
+#define BX_USE_BIOS_SMF 1  // BIOS
 #define BX_USE_CMOS_SMF 1  // CMOS
 #define BX_USE_DMA_SMF  1  // DMA
 #define BX_USE_FD_SMF   1  // Floppy
