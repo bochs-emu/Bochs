@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.22 2001-11-14 14:42:04 bdenney Exp $
+$Id: user.dbk,v 1.23 2001-11-17 17:14:28 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -22,6 +22,7 @@ This is the top level file for the Bochs Users Manual.
    <author><firstname>Kevin</firstname><surname>Lawton</surname></author>
    <author><firstname>Bryce</firstname><surname>Denney</surname></author>
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
+   <editor><firstname>Vasudeva</firstname></editor>
    </authorgroup>
 </bookinfo>
 
@@ -2433,7 +2434,7 @@ following prompt:
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-         $Id: user.dbk,v 1.22 2001-11-14 14:42:04 bdenney Exp $
+         $Id: user.dbk,v 1.23 2001-11-17 17:14:28 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -2550,6 +2551,17 @@ mformat c:
 And you now have a formatted disk image containing a single DOS
 partition.
 </screen>
+</section> <!-- end of Unix: How to make a disk image -->
+
+<section><title>Win32: Use winimage to manipulate disk images</title>
+<para>
+Someone on the bochs-developers list mentioned that they use a program
+called WinImage, from <ulink url="www.winimage.com">www.winimage.com</ulink>
+to read and write disk images (floppy and hard disk).
+</para>
+<para>
+If anyone wants to write a tutorial, send mail to &devlist; and volunteer.
+</para>
 </section>
 
 
@@ -2603,7 +2615,7 @@ files with the bochs disk images.  This is what I found out:
     this could be done with other operating systems.
 </screen>
 </para>
-</section>
+</section>  <!-- end of Linux: Mounting a disk image using the loop device -->
 
 <section><title>Simulating a Multiprocessor Machine</title>
 <para>
