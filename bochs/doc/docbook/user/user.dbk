@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.144 2004-02-29 11:18:52 cbothamy Exp $
+$Id: user.dbk,v 1.145 2004-03-25 05:38:20 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -7125,6 +7125,7 @@ Shall I remove the redolog afterwards?
         </section>
         <section id="guest-minix"> <title>Minix</title>
                   <para>
+Please see the <ulink url="http://minix1.hampshire.edu/faq/bxmxhowto.html">Minix on Bochs on Windows How-To</ulink> by Al Woodhull.
                   </para>
         </section>
           <section id="guest-openbsd"><title>OpenBSD</title>
@@ -9555,7 +9556,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.144 2004-02-29 11:18:52 cbothamy Exp $
+        $Id: user.dbk,v 1.145 2004-03-25 05:38:20 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
