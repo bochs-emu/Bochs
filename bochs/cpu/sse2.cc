@@ -27,11 +27,11 @@
 void BX_CPU_C::MOVUPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSSEInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVUPD_VpdWpd still not implemented"));
+  BX_PANIC(("MOVUPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVUPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -39,11 +39,11 @@ void BX_CPU_C::MOVUPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVSD_VsdWsd still not implemented"));
+  BX_PANIC(("MOVSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -51,11 +51,11 @@ void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::MOVUPD_WpdVpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVUPD_WpdVpd still not implemented"));
+  BX_PANIC(("MOVUPD_WpdVpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVUPD_WpdVpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -63,11 +63,11 @@ void BX_CPU_C::MOVUPD_WpdVpd(bxInstruction_c *i)
 void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVSD_WsdVsd still not implemented"));
+  BX_PANIC(("MOVSD_WsdVsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVSD_WsdVsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -75,11 +75,11 @@ void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
 void BX_CPU_C::MOVLPD_VsdMq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVLPD_VsdMq still not implemented"));
+  BX_PANIC(("MOVLPD_VsdMq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVLPD_VsdMq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -87,11 +87,11 @@ void BX_CPU_C::MOVLPD_VsdMq(bxInstruction_c *i)
 void BX_CPU_C::MOVLPD_MqVsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVLPD_MqVsd still not implemented"));
+  BX_PANIC(("MOVLPD_MqVsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVLPD_MqVsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -99,11 +99,11 @@ void BX_CPU_C::MOVLPD_MqVsd(bxInstruction_c *i)
 void BX_CPU_C::UNPCKLPD_VpdWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction UNPCKLPD_VpdWq still not implemented"));
+  BX_PANIC(("UNPCKLPD_VpdWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("UNPCKLPD_VpdWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -111,11 +111,11 @@ void BX_CPU_C::UNPCKLPD_VpdWq(bxInstruction_c *i)
 void BX_CPU_C::UNPCKHPD_VpdWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction UNPCKHPD_VpdWq still not implemented"));
+  BX_PANIC(("UNPCKHPD_VpdWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("UNPCKHPD_VpdWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -123,11 +123,11 @@ void BX_CPU_C::UNPCKHPD_VpdWq(bxInstruction_c *i)
 void BX_CPU_C::MOVHPD_VpdMq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVHPD_VpdMq still not implemented"));
+  BX_PANIC(("MOVHPD_VpdMq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVHPD_VpdMq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -135,11 +135,11 @@ void BX_CPU_C::MOVHPD_VpdMq(bxInstruction_c *i)
 void BX_CPU_C::MOVHPD_MqVpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVHPD_MqVpd still not implemented"));
+  BX_PANIC(("MOVHPD_MqVpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVHPD_MqVpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -147,11 +147,11 @@ void BX_CPU_C::MOVHPD_MqVpd(bxInstruction_c *i)
 void BX_CPU_C::MOVAPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVAPD_VpdWpd still not implemented"));
+  BX_PANIC(("MOVAPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVAPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -159,11 +159,11 @@ void BX_CPU_C::MOVAPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::MOVAPD_WpdVpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVAPD_WpdVpd still not implemented"));
+  BX_PANIC(("MOVAPD_WpdVpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVAPD_WpdVpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -171,11 +171,11 @@ void BX_CPU_C::MOVAPD_WpdVpd(bxInstruction_c *i)
 void BX_CPU_C::CVTPI2PD_VpdQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTPI2PD_VpdQd still not implemented"));
+  BX_PANIC(("CVTPI2PD_VpdQd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTPI2PD_VpdQd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -183,11 +183,11 @@ void BX_CPU_C::CVTPI2PD_VpdQd(bxInstruction_c *i)
 void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTSI2SD_VsdEd still not implemented"));
+  BX_PANIC(("CVTSI2SD_VsdEd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTSI2SD_VsdEd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -195,11 +195,11 @@ void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
 void BX_CPU_C::MOVNTPD_MdqVpd(bxInstruction_c *i)            	
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVNTPD_MdqVpd still not implemented"));
+  BX_PANIC(("MOVNTPD_MdqVpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVNTPD_MdqVpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -207,11 +207,11 @@ void BX_CPU_C::MOVNTPD_MdqVpd(bxInstruction_c *i)
 void BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTTPD2PI_PqWpd still not implemented"));
+  BX_PANIC(("CVTTPD2PI_PqWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTTPD2PI_PqWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -219,11 +219,11 @@ void BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
 void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTTSD2SI_GdWsd still not implemented"));
+  BX_PANIC(("CVTTSD2SI_GdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTTSD2SI_GdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -231,11 +231,11 @@ void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 void BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTPD2PI_PqWpd still not implemented"));
+  BX_PANIC(("CVTPD2PI_PqWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTPD2PI_PqWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -243,11 +243,11 @@ void BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTSD2SI_GdWsd still not implemented"));
+  BX_PANIC(("CVTSD2SI_GdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTSD2SI_GdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -255,11 +255,11 @@ void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 void BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)            	
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction UCOMISD_VsdWsd still not implemented"));
+  BX_PANIC(("UCOMISD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("UCOMISD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -267,11 +267,11 @@ void BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)   
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction COMISD_VpdWpd still not implemented"));
+  BX_PANIC(("COMISD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("COMISD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -279,11 +279,11 @@ void BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::MOVMSKPD_EdVRpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVMSKPD_EdVRpd still not implemented"));
+  BX_PANIC(("MOVMSKPD_EdVRpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVMSKPD_EdVRpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -291,11 +291,11 @@ void BX_CPU_C::MOVMSKPD_EdVRpd(bxInstruction_c *i)
 void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction SQRTPD_VpdWpd still not implemented"));
+  BX_PANIC(("SQRTPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("SQRTPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -303,11 +303,11 @@ void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction SQRTSD_VsdWsd still not implemented"));
+  BX_PANIC(("SQRTSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("SQRTSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -315,11 +315,11 @@ void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::ANDPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction ANDPD_VpdWpd still not implemented"));
+  BX_PANIC(("ANDPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("ANDPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -327,11 +327,11 @@ void BX_CPU_C::ANDPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::ANDNPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction ANDNPD_VpdWpd still not implemented"));
+  BX_PANIC(("ANDNPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("ANDNPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -339,11 +339,11 @@ void BX_CPU_C::ANDNPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::ORPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction ORPD_VpdWpd still not implemented"));
+  BX_PANIC(("ORPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("ORPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -351,11 +351,11 @@ void BX_CPU_C::ORPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::XORPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction XORPD_VpdWpd still not implemented"));
+  BX_PANIC(("XORPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("XORPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -363,11 +363,11 @@ void BX_CPU_C::XORPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction ADDPD_VpdWpd still not implemented"));
+  BX_PANIC(("ADDPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("ADDPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -375,11 +375,11 @@ void BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction ADDSD_VsdWsd still not implemented"));
+  BX_PANIC(("ADDSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("ADDSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -387,11 +387,11 @@ void BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MULPD_VpdWpd still not implemented"));
+  BX_PANIC(("MULPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MULPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -399,11 +399,11 @@ void BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MULSD_VsdWsd still not implemented"));
+  BX_PANIC(("MULSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MULSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -411,11 +411,11 @@ void BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTPS2PD_VpsWps still not implemented"));
+  BX_PANIC(("CVTPS2PD_VpsWps: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTPS2PD_VpsWps: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -423,11 +423,11 @@ void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 void BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTPD2PS_VpdWpd still not implemented"));
+  BX_PANIC(("CVTPD2PS_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTPD2PS_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -435,11 +435,11 @@ void BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTSD2SS_VsdWsd still not implemented"));
+  BX_PANIC(("CVTSD2SS_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTSD2SS_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -447,11 +447,11 @@ void BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTSS2SD_VssWss still not implemented"));
+  BX_PANIC(("CVTSS2SD_VssWss: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTSS2SD_VssWss: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -459,11 +459,11 @@ void BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
 void BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTDQ2PS_VpsWdq still not implemented"));
+  BX_PANIC(("CVTDQ2PS_VpsWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTDQ2PS_VpsWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -471,11 +471,11 @@ void BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
 void BX_CPU_C::CVTPS2DQ_VdqWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTPS2DQ_VdqWps still not implemented"));
+  BX_PANIC(("CVTPS2DQ_VdqWps: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTPS2DQ_VdqWps: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -483,11 +483,11 @@ void BX_CPU_C::CVTPS2DQ_VdqWps(bxInstruction_c *i)
 void BX_CPU_C::CVTTPS2DQ_VdqWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTTPS2DQ_VdqWps still not implemented"));
+  BX_PANIC(("CVTTPS2DQ_VdqWps: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTTPS2DQ_VdqWps: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -495,11 +495,11 @@ void BX_CPU_C::CVTTPS2DQ_VdqWps(bxInstruction_c *i)
 void BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction SUBPD_VpdWpd still not implemented"));
+  BX_PANIC(("SUBPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("SUBPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -507,11 +507,11 @@ void BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction SUBSD_VsdWsd still not implemented"));
+  BX_PANIC(("SUBSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("SUBSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -519,11 +519,11 @@ void BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MINPD_VpdWpd still not implemented"));
+  BX_PANIC(("MINPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MINPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -531,11 +531,11 @@ void BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MINSD_VsdWsd still not implemented"));
+  BX_PANIC(("MINSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MINSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -543,11 +543,11 @@ void BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction DIVPD_VpdWpd still not implemented"));
+  BX_PANIC(("DIVPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("DIVPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -555,11 +555,11 @@ void BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction DIVSD_VsdWsd still not implemented"));
+  BX_PANIC(("DIVSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("DIVSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -567,11 +567,11 @@ void BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MAXPD_VpdWpd still not implemented"));
+  BX_PANIC(("MAXPD_VpdWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MAXPD_VpdWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -579,11 +579,11 @@ void BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 void BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MAXSD_VsdWsd still not implemented"));
+  BX_PANIC(("MAXSD_VsdWsd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MAXSD_VsdWsd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -591,11 +591,11 @@ void BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKLBW_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKLBW_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKLBW_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKLBW_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -603,11 +603,11 @@ void BX_CPU_C::PUNPCKLBW_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKLWD_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKLWD_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKLWD_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -615,11 +615,11 @@ void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKLDQ_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKLDQ_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKLDQ_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -627,11 +627,11 @@ void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PACKSSWB_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PACKSSWB_VdqWq still not implemented"));
+  BX_PANIC(("PACKSSWB_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PACKSSWB_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -639,11 +639,11 @@ void BX_CPU_C::PACKSSWB_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PCMPGTB_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PCMPGTB_VdqWq still not implemented"));
+  BX_PANIC(("PCMPGTB_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PCMPGTB_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -651,11 +651,11 @@ void BX_CPU_C::PCMPGTB_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PCMPGTW_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PCMPGTW_VdqWq still not implemented"));
+  BX_PANIC(("PCMPGTW_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PCMPGTW_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -663,11 +663,11 @@ void BX_CPU_C::PCMPGTW_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PCMPGTD_VdqWdq still not implemented"));
+  BX_PANIC(("PCMPGTD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PCMPGTD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -675,11 +675,11 @@ void BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PACKUSWB_VdqWdq still not implemented"));
+  BX_PANIC(("PACKUSWB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PACKUSWB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -687,11 +687,11 @@ void BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKHBW_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKHBW_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKHBW_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKHBW_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -699,11 +699,11 @@ void BX_CPU_C::PUNPCKHBW_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKHWD_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKHWD_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKHWD_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -711,11 +711,11 @@ void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKHDQ_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKHDQ_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKHDQ_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -723,11 +723,11 @@ void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PACKSSDW_VdqWdq still not implemented"));
+  BX_PANIC(("PACKSSDW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PACKSSDW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -735,11 +735,11 @@ void BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKLQDQ_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKLQDQ_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKLQDQ_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -747,11 +747,11 @@ void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PUNPCKHQDQ_VdqWq still not implemented"));
+  BX_PANIC(("PUNPCKHQDQ_VdqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PUNPCKHQDQ_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -759,11 +759,11 @@ void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
 void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVD_VdqEd still not implemented"));
+  BX_PANIC(("MOVD_VdqEd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVD_VdqEd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -771,11 +771,11 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 void BX_CPU_C::MOVDQA_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVDQA_VdqWdq still not implemented"));
+  BX_PANIC(("MOVDQA_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVDQA_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -783,11 +783,11 @@ void BX_CPU_C::MOVDQA_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::MOVDQU_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVDQU_VdqWdq still not implemented"));
+  BX_PANIC(("MOVDQU_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVDQU_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -795,11 +795,11 @@ void BX_CPU_C::MOVDQU_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSHUFD_VdqWdqIb still not implemented"));
+  BX_PANIC(("PSHUFD_VdqWdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSHUFD_VdqWdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -807,11 +807,11 @@ void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSHUFHW_VqWqIb still not implemented"));
+  BX_PANIC(("PSHUFHW_VqWqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSHUFHW_VqWqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -819,11 +819,11 @@ void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
 void BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PCMPEQB_VdqWdq still not implemented"));
+  BX_PANIC(("PCMPEQB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PCMPEQB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -831,11 +831,11 @@ void BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PCMPEQW_VdqWdq still not implemented"));
+  BX_PANIC(("PCMPEQW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PCMPEQW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -843,11 +843,11 @@ void BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PCMPEQD_VdqWdq still not implemented"));
+  BX_PANIC(("PCMPEQD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PCMPEQD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -855,11 +855,11 @@ void BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVD_EdVd still not implemented"));
+  BX_PANIC(("MOVD_EdVd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVD_EdVd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -867,11 +867,11 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 void BX_CPU_C::MOVD_VqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVD_VqWq still not implemented"));
+  BX_PANIC(("MOVD_VqWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVD_VqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -879,11 +879,11 @@ void BX_CPU_C::MOVD_VqWq(bxInstruction_c *i)
 void BX_CPU_C::MOVDQA_WdqVdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVDQA_WdqVdq still not implemented"));
+  BX_PANIC(("MOVDQA_WdqVdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVDQA_WdqVdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -891,11 +891,11 @@ void BX_CPU_C::MOVDQA_WdqVdq(bxInstruction_c *i)
 void BX_CPU_C::MOVDQU_WdqVdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVDQU_WdqVdq still not implemented"));
+  BX_PANIC(("MOVDQU_WdqVdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVDQU_WdqVdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -903,11 +903,11 @@ void BX_CPU_C::MOVDQU_WdqVdq(bxInstruction_c *i)
 void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CMPPD_VpdWpdIb still not implemented"));
+  BX_PANIC(("CMPPD_VpdWpdIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CMPPD_VpdWpdIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -915,11 +915,11 @@ void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CMPSD_VsdWsdIb still not implemented"));
+  BX_PANIC(("CMPSD_VsdWsdIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CMPSD_VsdWsdIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -927,11 +927,11 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVNTI_MdGd still not implemented"));
+  BX_PANIC(("MOVNTI_MdGd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVNTI_MdGd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -939,11 +939,11 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 void BX_CPU_C::PINSRW_VdqEdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PINSRW_VdqEdIb still not implemented"));
+  BX_PANIC(("PINSRW_VdqEdIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PINSRW_VdqEdIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -951,11 +951,11 @@ void BX_CPU_C::PINSRW_VdqEdIb(bxInstruction_c *i)
 void BX_CPU_C::PEXTRW_VdqEdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PEXTRW_VdqEdIb still not implemented"));
+  BX_PANIC(("PEXTRW_VdqEdIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PEXTRW_VdqEdIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -963,11 +963,11 @@ void BX_CPU_C::PEXTRW_VdqEdIb(bxInstruction_c *i)
 void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction SHUFPD_VpdWpdIb still not implemented"));
+  BX_PANIC(("SHUFPD_VpdWpdIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("SHUFPD_VpdWpdIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -975,11 +975,11 @@ void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
 void BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRLW_VdqWdq still not implemented"));
+  BX_PANIC(("PSRLW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRLW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -987,11 +987,11 @@ void BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRLD_VdqWdq still not implemented"));
+  BX_PANIC(("PSRLD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRLD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -999,11 +999,11 @@ void BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRLQ_VdqWdq still not implemented"));
+  BX_PANIC(("PSRLQ_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRLQ_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1011,11 +1011,11 @@ void BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDQ_VdqWdq still not implemented"));
+  BX_PANIC(("PADDQ_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDQ_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1023,11 +1023,11 @@ void BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMULLW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMULLW_VdqWdq still not implemented"));
+  BX_PANIC(("PMULLW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMULLW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1035,11 +1035,11 @@ void BX_CPU_C::PMULLW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVQ_WqVq still not implemented"));
+  BX_PANIC(("MOVQ_WqVq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVQ_WqVq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1047,11 +1047,11 @@ void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
 void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVDQ2Q_PqVRq still not implemented"));
+  BX_PANIC(("MOVDQ2Q_PqVRq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVDQ2Q_PqVRq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1059,11 +1059,11 @@ void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVQ2DQ_VdqQq still not implemented"));
+  BX_PANIC(("MOVQ2DQ_VdqQq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVQ2DQ_VdqQq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1071,11 +1071,11 @@ void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 void BX_CPU_C::PMOVMSKB_GdVRdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMOVMSKB_GdVRdq still not implemented"));
+  BX_PANIC(("PMOVMSKB_GdVRdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMOVMSKB_GdVRdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1083,11 +1083,11 @@ void BX_CPU_C::PMOVMSKB_GdVRdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBUSB_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBUSB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBUSB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1095,11 +1095,11 @@ void BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBUSW_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBUSW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBUSW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1107,11 +1107,11 @@ void BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMINUB_VdqWdq still not implemented"));
+  BX_PANIC(("PMINUB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMINUB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1119,11 +1119,11 @@ void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PAND_VdqWdq still not implemented"));
+  BX_PANIC(("PAND_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PAND_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1131,11 +1131,11 @@ void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDUSB_VdqWdq still not implemented"));
+  BX_PANIC(("PADDUSB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDUSB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1143,11 +1143,11 @@ void BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDUSW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDUSW_VdqWdq still not implemented"));
+  BX_PANIC(("PADDUSW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDUSW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1155,11 +1155,11 @@ void BX_CPU_C::PADDUSW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMAXUB_VdqWdq still not implemented"));
+  BX_PANIC(("PMAXUB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMAXUB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1167,11 +1167,11 @@ void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PANDN_VdqWdq still not implemented"));
+  BX_PANIC(("PANDN_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PANDN_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1179,11 +1179,11 @@ void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PAVGB_VdqWdq still not implemented"));
+  BX_PANIC(("PAVGB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PAVGB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1191,11 +1191,11 @@ void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRAW_VdqWdq still not implemented"));
+  BX_PANIC(("PSRAW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRAW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1203,11 +1203,11 @@ void BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRAD_VdqWdq still not implemented"));
+  BX_PANIC(("PSRAD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRAD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1215,11 +1215,11 @@ void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PAVGW_VdqWdq still not implemented"));
+  BX_PANIC(("PAVGW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PAVGW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1227,11 +1227,11 @@ void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMULHUW_VdqWdq still not implemented"));
+  BX_PANIC(("PMULHUW_VdqWdq: SSE2 instruction still not implemented"));
 #else                                        
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMULHUW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1239,11 +1239,11 @@ void BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMULHW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMULHW_VdqWdq still not implemented"));
+  BX_PANIC(("PMULHW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMULHW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1251,11 +1251,11 @@ void BX_CPU_C::PMULHW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::CVTTPD2DQ_VqWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTTPD2DQ_VqWpd still not implemented"));
+  BX_PANIC(("CVTTPD2DQ_VqWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTTPD2DQ_VqWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1263,11 +1263,11 @@ void BX_CPU_C::CVTTPD2DQ_VqWpd(bxInstruction_c *i)
 void BX_CPU_C::CVTPD2DQ_VqWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTPD2DQ_VqWpd still not implemented"));
+  BX_PANIC(("CVTPD2DQ_VqWpd: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTPD2DQ_VqWpd: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1275,11 +1275,11 @@ void BX_CPU_C::CVTPD2DQ_VqWpd(bxInstruction_c *i)
 void BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction CVTDQ2PD_VpdWq still not implemented"));
+  BX_PANIC(("CVTDQ2PD_VpdWq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("CVTDQ2PD_VpdWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1287,11 +1287,11 @@ void BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 void BX_CPU_C::MOVNTDQ_MdqVdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MOVNTDQ_MdqVdq still not implemented"));
+  BX_PANIC(("MOVNTDQ_MdqVdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MOVNTDQ_MdqVdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1299,11 +1299,11 @@ void BX_CPU_C::MOVNTDQ_MdqVdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBSB_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBSB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBSB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1311,11 +1311,11 @@ void BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBSW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBSW_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBSW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBSW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1323,11 +1323,11 @@ void BX_CPU_C::PSUBSW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMINSW_VdqWdq still not implemented"));
+  BX_PANIC(("PMINSW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMINSW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1335,11 +1335,11 @@ void BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction POR_VdqWdq still not implemented"));
+  BX_PANIC(("POR_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("POR_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1347,11 +1347,11 @@ void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDSB_VdqWdq still not implemented"));
+  BX_PANIC(("PADDSB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDSB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1359,11 +1359,11 @@ void BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDSW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDSW_VdqWdq still not implemented"));
+  BX_PANIC(("PADDSW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDSW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1371,11 +1371,11 @@ void BX_CPU_C::PADDSW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMAXSW_VdqWdq still not implemented"));
+  BX_PANIC(("PMAXSW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMAXSW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1383,11 +1383,11 @@ void BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PXOR_VdqWdq still not implemented"));
+  BX_PANIC(("PXOR_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PXOR_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1395,11 +1395,11 @@ void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSLLW_VdqWdq still not implemented"));
+  BX_PANIC(("PSLLW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSLLW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1407,11 +1407,11 @@ void BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSLLD_VdqWdq still not implemented"));
+  BX_PANIC(("PSLLD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSLLD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1419,11 +1419,11 @@ void BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSLLQ_VdqWdq still not implemented"));
+  BX_PANIC(("PSLLQ_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSLLQ_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1431,11 +1431,11 @@ void BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMULUDQ_VdqWdq still not implemented"));
+  BX_PANIC(("PMULUDQ_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMULUDQ_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1443,11 +1443,11 @@ void BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PMADDWD_VdqWdq still not implemented"));
+  BX_PANIC(("PMADDWD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PMADDWD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1455,11 +1455,11 @@ void BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSADBW_VdqWdq still not implemented"));
+  BX_PANIC(("PSADBW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSADBW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1467,11 +1467,11 @@ void BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction MASKMOVDQU_VdqVRdq still not implemented"));
+  BX_PANIC(("MASKMOVDQU_VdqVRdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("MASKMOVDQU_VdqVRdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1479,11 +1479,11 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBB_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1491,11 +1491,11 @@ void BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBW_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1503,11 +1503,11 @@ void BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBD_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1515,11 +1515,11 @@ void BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSUBQ_VdqWdq still not implemented"));
+  BX_PANIC(("PSUBQ_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSUBQ_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1527,11 +1527,11 @@ void BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDB_VdqWdq still not implemented"));
+  BX_PANIC(("PADDB_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1539,11 +1539,11 @@ void BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDW_VdqWdq still not implemented"));
+  BX_PANIC(("PADDW_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1551,11 +1551,11 @@ void BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PADDD_VdqWdq still not implemented"));
+  BX_PANIC(("PADDD_VdqWdq: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PADDD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1563,11 +1563,11 @@ void BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRLW_PdqIb still not implemented"));
+  BX_PANIC(("PSRLW_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRLW_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1575,11 +1575,11 @@ void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRAW_PdqIb still not implemented"));
+  BX_PANIC(("PSRAW_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRAW_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1587,11 +1587,11 @@ void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSLLW_PdqIb still not implemented"));
+  BX_PANIC(("PSLLW_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSLLW_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1599,11 +1599,11 @@ void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRLD_PdqIb still not implemented"));
+  BX_PANIC(("PSRLD_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRLD_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1611,11 +1611,11 @@ void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRAD_PdqIb still not implemented"));
+  BX_PANIC(("PSRAD_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRAD_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1623,11 +1623,11 @@ void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSLLD_PdqIb still not implemented"));
+  BX_PANIC(("PSLLD_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSLLD_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1635,11 +1635,11 @@ void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRLQ_PdqIb still not implemented"));
+  BX_PANIC(("PSRLQ_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRLQ_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1647,11 +1647,11 @@ void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSRLDQ_WdqIb still not implemented"));
+  BX_PANIC(("PSRLDQ_WdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSRLDQ_WdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1659,11 +1659,11 @@ void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSLLQ_PdqIb still not implemented"));
+  BX_PANIC(("PSLLQ_PdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSLLQ_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1671,11 +1671,11 @@ void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
 void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
-  BX_CPU_THIS_PTR PrepareSseInstruction();
+  BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE2 Instruction PSLLDQ_WdqIb still not implemented"));
+  BX_PANIC(("PSLLDQ_WdqIb: SSE2 instruction still not implemented"));
 #else
-  BX_INFO(("SSE2 instruction set not supported in current configuration"));
+  BX_INFO(("PSLLDQ_WdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }

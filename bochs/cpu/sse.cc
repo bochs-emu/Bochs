@@ -52,7 +52,7 @@ void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
   if(BX_MXCSR_REGISTER & ~MXCSR_MASK)
       exception(BX_GP_EXCEPTION, 0, 0);
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("LDMXCSR: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -66,7 +66,7 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
   Bit32u mxcsr = BX_MXCSR_REGISTER & MXCSR_MASK;
   write_virtual_dword(i->seg(), RMAddr(i), &mxcsr);
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("STMXCSR: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -74,9 +74,9 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE
-  BX_PANIC(("SSE Instruction FXSAVE still not implemented"));
+  BX_PANIC(("FXSAVE: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("FXSAVE: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -84,9 +84,9 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE
-  BX_PANIC(("SSE Instruction FXRSTOR still not implemented"));
+  BX_PANIC(("FXRSTOR : SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("FXRSTOR: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -96,9 +96,9 @@ void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVUPS_VpsWps still not implemented"));
+  BX_PANIC(("MOVUPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVUPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -108,9 +108,9 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVSS_VssWss still not implemented"));
+  BX_PANIC(("MOVSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -120,9 +120,9 @@ void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVUPS_WpsVps still not implemented"));
+  BX_PANIC(("MOVUPS_WpsVps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVUPS_WpsVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -132,9 +132,9 @@ void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVSS_WssVss still not implemented"));
+  BX_PANIC(("MOVSS_WssVss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVSS_WssVss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -144,9 +144,9 @@ void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVLPS_VpsMq still not implemented"));
+  BX_PANIC(("MOVLPS_VpsMq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVLPS_VpsMq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -156,9 +156,9 @@ void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVLPS_MqVps still not implemented"));
+  BX_PANIC(("MOVLPS_MqVps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVLPS_MqVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -168,9 +168,9 @@ void BX_CPU_C::UNPCKLPS_VpsWq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction UNPCKLPS_VpsWq still not implemented"));
+  BX_PANIC(("UNPCKLPS_VpsWq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("UNPCKLPS_VpsWq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -180,9 +180,9 @@ void BX_CPU_C::UNPCKHPS_VpsWq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction UNPCKHPS_VpsWq still not implemented"));
+  BX_PANIC(("UNPCKHPS_VpsWq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("UNPCKHPS_VpsWq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -192,9 +192,9 @@ void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVHPS_VpsMq still not implemented"));
+  BX_PANIC(("MOVHPS_VpsMq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVHPS_VpsMq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -204,9 +204,9 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVHPS_MqVps still not implemented"));
+  BX_PANIC(("MOVHPS_MqVps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVHPS_MqVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -216,9 +216,9 @@ void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVAPS_VpsWps still not implemented"));
+  BX_PANIC(("MOVAPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVAPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -228,9 +228,9 @@ void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVAPS_WpsVps still not implemented"));
+  BX_PANIC(("MOVAPS_WpsVps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVAPS_WpsVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -240,9 +240,9 @@ void BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CVTPI2PS_VpsQq still not implemented"));
+  BX_PANIC(("CVTPI2PS_VpsQq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CVTPI2PS_VpsQq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -252,9 +252,9 @@ void BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CVTSI2SS_VssEd still not implemented"));
+  BX_PANIC(("CVTSI2SS_VssEd: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CVTSI2SS_VssEd: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -264,9 +264,9 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVNTPS_MdqVps still not implemented"));
+  BX_PANIC(("MOVNTPS_MdqVps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVNTPS_MdqVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -276,9 +276,9 @@ void BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CVTTPS2PI_PqWps still not implemented"));
+  BX_PANIC(("CVTTPS2PI_PqWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CVTTPS2PI_PqWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -288,9 +288,9 @@ void BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CVTTSS2SI_GdWss still not implemented"));
+  BX_PANIC(("CVTTSS2SI_GdWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CVTTSS2SI_GdWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -300,9 +300,9 @@ void BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CVTPS2PI_PqWps still not implemented"));
+  BX_PANIC(("CVTPS2PI_PqWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CVTPS2PI_PqWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -312,9 +312,9 @@ void BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CVTSS2SI_GdWss still not implemented"));
+  BX_PANIC(("CVTSS2SI_GdWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CVTSS2SI_GdWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -324,9 +324,9 @@ void BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction UCOMISS_VssWss still not implemented"));
+  BX_PANIC(("UCOMISS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("UCOMISS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -336,9 +336,9 @@ void BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction COMISS_VpsWps still not implemented"));
+  BX_PANIC(("COMISS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("COMISS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -348,9 +348,9 @@ void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MOVMSKPS_GdVRps still not implemented"));
+  BX_PANIC(("MOVMSKPS_GdVRps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVMSKPS_GdVRps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -360,9 +360,9 @@ void BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction SQRTPS_VpsWps still not implemented"));
+  BX_PANIC(("SQRTPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("SQRTPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -372,9 +372,9 @@ void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction SQRTSS_VssWss still not implemented"));
+  BX_PANIC(("SQRTSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("SQRTSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -384,9 +384,9 @@ void BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction RSQRTPS_VpsWps still not implemented"));
+  BX_PANIC(("RSQRTPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("RSQRTPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -396,9 +396,9 @@ void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction RSQRTSS_VssWss still not implemented"));
+  BX_PANIC(("RSQRTSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("RSQRTSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -408,9 +408,9 @@ void BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction RCPPS_VpsWps still not implemented"));
+  BX_PANIC(("RCPPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("RCPPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -420,9 +420,9 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction RCPSS_VssWss still not implemented"));
+  BX_PANIC(("RCPSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("RCPSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -432,9 +432,9 @@ void BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction ANDPS_VpsWps still not implemented"));
+  BX_PANIC(("ANDPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("ANDPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -444,9 +444,9 @@ void BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction ANDNPS_VpsWps still not implemented"));
+  BX_PANIC(("ANDNPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("ANDNPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -456,9 +456,9 @@ void BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction ORPS_VpsWps still not implemented"));
+  BX_PANIC(("ORPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("ORPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -468,9 +468,9 @@ void BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction XORPS_VpsWps still not implemented"));
+  BX_PANIC(("XORPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("XORPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -480,9 +480,9 @@ void BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction ADDPS_VpsWps still not implemented"));
+  BX_PANIC(("ADDPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("ADDPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -492,9 +492,9 @@ void BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction ADDSS_VssWss still not implemented"));
+  BX_PANIC(("ADDSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("ADDSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -504,9 +504,9 @@ void BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MULPS_VpsWps still not implemented"));
+  BX_PANIC(("MULPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MULPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -516,9 +516,9 @@ void BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MULSS_VssWss still not implemented"));
+  BX_PANIC(("MULSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MULSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -528,9 +528,9 @@ void BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction SUBPS_VpsWps still not implemented"));
+  BX_PANIC(("SUBPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("SUBPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -540,9 +540,9 @@ void BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction SUBSS_VssWss still not implemented"));
+  BX_PANIC(("SUBSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("SUBSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -552,9 +552,9 @@ void BX_CPU_C::MINPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MINPS_VpsWps still not implemented"));
+  BX_PANIC(("MINPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MINPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -564,9 +564,9 @@ void BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MINSS_VssWss still not implemented"));
+  BX_PANIC(("MINSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MINSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -576,9 +576,9 @@ void BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction DIVPS_VpsWps still not implemented"));
+  BX_PANIC(("DIVPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("DIVPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -588,9 +588,9 @@ void BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction DIVSS_VssWss still not implemented"));
+  BX_PANIC(("DIVSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("DIVSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -600,9 +600,9 @@ void BX_CPU_C::MAXPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MAXPS_VpsWps still not implemented"));
+  BX_PANIC(("MAXPS_VpsWps: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MAXPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -612,9 +612,9 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction MAXSS_VssWss still not implemented"));
+  BX_PANIC(("MAXSS_VssWss: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MAXSS_VssWss: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -624,9 +624,9 @@ void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction PSHUFLW_VqWqIb still not implemented"));
+  BX_PANIC(("PSHUFLW_VqWqIb: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PSHUFLW_VqWqIb: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -636,9 +636,9 @@ void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CMPPS_VpsWpsIb still not implemented"));
+  BX_PANIC(("CMPPS_VpsWpsIb: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CMPPS_VpsWpsIb: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -648,9 +648,9 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction CMPSS_VssWssIb still not implemented"));
+  BX_PANIC(("CMPSS_VssWssIb: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("CMPSS_VssWssIb: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -658,11 +658,11 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE
-  BX_CPU_THIS_PTR prepareSSE();
+  BX_CPU_THIS_PTR prepareMMX();
 
-  BX_PANIC(("SSE Instruction PINSRW_PqEdIb still not implemented"));
+  BX_PANIC(("PINSRW_PqEdIb: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PINSRW_PqEdIb: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -670,11 +670,11 @@ void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
 void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE
-  BX_CPU_THIS_PTR prepareSSE();
+  BX_CPU_THIS_PTR prepareMMX();
 
-  BX_PANIC(("SSE Instruction PEXTRW_PqEdIb still not implemented"));
+  BX_PANIC(("PEXTRW_PqEdIb: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PEXTRW_PqEdIb: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -684,9 +684,9 @@ void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction SHUFPS_VpsWpsIb still not implemented"));
+  BX_PANIC(("SHUFPS_VpsWpsIb: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("SHUFPS_VpsWpsIb: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -696,9 +696,9 @@ void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("SSE Instruction PMOVMSKB_GdPRq still not implemented"));
+  BX_PANIC(("PMOVMSKB_GdPRq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("PMOVMSKB_GdPRq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -706,9 +706,9 @@ void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
 void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE
-  BX_PANIC(("SSE Instruction MOVNTQ_MqPq still not implemented"));
+  BX_PANIC(("MOVNTQ_MqPq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MOVNTQ_MqPq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -716,9 +716,9 @@ void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE
-  BX_PANIC(("SSE Instruction MASKMOVQ_PqPRq still not implemented"));
+  BX_PANIC(("MASKMOVQ_PqPRq: SSE instruction still not implemented"));
 #else
-  BX_INFO(("SSE instruction set not supported in current configuration"));
+  BX_INFO(("MASKMOVQ_PqPRq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
