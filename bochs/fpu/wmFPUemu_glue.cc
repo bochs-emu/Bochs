@@ -285,4 +285,5 @@ math_abort(void *info, unsigned int signal)
 extern "C" int printk(const char * fmt, ...)
 {
   BX_INFO(("math abort: %s", fmt));
+  return 0;
 }
