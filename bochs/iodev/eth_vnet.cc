@@ -1,3 +1,6 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: eth_vnet.cc,v 1.4 2004-08-27 08:23:50 vruppert Exp $
+/////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
 //
@@ -20,6 +23,8 @@
 
 #define BX_ETH_VNET_LOGGING 1
 
+#define BX_PACKET_POLL  1000    // Poll for a frame every 1000 usecs
+
 /////////////////////////////////////////////////////////////////////////
 // handler to send/receive packets
 /////////////////////////////////////////////////////////////////////////
@@ -38,6 +43,10 @@ static const Bit8u broadcast_ipv4addr[3][4] =
 #define IPPACKET_MAX          2048
 #define ICMP_ECHO_PACKET_MAX  128
 #define LAYER4_LISTEN_MAX  128
+
+static Bit8u    packet_buffer[IPPACKET_MAX];
+static unsigned packet_len;
+
 typedef void (*layer4_handler_t)(
   void *this_ptr,
   const Bit8u *ipheader,
@@ -157,6 +166,10 @@ private:
   } l4data[LAYER4_LISTEN_MAX];
   unsigned l4data_used;
 
+  static void rx_timer_handler(void *);
+  void rx_timer(void);
+  int rx_timer_index;
+
 #if BX_ETH_VNET_LOGGING
   FILE *pktlog_txt;
 #endif // BX_ETH_VNET_LOGGING
@@ -249,6 +262,10 @@ bx_vnet_pktmover_c::pktmover_init(
 
   register_layer4_handler(0x11,INET_PORT_BOOTP_SERVER,udpipv4_dhcp_handler);
 
+  this->rx_timer_index = 
+    bx_pc_system.register_timer(this, this->rx_timer_handler, BX_PACKET_POLL,
+				0, 0, "eth_vnet");
+
 #if BX_ETH_VNET_LOGGING
   pktlog_txt = fopen ("ne2k-pktlog.txt", "wb");
   if (!pktlog_txt) BX_PANIC (("ne2k-pktlog.txt failed"));
@@ -304,6 +321,33 @@ bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
   }
 }
 
+// The receive poll process
+void
+bx_vnet_pktmover_c::rx_timer_handler(void *this_ptr)
+{
+  bx_vnet_pktmover_c *class_ptr = (bx_vnet_pktmover_c *) this_ptr;
+
+  class_ptr->rx_timer();
+}
+
+void
+bx_vnet_pktmover_c::rx_timer(void)
+{
+  this->rxh(this->rxarg, (void *)packet_buffer, packet_len);
+#if BX_ETH_VNET_LOGGING
+  fprintf (pktlog_txt, "a packet from host to guest, length %u\n", packet_len);
+  Bit8u *charbuf = (Bit8u *)packet_buffer;
+  unsigned n;
+  for (n=0; n<packet_len; n++) {
+    if (((n % 16) == 0) && n>0)
+      fprintf (pktlog_txt, "\n");
+    fprintf (pktlog_txt, "%02x ", (unsigned)charbuf[n]);
+  }
+  fprintf (pktlog_txt, "\n--\n");
+  fflush (pktlog_txt);
+#endif
+}
+
 void
 bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len)
 {
@@ -321,19 +365,9 @@ bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len)
     io_len=60;
   }
 
-  this->rxh(this->rxarg, (void *)buf, io_len);
-#if BX_ETH_VNET_LOGGING
-  fprintf (pktlog_txt, "a packet from host to guest, length %u\n", io_len);
-  Bit8u *charbuf = (Bit8u *)buf;
-  unsigned n;
-  for (n=0; n<io_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf (pktlog_txt, "\n");
-    fprintf (pktlog_txt, "%02x ", (unsigned)charbuf[n]);
-  }
-  fprintf (pktlog_txt, "\n--\n");
-  fflush (pktlog_txt);
-#endif
+  packet_len = io_len;
+  memcpy(&packet_buffer, &buf[0], io_len);
+  bx_pc_system.activate_timer(this->rx_timer_index, BX_PACKET_POLL, 0);
 }
 
 /////////////////////////////////////////////////////////////////////////
