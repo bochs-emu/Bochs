@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.14 2005-02-01 21:17:38 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.15 2005-02-03 22:08:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -5875,9 +5875,9 @@ bx_dbg_info_flags(void)
 {
  if(BX_CPU(dbg_cpu)->getB_ID())
   dbg_printf ("ID ");
- if(BX_CPU(dbg_cpu)->getB_VP())
+ if(BX_CPU(dbg_cpu)->getB_VIP())
   dbg_printf ("VIP ");
- if(BX_CPU(dbg_cpu)->getB_VF())
+ if(BX_CPU(dbg_cpu)->getB_VIF())
   dbg_printf ("VIF ");
  if(BX_CPU(dbg_cpu)->getB_AC())
   dbg_printf ("AC ");

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.194 2005-01-28 20:50:47 sshwarts Exp $
+// $Id: cpu.h,v 1.195 2005-02-03 22:08:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -393,6 +393,7 @@ typedef struct {
 
 #define DECLARE_EFLAGS_ACCESSORS()                                           \
   BX_CPP_INLINE void setEFlags(Bit32u val);
+
 #define IMPLEMENT_EFLAGS_ACCESSORS()                                         \
   BX_CPP_INLINE void BX_CPU_C::setEFlags(Bit32u val) {                       \
     BX_CPU_THIS_PTR eflags.val32 = val;                                      \
@@ -400,8 +401,8 @@ typedef struct {
     if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
       BX_CPU_THIS_PTR v8086Mode = BX_CPU_THIS_PTR eflags.VM_cached;          \
       BX_CPU_THIS_PTR protectedMode = ! BX_CPU_THIS_PTR v8086Mode;           \
-      }                                                                      \
-    }
+    }                                                                        \
+  }
 
   // accessors for all eflags in bx_flags_reg_t
   // The macro is used once for each flag bit.
@@ -444,22 +445,22 @@ typedef struct {
     if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
       BX_CPU_THIS_PTR protectedMode = 0;                                     \
       BX_CPU_THIS_PTR v8086Mode = 1;                                         \
-      }                                                                      \
     }                                                                        \
+  }                                                                          \
   BX_CPP_INLINE void BX_CPU_C::clear_VM() {                                  \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                            \
     BX_CPU_THIS_PTR eflags.VM_cached = 0;                                    \
     if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
       BX_CPU_THIS_PTR protectedMode = 1;                                     \
       BX_CPU_THIS_PTR v8086Mode = 0;                                         \
-      }                                                                      \
     }                                                                        \
+  }                                                                          \
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                                 \
     return BX_CPU_THIS_PTR eflags.VM_cached;                                 \
-    }                                                                        \
+  }                                                                          \
   BX_CPP_INLINE bx_bool BX_CPU_C::getB_VM() {                                \
     return (BX_CPU_THIS_PTR eflags.VM_cached>0);                             \
-    }                                                                        \
+  }                                                                          \
   BX_CPP_INLINE void BX_CPU_C::set_VM(Bit32u val) {                          \
     BX_CPU_THIS_PTR eflags.val32 =                                           \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
@@ -467,8 +468,8 @@ typedef struct {
     if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
       BX_CPU_THIS_PTR v8086Mode = val;                                       \
       BX_CPU_THIS_PTR protectedMode = ! BX_CPU_THIS_PTR v8086Mode;           \
-      }                                                                      \
-    }
+    }                                                                        \
+  }
 
 #define DECLARE_EFLAG_ACCESSOR_IOPL(bitnum)                                  \
   BX_CPP_INLINE void set_IOPL(Bit32u val);                                   \
@@ -478,10 +479,10 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::set_IOPL(Bit32u val) {                        \
     BX_CPU_THIS_PTR eflags.val32 &= ~(3<<12);                                \
     BX_CPU_THIS_PTR eflags.val32 |= ((3&val) << 12);                         \
-    }                                                                        \
-  BX_CPP_INLINE Bit32u  BX_CPU_C::get_IOPL() {                               \
+  }                                                                          \
+  BX_CPP_INLINE Bit32u BX_CPU_C::get_IOPL() {                                \
     return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12);                         \
-    }
+  }
 
 #define EFlagsCFMask     0x00000001
 #define EFlagsPFMask     0x00000004
@@ -2862,8 +2863,8 @@ public: // for now...
   DECLARE_EFLAGS_ACCESSORS()
   DECLARE_EFLAG_ACCESSOR   (DF,  10)
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
-  DECLARE_EFLAG_ACCESSOR   (VP,  20)
-  DECLARE_EFLAG_ACCESSOR   (VF,  19)
+  DECLARE_EFLAG_ACCESSOR   (VIP, 20)
+  DECLARE_EFLAG_ACCESSOR   (VIF, 19)
   DECLARE_EFLAG_ACCESSOR   (AC,  18)
   DECLARE_EFLAG_ACCESSOR_VM(     17)
   DECLARE_EFLAG_ACCESSOR   (RF,  16)
@@ -3198,17 +3199,17 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 #endif
 
 IMPLEMENT_EFLAGS_ACCESSORS()
-IMPLEMENT_EFLAG_ACCESSOR   (DF, 10)
-IMPLEMENT_EFLAG_ACCESSOR   (ID, 21)
-IMPLEMENT_EFLAG_ACCESSOR   (VP, 20)
-IMPLEMENT_EFLAG_ACCESSOR   (VF, 19)
-IMPLEMENT_EFLAG_ACCESSOR   (AC, 18)
-IMPLEMENT_EFLAG_ACCESSOR_VM(    17)
-IMPLEMENT_EFLAG_ACCESSOR   (RF, 16)
-IMPLEMENT_EFLAG_ACCESSOR   (NT, 14)
-IMPLEMENT_EFLAG_ACCESSOR_IOPL(  12)
-IMPLEMENT_EFLAG_ACCESSOR   (IF,  9)
-IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
+IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
+IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)
+IMPLEMENT_EFLAG_ACCESSOR   (VIP, 20)
+IMPLEMENT_EFLAG_ACCESSOR   (VIF, 19)
+IMPLEMENT_EFLAG_ACCESSOR   (AC,  18)
+IMPLEMENT_EFLAG_ACCESSOR_VM(     17)
+IMPLEMENT_EFLAG_ACCESSOR   (RF,  16)
+IMPLEMENT_EFLAG_ACCESSOR   (NT,  14)
+IMPLEMENT_EFLAG_ACCESSOR_IOPL(   12)
+IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
+IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 
 //
 // For decoding...
