@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.98 2003-05-03 16:37:17 cbothamy Exp $
+// $Id: harddrv.cc,v 1.99 2003-05-06 20:30:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,7 +37,9 @@
 
 #include "bochs.h"
 
+#if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
 
 #define LOG_THIS theHardDrive->
 
@@ -157,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.98 2003-05-03 16:37:17 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.99 2003-05-06 20:30:21 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3551,7 +3553,7 @@ int sparse_image_t::open (const char* pathname0)
  if ((lastchar >= '0') && (lastchar <= '9'))
  {
    struct stat stat_buf;
-   if (0 == lstat(parentpathname, &stat_buf))
+   if (0 == stat(parentpathname, &stat_buf))
    {
      parent_image = new sparse_image_t();
      int ret = parent_image->open(parentpathname);
@@ -4514,16 +4516,7 @@ int volatile_image_t::open (const char* pathname)
         redolog_name = (char*)malloc(strlen(pathname) + strlen(".XXXXXX") + 1);
         sprintf (redolog_name, "%s%s", pathname, ".XXXXXX");
 
-#if BX_HAVE_MKSTEMP
         filedes = mkstemp (redolog_name);
-#else // BX_HAVE_MKSTEMP
-        mktemp(redolog_name);
-        filedes = ::open(redolog_name, O_RDWR | O_CREAT | O_TRUNC
-#  ifdef O_BINARY
-            | O_BINARY
-#  endif
-              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
-#endif // BX_HAVE_MKSTEMP
 
         if (filedes < 0)
         {
@@ -4714,16 +4707,7 @@ int z_volatile_image_t::open (const char* pathname)
         redolog_name = (char*)malloc(strlen(pathname) + strlen(".XXXXXX") + 1);
         sprintf (redolog_name, "%s%s", pathname, ".XXXXXX");
 
-#if BX_HAVE_MKSTEMP
         filedes = mkstemp (redolog_name);
-#else // BX_HAVE_MKSTEMP
-        mktemp(redolog_name);
-        filedes = ::open(redolog_name, O_RDWR | O_CREAT | O_TRUNC
-#  ifdef O_BINARY
-            | O_BINARY
-#  endif
-              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
-#endif // BX_HAVE_MKSTEMP
 
         if (filedes < 0)
         {
