@@ -48,7 +48,7 @@ AC_MSG_CHECKING(for hash_map.h)
 AC_TRY_COMPILE([#include <hash_map.h>], [],
    [
      AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_HASH_MAP)
+     AC_DEFINE(BX_HAVE_HASH_MAP)
    ], AC_MSG_RESULT(no))
 AC_LANG_RESTORE
 
