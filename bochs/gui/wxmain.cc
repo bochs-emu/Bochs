@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.94 2003-08-25 16:46:18 vruppert Exp $
+// $Id: wxmain.cc,v 1.95 2003-08-29 18:57:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -319,7 +319,6 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
-  EVT_MENU(ID_Edit_Cmos, MyFrame::OnEditCmos)
   EVT_MENU(ID_Edit_Timing, MyFrame::OnEditTiming)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
@@ -431,7 +430,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
   menuEdit->Append( ID_Edit_Sound, "S&ound..." );
-  menuEdit->Append( ID_Edit_Cmos, "&CMOS..." );
   menuEdit->Append( ID_Edit_Timing, "&Timing..." );
   menuEdit->Append( ID_Edit_Network, "&Network..." );
   menuEdit->Append( ID_Edit_Keyboard, "&Keyboard..." );
@@ -648,15 +646,6 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal ();
 }
 
-void MyFrame::OnEditCmos(wxCommandEvent& WXUNUSED(event))
-{
-  ParamDialog dlg (this, -1);
-  dlg.SetTitle ("Configure CMOS");
-  dlg.AddParam (SIM->get_param (BXP_CMOS_IMAGE));
-  dlg.AddParam (SIM->get_param (BXP_CMOS_PATH));
-  dlg.ShowModal ();
-}
-
 void MyFrame::OnEditTiming(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
@@ -707,8 +696,8 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   dlg.SetTitle ("Other Options");
-  dlg.AddParam (SIM->get_param (BXP_SEL_DISPLAY_LIBRARY));
-  dlg.AddParam (SIM->get_param (BXP_SEL_CONFIG_INTERFACE));
+//dlg.AddParam (SIM->get_param (BXP_SEL_DISPLAY_LIBRARY));
+//dlg.AddParam (SIM->get_param (BXP_SEL_CONFIG_INTERFACE));
   dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
   dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
   dlg.AddParam (SIM->get_param (BXP_MOUSE_ENABLED));
@@ -721,6 +710,8 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
   dlg.AddParam (SIM->get_param (BXP_SCREENMODE));
 #endif
   dlg.AddParam (SIM->get_param (BXP_I440FX_SUPPORT));
+  dlg.AddParam (SIM->get_param (BXP_CMOS_IMAGE));
+  dlg.AddParam (SIM->get_param (BXP_CMOS_PATH));
   dlg.ShowModal ();
 }
 
@@ -971,7 +962,6 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   menuEdit->Enable( ID_Edit_Boot, canConfigure);
   menuEdit->Enable( ID_Edit_Memory, canConfigure);
   menuEdit->Enable( ID_Edit_Sound, canConfigure);
-  menuEdit->Enable( ID_Edit_Cmos, canConfigure);
   menuEdit->Enable( ID_Edit_Timing, canConfigure);
   menuEdit->Enable( ID_Edit_Network, canConfigure);
   menuEdit->Enable( ID_Edit_Keyboard, canConfigure);

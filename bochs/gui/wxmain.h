@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.42 2003-08-23 17:53:27 vruppert Exp $
+// $Id: wxmain.h,v 1.43 2003-08-29 18:57:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -39,7 +39,6 @@ enum
   ID_Edit_Boot,
   ID_Edit_Memory,
   ID_Edit_Sound,
-  ID_Edit_Cmos,
   ID_Edit_Timing,
   ID_Edit_Network,
   ID_Edit_Keyboard,
@@ -175,7 +174,6 @@ public:
   void OnEditMemory(wxCommandEvent& event);
   void OnEditSpeed(wxCommandEvent& event);
   void OnEditSound(wxCommandEvent& event);
-  void OnEditCmos(wxCommandEvent& event);
   void OnEditTiming(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
   void OnEditKeyboard(wxCommandEvent& event);
