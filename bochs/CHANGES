@@ -4,7 +4,7 @@ TO DO LIST:
 - (DONE) check logs in cpu
 - check logs in gui
   - (DONE) carbon.cc
-  - everything else
+  - (DONE) everything else
 - (DONE) check logs in iodev 
 - (DONE) check logs in main directory
   - (DONE) check logs of configure.in
@@ -418,24 +418,24 @@ I'm listing them here to remind us about them:
   - simplify 8 processors BIOS for operating systems which don't do 
     paranoia/sanity checks (Zwane)
 
-wxWindows
-- wxWindows is a cross-platform C++ user interface library which you can
-  download for free at http://wxwindows.org.  wxWindows provides C++
-  classes for all sorts of GUI controls (buttons, menubars, etc.) and
-  implements all of them using the native controls on the platform.
-- The new wxWindows port of Bochs provides both a graphical configuration
-  interface (for editing bochsrc options) and a display.  It was
-  written by Bryce Denney, Don Becker, Dave Poirier, and Volker Ruppert.
-- In release 2.0, we concentrated on making the wxWindows port as stable
-  and functional as the other interfaces.  wxWindows provides a great
-  toolbox that we can use to make Bochs easier to learn and use.
-- wxWindows supports charmap changes, keyboard mapping, cut and paste,
-  text and graphics modes, text mode cursor size, and mouse (Volker, Bryce)
-- To compile Bochs with wxWindows, you should install wxWindows 2.3.3
-  or later.  Then configure Bochs with --with-wx.
-- if you have multiple versions of wxWindows installed (e.g. a debug
-  and a release version), you can set $WX_CONFIG before configuring 
-  to select between them. (Bryce)
+- wxWindows
+  - wxWindows is a cross-platform C++ user interface library which you can
+    download for free at http://wxwindows.org.  wxWindows provides C++
+    classes for all sorts of GUI controls (buttons, menubars, etc.) and
+    implements all of them using the native controls on the platform.
+  - The new wxWindows port of Bochs provides both a graphical configuration
+    interface (for editing bochsrc options) and a display.  It was
+    written by Bryce Denney, Don Becker, Dave Poirier, and Volker Ruppert.
+  - In release 2.0, we concentrated on making the wxWindows port as stable
+    and functional as the other interfaces.  wxWindows provides a great
+    toolbox that we can use to make Bochs easier to learn and use.
+  - wxWindows supports charmap changes, keyboard mapping, cut and paste,
+    text and graphics modes, text mode cursor size, and mouse (Volker, Bryce)
+  - To compile Bochs with wxWindows, you should install wxWindows 2.3.3
+    or later.  Then configure Bochs with --with-wx.
+  - if you have multiple versions of wxWindows installed (e.g. a debug
+    and a release version), you can set $WX_CONFIG before configuring 
+    to select between them. (Bryce)
 
 - configuration interface
   - wxWindows config interface now allows you to change every bochsrc
@@ -475,19 +475,32 @@ wxWindows
   - new keymap files: SDL keymaps for US and DE keyboards,  X11 keymap
     for Danish keyboard.
   - use keyboard mapping for keyup messages too
-  - term display library:
-    - support for color terminal, function keys, clear screen (Volker)
-  - win32 display library:
-    - use native win32 toolbar for headerbar, use system palette (Volker)
   - renamed almost all references to data type "Boolean" to "bx_bool".
     The Boolean data type was defined in Carbon.h headers, and conflicted
     with Bochs's definition.  See bug [ 618388 ] Unable to boot under MacOS X
     Exceptions: When talking to the Carbon library, you must use Boolean.
     Also, siminterface.h uses standard "bool" instead of bx_bool.
-  - many Carbon interface improvements
+  - "User" button added in toolbar. It can send keyboard shortcuts to
+    the guest OS. (Volker)
+  - snapshot improvement and memory leak fixed (Volker)
+  - testing framework, based on comparing screen content, added (Greg)
+  - term display library:
+    - support for color terminal, function keys, clear screen (Volker)
+    - solaris compilation problem (bug #613393) fixed (Bryce)
+  - win32 display library:
+    - use native win32 toolbar for headerbar, use system palette (Volker)
+  - many Carbon interface improvements:
     - patch [ 549248 ] Fix Carbon key & menu handling (Chris Thomas)
     - partial keymap support, copy&paste, menu items fixed, new toolbar
       behavior, dialog box display for panics (Br'fin)
+  - sdl display library:
+    - keyboard fixes and key mapping added (Bryce)
+    - when captured, the mouse is forced to stay in the window. fix bug
+      [ 619283 ] SDL: os mouse pointer leaves the window (Bryce)
+  - x display library:
+    - bug [ #537593 ] vga font not being found fixed. If vga font not 
+      found, search for a font called "-*-vga-*" (Bryce)
+    - keyboard problems fixed (Bryce, Christophe)
 
 
 - Bochs debugger
@@ -571,7 +584,6 @@ bug [ 614171 ] update all bioses before release
 bug [ 638110 ] sb16 plugin crashes if not enabled
 bug [ 638552 ] rename plugin libs to avoid conflicts
 bug [ 628663 ] double panic from cmos get_timeval
-bug [ 629606 ] BX_WITH_TERM affects ^C handling
 bug [ 531063 ] crash when CD enabled but not present
 bug [ 629615 ] keybord not initialized properly
 bug [ 632169 ] no docs for TUN/TAP
