@@ -308,8 +308,7 @@ logfunctions::info(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
-	if(!onoff[LOGLEV_INFO])
-		return;
+	if(!onoff[LOGLEV_INFO]) return;
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
@@ -327,13 +326,12 @@ logfunctions::error(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
-	if(!onoff[LOGLEV_ERROR])
-		return;
+	if(!onoff[LOGLEV_ERROR]) return;
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
-	va_end(ap);
 	if (onoff[LOGLEV_ERROR] == ACT_FATAL) fatal (this->prefix, fmt, ap);
+	va_end(ap);
 }
 
 void
@@ -345,14 +343,12 @@ logfunctions::panic(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
-	if(onoff[LOGLEV_PANIC]) {
+	if(!onoff[LOGLEV_PANIC]) return;
 
-		va_start(ap, fmt);
-		this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
-		va_end(ap);
-
-	}
+	va_start(ap, fmt);
+	this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
 	if (onoff[LOGLEV_PANIC] == ACT_FATAL) fatal (this->prefix, fmt, ap);
+	va_end(ap);
 }
 
 void
@@ -364,13 +360,12 @@ logfunctions::ldebug(char *fmt, ...)
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
-	if(!onoff[LOGLEV_DEBUG])
-		return;
+	if(!onoff[LOGLEV_DEBUG]) return;
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
-	va_end(ap);
 	if (onoff[LOGLEV_DEBUG] == ACT_FATAL) fatal (this->prefix, fmt, ap);
+	va_end(ap);
 }
 
 void
