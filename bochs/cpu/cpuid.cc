@@ -241,11 +241,16 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [13:13] PGE/PTE Global Bit
       //   [14:14] MCA: Machine Check Architecture
       //   [15:15] CMOV: Cond Mov/Cmp Instructions
-      //   [22:16] Reserved
+      //   [16:16] PAT: Page Attribute Table
+      //   [17:17] PSE: Page-Size Extensions
+      //   [18:18] Reserved
+      //   [19:19] CLFLUSH: CLFLUSH Instruction support
+      //   [22:20] Reserved
       //   [23:23] MMX Technology
       //   [24]    FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
       //   [25]    SSE: SSE Extensions
       //   [26]    SSE2: SSE2 Extensions
+      //   [27]    Reserved
       //   [28]    Hyper Threading Technology
       //   [29]    TM: Thermal Monitor
       //   [31:30] Reserved
@@ -283,12 +288,11 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       features = get_std_cpuid_features ();
       RAX = features;
       // Many of the bits in EDX are the same as EAX
-      // [10:10] Reserved
-      // [11:11] SYSCALL and SYSRET instructions
       // [18:19] Reserved
       // [20:20] No-Execute page protection
       // [21:21] Reserved
       // [22:22] AMD MMX Extensions
+      // [25:25] Fast FXSAVE/FXRSTOR mode support
       // [25:28] Reserved
       // [29:29] Long Mode
       // [30:30] AMD 3DNow! Extensions
