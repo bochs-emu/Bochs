@@ -3,7 +3,7 @@ Changes in 2.1 (July ??, 2003):
 - Stanislav's changes...
   --------------------------------------------------------------------------
 
-+ Added emulation of AMD 3DNow! instructions set.
+[+] Added emulation of AMD 3DNow! instructions set.
 
   Bochs now could decode all AMD 3DNow! instructions. 
   Most of instructions still not implemented, but the basis already presents.
@@ -21,7 +21,7 @@ Changes in 2.1 (July ??, 2003):
  
      CPUID still could not report 3DNow! instruction set.
 
-+ Added emulation of SSE/SSE2 floating point instructions
+[+] Added emulation of SSE/SSE2 floating point instructions
 
   Alsmost all SSE/SSE2 floating point instructions are fully implemented 
   using free softfloat library (including DAZ support and floating point
@@ -34,29 +34,39 @@ Changes in 2.1 (July ??, 2003):
 
 	RSQRTSS_VssWss, RSQRTPS_VpsWps, RCPPS_VpsWps, RCPSS_VssWss
 
-+ Fixed: Unallowed lock prefix cases must cause #UD exception
+[+] Fixed: Unallowed lock prefix cases must cause #UD exception
 
-+ Fixed FXSAVE/FXRSTOR instructions
+[+] Fixed FXSAVE/FXRSTOR instructions
 
-+ Fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
+[+] Fixed fetchdecode bug caused #UD in SYSENTER/SYSEXIT instructions
   in 32bit mode.
 
-+ Hundreds of bugfixes in FPU emulation after checking of the emulation
+[+] Hundreds of bugfixes in FPU emulation after checking of the emulation
   with testfloat. Fixed cases:
 
-	floatx80_to_int32
-	floatx80_to_float32
-	floatx80_to_float64
-	floatx80_round_to_int
-	floatx80_add
-	floatx80_sub
-	floatx80_mul
-	floatx80_div
+	floatx80_to_int32,   floatx80_to_float32
+	floatx80_to_float64, floatx80_round_to_int
+	floatx80_add,        floatx80_sub, 
+        floatx80_mul,        floatx80_div
 
   Thanks to Scott Duplichan for fixing the bugs.
+
+Patches applied:
+
+- applied disassembler fixes for by Dirk Thierbach
+- applied FPU 64-bit addressing patch
+- applied CPU fixes patch by Vitaly Vorobyov
+ [x] fixed bug in int01 (opcode 0xF1) emulation
+ [x] fixed bug in x86 debugger with dr0-dr3 registers
+ [x] fixed bug with mov to/from dr register in v86mode 
+     (now exception is generated (according to Intel documentation)
+     instead of panic)
+ [x] fixed stack limit checking, now message is generated as BX_DEBUG,
+     rather then BX_PANIC, and exception code is executed
   --------------------------------------------------------------------------
 
 - Christophe's changes...
+
 - Volker's changes...
   --------------------------------------------------------------------------
 - I/O devices
@@ -114,6 +124,7 @@ Changes in 2.1 (July ??, 2003):
   --------------------------------------------------------------------------
 
 - Peter's changes...
+
 - SF patches applied
   #671873  minimal USB support (UHCI)               (Ben Lunt)
   #729450  new keymap x11-pc-be.map                 (Wouter Verhelst)
@@ -129,11 +140,7 @@ Changes in 2.1 (July ??, 2003):
 
 	added rombios patch by Dirk Thierbach
 	added rombios patch by Kory Markevich
-
-	I think these already could be committed:
-        
-		added disassembler patch by Dirk Thierbach
-		added FPU 64-bit addresses patch
+	added patches collection by Vitaly Vorobyov
 
 - these S.F. bugs were fixed...
 
