@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.15 2001-10-03 19:53:48 instinc Exp $
+// $Id: cpu.h,v 1.16 2002-03-25 01:58:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -548,9 +548,10 @@ public:
   virtual void trigger_irq (unsigned num, unsigned from);
   virtual void untrigger_irq (unsigned num, unsigned from);
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
+  virtual Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   virtual Boolean match_logical_addr (Bit8u address);
   virtual bx_apic_type_t get_type ();
+  virtual void set_arb_id (int newid);  // only implemented on local apics
 };
 
 class bx_local_apic_c : public bx_generic_apic_c {
@@ -612,10 +613,12 @@ public:
   virtual Boolean is_local_apic () { return true; }
   virtual bx_apic_type_t get_type () { return APIC_TYPE_LOCAL_APIC; }
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
+  virtual Boolean deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   Bit8u get_ppr ();
   Bit8u get_apr ();
   void periodic (Bit32u usec_delta);
   void set_divide_configuration (Bit32u value);
+  virtual void set_arb_id (int newid);
   };
 
 #define APIC_MAX_ID 16

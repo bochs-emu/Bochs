@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.11 2002-03-23 00:54:37 bdenney Exp $
+// $Id: apic.cc,v 1.12 2002-03-25 01:58:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -20,6 +20,13 @@ bx_generic_apic_c::bx_generic_apic_c ()
 
 bx_generic_apic_c::~bx_generic_apic_c () 
 {
+}
+
+void
+bx_generic_apic_c::set_arb_id (int new_arb_id)
+{
+  // politely ignore it.  This gets sent to every APIC, regardless of its
+  // type.
 }
 
 // init is called during RESET and when an INIT message is delivered.
@@ -160,8 +167,7 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   // mask must include ONLY local APICs, or we will have problems.
   if (!deliver_bitmask) {
-    if (bx_dbg.apic)
-			BX_INFO(("deliver failed: no APICs in destination bitmask"));
+    BX_PANIC(("deliver failed for vector %02x: no APICs in destination bitmask", vector));
     return false;
   }
   switch (delivery_mode) {
@@ -185,6 +191,10 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
       break;
     case 5:  // INIT
       {
+	// NOTE: special behavior of local apics is handled in
+	// bx_local_apic_c::deliver.
+	
+	// normal INIT. initialize the local apics in the delivery mask.
 	for (int bit=0; bit<APIC_MAX_ID; bit++) {
 	  if (deliver_bitmask & (1<<bit)) 
 	    apic_index[bit]->init ();
@@ -221,12 +231,46 @@ bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bi
   return true;
 }
 
+Boolean
+bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
+{
+  // In this function, implement only the behavior that is specific to
+  // the local apic.  For general behavior of all apics, just send it to
+  // the base class.
+  if (delivery_mode == 5)
+  {
+    int trig_mode = (icr_low >> 15) & 1;
+    int level = (icr_low >> 14) & 1;
+    if (level == 0 && trig_mode == 1) {
+      // special mode in local apic.  See "INIT Level Deassert" in the
+      // Intel Soft. Devel. Guide Vol 3, page 7-34.  This magic code
+      // causes all APICs (regardless of dest address) to set their
+      // arbitration ID to their APIC ID.
+      BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
+      for (int bit=0; bit<APIC_MAX_ID; bit++) {
+	if (apic_index[bit])
+	  apic_index[bit]->set_arb_id (apic_index[bit]->get_id ());
+      }
+      return true;
+    }
+  }
+  // not any special case behavior, just use generic apic code.
+  return bx_generic_apic_c::deliver (dest, dest_mode, delivery_mode, vector, polarity, trig_mode);
+}
+
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   : bx_generic_apic_c ()
 {
   char buffer[16];
   cpu = mycpu;
   hwreset ();
+}
+
+void
+bx_local_apic_c::set_arb_id (int new_arb_id)
+{
+  BX_DEBUG (("set arbitration ID to %d", new_arb_id));
+  arb_id = new_arb_id;
 }
 
 void
@@ -334,9 +378,11 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0xd0: // logical destination
       log_dest = (*data >> 24) & 0xff;
+      BX_DEBUG (("set logical destiation to %02x", log_dest));
       break;
     case 0xe0: // destination format
       dest_format = (*data >> 28) & 0xf;
+      BX_DEBUG (("set destination format to %02x", dest_format));
       break;
     case 0xf0: // spurious interrupt vector
       spurious_vec = (spurious_vec & 0x0f) | (*data & 0x3f0);
@@ -645,11 +691,8 @@ Bit8u bx_local_apic_c::get_ppr ()
 
 Bit8u bx_local_apic_c::get_apr ()
 {
-  BX_ERROR (("WARNING: Local APIC Arbitration Priority not implemented, returning 0"));
-  // should look at TPR, vector of highest priority isr, etc.
-  return 0;
+  return arb_id;
 }
-
 
 void
 bx_local_apic_c::periodic (Bit32u usec_delta)
