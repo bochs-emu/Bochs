@@ -677,7 +677,9 @@ parse_bochsrc(int argc)
   do {
     ret = fgets(line, sizeof(line)-1, fd);
     line[sizeof(line) - 1] = '\0';
-    line[strlen(line) - 1] = '\0';
+    int len = strlen(line);
+    if (len>0)
+      line[len-1] = '\0';
     if ((ret != NULL) && strlen(line)) {
       parse_line_unformatted(line);
       }
