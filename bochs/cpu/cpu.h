@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.29 2002-09-05 02:31:24 kevinlawton Exp $
+// $Id: cpu.h,v 1.30 2002-09-05 19:12:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1552,11 +1552,15 @@ public: // for now...
   BX_SMF BX_CPP_INLINE void set_PF(Boolean val);
   BX_SMF BX_CPP_INLINE void set_PF_base(Bit8u val);
 
-
   BX_SMF BX_CPP_INLINE void set_AX(Bit16u ax);
   BX_SMF BX_CPP_INLINE void set_BX(Bit16u bx);
   BX_SMF BX_CPP_INLINE void set_CX(Bit16u cx);
   BX_SMF BX_CPP_INLINE void set_DX(Bit16u dx);
+  BX_SMF BX_CPP_INLINE void set_SP(Bit16u sp);
+  BX_SMF BX_CPP_INLINE void set_BP(Bit16u bp);
+  BX_SMF BX_CPP_INLINE void set_SI(Bit16u si);
+  BX_SMF BX_CPP_INLINE void set_DI(Bit16u di);
+
   BX_SMF BX_CPP_INLINE void set_AL(Bit8u  al);
   BX_SMF BX_CPP_INLINE void set_AH(Bit8u  ah);
   BX_SMF BX_CPP_INLINE void set_BL(Bit8u  bl);
@@ -1579,6 +1583,22 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit16u get_BX(void);
   BX_SMF BX_CPP_INLINE Bit16u get_CX(void);
   BX_SMF BX_CPP_INLINE Bit16u get_DX(void);
+  BX_SMF BX_CPP_INLINE Bit16u get_SP(void);
+  BX_SMF BX_CPP_INLINE Bit16u get_BP(void);
+  BX_SMF BX_CPP_INLINE Bit16u get_SI(void);
+  BX_SMF BX_CPP_INLINE Bit16u get_DI(void);
+
+  BX_SMF BX_CPP_INLINE Bit32u get_EAX(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_EBX(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_ECX(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_EDX(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_ESP(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_EBP(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_ESI(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_EDI(void);
+
+  BX_SMF BX_CPP_INLINE Bit32u get_CPL(void);
+  BX_SMF BX_CPP_INLINE Bit32u get_EIP(void);
 
 #if BX_CPU_LEVEL >= 2
   BX_SMF BX_CPP_INLINE Boolean real_mode(void);
@@ -1616,6 +1636,11 @@ BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CX(Bit16u cx) { CX = cx; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DX(Bit16u dx) { DX = dx; };
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SP(Bit16u sp) { SP = sp; };
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BP(Bit16u bp) { BP = bp; };
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SI(Bit16u si) { SI = si; };
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DI(Bit16u di) { DI = di; };
+
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AL(Bit8u  al) { AL = al; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AH(Bit8u  ah) { AH = ah; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BL(Bit8u  bl) { BL = bl; };
@@ -1638,9 +1663,24 @@ BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_AX(void) { return(AX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BX(void) { return(BX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_CX(void) { return(CX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DX(void) { return(DX); };
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SP(void) { return(SP); };
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BP(void) { return(BP); };
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SI(void) { return(SI); };
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DI(void) { return(DI); };
+
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EAX(void) { return(EAX); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBX(void) { return(EBX); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ECX(void) { return(ECX); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDX(void) { return(EDX); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESP(void) { return(ESP); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBP(void) { return(EBP); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESI(void) { return(ESI); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDI(void) { return(EDI); };
+
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_CPL(void) { return(CPL); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EIP(void) { return(EIP); };
 
 #endif
-
 
 #if BX_CPU_LEVEL >= 2
   BX_CPP_INLINE Boolean BX_CPU_C::real_mode(void) { return( !BX_CPU_THIS_PTR cr0.pe ); };
