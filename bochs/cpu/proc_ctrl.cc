@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.46 2002-09-23 14:38:14 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.47 2002-09-23 14:45:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1381,7 +1381,7 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [15:15] CMOV: Cond Mov/Cmp Instructions
       //   [22:16] Reserved
       //   [23:23] MMX Technology
-      //   [24]    FXSR: FSAVE/FXRSTOR
+      //   [24]    FXSR: FSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
       //   [25]    SSE: SSE Extensions
       //   [26]    SSE2: SSE2 Extensions
       //   [28]    Reserved
@@ -1576,6 +1576,21 @@ BX_CPU_C::SetCR0(Bit32u val_32)
   void
 BX_CPU_C::SetCR4(Bit32u val_32)
 {
+
+  // CR4 bit definitions from AMD Hammer manual:
+  //   [63-11] Reserved, Must be Zero
+  //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
+  //   [9]     OSFXSR: Operating System FXSAVE/FXRSTOR Support R/W
+  //   [8]     PCE: Performance-Monitoring Counter Enable R/W
+  //   [7]     PGE: Page-Global Enable R/W
+  //   [6]     MCE: Machine Check Enable R/W
+  //   [5]     PAE: Physical-Address Extension R/W
+  //   [4]     PSE: Page Size Extensions R/W
+  //   [3]     DE: Debugging Extensions R/W
+  //   [2]     TSD: Time Stamp Disable R/W
+  //   [1]     PVI: Protected-Mode Virtual Interrupts R/W
+  //   [0]     VME: Virtual-8086 Mode Extensions R/W
+
   Bit32u allowMask = 0;
   Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
 
