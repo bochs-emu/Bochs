@@ -2,6 +2,7 @@
 Patch name: patch.highmem
 Author: Zwane Mwaikambo <zwane@linuxpower.ca>
 Date: Tue, 24 Sep 2002 21:13:36 -0400 (EDT)
+Status: applied to main code
 
 Detailed description:
 
@@ -71,7 +72,7 @@ diff -u -r1.30 misc_mem.cc
 --- bochs-cvs/memory/misc_mem.cc	19 Sep 2002 19:17:20 -0000	1.30
 +++ bochs-cvs/memory/misc_mem.cc	25 Sep 2002 00:57:15 -0000
 @@ -123,6 +123,7 @@
- 	BX_DEBUG(("Init $Id: patch.highmem,v 1.1 2002-09-25 13:29:11 bdenney Exp $"));
+ 	BX_DEBUG(("Init $Id: patch.highmem,v 1.2 2003-02-05 18:22:30 cbothamy Exp $"));
    // you can pass 0 if memory has been allocated already through
    // the constructor, or the desired size of memory if it hasn't
 +  BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
