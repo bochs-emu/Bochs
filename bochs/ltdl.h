@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ltdl.h,v 1.1.2.1 2002-10-10 17:25:40 bdenney Exp $
+// $Id: ltdl.h,v 1.1.2.2 2002-10-23 22:44:57 bdenney Exp $
 //
 // NOTE: The ltdl library comes from the Libtool package.  Bochs uses
 // ltdl and libtool to build and load plugins.  The libtool
@@ -37,7 +37,13 @@ Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #ifndef LTDL_H
 #define LTDL_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <sys/types.h>		/* for size_t declaration */
+#ifdef __cplusplus
+};
+#endif
 
 
 /* --- MACROS FOR PORTABILITY --- */
