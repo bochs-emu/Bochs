@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.32 2002-03-09 01:05:41 bdenney Exp $
+// $Id: ne2k.cc,v 1.32.2.1 2002-05-31 20:20:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.32 2002-03-09 01:05:41 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.32.2.1 2002-05-31 20:20:45 cbothamy Exp $"));
 	// nothing for now
 }
 
@@ -287,8 +287,11 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // have been initialised.
     //
     if (io_len > BX_NE2K_THIS s.remote_bytes)
-      BX_PANIC(("ne2K: dma read underrun"));
-    
+      {BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
+       return 0;
+      }
+
+    //BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS s.remote_bytes));
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
     //
     // The 8390 bumps the address and decreases the byte count
@@ -296,6 +299,9 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // the amount of data requested by the host (io_len).
     //
     BX_NE2K_THIS s.remote_dma += (BX_NE2K_THIS s.DCR.wdsize + 1);
+    if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
+      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
+    }
     // keep s.remote_bytes from underflowing
     if (BX_NE2K_THIS s.remote_bytes > 1)
       BX_NE2K_THIS s.remote_bytes -= (BX_NE2K_THIS s.DCR.wdsize + 1);
@@ -337,9 +343,13 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 
     if (BX_NE2K_THIS s.remote_bytes == 0)
       BX_PANIC(("ne2K: dma write, byte count 0"));
-    
+
     chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
+    // is this right ??? asic_read uses DCR.wordsize
     BX_NE2K_THIS s.remote_dma   += io_len;
+    if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
+      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
+    }
 
     BX_NE2K_THIS s.remote_bytes -= io_len;
     if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ)
@@ -358,8 +368,8 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     reset_device();
     break;
 
-  default:
-    BX_PANIC(("asic write invalid address %04x", (unsigned) offset));
+  default: // this is invalid, but happens under win95 device detection
+    BX_INFO(("asic write invalid address %04x, ignoring", (unsigned) offset));
     break ;
   }
 }
@@ -414,7 +424,7 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
   case 0x6:  // FIFO
     return (BX_NE2K_THIS s.fifo);
     break;
-    
+
   case 0x7:  // ISR
     return ((BX_NE2K_THIS s.ISR.reset     << 7) |
 	    (BX_NE2K_THIS s.ISR.rdma_done << 6) |
@@ -1135,7 +1145,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
   // Add the pkt header + CRC to the length, and work
   // out how many 256-byte pages the frame would occupy
-  pages = (io_len + 4 + 4)/256 + 1;
+  pages = (io_len + 4 + 4 + 255)/256;
 
   if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
     avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;    
@@ -1235,7 +1245,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.32 2002-03-09 01:05:41 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.32.2.1 2002-05-31 20:20:45 cbothamy Exp $"));
   BX_NE2K_THIS devices = d;
 
 
