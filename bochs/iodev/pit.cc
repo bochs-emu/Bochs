@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: pit.cc,v 1.6.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -23,6 +27,9 @@
 
 
 #include "bochs.h"
+
+#if (BX_USE_NEW_PIT==0)
+
 #define LOG_THIS bx_pit.
 
 
@@ -135,7 +142,7 @@ bx_pit_c bx_pit;
 
 bx_pit_c::bx_pit_c( void )
 {
-  setprefix("PIT");
+  put("PIT");
   settype(PITLOG);
   memset(&s, 0, sizeof(s));
 
@@ -857,3 +864,5 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   else
     return(0);
 }
+
+#endif // #if (BX_USE_NEW_PIT==0)

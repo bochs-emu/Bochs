@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: protect_ctrl.cc,v 1.7.2.1 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -520,6 +524,9 @@ BX_CPU_C::LTR_Ew(BxInstruction_t *i)
     BX_CPU_THIS_PTR tr.selector = selector;
     BX_CPU_THIS_PTR tr.cache    = descriptor;
     BX_CPU_THIS_PTR tr.cache.valid = 1;
+    // tr.cache.type should not have busy bit, or it would not get 
+    // through the conditions above.
+    BX_ASSERT((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
 
     /* mark as busy */
     dword2 |= 0x00000200; /* set busy bit */
@@ -626,7 +633,7 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
       return;
       }
     set_ZF(1); /* accessible */
-    BX_INFO(("VERR: data segment OK"));
+    BX_ERROR(("VERR: data segment OK"));
     return;
     }
 }

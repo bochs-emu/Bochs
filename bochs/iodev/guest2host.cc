@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: guest2host.cc,v 1.5.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -29,7 +33,7 @@ bx_g2h_c bx_g2h;
 
 bx_g2h_c::bx_g2h_c(void)
 {
-  setprefix("G2H");
+  put("G2H");
   settype(G2HLOG);
   unsigned i;
 
@@ -37,7 +41,6 @@ bx_g2h_c::bx_g2h_c(void)
     s.callback[i].f = NULL;
     s.callback[i].used = 0;
     }
-  BX_DEBUG(("Init."));
 }
 
 bx_g2h_c::~bx_g2h_c(void)
@@ -49,6 +52,7 @@ bx_g2h_c::~bx_g2h_c(void)
   void
 bx_g2h_c::init(bx_devices_c *d)
 {
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.5.2.1 2002-03-17 08:57:02 bdenney Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     d->register_io_read_handler(&bx_g2h,

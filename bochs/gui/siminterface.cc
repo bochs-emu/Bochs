@@ -1,6 +1,10 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: siminterface.cc,v 1.31.2.12 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.11 2002-03-17 07:45:26 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.12 2002-03-17 08:57:02 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -41,6 +45,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   int enabled;
 public:
   bx_real_sim_c ();
+  virtual ~bx_real_sim_c ();
   virtual int get_init_done () { return init_done; }
   virtual int set_init_done (int n) { init_done = n; return 0;}
   virtual void get_param_id_range (int *min, int *max) {
@@ -56,7 +61,7 @@ public:
   virtual int get_log_action (int mod, int level);
   virtual void set_log_action (int mod, int level, int action);
   virtual char *get_action_name (int action);
-  virtual char *get_log_level_name (int level);
+  virtual const char *get_log_level_name (int level);
   virtual int get_max_log_level ();
   virtual void quit_sim (int code);
   virtual int get_default_rc (char *path, int len);
@@ -69,7 +74,7 @@ public:
   virtual char *get_floppy_type_name (int type);
   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
   virtual BxEvent* LOCAL_notify (BxEvent *event);
-  virtual int LOCAL_log_msg (char *prefix, int level, char *msg);
+  virtual int LOCAL_log_msg (const char *prefix, int level, char *msg);
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
   virtual int vga_gui_button_pressed (bx_id which);
   virtual int notify_get_int_arg (int which);
@@ -121,7 +126,7 @@ bx_real_sim_c::get_param_string (bx_id id) {
 void siminterface_init ()
 {
   siminterface_log = new logfunctions ();
-  siminterface_log->setprefix ("CTRL");
+  siminterface_log->put ("CTRL");
   siminterface_log->settype(CTRLLOG);
   if (SIM == NULL) 
     SIM = new bx_real_sim_c();
@@ -153,6 +158,15 @@ bx_real_sim_c::bx_real_sim_c ()
 // called by constructor of bx_param_c, so that every parameter that is
 // initialized gets registered.  This builds a list of all parameters
 // which can be used to look them up by number (get_param).
+bx_real_sim_c::~bx_real_sim_c ()
+{
+    if ( param_registry != NULL )
+    {
+        delete [] param_registry;
+        param_registry = NULL;
+    }
+}
+
 int
 bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
 {
@@ -199,7 +213,7 @@ bx_real_sim_c::get_action_name (int action)
   return io->getaction (action);
 }
 
-char *
+const char *
 bx_real_sim_c::get_log_level_name (int level)
 {
   return io->getlevel (level);
@@ -290,10 +304,12 @@ char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", NULL };
 int n_floppy_type_names = 5;
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
 int n_floppy_status_names = 2;
-char *floppy_bootdisk_names[] = { "floppy", "hard", NULL };
-int n_floppy_bootdisk_names = 2;
+char *floppy_bootdisk_names[] = { "floppy", "hard","cdrom", NULL };
+int n_floppy_bootdisk_names = 3;
 char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
 int n_loader_os_names = 3;
+char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
+int n_keyboard_tupe_names = 3;
 
 char *
 bx_real_sim_c::get_floppy_type_name (int type)
@@ -323,11 +339,11 @@ bx_real_sim_c::LOCAL_notify (BxEvent *event)
 
 // returns 0 for continue, 1 for alwayscontinue, 2 for die.
 int 
-bx_real_sim_c::LOCAL_log_msg (char *prefix, int level, char *msg)
+bx_real_sim_c::LOCAL_log_msg (const char *prefix, int level, char *msg)
 {
   BxEvent *be = new BxEvent ();
   be->type = BX_ASYNC_EVT_LOG_MSG;
-  be->u.logmsg.prefix = prefix;
+  be->u.logmsg.prefix = (char *)prefix;
   be->u.logmsg.level = level;
   be->u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
@@ -422,7 +438,8 @@ bx_param_num_c::set (Bit32s newval)
 {
   if (handler) {
     // the handler can override the new value and/or perform some side effect
-    val = (*handler)(this, 1, newval);
+    val = newval;
+    (*handler)(this, 1, newval);
   } else {
     // just set the value.  This code does not check max/min.
     val = newval;
@@ -482,6 +499,26 @@ bx_param_string_c::bx_param_string_c (bx_id id,
   set (initial_val);
 }
 
+bx_param_string_c::~bx_param_string_c ()
+{
+    if ( this->val != NULL )
+    {
+        delete [] this->val;
+        this->val = NULL;
+    }
+    if ( this->initial_val != NULL )
+    {
+        delete [] this->initial_val;
+        this->initial_val = NULL;
+    }
+
+    if ( this->options != NULL )
+    {
+        delete [] this->options;
+        this->options = NULL;
+    }
+}
+
 void 
 bx_param_string_c::reset () {
   strncpy (this->val, this->initial_val, maxsize);
@@ -513,14 +550,14 @@ bx_param_string_c::get (char *buf, int len)
 void 
 bx_param_string_c::set (char *buf)
 {
-  if (handler) {
-    // the handler can return a different char* to be copied into the value
-    buf = (*handler)(this, 1, buf, -1);
-  }
   if (options->get () & BX_RAW_BYTES)
     memcpy (val, buf, maxsize);
   else
     strncpy (val, buf, maxsize);
+  if (handler) {
+    // the handler can return a different char* to be copied into the value
+    buf = (*handler)(this, 1, buf, -1);
+  }
 }
 
 #if 0
@@ -547,6 +584,30 @@ bx_list_c::bx_list_c (bx_id id, char *name, char *description, bx_param_c **init
   for (int i=0; i<this->size; i++)
     this->list[i] = init_list[i];
   init ();
+}
+
+bx_list_c::~bx_list_c()
+{
+    if (this->list)
+    {
+        delete [] this->list;
+        this->list = NULL;
+    }
+    if ( this->title != NULL)
+    {
+        delete this->title;
+        this->title = NULL;
+    }
+    if (this->options != NULL)
+    {
+        delete this->options;
+        this->options = NULL;
+    }
+    if ( this->choice != NULL )
+    {
+        delete this->choice;
+        this->choice = NULL;
+    }
 }
 
 void

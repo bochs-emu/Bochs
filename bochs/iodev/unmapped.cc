@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: unmapped.cc,v 1.8.2.1 2002-03-17 08:57:03 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -31,11 +35,15 @@ bx_unmapped_c bx_unmapped;
 #define this (&bx_unmapped)
 #endif
 
+logfunctions *bioslog;
 
 bx_unmapped_c::bx_unmapped_c(void)
 {
-  setprefix("UNMP");
+  put("UNMP");
   settype(UNMAPLOG);
+  bioslog = new logfunctions ();
+  bioslog->put("BIOS");
+  bioslog->settype (BIOSLOG);
   s.port80 = 0x00;
   s.port8e = 0x00;
 
@@ -44,7 +52,11 @@ bx_unmapped_c::bx_unmapped_c(void)
 
 bx_unmapped_c::~bx_unmapped_c(void)
 {
-  // nothing for now
+    if ( bioslog != NULL )              /* DT 17.12.2001 21:32 */
+    {
+        delete bioslog;
+        bioslog = NULL;
+    }
 }
 
   void
@@ -235,8 +247,19 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    // BX_DEBUG(("unsupported IO write to port %04x of %02x",
 	    // address, value));
       break;
+    case 0x0401:
+      if (BX_UM_THIS s.bios_message_i > 0) {
+	// if there are bits of message in the buffer, print them as the
+	// panic message.  Otherwise fall into the next case.
+	if (BX_UM_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE)
+	  BX_UM_THIS s.bios_message_i = BX_BIOS_MESSAGE_SIZE-1;
+        BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i] = 0;
+	BX_UM_THIS s.bios_message_i = 0;
+        bioslog->panic((BX_UM_THIS s.bios_message));
+	break;
+      }
     case 0x0400:
-      BX_PANIC(("BIOS panic at rombios.c, line %d", value));
+      bioslog->panic("BIOS panic at rombios.c, line %d", value);
       break;
     case 0xfedc:
       bx_dbg.debugger = (value > 0);
@@ -250,12 +273,12 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if ( BX_UM_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
         BX_UM_THIS s.bios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        BX_INFO(("BIOS message: %s", BX_UM_THIS s.bios_message));
+        bioslog->info("%s", BX_UM_THIS s.bios_message);
         }
       else if ((value & 0xff) == '\n') {
         BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i - 1 ] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        BX_INFO(("BIOS message: %s", BX_UM_THIS s.bios_message));
+        bioslog->info("%s", BX_UM_THIS s.bios_message);
         }
       break;
 

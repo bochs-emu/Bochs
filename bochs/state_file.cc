@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: state_file.cc,v 1.6.2.1 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -101,7 +105,7 @@ void
 state_file::init(void)
 {
 	log = new class logfunctions();
-	log->setprefix("STAT");
+	log->put("STAT");
 	log->settype(GENLOG);
 }
 
@@ -124,4 +128,9 @@ state_file::state_file (FILE *f)
 state_file::~state_file()
 {
   BX_DEBUG(("Exit."));
+  if ( log != NULL )
+  {
+        delete log;
+        log = NULL;
+  }
 }

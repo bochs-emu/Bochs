@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: ne2k.cc,v 1.14.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -35,9 +39,10 @@ bx_ne2k_c bx_ne2k;
 
 bx_ne2k_c::bx_ne2k_c(void)
 {
-  setprefix("NE2K");
-  settype(NE2KLOG);
-  // nothing for now
+	put("NE2K");
+	settype(NE2KLOG);
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.14.2.1 2002-03-17 08:57:02 bdenney Exp $"));
+	// nothing for now
 }
 
 
@@ -89,7 +94,7 @@ bx_ne2k_c::reset_device(void)
   
   // Set power-up conditions
   BX_NE2K_THIS s.CR.stop      = 1;
-  BX_NE2K_THIS s.CR.rdma_cmd  = 1;
+    BX_NE2K_THIS s.CR.rdma_cmd  = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
 }
@@ -114,7 +119,7 @@ bx_ne2k_c::read_cr(void)
 void
 bx_ne2k_c::write_cr(Bit32u value)
 {
-  BX_DEBUG(("wrote 0x%08x to CR"));
+    BX_DEBUG(("wrote 0x%02x to CR", value));
   // Validate remote-DMA
   if ((value & 0x38) == 0x00)
     return;
@@ -139,8 +144,25 @@ bx_ne2k_c::write_cr(Bit32u value)
   BX_NE2K_THIS s.CR.start = ((value & 0x02) == 0x02);
   BX_NE2K_THIS s.CR.pgsel = (value & 0xc0) >> 6;
 
+    // Check for send-packet command
+    if (BX_NE2K_THIS s.CR.rdma_cmd == 3) {
+	// Set up DMA read from receive ring
+	BX_NE2K_THIS s.remote_start = BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.bound_ptr * 256;
+	BX_NE2K_THIS s.remote_bytes = *((Bit16u*) & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.bound_ptr * 256 + 2 - BX_NE2K_MEMSTART]);
+	BX_INFO(("Sending buffer #x%x length %d",
+		  BX_NE2K_THIS s.remote_start,
+		  BX_NE2K_THIS s.remote_bytes));
+    }
+
   // Check for start-tx
-  if (value & 0x04) {
+    if ((value & 0x04) && BX_NE2K_THIS s.TCR.loop_cntl) {
+	if (BX_NE2K_THIS s.TCR.loop_cntl != 1) {
+	    BX_INFO(("Loop mode %d not supported.", BX_NE2K_THIS s.TCR.loop_cntl));
+	} else {
+	    rx_frame (& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART],
+		      BX_NE2K_THIS s.tx_bytes);
+	}
+    } else if (value & 0x04) {
     if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start)
       BX_PANIC(("CR write - tx start, dev in reset"));
     
@@ -185,7 +207,7 @@ bx_ne2k_c::write_cr(Bit32u value)
       BX_NE2K_THIS s.remote_bytes == 0) {
     BX_NE2K_THIS s.ISR.rdma_done = 1;
     if (BX_NE2K_THIS s.IMR.rdma_inte) {
-      BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+      BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
     }
   }
 }
@@ -215,7 +237,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  if ((address >= BX_NE2K_MEMSTART) && (address <= BX_NE2K_MEMEND)) {
+  if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
     retval = BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART];
     if (io_len == 2) {
       retval |= (BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] << 8);
@@ -223,7 +245,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  BX_INFO(("out-of-bounds chipmem read, %04X", address));
+  BX_DEBUG(("out-of-bounds chipmem read, %04X", address));
 
   return (0xff);
 }
@@ -234,12 +256,12 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
   if ((io_len == 2) && (address & 0x1)) 
     BX_PANIC(("unaligned chipmem word write"));
 
-  if ((address >= BX_NE2K_MEMSTART) && (address <= BX_NE2K_MEMEND)) {
+  if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
     BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART] = value & 0xff;
     if (io_len == 2)
       BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
   } else
-    BX_INFO(("out-of-bounds chipmem write, %04X", address));
+    BX_DEBUG(("out-of-bounds chipmem write, %04X", address));
 }
 
 //
@@ -259,22 +281,34 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
 
   switch (offset) {
   case 0x0:  // Data register
-    // 
-    // The device must have been set up to perform DMA in
-    // the same size as is being requested (the WTS bit
-    // in the DCR), a read remote-DMA command must have
-    // been issued, and the source-address and length
-    // registers must have been initialised.
     //
-    if (io_len != (1 + BX_NE2K_THIS s.DCR.wdsize))
-      BX_PANIC(("dma read, wrong size %d", io_len));
-
-    if (BX_NE2K_THIS s.remote_bytes == 0)
-      BX_PANIC(("ne2K: dma read, byte count 0"));
+    // A read remote-DMA command must have been issued,
+    // and the source-address and length registers must  
+    // have been initialised.
+    //
+    if (io_len > BX_NE2K_THIS s.remote_bytes)
+      BX_PANIC(("ne2K: dma read underrun"));
     
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
-    BX_NE2K_THIS s.remote_dma   += io_len;
-    BX_NE2K_THIS s.remote_bytes -= io_len;
+    //
+    // The 8390 bumps the address and decreases the byte count
+    // by the selected word size after every access, not by
+    // the amount of data requested by the host (io_len).
+    //
+    BX_NE2K_THIS s.remote_dma += (BX_NE2K_THIS s.DCR.wdsize + 1);
+    // keep s.remote_bytes from underflowing
+    if (BX_NE2K_THIS s.remote_bytes > 1)
+      BX_NE2K_THIS s.remote_bytes -= (BX_NE2K_THIS s.DCR.wdsize + 1);
+    else
+      BX_NE2K_THIS s.remote_bytes = 0;
+
+	// If all bytes have been written, signal remote-DMA complete
+	if (BX_NE2K_THIS s.remote_bytes == 0) {
+	    BX_NE2K_THIS s.ISR.rdma_done = 1;
+	    if (BX_NE2K_THIS s.IMR.rdma_inte) {
+		BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+	    }
+	}
     break;
 
   case 0xf:  // Reset register
@@ -292,23 +326,31 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
 void
 bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
-  BX_DEBUG(("asic write addr=0x%08x, value=0x%08x", (unsigned) value, (unsigned) offset));
+  BX_DEBUG(("asic write addr=0x%02x, value=0x%04x", (unsigned) offset, (unsigned) value));
   switch (offset) {
   case 0x0:  // Data register - see asic_read for a description
 
-    if (io_len != (1 + BX_NE2K_THIS s.DCR.wdsize))
-      BX_PANIC(("dma write, wrong size %d", io_len));
+    if ((io_len == 2) && (BX_NE2K_THIS s.DCR.wdsize == 0)) {
+      BX_PANIC(("dma write length 2 on byte mode operation"));
+      break;
+    }
 
     if (BX_NE2K_THIS s.remote_bytes == 0)
       BX_PANIC(("ne2K: dma write, byte count 0"));
     
     chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
     BX_NE2K_THIS s.remote_dma   += io_len;
+
     BX_NE2K_THIS s.remote_bytes -= io_len;
+    if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ)
+      BX_NE2K_THIS s.remote_bytes = 0;
 
     // If all bytes have been written, signal remote-DMA complete
     if (BX_NE2K_THIS s.remote_bytes == 0) {
       BX_NE2K_THIS s.ISR.rdma_done = 1;
+      if (BX_NE2K_THIS s.IMR.rdma_inte) {
+	  BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+      }
     }
     break;
 
@@ -331,9 +373,12 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
 {
   BX_DEBUG(("page 0 read from port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
-  if (io_len > 1)
-    BX_PANIC(("bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
-             (unsigned) io_len));
+  if (io_len > 1) {
+    BX_ERROR(("bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
+             (unsigned) io_len)); /* encountered with win98 hardware probe */
+	return 0;
+  }
+
 
   switch (offset) {
   case 0x0:  // CR
@@ -434,9 +479,13 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   BX_DEBUG(("page 0 write to port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
-  if (io_len > 1)
-    BX_PANIC(("bad length! page 0 write to port %04x, len=%u", (unsigned) offset,
-             (unsigned) io_len));
+    if (io_len != 1) {
+	BX_ERROR(("bad length! page 0 write to port %04x, len=%u",
+		  (unsigned) offset,
+            (unsigned) io_len));
+    return;
+  }
+	
   
   switch (offset) {
   case 0x0:  // CR
@@ -448,6 +497,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0x2:  // PSTOP
+	// BX_INFO(("Writing to PSTOP: %02x", value));
     BX_NE2K_THIS s.page_stop = value;
     break;
 
@@ -481,6 +531,22 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     BX_NE2K_THIS s.ISR.overwrite &= ~((value & 0x10) == 0x10);
     BX_NE2K_THIS s.ISR.cnt_oflow &= ~((value & 0x20) == 0x20);
     BX_NE2K_THIS s.ISR.rdma_done &= ~((value & 0x40) == 0x40);
+    value = ((BX_NE2K_THIS s.ISR.rdma_done << 6) |
+             (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
+             (BX_NE2K_THIS s.ISR.overwrite << 4) |
+             (BX_NE2K_THIS s.ISR.tx_err    << 3) |
+             (BX_NE2K_THIS s.ISR.rx_err    << 2) |
+             (BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
+             (BX_NE2K_THIS s.ISR.pkt_rx));
+    value &= ((BX_NE2K_THIS s.IMR.rdma_inte << 6) |
+              (BX_NE2K_THIS s.IMR.cofl_inte << 5) |
+              (BX_NE2K_THIS s.IMR.overw_inte << 4) |
+              (BX_NE2K_THIS s.IMR.txerr_inte << 3) |
+              (BX_NE2K_THIS s.IMR.rxerr_inte << 2) |
+              (BX_NE2K_THIS s.IMR.tx_inte << 1) |
+              (BX_NE2K_THIS s.IMR.rx_inte));
+    if (value == 0)
+      BX_NE2K_THIS devices->pic->lower_irq(BX_NE2K_THIS s.base_irq);
     break;
 
   case 0x8:  // RSAR0
@@ -534,8 +600,8 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 
     // Test loop mode (not supported)
     if (value & 0x06) {
-      BX_INFO(("TCR write, loop mode not supported"));
       BX_NE2K_THIS s.TCR.loop_cntl = (value & 0x6) >> 1;
+	    BX_INFO(("TCR write, loop mode %d not supported", BX_NE2K_THIS s.TCR.loop_cntl));
     } else {
       BX_NE2K_THIS s.TCR.loop_cntl = 0;
     }
@@ -545,7 +611,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
       BX_PANIC(("TCR write, inhibit-CRC not supported"));
 
     // Auto-transmit disable very suspicious
-    if (value & 0x04)
+    if (value & 0x08)
       BX_PANIC(("TCR write, auto transmit disable not supported"));
 
     // Allow collision-offset to be set, although not used
@@ -624,6 +690,7 @@ bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0x7:  // CURR
+      BX_DEBUG(("returning current page: %02x", (BX_NE2K_THIS s.curr_page)));
     return (BX_NE2K_THIS s.curr_page);
 
   case 0x8:  // MAR0-7
@@ -880,7 +947,7 @@ bx_ne2k_c::tx_timer(void)
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
     BX_NE2K_THIS s.ISR.pkt_tx = 1;
-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
   }
   BX_NE2K_THIS s.tx_timer_active = 0;
 }
@@ -907,7 +974,7 @@ bx_ne2k_c::read(Bit32u address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_NE2K_SMF
   BX_DEBUG(("read addr %x, len %d", address, io_len));
-  Bit32u retval;
+  Bit32u retval = 0;
   int offset = address - BX_NE2K_THIS s.base_address;
 
   if (offset >= 0x10) {
@@ -1030,7 +1097,7 @@ bx_ne2k_c::mcast_index(const void *dst)
 void
 bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
 {
-  BX_DEBUG(("rx_handler with length %d", len));
+    // BX_DEBUG(("rx_handler with length %d", len));
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) arg;
   
   class_ptr->rx_frame(buf, len);
@@ -1058,9 +1125,11 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
   BX_DEBUG(("rx_frame with length %d", io_len));
 
-  if ((BX_NE2K_THIS s.CR.start == 0) ||
+
+  if ((BX_NE2K_THIS s.CR.stop != 0) ||
       (BX_NE2K_THIS s.page_start == 0) ||
       (BX_NE2K_THIS s.TCR.loop_cntl != 0)) {
+
     return;
   }
 
@@ -1084,24 +1153,35 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   }
 
   if ((io_len < 60) && !BX_NE2K_THIS s.RCR.runts_ok) {
+    BX_DEBUG(("rejected small packet, length %d", io_len));
     return;
   }
 
   // Do address filtering if not in promiscuous mode
-  if (!BX_NE2K_THIS s.RCR.promisc) {
+  if (! BX_NE2K_THIS s.RCR.promisc) {
     if (!memcmp(buf, bcast_addr, 6)) {
       if (!BX_NE2K_THIS s.RCR.broadcast) {
 	return;
       }
     } else if (pktbuf[0] & 0x01) {
+	if (! BX_NE2K_THIS s.RCR.multicast) {
+	    return;
+	}
       idx = mcast_index(buf);
       if (!(BX_NE2K_THIS s.mchash[idx >> 3] & (1 << (idx & 0x7)))) {
 	return;
       }
-    } else if (memcmp(buf, BX_NE2K_THIS s.physaddr, 6)) {
+    } else if (0 != memcmp(buf, BX_NE2K_THIS s.physaddr, 6)) {
       return;
     }
+  } else {
+      BX_DEBUG(("rx_frame promiscuous receive"));
   }
+
+//    BX_INFO(("rx_frame %d to %x:%x:%x:%x:%x:%x from %x:%x:%x:%x:%x:%x",
+//  	   io_len,
+//  	   pktbuf[0], pktbuf[1], pktbuf[2], pktbuf[3], pktbuf[4], pktbuf[5],
+//  	   pktbuf[6], pktbuf[7], pktbuf[8], pktbuf[9], pktbuf[10], pktbuf[11]));
 
   nextpage = BX_NE2K_THIS s.curr_page + pages;
   if (nextpage >= BX_NE2K_THIS s.page_stop) {
@@ -1116,8 +1196,8 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
     pkthdr[0] |= 0x20;  // rx status += multicast packet
   }
   pkthdr[1] = nextpage;	// ptr to next packet
-  pkthdr[2] = (io_len + 8) & 0xff;	// length-low
-  pkthdr[3] = (io_len + 8) >> 8;	// length-hi
+  pkthdr[2] = (io_len + 4) & 0xff;	// length-low
+  pkthdr[3] = (io_len + 4) >> 8;	// length-hi
 
   // copy into buffer, update curpage, and signal interrupt if config'd
   startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.curr_page * 256 -
@@ -1147,7 +1227,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   BX_NE2K_THIS s.ISR.pkt_rx = 1;
 
   if (BX_NE2K_THIS s.IMR.rx_inte) {
-    BX_NE2K_THIS devices->pic->trigger_irq(BX_NE2K_THIS s.base_irq);
+    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
   }
 
 }
@@ -1155,9 +1235,9 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.14.2.1 2002-03-17 08:57:02 bdenney Exp $"));
   BX_NE2K_THIS devices = d;
 
-  BX_DEBUG(("Init."));
 
   if (bx_options.ne2k.Ovalid->get ()) {
     // Bring the register state into power-up state
@@ -1187,9 +1267,9 @@ bx_ne2k_c::init(bx_devices_c *d)
 						      addr, 
 						      "ne2000 NIC");
     }
-	BX_INFO(("irq %d, ioport 0x%x, mac %02x:%02x:%02x:%02x:%02x:%02x",
-				BX_NE2K_THIS s.base_irq,
+	BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
 				BX_NE2K_THIS s.base_address,
+				BX_NE2K_THIS s.base_irq,
 				BX_NE2K_THIS s.physaddr[0],
 				BX_NE2K_THIS s.physaddr[1],
 				BX_NE2K_THIS s.physaddr[2],
@@ -1223,6 +1303,8 @@ bx_ne2k_c::init(bx_devices_c *d)
 						this);
     
     if (BX_NE2K_THIS ethdev == NULL) {
+      BX_PANIC(("could not find eth module %s"));
+      // if they continue, use null.
       BX_INFO(("could not find eth module %s - using null instead",
 		bx_options.ne2k.Oethmod->getptr ()));
       
@@ -1235,3 +1317,252 @@ bx_ne2k_c::init(bx_devices_c *d)
     }
   }
 }
+
+#if BX_DEBUGGER
+
+/*
+ * this implements the info ne2k commands in the debugger.
+ * info ne2k - shows all registers
+ * info ne2k page N - shows all registers in a page
+ * info ne2k page N reg M - shows just one register
+ */
+
+#define SHOW_FIELD(reg,field) do { \
+  if (n>0 && !(n%5)) fprintf (fp, "\n  "); \
+  fprintf(fp, "%s=%d ", #field, BX_NE2K_THIS s.reg.field); \
+  n++; \
+} while (0);
+#define BX_HIGH_BYTE(x) ((0xff00 & (x)) >> 8)
+#define BX_LOW_BYTE(x) (0x00ff & (x))
+#define BX_DUPLICATE(n) if (brief && num!=n) break;
+
+void
+bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
+{
+  int i;
+  int n = 0;
+  if (page < 0) {
+    for (page=0; page<=2; page++)
+      BX_NE2K_THIS print_info (fp, page, reg, 1);
+    // tell them how to use this command
+    fprintf (fp, "\nHow to use the info ne2k command:\n");
+    fprintf (fp, "info ne2k - show all registers\n");
+    fprintf (fp, "info ne2k page N - show registers in page N\n");
+    fprintf (fp, "info ne2k page N reg M - show just one register\n");
+    return;
+  }
+  if (page > 2) {
+    fprintf (fp, "NE2K has only pages 0, 1, and 2.  Page %d is out of range.\n", page);
+    return;
+  }
+  if (reg < 0) {
+    fprintf (fp, "NE2K registers, page %d\n", page);
+    fprintf (fp, "----------------------\n");
+    for (reg=0; reg<=15; reg++)
+      BX_NE2K_THIS print_info (fp, page, reg, 1);
+    fprintf (fp, "----------------------\n");
+    return;
+  }
+  if (reg > 15) {
+    fprintf (fp, "NE2K has only registers 0-15 (0x0-0xf).  Register %d is out of range.\n", reg);
+    return;
+  }
+  if (!brief) {
+    fprintf (fp, "NE2K Info - page %d, register 0x%02x\n", page, reg);
+    fprintf (fp, "----------------------------------\n");
+  }
+  int num = page*0x100 + reg;
+  switch (num) {
+    case 0x0000:
+    case 0x0100:
+    case 0x0200:
+      fprintf (fp, "CR (Command register):\n  ");
+      SHOW_FIELD (CR, stop);
+      SHOW_FIELD (CR, start);
+      SHOW_FIELD (CR, tx_packet);
+      SHOW_FIELD (CR, rdma_cmd);
+      SHOW_FIELD (CR, pgsel);
+      fprintf (fp, "\n");
+      break;
+    case 0x0003:
+      fprintf (fp, "BNRY = Boundary Pointer = 0x%02x\n", BX_NE2K_THIS s.bound_ptr);
+      break;
+    case 0x0004:
+      fprintf (fp, "TSR (Transmit Status Register), read-only:\n  ");
+      SHOW_FIELD (TSR, tx_ok);
+      SHOW_FIELD (TSR, reserved);
+      SHOW_FIELD (TSR, collided);
+      SHOW_FIELD (TSR, aborted);
+      SHOW_FIELD (TSR, no_carrier);
+      SHOW_FIELD (TSR, fifo_ur);
+      SHOW_FIELD (TSR, cd_hbeat);
+      SHOW_FIELD (TSR, ow_coll);
+      fprintf (fp, "\n");
+      // fall through into TPSR, no break line.
+    case 0x0204:
+      fprintf (fp, "TPSR = Transmit Page Start = 0x%02x\n", BX_NE2K_THIS s.tx_page_start);
+      break;
+    case 0x0005:
+    case 0x0006:  BX_DUPLICATE(0x0005);
+      fprintf (fp, "NCR = Number of Collisions Register (read-only) = 0x%02x\n", BX_NE2K_THIS s.num_coll);
+      fprintf (fp, "TBCR1,TBCR0 = Transmit Byte Count = %02x %02x\n", 
+	  BX_HIGH_BYTE (BX_NE2K_THIS s.tx_bytes),
+	  BX_LOW_BYTE (BX_NE2K_THIS s.tx_bytes));
+      fprintf (fp, "FIFO = %02x\n", BX_NE2K_THIS s.fifo);
+      break;
+    case 0x0007:
+      fprintf (fp, "ISR (Interrupt Status Register):\n  ");
+      SHOW_FIELD (ISR, pkt_rx);
+      SHOW_FIELD (ISR, pkt_tx);
+      SHOW_FIELD (ISR, rx_err);
+      SHOW_FIELD (ISR, tx_err);
+      SHOW_FIELD (ISR, overwrite);
+      SHOW_FIELD (ISR, cnt_oflow);
+      SHOW_FIELD (ISR, rdma_done);
+      SHOW_FIELD (ISR, reset);
+      fprintf (fp, "\n");
+      break;
+    case 0x0008:
+    case 0x0009:  BX_DUPLICATE(0x0008);
+      fprintf (fp, "CRDA1,0 = Current remote DMA address = %02x %02x\n", 
+	  BX_HIGH_BYTE (BX_NE2K_THIS s.remote_dma),
+	  BX_LOW_BYTE (BX_NE2K_THIS s.remote_dma));
+      fprintf (fp, "RSAR1,0 = Remote start address = %02x %02x\n", 
+	  BX_HIGH_BYTE(s.remote_start),
+	  BX_LOW_BYTE(s.remote_start));
+      break;
+    case 0x000a:
+    case 0x000b:  BX_DUPLICATE(0x000a);
+      fprintf (fp, "RCBR1,0 = Remote byte count = %02x\n", BX_NE2K_THIS s.remote_bytes);
+      break;
+    case 0x000c:
+      fprintf (fp, "RSR (Receive Status Register), read-only:\n  ");
+      SHOW_FIELD (RSR, rx_ok);
+      SHOW_FIELD (RSR, bad_crc);
+      SHOW_FIELD (RSR, bad_falign);
+      SHOW_FIELD (RSR, fifo_or);
+      SHOW_FIELD (RSR, rx_missed);
+      SHOW_FIELD (RSR, rx_mbit);
+      SHOW_FIELD (RSR, rx_disabled);
+      SHOW_FIELD (RSR, deferred);
+      fprintf (fp, "\n");
+      // fall through into RCR
+    case 0x020c:
+      fprintf (fp, "RCR (Receive Configuration Register):\n  ");
+      SHOW_FIELD (RCR, errors_ok);
+      SHOW_FIELD (RCR, runts_ok);
+      SHOW_FIELD (RCR, broadcast);
+      SHOW_FIELD (RCR, multicast);
+      SHOW_FIELD (RCR, promisc);
+      SHOW_FIELD (RCR, monitor);
+      SHOW_FIELD (RCR, reserved);
+      fprintf (fp, "\n");
+      break;
+    case 0x000d:
+      fprintf (fp, "CNTR0 = Tally Counter 0 (Frame alignment errors) = %02x\n",
+	  BX_NE2K_THIS s.tallycnt_0);
+      // fall through into TCR
+    case 0x020d:
+      fprintf (fp, "TCR (Transmit Configuration Register):\n  ");
+      SHOW_FIELD (TCR, crc_disable);
+      SHOW_FIELD (TCR, loop_cntl);
+      SHOW_FIELD (TCR, ext_stoptx);
+      SHOW_FIELD (TCR, coll_prio);
+      SHOW_FIELD (TCR, reserved);
+      fprintf (fp, "\n");
+      break;
+    case 0x000e:
+      fprintf (fp, "CNTR1 = Tally Counter 1 (CRC Errors) = %02x\n",
+	  BX_NE2K_THIS s.tallycnt_1);
+      // fall through into DCR
+    case 0x020e:
+      fprintf (fp, "DCR (Data Configuration Register):\n  ");
+      SHOW_FIELD (DCR, wdsize);
+      SHOW_FIELD (DCR, endian);
+      SHOW_FIELD (DCR, longaddr);
+      SHOW_FIELD (DCR, loop);
+      SHOW_FIELD (DCR, auto_rx);
+      SHOW_FIELD (DCR, fifo_size);
+      fprintf (fp, "\n");
+      break;
+    case 0x000f:
+      fprintf (fp, "CNTR2 = Tally Counter 2 (Missed Packet Errors) = %02x\n",
+	  BX_NE2K_THIS s.tallycnt_2);
+      // fall through into IMR
+    case 0x020f:
+      fprintf (fp, "IMR (Interrupt Mask Register)\n  ");
+      SHOW_FIELD (IMR, rx_inte);
+      SHOW_FIELD (IMR, tx_inte);
+      SHOW_FIELD (IMR, rxerr_inte);
+      SHOW_FIELD (IMR, txerr_inte);
+      SHOW_FIELD (IMR, overw_inte);
+      SHOW_FIELD (IMR, cofl_inte);
+      SHOW_FIELD (IMR, rdma_inte);
+      SHOW_FIELD (IMR, reserved);
+      fprintf (fp, "\n");
+      break;
+    case 0x0101:
+    case 0x0102:  BX_DUPLICATE(0x0101);
+    case 0x0103:  BX_DUPLICATE(0x0101);
+    case 0x0104:  BX_DUPLICATE(0x0101);
+    case 0x0105:  BX_DUPLICATE(0x0101);
+    case 0x0106:  BX_DUPLICATE(0x0101);
+      fprintf (fp, "MAC address registers are located at page 1, registers 1-6.\n");
+      fprintf (fp, "The MAC address is ");
+      for (i=0; i<=5; i++) 
+	fprintf (fp, "%02x%c", BX_NE2K_THIS s.physaddr[i], i<5?':' : '\n');
+      break;
+    case 0x0107:
+      fprintf (fp, "Current page is 0x%02x\n", BX_NE2K_THIS s.curr_page);
+      break;
+    case 0x0108:
+    case 0x0109:  BX_DUPLICATE(0x0108);
+    case 0x010A:  BX_DUPLICATE(0x0108);
+    case 0x010B:  BX_DUPLICATE(0x0108);
+    case 0x010C:  BX_DUPLICATE(0x0108);
+    case 0x010D:  BX_DUPLICATE(0x0108);
+    case 0x010E:  BX_DUPLICATE(0x0108);
+    case 0x010F:  BX_DUPLICATE(0x0108);
+      fprintf (fp, "MAR0-7 (Multicast address registers 0-7) are set to:\n");
+      for (i=0; i<8; i++) fprintf (fp, "%02x ", BX_NE2K_THIS s.mchash[i]);
+      fprintf (fp, "\nMAR0 is listed first.\n");
+      break;
+    case 0x0001:
+    case 0x0002:  BX_DUPLICATE(0x0001);
+    case 0x0201:  BX_DUPLICATE(0x0001);
+    case 0x0202:  BX_DUPLICATE(0x0001);
+      fprintf (fp, "PSTART = Page start register = %02x\n", BX_NE2K_THIS s.page_start);
+      fprintf (fp, "PSTOP = Page stop register = %02x\n", BX_NE2K_THIS s.page_stop);
+      fprintf (fp, "Local DMA address = %02x %02x\n", 
+	  BX_HIGH_BYTE(BX_NE2K_THIS s.local_dma),
+	  BX_LOW_BYTE(BX_NE2K_THIS s.local_dma));
+      break;
+    case 0x0203:
+      fprintf (fp, "Remote Next Packet Pointer = %02x\n", BX_NE2K_THIS s.rempkt_ptr);
+      break;
+    case 0x0205:
+      fprintf (fp, "Local Next Packet Pointer = %02x\n", BX_NE2K_THIS s.localpkt_ptr);
+      break;
+    case 0x0206:
+    case 0x0207:  BX_DUPLICATE(0x0206);
+      fprintf (fp, "Address Counter= %02x %02x\n", 
+	 BX_HIGH_BYTE(BX_NE2K_THIS s.address_cnt),
+	 BX_LOW_BYTE(BX_NE2K_THIS s.address_cnt));
+      break;
+    case 0x0208:
+    case 0x0209:  BX_DUPLICATE(0x0208);
+    case 0x020A:  BX_DUPLICATE(0x0208);
+    case 0x020B:  BX_DUPLICATE(0x0208);
+      if (!brief) fprintf (fp, "Reserved\n");
+    case 0xffff:
+      fprintf (fp, "IMR (Interrupt Mask Register):\n  ");
+      fprintf (fp, "\n");
+      break;
+    default:
+      fprintf (fp, "NE2K info: sorry, page %d register %d cannot be displayed.\n", page, reg);
+  }
+  if (!brief)
+    fprintf (fp, "\n");
+}
+
+#endif

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: eth_fbsd.cc,v 1.12.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -54,9 +58,10 @@ extern "C" {
 #include <sys/socket.h>
 #include <net/if.h>
 #include <net/bpf.h>
+#include <errno.h>
 };
 
-#define BX_BPF_POLL  1000    // Poll for a frame every 1000 usecs
+#define BX_BPF_POLL  1000    // Poll for a frame every 250 usecs
 
 #define BX_BPF_BUFSIZ 2048   // enough for an ether frame + bpf hdr
 
@@ -65,14 +70,17 @@ extern "C" {
 // template filter for a unicast mac address and all 
 // multicast/broadcast frames
 static const struct bpf_insn macfilter[] = {
-  BPF_STMT(BPF_LD|BPF_W|BPF_ABS, 2),
-  BPF_JUMP(BPF_JMP|BPF_JEQ|BPF_K, 0xaaaaaaaa, 0, 2),
-  BPF_STMT(BPF_LD|BPF_H|BPF_ABS, 0),
-  BPF_JUMP(BPF_JMP|BPF_JEQ|BPF_K, 0x0000aaaa, 2, 0),
-  BPF_STMT(BPF_LD|BPF_B|BPF_ABS, 0),
-  BPF_JUMP(BPF_JMP|BPF_JSET|BPF_K, 0x01, 0, 1),
-  BPF_STMT(BPF_RET, 1514),
-  BPF_STMT(BPF_RET, 0),
+    BPF_STMT(BPF_LD|BPF_W|BPF_ABS, 2),                  // A <- P[2:4]
+    BPF_JUMP(BPF_JMP|BPF_JEQ|BPF_K, 0xaaaaaaaa, 0, 2),  // if A != 0xaaaaaaa GOTO LABEL-1
+    BPF_STMT(BPF_LD|BPF_H|BPF_ABS, 0),                  // A <- P[0:2]
+    BPF_JUMP(BPF_JMP|BPF_JEQ|BPF_K, 0x0000aaaa, 2, 0),  // if A == 0xaaaa GOTO ACCEPT
+    // LABEL-1
+    BPF_STMT(BPF_LD|BPF_B|BPF_ABS, 0),                  // A <- P[0:1]
+    BPF_JUMP(BPF_JMP|BPF_JSET|BPF_K, 0x01, 0, 1),       // if !(A & 1) GOTO LABEL-REJECT
+    // LABEL-ACCEPT
+    BPF_STMT(BPF_RET, 1514),                            // Accept packet
+    // LABEL-REJECT
+    BPF_STMT(BPF_RET, 0),                               // Reject packet
 };
 
 // template filter for all frames
@@ -141,27 +149,30 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   struct bpf_program bp;
   u_int v;
 
+  put("BPF");
   memcpy(fbsd_macaddr, macaddr, 6);
 
   do {
     (void)sprintf(device, "/dev/bpf%d", n++);
     this->bpf_fd = open(device, O_RDWR);
-  } while (this->bpf_fd < 0);
+	BX_DEBUG(("tried %s, returned %d (%s)",device,this->bpf_fd,strerror(errno)));
+	if(errno == EACCES)
+		break;
+  } while (this->bpf_fd == -1);
   
-  if (this->bpf_fd < 0) {
-    BX_INFO(("eth_freebsd: could not open packet filter"));
+  if (this->bpf_fd == -1) {
+    BX_PANIC(("eth_freebsd: could not open packet filter: %s", strerror(errno)));
     return;
   }
 
   if (ioctl(this->bpf_fd, BIOCVERSION, (caddr_t)&bv) < 0) {
-    BX_INFO(("eth_freebsd: could not retrieve bpf version"));
+    BX_PANIC(("eth_freebsd: could not retrieve bpf version"));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
   }
-  if (bv.bv_major != BPF_MAJOR_VERSION ||
-      bv.bv_minor < BPF_MINOR_VERSION) {
-    BX_INFO(("eth_freebsd: bpf version mismatch"));
+  if (bv.bv_major != BPF_MAJOR_VERSION || bv.bv_minor < BPF_MINOR_VERSION) {
+    BX_PANIC(("eth_freebsd: bpf version mismatch between compilation and runtime"));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -170,7 +181,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // Set buffer size
   v = BX_BPF_BUFSIZ;
   if (ioctl(this->bpf_fd, BIOCSBLEN, (caddr_t)&v) < 0) {
-    BX_INFO(("eth_freebsd: could not set buffer size"));
+    BX_PANIC(("eth_freebsd: could not set buffer size: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -178,20 +189,20 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
 
   (void)strncpy(ifr.ifr_name, netif, sizeof(ifr.ifr_name));
   if (ioctl(this->bpf_fd, BIOCSETIF, (caddr_t)&ifr) < 0) {
-    BX_INFO(("eth_freebsd: could not enable interface %s", netif));
+    BX_PANIC(("eth_freebsd: could not enable interface '%s': %s", netif, strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd == -1;
   }
   
   // Verify that the device is an ethernet.
   if (ioctl(this->bpf_fd, BIOCGDLT, (caddr_t)&v) < 0) {
-    BX_INFO(("eth_freebsd: could not retrieve datalink type"));
+    BX_PANIC(("eth_freebsd: could not retrieve datalink type: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
   }
   if (v != DLT_EN10MB) {
-    BX_INFO(("eth_freebsd: incorrect datalink type %d", v));
+    BX_PANIC(("eth_freebsd: incorrect datalink type %d, expected 10mb ethernet", v));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -202,7 +213,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // but this will do for now.
   //
   if (ioctl(this->bpf_fd, BIOCPROMISC, NULL) < 0) {
-    BX_INFO(("eth_freebsd: could not enable promisc mode"));
+    BX_PANIC(("eth_freebsd: could not enable promisc mode: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -211,7 +222,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // Set up non-blocking i/o
   v = 1;
   if (ioctl(this->bpf_fd, FIONBIO, &v) < 0) {
-    BX_INFO(("eth_freebsd: could not enable non-blocking i/o"));
+    BX_PANIC(("eth_freebsd: could not enable non-blocking i/o: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -221,18 +232,21 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
 #ifdef notdef
   memcpy(&this->filter, promiscfilter, sizeof(promiscfilter));
   bp.bf_len   = 1;
-#endif
+#else
   memcpy(&this->filter, macfilter, sizeof(macfilter));
-  this->filter[1].k = (macaddr[2] & 0xff) << 24 |
+  this->filter[1].k =
+      (macaddr[2] & 0xff) << 24 |
     (macaddr[3] & 0xff) << 16 |
     (macaddr[4] & 0xff) << 8  |
     (macaddr[5] & 0xff);
-  this->filter[3].k = (macaddr[0] & 0xff) << 8 |
+  this->filter[3].k =
+      (macaddr[0] & 0xff) << 8 |
     (macaddr[1] & 0xff);
   bp.bf_len   = 8;
+#endif
   bp.bf_insns = &this->filter[0];
   if (ioctl(this->bpf_fd, BIOCSETF, &bp) < 0) {
-    BX_INFO(("eth_freebsd: could not set filter"));
+    BX_PANIC(("eth_freebsd: could not set filter: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -301,45 +315,64 @@ bx_fbsd_pktmover_c::rx_timer_handler(void *this_ptr)
   class_ptr->rx_timer();
 }
 
+
 void
 bx_fbsd_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-  Bit8u rxbuf[BX_BPF_BUFSIZ]; 
+    unsigned char rxbuf[BX_BPF_BUFSIZ]; 
   struct bpf_hdr *bhdr;
+    struct bpf_stat bstat;
+    static struct bpf_stat previous_bstat;
+    int counter = 10;
+#define phdr ((unsigned char*)bhdr)
 
+    bhdr = (struct bpf_hdr *) rxbuf;
   nbytes = read(this->bpf_fd, rxbuf, sizeof(rxbuf));
 
-  if (nbytes > 0) {    
-    bhdr = (struct bpf_hdr *) rxbuf;     
+    while (phdr < (rxbuf + nbytes)) {
+	if (ioctl(this->bpf_fd, BIOCGSTATS, &bstat) < 0) {
+	    BX_PANIC(("eth_freebsd: could not stat filter: %s", strerror(errno)));
+	}
+	if (bstat.bs_drop > previous_bstat.bs_drop) {
+	    BX_INFO (("eth_freebsd: %d packets dropped by the kernel.",
+		      bstat.bs_drop - previous_bstat.bs_drop));
+	}
+	previous_bstat = bstat;
+	if (bhdr->bh_caplen < 20 || bhdr->bh_caplen > 1514) {
+	    BX_ERROR(("eth_freebsd: received too weird packet length: %d", bhdr->bh_caplen));
+	}
 
     // filter out packets sourced from this node
-    if (memcmp(rxbuf + bhdr->bh_hdrlen + 6, this->fbsd_macaddr, 6)) {
-      (*rxh)(rxarg, rxbuf + bhdr->bh_hdrlen, bhdr->bh_caplen);
+	if (memcmp(bhdr + bhdr->bh_hdrlen + 6, this->fbsd_macaddr, 6)) {
+	    (*rxh)(rxarg, phdr + bhdr->bh_hdrlen, bhdr->bh_caplen);
     }
+	
 #if BX_ETH_FBSD_LOGGING
   /// hey wait there is no receive data with a NULL ethernet, is there....
-  if (nbytes > 0) {
     BX_DEBUG (("receive packet length %u", nbytes));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
-    int n = fwrite (rxbuf, nbytes, 1, ne2klog);
-    if (n != 1) BX_ERROR (("fwrite to ne2klog failed", nbytes));
+	if (1 != fwrite (bhdr, bhdr->bh_caplen, 1, ne2klog)) {
+	    BX_PANIC (("fwrite to ne2klog failed: %s", strerror(errno)));
+	}
     // dump packet in hex into an ascii log file
-    fprintf (this->ne2klog_txt, "NE2K RX packet, length %u\n", nbytes);
+	fprintf (this->ne2klog_txt, "NE2K RX packet, length %u\n", bhdr->bh_caplen);
     Bit8u *charrxbuf = (Bit8u *)rxbuf;
-    for (n=0; n<nbytes; n++) {
+	int n;
+	for (n=0; n<bhdr->bh_caplen; n++) {
       if (((n % 16) == 0) && n>0)
 	fprintf (this->ne2klog_txt, "\n");
-      fprintf (this->ne2klog_txt, "%02x ", rxbuf[n]);
+	    fprintf (this->ne2klog_txt, "%02x ", phdr[n]);
     }
     fprintf (this->ne2klog_txt, "\n--\n");
     // flush log so that we see the packets as they arrive w/o buffering
     fflush (this->ne2klog);
     fflush (this->ne2klog_txt);
-  }
 #endif
 
+	// Advance bhdr and phdr pointers to next packet
+	bhdr = (struct bpf_hdr*) ((char*) bhdr + BPF_WORDALIGN(bhdr->bh_hdrlen + bhdr->bh_caplen));
   }  
 }
 #endif

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: logio.cc,v 1.3.2.2 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -50,7 +54,7 @@ iofunctions::init(void) {
 	n_logfn = 0;
 	init_log(stderr);
 	log = new logfunc_t(this);
-	LOG_THIS setprefix("IO");
+	LOG_THIS put("IO");
 	LOG_THIS settype(IOLOG);
 	BX_DEBUG(("Init(log file: '%s').",logfn));
 }
@@ -70,7 +74,7 @@ iofunctions::set_log_action (int loglevel, int action)
 }
 
 void
-iofunctions::init_log(char *fn)
+iofunctions::init_log(const char *fn)
 {
 	assert (magic==MAGIC_LOGNUM);
 	// use newfd/newfn so that we can log the message to the OLD log
@@ -83,9 +87,7 @@ iofunctions::init_log(char *fn)
 			newfn = strdup(fn);
 			BX_DEBUG(("Opened log file '%s'.", fn ));
 		} else {
-			BX_DEBUG(("Log file '%s' not there?", fn));
-			newfd = NULL;
-			logfn = "(none)";
+		  	BX_PANIC(("Couldn't open log file: %s", fn));
 		}
 	}
 	logfd = newfd;
@@ -126,14 +128,24 @@ iofunctions::init_log(int fd)
 //    fmt and ap retained for direct printinf from iofunctions only!
 
 void
-iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
+iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 {
+	char c=' ';
 	assert (magic==MAGIC_LOGNUM);
 	assert (this != NULL);
 	assert (logfd != NULL);
 
 	if( showtick )
-		fprintf(logfd, "%011lld ", bx_pc_system.time_ticks());
+		fprintf(logfd, "%011lld", bx_pc_system.time_ticks());
+
+	switch(l) {
+		case LOGLEV_INFO: c='i'; break;
+		case LOGLEV_PANIC: c='p'; break;
+		case LOGLEV_ERROR: c='e'; break;
+		case LOGLEV_DEBUG: c='d'; break;
+		default: break;
+	}
+	fprintf(logfd, "%c",c);
 
 	if(prefix != NULL)
 		fprintf(logfd, "%s ", prefix);
@@ -154,7 +166,7 @@ iofunctions::iofunctions(FILE *fs)
 	init_log(fs);
 }
 
-iofunctions::iofunctions(char *fn)
+iofunctions::iofunctions(const char *fn)
 {
 	init();
 	init_log(fn);
@@ -183,9 +195,10 @@ iofunctions::~iofunctions(void)
 
 logfunctions::logfunctions(void)
 {
-	setprefix(" ");
+	prefix = NULL;
+	put(" ");
 	settype(GENLOG);
-	if(io == NULL && Allocio == 0) {
+	if (io == NULL && Allocio == 0) {
 		Allocio = 1;
 		io = new iofunc_t(stderr);
 	}
@@ -198,7 +211,8 @@ logfunctions::logfunctions(void)
 
 logfunctions::logfunctions(iofunc_t *iofunc)
 {
-	setprefix(" ");
+	prefix = NULL;
+	put(" ");
 	settype(GENLOG);
 	setio(iofunc);
 	// BUG: unfortunately this can be called before the bochsrc is read,
@@ -209,6 +223,11 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 
 logfunctions::~logfunctions(void)
 {
+    if ( this->prefix )
+    {
+        free(this->prefix);
+        this->prefix = NULL;
+    }
 }
 
 void
@@ -221,11 +240,21 @@ logfunctions::setio(iofunc_t *i)
 }
 
 void
-logfunctions::setprefix(char *p)
+logfunctions::put(char *p)
 {
 	char *tmpbuf;
 	tmpbuf=strdup("[     ]");// if we ever have more than 32 chars,
 						   //  we need to rethink this
+
+	if ( tmpbuf == NULL)
+	{
+	    return ;                        /* allocation not successful */
+	}
+	if ( this->prefix != NULL )
+	{
+	    free(this->prefix);             /* free previously allocated memory */
+	    this->prefix = NULL;
+	}
 	int len=strlen(p);
 	for(int i=1;i<len+1;i++) {
 		tmpbuf[i]=p[i-1];
@@ -249,7 +278,7 @@ logfunctions::settype(int t)
 }
 
 void
-logfunctions::info(char *fmt, ...)
+logfunctions::info(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -269,7 +298,7 @@ logfunctions::info(char *fmt, ...)
 }
 
 void
-logfunctions::error(char *fmt, ...)
+logfunctions::error(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -288,14 +317,16 @@ logfunctions::error(char *fmt, ...)
 }
 
 void
-logfunctions::panic(char *fmt, ...)
+logfunctions::panic(const char *fmt, ...)
 {
 	va_list ap;
 
 	assert (this != NULL);
 	assert (this->logio != NULL);
 
-	if(!onoff[LOGLEV_PANIC]) return;
+	// Special case for panics since they are so important.  Always print
+	// the panic to the log, no matter what the log action says.
+	//if(!onoff[LOGLEV_PANIC]) return;
 
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
@@ -307,7 +338,7 @@ logfunctions::panic(char *fmt, ...)
 }
 
 void
-logfunctions::ldebug(char *fmt, ...)
+logfunctions::ldebug(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -326,7 +357,7 @@ logfunctions::ldebug(char *fmt, ...)
 }
 
 void
-logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
+logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 {
   char buf1[1024], buf2[1024];
   vsprintf (buf1, fmt, ap);
@@ -342,11 +373,37 @@ logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
       break;
     case 2:   // user chose die
       fatal (prefix, fmt, ap);
+    case 3: // user chose abort
+      fprintf (stderr, "User chose to dump core...\n");
+#if BX_HAVE_ABORT
+      abort ();
+#else
+      // do something highly illegal that should kill the process.
+      // Hey, this is fun!
+      {
+      char *crashptr = (char *)0; char c = *crashptr;
+      }
+      fprintf (stderr, "Sorry, I couldn't find your abort() function.  Exiting.");
+      exit (0);
+#endif
+#if BX_DEBUGGER
+    case 4:
+      // user chose debugger.  To "drop into the debugger" we just set the
+      // interrupt_requested bit and continue execution.  Before the next
+      // instruction, it should notice the user interrupt and return to
+      // the debugger.
+      bx_guard.interrupt_requested = 1;
+      break;
+#endif
+    default:
+      // this happens if panics happen before the callback is initialized
+      // in gui/control.cc.
+      fprintf (stderr, "WARNING: LOCAL_log_msg returned unexpected value %d\n", val);
   }
 }
 
 void
-logfunctions::fatal (char *prefix, char *fmt, va_list ap)
+logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
 {
   static int fatal_reentry = 0;
   if (fatal_reentry) return;

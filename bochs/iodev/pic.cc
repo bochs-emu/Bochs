@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: pic.cc,v 1.9.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -36,7 +40,7 @@ bx_pic_c bx_pic;
 
 bx_pic_c::bx_pic_c(void)
 {
-	setprefix("PIC");
+	put("PIC");
 	settype(PICLOG);
 }
 
@@ -99,6 +103,10 @@ bx_pic_c::init(bx_devices_c *d)
   BX_PIC_THIS s.slave_pic.init.requires_4 = 0;
   BX_PIC_THIS s.slave_pic.init.byte_expected = 0;
   BX_PIC_THIS s.slave_pic.special_mask = 0;
+  for (unsigned i=0; i<8; i++) { /* all IRQ lines low */
+    BX_PIC_THIS s.master_pic.IRQ_line[i] = 0;
+    BX_PIC_THIS s.slave_pic.IRQ_line[i] = 0;
+  }
 }
 
 
@@ -213,10 +221,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    // (mch) Ignore...
 	    // BX_INFO(("pic:master: init command 1 found %02x", (unsigned) value));
         if (bx_dbg.pic) {
-          BX_INFO(("pic:master: init command 1 found"));
-          BX_INFO(("            requires 4 = %u",
+          BX_INFO(("master: init command 1 found"));
+          BX_INFO(("        requires 4 = %u",
             (unsigned) (value & 0x01) ));
-          BX_INFO(("            cascade mode: [0=cascade,1=single] %u",
+          BX_INFO(("        cascade mode: [0=cascade,1=single] %u",
             (unsigned) ((value & 0x02) >> 1)));
           }
         BX_PIC_THIS s.master_pic.init.in_init = 1;
@@ -227,7 +235,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.master_pic.irr           = 0x00; /* no IRQ's requested */
         BX_PIC_THIS s.master_pic.INT = 0; /* reprogramming clears previous INTR request */
         if ( (value & 0x02) == 1 )
-          BX_PANIC(("pic:master: init command: single mode"));
+          BX_PANIC(("master: ICW1: single mode not supported"));
+        if ( (value & 0x08) == 1 ) {
+          BX_PANIC(("master: ICW1: level sensitive mode not supported"));
+	  }
+	else {
+          BX_DEBUG(("master: ICW1: edge triggered mode selected"));
+	  }
         BX_SET_INTR(0);
         return;
         }
@@ -239,7 +253,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         poll         = (value & 0x04) >> 2;
         read_op      = (value & 0x03);
         if (poll)
-          BX_PANIC(("pic:master:OCW3: poll bit set"));
+          BX_PANIC(("master: OCW3: poll bit set"));
         if (read_op == 0x02) /* read IRR */
 	  BX_PIC_THIS s.master_pic.read_reg_select = 0;
         else if (read_op == 0x03) /* read ISR */
@@ -257,7 +271,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       /* OCW2 */
       switch (value) {
         case 0x00: // Rotate in Auto-EOI mode
-          BX_PANIC(("PIC: Rotate in Auto-EOI mode command received."));
+          BX_PANIC(("Rotate in Auto-EOI mode command received."));
 	case 0x0A: /* select read interrupt request register */
 	  BX_PIC_THIS s.master_pic.read_reg_select = 0;
 	  break;
@@ -302,7 +316,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          BX_PANIC(("PIC: write to port 20h = %02x", value));
+          BX_PANIC(("write to port 20h = %02x", value));
 	} /* switch (value) */
       break;
 
@@ -314,15 +328,15 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PIC_THIS s.master_pic.interrupt_offset = value & 0xf8;
             BX_PIC_THIS s.master_pic.init.byte_expected = 3;
 	    if (bx_dbg.pic) {
-		  BX_INFO(("pic:master: init command 2 = %02x", (unsigned) value));
-		  BX_INFO(("            offset = INT %02x",
+		  BX_INFO(("master: init command 2 = %02x", (unsigned) value));
+		  BX_INFO(("        offset = INT %02x",
 			    BX_PIC_THIS s.master_pic.interrupt_offset));
 	    }
             return;
             break;
           case 3:
 	    if (bx_dbg.pic)
-		  BX_INFO(("pic:master: init command 3 = %02x", (unsigned) value));
+		  BX_INFO(("master: init command 3 = %02x", (unsigned) value));
             if (BX_PIC_THIS s.master_pic.init.requires_4) {
               BX_PIC_THIS s.master_pic.init.byte_expected = 4;
 	      }
@@ -333,7 +347,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           case 4:
 	    if (bx_dbg.pic) {
-		  BX_INFO(("pic:master: init command 4 = %02x", (unsigned) value));
+		  BX_INFO(("master: init command 4 = %02x", (unsigned) value));
 		  if (value & 0x02) BX_INFO(("       auto EOI"));
 		  else BX_INFO(("normal EOI interrupt"));
 	    }
@@ -346,7 +360,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             return;
             break;
           default:
-            BX_PANIC(("pic:master expecting bad init command"));
+            BX_PANIC(("master expecting bad init command"));
           }
         }
 
@@ -361,9 +375,9 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0xA0:
       if (value & 0x10) { /* initialization command 1 */
         BX_DEBUG(("slave: init command 1 found"));
-        BX_DEBUG(("           requires 4 = %u",
+        BX_DEBUG(("       requires 4 = %u",
             (unsigned) (value & 0x01) ));
-        BX_DEBUG(("           cascade mode: [0=cascade,1=single] %u",
+        BX_DEBUG(("       cascade mode: [0=cascade,1=single] %u",
             (unsigned) ((value & 0x02) >> 1)));
         BX_PIC_THIS s.slave_pic.init.in_init = 1;
         BX_PIC_THIS s.slave_pic.init.requires_4 = (value & 0x01);
@@ -373,7 +387,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.slave_pic.irr           = 0x00; /* no IRQ's requested */
         BX_PIC_THIS s.slave_pic.INT = 0; /* reprogramming clears previous INTR request */
         if ( (value & 0x02) == 1 )
-          BX_PANIC(("slave: init command: single mode"));
+          BX_PANIC(("slave: ICW1: single mode not supported"));
+        if ( (value & 0x08) == 1 ) {
+          BX_PANIC(("slave: ICW1: level sensitive mode not supported"));
+	  }
+	else {
+          BX_DEBUG(("slave: ICW1: edge triggered mode selected"));
+	  }
         return;
         }
 
@@ -395,8 +415,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         else if (special_mask == 0x03) { /* set specific mask */
           BX_PIC_THIS s.slave_pic.special_mask = 1;
           service_slave_pic();
-          BX_ERROR(("slave: OCW3 not implemented (%02x)",
-            (unsigned) value));
           }
         return;
         }
@@ -431,8 +449,21 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
           service_slave_pic();
 	  break;
 
+        // IRQ lowest priority commands
+        case 0xC0: // 0 7 6 5 4 3 2 1
+        case 0xC1: // 1 0 7 6 5 4 3 2
+        case 0xC2: // 2 1 0 7 6 5 4 3
+        case 0xC3: // 3 2 1 0 7 6 5 4
+        case 0xC4: // 4 3 2 1 0 7 6 5
+        case 0xC5: // 5 4 3 2 1 0 7 6
+        case 0xC6: // 6 5 4 3 2 1 0 7
+        case 0xC7: // 7 6 5 4 3 2 1 0
+          // ignore for now
+          BX_INFO(("IRQ lowest command 0x%x", value));
+          break;
+
         default:
-          BX_PANIC(("PIC: write to port A0h = %02x", value));
+          BX_PANIC(("write to port A0h = %02x", value));
 	} /* switch (value) */
       break;
 
@@ -445,13 +476,13 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PIC_THIS s.slave_pic.init.byte_expected = 3;
 	    if (bx_dbg.pic) {
 		  BX_DEBUG(("slave: init command 2 = %02x", (unsigned) value));
-		  BX_DEBUG(("           offset = INT %02x",
+		  BX_DEBUG(("       offset = INT %02x",
 			    BX_PIC_THIS s.slave_pic.interrupt_offset));
 	    }
             return;
             break;
           case 3:
-		  BX_DEBUG(("slave: init command 3 = %02x", (unsigned) value));
+            BX_DEBUG(("slave: init command 3 = %02x", (unsigned) value));
             if (BX_PIC_THIS s.slave_pic.init.requires_4) {
               BX_PIC_THIS s.slave_pic.init.byte_expected = 4;
 	      	} else {
@@ -489,6 +520,62 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
   return;
 }
 
+// new IRQ signal handling routines
+
+  void
+bx_pic_c::lower_irq(unsigned irq_no)
+{
+#if BX_SUPPORT_APIC
+  // forward this function call to the ioapic too
+  if ((BX_PIC_THIS devices) && (BX_PIC_THIS devices->ioapic))
+    BX_PIC_THIS devices->ioapic->untrigger_irq (irq_no, -1);
+#endif
+
+  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
+    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
+    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 0;
+    BX_PIC_THIS s.master_pic.irr &= ~(1 << irq_no);
+    if ((BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr) == 0) {
+      BX_SET_INTR(0);
+      BX_PIC_THIS s.master_pic.INT = 0;
+    }
+  } else if ((irq_no > 7) && (irq_no <= 15) &&
+             (BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
+    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
+    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 0;
+    BX_PIC_THIS s.slave_pic.irr &= ~(1 << (irq_no - 8));
+    if ((BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr) == 0) {
+      BX_PIC_THIS s.slave_pic.INT = 0;
+      lower_irq(2);
+    }
+  }
+}
+
+  void
+bx_pic_c::raise_irq(unsigned irq_no)
+{
+#if BX_SUPPORT_APIC
+  // forward this function call to the ioapic too
+  BX_PIC_THIS devices->ioapic->trigger_irq (irq_no, -1);
+#endif
+
+  if ((irq_no <= 7) && (!BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
+    BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
+    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 1;
+    BX_PIC_THIS s.master_pic.irr |= (1 << irq_no);
+    service_master_pic();
+  } else if ((irq_no > 7) && (irq_no <= 15) &&
+             (!BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
+    BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
+    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 1;
+    BX_PIC_THIS s.slave_pic.irr |= (1 << (irq_no - 8));
+    service_slave_pic();
+  }
+}
+
+// old IRQ handling routines (disabled)
+
+#if 0
   void
 bx_pic_c::trigger_irq(unsigned irq_no)
 {
@@ -499,10 +586,8 @@ bx_pic_c::trigger_irq(unsigned irq_no)
 
   int irq_no_bitmask;
 
-#if BX_DEBUG
   if ( irq_no > 15 )
     BX_PANIC(("trigger_irq: irq out of range"));
-#endif
 
   if (bx_dbg.pic)
     BX_INFO(("trigger_irq(%d decimal)", (unsigned) irq_no));
@@ -529,10 +614,8 @@ bx_pic_c::untrigger_irq(unsigned irq_no)
 
   int irq_no_bitmask;
 
-#if BX_DEBUG
   if ( irq_no > 15 )
     BX_PANIC(("untrigger_irq: irq out of range"));
-#endif
 
   if (bx_dbg.pic)
     BX_INFO(("untrigger_irq(%d decimal)", (unsigned) irq_no));
@@ -550,6 +633,7 @@ bx_pic_c::untrigger_irq(unsigned irq_no)
     }
   }
 }
+#endif
 
   /* */
   void
@@ -596,8 +680,6 @@ bx_pic_c::service_master_pic(void)
         continue;
       if (unmasked_requests & (1 << irq)) {
         BX_DEBUG(("signalling IRQ(%u)", (unsigned) irq));
-        BX_PIC_THIS s.master_pic.irr &= ~(1 << irq);
-        /*??? do for slave too: BX_PIC_THIS s.master_pic.isr |=  (1 << irq);*/
         BX_PIC_THIS s.master_pic.INT = 1;
         BX_SET_INTR(1);
         BX_PIC_THIS s.master_pic.irq = irq;
@@ -619,6 +701,13 @@ bx_pic_c::service_slave_pic(void)
     return;
     }
 
+  if (BX_PIC_THIS s.slave_pic.special_mask) {
+    /* all priorities may be enabled.  check all IRR bits except ones
+     * which have corresponding ISR bits set
+     */
+    lowest_priority_irq = 8;
+    }
+  else {
   /* Find the highest priority IRQ that is enabled due to current ISR */
   isr = BX_PIC_THIS s.slave_pic.isr;
   if (isr) {
@@ -631,20 +720,24 @@ bx_pic_c::service_slave_pic(void)
     }
   else
     lowest_priority_irq = 8;
+  }
 
 
   /* now, see if there are any higher priority requests */
   if ((unmasked_requests = (BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr)) ) {
     for (irq=0; irq<lowest_priority_irq; irq++) {
+      /* for special mode, since we're looking at all IRQ's, skip if
+       * current IRQ is already in-service
+       */
+      if ( BX_PIC_THIS s.slave_pic.special_mask && ((BX_PIC_THIS s.slave_pic.isr >> irq) & 0x01) )
+        continue;
       if (unmasked_requests & (1 << irq)) {
         if (bx_dbg.pic)
           BX_DEBUG(("slave: signalling IRQ(%u)",
             (unsigned) 8 + irq));
-        BX_PIC_THIS s.slave_pic.irr &= ~(1 << irq);
         BX_PIC_THIS s.slave_pic.INT = 1;
-        BX_PIC_THIS s.master_pic.irr |= 0x04; /* request IRQ 2 on master pic */
+        raise_irq(2); /* request IRQ 2 on master pic */
         BX_PIC_THIS s.slave_pic.irq = irq;
-        service_master_pic();
         return;
         } /* if (unmasked_requests & ... */
       } /* for (irq=7 ... */
@@ -670,6 +763,7 @@ bx_pic_c::IAC(void)
     }
   else { /* IRQ2 = slave pic IRQ8..15 */
     BX_PIC_THIS s.slave_pic.INT = 0;
+    BX_PIC_THIS s.master_pic.IRQ_line[2] = 0;
     irq    = BX_PIC_THIS s.slave_pic.irq;
     vector = irq + BX_PIC_THIS s.slave_pic.interrupt_offset;
     BX_PIC_THIS s.slave_pic.isr |= (1 << BX_PIC_THIS s.slave_pic.irq);

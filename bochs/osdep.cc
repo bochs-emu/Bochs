@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: osdep.cc,v 1.4.4.2 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -184,7 +188,7 @@ int main (int argc, char **argv)
 {
   char buf[256], *endbuf;
   long l;
-  long long ll;
+  Bit64s ll;
   while (1) {
     printf ("Enter a long int: ");
     gets (buf);

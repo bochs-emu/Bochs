@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: cdrom.cc,v 1.13.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -32,6 +36,10 @@
 
 #define LOG_THIS /* no SMF tricks here, not needed */
 
+extern "C" {
+#include <errno.h>
+}
+
 #ifdef __linux__
 extern "C" {
 #include <sys/ioctl.h>
@@ -52,6 +60,11 @@ extern "C" {
 }
 #endif /* __sun */
 
+#ifdef __BEOS__
+#include "cdrom_beos.h"
+#define BX_CD_FRAMESIZE 2048
+#endif
+
 #if (defined(__OpenBSD__) || defined(__FreeBSD__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
 // all the includes, because the i386 sys/disklabel.h contains code which 
@@ -71,6 +84,23 @@ extern "C" {
 #ifdef WIN32
 #include <windows.h>
 #include <winioctl.h>
+#include "aspi-win32.h"
+#include "scsidefs.h"
+
+DWORD (*GetASPI32SupportInfo)(void);
+DWORD (*SendASPI32Command)(LPSRB);
+BOOL  (*GetASPI32Buffer)(PASPI32BUFF);
+BOOL  (*FreeASPI32Buffer)(PASPI32BUFF);
+BOOL  (*TranslateASPI32Address)(PDWORD,PDWORD);
+DWORD (*GetASPI32DLLVersion)(void);
+
+
+static BOOL bUseASPI = FALSE;
+static BOOL bHaveDev = FALSE;
+static int hid = 0;
+static int tid = 0;
+static int lun = 0;
+
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE	2048
 HANDLE hFile = NULL;
@@ -79,9 +109,87 @@ HANDLE hFile = NULL;
 
 #include <stdio.h>
 
+#ifdef WIN32
+
+int ReadCDSector(unsigned int hid, unsigned int tid, unsigned int lun, unsigned long frame, unsigned char *buf, int bufsize)
+{
+	HANDLE hEventSRB;
+	SRB_ExecSCSICmd srb;
+	DWORD dwStatus;
+
+	hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
+	
+	memset(&srb,0,sizeof(SRB_ExecSCSICmd));
+	srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
+	srb.SRB_HaId       = hid;
+	srb.SRB_Target     = tid;
+ 	srb.SRB_Lun        = lun;
+	srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
+	srb.SRB_SenseLen   = SENSE_LEN;
+	srb.SRB_PostProc   = hEventSRB;
+	srb.SRB_BufPointer = buf;
+	srb.SRB_BufLen     = bufsize;
+	srb.SRB_CDBLen     = 10;
+	srb.CDBByte[0]     = SCSI_READ10;
+	srb.CDBByte[2]     = frame>>24;
+	srb.CDBByte[3]     = frame>>16;
+	srb.CDBByte[4]     = frame>>8;
+	srb.CDBByte[5]     = frame;
+	srb.CDBByte[7]     = 0;
+	srb.CDBByte[8]     = 1; /* read 1 frames */
+
+	ResetEvent(hEventSRB);
+	dwStatus = SendASPI32Command((SRB *)&srb);
+	if(dwStatus == SS_PENDING) {
+		WaitForSingleObject(hEventSRB, 100000);
+	}
+	CloseHandle(hEventSRB);
+	return (srb.SRB_TargStat == STATUS_GOOD);
+}
+
+int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
+{
+	HANDLE hEventSRB;
+	SRB_ExecSCSICmd srb;
+	DWORD dwStatus;
+	char buf[8];
+
+	hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
+	
+	memset(&buf, 0, sizeof(buf));
+	memset(&srb,0,sizeof(SRB_ExecSCSICmd));
+	srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
+	srb.SRB_HaId       = hid;
+	srb.SRB_Target     = tid;
+ 	srb.SRB_Lun        = lun;
+	srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
+	srb.SRB_SenseLen   = SENSE_LEN;
+	srb.SRB_PostProc   = hEventSRB;
+	srb.SRB_BufPointer = (unsigned char *)buf;
+	srb.SRB_BufLen     = 8;
+	srb.SRB_CDBLen     = 10;
+	srb.CDBByte[0]     = SCSI_READCDCAP;
+	srb.CDBByte[2]     = 0;
+	srb.CDBByte[3]     = 0;
+	srb.CDBByte[4]     = 0;
+	srb.CDBByte[5]     = 0;
+	srb.CDBByte[8]     = 0;
+
+	ResetEvent(hEventSRB);
+	dwStatus = SendASPI32Command((SRB *)&srb);
+	if(dwStatus == SS_PENDING) {
+		WaitForSingleObject(hEventSRB, 100000);
+	}
+
+	CloseHandle(hEventSRB);
+	return ((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]) * ((buf[4] << 24) + (buf[5] << 16) + (buf[6] << 8) + buf[7]);
+}
+
+#endif
+
 cdrom_interface::cdrom_interface(char *dev)
 {
-  setprefix("CD");
+  put("CD");
   settype(CDLOG);
   fd = -1; // File descriptor not yet allocated
 
@@ -89,73 +197,159 @@ cdrom_interface::cdrom_interface(char *dev)
     path = NULL;
   else {
     path = strdup(dev);
-    BX_INFO(("Init, file = '%s'",dev));
   }
   using_file=0;
 }
 
+void
+cdrom_interface::init(void) {
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.13.2.1 2002-03-17 08:57:02 bdenney Exp $"));
+  BX_INFO(("file = '%s'",path));
+}
+
 cdrom_interface::~cdrom_interface(void)
 {
-  if (fd >= 0)
-    close(fd);
-  if (path)
-    free(path);
+	if (fd >= 0)
+		close(fd);
+	if (path)
+		free(path);
+	BX_DEBUG(("Exit"));
 }
 
   bool
-cdrom_interface::insert_cdrom()
+cdrom_interface::insert_cdrom(char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
   ssize_t ret;
+  struct stat stat_buf;
 
   // Load CD-ROM. Returns false if CD is not ready.
+  if (dev != NULL) path = strdup(dev);
   BX_INFO (("load cdrom with path=%s", path));
 #ifdef WIN32
     char drive[256];
+	OSVERSIONINFO osi;
     if ( (path[1] == ':') && (strlen(path) == 2) )
     {
-      // With all the backslashes it's hard to see, but to open D: drive 
-      // the name would be: \\.\d:
-      sprintf(drive, "\\\\.\\%s", path);
-      using_file = 0;
-      BX_INFO (("opening raw cd"));
-      // This trick only works for Win2k and WinNT, so warn the user of that.
-      BX_ERROR (("WARNING: reading a raw cd only works under Win2000 and WinNT at present"));
+	  osi.dwOSVersionInfoSize = sizeof(osi);
+	  GetVersionEx(&osi);
+	  if(osi.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+	    // Use direct device access under windows NT/2k
+
+        // With all the backslashes it's hard to see, but to open D: drive 
+        // the name would be: \\.\d:
+        sprintf(drive, "\\\\.\\%s", path);
+        using_file = 0;
+        BX_INFO (("Using direct access for cdrom."));
+        // This trick only works for Win2k and WinNT, so warn the user of that.
+	  } else {
+		  BX_INFO(("Using ASPI for cdrom."));
+          bUseASPI = TRUE;
+	  }
     }
     else
     {
       strcpy(drive,path);
       using_file = 1;
-      BX_INFO (("opening image file as a cd"));
+      BX_INFO (("Opening image file as a cd"));
     }
-    hFile=CreateFile((char *)&drive,  GENERIC_READ, 0 , NULL, OPEN_EXISTING, 
-FILE_FLAG_RANDOM_ACCESS, NULL);
-  if (hFile !=(void *)0xFFFFFFFF)
-         fd=1;
+	if(bUseASPI) {
+		DWORD d, cnt, max;
+		int i, j, k;
+		SRB_HAInquiry sh;
+		SRB_GDEVBlock sd;
+		HINSTANCE hASPI = LoadLibrary("WNASPI32.DLL");
+		if(hASPI) {
+            SendASPI32Command      = (DWORD(*)(LPSRB))GetProcAddress( hASPI, "SendASPI32Command" );
+			GetASPI32DLLVersion    = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32DLLVersion" );
+			GetASPI32SupportInfo   = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32SupportInfo" );
+			BX_INFO(("Using first CDROM.  Please upgrade your ASPI drivers to version 4.01 or later if you wish to specify a cdrom driver."));
+			
+			d = GetASPI32SupportInfo();
+			cnt = LOBYTE(LOWORD(d));
+			for(i = 0; i < cnt; i++) {
+				memset(&sh, 0, sizeof(sh));
+				sh.SRB_Cmd  = SC_HA_INQUIRY;
+				sh.SRB_HaId = i;
+				SendASPI32Command((LPSRB)&sh);
+				if(sh.SRB_Status != SS_COMP)
+					continue;
+
+				max = (int)sh.HA_Unique[3];
+				for(j = 0; j < max; j++) {
+					for(k = 0; k < 8; k++) {
+						memset(&sd, 0, sizeof(sd));
+						sd.SRB_Cmd    = SC_GET_DEV_TYPE;
+						sd.SRB_HaId   = i;
+						sd.SRB_Target = j;
+						sd.SRB_Lun    = k;
+						SendASPI32Command((LPSRB)&sd);
+						if(sd.SRB_Status == SS_COMP) {
+							if(sd.SRB_DeviceType == DTYPE_CDROM) {
+								hid = i;
+								tid = j;
+								lun = k;
+								bHaveDev = TRUE;
+							}
+						}
+						if(bHaveDev) break;
+					}
+					if(bHaveDev) break;
+				}
+
+			}
+		} else {
+			BX_PANIC(("Could not load ASPI drivers, so cdrom access will fail"));
+		}
+		fd=1;
+	} else {
+	  BX_INFO(("Using direct access for CDROM"));
+      hFile=CreateFile((char *)&drive,  GENERIC_READ, 0 , NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+      if (hFile !=(void *)0xFFFFFFFF)
+        fd=1;
+	}
 #else
-    fd = open(path, O_RDONLY);
+      // all platforms except win32
+      fd = open(path, O_RDONLY);
 #endif
     if (fd < 0) {
-       BX_INFO(( "::cdrom_interface: open failed on dev '%s'.", path));
+       BX_ERROR(( "open cd failed for %s: %s", path, strerror(errno)));
        return(false);
     }
 
   // I just see if I can read a sector to verify that a
   // CD is in the drive and readable.
 #ifdef WIN32
-    ReadFile(hFile, (void *) buffer, BX_CD_FRAMESIZE, (unsigned long *) &ret, NULL);
-    if (ret < 0) {
-       CloseHandle(hFile);
-       fd = -1;
-       BX_DEBUG(( "insert_cdrom: read returns error." ));
-       return(false);
+	if(bUseASPI) {
+	  return ReadCDSector(hid, tid, lun, 0, buffer, BX_CD_FRAMESIZE);
+	} else {
+      ReadFile(hFile, (void *) buffer, BX_CD_FRAMESIZE, (unsigned long *) &ret, NULL);
+      if (ret < 0) {
+         CloseHandle(hFile);
+         fd = -1;
+         BX_DEBUG(( "insert_cdrom: read returns error." ));
+         return(false);
       }
+	}
 #else
+    // do fstat to determine if it's a file or a device, then set using_file.
+    ret = fstat (fd, &stat_buf);
+    if (ret) {
+      BX_PANIC (("fstat cdrom file returned error: %s", strerror (errno)));
+    }
+    if (S_ISREG (stat_buf.st_mode)) {
+      using_file = 1;
+      BX_INFO (("Opening image file %s as a cd.", path));
+    } else {
+      using_file = 0;
+      BX_INFO (("Using direct access for cdrom."));
+    }
+
     ret = read(fd, &buffer, BX_CD_FRAMESIZE);
     if (ret < 0) {
        close(fd);
        fd = -1;
-       BX_DEBUG(( "insert_cdrom: read returns error." ));
+       BX_DEBUG(( "insert_cdrom: read returns error: %s", strerror (errno) ));
        return(false);
         }
 #endif
@@ -179,9 +373,17 @@ cdrom_interface::eject_cdrom()
 #ifdef WIN32
 if (using_file == 0)
 {
-  DWORD lpBytesReturned;
-  DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+	if(bUseASPI) {
+	} else {
+		DWORD lpBytesReturned;
+		DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+	}
 }
+#endif
+
+#if __linux__
+  if (!using_file)
+    ioctl (fd, CDROMEJECT, NULL);
 #endif
 
     close(fd);
@@ -199,13 +401,22 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
     BX_PANIC(("cdrom: read_toc: file not open."));
     }
 
+  if (using_file) {
+    BX_ERROR (("WARNING: read_toc on a file is not implemented, just returning length=1"));
+    *length = 1;
+    return true;
+  }
+  // all these implementations below are the platform-dependent code required
+  // to read the TOC from a physical cdrom.
 #ifdef WIN32
   {
 /*     #define IOCTL_CDROM_BASE                 FILE_DEVICE_CD_ROM
      #define IOCTL_CDROM_READ_TOC         CTL_CODE(IOCTL_CDROM_BASE, 0x0000, METHOD_BUFFERED, FILE_READ_ACCESS)
      unsigned long iBytesReturned;
      DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC, NULL, 0, NULL, 0, &iBytesReturned, NULL);       */
-         return true;
+    BX_ERROR (("WARNING: read_toc is not implemented, just returning length=1"));
+    *length = 1;
+    return true;
   }
 #elif __linux__ || defined(__sun)
   {
@@ -377,7 +588,27 @@ cdrom_interface::capacity()
 {
   // Return CD-ROM capacity.  I believe you want to return
   // the number of bytes of capacity the actual media has.
-#ifdef __sun
+
+#if !defined WIN32
+  // win32 has its own way of doing this
+  if (using_file) {
+    // return length of the image file
+    struct stat stat_buf;
+    int ret = fstat (fd, &stat_buf);
+    if (ret) {
+       BX_PANIC (("fstat on cdrom image returned err: %s", strerror(errno)));
+    }
+    BX_INFO (("cdrom size is %d bytes", stat_buf.st_size));
+    if ((stat_buf.st_size % 2048) != 0)  {
+      BX_ERROR (("expected cdrom image to be a multiple of 2048 bytes"));
+    }
+    return stat_buf.st_size / 2048;
+  }
+#endif
+
+#ifdef __BEOS__
+	return GetNumDeviceBlocks(fd, BX_CD_FRAMESIZE);
+#elif defined(__sun)
   {
     struct stat buf = {0};
 
@@ -389,24 +620,6 @@ cdrom_interface::capacity()
       BX_PANIC(("cdrom: capacity: stat() failed."));
   
     return(buf.st_size);
-  }
-#elif __linux__
-  {
-  // I just looked through the Linux kernel source to see
-  // what it does with the ATAPI capacity command, and reversed
-  // that process here.
-  uint32 nr_sects;
-
-  if (fd < 0) {
-    BX_PANIC(("cdrom: capacity: file not open."));
-    }
-  if (ioctl(fd, BLKGETSIZE, &nr_sects) != 0) {
-    BX_PANIC(("cdrom: ioctl(BLKGETSIZE) failed"));
-    }
-  nr_sects /= (CD_FRAMESIZE / 512);
-
-  BX_DEBUG(( "capacity: %u", nr_sects));
-  return(nr_sects);
   }
 #elif defined(__OpenBSD__)
   {
@@ -421,6 +634,57 @@ cdrom_interface::capacity()
 
   BX_DEBUG(( "capacity: %u", lp.d_secperunit ));
   return(lp.d_secperunit);
+  }
+#elif defined(__linux__)
+  {
+  // Read the TOC to get the data size, since BLKGETSIZE doesn't work on
+  // non-ATAPI drives.  This is based on Keith Jones code below.
+  // <splite@purdue.edu> 21 June 2001
+
+  int i, dtrk, dtrk_lba, num_sectors;
+  struct cdrom_tochdr td;
+  struct cdrom_tocentry te;
+
+  if (fd < 0)
+    BX_PANIC(("cdrom: capacity: file not open."));
+
+  if (ioctl(fd, CDROMREADTOCHDR, &td) < 0)
+    BX_PANIC(("cdrom: ioctl(CDROMREADTOCHDR) failed"));
+
+  num_sectors = -1;
+  dtrk_lba = -1;
+
+  for (i = td.cdth_trk0; i <= td.cdth_trk1; i++) {
+    te.cdte_track = i;
+    te.cdte_format = CDROM_LBA;
+    if (ioctl(fd, CDROMREADTOCENTRY, &te) < 0)
+      BX_PANIC(("cdrom: ioctl(CDROMREADTOCENTRY) failed"));
+
+    if (dtrk_lba != -1) {
+      num_sectors = te.cdte_addr.lba - dtrk_lba;
+      break;
+    }
+    if (te.cdte_ctrl & CDROM_DATA_TRACK) {
+      dtrk = i;
+      dtrk_lba = te.cdte_addr.lba;
+    }
+  }
+
+  if (num_sectors < 0) {
+    if (dtrk_lba != -1) {
+      te.cdte_track = CDROM_LEADOUT;
+      te.cdte_format = CDROM_LBA;
+      if (ioctl(fd, CDROMREADTOCENTRY, &te) < 0)
+        BX_PANIC(("cdrom: ioctl(CDROMREADTOCENTRY) failed"));
+      num_sectors = te.cdte_addr.lba - dtrk_lba;
+    } else
+      BX_PANIC(("cdrom: no data track found"));
+  }
+
+  BX_INFO(("cdrom: Data track %d, length %d", dtrk, num_sectors));
+
+  return(num_sectors);
+
   }
 #elif defined(__FreeBSD__)
   {
@@ -457,7 +721,7 @@ cdrom_interface::capacity()
     if (rte.data[i].control & 4) {	/* data track */
       num_sectors = ntohl(rte.data[i + 1].addr.lba)
           - ntohl(rte.data[i].addr.lba);
-      BX_ERROR(( "cdrom: Data track %d, length %d",
+      BX_INFO(( "cdrom: Data track %d, length %d",
         rte.data[i].track, num_sectors));
       break;
       }
@@ -471,13 +735,15 @@ cdrom_interface::capacity()
   }
 #elif defined WIN32
   {
-      unsigned long FileSize;
-          return (GetFileSize(hFile, &FileSize)
-  );
-
+	  if(bUseASPI) {
+		  return GetCDCapacity(hid, tid, lun);
+	  } else {
+	    unsigned long FileSize;
+		return (GetFileSize(hFile, &FileSize));
+	  }
   }
 #else
-  BX_INFO(( "capacity: your OS is not supported yet." ));
+  BX_ERROR(( "capacity: your OS is not supported yet." ));
   return(0);
 #endif
 }
@@ -491,20 +757,21 @@ cdrom_interface::read_block(uint8* buf, int lba)
   ssize_t n;
 
 #ifdef WIN32
-  pos = SetFilePointer(hFile, lba*BX_CD_FRAMESIZE, NULL, SEEK_SET);
-  if (pos == 0xffffffff) {
-    BX_PANIC(("cdrom: read_block: lseek returned error."));
-    }
+  if(bUseASPI) {
+	  ReadCDSector(hid, tid, lun, lba, buf, BX_CD_FRAMESIZE);
+	  n = BX_CD_FRAMESIZE;
+  } else {
+    pos = SetFilePointer(hFile, lba*BX_CD_FRAMESIZE, NULL, SEEK_SET);
+    if (pos == 0xffffffff) {
+      BX_PANIC(("cdrom: read_block: lseek returned error."));
+	}
+	ReadFile(hFile, (void *) buf, BX_CD_FRAMESIZE, (unsigned long *) &n, NULL);
+  }
 #else
   pos = lseek(fd, lba*BX_CD_FRAMESIZE, SEEK_SET);
   if (pos < 0) {
     BX_PANIC(("cdrom: read_block: lseek returned error."));
-    }
-#endif
-
-#ifdef WIN32
-  ReadFile(hFile, (void *) buf, BX_CD_FRAMESIZE, (unsigned long *) &n, NULL);
-#else
+  }
   n = read(fd, buf, BX_CD_FRAMESIZE);
 #endif
 

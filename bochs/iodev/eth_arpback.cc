@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: eth_arpback.cc,v 1.4.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -28,6 +32,9 @@
 // rfc0903: rarp
 
 #include "bochs.h"
+
+#ifdef ETH_ARPBACK
+
 #include "crc32.h"
 #include "eth_packetmaker.h"
 #define LOG_THIS bx_ne2k.
@@ -197,4 +204,6 @@ void bx_arpback_pktmover_c::rx_timer (void)
     (*rxh)(rxarg, buf, io_len);
   }
 }
+
+#endif
 

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: tasking.cc,v 1.5.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -176,6 +180,8 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Gather info about old TSS
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    // sanity check type: cannot have busy bit
+    BX_ASSERT ((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
     obase32 = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
     old_TSS_max   = 43;
     old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
@@ -211,14 +217,14 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     BX_PANIC(("task_switch(): TR not valid"));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
     }
-
+#if BX_SUPPORT_PAGING
   // Check that old TSS, new TSS, and all segment descriptors
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.pg) {
     //BX_RW, BX_READ, BX_WRITE
     // Old TSS
-    (void) dtranslate_linear(nbase32, 0, /*rw*/ BX_WRITE);
-    (void) dtranslate_linear(nbase32+old_TSS_max, 0, /*rw*/ BX_WRITE);
+    (void) dtranslate_linear(obase32, 0, /*rw*/ BX_WRITE);
+    (void) dtranslate_linear(obase32+old_TSS_max, 0, /*rw*/ BX_WRITE);
 
     // New TSS
     (void) dtranslate_linear(nbase32, 0, /*rw*/ 0);
@@ -227,6 +233,7 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // ??? fix RW above
     // ??? touch old/new TSS descriptors here when necessary.
     }
+#endif // BX_SUPPORT_PAGING
 
   // Need to fetch all new registers and temporarily store them.
 
@@ -337,6 +344,8 @@ if (ss_descriptor.u.segment.d_b && (tss_descriptor->type<9)) {
   //
 
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    // sanity check: tr.cache.type cannot have busy bit
+    BX_ASSERT ((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
     temp16 = IP; access_linear(obase32 + 14, 2, 0, BX_WRITE, &temp16);
     temp16 = oldEFLAGS; access_linear(obase32 + 16, 2, 0, BX_WRITE, &temp16);
     temp16 = AX; access_linear(obase32 + 18, 2, 0, BX_WRITE, &temp16);
@@ -449,6 +458,9 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
 
   BX_CPU_THIS_PTR tr.selector = *tss_selector;
   BX_CPU_THIS_PTR tr.cache    = *tss_descriptor;
+  // Reset the busy-flag, because all functions expect non-busy types in
+  // tr.cache.  From Peter Lammich <peterl@sourceforge.net>.
+  BX_CPU_THIS_PTR tr.cache.type &= ~2;
 
 
   //
@@ -462,6 +474,7 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
 
   if (tss_descriptor->type >= 9) {
     CR3_change(newCR3); // Tell paging unit about new cr3 value
+    BX_DEBUG (("task_switch changing CR3 to 0x%08x\n", newCR3));
     BX_INSTR_TLB_CNTRL(BX_INSTR_TASKSWITCH, newCR3);
     }
 

@@ -28,6 +28,7 @@
 
 
 #include "bochs.h"
+#include <math.h>
 extern "C" {
 #include "fpu_emu.h"
 #include "linux/signal.h"
@@ -127,6 +128,38 @@ access_limit = 0xff;
                 data_sel_off, entry_sel_off);
 }
 
+static double sigh_scale_factor = pow(2.0, -31.0);
+static double sigl_scale_factor = pow(2.0, -63.0);
+
+void
+BX_CPU_C::fpu_print_regs()
+{
+  Bit32u reg;
+  reg = i387.soft.cwd;
+  fprintf(stderr, "cwd            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+  reg = i387.soft.swd;
+  fprintf(stderr, "swd            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+  reg = i387.soft.twd;
+  fprintf(stderr, "twd            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+  reg = i387.soft.fip;
+  fprintf(stderr, "fip            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+  reg = i387.soft.fcs;
+  fprintf(stderr, "fcs            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+  reg = i387.soft.foo;
+  fprintf(stderr, "foo            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+  reg = i387.soft.fos;
+  fprintf(stderr, "fos            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+  // print stack too
+  for (int i=0; i<8; i++) {
+    FPU_REG *fpr = &st(i);
+    double f1 = pow(2.0, ((0x7fff&fpr->exp) - EXTENDED_Ebias));
+    if (fpr->exp & SIGN_Negative) f1 = -f1;
+    double f2 = ((double)fpr->sigh * sigh_scale_factor);
+    double f3 = ((double)fpr->sigl * sigl_scale_factor);
+    double f = f1*(f2+f3);
+    fprintf(stderr, "st%d            %.10f (raw 0x%04x%08x%08x)\n", i, f, 0xffff&fpr->exp, fpr->sigh, fpr->sigl);
+  }
+}
 
   unsigned
 fpu_get_ds(void)

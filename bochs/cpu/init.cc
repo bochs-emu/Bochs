@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: init.cc,v 1.10.2.1 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -40,12 +44,13 @@ BX_CPU_C::BX_CPU_C()
   // in case of SMF, you cannot reference any member data
   // in the constructor because the only access to it is via
   // global variables which aren't initialized quite yet.
-  setprefix("CPU");
+  put("CPU");
   settype (CPU0LOG);
 }
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
+  BX_DEBUG(( "Init $Id: init.cc,v 1.10.2.1 2002-03-17 08:57:01 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -185,7 +190,6 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sprintf (name, "CPU %p", this);
 
   BX_INSTR_INIT();
-  BX_DEBUG(( "Init."));
 }
 
 
@@ -555,7 +559,11 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR EXT = 0;
   //BX_INTR = 0;
 
+#if BX_SUPPORT_PAGING
+#if BX_USE_TLB
   TLB_init();
+#endif // BX_USE_TLB
+#endif // BX_SUPPORT_PAGING
 
   BX_CPU_THIS_PTR bytesleft = 0;
   BX_CPU_THIS_PTR fetch_ptr = NULL;

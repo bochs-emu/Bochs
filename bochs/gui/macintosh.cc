@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: macintosh.cc,v 1.7.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -324,7 +328,7 @@ void CreateWindows(void)
 void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 										 unsigned headerbar_y)
 {	
-	th->setprefix("MGUI");
+	th->put("MGUI");
 	InitToolbox();
 	
 	//SouixWin = FrontWindow();
@@ -787,7 +791,7 @@ void bx_gui_c::clear_screen(void)
 
 void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 											unsigned long cursor_x, unsigned long cursor_y,
-         unsigned nrows)
+         Bit16u cursor_state, unsigned nrows)
 {
 	int				i;
 	unsigned char		achar;

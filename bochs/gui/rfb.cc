@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: rfb.cc,v 1.10.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2000  Psyon.Org!
 //
 //    Donald Becker
@@ -48,7 +52,9 @@ typedef int SOCKET;
 
 static bool keep_alive;
 
-static unsigned short rfbPort = 5900;
+#define BX_RFB_PORT_MIN 5900
+#define BX_RFB_PORT_MAX 5949
+static unsigned short rfbPort;
 
 // Headerbar stuff
 unsigned rfbBitmapCount = 0;
@@ -214,36 +220,50 @@ void ServerThreadInit(void *indata)
 	SOCKET             sServer;
 	SOCKET             sClient;
 	struct sockaddr_in sai;
-	int       sai_size;
+	unsigned int       sai_size;
+	int port_ok = 0;
 
 #ifdef WIN32
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #endif
 	if(!InitWinsock()) {
-		BX_ERROR(( "could not initialize winsock."));
+		BX_PANIC(( "could not initialize winsock."));
 		goto end_of_thread;
 	}
 
 	sServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(sServer == -1) { 
-		BX_ERROR(( "could not create socket." ));
+		BX_PANIC(( "could not create socket." ));
 		goto end_of_thread;
 	}
-	sai.sin_addr.s_addr = INADDR_ANY;
-	sai.sin_family      = AF_INET;
-	sai.sin_port        = htons(rfbPort);
-	if(bind(sServer, (struct sockaddr *)&sai, sizeof(sai)) == -1) {
-		BX_ERROR(( "could not bind socket."));
-		goto end_of_thread;
+	for (rfbPort = BX_RFB_PORT_MIN; rfbPort <= BX_RFB_PORT_MAX; rfbPort++) {
+	  sai.sin_addr.s_addr = INADDR_ANY;
+	  sai.sin_family      = AF_INET;
+	  sai.sin_port        = htons(rfbPort);
+	  BX_INFO (("Trying port %d", rfbPort));
+	  if(bind(sServer, (struct sockaddr *)&sai, sizeof(sai)) == -1) {
+		  BX_INFO(( "Could not bind socket."));
+		  continue;
+	  }
+	  if(listen(sServer, SOMAXCONN) == -1) {
+		  BX_INFO(( "Could not listen on socket."));
+		  continue;
+	  }
+	  // success
+	  port_ok = 1;
+	  break;
 	}
-	if(listen(sServer, SOMAXCONN) == -1) {
-		BX_ERROR(( "could not listen on socket."));
-		goto end_of_thread;
+	if (!port_ok) {
+	  BX_PANIC (("RFB could not bind any port between %d and %d\n", 
+		BX_RFB_PORT_MIN,
+		BX_RFB_PORT_MAX));
+	  goto end_of_thread;
 	}
-	fprintf(stderr, "# RFB: listening for connections on port %i.\n", rfbPort);
+	BX_INFO (("listening for connections on port %i", rfbPort));
+	fprintf (stderr, "RFB: listening for connections on port %i\n", rfbPort);
 	sai_size = sizeof(sai);
 	while(keep_alive) {
-		sClient = accept(sServer, (struct sockaddr *)&sai, &sai_size);
+		sClient = accept(sServer, (struct sockaddr *)&sai, (socklen_t*)&sai_size);
 		if(sClient != -1) {
 			HandleRfbClient(sClient);
 			sGlobal = -1;
@@ -502,7 +522,7 @@ void bx_gui_c::clear_screen(void)
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
 
-void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, unsigned nrows)
+void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, Bit16u cursor_state, unsigned nrows)
 {
 	unsigned char cChar;
 	unsigned int  nchars;
@@ -1256,9 +1276,20 @@ void rfbKeyPressed(Bit32u key, int press_release)
 
 void rfbMouseMove(int x, int y, int bmask)
 {
+	static int oldx = -1;
+	static int oldy = -1;
 	int buttons = 0;
+
+	if (oldx == oldy == -1) {
+		oldx = x;
+		oldy = y;
+		return;
+	}
 	if(y > rfbHeaderbarY) {
-		bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
+		//bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
+		bx_devices.keyboard->mouse_motion(x - oldx, oldy - y, bmask);
+		oldx = x;
+		oldy = y;
 	}
 }
 

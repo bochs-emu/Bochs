@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: dbg_main.cc,v 1.18.2.2 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -350,10 +354,12 @@ process_sim2:
 #endif
 
   // parse any remaining args in the usual way
-  bx_parse_cmdline (bochs_argc, bochs_argv);
+  bx_parse_cmdline (1, bochs_argc, bochs_argv);
 
   // initialize hardware
   bx_init_hardware();   // doesn't this duplicate things?
+
+  SIM->set_init_done (1);
 
 #if BX_NUM_SIMULATORS >= 2
   bx_debugger.compare_at_sync.cpu    = 0;
@@ -398,6 +404,7 @@ process_sim2:
   BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
 #endif
 
+
   // (mch) Moved from main.cc
   bx_devices.init(BX_MEM(0));
   bx_gui.init_signal_handlers ();
@@ -406,8 +413,22 @@ process_sim2:
   // setup Ctrl-C handler
   signal(SIGINT, bx_debug_ctrlc_handler);
 
-  bx_dbg_user_input_loop();
+  // Print disassembly of the first instruction...  you wouldn't think it
+  // would have to be so hard.  First initialize guard_found, since it is used
+  // in the disassembly code to decide what instruction to print.
+  BX_CPU_THIS_PTR guard_found.cs =
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  BX_CPU_THIS_PTR guard_found.eip =
+    BX_CPU_THIS_PTR prev_eip;
+  BX_CPU_THIS_PTR guard_found.laddr =
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip;
+  BX_CPU_THIS_PTR guard_found.is_32bit_code =
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  // finally, call the usual function to print the disassembly
+  fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
+  bx_dbg_disassemble_current (-1, 0);  // all cpus, don't print time
 
+  bx_dbg_user_input_loop();
 
   bx_dbg_exit(0);
   return(0); // keep compiler happy
@@ -661,6 +682,20 @@ bx_dbg_trace_off_command(void)
 }
 
 void
+bx_dbg_trace_reg_on_command(void)
+{
+  BX_CPU(dbg_cpu)->trace_reg = 1;
+  fprintf (stderr, "Register-Tracing enabled for %s\n", BX_CPU(dbg_cpu)->name);
+}
+
+void
+bx_dbg_trace_reg_off_command(void)
+{
+  BX_CPU(dbg_cpu)->trace_reg = 0;
+  fprintf (stderr, "Register-Tracing disabled for %s\n", BX_CPU(dbg_cpu)->name);
+}
+
+void
 bx_dbg_ptime_command(void)
 {
       fprintf(stderr, "ptime: %lld\n", bx_pc_system.time_ticks());
@@ -684,8 +719,8 @@ int timebp_queue_size = 0;
 void
 bx_dbg_timebp_command(Boolean absolute, Bit64u time)
 {
-      long long diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
-      long long abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
+      Bit64u diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
+      Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
 
       if (diff < 0) {
         fprintf(stderr, "Request for time break point in the past. I can't let you do that.\n");
@@ -918,7 +953,7 @@ struct playback_entry_t
 };
 
 static playback_entry_t playback_entry;
-static long long last_playback_time = 0;
+static Bit64u last_playback_time = 0;
 static int playback_timer_index = -1;
 
 void
@@ -1184,7 +1219,7 @@ enter_playback_entry()
 	    return;
       }
 
-      long long diff = time - last_playback_time;
+      Bit64u diff = time - last_playback_time;
       last_playback_time = time;
 
       if (diff < 0) {
@@ -1426,20 +1461,21 @@ bx_dbg_watch(int read, Bit32u address)
 {
       if (read == -1) {
 	    // print watch point info
-	    for (int i = 0; i < num_read_watchpoints; i++) {
+	    int i;
+	    for (i = 0; i < num_read_watchpoints; i++) {
 		  Bit8u buf[2];
 		  if (BX_MEM(0)->dbg_fetch_mem(read_watchpoint[i], 2, buf))
 			fprintf(stderr, "read   %08x   (%04x)\n", read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
 		  else
 			fprintf(stderr, "read   %08x   (read error)\n", read_watchpoint[i]);
 	    }
-	    for (int i = 0; i < num_write_watchpoints; i++) {
-		  Bit8u buf[2];
-		  if (BX_MEM(0)->dbg_fetch_mem(write_watchpoint[i], 2, buf))
-			fprintf(stderr, "write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
-		  else
-			fprintf(stderr, "write  %08x   (read error)\n", write_watchpoint[i]);
-	    }
+		for (i = 0; i < num_write_watchpoints; i++) {
+			Bit8u buf[2];
+			if (BX_MEM(0)->dbg_fetch_mem(write_watchpoint[i], 2, buf))
+				fprintf(stderr, "write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+			else
+				fprintf(stderr, "write  %08x   (read error)\n", write_watchpoint[i]);
+		}
       } else {
 	    if (read) {
 		  if (num_read_watchpoints == MAX_READ_WATCHPOINTS) {
@@ -1500,19 +1536,28 @@ bx_dbg_continue_command(void)
 	int stop = 0;
 	int which = -1;
 	while (!stop) {
-		int quantum = 5;   // arbitrary number of cycles to run in each
-		for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+		// the quantum is an arbitrary number of cycles to run in each
+		// processor.  In SMP mode, when this limit is reached, the
+		// cpu_loop exits so that another processor can be simulated
+		// for a few cycles.  With a single processor, the quantum
+		// setting should have no effect, although a low setting does
+		// lead to poor performance because cpu_loop is returning and 
+		// getting called again, over and over.
+		int quantum = 25;
+		int cpu;
+		for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
 			BX_CPU(cpu)->guard_found.guard_found = 0;
 			BX_CPU(cpu)->guard_found.icount = 0;
 			bx_guard.icount = quantum;
 			BX_CPU(cpu)->cpu_loop (-1);
+			/// check out BX_CPU(cpu)->guard_found.icount
+			//fprintf (stderr, "dbg_cont: after cpu_loop guard_found.icount=%d\n", BX_CPU(cpu)->guard_found.icount);
 			// set stop flag if a guard found other than icount or halted
 			unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
 			stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
 			if (found & BX_DBG_GUARD_ICOUNT) {
 				// I expected this guard, don't stop
 			} else if (found!=0) {
-				BX_INFO(("found guard other than icount in %s..stopping", BX_CPU(cpu)->name));
 				stop = 1;
 				which = cpu;
 			} else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
@@ -1524,19 +1569,29 @@ bx_dbg_continue_command(void)
 			// cpus set stop, too bad.
 		}
 		// increment time tick only after all processors have had their chance.
-		BX_TICKN(quantum);
+#if BX_SMP_PROCESSORS==1
+		// all ticks are handled inside the cpu loop
+#else
+		// We must tick by the number of instructions that were
+		// ACTUALLY executed, not the number that we asked it to
+		// execute.  Even this is tricky with SMP because one might
+		// have hit a breakpoint, while others executed the whole
+		// quantum.
+	    int max_executed = 0;
+		for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
+		  if (BX_CPU(cpu)->guard_found.icount > max_executed)
+			max_executed = BX_CPU(cpu)->guard_found.icount;
+		}
+		BX_TICKN(max_executed);
+#endif /* BX_SMP_PROCESSORS>1 */
 	}
-#endif
+#endif /* BX_NUM_SIMULATORS */
 
   // (mch) hack
   bx_vga.timer_handler(&bx_vga);
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
-
-  if (BX_CPU(which)->stop_reason == STOP_TRACE
-			|| BX_CPU(which)->stop_reason == STOP_CPU_HALTED)
-	goto one_more;
 
   if (watchpoint_continue && (BX_CPU(which)->stop_reason == STOP_READ_WATCH_POINT ||
 			      BX_CPU(which)->stop_reason == STOP_WRITE_WATCH_POINT))
@@ -1569,7 +1624,11 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 			BX_CPU(cpu)->guard_found.icount = 0;
 			BX_CPU(cpu)->cpu_loop(-1);
 		}
+#if BX_SMP_PROCESSORS==1
+		// ticks are handled inside the cpu loop
+#else
 		BX_TICK1 ();
+#endif
 	}
   //BX_INFO(("Stepped each CPU a total of %d cycles", count));
 #endif
@@ -1989,6 +2048,82 @@ bx_dbg_compare_sim_memory(void)
 #endif
 
 
+void bx_dbg_disassemble_current (int which_cpu, int print_time)
+{
+  Bit32u phy;
+  Boolean valid;
+
+  if (which_cpu < 0) {
+    // iterate over all of them.
+    for (int i=0; i<BX_NUM_SIMULATORS; i++)
+      bx_dbg_disassemble_current (i, print_time);
+    return;
+  }
+
+  BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy, &valid);
+
+  if (valid) {
+    unsigned ilen;
+
+    BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
+    ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
+				 bx_disasm_ibuf, bx_disasm_tbuf);
+
+    // Note: it would be nice to display only the modified registers here, the easy
+    // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
+    // in each cpu description (see cpu/cpu.h) and update/compare those "prev" values
+    // from here. (eks)
+    if( BX_CPU(dbg_cpu)->trace_reg )
+	    fprintf( stderr,
+		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
+		BX_CPU(which_cpu)->gen_reg[0],
+		BX_CPU(which_cpu)->gen_reg[1],
+		BX_CPU(which_cpu)->gen_reg[2],
+		BX_CPU(which_cpu)->gen_reg[3],
+		BX_CPU(which_cpu)->gen_reg[4],
+		BX_CPU(which_cpu)->gen_reg[5],
+		BX_CPU(which_cpu)->gen_reg[6],
+		BX_CPU(which_cpu)->gen_reg[7],
+		!!BX_CPU(which_cpu)->get_CF(),
+		!!BX_CPU(which_cpu)->get_AF(),
+		!!BX_CPU(which_cpu)->get_ZF(),
+		!!BX_CPU(which_cpu)->get_SF(),
+		!!BX_CPU(which_cpu)->get_OF(),
+		!!BX_CPU(which_cpu)->get_PF(),
+		BX_CPU(which_cpu)->eflags.tf,
+		BX_CPU(which_cpu)->eflags.if_,
+		BX_CPU(which_cpu)->eflags.df,
+		BX_CPU(which_cpu)->eflags.iopl,
+		BX_CPU(which_cpu)->eflags.nt,
+		BX_CPU(which_cpu)->eflags.rf,
+		BX_CPU(which_cpu)->eflags.vm
+		);
+
+    if (print_time)
+      fprintf (stderr, "(%u).[%lld] ", which_cpu, bx_pc_system.time_ticks());
+    else
+      fprintf (stderr, "(%u) ", which_cpu);
+    if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
+      fprintf(stderr, "%04x:%08x (%s): ", 
+	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
+	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
+      }
+    else {
+      fprintf(stderr, "%04x:%04x: ", 
+	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
+      }
+    for (unsigned j=0; j<ilen; j++)
+      fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
+    fprintf(stderr, ": %s\n", bx_disasm_tbuf);
+
+    
+    }
+  else {
+    fprintf(stderr, "(%u).[%lld] ??? (physical address not available)\n", which_cpu, bx_pc_system.time_ticks());
+  }
+}
 
   void
 bx_dbg_print_guard_results(void)
@@ -2036,8 +2171,6 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 	}
   else if (BX_CPU(sim)->stop_reason == STOP_MAGIC_BREAK_POINT) {
 	fprintf(stderr, "(%u) Magic breakpoint\n", sim);
-  } else if (BX_CPU(sim)->stop_reason == STOP_TRACE) {
-	/* Nothing */
   } else if (BX_CPU(sim)->stop_reason == STOP_TIME_BREAK_POINT) {
 	fprintf(stderr, "(%u) Caught time breakpoint\n", sim);
   } else if (BX_CPU(sim)->stop_reason == STOP_MODE_BREAK_POINT) {
@@ -2053,40 +2186,11 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 	    sim, BX_CPU(sim)->stop_reason);
     }
 
-
 #if BX_DISASM
   if (bx_debugger.auto_disassemble) {
-    Bit32u phy;
-    Boolean valid;
-
-    BX_CPU(sim)->dbg_xlate_linear2phy(BX_CPU(sim)->guard_found.laddr, &phy, &valid);
-
-    if (valid) {
-      unsigned ilen;
-
-      BX_CPU(sim)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
-      ilen = bx_disassemble.disasm(BX_CPU(sim)->guard_found.is_32bit_code,
-                                   bx_disasm_ibuf, bx_disasm_tbuf);
-
-      if (BX_CPU(sim)->guard_found.is_32bit_code) {
-        fprintf(stderr, "(%u) %04x:%08x (%s): ", sim,
-                (unsigned) BX_CPU(sim)->guard_found.cs,
-                (unsigned) BX_CPU(sim)->guard_found.eip,
-		bx_dbg_symbolic_address((BX_CPU(sim)->cr3) >> 12, BX_CPU(sim)->guard_found.eip, BX_CPU(sim)->sregs[BX_SREG_CS].cache.u.segment.base));
-        }
-      else {
-        fprintf(stderr, "(%u) %04x:%04x: ", sim,
-                (unsigned) BX_CPU(sim)->guard_found.cs,
-                (unsigned) BX_CPU(sim)->guard_found.eip);
-        }
-      for (unsigned j=0; j<ilen; j++)
-        fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
-      fprintf(stderr, ": %s\n", bx_disasm_tbuf);
-      }
-    else {
-      fprintf(stderr, "(%u) ??? (physical address not available)\n", sim);
-      }
-    }
+    fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
+    bx_dbg_disassemble_current (sim, 0);  // one cpu, don't print time
+  }
 #endif  // #if BX_DISASM
   }
 }
@@ -2335,55 +2439,60 @@ bx_dbg_take_command(char *what, unsigned n)
 
 
   void
-bx_dbg_info_registers_command(void)
+bx_dbg_info_registers_command(int which_regs_mask)
 {
   Bit32u reg;
   bx_dbg_cpu_t cpu;
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    memset(&cpu, 0, sizeof(cpu));
-    BX_CPU(i)->dbg_get_cpu(&cpu);
+    if (which_regs_mask & BX_INFO_CPU_REGS) {
+      memset(&cpu, 0, sizeof(cpu));
+      BX_CPU(i)->dbg_get_cpu(&cpu);
 
 #if (BX_SMP_PROCESSORS > 1)
-    fprintf(stderr, "%s:\n", BX_CPU(i)->name, i);
+      fprintf(stderr, "%s:\n", BX_CPU(i)->name, i);
 #endif
-    reg = cpu.eax;
-    fprintf(stderr, "eax            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ecx;
-    fprintf(stderr, "ecx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.edx;
-    fprintf(stderr, "edx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ebx;
-    fprintf(stderr, "ebx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.eax;
+      fprintf(stderr, "eax            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ecx;
+      fprintf(stderr, "ecx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.edx;
+      fprintf(stderr, "edx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ebx;
+      fprintf(stderr, "ebx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.esp;
-    fprintf(stderr, "esp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
-    reg = cpu.ebp;
-    fprintf(stderr, "ebp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
-    reg = cpu.esi;
-    fprintf(stderr, "esi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.edi;
-    fprintf(stderr, "edi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.esp;
+      fprintf(stderr, "esp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      reg = cpu.ebp;
+      fprintf(stderr, "ebp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      reg = cpu.esi;
+      fprintf(stderr, "esi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.edi;
+      fprintf(stderr, "edi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.eip;
-    fprintf(stderr, "eip            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      reg = cpu.eip;
+      fprintf(stderr, "eip            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.eflags;
-    fprintf(stderr, "eflags         0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.eflags;
+      fprintf(stderr, "eflags         0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.cs.sel;
-    fprintf(stderr, "cs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ss.sel;
-    fprintf(stderr, "ss             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ds.sel;
-    fprintf(stderr, "ds             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.es.sel;
-    fprintf(stderr, "es             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.fs.sel;
-    fprintf(stderr, "fs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.gs.sel;
-    fprintf(stderr, "gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.cs.sel;
+      fprintf(stderr, "cs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ss.sel;
+      fprintf(stderr, "ss             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ds.sel;
+      fprintf(stderr, "ds             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.es.sel;
+      fprintf(stderr, "es             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.fs.sel;
+      fprintf(stderr, "fs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.gs.sel;
+      fprintf(stderr, "gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
     }
+    if (which_regs_mask & BX_INFO_FPU_REGS) {
+      BX_CPU(i)->fpu_print_regs ();
+    }
+  }
 }
 
   void
@@ -3297,16 +3406,16 @@ bx_dbg_instrument_command(char *comm)
 {
 #if BX_INSTRUMENTATION
   if ( !strcmp(comm, "start") ) {
-    BX_CPU(0)->instr_start();
+    BX_INSTR_START ();
     }
   else if ( !strcmp(comm, "stop") ) {
-    BX_CPU(0)->instr_stop();
+    BX_INSTR_STOP ();
     }
   else if ( !strcmp(comm, "reset") ) {
-    BX_CPU(0)->instr_reset();
+    BX_INSTR_RESET ();
     }
   else if ( !strcmp(comm, "print") ) {
-    BX_CPU(0)->instr_print();
+    BX_INSTR_PRINT ();
     }
   else {
     fprintf(stderr, "Error: command instrument %s not implemented.\n", comm);
@@ -3500,11 +3609,24 @@ void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8], int verbose)
     if (type_names[type] == undef)  {
       fprintf (fp, "descriptor hi=%08x, lo=%08x", hi, lo);
     } else {
-      fprintf (fp, "target=%04x:%08x, DPL=%d", segment, offset, dpl);
       // for call gates, print segment:offset and parameter count p.4-15
       // for task gate, only present,dpl,TSS segment selector exist. p.5-13
       // for interrupt gate, segment:offset,p,dpl
       // for trap gate, segment:offset,p,dpl
+      // for TSS, base address and segment limit
+      switch (type) {
+	case 1: case 3:  // 16-bit TSS
+	case 9: case 11: // 32-bit TSS
+	  limit = (hi&0x000f0000) | (lo&0xffff);
+	  fprintf (fp, "at %08x, length 0x%x", base, limit);
+	  break;
+	case 2:
+	  // it's an LDT. not much to print.
+	  break;
+	default:
+	  // task, int, trap, or call gate.
+	  fprintf (fp, "target=%04x:%08x, DPL=%d", segment, offset, dpl);
+      }
     }
     fprintf (fp, "\n");
   }
@@ -3630,6 +3752,22 @@ bx_dbg_info_control_regs_command(void)
   fprintf (stderr, "    PCE=performance-monitor counter enable=%d\n", (cr4>>8) & 1);
   fprintf (stderr, "    OXFXSR=OS support for FXSAVE/FXRSTOR=%d\n", (cr4>>9) & 1);
   fprintf (stderr, "    OSXMMEXCPT=OS support for unmasked SIMD FP exceptions=%d\n", (cr4>>10) & 1);
+}
+
+/*
+ * this implements the info ne2k commands in the debugger.
+ * info ne2k - shows all registers
+ * info ne2k page N - shows all registers in a page
+ * info ne2k page N reg M - shows just one register
+ */
+void
+bx_dbg_info_ne2k(int page, int reg)
+{
+#if BX_NE2K_SUPPORT
+  bx_ne2k.print_info (stderr, page, reg, 0);
+#else
+  fprintf (stderr, "NE2000 support is not compiled in.\n");
+#endif
 }
 
 //

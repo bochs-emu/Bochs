@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: cpu.cc,v 1.12.2.2 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -20,7 +24,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
+#define BX_INSTR_SPY 0
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -118,6 +122,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
 
+  // not sure if these two are used during the async handling... --bbd
   BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
   BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
 
@@ -134,7 +139,13 @@ main_cpu_loop:
     goto handle_async_event;
 
 async_events_processed:
-
+  // added so that all debugging/tracing code uses the correct EIP even in the
+  // instruction just after a trap/interrupt.  If you use the prev_eip that was
+  // set before handle_async_event, traces and breakpoints fail to show the
+  // first instruction of int/trap handlers.
+  BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+  BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
+  
   // Now we can handle things which are synchronous to instruction
   // execution.
   if (BX_CPU_THIS_PTR eflags.rf) {
@@ -184,7 +195,18 @@ async_events_processed:
     }
   }
 #endif  // #if BX_DEBUGGER
-
+  
+#if BX_INSTR_SPY
+  {
+    int n=0;
+    if ((n & 0xffffff) == 0) {
+      Bit32u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+      Bit32u eip = BX_CPU_THIS_PTR prev_eip;
+      fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\n", n, bx_pc_system.time_ticks (), cs, eip, fetch_ptr);
+    }
+    n++;
+  }
+#endif
 
   is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
@@ -206,6 +228,15 @@ async_events_processed:
     BX_CPU_THIS_PTR fetch_ptr += i.ilen;
     BX_CPU_THIS_PTR bytesleft -= i.ilen;
 fetch_decode_OK:
+
+#if BX_DEBUGGER
+    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that is about to be executed.
+//      fprintf(stderr, "begin about to execute:\n");
+      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+//      fprintf(stderr, "  end about to execute:\n");
+    }
+#endif
 
     if (i.rep_used && (i.attr & BxRepeatable)) {
 repeat_loop:
@@ -254,6 +285,13 @@ repeat_not_done:
 #ifdef REGISTER_IADDR
       REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
+
+#if BX_DEBUGGER
+//    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that was just executed.
+//      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+//    }
+#endif
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -282,6 +320,13 @@ repeat_done:
 #ifdef REGISTER_IADDR
     REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
+
+#if BX_DEBUGGER
+//    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that was just executed.
+//      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+//    }
+#endif
     BX_TICK1_IF_SINGLE_PROCESSOR();
 
 debugger_check:
@@ -297,6 +342,7 @@ debugger_check:
 #endif
 
 #if BX_DEBUGGER
+
     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
     // note instr generating exceptions never reach this point.
 
@@ -333,14 +379,9 @@ debugger_check:
 	  }
     }
 #endif
-    if (BX_CPU_THIS_PTR trace) {
-	  BX_CPU_THIS_PTR stop_reason = STOP_TRACE;
-	  return;
-    }
-#endif
 
-#if BX_DEBUGGER
     {
+      // check for icount or control-C.  If found, set guard reg and return.
     Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
     if ( dbg_is_end_instr_bpoint(
            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -350,6 +391,7 @@ debugger_check:
       return;
       }
     }
+
 #endif  // #if BX_DEBUGGER
     goto main_cpu_loop;
     }
@@ -406,6 +448,8 @@ handle_async_event:
   if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
     // I made up the bitmask above to mean HALT state.
 #if BX_SMP_PROCESSORS==1
+    BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
+    BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     // for one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
     while (1) {
@@ -578,12 +622,15 @@ BX_CPU_C::prefetch(void)
     BX_PANIC(("prefetch: EIP > CS.limit"));
     }
 
+#if BX_SUPPORT_PAGING
   if (BX_CPU_THIS_PTR cr0.pg) {
     // aligned block guaranteed to be all in one page, same A20 address
     new_phy_addr = itranslate_linear(new_linear_addr, CPL==3);
     new_phy_addr = A20ADDR(new_phy_addr);
     }
-  else {
+  else
+#endif // BX_SUPPORT_PAGING
+    {
     new_phy_addr = A20ADDR(new_linear_addr);
     }
 
@@ -602,8 +649,18 @@ BX_CPU_C::prefetch(void)
   //if ((temp_limit - temp_eip) < 4096) {
   //  }
 
+#if BX_PCI_SUPPORT
+  if ((new_phy_addr >= 0x000C0000) && (new_phy_addr <= 0x000FFFFF)) {
+    BX_CPU_THIS_PTR bytesleft = 0x4000 - (new_phy_addr & 0x3FFF);
+    BX_CPU_THIS_PTR fetch_ptr = bx_devices.pci->i440fx_fetch_ptr(new_phy_addr);
+  } else {
+    BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
+    BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
+  }
+#else
   BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
   BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
+#endif
 }
 
 
@@ -623,8 +680,19 @@ BX_CPU_C::revalidate_prefetch_q(void)
     // same linear address, old linear->physical translation valid
     new_linear_offset = new_linear_addr & 0x00000fff;
     new_phy_addr = BX_CPU_THIS_PTR prev_phy_page | new_linear_offset;
+#if BX_PCI_SUPPORT
+    if ((new_phy_addr >= 0x000C0000) && (new_phy_addr <= 0x000FFFFF)) {
+      BX_CPU_THIS_PTR bytesleft = 0x4000 - (new_phy_addr & 0x3FFF);
+      BX_CPU_THIS_PTR fetch_ptr = bx_devices.pci->i440fx_fetch_ptr(new_phy_addr);
+      }
+    else {
+      BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
+      BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
+      }
+#else
     BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
     BX_CPU_THIS_PTR fetch_ptr = &BX_CPU_THIS_PTR mem->vector[new_phy_addr];
+#endif
     }
   else {
     BX_CPU_THIS_PTR bytesleft = 0; // invalidate prefetch Q
@@ -647,6 +715,7 @@ extern unsigned int dbg_show_mask;
 BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                     Bit32u is_32)
 {
+  //fprintf (stderr, "begin_instr_bp: checking cs:eip %04x:%08x\n", cs, eip);
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = eip;
   BX_CPU_THIS_PTR guard_found.laddr = laddr;
@@ -706,7 +775,11 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       Boolean valid;
       dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr,
                               &phy, &valid);
-      if ( (BX_CPU_THIS_PTR guard_found.icount!=0) && valid ) {
+      // The "guard_found.icount!=0" condition allows you to step or
+      // continue beyond a breakpoint.  Bryce tried removing it once,
+      // and once you get to a breakpoint you are stuck there forever.
+      // Not pretty.
+      if (valid && (BX_CPU_THIS_PTR guard_found.icount!=0)) {
         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
           if ( bx_guard.iaddr.phy[i].addr == phy ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
@@ -726,7 +799,15 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                   Bit32u is_32)
 {
+  //fprintf (stderr, "end_instr_bp: checking for icount or ^C\n");
   BX_CPU_THIS_PTR guard_found.icount++;
+
+  // convenient point to see if user typed Ctrl-C
+  if (bx_guard.interrupt_requested &&
+      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
+    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
+    return(1);
+    }
 
   // see if debugger requesting icount guard
   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
@@ -738,13 +819,6 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
       return(1);
       }
-    }
-
-  // convenient point to see if user typed Ctrl-C
-  if (bx_guard.interrupt_requested &&
-      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
-    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
-    return(1);
     }
 
 #if (BX_NUM_SIMULATORS >= 2)

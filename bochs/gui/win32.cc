@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: win32.cc,v 1.12.2.2 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -79,6 +83,9 @@ static HDC MemoryDC = NULL;
 static RECT updated_area;
 static BOOL updated_area_valid = FALSE;
 static Bit32u *VideoBits;
+
+// Textmode cursor
+HBITMAP cursorBmp;
 
 // Headerbar stuff
 unsigned bx_bitmap_entries = 0;
@@ -221,6 +228,7 @@ void terminateEmul(int reason) {
 
   for (unsigned c=0; c<256; c++)
     if (vgafont[c]) DeleteObject(vgafont[c]);
+  DeleteObject(cursorBmp);
 
   switch (reason) {
   case EXIT_GUI_SHUTDOWN:
@@ -262,7 +270,7 @@ void terminateEmul(int reason) {
 void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 			     tilewidth, unsigned tileheight,
 			     unsigned headerbar_y) {
-  th->setprefix("WGUI");
+  th->put("WGUI");
   static RGBQUAD black_quad={ 0, 0, 0, 0};
   stInfo.kill = 0;
   stInfo.UIinited = FALSE;
@@ -284,6 +292,8 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 
   for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
   create_vga_font();
+  cursorBmp = CreateBitmap(8,16,1,1,NULL);
+  if (!cursorBmp) terminateEmul(EXIT_FONT_BITMAP_ERROR);
 
   bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+
     256*sizeof(RGBQUAD)];
@@ -326,6 +336,11 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 
   if (bx_options.Oprivate_colormap->get ())
     BX_INFO(( "private_colormap option ignored."));
+
+  // load keymap tables
+  if(bx_options.keyboard.OuseMapping->get()) {
+    bx_keymap.loadKeymap(NULL);  // I have no function to convert X windows symbols
+    }
 }
 
 
@@ -376,7 +391,7 @@ VOID UIThread(PVOID pvoid) {
     cursorWarped();
 
     hdc = GetDC(stInfo.hwnd);
-    MemoryBitmap = CreateCompatibleBitmap(hdc, dimension_x, dimension_y);
+    MemoryBitmap = CreateCompatibleBitmap(hdc, BX_MAX_XRES, BX_MAX_YRES);
     MemoryDC = CreateCompatibleDC(hdc);
     ReleaseDC(stInfo.hwnd, hdc);
 
@@ -407,24 +422,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
     SetTimer (hwnd, 1, 330, NULL);
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     if (mouseCaptureMode)
-      SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
+      SetWindowText(hwnd, "Bochs for Windows      [F12 to release mouse]");
     else
-      SetWindowText(hwnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
+      SetWindowText(hwnd, "Bochs for Windows      [F12 enables mouse]");
     return 0;
 
   case WM_TIMER:
     // If mouse escaped, bring it back
     if ( mouseCaptureMode)
     {
-      GetCursorPos( &ptCursorPos);
       GetWindowRect(hwnd, &wndRect);
-      if ( ptCursorPos.x<wndRect.left || ptCursorPos.x>wndRect.right
-        || ptCursorPos.y<( wndRect.top+BX_HEADER_BAR_Y*stretch_factor) || ptCursorPos.y>wndRect.bottom)
-      {
-        SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-                   wndRect.top + stretched_y/2 + y_edge + y_caption);
-        cursorWarped();
-      }
+      SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
+                 wndRect.top + stretched_y/2 + y_edge + y_caption);
+      cursorWarped();
     }
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     
@@ -499,7 +509,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
 	SetWindowText(hwnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
     } else {
       EnterCriticalSection(&stInfo.keyCS);
-      enq_key_event(HIWORD (lParam) & 0xFF, BX_KEY_PRESSED);
+      enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_PRESSED);
       LeaveCriticalSection(&stInfo.keyCS);
     }
     return 0;
@@ -507,7 +517,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
   case WM_KEYUP:
   case WM_SYSKEYUP:
     EnterCriticalSection(&stInfo.keyCS);
-    enq_key_event(HIWORD (lParam) & 0xFF, BX_KEY_RELEASED);
+    enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_RELEASED);
     LeaveCriticalSection(&stInfo.keyCS);
     return 0;
 
@@ -606,6 +616,11 @@ void bx_gui_c::handle_events(void) {
       headerbar_click(LOWORD(key));
     }
     else {
+      if (((key & 0x0100) && ((key & 0x01ff) != 0x0145)) | ((key & 0x01ff) == 0x45)) {
+        // Its an extended key
+        scancode = 0xE0;
+        bx_devices.keyboard->put_scancode(&scancode, 1);
+      }
       // Its a key
       scancode = LOBYTE(LOWORD(key));
       // printf("# key = %d, scancode = %d\n",key,scancode);
@@ -679,11 +694,16 @@ void bx_gui_c::clear_screen(void) {
 
 void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			   unsigned long cursor_x, unsigned long cursor_y,
-                           unsigned nrows) {
+                           Bit16u cursor_state, unsigned nrows) {
   HDC hdc;
   unsigned char cChar;
   unsigned i, x, y;
+  Bit8u cs_start, cs_end;
   unsigned nchars;
+  unsigned char data[32];
+
+  cs_start = cursor_state >> 8;
+  cs_end = cursor_state & 0xff;
 
   if (!stInfo.UIinited) return;
 	
@@ -718,13 +738,17 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ((cursor_y*80 + cursor_x) < nchars ) {
+  if (((cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end)) {
     cChar = new_text[(cursor_y*80 + cursor_x)*2];
-	//reverse background and foreground colors
-	char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
-	cAttr = ((cAttr>>4)&0xf)+((cAttr&0xf)<<4);
-    DrawBitmap(hdc, vgafont[cChar], cursor_x*8, cursor_y*16 + bx_headerbar_y,
-	           SRCCOPY, cAttr);
+    memset(data, 0, sizeof(data));
+    for (unsigned i=0; i<16; i++) {
+      data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
+      if ((i >= cs_start) && (i <= cs_end))
+        data[i*2] = 255 - data[i*2];
+    }
+    SetBitmapBits(cursorBmp, 32, data);
+    DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16 + bx_headerbar_y,
+	           SRCCOPY, new_text[((cursor_y*80 + cursor_x)*2)+1]);
   }
 
   ReleaseDC(stInfo.hwnd, hdc);
@@ -847,7 +871,8 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
   for (unsigned i=0; i<ydim * xdim/8; i++)
     data[i] = reverse_bitorder(bmap[i]);
   SetBitmapBits(bx_bitmaps[bx_bitmap_entries].bmap, ydim * xdim/8, data);
-  delete data;
+  delete [] data;
+  data = NULL;
 
   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
@@ -1036,23 +1061,25 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
 //how to implement that so for now it's just implemented as color.
 //Note: it is also possible to program the VGA controller to have the
 //high bit for the foreground color enable blinking characters.
-	const COLORREF crPal[16] = { 
-									RGB(0 ,0 ,0 ),	//0 black 
-									RGB(0 ,0 ,0x80 ),	//1 dark blue 
-									RGB(0 ,0x80 ,0 ),	//2 dark green 
-									RGB(0 ,0x80 ,0x80 ),		//3 dark cyan 
-									RGB(0x80 ,0 ,0 ),	//4 dark red 
-									RGB(0x80 ,0 ,0x80 ),		//5 dark magenta 
-									RGB(0x80 ,0x80 ,0 ),		//6 brown
-									RGB(0xC0 ,0xC0 ,0xC0 ),	//7 light gray 
-									RGB(0x80 ,0x80 ,0x80 ),	//8 dark gray 
-									RGB(0 ,0 ,0xFF ),	//9 light blue 
-									RGB(0 ,0xFF ,0 ),	//10 green 
-									RGB(0 ,0xFF ,0xFF ),		//11 cyan 
-									RGB(0xFF ,0 ,0 ),	//12 light red 
-									RGB(0xFF ,0 ,0xFF ),		//13 magenta 
-									RGB(0xFF ,0xFF ,0 ),		//14 yellow 
-									RGB(0xFF ,0xFF ,0xFF )};	//15 white 
+
+	const COLORREF crPal[16] = {
+	RGB(0 ,0 ,0 ), //0 black 
+	RGB(0 ,0 ,0xA8 ), //1 dark blue 
+	RGB(0 ,0xA8 ,0 ), //2 dark green 
+	RGB(0 ,0xA8 ,0xA8 ), //3 dark cyan 
+	RGB(0xA8 ,0 ,0 ), //4 dark red 
+	RGB(0xA8 ,0 ,0xA8 ), //5 dark magenta 
+	RGB(0xA8 ,0x54 ,0 ), //6 brown 
+	RGB(0xA8 ,0xA8 ,0xA8 ), //7 light gray 
+	RGB(0x54 ,0x54 ,0x54 ), //8 dark gray 
+	RGB(0x54 ,0x54 ,0xFC ), //9 light blue 
+	RGB(0x54 ,0xFC ,0x54 ), //10 green 
+	RGB(0x54 ,0xFC ,0xFC ), //11 cyan 
+	RGB(0xFC ,0x54 ,0x54 ), //12 light red 
+	RGB(0xFC ,0x54 ,0xFC ), //13 magenta 
+	RGB(0xFC ,0xFC ,0x54 ), //14 yellow 
+	RGB(0xFC ,0xFC ,0xFC ) //15 white 
+	};
 
 	COLORREF crFore = SetTextColor(MemoryDC, crPal[(cColor>>4)&0xf]);
 	COLORREF crBack = SetBkColor(MemoryDC, crPal[cColor&0xf]);

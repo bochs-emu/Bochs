@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: ctrl_xfer32.cc,v 1.5.2.1 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -541,6 +545,9 @@ BX_CPU_C::IRET32(BxInstruction_t *i)
     }
 #endif
 
+  BX_ERROR(("IRET32 called when you're not in vm8086 mode or protected mode."));
+  BX_ERROR(("IRET32 may not be implemented right, since it doesn't check anything."));
+  BX_PANIC(("Please report that you have found a test case for BX_CPU_C::IRET32."));
 
     pop_32(&eip);
     pop_32(&ecs_raw);
@@ -548,6 +555,7 @@ BX_CPU_C::IRET32(BxInstruction_t *i)
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
     BX_CPU_THIS_PTR eip = eip;
+    //FIXME: this should do (eflags & 0x257FD5) | (EFLAGS | 0x1A0000)
     write_eflags(eflags, /* change IOPL? */ 1, /* change IF? */ 1, 0, 1);
 
 done:

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: dis_decode.cc,v 1.6.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -35,7 +39,7 @@ bx_disassemble_c bx_disassemble;
 
 bx_disassemble_c::bx_disassemble_c(void)
 {
-setprefix("DIS");
+put("DIS");
 settype(DISLOG);
 
 sreg_mod01_rm32[0]   = "DS";

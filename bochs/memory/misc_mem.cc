@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: misc_mem.cc,v 1.11.2.2 2002-03-17 08:57:03 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -46,7 +50,7 @@ BX_MEM_C::BX_MEM_C(void)
 {
   char mem[6];
   snprintf(mem, 6, "MEM%d", BX_SIM_ID);
-  setprefix(mem);
+  put(mem);
   settype(MEMLOG);
 
   vector = NULL;
@@ -64,7 +68,6 @@ BX_MEM_C::BX_MEM_C(size_t memsize)
   vector = new Bit8u[memsize];
   len    = memsize;
   megabytes = len / (1024*1024);
-  BX_INFO(("Init(%uB == %.2f)",memsize, megabytes));
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
@@ -87,6 +90,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.11.2.2 2002-03-17 08:57:03 bdenney Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -95,7 +99,7 @@ BX_MEM_C::init_memory(int memsize)
     BX_MEM_THIS vector = new Bit8u[memsize];
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
-    BX_INFO(("Init(%uB == %.2fMB).", memsize, (float)(BX_MEM_THIS megabytes) ));
+    BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
     }
   // initialize all memory to 0x00
   memset(BX_MEM_THIS vector, 0x00, BX_MEM_THIS len);
@@ -152,7 +156,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   while (size > 0) {
 #if BX_PCI_SUPPORT
     if (bx_options.Oi440FXSupport->get ())
-      ret = read(fd, (bx_ptr_t) &bx_devices.pci->s.i440fx.shadow[romaddress - 0xC0000 + offset],
+      ret = read(fd, (bx_ptr_t) &bx_pci.s.i440fx.shadow[romaddress - 0xC0000 + offset],
                  size);
     else
       ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
@@ -174,13 +178,13 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
 			path
 		));
   else
-    BX_INFO(("rom at 0x%06x/%u ('%s')",
+    BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
 			path
 		));
 #else  // #if BX_PCI_SUPPORT
-  BX_INFO(("rom at 0x%06x/%u ('%s')",
+  BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
  			path

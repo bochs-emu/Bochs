@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: instrument.cc,v 1.2.8.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -66,6 +70,21 @@ static struct {
     } io_access[MAX_IO_ACCESSES];
   } instruction;
 
+static logfunctions *instrument_log;
+#define LOG_THIS instrument_log->
+
+void
+bx_instr_init ()
+{
+  instrument_log = new logfunctions ();
+  //BX_INFO (("init"));
+}
+
+void
+bx_instr_shutdown ()
+{
+  //BX_INFO (("shutdown"));
+}
 
   void
 bx_instr_opcode_begin(Bit32u linear)
@@ -73,6 +92,8 @@ bx_instr_opcode_begin(Bit32u linear)
   Boolean valid;
 
   if (!collect_data) return;
+
+  //BX_INFO(("opcode_begin: linear address is %08x\n", linear));
 
   is_valid = 1;
   instruction.opcode_size = 0;
@@ -131,7 +152,7 @@ bx_instr_fetch_byte(Bit8u val8)
   if (!collect_data || !is_valid) return;
 
   if ((instruction.opcode_size+1) > MAX_OPCODE_SIZE) {
-    bx_panic("instr_fetch_byte: opcode too big.\n");
+    BX_PANIC (("instr_fetch_byte: opcode too big.\n"));
     }
   else {
     instruction.opcode[instruction.opcode_size] = val8;
@@ -145,7 +166,7 @@ bx_instr_fetch_word(Bit16u val16)
   if (!collect_data || !is_valid) return;
 
   if ((instruction.opcode_size+2) > MAX_OPCODE_SIZE) {
-    bx_panic("instr_fetch_word: opcode too big.\n");
+    BX_PANIC (("instr_fetch_word: opcode too big.\n"));
     }
   else {
     instruction.opcode[instruction.opcode_size]   = val16 & 0xff;
@@ -160,7 +181,7 @@ bx_instr_fetch_dword(Bit32u val32)
   if (!collect_data || !is_valid) return;
 
   if ((instruction.opcode_size+4) > MAX_OPCODE_SIZE) {
-    bx_panic("instr_fetch_dword: opcode too big.\n");
+    BX_PANIC (("instr_fetch_dword: opcode too big.\n"));
     }
   else {
     instruction.opcode[instruction.opcode_size]   = val32; val32 >>= 8;
@@ -195,7 +216,7 @@ bx_instr_inp(Bit16u addr, unsigned len)
   if (!collect_data || !is_valid) return;
 
   if (instruction.num_io_accesses >= MAX_IO_ACCESSES) {
-    bx_panic("instr_inp: instructions has too many accesses\n");
+    BX_PANIC (("instr_inp: instructions has too many accesses\n"));
     }
   index = instruction.num_io_accesses;
   instruction.io_access[index].addr = addr;
@@ -212,7 +233,7 @@ bx_instr_outp(Bit16u addr, unsigned len)
   if (!collect_data || !is_valid) return;
 
   if (instruction.num_io_accesses >= MAX_IO_ACCESSES) {
-    bx_panic("instr_outp: instructions has too many accesses\n");
+    BX_PANIC (("instr_outp: instructions has too many accesses\n"));
     }
   index = instruction.num_io_accesses;
   instruction.io_access[index].addr = addr;
@@ -259,7 +280,7 @@ bx_instr_cnear_branch_taken(Bit32u new_eip)
   if (!collect_data || !is_valid) return;
 
   // find linear address
-  laddr = bx_cpu.cs.cache.u.segment.base + new_eip;
+  laddr = BX_CPU(0)->sregs[BX_SREG_CS].cache.u.segment.base + new_eip;
 
   // find physical address
   bx_cpu.dbg_xlate_linear2phy(laddr, &paddr, &valid);
@@ -291,7 +312,7 @@ bx_instr_ucnear_branch(unsigned what, Bit32u new_eip)
   if (!collect_data || !is_valid) return;
 
   // find linear address
-  laddr = bx_cpu.cs.cache.u.segment.base + new_eip;
+  laddr = BX_CPU(0)->sregs[BX_SREG_CS].cache.u.segment.base + new_eip;
 
   // find physical address
   bx_cpu.dbg_xlate_linear2phy(laddr, &paddr, &valid);
@@ -308,7 +329,7 @@ bx_instr_ucnear_branch(unsigned what, Bit32u new_eip)
     case BX_INSTR_IS_JMP: break;
     case BX_INSTR_IS_RET: break;
     default:
-      bx_panic("instr_ucnear_branch: default case reached.\n");
+      BX_PANIC (("instr_ucnear_branch: default case reached.\n"));
     }
 }
 
@@ -324,7 +345,7 @@ bx_instr_far_branch(unsigned what, Bit32u new_cs, Bit32u new_eip)
   if (!collect_data || !is_valid) return;
 
   // find linear address
-  laddr = bx_cpu.cs.cache.u.segment.base + new_eip;
+  laddr = BX_CPU(0)->sregs[BX_SREG_CS].cache.u.segment.base + new_eip;
 
   // find physical address
   bx_cpu.dbg_xlate_linear2phy(laddr, &paddr, &valid);
@@ -343,7 +364,7 @@ bx_instr_far_branch(unsigned what, Bit32u new_cs, Bit32u new_eip)
     case BX_INSTR_IS_JMP: break;
     case BX_INSTR_IS_RET: break;
     default:
-      bx_panic("instr_far_branch: default case reached.\n");
+      BX_PANIC (("instr_far_branch: default case reached.\n"));
     }
 }
 
@@ -356,7 +377,7 @@ bx_instr_lin_write(Bit32u lin, Bit32u phy, unsigned len)
   if (!collect_data || !is_valid) return;
 
   if (instruction.num_data_accesses >= MAX_DATA_ACCESSES) {
-    bx_panic("instr_lin_write: instruction has too many accesses\n");
+    BX_PANIC (("instr_lin_write: instruction has too many accesses\n"));
     }
   index = instruction.num_data_accesses;
   instruction.data_access[index].paddr = A20ADDR(phy);
@@ -374,7 +395,7 @@ bx_instr_lin_read(Bit32u lin, Bit32u phy, unsigned len)
   if (!collect_data || !is_valid) return;
 
   if (instruction.num_data_accesses >= MAX_DATA_ACCESSES) {
-    bx_panic("instr_lin_read: instruction has too many accesses\n");
+    BX_PANIC (("instr_lin_read: instruction has too many accesses\n"));
     }
   index = instruction.num_data_accesses;
   instruction.data_access[index].paddr = A20ADDR(phy);

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: pc_system.cc,v 1.8.2.1 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -45,7 +49,7 @@ const Bit64u bx_pc_system_c::COUNTER_INTERVAL = 100000;
   // constructor
 bx_pc_system_c::bx_pc_system_c(void)
 {
-  this->setprefix("SYS");
+  this->put("SYS");
 
   num_timers = 0;
   // set ticks period and remaining to max Bit32u value
@@ -124,17 +128,18 @@ bx_pc_system_c::set_DACK(unsigned channel, Boolean val)
 
 
   void
-bx_pc_system_c::dma_write8(Bit32u phy_addr, unsigned channel)
+bx_pc_system_c::dma_write8(Bit32u phy_addr, unsigned channel, Boolean verify)
 {
   // DMA controlled xfer of byte from I/O to Memory
 
   Bit8u data_byte;
 
-  UNUSED(channel);
   bx_devices.dma_write8(channel, &data_byte);
-  BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 1, &data_byte);
+  if (!verify) {
+    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 1, &data_byte);
 
-  BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
+    BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
+    }
 }
 
 
@@ -145,11 +150,40 @@ bx_pc_system_c::dma_read8(Bit32u phy_addr, unsigned channel)
 
   Bit8u data_byte;
 
-  UNUSED(channel);
   BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 1, &data_byte);
   bx_devices.dma_read8(channel, &data_byte);
 
   BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
+}
+
+
+  void
+bx_pc_system_c::dma_write16(Bit32u phy_addr, unsigned channel, Boolean verify)
+{
+  // DMA controlled xfer of word from I/O to Memory
+
+  Bit16u data_word;
+
+  bx_devices.dma_write16(channel, &data_word);
+  if (!verify) {
+    BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, 2, &data_word);
+
+    BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
+    }
+}
+
+
+  void
+bx_pc_system_c::dma_read16(Bit32u phy_addr, unsigned channel)
+{
+  // DMA controlled xfer of word from Memory to I/O
+
+  Bit16u data_word;
+
+  BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, 2, &data_word);
+  bx_devices.dma_read16(channel, &data_word);
+
+  BX_DBG_DMA_REPORT(phy_addr, 2, BX_READ, data_word);
 }
 
 
@@ -371,6 +405,7 @@ bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
 
   // convert useconds to number of instructions
   instructions = (Bit64u) (double(useconds) * m_ips);
+  if((useconds!=0) && (instructions==0)) instructions = 1;
 
   return register_timer_ticks(this_ptr, funct, instructions, continuous, active);
 }
@@ -432,7 +467,7 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
       BX_DEBUG(( "Time breakpoint triggered" ));
 
       if (timebp_queue_size > 1) {
-	    long long new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
+	    Bit64s new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
 	    bx_pc_system.activate_timer_ticks(timebp_timer, new_diff, 1);
       }
       timebp_queue_size--;
@@ -441,6 +476,10 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
 }
 #endif // BX_DEBUGGER
 
+Bit64u
+bx_pc_system_c::time_usec() {
+  return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips );
+}
 
   Bit64u
 bx_pc_system_c::time_ticks()
@@ -502,6 +541,7 @@ bx_pc_system_c::activate_timer( unsigned timer_index,
   else {
     // convert useconds to number of instructions
     instructions = (Bit64u) (double(useconds) * m_ips);
+    if(instructions==0) instructions = 1;
     timer[timer_index].period = instructions;
     }
 

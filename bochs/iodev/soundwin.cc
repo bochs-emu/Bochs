@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: soundwin.cc,v 1.6.2.1 2002-03-17 08:57:03 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -322,6 +326,7 @@ int bx_sound_windows_c::playnextbuffer()
 	  WRITELOG( WAVELOG(5), "waveOutWrite: %s", errormsg);
 	}
     }
+    return BX_SOUND_OUTPUT_OK;
 }
 
 int bx_sound_windows_c::startwaveplayback(int frequency, int bits, int stereo, int format)

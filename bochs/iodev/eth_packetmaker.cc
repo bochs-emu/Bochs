@@ -1,5 +1,12 @@
-#include "eth_packetmaker.h"
+/////////////////////////////////////////////////////////////////////////
+// $Id: eth_packetmaker.cc,v 1.3.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 #include "bochs.h"
+
+#ifdef ETH_ARPBACK
+
+#include "eth_packetmaker.h"
 
 
 Boolean sendable(const eth_packet& outpacket) {
@@ -169,5 +176,5 @@ eth_ARPmaker::sendpacket(const eth_packet& outpacket) {
   }
 }
 
-
+#endif
 

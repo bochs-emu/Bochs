@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: paging.cc,v 1.6.2.1 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -953,6 +957,8 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
   BX_PANIC(("access_linear: paging not supported"));
 }
 
-
+  void
+BX_CPU_C::INVLPG(BxInstruction_t* i)
+{}
 
 #endif  // BX_SUPPORT_PAGING

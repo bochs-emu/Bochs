@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: term.cc,v 1.8.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2000  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -116,7 +120,7 @@ bx_gui_c::sighandler(int signo)
 bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 	unsigned headerbar_y)
 {
-	th->setprefix("TGUI");
+	th->put("TGUI");
 	UNUSED(th);
 	UNUSED(argc);
 	UNUSED(argv);
@@ -391,8 +395,10 @@ bx_gui_c::clear_screen(void)
 	void
 bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned long cursor_x, unsigned long cursor_y,
-	unsigned nrows)
+	Bit16u cursor_state, unsigned nrows)
 {
+	UNUSED(cursor_state);
+
 	unsigned ncols = 4000/nrows/2;
 	// XXX There has GOT to be a better way of doing this
 	for(int i=0;i<4001;i+=2) {

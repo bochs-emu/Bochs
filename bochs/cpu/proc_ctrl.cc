@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: proc_ctrl.cc,v 1.11.2.1 2002-03-17 08:57:01 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -21,11 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
@@ -47,13 +46,12 @@ BX_CPU_C::NOP(BxInstruction_t *i)
 {
 }
 
-
   void
 BX_CPU_C::HLT(BxInstruction_t *i)
 {
   // hack to panic if HLT comes from BIOS
   if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value == 0xf000 )
-    BX_PANIC(("HALT instruction encountered"));
+    BX_PANIC(("HALT instruction encountered in the BIOS ROM"));
 
   if (CPL!=0) {
     BX_INFO(("HLT(): CPL!=0"));
@@ -77,6 +75,10 @@ BX_CPU_C::HLT(BxInstruction_t *i)
   // Execution of this instruction completes.  The processor
   // will remain in a halt state until one of the above conditions
   // is met.
+
+#if BX_USE_IDLE_HACK  
+  bx_gui.sim_is_idle ();
+#endif /* BX_USE_IDLE_HACK */  
 }
 
 
@@ -483,9 +485,8 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       BX_PANIC(("MOV_CdRd: CR1 not implemented yet"));
       break;
     case 2: /* CR2 */
-      BX_INFO(("MOV_CdRd: CR2 not implemented yet"));
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_CdRd: CR2 = reg"));
+      BX_DEBUG(("MOV_CdRd: CR2 not implemented yet"));
+	  BX_DEBUG(("MOV_CdRd: CR2 = reg"));
       BX_CPU_THIS_PTR cr2 = val_32;
       break;
     case 3: // CR3
@@ -678,7 +679,8 @@ BX_PANIC(("LOADALL: handle CR0.val32"));
   BX_CPU_THIS_PTR tr.cache.p           = (access & 0x80) >> 7;
   BX_CPU_THIS_PTR tr.cache.dpl         = (access & 0x60) >> 5;
   BX_CPU_THIS_PTR tr.cache.segment     = (access & 0x10) >> 4;
-  BX_CPU_THIS_PTR tr.cache.type        = (access & 0x0f);
+  // don't allow busy bit in tr.cache.type, so bit 2 is masked away too.
+  BX_CPU_THIS_PTR tr.cache.type        = (access & 0x0d);
   BX_CPU_THIS_PTR tr.cache.u.tss286.base  = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR tr.cache.u.tss286.limit = limit;
 
@@ -1082,7 +1084,7 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 #if BX_CPU_LEVEL == 3
   BX_CPU_THIS_PTR cr0.val32 = val_32 | 0x7ffffff0;
 #elif BX_CPU_LEVEL == 4
-  BX_CPU_THIS_PTR cr0.val32 = val_32 & 0xe005002f;
+  BX_CPU_THIS_PTR cr0.val32 = (val_32 | 0x00000010) & 0xe005003f;
 #elif BX_CPU_LEVEL == 5
   BX_CPU_THIS_PTR cr0.val32 = val_32 | 0x00000010;
 #elif BX_CPU_LEVEL == 6

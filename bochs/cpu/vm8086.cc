@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: vm8086.cc,v 1.5.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -121,13 +125,19 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   void
 BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
 {
-  //BX_INFO(("stack_return_from_v86:"));
-  exception(BX_GP_EXCEPTION, 0, 0);
+  static Bit32u times = 0;
+  times++;
+  if (times<100) {
+    BX_ERROR(("stack_return_from_v86 may not be implemented right!"));
+  } else if (times==100) {
+    BX_ERROR(("stack_return_from_v86 called 100 times. I won't print this error any more"));
+  }
+  //exception(BX_GP_EXCEPTION, 0, 0);
 
-#if 0
+#if 1
   if (IOPL != 3) {
     // trap to virtual 8086 monitor
-    BX_INFO(("stack_return_from_v86: IOPL != 3"));
+    BX_ERROR(("stack_return_from_v86: IOPL != 3"));
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 

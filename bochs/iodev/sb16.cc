@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: sb16.cc,v 1.10.2.1 2002-03-17 08:57:03 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -48,7 +52,7 @@ bx_sb16_c bx_sb16;
 
 bx_sb16_c::bx_sb16_c(void)
 {
-  setprefix("SB16");
+  put("SB16");
   settype(SB16LOG);
 }
 
@@ -123,7 +127,7 @@ void bx_sb16_c::init(bx_devices_c *d)
   if ( (bx_options.sb16.Omidimode->get () == 2) ||
        (bx_options.sb16.Omidimode->get () == 3) )
     {
-      MIDIDATA = fopen(bx_options.sb16.Omidifile->getptr (),"w");
+      MIDIDATA = fopen(bx_options.sb16.Omidifile->getptr (),"wb");
       if (MIDIDATA == NULL)
 	{
 	  writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.", bx_options.sb16.Omidifile->getptr ());
@@ -136,7 +140,7 @@ void bx_sb16_c::init(bx_devices_c *d)
   if ( (bx_options.sb16.Owavemode->get () == 2) ||
        (bx_options.sb16.Owavemode->get () == 3) )
     {
-      WAVEDATA = fopen(bx_options.sb16.Owavefile->getptr (),"w");
+      WAVEDATA = fopen(bx_options.sb16.Owavefile->getptr (),"wb");
       if (WAVEDATA == NULL)
 	{
 	  writelog (WAVELOG(2), "Error opening file %s. Wavemode disabled.", bx_options.sb16.Owavefile);
@@ -190,6 +194,11 @@ void bx_sb16_c::init(bx_devices_c *d)
 
   BX_SB16_IRQ = -1; // will be initialized later by the mixer reset
 
+  MIXER.reg[0x80] = 2;  // IRQ 5
+  MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
+  MIXER.reg[0x82] = 0;  // no IRQ pending
+  set_irq_dma();        // set the IRQ and DMA
+
   // call the mixer reset
   mixer_writeregister(0x00);
   mixer_writedata(0x00);
@@ -211,14 +220,12 @@ void bx_sb16_c::init(bx_devices_c *d)
     BX_SB16_THIS devices->register_io_write_handler(this,
        &write_handler, addr, "SB16");
     }
-  /* Uncomment this if you know the consequences...
   for (addr=BX_SB16_IOADLIB; addr<BX_SB16_IOADLIB+BX_SB16_IOADLIBLEN; addr++) {
     BX_SB16_THIS devices->register_io_read_handler(this,
        read_handler, addr, "SB16");
     BX_SB16_THIS devices->register_io_write_handler(this,
        write_handler, addr, "SB16");
     }
-  */
 
   writelog(BOTHLOG(3),
 	   "driver initialised, IRQ %d, IO %03x/%03x/%03x, DMA %d/%d",
@@ -261,8 +268,12 @@ void bx_sb16_c::dsp_dmatimer (void *this_ptr)
   if ( (bx_options.sb16.Owavemode->get () != 1) ||
        ( (This->dsp.dma.chunkindex + 1 < BX_SOUND_OUTPUT_WAVEPACKETSIZE) &&
 	 (This->dsp.dma.count > 0) ) ||
-       (This->output->waveready() == BX_SOUND_OUTPUT_OK) )
-    bx_pc_system.set_DRQ(BX_SB16_DMAL, 1);
+       (This->output->waveready() == BX_SOUND_OUTPUT_OK) ) {
+    if (DSP.dma.bits == 8)
+      bx_pc_system.set_DRQ(BX_SB16_DMAL, 1);
+    else
+      bx_pc_system.set_DRQ(BX_SB16_DMAH, 1);
+    }
 }
 
 void bx_sb16_c::opl_timer (void *this_ptr)
@@ -310,7 +321,7 @@ void bx_sb16_c::dsp_reset(Bit32u value)
 
       if (DSP.irqpending != 0)
 	{
-	  BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
 	  writelog(WAVELOG(4), "DSP reset: IRQ untriggered");
 	}
       if (DSP.dma.mode != 0)
@@ -844,7 +855,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	  DSP.dataout.put(0xaa);
 	  DSP.irqpending = 1;
 	  MIXER.reg[0x82] |= 1; // reg 82 shows the kind of IRQ
-	  BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQ);
+	  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
 	  break;
 
 	  // unknown command
@@ -982,11 +993,12 @@ Bit32u bx_sb16_c::dsp_status()
   // read might be to acknowledge IRQ
   if ( DSP.irqpending != 0 )
     {
-      DSP.irqpending = 0;
       MIXER.reg[0x82] &= (~0x01);
       writelog( WAVELOG(4), "8-bit DMA or SBMIDI IRQ acknowledged");
-      if (MIXER.reg[0x82] == 0)
-	BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+      if (MIXER.reg[0x82] == 0) {
+        DSP.irqpending = 0;
+        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+      }
     }
 
   // if buffer is not empty, there is data to be read
@@ -1005,10 +1017,11 @@ Bit32u bx_sb16_c::dsp_irq16ack()
 
   if ( DSP.irqpending != 0 )
     {
-      DSP.irqpending = 0;
       MIXER.reg[0x82] &= (~0x02);
-      if (MIXER.reg[0x82] == 0)
-	BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQ);
+      if (MIXER.reg[0x82] == 0) {
+        DSP.irqpending = 0;
+        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+      }
       writelog( WAVELOG(4), "16-bit DMA IRQ acknowledged");
     }
   else
@@ -1132,7 +1145,7 @@ void bx_sb16_c::dsp_dmadone()
  else
     MIXER.reg[0x82] |= 2;
 
-  BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQ);
+  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
   DSP.irqpending = 1;
 
   //if auto-DMA, reinitialize
@@ -1190,7 +1203,7 @@ void bx_sb16_c::dma_read16(Bit16u *data_word)
     writelog( WAVELOG(5), "Received 16-bit DMA %4x, %d remaining ",
 	      *data_word, DSP.dma.count);
 
-  DSP.dma.count -= 2;
+  DSP.dma.count--;
 
   dsp_getsamplebyte(*data_word & 0xff);
   dsp_getsamplebyte(*data_word >> 8);
@@ -1205,7 +1218,7 @@ void bx_sb16_c::dma_write16(Bit16u *data_word)
 
   bx_pc_system.set_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
 
-  DSP.dma.count -= 2;
+  DSP.dma.count--;
 
   byte1 = dsp_putsamplebyte();
   byte2 = dsp_putsamplebyte();
@@ -1239,12 +1252,8 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
     case 0:  // initialize mixer
 
       writelog(BOTHLOG(4), "Initializing mixer...");
-      for (i=0; i<BX_SB16_MIX_REG; i++)
+      for (i=0; i<0x80; i++)
 	MIXER.reg[i] = 0;
-      MIXER.reg[0x80] = 2;  // IRQ 5
-      MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
-
-      set_irq_dma();        // set the IRQ and DMA
 
       MIXER.regindex = 0;   // next mixer register read is register 0
       break;
@@ -1421,7 +1430,7 @@ void bx_sb16_c::mpu_command(Bit32u value)
 	  if (BX_SB16_IRQMPU != -1)
 	    {
 	      MIXER.reg[0x82] |= 4;
-	      BX_SB16_THIS devices->pic->trigger_irq(BX_SB16_IRQMPU);
+	      BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQMPU);
 	    }
 	  break;
 
@@ -1484,7 +1493,7 @@ Bit32u bx_sb16_c::mpu_dataread()
 	MPU.irqpending = 0;
 	MIXER.reg[0x82] &= (~4);
 	if (MIXER.reg[0x82] == 0)
-	  BX_SB16_THIS devices->pic->untrigger_irq(BX_SB16_IRQMPU);
+	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQMPU);
 	writelog(MIDILOG(4), "MPU IRQ acknowledged");
       }
 
@@ -2252,7 +2261,7 @@ break_here:
       if (channum != -1)
 	{
 	  int needchange = 0;
-	  if ((OPL.oper[OPL.chan[channum].opnum[0]][4] & 1) != (value & 1))
+	  if ((OPL.oper[OPL.chan[channum].opnum[0]][4] & 1) != (int)(value & 1))
 	    needchange = 1;
 
 	  opl_changeop(channum, OPL.chan[channum].opnum[0], 4, value & 0x3f);
@@ -2537,11 +2546,11 @@ void bx_sb16_c::initmidifile()
     Bit16u timecode;  // 0x80 + deltatimesperquarter << 8
     } midiheader = 
 #ifdef BX_LITTLE_ENDIAN
-      { "MTh", 0x06000000, 0x0100, 0x0100, 0x8001 };
+      { "MTh", 0x06000000, 0, 0x0100, 0x8001 };
 #else
-      { "MTh", 6, 1, 1, 0x180 };
+      { "MTh", 6, 0, 1, 0x180 };
 #endif
-   midiheader.chunk[3] = 'k';
+   midiheader.chunk[3] = 'd';
 
   struct {
     Bit8u chunk[4];
@@ -3133,10 +3142,7 @@ void bx_sb16_c::writelog(int loglevel, const char *str, ...)
 // append a line to the log file, if desired
   if ( (int) bx_options.sb16.Ologlevel->get () >= loglevel)
     {
-	time_t timep = time(NULL);
-	tm *t = localtime(&timep);
-	BX_INFO(( "SB16 %02d:%02d:%02d (%i): ",
-		t->tm_hour, t->tm_min, t->tm_sec, loglevel ));
+        fprintf(LOGFILE, "%011lld (%d) ", bx_pc_system.time_ticks(), loglevel);
 	va_list ap;
 	va_start(ap, str);
 	vfprintf(LOGFILE, str, ap);

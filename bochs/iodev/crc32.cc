@@ -1,10 +1,16 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: crc32.cc,v 1.2.2.1 2002-03-17 08:57:02 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 /* CRC-32 calculator
  * Adapted from http://www.createwindow.org/programming/crc32/
  */
 
 #include "crc32.h"
 
-CRC_Generator::CRC_Generator() { init(); }
+CRC_Generator::CRC_Generator() {
+	init();
+}
 
 void CRC_Generator::init(void) {
   Bit32u POLYNOMIAL = 0x04c11db7;

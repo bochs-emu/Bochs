@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: serial_raw.cc,v 1.2.2.1 2002-03-17 08:57:03 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -26,7 +30,7 @@
 
 serial_raw::serial_raw (char *ttypath, int signal)
 {
-  setprefix ("SERR");
+  put ("SERR");
   settype (SERRLOG);
 }
 
