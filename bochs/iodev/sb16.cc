@@ -41,6 +41,9 @@
 
 #define BX_SB16_OUTPUT  BX_SB16_THIS output
 
+// here's a safe way to print out null pointeres
+#define MIGHT_BE_NULL(x)  ((x==NULL)? "(null)" : x)
+
 bx_sb16_c bx_sb16;
 #if BX_USE_SB16_SMF
 #define this ((void *)&bx_sb16)
@@ -159,9 +162,9 @@ void bx_sb16_c::init(bx_devices_c *d)
     }
 
   BX_INFO(("midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d\n",
-	    bx_options.sb16.midimode, bx_options.sb16.midifile,
-	    bx_options.sb16.wavemode, bx_options.sb16.wavefile,
-	    bx_options.sb16.loglevel, bx_options.sb16.logfile,
+	    bx_options.sb16.midimode, MIGHT_BE_NULL(bx_options.sb16.midifile),
+	    bx_options.sb16.wavemode, MIGHT_BE_NULL(bx_options.sb16.wavefile),
+	    bx_options.sb16.loglevel, MIGHT_BE_NULL(bx_options.sb16.logfile),
 	    bx_options.sb16.dmatimer));
 
   // allocate the FIFO buffers - except for the MPUMIDICMD buffer
