@@ -96,6 +96,11 @@ events from sim to gui:
 - [async] param value changed
 - make my thread sleep for X microseconds  (call wxThread::sleep then return)
 
+In a synchronous event, the event object will contain space for the entire
+response.  The sender allocates memory for the event and builds it.  The
+receiver fills in blanks in the event structure (or could overwrite parts)
+and returns the same event pointer as a response.  For async events, probably
+the sender will allocate and the receiver will have to delete it.
 
 implement the floppyA and floppyB change buttons using new event
 structure.  How should it work?
