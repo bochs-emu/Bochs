@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.100 2002-12-21 19:18:56 bdenney Exp $
+$Id: user.dbk,v 1.100.2.1 2003-01-01 22:47:06 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -29,7 +29,7 @@ This is the top level file for the Bochs Users Manual.
 </bookinfo>
 
 <!-- *************************************************************** -->
-<chapter><title>Introduction to Bochs</title>
+<chapter id="introduction"><title>Introduction to Bochs</title>
 <section id="whatisbochs"><title>What is Bochs?</title>
 <para>
 Bochs is a program that simulates a complete Intel x86 computer.  It 
@@ -75,7 +75,7 @@ the simulator typically takes control and simulates that code in
 software at much slower speed, just like Bochs does.
 </para>
 </footnote>, but they are neither portable to non-x86 platforms nor open
-source.  The <ulink url="http://www.plex86.org">Plex86</ulink> project is
+source.  The <ulink url="http://savannah.nongnu.org/projects/plex86">Plex86</ulink> project is
 working toward an open-source x86 simulator with virtualization.
 </para>
 
@@ -130,7 +130,7 @@ has settled into its new home, and around release times has even hit #1 most
 active project of the week at Source Forge.  
 </para> </section>  <!-- end of Introduction:What is Bochs? section -->
 
-<section><title>Who uses Bochs?</title>
+<section id="who-uses-bochs"><title>Who uses Bochs?</title>
 <para> It is hard to estimate how many people have tried Bochs or use it on a
 regular basis, but a few statistics give an indication.  The <link
 linkend="bochs-developers">bochs-developers mailing list</link>, which is the
@@ -173,7 +173,7 @@ Windows desktop?  Or reverse engineer your printer driver?  You decide.
 </section>  <!-- end of Introduction:Who uses Bochs? section -->
 
 
-<section><title>Is Bochs right for me?</title>
+<section id="is-bochs-right-for-me"><title>Is Bochs right for me?</title>
 <para>
 Bochs is very useful for some applications, and not well suited to others.
 This section tries to answer the question, "Is Bochs right for me?"
@@ -195,7 +195,7 @@ Information Technology changes faster than any other field.  It is very easy to 
 
 </section>  <!-- end of Introduction:Is Bochs right for me? section -->
 
-<section><title>Will it work for me?</title>
+<section id="will-it-work-for-me"><title>Will it work for me?</title>
 
 <para>
 Whether Bochs works for you depends on your host hardware, host operating system, guest operating system, guest software, and your ability to work in a command-line environment using documentation.  There is no gui or wizard to help you through the setup process.  You do not get a recovery or installation disk to assist you in the process of installing a guest operating system.  Bochs only provides you with the "virtual hardware", and it is up to you to do the rest.
@@ -221,7 +221,7 @@ guest platform have been tried by other Bochs users. -->
 
 </section>  <!-- end of Introduction:Will it work for me? section -->
 
-<section><title>Bochs License</title>
+<section id="license"><title>Bochs License</title>
 <para>
 Bochs is copyrighted by MandrakeSoft S.A.<footnote>
 <para>
@@ -501,7 +501,7 @@ currently work with.
 </table>
 </section> <!-- End of Features -->
 
-<section><title>Supported Platforms</title>
+<section id="supported-platforms"><title>Supported Platforms</title>
 <para>
        &FIXME; should add a column with supported display library (X11, SDL, wx, etc...)
 </para>
@@ -586,7 +586,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 </section>  <!-- End Platforms section -->
 
 <!-- *************************************************************** -->
-<section><title>FAQ</title>
+<section id="faq"><title>FAQ</title>
 <qandaset>
   <qandaentry>
      <question>
@@ -622,7 +622,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
        enhancements, and code contributions from some few hundred people, so
        it is not possible to list them all.  Recently, Kevin has been working
        on a PC virtualization project called <ulink
-       url="http://www.plex86.org">plex86</ulink>.  In Fall 2002, he
+       url="http://savannah.nongnu.org/projects/plex86">plex86</ulink>. In Fall 2002, he
        made contributed some major CPU speedups and helped with integration
        and debugging of the x86-64 emulation code.
        </para>
@@ -689,7 +689,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      Is there an irc channel for bochs?
      </para></question>
      <answer><para>
-     Yes. You will usually find Bochs developers and users on irc at irc.openprojects.net:6667, channel #bochs
+     Yes. You will usually find Bochs developers and users on irc at irc.freenode.net:6667, channel #bochs
      </para></answer>
   </qandaentry>
 
@@ -718,7 +718,7 @@ host operating system's CDROM data directly.
      Does bochs support a sound device?
      </para></question>
      <answer><para>
-     Yes, there is Sound Blaster emulation support for Windows and Linux.
+     Yes, there is Sound Blaster emulation support for Windows, Linux and FreeBSD.
      </para></answer>
   </qandaentry>
 
@@ -770,7 +770,7 @@ to mention, running DOOM, though at then-pathetic speeds.
 </chapter>  <!-- End of Introduction to Bochs -->
 
 <!-- *************************************************************** -->
-<chapter><title>Release Notes</title>
+<chapter id="release-notes"><title>Release Notes</title>
 
 <para>
 The change log is stored in the Bochs source code in a file called
@@ -788,7 +788,7 @@ the CHANGES file there.
 
 
 <!-- *************************************************************** -->
-<chapter><title>Installation</title>
+<chapter id="installation"><title>Installation</title>
 
 <section id="downloading"><title>Downloading Bochs</title>
 
@@ -1437,11 +1437,12 @@ been tested in recent Bochs versions:
 <screen>
   .conf.linux
   .conf.sparc
+  .conf.macos
   .conf.macosx
   .conf.win32-vcpp
   .conf.win32-cygwin
   .conf.AIX.4.3.1
-  .conf.beos-x86-R4
+  .conf.beos
 </screen>
 </para>
 
@@ -1505,9 +1506,9 @@ Once the program has been built, the next step is typically to run
 other required files into a public place so that all users can use it.
 <footnote><para>
 &FIXME; We should mention what gets installed, and where.
-    /usr/local/bochs/$VERSION/*
     /usr/local/bin/bochs (and bximage)
-    /usr/man/man1/bochs*.1 (and bximage.1)
+    /usr/local/share/bochs/*
+    /usr/local/share/man/man1/bochs*.1 (and bximage.1)
     make install_dlx option
 </para></footnote>
 </para>
@@ -1753,8 +1754,8 @@ turn it off.
       Enable Sound Blaster emulation.  SB16 output is only supported for
       Windows or Linux.  The <constant>dummy</constant> option means to support
       an SB16, but don't use an output device.  So for example, you might use
-      <option>--enable-sb16=linux</option>. Check out &FIXME; sound.html for
-      more info.
+      <option>--enable-sb16=linux</option>. See <xref linkend="sb16-emulation">
+      for more info.
       </entry>
     </row>
     <row>
@@ -2304,7 +2305,7 @@ to date.
 
 <para>
 If you are interested and have the required MacOS development tools, please
-let use know.  Someone requests a MacOS port almost once a month, but none of
+let us know.  Someone requests a MacOS port almost once a month, but none of
 the developers know how to help them.
 </para>
 </section>
@@ -2350,8 +2351,8 @@ Kevin Lawton ported Bochs to BeOS.  Bernd Korz has taken over the port,
 and is working on raw cdrom and raw floppy support.  As of Bochs 1.4, it should
 compile if you just type "configure && make", because configure will
 detect the BeOS platform and assume you want the BeOS GUI.  Optionally,
-you can use the configure shortcut script for BeOS,
-<filename>.conf.beos-x86-R4</filename>.
+you can use the configure shortcut script for BeOS, <filename>.conf.beos</filename>.
+This shortcut script uses the SDL gui by default.
 </para>
 </section> <!-- end BeOS -->
 
@@ -2529,7 +2530,8 @@ just reboot.
 <section><title>Option 2: Installing VGA font in local font directory</title>
 <screen>
    # NOTE1: Make sure your DISPLAY variable points to local machine.
-   # NOTE2: The "xset" command needs to be run for each X session.
+   # NOTE2: The "xset" command needs to be run for each X session (you may
+   # add it to your ~/.xinitrc ).
    user-> mkfontdir bochs-YYMMDD/font
    user-> xset fp+ [full-path]/bochs-YYMMDD/font
 </screen>
@@ -2538,7 +2540,7 @@ just reboot.
 
 </chapter>
 
-<chapter><title>Setup</title>
+<chapter id="setup"><title>Setup</title>
    <section><title>What does Bochs need?</title>
      <para> &FIXME; </para>
       <para>
@@ -2554,7 +2556,7 @@ just reboot.
       </screen>
       </para>
    </section>
-   <section>
+   <section id="bochsrc">
    <title>bochsrc</title>
 <para>
 Bochs uses a configuration file called a <filename>bochsrc</filename> to know
@@ -3384,7 +3386,10 @@ Examples:
 </screen>
 This enables a remap of a physical localized keyboard to a
 virtualized U.S. keyboard, as the PC architecture expects.
-If enabled, the keymap file must be specified.
+If enabled, the keymap file must be specified. Keyboard mapping is 
+available for X windows, SDL (Linux port) and wxWindows (GTK port).
+For SDL you have to use keymaps designed for SDL, the wxWindows gui 
+uses the keymaps for X windows.
 </para>
 </section>
 
@@ -3419,7 +3424,7 @@ Up to 3 keys can be pressed at a time.
 
 </section> <!--end of bochsrc section-->
 
-<section> <!-- start of SB16 section-->
+<section id="sb16-emulation"> <!-- start of SB16 section-->
 
 <title>Sound Blaster 16 Emulation</title>
 
@@ -3611,9 +3616,10 @@ Sound Blaster 16 emulation in the developer documentation.
 <section id="keymap"><title>How to write your own keymap table</title>
 <para>
 Christophe Bothamy wrote the keymapping code for Bochs, and provided this
-documentation for how to create new keymaps.  Keymapping is currently 
+documentation for how to create new keymaps.  Keymapping was first 
 implemented for X windows only, so there are many references to X-specific
-values in this section.
+values in this section. In Bochs 2.0 keymapping is also available for SDL 
+(Linux port) and wxWindows (wxGTK port).
 </para>
 <screen>
   The standard US Keyboard looks like this:
@@ -3833,7 +3839,7 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 
 </chapter>
 
-<chapter><title>Using Bochs</title>
+<chapter id="using-bochs"><title>Using Bochs</title>
     <para>
     <screen>
 - using the control panel
@@ -3851,7 +3857,7 @@ SourceForge
     
 </chapter>
 
-<chapter><title>Common problems and what to do about them (Troubleshooting)</title>
+<chapter id="common-problems"><title>Common problems and what to do about them (Troubleshooting)</title>
     <para>
     <screen>
         What's a panic?  How to report it to bug tracker, how to make
@@ -3946,7 +3952,7 @@ whenever someone does a checkin in the bochs cvs repository).
 
 </section>  <!-- End of bochs-cvs mailing list -->
 
-<section><title>Mailing List Etiquette</title>
+<section id="mailinglist-etiquette"><title>Mailing List Etiquette</title>
 
 <para>
 Here are a few guidelines for use of the Bochs mailing lists:
@@ -4007,7 +4013,7 @@ write to bochs-announce-request or bochs-developers-request.  Don't forget the
 </section>
 </chapter>
 
-<chapter><title>Tips and Techniques</title>
+<chapter id="howto"><title>Tips and Techniques</title>
 
 <section id="diskimagehowto"><title>How to make a disk image</title>
 <para>
@@ -4160,7 +4166,7 @@ partition.
 </screen>
 </section> <!-- end of Unix: How to make a disk image -->
 
-<section><title>Use mtools to manipulate disk images</title>
+<section id="mtools"><title>Use mtools to manipulate disk images</title>
 <para>
 Mtools is a set of programs that can read, write, and format DOS disk images.
 There are links to the Mtools main page and a Win32 port of Mtools on the
@@ -4173,7 +4179,7 @@ instructions specific to Bochs, we can add it right here.
 </para>
 </section>
 
-<section><title>Win32 only: Use winimage to manipulate disk images</title>
+<section id="winimage"><title>Win32 only: Use winimage to manipulate disk images</title>
 <para>
 Someone on the bochs-developers list mentioned that they use a program
 called WinImage, from <ulink url="www.winimage.com">www.winimage.com</ulink>
@@ -4185,7 +4191,7 @@ If anyone wants to write a tutorial, send mail to &devlist; and volunteer.
 </para>
 </section>
 
-<section><title>X Windows: Color allocation problems</title>
+<section id="xcolormap"><title>X Windows: Color allocation problems</title>
 <para>
 One common problem in X windows is that the screen colors can be abnormal
 if other X programs have already allocated all the colors.  If the colors
@@ -4206,7 +4212,7 @@ can support it, is to run your X server with 24-bit or 32-bit color.
 </para>
 </section>
 
-<section><title>Screen saver turns on too quickly</title>
+<section id="screensaver"><title>Screen saver turns on too quickly</title>
 
 <para>
 One thing you may notice is that the screen saver turns on (screen goes
@@ -4228,7 +4234,7 @@ realtime PIT, which tries to keep Bochs in sync with real time.
 </section>
 
 
-<section> <title>Linux: Mounting a disk image using the loop device</title>
+<section id="loop-device-usage"> <title>Linux: Mounting a disk image using the loop device</title>
 <para>
 This section was contributed by Volker Ruppert.  It describes how to
 access a floppy or hard disk image within Linux using the loop device.
@@ -4353,7 +4359,7 @@ in parallel.  This is a great idea, but it's not done at present.
 
 
 </section>
-<section><title>Setting Up Networking in DLX Linux</title>
+<section id="dlxlinux-networking"><title>Setting Up Networking in DLX Linux</title>
 <para>
 All Bochs binaries come with a working version of DLX Linux.  This section
 describes how to configure networking in Bochs and enable it within
@@ -5279,7 +5285,7 @@ dlx login:
         </section>
 </section>
 
-<section> 
+<section id="bios-tips"> 
 <title>Bios Tips</title>
         <section> 
         <title>CD Boot error codes</title>
@@ -5499,7 +5505,7 @@ gui button.
 </para>
 </section>
 
-<section><title>Notes about VESA usage</title>
+<section id="vesa-notes"><title>Notes about VESA usage</title>
 
 <para>
 Since Bochs version 1.4 it's possible to use VESA graphics. There are some limitations in the current implementation,
@@ -5531,8 +5537,8 @@ Interesting Facts:
 
 
 
-<chapter><title>Guest operating systems</title>
-        <section><title>Linux</title>
+<chapter id="guests"><title>Guest operating systems</title>
+        <section id="guest-linux"><title>Linux</title>
            <para>
            <screen>
             What disk images are available.
@@ -5542,26 +5548,26 @@ Interesting Facts:
            </screen>
            </para>
         </section>
-        <section> <title>Minix</title>
+        <section id="guest-minix"> <title>Minix</title>
                   <para>
                   </para>
         </section>
-          <section><title>OpenBSD</title>
+          <section id="guest-openbsd"><title>OpenBSD</title>
              <para>
              </para>
           </section>
-          <section><title>FreeBSD</title>
+          <section id="guest-freebsd"><title>FreeBSD</title>
              <para>
              </para>
           </section>
-          <section><title>FreeDOS</title>
+          <section id="guest-freedos"><title>FreeDOS</title>
              <para>
              </para>
           </section>
-          <section><title>The Hurd</title>
+          <section id="guest-gnu"><title>GNU (Also known as GNU/Hurd)</title>
 
 <section>
-<title>Installing the Hurd</title>
+<title>Installing GNU</title>
 <para>
 This has been contributed by Bruno Bonfils (asyd at debian-fr dot org) 
 </para>
@@ -5569,11 +5575,11 @@ This has been contributed by Bruno Bonfils (asyd at debian-fr dot org)
 <section>
 <title>Introduction</title>
 <para>
-Since I don't have enough computers to dedicate a box to the Hurd, I'm trying
+Since I don't have enough computers to dedicate a box to GNU, I'm trying
 to do my own harddrive image disk. I thougt there was
 some documentation about how to do that. But since I didn't find
 anything and I decided to write a small doc. I hope this document will be
-useful for some people who wants to try the Hurd.
+useful for some people who wants to try the GNU/Hurd.
 </para>
 </section>
 
@@ -5614,7 +5620,7 @@ can use any size without some problem.
 Use createdisk command like this :
 
 <screen>
-# createdisk hurd.img 112 
+# createdisk gnu.img 112 
 
 Disk Geometry:
 C: 227
@@ -5628,7 +5634,7 @@ Total size: 117153792 bytes
 Note on a paper or on your memory the disk geometry. Then, use the
 losetup command to create a loopback on the whole disk.
 <screen>
-# losetup /dev/loop1 hurd.img
+# losetup /dev/loop1 gnu.img
 </screen>
 </para>
 
@@ -5643,7 +5649,7 @@ detach the /dev/loop1 using :
 </section>
 
 <section>
-<title> Installing GNU/Hurd</title>
+<title> Installing GNU</title>
 
 <itemizedlist>
 <listitem>
@@ -5658,17 +5664,17 @@ partition of an image disk. Offset is computed like this :
 <para> 
 offset = sector * block_size (512)
 
-<screen># losetup -o 32256 /dev/loop1 hurd.img</screen>
+<screen># losetup -o 32256 /dev/loop1 gnu.img</screen>
 </para>
 </listitem>
 
 <listitem>
 <para> Preparing the filesystem</para>
 
-<para>According to The Hurd Installation Guide
+<para>According to the GNU/Hurd Installation Guide
 <footnote>
 <para>
-<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
+<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">GNU/Hurd Installation guide</ulink>
 </para>
 </footnote>
 , use mke2fs to create a filesystem.
@@ -5685,7 +5691,7 @@ Just mount /dev/loop1 like a typical dev.
 <para> Finish the installation</para>
 
 <para>
-Download a GNU/Hurd archive as indicated in the Hurd Installation Guide, and decompress it in /mnt/gnu.
+Download a GNU archive as indicated in the Hurd Installation Guide, and decompress it in /mnt/gnu.
 
 <screen>
 # cd /mnt/gnu
@@ -5712,7 +5718,7 @@ romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xf0000
 megs: 128
 vgaromimage: /usr/share/vgabios/vgabios.bin
 floppya: 1_44=/dev/fd0, status=ejected
-diskc: file="/home/asyd/travail/hurd/hurd.img", cyl=227, heads=16, spt=63 # edit me
+diskc: file="/home/asyd/travail/hurd/gnu.img", cyl=227, heads=16, spt=63 # edit me
 cdromd: dev=/dev/cdrom, status=inserted
 boot: c
 log: /dev/stdout
@@ -5744,13 +5750,13 @@ these lines, don't forget to read the Networking section.
 <title> Note on GNU Mach</title>
 
 <para>
-Remember that the Hurd is not an OS, it's just a collection of libraries
+Remember that the Hurd is not a kernel, it's just a collection of libraries
 and programs, so we can't actually boot the Hurd. We boot GNU Mach, and
 then launch the base servers.
 </para>
 
 <para>
-The default GNU Mach which is provided by the default GNU/Hurd archive 
+The default GNU Mach which is provided by the default GNU archive 
 contains some modules / drivers which are not needed in bochs 
 environment. If you use it, you'll probably have some kernel panic 
 while booting. Don't be afraid and just say alwayscont.
@@ -5800,10 +5806,10 @@ remember to copy stage1, stage2 Grub's files into /mnt/gnu/boot/grub.
 &lt;grub&gt; boot
 </screen>
 
-Now, you can read the official Hurd Installation Guide
+Now, you can read the official GNU/Hurd Installation Guide
 <footnote>
 <para>
-<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
+<ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">GNU/Hurd Installation guide</ulink>
 </para>
 </footnote>
 .
@@ -5874,11 +5880,11 @@ or any later version published by the Free Software Foundation.
 </para>
 </section>
 
-</section> <!-- Installing the Hurd -->
+</section> <!-- Installing GNU -->
 
-          </section> <!-- The Hurd -->
+          </section> <!-- GNU -->
 
-          <section><title>DOS</title>
+          <section id="guest-dos"><title>DOS</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install or use MS-DOS, OS2, DR-DOS, or any other DOS as a guest OS in Bochs.</para>
 <section><title>Accessing your CDROM</title>
@@ -5928,7 +5934,7 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 </section>
           </section>
 
-<section>
+<section id="guest-win95">
         <title>Windows 95</title>
 
 <section><title>How to Install Windows 95 with floppies</title>
@@ -6650,7 +6656,7 @@ to
         </section>
 </section>
 
-<section>
+<section id="guest-winnt4">
         <title>Windows NT 4.0</title>
 <para>
 You must read the message regarding software licenses in 
@@ -6685,7 +6691,7 @@ user_shortcut: keys=ctrlaltdel
 
 <!-- Win98 Section Starts Here -->
 
-<section id="win98"><title>Windows 98</title>
+<section id="guest-win98"><title>Windows 98</title>
 
 <para>
 You must read the message regarding software licenses in 
@@ -7497,7 +7503,7 @@ D:\WIN98>setup
 
 
 
-<section>
+<section id="guest-winme">
         <title>Windows ME</title>
         <para>
 </para>
@@ -7745,7 +7751,7 @@ Some bugs i've found
                 </para>
                 </section> <!-- end of Installing Windows ME -->
 </section>
-<section>
+<section id="guest-win2k">
         <title>Windows 2000</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install Windows 2000 as a guest OS in Bochs.</para>
@@ -7753,13 +7759,13 @@ Some bugs i've found
         </para>
 
 </section>
-<section>
+<section id="guest-win2k-server">
 <title>Windows 2000 Server</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install Windows 2000 Server as a guest OS in Bochs.</para>
 </section>
 
-<section>
+<section id="guest-winxp">
         <title>Windows XP</title>
 <para>You must read the message regarding software licenses in 
 <xref linkend="thirdparty"> before you install Windows XP as a guest OS in Bochs.</para>
