@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.63 2002-09-17 04:47:54 bdenney Exp $
+// $Id: siminterface.cc,v 1.64 2002-09-20 17:56:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -55,6 +55,12 @@ public:
   virtual int get_log_action (int mod, int level);
   virtual void set_log_action (int mod, int level, int action);
   virtual char *get_action_name (int action);
+  virtual int get_default_log_action (int level) {
+	return logfunctions::get_default_action (level);
+  }
+  virtual void set_default_log_action (int level, int action) {
+	logfunctions::set_default_action (level, action);
+  }
   virtual const char *get_log_level_name (int level);
   virtual int get_max_log_level ();
   virtual void quit_sim (int code);
@@ -219,8 +225,16 @@ bx_real_sim_c::get_log_action (int mod, int level)
 void 
 bx_real_sim_c::set_log_action (int mod, int level, int action)
 {
-  logfunc_t *logfn = io->get_logfn (mod);
-  logfn->setonoff (level, action);
+  // normal
+  if (mod >= 0) {
+	logfunc_t *logfn = io->get_logfn (mod);
+	logfn->setonoff (level, action);
+	return;
+  }
+  // if called with mod<0 loop over all
+  int nmod = get_n_log_modules ();
+  for (mod=0; mod<nmod; mod++)
+	set_log_action (mod, level, action);
 }
 
 char *

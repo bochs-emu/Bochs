@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.29 2002-09-15 11:02:22 bdenney Exp $
+// $Id: logio.cc,v 1.30 2002-09-20 17:56:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,6 @@
 
 // Just for the iofunctions
 
-#define LOG_THIS this->log->
 
 int Allocio=0;
 
@@ -54,9 +53,9 @@ iofunctions::init(void) {
 	n_logfn = 0;
 	init_log(stderr);
 	log = new logfunc_t(this);
-	LOG_THIS put("IO");
-	LOG_THIS settype(IOLOG);
-	BX_DEBUG(("Init(log file: '%s').",logfn));
+	log->put("IO");
+	log->settype(IOLOG);
+	log->ldebug ("Init(log file: '%s').",logfn);
 }
 
 void
@@ -85,9 +84,10 @@ iofunctions::init_log(const char *fn)
 		newfd = fopen(fn, "w");
 		if(newfd != NULL) {
 			newfn = strdup(fn);
-			BX_DEBUG(("Opened log file '%s'.", fn ));
+			log->ldebug ("Opened log file '%s'.", fn );
 		} else {
-		  	BX_PANIC(("Couldn't open log file: %s", fn));
+			// in constructor, genlog might not exist yet, so do it the safe way.
+		  	log->ldebug("Couldn't open log file: %s", fn);
 		}
 	}
 	logfd = newfd;
@@ -116,13 +116,16 @@ iofunctions::init_log(int fd)
 	assert (magic==MAGIC_LOGNUM);
 	FILE *tmpfd;
 	if( (tmpfd = fdopen(fd,"w")) == NULL ) {
-	  BX_PANIC(("Couldn't open fd %d as a stream for writing", fd));
+	  log->panic("Couldn't open fd %d as a stream for writing", fd);
 	  return;
 	}
 
 	init_log(tmpfd);
 	return;
 };
+
+// all other functions may use genlog safely.
+#define LOG_THIS genlog->
 
 // This converts the option string to a printf style string with the following args:
 // 1. timer, 2. event, 3. cpu0 eip, 4. device
@@ -233,8 +236,14 @@ iofunctions::~iofunctions(void)
 	this->magic=0;
 }
 
-#undef LOG_THIS
 #define LOG_THIS genlog->
+
+int logfunctions::default_onoff[N_LOGLEV] = {
+  ACT_IGNORE,  // ignore debug
+  ACT_REPORT,  // report info
+  ACT_REPORT,  // report error
+  ACT_FATAL    // die on panic
+};
 
 logfunctions::logfunctions(void)
 {
@@ -249,7 +258,7 @@ logfunctions::logfunctions(void)
 	// BUG: unfortunately this can be called before the bochsrc is read,
 	// which means that the bochsrc has no effect on the actions.
 	for (int i=0; i<N_LOGLEV; i++)
-	  onoff[i] = DEFAULT_LOG_ACTIONS(i);
+	  onoff[i] = get_default_action(i);
 }
 
 logfunctions::logfunctions(iofunc_t *iofunc)
@@ -261,7 +270,7 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 	// BUG: unfortunately this can be called before the bochsrc is read,
 	// which means that the bochsrc has no effect on the actions.
 	for (int i=0; i<N_LOGLEV; i++)
-	  onoff[i] = DEFAULT_LOG_ACTIONS(i);
+	  onoff[i] = get_default_action(i);
 }
 
 logfunctions::~logfunctions(void)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.141 2002-09-09 07:19:23 cbothamy Exp $
+// $Id: main.cc,v 1.142 2002-09-20 17:56:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -269,10 +269,6 @@ void bx_init_options ()
   char name[1024], descr[1024];
 
   memset (&bx_options, 0, sizeof(bx_options));
-  bx_options.log.actions[0] = ACT_IGNORE;
-  bx_options.log.actions[1] = ACT_REPORT;
-  bx_options.log.actions[2] = ACT_REPORT;
-  bx_options.log.actions[3] = ACT_ASK;
 
   // quick start option, set by command line arg
   new bx_param_bool_c (BXP_QUICK_START,
@@ -1296,7 +1292,7 @@ bx_do_text_config_interface (int argc, char *argv[])
   if (enable_config_interface) {
     // update log actions before starting configuration interface
     for (int level=0; level<N_LOGLEV; level++) {
-      int action = bx_options.log.actions[level];
+      int action = SIM->get_default_log_action (level);
       io->set_log_action (level, action);
     }
     // Display the pre-simulation configuration interface.
@@ -1370,7 +1366,7 @@ bx_read_configuration (char *rcfile)
   // update log actions if configuration interface is enabled
   if (enable_config_interface) {
     for (int level=0; level<N_LOGLEV; level++) {
-      int action = bx_options.log.actions[level];
+      int action = SIM->get_default_log_action (level);
       io->set_log_action (level, action);
     }
   }
@@ -1396,7 +1392,7 @@ bx_init_hardware()
 
   if (!enable_config_interface) {
     for (int level=0; level<N_LOGLEV; level++) {
-      int action = bx_options.log.actions[level];
+      int action = SIM->get_default_log_action (level);
 #if !BX_USE_CONFIG_INTERFACE
       if (action == ACT_ASK) action = ACT_FATAL;
 #endif
@@ -1983,13 +1979,13 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log.actions[LOGLEV_PANIC] = ACT_FATAL;
+      SIM->set_default_log_action (LOGLEV_PANIC, ACT_FATAL);
     else if (!strcmp (action, "report"))
-      bx_options.log.actions[LOGLEV_PANIC] = ACT_REPORT;
+      SIM->set_default_log_action (LOGLEV_PANIC, ACT_REPORT);
     else if (!strcmp (action, "ignore"))
-      bx_options.log.actions[LOGLEV_PANIC] = ACT_IGNORE;
+      SIM->set_default_log_action (LOGLEV_PANIC, ACT_IGNORE);
     else if (!strcmp (action, "ask"))
-      bx_options.log.actions[LOGLEV_PANIC] = ACT_ASK;
+      SIM->set_default_log_action (LOGLEV_PANIC, ACT_ASK);
     else {
       BX_PANIC(("%s: panic directive malformed.", context));
       }
@@ -2003,13 +1999,13 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log.actions[LOGLEV_ERROR] = ACT_FATAL;
+      SIM->set_default_log_action (LOGLEV_ERROR, ACT_FATAL);
     else if (!strcmp (action, "report"))
-      bx_options.log.actions[LOGLEV_ERROR] = ACT_REPORT;
+      SIM->set_default_log_action (LOGLEV_ERROR, ACT_REPORT);
     else if (!strcmp (action, "ignore"))
-      bx_options.log.actions[LOGLEV_ERROR] = ACT_IGNORE;
+      SIM->set_default_log_action (LOGLEV_ERROR, ACT_IGNORE);
     else if (!strcmp (action, "ask"))
-      bx_options.log.actions[LOGLEV_ERROR] = ACT_ASK;
+      SIM->set_default_log_action (LOGLEV_ERROR, ACT_ASK);
     else {
       BX_PANIC(("%s: error directive malformed.", context));
       }
@@ -2023,13 +2019,13 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log.actions[LOGLEV_INFO] = ACT_FATAL;
+      SIM->set_default_log_action (LOGLEV_INFO, ACT_FATAL);
     else if (!strcmp (action, "report"))
-      bx_options.log.actions[LOGLEV_INFO] = ACT_REPORT;
+      SIM->set_default_log_action (LOGLEV_INFO, ACT_REPORT);
     else if (!strcmp (action, "ignore"))
-      bx_options.log.actions[LOGLEV_INFO] = ACT_IGNORE;
+      SIM->set_default_log_action (LOGLEV_INFO, ACT_IGNORE);
     else if (!strcmp (action, "ask"))
-      bx_options.log.actions[LOGLEV_INFO] = ACT_ASK;
+      SIM->set_default_log_action (LOGLEV_INFO, ACT_ASK);
     else {
       BX_PANIC(("%s: info directive malformed.", context));
       }
@@ -2043,13 +2039,13 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     char *action = 7 + params[1];
     if (!strcmp(action, "fatal"))
-      bx_options.log.actions[LOGLEV_DEBUG] = ACT_FATAL;
+      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_FATAL);
     else if (!strcmp (action, "report"))
-      bx_options.log.actions[LOGLEV_DEBUG] = ACT_REPORT;
+      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_REPORT);
     else if (!strcmp (action, "ignore"))
-      bx_options.log.actions[LOGLEV_DEBUG] = ACT_IGNORE;
+      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_IGNORE);
     else if (!strcmp (action, "ask"))
-      bx_options.log.actions[LOGLEV_DEBUG] = ACT_ASK;
+      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_ASK);
     else {
       BX_PANIC(("%s: debug directive malformed.", context));
       }

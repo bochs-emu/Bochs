@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.93 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: bochs.h,v 1.94 2002-09-20 17:56:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -240,11 +240,6 @@ extern Bit8u DTPageDirty[];
 #define MAGIC_LOGNUM 0x12345678
 
 
-#define DEFAULT_LOG_ACTIONS(level) \
-  (level<=LOGLEV_INFO ? ACT_IGNORE \
-   : level==LOGLEV_ERROR ? ACT_REPORT \
-   : ACT_REPORT)
-
 typedef class logfunctions {
 	char *prefix;
 	int type;
@@ -256,6 +251,9 @@ typedef class logfunctions {
 #define N_ACT      4
 	int onoff[N_LOGLEV];
 	class iofunctions *logio;
+	// default log actions for all devices, declared and initialized
+	// in logio.cc.
+	static int default_onoff[N_LOGLEV];
 public:
 	logfunctions(void);
 	logfunctions(class iofunctions *);
@@ -279,6 +277,15 @@ public:
 	  assert (level>=0 && level<N_LOGLEV);
 	  return onoff[level]; 
         }
+	static void set_default_action (int loglev, int action) {
+	  assert (loglev >= 0 && loglev < N_LOGLEV);
+	  assert (action >= 0 && action < N_ACT);
+	  default_onoff[loglev] = action;
+	}
+	static int get_default_action (int loglev) {
+	  assert (loglev >= 0 && loglev < N_LOGLEV);
+	  return default_onoff[loglev];
+	}
 } logfunc_t;
 
 #define BX_LOGPREFIX_SIZE 51
@@ -593,9 +600,6 @@ typedef struct {
 typedef struct {
   bx_param_string_c *Ofilename;
   bx_param_string_c *Oprefix;
-  // one array item for each log level, indexed by LOGLEV_*.
-  // values: ACT_IGNORE, ACT_REPORT, ACT_ASK, ACT_FATAL
-  unsigned char actions[N_LOGLEV];  
 } bx_log_options;
 
 typedef struct {
