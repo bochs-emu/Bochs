@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.28 2002-09-04 02:11:33 bdenney Exp $
+// $Id: misc_mem.cc,v 1.29 2002-09-18 05:28:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,6 +54,7 @@ BX_MEM_C::BX_MEM_C(void)
   settype(MEMLOG);
 
   vector = NULL;
+  actual_vector = NULL;
   len    = 0;
   megabytes = 0;
 }
@@ -90,7 +91,8 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(size_t memsize)
 {
-  // Alloc 8 extra bytes so that the realignment operation is safe.
+  vector = NULL;
+  actual_vector = NULL;
   alloc_vector_aligned (memsize, BX_MEM_VECTOR_ALIGN);
   len    = memsize;
   megabytes = len / (1024*1024);
@@ -118,7 +120,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.28 2002-09-04 02:11:33 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.29 2002-09-18 05:28:55 bdenney Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
