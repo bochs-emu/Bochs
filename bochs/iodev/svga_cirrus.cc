@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.3 2004-08-26 16:20:50 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.4 2004-08-28 15:31:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -690,6 +690,7 @@ bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
                (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE))) {
       Bit32u offset = addr - (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256);
       svga_mmio_blt_write(offset & 0xff, value);
+      return;
     } else if ((addr >= BX_CIRRUS_THIS pci_mmioaddr) &&
                (addr < (BX_CIRRUS_THIS pci_mmioaddr + CIRRUS_PNPMMIO_SIZE))) {
       // memory-mapped I/O.
@@ -2885,7 +2886,7 @@ bx_svga_cirrus_c::svga_patterncopy()
         for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x++) {
           if ((bitmask & 0xff) == 0) {
             bitmask = 0x80;
-            bits = BX_CIRRUS_THIS bitblt.src[pattern_y];
+            bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
           }
           if (bits & bitmask) {
             (*BX_CIRRUS_THIS bitblt.rop_handler)(
@@ -2913,15 +2914,14 @@ bx_svga_cirrus_c::svga_patterncopy()
   dst = BX_CIRRUS_THIS bitblt.dst;
   pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
   src = (Bit8u *)BX_CIRRUS_THIS bitblt.src;
-  src -= pattern_y;
+  src -= (pattern_y * BX_CIRRUS_THIS bitblt.pixelwidth);
   for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
     srcc = src + pattern_y * patternbytes;
     dstc = dst;
     for (x = 0; x < bltbytes; x += patternbytes) {
       tilewidth = BX_MIN(patternbytes,bltbytes - x);
       (*BX_CIRRUS_THIS bitblt.rop_handler)(
-        dstc, srcc,
-        BX_CIRRUS_THIS bitblt.dstpitch, patternbytes,
+        dstc, srcc, 0, patternbytes,
         tilewidth, 1);
       dstc += patternbytes;
     }
@@ -2963,7 +2963,7 @@ bx_svga_cirrus_c::svga_simplebitblt()
         for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x++) {
           if ((bitmask & 0xff) == 0) {
             bitmask = 0x80;
-            bits = *BX_CIRRUS_THIS bitblt.src++;
+            bits = *BX_CIRRUS_THIS bitblt.src++ ^ bits_xor;
           }
           if (bits & bitmask) {
             (*BX_CIRRUS_THIS bitblt.rop_handler)(
