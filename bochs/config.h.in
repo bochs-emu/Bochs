@@ -26,7 +26,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #define BX_SIMULATE_SMP 1
-#define BX_SMP_PROCESSORS 2
+#define BX_SMP_PROCESSORS 4
 #define BX_APIC_SUPPORT 1
 
 #define BX_DEBUG_LINUX 1
@@ -100,7 +100,7 @@
 // If you want the efficiency of 'C', you can make all the
 // members of the C++ CPU class to be static.
 
-#define BX_USE_SMF 1
+#define BX_USE_SMF 0
 
 
 // Compile in support for DMA & FLOPPY IO.  You'll need this
@@ -177,7 +177,7 @@
 #define BX_USE_VGA_SMF  1  // VGA
 #define BX_USE_SB16_SMF 1  // Sound (SB 16)
 #define BX_USE_DEV_SMF  1  // System Devices (port92)
-#define BX_USE_PCI_SMF  1  // PCI
+#define BX_USE_PCI_SMF  0  // PCI
 
 #define BX_SUPPORT_SB16 0
 
