@@ -314,6 +314,7 @@ AC_SUBST(DEBUGGER_VAR)
 AC_CHECK_LIB(readline, 
   readline,
   [
+    AC_DEFINE(HAVE_LIBREADLINE, 1)
     READLINE_LIB='-lreadline'
   ]
 )
