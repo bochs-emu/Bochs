@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.148 2003-11-07 20:53:27 sshwarts Exp $
+// $Id: cpu.h,v 1.149 2003-11-13 21:17:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1276,7 +1276,7 @@ union {
   // in code that needs them.
   unsigned      protectedMode; // CR0.PE=1, EFLAGS.VM=0
   unsigned      v8086Mode;     // CR0.PE=1, EFLAGS.VM=1
-  unsigned      realMode;      // CR0.PE=1
+  unsigned      realMode;      // CR0.PE=0
 
   Bit32u        cr1;
   bx_address    cr2;
