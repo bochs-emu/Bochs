@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.40 2002-09-05 17:27:50 bdenney Exp $
+// $Id: wxmain.cc,v 1.41 2002-09-06 15:00:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -65,7 +65,7 @@
 #include "bitmaps/reset.xpm"
 #include "bitmaps/snapshot.xpm"
 #include "bitmaps/mouse.xpm"
-#include "bitmaps/configbutton.xpm"
+//#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
 
 // FIXME: ugly global variables that the bx_gui_c object in wx.cc can use
