@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.17 2002-09-28 05:38:11 kevinlawton Exp $
+// $Id: data_xfer32.cc,v 1.18 2002-09-29 19:21:36 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,21 +61,23 @@ BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
 }
 
   void
-BX_CPU_C::MOV_EdGd(bxInstruction_c *i)
+BX_CPU_C::MOV_EEdGd(bxInstruction_c *i)
 {
-    Bit32u op2_32;
+  Bit32u op2_32;
 
-    /* op2_32 is a register, op2_addr is an index of a register */
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
 
-    /* op1_32 is a register or memory reference */
-    /* now write op2 to op1 */
-    if (i->modC0()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
-      }
-    else {
-      write_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-      }
+  write_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+}
+
+  void
+BX_CPU_C::MOV_EGdGd(bxInstruction_c *i)
+{
+  Bit32u op2_32;
+
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+  BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
 }
 
 

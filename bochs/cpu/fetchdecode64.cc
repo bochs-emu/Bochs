@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.19 2002-09-29 15:07:11 kevinlawton Exp $
+// $Id: fetchdecode64.cc,v 1.20 2002-09-29 19:21:38 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -213,16 +213,56 @@ typedef struct BxOpcodeInfo_t {
   struct BxOpcodeInfo_t *AnotherArray;
 } BxOpcodeInfo_t;
 
+
+static BxOpcodeInfo_t opcodesADD_EwIw[2] = {
+  { 0,  { &BX_CPU_C::ADD_EEwIw } },
+  { 0,  { &BX_CPU_C::ADD_EGwIw } }
+  };
+
+static BxOpcodeInfo_t opcodesADD_EdId[2] = {
+  { 0,  { &BX_CPU_C::ADD_EEdId } },
+  { 0,  { &BX_CPU_C::ADD_EGdId } }
+  };
+
+static BxOpcodeInfo_t opcodesADD_GwEw[2] = {
+  { 0,  { &BX_CPU_C::ADD_GwEEw } },
+  { 0,  { &BX_CPU_C::ADD_GwEGw } }
+  };
+
+static BxOpcodeInfo_t opcodesADD_GdEd[2] = {
+  { 0,  { &BX_CPU_C::ADD_GdEEd } },
+  { 0,  { &BX_CPU_C::ADD_GdEGd } }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_GbEb[2] = {
+  { 0,  { &BX_CPU_C::MOV_GbEEb } },
+  { 0,  { &BX_CPU_C::MOV_GbEGb } }
+  };
+
 static BxOpcodeInfo_t opcodesMOV_GwEw[2] = {
-  { 0,  &BX_CPU_C::MOV_GwEEw },
-  { 0,  &BX_CPU_C::MOV_GwEGw }
+  { 0,  { &BX_CPU_C::MOV_GwEEw } },
+  { 0,  { &BX_CPU_C::MOV_GwEGw } }
   };
 
 static BxOpcodeInfo_t opcodesMOV_GdEd[2] = {
-  { 0,  &BX_CPU_C::MOV_GdEEd },
-  { 0,  &BX_CPU_C::MOV_GdEGd }
+  { 0,  { &BX_CPU_C::MOV_GdEEd } },
+  { 0,  { &BX_CPU_C::MOV_GdEGd } }
   };
 
+static BxOpcodeInfo_t opcodesMOV_EbGb[2] = {
+  { 0,  { &BX_CPU_C::MOV_EEbGb } },
+  { 0,  { &BX_CPU_C::MOV_EGbGb } }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_EwGw[2] = {
+  { 0,  { &BX_CPU_C::MOV_EEwGw } },
+  { 0,  { &BX_CPU_C::MOV_EGwGw } }
+  };
+
+static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
+  { 0,  { &BX_CPU_C::MOV_EEdGd } },
+  { 0,  { &BX_CPU_C::MOV_EGdGd } }
+  };
 
 static BxOpcodeInfo_t BxOpcodeInfo64G1EbIb[8] = {
   /* 0 */  { BxImmediate_Ib,  &BX_CPU_C::ADD_EbIb },
@@ -237,7 +277,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G1EbIb[8] = {
 
 static BxOpcodeInfo_t BxOpcodeInfo64G1Ew[8] = {
   // attributes defined in main area
-  /* 0 */  { 0,  &BX_CPU_C::ADD_EwIw },
+  /* 0 */  { BxSplitMod11b,  NULL, opcodesADD_EwIw },
   /* 1 */  { 0,  &BX_CPU_C::OR_EwIw },
   /* 2 */  { 0,  &BX_CPU_C::ADC_EwIw },
   /* 3 */  { 0,  &BX_CPU_C::SBB_EwIw },
@@ -249,7 +289,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G1Ew[8] = {
 
 static BxOpcodeInfo_t BxOpcodeInfo64G1Ed[8] = {
   // attributes defined in main area
-  /* 0 */  { 0,  &BX_CPU_C::ADD_EdId },
+  /* 0 */  { BxSplitMod11b,  NULL, opcodesADD_EdId },
   /* 1 */  { 0,  &BX_CPU_C::OR_EdId },
   /* 2 */  { 0,  &BX_CPU_C::ADC_EdId },
   /* 3 */  { 0,  &BX_CPU_C::SBB_EdId },
@@ -511,7 +551,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 00 */  { BxAnother,  &BX_CPU_C::ADD_EbGb },
   /* 01 */  { BxAnother,  &BX_CPU_C::ADD_EwGw },
   /* 02 */  { BxAnother,  &BX_CPU_C::ADD_GbEb },
-  /* 03 */  { BxAnother,  &BX_CPU_C::ADD_GwEw },
+  /* 03 */  { BxAnother | BxSplitMod11b,  NULL, opcodesADD_GwEw },
   /* 04 */  { BxImmediate_Ib,  &BX_CPU_C::ADD_ALIb },
   /* 05 */  { BxImmediate_Iv,  &BX_CPU_C::ADD_AXIw },
   /* 06 */  { 0,  &BX_CPU_C::BxError },
@@ -645,9 +685,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 85 */  { BxAnother,  &BX_CPU_C::TEST_EwGw },
   /* 86 */  { BxAnother,  &BX_CPU_C::XCHG_EbGb },
   /* 87 */  { BxAnother,  &BX_CPU_C::XCHG_EwGw },
-  /* 88 */  { BxAnother,  &BX_CPU_C::MOV_EbGb },
-  /* 89 */  { BxAnother,  &BX_CPU_C::MOV_EwGw },
-  /* 8A */  { BxAnother,  &BX_CPU_C::MOV_GbEb },
+  /* 88 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EbGb },
+  /* 89 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EwGw },
+  /* 8A */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GbEb },
   /* 8B */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GwEw },
   /* 8C */  { BxAnother,  &BX_CPU_C::MOV_EwSw },
   /* 8D */  { BxAnother,  &BX_CPU_C::LEA_GwM },
@@ -1033,7 +1073,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 00 */  { BxAnother,  &BX_CPU_C::ADD_EbGb },
   /* 01 */  { BxAnother,  &BX_CPU_C::ADD_EdGd },
   /* 02 */  { BxAnother,  &BX_CPU_C::ADD_GbEb },
-  /* 03 */  { BxAnother,  &BX_CPU_C::ADD_GdEd },
+  /* 03 */  { BxAnother | BxSplitMod11b, NULL, opcodesADD_GdEd },
   /* 04 */  { BxImmediate_Ib,  &BX_CPU_C::ADD_ALIb },
   /* 05 */  { BxImmediate_Iv,  &BX_CPU_C::ADD_EAXId },
   /* 06 */  { 0,  &BX_CPU_C::BxError },
@@ -1167,9 +1207,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 85 */  { BxAnother,  &BX_CPU_C::TEST_EdGd },
   /* 86 */  { BxAnother,  &BX_CPU_C::XCHG_EbGb },
   /* 87 */  { BxAnother,  &BX_CPU_C::XCHG_EdGd },
-  /* 88 */  { BxAnother,  &BX_CPU_C::MOV_EbGb },
-  /* 89 */  { BxAnother,  &BX_CPU_C::MOV_EdGd },
-  /* 8A */  { BxAnother,  &BX_CPU_C::MOV_GbEb },
+  /* 88 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EbGb },
+  /* 89 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EdGd },
+  /* 8A */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GbEb },
   /* 8B */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GdEd },
   /* 8C */  { BxAnother,  &BX_CPU_C::MOV_EwSw },
   /* 8D */  { BxAnother,  &BX_CPU_C::LEA_GdM },
@@ -1489,7 +1529,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F C0 */  { BxAnother,  &BX_CPU_C::XADD_EbGb },
   /* 0F C1 */  { BxAnother,  &BX_CPU_C::XADD_EdGd },
   /* 0F C2 */  { 0,  &BX_CPU_C::BxError },
-  /* 0F C3 */  { BxAnother,  &BX_CPU_C::MOV_EdGd }, // movnti
+  /* 0F C3 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EdGd }, // movnti
   /* 0F C4 */  { 0,  &BX_CPU_C::BxError },
   /* 0F C5 */  { 0,  &BX_CPU_C::BxError },
   /* 0F C6 */  { 0,  &BX_CPU_C::BxError },
@@ -1688,9 +1728,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 85 */  { BxAnother,  &BX_CPU_C::TEST_EqGq },
   /* 86 */  { BxAnother,  &BX_CPU_C::XCHG_EbGb },
   /* 87 */  { BxAnother,  &BX_CPU_C::XCHG_EqGq },
-  /* 88 */  { BxAnother,  &BX_CPU_C::MOV_EbGb },
+  /* 88 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EbGb },
   /* 89 */  { BxAnother,  &BX_CPU_C::MOV_EqGq },
-  /* 8A */  { BxAnother,  &BX_CPU_C::MOV_GbEb },
+  /* 8A */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GbEb },
   /* 8B */  { BxAnother,  &BX_CPU_C::MOV_GqEq },
   /* 8C */  { BxAnother,  &BX_CPU_C::MOV_EwSw },
   /* 8D */  { BxAnother,  &BX_CPU_C::LEA_GqM },
@@ -2576,28 +2616,36 @@ modrm_done:
       BxOpcodeInfo_t *OpcodeInfoPtr;
 
       OpcodeInfoPtr = BxOpcodeInfo64[b1+offset].AnotherArray;
-      instruction->execute = OpcodeInfoPtr[nnn].ExecutePtr;
       // get additional attributes from group table
       attr |= OpcodeInfoPtr[nnn].Attr;
       instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
 #if BX_DYNAMIC_TRANSLATION
       instruction->DTAttr = 0; // for now
 #endif
+      // For high frequency opcodes, two variants of the instruction are
+      // implemented; one for the mod=11b case (Reg-Reg), and one for
+      // the other cases (Reg-Mem).  If this is one of those cases,
+      // we need to dereference to get to the execute pointer.
+      if (attr & BxSplitMod11b) {
+        OpcodeInfoPtr = OpcodeInfoPtr[nnn].AnotherArray;
+        instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
+        }
+      else
+        instruction->execute = OpcodeInfoPtr[nnn].ExecutePtr;
       }
     else {
-      instruction->execute = BxOpcodeInfo64[b1+offset].ExecutePtr;
 #if BX_DYNAMIC_TRANSLATION
       instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
       instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
 #endif
-      // For high frequency opcodes, two variants of the instruction are
-      // implemented; one for the mod=11b case (Reg-Reg), and one for
-      // the other cases (Reg-Mem).
+      // (See note immediately above for comment)
       if (attr & BxSplitMod11b) {
         BxOpcodeInfo_t *OpcodeInfoPtr;
         OpcodeInfoPtr = BxOpcodeInfo64[b1+offset].AnotherArray;
         instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
         }
+      else
+        instruction->execute = BxOpcodeInfo64[b1+offset].ExecutePtr;
       }
     }
   else {

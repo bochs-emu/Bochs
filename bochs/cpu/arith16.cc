@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.20 2002-09-28 01:16:09 kevinlawton Exp $
+// $Id: arith16.cc,v 1.21 2002-09-29 19:21:36 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,44 +116,68 @@ BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
 
 
   void
-BX_CPU_C::ADD_GwEw(bxInstruction_c *i)
+BX_CPU_C::ADD_GwEEw(bxInstruction_c *i)
 {
-    Bit16u op1_16, op2_16, sum_16;
+  Bit16u op1_16, op2_16, sum_16;
 
+  op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-    /* op1_16 is a register, RMAddr(i) is an index of a register */
-    op1_16 = BX_READ_16BIT_REG(i->nnn());
-
-    /* op2_16 is a register or memory reference */
-    if (i->modC0()) {
-      op2_16 = BX_READ_16BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-      }
+  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
-    Bit32u flags32;
-    asm (
-      "addw %3, %1 \n\t"
-      "pushfl      \n\t"
-      "popl   %0"
-      : "=g" (flags32), "=r" (sum_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+  Bit32u flags32;
+  asm (
+    "addw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
-    sum_16 = op1_16 + op2_16;
+  sum_16 = op1_16 + op2_16;
 #endif
 
-    BX_WRITE_16BIT_REG(i->nnn(), sum_16);
+  BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+#endif
+}
+
+  void
+BX_CPU_C::ADD_GwEGw(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16, sum_16;
+
+  op1_16 = BX_READ_16BIT_REG(i->nnn());
+
+  op2_16 = BX_READ_16BIT_REG(i->rm());
+
+#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  Bit32u flags32;
+  asm (
+    "addw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
+#else
+  sum_16 = op1_16 + op2_16;
+#endif
+
+  BX_WRITE_16BIT_REG(i->nnn(), sum_16);
+
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 #endif
 }
 
@@ -653,56 +677,65 @@ BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
 
 
   void
-BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
+BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16, sum_16;
 
   op2_16 = i->Iw();
 
-  /* op1_16 is a register or memory reference */
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
+  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
-    Bit32u flags32;
-    asm (
-      "addw %3, %1 \n\t"
-      "pushfl      \n\t"
-      "popl   %0"
-      : "=g" (flags32), "=r" (sum_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+  Bit32u flags32;
+  asm (
+    "addw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
-    sum_16 = op1_16 + op2_16;
+  sum_16 = op1_16 + op2_16;
 #endif
-    BX_WRITE_16BIT_REG(i->rm(), sum_16);
-    }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  Write_RMW_virtual_word(sum_16);
+
+#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+#endif
+}
+
+  void
+BX_CPU_C::ADD_EGwIw(bxInstruction_c *i)
+{
+  Bit16u op2_16, op1_16, sum_16;
+
+  op2_16 = i->Iw();
+
+  op1_16 = BX_READ_16BIT_REG(i->rm());
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
-    Bit32u flags32;
-    asm (
-      "addw %3, %1 \n\t"
-      "pushfl      \n\t"
-      "popl   %0"
-      : "=g" (flags32), "=r" (sum_16)
-      : "1" (op1_16), "g" (op2_16)
-      : "cc"
-      );
-    BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
-    BX_CPU_THIS_PTR lf_flags_status = 0;
+  Bit32u flags32;
+  asm (
+    "addw %3, %1 \n\t"
+    "pushfl      \n\t"
+    "popl   %0"
+    : "=g" (flags32), "=r" (sum_16)
+    : "1" (op1_16), "g" (op2_16)
+    : "cc"
+    );
+  BX_CPU_THIS_PTR eflags.val32 =
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) |
+    (flags32 & EFlagsOSZAPCMask);
+  BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
-    sum_16 = op1_16 + op2_16;
+  sum_16 = op1_16 + op2_16;
 #endif
-    Write_RMW_virtual_word(sum_16);
-    }
+  BX_WRITE_16BIT_REG(i->rm(), sum_16);
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);

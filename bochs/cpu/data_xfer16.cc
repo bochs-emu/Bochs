@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.16 2002-09-28 05:38:11 kevinlawton Exp $
+// $Id: data_xfer16.cc,v 1.17 2002-09-29 19:21:36 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,21 +52,23 @@ BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
 
 
   void
-BX_CPU_C::MOV_EwGw(bxInstruction_c *i)
+BX_CPU_C::MOV_EEwGw(bxInstruction_c *i)
 {
-    Bit16u op2_16;
+  Bit16u op2_16;
 
-    /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-    /* op1_16 is a register or memory reference */
-    /* now write op2 to op1 */
-    if (i->modC0()) {
-      BX_WRITE_16BIT_REG(i->rm(), op2_16);
-      }
-    else {
-      write_virtual_word(i->seg(), RMAddr(i), &op2_16);
-      }
+  write_virtual_word(i->seg(), RMAddr(i), &op2_16);
+}
+
+  void
+BX_CPU_C::MOV_EGwGw(bxInstruction_c *i)
+{
+  Bit16u op2_16;
+
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+
+  BX_WRITE_16BIT_REG(i->rm(), op2_16);
 }
 
 
