@@ -10,6 +10,7 @@ Changes in 2.1.1 (February 8, 2004):
 - fix floppy dialog error on win2k (Volker)
 - fix adress check in TSS IO permission bitmap (Christophe)
 - fix buffer overflow vulnerability pointed out by SeSoX (Christophe)
+- updates for MacOS compile (Daniel Gimpelevich)
 
 -------------------------------------------------------------------------
 Changes in 2.1 (January 9, 2004):
