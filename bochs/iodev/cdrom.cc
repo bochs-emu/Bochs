@@ -73,9 +73,6 @@ extern "C" {
 #include <winioctl.h>
 #include "aspi-win32.h"
 #include "scsidefs.h"
-#ifndef __MINGW32__
-#include "type.h"
-#endif
 
 DWORD (*GetASPI32SupportInfo)(void);
 DWORD (*SendASPI32Command)(LPSRB);
@@ -192,7 +189,7 @@ cdrom_interface::cdrom_interface(char *dev)
 }
 void
 cdrom_interface::init(void) {
-    BX_DEBUG(("Init $Id: cdrom.cc,v 1.18 2001-06-27 20:11:10 fries Exp $"));
+    BX_DEBUG(("Init $Id: cdrom.cc,v 1.19 2001-08-14 05:01:49 bdenney Exp $"));
 	BX_INFO(("file = '%s'",path));
 }
 
