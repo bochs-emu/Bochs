@@ -2073,7 +2073,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodeInfoFP[512] = {
   /* DE FF */  { "fdivp",     0, STj, STj, XX },
 
   // DF (modrm is outside 00h - BFh) (mod == 11)
-  /* DF C0 */  { "ffreep",    0, STj,  XX, XX }, // 287+ compatility opcode
+  /* DF C0 */  { "ffreep",    0, STj,  XX, XX }, // 287+ compatibility opcode
   /* DF C1 */  { "ffreep",    0, STj,  XX, XX },
   /* DF C2 */  { "ffreep",    0, STj,  XX, XX },
   /* DF C3 */  { "ffreep",    0, STj,  XX, XX },

@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.255 2004-06-09 20:55:57 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.256 2004-07-15 19:57:31 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1199,7 +1199,6 @@ AC_ARG_ENABLE(external-debugger,
 AC_SUBST(BX_EXTERNAL_DEBUGGER)
 
 AC_MSG_CHECKING(for magic breakpoints)
-EXT_DEBUG_OBJS=''
 AC_ARG_ENABLE(magic-breakpoints,
   [  --enable-magic-breakpoints        enable magic debugger breakpoints],
   [if test "$enableval" = yes; then
