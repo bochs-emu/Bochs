@@ -26,6 +26,7 @@
  */
 
 #include "bochs.h"
+#include "pit82c54.h"
 #define LOG_THIS this->
 
   void pit_82C54::latch_counter(counter_type & thisctr) {
