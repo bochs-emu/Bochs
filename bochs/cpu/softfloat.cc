@@ -182,7 +182,7 @@ BX_CPP_INLINE flag extractFloat32Sign(float32 a)
 | Determine single-precision floating-point number class
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float_class_t float32_class(float32 a)
+float_class_t float32_class(float32 a)
 {
    Bit16s aExp = extractFloat32Exp(a);
    Bit32u aSig = extractFloat32Frac(a);
@@ -362,7 +362,7 @@ BX_CPP_INLINE flag extractFloat64Sign(float64 a)
 | Determine double-precision floating-point number class
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float_class_t float64_class(float64 a)
+float_class_t float64_class(float64 a)
 {
    Bit16s aExp = extractFloat64Exp(a);
    Bit64u aSig = extractFloat64Frac(a);
