@@ -32,6 +32,7 @@ these four paragraphs for those parts of this code that are retained.
  *            Stanislav Shwartsman (gate@fidonet.org.il)
  * ==========================================================================*/ 
 
+#define int16_indefinite 0x8000
 #define int32_indefinite 0x80000000
 #define int64_indefinite BX_CONST64(0x8000000000000000)
 
