@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.81 2002-12-05 20:32:07 bdenney Exp $
+$Id: user.dbk,v 1.82 2002-12-06 18:28:40 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1782,20 +1782,24 @@ RPM stands for "RedHat Package Manager."  An RPM is a compressed file
 containing files to be installed on your system.  Bochs 
 has a special shell script called <filename>make-rpm</filename> that helps
 to build an RPM of Bochs.  Start with a clean source directory.  Edit
-.conf.linux first if you want to adjust the configure options.  Then, type:
+.conf.linux first if you want to adjust the configure options.  
+Then, type:
 
 <screen>
-  su root
-  Password:     <replaceable>type root password</replaceable>
-  ./build/redhat/make-rpm
+  ./build/redhat/make-rpm | tee /tmp/build.txt
 </screen>
 
-When this command completes, you will have a source RPM and a binary RPM
-of Bochs, probably under <filename>/usr/src/redhat/RPMS</filename>.  The
-output of the <command>make rpm</command> will tell you the exact location
-of these new files.  Instructions for installing an RPM are <link
-linkend="linuxrpm">here</link>.
+When this command completes, you should have a source RPM and a binary RPM of
+Bochs in the current directory.  The <command>tee</command> part of the 
+command (optional) saves a transcript of the build process into /tmp/build.txt,
+which is very useful if anything goes wrong.  Instructions for installing an
+RPM are <link linkend="linuxrpm">here</link>.
 </para>
+
+<note><para>
+In the past, you had to build rpms as root, but as of version 2.0 you can build
+them as a normal user.
+</para></note>
 
 </section> <!-- end of Building an RPM -->
 
@@ -6361,7 +6365,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.81 2002-12-05 20:32:07 bdenney Exp $
+        $Id: user.dbk,v 1.82 2002-12-06 18:28:40 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6637,7 +6641,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.81 2002-12-05 20:32:07 bdenney Exp $
+        $Id: user.dbk,v 1.82 2002-12-06 18:28:40 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
