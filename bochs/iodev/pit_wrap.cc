@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.55 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pit_wrap.cc,v 1.56 2004-06-19 19:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,7 +30,6 @@
 #if BX_USE_NEW_PIT
 
 #include "pit_wrap.h"
-#include "iodev.h"
 
 //Important constant #defines:
 #define USEC_PER_SECOND (1000000)

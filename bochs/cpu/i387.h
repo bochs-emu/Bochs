@@ -53,8 +53,6 @@ public:
     void	init();		// used by FINIT/FNINIT instructions
     void	reset();	// called on CPU reset
 
-    int    	get_tos() const { return tos; }
-
     int 	is_IA_masked() const { return (cwd & FPU_CW_Invalid); }
 
     Bit16u 	get_control_word() const { return cwd; }
@@ -65,17 +63,12 @@ public:
     void   	FPU_pop ();
     void   	FPU_push();
 
-    void   	FPU_settag (int tag, int regnr);
-    int    	FPU_gettag (int regnr);
+    void   	FPU_settagi(int tag, int stnr);
+    int    	FPU_gettagi(int stnr);
 
-    void   	FPU_settagi(int tag, int stnr) { FPU_settag(tag, tos+stnr); }
-    int    	FPU_gettagi(int stnr) { return FPU_gettag(tos+stnr); }
-
-    void	FPU_save_reg (floatx80 reg, int tag, int regnr);
-
+    void  	FPU_save_regi(floatx80 reg, int tag, int stnr);
     void  	FPU_save_regi(floatx80 reg, int stnr) { FPU_save_regi(reg, FPU_tagof(reg), stnr); }
-    floatx80 	FPU_read_regi(int stnr) { return st_space[(tos+stnr) & 0x07]; }
-    void  	FPU_save_regi(floatx80 reg, int tag, int stnr) { FPU_save_reg(reg, tag, (tos+stnr) & 0x07); }
+    floatx80 	FPU_read_regi(int stnr) { return st_space[(tos+stnr) & 7]; }
 
 public:
     Bit16u cwd; 	// control word
@@ -96,30 +89,26 @@ public:
     unsigned char align3;
 };
 
-#define IS_TAG_EMPTY(i) 		\
+#define IS_TAG_EMPTY(i) 		                                \
   ((BX_CPU_THIS_PTR the_i387.FPU_gettagi(i)) == FPU_Tag_Empty)
 
-#define BX_READ_FPU_REG(i)		\
+#define BX_READ_FPU_REG(i)		                                \
   (BX_CPU_THIS_PTR the_i387.FPU_read_regi(i))
 
-#define BX_WRITE_FPU_REGISTER_AND_TAG(value, tag, i)			\
-{                                                               	\
-    BX_CPU_THIS_PTR the_i387.FPU_save_regi((value), (tag), (i));      	\
-}                                                               	
+#define BX_WRITE_FPU_REGISTER_AND_TAG(value, tag, i)                    \
+    BX_CPU_THIS_PTR the_i387.FPU_save_regi((value), (tag), (i));
 
-#define BX_WRITE_FPU_REG(value, i)					\
-{                                                               	\
-    BX_CPU_THIS_PTR the_i387.FPU_save_regi((value), (i));      		\
-}                                                               	
+#define BX_WRITE_FPU_REG(value, i)                                      \
+    BX_CPU_THIS_PTR the_i387.FPU_save_regi((value), (i));
 
-BX_CPP_INLINE int i387_t::FPU_gettag(int regnr)
+BX_CPP_INLINE int i387_t::FPU_gettagi(int stnr)
 {
-  return (get_tag_word() >> ((regnr & 7)*2)) & 3;
+  return (twd >> (((stnr+tos) & 7)*2)) & 3;
 }
 
-BX_CPP_INLINE void i387_t::FPU_settag (int tag, int regnr)
+BX_CPP_INLINE void i387_t::FPU_settagi(int tag, int stnr)
 {
-  regnr &= 7;
+  int regnr = (stnr + tos) & 7;
   twd &= ~(3 << (regnr*2));
   twd |= (tag & 3) << (regnr*2);
 }
@@ -135,10 +124,10 @@ BX_CPP_INLINE void i387_t::FPU_pop(void)
   tos++;
 }
 
-BX_CPP_INLINE void i387_t::FPU_save_reg (floatx80 reg, int tag, int regnr)
+BX_CPP_INLINE void i387_t::FPU_save_regi(floatx80 reg, int tag, int stnr)
 {
-  st_space[regnr] = reg;
-  FPU_settag(tag, regnr);
+  st_space[(stnr+tos) & 7] = reg;
+  FPU_settagi(tag, stnr);
 }
 
 #include <string.h>
