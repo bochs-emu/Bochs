@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.15 2004-07-04 17:07:49 vruppert Exp $
+// $Id: pci2isa.cc,v 1.16 2004-07-05 18:42:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,6 +70,7 @@ bx_pci2isa_c::~bx_pci2isa_c(void)
   void
 bx_pci2isa_c::init(void)
 {
+  unsigned i;
   // called once when bochs initializes
 
   Bit8u devfunc = BX_PCI_DEVICE(1,0);
@@ -88,8 +89,12 @@ bx_pci2isa_c::init(void)
   DEV_register_ioread_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 1);
 
-  for (unsigned i=0; i<256; i++)
+  for (i=0; i<256; i++)
     BX_P2I_THIS s.pci_conf[i] = 0x0;
+  for (i=0; i<16; i++)
+    BX_P2I_THIS s.irq_registry[i] = 0x0;
+  for (i=0; i<16; i++)
+    BX_P2I_THIS s.irq_level[i] = 0x0;
   // readonly registers
   BX_P2I_THIS s.pci_conf[0x00] = 0x86;
   BX_P2I_THIS s.pci_conf[0x01] = 0x80;
@@ -138,7 +143,8 @@ bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.pci_conf[0xae] = 0x00;
 
   for (unsigned i = 0; i < 4; i++) {
-    pci_write_handler(this, 0x60+i, 0x80, 1);
+    pci_set_irq(0x08, i+1, 0);
+    pci_unregister_irq(i);
   }
 
   BX_P2I_THIS s.elcr1 = 0x00;
@@ -146,26 +152,55 @@ bx_pci2isa_c::reset(unsigned type)
 }
 
   void
+bx_pci2isa_c::pci_register_irq(unsigned pirq, unsigned irq)
+{
+  if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
+    BX_P2I_THIS s.pci_conf[0x60 + pirq] = irq;
+    if (!BX_P2I_THIS s.irq_registry[irq]) {
+      DEV_register_irq(irq, "PIIX3 IRQ routing");
+    }
+    BX_P2I_THIS s.irq_registry[irq] |= (1 << pirq);
+  }
+}
+
+  void
+bx_pci2isa_c::pci_unregister_irq(unsigned pirq)
+{
+  Bit8u irq =  BX_P2I_THIS s.pci_conf[0x60 + pirq];
+  if (irq < 16) {
+    BX_P2I_THIS s.irq_registry[irq] &= ~(1 << pirq);
+    if (!BX_P2I_THIS s.irq_registry[irq]) {
+      DEV_unregister_irq(irq, "PIIX3 IRQ routing");
+    }
+    BX_P2I_THIS s.pci_conf[0x60 + pirq] = 0x80;
+  }
+}
+
+  void
 bx_pci2isa_c::pci_init_irq(Bit8u devfunc, unsigned line, unsigned irq)
 {
   Bit8u pirq = ((devfunc >> 3) + line - 2) & 0x03;
-  BX_P2I_THIS s.pci_conf[0x60 + pirq] = irq;
-  if (irq < 16) {
-    DEV_register_irq(irq, "PIIX3 IRQ routing");
-  }
+  pci_register_irq(pirq, irq);
 }
 
   void
 bx_pci2isa_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
 {
   Bit8u pirq = ((devfunc >> 3) + line - 2) & 0x03;
-  Bit8u isa_irq = BX_P2I_THIS s.pci_conf[0x60 + pirq];
-  BX_DEBUG(("PIRQ%c -> IRQ %d = %d", pirq+65, isa_irq, level));
-  if ((isa_irq > 2) && (isa_irq < 16)) {
+  Bit8u irq = BX_P2I_THIS s.pci_conf[0x60 + pirq];
+  if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
     if (level == 1) {
-      DEV_pic_raise_irq(isa_irq);
+      if (!BX_P2I_THIS s.irq_level[irq]) {
+        DEV_pic_raise_irq(irq);
+        BX_DEBUG(("PIRQ%c -> IRQ %d = 1", pirq+65, irq));
+      }
+      BX_P2I_THIS s.irq_level[irq] |= (1 << (devfunc >> 3));
     } else {
-      DEV_pic_lower_irq(isa_irq);
+      BX_P2I_THIS s.irq_level[irq] &= ~(1 << (devfunc >> 3));
+      if (!BX_P2I_THIS s.irq_level[irq]) {
+        DEV_pic_lower_irq(irq);
+        BX_DEBUG(("PIRQ%c -> IRQ %d = 0", pirq+65, irq));
+      }
     }
   }
 }
@@ -320,15 +355,15 @@ bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x62:
         case 0x63:
           if (value8 != BX_P2I_THIS s.pci_conf[address+i]) {
-            if (BX_P2I_THIS s.pci_conf[address+i] < 16) {
-              DEV_unregister_irq(BX_P2I_THIS s.pci_conf[address+i], "PIIX3 IRQ routing");
-            }
-            if (value8 < 16) {
-              DEV_register_irq(value8, "PIIX3 IRQ routing");
+            if (value8 >= 0x80) {
+              pci_unregister_irq((address+i) & 0x03);
+            } else {
+              pci_register_irq((address+i) & 0x03, value8);
             }
             BX_INFO(("PCI IRQ routing: PIRQ%c# set to 0x%02x", address+i-31,
                      value8));
           }
+          break;
         default:
           BX_P2I_THIS s.pci_conf[address+i] = value8;
           BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address,

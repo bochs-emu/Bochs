@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.6 2004-07-04 17:07:49 vruppert Exp $
+// $Id: pci2isa.h,v 1.7 2004-07-05 18:42:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,8 +49,13 @@ private:
   struct {
     Bit8u pci_conf[256];
     Bit8u elcr1;
-    Bit8u elcr2; 
+    Bit8u elcr2;
+    Bit8u irq_registry[16];
+    Bit32u irq_level[16];
     } s;
+
+  static void pci_register_irq(unsigned pirq, unsigned irq);
+  static void pci_unregister_irq(unsigned pirq);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
