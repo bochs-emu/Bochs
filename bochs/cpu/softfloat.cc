@@ -1483,7 +1483,7 @@ int float32_compare(float32 a, float32 b, float_status_t &status)
         return (aSign) ? float_relation_less : float_relation_greater;
     }
     if (aSign ^ (a < b)) return float_relation_less;
-    else float_relation_greater;
+    return float_relation_greater;
 }
 
 /*----------------------------------------------------------------------------
@@ -1523,7 +1523,7 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
         return (aSign) ? float_relation_less : float_relation_greater;
     }
     if (aSign ^ (a < b)) return float_relation_less;
-    else float_relation_greater;
+    return float_relation_greater;
 }
 
 /*----------------------------------------------------------------------------
@@ -2471,7 +2471,7 @@ int float64_compare(float64 a, float64 b, float_status_t &status)
         return (aSign) ? float_relation_less : float_relation_greater;
     }
     if (aSign ^ (a < b)) return float_relation_less;
-    else float_relation_greater;
+    return float_relation_greater;
 }
 
 /*----------------------------------------------------------------------------
@@ -2511,5 +2511,5 @@ int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
         return (aSign) ? float_relation_less : float_relation_greater;
     }
     if (aSign ^ (a < b)) return float_relation_less;
-    else float_relation_greater;
+    return float_relation_greater;
 }
