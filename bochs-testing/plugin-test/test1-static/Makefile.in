@@ -1,4 +1,5 @@
 top_builddir = ..
+top_srcdir = @srcdir@/..
 srcdir = @srcdir@
 VPATH = @srcdir@
 
@@ -18,11 +19,6 @@ libmodule1.la: module1.lo
 %.lo: %.cc
 	$(LIBTOOL) $(CXX) $(CXXFLAGS) -c $<
 
-test:
-	@echo "*** Running test in `pwd`"
-	-./uselib
-	@echo "*** Test done in `pwd`"
+include	${top_srcdir}/common-make-defs.txt
 
-clean: 
-	-$(LIBTOOL) rm libmodule1.la module1.lo uselib.exe uselib
-	rm -rf .libs
+clean: clean-common

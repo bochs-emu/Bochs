@@ -25,12 +25,6 @@ module2.dll: module2.cc main.h
 %.o: %.cc
 	$(CXX) $(CXXFLAGS) -c $<
 
-test:
-	@echo "*** Running test in `pwd`"
-	-./uselib
-	@echo "*** Test done in `pwd`"
+include	${top_srcdir}/common-make-defs.txt
 
-clean:
-	-$(LIBTOOL) rm libmodule1.la module1.lo libmodule2.la module2.lo
-	-rm -rf *.o *.lo *.la *.dll uselib.exe bin lib uselib uselib.exe
-	-rm -rf .libs
+clean: clean-common
