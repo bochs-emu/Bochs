@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.201 2002-12-02 21:26:03 cbothamy Exp $
+// $Id: main.cc,v 1.202 2002-12-03 18:55:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2322,10 +2322,38 @@ parse_bochsrc(char *rcfile)
   static char *
 get_builtin_variable(char *varname)
 {
+#ifdef WIN32
+  int code;
+  DWORD size;
+  DWORD type = 0;
+  HKEY hkey;
+  char keyname[80];
+  static char data[MAX_PATH];
+#endif
+
   if (strlen(varname)<1) return NULL;
   else {
     if (!strcmp(varname, "BXBIOS")) {
+#ifdef WIN32
+      wsprintf(keyname, "Software\\Bochs %s", VER_STRING);
+      code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyname, 0, KEY_READ, &hkey);
+      if (code == ERROR_SUCCESS) {
+        data[0] = 0;
+        size = MAX_PATH;
+        if (RegQueryValueEx(hkey, "", NULL, (LPDWORD)&type, (LPBYTE)data,
+                            (LPDWORD)&size ) == ERROR_SUCCESS ) {
+          RegCloseKey(hkey);
+          return data;
+        } else {
+          RegCloseKey(hkey);
+          return NULL;
+        }
+      } else {
+        return NULL;
+      }
+#else
       return BX_BIOS_DEFAULT_PATH;
+#endif
     }
     return NULL;
   }
