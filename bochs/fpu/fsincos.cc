@@ -89,28 +89,28 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
 
 static float128 sin_arr[SIN_ARR_SIZE] =
 {
-    packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000)), /*  1 */
-    packFloat128(BX_CONST64(0xbffc555555555555), BX_CONST64(0x5555555555555555)), /*  3 */
-    packFloat128(BX_CONST64(0x3ff8111111111111), BX_CONST64(0x1111111111111111)), /*  5 */
-    packFloat128(BX_CONST64(0xbff2a01a01a01a01), BX_CONST64(0xa01a01a01a01a01a)), /*  7 */
-    packFloat128(BX_CONST64(0x3fec71de3a556c73), BX_CONST64(0x38faac1c88e50017)), /*  9 */
-    packFloat128(BX_CONST64(0xbfe5ae64567f544e), BX_CONST64(0x38fe747e4b837dc7)), /* 11 */
-    packFloat128(BX_CONST64(0x3fde6124613a86d0), BX_CONST64(0x97ca38331d23af68)), /* 13 */
-    packFloat128(BX_CONST64(0xbfd6ae7f3e733b81), BX_CONST64(0xf11d8656b0ee8cb0)), /* 15 */
-    packFloat128(BX_CONST64(0x3fce952c77030ad4), BX_CONST64(0xa6b2605197771b00))  /* 17 */
+    PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
+    PACK_FLOAT_128(0xbffc555555555555, 0x5555555555555555), /*  3 */
+    PACK_FLOAT_128(0x3ff8111111111111, 0x1111111111111111), /*  5 */
+    PACK_FLOAT_128(0xbff2a01a01a01a01, 0xa01a01a01a01a01a), /*  7 */
+    PACK_FLOAT_128(0x3fec71de3a556c73, 0x38faac1c88e50017), /*  9 */
+    PACK_FLOAT_128(0xbfe5ae64567f544e, 0x38fe747e4b837dc7), /* 11 */
+    PACK_FLOAT_128(0x3fde6124613a86d0, 0x97ca38331d23af68), /* 13 */
+    PACK_FLOAT_128(0xbfd6ae7f3e733b81, 0xf11d8656b0ee8cb0), /* 15 */
+    PACK_FLOAT_128(0x3fce952c77030ad4, 0xa6b2605197771b00)  /* 17 */
 };
 
 static float128 cos_arr[COS_ARR_SIZE] =
 {
-    packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000)), /*  0 */
-    packFloat128(BX_CONST64(0xbffe000000000000), BX_CONST64(0x0000000000000000)), /*  2 */
-    packFloat128(BX_CONST64(0x3ffa555555555555), BX_CONST64(0x5555555555555555)), /*  4 */
-    packFloat128(BX_CONST64(0xbff56c16c16c16c1), BX_CONST64(0x6c16c16c16c16c17)), /*  6 */
-    packFloat128(BX_CONST64(0x3fefa01a01a01a01), BX_CONST64(0xa01a01a01a01a01a)), /*  8 */
-    packFloat128(BX_CONST64(0xbfe927e4fb7789f5), BX_CONST64(0xc72ef016d3ea6679)), /* 10 */
-    packFloat128(BX_CONST64(0x3fe21eed8eff8d89), BX_CONST64(0x7b544da987acfe85)), /* 12 */
-    packFloat128(BX_CONST64(0xbfda93974a8c07c9), BX_CONST64(0xd20badf145dfa3e5)), /* 14 */
-    packFloat128(BX_CONST64(0x3fd2ae7f3e733b81), BX_CONST64(0xf11d8656b0ee8cb0))  /* 16 */
+    PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  0 */
+    PACK_FLOAT_128(0xbffe000000000000, 0x0000000000000000), /*  2 */
+    PACK_FLOAT_128(0x3ffa555555555555, 0x5555555555555555), /*  4 */
+    PACK_FLOAT_128(0xbff56c16c16c16c1, 0x6c16c16c16c16c17), /*  6 */
+    PACK_FLOAT_128(0x3fefa01a01a01a01, 0xa01a01a01a01a01a), /*  8 */
+    PACK_FLOAT_128(0xbfe927e4fb7789f5, 0xc72ef016d3ea6679), /* 10 */
+    PACK_FLOAT_128(0x3fe21eed8eff8d89, 0x7b544da987acfe85), /* 12 */
+    PACK_FLOAT_128(0xbfda93974a8c07c9, 0xd20badf145dfa3e5), /* 14 */
+    PACK_FLOAT_128(0x3fd2ae7f3e733b81, 0xf11d8656b0ee8cb0)  /* 16 */
 };
 
 extern float128 OddPoly (float128 x, float128 *arr, unsigned n, float_status_t &status);

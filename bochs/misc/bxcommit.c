@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.8 2004-08-19 19:42:22 vruppert Exp $
+ * $Id: bxcommit.c,v 1.9 2005-01-19 18:21:39 sshwarts Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -53,7 +53,7 @@ int snprintf (char *s, size_t maxlen, const char *format, ...)
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.8 2004-08-19 19:42:22 vruppert Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.9 2005-01-19 18:21:39 sshwarts Exp $";
 char *divider = "========================================================================";
 
 void myexit (int code)
@@ -288,7 +288,7 @@ int commit_redolog (char *flatname, char *redologname )
   lseek(redologfd, dtoh32(header.standard.header), SEEK_SET);
 
   catalog_size = dtoh32(header.specific.catalog) * sizeof(Bit32u);
-  if (read(redologfd, catalog, catalog_size)!= catalog_size)
+  if ((Bit32u) read(redologfd, catalog, catalog_size) != catalog_size)
      fatal ("\nERROR: while reading redolog catalog!");
 
   printf ("] Done.");
@@ -315,7 +315,7 @@ int commit_redolog (char *flatname, char *redologname )
                   lseek(redologfd, bitmap_offset, SEEK_SET);
 
                   bitmap_size = dtoh32(header.specific.bitmap);
-                  if (read(redologfd, bitmap, bitmap_size) != bitmap_size)
+                  if ((Bit32u) read(redologfd, bitmap, bitmap_size) != bitmap_size)
                           fatal ("\nERROR: while reading bitmap from redolog !");
 
                   for(j=0; j<dtoh32(header.specific.bitmap); j++)

@@ -168,10 +168,10 @@ BX_CPP_INLINE void mul64To128(Bit64u a, Bit64u b, Bit64u *z0Ptr, Bit64u *z1Ptr)
     Bit32u aHigh, aLow, bHigh, bLow;
     Bit64u z0, zMiddleA, zMiddleB, z1;
 
-    aLow = a;
-    aHigh = a>>32;
-    bLow = b;
-    bHigh = b>>32;
+    aLow = (Bit32u) a;
+    aHigh = (Bit32u)(a>>32);
+    bLow = (Bit32u) b;
+    bHigh = (Bit32u)(b>>32);
     z1 = ((Bit64u) aLow) * bLow;
     zMiddleA = ((Bit64u) aLow) * bHigh;
     zMiddleB = ((Bit64u) aHigh) * bLow;
@@ -304,7 +304,7 @@ BX_CPP_INLINE int countLeadingZeros64(Bit64u a)
     else {
         a >>= 32;
     }
-    shiftCount += countLeadingZeros32(a);
+    shiftCount += countLeadingZeros32((int)(a));
     return shiftCount;
 }
 

@@ -188,6 +188,7 @@ Changes to next release:
  [1101165] APIC base address by Christian Neubert (flashburn)
  [1093796] Fix for bug #1093786 (Nigel Horne)
  [1082584] The start of Bus mice and USB mice by Ben Lunt
+ [1104695] msvc6 compatibility update (Royce Mitchell III)
 
 
 - SF patches partially applied
@@ -200,6 +201,7 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+ #1105208 drive order for boot gets saved wrong
   #661060 Problem with Win98SE
   #837377 Norton Ghost don't boot
   #876689 Unknown register 0x17 [CPU] / WIN98SE

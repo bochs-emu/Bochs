@@ -35,8 +35,8 @@ these four paragraphs for those parts of this code that are retained.
  *            Stanislav Shwartsman (gate at fidonet.org.il)
  * ==========================================================================*/ 
 
-#define int16_indefinite 0x8000
-#define int32_indefinite 0x80000000
+#define int16_indefinite ((Bit16s)0x8000)
+#define int32_indefinite ((Bit32s)0x80000000)
 #define int64_indefinite BX_CONST64(0x8000000000000000)
 
 /*----------------------------------------------------------------------------
@@ -143,7 +143,7 @@ BX_CPP_INLINE commonNaNT float32ToCommonNaN(float32 a, float_status_t &status)
 
 BX_CPP_INLINE float32 commonNaNToFloat32(commonNaNT a)
 {
-    return (((Bit32u) a.sign)<<31) | 0x7FC00000 | (a.hi>>41);
+    return (((Bit32u) a.sign)<<31) | 0x7FC00000 | (Bit32u)(a.hi>>41);
 }
 
 /*----------------------------------------------------------------------------
@@ -191,7 +191,7 @@ BX_CPP_INLINE Bit64u extractFloat64Frac(float64 a)
 
 BX_CPP_INLINE Bit16s extractFloat64Exp(float64 a)
 {
-    return (a>>52) & 0x7FF;
+    return (Bit16s)(a>>52) & 0x7FF;
 }
 
 /*----------------------------------------------------------------------------
@@ -200,7 +200,7 @@ BX_CPP_INLINE Bit16s extractFloat64Exp(float64 a)
 
 BX_CPP_INLINE int extractFloat64Sign(float64 a)
 {
-    return a>>63;
+    return (int)(a>>63);
 }
 
 /*----------------------------------------------------------------------------
@@ -249,7 +249,7 @@ BX_CPP_INLINE commonNaNT float64ToCommonNaN(float64 a, float_status_t &status)
 {
     commonNaNT z;
     if (float64_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
-    z.sign = a>>63;
+    z.sign = (int)(a>>63);
     z.lo = 0;
     z.hi = a<<12;
     return z;
@@ -477,7 +477,7 @@ BX_CPP_INLINE Bit64u extractFloat128Frac0(float128 a)
 
 BX_CPP_INLINE Bit32s extractFloat128Exp(float128 a)
 {
-    return (a.hi>>48) & 0x7FFF;
+    return ((Bit32s)(a.hi>>48)) & 0x7FFF;
 }
 
 /*----------------------------------------------------------------------------
@@ -486,7 +486,7 @@ BX_CPP_INLINE Bit32s extractFloat128Exp(float128 a)
 
 BX_CPP_INLINE int extractFloat128Sign(float128 a)
 {
-    return a.hi >> 63;
+    return (int)(a.hi >> 63);
 }
 
 /*----------------------------------------------------------------------------
@@ -523,6 +523,12 @@ BX_CPP_INLINE float128 packFloat128(Bit64u zHi, Bit64u zLo)
     return z;
 }
 
+#ifdef _MSC_VER
+#define PACK_FLOAT_128(hi,lo) { lo, hi }
+#else
+#define PACK_FLOAT_128(hi,lo) packFloat128(BX_CONST64(hi),BX_CONST64(lo))
+#endif
+
 /*----------------------------------------------------------------------------
 | Returns 1 if the quadruple-precision floating-point value `a' is a NaN;
 | otherwise returns 0.
@@ -555,7 +561,7 @@ BX_CPP_INLINE commonNaNT float128ToCommonNaN(float128 a, float_status_t &status)
 {
     commonNaNT z;
     if (float128_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
-    z.sign = a.hi>>63;
+    z.sign = (int)(a.hi>>63);
     shortShift128Left(a.hi, a.lo, 16, &z.hi, &z.lo);
     return z;
 }

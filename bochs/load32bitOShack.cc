@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.15 2004-06-19 15:20:06 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.16 2005-01-19 18:20:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -283,7 +283,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
     BX_EXIT(1);
     }
 
-  size = stat_buf.st_size;
+  size = (unsigned long)stat_buf.st_size;
   page_size = ((Bit32u)size + 0xfff) & ~0xfff;
 
   BX_MEM_C *mem = BX_MEM(0);

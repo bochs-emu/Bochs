@@ -246,7 +246,7 @@ void BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
   Bit64s scale = 1; 
   Bit64s val64 = 0;
 
-  for (int i = 0; i < 16; i++)
+  for (int n = 0; n < 16; n++)
   {
     val64 += (lo8 & 0x0F) * scale;
     lo8 >>= 4;
@@ -550,9 +550,9 @@ void BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
            save_val /= 10;
         }
 
-        save_reg_hi += (save_val % 10);
+        save_reg_hi += (Bit16u)(save_val % 10);
         save_val /= 10;
-        save_reg_hi += (save_val % 10) << 4;
+        save_reg_hi += (Bit16u)(save_val % 10) << 4;
     }
 
     /* check for fpu arithmetic exceptions */

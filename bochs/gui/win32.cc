@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.89 2004-12-28 14:38:30 vruppert Exp $
+// $Id: win32.cc,v 1.90 2005-01-19 18:21:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -578,7 +578,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
                                    tilewidth, unsigned tileheight,
                                    unsigned headerbar_y)
 {
-  int i;
+  unsigned i;
 
   put("WGUI");
   static RGBQUAD black_quad={ 0, 0, 0, 0};
@@ -653,7 +653,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   cmap_index=bitmap_info->bmiColors;
   // start out with all color map indeces pointing to Black
   cmap_index[0] = black_quad;
-  for (unsigned i=1; i<256; i++) {
+  for (i=1; i<256; i++) {
     cmap_index[i] = cmap_index[0];
   }
 

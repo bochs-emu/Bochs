@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.75 2004-11-04 22:41:24 sshwarts Exp $
+// $Id: cdrom.cc,v 1.76 2005-01-19 18:21:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -523,7 +523,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.75 2004-11-04 22:41:24 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.76 2005-01-19 18:21:32 sshwarts Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -774,6 +774,7 @@ if (using_file == 0)
   bx_bool
 cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track, int format)
 {
+  unsigned i;
   // Read CD TOC. Returns false if start track is out of bounds.
 
   if (fd < 0) {
@@ -850,7 +851,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
         buf[1] = 0x0a;
         buf[2] = 1;
         buf[3] = 1;
-        for (unsigned i = 0; i < 8; i++)
+        for (i = 0; i < 8; i++)
           buf[4+i] = 0;
         len = 12;
         break;

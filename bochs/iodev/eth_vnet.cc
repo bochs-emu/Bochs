@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.12 2004-10-24 12:49:04 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.13 2005-01-19 18:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -273,10 +273,11 @@ bx_vnet_pktmover_c::pktmover_init(
   fprintf (pktlog_txt, "vnet packetmover readable log file\n");
   fprintf (pktlog_txt, "net IF = %s\n", netif);
   fprintf (pktlog_txt, "host MAC address = ");
-  for (int i=0; i<6; i++) 
+  int i;
+  for (i=0; i<6; i++) 
     fprintf (pktlog_txt, "%02x%s", 0xff & host_macaddr[i], i<5?":" : "\n");
   fprintf (pktlog_txt, "guest MAC address = ");
-  for (int i=0; i<6; i++) 
+  for (i=0; i<6; i++) 
     fprintf (pktlog_txt, "%02x%s", 0xff & guest_macaddr[i], i<5?":" : "\n");
   fprintf (pktlog_txt, "--\n");
   fflush (pktlog_txt);

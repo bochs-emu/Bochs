@@ -2,7 +2,7 @@
 //
 // misc/niclist.c
 // by Don Becker <x-odus@iname.com>
-// $Id: niclist.c,v 1.11 2005-01-19 17:53:09 sshwarts Exp $
+// $Id: niclist.c,v 1.12 2005-01-19 18:21:40 sshwarts Exp $
 //
 // This program is for win32 only.  It lists the network interface cards
 // that you can use in the "ethdev" field of the ne2k line in your bochsrc.
@@ -187,4 +187,5 @@ int main(int argc, char **argv)
 	}
 
 	myexit (0);
+	return 0; /* shut up stupid compilers */
 }

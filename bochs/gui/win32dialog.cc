@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.23 2004-08-30 10:47:09 vruppert Exp $
+// $Id: win32dialog.cc,v 1.24 2005-01-19 18:21:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -143,7 +143,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         status = SIM->get_param_enum(BXP_FLOPPYB_STATUS);
         disktype = SIM->get_param_enum(BXP_FLOPPYB_DEVTYPE);
       }
-      cap = disktype->get() - disktype->get_min();
+      cap = disktype->get() - (int)disktype->get_min();
       SetWindowText(GetDlgItem(hDlg, IDDEVTYPE), floppy_type_names[cap]);
       if (status->get() == BX_INSERTED) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
@@ -203,7 +203,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           break;
         case IDCREATE:
           GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-          cap = disktype->get() - disktype->get_min();
+          cap = disktype->get() - (int)disktype->get_min();
           if (CreateImage(hDlg, floppy_type_n_sectors[cap], path)) {
             wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[cap], path);
             MessageBox(hDlg, mesg, "Image created", MB_OK);
@@ -395,6 +395,7 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
   static char origpath[4][MAX_PATH];
   char path[MAX_PATH];
   char prefix[8];
+  Bit8u cdrom;
 
   switch (msg) {
     case WM_INITDIALOG:
@@ -411,7 +412,7 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
       RuntimeDlgSetTab(hDlg, 0);
       // 4 cdroms supported at run time
       devcount = 1;
-      for (Bit8u cdrom=1; cdrom<4; cdrom++) {
+      for (cdrom=1; cdrom<4; cdrom++) {
         if (!SIM->get_cdrom_options (cdrom, &cdromop[cdrom], &device) || !cdromop[cdrom].Opresent->get ()) {
           EnableWindow(GetDlgItem(hDlg, IDLABEL1+cdrom), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDCDROM1+cdrom), FALSE);

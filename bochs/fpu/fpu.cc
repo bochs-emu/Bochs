@@ -514,7 +514,11 @@ void BX_CPU_C::print_state_FPU()
     const floatx80 &fp = BX_FPU_REG(i);
     double f = pow(2.0, ((0x7fff & fp.exp) - 0x3fff));
     if (fp.exp & 0x8000) f = -f;
+#ifdef _MSC_VER
+    f *= (double)(signed __int64)(fp.fraction>>1) * scale_factor * 2;
+#else
     f *= fp.fraction*scale_factor;
+#endif
     fprintf(stderr, "st(%d):        %.10f (raw 0x%04x:%08x%08x)\n", i, 
           f, fp.exp & 0xffff, fp.fraction >> 32, fp.fraction & 0xffffffff);
   }

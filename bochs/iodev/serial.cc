@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.63 2005-01-02 10:42:15 vruppert Exp $
+// $Id: serial.cc,v 1.64 2005-01-19 18:21:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -105,11 +105,12 @@ bx_serial_c::init(void)
 {
   Bit16u ports[BX_SERIAL_MAXDEV] = {0x03f8, 0x02f8, 0x03e8, 0x02e8};
   char name[16];
+  unsigned i;
 
   BX_SER_THIS detect_mouse = 0;
   BX_SER_THIS mouse_port = -1;
   BX_SER_THIS mouse_internal_buffer.num_elements = 0;
-  for (int i=0; i<BX_MOUSE_BUFF_SIZE; i++)
+  for (i=0; i<BX_MOUSE_BUFF_SIZE; i++)
     BX_SER_THIS mouse_internal_buffer.buffer[i] = 0;
   BX_SER_THIS mouse_internal_buffer.head = 0;
   BX_SER_THIS mouse_delayed_dx = 0;
@@ -117,7 +118,7 @@ bx_serial_c::init(void)
   /*
    * Put the UART registers into their RESET state
    */
-  for (unsigned i=0; i<BX_N_SERIAL_PORTS; i++) {
+  for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     if (bx_options.com[i].Oenabled->get ()) {
       sprintf(name, "Serial Port %d", i + 1);
       /* serial interrupt */
