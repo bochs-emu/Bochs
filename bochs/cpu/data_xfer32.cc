@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.16 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: data_xfer32.cc,v 1.17 2002-09-28 05:38:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,21 +80,24 @@ BX_CPU_C::MOV_EdGd(bxInstruction_c *i)
 
 
   void
-BX_CPU_C::MOV_GdEd(bxInstruction_c *i)
+BX_CPU_C::MOV_GdEGd(bxInstruction_c *i)
 {
-    Bit32u op2_32;
+  // 2nd modRM operand Ex, is known to be a general register Gd.
+  Bit32u op2_32;
 
-    if (i->modC0()) {
-      op2_32 = BX_READ_32BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-      }
-
-    BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
+  op2_32 = BX_READ_32BIT_REG(i->rm());
+  BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
 }
 
+  void
+BX_CPU_C::MOV_GdEEd(bxInstruction_c *i)
+{
+  // 2nd modRM operand Ex, is known to be a memory operand, Ed.
+  Bit32u op2_32;
+
+  read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+  BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
+}
 
   void
 BX_CPU_C::LEA_GdM(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.15 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: data_xfer16.cc,v 1.16 2002-09-28 05:38:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,19 +71,23 @@ BX_CPU_C::MOV_EwGw(bxInstruction_c *i)
 
 
   void
-BX_CPU_C::MOV_GwEw(bxInstruction_c *i)
+BX_CPU_C::MOV_GwEGw(bxInstruction_c *i)
 {
-    Bit16u op2_16;
+  // 2nd modRM operand Ex, is known to be a general register Gw.
+  Bit16u op2_16;
 
-    if (i->modC0()) {
-      op2_16 = BX_READ_16BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-      }
+  op2_16 = BX_READ_16BIT_REG(i->rm());
+  BX_WRITE_16BIT_REG(i->nnn(), op2_16);
+}
 
-    BX_WRITE_16BIT_REG(i->nnn(), op2_16);
+  void
+BX_CPU_C::MOV_GwEEw(bxInstruction_c *i)
+{
+  // 2nd modRM operand Ex, is known to be a memory operand, Ew.
+  Bit16u op2_16;
+
+  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+  BX_WRITE_16BIT_REG(i->nnn(), op2_16);
 }
 
   void

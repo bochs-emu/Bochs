@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.85 2002-09-28 00:54:04 kevinlawton Exp $
+// $Id: cpu.h,v 1.86 2002-09-28 05:38:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1649,8 +1649,15 @@ union {
   BX_SMF void MOV_EdGd(bxInstruction_c *);
   BX_SMF void MOV_EwGw(bxInstruction_c *);
   BX_SMF void MOV_GbEb(bxInstruction_c *);
+
   BX_SMF void MOV_GdEd(bxInstruction_c *);
+  BX_SMF void MOV_GdEGd(bxInstruction_c *);
+  BX_SMF void MOV_GdEEd(bxInstruction_c *);
+
   BX_SMF void MOV_GwEw(bxInstruction_c *);
+  BX_SMF void MOV_GwEGw(bxInstruction_c *);
+  BX_SMF void MOV_GwEEw(bxInstruction_c *);
+
   BX_SMF void MOV_EwSw(bxInstruction_c *);
   BX_SMF void LEA_GdM(bxInstruction_c *);
   BX_SMF void LEA_GwM(bxInstruction_c *);
@@ -2956,6 +2963,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 
 #define BxPrefix          0x0010 // bit  4
 #define BxAnother         0x0020 // bit  5
+#define SplitMod11b       0x0040 // bit  6
 #define BxRepeatable      0x0800 // bit 11 (pass through to metaInfo field)
 #define BxRepeatableZF    0x1000 // bit 12 (pass through to metaInfo field)
 #define BxGroupN          0x0100 // bits 8
