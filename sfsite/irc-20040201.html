@@ -1,0 +1,200 @@
+<HTML>
+<HEAD>
+<TITLE>bochs: The Open Source IA-32 Emulation Project (IRC Chat Transcript)</TITLE>
+
+<!--#include virtual="includes/header.txt" -->
+
+ <!--content starts here-->
+ <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Transcript of Bochs Chat from February 1, 2004</b></font><BR><BR>
+
+<p>
+
+<FONT SIZE="2">19:58:25</FONT> <B>Jan_B_A:</B></FONT>	Hello Daniel<BR>
+<FONT SIZE="2">19:58:38</FONT> <B>danielg4:</B></FONT>	hello<BR>
+<FONT SIZE="2">20:01:05</FONT> <B>cbothamy:</B></FONT>	hi<BR>
+<FONT SIZE="2">20:02:22</FONT> <B>Jan_B_A:</B></FONT>	Hi Christopher.<BR>
+<FONT SIZE="2">20:06:08</FONT> <B>cbothamy:</B></FONT>	it's 19:10 UTC, maybe we can start<BR>
+<FONT SIZE="2">20:06:25</FONT> <B>Jan_B_A:</B></FONT>	So, am I tonights newbie in this forum? Has you all taken part in similar "meetings" before?<BR>
+<FONT SIZE="2">20:07:21</FONT> <B>cbothamy:</B></FONT>	ok, Jan is here, Daniel also, who else ?<BR>
+<FONT SIZE="2">20:07:42</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: last meeting was logged, see http://bochs.sourceforge.net/irc-20021013.html<BR>
+<FONT SIZE="2">20:10:10</FONT> <B>Jan_B_A:</B></FONT>	Thanks - I am looking at it now.<BR>
+<FONT SIZE="2">20:11:05</FONT> <B>Jan_B_A:</B></FONT>	FYI, I am a newcomer to Bochs. My main interest in Bochs is as a platform for running old MS-DOS and Win9x games. Some of my games run fine in DOSBox (an DOS emulator) but some don't. I hope that Bochs will eventually allow me to run anything.<BR>
+<FONT SIZE="2">20:12:44</FONT> <B>Jan_B_A:</B></FONT>	I have absolutely no knowledge of x86 programming. Assemblywise I am fluent in 6502, and a bit rusty in PDP-11 and 68000.<BR>
+<FONT SIZE="2">20:13:09</FONT> <B>Jan_B_A:</B></FONT>	My webmastering skills are mainly restricted to handcrafting HTML code using Vim (a vi-clone). But what I do not know, I learn!<BR>
+<FONT SIZE="2">20:13:41</FONT> <B>danielg4:</B></FONT>	I'm fluent in 68000 and rusty in x86 and 6502.<BR>
+<FONT SIZE="2">20:14:07</FONT> <B>danielg4:</B></FONT>	never did pdp-11<BR>
+<FONT SIZE="2">20:15:14</FONT> <B>Jan_B_A:</B></FONT>	Daniel, if you are fluent in 68000, you will feel right at home with PDP-11. Addressing modes, op-codes, etc - they are so close that they could be cousins!<BR>
+<FONT SIZE="2">20:16:02</FONT> <B>danielg4:</B></FONT>	that's a bit OT because bochs will be ported to neither<BR>
+<FONT SIZE="2">20:16:40</FONT> <B>Jan_B_A:</B></FONT>	Okay, back on topic then - which is?<BR>
+<FONT SIZE="2">20:16:43</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: Jean-Michel Poure offered to help on the website. I'll tell him to contact you, ok ?<BR>
+<FONT SIZE="2">20:18:10</FONT> <B>Jan_B_A:</B></FONT>	Sure. Any idea what you would like to see happening? Any urgent changes needed? Or do me and Jean-Michel just look it over, and make a internal version for approval by ???<BR>
+<FONT SIZE="2">20:19:42</FONT> <B>cbothamy:</B></FONT>	There is no urgent changes needed. I guess a lot of links are wrong now, and new links could be added.<BR>
+<FONT SIZE="2">20:21:50</FONT> <B>Jan_B_A:</B></FONT>	Okay. I/we will look it over and see what needs to be updated.<BR>
+<FONT SIZE="2">20:21:52</FONT> <B>cbothamy:</B></FONT>	Also the source code used to be viewable on the website. The latest version available is 1.4pre1. Maybe we can remove the feature and link straight to sourceforge<BR>
+<FONT SIZE="2">20:22:51</FONT> <B>danielg4:</B></FONT>	The only source I saw was ViewCVS.<BR>
+<FONT SIZE="2">20:23:01</FONT> <B>cbothamy:</B></FONT>	or add the newer versions.<BR>
+<FONT SIZE="2">20:23:52</FONT> <B>cbothamy:</B></FONT>	url is http://bochs.sourceforge.net/cgi-bin/lxr/source<BR>
+<FONT SIZE="2">20:24:17</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: do you know how to update the website ?<BR>
+<FONT SIZE="2">20:24:38</FONT> <B>Jan_B_A:</B></FONT>	I have just opened up the "Web Site Request" tracker at SourceForge - Whew! I think the first line of action is to review those requests, get them closed or prioritised, and assigned to someone.<BR>
+<FONT SIZE="2">20:25:48</FONT> <B>danielg4:</B></FONT>	I just checked http://bochs.sourceforge.net/cgi-bin/lxr/source. Wow, is it old!<BR>
+<FONT SIZE="2">20:25:50</FONT> <B>Jan_B_A:</B></FONT>	cbothamy: I do not have a clue (yet!). But I am confident that I will figure it out.<BR>
+<FONT SIZE="2">20:27:25</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: absolutely, I'll check if you have admin rights on the tracker items<BR>
+<FONT SIZE="2">20:28:35</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: I'll write a document and send it to you. I'll also update the developer's guide at the same time<BR>
+<FONT SIZE="2">20:29:30</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: I think you have Admin rights <BR>
+<FONT SIZE="2">20:29:40</FONT> <B>cbothamy:</B></FONT>	on the tracker items<BR>
+<FONT SIZE="2">20:30:06</FONT> <B>danielg4:</B></FONT>	I know I do.<BR>
+<FONT SIZE="2">20:30:56</FONT> <B>Jan_B_A:</B></FONT>	Fine.<BR>
+<FONT SIZE="2">20:31:14</FONT> <B>danielg4:</B></FONT>	hello, Frank<BR>
+<FONT SIZE="2">20:31:30</FONT> <B>fcorneli:</B></FONT>	hi<BR>
+<FONT SIZE="2">20:33:13</FONT> <B>cbothamy:</B></FONT>	ok, Bochs 2.1.1 is still not out. I'm waiting for anybody to confirm the floppy dialog works or not on win2k.<BR>
+<FONT SIZE="2">20:33:22</FONT> <B>Jan_B_A:</B></FONT>	One of the items discussed recently was a new/better format for the .bochsrc file. How do you feel about going XML with it? To start with perhaps just a frontent that uses XSL to convert it into the old form?<BR>
+<FONT SIZE="2">20:34:44</FONT> <B>danielg4:</B></FONT>	I don't think that's necessary for the forseeable future.<BR>
+<FONT SIZE="2">20:35:15</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: I'm not sure about XML. It has been discussed once before. I don't see any benefits in using xml for a properties file.<BR>
+<FONT SIZE="2">20:35:38</FONT> <B>danielg4:</B></FONT>	cbothamy: I think Volker made a second patch regarding the floppy browse.<BR>
+<FONT SIZE="2">20:35:56</FONT> <B>Jan_B_A:</B></FONT>	No Win2K license here. I might be able to borrow a CD from a friend, just for testing, but it would be easier if someone with W2K already installed could test it.<BR>
+<FONT SIZE="2">20:36:19</FONT> <B>fcorneli:</B></FONT>	problem is that you'll need a portable xml parser that is available on all supported platforms... is there a good portable xml parser?<BR>
+<FONT SIZE="2">20:37:25</FONT> <B>danielg4:</B></FONT>	Such a parser is likely to be GPL, rather than LGPL.<BR>
+<FONT SIZE="2">20:37:41</FONT> <B>Jan_B_A:</B></FONT>	The Apache project has something. The developers at my work use a lot of that stuff. Xerxes is the name I think.<BR>
+<FONT SIZE="2">20:38:08</FONT> <B>fcorneli:</B></FONT>	yes, there is also the gpl vs lgpl problem...<BR>
+<FONT SIZE="2">20:38:26</FONT> <B>cbothamy:</B></FONT>	gnome has libxml2, that is released under the MIT license<BR>
+<FONT SIZE="2">20:38:45</FONT> <B>fcorneli:</B></FONT>	compatible with lgpl?<BR>
+<FONT SIZE="2">20:42:15</FONT> <B>cbothamy:</B></FONT>	I think so. But I think we a java-properties-like configuration file would be good enough.<BR>
+<FONT SIZE="2">20:42:47</FONT> <B>danielg4:</B></FONT>	I just took a quick look at the Apache license. Doesn't look compatible.<BR>
+<FONT SIZE="2">20:45:03</FONT> <B>cbothamy:</B></FONT>	ok, so you all have read the roadmap document http://marc.theaimsgroup.com/?l=bochs-dev&m=107550424808607&w=2<BR>
+<FONT SIZE="2">20:45:10</FONT> <B>fcorneli:</B></FONT>	XML-izing the config file can wait... but anyway, the config system needs some work... e.g. the main menu is static while it could be generated at run-time...<BR>
+<FONT SIZE="2">20:47:31</FONT> <B>danielg4:</B></FONT>	I'd have to reread the LGPL.<BR>
+<FONT SIZE="2">20:47:44</FONT> <B>fcorneli:</B></FONT>	Chris, how about letting the file ROADMAP live in the Bochs CVS tree? Would be a good guide for developers...<BR>
+<FONT SIZE="2">20:48:38</FONT> <B>cbothamy:</B></FONT>	that's a good idea. What we could also do is use the tasks system of source forge.<BR>
+<FONT SIZE="2">20:49:04</FONT> <B>danielg4:</B></FONT>	They're not mutually exclusive.<BR>
+<FONT SIZE="2">20:50:49</FONT> <B>cbothamy:</B></FONT>	fcorneli: "main menu is static" that's the menu when you press the "config" button ?<BR>
+<FONT SIZE="2">20:50:57</FONT> <B>fcorneli:</B></FONT>	yes...<BR>
+<FONT SIZE="2">20:51:25</FONT> <B>fcorneli:</B></FONT>	the main menu text lives somewhere in a file... while it should be generated at run-time by iterating the main menu objects<BR>
+<FONT SIZE="2">20:51:45</FONT> <B>fcorneli:</B></FONT>	AFAIK currently this is not the case...<BR>
+<FONT SIZE="2">20:52:32</FONT> <B>danielg4:</B></FONT>	That would certainly solve the problems with hot-swapping virtual drives.<BR>
+<FONT SIZE="2">20:52:47</FONT> <B>fcorneli:</B></FONT>	This stopped me from adding an extra menu for my pcidev...<BR>
+<FONT SIZE="2">20:52:58</FONT> <B>cbothamy:</B></FONT>	ok, I'll add a paragraph in the roadmap about config files and dynamic config menu<BR>
+<FONT SIZE="2">20:54:23</FONT> <B>fcorneli:</B></FONT>	yes, the menu menu definitely be generated a run-time so it can be changed at run-time as needed...<BR>
+<FONT SIZE="2">20:56:09</FONT> <B>Jan_B_A:</B></FONT>	As I wrote earlier, I am no big coder, so my efforts wrt. the roadmap will be in the "housekeeping" category. E.g. going through the User Guide, check for a new release of FreeDOS, make a new image, etc, and get the web site/download area updated.<BR>
+<FONT SIZE="2">20:57:39</FONT> <B>Jan_B_A:</B></FONT>	If Cygwin is suitable for compiling Bochs, I might take a stab at extended the 'boot:' option to take a prioritised list of devices to boot from.<BR>
+<FONT SIZE="2">20:58:03</FONT> <B>fcorneli:</B></FONT>	How many people are actually actively developing on Bochs?<BR>
+<FONT SIZE="2">20:58:24</FONT> <B>cbothamy:</B></FONT>	Jan_B_A: this is fine. We definitely need to keep our website and disk images up to date. <BR>
+<FONT SIZE="2">20:58:36</FONT> <B>danielg4:</B></FONT>	Another thing that should be in the ROADMAP is bringing the BIOS into conformance with Ralf Brown's INT list.<BR>
+<FONT SIZE="2">21:00:07</FONT> <B>cbothamy:</B></FONT>	fcorneli: between 5 and 10.<BR>
+<FONT SIZE="2">21:01:56</FONT> <B>Jan_B_A:</B></FONT>	The roadmap also talks about speed.... The DOSBox people seems to plan to add some kind of Just-In-Time compiler to their emulator. Anyone been following that?<BR>
+<FONT SIZE="2">21:02:27</FONT> <B>cbothamy:</B></FONT>	danielg4: this is a huge task. what we usually do is to wait for bug reports stating that a specific functions is missing.<BR>
+<FONT SIZE="2">21:03:36</FONT> <B>danielg4:</B></FONT>	If we continue to do that, the BIOS will grow larger than the max size.<BR>
+<FONT SIZE="2">21:04:05</FONT> <B>fcorneli:</B></FONT>	About that JiT, GNU Lightning could be an option... It's not that good (no peephole optimizations) but at least it's portable.<BR>
+<FONT SIZE="2">21:04:23</FONT> <B>cbothamy:</B></FONT>	danielg4: right, Volker and I think we should rewrite parts in asm to shrink its size.<BR>
+<FONT SIZE="2">21:06:08</FONT> <B>danielg4:</B></FONT>	And at the same time, introduce jump tables with all the Ralf Brown functions as placeholders.<BR>
+<FONT SIZE="2">21:08:06</FONT> <B>cbothamy:</B></FONT>	for jit-compiling there is also qemu. The dynamic compiler module is lgpl. it seems to be working quite well, the can boot win98 with the latest version.<BR>
+<FONT SIZE="2">21:08:44</FONT> <B>danielg4:</B></FONT>	I thought qemu only ran Linux binaries...<BR>
+<FONT SIZE="2">21:09:35</FONT> <B>cbothamy:</B></FONT>	it's got two modes, one without mmu for user mode, and one with a mmu for entire systems<BR>
+<FONT SIZE="2">21:09:48</FONT> <B>danielg4:</B></FONT>	If the JiT compiler module in it is LGPL, I think we should adopt it.<BR>
+<FONT SIZE="2">21:11:24</FONT> <B>cbothamy:</B></FONT>	danielg4: at least we have to give it a look, to check the feasability. Now the problem is who want to do it ? <BR>
+<FONT SIZE="2">21:13:02</FONT> <B>cbothamy:</B></FONT>	I add "jump tables place holders" in the bios section of the roadmap.<BR>
+<FONT SIZE="2">21:14:33</FONT> <B>fcorneli:</B></FONT>	The advantage of having two modes (user mode and full system) for the CPU is that you can binary search for bugs in the instructions in user mode.<BR>
+<FONT SIZE="2">21:15:33</FONT> <B>fcorneli:</B></FONT>	I once developed a 'virtual cpu' that could be detached at run-time, allowing for binary searching of bugs... it would be nice to have the same functionality for the Bochs CPU.<BR>
+<FONT SIZE="2">21:15:34</FONT> <B>danielg4:</B></FONT>	That's how the 68000 works :)<BR>
+<FONT SIZE="2">21:16:57</FONT> <B>cbothamy:</B></FONT>	fcorneli: I'm afraid I don't get it.. How does is work ?<BR>
+<FONT SIZE="2">21:17:22</FONT> <B>Jan_B_A:</B></FONT>	*also confused about the term 'binary search for bugs'*<BR>
+<FONT SIZE="2">21:17:34</FONT> <B>fcorneli:</B></FONT>	Check out: http://www.elis.ugent.be/~fcorneli/downloads/vcpu-README<BR>
+<FONT SIZE="2">21:20:16</FONT> <B>Night:</B></FONT>	hi, all<BR>
+<FONT SIZE="2">21:20:31</FONT> <B>cbothamy:</B></FONT>	hi Stanislav<BR>
+<FONT SIZE="2">21:20:38</FONT> <B>Night:</B></FONT>	I see I too late<BR>
+<FONT SIZE="2">21:21:17</FONT> <B>Night:</B></FONT>	Somebody could post be the log of dicussion ?<BR>
+<FONT SIZE="2">21:21:46</FONT> <B>fcorneli:</B></FONT>	`echo /dev/random` :)<BR>
+<FONT SIZE="2">21:21:58</FONT> <B>fcorneli:</B></FONT>	I mean cat...<BR>
+<FONT SIZE="2">21:23:15</FONT> <B>Night:</B></FONT>	I see I didn't missed anything ? ;)<BR>
+<FONT SIZE="2">21:23:34</FONT> <B>danielg4:</B></FONT>	You did, alittle.<BR>
+<FONT SIZE="2">21:24:21</FONT> <B>cbothamy:</B></FONT>	log is here http://cbothamy.free.fr/projects/bochs/freenode-%23bochs.log<BR>
+<FONT SIZE="2">21:24:39</FONT> <B>danielg4:</B></FONT>	Is that live?<BR>
+<FONT SIZE="2">21:24:53</FONT> <B>cbothamy:</B></FONT>	hi Volker<BR>
+<FONT SIZE="2">21:25:00</FONT> <B>fcorneli:</B></FONT>	Binary searching for bugs in instruction implementations is only possible when you can detach the emulation and let the user space take over.<BR>
+<FONT SIZE="2">21:26:01</FONT> <B>fcorneli:</B></FONT>	Source code available at: http://www.elis.ugent.be/~fcorneli/downloads/vcpu-0.1.1.tar.gz<BR>
+<FONT SIZE="2">21:27:28</FONT> <B>vruppert:</B></FONT>	Hi Christophe. After adding a new feature in the win32 runtime dialog I started testing gaim.<BR>
+<FONT SIZE="2">21:27:43</FONT> <B>Night:</B></FONT>	ok, i am reading the log now<BR>
+<FONT SIZE="2">21:29:35</FONT> <B>rO|:</B></FONT>	made an OS disk image, 2cts only, but maybe you like to offer it though..<BR>
+<FONT SIZE="2">21:30:28</FONT> <B>cbothamy:</B></FONT>	vruppert: do we know if the win2k dialog bug is fixed ?<BR>
+<FONT SIZE="2">21:32:09</FONT> <B>vruppert:</B></FONT>	I don't know. Is someone here using Bochs on Win2k ?<BR>
+<FONT SIZE="2">21:32:24</FONT> <B>Night:</B></FONT>	i am<BR>
+<FONT SIZE="2">21:32:46</FONT> <B>Night:</B></FONT>	I could check, just say that ;)<BR>
+<FONT SIZE="2">21:34:27</FONT> <B>Night:</B></FONT>	cristophe, your log is broken between 19:09 and 19:42 or nobody really did say a word ?<BR>
+<FONT SIZE="2">21:34:43</FONT> <B>Jan_B_A:</B></FONT>	Night: Physical diskettes in Win2K - can you test that too?<BR>
+<FONT SIZE="2">21:35:25</FONT> <B>Night:</B></FONT>	What should be with diskettes ?<BR>
+<FONT SIZE="2">21:35:54</FONT> <B>cbothamy:</B></FONT>	Night: this is local time. 19h00 utc is 20h00 local<BR>
+<FONT SIZE="2">21:36:10</FONT> <B>danielg4:</B></FONT>	Night: It's the timecode that's broken, not the log.<BR>
+<FONT SIZE="2">21:38:01</FONT> <B>danielg4:</B></FONT>	It is now 20:45 UTC<BR>
+<FONT SIZE="2">21:38:44</FONT> <B>Night:</B></FONT>	ok<BR>
+<FONT SIZE="2">21:40:38</FONT> <B>cbothamy:</B></FONT>	ok for Stanislav and Volker, we have been talking about Bochs improvements : website, config files, JIT, updating the bios, and Frank presented his virtual cpu<BR>
+<FONT SIZE="2">21:40:54</FONT> <B>Jan_B_A:</B></FONT>	Sorry - I could be mixing things up - The issue with Win2K is just the dialog for handling diskettes? Not actually reading them. I think I got this mixed up due a message in the Help forum where someone had problems with diskettes in XP.<BR>
+<FONT SIZE="2">21:41:28</FONT> <B>danielg4:</B></FONT>	Jan_B_A: yes<BR>
+<FONT SIZE="2">21:42:47</FONT> <B>Jan_B_A:</B></FONT>	*blush*<BR>
+<FONT SIZE="2">21:42:50</FONT> <B>Night:</B></FONT>	I got CVS version from yesterday. When I clicking Browse button I get "ComDialogExtendedError return 0x3002" error message<BR>
+<FONT SIZE="2">21:43:54</FONT> <B>danielg4:</B></FONT>	vruppert: Does that help?<BR>
+<FONT SIZE="2">21:43:55</FONT> <B>Night:</B></FONT>	with physical diskettes it working fine<BR>
+<FONT SIZE="2">21:44:10</FONT> <B>vruppert:</B></FONT>	Night: That means "illegal filename"<BR>
+<FONT SIZE="2">21:45:05</FONT> <B>Night:</B></FONT>	very informative ;)<BR>
+<FONT SIZE="2">21:45:40</FONT> <B>rO|:</B></FONT>	is there any reason why a normal w95 bootcd shouldn't work in bochs?<BR>
+<FONT SIZE="2">21:47:03</FONT> <B>Night:</B></FONT>	when I starting from empty "path" field it looks working. I have no disket images so I could not check at all<BR>
+<FONT SIZE="2">21:47:53</FONT> <B>vruppert:</B></FONT>	The floppy dialog sends the path stored in the parameter to the file open dialog. It works here if the parameter contains an image filename.<BR>
+<FONT SIZE="2">21:48:12</FONT> <B>Night:</B></FONT>	can you change the "ComDialogExtendedError" message to normal "Illegal filename" ?<BR>
+<FONT SIZE="2">21:48:37</FONT> <B>Jan_B_A:</B></FONT>	rol: No reason. I installed Win95 fine on Bochs 2.1 running on WinXP.<BR>
+<FONT SIZE="2">21:49:08</FONT> <B>vruppert:</B></FONT>	If the path is a raw device it seems to fail. We have to find a workaround for this case.<BR>
+<FONT SIZE="2">21:50:49</FONT> <B>rO|:</B></FONT>	someone trying yesterday on OS X had probs installing a w95 bootcd<BR>
+<FONT SIZE="2">21:51:23</FONT> <B>Night:</B></FONT>	that about APIC and SMP support in 2.1.x ? We already have 3 patches for APIC in "patches" folder.<BR>
+<FONT SIZE="2">21:51:46</FONT> <B>Night:</B></FONT>	Is any of them gets Bochs closer to WinNT SMP boot ?<BR>
+<FONT SIZE="2">21:53:11</FONT> <B>vruppert:</B></FONT>	I have to leave the channel now. Tomorrow I will read the log and try to find a workaround for the win32 floppy dialog problem.<BR>
+<FONT SIZE="2">21:53:29</FONT> <B>cbothamy:</B></FONT>	ok, bye volker, see you around<BR>
+<FONT SIZE="2">21:54:36</FONT> <B>cbothamy:</B></FONT>	Night: Sorry I have not tried any of those patches. I add an item in the roadmap about apic and winnt smp<BR>
+<FONT SIZE="2">21:56:08</FONT> <B>danielg4:</B></FONT>	Linux-smp might be easier to get to run.<BR>
+<FONT SIZE="2">21:58:05</FONT> <B>Night:</B></FONT>	now I am working on FPU code replacement with softfloat lib.<BR>
+<FONT SIZE="2">21:58:23</FONT> <B>Night:</B></FONT>	It looks faster and free of bugs<BR>
+<FONT SIZE="2">21:59:13</FONT> <B>cbothamy:</B></FONT>	right, I've seen your post in the mailing list<BR>
+<FONT SIZE="2">21:59:24</FONT> <B>Night:</B></FONT>	the last problem is transcendential instructions (log, sin/cos/tag, exp and etc). Any ideas how to implement them ?<BR>
+<FONT SIZE="2">21:59:36</FONT> <B>wli:</B></FONT>	power series<BR>
+<FONT SIZE="2">21:59:43</FONT> <B>danielg4:</B></FONT>	cbothamy: That was Scott Duplichan.<BR>
+<FONT SIZE="2">22:00:55</FONT> <B>Night:</B></FONT>	do you think standard C/C++ math.h functions could help ?<BR>
+<FONT SIZE="2">22:01:50</FONT> <B>danielg4:</B></FONT>	Not for transcendental funcs.<BR>
+<FONT SIZE="2">22:02:00</FONT> <B>Night:</B></FONT>	I see no functions with 'long double' parameter ;(<BR>
+<FONT SIZE="2">22:03:12</FONT> <B>danielg4:</B></FONT>	Not all platforms have a long double.<BR>
+<FONT SIZE="2">22:04:22</FONT> <B>danielg4:</B></FONT>	On PowerPC, for example, it's the same as double, but there is also a 'double double.'<BR>
+<FONT SIZE="2">22:08:33</FONT> <B>danielg4:</B></FONT>	The disadvantage to softfloat is that it doesn't use the host's FPU.<BR>
+<FONT SIZE="2">22:09:47</FONT> <B>Night:</B></FONT>	on x86 you could execute an instruction itself and on other platforms you will have a problems with handling of numeric exceptions and etc<BR>
+<FONT SIZE="2">22:10:52</FONT> <B>Night:</B></FONT>	host fpu could not produce you for example "precision" exception and you will miss it. for me accuracy of emulation is the first task.<BR>
+<FONT SIZE="2">22:14:10</FONT> <B>danielg4:</B></FONT>	Perhaps softfloat could be used for transcendental funcs and math.h for arithmetic?<BR>
+<FONT SIZE="2">22:14:49</FONT> <B>Night:</B></FONT>	btw, how about multithreading/multiprocessing in bochs ? I mean if Bochs will be able to run any device and cpu in separate thread ...<BR>
+<FONT SIZE="2">22:16:07</FONT> <B>danielg4:</B></FONT>	I agree. Giving the CPU its own thread sould be the first step. Perhaps an FPU thread next?<BR>
+<FONT SIZE="2">22:16:14</FONT> <B>cbothamy:</B></FONT>	Night: the problem with multithreading is to be portable.<BR>
+<FONT SIZE="2">22:17:00</FONT> <B>danielg4:</B></FONT>	There are standard C funcs for it, AFAIK.<BR>
+<FONT SIZE="2">22:17:34</FONT> <B>Night:</B></FONT>	not more problematic than GUI or devices. I sure there are portable libraries which provide threads/semaphores services<BR>
+<FONT SIZE="2">22:24:51</FONT> <B>Jan_B_A:</B></FONT>	Hello??<BR>
+<FONT SIZE="2">22:25:34</FONT> <B>danielg4:</B></FONT>	I'm going to need to leave pretty soon, but I'll leave the irc client running & read it later.<BR>
+<FONT SIZE="2">22:27:04</FONT> <B>danielg4:</B></FONT>	bye bye<BR>
+<FONT SIZE="2">22:27:16</FONT> <B>cbothamy:</B></FONT>	bye daniel<BR>
+<FONT SIZE="2">22:27:20</FONT> <B>fcorneli:</B></FONT>	bye<BR>
+<FONT SIZE="2">22:27:38</FONT> <B>Jan_B_A:</B></FONT>	If there is nothing else to discuss (the math problems was over my head) I was going to leave too. Will start working on the site asap.<BR>
+<FONT SIZE="2">22:28:14</FONT> <B>cbothamy:</B></FONT>	ok I'll have to go soon as well. What I'm going to do is upload the roadmap in the cvs, and open tasks ans subtasks on sourceforge.<BR>
+<FONT SIZE="2">22:29:02</FONT> <B>Night:</B></FONT>	cristophe, add to the roadmap that we should find some ideas to check correctness of instructions emulation, especially system instructions<BR>
+<FONT SIZE="2">22:29:56</FONT> <B>cbothamy:</B></FONT>	ok<BR>
+<FONT SIZE="2">22:29:58</FONT> <B>Night:</B></FONT>	arithmetic instructions could be validated with simply random testing<BR>
+<FONT SIZE="2">22:31:15</FONT> <B>Night:</B></FONT>	ok, I also leave now ...<BR>
+<FONT SIZE="2">22:31:22</FONT> <B>Night:</B></FONT>	bye<BR>
+<FONT SIZE="2">22:32:03</FONT> <B>fcorneli:</B></FONT>	I'm leaving too, see you all later around, and happy hacking... bye bye<BR>
+<FONT SIZE="2">22:32:28</FONT> <B>Jan_B_A:</B></FONT>	bye bye<BR>
+<FONT SIZE="2">22:32:41</FONT> <B>cbothamy:</B></FONT>	bye Frank. Thanks for being here<BR>
+<FONT SIZE="2">22:33:06</FONT> <B>fcorneli:</B></FONT>	no prob. cul<BR>
+
+ <!--content ends here -->
+
+
+<!--#include virtual="includes/footer.txt" -->
+
+
+Last Modified on <!--#flastmod file="mailinglists.html" -->.<BR>
+
+<!--#include virtual="includes/cright.txt" -->
+
+</BODY>
+</HTML>
