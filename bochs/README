@@ -37,11 +37,11 @@ What is this NOT?
 
 Here's how to get your own SMP Linux bochs running.  First run the configure script.
 
-$ ./configure --enable-cpu-level=6 --enable-fpu
+  ./configure --enable-cpu-level=6 --enable-fpu
 
 or if you want the debugger, try this:
 
-$ ./configure --enable-cpu-level=6 --enable-fpu --enable-debugger --enable-disasm
+  ./configure --enable-cpu-level=6 --enable-fpu --enable-debugger --enable-disasm
 
 By default, I've set up config.h.in to create a 2-processor system.  See the
 preprocessor variable BX_SMP_PROCESSORS to change it around.  For each 
