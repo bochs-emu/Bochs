@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.13 2001-12-26 14:56:15 vruppert Exp $
+// $Id: dma.cc,v 1.14 2002-01-02 10:00:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ bx_dma_c::~bx_dma_c(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.13 2001-12-26 14:56:15 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.14 2002-01-02 10:00:54 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -514,13 +514,14 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
   Boolean ma_sl;
 
 #if BX_SUPPORT_SB16
-  if ( (channel != 2) && (channel != (unsigned) BX_SB16_DMAL) &&
+  if ( (channel != 2) && (channel != 4) &&
+       (channel != (unsigned) BX_SB16_DMAL) &&
        (channel != (unsigned) BX_SB16_DMAH) )
-    BX_PANIC(("DRQ(): channel %d != 2 or %d (SB16) or %d (SB16)",
+    BX_PANIC(("DRQ(): channel %d != 2 or 4 or %d (SB16) or %d (SB16)",
 	     channel, BX_SB16_DMAL, BX_SB16_DMAH));
 #else
-  if ( channel != 2 )
-    BX_PANIC(("DRQ(): channel %d != 2",
+  if ( ( channel != 2 ) && ( channel != 4 ) )
+    BX_PANIC(("DRQ(): channel %d != 2 (floppy) or 4 (cascade)",
 	     channel));
 #endif
   ma_sl = (channel > 3);
@@ -556,7 +557,8 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
 
 
   if ( (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_SINGLE) &&
-       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_DEMAND) )
+       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_DEMAND) &&
+       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_CASCADE) )
     BX_PANIC(("DRQ: mode_type(%02x) not handled",
       (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement != 0)
@@ -573,10 +575,15 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
     BX_PANIC(("request outside 64k boundary"));
   }
 
-  //BX_DEBUG(("DRQ set up for single mode, increment, auto-init disabled, write"));
-  // should check mask register VS DREQ's in status register here?
-  // assert Hold ReQuest line to CPU
-  bx_pc_system.set_HRQ(1);
+  if (ma_sl) {
+    //BX_DEBUG(("DRQ set up for single mode, increment, auto-init disabled, write"));
+    // should check mask register VS DREQ's in status register here?
+    // assert Hold ReQuest line to CPU
+    bx_pc_system.set_HRQ(1);
+  } else {
+    // send DRQ to cascade channel of the master
+    bx_pc_system.set_DRQ(4, 1);
+  }
 }
 
   void
@@ -585,21 +592,22 @@ bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
   unsigned channel;
   Bit32u phy_addr;
   Boolean count_expired = 0;
-  Boolean ma_sl;
+  Boolean ma_sl = 0;
 
   // find highest priority channel
   for (channel=0; channel<4; channel++) {
-    if ( (BX_DMA_THIS s[0].status_reg & (1 << (channel+4))) &&
-         (BX_DMA_THIS s[0].mask[channel]==0) ) {
-      ma_sl = 0;
+    if ( (BX_DMA_THIS s[1].status_reg & (1 << (channel+4))) &&
+         (BX_DMA_THIS s[1].mask[channel]==0) ) {
+      ma_sl = 1;
       break;
       }
     }
-  if (channel >= 4) {
+  if (channel == 0) { // master cascade channel
+    bx_pc_system.set_DACK(channel + (ma_sl << 2), 1);
     for (channel=0; channel<4; channel++) {
-      if ( (BX_DMA_THIS s[1].status_reg & (1 << (channel+4))) &&
-           (BX_DMA_THIS s[1].mask[channel]==0) ) {
-        ma_sl = 1;
+      if ( (BX_DMA_THIS s[0].status_reg & (1 << (channel+4))) &&
+           (BX_DMA_THIS s[0].mask[channel]==0) ) {
+        ma_sl = 0;
         break;
         }
       }
@@ -678,5 +686,9 @@ bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
     bx_pc_system.set_TC(0);            // clear TC, adapter card already notified
     bx_pc_system.set_HRQ(0);           // clear HRQ to CPU
     bx_pc_system.set_DACK(channel + (ma_sl << 2), 0); // clear DACK to adapter card
+    if (!ma_sl) {
+      bx_pc_system.set_DRQ(4, 0); // clear DRQ to cascade
+      bx_pc_system.set_DACK(4, 0); // clear DACK to cascade
+      }
     }
 }
