@@ -96,10 +96,10 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   // Mouse button
   if (bx_options.Omouse_enabled->get ())
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS mouse_bmap_id,
-                          BX_GRAVITY_LEFT, mouse_handler);
+                          BX_GRAVITY_LEFT, toggle_mouse_enable);
   else
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS nomouse_bmap_id,
-                          BX_GRAVITY_LEFT, mouse_handler);
+                          BX_GRAVITY_LEFT, toggle_mouse_enable);
 
   // Power button
   BX_GUI_THIS power_hbar_id = headerbar_bitmap(BX_GUI_THIS power_bmap_id,
@@ -186,21 +186,28 @@ bx_gui_c::snapshot_handler(void)
 }
 
   void
-bx_gui_c::mouse_handler(void)
+bx_gui_c::toggle_mouse_enable(void)
 {
   int old = bx_options.Omouse_enabled->get ();
+  BX_INFO (("toggle mouse_enabled, now %d", !old));
   bx_options.Omouse_enabled->set (!old);
 }
 
   void
 bx_gui_c::mouse_enabled_changed (Boolean val)
 {
-  BX_DEBUG (("maybe this should happen only if window has been created"));
+  // This is only called when SIM->get_init_done is 1.  Note that VAL
+  // is the new value of mouse_enabled, which may not match the old
+  // value which is still in bx_options.Omouse_enabled->get ().
+  BX_INFO (("replacing the mouse bitmaps"));
   if (val)
     replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);
   else
     replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS nomouse_bmap_id);
-  // ideally, this should update the gui too.
+  // give the GUI a chance to respond to the event.  Most guis will hide
+  // the native mouse cursor and do something to trap the mouse inside the
+  // bochs VGA display window.
+  mouse_enabled_changed_specific (val);
 }
 
 void 

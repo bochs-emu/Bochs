@@ -1261,3 +1261,8 @@ void rfbMouseMove(int x, int y, int bmask)
 		bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
 	}
 }
+
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+}

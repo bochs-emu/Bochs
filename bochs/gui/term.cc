@@ -563,3 +563,8 @@ bx_gui_c::exit(void)
 	if(bx_dbg.video)
 		BX_INFO(("[TERM] exiting"));
 }
+
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+}

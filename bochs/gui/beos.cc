@@ -1136,3 +1136,8 @@ bx_gui_c::exit(void)
 {
   fprintf(stderr, "# WARNING: BEOS: bx_gui_c::exit() not implemented yet.\n");
 }
+
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+}

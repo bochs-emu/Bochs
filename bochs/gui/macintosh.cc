@@ -1524,3 +1524,8 @@ unsigned char reverse_bitorder(unsigned char b)
 	
 	return(ret);
 }
+
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+}

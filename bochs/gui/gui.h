@@ -50,6 +50,7 @@ public:
   static void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
   static void     mouse_enabled_changed (Boolean val);
+  static void     mouse_enabled_changed_specific (Boolean val);
   static void     exit(void);
   static void init_signal_handlers ();
 #if BX_GUI_SIGHANDLER
@@ -67,7 +68,7 @@ private:
   static void reset_handler(void);
   static void power_handler(void);
   static void snapshot_handler(void);
-  static void mouse_handler(void);
+  static void toggle_mouse_enable(void);
 
   Boolean floppyA_status;
   Boolean floppyB_status;

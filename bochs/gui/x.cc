@@ -516,6 +516,28 @@ if (bx_options.Oprivate_colormap->get ()) {
 }
 
 
+// This is called whenever the mouse_enabled parameter changes.  It
+// can change because of a gui event such as clicking on the mouse-enable
+// bitmap or pressing the middle button, or from the control panel.
+// In all those cases, setting the parameter value will get you here.
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+  BX_INFO (("mouse_enabled=%d, x11 specific code", val?1:0));
+  if (val) {
+    BX_INFO(("[x] Mouse on"));
+    mouse_enable_x = current_x;
+    mouse_enable_y = current_y;
+    disable_cursor();
+    // Move the cursor to a 'safe' place
+    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
+  } else {
+    BX_INFO(("[x] Mouse off"));
+    enable_cursor();
+    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
+  }
+}
+
   void
 load_font(void)
 {
@@ -606,22 +628,10 @@ bx_gui_c::handle_events(void)
           mouse_update = 0;
           break;
         case Button2:
-		  BX_DEBUG(("XXX:   button2"));
+	      BX_DEBUG(("XXX:   button2"));
 
 	      // (mch) Hack for easier mouse handling (toggle mouse enable)
-	      mouse_handler();
-	      if (bx_options.Omouse_enabled->get ()) {
-		    BX_INFO(("[x] Mouse on"));
-		    mouse_enable_x = current_x;
-		    mouse_enable_y = current_y;
-		    disable_cursor();
-		    // Move the cursor to a 'safe' place
-		    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
-	      } else {
-		    BX_INFO(("[x] Mouse off"));
-		    enable_cursor();
-		    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
-	      }
+	      toggle_mouse_enable();
 
           //mouse_button_state |= ;
           //send_keyboard_mouse_status();

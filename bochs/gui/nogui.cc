@@ -289,3 +289,8 @@ bx_gui_c::exit(void)
 {
   BX_INFO(("bx_gui_c::exit() not implemented yet."));
 }
+
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+}

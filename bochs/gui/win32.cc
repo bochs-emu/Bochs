@@ -1119,3 +1119,8 @@ void alarm (int time)
 }
 #endif
 #endif
+
+  void
+bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+{
+}
