@@ -1,0 +1,67 @@
+----------------------------------------------------------------------
+Patch name: patch.invlpg-tlb-tweggen
+Author: Timo Weggen
+Date: 06 August 2002
+
+Detailed description:
+  With this patch the INVLPG instruction doesn't invalidate the
+  whole TLB, but only a single page table entry.
+
+  'during test with my experimental kernel, I encoutered
+  massive performance drawbacks during my uKernel's
+  message passing implementation.
+  After grepping through bochs-developers I now assume,
+  the use of the invlpg instruction could be the point.'
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 06 August 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.50
+diff -u -r1.50 config.h.in
+--- config.h.in	5 Jun 2002 03:59:30 -0000	1.50
++++ config.h.in	6 Aug 2002 08:57:11 -0000
+@@ -140,6 +140,8 @@
+ //   There will be a many-to-one mapping to each TLB cache slot.
+ //   When there are collisions, the old entry is overwritten with
+ //   one for the newest access.
++// BX_TLB_ENTRY_FLUSH : controls whether the INVLPG instruction
++//   invalidates a single page table entry or the whole TLB
+ 
+ #define BX_SUPPORT_PAGING     1
+ #define BX_USE_TLB 1
+@@ -147,6 +149,7 @@
+ #define BX_TLB_SIZE 1024
+ #define BX_TLB_INDEX_OF(lpf) (((lpf) & 0x003ff000) >> 12)
+ 
++#define BX_TLB_ENTRY_FLUSH 1
+ 
+ // Compile in support for DMA & FLOPPY IO.  You'll need this
+ // if you plan to use the floppy drive emulation.  But if
+Index: cpu/paging.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/paging.cc,v
+retrieving revision 1.9
+diff -u -r1.9 paging.cc
+--- cpu/paging.cc	19 Jun 2002 15:49:07 -0000	1.9
++++ cpu/paging.cc	6 Aug 2002 08:57:11 -0000
+@@ -445,8 +445,12 @@
+     }
+ 
+ #if BX_USE_TLB
++#if BX_TLB_ENTRY_FLUSH
++  BX_CPU_THIS_PTR TLB.entry[BX_TLB_INDEX_OF(i->rm_addr)].lpf = BX_INVALID_TLB_ENTRY;
++#else
+   // Just clear the entire TLB, ugh!
+   TLB_clear();
++#endif 
+ #endif // BX_USE_TLB
+   BX_INSTR_TLB_CNTRL(BX_INSTR_INVLPG, 0);
+ 
