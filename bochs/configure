@@ -1434,9 +1434,9 @@ ac_config_headers="$ac_config_headers config.h"
 ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.0"
-VER_STRING="2.0"
-REL_STRING="December 21, 2002"
+VERSION="2.0.1"
+VER_STRING="2.0.1"
+REL_STRING="January 4, 2003"
 
 
 
