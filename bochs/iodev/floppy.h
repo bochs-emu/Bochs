@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.9 2002-02-06 18:51:48 vruppert Exp $
+// $Id: floppy.h,v 1.10 2002-08-04 08:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -112,6 +112,7 @@ private:
     unsigned floppy_buffer_index;
     int      floppy_timer_index;
     Boolean  media_present[2];
+    Bit8u    device_type[4];
     Bit8u    DIR; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed

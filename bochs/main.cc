@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.109 2002-08-01 12:19:00 vruppert Exp $
+// $Id: main.cc,v 1.110 2002-08-04 08:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,8 +68,8 @@ class state_file state_stuff("state_file.out", "options");
 bx_debug_t bx_dbg;
 
 bx_options_t bx_options = {
-  { NULL, NULL, NULL },   // floppya
-  { NULL, NULL, NULL },   // floppyb
+  { NULL, NULL, NULL, NULL },   // floppya
+  { NULL, NULL, NULL, NULL },   // floppyb
   { 0, NULL, 0, 0, 0 },                   // diskc
   { 0, NULL, 0, 0, 0 },                   // diskd
   { 0, NULL},			// com1
@@ -185,16 +185,26 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_CMOS_IMAGE:
       SIM->get_param (BXP_CMOS_PATH)->set_enabled (val);
       break;
-    case BXP_CDROM_INSERTED:
+    case BXP_CDROM_STATUS:
       if ((set) && (SIM->get_init_done ())) {
         bx_devices.hard_drive->set_cd_media_status(val == BX_INSERTED);
         bx_gui.update_drive_status_buttons ();
+      }
+      break;
+    case BXP_FLOPPYA_TYPE:
+      if ((set) && (!SIM->get_init_done ())) {
+        bx_options.floppya.Odevtype->set (val);
       }
       break;
     case BXP_FLOPPYA_STATUS:
       if ((set) && (SIM->get_init_done ())) {
         bx_devices.floppy->set_media_status(0, val == BX_INSERTED);
         bx_gui.update_drive_status_buttons ();
+      }
+      break;
+    case BXP_FLOPPYB_TYPE:
+      if ((set) && (!SIM->get_init_done ())) {
+        bx_options.floppyb.Odevtype->set (val);
       }
       break;
     case BXP_FLOPPYB_STATUS:
@@ -240,6 +250,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
             bx_devices.floppy->set_media_status(0, 1);
           }
         } else {
+          SIM->get_param_num(BXP_FLOPPYA_DEVTYPE)->set_enabled (!empty);
           SIM->get_param_num(BXP_FLOPPYA_TYPE)->set_enabled (!empty);
           SIM->get_param_num(BXP_FLOPPYA_STATUS)->set_enabled (!empty);
         }
@@ -264,6 +275,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
             bx_devices.floppy->set_media_status(1, 1);
           }
         } else {
+          SIM->get_param_num(BXP_FLOPPYB_DEVTYPE)->set_enabled (!empty);
           SIM->get_param_num(BXP_FLOPPYB_TYPE)->set_enabled (!empty);
           SIM->get_param_num(BXP_FLOPPYB_STATUS)->set_enabled (!empty);
         }
@@ -298,14 +310,14 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
             }
           }
           if ((bx_devices.hard_drive) &&
-              (SIM->get_param_num(BXP_CDROM_INSERTED)->get () == BX_INSERTED)) {
+              (SIM->get_param_num(BXP_CDROM_STATUS)->get () == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the cd
             bx_devices.hard_drive->set_cd_media_status(0);
             bx_devices.hard_drive->set_cd_media_status(1);
           }
         } else {
           SIM->get_param_num(BXP_CDROM_PRESENT)->set (!empty);
-          SIM->get_param_num(BXP_CDROM_INSERTED)->set_enabled (!empty);
+          SIM->get_param_num(BXP_CDROM_STATUS)->set_enabled (!empty);
         }
       }
       break;
@@ -335,6 +347,12 @@ void bx_init_options ()
 #else
   bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
 #endif
+  bx_options.floppya.Odevtype = new bx_param_enum_c (BXP_FLOPPYA_DEVTYPE,
+      "floppya:devtype",
+      "Type of floppy drive",
+      floppy_type_names,
+      BX_FLOPPY_NONE,
+      BX_FLOPPY_NONE);
   bx_options.floppya.Otype = new bx_param_enum_c (BXP_FLOPPYA_TYPE,
       "floppya:type",
       "Type of floppy disk",
@@ -342,27 +360,28 @@ void bx_init_options ()
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
   bx_options.floppya.Otype->set_ask_format ("What type of floppy disk? [%s] ");
-  bx_options.floppya.Oinitial_status = new bx_param_enum_c (BXP_FLOPPYA_STATUS,
+  bx_options.floppya.Ostatus = new bx_param_enum_c (BXP_FLOPPYA_STATUS,
       "Is floppya inserted",
       "Inserted or ejected",
       floppy_status_names,
       BX_INSERTED,
       BX_EJECTED);
-  bx_options.floppya.Oinitial_status->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
+  bx_options.floppya.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppya.Opath->set_format ("%s");
   bx_options.floppya.Otype->set_format (", size=%s, ");
-  bx_options.floppya.Oinitial_status->set_format ("%s");
+  bx_options.floppya.Ostatus->set_format ("%s");
   bx_param_c *floppya_init_list[] = {
     bx_options.floppya.Opath,
     bx_options.floppya.Otype,
-    bx_options.floppya.Oinitial_status,
+    bx_options.floppya.Ostatus,
     NULL
   };
   menu = new bx_list_c (BXP_FLOPPYA, "Floppy Disk 0", "All options for first floppy disk", floppya_init_list);
   menu->get_options ()->set (menu->BX_SERIES_ASK);
   bx_options.floppya.Opath->set_handler (bx_param_string_handler);
   bx_options.floppya.Opath->set ("none");
-  bx_options.floppya.Oinitial_status->set_handler (bx_param_handler);
+  bx_options.floppya.Otype->set_handler (bx_param_handler);
+  bx_options.floppya.Ostatus->set_handler (bx_param_handler);
 
   bx_options.floppyb.Opath = new bx_param_filename_c (BXP_FLOPPYB_PATH,
       "floppyb:path",
@@ -373,6 +392,12 @@ void bx_init_options ()
 #else
   bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
 #endif
+  bx_options.floppyb.Odevtype = new bx_param_enum_c (BXP_FLOPPYB_DEVTYPE,
+      "floppyb:devtype",
+      "Type of floppy drive",
+      floppy_type_names,
+      BX_FLOPPY_NONE,
+      BX_FLOPPY_NONE);
   bx_options.floppyb.Otype = new bx_param_enum_c (BXP_FLOPPYB_TYPE,
       "floppyb:type",
       "Type of floppy disk",
@@ -380,28 +405,29 @@ void bx_init_options ()
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
   bx_options.floppyb.Otype->set_ask_format ("What type of floppy disk? [%s] ");
-  bx_options.floppyb.Oinitial_status = new bx_param_enum_c (BXP_FLOPPYB_STATUS,
+  bx_options.floppyb.Ostatus = new bx_param_enum_c (BXP_FLOPPYB_STATUS,
       "Is floppyb inserted",
       "Inserted or ejected",
       floppy_status_names,
       BX_INSERTED,
       BX_EJECTED);
-  bx_options.floppyb.Oinitial_status->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
-  bx_options.floppyb.Oinitial_status->set_format ("%s");
+  bx_options.floppyb.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
+  bx_options.floppyb.Ostatus->set_format ("%s");
   bx_options.floppyb.Opath->set_format ("%s");
   bx_options.floppyb.Otype->set_format (", size=%s, ");
-  bx_options.floppyb.Oinitial_status->set_format ("%s");
+  bx_options.floppyb.Ostatus->set_format ("%s");
   bx_param_c *floppyb_init_list[] = {
     bx_options.floppyb.Opath,
     bx_options.floppyb.Otype,
-    bx_options.floppyb.Oinitial_status,
+    bx_options.floppyb.Ostatus,
     NULL
   };
   menu = new bx_list_c (BXP_FLOPPYB, "Floppy Disk 1", "All options for second floppy disk", floppyb_init_list);
   menu->get_options ()->set (menu->BX_SERIES_ASK);
   bx_options.floppyb.Opath->set_handler (bx_param_string_handler);
   bx_options.floppyb.Opath->set ("none");
-  bx_options.floppyb.Oinitial_status->set_handler (bx_param_handler);
+  bx_options.floppyb.Otype->set_handler (bx_param_handler);
+  bx_options.floppyb.Ostatus->set_handler (bx_param_handler);
 
   // diskc options
   bx_options.diskc.Opresent = new bx_param_bool_c (BXP_DISKC_PRESENT,
@@ -553,24 +579,24 @@ void bx_init_options ()
 #if BX_UI_TEXT
   bx_options.cdromd.Opath->set_ask_format ("Enter new filename, or 'none' for no CDROM: [%s] ");
 #endif
-  bx_options.cdromd.Oinserted = new bx_param_enum_c (BXP_CDROM_INSERTED,
+  bx_options.cdromd.Ostatus = new bx_param_enum_c (BXP_CDROM_STATUS,
       "Is the CDROM inserted or ejected",
       "Inserted or ejected",
       floppy_status_names,
       BX_INSERTED,
       BX_EJECTED);
-  bx_options.cdromd.Oinserted->set_format (", %s");
-  bx_options.cdromd.Oinserted->set_ask_format ("Is the CDROM inserted or ejected? [%s] ");
+  bx_options.cdromd.Ostatus->set_format (", %s");
+  bx_options.cdromd.Ostatus->set_ask_format ("Is the CDROM inserted or ejected? [%s] ");
   bx_param_c *cdromd_init_list[] = {
     bx_options.cdromd.Opath,
-    bx_options.cdromd.Oinserted,
+    bx_options.cdromd.Ostatus,
     NULL
   };
   menu = new bx_list_c (BXP_CDROMD, "CDROM", "Options for the CDROM", cdromd_init_list);
   menu->get_options ()->set (menu->BX_SERIES_ASK);
   bx_options.cdromd.Opath->set_handler (bx_param_string_handler);
   bx_options.cdromd.Opath->set ("none");
-  bx_options.cdromd.Oinserted->set_handler (bx_param_handler);
+  bx_options.cdromd.Ostatus->set_handler (bx_param_handler);
 
   bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
       "New Hard Drive Support",
@@ -1638,10 +1664,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.floppya.Otype->set (BX_FLOPPY_360K);
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
-        bx_options.floppya.Oinitial_status->set (BX_EJECTED);
+        bx_options.floppya.Ostatus->set (BX_EJECTED);
         }
       else if (!strncmp(params[i], "status=inserted", 15)) {
-        bx_options.floppya.Oinitial_status->set (BX_INSERTED);
+        bx_options.floppya.Ostatus->set (BX_INSERTED);
         }
       else {
         BX_PANIC(("%s: floppya attribute '%s' not understood.", context,
@@ -1673,10 +1699,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.floppyb.Otype->set (BX_FLOPPY_360K);
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
-        bx_options.floppyb.Oinitial_status->set (BX_EJECTED);
+        bx_options.floppyb.Ostatus->set (BX_EJECTED);
         }
       else if (!strncmp(params[i], "status=inserted", 15)) {
-        bx_options.floppyb.Oinitial_status->set (BX_INSERTED);
+        bx_options.floppyb.Ostatus->set (BX_INSERTED);
         }
       else {
         BX_PANIC(("%s: floppyb attribute '%s' not understood.", context,
@@ -1768,9 +1794,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     bx_options.cdromd.Opath->set (&params[1][4]);
     if (!strcmp(params[2], "status=inserted"))
-      bx_options.cdromd.Oinserted->set (BX_INSERTED);
+      bx_options.cdromd.Ostatus->set (BX_INSERTED);
     else if (!strcmp(params[2], "status=ejected"))
-      bx_options.cdromd.Oinserted->set (BX_EJECTED);
+      bx_options.cdromd.Ostatus->set (BX_EJECTED);
     else {
       BX_PANIC(("%s: cdromd directive malformed.", context));
       }
@@ -2360,7 +2386,7 @@ bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)
     (char)'a'+drive, 
     fdtypes[opt->Otype->get () - BX_FLOPPY_NONE],
     opt->Opath->getptr (),
-    opt->Oinitial_status->get ()==BX_EJECTED ? "ejected" : "inserted");
+    opt->Ostatus->get ()==BX_EJECTED ? "ejected" : "inserted");
   return 0;
 }
 
@@ -2390,7 +2416,7 @@ bx_write_cdrom_options (FILE *fp, int drive, bx_cdrom_options *opt)
   }
   fprintf (fp, "cdromd: dev=%s, status=%s\n",
     opt->Opath->getptr (),
-    opt->Oinserted->get ()==BX_INSERTED ? "inserted" : "ejected");
+    opt->Ostatus->get ()==BX_INSERTED ? "inserted" : "ejected");
   return 0;
 }
 

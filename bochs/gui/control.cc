@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.51 2002-06-26 14:42:34 cbothamy Exp $
+// $Id: control.cc,v 1.52 2002-08-04 08:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.51 2002-06-26 14:42:34 cbothamy Exp $
+ * $Id: control.cc,v 1.52 2002-08-04 08:42:34 vruppert Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -397,19 +397,26 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
 {
   bx_floppy_options floppyop;
   bx_cdrom_options cdromop;
-  bx_param_num_c *ips = SIM->get_param_num (BXP_IPS);
+/*  bx_param_num_c *ips = SIM->get_param_num (BXP_IPS); */
   char buffer[3][128];
   for (int i=0; i<2; i++) {
     SIM->get_floppy_options (i, &floppyop);
-    sprintf (buffer[i], "%s, size=%s, %s", floppyop.Opath->getptr (),
-      SIM->get_floppy_type_name (floppyop.Otype->get ()),
-      (floppyop.Oinitial_status->get () == BX_INSERTED)? "inserted" : "ejected");
-    if (!floppyop.Opath->getptr ()[0]) strcpy (buffer[i], "none");
+    if (floppyop.Odevtype->get () == BX_FLOPPY_NONE)
+      strcpy (buffer[i], "(not present)");
+    else {
+      sprintf (buffer[i], "%s, size=%s, %s", floppyop.Opath->getptr (),
+        SIM->get_floppy_type_name (floppyop.Otype->get ()),
+        (floppyop.Ostatus->get () == BX_INSERTED)? "inserted" : "ejected");
+      if (!floppyop.Opath->getptr ()[0]) strcpy (buffer[i], "none");
+    }
   }
   SIM->get_cdrom_options (0, &cdromop);
-  sprintf (buffer[2], "%s, %spresent, %s",
-    cdromop.Opath->getptr (), cdromop.Opresent->get ()?"":"not ",
-    (cdromop.Oinserted->get () == BX_INSERTED)? "inserted" : "ejected");
+  if (!cdromop.Opresent->get ())
+    sprintf (buffer[2], "(not present)");
+  else
+    sprintf (buffer[2], "%s, %s",
+      cdromop.Opath->getptr (),
+      (cdromop.Ostatus->get () == BX_INSERTED)? "inserted" : "ejected");
   snprintf (buf, size, format, buffer[0], buffer[1], buffer[2], 
       /* ips->get (), */
       SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
@@ -501,12 +508,23 @@ int bx_control_panel (int menu)
      break;
    case BX_CPANEL_RUNTIME:
      char prompt[1024];
+     bx_floppy_options floppyop;
+     bx_cdrom_options cdromop;
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
      if (ask_uint (prompt, 1, 12, 11, &choice, 10) < 0) return -1;
      switch (choice) {
-       case 1: do_menu (BXP_FLOPPYA); break;
-       case 2: do_menu (BXP_FLOPPYB); break;
-       case 3: do_menu (BXP_CDROMD); break;
+       case 1: 
+         SIM->get_floppy_options (0, &floppyop);
+	 if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYA);
+	 break;
+       case 2:
+         SIM->get_floppy_options (1, &floppyop);
+	 if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYB);
+	 break;
+       case 3:
+         SIM->get_cdrom_options (0, &cdromop);
+	 if (cdromop.Opresent->get ()) do_menu (BXP_CDROMD);
+	 break;
        case 4: // not implemented yet because I would have to mess with
 	       // resetting timers and pits and everything on the fly.
                // askparam (BXP_IPS);

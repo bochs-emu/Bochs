@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.41 2002-04-18 00:22:19 bdenney Exp $
+// $Id: gui.cc,v 1.42 2002-08-04 08:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -153,10 +153,10 @@ void
 bx_gui_c::update_drive_status_buttons (void) {
   BX_GUI_THIS floppyA_status = 
     bx_devices.floppy->get_media_status (0)
-    && bx_options.floppya.Oinitial_status->get ();
+    && bx_options.floppya.Ostatus->get ();
   BX_GUI_THIS floppyB_status = 
       bx_devices.floppy->get_media_status (1)
-      && bx_options.floppyb.Oinitial_status->get ();
+      && bx_options.floppyb.Ostatus->get ();
   BX_GUI_THIS cdromD_status =
     bx_devices.hard_drive->get_cd_media_status()
     && bx_options.cdromd.Opresent->get ();

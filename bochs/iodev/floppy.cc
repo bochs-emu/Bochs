@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.46 2002-08-03 06:58:56 vruppert Exp $
+// $Id: floppy.cc,v 1.47 2002-08-04 08:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,7 +89,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.46 2002-08-03 06:58:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.47 2002-08-04 08:42:34 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -107,6 +107,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_FD_THIS s.num_supported_floppies = 0;
 
   for (i=0; i<4; i++) {
+    BX_FD_THIS s.device_type[i] = BX_FLOPPY_NONE;
     BX_FD_THIS s.media[i].type = BX_FLOPPY_NONE;
     }
 
@@ -119,8 +120,9 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_FD_THIS s.media[0].sectors           = 0;
   BX_FD_THIS s.media[0].fd = -1;
   BX_FD_THIS s.media_present[0] = 0;
+  BX_FD_THIS s.device_type[0] = bx_options.floppya.Odevtype->get ();
 
-  switch (bx_options.floppya.Otype->get ()) {
+  switch (BX_FD_THIS s.device_type[0]) {
     case BX_FLOPPY_NONE:
       cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0x0f) | 0x00;
       break;
@@ -142,15 +144,16 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     default:
       BX_PANIC(("unknown floppya type"));
     }
+  if (BX_FD_THIS s.device_type[0] != BX_FLOPPY_NONE)
+    BX_FD_THIS s.num_supported_floppies++;
 
   if (bx_options.floppya.Otype->get () != BX_FLOPPY_NONE) {
-    BX_FD_THIS s.num_supported_floppies++;
-    if ( bx_options.floppya.Oinitial_status->get () == BX_INSERTED) {
+    if ( bx_options.floppya.Ostatus->get () == BX_INSERTED) {
       if (evaluate_media(bx_options.floppya.Otype->get (), bx_options.floppya.Opath->getptr (),
                    & BX_FD_THIS s.media[0]))
         BX_FD_THIS s.media_present[0] = 1;
       else
-	bx_options.floppya.Oinitial_status->set(BX_EJECTED);
+	bx_options.floppya.Ostatus->set(BX_EJECTED);
 #define MED (BX_FD_THIS s.media[0])
     	BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppya.Opath->getptr(),
 			MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
@@ -168,8 +171,9 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_FD_THIS s.media[1].sectors           = 0;
   BX_FD_THIS s.media[1].fd = -1;
   BX_FD_THIS s.media_present[1] = 0;
+  BX_FD_THIS s.device_type[1] = bx_options.floppyb.Odevtype->get ();
 
-  switch (bx_options.floppyb.Otype->get ()) {
+  switch (BX_FD_THIS s.device_type[1]) {
     case BX_FLOPPY_NONE:
       cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0xf0) | 0x00;
       break;
@@ -191,15 +195,16 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     default:
       BX_PANIC(("unknown floppyb type"));
     }
+  if (BX_FD_THIS s.device_type[1] != BX_FLOPPY_NONE)
+    BX_FD_THIS s.num_supported_floppies++;
 
   if (bx_options.floppyb.Otype->get () != BX_FLOPPY_NONE) {
-    BX_FD_THIS s.num_supported_floppies++;
-    if ( bx_options.floppyb.Oinitial_status->get () == BX_INSERTED) {
+    if ( bx_options.floppyb.Ostatus->get () == BX_INSERTED) {
       if (evaluate_media(bx_options.floppyb.Otype->get (), bx_options.floppyb.Opath->getptr (),
                    & BX_FD_THIS s.media[1]))
         BX_FD_THIS s.media_present[1] = 1;
       else
-	bx_options.floppyb.Oinitial_status->set(BX_EJECTED);
+	bx_options.floppyb.Ostatus->set(BX_EJECTED);
 #define MED (BX_FD_THIS s.media[1])
     	BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppyb.Opath->getptr(),
 			MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
@@ -443,7 +448,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
           (unsigned) normal_operation));
         BX_DEBUG(("  drive_select=%02x",
           (unsigned) drive_select));
-      if (BX_FD_THIS s.media[drive_select].type == BX_FLOPPY_NONE) {
+      if (BX_FD_THIS s.device_type[drive_select] == BX_FLOPPY_NONE) {
         BX_DEBUG(("WARNING: not existing drive selected"));
         }
       break;
@@ -725,7 +730,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
         return;
         }
-      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
         BX_PANIC(("floppy_command(): read ID: bad drive #%d", drive));
       BX_FD_THIS s.result_size = 7;
       BX_FD_THIS s.result_index = 0;
@@ -756,7 +761,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         sector_size = BX_FD_THIS s.command[2];
         BX_FD_THIS s.format_count = BX_FD_THIS s.command[3];
         BX_FD_THIS s.format_fillbyte = BX_FD_THIS s.command[5];
-        if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+        if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
           BX_PANIC(("floppy_command(): format track: bad drive #%d", drive));
 
         if (sector_size != 0x02) { // 512 bytes
@@ -837,7 +842,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_DEBUG(("  cylinder = %u", (unsigned) cylinder));
       BX_DEBUG(("  sector   = %u", (unsigned) sector));
       BX_DEBUG(("  eot      = %u", (unsigned) eot));
-      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
         BX_PANIC(("floppy_command(): read/write: bad drive #%d", drive));
 
       // check that head number in command[1] bit two matches the head
@@ -994,7 +999,7 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
 {
   int ret;
 
-  if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE)
+  if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
     BX_PANIC(("floppy_xfer: bad drive #%d", drive));
 
   if (bx_dbg.floppy) {
@@ -1073,7 +1078,7 @@ bx_floppy_ctrl_c::timer()
       BX_FD_THIS s.cylinder[drive] = 0;
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
-      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE) {
+      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE) {
         BX_FD_THIS s.status_reg0 |= 0x50;
         }
       else if (BX_FD_THIS s.media_present[drive] == 0) {
@@ -1090,7 +1095,7 @@ bx_floppy_ctrl_c::timer()
       /* write ready, not busy */
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
-      if (BX_FD_THIS s.media[drive].type == BX_FLOPPY_NONE) {
+      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE) {
         BX_FD_THIS s.status_reg0 |= 0x50;
         }
       else if (BX_FD_THIS s.media_present[drive] == 0) {
@@ -1364,8 +1369,14 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
   char *path;
   unsigned type;
 
+  if (drive == 0)
+    type = bx_options.floppya.Otype->get ();
+  else
+    type = bx_options.floppyb.Otype->get ();
+
   // if setting to the current value, nothing to do
-  if (status == BX_FD_THIS s.media_present[drive])
+  if ((status == BX_FD_THIS s.media_present[drive]) &&
+      ((status == 0) || (type == BX_FD_THIS s.media[drive].type)))
     return(status);
 
   if (status == 0) {
@@ -1376,9 +1387,9 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       }
     BX_FD_THIS s.media_present[drive] = 0;
     if (drive == 0) {
-      bx_options.floppya.Oinitial_status->set(BX_EJECTED);
+      bx_options.floppya.Ostatus->set(BX_EJECTED);
     } else {
-      bx_options.floppyb.Oinitial_status->set(BX_EJECTED);
+      bx_options.floppyb.Ostatus->set(BX_EJECTED);
     }
     BX_FD_THIS s.DIR |= 0x80; // disk changed line
     return(0);
@@ -1387,18 +1398,16 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     // insert floppy
     if (drive == 0) {
       path = bx_options.floppya.Opath->getptr ();
-      type = bx_options.floppya.Otype->get ();
       }
     else {
       path = bx_options.floppyb.Opath->getptr ();
-      type = bx_options.floppyb.Otype->get ();
       }
     if (evaluate_media(type, path, & BX_FD_THIS s.media[drive])) {
       BX_FD_THIS s.media_present[drive] = 1;
       if (drive == 0) {
-        bx_options.floppya.Oinitial_status->set(BX_INSERTED);
+        bx_options.floppya.Ostatus->set(BX_INSERTED);
       } else {
-        bx_options.floppyb.Oinitial_status->set(BX_INSERTED);
+        bx_options.floppyb.Ostatus->set(BX_INSERTED);
       }
       BX_FD_THIS s.DIR |= 0x80; // disk changed line
       return(1);
@@ -1406,9 +1415,9 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     else {
       BX_FD_THIS s.media_present[drive] = 0;
       if (drive == 0) {
-        bx_options.floppya.Oinitial_status->set(BX_EJECTED);
+        bx_options.floppya.Ostatus->set(BX_EJECTED);
       } else {
-        bx_options.floppyb.Oinitial_status->set(BX_EJECTED);
+        bx_options.floppyb.Ostatus->set(BX_EJECTED);
       }
       return(0);
       }

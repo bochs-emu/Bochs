@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.41 2002-08-01 07:34:59 vruppert Exp $
+// $Id: siminterface.h,v 1.42 2002-08-04 08:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.41 2002-08-01 07:34:59 vruppert Exp $
+ * $Id: siminterface.h,v 1.42 2002-08-04 08:42:34 vruppert Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -73,10 +73,12 @@ typedef enum {
   BXP_KBD_PASTE_DELAY,
   BXP_KBD_TYPE,
   BXP_FLOPPY_CMD_DELAY,
+  BXP_FLOPPYA_DEVTYPE,
   BXP_FLOPPYA_PATH,
   BXP_FLOPPYA_TYPE,
   BXP_FLOPPYA_STATUS,
   BXP_FLOPPYA,
+  BXP_FLOPPYB_DEVTYPE,
   BXP_FLOPPYB_PATH,
   BXP_FLOPPYB_TYPE,
   BXP_FLOPPYB_STATUS,
@@ -103,7 +105,7 @@ typedef enum {
   BXP_COM4_PATH,
   BXP_CDROM_PRESENT,
   BXP_CDROM_PATH,
-  BXP_CDROM_INSERTED,
+  BXP_CDROM_STATUS,
   BXP_CDROMD,
   BXP_PRIVATE_COLORMAP,
   BXP_FULLSCREEN,
@@ -546,9 +548,10 @@ extern char *keyboard_type_names[];
 extern int n_keyboard_type_names;
 
 typedef struct {
+  bx_param_enum_c *Odevtype;
   bx_param_string_c *Opath;
   bx_param_enum_c *Otype;
-  bx_param_enum_c *Oinitial_status;
+  bx_param_enum_c *Ostatus;
   } bx_floppy_options;
 
 typedef struct {
@@ -568,7 +571,7 @@ struct bx_cdrom_options
 {
   bx_param_bool_c *Opresent;
   bx_param_string_c *Opath;
-  bx_param_enum_c *Oinserted;
+  bx_param_enum_c *Ostatus;
 };
 
 

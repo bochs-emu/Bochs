@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.64 2002-07-30 09:54:26 vruppert Exp $
+// $Id: harddrv.cc,v 1.65 2002-08-04 08:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.64 2002-07-30 09:54:26 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.65 2002-08-04 08:42:34 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -200,7 +200,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 #endif
 
 #ifdef LOWLEVEL_CDROM
-	if (bx_options.cdromd.Oinserted->get () == BX_INSERTED) {
+	if (bx_options.cdromd.Ostatus->get () == BX_INSERTED) {
 	      if (BX_HD_THIS s[1].cdrom.cd->insert_cdrom()) {
 		    BX_INFO(( "Media present in CD-ROM drive"));
 		    BX_HD_THIS s[1].cdrom.ready = 1;
@@ -208,7 +208,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 	      } else {		    
 		    BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
 		    BX_HD_THIS s[1].cdrom.ready = 0;
-		    bx_options.cdromd.Oinserted->set(BX_EJECTED);
+		    bx_options.cdromd.Ostatus->set(BX_EJECTED);
 	      }
 	} else {
 #endif
@@ -1020,7 +1020,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
                                             BX_HD_THIS s[1].cdrom.cd->eject_cdrom();
 #endif
                                             BX_HD_THIS s[1].cdrom.ready = 0;
-                                            bx_options.cdromd.Oinserted->set(BX_EJECTED);
+                                            bx_options.cdromd.Ostatus->set(BX_EJECTED);
                                             bx_gui.update_drive_status_buttons();
                                           }
                                           raise_interrupt();
@@ -2723,7 +2723,7 @@ bx_hard_drive_c::set_cd_media_status(unsigned status)
       BX_HD_THIS s[1].cdrom.cd->eject_cdrom();
 #endif
       BX_HD_THIS s[1].cdrom.ready = 0;
-      bx_options.cdromd.Oinserted->set(BX_EJECTED);
+      bx_options.cdromd.Ostatus->set(BX_EJECTED);
       }
     }
   else {
@@ -2733,7 +2733,7 @@ bx_hard_drive_c::set_cd_media_status(unsigned status)
       BX_INFO(( "Media present in CD-ROM drive"));
       BX_HD_THIS s[1].cdrom.ready = 1;
       BX_HD_THIS s[1].cdrom.capacity = BX_HD_THIS s[1].cdrom.cd->capacity();
-      bx_options.cdromd.Oinserted->set(BX_INSERTED);
+      bx_options.cdromd.Ostatus->set(BX_INSERTED);
       BX_SELECTED_HD.sense.sense_key = SENSE_UNIT_ATTENTION;
       BX_SELECTED_HD.sense.asc = 0;
       BX_SELECTED_HD.sense.ascq = 0;
@@ -2743,7 +2743,7 @@ bx_hard_drive_c::set_cd_media_status(unsigned status)
 #endif
       BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS s[1].cdrom.ready = 0;
-      bx_options.cdromd.Oinserted->set(BX_EJECTED);
+      bx_options.cdromd.Ostatus->set(BX_EJECTED);
 #ifdef LOWLEVEL_CDROM
       }
 #endif
