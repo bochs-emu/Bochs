@@ -37,17 +37,30 @@ and other OS's, all on your workstation.
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
 	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
-	# build file list on the fly
+	# Build list of plugins on the fly (if any).  This allows the
+	# spec file to support RPM building with or without plugins.
 	cd $RPM_BUILD_ROOT
-	find . -type d | sed '1,2d;s,^\.,\%attr(-\,root\,root) \%dir ,' > \
+	find usr/lib -type d | sed '1,2d;s,^\.,\%attr(-\,root\,root) \%dir /,' > \
 	  $RPM_BUILD_DIR/file.list.%{pkg_name}
-	find . -type f | sed -e 's,^\.,\%attr(-\,root\,root) ,' \
+	find usr/lib -type f | sed -e 's,^\.,\%attr(-\,root\,root) /,' \
 	  -e '/\/etc\//s|^|%config|' >> \
 	  $RPM_BUILD_DIR/file.list.%{pkg_name}
-	find . -type l | sed 's,^\.,\%attr(-\,root\,root) ,' >> \
+	find usr/lib -type l | sed 's,^\.,\%attr(-\,root\,root) /,' >> \
 	  $RPM_BUILD_DIR/file.list.%{pkg_name}
+	# We could use the same technique to produce the complete file list,
+	# with only one very minor problem: it lists directories that are
+	# used by other programs, so when you remove the package you get
+	# errors like
+	#   error: cannot remove /usr/share/doc - directory not empty
 
 %files -f file.list.%{pkg_name}
+	/usr/bin/bochs
+	/usr/bin/bochs-docs
+	/usr/bin/bochs-dlx
+	/usr/bin/bximage
+	/usr/share/bochs/*
+	/usr/share/doc/*
+	%{_mandir}/*
 
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
