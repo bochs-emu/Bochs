@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.65 2003-11-30 20:54:42 vruppert Exp $
+// $Id: cdrom.cc,v 1.66 2003-12-08 23:49:48 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -209,11 +209,11 @@ static kern_return_t FindEjectableCDMedia( io_iterator_t *mediaIterator,
     fprintf ( stderr, "IOServiceMatching returned a NULL dictionary.\n" );
   else
     {
-      // Each IOMedia object has a property with key kIOMediaEjectable
+      // Each IOMedia object has a property with key kIOMediaEjectableKey
       // which is true if the media is indeed ejectable. So add property
       // to CFDictionary for matching.
       CFDictionarySetValue( classesToMatch,
-                            CFSTR( kIOMediaEjectable ), kCFBooleanTrue );
+                            CFSTR( kIOMediaEjectableKey ), kCFBooleanTrue );
     }
   kernResult = IOServiceGetMatchingServices( *masterPort,
                                              classesToMatch, mediaIterator );
@@ -238,7 +238,7 @@ static kern_return_t GetDeviceFilePath( io_iterator_t mediaIterator,
     {
       CFTypeRef    deviceFilePathAsCFString;
       deviceFilePathAsCFString = IORegistryEntryCreateCFProperty(
-                                                                 nextMedia, CFSTR( kIOBSDName ),
+                                                                 nextMedia, CFSTR( kIOBSDNameKey ),
                                                                  kCFAllocatorDefault, 0 );
       *deviceFilePath = '\0';
       if ( deviceFilePathAsCFString )
@@ -332,7 +332,7 @@ static struct _CDTOC * ReadTOC( const char * devpath ) {
     goto Exit;
   }
 
-  data = (CFDataRef) CFDictionaryGetValue( properties, CFSTR("TOC") );
+  data = (CFDataRef) CFDictionaryGetValue( properties, CFSTR(kIOCDMediaTOCKey) );
   if ( data == NULL ) {
     fprintf( stderr, "CFDictionaryGetValue failed\n" );
     goto Exit;
@@ -468,7 +468,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.65 2003-11-30 20:54:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.66 2003-12-08 23:49:48 danielg4 Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
