@@ -297,6 +297,17 @@ mouse: enabled=0
 private_colormap: enabled=0
 
 #=======================================================================
+# fullscreen: ONLY IMPLEMENTED ON AMIGA
+#             Request that Bochs occupy the entire screen instead of a 
+#             window.
+#
+# Examples:
+#   fullscreen: enabled=0
+#   fullscreen: enabled=1
+#=======================================================================
+fullscreen: enabled=0
+
+#=======================================================================
 # other stuff
 #=======================================================================
 # magic_break

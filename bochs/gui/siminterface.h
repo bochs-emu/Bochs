@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22 2001-06-22 13:37:08 bdenney Exp $
+ * $Id: siminterface.h,v 1.23 2001-08-15 20:17:19 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -54,6 +54,7 @@ typedef enum {
   BXP_CDROM_INSERTED,
   BXP_CDROMD,
   BXP_PRIVATE_COLORMAP,
+  BXP_FULLSCREEN,
   BXP_I440FX_SUPPORT,
   BXP_NEWHARDDRIVESUPPORT,
   BXP_LOG_FILENAME,

@@ -81,6 +81,7 @@ bx_options_t bx_options = {
   NULL,    // system clock sync
   NULL,    // default mouse_enabled
   NULL,       // default private_colormap
+  NULL,       // full screen mode
   NULL,          // default i440FXSupport
   {NULL, NULL},  // cmos path, cmos image boolean
   { NULL, NULL, NULL, NULL, NULL, NULL }, // ne2k
@@ -480,6 +481,14 @@ void bx_init_options ()
       "Sync with system clock",
       "This option slows down bochs if it starts to run ahead of the system clock",
       0);
+  bx_options.Ofullscreen = new bx_param_bool_c (BXP_FULLSCREEN,
+      "Use full screen mode",
+      "When enable, bochs occupied the whole screen instead of just a window.  Not implemented on all platforms.",
+      0);
+  bx_options.Osystem_clock_sync = new bx_param_bool_c (BXP_SYSTEM_CLOCK_SYNC,
+      "Sync with system clock",
+      "This option slows down bochs if it starts to run ahead of the system clock",
+      0);
   bx_param_c *interface_init_list[] = {
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
@@ -487,6 +496,7 @@ void bx_init_options ()
     bx_options.Omax_ips,
     bx_options.Osystem_clock_sync,
     bx_options.Oprivate_colormap,
+    bx_options.Ofullscreen,
     NULL
   };
   menu = new bx_list_c (BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
@@ -1402,6 +1412,19 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_PANIC(("%s: private_colormap directive malformed.", context));
       }
     }
+  else if (!strcmp(params[0], "fullscreen")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: fullscreen directive malformed.", context));
+      }
+    if (strncmp(params[1], "enabled=", 8)) {
+      BX_PANIC(("%s: fullscreen directive malformed.", context));
+      }
+    if (params[1][8] == '0' || params[1][8] == '1')
+      bx_options.Ofullscreen->set (params[1][8] - '0');
+    else {
+      BX_PANIC(("%s: fullscreen directive malformed.", context));
+      }
+    }
 
   else if (!strcmp(params[0], "sb16")) {
     for (i=1; i<num_params; i++) {
@@ -1770,6 +1793,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "system_clock_sync: enabled=%d\n", bx_options.Osystem_clock_sync->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
+  fprintf (fp, "fullscreen: enabled=%d\n", bx_options.Oprivate_colormap->get ());
   fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.Oi440FXSupport->get ());
   fprintf (fp, "time0: %u\n", bx_options.cmos.Otime0->get ());
   bx_write_ne2k_options (fp, &bx_options.ne2k);
