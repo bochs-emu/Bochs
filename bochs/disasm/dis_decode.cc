@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.12 2002-11-19 05:47:44 bdenney Exp $
+// $Id: dis_decode.cc,v 1.13 2003-01-21 13:23:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -960,16 +960,54 @@ bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
         goto done;
 
       case 0xA6: dis_sprintf("cmpsb "); XbYb(); goto done;
-      case 0xA7: dis_sprintf("cmpsw "); XvYv(); goto done;
+
+      case 0xA7:
+        if (db_32bit_opsize) {
+          dis_sprintf("cmpsd ");
+          }
+        else {
+          dis_sprintf("cmpsw ");
+          }
+        XvYv();
+        goto done;
+
       case 0xA8: dis_sprintf("test AL, "); Ib(); goto done;
       case 0xA9: dis_sprintf("test "); eAX(); dis_sprintf(", "); Iv(); goto done;
       case 0xAA: dis_sprintf("stosb "); YbAL(); goto done;
-      case 0xAB: dis_sprintf("stosw "); YveAX(); goto done;
-      case 0xAC: dis_sprintf("lodsb "); ALXb(); goto done;
-      case 0xAD: dis_sprintf("lodsw "); eAXXv(); goto done;
-      case 0xAE: dis_sprintf("scasb "); ALXb(); goto done;
-      case 0xAF: dis_sprintf("scasw "); eAXXv(); goto done;
 
+      case 0xAB:
+        if (db_32bit_opsize) {
+          dis_sprintf("stosd ");
+          }
+        else {
+          dis_sprintf("stosw ");
+          }
+        YveAX();
+        goto done;
+
+      case 0xAC: dis_sprintf("lodsb "); ALXb(); goto done;
+
+      case 0xAD:
+        if (db_32bit_opsize) {
+          dis_sprintf("lodsd ");
+          }
+        else {
+          dis_sprintf("lodsw ");
+          }
+        eAXXv();
+        goto done;
+
+      case 0xAE: dis_sprintf("scasb "); YbAL(); goto done;
+
+      case 0xAF:
+        if (db_32bit_opsize) {
+          dis_sprintf("scasd ");
+          }
+        else {
+          dis_sprintf("scasw ");
+          }
+        YveAX();
+        goto done;
 
       case 0xB0: dis_sprintf("mov AL, "); Ib(); goto done;
       case 0xB1: dis_sprintf("mov CL, "); Ib(); goto done;
