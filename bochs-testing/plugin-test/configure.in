@@ -32,6 +32,19 @@ case $host in
     AC_MSG_RESULT(no)
     ;;
 esac
+AC_MSG_CHECKING(how to build plugins)
+case $host in
+  *-*-cygwin* | *-*-mingw* | *-*-pw32* | *-*-os2*)
+    PLUGIN_MAKEFILE_TARGET=all_win32_dlltool
+    AC_MSG_RESULT(dlltool for cygwin/mingw)
+    ;;
+  *)
+    PLUGIN_MAKEFILE_TARGET=all_libtool
+    AC_MSG_RESULT(libtool)
+    ;;
+esac
+AC_SUBST(PLUGIN_MAKEFILE_TARGET)
+
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
