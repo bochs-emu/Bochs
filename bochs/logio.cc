@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.15 2001-12-21 19:33:18 bdenney Exp $
+// $Id: logio.cc,v 1.16 2002-01-07 16:10:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -223,11 +223,6 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 
 logfunctions::~logfunctions(void)
 {
-    if (io != NULL)
-    {
-        delete io;
-        io = NULL;
-    }
     if ( this->prefix )
     {
         free(this->prefix);
