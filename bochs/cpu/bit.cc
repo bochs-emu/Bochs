@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.14 2002-10-25 18:26:27 sshwarts Exp $
+// $Id: bit.cc,v 1.15 2004-01-10 19:45:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -637,7 +637,6 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
 BX_CPU_C::BSWAP_EAX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit32u eax, b0, b1, b2, b3;
 
   eax = EAX;
@@ -649,6 +648,7 @@ BX_CPU_C::BSWAP_EAX(bxInstruction_c *i)
   RAX = (b0<<24) | (b1<<16) | (b2<<8) | b3;  // zero extended
 #else
   BX_PANIC(("BSWAP_EAX: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -656,7 +656,6 @@ BX_CPU_C::BSWAP_EAX(bxInstruction_c *i)
 BX_CPU_C::BSWAP_ECX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit32u ecx, b0, b1, b2, b3;
 
   ecx = ECX;
@@ -668,13 +667,14 @@ BX_CPU_C::BSWAP_ECX(bxInstruction_c *i)
   RCX = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
   BX_PANIC(("BSWAP_ECX: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
+
   void
 BX_CPU_C::BSWAP_EDX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit32u edx, b0, b1, b2, b3;
 
   edx = EDX;
@@ -686,13 +686,14 @@ BX_CPU_C::BSWAP_EDX(bxInstruction_c *i)
   RDX = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
   BX_PANIC(("BSWAP_EDX: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
+
   void
 BX_CPU_C::BSWAP_EBX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit32u ebx, b0, b1, b2, b3;
 
   ebx = EBX;
@@ -704,8 +705,10 @@ BX_CPU_C::BSWAP_EBX(bxInstruction_c *i)
   RBX = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
   BX_PANIC(("BSWAP_EBX: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
+
   void
 BX_CPU_C::BSWAP_ESP(bxInstruction_c *i)
 {
@@ -722,8 +725,10 @@ BX_CPU_C::BSWAP_ESP(bxInstruction_c *i)
   RSP = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
   BX_PANIC(("BSWAP_ESP: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
+
   void
 BX_CPU_C::BSWAP_EBP(bxInstruction_c *i)
 {
@@ -740,8 +745,10 @@ BX_CPU_C::BSWAP_EBP(bxInstruction_c *i)
   RBP = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
   BX_PANIC(("BSWAP_EBP: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
+
   void
 BX_CPU_C::BSWAP_ESI(bxInstruction_c *i)
 {
@@ -758,8 +765,10 @@ BX_CPU_C::BSWAP_ESI(bxInstruction_c *i)
   RSI = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
   BX_PANIC(("BSWAP_ESI: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
+
   void
 BX_CPU_C::BSWAP_EDI(bxInstruction_c *i)
 {
@@ -776,16 +785,14 @@ BX_CPU_C::BSWAP_EDI(bxInstruction_c *i)
   RDI = (b0<<24) | (b1<<16) | (b2<<8) | b3;
 #else
   BX_PANIC(("BSWAP_EDI: not implemented CPU <= 3"));
+  UndefinedOpcode(i);
 #endif
 }
-
 
 #if BX_SUPPORT_X86_64
   void
 BX_CPU_C::BSWAP_RAX(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rax, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rax = RAX;
@@ -799,16 +806,11 @@ BX_CPU_C::BSWAP_RAX(bxInstruction_c *i)
   b7  = rax;
 
   RAX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b4<<16) | (b4<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_RAX: not implemented CPU <= 3"));
-#endif
 }
 
   void
 BX_CPU_C::BSWAP_RCX(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rcx, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rcx = RCX;
@@ -822,15 +824,11 @@ BX_CPU_C::BSWAP_RCX(bxInstruction_c *i)
   b7  = rcx;
 
   RCX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_ECX: not implemented CPU <= 3"));
-#endif
 }
+
   void
 BX_CPU_C::BSWAP_RDX(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rdx, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rdx = RDX;
@@ -844,15 +842,11 @@ BX_CPU_C::BSWAP_RDX(bxInstruction_c *i)
   b7  = rdx;
 
   RDX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_EDX: not implemented CPU <= 3"));
-#endif
 }
+
   void
 BX_CPU_C::BSWAP_RBX(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rbx, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rbx = RBX;
@@ -866,15 +860,11 @@ BX_CPU_C::BSWAP_RBX(bxInstruction_c *i)
   b7  = rbx;
 
   RBX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_EBX: not implemented CPU <= 3"));
-#endif
 }
+
   void
 BX_CPU_C::BSWAP_RSP(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rsp, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rsp = RSP;
@@ -888,15 +878,11 @@ BX_CPU_C::BSWAP_RSP(bxInstruction_c *i)
   b7  = rsp;
 
   RSP = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_ESP: not implemented CPU <= 3"));
-#endif
 }
+
   void
 BX_CPU_C::BSWAP_RBP(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rbp, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rbp = RBP;
@@ -910,15 +896,11 @@ BX_CPU_C::BSWAP_RBP(bxInstruction_c *i)
   b7  = rbp;
 
   RBP = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_EBP: not implemented CPU <= 3"));
-#endif
 }
+
   void
 BX_CPU_C::BSWAP_RSI(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rsi, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rsi = RSI;
@@ -932,15 +914,11 @@ BX_CPU_C::BSWAP_RSI(bxInstruction_c *i)
   b7  = rsi;
 
   RSI = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_ESI: not implemented CPU <= 3"));
-#endif
 }
+
   void
 BX_CPU_C::BSWAP_RDI(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit64u rdi, b0, b1, b2, b3, b4, b5, b6, b7;
 
   rdi = RDI;
@@ -954,9 +932,6 @@ BX_CPU_C::BSWAP_RDI(bxInstruction_c *i)
   b7  = rdi;
 
   RDI = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
-#else
-  BX_PANIC(("BSWAP_EDI: not implemented CPU <= 3"));
-#endif
 }
 #endif  // #if BX_SUPPORT_X86_64
 
@@ -1173,7 +1148,6 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
   BX_PANIC(("BTR_EvGv: not available on <386"));
 #else
   bx_address op1_addr;
-
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
