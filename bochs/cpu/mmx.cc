@@ -898,6 +898,33 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 #endif
 }
 
+/* 0F D7 */
+void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
+  Bit32u result = 0;
+
+  if(MMXUB0(op) & 0x80) result |= 0x01; 
+  if(MMXUB1(op) & 0x80) result |= 0x02;
+  if(MMXUB2(op) & 0x80) result |= 0x04;
+  if(MMXUB3(op) & 0x80) result |= 0x08;
+  if(MMXUB4(op) & 0x80) result |= 0x10;
+  if(MMXUB5(op) & 0x80) result |= 0x20;
+  if(MMXUB6(op) & 0x80) result |= 0x40;
+  if(MMXUB7(op) & 0x80) result |= 0x80;
+
+  /* now write result back to destination */
+  BX_WRITE_32BIT_REG(i->nnn(), result);
+  
+#else
+  BX_INFO(("PMOVMSKB_GdPRq: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
 /* 0F D8 */
 void BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
 {

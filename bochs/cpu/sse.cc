@@ -691,18 +691,6 @@ void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("PMOVMSKB_GdPRq: SSE instruction still not implemented"));
-#else
-  BX_INFO(("PMOVMSKB_GdPRq: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
 void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE
