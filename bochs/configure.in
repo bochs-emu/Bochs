@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.106 2002-09-16 11:53:35 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.107 2002-09-16 12:37:16 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -141,19 +141,20 @@ AC_TRY_COMPILE([#include <hash_map.h>], [],
    ], AC_MSG_RESULT(no))
 AC_LANG_RESTORE
 
+use_config_interface=1
 AC_MSG_CHECKING(for configuration interface)
 AC_ARG_ENABLE(config-interface,
   [  --enable-config-interface        turns on/off configuration interface],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_CONFIG_INTERFACE, 1)
+	use_config_interface=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_CONFIG_INTERFACE, 0)
+	use_config_interface=0
    fi],
   [
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_CONFIG_INTERFACE, 1)
+	use_config_interface=1
     ]
   )
 
@@ -164,17 +165,17 @@ AC_ARG_ENABLE(control-panel,
   [  --enable-control-panel           Deprecated. Use --enable-config-interface.],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_CONFIG_INTERFACE, 1)
+	use_config_interface=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_CONFIG_INTERFACE, 0)
+	use_config_interface=0
    fi],
   [
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_CONFIG_INTERFACE, 1)
+	use_config_interface=1
     ]
   )
-AC_SUBST(BX_USE_CONFIG_INTERFACE)
+AC_DEFINE(BX_USE_CONFIG_INTERFACE, $use_config_interface)
 
 AC_MSG_CHECKING(for new PIT model)
 AC_ARG_ENABLE(new-pit,
@@ -635,19 +636,20 @@ AC_ARG_ENABLE(repeat-speedups,
   )
 AC_SUBST(BX_SupportRepeatSpeedups)
 
+support_global_pages=0
 AC_MSG_CHECKING(for Global pages support)
 AC_ARG_ENABLE(global-pages,
   [  --enable-global-pages             support for Global pages in PDE/PTE],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportGlobalPages, 1)
+	support_global_pages=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportGlobalPages, 0)
+	support_global_pages=0
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportGlobalPages, 0)
+	support_global_pages=0
     ]
   )
 
@@ -1660,19 +1662,29 @@ if test ! -d instrument; then mkdir instrument; fi
 if test ! -d build; then mkdir build; fi
 if test ! -d build/linux; then mkdir build/linux; fi
 
+support_pae=0
 if test "$use_x86_64" = 1; then
   # For x86-64, force support of the Physical Address Extension (PAE),
   # and Page Global Extension (PGE.
   echo 'Because X86-64 is enabled, enabling Physical Address Extension (PAE).'
   echo 'Because X86-64 is enabled, enabling Page Global Extension (PGE).'
-  AC_DEFINE(BX_SupportPAE, 1)
-  AC_DEFINE(BX_SupportGlobalPages, 1)
+  support_pae=1
+  support_global_pages=1
 else
-  # Not an option yet for x86-32.
+  support_pae=0   # Not an option yet for x86-32.
+fi
+
+if test "$support_global_pages"; then 
+  AC_DEFINE(BX_SupportGlobalPages, 1)
+else 
+  AC_DEFINE(BX_SupportGlobalPages, 0)
+fi
+
+if test "$support_pae"; then 
+  AC_DEFINE(BX_SupportPAE, 1)
+else 
   AC_DEFINE(BX_SupportPAE, 0)
 fi
-AC_SUBST(BX_SupportPAE)
-AC_SUBST(BX_SupportGlobalPages)
 
 AC_SUBST(INSTALL_TARGET)
 AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
