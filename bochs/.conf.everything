@@ -22,6 +22,8 @@
   --enable-mmx \
   --enable-fpu \
   --enable-sse=2 \
+  --enable-pni \
+  --enable-3dnow \
   --enable-x86-debugger \
   --enable-cdrom \
   --enable-sb16=linux \
