@@ -20,4 +20,5 @@ export LDFLAGS
 
 ./configure --enable-cdrom \
 	    --enable-vbe \
-	    --enable-all-optimizations
+	    --enable-all-optimizations \
+	    ${CONFIGURE_ARGS}

@@ -703,11 +703,11 @@ Bochs execution. The network interface name is supplied to the script
 as first parameter
 
 Examples:
-  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xlo
-  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
-  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
-  ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
-  ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xlo
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
+  ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+  ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
 
 .TP
 .I "keyboard_mapping:"
@@ -750,7 +750,7 @@ Enables the i440fx PCI USB root hub. USB devices with access to real hardware
 are not implemented yet. PCI support must be enabled, too.
 
 Example:
-  usb1: enabled=1, ioaddr=0xFF40, irq=9
+  usb1: enabled=1, ioaddr=0xFF80, irq=10
 
 .\"SKIP_SECTION"
 .SH LICENSE

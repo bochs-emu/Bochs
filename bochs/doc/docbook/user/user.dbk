@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.127 2003-08-17 17:42:26 vruppert Exp $
+$Id: user.dbk,v 1.128 2003-10-02 11:33:41 danielg4 Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3514,7 +3514,7 @@ Enables limited i440fx PCI chipset support.
 <para>
 Examples:
 <screen>
-  usb1: enabled=1, ioaddr=0xFF40, irq=9
+  usb1: enabled=1, ioaddr=0xFF80, irq=10
 </screen>
 Enables the i440fx PCI USB root hub. PCI support must be enabled, too.
 </para>
@@ -3542,11 +3542,12 @@ the NE2000 just comment out the ne2k line.
 <para>
 Examples:
 <screen>
-ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
-ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
-ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replaceable>MYCARD</replaceable>
-ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
-ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
+ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
+ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0 #macosx
+ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replaceable>MYCARD</replaceable>
+ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
 
 ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts.
@@ -4805,12 +4806,14 @@ will emulate a network card called an NE2000.  Below are some examples of valid
 one that's closest to what you need, add it to your bochsrc file, and 
 edit the values if necessary.
 <screen>
+  # sample for Mac OS X
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0
   # sample for FreeBSD
-  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
   # sample for Linux
-  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
   # sample for Windows
-  ne2k: ioaddr=0x280, irq=9, mac=00:c4:3B:00:C3:00, ethmod=win32, ethdev=NE2000
+  ne2k: ioaddr=0x240, irq=9, mac=00:c4:3B:00:C3:00, ethmod=win32, ethdev=NE2000
 </screen>
 You see the pattern.  Usually you won't need to change the I/O address, IRQ
 number, or MAC address.  The <varname>ethmod</varname> value depends on your
@@ -4987,7 +4990,7 @@ Some of the other options in this group is probably also needed,
                 (see <xref linkend="compiling">)
         </para>
         <para>edit your <replaceable>.bochsrc</replaceable> configuration file and add something like :
-                <screen>  ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, 
+                <screen>  ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, 
                           ethmod=tuntap, ethdev=tun0, script=<replaceable>/path/to/tunconfig</replaceable>
                 </screen>
         </para>
@@ -6210,7 +6213,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.127 2003-08-17 17:42:26 vruppert Exp $
+      $Id: user.dbk,v 1.128 2003-10-02 11:33:41 danielg4 Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8673,7 +8676,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.127 2003-08-17 17:42:26 vruppert Exp $
+        $Id: user.dbk,v 1.128 2003-10-02 11:33:41 danielg4 Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

@@ -210,6 +210,7 @@
 #define BX_HAVE_MKSTEMP 0
 #define BX_HAVE_SYS_MMAN_H 0
 #define BX_HAVE_XPM_H 0
+#define BX_HAVE_TIMELOCAL 0
 #define BX_HAVE_GMTIME 0
 #define BX_HAVE_MKTIME 0
 
@@ -869,7 +870,7 @@ typedef
 #ifdef BX_USE_ETH_ARPBACK
 #  define ETH_ARPBACK 1
 #endif
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 #define ETH_FBSD  1
 #endif
 #if defined(linux)

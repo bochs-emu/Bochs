@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.252 2003-09-27 20:58:45 sshwarts Exp $
+// $Id: main.cc,v 1.253 2003-10-02 11:33:38 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -944,13 +944,13 @@ void bx_init_options ()
                 "usb:ioaddr",
                 "I/O base adress of USB hub",
                 0, 0xffe0,
-                (i==0)?0xff40 : 0);
+                (i==0)?0xff80 : 0);
         bx_options.usb[i].Oirq = new bx_param_num_c (
                 BXP_USBx_IRQ(i+1),
                 "usb:irq",
                 "IRQ used by USB hub",
                 0, 15,
-                (i==0)?9 : 0);
+                (i==0)?10 : 0);
         deplist = new bx_list_c (BXP_NULL, 2);
         deplist->add (bx_options.usb[i].Oioaddr);
         deplist->add (bx_options.usb[i].Oirq);
@@ -1222,18 +1222,18 @@ void bx_init_options ()
       "NE2K I/O Address",
       "I/O base address of the emulated NE2K device",
       0, 0xffff,
-      0);
+      0x240);
   bx_options.ne2k.Oioaddr->set_base (16);
   bx_options.ne2k.Oirq = new bx_param_num_c (BXP_NE2K_IRQ,
       "NE2K Interrupt",
       "IRQ used by the NE2K device",
       0, 15,
-      0);
+      9);
   bx_options.ne2k.Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
   bx_options.ne2k.Omacaddr = new bx_param_string_c (BXP_NE2K_MACADDR,
       "MAC Address",
       "MAC address of the NE2K device. Don't use an address of a machine on your net.",
-      "", 6);
+      "\xfe\xfd\xde\xad\xbe\xef", 6);
   bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
   bx_options.ne2k.Omacaddr->set_separator (':');
   static char *eth_module_list[] = {
@@ -2041,7 +2041,7 @@ bx_init_main (int argc, char *argv[])
       // there is no stdin/stdout so disable the text-based config interface.
       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
       char cwd[MAXPATHLEN];
-      getcwd (cwd);
+      getwd (cwd);
       BX_INFO (("Now my working directory is %s", cwd));
       // if it was started from command line, there could be some args still.
       for (int a=0; a<argc; a++) {
