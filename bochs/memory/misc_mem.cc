@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.57 2004-11-28 08:54:59 vruppert Exp $
+// $Id: misc_mem.cc,v 1.58 2005-01-29 23:29:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.57 2004-11-28 08:54:59 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.58 2005-01-29 23:29:08 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -387,6 +387,15 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     if (ioapic->get_base () == (a20Addr & ~0xfff))
       return(NULL); // Vetoed!  IOAPIC address space
 #endif
+
+  struct memory_handler_struct *memory_handler = memory_handlers[a20Addr >> 20];
+  while (memory_handler) {
+    if (memory_handler->begin <= a20Addr &&
+        memory_handler->end >= a20Addr) {
+      return(NULL); // Vetoed!  memory handler for vram, mmio and PCI PnP
+    }
+    memory_handler = memory_handler->next;
+  }
 
   if (op == BX_READ) {
     if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
