@@ -154,4 +154,22 @@ typedef union FpuMmxRegisters
 #endif
 } i387_t;
 
+#if BX_SUPPORT_MMX || BX_SUPPORT_SSE != 0
+
+#define FPU_TWD                (BX_CPU_THIS_PTR the_i387.soft.twd)
+#define FPU_SWD                (BX_CPU_THIS_PTR the_i387.soft.swd)
+
+#define BX_READ_MMX_REG(index) \
+    (BX_CPU_THIS_PTR the_i387.mmx.mmx[index].packed_mmx_register)
+
+#define BX_WRITE_MMX_REG(index, value)                                  \
+{                                                                       \
+   BX_CPU_THIS_PTR the_i387.mmx.mmx[index].packed_mmx_register = value; \
+   BX_CPU_THIS_PTR the_i387.mmx.mmx[index].exp = 0xffff;                \
+}                                                      
+
+#define FPU_TOS                (BX_CPU_THIS_PTR the_i387.soft.ftop)
+
+#endif
+
 #endif

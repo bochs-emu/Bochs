@@ -27,19 +27,6 @@
 
 #if BX_SUPPORT_MMX || BX_SUPPORT_SSE != 0
 
-#define MMX_REGFILE ((BX_CPU_THIS_PTR the_i387).mmx)
-
-#define MMX_TWD                (MMX_REGFILE.twd)
-#define MMX_SWD                (MMX_REGFILE.swd)
-#define MMX_TOS                (MMX_REGFILE.tos)
-#define BX_READ_MMX_REG(index) (MMX_REGFILE.mmx[index].packed_mmx_register)
-
-#define BX_WRITE_MMX_REG(index, value) \
-{                                                      \
-   MMX_REGFILE.mmx[index].packed_mmx_register = value; \
-   MMX_REGFILE.mmx[index].exp = 0xffff; \
-}                                                      
-
 Bit8s SaturateWordSToByteS(Bit16s value)
 {
 /*
@@ -115,10 +102,11 @@ void BX_CPU_C::prepareMMX(void)
   if(BX_CPU_THIS_PTR cr0.em)
     exception(BX_UD_EXCEPTION, 0, 0);
 
-  MMX_TWD = 0;
-  MMX_TOS = 0;        /* Each time an MMX instruction is */
-  MMX_SWD &= 0xc7ff;  /*    executed, the TOS value is set to 000b */
+  FPU_TWD = 0;
+  FPU_TOS = 0;        /* Each time an MMX instruction is */
+  FPU_SWD &= 0xc7ff;  /*    executed, the TOS value is set to 000b */
 }
+
 #endif
 
 
@@ -683,9 +671,9 @@ void BX_CPU_C::EMMS(bxInstruction_c *i)
   if(BX_CPU_THIS_PTR cr0.ts)
     exception(BX_NM_EXCEPTION, 0, 0);
 
-  MMX_TWD = 0xffffffff;
-  MMX_TOS = 0;        /* Each time an MMX instruction is */
-  MMX_SWD &= 0xc7ff;  /*    executed, the TOS value is set to 000b */
+  FPU_TWD  = 0xffffffff;
+  FPU_TOS  = 0;        /* Each time an MMX instruction is */
+  FPU_SWD &= 0xc7ff;   /*      executed, the TOS value is set to 000b */
 
 #else
   BX_INFO(("EMMS: MMX not supported in current configuration"));
