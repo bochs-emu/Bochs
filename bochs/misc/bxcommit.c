@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.2 2003-05-03 16:37:18 cbothamy Exp $
+ * $Id: bxcommit.c,v 1.3 2003-06-12 13:33:16 cbothamy Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -17,6 +17,9 @@
 #include <assert.h>
 #ifdef WIN32
 #  include <conio.h>
+#ifndef __MINGW32__
+#  define snprintf _snprintf
+#endif
 #endif
 #include "config.h"
 
@@ -30,7 +33,7 @@
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.2 2003-05-03 16:37:18 cbothamy Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.3 2003-06-12 13:33:16 cbothamy Exp $";
 char *divider = "========================================================================";
 
 void myexit (int code)
