@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.50 2005-03-22 18:19:54 kevinlawton Exp $
+// $Id: exception.cc,v 1.51 2005-03-30 20:52:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,7 +63,8 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 #endif
 #endif
 
-//BX_DEBUG(( "::interrupt(%u)", vector ));
+  BX_DEBUG(("interrupt(): vector = %u, INT = %u, EXT = %u",
+      (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT));
 
   BX_INSTR_INTERRUPT(BX_CPU_ID, vector);
   invalidate_prefetch_q();
@@ -74,23 +75,16 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
 #if BX_CPU_LEVEL >= 2
-//  unsigned prev_errno;
-
-  BX_DEBUG(("interrupt(): vector = %u, INT = %u, EXT = %u",
-      (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT));
 
   BX_CPU_THIS_PTR save_cs  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
   BX_CPU_THIS_PTR save_ss  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
   BX_CPU_THIS_PTR save_eip = EIP;
   BX_CPU_THIS_PTR save_esp = ESP;
 
-//  prev_errno = BX_CPU_THIS_PTR errorno;
-
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma)
   {
     // long mode interrupt
-
     Bit64u idtindex;
     Bit32u dword1, dword2, dword3;
 
@@ -105,12 +99,10 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     // else #GP(vector number*16 + 2 + EXT)
     idtindex = vector*16;
     if ( (idtindex + 15) > BX_CPU_THIS_PTR idtr.limit) {
-      BX_DEBUG(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
-      BX_DEBUG(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
-      BX_DEBUG(("interrupt vector must be within IDT table limits"));
-      BX_DEBUG(("bailing"));
-      BX_DEBUG(("interrupt(): vector > idtr.limit"));
-
+      BX_ERROR(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
+      BX_ERROR(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
+      BX_ERROR(("interrupt vector must be within IDT table limits"));
+      BX_ERROR(("long mode interrupt(): vector > idtr.limit"));
       exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
     }
 
@@ -126,7 +118,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 
     if ((gate_descriptor.valid==0) || gate_descriptor.segment)
     {
-      BX_DEBUG(("interrupt(): gate descriptor is not valid sys seg"));
+      BX_ERROR(("long mode interrupt(): gate descriptor is not valid sys seg"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
     }
 
@@ -138,7 +130,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       case BX_386_TRAP_GATE:
         break;
       default:
-        BX_DEBUG(("interrupt(): gate.type(%u) != {5,6,7,14,15}",
+        BX_ERROR(("long mode interrupt(): gate.type(%u) != {5,6,7,14,15}",
           (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
         return;
@@ -148,14 +140,14 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     // else #GP(vector * 8 + 2 + EXT)
     if (is_INT && (gate_descriptor.dpl < CPL))
     {
-      BX_DEBUG(("interrupt(): is_INT && (dpl < CPL)"));
+      BX_ERROR(("long mode interrupt(): is_INT && (dpl < CPL)"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
       return;
     }
 
     // Gate must be present, else #NP(vector * 8 + 2 + EXT)
     if (gate_descriptor.p == 0) {
-      BX_DEBUG(("interrupt(): p == 0"));
+      BX_ERROR(("long mode interrupt(): p == 0"));
       exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
     }
 
@@ -187,7 +179,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
          cs_descriptor.u.segment.executable==0 ||
          cs_descriptor.dpl>CPL)
     {
-      BX_DEBUG(("interrupt(): not code segment"));
+      BX_ERROR(("long mode interrupt(): not code segment"));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
@@ -195,13 +187,13 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     if ( cs_descriptor.u.segment.l == 0 ||
          cs_descriptor.u.segment.d_b == 1)
     {
-      BX_DEBUG(("interrupt(): must be 64 bit segment"));
+      BX_ERROR(("long mode interrupt(): must be 64 bit segment"));
       exception(BX_GP_EXCEPTION, vector, 0);
     }
 
     // segment must be present, else #NP(selector + EXT)
     if ( cs_descriptor.p==0 ) {
-      BX_DEBUG(("interrupt(): segment not present"));
+      BX_ERROR(("long mode interrupt(): segment not present"));
       exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
@@ -213,13 +205,12 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       Bit64u RSP_for_cpl_x, old_RSP;
       bx_descriptor_t ss_descriptor;
       bx_selector_t   ss_selector;
-      int savemode;
 
-      BX_DEBUG(("interrupt(): INTERRUPT TO INNER PRIVILEGE"));
+      BX_ERROR(("long mode interrupt(): INTERRUPT TO INNER PRIVILEGE"));
 
       // check selector and descriptor for new stack in current TSS
       if (ist > 0) {
-        BX_DEBUG(("trap to IST, vector = %d\n",ist));
+        BX_ERROR(("long mode interrupt(): trap to IST, vector = %d\n",ist));
         get_RSP_from_TSS(ist+3,&RSP_for_cpl_x);
       }
       else {
@@ -241,7 +232,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 
       // load new RSP values from TSS
 
-      savemode = BX_CPU_THIS_PTR cpu_mode;
+      int savemode = BX_CPU_THIS_PTR cpu_mode;
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
 
       // need to switch to 64 bit mode temporarily here.
@@ -294,11 +285,14 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     // INTERRUPT TO SAME PRIVILEGE LEVEL:
     if (cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL)
     {
-      BX_DEBUG(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE"));
+      BX_ERROR(("long mode interrupt(): INTERRUPT TO SAME PRIVILEGE"));
 
       Bit64u old_RSP = RSP;
       // align stack
       RSP = RSP & BX_CONST64(0xfffffffffffffff0);
+
+      int savemode = BX_CPU_THIS_PTR cpu_mode;
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
 
       // push flags onto stack
       // push current CS selector onto stack
@@ -310,6 +304,8 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       push_64(RIP);
       if ( is_error_code )
         push_64(error_code);
+
+      BX_CPU_THIS_PTR cpu_mode = savemode;
 
       // load CS:IP from gate
       // load CS descriptor
@@ -328,12 +324,12 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     }
 
     // else #GP(CS selector + ext)
-    BX_DEBUG(("interrupt: bad descriptor"));
-    BX_DEBUG(("c_ed=%u, descriptor.dpl=%u, CPL=%u",
+    BX_ERROR(("long mode interrupt(): bad descriptor"));
+    BX_ERROR(("c_ed=%u, descriptor.dpl=%u, CPL=%u",
       (unsigned) cs_descriptor.u.segment.c_ed,
       (unsigned) cs_descriptor.dpl,
       (unsigned) CPL));
-    BX_DEBUG(("cs.segment = %u", (unsigned) cs_descriptor.segment));
+    BX_ERROR(("cs.segment = %u", (unsigned) cs_descriptor.segment));
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
   }
   else
@@ -356,7 +352,6 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
       BX_DEBUG(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
       BX_DEBUG(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
       BX_DEBUG(("interrupt vector must be within IDT table limits"));
-      BX_DEBUG(("bailing"));
       BX_DEBUG(("interrupt(): vector > idtr.limit"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
     }

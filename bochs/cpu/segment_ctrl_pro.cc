@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.33 2005-03-29 21:37:06 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.34 2005-03-30 20:53:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -564,6 +564,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
       loadSRegLMNominal(BX_SEG_REG_CS, selector->value, 0, cpl);
     }
     else {
+      BX_INFO(("Compatibility Mode Activated"));
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
     }
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.211 2005-03-29 21:37:06 sshwarts Exp $
+// $Id: cpu.h,v 1.212 2005-03-30 20:52:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2743,7 +2743,7 @@ public: // for now...
   BX_SMF void    decrementESPForPush(unsigned nBytes, Bit32u *eSP);
   BX_SMF void    sanity_checks(void);
 
-  BX_SMF void    debug(Bit32u offset);
+  BX_SMF void    debug(bx_address offset);
 
 #if BX_EXTERNAL_DEBUGGER
   BX_SMF void    trap_debugger(bx_bool callnow);
