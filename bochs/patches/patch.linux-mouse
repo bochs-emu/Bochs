@@ -1,196 +1,147 @@
 Index: gui/x.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/x.cc,v
-retrieving revision 1.9
-diff -u -r1.9 x.cc
---- gui/x.cc	2001/05/30 18:56:01	1.9
-+++ gui/x.cc	2001/06/01 18:51:21
-@@ -60,7 +60,7 @@
- static unsigned imDepth, imWide, imBPP;
+retrieving revision 1.13
+diff -u -r1.13 x.cc
+--- gui/x.cc	2001/06/23 03:18:14	1.13
++++ gui/x.cc	2001/06/23 03:57:38
+@@ -75,8 +75,8 @@
+ static int warp_dy = 0;
  
- // current cursor coordinates
--static int prev_x=-1, prev_y=-1;
-+static int emulation_x=-1, emulation_y=-1;
- static int current_x=-1, current_y=-1;
- static unsigned mouse_button_state = 0;
+ static void warp_cursor(int dx, int dy);
+-static void disable_cursor();
+-static void enable_cursor();
++static void trap_x_pointer();
++static void release_x_pointer();
  
-@@ -589,8 +589,6 @@
-           send_keyboard_mouse_status();
+ struct {
+   Pixmap bmap;
+@@ -525,16 +525,16 @@
+ {
+   BX_INFO (("mouse_enabled=%d, x11 specific code", val?1:0));
+   if (val) {
+-    BX_INFO(("[x] Mouse on"));
+-    mouse_enable_x = current_x;
+-    mouse_enable_y = current_y;
+-    disable_cursor();
+-    // Move the cursor to a 'safe' place
+-    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
++	BX_INFO(("[x] Mouse on\n"));
++	mouse_enable_x = current_x;
++	mouse_enable_y = current_y;
++	trap_x_pointer();
++	// Move the cursor to a 'safe' place
++	warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
+   } else {
+-    BX_INFO(("[x] Mouse off"));
+-    enable_cursor();
+-    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
++	BX_INFO(("[x] Mouse off\n"));
++	release_x_pointer();
++	warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
+   }
+ }
+ 
+@@ -628,10 +628,10 @@
            mouse_update = 0;
-           }
--        prev_x = current_x = -1;
--        prev_y = current_y = -1;
-         headerbar_click(button_event->x, button_event->y);
-         break;
-         }
-@@ -611,16 +609,16 @@
- 	      // (mch) Hack for easier mouse handling (toggle mouse enable)
- 	      mouse_handler();
- 	      if (bx_options.mouse_enabled) {
--		    BX_INFO(("[x] Mouse on"));
--		    mouse_enable_x = current_x;
--		    mouse_enable_y = current_y;
-+		    BX_INFO(("[x] Mouse enabled"));
-+//		    mouse_enable_x = current_x;
-+//		    mouse_enable_y = current_y;
- 		    disable_cursor();
- 		    // Move the cursor to a 'safe' place
--		    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
-+//		    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
- 	      } else {
- 		    BX_INFO(("[x] Mouse off"));
- 		    enable_cursor();
--		    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
-+//		    warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
- 	      }
+           break;
+         case Button2:
+-	      BX_DEBUG(("XXX:   button2"));
++	  BX_DEBUG(("XXX:   button2"));
+ 
+-	      // (mch) Hack for easier mouse handling (toggle mouse enable)
+-	      toggle_mouse_enable();
++	  // (mch) Hack for easier mouse handling (toggle mouse enable)
++	  toggle_mouse_enable();
  
            //mouse_button_state |= ;
-@@ -646,8 +644,6 @@
-           send_keyboard_mouse_status();
-           mouse_update = 0;
-           }
--        prev_x = current_x = -1;
--        prev_y = current_y = -1;
-         // ignore, in headerbar area
-         break;
-         }
-@@ -691,23 +687,47 @@
- 
-     case MotionNotify:
+           //send_keyboard_mouse_status();
+@@ -703,22 +703,32 @@
        pointer_event = (XPointerMovedEvent *) &report;
--      current_x = pointer_event->x;
--      current_y = pointer_event->y;
+       current_x = pointer_event->x;
+       current_y = pointer_event->y;
 -      mouse_update = 1;
-+      if (pointer_event->y >= BX_HEADER_BAR_Y) {
-+        current_x = pointer_event->x;
-+        current_y = pointer_event->y;
-+        mouse_update = 1;
- //BX_INFO(("xxx: motionNotify x,y=(%d,%d)", current_x, current_y));
-+      }
+-//BX_INFO(("xxx: motionNotify x,y=(%d,%d)", current_x, current_y));
++      /* 
++          If both the conditions below are zero, this motion event is an echo from 
++	  the call to "WarpPointer()", so we just swallow it... 
++	  (i.e. don't update the emulation)
++      */
++      if ((warp_home_x-current_x) || (warp_home_y-current_y))
++         mouse_update = 1;
++//BX_INFO(("xxx: motionNotify x,y=(%d,%d)\n", current_x, current_y));
        break;
  
      case EnterNotify:
        enter_event = (XEnterWindowEvent *) &report;
 -      prev_x = current_x = enter_event->x;
 -      prev_y = current_y = enter_event->y;
-+      current_x = enter_event->x;
-+      current_y = enter_event->y - BX_HEADER_BAR_Y;
-+/*
-+    Hardware-level BIOS interface only provides mouse movements as deltas
-+    - never absolute positions.  This causes a problem when the mouse pointer
-+    leaves the screen (in an emulated environment), then re-enters the screen.
-+    Code in "send_keyboard_mouse_status(void)" below attempts to address
-+    this by calculating the delta of the exit point and the entry point, and
-+    feeding the appropriate delta move via the BIOS interface, which would
-+    work, except:
-+
-+     - There is still no way to synchronize the _absolute_ pointer locations
-+     in emulated and host environment; and
-+     - modern mouse drivers have "balistic" movements, so any "large, rapid"
-+     delta is magnified, perpetuating any skew between the host and emulation
-+     pointers.
-+     
-+    What we really need is a function like:
-+    bx_devices.keyboard->mouse_moveto(current_x,current_y);
-+    , which could resolve to the equivalent of (DOS) INT 33, function 4, which
-+    sets an absolute pointer position.  Unfortunately, this would be OS 
-+    dependant.
-+*/
-+
- //BX_INFO(("xxx: enterNotify x,y=(%d,%d)", current_x, current_y));
+-//BX_INFO(("xxx: enterNotify x,y=(%d,%d)", current_x, current_y));
++      mouse_enable_x = prev_x = current_x = enter_event->x;
++      mouse_enable_y = prev_y = current_y = enter_event->y;
++      trap_x_pointer();
++      // Move the cursor to a 'safe' place
++      warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
++//BX_INFO(("xxx: enterNotify x,y=(%d,%d)\n", current_x, current_y));
        break;
  
      case LeaveNotify:
        leave_event = (XLeaveWindowEvent *) &report;
--      prev_x = current_x = -1;
--      prev_y = current_y = -1;
-+      current_x = leave_event->x;
-+      current_y = leave_event->y - BX_HEADER_BAR_Y;
- //BX_INFO(("xxx: LeaveNotify x,y set to -1"));
+       prev_x = current_x = -1;
+       prev_y = current_y = -1;
+-//BX_INFO(("xxx: LeaveNotify x,y set to -1"));
++//BX_INFO(("xxx: LeaveNotify x,y set to -1\n"));
++// This _won't_ happen, because we use WarpPointer to "trap" the pointer 
        break;
  
-@@ -729,7 +749,7 @@
-   } /* end while */
- 
-   if (mouse_update) {
--    BX_DEBUG(("XXX: bottom, send status"));
-+    // BX_DEBUG(("xxx: bottom, send status"));
-     send_keyboard_mouse_status();
-     }
- }
-@@ -738,38 +758,45 @@
+     case MapNotify:
+@@ -748,9 +758,8 @@
    void
  send_keyboard_mouse_status(void)
  {
 -	BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
 -			prev_x, prev_y, current_x, current_y));
 -
--  if ( (prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) {
--    int dx, dy;
--
--    // (mch) consider warping here
--    dx = current_x - prev_x - warp_dx;
--    dy = -(current_y - prev_y - warp_dy);
--    warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
--
--//BX_INFO(("xxx: MOUSE_MOTION: dx=%d, dy=%d", (int) dx, (int) dy));
--    bx_devices.keyboard->mouse_motion( dx, dy, mouse_button_state);
--    //if (warped) {
--    //  prev_x = current_x = -1;
--    //  prev_y = current_y = -1;
--    //  }
--    //else {
--      prev_x = current_x;
--      prev_y = current_y;
--    //  }
-+//BX_DEBUG(("xxx: prev=(%d,%d) curr=(%d,%d)",
-+//  emulation_x, emulation_y, current_x, current_y));
-+  int dx, dy;
++//BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)\n",
++//  prev_x, prev_y, current_x, current_y));
+   if ( (prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) {
+     int dx, dy;
+ 
+@@ -763,6 +772,9 @@
+     bx_devices.keyboard->mouse_motion( dx, dy, mouse_button_state);
+     //if (warped) {
+     //  prev_x = current_x = -1;
 +
-+  do {
-+    // Continue to calculate deltas until the emulation pointer coincides
-+    // with the XWindows pointer...
-+    dx = (current_x - emulation_x);
-+    dy = -(current_y - emulation_y);
++  BX_DEBUG(("send_kbd_mse_status: warp_(%3d,%3d) d(%3d,%3d) c(%3d,%3d) p(%3d,%3d)\n", warp_dx, warp_dy, dx, dy, current_x, current_y, prev_x, prev_y )); 
 +
-+    // limit individual delta increments - up to max supported (255).
-+    // Increasing these values will provide more rapid tracking,
-+    // but if the value is too large, the OS-specific mouse driver
-+    // may switch to "balistic" mode, in which a large delta causes
-+    // a larger-than-normal motion of the pointer. This will cause a
-+    // offset between the emulation pointer location and the host pointer
-+    // location.
-+    
-+#define LIMIT_DX	30	// Must be less than 255
-+#define	LIMIT_DY	30	// Must be less than 255
-+
-+    if (dx > LIMIT_DX) {
-+	dx = LIMIT_DX;
-+    } else if (dx < -LIMIT_DX) {
-+	dx = -LIMIT_DX;
-     }
--  else {
--    if ( (current_x!=-1) && (current_y!=-1)) {
--      prev_x = current_x;
--      prev_y = current_y;
--      }
--    else {
--      prev_x = current_x = -1;
--      prev_y = current_y = -1;
--      }
-+    if (dy > LIMIT_DY) {
-+	dy = LIMIT_DY;
-+    } else if (dy < -LIMIT_DY) {
-+	dy = -LIMIT_DY;
-     }
-+
-+BX_INFO(("xxx: MOUSE_MOTION: emx=%d, cux=%d, dx=%d", emulation_x, current_x, (int) dx));
-+BX_INFO(("xxx: MOUSE_MOTION: emy=%d, cuy=%d, dy=%d", emulation_y, current_y, (int) dy));
-+    // Do at least one mouse_motion call, to handle button_state updates
-+    bx_devices.keyboard->mouse_motion( dx, dy, mouse_button_state);
-+    emulation_x += dx;
-+    emulation_y -= dy;
-+  } while ( (emulation_x != current_x) || (emulation_y != current_y) );
+     //  prev_y = current_y = -1;
+     //  }
+     //else {
+@@ -1251,14 +1263,15 @@
+ 
+ static void warp_cursor (int dx, int dy)
+ {
+-      if (bx_options.Omouse_enabled->get ()) {
++      if ((bx_options.Omouse_enabled->get ()) && ((dx != 0) || (dy != 0))) {
+ 	    warp_dx = dx;
+ 	    warp_dy = dy;
+ 	    XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);
+       }
  }
  
-   void
+-static void disable_cursor ()
++// "Trap" the X-Windows pointer by defining a local pointer for this window
++static void trap_x_pointer ()
+ {
+       static Cursor cursor;
+       static unsigned cursor_created = 0;
+@@ -1302,7 +1315,8 @@
+       XDefineCursor(bx_x_display, win, cursor);
+ }
+ 
+-static void enable_cursor ()
++// Release the X-Windows mouse pointer by undefining the local one.
++static void release_x_pointer ()
+ {
+       XUndefineCursor(bx_x_display, win);
+ }
