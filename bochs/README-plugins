@@ -57,22 +57,6 @@ changes:
  - the biosdev and unmapped devices were plugin-ized
 
 TO DO BEFORE RELEASE 2.0:
-- convert remaining devices
-
-- maybe the implementation class for each plugin device should go into the .cc
-  file instead of the header file.  If all their methods are called through
-  the stub class virtual functions, and no external file has access to
-  the real non-stub class, then maybe there is no point in letting anybody
-  else see the real class at all?  (If you do use the class you will get
-  undefined symbols when you compile for plugins anyway.)  For the hard drive,
-  we could put bx_hard_drive_stub_c in harddrv.h, and any constants or types
-  that external files might need, and then put the real class, bx_hard_drive_c,
-  at the top of harddrv.cc.
-
-- does bx_start_simulation actually need argc,argv???  Who uses this stuff?
-  If it is needed, Bryce should add some arguments to SIM->begin_simulation
-  or something like that.
-
 - some plugins, such as the GUI, PIT, SB, and NE2000, have several different
   possible implementations.  In this case, all implementations should be
   children of a single stub class.  The stub's methods produce errors or
@@ -82,8 +66,10 @@ TO DO BEFORE RELEASE 2.0:
   plugin or a user plugin can fill in these slots.
 
 - platform specific issues
-  - make sure LTDL works on VC++
-    - nmake build: we must use lib.exe, not $(LIBTOOL) $(CXX) stuff
+  - (LATER) make sure LTDL works on VC++.  It doesn't and won't without
+    significant work.  Maybe it's easier to support VC++ with ifdefs in
+    plugin.cc rather than using ltdl at all.  This will have to wait.
+  - (DONE) nmake build: we must use lib.exe, not $(LIBTOOL) $(CXX) stuff
 
 - configure script work
   - LTDL has a feature called dlpreload which sort of emulates dlopen
@@ -117,6 +103,19 @@ TO DO BEFORE RELEASE 2.0:
        but now the keyboard registers its own timer
   - I have never seen any problems caused by the sim differences, but they
     make me nervous. -Bryce
+
+- (LATER) convert remaining devices
+
+- (LATER) maybe the implementation class for each plugin device should go into
+  the .cc file instead of the header file.  If all their methods are called
+  through the stub class virtual functions, and no external file has access to
+  the real non-stub class, then maybe there is no point in letting anybody
+  else see the real class at all?  (If you do use the class you will get
+  undefined symbols when you compile for plugins anyway.)  For the hard drive,
+  we could put bx_hard_drive_stub_c in harddrv.h, and any constants or types
+  that external files might need, and then put the real class, bx_hard_drive_c,
+  at the top of harddrv.cc.
+
 
 - (LATER) eventually we need to clarify the connection between plugins and
   devices.  At the moment, each plugin creates exactly one device, but it does
@@ -276,6 +275,7 @@ DONE:
     directories it will search.
 - change log for BRANCH_PLUGINS is in patches/patch.plugins.  It is 
   pretty complete now.
+
 
 
 
