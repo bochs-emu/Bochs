@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.23 2002-09-28 13:36:32 vruppert Exp $
+// $Id: dma.cc,v 1.23.4.1 2002-10-08 17:16:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,6 +27,11 @@
 
 
 #include "bochs.h"
+
+#if BX_PLUGINS
+#include "dma.h"
+#endif
+
 #define LOG_THIS bx_dma.
 
 #define DMA_MODE_DEMAND  0
@@ -34,6 +39,20 @@
 #define DMA_MODE_BLOCK   2
 #define DMA_MODE_CASCADE 3
 
+#if BX_PLUGINS
+
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+
+#endif
 
 
 bx_dma_c bx_dma;
@@ -44,6 +63,21 @@ bx_dma_c bx_dma;
 
 bx_dma_c::bx_dma_c(void)
 {
+#if BX_PLUGINS
+
+  pluginRegisterDMA8Channel = registerDMA8Channel;
+  pluginRegisterDMA16Channel = registerDMA16Channel;
+  pluginUnregisterDMAChannel = unregisterDMAChannel;
+  pluginUnregisterDMAChannel = unregisterDMAChannel;
+  pluginDMASetDRQ = set_DRQ;
+  pluginDMAGetTC = get_TC;
+  pluginDMARaiseHLDA = raise_HLDA;
+
+  // Register plugin basic entry points
+  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_DMA);
+
+#endif
+
   put("DMA");
   settype(DMALOG);
 }
@@ -120,7 +154,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.23 2002-09-28 13:36:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.1 2002-10-08 17:16:34 cbothamy Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -137,26 +171,20 @@ bx_dma_c::init(bx_devices_c *d)
 
   // 0000..000F
   for (i=0x0000; i<=0x000F; i++) {
-    BX_DMA_THIS devices->register_io_read_handler(this, read_handler,
-                                        i, "DMA controller");
-    BX_DMA_THIS devices->register_io_write_handler(this, write_handler,
-                                        i, "DMA controller");
+    BX_REGISTER_IOREAD_HANDLER(BX_DMA_THIS, this, read_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_DMA_THIS, this, write_handler, i, "DMA controller", 7);
     }
 
   // 00081..008F
   for (i=0x0081; i<=0x008F; i++) {
-    BX_DMA_THIS devices->register_io_read_handler(this, read_handler,
-                                        i, "DMA controller");
-    BX_DMA_THIS devices->register_io_write_handler(this, write_handler,
-                                        i, "DMA controller");
+    BX_REGISTER_IOREAD_HANDLER(BX_DMA_THIS, this, read_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_DMA_THIS, this, write_handler, i, "DMA controller", 7);
     }
 
   // 000C0..00DE
   for (i=0x00C0; i<=0x00DE; i+=2) {
-    BX_DMA_THIS devices->register_io_read_handler(this, read_handler,
-                                        i, "DMA controller");
-    BX_DMA_THIS devices->register_io_write_handler(this, write_handler,
-                                        i, "DMA controller");
+    BX_REGISTER_IOREAD_HANDLER(BX_DMA_THIS, this, read_handler, i, "DMA controller", 7);
+    BX_REGISTER_IOWRITE_HANDLER(BX_DMA_THIS, this, write_handler, i, "DMA controller", 7);
     }
 
 

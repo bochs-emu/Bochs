@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.3 2002-10-08 08:29:08 bdenney Exp $
+// $Id: cmos.cc,v 1.20.2.4 2002-10-08 17:16:33 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,7 +116,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.3 2002-10-08 08:29:08 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.4 2002-10-08 17:16:33 cbothamy Exp $"));
 
   // CMOS RAM & RTC
 
@@ -292,7 +292,7 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
       // all bits of Register C are cleared after a read occurs.
       if (BX_CMOS_THIS s.cmos_mem_address == 0x0c) {
         BX_CMOS_THIS s.reg[0x0c] = 0x00;
-        BX_CMOS_THIS devices->pic->lower_irq(8);
+        BX_PIC_LOWER_IRQ(8);
         }
       return(ret8);
       break;
@@ -578,7 +578,7 @@ bx_cmos_c::periodic_timer()
   // update status register C
   if (BX_CMOS_THIS s.reg[0x0b] & 0x40) {
     BX_CMOS_THIS s.reg[0x0c] |= 0xc0; // Interrupt Request, Periodic Int
-    BX_CMOS_THIS devices->pic->raise_irq(8);
+    BX_PIC_RAISE_IRQ(8);
     }
 }
 
@@ -607,7 +607,7 @@ bx_cmos_c::one_second_timer()
   // update status register C
   if (BX_CMOS_THIS s.reg[0x0b] & 0x10) {
     BX_CMOS_THIS s.reg[0x0c] |= 0x90; // Interrupt Request, Update Ended
-    BX_CMOS_THIS devices->pic->raise_irq(8);
+    BX_PIC_RAISE_IRQ(8);
     }
 
   // compare CMOS user copy of time/date to alarm time/date here
@@ -631,7 +631,7 @@ bx_cmos_c::one_second_timer()
       }
     if (alarm_match) {
       BX_CMOS_THIS s.reg[0x0c] |= 0xa0; // Interrupt Request, Alarm Int
-      BX_CMOS_THIS devices->pic->raise_irq(8);
+      BX_PIC_RAISE_IRQ(8);
       }
     }
 }

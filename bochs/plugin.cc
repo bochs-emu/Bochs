@@ -35,18 +35,30 @@ void     (* pluginPutScancode)(unsigned char *code, int count);
 void     (* pluginKbdPasteBytes)(Bit8u *bytes, Bit32s length);
 void     (* pluginKbdPasteDelayChanged)();
 
-unsigned (* pluginRegisterDMAChannel)(
+unsigned (* pluginRegisterDMA8Channel)(
                 unsigned channel,
                 void (* dma_read)(Bit8u *data_byte),
-                void (* dma_write)(Bit8u *data_byte)
+                void (* dma_write)(Bit8u *data_byte),
+		const char* name
                 ) = 0;
+unsigned (* pluginRegisterDMA16Channel)(
+                unsigned channel,
+                void (* dma_read)(Bit16u *data_byte),
+                void (* dma_write)(Bit16u *data_byte),
+		const char* name
+                ) = 0;
+unsigned (* pluginUnregisterDMAChannel)(unsigned channel) = 0;
 void     (* pluginDMASetDRQ)(unsigned channel, unsigned val) = 0;
 unsigned (* pluginDMAGetTC)(void) = 0;
+void     (* pluginDMARaiseHLDA)(void) = 0;
 
-Bit32u   (* pluginHDReadHandler)(Bit32u address,
-                unsigned io_len) = 0;
-void     (* pluginHDWriteHandler)(Bit32u address,
-                Bit32u value, unsigned io_len) = 0;
+Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len) = 0;
+void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len) = 0;
+Bit32u   (* pluginHDGetDeviceHandle)(Bit8u, Bit8u) = 0;
+Bit32u   (* pluginHDGetFirstCDHandle)(void) = 0;
+unsigned (* pluginHDGetCDMediaStatus)(Bit32u) = 0;
+unsigned (* pluginHDSetCDMediaStatus)(Bit32u, unsigned) = 0;
+void     (* pluginHDCloseHarddrive) (void) = 0;
 
 void     (* pluginVGARedrawArea)(unsigned x0, unsigned y0,
                 unsigned width, unsigned height) = 0;
@@ -64,6 +76,7 @@ void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginRaiseIRQ)(unsigned irq) = 0;
 void  (*pluginLowerIRQ)(unsigned irq) = 0;
+Bit8u (*pluginPicIAC)(void) = 0;
 
 void  (* pluginResetSignal)(unsigned sig) = 0;
 
@@ -162,13 +175,33 @@ void builtinKbdPasteDelayChanged() {
 }
 
   static unsigned
-builtinRegisterDMAChannel(
+builtinRegisterDMA8Channel(
   unsigned channel,
   void (* dma_read)(Bit8u *data_byte),
-  void (* dma_write)(Bit8u *data_byte)
+  void (* dma_write)(Bit8u *data_byte),
+  const char* name
   )
 {
-  pluginlog->panic("builtinRegisterDMAChannel called, no DMA plugin loaded?");
+  pluginlog->panic("builtinRegisterDMA8Channel called, no DMA plugin loaded?");
+  return 0;
+}
+
+  static unsigned
+builtinRegisterDMA16Channel(
+  unsigned channel,
+  void (* dma_read)(Bit16u *data_byte),
+  void (* dma_write)(Bit16u *data_byte),
+  const char* name
+  )
+{
+  pluginlog->panic("builtinRegisterDMA16Channel called, no DMA plugin loaded?");
+  return 0;
+}
+
+  static unsigned
+builtinUnregisterDMAChannel(unsigned channel)
+{
+  pluginlog->panic("builtinUnregisterDMAChannel called, no DMA plugin loaded?");
   return 0;
 }
 
@@ -185,17 +218,57 @@ builtinDMAGetTC(void)
   return 0;
 }
 
+  static void     
+builtinDMARaiseHLDA(void)
+{
+  pluginlog->panic("builtinDMARaiseHLDA called, no DMA plugin loaded?");
+}
+
   static Bit32u
-builtinHDReadHandler(Bit32u address, unsigned io_len)
+builtinHDReadHandler(void* ptr, Bit32u address, unsigned io_len)
 {
   pluginlog->panic("builtinHDReadHandler called, no Harddisk plugin loaded?");
   return 0;
 }
 
   static void
-builtinHDWriteHandler(Bit32u address, Bit32u value, unsigned io_len)
+builtinHDWriteHandler(void* ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
   pluginlog->panic("builtinHDWriteHandler called, no Harddisk plugin loaded?");
+}
+
+  static Bit32u   
+builtinHDGetFirstCDHandle(void)
+{
+  pluginlog->panic("builtinHDGetFirstCDHandle called, no Harddisk plugin loaded?");
+  return 0;
+}
+
+  static Bit32u   
+builtinHDGetDeviceHandle(Bit8u, Bit8u)
+{
+  pluginlog->panic("builtinHDGetDeviceHandle called, no Harddisk plugin loaded?");
+  return 0;
+}
+
+  static unsigned 
+builtinHDGetCDMediaStatus(Bit32u)
+{
+  pluginlog->panic("builtinCDGetMediaStatus called, no Harddisk plugin loaded?");
+  return 0;
+}
+
+  static unsigned 
+builtinHDSetCDMediaStatus(Bit32u, unsigned) 
+{
+  pluginlog->panic("builtinHDSetCDMediaStatus called, no Harddisk plugin loaded?");
+  return 0;
+}
+
+  static void 
+builtinHDCloseHarddrive (void) 
+{
+  pluginlog->panic("builtinHDCloseHarddrive called, no Harddisk plugin loaded?");
 }
 
   static void
@@ -265,28 +338,27 @@ builtinUnregisterIRQ(unsigned irq, const char* name)
   static void
 builtinRaiseIRQ(unsigned irq)
 {
-#if 0
   pluginlog->panic("builtinRaiseIRQ called, no pic plugin loaded?");
-#else
-  bx_devices.pic->raise_irq(irq);
-#endif
 }
 
   static void
 builtinLowerIRQ(unsigned irq)
 {
-#if 0
   pluginlog->panic("builtinLowerIRQ called, no pic plugin loaded?");
-#else
-  bx_devices.pic->lower_irq(irq);
-#endif
+}
+
+  static Bit8u 
+builtinPicIAC(void)
+{
+  pluginlog->panic("builtinPicIAC called, no pic plugin loaded?");
+  return 0;
 }
 
   static void
 builtinSetHRQ(unsigned val)
 {
 #if 0
-  pluginlog->panic("builtinLowerIRQ called, no plugin loaded?");
+  pluginlog->panic("builtinSetHRQ called, no plugin loaded?");
 #else
   pluginHRQ = val;
 #endif
@@ -296,7 +368,7 @@ builtinSetHRQ(unsigned val)
 builtinSetHRQHackCallback( void (*callback)(void) )
 {
 #if 0
-  pluginlog->panic("builtinLowerIRQ called, no plugin loaded?");
+  pluginlog->panic("builtinSetHRQHackCallback called, no plugin loaded?");
 #else
   pluginHRQHackCallback = callback;
 #endif
@@ -567,12 +639,21 @@ plugin_startup(void)
   pluginPutScancode = builtinPutScancode;
   pluginKbdPasteBytes = builtinKbdPasteBytes;
   pluginKbdPasteDelayChanged = builtinKbdPasteDelayChanged;
-  pluginRegisterDMAChannel = builtinRegisterDMAChannel;
+
+  pluginRegisterDMA8Channel = builtinRegisterDMA8Channel;
+  pluginRegisterDMA16Channel = builtinRegisterDMA16Channel;
+  pluginUnregisterDMAChannel = builtinUnregisterDMAChannel;
   pluginDMASetDRQ    = builtinDMASetDRQ;
   pluginDMAGetTC     = builtinDMAGetTC;
+  pluginDMARaiseHLDA = builtinDMARaiseHLDA;
 
   pluginHDReadHandler  = builtinHDReadHandler;
   pluginHDWriteHandler = builtinHDWriteHandler;
+  pluginHDGetFirstCDHandle = builtinHDGetFirstCDHandle;
+  pluginHDGetDeviceHandle = builtinHDGetDeviceHandle;
+  pluginHDGetCDMediaStatus = builtinHDGetCDMediaStatus;
+  pluginHDSetCDMediaStatus = builtinHDSetCDMediaStatus;
+  pluginHDCloseHarddrive = builtinHDCloseHarddrive;
 
   pluginVGARedrawArea  = builtinVGARedrawArea;
   pluginVGAMemRead     = builtinVGAMemRead;
@@ -588,6 +669,7 @@ plugin_startup(void)
   pluginUnregisterIRQ = builtinUnregisterIRQ;
   pluginRaiseIRQ = builtinRaiseIRQ;
   pluginLowerIRQ = builtinLowerIRQ;
+  pluginPicIAC = builtinPicIAC;
 
   pluginResetSignal = builtinResetSignal;
 
@@ -700,11 +782,15 @@ int bx_load_plugins (void)
   bx_load_plugin("unmapped.so");
   bx_load_plugin("biosdev.so");
   bx_load_plugin("cmos.so");
+  bx_load_plugin("dma.so");
+  bx_load_plugin("pic.so");
   bx_load_plugin("vga.so");
   bx_load_plugin("floppy.so");
   bx_load_plugin("parallel.so");
   bx_load_plugin("serial.so");
   bx_load_plugin("keyboard.so");
+  bx_load_plugin("harddrv.so");
+
 
   // quick and dirty gui plugin selection
   fprintf (stderr, 

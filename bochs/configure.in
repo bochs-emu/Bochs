@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.2 2002-10-07 16:43:32 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.147.2.3 2002-10-08 17:16:31 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -288,9 +288,9 @@ AC_ARG_ENABLE(plugins,
     bx_plugins=1
     AC_DEFINE(BX_PLUGINS, 1)
     BX_IODEV_NON_PLUGINS_OBJ='$(BX_IODEV_OBJS_NON_PLUGINABLE)'
-    BX_IODEV_PLUGINS_OBJ='$(BX_IODEV_OBJS_PLUGINABLE) $(BX_IODEV_OBJS_EXTERNAL)'
+    BX_IODEV_PLUGINS_OBJ='$(BX_IODEV_OBJS_PLUGINABLE)'
     GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE)'
-    GUI_PLUGINS_OBJ='$(GUI_OBJS_PLUGINABLE) $(GUI_OBJS_EXTERNAL)'
+    GUI_PLUGINS_OBJ='$(GUI_OBJS_PLUGINABLE)'
    else
     AC_MSG_RESULT(no)
     bx_plugins=0

@@ -32,6 +32,9 @@ extern "C" {
 #define BX_PLUGIN_PARALLEL "PARALLEL"
 #define BX_PLUGIN_SERIAL   "SERIAL"
 #define BX_PLUGIN_KEYBOARD "KEYBOARD"
+#define BX_PLUGIN_HARDDRV  "HARDDRIVE"
+#define BX_PLUGIN_DMA      "DMA"
+#define BX_PLUGIN_PIC      "PIC"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 
@@ -65,10 +68,33 @@ extern "C" {
 
 #define BX_FLOPPY_PRESENT() (pluginDevicePresent(BX_PLUGIN_FLOPPY))
 
-#define BX_HD_READ_HANDLER(a, b, c) \
-    (bx_devices.hard_drive->read_handler(bx_devices.hard_drive, b, c))
-#define BX_HD_WRITE_HANDLER(a, b, c, d) \
-    (bx_devices.hard_drive->write_handler(bx_devices.hard_drive, b, c, d))
+#define BX_HD_READ_HANDLER(a, b, c) pluginHDReadHandler(NULL, b, c)
+#define BX_HD_WRITE_HANDLER(a, b, c, d) pluginHDWriteHandler(NULL, b, c, d)
+#define BX_HD_GET_FIRST_CD_HANDLE() pluginHDGetFirstCDHandle()
+#define BX_HD_GET_DEVICE_HANDLE(a,b) pluginHDGetDeviceHandle(a,b)
+#define BX_HD_GET_CD_MEDIA_STATUS(handle) pluginHDGetCDMediaStatus(handle)
+#define BX_HD_SET_CD_MEDIA_STATUS(handle, status)  pluginHDSetCDMediaStatus(handle, status)
+#define BX_HD_CLOSE_HARDDRIVE()  pluginHDCloseHarddrive()
+
+#define BX_HARD_DRIVE_PRESENT() (pluginDevicePresent(BX_PLUGIN_HARDDRV))
+
+#define BX_BULK_IO_QUANTUM_REQUESTED(a) (bx_devices.bulkIOQuantumsRequested)
+#define BX_BULK_IO_QUANTUM_TRANSFERRED(a) (bx_devices.bulkIOQuantumsTransferred)
+#define BX_BULK_IO_HOST_ADDR(a) (bx_devices.bulkIOHostAddr)
+
+#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  pluginRegisterDMA8Channel(channel, dmaRead, dmaWrite, name)
+#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  pluginRegisterDMA16Channel(channel, dmaRead, dmaWrite, name)
+#define BX_UNREGISTER_DMA_CHANNEL(channel) \
+  pluginUnregisterDMAChannel(channel)
+#define BX_DMA_SET_DRQ(channel, val) pluginDMASetDRQ(channel, val)
+#define BX_DMA_GET_TC()              pluginDMAGetTC()
+#define BX_DMA_RAISE_HLDA()          pluginDMARaiseHLDA()
+
+#define BX_PIC_LOWER_IRQ(b)  pluginLowerIRQ(b)
+#define BX_PIC_RAISE_IRQ(b)  pluginRaiseIRQ(b)
+#define BX_PIC_IAC()         pluginPicIAC()
 
 #else
 
@@ -107,15 +133,42 @@ extern "C" {
     (a devices->hard_drive->read_handler(a devices->hard_drive, b, c))
 #define BX_HD_WRITE_HANDLER(a, b, c, d) \
     (a devices->hard_drive->write_handler(a devices->hard_drive, b, c, d))
+#define BX_HD_GET_FIRST_CD_HANDLE() \
+    (bx_devices.hard_drive->get_first_cd_handle())
+#define BX_HD_GET_DEVICE_HANDLE(a,b) \
+    (bx_devices.hard_drive->get_device_handle(a,b))
+#define BX_HD_GET_CD_MEDIA_STATUS(handle) \
+    (bx_devices.hard_drive->get_cd_media_status(handle))
+#define BX_HD_SET_CD_MEDIA_STATUS(handle, status) \
+    (bx_devices.hard_drive->set_cd_media_status(handle, status))
+#define BX_HD_CLOSE_HARDDRIVE()  bx_devices.hard_drive->close_harddrive()
+
+#define BX_HARD_DRIVE_PRESENT() (bx_devices.hard_drive)
+
+#define BX_BULK_IO_QUANTUM_REQUESTED(a) (a devices->bulkIOQuantumsRequested)
+#define BX_BULK_IO_QUANTUM_TRANSFERRED(a) (a devices->bulkIOQuantumsTransferred)
+#define BX_BULK_IO_HOST_ADDR(a) (a devices->bulkIOHostAddr)
+
+#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  bx_dma.registerDMA8Channel(channel, dmaRead, dmaWrite, name)
+#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  bx_dma.registerDMA16Channel(channel, dmaRead, dmaWrite, name)
+#define BX_UNREGISTER_DMA_CHANNEL(channel) \
+  bx_dma.unregisterDMAChannel(channel)
+#define BX_DMA_SET_DRQ(channel, val) bx_dma.set_DRQ(channel, val)
+#define BX_DMA_GET_TC()             bx_dma.get_TC()
+#define BX_DMA_RAISE_HLDA()         bx_dma.raise_HLDA()
+
+#define BX_PIC_LOWER_IRQ(b) bx_devices.pic->lower_irq(b);
+#define BX_PIC_RAISE_IRQ(b) bx_devices.pic->raise_irq(b);
+#define BX_PIC_IAC()        bx_devices.pic->IAC()
 
 #endif // #if BX_PLUGINS
 
+#define BX_IOAPIC_PRESENT() (bx_devices.hard_drive)
 
 // FIXME Do we really need pluginRegisterTimer ?
 #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
-
-#define BX_PIC_LOWER_IRQ(a,b)  pluginLowerIRQ(b)
-#define BX_PIC_RAISE_IRQ(a,b)  pluginRaiseIRQ(b)
 
 
 #if BX_PLUGINS
@@ -145,12 +198,6 @@ extern "C" {
 
 #endif
 
-#define BX_HD_GET_FIRST_CD_HANDLE() \
-    (bx_devices.hard_drive->get_first_cd_handle())
-#define BX_CD_GET_MEDIA_STATUS(handle) \
-    (bx_devices.hard_drive->get_cd_media_status(handle))
-#define BX_CD_SET_MEDIA_STATUS(handle, status) \
-    (bx_devices.hard_drive->set_cd_media_status(handle, status))
 
 
 #include <dlfcn.h>
@@ -217,10 +264,11 @@ extern int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_
                                  const char *name, unsigned len);
 
 /* === IRQ stuff === */
-extern void (*pluginRegisterIRQ)(unsigned irq, const char *name);
-extern void (*pluginUnregisterIRQ)(unsigned irq, const char *name);
-extern void (*pluginRaiseIRQ)(unsigned irq);
-extern void (*pluginLowerIRQ)(unsigned irq);
+extern void  (*pluginRegisterIRQ)(unsigned irq, const char *name);
+extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
+extern void  (*pluginRaiseIRQ)(unsigned irq);
+extern void  (*pluginLowerIRQ)(unsigned irq);
+extern Bit8u (*pluginPicIAC)(void);
 
 
 /* === CMOS query/set stuff === */
@@ -249,19 +297,32 @@ extern void (* pluginKbdPasteDelayChanged)(void);
 
 
 /* === DMA stuff === */
-extern unsigned (* pluginRegisterDMAChannel)(
+extern unsigned (* pluginRegisterDMA8Channel)(
   unsigned channel,
   void (* dma_read)(Bit8u *data_byte),
-  void (* dma_write)(Bit8u *data_byte)
+  void (* dma_write)(Bit8u *data_byte),
+  const char* name
   );
+extern unsigned (* pluginRegisterDMA16Channel)(
+  unsigned channel,
+  void (* dma_read)(Bit16u *data_byte),
+  void (* dma_write)(Bit16u *data_byte),
+  const char* name
+  );
+extern unsigned  (* pluginUnregisterDMAChannel)(unsigned channel);
 extern void     (* pluginDMASetDRQ)(unsigned channel, unsigned val);
 extern unsigned (* pluginDMAGetTC)(void);
+extern unsigned (* pluginDMAGetTC)(void);
+extern void     (* pluginDMARaiseHLDA)(void);
 
 /* === Hard drive / floppy port sharing hack === */
-extern Bit32u (* pluginHDReadHandler)(Bit32u address,
-    unsigned io_len);
-extern void   (* pluginHDWriteHandler)(Bit32u address,
-    Bit32u value, unsigned io_len);
+extern Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len);
+extern void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len);
+extern Bit32u   (* pluginHDGetFirstCDHandle)(void);
+extern Bit32u   (* pluginHDGetDeviceHandle)(Bit8u, Bit8u);
+extern unsigned (* pluginHDGetCDMediaStatus)(Bit32u);
+extern unsigned (* pluginHDSetCDMediaStatus)(Bit32u, unsigned);
+extern void     (* pluginHDCloseHarddrive)(void);
 
 /* === Floppy stuff ===*/
 extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);

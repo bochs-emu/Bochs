@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.51.2.3 2002-10-08 08:29:08 bdenney Exp $
+// $Id: floppy.cc,v 1.51.2.4 2002-10-08 17:16:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -117,7 +117,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.3 2002-10-08 08:29:08 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51.2.4 2002-10-08 17:16:34 cbothamy Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -304,7 +304,7 @@ bx_floppy_ctrl_c::reset(unsigned type)
 
   BX_FD_THIS s.floppy_buffer_index = 0;
 
-  BX_PIC_LOWER_IRQ(BX_FD_THIS, 6);
+  BX_PIC_LOWER_IRQ(6);
   BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
 }
 
@@ -365,7 +365,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
         BX_FD_THIS s.result[0] = value;
         BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
         if (!BX_FD_THIS s.reset_sensei) BX_FD_THIS s.pending_irq = 0;
-	BX_PIC_LOWER_IRQ(BX_FD_THIS, 6);
+	BX_PIC_LOWER_IRQ(6);
         }
       return(value);
       break;
@@ -1353,7 +1353,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
   void
 bx_floppy_ctrl_c::raise_interrupt(void)
 {
-  BX_PIC_RAISE_IRQ(BX_FD_THIS, 6);
+  BX_PIC_RAISE_IRQ(6);
   BX_FD_THIS s.pending_irq = 1;
   BX_FD_THIS s.reset_sensei = 0;
 }

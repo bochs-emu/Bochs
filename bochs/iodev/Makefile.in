@@ -52,27 +52,26 @@ SB16_LINUX_OBJS = sb16.o soundlnx.o
 SB16_WIN_OBJS   = sb16.o soundwin.o
 SLOWDOWN_OBJS = slowdown_timer.o
 
-BX_IODEV_OBJS_EXTERNAL = 
+BX_IODEV_OBJS_EXTERNAL = \
+  @CDROM_OBJS@
+
 
 BX_IODEV_OBJS_NON_PLUGINABLE = \
   devices.o \
-  pic.o \
   pit.o \
-  harddrv.o \
   pit82c54.o pit_wrap.o \
   scancodes.o \
   @IODEBUG_OBJS@ \
   \
-  dma.o \
   @PCI_OBJ@ \
   @NE2K_OBJS@ \
-  @CDROM_OBJS@ \
   @SB16_OBJS@ \
   @SLOWDOWN_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
 
 BX_IODEV_OBJS_PLUGINABLE = \
+  pic.o \
   serial.o \
   parallel.o \
   floppy.o \
@@ -80,6 +79,8 @@ BX_IODEV_OBJS_PLUGINABLE = \
   $(VIDEO_OBJS) \
   biosdev.o \
   cmos.o \
+  harddrv.o \
+  dma.o \
   unmapped.o 
 
 BX_IODEV_OBJS_NON_PLUGINS=@BX_IODEV_NON_PLUGINS_OBJ@
@@ -98,6 +99,11 @@ all: libiodev.a plugins
 
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+
+harddrv.so: harddrv.o @CDROM_OBJS@
+	$(CXX) -shared harddrv.o @CDROM_OBJS@ -o harddrv.so
+	mkdir -p ../plugins
+	cp $@ ../plugins
 
 keyboard.so: keyboard.o scancodes.o
 	$(CXX) -shared keyboard.o scancodes.o -o keyboard.so

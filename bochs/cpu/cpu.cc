@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.61 2002-10-04 17:04:31 kevinlawton Exp $
+// $Id: cpu.cc,v 1.61.2.1 2002-10-08 17:16:32 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -584,10 +584,10 @@ BX_CPU_C::handleAsyncEvent(void)
     if (BX_CPU_THIS_PTR int_from_local_apic)
       vector = BX_CPU_THIS_PTR local_apic.acknowledge_int ();
     else
-      vector = BX_IAC(); // may set INTR with next interrupt
+      vector = BX_PIC_IAC(); // may set INTR with next interrupt
 #else
     // if no local APIC, always acknowledge the PIC.
-    vector = BX_IAC(); // may set INTR with next interrupt
+    vector = BX_PIC_IAC(); // may set INTR with next interrupt
 #endif
     //BX_DEBUG(("decode: interrupt %u",
     //                                   (unsigned) vector));
@@ -609,7 +609,7 @@ BX_CPU_C::handleAsyncEvent(void)
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
     // NOTE: similar code in ::take_dma()
     // assert Hold Acknowledge (HLDA) and go into a bus hold state
-    BX_RAISE_HLDA();
+    BX_DMA_RAISE_HLDA();
     }
 
   // Priority 6: Faults from fetching next instruction
@@ -1048,7 +1048,7 @@ BX_CPU_C::dbg_take_dma(void)
   // NOTE: similar code in ::cpu_loop()
   if ( BX_HRQ ) {
     BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
-    BX_RAISE_HLDA();
+    BX_DMA_RAISE_HLDA();
     }
 }
 #endif  // #if BX_DEBUGGER

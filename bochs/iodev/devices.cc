@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.7 2002-10-08 08:24:26 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.8 2002-10-08 17:16:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,12 +53,14 @@ bx_devices_c::bx_devices_c(void)
   cmos = NULL;
   vga = NULL;
   floppy = NULL;
+  hard_drive = NULL;
   parallel = NULL;
   serial = NULL;
   keyboard = NULL;
+  dma = NULL;
+  pic = NULL;
 #endif
 
-  dma = NULL;
 
 #if BX_PCI_SUPPORT
   pci = NULL;
@@ -66,8 +68,6 @@ bx_devices_c::bx_devices_c(void)
 #endif
 
   pit = NULL;
-  pic = NULL;
-  hard_drive = NULL;
   sb16 = NULL;
   ne2k = NULL;
   g2h = NULL;
@@ -89,7 +89,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.7 2002-10-08 08:24:26 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.8 2002-10-08 17:16:34 cbothamy Exp $"));
   mem = newmem;
 
   devices=this;
@@ -158,15 +158,19 @@ bx_devices_c::init(BX_MEM_C *newmem)
     ioapic->init (this);
 #endif
 
+#if !BX_PLUGINS 
+
   /*--- 8237 DMA ---*/
   dma = &bx_dma;
   dma->init(this);
 
-#if !BX_PLUGINS 
-
   //--- FLOPPY ---
   floppy = &bx_floppy;
   floppy->init(this);
+
+  /*--- HARD DRIVE ---*/
+  hard_drive = &bx_hard_drive;
+  hard_drive->init(this);
 
   /*--- PARALLEL PORT ---*/
   parallel = &bx_parallel;
@@ -176,24 +180,22 @@ bx_devices_c::init(BX_MEM_C *newmem)
   serial = &bx_serial;
   serial->init(this);
 
+  /*--- KEYBOARD ---*/
   keyboard = &bx_keyboard;
   keyboard->init(this);
+
+  /*--- 8259A PIC ---*/
+  pic = & bx_pic;
+  pic->init(this);
+
 #endif
 
-
-  /*--- HARD DRIVE ---*/
-  hard_drive = &bx_hard_drive;
-  hard_drive->init(this);
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
   sb16 = &bx_sb16;
   sb16->init(this);
 #endif
-
-  /*--- 8259A PIC ---*/
-  pic = & bx_pic;
-  pic->init(this);
 
   /*--- 8254 PIT ---*/
   pit = & bx_pit;
@@ -262,7 +264,6 @@ bx_devices_c::reset(unsigned type)
   pci2isa->reset(type);
 #endif
 
-  dma->reset(type);
 
 #  if BX_SUPPORT_IOAPIC
     ioapic->reset (type);
@@ -270,6 +271,7 @@ bx_devices_c::reset(unsigned type)
 
 #if !BX_PLUGINS 
 
+  dma->reset(type);
   cmos->reset(type);
   biosdev->reset(type);
   unmapped->reset(type);
@@ -281,16 +283,16 @@ bx_devices_c::reset(unsigned type)
 #endif
 
   floppy->reset(type);
+  hard_drive->reset(type);
   parallel->reset(type);
   serial->reset(type);
   keyboard->reset(type);
+  pic->reset(type);
 #endif
 
-  hard_drive->reset(type);
 #if BX_SUPPORT_SB16
   sb16->reset(type);
 #endif
-  pic->reset(type);
   pit->reset(type);
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.reset(type);
@@ -379,8 +381,8 @@ bx_devices_c::timer()
 #if (BX_USE_NEW_PIT==0)
   if ( pit->periodic( BX_IODEV_HANDLER_PERIOD ) ) {
     // This is a hack to make the IRQ0 work
-    pic->lower_irq(0);
-    pic->raise_irq(0);
+    BX_PIC_LOWER_IRQ(0);
+    BX_PIC_RAISE_IRQ(0);
     }
 #endif
 

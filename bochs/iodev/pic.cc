@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.29 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pic.cc,v 1.29.4.1 2002-10-08 17:16:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,6 +27,11 @@
 
 
 #include "bochs.h"
+
+#if BX_PLUGINS
+#include "pic.h"
+#endif
+
 #define LOG_THIS bx_pic.
 
 
@@ -37,9 +42,35 @@ bx_pic_c bx_pic;
 #endif
 
 
+#if BX_PLUGINS
+
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+
+#endif
+
 
 bx_pic_c::bx_pic_c(void)
 {
+#if BX_PLUGINS
+
+  pluginRaiseIRQ = raise_irq;
+  pluginLowerIRQ = lower_irq;
+  pluginPicIAC   = IAC;
+
+  // Register plugin basic entry points
+  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_PIC);
+
+#endif
+
 	put("PIC");
 	settype(PICLOG);
 }
@@ -56,15 +87,15 @@ bx_pic_c::init(bx_devices_c *d)
   BX_PIC_THIS devices = d;
 
   /* 8259 PIC (Programmable Interrupt Controller) */
-  BX_PIC_THIS devices->register_io_read_handler(this, read_handler, 0x0020, "8259 PIC");
-  BX_PIC_THIS devices->register_io_read_handler(this, read_handler, 0x0021, "8259 PIC");
-  BX_PIC_THIS devices->register_io_read_handler(this, read_handler, 0x00A0, "8259 PIC");
-  BX_PIC_THIS devices->register_io_read_handler(this, read_handler, 0x00A1, "8259 PIC");
+  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x0020, "8259 PIC", 7);
+  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x0021, "8259 PIC", 7);
+  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x00A0, "8259 PIC", 7);
+  BX_REGISTER_IOREAD_HANDLER(BX_PIC_THIS, this, read_handler, 0x00A1, "8259 PIC", 7);
 
-  BX_PIC_THIS devices->register_io_write_handler(this, write_handler, 0x0020, "8259 PIC");
-  BX_PIC_THIS devices->register_io_write_handler(this, write_handler, 0x0021, "8259 PIC");
-  BX_PIC_THIS devices->register_io_write_handler(this, write_handler, 0x00A0, "8259 PIC");
-  BX_PIC_THIS devices->register_io_write_handler(this, write_handler, 0x00A1, "8259 PIC");
+  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x0020, "8259 PIC", 7);
+  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x0021, "8259 PIC", 7);
+  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x00A0, "8259 PIC", 7);
+  BX_REGISTER_IOWRITE_HANDLER(BX_PIC_THIS, this, write_handler, 0x00A1, "8259 PIC", 7);
 
 
   BX_PIC_THIS s.master_pic.single_PIC = 0;
@@ -606,8 +637,8 @@ bx_pic_c::lower_irq(unsigned irq_no)
 {
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
-  if ((BX_PIC_THIS devices) && (BX_PIC_THIS devices->ioapic))
-    BX_PIC_THIS devices->ioapic->untrigger_irq (irq_no, -1);
+  if (BX_IOAPIC_PRESENT())
+    bx_devices.ioapic->untrigger_irq (irq_no, -1);
 #endif
 
   if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
@@ -635,7 +666,7 @@ bx_pic_c::raise_irq(unsigned irq_no)
 {
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
-  BX_PIC_THIS devices->ioapic->trigger_irq (irq_no, -1);
+  bx_devices.ioapic->trigger_irq (irq_no, -1);
 #endif
 
   if ((irq_no <= 7) && (!BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {

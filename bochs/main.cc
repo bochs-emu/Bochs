@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.7 2002-10-08 08:24:25 bdenney Exp $
+// $Id: main.cc,v 1.156.2.8 2002-10-08 17:16:31 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,8 +139,8 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_ATA3_SLAVE_STATUS:
       if ((set) && (SIM->get_init_done ())) {
 	Bit8u device = id - BXP_ATA0_MASTER_STATUS;
-	Bit32u handle = bx_devices.hard_drive->get_device_handle (device/2, device%2);
-        bx_devices.hard_drive->set_cd_media_status(handle, val == BX_INSERTED);
+	Bit32u handle = BX_HD_GET_DEVICE_HANDLE (device/2, device%2);
+        BX_HD_SET_CD_MEDIA_STATUS(handle, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons ();
       }
       break;
@@ -167,7 +167,9 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       }
       break;
     case BXP_KBD_PASTE_DELAY:
-      if (set) BX_KBD_PASTE_DELAY_CHANGED ();
+      if ((set) && (SIM->get_init_done ())) {
+        BX_KBD_PASTE_DELAY_CHANGED ();
+        }
       break;
     case BXP_ATA0_MASTER_TYPE:
     case BXP_ATA0_SLAVE_TYPE:
@@ -282,12 +284,13 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
     case BXP_ATA3_MASTER_PATH:
     case BXP_ATA3_SLAVE_PATH:
       if (set==1) {
-        Bit8u device = id - BXP_ATA0_MASTER_PATH;
-	Bit32u handle = bx_devices.hard_drive->get_device_handle(device/2, device%2);
-
         if (SIM->get_init_done ()) {
+
+          Bit8u device = id - BXP_ATA0_MASTER_PATH;
+	  Bit32u handle = BX_HD_GET_DEVICE_HANDLE(device/2, device%2);
+
           if (empty) {
-            bx_devices.hard_drive->set_cd_media_status(handle, 0);
+            BX_HD_SET_CD_MEDIA_STATUS(handle, 0);
             bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->get ()) {
@@ -299,12 +302,12 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
               bx_options.atadevice[device/2][device%2].Opresent->set (0);
             }
           }
-          if ((bx_devices.hard_drive) &&
+          if (BX_HARD_DRIVE_PRESENT() &&
               (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_STATUS + device))->get () == BX_INSERTED) &&
               (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get () == BX_ATA_DEVICE_CDROM)) {
             // tell the device model that we removed, then inserted the cd
-            bx_devices.hard_drive->set_cd_media_status(handle, 0);
-            bx_devices.hard_drive->set_cd_media_status(handle, 1);
+            BX_HD_SET_CD_MEDIA_STATUS(handle, 0);
+            BX_HD_SET_CD_MEDIA_STATUS(handle, 1);
           }
         }
       }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.5 2002-10-07 22:15:42 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.6 2002-10-08 17:16:35 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,13 +46,13 @@ class bx_vga_c;
 class bx_unmapped_c;
 class bx_parallel_c;
 class bx_serial_c;
+class bx_hard_drive_c;
+class bx_dma_c;
+class bx_pic_c;
 #endif
 
 class bx_pit_c;
 class bx_keyb_c;
-class bx_dma_c;
-class bx_pic_c;
-class bx_hard_drive_c;
 class bx_sb16_c;
 class bx_pci_c;
 class bx_pci2isa_c;
@@ -108,10 +108,10 @@ public:
   bx_pci_c         *pci;
   bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
-  bx_keyb_c        *keyboard;
-  bx_dma_c         *dma;
   bx_ioapic_c      *ioapic;
 #if !BX_PLUGINS
+  bx_keyb_c        *keyboard;
+  bx_dma_c         *dma;
   bx_unmapped_c    *unmapped;
   bx_biosdev_c     *biosdev;
   bx_cmos_c        *cmos;
@@ -119,9 +119,9 @@ public:
   bx_floppy_ctrl_c *floppy;
   bx_parallel_c    *parallel;
   bx_serial_c      *serial;
-#endif
-  bx_pic_c         *pic;
   bx_hard_drive_c  *hard_drive;
+  bx_pic_c         *pic;
+#endif
   bx_sb16_c        *sb16;
   bx_ne2k_c        *ne2k;
   bx_g2h_c         *g2h;
@@ -189,23 +189,23 @@ private:
 #else
 #  include "iodev/hga.h"
 #endif
+#include "iodev/floppy.h"
+#include "iodev/harddrv.h"
+#include "iodev/parallel.h"
+#include "iodev/serial.h"
+#include "iodev/dma.h"
+#include "iodev/pic.h"
+#include "iodev/keyboard.h"
+
+#endif // #if !BX_PLUGINS
+
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
 #endif
 
-#include "iodev/floppy.h"
-#include "iodev/parallel.h"
-#include "iodev/serial.h"
-
-#endif // #if !BX_PLUGINS
-
-#include "iodev/dma.h"
-#include "iodev/harddrv.h"
 #if BX_IODEBUG_SUPPORT
 #   include "iodev/iodebug.h"
 #endif
-#include "iodev/keyboard.h"
-#include "iodev/pic.h"
 #include "iodev/pit.h"
 #include "iodev/pit_wrap.h"
 #if BX_SUPPORT_SB16

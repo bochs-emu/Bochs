@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.5 2002-10-07 16:43:29 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.6 2002-10-08 17:16:26 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,17 +151,7 @@ extern "C" {
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
 #define BX_CPU_C                    bx_cpu_c
 #define BX_MEM_C                    bx_mem_c
-// macros for DMA handling
-#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  bx_dma.registerDMA8Channel(channel, dmaRead, dmaWrite, name)
-#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  bx_dma.registerDMA16Channel(channel, dmaRead, dmaWrite, name)
-#define BX_UNREGISTER_DMA_CHANNEL(channel) \
-  bx_dma.unregisterDMAChannel(channel)
-#define BX_DMA_SET_DRQ(channel, val) bx_dma.set_DRQ(channel, val)
-#define BX_DMA_GET_TC()             bx_dma.get_TC()
 #define BX_HRQ                      (bx_pc_system.HRQ)
-#define BX_RAISE_HLDA()             bx_dma.raise_HLDA()
 #define BX_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
   BX_MEM(0)->readPhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 #define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
@@ -194,7 +184,6 @@ extern "C" {
 
 
 // #define BX_IAC()                 bx_pc_system.IAC()
-#define BX_IAC()                    bx_devices.pic->IAC()
 //#define BX_IAC()                    bx_dbg_IAC()
 
 //

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.2 2002-10-08 08:29:08 bdenney Exp $
+// $Id: parallel.cc,v 1.20.4.3 2002-10-08 17:16:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.2 2002-10-08 08:29:08 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.3 2002-10-08 17:16:36 cbothamy Exp $"));
   BX_PAR_THIS devices = d;
 
   if (bx_options.par[0].Oenabled->get ()) {
@@ -137,7 +137,7 @@ bx_parallel_c::virtual_printer(void)
       fflush (OUTPUT);
       }
     if (BX_PAR_THIS s.CONTROL.irq == 1) {
-      BX_PIC_RAISE_IRQ(BX_PAR_THIS, 7);
+      BX_PIC_RAISE_IRQ(7);
       }
     BX_PAR_THIS s.STATUS.ack = 0;
     BX_PAR_THIS s.STATUS.busy = 1;
@@ -190,7 +190,7 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
 	  if (BX_PAR_THIS s.STATUS.ack == 0) {
 	    BX_PAR_THIS s.STATUS.ack = 1;
             if (BX_PAR_THIS s.CONTROL.irq == 1) {
-              BX_PIC_LOWER_IRQ(BX_PAR_THIS, 7);
+              BX_PIC_LOWER_IRQ(7);
 	      }
 	    }
 	  if (BX_PAR_THIS s.initmode == 1) {

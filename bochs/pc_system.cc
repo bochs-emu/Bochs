@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.27.2.2 2002-10-07 16:43:33 bdenney Exp $
+// $Id: pc_system.cc,v 1.27.2.3 2002-10-08 17:16:31 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -220,14 +220,14 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   Bit8u
 bx_pc_system_c::IAC(void)
 {
-  return( bx_devices.pic->IAC() );
+  return( BX_PIC_IAC() );
 }
 
   void
 bx_pc_system_c::exit(void)
 {
-  if (bx_devices.hard_drive)
-    bx_devices.hard_drive->close_harddrive();
+  if (BX_HARD_DRIVE_PRESENT())
+    BX_HD_CLOSE_HARDDRIVE();
 
   BX_INFO(("Last time is %d", BX_GET_CMOS_TIMEVAL(bx_devices.)));
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.2 2002-10-07 16:43:34 bdenney Exp $
+// $Id: harddrv.cc,v 1.77.2.3 2002-10-08 17:16:35 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,6 +31,11 @@
 
 
 #include "bochs.h"
+
+#if BX_PLUGINS
+#include "harddrv.h"
+#endif
+
 #define LOG_THIS bx_hard_drive.
 
 // WARNING: dangerous options!
@@ -97,12 +102,42 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 #define WRITE_LBA_MODE(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).lba_mode = _a; BX_CONTROLLER((c),1).lba_mode = _a; } while(0)
 
 
-//static unsigned im_here = 0;
+#if BX_PLUGINS
+
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+
+#endif
+
 
 bx_hard_drive_c::bx_hard_drive_c(void)
 {
+
+#if BX_PLUGINS
+
+    pluginHDReadHandler = read_handler;
+    pluginHDWriteHandler = write_handler;
+    pluginHDGetFirstCDHandle = get_first_cd_handle;
+    pluginHDGetDeviceHandle = get_device_handle;
+    pluginHDGetCDMediaStatus = get_cd_media_status;
+    pluginHDSetCDMediaStatus = set_cd_media_status;
+    pluginHDCloseHarddrive = close_harddrive;
+
+    // Register plugin basic entry points
+    BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_HARDDRV);
+
+#endif
+
 #if DLL_HD_SUPPORT
-#    error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
+#   error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
 #endif
       
     for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
@@ -162,7 +197,7 @@ bx_hard_drive_c::init(bx_devices_c *d)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.2 2002-10-07 16:43:34 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.3 2002-10-08 17:16:35 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -192,24 +227,24 @@ bx_hard_drive_c::init(bx_devices_c *d)
     sprintf(string ,"ATA%d", channel);
 
     if (BX_HD_THIS channels[channel].irq != 0) 
-      BX_HD_THIS devices->register_irq(BX_HD_THIS channels[channel].irq, strdup(string));
+      BX_REGISTER_IRQ(BX_HD_THIS, BX_HD_THIS channels[channel].irq, strdup(string));
 
     if (BX_HD_THIS channels[channel].ioaddr1 != 0) {
       for (unsigned addr=0x0; addr<=0x7; addr++) {
-        BX_HD_THIS devices->register_io_read_handler(this, read_handler,
-                                            BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string));
-        BX_HD_THIS devices->register_io_write_handler(this, write_handler,
-                                            BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string));
+        BX_REGISTER_IOREAD_HANDLER(BX_HD_THIS, this, read_handler,
+                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
+        BX_REGISTER_IOWRITE_HANDLER(BX_HD_THIS, this, write_handler,
+                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
         }
       }
 
     // We don't want to register addresses 0x3f6 and 0x3f7 as they are handled by the floppy controller
     if ((BX_HD_THIS channels[channel].ioaddr2 != 0) && (BX_HD_THIS channels[channel].ioaddr2 != 0x3f0)) {
       for (unsigned addr=0x6; addr<=0x7; addr++) {
-        BX_HD_THIS devices->register_io_read_handler(this, read_handler,
-                                            BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string));
-        BX_HD_THIS devices->register_io_write_handler(this, write_handler,
-                                            BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string));
+        BX_REGISTER_IOREAD_HANDLER(BX_HD_THIS, this, read_handler,
+                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
+        BX_REGISTER_IOWRITE_HANDLER(BX_HD_THIS, this, write_handler,
+                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
         }
       }
      
@@ -571,22 +606,22 @@ if (channel == 0) {
             BX_PANIC(("IO read(1f0): buffer_index >= 512"));
 
 #if BX_SupportRepeatSpeedups
-          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+          if (BX_BULK_IO_QUANTUM_REQUESTED(BX_HD_THIS)) {
             unsigned transferLen, quantumsMax;
 
             quantumsMax =
               (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
 if ( quantumsMax == 0)
   BX_PANIC(("IO read(1f0): not enough space for read"));
-            BX_HD_THIS devices->bulkIOQuantumsTransferred =
-                BX_HD_THIS devices->bulkIOQuantumsRequested;
-            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
-              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
-            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
-            memcpy((Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+            BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS) =
+                BX_BULK_IO_QUANTUM_REQUESTED(BX_HD_THIS);
+            if (quantumsMax < BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS))
+              BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS) = quantumsMax;
+            transferLen = io_len * BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS);
+            memcpy((Bit8u*) BX_BULK_IO_HOST_ADDR(BX_HD_THIS),
               &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], 
               transferLen);
-            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+            BX_BULK_IO_HOST_ADDR(BX_HD_THIS) += transferLen;
             BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             value32 = 0; // Value returned not important;
             }
@@ -938,7 +973,9 @@ if ( quantumsMax == 0)
         BX_SELECTED_CONTROLLER(channel).status.index_pulse_count = 0;
         }
       }
-      if (port == 0x07) BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
+      if (port == 0x07) {
+        BX_PIC_LOWER_IRQ(BX_HD_THIS channels[channel].irq);
+        }
       goto return_value8;
       break;
 
@@ -1080,23 +1117,23 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
             BX_PANIC(("IO write(1f0): buffer_index >= 512"));
 
 #if BX_SupportRepeatSpeedups
-          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+          if (BX_BULK_IO_QUANTUM_REQUESTED(BX_HD_THIS)) {
             unsigned transferLen, quantumsMax;
 
             quantumsMax =
               (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
 if ( quantumsMax == 0)
   BX_PANIC(("IO write(1f0): not enough space for write"));
-            BX_HD_THIS devices->bulkIOQuantumsTransferred =
-                BX_HD_THIS devices->bulkIOQuantumsRequested;
-            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
-              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
-            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
+            BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS) =
+                BX_BULK_IO_QUANTUM_REQUESTED(BX_HD_THIS);
+            if (quantumsMax < BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS))
+              BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS) = quantumsMax;
+            transferLen = io_len * BX_BULK_IO_QUANTUM_TRANSFERRED(BX_HD_THIS);
             memcpy(
               &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], 
-              (Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+              (Bit8u*) BX_BULK_IO_HOST_ADDR(BX_HD_THIS)
               transferLen);
-            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+	    BX_BULK_IO_HOST_ADDR(BX_HD_THIS) += transferLen;
             BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             }
           else
@@ -2893,12 +2930,12 @@ bx_hard_drive_c::raise_interrupt(Bit8u channel)
 	BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER(channel).control.disable_irq));
 	if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) { BX_DEBUG(("raising interrupt")); } else { BX_DEBUG(("Not raising interrupt")); }
       if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) {
-	    Bit32u irq = BX_HD_THIS channels[channel].irq; 
-   	    BX_DEBUG(("Raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
-	    BX_HD_THIS devices->pic->raise_irq(irq);
+          Bit32u irq = BX_HD_THIS channels[channel].irq; 
+          BX_DEBUG(("Raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
+          BX_PIC_RAISE_IRQ(irq);
       } else {
-	    if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-		  BX_INFO(("Interrupt masked {%s}", BX_SELECTED_TYPE_STRING(channel)));
+          if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
+              BX_INFO(("Interrupt masked {%s}", BX_SELECTED_TYPE_STRING(channel)));
       }
 }
 

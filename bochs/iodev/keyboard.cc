@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.4 2002-10-08 08:29:08 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.5 2002-10-08 17:16:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,6 +51,10 @@
 #include <math.h>
 #include "scancodes.h"
 
+#if BX_PLUGINS
+#include "keyboard.h"
+#endif
+
 #define LOG_THIS  bx_keyboard.
 
 
@@ -84,7 +88,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.4 2002-10-08 08:29:08 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.5 2002-10-08 17:16:36 cbothamy Exp $"));
 #if BX_PLUGINS
   pluginMouseMotion = bx_keyboard.mouse_motion;
   pluginGenScancode = bx_keyboard.gen_scancode;
@@ -134,7 +138,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.4 2002-10-08 08:29:08 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.5 2002-10-08 17:16:36 cbothamy Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -328,7 +332,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
 
 //BX_DEBUG(("mouse: ___io_read aux = 0x%02x", (unsigned) val));
 
-      BX_KEY_THIS devices->pic->lower_irq(12);
+      BX_PIC_LOWER_IRQ(12);
       activate_timer();
       BX_DEBUG(("READ(%02x) (from mouse) = %02x", (unsigned) address,
           (unsigned) val));
@@ -358,7 +362,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
         BX_KEY_THIS s.controller_Qsize--;
         }
 
-      BX_KEY_THIS devices->pic->lower_irq(1);
+      BX_PIC_LOWER_IRQ(1);
       activate_timer();
       BX_DEBUG(("READ(%02x) = %02x", (unsigned) address,
           (unsigned) val));
@@ -705,11 +709,11 @@ bx_keyb_c::service_paste_buf ()
     } else {
       BX_DEBUG (("pasting character 0x%02x. baseKey is %04x", byte, entry->baseKey));
       if (entry->modKey != BX_KEYMAP_UNKNOWN)
-        bx_devices.keyboard->gen_scancode(entry->modKey);
-      bx_devices.keyboard->gen_scancode(entry->baseKey);
-      bx_devices.keyboard->gen_scancode(entry->baseKey | BX_KEY_RELEASED);
+        BX_EVENT_GEN_SCANCODE(entry->modKey);
+      BX_EVENT_GEN_SCANCODE(entry->baseKey);
+      BX_EVENT_GEN_SCANCODE(entry->baseKey | BX_KEY_RELEASED);
       if (entry->modKey != BX_KEYMAP_UNKNOWN)
-        bx_devices.keyboard->gen_scancode(entry->modKey | BX_KEY_RELEASED);
+        BX_EVENT_GEN_SCANCODE(entry->modKey | BX_KEY_RELEASED);
     }
     BX_KEY_THIS pastebuf_ptr++;
   }
@@ -1170,11 +1174,9 @@ bx_keyb_c::timer_handler(void *this_ptr)
   retval=class_ptr->periodic(1);
 
   if(retval&0x01)
-    // pluginRaiseIRQ(1);
-    BX_KEY_THIS devices->pic->raise_irq(1);
+    BX_PIC_RAISE_IRQ(1);
   if(retval&0x02)
-    // pluginRaiseIRQ(12);
-    BX_KEY_THIS devices->pic->raise_irq(12);
+    BX_PIC_RAISE_IRQ(12);
 }
 
   unsigned
