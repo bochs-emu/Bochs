@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.192 2002-11-24 13:41:07 cbothamy Exp $
+// $Id: main.cc,v 1.193 2002-11-25 17:53:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1413,6 +1413,43 @@ static void setupWorkingDirectory (char *path)
         n = chdir ("../../../");
     if (n) BX_PANIC (("failed to change to ../../.."));
 }
+
+/* Panic button to display fatal errors.
+  Completely self contained, can't rely on carbon.cc being available */
+static void carbonFatalDialog(const char *error, const char *exposition)
+{
+  DialogRef                     alertDialog;
+  CFStringRef                   cfError;
+  CFStringRef                   cfExposition;
+  DialogItemIndex               index;
+  AlertStdCFStringAlertParamRec alertParam = {0};
+  fprintf(stderr, "Entering carbonFatalDialog: %s\n", error);
+  
+  // Init libraries
+  InitCursor();
+  // Assemble dialog
+  cfError = CFStringCreateWithCString(NULL, error, kCFStringEncodingASCII);
+  if(exposition != NULL)
+  {
+    cfExposition = CFStringCreateWithCString(NULL, exposition, kCFStringEncodingASCII);
+  }
+  else { cfExposition = NULL; }
+  alertParam.version       = kStdCFStringAlertVersionOne;
+  alertParam.defaultText   = CFSTR("Quit");
+  alertParam.position      = kWindowDefaultPosition;
+  alertParam.defaultButton = kAlertStdAlertOKButton;
+  // Display Dialog
+  CreateStandardAlert(
+    kAlertStopAlert,
+    cfError,
+    cfExposition,       /* can be NULL */
+    &alertParam,             /* can be NULL */
+    &alertDialog);
+  RunStandardAlert( alertDialog, NULL, &index);
+  // Cleanup
+  CFRelease( cfError );
+  if( cfExposition != NULL ) { CFRelease( cfExposition ); }
+}
 #endif
 
 // In some situations, there is no way to display stdin/stdout.  In that case
@@ -1429,9 +1466,12 @@ bx_bool ensure_text_console_exists ()
   // return false;
 #endif
 #if BX_WITH_CARBON
-  // insert Carbon way of displaying a message dialog
-  // carbondialog ("Please run Bochs by clicking on the ___ instead, or run from the command line with -q");
-  // return false;
+  if(!isatty(STDIN_FILENO))
+  {
+    carbonFatalDialog("Bochs was unable to load the \"bochsrc.txt\" configuration file",
+      "Copy Bochs to a directory with a valid \"bochsrc.txt\" configuration file. (Such as the dlxlinux directory) or  Run Bochs within Terminal by clicking on \"bochs.scpt\".");
+    return false;
+  }
 #endif
   return true;
 }
