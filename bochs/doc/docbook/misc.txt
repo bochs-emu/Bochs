@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.16 2002-11-25 13:30:09 bdenney Exp $
+$Id: misc.txt,v 1.17 2002-12-05 19:17:27 bdenney Exp $
 
 Testing testing....
 
@@ -268,3 +268,57 @@ window, run the .BAT file that sets up the environment variables
 (C:\vc98\bin\vcvars32.bat on my system), and then run NMAKE in the Bochs
 source directory.  You will get lots of compile warnings, but hopefully no
 fatal errors!  At the end, you should see Bochs.exe in the source directory.
+-----
+
+--------------------------------------------------
+Building a release on win32
+Thu Dec  5 14:23:20  2002
+Bryce Denney
+
+In Cygwin:
+  sh .conf.win32-vcpp         # runs configure 
+  make win32_snap             # unzip workspace, make a win32 source ZIP
+
+Copy the source ZIP to a windows machine, if necessary.
+
+Open up Visual C++ and load the workspace file Bochs.dsw.  Check
+the Build:Set Active Project Configuration is set the way you want it.
+For releases I use "Win32 Release".
+
+make install_win32 prefix=/tmp/bochs-2.0.pre3
+
+OPTIONAL: Build bochsdbg.exe.
+|  To create "bochsdbg.exe" with Bochs debugger support, manually change two
+|  lines in config.h to turn on the debugger.
+|	#define BX_DEBUGGER 1
+|	#define BX_DISASM 1
+|
+|  VC++ will rebuild bochs with debugger and overwrite bochs.exe.  To avoid
+|  trashing the non-debug version, move it out of the way while the debugger
+|  version is being built.  Then rename the debugger version to bochsdbg.exe.
+|	cd obj-release
+|	mv bochs.exe bochs-normal.exe
+|	<<build again with BX_DEBUGGER=1 this time>>
+|	mv bochs.exe bochsdbg.exe
+|	mv bochs-normal.exe bochs.exe
++---
+
+Do make install_win32 into /tmp or someplace.
+
+make install_win32 prefix=/tmp/bochs-2.0.pre3
+This copies all the files into /tmp/bochs-2.0.pre3 and then creates a
+binary ZIP at /tmp/bochs-2.0.pre3.zip.  Rename that 
+bochs-2.0.pre3.win32-bin.zip
+
+Now make the NSIS installer package.
+cd build/win32/nsis
+
+Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and 
+then run make.
+
+unzip ~/bochs-2.0.pre3.zip
+make
+
+That gives an installer called 'Bochs-2.0.pre3.exe'.
+Test and upload.
+------------------------------------
