@@ -564,3 +564,50 @@ Make both the CPU and the memory space an array.  The CPU structure will
 have a pointer to its memory space.  This allows cosimulation to still 
 happen (cpu0 with mem0, cpu1 with mem1) with any number of processors,
 and also SMP (cpu0 with mem0, cpu1 with mem0, etc.).
+
+How will the CPU loop work here?  It was written for one CPU of course,
+and runs until a breakpoint or asynchronous event.  But now I will need
+several multiple processors to have a chance to run their own CPU loop.
+One conceptually simple solution is to let each CPU run one instruction,
+then switch to another CPU.  Can I do this with existing guards, or
+will I need to recode cpu_loop?
+
+Which processor should receive asynchronous events?  On page 7-15 of
+sdg3, it shows that all external interrupts go to the I/O APIC.  The
+I/O APIC must forward them to the correct processor, once it has been 
+configured.  First worry about how to give each processor a chance to 
+execute instructions.
+
+Added a "bx_guard_found_t" struct pointer inside every CPU.  The 
+alternative was an array of them, but they need to be written within
+the BX_CPU_C methods, which wouldn't know where in the array to find
+it.
+
+Debugging SMP infinite loop.  stop at floppy_drive_recal.
+in good sim:
+  vbreak 0xf000:0x24d6
+  s 133000
+  s 1000
+in bad sim:
+oops: step doesn't notice breakpoints.
+
+in sync until 883100
+dies before 884200
+
+The difference occurs here: (output from show "dbg-all")
+< 132700 interrupt(): vector = 9, INT = 0, EXT = 1
+< 132703 keyboard: 8-bit write to 0064 = ad
+< 132703 KBD: keyboard disabled
+< 132705 keyboard: 8-bit read from 0064 = 1c
+< 132711 pic: IO write to 0020 = 0b
+< 132712 pic: IO read from 0020
+< 132712 pic: read master ISR = 02
+< 132716 pic: IO write to 0020 = 20
+
+changed pc_system because the interrupt was getting sent only to cpu0.
+next problem is when it goes into protected mode.  
+in bad sim:
+33000683 exception(0e h) just after enable_paging ()
+
+try to get a trace of the instructions before the exception, since
+they caused the exception.
