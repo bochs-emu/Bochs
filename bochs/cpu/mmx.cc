@@ -1276,6 +1276,11 @@ void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
+  if(!MMXUQ(op2)) {
+    BX_WRITE_MMX_REG(i->nnn(), op1);
+    return;
+  }
+
   Bit8u shift = MMXUB0(op2);
 
   if(MMXUQ(op2) > 15) {
@@ -1319,6 +1324,11 @@ void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
   else {
     /* pointer, segment address pair */
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  if(!MMXUQ(op2)) {
+    BX_WRITE_MMX_REG(i->nnn(), op1);
+    return;
   }
 
   Bit8u shift = MMXUB0(op2);
@@ -2159,6 +2169,11 @@ void BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
+  if(shift == 0) {
+    BX_WRITE_MMX_REG(i->nnn(), op);
+    return;
+  }
+
   if(shift > 15) {
     MMXUW0(result) = (MMXUW0(op) & 0x8000) ? 0xffff : 0;
     MMXUW1(result) = (MMXUW1(op) & 0x8000) ? 0xffff : 0;
@@ -2243,6 +2258,11 @@ void BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm()), result;
   Bit8u shift = i->Ib();
+
+  if(shift == 0) {
+    BX_WRITE_MMX_REG(i->nnn(), op);
+    return;
+  }
 
   if(shift > 31) {
     MMXUD0(result) = (MMXUD0(op) & 0x80000000) ? 0xffffffff : 0;

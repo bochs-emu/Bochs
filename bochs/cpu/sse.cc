@@ -1149,6 +1149,12 @@ void BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
+  if(op2.xmm64u(0) == 0)
+  {
+    BX_WRITE_XMM_REG(i->nnn(), op1);
+    return;
+  }
+
   if(op2.xmm64u(0) > 15)  /* looking only to low 64 bits */
   {
     result.xmm16u(0) = (op1.xmm16u(0) & 0x8000) ? 0xffff : 0;
@@ -1206,6 +1212,12 @@ void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
   else {
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  if(op2.xmm64u(0) == 0)
+  {
+    BX_WRITE_XMM_REG(i->nnn(), op1);
+    return;
   }
 
   if(op2.xmm64u(0) > 31)  /* looking only to low 64 bits */
@@ -2071,20 +2083,20 @@ void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op1.xmm16u(0) >>= shift;
-  op1.xmm16u(1) >>= shift;
-  op1.xmm16u(2) >>= shift;
-  op1.xmm16u(3) >>= shift;
-  op1.xmm16u(4) >>= shift;
-  op1.xmm16u(5) >>= shift;
-  op1.xmm16u(6) >>= shift;
-  op1.xmm16u(7) >>= shift;
+  op.xmm16u(0) >>= shift;
+  op.xmm16u(1) >>= shift;
+  op.xmm16u(2) >>= shift;
+  op.xmm16u(3) >>= shift;
+  op.xmm16u(4) >>= shift;
+  op.xmm16u(5) >>= shift;
+  op.xmm16u(6) >>= shift;
+  op.xmm16u(7) >>= shift;
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->rm(), op1);
+  BX_WRITE_XMM_REG(i->rm(), op);
 #else
   BX_INFO(("PSRLW_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -2097,37 +2109,43 @@ void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
+  if(shift == 0)
+  {
+    BX_WRITE_XMM_REG(i->nnn(), op);
+    return;
+  }
+
   if(shift > 15) {
-    result.xmm16u(0) = (op1.xmm16u(0) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(1) = (op1.xmm16u(1) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(2) = (op1.xmm16u(2) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(3) = (op1.xmm16u(3) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(4) = (op1.xmm16u(4) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(5) = (op1.xmm16u(5) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(6) = (op1.xmm16u(6) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(7) = (op1.xmm16u(7) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(0) = (op.xmm16u(0) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(1) = (op.xmm16u(1) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(2) = (op.xmm16u(2) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(3) = (op.xmm16u(3) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(4) = (op.xmm16u(4) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(5) = (op.xmm16u(5) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(6) = (op.xmm16u(6) & 0x8000) ? 0xffff : 0;
+    result.xmm16u(7) = (op.xmm16u(7) & 0x8000) ? 0xffff : 0;
   }
   else {
-    result.xmm16u(0) = op1.xmm16u(0) >> shift;
-    result.xmm16u(1) = op1.xmm16u(1) >> shift;
-    result.xmm16u(2) = op1.xmm16u(2) >> shift;
-    result.xmm16u(3) = op1.xmm16u(3) >> shift;
-    result.xmm16u(4) = op1.xmm16u(4) >> shift;
-    result.xmm16u(5) = op1.xmm16u(5) >> shift;
-    result.xmm16u(6) = op1.xmm16u(6) >> shift;
-    result.xmm16u(7) = op1.xmm16u(7) >> shift;
+    result.xmm16u(0) = op.xmm16u(0) >> shift;
+    result.xmm16u(1) = op.xmm16u(1) >> shift;
+    result.xmm16u(2) = op.xmm16u(2) >> shift;
+    result.xmm16u(3) = op.xmm16u(3) >> shift;
+    result.xmm16u(4) = op.xmm16u(4) >> shift;
+    result.xmm16u(5) = op.xmm16u(5) >> shift;
+    result.xmm16u(6) = op.xmm16u(6) >> shift;
+    result.xmm16u(7) = op.xmm16u(7) >> shift;
 
-    if(op1.xmm16u(0) & 0x8000) result.xmm16u(0) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(1) & 0x8000) result.xmm16u(1) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(2) & 0x8000) result.xmm16u(2) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(3) & 0x8000) result.xmm16u(3) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(4) & 0x8000) result.xmm16u(4) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(5) & 0x8000) result.xmm16u(5) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(6) & 0x8000) result.xmm16u(6) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(7) & 0x8000) result.xmm16u(7) |= (0xffff << (16 - shift));
+    if(op.xmm16u(0) & 0x8000) result.xmm16u(0) |= (0xffff << (16 - shift));
+    if(op.xmm16u(1) & 0x8000) result.xmm16u(1) |= (0xffff << (16 - shift));
+    if(op.xmm16u(2) & 0x8000) result.xmm16u(2) |= (0xffff << (16 - shift));
+    if(op.xmm16u(3) & 0x8000) result.xmm16u(3) |= (0xffff << (16 - shift));
+    if(op.xmm16u(4) & 0x8000) result.xmm16u(4) |= (0xffff << (16 - shift));
+    if(op.xmm16u(5) & 0x8000) result.xmm16u(5) |= (0xffff << (16 - shift));
+    if(op.xmm16u(6) & 0x8000) result.xmm16u(6) |= (0xffff << (16 - shift));
+    if(op.xmm16u(7) & 0x8000) result.xmm16u(7) |= (0xffff << (16 - shift));
   }
 
   /* now write result back to destination */
@@ -2144,20 +2162,20 @@ void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op1.xmm16u(0) <<= shift;
-  op1.xmm16u(1) <<= shift;
-  op1.xmm16u(2) <<= shift;
-  op1.xmm16u(3) <<= shift;
-  op1.xmm16u(4) <<= shift;
-  op1.xmm16u(5) <<= shift;
-  op1.xmm16u(6) <<= shift;
-  op1.xmm16u(7) <<= shift;
+  op.xmm16u(0) <<= shift;
+  op.xmm16u(1) <<= shift;
+  op.xmm16u(2) <<= shift;
+  op.xmm16u(3) <<= shift;
+  op.xmm16u(4) <<= shift;
+  op.xmm16u(5) <<= shift;
+  op.xmm16u(6) <<= shift;
+  op.xmm16u(7) <<= shift;
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->rm(), op1);
+  BX_WRITE_XMM_REG(i->rm(), op);
 #else
   BX_INFO(("PSLLW_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -2170,16 +2188,16 @@ void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op1.xmm32u(0) >>= shift;
-  op1.xmm32u(1) >>= shift;
-  op1.xmm32u(2) >>= shift;
-  op1.xmm32u(3) >>= shift;
+  op.xmm32u(0) >>= shift;
+  op.xmm32u(1) >>= shift;
+  op.xmm32u(2) >>= shift;
+  op.xmm32u(3) >>= shift;
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->rm(), op1);
+  BX_WRITE_XMM_REG(i->rm(), op);
 #else
   BX_INFO(("PSRLD_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -2192,25 +2210,31 @@ void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
+  if(shift == 0)
+  {
+    BX_WRITE_XMM_REG(i->nnn(), op);
+    return;
+  }
+
   if(shift > 31) {
-    result.xmm32u(0) = (op1.xmm32u(0) & 0x80000000) ? 0xffffffff : 0;
-    result.xmm32u(1) = (op1.xmm32u(1) & 0x80000000) ? 0xffffffff : 0;
-    result.xmm32u(2) = (op1.xmm32u(2) & 0x80000000) ? 0xffffffff : 0;
-    result.xmm32u(3) = (op1.xmm32u(3) & 0x80000000) ? 0xffffffff : 0;
+    result.xmm32u(0) = (op.xmm32u(0) & 0x80000000) ? 0xffffffff : 0;
+    result.xmm32u(1) = (op.xmm32u(1) & 0x80000000) ? 0xffffffff : 0;
+    result.xmm32u(2) = (op.xmm32u(2) & 0x80000000) ? 0xffffffff : 0;
+    result.xmm32u(3) = (op.xmm32u(3) & 0x80000000) ? 0xffffffff : 0;
   }
   else {
-    result.xmm32u(0) = op1.xmm32u(0) >> shift;
-    result.xmm32u(1) = op1.xmm32u(1) >> shift;
-    result.xmm32u(2) = op1.xmm32u(2) >> shift;
-    result.xmm32u(3) = op1.xmm32u(3) >> shift;
+    result.xmm32u(0) = op.xmm32u(0) >> shift;
+    result.xmm32u(1) = op.xmm32u(1) >> shift;
+    result.xmm32u(2) = op.xmm32u(2) >> shift;
+    result.xmm32u(3) = op.xmm32u(3) >> shift;
 
-    if(op1.xmm32u(0) & 0x80000000) result.xmm32u(0) |= (0xffffffff << (32-shift));
-    if(op1.xmm32u(1) & 0x80000000) result.xmm32u(1) |= (0xffffffff << (32-shift));
-    if(op1.xmm32u(2) & 0x80000000) result.xmm32u(2) |= (0xffffffff << (32-shift));
-    if(op1.xmm32u(3) & 0x80000000) result.xmm32u(3) |= (0xffffffff << (32-shift));
+    if(op.xmm32u(0) & 0x80000000) result.xmm32u(0) |= (0xffffffff << (32-shift));
+    if(op.xmm32u(1) & 0x80000000) result.xmm32u(1) |= (0xffffffff << (32-shift));
+    if(op.xmm32u(2) & 0x80000000) result.xmm32u(2) |= (0xffffffff << (32-shift));
+    if(op.xmm32u(3) & 0x80000000) result.xmm32u(3) |= (0xffffffff << (32-shift));
   }
 
   /* now write result back to destination */
@@ -2227,16 +2251,16 @@ void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op1.xmm32u(0) <<= shift;
-  op1.xmm32u(1) <<= shift;
-  op1.xmm32u(2) <<= shift;
-  op1.xmm32u(3) <<= shift;
+  op.xmm32u(0) <<= shift;
+  op.xmm32u(1) <<= shift;
+  op.xmm32u(2) <<= shift;
+  op.xmm32u(3) <<= shift;
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->rm(), op1);
+  BX_WRITE_XMM_REG(i->rm(), op);
 #else
   BX_INFO(("PSLLD_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -2249,14 +2273,14 @@ void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op1.xmm64u(0) >>= shift;
-  op1.xmm64u(1) >>= shift;
+  op.xmm64u(0) >>= shift;
+  op.xmm64u(1) >>= shift;
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->rm(), op1);
+  BX_WRITE_XMM_REG(i->rm(), op);
 #else
   BX_INFO(("PSRLQ_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -2268,7 +2292,7 @@ void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
   result.xmm64u(0) = 0;
@@ -2276,7 +2300,7 @@ void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
 
   for(unsigned j=shift; j<16; j++)
   {
-    result.xmmubyte(j-shift) = op1.xmmubyte(j);
+    result.xmmubyte(j-shift) = op.xmmubyte(j);
   }
 
   /* now write result back to destination */
@@ -2293,14 +2317,14 @@ void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  op1.xmm64u(0) <<= shift;
-  op1.xmm64u(1) <<= shift;
+  op.xmm64u(0) <<= shift;
+  op.xmm64u(1) <<= shift;
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->rm(), op1);
+  BX_WRITE_XMM_REG(i->rm(), op);
 #else
   BX_INFO(("PSLLQ_PdqIb: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -2313,7 +2337,7 @@ void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
   result.xmm64u(0) = 0;
@@ -2321,7 +2345,7 @@ void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
 
   for(unsigned j=shift; j<16; j++)
   {
-    result.xmmubyte(j) = op1.xmmubyte(j-shift);
+    result.xmmubyte(j) = op.xmmubyte(j-shift);
   }
 
   /* now write result back to destination */
