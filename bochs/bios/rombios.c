@@ -121,10 +121,14 @@ use16 286
 #endif
 
 MACRO HALT
-  mov dx,PANIC_PORT
+  ;; the HALT macro is called with the line number of the HALT call.
+  ;; The line number is then sent to the PANIC_PORT, causing Bochs to
+  ;; print a BX_PANIC message.  This will normally halt the simulation
+  ;; with a message such as "BIOS panic at rombios.c, line 4091".
+  ;; However, users can choose to make panics non-fatal and continue.
+  mov dx,#PANIC_PORT
   mov ax,#?1
   out dx,ax
-  hlt
 MEND
 
 MACRO JMP_AP
@@ -3373,12 +3377,14 @@ int19_loadsector:
 bootstrap_problem:
   int #0x18 ;; Boot failure
   HALT(__LINE__)
+  iret
 
 ;----------
 ;- INT18h -
 ;----------
 int18_handler: ;; Boot Failure routing
   HALT(__LINE__)
+  iret
 
 
 ;----------
@@ -4340,6 +4346,7 @@ notrom:
 
 .org 0xe2c3 ; NMI Handler Entry Point
   HALT(__LINE__)
+  iret
 
 ;-------------------------------------------
 ;- INT 13h Fixed Disk Services Entry Point -
@@ -4657,6 +4664,7 @@ int17_handler:
 
 .org 0xf045 ; INT 10 Functions 0-Fh Entry Point
   HALT(__LINE__)
+  iret
 
 ;----------
 ;- INT10h -
@@ -4811,6 +4819,7 @@ dummy_iret_handler:
 
 .org 0xff54 ; INT 05h Print Screen Service Entry Point
   HALT(__LINE__)
+  iret
 
 ; .org 0xff00
 ; .ascii "(c) 1994-2000 Kevin P. Lawton"
