@@ -9,7 +9,7 @@ set echo
 
 # These really just make ./configure happy on your Unix machine.
 # They are not the options passed to Visual C++
-CC="egcs"
+CC="gcc"
 CFLAGS=""
 CXX="$CC"
 CXXFLAGS="$CFLAGS"
@@ -24,7 +24,7 @@ export CXXFLAGS
 #./configure --with-win32-vcpp --enable-debugger --enable-disasm
 #./configure --with-win32-vcpp --enable-disasm
 
-./configure --with-win32-vcpp --enable-cdrom --enable-sb16=win
+./configure --with-win32-vcpp --enable-cdrom --enable-sb16=win --enable-cpp
 
 unset echo
 
