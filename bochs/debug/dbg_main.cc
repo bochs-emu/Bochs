@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.41.4.1 2002-09-12 03:38:29 bdenney Exp $
+// $Id: dbg_main.cc,v 1.41.4.2 2002-09-12 04:16:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,7 +26,7 @@
 
 // define shortcuts to get register from the default CPU
 #define EBP (BX_CPU(dbg_cpu)->gen_reg[5].erx)
-#define EIP (BX_CPU(dbg_cpu)->eip)
+#define EIP (BX_CPU(dbg_cpu)->_long.eip)
 #define ESP (BX_CPU(dbg_cpu)->gen_reg[4].erx)
 #define SP  (BX_CPU(dbg_cpu)->gen_reg[4].word.rx)
 
@@ -2120,13 +2120,14 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 		!!BX_CPU(which_cpu)->get_SF(),
 		!!BX_CPU(which_cpu)->get_OF(),
 		!!BX_CPU(which_cpu)->get_PF(),
-		BX_CPU(which_cpu)->eflags.tf,
-		BX_CPU(which_cpu)->eflags.if_,
-		BX_CPU(which_cpu)->eflags.df,
-		BX_CPU(which_cpu)->eflags.iopl,
-		BX_CPU(which_cpu)->eflags.nt,
-		BX_CPU(which_cpu)->eflags.rf,
-		BX_CPU(which_cpu)->eflags.vm
+#warning "KPL: fix eflags stuff"
+		(BX_CPU(which_cpu)->eflags.val32>>8)&1, // .tf,
+		(BX_CPU(which_cpu)->eflags.val32>>9)&1, // .if_,
+		(BX_CPU(which_cpu)->eflags.val32>>10)&1, // .df,
+		(BX_CPU(which_cpu)->eflags.val32>>12)&3, // .iopl,
+		(BX_CPU(which_cpu)->eflags.val32>>14)&1, // .nt,
+		(BX_CPU(which_cpu)->eflags.val32>>16)&1, // .rf,
+		(BX_CPU(which_cpu)->eflags.val32>>17)&1  // .vm
 		);
 
     if (print_time)
