@@ -185,7 +185,7 @@ smapnipss<BR>
 <br>[20:15] <b>yakovlev</b> Moja: that's not the point.
 <br>[20:16] <b>bryce</b> bochs is not for speed. :)
 <br>[20:16] <b>uninet</b> yak: Do you know who did the bochs in bochs thing? I'd love to post a screenshot of that.
-<br>[20:16] <b>Psyon</b> http://prdownloads.sourceforge.net/bochs/bochs-1.2.1.win32.zip <b>--- is that a source zip or binary?
+<br>[20:16] <b>Psyon</b> http://prdownloads.sourceforge.net/bochs/bochs-1.2.1.win32.zip --- is that a source zip or binary?
 <br>[20:16] <b>Moja</b> yako;  yeah, i guess I'm probably not the target audience.  I just need some kind of 'doze implementation to run this one particular proprietary crapware app that my office forces me to use.
 <br>[20:16] <b>yakovlev</b> I thought I had seen one.
 <br>[20:16] <b>bryce</b> that's a binary ZIP
@@ -341,7 +341,7 @@ smapnipss<BR>
 <br>[20:39] <b>bryce</b> makes various size floppies too
 <br>[20:39] <b>KWeisshar</b> is there any way to accesss the floppy and cd-rom drive directly when running bochs under win98 or windows me
 <br>[20:40] <b>Psyon</b> Im working on that
-<br>[20:40] *** rjlemley (selma@dsl092-005-134.sfo1.dsl.speakeasy.net) Quit (Quit: <br>[x]chat)
+<br>[20:40] *** rjlemley (selma@dsl092-005-134.sfo1.dsl.speakeasy.net) Quit (Quit: [x]chat)
 <br>[20:40] <b>Psyon</b> KWeisshar: Win98/Me do not provide a direct way to access the cdrom sectors
 <br>[20:40] <b>KWeisshar</b> what about floppy sectors
 <br>[20:40] <b>Psyon</b> nope
@@ -359,7 +359,7 @@ smapnipss<BR>
 <br>[20:41] <b>eks</b> bryce: I prefer partcopy from John Fine
 <br>[20:41] <b>eks</b> http://erols.com/johnfine/pcopy02.zip
 <br>[20:41] *** Psyon sets mode: +o yakovlev
-<br>[20:42] <b>bryce</b> Calvin Smith also said <b>A HREF="http://www.winimage.com"</b>www.winimage.com<b>/A</b> has a good image manipulation tool
+<br>[20:42] <b>bryce</b> Calvin Smith also said www.winimage.com has a good image manipulation tool
 <br>[20:42] *** Psyon sets mode: +o fries
 <br>[20:42] <b>eks</b> you can byte-align transfer anything to/from floppies
 <br>[20:42] <b>KWeisshar</b> how do i create an image from the cd-rom to use with bochs
@@ -432,7 +432,7 @@ smapnipss<BR>
 <br>[20:52] <b>yakovlev</b> I download it from sources.redhad.com/cygwin
 <br>[20:52] <b>KWeisshar</b> it costs aabout $100
 <br>[20:52] <b>divad547</b> last time I looked, the cygwin support libraries where GPL without the exceptions in GCC's libraries.
-<br>[20:52] <b>yakovlev</b> redhad-</b>redhat
+<br>[20:52] <b>yakovlev</b> redhad-redhat
 <br>[20:52] <b>divad547</b> so anything you built with cygwin had to be GPL.
 <br>[20:52] <b>bryce</b> Greg, do you want to describe your work on the networking front?
 <br>[20:53] <b>Psyon</b> yes
@@ -498,15 +498,15 @@ smapnipss<BR>
 <br>[21:03] <b>yakovlev</b> If all ppp wrapper is is basically a wrapper around an IP packet, converting to PPP is easy.
 <br>[21:03] <b>yakovlev</b> except for all the connection headache.
 <br>[21:04] <b>bryce</b> it seems like converting to PPP is a benefit because you have the option of either REAL PPP or slirp (emulated PPP)
-<br>[21:04] *** daboj_awa (~daboy@lnk2-bfrost-gw.binary.net) Quit (Quit: <br>[BX] Get your free warez from ftp://127.0.0.1!)
+<br>[21:04] *** daboj_awa (~daboy@lnk2-bfrost-gw.binary.net) Quit (Quit: [BX] Get your free warez from ftp://127.0.0.1!)
 <br>[21:04] <b>yakovlev</b> Psyon: the interface is: send(char*, len)  rxh(char*, len)
 <br>[21:04] <b>bryce</b> psyon: with the sendpacket/readpacket method, is there any chance that the kernel can see the packet, or does it go directly out to the physical network?
 <br>[21:05] <b>Psyon</b> directly to network im guessing
 <br>[21:05] <b>bryce</b> that's the problem with the fbsd implementation
 <br>[21:05] <b>Psyon</b> Never looked into it a lot
-<br>[21:05] <b>bryce</b> take a look at <b>A HREF="http://bochs.sf.net/networking"</b>http://bochs.sf.net/networking<b>/A</b>
+<br>[21:05] <b>bryce</b> take a look at http://bochs.sf.net/networking
 <br>[21:05] <b>bryce</b> Peter Grehan drew some diagrams of the different options
-<br>[21:05] <b>Psyon</b> http://www.rawether.net/ <b>--- wonder if they would make a license donation to the project
+<br>[21:05] <b>Psyon</b> http://www.rawether.net/ --- wonder if they would make a license donation to the project
 <br>[21:05] <b>bryce</b> packet filter is what is done now (see pkt_filter.gif)
 <br>[21:06] <b>Psyon</b> I have enought sample drivers
 <br>[21:06] <b>Psyon</b> to make my own
@@ -556,7 +556,7 @@ smapnipss<BR>
 <br>[21:14] <b>bryce</b> collects the response from the real server, and then puts the UDP response back on the PPP line
 <br>[21:14] <b>yakovlev</b> Does it return it to the source port?
 <br>[21:14] <b>bryce</b> Psyon: pcap is a packet filter solution, which will not talk to the host OS kernel, so it's incomplete...
-<br>[21:15] <b>bryce</b> see <b>A HREF="http://bochs.sourceforge.net/networking/pkt_filter.gif"</b>http://bochs.sourceforge.net/networking/pkt_filter.gif<b>/A</b> for a diagram
+<br>[21:15] <b>bryce</b> see http://bochs.sourceforge.net/networking/pkt_filter.gif" for a diagram
 <br>[21:15] <b>bryce</b> greg: why not?
 <br>[21:15] <b>Psyon</b> Why does it need to talk to the host kernel? oh! for host client communications?
 <br>[21:15] <b>bryce</b> uhhhhhh yeah!
@@ -565,7 +565,7 @@ smapnipss<BR>
 <br>[21:16] <b>bryce</b> greg: me too :) but a normal user process can get DNS responses back.  I don't know what port it uses....
 <br>[21:16] <b>bryce</b> you don't need root to look up a DNS number, so there has to be a user-mode solution to that.
 <br>[21:18] <b>bryce</b> Should we at least sum up the "big picture" on networking?
-<br>[21:18] <b>bryce</b> There are 6 or so different proposals listed at <b>A HREF="http://bochs.sourceforge.net/networking/bochs-network-planning.txt"</b>http://bochs.sourceforge.net/networking/bochs-network-planning.txt<b>/A</b> with pros and cons
+<br>[21:18] <b>bryce</b> There are 6 or so different proposals listed at http://bochs.sourceforge.net/networking/bochs-network-planning.txt with pros and cons
 <br>[21:19] <b>bryce</b> these came from conversations with lots of people
 <br>[21:19] <b>yakovlev</b> Okay, what we have people working on:
 <br>[21:19] <b>bryce</b> and all of our talk about slirp and PPP is related to #3 and #4
@@ -594,7 +594,7 @@ smapnipss<BR>
 <br>[21:27] <b>bryce</b> (Peter Grehan, who wrote ne2k code)
 <br>[21:28] <b>divad547</b> is that the method 2 version?
 <br>[21:28] <b>bryce</b> yes
-<br>[21:28] <b>bryce</b> and also diagram <b>A HREF="http://bochs.sourceforge.net/networking/pkt_filter.gif"</b>http://bochs.sourceforge.net/networking/pkt_filter.gif<b>/A</b>
+<br>[21:28] <b>bryce</b> and also diagram http://bochs.sourceforge.net/networking/pkt_filter.gif
 <br>[21:28] <b>yakovlev</b> are 0-1024 reserved in UDP?
 <br>[21:29] <b>divad547</b> I believe so, 0-1023.
 <br>[21:30] <b>bryce</b> I think the quickest (not highest performance) way to get networking in Bochs is by fixing up serial.cc and running PPP/SLIP on both the guest OS and the host OS.
@@ -715,7 +715,7 @@ smapnipss<BR>
 <br>[21:51] <b>yakovlev</b> :)
 <br>[21:51] <b>yakovlev</b> Those were the days.
 <br>[21:51] <b>KWeisshar</b> i don't have a turbo button
-<br>[21:51] <b>bryce</b> we have a feature request <br>[ #418731 ] bochs uses 100% CPU which is related to the too fast problem
+<br>[21:51] <b>bryce</b> we have a feature request [ #418731 ] bochs uses 100% CPU which is related to the too fast problem
 <br>[21:51] <b>eSoul</b> KWeisshar, if you must use bochs, what is the problem that you cant install ms-dos?
 <br>[21:51] <b>bryce</b> one solution proposed to that problem is a
 <br>[21:52] <b>bryce</b> "maximum ips" setting
@@ -845,7 +845,7 @@ smapnipss<BR>
 <br>[22:14] <b>yakovlev</b> and have it set up everything else.
 <br>[22:15] <b>yakovlev</b> right.
 <br>[22:15] <b>bryce</b> yes that would be best
-<br>[22:15] <b>fries</b> yakovlev: I updated bochs earlier this evening so that setparam("<br>[VGA ]") is now setparam("VGA")
+<br>[22:15] <b>fries</b> yakovlev: I updated bochs earlier this evening so that setparam("[VGA ]") is now setparam("VGA")
 <br>[22:15] <b>fries</b> it would be nice to enhance even rename setparam() to register the device class
 <br>[22:15] <b>yakovlev</b> You'd have to use a base class for that.
 <br>[22:15] <b>fries</b> rather than the backwards way its being done now, which is bx_devices pointing to static globals
@@ -967,7 +967,7 @@ smapnipss<BR>
 <br>[22:36] <b>yakovlev</b> You were saying you expected there to be a configuration program... did you expect that to be standalone?
 <br>[22:37] <b>bryce</b> at first, I think it's much easier for the configuration and control UI to be running in the same process, communicating by method calls
 <br>[22:37] <b>yakovlev</b> Well, it's VERY important that you decide that.
-<br>[22:37] <b>bryce</b> Now I think it's time to point to <b>A HREF="http://bochs.sourceforge.net/tmp/ui/"</b>http://bochs.sourceforge.net/tmp/ui/<b>/A</b> which I wrote up before this began
+<br>[22:37] <b>bryce</b> Now I think it's time to point to http://bochs.sourceforge.net/tmp/ui/ which I wrote up before this began
 <br>[22:38] <b>bryce</b> People have said that the UI should be separable, so I've tried very hard to make the UI talk only to a well-defined interface
 <br>[22:38] <b>bryce</b> called siminterface.h
 <br>[22:38] <b>yakovlev</b> If it's not standalone, there are some cool things we can do.
@@ -1107,7 +1107,7 @@ smapnipss<BR>
 <br>[23:15] <b>bryce</b> I don't think it does any harm for bochs to provide some hints about things, and it would help to make the GUIs more uniform, so that they would appear to be the same piece of software no matter which platform you are on.
 <br>[23:16] <b>yakovlev</b> If you really intend for your parm to be visible from the outside, out it in another descriptor area.
 <br>[23:16] <b>bryce</b> did anybody look at my link?
-<br>[23:16] <b>bryce</b> <b>A HREF="http://bochs.sourceforge.net/tmp/ui/"</b>http://bochs.sourceforge.net/tmp/ui/<b>/A</b>
+<br>[23:16] <b>bryce</b> http://bochs.sourceforge.net/tmp/ui/
 <br>[23:17] <b>yakovlev</b> out=put
 <br>[23:18] <b>divad547</b> I did
 <br>[23:18] <b>yakovlev</b> But that's a lot of extra code if you only want to read the parms from .bochsrc
