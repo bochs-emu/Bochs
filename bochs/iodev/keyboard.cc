@@ -1052,6 +1052,7 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   {
     multiple=0;
 	SIM->periodic ();
+	if (BX_CPU_THIS_PTR kill_bochs_request) return 0;
     bx_gui.handle_events();
   }
   retval = BX_KEY_THIS s.kbd_controller.irq1_requested | (BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
