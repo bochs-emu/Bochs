@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.21 2002-03-06 10:55:44 cbothamy Exp $
+// $Id: gui.h,v 1.22 2002-03-06 14:04:42 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -224,31 +224,28 @@ private:
 #define BX_KEY_KP_MULTIPLY  100
 #define BX_KEY_KP_DIVIDE    101
 
-#define BX_KEY_PRINT_SCREEN 102
-#define BX_KEY_SCROLL_LOCK  103
+#define BX_KEY_WIN_L        102
+#define BX_KEY_WIN_R        103
+#define BX_KEY_MENU         104
 
-#define BX_KEY_WIN_L        104
-#define BX_KEY_WIN_R        105
-#define BX_KEY_MENU         106
+#define BX_KEY_ALT_SYSREQ   105
+#define BX_KEY_CTRL_BREAK   106
 
-#define BX_KEY_ALT_SYSREQ   107
-#define BX_KEY_CTRL_BREAK   108
+#define BX_KEY_INT_BACK     107
+#define BX_KEY_INT_FORWARD  108
+#define BX_KEY_INT_STOP     109
+#define BX_KEY_INT_MAIL     110
+#define BX_KEY_INT_SEARCH   111
+#define BX_KEY_INT_FAV      112
+#define BX_KEY_INT_HOME     113
 
-#define BX_KEY_INT_BACK     109
-#define BX_KEY_INT_FORWARD  110
-#define BX_KEY_INT_STOP     111
-#define BX_KEY_INT_MAIL     112
-#define BX_KEY_INT_SEARCH   113
-#define BX_KEY_INT_FAV      114
-#define BX_KEY_INT_HOME     115
+#define BX_KEY_POWER_MYCOMP 114
+#define BX_KEY_POWER_CALC   115
+#define BX_KEY_POWER_SLEEP  116
+#define BX_KEY_POWER_POWER  117
+#define BX_KEY_POWER_WAKE   118
 
-#define BX_KEY_POWER_MYCOMP 116
-#define BX_KEY_POWER_CALC   117
-#define BX_KEY_POWER_SLEEP  118
-#define BX_KEY_POWER_POWER  119
-#define BX_KEY_POWER_WAKE   120
-
-#define BX_KEY_NBKEYS       121
+#define BX_KEY_NBKEYS       119
 // If you add BX_KEYs Please update 
 // - BX_KEY_NBKEYS
 // - the scancodes table in the file iodev/scancodes.cc

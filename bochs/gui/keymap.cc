@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.2 2002-03-06 09:31:55 cbothamy Exp $
+// $Id: keymap.cc,v 1.3 2002-03-06 14:04:42 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  Christophe Bothamy
@@ -64,13 +64,12 @@ char *bx_key_symbol[BX_KEY_NBKEYS] = {
   "BX_KEY_KP_DELETE",      "BX_KEY_KP_5",           "BX_KEY_UP",
   "BX_KEY_DOWN",           "BX_KEY_LEFT",           "BX_KEY_RIGHT",
   "BX_KEY_KP_ENTER",       "BX_KEY_KP_MULTIPLY",    "BX_KEY_KP_DIVIDE",
-  "BX_KEY_PRINT_SCREEN",   "BX_KEY_SCROLL_LOCK",    "BX_KEY_WIN_L",
-  "BX_KEY_WIN_R",          "BX_KEY_MENU",           "BX_KEY_ALT_SYSREQ",
-  "BX_KEY_CTRL_BREAK",     "BX_KEY_INT_BACK",       "BX_KEY_INT_FORWARD",
-  "BX_KEY_INT_STOP",       "BX_KEY_INT_MAIL",       "BX_KEY_INT_SEARCH",
-  "BX_KEY_INT_FAV",        "BX_KEY_INT_HOME",       "BX_KEY_POWER_MYCOMP",
-  "BX_KEY_POWER_CALC",     "BX_KEY_POWER_SLEEP",    "BX_KEY_POWER_POWER",
-  "BX_KEY_POWER_WAKE",
+  "BX_KEY_WIN_L",          "BX_KEY_WIN_R",          "BX_KEY_MENU",           
+  "BX_KEY_ALT_SYSREQ",     "BX_KEY_CTRL_BREAK",     "BX_KEY_INT_BACK",       
+  "BX_KEY_INT_FORWARD",    "BX_KEY_INT_STOP",       "BX_KEY_INT_MAIL",       
+  "BX_KEY_INT_SEARCH",     "BX_KEY_INT_FAV",        "BX_KEY_INT_HOME",       
+  "BX_KEY_POWER_MYCOMP",   "BX_KEY_POWER_CALC",     "BX_KEY_POWER_SLEEP",    
+  "BX_KEY_POWER_POWER",    "BX_KEY_POWER_WAKE",
   };
 
 bx_keymap_c bx_keymap;
@@ -208,8 +207,6 @@ bx_keymap_c::convertStringToBXKey(const char* string)
     // Key is not known
     return BX_KEYMAP_UNKNOWN;
 }
-
-#include <X11/Xlib.h>
 
     Bit32u
 bx_keymap_c::getBXKey(Bit32u key)

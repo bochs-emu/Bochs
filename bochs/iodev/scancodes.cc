@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.cc,v 1.2 2002-03-06 09:19:36 cbothamy Exp $
+// $Id: scancodes.cc,v 1.3 2002-03-06 14:04:42 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  Christophe Bothamy
@@ -487,15 +487,15 @@ scancode scancodes[BX_KEY_NBKEYS][3] =
  },
 
  { // BX_KEY_PRINT ( ibm 124 ) 
-   { "\xE0\x2A\xE0\x37" , "\xE0\xAA\xE0\xB7" },
-   { "\xE0\x12\xE0\x7C" , "\xE0\xF0\x12\xE0\xF0\x7C" },
-   { "\x57" ,             "\xF0\x57" },
+   { "\xE0\x37" , "\xE0\xB7" },
+   { "\xE0\x7C" , "\xE0\xF0\x7C" },
+   { "\x57" ,     "\xF0\x57" },
  },
 
  { // BX_KEY_SCRL_LOCK ( ibm 125 ) 
    { "\x46" , "\xC6" },
    { "\x7E" , "\xF0\x7E" },
-   { "\x5F" , "\\xF0x5F" },
+   { "\x5F" , "\xF0\x5F" },
  },
 
  { // BX_KEY_PAUSE ( ibm 126 ) 
@@ -658,18 +658,6 @@ scancode scancodes[BX_KEY_NBKEYS][3] =
    { "\xE0\x35" , "\xE0\xB5" },
    { "\xE0\x4A" , "\xE0\xF0\x4A" },
    { "\x77" ,     "\xF0\x77" },
- },
-
- { // BX_KEY_PRINT_SCREEN 
-   { "\xE0\x37" , "\xE0\xB7" },
-   { "\xE0\x7C" , "\xE0\xF0\x7C" },
-   { "\x57" ,     "\xF0\x57" },
- },
-
- { // BX_KEY_SCROLL_LOCK 
-   { "\x46" ,   "\xC6" },
-   { "\x7E" ,   "\xF0\x7E" },
-   { "\x5F" ,   "\xF0\x5F" },
  },
 
  { // BX_KEY_WIN_L 
