@@ -187,7 +187,7 @@ Examples:
 This defines the type and characteristics of all attached ata devices:
    type=       type of attached device [disk|cdrom] 
    path=       path of the image
-   mode=       image mode [flat|concat|external|dll|sparse|vmware3|undoable|growing|volatile|z-undoable|z-volatile], only valid for disks
+   mode=       image mode [flat|concat|external|dll|sparse|vmware3|undoable|growing|volatile], only valid for disks
    cylinders=  only valid for disks
    heads=      only valid for disks
    spt=        only valid for disks
@@ -195,6 +195,7 @@ This defines the type and characteristics of all attached ata devices:
    biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
    translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
    model=      string returned by identify device command
+   journal=    optional filename of the redolog for undoable and volatile disks
    
 Point this at a hard disk image file, cdrom iso file,
 or a physical cdrom device.  
@@ -218,8 +219,6 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - undoable : flat file with commitable redolog
   - growing : growing file
   - volatile : flat file with volatile redolog
-  - z-undoable : gziped flat file with commitable redolog
-  - z-volatile : gziped flat file with volatile redolog
 
 The disk translation scheme (implemented in legacy int13 bios functions, and used by
 older operating systems like MS-DOS), can be defined as:
