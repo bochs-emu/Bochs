@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.10 2003-10-24 15:39:57 vruppert Exp $
+// $Id: win32dialog.cc,v 1.11 2004-01-26 04:24:55 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -206,29 +206,20 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param)
 {
   OPENFILENAME ofn;
   int ret;
+  DWORD errcode;
   char filename[MAX_PATH];
   char *title;
+  char errtext[80];
 
   param->get(filename, MAX_PATH);
   title = param->get_label();
   if (!title) title = param->get_name();
+  memset(&ofn, 0, sizeof(OPENFILENAME));
   ofn.lStructSize = sizeof(OPENFILENAME);
   ofn.hwndOwner = hwnd;
-  ofn.hInstance   = NULL;
-  ofn.lpstrCustomFilter = NULL;
-  ofn.nMaxCustFilter = 0;
-  ofn.nFilterIndex = 0;
   ofn.lpstrFile   = filename;
   ofn.nMaxFile    = MAX_PATH;
-  ofn.lpstrFileTitle = NULL;
-  ofn.nMaxFileTitle = 0;
-  ofn.lpstrInitialDir = NULL;
   ofn.lpstrTitle = title;
-  ofn.nFileOffset = 0;
-  ofn.nFileExtension = 0;
-  ofn.lCustData = 0;
-  ofn.lpfnHook = NULL;
-  ofn.lpTemplateName = NULL;
   ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
   if (param->get_options()->get() & bx_param_filename_c::SAVE_FILE_DIALOG) {
     ofn.lpstrFilter = "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0";
@@ -242,7 +233,15 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param)
     ret = GetOpenFileName(&ofn);
   }
   param->set(filename);
-  if (ret == 0) ret = -1;
+  if (ret == 0) {
+    errcode = CommDlgExtendedError();
+    if (errcode == 0) {
+      ret = -1;
+    } else {
+      wsprintf(errtext, "CommDlgExtendedError returns 0x%04x", errcode);
+      MessageBox(hwnd, errtext, "Error", MB_ICONERROR);
+    }
+  }
   return ret;
 }
 
