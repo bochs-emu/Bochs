@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.13 2002-03-27 03:47:45 bdenney Exp $
+// $Id: apic.cc,v 1.14 2002-03-27 16:04:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -32,6 +32,14 @@ bx_generic_apic_c::set_arb_id (int new_arb_id)
 // init is called during RESET and when an INIT message is delivered.
 void bx_generic_apic_c::init ()
 {
+}
+
+void bx_local_apic_c::update_msr_apicbase(Bit32u newbase)
+{
+  Bit64u val64;
+  val64 = newbase << 12;	/* push the APIC base address to bits 12:35 */
+  val64 += cpu->msr.apicbase & 0x0900;	/* don't modify other apicbase or reserved bits */
+  cpu->msr.apicbase = val64;
 }
 
 void bx_generic_apic_c::set_base (Bit32u newbase)
@@ -291,7 +299,8 @@ bx_local_apic_c::init ()
   BX_INFO(("local apic in %s initializing", 
       (cpu && cpu->name) ? cpu->name : "?"));
   // default address for a local APIC, can be moved
-  base_addr = 0xfee00000;
+  base_addr = APIC_BASE_ADDR;
+  update_msr_apicbase(base_addr);
   err_status = 0;
   log_dest = 0;
   dest_format = 0xf;

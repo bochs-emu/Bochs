@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.14 2001-10-03 13:10:37 bdenney Exp $
+// $Id: init.cc,v 1.15 2002-03-27 16:04:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ BX_CPU_C::BX_CPU_C()
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.14 2001-10-03 13:10:37 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.15 2002-03-27 16:04:05 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -554,7 +554,11 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr4 = 0;
 #endif
 
-
+/* initialise MSR registers to defaults */
+#if BX_CPU_LEVEL >= 5
+  /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
+  BX_CPU_THIS_PTR msr.apicbase = (APIC_BASE_ADDR << 12) + 0x900;
+#endif
 
   BX_CPU_THIS_PTR EXT = 0;
   //BX_INTR = 0;
@@ -593,9 +597,13 @@ BX_CPU_C::reset(unsigned source)
   if (BX_BOOTSTRAP_PROCESSOR == apic_id)
   {
     // boot normally
+    BX_CPU_THIS_PTR bsp = 1;
+    BX_CPU_THIS_PTR msr.apicbase |= 0x0100;	/* set bit 8 BSP */
     BX_INFO(("CPU[%d] is the bootstrap processor", apic_id));
   } else {
     // it's an application processor, halt until IPI is heard.
+    BX_CPU_THIS_PTR bsp = 0;
+    BX_CPU_THIS_PTR msr.apicbase &= ~0x0100;	/* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
     debug_trap |= 0x80000000;
     async_event = 1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.17 2001-11-18 16:32:40 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.18 2002-03-27 16:04:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1147,23 +1147,143 @@ BX_CPU_C::RDTSC(BxInstruction_t *i)
 BX_CPU_C::RDMSR(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_ERROR(("RDMSR: not implemented yet"));
-  UndefinedOpcode(i);
+	invalidate_prefetch_q();
+	
+	if (v8086_mode()) {
+		BX_INFO(("RDMSR: Invalid whilst in virtual 8086 mode"));
+		goto do_exception;
+	}
+
+	if (CPL!= 0) {
+		BX_INFO(("RDMSR: CPL!= 0"));
+		goto do_exception;
+	}
+
+	/* We have the requested MSR register in ECX */
+	switch(ECX) {
+#if BX_CPU_LEVEL == 5
+		/* The following registers are defined for Pentium only */
+		case BX_MSR_P5_MC_ADDR:
+		case BX_MSR_MC_TYPE:
+			/* TODO */
+			return;
+
+		case BX_MSR_TSC:
+			RDTSC(i);
+			return;
+
+		case BX_MSR_CESR:
+			/* TODO */
+			return;
 #else
-  UndefinedOpcode(i);
-#endif
+		/* These are noops on i686... */
+		case BX_MSR_P5_MC_ADDR:
+		case BX_MSR_MC_TYPE:
+			/* do nothing */
+			return;
+
+		case BX_MSR_TSC:
+			RDTSC(i);
+			return;
+
+		/* ... And these cause an exception on i686 */
+		case BX_MSR_CESR:
+		case BX_MSR_CTR0:
+		case BX_MSR_CTR1:
+			goto do_exception;
+#endif	/* BX_CPU_LEVEL == 5 */
+
+		/* MSR_APICBASE
+		   0:7		Reserved
+		   8		This is set if its the BSP
+		   9:10		Reserved
+		   11		APIC Global Enable bit (1=enabled 0=disabled)
+		   12:35	APIC Base Address
+		   36:63	Reserved
+		*/
+		case BX_MSR_APICBASE:
+			/* we return low 32 bits in EAX, and high in EDX */
+			EAX = BX_CPU_THIS_PTR msr.apicbase & 0xff;
+			EDX = BX_CPU_THIS_PTR msr.apicbase >> 32;
+			BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", EDX, EAX));
+			return;
+			
+		default:
+			BX_INFO(("RDMSR: Unknown register!"));
+			goto do_exception;
+			
+	}
+#endif	/* BX_CPU_LEVEL >= 5 */
+
+do_exception:
+	exception(BX_GP_EXCEPTION, 0, 0);
 }
 
   void
 BX_CPU_C::WRMSR(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 5
-  invalidate_prefetch_q();
+	invalidate_prefetch_q();
 
-  BX_PANIC(( "WRMSR: not implemented yet"));
+	if (v8086_mode()) {
+		BX_INFO(("WRMSR: Invalid whilst in virtual 8086 mode"));
+		goto do_exception;
+	}
+
+	if (CPL!= 0) {
+		BX_INFO(("WDMSR: CPL!= 0"));
+		goto do_exception;
+	}
+
+	/* ECX has the MSR to write to */
+	switch(ECX) {
+#if BX_CPU_LEVEL == 5
+		/* The following registers are defined for Pentium only */
+		case BX_MSR_P5_MC_ADDR:
+		case BX_MSR_MC_TYPE:
+		case BX_MSR_TSC:
+		case BX_MSR_CESR:
+			/* TODO */
+			return;
 #else
-  UndefinedOpcode(i);
-#endif
+		/* These are noops on i686... */
+		case BX_MSR_P5_MC_ADDR:
+		case BX_MSR_MC_TYPE:
+		case BX_MSR_TSC:
+			/* do nothing */
+			return;
+
+		/* ... And these cause an exception on i686 */
+		case BX_MSR_CESR:
+		case BX_MSR_CTR0:
+		case BX_MSR_CTR1:
+			goto do_exception;
+#endif	/* BX_CPU_LEVEL == 5 */
+
+		/* MSR_APICBASE
+		   0:7		Reserved
+		   8		This is set if its the BSP
+		   9:10		Reserved
+		   11		APIC Global Enable bit (1=enabled 0=disabled)
+		   12:35	APIC Base Address
+		   36:63	Reserved
+		*/
+
+		case BX_MSR_APICBASE:
+			BX_CPU_THIS_PTR msr.apicbase = (EDX << 32) + EAX;
+			BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", EDX, EAX));
+			return;
+			
+		default:
+			BX_INFO(("WRMSR: Unknown register!"));
+			goto do_exception;
+			
+	}
+#endif	/* BX_CPU_LEVEL >= 5 */
+
+do_exception:
+	exception(BX_GP_EXCEPTION, 0, 0);
+
 }
 
 #if BX_X86_DEBUGGER
