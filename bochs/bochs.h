@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.126 2003-08-25 16:46:18 vruppert Exp $
+// $Id: bochs.h,v 1.127 2003-08-28 19:25:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -232,15 +232,7 @@ int bx_begin_simulation (int argc, char *argv[]);
 #  define BX_DBG_UCMEM_REPORT(addr, size, op, val)
 #endif  // #if BX_DEBUGGER
 
-extern Bit8u DTPageDirty[];
-#if BX_DYNAMIC_TRANSLATION
-#  define BX_DYN_DIRTY_PAGE(page) DTPageDirty[page] = 1;
-#else
-#  define BX_DYN_DIRTY_PAGE(page)
-#endif
-
 #define MAGIC_LOGNUM 0x12345678
-
 
 typedef class BOCHSAPI logfunctions {
 	char *prefix;
@@ -428,12 +420,6 @@ int bx_gdbstub_check(unsigned int eip);
 #if BX_DISASM
 #  include "disasm/disasm.h"
 #endif
-
-#if BX_DYNAMIC_TRANSLATION
-#  include "dynamic/dynamic.h"
-#endif
-
-
 
 typedef struct {
   bx_bool floppy;

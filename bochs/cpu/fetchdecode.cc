@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.56 2003-08-15 13:08:23 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.57 2003-08-28 19:25:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,6 @@
 ///////////////////////////
 
 
-
 // sign extended to osize:
 //   6a push ib
 //   6b imul gvevib
@@ -64,7 +63,6 @@
 // maybe move 16bit only i's like  MOV_EwSw, MOV_SwEw
 // to 32 bit modules.
 
-// use 0F as a prefix too?
 
 /* *********** */
 // LOCK PREFIX //
@@ -84,22 +82,6 @@
  */
 
 void BxResolveError(bxInstruction_c *);
-
-#if BX_DYNAMIC_TRANSLATION
-// For 16-bit address mode, this matrix describes the registers
-// used to formulate the offset, indexed by the RM field.
-// This info is needed by the dynamic translation code for dataflow.
-static unsigned BxMemRegsUsed16[8] = {
-  (1<<3) | (1<<6), // BX + SI
-  (1<<3) | (1<<7), // BX + DI
-  (1<<5) | (1<<6), // BP + SI
-  (1<<5) | (1<<7), // BP + DI
-  (1<<6),          // SI
-  (1<<7),          // DI
-  (1<<5),          // BP
-  (1<<3)           // BX
-  };
-#endif
 
 static BxExecutePtr_tR BxResolve16Mod0[8] = {
   &BX_CPU_C::Resolve16Mod0Rm0,
@@ -189,43 +171,43 @@ static BxOpcodeInfo_t opcodesADD_EdId[2] = {
   };
 
 static BxOpcodeInfo_t opcodesADD_GwEw[2] = {
-  { 0,          &BX_CPU_C::ADD_GwEEw },
-  { 0,          &BX_CPU_C::ADD_GwEGw }
+  { 0, &BX_CPU_C::ADD_GwEEw },
+  { 0, &BX_CPU_C::ADD_GwEGw }
   };
 
 static BxOpcodeInfo_t opcodesADD_GdEd[2] = {
-  { 0,          &BX_CPU_C::ADD_GdEEd },
-  { 0,          &BX_CPU_C::ADD_GdEGd }
+  { 0, &BX_CPU_C::ADD_GdEEd },
+  { 0, &BX_CPU_C::ADD_GdEGd }
   };
 
 static BxOpcodeInfo_t opcodesMOV_GbEb[2] = {
-  { 0,          &BX_CPU_C::MOV_GbEEb },
-  { 0,          &BX_CPU_C::MOV_GbEGb }
+  { 0, &BX_CPU_C::MOV_GbEEb },
+  { 0, &BX_CPU_C::MOV_GbEGb }
   };
 
 static BxOpcodeInfo_t opcodesMOV_GwEw[2] = {
-  { 0,          &BX_CPU_C::MOV_GwEEw },
-  { 0,          &BX_CPU_C::MOV_GwEGw }
+  { 0, &BX_CPU_C::MOV_GwEEw },
+  { 0, &BX_CPU_C::MOV_GwEGw }
   };
 
 static BxOpcodeInfo_t opcodesMOV_GdEd[2] = {
-  { 0,          &BX_CPU_C::MOV_GdEEd },
-  { 0,          &BX_CPU_C::MOV_GdEGd }
+  { 0, &BX_CPU_C::MOV_GdEEd },
+  { 0, &BX_CPU_C::MOV_GdEGd }
   };
 
 static BxOpcodeInfo_t opcodesMOV_EbGb[2] = {
-  { 0,          &BX_CPU_C::MOV_EEbGb },
-  { 0,          &BX_CPU_C::MOV_EGbGb }
+  { 0, &BX_CPU_C::MOV_EEbGb },
+  { 0, &BX_CPU_C::MOV_EGbGb }
   };
 
 static BxOpcodeInfo_t opcodesMOV_EwGw[2] = {
-  { 0,          &BX_CPU_C::MOV_EEwGw },
-  { 0,          &BX_CPU_C::MOV_EGwGw }
+  { 0, &BX_CPU_C::MOV_EEwGw },
+  { 0, &BX_CPU_C::MOV_EGwGw }
   };
 
 static BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
-  { 0,          &BX_CPU_C::MOV_EEdGd },
-  { 0,          &BX_CPU_C::MOV_EGdGd }
+  { 0, &BX_CPU_C::MOV_EEdGd },
+  { 0, &BX_CPU_C::MOV_EGdGd }
   };
 
 
@@ -1549,9 +1531,6 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F FF */  { 0, &BX_CPU_C::BxError }
   };
 
-
-
-
   unsigned
 BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
                       unsigned remain)
@@ -1563,6 +1542,7 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
   unsigned imm_mode, offset;
   unsigned rm, mod=0, nnn=0;
   unsigned sse_prefix;
+
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
@@ -1589,29 +1569,7 @@ another_byte:
   attr = BxOpcodeInfo[b1+offset].Attr;
   instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
 
-  if ( !(attr & BxAnother) ) {
-    // Opcode does not require a MODRM byte.
-    // Note that a 2-byte opcode (0F XX) will jump to before
-    // the if() above after fetching the 2nd byte, so this path is
-    // taken in all cases if a modrm byte is NOT required.
-    instruction->execute = BxOpcodeInfo[b1+offset].ExecutePtr;
-    instruction->IxForm.opcodeReg = b1 & 7;
-#if BX_DYNAMIC_TRANSLATION
-    instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
-    instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
-#endif
-    // Simple instruction, nothing left to do.
-    if (attr == 0) {
-      if (lock) {
-        BX_INFO(("LOCK prefix unallowed (op1=0x%x, attr=0x%x, mod=0x%x, nnn=%u)", b1, attr, mod, nnn));
-        UndefinedOpcode(instruction);
-      }
-      instruction->setB1(b1);
-      instruction->setILen(ilen);
-      return(1);
-    }
-  }
-  else {
+  if (attr & BxAnother) {
     if (attr & BxPrefix) {
       switch (b1) {
         case 0x66: // OpSize
@@ -1713,10 +1671,11 @@ another_byte:
           return(0);
 
         default:
-BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
+          BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
           return(0);
         }
       }
+
     // opcode requires another byte
     if (ilen < remain) {
       ilen++;
@@ -1747,14 +1706,8 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
     if (instruction->as32L()) {
       // 32-bit addressing modes; note that mod==11b handled above
       if (rm != 4) { // no s-i-b byte
-#if BX_DYNAMIC_TRANSLATION
-        instruction->DTMemRegsUsed = 1<<rm; // except for mod=00b rm=100b
-#endif
         if (mod == 0x00) { // mod == 00b
           instruction->ResolveModrm = BxResolve32Mod0[rm];
-#if BX_DYNAMIC_TRANSLATION
-          instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod0[rm];
-#endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
@@ -1762,9 +1715,6 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
               iptr += 4;
               ilen += 4;
-#if BX_DYNAMIC_TRANSLATION
-              instruction->DTMemRegsUsed = 0;
-#endif
               goto modrm_done;
               }
             else return(0);
@@ -1774,9 +1724,6 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
           }
         if (mod == 0x40) { // mod == 01b
           instruction->ResolveModrm = BxResolve32Mod1or2[rm];
-#if BX_DYNAMIC_TRANSLATION
-          instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2[rm];
-#endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01_rm32[rm]);
 get_8bit_displ:
@@ -1790,9 +1737,6 @@ get_8bit_displ:
           }
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve32Mod1or2[rm];
-#if BX_DYNAMIC_TRANSLATION
-        instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2[rm];
-#endif
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm32[rm]);
 get_32bit_displ:
@@ -1819,46 +1763,23 @@ get_32bit_displ:
         instruction->modRMForm.modRMData |= (base<<12);
         instruction->modRMForm.modRMData |= (index<<16);
         instruction->modRMForm.modRMData |= (scale<<4);
-#if BX_DYNAMIC_TRANSLATION
-        if (index == 0x04) // 100b
-          instruction->DTMemRegsUsed = 0;
-        else
-          instruction->DTMemRegsUsed = 1<<index;
-#endif
         if (mod == 0x00) { // mod==00b, rm==4
           instruction->ResolveModrm = BxResolve32Mod0Base[base];
-#if BX_DYNAMIC_TRANSLATION
-          instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod0Base[base];
-#endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
-          if (base == 0x05) {
+          if (base == 0x05)
             goto get_32bit_displ;
-            }
           // mod==00b, rm==4, base!=5
-#if BX_DYNAMIC_TRANSLATION
-          instruction->DTMemRegsUsed |= 1<<base;
-#endif
           goto modrm_done;
           }
-#if BX_DYNAMIC_TRANSLATION
-        // for remaining 32bit cases
-        instruction->DTMemRegsUsed |= 1<<base;
-#endif
         if (mod == 0x40) { // mod==01b, rm==4
           instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
-#if BX_DYNAMIC_TRANSLATION
-          instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2Base[base];
-#endif
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
           }
         // (mod == 0x80),  mod==10b, rm==4
         instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
-#if BX_DYNAMIC_TRANSLATION
-        instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2Base[base];
-#endif
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
         goto get_32bit_displ;
@@ -1868,14 +1789,8 @@ get_32bit_displ:
       // 16-bit addressing modes, mod==11b handled above
       if (mod == 0x40) { // mod == 01b
         instruction->ResolveModrm = BxResolve16Mod1or2[rm];
-#if BX_DYNAMIC_TRANSLATION
-        instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve16Mod1or2[rm];
-#endif
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01_rm16[rm]);
-#if BX_DYNAMIC_TRANSLATION
-        instruction->DTMemRegsUsed = BxMemRegsUsed16[rm];
-#endif
         if (ilen < remain) {
           // 8 sign extended to 16
           instruction->modRMForm.displ16u = (Bit8s) *iptr++;
@@ -1886,14 +1801,8 @@ get_32bit_displ:
         }
       if (mod == 0x80) { // mod == 10b
         instruction->ResolveModrm = BxResolve16Mod1or2[rm];
-#if BX_DYNAMIC_TRANSLATION
-        instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve16Mod1or2[rm];
-#endif
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm16[rm]);
-#if BX_DYNAMIC_TRANSLATION
-        instruction->DTMemRegsUsed = BxMemRegsUsed16[rm];
-#endif
         if ((ilen+1) < remain) {
           instruction->modRMForm.displ16u = FetchWORD(iptr);
           iptr += 2;
@@ -1904,9 +1813,6 @@ get_32bit_displ:
         }
       // mod must be 00b at this point
       instruction->ResolveModrm = BxResolve16Mod0[rm];
-#if BX_DYNAMIC_TRANSLATION
-      instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve16Mod0[rm];
-#endif
       if (BX_NULL_SEG_REG(instruction->seg()))
         instruction->setSeg(BX_CPU_THIS_PTR sreg_mod00_rm16[rm]);
       if (rm == 0x06) {
@@ -1919,76 +1825,59 @@ get_32bit_displ:
         else return(0);
         }
       // mod=00b rm!=6
-#if BX_DYNAMIC_TRANSLATION
-      instruction->DTMemRegsUsed = BxMemRegsUsed16[rm];
-#endif
       }
 
 modrm_done:
-    if (attr & BxGroupN) {
-      BxOpcodeInfo_t *OpcodeInfoPtr = BxOpcodeInfo[b1+offset].AnotherArray;
-      // get additional attributes from group table
-      attr |= OpcodeInfoPtr[nnn].Attr;
-      instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
-#if BX_DYNAMIC_TRANSLATION
-      instruction->DTAttr = 0; // for now
-#endif
-      /* For SSE opcodes, look into another 4 entries table 
-                        with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3 */
-      if (attr & BxPrefixSSE) {
-        int op = sse_prefix_index[sse_prefix];
-        if(op < 0) BX_PANIC(("fetchdecode: SSE opcode with two or more prefixes"));
-        else {
-           OpcodeInfoPtr = OpcodeInfoPtr[nnn].AnotherArray;
-           instruction->execute = OpcodeInfoPtr[op].ExecutePtr;
-           attr |= OpcodeInfoPtr[op].Attr; 
-        }
-      }
-      // For high frequency opcodes, two variants of the instruction are
-      // implemented; one for the mod=11b case (Reg-Reg), and one for
-      // the other cases (Reg-Mem).  If this is one of those cases,
-      // we need to dereference to get to the execute pointer.
-      else {	// ! BxPrefixSSE
-        if (attr & BxSplitMod11b) {
-          OpcodeInfoPtr = OpcodeInfoPtr[nnn].AnotherArray;
-          instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
-          attr |= OpcodeInfoPtr[mod==0xc0].Attr;
-        }
-        else {
-          instruction->execute = OpcodeInfoPtr[nnn].ExecutePtr;
-          attr |= OpcodeInfoPtr[nnn].Attr;
-        }
-      }
+
+    // Resolve ExecutePtr and additional opcode Attr
+    BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo[b1+offset]);
+    while(attr & BxGroupX) 
+    {
+       Bit32u Group = attr & BxGroupX;
+       attr &= ~BxGroupX;
+      
+       switch(Group) {
+         case BxGroupN:
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+             break;
+         case BxPrefixSSE:
+         {
+             /* For SSE opcodes, look into another 4 entries table 
+                      with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
+             int op = sse_prefix_index[sse_prefix];
+             if (op < 0) {
+                 BX_INFO(("fetchdecode: SSE opcode with two or more prefixes"));
+                 UndefinedOpcode(instruction);
+             }
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[op]);
+             break;
+         }
+         case BxSplitMod11b:
+             /* For high frequency opcodes, two variants of the instruction are
+              * implemented; one for the mod=11b case (Reg-Reg), and one for
+              * the other cases (Reg-Mem).  If this is one of those cases,
+              * we need to dereference to get to the execute pointer.
+              */
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[mod==0xc0]);
+             break;
+         default:
+             BX_PANIC(("fetchdecode: Unknown opcode group"));
+       }
+
+       /* get additional attributes from group table */
+       attr |= OpcodeInfoPtr->Attr;
     }
-    else {
-#if BX_DYNAMIC_TRANSLATION
-      instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
-      instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
-#endif
-      /* For SSE opcodes, look into another 4 entries table 
-                        with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3 */
-      if (attr & BxPrefixSSE) {
-        int op = sse_prefix_index[sse_prefix];
-        if(op < 0) BX_PANIC(("fetchdecode: SSE opcode with two or more prefixes"));
-        else {
-           BxOpcodeInfo_t *OpcodeInfoPtr = BxOpcodeInfo[b1+offset].AnotherArray;
-           instruction->execute = OpcodeInfoPtr[op].ExecutePtr;
-           attr |= OpcodeInfoPtr[op].Attr;
-        }
-      }
-      // (See note immediately above for comment)
-      else {
-        if (attr & BxSplitMod11b) {
-          BxOpcodeInfo_t *OpcodeInfoPtr = BxOpcodeInfo[b1+offset].AnotherArray;
-          instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
-          attr |= OpcodeInfoPtr[mod==0xc0].Attr;
-        }
-        else {
-          instruction->execute = BxOpcodeInfo[b1+offset].ExecutePtr;
-          attr |= BxOpcodeInfo[b1+offset].Attr;
-        }
-      }
-    }
+
+    instruction->execute = OpcodeInfoPtr->ExecutePtr;
+    instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
+  }
+  else {
+    // Opcode does not require a MODRM byte.
+    // Note that a 2-byte opcode (0F XX) will jump to before
+    // the if() above after fetching the 2nd byte, so this path is
+    // taken in all cases if a modrm byte is NOT required.
+    instruction->execute = BxOpcodeInfo[b1+offset].ExecutePtr;
+    instruction->IxForm.opcodeReg = b1 & 7;
   }
 
   if (lock) { // lock prefix invalid opcode
@@ -2000,7 +1889,6 @@ modrm_done:
   }
 
   imm_mode = attr & BxImmediate;
-
   if (imm_mode) {
     switch (imm_mode) {
       case BxImmediate_Ib:
@@ -2113,7 +2001,7 @@ modrm_done:
           }
         break;
       default:
-BX_INFO(("b1 was %x", b1));
+        BX_INFO(("b1 was %x", b1));
         BX_PANIC(("fetchdecode: imm_mode = %u", imm_mode));
       }
     }

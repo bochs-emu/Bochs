@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.143 2003-08-17 18:55:16 sshwarts Exp $
+// $Id: cpu.h,v 1.144 2003-08-28 19:25:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1182,10 +1182,6 @@ class BX_MEM_C;
 #include "cpu/xmm.h"
 #endif
 
-#if BX_DYNAMIC_TRANSLATION
-typedef void (*BxDTShim_t)(void);
-#endif
-
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
 public: // for now...
@@ -1236,30 +1232,8 @@ union {
   // each fetch/execute cycle.
   bx_address prev_eip;
 #endif
-  // A few pointer to functions for use by the dynamic translation
-  // code.  Keep them close to the gen_reg declaration, so I can
-  // use an 8bit offset to access them.
-
-#if BX_DYNAMIC_TRANSLATION
-  BxDTShim_t DTWrite8vShim;
-  BxDTShim_t DTWrite16vShim;
-  BxDTShim_t DTWrite32vShim;
-  BxDTShim_t DTRead8vShim;
-  BxDTShim_t DTRead16vShim;
-  BxDTShim_t DTRead32vShim;
-  BxDTShim_t DTReadRMW8vShim;
-  BxDTShim_t DTReadRMW16vShim;
-  BxDTShim_t DTReadRMW32vShim;
-  BxDTShim_t DTWriteRMW8vShim;
-  BxDTShim_t DTWriteRMW16vShim;
-  BxDTShim_t DTWriteRMW32vShim;
-  BxDTShim_t DTSetFlagsOSZAPCPtr;
-  BxDTShim_t DTIndBrHandler;
-  BxDTShim_t DTDirBrHandler;
-#endif
-
   // status and control flags register set
-  Bit32u   lf_flags_status;
+  Bit32u lf_flags_status;
   bx_flags_reg_t eflags;
 
   bx_lf_flags_entry oszapc;
@@ -3130,14 +3104,20 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 #define BxImmediate_Iq      0x000A // 64 bit override
 #endif
 
-#define BxPrefix          0x0010 // bit  4
-#define BxAnother         0x0020 // bit  5
-#define BxSplitMod11b     0x0040 // bit  6
-#define BxPrefixSSE       0x0080 // bit  7
-#define BxLockable        0x0200 // bit  9
-#define BxRepeatable      0x0800 // bit 11 (pass through to metaInfo field)
-#define BxRepeatableZF    0x1000 // bit 12 (pass through to metaInfo field)
-#define BxGroupN          0x0100 // bits 8
+// Lookup for opcode and attributes in another opcode tables
+// Totally 7 opcode groups supported
+#define BxGroupX            0x0070 // bits 6..4: opcode groups definition
+#define BxGroupN            0x0010 // Group encoding: 001
+#define BxPrefixSSE         0x0020 // Group encoding: 010
+#define BxSplitMod11b       0x0030 // Group encoding: 011
+
+#define BxPrefix            0x0080 // bit  7
+#define BxAnother           0x0100 // bit  8
+#define BxLockable          0x0200 // bit  9
+
+#define BxRepeatable        0x0800 // bit 11 (pass through to metaInfo field)
+#define BxRepeatableZF      0x1000 // bit 12 (pass through to metaInfo field)
+
 #define BxGroup1          BxGroupN
 #define BxGroup2          BxGroupN
 #define BxGroup3          BxGroupN
@@ -3156,10 +3136,10 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 
 #if BX_DEBUGGER
 typedef enum _show_flags {
-      Flag_call = 0x1,
-      Flag_ret = 0x2,
-      Flag_int = 0x4,
-      Flag_iret = 0x8,
+      Flag_call   = 0x1,
+      Flag_ret    = 0x2,
+      Flag_int    = 0x4,
+      Flag_iret   = 0x8,
       Flag_intsig = 0x10
 } show_flags_t;
 #endif
