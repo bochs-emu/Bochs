@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.20 2002-10-21 22:11:11 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.21 2002-10-21 23:40:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ bx_devices_c::bx_devices_c(void)
   pluginCmosDevice = &stubCmos;
   pluginDmaDevice = &stubDma;
   pluginPicDevice = &stubPic;
-  pluginVgaDevice = NULL;
+  pluginVgaDevice = &stubVga;
   pluginFloppyDevice = &stubFloppy;
 }
 
@@ -82,7 +82,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.20 2002-10-21 22:11:11 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.21 2002-10-21 23:40:45 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */

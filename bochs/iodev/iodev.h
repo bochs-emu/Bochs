@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.19 2002-10-21 22:11:12 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.20 2002-10-21 23:40:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -222,6 +222,30 @@ class bx_pic_stub_c : public bx_devmodel_c {
   }
 };
 
+class bx_vga_stub_c : public bx_devmodel_c {
+  public:
+  virtual void redraw_area(unsigned x0, unsigned y0, 
+                           unsigned width, unsigned height) {
+    STUBFUNC(vga, redraw_area);  
+  }
+  virtual Bit8u mem_read(Bit32u addr) {
+    STUBFUNC(vga, mem_read);  return 0;
+  }
+  virtual void mem_write(Bit32u addr, Bit8u value) {
+    STUBFUNC(vga, mem_write);
+  }
+  virtual void get_text_snapshot(Bit8u **text_snapshot, 
+                                 unsigned *txHeight, unsigned *txWidth) {
+    STUBFUNC(vga, get_text_snapshot); 
+  }
+  virtual void trigger_timer(void *this_ptr) {
+    STUBFUNC(vga, trigger_timer); 
+  }
+  virtual void set_update_interval (unsigned interval) {
+    STUBFUNC(vga, set_update_interval); 
+  }
+};
+
 class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -267,7 +291,7 @@ public:
   bx_cmos_stub_c *pluginCmosDevice;
   bx_dma_stub_c *pluginDmaDevice;
   bx_pic_stub_c *pluginPicDevice;
-  bx_devmodel_c *pluginVgaDevice;
+  bx_vga_stub_c *pluginVgaDevice;
   bx_floppy_stub_c *pluginFloppyDevice;
 
   // stub classes that the pointers (above) can point to until a plugin is
@@ -278,6 +302,7 @@ public:
   bx_dma_stub_c  stubDma;
   bx_pic_stub_c  stubPic;
   bx_floppy_stub_c  stubFloppy;
+  bx_vga_stub_c  stubVga;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle

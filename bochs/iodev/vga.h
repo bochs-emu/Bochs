@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.17.4.3 2002-10-18 19:37:10 bdenney Exp $
+// $Id: vga.h,v 1.17.4.4 2002-10-21 23:40:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -92,25 +92,30 @@
 #endif
 
 
-class bx_vga_c : public bx_devmodel_c {
+class bx_vga_c : public bx_vga_stub_c {
 public:
 
   bx_vga_c(void);
   ~bx_vga_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
-  BX_VGA_SMF Bit8u  mem_read(Bit32u addr);
+  virtual Bit8u  mem_read(Bit32u addr);
   // Note: either leave value of type Bit8u, or mask it when
   //       used to 8 bits, in memory.cc
-  BX_VGA_SMF void   mem_write(Bit32u addr, Bit8u value);
+  virtual void   mem_write(Bit32u addr, Bit8u value);
+  virtual void   trigger_timer(void *this_ptr);
 
 #if BX_SUPPORT_VBE 
   BX_VGA_SMF Bit8u  vbe_mem_read(Bit32u addr);
   BX_VGA_SMF void   vbe_mem_write(Bit32u addr, Bit8u value);  
 #endif
   
-  BX_VGA_SMF void   redraw_area(unsigned x0, unsigned y0,
-                                unsigned width, unsigned height);
+  virtual void   redraw_area(unsigned x0, unsigned y0,
+                             unsigned width, unsigned height);
+
+  virtual void   set_update_interval (unsigned interval);
+  virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
+                                   unsigned *txWidth);
 
 private:
 
@@ -268,9 +273,7 @@ private:
   public:
   static void   timer_handler(void *);
   BX_VGA_SMF void   timer(void);
-  BX_VGA_SMF void set_update_interval (unsigned interval);
-  BX_VGA_SMF void  get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
-                                                            unsigned *txWidth);
+
   private:
   BX_VGA_SMF void   update(void);
   BX_VGA_SMF void   dump_status(void);

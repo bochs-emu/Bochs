@@ -26,23 +26,6 @@
 #define PLUGIN_FINI  "plugin_fini"
 
 
-Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len) = 0;
-void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len) = 0;
-Bit32u   (* pluginHDGetDeviceHandle)(Bit8u, Bit8u) = 0;
-Bit32u   (* pluginHDGetFirstCDHandle)(void) = 0;
-unsigned (* pluginHDGetCDMediaStatus)(Bit32u) = 0;
-unsigned (* pluginHDSetCDMediaStatus)(Bit32u, unsigned) = 0;
-void     (* pluginHDCloseHarddrive) (void) = 0;
-
-void     (* pluginVGARedrawArea)(unsigned x0, unsigned y0,
-                unsigned width, unsigned height) = 0;
-Bit8u    (* pluginVGAMemRead)(Bit32u addr) = 0;
-void     (* pluginVGAMemWrite)(Bit32u addr, Bit8u value) = 0;
-void     (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot, 
-		     unsigned *txHeight, unsigned *txWidth) = 0;
-void     (* pluginVGARefresh)(void *) = 0;
-void     (* pluginVGASetUpdateInterval)(unsigned) = 0;
-
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
 
@@ -77,40 +60,6 @@ plugin_t *current_plugin_context = NULL;
 /************************************************************************/
 /* Builtins declarations                                                */
 /************************************************************************/
-
-  static void
-builtinVGARedrawArea(unsigned x0, unsigned y0,
-                     unsigned width, unsigned height)
-{
-  pluginlog->panic("builtinVGARedrawArea called, no VGA plugin loaded?");
-}
-
-Bit8u builtinVGAMemRead(Bit32u addr)
-{
-  pluginlog->panic("builtinVGAMemRead called, no VGA plugin loaded?");
-  return 0;
-}
-
-void  builtinVGAMemWrite(Bit32u addr, Bit8u value) 
-{
-  pluginlog->panic("builtinVGAMemWrite called, no VGA plugin loaded?");
-}
-
-void builtinVGAGetTextSnapshot(Bit8u **text_snapshot, 
-		     unsigned *txHeight, unsigned *txWidth) 
-{
-  pluginlog->panic("builtinVGAGetTextSnapshot called, no VGA plugin loaded?");
-}
-
-void builtinVGARefresh(void *v)
-{
-  pluginlog->panic("builtinVGARefresh called, no VGA plugin loaded?");
-}
-
-void builtinVGASetUpdateInterval(unsigned val)
-{
-  pluginlog->panic("builtinVGASetUpdateInterval called, no VGA plugin loaded?");
-}
 
   static void  
 builtinRegisterIRQ(unsigned irq, const char* name) 
@@ -418,13 +367,6 @@ plugin_abort (void)
   void
 plugin_startup(void)
 {
-  pluginVGARedrawArea  = builtinVGARedrawArea;
-  pluginVGAMemRead     = builtinVGAMemRead;
-  pluginVGAMemWrite    = builtinVGAMemWrite;
-  pluginVGAGetTextSnapshot = builtinVGAGetTextSnapshot;
-  pluginVGARefresh     = builtinVGARefresh;
-  pluginVGASetUpdateInterval = builtinVGASetUpdateInterval;
-
   pluginRegisterIRQ = builtinRegisterIRQ;
   pluginUnregisterIRQ = builtinUnregisterIRQ;
 

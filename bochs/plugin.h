@@ -58,18 +58,6 @@ extern "C" {
 #define BX_REGISTER_IRQ(b,c) pluginRegisterIRQ(b,c)
 #define BX_UNREGISTER_IRQ(b) pluginUnregisterIRQ(b)
 
-#define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
-#define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
-#define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
-#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) pluginVGAGetTextSnapshot(rawsnap, height, width)
-#define BX_VGA_REFRESH() pluginVGARefresh(bx_devices.pluginVgaDevice)
-#define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
-
-
-#define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
-#define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
-#define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
-
 #else
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
@@ -83,17 +71,6 @@ extern "C" {
 #define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(b,c,d,e) bx_devices.register_default_io_write_handler(b,c,d)
 #define BX_REGISTER_IRQ(b,c) bx_devices.register_irq(b,c)
 #define BX_UNREGISTER_IRQ(b) bx_devices.unregister_irq(b)
-
-#define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
-#define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
-#define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
-#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) pluginVGAGetTextSnapshot(rawsnap, height, width)
-#define BX_VGA_REFRESH() pluginVGARefresh(bx_devices.pluginVgaDevice)
-#define BX_VGA_SET_UPDATE_INTERVAL(val) pluginVGASetUpdateInterval(val)
-
-#define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
-#define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
-#define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
 
 #endif // #if BX_PLUGINS
 
@@ -138,6 +115,10 @@ extern "C" {
 #define BX_HD_CLOSE_HARDDRIVE()  bx_devices.pluginHardDrive->close_harddrive()
 #define BX_HARD_DRIVE_PRESENT() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
 
+#define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
+#define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
+#define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
+
 ///////// FLOPPY macros
 #define BX_FLOPPY_GET_MEDIA_STATUS(drive) bx_devices.pluginFloppyDevice->get_media_status(drive)
 #define BX_FLOPPY_SET_MEDIA_STATUS(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
@@ -161,6 +142,18 @@ extern "C" {
 #define BX_PIC_LOWER_IRQ(b)  (bx_devices.pluginPicDevice->lower_irq(b))
 #define BX_PIC_RAISE_IRQ(b)  (bx_devices.pluginPicDevice->raise_irq(b))
 #define BX_PIC_IAC()         (bx_devices.pluginPicDevice->IAC())
+
+///////// VGA macros
+#define BX_VGA_MEM_READ(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
+#define BX_VGA_MEM_WRITE(addr, val) (bx_devices.pluginVgaDevice->mem_write(addr, val))
+#define BX_VGA_REDRAW_AREA(left, top, right, bottom) \
+  (bx_devices.pluginVgaDevice->redraw_area(left, top, right, bottom))
+#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) \
+  (bx_devices.pluginVgaDevice->get_text_snapshot(rawsnap, height, width))
+#define BX_VGA_REFRESH() \
+  (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
+#define BX_VGA_SET_UPDATE_INTERVAL(val) \
+  (bx_devices.pluginVgaDevice->set_update_interval(val))
 
 
 #if BX_HAVE_DLFCN_H

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43.2.7 2002-10-18 19:37:10 bdenney Exp $
+// $Id: vga.cc,v 1.43.2.8 2002-10-21 23:40:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,12 +61,6 @@ bx_vga_c::bx_vga_c(void)
   s.vga_mem_updated = 0;
   s.x_tilesize = X_TILESIZE;
   s.y_tilesize = Y_TILESIZE;
-  pluginVGARedrawArea = redraw_area;
-  pluginVGAMemRead = mem_read;
-  pluginVGAMemWrite = mem_write;
-  pluginVGAGetTextSnapshot = get_text_snapshot;
-  pluginVGARefresh = timer_handler;
-  pluginVGASetUpdateInterval = set_update_interval;
 }
 
 
@@ -1182,6 +1176,12 @@ bx_vga_c::set_update_interval (unsigned interval)
   BX_INFO (("Changing timer interval to %d\n", interval));
   BX_VGA_THIS timer_handler (theVga);
   bx_pc_system.activate_timer (BX_VGA_THIS timer_id, interval, 1);
+}
+
+  void
+bx_vga_c::trigger_timer(void *this_ptr)
+{
+  timer_handler(this_ptr);
 }
 
   void
