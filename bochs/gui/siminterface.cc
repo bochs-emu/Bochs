@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.69 2002-09-25 22:54:22 bdenney Exp $
+// $Id: siminterface.cc,v 1.70 2002-10-01 13:40:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -643,6 +643,7 @@ void bx_real_sim_c::debug_puts (const char *text)
 #else
   // text mode debugger: just write to console
   fputs (text, stderr);
+  delete text;
 #endif
 }
 #endif
