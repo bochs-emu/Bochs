@@ -1,9 +1,10 @@
 #if defined(WIN32) || defined(__CYGWIN__)
-#  if defined(MODULE2_DLL_EXPORT) && defined(DLL_EXPORT)
-#    warning case 1
-#    define MODULE2API(type) __declspec(dllexport) type
-#  endif
-#  ifdef MODULE2_DLL_IMPORT
+#  ifdef MODULE2_DLL_EXPORT
+#    ifdef DLL_EXPORT
+#      warning case 1
+#      define MODULE2API(type) __declspec(dllexport) type
+#    endif
+#  else
 #    warning case 2
 #    define MODULE2API(type) __declspec(dllimport) type
 #  endif
