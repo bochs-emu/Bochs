@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.17 2001-10-03 14:53:22 fries Exp $
+// $Id: eth_fbsd.cc,v 1.18 2001-10-06 17:31:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,19 +158,18 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   } while (this->bpf_fd == -1);
   
   if (this->bpf_fd == -1) {
-    BX_PANIC(("eth_freebsd: could not open packet filter"));
+    BX_PANIC(("eth_freebsd: could not open packet filter: %s", strerror(errno)));
     return;
   }
 
   if (ioctl(this->bpf_fd, BIOCVERSION, (caddr_t)&bv) < 0) {
-    BX_ERROR(("eth_freebsd: could not retrieve bpf version"));
+    BX_PANIC(("eth_freebsd: could not retrieve bpf version"));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
   }
-  if (bv.bv_major != BPF_MAJOR_VERSION ||
-      bv.bv_minor < BPF_MINOR_VERSION) {
-    BX_ERROR(("eth_freebsd: bpf version mismatch"));
+  if (bv.bv_major != BPF_MAJOR_VERSION || bv.bv_minor < BPF_MINOR_VERSION) {
+    BX_PANIC(("eth_freebsd: bpf version mismatch between compilation and runtime"));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -179,7 +178,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // Set buffer size
   v = BX_BPF_BUFSIZ;
   if (ioctl(this->bpf_fd, BIOCSBLEN, (caddr_t)&v) < 0) {
-    BX_INFO(("eth_freebsd: could not set buffer size"));
+    BX_PANIC(("eth_freebsd: could not set buffer size: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -187,20 +186,20 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
 
   (void)strncpy(ifr.ifr_name, netif, sizeof(ifr.ifr_name));
   if (ioctl(this->bpf_fd, BIOCSETIF, (caddr_t)&ifr) < 0) {
-    BX_INFO(("eth_freebsd: could not enable interface %s", netif));
+    BX_PANIC(("eth_freebsd: could not enable interface '%s': %s", netif, strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd == -1;
   }
   
   // Verify that the device is an ethernet.
   if (ioctl(this->bpf_fd, BIOCGDLT, (caddr_t)&v) < 0) {
-    BX_INFO(("eth_freebsd: could not retrieve datalink type"));
+    BX_PANIC(("eth_freebsd: could not retrieve datalink type: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
   }
   if (v != DLT_EN10MB) {
-    BX_INFO(("eth_freebsd: incorrect datalink type %d", v));
+    BX_PANIC(("eth_freebsd: incorrect datalink type %d, expected 10mb ethernet", v));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -211,7 +210,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // but this will do for now.
   //
   if (ioctl(this->bpf_fd, BIOCPROMISC, NULL) < 0) {
-    BX_INFO(("eth_freebsd: could not enable promisc mode"));
+    BX_PANIC(("eth_freebsd: could not enable promisc mode: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -220,7 +219,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // Set up non-blocking i/o
   v = 1;
   if (ioctl(this->bpf_fd, FIONBIO, &v) < 0) {
-    BX_INFO(("eth_freebsd: could not enable non-blocking i/o"));
+    BX_PANIC(("eth_freebsd: could not enable non-blocking i/o: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
@@ -241,7 +240,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   bp.bf_len   = 8;
   bp.bf_insns = &this->filter[0];
   if (ioctl(this->bpf_fd, BIOCSETF, &bp) < 0) {
-    BX_INFO(("eth_freebsd: could not set filter"));
+    BX_PANIC(("eth_freebsd: could not set filter: %s", strerror(errno)));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
