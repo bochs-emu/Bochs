@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.67 2004-02-14 06:33:29 danielg4 Exp $
+// $Id: cdrom.cc,v 1.68 2004-05-30 19:20:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -115,13 +115,13 @@ extern "C" {
 #define Float32 KLUDGE_Float32
 #define Float64 KLUDGE_Float64
 #include <IOKit/IOKitLib.h>
-#undef Float32
-#undef Float64
 #include <IOKit/IOBSD.h>
 #include <IOKit/storage/IOCDMedia.h>
 #include <IOKit/storage/IOMedia.h>
 #include <IOKit/storage/IOCDTypes.h>
 #include <CoreFoundation/CoreFoundation.h>
+#undef Float32
+#undef Float64
 
 // These definitions were taken from mount_cd9660.c
 // There are some similar definitions in IOCDTypes.h
@@ -472,7 +472,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.67 2004-02-14 06:33:29 danielg4 Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.68 2004-05-30 19:20:53 sshwarts Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
