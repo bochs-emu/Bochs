@@ -2529,7 +2529,7 @@ static void
 | Determine extended-precision floating-point number class
 *----------------------------------------------------------------------------*/
 
-float_class_t floatx80_class(float64 a)
+float_class_t floatx80_class(floatx80 a)
 {
    Bit32s aExp = extractFloatx80Exp(a);
    Bit64u aSig = extractFloatx80Frac(a);
