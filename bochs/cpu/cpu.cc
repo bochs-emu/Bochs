@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.71 2002-11-21 08:08:29 cbothamy Exp $
+// $Id: cpu.cc,v 1.72 2002-12-20 13:36:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -275,11 +275,6 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
                   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
     }
 #endif
-
-    // An instruction will have been fetched using either the normal case,
-    // or the boundary fetch (across pages), by this point.
-    BX_INSTR_FETCH_DECODE_COMPLETED(CPU_ID, i);
-
     execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
       BX_CPU_CALL_METHOD(resolveModRM, (i));
@@ -287,14 +282,14 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     }
   }
 
+    // An instruction will have been fetched using either the normal case,
+    // or the boundary fetch (across pages), by this point.
+    BX_INSTR_FETCH_DECODE_COMPLETED(CPU_ID, i);
+
 #if BX_DEBUGGER
     if (BX_CPU_THIS_PTR trace) {
       // print the instruction that is about to be executed.
-#if (BX_SMP_PROCESSORS==1)
-      bx_dbg_disassemble_current (0, 1);  // only one cpu, print time stamp
-#else
-      bx_dbg_disassemble_current (local_apic.get_id (), 1); // this cpu only
-#endif
+      bx_dbg_disassemble_current (CPU_ID, 1);  // only one cpu, print time stamp
     }
 #endif
 
