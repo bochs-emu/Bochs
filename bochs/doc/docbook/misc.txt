@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.7 2001-11-15 17:44:50 bdenney Exp $
+$Id: misc.txt,v 1.8 2001-11-15 22:15:07 bdenney Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -351,4 +351,53 @@ Here is an aborted one:
   a)bort, c)ontinue, e)dit, !)reuse this message unchanged for remaining dirs
   Action: a
   cvs [commit aborted]: aborted by user
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: Thu, 15 Nov 2001 13:31:34 -0800
+From: David Christy <davidc@davidc.biz>
+To: bryce@tlw.com
+Subject: usefull info for mounting 
+
+
+I didn't see this in the doc's so I thought you might like a
+short description of how to mount a disk image file into
+loopback filesystem for maintenance purposes.
+
+--------------------------------------------
+
+1) First run
+
+fdisk -l <image_name>
+
+... and it should print out a partition table (with a few
+complaints requesting the drive geometry, and I don't know
+if older versions require a block device) In fact fdisk will
+even work to modify partitions in an image, but you must
+specify the drive geometry that's in the bocsrc first.
+
+2) Whatever it says the starting partition is, subtract 1
+and multiply by 512
+
+3) Type
+
+mount -o loop,offset=<insert number here> <image_name>
+/mount/dir
+
+or if it's just a floppy image, just
+
+mount -o loop floppy.img /mount/dir
+
+---------------------------------------------------
+
+I would recommend putting -o ro for read only access if
+bochs is in use.  For unusual filesystems you may need to
+add a -t <fstype> flag to the mount command to specify the
+filesystem type.
+
+see man mount, losetup, and fdisk for more info
+
+
 
