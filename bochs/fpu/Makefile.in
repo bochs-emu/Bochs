@@ -121,8 +121,6 @@ fpu_etc.o: fpu_etc.c fpu_system.h exception.h fpu_emu.h fpu_proto.h \
 fpu_tags.o: fpu_tags.c fpu_emu.h fpu_system.h fpu_proto.h exception.h
 fpu_trig.o: fpu_trig.c fpu_system.h exception.h fpu_emu.h fpu_proto.h \
  status_w.h control_w.h reg_constant.h
-get_address.o: get_address.c fpu_system.h exception.h fpu_emu.h \
- fpu_proto.h
 load_store.o: load_store.c fpu_system.h exception.h fpu_emu.h \
  fpu_proto.h status_w.h control_w.h
 mul_Xsig.o: mul_Xsig.c fpu_emu.h fpu_system.h fpu_proto.h poly.h

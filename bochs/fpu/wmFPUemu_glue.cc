@@ -62,8 +62,6 @@ math_emulate(fpu_addr_modes addr_modes,
               struct address data_sel_off,
               struct address entry_sel_off);
 
-extern "C" void printfp(char *s, FPU_REG *r);
-
 
   // This is called by bochs upon reset
   void
@@ -263,7 +261,9 @@ math_abort(void *info, unsigned int signal)
 
     case SIGILL:
       BX_PANIC (("math_abort: SIGILL not implemented yet."));
+      fpu_cpu_ptr->UndefinedOpcode(fpu_iptr);
       break;
+
     case SIGSEGV:
       BX_PANIC (("math_abort: SIGSEGV not implemented yet."));
       break;

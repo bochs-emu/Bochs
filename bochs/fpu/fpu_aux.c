@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_aux.c                                                                |
- |  $Id: fpu_aux.c,v 1.4 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: fpu_aux.c,v 1.5 2003-08-01 16:57:59 sshwarts Exp $
  |                                                                           |
  | Code to implement some of the FPU auxiliary instructions.                 |
  |                                                                           |
@@ -200,4 +200,3 @@ void fstp_i()
   FPU_copy_to_regi(&st(0), FPU_gettag0(), FPU_rm);
   FPU_pop();
 }
-
