@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.154 2002-10-26 13:14:04 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.155 2002-10-26 21:51:19 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1350,10 +1350,14 @@ AC_MSG_CHECKING(for CDROM support)
 AC_ARG_ENABLE(cdrom,
   [  --enable-cdrom                    CDROM support],
   [if test "$enableval" = no; then
-    AC_MSG_RESULT(no)
-    CDROM_OBJS=''
-    AC_DEFINE(BX_SUPPORT_CDROM, 0)
+     bx_cdrom=0
    else
+     bx_cdom=1
+   fi],
+  [ bx_cdrom=1 ]
+  )
+
+if test "$bx_cdrom" = 1; then
     AC_MSG_RESULT(yes)
     CDROM_OBJS='cdrom.o'
     if test "$can_compile_amigaos" = yes; then
@@ -1371,25 +1375,11 @@ AC_ARG_ENABLE(cdrom,
 	CDROM_OBJS="$CDROM_OBJS cdrom_beos.o"
     esac
     AC_DEFINE(BX_SUPPORT_CDROM, 1)
-   fi],
-  [
-    AC_MSG_RESULT(yes)
-    CDROM_OBJS='cdrom.o'
-    if test "$with_amigaos" = yes; then
-      # use the amiga cdrom file instead.
-      CDROM_OBJS="cdrom_amigaos.o"
-    elif test "$can_use_osx_cdrom" = yes; then
-      # use cdrom_osx
-      AC_MSG_RESULT(Using OSX IOKit CD Interface)	
-      CDROM_OBJS="cdrom_osx.o"
-      EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation"
-    elif test "$with_beos" = yes; then
-      # use the beos cdrom file instead
-      CDROM_OBJS="$CDROM_OBJS cdrom_beos.o"
-    fi
-    AC_DEFINE(BX_SUPPORT_CDROM, 1)
-    ]
-  )
+else
+    AC_MSG_RESULT(no)
+    CDROM_OBJS=''
+    AC_DEFINE(BX_SUPPORT_CDROM, 0)
+fi
 
 AC_SUBST(CDROM_OBJS)
 
