@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.8 2002-03-15 15:04:17 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.9 2002-03-16 14:51:19 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -220,14 +220,8 @@ bx_real_sim_c::quit_sim (int code) {
   bx_atexit ();
   // tell the control panel to shut down
   LOCAL_notify (NOTIFY_CODE_SHUTDOWN);
-  while(1) {
-  printf ("Simulation is over but somehow I'm still running\n");
-#ifdef WIN32
-  Sleep (5000);
-#else
-  sleep (5);
-#endif
-  }
+  // for a while I tried to sleep() here, but that was bad because it
+  // suspends the whole process, including the gui thread.
 }
 
 int
