@@ -1,0 +1,161 @@
+----------------------------------------------------------------------
+Patch name: patch.marklog
+Author: Carl Sopchak
+Date: May, 1st 2002
+
+Detailed description:
+ While working on getting SCO OSR5 installed into bochs,
+ I added this mod to the gui programs. It adds a button
+ (labelled XX LOG; my bitmap artsmanship leaves MUCH to
+ be desired!) to the gui bar that writes a BX_ERROR
+ entry into the log file. The format of the entry is:
+
+ tttttttttt-x-@eeeeeeee[XGUI ]
+ ================================
+ Log Marker # nnnn
+ ================================
+
+ where nnnn is a sequential number from the beginning of
+ the bochs session. A message is also written to stdout
+ stating that the entry was logged, which also shows the
+ number.
+
+ This is useful to log demarcation points in the log
+ file (e.g., "skip everything before marker #1"; "stuff
+ between markers 3 & 4 is where the hard disk gets
+ initialized", etc.)
+
+ Please make this a part of the standard bochs package.
+
+ Thanks,
+
+ Carl
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on May, 1st 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "cd gui"
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: gui.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/gui.h,v
+retrieving revision 1.27
+diff -u -r1.27 gui.h
+--- gui.h	20 Apr 2002 07:19:35 -0000	1.27
++++ gui.h	1 May 2002 18:13:03 -0000
+@@ -78,6 +78,7 @@
+   static void cdromD_handler(void);
+   static void reset_handler(void);
+   static void power_handler(void);
++  static void marklog_handler(void);
+   static void copy_handler(void);
+   static void paste_handler(void);
+   static void snapshot_handler(void);
+@@ -91,6 +92,7 @@
+   unsigned floppyA_bmap_id, floppyA_eject_bmap_id, floppyA_hbar_id;
+   unsigned floppyB_bmap_id, floppyB_eject_bmap_id, floppyB_hbar_id;
+   unsigned cdromD_bmap_id, cdromD_eject_bmap_id, cdromD_hbar_id;
++  unsigned marklog_bmap_id,    marklog_hbar_id;
+   unsigned power_bmap_id,    power_hbar_id;
+   unsigned reset_bmap_id,    reset_hbar_id;
+   unsigned copy_bmap_id, copy_hbar_id;
+@@ -98,11 +100,13 @@
+   unsigned snapshot_bmap_id, snapshot_hbar_id;
+   unsigned config_bmap_id, config_hbar_id;
+   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
++
++  unsigned markercount;
+   };
+ 
+ 
+ #define BX_MAX_PIXMAPS 16
+-#define BX_MAX_HEADERBAR_ENTRIES 10
++#define BX_MAX_HEADERBAR_ENTRIES 11
+ #define BX_HEADER_BAR_Y 32
+ 
+ // align pixmaps towards left or right side of header bar
+Index: gui.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/gui.cc,v
+retrieving revision 1.41
+diff -u -r1.41 gui.cc
+--- gui.cc	18 Apr 2002 00:22:19 -0000	1.41
++++ gui.cc	1 May 2002 18:13:03 -0000
+@@ -37,6 +37,7 @@
+ #include "gui/bitmaps/paste.h"
+ #include "gui/bitmaps/configbutton.h"
+ #include "gui/bitmaps/cdromd.h"
++#include "gui/bitmaps/marklog.h"
+ #if BX_WITH_MACOS
+ #  include <Disks.h>
+ #endif
+@@ -75,13 +76,15 @@
+   BX_GUI_THIS nomouse_bmap_id = create_bitmap(bx_nomouse_bmap,
+                           BX_MOUSE_BMAP_X, BX_MOUSE_BMAP_Y);
+ 
+-
+   BX_GUI_THIS power_bmap_id = create_bitmap(bx_power_bmap, BX_POWER_BMAP_X, BX_POWER_BMAP_Y);
+   BX_GUI_THIS reset_bmap_id = create_bitmap(bx_reset_bmap, BX_RESET_BMAP_X, BX_RESET_BMAP_Y);
+   BX_GUI_THIS snapshot_bmap_id = create_bitmap(bx_snapshot_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
+   BX_GUI_THIS copy_bmap_id = create_bitmap(bx_copy_bmap, BX_COPY_BMAP_X, BX_COPY_BMAP_Y);
+   BX_GUI_THIS paste_bmap_id = create_bitmap(bx_paste_bmap, BX_PASTE_BMAP_X, BX_PASTE_BMAP_Y);
+   BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_CONFIG_BMAP_X, BX_CONFIG_BMAP_Y);
++  BX_GUI_THIS marklog_bmap_id = create_bitmap(bx_marklog_bmap, BX_MARKLOG_BMAP_X, BX_MARKLOG_BMAP_Y);
++
++  BX_GUI_THIS markercount = 0;
+ 
+ 
+   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
+@@ -145,6 +148,9 @@
+   // Copy button
+   BX_GUI_THIS copy_hbar_id = headerbar_bitmap(BX_GUI_THIS copy_bmap_id,
+                           BX_GRAVITY_RIGHT, copy_handler);
++  // Mark Log button
++  BX_GUI_THIS marklog_hbar_id = headerbar_bitmap(BX_GUI_THIS marklog_bmap_id,
++                          BX_GRAVITY_RIGHT, marklog_handler);
+ 
+   show_headerbar();
+ }
+@@ -262,6 +268,15 @@
+   bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
+   for (int i=0; i<BX_SMP_PROCESSORS; i++)
+       BX_CPU(i)->reset(BX_RESET_HARDWARE);
++}
++
++  void
++bx_gui_c::marklog_handler(void)
++{
++  // the user pressed Mark Log button, so write error marker to log file
++  BX_GUI_THIS markercount += 1;
++  BX_ERROR (("\n================================\nLog Marker # %d\n================================", BX_GUI_THIS markercount));
++  fprintf (stderr, "Marker # %d written to log.\n", BX_GUI_THIS markercount);
+ }
+ 
+   void
+--- /dev/null	Thu Aug 30 16:30:55 2001
++++ bitmaps/marklog.h	Wed May  1 09:58:00 2002
+@@ -0,0 +1,20 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.marklog,v 1.1 2002-05-01 21:07:13 cbothamy Exp $
++/////////////////////////////////////////////////////////////////////////
++//
++#define BX_MARKLOG_BMAP_X 32
++#define BX_MARKLOG_BMAP_Y 32
++
++static const unsigned char bx_marklog_bmap[(BX_MARKLOG_BMAP_X * BX_MARKLOG_BMAP_Y)/8] = {
++  0x60, 0x18, 0x86, 0x01, 0xc0, 0x0c, 0xcc, 0x00, 0x80, 0x07, 0x78, 0x00,
++  0x00, 0x03, 0x30, 0x00, 0x80, 0x07, 0x78, 0x00, 0xc0, 0x0c, 0xcc, 0x00,
++  0x60, 0x18, 0x86, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00,
++  0x00, 0x30, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 
++  0x00, 0x30, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0xf0, 0x1f, 0x00, 
++  0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x1f, 0x00, 0x00, 0x30, 0x18, 0x00, 
++  0x00, 0x30, 0x18, 0x00, 0x00, 0x30, 0x18, 0x00, 0x00, 0x30, 0x18, 0x00, 
++  0x00, 0x30, 0x18, 0x00, 0x00, 0xf0, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 
++  0x00, 0xf0, 0x1f, 0x00, 0x00, 0x30, 0x10, 0x00, 0x00, 0x30, 0x00, 0x00, 
++  0x00, 0x30, 0x1e, 0x00, 0x00, 0x30, 0x18, 0x00, 0x00, 0x30, 0x18, 0x00, 
++  0x00, 0xf0, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00 
++  };

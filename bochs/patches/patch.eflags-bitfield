@@ -1,0 +1,235 @@
+----------------------------------------------------------------------
+Patch name: patch.eflags-bitfield
+Author: cbbochs@free.fr
+Date: July, 31th 2002
+
+Detailed description:
+  - turns the eflags structure to a 32bits bitfield
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on July, 31th 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.22
+diff -u -r1.22 cpu.h
+--- cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
++++ cpu/cpu.h	31 Jul 2002 13:23:58 -0000
+@@ -243,36 +243,45 @@
+    *  0|NT| IOPL|OF|DF|IF|TF|SF|ZF| 0|AF| 0|PF| 1|CF
+    */
+ 
+-  // In order to get access to these fields from the Dynamic Translation
+-  // code, using only 8bit offsets, I needed to move these fields
+-  // together.
+-  Bit32u  cf;
+-  Bit32u  af;
+-  Bit32u  zf;
+-  Bit32u  sf;
+-  Bit32u  of;
+-
+-  Boolean bit1;
+-  Bit8u   pf_byte;  /* PF derived from last result byte when needed */
+-  Boolean bit3;
+-  Boolean bit5;
+-  Boolean tf;
+-  Boolean if_;
+-  Boolean df;
++  Bit32u  cf :1;
++  Bit32u  bit1 :1;
++  Bit32u  pf :1;
++  Bit32u  bit3 :1;
++  Bit32u  af :1;
++  Bit32u  bit5 :1;
++  Bit32u  zf :1;
++  Bit32u  sf :1;
++  Bit32u  tf :1;
++  Bit32u  if_ :1;
++  Bit32u  df :1;
++  Bit32u  of :1;
+ #if BX_CPU_LEVEL >= 2
+-  Bit8u   iopl;
+-  Boolean nt;
++  Bit32u  iopl :2;
++  Bit32u  nt :1;
++#else
++  Bit32u  :2;
++  Bit32u  :1;
+ #endif
+-  Boolean bit15;
++  Bit32u  bit15 :1;
++
+ #if BX_CPU_LEVEL >= 3
+-  Boolean rf;
+-  Boolean vm;
++  Boolean rf :1;
++  Boolean vm :1;
++#else
++  Boolean :1;
++  Boolean :1;
+ #endif
++
+ #if BX_CPU_LEVEL >= 4
+-  Boolean ac;  // alignment check
+-  // Boolean vif; // Virtual Interrupt Flag
+-  // Boolean vip; // Virtual Interrupt Pending
+-  Boolean id;  // late model 486 and beyond had CPUID
++  Boolean ac :1;  // alignment check
++  Boolean vif :1; // Virtual Interrupt Flag
++  Boolean vip :1; // Virtual Interrupt Pending
++  Boolean id :1;  // late model 486 and beyond had CPUID
++#else
++  Boolean :1; 
++  Boolean :1; 
++  Boolean :1; 
++  Boolean :1; 
+ #endif
+   } bx_flags_reg_t;
+ 
+@@ -755,7 +764,7 @@
+ 
+   // status and control flags register set
+   Bit32u   lf_flags_status;
+-  Boolean  lf_pf;
++  Bit8u    lf_pf_byte;
+   bx_flags_reg_t eflags;
+ 
+   bx_lf_flags_entry oszapc;
+@@ -1649,7 +1658,6 @@
+ 
+ #endif
+ 
+-
+ #if BX_CPU_LEVEL >= 2
+   BX_CPP_INLINE Boolean BX_CPU_C::real_mode(void) { return( !BX_CPU_THIS_PTR cr0.pe ); };
+ #endif
+@@ -1717,12 +1725,12 @@
+     BX_CPP_INLINE void
+ BX_CPU_C::set_PF(Boolean val) {
+     BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
+-    BX_CPU_THIS_PTR lf_pf = val;
++    BX_CPU_THIS_PTR eflags.pf = val;
+     }
+ 
+     BX_CPP_INLINE void
+ BX_CPU_C::set_PF_base(Bit8u val) {
+-    BX_CPU_THIS_PTR eflags.pf_byte = val;
++    BX_CPU_THIS_PTR lf_pf_byte =  val;
+     BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0xffff0f) | BX_LF_MASK_P;
+     }
+ 
+@@ -1809,7 +1817,6 @@
+     BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0; \
+     /* ??? could also mark other bits undefined here */ \
+     }
+-
+ 
+ 
+ 
+Index: cpu/lazy_flags.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/lazy_flags.cc,v
+retrieving revision 1.6
+diff -u -r1.6 lazy_flags.cc
+--- cpu/lazy_flags.cc	3 Oct 2001 13:10:37 -0000	1.6
++++ cpu/lazy_flags.cc	31 Jul 2002 13:23:59 -0000
+@@ -707,7 +707,7 @@
+ {
+   switch ( (BX_CPU_THIS_PTR lf_flags_status>>4) & 0x00000f ) {
+     case BX_LF_INDEX_KNOWN:
+-      return(BX_CPU_THIS_PTR lf_pf);
++      return(BX_CPU_THIS_PTR eflags.pf);
+     case BX_LF_INDEX_OSZAPC:
+       switch (BX_CPU_THIS_PTR oszapc.instr) {
+         case BX_INSTR_ADD8:
+@@ -725,7 +725,7 @@
+         case BX_INSTR_SCAS8:
+         case BX_INSTR_SHR8:
+         case BX_INSTR_SHL8:
+-          BX_CPU_THIS_PTR lf_pf =
++          BX_CPU_THIS_PTR eflags.pf =
+             bx_parity_lookup[BX_CPU_THIS_PTR oszapc.result_8];
+           break;
+         case BX_INSTR_ADD16:
+@@ -743,7 +743,7 @@
+         case BX_INSTR_SCAS16:
+         case BX_INSTR_SHR16:
+         case BX_INSTR_SHL16:
+-          BX_CPU_THIS_PTR lf_pf =
++          BX_CPU_THIS_PTR eflags.pf =
+             bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.result_16];
+           break;
+         case BX_INSTR_ADD32:
+@@ -761,42 +761,42 @@
+         case BX_INSTR_SCAS32:
+         case BX_INSTR_SHR32:
+         case BX_INSTR_SHL32:
+-          BX_CPU_THIS_PTR lf_pf =
++          BX_CPU_THIS_PTR eflags.pf =
+             bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.result_32];
+           break;
+         default:
+           BX_PANIC(("get_PF: OSZAPC: unknown instr"));
+         }
+       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
+-      return(BX_CPU_THIS_PTR lf_pf);
++      return(BX_CPU_THIS_PTR eflags.pf);
+ 
+     case BX_LF_INDEX_OSZAP:
+       switch (BX_CPU_THIS_PTR oszap.instr) {
+         case BX_INSTR_INC8:
+         case BX_INSTR_DEC8:
+-          BX_CPU_THIS_PTR lf_pf =
++          BX_CPU_THIS_PTR eflags.pf =
+             bx_parity_lookup[BX_CPU_THIS_PTR oszap.result_8];
+           break;
+         case BX_INSTR_INC16:
+         case BX_INSTR_DEC16:
+-          BX_CPU_THIS_PTR lf_pf =
++          BX_CPU_THIS_PTR eflags.pf =
+             bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszap.result_16];
+           break;
+         case BX_INSTR_INC32:
+         case BX_INSTR_DEC32:
+-          BX_CPU_THIS_PTR lf_pf =
++          BX_CPU_THIS_PTR eflags.pf =
+             bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszap.result_32];
+           break;
+         default:
+           BX_PANIC(("get_PF: OSZAP: unknown instr"));
+         }
+       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
+-      return(BX_CPU_THIS_PTR lf_pf);
++      return(BX_CPU_THIS_PTR eflags.pf);
+ 
+     case BX_LF_INDEX_P:
+-      BX_CPU_THIS_PTR lf_pf = bx_parity_lookup[BX_CPU_THIS_PTR eflags.pf_byte];
++      BX_CPU_THIS_PTR eflags.pf = bx_parity_lookup[BX_CPU_THIS_PTR lf_pf_byte];
+       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
+-      return(BX_CPU_THIS_PTR lf_pf);
++      return(BX_CPU_THIS_PTR eflags.pf);
+ 
+     default:
+       BX_PANIC(("get_PF: unknown case"));
+Index: cpu/init.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
+retrieving revision 1.16
+diff -u -r1.16 init.cc
+--- cpu/init.cc	5 Jun 2002 21:51:30 -0000	1.16
++++ cpu/init.cc	31 Jul 2002 14:33:49 -0000
+@@ -231,7 +231,7 @@
+ 
+   // all status flags at known values, use BX_CPU_THIS_PTR eflags structure
+   BX_CPU_THIS_PTR lf_flags_status = 0x000000;
+-  BX_CPU_THIS_PTR lf_pf = 0;
++  BX_CPU_THIS_PTR lf_pf_byte = 0;
+ 
+   // status and control flags register set
+   BX_CPU_THIS_PTR set_CF(0);

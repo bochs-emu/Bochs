@@ -1,0 +1,80 @@
+----------------------------------------------------------------------
+Patch name: patch.MOV_CdRd-v86-ams
+Author: Martin Str|mberg
+Date: August 10th, 2002
+
+Detailed description:
+ This patch adds MOV_CdRd handling in v8086 mode
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on August 10th, 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/proc_ctrl.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
+retrieving revision 1.24
+diff -u -r1.24 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	1 Aug 2002 07:23:11 -0000	1.24
++++ cpu/proc_ctrl.cc	10 Aug 2002 11:57:36 -0000
+@@ -366,7 +366,7 @@
+   Bit16u msw;
+   Bit32u cr0;
+ 
+-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
++  if (v8086_mode()) BX_PANIC(("proc_ctrl: LMSW in v8086 mode unsupported"));
+ 
+   if ( protected_mode() ) {
+     if ( CPL != 0 ) {
+@@ -448,7 +448,7 @@
+   Bit32u val_32;
+ 
+ 
+-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
++/*  if (v8086_mode()) BX_PANIC(("proc_ctrl: MOV_CdRd in v8086 mode unsupported"));*/
+ 
+   /* NOTES:
+    *   32bit operands always used
+@@ -463,7 +463,7 @@
+ 
+   invalidate_prefetch_q();
+ 
+-  if (protected_mode() && CPL!=0) {
++  if ((protected_mode() || v8086_mode()) && CPL!=0) {
+     BX_PANIC(("MOV_CdRd: CPL!=0"));
+     /* #GP(0) if CPL is not 0 */
+     exception(BX_GP_EXCEPTION, 0, 0);
+@@ -531,7 +531,7 @@
+ #else
+   Bit32u val_32;
+ 
+-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
++/*  if (v8086_mode()) BX_PANIC(("proc_ctrl: MOV_RdCd in v8086 mode unsupported"));*/
+ 
+   /* NOTES:
+    *   32bit operands always used
+@@ -544,9 +544,8 @@
+     BX_PANIC(("MOV_RdCd(): rm field not a register!"));
+     }
+ 
+-  if (protected_mode() && CPL!=0) {
+-//    BX_PANIC(("MOV_RdCd: CPL!=0"));
+-    /* #GP(0) if CPL is not 0 */
++  if ((protected_mode() || v8086_mode()) && CPL!=0) {
++    BX_INFO(("MOV_RdCd: CPL!=0"));
+     exception(BX_GP_EXCEPTION, 0, 0);
+     return;
+     }
+@@ -633,7 +632,7 @@
+   Bit16u base_15_0, limit;
+   Bit8u  base_23_16, access;
+ 
+-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
++  if (v8086_mode()) BX_PANIC(("proc_ctrl: LOADALL in v8086 mode unsupported"));
+ 
+ #if BX_CPU_LEVEL > 2
+   BX_PANIC(("loadall: not implemented for 386"));

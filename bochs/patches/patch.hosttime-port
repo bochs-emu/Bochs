@@ -1,0 +1,165 @@
+----------------------------------------------------------------------
+Patch name: patch.hosttime-port
+Author: cbbochs@free.fr
+Date: July, 31th 2002
+
+Detailed description:
+  This patch enables the guest to read to host time (linux only).
+  Port 0x8901 is used. Two time values can be set and 
+  read, along with the difference of the two. 
+  This can be useful to do performance tests.
+
+  port 0x8901 :
+
+  Writes can be bytes, word, dword
+  Reads must be dword
+  write 0x00 : set both times to 0
+  write 0x01 : set the first time
+  write 0x02 : set the second time
+  write 0x03 : set the both time
+  write 0x11 : the seconds of the first time will be read from 0x8901
+  write 0x12 : the microseconds of the first time will be read from 0x8901
+  write 0x21 : the seconds of the second time will be read from 0x8901
+  write 0x22 : the microseconds of the second time will be read from 0x8901
+  write 0x31 : the seconds of the difference will be read from 0x8901
+  write 0x32 : the microseconds of the difference will be read from 0x8901
+
+  Additionnal values have been defined for language that can't do 32bits
+  port access. Please look in the source.
+
+  Example : Set first time, then second time, and get the difference :
+
+  outb(0x8901, 0x01); // Set first time
+  outb(0x8901, 0x02); // Set second time
+  outb(0x8901, 0x31); // Read difference : seconds fields
+  sec = inl(0x8901);
+  outb(0x8901, 0x32); // Read difference : microseconds fields
+  usec = inl(0x8901);
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on July, 31th 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: iodev/unmapped.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.cc,v
+retrieving revision 1.17
+diff -u -r1.17 unmapped.cc
+--- iodev/unmapped.cc	30 Jul 2002 08:48:03 -0000	1.17
++++ iodev/unmapped.cc	31 Jul 2002 09:01:23 -0000
+@@ -137,6 +137,40 @@
+ 	  retval = 0xffffffff;
+       BX_DEBUG(("unsupported IO read from port %04x", address));
+       break;
++#ifdef __linux__
++    case 0x8901: // host-time port
++      struct timeval diff;
++      retval = 0;
++
++      if (timercmp(& BX_UM_THIS s.hosttime_value1, & BX_UM_THIS s.hosttime_value2, < ) )
++        timersub(& BX_UM_THIS s.hosttime_value2, & BX_UM_THIS s.hosttime_value1, &diff);
++      else
++        timersub(& BX_UM_THIS s.hosttime_value1, & BX_UM_THIS s.hosttime_value2, &diff);
++
++      switch (BX_UM_THIS s.hosttime_field) {
++        case 0x11: retval = BX_UM_THIS s.hosttime_value1.tv_sec; break;
++        case 0x12: retval = BX_UM_THIS s.hosttime_value1.tv_usec; break;
++        case 0x1C: retval = BX_UM_THIS s.hosttime_value1.tv_sec & 0xffff; break;
++        case 0x1D: retval = BX_UM_THIS s.hosttime_value1.tv_sec >> 16; break;
++        case 0x1E: retval = BX_UM_THIS s.hosttime_value1.tv_usec & 0xffff; break;
++        case 0x1F: retval = BX_UM_THIS s.hosttime_value1.tv_usec >> 16; break;
++        case 0x21: retval = BX_UM_THIS s.hosttime_value2.tv_sec; break;
++        case 0x22: retval = BX_UM_THIS s.hosttime_value2.tv_usec; break;
++        case 0x2C: retval = BX_UM_THIS s.hosttime_value2.tv_sec & 0xffff; break;
++        case 0x2D: retval = BX_UM_THIS s.hosttime_value2.tv_sec >> 16; break;
++        case 0x2E: retval = BX_UM_THIS s.hosttime_value2.tv_usec & 0xffff; break;
++        case 0x2F: retval = BX_UM_THIS s.hosttime_value2.tv_usec >> 16; break;
++        case 0x31: retval = diff.tv_sec; break;
++        case 0x32: retval = diff.tv_usec; break;
++        case 0x3C: retval = diff.tv_sec & 0xffff; break;
++        case 0x3D: retval = diff.tv_sec >> 16; break;
++        case 0x3E: retval = diff.tv_usec & 0xffff; break;
++        case 0x3F: retval = diff.tv_usec >> 16; break;
++        }
++
++      break;
++#endif
++
+     default:
+ 	  retval = 0xffffffff;
+     }
+@@ -256,6 +290,51 @@
+         BX_CPU(0)->kill_bochs_request = 2;
+         }
+       break;
++
++#ifdef __linux__
++    case 0x8901: // host-time port
++      switch (value) {
++        case 0x01: // set first time
++          gettimeofday(& BX_UM_THIS s.hosttime_value1, NULL);
++          break;
++        case 0x02: // set second time
++          gettimeofday(& BX_UM_THIS s.hosttime_value2, NULL);
++          break;
++        case 0x03: // set both times
++          gettimeofday(& BX_UM_THIS s.hosttime_value1, NULL);
++          BX_UM_THIS s.hosttime_value2.tv_sec = BX_UM_THIS s.hosttime_value1.tv_sec;
++          BX_UM_THIS s.hosttime_value2.tv_usec = BX_UM_THIS s.hosttime_value1.tv_usec;
++          break;
++        case 0x11: // retrieve sec from first time   // 32 bits
++        case 0x12: // retrieve usec from first time  // 32 bits
++        case 0x1C: // retrieve sec from first time   // low 16 bits
++        case 0x1D: // retrieve sec from first time   // high 16 bits
++        case 0x1E: // retrieve usec from first time  // low 16 bits
++        case 0x1F: // retrieve usec from first time  // high 16 bits
++        case 0x21: // retrieve sec from second time  // 32 bits
++        case 0x22: // retrieve usec from second time // 32 bits
++        case 0x2C: // retrieve sec from second time  // low 16 bits
++        case 0x2D: // retrieve sec from second time  // high 16 bits
++        case 0x2E: // retrieve usec from second time // low 16 bits
++        case 0x2F: // retrieve usec from second time // high 16 bits
++        case 0x31: // retrieve sec from difference   // 32 bits
++        case 0x32: // retrieve usec from difference  // 32 bits
++        case 0x3C: // retrieve sec from difference   // low 16 bits
++        case 0x3D: // retrieve sec from difference   // high 16 bits
++        case 0x3E: // retrieve usec from difference  // low 16 bits
++        case 0x3F: // retrieve usec from difference  // high 16 bits
++          BX_UM_THIS s.hosttime_field = value;  
++          break;
++        default:
++          BX_UM_THIS s.hosttime_field = 0;
++          BX_UM_THIS s.hosttime_value1.tv_sec = 0;
++          BX_UM_THIS s.hosttime_value1.tv_usec = 0;
++          BX_UM_THIS s.hosttime_value2.tv_sec = 0;
++          BX_UM_THIS s.hosttime_value2.tv_usec = 0;
++          break;
++        }
++      break;
++#endif
+ 
+     case 0xfedc:
+       bx_dbg.debugger = (value > 0);
+Index: iodev/unmapped.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.h,v
+retrieving revision 1.8
+diff -u -r1.8 unmapped.h
+--- iodev/unmapped.h	29 Jul 2002 12:44:47 -0000	1.8
++++ iodev/unmapped.h	31 Jul 2002 09:01:23 -0000
+@@ -56,6 +56,11 @@
+     Bit8u port80;
+     Bit8u port8e;
+     Bit8u shutdown;
++#ifdef __linux__
++    Bit8u hosttime_field;
++    struct timeval hosttime_value1;
++    struct timeval hosttime_value2;
++#endif
+     } s;  // state information
+ 
+   bx_devices_c *devices;

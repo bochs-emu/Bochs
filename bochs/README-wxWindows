@@ -1,0 +1,260 @@
+Readme for wxWindows Interface
+updated Thu Aug 29 10:43:37 EDT 2002
+
+Contributors to wxWindows port:
+  Don Becker (Psyon)
+  Bryce Denney
+  Dave Poirier
+  Volker Ruppert
+
+wxWindows Configuration Interface
+
+The wxWindows port began in June 2001 around the time of Bochs 1.2.1.  Dave
+Poirier and Bryce Denney started adding a wxWindows configuration interface.
+We made some progress, but stopped after a while.  Then in March/April 2002
+Bryce and Psyon revived the wxWindows branch and turned it into a (mostly)
+usable interface.  Psyon did most of the work to get text and graphics 
+working, and Bryce worked on event passing between threads, and keyboard
+mapping.
+
+The wxWindows window appears first.  This WILL BE where you can choose a preset
+configuration or create one from scratch, then edit the bochsrc options using
+the GUI.  Then, by clicking on Simulate:Start, you can start up the Bochs
+simulation.  The VGA display is implemented in wxWindows.
+
+WARNING: Don't expect perfect code yet!
+
+Regarding wxWindows versions, we started out with 2.2.9 but then found
+a reason or two to switch to 2.3.2.  (I have forgotten exactly what
+they were.)  In addition, I made a keyboard patch to wxWindows itself,
+which they accepted for the next version, that allows us to get raw
+keycodes out of the library in addition to wxwindows translated keys.
+Bochs will work with or without it, but you'll find that the keyboard
+mapping is much better with the patch, which is called
+patches/patch.wx-raw-keycodes.
+
+So the ideal wxWindows version is 2.3.2+patch.wx-raw-keycodes.
+To apply the patch, go to the main wx____-2.3.2 directory and
+type "patch -p1 < THIS_PATCH_FILE".
+
+Bryce has been developing in linux, where a "configure --with-wx;make"
+should work fine.
+
+To build in MS VC++:
+- edit .conf.win32-vcpp and add "--with-wx" to the configure line. 
+  If you want different configure options from what you see, change them
+  too.
+- in cygwin, do "sh .conf.win32-vcpp" to run configure
+- unzip build/win32/wxworkspace.zip into the main directory.
+  For cygwin: unzip build/win32/wxworkspace.zip
+  or use winzip or whatever else.
+- open up bochs.dsw, the workspace file
+- edit project settings so that VC++ can find the wxWindows include
+  files and libraries on your system.  I installed them in
+  d:/wx/wx232/include and d:/wx/wx232/lib.  Specifically, edit
+  - Project>Settings>C/C++>Category=Preprocessor: include directories.
+  - Project>Settings>Link>Category=Input: additional library path.
+- build
+
+Note that the project is set up for wxWindows 2.3.2, and the only 
+configuration that I've used is called Win32 Debug.  To use on 
+other wxwindows versions, you will have to change some of the names
+of the libraries to include.  Use the samples that came with that
+version of wxwindows for reference.
+
+What works right now (August 2002):
+- cd to a directory with a bochsrc and disk images in it (I use dlxlinux)
+- start up bochs.  You get a small window with a File, Edit, Simulate,
+  Debug, Log, Help menus.  The empty black rectangle is where the
+  simulation will be displayed.
+- choose File:Read Configuration and select the bochsrc file you want
+  to read.
+- use Edit:Floppy Disk * or Edit:Hard Disk * to tweak settings.
+  These are the only dialogs that have been written so far.
+  Eventually you should be able to edit all settings using dialogs.
+- choose "Start" on the Simulate menu.  Bochs starts running in the
+  You can pause it, resume it, or kill it on the Simulate menu.
+  Most toolbar buttons work.  Mouse support does not exist yet,
+  and the configure button doesn't do anything and should be removed.
+- You can pause, resume, and stop the simulation too.  If you start
+  a new simulation, be aware that may not work quite right.  The
+  initialization and re-initialization process needs work.
+- That's all.  The other menu options are not implemented except for quit.
+
+To do:
+- sketch the GUI pieces that need to be made, with text description of
+  basically what they should do.  Later in this file you'll find lots
+  of examples of this.
+- have a few people look over the sketches so that we don't waste lots of
+  time building dialogs that people will hate.
+- code some dialog boxes in wxwindows.  Just get it looking right at first, and
+  Bryce can help you to get it connected to the simulator using the event
+  infrastructure that he has made.  Again, after one or two is done there will
+  be some good examples to look at.
+- implement ASK_PARAM gui event for all types of parameters.  Currently only
+  string params are supported, meaning that when you call ask_param() on
+  a string parameter, the GUI gives the user a chance to edit that parameter's
+  value.  We will need to implement boolean, enum, numerical parameters, and
+  lists.  Lists should probably be displayed as a table or a dialog box
+  with several things to select.
+- debugger interface.  There's lots of demand for a debugger interface
+  to Bochs, probably more demand than for a configuration interface.  We
+  should talk about what this will look like, and when we have a plan we
+  can start sketching and coding dialogs for the debugger interface too.
+- clean up the biggest memory leaks and init/cleanup code.  The gui allows you
+  to kill the simulator and restart, but it doesn't do well after the first
+  time.  Valgrind should help with memory leak debugging, though until
+  recently it couldn't run multithreaded programes.
+- disk change dialogs for floppy and cdrom need work.
+  http://sourceforge.net/tracker/index.php?func=detail&aid=545414&group_id=12580&atid=112580
+- with --with-wx and debugger, control-C in the terminal window kills the
+  process instead of just interrupting the simulation.
+- mouse events not implemented
+-------------
+
+------------------------------------------------------
+
+Random notes follow
+
+Added some sketches.  I'm thinking that the control
+panel will be able to basically show one of these screens at a time.  When
+you first start you would see ChooseConfigScreen which chooses between the
+configurations that you have loaded recently (which it would remember
+by the pathname of their bochsrc).  Whether you choose an existing 
+configuration to be loaded or a new one, when you click Ok you go to
+the first configuration screen, ConfigDiskScreen.
+
+Each of the configuration screens takes up the whole control panel window.
+We could use tabs on the top and/or "<-Prev" and "Next->" buttons to make
+it quick to navigate the configuration screens.  Each screen should
+probably have a Prev, Next, Revert to Saved, and Accept button.
+The menu choices like Disk..., VGA..., etc. just switch directly to
+that tab.
+
+
+------------------------------------------------------
+Notes:
+
+events from gui to sim:
+- [async] key pressed or released
+- [async] mouse motion with button state
+- [sync] query parameter
+- [sync] change parameter
+- [async] start, pause, stop, reset simulation.  Can be implemented
+  as changing a parameter.
+- [async] request notification when some param changes
+
+events from sim to gui:
+- [async] log message to be displayed (or not)
+- [async] ask user how to proceed (like panic: action=ask)
+- [async] param value changed
+- make my thread sleep for X microseconds  (call wxThread::sleep then return)
+
+In a synchronous event, the event object will contain space for the entire
+response.  The sender allocates memory for the event and builds it.  The
+receiver fills in blanks in the event structure (or could overwrite parts)
+and returns the same event pointer as a response.  For async events, probably
+the sender will allocate and the receiver will have to delete it.
+
+implement the floppyA and floppyB change buttons using new event
+structure.  How should it work?
+
+vga gui detects a click on floppyA bitmap
+construct a BxEvent type BX_EVT_ASK_PARAM
+post the event to the wxwindows gui thread (somehow) and block for response
+when it arrives in the gui thread, show a modal dialog box
+get the answer back to the simulator thread
+
+
+right now, this is working ok within the simulator thread using
+wxMutexGuiEnter/Leave.  Still I'm going to change it so that the
+siminterface.cc code builds an event structure and the gui code
+fills in the blank in the structure, instead of the stupid 
+notify_get_int_arg stuff.
+
+
+Starting and Killing Threads
+
+When a detachable (default) thread finishes (returns from its Entry()
+function), wxwindows frees the memory associated with that thread.  
+Unless the thread is never going to end, it is potentially dangerous to have a
+pointer to it at all.  Even if you try to "check if it's alive" first, you may
+be dereferencing the pointer after it has already been deleted, leading to it
+claiming to be alive when it's not, or a segfault.  To solve this, the approach
+used in the wxwindows threads example is to have code in the thread's OnExit()
+method remove the thread's pointer from the list of usable threads.  In
+addition, any references or changes to the list of threads is controlled by a
+critical section to ensure that it stays correct.  This post finally 
+explained what I was seeing.
+
++-----------------------
+| From: Pieter van der Meulen (pgmvdm@yahoo.com)
+|  Subject: Re: Thread Sample program - bug 
+|  Newsgroups: comp.soft-sys.wxwindows
+|  Date: 2001-06-28 17:51:35 PST 
+| 
+| 
+| At 06:24 PM 6/28/2001, you wrote:
+| >Hi,
+| >I have wxWindows 2.2.7 (wxMSW) installed.
+| >
+| >I just found in the thread.cpp sample code this section:
+| >
+| ><code>
+| >void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event) )
+| >{
+| >     size_t count = wxGetApp().m_threads.Count();
+| >     for ( size_t i = 0; i < count; i++ )
+| >     {
+| >===>        wxGetApp().m_threads[0]->Delete();    <=====
+| >     }
+| >
+| >     Close(TRUE);
+| >}
+| ></code>
+| >The indecated line should probably rather have a
+| >m_threads[i]     rather than     m_threads[0] .
+| 
+| No, it should not, although it is not immediately obvious. When Delete() is 
+| called, the thread will eventually delete itself, but not before it calls 
+| MyThread::Exit(), which will remove itself from m_threads[] using 
+| wxArray::Remove(this). wxArray::Remove (RemoveAt) will compact the array to 
+| remove the element, it is now size-1. After this wxThread::Delete() returns.
+| 
+| 
+| >I have have a further question to this:
+| >Does this mean that a detached thread created with new
+| >HAS to be deleted  manually ?  Or is this only in case it might still
+| >be running?
+| 
+| Firstly, you must create every detached thread using new since it will 
+| delete itself, literally calling delete this.
+| Calling wxThread::Delete() is a correct way to terminate a thread, but 
+| manually deleting (using delete) a detached wxThread object is not. 
+| wxThread::Delete() will ask the thread to exit, the thread should check for 
+| this in wxThread::Entry() regularly using wxThread::TestDestroy() and exit 
+| when asked to do so.
+| 
+| >(In general I have a unsatisfied felling about when delete is
+| >neccessary and when not -- "I only know, it's not , if the class is
+| >derived from wxWindows")
+| 
+| For wxThreads: joinable threads must be deleted (when allocated on the 
+| heap), detached threads may never be deleted. For other classes, consult 
+| the documentation ;)
+| 
+| 
+| >Thanks for some feedback,
+| >Sebastian
+| 
+| Regards,
+| 
+| Pieter.
++-----------------------
+
+tracking some kind of deadlock bug in Linux.
+
+seems to be in ReadMailcap, src/unix/mimetypes.cpp in wxwindows sources
+src/unix/mimetype.cpp:2312
+
+SOLUTION: compile with -pthread on every compile and link line.

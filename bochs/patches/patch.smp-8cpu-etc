@@ -1,0 +1,101 @@
+From wli@holomorphy.com Sun Apr  7 21:59:35 2002
+Date: Sun, 7 Apr 2002 18:07:38 -0700
+From: William Lee Irwin III <wli@holomorphy.com>
+To: bochs-developers@lists.sourceforge.net
+Subject: [Bochs-developers] 06_8_cpu_workarounds
+
+Here's a patch with the workarounds for 8 cpu's I used on top of
+reverting keyboard changes... looks like keyboard changes are getting
+fixed up pretty soon here so that will not be necessary for long.
+
+Cheers,
+Bill
+
+
+Index: cpu/apic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/apic.cc,v
+retrieving revision 1.14
+diff -u -r1.14 apic.cc
+--- cpu/apic.cc	27 Mar 2002 16:04:04 -0000	1.14
++++ cpu/apic.cc	5 Apr 2002 10:17:18 -0000
+@@ -56,9 +56,12 @@
+       BX_PANIC(("inconsistent APIC id table"));
+     apic_index[id] = NULL;
+   }
++  if (id == newid && (apic_index[id] == this || apic_index[id] == NULL))
++    goto set_ok;
++  if (apic_index[newid] != NULL)
++    BX_PANIC(("duplicate APIC id assigned, id=%lx, newid=%lx, this=%p, apic_index[id]=%p", id, newid, this, apic_index[newid]));
++set_ok:
+   id = newid;
+-  if (apic_index[id] != NULL)
+-    BX_PANIC(("duplicate APIC id assigned"));
+   apic_index[id] = this;
+ }
+ 
+Index: cpu/cpu.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.cc,v
+retrieving revision 1.27
+diff -u -r1.27 cpu.cc
+--- cpu/cpu.cc	1 Apr 2002 13:14:37 -0000	1.27
++++ cpu/cpu.cc	5 Apr 2002 10:17:18 -0000
+@@ -207,7 +207,10 @@
+   }
+ #endif
+ 
+-  is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
++  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
++    is_32 = 1;
++  else
++    is_32 = 0;
+ 
+   if (BX_CPU_THIS_PTR bytesleft == 0) {
+     prefetch();
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.18
+diff -u -r1.18 cpu.h
+--- cpu/cpu.h	1 Apr 2002 04:42:43 -0000	1.18
++++ cpu/cpu.h	5 Apr 2002 10:17:19 -0000
+@@ -457,7 +457,7 @@
+   Bit8u    Ib2; // for ENTER_IwIb
+   Bit16u   Iw2; // for JMP_Ap
+   unsigned ilen; // instruction length
+-  unsigned os_32, as_32; // OperandSize/AddressSize is 32bit
++  bool os_32, as_32; // OperandSize/AddressSize is 32bit
+   unsigned flags_in, flags_out; // flags needed, flags modified
+ 
+ #if BX_USE_CPU_SMF
+@@ -669,7 +669,7 @@
+   virtual void set_arb_id (int newid);
+   };
+ 
+-#define APIC_MAX_ID 16
++#define APIC_MAX_ID 32
+ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
+ #endif // if BX_SUPPORT_APIC
+ 
+Index: iodev/ioapic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/ioapic.cc,v
+retrieving revision 1.7
+diff -u -r1.7 ioapic.cc
+--- iodev/ioapic.cc	20 Mar 2002 02:41:19 -0000	1.7
++++ iodev/ioapic.cc	5 Apr 2002 10:17:19 -0000
+@@ -106,7 +106,7 @@
+   switch (ioregsel) {
+     case 0x00: // set APIC ID
+       {
+-	Bit8u newid = (*value >> 24) & 0xf;
++	Bit8u newid = (*value >> 24);
+ 	BX_INFO(("IOAPIC: setting id to 0x%x", newid));
+ 	set_id (newid);
+ 	return;
+
+_______________________________________________
+bochs-developers mailing list
+bochs-developers@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bochs-developers

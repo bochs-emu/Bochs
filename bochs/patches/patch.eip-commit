@@ -1,0 +1,65 @@
+----------------------------------------------------------------------
+Patch name: patch.eip-commit
+Author: Kevin Lawton <kevinlawton2001@yahoo.com>
+Date: Thu, 29 Aug 2002 17:04:52 -0700 (PDT)
+
+Detailed description:
+Moved 2 lines of redundant code, which were consuming
+3% of Win95 boot time!
+
+Looks like somebody had duplicated the lines of code
+which commit EIP/ESP in an effort to make reporting
+debugging/tracing look right after an async event
+was handled.
+
+This simple diff, moves that redundant commit to after
+the interrupt() call in the async event handling, I think
+the only place EIP/ESP need the commit.  Unlike
+exception(), interrupt() returns without the longjmp,
+so it wasn't hitting the extra commit sequence as
+other instructions already do.
+
+Let me know if this still works for debugging/tracing.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  current cvs
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+
+Index: cpu.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.cc,v
+retrieving revision 1.32
+diff -u -r1.32 cpu.cc
+--- cpu/cpu.cc	6 Jun 2002 23:03:09 -0000	1.32
++++ cpu/cpu.cc	29 Aug 2002 23:47:13 -0000
+@@ -148,13 +148,6 @@
+     goto handle_async_event;
+ 
+ async_events_processed:
+-  // added so that all debugging/tracing code uses the correct EIP even in the
+-  // instruction just after a trap/interrupt.  If you use the prev_eip that was
+-  // set before handle_async_event, traces and breakpoints fail to show the
+-  // first instruction of int/trap handlers.
+-  BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+-  BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
+-  
+   // Now we can handle things which are synchronous to instruction
+   // execution.
+   if (BX_CPU_THIS_PTR eflags.rf) {
+@@ -629,6 +622,10 @@
+     BX_CPU_THIS_PTR EXT   = 1; /* external event */
+     interrupt(vector, 0, 0, 0);
+     BX_INSTR_HWINTERRUPT(vector, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
++    // added so that all debugging/tracing code uses the correct EIP even in the
++    // instruction just after a trap/interrupt.
++    BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
++    BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
+     }
+   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
+     // NOTE: similar code in ::take_dma()
