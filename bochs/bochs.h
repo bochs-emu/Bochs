@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.125 2003-08-24 10:08:49 vruppert Exp $
+// $Id: bochs.h,v 1.126 2003-08-25 16:46:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -582,7 +582,7 @@ typedef struct {
   bx_param_num_c *Oioaddr;
   bx_param_num_c *Oirq;
   bx_param_string_c *Omacaddr;
-  bx_param_string_c *Oethmod;
+  bx_param_enum_c *Oethmod;
   bx_param_string_c *Oethdev;
   bx_param_string_c *Oscript;
   } bx_ne2k_options;

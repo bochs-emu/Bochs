@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.54 2003-07-31 12:04:48 vruppert Exp $
+// $Id: ne2k.cc,v 1.55 2003-08-25 16:46:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1272,7 +1272,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.54 2003-07-31 12:04:48 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.55 2003-08-25 16:46:18 vruppert Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
@@ -1322,17 +1322,17 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
     
   // Attach to the simulated ethernet dev
-  BX_NE2K_THIS ethdev = eth_locator_c::create(bx_options.ne2k.Oethmod->getptr (), 
+  char *ethmod = bx_options.ne2k.Oethmod->get_choice(bx_options.ne2k.Oethmod->get());
+  BX_NE2K_THIS ethdev = eth_locator_c::create(ethmod,
                                               bx_options.ne2k.Oethdev->getptr (),
                                               (const char *) bx_options.ne2k.Omacaddr->getptr (),
                                               rx_handler, 
                                               this);
 
   if (BX_NE2K_THIS ethdev == NULL) {
-    BX_PANIC(("could not find eth module %s", bx_options.ne2k.Oethmod->getptr ()));
+    BX_PANIC(("could not find eth module %s", ethmod));
     // if they continue, use null.
-    BX_INFO(("could not find eth module %s - using null instead",
-             bx_options.ne2k.Oethmod->getptr ()));
+    BX_INFO(("could not find eth module %s - using null instead", ethmod));
 
     BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
                                                 (const char *) bx_options.ne2k.Omacaddr->getptr (),

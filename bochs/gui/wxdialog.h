@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.48 2003-08-23 17:53:27 vruppert Exp $
+// $Id: wxdialog.h,v 1.49 2003-08-25 16:46:18 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -205,76 +205,6 @@ public:
   void SetDriveName (wxString name);
   void SetValidateFunc (validateFunc_t v) { validate = v; }
   void AddRadio (const wxString& description, const wxString& filename);
-DECLARE_EVENT_TABLE()
-};
-
-////////////////////////////////////////////////////////////////////////////
-// ConfigNetworkDialog allows the user to change the settings for 
-// the emulated NE2000 network card.
-////////////////////////////////////////////////////////////////////////////
-// +--- Configure Networking --------------------------------------+
-// |                                                               |
-// |  Bochs can emulate an NE2000-compatible network card.  Would  |
-// |  you like to enable it?                                       |
-// |                                                               |
-// |      Enable networking?  [X]                                  |
-// |                                                               |
-// |      NE2000 I/O address: [ 0x280 ]                            |
-// |                     IRQ: [   9   ]                            |
-// |             MAC address: [ b0:c4:00:00:00:00 ]                |
-// |    Connection to the OS: [ Linux Packet Filter ]              |
-// |     Physical NIC to use: [ eth0 ]                             |
-// |            Setup script: [_________________]                  |
-// |                                                               |
-// |                                    [ Help ] [ Cancel ] [ Ok ] |
-// +---------------------------------------------------------------+
-// To use this dialog:
-// After constructor, use AddConn() to add values to the choice box 
-// called "Connection to the OS".  Then use SetEnable, SetIO, SetIrq, SetMac,
-// SetConn, SetNic, and SetDebug to fill in the current values.  Then call
-// ShowModal(), which will return wxID_OK or wxID_CANCEL.  Then use the Get*
-// methods to retrieve the values that were chosen.
-class NetConfigDialog: public wxDialog
-{
-private:
-#define NET_CONFIG_TITLE "Configure Networking"
-#define NET_CONFIG_PROMPT "Bochs can emulate an NE2000-compatible network card.  Would you like to enable it?"
-#define NET_CONFIG_EN "Enable networking?"
-#define NET_CONFIG_IO "I/O address (hex): "
-#define NET_CONFIG_IRQ "IRQ: "
-#define NET_CONFIG_MAC "MAC address: "
-#define NET_CONFIG_CONN "Connection to OS: "
-#define NET_CONFIG_PHYS "Physical NIC to use: "
-#define NET_CONFIG_SCRIPT "Setup script: "
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
-  wxBoxSizer *mainSizer, *vertSizer, *buttonSizer;
-  wxCheckBox *enable;
-  wxTextCtrl *io, *mac, *phys, *script;
-  wxSpinCtrl *irq;
-  wxChoice *conn;
-  int n_conn_choices;
-  void EnableChanged ();
-public:
-  NetConfigDialog(wxWindow* parent, wxWindowID id);
-  void OnEvent (wxCommandEvent& event);
-  int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetEnable (bool en) { enable->SetValue (en); EnableChanged (); }
-  bool GetEnable () { return enable->GetValue (); }
-  void SetIO (int addr) { SetTextCtrl (io, "0x%03x", addr); }
-  int GetIO ();
-  void SetIrq (int addr) { irq->SetValue (addr); }
-  int GetIrq () { return irq->GetValue (); }
-  void SetMac (unsigned char addr[6]);
-  bool GetMac (unsigned char addr[6]);
-  void SetConn(const char *realname);
-  int GetConn () { return conn->GetSelection (); }
-  void *GetConnData () { return conn->GetClientData (conn->GetSelection ()); }
-  void AddConn (wxString niceName, char *realName);
-  void SetPhys (wxString s) { phys->SetValue (s); }
-  wxString GetPhys () { return phys->GetValue (); }
-  void SetScript (wxString s) { script->SetValue (s); }
-  wxString GetScript () { return script->GetValue (); }
 DECLARE_EVENT_TABLE()
 };
 

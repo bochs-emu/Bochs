@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.240 2003-08-24 10:08:49 vruppert Exp $
+// $Id: main.cc,v 1.241 2003-08-25 16:46:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1185,10 +1185,35 @@ void bx_init_options ()
       "", 6);
   bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
   bx_options.ne2k.Omacaddr->set_separator (':');
-  bx_options.ne2k.Oethmod = new bx_param_string_c (BXP_NE2K_ETHMOD,
+  static char *eth_module_list[] = {
+    "null",
+#if defined(ETH_LINUX)
+    "linux",
+#endif
+#if HAVE_ETHERTAP
+    "tap",
+#endif
+#if HAVE_TUNTAP
+    "tuntap",
+#endif
+#if defined(ETH_WIN32)
+    "win32",
+#endif
+#if defined(ETH_FBSD)
+    "fbsd",
+#endif
+#ifdef ETH_ARPBACK
+    "arpback",
+#endif
+    NULL
+  };
+  bx_options.ne2k.Oethmod = new bx_param_enum_c (BXP_NE2K_ETHMOD,
       "Ethernet module",
       "to be written",
-      "null", 16);
+       eth_module_list,
+       0,
+       0);
+  bx_options.ne2k.Oethmod->set_by_name ("null");
   bx_options.ne2k.Oethdev = new bx_param_string_c (BXP_NE2K_ETHDEV,
       "Ethernet device",
       "to be written",
@@ -3747,7 +3772,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if ((num_params < 4) || (num_params > 7)) {
       PARSE_ERR(("%s: ne2k directive malformed.", context));
       }
-    bx_options.ne2k.Oethmod->set ("null");
+    bx_options.ne2k.Oethmod->set_by_name ("null");
     if (strncmp(params[1], "ioaddr=", 7)) {
       PARSE_ERR(("%s: ne2k directive malformed.", context));
       }
@@ -3771,7 +3796,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
       if (strncmp(params[4], "ethmod=", 7)) {
         PARSE_ERR(("%s: ne2k directive malformed.", context));
         }
-      bx_options.ne2k.Oethmod->set (strdup(&params[4][7]));
+      if (!bx_options.ne2k.Oethmod->set_by_name (strdup(&params[4][7])))
+        PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[4][7])));
       if (num_params > 5) {
         if (strncmp(params[5], "ethdev=", 7)) {
           PARSE_ERR(("%s: ne2k directive malformed.", context));
@@ -4075,7 +4101,7 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
       (unsigned int)(0xff & ptr[3]),
       (unsigned int)(0xff & ptr[4]),
       (unsigned int)(0xff & ptr[5]),
-      opt->Oethmod->getptr (),
+      opt->Oethmod->get_choice(opt->Oethmod->get()),
       opt->Oethdev->getptr (),
       opt->Oscript->getptr ());
   return 0;
