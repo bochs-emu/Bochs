@@ -1125,7 +1125,7 @@ Bit32u scancodes2bx[_SCN2BX_LAST_][2] = {
   {0,	BX_KEY_DELETE},		// 53 -  83
   {0,	BX_KEY_ALT_SYSREQ},	// 54 -  84
   {0,	0},			// 55 -  85
-  {0,	0},			// 56 -  86 non-US unlabeled key
+  {0,	BX_KEY_LEFT_BACKSLASH},	// 56 -  86 non-US unlabeled key
   {0,	BX_KEY_F11},		// 57 -  87
   {0,	BX_KEY_F12},		// 58 -  88
   {0,	0},			// 59 -  89
