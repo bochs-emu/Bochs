@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-O2
-LIST=blur-no-opt blur-O2 blur-profile blur-O2-unroll blur-O2-func blur-O2-switch blur-O2-switch-call blur-O2-fnptr-switch  blur-O2-fnptr-table blur-O2-opcode-switch blur-O2-opcode-fnptr blur-O2-opcode-translated1 blur-O2-opcode-translated2 blur-O2-opcode-translated3 blur-O2-opcode-dynamic1 blur-O2-opcode-dynamic1-test blur-O2-opcode-dynamic2 blur-O2-opcode-dynamic2-test blur-O2-opcode-dynamic3
+LIST=blur-no-opt blur-O2 blur-profile blur-O2-unroll blur-O2-func blur-O2-switch blur-O2-switch-call blur-O2-fnptr-switch  blur-O2-fnptr-table blur-O2-opcode-switch blur-O2-opcode-fnptr blur-O2-opcode-translated1 blur-O2-opcode-translated2 blur-O2-opcode-translated3 blur-O2-opcode-dynamic1 blur-O2-opcode-dynamic1-test blur-O2-opcode-dynamic2 blur-O2-opcode-dynamic2-test blur-O2-opcode-dynamic3 blur-translate
 
 all: $(LIST) 
 
@@ -87,6 +87,10 @@ translate2.c: blur-O2-opcode-dynamic2
 blur-O2-opcode-dynamic3: blur-opcode.c
 	libtool $(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE3 -o blur-O2-opcode-dynamic3-test blur-opcode.c -lltdl -export-dynamic
 	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE3 -o blur-O2-opcode-dynamic3-test.s -S blur-opcode.c
+
+blur-translate: blur-translate.c
+	libtool $(CC) $(CFLAGS) -DUSE_DYNAMIC_TRANSLATION -o blur-translate blur-translate.c -lltdl -export-dynamic
+	$(CC) $(CFLAGS) -S blur-translate.c
 
 
 dltest:
