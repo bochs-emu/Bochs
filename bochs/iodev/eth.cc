@@ -50,6 +50,9 @@ extern class bx_fbsd_locator_c bx_fbsd_match;
 #ifdef ETH_LINUX
 extern class bx_linux_locator_c bx_linux_match;
 #endif
+#ifdef ETH_WIN32
+extern class bx_win32_locator_c bx_win32_match;
+#endif
 #ifdef ETH_TEST
 extern bx_test_match;
 #endif
@@ -96,6 +99,12 @@ eth_locator_c::create(const char *type, const char *netif,
   {
     if (!strcmp(type, "linux"))    
       ptr = (eth_locator_c *) &bx_linux_match;
+  }
+#endif
+#ifdef ETH_WIN32
+  {
+    if(!strcmp(type, "win32"))
+      ptr = (eth_locator_c *) &bx_win32_match;
   }
 #endif
 #ifdef ETH_TEST
