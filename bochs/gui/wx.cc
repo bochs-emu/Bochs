@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.61 2003-06-28 08:04:31 vruppert Exp $
+// $Id: wx.cc,v 1.62 2003-07-04 17:11:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -97,6 +97,7 @@ static unsigned long wxFontX = 0;
 static unsigned long wxFontY = 0;
 static unsigned int text_rows=25, text_cols=80;
 static Bit8u h_panning = 0, v_panning = 0;
+static unsigned vga_bpp=8;
 struct {
   unsigned char red;
   unsigned char green;
@@ -908,21 +909,68 @@ bx_wx_gui_c::clear_screen(void)
 static void 
 UpdateScreen(unsigned char *newBits, int x, int y, int width, int height) 
 {
+  Bit16u *newBits16 = (Bit16u *)newBits;
+
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen got lock. wxScreen=%p", wxScreen)));
   if(wxScreen != NULL) {
-    for(int i = 0; i < height; i++) {
-      char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
-      for(int c = 0; c < width; c++) {
-        unsigned pixel = (i * width) + c;
-        pwxScreen[0] = wxBochsPalette[newBits[pixel]].red;
-        pwxScreen[1] = wxBochsPalette[newBits[pixel]].green;
-        pwxScreen[2] = wxBochsPalette[newBits[pixel]].blue;
-        pwxScreen += 3;
-      }
-      y++;
-      if(y >= wxScreenY) break;
+    switch (vga_bpp) {
+      case 32:
+        for(int i = 0; i < height; i++) {
+          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
+          for(int c = 0; c < width; c++) {
+            unsigned pixel = ((i * width) + c) * 4;
+            pwxScreen[0] = newBits[pixel+2];
+            pwxScreen[1] = newBits[pixel+1];
+            pwxScreen[2] = newBits[pixel];
+            pwxScreen += 3;
+          }
+          y++;
+          if(y >= wxScreenY) break;
+        }
+        break;
+      case 24:
+        for(int i = 0; i < height; i++) {
+          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
+          for(int c = 0; c < width; c++) {
+            unsigned pixel = ((i * width) + c) * 3;
+            pwxScreen[0] = newBits[pixel+2];
+            pwxScreen[1] = newBits[pixel+1];
+            pwxScreen[2] = newBits[pixel];
+            pwxScreen += 3;
+          }
+          y++;
+          if(y >= wxScreenY) break;
+        }
+        break;
+      case 16:
+        for(int i = 0; i < height; i++) {
+          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
+          for(int c = 0; c < width; c++) {
+            unsigned pixel = (i * width) + c;
+            pwxScreen[0] = (newBits16[pixel] & 0xF800) >> 8;
+            pwxScreen[1] = (newBits16[pixel] & 0x07e0) >> 3;
+            pwxScreen[2] = (newBits16[pixel] & 0x001f) << 3;
+            pwxScreen += 3;
+          }
+          y++;
+          if(y >= wxScreenY) break;
+        }
+        break;
+      default: /* 8 bpp */
+        for(int i = 0; i < height; i++) {
+          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
+          for(int c = 0; c < width; c++) {
+            unsigned pixel = (i * width) + c;
+            pwxScreen[0] = wxBochsPalette[newBits[pixel]].red;
+            pwxScreen[1] = wxBochsPalette[newBits[pixel]].green;
+            pwxScreen[2] = wxBochsPalette[newBits[pixel]].blue;
+            pwxScreen += 3;
+          }
+          y++;
+          if(y >= wxScreenY) break;
+        }
     }
   } else {
     IFDBG_VGA (wxLogDebug (wxT ("UpdateScreen with null wxScreen")));
@@ -1168,9 +1216,14 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen)));
   wxScreen_lock.Enter ();
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen)));
-  BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d", x, y, fheight, fwidth));
-  if (bpp > 8) {
-    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
+  if ((bpp == 8) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
+    if (bpp == 32) BX_INFO(("wxWindows ignores bit 24..31 in 32bpp mode"));
+    vga_bpp = bpp;
+  }
+  else
+  {
+    BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   if (fheight > 0) {
     wxFontX = fwidth;
