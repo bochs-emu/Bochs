@@ -21314,6 +21314,14 @@ _ACEOF
 #define BX_NO_ATTRIBUTES 1
 _ACEOF
 
+    cat >>confdefs.h <<\_ACEOF
+#define HAVE_TUNTAP 0
+_ACEOF
+
+    cat >>confdefs.h <<\_ACEOF
+#define HAVE_ETHERTAP 0
+_ACEOF
+
     ;;
   *-pc-windows*)
     INSTALL_TARGET='install_win32'

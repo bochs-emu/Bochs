@@ -18,6 +18,17 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --target=mac-macos
+./configure --target=ppc-macos \
+                --enable-cdrom \
+                --enable-sb16=dummy \
+                --enable-vbe \
+                --enable-all-optimizations \
+                ${CONFIGURE_ARGS} \
+                --enable-plugins \
+                --enable-pci \
+                --enable-port-e9-hack \
+                --enable-mmx \
+                --enable-sse=2 \
+                --with-macos
 
 unset echo
