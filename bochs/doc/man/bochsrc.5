@@ -570,6 +570,16 @@ speed.
 Example:
   ips: 1000000
 
+.TP
+.I "pit:"
+The PIT is the programmable interval timer.  It has an option that tries to
+keep the PIT in sync with real time.  This feature is still experimental,
+but it may be useful if you want to prevent Bochs from running too fast, for
+example a DOS video game.  Be aware that with the realtime pit option, your
+simulation will not be repeatable; this can a problem if you are debugging.
+
+Example:
+  pit: realtime=1
 
 .TP
 .I "mouse:"
