@@ -3675,6 +3675,18 @@ bx_dbg_info_control_regs_command(void)
   fprintf (stderr, "    OSXMMEXCPT=OS support for unmasked SIMD FP exceptions=%d\n", (cr4>>10) & 1);
 }
 
+/*
+ * this implements the info ne2k commands in the debugger.
+ * info ne2k - shows all registers
+ * info ne2k page N - shows all registers in a page
+ * info ne2k page N reg M - shows just one register
+ */
+void
+bx_dbg_info_ne2k(int page, int reg)
+{
+  bx_ne2k.print_info (stderr, page, reg, 0);
+}
+
 //
 // Reports from various events
 //

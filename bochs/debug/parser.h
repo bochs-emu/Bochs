@@ -70,19 +70,21 @@
 #define BX_TOKEN_NUMERIC 326
 #define BX_TOKEN_LONG_NUMERIC 327
 #define BX_TOKEN_INFO_ADDRESS 328
-#define BX_TOKEN_CS 329
-#define BX_TOKEN_ES 330
-#define BX_TOKEN_SS 331
-#define BX_TOKEN_DS 332
-#define BX_TOKEN_FS 333
-#define BX_TOKEN_GS 334
-#define BX_TOKEN_ALWAYS_CHECK 335
-#define BX_TOKEN_MATHS 336
-#define BX_TOKEN_ADD 337
-#define BX_TOKEN_SUB 338
-#define BX_TOKEN_MUL 339
-#define BX_TOKEN_DIV 340
-#define BX_TOKEN_V2L 341
+#define BX_TOKEN_NE2000 329
+#define BX_TOKEN_PAGE 330
+#define BX_TOKEN_CS 331
+#define BX_TOKEN_ES 332
+#define BX_TOKEN_SS 333
+#define BX_TOKEN_DS 334
+#define BX_TOKEN_FS 335
+#define BX_TOKEN_GS 336
+#define BX_TOKEN_ALWAYS_CHECK 337
+#define BX_TOKEN_MATHS 338
+#define BX_TOKEN_ADD 339
+#define BX_TOKEN_SUB 340
+#define BX_TOKEN_MUL 341
+#define BX_TOKEN_DIV 342
+#define BX_TOKEN_V2L 343
 typedef union {
   char    *sval;
   Bit32u   uval;

@@ -88,6 +88,8 @@
 %token <uval> BX_TOKEN_NUMERIC
 %token <ulval> BX_TOKEN_LONG_NUMERIC
 %token <sval> BX_TOKEN_INFO_ADDRESS
+%token <sval> BX_TOKEN_NE2000
+%token <sval> BX_TOKEN_PAGE
 %token <sval> BX_TOKEN_CS
 %token <sval> BX_TOKEN_ES
 %token <sval> BX_TOKEN_SS
@@ -513,6 +515,21 @@ info_command:
         {
         bx_dbg_info_control_regs_command();
         free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_NE2000 '\n'
+        {
+        bx_dbg_info_ne2k(-1, -1);
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_NE2000 BX_TOKEN_PAGE BX_TOKEN_NUMERIC '\n'
+        {
+        free($1); free($2); free($3);
+        bx_dbg_info_ne2k($4, -1);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_NE2000 BX_TOKEN_PAGE BX_TOKEN_NUMERIC BX_TOKEN_REGISTERS BX_TOKEN_NUMERIC '\n'
+        {
+        free($1); free($2); free($3); free($5);
+        bx_dbg_info_ne2k($4, $6);
         }
     ;
 

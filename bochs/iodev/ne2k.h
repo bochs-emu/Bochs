@@ -194,6 +194,7 @@ public:
   bx_ne2k_c(void);
   ~bx_ne2k_c(void);
   BX_NE2K_SMF void   init(bx_devices_c *);
+  void print_info (FILE *file, int page, int reg, int nodups);
 
 private:
   bx_ne2k_t s;
