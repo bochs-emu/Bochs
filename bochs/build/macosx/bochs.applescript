@@ -11,7 +11,7 @@ set the script_path to the text_item_list as string
 
 tell application "Terminal"
 	activate
-	do script "cd " & script_path & ";" & bochs_path
+	do script "cd \"" & script_path & "\";" & bochs_path
 	-- Wait for Terminal to change the name first, then change it to ours
 	delay 1
 	set AppleScript's text item delimiters to "/"
