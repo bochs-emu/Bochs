@@ -38,8 +38,8 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
   Example:
     romimage: file=bios/BIOS-bochs-eltorito, address=0xf0000
     boot: cdrom
-- updated Christophe Bothamy's free vga bios to version 0.2b.  The only
-  change is a bug fix for function ah=13.
+- updated Christophe Bothamy's free vga bios to version 0.3a.  This consists of
+  a bug fix for function ah=13 and VBE support.
 - keyboard changes by Christophe Bothamy. FIXME(cbothamy): need details.
   - keyboard mapping?
   - keyboard type?
