@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.65 2003-02-09 18:59:19 vruppert Exp $
+// $Id: gui.cc,v 1.66 2003-05-24 10:51:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -164,6 +164,8 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   if(bx_options.Otext_snapshot_check->get()) {
     bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 1000000, 1, 1, "snap_chk");
   }
+
+  BX_GUI_THIS charmap_updated = 0;
 
   show_headerbar();
 }
