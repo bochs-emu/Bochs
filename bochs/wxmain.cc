@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.26 2002-04-08 06:18:04 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.27 2002-04-08 12:43:58 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -225,7 +225,7 @@ struct {
 
 bool MyApp::OnInit()
 {
-  wxLog::AddTraceMask (_T("mime"));
+  //wxLog::AddTraceMask (_T("mime"));
   siminterface_init ();
   MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
   theFrame = frame;  // hack alert
@@ -932,14 +932,14 @@ char wxAsciiKey[0x5f] = {
   BX_KEY_GRAVE
 };
 
-// MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode1 & 2.
+// MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode & 2.
 Boolean
 MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 {
-#if defined(wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXMSW__)
-  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_MSW. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode1, wxev.m_rawCode2));
+#if defined(wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
+  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_MSW. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags));
   // this code was grabbed from gui/win32.cpp
-  Bit32u lParam = wxev.m_rawCode2;
+  Bit32u lParam = wxev.m_rawFlags;
   Bit32u key = HIWORD (lParam) & 0x01FF;
   bxev.bx_key = 0x0000;
   if (((key & 0x0100) && ((key & 0x01ff) != 0x0145)) | ((key & 0x01ff) == 0x45)) {
@@ -955,19 +955,19 @@ MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
 #endif
 }
 
-#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
+#if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 // get those keysym definitions
 #include <gdk/gdkkeysyms.h>
 #endif
 
-// GTK specific key mapping, which uses wxKeyEvent::m_rawCode1.
+// GTK specific key mapping, which uses wxKeyEvent::m_rawCode.
 Boolean
 MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 {
-#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
-  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_GTK. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode1, wxev.m_rawCode2));
+#if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
+  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_GTK. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags));
   // GTK has only 16bit key codes
-  Bit16u keysym = (Bit32u) wxev.m_rawCode1;
+  Bit16u keysym = (Bit32u) wxev.m_rawCode;
   Bit32u bx_key = 0;
   // since the GDK_* symbols are very much like the X11 symbols (possibly
   // identical), I'm using code that is copied from gui/x.cc.
@@ -1107,11 +1107,11 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
   // sources and recompile.  This patch, or something like it, should appear in
   // future wxWindows versions.
 
-#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXMSW__)
+#if defined (wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
   return fillBxKeyEvent_MSW (wxev, bxev, release);
 #endif
 
-#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
+#if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
   return fillBxKeyEvent_GTK (wxev, bxev, release);
 #endif
 

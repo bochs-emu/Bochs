@@ -13,11 +13,10 @@ TO DO:
   stuff go into gui/wxmain.cc ?  
 - test with --with-wx and debugger.  The console debugger doesn't pop up
   at all if you use --with-wx.  I'll have to figure this out.
-- start using the rawCode/rawFlag notation that Vadim checked in, so that
-  when wxWindows 2.3.4 arrives bochs will be prepared for it.
 - add comments in the split-up main to explain why it is split the way it is.
   Maybe there are more useful names than bx_init_before_control_panel and
   bx_continue_after_control_panel.
+- add gtk-config --cflags for Jeroen
 -------------
 
 wxWindows Configuration Interface
