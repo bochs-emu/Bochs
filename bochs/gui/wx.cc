@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.21 2002-09-08 09:23:45 vruppert Exp $
+// $Id: wx.cc,v 1.22 2002-09-18 20:57:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -91,11 +91,32 @@ BEGIN_EVENT_TABLE(MyPanel, wxPanel)
   EVT_KEY_DOWN(MyPanel::OnKeyDown)
   EVT_KEY_UP(MyPanel::OnKeyUp)
   EVT_PAINT(MyPanel::OnPaint)
+  EVT_TIMER(-1, MyPanel::OnTimer)
 END_EVENT_TABLE()
+
+MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+  : wxPanel (parent, id, pos, size, style, name)
+{
+  wxLogDebug ("MyPanel constructor"); 
+  refreshTimer.SetOwner (this);
+  refreshTimer.Start (100);
+  needRefresh = true;
+}
+
+void MyPanel::OnTimer(wxCommandEvent& WXUNUSED(event))
+{
+  wxLogDebug ("timer");
+  if (needRefresh) {
+    wxLogDebug ("painting");
+    wxPaintEvent unused;
+    OnPaint (unused);
+  }
+}
 
 void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
+	BX_INFO (("OnPaint"));
 	//PrepareDC(dc);
 
 	IFDBG_VGA(wxLogDebug ("MyPanel::OnPaint trying to get lock. wxScreen=%p", wxScreen));
@@ -106,20 +127,14 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 	  wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
 	  dc.DrawBitmap(screenImage.ConvertToBitmap(), pt.x, pt.y, FALSE);
 	}
-	
+	needRefresh = false;
 }
 
 void 
 MyPanel::MyRefresh ()
 {
-#if defined(__WXMSW__)
-	// For some reason, on windows the postevent trick does not
-	// cause a paint event.
-	Refresh(FALSE);
-#else
-	wxPaintEvent event;
-	wxPostEvent (this, event);
-#endif
+  BX_INFO (("set needRefresh=true"));
+  needRefresh = true;
 }
 
 void 
@@ -729,6 +744,7 @@ bx_gui_c::clear_screen(void)
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug ("MyPanel::clear_screen got lock. wxScreen=%p", wxScreen));
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+  thePanel->MyRefresh ();
 }
 
 static void 
@@ -746,6 +762,8 @@ UpdateScreen(char *newBits, int x, int y, int width, int height)
 			}
 			y++;
 		}
+	} else {
+	  IFDBG_VGA (wxLogDebug ("UpdateScreen with null wxScreen"));
 	}
 }
 
@@ -802,7 +820,10 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
 		      Bit16u cursor_state, unsigned nrows)
 {
-	IFDBG_VGA(wxLogDebug ("text_update"));
+  IFDBG_VGA(wxLogDebug ("text_update"));
+  //static Bit32u counter = 0;
+  //BX_INFO (("text_update executed %d times", ++counter));
+
 	Bit8u cs_start = (cursor_state >> 8) & 0x3f;
 	Bit8u cs_end = cursor_state & 0x1f;
 	unsigned char cChar;
@@ -849,6 +870,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
   wxBochsPalette[index].red = red;
   wxBochsPalette[index].green = green;
   wxBochsPalette[index].blue = blue;
+  thePanel->MyRefresh ();
   return(0);
 }
 
@@ -871,8 +893,10 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   IFDBG_VGA (wxLogDebug ("graphics_tile_update"));
+  //static Bit32u counter = 0;
+  //BX_INFO (("graphics_tile_update executed %d times", ++counter));
   UpdateScreen((char *)tile, x0, y0, wxTileX, wxTileY);
-  //thePanel->MyRefresh ();
+  thePanel->MyRefresh ();
 }
 
 // ::DIMENSION_UPDATE()
@@ -889,6 +913,7 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
   IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen));
   wxScreen_lock.Enter ();
   IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen));
+  BX_INFO (("dimension update"));
   if (fheight > 0) {
 	wxFontY = fheight;
   }
@@ -912,9 +937,9 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
   //theFrame->SetSize(-1, -1, wxScreenX + 6, wxScreenY + 100, 0);
   //wxSize size = theFrame->GetToolBar()->GetToolSize();
   theFrame->SetClientSize(wxScreenX, wxScreenY); // + size.GetHeight());
-  //thePanel->MyRefresh ();
   theFrame->Layout ();
   wxMutexGuiLeave ();
+  thePanel->MyRefresh ();
 }
 
 
