@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.51 2002-10-16 19:50:27 vruppert Exp $
+// $Id: gui.cc,v 1.52 2002-10-22 17:30:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -304,15 +304,13 @@ bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
   for (unsigned i=0; i<txHeight; i++) {
     line_addr = i * txWidth * 2;
     for (unsigned j=0; j<(txWidth*2); j+=2) {
-      clean_snap[txt_addr] = raw_snap[line_addr+j];
-      txt_addr++;
+      clean_snap[txt_addr++] = raw_snap[line_addr+j];
     }
+  while ((txt_addr > 0) && (clean_snap[txt_addr-1] == ' ')) txt_addr--;
 #ifdef WIN32
-    clean_snap[txt_addr] = 13;
-    txt_addr++;
+    clean_snap[txt_addr++] = 13;
 #endif
-    clean_snap[txt_addr] = 10;
-    txt_addr++;
+    clean_snap[txt_addr++] = 10;
   }
   clean_snap[txt_addr] = 0;
   *snapshot = clean_snap;
