@@ -25,6 +25,15 @@ Notes for win32 DLLs:
 
 *.dll.a is an import library
 
+libtool makes an import library when you link against a DLL
+
+dlltool --as=as --dllname cygmodule2-0.dll --def .libs/cygmodule2-0.dll-def --output-lib .libs/libimp-cygmodule2-0.a
+
+the dll-def file is created at the time that the DLL is created.
+
+
+
+
 Win32 DLL Topics
 http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vccore98/html/_core_dll_topics.asp
 
@@ -63,3 +72,152 @@ If you had run the LIB utility earlier to produce an import library for DLL1,
 LIB would have produced the file DLL1.EXP as well. You must use DLL1.EXP as
 input to LINK when building DLL1.DLL.
 -----------
+
+this makes a symbol table for a file
+
+dlltool.exe  --export-all --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --output-def def.txt uselib.exe
+
+These lines from  test4 show that libtool does know how to make
+import libraries:
+> generating import library for `cygmodule1-0.dll'
+> dlltool --as=as --dllname cygmodule1-0.dll --def .libs/cygmodule1-0.dll-def --output-lib .libs/libimp-cygmodule1-0.a
+
+Now what I want to see is generation of an import library corresponding to
+a BINARY.
+
+
+/bin/sh.exe ../libtool g++ -g -O2 -c module1.cc
+mkdir .libs
+g++ -g -O2 -c module1.cc  -DDLL_EXPORT -DPIC -o .libs/module1.lo
+In file included from module1.cc:2:
+module1.h:4: warning: #warning I will export DLL symbols for MODULE1
+In file included from module1.cc:3:
+module2.h:8: warning: #warning I will import DLL symbols for MODULE2
+g++ -g -O2 -c module1.cc -o module1.o >/dev/null 2>&1
+mv -f .libs/module1.lo module1.lo
+/bin/sh.exe ../libtool g++ -g -O2 -c module2.cc
+rm -f .libs/module2.lo
+g++ -g -O2 -c module2.cc  -DDLL_EXPORT -DPIC -o .libs/module2.lo
+In file included from module2.cc:3:
+module2.h:4: warning: #warning I will export DLL symbols for MODULE2
+g++ -g -O2 -c module2.cc -o module2.o >/dev/null 2>&1
+mv -f .libs/module2.lo module2.lo
+/bin/sh.exe ../libtool g++ -no-undefined -o libmodule2.la module2.lo -rpath `pwd`/lib
+rm -fr .libs/libmodule2.la .libs/libmodule2.* .libs/libmodule2.*
+generating symbol list for `libmodule2.la'
+ dlltool --export-all --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --output-def .libs/cygmodule2-0.dll-def  module2.lo 
+ sed -e "1,/EXPORTS/d" -e "s/ @ [0-9]*//" -e "s/ *;.*$//" < .libs/cygmodule2-0.dll-def > .libs/libmodule2.exp
+if test "x`head -1 .libs/libmodule2.exp`" = xEXPORTS; then cp .libs/libmodule2.exp .libs/cygmodule2-0.dll-def; else echo EXPORTS > .libs/cygmodule2-0.dll-def; _lt_hint=1; cat .libs/libmodule2.exp | while read symbol; do set dummy $symbol; case $# in 2) echo " $2 @ $_lt_hint ; " >> .libs/cygmodule2-0.dll-def;; *) echo " $2 @ $_lt_hint $3 ; " >> .libs/cygmodule2-0.dll-def;; esac; _lt_hint=`expr 1 + $_lt_hint`; done; fi
+ gcc -Wl,--base-file,.libs/cygmodule2-0.dll-base -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule2-0.dll  module2.lo  
+ dlltool --as=as --dllname cygmodule2-0.dll --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --def .libs/cygmodule2-0.dll-def --base-file .libs/cygmodule2-0.dll-base --output-exp .libs/cygmodule2-0.dll-exp
+ gcc -Wl,--base-file,.libs/cygmodule2-0.dll-base .libs/cygmodule2-0.dll-exp -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule2-0.dll  module2.lo  
+ dlltool --as=as --dllname cygmodule2-0.dll --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --def .libs/cygmodule2-0.dll-def --base-file .libs/cygmodule2-0.dll-base --output-exp .libs/cygmodule2-0.dll-exp --output-lib .libs/libmodule2.dll.a
+ gcc .libs/cygmodule2-0.dll-exp -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule2-0.dll  module2.lo  
+ar cru .libs/libmodule2.a  module2.o 
+ranlib .libs/libmodule2.a
+creating libmodule2.la
+(cd .libs && rm -f libmodule2.la && ln -s ../libmodule2.la libmodule2.la)
+mkdir -p lib bin
+/bin/sh.exe ../libtool cp libmodule2.la `pwd`/lib
+cp .libs/libmodule2.dll.a /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule2.dll.a
+dlpath=`bash 2>&1 -c '. .libs/libmodule2.lai;echo $dlname'`
+ dldir=/home/bryce/bochs-testing/plugin-test/test4-interdep/lib/`dirname $dlpath`
+ test -d $dldir || mkdir -p $dldir
+ cp .libs/cygmodule2-0.dll $dldir/cygmodule2-0.dll
+cp .libs/libmodule2.lai /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule2.la
+cp .libs/libmodule2.a /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule2.a
+ranlib /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule2.a
+chmod 644 /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule2.a
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /home/bryce/bochs-testing/plugin-test/test4-interdep/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the `-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the `PATH' environment variable
+     during execution
+   - add LIBDIR to the `LD_RUN_PATH' environment variable
+     during linking
+   - use the `-Wl,--rpath -Wl,LIBDIR' linker flag
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+/bin/sh.exe ../libtool g++ -no-undefined -o libmodule1.la module1.lo -rpath `pwd`/lib libmodule2.la
+generating import library for `cygmodule2-0.dll'
+dlltool --as=as --dllname cygmodule2-0.dll --def .libs/cygmodule2-0.dll-def --output-lib .libs/libimp-cygmodule2-0.a
+rm -fr .libs/libmodule1.la .libs/libmodule1.* .libs/libmodule1.*
+generating symbol list for `libmodule1.la'
+ dlltool --export-all --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --output-def .libs/cygmodule1-0.dll-def  module1.lo 
+ sed -e "1,/EXPORTS/d" -e "s/ @ [0-9]*//" -e "s/ *;.*$//" < .libs/cygmodule1-0.dll-def > .libs/libmodule1.exp
+if test "x`head -1 .libs/libmodule1.exp`" = xEXPORTS; then cp .libs/libmodule1.exp .libs/cygmodule1-0.dll-def; else echo EXPORTS > .libs/cygmodule1-0.dll-def; _lt_hint=1; cat .libs/libmodule1.exp | while read symbol; do set dummy $symbol; case $# in 2) echo " $2 @ $_lt_hint ; " >> .libs/cygmodule1-0.dll-def;; *) echo " $2 @ $_lt_hint $3 ; " >> .libs/cygmodule1-0.dll-def;; esac; _lt_hint=`expr 1 + $_lt_hint`; done; fi
+ gcc -Wl,--base-file,.libs/cygmodule1-0.dll-base -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule1-0.dll  module1.lo  .libs/libimp-cygmodule2-0.a 
+ dlltool --as=as --dllname cygmodule1-0.dll --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --def .libs/cygmodule1-0.dll-def --base-file .libs/cygmodule1-0.dll-base --output-exp .libs/cygmodule1-0.dll-exp
+ gcc -Wl,--base-file,.libs/cygmodule1-0.dll-base .libs/cygmodule1-0.dll-exp -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule1-0.dll  module1.lo  .libs/libimp-cygmodule2-0.a 
+ dlltool --as=as --dllname cygmodule1-0.dll --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --def .libs/cygmodule1-0.dll-def --base-file .libs/cygmodule1-0.dll-base --output-exp .libs/cygmodule1-0.dll-exp --output-lib .libs/libmodule1.dll.a
+ gcc .libs/cygmodule1-0.dll-exp -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule1-0.dll  module1.lo  .libs/libimp-cygmodule2-0.a 
+ar cru .libs/libmodule1.a  module1.o 
+ranlib .libs/libmodule1.a
+creating libmodule1.la
+(cd .libs && rm -f libmodule1.la && ln -s ../libmodule1.la libmodule1.la)
+mkdir -p lib bin
+/bin/sh.exe ../libtool cp libmodule1.la `pwd`/lib
+libtool: install: warning: relinking `libmodule1.la'
+cd /home/bryce/bochs-testing/plugin-test/test4-interdep; /bin/sh ../libtool --mode=relink g++ -no-undefined -o libmodule1.la module1.lo -rpath /home/bryce/bochs-testing/plugin-test/test4-interdep/lib libmodule2.la
+generating symbol list for `libmodule1.la'
+ dlltool --export-all --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --output-def .libs/cygmodule1-0.dll-def  module1.lo 
+ sed -e "1,/EXPORTS/d" -e "s/ @ [0-9]*//" -e "s/ *;.*$//" < .libs/cygmodule1-0.dll-def > .libs/libmodule1.exp
+if test "x`head -1 .libs/libmodule1.exp`" = xEXPORTS; then cp .libs/libmodule1.exp .libs/cygmodule1-0.dll-def; else echo EXPORTS > .libs/cygmodule1-0.dll-def; _lt_hint=1; cat .libs/libmodule1.exp | while read symbol; do set dummy $symbol; case $# in 2) echo " $2 @ $_lt_hint ; " >> .libs/cygmodule1-0.dll-def;; *) echo " $2 @ $_lt_hint $3 ; " >> .libs/cygmodule1-0.dll-def;; esac; _lt_hint=`expr 1 + $_lt_hint`; done; fi
+ gcc -Wl,--base-file,.libs/cygmodule1-0.dll-base -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule1-0.dll  module1.lo  -L/home/bryce/bochs-testing/plugin-test/test4-interdep/lib -lmodule2 
+ dlltool --as=as --dllname cygmodule1-0.dll --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --def .libs/cygmodule1-0.dll-def --base-file .libs/cygmodule1-0.dll-base --output-exp .libs/cygmodule1-0.dll-exp
+ gcc -Wl,--base-file,.libs/cygmodule1-0.dll-base .libs/cygmodule1-0.dll-exp -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule1-0.dll  module1.lo  -L/home/bryce/bochs-testing/plugin-test/test4-interdep/lib -lmodule2 
+ dlltool --as=as --dllname cygmodule1-0.dll --exclude-symbols DllMain@12,_cygwin_dll_entry@12,_cygwin_noncygwin_dll_entry@12,DllMainCRTStartup@12,DllEntryPoint@12 --def .libs/cygmodule1-0.dll-def --base-file .libs/cygmodule1-0.dll-base --output-exp .libs/cygmodule1-0.dll-exp --output-lib .libs/libmodule1.dll.a
+ gcc .libs/cygmodule1-0.dll-exp -Wl,--dll -nostartfiles -Wl,-e,__cygwin_dll_entry@12 -o .libs/cygmodule1-0.dll  module1.lo  -L/home/bryce/bochs-testing/plugin-test/test4-interdep/lib -lmodule2 
+cp .libs/libmodule1.dll.aT /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule1.dll.a
+dlpath=`bash 2>&1 -c '. .libs/libmodule1.lai;echo $dlname'`
+ dldir=/home/bryce/bochs-testing/plugin-test/test4-interdep/lib/`dirname $dlpath`
+ test -d $dldir || mkdir -p $dldir
+ cp .libs/cygmodule1-0.dll $dldir/cygmodule1-0.dll
+cp .libs/libmodule1.lai /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule1.la
+cp .libs/libmodule1.a /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule1.a
+ranlib /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule1.a
+chmod 644 /home/bryce/bochs-testing/plugin-test/test4-interdep/lib/libmodule1.a
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /home/bryce/bochs-testing/plugin-test/test4-interdep/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the `-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the `PATH' environment variable
+     during execution
+   - add LIBDIR to the `LD_RUN_PATH' environment variable
+     during linking
+   - use the `-Wl,--rpath -Wl,LIBDIR' linker flag
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+/bin/sh.exe ../libtool g++ -no-undefined -o uselib ./uselib.cc libmodule1.la libmodule2.la
+generating import library for `cygmodule1-0.dll'
+dlltool --as=as --dllname cygmodule1-0.dll --def .libs/cygmodule1-0.dll-def --output-lib .libs/libimp-cygmodule1-0.a
+g++ -o .libs/uselib ./uselib.cc  .libs/libimp-cygmodule1-0.a .libs/libimp-cygmodule2-0.a -Wl,--rpath -Wl,/home/bryce/bochs-testing/plugin-test/test4-interdep/lib
+In file included from ./uselib.cc:2:
+module1.h:8: warning: #warning I will import DLL symbols for MODULE1
+In file included from ./uselib.cc:3:
+module2.h:8: warning: #warning I will import DLL symbols for MODULE2
+creating uselib.exe
+
+
+
+Try making a dll with everything in it, and then a nearly empty object that
+
+build libmain.la with main.lo
+build module1.la with libmain.la
+build module2.la with libmain.la
+build .exe from libmain.la
+
+Then main.cc can dlopen module1.la
