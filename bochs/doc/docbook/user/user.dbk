@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.44 2002-08-13 13:50:54 vruppert Exp $
+$Id: user.dbk,v 1.45 2002-08-24 10:20:34 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2498,14 +2498,18 @@ com1: dev=/dev/cua0
 
 <section><title>parport1</title>
 <para>
-This defines a parallel (printer) port.  When turned on, the emulated
-printer port sends characters printed by the guest OS into an output file.
+This defines a parallel (printer) port. When turned on and an output file is
+defined emulated printer port sends characters printed by the guest OS into
+the output file. On some platforms a device filename can be used to send the
+data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
+win32 platforms).
 </para>
 <para>
 Examples:
 <screen>
-parport1: enable=1, file="parport.out"
-parport1: enable=0
+parport1: enabled=1, file="parport.out"
+parport1: enabled=1, file="/dev/lp0"
+parport1: enabled=0
 </screen>
 </para>
 </section>

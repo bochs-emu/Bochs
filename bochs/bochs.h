@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.77 2002-08-22 22:38:40 cbothamy Exp $
+// $Id: bochs.h,v 1.78 2002-08-24 10:20:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -556,7 +556,7 @@ typedef struct {
   } bx_mem_options;
 
 typedef struct {
-  bx_param_bool_c *Oenable;
+  bx_param_bool_c *Opresent;
   bx_param_string_c *Ooutfile;
 } bx_parport_options;
 
@@ -638,8 +638,7 @@ typedef struct {
   bx_vgarom_options vgarom;
   bx_rom_options    optrom[4]; // Optional rom images 
   bx_mem_options    memory;
-  bx_parport_options par1; // parallel port #1
-  bx_parport_options par2; // parallel port #2  (not implemented)
+  bx_parport_options par[2]; // parallel port #1 / #2
   bx_sb16_options   sb16;
   bx_param_num_c    *Obootdrive;  
   bx_param_bool_c   *OfloppySigCheck;

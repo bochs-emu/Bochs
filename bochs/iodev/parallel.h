@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.7 2001-12-18 21:58:59 vruppert Exp $
+// $Id: parallel.h,v 1.8 2002-08-24 10:20:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,6 +50,8 @@ typedef struct {
     Boolean irq;
     Boolean input;
   } CONTROL;
+  FILE *output;
+  Boolean initmode;
 } bx_par_t;
 
 
@@ -62,10 +64,6 @@ public:
   BX_PAR_SMF void   init(bx_devices_c *);
 
 private:
-  FILE *output;
-
-  Boolean initmode;
-
   bx_par_t s;
 
   bx_devices_c *devices;

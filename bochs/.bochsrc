@@ -227,14 +227,18 @@ debug: action=ignore
 
 #=======================================================================
 # PARPORT1:
-# This defines a parallel (printer) port.  When turned on, the emulated
-# printer port sends characters printed by the guest OS into an output file.
+# This defines a parallel (printer) port. When turned on and an output file is
+# defined the emulated printer port sends characters printed by the guest OS
+# into the output file. On some platforms a device filename can be used to
+# send the data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
+# win32 platforms).
 #
 # Examples:
-#   parport1: enable=1, file="parport.out"
-#   parport1: enable=0
+#   parport1: enabled=1, file="parport.out"
+#   parport1: enabled=1, file="/dev/lp0"
+#   parport1: enabled=0
 #=======================================================================
-parport1: enable=0
+parport1: enabled=1, file="parport.out"
 
 #=======================================================================
 # SB16:

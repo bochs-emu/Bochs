@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.114 2002-08-22 22:38:40 cbothamy Exp $
+// $Id: main.cc,v 1.115 2002-08-24 10:20:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,8 +82,7 @@ bx_options_t bx_options = {
   { NULL },                     // vgarom
   {{ NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }}, // optrom[4]
   { NULL },              // memory
-  { 0, NULL },          // parallel port 1
-  { 0, NULL },          // parallel port 2
+  {{ 0, NULL }, { 0, NULL }},   // parallel port 1 + 2
   { 0, NULL, NULL, NULL, 0, 0, 0, 0 },  // SB16
   NULL,                                  // boot drive
   NULL,                                  // boot signature check
@@ -132,10 +131,10 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
         bx_keyboard.mouse_enabled_changed (val!=0);
       }
       break;
-    case BXP_PARPORT1_ENABLE:
+    case BXP_PARPORT1_PRESENT:
       SIM->get_param (BXP_PARPORT1_OUTFILE)->set_enabled (val!=0);
       break;
-    case BXP_PARPORT2_ENABLE:
+    case BXP_PARPORT2_PRESENT:
       SIM->get_param (BXP_PARPORT2_OUTFILE)->set_enabled (val!=0);
       break;
     case BXP_COM1_PRESENT:
@@ -640,31 +639,31 @@ void bx_init_options ()
   bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
 
-  bx_options.par1.Oenable = new bx_param_bool_c (BXP_PARPORT1_ENABLE,
+  bx_options.par[0].Opresent = new bx_param_bool_c (BXP_PARPORT1_PRESENT,
       "Enable parallel port #1",
       "Enables the first parallel port",
-      0);
-  bx_options.par1.Oenable->set_handler (bx_param_handler);
-  bx_options.par1.Ooutfile = new bx_param_filename_c (BXP_PARPORT1_OUTFILE,
+      1);
+  bx_options.par[0].Opresent->set_handler (bx_param_handler);
+  bx_options.par[0].Ooutfile = new bx_param_filename_c (BXP_PARPORT1_OUTFILE,
       "Parallel port #1 output file",
       "Data written to parport#1 by the guest OS is written to this file",
-      "parport.out", BX_PATHNAME_LEN);
+      "", BX_PATHNAME_LEN);
 #if 0
-  bx_options.par2.Oenable = new bx_param_bool_c (BXP_PARPORT2_ENABLE,
+  bx_options.par[1].Opresent = new bx_param_bool_c (BXP_PARPORT2_PRESENT,
       "Enable parallel port #2",
       "Enables the second parallel port",
       0);
-  bx_options.par2.Oenable->set_handler (bx_param_handler);
-  bx_options.par2.Ooutfile = new bx_param_filename_c (BXP_PARPORT2_OUTFILE,
+  bx_options.par[1].Opresent->set_handler (bx_param_handler);
+  bx_options.par[1].Ooutfile = new bx_param_filename_c (BXP_PARPORT2_OUTFILE,
       "Parallel port #2 output file",
       "Data written to parport#2 by the guest OS is written to this file",
-      "parport2.out", BX_PATHNAME_LEN);
+      "", BX_PATHNAME_LEN);
 #endif
-  bx_param_c *parport_init_list[] = {
-    bx_options.par1.Oenable,
-    bx_options.par1.Ooutfile,
-    //bx_options.par2.Oenable,
-    //bx_options.par2.Ooutfile,
+  bx_param_c *par_ser_init_list[] = {
+    bx_options.par[0].Opresent,
+    bx_options.par[0].Ooutfile,
+    //bx_options.par[1].Opresent,
+    //bx_options.par[1].Ooutfile,
     bx_options.com1.Opresent,
     bx_options.com1.Odev,
     //bx_options.com2.Opresent,
@@ -675,7 +674,7 @@ void bx_init_options ()
     //bx_options.com4.Odev,
     NULL
   };
-  menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL, "Serial and Parallel Port Options", "serial_parallel_menu", parport_init_list);
+  menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL, "Serial and Parallel Port Options", "serial_parallel_menu", par_ser_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
   bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
@@ -2190,11 +2189,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
   else if (!strcmp(params[0], "parport1")) {
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enable=", 7)) {
-	bx_options.par1.Oenable->set (atol(&params[i][7]));
+      if (!strncmp(params[i], "enabled=", 8)) {
+	bx_options.par[0].Opresent->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "file=", 5)) {
-	bx_options.par1.Ooutfile->set (strdup(&params[i][5]));
+	bx_options.par[0].Ooutfile->set (strdup(&params[i][5]));
         }
     }
   }
@@ -2202,11 +2201,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
 #if 0
   else if (!strcmp(params[0], "parport2")) {
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enable=", 7)) {
-	bx_options.par1.Oenable->set (atol(&params[i][7]));
+      if (!strncmp(params[i], "enabled=", 8)) {
+	bx_options.par[1].Opresent->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "file=", 5)) {
-	bx_options.par1.Ooutfile->set (strdup(&params[i][5]));
+	bx_options.par[1].Ooutfile->set (strdup(&params[i][5]));
         }
     }
   }
@@ -2464,13 +2463,9 @@ bx_write_cdrom_options (FILE *fp, int drive, bx_cdrom_options *opt)
 int
 bx_write_parport_options (FILE *fp, bx_parport_options *opt, int n)
 {
-  if (!opt->Oenable->get ()) {
-    fprintf (fp, "# no parport #%d\n", n);
-    return 0;
-  }
-  fprintf (fp, "parport%d: enable=%d", n, opt->Oenable->get ());
-  if (opt->Oenable->get ()) {
-  fprintf (fp, ", file=\"%s\"", opt->Ooutfile->getptr ());
+  fprintf (fp, "parport%d: enabled=%d", n, opt->Opresent->get ());
+  if (opt->Opresent->get ()) {
+    fprintf (fp, ", file=\"%s\"", opt->Ooutfile->getptr ());
   }
   fprintf (fp, "\n");
   return 0;
@@ -2618,8 +2613,8 @@ bx_write_configuration (char *rc, int overwrite)
   if (strlen (bx_options.optrom[3].Opath->getptr ()) > 0)
     fprintf (fp, "optromimage4: file=%s, address=0x%05x\n", bx_options.optrom[3].Opath->getptr(), (unsigned int)bx_options.optrom[3].Oaddress->get ());
   fprintf (fp, "megs: %d\n", bx_options.memory.Osize->get ());
-  bx_write_parport_options (fp, &bx_options.par1, 1);
-  //bx_write_parport_options (fp, &bx_options.par2);
+  bx_write_parport_options (fp, &bx_options.par[0], 1);
+  //bx_write_parport_options (fp, &bx_options.par[1], 2);
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
   fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "a" : (bootdrive==BX_BOOT_DISKC) ? "c" : "cdrom");

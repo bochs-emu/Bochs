@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.17 2002-01-29 17:20:11 vruppert Exp $
+// $Id: parallel.cc,v 1.18 2002-08-24 10:20:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 #include "bochs.h"
 #define LOG_THIS bx_parallel.
 
-#define OUTPUT (BX_PAR_THIS output)
+#define OUTPUT (BX_PAR_THIS s.output)
 
 bx_parallel_c bx_parallel;
 
@@ -58,40 +58,43 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.17 2002-01-29 17:20:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.18 2002-08-24 10:20:35 vruppert Exp $"));
   BX_PAR_THIS devices = d;
 
-  /* PARALLEL PORT 1 */
+  if (bx_options.par[0].Opresent->get ()) {
 
-  BX_PAR_THIS devices->register_irq(7, "Parallel Port 1");
-  for (unsigned addr=0x0378; addr<=0x037A; addr++) {
-    BX_PAR_THIS devices->register_io_read_handler(this,
-         read_handler, addr, "Parallel Port 1");
+    /* PARALLEL PORT 1 */
+
+    BX_PAR_THIS devices->register_irq(7, "Parallel Port 1");
+    for (unsigned addr=0x0378; addr<=0x037A; addr++) {
+      BX_PAR_THIS devices->register_io_read_handler(this,
+           read_handler, addr, "Parallel Port 1");
+      }
+    BX_PAR_THIS devices->register_io_write_handler(this,
+         write_handler, 0x0378, "Parallel Port 1");
+    BX_PAR_THIS devices->register_io_write_handler(this,
+         write_handler, 0x037A, "Parallel Port 1");
+
+    BX_PAR_THIS s.STATUS.error = 1;
+    BX_PAR_THIS s.STATUS.slct  = 1;
+    BX_PAR_THIS s.STATUS.pe    = 0;
+    BX_PAR_THIS s.STATUS.ack   = 1;
+    BX_PAR_THIS s.STATUS.busy  = 1;
+
+    BX_PAR_THIS s.CONTROL.strobe   = 0;
+    BX_PAR_THIS s.CONTROL.autofeed = 0;
+    BX_PAR_THIS s.CONTROL.init     = 1;
+    BX_PAR_THIS s.CONTROL.slct_in  = 1;
+    BX_PAR_THIS s.CONTROL.irq      = 0;
+    BX_PAR_THIS s.CONTROL.input    = 0;
+
+    BX_PAR_THIS s.initmode = 0;
+
+    if (strlen(bx_options.par[0].Ooutfile->getptr ()) > 0) {
+      OUTPUT = fopen(bx_options.par[0].Ooutfile->getptr (), "wb");
+      if (!OUTPUT)
+        BX_PANIC (("Could not open '%s' to write parport1 output"));
     }
-  BX_PAR_THIS devices->register_io_write_handler(this,
-       write_handler, 0x0378, "Parallel Port 1");
-  BX_PAR_THIS devices->register_io_write_handler(this,
-       write_handler, 0x037A, "Parallel Port 1");
-
-  BX_PAR_THIS s.STATUS.error = 1;
-  BX_PAR_THIS s.STATUS.slct  = 1;
-  BX_PAR_THIS s.STATUS.pe    = 0;
-  BX_PAR_THIS s.STATUS.ack   = 1;
-  BX_PAR_THIS s.STATUS.busy  = 1;
-
-  BX_PAR_THIS s.CONTROL.strobe   = 0;
-  BX_PAR_THIS s.CONTROL.autofeed = 0;
-  BX_PAR_THIS s.CONTROL.init     = 1;
-  BX_PAR_THIS s.CONTROL.slct_in  = 1;
-  BX_PAR_THIS s.CONTROL.irq      = 0;
-  BX_PAR_THIS s.CONTROL.input    = 0;
-
-  BX_PAR_THIS initmode = 0;
-
-  if (bx_options.par1.Oenable->get ()) {
-    OUTPUT = fopen(bx_options.par1.Ooutfile->getptr (), "wb");
-    if (!OUTPUT)
-      BX_PANIC (("Could not open '%s' to write parport1 output"));
   }
 }
 
@@ -160,10 +163,10 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
               BX_PAR_THIS devices->pic->lower_irq(7);
 	      }
 	    }
-	  if (BX_PAR_THIS initmode == 1) {
+	  if (BX_PAR_THIS s.initmode == 1) {
 	    BX_PAR_THIS s.STATUS.busy  = 1;
 	    BX_PAR_THIS s.STATUS.slct  = 1;
-	    BX_PAR_THIS initmode = 0;
+	    BX_PAR_THIS s.initmode = 0;
 	    }
 	  BX_DEBUG(("read: status register returns 0x%02x", retval));
 	  return retval;
@@ -231,7 +234,7 @@ bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	      BX_PAR_THIS s.CONTROL.init = 1;
 	      BX_PAR_THIS s.STATUS.busy  = 0;
 	      BX_PAR_THIS s.STATUS.slct  = 0;
-	      BX_PAR_THIS initmode = 1;
+	      BX_PAR_THIS s.initmode = 1;
 	      BX_DEBUG(("printer init requested"));
 	      }
 	  } else {

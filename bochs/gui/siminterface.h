@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.43 2002-08-09 06:16:43 vruppert Exp $
+// $Id: siminterface.h,v 1.44 2002-08-24 10:20:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.43 2002-08-09 06:16:43 vruppert Exp $
+ * $Id: siminterface.h,v 1.44 2002-08-24 10:20:35 vruppert Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -151,9 +151,9 @@ typedef enum {
   BXP_SB16_LOGLEVEL,
   BXP_SB16_DMATIMER,
   BXP_SB16,
-  BXP_PARPORT1_ENABLE,
+  BXP_PARPORT1_PRESENT,
   BXP_PARPORT1_OUTFILE,
-  BXP_PARPORT2_ENABLE,
+  BXP_PARPORT2_PRESENT,
   BXP_PARPORT2_OUTFILE,
   BXP_KEYBOARD_USEMAPPING,
   BXP_KEYBOARD_MAP,
