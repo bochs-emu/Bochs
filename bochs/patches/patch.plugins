@@ -1,0 +1,209 @@
+----------------------------------------------------------------------
+Patch name: patch.plugins
+Authors:
+  Bryce Denney
+  Christophe Bothamy
+  Kevin Lawton (we grabbed a lot of plugin code from plex86)
+Date:
+
+THINGS TO FIX!!!!!!!!
+- I removed more than I needed to from gui/Makefile.in.  Why remove the
+  sdl, rfb targets? 
+
+GENERAL NOTES
+- All the work on this patch was done in a CVS branch called BRANCH_PLUGINS.
+  It was made into a patch mostly for documentation purposes.  You can find
+  more details on many things mentioned here in the CVS logs for
+  BRANCH_PLUGINS.
+- Generally, this patch touches so many files and so many important variables
+  that any file that has NOT been test-compiled might not compile anymore.
+  We have tried to test every file, but there are some that we just can't
+  test without help from others because we don't have every platform avaiable.
+  During the bugfix/release process for 2.0 I hope we can get somebody to
+  compile every file so that we don't release a broken 2.0.
+
+USING PLUGINS
+- add new configure option --enable-plugins, which turns on plugin support
+- added 2 new bochsrc options that let you select which configuration 
+  interface and which display library you want to use:
+    config_interface: control
+    display_library: sdl
+  There is one restriction though: if you want to use wxWindows at all,
+  then it must be selected as both the config_interface and the 
+  display_library.  These two are not separable.  There could be 
+  strange interactions between other combinations of libraries that we
+  haven't discovered yet.
+- now you can configure with several different --with-* options at once,
+  and select between them at runtime.  This works with or without plugins
+  enabled.  Example:  configure --with-x11 --with-sdl --with-term.
+  To choose between them use "display_library: name" in the bochsrc
+- add new configure options --with-all-libs which tries to detect all the
+  display libraries that can be compiled on your machine, and enables them
+  all.
+
+CONFIGURE AND MAKE
+- makefiles in gui and iodev directories have some new options and targets
+  for building plugins.  First the object files are sorted into two groups,
+  pluggable and non-pluggable.  When you are compiling with plugins, each of
+  the pluggable object files is added to the list to compile as plugins.
+  If plugins are disabled, all objects are put into a list to compile 
+  normally.
+- remove MDEFINES from top level makefile
+- add LDFLAGS to the @LINK@ variable that is set by configure
+- add several plugin-related make targets in toplevel, gui, and iodev
+  makefiles
+- use libtool to build libraries: both static and shared.  Except on win32,
+  libtool doesn't do the job so we just use gcc directly with help from
+  a program called dlltool.
+- use libtool's tiny LTDL library to provide a cross-platform interface
+  to the functions that load shared libraries.  The LTDL sources are included
+  in the Bochs source code now (ltdl.h and ltdl.c), and also the configure
+  script generates ltdlconf.h.  Bryce has done some minor-to-medium intensity
+  hacking on LTDL to make it work at all.  To see the changes, do cvs diff
+  -r1.1.2.1 -r1.1.2.2 ltdl.c or look at the CVS logs of
+  bochs-testing/plugin-test/libltdl/ltdl.c for details.
+- add "BOCHSAPI" to every variable, function, and class that any plugin
+  will need, for building win32 DLLs.  The BOCHSAPI macro is used
+  for DLL building on win32 platforms.  In config.h it is defined as
+  __declspec(dllexport), or __declspec(dllimport), or empty.  Config.h
+  knows if it should be importing or exporting symbols by the BX_PLUGGABLE
+  macro which is defined in all plugin files.
+
+PLUGIN CONFIGURATION INTERFACES AND DISPLAY LIBRARIES
+- a configuration interface is a set of menus that lets you change Bochs's
+  settings.  You can choose between two configuration interfaces:
+  the text mode menus, and the wxWindows graphical interface.
+- A display library is the code that shows text and graphics on the
+  virtual Bochs screen.  There are many different display libraries 
+  to choose from, for example X11, win32, BeOS, Carbon(MacOSX), SDL, etc.
+  Except for wxWindows, all display libraries look pretty similar.  They
+  create a window with a toolbar full of buttons at the top.
+- The wxWindows port is BOTH a configuration interface and a display library.
+  It has menus and dialog boxes (the config interface) and also a toolbar and
+  virtual Bochs screen.
+- now the standard main() is used ALL the time, even for wxWindows which
+  used to define its own main in the IMPLEMENT_APP macro.  Now we always
+  start in main(), and wxWindows uses the IMPLEMENT_APP_NO_MAIN macro.  It
+  parses the command line and possibly the configuration file, then according
+  to the setting of the param BXP_SEL_CONFIG_INTERFACE it starts the text
+  config interface (control) or the wxWindows config interface (loading a
+  plugin if necessary).  Now the config interface is responsible for 
+  starting the simulation at the appropriate time (by calling
+  SIM->begin_simulation()), instead of returning and letting main start the
+  simulation.  See cvs log for main.cc 1.156.2.14 for more details.
+- wxmain.cc's MyApp::OnInit function is called later in the startup 
+  process than it used to be.  Now main() does the first few steps, such
+  as calling bx_init_main(), and starts up the configuration interface
+  when it's ready.  This means that the config interface does not get
+  to control the messages that appear during command line parsing or
+  loading of the .bochsrc.  It may have to change in the future.
+- configuration interfaces now must define an initialization function that
+  calls SIM->register_configuration_interface with a callback function.
+  The callback function is called whenever Bochs needs a simulation 
+  interface.  This allows us to easily select between them, even when 
+  support for multiple config interfaces is compiled in.  wxWindows
+  has been made into a plugin, but so far control.cc (the text config
+  interface) has not due to some difficulties linking bochs without it.
+- Bryce intends to rename control.cc to textconfig.cc or something more
+  appropriate when the branch merge is done.  When it was created, it was
+  called a "control panel" but now that term has been replaced by a
+  "configuration interface".
+- Each display library file (gui/win32.cc, gui/x.cc, etc.) defines a C++ class
+  that descends from bx_gui_c.  bx_gui_c declares some of its methods virtual
+  so that the child class can redefine the methods.  The virtual methods are:
+  specific_init, text_update, graphics_tile_update, handle_events, flush,
+  clear_screen, palette_change, dimension_update, create_bitmap,
+  headerbar_bitmap, replace_bitmap, show_headerbar, get_clipboard_text,
+  set_clipboard_text, mouse_enabled_changed_specific, and exit.  Also, 
+  each file needed a plugin_init, which creates an object of the right
+  type and sets the global "bx_gui" to it, and a plugin_fini which 
+  (theoretically) cleans up afterward.  These turned out to be so similar
+  that they are defined in a macro called IMPLEMENT_GUI_PLUGIN_CODE(gui_name).
+  (As usual, wxWindows is different and needs its own plugin_init and fini
+  since it provides both a configuration interface and a display.  It
+  registers a config interface and calls MyPanel::OnPluginInit, which is
+  in wx.cc, to create a bx_wx_gui_c and set the bx_gui pointer.)
+- removed the first argument of bx_gui::specific_init method because it
+  is no longer static.  In a virtual method, you always know who "this" is.
+- bx_gui::get_sighandler_mask() and bx_gui::sighandler() are always present,
+  defined as virtual methods that do nothing.  In term.cc only, they are
+  redefined to do whatever term needs to do with them.  This solves problems
+  with undefined symbols when you enable term support.
+- The various display libraries used to all redefine bx_gui methods instead
+  of virtual methods of their own subclass.  This made it impossible to
+  compile multiple guis at once.  Because they are all child classes with
+  different names, any number can be linked into a binary at once.  This was
+  important for plugins, but even without plugins it allows us to compile
+  in support for many display libraries and select them at runtime.
+- in siminterface, added register_configuration_interface and
+  configuration_interface.  The register method is called by the
+  init function of a configuration interface (control.cc or wxmain.cc)
+  to tell siminterface what function to call when someone wants to start
+  the config interface.  To start it, you call configuration_interface(),
+  which calls the callback function set up by that init function.
+- in siminterface, is_sim_thread, set_sim_thread_func.  These replace the
+  global isSimThread function.  I had to make something that was 
+  1) available if wxWindows was compiled in, compiled as a plugin and
+  either loaded, or not., and 2) did not have any link time references
+  to wxWindows files.  As with other things, when wxWindows initializes 
+  it calls SIM->set_sim_thread_func() with a callback function.  When 
+  anyone calls SIM->is_sim_thread() it calls the callback function, or if
+  it hasn't been installed yet it always returns true.
+
+PLUGIN DEVICES
+- Plugin devices are not as uniform as plugin display libraries.  There
+  are many of them that interact, some provide special functions that other
+  devices can call like bx_pic::raise_irq(), and some have to be initialized
+  before or after others.  Our implementation of plugin devices works like
+  this:
+  - each device provides a plugin_init method and a plugin_fini method
+  - the plugin_init method can initialize any number of devices and they 
+    should be "registered" by calling BX_REGISTER_DEVICE_DEVMODEL().
+  - for devices that provide special functions that other devices can call, we
+    make a "stub" class in iodev/iodev.h which has virtual functions that just
+    print a panic or warning message.  The real device will create a subclass
+    of the stub, which redefines the virtual methods with the actual
+    implementation.  This means that we can install an instance of the stub if
+    the plugin is not loaded to catch any calls to the device (it's that
+    or a segfault).  When the plugin is loaded, we replace the stub with a
+    pointer to the real class.  Virtual functions are equivalent in performance
+    to setting up function pointers, but the syntax is cleaner and the compiler
+    helps to enforce correct usage.
+  - because of limitations of shared libraries on some systems such as
+    Solaris, it is not safe to rely on global variable constructors being
+    called.  So if you write "bx_my_device device;" as a global variable,
+    on Solaris the constructor(s) for bx_my_device will not ever be called.
+    That's why in the plugin_init function we explictly create the object
+    with the "new" operator.
+  - every file that can be compiled as a plugin should define BX_PLUGGABLE
+    before including config.h.  This is used when building win32 DLLs.
+- in plugin.h, define macros for basically every inter-device function, 
+  for example BX_REGISTER_DMA8_CHANNEL, BX_MEM_READ_PHYSICAL, 
+  BX_HD_READ_HANDLER, etc.  The macros are used everywhere instead
+  of the direct call to the device, because the macros are designed to
+  do the right thing even if the plugin is not loaded.  This is necessary
+  even for devices that will always be loaded, but we want to make them
+  into a plugin.  Otherwise we can't link bochs because of references to
+  undefined symbols.
+
+
+
+BUG FIXES THAT ENDED UP IN THE PLUGIN BRANCH
+(maybe should be checked in separately?)
+- gdbstub should not call bx_parse_cmdline anymore
+- check SIM->get_init_done before calling DEV_kbd_paste_delay_changed.
+- in all makefiles move $(BX_INCDIRS) to the front.  Otherwise you can
+  accidently get config.h or other important includes from libraries
+  when they put -Ipath into CFLAGS.
+- add semicolon to the end of a BX_INFO for XADD_EdGd in arith32.cc
+- make control.cc ignore BX_ASYNC_EVT_REFRESH and BX_ASYNC_EVT_DBG_MSG
+  instead of sending them to default: which prints a warning.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
