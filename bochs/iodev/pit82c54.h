@@ -7,7 +7,6 @@
  */
 
 #include "bochs.h"
-#define LOG_THIS this->
 
 class pit_82C54 : public logfunctions {
 
