@@ -1141,7 +1141,8 @@ BX_CPU_C::RDTSC(BxInstruction_t *i)
 BX_CPU_C::RDMSR(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_PANIC(("RDMSR: not implemented yet\n"));
+  BX_ERROR(("RDMSR: not implemented yet\n"));
+  UndefinedOpcode(i);
 #else
   UndefinedOpcode(i);
 #endif

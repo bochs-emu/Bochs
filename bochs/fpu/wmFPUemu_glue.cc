@@ -240,7 +240,7 @@ math_abort(struct info *info, unsigned int signal)
 
 #else
   UNUSED(signal);
-  BX_INFO("math_abort: CPU<4 not supported yet\n");
+  BX_INFO(("math_abort: CPU<4 not supported yet\n"));
 #endif
 }
 
