@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.51 2003-05-29 17:15:08 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.52 2003-05-29 17:19:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1763,7 +1763,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 84 */  { BxAnother, &BX_CPU_C::TEST_EbGb },
   /* 85 */  { BxAnother, &BX_CPU_C::TEST_EqGq },
   /* 86 */  { BxAnother | BxLockable, &BX_CPU_C::XCHG_EbGb },
-  /* 87 */  { BxAnother | BxLockable, &BX_CPU_C::XCHG_EqGq },
+  /* 87 */  { BxAnother | BxLockable, &BX_CPU_C::XCHG_EwGw },
   /* 88 */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_EbGb },
   /* 89 */  { BxAnother, &BX_CPU_C::MOV_EqGq },
   /* 8A */  { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GbEb },
