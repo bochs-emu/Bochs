@@ -1,6 +1,6 @@
 /*
  *
- * $Id: blur.c,v 1.5 2002-04-16 22:40:30 bdenney Exp $
+ * $Id: blur.c,v 1.6 2002-04-17 02:28:33 bdenney Exp $
  *
  */
 
@@ -32,6 +32,22 @@ void blur_simple()
     }
 }
 
+#ifdef BLUR_UNROLL_INNER
+void blur_unroll_inner()
+{
+  int sum;
+  int x,y,x2,y2;
+  for (x=1; x<MAX-1; x++)
+    for (y=1; y<MAX-1; y++)
+    {
+      sum = array[x-1][y-1] + array[x-1][y] + array[x-1][y+1]
+	    + array[x][y-1] + array[x][y] + array[x][y+1]
+	    + array[x+1][y-1] + array[x+1][y] + array[x+1][y+1];
+      array2[x][y] = sum;
+    }
+}
+#endif
+
 #ifdef BLUR_USE_FUNCTION_CALL
 void blur_func (int *sum, int *data)
 {
@@ -52,7 +68,7 @@ void blur_funcall()
       array2[x][y] = sum;
     }
 }
-#endif
+#endif //ifdef BLUR_USE_FUNCTION_CALL
 
 #ifdef BLUR_USE_SWITCH
 /// With BLUR_USE_SWITCH, don't expect the result to match.  I had to make
@@ -143,7 +159,7 @@ void blur_switch()
     }
 }
 
-#endif
+#endif // ifdef BLUR_USE_SWITCH
 
 #ifdef BLUR_USE_SWITCH_CALL
 void blur_func00 (int *sum, int *data) { *sum += *data; }
@@ -230,7 +246,7 @@ void blur_switch_call()
       array2[x][y] = sum;
     }
 }
-#endif
+#endif //ifdef BLUR_USE_SWITCH_CALL
 
 #ifdef BLUR_FNPTR_SWITCH
 void blur_func00 (int *sum, int *data) { *sum += *data; }
@@ -413,7 +429,7 @@ void bluf_fnptr_switch()
       array2[x][y] = sum;
     }
 }
-#endif
+#endif //ifdef BLUR_FNPTR_SWITCH
 
 #ifdef BLUR_FNPTR_TABLE
 void blur_func00 (int *sum, int *data) { *sum += *data; }
@@ -598,8 +614,7 @@ void blur_fnptr_table()
       array2[x][y] = sum;
     }
 }
-#endif
-
+#endif // ifdef BLUR_FNPTR_TABLE
 
 void fill_array()
 {
@@ -650,7 +665,9 @@ int main (int argc, char *argv[])
   //dump_array (stderr);
   start_timer();
   for (i=0; i<times; i++)  {
-#if defined BLUR_USE_FUNCTION_CALL
+#if defined BLUR_UNROLL_INNER
+    blur_unroll_inner ();
+#elif defined BLUR_USE_FUNCTION_CALL
     blur_funcall ();
 #elif defined BLUR_USE_SWITCH
     blur_switch();
