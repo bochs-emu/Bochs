@@ -14,7 +14,7 @@ diff -urN clean/gui/bitmaps/copy.h bochs-paste/gui/bitmaps/copy.h
 +++ bochs-paste/gui/bitmaps/copy.h	Mon Mar 11 09:01:13 2002
 @@ -0,0 +1,18 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.paste,v 1.1 2002-03-11 14:29:01 bdenney Exp $
++// $Id: patch.paste,v 1.2 2002-03-11 14:32:41 bdenney Exp $
 +/////////////////////////////////////////////////////////////////////////
 +#define BX_COPY_BMAP_X 32
 +#define BX_COPY_BMAP_Y 32
@@ -36,7 +36,7 @@ diff -urN clean/gui/bitmaps/paste.h bochs-paste/gui/bitmaps/paste.h
 +++ bochs-paste/gui/bitmaps/paste.h	Mon Mar 11 09:01:13 2002
 @@ -0,0 +1,18 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.paste,v 1.1 2002-03-11 14:29:01 bdenney Exp $
++// $Id: patch.paste,v 1.2 2002-03-11 14:32:41 bdenney Exp $
 +/////////////////////////////////////////////////////////////////////////
 +#define BX_PASTE_BMAP_X 32
 +#define BX_PASTE_BMAP_Y 32
@@ -312,7 +312,7 @@ diff -urN clean/gui/gui.h bochs-paste/gui/gui.h
  // align pixmaps towards left or right side of header bar
 diff -urN clean/gui/keymap.cc bochs-paste/gui/keymap.cc
 --- clean/gui/keymap.cc	Wed Mar  6 09:04:42 2002
-+++ bochs-paste/gui/keymap.cc	Mon Mar 11 09:01:13 2002
++++ bochs-paste/gui/keymap.cc	Mon Mar 11 09:29:37 2002
 @@ -81,7 +81,7 @@
      put("KMAP");
  
@@ -331,7 +331,7 @@ diff -urN clean/gui/keymap.cc bochs-paste/gui/keymap.cc
        }
      keymapCount = 0;
  }
-@@ -102,87 +102,140 @@
+@@ -102,87 +102,144 @@
      }
  }
  
@@ -406,6 +406,10 @@ diff -urN clean/gui/keymap.cc bochs-paste/gui/keymap.cc
 +	*ascii = '\n';
 +      } else if (!strcmp(buf, "tab")) {
 +	*ascii = '\t';
++      } else if (!strcmp(buf, "backslash")) {
++	*ascii = '\\';
++      } else if (!strcmp(buf, "apostrophe")) {
++	*ascii = '\'';
 +      } else if (!strcmp(buf, "none")) {
 +	*ascii = -1;
 +      } else {
@@ -526,7 +530,7 @@ diff -urN clean/gui/keymap.cc bochs-paste/gui/keymap.cc
        
        keymapCount++;
        }
-@@ -208,19 +261,40 @@
+@@ -208,19 +265,40 @@
      return BX_KEYMAP_UNKNOWN;
  }
  
@@ -627,7 +631,7 @@ diff -urN clean/gui/keymaps/x11-pc-us.map bochs-paste/gui/keymaps/x11-pc-us.map
 -# Bochs Keymap file : X11 - i386 - US
 -# Author : the Bochs team
 +# Bochs Keymap file
-+# $Id: patch.paste,v 1.1 2002-03-11 14:29:01 bdenney Exp $
++# $Id: patch.paste,v 1.2 2002-03-11 14:32:41 bdenney Exp $
 +# Target: PC(x86) keyboard, US keymap
 +# Author: Christophe Bothamy, Bryce Denney
  #
