@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.79 2003-07-12 08:17:10 vruppert Exp $
+// $Id: keyboard.cc,v 1.80 2003-07-13 19:51:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.79 2003-07-12 08:17:10 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.80 2003-07-13 19:51:21 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1596,17 +1596,6 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
   }
 
   create_mouse_packet(force_enq);
-}
-
-
-  void
-bx_keyb_c::put_scancode( unsigned char *code, int count )
-{
-  for ( int i = 0 ; i < count ; i++ ) {
-    kbd_enQ( code[i] );
-    }
-
-  return;
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.33 2003-06-21 12:55:19 vruppert Exp $
+// $Id: iodev.h,v 1.34 2003-07-13 19:51:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,11 +95,8 @@ class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
   virtual void mouse_motion(int delta_x, int delta_y, unsigned button_state) {
     STUBFUNC(keyboard, mouse_motion);
   }
-  virtual void gen_scancode(Bit32u   scancode) {
+  virtual void gen_scancode(Bit32u key) {
     STUBFUNC(keyboard, gen_scancode);
-  }
-  virtual void put_scancode( unsigned char *code, int count ) {
-    STUBFUNC(keyboard, put_scancode);
   }
   virtual void paste_bytes(Bit8u *data, Bit32s length) {
     STUBFUNC(keyboard, paste_bytes);

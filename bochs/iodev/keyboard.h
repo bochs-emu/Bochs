@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.21 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: keyboard.h,v 1.22 2003-07-13 19:51:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,10 +54,9 @@ public:
   virtual void     init(void);
   virtual void     reset(unsigned type);
   // override stubs from bx_keyb_stub_c
-  virtual void     gen_scancode(Bit32u   scancode);
+  virtual void     gen_scancode(Bit32u key);
   virtual void     paste_bytes(Bit8u *data, Bit32s length);
   virtual void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
-  virtual void     put_scancode( unsigned char *code, int count );
 
   // update the paste delay based on bx_options.Okeyboard_paste_delay
   virtual void     paste_delay_changed ();
