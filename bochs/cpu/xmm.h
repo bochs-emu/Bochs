@@ -1,4 +1,4 @@
-#ifndef BX_SSE_EXTENSIONS_H
+#ifndef BX_SSE_EXTENSIONS_H 
 #define BX_SSE_EXTENSIONS_H
 
 /* XMM REGISTER */
@@ -7,16 +7,14 @@ typedef Bit32u Float32;
 typedef Bit64u Float64;
 
 typedef union bx_xmm_reg_t {
-   Bit8s   s8[16];
-   Bit16s  s16[8];
-   Bit32s  s32[4];
-   Bit64s  s64[2];
-   Bit8u   u8[16];
-   Bit16u  u16[8];
-   Bit32u  u32[4];
-   Bit64u  u64[2];
-   Float32 f32[4];
-   Float64 f64[2];
+   Bit8s   _sbyte[16];
+   Bit16s  _s16[8];
+   Bit32s  _s32[4];
+   Bit64s  _s64[2];
+   Bit8u   _ubyte[16];
+   Bit16u  _u16[8];
+   Bit32u  _u32[4];
+   Bit64u  _u64[2];
 } BxPackedXmmRegister;
 
 #ifdef BX_SUPPORT_X86_64
@@ -24,6 +22,33 @@ typedef union bx_xmm_reg_t {
 #else
 #  define BX_XMM_REGISTERS 8
 #endif
+
+#ifdef BX_BIG_ENDIAN
+#define xmm64s(i)   (_s64[1 - (i)])
+#define xmm32s(i)   (_s32[3 - (i)])
+#define xmm16s(i)   (_s16[7 - (i)])
+#define xmmsbyte(i) (_sbyte[15 - (i)])
+#define xmmubyte(i) (_ubyte[15 - (i)])
+#define xmm16u(i)   (_u16[7 - (i)])
+#define xmm32u(i)   (_u32[3 - (i)])
+#define xmm64u(i)   (_u64[1 - (i)])
+#else
+#define xmm64s(i)   (_s64[i])
+#define xmm32s(i)   (_s32[i])
+#define xmm16s(i)   (_s16[i])
+#define xmmsbyte(i) (_sbyte[i])
+#define xmmubyte(i) (_ubyte[i])
+#define xmm16u(i)   (_u16[i])
+#define xmm32u(i)   (_u32[i])
+#define xmm64u(i)   (_u64[i])
+#endif
+
+/* floating point representation: single and double precission */
+#define xmm32f(i)   xmm32u(i)
+#define xmm64f(i)   xmm64u(i)
+
+#define BX_READ_XMM_REG(index) (BX_CPU_THIS_PTR xmm[index])
+#define BX_WRITE_XMM_REG(index, reg) { BX_CPU_THIS_PTR xmm[index] = reg; }
  
 /* MXCSR REGISTER */
 
@@ -60,7 +85,7 @@ struct bx_mxcsr_t {
    Bit32u mxcsr;      /* define bitfields accessors later */
 };
 
-#define MXCSR_MASK  0x00FF  /* reset reserved bits */
-#define MXCSR_RESET 0x1F80  /* reset value of the MXCSR register */
+#define MXCSR_MASK  0x00ff  /* reset reserved bits */
+#define MXCSR_RESET 0x1f80  /* reset value of the MXCSR register */
 
 #endif
