@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.34 2002-03-11 16:35:41 bdenney Exp $
+// $Id: gui.cc,v 1.35 2002-03-12 06:46:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -299,9 +299,9 @@ bx_gui_c::copy_handler(void)
   BX_INFO (("storing %d bytes to X windows clipboard", len));
   XStoreBytes (bx_x_display, (char *)text_snapshot, len);
 #else
-  OUTPUT = fopen("copy.txt", "w");
-  fwrite(text_snapshot, 1, strlen(snapshot_txt), OUTPUT);
-  fclose(OUTPUT);
+  FILE *fp = fopen("copy.txt", "w");
+  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+  fclose(fp);
 #endif
   free(text_snapshot);
 }
