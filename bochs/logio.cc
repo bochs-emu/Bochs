@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.9 2001-10-06 14:36:00 bdenney Exp $
+// $Id: logio.cc,v 1.10 2001-10-06 22:23:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -366,6 +366,8 @@ logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
       break;
 #endif
     default:
+      // this happens if panics happen before the callback is initialized
+      // in gui/control.cc.
       fprintf (stderr, "WARNING: LOCAL_log_msg returned unexpected value %d\n", val);
   }
 }
