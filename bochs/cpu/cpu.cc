@@ -20,7 +20,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
+#define BX_INSTR_SPY 0
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -184,7 +184,18 @@ async_events_processed:
     }
   }
 #endif  // #if BX_DEBUGGER
-
+  
+#if BX_INSTR_SPY
+  {
+    int n=0;
+    if ((n & 0xffffff) == 0) {
+      Bit32u cs = BX_CPU(0)->sregs[BX_SEG_REG_CS].selector.value;
+      Bit32u eip = BX_CPU(0)->prev_eip;
+      fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\s", n, bx_pc_system.time_ticks (), cs, eip, fetch_ptr);
+    }
+    n++;
+  }
+#endif
 
   is_32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
