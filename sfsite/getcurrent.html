@@ -7,7 +7,71 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.0</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.0.1</font><BR><BR>
+
+<b>Bochs 2.0.1</b> (January 4, 2003)
+Version 2.0.1 is a bugfix version based on 2.0.  Among other things, this
+version fixes some compile probleems, the text mode colors, an FPU bug, and the
+problems with saving a corrupt configuration file.  
+( <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/bochs/bochs/CHANGES?rev=HEAD&content-type=text/vnd.viewcvs-markup"> Details </a> ) <p>
+
+<BR>
+<B>BOCHS BINARIES</B><BR>
+<i>All binaries include Bochs plus a 10 mb disk image of DLX Linux to get you started.</i>
+<UL>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/Bochs-2.0.1.exe">Windows Installer for x86 machines (2.8meg)</A>, includes bochsdbg.exe with debugger enabled </li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.1.win32-bin.zip">ZIP
+containing Windows binaries for x86 machines (2.8meg)</A>.  Use the installer if
+you can.
+<li><IMG SRC="/icons/compressed.gif" ALT="[RPM]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.1.i386.rpm">RPM Binary for all RPM-based Linux x86 Distributions (3.3m)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[DMG]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/Bochs-2.0.1.dmg">DMG file for MacOSX (2.6m)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[DMG]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.1.ppc-macos.sit"></a>(coming soon) SIT file with binaries for MacOS 9</li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[DMG]"> <A
+HREF="http://osdn.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.1.beos.pkg"></a>(coming soon) PKG file for BeOS (x86)</A></li>
+</ul>
+
+<BR><BR>
+<B>BOCHS SOURCE</B><BR>
+Because Bochs is a cross-platform application, it can be compiled for
+many platforms in addition to the ones for which binaries are provided.
+If your platform can run the configure script, you can use the tarball.
+If you're running Linux and your system can read RPMs, you can 
+build Bochs using a source RPM.  If you're compiling for Win32 with 
+Microsoft VC++, the ZIP file contains sources that have already been 
+configured for you so you can go directly to the compile step.  For
+detailed compile instructions see the 
+<a href="/doc/docbook/user/book1.htm">User Guide</a>.
+
+<UL>
+<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.1.tar.gz">GZIPPED TARBALL file containing source code (3.1meg)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.1.src.rpm">RPM Source (3.1meg)</A></li>
+<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A
+HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.1.win32-src.zip">ZIP containing source code configured for Win32/VC++ (3.6meg)</A></li>
+</ul>
+<B>NOTE:</b> We depend on volunteers to provide binaries for most platforms.
+If your platform is missing, you can compile from sources or use a binary from
+a previous version.  To get your binary onto our site, contact 
+<a href="http://sourceforge.net/sendmessage.php?touser=185114">Bryce</a>.
+
+
+
+
+
+
+
+
+
+
+
+<BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.0</font><BR><BR>
 
 <b>Bochs 2.0</b> (December 21, 2002):
 It's been a busy 6 months since our previous release!  Bochs is now about twice
@@ -28,7 +92,7 @@ documentation.
 <li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/Bochs-2.0.exe">Windows Installer for x86 machines (2.8meg)</A>, includes bochsdbg.exe with debugger enabled </li>
 <li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A
 HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.win32-bin.zip">ZIP
-containing Windows Binaries for x86 machines (2.8meg)</A>.  Use the installer if
+containing Windows binaries for x86 machines (2.8meg)</A>.  Use the installer if
 you can.
 <li><IMG SRC="/icons/compressed.gif" ALT="[RPM]"> <A HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.i386.rpm">RPM Binary for all RPM-based Linux x86 Distributions (3.3m)</A></li>
 <li><IMG SRC="/icons/compressed.gif" ALT="[DMG]"> <A HREF="http://twtelecom.dl.sourceforge.net/sourceforge/bochs/Bochs-2.0.dmg">DMG file for MacOSX (2.6m)</A></li>
@@ -110,72 +174,10 @@ a previous version.  To get your binary onto our site, send it to Bryce
 in an email.
 
  <BR><BR>
- <BR><font face="arial, helvetica" color="#1e029a" size="4">Bochs 1.3</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4">Other Releases</font><BR><BR>
+You can download any release since March 2001 on the 
+<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=See+All+Releases&url=http://sourceforge.net/project/showfiles.phpqmrkgroup_ideq12580">Releases Page</a>.
 
-<b>Bochs 1.3</b> (December 10, 2001):
-Bochs 1.3 is a major upgrade release to Bochs 1.2. New features include:
-<ul>
-<li> add support for MacOS X (Carbon API), BeOS, and AmigaOS/MorphOS
-<li> emulated NE2000 works in Linux and WinNT/2000
-<li> read raw CD in Win95/98, read ISO images on any platform
-<li> in WinNT/2000, reading from raw floppies is supported
-<li> debugger is supported on win32
-<li> new text mode configuration menus, as an alternative to editing .bochsrc
-<li> runtime configuration menu can change floppy disk images, turn debug logging on/off during simulation
-<li> polite panics.  If you write "panic: action=ask" in the bochsrc, bochs
-     will ask you what to do when a panic occurs.  Choices include: quit,
-     continue, or turn off this type of message.
-<li> parallel port emulation
-<li> new and improved model of PIT (programmable interval timer)
-<li> improved control over simulation time: option to stay in sync with real time, and an option to use less CPU time when Bochs is idle.
-<li> many small improvements in cpu and device emulation
-<li> simpler Win32/VC++ compile process, option to use VC++ workspaces
-<li> documentation is about 80% converted to docbook, with many sections
-     written from scratch.
-</ul>
-
-<BR><BR>
-<B>BOCHS BINARIES</B><BR>
-<i>All binaries include Bochs plus a 10 mb disk image of DLX Linux to get you started.</i>
-<UL>
-<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.win32-bin.zip">ZIP file with Binaries for all x86 Win32 Systems (3.3m)</A>, includes bochsdbg.exe with debugger enabled </li>
-<li><IMG SRC="/icons/compressed.gif" ALT="[RPM]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.i386.rpm">RPM Binary for all RPM-based Linux x86 Distributions (1.8m)</A></li>
-<li><IMG SRC="/icons/compressed.gif" ALT="[RPM]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.morphos.lha">LHA with binary for MorphOS (490k)</A></li>
-</ul>
-
-<BR><BR>
-<B>BOCHS SOURCE</B><BR>
-Because Bochs is a cross-platform application, it can be compiled for
-many platforms in addition to the ones for which binaries are provided.
-If your platform can run the configure script, you can use the tarball.
-If you're running Linux and your system can read RPMs, you can try 
-installing from a source RPM.  If you're compiling for Win32 with 
-Microsoft VC++, the ZIP file contains sources that have already been 
-configured for you so you can go directly to the compile step.  For
-detailed compile instructions see the 
-<a href="/doc/docbook/user/book1.htm">User Guide</a> in the new
-documentation.
-
-<UL>
-<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.tar.gz">GZIPPED TARBALL file containing source code (1.1meg)</A></li>
-<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.src.rpm">RPM Source (2.4meg)</A></li>
-<li><IMG SRC="/icons/compressed.gif" ALT="[ZIP]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.win32-src.zip">ZIP containing source code configured for Win32/VC++ (1.4meg)</A></li>
-</ul>
-<B>NOTE:</b> We depend on volunteers to provide binaries for most platforms.
-If your platform is missing, you can compile from sources or use a binary from
-a previous version.  To get your binary onto our site, send it to Bryce
-in an email.
-<BR><BR>
-<B>BOCHS DOCUMENTATION</B><BR>
-The Bochs documentation is in the process of being converted to Docbook.  Since
-this transition is not yet complete, the old HTML documentation is still
-included in all source and binary distributions of 1.3.  For now, the
-new documentation is in a separate package, which you can download here.
-Of course, you can still read the <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Help+Documents&url=http://bochs.sourceforge.net/docs-html/">old documentation</a> or 
-<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook">new documentation</a> online.
-<UL>
-<li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochsdoc-1.3.pre1.tar.gz">GZIPPED TARBALL file containing the new docbook documentation, rendered in HTML (151k)</A></li>
-</ul>
 
 <BR><BR>
 
