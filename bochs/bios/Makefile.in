@@ -58,6 +58,7 @@ clean:
 	@RMCOMMAND@ biosconfig.h
 	@RMCOMMAND@ as86-sym.txt
 	@RMCOMMAND@ ld86-sym.txt
+	@RMCOMMAND@ rombios.txt
 
 dist-clean: clean bios-clean
 	@RMCOMMAND@ Makefile
