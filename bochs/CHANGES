@@ -1,12 +1,15 @@
-I've marked several items with FIXME to remind us to check things or 
-fill in blanks.
--Bryce
-
-REMINDER(bryce): add instructions for setting up networking to the docbook docs.
-
 -------------------------------------------------------------------------
-Changes in 1.4 (FIXME(bdenney):change to release date):
-- configure script
+Changes in 1.4 (March 27, 2002):
+- ROM BIOS
+  - Boot from CDROM!  Christophe Bothamy added partial El Torito support in
+    rombios.c, which allows Bochs to boot cdroms.  Booting from win2k or winXP
+    cdrom is not supported yet.  The default BIOS includes El Torito functions.
+    the boot line must say "cdrom".
+    Example:
+      boot: cdrom
+  - implementation of int13 diskette function 5 (format track) (Volker)
+  - initialisation of PIC and DMA-2 added to POST code (Volker)
+- configure script (Bryce Denney)
   - the configure script now detects your platform and provides a default
     GUI and the required compiler flags.  All supported platforms should
     compile with simply "configure" and "make".
@@ -20,21 +23,14 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
   - compile arguments supplied by configure script
     - win32: too many to list here; see documentation
     - cygwin: -mno-cygwin -DWIN32
-    - MacOS X: -fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh
+	- MacOS X: -fpascal-strings -fno-common -arch ppc -Wno-four-char-constants
+	           -Wno-unknown-pragmas -Dmacintosh
   - the --with-GUINAME configure option is only needed if you want to override
     the default GUI.  This is the only way to use the Term, RFB, and SDL
     GUIs.
-- ROM BIOS
-  - Boot from CDROM!  Christophe Bothamy added partial El Torito support in
-    rombios.c, which allows Bochs to boot cdroms.  Booting from win2k or winXP
-    cdrom is not supported yet.  The default BIOS includes El Torito functions.
-    the boot line must say "cdrom".
-    Example:
-      boot: cdrom
-  - implementation of int13 diskette function 5 (format track) (Volker)
-  - initialisation of PIC and DMA-2 added to POST code (Volker)
 - VGA
-  - added VESA BIOS Extensions code by Jeroen Janssen (banked mode only, LFB support in patches/)
+  - added VESA BIOS Extensions code by Jeroen Janssen (banked mode only, LFB
+	support in patches)
   - vga memory read/write functions in text mode fixed
   - implementation of CGA mode 320*200*4 (patch from Sebastien Bechet)
 - VGA BIOS
@@ -126,6 +122,7 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
   - fixed default destination format in local APIC
   - fix SMP instruction tracing in bochs debugger
   - fix deadlock when debugger enabled and all processors HLT
+  - MSR support added by Zwane Mwaikambo
 - simulation of interrupts is more accurate (Volker)
   - implemented edge triggered interrupt mode
   - added functions raise_irq() and lower_irq()
@@ -139,7 +136,6 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
 - Double-Word IO is supported for ATA devices
 - fix bash-specific syntax in install-x11-fonts script
 - print stack_return_from_v86 error only the first 100 times
-
 
 -------------------------------------------------------------------------
 Changes in 1.3 (December 10, 2001):

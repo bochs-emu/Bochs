@@ -6,9 +6,9 @@ AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="1.4.pre2"
-VER_STRING="1.4.pre2"
-REL_STRING="March 11, 2002"
+VERSION="1.4"
+VER_STRING="1.4"
+REL_STRING="March 27, 2002"
 
 changequote(<<, >>)
 changequote([, ])
