@@ -538,10 +538,13 @@ Boolean bx_local_apic_c::match_logical_addr (Bit8u address)
   if (dest_format != 0xf) {
     bx_panic ("bx_local_apic_c::match_logical_addr: cluster model addressing not implemented");
   }
+  // if all address bits are 1, send to all local APICs. SDG3:7-27.
+  if (address == 0xff) {
+    bx_printf ("%s: MDA=0xff matches everybody\n", cpu->name);
+    return true;
+  }
   Boolean match = ((address & log_dest) != 0);
-  bx_printf ("%s: comparing MDA %02x and LDR %02x -> %s\n", cpu->name, address, log_dest, match? "Match" : "Not a match");
-#warning hack!
-  if (address == 0xff) return true;
+  bx_printf ("%s: comparing MDA %02x to my LDR %02x -> %s\n", cpu->name, address, log_dest, match? "Match" : "Not a match");
   return match;
 }
 
