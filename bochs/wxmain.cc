@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.12 2002-03-24 15:39:12 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.13 2002-03-25 00:38:54 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -97,6 +97,8 @@ void OnPauseResumeSim(wxCommandEvent& event);
 void OnKillSim(wxCommandEvent& event);
 void OnSim2GuiEvent(wxCommandEvent& event);
 void OnToolbarClick(wxCommandEvent& event);
+void OnKeyDown(wxKeyEvent& event);
+void OnKeyUp(wxKeyEvent& event);
 int HandleAskParam (BxEvent *event);
 int HandleAskParamString (bx_param_string_c *param);
 
@@ -153,6 +155,8 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Sim2Gui_Event, MyFrame::OnSim2GuiEvent)
   EVT_PAINT(MyFrame::OnPaint)
   EVT_MENU(IDM_TOOLBAR_POWER, MyFrame::OnToolbarClick)
+  EVT_KEY_DOWN(MyFrame::OnKeyDown)
+  EVT_KEY_UP(MyFrame::OnKeyUp)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(MyApp)
@@ -167,6 +171,12 @@ static unsigned long wxCursorX = 0;
 static unsigned long wxCursorY = 0;
 //hack alert
 static MyFrame *theFrame = NULL;
+
+wxCriticalSection event_thread_lock;
+
+#define MAX_EVENTS 256
+BxEvent event_queue[MAX_EVENTS];
+static unsigned long num_events = 0;
 
 void UpdateScreen(char *newBits, int x, int y, int width, int heigh);
 void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color);
@@ -409,6 +419,7 @@ int
 MyFrame::HandleAskParam (BxEvent *event)
 {
   wxASSERT (event->type == BX_SYNC_EVT_ASK_PARAM);
+
   bx_param_c *param = event->u.param.param;
   Raise ();  // bring control panel to front so that you will see the dialog
   switch (param->get_type ())
@@ -527,6 +538,26 @@ void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event))
 void MyFrame::OnToolbarClick(wxCommandEvent& event)
 {
 
+}
+
+void MyFrame::OnKeyDown(wxKeyEvent& event)
+{
+	wxCriticalSectionLocker lock(event_thread_lock);
+	if(num_events < MAX_EVENTS) {
+		event_queue[num_events].type = BX_ASYNC_EVT_KEY_PRESS;
+		event_queue[num_events].u.key.scancode = event.m_keyCode;
+		num_events++;
+	}
+}
+
+void MyFrame::OnKeyUp(wxKeyEvent& event)
+{
+	wxCriticalSectionLocker lock(event_thread_lock);
+	if(num_events < MAX_EVENTS) {
+		event_queue[num_events].type = BX_ASYNC_EVT_KEY_RELEASE;
+		event_queue[num_events].u.key.scancode = event.m_keyCode;
+		num_events++;
+	}
 }
 
 /////////////// bochs thread
@@ -691,9 +722,227 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 // the gui code can poll for keyboard, mouse, and other
 // relevant events.
 
-  void
-bx_gui_c::handle_events(void)
+char wxAsciiKey[0x5f] = {
+  //  !"#$%&'
+  BX_KEY_SPACE,
+  BX_KEY_1,
+  BX_KEY_SINGLE_QUOTE,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_7,
+  BX_KEY_SINGLE_QUOTE,
+
+  // ()*+,-./
+  BX_KEY_9,
+  BX_KEY_0,
+  BX_KEY_8,
+  BX_KEY_EQUALS,
+  BX_KEY_COMMA,
+  BX_KEY_MINUS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+
+  // 01234567
+  BX_KEY_0,
+  BX_KEY_1,
+  BX_KEY_2,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_6,
+  BX_KEY_7,
+
+  // 89:;<=>?
+  BX_KEY_8,
+  BX_KEY_9,
+  BX_KEY_SEMICOLON,
+  BX_KEY_SEMICOLON,
+  BX_KEY_COMMA,
+  BX_KEY_EQUALS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+
+  // @ABCDEFG
+  BX_KEY_2,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
+
+
+  // HIJKLMNO
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
+
+
+  // PQRSTUVW
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
+
+  // XYZ[\]^_
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_6,
+  BX_KEY_MINUS,
+
+  // `abcdefg
+  BX_KEY_GRAVE,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
+
+  // hijklmno
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
+
+  // pqrstuvw
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
+
+  // xyz{|}~
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_GRAVE
+};
+
+void press_key(Bit16u key, int press_release)
 {
+	Bit32u key_event;
+	
+	if(key >= WXK_SPACE && key < WXK_DELETE) {
+		key_event = wxAsciiKey[key - WXK_SPACE];
+	} else {
+		// handle extended keys here
+		switch(key) {
+		case WXK_BACK:		key_event = BX_KEY_BACKSPACE; break;
+		case WXK_TAB:		key_event = BX_KEY_TAB; break;
+		case WXK_RETURN:	key_event = BX_KEY_ENTER; break;
+		case WXK_ESCAPE:	key_event = BX_KEY_ESC; break;
+		case WXK_DELETE:	key_event = BX_KEY_DELETE; break;
+		case WXK_SHIFT:		key_event = BX_KEY_SHIFT_L; break;
+		case WXK_CONTROL:	key_event = BX_KEY_CTRL_L; break;
+		case WXK_MENU:		key_event = BX_KEY_MENU; break;
+		case WXK_PAUSE:		key_event = BX_KEY_PAUSE; break;
+		case WXK_PRIOR:		key_event = BX_KEY_PAGE_UP; break;
+		case WXK_NEXT:		key_event = BX_KEY_PAGE_DOWN; break;
+		case WXK_END:		key_event = BX_KEY_END; break;
+		case WXK_HOME:		key_event = BX_KEY_HOME; break;
+		case WXK_LEFT:		key_event = BX_KEY_LEFT; break;
+		case WXK_UP:		key_event = BX_KEY_UP; break;
+		case WXK_RIGHT:		key_event = BX_KEY_RIGHT; break;
+		case WXK_DOWN:		key_event = BX_KEY_DOWN; break;
+		case WXK_INSERT:	key_event = BX_KEY_INSERT; break;
+		case WXK_NUMPAD0:	key_event = BX_KEY_KP_INSERT; break;
+		case WXK_NUMPAD1:	key_event = BX_KEY_KP_END; break;
+		case WXK_NUMPAD2:	key_event = BX_KEY_KP_DOWN; break;
+		case WXK_NUMPAD3:	key_event = BX_KEY_KP_PAGE_DOWN; break;
+		case WXK_NUMPAD4:	key_event = BX_KEY_KP_LEFT; break;
+		case WXK_NUMPAD5:	key_event = BX_KEY_KP_5; break;
+		case WXK_NUMPAD6:	key_event = BX_KEY_KP_RIGHT; break;
+		case WXK_NUMPAD7:	key_event = BX_KEY_KP_HOME; break;
+		case WXK_NUMPAD8:	key_event = BX_KEY_KP_UP; break;
+		case WXK_NUMPAD9:	key_event = BX_KEY_KP_PAGE_UP; break;
+		case WXK_F1:		key_event = BX_KEY_F1; break;
+		case WXK_F2:		key_event = BX_KEY_F2; break;
+		case WXK_F3:		key_event = BX_KEY_F3; break;
+		case WXK_F4:		key_event = BX_KEY_F4; break;
+		case WXK_F5:		key_event = BX_KEY_F5; break;
+		case WXK_F6:		key_event = BX_KEY_F6; break;
+		case WXK_F7:		key_event = BX_KEY_F7; break;
+		case WXK_F8:		key_event = BX_KEY_F8; break;
+		case WXK_F9:		key_event = BX_KEY_F9; break;
+		case WXK_F10:		key_event = BX_KEY_F10; break;
+		case WXK_F11:		key_event = BX_KEY_F11; break;
+		case WXK_F12:		key_event = BX_KEY_F12; break;
+		case WXK_NUMLOCK:	key_event = BX_KEY_NUM_LOCK; break;
+		case WXK_SCROLL:	key_event = BX_KEY_SCRL_LOCK; break;
+
+		case WXK_NUMPAD_ENTER:		key_event = BX_KEY_KP_ENTER; break;
+		case WXK_NUMPAD_HOME:		key_event = BX_KEY_KP_HOME; break;
+		case WXK_NUMPAD_LEFT:		key_event = BX_KEY_KP_LEFT; break;
+		case WXK_NUMPAD_UP:			key_event = BX_KEY_KP_UP; break;
+		case WXK_NUMPAD_RIGHT:		key_event = BX_KEY_KP_RIGHT; break;
+		case WXK_NUMPAD_DOWN:		key_event = BX_KEY_KP_DOWN; break;
+		case WXK_NUMPAD_PRIOR:		key_event = BX_KEY_KP_PAGE_UP; break;
+		case WXK_NUMPAD_PAGEUP:		key_event = BX_KEY_KP_PAGE_UP; break;
+		case WXK_NUMPAD_NEXT:		key_event = BX_KEY_KP_PAGE_DOWN; break;
+		case WXK_NUMPAD_PAGEDOWN:	key_event = BX_KEY_KP_PAGE_DOWN; break;
+		case WXK_NUMPAD_END:		key_event = BX_KEY_KP_END; break;
+		case WXK_NUMPAD_BEGIN:		key_event = BX_KEY_KP_HOME; break;
+		case WXK_NUMPAD_INSERT:		key_event = BX_KEY_KP_INSERT; break;
+		case WXK_NUMPAD_DELETE:		key_event = BX_KEY_KP_DELETE; break;
+		case WXK_NUMPAD_EQUAL:		key_event = BX_KEY_KP_ENTER; break;
+		case WXK_NUMPAD_MULTIPLY:	key_event = BX_KEY_KP_MULTIPLY; break;
+		case WXK_NUMPAD_SUBTRACT:	key_event = BX_KEY_KP_SUBTRACT; break;
+		case WXK_NUMPAD_DECIMAL:	key_event = BX_KEY_KP_DELETE; break;
+		case WXK_NUMPAD_DIVIDE:		key_event = BX_KEY_KP_DIVIDE; break;
+
+		case WXK_DECIMAL:			key_event = BX_KEY_PERIOD; break;
+
+		default:
+			wxLogMessage("Unhandled key event: %x", key);
+			return;
+		}
+	}
+	if(press_release == BX_ASYNC_EVT_KEY_RELEASE) key_event |= BX_KEY_RELEASED;
+	bx_devices.keyboard->gen_scancode(key_event);
+}
+
+void bx_gui_c::handle_events(void)
+{
+	  wxCriticalSectionLocker lock(event_thread_lock);
+	  for(unsigned int i = 0; i < num_events; i++) {
+		  switch(event_queue[i].type) {
+		  case BX_ASYNC_EVT_KEY_PRESS:
+			  press_key(event_queue[i].u.key.scancode, BX_ASYNC_EVT_KEY_PRESS);
+			  break;
+
+		  case BX_ASYNC_EVT_KEY_RELEASE:
+			  press_key(event_queue[i].u.key.scancode, BX_ASYNC_EVT_KEY_RELEASE);
+			  break;
+		  }
+	  }
+	  num_events = 0;
 }
 
 
