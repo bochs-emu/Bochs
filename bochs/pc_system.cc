@@ -23,6 +23,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS bx_pc_system.
 
 #ifdef WIN32
 #ifndef __MINGW32__
@@ -44,6 +45,8 @@ const Bit64u bx_pc_system_c::COUNTER_INTERVAL = 100000;
   // constructor
 bx_pc_system_c::bx_pc_system_c(void)
 {
+  this->setprefix("[SYS ]");
+
   num_timers = 0;
   // set ticks period and remaining to max Bit32u value
   num_cpu_ticks_in_period = num_cpu_ticks_left = (Bit32u) -1;
@@ -76,7 +79,7 @@ bx_pc_system_c::init_ips(Bit32u ips)
 {
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
-  bx_printf("ips = %u\n", (unsigned) ips);
+  BX_INFO(("ips = %u\n", (unsigned) ips));
 }
 
   void
@@ -91,7 +94,7 @@ bx_pc_system_c::raise_HLDA(void)
 bx_pc_system_c::set_DRQ(unsigned channel, Boolean val)
 {
   if (channel > 7)
-    bx_panic("set_DRQ() channel > 7\n");
+    BX_PANIC(("set_DRQ() channel > 7\n"));
   DRQ[channel] = val;
   bx_devices.drq(channel, val);
 }
@@ -187,7 +190,7 @@ bx_pc_system_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
 bx_pc_system_c::set_enable_a20(Bit8u value)
 {
 #if BX_CPU_LEVEL < 2
-    bx_panic("set_enable_a20() called: 8086 emulation\n");
+    BX_PANIC(("set_enable_a20() called: 8086 emulation\n"));
 #else
 
 #if BX_SUPPORT_A20
@@ -206,10 +209,9 @@ bx_pc_system_c::set_enable_a20(Bit8u value)
 
   BX_DBG_A20_REPORT(value);
 
-  if (bx_dbg.a20)
-    bx_printf("A20: set() = %u\n", (unsigned) enable_a20);
+  BX_DEBUG(("A20: set() = %u\n", (unsigned) enable_a20));
 #else
-  bx_printf("set_enable_a20: ignoring: SUPPORT_A20 = 0\n");
+  BX_DEBUG(("set_enable_a20: ignoring: SUPPORT_A20 = 0\n"));
 #endif  // #if BX_SUPPORT_A20
 
 #endif
@@ -220,12 +222,12 @@ bx_pc_system_c::get_enable_a20(void)
 {
 #if BX_SUPPORT_A20
   if (bx_dbg.a20)
-    bx_printf("A20: get() = %u\n", (unsigned) enable_a20);
+    BX_INFO(("A20: get() = %u\n", (unsigned) enable_a20));
 
   if (enable_a20) return(1);
   else return(0);
 #else
-  bx_printf("get_enable_a20: ignoring: SUPPORT_A20 = 0\n");
+  BX_INFO(("get_enable_a20: ignoring: SUPPORT_A20 = 0\n"));
   return(1);
 #endif  // #if BX_SUPPORT_A20
 }
@@ -236,7 +238,7 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   UNUSED( operation );
   // Reset the processor.
 
-  fprintf(stderr, "# bx_pc_system_c::ResetSignal() called\n");
+  BX_ERROR(( "# bx_pc_system_c::ResetSignal() called\n" ));
   BX_CPU.reset(BX_RESET_SOFTWARE);
   return(0);
 }
@@ -253,7 +255,7 @@ bx_pc_system_c::exit(void)
 {
   if (bx_devices.hard_drive)
     bx_devices.hard_drive->close_harddrive();
-  bx_printf("Last time is %d\n", BX_CMOS_THIS s.timeval);
+  BX_INFO(("Last time is %d\n", bx_cmos.s.timeval));
   bx_gui.exit();
 }
 
@@ -270,12 +272,12 @@ bx_pc_system_c::timer_handler(void)
   unsigned i;
   Bit64u delta;
 
-  //  fprintf(stderr, "Time handler ptime = %d\n", bx_pc_system.time_ticks());
+  //  BX_ERROR(( "Time handler ptime = %d\n", bx_pc_system.time_ticks() ));
 
   delta = num_cpu_ticks_in_period - num_cpu_ticks_left;
 #if BX_TIMER_DEBUG
   if (num_cpu_ticks_left != 0)
-    bx_panic("timer_handler: ticks_left!=0\n");
+    BX_PANIC(("timer_handler: ticks_left!=0\n"));
 #endif
 
   for (i=0; i < num_timers; i++) {
@@ -283,7 +285,7 @@ bx_pc_system_c::timer_handler(void)
     if (timer[i].active) {
 #if BX_TIMER_DEBUG
       if (timer[i].remaining < delta) {
-        bx_panic("timer_handler: remain < delta\n");
+        BX_PANIC(("timer_handler: remain < delta\n"));
         }
 #endif
       timer[i].remaining -= delta;
@@ -328,12 +330,12 @@ bx_pc_system_c::expire_ticks(void)
 #if BX_TIMER_DEBUG
       if (timer[i].remaining <= ticks_delta) {
 for (unsigned j=0; j<num_timers; j++) {
-  bx_printf("^^^timer[%u]\n", j);
-  bx_printf("^^^remaining = %u, period = %u\n",
-    timer[j].remaining, timer[j].period);
+  BX_INFO(("^^^timer[%u]\n", j));
+  BX_INFO(("^^^remaining = %u, period = %u\n",
+    timer[j].remaining, timer[j].period));
   }
-        bx_panic("expire_ticks: i=%u, remain(%u) <= delta(%u)\n",
-          i, timer[i].remaining, (unsigned) ticks_delta);
+        BX_PANIC(("expire_ticks: i=%u, remain(%u) <= delta(%u)\n",
+          i, timer[i].remaining, (unsigned) ticks_delta));
         }
 #endif
       timer[i].remaining -= ticks_delta; // must be >= 1 here
@@ -351,13 +353,13 @@ bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
   Bit64u instructions;
 
   if (num_timers >= BX_MAX_TIMERS) {
-    bx_panic("register_timer: too many registered timers.");
+    BX_PANIC(("register_timer: too many registered timers."));
     }
 
   if (this_ptr == NULL)
-    bx_panic("register_timer: this_ptr is NULL\n");
+    BX_PANIC(("register_timer: this_ptr is NULL\n"));
   if (funct == NULL)
-    bx_panic("register_timer: funct is NULL\n");
+    BX_PANIC(("register_timer: funct is NULL\n"));
 
   // account for ticks up to now
   expire_ticks();
@@ -374,13 +376,13 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct, B
   unsigned i;
 
   if (num_timers >= BX_MAX_TIMERS) {
-    bx_panic("register_timer: too many registered timers.");
+    BX_PANIC(("register_timer: too many registered timers."));
     }
 
   if (this_ptr == NULL)
-    bx_panic("register_timer: this_ptr is NULL\n");
+    BX_PANIC(("register_timer: this_ptr is NULL\n"));
   if (funct == NULL)
-    bx_panic("register_timer: funct is NULL\n");
+    BX_PANIC(("register_timer: funct is NULL\n"));
 
   i = num_timers;
   num_timers++;
@@ -422,7 +424,7 @@ bx_pc_system_c::counter_timer_handler(void* this_ptr)
 bx_pc_system_c::timebp_handler(void* this_ptr)
 {
       BX_CPU_THIS_PTR break_point = BREAK_POINT_TIME;
-      fprintf(stderr, "Time breakpoint triggered\n");
+      BX_DEBUG(( "Time breakpoint triggered\n" ));
 
       if (timebp_queue_size > 1) {
 	    long long new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
@@ -472,7 +474,7 @@ bx_pc_system_c::start_timers(void)
 bx_pc_system_c::activate_timer_ticks (unsigned timer_index, Bit64u instructions, Boolean continuous)
 {
   if (timer_index >= num_timers)
-    bx_panic("activate_timer(): bad timer index given\n");
+    BX_PANIC(("activate_timer(): bad timer index given\n"));
 
   // set timer continuity to new value (1=continuous, 0=one-shot)
   timer[timer_index].continuous = continuous;
@@ -500,7 +502,7 @@ bx_pc_system_c::activate_timer( unsigned timer_index,
   Bit64u instructions;
 
   if (timer_index >= num_timers)
-    bx_panic("activate_timer(): bad timer index given\n");
+    BX_PANIC(("activate_timer(): bad timer index given\n"));
 
   // account for ticks up to now
   expire_ticks();
@@ -538,7 +540,7 @@ bx_pc_system_c::activate_timer( unsigned timer_index,
 bx_pc_system_c::deactivate_timer( unsigned timer_index )
 {
   if (timer_index >= num_timers)
-    bx_panic("deactivate_timer(): bad timer index given\n");
+    BX_PANIC(("deactivate_timer(): bad timer index given\n"));
 
   timer[timer_index].active = 0;
 }

@@ -28,12 +28,16 @@
 
 
 #include "bochs.h"
+#define LOG_THIS bx_disassemble.
 
 bx_disassemble_c bx_disassemble;
 
 
 bx_disassemble_c::bx_disassemble_c(void)
 {
+setprefix("[DIS ]");
+settype(DISLOG);
+
 sreg_mod01_rm32[0]   = "DS";
 sreg_mod01_rm32[1]   = "DS";
 sreg_mod01_rm32[2]   = "DS";
@@ -232,7 +236,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
               case 0x05: dis_sprintf("verw "); Ew(); goto done;
               case 0x06: invalid_opcode(); goto done;
               case 0x07: invalid_opcode(); goto done;
-              default: bx_panic("debugger: invalid opcode\n"); goto done;
+              default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
               }
             goto done;
           case 0x01: /* Group 7 */
@@ -247,7 +251,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
               case 0x05: invalid_opcode(); goto done;
               case 0x06: dis_sprintf("lmsw "); Ew(); goto done;
               case 0x07: invalid_opcode(); goto done;
-              default: bx_panic("debugger: invalid opcode\n"); goto done;
+              default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
               }
             goto done;
 
@@ -458,7 +462,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
               case 0x05: dis_sprintf("bts "); EvIb(); goto done;
               case 0x06: dis_sprintf("btr "); EvIb(); goto done;
               case 0x07: dis_sprintf("btc "); EvIb(); goto done;
-              default: bx_panic("debugger: invalid opcode\n"); goto done;
+              default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
               }
             goto done;
 
@@ -536,7 +540,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
 	  case 0xFE:
 	  case 0xFF: invalid_opcode(); goto done;
 
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -699,7 +703,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("sub "); EbIb(); goto done;
           case 0x06: dis_sprintf("xor "); EbIb(); goto done;
           case 0x07: dis_sprintf("cmp "); EbIb(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
         break;
@@ -716,7 +720,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("sub "); EvIv(); goto done;
           case 0x06: dis_sprintf("xor "); EvIv(); goto done;
           case 0x07: dis_sprintf("cmp "); EvIv(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -734,7 +738,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("sub "); EvIb(); goto done;
           case 0x06: dis_sprintf("xor "); EvIb(); goto done;
           case 0x07: dis_sprintf("cmp "); EvIb(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -826,7 +830,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("shr "); EbIb(); goto done;
           case 0x06: invalid_opcode(); goto done;
           case 0x07: dis_sprintf("sar "); EbIb(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -842,7 +846,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("shr "); EvIb(); goto done;
           case 0x06: invalid_opcode(); goto done;
           case 0x07: dis_sprintf("sar "); EvIb(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -874,7 +878,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("shr "); Eb1(); goto done;
           case 0x06: invalid_opcode(); goto done;
           case 0x07: dis_sprintf("sar "); Eb1(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -890,7 +894,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("shr "); Ev1(); goto done;
           case 0x06: invalid_opcode(); goto done;
           case 0x07: dis_sprintf("sar "); Ev1(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -906,7 +910,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("shr "); Eb(); dis_sprintf(", CL"); goto done;
           case 0x06: invalid_opcode(); goto done;
           case 0x07: dis_sprintf("sar "); Eb(); dis_sprintf(", CL"); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -922,7 +926,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("shr "); Ev(); dis_sprintf(", CL"); goto done;
           case 0x06: invalid_opcode(); goto done;
           case 0x07: dis_sprintf("sar "); Ev(); dis_sprintf(", CL"); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -944,7 +948,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fsubr "); Es(); goto done;
             case 0x06: dis_sprintf("fdiv "); Es(); goto done;
             case 0x07: dis_sprintf("fdivr "); Es(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -957,7 +961,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fsubr "); ST_STi(); goto done;
             case 0x06: dis_sprintf("fdiv "); ST_STi(); goto done;
             case 0x07: dis_sprintf("fdivr "); ST_STi(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         goto done;
@@ -975,7 +979,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fldcw "); Ew(); goto done;
             case 0x06: dis_sprintf("fstenv "); Ea(); goto done;
             case 0x07: dis_sprintf("fstcw "); Ew(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -1038,7 +1042,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
                 case 0x06: dis_sprintf("fsin"); goto done;
                 case 0x07: dis_sprintf("fcos"); goto done;
                 }
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         goto done;
@@ -1056,7 +1060,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fisubr "); Ed(); goto done;
             case 0x06: dis_sprintf("fidiv "); Ed(); goto done;
             case 0x07: dis_sprintf("fidivr "); Ed(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -1085,7 +1089,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fld "); Et(); goto done;
             case 0x06: invalid_opcode(); goto done;
             case 0x07: dis_sprintf("fstp "); Et(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -1116,7 +1120,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fsubr "); El(); goto done;
             case 0x06: dis_sprintf("fdiv "); El(); goto done;
             case 0x07: dis_sprintf("fdivr "); El(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -1147,7 +1151,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: invalid_opcode(); goto done;
             case 0x06: dis_sprintf("fsave "); Ea(); goto done;
             case 0x07: dis_sprintf("fstsw "); Ew(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -1177,7 +1181,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fisubr "); Ew(); goto done;
             case 0x06: dis_sprintf("fidiv "); Ew(); goto done;
             case 0x07: dis_sprintf("fidivr "); Ew(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -1211,7 +1215,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
             case 0x05: dis_sprintf("fild "); Eq(); goto done;
             case 0x06: dis_sprintf("fbstp "); Eb(); goto done;
             case 0x07: dis_sprintf("fistp "); Eq(); goto done;
-            default: bx_panic("debugger: invalid opcode\n"); goto done;
+            default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
             }
           }
         else { /* mod == 3 */
@@ -1273,7 +1277,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("imul AL, "); Eb(); goto done;
           case 0x06: dis_sprintf("div AL, "); Eb(); goto done;
           case 0x07: dis_sprintf("idiv AL, "); Eb(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
 
@@ -1289,7 +1293,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
           case 0x05: dis_sprintf("imul "); eAXEv(); goto done;
           case 0x06: dis_sprintf("div "); eAXEv(); goto done;
           case 0x07: dis_sprintf("idiv "); eAXEv(); goto done;
-          default: bx_panic("debugger: invalid opcode\n"); goto done;
+          default: BX_PANIC(("debugger: invalid opcode\n")); goto done;
           }
         goto done;
       case 0xF8: dis_sprintf("clc"); goto done;
@@ -1324,7 +1328,7 @@ bx_disassemble_c::disasm(Boolean is_32, Bit8u *instr, char *disbuf)
         goto done;
 
       default: /* only invalid instructions left */
-        bx_panic("debugger: invalid opcode\n");
+        BX_PANIC(("debugger: invalid opcode\n"));
         goto done;
         break;
       } /* switch (next_byte) */

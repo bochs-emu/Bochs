@@ -34,7 +34,6 @@
 #  define BX_FD_THIS this->
 #endif
 
-
 typedef struct {
   int      fd;         /* file descriptor of floppy image file */
   unsigned sectors_per_track;    /* number of sectors/track */
@@ -44,7 +43,7 @@ typedef struct {
   unsigned type;
   } floppy_t;
 
-class bx_floppy_ctrl_c {
+class bx_floppy_ctrl_c : public logfunctions {
 public:
 
   bx_floppy_ctrl_c(void);
@@ -124,6 +123,4 @@ public:
   BX_FD_SMF Boolean evaluate_media(unsigned type, char *path, floppy_t *floppy);
   };
 
-#if BX_USE_FD_SMF
 extern bx_floppy_ctrl_c bx_floppy;
-#endif

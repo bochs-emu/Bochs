@@ -202,6 +202,148 @@ extern Bit8u DTPageDirty[];
 #  define BX_DYN_DIRTY_PAGE(page)
 #endif
 
+#define MAGIC_LOGNUM 0x12345678
+
+
+typedef class logfunctions {
+	char *prefix;
+	int type;
+	class iofunctions *logio;
+public:
+	logfunctions(void);
+	logfunctions(class iofunctions *);
+	~logfunctions(void);
+
+	void info(char *fmt, ...);
+	void error(char *fmt, ...);
+	void panic(char *fmt, ...);
+	void ldebug(char *fmt, ...);
+	void setprefix(char *);
+	void settype(int);
+	void setio(class iofunctions *);
+} logfunc_t;
+
+class iofunctions {
+
+	int showtick,magic;
+	FILE *logfd;
+	class logfunctions *log;
+	int onoff[5];
+	void init(void);
+	void flush(void);
+	char *getlevel(int i) {
+		static char *loglevel[] = {
+			"DEBUG",
+			"INFO",
+			"PANIC",
+			"ERROR",
+		};
+		return loglevel[i];
+	}
+// Log Level defines
+#define LOGLEV_DEBUG 0
+#define LOGLEV_INFO  1
+#define LOGLEV_PANIC 2
+#define LOGLEV_ERROR 3
+	char *getclass(int i) {
+		char *logclass[] = {
+		  "IO  ",
+		  "FD  ",
+		  "GEN ",
+		  "CMOS",
+		  "CD  ",
+		  "DMA ",
+		  "ETH ",
+		  "G2H ",
+		  "HD  ",
+		  "KBD ",
+		  "NE2K",
+		  "PAR ",
+		  "PCI ",
+		  "PIC ",
+		  "PIT ",
+		  "SB16",
+		  "SER ",
+		  "VGA ",
+		  "ST  ",
+		  "DEV ",
+		  "MEM ",
+		  "DIS ",
+		  "GUI "
+		};
+		return logclass[i];
+	}
+
+// Log Class defines
+#define    IOLOG           0
+#define    FDLOG           1
+#define    GENLOG          2
+#define    CMOSLOG         3
+#define    CDLOG           4
+#define    DMALOG          5
+#define    ETHLOG          6
+#define    G2HLOG          7
+#define    HDLOG           8
+#define    KBDLOG          9
+#define    NE2KLOG         10
+#define    PARLOG          11
+#define    PCILOG          12
+#define    PICLOG          13
+#define    PITLOG          14
+#define    SB16LOG         15
+#define    SERLOG          16
+#define    VGALOG          17
+#define    STLOG           18   // state_file.cc
+#define    DEVLOG          19
+#define    MEMLOG          20
+#define    DISLOG          21
+#define    GUILOG          22
+
+
+public:
+	iofunctions(void);
+	iofunctions(FILE *);
+	iofunctions(int);
+	iofunctions(char *);
+	~iofunctions(void);
+
+	void out(int facility, int level, char *pre, char *fmt, va_list ap);
+
+	void init_log(char *fn);
+	void init_log(int fd);
+	void init_log(FILE *fs);
+protected:
+	char *logfn;
+};
+
+typedef class iofunctions iofunc_t;
+
+
+#define SAFE_GET_IOFUNC() \
+  ((io==NULL)? (io=new iofunc_t("/dev/stderr")) : io)
+#define SAFE_GET_GENLOG() \
+  ((genlog==NULL)? (genlog=new logfunc_t(SAFE_GET_IOFUNC())) : genlog)
+
+#ifndef NO_LOGGING
+
+#define BX_INFO(x)  (LOG_THIS info) x
+#define BX_DEBUG(x) (LOG_THIS ldebug) x
+#define BX_ERROR(x) (LOG_THIS error) x
+#define BX_PANIC(x) (LOG_THIS panic) x
+
+#else
+
+#define EMPTY do { } while(0)
+
+#define BX_INFO(x)  EMPTY
+#define BX_DEBUG(x) EMPTY
+#define BX_ERROR(x) EMPTY
+#define BX_PANIC(x) (LOG_THIS panic) x
+
+#endif
+
+extern iofunc_t *io;
+extern logfunc_t *genlog;
 
 #include "state_file.h"
 
@@ -261,8 +403,6 @@ typedef struct {
   } bx_debug_t;
 
 void bx_signal_handler (int signum);
-void bx_printf(char *fmt, ...);
-void bx_panic(char *fmt, ...);
 void bx_atexit(void);
 extern bx_debug_t bx_dbg;
 
@@ -302,11 +442,6 @@ extern bx_gui_c   bx_gui;
 
 
 /* --- EXTERNS --- */
-
-extern FILE *bx_logfd;
-
-
-
 
 #if ( BX_PROVIDE_DEVICE_MODELS==1 )
 extern bx_devices_c   bx_devices;

@@ -23,6 +23,7 @@
 
 
 #include "bochs.h"
+#include <assert.h>
 #include "state_file.h"
 
 extern "C" {
@@ -56,19 +57,7 @@ bx_pc_system_c bx_pc_system;
 class state_file state_stuff("state_file.out", "options");
 #endif
 
-
-FILE *bx_logfd = NULL; /* for logging bx_printf() messages */
-
-
-
-
-
-
 bx_debug_t bx_dbg;
-
-
-
-
 
 bx_options_t bx_options = {
   { "", BX_FLOPPY_NONE, BX_EJECTED },
@@ -97,14 +86,280 @@ bx_options_t bx_options = {
 static char bochsrc_path[512];
 static char logfilename[512] = "-";
 
+
 static void parse_line_unformatted(char *line);
 static void parse_line_formatted(int num_params, char *params[]);
 static void parse_bochsrc(void);
 
 
-  int
+// Just for the iofunctions
+
+#define LOG_THIS this->log->
+
+int Allocio=0;
+
+void
+iofunctions::flush(void) {
+	if(logfd && magic == MAGIC_LOGNUM) {
+		fflush(logfd);
+	}
+}
+
+void
+iofunctions::init(void) {
+	// iofunctions methods must not be called before this magic
+	// number is set.
+	magic=MAGIC_LOGNUM;
+	showtick = 1;
+	init_log(stderr);
+	log = new logfunc_t(this);
+	LOG_THIS setprefix("[IO  ]");
+	LOG_THIS settype(IOLOG);
+	onoff[LOGLEV_DEBUG]=0;
+	onoff[LOGLEV_ERROR]=1;
+	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
+	onoff[LOGLEV_INFO]=1;
+	BX_DEBUG(("Init(log file: '%s').\n",logfn));
+}
+
+void
+iofunctions::init_log(char *fn)
+{
+	assert (magic==MAGIC_LOGNUM);
+	// use newfd/newfn so that we can log the message to the OLD log
+	// file descriptor.
+	FILE *newfd = stderr;
+	char *newfn = "/dev/stderr";
+	if( strcmp( fn, "-" ) != 0 ) {
+		newfd = fopen(fn, "w");
+		if(newfd != NULL) {
+			newfn = strdup(fn);
+			BX_DEBUG(("Opened log file '%s'.\n", fn ));
+		} else {
+			BX_DEBUG(("Log file '%s' not there?\n", fn));
+			newfd = NULL;
+			logfn = "(none)";
+		}
+	}
+	logfd = newfd;
+	logfn = newfn;
+}
+
+void
+iofunctions::init_log(FILE *fs)
+{
+	assert (magic==MAGIC_LOGNUM);
+	logfd = fs;
+
+	if(fs == stderr) {
+		logfn = "/dev/stderr";
+	} else if(fs == stdout) { 
+		logfn = "/dev/stdout";
+	} else {
+		logfn = "(unknown)";
+	}
+}
+
+void
+iofunctions::init_log(int fd)
+{
+	assert (magic==MAGIC_LOGNUM);
+	FILE *tmpfd;
+	if( (tmpfd = fdopen(fd,"w")) == NULL ) {
+		fprintf(stderr, "Couldn't open fd %d as a stream for writing\n",
+			fd);
+		return;
+	}
+
+	init_log(tmpfd);
+	return;
+};
+
+//  iofunctions::out( class, level, prefix, fmt, ap)
+//  DO NOT nest out() from ::info() and the like.
+//    fmt and ap retained for direct printinf from iofunctions only!
+
+void
+iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
+{
+	assert (magic==MAGIC_LOGNUM);
+	assert (this != NULL);
+	assert (logfd != NULL);
+
+	if(!onoff[l]) 
+		return;
+
+	if( showtick )
+		fprintf(logfd, "%011lld ", bx_pc_system.time_ticks());
+
+	if(prefix != NULL)
+		fprintf(logfd, "%s ", prefix);
+
+	vfprintf(logfd, fmt, ap);
+	fflush(logfd);
+
+	return;
+}
+
+iofunctions::iofunctions(FILE *fs)
+{
+	init();
+	init_log(fs);
+}
+
+iofunctions::iofunctions(char *fn)
+{
+	init();
+	init_log(fn);
+}
+
+iofunctions::iofunctions(int fd)
+{
+	init();
+	init_log(fd);
+}
+
+iofunctions::iofunctions(void)
+{
+	this->init();
+}
+
+iofunctions::~iofunctions(void)
+{
+	// flush before erasing magic number, or flush does nothing.
+	this->flush();
+	this->magic=0;
+}
+
+#undef LOG_THIS
+#define LOG_THIS genlog->
+
+logfunctions::logfunctions(void)
+{
+	setprefix("[GEN ]");
+	settype(GENLOG);
+	if(io == NULL && Allocio == 0) {
+		Allocio = 1;
+		io = new iofunc_t(stderr);
+	}
+	setio(io);
+}
+
+logfunctions::logfunctions(iofunc_t *iofunc)
+{
+	setprefix("[GEN ]");
+	settype(GENLOG);
+	setio(iofunc);
+}
+
+logfunctions::~logfunctions(void)
+{
+}
+
+void
+logfunctions::setio(iofunc_t *i)
+{
+	this->logio = i;
+}
+
+void
+logfunctions::setprefix(char *p)
+{
+	this->prefix=strdup(p);
+}
+
+void
+logfunctions::settype(int t)
+{
+	type=t;
+}
+
+void
+logfunctions::info(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	assert (this != NULL);
+	assert (this->logio != NULL);
+
+	va_start(ap, fmt);
+	this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
+	va_end(ap);
+}
+
+void
+logfunctions::error(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	assert (this != NULL);
+	assert (this->logio != NULL);
+
+	va_start(ap, fmt);
+	this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
+	va_end(ap);
+}
+void
+logfunctions::panic(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	assert (this != NULL);
+	assert (this->logio != NULL);
+
+	va_start(ap, fmt);
+	this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
+	va_end(ap);
+
+#if !BX_PANIC_IS_FATAL
+  return;
+#endif    
+
+  bx_atexit();
+
+#if !BX_DEBUGGER
+  exit(1);
+#else
+  static Boolean dbg_exit_called = 0;
+  if (dbg_exit_called == 0) {
+    dbg_exit_called = 1;
+    bx_dbg_exit(1);
+    }
+#endif
+}
+
+void
+logfunctions::ldebug(char *fmt, ...)
+{
+	va_list ap;
+	FILE *fs;
+
+	assert (this != NULL);
+	assert (this->logio != NULL);
+
+	va_start(ap, fmt);
+	this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
+	va_end(ap);
+}
+
+iofunc_t *io = NULL;
+logfunc_t *genlog = NULL;
+
+int
 main(int argc, char *argv[])
 {
+  // To deal with initialization order problems inherent in C++, use
+  // the macros SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog"
+  // in all constructors or functions called by constructors.  The macros
+  // test for NULL and create the object if necessary, then return it.
+  // Ensure that io and genlog get created, by making one reference to
+  // each macro right here.  All other code can call them directly.
+  SAFE_GET_IOFUNC();
+  SAFE_GET_GENLOG();
+
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_bochs_init() and cpu_loop()
@@ -121,6 +376,7 @@ main(int argc, char *argv[])
   BX_CPU.cpu_loop();
 #endif
 
+  fprintf(stderr,"genlog is at 0x%x\n",genlog);
   return(0);
 }
 
@@ -157,16 +413,8 @@ bx_bochs_init(int argc, char *argv[])
 
   bx_pc_system.init_ips(bx_options.ips);
 
-  if (!strcmp(logfilename, "-")) {
-    bx_logfd = stderr;
-    }
-  else {
-    bx_logfd = fopen(logfilename, "w");
-    if (!bx_logfd) {
-      fprintf(stderr, "could not open log file '%s'\n", logfilename);
-      exit(1);
-      }
-    }
+  if(logfilename[0]!='-')
+  	io->init_log(logfilename);
 
 #if BX_DEBUGGER == 0
   // debugger will do this work, if enabled
@@ -184,7 +432,7 @@ bx_bochs_init(int argc, char *argv[])
   bx_pc_system.start_timers();
 #endif
 
-  bx_printf ("bx_bochs_init is setting signal handlers\n");
+  BX_INFO(("bx_bochs_init is setting signal handlers\n"));
 // if not using debugger, then we can take control of SIGINT.
 // If using debugger, it needs control of this.
 #if BX_DEBUGGER==0
@@ -236,25 +484,6 @@ bx_init_debug(void)
 }
 
 
-
-  void
-bx_printf(char *fmt, ...)
-{
-  va_list ap;
-
-  if (bx_logfd) {
-    fprintf(bx_logfd, "%lld ", bx_pc_system.time_ticks());
-
-    va_start(ap, fmt);
-    vfprintf(bx_logfd, fmt, ap);
-    va_end(ap);
-    }
-
-  fflush(bx_logfd);
-}
-
-
-
   void
 bx_atexit(void)
 {
@@ -271,63 +500,13 @@ bx_atexit(void)
   BX_CPU.atexit();
 #endif
 
-  if (bx_logfd) {
 #if BX_PCI_SUPPORT
     if (bx_options.i440FXSupport) {
-      bx_devices.pci->print_i440fx_state(bx_logfd);
+      bx_devices.pci->print_i440fx_state();
       }
 #endif
-    fprintf(stderr, "bochs exited, log file was '%s'\n",
-      logfilename);
-    fflush(bx_logfd);
-    fclose(bx_logfd);
-    bx_logfd = NULL;
-    }
+    BX_INFO(("bochs exited, log file was '%s'\n", logfilename));
 }
-
-
-
-  void
-bx_panic(char *fmt, ...)
-{
-  va_list ap;
-#if BX_DEBUGGER
-  static Boolean dbg_exit_called = 0;
-#endif
-
-  if (bx_logfd) {
-    fprintf(bx_logfd, "bochs: panic, ");
-
-    va_start(ap, fmt);
-    vfprintf(bx_logfd, fmt, ap);
-    va_end(ap);
-   } else {
-     /* panic message is critical to knowing what went wrong. print to
-       stderr instead */
-     fprintf(stderr, "bochs: panic, ");
-     va_start(ap, fmt);
-     vfprintf(stderr, fmt, ap);
-     va_end(ap);
-   }
-
-#if !BX_PANIC_IS_FATAL
-  return;
-#endif    
-
-  bx_atexit();
-
-#if !BX_DEBUGGER
-  exit(1);
-#else
-  if (dbg_exit_called == 0) {
-    dbg_exit_called = 1;
-    bx_dbg_exit(1);
-    }
-#endif
-}
-
-
-
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
   void
@@ -353,16 +532,15 @@ parse_bochsrc(void)
 
   ptr = getenv("HOME");
   if (!ptr) {
-    fprintf(stderr, "could not get environment variable 'HOME'.\n");
-    exit(1);
-    }
+    BX_PANIC(( "could not get environment variable 'HOME'.\n" ));
+  }
 
   strcpy(bochsrc_path, ".bochsrc");
   fd = fopen(bochsrc_path, "r");
 
   if (!fd) {
-    fprintf(stderr, "could not open file '%s', trying home directory.\n",
-      bochsrc_path);
+    BX_DEBUG(( "could not open file '%s', trying home directory.\n",
+      bochsrc_path));
 
     strcpy(bochsrc_path, ptr);
     strcat(bochsrc_path, "/");
@@ -370,16 +548,16 @@ parse_bochsrc(void)
 
     fd = fopen(bochsrc_path, "r");
     if (!fd) {
-      fprintf(stderr, "could not open file '%s'.\n", bochsrc_path);
+      BX_DEBUG(( "could not open file '%s'.\n", bochsrc_path ));
       // no file used, nothing left to do.  This is now valid,
       // as you can pass everything on the command line.
       return;
       }
     else
-      bx_printf("using rc file '%s'.\n", bochsrc_path);
+      BX_INFO(("using rc file '%s'.\n", bochsrc_path));
     }
   else
-    bx_printf("using rc file '%s'.\n", bochsrc_path);
+    BX_INFO(("using rc file '%s'.\n", bochsrc_path));
 
 #else
   // try opening file bochsrc only in current directory for win32
@@ -387,8 +565,8 @@ parse_bochsrc(void)
   fd = fopen(bochsrc_path, "r");
 
   if (!fd) {
-    fprintf(stderr, "could not open file '%s' in current directory.\n",
-      bochsrc_path);
+    BX_INFO(( "could not open file '%s' in current directory.\n",
+      bochsrc_path ));
     exit(1);
     }
 #endif  // #if (!defined(WIN32) && !defined(macintosh))
@@ -894,12 +1072,11 @@ parse_line_formatted(int num_params, char *params[])
     }
 
   else {
-    fprintf(stderr, ".bochsrc: directive '%s' not understood\n", params[0]);
-    exit(1);
+    BX_PANIC(( ".bochsrc: directive '%s' not understood\n", params[0]));
     }
 
   if (bx_options.diskd.present && bx_options.cdromd.present)
-    bx_panic ("At present, using both diskd and cdromd at once is not supported.");
+    BX_PANIC(("At present, using both diskd and cdromd at once is not supported."));
 }
 #endif // #if BX_PROVIDE_MAIN
 
@@ -928,5 +1105,6 @@ bx_signal_handler( int signum)
     }
 #endif
 
-  bx_panic("SIGNAL %u caught\n", signum);
+  BX_PANIC(("SIGNAL %u caught\n", signum));
 }
+

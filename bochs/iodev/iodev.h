@@ -67,7 +67,7 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
 
 
-class bx_devices_c {
+class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
   ~bx_devices_c(void);

@@ -23,6 +23,7 @@
 
 #include "bochs.h"
 
+#define LOG_THIS genlog->
 
 // Nomenclature used to signify argument types
 //
@@ -46,7 +47,7 @@ BX_CPU_C::ESC0(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC0 not implemented\n");
+  BX_INFO(("ESC0 not implemented\n"));
 #endif
 }
 
@@ -59,7 +60,7 @@ BX_CPU_C::ESC1(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC1 not implemented\n");
+  BX_INFO(("ESC1 not implemented\n"));
 #endif
 }
 
@@ -72,7 +73,7 @@ BX_CPU_C::ESC2(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC2 not implemented\n");
+  BX_INFO(("ESC2 not implemented\n"));
 #endif
 }
 
@@ -83,13 +84,13 @@ BX_CPU_C::ESC3(BxInstruction_t *i)
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 
-//fprintf(stderr, "CS:EIP = %04x:%08x\n",
-//  BX_CPU.sregs[BX_SEG_REG_CS].selector.value, BX_CPU.prev_eip);
+//BX_DEBUG(( "CS:EIP = %04x:%08x\n",
+//  BX_CPU.sregs[BX_SEG_REG_CS].selector.value, BX_CPU.prev_eip));
 
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC3 not implemented\n");
+  BX_INFO(("ESC3 not implemented\n"));
 #endif
 }
 
@@ -102,7 +103,7 @@ BX_CPU_C::ESC4(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC4 not implemented\n");
+  BX_INFO(("ESC4 not implemented\n"));
 #endif
 }
 
@@ -115,7 +116,7 @@ BX_CPU_C::ESC5(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC5 not implemented\n");
+  BX_INFO(("ESC5 not implemented\n"));
 #endif
 }
 
@@ -128,7 +129,7 @@ BX_CPU_C::ESC6(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC6 not implemented\n");
+  BX_INFO(("ESC6 not implemented\n"));
 #endif
 }
 
@@ -141,7 +142,7 @@ BX_CPU_C::ESC7(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("ESC7 not implemented\n");
+  BX_INFO(("ESC7 not implemented\n"));
 #endif
 }
 
@@ -153,7 +154,7 @@ BX_CPU_C::FWAIT(BxInstruction_t *i)
   // The same goes for prefix instructions, and instructions which
   // modify segment registers. (pg4-16)
   // BX_CPU_THIS_PTR single_step_event = 0;
-  bx_panic("WAIT: not implemented for < 386\n");
+  BX_PANIC(("WAIT: not implemented for < 386\n"));
 #else // BX_CPU_LEVEL >= 3
 
   if ( BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp ) {
@@ -162,7 +163,7 @@ BX_CPU_C::FWAIT(BxInstruction_t *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  bx_printf("FWAIT: no FPU\n");
+  BX_INFO(("FWAIT: no FPU\n"));
 #endif
 
 #endif

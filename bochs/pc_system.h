@@ -41,7 +41,7 @@ extern class bx_pc_system_c bx_pc_system;
 extern double m_ips;
 #endif
 
-class bx_pc_system_c {
+class bx_pc_system_c : logfunctions {
 private:
 
   struct {

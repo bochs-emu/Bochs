@@ -25,6 +25,7 @@
 
 
 #include "bochs.h"
+#define LOG_THIS BX_CPU_THIS_PTR
 
 
   void
@@ -533,14 +534,14 @@ BX_CPU_C::CDQ(BxInstruction_t *i)
   void
 BX_CPU_C::CMPXCHG_XBTS(BxInstruction_t *i)
 {
-  bx_printf("CMPXCHG_XBTS:\n");
+  BX_INFO(("CMPXCHG_XBTS:\n"));
   UndefinedOpcode(i);
 }
 
   void
 BX_CPU_C::CMPXCHG_IBTS(BxInstruction_t *i)
 {
-  bx_printf("CMPXCHG_IBTS:\n");
+  BX_INFO(("CMPXCHG_IBTS:\n"));
   UndefinedOpcode(i);
 }
 
@@ -590,7 +591,7 @@ BX_CPU_C::XADD_EdGd(BxInstruction_t *i)
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_XADD32);
 #else
-  bx_panic("XADD_EdGd: not supported on < 80486\n");
+  BX_PANIC(("XADD_EdGd: not supported on < 80486\n"));
 #endif
 }
 
@@ -842,7 +843,7 @@ BX_CPU_C::CMPXCHG_EdGd(BxInstruction_t *i)
       EAX = op1_32;
       }
 #else
-  bx_panic("CMPXCHG_EdGd:\n");
+  BX_PANIC(("CMPXCHG_EdGd:\n"));
 #endif
 }
 
@@ -851,12 +852,12 @@ BX_CPU_C::CMPXCHG8B(BxInstruction_t *i)
 {
 #if (BX_CPU_LEVEL >= 5) || (BX_CPU_LEVEL_HACKED >= 5)
   if (i->mod != 0xc0) {
-    bx_printf("CMPXCHG8B: dest is reg: #UD\n");
+    BX_INFO(("CMPXCHG8B: dest is reg: #UD\n"));
     UndefinedOpcode(i);
     }
-  bx_panic("CMPXCHG8B: not implemented yet\n");
+  BX_PANIC(("CMPXCHG8B: not implemented yet\n"));
 #else
-  bx_printf("CMPXCHG8B: not implemented yet\n");
+  BX_INFO(("CMPXCHG8B: not implemented yet\n"));
   UndefinedOpcode(i);
 #endif
 }

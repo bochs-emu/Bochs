@@ -35,10 +35,17 @@
 
 
 
+
 bx_gui_c   bx_gui;
 
 #define BX_GUI_THIS bx_gui.
+#define LOG_THIS BX_GUI_THIS
 
+bx_gui_c::bx_gui_c(void)
+{
+  setprefix("[GUI ]"); // Init in specific_init
+  settype(GUILOG);
+}
 
   void
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
@@ -151,19 +158,19 @@ bx_gui_c::floppyB_handler(void)
   void
 bx_gui_c::reset_handler(void)
 {
-  fprintf(stderr, "# RESET callback (unimplemented).\n");
+  BX_INFO(( "# RESET callback (unimplemented).\n" ));
 }
 
   void
 bx_gui_c::power_handler(void)
 {
-  bx_panic("POWER button turned off.\n");
+  BX_PANIC(("POWER button turned off.\n"));
 }
 
   void
 bx_gui_c::snapshot_handler(void)
 {
-  fprintf(stderr, "# SNAPSHOT callback (unimplemented).\n");
+  BX_INFO(( "# SNAPSHOT callback (unimplemented).\n" ));
 }
 
   void

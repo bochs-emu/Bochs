@@ -24,11 +24,12 @@
 
 
 #include "bochs.h"
+#define LOG_THIS bx_parallel.
 
 
+bx_parallel_c bx_parallel;
 
 #if BX_USE_PAR_SMF
-bx_parallel_c bx_parallel;
 #define this (&bx_parallel)
 #endif
 
@@ -36,6 +37,8 @@ bx_parallel_c bx_parallel;
 
 bx_parallel_c::bx_parallel_c(void)
 {
+  setprefix("[PAR ]");
+  settype(PARLOG);
   // nothing for now
 }
 

@@ -38,11 +38,11 @@ do_scan(int key_event, int shift, int ctrl, int alt)
 		 keyboard input to the simulated machine */
 
 	if(bx_dbg.keyboard)
-		bx_printf("[TERM] key_event %d/0x%x %s%s%s\n",
+		BX_INFO(("[TERM] key_event %d/0x%x %s%s%s\n",
 			key_event,key_event,
 			shift?"(shift)":"",
 			ctrl?"(ctrl)":"",
-			alt?"(alt)":"");
+			alt?"(alt)":""));
 	if(shift)
 		bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L);
 	if(ctrl)
@@ -105,7 +105,7 @@ bx_gui_c::sighandler(int signo)
 		do_scan(BX_KEY_Z,0,1,0);
 		break;
 	default:
-		bx_printf("sig %d caught\n",signo);
+		BX_INFO(("sig %d caught\n",signo));
 		break;
 	}
 }
@@ -114,6 +114,7 @@ bx_gui_c::sighandler(int signo)
 bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 	unsigned headerbar_y)
 {
+	th->setprefix("[TGUI]");
 	UNUSED(th);
 	UNUSED(argc);
 	UNUSED(argv);
@@ -125,9 +126,9 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
 	// XXX log should be different from stderr, otherwise terminal mode really
 	//     ends up having fun
-	//bx_printf("[TERM] Moving Log to another tty\n");
+	//BX_INFO(("[TERM] Moving Log to another tty\n"));
 	//bio->init_log("/dev/ttyp5");
-	//bx_printf("[TERM] Moved Log to another tty\n");
+	//BX_INFO(("[TERM] Moved Log to another tty\n"));
 
 	initscr();
 	cbreak();
@@ -138,7 +139,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
 	if (bx_options.private_colormap)
 		if(bx_dbg.video)
-			bx_printf("#TERM] WARNING: private_colormap option ignored.\n");
+			BX_INFO(("#TERM] WARNING: private_colormap option ignored.\n"));
 }
 
 
@@ -317,7 +318,7 @@ do_char(int character,int alt)
 			break;
 		}
 
-		bx_printf("[TERM] character unhandled: 0x%x\n",character);
+		BX_INFO(("[TERM] character unhandled: 0x%x\n",character));
 		break;
 	}
 }
@@ -335,7 +336,7 @@ bx_gui_c::handle_events(void)
 	unsigned int character;
 	while((character = getch()) != ERR) {
 		if(bx_dbg.keyboard)
-			bx_printf("[TERM] scancode(0x%x)\n",character);
+			BX_INFO(("[TERM] scancode(0x%x)\n",character));
 		do_char(character,0);
 	}
 }
@@ -363,7 +364,7 @@ bx_gui_c::flush(void)
 bx_gui_c::clear_screen(void)
 {
 	if(bx_dbg.video)
-		bx_printf("[TERM] Ignored clear_screeen()\n");
+		BX_INFO(("[TERM] Ignored clear_screeen()\n"));
 }
 
 // ::TEXT_UPDATE()
@@ -421,8 +422,8 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	if(bx_dbg.video)
-		bx_printf("[TERM] color pallete request (%d,%d,%d,%d) ignored\n",
-			index,red,green,blue);
+		BX_INFO(("[TERM] color pallete request (%d,%d,%d,%d) ignored\n",
+			index,red,green,blue));
 	return(0);
 }
 
@@ -558,5 +559,5 @@ bx_gui_c::exit(void)
 	echo();
 	nocbreak();
 	if(bx_dbg.video)
-		bx_printf("[TERM] exiting\n");
+		BX_INFO(("[TERM] exiting\n"));
 }
