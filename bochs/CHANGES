@@ -223,15 +223,20 @@ Changes in 2.2.pre2 (March 25, 2005):
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
+ #1172191 Screen-update bug in vga.cc [2.2.pre2]
+ #1171061 SDL GUI startup failure
+ #1022056 win32 error build debug version..c2146
+  #957190 error while attempting to compile sb16.cc
+  #804797 Debugger: visualization problem (jmp) 
   #675523 2.0.1 doesn't run on W2K?
  #1167358 When using 5430PCI in DR-DOS Bochs would panic with a PUSHAD
  #1164654 Bochs VBE bios causing exception 0B in Windows 95 (SVGA bios)
  #1162983 conflicts which configure could detect
- #1164636 Windows 95 B crashes during install
+ #1164536 Windows 95 B crashes during install
   #526978 cygwin: in an rxvt, stdout is flaky
   #542303 >>PANIC<< call_protected: CS selector null
   #859457 BRICKS game doesn't work
- #1153639 textmodes on address A0000-BFFFF are not handled properly
+ #1159639 text modes on address A0000-BFFFF are not handled properly
  #1164225 define BX_SUPPORT_X86_64 0
  #1163720 ROL bug
  #1156776 keyboard scanmode fault
