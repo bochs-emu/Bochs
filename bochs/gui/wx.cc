@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.9 2002-08-30 07:03:49 bdenney Exp $
+// $Id: wx.cc,v 1.10 2002-08-30 17:39:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -312,7 +312,9 @@ MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
   Bit32u lParam = wxev.m_rawFlags;
   Bit32u key = HIWORD (lParam) & 0x01FF;
   bxev.bx_key = 0x0000;
-  if (((key & 0x0100) && ((key & 0x01ff) != 0x0145)) | ((key & 0x01ff) == 0x45)) {
+  // Swap the scancodes of "numlock" and "pause"
+  if ((key & 0xff)==0x45) key ^= 0x100;
+  if (key & 0x0100) {
 	// Its an extended key
 	bxev.bx_key = 0xE000;
   }
@@ -713,26 +715,8 @@ UpdateScreen(char *newBits, int x, int y, int width, int height)
 static void 
 DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color)
 {
-	char vgaPallet[] = { (char)0x00, //Black 
-						 (char)0x01, //Dark Blue
-						 (char)0x02, //Dark Green
-						 (char)0x03, //Dark Cyan
-						 (char)0x04, //Dark Red
-						 (char)0x05, //Dark Magenta
-						 (char)0x06, //Brown
-						 (char)0x07, //Light Gray
-						 (char)0x38, //Dark Gray
-						 (char)0x09, //Light Blue
-						 (char)0x12, //Green
-						 (char)0x1B, //Cyan
-						 (char)0x24, //Light Red
-						 (char)0x2D, //Magenta
-						 (char)0x36, //Yellow
-						 (char)0x3F  //White
-						};
-
-	char bgcolor = vgaPallet[(color >> 4) & 0xF];
-	char fgcolor = vgaPallet[color & 0xF];
+	char bgcolor = (color >> 4) & 0xF;
+	char fgcolor = color & 0xF;
 
 	char *newBits = (char *)malloc(width * height);
 	memset(newBits, 0, (width * height));
@@ -785,7 +769,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1]);
 	}
 	
-	for(int i = 0; i < nchars * 2; i += 2) {
+	for(unsigned int i = 0; i < nchars * 2; i += 2) {
 		if((old_text[i] != new_text[i]) || (old_text[i+1] != new_text[i+1])) {
 			cChar = new_text[i];
 			int x = (i / 2) % ncols;
