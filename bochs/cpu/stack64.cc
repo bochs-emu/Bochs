@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.14 2004-09-26 20:29:04 sshwarts Exp $
+// $Id: stack64.cc,v 1.15 2004-10-06 20:10:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -301,7 +301,7 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 
   RBP = frame_ptr64;
 
-  RSP -= RSP - i->Iw();
+  RSP -= i->Iw();
 }
 
   void
