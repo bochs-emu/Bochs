@@ -539,8 +539,16 @@ class bx_local_apic_c : public bx_generic_apic_c {
   // bit in ISR is set.  The ISR bit is cleared when 
   Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
   Bit32u arb_id, arb_priority, task_priority, log_dest, dest_format, spurious_vec;
-  Bit32u lvt_timer, lvt_thermal, lvt_perf, lvt_lint0, lvt_lint1, lvt_err;
-  Bit32u timer_initial, timer_current, timer_divide;
+  Bit32u lvt[6];
+#define APIC_LVT_TIMER   0
+#define APIC_LVT_THERMAL 1
+#define APIC_LVT_PERFORM 2
+#define APIC_LVT_LINT0   3
+#define APIC_LVT_LINT1   4
+#define APIC_LVT_ERROR   5
+  Bit32u timer_initial, timer_current, timer_divconf;
+  Boolean timer_active;  // internal state, not accessible from bus
+  Bit32u timer_divide_counter, timer_divide_factor;
   Bit32u apic_base_msr;
   Bit32u icr_high, icr_low;
   Bit32u err_status;
@@ -578,6 +586,8 @@ public:
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
   Bit8u get_ppr ();
   Bit8u get_apr ();
+  void periodic (Bit32u usec_delta);
+  void set_divide_configuration (Bit32u value);
   };
 
 #define APIC_MAX_ID 16
