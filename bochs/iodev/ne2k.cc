@@ -1109,7 +1109,12 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   }
 
   // Setup packet header
-  pkthdr[0] = 0;	// rx status
+  pkthdr[0] = 0;	// rx status - old behavior
+  pkthdr[0] = 1;        // Probably better to set it all the time
+                        // rather than set it to 0, which is clearly wrong.
+  if (pktbuf[0] & 0x01) {
+    pkthdr[0] |= 0x20;  // rx status += multicast packet
+  }
   pkthdr[1] = nextpage;	// ptr to next packet
   pkthdr[2] = (io_len + 8) & 0xff;	// length-low
   pkthdr[3] = (io_len + 8) >> 8;	// length-hi
