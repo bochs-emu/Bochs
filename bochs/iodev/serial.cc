@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.23 2002-08-24 19:03:43 vruppert Exp $
+// $Id: serial.cc,v 1.24 2002-08-27 17:24:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -230,7 +230,7 @@ bx_serial_c::init(bx_devices_c *d)
   }
 
   for (unsigned addr=0x03F8; addr<=0x03FF; addr++) {
-	BX_DEBUG(("register read/write: 0x%x",addr));
+	BX_DEBUG(("register read/write: 0x%04x",addr));
     BX_SER_THIS devices->register_io_read_handler(this,
        read_handler,
        addr, "Serial Port 1");
@@ -270,11 +270,11 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
   /* SERIAL PORT 1 */
 
   if (io_len > 1)
-    BX_PANIC(("io read from port %04x, bad len=%u",
+    BX_PANIC(("io read from port 0x%04x, bad len=%u",
 	     (unsigned) address,
              (unsigned) io_len));
 
-  BX_DEBUG(("register read from address 0x%x - ", (unsigned) address));
+  BX_DEBUG(("register read from address 0x%04x - ", (unsigned) address));
 
   switch (address) {
     case 0x03F8: /* receive buffer, or divisor latch LSB if DLAB set */
@@ -411,12 +411,12 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 
     default:
       val = 0; // keep compiler happy
-      BX_PANIC(("unsupported io read from address=%0x%x!",
+      BX_PANIC(("unsupported io read from address=0x%04x!",
         (unsigned) address));
       break;
   }
 
-  BX_DEBUG(("val =  0x%x", (unsigned) val));
+  BX_DEBUG(("val =  0x%02x", (unsigned) val));
 
   return(val);
 }
@@ -443,15 +443,13 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Boolean prev_cts, prev_dsr, prev_ri, prev_dcd;
   Boolean gen_int = 0;
 
-  BX_DEBUG(("write: 0x%x <- %d",address,value));
-
   /* SERIAL PORT 1 */
 
   if (io_len > 1)
-    BX_PANIC(("io write to address %08x len=%u",
+    BX_PANIC(("io write to address 0x%04x len=%u",
              (unsigned) address, (unsigned) io_len));
 
-  BX_DEBUG(("write to address: 0x%x = 0x%x",
+  BX_DEBUG(("write to address: 0x%04x = 0x%02x",
 	      (unsigned) address, (unsigned) value));
 
   switch (address) {
@@ -658,7 +656,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     default:
-      BX_PANIC(("unsupported io write to address=0x%x, value = 0x%x!",
+      BX_PANIC(("unsupported io write to address=0x%04x, value = 0x%02x!",
         (unsigned) address, (unsigned) value));
       break;
   }

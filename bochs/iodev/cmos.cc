@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.16 2002-01-29 17:20:11 vruppert Exp $
+// $Id: cmos.cc,v 1.17 2002-08-27 17:24:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ bx_cmos_c::~bx_cmos_c(void)
 bx_cmos_c::init(bx_devices_c *d)
 {
 	unsigned i;
-	BX_DEBUG(("Init $Id: cmos.cc,v 1.16 2002-01-29 17:20:11 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: cmos.cc,v 1.17 2002-08-27 17:24:36 vruppert Exp $"));
 
 	// CMOS RAM & RTC
 
@@ -232,11 +232,11 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
 	Bit8u ret8;
 
 	if (io_len > 1)
-    BX_PANIC(("io read from address %08x len=%u",
+    BX_PANIC(("io read from address 0x%04x len=%u",
 			  (unsigned) address, (unsigned) io_len));
 
 	if (bx_dbg.cmos)
-    BX_INFO(("CMOS read of CMOS register 0x%x",
+    BX_INFO(("CMOS read of CMOS register 0x%02x",
       (unsigned) BX_CMOS_THIS s.cmos_mem_address));
 
 
@@ -257,7 +257,7 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
       break;
 
     default:
-      BX_PANIC(("unsupported cmos read, address=%0x%x!",
+      BX_PANIC(("unsupported cmos read, address=0x%04x!",
 		 (unsigned) address));
       return(0);
       break;
@@ -285,11 +285,11 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_CMOS_SMF
 
 	if (io_len > 1)
-    BX_PANIC(("io write to address %08x len=%u",
+    BX_PANIC(("io write to address 0x%04x len=%u",
 			  (unsigned) address, (unsigned) io_len));
 
 	if (bx_dbg.cmos)
-    BX_INFO(("CMOS write to address: 0x%x = 0x%x",
+    BX_INFO(("CMOS write to address: 0x%04x = 0x%02x",
       (unsigned) address, (unsigned) value));
 
 
@@ -304,7 +304,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x0071:
       if (BX_CMOS_THIS s.cmos_mem_address >= BX_NUM_CMOS_REGS) {
-		 BX_PANIC(("unsupported cmos io write, register(0x%02x)=%02x!",
+		 BX_PANIC(("unsupported cmos io write, register(0x%02x) = 0x%02x !",
 			 (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value));
 		 return;
 		 }
@@ -319,7 +319,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		 case 0x07: // day of the month
 		 case 0x08: // month
 		 case 0x09: // year
-		   //BX_INFO(("write reg %02xh: value = %02xh",
+		   //BX_INFO(("write reg 0x%02x: value = 0x%02x",
 		   //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
 		   BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
 		   return;
@@ -360,7 +360,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		   unsigned dcc;
 		   dcc = (value >> 4) & 0x07;
 		   if (dcc != 0x02) {
-			 BX_PANIC(("CRA: divider chain control 0x%x", dcc));
+			 BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
 			 }
 		   BX_CMOS_THIS s.reg[0x0a] = value & 0x7f;
 		   BX_CMOS_THIS CRA_change();
@@ -429,12 +429,12 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 		 case 0x0c: // Control Register C
 		 case 0x0d: // Control Register D
-		   BX_ERROR(("write to control register 0x%x (read-only)",
+		   BX_ERROR(("write to control register 0x%02x (read-only)",
 			        BX_CMOS_THIS s.cmos_mem_address));
 		   break;
 
 		 case 0x0e: // diagnostic status
-		   BX_DEBUG(("write register 0Eh: %02x", (unsigned) value));;
+		   BX_DEBUG(("write register 0x0e: 0x%02x", (unsigned) value));;
 		   break;
 
 	case 0x0f: // shutdown status
@@ -466,14 +466,14 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 			                  " to jump to DWORD at 40:67"));
 			   break;
 			 default:
-			   BX_PANIC(("unsupported cmos io write to reg F, case %x!",
+			   BX_PANIC(("unsupported cmos io write to reg F, case 0x%02x!",
 			     (unsigned) value));
 			   break;
 			 }
 		   break;
 
 		 default:
-		   BX_DEBUG(("write reg %02xh: value = %02xh",
+		   BX_DEBUG(("write reg 0x%02x: value = 0x%02x",
 			 (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value));
 		   break;
 		 }
