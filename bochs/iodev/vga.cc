@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.28 2002-03-16 10:22:57 japj Exp $
+// $Id: vga.cc,v 1.29 2002-03-16 11:37:43 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2303,11 +2303,13 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         
       case VBE_DISPI_INDEX_BANK: // set bank
       {
+        value=value & 0xff ; // FIXME lobyte = vbe bank A?
+        
         // check for max bank nr
         if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024 /64))
         {
-          BX_INFO(("VBE set bank to %d", BX_VGA_THIS s.vbe_bank));
-          BX_VGA_THIS s.vbe_bank=(Bit16u) value & 0xff; // FIXME lobyte = vbe bank A?
+          BX_INFO(("VBE set bank to %d", value));
+          BX_VGA_THIS s.vbe_bank=value;
         }
         else
         {
