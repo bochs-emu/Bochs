@@ -68,7 +68,32 @@ TO DO:
 - patch.ltdl: nearly fine but in noplugin compile, now it includes ltdl.o
   and not -ld.  Make ltdl.o conditional on plugin compile too, and it will
   be set.
-
+- how do we know what plugins should be available when we start Bochs?
+  - idea: have a list of plugin names that is linked into the binary that
+    tells which guis and which devices are guaranteed to be available.
+    In a static binary, they are 100% guaranteed.  In a plugin binary,
+    it will assume that all the plugins on the list can be loaded if 
+    necessary.
+  - if you want bochs to load a plugin that was not known at compile time,
+    we can allow a bochsrc line such as "plugin_gui: sdl" or
+    "plugin_device: mypit".  I'm distinguishing between gui and device 
+    plugins, because they are used in quite different ways.
+- how do we locate plugins on the disk?
+  - bochsrc could say "plugin_search_directory: /path/to/libs".  If possible
+    the user specified directory should be tried first.  If there are multiple
+    copies installed, surely the user wants the one that he specifically asked
+    for.
+  - try a list of other directories that are compiled into the binary, such as
+    the place that bochs is installed, e.g. $prefix/$version/plugins.
+  - just attempt to load it and see if it works, using the system's default
+    search routine.  On some systems the LD_LIBRARY_PATH variable will control
+    what directories are checked.
+- how does the user select which gui to use?  Add a bochsrc parameter
+  "gui_select: sdl".  This variable can also be edited in configuration 
+  menus.  If there is no user-specified value when it's time to initialize 
+  the gui, it will choose the first gui in the list of available ones.
+  We just need to put the list in a reasonable order, for example don't 
+  put nogui first.
 
 DONE:
 - applied patch.plugins5
