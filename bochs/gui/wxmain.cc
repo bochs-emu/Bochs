@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.27 2002-09-03 08:55:35 bdenney Exp $
+// $Id: wxmain.cc,v 1.28 2002-09-03 16:03:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -349,10 +349,10 @@ void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 {
-  int maxBootDevices = 3;
+#define MAX_BOOT_DEVICES 3
   int bootDevices = 0;
-  wxString devices[maxBootDevices];
-  int dev_id[maxBootDevices];
+  wxString devices[MAX_BOOT_DEVICES];
+  int dev_id[MAX_BOOT_DEVICES];
   bx_param_bool_c *floppy = (bx_param_bool_c *)
     SIM->get_param (BXP_FLOPPYA_DEVTYPE);
   bx_param_bool_c *hd = (bx_param_bool_c *)
