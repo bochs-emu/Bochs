@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.26 2004-01-17 15:51:08 vruppert Exp $
+// $Id: pc_system.h,v 1.27 2004-04-08 20:56:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -200,4 +200,7 @@ public:
   bx_bool get_enable_a20(void);
   void    exit(void);
 
+  // Cpu and System Reset
+  int ResetCpus( unsigned type );
+  int ResetSystem( unsigned type );
   };

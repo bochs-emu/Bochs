@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.35 2004-01-17 15:51:08 vruppert Exp $
+// $Id: pc_system.cc,v 1.36 2004-04-08 20:56:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -212,13 +212,31 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   UNUSED( operation );
   // Reset the processor.
 
-  BX_ERROR(( "# bx_pc_system_c::ResetSignal() called" ));
+  BX_ERROR(( "bx_pc_system_c::ResetSignal() called" ));
   for (int i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->reset(BX_RESET_SOFTWARE);
   DEV_reset_devices(BX_RESET_SOFTWARE);
   return(0);
 }
 
+  int
+bx_pc_system_c::ResetCpus( unsigned type )
+{
+  BX_INFO(( "bx_pc_system_c::ResetCpus() called" ));
+  for (int i=0; i<BX_SMP_PROCESSORS; i++)
+    BX_CPU(i)->reset(type);
+  return(0);
+}
+
+  int
+bx_pc_system_c::ResetSystem( unsigned type )
+{
+  BX_INFO(( "bx_pc_system_c::ResetSystem() called" ));
+  for (int i=0; i<BX_SMP_PROCESSORS; i++)
+    BX_CPU(i)->reset(type);
+  DEV_reset_devices(type);
+  return(0);
+}
 
   Bit8u
 bx_pc_system_c::IAC(void)
