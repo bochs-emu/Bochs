@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.2 2002-12-13 17:20:27 bdenney Exp $
+# $Id: Makefile.in,v 1.3 2002-12-13 17:52:16 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -9,6 +9,7 @@
 
 prefix          = @prefix@
 docdir          = $(prefix)/share/doc/bochs
+DOCBOOK2HTML = @DOCBOOK2HTML@
 
 # name of the major documentation sections
 SECTIONS=user documentation development
@@ -34,11 +35,11 @@ SSH=ssh -x
 all: $(SECTION_HTML)
 
 user/book1.html: user/user.dbk
-	cd user; docbook2html user.dbk
+	cd user; $(DOCBOOK2HTML) user.dbk
 documentation/book1.html: documentation/documentation.dbk
-	cd documentation; docbook2html documentation.dbk
+	cd documentation; $(DOCBOOK2HTML) documentation.dbk
 development/book1.html: development/development.dbk
-	cd development; docbook2html development.dbk
+	cd development; $(DOCBOOK2HTML) development.dbk
 
 fixperm::
 	# fix permissions locally so that tar will install things right

@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.187 2002-12-13 17:39:03 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.188 2002-12-13 17:52:09 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -446,7 +446,7 @@ AC_CHECK_HEADER(assert.h, AC_DEFINE(HAVE_ASSERT_H, 1))
 
 AC_MSG_CHECKING(for plugins support)
 AC_ARG_ENABLE(plugins,
-  [  --enable-plugins                enable plugins],
+  [  --enable-plugins                  enable plugins],
   [if test "$enableval" = yes; then
      bx_plugins=1
    else
@@ -1506,6 +1506,28 @@ AC_ARG_ENABLE(iodebug,
 AC_SUBST(IODEBUG_OBJS)
 
 
+AC_PATH_PROG(DOCBOOK2HTML, docbook2html, not_found)
+AC_MSG_CHECKING(whether to build docbook documentation)
+build_docbook=0
+AC_ARG_ENABLE(docbook,
+  [  --enable-docbook                  build the Docbook documentation],
+  [
+    if test "$enableval" = yes; then build_docbook=1; fi 
+  ],
+  [
+    dnl Not specified. If they have docbook2html, then yes.
+    if test "$DOCBOOK2HTML" != not_found; then build_docbook=1; fi
+    ]
+  )
+
+if test $build_docbook = 1; then
+  AC_MSG_RESULT(yes)
+  INSTALL_DOCBOOK_VAR=install_docbook
+else
+  AC_MSG_RESULT(no)
+fi
+AC_SUBST(INSTALL_DOCBOOK_VAR)
+AC_SUBST(DOCBOOK2HTML)
 
 PRIMARY_TARGET='bochs'
 PLUGIN_LIBNAME_TRANSFORMATION='%.o=libbx_%.la'
@@ -1568,7 +1590,7 @@ AC_ARG_WITH(sdl,
   )
 
 AC_ARG_WITH(svga,
-  [  --with-svga                        use SVGALib libraries],
+  [  --with-svga                       use SVGALib libraries],
   )
 
 AC_ARG_WITH(wx,
