@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.11 2002-03-23 03:22:07 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.12 2002-03-24 15:39:12 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -71,7 +71,7 @@ class SimThread: public wxThread
   wxCriticalSection sim2gui_mailbox_lock;
 
 public:
-  SimThread (MyFrame *_frame) { frame = _frame; }
+  SimThread (MyFrame *_frame) { frame = _frame; sim2gui_mailbox = NULL; }
   virtual ExitCode Entry ();
   void OnExit ();
   // called by the siminterface code, with the pointer to the sim thread
@@ -157,6 +157,7 @@ END_EVENT_TABLE()
 
 IMPLEMENT_APP(MyApp)
 
+wxCriticalSection wxScreen_lock;
 static char *wxScreen = NULL;
 static long wxScreenX = 0;
 static long wxScreenY = 0;
@@ -292,7 +293,7 @@ void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
 	  "Already Running", wxOK | wxICON_ERROR);
 	return;
   }
-  wxLogStatus ("Starting a Bochs simulation\n");
+  wxLogStatus ("Starting a Bochs simulation");
   start_bochs_times++;
   if (start_bochs_times>1) {
 	wxMessageBox (
@@ -302,7 +303,7 @@ void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
   sim_thread = new SimThread (this);
   sim_thread->Create ();
   sim_thread->Run ();                                                        
-  wxLogDebug ("Simulator thread has started.\n");
+  wxLogDebug ("Simulator thread has started.");
   // set up callback for events from simulator thread
   SIM->set_notify_callback (&SimThread::SiminterfaceCallback, sim_thread);
   // fix up menu choices
@@ -383,7 +384,7 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
   // to junk.  So be sure to copy the text out before deleting it!
   if (newval && strlen(newval)>0) {
 	// change floppy path to this value.
-	wxLogDebug ("Setting param %s to '%s'\n", param->get_name (), newval);
+	wxLogDebug ("Setting param %s to '%s'", param->get_name (), newval);
 	param->set (newval);
 	delete dialog;
 	return 1;
@@ -449,7 +450,7 @@ MyFrame::HandleAskParam (BxEvent *event)
 	      // change floppy path to this value.
 	      bx_param_string_c *Opath = SIM->get_param_string (param);
 	      assert (Opath != NULL);
-	      wxLogDebug ("Setting floppy %c path to '%s'\n", 
+	      wxLogDebug ("Setting floppy %c path to '%s'", 
 		    param == BXP_FLOPPYA_PATH ? 'A' : 'B',
 		    newpath);
 	      Opath->set (newpath);
@@ -459,7 +460,7 @@ MyFrame::HandleAskParam (BxEvent *event)
 	  return 0;
 	}
   default:
-	wxLogError ("HandleAskParam: parameter %d, not implemented\n", event->u.param.id);
+	wxLogError ("HandleAskParam: parameter %d, not implemented", event->u.param.id);
   }
 #endif
   return -1;  // could not display
@@ -471,9 +472,9 @@ MyFrame::HandleAskParam (BxEvent *event)
 void 
 MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
 {
-  wxLogDebug ("received a bochs event in the GUI thread\n");
+  wxLogDebug ("received a bochs event in the GUI thread");
   BxEvent *be = (BxEvent *) event.GetEventObject ();
-  wxLogDebug ("event type = %d\n", (int) be->type);
+  wxLogDebug ("event type = %d", (int) be->type);
   // all cases should return.  sync event handlers MUST send back a 
   // response.
   switch (be->type) {
@@ -486,18 +487,18 @@ MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
     wxLogDebug ("after SendSyncResponse");
 	return;
   case BX_ASYNC_EVT_SHUTDOWN_GUI:
-	wxLogDebug ("control panel is exiting\n");
+	wxLogDebug ("control panel is exiting");
     Close (TRUE);
 	wxExit ();
 	return;
   case BX_ASYNC_EVT_LOG_MSG:
-    wxLogDebug ("log msg: level=%d, prefix='%s', msg='%s'\n",
+    wxLogDebug ("log msg: level=%d, prefix='%s', msg='%s'",
 	  be->u.logmsg.level,
 	  be->u.logmsg.prefix,
 	  be->u.logmsg.msg);
     return;
   default:
-    wxLogDebug ("OnSim2GuiEvent: event type %d ignored\n", (int)be->type);
+    wxLogDebug ("OnSim2GuiEvent: event type %d ignored", (int)be->type);
 	// assume it's a synchronous event and send back a response, to avoid
 	// potential deadlock.
     sim_thread->SendSyncResponse(be);
@@ -513,6 +514,8 @@ void MyFrame::OnPaint(wxPaintEvent& WXUNUSED(event))
 	wxPaintDC dc(this);
 	//PrepareDC(dc);
 
+	wxCriticalSectionLocker lock(wxScreen_lock);
+	wxLogDebug ("OnPaint called with wxScreen = %p", wxScreen);
 	if(wxScreen != NULL) {
 	  wxPoint pt = GetClientAreaOrigin();
 	  wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
@@ -533,7 +536,7 @@ SimThread::Entry (void)
 {     
   int argc=1;
   char *argv[] = {"bochs"};
-  wxLogDebug ("in SimThread, starting at bx_continue_after_control_panel\n");
+  wxLogDebug ("in SimThread, starting at bx_continue_after_control_panel");
   // run all the rest of the Bochs simulator code.  This function will
   // run forever, unless a "kill_bochs_request" is issued.  The procedure
   // is as follows:
@@ -549,7 +552,7 @@ SimThread::Entry (void)
   //     kill_bochs_request and returns back to this Entry() function.
   //   - Entry() exits and the thread stops. Whew.
   bx_continue_after_control_panel (argc, argv);
-  wxLogDebug ("in SimThread, bx_continue_after_control_panel exited\n");
+  wxLogDebug ("in SimThread, bx_continue_after_control_panel exited");
   return NULL;
 }
 
@@ -584,7 +587,7 @@ SimThread::SiminterfaceCallback (void *thisptr, BxEvent *event)
 BxEvent *
 SimThread::SiminterfaceCallback2 (BxEvent *event)
 {
-  //wxLogDebug ("SiminterfaceCallback with event type=%d\n", (int)event->type);
+  //wxLogDebug ("SiminterfaceCallback with event type=%d", (int)event->type);
   event->retcode = 0;  // default return code
   int async = BX_EVT_IS_ASYNC(event->type);
   if (!async) {
@@ -608,17 +611,17 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
   //encapsulate the bxevent in a wxwindows event
   wxCommandEvent wxevent (wxEVT_COMMAND_MENU_SELECTED, ID_Sim2Gui_Event);
   wxevent.SetEventObject ((wxEvent *)event);
-  wxLogDebug ("Sending an event to the window\n");
+  wxLogDebug ("Sending an event to the window");
   wxPostEvent (frame, wxevent);
   // if it is an asynchronous event, return immediately
   if (async) return NULL;
-  wxLogDebug ("SiminterfaceCallback2: synchronous event; waiting for response\n");
+  wxLogDebug ("SiminterfaceCallback2: synchronous event; waiting for response");
   // now wait forever for the GUI to post a response.
   BxEvent *response = NULL;
   while (response == NULL) {
 	response = GetSyncResponse ();
 	if (!response) {
-	  wxLogDebug ("no sync response yet, waiting\n");
+	  wxLogDebug ("no sync response yet, waiting");
 	  this->Sleep(500);
 	}
   }
@@ -631,7 +634,7 @@ SimThread::ClearSyncResponse ()
 {
   wxCriticalSectionLocker lock(sim2gui_mailbox_lock);
   if (sim2gui_mailbox != NULL) {
-    wxLogDebug ("WARNING: ClearSyncResponse is throwing away an event that was previously in the mailbox\n");
+    wxLogDebug ("WARNING: ClearSyncResponse is throwing away an event that was previously in the mailbox");
   }
   sim2gui_mailbox = NULL;
 }
@@ -641,7 +644,7 @@ SimThread::SendSyncResponse (BxEvent *event)
 {
   wxCriticalSectionLocker lock(sim2gui_mailbox_lock);
   if (sim2gui_mailbox != NULL) {
-    wxLogDebug ("WARNING: SendSyncResponse is throwing away an event that was previously in the mailbox\n");
+    wxLogDebug ("WARNING: SendSyncResponse is throwing away an event that was previously in the mailbox");
   }
   sim2gui_mailbox = event;
 }
@@ -673,6 +676,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
   wxScreenX = 640;
   wxScreenY = 480;
+  wxCriticalSectionLocker lock(wxScreen_lock);
   wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 
@@ -712,6 +716,7 @@ bx_gui_c::flush(void)
   void
 bx_gui_c::clear_screen(void)
 {
+  wxCriticalSectionLocker lock(wxScreen_lock);
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 }
 
@@ -740,6 +745,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
 		      Bit16u cursor_state, unsigned nrows)
 {
+  wxLogDebug ("text_update");
 	unsigned char cChar;
 	unsigned int nchars = 80 * nrows;
 	if((wxCursorY * 80 + wxCursorX) < nchars) {
@@ -765,7 +771,8 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr);
 	}
 
-	theFrame->Refresh(FALSE);
+	wxPaintEvent event;
+	wxPostEvent (theFrame, event);
 }
 
 
@@ -779,6 +786,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Boolean
 bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
+  wxLogDebug ("palette_change");
   wxBochsPalette[index].red = red;
   wxBochsPalette[index].green = green;
   wxBochsPalette[index].blue = blue;
@@ -803,6 +811,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
+  wxLogDebug ("graphics_tile_update");
 	UpdateScreen((char *)tile, x0, y0, wxTileX, wxTileY);
 }
 
@@ -819,9 +828,12 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_gui_c::dimension_update(unsigned x, unsigned y)
 {
+  wxLogDebug ("dimension_update");
+  wxCriticalSectionLocker lock(wxScreen_lock);
   wxScreenX = x;
   wxScreenY = y;
   wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
+  wxASSERT (wxScreen != NULL);
   
   //theFrame->SetSize(-1, -1, wxScreenX + 6, wxScreenY + 100, 0);
   //wxSize size = theFrame->GetToolBar()->GetToolSize();
@@ -924,6 +936,7 @@ bx_gui_c::mouse_enabled_changed_specific (Boolean val)
 
 void UpdateScreen(char *newBits, int x, int y, int width, int height) 
 {
+	wxCriticalSectionLocker lock(wxScreen_lock);
 	if(wxScreen != NULL) {
 		for(int i = 0; i < height; i++) {
 			for(int c = 0; c < width; c++) {
