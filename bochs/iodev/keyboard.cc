@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.71 2002-10-25 11:44:40 bdenney Exp $
+// $Id: keyboard.cc,v 1.72 2002-10-30 23:58:03 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.71 2002-10-25 11:44:40 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.72 2002-10-30 23:58:03 yakovlev Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -991,7 +991,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       case 3: BX_INFO(("setting delay to 1000 mS (unused)")); break;
       }
     BX_KEY_THIS s.kbd_internal_buffer.repeat_rate = value & 0x1f;
-    double cps = 1 /((8 + (value & 0x07)) * exp(log(2) * ((value >> 3) & 0x03)) * 0.00417);
+    double cps = 1 /((double)(8 + (value & 0x07)) * (double)exp(log((double)2) * (double)((value >> 3) & 0x03)) * 0.00417);
     BX_INFO(("setting repeat rate to %.1f cps (unused)", cps));
     kbd_enQ(0xFA); // send ACK
     return;
