@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.63 2003-07-11 15:11:24 vruppert Exp $
+// $Id: win32.cc,v 1.64 2003-09-17 19:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -581,6 +581,8 @@ VOID UIThread(PVOID pvoid) {
     if (MemoryBitmap && MemoryDC) {
       stInfo.UIinited = TRUE;
 
+      bx_gui->clear_screen();
+
       while (GetMessage (&msg, NULL, 0, 0)) {
         TranslateMessage (&msg);
         DispatchMessage (&msg);
@@ -662,12 +664,19 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
     hdcMem = CreateCompatibleDC (hdc);
     SelectObject (hdcMem, MemoryBitmap);
 
-    StretchBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
-           ps.rcPaint.right - ps.rcPaint.left + 1,
-           ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
-           ps.rcPaint.left/stretch_factor, ps.rcPaint.top,
-            (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor, (ps.rcPaint.bottom - ps.rcPaint.top+1),SRCCOPY);
-
+    if (stretch_factor == 1) {
+      BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
+             ps.rcPaint.right - ps.rcPaint.left + 1,
+             ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
+             ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+    } else {
+      StretchBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
+                 ps.rcPaint.right - ps.rcPaint.left + 1,
+                 ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
+                 ps.rcPaint.left/stretch_factor, ps.rcPaint.top,
+                 (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor,
+                 (ps.rcPaint.bottom - ps.rcPaint.top+1), SRCCOPY);
+    }
     DeleteDC (hdcMem);
     EndPaint (hwnd, &ps);
     LeaveCriticalSection(&stInfo.drawCS);
@@ -1375,7 +1384,6 @@ unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 				    void (*f)(void)) {
   unsigned hb_index;
   TBBUTTON tbb[1];
-  RECT R;
 
   if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
     terminateEmul(EXIT_HEADER_BITMAP_ERROR);
@@ -1401,11 +1409,6 @@ unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   } else { // BX_GRAVITY_RIGHT
     SendMessage(hwndTB, TB_INSERTBUTTON, bx_hb_separator+1, (LPARAM)(LPTBBUTTON)&tbb);
   }
-  if (hb_index==0) {
-    SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
-    GetWindowRect(hwndTB, &R);
-    bx_headerbar_y = R.bottom - R.top + 1;
-  }
 
   bx_headerbar_entry[hb_index].bmap_id = bmap_id;
   bx_headerbar_entry[hb_index].f = f;
@@ -1421,6 +1424,17 @@ unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 
 void bx_win32_gui_c::show_headerbar(void)
 {
+  RECT R;
+
+  SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+  GetWindowRect(hwndTB, &R);
+  if (bx_headerbar_y != (R.bottom - R.top + 1)) {
+    bx_headerbar_y = R.bottom - R.top + 1;
+    SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
+                 stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
+                 SWP_NOMOVE | SWP_NOZORDER);
+    MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
+  }
 }
 
 
