@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.59 2003-01-17 18:16:02 cbothamy Exp $
+// $Id: x.cc,v 1.60 2003-01-18 12:05:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,6 @@ static int rows=25, columns=80;
 static Window win;
 static GC gc, gc_inv, gc_headerbar, gc_headerbar_inv;
 static unsigned font_width, font_height;
-static unsigned font_height_orig = 16;
 static Bit8u blank_line[80];
 static unsigned dimension_x=0, dimension_y=0;
 
@@ -621,7 +620,7 @@ bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
   void
 create_internal_vga_font(void)
 {
-  // Fixed for now
+  // Default values
   font_width=8;
   font_height=16;
 
@@ -1063,9 +1062,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit8u cs_start, cs_end;
   unsigned nchars;
   bx_bool force_update=0;
-  unsigned char cell[16];
-
-  UNUSED(nrows);
+  unsigned char cell[32];
 
   if (charmap_updated) {
     BX_INFO(("charmap update. Font Height is %d",font_height));
@@ -1074,7 +1071,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         XFreePixmap(bx_x_display, vgafont[c]);
         
         memset(cell, 0, sizeof(cell));
-        for(i=0; i<16; i++) {
+        for(i=0; i<font_height; i++) {
           cell[i] |= ((vga_charmap[(c<<5)+i] & 0x01)<<7);
           cell[i] |= ((vga_charmap[(c<<5)+i] & 0x02)<<5);
           cell[i] |= ((vga_charmap[(c<<5)+i] & 0x04)<<3);
@@ -1097,11 +1094,11 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
 
-  cs_start = ((cursor_state >> 8) & 0x3f) * font_height / font_height_orig;
-  cs_end = (cursor_state & 0x1f) * font_height / font_height_orig;
+  cs_start = (cursor_state >> 8) & 0x3f;
+  cs_end = cursor_state & 0x1f;
 
   // Number of characters on screen, variable number of rows
-  nchars = columns*rows;
+  nchars = columns*nrows;
 
   // first draw over character at original block cursor location
   if ( (prev_block_cursor_y*columns + prev_block_cursor_x) < nchars ) {
@@ -1137,19 +1134,15 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_x = cursor_x;
   prev_block_cursor_y = cursor_y;
 
-  XSetForeground(bx_x_display, gc, white_pixel);
-  XSetBackground(bx_x_display, gc, black_pixel);
-
   // now draw character at new block cursor location in reverse
   if ( ( (cursor_y*columns + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
-    for (unsigned i = cs_start; i <= cs_end; i++)
-      XDrawLine(bx_x_display, win,
-	gc_inv,
-	cursor_x * font_width,
-	cursor_y * font_height + bx_headerbar_y + i,
-	(cursor_x + 1) * font_width - 1,
-	cursor_y * font_height + bx_headerbar_y + i
-      );
+    curs = (cursor_y*columns + cursor_x)*2;
+    c = new_text[curs];
+    XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx((new_text[curs+1] & 0xf0) >> 4)]);
+    XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_text[curs+1] & 0x0f)]);
+
+    XCopyPlane(bx_x_display, vgafont[c], win, gc, 0, cs_start, font_width, cs_end - cs_start + 1,
+               cursor_x * font_width, cursor_y * font_height + bx_headerbar_y + cs_start, 1);
     }
 
   XFlush(bx_x_display);
@@ -1290,15 +1283,9 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
 bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   if (fheight > 0) {
-    font_height_orig = fheight;
-    rows = y / fheight;
-    columns = x / 8;
-    if (fheight != font_height) {
-      y = rows * font_height;
-    }
-    if (font_width != 8) {
-      x = columns * font_width;
-    }
+    font_height = fheight;
+    font_width = 8;
+    columns = x / font_width;
   }
   if ( (x != dimension_x) || (y != (dimension_y-bx_headerbar_y)) ) {
     XSizeHints hints;
