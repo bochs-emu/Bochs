@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.112 2002-08-12 14:55:21 cbothamy Exp $
+// $Id: main.cc,v 1.113 2002-08-18 16:59:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,6 +30,7 @@
 #include "state_file.h"
 
 int enable_control_panel = 1;
+int bochsrc_include_count = 0;
 
 extern "C" {
 #include <signal.h>
@@ -109,6 +110,7 @@ bx_options_t bx_options = {
   // log options: ignore debug, report info and error, crash on panic.
   { NULL, NULL, { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_ASK } },
   { NULL, NULL }, // KeyboardMapping
+  NULL  // user shortcut
   };
 
 static void parse_line_unformatted(char *context, char *line);
@@ -1152,16 +1154,21 @@ bx_do_text_config_interface (int argc, char *argv[])
   char *bochsrc = NULL;
   int norcfile = 1;
 
-  // detect -nocontrolpanel or -nocp argument before anything else
+  // detect -f, -nocontrolpanel or -nocp argument before anything else
   int arg = 1;
-  if (argc > 1 && 
+  if ((argc > 1) && 
        ((!strcmp ("-nocontrolpanel", argv[1]))
-        || (!strcmp ("-nocp", argv[1])))) {
+        || (!strcmp ("-nocp", argv[1]))
+        || (!strncmp ("-q", argv[1], 2)))) {
     // skip the control panel
     arg++;
     SIM->set_enabled (0);
     enable_control_panel = 0;
-    if ((argc > 3) && (!strcmp ("-f", argv[arg]))) {
+    if ((argc > 2) && (!strcmp(argv[1], "-qf"))) {
+      bochsrc = argv[arg];
+      arg++;
+    }
+    else if ((argc > 3) && (!strcmp ("-f", argv[arg]))) {
       bochsrc = argv[arg+1];
       arg += 2;
     }
@@ -1541,6 +1548,8 @@ parse_bochsrc(char *rcfile)
 
   // try several possibilities for the bochsrc before giving up
 
+  bochsrc_include_count++;
+
   fd = fopen (rcfile, "r");
   if (fd == NULL) return -1;
 
@@ -1555,6 +1564,7 @@ parse_bochsrc(char *rcfile)
       }
     } while (!feof(fd));
   fclose(fd);
+  bochsrc_include_count--;
   return 0;
 }
 
@@ -1581,7 +1591,10 @@ parse_line_unformatted(char *context, char *line)
 
   num_params = 0;
 
-  ptr = strtok(line, ":");
+  if (!strncmp(line, "#include", 8))
+    ptr = strtok(line, " ");
+  else
+    ptr = strtok(line, ":");
   while (ptr) {
     string_i = 0;
     for (i=0; i<strlen(ptr); i++) {
@@ -1648,7 +1661,22 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
   if (num_params < 1) return;
 
-  if (params[0][0] == '#') return; /* comment */
+  if (!strcmp(params[0], "#include")) {
+    if (num_params != 2) {
+      BX_ERROR(("%s: ignoring malformed #include directive.", context));
+      return;
+      }
+    if (!strcmp(params[1], context)) {
+      BX_ERROR(("%s: cannot include this file again.", context));
+      return;
+      }
+    if (bochsrc_include_count == 2) {
+      BX_ERROR(("%s: include directive in an included file not supported yet.", context));
+      return;
+      }
+    bx_read_configuration(params[1]);
+    }
+  else if (params[0][0] == '#') return; /* comment */
   else if (!strcmp(params[0], "floppya")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "2_88=", 5)) {
