@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.9 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: io_pro.cc,v 1.10 2002-09-24 18:33:38 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -163,7 +163,7 @@ BX_CPU_C::allow_io(Bit16u addr, unsigned len)
                          &io_base);
   if (io_base <= 103) {
 BX_INFO(("PE is %u", BX_CPU_THIS_PTR cr0.pe));
-BX_INFO(("VM is %u", !! BX_CPU_THIS_PTR get_VM ()));
+BX_INFO(("VM is %u", BX_CPU_THIS_PTR getB_VM ()));
 BX_INFO(("CPL is %u", CPL));
 BX_INFO(("IOPL is %u", BX_CPU_THIS_PTR get_IOPL ()));
 BX_INFO(("addr is %u", addr));

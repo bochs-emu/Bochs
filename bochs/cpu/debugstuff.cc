@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.19 2002-09-23 22:10:00 bdenney Exp $
+// $Id: debugstuff.cc,v 1.20 2002-09-24 18:33:38 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -226,9 +226,9 @@ BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
         return(0);
         }
       // make sure none of the system bits are being changed
-      current_sys_bits = ((!!BX_CPU_THIS_PTR get_NT()) << 14) |
+      current_sys_bits = ((BX_CPU_THIS_PTR getB_NT()) << 14) |
                          (BX_CPU_THIS_PTR get_IOPL () << 12) |
-                         ((!!BX_CPU_THIS_PTR get_TF()) << 8);
+                         ((BX_CPU_THIS_PTR getB_TF()) << 8);
       if ( current_sys_bits != (val & 0x0000f100) ) {
         BX_INFO(("dbg_set_reg: can not modify NT, IOPL, or TF."));
         return(0);
