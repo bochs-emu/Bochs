@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.11 2002-11-02 16:48:32 ndavidg Exp $
+$Id: misc.txt,v 1.12 2002-11-02 16:51:18 ndavidg Exp $
 
 Testing testing....
 
@@ -292,4 +292,4 @@ see man mount, losetup, and fdisk for more info
 
 
 
-BOCHS Rocks!
+BOCHS Rocks!!!
