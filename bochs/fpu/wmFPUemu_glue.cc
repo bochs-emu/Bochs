@@ -123,11 +123,11 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
                 data_sel_off, entry_sel_off);
 }
 
-static double sigh_scale_factor = pow(2.0, -31.0);
-static double sigl_scale_factor = pow(2.0, -63.0);
-
 void BX_CPU_C::print_state_FPU()
 {
+  static double sigh_scale_factor = pow(2.0, -31.0);
+  static double sigl_scale_factor = pow(2.0, -63.0);
+
   Bit32u reg;
   reg = i387.cwd;
   fprintf(stderr, "cwd            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
@@ -162,13 +162,21 @@ fpu_get_ds(void)
 }
 
   void
-fpu_set_ax(unsigned short val16)
+fpu_set_ax(Bit16u val16)
 {
-// define to set AX in the current CPU -- not ideal.
-#undef AX
-#define AX (fpu_cpu_ptr->gen_reg[0].word.rx)
-  AX = val16;
-#undef AX
+  fpu_cpu_ptr->set_AX(val16);
+}
+
+  void
+fpu_set_eflags(Bit32u val32)
+{
+  fpu_cpu_ptr->writeEFlags(val32, 0xFFFFFFFF);
+}
+
+  Bit32u 
+fpu_get_eflags(void)
+{
+  return fpu_cpu_ptr->read_eflags();
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -186,7 +194,7 @@ fpu_verify_area(unsigned what, bx_address ptr, unsigned n)
     }
 }
 
-  unsigned BX_CPP_AttrRegparmN(2)
+  Bit32u BX_CPP_AttrRegparmN(2)
 fpu_get_user(bx_address ptr, unsigned len)
 {
   Bit32u val32;
@@ -212,7 +220,7 @@ fpu_get_user(bx_address ptr, unsigned len)
 }
 
   void BX_CPP_AttrRegparmN(3)
-fpu_put_user(unsigned val, bx_address ptr, unsigned len)
+fpu_put_user(Bit32u val, bx_address ptr, unsigned len)
 {
   Bit32u val32;
   Bit16u val16;
@@ -272,4 +280,9 @@ math_abort(void *info, unsigned int signal)
   UNUSED(signal);
   BX_INFO(("math_abort: CPU<4 not supported yet"));
 #endif
+}
+
+extern "C" int printk(const char * fmt, ...)
+{
+  BX_INFO(("math abort: %s", fmt));
 }

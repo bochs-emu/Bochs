@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.17 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.18 2003-11-01 18:36:19 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -35,49 +35,33 @@
 
 #define __BAD__ FPU_illegal   /* Illegal on an 80486, causes SIGILL */
 
-#ifndef NO_UNDOC_CODE    /* Un-documented FPU op-codes supported by default. */
-
-/* WARNING: These codes are not documented by Intel in their 80486 manual
-   and may not work on FPU clones or later Intel FPUs. */
-
-/* Changes to support the un-doc codes provided by Linus Torvalds. */
-
-#define _d9_d8_ fstp_i    /* unofficial code (19) */
-#define _dc_d0_ fcom_st   /* unofficial code (14) */
-#define _dc_d8_ fcompst   /* unofficial code (1c) */
-#define _dd_c8_ fxch_i    /* unofficial code (0d) */
-#define _de_d0_ fcompst   /* unofficial code (16) */
-#define _df_c0_ ffreep    /* unofficial code (07) ffree + pop */
-#define _df_c8_ fxch_i    /* unofficial code (0f) */
-#define _df_d0_ fstp_i    /* unofficial code (17) */
-#define _df_d8_ fstp_i    /* unofficial code (1f) */
+#if BX_CPU_LEVEL < 6
 
 static FUNC const st_instr_table[64] = {
-  fadd__,   fld_i_,     __BAD__, __BAD__, fadd_i,  ffree_,  faddp_,  _df_c0_,
-  fmul__,   fxch_i,     __BAD__, __BAD__, fmul_i,  _dd_c8_, fmulp_,  _df_c8_,
-  fcom_st,  fp_nop,     __BAD__, __BAD__, _dc_d0_, fst_i_,  _de_d0_, _df_d0_,
-  fcompst,  _d9_d8_,    __BAD__, __BAD__, _dc_d8_, fstp_i,  fcompp,  _df_d8_,
-  fsub__,   FPU_etc,    __BAD__, finit_,  fsubri,  fucom_,  fsubrp,  fstsw_,
-  fsubr_,   fconst,     fucompp, __BAD__, fsub_i,  fucomp,  fsubp_,  __BAD__,
-  fdiv__,   FPU_triga,  __BAD__, __BAD__, fdivri,  __BAD__, fdivrp,  __BAD__,
-  fdivr_,   FPU_trigb,  __BAD__, __BAD__, fdiv_i,  __BAD__, fdivp_,  __BAD__,
+  fadd__,  fld_i_,    __BAD__, __BAD__, fadd_i,  ffree_,  faddp_,  __BAD__,
+  fmul__,  fxch_i,    __BAD__, __BAD__, fmul_i,  __BAD__, fmulp_,  __BAD__,
+  fcom_st, fp_nop,    __BAD__, __BAD__, __BAD__, fst_i_,  __BAD__, __BAD__,
+  fcompst, __BAD__,   __BAD__, __BAD__, __BAD__, fstp_i,  fcompp,  __BAD__,
+  fsub__,  FPU_etc,   __BAD__, finit_,  fsubri,  fucom_,  fsubrp,  fstsw_,
+  fsubr_,  fconst,    fucompp, __BAD__, fsub_i,  fucomp,  fsubp_,  __BAD__,
+  fdiv__,  FPU_triga, __BAD__, __BAD__, fdivri,  __BAD__, fdivrp,  __BAD__,
+  fdivr_,  FPU_trigb, __BAD__, __BAD__, fdiv_i,  __BAD__, fdivp_,  __BAD__,
 };
 
-#else     /* Support only documented FPU op-codes */
+#else
 
 static FUNC const st_instr_table[64] = {
-  fadd__,   fld_i_,     __BAD__, __BAD__, fadd_i,  ffree_,  faddp_,  __BAD__,
-  fmul__,   fxch_i,     __BAD__, __BAD__, fmul_i,  __BAD__, fmulp_,  __BAD__,
-  fcom_st,  fp_nop,     __BAD__, __BAD__, __BAD__, fst_i_,  __BAD__, __BAD__,
-  fcompst,  __BAD__,    __BAD__, __BAD__, __BAD__, fstp_i,  fcompp,  __BAD__,
-  fsub__,   FPU_etc,    __BAD__, finit_,  fsubri,  fucom_,  fsubrp,  fstsw_,
-  fsubr_,   fconst,     fucompp, __BAD__, fsub_i,  fucomp,  fsubp_,  __BAD__,
-  fdiv__,   FPU_triga,  __BAD__, __BAD__, fdivri,  __BAD__, fdivrp,  __BAD__,
-  fdivr_,   FPU_trigb,  __BAD__, __BAD__, fdiv_i,  __BAD__, fdivp_,  __BAD__,
+  fadd__,  fld_i_,    FPU_fcmovb,  FPU_fcmovnb,  fadd_i,  ffree_,  faddp_,  __BAD__,
+  fmul__,  fxch_i,    FPU_fcmove,  FPU_fcmovne,  fmul_i,  __BAD__, fmulp_,  __BAD__,
+  fcom_st, fp_nop,    FPU_fcmovbe, FPU_fcmovnbe, __BAD__, fst_i_,  __BAD__, __BAD__,
+  fcompst, __BAD__,   FPU_fcmovu,  FPU_fcmovnu,  __BAD__, fstp_i,  fcompp,  __BAD__,
+  fsub__,  FPU_etc,   __BAD__,     finit_,       fsubri,  fucom_,  fsubrp,  fstsw_,
+  fsubr_,  fconst,    fucompp,     FPU_fucomi,   fsub_i,  fucomp,  fsubp_,  FPU_fucomip,
+  fdiv__,  FPU_triga, __BAD__,     FPU_fcomi,    fdivri,  __BAD__, fdivrp,  FPU_fcomip,
+  fdivr_,  FPU_trigb, __BAD__,     __BAD__,      fdiv_i,  __BAD__, fdivp_,  __BAD__,
 };
 
-#endif /* NO_UNDOC_CODE */
-
+#endif
 
 #define _NONE_ 0   /* Take no special action */
 #define _REG0_ 1   /* Need to check for not empty st(0) */
@@ -90,22 +74,7 @@ static FUNC const st_instr_table[64] = {
 #define _REGIc 0   /* Compare st(0) and st(rm) */
 #define _REGIn 0   /* Uses st(0) and st(rm), but handle checks later */
 
-#ifndef NO_UNDOC_CODE
-
-/* Un-documented FPU op-codes supported by default. (see above) */
-
-static u_char const type_table[64] = {
-  _REGI_, _NONE_, _null_, _null_, _REGIi, _REGi_, _REGIp, _REGi_,
-  _REGI_, _REGIn, _null_, _null_, _REGIi, _REGI_, _REGIp, _REGI_,
-  _REGIc, _NONE_, _null_, _null_, _REGIc, _REG0_, _REGIc, _REG0_,
-  _REGIc, _REG0_, _null_, _null_, _REGIc, _REG0_, _REGIc, _REG0_,
-  _REGI_, _NONE_, _null_, _NONE_, _REGIi, _REGIc, _REGIp, _NONE_,
-  _REGI_, _NONE_, _REGIc, _null_, _REGIi, _REGIc, _REGIp, _null_,
-  _REGI_, _NONE_, _null_, _null_, _REGIi, _null_, _REGIp, _null_,
-  _REGI_, _NONE_, _null_, _null_, _REGIi, _null_, _REGIp, _null_
-};
-
-#else     /* Support only documented FPU op-codes */
+#if BX_CPU_LEVEL < 6
 
 static u_char const type_table[64] = {
   _REGI_, _NONE_, _null_, _null_, _REGIi, _REGi_, _REGIp, _null_,
@@ -118,8 +87,20 @@ static u_char const type_table[64] = {
   _REGI_, _NONE_, _null_, _null_, _REGIi, _null_, _REGIp, _null_
 };
 
-#endif /* NO_UNDOC_CODE */
+#else
 
+static u_char const type_table[64] = {
+  _REGI_, _NONE_, _REGIn, _REGIn, _REGIi, _REGi_, _REGIp, _null_,
+  _REGI_, _REGIn, _REGIn, _REGIn, _REGIi, _null_, _REGIp, _null_,
+  _REGIc, _NONE_, _REGIn, _REGIn, _null_, _REG0_, _null_, _null_,
+  _REGIc, _null_, _REGIn, _REGIn, _null_, _REG0_, _REGIc, _null_,
+  _REGI_, _NONE_, _null_, _NONE_, _REGIi, _REGIc, _REGIp, _NONE_,
+  _REGI_, _NONE_, _REGIc, _REGIc, _REGIi, _REGIc, _REGIp, _REGIc,
+  _REGI_, _NONE_, _null_, _REGIc, _REGIi, _null_, _REGIp, _REGIc,
+  _REGI_, _NONE_, _null_, _null_, _REGIi, _null_, _REGIp, _null_
+};
+
+#endif
 
 /* Note, this is a version of fpu_entry.c, modified to interface
  * to a CPU simulator, rather than a kernel.

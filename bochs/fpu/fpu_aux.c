@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_aux.c                                                                |
- |  $Id: fpu_aux.c,v 1.6 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: fpu_aux.c,v 1.7 2003-11-01 18:36:19 sshwarts Exp $
  |                                                                           |
  | Code to implement some of the FPU auxiliary instructions.                 |
  |                                                                           |
@@ -61,10 +61,9 @@ void finit_()
   (finit_table[FPU_rm])();
 }
 
-
 static void fstsw_ax(void)
 {
-  SET_AX(status_word());
+  fpu_set_ax(status_word());
   no_ip_update = 1;
 }
 
@@ -88,7 +87,6 @@ void fp_nop()
 {
   (fp_nop_table[FPU_rm])();
 }
-
 
 void fld_i_()
 {
@@ -123,7 +121,6 @@ void fld_i_()
 
 }
 
-
 void fxch_i()
 {
   /* fxch st(i) */
@@ -134,6 +131,8 @@ void fxch_i()
   int regnr = FPU_tos & 7, regnri = ((regnr + i) & 7);
   u_char st0_tag = (tag_word >> (regnr*2)) & 3;
   u_char sti_tag = (tag_word >> (regnri*2)) & 3;
+
+  clear_C1();
 
   if ( st0_tag == TAG_Empty )
     {
@@ -161,7 +160,6 @@ void fxch_i()
       FPU_stack_underflow();
       return;
     }
-  clear_C1();
 
   reg_copy(st0_ptr, &t);
   reg_copy(sti_ptr, st0_ptr);
@@ -172,28 +170,17 @@ void fxch_i()
   FPU_tag_word = tag_word;
 }
 
-
 void ffree_()
 {
   /* ffree st(i) */
   FPU_settagi(FPU_rm, TAG_Empty);
 }
 
-
-void ffreep()
-{
-  /* ffree st(i) + pop - unofficial code */
-  FPU_settagi(FPU_rm, TAG_Empty);
-  FPU_pop();
-}
-
-
 void fst_i_()
 {
   /* fst st(i) */
   FPU_copy_to_regi(&st(0), FPU_gettag0(), FPU_rm);
 }
-
 
 void fstp_i()
 {
