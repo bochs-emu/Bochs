@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.11 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: logical64.cc,v 1.12 2004-09-13 20:48:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -383,7 +383,7 @@ BX_CPU_C::TEST_RAXId(bxInstruction_c *i)
     /* op1 is RAX register */
     op1_64 = RAX;
 
-    /* op2 is imm64 */
+    /* op2 is imm32 */
     op2_64 = (Bit32s) i->Id();
 
     result_64 = op1_64 & op2_64;

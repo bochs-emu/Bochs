@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.86 2004-07-29 20:30:14 sshwarts Exp $
+// $Id: cpu.cc,v 1.87 2004-09-13 20:48:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,11 +197,10 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
   }
 
 #if BX_SUPPORT_ICACHE
-  unsigned iCacheHash;
   Bit32u pAddr, pageWriteStamp;
 
   pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
-  iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
+  unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
   i = & BX_CPU_THIS_PTR iCache.entry[iCacheHash].i;
 
   pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
@@ -222,10 +221,10 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
     BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
           i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 #endif
-    }
+  }
   else
 #endif
-    {
+  {
     // iCache miss. No validated instruction with matching fetch parameters
     // is in the iCache. Or we're not compiling iCache support in, in which
     // case we always have an iCache miss.  :^)
@@ -298,9 +297,11 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
     }
 #endif
 
+    // decoding instruction compeleted -> continue with execution
+    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
+
     if ( !(i->repUsedL() && i->repeatableL()) ) {
       // non repeating instruction
-      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
       RIP += i->ilen();
       BX_CPU_CALL_METHOD(execute, (i));
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
@@ -312,10 +313,8 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
 #endif
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
-      }
-
+    }
     else {
-      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
 
 repeat_loop:
       if (i->repeatableZFL()) {
@@ -432,7 +431,6 @@ debugger_check:
 #endif
 
 #if BX_DEBUGGER
-
     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
     // note instr generating exceptions never reach this point.
 
@@ -735,9 +733,7 @@ BX_CPU_C::prefetch(void)
 
   temp_rip   = RIP;
   temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
-
-  laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base +
-                    temp_rip;
+  laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + temp_rip;
 
   if (((Bit32u)temp_rip) > temp_limit) {
     BX_PANIC(("prefetch: RIP > CS.limit"));
