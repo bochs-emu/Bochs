@@ -175,10 +175,12 @@ private:
 #else
   void write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
 #endif
+  int timer_id;
 
   public:
   static void   timer_handler(void *);
   BX_VGA_SMF void   timer(void);
+  BX_VGA_SMF void set_update_interval (unsigned interval);
   private:
   BX_VGA_SMF void   update(void);
   BX_VGA_SMF void   dump_status(void);

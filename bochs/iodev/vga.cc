@@ -188,7 +188,7 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   }
 
   BX_INFO(("interval=%lu", bx_options.vga_update_interval));
-  bx_pc_system.register_timer(this, timer_handler,
+  BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
      bx_options.vga_update_interval, 1, 1);
 
   cmos->s.reg[0x14] = (cmos->s.reg[0x14] & 0xcf) | 0x00; /* video card with BIOS ROM */
@@ -1109,6 +1109,14 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
     }
 }
 
+void 
+bx_vga_c::set_update_interval (unsigned interval)
+{
+  bx_options.vga_update_interval = interval;
+  BX_INFO (("Changing timer interval to %d\n", interval));
+  BX_VGA_THIS timer ();
+  bx_pc_system.activate_timer (BX_VGA_THIS timer_id, interval, 1);
+}
 
   void
 bx_vga_c::timer_handler(void *this_ptr)
@@ -1142,8 +1150,7 @@ bx_vga_c::update(void)
 
   // if (BX_VGA_THIS s.vga_mem_updated==0 || BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
   if (BX_VGA_THIS s.vga_mem_updated==0) {
-//BX_DEBUG(("update(): updated=%u enabled=%u",
-//(unsigned) BX_VGA_THIS s.vga_mem_updated, (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled);
+    /* BX_DEBUG(("update(): updated=%u enabled=%u", (unsigned) BX_VGA_THIS s.vga_mem_updated, (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled)); */
     return;
     }
   BX_VGA_THIS s.vga_mem_updated = 0;
