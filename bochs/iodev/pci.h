@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.16 2004-06-29 19:24:34 vruppert Exp $
+// $Id: pci.h,v 1.17 2004-07-01 22:18:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,6 +40,11 @@ typedef void   (*bx_pci_write_handler_t)(void *, Bit8u, Bit32u, unsigned);
 #  define BX_PCI_THIS this->
 #endif
 
+
+#define BX_PCI_PIRQA 1
+#define BX_PCI_PIRQB 2
+#define BX_PCI_PIRQC 3
+#define BX_PCI_PIRQD 4
 
 typedef struct {
   Bit32u confAddr;

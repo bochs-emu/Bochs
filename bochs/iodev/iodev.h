@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.44 2004-06-29 19:24:31 vruppert Exp $
+// $Id: iodev.h,v 1.45 2004-07-01 22:18:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -271,6 +271,13 @@ class BOCHSAPI bx_pci_stub_c : public bx_devmodel_c {
   virtual void print_i440fx_state(void) {}
 };
 
+class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c {
+  public:
+  virtual void pci_set_irq (unsigned line, bx_bool level) {
+    STUBFUNC(pci2isa, pci_set_irq);
+  }
+};
+
 class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
   public:
   virtual void print_info(FILE *file, int page, int reg, int nodups) {}
@@ -326,7 +333,7 @@ public:
   bx_devmodel_c     *pluginBiosDevice;
   bx_ioapic_c       *ioapic;
   bx_pci_stub_c     *pluginPciBridge;
-  bx_devmodel_c     *pluginPci2IsaBridge;
+  bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_devmodel_c     *pluginPciIdeController;
   bx_devmodel_c     *pluginPciVgaAdapter;
   bx_devmodel_c     *pluginPciDevAdapter;
@@ -363,6 +370,7 @@ public:
   bx_floppy_stub_c  stubFloppy;
   bx_vga_stub_c  stubVga;
   bx_pci_stub_c  stubPci;
+  bx_pci2isa_stub_c  stubPci2Isa;
   bx_ne2k_stub_c stubNE2k;
   bx_speaker_stub_c stubSpeaker;
 

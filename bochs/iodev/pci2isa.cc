@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.13 2004-06-29 19:24:34 vruppert Exp $
+// $Id: pci2isa.cc,v 1.14 2004-07-01 22:18:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,6 +140,18 @@ bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.elcr2 = 0x00;
 }
 
+  void
+bx_pci2isa_c::pci_set_irq(unsigned line, bx_bool level)
+{
+  Bit8u isa_irq =BX_P2I_THIS s.pci_conf[0x60+line-1];
+  if (isa_irq < 16) {
+    if (level == 1) {
+      DEV_pic_raise_irq(isa_irq);
+    } else {
+      DEV_pic_lower_irq(isa_irq);
+    }
+  }
+}
 
 
   // static IO port read callback handler
@@ -286,6 +298,20 @@ bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       switch (address+i) {
         case 0x06:
           break;
+        case 0x60:
+        case 0x61:
+        case 0x62:
+        case 0x63:
+          if (value8 != BX_P2I_THIS s.pci_conf[address+i]) {
+            if (BX_P2I_THIS s.pci_conf[address+i] < 16) {
+              DEV_unregister_irq(BX_P2I_THIS s.pci_conf[address+i], "PIIX3 IRQ routing");
+            }
+            if (value8 < 16) {
+              DEV_register_irq(value8, "PIIX3 IRQ routing");
+            }
+            BX_INFO(("PCI IRQ routing: PIRQ%c# set to 0x%02x", address+i-31,
+                     value8));
+          }
         default:
           BX_P2I_THIS s.pci_conf[address+i] = value8;
           BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address,

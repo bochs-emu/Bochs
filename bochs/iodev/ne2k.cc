@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.61 2004-06-29 19:24:32 vruppert Exp $
+// $Id: ne2k.cc,v 1.62 2004-07-01 22:18:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,7 +116,8 @@ bx_ne2k_c::reset(unsigned type)
     BX_NE2K_THIS s.CR.rdma_cmd  = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
-  DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
+
+  set_irq_level(0);
 }
 
 //
@@ -544,7 +545,9 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   // break up outw into two outb's
   if (io_len == 2) {
     page0_write(offset, (value & 0xff), 1);
-    page0_write(offset + 1, ((value >> 8) & 0xff), 1);
+    if (offset < 0x0f) {
+      page0_write(offset + 1, ((value >> 8) & 0xff), 1);
+    }
     return;
   }
 
@@ -1285,7 +1288,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.61 2004-06-29 19:24:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.62 2004-07-01 22:18:20 vruppert Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
@@ -1317,7 +1320,7 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS s.pci_conf[0x10] = (BX_NE2K_THIS s.base_address & 0xe0) | 0x01;
     BX_NE2K_THIS s.pci_conf[0x11] = BX_NE2K_THIS s.base_address >> 8;
     BX_NE2K_THIS s.pci_conf[0x3c] = BX_NE2K_THIS s.base_irq;
-    BX_NE2K_THIS s.pci_conf[0x3d] = 0x01;
+    BX_NE2K_THIS s.pci_conf[0x3d] = BX_PCI_PIRQD;
   }
 #endif
 
@@ -1327,7 +1330,9 @@ bx_ne2k_c::init(void)
                                   0,0, "ne2k"); // one-shot, inactive
   }
   // Register the IRQ and i/o port addresses
-  DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
+  if (!BX_NE2K_THIS s.pci_enabled) {
+    DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
+  }
 
   DEV_register_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
                                     BX_NE2K_THIS s.base_address,
@@ -1401,6 +1406,20 @@ bx_ne2k_c::init(void)
 
   // Bring the register state into power-up state
   theNE2kDevice->reset(BX_RESET_HARDWARE);
+}
+
+  void
+bx_ne2k_c::set_irq_level(bx_bool level)
+{
+  if (BX_NE2K_THIS s.pci_enabled) {
+    DEV_pci_set_irq(BX_NE2K_THIS s.pci_conf[0x3d], level);
+  } else {
+    if (level) {
+      DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
+    } else {
+      DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
+    }
+  }
 }
 
 #if BX_PCI_SUPPORT
@@ -1483,16 +1502,6 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           baseaddr_change = (value8 != oldval);
         case 0x3c:
           value &= 0x0f;
-          if (BX_NE2K_THIS s.base_irq > 0) {
-            DEV_unregister_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
-          }
-          if ((value > 2) && (value < 12)) {
-            BX_NE2K_THIS s.base_irq = value;
-            BX_INFO(("new irq: %d", BX_NE2K_THIS s.base_irq));
-            DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
-          } else {
-            BX_NE2K_THIS s.base_irq = 0;
-          }
         default:
           BX_NE2K_THIS s.pci_conf[address+i] = value8;
           BX_DEBUG(("NE2000 PCI NIC write register 0x%02x value 0x%02x", address,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.4 2002-11-09 20:51:40 vruppert Exp $
+// $Id: pci2isa.h,v 1.5 2004-07-01 22:18:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,13 +34,14 @@
 #endif
 
 
-class bx_pci2isa_c : public bx_devmodel_c {
+class bx_pci2isa_c : public bx_pci2isa_stub_c {
 
 public:
   bx_pci2isa_c(void);
   ~bx_pci2isa_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
+  virtual void   pci_set_irq(unsigned line, bx_bool level);
 
 private:
 
