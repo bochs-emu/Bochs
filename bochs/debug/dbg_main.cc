@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.48 2002-08-27 20:09:00 bdenney Exp $
+// $Id: dbg_main.cc,v 1.49 2002-08-27 21:32:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3458,7 +3458,7 @@ bx_dbg_loader_command(char *path_quoted)
 #if BX_USE_LOADER
   {
   bx_loader_misc_t loader_misc;
-  BX_CPU(0)->loader(path_quoted, &loader_misc);
+  bx_dbg_callback[0].loader(path_quoted, &loader_misc);
 #if 0
 fprintf(stderr, "dr0: 0x%08x\n", loader_misc.dr0);
 fprintf(stderr, "dr1: 0x%08x\n", loader_misc.dr1);
