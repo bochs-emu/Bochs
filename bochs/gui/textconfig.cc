@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.6 2002-12-02 21:26:05 cbothamy Exp $
+// $Id: textconfig.cc,v 1.7 2002-12-12 18:31:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -921,7 +921,8 @@ bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
 	continue;
       }
     }
-    set (buffer);
+    if (!equals (buffer)) 
+      set (buffer);
     return 0;
   }
 }

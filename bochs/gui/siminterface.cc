@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.89 2002-12-07 19:43:52 bdenney Exp $
+// $Id: siminterface.cc,v 1.90 2002-12-12 18:31:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1235,6 +1235,15 @@ bx_param_string_c::set (char *buf)
     // the handler can return a different char* to be copied into the value
     buf = (*handler)(this, 1, buf, -1);
   }
+}
+
+bx_bool
+bx_param_string_c::equals (const char *buf)
+{
+  if (options->get () & RAW_BYTES)
+    return (memcmp (val, buf, maxsize) == 0);
+  else
+    return (strncmp (val, buf, maxsize) == 0);
 }
 
 bx_list_c::bx_list_c (bx_id id, int maxsize)

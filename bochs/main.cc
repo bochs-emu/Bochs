@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.205 2002-12-12 15:29:27 cbothamy Exp $
+// $Id: main.cc,v 1.206 2002-12-12 18:31:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -524,6 +524,13 @@ void bx_init_options ()
           BX_ATA_DEVICE_DISK,
           BX_ATA_DEVICE_DISK));
 
+      menu->add (bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_STATUS+channel*2+slave),
+       "ata-device:status",
+       "Inserted or ejected",
+       atadevice_status_names,
+       BX_INSERTED,
+       BX_EJECTED));
+
       menu->add (bx_options.atadevice[channel][slave].Opath = new bx_param_filename_c ((bx_id)(BXP_ATA0_MASTER_PATH+channel*2+slave),
           "ata-device:path",
           "Pathname of the image",
@@ -545,13 +552,6 @@ void bx_init_options ()
           0, 65535,
           0));
       
-      menu->add (bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_STATUS+channel*2+slave),
-       "ata-device:status",
-       "Inserted or ejected",
-       atadevice_status_names,
-       BX_INSERTED,
-       BX_EJECTED));
-
       menu->add (bx_options.atadevice[channel][slave].Omodel = new bx_param_string_c ((bx_id)(BXP_ATA0_MASTER_MODEL+channel*2+slave),
        "ata-device:model",
        "Model name",

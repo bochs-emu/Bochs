@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.93 2002-12-12 06:21:43 yakovlev Exp $
+// $Id: siminterface.h,v 1.94 2002-12-12 18:31:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -978,6 +978,7 @@ public:
   Bit32s get (char *buf, int len);
   char *getptr () {return val; }
   void set (char *buf);
+  bx_bool equals (const char *buf);
   bx_param_num_c *get_options () { return options; }
   void set_separator (char sep) {separator = sep; }
 #if BX_UI_TEXT

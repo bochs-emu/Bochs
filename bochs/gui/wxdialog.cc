@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.52 2002-12-08 09:16:18 bdenney Exp $
+// $Id: wxdialog.cc,v 1.53 2002-12-12 18:31:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -2042,7 +2042,8 @@ bool ParamDialog::CopyGuiToParam ()
     switch (type) {
       case BXT_PARAM_BOOL: {
         bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
-        boolp->set (pstr->u.checkbox->GetValue ());
+	bool val = pstr->u.checkbox->GetValue ();
+	if (val != boolp->get ()) boolp->set (val);
 	break;
         }
       case BXT_PARAM_NUM: {
@@ -2051,12 +2052,13 @@ bool ParamDialog::CopyGuiToParam ()
 	wxString complaint;
 	complaint.Printf ("Invalid integer for %s.", pstr->param->get_name ());
 	int n = GetTextCtrlInt (pstr->u.text, &valid, true, complaint);
-        nump->set (n);
+	if (n != nump->get ()) nump->set (n);
 	break;
         }
       case BXT_PARAM_ENUM: {
         bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
-        enump->set (pstr->u.choice->GetSelection () + enump->get_min ());
+	int value = pstr->u.choice->GetSelection () + enump->get_min ();
+	if (value != enump->get ()) enump->set (value);
 	break;
         }
       case BXT_PARAM_STRING: {
@@ -2064,7 +2066,8 @@ bool ParamDialog::CopyGuiToParam ()
 	char buf[1024];
 	wxString tmp(pstr->u.text->GetValue ());
 	strncpy (buf, tmp.c_str(), sizeof(buf));
-	stringp->set (buf);
+	buf[sizeof(buf)-1] = 0;
+	if (!stringp->equals (buf)) stringp->set (buf);
 	break;
         }
       case BXT_LIST:
