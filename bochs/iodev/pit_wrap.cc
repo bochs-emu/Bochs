@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.23 2002-09-20 23:10:55 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.24 2002-09-21 03:20:59 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,6 +78,7 @@ bx_pit_c bx_pit;
 
 #define DEBUG_REALTIME_WITH_PRINTF 0
 #define BX_HAVE_GETTIMEOFDAY 1
+#define DEBUG_GETTIMEOFDAY_WITH_PRINTF 0
 
 
 #define TIME_DIVIDER (1)
@@ -471,21 +472,45 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   Bit64u em_time_delta = (Bit64u)usec_delta + (Bit64u)BX_PIT_THIS s.stored_delta;
   BX_PIT_THIS s.ticks_per_second = TICKS_PER_SECOND;
 
+  //Start out with the number of ticks we would like
+  // to have to line up with real time.
   ticks_delta = REAL_USEC_TO_TICKS(real_time_total) - BX_PIT_THIS s.total_ticks;
-  if(ticks_delta > REAL_USEC_TO_TICKS(MAX_MULT * real_time_delta)) {
+  if(REAL_USEC_TO_TICKS(real_time_total) < BX_PIT_THIS s.total_ticks) {
+    //This slows us down if we're already ahead.
+    //  probably only an issue on startup, but it solves some problems.
+    ticks_delta = 0;
+  }
+  if(ticks_delta > REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta))) {
+    //This keeps us from going too fast in relation to real time.
     ticks_delta = REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta));
     BX_PIT_THIS s.ticks_per_second = (Bit64u)(MAX_MULT * TICKS_PER_SECOND);
   }
   if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
+    //This keeps us from having too few instructions between ticks.
     ticks_delta = em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND;
+  }
+  if(ticks_delta > BX_PIT_THIS s.timer.get_next_event_time()) {
+    //This keeps us from missing ticks.
+    ticks_delta = BX_PIT_THIS s.timer.get_next_event_time();
   }
 
   if(ticks_delta) {
+#if DEBUG_GETTIMEOFDAY_WITH_PRINTF
+    if(((BX_PIT_THIS s.last_time + real_time_delta) / USEC_PER_SECOND) > (BX_PIT_THIS s.last_time / USEC_PER_SECOND)) {
+      printf("useconds: %lld, expected ticks: %lld, ticks: %lld, diff: %lld\n",
+	     (Bit64u) BX_PIT_THIS s.total_sec,
+	     (Bit64u)REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec),
+	     (Bit64u)BX_PIT_THIS s.total_ticks,
+	     (Bit64u)(REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec) - BX_PIT_THIS s.total_ticks)
+	     );
+    }
+#endif
     BX_PIT_THIS s.last_time += real_time_delta;
     BX_PIT_THIS s.total_sec += real_time_delta;
     BX_PIT_THIS s.last_sec_usec += em_time_delta;
     //    BX_PIT_THIS s.total_usec += em_time_delta;
     BX_PIT_THIS s.stored_delta = 0;
+    BX_PIT_THIS s.total_ticks += ticks_delta;
   } else {
     BX_PIT_THIS s.stored_delta = em_time_delta;
   }
