@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.8 2004-03-09 20:45:17 sshwarts Exp $
+// $Id: bcd.cc,v 1.9 2004-03-10 20:14:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,12 +38,12 @@
   void
 BX_CPU_C::DAS(bxInstruction_c *)
 {
-  /* the algorithm for DAS is fashioned after the pseudo code in the
+  /* The algorithm for DAS is fashioned after the pseudo code in the
    * Pentium Processor Family Developer's Manual, volume 3.  It seems
    * to have changed from earlier processor's manuals.  I'm not sure
    * if this is a correction in the algorithm printed, or Intel has
-   * changed the handling of instruction.  It might not even be
-   * correct yet...
+   * changed the handling of instruction. Validated against Intel 
+   * Pentium family hardware.
    */
 
   Bit8u tmpAL = AL;
@@ -51,16 +51,16 @@ BX_CPU_C::DAS(bxInstruction_c *)
 
   /* DAS effect the following flags: A,C,S,Z,P */
 
-  if (((AL & 0x0F) > 0x09) || get_AF())
+  if (((tmpAL & 0x0F) > 0x09) || get_AF())
   {
-    tmpAL = AL - 0x06;
-    if ((AL < 0x06) || get_CF()) tmpCF = 1;
+    tmpCF = (AL < 0x06) || get_CF();
+    AL = AL - 0x06;
     set_AF(1);
   }
   else
     set_AF(0);
 
-  if ((AL > 0x99) || get_CF())
+  if ((tmpAL > 0x99) || get_CF())
   {
     AL = AL - 0x60;
     tmpCF = 1;
@@ -68,22 +68,40 @@ BX_CPU_C::DAS(bxInstruction_c *)
   else
     tmpCF = 0;
 
-  AL = tmpAL;
-
   set_CF(tmpCF);
-  set_SF(tmpAL >> 7);
-  set_ZF(tmpAL==0);
-  set_PF_base(tmpAL);
+  set_SF(AL >> 7);
+  set_ZF(AL==0);
+  set_PF_base(AL);
 }
 
   void
 BX_CPU_C::AAA(bxInstruction_c *)
 {
+  /* 
+   *  Note: This istruction incorrectly documented in Intel's materials.
+   *        The right description is:
+   *
+   *    IF (((AL and 0FH) > 9) or (AF==1)
+   *    THEN {
+   *        IF CPU<286 THEN {  AL <- AL+6 }
+   *                   ELSE {  AX <- AX+6 }
+   *        AH <- AH+1
+   *        CF <- 1
+   *        AF <- 1
+   *    } ELSE {
+   *        CF <- 0
+   *        AF <- 0
+   *	}
+   *	AL <- AL and 0Fh
+   */	
+
+  /* Validated against Intel Pentium family hardware. */
+
   /* AAA affects the following flags: A,C */
 
   if ( ((AL & 0x0f) > 9) || get_AF() )
   {
-    AL = AL + 6;
+    AX = AX + 6;
     AH = AH + 1;
     set_AF(1);
     set_CF(1);
@@ -103,7 +121,7 @@ BX_CPU_C::AAS(bxInstruction_c *)
 
   if ( ((AL & 0x0F) > 0x09) || get_AF() )
   {
-    AL = AL - 6;
+    AL = AL - 6;	/* never borrow */
     AH = AH - 1;
     set_AF(1);
     set_CF(1);
@@ -168,31 +186,31 @@ BX_CPU_C::AAD(bxInstruction_c *i)
 BX_CPU_C::DAA(bxInstruction_c *)
 {
   Bit8u tmpAL = AL;
-  int tmpCF = 0;
+  int   tmpCF = 0;
+
+  /* Validated against Intel Pentium family hardware. */
 
   // DAA affects the following flags: S,Z,A,P,C
 
-  if (((AL & 0x0F) > 0x09) || get_AF())
+  if (((tmpAL & 0x0F) > 0x09) || get_AF())
   {
-    tmpAL = AL + 0x06;
-    if (get_CF() || (tmpAL < AL)) tmpCF = 1;
+    tmpCF = ((AL > 0xF9) || get_CF());
+    AL = AL + 0x06;
     set_AF(1);
   }
   else
     set_AF(0);
 
-  if ((AL > 0x99) || get_CF())
+  if ((tmpAL > 0x99) || get_CF())
   {
-    tmpAL = AL + 0x60;
+    AL = AL + 0x60;
     tmpCF = 1;
   }
   else
     tmpCF = 0;
 
-  AL = tmpAL;
-
   set_CF(tmpCF);
-  set_SF(tmpAL >> 7);
-  set_ZF(tmpAL==0);
-  set_PF_base(tmpAL);
+  set_SF(AL >> 7);
+  set_ZF(AL==0);
+  set_PF_base(AL);
 }
