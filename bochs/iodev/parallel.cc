@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.12 2001-11-14 00:29:20 bdenney Exp $
+// $Id: parallel.cc,v 1.13 2001-11-15 23:35:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.12 2001-11-14 00:29:20 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.13 2001-11-15 23:35:26 vruppert Exp $"));
   BX_PAR_THIS devices = d;
 
   /* PARALLEL PORT 1 */
@@ -97,9 +97,10 @@ bx_parallel_c::init(bx_devices_c *d)
   void
 bx_parallel_c::virtual_printer(void)
 {
-  if (!OUTPUT) return;
-  fputc(BX_PAR_THIS s.data, OUTPUT);
-  fflush (OUTPUT);
+  if (OUTPUT != NULL) {
+    fputc(BX_PAR_THIS s.data, OUTPUT);
+    fflush (OUTPUT);
+    }
   if (BX_PAR_THIS s.CONTROL.irq == 1) {
     BX_PAR_THIS devices->pic->trigger_irq(7);
     }
