@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.38 2002-09-05 16:27:06 bdenney Exp $
+// $Id: wxmain.cc,v 1.39 2002-09-05 16:41:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -132,6 +132,7 @@ IMPLEMENT_APP(MyApp)
 bool MyApp::OnInit()
 {
   //wxLog::AddTraceMask (_T("mime"));
+  wxLog::SetActiveTarget (new wxLogStderr ());
   bx_init_siminterface ();
   bx_init_main (argc, argv);
   MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
