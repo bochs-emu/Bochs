@@ -1,0 +1,1240 @@
+    <HTML>
+<HEAD>
+<TITLE>bochs: The Open Source IA-32 Emulation Project (IRC Chat Transcript)</TITLE>
+
+<!--#include virtual="includes/header.txt" -->
+
+ <!--content starts here-->
+ <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Transcript of 6/19/2001 Bochs Chat</b></font><BR><BR> <b>Those in
+attendance were:</b> Bryce Denney (bryce), Greg Alexander (yakovlev), Donald
+Becker (psyon), Dave Poirier (eks), Tim Butler (uninet), daboj_awa, divad547, rjlemley, Peter, KWeisshar, doug_, Moja
+smapnipss<BR>
+<B>Elapsed Time:</b> 4.1 Hours (5:49 PM - 10:05 PM PDT)<BR><BR><BR>
+<tt>
+<br>[19:49] <b>bryce</b> hi
+<br>[19:49] <b>uninet</b> Good Evening!
+<br>[19:50] *** yakovlev (~gwa@slip129-37-118-40.nc.us.prserv.net) has joined #bochs
+<br>[19:50] <b>yakovlev</b> hey bryce
+<br>[19:51] <b>eks</b> hi guys :)
+<br>[19:51] <b>bryce</b> can a few people turn on logging, just in case :)
+<br>[19:51] <b>eks</b>  Value of LOG set to ON
+<br>[19:51] *** yakovlev (~gwa@slip129-37-118-40.nc.us.prserv.net) Quit (Quit: changing servers)
+<br>[19:51] <b>uninet</b> Bryce: do you know how to enable chat logging in GAIM? Perhaps I'm over looking it...
+<br>[19:52] <b>bryce</b> There's a little button to the right of the smiley faces, that I think is a miniscule picture of a log. :)
+<br>[19:52] <b>uninet</b> Thanks.
+<br>[19:52] <b>uninet</b> I'll attempt to make a copy then, that way I'll be able to immediately post our chat. :-)
+<br>[19:53] *** yakovlev (~gwa@slip129-37-118-40.nc.us.prserv.net) has joined #bochs
+<br>[19:53] *** Moja (~bofh@cs6625174-155.austin.rr.com) has joined #bochs
+<br>[19:54] *** divad547 (somebody@24-168-204-6.wo.cox.rr.com) has joined #Bochs
+<br>[19:54] <b>yakovlev</b> this should be much better.
+<br>[19:54] <b>yakovlev</b> anyone there?
+<br>[19:54] <b>uninet</b> I am.
+<br>[19:54] <b>bryce</b> hi
+<br>[19:54] <b>divad547</b> hi
+<br>[19:54] <b>yakovlev</b> oh, good.
+<br>[19:54] <b>Moja</b> yo
+<br>[19:55] <b>yakovlev</b> Last time things were fast and furious pretty quickly.
+<br>[19:55] <b>bryce</b> is Psyon here, or just sleeping again?  (Psyon camps out on this channel 24/7 usually, but I don't see him here.)
+<br>[19:55] <b>bryce</b> Greg, should we decide in advance where to try in case of a netsplit?
+<br>[19:55] <b>yakovlev</b> yes.
+<br>[19:55] <b>yakovlev</b> our current one is good.
+<br>[19:55] <b>eks</b> netsplit were common just a few hours ago
+<br>[19:56] <b>bryce</b> which is...
+<br>[19:56] <b>yakovlev</b> irc.ladns.com
+<br>[19:56] *** rjlemley (selma@dsl092-005-134.sfo1.dsl.speakeasy.net) has joined #bochs
+<br>[19:56] <b>uninet</b> What's a netsplit?
+<br>[19:56] <b>yakovlev</b> do /whois username
+<br>[19:56] *** eks<b>x (eks@HSE-MTL-ppp60070.qc.sympatico.ca) has joined #Bochs
+<br>[19:57] *** eks<b>x (eks@HSE-MTL-ppp60070.qc.sympatico.ca) has left #Bochs
+<br>[19:58] *** eks<b>x (eks@HSE-MTL-ppp60070.qc.sympatico.ca) has joined #Bochs
+<br>[19:58] *** eks<b>x is now known as eks<b>x_
+<br>[19:58] * yakovlev has a pretty good idea how to use nickserv.
+<br>[19:58] <b>eks</b> jeez.. irc.oasis-net.net is lagged..
+<br>[19:58] *** eks<b>x_ (eks@HSE-MTL-ppp60070.qc.sympatico.ca) Quit (Quit: Assembly: My blood, my life, my spirit)
+<br>[19:59] <b>bryce</b> eks: it's in the UK...
+<br>[19:59] <b>bryce</b> eks: maybe try irc.ladns.com
+<br>[19:59] <b>yakovlev</b> everyone who isn't on irc.ladns.com, change servers to save yourself from netsplits.
+<br>[19:59] <b>yakovlev</b> eks already left.
+<br>[19:59] <b>eks</b> bryce: that's my current server
+<br>[19:59] <b>yakovlev</b> oh, he's back.
+<br>[19:59] *** rjlemley (selma@dsl092-005-134.sfo1.dsl.speakeasy.net) has left #bochs
+<br>[19:59] <b>bryce</b> switching to ladns...
+<br>[19:59] *** bryce (~bryce@debussy.ne.mediaone.net) has left #bochs
+<br>[19:59] * yakovlev likes /server
+<br>[19:59] <b>eks</b> yakovlev: I used a clone ;)
+<br>[19:59] <b>uninet</b> brb. I went with newnet.net.
+<br>[20:00] *** rjlemley (selma@dsl092-005-134.sfo1.dsl.speakeasy.net) has joined #bochs
+<br>[20:00] <b>yakovlev</b> bryce was already on ladns!
+<br>[20:00] *** uninet (~tbutler@c1331724-a.schrls1.mo.home.com) has left #bochs
+<br>[20:00] *** bryce (~bryce@debussy.ne.mediaone.net) has joined #bochs
+<br>[20:00] *** ChanServ sets mode: +o bryce
+<br>[20:00] <b>eks</b> lol@bryce
+<br>[20:00] <b>bryce</b> :)
+<br>[20:00] <b>yakovlev</b> bryce, you were already on ladns, that's why I chose it.
+<br>[20:00] *** uninet (~tbutler@c1331724-a.schrls1.mo.home.com) has joined #bochs
+<br>[20:00] *** ChanServ sets mode: +o uninet
+<br>[20:01] <b>bryce</b> haha it picked it at random, I didn't even know which I was on :)
+<br>[20:01] <b>yakovlev</b> both you and at least one other person.
+<br>[20:01] <b>eks</b> :)
+<br>[20:01] <b>uninet</b> So  which one did you want me to be on again?
+<br>[20:01] <b>bryce</b> sigh
+<br>[20:01] <b>yakovlev</b> that's what /whois bryce would do for you.
+<br>[20:01] <b>eks</b> uninet: irc.ladns.com
+<br>[20:01] <b>bryce</b> I'm telling you, /whois doesn't do anything in this client!
+<br>[20:01] <b>yakovlev</b> uninet: /server irc.ladns.com
+<br>[20:02] <b>yakovlev</b> what client, bryce?
+<br>[20:02] <b>bryce</b> gaim
+<br>[20:02] <b>eks</b> gaim ;)
+<br>[20:02] <b>yakovlev</b> ahhh, doesn't exactly have all of ircii?
+<br>[20:02] <b>uninet</b> eks: thanks.
+<br>[20:02] * yakovlev is using the real deal.
+<br>[20:02] * eks is using BitchX
+<br>[20:02] *** uninet (~tbutler@c1331724-a.schrls1.mo.home.com) has left #bochs
+<br>[20:02] <b>Exodus</b> hey
+<br>[20:03] <b>Exodus</b> Its me, Don
+<br>[20:03] <b>Exodus</b> heheh
+<br>[20:03] <b>yakovlev</b> it's a client Exodus.
+<br>[20:03] *** Exodus is now known as Psyon
+<br>[20:03] <b>bryce</b> Hey Don
+<br>[20:03] <b>yakovlev</b> Oh, cool.
+<br>[20:03] <b>bryce</b> Now that Don is here, shall we start?
+<br>[20:03] <b>yakovlev</b> looks like the gang is here.
+<br>[20:04] <b>Psyon</b> What are we starting?
+<br>[20:04] <b>eks</b> Psyon: chat session? ;)
+<br>[20:04] <b>Psyon</b> Hmm...
+<br>[20:04] <b>Psyon</b> dan
+<br>[20:04] <b>Psyon</b> damn
+<br>[20:04] <b>Psyon</b> I was hoping itw ould be  a big party
+<br>[20:04] <b>Psyon</b> with bear and stuff
+<br>[20:04] * eks isn't the one wanting bear around..
+<br>[20:05] <b>Psyon</b> beer
+<br>[20:05] <b>Psyon</b> hehe
+<br>[20:05] <b>Psyon</b> oops
+<br>[20:05] <b>Psyon</b> I need a spell checker for mIRC
+<br>[20:05] *** eSoul (Chat-Zone@ACABEF78.ipt.aol.com) has joined #Bochs
+<br>[20:05] <b>eks</b> eheh
+<br>[20:05] <b>eks</b> wb eSoul
+<br>[20:05] <b>eSoul</b> Thanks
+<br>[20:05] <b>eks</b> eSoul: switch to irc.ladns.com
+<br>[20:05] <b>eSoul</b> aight, give me a few
+<br>[20:05] *** eSoul (Chat-Zone@ACABEF78.ipt.aol.com) Quit (Quit: ox: its more addictive then crack)
+<br>[20:06] <b>bryce</b> So we're #1 most active on source forge again today :)
+<br>[20:06] <b>Psyon</b> We are?
+<br>[20:06] <b>Psyon</b> wow!
+<br>[20:06] <b>bryce</b> 1300 downloads, 9800 page views yesterday
+<br>[20:06] <b>divad547</b> maybe people watching for this chat...
+<br>[20:06] *** eSoul (Chat-Zone@ACABEF78.ipt.aol.com) has joined #Bochs
+<br>[20:06] <b>bryce</b> yeah right :)
+<br>[20:06] <b>bryce</b> I think it's people marvelling at the length of our bugs list....
+<br>[20:07] <b>Psyon</b> hehehe
+<br>[20:07] *** uninet (~tbutler@c1331724-a.schrls1.mo.home.com) has joined #bochs
+<br>[20:07] *** ChanServ sets mode: +o uninet
+<br>[20:07] <b>eSoul</b> hmm, about bugs, I have one, I think
+<br>[20:07] <b>divad547</b> well, one bug I have seen : no-one apparently does a "make distcheck"...
+<br>[20:07] <b>bryce</b> what's that do?
+<br>[20:07] <b>Psyon</b> distcheck?
+<br>[20:08] <b>divad547</b> verifies the distribution
+<br>[20:08] <b>divad547</b> including that configure can be run from another directory
+<br>[20:08] <b>Psyon</b> heheh
+<br>[20:08] <b>bryce</b> is there a standard distcheck somewhere?
+<br>[20:08] <b>bryce</b> that we should stick into the makefile?
+<br>[20:08] <b>divad547</b> it is part of autoconf/automake
+<br>[20:09] <b>eSoul</b> hmm, anyone ever used os/2 yet with bochs?
+<br>[20:09] <b>bryce</b> I use autoconf but not automake
+<br>[20:09] <b>eSoul</b> ...or tried?
+<br>[20:09] <b>Psyon</b> I have no experience with OS2 at all really
+<br>[20:09] * yakovlev could try.
+<br>[20:09] <b>bryce</b> host os2 or guest os2?
+<br>[20:09] <b>yakovlev</b> I'm not sure I'm in the mood, though.
+<br>[20:09] <b>eSoul</b> I tried, it hangs on boot up
+<br>[20:09] <b>bryce</b> hang ? freeze with no response?
+<br>[20:09] <b>yakovlev</b> I don't want to go through all 40 disks.
+<br>[20:10] <b>eSoul</b> Yea, no boot messages jsut the green text for the VGA bios
+<br>[20:10] <b>yakovlev</b> icky
+<br>[20:10] <b>bryce</b> hm, you may have to get into the debugger and turn on tracing to get any clue about that
+<br>[20:10] <b>Moja</b> hrm.  sorry if this is a silly question, but why is this sample mini linux distro included with the bochs binaries so slow using linux as a host OS?
+<br>[20:10] <b>eSoul</b> and, for some reason, the green text is moved up one line, the V is cut of from V
+<br>[20:11] <b>divad547</b> ok, alternative to distcheck : make another directory and do <b>original_directory</b>/configure, and then build....
+<br>[20:11] <b>eSoul</b> *Version
+<br>[20:11] <b>uninet</b> Moja: It's pretty slow in Windows too.
+<br>[20:11] <b>eSoul</b> anyway, ill be back in a few, supers done
+<br>[20:11] <b>eSoul</b> *suppers
+<br>[20:11] *** eSoul (Chat-Zone@ACABEF78.ipt.aol.com) Quit (Quit: ox: i greased montel's head)
+<br>[20:12] <b>bryce</b> moja: bochs is emulating every instruction, and that's why it goes very slowly.  It doesn't take advantage of the fact that it's running linux in linux.
+<br>[20:12] <b>yakovlev</b> Actually, I found dlxlinux quite snappy, all things considered.
+<br>[20:13] <b>bryce</b> it loads fast compared to a full redhat install, that's for sure.  smaller kernel, not much to set up during boot.
+<br>[20:13] <b>Psyon</b> I still love the fact that a search for "bochs win32" on yahoo brings up my page on teh top of the list :)
+<br>[20:13] <b>uninet</b> Yeah, I think it's really quite nice in the CVS as of June 9th...
+<br>[20:13] <b>Psyon</b> just something to piont out
+<br>[20:13] <b>Psyon</b> :)
+<br>[20:13] <b>Moja</b> bryce;  ah.  I installed bochs way back when & figured I'd give it a shot again today to see if it would be any faster than vmware.  not sure if thats a dirty word around here :)
+<br>[20:14] <b>bryce</b> faster than vmware may be plex86's goal, but it's not possible for bochs.
+<br>[20:14] <b>uninet</b> Moja: It's a different kind of beast than VMware.
+<br>[20:14] <b>yakovlev</b> vmware is MUCH faster.
+<br>[20:14] <b>bryce</b> they take advantage of running intel instructions on an intel, so they can zoom compared to bochs (emulating everything)
+<br>[20:14] <b>Psyon</b> I wonder does bochs run inside VMWare?
+<br>[20:14] <b>yakovlev</b> I'd be amazed if it didn't.
+<br>[20:14] <b>uninet</b> Ps: That would be interesting.
+<br>[20:14] <b>Psyon</b> I should try
+<br>[20:15] <b>yakovlev</b> More interesting would be does vmware run inside bochs?
+<br>[20:15] <b>Psyon</b> I was gonna try for bochs in bochs untill i lost my Win95 image
+<br>[20:15] <b>Moja</b> yakovlev;  that would probably be painfully slow
+<br>[20:15] <b>yakovlev</b> somebody said they did bochs inside bochs.
+<br>[20:15] <b>yakovlev</b> Moja: that's not the point.
+<br>[20:16] <b>bryce</b> bochs is not for speed. :)
+<br>[20:16] <b>uninet</b> yak: Do you know who did the bochs in bochs thing? I'd love to post a screenshot of that.
+<br>[20:16] <b>Psyon</b> http://prdownloads.sourceforge.net/bochs/bochs-1.2.1.win32.zip <b>--- is that a source zip or binary?
+<br>[20:16] <b>Moja</b> yako;  yeah, i guess I'm probably not the target audience.  I just need some kind of 'doze implementation to run this one particular proprietary crapware app that my office forces me to use.
+<br>[20:16] <b>yakovlev</b> I thought I had seen one.
+<br>[20:16] <b>bryce</b> that's a binary ZIP
+<br>[20:17] <b>Psyon</b> ok
+<br>[20:17] <b>uninet</b> Moja: Plex86 is probably more what you are looking for.
+<br>[20:17] <b>yakovlev</b> come across on the list... maybe I'm mistaken.
+<br>[20:17] <b>uninet</b> Huh... I should look in the archives.
+<br>[20:17] <b>Psyon</b> Moja: why not Wine?
+<br>[20:17] <b>Moja</b> uninet;  thanks, I'll go STFW on that
+<br>[20:18] <b>uninet</b> Moja: certianly.
+<br>[20:18] <b>Moja</b> psyon;  unfortunately this one doesn't work with wine.  tried it.
+<br>[20:18] <b>uninet</b> Good point Don, Wine has improved a lot as of late.
+<br>[20:18] <b>bryce</b> moja: what are you trying to run?
+<br>[20:18] <b>Moja</b> bryce;  its called viewmail - integrated fax/voicemail, etc. app
+<br>[20:19] <b>Moja</b> so I can save my faxes, save my voicemails as wavs, etc.
+<br>[20:19] <b>yakovlev</b> mj: is it dos or windows?
+<br>[20:19] <b>Moja</b> its 'doze.
+<br>[20:20] <b>yakovlev</b> Yeah, I'd try plex86.
+<br>[20:20] <b>bryce</b> I think for simply running a Win application (assuming you have x86 hardware), vmware or plex86 or win4lin may be the easiest solution.
+<br>[20:20] <b>bryce</b> he needs modem support too, plex86's serial.cc is the same as ours and it's not perfect at this point
+<br>[20:21] <b>Moja</b> I'd been running vmware since it uses netbios over tcp/ip.  I don't need modem support - just my NIC
+<br>[20:21] <b>Psyon</b> So who all here does Win32 programming? or am I the only one?
+<br>[20:21] <b>yakovlev</b> I think you're it.
+<br>[20:21] <b>divad547</b> I do it when I must....  and despise it.
+<br>[20:21] <b>yakovlev</b> Although I have to muddle through the cygwin stuff sometimes.
+<br>[20:22] <b>eks</b> I try to avoid at all cost win32
+<br>[20:22] <b>Psyon</b> Ever done anything with ASPI?
+<br>[20:22] <b>Moja</b> heh, this is wild.  The first time I installed bochs like 2 yrs ago it took me 1/2 a day to get it working.  Today I snagged an RPM and was rocking in ~5 mins.
+<br>[20:22] <b>yakovlev</b> ASPI?  Don't you just love computer culture?
+<br>[20:22] <b>Psyon</b> Advanced Scsi Programming Interface
+<br>[20:22] <b>uninet</b> Moja: Aren't Binaries great?
+<br>[20:23] <b>bryce</b> even if we only have one brave enough to program win32, it should be noted that 3 times more windows ZIPs have been downloaded than linux RPMs or source tars.
+<br>[20:23] <b>Psyon</b> Yako: even though it is the SCSI interface... it allows you to read sectors from an IDE cdrom also
+<br>[20:23] <b>Moja</b> uninet;  aye.  Although the first time I installed, it wasn't the compilation that got me - that always worked okay.
+<br>[20:23] <b>yakovlev</b> Ahhh, I see.
+<br>[20:24] <b>Psyon</b> Yako: and you should know why I need to read those damn cdrom sectors
+<br>[20:24] <b>bryce</b> :)
+<br>[20:24] <b>yakovlev</b> So, we're only going to support ATAPI?
+<br>[20:24] <b>uninet</b> Moja: yeah, the DLX-Linux configuration out of the box really speeds up the time it takes to launch bochs.
+<br>[20:24] <b>Psyon</b> No
+<br>[20:24] <b>Psyon</b> it will read SCSI or IDE
+<br>[20:24] <b>Psyon</b> interchangeably
+<br>[20:24] <b>yakovlev</b> Oh, okay.
+<br>[20:24] <b>Psyon</b> ASPI makes the IDE devices look like a SCSI device
+<br>[20:25] <b>bryce</b> psyon: does it work in win95/98 and later too?
+<br>[20:25] <b>divad547</b> any IDE or IDE ATAPI ?
+<br>[20:25] <b>Psyon</b> It works in All versions of Windows
+<br>[20:25] <b>bryce</b> excellent
+<br>[20:25] <b>Psyon</b> but I will still use the current method for NT/2k
+<br>[20:25] <b>Moja</b> uninet;  yeah.  Other than the fact that for some reason my redhat machine didn't want to add that damned vga font, it was practically instantaneous.
+<br>[20:25] <b>Psyon</b> Div: there are a few older IDE drives that dont like ASPI
+<br>[20:25] <b>Psyon</b> but most should work
+<br>[20:25] <b>Psyon</b> its better than none
+<br>[20:26] <b>Moja</b> heres one for the FAQ:  after running mkfontdir, do xset fp+ /path/to/misc
+<br>[20:26] <b>divad547</b> right.  ATAPI is SCSI commands over IDE, so a SCSI driver can do ATAPI drives too.
+<br>[20:26] <b>Moja</b> even if /path/to/misc appears to already be in your font path *boggle*
+<br>[20:26] <b>bryce</b> ok
+<br>[20:27] <b>Psyon</b> The other option is to make a DLL that thunks to a 16bit DLL... the problem I have with that is a.) two dlls, that I dont want b.) not everyone has a 16bit compiler or thunk.exe
+<br>[20:27] <b>Psyon</b> Thunk = Calling 16bit code from 32bit programs
+<br>[20:27] <b>Moja</b> anyway.  Thks for the advice folks.
+<br>[20:27] *** Moja (~bofh@cs6625174-155.austin.rr.com) Quit (Quit: <br>[BX] The Borg use BitchX. It will be assimilated. Shouldn't you?)
+<br>[20:28] <b>yakovlev</b> Probably not good for future MS OSen either
+<br>[20:28] *** daboy (~daboy@lnk2-bfrost-gw.binary.net) has joined #bochs
+<br>[20:28] <b>Psyon</b> New versions of windows should be able to use the current way of reading the cdrom
+<br>[20:28] <b>Psyon</b> if you open \\.\d: where d is your cdrom
+<br>[20:28] <b>Psyon</b> you can read the sectors
+<br>[20:28] <b>uninet</b> yak: You have a point there. WinXP doesn't support any (or nearly any) 16-bit code, AFAIK.
+<br>[20:28] <b>Psyon</b> actually you can do it for any drive letter
+<br>[20:29] <b>Psyon</b> that is how the floppy drive is done also
+<br>[20:29] <b>divad547</b> I have a patch that allows a CDROM image to be used instead of a real CDROM drive.  seems to work...
+<br>[20:29] <b>bryce</b> does Calvin's patch (in CVS now) work for win?  Has anyone tried the CVS version on that?
+<br>[20:29] <b>bryce</b> all it does is convert "d:" to "\\.\d:"
+<br>[20:29] <b>bryce</b> and leave other file names alone, I think
+<br>[20:30] <b>Psyon</b> ahhh
+<br>[20:30] <b>Psyon</b> heheh
+<br>[20:30] <b>daboy</b> hi
+<br>[20:30] <b>daboy</b> i don't have a bunch of time...
+<br>[20:30] <b>bryce</b> hi daboy
+<br>[20:30] <b>daboy</b> but i wanna say...
+<br>[20:30] <b>eks</b> bryce: I don't want to be obstrusive, but shouldn't we first start by what was on topic?
+<br>[20:30] <b>daboy</b> I WANT FPU
+<br>[20:30] <b>daboy</b> :P
+<br>[20:30] <b>daboy</b> and i want to see the registers
+<br>[20:30] <b>daboy</b> and i want float data types :)
+<br>[20:30] <b>bryce</b> you have FPU
+<br>[20:30] <b>yakovlev</b> We have fpu.
+<br>[20:30] <b>Psyon</b> bryce: could just make it so you specirfy \\.\d: in the bochsrc
+<br>[20:30] <b>daboy</b> yes, but i can't see the registers
+<br>[20:30] <b>Psyon</b> then dont have to worry about tranlating
+<br>[20:30] <b>Psyon</b> hehe
+<br>[20:30] <b>daboy</b> and i can't display memory as a float
+<br>[20:31] <b>yakovlev</b> That's being worked on.
+<br>[20:31] <b>daboy</b> oki :)
+<br>[20:31] <b>bryce</b> do you know of any code that translates the hex into the right kinds of data?
+<br>[20:31] <b>bryce</b> as in free software to use as an example...
+<br>[20:31] <b>Psyon</b> that translates Hex into what?
+<br>[20:31] <b>yakovlev</b> As far as memory as float: learn perl.
+<br>[20:31] *** daboy is now known as daboj_awa
+<br>[20:32] <b>bryce</b> eks help me out!
+<br>[20:32] <b>Psyon</b> ?
+<br>[20:32] <b>bryce</b> the FPU has different formats for double precision float, single precision float, etc.
+<br>[20:32] <b>bryce</b> but of course in hardware it's all binary
+<br>[20:32] <b>Psyon</b> im not familiar with the FPU code
+<br>[20:32] <b>bryce</b> so when we display the FPU stack in the debugger or something
+<br>[20:32] <b>Psyon</b> sorry
+<br>[20:32] <b>Psyon</b> hehe
+<br>[20:33] <b>bryce</b> it's useful to print it in nice floating point form
+<br>[20:33] <b>bryce</b> daboy, is that what you mean?
+<br>[20:33] <b>eks</b> bryce: using 'scanf' you can convert to any C type format, using %<b>something</b> you can print them in any other format
+<br>[20:33] *** eSoul (Chat-Zone@AC85C638.ipt.aol.com) has joined #bochs
+<br>[20:33] <b>Psyon</b> OH! One other thing I wanted to bring up
+<br>[20:33] <b>Psyon</b> ok....
+<br>[20:33] <b>Psyon</b> I made my HD Image
+<br>[20:33] <b>Psyon</b> booted from a Win98 boot disk image
+<br>[20:33] <b>eks</b> bryce: the thing about printing them in a nice float form is the actual 'sharing' of fpu stack between fpu/mmx/sse/3dnow
+<br>[20:33] <b>Psyon</b> fdisked the drive in bochs
+<br>[20:33] <b>Psyon</b> and formated
+<br>[20:33] <b>Psyon</b> but mtools wont recognize it
+<br>[20:33] <b>bryce</b> eks: even from whatever 80-bit binary junk is in the floating point registers on an intel machine??
+<br>[20:34] *** eSoul (Chat-Zone@AC85C638.ipt.aol.com) Quit (Quit: Read error: 250hb/m (Excessive heartbeats per minute))
+<br>[20:34] <b>eks</b> bryce: nope, this you will have to handle yourself afaik
+<br>[20:34] <b>bryce</b> mtools for win32.
+<br>[20:34] <b>Psyon</b> yeah
+<br>[20:34] <b>Psyon</b> thats what I used
+<br>[20:34] <b>bryce</b> eks: that's what I was asking him about ... :)
+<br>[20:34] <b>eks</b> bryce: if I'm not mistaken, the AMD optimization manuals do come with a routine to do that
+<br>[20:34] <b>bryce</b> never tried it!
+<br>[20:34] <b>bryce</b> eks: somebody with a manual, type it in!
+<br>[20:35] <b>bryce</b> who has used mtools on any system?
+<br>[20:35] <b>bryce</b> I always mount the disk images with loopback
+<br>[20:35] * yakovlev has, a while back.
+<br>[20:35] <b>Psyon</b> Mtools doesnt handle the disk iamges like bochs
+<br>[20:35] <b>Psyon</b> or something
+<br>[20:35] <b>Psyon</b> maybe they are one byte off
+<br>[20:35] <b>Psyon</b> i dont know
+<br>[20:35] <b>bryce</b> but it's hard with a hard drive partition, because the first 32256 bytes are the boot track
+<br>[20:35] * eks doesn't have the manuals, but know that such code is in it
+<br>[20:36] <b>bryce</b> that's why I did the split hard disk thing, so the boot track could be in img0 and the rest could be in img1.  THen I can mount img1 with loopback.
+<br>[20:36] <b>Peter</b> Pyson: I don't know if this would help but i had the same problem. It was due to me writing the wrong harddrive specifications in the .bochsrc file
+<br>[20:36] <b>yakovlev</b> No, mtools recognizes partitions.
+<br>[20:36] <b>bryce</b> ok
+<br>[20:37] <b>yakovlev</b> You have to tell it which partition you want.
+<br>[20:37] <b>Psyon</b> Peter: Im pretty sure they were the same
+<br>[20:37] <b>bryce</b> has anyone had trouble with bximage making an unusual disk geometry?
+<br>[20:37] <b>yakovlev</b> I haven't used bximage.
+<br>[20:38] <b>bryce</b> AFAIK it's always legal, but for small disks it's definitely different from what a normal disk would have.
+<br>[20:38] <b>Psyon</b> I havent used it yet
+<br>[20:38] <b>uninet</b> Yako: you should try it - it makes creating disk images and configuring them a really simple job.
+<br>[20:38] <b>Psyon</b> been too focused on this ASPI cdrom thing
+<br>[20:38] *** KWeisshar (vze26rvn@adsl-138-89-120-162.nnj.adsl.bellatlantic.net) has joined #bochs
+<br>[20:38] <b>Psyon</b> havent looked at the new binaries
+<br>[20:39] <b>bryce</b> bximage comes with bochs now, and it's supposed to make disk images for you.  You say "I want a 99 meg hard disk" and it makes one, and gives you the diskc line that you need to use.
+<br>[20:39] <b>bryce</b> makes various size floppies too
+<br>[20:39] <b>KWeisshar</b> is there any way to accesss the floppy and cd-rom drive directly when running bochs under win98 or windows me
+<br>[20:40] <b>Psyon</b> Im working on that
+<br>[20:40] *** rjlemley (selma@dsl092-005-134.sfo1.dsl.speakeasy.net) Quit (Quit: <br>[x]chat)
+<br>[20:40] <b>Psyon</b> KWeisshar: Win98/Me do not provide a direct way to access the cdrom sectors
+<br>[20:40] <b>KWeisshar</b> what about floppy sectors
+<br>[20:40] <b>Psyon</b> nope
+<br>[20:40] <b>Psyon</b> well...
+<br>[20:40] <b>Psyon</b> kina
+<br>[20:40] <b>bryce</b> floppy: you can grab the whole floppy into a disk image, and read the disk image.
+<br>[20:41] <b>bryce</b> (what's the win32 tool for that, like inverse of rawrite?)
+<br>[20:41] <b>Psyon</b> Umm...
+<br>[20:41] <b>Psyon</b> dont know
+<br>[20:41] <b>divad547</b> rawread I believe
+<br>[20:41] <b>Psyon</b> Rawwrite.exe
+<br>[20:41] <b>Psyon</b> heheh
+<br>[20:41] <b>Psyon</b> rawwrite for windows will do it
+<br>[20:41] <b>bryce</b> does it do reading too??
+<br>[20:41] <b>eks</b> bryce: I prefer partcopy from John Fine
+<br>[20:41] <b>eks</b> http://erols.com/johnfine/pcopy02.zip
+<br>[20:41] *** Psyon sets mode: +o yakovlev
+<br>[20:42] <b>bryce</b> Calvin Smith also said <b>A HREF="http://www.winimage.com"</b>www.winimage.com<b>/A</b> has a good image manipulation tool
+<br>[20:42] *** Psyon sets mode: +o fries
+<br>[20:42] <b>eks</b> you can byte-align transfer anything to/from floppies
+<br>[20:42] <b>KWeisshar</b> how do i create an image from the cd-rom to use with bochs
+<br>[20:42] <b>bryce</b> psyon: shouldn't we be grabbing the source of rawrite or whatever tools like that?
+<br>[20:42] <b>bryce</b> they may have already solved your problem?
+<br>[20:42] <b>Psyon</b> Rawrite for win is in Delphi
+<br>[20:42] <b>Psyon</b> and it uses the thunk method
+<br>[20:43] <b>Psyon</b> Which I dont like
+<br>[20:43] <b>bryce</b> is it open source?
+<br>[20:43] <b>Psyon</b> there is a halfway direct way to access the floppy with API calls
+<br>[20:43] <b>Psyon</b> you can use a call to DeviceIoControl() to do Int 13 calls
+<br>[20:43] <b>Psyon</b> it will only work on floppies though from what I can tell
+<br>[20:43] <b>bryce</b> ok
+<br>[20:43] <b>bryce</b> anyone know cdrom image tools?
+<br>[20:43] <b>Psyon</b> MS just doenst like to tell you that
+<br>[20:44] <b>bryce</b> I would think some CDwriter software would grab an ISO image off of a cdrom...
+<br>[20:44] <b>Psyon</b> bryce: ive been trying to find some tools to make cdrom images that are opensource... would help me learn how to read the sectors
+<br>[20:44] <b>Psyon</b> Most cd burning softwar
+<br>[20:44] <b>KWeisshar</b> does bochs support cd-rom iso image
+<br>[20:44] <b>Psyon</b> has a proprietary format though
+<br>[20:44] <b>Psyon</b> I think the .BIN from cue/bin formats are closes
+<br>[20:44] <b>Psyon</b> not sure though
+<br>[20:44] <b>Psyon</b> actually
+<br>[20:44] <b>Psyon</b> the ISO format should be the same
+<br>[20:44] <b>bryce</b> KWeisshar: the latest CVS version can read an ISO image on windows
+<br>[20:44] <b>yakovlev</b> support is in win32 for iso images, but it's only checked in CVS.
+<br>[20:45] <b>bryce</b> we don't have binaries of it yet, it only came in last week
+<br>[20:45] <b>yakovlev</b> bryce: how hard would it be to port the iso image code over to linux?
+<br>[20:45] <b>bryce</b> it looked like all that patch did was comment out the parts that tried to eject the disk, etc.
+<br>[20:46] <b>bryce</b> I haven't tried it in unix to see what the pitfalls are.
+<br>[20:46] <b>bryce</b> but if it's just commenting out ioctls, I volunteer :)
+<br>[20:46] <b>bryce</b> (making them conditional I should say)
+<br>[20:46] <b>yakovlev</b> I suspect it's something like that, although I don't know.
+<br>[20:46] <b>bryce</b> it's still on the feature list....
+<br>[20:47] <b>bryce</b> KW: did that answer your question?
+<br>[20:47] <b>bryce</b> you either need to compile the CVS snapshot, or wait for a release with binaries for windows, I think
+<br>[20:47] * yakovlev wishes he had emacs under cygwin.
+<br>[20:47] <b>KWeisshar</b> if i get the cvs version, do i need to compile it
+<br>[20:47] <b>bryce</b> yes
+<br>[20:47] <b>KWeisshar</b> what compiler do i need to compile the win32 version
+<br>[20:48] <b>bryce</b> vc++ or cygwin
+<br>[20:48] <b>KWeisshar</b> i don't have any win32 compiler
+<br>[20:48] <b>yakovlev</b> Hmmm, I wonder if iso images would work under cygwin?
+<br>[20:48] <b>Psyon</b> You can get a free one from borland
+<br>[20:48] <b>uninet</b> bryce: could you use GCC under Win32 to compile it?
+<br>[20:48] <b>uninet</b> (I think I might have asked that before)
+<br>[20:48] <b>yakovlev</b> I don't know if it's been tried.
+<br>[20:49] <b>bryce</b> isn't that what the cygwin compiler is? gcc
+<br>[20:49] <b>bryce</b> or is there something else "gcc under win32"?
+<br>[20:49] <b>yakovlev</b> I assumed be meant more like djgpp
+<br>[20:49] <b>uninet</b> There is a GCC port that is suppose to avoid needing cygwin binaries.
+<br>[20:49] <b>Psyon</b> Borland gives away Borland C++ 5 now
+<br>[20:49] <b>Psyon</b> its an 8mb download
+<br>[20:49] <b>uninet</b> Yak: I think that is what I mean. :-)
+<br>[20:50] <b>KWeisshar</b> vc++ is expensive
+<br>[20:50] <b>yakovlev</b> I don't know if you'd have the required includes, etc.
+<br>[20:50] <b>yakovlev</b> cygwin is free, but big.
+<br>[20:50] <b>Psyon</b> if borland dosnt have the includes... you can get teh SDK from MS
+<br>[20:50] <b>Psyon</b> and it has them
+<br>[20:50] <b>Psyon</b> last I checked
+<br>[20:50] <b>KWeisshar</b> i have seen retail version of cygwin for windows nt and it's expensive
+<br>[20:50] <b>Psyon</b> commercial version of cygwin?
+<br>[20:50] <b>divad547</b> is cygwin GCC still tainted with GPL?
+<br>[20:51] <b>KWeisshar</b> there is a retail version of cygwin in staples, what does the retail version include
+<br>[20:51] <b>uninet</b> divad: what do you mena "tainted" with GPL?
+<br>[20:51] <b>yakovlev</b> Retail version?
+<br>[20:51] <b>Psyon</b> Staples?
+<br>[20:52] <b>Psyon</b> Hmm... If staples carries it I can have my buddy get me a copy
+<br>[20:52] <b>bryce</b> I think we should move on.  We can talk about compilers and platforms forever (and open source licenses) ...
+<br>[20:52] <b>yakovlev</b> I download it from sources.redhad.com/cygwin
+<br>[20:52] <b>KWeisshar</b> it costs aabout $100
+<br>[20:52] <b>divad547</b> last time I looked, the cygwin support libraries where GPL without the exceptions in GCC's libraries.
+<br>[20:52] <b>yakovlev</b> redhad-</b>redhat
+<br>[20:52] <b>divad547</b> so anything you built with cygwin had to be GPL.
+<br>[20:52] <b>bryce</b> Greg, do you want to describe your work on the networking front?
+<br>[20:53] <b>Psyon</b> yes
+<br>[20:53] <b>Psyon</b> please
+<br>[20:53] <b>Psyon</b> Id like to hear about that
+<br>[20:53] <b>uninet</b> divad: Ah... good for open source, but I wonder if Bochs would qualify as a LGPL app?
+<br>[20:53] <b>yakovlev</b> Hmmmm, I'm not sure I like that interpretation, but anyways.
+<br>[20:53] <b>yakovlev</b> Is bochs lgpl?
+<br>[20:53] <b>bryce</b> bochs is LGPL
+<br>[20:54] <b>yakovlev</b> Oh, cool.
+<br>[20:54] <b>divad547</b> LPGL? it can be linked to?
+<br>[20:54] <b>yakovlev</b> Not that there's much to link it with.
+<br>[20:54] <b>yakovlev</b> YET
+<br>[20:54] <b>bryce</b> Kevin had ways of building bochs as a library
+<br>[20:55] <b>yakovlev</b> Networking: I discovered that the NE2K won't work under linux.
+<br>[20:55] <b>bryce</b> :)
+<br>[20:55] <b>yakovlev</b> (linux client)
+<br>[20:55] <b>Psyon</b> why wont NEk2 work under linux?
+<br>[20:55] <b>bryce</b> you mean that the NE2K is missing some features that linux requires, right?
+<br>[20:55] <b>yakovlev</b> or (so I hear) with a windows client.
+<br>[20:55] <b>bryce</b> we need to get the NE2K docs and add the features.
+<br>[20:55] <b>yakovlev</b> Peter sent them to me.
+<br>[20:56] <b>bryce</b> cool I want one too :)
+<br>[20:56] *** doug_ (~none@pc-62-31-74-146-ed.blueyonder.co.uk) has joined #Bochs
+<br>[20:56] <b>yakovlev</b> It's a big pdf off of... let me look.
+<br>[20:56] <b>bryce</b> So do you mean emulated NE2K will never work in linux, or that NE2K doesn't work now?
+<br>[20:56] <b>bryce</b> (you can send it later, no hurry)
+<br>[20:57] <b>yakovlev</b> it doesn't work now.
+<br>[20:57] <b>bryce</b> ok
+<br>[20:57] <b>yakovlev</b> it'll need some improvement.
+<br>[20:57] <b>bryce</b> but it did work in OpenBSD because of driver differences.
+<br>[20:57] <b>yakovlev</b> Once I realized that was the problem, I tested under openbsd.
+<br>[20:57] <b>yakovlev</b> I got an ARP response accepted, which I feel is a big step.
+<br>[20:58] <b>bryce</b> what is your goal?  is it turning ethernet into PPP packets and back? or getting the ethernet packets into slirp?
+<br>[20:58] <b>Psyon</b> if you guys can develop the emu NIC interface with some functions like WritePacket and ReadPacket or soemthing
+<br>[20:59] <b>Psyon</b> I can make the code to send the packets in Win32
+<br>[20:59] <b>bryce</b> psyon: that's already there
+<br>[20:59] <b>yakovlev</b> I looked at tinytcp, it's one heck of a lot simpler that slirp.
+<br>[20:59] <b>Psyon</b> it is?
+<br>[20:59] <b>Psyon</b> I really need to look closer at the source
+<br>[20:59] <b>Psyon</b> hehehe
+<br>[20:59] <b>bryce</b> you just need to write iodev/eth_win32 based on iodev/eth_fbsd.
+<br>[20:59] <b>bryce</b> greg: that's good
+<br>[21:00] <b>Psyon</b> Again... the problem with the way this needs to be done is that it cant be compiled by everyone
+<br>[21:00] <b>Psyon</b> you would have to have the DDK
+<br>[21:00] <b>bryce</b> device driver kit = ddk I believe
+<br>[21:00] <b>Psyon</b> Driver Development Kit
+<br>[21:01] <b>bryce</b> psyon, can you build the win32 specific stuff as a DLL and we can link to and distribute the DLL without having to recompile it?
+<br>[21:01] <b>yakovlev</b> I'm thinking what I'll do is use that as a basis, but hand-code some TCP code.
+<br>[21:01] <b>yakovlev</b> The real problem is that means no UDP== no DNS
+<br>[21:01] *** KWeisshar (vze26rvn@adsl-138-89-120-162.nnj.adsl.bellatlantic.net) has left #bochs
+<br>[21:01] <b>bryce</b> greg: yes, that's bad
+<br>[21:02] <b>bryce</b> is it a lot harder to translate ethernet to real PPP?
+<br>[21:02] <b>Psyon</b> So what NIC does that emulate?
+<br>[21:02] <b>yakovlev</b> what NIC does what emulate?
+<br>[21:02] <b>bryce</b> psyon: the emulated NIC is NE2K in all cases (so far)
+<br>[21:02] <b>Psyon</b> I mean like if Win95 deteced it... what would it come up as
+<br>[21:02] <b>bryce</b> all this other stuff is trying to answer the question fo
+<br>[21:02] <b>yakovlev</b> There's a generic packet interface.
+<br>[21:02] <b>bryce</b> of "How do we get the packets to the real world"
+<br>[21:03] <b>Psyon</b> Under Win32 you make an NDIS Protocol driver that can be loaded at run time
+<br>[21:03] <b>Psyon</b> that is how all packet capture libs for Win32 work
+<br>[21:03] <b>yakovlev</b> If all ppp wrapper is is basically a wrapper around an IP packet, converting to PPP is easy.
+<br>[21:03] <b>yakovlev</b> except for all the connection headache.
+<br>[21:04] <b>bryce</b> it seems like converting to PPP is a benefit because you have the option of either REAL PPP or slirp (emulated PPP)
+<br>[21:04] *** daboj_awa (~daboy@lnk2-bfrost-gw.binary.net) Quit (Quit: <br>[BX] Get your free warez from ftp://127.0.0.1!)
+<br>[21:04] <b>yakovlev</b> Psyon: the interface is: send(char*, len)  rxh(char*, len)
+<br>[21:04] <b>bryce</b> psyon: with the sendpacket/readpacket method, is there any chance that the kernel can see the packet, or does it go directly out to the physical network?
+<br>[21:05] <b>Psyon</b> directly to network im guessing
+<br>[21:05] <b>bryce</b> that's the problem with the fbsd implementation
+<br>[21:05] <b>Psyon</b> Never looked into it a lot
+<br>[21:05] <b>bryce</b> take a look at <b>A HREF="http://bochs.sf.net/networking"</b>http://bochs.sf.net/networking<b>/A</b>
+<br>[21:05] <b>bryce</b> Peter Grehan drew some diagrams of the different options
+<br>[21:05] <b>Psyon</b> http://www.rawether.net/ <b>--- wonder if they would make a license donation to the project
+<br>[21:05] <b>bryce</b> packet filter is what is done now (see pkt_filter.gif)
+<br>[21:06] <b>Psyon</b> I have enought sample drivers
+<br>[21:06] <b>Psyon</b> to make my own
+<br>[21:06] <b>Psyon</b> so im not actually worried about it
+<br>[21:06] <b>yakovlev</b> slirp is going to be a pain to get compiling on non-gnu machines.
+<br>[21:07] <b>bryce</b> greg: what kind of code is gcc specific?
+<br>[21:07] <b>yakovlev</b> I wish I knew.
+<br>[21:07] <b>yakovlev</b> I can't tell what is supposed to come from where.
+<br>[21:07] <b>yakovlev</b> so I don't know why my compiler won't compile it.
+<br>[21:07] <b>bryce</b> so you have major compile problems on aix?
+<br>[21:07] <b>yakovlev</b> Yup.
+<br>[21:07] <b>bryce</b> ok
+<br>[21:08] <b>yakovlev</b> And it's not like bochs where I could look and see what it was complaining about.
+<br>[21:08] <b>bryce</b> I can try on a few different systems (compile farm at SF, testdrive)
+<br>[21:08] <b>bryce</b> if you want
+<br>[21:08] <b>yakovlev</b> What all does slirp do, anyways?
+<br>[21:08] <b>Psyon</b> http://netgroup-serv.polito.it/winpcap/
+<br>[21:09] <b>yakovlev</b> I'm not totally clear on that, so I'd like to have an idea.
+<br>[21:09] <b>bryce</b> slirp takes a PPP or SLIP packets on one side
+<br>[21:09] <b>bryce</b> (usually talking through a modem to your home machine)
+<br>[21:10] <b>bryce</b> and turns those packets into TCP/UDP/ICMP code
+<br>[21:10] <b>bryce</b> It can run as a normal, non-root user, and give a similar
+<br>[21:10] <b>bryce</b> effect to having a real PPP connection.
+<br>[21:10] <b>bryce</b> So it is like a user-mode PPP substitute.
+<br>[21:11] <b>yakovlev</b> I don't understand how it can be done for UDP/ICMP
+<br>[21:11] <b>yakovlev</b> (incoming, that is)
+<br>[21:11] <b>bryce</b> I'm not sure
+<br>[21:11] <b>bryce</b> UDP, you can bind a port right?
+<br>[21:11] <b>yakovlev</b> Outgoing is easy.
+<br>[21:11] <b>yakovlev</b> Right, but that's not transmitted.
+<br>[21:12] <b>bryce</b> maybe you have to configure it to redirect port X on the slirp machine to port Y on the remote?
+<br>[21:12] <b>bryce</b> You can't bind a reserved port as a user anyway, so I think you would have to have a port mapping like that in any case.
+<br>[21:12] <b>yakovlev</b> I know that's what you have to do for TCP.
+<br>[21:12] *** eSoul (Chat-Zone@AC9210B6.ipt.aol.com) has joined #bochs
+<br>[21:12] <b>yakovlev</b> So, this still doesn't explain how you get DNS.
+<br>[21:12] <b>bryce</b> slirp is a big unknown still
+<br>[21:12] <b>bryce</b> DNS outgoing?
+<br>[21:13] <b>yakovlev</b> DNS responses.
+<br>[21:13] <b>bryce</b> slirp sees the UDP packet coming in from the PPP line
+<br>[21:13] <b>bryce</b> it opens a UDP port to send that response on behalf of the remote PPP guy
+<br>[21:13] <b>yakovlev</b> Right, and send it to the DNS server, easy so far.
+<br>[21:13] <b>Psyon</b> Why cant we use libpcap for the linux part?
+<br>[21:13] <b>Psyon</b> it lets you send and recv packets
+<br>[21:13] <b>yakovlev</b> How does it come back?
+<br>[21:14] <b>Psyon</b> or base it off the code
+<br>[21:14] <b>yakovlev</b> UDP is connectionless.
+<br>[21:14] <b>bryce</b> collects the response from the real server, and then puts the UDP response back on the PPP line
+<br>[21:14] <b>yakovlev</b> Does it return it to the source port?
+<br>[21:14] <b>bryce</b> Psyon: pcap is a packet filter solution, which will not talk to the host OS kernel, so it's incomplete...
+<br>[21:15] <b>bryce</b> see <b>A HREF="http://bochs.sourceforge.net/networking/pkt_filter.gif"</b>http://bochs.sourceforge.net/networking/pkt_filter.gif<b>/A</b> for a diagram
+<br>[21:15] <b>bryce</b> greg: why not?
+<br>[21:15] <b>Psyon</b> Why does it need to talk to the host kernel? oh! for host client communications?
+<br>[21:15] <b>bryce</b> uhhhhhh yeah!
+<br>[21:15] * yakovlev needs to reread the DNS RFC.
+<br>[21:16] <b>Psyon</b> brb gotta cook
+<br>[21:16] <b>bryce</b> greg: me too :) but a normal user process can get DNS responses back.  I don't know what port it uses....
+<br>[21:16] <b>bryce</b> you don't need root to look up a DNS number, so there has to be a user-mode solution to that.
+<br>[21:18] <b>bryce</b> Should we at least sum up the "big picture" on networking?
+<br>[21:18] <b>bryce</b> There are 6 or so different proposals listed at <b>A HREF="http://bochs.sourceforge.net/networking/bochs-network-planning.txt"</b>http://bochs.sourceforge.net/networking/bochs-network-planning.txt<b>/A</b> with pros and cons
+<br>[21:19] <b>bryce</b> these came from conversations with lots of people
+<br>[21:19] <b>yakovlev</b> Okay, what we have people working on:
+<br>[21:19] <b>bryce</b> and all of our talk about slirp and PPP is related to #3 and #4
+<br>[21:20] <b>yakovlev</b> I'm working on getting a home-grown sockets approach and have looked at converting ethernet to PPP
+<br>[21:20] <b>yakovlev</b> I'm uncomfortable with the PPP RFC is the main problem with setting that part up.
+<br>[21:21] <b>divad547</b> you might consider SLIP instead of PPP....
+<br>[21:21] <b>bryce</b> how are they different? I really don't know
+<br>[21:21] <b>divad547</b> SLIP is much simpler, but only does IP.
+<br>[21:21] <b>bryce</b> what other protocols does PPP do?
+<br>[21:21] <b>divad547</b> I think PPP can do anything...
+<br>[21:22] <b>bryce</b> arp?
+<br>[21:22] <b>divad547</b> also may be able to wrap the MAC addresses..
+<br>[21:22] <b>bryce</b> does arp only exist on ethernets?
+<br>[21:22] <b>yakovlev</b> I'm not sure.
+<br>[21:22] <b>divad547</b> ARP only needs to exist on protocols with addresses...
+<br>[21:22] <b>divad547</b> not needed in point-to-point protocols like PPP and SLIP
+<br>[21:23] <b>yakovlev</b> Yeah, PPP is point-to-point.
+<br>[21:23] <b>bryce</b> what's the right term for the level of protocol that ARP exists on?  How about IP, PPP, SLIP?
+<br>[21:24] <b>yakovlev</b> It's not really clear.
+<br>[21:24] <b>yakovlev</b> What is the protocol field in PPP?
+<br>[21:25] <b>yakovlev</b> Is it it's own meaning, like ether_type, or does it match another protocol field?
+<br>[21:25] <b>divad547</b> I don't know...
+<br>[21:26] <b>bryce</b> I have "Internetworking with TCP/IP Principles Protocols and Architecture" on my shelf, and I never thought I would read it.  But maybe I should. :)
+<br>[21:27] <b>bryce</b> Does everybody understand the problem with the packet filter approach that eth_fbsd and eth_* currently use?
+<br>[21:27] <b>bryce</b> Peter explained that to me, so I can try to pass it on if necessary.
+<br>[21:27] <b>bryce</b> (Peter Grehan, who wrote ne2k code)
+<br>[21:28] <b>divad547</b> is that the method 2 version?
+<br>[21:28] <b>bryce</b> yes
+<br>[21:28] <b>bryce</b> and also diagram <b>A HREF="http://bochs.sourceforge.net/networking/pkt_filter.gif"</b>http://bochs.sourceforge.net/networking/pkt_filter.gif<b>/A</b>
+<br>[21:28] <b>yakovlev</b> are 0-1024 reserved in UDP?
+<br>[21:29] <b>divad547</b> I believe so, 0-1023.
+<br>[21:30] <b>bryce</b> I think the quickest (not highest performance) way to get networking in Bochs is by fixing up serial.cc and running PPP/SLIP on both the guest OS and the host OS.
+<br>[21:30] <b>bryce</b> I really think this should be done soon, since
+<br>[21:31] <b>bryce</b> looking at the packets that come out of that
+<br>[21:31] <b>bryce</b> will help to debug all the other protocol tricks
+<br>[21:31] <b>bryce</b> that Greg and others want to do.
+<br>[21:32] *** eks (eks@HSE-MTL-ppp60070.qc.sympatico.ca) Quit (Ping timeout for eks<br>[HSE-MTL-ppp60070.qc.sympatico.ca])
+<br>[21:32] <b>bryce</b> (that is #6, if you're counting)
+<br>[21:32] <b>divad547</b> not sure anyone wants to consider this, but:  one could create a new particularly simple pseudo-device and write device drivers for it.
+<br>[21:33] <b>bryce</b> Is that #1 Emulated NE2K + virtual ethernet driver ?
+<br>[21:33] <b>bryce</b> a kernel module
+<br>[21:33] <b>eSoul</b> Hmm, I was thinking of a internet connection idea for bochs, how about making a NIC card driver that you would install in bochs, that would allow use of the host machines internet connection?
+<br>[21:33] <b>divad547</b> actually, I was thinking something simpler that NE2000.
+<br>[21:34] <b>bryce</b> eSoul: do you mean a guest OS specific driver?
+<br>[21:34] <b>eSoul</b> yea
+<br>[21:34] <b>eSoul</b> It would almost have to be
+<br>[21:34] <b>bryce</b> can be done, but it's not nearly as attractive as tackling all guest oses at once....
+<br>[21:34] <b>eSoul</b> Yea, true
+<br>[21:35] <b>bryce</b> if you want a guest OS specific driver, I think you can grab code from user-mode-linux and several other places
+<br>[21:35] <b>divad547</b> guest OS specific driver would help in part for speed...
+<br>[21:35] <b>bryce</b> yes
+<br>[21:35] <b>eSoul</b> but there are just too many
+<br>[21:35] <b>bryce</b> but we don't have any lower-speed alternative for all those other OSes yet
+<br>[21:35] <b>fries</b> hi
+<br>[21:35] <b>bryce</b> Hey Todd!
+<br>[21:35] <b>fries</b> brb
+<br>[21:36] <b>yakovlev</b> Ahhh, got it!
+<br>[21:36] <b>yakovlev</b> UDP is transaction oriented.
+<br>[21:36] *** KWeisshar (vze26rvn@adsl-138-89-120-162.nnj.adsl.bellatlantic.net) has joined #bochs
+<br>[21:36] <b>KWeisshar</b> what compiler should i use to compile bochs under win98
+<br>[21:36] <b>Psyon</b> Borland C++ 5
+<br>[21:36] <b>Psyon</b> or CYGWin
+<br>[21:36] <b>Psyon</b> or Visual C++ if you have it
+<br>[21:37] <b>bryce</b> it compiles with no effort on VC++
+<br>[21:37] <b>Psyon</b> Actually....
+<br>[21:37] <b>bryce</b> and cygwin
+<br>[21:37] <b>Psyon</b> no one has eer compiled in Borland
+<br>[21:37] <b>Psyon</b> have they?
+<br>[21:37] <b>bryce</b> they haven't told us about it
+<br>[21:37] <b>eSoul</b> I would really like to see Direct cd access in bochs for Win32, so i can install linux, along with some other apps
+<br>[21:37] <b>KWeisshar</b> how much is visual c++
+<br>[21:37] <b>yakovlev</b> Cygwin is free.
+<br>[21:38] <b>KWeisshar</b> i don't have any compilers because i'm not a developer
+<br>[21:38] <b>Psyon</b> You can get a version of VC++ for about $100
+<br>[21:38] <b>KWeisshar</b> i just want to try out bochs
+<br>[21:38] <b>uninet</b> Try the binary then.
+<br>[21:38] <b>bryce</b> KWeisshar, please try a binary distribution of version 1.2.1
+<br>[21:38] <b>KWeisshar</b> i tried the pre-compiled binaires and it only runs dlxlinux
+<br>[21:39] <b>bryce</b> no, that was only a demo
+<br>[21:39] <b>uninet</b> it will run more, you just need to add more disk images.
+<br>[21:39] <b>KWeisshar</b> the reset button doesn't reboot, it shuts down bochs
+<br>[21:39] <b>Psyon</b> HEY! thats what I need to find... ther is an open source PSX emu for Windows that reads raw cdrom sectors
+<br>[21:39] <b>yakovlev</b> CVS just has the bleeding edge stuff.
+<br>[21:39] <b>KWeisshar</b> why isn't warm boot working
+<br>[21:39] <b>uninet</b> KW: it isn't implemented.
+<br>[21:40] <b>fries</b> kweisshar hah it runs more than dlxlinux I used cygwin myself to run openbsd on win32
+<br>[21:40] <b>uninet</b> Don: good thinking. there's a psx emu for Win?
+<br>[21:40] <b>eSoul</b> Psyon, that sounds awesome
+<br>[21:40] <b>bryce</b> KWeisshar, we've been trying to make warm boot right for all OSes.  Until it does, the reboot button will just quit.
+<br>[21:40] <b>yakovlev</b> What should the reboot button do?
+<br>[21:41] <b>yakovlev</b> What does it do on real machines?
+<br>[21:41] <b>yakovlev</b> I always assumed it basically pulled reset on all the chips.
+<br>[21:41] <b>KWeisshar</b> when you reboot the bios jumps to ffff:0000
+<br>[21:41] <b>fries</b> bryce reboot quit? hmm? Ithought I made it reboot ;-)
+<br>[21:41] <b>KWeisshar</b> ffff:0000 is a  jump instruction to the bios initialization routine
+<br>[21:42] <b>KWeisshar</b> it's 5 bytes
+<br>[21:42] <b>bryce</b> bochs's problem with reboot is resetting all the I/O devices
+<br>[21:42] <b>bryce</b> (pulling reset on all the chips)
+<br>[21:42] <b>bryce</b> it's not JUST jumping to rom again
+<br>[21:42] <b>uninet</b> bryce: what about just killing the current process after forking a new copy of bochs when the reboot button is pressed?
+<br>[21:43] <b>bryce</b> Todd: in CVS it tries to reboot, but it never works for me.  So in the 1.2 branch I reverted those reboot changes to make it panic again, since that was the only way to make it work consistently.
+<br>[21:43] <b>yakovlev</b> Which devices won't accept init a second time?
+<br>[21:43] <b>bryce</b> there's just no code yet to call init on them again, I think.
+<br>[21:43] <b>bryce</b> it doesn't sound hard at all
+<br>[21:43] <b>fries</b> yakovlev: OpenBSD hangs on reading the floppy 2nd time around, and usually floppy doesn't respond either
+<br>[21:44] <b>fries</b> but bryce is right, no uniform methodology on reboot exists, its just 'reset a few things and hope for the best' right now which really doesn't work well
+<br>[21:44] <b>bryce</b> I think it would be safest to call init (or reset or whatever) on every single device
+<br>[21:44] <b>bryce</b> and try to get all of them back to their "I just ran bochs" state
+<br>[21:44] <b>bryce</b> rather than try to emulate a soft boot exactly
+<br>[21:45] <b>uninet</b> Is there any real need to have a "real" soft boot in bochs?
+<br>[21:45] <b>KWeisshar</b> why not just have reboot reinitialize bochs
+<br>[21:45] <b>bryce</b> that's what I'm saying
+<br>[21:45] <b>KWeisshar</b> it's only an emulator
+<br>[21:45] <b>uninet</b> KW: that's what I was thinking with forking the process.
+<br>[21:46] <b>bryce</b> uninet: I don't see any use.  fork copies the existing process, it doesn't reload the startup values.
+<br>[21:46] <b>yakovlev</b> Forking the process is awkward.
+<br>[21:46] <b>yakovlev</b> I mean, we could just quit and tell the shell to rerun bochs!
+<br>[21:46] <b>bryce</b> yeah yeah
+<br>[21:47] <b>bryce</b> we just need to figure out which init code is not getting run
+<br>[21:47] <b>bryce</b> and run it!
+<br>[21:47] <b>bryce</b> the main problem is, there are so many bugs on the stinking list that this has not come anywhere near the surface.
+<br>[21:47] <b>divad547</b> extra point - reset doesn't actually clear memory...
+<br>[21:47] <b>bryce</b> right
+<br>[21:47] <b>yakovlev</b> So?
+<br>[21:47] <b>KWeisshar</b> the bios has to inialize the io devices
+<br>[21:48] <b>yakovlev</b> Would it be "wrong" if it did?
+<br>[21:48] <b>divad547</b> so if the bios cooperates, a program can outlast a soft boot...
+<br>[21:48] <b>uninet</b> bryce/yak: gotcha.
+<br>[21:48] <b>divad547</b> this is how a 286 gets back to real mode...
+<br>[21:48] <b>fries</b>
+<br>[21:49] <b>KWeisshar</b> i have a few old dos games and it just runs too fast when i run it natively on my pentium
+<br>[21:49] <b>bryce</b> Todd, that was just a blank line
+<br>[21:49] <b>uninet</b> divad: is there any useful program for a 386 or higher than needs to "live beyond" a reboot?
+<br>[21:49] <b>eSoul</b> KWeisshar, there are utitlites for that
+<br>[21:49] <b>divad547</b> I have no idea.
+<br>[21:49] <b>KWeisshar</b> i have 300mhz but my old dos games was designed for 386
+<br>[21:49] <b>yakovlev</b> Oh, now I see.
+<br>[21:49] <b>divad547</b> is that the point?
+<br>[21:49] <b>yakovlev</b> the bios used to be cooperative.
+<br>[21:49] <b>KWeisshar</b> i have the police quest collection
+<br>[21:49] <b>fries</b> kweisshar you can crank the ips
+<br>[21:50] <b>eSoul</b> KWeisshar, search google for abandonwarez, and you prolly run across utilities that slwo down your pc for games
+<br>[21:51] <b>KWeisshar</b> i tried moslo but it's still too fast
+<br>[21:51] <b>yakovlev</b> I remember having one to slow down my dad's 286 so I could run my XT games on it.
+<br>[21:51] <b>KWeisshar</b> i have trouble with the police quest 3 driving interface
+<br>[21:51] <b>eSoul</b> haha, slowing a 286
+<br>[21:51] <b>yakovlev</b> :)
+<br>[21:51] <b>yakovlev</b> Those were the days.
+<br>[21:51] <b>KWeisshar</b> i don't have a turbo button
+<br>[21:51] <b>bryce</b> we have a feature request <br>[ #418731 ] bochs uses 100% CPU which is related to the too fast problem
+<br>[21:51] <b>eSoul</b> KWeisshar, if you must use bochs, what is the problem that you cant install ms-dos?
+<br>[21:51] <b>bryce</b> one solution proposed to that problem is a
+<br>[21:52] <b>bryce</b> "maximum ips" setting
+<br>[21:52] <b>Psyon</b> im doing some researc... if you need me... /notice me so I get a ding or something
+<br>[21:52] <b>KWeisshar</b> i'm running windows me
+<br>[21:52] <b>eSoul</b> Why cant you install ms-dos in bochs?
+<br>[21:52] <b>yakovlev</b> He might not have a ms-dos license.
+<br>[21:52] <b>yakovlev</b> (had to be said)
+<br>[21:52] <b>uninet</b> What about FreeDOS?
+<br>[21:53] <b>KWeisshar</b> i don't have any ms-dos disks
+<br>[21:53] <b>bryce</b> maximum ips would look at the system time and notice if bochs is running faster than real time, and call "usleep" or something until real time catches up.  This would solve Todd's keyboard repeat problem too.
+<br>[21:53] * eSoul wonders if Freedos would run Win3.1
+<br>[21:53] <b>uninet</b> bryce: that would be great! Is that hard to implement?
+<br>[21:53] <b>uninet</b> eSoul: I think so.
+<br>[21:53] <b>eSoul</b> KWeisshar, get the FreeDOS image from boch.sourceforge.net?
+<br>[21:54] <b>eSoul</b> *bochs
+<br>[21:54] <b>yakovlev</b> Are these 3.1 games or DOS games?
+<br>[21:54] <b>KWeisshar</b> dos games
+<br>[21:54] <b>KWeisshar</b> my collection is on cd-rom
+<br>[21:54] <b>bryce</b> uninet: I don't think it's hard, it may not do exactly what you want without a little work though...
+<br>[21:54] <b>yakovlev</b> Definitely try FREEDOS.
+<br>[21:54] <b>KWeisshar</b> it's called swat career pack and it includes pq1, pq2, pq3, pq4, swat1 and swat2
+<br>[21:54] <b>uninet</b> Or DR-DOS if that does work....
+<br>[21:54] * yakovlev has no idea why that was all caps.
+<br>[21:54] <b>fries</b> kweisshar you can use freedos, there's a demo download on the web page, or there should be ;-)
+<br>[21:55] <b>KWeisshar</b> how can i install a cd-rom game under freedos running in bochs
+<br>[21:55] <b>KWeisshar</b> the game is written for dos
+<br>[21:56] <b>KWeisshar</b> i can't install the game unless bochs can read either a raw cd-rom sectors or a cd-rom image
+<br>[21:56] <b>yakovlev</b> FreeDos is a freeware port of the DOS api.
+<br>[21:56] <b>yakovlev</b> not freeware.
+<br>[21:56] <b>yakovlev</b> free.
+<br>[21:56] <b>KWeisshar</b> is there any utility to create a cd-rom image that is compatible with bochs
+<br>[21:56] <b>divad547</b> I use "dd"
+<br>[21:56] <b>fries</b> have to load a cdrom like a real
+<br>[21:56] <b>fries</b> cdrom
+<br>[21:57] <b>bryce</b> Todd, what goes wrong if you try to read from an ISO?
+<br>[21:57] <b>eSoul</b> is there a program that could copy files into a image that could be read as a hard disk image?
+<br>[21:57] <b>yakovlev</b> We're working on the CD-ROM.
+<br>[21:57] <b>divad547</b> Does bochs include El Torito support?
+<br>[21:57] <b>fries</b> haven't tried lately
+<br>[21:57] <b>fries</b> last time I tried, it had problems doing an ioctl to a file
+<br>[21:57] <b>bryce</b> El Torito: not at this point
+<br>[21:57] <b>divad547</b> pity.
+<br>[21:57] <b>bryce</b> todd: we must try conditioning ioctls
+<br>[21:57] <b>bryce</b> that's all that was necessary for win32 apparantly
+<br>[21:57] <b>fries</b> cool
+<br>[21:58] <b>bryce</b> if (using_file==0) { ioctl... }
+<br>[21:58] <b>KWeisshar</b> will bochs support ioctl
+<br>[21:58] <b>uninet</b> El Torito is the spec that makes bootable CD's right?
+<br>[21:58] <b>divad547</b> yes
+<br>[21:58] <b>fries</b> I did an '#if 0' around it and told it not to set ready=0 once, but it still didn't work beyond bochs being happy
+<br>[21:58] <b>fries</b> uninet yes and it requires bios asm/c coding
+<br>[21:58] <b>KWeisshar</b> what command do i need to put in bochsrc to use ioctl
+<br>[21:58] <b>bryce</b> kw: ioctl is a unix software thing, it only matters if you are running linux
+<br>[21:59] <b>bryce</b> or something
+<br>[21:59] <b>KWeisshar</b> dos uses msdos ioctl for diskcopy
+<br>[21:59] <b>KWeisshar</b> it's one of the int21 calls
+<br>[21:59] <b>bryce</b> I didn't know that
+<br>[21:59] <b>bryce</b> and does it fail?
+<br>[22:01] <b>bryce</b> Let's be sure to talk about GUIs as well...
+<br>[22:02] <b>bryce</b> Psyon, EKS, and I have been working (in different ways) on the GUI problem
+<br>[22:02] <b>uninet</b> GUIs... one of my favorite subjects to talk about that I can't implement!
+<br>[22:03] <b>bryce</b> is everybody still on? it's very quiet suddenly
+<br>[22:03] <b>eSoul</b> Im alive..
+<br>[22:03] <b>divad547</b> end time....
+<br>[22:03] <b>bryce</b> :)
+<br>[22:03] <b>uninet</b> still here.
+<br>[22:03] <b>bryce</b> ok
+<br>[22:03] <b>bryce</b> I haven't heard from eks in the last hour
+<br>[22:04] <b>yakovlev</b> Bryce, I was looking at your parms interface.
+<br>[22:04] <b>bryce</b> what did you think?
+<br>[22:04] *** KWeisshar (vze26rvn@adsl-138-89-120-162.nnj.adsl.bellatlantic.net) has left #bochs
+<br>[22:04] <b>yakovlev</b> The big problem I see is that you still use an enormous parser.
+<br>[22:04] <b>bryce</b> did you call that thing a parser????
+<br>[22:04] <b>fries</b> ewww
+<br>[22:04] <b>fries</b> hehe
+<br>[22:05] <b>fries</b> parser re-write was on my subconscious list of todo items
+<br>[22:05] <b>divad547</b> simplistic one perhaps....
+<br>[22:05] <b>fries</b> after I finish getting the io code to what I envision it can be
+<br>[22:05] <b>bryce</b> I don't see that as a problem with the parameters
+<br>[22:05] <b>yakovlev</b> The parameters can do the parsing themselves.
+<br>[22:05] <b>fries</b> i keep trying to convince bryce of the generic container and he keeps coming up with static arrays for a quick solution,so I'd like to get one subsystem with a generic container (io stuff, my specialty) ..
+<br>[22:05] <b>yakovlev</b> In the handlers.
+<br>[22:06] <b>bryce</b> in fact I think we can use parameters to clean it up
+<br>[22:06] <b>bryce</b> right
+<br>[22:06] <b>eSoul</b> oh, btw, when trying to boot from a "Read-Only" disk image, you get a rombios.c error, just wanted to say you should add somewhere in documentation, that they cant be. This could be a common error when people are trying to boot linux using the images of the cd
+<br>[22:06] <b>yakovlev</b> They should really go in a hash table by name (the thing before the ':')
+<br>[22:06] <b>bryce</b> esoul: that's fixed now in cvs
+<br>[22:07] <b>eSoul</b> cool
+<br>[22:07] <b>bryce</b> esoul: write protected floppies are recognized as such
+<br>[22:07] <b>yakovlev</b> What about write-protected hard drives?
+<br>[22:07] <b>bryce</b> there's no hardware equivalent right?
+<br>[22:07] <b>yakovlev</b> Well, maybe a CD-ROM
+<br>[22:08] <b>bryce</b> so I think we should allow them to be opened, and just make the writes to it fail (log maybe)
+<br>[22:08] <b>bryce</b> cdrom is limited size
+<br>[22:08] <b>yakovlev</b> so is a HD.
+<br>[22:08] <b>divad547</b> zip disks can be secured like floppies...
+<br>[22:08] <b>bryce</b> you want to use the IDE controller and all
+<br>[22:08] <b>bryce</b> divad: want to write an emulated ZIP drive?
+<br>[22:08] <b>yakovlev</b> Is there a ro bit in the IDE spec?
+<br>[22:08] <b>eSoul</b> Oh, also, for some reason in 1.2.1, my windows98 install disk finds a cd-rom drive, even when its not specified in bochsrc
+<br>[22:08] <b>divad547</b> not really...
+<br>[22:09] <b>bryce</b> me either.
+<br>[22:09] <b>bryce</b> if there's a R/O bit in the IDE spec we'll implement it but I highly doubt it.
+<br>[22:09] <b>bryce</b> you really need it to appear as a hard drive
+<br>[22:10] <b>bryce</b> or else you have to run a guest os that allows booting from zip, cdrom, etc.
+<br>[22:10] <b>bryce</b> but it's just going to print errors into the bochs log when you try to write
+<br>[22:10] <b>bryce</b> I can't see any other way there
+<br>[22:10] <b>divad547</b> is there any intent to allow more than 2 IDE devices?  or to configure them by controller and device?
+<br>[22:11] <b>yakovlev</b> I suspect there is something like R/O in the spec, but I don't really know.
+<br>[22:11] <b>bryce</b> with some hacking at harddrv.cc, yes
+<br>[22:11] <b>bryce</b> should be not that hard to have 4 hard disks or 3 hard disks+cdrom
+<br>[22:11] <b>bryce</b> (and some hacking at rombios, but not major)
+<br>[22:11] <b>bryce</b> if it's not on the feature list, please add it.
+<br>[22:11] <b>fries</b> you can have more than 2 controllers, especially if you do ide
+<br>[22:12] <b>fries</b> you can even have multiple video cards with .. grr .. pci .. I meant pci not ide above ;-)
+<br>[22:13] <b>bryce</b> can we get back to GUIs please?
+<br>[22:13] <b>bryce</b> :)
+<br>[22:13] <b>eSoul</b> hah
+<br>[22:13] *** fries changes topic to '<b>bryce</b> can we get back to GUIs please?'
+<br>[22:13] <b>uninet</b> :-)
+<br>[22:13] <b>bryce</b> Greg, other than the horrid parsing that's been there forever,
+<br>[22:13] <b>bryce</b> do you have any other comments about the parameter thing?
+<br>[22:14] <b>yakovlev</b> Well, it would be nice if we could define the parameter in one place, where it's used...
+<br>[22:14] <b>fries</b> I liked the hash suggestion, if you fit it in a container, you can store it however, and the big point I like is you don't have to know the size ahead of time, just link in objects and they'll all get init'ed ;-)
+<br>[22:14] <b>bryce</b> like in floppy.cc for floppy params?
+<br>[22:14] <b>yakovlev</b> and have it set up everything else.
+<br>[22:15] <b>yakovlev</b> right.
+<br>[22:15] <b>bryce</b> yes that would be best
+<br>[22:15] <b>fries</b> yakovlev: I updated bochs earlier this evening so that setparam("<br>[VGA ]") is now setparam("VGA")
+<br>[22:15] <b>fries</b> it would be nice to enhance even rename setparam() to register the device class
+<br>[22:15] <b>yakovlev</b> You'd have to use a base class for that.
+<br>[22:15] <b>fries</b> rather than the backwards way its being done now, which is bx_devices pointing to static globals
+<br>[22:15] <b>fries</b> yakovlev: already done
+<br>[22:15] <b>fries</b> look at logio.cc
+<br>[22:15] <b>fries</b> there are iofunctions and logfunctions
+<br>[22:16] <b>fries</b> iofucnctions typically have one instance
+<br>[22:16] * yakovlev is talking about parms, not io functions.
+<br>[22:16] <b>fries</b> logfunctions are inherited by all device classes (and allocated a couple of places)
+<br>[22:16] <b>fries</b> listen to what Im saying ;-)
+<br>[22:16] <b>fries</b> you wanted to register things
+<br>[22:16] <b>fries</b> the logfunctions CLASS ..
+<br>[22:16] <b>fries</b> registers with 'setparam()' already TODAY ;-)
+<br>[22:17] <b>fries</b> so just add code to setparam()
+<br>[22:17] <b>fries</b> maybe it should be called register()
+<br>[22:17] <b>bryce</b> Todd: does it register using the string "vga" and then the class "this" ?
+<br>[22:17] <b>bryce</b> so that you can later look up the class pointer using the string "vga"?
+<br>[22:17] <b>fries</b> bryce: not yet but that's the goal
+<br>[22:17] * yakovlev is having a problem with bximage.
+<br>[22:18] <b>fries</b> bryce: this is the whole reason I said 'settype()' will go away
+<br>[22:18] <b>bryce</b> (greg, can we fix it later?)
+<br>[22:18] <b>bryce</b> ( :) )
+<br>[22:18] <b>yakovlev</b> No, you just asked if anyone had had any trouble, and I'm having one.  :)
+<br>[22:18] <b>bryce</b> todd: ok, should all parameters also be registered by name too?
+<br>[22:19] <b>fries</b> bryce: parameters should be known to the class
+<br>[22:19] <b>yakovlev</b> I mean yes, we can fix it later.
+<br>[22:20] <b>bryce</b> ok, so floppy.cc will have a parameter or at least a pointer to a param for the floppy size, pathname, etc.
+<br>[22:20] <b>fries</b> bryce: aka the class should be an island of its own stuff
+<br>[22:20] <b>bryce</b> and then it registers that parameter by name, like "floppya:path" so that others can find it
+<br>[22:20] <b>fries</b> bryce: menus and guis and stuff should be able to discover what it has, its treasures so to speak
+<br>[22:20] <b>fries</b> it should not be hardcoded anywhere ;-)
+<br>[22:20] <b>bryce</b> rather than getting at it by "bx_floppy.path"
+<br>[22:20] <b>bryce</b> ?
+<br>[22:21] <b>fries</b> pseudocode:
+<br>[22:21] <b>fries</b>  ... for each regsitered class
+<br>[22:21] <b>fries</b>     ... for each config function found
+<br>[22:22] <b>fries</b>          ... display option and choice, have a type of 'path' for floppy a and floppy b in the floppy class
+<br>[22:22] <b>fries</b> make sense?
+<br>[22:22] <b>yakovlev</b> type of string.
+<br>[22:22] <b>yakovlev</b> no reason to make it a path.
+<br>[22:22] <b>fries</b> well, you could have a bool of types
+<br>[22:22] <b>fries</b> kindof like a gui with registered methods
+<br>[22:23] <b>yakovlev</b> bool-</b>pool, I assume.
+<br>[22:23] <b>bryce</b> type = path could mean that you edit it using a file-open box, rather than just a text field
+<br>[22:23] <b>yakovlev</b> Oh, I see.
+<br>[22:23] <b>fries</b> you could have a string of methods registration pool, but that gets hard to make work with most guis
+<br>[22:23] <b>bryce</b> todd wants a dynamic container for everything!
+<br>[22:23] <b>fries</b> why not?
+<br>[22:23] <b>fries</b> its more clean
+<br>[22:23] <b>fries</b> you can code a pci device
+<br>[22:23] <b>bryce</b> what did you mean by "for each config function found"?
+<br>[22:23] <b>fries</b> and have a dozen of them if you choose
+<br>[22:24] <b>bryce</b> how are you going to discover the config functions? and why several?
+<br>[22:24] <b>fries</b> bryce aka call something on the class .. getnextconfigfunction()
+<br>[22:24] <b>eSoul</b> brb, rebooting
+<br>[22:24] *** eSoul (Chat-Zone@AC9210B6.ipt.aol.com) Quit (Quit: ox: keyboard is disconnected or is not responding. press any key to reconnect it)
+<br>[22:24] <b>yakovlev</b> I would have a descriptor and a type for each parm.
+<br>[22:24] <b>fries</b> anyway, I'll read further discussion and respond later, bbl
+<br>[22:25] <b>bryce</b> greg: I don't understand what you mean...descriptor and a type
+<br>[22:25] <b>yakovlev</b> Here's what I would think (sort of like iofunctions)
+<br>[22:25] <b>yakovlev</b> bryce:
+<br>[22:25] <b>yakovlev</b> it's a string, or an int.
+<br>[22:26] <b>bryce</b> right now I have C++ classes for each type of parameter.  bx_param_num_c, bx_param_bool_c, bx_param_string_c.
+<br>[22:26] <b>yakovlev</b> however, a string may be a choice from several options.
+<br>[22:26] <b>yakovlev</b> or a path
+<br>[22:26] <b>yakovlev</b> or whatever you want.
+<br>[22:26] <b>bryce</b> I would make bx_param_enum_c (choice from several options) and bx_param_path_c (a pathname)
+<br>[22:26] <b>yakovlev</b> If you're just dumping .bochsrc straight, you only care that it's a string.
+<br>[22:27] <b>bryce</b> enum inherits from num, and path inherits from string.
+<br>[22:28] <b>yakovlev</b> Depends on where you want to put the different parsing actions for a .bochsrc dump vs. a gui setup.
+<br>[22:28] <b>bryce</b> the reason I have different classes for different types is
+<br>[22:28] <b>bryce</b> that in a GUI (which one of these years we will be starting to write)
+<br>[22:28] <b>bryce</b> a different type of GUI object is used to display and edit each type of data
+<br>[22:29] <b>bryce</b> so a bx_param_enum (choice from several options) might be a drop-down box
+<br>[22:29] <b>yakovlev</b> But as a result it gets harder and harder to:
+<br>[22:29] <b>yakovlev</b> a.) parse .bochsrc
+<br>[22:29] <b>yakovlev</b> b.) hand write a .bochsrc
+<br>[22:30] <b>bryce</b> ?
+<br>[22:30] <b>yakovlev</b> If you're writing a quick and dirty port.
+<br>[22:30] <b>bryce</b> you need different code to parse an int, an enum, and a string
+<br>[22:30] <b>bryce</b> so putting that different parsing code in the same method ofdifferent classes seems logical
+<br>[22:30] <b>bryce</b> I don't see why it's harder?
+<br>[22:31] <b>yakovlev</b> What exactly are you planning for an enum?
+<br>[22:31] <b>yakovlev</b> Are you planning to pass it a string and it does the parsing for you?
+<br>[22:31] <b>yakovlev</b> or do you have to give it the number?
+<br>[22:31] <b>bryce</b> it has a get/set method that deals with ints
+<br>[22:31] <b>uninet</b> Is anyone else here still logging? I need to reboot.
+<br>[22:31] <b>yakovlev</b> Which means you have to figure out what your string matches.
+<br>[22:31] <b>fries</b> how can it be hard to do  a .bochsrc if you have a 'toString()' method in each class? or something
+<br>[22:31] <b>divad547</b> when we are talking about a "GUI" here, is this a configuration app or a display of the running system?
+<br>[22:32] <b>bryce</b> and the methods that display it on a GUI or on a console ask you which of the string options
+<br>[22:32] <b>fries</b> i am
+<br>[22:32] <b>bryce</b> uninet, I am logging too
+<br>[22:32] <b>yakovlev</b> But I don't want to display it on a GUI.
+<br>[22:32] <b>yakovlev</b> (playing devil's advocate)
+<br>[22:32] <b>bryce</b> you don't want to display the number, you want to display the string version
+<br>[22:33] <b>uninet</b> bryce: thanks.
+<br>[22:33] <b>uninet</b> brb.
+<br>[22:33] <b>yakovlev</b> I want to "DISPLAY" anything.
+<br>[22:33] <b>fries</b> so, parse the return chars to whatever .. 'char * toString()' ..
+<br>[22:33] <b>bryce</b> so that methods that are specific to UI tell the user the choices in terms of string version
+<br>[22:33] *** uninet (~tbutler@c1331724-a.schrls1.mo.home.com) has left #bochs
+<br>[22:33] <b>yakovlev</b> I'm talking FROMstring.
+<br>[22:33] <b>bryce</b> and then store the number
+<br>[22:33] <b>bryce</b> divad: I mean a configuration panel
+<br>[22:34] <b>bryce</b> divad: we want to leave the display of the running system alone (at least I do)
+<br>[22:34] <b>yakovlev</b> It's a lot harder to hand code an rc file if I have to know what number text=green is.
+<br>[22:34] <b>bryce</b> no no
+<br>[22:34] <b>bryce</b> nobody has to do that
+<br>[22:34] <b>bryce</b> the enum class has a list of the string choices
+<br>[22:34] <b>bryce</b> so it can convert string to number and number to string whenever it needs to
+<br>[22:35] <b>bryce</b> the enum class should be called to do this conversion, anytime it needs to be done
+<br>[22:35] <b>bryce</b> including parsing
+<br>[22:35] <b>yakovlev</b> Now: At what level?
+<br>[22:35] <b>bryce</b> and including building the GUI, and interpreting the user's response in the UI back into an int.
+<br>[22:35] <b>yakovlev</b> Can I pass it a line from .bochsrc?
+<br>[22:36] <b>bryce</b> we need to work that out
+<br>[22:36] <b>bryce</b> there are 10 ways to do it
+<br>[22:36] <b>yakovlev</b> You were saying you expected there to be a configuration program... did you expect that to be standalone?
+<br>[22:37] <b>bryce</b> at first, I think it's much easier for the configuration and control UI to be running in the same process, communicating by method calls
+<br>[22:37] <b>yakovlev</b> Well, it's VERY important that you decide that.
+<br>[22:37] <b>bryce</b> Now I think it's time to point to <b>A HREF="http://bochs.sourceforge.net/tmp/ui/"</b>http://bochs.sourceforge.net/tmp/ui/<b>/A</b> which I wrote up before this began
+<br>[22:38] <b>bryce</b> People have said that the UI should be separable, so I've tried very hard to make the UI talk only to a well-defined interface
+<br>[22:38] <b>bryce</b> called siminterface.h
+<br>[22:38] <b>yakovlev</b> If it's not standalone, there are some cool things we can do.
+<br>[22:38] <b>bryce</b> the text mode UI doesn't even include bochs.h, only includes siminterface.h, to guarantee that it follows the rules and doesn't touch anything directly
+<br>[22:38] *** eSoul (Chat-Zone@ACA68BD5.ipt.aol.com) has joined #bochs
+<br>[22:39] <b>yakovlev</b> Here's my idea of what parms "should" look like.
+<br>[22:39] <b>yakovlev</b> (to bochs internals, not the outside)
+<br>[22:40] *** uninet (~tbutler@c1331724-a.schrls1.mo.home.com) has joined #bochs
+<br>[22:40] *** ChanServ sets mode: +o uninet
+<br>[22:40] <b>yakovlev</b> in main.cc we call parm_handler
+<br>[22:40] <b>yakovlev</b> I mean parm_handler.init.
+<br>[22:40] <b>yakovlev</b> then we call init_parms in all the devices, etc.
+<br>[22:41] <b>yakovlev</b> Inside each device, we define all the parms we want, and init_parms just calls parm.init
+<br>[22:41] <b>yakovlev</b> on every parm in the class.
+<br>[22:42] <b>yakovlev</b> parm.init registers the parm with parm_handler.
+<br>[22:42] <b>fries</b> shouldn't that be part of the class'es ::init() or constructor?
+<br>[22:42] <b>fries</b> why do we have to have a separate ::init() ?
+<br>[22:42] <b>yakovlev</b> No, ::init initializes the device, which requires that some parm values be set.
+<br>[22:43] <b>yakovlev</b> (I'm having to add extra functions because we don't dynamically allocate)
+<br>[22:43] <b>bryce</b> ok that sounds good so far
+<br>[22:44] <b>bryce</b> when registering, are you putting them all in one big crowd,
+<br>[22:44] <b>yakovlev</b> Then the parms list that is now in parm_handler is shown to the "GUI" code for display.
+<br>[22:44] <b>bryce</b> or do you register the parameters by the device and the name both?
+<br>[22:44] <b>yakovlev</b> That's a naming convention.
+<br>[22:44] <b>bryce</b> otherwise it's hard for the GUI to magically group them in a sensible way
+<br>[22:45] <b>fries</b> why can you not parse the devices dynamically by the gui ? what if you want to remove or add devices? think of pcmcia, etc ..
+<br>[22:46] <b>yakovlev</b> removable devices make things a little tough.
+<br>[22:46] <b>bryce</b> everything that is dynamic has a cost too
+<br>[22:46] <b>yakovlev</b> I'm not sure they're really worth it.
+<br>[22:46] <b>bryce</b> in complexity, and sometimes in performance as well
+<br>[22:47] <b>bryce</b> if you're trying to organize your GUI in a way that makes sense and fits on the screen,
+<br>[22:47] <b>bryce</b> you MAY have to hardcode some things...
+<br>[22:48] <b>bryce</b> you can make rules that do something reasonable for most cases
+<br>[22:48] <b>yakovlev</b> Well, you can dump options you don't know about in a "other" category hidden off in a corner.
+<br>[22:48] <b>bryce</b> but for other things, you just have to override the default and say "put this here"
+<br>[22:48] <b>yakovlev</b> Or ignore them altogether.  All options should have a sensible default.
+<br>[22:49] <b>bryce</b> but on the subject of putting the parameter declarations in the device that they control, I agree
+<br>[22:49] <b>bryce</b> and dynamically registering themselves, great.
+<br>[22:50] <b>bryce</b> so now you have a registry of parameters, which you can look up by name or somehow get a list of all of them.
+<br>[22:50] <b>yakovlev</b> I guess having them appear and disappear isn't so bad, if that's all we're talking about.
+<br>[22:50] <b>yakovlev</b> Right.
+<br>[22:50] <b>bryce</b> so now the GUI needs to be able to probe the registry to find out what it should display
+<br>[22:51] <b>yakovlev</b> not sure I follow you.
+<br>[22:52] <b>bryce</b> How does the GUI know which options to put on the first menu
+<br>[22:52] <b>yakovlev</b> The GUI can look through the registry, it's basically a container class.
+<br>[22:52] <b>bryce</b> or how to group them into pages?
+<br>[22:52] <b>yakovlev</b> That's GUI-specific.
+<br>[22:52] <b>yakovlev</b> doesn't belong in the emulation layer.
+<br>[22:53] <b>divad547</b> the parameters could provide a categorization for themselves in addition to their name, type, and value.
+<br>[22:53] <b>bryce</b> After going to all the trouble of making a registry of parameters by name, do you want the GUI to have a hardcoded input that says to show floppy options in this order?
+<br>[22:53] <b>bryce</b> ok
+<br>[22:53] <b>yakovlev</b> yes.
+<br>[22:54] <b>divad547</b> I  wouldn't want the GUI to be handcoded like that....
+<br>[22:54] <b>bryce</b> that seems like a waste of effort
+<br>[22:54] <b>yakovlev</b> It's reasonable to have the emulation layer let you know they're floppy options.
+<br>[22:55] <b>divad547</b> yakovlev: agreed
+<br>[22:55] <b>bryce</b> what categories could we have
+<br>[22:55] <b>yakovlev</b> Well, what exactly do you want the emulation layer to give you?
+<br>[22:55] <b>divad547</b> I would leave the list of categories open ended.
+<br>[22:55] <b>divad547</b> and perhaps hierarchical
+<br>[22:55] <b>yakovlev</b> I mean, they can be devices/disks/floppy/parmnames
+<br>[22:55] <b>bryce</b> floppy:0:path  means path name of floppy number zero
+<br>[22:55] <b>bryce</b> I was thinking of that as a name of that option
+<br>[22:56] <b>divad547</b> they are often closely related...
+<br>[22:56] <b>divad547</b> but the categories might also be multi-valued
+<br>[22:57] <b>bryce</b> divad: example?
+<br>[22:57] <b>fries</b> controller, bus, device
+<br>[22:58] <b>fries</b> chipset..?
+<br>[22:58] <b>yakovlev</b> however, telling the gui: show path, then size, then spt, then tracks, etc. seems like a bit much for the emulation layer.
+<br>[22:58] <b>fries</b> memory
+<br>[22:58] <b>fries</b> output
+<br>[22:58] <b>bryce</b> greg: but I think you need that kind of control somewhere to be able to have an intuitive interface
+<br>[22:58] <b>fries</b> nah
+<br>[22:58] <b>yakovlev</b> It really belongs only in the GUI.
+<br>[22:59] <b>bryce</b> it is possible to display every single option in a big tree
+<br>[22:59] <b>divad547</b> I'm having trouble thinking of one in the context of Bochs
+<br>[22:59] <b>divad547</b> perhaps Devices/Disks/Floppy/A/Path and Path/Floppy/A
+<br>[22:59] <b>divad547</b> one trick you could do: strip leading digits from the categories....
+<br>[22:59] <b>bryce</b> but it will never look very good
+<br>[22:59] <b>divad547</b> so that you can add numeric prefixes to set the order.
+<br>[22:59] <b>yakovlev</b> That's where the gui comes in.
+<br>[22:59] <b>yakovlev</b> if it's something used everyday, it'll have something hard coded.
+<br>[23:00] <b>bryce</b> why is it out of place for the emulation layer, which created all these options, provide hints as to what order and what grouping they should be displayed in?
+<br>[23:00] <b>yakovlev</b> if it's something obscure, you have to walk the hierarchy.
+<br>[23:00] <b>divad547</b> one could also have a seperate configuration file for the gui tool...
+<br>[23:00] <b>yakovlev</b> because all these options are superficial to what the emulation layer does.
+<br>[23:00] <b>divad547</b> seems overkill...
+<br>[23:01] <b>bryce</b> divad: one that only the developer would want to edit, maybe
+<br>[23:01] *** eSoul is now known as Fucker
+<br>[23:01] *** Fucker is now known as eSoul
+<br>[23:01] <b>divad547</b> exactly
+<br>[23:01] <b>bryce</b> greg: so is parsing, but I think it would be a mistake to offload that to the gui too
+<br>[23:02] <b>yakovlev</b> ummm, this is a corporate account, I'd appreciate not doing too much cursing in PLAINTEXT!
+<br>[23:03] <b>yakovlev</b> parsing, to a certain extent, belongs in the emulation layer.
+<br>[23:03] <b>yakovlev</b> menu LOOKS don't.
+<br>[23:04] <b>bryce</b> so in your model, the source code contains the name of the parameter and maybe the name implies a category
+<br>[23:04] <b>bryce</b> source code = bochs emulation layer
+<br>[23:04] <b>yakovlev</b> right, we can even be more explicit than that about name.
+<br>[23:05] * yakovlev thought that was what you meant.
+<br>[23:05] <b>bryce</b> give an example
+<br>[23:05] <b>bryce</b> ?
+<br>[23:05] <b>yakovlev</b> We could I guess specify menu instead of name.
+<br>[23:05] <b>yakovlev</b> But really that's just name.
+<br>[23:05] <b>bryce</b> and then the GUI has access to a separate database that maps those names into particular menus
+<br>[23:06] <b>yakovlev</b> like: menu: menuname, parm: parmname
+<br>[23:06] <b>yakovlev</b> I guess.
+<br>[23:06] <b>yakovlev</b> Most of the parms the GUI simply won't care about.
+<br>[23:06] *** Ground_Ho (~hog_g@CPE-203-45-159-243.qld.bigpond.net.au) has joined #Bochs
+<br>[23:07] *** Ground_Ho is now known as GroundHog
+<br>[23:07] *** Peter (peter@h117n1fls20o53.telia.com) Quit (Quit: )
+<br>[23:07] <b>bryce</b> what's an example for floppy options?
+<br>[23:07] <b>yakovlev</b> DMA vs. Non-DMA
+<br>[23:08] <b>bryce</b> what would be the name that you register under?
+<br>[23:08] <b>bryce</b> floppy/0/dma
+<br>[23:08] <b>yakovlev</b> devices/floppy/0/usedma
+<br>[23:08] <b>divad547</b> except that is probably at the controller level
+<br>[23:09] <b>yakovlev</b> so it's controller 0, that's not the point.
+<br>[23:09] <b>bryce</b> how about floppy disk type, like 1.44
+<br>[23:09] <b>yakovlev</b> The point is, it's not an opton that needs to be pretty.
+<br>[23:09] <b>yakovlev</b> That probably should be pretty.
+<br>[23:09] <b>bryce</b> devices/floppy/0/format   is an enum, with options 720k, 1.44MB, 2.88MB etc
+<br>[23:09] <b>yakovlev</b> The enum already tells you it's a list of choices.
+<br>[23:10] <b>yakovlev</b> Right.  You'll probably hardcode a nice big "Change disk" button into the gui.
+<br>[23:11] <b>yakovlev</b> That will bring up a hardcoded menu that has floppy/0/format and floppy/0/path in it.
+<br>[23:11] <b>yakovlev</b> because those are used all the time.
+<br>[23:11] <b>bryce</b> ok
+<br>[23:12] <b>bryce</b> and in addition to the hardcoded stuff, you have some interface that takes care of
+<br>[23:12] <b>bryce</b> all the other stuff
+<br>[23:12] <b>yakovlev</b> Right.
+<br>[23:12] <b>bryce</b> or more likely, every option will appear there, even the ones that can be done with some dumb wizard.
+<br>[23:12] <b>yakovlev</b> Right.
+<br>[23:13] <b>yakovlev</b> Also, you'd want to let the OS-specific code register parms too, since those would vary.
+<br>[23:13] <b>fries</b> think about if you didn't have a floppy though?
+<br>[23:14] <b>yakovlev</b> (that's from a little earlier, but I thought I'd bring it up)
+<br>[23:14] <b>bryce</b> I was picturing the GUI as having less knowledge about what it was going to display, and discover more by asking hints from bochs.  The reason this is useful is that we're probably going to have multiple implementations of the GUI part, and if they all do their own thing it's much harder to support and test.
+<br>[23:15] <b>yakovlev</b> Add a layer.  :)
+<br>[23:15] <b>bryce</b> I don't think it does any harm for bochs to provide some hints about things, and it would help to make the GUIs more uniform, so that they would appear to be the same piece of software no matter which platform you are on.
+<br>[23:16] <b>yakovlev</b> If you really intend for your parm to be visible from the outside, out it in another descriptor area.
+<br>[23:16] <b>bryce</b> did anybody look at my link?
+<br>[23:16] <b>bryce</b> <b>A HREF="http://bochs.sourceforge.net/tmp/ui/"</b>http://bochs.sourceforge.net/tmp/ui/<b>/A</b>
+<br>[23:17] <b>yakovlev</b> out=put
+<br>[23:18] <b>divad547</b> I did
+<br>[23:18] <b>yakovlev</b> But that's a lot of extra code if you only want to read the parms from .bochsrc
+<br>[23:18] <b>bryce</b> I'm sure we'll hack it to bits :)
+<br>[23:18] <b>bryce</b> in which case do you mean?
+<br>[23:19] <b>bryce</b> the -</b>get () ?
+<br>[23:19] <b>yakovlev</b> Extra code in the emulator if you include parm formatting information in it.
+<br>[23:20] <b>bryce</b> you can read an integer param with an inline get function that is no slower than reading *intptr.
+<br>[23:20] <b>yakovlev</b> What if we defined a second, optional, menu interface for building menus from parms?
+<br>[23:20] <b>bryce</b> I already have one :)
+<br>[23:20] <b>bryce</b> bx_param_list_c contains a pointer to a series of parameters
+<br>[23:20] <b>yakovlev</b> So if you want the menu info, you call init_menus
+<br>[23:21] <b>yakovlev</b> if not, you don't.
+<br>[23:21] <b>bryce</b> I was going to use the "list" idea for all types of grouping
+<br>[23:21] <b>bryce</b> 1. grouping parameters into menus
+<br>[23:21] <b>bryce</b> 2. grouping all the floppy options together
+<br>[23:22] <b>bryce</b> but if the name implies the grouping, that may not be necessary
+<br>[23:22] <b>yakovlev</b> name would probably imply floppy option.
+<br>[23:23] <b>yakovlev</b> so menu/device/floppy/0 would have:
+<br>[23:23] <b>bryce</b> you have to remember, this code has grown gradually out of the old bx_options, so that's where it got all of its origins.
+<br>[23:23] <b>yakovlev</b> 1: device/floppy/0/path
+<br>[23:23] <b>yakovlev</b> 2: device/floppy/0/format
+<br>[23:23] <b>yakovlev</b> and would not include device/floppy/0/dma
+<br>[23:25] <b>bryce</b> you know, having strong feelings about how it should be done may mean that you have to do some of those parts :)
+<br>[23:27] <b>bryce</b> we should come up with a catalog of device names
+<br>[23:27] <b>yakovlev</b> I just don't want to have to figure out what menu to put parm_q123f435 into.
+<br>[23:27] <b>bryce</b> for each member of bx_options and its sub-structs (bx_floppy_options, etc.)
+<br>[23:28] *** yakovlev (~gwa@slip129-37-118-40.nc.us.prserv.net) Quit (Quit: Leaving)
+<br>[23:28] <b>bryce</b> uh oh greg is gone...
+<br>[23:31] <b>bryce</b> did anybody see the discussion of how to get windows running in bochs without doing a full install?
+<br>[23:33] <b>bryce</b> I'll check back in a minute.....
+<br>[23:33] <b>uninet</b> nope.
+<br>[23:33] <b>uninet</b> Where was that?
+<br>[23:33] <b>bryce</b> I posted a way
+<br>[23:33] <b>uninet</b> On here?
+<br>[23:34] <b>bryce</b> and someone said it would be better to get a clean install
+<br>[23:34] <b>bryce</b> in mailing list some time
+<br>[23:34] <b>bryce</b> Date: Thu, 14 Jun 2001 15:59:17 -0400 (EDT)
+<br>[23:35] <b>uninet</b> Oh yeah. I remember that.
+<br>[23:35] <b>bryce</b> it did work, but certainly windows under bochs got confused when all of its hardware disappeared :)
+<br>[23:35] <b>bryce</b> so I had several bouts with safe mode
+<br>[23:36] <b>bryce</b> but I wonder if the process can be cleaned up (even automated) a bit
+<br>[23:37] <b>bryce</b> for example, we could make a linux bootable floppy with some scripts
+<br>[23:37] <b>bryce</b> that would mount a blank disk image on /dev/hda1
+<br>[23:37] <b>uninet</b> That'd be neat.
+<br>[23:37] <b>bryce</b> and a raw hard disk with windows on it at /dev/hdb (or something)
+<br>[23:37] <b>uninet</b> Instant Windows (just add water!)
+<br>[23:38] <b>bryce</b> and it would copy all the necessary files onto hard disk c
+<br>[23:38] <b>uninet</b> That'd be good.
+<br>[23:38] <b>bryce</b> if the process could be made simpler like that, it would save people tons of time.
+<br>[23:38] <b>uninet</b> Come to think of it...
+<br>[23:39] <b>uninet</b> ...I bet MS doesn't hold a copyright on the actual registry DATABASE, perhaps a fresh copy of the registry, optimized without non-Bochs hardware, could be included...
+<br>[23:40] <b>uninet</b> (user.dat and system.dat)
+<br>[23:40] <b>bryce</b> not sure, that sounds a little fishy
+<br>[23:40] <b>divad547</b> the Bochs rescue disk?
+<br>[23:40] <b>bryce</b> I would be wary of including anything except scripts and stuff that you write on the floppy
+<br>[23:40] <b>bryce</b> but since you have access to a whole working windows system,
+<br>[23:40] <b>uninet</b> Yeah...
+<br>[23:40] <b>bryce</b> you can just copy the stuff
+<br>[23:40] <b>uninet</b> true.
+<br>[23:41] <b>bryce</b> maybe with some hacking to remove all the devices so that they had to be re-detected
+<br>[23:41] <b>uninet</b> Yeah.
+<br>[23:41] <b>uninet</b> I believe Windows has a commandline based version of regedit...
+<br>[23:41] <b>bryce</b> hmmm
+<br>[23:41] <b>divad547</b> there are programs to do that
+<br>[23:42] <b>bryce</b> where?
+<br>[23:42] <b>divad547</b> but I don't think there is one as part of windows normally.
+<br>[23:42] <b>uninet</b> So if the bochs rescue disk started up a dos session (using DOS 7.0)...
+<br>[23:42] <b>divad547</b> NT Resource kit has one...or two
+<br>[23:42] <b>uninet</b> I think regedit.exe, if run from the command line, let's you integrate .reg files.
+<br>[23:42] <b>uninet</b> I know there are several useful registry utilities for command line usage in Win9x.
+<br>[23:42] <b>bryce</b> what happens if you erase the registry? does it rebuild one when it boots next time, or just crash?
+<br>[23:43] <b>divad547</b> well, NT stores the partition map in the registry so if you loose that, it doesn't know the disks
+<br>[23:43] <b>bryce</b> :)
+<br>[23:44] <b>bryce</b> ok maybe we need to be a little selective
+<br>[23:44] <b>uninet</b> Yeah.
+<br>[23:44] <b>uninet</b> I don't think Windows can rebuild the registry like that.
+<br>[23:44] <b>bryce</b> we need a registry editor that is already there (on all windows versions)
+<br>[23:44] <b>bryce</b> or else a free one that we can distribute
+<br>[23:44] <b>uninet</b> It's going to be tough to make a one-for-all script that could work with both Windows 9x and NT/2k.
+<br>[23:45] <b>bryce</b> how many different ones then?
+<br>[23:45] <b>bryce</b> 95,98,2k,me,nt ?
+<br>[23:46] <b>uninet</b> yup.
+<br>[23:46] <b>uninet</b> and soon XP and Server.NET (formerly 2002 Server)
+<br>[23:46] <b>bryce</b> well I have 95 and 98 here that I could test with
+<br>[23:46] <b>uninet</b> oh and Win 98 SE, which has a few minor difference from 98...
+<br>[23:46] <b>bryce</b> ugh
+<br>[23:46] <b>uninet</b> I have 2k and ME.
+<br>[23:47] <b>bryce</b> the basics will be the same though
+<br>[23:47] <b>uninet</b> (and a XP beta I haven't installed)
+<br>[23:48] <b>bryce</b> do you want to try this out too?
+<br>[23:48] <b>uninet</b> sure.
+<br>[23:48] <b>bryce</b> if we ever want to automate it, let's write down exactly what we do
+<br>[23:49] <b>uninet</b> Okay.
+<br>[23:49] <b>bryce</b> I suggested a linux boot disk because I know better how to automate things that way
+<br>[23:49] <b>uninet</b> Yeah...
+<br>[23:49] <b>uninet</b> it could be a two stage setup...
+<br>[23:49] <b>bryce</b> like running fdisk, mounting things, copying things
+<br>[23:50] <b>uninet</b> Linux disk manipulates as much as possible, and then boots Windows MS-DOS mode for finalizing things with a few batch files.
+<br>[23:50] <b>bryce</b> right
+<br>[23:50] <b>bryce</b> that would be cool!
+<br>[23:50] <b>uninet</b> Yeah, very cool.
+<br>[23:50] <b>bryce</b> even if there are a lot of steps, the fact that it can be done in 30 minutes is a great attraction
+<br>[23:50] <b>bryce</b> :)
+<br>[23:52] <b>bryce</b> anything else to talk about tonight?
+<br>[23:52] <b>bryce</b> I'm running out of steam.
+<br>[23:53] <b>uninet</b> Not that I can think of.
+<br>[23:54] <b>bryce</b> ok I'm out of here
+<br>[23:54] <b>uninet</b> Okay, g'night bryce... I'm going to do the same.
+<br>[23:54] <b>bryce</b> thanks everybody!
+<br>[23:54] <b>uninet</b> Good night everyone!
+<br>[23:54] <b>bryce</b> Sorry that we lost Greg at the last miunte.
+<br>[23:54] <b>bryce</b> minute
+</tt>
+
+<i>And with interesting closing thoughts on automating Windows(R) setup under Bochs, we ended the 6/19/2001 Bochs chat.</i> <BR><BR>
+
+
+ <!--content ends here -->
+
+
+<!--#include virtual="includes/footer.txt" -->
+
+
+Last Modified on <!--#flastmod file="mailinglists.html" -->.<BR>
+
+<!--#include virtual="includes/cright.txt" -->
+
+</BODY>
+</HTML>
