@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.33 2003-05-07 19:15:46 vruppert Exp $
+// $Id: sdl.cc,v 1.34 2003-05-09 16:26:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -281,11 +281,8 @@ void bx_sdl_gui_c::text_update(
   Uint32 bgcolor;
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
-  Bit8u cs_start, cs_end, cs_line, mask;
+  Bit8u cs_line, mask;
   bx_bool invert, forceUpdate;
-
-  cs_start = tm_info.cs_start;
-  cs_end = tm_info.cs_end;
 
   forceUpdate = 0;
   if(charmap_updated)
@@ -321,10 +318,10 @@ void bx_sdl_gui_c::text_update(
 
 	// Get Foreground/Background pixel colors
 	fgcolor_ndx = DEV_vga_get_actl_pal_idx(new_text[1] & 0x0F);
-	bgcolor_ndx = DEV_vga_get_actl_pal_idx((new_text[1] >> 4) & 0x07);
+	bgcolor_ndx = DEV_vga_get_actl_pal_idx((new_text[1] >> 4) & 0x0F);
 	fgcolor = palette[fgcolor_ndx];
 	bgcolor = palette[bgcolor_ndx];
-	invert = ( (y == cursor_y) && (x == cursor_x) && (cs_start < cs_end) );
+	invert = ( (y == cursor_y) && (x == cursor_x) && (tm_info.cs_start < tm_info.cs_end) );
 	
 	// Display this one char
 	fontrows = fontheight;
@@ -335,7 +332,7 @@ void bx_sdl_gui_c::text_update(
 	  font_row = *pfont_row++;
 	  fontpixels = fontwidth;
 	  cs_line = (fontheight - fontrows);
-	  if( (invert) && (cs_line >= cs_start) && (cs_line <= cs_end) )
+	  if( (invert) && (cs_line >= tm_info.cs_start) && (cs_line <= tm_info.cs_end) )
 	    mask = 0x80;
 	  else
 	    mask = 0x00;
@@ -346,7 +343,7 @@ void bx_sdl_gui_c::text_update(
 	    else
 	      *buf = fgcolor;
 	    buf++;
-	    font_row = font_row << 1;
+	    font_row <<= 1;
 	  } while( --fontpixels );
 	  buf -= fontwidth;
 	  buf += disp;
@@ -368,6 +365,11 @@ void bx_sdl_gui_c::text_update(
 
     // go to next character row location
     buf_row += disp * fontheight;
+    if( tm_info.line_offset > (textres_x*2) )
+    {
+      new_text+=(tm_info.line_offset - (textres_x*2));
+      old_text+=(tm_info.line_offset - (textres_x*2));
+    }
   } while( --rows );
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
