@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.72 2002-12-20 13:36:50 sshwarts Exp $
+// $Id: cpu.cc,v 1.73 2002-12-26 20:22:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -213,7 +213,12 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
       BX_CPU_CALL_METHOD(resolveModRM, (i));
-      }
+    }
+#if BX_INSTRUMENTATION
+    // An instruction was found in the iCache.
+    BX_INSTR_OPCODE(CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased, 
+          i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
+#endif
     }
   else
 #endif
