@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.61 2002-09-20 22:42:29 bdenney Exp $
+// $Id: keyboard.cc,v 1.62 2002-09-23 16:19:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.61 2002-09-20 22:42:29 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.62 2002-09-23 16:19:21 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,12 +110,13 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.61 2002-09-20 22:42:29 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.62 2002-09-23 16:19:21 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
 
   BX_KEY_THIS devices->register_irq(1, "8042 Keyboard controller");
+  BX_KEY_THIS devices->register_irq(12, "8042 Keyboard controller (PS/2 mouse)");
 
   BX_KEY_THIS devices->register_io_read_handler(this, read_handler,
                                       0x0060, "8042 Keyboard controller");
