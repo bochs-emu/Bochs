@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.31 2002-09-28 00:54:05 kevinlawton Exp $
+// $Id: paging.cc,v 1.32 2002-10-03 04:53:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -979,7 +979,7 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 }
 
 
-#if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION
+#if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
 
 #if BX_SUPPORT_X86_64
 #warning "Fix dbg_xlate_linear2phy for 64-bit and new features."

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.90 2002-09-30 22:18:52 bdenney Exp $
+// $Id: cpu.h,v 1.91 2002-10-03 04:53:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2447,7 +2447,7 @@ union {
   BX_SMF Boolean  dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip,
                                           Bit32u laddr, Bit32u is_32);
 #endif
-#if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION
+#if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF void     dbg_xlate_linear2phy(Bit32u linear, Bit32u *phy, Boolean *valid);
 #endif
   BX_SMF void     atexit(void);
