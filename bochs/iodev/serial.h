@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.12 2003-10-29 21:00:04 vruppert Exp $
+// $Id: serial.h,v 1.13 2003-10-31 17:23:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,6 +47,14 @@
 #define  BX_SER_RXIDLE  0
 #define  BX_SER_RXPOLL  1
 #define  BX_SER_RXWAIT  2
+
+enum {
+  BX_SER_INT_IER,
+  BX_SER_INT_RXDATA,
+  BX_SER_INT_TXHOLD,
+  BX_SER_INT_RXLSTAT,
+  BX_SER_INT_MODSTAT,
+};
 
 typedef struct {
   /*
@@ -162,6 +170,7 @@ private:
     bx_serial_t s[BX_SERIAL_MAXDEV];
 
   static void lower_interrupt(Bit8u port);
+  static void raise_interrupt(Bit8u port, int type);
 
   static void tx_timer_handler(void *);
   BX_SER_SMF void tx_timer(void);
