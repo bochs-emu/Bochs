@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.21 2002-09-27 03:33:13 ptrumpet Exp $
+// $Id: exception.cc,v 1.22 2002-09-28 00:54:04 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,7 +71,7 @@ BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
 
 //BX_DEBUG(( "::interrupt(%u)", vector ));
 
-  BX_INSTR_INTERRUPT(vector);
+  BX_INSTR_INTERRUPT(CPU_ID, vector);
   invalidate_prefetch_q();
 
   // Discard any traps and inhibits for new context; traps will
@@ -823,7 +823,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, Boolean is_INT)
 #endif
 
 
-  BX_INSTR_EXCEPTION(vector);
+  BX_INSTR_EXCEPTION(CPU_ID, vector);
   invalidate_prefetch_q();
 
   UNUSED(is_INT);

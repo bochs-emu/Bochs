@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.4 2001-10-03 13:10:38 bdenney Exp $
+// $Id: instrument.cc,v 1.5 2002-09-28 00:54:05 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,361 +28,56 @@
 
 #include "bochs.h"
 
+void bx_instr_init(unsigned cpu) {}
+void bx_instr_shutdown(unsigned cpu) {}
+void bx_instr_reset(unsigned cpu) {}
+void bx_instr_new_instruction(unsigned cpu) {}
 
-#if 0
-// possible types passed to BX_INSTR_TLB_CNTRL()
-#define BX_INSTR_MOV_CR3     10
-#define BX_INSTR_INVLPG      11
-#define BX_INSTR_TASKSWITCH  12
+void bx_instr_debug_promt() {}
+void bx_instr_start() {}
+void bx_instr_stop() {}
+void bx_instr_print() {}
 
-// possible types passed to BX_INSTR_CACHE_CNTRL()
-#define BX_INSTR_INVD      20
-#define BX_INSTR_WBINVD    21
-#endif
+void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip) {}
+void bx_instr_cnear_branch_not_taken(unsigned cpu) {}
+void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip) {}
+void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip) {}
 
+void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, Boolean is32) {}
+void bx_instr_fetch_decode_completed(unsigned cpu, bxInstruction *i) {}
 
-// called from the CPU core
-  void
-bx_instr_cnear_branch_taken(Bit32u new_eip)
-{
-  UNUSED(new_eip);
-}
+void bx_instr_prefix_as(unsigned cpu) {}
+void bx_instr_prefix_os(unsigned cpu) {}
+void bx_instr_prefix_rep(unsigned cpu) {}
+void bx_instr_prefix_repne(unsigned cpu) {}
+void bx_instr_prefix_lock(unsigned cpu) {}
+void bx_instr_prefix_cs(unsigned cpu) {}
+void bx_instr_prefix_ss(unsigned cpu) {}
+void bx_instr_prefix_ds(unsigned cpu) {}
+void bx_instr_prefix_es(unsigned cpu) {}
+void bx_instr_prefix_fs(unsigned cpu) {}
+void bx_instr_prefix_gs(unsigned cpu) {}
+void bx_instr_prefix_extend8b(unsigned cpu) {}
 
-  void
-bx_instr_cnear_branch_not_taken(void)
-{
-}
+void bx_instr_interrupt(unsigned cpu, unsigned vector) {}
+void bx_instr_exception(unsigned cpu, unsigned vector) {}
+void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip) {}
 
-  void
-bx_instr_ucnear_branch(unsigned what, Bit32u new_eip)
-{
-  UNUSED(what);
-  UNUSED(new_eip);
-}
+void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, Bit32u newval) {}
+void bx_instr_cache_cntrl(unsigned cpu, unsigned what) {}
 
-  void
-bx_instr_far_branch(unsigned what, Bit32u new_cs, Bit32u new_eip)
-{
-  UNUSED(what);
-  UNUSED(new_eip);
-  UNUSED(new_cs);
-}
+void bx_instr_repeat_iteration(unsigned cpu) {}
 
-  void
-bx_instr_opcode_byte1(Bit8u opcode)
-{
-  UNUSED(opcode);
-}
+void bx_instr_inp(Bit16u addr, unsigned len) {}
+void bx_instr_outp(Bit16u addr, unsigned len) {}
+void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val) {}
+void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val) {}
 
-  void
-bx_instr_opcode_byte2(Bit8u opcode)
-{
-  UNUSED(opcode);
-}
+void bx_instr_mem_code(unsigned cpu, bx_address linear, unsigned size) {}
+void bx_instr_mem_data(unsigned cpu, bx_address linear, unsigned size, unsigned rw) {}
 
-  void
-bx_instr_opcode_g1ebib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
+void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len) {}
+void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned len) {}
 
-  void
-bx_instr_opcode_g1eviv(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g1evib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2ebib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2evib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2eb1(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2ev1(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2ebcl(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2evcl(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g3eb(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g3ev(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g4(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g5(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g6(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g7(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g8evib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_mem_code(Bit32u linear, unsigned size)
-{
-  UNUSED(linear);
-  UNUSED(size);
-}
-
-  void
-bx_instr_mem_data(Bit32u linear, unsigned size, unsigned rw)
-{
-  UNUSED(linear);
-  UNUSED(size);
-  UNUSED(rw);
-}
-
-  void
-bx_instr_opcode_begin(Bit32u linear)
-{
-  UNUSED(linear);
-}
-
-  void
-bx_instr_opcode_end(Bit32u linear)
-{
-  UNUSED(linear);
-}
-
-  void
-bx_instr_exception(unsigned vector)
-{
-  UNUSED(vector);
-}
-
-  void
-bx_instr_tlb_cntrl(unsigned what, Bit32u newval)
-{
-  UNUSED(what);
-  UNUSED(newval);
-}
-
-  void
-bx_instr_cache_cntrl(unsigned what)
-{
-  UNUSED(what);
-}
-
-  void
-bx_instr_hwinterrupt(unsigned vector, Bit32u cs, Bit32u eip)
-{
-  UNUSED(vector);
-  UNUSED(cs);
-  UNUSED(eip);
-}
-
-  void
-bx_instr_init(void)
-{
-}
-
-  void
-bx_instr_shutdown(void)
-{
-}
-
-  void
-bx_instr_opcode_repeating(void)
-{
-}
-
-
-// called from the debug prompt
-  void
-bx_instr_start(void)
-{
-}
-
-  void
-bx_instr_stop(void)
-{
-}
-
-  void
-bx_instr_reset(void)
-{
-}
-
-  void
-bx_instr_print(void)
-{
-}
-
-  void
-bx_instr_prefix_as(void)
-{
-}
-  void
-bx_instr_prefix_os(void)
-{
-}
-  void
-bx_instr_prefix_rep(void)
-{
-}
-  void
-bx_instr_prefix_repne(void)
-{
-}
-  void
-bx_instr_prefix_lock(void)
-{
-}
-  void
-bx_instr_prefix_cs(void)
-{
-}
-  void
-bx_instr_prefix_ss(void)
-{
-}
-  void
-bx_instr_prefix_ds(void)
-{
-}
-  void
-bx_instr_prefix_es(void)
-{
-}
-  void
-bx_instr_prefix_fs(void)
-{
-}
-  void
-bx_instr_prefix_gs(void)
-{
-}
-
-  void
-bx_instr_modrm32(unsigned modrm)
-{
-  UNUSED(modrm);
-}
-
-  void
-bx_instr_sib32(unsigned sib)
-{
-  UNUSED(sib);
-}
-
-  void
-bx_instr_modrm16(unsigned modrm)
-{
-  UNUSED(modrm);
-}
-
-  void
-bx_instr_iret(void)
-{
-}
-
-  void
-bx_instr_debug_prompt(void)
-{
-}
-
-  void
-bx_instr_fetch_byte(Bit8u val8)
-{
-}
-  void
-bx_instr_fetch_word(Bit16u val16)
-{
-}
-  void
-bx_instr_fetch_dword(Bit32u val32)
-{
-}
-  void
-bx_instr_phy_write(Bit32u addr, unsigned len)
-{
-}
-  void
-bx_instr_phy_read(Bit32u addr, unsigned len)
-{
-}
-  void
-bx_instr_interrupt(unsigned vector)
-{
-}
-  void
-bx_instr_inp(Bit16u addr, unsigned len)
-{
-}
-  void
-bx_instr_outp(Bit16u addr, unsigned len)
-{
-}
-  void
-bx_instr_inp2(Bit16u addr, unsigned len, unsigned val)
-{
-}
-  void
-bx_instr_outp2(Bit16u addr, unsigned len, unsigned val)
-{
-}
-void bx_instr_lin_read(Bit32u lin, Bit32u phy, unsigned len)
-{
-}
-void bx_instr_lin_write(Bit32u lin, Bit32u phy, unsigned len)
-{
-}
+void bx_instr_phy_write(bx_address addr, unsigned len) {}
+void bx_instr_phy_read(bx_address addr, unsigned len) {}

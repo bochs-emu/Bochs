@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.19 2002-09-27 07:01:02 kevinlawton Exp $
+// $Id: ctrl_xfer32.cc,v 1.20 2002-09-28 00:54:04 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -92,7 +92,7 @@ BailBigRSP("RETnear32_Iw");
         SP  += imm16;
       }
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, EIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_RET, EIP);
 }
 
   void
@@ -138,7 +138,7 @@ BailBigRSP("RETnear32");
       EIP = return_EIP;
       }
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, EIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_RET, EIP);
 }
 
   void
@@ -175,7 +175,7 @@ BailBigRSP("RETfar32_Iw");
       SP  += imm16;
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
@@ -205,7 +205,7 @@ BailBigRSP("RETfar32");
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
@@ -239,7 +239,7 @@ BailBigRSP("CALL_Ad");
   push_32(EIP);
   EIP = new_EIP;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, EIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
 
   void
@@ -268,7 +268,7 @@ BailBigRSP("CALL32_Ap");
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
@@ -309,7 +309,7 @@ BailBigRSP("CALL_Ed");
   push_32(EIP);
   EIP = op1_32;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, EIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
 
   void
@@ -346,7 +346,7 @@ BailBigRSP("CALL32_Ep");
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
@@ -371,7 +371,7 @@ BailBigRSP("JMP_Jd");
 #endif
 
   EIP = new_EIP;
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_EIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
   void
@@ -420,12 +420,12 @@ BailBigRSP("JCC_Jd");
       }
 #endif
     EIP = new_EIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
     revalidate_prefetch_q();
     }
 #if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
     }
 #endif
 }
@@ -448,12 +448,12 @@ BailBigRSP("JZ_Jd");
       }
 #endif
     EIP = new_EIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
     revalidate_prefetch_q();
     }
 #if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
     }
 #endif
 }
@@ -476,12 +476,12 @@ BailBigRSP("JNZ_Jd");
       }
 #endif
     EIP = new_EIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
     revalidate_prefetch_q();
     }
 #if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
     }
 #endif
 }
@@ -514,7 +514,7 @@ BailBigRSP("JMP_Ap");
   EIP = disp32;
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
@@ -552,7 +552,7 @@ BailBigRSP("JMP_Ed");
 
   EIP = new_EIP;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_EIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
   /* Far indirect jump */
@@ -585,7 +585,7 @@ BailBigRSP("JMP32_Ep");
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
@@ -629,6 +629,6 @@ BailBigRSP("IRET32");
     write_eflags(eflags, /* change IOPL? */ 1, /* change IF? */ 1, 0, 1);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_IRET,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }

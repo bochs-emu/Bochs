@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.84 2002-09-27 09:56:40 sshwarts Exp $
+// $Id: cpu.h,v 1.85 2002-09-28 00:54:04 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -248,7 +248,7 @@ typedef Bit32u bx_address;
 #endif
 
 
-
+#define CPU_ID (BX_CPU_THIS_PTR which_cpu())
 
 #ifndef CPL
 #define CPL  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
@@ -342,23 +342,15 @@ class BX_CPU_C;
 // object->*(fnptr)(arg, ...);
 // Since this is different from when SMF=1, encapsulate it in a macro.
 #  define BX_CPU_CALL_METHOD(func, args) \
-    do { \
-      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-      (this->*((BxExecutePtr_t) (func))) args \
-      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-    } while (0)
+            (this->*((BxExecutePtr_t) (func))) args
 #else
 // static member functions.  With SMF, there is only one CPU by definition.
 #  define BX_CPU_THIS_PTR  BX_CPU(0)->
 #  define BX_CPU_THIS      BX_CPU(0)
 #  define BX_SMF           static
 #  define BX_CPU_C_PREFIX
-#  define BX_CPU_CALL_METHOD(func, args)   \
-    do { \
-      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-    ((BxExecutePtr_t) (func)) args; \
-      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
-    } while (0)
+#  define BX_CPU_CALL_METHOD(func, args) \
+            ((BxExecutePtr_t) (func)) args
 #endif
 
 #if BX_SMP_PROCESSORS==1

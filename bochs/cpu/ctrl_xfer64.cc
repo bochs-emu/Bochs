@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.14 2002-09-27 07:01:02 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.15 2002-09-28 00:54:04 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   RIP = return_RIP;
   RSP += 8 + imm16; /* ??? should it be 2*imm16 ? */
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_RET, BX_CPU_THIS_PTR rip);
 }
 
   void
@@ -97,7 +97,7 @@ BX_CPU_C::RETnear64(bxInstruction_c *i)
   RIP = return_RIP;
   RSP += 8;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_RET, BX_CPU_THIS_PTR rip);
 }
 
   void
@@ -129,7 +129,7 @@ BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) rcs_raw);
     RSP += imm16;
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
 
@@ -158,7 +158,7 @@ BX_CPU_C::RETfar64(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) rcs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
 
@@ -184,7 +184,7 @@ BX_CPU_C::CALL_Aq(bxInstruction_c *i)
   push_64(BX_CPU_THIS_PTR rip);
   RIP = new_RIP;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL, BX_CPU_THIS_PTR rip);
 }
 
   void
@@ -212,7 +212,7 @@ BX_CPU_C::CALL64_Ap(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
 
@@ -240,7 +240,7 @@ BX_CPU_C::CALL_Eq(bxInstruction_c *i)
   push_64(BX_CPU_THIS_PTR rip);
   RIP = op1_64;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL, BX_CPU_THIS_PTR rip);
 }
 
   void
@@ -276,7 +276,7 @@ BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
 
@@ -284,14 +284,12 @@ done:
   void
 BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 {
-  Bit64u new_RIP;
-
   invalidate_prefetch_q();
 
   RIP += (Bit32s) i->Id();
   if (i->os32L()==0)
     RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_RIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
   void
@@ -329,12 +327,12 @@ BX_CPU_C::JCC_Jq(bxInstruction_c *i)
     RIP += (Bit32s) i->Id();
     if (i->os32L()==0)
       RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-    BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
     revalidate_prefetch_q();
     }
 #if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
     }
 #endif
 }
@@ -367,7 +365,7 @@ BX_CPU_C::JMP64_Ap(bxInstruction_c *i)
   RIP = disp64;
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
 
@@ -378,7 +376,6 @@ done:
   void
 BX_CPU_C::JMP_Eq(bxInstruction_c *i)
 {
-  Bit64u new_RIP;
   Bit64u op1_64;
 
   invalidate_prefetch_q();
@@ -392,7 +389,7 @@ BX_CPU_C::JMP_Eq(bxInstruction_c *i)
 
   RIP = op1_64;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_RIP);
+  BX_INSTR_UCNEAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
   /* Far indirect jump */
@@ -421,7 +418,7 @@ BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
@@ -446,7 +443,7 @@ BX_CPU_C::IRET64(bxInstruction_c *i)
 
 
 done:
-  BX_INSTR_FAR_BRANCH(BX_INSTR_IS_IRET,
+  BX_INSTR_FAR_BRANCH(CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
 
@@ -459,12 +456,12 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(new_RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
     }
@@ -473,12 +470,12 @@ BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
   }
@@ -495,12 +492,12 @@ BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
     }
@@ -509,12 +506,12 @@ BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
     }
@@ -529,12 +526,12 @@ BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
     }
@@ -543,12 +540,12 @@ BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
     }
@@ -563,12 +560,12 @@ BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
     }
@@ -577,12 +574,12 @@ BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
       RIP += (Bit32s) i->Id();
       if (i->os32L()==0)
         RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-      BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN();
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID, );
       }
 #endif
     }

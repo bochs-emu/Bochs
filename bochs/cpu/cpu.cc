@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.52 2002-09-24 18:33:37 kevinlawton Exp $
+// $Id: cpu.cc,v 1.53 2002-09-28 00:54:04 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,7 +24,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-#define BX_INSTR_SPY 0
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -173,18 +172,6 @@ async_events_processed:
   }
 #endif  // #if BX_DEBUGGER
 
-#if BX_INSTR_SPY
-  {
-    int n=0;
-    if ((n & 0xffffff) == 0) {
-      Bit32u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-      Bit32u rip = BX_CPU_THIS_PTR prev_eip;
-      fprintf (stdout, "instr %d, time %lld, pc %04x:%08x, fetch_ptr=%p\n", n, bx_pc_system.time_ticks (), cs, rip, fetch_ptr);
-    }
-    n++;
-  }
-#endif
-
 #if BX_EXTERNAL_DEBUGGER
   if (regs.debug_state != debug_run) {
     bx_external_debugger(this);
@@ -281,6 +268,10 @@ async_events_processed:
       resolveModRM = i->ResolveModrm; // Get function pointers as early
       }
 
+    // An instruction will have been fetched using either the normal case,
+    // or the boundary fetch (across pages), by this point.
+    BX_INSTR_FETCH_DECODE_COMPLETED(CPU_ID, i);
+
     execute = i->execute; // fetch as soon as possible for speculation.
     if (resolveModRM) {
       BX_CPU_CALL_METHOD(resolveModRM, (i));
@@ -288,6 +279,9 @@ async_events_processed:
     }
   }
 
+  // An instruction was either fetched, or found in the iCache.
+  BX_INSTR_OPCODE(CPU_ID, fetchPtr, i->ilen(),
+                  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 
 
 #if BX_DEBUGGER
@@ -387,6 +381,7 @@ repeat_not_done:
       REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
 
+      BX_INSTR_REPEAT_ITERATION(CPU_ID);
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -410,10 +405,14 @@ repeat_done:
       REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
 
+      BX_INSTR_REPEAT_ITERATION(CPU_ID);
       BX_TICK1_IF_SINGLE_PROCESSOR();
       }
 
 debugger_check:
+
+    // inform instrumentation about new instruction
+    BX_INSTR_NEW_INSTRUCTION(CPU_ID);
 
 #if (BX_SMP_PROCESSORS>1 && BX_DEBUGGER==0)
     // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
@@ -593,7 +592,7 @@ handle_async_event:
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT   = 1; /* external event */
     interrupt(vector, 0, 0, 0);
-    BX_INSTR_HWINTERRUPT(vector,
+    BX_INSTR_HWINTERRUPT(CPU_ID, vector,
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
     // Set up environment, as would be when this main cpu loop gets
     // invoked.  At the end of normal instructions, we always commmit
@@ -820,6 +819,9 @@ BX_CPU_C::boundaryFetch(bxInstruction_c *i)
 // eliminate the extra prefetch() since we do it above, but have to
 // think about repeated instructions, etc.
 BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
+
+  BX_INSTR_OPCODE(CPU_ID, fetchBuffer, i->ilen(),
+                  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 }
 
 
