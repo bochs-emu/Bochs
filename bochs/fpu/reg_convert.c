@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_convert.c                                                            |
- |  $Id: reg_convert.c,v 1.3 2003-03-02 23:59:09 cbothamy Exp $
+ |  $Id: reg_convert.c,v 1.4 2003-03-04 21:46:49 cbothamy Exp $
  |                                                                           |
  |  Convert register representation.                                         |
  |                                                                           |
@@ -15,7 +15,7 @@
 #include "fpu_emu.h"
 
 
-int  __attribute__((regparm(2)))
+int  BX_CPP_AttrRegparmN(2)
 FPU_to_exp16(FPU_REG const *a, FPU_REG *x)
 {
   int sign = getsign(a);

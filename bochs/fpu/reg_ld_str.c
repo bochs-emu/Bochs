@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.6 2003-03-02 23:59:09 cbothamy Exp $
+ |  $Id: reg_ld_str.c,v 1.7 2003-03-04 21:46:49 cbothamy Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -38,7 +38,7 @@
 #define SINGLE_Emin (-126)       /* smallest valid exponent */
 
 
-static u_char  __attribute__((regparm(3)))
+static u_char  BX_CPP_AttrRegparmN(3)
 normalize_no_excep(FPU_REG *r, int exp, int sign)
 {
   u_char tag;
@@ -54,7 +54,7 @@ normalize_no_excep(FPU_REG *r, int exp, int sign)
 }
 
 
-int  __attribute__((regparm(1)))
+int  BX_CPP_AttrRegparmN(1)
 FPU_tagof(FPU_REG *ptr)
 {
   int exp;
@@ -89,7 +89,7 @@ FPU_tagof(FPU_REG *ptr)
 
 
 /* Get a long double from user memory */
-int  __attribute__((regparm(2)))
+int  BX_CPP_AttrRegparmN(2)
 FPU_load_extended(long double *s, int stnr)
 {
   FPU_REG *sti_ptr = &st(stnr);
@@ -110,7 +110,7 @@ FPU_load_extended(long double *s, int stnr)
 
 
 /* Get a double from user memory */
-int  __attribute__((regparm(2)))
+int  BX_CPP_AttrRegparmN(2)
 FPU_load_double(double *dfloat, FPU_REG *loaded_data)
 {
   int exp, tag, negative;
@@ -183,7 +183,7 @@ FPU_load_double(double *dfloat, FPU_REG *loaded_data)
 
 
 /* Get a float from user memory */
-int  __attribute__((regparm(2)))
+int  BX_CPP_AttrRegparmN(2)
 FPU_load_single(float *single, FPU_REG *loaded_data)
 {
   u32 m32;
@@ -248,7 +248,7 @@ FPU_load_single(float *single, FPU_REG *loaded_data)
 
 
 /* Get a 64bit quantity from user memory */
-int  __attribute__((regparm(1)))
+int  BX_CPP_AttrRegparmN(1)
 FPU_load_int64(s64 *_s)
 {
   s64 s;
@@ -291,7 +291,7 @@ FPU_load_int64(s64 *_s)
 
 
 /* Get a long from user memory */
-int  __attribute__((regparm(2)))
+int  BX_CPP_AttrRegparmN(2)
 FPU_load_int32(s32 *_s, FPU_REG *loaded_data)
 {
   s32 s;
@@ -321,7 +321,7 @@ FPU_load_int32(s32 *_s, FPU_REG *loaded_data)
 
 
 /* Get a short from user memory */
-int  __attribute__((regparm(1)))
+int  BX_CPP_AttrRegparmN(1)
 FPU_load_int16(s16 *_s, FPU_REG *loaded_data)
 {
   s16 s, negative;
@@ -351,7 +351,7 @@ FPU_load_int16(s16 *_s, FPU_REG *loaded_data)
 
 
 /* Get a packed bcd array from user memory */
-int  __attribute__((regparm(1)))
+int  BX_CPP_AttrRegparmN(1)
 FPU_load_bcd(u_char *s)
 {
   FPU_REG *st0_ptr = &st(0);
@@ -395,7 +395,7 @@ FPU_load_bcd(u_char *s)
 /*===========================================================================*/
 
 /* Put a long double into user memory */
-int  __attribute__((regparm(3)))
+int  BX_CPP_AttrRegparmN(3)
 FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, long double *d)
 {
   /*
@@ -438,7 +438,7 @@ FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag, long double *d)
 
 
 /* Put a double into user memory */
-int  __attribute__((regparm(3)))
+int  BX_CPP_AttrRegparmN(3)
 FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat)
 {
   u32 l[2];
@@ -658,7 +658,7 @@ FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat)
 
 
 /* Put a float into user memory */
-int  __attribute__((regparm(3)))
+int  BX_CPP_AttrRegparmN(3)
 FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single)
 {
   s32 templ;
@@ -883,7 +883,7 @@ FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single)
 
 
 /* Put a 64bit quantity into user memory */
-int  __attribute__((regparm(3)))
+int  BX_CPP_AttrRegparmN(3)
 FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d)
 {
   FPU_REG t;
@@ -955,7 +955,7 @@ FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d)
 
 
 /* Put a long into user memory */
-int  __attribute__((regparm(3)))
+int  BX_CPP_AttrRegparmN(3)
 FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d)
 {
   FPU_REG t;
@@ -1013,7 +1013,7 @@ FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d)
 
 
 /* Put a short into user memory */
-int  __attribute__((regparm(3)))
+int  BX_CPP_AttrRegparmN(3)
 FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d)
 {
   FPU_REG t;
@@ -1071,7 +1071,7 @@ FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d)
 
 
 /* Put a packed bcd array into user memory */
-int  __attribute__((regparm(3)))
+int  BX_CPP_AttrRegparmN(3)
 FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d)
 {
   FPU_REG t;
@@ -1158,7 +1158,7 @@ FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d)
 /* Overflow is signalled by a non-zero return value (in eax).
    In the case of overflow, the returned significand always has the
    largest possible value */
-int  __attribute__((regparm(2)))
+int  BX_CPP_AttrRegparmN(2)
 FPU_round_to_int(FPU_REG *r, u_char tag)
 {
   u_char     very_big;
@@ -1223,7 +1223,7 @@ FPU_round_to_int(FPU_REG *r, u_char tag)
 
 /*===========================================================================*/
 
-u_char  __attribute__((regparm(2)))
+u_char  BX_CPP_AttrRegparmN(2)
 *fldenv(fpu_addr_modes addr_modes, u_char *s)
 {
   u16 tag_word = 0;
@@ -1315,7 +1315,7 @@ u_char  __attribute__((regparm(2)))
 }
 
 
-void  __attribute__((regparm(2)))
+void  BX_CPP_AttrRegparmN(2)
 frstor(fpu_addr_modes addr_modes, u_char *data_address)
 {
   int i, regnr;
@@ -1366,7 +1366,7 @@ frstor(fpu_addr_modes addr_modes, u_char *data_address)
 }
 
 
-u_char  __attribute__((regparm(2)))
+u_char  BX_CPP_AttrRegparmN(2)
 *fstenv(fpu_addr_modes addr_modes, u_char *d)
 {
   if ( (addr_modes.default_mode == VM86) ||
@@ -1434,7 +1434,7 @@ u_char  __attribute__((regparm(2)))
 }
 
 
-void  __attribute__((regparm(2)))
+void  BX_CPP_AttrRegparmN(2)
 fsave(fpu_addr_modes addr_modes, u_char *data_address)
 {
   u_char *d;
