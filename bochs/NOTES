@@ -1,4 +1,4 @@
-./configure --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
+./configure --enable-cpu-level=6 --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
 
 
 
@@ -403,6 +403,68 @@ hit 8 times then it crashes
 The Bochs pit.cc model does not support mode 0 in timer 2.
 Any reason why not?
 
+changed CPU_LEVEL to 6, pentium pro.  This (with my SMP rombios) 
+gets me into the SMP initialization.  Add stub device at 
+APIC I/O addresses.
+
+hard to read all the debug output as it flashes by
+step to 50 million and see what is happening. no luck.
+per-CPU timeslice cutoff: 1.58 usecs.
+CPU15: Intel Pentium Pro stepping 03
+Getting VERSION: ffffffff
+Getting VERSION: ffffffff
+Getting LVT0: ffffffff
+Getting LVT1: ffffffff
+setup_APIC_clock() called
+calibrating APIC timer...
+... 181501 CPU clocks in 1 timer chip tick
+... 0 APIC bus clocks in 1 timer chip tick
+... CPU clock speed is 18.1501 MHz
+... system bus clock speed is 0 MHz
+CPU map: 8003
+Booting processor 0 eip 2000
+Setting warm reset code and vector
+1.
+2.
+3.
+Asserting INIT.
+Deasserting INIT.
+After Startup.
+Before Callout 0.
+After Callout 0
+--- then freezes for 5 seconds! waiting for processor to start up via APIC.
+--- Finally it says:
+Not responding.
+CPU has booted.
+Booting processor 1 eip 2000
+Setting warm reset code and vector
+1.
+2.
+3.
+Asserting INIT.
+Deasserting INIT.
+After Startup.
+Before Callout 1.
+After Callout 1.
+Not responding.
+CPU has booted.
+Before bogomips.
+Total of 3 processors activated (18.07 BogoMIPS).
+Before bogocount - setting activated=1.
+Boot done.
+enabling symmetric IO mode... ...done.
+ENABLING IO-APIC IRQs
+no explicit IRQ entries, using default mptable
+...changing IO-APIC physical APIC ID to 2...
+Kernel panic: could not set ID
+
+--- then freezes for 5 seconds! waiting for processor to start up via APIC.
+--- Finally it says:
+Not responding.
+CPU has booted.
+
+unaligned read of APIC at 0xc01b4956, seems to be in sched_init function
+
 -----
 RTLINUX
 booted rtlinux
@@ -422,3 +484,197 @@ this function to see what's up.
 I know it's not that the TSC returns the same value each time or something,
 but I'm sure it behaves differently from a clock in a real system.
 I'm sure I can chase it down since I have the code.
+
+
+up to "After callout 0"
+
+APIC model
+----------
+in CPUID bit 9 indicates on-chip APIC
+can be disabled by MSR
+pentium 4, local APICs and I/O APICs talked via system bus
+pentium 6, talk via APIC bus
+APIC addresses are on page 7-23 of IA32-sdg-3
+
+now it's trying to contact other processors via its local APIC.
+kernel says: Asserting INIT.
+53201427 APIC 0x01 sending interrupt to destination APIC 0x02
+53201427 low word of APIC 0x01 ICR = 0xc500
+
+kernel says: Deasserting INIT.
+53207334 APIC 0x01 sending interrupt to destination APIC 0x02
+53207334 low word of APIC 0x01 ICR = 0x8500
+
+kernel says: Sending STARTUP #1.
+53214931 APIC 0x01 sending interrupt to destination APIC 0x02
+53214931 low word of APIC 0x01 ICR = 0x0602
+
+kernel says: Sending STARTUP #2.
+53233832 APIC 0x01 sending interrupt to destination APIC 0x02
+53233832 low word of APIC 0x01 ICR = 0x0602
+
+There is an APIC algorithm to determine the bootstrap processor, but
+I don't see any use in implementing it.  The ID of the bootstrap processor
+needs to be consistent with the MPC table in BIOS, which means it's
+got to be predetermined.  So it seems ok to just hardcode the APIC ID of
+the boostrap processor and make it consistent with rombios.c.  Then
+when the different processor objects are starting up, the init code
+can check if the processor is the BSP or not.  The BSP will start up at
+f000:fff0 as usual and the others will basically execute a halt as they
+wait for a SIPI from the bootstrap guy.
+
+First, however, I need to be able to compile without static member 
+functions on the CPU.
+
+I have it compiling without static member functions (it took some work),
+but now I have crashes instead.  Specifically, the debugger uses structures
+it calls "callbacks" which are filled with function pointers.  These 
+function pointers point to C++ methods, but somehow the compiler allows
+them to be called without a This pointer, leading to crashes the first time
+you try something like "EAX = 0".
+
+I can't see that plex86 is using this debugger, so I expect nobody is.
+This means it's not a total waste of time to clean it up in the way that
+makes most sense to me.  What C++ structure will I need to implement
+the multiprocessor simulation with debugging?  Instead of a single BX_CPU
+object, there will be several.  I think to make SMF=0 work at all I'll
+need to redo the callback structure in a C++ way.
+
+BX_CPU_C is the type
+BX_CPU is used everywhere as the CPU object.
+But in the SMP model, you need to specify WHICH cpu you're talking about.
+In the debugger it would be acceptable to have a "current" CPU, and commands
+that apply to a particular cpu would automatically go to the current one.
+What other references to BX_CPU are outside of methods?
+
+I'm about to change BX_CPU into an array of BX_CPUs, and I fear
+the resulting explosion of broken things that were never really object
+oriented to begin with.  But it will be worth it when the APIC model can
+actually tell the other cpus to boot up.
+
+Here's a strategy: make BX_CPU an array and start ripping, without being
+constrained by keeping BX_USE_SMF=1 alive.  I hate it anyway.  Then maybe
+it will be clear how to make BX_USE_SMF=1 work again with stupid macros.
+
+What about this debug callback thing?  What's the point?  Replace each
+call of a callback with a call of the real object.  In the debugger, define
+a variable that is the "current" CPU that the user is interested in.
+
+Make both the CPU and the memory space an array.  The CPU structure will
+have a pointer to its memory space.  This allows cosimulation to still 
+happen (cpu0 with mem0, cpu1 with mem1) with any number of processors,
+and also SMP (cpu0 with mem0, cpu1 with mem0, etc.).
+
+How will the CPU loop work here?  It was written for one CPU of course,
+and runs until a breakpoint or asynchronous event.  But now I will need
+several multiple processors to have a chance to run their own CPU loop.
+One conceptually simple solution is to let each CPU run one instruction,
+then switch to another CPU.  Can I do this with existing guards, or
+will I need to recode cpu_loop?
+
+Which processor should receive asynchronous events?  On page 7-15 of
+sdg3, it shows that all external interrupts go to the I/O APIC.  The
+I/O APIC must forward them to the correct processor, once it has been 
+configured.  First worry about how to give each processor a chance to 
+execute instructions.
+
+Added a "bx_guard_found_t" struct pointer inside every CPU.  The 
+alternative was an array of them, but they need to be written within
+the BX_CPU_C methods, which wouldn't know where in the array to find
+it.
+
+Debugging SMP infinite loop.  stop at floppy_drive_recal.
+in good sim:
+  vbreak 0xf000:0x24d6
+  s 133000
+  s 1000
+in bad sim:
+oops: step doesn't notice breakpoints.
+
+in sync until 883100
+dies before 884200
+
+The difference occurs here: (output from show "dbg-all")
+< 132700 interrupt(): vector = 9, INT = 0, EXT = 1
+< 132703 keyboard: 8-bit write to 0064 = ad
+< 132703 KBD: keyboard disabled
+< 132705 keyboard: 8-bit read from 0064 = 1c
+< 132711 pic: IO write to 0020 = 0b
+< 132712 pic: IO read from 0020
+< 132712 pic: read master ISR = 02
+< 132716 pic: IO write to 0020 = 20
+
+changed pc_system because the interrupt was getting sent only to cpu0.
+next problem is when it goes into protected mode.  
+in bad sim:
+33000683 exception(0e h) just after enable_paging ()
+
+try to get a trace of the instructions before the exception, since
+they caused the exception.
+vbreak 0x10:0x0010002f
+c
+set $cpu=2
+trace-on
+c
+This was caused by FPU code which was hardcoded to BX_CPU[0].  When Linux
+tested for an FPU, the results were written to BX_CPU[0] instead of the
+bootstrap cpu.  Fixed.
+Now I'm having trouble in the multiprocessor simulation with fpu_check
+failing.  It worked fine before.  I get
+Checking 386/387 coupling... general protection fault: 0000
+CPU:2
+EIP 0x10:0xc01b0120
+Another BX_CPU[0] problem in the FPU code. Hopefully no more.
+
+time_init() problem in multiprocessor sim that doesn't happen in the other
+Stop in time_init and again at end.
+vbreak 0x10:0xc01b1f54
+vbreak 0x10:0xc01b1fc6
+it does reach end of time_init. where the crash then?
+can't interrupt trace output with ^C (?)
+
+fixed lack of BX_TICK1 calls when all processors halted.
+added code so that APIC startup message brings the target processor
+out of halt, sets its CS:IP to vector*0x1000.
+Now problem is:  jump_protected: gate type 0 unsupported
+supported gate types 
+1,3,4,5,9,11,12
+
+1=286 available TSS
+3=Busy 286 TSS
+4=286 call gate
+5=task gate
+9=386 available TSS
+11=Busy 386 TSS
+12=386 call gate
+
+this is the instruction, in processor #0, and it's exactly what should
+be going on.  It should jump to the start of the kernel.
+jmp 0010:00100000
+Step through the trampoline code and watch.
+JMP_Ap -> jump_protected (ctrl_xfer_pro.cc)
+a far call or far jmp can only access a segment descriptor for a 
+conforming code segment, nonconforming code segment, call gate, task gate,
+or TSS.  So what is this one?
+segment is 0x10
+check that gdtr+16 points to the right thing before the jump
+huh? cpu#0 has
+gdtr:base=0xff53f0, limit=0xff
+idtr:base=0xf000ff, limit=0x53f0
+could this be mapped to a real gdt?
+
+ok, the problem was that I jumped to 0000:2000 but it should have been
+0200:0000.  In real mode, they're the same, but then it needed to reference
+data using 0x0200:offset too.  Now the second processor boots, but I'm
+getting a nonzero write to CR4, which is causing a panic.
+panic: MOV_CdRd: (CR4) write of 0x10
+eip=0xc010016e
+Indeed, in kernel startup code the first CPU skips the code in
+head.S that says:
+        movl %cr4,%eax          # Turn on 4Mb pages
+	orl $16,%eax
+	movl %eax,%cr4
+bochs does not support 4mb pages.  Do I need to implement it, or can Linux
+do without?  Linux can do without for now, if I use "mem=nopentium".
+Later, if I feel like it (and understand paging well enough), implement 
+4mb pages.

@@ -119,7 +119,7 @@ public:
 void
 syscall_names_t::init ()
 {
-  for (int i=0; i<MAX_SYSCALLS; i++) {
+  for (int i; i<MAX_SYSCALLS; i++) {
     syscall_names_linux[i] = "<unknown syscall>";
   }
 #define DEF_SYSCALL(num,name)  syscall_names_linux[num] = name;
