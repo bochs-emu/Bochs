@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.29 2002-09-25 07:21:38 bdenney Exp $
+// $Id: wx.cc,v 1.30 2002-09-25 18:40:15 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -220,32 +220,6 @@ MyPanel::MyRefresh ()
 {
   IFDBG_VGA (wxLogDebug ("set needRefresh=true"));
   needRefresh = true;
-}
-
-void 
-MyPanel::ReadConfiguration ()
-{
-  char *bochsrc;
-  long style = wxOPEN;
-  wxFileDialog *fdialog = new wxFileDialog (this, "Read configuration", "", "", "*.*", style);
-  if (fdialog->ShowModal() == wxID_OK) {
-    bochsrc = (char *)fdialog->GetPath().c_str ();
-    bx_read_configuration(bochsrc);
-  }
-  delete fdialog;
-}
-
-void 
-MyPanel::SaveConfiguration ()
-{
-  char *bochsrc;
-  long style = wxSAVE | wxOVERWRITE_PROMPT;
-  wxFileDialog *fdialog = new wxFileDialog (this, "Save configuration", "", "", "*.*", style);
-  if (fdialog->ShowModal() == wxID_OK) {
-    bochsrc = (char *)fdialog->GetPath().c_str ();
-    bx_write_configuration(bochsrc, 1);
-  }
-  delete fdialog;
 }
 
 void MyPanel::OnKeyDown(wxKeyEvent& event)

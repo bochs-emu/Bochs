@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.30 2002-09-22 20:56:12 cbothamy Exp $
+// $Id: wxmain.h,v 1.31 2002-09-25 18:40:15 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -142,8 +142,6 @@ public:
   void OnPaint(wxPaintEvent& event);
   void OnMouse(wxMouseEvent& event);
   void MyRefresh ();
-  void ReadConfiguration ();
-  void SaveConfiguration ();
   void ToggleMouse ();
 private:
   wxCursor *blankCursor;
@@ -177,6 +175,7 @@ public:
   void OnPauseResumeSim(wxCommandEvent& event);
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CIEvent(wxCommandEvent& event);
+  void OnLogMsg(BxEvent *logMsgEvent);
   void OnEditBoot(wxCommandEvent& event);
   void OnEditMemory(wxCommandEvent& event);
   void OnEditSound(wxCommandEvent& event);

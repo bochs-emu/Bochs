@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.56 2002-09-22 20:56:12 cbothamy Exp $
+// $Id: wxmain.cc,v 1.57 2002-09-25 18:40:15 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -91,6 +91,12 @@ class MyApp: public wxApp
 {
 virtual bool OnInit();
 virtual int OnExit();
+  public:
+  // This default callback is installed when the simthread is NOT running,
+  // so that events coming from the simulator code can be handled.
+  // The primary culprit is panics which cause an BX_SYNC_EVT_LOG_ASK.
+  static BxEvent *DefaultCallback (void *thisptr, BxEvent *event);
+  BxEvent *DefaultCallback2 (BxEvent *event);
 };
 
 // SimThread is the thread in which the Bochs simulator runs.  It is created
@@ -135,6 +141,9 @@ bool MyApp::OnInit()
   //wxLog::AddTraceMask (_T("mime"));
   wxLog::SetActiveTarget (new wxLogStderr ());
   bx_init_siminterface ();
+  // install callback function to handle anything that occurs before the
+  // simulation begins.
+  SIM->set_notify_callback (&MyApp::DefaultCallback, this);
   bx_init_main (argc, argv);
   MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
   theFrame = frame;  // hack alert
@@ -153,6 +162,46 @@ int MyApp::OnExit ()
 {
   return 0;
 }
+
+// these are only called when the simthread is not running.
+BxEvent *
+MyApp::DefaultCallback (void *thisptr, BxEvent *event)
+{
+  MyApp *me = (MyApp *)thisptr;
+  // call the normal non-static method now that we know the this pointer.
+  return me->DefaultCallback2 (event);
+}
+
+BxEvent *
+MyApp::DefaultCallback2 (BxEvent *event)
+{
+  wxLogDebug ("DefaultCallback2: event type %d", event->type);
+  event->retcode = -1;  // default return code
+  switch (event->type)
+  {
+    case BX_ASYNC_EVT_LOG_MSG:
+    case BX_SYNC_EVT_LOG_ASK: {
+      wxLogDebug ("DefaultCallback2: log ask event");
+      wxString text;
+      text.Printf ("Error: %s", event->u.logmsg.msg);
+      wxMessageBox (text, "Error", wxOK | wxICON_ERROR );
+      //theFrame->OnLogMsg (event);
+      event->retcode = BX_LOG_ASK_CHOICE_CONTINUE;
+      // There is only one thread at this point.  if I choose DIE here, it will
+      // call fatal() and kill the whole app.
+      break;
+    }
+    case BX_ASYNC_EVT_REFRESH:
+    case BX_SYNC_EVT_ASK_PARAM:
+    case BX_ASYNC_EVT_DBG_MSG:
+    case BX_SYNC_EVT_GET_DBG_COMMAND:
+      break;
+    default:
+      wxLogDebug ("unknown event type %d", event->type);
+  }
+  return event;
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // MyFrame: the top level frame for the Bochs application
@@ -390,12 +439,27 @@ void MyFrame::OnConfigNew(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 {
-  panel->ReadConfiguration ();
+  char *bochsrc;
+  long style = wxOPEN;
+  wxFileDialog *fdialog = new wxFileDialog (this, "Read configuration", "", "", "*.*", style);
+  if (fdialog->ShowModal() == wxID_OK) {
+    bochsrc = (char *)fdialog->GetPath().c_str ();
+    SIM->reset_all_param ();
+    SIM->read_rc (bochsrc);
+  }
+  delete fdialog;
 }
 
 void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
 {
-  panel->SaveConfiguration ();
+  char *bochsrc;
+  long style = wxSAVE | wxOVERWRITE_PROMPT;
+  wxFileDialog *fdialog = new wxFileDialog (this, "Save configuration", "", "", "*.*", style);
+  if (fdialog->ShowModal() == wxID_OK) {
+    bochsrc = (char *)fdialog->GetPath().c_str ();
+    SIM->write_rc (bochsrc, 1);
+  }
+  delete fdialog;
 }
 
 void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
@@ -1081,39 +1145,8 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
 #endif
   case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
-    {
-    wxLogDebug ("log msg: level=%d, prefix='%s', msg='%s'",
-	be->u.logmsg.level,
-	be->u.logmsg.prefix,
-	be->u.logmsg.msg);
-    if (be->type == BX_ASYNC_EVT_LOG_MSG) {
-      // don't ask for user response
-      delete be;
-      return;
-    }
-    wxString levelName (SIM->get_log_level_name (be->u.logmsg.level));
-    LogMsgAskDialog dlg (this, -1, levelName);  // panic, error, etc.
-#if !BX_DEBUGGER
-    dlg.EnableButton (dlg.DEBUG, FALSE);
-#endif
-    dlg.SetContext (be->u.logmsg.prefix);
-    dlg.SetMessage (be->u.logmsg.msg);
-    int n = dlg.ShowModal ();
-    Boolean dontAsk = dlg.GetDontAsk ();
-    // turn the return value into the constant that logfunctions::ask is
-    // expecting.  0=continue, 1=continue but ignore future messages from this
-    // device, 2=die, 3=dump core, 4=debugger. FIXME: yuck. replace hardcoded
-    // constants in logfunctions::ask with enum or defined constant.
-    if (n==0) {
-      n = dontAsk? 1 : 0; 
-    } else {
-      n=n+1;
-    }
-    be->retcode = n;
-    wxLogDebug ("you chose %d", n);
-    sim_thread->SendSyncResponse (be);
+    OnLogMsg (be);
     return;
-    }
   case BX_SYNC_EVT_GET_DBG_COMMAND:
     wxLogDebug ("BX_SYNC_EVT_GET_DBG_COMMAND received");
     if (debugCommand == NULL) {
@@ -1151,6 +1184,47 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
   // it is critical to send a response back eventually since the sim thread
   // is blocking.
   wxASSERT_MSG (0, "switch stmt should have returned");
+}
+
+void MyFrame::OnLogMsg (BxEvent *be) {
+  wxLogDebug ("log msg: level=%d, prefix='%s', msg='%s'",
+      be->u.logmsg.level,
+      be->u.logmsg.prefix,
+      be->u.logmsg.msg);
+  if (be->type == BX_ASYNC_EVT_LOG_MSG) {
+    // don't ask for user response
+    delete be;  // because it was async
+    return;
+  } else {
+    wxASSERT (be->type == BX_SYNC_EVT_LOG_ASK);
+  }
+  wxString levelName (SIM->get_log_level_name (be->u.logmsg.level));
+  LogMsgAskDialog dlg (this, -1, levelName);  // panic, error, etc.
+#if !BX_DEBUGGER
+  dlg.EnableButton (dlg.DEBUG, FALSE);
+#endif
+  dlg.SetContext (be->u.logmsg.prefix);
+  dlg.SetMessage (be->u.logmsg.msg);
+  int n = dlg.ShowModal ();
+  Boolean dontAsk = dlg.GetDontAsk ();
+  // turn the return value into the constant that logfunctions::ask is
+  // expecting.  0=continue, 1=continue but ignore future messages from this
+  // device, 2=die, 3=dump core, 4=debugger. FIXME: yuck. replace hardcoded
+  // constants in logfunctions::ask with enum or defined constant.
+  if (n==0) {
+    n = dontAsk? 1 : 0; 
+  } else {
+    n=n+1;
+  }
+  be->retcode = n;
+  wxLogDebug ("you chose %d", n);
+  // This can be called from two different contexts:
+  // 1) before sim_thread starts, the default application callback can
+  //    call OnLogMsg to display messages.
+  // 2) after the sim_thread starts, the sim_thread callback can call
+  //    OnLogMsg to display messages
+  if (sim_thread)  
+    sim_thread->SendSyncResponse (be);  // only for case #2
 }
 
 void 
@@ -1331,8 +1405,9 @@ SimThread::OnExit ()
   // notify the MyFrame that the bochs thread has died.  I can't adjust
   // the sim_thread directly because it's private.
   frame->OnSimThreadExit ();
-  // don't use this SimThread's callback function anymore.
-  SIM->set_notify_callback (NULL, NULL);
+  // don't use this SimThread's callback function anymore.  Use the
+  // application default callback.
+  SIM->set_notify_callback (&MyApp::DefaultCallback, this);
 }
 
 // Event handler function for BxEvents coming from the simulator.
