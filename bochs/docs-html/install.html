@@ -138,10 +138,16 @@ root access.
    #        Solaris 2.x /usr/openwin/lib/X11/fonts
    #        Linux       /usr/lib/X11/fonts/
    root-> cp font/vga.pcf font-path-here/misc
-   root-> compress font-path-here/misc/vga.pcf
+   root-> compress font-path-here/misc/vga.pcf      (see note below)
    root-> mkfontdir font-path-here/misc
    root-> xset fp rehash
 </PRE>
+
+Please note that on some systems, compressed fonts are not recognized.
+It may be safer to leave out the compress step entirely.  If you are seeing
+the "Could not open vga font" message, try leaving the font uncompressed.
+Whenever you move fonts around or compress/uncompress them, you must run
+mkfontdir again to notify the X server that the fonts have changed.
 
 <B>Option 2: installing VGA font in local font directory</B>
 <PRE>
