@@ -31,7 +31,7 @@
 //DEBUG configuration:
 
 //Debug with printf options.
-#define DEBUG_REALTIME_WITH_PRINTF 1
+#define DEBUG_REALTIME_WITH_PRINTF 0
 
 //Use to test execution at multiples of real time.
 #define TIME_DIVIDER (1)
