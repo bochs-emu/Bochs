@@ -113,11 +113,15 @@ Changes to next release:
   [838601] support for the over 2GB disk size with MSVC++
   [874816] local ARP/ping/DHCP simulator by m_suzu
   [976066] Keyboard: Get controller version by Ben Lunt
+  [832330] ROMBIOS improvement (reduce stack consumption, etc.)
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
  [1005422] Improve mouse cursol Grub when 2 buttons-mouse use (WIN32)
            (TODO: improved japanese keyboard support)
+
+- patches applied
+  - patch.rombios.markevich (Start/Stop Wait Timer) (Kory Markevich)
 
 - these S.F. bugs were closed
   #651510 bximage won't create larger than 2GB

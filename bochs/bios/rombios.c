@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.113 2004-08-20 09:59:49 vruppert Exp $
+// $Id: rombios.c,v 1.114 2004-08-21 13:31:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -916,10 +916,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.113 $";
-static char bios_date_string[] = "$Date: 2004-08-20 09:59:49 $";
+static char bios_cvs_version_string[] = "$Revision: 1.114 $";
+static char bios_date_string[] = "$Date: 2004-08-21 13:31:48 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.113 2004-08-20 09:59:49 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.114 2004-08-21 13:31:48 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3288,22 +3288,18 @@ int14_function(regs, ds, iret_addr)
 
   void
 int15_function(regs, ES, DS, FLAGS)
-  pushad_regs_t regs; // REGS pushed via pushad
+  pusha_regs_t regs; // REGS pushed via pusha
   Bit16u ES, DS, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
-  Bit8u  mouse_flags_1, mouse_flags_2;
-  Bit16u mouse_driver_seg;
-  Bit16u mouse_driver_offset;
-  Bit8u  response, prev_command_byte;
   bx_bool prev_a20_enable;
   Bit16u  base15_00;
   Bit8u   base23_16;
   Bit16u  ss;
-  Bit8u   ret, mouse_data1, mouse_data2, mouse_data3;
-  Bit8u   comm_byte, mf2_state;
-  Bit32u  extended_memory_size=0; // 64bits long
   Bit16u  CX,DX;
+
+  Bit16u bRegister;
+  Bit8u irqDisable;
 
 BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
 
@@ -3357,49 +3353,42 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
       regs.u.r8.ah = 0;  // "ok ejection may proceed"
       break;
 
-    case 0x86:
-      // Wait for CX:DX microseconds. currently using the 
-      // refresh request port 0x61 bit4, toggling every 15usec 
-
-      CX = regs.u.r16.cx;
-      DX = regs.u.r16.dx;
-
-ASM_START
-      sti
-
-      ;; Get the count in eax
-      mov  bx, sp
-      SEG SS
-        mov  ax, _int15_function.CX [bx]
-      shl  eax, #16
-      SEG SS
-        mov  ax, _int15_function.DX [bx]
-
-      ;; convert to numbers of 15usec ticks
-      mov ebx, #15
-      xor edx, edx
-      div eax, ebx
-      mov ecx, eax
-
-      ;; wait for ecx number of refresh requests
-      in al, #0x61
-      and al,#0x10
-      mov ah, al
-
-      or ecx, ecx
-      je int1586_tick_end
-int1586_tick:
-      in al, #0x61
-      and al,#0x10
-      cmp al, ah
-      je  int1586_tick
-      mov ah, al
-      dec ecx
-      jnz int1586_tick
-int1586_tick_end:
-ASM_END
+    case 0x83: {
+      if( regs.u.r8.al == 0 ) {
+        // Set Interval requested.
+        if( ( read_byte( 0x40, 0xA0 ) & 1 ) == 0 ) {
+          // Interval not already set.
+          write_byte( 0x40, 0xA0, 1 );  // Set status byte.
+          write_word( 0x40, 0x98, ES ); // Byte location, segment
+          write_word( 0x40, 0x9A, regs.u.r16.bx ); // Byte location, offset
+          write_word( 0x40, 0x9C, regs.u.r16.dx ); // Low word, delay
+          write_word( 0x40, 0x9E, regs.u.r16.cx ); // High word, delay.
+          CLEAR_CF( );
+          irqDisable = inb( 0xA1 );
+          outb( 0xA1, irqDisable & 0xFE );
+          bRegister = inb_cmos( 0xB );  // Unmask IRQ8 so INT70 will get through.
+          outb_cmos( 0xB, bRegister | 0x40 ); // Turn on the Periodic Interrupt timer
+        } else {
+          // Interval already set.
+          BX_DEBUG_INT15("int15: Func 83h, failed, already waiting.\n" );
+          SET_CF();
+          regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+        }
+      } else if( regs.u.r8.al == 1 ) {
+        // Clear Interval requested
+        write_byte( 0x40, 0xA0, 0 );  // Clear status byte
+        CLEAR_CF( );
+        bRegister = inb_cmos( 0xB );
+        outb_cmos( 0xB, bRegister & ~0x40 );  // Turn off the Periodic Interrupt timer
+      } else {
+        BX_DEBUG_INT15("int15: Func 83h, failed.\n" );
+        SET_CF();
+        regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+        regs.u.r8.al--;
+      }
 
       break;
+    }
 
     case 0x87:
 #if BX_CPU < 3
@@ -3473,7 +3462,8 @@ ASM_START
 
       // since we need to set SS:SP, save them to the BDA
       // for future restore
-      xor ax, ax
+      push eax
+      xor eax, eax
       mov ds, ax
       mov 0x0469, ss
       mov 0x0467, sp
@@ -3485,8 +3475,7 @@ ASM_START
       ;;  perhaps do something with IDT here
 
       ;; set PE bit in CR0
-      xor  eax, eax
-      mov  al, #0x01
+      mov  ax, #0x0001
       mov  cr0, eax
       ;; far jump to flush CPU queue after transition to protected mode
       JMP_AP(0x0020, protected_mode)
@@ -3527,6 +3516,7 @@ real_mode:
       mov ds, ax
       mov ss, 0x0469
       mov sp, 0x0467
+      pop eax
 ASM_END
 
       set_enable_a20(prev_a20_enable);
@@ -3591,6 +3581,39 @@ ASM_END
 #endif
       break;
 
+    case 0xd8:
+      bios_printf(BIOS_PRINTF_DEBUG, "EISA BIOS not present\n");
+      SET_CF();
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+      break;
+
+    default:
+      BX_INFO("*** int 15h function AX=%04x, BX=%04x not yet supported!\n",
+        (unsigned) regs.u.r16.ax, (unsigned) regs.u.r16.bx);
+      SET_CF();
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+      break;
+    }
+}
+
+#if BX_USE_PS2_MOUSE
+  void
+int15_function_mouse(regs, ES, DS, FLAGS)
+  pusha_regs_t regs; // REGS pushed via pusha
+  Bit16u ES, DS, FLAGS;
+{
+  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit8u  mouse_flags_1, mouse_flags_2;
+  Bit16u mouse_driver_seg;
+  Bit16u mouse_driver_offset;
+  Bit8u  response, prev_command_byte;
+  bx_bool prev_a20_enable;
+  Bit8u   ret, mouse_data1, mouse_data2, mouse_data3;
+  Bit8u   comm_byte, mf2_state;
+
+BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
+
+  switch (regs.u.r8.ah) {
     case 0xC2:
       // Return Codes status in AH
       // =========================
@@ -3603,10 +3626,6 @@ ASM_END
       // 05: cannot enable mouse, since no far call has been installed
       // 80/86: mouse service not implemented
 
-#if BX_USE_PS2_MOUSE < 1
-      SET_CF();
-      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
-#else
       switch (regs.u.r8.al) {
         case 0: // Disable/Enable Mouse
 BX_DEBUG_INT15("case 0:\n");
@@ -3792,17 +3811,17 @@ BX_DEBUG_INT15("case 7:\n");
           write_word(ebda_seg, 0x0022, mouse_driver_offset);
           write_word(ebda_seg, 0x0024, mouse_driver_seg);
           mouse_flags_2 = read_byte(ebda_seg, 0x0027);
-          if (mouse_driver_offset == 0 &&
-              mouse_driver_seg == 0) {
-              /* remove handler */
-              if ( (mouse_flags_2 & 0x80) != 0 ) {
-                  mouse_flags_2 &= ~0x80;
-                  inhibit_mouse_int_and_events(); // disable IRQ12 and packets
+          if (mouse_driver_offset == 0 && mouse_driver_seg == 0) {
+            /* remove handler */
+            if ( (mouse_flags_2 & 0x80) != 0 ) {
+              mouse_flags_2 &= ~0x80;
+              inhibit_mouse_int_and_events(); // disable IRQ12 and packets
               }
-          } else {
-              /* install handler */
-          mouse_flags_2 |= 0x80;
-          }
+            }
+          else {
+            /* install handler */
+            mouse_flags_2 |= 0x80;
+            }
           write_byte(ebda_seg, 0x0027, mouse_flags_2);
           CLEAR_CF();
           regs.u.r8.ah = 0;
@@ -3813,11 +3832,71 @@ BX_DEBUG_INT15("case default:\n");
           regs.u.r8.ah = 1; // invalid function
           SET_CF();
         }
-#endif
       break;
 
-    case 0xd8:
-      bios_printf(BIOS_PRINTF_DEBUG, "EISA BIOS not present\n");
+    default:
+      BX_INFO("*** int 15h function AX=%04x, BX=%04x not yet supported!\n",
+        (unsigned) regs.u.r16.ax, (unsigned) regs.u.r16.bx);
+      SET_CF();
+      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+      break;
+    }
+}
+#endif
+
+  void
+int15_function32(regs, ES, DS, FLAGS)
+  pushad_regs_t regs; // REGS pushed via pushad
+  Bit16u ES, DS, FLAGS;
+{
+  Bit32u  extended_memory_size=0; // 64bits long
+  Bit16u  CX,DX;
+
+BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
+
+  switch (regs.u.r8.ah) {
+    case 0x86:
+      // Wait for CX:DX microseconds. currently using the 
+      // refresh request port 0x61 bit4, toggling every 15usec 
+
+      CX = regs.u.r16.cx;
+      DX = regs.u.r16.dx;
+
+ASM_START
+      sti
+
+      ;; Get the count in eax
+      mov  bx, sp
+      SEG SS
+        mov  ax, _int15_function.CX [bx]
+      shl  eax, #16
+      SEG SS
+        mov  ax, _int15_function.DX [bx]
+
+      ;; convert to numbers of 15usec ticks
+      mov ebx, #15
+      xor edx, edx
+      div eax, ebx
+      mov ecx, eax
+
+      ;; wait for ecx number of refresh requests
+      in al, #0x61
+      and al,#0x10
+      mov ah, al
+
+      or ecx, ecx
+      je int1586_tick_end
+int1586_tick:
+      in al, #0x61
+      and al,#0x10
+      cmp al, ah
+      je  int1586_tick
+      mov ah, al
+      dec ecx
+      jnz int1586_tick
+int1586_tick_end:
+ASM_END
+
       break;
 
     case 0xe8:
@@ -3933,7 +4012,6 @@ BX_DEBUG_INT15("case default:\n");
 	  goto int15_unimplemented;
        }
        break;
-
     int15_unimplemented:
        // fall into the default
     default:
@@ -3944,7 +4022,6 @@ BX_DEBUG_INT15("case default:\n");
       break;
     }
 }
-
 
   void
 int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
@@ -3961,7 +4038,8 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       if ( !dequeue_key(&scan_code, &ascii_code, 1) ) {
         BX_PANIC("KBD: int16h: out of keyboard input\n");
         }
-      if (ascii_code == 0xE0) ascii_code = 0;
+      if (scan_code !=0 && ascii_code == 0xF0) ascii_code = 0;
+      else if (ascii_code == 0xE0) ascii_code = 0;
       AX = (scan_code << 8) | ascii_code;
       break;
 
@@ -3970,7 +4048,8 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
         SET_ZF();
         return;
         }
-      if (ascii_code == 0xE0) ascii_code = 0;
+      if (scan_code !=0 && ascii_code == 0xF0) ascii_code = 0;
+      else if (ascii_code == 0xE0) ascii_code = 0;
       AX = (scan_code << 8) | ascii_code;
       CLEAR_ZF();
       break;
@@ -4030,6 +4109,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       if ( !dequeue_key(&scan_code, &ascii_code, 1) ) {
         BX_PANIC("KBD: int16h: out of keyboard input\n");
         }
+      if (scan_code !=0 && ascii_code == 0xF0) ascii_code = 0;
       AX = (scan_code << 8) | ascii_code;
       break;
 
@@ -4038,6 +4118,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
         SET_ZF();
         return;
         }
+      if (scan_code !=0 && ascii_code == 0xF0) ascii_code = 0;
       AX = (scan_code << 8) | ascii_code;
       CLEAR_ZF();
       break;
@@ -7542,25 +7623,47 @@ int70_function(regs, ds, iret_addr)
   iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
 {
   // INT 70h: IRQ 8 - CMOS RTC interrupt from periodic or alarm modes
-  Bit8u val8;
+  Bit8u registerB = 0, registerC = 0;
 
-  val8 = inb_cmos(0x0c); // Status Reg C
-  if (val8 == 0) BX_PANIC("int70: regC 0\n");
-  if (val8 & 0x40) BX_PANIC("int70: periodic request\n");
-  if (val8 & 0x20) {
-    // Alarm Flag indicates alarm time matches current time
-    // call user INT 4Ah alarm handler
+  // Check which modes are enabled and have occurred.
+  registerB = inb_cmos( 0xB );
+  registerC = inb_cmos( 0xC );
+
+  if( ( registerB & 0x60 ) != 0 ) {
+    if( ( registerC & 0x20 ) != 0 ) {
+      // Handle Alarm Interrupt.
 ASM_START
-    sti
-    //pushf
-    //;; call_ep [ds:loc]
-    //CALL_EP( 0x4a << 2 )
-    int #0x4a
-    cli
+      sti
+      int #0x4a
+      cli
 ASM_END
     }
+    if( ( registerC & 0x40 ) != 0 ) {
+      // Handle Periodic Interrupt.
 
-  ; //FIXME BCC BUG
+      if( read_byte( 0x40, 0xA0 ) != 0 ) {
+        // Wait Interval (Int 15, AH=83) active.
+        Bit32u time, toggle;
+
+        time = read_dword( 0x40, 0x9C );  // Time left in microseconds.
+        if( time < 0x3D1 ) {
+          // Done waiting.
+          Bit16u segment, offset;
+
+          offset = read_word( 0x40, 0x98 );
+          segment = read_word( 0x40, 0x9A );
+          write_byte( 0x40, 0xA0, 0 );  // Turn of status byte.
+          outb_cmos( 0xB, registerB & 0x37 ); // Clear the Periodic Interrupt.
+          write_byte( segment, offset, 0x80 );  // Write to specified flag byte.
+        } else {
+          // Continue waiting.
+          time -= 0x3D1;
+          write_dword( 0x40, 0x9C, time );
+        }
+      }
+    }
+  }
+
 ASM_START
   call eoi_both_pics
 ASM_END
@@ -9425,6 +9528,8 @@ int09_handler:
   sti
 
 int09_call_int15_4f:
+  push  ds
+  pusha
 #ifdef BX_CALL_INT15_4F
   mov  ah, #0x4f     ;; allow for keyboard intercept
   stc
@@ -9434,15 +9539,13 @@ int09_call_int15_4f:
 
 
 //int09_process_key:
-  push  ds
-  pusha
   mov   bx, #0xf000
   mov   ds, bx
   call  _int09_function
-  popa
-  pop   ds
 
 int09_done:
+  popa
+  pop   ds
   cli
   call eoi_master_pic
 
@@ -9627,18 +9730,39 @@ int15_handler:
 #endif
   push  ds
   push  es
-  pushad
+  cmp  ah, #0x86
+  je int15_handler32
+  cmp  ah, #0xE8
+  je int15_handler32
+  pusha
+#if BX_USE_PS2_MOUSE
+  cmp  ah, #0xC2
+  je int15_handler_mouse
+#endif
   call _int15_function
-  popad
+int15_handler_mouse_ret:
+  popa
+int15_handler32_ret:
   pop   es
   pop   ds
   popf
-  //JMPL(iret_modify_cf)
   jmp iret_modify_cf
 #if BX_APM
 apm_call:
   jmp _apmreal_entry
 #endif
+
+#if BX_USE_PS2_MOUSE
+int15_handler_mouse:
+  call _int15_function_mouse
+  jmp int15_handler_mouse_ret
+#endif
+
+int15_handler32:
+  pushad
+  call _int15_function32
+  popad
+  jmp int15_handler32_ret
 
 ;; Protected mode IDT descriptor
 ;;
