@@ -1,8 +1,12 @@
-#include <stdio.h>
+// set up MODULE2API macro for DLL export
+#if defined(_MSC_EXTENSIONS) && !defined(__BEOS__) && !defined(__CYGWIN__)
+#  define MODULE2API(type) __declspec(dllexport) type __cdecl
+#else
+#  define MODULE2API(type) type
+#endif
 
-#define DLLINTERFACE __declspec(dllexport)
+#include <stdio.h>
 #include "module2.h"
-#undef DLLINTERFACE
 
 int n_operations = 0;
 
