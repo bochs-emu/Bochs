@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.208 2002-12-15 17:11:13 bdenney Exp $
+// $Id: main.cc,v 1.209 2002-12-16 02:49:55 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -917,7 +917,7 @@ void bx_init_options ()
       0);
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
-      "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.",
+      "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
       0);
   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
       "Use a private colormap",
