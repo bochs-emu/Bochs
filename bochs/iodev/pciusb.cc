@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.8 2004-07-11 20:38:48 vruppert Exp $
+// $Id: pciusb.cc,v 1.9 2004-07-12 17:34:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -42,8 +42,8 @@
 
 bx_pciusb_c* theUSBDevice = NULL;
 
-const Bit8u usb_iomask[32] = {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                              7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const Bit8u usb_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 1, 4, 0, 0, 0, 1, 0, 0, 0,
+                              2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   int
 libpciusb_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -80,22 +80,10 @@ bx_pciusb_c::init(void)
 
   if (!bx_options.usb[0].Oenabled->get()) return;
 
-  Bit16u base_ioaddr = bx_options.usb[0].Oioaddr->get();
-  Bit8u irq = bx_options.usb[0].Oirq->get();
-
-  BX_USB_THIS hub[0].irq = irq;
-
   // Call our timer routine every 1mS (1,000uS)
   // Continuous and active
   BX_USB_THIS hub[0].timer_index =
                    bx_pc_system.register_timer(this, usb_timer_handler, 1000, 1,1, "usb.timer");
-
-  for (unsigned addr=base_ioaddr; addr<(unsigned)(base_ioaddr+0x14); addr++) {
-    BX_DEBUG(("register read/write: 0x%04x", addr));
-    DEV_register_ioread_handler(this, read_handler, addr, "USB Hub #1", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "USB Hub #1", 7);
-  }
-  BX_USB_THIS hub[0].base_ioaddr = base_ioaddr;
 
   Bit8u devfunc = BX_PCI_DEVICE(1,2);
   DEV_register_pci_handlers(this,
@@ -107,6 +95,11 @@ bx_pciusb_c::init(void)
   for (unsigned i=0; i<256; i++) {
     BX_USB_THIS hub[0].pci_conf[i] = 0x0;
   }
+
+  BX_USB_THIS hub[0].base_ioaddr = 0x0;
+
+  Bit16u base_ioaddr = bx_options.usb[0].Oioaddr->get();
+  Bit8u irq = bx_options.usb[0].Oirq->get();
 
   BX_INFO(("usb1 at 0x%04x-0x%04x irq %d", base_ioaddr, base_ioaddr+0x13, irq));
 }
