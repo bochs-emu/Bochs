@@ -26,7 +26,7 @@
 
 serial_raw::serial_raw (char *ttypath, int signal)
 {
-  setprefix ("SERR");
+  put ("SERR");
   settype (SERRLOG);
 }
 

@@ -46,7 +46,7 @@ BX_MEM_C::BX_MEM_C(void)
 {
   char mem[6];
   snprintf(mem, 6, "MEM%d", BX_SIM_ID);
-  setprefix(mem);
+  put(mem);
   settype(MEMLOG);
 
   vector = NULL;

@@ -54,6 +54,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <net/if.h>
 #include <net/bpf.h>
+#include <errno.h>
 };
 
 #define BX_BPF_POLL  1000    // Poll for a frame every 1000 usecs
@@ -146,9 +147,12 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   do {
     (void)sprintf(device, "/dev/bpf%d", n++);
     this->bpf_fd = open(device, O_RDWR);
-  } while (this->bpf_fd < 0);
+	BX_INFO(("tried %s, returned %d",device,this->bpf_fd));
+	if(errno == EACCES)
+		break;
+  } while (this->bpf_fd == -1);
   
-  if (this->bpf_fd < 0) {
+  if (this->bpf_fd == -1) {
     BX_INFO(("eth_freebsd: could not open packet filter"));
     return;
   }

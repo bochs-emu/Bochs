@@ -248,7 +248,7 @@ public:
 	void ldebug(char *fmt, ...);
 	void fatal (char *prefix, char *fmt, va_list ap);
 	void ask (int level, char *prefix, char *fmt, va_list ap);
-	void setprefix(char *);
+	void put(char *);
 	void settype(int);
 	void setio(class iofunctions *);
 	void setonoff(int loglev, int value) {

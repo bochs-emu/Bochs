@@ -59,7 +59,7 @@
 bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
-  th->setprefix("NGUI");
+  th->put("NGUI");
   UNUSED(th);
   UNUSED(argc);
   UNUSED(argv);

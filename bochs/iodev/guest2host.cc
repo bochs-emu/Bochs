@@ -29,7 +29,7 @@ bx_g2h_c bx_g2h;
 
 bx_g2h_c::bx_g2h_c(void)
 {
-  setprefix("G2H");
+  put("G2H");
   settype(G2HLOG);
   unsigned i;
 

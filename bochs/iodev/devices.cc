@@ -44,7 +44,7 @@ bx_devices_c bx_devices;
   // constructor for bx_devices_c
 bx_devices_c::bx_devices_c(void)
 {
-  setprefix("DEV");
+  put("DEV");
   settype(DEVLOG);
   unsigned i;
 
@@ -230,11 +230,11 @@ bx_devices_c::port92_read(Bit32u address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_DEV_SMF
   if (io_len > 1)
-    BX_PANIC(("devices.c: port 92h: io read from address %08x, len=%u",
+    BX_PANIC(("port 92h: io read from address %08x, len=%u",
              (unsigned) address, (unsigned) io_len));
 
-  BX_INFO(("devices: port92h read partially supported!!!"));
-  BX_INFO(("devices:   returning %02x", (unsigned) (BX_GET_ENABLE_A20() << 1)));
+  BX_DEBUG(("port92h read partially supported!!!"));
+  BX_DEBUG(("  returning %02x", (unsigned) (BX_GET_ENABLE_A20() << 1)));
   return(BX_GET_ENABLE_A20() << 1);
 }
 
@@ -257,12 +257,12 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
   Boolean bx_cpu_reset;
 
   if (io_len > 1)
-    BX_PANIC(("devices.c: port 92h: io read from address %08x, len=%u",
+    BX_PANIC(("port 92h: io read from address %08x, len=%u",
              (unsigned) address, (unsigned) io_len));
 
-  BX_INFO(("devices: port92h write of %02x partially supported!!!",
+  BX_DEBUG(("port92h write of %02x partially supported!!!",
     (unsigned) value));
-BX_INFO(("devices: A20: set_enable_a20() called"));
+  BX_DEBUG(("A20: set_enable_a20() called"));
   BX_SET_ENABLE_A20( (value & 0x02) >> 1 );
   BX_INFO(("A20: now %u", (unsigned) BX_GET_ENABLE_A20()));
   bx_cpu_reset  = (value & 0x01); /* high speed reset */

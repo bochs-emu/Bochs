@@ -198,7 +198,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv,
 UNUSED(argc);
 UNUSED(argv);
 UNUSED(window_name);
-  th->setprefix("BGUI");
+  th->put("BGUI");
 
 if (bx_options.Oprivate_colormap->get ()) {
   BX_INFO(( "BeOS: private_colormap option not handled yet."));

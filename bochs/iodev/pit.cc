@@ -135,7 +135,7 @@ bx_pit_c bx_pit;
 
 bx_pit_c::bx_pit_c( void )
 {
-  setprefix("PIT");
+  put("PIT");
   settype(PITLOG);
   memset(&s, 0, sizeof(s));
 

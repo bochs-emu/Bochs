@@ -35,7 +35,7 @@ bx_disassemble_c bx_disassemble;
 
 bx_disassemble_c::bx_disassemble_c(void)
 {
-setprefix("DIS");
+put("DIS");
 settype(DISLOG);
 
 sreg_mod01_rm32[0]   = "DS";

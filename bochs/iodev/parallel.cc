@@ -37,7 +37,7 @@ bx_parallel_c bx_parallel;
 
 bx_parallel_c::bx_parallel_c(void)
 {
-  setprefix("PAR");
+  put("PAR");
   settype(PARLOG);
   // nothing for now
 }

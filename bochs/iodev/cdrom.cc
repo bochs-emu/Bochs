@@ -179,7 +179,7 @@ int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
 
 cdrom_interface::cdrom_interface(char *dev)
 {
-  setprefix("CD");
+  put("CD");
   settype(CDLOG);
   fd = -1; // File descriptor not yet allocated
 

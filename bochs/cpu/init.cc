@@ -40,7 +40,7 @@ BX_CPU_C::BX_CPU_C()
   // in case of SMF, you cannot reference any member data
   // in the constructor because the only access to it is via
   // global variables which aren't initialized quite yet.
-  setprefix("CPU");
+  put("CPU");
   settype (CPU0LOG);
 }
 

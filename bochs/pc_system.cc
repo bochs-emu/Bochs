@@ -45,7 +45,7 @@ const Bit64u bx_pc_system_c::COUNTER_INTERVAL = 100000;
   // constructor
 bx_pc_system_c::bx_pc_system_c(void)
 {
-  this->setprefix("SYS");
+  this->put("SYS");
 
   num_timers = 0;
   // set ticks period and remaining to max Bit32u value

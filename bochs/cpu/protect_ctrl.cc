@@ -626,7 +626,7 @@ BX_CPU_C::VERR_Ew(BxInstruction_t *i)
       return;
       }
     set_ZF(1); /* accessible */
-    BX_INFO(("VERR: data segment OK"));
+    BX_ERROR(("VERR: data segment OK"));
     return;
     }
 }

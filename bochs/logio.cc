@@ -50,7 +50,7 @@ iofunctions::init(void) {
 	n_logfn = 0;
 	init_log(stderr);
 	log = new logfunc_t(this);
-	LOG_THIS setprefix("IO");
+	LOG_THIS put("IO");
 	LOG_THIS settype(IOLOG);
 	BX_DEBUG(("Init(log file: '%s').",logfn));
 }
@@ -183,7 +183,7 @@ iofunctions::~iofunctions(void)
 
 logfunctions::logfunctions(void)
 {
-	setprefix(" ");
+	put(" ");
 	settype(GENLOG);
 	if(io == NULL && Allocio == 0) {
 		Allocio = 1;
@@ -198,7 +198,7 @@ logfunctions::logfunctions(void)
 
 logfunctions::logfunctions(iofunc_t *iofunc)
 {
-	setprefix(" ");
+	put(" ");
 	settype(GENLOG);
 	setio(iofunc);
 	// BUG: unfortunately this can be called before the bochsrc is read,
@@ -221,7 +221,7 @@ logfunctions::setio(iofunc_t *i)
 }
 
 void
-logfunctions::setprefix(char *p)
+logfunctions::put(char *p)
 {
 	char *tmpbuf;
 	tmpbuf=strdup("[     ]");// if we ever have more than 32 chars,

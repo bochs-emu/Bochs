@@ -43,7 +43,7 @@ bx_gui_c   bx_gui;
 
 bx_gui_c::bx_gui_c(void)
 {
-  setprefix("GUI"); // Init in specific_init
+  put("GUI"); // Init in specific_init
   settype(GUILOG);
 }
 
