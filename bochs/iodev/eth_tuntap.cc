@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.16 2004-09-18 12:35:13 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.17 2004-09-26 15:38:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,7 +66,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define TUNTAP_VIRTUAL_HW_ADDR             0xDEADBEEF
 #define BX_ETH_TUNTAP_LOGGING 0
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
@@ -232,7 +231,7 @@ bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   if (size != io_len-14) {
     BX_PANIC (("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_INFO (("wrote %d bytes on tuntap - 14 bytes Ethernet header", io_len));
+    BX_DEBUG (("wrote %d bytes on tuntap - 14 bytes Ethernet header", io_len));
   }
 #elif NEVERDEF
   Bit8u txbuf[BX_PACKET_BUFSIZ];
@@ -243,14 +242,14 @@ bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   if (size != io_len+2) {
     BX_PANIC (("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_INFO (("wrote %d bytes + 2 byte pad on tuntap", io_len));
+    BX_DEBUG (("wrote %d bytes + 2 byte pad on tuntap", io_len));
   }
 #else
   unsigned int size = write (fd, buf, io_len);
   if (size != io_len) {
     BX_PANIC (("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_INFO (("wrote %d bytes on tuntap", io_len));
+    BX_DEBUG (("wrote %d bytes on tuntap", io_len));
   }
 #endif
 #if BX_ETH_TUNTAP_LOGGING
@@ -317,7 +316,7 @@ void bx_tuntap_pktmover_c::rx_timer ()
 #else
   if (nbytes>0)
 #endif
-    BX_INFO (("tuntap read returned %d bytes", nbytes));
+    BX_DEBUG (("tuntap read returned %d bytes", nbytes));
 #ifdef __APPLE__	//FIXME:hack
   if (nbytes<14) {
 #else
@@ -356,36 +355,33 @@ void bx_tuntap_pktmover_c::rx_timer ()
 }
 
 
-  int tun_alloc(char *dev)
-  {
-      struct ifreq ifr;
-      int fd, err;
+int tun_alloc(char *dev)
+{
+  struct ifreq ifr;
+  int fd, err;
 
-      if( (fd = open(dev, O_RDWR)) < 0 )
-         return -1;
-
+  if ((fd = open(dev, O_RDWR)) < 0)
+    return -1;
 #ifdef __linux__
-      memset(&ifr, 0, sizeof(ifr));
+  memset(&ifr, 0, sizeof(ifr));
 
-      /* Flags: IFF_TUN   - TUN device (no Ethernet headers) 
-       *        IFF_TAP   - TAP device  
-       *
-       *        IFF_NO_PI - Do not provide packet information  
-       */ 
-      ifr.ifr_flags = IFF_TAP | IFF_NO_PI; 
-      if( *dev )
-         strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+  /* Flags: IFF_TUN   - TUN device (no Ethernet headers) 
+   *        IFF_TAP   - TAP device  
+   *
+   *        IFF_NO_PI - Do not provide packet information  
+   */ 
+  ifr.ifr_flags = IFF_TAP | IFF_NO_PI; 
+  if (*dev)
+    strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+  if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0) {
+    close(fd);
+    return err;
+  }
 
-      if( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ){
-         close(fd);
-         return err;
-      }
-
-      //strcpy(dev, ifr.ifr_name);
-      ioctl( fd, TUNSETNOCSUM, 1 );
+  ioctl( fd, TUNSETNOCSUM, 1 );
 #endif
 
-      return fd;
-  }              
+  return fd;
+}              
 
 #endif /* if BX_SUPPORT_NE2K */

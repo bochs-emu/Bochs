@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.21 2004-09-18 12:35:13 vruppert Exp $
+// $Id: eth_tap.cc,v 1.22 2004-09-26 15:38:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,7 +113,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define TAP_VIRTUAL_HW_ADDR             0xDEADBEEF
 #define BX_ETH_TAP_LOGGING 0
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
@@ -284,7 +283,7 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 #endif
     BX_PANIC (("write on tap device: %s", strerror (errno)));
   } else {
-    BX_INFO (("wrote %d bytes + 2 byte pad on tap", io_len));
+    BX_DEBUG (("wrote %d bytes + 2 byte pad on tap", io_len));
   }
 #if BX_ETH_TAP_LOGGING
   BX_DEBUG (("sendpkt length %u", io_len));
@@ -339,7 +338,7 @@ void bx_tap_pktmover_c::rx_timer ()
 #endif
 
   if (nbytes>0)
-    BX_INFO (("tap read returned %d bytes", nbytes));
+    BX_DEBUG (("tap read returned %d bytes", nbytes));
   if (nbytes<0) {
     if (errno != EAGAIN)
       BX_ERROR (("tap read error: %s", strerror(errno)));
