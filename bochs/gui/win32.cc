@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.18 2001-11-12 18:33:28 bdenney Exp $
+// $Id: win32.cc,v 1.19 2001-11-23 18:03:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -498,7 +498,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
 	SetWindowText(hwnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
     } else {
       EnterCriticalSection(&stInfo.keyCS);
-      enq_key_event(HIWORD (lParam) & 0xFF, BX_KEY_PRESSED);
+      enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_PRESSED);
       LeaveCriticalSection(&stInfo.keyCS);
     }
     return 0;
@@ -506,7 +506,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
   case WM_KEYUP:
   case WM_SYSKEYUP:
     EnterCriticalSection(&stInfo.keyCS);
-    enq_key_event(HIWORD (lParam) & 0xFF, BX_KEY_RELEASED);
+    enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_RELEASED);
     LeaveCriticalSection(&stInfo.keyCS);
     return 0;
 
@@ -605,6 +605,11 @@ void bx_gui_c::handle_events(void) {
       headerbar_click(LOWORD(key));
     }
     else {
+      // Its an extended key
+      if (key & 0x0100) {
+        scancode = 0xE0;
+        bx_devices.keyboard->put_scancode(&scancode, 1);
+      }
       // Its a key
       scancode = LOBYTE(LOWORD(key));
       // printf("# key = %d, scancode = %d\n",key,scancode);
