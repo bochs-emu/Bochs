@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.21 2002-08-27 19:54:46 bdenney Exp $
+// $Id: dma.cc,v 1.22 2002-08-28 19:39:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.21 2002-08-27 19:54:46 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.22 2002-08-28 19:39:00 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -161,13 +161,6 @@ bx_dma_c::init(bx_devices_c *d)
 
 
   for (i=0; i<2; i++) {
-    BX_DMA_THIS s[i].mask[0] = 1; // channel 0 masked
-    BX_DMA_THIS s[i].mask[1] = 1; // channel 1 masked
-    BX_DMA_THIS s[i].mask[2] = 1; // channel 2 masked
-    BX_DMA_THIS s[i].mask[3] = 1; // channel 3 masked
-
-    BX_DMA_THIS s[i].flip_flop = 0; /* cleared */
-    BX_DMA_THIS s[i].status_reg = 0; // no requests, no terminal counts reached
     for (c=0; c<4; c++) {
       BX_DMA_THIS s[i].chan[c].mode.mode_type = 0;         // demand mode
       BX_DMA_THIS s[i].chan[c].mode.address_decrement = 0; // address increment
@@ -188,8 +181,23 @@ bx_dma_c::init(bx_devices_c *d)
   void
 bx_dma_c::reset(unsigned type)
 {
+  reset_controller(0);
+  reset_controller(1);
 }
 
+  void
+bx_dma_c::reset_controller(unsigned num)
+{
+  BX_DMA_THIS s[num].mask[0] = 1;
+  BX_DMA_THIS s[num].mask[1] = 1;
+  BX_DMA_THIS s[num].mask[2] = 1;
+  BX_DMA_THIS s[num].mask[3] = 1;
+  BX_DMA_THIS s[num].command_reg = 0;
+  BX_DMA_THIS s[num].status_reg = 0;
+  BX_DMA_THIS s[num].request_reg = 0;
+  BX_DMA_THIS s[num].temporary_reg = 0;
+  BX_DMA_THIS s[num].flip_flop = 0;
+}
 
   // index to find channel from register number (only [0],[1],[2],[6] used)
   Bit8u channelindex[7] = {2, 3, 1, 0, 0, 0, 0};
@@ -502,15 +510,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       // same action as a hardware reset
       // mask register is set (chan 0..3 disabled)
       // command, status, request, temporary, and byte flip-flop are all cleared
-      BX_DMA_THIS s[ma_sl].mask[0] = 1;
-      BX_DMA_THIS s[ma_sl].mask[1] = 1;
-      BX_DMA_THIS s[ma_sl].mask[2] = 1;
-      BX_DMA_THIS s[ma_sl].mask[3] = 1;
-      BX_DMA_THIS s[ma_sl].command_reg = 0;
-      BX_DMA_THIS s[ma_sl].status_reg = 0;
-      BX_DMA_THIS s[ma_sl].request_reg = 0;
-      BX_DMA_THIS s[ma_sl].temporary_reg = 0;
-      BX_DMA_THIS s[ma_sl].flip_flop = 0;
+      reset_controller(ma_sl);
       return;
       break;
 

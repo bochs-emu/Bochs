@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.9 2002-08-27 19:54:46 bdenney Exp $
+// $Id: dma.h,v 1.10 2002-08-28 19:39:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,6 +70,7 @@ private:
   void     write(Bit32u   address, Bit32u   value, unsigned io_len);
 #endif
   BX_DMA_SMF void control_HRQ(Boolean ma_sl);
+  BX_DMA_SMF void reset_controller(unsigned num);
 
   struct {
     Boolean DRQ[4];  // DMA Request
