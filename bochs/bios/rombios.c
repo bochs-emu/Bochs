@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.93 2003-04-25 22:13:24 cbothamy Exp $
+// $Id: rombios.c,v 1.94 2003-08-07 00:02:24 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.93 $";
-static char bios_date_string[] = "$Date: 2003-04-25 22:13:24 $";
+static char bios_cvs_version_string[] = "$Revision: 1.94 $";
+static char bios_date_string[] = "$Date: 2003-08-07 00:02:24 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.93 2003-04-25 22:13:24 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.94 2003-08-07 00:02:24 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3885,8 +3885,10 @@ BX_DEBUG_INT15("case default:\n");
 
           // my real system sets ax and bx to 0
           // this is confirmed by Ralph Brown list
-          regs.u.r16.ax = 0;
-          regs.u.r16.bx = 0;
+          // but syslinux v1.48 is known to behave 
+          // strangely if ax is set to 0
+          // regs.u.r16.ax = 0;
+          // regs.u.r16.bx = 0;
 
           // Get the amount of extended memory (above 1M)
           regs.u.r8.cl = inb_cmos(0x30);
@@ -3902,6 +3904,9 @@ BX_DEBUG_INT15("case default:\n");
           regs.u.r8.dl = inb_cmos(0x34);
           regs.u.r8.dh = inb_cmos(0x35);
 
+          // Set configured memory equal to extended memory
+          regs.u.r16.ax = regs.u.r16.cx;
+          regs.u.r16.bx = regs.u.r16.dx;
           break;
 	default:  /* AH=0xE8?? but not implemented */
 	  goto int15_unimplemented;
