@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.213 2002-12-17 20:58:18 bdenney Exp $
+// $Id: main.cc,v 1.214 2002-12-21 17:27:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3186,23 +3186,18 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_ERROR(("%s: WARNING: ips is AWFULLY low!", context));
       }
     }
-  else if (!strcmp(params[0], "realtime_pit")) {
+  else if (!strcmp(params[0], "pit")) {
     if (num_params != 2) {
-      PARSE_ERR(("%s: realtime_pit directive: wrong # args.", context));
+      PARSE_ERR(("%s: pit directive: wrong # args.", context));
       }
-    if (!strncmp(params[1], "enable", 6)) {
-      bx_options.Orealtime_pit->set (1);
+    if (!strncmp(params[1], "realtime=", 9)) {
+      switch (params[1][9]) {
+	case '0': bx_options.Orealtime_pit->set (0); break;
+	case '1': bx_options.Orealtime_pit->set (1); break;
+	default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
+        }
       }
-    else if (!strncmp(params[1], "disable", 7)) {
-      bx_options.Orealtime_pit->set (0);
-      }
-    else if (!strncmp(params[1], "reproducible", 12)) {
-      bx_options.Orealtime_pit->set (0);
-      }
-    else if (!strncmp(params[1], "realtime", 8)) {
-      bx_options.Orealtime_pit->set (1);
-      }
-    else bx_options.Orealtime_pit->set (!!(atol(params[1])));
+    else PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
     }
   else if (!strcmp(params[0], "max_ips")) {
     if (num_params != 2) {
