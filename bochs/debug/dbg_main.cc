@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.32 2001-10-05 21:03:53 bdenney Exp $
+// $Id: dbg_main.cc,v 1.33 2001-10-06 00:01:12 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -404,6 +404,7 @@ process_sim2:
   BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
 #endif
 
+
   // (mch) Moved from main.cc
   bx_devices.init(BX_MEM(0));
   bx_gui.init_signal_handlers ();
@@ -411,6 +412,21 @@ process_sim2:
 
   // setup Ctrl-C handler
   signal(SIGINT, bx_debug_ctrlc_handler);
+
+  // Print disassembly of the first instruction...  you wouldn't think it
+  // would have to be so hard.  First initialize guard_found, since it is used
+  // in the disassembly code to decide what instruction to print.
+  BX_CPU_THIS_PTR guard_found.cs =
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  BX_CPU_THIS_PTR guard_found.eip =
+    BX_CPU_THIS_PTR prev_eip;
+  BX_CPU_THIS_PTR guard_found.laddr =
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip;
+  BX_CPU_THIS_PTR guard_found.is_32bit_code =
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  // finally, call the usual function to print the disassembly
+  fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
+  bx_dbg_disassemble_current (-1, 0);  // all cpus, don't print time
 
   bx_dbg_user_input_loop();
 
@@ -2156,7 +2172,7 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 
 #if BX_DISASM
   if (bx_debugger.auto_disassemble) {
-    fprintf (stderr, "Next instruction:\n");
+    fprintf (stderr, "Next at t=%lld\n", bx_pc_system.time_ticks ());
     bx_dbg_disassemble_current (sim, 0);  // one cpu, don't print time
   }
 #endif  // #if BX_DISASM
