@@ -222,6 +222,8 @@ Changes in 2.2.pre1 (March 13, 2005):
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
+ #1162042 Duke Nukem 3D: >>PANIC<< iret: VM set on stack, CPL!=0
+ #1161945 ctrl_xfer32 compile/make error 
  #1157124 Bochs doesn't run with large amounts of memory in bochsrc 
  #1154266 weird INT handling in V86 mode
  #1157051 default Bochs CVS doesn't work-out-of-the-box
