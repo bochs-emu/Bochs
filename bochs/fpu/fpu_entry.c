@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.10 2003-07-25 08:59:45 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.11 2003-07-25 09:16:26 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -129,7 +129,6 @@ static u_char const type_table[64] = {
  * Ported by Kevin Lawton Sep 20, 1999
  */
 
-
   asmlinkage void
 math_emulate(fpu_addr_modes addr_modes,
               u_char  FPU_modrm,
@@ -144,16 +143,14 @@ math_emulate(fpu_addr_modes addr_modes,
   FPU_REG *st0_ptr;
   u_char    loaded_tag, st0_tag;
 
-
   /* assuming byte is 0xd8..0xdf or 0xdb==FWAIT */
 
   /* lock is not a valid prefix for FPU instructions, +++
      let the cpu handle it to generate a SIGILL. */
 
-
   no_ip_update = 0;
 
-  if ( byte1 == FWAIT_OPCODE ) {
+  if (byte1 == FWAIT_OPCODE) {
     if (partial_status & SW_Summary)
       goto do_the_FPU_interrupt;
     else
@@ -168,10 +165,10 @@ math_emulate(fpu_addr_modes addr_modes,
        fninit, fnstenv, fnsave, fnstsw, fnstenv, fnclex.
        */
     code = (FPU_modrm << 8) | byte1;
-    if ( ! ( (((code & 0xf803) == 0xe003) ||    /* fnclex, fninit, fnstsw */
+    if (! ((((code & 0xf803) == 0xe003) ||    /* fnclex, fninit, fnstsw */
               (((code & 0x3003) == 0x3001) &&   /* fnsave, fnstcw, fnstenv,
                                                    fnstsw */
-               ((code & 0xc000) != 0xc000))) ) ) {
+               ((code & 0xc000) != 0xc000))))) {
       /*
        *  We need to simulate the action of the kernel to FPU
        *  interrupts here.
@@ -186,42 +183,40 @@ do_the_FPU_interrupt:
 
   FPU_rm = FPU_modrm & 7;
 
-  if ( FPU_modrm < 0300 ) {
+  if (FPU_modrm < 0300) {
       /* All of these instructions use the mod/rm byte to get a data address */
 
-      if ( !(byte1 & 1) ) {
+      if (!(byte1 & 1)) {
           u16 status1 = partial_status;
 
           st0_ptr = &st(0);
           st0_tag = FPU_gettag0();
 
           /* Stack underflow has priority */
-          if ( NOT_EMPTY_ST0 ) {
+          if (NOT_EMPTY_ST0) {
 
 #ifndef USE_WITH_CPU_SIM
               /* memory access limits checked in FPU_verify_area */
-              if ( addr_modes.default_mode & PROTECTED )
+              if (addr_modes.default_mode & PROTECTED)
                 {
                   /* This table works for 16 and 32 bit protected mode */
-                  if ( access_limit < data_sizes_16[(byte1 >> 1) & 3] )
+                  if (access_limit < data_sizes_16[(byte1 >> 1) & 3])
                     math_abort(FPU_info, SIGSEGV);
                 }
 #endif
               unmasked = 0;  /* Do this here to stop compiler warnings. */
-              switch ( (byte1 >> 1) & 3 )
+              switch ((byte1 >> 1) & 3)
                 {
                 case 0:
-                  unmasked = FPU_load_single(data_address,
-                                             &loaded_data);
+                  unmasked = FPU_load_single(data_address, &loaded_data);
                   loaded_tag = unmasked & 0xff;
                   unmasked &= ~0xff;
                   break;
                 case 1:
-                  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);
+                  loaded_tag = FPU_load_int32(data_address, &loaded_data);
                   break;
                 case 2:
-                  unmasked = FPU_load_double(data_address,
-                                             &loaded_data);
+                  unmasked = FPU_load_double(data_address, &loaded_data);
                   loaded_tag = unmasked & 0xff;
                   unmasked &= ~0xff;
                   break;
@@ -237,28 +232,28 @@ do_the_FPU_interrupt:
               /* NaN operands have the next priority. */
               /* We have to delay looking at st(0) until after
                  loading the data, because that data might contain an SNaN */
-              if ( ((st0_tag == TAG_Special) && isNaN(st0_ptr)) ||
-                  ((loaded_tag == TAG_Special) && isNaN(&loaded_data)) )
+              if (((st0_tag == TAG_Special) && isNaN(st0_ptr)) ||
+                  ((loaded_tag == TAG_Special) && isNaN(&loaded_data)))
                 {
                   /* Restore the status word; we might have loaded a
                      denormal. */
                   partial_status = status1;
-                  if ( (FPU_modrm & 0x30) == 0x10 )
+                  if ((FPU_modrm & 0x30) == 0x10)
                     {
                       /* fcom or fcomp */
                       EXCEPTION(EX_Invalid);
                       setcc(SW_C3 | SW_C2 | SW_C0);
-                      if ( (FPU_modrm & 0x08) && (control_word & CW_Invalid) )
+                      if ((FPU_modrm & 0x08) && (control_word & CW_Invalid))
                         FPU_pop();             /* fcomp, masked, so we pop. */
                     }
                   else
                     {
-                      if ( loaded_tag == TAG_Special )
+                      if (loaded_tag == TAG_Special)
                         loaded_tag = FPU_Special(&loaded_data);
 #ifdef PECULIAR_486
                       /* This is not really needed, but gives behaviour
                          identical to an 80486 */
-                      if ( (FPU_modrm & 0x28) == 0x20 )
+                      if ((FPU_modrm & 0x28) == 0x20)
                         /* fdiv or fsub */
                         real_2op_NaN(&loaded_data, loaded_tag, 0, &loaded_data);
                       else
@@ -269,19 +264,18 @@ do_the_FPU_interrupt:
                   goto reg_mem_instr_done;
                 }
 
-              if ( unmasked && !((FPU_modrm & 0x30) == 0x10) )
+              if (unmasked && !((FPU_modrm & 0x30) == 0x10))
                 {
                   /* Is not a comparison instruction. */
-                  if ( (FPU_modrm & 0x38) == 0x38 )
+                  if ((FPU_modrm & 0x38) == 0x38)
                     {
                       /* fdivr */
-                      if ( (st0_tag == TAG_Zero) &&
+                      if ((st0_tag == TAG_Zero) &&
                            ((loaded_tag == TAG_Valid)
                             || (loaded_tag == TAG_Special
-                                && isdenormal(&loaded_data))) )
+                                && isdenormal(&loaded_data))))
                         {
-                          if ( FPU_divide_by_zero(0, getsign(&loaded_data))
-                               < 0 )
+                          if (FPU_divide_by_zero(0, getsign(&loaded_data)) < 0)
                             {
                               /* We use the fact here that the unmasked
                                  exception in the loaded data was for a
@@ -297,7 +291,7 @@ do_the_FPU_interrupt:
                   goto reg_mem_instr_done;
                 }
 
-              switch ( (FPU_modrm >> 3) & 7 )
+              switch ((FPU_modrm >> 3) & 7)
                 {
                 case 0:         /* fadd */
                   clear_C1();
@@ -313,8 +307,8 @@ do_the_FPU_interrupt:
                 case 3:         /* fcomp */
 		  /* bbd: used to typecase to int first, but this corrupted the
 		     pointer on 64 bit machines. */
-                  if ( !FPU_compare_st_data(&loaded_data, loaded_tag)
-                       && !unmasked )
+                  if (!FPU_compare_st_data(&loaded_data, loaded_tag)
+                       && !unmasked)
                     FPU_pop();
                   break;
                 case 4:         /* fsub */
@@ -331,7 +325,7 @@ do_the_FPU_interrupt:
                   break;
                 case 7:         /* fdivr */
                   clear_C1();
-                  if ( st0_tag == TAG_Zero )
+                  if (st0_tag == TAG_Zero)
                     partial_status = status1;  /* Undo any denorm tag,
                                                   zero-divide has priority. */
                   FPU_div(REV|LOADED|loaded_tag, &loaded_data, control_word);
@@ -340,12 +334,12 @@ do_the_FPU_interrupt:
             }
           else
             {
-              if ( (FPU_modrm & 0x30) == 0x10 )
+              if ((FPU_modrm & 0x30) == 0x10)
                 {
                   /* The instruction is fcom or fcomp */
                   EXCEPTION(EX_StackUnder);
                   setcc(SW_C3 | SW_C2 | SW_C0);
-                  if ( (FPU_modrm & 0x08) && (control_word & CW_Invalid) )
+                  if ((FPU_modrm & 0x08) && (control_word & CW_Invalid))
                     FPU_pop();             /* fcomp */
                 }
               else
@@ -355,9 +349,9 @@ do_the_FPU_interrupt:
           operand_address = data_sel_off;
         }
       else {
-          if ( !(no_ip_update =
+          if (!(no_ip_update =
                  FPU_load_store(((FPU_modrm & 0x38) | (byte1 & 6)) >> 1,
-                                addr_modes, data_address)) )
+                                addr_modes, data_address)))
             {
               operand_address = data_sel_off;
             }
@@ -376,33 +370,33 @@ do_the_FPU_interrupt:
 
       st0_ptr = &st(0);
       st0_tag = FPU_gettag0();
-      switch ( type_table[(int) instr_index] )
+      switch (type_table[(int) instr_index])
         {
         case _NONE_:   /* also _REGIc: _REGIn */
           break;
         case _REG0_:
-          if ( !NOT_EMPTY_ST0 )
+          if (!NOT_EMPTY_ST0)
             {
               FPU_stack_underflow();
               goto FPU_instruction_done;
             }
           break;
         case _REGIi:
-          if ( !NOT_EMPTY_ST0 || !NOT_EMPTY(FPU_rm) )
+          if (!NOT_EMPTY_ST0 || !NOT_EMPTY(FPU_rm))
             {
               FPU_stack_underflow_i(FPU_rm);
               goto FPU_instruction_done;
             }
           break;
         case _REGIp:
-          if ( !NOT_EMPTY_ST0 || !NOT_EMPTY(FPU_rm) )
+          if (!NOT_EMPTY_ST0 || !NOT_EMPTY(FPU_rm))
             {
               FPU_stack_underflow_pop(FPU_rm);
               goto FPU_instruction_done;
             }
           break;
         case _REGI_:
-          if ( !NOT_EMPTY_ST0 || !NOT_EMPTY(FPU_rm) )
+          if (!NOT_EMPTY_ST0 || !NOT_EMPTY(FPU_rm))
             {
               FPU_stack_underflow();
               goto FPU_instruction_done;
@@ -423,7 +417,7 @@ FPU_instruction_done:
       ;
     }
 
-  if ( ! no_ip_update )
+  if (! no_ip_update)
     instruction_address = entry_sel_off;
 
 FPU_fwait_done:
@@ -431,6 +425,7 @@ FPU_fwait_done:
 #ifdef DEBUG
   FPU_printall();
 #endif /* DEBUG */
+
 #ifdef BX_NO_BLANK_LABELS
   if(0);
 #endif
