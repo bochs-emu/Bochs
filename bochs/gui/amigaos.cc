@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.14 2003-04-06 15:48:58 nicholai Exp $
+// $Id: amigaos.cc,v 1.15 2003-04-08 17:53:12 nicholai Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -355,7 +355,7 @@ bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsig
 	BX_PANIC(("Amiga: Failed to open diskfont.library v38 or later!"));
 
 	IFFParseBase = OpenLibrary("iffparse.library", 39);
-	if (DiskfontBase == NULL)
+	if (IFFParseBase == NULL)
 	BX_PANIC(("Amiga: Failed to open iffparse.library v39 or later!"));
 
 	open_screen();
