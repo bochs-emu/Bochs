@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.30 2002-09-05 19:12:02 sshwarts Exp $
+// $Id: cpu.h,v 1.31 2002-09-05 19:46:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1508,6 +1508,7 @@ public: // for now...
                     Boolean change_VM, Boolean change_RF);
   BX_SMF Bit16u read_flags(void);
   BX_SMF Bit32u read_eflags(void);
+  BX_SMF Bit32u get_segment_base(unsigned seg);
 
   BX_SMF Bit8u   inp8(Bit16u addr);
   BX_SMF void    outp8(Bit16u addr, Bit8u value);
@@ -1543,6 +1544,8 @@ public: // for now...
   BX_SMF Bit32u  hwdebug_compare(Bit32u laddr, unsigned size,
                                  unsigned opa, unsigned opb);
 #endif
+
+  BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }
 
   BX_SMF BX_CPP_INLINE void set_CF(Boolean val);
   BX_SMF BX_CPP_INLINE void set_AF(Boolean val);
@@ -1597,7 +1600,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit32u get_ESI(void);
   BX_SMF BX_CPP_INLINE Bit32u get_EDI(void);
 
-  BX_SMF BX_CPP_INLINE Bit32u get_CPL(void);
+  BX_SMF BX_CPP_INLINE Bit8u  get_CPL(void);
   BX_SMF BX_CPP_INLINE Bit32u get_EIP(void);
 
 #if BX_CPU_LEVEL >= 2
@@ -1632,55 +1635,59 @@ extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CX(Bit16u cx) { CX = cx; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DX(Bit16u dx) { DX = dx; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SP(Bit16u sp) { SP = sp; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BP(Bit16u bp) { BP = bp; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SI(Bit16u si) { SI = si; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DI(Bit16u di) { DI = di; };
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; }
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; }
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CX(Bit16u cx) { CX = cx; }
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DX(Bit16u dx) { DX = dx; }
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SP(Bit16u sp) { SP = sp; }
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BP(Bit16u bp) { BP = bp; }
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_SI(Bit16u si) { SI = si; }
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DI(Bit16u di) { DI = di; } 
 
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AL(Bit8u  al) { AL = al; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AH(Bit8u  ah) { AH = ah; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BL(Bit8u  bl) { BL = bl; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BH(Bit8u  bh) { BH = bh; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CL(Bit8u  cl) { CL = cl; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CH(Bit8u  ch) { CH = ch; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DL(Bit8u  dl) { DL = dl; };
-BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DH(Bit8u  dh) { DH = dh; };
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AL(Bit8u  al) { AL = al; } 
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AH(Bit8u  ah) { AH = ah; } 
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BL(Bit8u  bl) { BL = bl; } 
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BH(Bit8u  bh) { BH = bh; } 
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CL(Bit8u  cl) { CL = cl; } 
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CH(Bit8u  ch) { CH = ch; } 
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DL(Bit8u  dl) { DL = dl; } 
+BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_DH(Bit8u  dh) { DH = dh; } 
 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_AL(void) { return(AL); };
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_AH(void) { return(AH); };
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_BL(void) { return(BL); };
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_BH(void) { return(BH); };
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CL(void) { return(CL); };
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CH(void) { return(CH); };
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_DL(void) { return(DL); };
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_DH(void) { return(DH); };
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_AL(void) { return(AL); } 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_AH(void) { return(AH); } 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_BL(void) { return(BL); } 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_BH(void) { return(BH); } 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CL(void) { return(CL); } 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CH(void) { return(CH); } 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_DL(void) { return(DL); } 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_DH(void) { return(DH); } 
 
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_AX(void) { return(AX); };
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BX(void) { return(BX); };
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_CX(void) { return(CX); };
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DX(void) { return(DX); };
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SP(void) { return(SP); };
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BP(void) { return(BP); };
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SI(void) { return(SI); };
-BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DI(void) { return(DI); };
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_AX(void) { return(AX); } 
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BX(void) { return(BX); } 
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_CX(void) { return(CX); } 
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DX(void) { return(DX); } 
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SP(void) { return(SP); } 
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BP(void) { return(BP); } 
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_SI(void) { return(SI); } 
+BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DI(void) { return(DI); } 
 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EAX(void) { return(EAX); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBX(void) { return(EBX); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ECX(void) { return(ECX); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDX(void) { return(EDX); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESP(void) { return(ESP); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBP(void) { return(EBP); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESI(void) { return(ESI); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDI(void) { return(EDI); };
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EAX(void) { return(EAX); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBX(void) { return(EBX); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ECX(void) { return(ECX); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDX(void) { return(EDX); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESP(void) { return(ESP); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EBP(void) { return(EBP); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_ESI(void) { return(ESI); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EDI(void) { return(EDI); } 
 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_CPL(void) { return(CPL); };
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EIP(void) { return(EIP); };
+BX_SMF BX_CPP_INLINE Bit8u  BX_CPU_C_PREFIX get_CPL(void) { return(CPL); } 
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EIP(void) { return(EIP); } 
 
-#endif
+#endif /* defined(NEED_CPU_REG_SHORTCUTS) */
+
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C::get_segment_base(unsigned seg) {
+   return (BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
+}
 
 #if BX_CPU_LEVEL >= 2
   BX_CPP_INLINE Boolean BX_CPU_C::real_mode(void) { return( !BX_CPU_THIS_PTR cr0.pe ); };
