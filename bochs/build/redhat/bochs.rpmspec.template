@@ -57,6 +57,7 @@ and other OS's, all on your workstation.
 %defattr(-, root, root)
 	/usr/bin/bochs
 	/usr/bin/bochs-dlx
+	/usr/bin/bxcommit
 	/usr/bin/bximage
 	/usr/share/bochs/*
 	/usr/share/doc/*
