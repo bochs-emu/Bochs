@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.56 2004-11-14 19:29:34 sshwarts Exp $
+// $Id: init.cc,v 1.57 2004-11-14 21:25:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.56 2004-11-14 19:29:34 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.57 2004-11-14 21:25:42 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -527,16 +527,6 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 #endif
 
-#if BX_SUPPORT_SSE >= 1
-  for(unsigned index=0; index < BX_XMM_REGISTERS; index++)
-  {
-    BX_CPU_THIS_PTR xmm[index].xmm64u(0) = 0;
-    BX_CPU_THIS_PTR xmm[index].xmm64u(1) = 0;
-  }
-
-  BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
-#endif
-
   /* CS (Code Segment) and descriptor cache */
   /* Note: on a real cpu, CS initially points to upper memory.  After
    * the 1st jump, the descriptor base is zero'd out.  Since I'm just
@@ -547,23 +537,23 @@ void BX_CPU_C::reset(unsigned source)
    *        286     F000         FF0000        FFFF   FFF0
    *        386+    F000       FFFF0000        FFFF   FFF0
    */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value =     0xf000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = 0xF000;
 #if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid =     1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 3; /* read/write access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0; /* normal expand up */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1; /* writeable */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1; /* accessed */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0x000F0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0xFFFF0000;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        =     0xFFFF;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled =     0xFFFF;
 #endif
@@ -574,17 +564,17 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   /* SS (Stack Segment) and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value =     0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = 0x0000;
 #if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid =     1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = 3; /* read/write access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -601,17 +591,17 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   /* DS (Data Segment) and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value =     0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0x0000;
 #if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti    = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid =     1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.type = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid    = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl      = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.type     = 3; /* read/write access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -628,17 +618,17 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   /* ES (Extra Segment) and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value =     0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0x0000;
 #if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.ti = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.ti    = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid =     1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.type = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid    = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl      = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.type     = 3; /* read/write access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -656,16 +646,16 @@ void BX_CPU_C::reset(unsigned source)
 
   /* FS and descriptor cache */
 #if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.index =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.ti = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.rpl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.ti    = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid =     1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.p = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl     = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.type = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.type    = 3; /* read/write access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -681,16 +671,16 @@ void BX_CPU_C::reset(unsigned source)
 
   /* GS and descriptor cache */
 #if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.index =     0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.ti = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.rpl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.ti    = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid =     1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.p = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.type = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid    = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl      = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.type     = 3; /* read/write access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -704,7 +694,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.avl = 0;
 #endif
 
-
 #if BX_CPU_LEVEL >= 2
   /* GDTR (Global Descriptor Table Register) */
   BX_CPU_THIS_PTR gdtr.base         = 0x00000000;
@@ -717,23 +706,23 @@ void BX_CPU_C::reset(unsigned source)
   /* LDTR (Local Descriptor Table Register) */
   BX_CPU_THIS_PTR ldtr.selector.value = 0x0000;
   BX_CPU_THIS_PTR ldtr.selector.index = 0x0000;
-  BX_CPU_THIS_PTR ldtr.selector.ti  = 0;
-  BX_CPU_THIS_PTR ldtr.selector.rpl = 0;
+  BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
+  BX_CPU_THIS_PTR ldtr.selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR ldtr.cache.valid   = 0; /* not valid */
-  BX_CPU_THIS_PTR ldtr.cache.p       = 0; /* not present */
-  BX_CPU_THIS_PTR ldtr.cache.dpl     = 0; /* field not used */
-  BX_CPU_THIS_PTR ldtr.cache.segment = 0; /* system segment */
-  BX_CPU_THIS_PTR ldtr.cache.type    = 2; /* LDT descriptor */
+  BX_CPU_THIS_PTR ldtr.cache.valid    = 0; /* not valid */
+  BX_CPU_THIS_PTR ldtr.cache.p        = 0; /* not present */
+  BX_CPU_THIS_PTR ldtr.cache.dpl      = 0; /* field not used */
+  BX_CPU_THIS_PTR ldtr.cache.segment  = 0; /* system segment */
+  BX_CPU_THIS_PTR ldtr.cache.type     = 2; /* LDT descriptor */
 
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base      = 0x00000000;
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit     =     0xFFFF;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base  = 0x00000000;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit =     0xFFFF;
 
-  /* TR (Task Register) */   /* ??? I don't know what state the TR comes up in */
-  BX_CPU_THIS_PTR tr.selector.value =     0x0000;
-  BX_CPU_THIS_PTR tr.selector.index =     0x0000; /* undefined */
-  BX_CPU_THIS_PTR tr.selector.ti    =     0;
-  BX_CPU_THIS_PTR tr.selector.rpl   =     0;
+  /* TR (Task Register) */
+  BX_CPU_THIS_PTR tr.selector.value = 0x0000;
+  BX_CPU_THIS_PTR tr.selector.index = 0x0000; /* undefined */
+  BX_CPU_THIS_PTR tr.selector.ti    = 0;
+  BX_CPU_THIS_PTR tr.selector.rpl   = 0;
 
   BX_CPU_THIS_PTR tr.cache.valid    = 0;
   BX_CPU_THIS_PTR tr.cache.p        = 0;
@@ -802,6 +791,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr0.val32 |= 0x60000000;
 #endif
 
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32;
+#endif
+
   // handle reserved bits
 #if BX_CPU_LEVEL == 3
   // reserved bits all set to 1 on 386
@@ -812,7 +805,6 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 #endif // CPU >= 2
 
-
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR cr2 = 0;
   BX_CPU_THIS_PTR cr3 = 0;
@@ -821,11 +813,6 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.setRegister(0);
 #endif
-
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32;
-#endif
-
 
 /* initialise MSR registers to defaults */
 #if BX_CPU_LEVEL >= 5
@@ -861,7 +848,18 @@ void BX_CPU_C::reset(unsigned source)
 
   // Reset the Floating Point Unit
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR the_i387.reset();
+  BX_CPU_THIS_PTR the_i387.reset(); // unchanged on #INIT
+#endif
+
+  // Reset XMM state
+#if BX_SUPPORT_SSE >= 1  // unchanged on #INIT
+  for(unsigned index=0; index < BX_XMM_REGISTERS; index++)
+  {
+    BX_CPU_THIS_PTR xmm[index].xmm64u(0) = 0;
+    BX_CPU_THIS_PTR xmm[index].xmm64u(1) = 0;
+  }
+
+  BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
 #endif
 
 #if (BX_SMP_PROCESSORS > 1)
@@ -945,7 +943,6 @@ void BX_CPU_C::sanity_checks(void)
     BX_PANIC(("problems using BX_READ_16BIT_REG()!"));
     }
 
-
   eax = EAX;
   ecx = ECX;
   edx = EDX;
@@ -954,7 +951,6 @@ void BX_CPU_C::sanity_checks(void)
   ebp = EBP;
   esi = ESI;
   edi = EDI;
-
 
   if (sizeof(Bit8u)  != 1  ||  sizeof(Bit8s)  != 1)
     BX_PANIC(("data type Bit8u or Bit8s is not of length 1 byte!"));

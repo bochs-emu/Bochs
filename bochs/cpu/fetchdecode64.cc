@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.64 2004-10-08 19:29:04 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.65 2004-11-14 21:25:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2139,7 +2139,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction,
 
   unsigned b1, b2, ilen=1, attr, lock=0;
   unsigned imm_mode, offset, rex_r,rex_x,rex_b;
-  unsigned rm, mod, nnn;
+  unsigned rm, mod = 0, nnn = 0;
   unsigned sse_prefix;
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
@@ -2309,7 +2309,7 @@ another_byte:
           return(0);
 
         default:
-BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
+          BX_PANIC(("fetchdecode64: prefix default = 0x%02x", b1));
           return(0);
         }
       }

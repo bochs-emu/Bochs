@@ -2790,7 +2790,7 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
+  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result = 0;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2846,7 +2846,7 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
+  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result = 0;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
