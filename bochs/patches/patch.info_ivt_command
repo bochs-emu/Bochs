@@ -70,7 +70,7 @@ diff -u -r1.100 dbg_main.cc
 +    case 0x1b : ret = "KEYBOARD - CONTROL-BREAK HANDLER"    ; break;
 +    case 0x1c : ret = "TIME - SYSTEM TIMER TICK"            ; break;
 +    case 0x1d : ret = "SYSTEM DATA - VIDEO PARAMETER TABLES"; break;
-+    case 0x1e : ret = "SYSTEM DAYA - DISKETTE PARAMETERS"   ; break;
++    case 0x1e : ret = "SYSTEM DATA - DISKETTE PARAMETERS"   ; break;
 +    case 0x1f : ret = "SYSTEM DATA - 8x8 GRAPHICS FONT"     ; break;
 +    default   : ret = ""                                    ; break;
 +  }
@@ -104,7 +104,7 @@ diff -u -r1.100 dbg_main.cc
 +      seg = (buff[3] << 8) | buff[2];
 +      off = (buff[1] << 8) | buff[0];
 +#endif
-+      dbg_printf("INT# %02x > %04X:%04X (%08X) %s\n", i, seg, off, (seg << 4) | off, bx_dbg_ivt_desc(i));
++      dbg_printf("INT# %02x > %04X:%04X (%08X) %s\n", i, seg, off, (seg << 4) + off, bx_dbg_ivt_desc(i));
 +    }
 +  }
 +  else
