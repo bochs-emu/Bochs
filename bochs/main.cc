@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.247 2003-09-02 19:34:48 vruppert Exp $
+// $Id: main.cc,v 1.248 2003-09-04 16:58:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -862,8 +862,12 @@ void bx_init_options ()
       "Amount of RAM in megabytes",
       1, BX_MAX_BIT32U,
       BX_DEFAULT_MEM_MEGS);
-  bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
+#if BX_WITH_WX
+  bx_options.memory.Osize->set_label ("Memory size (megabytes)");
+#else
+  bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
+#endif
 
   // initialize serial and parallel port options
 #define PAR_SER_INIT_LIST_MAX \
@@ -978,8 +982,13 @@ void bx_init_options ()
       "The address at which the ROM image should be loaded",
       0, BX_MAX_BIT32U, 
       0xf0000);
-  bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
   bx_options.rom.Oaddress->set_base (16);
+#if BX_WITH_WX
+  bx_options.rom.Opath->set_label ("ROM BIOS image");
+  bx_options.rom.Oaddress->set_label ("ROM BIOS address");
+#else
+  bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
+#endif
 
   bx_options.optrom[0].Opath = new bx_param_filename_c (BXP_OPTROM1_PATH,
       "optional romimage #1",
@@ -991,8 +1000,13 @@ void bx_init_options ()
       "The address at which the optional ROM image #1 should be loaded",
       0, BX_MAX_BIT32U, 
       0);
-  bx_options.optrom[0].Oaddress->set_format ("optional ROM #1 address: 0x%05x");
   bx_options.optrom[0].Oaddress->set_base (16);
+#if BX_WITH_WX
+  bx_options.optrom[0].Opath->set_label ("Optional ROM image #1");
+  bx_options.optrom[0].Oaddress->set_label ("Address");
+#else
+  bx_options.optrom[0].Oaddress->set_format ("optional ROM #1 address: 0x%05x");
+#endif
 
   bx_options.optrom[1].Opath = new bx_param_filename_c (BXP_OPTROM2_PATH,
       "optional romimage #2",
@@ -1004,8 +1018,13 @@ void bx_init_options ()
       "The address at which the optional ROM image #2 should be loaded",
       0, BX_MAX_BIT32U, 
       0);
-  bx_options.optrom[1].Oaddress->set_format ("optional ROM #2 address: 0x%05x");
   bx_options.optrom[1].Oaddress->set_base (16);
+#if BX_WITH_WX
+  bx_options.optrom[1].Opath->set_label ("Optional ROM image #2");
+  bx_options.optrom[1].Oaddress->set_label ("Address");
+#else
+  bx_options.optrom[1].Oaddress->set_format ("optional ROM #2 address: 0x%05x");
+#endif
 
   bx_options.optrom[2].Opath = new bx_param_filename_c (BXP_OPTROM3_PATH,
       "optional romimage #3",
@@ -1017,8 +1036,13 @@ void bx_init_options ()
       "The address at which the optional ROM image #3 should be loaded",
       0, BX_MAX_BIT32U, 
       0);
-  bx_options.optrom[2].Oaddress->set_format ("optional ROM #3 address: 0x%05x");
   bx_options.optrom[2].Oaddress->set_base (16);
+#if BX_WITH_WX
+  bx_options.optrom[2].Opath->set_label ("Optional ROM image #3");
+  bx_options.optrom[2].Oaddress->set_label ("Address");
+#else
+  bx_options.optrom[2].Oaddress->set_format ("optional ROM #3 address: 0x%05x");
+#endif
 
   bx_options.optrom[3].Opath = new bx_param_filename_c (BXP_OPTROM4_PATH,
       "optional romimage #4",
@@ -1030,14 +1054,22 @@ void bx_init_options ()
       "The address at which the optional ROM image #4 should be loaded",
       0, BX_MAX_BIT32U, 
       0);
-  bx_options.optrom[3].Oaddress->set_format ("optional ROM #4 address: 0x%05x");
   bx_options.optrom[3].Oaddress->set_base (16);
+#if BX_WITH_WX
+  bx_options.optrom[3].Opath->set_label ("Optional ROM image #4");
+  bx_options.optrom[3].Oaddress->set_label ("Address");
+#else
+  bx_options.optrom[3].Oaddress->set_format ("optional ROM #4 address: 0x%05x");
+#endif
 
   bx_options.vgarom.Opath = new bx_param_filename_c (BXP_VGA_ROM_PATH,
       "vgaromimage",
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
   bx_options.vgarom.Opath->set_format ("Name of VGA BIOS image: %s");
+#if BX_WITH_WX
+  bx_options.vgarom.Opath->set_label ("VGA BIOS image");
+#endif
   bx_param_c *memory_init_list[] = {
     bx_options.memory.Osize,
     bx_options.vgarom.Opath,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.97 2003-09-02 19:34:48 vruppert Exp $
+// $Id: wxmain.cc,v 1.98 2003-09-04 16:58:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -593,48 +593,7 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
 {
   ConfigMemoryDialog dlg (this, -1);
-  bx_param_num_c *megs = (bx_param_num_c*) SIM->get_param(BXP_MEM_SIZE);
-  bx_param_string_c *bios = (bx_param_string_c *) SIM->get_param (BXP_ROM_PATH);
-  bx_param_num_c *biosaddr = (bx_param_num_c*) SIM->get_param(BXP_ROM_ADDRESS);
-  bx_param_string_c *vgabios = (bx_param_string_c *) SIM->get_param (BXP_VGA_ROM_PATH);
-  static bx_id optRomPathParams[] = {
-    BXP_OPTROM1_PATH, BXP_OPTROM2_PATH, BXP_OPTROM3_PATH, BXP_OPTROM4_PATH
-  };
-  static bx_id optRomAddrParams[] = {
-    BXP_OPTROM1_ADDRESS, BXP_OPTROM2_ADDRESS, BXP_OPTROM3_ADDRESS, BXP_OPTROM4_ADDRESS
-  };
-  bx_param_string_c *optromPath[CONFIG_MEMORY_N_ROMS];
-  bx_param_num_c *optromAddr[CONFIG_MEMORY_N_ROMS];
-  int rom;
-  for (rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
-    optromPath[rom] = (bx_param_string_c *) 
-      SIM->get_param (optRomPathParams[rom]);
-    optromAddr[rom] = (bx_param_num_c *) 
-      SIM->get_param (optRomAddrParams[rom]);
-  }
-  dlg.SetSize (megs->get ());
-  dlg.SetBios (wxString (bios->getptr ()));
-  dlg.SetBiosAddr (biosaddr->get ());
-  dlg.SetVgaBios (wxString (vgabios->getptr ()));
-  for (rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
-    dlg.SetRom (rom, wxString (optromPath[rom]->getptr ()));
-    dlg.SetRomAddr (rom, optromAddr[rom]->get ());
-  }
-  int n = dlg.ShowModal ();
-  if (n == wxID_OK) {
-    char buf[1024];
-    megs->set (dlg.GetSize ());
-    safeWxStrcpy (buf, dlg.GetBios (), sizeof (buf));
-    bios->set (buf);
-    biosaddr->set (dlg.GetBiosAddr ());
-    safeWxStrcpy (buf, dlg.GetVgaBios (), sizeof (buf));
-    vgabios->set (buf);
-    for (rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
-      safeWxStrcpy (buf, dlg.GetRom (rom), sizeof (buf));
-      optromPath[rom]->set (buf);
-      optromAddr[rom]->set (dlg.GetRomAddr (rom));
-    }
-  }
+  dlg.ShowModal ();
 }
 
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))

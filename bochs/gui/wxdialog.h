@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.50 2003-09-02 19:34:48 vruppert Exp $
+// $Id: wxdialog.h,v 1.51 2003-09-04 16:58:27 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -208,94 +208,6 @@ public:
 DECLARE_EVENT_TABLE()
 };
 
-////////////////////////////////////////////////////////////////////////////
-// ConfigMemoryDialog
-////////////////////////////////////////////////////////////////////////////
-//
-//  +--- Configure Memory ----------------------------------------------+
-//  |                                                                   |
-//  | +--- Standard Options ------------------------------------------+ |
-//  | |                                                               | |
-//  | |     Memory size (megabytes): [_____]                          | |
-//  | |              ROM BIOS image: [________________] [Browse]      | |
-//  | |            ROM BIOS address: [______]                         | |
-//  | |              VGA BIOS image: [________________] [Browse]      | |
-//  | |            VGA BIOS address: 0xc0000                          | |
-//  | |                                                               | |
-//  | +---------------------------------------------------------------+ |
-//  |                                                                   |
-//  | +--- Optional ROM images ---------------------------------------+ |
-//  | |                                                               | |
-//  | |   Optional ROM image #1: [________________] [Browse]          | |
-//  | |                 Address: [______]                             | |
-//  | |                                                               | |
-//  | |   Optional ROM image #2: [________________] [Browse]          | |
-//  | |                 Address: [______]                             | |
-//  | |                                                               | |
-//  | |   Optional ROM image #3: [________________] [Browse]          | |
-//  | |                 Address: [______]                             | |
-//  | |                                                               | |
-//  | |   Optional ROM image #4: [________________] [Browse]          | |
-//  | |                 Address: [______]                             | |
-//  | |                                                               | |
-//  | +---------------------------------------------------------------+ |
-//  |                                        [ Help ] [ Cancel ] [ Ok ] |
-//  +-------------------------------------------------------------------+
-//
-// To use this dialog:
-// After constructor, use SetSize(), SetBios(), SetBiosAddr(), SetVgaBios(),
-// SetRom(), SetRomAddr() to set the initial values.  Then call ShowModal()
-// which will return wxID_OK or wxID_CANCEL.  Use the Get* equivalent methods
-// to find out the value from each field.
-class ConfigMemoryDialog: public wxDialog
-{
-private:
-#define CONFIG_MEMORY_TITLE "Configure Memory"
-#define CONFIG_MEMORY_BOX1_TITLE "Standard Options"
-#define CONFIG_MEMORY_BOX2_TITLE "Optional ROM Images"
-#define CONFIG_MEMORY_BOX1_LABELS { \
-  "Memory size (megabytes):", \
-    "ROM BIOS image:", \
-    "ROM BIOS address:", \
-    "VGA BIOS image:", \
-    "VGA BIOS address:", \
-    "0xC0000" }
-#define CONFIG_MEMORY_BOX2_LABELS { \
-  "Optional ROM image #1:", "Address:",  \
-  "Optional ROM image #2:", "Address:",  \
-  "Optional ROM image #3:", "Address:",  \
-  "Optional ROM image #4:", "Address:" \
-  }
-#define CONFIG_MEMORY_N_ROMS 4
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
-  wxBoxSizer *mainSizer, *buttonSizer;
-  wxStaticBoxSizer *box1sizer, *box2sizer;
-  wxFlexGridSizer *box1gridSizer, *box2gridSizer;
-  wxSpinCtrl *megs;
-  wxTextCtrl *biosImage, *biosAddr, *vgabiosImage;
-  wxTextCtrl *rom[CONFIG_MEMORY_N_ROMS], *romAddr[CONFIG_MEMORY_N_ROMS];
-#define CONFIG_MEMORY_N_BROWSES 6
-  wxButton *browseBtn[CONFIG_MEMORY_N_BROWSES];
-public:
-  ConfigMemoryDialog(wxWindow* parent, wxWindowID id);
-  void OnEvent (wxCommandEvent& event);
-  int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetSize (int val) { megs->SetValue (val); }
-  void SetBios (wxString filename) { biosImage->SetValue (filename); }
-  void SetVgaBios (wxString filename) { vgabiosImage->SetValue (filename); }
-  void SetRom (int n, wxString filename) { rom[n]->SetValue (filename); }
-  void SetBiosAddr (int addr) { SetTextCtrl (biosAddr, "0x%05X", addr); }
-  void SetRomAddr (int n, int addr) { SetTextCtrl (romAddr[n], "0x%05X", addr); }
-  int GetSize () { return megs->GetValue (); }
-  wxString GetBios () { return biosImage->GetValue (); }
-  wxString GetVgaBios () { return vgabiosImage->GetValue (); }
-  wxString GetRom (int n) { return rom[n]->GetValue (); }
-  int GetBiosAddr () { return GetTextCtrlInt (biosAddr); }
-  int GetRomAddr (int n) { return GetTextCtrlInt (romAddr[n]); }
-
-DECLARE_EVENT_TABLE()
-};
 
 ////////////////////////////////////////////////////////////////////////////
 // LogOptionsDialog
@@ -588,6 +500,18 @@ public:
   virtual void CopyParamToGui ();
   bool IsShowing () { return isShowing; }
   void SetRuntimeFlag(bool val) { runtime = val; }
+DECLARE_EVENT_TABLE()
+};
+
+class ConfigMemoryDialog : public ParamDialog
+{
+#define CONFIG_MEMORY_TITLE "Configure Memory"
+#define CONFIG_MEMORY_BOX1_TITLE "Standard Options"
+#define CONFIG_MEMORY_BOX2_TITLE "Optional ROM Images"
+private:
+  wxFlexGridSizer *box1gridSizer, *box2gridSizer;
+public:
+  ConfigMemoryDialog(wxWindow* parent, wxWindowID id);
 DECLARE_EVENT_TABLE()
 };
 

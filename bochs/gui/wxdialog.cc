@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.64 2003-09-02 19:34:48 vruppert Exp $
+// $Id: wxdialog.cc,v 1.65 2003-09-04 16:58:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -785,207 +785,6 @@ void AdvancedLogOptionsDialog::ShowHelp ()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
-//////////////////////////////////////////////////////////////////////
-// ConfigMemoryDialog implementation
-//////////////////////////////////////////////////////////////////////
-// Structure:
-//   mainSizer:
-//     box1 = static box "Standard Options"
-//       box1sizer:
-//         box1gridSizer, 3 columns:
-//           "memsize"
-//           megs = textfield
-//           spacer
-//           "biosimg"
-//           biosImage = textfield
-//           browse button
-//           "biosaddr"
-//           biosAddr = textfield
-//           spacer
-//           "vgabiosimg"
-//           vgabios = textfield
-//           browse button
-//           "vgabiosaddr"
-//           "0xc0000"
-//     box2 = static box "Optional ROM images"
-//       box2sizer:
-//         box2gridSizer, 3 columns:
-//           "opt rom 1"
-//           romImage[0] = textfield
-//           browse button
-//           "opt rom 2"
-//           romImage[1] = textfield
-//           browse button
-//           "opt rom 3"
-//           romImage[2] = textfield
-//           browse button
-//           "opt rom 4"
-//           romImage[3] = textfield
-//           browse button
-//     buttonSizer:
-//       help
-//       cancel
-//       ok
-//
-
-// all events go to OnEvent method
-BEGIN_EVENT_TABLE(ConfigMemoryDialog, wxDialog)
-  EVT_BUTTON(-1, ConfigMemoryDialog::OnEvent)
-  EVT_CHECKBOX(-1, ConfigMemoryDialog::OnEvent)
-  EVT_TEXT(-1, ConfigMemoryDialog::OnEvent)
-END_EVENT_TABLE()
-
-
-ConfigMemoryDialog::ConfigMemoryDialog(
-    wxWindow* parent,
-    wxWindowID id)
-  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
-    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
-{
-  static char *box1_label[] = CONFIG_MEMORY_BOX1_LABELS;
-  static char *box2_label[] = CONFIG_MEMORY_BOX2_LABELS;
-  int n_browse = 0;
-  int insideStaticBoxMargin = 15;
-  SetTitle (CONFIG_MEMORY_TITLE);
-  mainSizer = new wxBoxSizer (wxVERTICAL);
-  wxStaticBox *box1 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX1_TITLE);
-  box1sizer = new wxStaticBoxSizer (box1, wxVERTICAL);
-  mainSizer->Add (box1sizer, 0, wxALL|wxGROW, 10);
-  wxStaticBox *box2 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX2_TITLE);
-  box2sizer = new wxStaticBoxSizer (box2, wxVERTICAL);
-  mainSizer->Add (box2sizer, 0, wxALL|wxGROW, 10);
-  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
-  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
-
-  // box1 contents
-  box1gridSizer = new wxFlexGridSizer (3);
-  box1sizer->Add (box1gridSizer, 0, wxALL, insideStaticBoxMargin);
-#define add(x) box1gridSizer->Add (x, 0, wxALL, 2)
-#define addrt(x) box1gridSizer->Add (x, 0, wxALL|wxALIGN_RIGHT, 2)
-#define newlabel(x) new wxStaticText (this, -1, x)
-#define spacer() box1gridSizer->Add (1, 1);
-#define newbrowse() (browseBtn[n_browse++] = new wxButton (this, ID_Browse, BTNLABEL_BROWSE))
-#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize))
-  addrt (newlabel (box1_label[0]));
-  add (megs = new wxSpinCtrl (this, -1));
-  spacer();
-  addrt (newlabel (box1_label[1]));
-  add (biosImage = newlongtext ());
-  add (newbrowse ());
-  addrt (newlabel (box1_label[2]));
-  add (biosAddr = new wxTextCtrl (this, -1));
-  spacer();
-  addrt (newlabel (box1_label[3]));
-  add (vgabiosImage = newlongtext ());
-  add (newbrowse ());
-  addrt (newlabel (box1_label[4]));
-  add (newlabel (box1_label[5]));
-#undef add
-#undef addrt
-#undef newlabel
-#undef spacer
-
-  // box2 contents
-  box2gridSizer = new wxFlexGridSizer (3);
-  box2sizer->Add (box2gridSizer, 0, wxALL, insideStaticBoxMargin);
-#define add(x) box2gridSizer->Add (x, 0, wxALL, 2)
-#define addrt(x) box2gridSizer->Add (x, 0, wxALL|wxALIGN_RIGHT, 2)
-#define newlabel(x) new wxStaticText (this, -1, x)
-#define spacer() box2gridSizer->Add (1, 1);
-  for (int i=0; i<CONFIG_MEMORY_N_ROMS; i++) {
-    addrt (newlabel (box2_label[2*i]));
-    add (rom[i] = newlongtext ());
-    add (newbrowse ());
-    addrt (newlabel (box2_label[2*i + 1]));
-    add (romAddr[i] = new wxTextCtrl (this, -1));
-    spacer();
-  }
-#undef add
-#undef addrt
-#undef newlabel
-#undef spacer
-#undef newbrowse
-#undef newlongtext
-
-  // buttonSizer contents
-  wxButton *btn;
-  btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-}
-
-void ConfigMemoryDialog::Init()
-{
-  // lay it out!
-  SetAutoLayout(TRUE);
-  SetSizer(mainSizer);
-  mainSizer->Fit (this);
-  wxSize size = mainSizer->GetMinSize ();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
-  int margin = 5;
-  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
-  Center ();
-}
-
-void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
-{
-  int id = event.GetId ();
-  wxLogMessage ("you pressed button id=%d", id);
-  switch (id) {
-    case ID_Browse:
-      {
-	// There are several browse buttons.  Figure out which one was
-	// pressed, and which text control is next to it.
-	wxTextCtrl *text = NULL;
-	wxObject *source = event.GetEventObject ();
-	for (int i=0; i<CONFIG_MEMORY_N_BROWSES; i++) {
-	  if (source == browseBtn[i]) {
-	    switch (i) {
-	      case 0: text = biosImage; break;
-	      case 1: text = vgabiosImage; break;
-	      case 2: case 3: case 4: case 5:
-		text = rom[i-2];
-		break;
-	    }
-	    break;
-	  }
-	}
-	if (!text) return;  // not recognized from browse button array
-	BrowseTextCtrl (text);
-      }
-      break;
-    case wxID_OK:
-      {
-	// test validity of the integer fields
-	bool valid;
-	GetTextCtrlInt (biosAddr, &valid, true, "Invalid ROM BIOS Address");
-	if (!valid) return;
-	for (int rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
-	  GetTextCtrlInt (romAddr[rom], &valid, true, "Invalid Optional ROM address");
-	  if (!valid) return;
-	}
-      }
-      EndModal (wxID_OK);
-      break;
-    case wxID_CANCEL:
-      EndModal (wxID_CANCEL);
-      break;
-    case wxID_HELP:
-      ShowHelp(); 
-      break;
-    default:
-      event.Skip ();
-  }
-}
-
-void ConfigMemoryDialog::ShowHelp ()
-{
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
-}
 
 #if BX_DEBUGGER
 //////////////////////////////////////////////////////////////////////
@@ -1296,7 +1095,7 @@ void ParamDialog::AddParam (
 	wxCheckBox *ckbx = new wxCheckBox (context->parent, pstr->id, "");
 	ckbx->SetValue (param->get ());
         if (description) ckbx->SetToolTip(description);
-	sizer->Add (ckbx);
+	sizer->Add (ckbx, 0, wxALL, 2);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	pstr->u.checkbox = ckbx;
 	idHash->Put (pstr->id, pstr);
@@ -1312,7 +1111,7 @@ void ParamDialog::AddParam (
 	  format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
 	SetTextCtrl (textctrl, format, param->get ());
         if (description) textctrl->SetToolTip(description);
-	sizer->Add (textctrl);
+	sizer->Add (textctrl, 0, wxALL, 2);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	pstr->u.text = textctrl;
 	idHash->Put (pstr->id, pstr);
@@ -1324,7 +1123,7 @@ void ParamDialog::AddParam (
 	if (!plain) ADD_LABEL (prompt);
 	wxChoice *choice = new wxChoice (context->parent, pstr->id);
         if (description) choice->SetToolTip(description);
-	sizer->Add (choice, 0, wxADJUST_MINSIZE);
+	sizer->Add (choice, 0, wxADJUST_MINSIZE, 2);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	// fill in the choices
 	int i=0;
@@ -1358,14 +1157,14 @@ void ParamDialog::AddParam (
         } else {
           txtctrl->SetValue (param->getptr ());
         }
-	sizer->Add (txtctrl);
+	sizer->Add (txtctrl, 0, wxALL, 2);
 	if (!plain) {
 	  if (isFilename) {
 	    // create Browse button
 	    pstr->browseButtonId = genId ();
 	    pstr->browseButton = new wxButton (context->parent, 
 		pstr->browseButtonId, BTNLABEL_BROWSE);
-	    sizer->Add (pstr->browseButton, 0, wxALL, 5);
+	    sizer->Add (pstr->browseButton, 0, wxALL, 2);
 	    idHash->Put (pstr->browseButtonId, pstr);  // register under button id
 	  } else {
 	    sizer->Add (1, 1);  // spacer
@@ -1760,6 +1559,93 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
 void ParamDialog::ShowHelp ()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
+}
+
+//////////////////////////////////////////////////////////////////////
+// ConfigMemoryDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   mainSizer:
+//     box1 = static box "Standard Options"
+//       box1sizer:
+//         box1gridSizer, 3 columns:
+//           "memsize"
+//           megs = textfield
+//           spacer
+//           "biosimg"
+//           biosImage = textfield
+//           browse button
+//           "biosaddr"
+//           biosAddr = textfield
+//           spacer
+//           "vgabiosimg"
+//           vgabios = textfield
+//           browse button
+//           "vgabiosaddr"
+//           "0xc0000"
+//     box2 = static box "Optional ROM images"
+//       box2sizer:
+//         box2gridSizer, 3 columns:
+//           "opt rom 1"
+//           romImage[0] = textfield
+//           browse button
+//           "opt rom 2"
+//           romImage[1] = textfield
+//           browse button
+//           "opt rom 3"
+//           romImage[2] = textfield
+//           browse button
+//           "opt rom 4"
+//           romImage[3] = textfield
+//           browse button
+//     buttonSizer:
+//       help
+//       cancel
+//       ok
+//
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(ConfigMemoryDialog, wxDialog)
+  EVT_BUTTON(-1, ConfigMemoryDialog::OnEvent)
+  EVT_CHECKBOX(-1, ConfigMemoryDialog::OnEvent)
+  EVT_TEXT(-1, ConfigMemoryDialog::OnEvent)
+END_EVENT_TABLE()
+
+ConfigMemoryDialog::ConfigMemoryDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : ParamDialog (parent, id)
+{
+  bx_id standardList[] = {BXP_MEM_SIZE, BXP_ROM_PATH, BXP_ROM_ADDRESS,
+                          BXP_VGA_ROM_PATH, BXP_NULL};
+  bx_id optionalList[] = {BXP_OPTROM1_PATH, BXP_OPTROM1_ADDRESS,
+                          BXP_OPTROM2_PATH, BXP_OPTROM2_ADDRESS,
+                          BXP_OPTROM3_PATH, BXP_OPTROM3_ADDRESS,
+                          BXP_OPTROM4_PATH, BXP_OPTROM4_ADDRESS, BXP_NULL};
+  int insideStaticBoxMargin = 15;
+  SetTitle (CONFIG_MEMORY_TITLE);
+
+  // top level objects
+  wxStaticBox *box1 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX1_TITLE);
+  wxStaticBoxSizer *box1sizer = new wxStaticBoxSizer (box1, wxVERTICAL);
+  mainSizer->Add (box1sizer, 0, wxALL|wxGROW, 10);
+
+  wxStaticBox *box2 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX2_TITLE);
+  wxStaticBoxSizer *box2sizer = new wxStaticBoxSizer (box2, wxVERTICAL);
+  mainSizer->Add (box2sizer, 0, wxALL|wxGROW, 10);
+
+  // box1 contents
+  box1gridSizer = new wxFlexGridSizer (3);
+  box1sizer->Add (box1gridSizer, 0, wxALL, insideStaticBoxMargin);
+  AddParamList (standardList, box1gridSizer);
+  wxStaticText *vgabiosaddr1 = new wxStaticText (this, -1, "VGA BIOS address");
+  box1gridSizer->Add (vgabiosaddr1, 0, wxALIGN_RIGHT|wxALL, 2);
+  wxStaticText *vgabiosaddr2 = new wxStaticText (this, -1, "0xC0000");
+  box1gridSizer->Add (vgabiosaddr2, 0, wxALL, 2);
+  // box2 contents
+  box2gridSizer = new wxFlexGridSizer (3);
+  box2sizer->Add (box2gridSizer, 0, wxALL, insideStaticBoxMargin);
+  AddParamList (optionalList, box2gridSizer);
 }
 
 /////////////////////////////////////////////////////////////////
