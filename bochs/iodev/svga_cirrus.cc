@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.6 2004-12-29 10:43:34 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.7 2005-01-27 18:11:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -438,11 +438,12 @@ bx_svga_cirrus_c::mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u valu
   dst = BX_CIRRUS_THIS vidmem + offset;
   for (x = 0; x < 8; x++) {
     if (val & 0x80) {
-      *dst++ = BX_CIRRUS_THIS control.shadow_reg1;
+      *dst = BX_CIRRUS_THIS control.shadow_reg1;
     } else if (mode == 5) {
-      *dst++ = BX_CIRRUS_THIS control.shadow_reg0;
+      *dst = BX_CIRRUS_THIS control.shadow_reg0;
     }
     val <<= 1;
+    dst++;
   }
 }
 
@@ -456,13 +457,14 @@ bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u val
   dst = BX_CIRRUS_THIS vidmem + offset;
   for (x = 0; x < 8; x++) {
     if (val & 0x80) {
-      *dst++ = BX_CIRRUS_THIS control.shadow_reg1;
-      *dst++ = BX_CIRRUS_THIS control.reg[0x11];
+      *dst = BX_CIRRUS_THIS control.shadow_reg1;
+      *(dst + 1) = BX_CIRRUS_THIS control.reg[0x11];
     } else if (mode == 5) {
-      *dst++ = BX_CIRRUS_THIS control.shadow_reg0;
-      *dst++ = BX_CIRRUS_THIS control.reg[0x10];
+      *dst = BX_CIRRUS_THIS control.shadow_reg0;
+      *(dst + 1) = BX_CIRRUS_THIS control.reg[0x10];
     }
     val <<= 1;
+    dst += 2;
   }
 }
 
@@ -582,7 +584,7 @@ bx_svga_cirrus_c::mem_read(Bit32u addr)
       return 0xff;
       }
     }
-  else if (addr >= 0xB8000 && addr <= 0xBFFFF) {
+  else if (addr >= 0xB8000 && addr <= 0xB8100) {
     // memory-mapped I/O.
     Bit32u offset;
 
@@ -727,7 +729,7 @@ bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
       SET_TILE_UPDATED(((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
                        (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE, 1);
     }
-  } else if (addr >= 0xB8000 && addr <= 0xBFFFF) {
+  } else if (addr >= 0xB8000 && addr < 0xB8100) {
     // memory-mapped I/O.
     Bit32u offset;
 
@@ -1906,6 +1908,8 @@ bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value
         svga_bitblt();
       }
       return;
+    case 0x2b: // BLT DEST ADDR (unused bits)
+      break;
     case 0x2c: // BLT SRC ADDR 0x0000ff
       break;
     case 0x2d: // BLT SRC ADDR 0x00ff00
@@ -2204,6 +2208,9 @@ bx_svga_cirrus_c::svga_mmio_blt_write(Bit32u address,Bit8u value)
       break;
     case CLGD543x_MMIO_BLTMODE:
       svga_write_control(0x3cf,0x30,value);
+      break;
+    case CLGD543x_MMIO_BLTMODE+1:
+      // unused ??? - ignored for now
       break;
     case CLGD543x_MMIO_BLTROP:
       svga_write_control(0x3cf,0x32,value);
