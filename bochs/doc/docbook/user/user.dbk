@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.118 2003-05-11 19:00:37 cbothamy Exp $
+$Id: user.dbk,v 1.119 2003-05-11 19:27:03 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -5859,6 +5859,16 @@ disk accesses are _VERY_ slow.
 
 <section><title>concat</title>
 <para>
+&FIXME; temporary text from old enable-split-hd option
+<screen>
+      When enabled, this allows a series of partial hard disk image files to be
+      treated as if it was one large file.  The .bochsrc specifies the first
+      partial HD image (example win95-1) and then bochs searches for the other
+      partial images in as a sequence (win95-2, win95-3, etc.) and opens them
+      all.  Then, it treats the series as if there was a single large file
+      created by "cat win95-1 win95-2 win95-3".  This trick works for both
+      diskc and diskd.  All files must be a multiple of 512 bytes.
+</screen>
 </para>
 </section>
 
@@ -5932,7 +5942,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.118 2003-05-11 19:00:37 cbothamy Exp $
+      $Id: user.dbk,v 1.119 2003-05-11 19:27:03 cbothamy Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8359,7 +8369,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.118 2003-05-11 19:00:37 cbothamy Exp $
+        $Id: user.dbk,v 1.119 2003-05-11 19:27:03 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
