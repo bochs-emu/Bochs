@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.28 2003-12-11 13:06:45 cbothamy Exp $
+$Id: misc.txt,v 1.29 2004-01-01 23:10:33 cbothamy Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -332,7 +332,7 @@ OPTIONAL: Build bochsdbg.exe.
 NOTE: To get the docbook installed, you need to do  something like this
 make dl_docbook
 or copy up to date doc files
-and cd doc/docbook; touch */*
+and cd doc/docbook; touch */*.html
 
 Do make install_win32 into /tmp or someplace:
 make install_win32 prefix=/tmp/bochs-2.0.pre3
@@ -342,7 +342,7 @@ bochs-2.0.pre3.win32-bin.zip
 
 
 Now make the NSIS installer package 
-(the current script is known to work with nsis 2.0b0)
+(the current script is known to work with nsis 2.0rc1)
 cd build/win32/nsis
 
 Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and 
