@@ -2,7 +2,7 @@
 //
 // misc/niclist.c
 // by Don Becker <x-odus@iname.com>
-// $Id: niclist.c,v 1.1 2001-10-03 13:36:14 bdenney Exp $
+// $Id: niclist.c,v 1.2 2001-10-31 16:01:29 bdenney Exp $
 //
 // This program is for win32 only.  It lists the network interface cards
 // that you can use in the "ethdev" field of the ne2k line in your bochsrc.
@@ -14,21 +14,24 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <wchar.h>
 
 BOOLEAN   (*PacketGetAdapterNames) (PTSTR, PULONG);
 
 int main(int argc, char **argv)
 {
-	int i = 0;
-    WCHAR     AdapterNameW[512];
+    int i = 0;
+    wchar_t   AdapterNameW[512];
     char      AdapterNameA[512];  
     int       AdapterNum = 0;
     ULONG     AdapterLength;
-	HINSTANCE hPacket;
-	DWORD     dwVersion, dwMajorVersion;
+    HINSTANCE hPacket;
+    DWORD     dwVersion, dwMajorVersion;
     char      AdapterList[10][1024];
-	WCHAR     *tempW, *tempW2;
-	char      *tempA, *tempA2;
+    wchar_t   *tempW, *tempW2;
+    char      *tempA, *tempA2;
+    char      buff[512];
 
     hPacket = LoadLibrary("PACKET.DLL");
 
@@ -59,8 +62,15 @@ int main(int argc, char **argv)
 		}
 	  
 		AdapterNum=i;
-		for (i=0;i<AdapterNum;i++)
-			wprintf(L"\n%d.) %s\n",i+1,AdapterList[i]);
+		for (i=0;i<AdapterNum;i++) {
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+                        memset(&buff, 0, sizeof(buff));
+                        wcstombs(buff, (wchar_t *)AdapterList[i], wcslen((wchar_t *)AdapterList[i]));
+			printf("\n%d.) %s\n",i+1,buff);
+#else
+                        wprintf(L"\n%d.) %s\n",i+1,AdapterList[i]);
+#endif
+                }
 		printf("\n");
 		
 	}
@@ -88,6 +98,5 @@ int main(int argc, char **argv)
 		printf("\n");
 
 	}
-
 	return 0;
 }
