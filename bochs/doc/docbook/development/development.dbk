@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.8 2002-12-23 22:15:30 vruppert Exp $
+$Id: development.dbk,v 1.9 2003-02-03 17:10:04 cbothamy Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -984,7 +984,7 @@ the future.
       <para>
       &FIXME;
       how to make, where to submit, what happens then?
-      </para
+      </para>
       </section>
 
       <section id="cvs-release"><title>life cycle of a CVS release</title>

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.113 2003-01-28 00:37:11 cbothamy Exp $
+$Id: user.dbk,v 1.114 2003-02-03 17:10:05 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -286,7 +286,7 @@ The following table shows the features of Bochs and which platforms they
 currently work with.
 </para>
 <table><title>Bochs Features</title>
-<tgroup cols=3 align=left colsep=1 rowsep=1>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
   <row>
     <entry>Feature</entry>
@@ -506,7 +506,7 @@ currently work with.
        &FIXME; should add a column with supported display library (X11, SDL, wx, etc...)
 </para>
 <table><title>Supported platforms</title>
-   <tgroup cols=2 align=left colsep=1 rowsep=1>
+   <tgroup cols="2" align="left" colsep="1" rowsep="1">
    <tbody>
    <row>
       <entry>Unix/X11</entry>
@@ -1313,7 +1313,7 @@ description of each one.
 </para>
 
 <table><title>Files in RPM package</title>
-<tgroup cols=2 align=left colsep=1 rowsep=1>
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
 <thead> <row> <entry>File</entry> <entry>Description</entry> </row>
 </thead>
 <tbody>
@@ -1616,7 +1616,7 @@ In Bochs 1.3 and before, the X11 gui was always the default.
 
 
 <table><title>Defaults by Platform</title>
-<tgroup cols=3 align=left colsep=1 rowsep=1>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
   <row>
     <entry>Platform</entry>
@@ -1666,7 +1666,7 @@ In Bochs 1.3 and before, the X11 gui was always the default.
 </table>
 
 <table><title>Configure Options to Select the Display Library (optional)</title>
-<tgroup cols=3>
+<tgroup cols="3">
   <thead>
     <row>
       <entry>Option</entry>
@@ -1791,7 +1791,7 @@ turn it off.
 </para>
 
 <table><title>Configure Options</title>
-<tgroup cols=3>
+<tgroup cols="3">
   <thead>
     <row>
       <entry>Option</entry>
@@ -2806,7 +2806,7 @@ ata2-slave:  type=cdrom, path=iso.sample, status=inserted
 This defines the type and characteristics of all attached ata devices:
 <table>   
 <title>ata devices configuration options</title>
-<tgroup cols=3>
+<tgroup cols="3">
 <thead>
 <row>
 <entry>Option</entry>
@@ -3002,7 +3002,7 @@ you.
 </para>
 <table>   
 <title>display_library values</title>
-<tgroup cols=2>
+<tgroup cols="2">
 <thead>
 <row>
 <entry>Option</entry>
@@ -3319,7 +3319,7 @@ speed.</para></footnote>.
 </para>
 
 <table><title>Example IPS Settings</title>
-  <tgroup cols=3 align=left colsep=1 rowsep=1>
+  <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
   <row>
     <entry>Speed</entry>
@@ -3780,7 +3780,7 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 </para>
 
 <table id="bx-key-table"><title>BX_KEY constants</title>
-<tgroup cols=2 align=center colsep=1 rowsep=1>
+<tgroup cols="2" align="center" colsep="1" rowsep="1">
 <thead>
   <row>
     <entry> BX_KEY constant </entry>
@@ -5392,7 +5392,7 @@ Here is a summary of what can happen when booting from the cd.
 
 <table><title>CD Boot error codes</title>
 
-<tgroup cols=2 align=left colsep=1 rowsep=1>
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
 <thead>
  <row>
  <entry>Error code</entry>
@@ -5494,7 +5494,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
         </para>
 
 <table><title>Disk translation algorithms</title>
-<tgroup cols=4 align=left colsep=1 rowsep=1>
+<tgroup cols="4" align="left" colsep="1" rowsep="1">
 <thead>
   <row>
     <entry>Algorithm</entry>
@@ -5672,7 +5672,7 @@ Current limitations:
 	<listitem> <para> only 8bpp modes are supported (no 16bpp, 24bpp or 32bpp!)</para> </listitem>
 	<listitem> <para> banked mode is very slow (if you can, just use Linear Frame Buffering instead!) </para> </listitem>
 	<listitem> <para> only 320x200, 640x400, 640x480, 800x600, 1024x768 are currently supported</para> </listitem>
-</itemizedlist
+</itemizedlist>
 </para>
 
 <para>
@@ -5681,7 +5681,7 @@ Interesting Facts:
 	<listitem> <para> You need a display driver capable of using the VESA bios for this to work 
 	                  (a recent XFree86 will do, Windows 9x/NT/2K/XP probably will not work 'out of the box'. </para> </listitem>
 	<listitem> <para> Currently the VBE2 extension should be supported ok </para> </listitem>
-</itemizedlist
+</itemizedlist>
 </para>
 
 </section>
