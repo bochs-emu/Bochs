@@ -40,9 +40,17 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
     boot: cdrom
 - updated Christophe Bothamy's LGPL vga bios to version 0.3a.  This consists of
   a bug fix for function ah=13 and VBE support by Jeroen Janssen.
-- keyboard changes by Christophe Bothamy. FIXME(cbothamy): need details.
-  - keyboard mapping?
-  - keyboard type?
+- keyboard changes by Christophe Bothamy. 
+  - completed keyboard emulation with the implementation of the three scancodes
+    sets (mf1, mf2, mf3) with or without translation. This is based on Ludovic 
+    Lange's plex86 keyboard patch.
+  - added a "keyboard_type" option, that defines the answer to an "identify 
+    keybord" request to the keyboard controller. The available values are
+    "xt","at","mf". 
+  - added a deactivable keyboard_mapping option that enables to use your
+    country specific keyboard with Bochs. If enabled the keymap file must be 
+    specified in bochsrc; The available keymaps are US, german, spanish and 
+    french for PCs running X11. Contributions are welcomed.
 - keyboard changes by Volker Ruppert. FIXME(vruppert): need details.
 - experimental SDL interface by Dave Poirier.
   SDL is a graphics library that has works on many platforms.
