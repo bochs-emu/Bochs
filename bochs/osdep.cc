@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.7 2002-09-23 02:20:51 yakovlev Exp $
+// $Id: osdep.cc,v 1.8 2002-09-25 19:24:26 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,7 +209,7 @@ char *bx_strdup(const char *str)
 {
 	char *temp;
 	
-	temp = malloc(strlen(str));
+	temp = malloc(strlen(str)+1);
 	sprintf(temp, "%s", str);
 	return temp;
 	
