@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.39 2004-06-21 10:39:23 cbothamy Exp $
+// $Id: exception.cc,v 1.40 2004-07-12 19:20:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,8 +50,7 @@ const bx_bool BX_CPU_C::is_exception_OK[3][3] = {
 
 
   void
-BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
-                    Bit16u error_code)
+BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
 #if BX_DEBUGGER
   if (bx_guard.special_unwind_stack) {
@@ -188,14 +187,15 @@ BX_CPU_THIS_PTR save_esp = ESP;
     if ( cs_descriptor.valid==0 ||
          cs_descriptor.segment==0 ||
          cs_descriptor.u.segment.executable==0 ||
-         cs_descriptor.dpl>CPL
-          ) {
+         cs_descriptor.dpl>CPL)
+    {
       BX_DEBUG(("interrupt(): not code segment"));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-      }
+    }
     // check that it's a 64 bit segment
     if ( cs_descriptor.u.segment.l == 0 ||
-         cs_descriptor.u.segment.d_b == 1) {
+         cs_descriptor.u.segment.d_b == 1)
+    {
       BX_DEBUG(("interrupt(): must be 64 bit segment"));
       exception(BX_GP_EXCEPTION, vector, 0);
     }
@@ -204,11 +204,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
     if ( cs_descriptor.p==0 ) {
       BX_DEBUG(("interrupt(): segment not present"));
       exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-      }
+    }
 
     // if code segment is non-conforming and DPL < CPL then
     // INTERRUPT TO INNER PRIVILEGE:
-    if ( (cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL) || (ist > 0)) {
+    if ((cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL) || (ist > 0))
+    {
       Bit16u old_SS, old_CS;
       Bit64u RSP_for_cpl_x, old_RIP, old_RSP;
       bx_descriptor_t ss_descriptor;
@@ -243,7 +244,6 @@ BX_CPU_THIS_PTR save_esp = ESP;
       old_RSP = RSP;
 
       // load new RSP values from TSS
-
 
       savemode = BX_CPU_THIS_PTR cpu_mode;
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
@@ -293,13 +293,13 @@ BX_CPU_THIS_PTR save_esp = ESP;
       BX_CPU_THIS_PTR clear_RF ();
       BX_CPU_THIS_PTR clear_NT ();
       return;
-      }
+    }
 
     // if code segment is conforming OR code segment DPL = CPL then
     // INTERRUPT TO SAME PRIVILEGE LEVEL:
-    if ( cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL ) {
+    if (cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL )
+    {
       Bit64u old_RSP;
-
 
       BX_DEBUG(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE"));
 
@@ -332,7 +332,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
       BX_CPU_THIS_PTR clear_RF ();
       BX_CPU_THIS_PTR clear_NT ();
       return;
-      }
+    }
 
     // else #GP(CS selector + ext)
     BX_DEBUG(("interrupt: bad descriptor"));
@@ -342,7 +342,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
       (unsigned) CPL));
     BX_DEBUG(("cs.segment = %u", (unsigned) cs_descriptor.segment));
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if(!real_mode()) {
@@ -357,7 +357,6 @@ BX_CPU_THIS_PTR save_esp = ESP;
     Bit16u gate_dest_selector;
     Bit32u gate_dest_offset;
 
-
     // interrupt vector must be within IDT table limits,
     // else #GP(vector number*8 + 2 + EXT)
     if ( (vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
@@ -366,9 +365,8 @@ BX_CPU_THIS_PTR save_esp = ESP;
       BX_DEBUG(("interrupt vector must be within IDT table limits"));
       BX_DEBUG(("bailing"));
       BX_DEBUG(("interrupt(): vector > idtr.limit"));
-
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
-      }
+    }
 
     // descriptor AR byte must indicate interrupt gate, trap gate,
     // or task gate, else #GP(vector*8 + 2 + EXT)
@@ -431,8 +429,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
           }
 
         // index must be within GDT limits, else #TS(TSS selector)
-        fetch_raw_descriptor(&tss_selector, &dword1, &dword2,
-          BX_TS_EXCEPTION);
+        fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
 
         // AR byte must specify available TSS,
         //   else #TS(TSS selector)
@@ -447,7 +444,6 @@ BX_CPU_THIS_PTR save_esp = ESP;
           exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
           return;
           }
-
 
         // TSS must be present, else #NP(TSS selector)
         // done in task_switch()
@@ -824,9 +820,6 @@ BX_CPU_THIS_PTR save_esp = ESP;
     }
 }
 
-
-
-
   void
 BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   // vector:     0..255: vector in IDT
@@ -847,11 +840,6 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 #endif
 
 #if BX_EXTERNAL_DEBUGGER
-#if BX_SUPPORT_X86_64
-  //printf ("Exception(%u) code=%08x @%08x%08x\n", vector, error_code,(Bit32u)(BX_CPU_THIS_PTR prev_eip >>32),(Bit32u)(BX_CPU_THIS_PTR prev_eip));
-#else
-  //printf ("Exception(%u) code=%08x @%08x\n", vector, error_code,(Bit32u)(BX_CPU_THIS_PTR prev_eip));
-#endif
   //trap_debugger(1);
 #endif
 
@@ -1074,12 +1062,12 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     }
   else // real mode
 #endif
-    {
+  {
     // not INT, no error code pushed
     BX_CPU_THIS_PTR interrupt(vector, 0, 0, 0);
     BX_CPU_THIS_PTR errorno = 0; // error resolved
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-    }
+  }
 }
 
 
@@ -1090,19 +1078,6 @@ BX_CPU_C::int_number(bx_segment_reg_t *seg)
     return(BX_SS_EXCEPTION);
   else
     return(BX_GP_EXCEPTION);
-}
-
-  void
-BX_CPU_C::shutdown_cpu(void)
-{
-
-#if BX_CPU_LEVEL > 2
-  BX_PANIC(("shutdown_cpu(): not implemented for 386"));
-#endif
-
-  invalidate_prefetch_q();
-  BX_PANIC(("shutdown_cpu(): not finished"));
-
 }
 
 #if BX_SUPPORT_X86_64
@@ -1180,8 +1155,6 @@ SYSCALL_LEGACY_MODE:
   bx_descriptor_t cs_descriptor,ss_descriptor;
   bx_selector_t cs_selector,ss_selector;
   Bit32u  dword1, dword2;
-
-
 
   if (!BX_CPU_THIS_PTR msr.sce) {
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -1363,7 +1336,6 @@ SYSRET_NON_64BIT_MODE:
     BX_CPU_THIS_PTR assert_IF ();
 
     RIP = temp_RIP;
-    }
-
+  }
 }
 #endif // BX_SUPPORT_X86_64
