@@ -1,14 +1,15 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.20 2004-04-30 17:26:37 cbothamy Exp $
+ * $Id: bximage.c,v 1.21 2004-08-19 16:03:03 vruppert Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
  */
 
 #ifdef WIN32
-#  include <windows.h>
 #  include <conio.h>
+#  include <windows.h>
+#  include <winioctl.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +27,13 @@
 #define INCLUDE_ONLY_HD_HEADERS 1
 #include "../iodev/harddrv.h"
 
+typedef int (*WRITE_IMAGE)(FILE*, Bit64u);
+#ifdef WIN32
+typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
+#endif
+
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.20 2004-04-30 17:26:37 cbothamy Exp $";
+char *rcsid = "$Id: bximage.c,v 1.21 2004-08-19 16:03:03 vruppert Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -272,6 +278,34 @@ void make_redolog_header(redolog_header_t *header, const char* type, Bit64u size
 }
 
 /* produce a flat image file */
+#ifdef WIN32 
+int make_flat_image_win32(HANDLE hFile, Bit64u sec)
+{
+  LARGE_INTEGER pos;
+  DWORD dwCount;
+  USHORT mode;
+  char buffer[1024];
+
+  SetLastError(NO_ERROR);
+  mode = COMPRESSION_FORMAT_DEFAULT;
+  dwCount = 0;
+  memset(buffer, 0, 512);
+  WriteFile(hFile, buffer, 512, &dwCount, NULL); // set the first sector to 0, Win98 doesn't zero out the file
+                                                 // if there is a write at/over the end
+  DeviceIoControl(hFile, FSCTL_SET_COMPRESSION, &mode, sizeof(mode), NULL, 0, &dwCount, NULL);
+  pos.u.LowPart = (sec - 1) << 9;
+  pos.u.HighPart = (sec - 1) >> 23;
+  pos.u.LowPart = SetFilePointer(hFile, pos.u.LowPart, &pos.u.HighPart, FILE_BEGIN);
+  memset(buffer, 0, 512);
+  if ((pos.u.LowPart == 0xffffffff && GetLastError() != NO_ERROR) || !WriteFile(hFile, buffer, 512, &dwCount, NULL) || dwCount != 512)
+  {
+    CloseHandle(hFile);
+    fatal ("ERROR: The disk image is not complete!");
+  }
+  return 0;
+}
+#endif
+
 int make_flat_image(FILE *fp, Bit64u sec)
 {
    /*
@@ -367,9 +401,49 @@ int make_growing_image(FILE *fp, Bit64u sec)
 }
 
 /* produce the image file */
-int make_image (Bit64u sec, char *filename, int (*write_image)(FILE*, Bit64u) )
+#ifdef WIN32
+int make_image_win32 (Bit64u sec, char *filename, WRITE_IMAGE_WIN32 write_image)
 {
- FILE *fp;
+  HANDLE hFile;
+  char buffer[1024];
+
+  // check if it exists before trashing someone's disk image
+  hFile = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL , NULL);
+  if (hFile != INVALID_HANDLE_VALUE) {
+    int confirm;
+    sprintf (buffer, "\nThe disk image '%s' already exists.  Are you sure you want to replace it?\nPlease type yes or no. ", filename);
+    if (ask_yn (buffer, 0, &confirm) < 0)
+      fatal (EOF_ERR);
+    if (!confirm)
+      fatal ("ERROR: Aborted");
+    CloseHandle(hFile);
+  }
+
+  // okay, now open it for writing
+  hFile = CreateFile(filename, GENERIC_WRITE|GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hFile == INVALID_HANDLE_VALUE) {
+    // attempt to print an error
+#ifdef HAVE_PERROR
+    sprintf (buffer, "while opening '%s' for writing", filename);
+    perror (buffer);
+#endif
+    fatal ("ERROR: Could not write disk image");
+  }
+
+  printf ("\nWriting: [");
+
+  if( (*write_image)(hFile, sec) != 0)
+     fatal ("ERROR: while writing disk image!");
+
+  printf ("] Done.\n");
+  CloseHandle(hFile);
+  return 0;
+}
+#endif
+
+int make_image (Bit64u sec, char *filename, WRITE_IMAGE write_image)
+{
+  FILE *fp;
   char buffer[1024];
  
   // check if it exists before trashing someone's disk image
@@ -412,7 +486,10 @@ int main()
   char filename[256];
   char bochsrc_line[256];
 
-  int (*write_function)(FILE*, Bit64u)=NULL;
+  WRITE_IMAGE write_function=NULL;
+#ifdef WIN32
+  WRITE_IMAGE_WIN32 writefn_win32=NULL;
+#endif
  
   print_banner ();
   filename[0] = 0;
@@ -435,7 +512,7 @@ int main()
     printf ("  heads=%d\n", heads);
     printf ("  sectors per track=%d\n", spt);
     printf ("  total sectors=%lld\n", sectors);
-    printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
+    printf ("  total size=%.2f megabytes\n", (float)(Bit64s)(sectors/2)/1024.0);
     if (ask_string ("\nWhat should I name the image?\n", "c.img", filename) < 0)
       fatal (EOF_ERR);
 
@@ -449,7 +526,11 @@ int main()
         write_function=make_growing_image;
         break;
       default:
+#ifdef WIN32
+        writefn_win32=make_flat_image_win32;
+#else
         write_function=make_flat_image;
+#endif
       }
   } else {
     int fdsize, cyl=0, heads=0, spt=0;
@@ -482,8 +563,21 @@ int main()
     fatal ("ERROR: Illegal disk size!");
   if (strlen (filename) < 1)
     fatal ("ERROR: Illegal filename");
-  make_image (sectors, filename, write_function);
-  printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
+#ifdef WIN32
+  if (writefn_win32 != NULL) {
+    make_image_win32 (sectors, filename, writefn_win32);
+  }
+  else
+#else
+  {
+    make_image (sectors, filename, write_function);
+  }
+#endif
+#if defined(WIN32) && !defined(__MINGW32__)
+  printf ("\nI wrote %I64u bytes to %s.\n", sectors*512, filename);
+#else
+   printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
+#endif
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
 #ifdef WIN32
