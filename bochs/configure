@@ -33625,7 +33625,7 @@ _ACEOF
 
 else
 
-    if test "bx_cpu_level" >= 5; then
+    if test "$bx_cpu_level" -ge 5; then
       echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
       cat >>confdefs.h <<\_ACEOF
