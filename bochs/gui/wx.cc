@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35 2002-10-04 10:52:44 vruppert Exp $
+// $Id: wx.cc,v 1.35.2.1 2002-10-07 06:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -780,19 +780,19 @@ void bx_gui_c::handle_events(void)
 		  if (bx_key & 0xFF00) { // for extended keys
 		    scancode = 0xFF & (bx_key>>8);
 			IFDBG_KEY (wxLogDebug ("sending raw scancode 0x%02x (extended key)", (int)scancode));
-		    bx_devices.keyboard->put_scancode (&scancode, 1);
+		    BX_EVENT_PUT_SCANCODE(&scancode, 1);
 		  }
 		  scancode = 0xFF & bx_key;
 		  IFDBG_KEY (wxLogDebug ("sending raw scancode 0x%02x", (int)scancode));
-		  bx_devices.keyboard->put_scancode (&scancode, 1);
+		  BX_EVENT_PUT_SCANCODE(&scancode, 1);
 		} else {
 		  // event contains BX_KEY_* codes: use gen_scancode
 		  IFDBG_KEY (wxLogDebug ("sending key event 0x%02x", bx_key));
-		  bx_devices.keyboard->gen_scancode(bx_key);
+		  BX_EVENT_GEN_SCANCODE(bx_key);
 		}
         break;
       case BX_ASYNC_EVT_MOUSE:
-	bx_devices.keyboard->mouse_motion (
+	BX_EVENT_MOUSE_MOTION(
 	    event_queue[i].u.mouse.dx,
 	    event_queue[i].u.mouse.dy,
 	    event_queue[i].u.mouse.buttons);

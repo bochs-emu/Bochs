@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.17 2002-08-26 15:31:19 bdenney Exp $
+// $Id: beos.cc,v 1.17.4.1 2002-10-07 06:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -282,7 +282,7 @@ bx_gui_c::handle_events(void)
 
   while ( head != tail ) {
     key = deq_key_event();
-    bx_devices.keyboard->gen_scancode(key);
+    BX_EVENT_GEN_SCANCODE(key);
     }
 //IRA=> Start
   if (aView) {
@@ -303,7 +303,7 @@ bx_gui_c::handle_events(void)
 	  	  mouse_button_state != newstate) {
 	    int dx = (int)(current.x - previous.x) *2;
 	    int dy = -(int)((current.y - previous.y) *2);
-	    bx_devices.keyboard->mouse_motion( dx, dy, newstate);
+	    BX_EVENT_MOUSE_MOTION( dx, dy, newstate);
 	    mouse_button_state = newstate;
 	    previous = current;
       }

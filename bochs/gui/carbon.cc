@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.11 2002-09-30 14:03:20 bdenney Exp $
+// $Id: carbon.cc,v 1.11.2.1 2002-10-07 06:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -247,7 +247,7 @@ pascal OSStatus CEvtHandleWindowEmulatorUpdate (EventHandlerCallRef nextHandler,
             NULL, sizeof(WindowRef), NULL, &myWindow);
 
 	GetWindowPortBounds(myWindow, &box);
-	bx_vga.redraw_area(box.left, box.top, box.right, box.bottom);
+	BX_VGA_REDRAW_AREA(box.left, box.top, box.right, box.bottom);
 
 	return noErr; // Report success
 }
@@ -740,11 +740,11 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
             else
             {
                 if (modifiers & shiftKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | keyState);
+                        BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L | keyState);
                 if (modifiers & controlKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | keyState);
+                        BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L | keyState);
                 if (modifiers & optionKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | keyState);
+                        BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L | keyState);
                 
         //            key = (event->message & keyCodeMask) >> 8;
                 
@@ -755,14 +755,14 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
                 // statement!
                 
                 if (trans > 0)
-                        bx_devices.keyboard->gen_scancode(trans | keyState);
+                        BX_EVENT_GEN_SCANCODE(trans | keyState);
         
                 if (modifiers & shiftKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
+                        BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
                 if (modifiers & controlKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+                        BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L | BX_KEY_RELEASED);
                 if (modifiers & optionKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
+                        BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L | BX_KEY_RELEASED);
             }
         }
     }
@@ -907,7 +907,7 @@ void bx_gui_c::handle_events(void)
                             dy = 0;
                     }
                     
-                    bx_devices.keyboard->mouse_motion(dx, dy, mouse_button_state);
+                    BX_EVENT_MOUSE_MOTION(dx, dy, mouse_button_state);
                     
                     if (!cursorVisible && mouseMoved)
                     {

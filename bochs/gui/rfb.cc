@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.17 2002-04-20 07:19:35 vruppert Exp $
+// $Id: rfb.cc,v 1.17.4.1 2002-10-07 06:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -1284,7 +1284,7 @@ void rfbKeyPressed(Bit32u key, int press_release)
 	}
 
 	if (press_release) key_event |= 0x80;
-	bx_devices.keyboard->put_scancode((unsigned char *)&key_event, 1);
+	BX_EVENT_PUT_SCANCODE((unsigned char *)&key_event, 1);
 }
 
 void rfbMouseMove(int x, int y, int bmask)
@@ -1299,8 +1299,8 @@ void rfbMouseMove(int x, int y, int bmask)
 		return;
 	}
 	if(y > rfbHeaderbarY) {
-		//bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
-		bx_devices.keyboard->mouse_motion(x - oldx, oldy - y, bmask);
+		//BX_EVENT_MOUSE_MOTION(x, y - rfbHeaderbarY, buttons);
+		BX_EVENT_MOUSE_MOTION(x - oldx, oldy - y, bmask);
 		oldx = x;
 		oldy = y;
 	}

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.13 2002-04-20 07:19:35 vruppert Exp $
+// $Id: macintosh.cc,v 1.13.4.1 2002-10-07 06:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,11 +387,11 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
 	else
 	{		
 		if (event->modifiers & shiftKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | keyState);
+			BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L | keyState);
 		if (event->modifiers & controlKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | keyState);
+			BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L | keyState);
 		if (event->modifiers & optionKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | keyState);
+			BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L | keyState);
 		
 		key = (event->message & keyCodeMask) >> 8;
 		
@@ -402,14 +402,14 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
 		// statement!
 		
 		if (trans > 0)
-			bx_devices.keyboard->gen_scancode(trans | keyState);
+			BX_EVENT_GEN_SCANCODE(trans | keyState);
 
 		if (event->modifiers & shiftKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
+			BX_EVENT_GEN_SCANCODE(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
 		if (event->modifiers & controlKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+			BX_EVENT_GEN_SCANCODE(BX_KEY_CTRL_L | BX_KEY_RELEASED);
 		if (event->modifiers & optionKey)
-			bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
+			BX_EVENT_GEN_SCANCODE(BX_KEY_ALT_L | BX_KEY_RELEASED);
 	}		
 }
 
@@ -633,7 +633,7 @@ void UpdateWindow(WindowPtr window)
 	if (window == win)
 	{
 		box = window->portRect;
-		bx_vga.redraw_area(box.left, box.top, box.right, box.bottom);
+		BX_VGA_REDRAW_AREA(box.left, box.top, box.right, box.bottom);
 	}
 	else if (window == backdrop)
 	{
@@ -724,7 +724,7 @@ void bx_gui_c::handle_events(void)
 		dx = mousePt.h - prevPt.h;
 		dy = prevPt.v - mousePt.v;
 		
-		bx_devices.keyboard->mouse_motion(dx, dy, mouse_button_state);
+		BX_EVENT_MOUSE_MOTION(dx, dy, mouse_button_state);
 		
 		if (!cursorVisible)
 		{

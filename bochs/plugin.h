@@ -91,6 +91,24 @@ extern "C" {
     (bx_devices.keyboard->mouse_motion(dx, dy, state))
 #define BX_EVENT_GEN_SCANCODE(scancode) \
     (bx_devices.keyboard->gen_scancode(scancode))
+#define BX_EVENT_PUT_SCANCODE(scancode, count) \
+    (bx_devices.keyboard->put_scancode(scancode, count))
+#define BX_KBD_PASTE_BYTES(bytes, count) \
+    (bx_devices.keyboard->paste_bytes(bytes, count))
+#define BX_VGA_REDRAW_AREA(left, top, right, bottom) \
+    (bx_vga.redraw_area(left, top, right, bottom))
+#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) \
+    (bx_vga.get_text_snapshot(rawsnap, height, width))
+#define BX_FLOPPY_GET_MEDIA_STATUS(drive) \
+    (bx_devices.floppy->get_media_status(drive))
+#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status) \
+    (bx_devices.floppy->set_media_status(drive, status))
+#define BX_HD_GET_FIRST_CD_HANDLE() \
+    (bx_devices.hard_drive->get_first_cd_handle())
+#define BX_CD_GET_MEDIA_STATUS(handle) \
+    (bx_devices.hard_drive->get_cd_media_status(handle))
+#define BX_CD_SET_MEDIA_STATUS(handle, status) \
+    (bx_devices.hard_drive->set_cd_media_status(handle, status))
 
 
 #include <dlfcn.h>
