@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.2 2003-05-25 13:35:39 vruppert Exp $
+// $Id: win32dialog.cc,v 1.3 2003-05-25 18:34:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -62,6 +62,35 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
   return FALSE;
 }
 
+static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  static bx_param_string_c *param;
+  char buffer[20];
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      param = (bx_param_string_c *)lParam;
+      SetWindowText(hDlg, param->get_description());
+      SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
+      return FALSE;
+    case WM_CLOSE:
+      EndDialog(hDlg, -1);
+      break;
+    case WM_COMMAND:
+      switch (LOWORD(wParam)) {
+        case IDOK:
+          GetWindowText(GetDlgItem(hDlg, IDSTRING), buffer, 20);
+          param->set(buffer);
+          EndDialog(hDlg, 1);
+          break;
+        case IDCANCEL:
+          EndDialog(hDlg, -1);
+          break;
+    }
+  }
+  return FALSE;
+}
+
 void LogAskDialog(BxEvent *event)
 {
   event->retcode = DialogBoxParam(NULL, MAKEINTRESOURCE(ASK_DLG), GetBochsWindow(),
@@ -107,6 +136,12 @@ int AskFilename(bx_param_filename_c *param)
   param->set(filename);
   if (ret == 0) ret = -1;
   return ret;
+}
+
+int AskString(bx_param_string_c *param)
+{
+  return DialogBoxParam(NULL, MAKEINTRESOURCE(STRING_DLG), GetBochsWindow(),
+                        (DLGPROC)StringParamProc, (LPARAM)param);
 }
 
 #endif // WIN32
