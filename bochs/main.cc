@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.144 2002-09-22 20:56:11 cbothamy Exp $
+// $Id: main.cc,v 1.145 2002-09-24 09:50:16 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2219,7 +2219,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "boot")) {
     if (!strcmp(params[1], "a")) {
       bx_options.Obootdrive->set (BX_BOOT_FLOPPYA);
+    } else if (!strcmp(params[1], "floppy")) {
+      bx_options.Obootdrive->set (BX_BOOT_FLOPPYA);
     } else if (!strcmp(params[1], "c")) {
+      bx_options.Obootdrive->set (BX_BOOT_DISKC);
+    } else if (!strcmp(params[1], "disk")) {
       bx_options.Obootdrive->set (BX_BOOT_DISKC);
     } else if (!strcmp(params[1], "cdrom")) {
       bx_options.Obootdrive->set (BX_BOOT_CDROM);
@@ -3084,7 +3088,7 @@ bx_write_configuration (char *rc, int overwrite)
   //bx_write_serial_options (fp, &bx_options.com[3], 4);
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
-  fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "a" : (bootdrive==BX_BOOT_DISKC) ? "c" : "cdrom");
+  fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "floppy" : (bootdrive==BX_BOOT_DISKC) ? "disk" : "cdrom");
   fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get ());
   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());

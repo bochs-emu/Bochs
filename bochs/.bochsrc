@@ -215,14 +215,17 @@ ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
 #=======================================================================
 # BOOT:
 # This defines your boot drive.  
-# You can either boot from 'a', 'c' or 'cdrom'
+# You can either boot from 'floppy', 'disk' or 'cdrom'
+# legacy 'a' and 'c' are also supported
 # Examples:
+#   boot: floppy
+#   boot: disk
+#   boot: cdrom
 #   boot: c
 #   boot: a
-#   boot: cdrom
 #=======================================================================
-#boot: a
-boot: c
+#boot: floppy
+boot: disk
 
 #=======================================================================
 # FLOPPY_BOOTSIG_CHECK: disabled=[0|1]
