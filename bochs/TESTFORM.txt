@@ -45,6 +45,7 @@ What version of bochs are you using?
    [ ] compiled from version 1.1 (bugfix1)
    [ ] compiled from version 1.1.1 (bugfix2)
    [ ] compiled from version 1.1.2 (bugfix3)
+   [ ] compiled from version 1.2-pre1
    [ ] I compiled it from the CVS sources from date: [__]
    [ ] other source distribution from URL: [__]
    [ ] binary distribution from URL: [__]

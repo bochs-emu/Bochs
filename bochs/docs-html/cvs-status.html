@@ -1,28 +1,18 @@
 <li><h2>
-<a href="http://sourceforge.net/cvs/?group_id=12580">Current CVS tree</a> (these notes updated 5/17/2001)
+<a href="http://sourceforge.net/cvs/?group_id=12580">Current CVS tree</a> (these notes updated 5/25/2001)
 </h2>
 
+<i>For the latest CVS status, be sure that you are actually looking at
+<a href="http://bochs.sourceforge.net/docs-html/cvs-status.html">this page on the web site</a> (not a local copy).
+<p></i>
+
 This is a list of changes which are in the CVS tree but not in the latest
-release (1.1.2 bugfix3).
+release.
 
   <ul>
-  <li> implement diskd (second hard drive).  You cannot have both a diskd and a cdromd.
-  <li> latest bios version is now BIOS-bochs-2001_0517.  This bios is required to use two hard disks.
-  <li> enable newharddrivesupport by default.  This was needed for ATAPI CDs, disks larger than 528MB, and maybe other things.  It seemed like every time I had a wierd disk detection problem, it was because I had forgotten newharddrivesupport.
-  <li> add --with-term GUI mode. uses text mode display only
-  <li> add --enable-split-hd.  Split hard drive mode allows several partial disk image files (e.g. win95-1, win95-2, win95-3) to be treated as one large file, so that you can store each partition in a separate file, if you get the file sizes to match the partition table boundaries.  Split hard disk patch requires a new rombios, BIOS-bochs-2001_0509.
-  <li> patches sitting in patches subdirectory:
-    <ul>
-    <li> patches/patch.lba. we have a patch to add LBA support, which Bryce grabbed from the plex86 source tree.  I know that it compiles.  But can someone suggest how to test it?
-    <li> patches/patch.4meg-pages. Again, we just need a test case.  Once we can test it, I'll put it in.
-    <li> patches/patch.goswin-changes. These are diffs against 3/25/2000, and not all of them apply anymore because of our bug fixes.
-    </ul>
+  <li> I'm just about to make 1.2-pre1, a pre-release of version 1.2, along
+  with source tars and binary packages.  Once this is out, all the changes in
+  CVS (even SMP) will be in the latest release.
+  <li> The SMP branch has been merged into the main line, as of 5/23/2001 or so.
   </ul>
-
-There is also one active branch in addition to the main branch, called
-BRANCH-smp-bochs.  The SMP bochs branch allows Bochs to simulate a multiple
-processor machine.  It does NOT make Bochs perform better or run in different
-CPUs on a real SMP machine.  This branch will be integrated into the main
-source tree in the near future.  It has not been tested much since
-REL-smpbochs-04-03-2001, but has most of the same bug fixes and features that
-the main branch had on 5/8/2001.  Est. time frame to merge: next weekend 5/20.
+ 

@@ -16,6 +16,56 @@
 
 <br>
 <li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.tar.gz">Version 1.2-pre1</a> (5/25/2001)
+</h2>
+  This version is the first feature release from the Bochs project on Sourceforge.  It is marked "pre1" because some of the new features have not had widespread testing yet.  When more features/platforms/OSes have been tested (and bugs fixed) we will make a real 1.2 release.
+  <ul>
+  <li> major cleanup of .bochsrc
+  <li> major cleanup of stderr output: prints bochs version information when
+    starting, and at the end it tries to print the message that caused
+    bochs to quit.
+  <li> two hard disk support (diskd).  At present, you cannot have two 
+    hard drives and a cdrom at the same time, because there is only
+    one IDE controller with two channels. 
+  <li> split hard disk support allows different partitions to be stored in
+    different image files
+  <li> two new GUI choices: term mode and RFB mode.  Term is a text-only
+    interface, and RFB creates a server that can be accessed using 
+    the AT&T VNC viewer.
+  <li> now Bochs can simulate an SMP machine, if you configure with
+    --enable-processors=N.  Configuring more than one processor has
+    a major performance impact, so the default is 1 processor.
+    See <a href="smp-simulation.html">SMP documentation</a> for more details.
+  <li> to make SMP work, bx_mem and bx_cpu have been replaced with
+    bx_mem_array[] and bx_cpu_array[].  The cpus are referenced through
+    the BX_CPU(n) macro and memories through the BX_MEM(n).  Normal
+    mode has one cpu and one memory, SMP mode has multiple cpu's and
+    one memory, cosimulation mode has multiple cpus and multiple memories.
+  <li> use --enable-cpu-level=6 to make Bochs claim to be a Pentium Pro.
+    The only feature that requires CPU level 6 is apic support.
+  <li> new logging system by Todd Fries, which has 4 levels of event
+    severity (panic, error, info, debug).  There are new .bochsrc
+    options that control what action to take when a 
+    panic/error/info/debug event occurs.
+  <li> now searches for .bochsrc, bochsrc, bochsrc.txt, and (on unix only)
+    $HOME/.bochsrc.
+  <li> use GNU readline library if --enable-debugger is on, as long as readline
+    can be found on the machine
+  <li> configure checks for existence strtoull and strtouq. if neither exists,
+    Bochs uses its own implementation
+  <li> applied patches from Cliff Hones <cliff@aonix.co.uk> to fix up the
+    rombios.  This includes many improvements, which you can list by
+    doing "cvs log -r 1.6 bios/rombios.c" or looking at cvsweb.
+  <li> added suggested geometries of larger disks to the documentation
+  <li> this is the first release to have official binary packages for win32
+    and Linux.  There is a new "make rpm" in the top-level Makefile which
+    will create an RPM of the current bochs directory.  To use this,
+    become root and type "configure; make rpm".
+  <li> applied some FreeBSD patches from Maxim Sobolev (cdrom and serial).
+  </ul>
+
+<br>
+<li><h2>
 <a href="http://prdownloads.sourceforge.net/bochs/bochs-1.1.2.tar.gz">Version 1.1.2 (bugfix3)</a> (5/16/2001)
 </h2>
   <ul>
