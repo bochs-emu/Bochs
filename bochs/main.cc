@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.58.2.10 2002-04-05 06:53:45 bdenney Exp $
+// $Id: main.cc,v 1.58.2.11 2002-04-08 06:17:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,6 +109,8 @@ bx_options_t bx_options = {
 static void parse_line_unformatted(char *context, char *line);
 static void parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
+void bx_init_before_control_panel ();
+int bx_continue_after_control_panel (int arg, int argc, char *argv[]);
 
 static Bit32s
 bx_param_handler (bx_param_c *param, int set, Bit32s val)
@@ -323,7 +325,7 @@ void bx_init_options ()
       "Floppy A image",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
-#if USE_WX
+#if BX_WITH_WX
   bx_options.floppya.Opath->set_ask_format ("Filename of first floppy image");
 #else
   bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
@@ -361,7 +363,7 @@ void bx_init_options ()
       "floppyb:path",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
-#if USE_WX
+#if BX_WITH_WX
   bx_options.floppyb.Opath->set_ask_format ("Filename of second floppy image");
 #else
   bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
@@ -1017,12 +1019,36 @@ bx_init_before_control_panel ()
   // in this wxwindows situation.
 }
 
-int
-bx_continue_after_control_panel (int argc, char *argv[])
+#if !BX_WITH_WX
+// main() is the entry point for all configurations, except for
+// wxWindows.
+int main (int argc, char *argv[])
 {
+  siminterface_init ();
+  bx_control_panel (BX_CPANEL_INIT);
+
+  // detect -nocontrolpanel or -nocp argument before anything else
   int arg = 1;
-  int read_rc_already = 0;
-  if (!read_rc_already) {
+  if (argc > 1 && 
+       ((!strcmp ("-nocontrolpanel", argv[1]))
+        || (!strcmp ("-nocp", argv[1])))) {
+    // skip the control panel
+    arg++;
+    SIM->set_enabled (0);
+    enable_control_panel = 0;
+  }
+#if !BX_USE_CONTROL_PANEL
+  enable_control_panel = 0;
+#endif
+
+  bx_continue_after_control_panel (arg, argc, argv);
+}
+#endif
+
+int
+bx_continue_after_control_panel (int arg, int argc, char *argv[])
+{
+  if (!enable_control_panel && !BX_WITH_WX) {
     /* parse configuration file and command line arguments */
     char *bochsrc = bx_find_bochsrc ();
     if (bochsrc)
@@ -1064,7 +1090,7 @@ bx_continue_after_control_panel (int argc, char *argv[])
     }
     // Display the pre-simulation control panel.
     SIM->set_enabled (1);
-#if !USE_WX
+#if !BX_WITH_WX
 // if wxwindows interface in use, don't use the text mode interface.
     bx_control_panel (BX_CPANEL_START_MENU);
 #endif
@@ -1118,6 +1144,7 @@ bx_continue_after_control_panel (int argc, char *argv[])
   bx_atexit ();
   return(0);
 }
+
 
 int
 bx_read_configuration (char *rcfile)
