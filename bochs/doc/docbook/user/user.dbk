@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.21 2001-11-14 04:37:24 bdenney Exp $
+$Id: user.dbk,v 1.22 2001-11-14 14:42:04 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2265,21 +2265,26 @@ and 0 turns it off.
 
 <chapter><title>Using Bochs</title>
     <para>
-      Resources for users
-	testing status page: tells what has been tried and who got it working
-	SourceForge
-	  look for bug reports
-	  how to report problems, make feature requests
-          </para>
+    <screen>
+Resources for users
+testing status page: tells what has been tried and who got it working
+search on bochs web site
+SourceForge
+  look for bug reports
+  how to report problems, make feature requests
+    </screen>
+    </para>
 </chapter>
 
 <chapter><title>Common problems and what to do about them (Troubleshooting)</title>
     <para>
+    <screen>
         What's a panic?  How to report it to bug tracker, how to make
 	  it non-fatal.
         Mouse behavior, enabling and disabling
 	Keyboard mapping problems
 	[...]
+    </screen>
     </para>
 </chapter>
 
@@ -2398,11 +2403,155 @@ write to bochs-announce-request or bochs-developers-request.  Don't forget the
 <chapter><title>Tips and Techniques</title>
     <para>
       <screen>
-Ideas:
+Ideas for new sections:
 - Using two hard disks
-- How to install ____
+- How to install Windows 95
+- etc.
       </screen>
     </para>
+
+<section><title>Unix: How to make a disk image</title>
+<para>
+This was contributed by Greg Alexander in October 2001.
+</para>
+<screen>
+0.) What you need:
+
+1.) An executable version of bochs.  See "obtaining a bochs executable"
+or "compiling the bochs source"
+2.) The bximage program, included with bochs
+3.) A FreeDOS boot disk, or a boot disk from another OS capable of
+producing DOS partitions (i.e. a linux install disk.)
+4.) (optional) mtools, a program for manipulating DOS disks/images.
+
+
+1.) Creating an image file.
+Run `bximage` to create a disk image file.  You will be greeted with the
+following prompt:
+
+
+========================================================================
+                                bximage
+                  Disk Image Creation Tool for Bochs
+         $Id: user.dbk,v 1.22 2001-11-14 14:42:04 bdenney Exp $
+========================================================================
+
+Do you want to create a floppy disk image or a hard disk image?
+Please type hd or fd. [hd] 
+
+
+Since we are creating a hard disk image, accept the default of hd by
+pressing <command>Enter</command> or typing 'hd' and pressing
+<command>Enter</command>.  Next, bximage will ask for the size of the disk
+image you want to create, in Megabytes:
+
+
+Enter the hard disk size in megabytes, between 1 and 32255
+[10] 
+
+
+Enter the size of the hard disk you want to create, and press
+<command>Enter</command>. 
+Bochs will give you some information about the image it is creating, and
+ask you for a filename to use for the file it is creating.  I told it to
+use the default of 10 megabytes, and was given the following information
+along with the prompt for a filename:
+
+
+[10] 10
+
+I will create a hard disk image with
+  cyl=20
+  heads=16
+  sectors per track=63
+  total sectors=20160
+  total size=9.84 megabytes
+
+What should I name the image?
+[c.img] 
+
+
+At this point, type in the filename you want to use for the image.  The
+default of "c.img" is appropriate if this will be your only hard disk
+image.  After you have typed in the name of the filename you want to
+use, press <command>Enter</command>.  Bximage will tell you it is writing the disk and
+will display a status bar as you wait.  When it is finished, it will
+give you a final status report and tell you a line that should be added
+to your .bochsrc file when you want to use this disk image.  I named my
+10 Megabyte image "teaching.img" and the output of bximage looked like
+this:
+
+
+[c.img] teaching.img
+
+Writing: [..........] Done.
+
+I wrote 10321920 bytes to teaching.img.
+
+The following line should appear in your bochsrc:
+  diskc: file="teaching.img", cyl=20, heads=16, spt=63
+
+
+At this point, a file called "teaching.img" was created in my current
+directory and is ready to be used as an image file for a bochs session.
+
+
+2.) Partition and format your image file.
+
+Option 1: Using FreeDOS (Advantages: Creates a MBR on the partition.)
+
+First, you need to edit the .bochsrc file that bochs uses for
+configuration information.  Open the file .bochsrc with a text editor. 
+Remove any lines in the file beginning with "diskc:".  Add the "diskc:"
+line that was displayed when you ran bximage to the .bochsrc file in the
+same place that you removed the old "diskc:" lines from.
+
+Also, you need to download or create a FreeDOS (or DOS, or Windows, or
+linux) disk image.  Modify the "floppya:" line in your .bochsrc file to point
+at the downloaded FreeDOS image and change its status to "status=inserted".
+
+Save and close your .bochsrc.  Now run bochs.  (see: "Running bochs from
+the command line.")
+
+Use the standard FreeDOS commands fdisk and format to format your hard
+drive image.  You must make the image bootable to be able to boot
+without a hard drive.  However, creating a bootable disk image is best
+done with a boot disk from the OS you intend to install on the image.
+
+
+
+Option 2: Using mtools (Disadvantages: cannot create bootable images
+without a MBR image)
+
+Use a text editor to add the following line to the file ~/.mtoolsrc:
+
+
+drive c: file="<replaceable>path</replaceable>/filename.img" partition=1
+
+
+Save and close .mtoolsrc.  Next, execute the following commands to
+create a partition table for the drive image:
+
+
+mpartition -I -s <replaceable>spt</replaceable> -t <replaceable>cyl</replaceable> -h <replaceable>heads</replaceable> c:
+mpartition -cpv -s <replaceable>spt</replaceable> -t <replaceable>cyl</replaceable> -h <replaceable>heads</replaceable> c:
+
+For example, for my 10 meg drive, I used:
+mpartition -I -s 63 -t 20 -h 16 c:
+mpartition -cpv -s 63 -t 20 -h 16 c:
+
+
+Next, format the partition you just created using the mformat command:
+
+
+mformat c:
+
+
+And you now have a formatted disk image containing a single DOS
+partition.
+</screen>
+</section>
+
 
 <section> <title>Linux: Mounting a disk image using the loop device</title>
 <para>
