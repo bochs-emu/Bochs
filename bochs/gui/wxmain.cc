@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.18 2002-08-30 16:23:36 bdenney Exp $
+// $Id: wxmain.cc,v 1.19 2002-08-31 04:58:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -147,6 +147,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -326,6 +327,44 @@ void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
 {
   panel->SaveConfiguration ();
+}
+
+void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
+{
+  int maxBootDevices = 3;
+  int bootDevices = 0;
+  wxString devices[maxBootDevices];
+  int dev_id[maxBootDevices];
+  bx_param_bool_c *floppy = (bx_param_bool_c *)
+    SIM->get_param (BXP_FLOPPYA_DEVTYPE);
+  bx_param_bool_c *hd = (bx_param_bool_c *)
+    SIM->get_param (BXP_DISKC_PRESENT);
+  bx_param_bool_c *cdrom = (bx_param_bool_c *)
+    SIM->get_param (BXP_CDROM_PRESENT);
+  wxASSERT (floppy->get_type () == BXT_PARAM_ENUM
+      && hd->get_type () == BXT_PARAM_BOOL
+      && cdrom->get_type () == BXT_PARAM_BOOL);
+  if (floppy->get () != BX_FLOPPY_NONE) {
+    devices[bootDevices] = wxT("First floppy drive");
+    dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
+  }
+  if (hd->get ()) {
+    devices[bootDevices] = wxT("First hard drive");
+    dev_id[bootDevices++] = BX_BOOT_DISKC;
+  }
+  if (cdrom->get ()) {
+    devices[bootDevices] = wxT("CD-ROM drive");
+    dev_id[bootDevices++] = BX_BOOT_CDROM;
+  }
+  if (bootDevices == 0) {
+    wxMessageBox( "All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, the first hard drive, or the CD-ROM.", "None enabled", wxOK | wxICON_ERROR );
+    return;
+  }
+  int which = wxGetSingleChoiceIndex ("Select the device to boot from", "Boot Device", bootDevices, devices);
+  if (which<0) return;  // cancelled
+  bx_param_enum_c *bootdevice = (bx_param_enum_c *) 
+    SIM->get_param(BXP_BOOTDRIVE);
+  bootdevice->set (which);
 }
 
 void MyFrame::OnQuit(wxCommandEvent& event)
@@ -738,7 +777,8 @@ void MyFrame::editHDConfig (int drive)
     spt->set (dlg.GetGeom (2));
     present->set (dlg.GetEnable ());
     printf ("present=%d cyl=%d heads=%d spt=%d\n", present->get (), cyl->get(), heads->get(), spt->get());
-    if (present->get ()) {
+    if (drive==1 && present->get ()) {
+      // check that diskD and cdrom are not enabled at the same time
       bx_param_bool_c *cdromd = (bx_param_bool_c*)
 	SIM->get_param(BXP_CDROM_PRESENT);
       if (cdromd->get ()) {

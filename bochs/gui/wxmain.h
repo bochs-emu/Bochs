@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.12 2002-08-30 16:23:36 bdenney Exp $
+// $Id: wxmain.h,v 1.13 2002-08-31 04:58:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -130,6 +130,7 @@ public:
   void OnPauseResumeSim(wxCommandEvent& event);
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CIEvent(wxCommandEvent& event);
+  void OnEditBoot(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);
