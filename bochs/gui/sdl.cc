@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.8 2002-03-06 20:39:23 bdenney Exp $
+// $Id: sdl.cc,v 1.9 2002-03-15 01:11:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -207,9 +207,9 @@ void bx_gui_c::specific_init(
 
   sdl_screen = NULL;
   th->dimension_update(640,480);
-    
 
   sdl_fullscreen_toggle = 0;
+
   SDL_EnableKeyRepeat(250,50);
   SDL_WM_SetCaption(
 #if BX_CPU_LEVEL < 2
@@ -355,6 +355,9 @@ void bx_gui_c::graphics_tile_update(
 
   i = tileheight;
   if( i + y > res_y ) i = res_y - y;
+
+  // FIXME
+  if( i<=0 ) return;
 
   do
   {
@@ -607,6 +610,7 @@ void bx_gui_c::dimension_update(
 	BX_HEADERBAR_FG_RED,
 	BX_HEADERBAR_FG_GREEN,
 	BX_HEADERBAR_FG_BLUE );
+    headerbar_fg=0xffffffff;
     headerbar_bg = SDL_MapRGB(
 	sdl_screen->format,
 	BX_HEADERBAR_BG_RED,
@@ -689,11 +693,11 @@ unsigned bx_gui_c::create_bitmap(
       pixels = *bmap++;
       for(unsigned i=0;i<8;i++)
       {
-	if( (pixels & 0x80) == 0 )
+	if( (pixels & 0x01) == 0 )
 	  *buf++ = headerbar_bg;
 	else
 	  *buf++ = headerbar_fg;
-	pixels = pixels << 1;
+	pixels = pixels >> 1;
       }
     } while( --xdim );
     buf = buf_row + disp;
