@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.21 2002-07-16 12:04:46 cbothamy Exp $
+// $Id: logio.cc,v 1.22 2002-08-27 17:03:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -404,6 +404,10 @@ logfunctions::ldebug(const char *fmt, ...)
 void
 logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 {
+  // Guard against reentry on ask() function.  The danger is that some
+  // function that's called within ask() could trigger another
+  // BX_PANIC that could call ask() again, leading to infinite
+  // recursion and infinite asks.
   static char in_ask_already = 0;
   char buf1[1024], buf2[1024];
   if (in_ask_already) {
@@ -430,7 +434,10 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       setonoff (level, ACT_REPORT);
       break;
     case 2:   // user chose die
+      in_ask_already = 0;  // because fatal will longjmp out
       fatal (prefix, fmt, ap);
+      // should never get here
+      BX_PANIC (("in ask(), fatal() should never return!"));
       break;
     case 3: // user chose abort
       fprintf (stderr, "User chose to dump core...\n");
@@ -465,9 +472,6 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 void
 logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
 {
-  static int fatal_reentry = 0;
-  if (fatal_reentry) return;
-  fatal_reentry++;
   bx_atexit();
   fprintf (stderr, "%s\n", divider);
   fprintf (stderr, "Bochs is exiting with the following message:\n");
@@ -475,7 +479,7 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
   vfprintf (stderr, fmt, ap);
   fprintf (stderr, "\n%s\n", divider);
 #if 0 && defined(WIN32)
-#error disabled because it  is not working yet!
+#error disabled because it is not working yet!
   // wait for a keypress before quitting.  Depending on how bochs is
   // installed, the console window can disappear before the user has
   // a chance to read the final message.
@@ -492,7 +496,7 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
     bx_dbg_exit(1);
     }
 #endif
-  fatal_reentry--;
+  BX_PANIC (("fatal() should never return return, but it just did"));
 }
 
 iofunc_t *io = NULL;
