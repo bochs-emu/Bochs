@@ -6,7 +6,7 @@
 
 CC="egcs"
 CXX="c++"
-CFLAGS="-Wall -O2 -fomit-frame-pointer -pipe"
+CFLAGS="-Wall -g -fomit-frame-pointer -pipe"
 CXXFLAGS="$CFLAGS"
 
 export CC
