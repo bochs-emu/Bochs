@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.28 2001-12-08 18:05:49 bdenney Exp $
+$Id: user.dbk,v 1.29 2001-12-10 12:46:13 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1462,8 +1462,8 @@ auxilliary programs <filename>bximage.exe</filename> and
 in version 1.3, so it has not had very long to be tested and tuned.  Using
 workspaces is easy and intuitive, but there is one caveat.  The workspaces
 are not currently integrated with configure.  Some configure options such
-as --enable-debugger need to add additional source files to the Makefile to be
-compiled, but they do not alter the workspace file.  If you add configure
+as --enable-debugger need additional source files to be compiled, and
+for now you must add them to the VC++ workspace by hand.  If you add configure
 options and start having compile problems, try the nmake method (below)
 instead.  These problems should be fixed in future versions.
 </para>
