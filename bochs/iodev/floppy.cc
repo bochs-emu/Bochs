@@ -864,7 +864,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 #endif
 }
 
-  Bit32u
+  void
 bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
             Bit32u bytes, Bit8u direction)
 {
