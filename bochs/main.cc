@@ -986,9 +986,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     bx_options.cdromd.Opath->set (&params[1][4]);
     if (!strcmp(params[2], "status=inserted"))
-      bx_options.cdromd.Oinserted->set (1);
+      bx_options.cdromd.Oinserted->set (BX_INSERTED);
     else if (!strcmp(params[2], "status=ejected"))
-      bx_options.cdromd.Oinserted->set (0);
+      bx_options.cdromd.Oinserted->set (BX_EJECTED);
     else {
       BX_PANIC(("%s: cdromd directive malformed.", context));
       }
