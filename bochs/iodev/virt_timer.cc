@@ -200,7 +200,7 @@ bx_virt_timer_c::register_timer( void *this_ptr, bx_timer_handler_t handler,
   BX_ASSERT((!active) || (useconds>0));
 
   //Search for an unused timer.
-  int i;
+  unsigned int i;
   for (i=0; i < numTimers; i++) {
     if (timer[i].inUse == 0 || i==numTimers)
       break;
@@ -317,7 +317,7 @@ bx_virt_timer_c::next_event_time_update(void) {
     bx_pc_system.deactivate_timer(system_timer_id);
     BX_ASSERT(virtual_next_event_time);
     bx_pc_system.activate_timer(system_timer_id, 
-				BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time)),
+				(Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
 				0);
   }
 }
@@ -326,7 +326,7 @@ void
 bx_virt_timer_c::init(void) {
   virtual_timers_realtime = bx_options.Orealtime_pit->get ();
 
-  register_timer(this, nullTimer, NullTimerInterval, 1, 1, "Null Timer");
+  register_timer(this, nullTimer, (Bit32u)NullTimerInterval, 1, 1, "Null Timer");
 
   system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler,virtual_next_event_time , 0, 1, "Virtual Timer");
 
@@ -363,7 +363,7 @@ bx_virt_timer_c::timer_handler(void) {
       }
     }
     bx_pc_system.activate_timer(system_timer_id,
-				(virtual_next_event_time>2)?(virtual_next_event_time-2):1,
+				(Bit32u)BX_MIN(0x7FFFFFFF,(virtual_next_event_time>2)?(virtual_next_event_time-2):1),
 				0);
     return;
   }
@@ -455,7 +455,7 @@ bx_virt_timer_c::timer_handler(void) {
   bx_pc_system.deactivate_timer(system_timer_id);
   BX_ASSERT(virtual_next_event_time);
   bx_pc_system.activate_timer(system_timer_id, 
-			      BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time)),
+			      (Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
 			      0);
 
 }
