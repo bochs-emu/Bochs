@@ -1,5 +1,6 @@
 CXX=g++
-CXXFLAGS=-Wall -g -mno-cygwin
+CXXFLAGS=-Wall -g
+#CXXFLAGS=-Wall -g -mno-cygwin
 LIBTOOL=libtool
 RPATH=`pwd`/lib
 
