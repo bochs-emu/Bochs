@@ -1125,3 +1125,80 @@ time commands to measure performance or something.  And make the local APIC
 timer actually work, since I recall that is used for system/user time
 profiling.
 
+
+Who's who?
+kpl: obviously Kevin Lawton <kevin@mandrakesoft.com>
+mch: worked on I/O devices, break points, etc.
+HanishKVC: worked on debugger
+bbd: that's me.
+
+Timing:
+register_timer uses units of microseconds.
+
+I'm using 500000 instructions per second, so each tick is 2 microseconds.
+Therefore, to implement the vga_update_interval of 300000 microseconds, it
+must wait 150000 instructions between updates.  And it does.  The only
+time this is computed is when registering the timer, which is correct.  
+After that, everything is in units of ticks.
+
+The local apic counter is supposed to count on the bus clock, which 
+in a real machine would be usually slower than the CPU clock.  For now,
+do like the PIT does: bx_devices calls the member function "periodic"
+every TIMER_DELTA (100 usec).  The periodic function for the local APIC
+will decrement the counter by TIMER_DELTA and trigger some interrupt
+if the counter has gone down to zero.  I think this makes the local APIC
+counter go down at a rate of 1 MHz.
+
+With settings: ips: 500000
+Linux says:
+calibrating APIC timer...
+...6050 CPU clocks in 1 timer chip tick
+...48320 APIC bus clocks in 1 timer chip tick
+...CPU block speed is .6050 MHz
+...system bus clock speed is 4.8320 MHz
+
+With settings: ips: 600000
+3.58 bogomips
+Linux says:
+calibrating APIC timer...
+...7259 CPU clocks in 1 timer chip tick
+...48480 APIC bus clocks in 1 timer chip tick
+...CPU block speed is .7259 MHz
+...system bus clock speed is 4.8320 MHz
+
+With settings: ips: 1000000
+6.00 bogomips
+Linux says:
+calibrating APIC timer...
+...12099 CPU clocks in 1 timer chip tick
+...48480 APIC bus clocks in 1 timer chip tick
+...CPU clock speed is 1.2099 MHz
+...system bus clock speed is 4.8480 MHz
+
+ips		bogomips	cpu clk speed	bus clk speed
+500000  	?               0.6050 MHz      4.8320 MHz
+600000		3.58		0.7259 MHz	4.8320 MHz
+1000000		6.00		1.2099 MHz	4.8480 MHz
+10000000	60.42		12.099 MHz	4.8480 MHz
+
+for 10mips mode, here's how it got the APIC clocks per timer chip tick:
+((APIC count after) - (APIC count before)) * APIC_DIVISOR / LOOPS
+= ((0x03b9a1b0-0x03b92b54)) * 16 / 10
+= 30300 * 16 / 10
+= 48480
+
+But what I thought would happen is this:
+in bx_devices, TIMER_DELTA=100.
+That means that the bx_devices::timer handler is called once every 100 usec.
+Every 100 usec (seems to be 1000 instructions or 1000 ticks) it calls
+local_apic.periodic (100) and tells it to decrement its counter by 100.
+On average, that implies that the counter will decrement 1 per microsecond.
+That means its count rate is 1/1e-6 = 1e6 or 1 MHz.
+
+Fixed a bug in APIC divide-down factor.  Now it says the
+CPU is running at 12MHz and the bus at 1.2 MHz.  It should actually be
+1.0 MHz but this is pretty close.  Probably if I reduced timer delta, it
+would get closer. 
+
+Tried with TIMER_DELTA=10.  However it had no effect!  Went from 1.2000 MHz to
+1.952MHz for bus clock speed.  I think it is good enough now anyway.
