@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.21 2002-09-01 15:38:29 bdenney Exp $
+// $Id: pit_wrap.cc,v 1.22 2002-09-20 04:42:25 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,6 +43,7 @@ bx_pit_c bx_pit;
 #endif
 
 #define DEBUG_REALTIME_WITH_PRINTF 0
+#define BX_HAVE_GETTIMEOFDAY 0
 
 #define TIME_DIVIDER (1)
 #define TIME_MULTIPLIER (1)
@@ -142,7 +143,17 @@ bx_pit_c::init( bx_devices_c *d )
   BX_PIT_THIS s.usec_per_second=USEC_PER_SECOND;
   BX_PIT_THIS s.ticks_per_second=TICKS_PER_SECOND;
   BX_PIT_THIS s.total_sec=0;
-  BX_PIT_THIS s.last_time=(time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART;
+#if BX_HAVE_GETTIMEOFDAY
+  {
+  timeval thetime;
+  gettimeofday(&thetime,0);
+  unsigned long long mytime;
+  mytime=(unsigned long long)thetime.tv_sec*1000000ll+(unsigned long long)thetime.tv_usec;
+  BX_PIT_THIS s.last_time=((mytime*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
+  }
+#else
+  BX_PIT_THIS s.last_time=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART)*USEC_PER_SECOND;
+#endif
   BX_PIT_THIS s.max_ticks = AHEAD_CEILING;
 #else
   BX_PIT_THIS s.total_usec=0;
@@ -464,21 +475,32 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 #if BX_USE_REALTIME_PIT
 void
 bx_pit_c::second_update_data(void) {
-  Bit64u timediff=(time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)-BX_PIT_THIS s.last_time;
+  Bit64u timediff;
+#if BX_HAVE_GETTIMEOFDAY
+  if(1) {
+  timeval thetime;
+  gettimeofday(&thetime,0);
+  unsigned long long mytime;
+  mytime=(unsigned long long)thetime.tv_sec*1000000ll+(unsigned long long)thetime.tv_usec;
+  timediff=((mytime*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))-(Bit64u)BX_PIT_THIS s.last_time;
+  }
+#else
+  timediff=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)*USEC_PER_SECOND)-BX_PIT_THIS s.last_time;
+#endif
   BX_PIT_THIS s.last_time += timediff;
   if(timediff) {
     Bit64s tickstemp;
 
     BX_PIT_THIS s.total_sec += timediff;
 
-    BX_PIT_THIS s.max_ticks = MIN( ((BX_PIT_THIS s.total_sec)*(Bit64u)(TICKS_PER_SECOND)) + AHEAD_CEILING , BX_PIT_THIS s.total_ticks + (Bit64u)(TICKS_PER_SECOND*MAX_MULT) );
+    BX_PIT_THIS s.max_ticks = MIN( (((BX_PIT_THIS s.total_sec)*(Bit64u)(TICKS_PER_SECOND))/USEC_PER_SECOND) + AHEAD_CEILING , BX_PIT_THIS s.total_ticks + (Bit64u)(TICKS_PER_SECOND*MAX_MULT) );
 
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("timediff: %lld, total_sec: %lld, total_ticks: %lld\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
 #endif
 
     tickstemp = 
-      (((BX_PIT_THIS s.total_sec)*TICKS_PER_SECOND)-BX_PIT_THIS s.total_ticks)
+      ((((BX_PIT_THIS s.total_sec)*TICKS_PER_SECOND)/USEC_PER_SECOND)-BX_PIT_THIS s.total_ticks)
        + TICKS_PER_SECOND;
 
 //    while((BX_PIT_THIS s.total_sec >= 0) && (BX_PIT_THIS s.total_ticks >= TICKS_PER_SECOND)) {
@@ -514,8 +536,8 @@ bx_pit_c::second_update_data(void) {
 
     BX_PIT_THIS s.ticks_per_second = tickstemp;
 
-    //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff));
-    BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff);
+    //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff));
+    BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff);
     BX_PIT_THIS s.usec_per_second = MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
     BX_PIT_THIS s.last_sec_usec = bx_pc_system.time_usec();
 #if DEBUG_REALTIME_WITH_PRINTF
