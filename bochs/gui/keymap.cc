@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.11 2002-10-08 06:14:52 bdenney Exp $
+// $Id: keymap.cc,v 1.12 2002-10-09 17:49:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -176,7 +176,7 @@ get_next_keymap_line (FILE *fp, char *bxsym, char *modsym, Bit32s *ascii, char *
 	return -1;
       }
       if (buf[0] == '\'' && buf[2] == '\'' && buf[3]==0) {
-	*ascii = (Bit32s) buf[1];
+	*ascii = (Bit8u) buf[1];
       } else if (!strcmp(buf, "space")) {
 	*ascii = ' ';
       } else if (!strcmp(buf, "return")) {
