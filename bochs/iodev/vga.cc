@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.98 2004-02-24 19:21:48 vruppert Exp $
+// $Id: vga.cc,v 1.99 2004-03-02 16:29:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2866,6 +2866,8 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         {
           if (value & VBE_DISPI_ENABLED)
           {
+            if (BX_VGA_THIS s.vbe_enabled) break;
+
             unsigned depth=0;
 
             // setup virtual resolution to be the same as current reso      
@@ -2957,7 +2959,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_VGA_THIS s.vbe_lfb_enabled=0;
           }     
           BX_VGA_THIS s.vbe_enabled=(bx_bool)(value & VBE_DISPI_ENABLED);
-          BX_VGA_THIS s.vbe_get_capabilities=(bx_bool)(value & VBE_DISPI_GETCAPS);
+          BX_VGA_THIS s.vbe_get_capabilities=(bx_bool)((value & VBE_DISPI_GETCAPS) != 0);
         } break;
 
         case VBE_DISPI_INDEX_X_OFFSET:
