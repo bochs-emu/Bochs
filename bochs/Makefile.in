@@ -180,7 +180,9 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 
 clean:
 	@RMCOMMAND@ *.o
+	@RMCOMMAND@ */*.o
 	@RMCOMMAND@ *.a
+	@RMCOMMAND@ */*.a
 	@RMCOMMAND@ bochs@EXE@
 	@RMCOMMAND@ bochs.out
 
