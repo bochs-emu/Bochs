@@ -1,10 +1,11 @@
 /*
  *
- * $Id: blur-opcode.c,v 1.3 2002-04-17 05:15:37 bdenney Exp $
+ * $Id: blur-opcode.c,v 1.4 2002-04-17 07:15:02 bdenney Exp $
  *
  */
 
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <assert.h>
@@ -601,14 +602,14 @@ void blur_dynamic_translate1_test ()
 }
 #endif
 
-#ifdef BLUR_DYNAMIC_TRANSLATE2
+#if defined(BLUR_DYNAMIC_TRANSLATE2) || defined(BLUR_DYNAMIC_TRANSLATE3)
 
 static int unique_fn_id = 283473;
 
-void blur_dynamic_translate2 ()
+void blur_dynamic_translate2 (char *filename)
 {
   // csrc is the main text file containing the translated code.
-  FILE *csrc = fopen ("translate2.c", "w");
+  FILE *csrc = fopen (filename, "w");
   State state;
   int done = 0;
   int *pc;
@@ -682,6 +683,58 @@ void blur_dynamic_translate2_test ()
 }
 #endif
 
+#ifdef BLUR_DYNAMIC_TRANSLATE3
+#include <ltdl.h>
+
+void (*func)(State *) = NULL;
+
+int load_dl_and_execute ()
+{
+  static int first_time = 1;
+  State state;
+  int n;
+  if (first_time) {
+    struct stat st;
+    first_time=0;
+    fprintf (stderr, "building translation function in translate3.c\n");
+    blur_dynamic_translate2 ("translate3.c");
+    fprintf (stderr, "compiling translate3.c\n");
+    if (system ("./buildshared translate3") < 0) {
+      fprintf (stderr, "buildshared failed\n");
+      exit (1);
+    }
+    if (stat ("translate3.c", &st) < 0) {
+      fprintf (stderr, "stat failed\n");
+      exit (1);
+    }
+    fprintf (stderr, "shared library is %d bytes\n", (int)st.st_size);
+    fprintf (stderr, "opening libtranslate3.la\n");
+    if (lt_dlinit () != 0) {
+      fprintf (stderr, "lt_dlinit() failed\n");
+      exit (1);
+    }
+    if (!func) {
+      char *filename = "libtranslate3.la";
+      lt_dlhandle handle;
+      handle = lt_dlopen (filename);
+      if (!handle) {
+	fprintf (stderr, "can't open the module %s!\n", filename);
+	fprintf (stderr, "error was: %s\n", lt_dlerror());
+	exit (1);
+      }
+      func = (void (*)(State *)) lt_dlsym(handle, "translate283473");
+      if (!func) {
+	fprintf (stderr, "can't find translate283473()\n");
+	exit (1);
+      }
+    }
+    fprintf (stderr, "Ready to use translated function.\n");
+  }
+  state.x = 1;
+  state.y = 1;
+  (*func)(&state);
+}
+#endif
 
 void fill_array()
 {
@@ -745,7 +798,9 @@ int main (int argc, char *argv[])
 #elif defined BLUR_DYNAMIC_TRANSLATE1
     blur_dynamic_translate1 ();
 #elif defined BLUR_DYNAMIC_TRANSLATE2
-    blur_dynamic_translate2 ();
+    blur_dynamic_translate2 ("translate2.c");
+#elif defined BLUR_DYNAMIC_TRANSLATE3
+    load_dl_and_execute ("translate2");
 #elif defined BLUR_DYNAMIC_TRANSLATE1_TEST
     blur_dynamic_translate1_test ();
 #elif defined BLUR_DYNAMIC_TRANSLATE2_TEST
