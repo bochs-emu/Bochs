@@ -30,13 +30,13 @@ VER_STRING=cvs-snapshot
 REL_STRING=
 PREFIX=/usr/local/bochs
 BINPATH=/usr/local/bin
-INSTALL_LIST=bios/BIOS-* CHANGES.txt COPYING README bios/VGABIOS*
+INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bximage build/linux/DOC-linux.html
 CP=cp
 CAT=cat
 RM=rm
 MV=mv
 LN_S=ln -sf
-DLXLINUX_TAR=dlxlinux1.tar.gz
+DLXLINUX_TAR=dlxlinux2.tar.gz
 DLXLINUX_TAR_URL=http://bochs.sourceforge.net/guestos/$(DLXLINUX_TAR)
 DLXLINUX_ROMFILE=BIOS-bochs-latest
 GUNZIP=gunzip
@@ -224,30 +224,32 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
 
-install: install_bin install_dlx
+install: all install_bin install_dlx
 
 install_bin::
-	$(CP) bochs $(BINPATH)/bochs-$(VERSION)
-	$(RM) -f $(BINPATH)/bochs
-	$(LN_S) bochs-$(VERSION) $(BINPATH)/bochs
-	for i in bochs-dlx bochs-docs; do cp build/linux/$$i $(BINPATH); done
+	for i in bochs-dlx bochs-docs; do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(BINPATH)/$$i; $(CHMOD) 755 $(BINPATH)/$$i; done
 	-mkdir $(PREFIX)
 	-mkdir $(PREFIX)/$(VERSION)
 	test -d $(PREFIX)/$(VERSION)
 	test -w $(PREFIX)/$(VERSION)
 	for i in $(INSTALL_LIST); do /bin/cp $$i $(PREFIX)/$(VERSION); done
+	$(LN_S) $(PREFIX)/$(VERSION)/bochs $(BINPATH)/bochs
+	$(LN_S) $(PREFIX)/$(VERSION)/bximage $(BINPATH)/bximage
 	$(CP) -r docs-html $(PREFIX)/$(VERSION)
 	$(RM) -f $(PREFIX)/$(VERSION)/README
 	$(CAT) build/linux/README.linux-binary README > $(PREFIX)/$(VERSION)/README
-	$(CP) -r font/vga.pcf $(PREFIX)/$(VERSION)
+	$(CP) font/vga.pcf $(PREFIX)/$(VERSION)
+	$(CP) .bochsrc $(PREFIX)/$(VERSION)/bochsrc-sample.txt
+	$(LN_S) $(VERSION) $(PREFIX)/latest
 
 install_dlx::
 	$(RM) -f $(DLXLINUX_TAR)
 	$(WGET) $(DLXLINUX_TAR_URL)
 	$(RM) -rf $(PREFIX)/dlxlinux
 	$(GUNZIP) -c $(DLXLINUX_TAR) | (cd $(PREFIX); tar -xvf -)
+	$(RM) -f $(DLXLINUX_TAR)
 	test -d $(PREFIX)/dlxlinux
-	(cd $(PREFIX)/dlxlinux; $(MV) .bochsrc .bochsrc.orig; $(SED) -e "s/BIOS-bochs-990925a/$(DLXLINUX_ROMFILE)/" -e "s/1\.1\.2/$(VERSION)/g"< .bochsrc.orig > bochsrc; rm -f .bochsrc.orig)
+	(cd $(PREFIX)/dlxlinux; $(MV) bochsrc.txt bochsrc.txt.orig; $(SED) -e "s/1\.1\.2/$(VERSION)/g"< bochsrc.txt.orig > bochsrc.txt; rm -f bochsrc.txt.orig)
 	$(CHOWN) -R root.root $(PREFIX)/dlxlinux
 	$(CHMOD) 777 $(PREFIX)/dlxlinux
 	$(CHMOD) 666 $(PREFIX)/dlxlinux/*
@@ -274,7 +276,9 @@ clean:
 	@RMCOMMAND@ *.a
 	@RMCOMMAND@ */*.a
 	@RMCOMMAND@ bochs@EXE@
+	@RMCOMMAND@ bximage@EXE@
 	@RMCOMMAND@ bochs.out
+	@RMCOMMAND@ bochsout.txt
 
 local-dist-clean: clean
 	@RMCOMMAND@ config.h config.status config.log config.cache
