@@ -913,6 +913,8 @@ elif test "$with_win32_vcpp" = yes; then
   AC_DEFINE(BX_NO_EMPTY_STRUCTS, 1)
   AC_DEFINE(BX_NO_ATTRIBUTES, 1)
   AC_DEFINE(BX_HAVE_HASH_MAP, 0)
+  AC_DEFINE(BX_HAVE_STRTOULL, 0)
+  AC_DEFINE(BX_HAVE_STRTOUQ, 0)
 elif test "$with_macos" = yes; then
   AC_MSG_RESULT(macos)
   AC_DEFINE(BX_WITH_MACOS, 1)
