@@ -255,15 +255,15 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
   int x, y;   /* window position */
   unsigned int border_width = 4;  /* four pixels */
 #if BX_CPU_LEVEL < 2
-  char *window_name = "Bochs 8086 emulator, http://www.bochs.com/";
+  char *window_name = "Bochs 8086 emulator, http://bochs.sourceforge.net/";
 #elif BX_CPU_LEVEL == 2
-  char *window_name = "Bochs 80286 emulator, http://www.bochs.com/";
+  char *window_name = "Bochs 80286 emulator, http://bochs.sourceforge.net/";
 #elif BX_CPU_LEVEL == 3
-  char *window_name = "Bochs 80386 emulator, http://www.bochs.com/";
+  char *window_name = "Bochs 80386 emulator, http://bochs.sourceforge.net/";
 #elif BX_CPU_LEVEL == 4
-  char *window_name = "Bochs 80486 emulator, http://www.bochs.com/";
+  char *window_name = "Bochs 80486 emulator, http://bochs.sourceforge.net/";
 #else
-  char *window_name = "Bochs Pentium emulator, http://www.bochs.com/";
+  char *window_name = "Bochs Pentium emulator, http://bochs.sourceforge.net/";
 #endif
   char *icon_name = "Bochs";
   Pixmap icon_pixmap;
