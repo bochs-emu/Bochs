@@ -384,7 +384,7 @@ public:
 	void set_log_action (int loglevel, int action);
 protected:
 	int n_logfn;
-#define MAX_LOGFNS 32
+#define MAX_LOGFNS 64
 	logfunc_t *logfn_list[MAX_LOGFNS];
 	char *logfn;
 };
