@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.23 2002-09-18 22:44:02 bdenney Exp $
+// $Id: wx.cc,v 1.24 2002-09-19 00:43:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -102,6 +102,8 @@ MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSi
   refreshTimer.SetOwner (this);
   refreshTimer.Start (100);
   needRefresh = true;
+  const char bits[1] = { 0 };
+  blankCursor = new wxCursor (bits, 1, 1, -1, -1, bits);
 }
 
 void MyPanel::OnTimer(wxCommandEvent& WXUNUSED(event))
@@ -141,6 +143,9 @@ void MyPanel::ToggleMouse ()
     mouseSavedX = wxScreenX / 2;
     mouseSavedY = wxScreenY / 2;
     WarpPointer (mouseSavedX, mouseSavedY);
+    SetCursor (*blankCursor);
+  } else {
+    SetCursor (wxNullCursor);
   }
 }
 

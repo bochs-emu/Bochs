@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.26 2002-09-18 22:44:02 bdenney Exp $
+// $Id: wxmain.h,v 1.27 2002-09-19 00:43:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -141,6 +141,7 @@ public:
   void SaveConfiguration ();
   void ToggleMouse ();
 private:
+  wxCursor *blankCursor;
   bool needRefresh;
   wxTimer refreshTimer;
   Bit16s mouseSavedX, mouseSavedY;
