@@ -369,15 +369,15 @@ debug: action=ignore
 debugger_log: -
 
 #=======================================================================
-# com1:
-# This defines a serial (COM) port. You can specify a device to use as com1.
-# This can be a real serial line, or a pty.  To use a pty (under X/Unix),
-# create two windows (xterms, usually).  One of them will run bochs, and the
-# other will act as com1. Find out the tty the com1 window using the `tty'
-# command, and use that as the `dev' parameter.  Then do `sleep 1000000' in
-# the com1 window to keep the shell from messing with things, and run bochs in
-# the other window.  Serial I/O to com1 (port 0x3f8) will all go to the other
-# window.
+# COM1:
+# This defines a serial port (UART type 16550A). You can specify a device
+# to use as com1. This can be a real serial line, or a pty.  To use a pty
+# (under X/Unix), create two windows (xterms, usually).  One of them will
+# run bochs, and the other will act as com1. Find out the tty the com1
+# window using the `tty' command, and use that as the `dev' parameter.
+# Then do `sleep 1000000' in the com1 window to keep the shell from
+# messing with things, and run bochs in the other window.  Serial I/O to
+# com1 (port 0x3f8) will all go to the other window.
 #=======================================================================
 #com1: enabled=1, dev=/dev/ttyp9
 
@@ -488,18 +488,18 @@ keyboard_paste_delay: 100000
 floppy_command_delay: 500
 
 #=======================================================================
-# mouse: Not used in any of the GUI specific modules, but the option
-#        bx_options.mouse_enabled is set to this value.  The idea,
-#        is that the GUI code should not generate mouse events when
-#        not enabled.  The hardware emualation itself is not disabled
-#        by this.  This is to facilitate deterministic runs of bochs.
+# MOUSE: 
+# This option prevents Bochs from creating mouse "events" unless a mouse
+# is  enabled. The hardware emulation itself is not disabled by this.
+# You can turn the mouse on by setting enabled to 1, or turn it off by
+# setting enabled to 0. Unless you have a particular reason for enabling
+# the mouse by default, it is recommended that you leave it off.
+# You can also toggle the mouse usage at runtime (middle mouse button on
+# X11 and SDL, F12 on Win32).
 #
 # Examples:
 #   mouse: enabled=1
 #   mouse: enabled=0
-#
-# I wouldn't recommend enabling the mouse by default, unless you have a
-# really good reason to do so.
 #=======================================================================
 mouse: enabled=0
 
