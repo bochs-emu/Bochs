@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.51 2004-12-13 22:26:36 sshwarts Exp $
+// $Id: paging.cc,v 1.52 2004-12-16 22:21:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -358,6 +358,8 @@
 static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 
+#define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
+
 
 // === TLB Instrumentation section ==============================
 
@@ -590,15 +592,14 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 #endif
 }
 
-
 // Translate a linear address to a physical address, for
 // a data access (D)
 
   Bit32u BX_CPP_AttrRegparmN(3)
-BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
+BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
 {
   bx_address lpf;
-  Bit32u   accessBits, combined_access, error_code;
+  Bit32u   accessBits, combined_access, error_code = 0;
   unsigned priv_index;
 #if BX_USE_TLB
   Bit32u TLB_index;
@@ -611,7 +612,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   // 32 bit entries although cr3 is expanded to 64 bits.
   Bit32u ppf, poffset, paddress;
 
-  bx_bool isWrite = (rw>=BX_WRITE); // write or r-m-w
+  bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
 
 #if BX_SupportPAE
   if (BX_CPU_THIS_PTR cr4.get_PAE())
@@ -653,11 +654,10 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
       if ( !(pml4 & 0x01) ) {
-        // PML4 Entry NOT present
-        error_code = 0x00000000; // RSVD=0, P=0
-        goto page_fault_not_present;
+        goto page_fault_not_present; // PML4 Entry NOT present
       }
-      if ( !(pml4 & 0x20) ) {
+      if ( !(pml4 & 0x20) )
+      {
         pml4 |= 0x20;
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
       }
@@ -674,9 +674,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdp_addr, sizeof(bx_address), &pdp);
     if ( !(pdp & 0x01) ) {
-      // PDP Entry NOT present
-      error_code = 0x00000000; // RSVD=0, P=0
-      goto page_fault_not_present;
+      goto page_fault_not_present; // PDP Entry NOT present
     }
     if ( !(pdp & 0x20) ) {
       pdp |= 0x20;
@@ -688,9 +686,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
     if ( !(pde & 0x01) ) {
-      // Page Directory Entry NOT present
-      error_code = 0x00000000; // RSVD=0, P=0
-      goto page_fault_not_present;
+      goto page_fault_not_present; // Page Directory Entry NOT present
     }
 
 #if BX_SUPPORT_4MEG_PAGES
@@ -718,10 +714,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
         (combined_access & 0x06) |     // bit 2,1
         isWrite;                       // bit 0
 
-      if (!priv_check[priv_index]) {
-        error_code = 0x00000001; // RSVD=0, P=1
-        goto page_fault_access;
-      }
+      if (!priv_check[priv_index]) goto page_fault_access;
 
       // Update PDE if A/D bits if needed.
       if ( ((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0)) )
@@ -751,9 +744,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 #endif
 
       if ( !(pte & 0x01) ) {
-        // Page Table Entry NOT present
-        error_code = 0x00000000; // RSVD=0, P=0
-        goto page_fault_not_present;
+        goto page_fault_not_present; 
       }
 
       priv_index =
@@ -764,10 +755,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
         (combined_access & 0x06) |     // bit 2,1
         isWrite;                       // bit 0
 
-      if (!priv_check[priv_index]) {
-        error_code = 0x00000001; // RSVD=0, P=1
-        goto page_fault_access;
-      }
+      if (!priv_check[priv_index]) goto page_fault_access;
 
       // Update PDE A bit if needed.
       if ( (pde & 0x20)==0 ) {
@@ -817,11 +805,8 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
 
-    if ( !(pde & 0x01) )
-    {
-      // Page Directory Entry NOT present
-      error_code = 0x00000000; // RSVD=0, P=0
-      goto page_fault_not_present;
+    if ( !(pde & 0x01) ) {
+      goto page_fault_not_present; // Page Directory Entry NOT present
     }
 
 #if BX_SUPPORT_4MEG_PAGES
@@ -852,10 +837,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
         (combined_access & 0x06) |     // bit 2,1
         isWrite;                       // bit 0
 
-      if (!priv_check[priv_index]) {
-        error_code = 0x00000001; // RSVD=0, P=1
-        goto page_fault_access;
-      }
+      if (!priv_check[priv_index]) goto page_fault_access;
 
       // Update PDE if A/D bits if needed.
       if (((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0)))
@@ -900,9 +882,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       ppf = pte & 0xfffff000;
 
       if ( !(pte & 0x01) ) {
-        // Page Table Entry NOT present
-        error_code = 0x00000000; // RSVD=0, P=0
-        goto page_fault_not_present;
+        goto page_fault_not_present; // Page Table Entry NOT present
       }
 
       priv_index =
@@ -913,10 +893,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
         (combined_access & 0x06) |     // bit 2,1
         isWrite;                       // bit 0
 
-      if (!priv_check[priv_index]) {
-        error_code = 0x00000001; // RSVD=0, P=1
-        goto page_fault_access;
-      }
+      if (!priv_check[priv_index]) goto page_fault_access;
 
 #if (BX_CPU_LEVEL >= 6)
       // update PDE if A bit was not set before
@@ -947,15 +924,15 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 // b2: Write Sys   OK
 // b3: Write User  OK
   if ( combined_access & 4 ) { // User
-    accessBits = 0x3; // User priv; read from {user,sys} OK.
-    if ( isWrite ) { // Current operation is a write (Dirty bit updated)
+    accessBits = 0x3;    // User priv; read from {user,sys} OK.
+    if ( isWrite ) {     // Current operation is a write (Dirty bit updated)
       accessBits |= 0xc; // write from {user,sys} OK.
     }
   }
   else { // System
-    accessBits = 0x1; // System priv; read from {sys} OK.
-    if ( isWrite ) { // Current operation is a write (Dirty bit updated)
-      accessBits |= 4; // write from {sys} OK.
+    accessBits = 0x1;    // System priv; read from {sys} OK.
+    if ( isWrite ) {     // Current operation is a write (Dirty bit updated)
+      accessBits |= 4;   // write from {sys} OK.
     }
   }
 #if BX_SupportGlobalPages
@@ -974,10 +951,25 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
   return(paddress);
 
-page_fault_access:
-page_fault_not_present:
+#define ERROR_NOT_PRESENT       0x00
+#define ERROR_PROTECTION        0x01
+#define ERROR_RESERVED          0x08
+#define ERROR_ID                0x10
 
+/* keep compiler happy until it actually used
+page_fault_reserved:
+  error_code |= ERROR_RESERVED;   // RSVD = 1
+*/
+
+page_fault_access:
+  error_code |= ERROR_PROTECTION; // P = 1
+
+page_fault_not_present:
   error_code |= (pl << 2) | (isWrite << 1);
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR msr.nxe && (access_type == CODE_ACCESS))
+    error_code |= ERROR_ID;       // I/D = 1
+#endif
   BX_CPU_THIS_PTR cr2 = laddr;
   // Invalidate TLB entry.
 #if BX_USE_TLB
@@ -997,16 +989,17 @@ page_fault_not_present:
   return(0); // keep compiler happy
 }
 
-
-// Translate a linear address to a physical address, for
-// an instruction fetch access (I)
+  Bit32u BX_CPP_AttrRegparmN(3)
+BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
+{
+  return translate_linear(laddr, pl, rw, DATA_ACCESS);
+}
 
   Bit32u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 {
-  return dtranslate_linear(laddr, pl, BX_READ);
+  return translate_linear(laddr, pl, BX_READ, CODE_ACCESS);
 }
-
 
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
 
@@ -1015,7 +1008,6 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 #warning "Fix dbg_xlate_linear2phy for 64-bit and new features."
 #endif
 #endif
-
 
   void
 BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, bx_bool *valid)
@@ -1028,7 +1020,7 @@ BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, bx_bool *valid)
     *phy = laddr;
     *valid = 1;
     return;
-    }
+  }
 
   lpf       = laddr & 0xfffff000; // linear page frame
   poffset   = laddr & 0x00000fff; // physical offset

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.150 2004-12-14 19:27:41 vruppert Exp $
+// $Id: bochs.h,v 1.151 2004-12-16 22:21:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -473,6 +473,9 @@ BOCHSAPI extern bx_debug_t bx_dbg;
 #define BX_READ         0
 #define BX_WRITE        1
 #define BX_RW           2
+
+#define DATA_ACCESS     0
+#define CODE_ACCESS     1
 
 
 #include "memory/memory.h"

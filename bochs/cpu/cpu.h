@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.191 2004-12-13 22:26:35 sshwarts Exp $
+// $Id: cpu.h,v 1.192 2004-12-16 22:21:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2537,8 +2537,6 @@ public: // for now...
 #if BX_CPU_LEVEL >= 4
   BX_SMF void SetCR4(Bit32u val_32);
 #endif
-  BX_SMF void dynamic_translate(void);
-  BX_SMF void dynamic_init(void);
   BX_SMF unsigned fetchDecode(Bit8u *, bxInstruction_c *, unsigned);
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
@@ -2748,6 +2746,8 @@ public: // for now...
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
                      unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF Bit32u  translate_linear(bx_address laddr, 
+     unsigned pl, unsigned rw, unsigned access_type) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw) BX_CPP_AttrRegparmN(3);
   BX_SMF void TLB_flush(bx_bool invalidateGlobal);
@@ -2962,31 +2962,38 @@ IMPLEMENT_32BIT_REGISTER_ACCESSORS(EBP);
 IMPLEMENT_32BIT_REGISTER_ACCESSORS(ESI);
 IMPLEMENT_32BIT_REGISTER_ACCESSORS(EDI);
 
-BX_CPP_INLINE void BX_CPU_C::set_cpu_id(unsigned id) {
+BX_CPP_INLINE void BX_CPU_C::set_cpu_id(unsigned id)
+{
    BX_CPU_THIS_PTR bx_cpuid = id;
 }
 
-BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CPL(void) { 
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CPL(void)
+{ 
    return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); 
 } 
 
-BX_CPP_INLINE Bit32u BX_CPU_C::get_EIP(void) {
+BX_CPP_INLINE Bit32u BX_CPU_C::get_EIP(void)
+{
    return (BX_CPU_THIS_PTR dword.eip); 
 } 
 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg)
+{
    return (BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }
 
-BX_CPP_INLINE bx_bool BX_CPU_C::real_mode(void) {
+BX_CPP_INLINE bx_bool BX_CPU_C::real_mode(void)
+{
   return (BX_CPU_THIS_PTR realMode);
 }
 
-BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void) {
+BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void)
+{
   return (BX_CPU_THIS_PTR v8086Mode);
 }
 
-BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void) {
+BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
+{
   return (BX_CPU_THIS_PTR protectedMode);
 }
 
