@@ -1,0 +1,32 @@
+Notes on preparing a release:
+
+update README (easy)
+update Makefile.in
+update bxversion.h     (configure; make bxversion.h)
+write into CHANGES.txt
+copy into docs-html/changelog.html
+update docs-html/cvs-status.html
+
+building it:
+source: 
+  cvs tag REL_1_2_BASE
+  cvs checkout -r REL_1_2_BASE -d bochs-1.2 bochs
+  tar czvf bochs-1.2.tar.gz bochs-1.2
+
+win32 makefiles:
+  sh .conf.win32-vcpp
+  zip bochs-win32makefiles-1.2.zip  bochs-1.2/config.h bochs-1.2/Makefile bochs-1.2/*/Makefile bochs-1.2/*/*/Makefile
+
+mac makefiles:
+  sh .conf.macos
+  zip bochs-macos-1.2.zip  bochs-1.2/config.h bochs-1.2/Makefile bochs-1.2/*/Makefile bochs-1.2/*/*/Makefile
+
+win32 binary:
+  for windows, no automation yet.  Look at old package and copy new files in.
+
+RPM:
+  cvs export -r REL_1_2_BASE -d bochs-1.2 bochs
+  su root
+  configure
+  make rpm
+
