@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.94 2003-01-05 03:22:03 cbothamy Exp $
+// $Id: harddrv.cc,v 1.95 2003-02-01 12:21:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.94 2003-01-05 03:22:03 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.95 2003-02-01 12:21:43 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -551,16 +551,14 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
   Bit32u value32;
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
-  Bit32u port;
+  Bit32u port = 0xff; // undefined
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if ((address >= BX_HD_THIS channels[channel].ioaddr1) 
-     && (address <= BX_HD_THIS channels[channel].ioaddr1 + 7) ) {
+    if ((address & 0xfff8) == BX_HD_THIS channels[channel].ioaddr1) {
       port = address - BX_HD_THIS channels[channel].ioaddr1;
       break;
       }
-    else if ((address >= BX_HD_THIS channels[channel].ioaddr2)
-          && (address <= BX_HD_THIS channels[channel].ioaddr2 + 7) ) {
+    else if ((address & 0xfff8) == BX_HD_THIS channels[channel].ioaddr2) {
       port = address - BX_HD_THIS channels[channel].ioaddr2 + 0x10;
       break;
       }
@@ -635,12 +633,12 @@ if (channel == 0) {
   switch (port) {
     case 0x00: // hard disk data (16bit) 0x1f0
       if (BX_SELECTED_CONTROLLER(channel).status.drq == 0) {
-	    BX_ERROR(("IO read(1f0h) with drq == 0: last command was %02xh",
-		     (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
+	    BX_ERROR(("IO read(0x%04x) with drq == 0: last command was %02xh",
+		     address, (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
             return(0);
       }
-      BX_DEBUG(("IO read(1f0h): current command is %02xh",
-            (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
+      BX_DEBUG(("IO read(0x%04x): current command is %02xh",
+            address, (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
       switch (BX_SELECTED_CONTROLLER(channel).current_command) {
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
@@ -649,7 +647,7 @@ if (channel == 0) {
                      (unsigned) address));
             }
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512)
-            BX_PANIC(("IO read(1f0): buffer_index >= 512"));
+            BX_PANIC(("IO read(0x%04x): buffer_index >= 512", address));
 
 #if BX_SupportRepeatSpeedups
           if (DEV_bulk_io_quantum_requested()) {
@@ -657,8 +655,8 @@ if (channel == 0) {
 
             quantumsMax =
               (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
-if ( quantumsMax == 0)
-  BX_PANIC(("IO read(1f0): not enough space for read"));
+            if ( quantumsMax == 0)
+              BX_PANIC(("IO read(0x%04x): not enough space for read", address));
             DEV_bulk_io_quantum_transferred() =
                 DEV_bulk_io_quantum_requested();
             if (quantumsMax < DEV_bulk_io_quantum_transferred())
@@ -779,7 +777,7 @@ if ( quantumsMax == 0)
             GOTO_RETURN_VALUE;
 	  }
           else
-            BX_PANIC(("IO read(1f0h): current command is %02xh",
+            BX_PANIC(("IO read(0x%04x): current command is %02xh", address,
               (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
 
 	    case 0xa0: {
@@ -959,7 +957,7 @@ if ( quantumsMax == 0)
 	case 0xF9: BX_ERROR(("read cmd 0xF9 (SET MAX ADDRESS) not supported")); command_aborted(channel, 0xF9); break;
 
         default:
-          BX_PANIC(("IO read(1f0h): current command is %02xh",
+          BX_PANIC(("IO read(0x%04x): current command is %02xh", address,
             (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
         }
       break;
@@ -1086,16 +1084,14 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   bx_bool prev_control_reset;
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
-  Bit32u port;
+  Bit32u port = 0xff; // undefined
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if ((address >= BX_HD_THIS channels[channel].ioaddr1) 
-     && (address <= BX_HD_THIS channels[channel].ioaddr1 + 7) ) {
+    if ((address & 0xfff8) == BX_HD_THIS channels[channel].ioaddr1) {
       port = address - BX_HD_THIS channels[channel].ioaddr1;
       break;
       }
-    else if ((address >= BX_HD_THIS channels[channel].ioaddr2)
-          && (address <= BX_HD_THIS channels[channel].ioaddr2 + 7) ) {
+    else if ((address & 0xfff8) == BX_HD_THIS channels[channel].ioaddr2) {
       port = address - BX_HD_THIS channels[channel].ioaddr2 + 0x10;
       break;
       }
@@ -1158,12 +1154,12 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
   switch (port) {
     case 0x00: // 0x1f0
       if (io_len == 1) {
-        BX_PANIC(("byte IO write to 0x1f0"));
+        BX_PANIC(("byte IO write to 0x%04x", address));
         }
       switch (BX_SELECTED_CONTROLLER(channel).current_command) {
         case 0x30: // WRITE SECTORS
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512)
-            BX_PANIC(("IO write(1f0): buffer_index >= 512"));
+            BX_PANIC(("IO write(0x%04x): buffer_index >= 512", address));
 
 #if BX_SupportRepeatSpeedups
           if (DEV_bulk_io_quantum_requested()) {
@@ -1171,8 +1167,8 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
             quantumsMax =
               (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
-if ( quantumsMax == 0)
-  BX_PANIC(("IO write(1f0): not enough space for write"));
+            if ( quantumsMax == 0)
+              BX_PANIC(("IO write(0x%04x): not enough space for write", address));
             DEV_bulk_io_quantum_transferred() =
                 DEV_bulk_io_quantum_requested();
             if (quantumsMax < DEV_bulk_io_quantum_transferred())
@@ -1263,7 +1259,7 @@ if ( quantumsMax == 0)
 
 	    case 0xa0: // PACKET
 		  if (BX_SELECTED_CONTROLLER(channel).buffer_index >= PACKET_SIZE)
-			BX_PANIC(("IO write(1f0): buffer_index >= PACKET_SIZE"));
+			BX_PANIC(("IO write(0x%04x): buffer_index >= PACKET_SIZE", address));
 		  BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index] = value;
 		  BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] = (value >> 8);
 		  BX_SELECTED_CONTROLLER(channel).buffer_index += 2;
@@ -1772,7 +1768,7 @@ if ( quantumsMax == 0)
 		  break;
 
         default:
-          BX_PANIC(("IO write(1f0h): current command is %02xh",
+          BX_PANIC(("IO write(0x%04x): current command is %02xh", address,
             (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
         }
       break;
@@ -1821,7 +1817,7 @@ if ( quantumsMax == 0)
       // b3..0 HD3..HD0
       {
       if ( (value & 0xa0) != 0xa0 ) // 1x1xxxxx
-        BX_INFO(("IO write 1f6 (%02x): not 1x1xxxxxb", (unsigned) value));
+        BX_INFO(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
       Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
       WRITE_HEAD_NO(channel,value & 0xf);
       if (BX_SELECTED_CONTROLLER(channel).lba_mode == 0 && ((value >> 6) & 1) == 1)
@@ -2299,7 +2295,7 @@ if ( quantumsMax == 0)
 	case 0xF9: BX_ERROR(("write cmd 0xF9 (SET MAX ADDRESS) not supported"));command_aborted(channel, 0xF9); break;
 
 	default:
-          BX_PANIC(("IO write(1f7h): command 0x%02x", (unsigned) value));
+          BX_PANIC(("IO write(0x%04x): command 0x%02x", address, (unsigned) value));
 	  // if user foolishly decides to continue, abort the command
 	  // so that the software knows the drive didn't understand it.
           command_aborted(channel, value);
