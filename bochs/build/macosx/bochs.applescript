@@ -12,7 +12,7 @@ on run
 	--Use the script's directory as the current directory
 	tell application "Terminal"
 		activate
-		do script "cd " & script_path & ";exec " & (POSIX path of bochs_app) & bochs_path
+		do script "cd '" & script_path & "';exec '" & (POSIX path of bochs_app) & bochs_path&"'"
 		-- Wait for Terminal to change the name first, then change it to ours
 		delay 1
 		set AppleScript's text item delimiters to "/"

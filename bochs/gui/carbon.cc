@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.20 2003-06-28 08:04:31 vruppert Exp $
+// $Id: carbon.cc,v 1.21 2003-10-03 20:58:23 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1699,7 +1699,7 @@ void CreateKeyMap(void)
     BX_KEY_X,
     BX_KEY_C,
     BX_KEY_V,
-    0,
+    BX_KEY_LEFT_BACKSLASH,
     BX_KEY_B,
     BX_KEY_Q,
     BX_KEY_W,
@@ -1741,47 +1741,47 @@ void CreateKeyMap(void)
     BX_KEY_SPACE,
     BX_KEY_GRAVE,
     BX_KEY_BACKSPACE,
-    0,
+    BX_KEY_KP_ENTER,
     BX_KEY_ESC,
-    0, // 0x36
-    0, // 0x37
-    0, // 0x38
-    0, // 0x39
-    0, // 0x3A
-    0, // 0x3B
-    0, // 0x3C
-    0, // 0x3D
-    0, // 0x3E
-    0, // 0x3F
+    0, // 0x36 (record button)
+    0, // 0x37 (cmd key)
+    0, // 0x38 (left shift)
+    0, // 0x39 (caps lock)
+    0, // 0x3A (left option/alt)
+    0, // 0x3B (left ctrl)
+    0, // 0x3C (right shift)
+    0, // 0x3D (right option/alt)
+    0, // 0x3E (right ctrl)
+    0, // 0x3F (fn key -- laptops)
     0, // 0x40
-    BX_KEY_PERIOD, // KP_PERIOD
-    0, // 0x42
+    BX_KEY_KP_DELETE, // KP_PERIOD
+    0, // 0x42 (move right/multiply)
     BX_KEY_KP_MULTIPLY,
     0, // 0x44
     BX_KEY_KP_ADD,
-    0, // 0x46
-    BX_KEY_KP_DELETE,
-    0, // 0x48
+    0, // 0x46 (move left/add)
+    BX_KEY_NUM_LOCK,
+    0, // 0x48 (move down/equals)
     0, // 0x49
     0, // 0x4A
     BX_KEY_KP_DIVIDE,
     BX_KEY_KP_ENTER,
-    0, // 0x4D
+    0, // 0x4D (move up/divide)
     BX_KEY_KP_SUBTRACT,
     0, // 0x4F
     0, // 0x50
-    0, // 0x51 (kp equals)
-    0, // 0x52 (kp 0)
-    0, // 0x53 (kp 1)
+    BX_KEY_EQUALS, // 0x51 (kp equals)
+    BX_KEY_KP_INSERT, // 0x52 (kp 0)
+    BX_KEY_KP_END, // 0x53 (kp 1)
     BX_KEY_KP_DOWN, // 0x54 (kp 2)
-    0, // 0x55 (kp 3)
+    BX_KEY_KP_PAGE_DOWN, // 0x55 (kp 3)
     BX_KEY_KP_LEFT, // 0x56 (kp 4)
     BX_KEY_KP_5,
     BX_KEY_KP_RIGHT, // 0x58 (kp 6)
-    0, // 0x59 (kp 7)
+    BX_KEY_KP_HOME, // 0x59 (kp 7)
     0, // 0x5A
     BX_KEY_KP_UP, // 0x5B (kp 8)
-    0, // 0x5C (kp 9)
+    BX_KEY_KP_PAGE_UP, // 0x5C (kp 9)
     0, // 0x5D
     0, // 0x5E
     0, // 0x5F
@@ -1794,15 +1794,15 @@ void CreateKeyMap(void)
     0, // 0x66
     BX_KEY_F11,
     0, // 0x68
-    0, // 0x69 (print screen)
+    BX_KEY_PRINT, // 0x69 (print screen)
     0, // 0x6A
-    0, // 0x6B (scroll lock)
+    BX_KEY_SCRL_LOCK, // 0x6B (scroll lock)
     0, // 0x6C
     BX_KEY_F10,
-    0, // 0x6E
+    BX_KEY_MENU, // 0x6E
     BX_KEY_F12,
     0, // 0x70
-    0, // 0x71 (pause)
+    BX_KEY_PAUSE, // 0x71 (pause)
     BX_KEY_INSERT,
     BX_KEY_HOME,
     BX_KEY_PAGE_UP,

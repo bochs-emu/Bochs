@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.128 2003-10-02 11:33:41 danielg4 Exp $
+$Id: user.dbk,v 1.129 2003-10-03 20:58:22 danielg4 Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2837,8 +2837,8 @@ Examples:
 <screen>
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
-ata2: enabled=1, ioaddr1=0x1e8, ioaddr2=0x3e8, irq=11
-ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x368, irq=9
+ata2: enabled=1, ioaddr1=0x1e8, ioaddr2=0x3e0, irq=11
+ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x360, irq=9
 </screen>
 
 These options enables up to 4 ata channels. For each channel
@@ -6213,7 +6213,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.128 2003-10-02 11:33:41 danielg4 Exp $
+      $Id: user.dbk,v 1.129 2003-10-03 20:58:22 danielg4 Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8676,7 +8676,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.128 2003-10-02 11:33:41 danielg4 Exp $
+        $Id: user.dbk,v 1.129 2003-10-03 20:58:22 danielg4 Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
