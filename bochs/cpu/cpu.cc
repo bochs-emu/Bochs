@@ -60,8 +60,15 @@ const Boolean bx_parity_lookup[256] = {
 #endif
 
 
+#if BX_SMP_PROCESSORS==1
+// single processor simulation, so there's one of everything
+BX_CPU_C    bx_cpu;
+BX_MEM_C    bx_mem;
+#else
+// multiprocessor simulation, we need an array of cpus and memories
 BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
 BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
+#endif
 
 
 
@@ -73,12 +80,9 @@ BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 extern void REGISTER_IADDR(Bit32u addr);
 #endif
 
-#if BX_DEBUGGER==0
-
-// The CHECK_MAX_INSTRUCTIONS macro is equivalent to the ICOUNT
-// guard in the debugger.  For SMP, I needed the same functionality
-// as ICOUNT but didn't want to have to enable every debugger feature.
-// So the macro is defined ONLY when the debugger is off.
+// The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
+// instructions and then return so that the other processors have a chance to
+// run.  This is used only when simulating multiple processors.
 // 
 // If maximum instructions have been executed, return.  A count less
 // than zero means run forever.
@@ -86,9 +90,13 @@ extern void REGISTER_IADDR(Bit32u addr);
   if (count >= 0) {                   \
     count--; if (count == 0) return;  \
   }
+
+#if BX_SMP_PROCESSORS==1
+#  define BX_TICK1_IF_SINGLE_PROCESSOR() BX_TICK1()
 #else
-#define CHECK_MAX_INSTRUCTIONS(count)  /* not needed in debugger*/
+#  define BX_TICK1_IF_SINGLE_PROCESSOR()
 #endif
+
 
 #if BX_DYNAMIC_TRANSLATION == 0
   void
@@ -246,7 +254,7 @@ repeat_not_done:
 #ifdef REGISTER_IADDR
       REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
-      //BX_TICK1();
+      BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event) {
@@ -274,11 +282,19 @@ repeat_done:
 #ifdef REGISTER_IADDR
     REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
-    //BX_TICK1();
+    BX_TICK1_IF_SINGLE_PROCESSOR();
 
 debugger_check:
 
+#if (BX_SMP_PROCESSORS>1 && BX_DEBUGGER==0)
+    // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
+    // instructions and then return so that the other processors have a chance
+    // to run.  This is used only when simulating multiple processors.  If only
+    // one processor, don't waste any cycles on it!  Also, it is not needed
+    // with the debugger because its guard mechanism provides the same
+    // functionality.
     CHECK_MAX_INSTRUCTIONS(max_instr_count);
+#endif
 
 #if BX_DEBUGGER
     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
@@ -389,6 +405,20 @@ handle_async_event:
 
   if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
     // I made up the bitmask above to mean HALT state.
+#if BX_SMP_PROCESSORS==1
+    // for one processor, pass the time as quickly as possible until
+    // an interrupt wakes up the CPU.
+    while (1) {
+      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
+        break;
+        }
+      BX_TICK1();
+    }
+#else      /* BX_SMP_PROCESSORS != 1 */
+    // for multiprocessor simulation, even if this CPU is halted we still
+    // must give the others a chance to simulate.  If an interrupt has 
+    // arrived, then clear the HALT condition; otherwise just return from
+    // the CPU loop with stop_reason STOP_CPU_HALTED.
     if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
       // interrupt ends the HALT condition
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
@@ -401,6 +431,7 @@ handle_async_event:
 #endif
       return;
     }
+#endif
   }
 
 
@@ -450,7 +481,7 @@ handle_async_event:
     Bit8u vector;
 
     // NOTE: similar code in ::take_irq()
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
     if (BX_CPU_THIS_PTR int_from_local_apic)
       vector = BX_CPU_THIS_PTR local_apic.acknowledge_int ();
     else
