@@ -34216,7 +34216,7 @@ echo "${ECHO_T}yes" >&6
 _ACEOF
 
     pci=1
-    PCI_OBJ='pci.o pci2isa.o pcivga.o'
+    PCI_OBJ='pci.o pci2isa.o pci_ide.o pcivga.o'
    else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
