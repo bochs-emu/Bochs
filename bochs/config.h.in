@@ -236,6 +236,16 @@
 // Leave this 0 unless you have a reason to use it.
 #define BX_PORT_E9_HACK 0
 
+// This option enables "split hard drive" support, which means
+// that a series of partial hard disk images can be treated
+// as a single large image.  If you set up the partition sizes and
+// file sizes correctly, this allows you to store each partition
+// in a separate file, which is very convenient if you want to operate
+// on a single partition (e.g. mount with loopback, create filesystem,
+// fsck, etc.).
+// [[Provide example of partitioning]]
+#define BX_SPLIT_HD_SUPPORT 0
+
 
 // =================================================================
 // BEGIN: OPTIONAL DEBUGGER SECTION

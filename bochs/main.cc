@@ -552,7 +552,6 @@ parse_line_formatted(int num_params, char *params[])
     bx_options.diskc.present = 1;
     }
   else if (!strcmp(params[0], "diskd")) {
-    bx_panic("Diskd not implemented. Use cdromd for CD-ROM support.\n");
     if (num_params != 5) {
       fprintf(stderr, ".bochsrc: diskd directive malformed.\n");
       exit(1);
@@ -915,6 +914,10 @@ parse_line_formatted(int num_params, char *params[])
     fprintf(stderr, ".bochsrc: directive '%s' not understood\n", params[0]);
     exit(1);
     }
+
+  if (bx_options.diskd.present && bx_options.cdromd.present)
+    bx_panic ("At present, using both diskd and cdromd at once is not supported.");
+
 }
 #endif // #if BX_PROVIDE_MAIN
 

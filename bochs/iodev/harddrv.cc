@@ -67,8 +67,16 @@ bx_hard_drive_c::bx_hard_drive_c(void)
       s[0].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();
       s[1].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();
 #else
+
+#if BX_SPLIT_HD_SUPPORT
+      // use new concatenated image object
+      s[0].hard_drive = new concat_image_t();
+      s[1].hard_drive = new concat_image_t();
+#else
       s[0].hard_drive = new default_image_t();
       s[1].hard_drive = new default_image_t();
+#endif
+
 #endif
 }
 
@@ -93,6 +101,19 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     BX_HD_THIS devices->register_io_write_handler(this, write_handler,
                                         addr, "Hard Drive 0");
     }
+#if 0
+  // this would be necessary to make the second HD master on the
+  // second controller, using 0x170-0x177 and irq15.  But it currently
+  // works as second disk on the first IDE controller, so this code
+  // is not needed.
+  BX_HD_THIS devices->register_irq(15, "Hard Drive 1");
+  for (unsigned addr=0x0170; addr<=0x0177; addr++) {
+    BX_HD_THIS devices->register_io_read_handler(this, read_handler,
+                                        addr, "Hard Drive 1");
+    BX_HD_THIS devices->register_io_write_handler(this, write_handler,
+                                        addr, "Hard Drive 1");
+    }
+#endif
 
   BX_HD_THIS drive_select = 0;
 
@@ -180,18 +201,55 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   if (!bx_options.cmos.cmosImage) {
     cmos->s.reg[0x12] = 0x00; // start out with: no drive 0, no drive 1
 
-    // Flag drive type as Fh, use extended CMOS location as real type
-    cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0x0f) | 0xf0;
-    cmos->s.reg[0x19] = 47; // user definable type
-    cmos->s.reg[0x1b] = (bx_options.diskc.cylinders & 0x00ff);
-    cmos->s.reg[0x1c] = (bx_options.diskc.cylinders & 0xff00) >> 8;
-    cmos->s.reg[0x1d] = (bx_options.diskc.heads);
-    cmos->s.reg[0x1e] = 0xff; // -1
-    cmos->s.reg[0x1f] = 0xff; // -1
-    cmos->s.reg[0x20] = 0xc0 | ((bx_options.diskc.heads > 8) << 3);
-    cmos->s.reg[0x21] = cmos->s.reg[0x1b];
-    cmos->s.reg[0x22] = cmos->s.reg[0x1c];
-    cmos->s.reg[0x23] = bx_options.diskc.spt;
+    if (bx_options.diskc.present) {
+      // Flag drive type as Fh, use extended CMOS location as real type
+      cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0x0f) | 0xf0;
+      cmos->s.reg[0x19] = 47; // user definable type
+      // AMI BIOS: 1st hard disk #cyl low byte
+      cmos->s.reg[0x1b] = (bx_options.diskc.cylinders & 0x00ff);
+      // AMI BIOS: 1st hard disk #cyl high byte
+      cmos->s.reg[0x1c] = (bx_options.diskc.cylinders & 0xff00) >> 8;
+      // AMI BIOS: 1st hard disk #heads
+      cmos->s.reg[0x1d] = (bx_options.diskc.heads);
+      // AMI BIOS: 1st hard disk write precompensation cylinder, low byte
+      cmos->s.reg[0x1e] = 0xff; // -1
+      // AMI BIOS: 1st hard disk write precompensation cylinder, high byte
+      cmos->s.reg[0x1f] = 0xff; // -1
+      // AMI BIOS: 1st hard disk control byte
+      cmos->s.reg[0x20] = 0xc0 | ((bx_options.diskc.heads > 8) << 3);
+      // AMI BIOS: 1st hard disk landing zone, low byte
+      cmos->s.reg[0x21] = cmos->s.reg[0x1b];
+      // AMI BIOS: 1st hard disk landing zone, high byte
+      cmos->s.reg[0x22] = cmos->s.reg[0x1c];
+      // AMI BIOS: 1st hard disk sectors/track
+      cmos->s.reg[0x23] = bx_options.diskc.spt;
+    }
+
+    //set up cmos for second hard drive
+    if (bx_options.diskd.present) {
+      bx_printf ("[diskd] I will put 0xf into the second hard disk field");
+      // fill in lower 4 bits of 0x12 for second HD
+      cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0xf0) | 0x0f;
+      cmos->s.reg[0x1a] = 47; // user definable type
+      // AMI BIOS: 2nd hard disk #cyl low byte
+      cmos->s.reg[0x24] = (bx_options.diskd.cylinders & 0x00ff);
+      // AMI BIOS: 2nd hard disk #cyl high byte
+      cmos->s.reg[0x25] = (bx_options.diskd.cylinders & 0xff00) >> 8;
+      // AMI BIOS: 2nd hard disk #heads
+      cmos->s.reg[0x26] = (bx_options.diskd.heads);
+      // AMI BIOS: 2nd hard disk write precompensation cylinder, low byte
+      cmos->s.reg[0x27] = 0xff; // -1
+      // AMI BIOS: 2nd hard disk write precompensation cylinder, high byte
+      cmos->s.reg[0x28] = 0xff; // -1
+      // AMI BIOS: 2nd hard disk, 0x80 if heads>8
+      cmos->s.reg[0x29] = (bx_options.diskd.heads > 8) ? 0x80 : 0x00;
+      // AMI BIOS: 2nd hard disk landing zone, low byte
+      cmos->s.reg[0x2a] = cmos->s.reg[0x1b];
+      // AMI BIOS: 2nd hard disk landing zone, high byte
+      cmos->s.reg[0x2b] = cmos->s.reg[0x1c];
+      // AMI BIOS: 2nd hard disk sectors/track
+      cmos->s.reg[0x2c] = bx_options.diskd.spt;
+    }
 
 
     if ( bx_options.bootdrive[0] == 'c' ) {
@@ -325,7 +383,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	      ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
               if (ret < 512) {
                 bx_printf("logical sector was %u\n", (unsigned) logical_sector);
-                bx_panic("disk: could not read() hard drive image file\n");
+                bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
                 }
 
               BX_SELECTED_CONTROLLER.buffer_index = 0;
@@ -489,18 +547,10 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       value8 = BX_SELECTED_CONTROLLER.error_register;
       goto return_value8;
       break;
-
     case 0x1f2: // hard disk sector count / interrupt reason
-      if (BX_SELECTED_CONTROLLER.current_command==0x20 ||
-          BX_SELECTED_CONTROLLER.current_command==0x21 ||
-          BX_SELECTED_CONTROLLER.current_command==0x30 ||
-          BX_SELECTED_CONTROLLER.current_command==0xa0) {
-        value8 = BX_SELECTED_CONTROLLER.sector_count;
-        goto return_value8;
-        }
-      bx_panic("disk: IO read(0x1f2): current command not read/write\n");
+      value8 = BX_SELECTED_CONTROLLER.sector_count;
+      goto return_value8;
       break;
-
     case 0x1f3: // sector number
       value8 = BX_SELECTED_CONTROLLER.sector_no;
       goto return_value8;
@@ -555,6 +605,19 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       goto return_value8;
       break;
 
+#if 0
+      // you'll need these to support second IDE controller, not needed yet.
+      case 0x170:
+      case 0x171:
+      case 0x172:
+      case 0x173:
+      case 0x174:
+      case 0x175:
+      case 0x176:
+      case 0x177:
+	    bx_printf ("[disk] ignoring read from 0x%04x\n", address);
+       break;
+#endif
     default:
       bx_panic("hard drive: io read to address %x unsupported\n",
         (unsigned) address);
@@ -662,7 +725,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 	    ret = BX_SELECTED_HD.hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
             if (ret < 512)
-              bx_panic("disk: could not write() hard drive image file\n");
+              bx_panic("disk: could not write() hard drive image file at byte %d\n", logical_sector*512);
 
             BX_SELECTED_CONTROLLER.buffer_index = 0;
 
@@ -1284,7 +1347,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
           if (ret < 512) {
             bx_printf("logical sector was %u\n", (unsigned) logical_sector);
-            bx_panic("disk: could not read() hard drive image file\n");
+            bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
             }
 
           BX_SELECTED_CONTROLLER.error_register = 0;
@@ -1619,6 +1682,19 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		}
 	  }
 	  break;
+#if 0
+      // you'll need these to support second IDE controller, not needed yet.
+    case 0x170:
+    case 0x171:
+    case 0x172:
+    case 0x173:
+    case 0x174:
+    case 0x175:
+    case 0x176:
+    case 0x177:
+	  bx_printf ("[disk] ignoring write to 0x%04x\n", address);
+       break;
+#endif
 
     default:
       bx_panic("hard drive: io write to address %x = %02x\n",
@@ -2233,9 +2309,11 @@ void
 bx_hard_drive_c::raise_interrupt()
 {
       if (!BX_SELECTED_CONTROLLER.control.disable_irq) {
+	    Bit32u irq = 14;  // always 1st IDE controller
+	    // for second controller, you would want irq 15
 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
-		  bx_printf("disk: Raising interrupt {%s}\n", DEVICE_TYPE_STRING);
-	    BX_HD_THIS devices->pic->trigger_irq(14);
+		  bx_printf("disk: Raising interrupt %d {%s}\n", irq, DEVICE_TYPE_STRING);
+	    BX_HD_THIS devices->pic->trigger_irq(irq);
       } else {
 	    if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom))
 		  bx_printf("disk: Interrupt masked {%s}\n", DEVICE_TYPE_STRING);
@@ -2305,6 +2383,143 @@ ssize_t default_image_t::write (const void* buf, size_t count)
 {
       return ::write(fd, buf, count);
 }
+
+#if BX_SPLIT_HD_SUPPORT
+/*** concat_image_t function definitions ***/
+
+void concat_image_t::increment_string (char *str)
+{
+  // find the last character of the string, and increment it.
+  char *p = str;
+  while (*p != 0) p++;
+  assert (p>str);  // choke on zero length strings
+  p--;  // point to last character of the string
+  ++(*p);  // increment to next ascii code.
+  if (bx_dbg.disk)
+    bx_printf ("concat_image.increment string returning '%s'\n", str);
+}
+
+int concat_image_t::open (const char* pathname0)
+{
+  char *pathname = strdup (pathname0);
+  bx_printf ("concat_image_t.open\n");
+  ssize_t start_offset = 0;
+  for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
+    fd_table[i] = ::open(pathname, O_RDWR
+#ifdef O_BINARY
+		| O_BINARY
+#endif
+	  );
+    if (fd_table[i] < 0) {
+      // open failed.
+      // if no FD was opened successfully, return -1 (fail).
+      if (i==0) return -1;
+      // otherwise, it only means that all images in the series have 
+      // been opened.  Record the number of fds opened successfully.
+      maxfd = i; 
+      break;
+    }
+    if (bx_dbg.disk)
+      bx_printf ("concat_image: open image %s, fd[%d] = %d\n", pathname, i, fd_table[i]);
+    /* look at size of image file to calculate disk geometry */
+    struct stat stat_buf;
+    int ret = fstat(fd_table[i], &stat_buf);
+    if (ret) {
+	  perror("fstat'ing hard drive image file");
+	  bx_panic("fstat() returns error!\n");
+    }
+    if ((stat_buf.st_size % 512) != 0) {
+      bx_panic ("[HDD] size of disk image must be multiple of 512 bytes");
+    }
+    length_table[i] = stat_buf.st_size;
+    start_offset_table[i] = start_offset;
+    start_offset += stat_buf.st_size;
+    increment_string (pathname);
+  }
+  // start up with first image selected
+  index = 0;
+  fd = fd_table[0];
+  thismin = 0;
+  thismax = length_table[0]-1;
+  seek_was_last_op = 0;
+  return 0; // success.
+}
+
+void concat_image_t::close ()
+{
+  bx_printf ("concat_image_t.close\n");
+  if (fd > -1) {
+    ::close(fd);
+  }
+}
+
+off_t concat_image_t::lseek (off_t offset, int whence)
+{
+  if ((offset % 512) != 0) 
+    bx_panic ("lseek HD with offset not multiple of 512");
+  if (bx_dbg.disk)
+    bx_printf ("concat_image_t.lseek(%d)\n", whence);
+  // is this offset in this disk image?
+  if (offset < thismin) {
+    // no, look at previous images
+    for (int i=index-1; i>=0; i--) {
+      if (offset >= start_offset_table[i]) {
+	index = i;
+	fd = fd_table[i];
+	thismin = start_offset_table[i];
+	thismax = thismin + length_table[i] - 1;
+	if (bx_dbg.disk)
+	  bx_printf ("concat_image_t.lseek to earlier image, index=%d\n", index);
+	break;
+      }
+    }
+  } else if (offset > thismax) {
+    // no, look at later images
+    for (int i=index+1; i<maxfd; i++) {
+      if (offset < start_offset_table[i] + length_table[i]) {
+	index = i;
+	fd = fd_table[i];
+	thismin = start_offset_table[i];
+	thismax = thismin + length_table[i] - 1;
+	if (bx_dbg.disk)
+	  bx_printf ("concat_image_t.lseek to earlier image, index=%d\n", index);
+	break;
+      }
+    }
+  }
+  // now offset should be within the current image.
+  offset -= start_offset_table[index];
+  if (offset < 0 || offset >= length_table[index])
+    bx_panic ("concat_image_t.lseek to byte %ld failed\n", (long)offset);
+
+  seek_was_last_op = 1;
+  return ::lseek(fd, offset, whence);
+}
+
+ssize_t concat_image_t::read (void* buf, size_t count)
+{
+  if (bx_dbg.disk)
+    bx_printf ("concat_image_t.read %ld bytes\n", (long)count);
+  // notice if anyone does sequential read or write without seek in between.
+  // This can be supported pretty easily, but needs additional checks for
+  // end of a partial image.
+  if (!seek_was_last_op) 
+    bx_panic ("disk: no seek before read");
+  return ::read(fd, buf, count);
+}
+
+ssize_t concat_image_t::write (const void* buf, size_t count)
+{
+  if (bx_dbg.disk)
+    bx_printf ("concat_image_t.write %ld bytes\n", (long)count);
+  // notice if anyone does sequential read or write without seek in between.
+  // This can be supported pretty easily, but needs additional checks for
+  // end of a partial image.
+  if (!seek_was_last_op) 
+    bx_panic ("disk: no seek before write");
+  return ::write(fd, buf, count);
+}
+#endif   /* BX_SPLIT_HD_SUPPORT */
 
 error_recovery_t::error_recovery_t ()
 {

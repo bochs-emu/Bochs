@@ -2,6 +2,16 @@
 #define _LINUX_TYPES_H
 
 #ifndef __ASSEMBLY__
+
+#define u_char bx_u_char
+#define u_short bx_u_short
+#define u_int bx_u_int
+#define u_long bx_u_long
+#define unchar bx_unchar
+#define ushort bx_ushort
+#define uint bx_uint
+#define ulong bx_ulong
+
 /* bsd */
 typedef unsigned char           u_char;
 typedef unsigned short          u_short;
