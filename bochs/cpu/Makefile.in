@@ -67,14 +67,12 @@ OBJS32 = \
 	data_xfer32.o \
 	logical32.o \
 	stack32.o \
-	arith8.o \
 	mult8.o \
 	data_xfer8.o \
 	logical8.o \
 	ctrl_xfer8.o \
 	arith16.o \
 	data_xfer16.o \
-	stack16.o \
 	bit.o \
 	flag_ctrl.o \
 	io.o \
@@ -103,6 +101,8 @@ OBJSXX = \
 	tasking.o \
 	shift32.o \
 	shift8.o \
+	arith8.o \
+	stack16.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: stack16.cc,v 1.8 2002-09-13 17:28:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,11 @@
   void
 BX_CPU_C::PUSH_RX(BxInstruction_t *i)
 {
+#if BX_SUPPORT_X86_64
+  push_16( BX_CPU_THIS_PTR gen_reg[i->nnn].word.rx );
+#else
   push_16( BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx );
+#endif
 }
 
   void
@@ -48,7 +52,11 @@ BX_CPU_C::POP_RX(BxInstruction_t *i)
   Bit16u rx;
 
   pop_16(&rx);
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR gen_reg[i->nnn].word.rx = rx;
+#else
   BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx = rx;
+#endif
 }
 
   void
