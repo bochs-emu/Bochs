@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-be.map,v 1.1 2003-05-02 22:19:05 vruppert Exp $
+# $Id: x11-pc-be.map,v 1.2 2003-07-29 13:31:11 bdenney Exp $
 # Target: PC(x86) keyboard, BE keymap
 # Author: Wouter Verhelst,
 # based on FR keymap by Christophe Bothamy, Bryce Denney
@@ -40,6 +40,7 @@ BX_KEY_0                                      'à'        XK_agrave
 BX_KEY_0+BX_KEY_ALT_R                         '}'        XK_braceright
 BX_KEY_1+BX_KEY_SHIFT_L                       '1'        XK_1
 BX_KEY_1                                      '&'        XK_ampersand
+BX_KEY_1+BX_KEY_ALT_R                         '|'        XK_bar
 BX_KEY_2+BX_KEY_SHIFT_L                       '2'        XK_2
 BX_KEY_2+BX_KEY_ALT_R                         '@'        XK_at
 BX_KEY_2                                      'é'        XK_eacute
@@ -199,6 +200,7 @@ BX_KEY_PRINT                                  none       XK_Sys_Req
 BX_KEY_RIGHT                                  none       XK_Right
 BX_KEY_RIGHT_BRACKET                          '$'        XK_dollar
 BX_KEY_RIGHT_BRACKET+BX_KEY_SHIFT_L           '*'        XK_asterisk
+BX_KEY_RIGHT_BRACKET+BX_KEY_ALT_R             ']'        XK_bracketright
 BX_KEY_SCRL_LOCK                              none       XK_Scroll_Lock
 BX_KEY_SEMICOLON+BX_KEY_SHIFT_L               'M'        XK_M
 BX_KEY_SEMICOLON                              'm'        XK_m
