@@ -3,7 +3,7 @@ megs: 32
 #megs: 16
 #megs: 8
 boot: c
-vgaromimage: bios/VGABIOS-elpin-2.20
+vgaromimage: bios/VGABIOS-elpin-2.40
 
 # You many now use double quotes around pathnames, in case
 # your pathname includes spaces.
