@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.65 2003-01-14 07:46:05 ptrumpet Exp $
+// $Id: proc_ctrl.cc,v 1.66 2003-01-20 20:10:31 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1358,7 +1358,8 @@ get_std_cpuid_features()
       //   [7:7]   MCE: Machine Check Exception
       //   [8:8]   CXS: CMPXCHG8B instruction
       //   [9:9]   APIC: APIC on Chip
-      //   [11:10] Reserved
+      //   [10:10] Reserved
+      //   [11:11] SYSENTER/SYSEXIT support
       //   [12:12] MTRR: Memory Type Range Reg
       //   [13:13] PGE/PTE Global Bit
       //   [14:14] MCA: Machine Check Architecture
@@ -1413,7 +1414,11 @@ get_std_cpuid_features()
 #endif
 
 #if BX_SUPPORT_X86_64
-  features |= (1<<5); //AMD specific MSR's
+  features |= (1<<5);       // AMD specific MSR's
+#endif
+
+#if BX_SUPPORT_SEP
+  features |= (1<<11);      // SYSENTER/SYSEXIT
 #endif
 
   return features;
@@ -1732,6 +1737,13 @@ BX_CPU_C::RDMSR(bxInstruction_c *i)
 
   /* We have the requested MSR register in ECX */
   switch(ECX) {
+
+#if BX_SUPPORT_SEP
+    case BX_MSR_SYSENTER_CS:  { EAX = BX_CPU_THIS_PTR sysenter_cs_msr;  EDX = 0; return; }
+    case BX_MSR_SYSENTER_ESP: { EAX = BX_CPU_THIS_PTR sysenter_esp_msr; EDX = 0; return; }
+    case BX_MSR_SYSENTER_EIP: { EAX = BX_CPU_THIS_PTR sysenter_eip_msr; EDX = 0; return; }
+#endif 
+
 #if BX_CPU_LEVEL == 5
     /* The following registers are defined for Pentium only */
     case BX_MSR_P5_MC_ADDR:
@@ -1857,6 +1869,17 @@ BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   /* ECX has the MSR to write to */
   switch(ECX) {
+
+#if BX_SUPPORT_SEP
+    case BX_MSR_SYSENTER_CS:  {
+      if (EAX & 3) BX_PANIC (("writing sysenter_cs_msr with non-kernel mode selector %X", EAX));  // not a bug according to book
+      BX_CPU_THIS_PTR sysenter_cs_msr  = EAX;                                                     // ... but very stOOpid
+      return;
+    }
+    case BX_MSR_SYSENTER_ESP: { BX_CPU_THIS_PTR sysenter_esp_msr = EAX; return; }
+    case BX_MSR_SYSENTER_EIP: { BX_CPU_THIS_PTR sysenter_eip_msr = EAX; return; }
+#endif
+
 #if BX_CPU_LEVEL == 5
     /* The following registers are defined for Pentium only */
     case BX_MSR_P5_MC_ADDR:
@@ -1943,6 +1966,127 @@ BX_CPU_C::WRMSR(bxInstruction_c *i)
 do_exception:
   exception(BX_GP_EXCEPTION, 0, 0);
 
+}
+
+  void 
+BX_CPU_C::SYSENTER (bxInstruction_c *i)
+{
+#if BX_SUPPORT_SEP
+  if (!protected_mode ()) {
+    BX_INFO (("sysenter not from protected mode"));
+    exception (BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
+  if (BX_CPU_THIS_PTR sysenter_cs_msr == 0) {
+    BX_INFO (("sysenter with zero sysenter_cs_msr"));
+    exception (BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
+
+  invalidate_prefetch_q ();
+
+  BX_CPU_THIS_PTR set_VM(0);           // do this just like the book says to do
+  BX_CPU_THIS_PTR set_IF(0);
+  BX_CPU_THIS_PTR set_RF(0);
+
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = BX_CPU_THIS_PTR sysenter_cs_msr >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;          // code segment
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;          // non-conforming
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1;          // readable
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1;          // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;          // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;     // segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;          // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;          // 32-bit mode
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
+
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr + 8;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;          // data segment
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;          // expand-up
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1;          // writeable
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1;          // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;          // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;     // segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;          // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;          // 32-bit mode
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;          // available for use by system
+
+  // BX_INFO (("sysenter: old eip %X, esp %x, new eip %x, esp %X, edx %X", BX_CPU_THIS_PTR prev_eip, ESP, BX_CPU_THIS_PTR sysenter_eip_msr, BX_CPU_THIS_PTR sysenter_esp_msr, EDX));
+
+  ESP = BX_CPU_THIS_PTR sysenter_esp_msr;
+  EIP = BX_CPU_THIS_PTR sysenter_eip_msr;
+#else
+  UndefinedOpcode (i);
+#endif
+}
+
+  void 
+BX_CPU_C::SYSEXIT (bxInstruction_c *i)
+{
+#if BX_SUPPORT_SEP
+  if (!protected_mode ()) {
+    BX_INFO (("sysexit not from protected mode"));
+    exception (BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
+  if (BX_CPU_THIS_PTR sysenter_cs_msr == 0) {
+    BX_INFO (("sysexit with zero sysenter_cs_msr"));
+    exception (BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
+  if (CPL != 0) {
+    BX_INFO (("sysexit at non-zero cpl %u", CPL));
+    exception (BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
+
+  invalidate_prefetch_q ();
+
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) | 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;           // code segment
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;           // non-conforming
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1;           // readable
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1;           // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;           // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      // segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;           // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;           // 32-bit mode
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;           // available for use by system
+
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;           // data segment
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;           // expand-up
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1;           // writeable
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1;           // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;           // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;      // segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;           // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;           // 32-bit mode
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;           // available for use by system
+
+  // BX_INFO (("sysexit: old eip %X, esp %x, new eip %x, esp %X, eax %X", BX_CPU_THIS_PTR prev_eip, ESP, EDX, ECX, EAX));
+
+  ESP = ECX;
+  EIP = EDX;
+#else
+  UndefinedOpcode (i);
+#endif
 }
 
 #if BX_SUPPORT_X86_64

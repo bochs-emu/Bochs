@@ -683,6 +683,7 @@ typedef
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_MMX 0
 #define BX_SUPPORT_SSE 0
+#define BX_SUPPORT_SEP 0
 #define BX_SUPPORT_4MEG_PAGES 0
 #define BX_SupportGuest2HostTLB 0
 #define BX_SupportRepeatSpeedups 0
@@ -735,6 +736,10 @@ typedef
 #endif
 #endif
 
+#if (BX_CPU_LEVEL<6 && BX_SUPPORT_SEP)
+#error SYSENTER/SYSEXIT only supported with CPU_LEVEL >= 6
+#endif
+
 #if BX_SUPPORT_X86_64
 // Sanity checks to ensure that you cannot accidently use conflicting options.
 
@@ -752,6 +757,10 @@ typedef
 #endif
 #if !BX_SUPPORT_4MEG_PAGES
 #error X86-64 requires Page Size Extension (PSE)
+#endif
+
+#if BX_SUPPORT_SEP
+#error SYSENTER/SYSEXIT not implemented for X86-64
 #endif
 
 #endif

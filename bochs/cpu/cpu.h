@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.125 2002-12-22 20:48:45 sshwarts Exp $
+// $Id: cpu.h,v 1.126 2003-01-20 20:10:27 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -289,6 +289,11 @@
 #define BX_MSR_BBL_CR_TRIG       0x011a
 #define BX_MSR_BBL_CR_BUSY       0x011b
 #define BX_MSR_BBL_CR_CTL3       0x011e
+#if BX_SUPPORT_SEP
+#  define BX_MSR_SYSENTER_CS  0x0174
+#  define BX_MSR_SYSENTER_ESP 0x0175
+#  define BX_MSR_SYSENTER_EIP 0x0176
+#endif
 #define BX_MSR_MCG_CAP           0x0179
 #define BX_MSR_MCG_STATUS        0x017a
 #define BX_MSR_MCG_CTL           0x017b
@@ -1504,6 +1509,13 @@ union {
 #define TLB_GENERATION_MAX (BX_TLB_SIZE-1)
 #endif
 
+  // SYSENTER/SYSEXIT instruction msr's
+#if BX_SUPPORT_SEP
+  Bit32u sysenter_cs_msr;
+  Bit32u sysenter_esp_msr;
+  Bit32u sysenter_eip_msr;
+#endif
+
   // for paging
 #if BX_USE_TLB
   struct {
@@ -2498,6 +2510,8 @@ union {
   BX_SMF void WRMSR(bxInstruction_c *);
   BX_SMF void RDTSC(bxInstruction_c *);
   BX_SMF void RDMSR(bxInstruction_c *);
+  BX_SMF void SYSENTER(bxInstruction_c *);
+  BX_SMF void SYSEXIT(bxInstruction_c *);
   BX_SMF void SetCR0(Bit32u val_32);
 #if BX_CPU_LEVEL >= 4
   BX_SMF void SetCR4(Bit32u val_32);
