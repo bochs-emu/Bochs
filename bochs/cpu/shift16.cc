@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.21 2004-08-15 20:12:05 sshwarts Exp $
+// $Id: shift16.cc,v 1.22 2004-08-15 20:31:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -484,5 +484,5 @@ BX_CPU_C::SAR_Ew(bxInstruction_c *i)
       Write_RMW_virtual_word(result_16);
       }
 
-    SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_SAR16);
+    SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SAR16);
 }

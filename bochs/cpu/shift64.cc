@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.13 2004-08-15 20:12:05 sshwarts Exp $
+// $Id: shift64.cc,v 1.14 2004-08-15 20:31:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -424,7 +424,7 @@ BX_CPU_C::SAR_Eq(bxInstruction_c *i)
       Write_RMW_virtual_qword(result_64);
       }
 
-    SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_SAR64);
+    SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SAR64);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

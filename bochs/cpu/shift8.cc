@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.16 2004-08-15 20:12:05 sshwarts Exp $
+// $Id: shift8.cc,v 1.17 2004-08-15 20:31:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -350,5 +350,5 @@ BX_CPU_C::SAR_Eb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result_8);
     }
 
-  SET_FLAGS_OSZAPC_RESULT_8(result_8, BX_INSTR_SAR8);
+  SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SAR8);
 }

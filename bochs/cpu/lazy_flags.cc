@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.17 2004-08-15 20:12:05 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.18 2004-08-15 20:31:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -177,21 +177,47 @@ bx_bool BX_CPU_C::get_CFLazy(void)
           cf = 0;
           break;
         case BX_INSTR_SAR8:
+	  if (BX_CPU_THIS_PTR oszapc.op2_8 < 8) {
+	    cf =
+	      (BX_CPU_THIS_PTR oszapc.op1_8 >>
+	        (BX_CPU_THIS_PTR oszapc.op2_8 - 1)) & 0x01;
+	  }
+	  else {
+	    cf = (BX_CPU_THIS_PTR oszapc.op1_8 & 0x80) > 0;
+	  }
+          break;
         case BX_INSTR_SHR8:
-          cf = BX_CPU_THIS_PTR oszapc.result_8 & 0x01;
+          cf =
+            (BX_CPU_THIS_PTR oszapc.op1_8 >>
+              (BX_CPU_THIS_PTR oszapc.op2_8 - 1)) & 0x01;
           break;
         case BX_INSTR_SAR16:
+	  if (BX_CPU_THIS_PTR oszapc.op2_16 < 16) {
+	    cf =
+	      (BX_CPU_THIS_PTR oszapc.op1_16 >>
+	        (BX_CPU_THIS_PTR oszapc.op2_16 - 1)) & 0x01;
+	  }
+	  else {
+	    cf = (BX_CPU_THIS_PTR oszapc.op1_16 & 0x8000) > 0;
+	  }
+          break;
         case BX_INSTR_SHR16:
-          cf = BX_CPU_THIS_PTR oszapc.result_16 & 0x01;
+          cf =
+            (BX_CPU_THIS_PTR oszapc.op1_16 >>
+              (BX_CPU_THIS_PTR oszapc.op2_16 - 1)) & 0x01;
           break;
         case BX_INSTR_SAR32:
         case BX_INSTR_SHR32:
-          cf = BX_CPU_THIS_PTR oszapc.result_32 & 0x01;
+          cf =
+            (BX_CPU_THIS_PTR oszapc.op1_32 >>
+              (BX_CPU_THIS_PTR oszapc.op2_32 - 1)) & 0x01;
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_SAR64:
         case BX_INSTR_SHR64:
-          cf = BX_CPU_THIS_PTR oszapc.result_64 & 0x01;
+          cf =
+            (BX_CPU_THIS_PTR oszapc.op1_64 >>
+              (BX_CPU_THIS_PTR oszapc.op2_64 - 1)) & 0x01;
           break;
 #endif
         case BX_INSTR_SHL8:

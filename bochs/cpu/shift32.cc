@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.22 2004-08-15 20:12:05 sshwarts Exp $
+// $Id: shift32.cc,v 1.23 2004-08-15 20:31:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -435,5 +435,5 @@ BX_CPU_C::SAR_Ed(bxInstruction_c *i)
       Write_RMW_virtual_dword(result_32);
       }
 
-    SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_SAR32);
+    SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SAR32);
 }
