@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.76 2004-02-15 00:03:16 vruppert Exp $
+// $Id: win32.cc,v 1.77 2004-02-15 11:30:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -708,11 +708,11 @@ VOID UIThread(PVOID pvoid) {
     SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
     SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
     ShowWindow(hwndTB, SW_SHOW);
-    hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "F12 enables mouse",
+    hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, " CTRL + 3rd button enables mouse",
                                 stInfo.mainWnd, 0x7712);
     if (hwndSB) {
       int elements;
-      SB_Edges[0] = SIZE_OF_SB_FIRST_ELEMENT + SIZE_OF_SB_ELEMENT;   // F12 Mouse
+      SB_Edges[0] = SIZE_OF_SB_FIRST_ELEMENT + SIZE_OF_SB_ELEMENT;   // Mouse info
       for (elements = 1; elements < (BX_MAX_STATUSITEMS+1); elements++)
         SB_Edges[elements] = SB_Edges[elements-1] + SIZE_OF_SB_ELEMENT;
       SB_Edges[elements] = -1;
@@ -828,9 +828,9 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_CREATE:
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     if (mouseCaptureMode)
-      SetStatusText(0, "Press F12 to release mouse", TRUE);
+      SetStatusText(0, "CTRL + 3rd button disables mouse", TRUE);
     else
-      SetStatusText(0, "F12 enables mouse", TRUE);
+      SetStatusText(0, "CTRL + 3rd button enables mouse", TRUE);
     return 0;
 
   case WM_COMMAND:
@@ -877,10 +877,12 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
-LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
   RECT wndRect;
+  static BOOL mouseModeChange = FALSE;
 
   switch (iMsg) {
   case WM_CREATE:
@@ -928,7 +930,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
     return 0;
 
   case WM_MOUSEMOVE:
-    processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 0);
+    if (!mouseModeChange) {
+      processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 0);
+    }
     return 0;
 
   case WM_LBUTTONDOWN:
@@ -940,7 +944,24 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
   case WM_MBUTTONDOWN:
   case WM_MBUTTONDBLCLK:
   case WM_MBUTTONUP:
-    processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 4);
+    if (wParam == (MK_CONTROL | MK_MBUTTON)) {
+      mouseCaptureMode = !mouseCaptureMode;
+      bx_options.Omouse_enabled->set (mouseCaptureMode);
+      ShowCursor(!mouseCaptureMode);
+      ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
+      GetWindowRect(hwnd, &wndRect);
+      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
+      cursorWarped();
+      if (mouseCaptureMode)
+        SetStatusText(0, "CTRL + 3rd button disables mouse", TRUE);
+      else
+        SetStatusText(0, "CTRL + 3rd button enables mouse", TRUE);
+      mouseModeChange = TRUE;
+    } else if (mouseModeChange && (iMsg == WM_MBUTTONUP)) {
+      mouseModeChange = FALSE;
+    } else {
+      processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 4);
+    }
     return 0;
 
   case WM_RBUTTONDOWN:
@@ -962,23 +983,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
 
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
-    if (wParam == VK_F12) {
-      mouseCaptureMode = !mouseCaptureMode;
-      bx_options.Omouse_enabled->set (mouseCaptureMode);
-      ShowCursor(!mouseCaptureMode);
-      ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
-      GetWindowRect(hwnd, &wndRect);
-      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
-      cursorWarped();
-      if (mouseCaptureMode)
-        SetStatusText(0, "Press F12 to release mouse", TRUE);
-      else
-        SetStatusText(0, "F12 enables mouse", TRUE);
-    } else {
-      EnterCriticalSection(&stInfo.keyCS);
-      enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_PRESSED);
-      LeaveCriticalSection(&stInfo.keyCS);
-    }
+    EnterCriticalSection(&stInfo.keyCS);
+    enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_PRESSED);
+    LeaveCriticalSection(&stInfo.keyCS);
     return 0;
 
   case WM_KEYUP:
@@ -999,7 +1006,47 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 
-void enq_key_event(Bit32u key, Bit32u press_release) {
+void enq_key_event(Bit32u key, Bit32u press_release)
+{
+  static BOOL alt_pressed = FALSE;
+  static BOOL ctrl_pressed = FALSE;
+  static BOOL shift_pressed = FALSE;
+
+  if (press_release == BX_KEY_PRESSED) {
+    switch (key) {
+      case 0x1d:
+        if (ctrl_pressed)
+          return;
+        else
+          ctrl_pressed = TRUE;
+        break;
+      case 0x2a:
+        if (shift_pressed)
+          return;
+        else
+          shift_pressed = TRUE;
+        break;
+      case 0x38:
+        if (alt_pressed)
+          return;
+        else
+          alt_pressed = TRUE;
+        break;
+    }
+  }
+  if (press_release == BX_KEY_RELEASED) {
+    switch (key) {
+      case 0x1d:
+        ctrl_pressed = FALSE;
+        break;
+      case 0x2a:
+        shift_pressed = FALSE;
+        break;
+      case 0x38:
+        alt_pressed = FALSE;
+        break;
+    }
+  }
   if (((tail+1) % SCANCODE_BUFSIZE) == head) {
     BX_ERROR(( "enq_scancode: buffer full"));
     return;
@@ -1052,8 +1099,6 @@ void bx_win32_gui_c::handle_events(void) {
   Bit32u key;
   Bit32u key_event;
 
-  // printf("# Hey!!!\n");
-
   if (stInfo.kill) terminateEmul(stInfo.kill);
 
   // Handle mouse moves
@@ -1073,7 +1118,6 @@ void bx_win32_gui_c::handle_events(void) {
     }
     // Check for mouse buttons first
     else if ( key & MOUSE_PRESSED) {
-      // printf("# click!\n");
       DEV_mouse_motion( 0, 0, LOWORD(key));
     }
     else if (key & HEADERBAR_CLICKED) {
