@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.94 2002-12-12 18:31:19 bdenney Exp $
+// $Id: siminterface.h,v 1.95 2002-12-16 06:43:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1199,6 +1199,8 @@ public:
   // and free up memory, then sends a notify message to the CI 
   // telling it that bochs has stopped.
   virtual void quit_sim (int code) {}
+
+  virtual int get_exit_code () { return 0; }
 
   virtual int get_default_rc (char *path, int len) {return -1;}
   virtual int read_rc (char *path) {return -1;}

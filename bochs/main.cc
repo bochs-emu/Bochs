@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.209 2002-12-16 02:49:55 yakovlev Exp $
+// $Id: main.cc,v 1.210 2002-12-16 06:43:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1532,7 +1532,7 @@ int bxmain () {
   char buf[16];
   fgets (buf, sizeof(buf), stdin);
 #endif
-  return 0;
+  return SIM->get_exit_code ();
 }
 
 #if defined(__WXMSW__)

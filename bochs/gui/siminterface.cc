@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.90 2002-12-12 18:31:19 bdenney Exp $
+// $Id: siminterface.cc,v 1.91 2002-12-16 06:43:02 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -37,6 +37,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   int enabled;
   // save context to jump to if we must quit unexpectedly
   jmp_buf *quit_context;
+  int exit_code;
 public:
   bx_real_sim_c ();
   virtual ~bx_real_sim_c ();
@@ -68,6 +69,7 @@ public:
   virtual const char *get_log_level_name (int level);
   virtual int get_max_log_level ();
   virtual void quit_sim (int code);
+  virtual int get_exit_code () { return exit_code; }
   virtual int get_default_rc (char *path, int len);
   virtual int read_rc (char *path);
   virtual int write_rc (char *path, int overwrite);
@@ -225,6 +227,7 @@ bx_real_sim_c::bx_real_sim_c ()
   for (i=0; i<registry_alloc_size; i++)
     param_registry[i] = NULL;
   quit_context = NULL;
+  exit_code = 0;
 }
 
 // called by constructor of bx_param_c, so that every parameter that is
@@ -313,7 +316,8 @@ bx_real_sim_c::get_max_log_level ()
 
 void 
 bx_real_sim_c::quit_sim (int code) {
-  BX_INFO (("quit_sim called"));
+  BX_INFO (("quit_sim called with exit code %d", code));
+  exit_code = code;
   // use longjmp to quit cleanly, no matter where in the stack we are.
   //fprintf (stderr, "using longjmp() to jump directly to the quit context!\n");
   if (quit_context != NULL) {
