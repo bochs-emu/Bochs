@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.33 2002-10-25 11:44:37 bdenney Exp $
+// $Id: gui.h,v 1.34 2002-10-27 23:33:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,6 +60,10 @@ public:
   virtual Bit32u get_sighandler_mask () {return 0;}
   // called when registered signal arrives
   virtual void sighandler (int sig) {}
+#if BX_USE_IDLE_HACK
+  // this is called from the CPU model when the HLT instruction is executed.
+  virtual void sim_is_idle(void) {}
+#endif
 
   // The following function(s) are defined already, and your
   // GUI code calls them
@@ -72,9 +76,6 @@ public:
   void update_drive_status_buttons (void);
   static void     mouse_enabled_changed (bx_bool val);
   static void init_signal_handlers ();
-#if BX_USE_IDLE_HACK
-  static void sim_is_idle(void);
-#endif
 
 
 protected:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.52 2002-10-25 11:44:37 bdenney Exp $
+// $Id: x.cc,v 1.53 2002-10-27 23:33:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,6 +47,9 @@ class bx_x_gui_c : public bx_gui_c {
 public:
   bx_x_gui_c (void);
   DECLARE_GUI_VIRTUAL_METHODS()
+#if BX_USE_IDLE_HACK
+  virtual void sim_is_idle(void);
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1545,7 +1548,7 @@ Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *
     return(True);
 }
 
-
+#if BX_USE_IDLE_HACK
 void bx_x_gui_c::sim_is_idle () {
   XEvent dummy;
   struct timeval   timeout;   
@@ -1553,4 +1556,5 @@ void bx_x_gui_c::sim_is_idle () {
   timeout.tv_usec = 1000; /* 1/1000 s */  
   XPeekEventTimeout(bx_x_display, &dummy, &timeout);
 }
+#endif
 #endif /* BX_USE_IDLE_HACK */  
