@@ -90,6 +90,14 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
+#if BX_SUPPORT_MMX
+  if(BX_CPU_THIS_PTR cr0.ts)
+    exception(BX_NM_EXCEPTION, 0, 0);
+
+  if(BX_CPU_THIS_PTR cr0.em)
+    exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
   xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word ();
 
@@ -180,6 +188,14 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
+#if BX_SUPPORT_MMX
+  if(BX_CPU_THIS_PTR cr0.ts)
+    exception(BX_NM_EXCEPTION, 0, 0);
+
+  if(BX_CPU_THIS_PTR cr0.em)
+    exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+
   readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
   
   BX_CPU_THIS_PTR the_i387.cwd = xmm.xmm16u(0);
@@ -199,9 +215,9 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   {
     readVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
 
-    Bit32u new_mxcsr = xmm.xmm32u(2), mxcsr_msk = xmm.xmm32u(3);
-    if(! mxcsr_msk) mxcsr_msk = MXCSR_MASK; 
-    if(new_mxcsr & ~mxcsr_msk)
+    Bit32u new_mxcsr = xmm.xmm32u(2), mxcsr_mask = xmm.xmm32u(3);
+    if(! mxcsr_mask) mxcsr_mask = MXCSR_MASK;
+    if(new_mxcsr & ~mxcsr_mask)
        exception(BX_GP_EXCEPTION, 0, 0);
 
     BX_MXCSR_REGISTER = new_mxcsr;
@@ -260,8 +276,8 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   for(index = 0;index < 8; index++, twd <<= 2, tag_byte_mask <<= 1)
   {
       if(tag_byte & tag_byte_mask) {
-          const floatx80 &fpu_reg = BX_FPU_REG(index);
-          twd = FPU_tagof(fpu_reg);
+         const floatx80 &fpu_reg = BX_FPU_REG(index);
+         twd = FPU_tagof(fpu_reg);
       }
       else {
          twd |= FPU_Tag_Empty;
