@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.8 2002-08-27 19:54:46 bdenney Exp $
+// $Id: ioapic.cc,v 1.9 2002-08-29 16:52:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -55,7 +55,7 @@ bx_ioapic_c::init ()
 }
 
 void 
-bx_ioapic_c::reset () 
+bx_ioapic_c::reset (unsigned type) 
 {
 }
 
