@@ -1,9 +1,9 @@
 /*
  *  PCIDEV: PCI host device mapping
- *  Copyright (C) 2003 Frank Cornelis <fcorneli@pandora.be>
+ *  Copyright (C) 2003, 2004 Frank Cornelis <fcorneli@pandora.be>
  *
  *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 2 as 
+ *  it under the terms of the GNU General Public License version 2 as
  *  published by the Free Software Foundation.
  *
  *  This program is distributed in the hope that it will be useful,
@@ -45,10 +45,16 @@ static char *pcidev_name = PCIDEV_NAME;
 static int pcidev_open(struct inode *inode, struct file *file)
 {
 	struct pcidev_struct *pcidev = kmalloc(sizeof(struct pcidev_struct), GFP_KERNEL);
+	int idx;
+	if (!pcidev)
+		goto out;
 	pcidev->dev = NULL;
 	pcidev->pid = 0;
+	for (idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++)
+		pcidev->mapped_mem[idx] = NULL;
 	init_timer(&pcidev->irq_timer);
 	pcidev->irq_timer.function = NULL; // no test irq signaling 
+out:
 	file->private_data = pcidev;
 	return 0;
 }
@@ -58,8 +64,10 @@ static int pcidev_release(struct inode *inode, struct file *file)
 {
 	struct pcidev_struct *pcidev = (struct pcidev_struct *)file->private_data;
 	int idx;
-	if (!pcidev->dev)
+	if (!pcidev)
 		return 0;
+	if (!pcidev->dev)
+		goto out;
 	if (pcidev->irq_timer.function)
 		del_timer_sync(&pcidev->irq_timer);
 	if (pcidev->pid) {
@@ -72,6 +80,7 @@ static int pcidev_release(struct inode *inode, struct file *file)
 		if (pcidev->mapped_mem[idx])
 			iounmap(pcidev->mapped_mem[idx]);
 	pci_release_regions(pcidev->dev);
+out:
 	kfree(file->private_data);
 	return 0;
 }
@@ -124,6 +133,8 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 {
 	int ret = 0;
 	struct pcidev_struct *pcidev = (struct pcidev_struct *)file->private_data;
+	if (!pcidev)
+		return -EIO;
 	switch(cmd) {
 	case PCIDEV_IOCTL_FIND: {
 		struct pcidev_find_struct *find;
@@ -158,7 +169,7 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 			break;
 		for (idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++) {
 			if (pci_resource_flags(dev, idx) & IORESOURCE_MEM) {
-				long len = pci_resource_len(dev,idx);
+				long len = pci_resource_len(dev, idx);
 				unsigned long mapped_start = (unsigned long)ioremap(pci_resource_start(dev, idx), len);
 				__put_user(mapped_start, &find->resources[idx].start);
 				__put_user(mapped_start + len - 1, &find->resources[idx].end);
@@ -224,7 +235,8 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		 * the PCI host device since this could cause great 
 		 * trouble because we don't own those I/O resources.
 		 * If the pcidev wants to remap a device he needs to
-		 * emulate the mapping himself and not bother us about it.
+		 * emulate the mapping himself and not bother the host
+		 * kernel about it.
 		 */
 		if (address == PCI_INTERRUPT_PIN) {
 			printk(KERN_WARNING "pcidev: not allowed to set irq pin!\n");
@@ -257,25 +269,23 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		u8 irq;
 		if (!pcidev->dev)
 			return -EIO;
-	     	ret = pci_read_config_byte(pcidev->dev, PCI_INTERRUPT_PIN, &irq);
-	     	if (ret < 0)
+		ret = pci_read_config_byte(pcidev->dev, PCI_INTERRUPT_PIN, &irq);
+		if (ret < 0)
 			break;
-	     	ret = -EIO;
-	     	if (!irq)
-		     	break;
-	     	ret = pci_read_config_byte(pcidev->dev, PCI_INTERRUPT_LINE, &irq);
-	     	if (ret < 0)
-	     		break;
+		if (!irq)
+			return -EIO;
+		ret = pci_read_config_byte(pcidev->dev, PCI_INTERRUPT_LINE, &irq);
+		if (ret < 0)
+			break;
 		if (arg & 1) {
 			pcidev->pid = current->pid; // our dev_id
 			printk(KERN_INFO "pcidev: enabling IRQ %d\n", irq);
-			ret = request_irq(irq, pcidev_irqhandler, SA_SHIRQ, 
+			ret = request_irq(irq, pcidev_irqhandler, SA_SHIRQ,
 					pcidev_name, (void *)current->pid);
 		}
 		else {
-			ret = -EIO;
 			if (!pcidev->pid)
-				break;
+				return -EIO;
 			printk(KERN_INFO "pcidev: disabling IRQ %d\n", irq);
 			free_irq(irq, (void *)pcidev->pid);
 			pcidev->pid = 0;
@@ -372,13 +382,13 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		printk(KERN_DEBUG "pcidev: reading memory %#x\n", (int)address);
 		switch(cmd) {
 		case PCIDEV_IOCTL_READ_MEM_BYTE:
-			value = readb(address);
+			value = readb((unsigned char *)address);
 			break;
 		case PCIDEV_IOCTL_READ_MEM_WORD:
-			value = readw(address);
+			value = readw((unsigned short *)address);
 			break;
 		case PCIDEV_IOCTL_READ_MEM_DWORD:
-			value = readl(address);
+			value = readl((unsigned int *)address);
 			break;
 		}
 		__put_user(value, &io->value);
@@ -386,7 +396,7 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		break;
 	}
 	case PCIDEV_IOCTL_WRITE_MEM_BYTE: 
-	case PCIDEV_IOCTL_WRITE_MEM_WORD: 
+	case PCIDEV_IOCTL_WRITE_MEM_WORD:
 	case PCIDEV_IOCTL_WRITE_MEM_DWORD: {
 		struct pcidev_io_struct *io;
 		unsigned long address, value;
@@ -398,13 +408,13 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		printk(KERN_DEBUG "pcidev: writing memory %#x\n", (int)address);
 		switch(cmd) {
 		case PCIDEV_IOCTL_WRITE_MEM_BYTE:
-			writeb(value, address);
+			writeb(value, (unsigned char *)address);
 			break;
 		case PCIDEV_IOCTL_WRITE_MEM_WORD:
-			writew(value, address);
+			writew(value, (unsigned short *)address);
 			break;
 		case PCIDEV_IOCTL_WRITE_MEM_DWORD:
-			writel(value, address);
+			writel(value, (unsigned int *)address);
 			break;
 		}
 		ret = 0;
@@ -457,11 +467,9 @@ int __init init_module(void)
 {
 	int result;
 	printk(KERN_INFO "pcidev init\n");
-	if ((result = register_chrdev(PCIDEV_MAJOR, pcidev_name, &pcidev_fops)) < 0) {
+	if ((result = register_chrdev(PCIDEV_MAJOR, pcidev_name, &pcidev_fops)) < 0)
 		printk(KERN_WARNING "Could not register pcidev.\n");
-		return result;
-	}
-	return 0;
+	return result;
 }
 
 
