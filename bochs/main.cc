@@ -928,28 +928,32 @@ bx_init_bx_dbg (void)
 }
 
 
-  void
+int
 bx_atexit(void)
 {
   static Boolean been_here = 0;
-
+  printf ("bx_atexit: been_here = %d\n", been_here);
+  if (been_here) return 1;   // protect from reentry
+  been_here = 1;
 
 #if BX_PROVIDE_DEVICE_MODELS==1
-  if (been_here == 0) {
-    bx_pc_system.exit();
-    }
+  printf ("shutting down device models\n");
+  bx_pc_system.exit();
 #endif
 
 #if BX_DEBUGGER == 0
+  printf ("shutting down processors\n");
   for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
 #endif
 
 #if BX_PCI_SUPPORT
+    printf ("shutting down PCI\n");
     if (bx_options.Oi440FXSupport->get ()) {
       bx_devices.pci->print_i440fx_state();
       }
-#endif
+#endif'
+	return 0;
 }
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
