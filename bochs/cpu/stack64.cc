@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.16 2004-11-02 16:10:02 sshwarts Exp $
+// $Id: stack64.cc,v 1.17 2004-11-04 22:41:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,7 +236,6 @@ BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
 BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 {
   Bit64u frame_ptr64;
-  Bit16u frame_ptr16;
   Bit8u level;
   static Bit8u first_time = 1;
 

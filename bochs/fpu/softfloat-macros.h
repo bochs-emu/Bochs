@@ -418,7 +418,7 @@ BX_CPP_INLINE void add192(
 )
 {
     Bit64u z0, z1, z2;
-    int carry0, carry1;
+    unsigned carry0, carry1;
 
     z2 = a2 + b2;
     carry1 = (z2 < a2);
@@ -454,7 +454,7 @@ BX_CPP_INLINE void sub192(
 )
 {
     Bit64u z0, z1, z2;
-    int borrow0, borrow1;
+    unsigned borrow0, borrow1;
 
     z2 = a2 - b2;
     borrow1 = (a2 < b2);

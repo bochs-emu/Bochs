@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.26 2004-10-29 21:15:48 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.27 2004-11-04 22:41:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -377,8 +377,6 @@ done:
   void
 BX_CPU_C::IRET64(bxInstruction_c *i)
 {
-  Bit32u rip, ecs_raw, eflags;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER

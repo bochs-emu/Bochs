@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.43 2004-11-02 16:10:01 sshwarts Exp $
+// $Id: exception.cc,v 1.44 2004-11-04 22:41:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -92,8 +92,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
     // long mode interrupt
 
     Bit64u idtindex;
-    Bit32u save_upper;
-    Bit32u  dword1, dword2, dword3;
+    Bit32u dword1, dword2, dword3;
 
     bx_descriptor_t gate_descriptor, cs_descriptor;
     bx_selector_t cs_selector;
@@ -206,11 +205,10 @@ BX_CPU_THIS_PTR save_esp = ESP;
     // INTERRUPT TO INNER PRIVILEGE:
     if ((cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL) || (ist > 0))
     {
-      Bit16u old_SS, old_CS;
-      Bit64u RSP_for_cpl_x, old_RIP, old_RSP;
+      Bit16u old_SS;
+      Bit64u RSP_for_cpl_x, old_RSP;
       bx_descriptor_t ss_descriptor;
       bx_selector_t   ss_selector;
-      int bytes;
       int savemode;
 
       BX_DEBUG(("interrupt(): INTERRUPT TO INNER PRIVILEGE"));
@@ -227,14 +225,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
       parse_selector(0,&ss_selector);
       parse_descriptor(0,0,&ss_descriptor);
 
-
       // 386 int/trap gate
       // new stack must have room for 40|48 bytes, else #SS(0)
       //if ( is_error_code )
       //  bytes = 48;
       //else
       //  bytes = 40;
-
 
       old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
       old_RSP = RSP;
@@ -295,11 +291,9 @@ BX_CPU_THIS_PTR save_esp = ESP;
     // INTERRUPT TO SAME PRIVILEGE LEVEL:
     if (cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL )
     {
-      Bit64u old_RSP;
-
       BX_DEBUG(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE"));
 
-      old_RSP = RSP;
+      Bit64u old_RSP = RSP;
       // align stack
       RSP = RSP & BX_CONST64(0xfffffffffffffff0);
 

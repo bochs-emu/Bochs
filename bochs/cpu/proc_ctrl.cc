@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.85 2004-11-02 16:10:01 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.86 2004-11-04 22:41:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -455,23 +455,29 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       if ( (((val_64>>16) & 3)==2) ||
            (((val_64>>20) & 3)==2) ||
            (((val_64>>24) & 3)==2) ||
-           (((val_64>>28) & 3)==2) ) {
+           (((val_64>>28) & 3)==2) )
+      {
         // IO breakpoints (10b) are not yet supported.
-        BX_PANIC(("MOV_DqRq: write of %08x contains IO breakpoint", val_64));
+        BX_PANIC(("MOV_DqRq: write of %08x:%08x contains IO breakpoint", 
+          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
       if ( (((val_64>>18) & 3)==2) ||
            (((val_64>>22) & 3)==2) ||
            (((val_64>>26) & 3)==2) ||
-           (((val_64>>30) & 3)==2) ) {
+           (((val_64>>30) & 3)==2) )
+      {
         // LEN0..3 contains undefined length specifier (10b)
-        BX_PANIC(("MOV_DqRq: write of %08x contains undefined LENx", val_64));
+        BX_PANIC(("MOV_DqRq: write of %08x:%08x contains undefined LENx",
+          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
       if ( ((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
            ((((val_64>>20) & 3)==0) && (((val_64>>22) & 3)!=0)) ||
            ((((val_64>>24) & 3)==0) && (((val_64>>26) & 3)!=0)) ||
-           ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)) ) {
+           ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)) )
+      {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_PANIC(("MOV_DqRq: write of %08x, R/W=00b LEN!=00b", val_64));
+        BX_PANIC(("MOV_DqRq: write of %08x:%08x , R/W=00b LEN!=00b",
+          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
 
       // Pentium+: bits15,14,12 are hardwired to 0, rest are settable.
@@ -835,13 +841,9 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
 
-      BX_INFO(("MOV_CqRq: ignoring write to CR4 of 0x%08x", val_64));
-      if (val_64) {
-        BX_INFO(("MOV_CqRq: (CR4) write of 0x%08x not supported!", val_64));
-        }
-      // Only allow writes of 0 to CR4 for now.
-      // Writes to bits in CR4 should not be 1s as CPUID
-      // returns not-supported for all of these features.
+      BX_INFO(("MOV_CqRq: write to CR4 of %08x:%08x", 
+          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
+
       SetCR4(val_64);
       break;
 #if BX_SUPPORT_APIC

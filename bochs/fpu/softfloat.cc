@@ -92,12 +92,9 @@ float64 int32_to_float64(Bit32s a)
 
 float32 int64_to_float32(Bit64s a, float_status_t &status)
 {
-    Bit64u absA;
-    Bit32u zSig;
-
     if (a == 0) return 0;
     int zSign = (a < 0);
-    absA = zSign ? -a : a;
+    Bit64u absA = zSign ? -a : a;
     int shiftCount = countLeadingZeros64(absA) - 40;
     if (0 <= shiftCount) {
         return packFloat32(zSign, 0x95 - shiftCount, absA<<shiftCount);
@@ -1620,7 +1617,6 @@ float64 float64_sqrt(float64 a, float_status_t &status)
     Bit16s aExp, zExp;
     Bit64u aSig, zSig, doubleZSig;
     Bit64u rem0, rem1, term0, term1;
-    float64 z;
 
     aSig = extractFloat64Frac(a);
     aExp = extractFloat64Exp(a);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.34 2004-10-16 19:34:16 sshwarts Exp $
+// $Id: apic.cc,v 1.35 2004-11-04 22:41:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -215,12 +215,11 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
   // return false if we can't deliver for any reason, so that the caller
   // knows not to clear its IRR.
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
-  int lowest_priority = 0x100, lowest_mask = -1;
   // arbitrate by default
   int arbitrate = 1;
   int broadcast = (deliver_bitmask == BX_CPU_C::cpu_online_map);
   bx_bool once = false;
-  int bit, i;
+  int i;
 
   // mask must include ONLY local APICs, or we will have problems.
   if (!deliver_bitmask) {
@@ -821,7 +820,7 @@ bx_bool bx_local_apic_c::match_logical_addr (Bit8u address)
 Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 {
   int dest_shorthand = (icr_low >> 18) & 3;
-  Bit32u mask;
+  Bit32u mask = 0; /* stop compiler warnings */
 
   switch (dest_shorthand) {
   case 0:  // no shorthand, use real destination value
