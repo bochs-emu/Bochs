@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.27 2003-01-06 02:20:47 cbothamy Exp $
+// $Id: iodev.h,v 1.28 2003-01-10 22:43:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -297,6 +297,7 @@ public:
   bx_ioapic_c      *ioapic;
   bx_pci_stub_c    *pluginPciBridge;
   bx_devmodel_c    *pluginPci2IsaBridge;
+  bx_devmodel_c    *pluginPciVgaAdapter;
   bx_pit_c         *pit;
   bx_keyb_stub_c   *pluginKeyboard;
   bx_dma_stub_c    *pluginDmaDevice;
@@ -378,6 +379,9 @@ private:
 #if BX_PCI_SUPPORT
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
+#if BX_PCI_VGA_SUPPORT
+#include "iodev/pcivga.h"
+#endif
 #endif
 #include "iodev/vga.h"
 #if BX_SUPPORT_APIC
