@@ -26,6 +26,9 @@ struct _fpstate {
 	unsigned long	status;
 };
 
+#if 0
+/* sigcontext is not needed by bochs, and it conflicts with some other
+   machine types (DEC OSF1) */
 struct sigcontext {
 	unsigned short gs, __gsh;
 	unsigned short fs, __fsh;
@@ -50,6 +53,7 @@ struct sigcontext {
 	unsigned long oldmask;
 	unsigned long cr2;
 };
+#endif
 
 
 #endif
