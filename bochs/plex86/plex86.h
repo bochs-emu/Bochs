@@ -1,5 +1,5 @@
 /************************************************************************
- * $Id: plex86.h,v 1.3 2003-01-02 17:05:06 kevinlawton Exp $
+ * $Id: plex86.h,v 1.4 2003-01-08 17:19:57 kevinlawton Exp $
  ************************************************************************
  *
  *  plex86: run multiple x86 operating systems concurrently
@@ -162,17 +162,17 @@ typedef struct {
 #else
 #include <sys/ioccom.h>
 #endif
-#define PLEX86_ALLOCVPHYS   _IO('k', 2)
 #define PLEX86_RESET        _IO('k', 3)
 #define PLEX86_TEARDOWN     _IO('k', 4)
 #define PLEX86_EXECUTE      _IO('k', 5)
 #define PLEX86_CPUID        _IO('k', 6)
+#define PLEX86_REGISTER_MEMORY _IO('k', 7)
 #else
-#define PLEX86_ALLOCVPHYS   0x6b02
 #define PLEX86_RESET        0x6b03
 #define PLEX86_TEARDOWN     0x6b04
 #define PLEX86_EXECUTE      0x6b05
 #define PLEX86_CPUID        0x6b06
+#define PLEX86_REGISTER_MEMORY 0x6b07
 #endif
 
 /* Reasons why plex86 could not execute the guest context in the VM. */
@@ -234,5 +234,10 @@ typedef struct {
   unsigned             instructionsExecuted;
   plex86MonitorState_t monitorState;
   } plex86IoctlExecute_t;
+
+typedef struct {
+  unsigned nMegs;
+  Bit8u   *vector;
+  } plex86IoctlRegisterMem_t;
 
 #endif  /* #ifndef __PLEX86_H__ */

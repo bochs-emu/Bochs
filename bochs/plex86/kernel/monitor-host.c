@@ -720,12 +720,14 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
       return 0;
       }
 
-    /*
-     * Allocate guest physical memory and related VM structures.
-     */
-    case PLEX86_ALLOCVPHYS:
-      return( ioctlAllocVPhys(vm, arg) );
-
+    case PLEX86_REGISTER_MEMORY:
+      {
+      plex86IoctlRegisterMem_t registerMemMsg;
+      if ( hostCopyFromUser(&registerMemMsg, (void *)arg,
+                            sizeof(registerMemMsg)) )
+        return -Plex86ErrnoEFAULT;
+      return( ioctlRegisterMem(vm, &registerMemMsg) );
+      }
 
     /*
      * Tear down the VM environment.
@@ -1236,12 +1238,11 @@ copyGuestStateToUserSpace(vm_t *vm)
 }
 
 
-  unsigned
-ioctlAllocVPhys(vm_t *vm, unsigned long arg)
+  int
+ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
 {
   unsigned error;
 
-hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
   /* Do not allow duplicate allocation.  The file descriptor must be
    * opened.  The guest CPUID info can be filled in later.
    */
@@ -1252,13 +1253,17 @@ hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
     return -Plex86ErrnoEBUSY;
 
   /* Check that the amount of memory is reasonable. */
-  if ( (arg > PLEX86_MAX_PHY_MEGS)  ||
-       (arg < 4) ||
-       ((arg & ~0x3) != arg) ) 
+  if ( (registerMemMsg->nMegs > PLEX86_MAX_PHY_MEGS)  ||
+       (registerMemMsg->nMegs < 4) ||
+       (registerMemMsg->nMegs & 0x3) )
+    return -Plex86ErrnoEINVAL;
+
+  /* Check that the guest memory vector is page aligned. */
+  if ( ((unsigned)registerMemMsg->vector) & 0xfff )
     return -Plex86ErrnoEINVAL;
 
   /* Allocate memory */
-  if ( (error = allocVmPages(vm, arg)) != 0 ) {
+  if ( (error = allocVmPages(vm, registerMemMsg)) != 0 ) {
     hostPrint("plex86: allocVmPages failed at %u\n",
       error);
     return -Plex86ErrnoENOMEM;
@@ -1291,31 +1296,35 @@ hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
  */
 
   int
-allocVmPages( vm_t *vm, unsigned nmegs )
+allocVmPages(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
 {
   vm_pages_t *pg = &vm->pages;
   vm_addr_t  *ad = &vm->host.addr;
-  unsigned where;
+#warning "Fix these shortcuts"
+  unsigned where = 1;
 
   /* clear out allocated pages lists */
   mon_memzero(pg, sizeof(*pg));
   mon_memzero(ad, sizeof(*ad));
 
-
   /* Guest physical memory pages */
-  pg->guest_n_megs  = nmegs;
-  pg->guest_n_pages = nmegs * 256;
-  pg->guest_n_bytes = nmegs * 1024 * 1024;
-
-  where = 1;
-  if ( !(ad->guest = hostAllocZeroedMem(pg->guest_n_megs * 1024 * 1024)) ) {
+  pg->guest_n_megs  = registerMemMsg->nMegs;
+  pg->guest_n_pages = registerMemMsg->nMegs * 256;
+  pg->guest_n_bytes = registerMemMsg->nMegs * 1024 * 1024;
+  if ( pg->guest_n_pages > MAX_MON_GUEST_PAGES) {
+    /* The size of the user-space allocated guest physical memory must
+     * fit within the maximum number of guest pages that the VM monitor
+     * supports.
+     */
     goto error;
     }
   where++;
-  if (!hostGetAllocedMemPhyPages(pg->guest, MON_GUEST_PAGES, 
-           ad->guest, pg->guest_n_megs * 1024 * 1024) ) {
+  if ( !hostGetAndPinUserPages(vm, pg->guestPhyMem, registerMemMsg->vector,
+                               pg->guest_n_pages) ) {
     goto error;
     }
+  vm->guestPhyMemVector = registerMemMsg->vector;
+  vm->vmState |= VMStateMMapPhyMem; /* Bogus for now. */
   where++;
 
   /* Monitor page directory */
@@ -1474,54 +1483,59 @@ allocVmPages( vm_t *vm, unsigned nmegs )
   void
 unallocVmPages( vm_t *vm )
 {
-    vm_pages_t *pg = &vm->pages;
-    vm_addr_t  *ad = &vm->host.addr;
+  vm_pages_t *pg = &vm->pages;
+  vm_addr_t  *ad = &vm->host.addr;
 
-    /* Guest physical memory pages */
-    if (ad->guest) hostFreeMem(ad->guest);
+  /* Guest physical memory pages */
+  if (vm->guestPhyMemVector) {
+    hostReleasePinnedUserPages(vm, pg->guestPhyMem, pg->guest_n_pages);
+    vm->guestPhyMemVector = 0;
+    }
+#warning "Fix bogus VMStateMMapPhyMem."
+  vm->vmState &= ~VMStateMMapPhyMem; /* Bogus for now. */
 
-    /* Monitor page directory */
-    if (ad->page_dir) hostFreePage(ad->page_dir);
+  /* Monitor page directory */
+  if (ad->page_dir) hostFreePage(ad->page_dir);
 
-    /* Monitor page tables */
-    if (ad->page_tbl) hostFreeMem(ad->page_tbl);
+  /* Monitor page tables */
+  if (ad->page_tbl) hostFreeMem(ad->page_tbl);
 
-    /* Map of linear addresses of page tables mapped into monitor. */
-    if (ad->page_tbl_laddr_map) hostFreePage(ad->page_tbl_laddr_map);
+  /* Map of linear addresses of page tables mapped into monitor. */
+  if (ad->page_tbl_laddr_map) hostFreePage(ad->page_tbl_laddr_map);
 
-    /* Nexus page table */
-    if (ad->nexus_page_tbl) hostFreePage(ad->nexus_page_tbl);
+  /* Nexus page table */
+  if (ad->nexus_page_tbl) hostFreePage(ad->nexus_page_tbl);
 
-    /* Guest CPU state. */
-    if (ad->guest_cpu) hostFreePage(ad->guest_cpu);
+  /* Guest CPU state. */
+  if (ad->guest_cpu) hostFreePage(ad->guest_cpu);
 
-    /* Transition page table */
-    if (ad->transition_PT) hostFreePage(ad->transition_PT);
+  /* Transition page table */
+  if (ad->transition_PT) hostFreePage(ad->transition_PT);
 
-    if (ad->log_buffer) hostFreeMem(ad->log_buffer);
+  if (ad->log_buffer) hostFreeMem(ad->log_buffer);
 
-    /* Nexus page */
-    if (ad->nexus) hostFreePage(ad->nexus);
+  /* Nexus page */
+  if (ad->nexus) hostFreePage(ad->nexus);
 
-    /* Monitor IDT */
-    if (ad->idt) hostFreeMem(ad->idt);
+  /* Monitor IDT */
+  if (ad->idt) hostFreeMem(ad->idt);
 
-    /* Monitor GDT */
-    if (ad->gdt) hostFreeMem(ad->gdt);
+  /* Monitor GDT */
+  if (ad->gdt) hostFreeMem(ad->gdt);
 
-    /* Monitor LDT */
-    if (ad->ldt) hostFreeMem(ad->ldt);
+  /* Monitor LDT */
+  if (ad->ldt) hostFreeMem(ad->ldt);
 
-    /* Monitor TSS */
-    if (ad->tss) hostFreeMem(ad->tss);
+  /* Monitor TSS */
+  if (ad->tss) hostFreeMem(ad->tss);
 
-    /* Monitor IDT stubs */
-    if (ad->idt_stubs) hostFreeMem(ad->idt_stubs);
+  /* Monitor IDT stubs */
+  if (ad->idt_stubs) hostFreeMem(ad->idt_stubs);
 
 
-    /* clear out allocated pages lists */
-    mon_memzero(pg, sizeof(*pg));
-    mon_memzero(ad, sizeof(*ad));
+  /* clear out allocated pages lists */
+  mon_memzero(pg, sizeof(*pg));
+  mon_memzero(ad, sizeof(*ad));
 }
 
   unsigned
@@ -1697,7 +1711,6 @@ initShadowPaging(vm_t *vm)
 reserveGuestPhyPages(vm_t *vm)
 {
   /* Mark guest pages as reserved (for mmap()). */
-  hostReservePhyPages(vm, vm->pages.guest, vm->pages.guest_n_pages);
   hostReservePhyPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES);
   hostReservePhyPages(vm, &vm->pages.guest_cpu, 1);
 }
@@ -1705,7 +1718,6 @@ reserveGuestPhyPages(vm_t *vm)
   void
 unreserveGuestPhyPages(vm_t *vm)
 {
-  hostUnreservePhyPages(vm, vm->pages.guest, vm->pages.guest_n_pages);
   hostUnreservePhyPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES);
   hostUnreservePhyPages(vm, &vm->pages.guest_cpu, 1);
 }
@@ -1730,6 +1742,7 @@ genericMMap(vm_t *vm, void *inode, void *file, void *vma, unsigned firstPage,
     return Plex86ErrnoEACCES;
     }
 
+#if 0
   if ( firstPage == 0 ) {
     if (pagesN != vm->pages.guest_n_pages) {
       hostPrint("plex86: mmap of guest phy mem, "
@@ -1741,7 +1754,9 @@ genericMMap(vm_t *vm, void *inode, void *file, void *vma, unsigned firstPage,
     pagesArray = &vm->pages.guest[0];
     stateMask = VMStateMMapPhyMem;
     }
-  else if ( firstPage == (vm->pages.guest_n_pages+0) ) {
+  else
+#endif
+  if ( firstPage == (vm->pages.guest_n_pages+0) ) {
     if (pagesN != 1) {
       hostPrint("plex86: mmap of log_buffer, pages>1.\n");
       return Plex86ErrnoEINVAL;

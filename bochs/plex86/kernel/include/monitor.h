@@ -177,7 +177,7 @@ typedef struct {
 #define MON_IDT_STUBS_PAGES BytesToPages(MON_IDT_STUBS_SIZE)
 #define MON_TSS_PAGES       BytesToPages(MON_TSS_SIZE)
 
-#define MON_GUEST_PAGES    (PLEX86_MAX_PHY_MEGS * 256)
+#define MAX_MON_GUEST_PAGES    (PLEX86_MAX_PHY_MEGS * 256)
 /* +++ MON_PAGE_TABLES is kind of random */
 #define MON_PAGE_TABLES    (10*((PLEX86_MAX_PHY_MEGS+3) >> 2))
 
@@ -205,7 +205,13 @@ typedef struct {
   Bit32u vm[MAX_VM_STRUCT_PAGES];
 
   /* for the guest OS/app code */
-  Bit32u guest[MON_GUEST_PAGES];
+  Bit32u guestPhyMem[MAX_MON_GUEST_PAGES];
+
+  /* This is a hack for now.  I need to store the "struct page *"
+   * information returned by get_user_pages() in the Linux kernel.
+   * Should clean this up.
+   */
+  void  *hostStructPagePtr[MAX_MON_GUEST_PAGES];
 
   /* for the monitor's page directory */
   Bit32u page_dir;
@@ -242,8 +248,6 @@ typedef struct {
 
 
 typedef struct {
-  void         *guest;
-
   pageEntry_t  *page_dir;
   page_t       *page_tbl;
   unsigned     *page_tbl_laddr_map;
@@ -371,6 +375,7 @@ typedef struct {
  * Complete state of the VM (Virtual Machine).
  */
 typedef struct {
+  Bit8u   *guestPhyMemVector; /* Ptr to malloced memory from user space. */
 
   /* Store eflags values of the guest which are virtualized to
    * run in the monitor
@@ -425,7 +430,7 @@ typedef struct {
   /* pages contains, and maintain some additional attributes. */
   /* We determine which kinds of information reside in the page, */
   /* dynamically. */
-  phy_page_usage_t page_usage[MON_GUEST_PAGES];
+  phy_page_usage_t page_usage[MAX_MON_GUEST_PAGES];
 
   struct {
     volatile unsigned event; /* Any log event occurred. */
@@ -586,7 +591,7 @@ int      initMonitor(vm_t *);
 unsigned mapMonitor(vm_t *);
 unsigned initGuestPhyMem(vm_t *);
 void     unallocVmPages(vm_t *);
-int      allocVmPages(vm_t *, unsigned nmegs);
+int      allocVmPages(vm_t *, plex86IoctlRegisterMem_t *registerMsg);
 void     initShadowPaging(vm_t *vm);
 void     genericDeviceOpen(vm_t *);
 unsigned genericModuleInit(void);
@@ -594,7 +599,7 @@ unsigned getCpuCapabilities(void);
 int      ioctlGeneric(vm_t *vm, void *inode, void *filp,
                       unsigned int cmd, unsigned long arg);
 int      ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg);
-unsigned ioctlAllocVPhys(vm_t *vm, unsigned long arg);
+int      ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMsg);
 void     copyGuestStateToUserSpace(vm_t *vm);
 void     unreserveGuestPhyPages(vm_t *vm);
 void     reserveGuestPhyPages(vm_t *vm);
@@ -611,6 +616,9 @@ void    *hostAllocZeroedPage(void);
 void     hostFreePage(void *ptr);
 unsigned hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr,
                                    unsigned size);
+unsigned hostGetAndPinUserPages(vm_t *vm, Bit32u *pageList, void *userPtr,
+                                unsigned sizeInPages);
+void     hostReleasePinnedUserPages(vm_t *vm, Bit32u *pageList, unsigned nPages);
 Bit32u   hostGetAllocedPagePhyPage(void *ptr);
 void     hostPrint(char *fmt, ...);
 Bit32u   hostKernelOffset(void);

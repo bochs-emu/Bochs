@@ -39,6 +39,18 @@
 #  define VERSION_CODE(vers,rel,seq) ( ((vers)<<16) | ((rel)<<8) | (seq) )
 #endif
 
+
+#if LINUX_VERSION_CODE < VERSION_CODE(2,4,20)
+/* I use get_user_pages() to find and pin physical pages of memory
+ * underlying the guest physical memory malloc()'d from user space.
+ * This became an exported symbol available for kernel modules
+ * as of 2.4.20.  You will have to recode some functions for
+ * lesser kernels.
+ */
+#  error "Currently, you need Linux kernel 2.4.20 or above."
+#endif
+
+
 #if LINUX_VERSION_CODE >= VERSION_CODE(2,1,0)
 #  include <asm/uaccess.h>
 #endif
@@ -824,4 +836,65 @@ hostCopyFromUser(void *to, void *from, unsigned long len)
 hostCopyToUser(void *to, void *from, unsigned long len)
 {
   return( copy_to_user(to, from, len) );
+}
+
+  unsigned
+hostGetAndPinUserPages(vm_t *vm, Bit32u *pagePhyAddrList, void *userPtr,
+                       unsigned nPages)
+{
+  int    ret;
+  unsigned p;
+  struct page **linuxKernelPageList;
+
+  linuxKernelPageList = (struct page **) vm->pages.hostStructPagePtr;
+  ret = get_user_pages(current,
+                       current->mm,
+                       (unsigned long) userPtr,
+                       nPages,
+                       1, /* 'write': intent to write. */
+                       0, /* 'force': ? */
+                       linuxKernelPageList,
+                       NULL /* struct vm_area_struct *[] */
+                       );
+  if (ret != nPages) {
+    printk(KERN_ERR "plex86: hostGetAndPinUserPages: failed.\n");
+    return(0); /* Error. */
+    }
+
+  /* Now that we have a list of "struct page *", one for each physical
+   * page of memory of the user space process's requested area, we can
+   * calculate the physical page address by simple pointer arithmetic
+   * based on "mem_map".
+   */
+  for (p=0; p<nPages; p++) {
+    pagePhyAddrList[p] = linuxKernelPageList[p] - mem_map;
+    }
+  
+  return(1); /* OK. */
+}
+
+  void
+hostReleasePinnedUserPages(vm_t *vm, Bit32u *pageAddrList, unsigned nPages)
+{
+#if 0
+  /* Here is some sample code from Linux 2.4.18, mm/memory.c:__free_pte() */
+	struct page *page = pte_page(pte);
+  if ((!VALID_PAGE(page)) || PageReserved(page))
+    return;
+  if (pte_dirty(pte))
+    set_page_dirty(page);
+  free_page_and_swap_cache(page);
+#endif
+
+	struct page *page;
+  unsigned p;
+
+static unsigned iteration = 0;
+printk(KERN_WARNING "plex86: Release called %u.\n", iteration++);
+  for (p=0; p<nPages; p++) {
+    page = (struct page *) vm->pages.hostStructPagePtr[p];
+    if (1) /* If dirty. */
+      set_page_dirty(page);
+    put_page(page);
+    }
 }

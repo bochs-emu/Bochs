@@ -258,7 +258,7 @@ open_guest_phy_page(vm_t *vm, Bit32u ppi, Bit8u *mon_offset)
 
   /* Remap the base field.  All the rest of the fields are */
   /* set previously, and can remain the same. */
-  pageTable->pte[pti].fields.base = vm->pages.guest[ppi];
+  pageTable->pte[pti].fields.base = vm->pages.guestPhyMem[ppi];
   invlpg_mon_offset( (Bit32u) mon_offset );
   return(mon_offset);
 }
@@ -620,7 +620,7 @@ return(MapLinEmulate);
 
       /* Base/Avail=0/G=0/PS=0/D=d/A=a/PCD=0/PWT=0/US=1/RW=rw/P=1 */
       monPTE->raw =
-          (vm->pages.guest[*guest_ppi] << 12) | (guestPTE.raw & 0x60) |
+          (vm->pages.guestPhyMem[*guest_ppi] << 12) | (guestPTE.raw & 0x60) |
           0x5 | (rw<<1);
       }
     else { /* CR0.PG==0 */
@@ -634,7 +634,7 @@ return(MapLinEmulate);
         return(MapLinEmulate);
       /* Base/Avail=0/G=0/PS=0/D=0/A=0/PCD=0/PWT=0/US=1/RW=rw/P=1 */
       monPTE->raw =
-          (vm->pages.guest[*guest_ppi] << 12) | 0x5 | (rw<<1);
+          (vm->pages.guestPhyMem[*guest_ppi] << 12) | 0x5 | (rw<<1);
       }
 
     /* Mark physical page as having an unvirtualized linear address
