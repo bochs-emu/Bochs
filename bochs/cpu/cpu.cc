@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.91 2004-11-05 10:13:15 sshwarts Exp $
+// $Id: cpu.cc,v 1.92 2004-11-06 10:50:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -120,9 +120,12 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
   }
 #elif BX_GDBSTUB
-  if (setjmp( BX_CPU_THIS_PTR jmp_buf_env ))
-  {
-    return;
+  if (bx_dbg.gdbstub_enabled) {
+    if (setjmp( BX_CPU_THIS_PTR jmp_buf_env )) {
+      return;
+    }
+  } else {
+    (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
   }
 #else
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
@@ -453,10 +456,10 @@ debugger_check:
 #endif  // #if BX_DEBUGGER
 
 #if BX_GDBSTUB
-    {
-    unsigned int reason;
-    if ((reason = bx_gdbstub_check(EIP)) != GDBSTUB_STOP_NO_REASON) {
-      return;
+    if (bx_dbg.gdbstub_enabled) {
+      unsigned int reason;
+      if ((reason = bx_gdbstub_check(EIP)) != GDBSTUB_STOP_NO_REASON) {
+        return;
       }
     }
 #endif

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.152 2004-10-30 16:05:44 vruppert Exp $
+$Id: user.dbk,v 1.153 2004-11-06 10:50:03 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -5971,7 +5971,7 @@ This section covers how you can use Bochs with a remote GDB stub to debug your k
 
 <section>
 <title>
-Configurating Bochs
+Configuring Bochs
 </title>
 <para>
 The GDB stub is not active in standard Bochs binary package.  So you must recompile Bochs. 
@@ -5991,7 +5991,7 @@ After that, just run make and you should have a Bochs binary that contain a GDB 
 Running Bochs
 </title>
 <para>
-Just start Bochs as normal. Bochs will stop and wait for GDB to connect to the stub.
+Enable the gdbstub option in bochsrc, then just start Bochs as normal. Bochs will stop and wait for GDB to connect to the stub.
 </para>
 </section>
 
@@ -9795,7 +9795,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.152 2004-10-30 16:05:44 vruppert Exp $
+        $Id: user.dbk,v 1.153 2004-11-06 10:50:03 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

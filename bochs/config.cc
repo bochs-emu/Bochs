@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.16 2004-10-24 20:04:50 vruppert Exp $
+// $Id: config.cc,v 1.17 2004-11-06 10:50:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2200,42 +2200,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
-   else if (!strcmp(params[0], "gdbstub_port"))
-     {
-       if (num_params != 2)
-         {
-            fprintf(stderr, ".bochsrc: gdbstub_port directive: wrong # args.\n");
-            exit(1);
-         }
-       bx_options.gdbstub.port = atoi(params[1]);
-     }
-   else if (!strcmp(params[0], "gdbstub_text_base"))
-     {
-       if (num_params != 2)
-         {
-            fprintf(stderr, ".bochsrc: gdbstub_text_base directive: wrong # args.\n");
-            exit(1);
-         }
-       bx_options.gdbstub.text_base = atoi(params[1]);
-     }
-   else if (!strcmp(params[0], "gdbstub_data_base"))
-     {
-       if (num_params != 2)
-         {
-            fprintf(stderr, ".bochsrc: gdbstub_data_base directive: wrong # args.\n");
-            exit(1);
-         }
-       bx_options.gdbstub.data_base = atoi(params[1]);
-     }
-   else if (!strcmp(params[0], "gdbstub_bss_base"))
-     {
-       if (num_params != 2)
-         {
-            fprintf(stderr, ".bochsrc: gdbstub_bss_base directive: wrong # args.\n");
-            exit(1);
-         }
-       bx_options.gdbstub.bss_base = atoi(params[1]);
-     }
 
   else if (!strcmp(params[0], "floppyb")) {
     for (i=1; i<num_params; i++) {
@@ -3237,6 +3201,46 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
+  else if (!strcmp(params[0], "gdbstub")) {
+#ifdef BX_GDBSTUB
+    if (num_params < 2) {
+      PARSE_ERR(("%s: gdbstub directive: wrong # args.", context));
+      }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        if (params[i][8] == '0') {
+          BX_INFO(("Disabled gdbstub"));
+          bx_dbg.gdbstub_enabled = 0;
+          }
+        else if (params[i][8] == '1') {
+          BX_INFO(("Enabled gdbstub"));
+          bx_dbg.gdbstub_enabled = 1;
+          }
+        else {
+          PARSE_ERR(("%s: gdbstub directive malformed.", context));
+          }
+        }
+      else if (!strncmp(params[i], "port=", 5)) {
+        bx_options.gdbstub.port = atoi(&params[i][5]);
+        }
+      else if (!strncmp(params[i], "text_base=", 10)) {
+        bx_options.gdbstub.text_base = atoi(&params[i][10]);
+        }
+      else if (!strncmp(params[i], "data_base=", 10)) {
+        bx_options.gdbstub.data_base = atoi(&params[i][10]);
+        }
+      else if (!strncmp(params[i], "bss_base=", 9)) {
+        bx_options.gdbstub.bss_base = atoi(&params[i][9]);
+        }
+      else {
+        PARSE_ERR(("%s: gdbstub directive malformed.", context));
+        }
+      }
+#else
+    PARSE_ERR(("%s: Bochs is not compiled with gdbstub support", context));
+#endif
+    }
+
 #if BX_MAGIC_BREAKPOINT
   else if (!strcmp(params[0], "magic_break")) {
     if (num_params != 2) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.281 2004-09-01 18:12:22 vruppert Exp $
+// $Id: main.cc,v 1.282 2004-11-06 10:50:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -724,59 +724,64 @@ bx_begin_simulation (int argc, char *argv[])
     BX_PANIC (("no gui module was loaded"));
     return 0;
   }
-#if BX_GDBSTUB
-  // If using gdbstub, it will take control and call
-  // bx_init_hardware() and cpu_loop()
-  bx_gdbstub_init (argc, argv);
-#elif BX_DEBUGGER
+#if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
   bx_dbg_main(argc, argv);
 #else
+#if BX_GDBSTUB
+  // If using gdbstub, it will take control and call
+  // bx_init_hardware() and cpu_loop()
+  if (bx_dbg.gdbstub_enabled)
+    bx_gdbstub_init (argc, argv);
+  else
+#endif
+  {
 
-  bx_init_hardware();
+    bx_init_hardware();
 
-  if (bx_options.load32bitOSImage.OwhichOS->get ()) {
-    void bx_load32bitOSimagehack(void);
-    bx_load32bitOSimagehack();
+    if (bx_options.load32bitOSImage.OwhichOS->get ()) {
+      void bx_load32bitOSimagehack(void);
+      bx_load32bitOSimagehack();
     }
 
-  SIM->set_init_done (1);
+    SIM->set_init_done (1);
 
-  // update headerbar buttons since drive status can change during init
-  bx_gui->update_drive_status_buttons ();
-  // iniialize statusbar and set all items inactive
-  bx_gui->statusbar_setitem(-1, 0);
+    // update headerbar buttons since drive status can change during init
+    bx_gui->update_drive_status_buttons ();
+    // iniialize statusbar and set all items inactive
+    bx_gui->statusbar_setitem(-1, 0);
 
-  // The set handler for mouse_enabled does not actually update the gui
-  // until init_done is set.  This forces the set handler to be called,
-  // which sets up the mouse enabled GUI-specific stuff correctly.
-  // Not a great solution but it works. BBD
-  bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get ());
+    // The set handler for mouse_enabled does not actually update the gui
+    // until init_done is set.  This forces the set handler to be called,
+    // which sets up the mouse enabled GUI-specific stuff correctly.
+    // Not a great solution but it works. BBD
+    bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get ());
 
-  if (BX_SMP_PROCESSORS == 1) {
-    // only one processor, run as fast as possible by not messing with
-    // quantums and loops.
-    BX_CPU(0)->cpu_loop(1);
-        // for one processor, the only reason for cpu_loop to return is
-        // that kill_bochs_request was set by the GUI interface.
-  } else {
-    // SMP simulation: do a few instructions on each processor, then switch
-    // to another.  Increasing quantum speeds up overall performance, but
-    // reduces granularity of synchronization between processors.
-    int processor = 0;
-    int quantum = 5;
-    while (1) {
-      // do some instructions in each processor
-      BX_CPU(processor)->cpu_loop(quantum);
-      processor = (processor+1) % BX_SMP_PROCESSORS;
-          if (BX_CPU(0)->kill_bochs_request) 
-            break;
-      if (processor == 0) 
-            BX_TICKN(quantum);
+    if (BX_SMP_PROCESSORS == 1) {
+      // only one processor, run as fast as possible by not messing with
+      // quantums and loops.
+      BX_CPU(0)->cpu_loop(1);
+      // for one processor, the only reason for cpu_loop to return is
+      // that kill_bochs_request was set by the GUI interface.
+    } else {
+      // SMP simulation: do a few instructions on each processor, then switch
+      // to another.  Increasing quantum speeds up overall performance, but
+      // reduces granularity of synchronization between processors.
+      int processor = 0;
+      int quantum = 5;
+      while (1) {
+        // do some instructions in each processor
+        BX_CPU(processor)->cpu_loop(quantum);
+        processor = (processor+1) % BX_SMP_PROCESSORS;
+        if (BX_CPU(0)->kill_bochs_request) 
+          break;
+        if (processor == 0) 
+          BX_TICKN(quantum);
+      }
     }
   }
-#endif
+#endif /* ! BX_DEBUGGER */
   BX_INFO (("cpu loop quit, shutting down simulator"));
   bx_atexit ();
   return(0);
@@ -957,6 +962,9 @@ bx_init_bx_dbg (void)
   bx_dbg.cdrom = 0;
 #if BX_MAGIC_BREAKPOINT
   bx_dbg.magic_break_enabled = 0;
+#endif
+#ifdef BX_GDBSTUB
+  bx_dbg.gdbstub_enabled = 0;
 #endif
 
 }
