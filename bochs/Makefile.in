@@ -235,6 +235,7 @@ install_bin::
 	$(CP) -r docs-html $(PREFIX)/$(VERSION)
 	$(RM) -f $(PREFIX)/$(VERSION)/README
 	$(CAT) build/linux/README.linux-binary README > $(PREFIX)/$(VERSION)/README
+	$(CP) -r font/vga.pcf $(PREFIX)/$(VERSION)
 
 install_dlx::
 	$(RM) -f $(DLXLINUX_TAR)
