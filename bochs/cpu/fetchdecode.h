@@ -43,7 +43,7 @@ BX_CPP_INLINE Bit32u FetchDWORD(Bit8u *iptr)
 BX_CPP_INLINE Bit64u FetchQWORD(Bit8u *iptr)
 {
    Bit64u data;
-   ReadHostDWordFromLittleEndian(iptr, data);
+   ReadHostQWordFromLittleEndian(iptr, data);
    return data;
 }
 
