@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.31 2002-09-05 19:46:20 sshwarts Exp $
+// $Id: cpu.h,v 1.32 2002-09-05 20:16:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1545,7 +1545,7 @@ public: // for now...
                                  unsigned opa, unsigned opb);
 #endif
 
-  BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }
+  BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }
 
   BX_SMF BX_CPP_INLINE void set_CF(Boolean val);
   BX_SMF BX_CPP_INLINE void set_AF(Boolean val);
@@ -1685,7 +1685,7 @@ BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EIP(void) { return(EIP); }
 
 #endif /* defined(NEED_CPU_REG_SHORTCUTS) */
 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C::get_segment_base(unsigned seg) {
+BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
    return (BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }
 
