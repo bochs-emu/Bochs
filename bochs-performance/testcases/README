@@ -1,0 +1,19 @@
+In this directory, I'm developing some test cases to study 
+some different options for Bochs performance improvements.
+
+ideas:
+
+write a loop or nested loop that takes some serious computing, that takes 
+  maybe 15 seconds to run
+benchmark on several machines
+compile with optimization and understand the assembly
+reimplement with switch stmt,function pointers, etc
+benchmark again to measure the overhead of switch & function calls
+test on several machines
+reimplement with goto *label (gcc extension) style
+benchmark again to measure the overhead of switch & function calls
+test on several machines
+
+or, by working more directly with the bochs source, we can test the
+performance benefit of the "cut-and-paste native code" method on 
+a small scale.
