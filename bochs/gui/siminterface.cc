@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.8 2001-06-11 06:35:18 bdenney Exp $
+ * $Id: siminterface.cc,v 1.9 2001-06-11 06:48:37 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -9,6 +9,8 @@
  */
 
 #include "bochs.h"
+
+#if BX_USE_CONTROL_PANEL
 
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
@@ -361,3 +363,5 @@ bx_real_sim_c::set_private_colormap (int en)
 {
   bx_options.private_colormap = en;
 }
+
+#endif  // if BX_USE_CONTROL_PANEL==1

@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.9 2001-06-11 06:35:18 bdenney Exp $
+ * $Id: control.cc,v 1.10 2001-06-11 06:48:37 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -58,13 +58,15 @@ write a compiler!
 
 */
 
+#include "config.h"
+#if BX_USE_CONTROL_PANEL
+
 extern "C" {
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
 }
-#include "config.h"
 #include "osdep.h"
 #include "control.h"
 #include "siminterface.h"
@@ -811,3 +813,5 @@ void bx_edit_rom_addr ()
   }
 }
 
+
+#endif

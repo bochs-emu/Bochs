@@ -174,7 +174,11 @@ bx_gui_c::power_handler(void)
   void
 bx_gui_c::snapshot_handler(void)
 {
+#if BX_USE_CONTROL_PANEL
   bx_control_panel (BX_CPANEL_RUNTIME);
+#else
+  BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
+#endif
 }
 
   void
