@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.69 2003-06-13 16:05:03 vruppert Exp $
+// $Id: x.cc,v 1.70 2003-06-15 08:53:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1079,12 +1079,12 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       bx_vga_tminfo_t tm_info, unsigned nrows)
 {
-  unsigned char *old_line, *new_line, *new_start;
+  unsigned char *old_line, *new_line;
   unsigned char cChar;
-  unsigned int curs, hchars, i, j, rows, x, y, xc, yc;
+  unsigned int curs, hchars, i, j, offset, rows, x, y, xc, yc, yc2;
   unsigned new_foreground, new_background;
-  Bit8u cfwidth, cfheight, font_col, font_row;
-  bx_bool force_update=0;
+  Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
+  bx_bool cursor_visible, force_update=0;
   unsigned char cell[64];
 
   UNUSED(nrows);
@@ -1135,10 +1135,11 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     old_text[curs] = ~new_text[curs];
   }
 
-  new_start = new_text;
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
+  curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+  cursor_visible = ((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < font_height));
   do {
     hchars = text_cols;
     if (h_panning) hchars++;
@@ -1164,6 +1165,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     new_line = new_text;
     old_line = old_text;
     x = 0;
+    offset = y * tm_info.line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1185,7 +1187,8 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         cfwidth = font_width;
       }
       if ( force_update || (old_text[0] != new_text[0])
-          || (old_text[1] != new_text[1]) ) {
+          || (old_text[1] != new_text[1])
+          || (offset == curs) ) {
 
         cChar = new_text[0];
         new_foreground = new_text[1] & 0x0f;
@@ -1196,10 +1199,34 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
         XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row, cfwidth, cfheight,
                    xc, yc, 1);
+        if (offset == curs) {
+          if (cursor_visible) {
+            XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_background)]);
+            XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_foreground)]);
+            if (font_row == 0) {
+              yc2 = yc + tm_info.cs_start;
+              font_row2 = tm_info.cs_start;
+              cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+            } else {
+              if (v_panning > tm_info.cs_start) {
+                yc2 = yc;
+                font_row2 = font_row;
+                cfheight2 = tm_info.cs_end - v_panning + 1;
+              } else {
+                yc2 = yc + tm_info.cs_start - v_panning;
+                font_row2 = tm_info.cs_start;
+                cfheight2 = tm_info.cs_end - tm_info.cs_start + 1;
+              }
+            }
+            XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row2, cfwidth,
+                       cfheight2, xc, yc2, 1);
+          }
+        }
       }
       x++;
       new_text+=2;
       old_text+=2;
+      offset+=2;
     } while (--hchars);
     y++;
     new_text = new_line + tm_info.line_offset;
@@ -1208,35 +1235,6 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
-
-  // now draw character at new block cursor location in reverse
-  if ( (cursor_y < text_rows) && (cursor_x < text_cols ) && (tm_info.cs_start <= tm_info.cs_end) ) {
-    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
-    cChar = new_start[curs];
-    XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx((new_start[curs+1] & 0xf0) >> 4)]);
-    XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_start[curs+1] & 0x0f)]);
-
-    yc = cursor_y * font_height + bx_headerbar_y - v_panning + tm_info.cs_start;
-    font_row = tm_info.cs_start;
-    cfheight = tm_info.cs_end - tm_info.cs_start + 1;
-    if (yc < bx_headerbar_y) {
-      font_row -= (bx_headerbar_y - yc);
-      cfheight -= (bx_headerbar_y - yc);
-      yc = bx_headerbar_y;
-    }
-    if (cursor_x == 0) {
-      xc = 0;
-      font_col = h_panning;
-      cfwidth = font_width - h_panning;
-    } else {
-      xc = cursor_x * font_width - h_panning;
-      font_col = 0;
-      cfwidth = font_width;
-    }
-
-    XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row, cfwidth,
-               cfheight, xc, yc, 1);
-  }
 
   XFlush(bx_x_display);
 }
