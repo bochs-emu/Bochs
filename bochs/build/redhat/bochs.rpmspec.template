@@ -34,31 +34,26 @@ and other OS's, all on your workstation.
 	for i in "" usr usr/bin usr/man usr/man/man1; do 
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
-	make install_bin install_man install_fonts install_dlx prefix=$RPM_BUILD_ROOT/usr
-	# fix up symlinks that point to buildroot
-        cd $RPM_BUILD_ROOT/usr/bin
-        rm -f bochs; ln -sf /usr/bochs/@SEDVERSION@/bochs .
-        rm -f bximage; ln -sf /usr/bochs/@SEDVERSION@/bximage .
+	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
 
 %files
 	/usr/bin/bochs
 	/usr/bin/bochs-docs
 	/usr/bin/bochs-dlx
 	/usr/bin/bximage
-	/usr/bochs/@SEDVERSION@
-	/usr/bochs/dlxlinux
-	/usr/bochs/latest
-	/usr/man/man1/*
+	/usr/share/bochs/*
+	/usr/share/doc/*
+	/usr/man/*
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	if test "/" != $RPM_BUILD_ROOT; then
 	  rm -rf $RPM_BUILD_ROOT
 	fi
 %post
-	/usr/bochs/@SEDVERSION@/install-x11-fonts
+	/usr/share/bochs/install-x11-fonts
 %preun
 	# clean up the bochsout.txt that is always produced if you 
 	# run bochs-dlx.
-	rm -rf /usr/bochs/dlxlinux/bochsout.txt core
+	rm -rf /usr/share/bochs/dlxlinux/bochsout.txt core
 %postun
-	rmdir /usr/bochs > /dev/null 2>&1
+	rmdir /usr/share/bochs > /dev/null 2>&1
