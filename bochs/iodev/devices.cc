@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.22 2002-10-23 16:00:40 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.23 2002-10-23 17:33:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,6 +38,9 @@
 
 bx_devices_c bx_devices;
 
+
+
+
 // constructor for bx_devices_c
 bx_devices_c::bx_devices_c(void)
 {
@@ -48,7 +51,6 @@ bx_devices_c::bx_devices_c(void)
   pci = NULL;
   pci2isa = NULL;
 #endif
-
   pit = NULL;
   sb16 = NULL;
   ne2k = NULL;
@@ -82,7 +84,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.22 2002-10-23 16:00:40 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.23 2002-10-23 17:33:21 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -239,6 +241,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   void
 bx_devices_c::reset(unsigned type)
 {
+  pluginUnmapped->reset(type);
 #if BX_PCI_SUPPORT
   pci->reset(type);
   pci2isa->reset(type);
@@ -246,28 +249,19 @@ bx_devices_c::reset(unsigned type)
 #if BX_SUPPORT_IOAPIC
   ioapic->reset (type);
 #endif
-  pluginFloppyDevice->reset(type);
-
-#if !BX_PLUGINS 
-
-  pluginDmaDevice->reset(type);
-  pluginCmosDevice->reset(type);
   pluginBiosDevice->reset(type);
-  pluginUnmapped->reset(type);
-
+  pluginCmosDevice->reset(type);
+  pluginDmaDevice->reset(type);
+  pluginFloppyDevice->reset(type);
+#if BX_SUPPORT_SB16
+  sb16->reset(type);
+#endif
 #if BX_SUPPORT_VGA
   pluginVgaDevice->reset(type);
 #else
   // reset hga hardware?
 #endif
-
   pluginPicDevice->reset(type);
-
-#endif
-
-#if BX_SUPPORT_SB16
-  sb16->reset(type);
-#endif
   pit->reset(type);
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.reset(type);
