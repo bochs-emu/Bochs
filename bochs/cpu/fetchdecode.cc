@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.67 2004-09-06 20:22:38 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.68 2004-09-17 20:47:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -895,7 +895,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F A0 */  { 0, &BX_CPU_C::PUSH_FS },
   /* 0F A1 */  { 0, &BX_CPU_C::POP_FS },
   /* 0F A2 */  { 0, &BX_CPU_C::CPUID },
-  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EvGv },
+  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EwGw },
   /* 0F A4 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHLD_EwGw },
   /* 0F A5 */  { BxAnother,                  &BX_CPU_C::SHLD_EwGw },
   /* 0F A6 */  { 0, &BX_CPU_C::CMPXCHG_XBTS },
@@ -903,7 +903,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F A8 */  { 0, &BX_CPU_C::PUSH_GS },
   /* 0F A9 */  { 0, &BX_CPU_C::POP_GS },
   /* 0F AA */  { 0, &BX_CPU_C::RSM },
-  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EvGv },
+  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EwGw },
   /* 0F AC */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHRD_EwGw },
   /* 0F AD */  { BxAnother,                  &BX_CPU_C::SHRD_EwGw },
   /* 0F AE */  { BxAnother | BxGroup15, NULL, BxOpcodeInfoG15 },
@@ -911,7 +911,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B0 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
   /* 0F B1 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EwGw },
   /* 0F B2 */  { BxAnother, &BX_CPU_C::LSS_GvMp },
-  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EvGv },
+  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EwGw },
   /* 0F B4 */  { BxAnother, &BX_CPU_C::LFS_GvMp },
   /* 0F B5 */  { BxAnother, &BX_CPU_C::LGS_GvMp },
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GwEb },
@@ -919,9 +919,9 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
   /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfoG8EvIb },
-  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
-  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
-  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GvEv },
+  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EwGw },
+  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GwEw },
+  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GwEw },
   /* 0F BE */  { BxAnother, &BX_CPU_C::MOVSX_GwEb },
   /* 0F BF */  { BxAnother, &BX_CPU_C::MOVSX_GwEw },
   /* 0F C0 */  { BxAnother | BxLockable, &BX_CPU_C::XADD_EbGb },
@@ -1443,7 +1443,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F A0 */  { 0, &BX_CPU_C::PUSH_FS },
   /* 0F A1 */  { 0, &BX_CPU_C::POP_FS },
   /* 0F A2 */  { 0, &BX_CPU_C::CPUID },
-  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EvGv },
+  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EdGd },
   /* 0F A4 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHLD_EdGd },
   /* 0F A5 */  { BxAnother,                  &BX_CPU_C::SHLD_EdGd },
   /* 0F A6 */  { 0, &BX_CPU_C::CMPXCHG_XBTS },
@@ -1451,7 +1451,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F A8 */  { 0, &BX_CPU_C::PUSH_GS },
   /* 0F A9 */  { 0, &BX_CPU_C::POP_GS },
   /* 0F AA */  { 0, &BX_CPU_C::RSM },
-  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EvGv },
+  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EdGd },
   /* 0F AC */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHRD_EdGd },
   /* 0F AD */  { BxAnother,                  &BX_CPU_C::SHRD_EdGd },
   /* 0F AE */  { BxAnother | BxGroup15, NULL, BxOpcodeInfoG15 },
@@ -1459,7 +1459,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B0 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
   /* 0F B1 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EdGd },
   /* 0F B2 */  { BxAnother, &BX_CPU_C::LSS_GvMp },
-  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EvGv },
+  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EdGd },
   /* 0F B4 */  { BxAnother, &BX_CPU_C::LFS_GvMp },
   /* 0F B5 */  { BxAnother, &BX_CPU_C::LGS_GvMp },
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GdEb },
@@ -1467,9 +1467,9 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
   /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfoG8EvIb },
-  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
-  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
-  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GvEv },
+  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EdGd },
+  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GdEd },
+  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GdEd },
   /* 0F BE */  { BxAnother, &BX_CPU_C::MOVSX_GdEb },
   /* 0F BF */  { BxAnother, &BX_CPU_C::MOVSX_GdEw },
   /* 0F C0 */  { BxAnother | BxLockable, &BX_CPU_C::XADD_EbGb },

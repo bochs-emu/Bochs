@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.61 2004-09-06 20:22:39 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.62 2004-09-17 20:47:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,6 +56,23 @@
 // UD2 opcode (according to Intel manuals):
 // Use the 0F0B opcode (UD2 instruction) or the 0FB9H opcode when deliberately 
 // trying to generate an invalid opcode exception (#UD).
+
+/* *********** */
+// LOCK PREFIX //
+/* *********** */
+
+/* 
+ *  The  LOCK  prefix  can be prepended only to the following instructions
+ *  and  only  to  those  forms  of the instructions where the destination
+ *  operand  is  a  memory operand: ADD, ADC, AND, BTC, BTR, BTS, CMPXCHG,
+ *  CMPXCH8B,  DEC,  INC,  NEG, NOT, OR, SBB, SUB, XOR, XADD, and XCHG. If
+ *  the  LOCK prefix is used with one of these instructions and the source
+ *  operand  is a memory operand, an undefined opcode exception (#UD) will
+ *  be  generated. An undefined opcode exception will also be generated if
+ *  the  LOCK  prefix  is used with any instruction not in the above list.
+ *  The XCHG instruction always asserts the LOCK# signal regardless of the
+ *  presence or absence of the LOCK prefix.
+ */
 
 
 void BxResolveError(bxInstruction_c *);
@@ -969,15 +986,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F A0 */  { 0, &BX_CPU_C::PUSH_FS },
   /* 0F A1 */  { 0, &BX_CPU_C::POP_FS },
   /* 0F A2 */  { 0, &BX_CPU_C::CPUID },
-  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EvGv },
+  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EwGw },
   /* 0F A4 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHLD_EwGw },
   /* 0F A5 */  { BxAnother,                  &BX_CPU_C::SHLD_EwGw },
-  /* 0F A6 */  { 0, &BX_CPU_C::CMPXCHG_XBTS },
-  /* 0F A7 */  { 0, &BX_CPU_C::CMPXCHG_IBTS },
+  /* 0F A6 */  { 0, &BX_CPU_C::BxError },
+  /* 0F A7 */  { 0, &BX_CPU_C::BxError },
   /* 0F A8 */  { 0, &BX_CPU_C::PUSH_GS },
   /* 0F A9 */  { 0, &BX_CPU_C::POP_GS },
   /* 0F AA */  { 0, &BX_CPU_C::RSM },
-  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EvGv },
+  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EwGw },
   /* 0F AC */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHRD_EwGw },
   /* 0F AD */  { BxAnother,                  &BX_CPU_C::SHRD_EwGw },
   /* 0F AE */  { BxAnother | BxGroup15, NULL, BxOpcodeInfo64G15 },
@@ -985,7 +1002,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B0 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
   /* 0F B1 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EwGw },
   /* 0F B2 */  { BxAnother, &BX_CPU_C::LSS_GvMp },
-  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EvGv },
+  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EwGw },
   /* 0F B4 */  { BxAnother, &BX_CPU_C::LFS_GvMp },
   /* 0F B5 */  { BxAnother, &BX_CPU_C::LGS_GvMp },
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GwEb },
@@ -993,9 +1010,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
   /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfo64G8EvIb },
-  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
-  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
-  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GvEv },
+  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EwGw },
+  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GwEw },
+  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GwEw },
   /* 0F BE */  { BxAnother, &BX_CPU_C::MOVSX_GwEb },
   /* 0F BF */  { BxAnother, &BX_CPU_C::MOVSX_GwEw },
   /* 0F C0 */  { BxAnother | BxLockable, &BX_CPU_C::XADD_EbGb },
@@ -1494,15 +1511,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F A0 */  { 0, &BX_CPU_C::PUSH64_FS },
   /* 0F A1 */  { 0, &BX_CPU_C::POP64_FS },
   /* 0F A2 */  { 0, &BX_CPU_C::CPUID },
-  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EvGv },
+  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EdGd },
   /* 0F A4 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHLD_EdGd },
   /* 0F A5 */  { BxAnother,                  &BX_CPU_C::SHLD_EdGd },
-  /* 0F A6 */  { 0, &BX_CPU_C::CMPXCHG_XBTS },
-  /* 0F A7 */  { 0, &BX_CPU_C::CMPXCHG_IBTS },
+  /* 0F A6 */  { 0, &BX_CPU_C::BxError },
+  /* 0F A7 */  { 0, &BX_CPU_C::BxError },
   /* 0F A8 */  { 0, &BX_CPU_C::PUSH64_GS },
   /* 0F A9 */  { 0, &BX_CPU_C::POP64_GS },
   /* 0F AA */  { 0, &BX_CPU_C::RSM },
-  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EvGv },
+  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EdGd },
   /* 0F AC */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHRD_EdGd },
   /* 0F AD */  { BxAnother,                  &BX_CPU_C::SHRD_EdGd },
   /* 0F AE */  { BxAnother | BxGroup15, NULL, BxOpcodeInfo64G15 },
@@ -1510,7 +1527,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B0 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
   /* 0F B1 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EdGd },
   /* 0F B2 */  { BxAnother, &BX_CPU_C::LSS_GvMp },
-  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EvGv },
+  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EdGd },
   /* 0F B4 */  { BxAnother, &BX_CPU_C::LFS_GvMp },
   /* 0F B5 */  { BxAnother, &BX_CPU_C::LGS_GvMp },
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GdEb },
@@ -1518,9 +1535,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
   /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfo64G8EvIb },
-  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EvGv },
-  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
-  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GvEv },
+  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EdGd },
+  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GdEd },
+  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GdEd },
   /* 0F BE */  { BxAnother, &BX_CPU_C::MOVSX_GdEb },
   /* 0F BF */  { BxAnother, &BX_CPU_C::MOVSX_GdEw },
   /* 0F C0 */  { BxAnother | BxLockable, &BX_CPU_C::XADD_EbGb },
@@ -2016,15 +2033,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F A0 */  { 0, &BX_CPU_C::PUSH64_FS },
   /* 0F A1 */  { 0, &BX_CPU_C::POP64_FS },
   /* 0F A2 */  { 0, &BX_CPU_C::CPUID },
-  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EvGv },
+  /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EqGq },
   /* 0F A4 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHLD_EqGq },
   /* 0F A5 */  { BxAnother,                  &BX_CPU_C::SHLD_EqGq },
-  /* 0F A6 */  { 0, &BX_CPU_C::CMPXCHG_XBTS },
-  /* 0F A7 */  { 0, &BX_CPU_C::CMPXCHG_IBTS },
+  /* 0F A6 */  { 0, &BX_CPU_C::BxError },
+  /* 0F A7 */  { 0, &BX_CPU_C::BxError },
   /* 0F A8 */  { 0, &BX_CPU_C::PUSH64_GS },
   /* 0F A9 */  { 0, &BX_CPU_C::POP64_GS },
   /* 0F AA */  { 0, &BX_CPU_C::RSM },
-  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EvGv },
+  /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EqGq },
   /* 0F AC */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHRD_EqGq },
   /* 0F AD */  { BxAnother,                  &BX_CPU_C::SHRD_EqGq },
   /* 0F AE */  { BxAnother | BxGroup15, NULL, BxOpcodeInfo64G15 },
@@ -2032,7 +2049,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B0 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
   /* 0F B1 */  { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EqGq },
   /* 0F B2 */  { BxAnother, &BX_CPU_C::LSS_GvMp },
-  /* 0F B3 */  { BxAnother, &BX_CPU_C::BTR_EvGv },
+  /* 0F B3 */  { BxAnother | BxLockable, &BX_CPU_C::BTR_EqGq },
   /* 0F B4 */  { BxAnother, &BX_CPU_C::LFS_GvMp },
   /* 0F B5 */  { BxAnother, &BX_CPU_C::LGS_GvMp },
   /* 0F B6 */  { BxAnother, &BX_CPU_C::MOVZX_GqEb },
@@ -2040,12 +2057,12 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B8 */  { 0, &BX_CPU_C::BxError },
   /* 0F B9 */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */  { BxAnother | BxGroup8, NULL, BxOpcodeInfo64G8EvIb },
-  /* 0F BB */  { BxAnother, &BX_CPU_C::BTC_EvGv },
-  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GvEv },
-  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GvEv },
+  /* 0F BB */  { BxAnother | BxLockable, &BX_CPU_C::BTC_EqGq },
+  /* 0F BC */  { BxAnother, &BX_CPU_C::BSF_GqEq },
+  /* 0F BD */  { BxAnother, &BX_CPU_C::BSR_GqEq },
   /* 0F BE */  { BxAnother, &BX_CPU_C::MOVSX_GqEb },
   /* 0F BF */  { BxAnother, &BX_CPU_C::MOVSX_GqEw },
-  /* 0F C0 */  { BxAnother, &BX_CPU_C::XADD_EbGb },
+  /* 0F C0 */  { BxAnother | BxLockable, &BX_CPU_C::XADD_EbGb },
   /* 0F C1 */  { BxAnother | BxLockable, &BX_CPU_C::XADD_EqGq },
   /* 0F C2 */  { BxAnother | BxImmediate_Ib | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fc2 },
   /* 0F C3 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fc3 },
@@ -2511,8 +2528,7 @@ modrm_done:
                      b1,b2,offset,
                      instruction->modRMForm.rm,
                      mod,
-                     nnn
-                     ));
+                     nnn));
     */
 
     // Resolve ExecutePtr and additional opcode Attr

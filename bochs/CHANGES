@@ -2,8 +2,8 @@ Changes to next release:
 
 - CPU
   - fixes for booting OS/2 by Dmitri Froloff
-    - v8086 priveleged instruction processing bug (was also reported by
-      LightCone Aug  7 2003)
+    - fuxed v8086 priveleged instruction processing bug (was also reported
+      by LightCone Aug 7 2003)
     - exception process bug (was reported by Diego Henriquez Sat Nov 15
       01:16:51 CET 2003)
     - segment validation with IRET instruction
@@ -20,7 +20,7 @@ Changes to next release:
   - fixed using invalid segment register for MOV instruction (h.johansson)
   - fixed ET bit mismatch between CR0 and SMSW instruction
   - fixed possible simulator #DIVZERO fault when executing IDIV instruction
-  - fixed undocumented flags handling for BTS, BTR, SHR and MUL 
+  - fixed undocumented flags handling for BTS, BTR, SHR, MUL and IMUL
     instructions (Stanislav Shwartsman)
   - fixed CF flag handling for SHL instruction in x86-64 mode
     (Stanislav Shwartsman)
@@ -133,8 +133,19 @@ Changes to next release:
 
 - patches applied
   - patch.rombios.markevich (Start/Stop Wait Timer) (Kory Markevich)
+  - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+ #1028682 Report incorrect disk parameters of floppy
+ #1026234 make fails on Cygwin because of missing .exe extension
+ #1026241 --enable-cpp needed for .conf.win32-cygwin
+  #855323 BIOS Panic at rombios.c, line 1563
+  #762773 ROM checksum is not checked in rom_scan_loop
+  #657604 concat_image_t.lseek to byte -1378816 fa
+  #800140 No AH=83h INT15h implemented
+  #831965 Win32.zip BIOSes in wrong directory
+  #873280 bximage crashes after createing "growing"
+  #892223 bochsrc-sample.txt/vgaromimage option error
  #1014361 Bximage on WinXP won't create image
   #651510 bximage won't create larger than 2GB
   #759206 bximage fails on Win32 for hd images over 2Gb

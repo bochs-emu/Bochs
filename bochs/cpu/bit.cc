@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.21 2004-08-28 08:41:46 sshwarts Exp $
+// $Id: bit.cc,v 1.22 2004-09-17 20:47:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,8 +44,7 @@
 #define RBP EBP
 #endif
 
-  void
-BX_CPU_C::SETO_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETO_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -63,8 +62,7 @@ BX_CPU_C::SETO_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -82,8 +80,7 @@ BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETB_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETB_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -101,8 +98,7 @@ BX_CPU_C::SETB_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -120,8 +116,7 @@ BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -139,8 +134,7 @@ BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -158,8 +152,7 @@ BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -177,8 +170,7 @@ BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -196,8 +188,7 @@ BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETS_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETS_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -215,8 +206,7 @@ BX_CPU_C::SETS_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -234,8 +224,7 @@ BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETP_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETP_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
  
@@ -253,8 +242,7 @@ BX_CPU_C::SETP_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
 
@@ -272,8 +260,7 @@ BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETL_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETL_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
  
@@ -291,8 +278,7 @@ BX_CPU_C::SETL_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
  
@@ -310,8 +296,7 @@ BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
  
@@ -329,8 +314,7 @@ BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
+void BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
 {
   Bit8u result_8;
  
@@ -347,197 +331,196 @@ BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 }
+
+void BX_CPU_C::BSF_GwEw(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16;
+
+  /* op2_16 is a register or memory reference */
+  if (i->modC0()) {
+    op2_16 = BX_READ_16BIT_REG(i->rm());
+    }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    }
+
+  if (op2_16 == 0) {
+    set_ZF(1); /* op1_16 undefined */
+    return;
+  }
+
+  op1_16 = 0;
+  while ( (op2_16 & 0x01) == 0 ) {
+    op1_16++;
+    op2_16 >>= 1;
+  }
+
+  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
+
+  /* now write result back to destination */
+  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+}
+
+void BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
+{
+  /* for 32 bit operand size mode */
+  Bit32u op1_32, op2_32;
+
+  /* op2_32 is a register or memory reference */
+  if (i->modC0()) {
+    op2_32 = BX_READ_32BIT_REG(i->rm());
+    }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+    }
+
+  if (op2_32 == 0) {
+    set_ZF(1); /* op1_32 undefined */
+    return;
+  }
+
+  op1_32 = 0;
+  while ( (op2_32 & 0x01) == 0 ) {
+    op1_32++;
+    op2_32 >>= 1;
+  }
+
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
+
+  /* now write result back to destination */
+  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+}
  
-  void
-BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
-{
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) { /* 64 bit operand size mode */
-    /* for 64 bit operand size mode */
-    Bit64u op1_64, op2_64;
+void BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
+{
+  /* for 64 bit operand size mode */
+  Bit64u op1_64, op2_64;
 
-    /* op2_64 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-    }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-    }
-
-    if (op2_64 == 0) {
-      set_ZF(1); /* op1_64 undefined */
-      return;
-    }
-
-    op1_64 = 0;
-    while ( (op2_64 & 0x01) == 0 ) {
-      op1_64++;
-      op2_64 >>= 1;
-    }
-
-    SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
-
-    /* now write result back to destination */
-    BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  /* op2_64 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
   }
-  else
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+  }
+
+  if (op2_64 == 0) {
+    set_ZF(1); /* op1_64 undefined */
+    return;
+  }
+
+  op1_64 = 0;
+  while ( (op2_64 & 0x01) == 0 ) {
+    op1_64++;
+    op2_64 >>= 1;
+  }
+
+  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
+
+  /* now write result back to destination */
+  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+}
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os32L()) { /* 32 bit operand size mode */
-    /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32;
 
-    /* op2_32 is a register or memory reference */
-    if (i->modC0()) {
-      op2_32 = BX_READ_32BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-      }
+void BX_CPU_C::BSR_GwEw(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16;
 
-    if (op2_32 == 0) {
-      set_ZF(1); /* op1_32 undefined */
-      return;
+  /* op2_16 is a register or memory reference */
+  if (i->modC0()) {
+    op2_16 = BX_READ_16BIT_REG(i->rm());
+    }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
     }
 
-    op1_32 = 0;
-    while ( (op2_32 & 0x01) == 0 ) {
-      op1_32++;
-      op2_32 >>= 1;
-    }
-
-    SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
-
-    /* now write result back to destination */
-    BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+  if (op2_16 == 0) {
+    set_ZF(1); /* op1_16 undefined */
+    return;
   }
-  else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16;
 
-    /* op2_16 is a register or memory reference */
-    if (i->modC0()) {
-      op2_16 = BX_READ_16BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-      }
-
-    if (op2_16 == 0) {
-      set_ZF(1); /* op1_16 undefined */
-      return;
-    }
-
-    op1_16 = 0;
-    while ( (op2_16 & 0x01) == 0 ) {
-      op1_16++;
-      op2_16 >>= 1;
-    }
-
-    SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
-
-    /* now write result back to destination */
-    BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+  op1_16 = 15;
+  while ( (op2_16 & 0x8000) == 0 ) {
+    op1_16--;
+    op2_16 <<= 1;
   }
+
+  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
+
+  /* now write result back to destination */
+  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 }
 
-  void
-BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
+void BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
 {
+  /* for 32 bit operand size mode */
+  Bit32u op1_32, op2_32;
+
+  /* op2_32 is a register or memory reference */
+  if (i->modC0()) {
+    op2_32 = BX_READ_32BIT_REG(i->rm());
+    }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+    }
+
+  if (op2_32 == 0) {
+    set_ZF(1); /* op1_32 undefined */
+    return;
+  }
+
+  op1_32 = 31;
+  while ( (op2_32 & 0x80000000) == 0 ) {
+    op1_32--;
+    op2_32 <<= 1;
+  }
+
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
+
+  /* now write result back to destination */
+  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+}
+
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) { /* 64 bit operand size mode */
-    /* for 64 bit operand size mode */
-    Bit64u op1_64, op2_64;
+void BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
+{
+  /* for 64 bit operand size mode */
+  Bit64u op1_64, op2_64;
 
-    /* op2_64 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-      }
-
-    if (op2_64 == 0) {
-      set_ZF(1); /* op1_64 undefined */
-      return;
+  /* op2_64 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
+    }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
     }
 
-    op1_64 = 63;
-    while ( (op2_64 & BX_CONST64(0x8000000000000000)) == 0 ) {
-      op1_64--;
-      op2_64 <<= 1;
-    }
+  if (op2_64 == 0) {
+    set_ZF(1); /* op1_64 undefined */
+    return;
+  }
 
-    SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
+  op1_64 = 63;
+  while ( (op2_64 & BX_CONST64(0x8000000000000000)) == 0 ) {
+    op1_64--;
+    op2_64 <<= 1;
+  }
+
+  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
   
-    /* now write result back to destination */
-    BX_WRITE_64BIT_REG(i->nnn(), op1_64);
-  }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->os32L()) { /* 32 bit operand size mode */
-    /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32;
-
-    /* op2_32 is a register or memory reference */
-    if (i->modC0()) {
-      op2_32 = BX_READ_32BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-      }
-
-    if (op2_32 == 0) {
-      set_ZF(1); /* op1_32 undefined */
-      return;
-    }
-
-    op1_32 = 31;
-    while ( (op2_32 & 0x80000000) == 0 ) {
-      op1_32--;
-      op2_32 <<= 1;
-    }
-
-    SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
-
-    /* now write result back to destination */
-    BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
-  }
-  else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16;
-
-    /* op2_16 is a register or memory reference */
-    if (i->modC0()) {
-      op2_16 = BX_READ_16BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-      }
-
-    if (op2_16 == 0) {
-      set_ZF(1); /* op1_16 undefined */
-      return;
-    }
-
-    op1_16 = 15;
-    while ( (op2_16 & 0x8000) == 0 ) {
-      op1_16--;
-      op2_16 <<= 1;
-    }
-
-    SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
-
-    /* now write result back to destination */
-    BX_WRITE_16BIT_REG(i->nnn(), op1_16);
-    }
+  /* now write result back to destination */
+  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }
+#endif
 
-  void
-BX_CPU_C::BSWAP_EAX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_EAX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit32u eax, b0, b1, b2, b3;
@@ -555,8 +538,7 @@ BX_CPU_C::BSWAP_EAX(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::BSWAP_ECX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_ECX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit32u ecx, b0, b1, b2, b3;
@@ -574,8 +556,7 @@ BX_CPU_C::BSWAP_ECX(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::BSWAP_EDX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_EDX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit32u edx, b0, b1, b2, b3;
@@ -593,8 +574,7 @@ BX_CPU_C::BSWAP_EDX(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::BSWAP_EBX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_EBX(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit32u ebx, b0, b1, b2, b3;
@@ -612,8 +592,7 @@ BX_CPU_C::BSWAP_EBX(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::BSWAP_ESP(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_ESP(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
 
@@ -632,8 +611,7 @@ BX_CPU_C::BSWAP_ESP(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::BSWAP_EBP(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_EBP(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
 
@@ -652,8 +630,7 @@ BX_CPU_C::BSWAP_EBP(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::BSWAP_ESI(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_ESI(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
 
@@ -672,8 +649,7 @@ BX_CPU_C::BSWAP_ESI(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::BSWAP_EDI(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_EDI(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
 
@@ -693,8 +669,7 @@ BX_CPU_C::BSWAP_EDI(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-  void
-BX_CPU_C::BSWAP_RAX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RAX(bxInstruction_c *i)
 {
   Bit64u rax, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -711,8 +686,7 @@ BX_CPU_C::BSWAP_RAX(bxInstruction_c *i)
   RAX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b4<<16) | (b4<<8) | b7;
 }
 
-  void
-BX_CPU_C::BSWAP_RCX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RCX(bxInstruction_c *i)
 {
   Bit64u rcx, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -729,8 +703,7 @@ BX_CPU_C::BSWAP_RCX(bxInstruction_c *i)
   RCX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 }
 
-  void
-BX_CPU_C::BSWAP_RDX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RDX(bxInstruction_c *i)
 {
   Bit64u rdx, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -747,8 +720,7 @@ BX_CPU_C::BSWAP_RDX(bxInstruction_c *i)
   RDX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 }
 
-  void
-BX_CPU_C::BSWAP_RBX(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RBX(bxInstruction_c *i)
 {
   Bit64u rbx, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -765,8 +737,7 @@ BX_CPU_C::BSWAP_RBX(bxInstruction_c *i)
   RBX = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 }
 
-  void
-BX_CPU_C::BSWAP_RSP(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RSP(bxInstruction_c *i)
 {
   Bit64u rsp, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -783,8 +754,7 @@ BX_CPU_C::BSWAP_RSP(bxInstruction_c *i)
   RSP = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 }
 
-  void
-BX_CPU_C::BSWAP_RBP(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RBP(bxInstruction_c *i)
 {
   Bit64u rbp, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -801,8 +771,7 @@ BX_CPU_C::BSWAP_RBP(bxInstruction_c *i)
   RBP = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 }
 
-  void
-BX_CPU_C::BSWAP_RSI(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RSI(bxInstruction_c *i)
 {
   Bit64u rsi, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -819,8 +788,7 @@ BX_CPU_C::BSWAP_RSI(bxInstruction_c *i)
   RSI = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 }
 
-  void
-BX_CPU_C::BSWAP_RDI(bxInstruction_c *i)
+void BX_CPU_C::BSWAP_RDI(bxInstruction_c *i)
 {
   Bit64u rdi, b0, b1, b2, b3, b4, b5, b6, b7;
 
@@ -838,424 +806,419 @@ BX_CPU_C::BSWAP_RDI(bxInstruction_c *i)
 }
 #endif  // #if BX_SUPPORT_X86_64
 
-
-  void
-BX_CPU_C::BT_EvGv(bxInstruction_c *i)
+void BX_CPU_C::BT_EwGw(bxInstruction_c *i)
 {
   bx_address op1_addr;
+  Bit16u op1_16, op2_16, index;
+  Bit32s displacement32;
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) { /* 64 bit operand size mode */
-    /* for 64 bit operand size mode */
-    Bit64u op1_64, op2_64;
-    Bit64s displacement64;
-    Bit64u index;
+  /* op2_16 is a register, op2_addr is an index of a register */
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-    /* op2_64 is a register, op2_addr is an index of a register */
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
+  /* op1_16 is a register or memory reference */
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
+    op2_16 &= 0x0f;
+    set_CF((op1_16 >> op2_16) & 0x01);
+    return;
+  }
 
-    /* op1_64 is a register or memory reference */
-    if (i->modC0()) {
-      op1_64 = BX_READ_64BIT_REG(i->rm());
-      op2_64 &= 0x3f;
-      set_CF((op1_64 >> op2_64) & 0x01);
-      return;
-      }
+  index = op2_16 & 0x0f;
+  displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
+  op1_addr = RMAddr(i) + 2 * displacement32;
 
-    index = op2_64 & 0x3f;
-    displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
-    op1_addr = RMAddr(i) + 8 * displacement64;
+  /* pointer, segment address pair */
+  read_virtual_word(i->seg(), op1_addr, &op1_16);
 
-    /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), op1_addr, &op1_64);
-
-    set_CF((op1_64 >> index) & 0x01);
-    }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->os32L()) { /* 32 bit operand size mode */
-    /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32, index;
-    Bit32s displacement32;
-
-    /* op2_32 is a register, op2_addr is an index of a register */
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-    /* op1_32 is a register or memory reference */
-    if (i->modC0()) {
-      op1_32 = BX_READ_32BIT_REG(i->rm());
-      op2_32 &= 0x1f;
-      set_CF((op1_32 >> op2_32) & 0x01);
-      return;
-      }
-
-    index = op2_32 & 0x1f;
-    displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
-    op1_addr = RMAddr(i) + 4 * displacement32;
-
-    /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), op1_addr, &op1_32);
-
-    set_CF((op1_32 >> index) & 0x01);
-    }
-  else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16, index;
-    Bit32s displacement32;
-
-    /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
-
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-      op2_16 &= 0x0f;
-      set_CF((op1_16 >> op2_16) & 0x01);
-      return;
-      }
-
-    index = op2_16 & 0x0f;
-    displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
-    op1_addr = RMAddr(i) + 2 * displacement32;
-
-    /* pointer, segment address pair */
-    read_virtual_word(i->seg(), op1_addr, &op1_16);
-
-    set_CF((op1_16 >> index) & 0x01);
-    }
+  set_CF((op1_16 >> index) & 0x01);
 }
 
-  void
-BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
+void BX_CPU_C::BT_EdGd(bxInstruction_c *i)
 {
   bx_address op1_addr;
+  Bit32u op1_32, op2_32, index;
+  Bit32s displacement32;
+
+  /* op2_32 is a register, op2_addr is an index of a register */
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+  /* op1_32 is a register or memory reference */
+  if (i->modC0()) {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op2_32 &= 0x1f;
+    set_CF((op1_32 >> op2_32) & 0x01);
+    return;
+  }
+
+  index = op2_32 & 0x1f;
+  displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
+  op1_addr = RMAddr(i) + 4 * displacement32;
+
+  /* pointer, segment address pair */
+  read_virtual_dword(i->seg(), op1_addr, &op1_32);
+
+  set_CF((op1_32 >> index) & 0x01);
+}
 
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) { /* 64 bit operand size mode */
-    /* for 64 bit operand size mode */
-    Bit64u op1_64, op2_64, index;
-    Bit64s displacement64;
-    Bit64u bit_i;
+void BX_CPU_C::BT_EqGq(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit64u op1_64, op2_64;
+  Bit64s displacement64;
+  Bit64u index;
 
-    /* op2_64 is a register, op2_addr is an index of a register */
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
+  /* op2_64 is a register, op2_addr is an index of a register */
+  op2_64 = BX_READ_64BIT_REG(i->nnn());
 
-    /* op1_64 is a register or memory reference */
-    if (i->modC0()) {
-      op1_64 = BX_READ_64BIT_REG(i->rm());
-      op2_64 &= 0x3f;
-      set_CF((op1_64 >> op2_64) & 0x01);
-      op1_64 |= (((Bit64u) 1) << op2_64);
+  /* op1_64 is a register or memory reference */
+  if (i->modC0()) {
+    op1_64 = BX_READ_64BIT_REG(i->rm());
+    op2_64 &= 0x3f;
+    set_CF((op1_64 >> op2_64) & 0x01);
+    return;
+  }
 
-      /* now write diff back to destination */
-      BX_WRITE_64BIT_REG(i->rm(), op1_64);
-      return;
-      }
+  index = op2_64 & 0x3f;
+  displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
+  op1_addr = RMAddr(i) + 8 * displacement64;
 
-    index = op2_64 & 0x3f;
-    displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
-    op1_addr = RMAddr(i) + 8 * displacement64;
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), op1_addr, &op1_64);
 
-    /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
+  set_CF((op1_64 >> index) & 0x01);
+}
+#endif
 
-    bit_i = (op1_64 >> index) & 0x01;
-    op1_64 |= (((Bit64u) 1) << index);
+void BX_CPU_C::BTS_EwGw(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit16u op1_16, op2_16, bit_i, index;
+  Bit32s displacement32;
 
-    Write_RMW_virtual_qword(op1_64);
+  /* op2_16 is a register, op2_addr is an index of a register */
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-    set_CF(bit_i);
-    }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->os32L()) { /* 32 bit operand size mode */
-    /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32, bit_i, index;
-    Bit32s displacement32;
+  /* op1_16 is a register or memory reference */
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
+    op2_16 &= 0x0f;
+    set_CF((op1_16 >> op2_16) & 0x01);
+    op1_16 |= (((Bit16u) 1) << op2_16);
 
-    /* op2_32 is a register, op2_addr is an index of a register */
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
+    /* now write diff back to destination */
+    BX_WRITE_16BIT_REG(i->rm(), op1_16);
+    return;
+  }
 
-    /* op1_32 is a register or memory reference */
-    if (i->modC0()) {
-      op1_32 = BX_READ_32BIT_REG(i->rm());
-      op2_32 &= 0x1f;
-      set_CF((op1_32 >> op2_32) & 0x01);
-      op1_32 |= (((Bit32u) 1) << op2_32);
+  index = op2_16 & 0x0f;
+  displacement32 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
+  op1_addr = RMAddr(i) + 2 * displacement32;
 
-      /* now write diff back to destination */
-      BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-      return;
-      }
+  /* pointer, segment address pair */
+  read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
 
-    index = op2_32 & 0x1f;
-    displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
-    op1_addr = RMAddr(i) + 4 * displacement32;
+  bit_i = (op1_16 >> index) & 0x01;
+  op1_16 |= (((Bit16u) 1) << index);
 
-    /* pointer, segment address pair */
-    read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
+  Write_RMW_virtual_word(op1_16);
 
-    bit_i = (op1_32 >> index) & 0x01;
-    op1_32 |= (((Bit32u) 1) << index);
+  set_CF(bit_i);
+}
 
-    Write_RMW_virtual_dword(op1_32);
+void BX_CPU_C::BTS_EdGd(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit32u op1_32, op2_32, bit_i, index;
+  Bit32s displacement32;
 
-    set_CF(bit_i);
-    }
-  else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16, bit_i, index;
-    Bit32s displacement32;
+  /* op2_32 is a register, op2_addr is an index of a register */
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
 
-    /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+  /* op1_32 is a register or memory reference */
+  if (i->modC0()) {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op2_32 &= 0x1f;
+    set_CF((op1_32 >> op2_32) & 0x01);
+    op1_32 |= (((Bit32u) 1) << op2_32);
 
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-      op2_16 &= 0x0f;
-      set_CF((op1_16 >> op2_16) & 0x01);
-      op1_16 |= (((Bit16u) 1) << op2_16);
+    /* now write diff back to destination */
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
+    return;
+  }
 
-      /* now write diff back to destination */
-      BX_WRITE_16BIT_REG(i->rm(), op1_16);
-      return;
-      }
+  index = op2_32 & 0x1f;
+  displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
+  op1_addr = RMAddr(i) + 4 * displacement32;
 
-    index = op2_16 & 0x0f;
-    displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
-    op1_addr = RMAddr(i) + 2 * displacement32;
+  /* pointer, segment address pair */
+  read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
 
-    /* pointer, segment address pair */
+  bit_i = (op1_32 >> index) & 0x01;
+  op1_32 |= (((Bit32u) 1) << index);
+
+  Write_RMW_virtual_dword(op1_32);
+
+  set_CF(bit_i);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::BTS_EqGq(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit64u op1_64, op2_64, index;
+  Bit64s displacement64;
+  Bit64u bit_i;
+
+  /* op2_64 is a register, op2_addr is an index of a register */
+  op2_64 = BX_READ_64BIT_REG(i->nnn());
+
+  /* op1_64 is a register or memory reference */
+  if (i->modC0()) {
+    op1_64 = BX_READ_64BIT_REG(i->rm());
+    op2_64 &= 0x3f;
+    set_CF((op1_64 >> op2_64) & 0x01);
+    op1_64 |= (((Bit64u) 1) << op2_64);
+
+    /* now write diff back to destination */
+    BX_WRITE_64BIT_REG(i->rm(), op1_64);
+    return;
+  }
+
+  index = op2_64 & 0x3f;
+  displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
+  op1_addr = RMAddr(i) + 8 * displacement64;
+
+  /* pointer, segment address pair */
+  read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
+
+  bit_i = (op1_64 >> index) & 0x01;
+  op1_64 |= (((Bit64u) 1) << index);
+
+  Write_RMW_virtual_qword(op1_64);
+
+  set_CF(bit_i);
+}
+#endif
+
+void BX_CPU_C::BTR_EwGw(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit16u op1_16, op2_16, index;
+  Bit32s displacement32;
+
+  /* op2_16 is a register, op2_addr is an index of a register */
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+
+  /* op1_16 is a register or memory reference */
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
+    op2_16 &= 0x0f;
+    set_CF((op1_16 >> op2_16) & 0x01);
+    op1_16 &= ~(((Bit16u) 1) << op2_16);
+
+    /* now write diff back to destination */
+    BX_WRITE_16BIT_REG(i->rm(), op1_16);
+    return;
+  }
+
+  index = op2_16 & 0x0f;
+  displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
+  op1_addr = RMAddr(i) + 2 * displacement32;
+
+  /* pointer, segment address pair */
+  read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
+
+  bx_bool temp_cf = (op1_16 >> index) & 0x01;
+  op1_16 &= ~(((Bit16u) 1) << index);
+
+  /* now write back to destination */
+  Write_RMW_virtual_word(op1_16);
+
+  set_CF(temp_cf);
+}
+
+void BX_CPU_C::BTR_EdGd(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit32u op1_32, op2_32, index;
+  Bit32s displacement32;
+
+  /* op2_32 is a register, op2_addr is an index of a register */
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+  /* op1_32 is a register or memory reference */
+  if (i->modC0()) {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op2_32 &= 0x1f;
+    set_CF((op1_32 >> op2_32) & 0x01);
+    op1_32 &= ~(((Bit32u) 1) << op2_32);
+
+    /* now write diff back to destination */
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
+    return;
+  }
+
+  index = op2_32 & 0x1f;
+  displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
+  op1_addr = RMAddr(i) + 4 * displacement32;
+
+  /* pointer, segment address pair */
+  read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
+
+  bx_bool temp_cf = (op1_32 >> index) & 0x01;
+  op1_32 &= ~(((Bit32u) 1) << index);
+
+  /* now write back to destination */
+  Write_RMW_virtual_dword(op1_32);
+
+  set_CF(temp_cf);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::BTR_EqGq(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit64u op1_64, op2_64, index;
+  Bit64s displacement64;
+
+  /* op2_64 is a register, op2_addr is an index of a register */
+  op2_64 = BX_READ_64BIT_REG(i->nnn());
+
+  /* op1_64 is a register or memory reference */
+  if (i->modC0()) {
+    op1_64 = BX_READ_64BIT_REG(i->rm());
+    op2_64 &= 0x3f;
+    set_CF((op1_64 >> op2_64) & 0x01);
+    op1_64 &= ~(((Bit64u) 1) << op2_64);
+
+    /* now write diff back to destination */
+    BX_WRITE_64BIT_REG(i->rm(), op1_64);
+    return;
+  }
+
+  index = op2_64 & 0x3f;
+  displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
+  op1_addr = RMAddr(i) + 8 * displacement64;
+
+  /* pointer, segment address pair */
+  read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
+
+  bx_bool temp_cf = (op1_64 >> index) & 0x01;
+  op1_64 &= ~(((Bit64u) 1) << index);
+
+  /* now write back to destination */
+  Write_RMW_virtual_qword(op1_64);
+
+  set_CF(temp_cf);
+}
+#endif 
+
+void BX_CPU_C::BTC_EwGw(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit16u op1_16, op2_16, index_16;
+  Bit16s displacement16;
+
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+  index_16 = op2_16 & 0x0f;
+
+  /* op1_16 is a register or memory reference */
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
+    op1_addr = 0; // keep compiler happy
+  }
+  else {
+    displacement16 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
+    op1_addr = RMAddr(i) + 2 * displacement16;
     read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
+  }
 
-    bit_i = (op1_16 >> index) & 0x01;
-    op1_16 |= (((Bit16u) 1) << index);
+  bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
+  op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
+  set_CF(temp_CF);
 
+  /* now write diff back to destination */
+  if (i->modC0()) {
+    BX_WRITE_16BIT_REG(i->rm(), op1_16);
+    }
+  else {
     Write_RMW_virtual_word(op1_16);
+    }
 
-    set_CF(bit_i);
+  set_CF(temp_CF);
+}
+
+void BX_CPU_C::BTC_EdGd(bxInstruction_c *i)
+{
+  bx_address op1_addr;
+  Bit32u op1_32, op2_32, index_32;
+  Bit32s displacement32;
+
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  index_32 = op2_32 & 0x1f;
+
+  /* op1_32 is a register or memory reference */
+  if (i->modC0()) {
+    op1_32 = BX_READ_32BIT_REG(i->rm());
+    op1_addr = 0; // keep compiler happy
+  }
+  else {
+    displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
+    op1_addr = RMAddr(i) + 4 * displacement32;
+    read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
+  }
+
+  bx_bool temp_CF = (op1_32 >> index_32) & 0x01;
+  op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
+  set_CF(temp_CF);
+
+  /* now write diff back to destination */
+  if (i->modC0()) {
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
+    }
+  else {
+    Write_RMW_virtual_dword(op1_32);
     }
 }
 
-  void
-BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::BTC_EqGq(bxInstruction_c *i)
 {
   bx_address op1_addr;
+  Bit64u op1_64, op2_64;
+  Bit64s displacement64;
+  Bit64u index;
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) { /* 64 bit operand size mode */
-    /* for 64 bit operand size mode */
-    Bit64u op1_64, op2_64, index;
-    Bit64s displacement64;
+  op2_64 = BX_READ_64BIT_REG(i->nnn());
+  index = op2_64 & 0x3f;
 
-    /* op2_64 is a register, op2_addr is an index of a register */
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
-
-    /* op1_64 is a register or memory reference */
-    if (i->modC0()) {
-      op1_64 = BX_READ_64BIT_REG(i->rm());
-      op2_64 &= 0x3f;
-      set_CF((op1_64 >> op2_64) & 0x01);
-      op1_64 &= ~(((Bit64u) 1) << op2_64);
-
-      /* now write diff back to destination */
-      BX_WRITE_64BIT_REG(i->rm(), op1_64);
-      return;
-    }
-
-    index = op2_64 & 0x3f;
+  /* op1_64 is a register or memory reference */
+  if (i->modC0()) {
+    op1_64 = BX_READ_64BIT_REG(i->rm());
+    op1_addr = 0; // keep compiler happy
+  }
+  else {
     displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
     op1_addr = RMAddr(i) + 8 * displacement64;
-
-    /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
+  }
 
-    bx_bool temp_cf = (op1_64 >> index) & 0x01;
-    op1_64 &= ~(((Bit64u) 1) << index);
+  bx_bool temp_CF = (op1_64 >> index) & 0x01;
+  op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
+  set_CF(temp_CF);
 
-    /* now write back to destination */
+  /* now write diff back to destination */
+  if (i->modC0()) {
+    BX_WRITE_64BIT_REG(i->rm(), op1_64);
+    }
+  else {
     Write_RMW_virtual_qword(op1_64);
-
-    set_CF(temp_cf);
-    }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->os32L()) { /* 32 bit operand size mode */
-    /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32, index;
-    Bit32s displacement32;
-
-    /* op2_32 is a register, op2_addr is an index of a register */
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-    /* op1_32 is a register or memory reference */
-    if (i->modC0()) {
-      op1_32 = BX_READ_32BIT_REG(i->rm());
-      op2_32 &= 0x1f;
-      set_CF((op1_32 >> op2_32) & 0x01);
-      op1_32 &= ~(((Bit32u) 1) << op2_32);
-
-      /* now write diff back to destination */
-      BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-      return;
-      }
-
-    index = op2_32 & 0x1f;
-    displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
-    op1_addr = RMAddr(i) + 4 * displacement32;
-
-    /* pointer, segment address pair */
-    read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
-
-    bx_bool temp_cf = (op1_32 >> index) & 0x01;
-    op1_32 &= ~(((Bit32u) 1) << index);
-
-    /* now write back to destination */
-    Write_RMW_virtual_dword(op1_32);
-
-    set_CF(temp_cf);
-  }
-  else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16, index;
-    Bit32s displacement32;
-
-    /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
-
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-      op2_16 &= 0x0f;
-      set_CF((op1_16 >> op2_16) & 0x01);
-      op1_16 &= ~(((Bit16u) 1) << op2_16);
-
-      /* now write diff back to destination */
-      BX_WRITE_16BIT_REG(i->rm(), op1_16);
-      return;
-    }
-
-    index = op2_16 & 0x0f;
-    displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
-    op1_addr = RMAddr(i) + 2 * displacement32;
-
-    /* pointer, segment address pair */
-    read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
-
-    bx_bool temp_cf = (op1_16 >> index) & 0x01;
-    op1_16 &= ~(((Bit16u) 1) << index);
-
-    /* now write back to destination */
-    Write_RMW_virtual_word(op1_16);
-
-    set_CF(temp_cf);
     }
 }
+#endif
 
-  void
-BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
-{
-  bx_address op1_addr;
-
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) { /* 64 bit operand size mode */
-    /* for 64 bit operand size mode */
-    Bit64u op1_64, op2_64;
-    Bit64s displacement64;
-    Bit64u index;
-
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
-    index = op2_64 & 0x3f;
-
-    /* op1_64 is a register or memory reference */
-    if (i->modC0()) {
-      op1_64 = BX_READ_64BIT_REG(i->rm());
-      op1_addr = 0; // keep compiler happy
-    }
-    else {
-      displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
-      op1_addr = RMAddr(i) + 8 * displacement64;
-      read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
-    }
-
-    bx_bool temp_CF = (op1_64 >> index) & 0x01;
-    op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
-    set_CF(temp_CF);
-
-    /* now write diff back to destination */
-    if (i->modC0()) {
-      BX_WRITE_64BIT_REG(i->rm(), op1_64);
-      }
-    else {
-      Write_RMW_virtual_qword(op1_64);
-      }
-  }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->os32L()) { /* 32 bit operand size mode */
-    /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32, index_32;
-    Bit32s displacement32;
-
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
-    index_32 = op2_32 & 0x1f;
-
-    /* op1_32 is a register or memory reference */
-    if (i->modC0()) {
-      op1_32 = BX_READ_32BIT_REG(i->rm());
-      op1_addr = 0; // keep compiler happy
-    }
-    else {
-      displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
-      op1_addr = RMAddr(i) + 4 * displacement32;
-      read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
-    }
-
-    bx_bool temp_CF = (op1_32 >> index_32) & 0x01;
-    op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
-    set_CF(temp_CF);
-
-    /* now write diff back to destination */
-    if (i->modC0()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-      }
-    else {
-      Write_RMW_virtual_dword(op1_32);
-      }
-    }
-  else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16, index_16;
-    Bit16s displacement16;
-
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
-    index_16 = op2_16 & 0x0f;
-
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-      op1_addr = 0; // keep compiler happy
-    }
-    else {
-      displacement16 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
-      op1_addr = RMAddr(i) + 2 * displacement16;
-      read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
-    }
-
-    bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
-    op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
-    set_CF(temp_CF);
-
-    /* now write diff back to destination */
-    if (i->modC0()) {
-      BX_WRITE_16BIT_REG(i->rm(), op1_16);
-      }
-    else {
-      Write_RMW_virtual_word(op1_16);
-      }
-    set_CF(temp_CF);
-  }
-}
-
-  void
-BX_CPU_C::BT_EvIb(bxInstruction_c *i)
+void BX_CPU_C::BT_EvIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
@@ -1312,8 +1275,7 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
+void BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
@@ -1341,6 +1303,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_qword(op1_64);
       }
+
     set_CF(temp_CF);
   }
   else
@@ -1370,6 +1333,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_dword(op1_32);
       }
+
     set_CF(temp_CF);
   }
   else { /* 16 bit operand size mode */
@@ -1396,12 +1360,12 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_word(op1_16);
       }
+
     set_CF(temp_CF);
   }
 }
 
-  void
-BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
+void BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
@@ -1488,8 +1452,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
   }
 }
 
-  void
-BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
+void BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
@@ -1517,6 +1480,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_qword(op1_64);
       }
+
     set_CF(temp_CF);
   }
   else
@@ -1573,8 +1537,9 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_word(op1_16);
       }
+
     set_CF(temp_CF);
   }
 }
 
-#endif
+#endif /* BX_CPU_LEVEL >= 3 */
