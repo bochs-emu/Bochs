@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.157 2002-10-28 05:49:42 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.158 2002-11-01 16:36:27 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1366,7 +1366,7 @@ if test "$bx_cdrom" = 1; then
     elif test "$can_use_osx_cdrom" = yes; then
       # use cdrom_osx
       AC_MSG_RESULT(Using OSX IOKit CD Interface)	
-      CDROM_OBJS="cdrom_osx.o"
+      CDROM_OBJS="cdrom.o"
       EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation"
     fi
     case $target in
