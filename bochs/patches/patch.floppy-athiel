@@ -2,6 +2,7 @@
 Patch name: patch.floppy-athiel
 Author: Alex Thiel (uploaded by cbothamy)
 Date: 8 Nov 2002
+Status: Proposed 
 
 Detailed description:
 This patch  introduces the implicit termination of data transfer via 
@@ -20,10 +21,10 @@ Instructions:
 Index: iodev/floppy.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/floppy.cc,v
-retrieving revision 1.58
-diff -u -r1.58 floppy.cc
---- iodev/floppy.cc	Sat Nov 30 10:39:29 2002
-+++ iodev/floppy.cc	Sat Nov 30 10:53:16 2002
+retrieving revision 1.61
+diff -u -r1.61 floppy.cc
+--- iodev/floppy.cc	2003-02-07 13:47:40 +0100
++++ iodev/floppy.cc	2003-06-16 20:50:39 +0200
 @@ -61,6 +61,10 @@
  #define FD_MS_ACTB 0x02
  #define FD_MS_ACTA 0x01
@@ -35,7 +36,7 @@ diff -u -r1.58 floppy.cc
  #define FROM_FLOPPY 10
  #define TO_FLOPPY   11
  
-@@ -220,7 +224,8 @@
+@@ -250,7 +254,8 @@
        }
      }
  
@@ -44,8 +45,8 @@ diff -u -r1.58 floppy.cc
 +#define FD_IRQ_DELAY   2  // delay so the system can detect a INT change
  
    /* CMOS Equipment Byte register */
-   if (BX_FD_THIS s.num_supported_floppies > 0)
-@@ -325,6 +330,20 @@
+   if (BX_FD_THIS s.num_supported_floppies > 0) {
+@@ -356,6 +361,20 @@
        break;
  
      case 0x3F5: /* diskette controller data */
@@ -66,7 +67,7 @@ diff -u -r1.58 floppy.cc
        if (BX_FD_THIS s.result_size == 0) {
          BX_ERROR(("port 0x3f5: no results to read"));
          BX_FD_THIS s.main_status_reg = 0;
-@@ -456,6 +475,20 @@
+@@ -487,6 +506,20 @@
        break;
  
      case 0x3F5: /* diskette controller data */
@@ -87,7 +88,7 @@ diff -u -r1.58 floppy.cc
        BX_DEBUG(("command = %02x", (unsigned) value));
        if (BX_FD_THIS s.command_complete) {
          if (BX_FD_THIS s.pending_command!=0)
-@@ -589,11 +622,6 @@
+@@ -620,11 +653,6 @@
    for (i=0; i<BX_FD_THIS s.command_size; i++)
      BX_DEBUG(("[%02x] ", (unsigned) BX_FD_THIS s.command[i]));
  
@@ -99,7 +100,7 @@ diff -u -r1.58 floppy.cc
    BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
    switch (BX_FD_THIS s.pending_command) {
      case 0x03: // specify
-@@ -602,8 +630,9 @@
+@@ -633,8 +661,9 @@
        step_rate_time = BX_FD_THIS s.command[1] >> 4;
        head_unload_time = BX_FD_THIS s.command[1] & 0x0f;
        head_load_time = BX_FD_THIS s.command[2] >> 1;
@@ -111,7 +112,7 @@ diff -u -r1.58 floppy.cc
        enter_idle_phase();
        return;
        break;
-@@ -771,10 +800,15 @@
+@@ -802,10 +831,15 @@
        /* 4 header bytes per sector are required */
        BX_FD_THIS s.format_count <<= 2;
  
@@ -131,7 +132,7 @@ diff -u -r1.58 floppy.cc
        BX_DEBUG(("format track"));
        return;
        break;
-@@ -891,19 +925,27 @@
+@@ -920,19 +954,27 @@
          floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
                      512, FROM_FLOPPY);
  
@@ -169,7 +170,7 @@ diff -u -r1.58 floppy.cc
          }
        else
          BX_PANIC(("floppy_command(): unknown read/write command"));
-@@ -1015,18 +1057,43 @@
+@@ -1044,18 +1086,43 @@
          BX_FD_THIS s.DIR[drive] &= ~0x80; // clear disk change line
  
        enter_idle_phase();
@@ -215,7 +216,7 @@ diff -u -r1.58 floppy.cc
        BX_FD_THIS s.reset_sensei = 4;
        break;
      
-@@ -1047,9 +1114,11 @@
+@@ -1076,9 +1143,11 @@
    // We need to return then next data byte from the floppy buffer
    // to be transfered via the DMA to memory. (read block from floppy)
  
@@ -228,7 +229,7 @@ diff -u -r1.58 floppy.cc
    if (BX_FD_THIS s.floppy_buffer_index >= 512) {
      Bit8u drive;
  
-@@ -1058,7 +1127,6 @@
+@@ -1087,7 +1156,6 @@
      BX_FD_THIS s.floppy_buffer_index = 0;
      if (DEV_dma_get_tc()) { // Terminal Count line, done
        BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
@@ -236,7 +237,7 @@ diff -u -r1.58 floppy.cc
        BX_FD_THIS s.status_reg2 = 0;
  
        if (bx_dbg.floppy) {
-@@ -1096,6 +1164,9 @@
+@@ -1128,6 +1196,9 @@
    Bit8u drive;
    Bit32u logical_sector;
  
@@ -246,7 +247,7 @@ diff -u -r1.58 floppy.cc
    drive = BX_FD_THIS s.DOR & 0x03;
    if (BX_FD_THIS s.pending_command == 0x4d) { // format track in progress
      --BX_FD_THIS s.format_count;
-@@ -1158,7 +1229,6 @@
+@@ -1192,7 +1263,6 @@
      BX_FD_THIS s.floppy_buffer_index = 0;
      if (DEV_dma_get_tc()) { // Terminal Count line, done
        BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
@@ -254,7 +255,7 @@ diff -u -r1.58 floppy.cc
        BX_FD_THIS s.status_reg2 = 0;
  
        if (bx_dbg.floppy) {
-@@ -1186,6 +1256,13 @@
+@@ -1220,6 +1290,13 @@
    BX_FD_THIS s.reset_sensei = 0;
  }
  
@@ -268,7 +269,7 @@ diff -u -r1.58 floppy.cc
  
    void
  bx_floppy_ctrl_c::increment_sector(void)
-@@ -1194,6 +1271,14 @@
+@@ -1228,6 +1305,14 @@
  
    drive = BX_FD_THIS s.DOR & 0x03;
  
@@ -283,7 +284,7 @@ diff -u -r1.58 floppy.cc
    // values after completion of data xfer
    // ??? calculation depends on base_count being multiple of 512
    BX_FD_THIS s.sector[drive] ++;
-@@ -1216,6 +1301,11 @@
+@@ -1250,6 +1335,11 @@
        BX_INFO(("increment_sector: clamping cylinder to max"));
        }
      }
@@ -295,7 +296,7 @@ diff -u -r1.58 floppy.cc
  }
  
    unsigned
-@@ -1517,14 +1607,23 @@
+@@ -1591,14 +1681,23 @@
      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
      BX_FD_THIS s.result[1] = BX_FD_THIS s.cylinder[drive];
      break;
@@ -321,7 +322,7 @@ diff -u -r1.58 floppy.cc
      BX_FD_THIS s.result_size = 7;
      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;    
      BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
-@@ -1533,7 +1632,9 @@
+@@ -1607,7 +1706,9 @@
      BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
      BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
      BX_FD_THIS s.result[6] = 2; /* sector size code */
@@ -332,25 +333,25 @@ diff -u -r1.58 floppy.cc
      break;
    }
  }
-@@ -1543,6 +1644,11 @@
- {
+@@ -1618,6 +1719,11 @@
    BX_FD_THIS s.main_status_reg &= 0x0f;      // leave drive status untouched
    BX_FD_THIS s.main_status_reg |= FD_MS_MRQ; // data register ready
-+
+ 
 +  /* do not touch ST0 and ST3 since these may be queried later via
 +     commands 0x08 and 0x04, respectively. */
 +  BX_FD_THIS s.status_reg1 = 0;
 +  BX_FD_THIS s.status_reg2 = 0;
- 
++
    BX_FD_THIS s.command_complete = 1; /* waiting for new command */
    BX_FD_THIS s.command_index = 0;
+   BX_FD_THIS s.command_size = 0;
 Index: iodev/floppy.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/floppy.h,v
 retrieving revision 1.16
 diff -u -r1.16 floppy.h
---- iodev/floppy.h	Sat Nov 30 10:39:29 2002
-+++ iodev/floppy.h	Sat Nov 30 10:49:21 2002
+--- iodev/floppy.h	2002-11-30 10:39:29 +0100
++++ iodev/floppy.h	2003-06-16 20:50:39 +0200
 @@ -114,6 +114,7 @@
      Bit8u    DIR[4]; // Digital Input Register:
                    // b7: 0=diskette is present and has not been changed
