@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.14 2001-11-17 18:10:54 vruppert Exp $
+// $Id: serial.cc,v 1.15 2002-01-08 20:31:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -262,11 +262,6 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 	BX_SER_THIS s[0].line_status.rxdata_ready = 0;
 	BX_SER_THIS s[0].rx_empty = 1;
 
-	/* If there are no more ints pending, clear the irq */
-	if ((BX_SER_THIS s[0].rx_interrupt == 1) &&
-	    (BX_SER_THIS s[0].tx_interrupt == 0)) {
-	  BX_SER_THIS devices->pic->untrigger_irq(4);
-	}
 	BX_SER_THIS s[0].rx_interrupt = 0;
       }
       break;
@@ -299,11 +294,6 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
 
       BX_SER_THIS s[0].tx_interrupt = 0;
 
-      /* no more ints pending, clear the irq */
-      if (BX_SER_THIS s[0].int_ident.int_ID == 0x1) {
-	BX_SER_THIS devices->pic->untrigger_irq(4);
-      }
-
       val = BX_SER_THIS s[0].int_ident.ipending  |
 	(BX_SER_THIS s[0].int_ident.int_ID << 1) |
 	(BX_SER_THIS s[0].int_ident.fifo_enabled << 6);
@@ -320,11 +310,11 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
 
     case 0x03FC: /* MODEM control register */
-      val = BX_SER_THIS s[0].modem_cntl.dtr     |
-	(BX_SER_THIS s[0].modem_cntl.rts << 1)  |
-	(BX_SER_THIS s[0].modem_cntl.out1 << 2) |
-	(BX_SER_THIS s[0].modem_cntl.out2 << 3) |
-	(BX_SER_THIS s[0].modem_cntl.local_loopback);
+      val = BX_SER_THIS s[0].modem_cntl.dtr |
+            (BX_SER_THIS s[0].modem_cntl.rts << 1) |
+            (BX_SER_THIS s[0].modem_cntl.out1 << 2) |
+            (BX_SER_THIS s[0].modem_cntl.out2 << 3) |
+            (BX_SER_THIS s[0].modem_cntl.local_loopback << 4);
       break;
 
     case 0x03FD: /* Line status register */
@@ -418,15 +408,9 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  BX_SER_THIS s[0].tx_empty = 0;
 	  BX_SER_THIS s[0].line_status.txtransm_empty = 0;
 	  BX_SER_THIS s[0].line_status.txhold_empty = 0;
-	  /* If there are no more ints pending, clear the irq */
-	  if ((BX_SER_THIS s[0].tx_interrupt == 1) &&
-	      (BX_SER_THIS s[0].rx_interrupt == 0)) {
-	    BX_SER_THIS devices->pic->untrigger_irq(4);
-	  }
 	  BX_SER_THIS s[0].tx_interrupt = 0;
 	  BX_SER_THIS s[0].txbuffer = value;
-	  bx_pc_system.activate_timer(BX_SER_THIS s[0].tx_timer_index
-,
+	  bx_pc_system.activate_timer(BX_SER_THIS s[0].tx_timer_index,
 		 (int) (1000000.0 / (BX_SER_THIS s[0].baudrate / 8)),
 				      0); /* not continuous */
 	} else {
