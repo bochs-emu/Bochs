@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.41 2002-06-02 18:34:41 vruppert Exp $
+$Id: user.dbk,v 1.42 2002-07-28 17:04:29 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2279,7 +2279,7 @@ The section below lists all the supported bochsrc options.
 <para>
 Examples:
 <screen>
-  file=bios/BIOS-bochs-latest, address=0xf0000
+  romimage: file=bios/BIOS-bochs-latest, address=0xf0000
 </screen>
 You need to load a ROM BIOS into addresses 0xf0000-0xfffff.  The BIOS controls
 what the PC does when it first powers on.  Normally, you can use a precompiled
