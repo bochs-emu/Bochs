@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.55 2002-05-03 08:17:18 cbothamy Exp $
+// $Id: harddrv.cc,v 1.56 2002-05-04 16:00:40 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.55 2002-05-03 08:17:18 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.56 2002-05-04 16:00:40 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -304,19 +304,22 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     if ( bx_options.Obootdrive->get () == BX_BOOT_FLOPPYA) {
       // system boot sequence A:
       cmos->s.reg[0x3d] = 0x01;
+      BX_INFO(("Boot device will be 'a'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) { 
       // system boot sequence C:
       cmos->s.reg[0x3d] = 0x02;
+      BX_INFO(("Boot device will be 'c'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_CDROM) { 
       // system boot sequence cdrom
       cmos->s.reg[0x3d] = 0x03;
+      BX_INFO(("Boot device will be 'cdrom'"));
       }
       
-    // Set the signature check flag
+    // Set the signature check flag in cmos, inverted for compatibility
     cmos->s.reg[0x38] = bx_options.OfloppySigCheck->get();
-    BX_INFO(("Floppy boot signature will %sbe checked", bx_options.OfloppySigCheck->get()==0?"not ":""));
+    BX_INFO(("Floppy boot signature check is %sabled", bx_options.OfloppySigCheck->get() ? "dis" : "en"));
     }
 
   //switch (stat_buf.st_size) {
@@ -2427,7 +2430,7 @@ bx_hard_drive_c::identify_drive(unsigned drive)
   //       9: 1 = LBA supported
   //       8: 1 = DMA supported
   //     7-0: Vendor unique
-  BX_SELECTED_HD.id_drive[49] = 0;
+  BX_SELECTED_HD.id_drive[49] = 1<<9;
 
   // Word 50: Reserved
   BX_SELECTED_HD.id_drive[50] = 0;
@@ -2562,7 +2565,7 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int allo
 
       if ((BX_SELECTED_CONTROLLER.byte_count & 1)
           && !(alloc_length <= BX_SELECTED_CONTROLLER.byte_count)) {
-        BX_PANIC(("Odd byte count to ATAPI command"));
+        BX_ERROR(("Odd byte count to ATAPI command"));
       }
       if (alloc_length <= 0)
 	    BX_PANIC(("Allocation length <= 0"));

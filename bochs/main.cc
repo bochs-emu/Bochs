@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.99 2002-05-02 07:54:22 cbothamy Exp $
+// $Id: main.cc,v 1.100 2002-05-04 16:00:40 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -585,7 +585,7 @@ void bx_init_options ()
   bx_options.OfloppySigCheck = new bx_param_bool_c (BXP_FLOPPYSIGCHECK,
       "Flopppy Boot Signature Check",
       "Checks for the 0xaa55 signature on floppy boot device.",
-      1);
+      0);
 
   // disk menu
   bx_param_c *disk_menu_init_list[] = {
@@ -1676,12 +1676,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (num_params != 2) {
       BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
       }
-    if (strncmp(params[1], "enabled=", 8)) {
+    if (strncmp(params[1], "disabled=", 9)) {
       BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
       }
-    if (params[1][8] == '0')
+    if (params[1][9] == '0')
       bx_options.OfloppySigCheck->set (0);
-    else if (params[1][8] == '1')
+    else if (params[1][9] == '1')
       bx_options.OfloppySigCheck->set (1);
     else {
       BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
