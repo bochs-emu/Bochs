@@ -1,53 +1,81 @@
-all: blur-no-opt
+CC=gcc
+CFLAGS=-O2
+LIST=blur-no-opt blur-O2 blur-profile blur-O2-unroll blur-O2-func blur-O2-switch blur-O2-switch-call blur-O2-fnptr-switch  blur-O2-fnptr-table blur-O2-opcode-switch blur-O2-opcode-fnptr blur-O2-opcode-translated1 blur-O2-opcode-translated2 blur-O2-opcode-translated3 blur-O2-opcode-dynamic1 blur-O2-opcode-dynamic1_test
+
+all: $(LIST)
 
 blur-no-opt: blur.c blur-opcode.c
-	gcc -S blur.c -o blur.s
-	gcc -o blur-no-opt blur.c
-	gcc -O2 -S blur.c -o blur-O2.s
-	gcc -O2 -o blur-O2 blur.c
-	gcc -O2 -pg -fprofile-arcs -ftest-coverage blur.c -o blur-profile
-	gcc -O2 -DBLUR_UNROLL_INNER -o blur-O2-unroll blur.c
-	gcc -O2 -DBLUR_UNROLL_INNER -o blur-O2-unroll.s -S blur.c
-	gcc -O2 -DBLUR_USE_FUNCTION_CALL -o blur-O2-func blur.c
-	gcc -O2 -DBLUR_USE_FUNCTION_CALL -o blur-O2-func.s -S blur.c
-	gcc -O2 -DBLUR_USE_SWITCH -o blur-O2-switch blur.c
-	gcc -O2 -DBLUR_USE_SWITCH -o blur-O2-switch.s -S blur.c
-	gcc -O2 -DBLUR_USE_SWITCH_CALL -o blur-O2-switch-call blur.c
-	gcc -O2 -DBLUR_USE_SWITCH_CALL -o blur-O2-switch-call.s -S blur.c
-	gcc -O2 -DBLUR_FNPTR_SWITCH -o blur-O2-fnptr-switch blur.c
-	gcc -O2 -DBLUR_FNPTR_SWITCH -o blur-O2-fnptr-switch.s -S blur.c
-	gcc -O2 -DBLUR_FNPTR_TABLE -o blur-O2-fnptr-table blur.c
-	gcc -O2 -DBLUR_FNPTR_TABLE -o blur-O2-fnptr-table.s -S blur.c
-	gcc -O2 -DBLUR_USE_SWITCH -o blur-O2-opcode-switch blur-opcode.c
-	gcc -O2 -DBLUR_USE_SWITCH -o blur-O2-opcode-switch.s -S blur-opcode.c
-	gcc -O2 -DBLUR_USE_FNPTR -o blur-O2-opcode-fnptr blur-opcode.c
-	gcc -O2 -DBLUR_USE_FNPTR -o blur-O2-opcode-fnptr.s -S blur-opcode.c
-	gcc -O2 -DBLUR_TRANSLATED1 -o blur-O2-opcode-translated1 blur-opcode.c
-	gcc -O2 -DBLUR_TRANSLATED1 -o blur-O2-opcode-translated1.s -S blur-opcode.c
-	gcc -O2 -DBLUR_TRANSLATED2 -o blur-O2-opcode-translated2 blur-opcode.c
-	gcc -O2 -DBLUR_TRANSLATED2 -o blur-O2-opcode-translated2.s -S blur-opcode.c
-	gcc -O2 -DBLUR_TRANSLATED3 -o blur-O2-opcode-translated3 blur-opcode.c
-	gcc -O2 -DBLUR_TRANSLATED3 -o blur-O2-opcode-translated3.s -S blur-opcode.c
+	$(CC) -o blur-no-opt blur.c
+
+blur-O2: blur.c
+	$(CC) $(CFLAGS) -S blur.c -o blur-O2.s
+	$(CC) $(CFLAGS) -o blur-O2 blur.c
+
+blur-profile: blur.c 
+	$(CC) $(CFLAGS) -pg -fprofile-arcs -ftest-coverage blur.c -o blur-profile
+
+blur-O2-unroll: blur.c
+	$(CC) $(CFLAGS) -DBLUR_UNROLL_INNER -o blur-O2-unroll blur.c
+	$(CC) $(CFLAGS) -DBLUR_UNROLL_INNER -o blur-O2-unroll.s -S blur.c
+
+ blur-O2-func: blur.c
+	$(CC) $(CFLAGS) -DBLUR_USE_FUNCTION_CALL -o blur-O2-func blur.c
+	$(CC) $(CFLAGS) -DBLUR_USE_FUNCTION_CALL -o blur-O2-func.s -S blur.c
+
+blur-O2-switch: blur.c
+	$(CC) $(CFLAGS) -DBLUR_USE_SWITCH -o blur-O2-switch blur.c
+	$(CC) $(CFLAGS) -DBLUR_USE_SWITCH -o blur-O2-switch.s -S blur.c
+
+blur-O2-switch-call: blur.c
+	$(CC) $(CFLAGS) -DBLUR_USE_SWITCH_CALL -o blur-O2-switch-call blur.c
+	$(CC) $(CFLAGS) -DBLUR_USE_SWITCH_CALL -o blur-O2-switch-call.s -S blur.c
+
+blur-O2-fnptr-switch: blur.c
+	$(CC) $(CFLAGS) -DBLUR_FNPTR_SWITCH -o blur-O2-fnptr-switch blur.c
+	$(CC) $(CFLAGS) -DBLUR_FNPTR_SWITCH -o blur-O2-fnptr-switch.s -S blur.c
+
+blur-O2-fnptr-table: blur.c
+	$(CC) $(CFLAGS) -DBLUR_FNPTR_TABLE -o blur-O2-fnptr-table blur.c
+	$(CC) $(CFLAGS) -DBLUR_FNPTR_TABLE -o blur-O2-fnptr-table.s -S blur.c
+
+blur-O2-opcode-switch: blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_USE_SWITCH -o blur-O2-opcode-switch blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_USE_SWITCH -o blur-O2-opcode-switch.s -S blur-opcode.c
+
+blur-O2-opcode-fnptr: blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_USE_FNPTR -o blur-O2-opcode-fnptr blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_USE_FNPTR -o blur-O2-opcode-fnptr.s -S blur-opcode.c
+
+blur-O2-opcode-translated1: blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_TRANSLATED1 -o blur-O2-opcode-translated1 blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_TRANSLATED1 -o blur-O2-opcode-translated1.s -S blur-opcode.c
+
+blur-O2-opcode-translated2: blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_TRANSLATED2 -o blur-O2-opcode-translated2 blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_TRANSLATED2 -o blur-O2-opcode-translated2.s -S blur-opcode.c
+
+blur-O2-opcode-translated3: blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_TRANSLATED3 -o blur-O2-opcode-translated3 blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_TRANSLATED3 -o blur-O2-opcode-translated3.s -S blur-opcode.c
+
+blur-O2-opcode-dynamic1: blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1 -o blur-O2-opcode-dynamic1 blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1 -o blur-O2-opcode-dynamic1.s -S blur-opcode.c
+
+blur-O2-opcode-dynamic1_test: blur-opcode.c translate1.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1_TEST -o blur-O2-opcode-dynamic1_test blur-opcode.c translate1.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1_TEST -o blur-O2-opcode-dynamic1_test.s -S blur-opcode.c
+
+translate1.c: blur-O2-opcode-dynamic1
+	rm -rf translate1.c
+	./blur-O2-opcode-dynamic1
+	test -f translate1.c
 
 run-all::
-	./blur-no-opt
-	./blur-O2
-	./blur-O2-unroll
-	./blur-O2-func
-	./blur-O2-switch
-	./blur-O2-switch-call
-	./blur-O2-fnptr-switch
-	./blur-O2-fnptr-table
-	./blur-O2-opcode-switch
-	./blur-O2-opcode-translated1
-	./blur-O2-opcode-translated2
-	./blur-O2-opcode-translated3
-
-blur-opcode: blur-opcode.c
-	gcc -g blur-opcode.c -o blur-opcode
+	for i in $(LIST); do echo Running $$i; ./$$i; done
 
 clean::
-	rm -rf *.o *.s blur-no-opt blur-O* blur-profile gmon.out blur.out *.bb *.bbg *.da *.gcov
+	rm -rf *.o *.s blur-no-opt blur-O* blur-profile gmon.out blur.out *.bb *.bbg *.da *.gcov translate1.c $(LIST)
 
 # blur-no-opt: 11.98
 # blur-O1: 6.56
