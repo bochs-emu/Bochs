@@ -550,7 +550,7 @@ extern bx_devices_c   bx_devices;
 #define BX_RESET_SOFTWARE 10
 #define BX_RESET_HARDWARE 11
 
-
+void bx_init_before_control_panel ();
 char *bx_find_bochsrc (void);
 int bx_parse_cmdline (int argc, char *argv[]);
 int bx_read_configuration (char *rcfile);

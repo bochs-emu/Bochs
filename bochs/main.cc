@@ -697,8 +697,8 @@ void bx_print_header ()
   fprintf (stderr, "%s\n", divider);
 }
 
-int
-BX_MAIN(int argc, char *argv[])
+void
+bx_init_before_control_panel ()
 {
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
@@ -711,27 +711,13 @@ BX_MAIN(int argc, char *argv[])
 
   bx_print_header ();
   bx_init_bx_dbg ();
-
-  int read_rc_already = 0;
-  init_siminterface ();
   bx_init_options ();
+}
 
-#if BX_USE_CONTROL_PANEL
-  if (argc > 1 && (!strcmp ("-nocontrolpanel", argv[1]))) {
-    // skip the control panel
-    argc++;
-    SIM->set_enabled (0);
-  } else {
-    // Display the pre-simulation control panel.
-    if ((bx_control_panel (BX_CPANEL_START_MAIN)) == BX_DISABLE_CONTROL_PANEL)
-      SIM->set_enabled (0);
-    else {
-      SIM->set_enabled (1);
-      read_rc_already = 1;
-    }
-  }
-#endif
-
+int
+bx_continue_after_control_panel (int argc, char *argv[])
+{
+  int read_rc_already = 0;
   if (!read_rc_already) {
     /* parse configuration file and command line arguments */
     char *bochsrc = bx_find_bochsrc ();
