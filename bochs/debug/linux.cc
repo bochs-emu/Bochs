@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: linux.cc,v 1.4 2001-10-03 13:10:37 bdenney Exp $
+// $Id: linux.cc,v 1.5 2002-11-01 15:22:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -17,7 +17,7 @@ bx_dbg_info_linux_command (void)
 {
   BX_INFO (("Info linux"));
   bx_dbg_cpu_t cpu;
-  bx_dbg_callback[0].get_cpu(&cpu);
+  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
 
   int mode;
   if (cpu.cr0 & 1) {
