@@ -1,0 +1,44 @@
+----------------------------------------------------------------------
+Patch name: patch.seg-limit-real
+Author: Bryce Denney
+Date: Wed Jun 13 10:54:16 EDT 2001
+
+Detailed description:
+See sourceforge bug
+[ #429383 ] real mode seg limit: Bochs does #GP when Pentium does not
+URL is
+http://bochs.sf.net/cgi-bin/topper.pl?sftype=bug&id=429383
+
+This patch may be applied if we can convince ourselves that real
+processors do not do this exception.  The Intel docs say that the
+exception should happen under these circumstances, but Kasper Andersen
+reports that his pentium does not.
+
+Apply patch to:
+  current CVS
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: cpu/access.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/access.cc,v
+retrieving revision 1.7
+diff -u -r1.7 access.cc
+--- cpu/access.cc	2001/05/30 18:56:01	1.7
++++ cpu/access.cc	2001/06/11 16:09:08
+@@ -98,10 +98,10 @@
+ 
+   else { /* real mode */
+     if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
+-      //BX_INFO(("write_virtual_checks() SEG EXCEPTION:  %x:%x + %x",
+-      //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
+-      if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
+-      else exception(BX_GP_EXCEPTION, 0, 0);
++      BX_ERROR(("write_virtual_checks() SEG EXCEPTION IGNORED:  %x:%x + %x",
++        (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
++      //if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
++      //else exception(BX_GP_EXCEPTION, 0, 0);
+       }
+     }
+ }
