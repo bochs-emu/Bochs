@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.14 2002-09-23 00:27:18 kevinlawton Exp $
+// $Id: arith8.cc,v 1.15 2002-09-23 00:40:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -427,7 +427,7 @@ BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
     "pushfl     \n\t"
     "popl %0"
     : "=g" (flags32)
-    : "q" (op1_8), "g" (op2_8)
+    : "q" (op1_8), "mq" (op2_8)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -463,7 +463,7 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
     "pushfl     \n\t"
     "popl %0"
     : "=g" (flags32)
-    : "q" (op1_8), "g" (op2_8)
+    : "q" (op1_8), "mq" (op2_8)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -495,7 +495,7 @@ BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
     "pushfl     \n\t"
     "popl %0"
     : "=g" (flags32)
-    : "q" (op1_8), "g" (op2_8)
+    : "q" (op1_8), "mq" (op2_8)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -675,7 +675,7 @@ BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
     "pushfl     \n\t"
     "popl %0"
     : "=g" (flags32)
-    : "q" (op1_8), "g" (op2_8)
+    : "q" (op1_8), "mq" (op2_8)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =

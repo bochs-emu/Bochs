@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.11 2002-09-22 22:22:16 kevinlawton Exp $
+// $Id: logical8.cc,v 1.12 2002-09-23 00:40:58 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -305,8 +305,8 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     "andb %3, %1\n\t"
     "pushfl     \n\t"
     "popl %0"
-    : "=g" (flags32), "=r" (result)
-    : "1" (op1), "g" (op2)
+    : "=g" (flags32), "=q" (result)
+    : "1" (op1), "mq" (op2)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -343,8 +343,8 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
     "andb %3, %1\n\t"
     "pushfl     \n\t"
     "popl %0"
-    : "=g" (flags32), "=r" (result)
-    : "1" (op1), "g" (op2)
+    : "=g" (flags32), "=q" (result)
+    : "1" (op1), "mq" (op2)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -377,8 +377,8 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
     "andb %3, %1\n\t"
     "pushfl     \n\t"
     "popl %0"
-    : "=g" (flags32), "=r" (result)
-    : "1" (op1), "g" (op2)
+    : "=g" (flags32), "=q" (result)
+    : "1" (op1), "mq" (op2)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -423,8 +423,8 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     "andb %3, %1\n\t"
     "pushfl     \n\t"
     "popl %0"
-    : "=g" (flags32), "=r" (result)
-    : "1" (op1), "g" (op2)
+    : "=g" (flags32), "=q" (result)
+    : "1" (op1), "mq" (op2)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -461,7 +461,7 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
     "pushfl     \n\t"
     "popl %0"
     : "=g" (flags32)
-    : "r" (op1), "g" (op2)
+    : "q" (op1), "mq" (op2)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -495,7 +495,7 @@ BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
     "pushfl     \n\t"
     "popl %0"
     : "=g" (flags32)
-    : "r" (op1), "g" (op2)
+    : "q" (op1), "mq" (op2)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
@@ -535,7 +535,7 @@ BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
     "pushfl     \n\t"
     "popl %0"
     : "=g" (flags32)
-    : "r" (op1), "g" (op2)
+    : "q" (op1), "mq" (op2)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
