@@ -1,0 +1,182 @@
+----------------------------------------------------------------------
+Patch name: patch.userbutton
+Author: Volker Ruppert
+Date:   August 6th 2002
+
+Detailed description:
+  This patch adds a headerbar button that can send keypresses to the guest OS.
+  It currently can send CTRL+ALT+DEL only. We need an option in the config
+  interface to change the shortcut to be sent.
+
+  Here is the list of changes:
+  
+  * userbutton.h added in gui/bitmaps
+  * initialize the new button in the gui.cc
+  * the gui stops adding buttons to the headerbar if not enough space is left.
+    This can happen when the screen width is 320 pixels. Done for X11 and Win32.
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  cvs checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -urN ../bochs/gui/bitmaps/userbutton.h gui/bitmaps/userbutton.h
+--- ../bochs/gui/bitmaps/userbutton.h	Thu Jan  1 01:00:00 1970
++++ gui/bitmaps/userbutton.h	Tue Aug  6 17:45:57 2002
+@@ -0,0 +1,19 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.userbutton,v 1.1 2002-08-06 16:17:49 vruppert Exp $
++/////////////////////////////////////////////////////////////////////////
++#define BX_USER_BMAP_X 32
++#define BX_USER_BMAP_Y 32
++
++static const unsigned char bx_user_bmap[BX_USER_BMAP_X*BX_USER_BMAP_Y/8] = {
++  0x00, 0x00, 0x00, 0x00, 0x84, 0x78, 0x9e, 0x07, 0x84, 0x04, 0x82, 0x08, 
++  0x84, 0x04, 0x82, 0x08, 0x84, 0x38, 0x9e, 0x07, 0x84, 0x40, 0x82, 0x01, 
++  0x84, 0x40, 0x82, 0x06, 0x78, 0x3c, 0x9e, 0x08, 0x00, 0x00, 0x00, 0x00, 
++  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x1c, 
++  0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x80, 0x00, 
++  0x00, 0x00, 0x80, 0x00, 0xfe, 0xff, 0xff, 0x3f, 0x02, 0x00, 0x00, 0x20, 
++  0xaa, 0xaa, 0x2a, 0x2a, 0x02, 0x00, 0x00, 0x20, 0x02, 0x00, 0x00, 0x20, 
++  0xaa, 0xaa, 0xaa, 0x2a, 0x52, 0x55, 0x11, 0x25, 0xaa, 0xaa, 0xaa, 0x2a, 
++  0x52, 0x55, 0x01, 0x25, 0xaa, 0xaa, 0x82, 0x2a, 0x52, 0x55, 0x11, 0x25, 
++  0xaa, 0xbf, 0xaa, 0x2a, 0x02, 0x00, 0x00, 0x20, 0xfe, 0xff, 0xff, 0x3f, 
++  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
++  };
+diff -urN ../bochs/gui/gui.cc gui/gui.cc
+--- ../bochs/gui/gui.cc	Sun Aug  4 10:42:34 2002
++++ gui/gui.cc	Tue Aug  6 17:44:56 2002
+@@ -37,6 +37,7 @@
+ #include "gui/bitmaps/paste.h"
+ #include "gui/bitmaps/configbutton.h"
+ #include "gui/bitmaps/cdromd.h"
++#include "gui/bitmaps/userbutton.h"
+ #if BX_WITH_MACOS
+ #  include <Disks.h>
+ #endif
+@@ -82,6 +83,7 @@
+   BX_GUI_THIS copy_bmap_id = create_bitmap(bx_copy_bmap, BX_COPY_BMAP_X, BX_COPY_BMAP_Y);
+   BX_GUI_THIS paste_bmap_id = create_bitmap(bx_paste_bmap, BX_PASTE_BMAP_X, BX_PASTE_BMAP_Y);
+   BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_CONFIG_BMAP_X, BX_CONFIG_BMAP_Y);
++  BX_GUI_THIS user_bmap_id = create_bitmap(bx_user_bmap, BX_USER_BMAP_X, BX_USER_BMAP_Y);
+ 
+ 
+   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
+@@ -145,6 +147,9 @@
+   // Copy button
+   BX_GUI_THIS copy_hbar_id = headerbar_bitmap(BX_GUI_THIS copy_bmap_id,
+                           BX_GRAVITY_RIGHT, copy_handler);
++  // User button
++  BX_GUI_THIS user_hbar_id = headerbar_bitmap(BX_GUI_THIS user_bmap_id,
++                          BX_GRAVITY_RIGHT, userbutton_handler);
+ 
+   show_headerbar();
+ }
+@@ -389,6 +394,18 @@
+   int old = bx_options.Omouse_enabled->get ();
+   BX_DEBUG (("toggle mouse_enabled, now %d", !old));
+   bx_options.Omouse_enabled->set (!old);
++}
++
++  void
++bx_gui_c::userbutton_handler(void)
++{
++  BX_INFO(("User button pressed"));
++  bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L);
++  bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L);
++  bx_devices.keyboard->gen_scancode(BX_KEY_DELETE);
++  bx_devices.keyboard->gen_scancode(BX_KEY_DELETE | BX_KEY_RELEASED);
++  bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
++  bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+ }
+ 
+   void
+diff -urN ../bochs/gui/gui.h gui/gui.h
+--- ../bochs/gui/gui.h	Sat Apr 20 09:19:35 2002
++++ gui/gui.h	Tue Aug  6 17:50:14 2002
+@@ -83,6 +83,7 @@
+   static void snapshot_handler(void);
+   static void config_handler(void);
+   static void toggle_mouse_enable(void);
++  static void userbutton_handler(void);
+   static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
+ 
+   Boolean floppyA_status;
+@@ -98,11 +99,12 @@
+   unsigned snapshot_bmap_id, snapshot_hbar_id;
+   unsigned config_bmap_id, config_hbar_id;
+   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
++  unsigned user_bmap_id, user_hbar_id;
+   };
+ 
+ 
+ #define BX_MAX_PIXMAPS 16
+-#define BX_MAX_HEADERBAR_ENTRIES 10
++#define BX_MAX_HEADERBAR_ENTRIES 11
+ #define BX_HEADER_BAR_Y 32
+ 
+ // align pixmaps towards left or right side of header bar
+diff -urN ../bochs/gui/win32.cc gui/win32.cc
+--- ../bochs/gui/win32.cc	Sat Apr 20 09:19:35 2002
++++ gui/win32.cc	Tue Aug  6 17:38:40 2002
+@@ -1019,6 +1019,7 @@
+ 
+ void bx_gui_c::show_headerbar(void) {
+   unsigned xorigin;
++  int xleft, xright;
+   HGDIOBJ oldObj;
+ 
+   if (!headerbar_changed || !stInfo.UIinited) return;
+@@ -1028,11 +1029,18 @@
+   oldObj = SelectObject(MemoryDC, MemoryBitmap);
+   PatBlt (MemoryDC, 0, 0, dimension_x, bx_headerbar_y, BLACKNESS);
+ 	
++  xleft = 0;
++  xright = dimension_x;
+   for (unsigned i=0; i<bx_headerbar_entries; i++) {
+-    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
++    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT) {
+       xorigin = bx_headerbar_entry[i].xorigin;
+-    else
++      xleft += bx_headerbar_entry[i].xdim;
++      }
++    else {
+       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
++      xright = xorigin;
++      }
++    if (xright < xleft) break;
+     DrawBitmap(MemoryDC, bx_headerbar_entry[i].bitmap, xorigin, 0, SRCCOPY, 0x7);
+   }
+ 
+diff -urN ../bochs/gui/x.cc gui/x.cc
+--- ../bochs/gui/x.cc	Sat May 18 18:02:20 2002
++++ gui/x.cc	Tue Aug  6 17:38:40 2002
+@@ -1245,15 +1245,23 @@
+ bx_gui_c::show_headerbar(void)
+ {
+   unsigned xorigin;
++  int xleft, xright;
+ 
+   // clear header bar area to white
+   XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,0, dimension_x, bx_headerbar_y);
+ 
++  xleft = 0;
++  xright = dimension_x;
+   for (unsigned i=0; i<bx_headerbar_entries; i++) {
+-    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
++    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT) {
+       xorigin = bx_headerbar_entry[i].xorigin;
+-    else
++      xleft += bx_headerbar_entry[i].xdim;
++      }
++    else {
+       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
++      xright = xorigin;
++      }
++    if (xright < xleft) break;
+     XCopyPlane(bx_x_display, bx_headerbar_entry[i].bitmap, win, gc_headerbar,
+       0,0, bx_headerbar_entry[i].xdim, bx_headerbar_entry[i].ydim,
+               xorigin, 0, 1);
