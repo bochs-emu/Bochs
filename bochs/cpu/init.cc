@@ -43,10 +43,9 @@ BX_CPU_C::BX_CPU_C(BX_MEM_C *addrspace)
 #if BX_APIC_SUPPORT
   local_apic.init ();
 #endif
-  char cpu[8];
-  snprintf(cpu, 8, "[CPU%d]",BX_SIM_ID);
-
-  setprefix(cpu);
+  setprefix("[CPU ]");
+  // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
+  // bx_local_apic_c::set_id as soon as the apic ID is assigned.
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
      you can assume there's always a base & index register used.  For
