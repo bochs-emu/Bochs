@@ -60,6 +60,9 @@ Changes in 2.1 (July ??, 2003):
 - Volker's changes...
   --------------------------------------------------------------------------
 - I/O devices
+  - general
+    - i/o access mask implemented, unallowed cases are now handled in the devices
+      code and cause a BX_ERROR
   - vga
     - color depth 15, 16, 24 and 32 bpp supported by VBE (based on a patch from
       Christopher Nelson for 32 bpp on win32). Supported by sdl, x, win32 and wx.
@@ -105,6 +108,9 @@ Changes in 2.1 (July ??, 2003):
     - key event handling rewritten
     - Bochs-RFB waits up to 30 seconds for a client connection. The emulation
       starts after connecting the client.
+- documentation
+  - user documentation updated and extended
+  - already ported and obsolete parts of the old documentation removed
   --------------------------------------------------------------------------
 
 - Peter's changes...
