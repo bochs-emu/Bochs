@@ -2257,7 +2257,7 @@ find_handle_callback (filename, data, ignored)
      lt_ptr ignored;
 {
   lt_dlhandle  *handle	= (lt_dlhandle *) data;
-  int		found	= access (filename, R_OK);
+  int		found	= (0 == access (filename, R_OK));
 
   /* Bail out if file cannot be read...  */
   if (!found)
