@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.13 2003-11-02 10:23:59 cbothamy Exp $
+$Id: development.dbk,v 1.14 2004-02-21 11:57:41 cbothamy Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -1614,6 +1614,46 @@ Returns the number of bytes written.
       <section id="cvs-release"><title>life cycle of a CVS release</title>
       <para>
       &FIXME;
+      </para>
+      </section>
+
+</chapter>
+
+<chapter id="webmastering"><title>Coding</title>
+
+      <section id="websites"><title>websites</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+
+      <section id="shell-access"><title>shell access to the website</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+
+      <section id="repository"><title>website html repository</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+
+      <section id="site-update"><title>automatic site update</title>
+      <para>
+      &FIXME;
+      </para>
+      </section>
+
+      <section id="other-content"><title>other content</title>
+      <para>
+      &FIXME; sources, tmp
+      </para>
+      </section>
+
+      <section id="available-tools"><title>available tools</title>
+      <para>
+      &FIXME; sources, tmp
       </para>
       </section>
 
