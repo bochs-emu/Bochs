@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.18 2003-08-19 00:10:38 cbothamy Exp $
+// $Id: virt_timer.cc,v 1.19 2003-08-26 20:24:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -396,7 +396,12 @@ bx_virt_timer_c::next_event_time_update(void) {
 
 void
 bx_virt_timer_c::init(void) {
-  virtual_timers_realtime = (bx_options.clock.Osync->get ()==BX_CLOCK_SYNC_REALTIME);
+
+  if ( (bx_options.clock.Osync->get ()!=BX_CLOCK_SYNC_REALTIME)
+    && (bx_options.clock.Osync->get ()!=BX_CLOCK_SYNC_BOTH) )
+    virtual_timers_realtime = 0;
+  else
+    virtual_timers_realtime = 1;
 
   if (virtual_timers_realtime) {
     BX_INFO(("using 'realtime pit' synchronization method"));

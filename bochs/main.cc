@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.242 2003-08-25 18:36:09 vruppert Exp $
+// $Id: main.cc,v 1.243 2003-08-26 20:24:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -4131,6 +4131,9 @@ bx_write_clock_options (FILE *fp, bx_clock_options *opt)
       break;
     case BX_CLOCK_SYNC_SLOWDOWN:
       fprintf (fp, "sync=slowdown");
+      break;
+    case BX_CLOCK_SYNC_BOTH:
+      fprintf (fp, "sync=both");
       break;
     default:
       BX_PANIC(("Unknown value for sync method"));

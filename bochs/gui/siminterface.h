@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.108 2003-08-25 15:21:18 vruppert Exp $
+// $Id: siminterface.h,v 1.109 2003-08-26 20:24:35 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1205,7 +1205,8 @@ enum {
 #define BX_CLOCK_SYNC_NONE     0
 #define BX_CLOCK_SYNC_REALTIME 1
 #define BX_CLOCK_SYNC_SLOWDOWN 2
-#define BX_CLOCK_SYNC_LAST     2
+#define BX_CLOCK_SYNC_BOTH     3
+#define BX_CLOCK_SYNC_LAST     3
 
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2

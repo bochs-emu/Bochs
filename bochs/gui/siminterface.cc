@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.101 2003-08-23 09:52:26 vruppert Exp $
+// $Id: siminterface.cc,v 1.102 2003-08-26 20:24:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -459,8 +459,8 @@ char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
 int n_atadevice_biosdetect_names = 3;
 char *atadevice_translation_names[] = { "none", "lba", "large", "rechs", "auto", NULL };
 int n_atadevice_translation_names = 5;
-char *clock_sync_names[] = { "none", "realtime", "slowdown", NULL };
-int clock_sync_n_names=3;
+char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
+int clock_sync_n_names=4;
 
 
 
