@@ -1,0 +1,115 @@
+----------------------------------------------------------------------
+Patch name: patch.x11-charmap
+Author: Christophe Bothamy
+Date: Fri Jan 17 19:09:24 CET 2003
+
+Detailed description:
+  This patch adds charmap changes support fox x11.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on Fri Jan 17 19:09:24 CET 2003
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: gui/x.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/x.cc,v
+retrieving revision 1.58
+diff -u -r1.58 x.cc
+--- gui/x.cc	16 Jan 2003 21:14:11 -0000	1.58
++++ gui/x.cc	17 Jan 2003 16:26:36 -0000
+@@ -265,7 +265,7 @@
+ extern Bit8u graphics_snapshot[32 * 1024];
+ 
+ 
+-static void create_vga_font(void);
++static void create_internal_vga_font(void);
+ static void xkeypress(KeySym keysym, int press_release);
+ // extern "C" void select_visual(void);
+ 
+@@ -547,7 +547,7 @@
+   BX_DEBUG(("MapNotify found."));
+ 
+   // Create the VGA font
+-  create_vga_font();
++  create_internal_vga_font();
+ 
+ 
+ {
+@@ -619,7 +619,7 @@
+ }
+ 
+   void
+-create_vga_font(void)
++create_internal_vga_font(void)
+ {
+   // Fixed for now
+   font_width=8;
+@@ -1062,9 +1062,41 @@
+   Bit8u c;
+   Bit8u cs_start, cs_end;
+   unsigned nchars;
++  bx_bool force_update=0;
++  unsigned char cell[16];
+ 
+   UNUSED(nrows);
+ 
++  if (charmap_updated) {
++    BX_INFO(("charmap update. Font Height is %d",font_height));
++    for (unsigned c = 0; c<256; c++) {
++      if (char_changed[c]) {
++        XFreePixmap(bx_x_display, vgafont[c]);
++        
++        memset(cell, 0, sizeof(cell));
++        for(i=0; i<16; i++) {
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x01)<<7);
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x02)<<5);
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x04)<<3);
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x08)<<1);
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x10)>>1);
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x20)>>3);
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x40)>>5);
++          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x80)>>7);
++        }
++
++        vgafont[c]=XCreateBitmapFromData(bx_x_display, win, 
++                        (const char*)cell,
++                        font_width, font_height);
++            if(vgafont[c] == None)
++              BX_PANIC(("Can't create vga font [%d]", c));
++        char_changed[c] = 0;
++      }
++    }
++    force_update = 1;
++    charmap_updated = 0;
++  }
++
+   cs_start = ((cursor_state >> 8) & 0x3f) * font_height / font_height_orig;
+   cs_end = (cursor_state & 0x1f) * font_height / font_height_orig;
+ 
+@@ -1084,7 +1116,8 @@
+ 
+   for (i=0; i<nchars*2; i+=2) {
+     if ( (old_text[i]!=new_text[i]) ||
+-         (old_text[i+1]!=new_text[i+1]) ) {
++         (old_text[i+1]!=new_text[i+1]) ||
++         (force_update) ) {
+ 
+       c = new_text[i];
+       new_foreground = new_text[i+1] & 0x0f;
+@@ -1399,6 +1432,12 @@
+   void
+ bx_x_gui_c::exit(void)
+ {
++  // Delete the font bitmaps
++  for (int i=0; i<256; i++) {
++    //if (vgafont[i] != NULL) 
++      XFreePixmap(bx_x_display,vgafont[i]);
++  }
++
+   if (bx_x_display)
+     XCloseDisplay (bx_x_display);
+   BX_INFO(("Exit."));
