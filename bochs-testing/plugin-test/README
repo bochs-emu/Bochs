@@ -12,3 +12,54 @@ test2-dynamic: with same code, build a shared library and link against it
 test3-twomodules: build 2 shared libs and link against them
 test4-interdep: build 2 shared libs, one depends on the other, and link
 test5-execsymbols: can a shared lib can access a symbol from the executable?
+
+
+
+
+
+
+
+
+
+Notes for win32 DLLs:
+
+*.dll.a is an import library
+
+Win32 DLL Topics
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vccore98/html/_core_dll_topics.asp
+
+------
+Mutual DLL imports
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vccore98/html/_core_mutual_imports.asp
+
+Exporting or importing to another executable file presents complications when
+the imports are mutual (or "circular"). For example, two DLLs import symbols
+from each other, similar to mutually-recursive functions.
+
+The problem with mutually-importing executable files (usually DLLs) is that
+neither can be built without building the other first. Each build process
+requires, as input, an import library produced by the other build process.
+
+The solution is to use the LIB utility with the /DEF option, which produces an
+import library without building the executable file. Using this utility, you
+can build all the import libraries you need, no matter how many DLLs are
+involved or how complicated the dependencies are.
+
+The general solution for handling mutual imports is: 
+
+1.Take each DLL in turn. (Any order is feasible, although some orders are more
+optimal.) If all the needed import libraries exist and are current, run LINK to
+build the executable file (DLL). This produces an import library. Otherwise,
+run LIB to produce an import library.
+
+Running LIB with the /DEF option produces an additional file with an .EXP
+extension. The .EXP file must be used later to build the executable file.
+
+2.After using either LINK or LIB to build all the import libraries, go back and
+run LINK to build any executable files that were not built in the previous
+step. Note that the corresponding .EXP file must be specified on the LINK line.
+
+If you had run the LIB utility earlier to produce an import library for DLL1,
+LIB would have produced the file DLL1.EXP as well. You must use DLL1.EXP as
+input to LINK when building DLL1.DLL.
+-----------
