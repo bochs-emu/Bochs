@@ -263,16 +263,6 @@ void CreateMenus(void)
             BX_PANIC(("can't create menu"));
 }
 
-/* Please forgive my cluelessness regarding pascal strings.  The MacOS X
-   compile does not understand the "\pstring" syntax, so I made this
-   utility function instead. -bbd */
-unsigned char *makePascalString (char *in)
-{
-  unsigned char *pstring;
-  CopyCStringToPascal (in, pstring);
-  return pstring;
-}
-
 void CreateWindows(void)
 {
 	int l, t, r, b;
@@ -281,7 +271,7 @@ void CreateWindows(void)
         
         GetRegionBounds(GetGrayRgn(), &screenBitsBounds);
 	SetRect(&winRect, 0, 0, screenBitsBounds.right, screenBitsBounds.bottom + GetMBarHeight());
-        backdrop = NewWindow(NULL, &winRect, makePascalString(""), false, plainDBox, (WindowPtr)-1, false, 0);
+        backdrop = NewWindow(NULL, &winRect, "\p", false, plainDBox, (WindowPtr)-1, false, 0);
 	
 	width = 640;
 	height = 480;
@@ -295,17 +285,17 @@ void CreateWindows(void)
 	b = t + height;
 	
 	SetRect(&winRect, 0, 20, screenBitsBounds.right , 22+gheaderbar_y); //qd.screenBits.bounds.right, 22+gheaderbar_y);
-	toolwin = NewCWindow(NULL, &winRect, makePascalString("MacBochs 586"), true, floatProc,
+	toolwin = NewCWindow(NULL, &winRect, "\pMacBochs 586", true, floatProc,
 		(WindowPtr)-1, false, 0);
 	if (toolwin == NULL)
 		{BX_PANIC(("mac: can't create tool window"));}
 	// Create a moveable tool window for the "headerbar"
 	
 	SetRect(&winRect, l, t, r, b);
-	fullwin = NewCWindow(NULL, &winRect, makePascalString(""), false, plainDBox, (WindowPtr)-1, false, 1);
+	fullwin = NewCWindow(NULL, &winRect, "\p", false, plainDBox, (WindowPtr)-1, false, 1);
 	
 	SetRect(&winRect, gLeft, gMaxTop, gLeft+width, gMaxTop+height);
-	win = NewCWindow(NULL, &winRect, makePascalString("MacBochs 586"), true, documentProc,
+	win = NewCWindow(NULL, &winRect, "\pMacBochs 586", true, documentProc,
 		(WindowPtr)-1, true, 1);
 	if (win == NULL)
 		BX_PANIC(("mac: can't create emulator window"));
