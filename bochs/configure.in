@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.177 2002-11-22 06:44:43 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.178 2002-11-23 00:29:43 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -172,6 +172,47 @@ if test "x$wx_largefile" = "xyes"; then
     CXXFLAGS="$CXXFLAGS $BX_LARGEFILE_FLAGS"
 fi
 dnl ---end of largefile tests
+
+dnl Add the -lm library if math functions cannot be used without it.
+dnl This check is important on cygwin because of the bizarre way that they
+dnl have organized functions into libraries.  On cygwin, both libc.a and
+dnl libm.a are symbolic links to a single lib libcygwin.a.  This means that
+dnl   1) linking with -lm is not necessary, and
+dnl   2) linking with -lm is dangerous if the order of libraries is wrong
+dnl In particular, if you compile any program with -mno-cygwin and link with
+dnl -lm, it will crash instantly when it is run.  This happens because the
+dnl linker incorrectly links the Cygwin libm.a (==libcygwin.a), which replaces
+dnl the ___main function instead of allowing it to be defined by
+dnl /usr/lib/mingw/libmingw32.a as it should be.
+dnl
+dnl On MacOS X, this test will find that -lm is unnecessary and leave it out.
+dnl
+dnl Just check a few math functions. If they are all found without
+dnl -lm, then we must not need -lm.
+have_cos=0
+have_floor=0
+AC_CHECK_FUNCS(cos, have_cos=1)
+AC_CHECK_FUNCS(floor, have_floor=1)
+AC_MSG_CHECKING(if math functions link without -lm)
+if test "$have_cos" = 1 -a "$have_floor" = 1; then
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+    LIBS="$LIBS -lm"
+    # use different functions to bypass configure caching
+    have_sin=0
+    have_ceil=0
+    AC_CHECK_FUNCS(sin, have_sin=1)
+    AC_CHECK_FUNCS(ceil, have_ceil=1)
+    AC_MSG_CHECKING(if math functions link with -lm)
+    if test "$have_sin" = 1 -a "$have_ceil" = 1; then
+        AC_MSG_RESULT(yes)
+    else
+        AC_MSG_RESULT(no)
+        # not sure we should warn the user, crash, etc.
+	# expect link failure
+    fi
+fi
 
 AC_MSG_CHECKING(for struct timeval)
 AC_TRY_COMPILE([#include <sys/time.h>],
