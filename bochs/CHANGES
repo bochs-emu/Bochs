@@ -2,7 +2,7 @@ Changes to next release:
 
 - CPU
   - fixes for booting OS/2 by Dmitri Froloff
-    - fuxed v8086 priveleged instruction processing bug (was also reported
+    - fixed v8086 priveleged instruction processing bug (was also reported
       by LightCone Aug 7 2003)
     - exception process bug (was reported by Diego Henriquez Sat Nov 15
       01:16:51 CET 2003)
