@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.11 2002-09-12 18:10:41 bdenney Exp $
+// $Id: io.cc,v 1.12 2002-09-15 02:55:34 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,6 +35,12 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
+#if BX_SUPPORT_X86_64==0
+// Make life easier for merging cpu64 and cpu32 code.
+#define RDI EDI
+#define RSI ESI
+#define RAX EAX
+#endif
 
 
 
@@ -49,7 +55,24 @@ BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
       }
     }
 
-  if (i->as_32) {
+  if (i->as_64) {
+    // Write a zero to memory, to trigger any segment or page
+    // faults before reading from IO port.
+    write_virtual_byte(BX_SEG_REG_ES, RDI, &value8);
+
+    value8 = BX_INP(DX, 1);
+
+    /* no seg override possible */
+    write_virtual_byte(BX_SEG_REG_ES, RDI, &value8);
+
+    if (BX_CPU_THIS_PTR get_DF ()) {
+      RDI = RDI - 1;
+      }
+    else {
+      RDI = RDI + 1;
+      }
+    }
+  else if (i->as_32) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
     write_virtual_byte(BX_SEG_REG_ES, EDI, &value8);
@@ -60,10 +83,10 @@ BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
     write_virtual_byte(BX_SEG_REG_ES, EDI, &value8);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      EDI = EDI - 1;
+      RDI = EDI - 1;
       }
     else {
-      EDI = EDI + 1;
+      RDI = EDI + 1;
       }
     }
   else {
@@ -89,10 +112,15 @@ BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
 BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
   // input word/doubleword from port to string
 {
-  Bit32u edi;
+  bx_address edi;
   unsigned int incr;
 
-  if (i->as_32)
+#if BX_SUPPORT_X86_64
+#warning "KPL: Changed  if (i->as_32)  to  if (i->as_64) below.  Typo?"
+#endif
+  if (i->as_64)  // This was coded as   if (i->as_64) ???
+    edi = RDI;
+  else if (i->as_32)
     edi = EDI;
   else
     edi = DI;
@@ -289,11 +317,18 @@ doIncr:
 #endif
 #endif
 
+  if (i->as_64) {
+    if (BX_CPU_THIS_PTR get_DF ())
+      RDI = RDI - incr;
+    else
+      RDI = RDI + incr;
+    }
+  else
   if (i->as_32) {
     if (BX_CPU_THIS_PTR get_DF ())
-      EDI = EDI - incr;
+      RDI = EDI - incr;
     else
-      EDI = EDI + incr;
+      RDI = EDI + incr;
     }
   else {
     if (BX_CPU_THIS_PTR get_DF ())
@@ -308,7 +343,7 @@ BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
 {
   unsigned seg;
   Bit8u value8;
-  Bit32u esi;
+  bx_address esi;
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
     if ( !BX_CPU_THIS_PTR allow_io(DX, 1) ) {
@@ -323,7 +358,9 @@ BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
     seg = BX_SEG_REG_DS;
     }
 
-  if (i->as_32)
+  if (i->as_64)
+    esi = RSI;
+  else if (i->as_32)
     esi = ESI;
   else
     esi = SI;
@@ -334,9 +371,9 @@ BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
 
   if (i->as_32) {
     if (BX_CPU_THIS_PTR get_DF ())
-      ESI -= 1;
+      RSI -= 1;
     else
-      ESI += 1;
+      RSI += 1;
     }
   else {
     if (BX_CPU_THIS_PTR get_DF ())
@@ -361,7 +398,9 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
     seg = BX_SEG_REG_DS;
     }
 
-  if (i->as_32)
+  if (i->as_64)
+    esi = RSI;
+  else if (i->as_32)
     esi = ESI;
   else
     esi = SI;
@@ -548,11 +587,20 @@ doIncr:
 #endif
 #endif
 
-  if (i->as_32) {
+#if BX_SUPPORT_X86_64
+#warning "KPL: Changed  if (i->as_32)  to  if (i->as_64) below.  Typo?"
+#endif
+  if (i->as_64) { // Was coded as  if (i->as_32)
     if (BX_CPU_THIS_PTR get_DF ())
-      ESI = ESI - incr;
+      RSI = RSI - incr;
     else
-      ESI = ESI + incr;
+      RSI = RSI + incr;
+    }
+  else if (i->as_32) {
+    if (BX_CPU_THIS_PTR get_DF ())
+      RSI = ESI - incr;
+    else
+      RSI = ESI + incr;
     }
   else {
     if (BX_CPU_THIS_PTR get_DF ())
@@ -588,7 +636,7 @@ BX_CPU_C::IN_eAXIb(BxInstruction_t *i)
     Bit32u eax;
 
     eax = BX_CPU_THIS_PTR inp32(imm8);
-    EAX = eax;
+    RAX = eax;
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */
@@ -648,7 +696,7 @@ BX_CPU_C::IN_eAXDX(BxInstruction_t *i)
     Bit32u eax;
 
     eax = BX_CPU_THIS_PTR inp32(DX);
-    EAX = eax;
+    RAX = eax;
     }
   else
 #endif /* BX_CPU_LEVEL > 2 */

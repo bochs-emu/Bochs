@@ -52,7 +52,6 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 OBJS32 = \
 	paging.o \
 	bit.o \
-	io.o \
 	string.o \
 	$(EXT_DEBUG_OBJS) \
 
@@ -104,6 +103,7 @@ OBJSXX = \
 	arith32.o \
 	ctrl_xfer_pro.o \
 	segment_ctrl_pro.o \
+	io.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
