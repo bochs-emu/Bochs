@@ -31,12 +31,13 @@ Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
+Index: Makefile.in
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/Makefile.in,v
 retrieving revision 1.62
 diff -u -r1.62 Makefile.in
 --- Makefile.in	2001/12/10 21:31:20	1.62
-+++ Makefile.in	2001/12/13 02:31:09
++++ Makefile.in	2001/12/13 03:03:42
 @@ -78,7 +78,7 @@
  CXXFLAGS = @CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
  
@@ -84,7 +85,7 @@ diff -u -r1.62 Makefile.in
  	echo "#define REL_STRING \"$(REL_STRING)\"" >> bxversion.h
 +
 +iodev/libplex-keyboard.la::
-+	make -C iodev libplex-keyboard.la
++	(cd iodev; make libplex-keyboard.la)
  
  iodev/libiodev.a::
  	cd iodev @COMMAND_SEPARATOR@
@@ -94,7 +95,7 @@ RCS file: /cvsroot/bochs/bochs/bochs.h,v
 retrieving revision 1.56
 diff -u -r1.56 bochs.h
 --- bochs.h	2001/12/12 10:43:36	1.56
-+++ bochs.h	2001/12/13 02:31:10
++++ bochs.h	2001/12/13 03:03:42
 @@ -73,6 +73,7 @@
  #include "osdep.h"       /* platform dependent includes and defines */ 
  #include "debug/debug.h"
@@ -109,7 +110,7 @@ RCS file: /cvsroot/bochs/bochs/main.cc,v
 retrieving revision 1.80
 diff -u -r1.80 main.cc
 --- main.cc	2001/12/12 10:43:36	1.80
-+++ main.cc	2001/12/13 02:31:13
++++ main.cc	2001/12/13 03:03:45
 @@ -118,7 +118,9 @@
        // if after init, notify the GUI
        if (set && SIM->get_init_done ()) {
@@ -137,7 +138,7 @@ Index: plugin.cc
 RCS file: plugin.cc
 diff -N plugin.cc
 --- /dev/null	Thu May 24 22:33:05 2001
-+++ plugin.cc	Wed Dec 12 18:31:15 2001
++++ plugin.cc	Wed Dec 12 19:03:47 2001
 @@ -0,0 +1,841 @@
 +/*
 + *  plex86: run multiple x86 operating systems concurrently
@@ -985,7 +986,7 @@ Index: plugin.h
 RCS file: plugin.h
 diff -N plugin.h
 --- /dev/null	Thu May 24 22:33:05 2001
-+++ plugin.h	Wed Dec 12 18:31:15 2001
++++ plugin.h	Wed Dec 12 19:03:47 2001
 @@ -0,0 +1,338 @@
 +/*
 + *  plex86: run multiple x86 operating systems concurrently
@@ -1331,7 +1332,7 @@ RCS file: /cvsroot/bochs/bochs/gui/x.cc,v
 retrieving revision 1.24
 diff -u -r1.24 x.cc
 --- gui/x.cc	2001/12/08 13:42:55	1.24
-+++ gui/x.cc	2001/12/13 02:31:17
++++ gui/x.cc	2001/12/13 03:03:47
 @@ -24,7 +24,6 @@
  //  License along with this library; if not, write to the Free Software
  //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
@@ -1364,7 +1365,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
 retrieving revision 1.12
 diff -u -r1.12 Makefile.in
 --- iodev/Makefile.in	2001/12/07 21:56:15	1.12
-+++ iodev/Makefile.in	2001/12/13 02:31:18
++++ iodev/Makefile.in	2001/12/13 03:03:49
 @@ -63,7 +63,7 @@
    floppy.o \
    harddrv.o \
@@ -1394,7 +1395,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/devices.cc,v
 retrieving revision 1.18
 diff -u -r1.18 devices.cc
 --- iodev/devices.cc	2001/10/03 13:10:38	1.18
-+++ iodev/devices.cc	2001/12/13 02:31:18
++++ iodev/devices.cc	2001/12/13 03:03:49
 @@ -56,7 +56,8 @@
    pci = NULL;
  #endif
@@ -1455,7 +1456,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
 retrieving revision 1.10
 diff -u -r1.10 iodev.h
 --- iodev/iodev.h	2001/10/03 13:10:38	1.10
-+++ iodev/iodev.h	2001/12/13 02:31:20
++++ iodev/iodev.h	2001/12/13 03:03:50
 @@ -39,7 +39,7 @@
  
  
@@ -1487,9 +1488,9 @@ diff -u -r1.10 iodev.h
 Index: iodev/plex-keyboard.cc
 ===================================================================
 RCS file: iodev/plex-keyboard.cc
-diff -N iodev/plex-keyboard.cc
+diff -N plex-keyboard.cc
 --- /dev/null	Thu May 24 22:33:05 2001
-+++ iodev/plex-keyboard.cc	Wed Dec 12 18:31:21 2001
++++ iodev/plex-keyboard.cc	Wed Dec 12 19:03:51 2001
 @@ -0,0 +1,1360 @@
 +//  Copyright (C) 2000  MandrakeSoft S.A.
 +//
@@ -2856,7 +2857,7 @@ Index: iodev/plex-keyboard.h
 RCS file: plex-keyboard.h
 diff -N iodev/plex-keyboard.h
 --- /dev/null	Thu May 24 22:33:05 2001
-+++ iodev/plex-keyboard.h	Wed Dec 12 18:31:21 2001
++++ iodev/plex-keyboard.h	Wed Dec 12 19:03:51 2001
 @@ -0,0 +1,183 @@
 +//  Copyright (C) 2000  MandrakeSoft S.A.
 +//
