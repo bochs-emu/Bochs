@@ -1327,7 +1327,7 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
 
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
-  if (bx_options.mouse_enabled==0)
+  if (bx_options.mouse_enabled->get () == 0)
     return;
 
 
