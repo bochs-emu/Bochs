@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.52 2003-05-04 16:03:23 vruppert Exp $
+// $Id: win32.cc,v 1.53 2003-05-07 19:15:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -944,7 +944,7 @@ void bx_win32_gui_c::clear_screen(void) {
 
 void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			   unsigned long cursor_x, unsigned long cursor_y,
-                           Bit16u cursor_state, unsigned nrows) {
+                           bx_vga_tminfo_t tm_info, unsigned nrows) {
   HDC hdc;
   unsigned char cChar;
   unsigned i, x, y;
@@ -967,8 +967,8 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
 
-  cs_start = (cursor_state >> 8) & 0x3f;
-  cs_end = cursor_state & 0x1f;
+  cs_start = tm_info.cs_start;
+  cs_end = tm_info.cs_end;
 
   if (!stInfo.UIinited) return;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.18 2002-12-12 15:29:01 cbothamy Exp $
+// $Id: macintosh.cc,v 1.19 2003-05-07 19:15:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -811,7 +811,7 @@ void bx_macintosh_gui_c::clear_screen(void)
 
 void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 											unsigned long cursor_x, unsigned long cursor_y,
-         Bit16u cursor_state, unsigned nrows)
+         bx_vga_tminfo_t tm_info, unsigned nrows)
 {
 	int				i;
 	unsigned char		achar;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.36 2002-12-12 06:21:43 yakovlev Exp $
+// $Id: gui.h,v 1.37 2003-05-07 19:15:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,6 +24,16 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+typedef struct bx_vga_tminfo_t {
+  Bit8u cs_start;
+  Bit8u cs_end;
+  Bit16u line_offset;
+  Bit16u line_compare;
+  Bit8u h_panning;
+  Bit8u v_panning;
+};
+
+
 BOCHSAPI extern class bx_gui_c *bx_gui;
 
 
@@ -39,7 +49,7 @@ public:
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
-                          Bit16u cursor_state, unsigned rows) = 0;
+                          bx_vga_tminfo_t tm_info, unsigned rows) = 0;
   virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
   virtual void handle_events(void) = 0;
   virtual void flush(void) = 0;
@@ -139,7 +149,7 @@ protected:
 		 unsigned header_bar_y);                                      \
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
                           unsigned long cursor_x, unsigned long cursor_y,     \
-                          Bit16u cursor_state, unsigned rows);                \
+                          bx_vga_tminfo_t tm_info, unsigned rows);            \
   virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
   virtual void handle_events(void);                                           \
   virtual void flush(void);                                                   \

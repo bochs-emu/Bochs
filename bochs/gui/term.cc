@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.25 2002-11-20 12:23:40 bdenney Exp $
+// $Id: term.cc,v 1.26 2003-05-07 19:15:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -518,9 +518,9 @@ get_term_char(Bit8u vga_char[])
 	void
 bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned long cursor_x, unsigned long cursor_y,
-	Bit16u cursor_state, unsigned nrows)
+	bx_vga_tminfo_t tm_info, unsigned nrows)
 {
-	UNUSED(cursor_state);
+	UNUSED(tm_info);
 	chtype ch;
 
 	unsigned ncols = 4000/nrows/2;

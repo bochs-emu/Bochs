@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.32 2002-12-28 11:49:16 vruppert Exp $
+// $Id: sdl.cc,v 1.33 2003-05-07 19:15:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -269,7 +269,7 @@ void bx_sdl_gui_c::text_update(
     Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
-    Bit16u cursor_state,
+    bx_vga_tminfo_t tm_info,
     unsigned rows)
 {
   unsigned char font_row, *pfont_row;
@@ -284,8 +284,8 @@ void bx_sdl_gui_c::text_update(
   Bit8u cs_start, cs_end, cs_line, mask;
   bx_bool invert, forceUpdate;
 
-  cs_start = (cursor_state >> 8) & 0x3f;
-  cs_end = cursor_state & 0x1f;
+  cs_start = tm_info.cs_start;
+  cs_end = tm_info.cs_end;
 
   forceUpdate = 0;
   if(charmap_updated)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.16 2003-04-08 17:56:45 nicholai Exp $
+// $Id: amigaos.cc,v 1.17 2003-05-07 19:15:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -443,7 +443,7 @@ bx_amigaos_gui_c::clear_screen(void)
   void
 bx_amigaos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 					  unsigned long cursor_x, unsigned long cursor_y,
-					  Bit16u cursor_state, unsigned nrows)
+					  bx_vga_tminfo_t tm_info, unsigned nrows)
 {
 int i;
 int	cursori;

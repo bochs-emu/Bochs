@@ -129,7 +129,7 @@ void bx_svga_gui_c::text_update(
     Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
-    Bit16u cursor_state,
+    bx_vga_tminfo_t tm_info,
     unsigned rows)
 {
    unsigned x, y, i;

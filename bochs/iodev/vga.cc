@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.72 2003-05-06 17:10:13 vruppert Exp $
+// $Id: vga.cc,v 1.73 2003-05-07 19:15:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1629,8 +1629,15 @@ bx_vga_c::update(void)
   else { // text mode
     unsigned long start_address;
     unsigned long cursor_address, cursor_x, cursor_y;
-    Bit16u cursor_state;
+    bx_vga_tminfo_t tm_info;
 
+
+    tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
+    tm_info.cs_end = BX_VGA_THIS s.CRTC.reg[0x0b] & 0x1f;
+    tm_info.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 2;
+    tm_info.line_compare = BX_VGA_THIS s.line_compare;
+    tm_info.h_panning = BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning & 0x0f;
+    tm_info.v_panning = BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f;
 
     switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
       case 0: // 128K @ A0000
@@ -1656,10 +1663,9 @@ bx_vga_c::update(void)
           cursor_x = ((cursor_address - start_address)/2) % 80;
           cursor_y = ((cursor_address - start_address)/2) / 80;
           }
-        cursor_state = (BX_VGA_THIS s.CRTC.reg[0x0a] << 8) | BX_VGA_THIS s.CRTC.reg[0x0b];
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
-                           cursor_x, cursor_y, cursor_state, 25);
+                           cursor_x, cursor_y, tm_info, 25);
         // screen updated, copy new VGA memory contents into text snapshot
         memcpy(BX_VGA_THIS s.text_snapshot,
               &BX_VGA_THIS s.vga_memory[start_address],
@@ -1689,10 +1695,9 @@ bx_vga_c::update(void)
           cursor_x = ((cursor_address - start_address)/2) % 80;
           cursor_y = ((cursor_address - start_address)/2) / 80;
           }
-        cursor_state = (BX_VGA_THIS s.CRTC.reg[0x0a] << 8) | BX_VGA_THIS s.CRTC.reg[0x0b];
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
-                           cursor_x, cursor_y, cursor_state, 25);
+                           cursor_x, cursor_y, tm_info, 25);
         // screen updated, copy new VGA memory contents into text snapshot
         memcpy(BX_VGA_THIS s.text_snapshot,
               &BX_VGA_THIS s.vga_memory[start_address],
@@ -1743,10 +1748,9 @@ bx_vga_c::update(void)
           cursor_x = ((cursor_address - start_address)/2) % (iWidth/8);
           cursor_y = ((cursor_address - start_address)/2) / (iWidth/8);
           }
-        cursor_state = (BX_VGA_THIS s.CRTC.reg[0x0a] << 8) | BX_VGA_THIS s.CRTC.reg[0x0b];
         bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                           &BX_VGA_THIS s.vga_memory[start_address],
-                           cursor_x, cursor_y, cursor_state, rows);
+                           cursor_x, cursor_y, tm_info, rows);
         // screen updated, copy new VGA memory contents into text snapshot
         memcpy(BX_VGA_THIS s.text_snapshot,
               &BX_VGA_THIS s.vga_memory[start_address],
