@@ -1,0 +1,16 @@
+Index: cpu/apic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/apic.cc,v
+retrieving revision 1.9
+diff -u -r1.9 apic.cc
+--- cpu/apic.cc	20 Mar 2002 02:51:47 -0000	1.9
++++ cpu/apic.cc	20 Mar 2002 04:21:41 -0000
+@@ -250,7 +250,7 @@
+   base_addr = 0xfee00000;
+   err_status = 0;
+   log_dest = 0;
+-  dest_format = 0xff;
++  dest_format = 0xf;
+   for (int bit=0; bit<BX_LOCAL_APIC_MAX_INTS; bit++) {
+     irr[bit] = isr[bit] = tmr[bit] = 0;
+   }
