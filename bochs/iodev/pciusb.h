@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.5 2004-12-16 19:03:31 vruppert Exp $
+// $Id: pciusb.h,v 1.6 2004-12-19 09:59:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
 #define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
 #define USB_NUM_PORTS   2 /* UHCI supports 2 ports per root hub */
-#define USB_CUR_DEVS    1
+#define USB_CUR_DEVS    2 // 2 devices.  1 on each port
 
 #define TOKEN_IN    0x69
 #define TOKEN_OUT   0xE1
@@ -93,22 +93,34 @@ struct REQUEST_PACKET {
   Bit16u length;
 };
 
+#define KEYPAD_LEN   128
+struct KEYPAD {
+  Bit32u key;
+  Bit8u  keypad;
+};
+
+#define USB_DEV_TYPE_NONE    0
+#define USB_DEV_TYPE_MOUSE   1
+#define USB_DEV_TYPE_KEYPAD  2
+
 // set it to 1 (align on byte) and save so we can pop it
 #pragma pack(push, 1)
 struct USB_DEVICE {
-  Bit8u   address;       // 7 bit address
-  Bit8u   config;        // which configuration to use
-  Bit8u   Interface;     // which interface to use
-  Bit8u   alt_interface; // which alt interface to use
-  Bit8u   endpt;         // which endpt to use
-  unsigned state;        // the state the device is in.  DEFUALT, ADDRESS, or CONFIGURED
+  int     dev_type;       // our device type
+  bx_bool connect_status; // is device connected
+  Bit8u   address;        // 7 bit address
+  Bit8u   config;         // which configuration to use
+  Bit8u   Interface;      // which interface to use
+  Bit8u   alt_interface;  // which alt interface to use
+  Bit8u   endpt;          // which endpt to use
+  unsigned state;         // the state the device is in.  DEFAULT, ADDRESS, or CONFIGURED
   struct {
     Bit8u   direction;
     Bit8u   *in;
     Bit8u   *out;
     Bit16u  in_cnt;
     Bit16u  out_cnt;
-    unsigned configs;
+    unsigned configs; ///// this is the same as configs below??????
     struct {
       Bit8u  len;
       Bit8u  type;
@@ -134,7 +146,6 @@ struct USB_DEVICE {
       Bit8u  config_indx;
       Bit8u  attrbs;
       Bit8u  max_power;
-      unsigned interface_cnt;
       struct {
         Bit8u  size;
         Bit8u  type;
@@ -165,6 +176,8 @@ struct USB_DEVICE {
             Bit8u  dev_hid_descript_report[128];
           } descriptor[16];
         } dev_hid_descript;
+        int lookup_cnt;
+        struct KEYPAD lookup[KEYPAD_LEN];
       } Interface[4];
     } device_config[4];
     struct {
@@ -289,6 +302,10 @@ typedef struct {
   //  Bit      0  current connect status (read-only)
   //  Can only write in WORD sizes (Read in byte sizes???)
   struct {
+    // our data
+    int     device_num;     // device number on this hub
+
+    // bit reps of actual port
     bx_bool suspend;
     bx_bool reset;
     bx_bool low_speed;
@@ -338,12 +355,13 @@ public:
   virtual void  reset(unsigned);
   virtual void  usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
   virtual void  usb_mouse_enable(bx_bool enable);
+  virtual bx_bool usb_key_enq(Bit32u key);
 
 private:
 
   bx_bool  busy;
 
-  bx_usb_t hub[BX_USB_MAXDEV];
+  bx_usb_t hub[BX_USB_CONFDEV];
   Bit8u    global_reset;
 
   int      mouse_delayed_dx;
@@ -355,12 +373,17 @@ private:
   Bit8s    mouse_z;
   Bit8u    b_state;
 
-  static void set_irq_level(bx_bool level);
-  Bit8u    set_address;
-  Bit8u   *device_buffer;
+  Bit32u   saved_key;
+  Bit8u    packet_key;
 
-  bx_bool usb_connect_status;
-  static void  usb_mouse_connect(bx_bool connected);
+  static void set_irq_level(bx_bool level);
+  Bit8u  *device_buffer;
+
+  unsigned set_address_stk;
+  Bit8u    set_address[128];
+
+  bx_bool  last_connect;
+  static void  usb_set_connect_status(int type, bx_bool connected);
 
   static void usb_timer_handler(void *);
   void usb_timer(void);
