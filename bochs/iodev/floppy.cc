@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.67 2003-12-07 15:59:32 vruppert Exp $
+// $Id: floppy.cc,v 1.68 2003-12-10 22:14:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.67 2003-12-07 15:59:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.68 2003-12-10 22:14:01 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1447,6 +1447,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     ret = fstat(media->fd, &stat_buf);
 #elif defined(WIN32)
   if (raw_floppy) {
+    memset (&stat_buf, 0, sizeof(stat_buf));
     stat_buf.st_mode = S_IFCHR;
     ret = 0;
   } else {
