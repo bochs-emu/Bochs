@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.31 2002-10-25 11:44:33 bdenney Exp $
+// $Id: pc_system.cc,v 1.32 2003-02-14 04:22:16 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,6 +78,8 @@ bx_pc_system_c::bx_pc_system_c(void)
   currCountdown       = NullTimerInterval;
   currCountdownPeriod = NullTimerInterval;
   numTimers = 1; // So far, only the nullTimer.
+  lastTimeUsec = 0;
+  usecSinceLast = 0;
 }
 
   void
@@ -419,6 +421,21 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
 }
 #endif // BX_DEBUGGER
 
+  Bit64u
+bx_pc_system_c::time_usec_sequential() {
+    Bit64u this_time_usec = time_usec();
+    if(this_time_usec != lastTimeUsec) {
+      Bit64u diff_usec = this_time_usec-lastTimeUsec;
+      lastTimeUsec = this_time_usec;
+      if(diff_usec >= usecSinceLast) {
+	usecSinceLast = 0;
+      } else {
+	usecSinceLast -= diff_usec;
+      }
+    }
+    usecSinceLast++;
+    return (this_time_usec+usecSinceLast);
+}
   Bit64u
 bx_pc_system_c::time_usec() {
   return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips );
