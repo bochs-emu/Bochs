@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "main.h"
+#define _buildsym(sym) libmodule1_LTX_##sym
+#include "modules.h"
 
 void module_init ()
 {
