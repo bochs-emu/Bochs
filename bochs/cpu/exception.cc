@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.22 2002-09-28 00:54:04 kevinlawton Exp $
+// $Id: exception.cc,v 1.23 2002-10-01 04:13:12 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,10 +29,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_EXTERNAL_DEBUGGER
-#include "cpu/extdb.h"
-#endif
 
 
 /* Exception classes.  These are used as indexes into the 'is_exception_OK'

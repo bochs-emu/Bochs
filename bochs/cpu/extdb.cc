@@ -1,5 +1,4 @@
 #include "bochs.h"
-#include "cpu/extdb.h"
 #ifdef WIN32
 #  include <windows.h>
 #else
@@ -67,6 +66,8 @@ void bx_external_debugger(BX_CPU_C *cpu)
      //regs.cr5 = cpu->cr5;
      //regs.cr6 = cpu->cr6;
      //regs.cr7 = cpu->cr7;
+     regs.fsbase = cpu->sregs[BX_SEG_REG_FS].cache.u.segment.base;
+     regs.gsbase = cpu->sregs[BX_SEG_REG_GS].cache.u.segment.base;
      regs.efer = (BX_CPU_THIS_PTR msr.sce << 0)
                | (BX_CPU_THIS_PTR msr.lme << 8)
                | (BX_CPU_THIS_PTR msr.lma << 10);

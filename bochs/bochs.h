@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.96 2002-09-22 20:56:11 cbothamy Exp $
+// $Id: bochs.h,v 1.97 2002-10-01 04:13:12 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -435,6 +435,10 @@ extern logfunc_t *genlog;
 #  include "cpu/cpu.h"
 #endif
 
+#if BX_EXTERNAL_DEBUGGER
+#  include "cpu/extdb.h"
+#endif
+
 #if BX_DISASM
 #  include "disasm/disasm.h"
 #endif
@@ -442,6 +446,7 @@ extern logfunc_t *genlog;
 #if BX_DYNAMIC_TRANSLATION
 #  include "dynamic/dynamic.h"
 #endif
+
 
 
 typedef struct {

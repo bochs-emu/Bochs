@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.57 2002-09-29 22:38:15 kevinlawton Exp $
+// $Id: cpu.cc,v 1.58 2002-10-01 04:13:12 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,11 +33,6 @@
 #if BX_USE_CPU_SMF
 #define this (BX_CPU(0))
 #endif
-
-#if BX_EXTERNAL_DEBUGGER
-#include "cpu/extdb.h"
-#endif
-
 
 
 #if BX_SIM_ID == 0   // only need to define once
