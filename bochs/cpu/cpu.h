@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.130 2003-02-26 02:41:30 ptrumpet Exp $
+// $Id: cpu.h,v 1.131 2003-02-28 02:37:18 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1052,11 +1052,13 @@ typedef struct {
 
 
 #if BX_USE_TLB
+typedef bx_ptr_equiv_t bx_hostpageaddr_t;
+
   typedef struct {
     bx_address lpf; // linear page frame
     Bit32u ppf; // physical page frame
     Bit32u accessBits; // Page Table Address for updating A & D bits
-    Bit32u hostPageAddr;
+    bx_hostpageaddr_t hostPageAddr;
     } bx_TLB_entry;
 #endif  // #if BX_USE_TLB
 
@@ -1543,7 +1545,7 @@ union {
     Bit32u  paddress2;  // physical address after translation of 2nd len2 bytes of data
     Bit32u  len1;       // Number of bytes in page 1
     Bit32u  len2;       // Number of bytes in page 2
-    Bit32u  pages;      // Number of pages access spans (1 or 2).  Also used
+    bx_ptr_equiv_t pages;      // Number of pages access spans (1 or 2).  Also used
                         //   for the case when a native host pointer is
                         //   available for the R-M-W instructions.  The host
                         //   pointer is stuffed here.  Since this field has

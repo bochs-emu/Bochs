@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.36 2003-02-13 15:03:56 sshwarts Exp $
+// $Id: access.cc,v 1.37 2003-02-28 02:37:17 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -303,7 +303,7 @@ accessOK:
       if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)))
         {
         Bit32u accessBits;
-        Bit32u hostPageAddr;
+        bx_hostpageaddr_t hostPageAddr;
         Bit8u *hostAddr;
 
         // See if the TLB entry privilege level allows us write access
@@ -369,7 +369,7 @@ accessOK:
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
-          Bit32u  hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit16u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
@@ -436,7 +436,7 @@ accessOK:
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
-          Bit32u  hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit32u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
@@ -504,7 +504,7 @@ accessOK:
         // See if the TLB entry privilege level allows us read access
         // from this CPL.
         Bit32u accessBits;
-        Bit32u hostPageAddr;
+        bx_hostpageaddr_t hostPageAddr;
         Bit8u *hostAddr;
 
         hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
@@ -557,7 +557,7 @@ accessOK:
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
-          Bit32u hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit16u *hostAddr;
 
           hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
@@ -611,7 +611,7 @@ accessOK:
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
-          Bit32u hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit32u *hostAddr;
 
           hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
@@ -668,7 +668,7 @@ accessOK:
       if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
            ) {
         Bit32u accessBits;
-        Bit32u hostPageAddr;
+        bx_hostpageaddr_t hostPageAddr;
         Bit8u *hostAddr;
 
         // See if the TLB entry privilege level allows us write access
@@ -689,7 +689,7 @@ accessOK:
 #endif
               ) {
             *data = *hostAddr;
-            BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
+            BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SupportICache
             (*pageStamp)--;
 #endif
@@ -738,7 +738,7 @@ accessOK:
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
-          Bit32u  hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit16u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
@@ -759,7 +759,7 @@ accessOK:
 #endif
                 ) {
               ReadHostWordFromLittleEndian(hostAddr, *data);
-              BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
+              BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SupportICache
               (*pageStamp)--;
 #endif
@@ -806,7 +806,7 @@ accessOK:
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
-          Bit32u  hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit32u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
@@ -827,7 +827,7 @@ accessOK:
 #endif
                 ) {
               ReadHostDWordFromLittleEndian(hostAddr, *data);
-              BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
+              BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SupportICache
               (*pageStamp)--;
 #endif
@@ -958,7 +958,7 @@ accessOK:
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
-          Bit32u  hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit64u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
@@ -1027,7 +1027,7 @@ accessOK:
           // See if the TLB entry privilege level allows us read access
           // from this CPL.
           Bit32u accessBits;
-          Bit32u hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit64u *hostAddr;
 
           hostPageAddr = BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr;
@@ -1116,7 +1116,7 @@ accessOK:
         if ( (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf))
              ) {
           Bit32u accessBits;
-          Bit32u  hostPageAddr;
+          bx_hostpageaddr_t hostPageAddr;
           Bit32u *hostAddr;
 
           // See if the TLB entry privilege level allows us write access
@@ -1137,7 +1137,7 @@ accessOK:
 #endif
                 ) {
               ReadHostQWordFromLittleEndian(hostAddr, *data);
-              BX_CPU_THIS_PTR address_xlation.pages = (Bit32u) hostAddr;
+              BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SupportICache
               (*pageStamp)--;
 #endif
