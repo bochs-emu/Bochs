@@ -1,6 +1,6 @@
 /* 
- * misc/mkimg2.c
- * $Id: mkimg2.c,v 1.2 2001-06-01 04:07:21 bdenney Exp $
+ * misc/bximage.c
+ * $Id: bximage.c,v 1.1 2001-06-01 04:20:26 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -11,11 +11,49 @@
 #include <assert.h>
 #include "config.h"
 
-static char *EOF_ERR = "ERROR: End of input";
-static char rcsid = "$Revision: 1.2 $, modified $Date: 2001-06-01 04:07:21 $";
+char *EOF_ERR = "ERROR: End of input";
+char *rcsid = "$Revision: 1.1 $, modified $Date: 2001-06-01 04:20:26 $";
+char *divider = "========================================================================";
 
-/* remove leading spaces, newline junk at end.
-   return pointer to cleaned string, which is between s0 and the null */
+/* menu data for choosing floppy/hard disk */
+char *fdhd_menu = "\nDo you want to create a floppy disk image or a hard disk image?\nPlease type hd or fd. [hd] ";
+char *fdhd_choices[] = { "fd", "hd" };
+int fdhd_n_choices = 2;
+
+/* menu data for choosing floppy size */
+char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.72, 1.2, 1.44, or 2.88. [1.44] ";
+char *fdsize_choices[] = { "0.72","1.2","1.44","2.88" };
+int fdsize_n_choices = 4;
+
+/* stolen from main.cc */
+void bx_center_print (FILE *file, char *line, int maxwidth)
+{
+  int imax;
+  int i;
+  imax = (maxwidth - strlen(line)) >> 1;
+  for (i=0; i<imax; i++) fputc (' ', file);
+  fputs (line, file);
+}
+
+void
+print_banner ()
+{
+  printf ("%s\n", divider);
+  bx_center_print (stdout, "bximage\n", 72);
+  bx_center_print (stdout, "Disk Image Creation Tool for Bochs\n", 72);
+  bx_center_print (stdout, rcsid, 72);
+  printf ("\n%s\n", divider);
+}
+
+/* this is how we crash */
+void fatal (char *c)
+{
+  printf ("%s\n", c);
+  exit (1);
+}
+
+/* remove leading spaces, newline junk at end.  returns pointer to 
+ cleaned string, which is between s0 and the null */
 char *
 clean_string (char *s0)
 {
@@ -32,8 +70,9 @@ clean_string (char *s0)
   return s;
 }
 
-/* returns 0 on success, -1 on failure */
-int ask_int (char *prompt, int min, int max, int the_default, int *out)
+/* returns 0 on success, -1 on failure.  The value goes into out. */
+int 
+ask_int (char *prompt, int min, int max, int the_default, int *out)
 {
   int n = max + 1;
   char buffer[1024];
@@ -61,7 +100,8 @@ int ask_int (char *prompt, int min, int max, int the_default, int *out)
   }
 }
 
-int ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out)
+int 
+ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
@@ -93,7 +133,8 @@ int ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int 
   }
 }
 
-int ask_yn (char *prompt, int the_default, int *out)
+int 
+ask_yn (char *prompt, int the_default, int *out)
 {
   char buffer[16];
   char *clean;
@@ -117,7 +158,8 @@ int ask_yn (char *prompt, int the_default, int *out)
   }
 }
 
-int ask_string (char *prompt, char *the_default, char *out)
+int 
+ask_string (char *prompt, char *the_default, char *out)
 {
   char buffer[1024];
   char *clean;
@@ -136,20 +178,7 @@ int ask_string (char *prompt, char *the_default, char *out)
   return 0;
 }
 
-char *fdhd_menu = "\nDo you want to create a floppy disk image or a hard disk image?\nPlease type hd or fd. [hd] ";
-char *fdhd_choices[] = { "fd", "hd" };
-int fdhd_n_choices = 2;
-
-char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.72, 1.2, 1.44, or 2.88. [1.44] ";
-char *fdsize_choices[] = { "0.72","1.2","1.44","2.88" };
-int fdsize_n_choices = 4;
-
-void fatal (char *c)
-{
-  printf ("%s\n", c);
-  exit (1);
-}
-
+/* produce the image file */
 int make_image (int sec, char *filename)
 {
   FILE *fp;
@@ -183,7 +212,7 @@ int make_image (int sec, char *filename)
   for (i=0; i<512; i++)
     buffer[i] = 0;
   // write it however many times
-  printf ("\nWriting: ");
+  printf ("\nWriting: [");
   for (i=0; i<sec; i++) {
     n = (unsigned int) fwrite (buffer, 512, 1, fp);
     if (n != 1) {
@@ -196,7 +225,7 @@ int make_image (int sec, char *filename)
       fflush (stdout);
     }
   }
-  printf ("done.\n");
+  printf ("] Done.\n");
   fclose (fp);
   return 0;
 }
@@ -207,6 +236,7 @@ int main()
   int sectors = 0;
   char filename[256];
   char bochsrc_line[256];
+  print_banner ();
   filename[0] = 0;
   if (ask_menu (fdhd_menu, fdhd_n_choices, fdhd_choices, 1, &hd) < 0)
     fatal (EOF_ERR);
