@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.55 2004-11-06 17:03:41 vruppert Exp $
+// $Id: sdl.cc,v 1.56 2004-12-10 15:57:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -886,9 +886,11 @@ void bx_sdl_gui_c::handle_events(void)
 {
   Bit32u key_event;
   Bit8u mouse_state;
+  int wheel_status;
 
   while( SDL_PollEvent(&sdl_event) )
   {
+    wheel_status = 0;
     switch( sdl_event.type )
     {
       case SDL_VIDEOEXPOSE:
@@ -916,10 +918,11 @@ void bx_sdl_gui_c::handle_events(void)
 	//fprintf (stderr, "processing relative mouse event\n");
         new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02)
                             |((sdl_event.motion.state<<1)&0x04));
-	DEV_mouse_motion(
-	    sdl_event.motion.xrel,
-	    -sdl_event.motion.yrel,
-	    new_mousebuttons );
+        DEV_mouse_motion_ext(
+            sdl_event.motion.xrel,
+            -sdl_event.motion.yrel,
+            wheel_status,
+            new_mousebuttons);
 	old_mousebuttons = new_mousebuttons;
 	old_mousex = (int)(sdl_event.motion.x);
 	old_mousey = (int)(sdl_event.motion.y);
@@ -950,6 +953,13 @@ void bx_sdl_gui_c::handle_events(void)
 	  headerbar_click(sdl_event.button.x);
 	  break;
 	}
+        // get the wheel status
+        if (sdl_event.button.button == SDL_BUTTON_WHEELUP) {
+          wheel_status = 1;
+        }
+        if (sdl_event.button.button == SDL_BUTTON_WHEELDOWN) {
+          wheel_status = -1;
+        }
       case SDL_MOUSEBUTTONUP:
 	// figure out mouse state
 	new_mousex = (int)(sdl_event.button.x);
@@ -963,11 +973,12 @@ void bx_sdl_gui_c::handle_events(void)
 	// filter out middle button if not fullscreen
 	if( sdl_fullscreen_toggle == 0 )
 	  new_mousebuttons &= 0x07;
-	// send motion information
-	DEV_mouse_motion(
-	    new_mousex - old_mousex,
-	    -(new_mousey - old_mousey),
-	    new_mousebuttons );
+        // send motion information
+        DEV_mouse_motion_ext(
+            new_mousex - old_mousex,
+            -(new_mousey - old_mousey),
+            wheel_status,
+            new_mousebuttons);
 	// mark current state to diff with next packet
 	old_mousebuttons = new_mousebuttons;
 	old_mousex = new_mousex;
