@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.15 2002-10-20 17:22:57 bdenney Exp $
+// $Id: main.cc,v 1.156.2.16 2002-10-21 12:25:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -921,7 +921,7 @@ void bx_init_options ()
   // compile time.  The one that is listed first will be the default,
   // which is used unless the user overrides it on the command line or
   // in a configuration file.
-  static char *vga_library_list[] = {
+  static char *display_library_list[] = {
 #if BX_WITH_X11
     "x",
 #endif
@@ -957,18 +957,18 @@ void bx_init_options ()
 #endif
     NULL
   };
-  bx_options.Osel_vgalib = new bx_param_enum_c (BXP_SEL_VGA_LIBRARY,
+  bx_options.Osel_displaylib = new bx_param_enum_c (BXP_SEL_DISPLAY_LIBRARY,
     "VGA Display Library",
     "Select VGA Display Library",
-    vga_library_list,
+    display_library_list,
     0,
     0);
-  bx_options.Osel_vgalib->set_by_name (BX_DEFAULT_VGA_LIBRARY);
-  bx_options.Osel_vgalib->set_format ("VGA display libarary: %s");
-  bx_options.Osel_vgalib->set_ask_format ("Choose which libary to use for the VGA display: [%s] ");
+  bx_options.Osel_displaylib->set_by_name (BX_DEFAULT_DISPLAY_LIBRARY);
+  bx_options.Osel_displaylib->set_format ("Display libarary: %s");
+  bx_options.Osel_displaylib->set_ask_format ("Choose which libary to use for the Bochs display: [%s] ");
   bx_param_c *interface_init_list[] = {
     bx_options.Osel_config,
-    bx_options.Osel_vgalib,
+    bx_options.Osel_displaylib,
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
     bx_options.Oips,
@@ -1542,7 +1542,7 @@ Boolean load_and_init_gui () {
     return true;
   }
   BX_ASSERT (bx_gui == NULL);
-  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_VGA_LIBRARY);
+  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_DISPLAY_LIBRARY);
   char *gui_name = gui_param->get_choice (gui_param->get ());
   if (!strcmp (gui_name, "wx")) {
     // they must not have used wx as the configuration interface, or bx_gui
@@ -3042,11 +3042,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (!bx_options.Osel_config->set_by_name (params[1]))
       PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
     }
-  else if (!strcmp(params[0], "vga_library")) {
+  else if (!strcmp(params[0], "display_library")) {
     if (num_params != 2) {
-      PARSE_ERR(("%s: vga_library directive: wrong # args.", context));
+      PARSE_ERR(("%s: display_library directive: wrong # args.", context));
       }
-    if (!bx_options.Osel_vgalib->set_by_name (params[1]))
+    if (!bx_options.Osel_displaylib->set_by_name (params[1]))
       PARSE_ERR(("%s: VGA library '%s' not available", context, params[1]));
     }
   else {

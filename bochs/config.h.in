@@ -367,7 +367,7 @@
 #define BX_WITH_WX 0
 
 #define BX_DEFAULT_CONFIG_INTERFACE "defined_by_configure"
-#define BX_DEFAULT_VGA_LIBRARY "defined_by_configure"
+#define BX_DEFAULT_DISPLAY_LIBRARY "defined_by_configure"
 
 // Roland Mainz's idle hack is presently specific to X11. If people try to
 // enable it elsewhere, give a compile error so that they don't waste their

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.10 2002-10-20 13:57:20 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.11 2002-10-21 12:25:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -654,7 +654,7 @@ typedef struct {
   bx_param_string_c *Ouser_shortcut;
   bx_gdbstub_t      gdbstub;
   bx_param_enum_c *Osel_config;
-  bx_param_enum_c *Osel_vgalib;
+  bx_param_enum_c *Osel_displaylib;
   } bx_options_t;
 
 extern bx_options_t bx_options;

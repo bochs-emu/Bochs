@@ -14,19 +14,19 @@
 # choose a default for you.
 #
 # NOTE: if you use the "wx" configuration interface, you must also use
-# the "wx" VGA library.
+# the "wx" display library.
 #=======================================================================
 #config_interface: control
 #config_interface: wx
 
 #=======================================================================
-# VGA_LIBRARY
+# DISPLAY_LIBRARY
 #
-# The VGA library is what displays the Bochs VGA screen.  Bochs has a
-# selection of about 10 different VGA screen implementations for different
-# platforms.  If you run configure with multiple --with-* options, the
-# vga_library command lets you choose which one you want to run with.
-# If you do not write a vga_library line, Bochs will choose a default for
+# The display library is the code that displays the Bochs VGA screen.  Bochs 
+# has a selection of about 10 different display library implementations for 
+# different platforms.  If you run configure with multiple --with-* options, 
+# the display_library command lets you choose which one you want to run with.
+# If you do not write a display_library line, Bochs will choose a default for
 # you.
 #
 # The choices are: 
@@ -40,22 +40,22 @@
 #   term           text only, uses curses/ncurses library, cross platform
 #   rfb            provides an interface to AT&T's VNC viewer, cross platform
 #   wx             use wxWindows library, cross platform
-#   nogui          no VGA screen
+#   nogui          no display at all
 #
 # NOTE: if you use the "wx" configuration interface, you must also use
-# the "wx" VGA library.
+# the "wx" display library.
 #=======================================================================
-#vga_library: amigaos
-#vga_library: beos
-#vga_library: carbon
-#vga_library: macintosh
-#vga_library: nogui
-#vga_library: rfb
-#vga_library: sdl
-#vga_library: term
-#vga_library: win32
-#vga_library: wx
-#vga_library: x
+#display_library: amigaos
+#display_library: beos
+#display_library: carbon
+#display_library: macintosh
+#display_library: nogui
+#display_library: rfb
+#display_library: sdl
+#display_library: term
+#display_library: win32
+#display_library: wx
+#display_library: x
 
 #=======================================================================
 # ROMIMAGE:
