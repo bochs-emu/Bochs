@@ -1127,7 +1127,7 @@ BX_CPU_C::RSM(BxInstruction_t *i)
 BX_CPU_C::RDTSC(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 5
-  Boolean tsd = BX_CPU_THIS_PTR cr4 & 4;
+  Boolean tsd = (BX_CPU_THIS_PTR cr4 & 4)? 1 : 0;
   Boolean cpl = CPL;
   if ((tsd==0) || (tsd==1 && cpl==0)) {
     // return ticks
