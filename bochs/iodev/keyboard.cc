@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.45 2002-02-21 20:26:48 bdenney Exp $
+// $Id: keyboard.cc,v 1.46 2002-02-23 09:32:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.45 2002-02-21 20:26:48 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.46 2002-02-23 09:32:49 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.45 2002-02-21 20:26:48 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.46 2002-02-23 09:32:49 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -179,8 +179,6 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   cmos->s.reg[0x14] |= 0x04;
 }
 
-#define RETURN(x) do { ret = (x); goto read_return; } while (0)
-
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions
 
@@ -208,8 +206,6 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_KEY_SMF
 
-  Bit32u ret = 0;
-
   if (io_len > 1)
     BX_PANIC(("kbd: io read to address %08x, len=%u",
              (unsigned) address, (unsigned) io_len));
@@ -225,6 +221,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
       //      BX_INFO(("kbd: %04d outb 0 auxb 0",__LINE__)); // das
       BX_KEY_THIS s.kbd_controller.outb = 0;
       BX_KEY_THIS s.kbd_controller.auxb = 0;
+      BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
 
       if (BX_KEY_THIS s.controller_Qsize) {
         unsigned i;
@@ -243,16 +240,18 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
 
 //BX_DEBUG(("mouse: ___io_read aux = 0x%02x", (unsigned) val));
 
+      BX_KEY_THIS devices->pic->lower_irq(12);
       activate_timer();
       BX_DEBUG(("READ(%02x) (from mouse) = %02x", (unsigned) address,
           (unsigned) val));
-      RETURN(val);
+      return val;
       }
     else if (BX_KEY_THIS s.kbd_controller.outb) { /* kbd byte available */
       val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
       // BX_INFO(("kbd: %04d outb 0 auxb 0",__LINE__)); // das
       BX_KEY_THIS s.kbd_controller.outb = 0;
       BX_KEY_THIS s.kbd_controller.auxb = 0;
+      BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
 //BX_DEBUG(( "___io_read kbd"));
 
       if (BX_KEY_THIS s.controller_Qsize) {
@@ -267,27 +266,28 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
           // move Q elements towards head of queue by one
           BX_KEY_THIS s.controller_Q[i] = BX_KEY_THIS s.controller_Q[i+1];
           }
+	BX_DEBUG(("s.controller_Qsize: %02X",BX_KEY_THIS s.controller_Qsize));
         BX_KEY_THIS s.controller_Qsize--;
         }
 
+      BX_KEY_THIS devices->pic->lower_irq(1);
       activate_timer();
       BX_DEBUG(("READ(%02x) = %02x", (unsigned) address,
           (unsigned) val));
-      RETURN(val);
+      return val;
       }
     else {
         BX_DEBUG(("num_elements = %d", BX_KEY_THIS s.kbd_internal_buffer.num_elements));
         BX_DEBUG(("read from port 60h with outb empty"));
-        val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
-      RETURN(val);
+//        val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
+      return BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
       }
     }
 
 #if BX_CPU_LEVEL >= 2
   else if (address == 0x64) { /* status register */
-    Bit8u   val;
 
-    val = (BX_KEY_THIS s.kbd_controller.pare << 7)  |
+    return (BX_KEY_THIS s.kbd_controller.pare << 7)  |
           (BX_KEY_THIS s.kbd_controller.tim  << 6)  |
           (BX_KEY_THIS s.kbd_controller.auxb << 5)  |
           (BX_KEY_THIS s.kbd_controller.keyl << 4)  |
@@ -295,28 +295,19 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
           (BX_KEY_THIS s.kbd_controller.sysf << 2)  |
           (BX_KEY_THIS s.kbd_controller.inpb << 1)  |
           BX_KEY_THIS s.kbd_controller.outb;
-    BX_KEY_THIS devices->pic->lower_irq(1);
-    BX_KEY_THIS devices->pic->lower_irq(12);
-    RETURN(val);
     }
 
 #else /* BX_CPU_LEVEL > 0 */
   /* XT MODE, System 8255 Mode Register */
   else if (address == 0x64) { /* status register */
     BX_DEBUG(("IO read from port 64h, system 8255 mode register"));
-    RETURN(BX_KEY_THIS s.kbd_controller.outb);
+    return BX_KEY_THIS s.kbd_controller.outb;
     }
 #endif /* BX_CPU_LEVEL > 0 */
 
-  else {
-    BX_PANIC(("unknown address in io read to keyboard port %x",
+  BX_PANIC(("unknown address in io read to keyboard port %x",
       (unsigned) address));
-    RETURN(0); /* keep compiler happy */
-    }
-
-  read_return:
-  BX_DEBUG(("keyboard: 8-bit read from %04x = %02x", (unsigned)address, ret));
-  return ret;
+  return 0; /* keep compiler happy */
 }
 
 
