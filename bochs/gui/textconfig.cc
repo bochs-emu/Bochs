@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.66 2002-10-24 21:06:17 bdenney Exp $
+// $Id: textconfig.cc,v 1.1 2002-10-29 20:17:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -7,7 +7,7 @@
 // the simulator through an object called SIM, defined in siminterface.cc
 // and siminterface.h.  This separation adds an extra layer of method
 // calls before any work can be done, but the benefit is that the compiler
-// enforces the rules.  I can guarantee that control.cc doesn't call any
+// enforces the rules.  I can guarantee that textconfig.cc doesn't call any
 // I/O device objects directly, for example, because the bx_devices symbol
 // isn't even defined in this context.
 //
@@ -21,7 +21,7 @@ extern "C" {
 #include <assert.h>
 }
 #include "osdep.h"
-#include "control.h"
+#include "textconfig.h"
 #include "siminterface.h"
 #include "extplugin.h"
 
@@ -951,7 +951,7 @@ static int ci_callback (void *userdata, ci_command_t command)
   switch (command)
   {
     case CI_START:
-      //fprintf (stderr, "control.cc: start\n");
+      //fprintf (stderr, "textconfig.cc: start\n");
       bx_config_interface_init ();
       if (SIM->get_param_bool(BXP_QUICK_START)->get ())
 	bx_config_interface (BX_CI_START_SIMULATION);
@@ -962,7 +962,7 @@ static int ci_callback (void *userdata, ci_command_t command)
       bx_config_interface (BX_CI_RUNTIME);
       break;
     case CI_SHUTDOWN:
-      //fprintf (stderr, "control.cc: shutdown\n");
+      //fprintf (stderr, "textconfig.cc: shutdown\n");
       break;
   }
   return 0;
@@ -972,7 +972,7 @@ static int ci_callback (void *userdata, ci_command_t command)
 // this file can become a plugin too.
 int init_text_config_interface ()
 {
-  //fprintf (stderr, "plugin_init for control.cc\n");
-  SIM->register_configuration_interface ("control", ci_callback, NULL);
+  //fprintf (stderr, "plugin_init for textconfig.cc\n");
+  SIM->register_configuration_interface ("textconfig", ci_callback, NULL);
   return 0;  // success
 }
