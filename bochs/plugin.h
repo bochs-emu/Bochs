@@ -58,11 +58,6 @@ extern "C" {
 #define BX_REGISTER_IRQ(b,c) pluginRegisterIRQ(b,c)
 #define BX_UNREGISTER_IRQ(b) pluginUnregisterIRQ(b)
 
-#define BX_GET_CMOS_REG(b) pluginGetCMOSReg(b)
-#define BX_SET_CMOS_REG(b,c) pluginSetCMOSReg(b,c)
-#define BX_CMOS_CHECKSUM() pluginCMOSChecksum()
-#define BX_GET_CMOS_TIMEVAL() pluginGetCMOSTimeval()
-
 #define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
 #define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
 #define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
@@ -107,11 +102,6 @@ extern "C" {
 #define BX_REGISTER_IRQ(b,c) bx_devices.register_irq(b,c)
 #define BX_UNREGISTER_IRQ(b) bx_devices.unregister_irq(b)
 
-#define BX_GET_CMOS_REG(b) pluginGetCMOSReg(b)
-#define BX_SET_CMOS_REG(b,c) pluginSetCMOSReg(b,c)
-#define BX_CMOS_CHECKSUM() pluginCMOSChecksum()
-#define BX_GET_CMOS_TIMEVAL() pluginGetCMOSTimeval()
-
 #define BX_VGA_MEM_READ(addr) pluginVGAMemRead(addr)
 #define BX_VGA_MEM_WRITE(addr, val) pluginVGAMemWrite(addr, val)
 #define BX_VGA_REDRAW_AREA(left, top, right, bottom) pluginVGARedrawArea(left, top, right, bottom)
@@ -149,6 +139,11 @@ extern "C" {
 // FIXME Do we really need pluginRegisterTimer ?
 #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 
+///////// CMOS macros
+#define BX_GET_CMOS_REG(a) (bx_devices.pluginCmosDevice->get_reg(a))
+#define BX_SET_CMOS_REG(a,b) (bx_devices.pluginCmosDevice->set_reg(a,b))
+#define BX_CMOS_CHECKSUM() (bx_devices.pluginCmosDevice->checksum_cmos())
+#define BX_GET_CMOS_TIMEVAL() (bx_devices.pluginCmosDevice->get_timeval())
 
 ///////// keyboard macros
 #define DEV_mouse_motion(dx, dy, state) \
@@ -266,18 +261,6 @@ extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
 extern void  (*pluginRaiseIRQ)(unsigned irq);
 extern void  (*pluginLowerIRQ)(unsigned irq);
 extern Bit8u (*pluginPicIAC)(void);
-
-
-/* === CMOS query/set stuff === */
-
-/* These are function pointers.  At startup time, they are set to
- * builtin default handlers which will cause an abort if called.
- * A CMOS plugin should set these pointers to real handler functions.
- */
-extern Bit32u (* pluginGetCMOSReg)(unsigned reg);
-extern void   (* pluginSetCMOSReg)(unsigned reg, Bit32u val);
-extern void   (* pluginCMOSChecksum)(void);
-extern time_t (* pluginGetCMOSTimeval)(void);
 
 
 /* === A20 enable line stuff === */

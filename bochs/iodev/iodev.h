@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.15 2002-10-18 19:37:10 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.16 2002-10-18 20:29:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,6 +151,22 @@ class bx_hard_drive_stub_c : public bx_devmodel_c {
   }
 };
 
+class bx_cmos_stub_c : public bx_devmodel_c {
+  public:
+  virtual Bit32u get_reg(unsigned reg) {
+    STUBFUNC(cmos, get_reg); return 0;
+  }
+  virtual void set_reg(unsigned reg, Bit32u val) {
+    STUBFUNC(cmos, set_reg);
+  }
+  virtual time_t get_timeval() {
+    STUBFUNC(cmos, get_timeval); return 0;
+  }
+  virtual void checksum_cmos(void) {
+    STUBFUNC(cmos, checksum);
+  }
+};
+
 class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -193,7 +209,7 @@ public:
   bx_devmodel_c *pluginParallelDevice;
   bx_devmodel_c *pluginUnmapped;
   bx_devmodel_c *pluginBiosDevice;
-  bx_devmodel_c *pluginCmosDevice;
+  bx_cmos_stub_c *pluginCmosDevice;
   bx_devmodel_c *pluginDmaDevice;
   bx_devmodel_c *pluginPicDevice;
   bx_devmodel_c *pluginVgaDevice;
@@ -201,6 +217,7 @@ public:
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
+  bx_cmos_stub_c stubCmos;
   bx_keyb_stub_c stubKeyboard;
   bx_hard_drive_stub_c stubHardDrive;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.7 2002-10-18 19:37:07 bdenney Exp $
+// $Id: cmos.cc,v 1.20.2.8 2002-10-18 20:29:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,24 +42,6 @@ bx_cmos_c *theCmosDevice = NULL;
 #endif
 
 
-  static Bit32u
-cmosGetReg(unsigned reg)
-{
-  return( BX_CMOS_THIS s.reg[reg] );
-}
-
-  static void
-cmosSetReg(unsigned reg, Bit32u val)
-{
-  BX_CMOS_THIS s.reg[reg] = val;
-}
-
-  static time_t
-cmosGetTimeval()
-{
-  return( BX_CMOS_THIS s.timeval );
-}
-
   int
 libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -76,11 +58,6 @@ libcmos_LTX_plugin_fini(void)
 
 bx_cmos_c::bx_cmos_c(void)
 {
-  pluginGetCMOSReg = cmosGetReg;
-  pluginSetCMOSReg = cmosSetReg;
-  pluginCMOSChecksum = checksum_cmos;
-  pluginGetCMOSTimeval = cmosGetTimeval;
-
   put("CMOS");
   settype(CMOSLOG);
 
@@ -98,7 +75,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.7 2002-10-18 19:37:07 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.8 2002-10-18 20:29:20 bdenney Exp $"));
 
   // CMOS RAM & RTC
 

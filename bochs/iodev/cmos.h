@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.6.4.2 2002-10-18 19:37:07 bdenney Exp $
+// $Id: cmos.h,v 1.6.4.3 2002-10-18 20:29:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,14 +37,24 @@
 #endif
 
 
-class bx_cmos_c : public bx_devmodel_c {
+class bx_cmos_c : public bx_cmos_stub_c {
 public:
   bx_cmos_c(void);
   ~bx_cmos_c(void);
 
   virtual void init(void);
-  BX_CMOS_SMF void checksum_cmos(void);
+  virtual void checksum_cmos(void);
   virtual void reset(unsigned type);
+
+  virtual Bit32u get_reg(unsigned reg) {
+    return s.reg[reg];
+  }
+  virtual void set_reg(unsigned reg, Bit32u val) {
+    s.reg[reg] = val;
+  }
+  virtual time_t get_timeval() {
+    return s.timeval;
+  }
 
   struct {
     int     periodic_timer_index;

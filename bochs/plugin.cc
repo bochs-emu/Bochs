@@ -26,11 +26,6 @@
 #define PLUGIN_FINI  "plugin_fini"
 
 
-Bit32u   (* pluginGetCMOSReg)(unsigned reg) = 0;
-void     (* pluginSetCMOSReg)(unsigned reg, Bit32u val) = 0;
-void     (* pluginCMOSChecksum)(void) = 0;
-time_t   (* pluginGetCMOSTimeval)(void) = 0;
-
 unsigned (* pluginRegisterDMA8Channel)(
                 unsigned channel,
                 void (* dma_read)(Bit8u *data_byte),
@@ -117,33 +112,6 @@ bx_gui_c *bx_gui = NULL;
 /************************************************************************/
 /* Builtins declarations                                                */
 /************************************************************************/
-
-  static Bit32u
-builtinGetCMOSReg(unsigned reg)
-{
-  pluginlog->panic("builtinGetCMOSReg called, not overloaded by CMOS plugin?");
-  return 0;
-}
-
-  static void
-builtinSetCMOSReg(unsigned reg, Bit32u val)
-{
-  pluginlog->panic("builtinSetCMOSReg called, not overloaded by CMOS plugin?");
-  return;
-}
-
-  static void
-builtinCMOSChecksum(void)
-{
-  pluginlog->panic("builtinCMOSChecksum called, no CMOS plugin loaded?");
-}
-
-  static time_t
-builtinGetCMOSTimeval(void)
-{
-  pluginlog->panic("builtinGetCMOSTimeval called, no CMOS plugin loaded?");
-  return 0;
-}
 
   static unsigned
 builtinRegisterDMA8Channel(
@@ -567,10 +535,6 @@ plugin_abort (void)
   void
 plugin_startup(void)
 {
-  pluginGetCMOSReg   = builtinGetCMOSReg;
-  pluginSetCMOSReg   = builtinSetCMOSReg;
-  pluginCMOSChecksum = builtinCMOSChecksum;
-  pluginGetCMOSTimeval  = builtinGetCMOSTimeval;
   pluginRegisterDMA8Channel = builtinRegisterDMA8Channel;
   pluginRegisterDMA16Channel = builtinRegisterDMA16Channel;
   pluginUnregisterDMAChannel = builtinUnregisterDMAChannel;
