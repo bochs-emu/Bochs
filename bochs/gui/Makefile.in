@@ -67,7 +67,7 @@ GUI_OBJS = $(GUI_OBJS_NON_PLUGINS)
 GUI_SO_OBJS = $(GUI_OBJS_PLUGINS)
 OBJS = $(GUI_OBJS_NON_PLUGINS) $(GUI_OBJS_PLUGINS) $(GUI_OBJS_EXTERNAL)
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
 
 #
@@ -82,10 +82,10 @@ libgui.a: $(BX_GUI_OBJS)
 	@RMCOMMAND@ libgui.a
 	$(LIBTOOL) $(CXX) -o libgui.a $(BX_GUI_OBJS)
 
-%.o: %.cc
+%.o: %.@CPP_SUFFIX@
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-%.lo: %.cc
+%.lo: %.@CPP_SUFFIX@
 	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 %.dll: %.o

@@ -50,7 +50,7 @@ VIDEO_OBJS = @VIDEO_OBJS@
 CDROM_OBJS = @CDROM_OBJS@
 IOAPIC_OBJS = @IOAPIC_OBJS@
 
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ 
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
 SB16_DUMMY_OBJS = sb16.o
@@ -102,10 +102,10 @@ BX_INCLUDES = iodev.h
 
 all: libiodev.a 
 
-%.o: %.cc
+%.o: %.@CPP_SUFFIX@
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-%.lo: %.cc
+%.lo: %.@CPP_SUFFIX@
 	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 # special rule for hard drive, which can have multiple objects
