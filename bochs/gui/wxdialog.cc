@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.30 2002-09-06 16:43:23 bdenney Exp $
+// $Id: wxdialog.cc,v 1.31 2002-09-13 17:43:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -16,6 +16,7 @@
 #endif
 #include <wx/spinctrl.h>
 #include <wx/config.h>
+#include <wx/confbase.h>
 
 #include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff
@@ -1794,7 +1795,7 @@ int GetTextCtrlInt (wxTextCtrl *ctrl,
 
 bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
   // try to configure the dialog to show hidden files
-  wxConfig::Get() -> Write(wxT("/wxWindows/wxFileDialog/ShowHidden"), true);
+  wxConfigBase::Get() -> Write(wxT("/wxWindows/wxFileDialog/ShowHidden"), true);
   wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), wxString(), style);
   if (fdialog->ShowModal () == wxID_OK)
     text->SetValue (fdialog->GetPath ());
