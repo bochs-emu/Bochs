@@ -1,0 +1,8 @@
+bochs for Debian
+----------------
+
+I've tried to keep the install the same as the default, everything goes in
+/usr/local/bochs. Binary symlinks in /usr/local/bin.
+
+
+ -- Rob Lemley <rjlemley@calypsoblue.org>, Tue,  5 Jun 2001 21:08:30 -0700
