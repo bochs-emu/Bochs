@@ -354,7 +354,7 @@ wx.o: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h \
  ../instrument/stubs/instrument.h ../gui/icon_bochs.h \
- ../font/vga.bitmap.h wxdialog.h wxmain.h
+ ../font/vga.bitmap.h wxmain.h
 wxdialog.o: wxdialog.@CPP_SUFFIX@ ../config.h ../osdep.h ../gui/siminterface.h \
  ../bxversion.h wxdialog.h wxmain.h
 wxmain.o: wxmain.@CPP_SUFFIX@ ../config.h ../osdep.h ../gui/siminterface.h \
