@@ -708,6 +708,7 @@ typedef
 #define BX_SUPPORT_3DNOW 0
 #define BX_SUPPORT_SSE 0
 #define BX_SUPPORT_DAZ 0
+#define BX_SUPPORT_PNI 0
 #define BX_SUPPORT_SEP 0
 #define BX_SUPPORT_4MEG_PAGES 0
 
@@ -762,6 +763,10 @@ typedef
 
 #if (BX_SUPPORT_SSE && !BX_SUPPORT_MMX)
 #error "SSE cannot be compiled without FPU+MMX support"
+#endif
+
+#if (BX_SUPPORT_PNI && !BX_SUPPORT_SSE)
+#error "PNI cannot be compiled without SSE support"
 #endif
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_SEP)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.73 2003-08-03 16:44:53 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.74 2003-08-29 21:20:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,7 +73,6 @@ BX_CPU_C::HLT(bxInstruction_c *i)
     BX_PANIC(("HALT instruction encountered in the BIOS ROM"));
 
   if (CPL!=0) {
-//  BX_INFO(("HLT(): CPL!=0"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
@@ -889,11 +888,9 @@ BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
 
-      BX_INFO(("MOV_CqRq: ignoring write to CR4 of 0x%08x",
-        val_64));
+      BX_INFO(("MOV_CqRq: ignoring write to CR4 of 0x%08x", val_64));
       if (val_64) {
-        BX_INFO(("MOV_CqRq: (CR4) write of 0x%08x not supported!",
-          val_64));
+        BX_INFO(("MOV_CqRq: (CR4) write of 0x%08x not supported!", val_64));
         }
       // Only allow writes of 0 to CR4 for now.
       // Writes to bits in CR4 should not be 1s as CPUID
@@ -1343,7 +1340,7 @@ BX_PANIC(("LOADALL: handle CR0.val32"));
   static inline Bit32u
 get_std_cpuid_features()
 {
-  unsigned features;
+   Bit32u features;
 
       // EAX[3:0]   Stepping ID
       // EAX[7:4]   Model: starts at 1
@@ -1351,7 +1348,10 @@ get_std_cpuid_features()
       // EAX[13:12] Type: 0=OEM,1=overdrive,2=dual cpu,3=reserved
       // EAX[31:14] Reserved
       // EBX:       Reserved (0)
-      // ECX:       Reserved (0)
+      // ECX:       Feature Flags::Extended
+      //   [0:0]   PNI
+      //   [3:3]   MONITOR/MWAIT
+      //   [7:7]   Enchanced Intel Speedstep Technology
       // EDX:       Feature Flags
       //   [0:0]   FPU on chip
       //   [1:1]   VME: Virtual-8086 Mode enhancements
@@ -1409,21 +1409,19 @@ get_std_cpuid_features()
 #if BX_SUPPORT_4MEG_PAGES
       features |= (1<<3);   // Support Page-Size Extension (4M pages)
 #endif
-
 #if BX_SupportGlobalPages
       features |= (1<<13);  // Support Global pages.
 #endif
-
 #if BX_SupportPAE
       features |= (1<<6);   // Support PAE.
 #endif
 
 #if BX_SUPPORT_X86_64
-  features |= (1<<5);       // AMD specific MSR's
+      features |= (1<<5);   // AMD specific MSR's
 #endif
 
 #if BX_SUPPORT_SEP
-  features |= (1<<11);      // SYSENTER/SYSEXIT
+      features |= (1<<11);  // SYSENTER/SYSEXIT
 #endif
 
   return features;
@@ -1476,15 +1474,15 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 
 #elif BX_CPU_LEVEL == 5
   family = 5;
-  model = 1; // Pentium (60,66)
+  model = 1;    // Pentium (60,66)
   stepping = 3; // ???
 
 #elif BX_CPU_LEVEL == 6
   family = 6;
 #if BX_SUPPORT_X86_64
-  model = 2; // Hammer returns what?
+  model = 2;    // Hammer returns what?
 #else
-  model = 1; // Pentium Pro
+  model = 1;    // Pentium Pro
 #endif
   stepping = 3; // ???
 #else
@@ -1493,6 +1491,9 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 
       RAX = (family <<8) | (model<<4) | stepping;
       RBX = RCX = 0; // reserved
+#if BX_SUPPORT_PNI
+      RCX = 1;       // report PNI
+#endif
       RDX = get_std_cpuid_features ();
       break;
 
@@ -1844,8 +1845,8 @@ BX_CPU_C::RDMSR(bxInstruction_c *i)
 
     default:
 #if BX_IGNORE_BAD_MSR
-                        BX_ERROR(("RDMSR: Unknown register %#x", ECX));
-                        return;
+      BX_ERROR(("RDMSR: Unknown register %#x", ECX));
+      return;
 #else
       BX_PANIC(("RDMSR: Unknown register %#x", ECX));
 #endif
@@ -1972,7 +1973,6 @@ BX_CPU_C::WRMSR(bxInstruction_c *i)
 
 do_exception:
   exception(BX_GP_EXCEPTION, 0, 0);
-
 }
 
   void 
@@ -2099,24 +2099,21 @@ BX_CPU_C::SYSEXIT (bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-  void
-BX_CPU_C::SWAPGS(bxInstruction_c *i)
+void BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
   Bit64u temp_GS_base;
 
-  if(CPL != 0) {
+  if(CPL != 0)
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+
   temp_GS_base = MSR_GSBASE;
   MSR_GSBASE = MSR_KERNELGSBASE;
   MSR_KERNELGSBASE = temp_GS_base;
-
 }
 #endif
 
 #if BX_X86_DEBUGGER
-  Bit32u
-BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
+Bit32u BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
                           unsigned opa, unsigned opb)
 {
   // Support x86 hardware debug facilities (DR0..DR7)

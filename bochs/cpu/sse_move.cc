@@ -299,7 +299,6 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 /* MOVUPS:    0F 10 */
 /* MOVUPD: 66 0F 10 */
 /* MOVDQU: F3 0F 6F */
-
 void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -327,7 +326,6 @@ void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 /* MOVUPS:    0F 11 */
 /* MOVUPD: 66 0F 11 */
 /* MOVDQU: F3 0F 7F */
-
 void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -351,7 +349,6 @@ void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 /* MOVAPS:    0F 28 */
 /* MOVAPD: 66 0F 28 */
 /* MOVDQA: F3 0F 6F */
-
 void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -379,7 +376,6 @@ void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 /* MOVAPS:    0F 29 */
 /* MOVAPD: 66 0F 29 */
 /* MOVDQA: F3 0F 7F */
-
 void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -525,7 +521,6 @@ void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
 
 /* MOVLPS:    0F 12 */
 /* MOVLPD: 66 0F 12 */
-
 void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -549,9 +544,94 @@ void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 #endif
 }
 
+/* F2 0F 12 */
+void BX_CPU_C::MOVDDUP_VpdWq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+  Bit64u val64;
+  BxPackedXmmRegister op;
+
+  if (i->modC0())
+  {
+    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
+
+  op.xmm64u(0) = val64;
+  op.xmm64u(1) = val64;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op);
+#else
+  BX_INFO(("MOVDDUP_VpdWq: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* F3 0F 12 */
+void BX_CPU_C::MOVSLDUP_VpsWps(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister op, result;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  result.xmm32u(0) = op.xmm32u(0);
+  result.xmm32u(1) = op.xmm32u(0);
+  result.xmm32u(2) = op.xmm32u(2);
+  result.xmm32u(3) = op.xmm32u(2);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("MOVSLDUP_VpsWps: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* F3 0F 16 */
+void BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister op, result;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  result.xmm32u(0) = op.xmm32u(1);
+  result.xmm32u(1) = op.xmm32u(1);
+  result.xmm32u(2) = op.xmm32u(3);
+  result.xmm32u(3) = op.xmm32u(3);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("MOVHLDUP_VpsWps: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
 /* MOVLPS:    0F 13 */
 /* MOVLPD: 66 0F 13 */
-
 void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -573,7 +653,6 @@ void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 
 /* MOVHPS:    0F 16 */
 /* MOVHPD: 66 0F 16 */
-
 void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -599,7 +678,6 @@ void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 
 /* MOVHPS:    0F 17 */
 /* MOVHPD: 66 0F 17 */
-
 void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -619,6 +697,31 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 #endif
 }
 
+/* F2 0F F0 */
+void BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+
+  /* source must be memory reference */
+  if (i->modC0()) {
+    BX_INFO(("LDDQU_VdqMdq: must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  BxPackedXmmRegister op;
+
+  readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op);
+
+#else
+  BX_INFO(("LDDQU_VdqMdq: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F F7 */
 void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
@@ -1349,7 +1452,6 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 /* MOVNTPS:    0F 2B */
 /* MOVNTPD: 66 0F 2B */
 /* MOVNTDQ: 66 0F E7 */
-
 void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1

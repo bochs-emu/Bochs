@@ -2565,6 +2565,212 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 }
 
 /* 
+ * Opcode: 66 0F 7C
+ * Add horizontally packed double precision FP in XMM2/MEM from XMM1.
+ * Possible floating point exceptions: #I, #D, #O, #U, #P
+ */
+void BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  softfloat_status_word_t status_word;
+  MXCSR_to_softfloat_status_word(status_word, MXCSR);
+  int rc;
+
+  if (MXCSR.get_DAZ()) 
+  {
+	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+
+	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+  }
+
+  result.xmm64u(0) = 
+     float64_add(op1.xmm64u(0), op1.xmm64u(1), status_word);
+  result.xmm64u(1) = 
+     float64_add(op2.xmm64u(1), op2.xmm64u(1), status_word);
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+
+#else
+  BX_INFO(("HADDPD_VpdWpd: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 
+ * Opcode: F2 0F 7C
+ * Add horizontally packed single precision FP in XMM2/MEM from XMM1.
+ * Possible floating point exceptions: #I, #D, #O, #U, #P
+ */
+void BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  softfloat_status_word_t status_word;
+  MXCSR_to_softfloat_status_word(status_word, MXCSR);
+  int rc;
+
+  if (MXCSR.get_DAZ()) {
+	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+
+	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+  }
+
+  result.xmm32u(0) = 
+     float32_add(op1.xmm32u(0), op1.xmm32u(1), status_word);
+  result.xmm32u(1) = 
+     float32_add(op1.xmm32u(2), op1.xmm32u(3), status_word);
+  result.xmm32u(2) = 
+     float32_add(op2.xmm32u(0), op2.xmm32u(1), status_word);
+  result.xmm32u(3) = 
+     float32_add(op2.xmm32u(2), op2.xmm32u(3), status_word);
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+
+#else
+  BX_INFO(("HADDPS_VpsWps: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 
+ * Opcode: 66 0F 7D
+ * Subtract horizontally packed double precision FP in XMM2/MEM from XMM1.
+ * Possible floating point exceptions: #I, #D, #O, #U, #P
+ */
+void BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  softfloat_status_word_t status_word;
+  MXCSR_to_softfloat_status_word(status_word, MXCSR);
+  int rc;
+
+  if (MXCSR.get_DAZ()) 
+  {
+	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+
+	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+  }
+
+  result.xmm64u(0) = 
+     float64_sub(op1.xmm64u(0), op1.xmm64u(1), status_word);
+  result.xmm64u(1) = 
+     float64_sub(op2.xmm64u(1), op2.xmm64u(1), status_word);
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+
+#else
+  BX_INFO(("HSUBPD_VpdWpd: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 
+ * Opcode: F2 0F 7D
+ * Subtract horizontally packed single precision FP in XMM2/MEM from XMM1.
+ * Possible floating point exceptions: #I, #D, #O, #U, #P
+ */
+void BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  softfloat_status_word_t status_word;
+  MXCSR_to_softfloat_status_word(status_word, MXCSR);
+  int rc;
+
+  if (MXCSR.get_DAZ()) {
+	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+
+	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+  }
+
+  result.xmm32u(0) = 
+     float32_sub(op1.xmm32u(0), op1.xmm32u(1), status_word);
+  result.xmm32u(1) = 
+     float32_sub(op1.xmm32u(2), op1.xmm32u(3), status_word);
+  result.xmm32u(2) = 
+     float32_sub(op2.xmm32u(0), op2.xmm32u(1), status_word);
+  result.xmm32u(3) = 
+     float32_sub(op2.xmm32u(2), op2.xmm32u(3), status_word);
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+
+#else
+  BX_INFO(("HSUBPS_VpsWps: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 
  * Opcode: 0F C2
  * Compare packed single precision FP values using Ib as comparison predicate.
  * Possible floating point exceptions: #I, #D
@@ -2809,6 +3015,107 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 
 #else
   BX_INFO(("CMPSS_VssWssIb: required SSE, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 
+ * Opcode: 66 0F D0
+ * Add/Subtract packed double precision FP numbers from XMM2/MEM to XMM1.
+ * Possible floating point exceptions: #I, #D, #O, #U, #P
+ */
+void BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  softfloat_status_word_t status_word;
+  MXCSR_to_softfloat_status_word(status_word, MXCSR);
+
+  if (MXCSR.get_DAZ()) 
+  {
+	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+
+	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+  }
+
+  result.xmm64u(0) = 
+     float64_sub(op1.xmm64u(0), op2.xmm64u(0), status_word);
+  result.xmm64u(1) = 
+     float64_add(op1.xmm64u(1), op2.xmm64u(1), status_word);
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+
+#else
+  BX_INFO(("ADDSUBPD_VpdWpd: required PNI, use --enable-pni option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 
+ * Opcode: F2 0F D0
+ * Add/Substract packed single precision FP numbers from XMM2/MEM to XMM1.
+ * Possible floating point exceptions: #I, #D, #O, #U, #P
+ */
+void BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
+{
+#if BX_SUPPORT_PNI
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  softfloat_status_word_t status_word;
+  MXCSR_to_softfloat_status_word(status_word, MXCSR);
+
+  if (MXCSR.get_DAZ()) {
+	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+
+	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+  }
+
+  result.xmm32u(0) = 
+     float32_sub(op1.xmm32u(0), op2.xmm32u(0), status_word);
+  result.xmm32u(1) = 
+     float32_add(op1.xmm32u(1), op2.xmm32u(1), status_word);
+  result.xmm32u(2) = 
+     float32_sub(op1.xmm32u(2), op2.xmm32u(2), status_word);
+  result.xmm32u(3) = 
+     float32_add(op1.xmm32u(3), op2.xmm32u(3), status_word);
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+
+#else
+  BX_INFO(("ADDSUBPS_VpsWps: required PNI, use --enable-pni option"));
   UndefinedOpcode(i);
 #endif
 }

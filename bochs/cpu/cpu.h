@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.144 2003-08-28 19:25:23 sshwarts Exp $
+// $Id: cpu.h,v 1.145 2003-08-29 21:20:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,19 +168,16 @@
 #define BX_READ_8BIT_REGx(index,extended)  ((((index) < 4) || (extended)) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
   (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
-#define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
-#define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].dword.erx)
 #define BX_READ_64BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].rrx)
-
 #else
-
 #define BX_READ_8BIT_REG(index)  (((index) < 4) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
   (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
 #define BX_READ_8BIT_REGx(index,ext) BX_READ_8BIT_REG(index)
+#endif
+
 #define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
 #define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].dword.erx)
-#endif
 
 #define BX_READ_16BIT_BASE_REG(var, index) {\
   var = *BX_CPU_THIS_PTR _16bit_base_reg[index];\
@@ -191,6 +188,7 @@
   }
 
 #if BX_SUPPORT_X86_64
+
 #define BX_WRITE_8BIT_REGx(index, extended, val) {\
   if (((index) < 4) || (extended)) \
     BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
@@ -231,6 +229,7 @@
 #define BX_WRITE_32BIT_REGZ(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = (Bit32u) val; \
   }
+
 #endif
 
 #ifndef CPL
@@ -2159,6 +2158,19 @@ union {
   BX_SMF void PSLLQ_PdqIb(bxInstruction_c *i);
   BX_SMF void PSLLDQ_WdqIb(bxInstruction_c *i);
   /* SSE2 */
+
+  /* PNI */
+  BX_SMF void MOVDDUP_VpdWq(bxInstruction_c *i);
+  BX_SMF void MOVSLDUP_VpsWps(bxInstruction_c *i);
+  BX_SMF void MOVSHDUP_VpsWps(bxInstruction_c *i);
+  BX_SMF void HADDPD_VpdWpd(bxInstruction_c *i);
+  BX_SMF void HADDPS_VpsWps(bxInstruction_c *i);
+  BX_SMF void HSUBPD_VpdWpd(bxInstruction_c *i);
+  BX_SMF void HSUBPS_VpsWps(bxInstruction_c *i);
+  BX_SMF void ADDSUBPD_VpdWpd(bxInstruction_c *i);
+  BX_SMF void ADDSUBPS_VpsWps(bxInstruction_c *i);
+  BX_SMF void LDDQU_VdqMdq(bxInstruction_c *i);
+  /* PNI */
 
 #if BX_SUPPORT_FPU
   BX_SMF void fpu_execute(bxInstruction_c *i);
