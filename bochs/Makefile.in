@@ -359,7 +359,8 @@ rpm:: dist-clean download_dlx
 V6WORKSPACE_ZIP=build/win32/workspace.zip
 V6WORKSPACE_FILES=bochs.dsw bochs.dsp bochs.opt cpu/cpu.dsp \
 	memory/memory.dsp iodev/iodev.dsp instrument/stubs/stubs.dsp \
-	gui/gui.dsp fpu/fpu.dsp disasm/disasm.dsp debug/debug.dsp bximage.dsp
+	gui/gui.dsp fpu/fpu.dsp disasm/disasm.dsp debug/debug.dsp \
+	misc/niclist.dsp bximage.dsp
 
 v6workspace:
 	zip $(V6WORKSPACE_ZIP) $(V6WORKSPACE_FILES)
