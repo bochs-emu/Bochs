@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.127 2005-01-31 18:35:35 vruppert Exp $
+// $Id: rombios.c,v 1.128 2005-02-02 19:12:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -858,6 +858,7 @@ static Bit32u         int19_function();
 static void           int1a_function();
 static void           int70_function();
 static void           int74_function();
+static Bit16u         get_CS();
 //static Bit16u         get_DS();
 //static void           set_DS();
 static Bit16u         get_SS();
@@ -912,10 +913,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.127 $";
-static char bios_date_string[] = "$Date: 2005-01-31 18:35:35 $";
+static char bios_cvs_version_string[] = "$Revision: 1.128 $";
+static char bios_date_string[] = "$Date: 2005-02-02 19:12:43 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.127 2005-01-31 18:35:35 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.128 2005-02-02 19:12:43 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1004,6 +1005,8 @@ static char CVSID[] = "$Id: rombios.c,v 1.127 2005-01-31 18:35:35 vruppert Exp $
 #define GET_CH() ( CX >> 8 )
 #define GET_DH() ( DX >> 8 )
 
+#define GET_ELDL() ( ELDX & 0x00ff )
+#define GET_ELDH() ( ELDX >> 8 )
 
 #define SET_CF()     FLAGS |= 0x0001
 #define CLEAR_CF()   FLAGS &= 0xfffe
@@ -1355,6 +1358,14 @@ ASM_START
 ASM_END
 }
 
+  Bit16u
+get_CS()
+{
+ASM_START
+  mov  ax, cs
+ASM_END
+}
+
 //  Bit16u
 //get_DS()
 //{
@@ -1484,7 +1495,7 @@ bios_printf(action, s)
     bios_printf (BIOS_PRINTF_SCREEN, "FATAL: ");
   }
 
-  while (c = read_byte(0xf000, s)) {
+  while (c = read_byte(get_CS(), s)) {
     if ( c == '%' ) {
       in_format = 1;
       format_width = 0;
@@ -4597,8 +4608,8 @@ BX_DEBUG_INT74("int74_function: make_farcall=1\n");
 #if BX_USE_ATADRV
 
   void
-int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
+int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
+  Bit16u DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
 {
   Bit32u lba;
   Bit16u ebda_seg=read_word(0x0040,0x000E);
@@ -4613,17 +4624,17 @@ int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   write_byte(0x0040, 0x008e, 0);  // clear completion flag
 
   // basic check : device has to be defined
-  if ( (GET_DL() < 0x80) || (GET_DL() >= 0x80 + BX_MAX_ATA_DEVICES) ) {
-    BX_INFO("int13_harddisk: function %02x, DL out of range %02x\n", GET_AH(), GET_DL());
+  if ( (GET_ELDL() < 0x80) || (GET_ELDL() >= 0x80 + BX_MAX_ATA_DEVICES) ) {
+    BX_INFO("int13_harddisk: function %02x, ELDL out of range %02x\n", GET_AH(), GET_ELDL());
     goto int13_fail;
     }
 
   // Get the ata channel
-  device=read_byte(ebda_seg,&EbdaData->ata.hdidmap[GET_DL()-0x80]);
+  device=read_byte(ebda_seg,&EbdaData->ata.hdidmap[GET_ELDL()-0x80]);
 
   // basic check : device has to be valid 
   if (device >= BX_MAX_ATA_DEVICES) {
-    BX_INFO("int13_harddisk: function %02x, unmapped device for DL=%02x\n", GET_AH(), GET_DL());
+    BX_INFO("int13_harddisk: function %02x, unmapped device for ELDL=%02x\n", GET_AH(), GET_ELDL());
     goto int13_fail;
     }
   
@@ -4992,10 +5003,8 @@ int13_success_noah:
 // ---------------------------------------------------------------------------
 
   void
-int13_cdrom(DI, DIH, SI, SIH, BP, BPH, SP, SPH, BX, BXH, DX, DXH, CX, CXH, AX, AXH,
-            DS, ES, FLAGS)
-  Bit16u DI, DIH, SI, SIH, BP, BPH, SP, SPH, BX, BXH, DX, DXH, CX, CXH, AX, AXH,
-         DS, ES, FLAGS;
+int13_cdrom(EHBX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
+  Bit16u EHBX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit8u  device, status, locks;
@@ -5009,17 +5018,17 @@ int13_cdrom(DI, DIH, SI, SIH, BP, BPH, SP, SPH, BX, BXH, DX, DXH, CX, CXH, AX, A
   SET_DISK_RET_STATUS(0x00);
 
   /* basic check : device should be 0xE0+ */
-  if( (GET_DL() < 0xE0) || (GET_DL() >= 0xE0+BX_MAX_ATA_DEVICES) ) {
-    BX_INFO("int13_cdrom: function %02x, DL out of range %02x\n", GET_AH(), GET_DL());
+  if( (GET_ELDL() < 0xE0) || (GET_ELDL() >= 0xE0+BX_MAX_ATA_DEVICES) ) {
+    BX_INFO("int13_cdrom: function %02x, ELDL out of range %02x\n", GET_AH(), GET_ELDL());
     goto int13_fail;
     }
 
   // Get the ata channel
-  device=read_byte(ebda_seg,&EbdaData->ata.cdidmap[GET_DL()-0xE0]);
+  device=read_byte(ebda_seg,&EbdaData->ata.cdidmap[GET_ELDL()-0xE0]);
 
   /* basic check : device has to be valid  */
   if (device >= BX_MAX_ATA_DEVICES) {
-    BX_INFO("int13_cdrom: function %02x, unmapped device for DL=%02x\n", GET_AH(), GET_DL());
+    BX_INFO("int13_cdrom: function %02x, unmapped device for ELDL=%02x\n", GET_AH(), GET_ELDL());
     goto int13_fail;
     }
   
@@ -5349,8 +5358,8 @@ int13_success_noah:
 // ---------------------------------------------------------------------------
 
   void
-int13_eltorito(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
+int13_eltorito(DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS)
+  Bit16u DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
 
@@ -5419,8 +5428,8 @@ int13_success:
 // ---------------------------------------------------------------------------
 
   void
-int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS;
+int13_cdemu(DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS)
+  Bit16u DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit8u  device, status;
@@ -5671,8 +5680,8 @@ ASM_END
 }
 
   void
-int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
+int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
+  Bit16u DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
 {
   Bit8u    drive, num_sectors, sector, head, status, mod;
   Bit8u    drive_map;
@@ -5705,7 +5714,7 @@ int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   n_drives = (drive_map==0) ? 0 :
     ((drive_map==3) ? 2 : 1);
 
-  if (!(drive_map & (1<<(GET_DL()&0x7f)))) { /* allow 0, 1, or 2 disks */
+  if (!(drive_map & (1<<(GET_ELDL()&0x7f)))) { /* allow 0, 1, or 2 disks */
     SET_AH(0x01);
     SET_DISK_RET_STATUS(0x01);
     SET_CF(); /* error occurred */
@@ -5739,7 +5748,7 @@ BX_DEBUG_INT13_HD("int13_f01\n");
 
     case 0x04: // verify disk sectors
     case 0x02: // read disk sectors
-      drive = GET_DL();
+      drive = GET_ELDL();
       get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 
       num_sectors = GET_AL();
@@ -5885,7 +5894,7 @@ ASM_END
 
     case 0x03: /* write disk sectors */
 BX_DEBUG_INT13_HD("int13_f03\n");
-      drive = GET_DL ();
+      drive = GET_ELDL ();
       get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 
       num_sectors = GET_AL();
@@ -5939,13 +5948,13 @@ BX_DEBUG_INT13_HD("int13_f03\n");
       /* activate LBA? (tomv) */
       if (hd_heads > 16) {
 BX_DEBUG_INT13_HD("CHS (write): %x %x %x\n", cylinder, head, sector);
-        outLBA(cylinder,hd_heads,head,hd_sectors,sector,GET_DL());
+        outLBA(cylinder,hd_heads,head,hd_sectors,sector,GET_ELDL());
         }
       else {
         outb(0x01f3, sector);
         outb(0x01f4, cylinder & 0x00ff);
         outb(0x01f5, cylinder >> 8);
-        outb(0x01f6, 0xa0 | ((GET_DL() & 0x01)<<4) | (head & 0x0f));
+        outb(0x01f6, 0xa0 | ((GET_ELDL() & 0x01)<<4) | (head & 0x0f));
         }
       outb(0x01f7, 0x30);
 
@@ -6035,7 +6044,7 @@ BX_DEBUG_INT13_HD("int13_f05\n");
     case 0x08: /* read disk drive parameters */
 BX_DEBUG_INT13_HD("int13_f08\n");
       
-      drive = GET_DL ();
+      drive = GET_ELDL ();
       get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 
       // translate CHS
@@ -6149,7 +6158,7 @@ BX_DEBUG_INT13_HD("int13_f14\n");
       break;
 
     case 0x15: /* read disk drive size */
-      drive = GET_DL();
+      drive = GET_ELDL();
       get_hd_geometry(drive, &hd_cylinders, &hd_heads, &hd_sectors);
 ASM_START
       push bp
@@ -6478,8 +6487,8 @@ floppy_drive_exists(drive)
 
 #if BX_SUPPORT_FLOPPY
   void
-int13_diskette_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS;
+int13_diskette_function(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
+  Bit16u DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
 {
   Bit8u  drive, num_sectors, track, sector, head, status;
   Bit16u base_address, base_count, base_es;
@@ -6496,7 +6505,7 @@ int13_diskette_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   switch ( ah ) {
     case 0x00: // diskette controller reset
 BX_DEBUG_INT13_FL("floppy f00\n");
-      drive = GET_DL();
+      drive = GET_ELDL();
       if (drive > 1) {
         SET_AH(1); // invalid param
         set_diskette_ret_status(1);
@@ -6537,7 +6546,7 @@ BX_DEBUG_INT13_FL("floppy f00\n");
       track       = GET_CH();
       sector      = GET_CL();
       head        = GET_DH();
-      drive       = GET_DL();
+      drive       = GET_ELDL();
 
       if ( (drive > 1) || (head > 1) ||
            (num_sectors == 0) || (num_sectors > 72) ) {
@@ -6895,7 +6904,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
       num_sectors = GET_AL();
       track       = GET_CH();
       head        = GET_DH();
-      drive       = GET_DL();
+      drive       = GET_ELDL();
 
       if ((drive > 1) || (head > 1) || (track > 79) ||
           (num_sectors == 0) || (num_sectors > 18)) {
@@ -7049,7 +7058,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
 
     case 0x08: // read diskette drive parameters
 BX_DEBUG_INT13_FL("floppy f08\n");
-      drive = GET_DL();
+      drive = GET_ELDL();
 
       if (drive > 1) {
         AX = 0;
@@ -7141,7 +7150,7 @@ BX_DEBUG_INT13_FL("floppy f08\n");
 
     case 0x15: // read diskette drive type
 BX_DEBUG_INT13_FL("floppy f15\n");
-      drive = GET_DL();
+      drive = GET_ELDL();
       if (drive > 1) {
         SET_AH(0); // only 2 drives supported
         // set_diskette_ret_status here ???
@@ -7162,16 +7171,11 @@ BX_DEBUG_INT13_FL("floppy f15\n");
         SET_AH(1); // drive present, does not support change line
         }
 
-#if BX_ELTORITO_BOOT
-      // This is mandatory. Otherwise Win98 does not boot
-      if ((cdemu_isactive() != 00) && (cdemu_emulated_drive() == drive))
-        DX+=0x0001;
-#endif
       return;
 
     case 0x16: // get diskette change line status
 BX_DEBUG_INT13_FL("floppy f16\n");
-      drive = GET_DL();
+      drive = GET_ELDL();
       if (drive > 1) {
         SET_AH(0x01); // invalid drive
         set_diskette_ret_status(0x01);
@@ -7212,8 +7216,8 @@ BX_DEBUG_INT13_FL("floppy f18\n");
 }
 #else  // #if BX_SUPPORT_FLOPPY
   void
-int13_diskette_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
-  Bit16u DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS;
+int13_diskette_function(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
+  Bit16u DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
 {
   Bit8u  val8;
 
@@ -7806,7 +7810,15 @@ int13_relocated:
   jb    int13_not_eltorito
   cmp   ah,#0x4d
   ja    int13_not_eltorito
-  jmp   int13_eltorito
+
+  pusha
+  push  es
+  push  ds
+  push  ss
+  pop   ds
+
+  push  #int13_out
+  jmp   _int13_eltorito      ;; ELDX not used
 
 int13_not_eltorito:
   push  ax
@@ -7824,125 +7836,111 @@ int13_not_eltorito:
   pop   dx
   push  dx
   cmp   al,dl                ;; int13 on emulated drive
-  je    int13_cdemu
+  jne   int13_nocdemu
 
-  ;; otherwise 
-  and   dl,#0xE0             ;; mask to get device class, including cdroms
-  cmp   al,dl                ;; al is 0x00 or 0x80
-  jne   int13_cdemu_inactive ;; inactive for device class
-  
-int13_cdemu_active:
   pop   dx
   pop   cx
   pop   bx
   pop   ax
+
+  pusha
+  push  es
+  push  ds
+  push  ss
+  pop   ds
+
+  push  #int13_out
+  jmp   _int13_cdemu         ;; ELDX not used
+
+int13_nocdemu:
+  and   dl,#0xE0             ;; mask to get device class, including cdroms
+  cmp   al,dl                ;; al is 0x00 or 0x80
+  jne   int13_cdemu_inactive ;; inactive for device class
+
+  pop   dx
+  pop   cx
+  pop   bx
+  pop   ax
+
+  push  ax
+  push  cx
+  push  dx
+  push  bx
+
   dec   dl                   ;; real drive is dl - 1
   jmp   int13_legacy
-  
+
 int13_cdemu_inactive:
   pop   dx
   pop   cx
   pop   bx
   pop   ax
 
-int13_legacy:
-
 #endif // BX_ELTORITO_BOOT
 
-  pushf
+int13_noeltorito:
+
+  push  ax
+  push  cx
+  push  dx
+  push  bx
+
+int13_legacy:
+
+  push  dx                   ;; push eltorito value of dx instead of sp
+
+  push  bp
+  push  si
+  push  di
+
+  push  es
+  push  ds
+  push  ss
+  pop   ds
+
+  ;; now the 16-bit registers can be restored with:
+  ;; pop ds; pop es; popa; iret
+  ;; arguments passed to functions should be
+  ;; DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS
+
   test  dl, #0x80
-  jz    int13_floppy
+  jnz   int13_notfloppy
+
+  push #int13_out
+  jmp _int13_diskette_function
+
+int13_notfloppy:
 
 #if BX_USE_ATADRV
 
-int13_disk_or_cdrom:
-    cmp   dl, #0xE0
-    jae   int13_cdrom
+  cmp   dl, #0xE0
+  jb    int13_notcdrom
+
+  // ebx is modified: BSD 5.2.1 boot loader problem
+  // someone should figure out which 32 bit register that actually are used
+
+  shr   ebx, #16
+  push  bx
+
+  call  _int13_cdrom
+
+  pop   bx
+  shl   ebx, #16
+
+  jmp int13_out
+
+int13_notcdrom:
 
 #endif
 
 int13_disk:
-  ;; pushf already done
-  push  es
-  push  ds
-  push  ss
-  pop   ds
-  pusha
   call  _int13_harddisk
+
+int13_out:
+  pop ds
+  pop es
   popa
-  pop   ds
-  pop   es
-  popf
-  //  JMPL(iret_modify_cf)
-  jmp iret_modify_cf
-
-int13_floppy:
-  popf
-  // JMPL(int13_diskette)
-  jmp int13_diskette
-
-
-#if BX_USE_ATADRV
-int13_cdrom:
-  ;; pushf already done
-  ;; popf
-  ;; pushf
-  push  es
-  push  ds
-  push  ss
-  pop   ds
-  // ebx is modified: BSD 5.2.1 boot loader problem, so we save all
-  // the 32 bit registers. It should be done in all the bios or no 32
-  // bit register should be used without saving it first.
-  pushad
-  call  _int13_cdrom
-  popad
-  pop   ds
-  pop   es
-  popf
- 
-  //  JMPL(iret_modify_cf)
-  jmp iret_modify_cf
-#endif
-
-#if BX_ELTORITO_BOOT
-int13_cdemu:
-  pop   dx
-  pop   cx
-  pop   bx
-  pop   ax
-
-  push  ds
-  push  ss
-  pop   ds
-
-  pushf
-  push  es
-  pusha
-  call  _int13_cdemu
-  popa
-  pop   es
-  popf
-
-  pop   ds
-  jmp iret_modify_cf
-
-int13_eltorito:
-
-  pushf
-  push  es
-  push  ds
-  push  ss
-  pop   ds
-  pusha
-  call  _int13_eltorito
-  popa
-  pop   ds
-  pop   es
-  popf
-
-  jmp iret_modify_cf
-#endif
+  iret 
 
 
 ;----------
@@ -8607,6 +8605,8 @@ bios32_end:
 pcibios_protected:
   pushf
   cli
+  push esi
+  push edi
   cmp al, #0x01 ;; installation check
   jne pci_pro_f02
   mov bx, #0x0210
@@ -8618,7 +8618,7 @@ pci_pro_f02: ;; find pci device
   cmp al, #0x02
   jne pci_pro_f08
   shl ecx, #16
-  or  ecx, edx
+  mov cx, dx
   mov bx, #0x0000
   mov di, #0x00
 pci_pro_devloop:
@@ -8707,12 +8707,16 @@ pci_pro_f0d: ;; write configuration dword
 pci_pro_unknown:
   mov ah, #0x81
 pci_pro_fail:
+  pop edi
+  pop esi
   sti
   popf
   stc
   retf
 pci_pro_ok:
   xor ah, ah
+  pop edi
+  pop esi
   sti
   popf
   clc
@@ -8757,15 +8761,17 @@ pci_present:
   mov bx, #0x0210
   mov cx, #0
   mov edx, #0x20494350
-  mov edi, #pcibios_protected
-  or  edi, #0xf0000
+  mov edi, #0xf0000
+  mov di, #pcibios_protected
   clc
   ret
 pci_real_f02: ;; find pci device
+  push esi
+  push edi
   cmp al, #0x02
   jne pci_real_f08
   shl ecx, #16
-  or  ecx, edx
+  mov cx, dx
   mov bx, #0x0000
   mov di, #0x00
 pci_real_devloop:
@@ -8856,10 +8862,14 @@ pci_real_f0d: ;; write configuration dword
 pci_real_unknown:
   mov ah, #0x81
 pci_real_fail:
+  pop edi
+  pop esi
   stc
   ret
 pci_real_ok:
   xor ah, ah
+  pop edi
+  pop esi
   clc
   ret
 
@@ -9814,46 +9824,7 @@ int09_finish:
 ;----------------------------------------
 .org 0xec59
 int13_diskette:
-  pushf
-  push  es
-  pusha
-  call  _int13_diskette_function
-  popa
-  pop   es
-  popf
-  //JMPL(iret_modify_cf)
-  jmp iret_modify_cf
-
-#if 0
-  pushf
-  cmp  ah, #0x01
-  je   i13d_f01
-
-  ;; pushf already done
-  push  es
-  pusha
-  call  _int13_diskette_function
-  popa
-  pop   es
-  popf
-  //JMPL(iret_modify_cf)
-  jmp iret_modify_cf
-i13d_f01:
-  popf
-  push  ds
-  push  bx
-  mov   bx, #0x0000
-  mov   ds, bx
-  mov   ah, 0x0441
-  pop   bx
-  pop   ds
-  clc
-  ;; ??? dont know if this service changes the return status
-  //JMPL(iret_modify_cf)
-  jmp iret_modify_cf
-#endif
-
-
+  jmp int13_noeltorito
 
 ;---------------------------------------------
 ;- INT 0Eh Diskette Hardware ISR Entry Point -
@@ -10072,27 +10043,22 @@ int1a_handler:
   jne  int1a_normal
   call pcibios_real
   jc   pcibios_error
-  push ax
-  mov  ax, ss
-  push ds
-  mov  ds, ax
-  push bp
-  mov  bp, sp
-  lahf
-  mov  [bp+10], ah
-  pop bp
-  pop ds
-  pop ax
-  iret
+  retf 2
 pcibios_error:
   mov  bl, ah
   mov  ah, #0xb1
+  push ds
+  pusha
+  mov ax, ss  ; set readable descriptor to ds, for calling pcibios
+  mov ds, ax  ;  on 16bit protected mode.
+  jmp int1a_callfunction
 int1a_normal:
 #endif
   push ds
   pusha
   xor  ax, ax
   mov  ds, ax
+int1a_callfunction:
   call _int1a_function
   popa
   pop  ds
