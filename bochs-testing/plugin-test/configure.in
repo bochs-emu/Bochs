@@ -1,0 +1,27 @@
+AC_INIT
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+AC_PROG_CC
+AC_PROG_CXX
+
+dnl------------ libtool configuration
+dnl Enable building of the convenience library
+dnl and set LIBLTDL accordingly
+AC_LIBLTDL_CONVENIENCE
+dnl Substitute INCLTDL and LIBLTDL in the Makefiles
+AC_SUBST(INCLTDL)
+AC_SUBST(LIBLTDL)
+dnl Prepare to make DLLs
+AC_LIBTOOL_WIN32_DLL
+dnl Check for dlopen support
+AC_LIBTOOL_DLOPEN
+dnl Configure libtool
+AC_PROG_LIBTOOL
+dnl Configure libltdl
+AC_CONFIG_SUBDIRS(libltdl)
+
+LT_LDFLAGS=
+AC_SUBST(LT_LDFLAGS)
+
+AC_OUTPUT(config.h Makefile test1-static/Makefile test2-dynamic/Makefile test3-twomodules/Makefile test4-interdep/Makefile test5-execsymbols/Makefile)

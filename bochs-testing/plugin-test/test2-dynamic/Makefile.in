@@ -1,21 +1,23 @@
-CXX=g++
-CXXFLAGS=-Wall -g
-#CXXFLAGS=-Wall -g -mno-cygwin
-LIBTOOL=libtool
+top_builddir = ..
+
+CXX=@CXX@
+CXXFLAGS=@CXXFLAGS@
+LDFLAGS=@LDFLAGS@ @LT_LDFLAGS@
+LIBTOOL=@LIBTOOL@
 RPATH=`pwd`/lib
 
 all: uselib
 
 uselib: uselib.cc libmodule1.la
-	$(LIBTOOL) $(CXX) $(CXXFLAGS) -o uselib uselib.cc libmodule1.la
+	$(LIBTOOL) $(CXX) $(LDFLAGS) -o uselib uselib.cc libmodule1.la
 
 libmodule1.la: module1.lo
-	$(LIBTOOL) $(CXX) -no-undefined -o libmodule1.la module1.lo -rpath ${RPATH}
+	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule1.la module1.lo -rpath ${RPATH}
 	mkdir -p lib bin
 	$(LIBTOOL) cp libmodule1.la ${RPATH}
 
 %.lo: %.cc %.h
-	$(LIBTOOL) $(CXX) -c $<
+	$(LIBTOOL) $(CXX) $(CXXFLAGS) -c $<
 
 test:
 	@echo "*** Running test in `pwd`"
@@ -23,6 +25,6 @@ test:
 	@echo "*** Test done in `pwd`"
 
 clean:
-	-libtool rm libmodule1.la module1.lo
+	-$(LIBTOOL) rm libmodule1.la module1.lo
 	rm -rf *.o uselib.exe bin lib uselib uselib.exe
 	rm -rf .libs
