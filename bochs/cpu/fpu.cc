@@ -1,3 +1,6 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: fpu.cc,v 1.1 2003-04-22 20:21:32 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -38,8 +41,7 @@
 
 
 
-  void
-BX_CPU_C::ESC0(bxInstruction_c *i)
+void BX_CPU_C::ESC0(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -47,12 +49,11 @@ BX_CPU_C::ESC0(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC0 not implemented"));
+  BX_INFO(("FPU: ESC0 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::ESC1(bxInstruction_c *i)
+void BX_CPU_C::ESC1(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -60,12 +61,11 @@ BX_CPU_C::ESC1(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC1 not implemented"));
+  BX_INFO(("FPU: ESC1 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::ESC2(bxInstruction_c *i)
+void BX_CPU_C::ESC2(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -73,29 +73,24 @@ BX_CPU_C::ESC2(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC2 not implemented"));
+  BX_INFO(("FPU: ESC2 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::ESC3(bxInstruction_c *i)
+void BX_CPU_C::ESC3(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 
-//BX_DEBUG(( "CS:EIP = %04x:%08x",
-//  BX_CPU.sregs[BX_SEG_REG_CS].selector.value, BX_CPU.prev_eip));
-
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC3 not implemented"));
+  BX_INFO(("FPU: ESC3 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::ESC4(bxInstruction_c *i)
+void BX_CPU_C::ESC4(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -103,12 +98,11 @@ BX_CPU_C::ESC4(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC4 not implemented"));
+  BX_INFO(("FPU: ESC4 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::ESC5(bxInstruction_c *i)
+void BX_CPU_C::ESC5(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -116,12 +110,11 @@ BX_CPU_C::ESC5(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC5 not implemented"));
+  BX_INFO(("FPU: ESC5 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::ESC6(bxInstruction_c *i)
+void BX_CPU_C::ESC6(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -129,12 +122,11 @@ BX_CPU_C::ESC6(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC6 not implemented"));
+  BX_INFO(("FPU: ESC6 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::ESC7(bxInstruction_c *i)
+void BX_CPU_C::ESC7(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -142,38 +134,27 @@ BX_CPU_C::ESC7(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("ESC7 not implemented"));
+  BX_INFO(("FPU: ESC7 not implemented, use --enable-fpu"));
 #endif
 }
 
-  void
-BX_CPU_C::FWAIT(bxInstruction_c *i)
+void BX_CPU_C::FWAIT(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   // WAIT doesn't generate single steps on 8086.
   // The same goes for prefix instructions, and instructions which
   // modify segment registers. (pg4-16)
-  // single_step_event = 0;
   BX_PANIC(("WAIT: not implemented for < 386"));
 #else // BX_CPU_LEVEL >= 3
 
   if ( BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp ) {
-    exception(BX_NM_EXCEPTION, 0, 0); // no error
+    exception(BX_NM_EXCEPTION, 0, 0); 
     }
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
-  BX_INFO(("FWAIT: no FPU"));
+  BX_INFO(("FWAIT: requred FPU, use --enable-fpu"));
 #endif
 
 #endif
 }
-
-
-#if BX_SUPPORT_FPU==0
-  // if supporting FPU, this function in glue logic file
-  void
-BX_CPU_C::fpu_init(void)
-{
-}
-#endif

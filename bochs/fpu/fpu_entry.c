@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.7 2003-04-16 18:38:52 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.8 2003-04-22 20:21:33 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -131,7 +131,7 @@ static u_char const type_table[64] = {
 
 
   asmlinkage void
-math_emulate2(fpu_addr_modes addr_modes,
+math_emulate(fpu_addr_modes addr_modes,
               u_char  FPU_modrm,
               u_char byte1,
               void *data_address,

@@ -55,7 +55,7 @@ static BX_CPU_C *fpu_cpu_ptr = NULL;
 i387_t *current_i387;
 
 extern "C" void
-math_emulate2(fpu_addr_modes addr_modes,
+math_emulate(fpu_addr_modes addr_modes,
               u_char  FPU_modrm,
               u_char byte1,
               void *data_address,
@@ -129,7 +129,7 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
   data_sel_off.offset = RMAddr(i);
   data_sel_off.selector = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
 
-  math_emulate2(addr_modes, i->modrm(), i->b1(), data_address,
+  math_emulate(addr_modes, i->modrm(), i->b1(), data_address,
                 data_sel_off, entry_sel_off);
 }
 
@@ -180,7 +180,6 @@ fpu_set_ax(unsigned short val16)
 #define AX (fpu_cpu_ptr->gen_reg[0].word.rx)
   AX = val16;
 #undef AX
-//BX_DEBUG(( "fpu_set_ax(0x%04x)", (unsigned) val16));
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -196,7 +195,6 @@ fpu_verify_area(unsigned what, void *ptr, unsigned n)
   else {  // VERIFY_WRITE
     fpu_cpu_ptr->write_virtual_checks(seg, PTR2INT(ptr), n);
     }
-//BX_DEBUG(( "verify_area: 0x%x", PTR2INT(ptr)));
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.136 2003-04-06 19:08:22 sshwarts Exp $
+// $Id: cpu.h,v 1.137 2003-04-22 20:21:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1285,7 +1285,9 @@ typedef void (*BxDTShim_t)(void);
 
 class BX_MEM_C;
 
+#if BX_SUPPORT_FPU
 #include "cpu/i387.h"
+#endif
 
 #if BX_SUPPORT_SSE
 #include "cpu/xmm.h"
@@ -1425,7 +1427,9 @@ union {
   bx_regs_msr_t msr;  
 #endif
 
+#if BX_SUPPORT_FPU
   i387_t the_i387;
+#endif
 
 #if BX_SUPPORT_SSE
   bx_xmm_reg_t xmm[BX_XMM_REGISTERS];
@@ -2256,9 +2260,11 @@ union {
   BX_SMF void PSLLDQ_WdqIb(bxInstruction_c *i);
   /* SSE2 */
 
+#if BX_SUPPORT_FPU
   BX_SMF void fpu_execute(bxInstruction_c *i);
   BX_SMF void fpu_init(void);
   BX_SMF void fpu_print_regs (void);
+#endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *);
   BX_SMF void CMPXCHG_IBTS(bxInstruction_c *);
