@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.30 2002-01-20 00:25:12 vruppert Exp $
+// $Id: rombios.c,v 1.31 2002-01-24 20:31:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -273,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.30 $";
-static char bios_date_string[] = "$Date: 2002-01-20 00:25:12 $";
+static char bios_cvs_version_string[] = "$Revision: 1.31 $";
+static char bios_date_string[] = "$Date: 2002-01-24 20:31:40 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.30 2002-01-20 00:25:12 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.31 2002-01-24 20:31:40 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -5122,6 +5122,30 @@ i13d_f01:
 .org 0xef57 ; INT 0Eh Diskette Hardware ISR Entry Point
 int0e_handler:
   push ax
+  push dx
+  mov  dx, #0x03f4
+  in   al, dx
+  and  al, #0xc0
+  cmp  al, #0xc0
+  je   int0e_normal
+  mov  dx, #0x03f5
+  mov  al, #0x08 ; sense interrupt status
+  out  dx, al
+int0e_loop1:
+  mov  dx, #0x03f4
+  in   al, dx
+  and  al, #0xc0
+  cmp  al, #0xc0
+  jne  int0e_loop1
+int0e_loop2:
+  mov  dx, #0x03f5
+  in   al, dx
+  mov  dx, #0x03f4
+  in   al, dx
+  and  al, #0xc0
+  cmp  al, #0xc0
+  je int0e_loop2
+int0e_normal:
   push ds
   mov  ax, #0x0000 ;; segment 0000
   mov  ds, ax
@@ -5131,6 +5155,7 @@ int0e_handler:
   or   al, #0x80 ;; diskette interrupt has occurred
   mov  0x043e, al
   pop  ds
+  pop  dx
   pop  ax
   iret
 
