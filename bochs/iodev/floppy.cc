@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.53 2002-10-06 19:38:53 vruppert Exp $
+// $Id: floppy.cc,v 1.54 2002-10-13 09:40:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,7 +88,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.53 2002-10-06 19:38:53 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.54 2002-10-13 09:40:05 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -1446,7 +1446,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 {
   struct stat stat_buf;
   int ret;
-#if BX_WITH_WIN32
+#ifdef WIN32
   char sTemp[1024];
 #endif
 
@@ -1465,7 +1465,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-#if BX_WITH_WIN32
+#ifdef WIN32
     if ( (path[1] == ':') && (strlen(path) == 2) ) {
 	  wsprintf(sTemp, "\\\\.\\%s", path);
 	  media->fd = open(sTemp, BX_RDWR);
@@ -1484,7 +1484,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-#if BX_WITH_WIN32
+#ifdef WIN32
     if ( (path[1] == ':') && (strlen(path) == 2) ) {
 	  wsprintf(sTemp, "\\\\.\\%s", path);
 	  media->fd = open(sTemp, BX_RDONLY);
@@ -1507,7 +1507,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     ret = fd_stat(&stat_buf);
   else
     ret = fstat(media->fd, &stat_buf);
-#elif BX_WITH_WIN32
+#elif defined(WIN32)
 //  if ( (path[1] == ':') && (strlen(path) == 2) ) {
     stat_buf.st_mode = S_IFCHR;
     // maybe replace with code that sets ret to -1 if the disk is not available
