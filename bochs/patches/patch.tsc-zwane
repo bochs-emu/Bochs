@@ -1,17 +1,11 @@
 ----------------------------------------------------------------------
 Patch name: patch.tsc-zwane
 Author: Zwane Mwaikambo <zwane@linuxpower.ca>
-Date: Tue, 24 Sep 2002 19:44:51 -0400 (EDT)
+Date: Sat Dec 14 01:30:22 EST 2002
 
 Detailed description:
 
-This patch will seperate the TSC from the other timers, this helps a lot 
-in speeding up SMP boot and allows TSC synch to be possible. Seperation is 
-definitely necessary for writing to the TSC (e.g. via WRMSR)
-
-Minor bug fixes by Bryce:
-1. I had to move the definition of tsc into BX_CPU_C.
-2. remove duplicate case label BX_MSR_TSC in proc_ctrl.cc
+Revised TSC patch that calls tick at the right time
 
 Patch was created with:
   cvs diff -u
@@ -22,107 +16,137 @@ Instructions:
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 
-Index: pc_system.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/pc_system.cc,v
-retrieving revision 1.23
-diff -u -r1.23 pc_system.cc
---- pc_system.cc	20 Sep 2002 15:35:44 -0000	1.23
-+++ pc_system.cc	28 Sep 2002 04:01:05 -0000
-@@ -370,6 +370,12 @@
-       UNUSED(this_ptr);
- 
-       bx_pc_system.counter++;
-+
-+#if BX_CPU_LEVEL >= 5
-+      // This really belongs in CPU code...
-+      for (int i = 0; i < BX_SMP_PROCESSORS; i++)
-+	BX_CPU(i)->tsc++;
-+#endif
- }
- 
- #if BX_DEBUGGER
 Index: cpu/cpu.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
-retrieving revision 1.84
-diff -u -r1.84 cpu.h
---- cpu/cpu.h	27 Sep 2002 09:56:40 -0000	1.84
-+++ cpu/cpu.h	28 Sep 2002 04:01:09 -0000
-@@ -1390,6 +1390,7 @@
+retrieving revision 1.119
+diff -u -r1.119 cpu.h
+--- cpu/cpu.h	25 Nov 2002 21:58:47 -0000	1.119
++++ cpu/cpu.h	14 Dec 2002 06:21:24 -0000
+@@ -1411,7 +1411,8 @@
+ #endif
  
  #if BX_CPU_LEVEL >= 5
-   bx_regs_msr_t	msr;  
+-  bx_regs_msr_t msr;  
++  bx_regs_msr_t msr;
 +  Bit64u tsc;
  #endif
  
    i387_t the_i387;
-Index: cpu/init.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
-retrieving revision 1.32
-diff -u -r1.32 init.cc
---- cpu/init.cc	22 Sep 2002 18:22:24 -0000	1.32
-+++ cpu/init.cc	28 Sep 2002 04:01:10 -0000
-@@ -497,7 +497,9 @@
- #if BX_CPU_LEVEL >= 4
-   BX_CPU_THIS_PTR clear_AC ();
- #endif
--
-+#if BX_CPU_LEVEL >= 5
-+  BX_CPU_THIS_PTR tsc = 0;
-+#endif
-   BX_CPU_THIS_PTR inhibit_mask = 0;
-   BX_CPU_THIS_PTR debug_trap = 0;
- 
 Index: cpu/proc_ctrl.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
-retrieving revision 1.51
-diff -u -r1.51 proc_ctrl.cc
---- cpu/proc_ctrl.cc	25 Sep 2002 14:09:08 -0000	1.51
-+++ cpu/proc_ctrl.cc	28 Sep 2002 04:01:13 -0000
-@@ -1652,9 +1652,11 @@
-   Boolean cpl = CPL;
+retrieving revision 1.63
+diff -u -r1.63 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	13 Nov 2002 21:00:04 -0000	1.63
++++ cpu/proc_ctrl.cc	14 Dec 2002 06:21:27 -0000
+@@ -1682,9 +1682,9 @@
+   bx_bool cpl = CPL;
    if ((tsd==0) || (tsd==1 && cpl==0)) {
      // return ticks
 -    Bit64u ticks = bx_pc_system.time_ticks ();
--    RAX = (Bit32u) (ticks & 0xffffffff);
--    RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
 +    Bit64u ticks = BX_CPU_THIS_PTR tsc;
-+    EAX = (Bit32u) (ticks & 0xffffffff);
-+    EDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
-+    EDX = (Bit32u) (ticks >> 32);
-+
+     RAX = (Bit32u) (ticks & 0xffffffff);
+-    RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
++    RDX = (Bit32u) ticks >> 32;
      //BX_INFO(("RDTSC: returning EDX:EAX = %08x:%08x", EDX, EAX));
    } else {
      // not allowed to use RDTSC!
-@@ -1812,7 +1814,6 @@
- 		/* The following registers are defined for Pentium only */
- 		case BX_MSR_P5_MC_ADDR:
- 		case BX_MSR_MC_TYPE:
--		case BX_MSR_TSC:
- 		case BX_MSR_CESR:
- 			/* TODO */
- 			return;
-@@ -1820,7 +1821,6 @@
- 		/* These are noops on i686... */
- 		case BX_MSR_P5_MC_ADDR:
- 		case BX_MSR_MC_TYPE:
--		case BX_MSR_TSC:
- 			/* do nothing */
- 			return;
+@@ -1720,10 +1720,6 @@
+       /* TODO */
+       return;
  
-@@ -1830,6 +1830,12 @@
- 		case BX_MSR_CTR1:
- 			goto do_exception;
- #endif	/* BX_CPU_LEVEL == 5 */
+-    case BX_MSR_TSC:
+-      RDTSC(i);
+-      return;
+-
+     case BX_MSR_CESR:
+       /* TODO */
+       return;
+@@ -1734,10 +1730,6 @@
+       /* do nothing */
+       return;
+ 
+-    case BX_MSR_TSC:
+-      RDTSC(i);
+-      return;
+-
+     /* ... And these cause an exception on i686 */
+     case BX_MSR_CESR:
+     case BX_MSR_CTR0:
+@@ -1745,6 +1737,10 @@
+       goto do_exception;
+ #endif  /* BX_CPU_LEVEL == 5 */
+ 
++    case BX_MSR_TSC:
++      RDTSC(i);
++      return;
 +
-+		case BX_MSR_TSC:
-+		/* we ignore the high 32bits */
-+		  BX_CPU_THIS_PTR tsc = (Bit64u)EAX;
-+		  BX_INFO(("WRMSR: wrote %08x:%08x to MSR_TSC\n", 0, EAX));
-+		  return;
+     /* MSR_APICBASE
+        0:7    Reserved
+        8    This is set if its the BSP
+@@ -1842,7 +1838,6 @@
+     /* The following registers are defined for Pentium only */
+     case BX_MSR_P5_MC_ADDR:
+     case BX_MSR_MC_TYPE:
+-    case BX_MSR_TSC:
+     case BX_MSR_CESR:
+       /* TODO */
+       return;
+@@ -1850,7 +1845,6 @@
+     /* These are noops on i686... */
+     case BX_MSR_P5_MC_ADDR:
+     case BX_MSR_MC_TYPE:
+-    case BX_MSR_TSC:
+       /* do nothing */
+       return;
  
- 		/* MSR_APICBASE
- 		   0:7		Reserved
+@@ -1860,6 +1854,12 @@
+     case BX_MSR_CTR1:
+       goto do_exception;
+ #endif  /* BX_CPU_LEVEL == 5 */
++
++    case BX_MSR_TSC:
++    /* we ignore the high 32bits */
++    BX_CPU_THIS_PTR tsc = (Bit64u)EAX;
++    BX_INFO(("WRMSR: wrote %08x:%08x to MSR_TSC\n", 0, EAX));
++      return;
+ 
+     /* MSR_APICBASE
+        0:7    Reserved
+Index: pc_system.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/pc_system.h,v
+retrieving revision 1.22
+diff -u -r1.22 pc_system.h
+--- pc_system.h	25 Oct 2002 11:44:33 -0000	1.22
++++ pc_system.h	14 Dec 2002 06:21:28 -0000
+@@ -27,7 +27,7 @@
+ 
+ 
+ 
+-#define BX_MAX_TIMERS (15+BX_SMP_PROCESSORS)
++#define BX_MAX_TIMERS (128+BX_SMP_PROCESSORS)
+ #define BX_NULL_TIMER_HANDLE 10000
+ 
+ 
+@@ -113,6 +113,9 @@
+     if (--bx_pc_system.currCountdown == 0) {
+       bx_pc_system.countdownEvent();
+       }
++    for (int i = 0; i < BX_SMP_PROCESSORS; i++)
++      BX_CPU(i)->tsc++;
++ 
+     }
+   static BX_CPP_INLINE void tickn(Bit64u n) {
+ #if BX_SHOW_IPS
+@@ -130,6 +133,9 @@
+     // 'n' is not (or no longer) >= the countdown size.  We can just decrement
+     // the remaining requested ticks and continue.
+     bx_pc_system.currCountdown -= Bit32u(n);
++    for (int i = 0; i < BX_SMP_PROCESSORS; i++)
++      BX_CPU(i)->tsc+=n;
++
+     }
+ 
+   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
