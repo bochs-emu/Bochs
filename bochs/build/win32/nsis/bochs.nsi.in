@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.7 2003-10-01 02:00:11 bdenney Exp $
+; $Id: bochs.nsi.in,v 1.8 2004-01-01 23:05:45 cbothamy Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -9,14 +9,16 @@
 ; Based on Example Script by Joost Verburg
 ; also original BOCHS script by Robert (segra)
 ; 
+;---------------------
+;Include Modern UI
+
+  !include "MUI.nsh"
+
+;--------------------------------
 
 !define VERSION @VERSION@
 !define NAME "Bochs ${VERSION}"
 
-!verbose 3
-!include "WinMessages.nsh"
-!include "ModernUI.nsh"
-!verbose 4
 
 !define CURRENTPAGE $9
 
@@ -31,11 +33,9 @@
 
   ;General
   Name "${NAME}"
+  Icon "bochs.ico"
   OutFile Bochs-${VERSION}.exe
   SetOverwrite on
-
-  ;User interface
-  !insertmacro MUI_INTERFACE "modern2.exe" "bochs.ico" "bochs.ico" "modern.bmp" "smooth"
 
   ;License dialog
   LicenseText "Scroll down to see the rest of the agreement."
@@ -180,13 +180,6 @@ Section "Register .bxrc Extension" SecExtension
 SectionEnd
 
 
-Section ""
-
-  ;Invisible section to display the Finish header
-  !insertmacro MUI_FINISHHEADER SetHeader
-  
-SectionEnd
-
 Section -post
   ; Register Uninstaller
   WriteRegStr HKLM "SOFTWARE\${NAME}" "" $INSTDIR
@@ -200,90 +193,6 @@ SectionEnd
 
 ;--------------------------------
 ;Installer Functions
-
-Function .onInitDialog
-
-  !insertmacro MUI_INNERDIALOG_INIT
-
-    !insertmacro MUI_INNERDIALOG_START 1
-      !insertmacro MUI_INNERDIALOG_TEXT 1033 1040 "If you accept all the terms of the agreement, choose I Agree to continue. If you choose Cancel, Setup will close. You must accept the agreement to install ${NAME}."
-    !insertmacro MUI_INNERDIALOG_STOP 1
-
-    !insertmacro MUI_INNERDIALOG_START 2
-      !insertmacro MUI_INNERDIALOG_TEXT 1033 1042 "Description"
-      !insertmacro MUI_INNERDIALOG_TEXT 1033 1043 "Hover your mouse over a component to see it's description."
-    !insertmacro MUI_INNERDIALOG_STOP 2
-
-    !insertmacro MUI_INNERDIALOG_START 3
-      !insertmacro MUI_INNERDIALOG_TEXT 1033 1041 "Destination Folder"
-      !insertmacro MUI_INNERDIALOG_STOP 3
-
-  !insertmacro MUI_INNERDIALOG_END
-
-FunctionEnd
-
-Function .onNextPage
-
-  !insertmacro MUI_NEXTPAGE_OUTER
-  !insertmacro MUI_NEXTPAGE SetHeader
-  
-FunctionEnd
-
-Function .onPrevPage
-
-  !insertmacro MUI_PREVPAGE
-
-FunctionEnd
-
-Function SetHeader
-
-  !insertmacro MUI_HEADER_INIT
-
-    !insertmacro MUI_HEADER_START 1
-       !insertmacro MUI_HEADER_TEXT 1033 "License Agreement" "Please review the license terms before installing ${NAME}."
-    !insertmacro MUI_HEADER_STOP 1
-
-    !insertmacro MUI_HEADER_START 2
-      !insertmacro MUI_HEADER_TEXT 1033 "Choose Components" "Choose the components you want to install."
-    !insertmacro MUI_HEADER_STOP 2
-
-    !insertmacro MUI_HEADER_START 3
-      !insertmacro MUI_HEADER_TEXT 1033 "Choose Install Location" "Choose the folder in which to install ${NAME} in."
-    !insertmacro MUI_HEADER_STOP 3
-
-    !insertmacro MUI_HEADER_START 4
-      !insertmacro MUI_HEADER_TEXT 1033 "Installing" "Please wait while ${NAME} is being installed."
-    !insertmacro MUI_HEADER_STOP 4
-
-    !insertmacro MUI_HEADER_START 5
-      !insertmacro MUI_HEADER_TEXT 1033 "Finished" "Setup was completed successfully."
-    !insertmacro MUI_HEADER_STOP 5
-
-  !insertmacro MUI_HEADER_END
-
-FunctionEnd
-
-Function .onMouseOverSection
-
-  !insertmacro MUI_DESCRIPTION_INIT
-
-    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecCore} "Installs the core ${NAME} applications."
-    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecROMs} "BIOS and Video ROMs required by ${NAME}."
-    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecDLX} "An image of DLX Linux with a batch file for quickly loading it."
-    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecDocs} "Documentation for configuring and running ${NAME}."
-    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecIcons} "Installs icons and program menu items for quickly running ${NAME}."
-    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecExtension} "Adds the ability to double-click a .bxrc file and start ${NAME} immediately."
-
- !insertmacro MUI_DESCRIPTION_END
-
-FunctionEnd
-
-Function .onUserAbort
-
-  !insertmacro MUI_ABORTWARNING 1033 "Are you sure you want to quit ${NAME} Setup?"
-  !insertmacro MUI_ABORTWARNING_END
-  
-FunctionEnd
 
 Function .onInstSuccess
   MessageBox MB_YESNO|MB_ICONQUESTION \
@@ -349,38 +258,6 @@ Section "Uninstall"
   RMDIR "$INSTDIR\docs"
   RMDIR "$INSTDIR"
 
-  !insertmacro MUI_FINISHHEADER un.SetHeader
- 
 SectionEnd
-
-;--------------------------------
-;Uninstaller Functions
-
-Function un.onNextPage
-
-  !insertmacro MUI_NEXTPAGE_OUTER
-  !insertmacro MUI_NEXTPAGE un.SetHeader
-  
-FunctionEnd
-
-Function un.SetHeader
-
-  !insertmacro MUI_HEADER_INIT
-
-    !insertmacro MUI_HEADER_START 1
-      !insertmacro MUI_HEADER_TEXT 1033 "Uninstall ${NAME}" "Remove ${NAME} from your system."
-    !insertmacro MUI_HEADER_STOP 1
-
-    !insertmacro MUI_HEADER_START 2
-      !insertmacro MUI_HEADER_TEXT 1033 "Uninstalling" "Please wait while ${NAME} is being uninstalled."
-    !insertmacro MUI_HEADER_STOP 2
-
-    !insertmacro MUI_HEADER_START 3
-      !insertmacro MUI_HEADER_TEXT 1033 "Finished" "${NAME} has been removed from your system."
-    !insertmacro MUI_HEADER_STOP 3
-
-  !insertmacro MUI_HEADER_END
-
-FunctionEnd
 
 ;eof
