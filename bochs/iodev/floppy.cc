@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.71 2004-02-08 10:25:50 vruppert Exp $
+// $Id: floppy.cc,v 1.72 2004-02-08 18:38:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.71 2004-02-08 10:25:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.72 2004-02-08 18:38:26 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -200,7 +200,7 @@ bx_floppy_ctrl_c::init(void)
     }
   if (BX_FD_THIS s.device_type[0] != BX_FLOPPY_NONE) {
     BX_FD_THIS s.num_supported_floppies++;
-    BX_FD_THIS s.statusbar_id[0] = bx_gui->register_statusitem("A:");
+    BX_FD_THIS s.statusbar_id[0] = bx_gui->register_statusitem(" A: ");
   } else {
     BX_FD_THIS s.statusbar_id[0] = -1;
   }
@@ -270,7 +270,7 @@ bx_floppy_ctrl_c::init(void)
     }
   if (BX_FD_THIS s.device_type[1] != BX_FLOPPY_NONE) {
     BX_FD_THIS s.num_supported_floppies++;
-    BX_FD_THIS s.statusbar_id[1] = bx_gui->register_statusitem("B:");
+    BX_FD_THIS s.statusbar_id[1] = bx_gui->register_statusitem(" B: ");
   } else {
     BX_FD_THIS s.statusbar_id[1] = -1;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.73 2004-02-08 10:25:50 vruppert Exp $
+// $Id: win32.cc,v 1.74 2004-02-08 18:38:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -127,10 +127,11 @@ static int bx_headerbar_entries;
 static unsigned bx_hb_separator;
 
 // Status Bar stuff
-#define SIZE_OF_SB_ELEMENT        30
-#define SIZE_OF_SB_FIRST_ELEMENT 192
+#define SIZE_OF_SB_ELEMENT        40
+#define SIZE_OF_SB_FIRST_ELEMENT 160
 long SB_Edges[BX_MAX_STATUSITEMS+2];
 char SB_Text[BX_MAX_STATUSITEMS][10];
+bx_bool SB_Active[BX_MAX_STATUSITEMS];
 
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
@@ -789,17 +790,18 @@ void SetStatusText(int Num, const char *Text, bx_bool active)
 {
   char StatText[MAX_PATH];
 
-  if (Num < 1) {
-    StatText[0] = ' ';  // Add space to text in first item
+  if ((Num < 1) || (Num > BX_MAX_STATUSITEMS)) {
+    StatText[0] = ' ';  // Add space to text in first and last item
   } else {
     StatText[0] = 9;  // Center the rest
   }
   lstrcpy(StatText+1, Text);
-  if (active)
+  if ((Num < 1) || (Num > BX_MAX_STATUSITEMS)) {
     SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
-  else {
-    lstrcpy(SB_Text[Num], StatText);
-    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (long)SB_Text[Num]);
+  } else {
+    lstrcpy(SB_Text[Num-1], StatText);
+    SB_Active[Num-1] = active;
+    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (long)SB_Text[Num-1]);
   }
   UpdateWindow(hwndSB);
 }
@@ -858,8 +860,12 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     lpdis = (DRAWITEMSTRUCT *)lParam;
     if (lpdis->hwndItem == hwndSB) {
       sbtext = (char *)lpdis->itemData;
-      SetBkMode(lpdis->hDC, TRANSPARENT);
-      SetTextColor(lpdis->hDC, 0x00808080);
+      if (SB_Active[lpdis->itemID-1]) {
+        SetBkColor(lpdis->hDC, 0x0000FF00);
+      } else {
+        SetBkMode(lpdis->hDC, TRANSPARENT);
+        SetTextColor(lpdis->hDC, 0x00808080);
+      }
       DrawText(lpdis->hDC, sbtext+1, lstrlen(sbtext)-1, &lpdis->rcItem, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
       return TRUE;
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.23 2004-02-06 22:28:00 danielg4 Exp $
+// $Id: harddrv.h,v 1.24 2004-02-08 18:38:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -741,6 +741,7 @@ private:
       atapi_t atapi;
 
       Bit8u model_no[41];
+      int statusbar_id;
       } drives[2];
     unsigned drive_select;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.117 2004-02-06 22:28:00 danielg4 Exp $
+// $Id: harddrv.cc,v 1.118 2004-02-08 18:38:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -158,8 +158,9 @@ bx_hard_drive_c::init(void)
 {
   Bit8u channel;
   char  string[5];
+  char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.117 2004-02-06 22:28:00 danielg4 Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.118 2004-02-08 18:38:26 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -251,6 +252,7 @@ bx_hard_drive_c::init(void)
 	
 	  // If not present
       BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
+      BX_HD_THIS channels[channel].drives[device].statusbar_id = -1;
       if (!bx_options.atadevice[channel][device].Opresent->get()) {
         continue;
         }
@@ -265,6 +267,9 @@ bx_hard_drive_c::init(void)
       if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_DISK) {
         BX_DEBUG(( "Hard-Disk on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type           = IDE_DISK;
+        sprintf(sbtext, "HD:%d-%s", channel, device?"S":"M");
+        BX_HD_THIS channels[channel].drives[device].statusbar_id =
+          bx_gui->register_statusitem(sbtext);
 
         int cyl = bx_options.atadevice[channel][device].Ocylinders->get ();
         int heads = bx_options.atadevice[channel][device].Oheads->get ();
@@ -389,6 +394,9 @@ bx_hard_drive_c::init(void)
         BX_HD_THIS channels[channel].drives[device].sense.sense_key = SENSE_NONE;
         BX_HD_THIS channels[channel].drives[device].sense.asc = 0;
         BX_HD_THIS channels[channel].drives[device].sense.ascq = 0;
+        sprintf(sbtext, "CD:%d-%s", channel, device?"S":"M");
+        BX_HD_THIS channels[channel].drives[device].statusbar_id =
+          bx_gui->register_statusitem(sbtext);
 	
         // Check bit fields
         BX_CONTROLLER(channel,device).sector_count = 0;
