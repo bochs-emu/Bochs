@@ -69,7 +69,7 @@ public:
   Boolean TC;      // Terminal Count
   Boolean HRQ;     // Hold Request
   Boolean HLDA;    // Hold Acknowlege
-  Boolean INTR;    // Interrupt
+  //Boolean INTR;    // Interrupt
 
 
     // Address line 20 control:

@@ -22,10 +22,8 @@
 
 
 // if including from C parser, need basic types etc
-#ifndef __cplusplus
 #include "config.h"
 #include "osdep.h"
-#endif
 
 #if BX_USE_LOADER
 #include "loader_misc.h"
@@ -43,7 +41,7 @@ void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
 
 #define BX_DBG_NO_HANDLE 1000
 
-
+extern Bit32u dbg_cpu;
 
 unsigned long crc32(unsigned char *buf, int len);
 
@@ -64,6 +62,13 @@ void bx_add_lex_input(char *buf);
 extern int bxparse(void);
 extern void bxerror(char *s);
 
+typedef struct {
+  Bit64s from;
+  Bit64s to;
+} bx_num_range;
+#define EMPTY_ARG (-1)
+
+bx_num_range make_num_range (Bit64s from, Bit64s to);
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 void bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset);
 void bx_dbg_trace_on_command(void);
@@ -102,6 +107,12 @@ void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
 void bx_dbg_info_registers_command(void);
 void bx_dbg_info_dirty_command(void);
+void bx_dbg_info_idt_command(bx_num_range);
+void bx_dbg_info_gdt_command(bx_num_range);
+void bx_dbg_info_ldt_command(bx_num_range);
+void bx_dbg_info_tss_command(bx_num_range);
+void bx_dbg_info_control_regs_command(void);
+void bx_dbg_info_linux_command(void);
 void bx_dbg_examine_command(char *command, char *format, Boolean format_passed,
                     Bit32u addr, Boolean addr_passed, int simulator);
 void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
@@ -110,7 +121,7 @@ void bx_dbg_query_command(char *);
 void bx_dbg_take_command(char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
 void bx_dbg_set_cpu_command(void);
-void bx_dbg_disassemble_command(Bit32u addr1, Bit32u addr2);
+void bx_dbg_disassemble_command(bx_num_range);
 void bx_dbg_instrument_command(char *);
 void bx_dbg_loader_command(char *);
 void bx_dbg_doit_command(unsigned);
@@ -119,6 +130,7 @@ void bx_dbg_maths_command(char *command, int data1, int data2);
 void bx_dbg_maths_expression_command(char *expr);
 void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
 extern Boolean watchpoint_continue;
+void bx_dbg_linux_syscall ();
 
 #ifdef __cplusplus
 }
@@ -136,7 +148,7 @@ extern int num_read_watchpoints;
 extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 
 typedef enum {
-      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, STOP_TRACE, STOP_MODE_BREAK_POINT
+      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
 } stop_reason_t;
 
 typedef enum {
@@ -271,7 +283,7 @@ typedef struct {
 
 // working information for each simulator to update when a guard
 // is reached (found)
-typedef struct {
+typedef struct bx_guard_found_t {
   unsigned long guard_found;
   unsigned iaddr_index;
   bx_dbg_icount_t icount; // number of completed instructions
@@ -283,7 +295,6 @@ typedef struct {
   } bx_guard_found_t;
 
 extern bx_guard_t        bx_guard;
-extern bx_guard_found_t  bx_guard_found[];
 
 
 
@@ -369,6 +380,7 @@ typedef struct {
                    Bit32u addr1, Bit32u addr2, Bit32u *crc);
   } bx_dbg_callback_t;
 
+extern bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
 
 void BX_SIM1_INIT(bx_dbg_callback_t *, int argc, char *argv[]);
 #ifdef BX_SIM2_INIT

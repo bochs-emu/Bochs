@@ -50,6 +50,7 @@ YACC   = yacc
 
 BX_OBJS = \
   dbg_main.o \
+  linux.o \
   crc.o @BX_LOADER_OBJS@
 
 BX_PARSER_OBJS = \

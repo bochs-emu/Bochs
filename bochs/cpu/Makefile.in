@@ -41,6 +41,8 @@ RANLIB = @RANLIB@
 
 BX_INCDIRS = -I.. -I../@INSTRUMENT_DIR@
 
+APIC_OBJS = @APIC_OBJS@
+
 OBJS = \
 	init.o \
 	access.o \
@@ -86,7 +88,8 @@ OBJS = \
 	segment_ctrl.o \
 	soft_int.o \
 	string.o \
-	bcd.o
+	bcd.o \
+	$(APIC_OBJS)
 
 BX_INCLUDES = ../bochs.h ../config.h
 

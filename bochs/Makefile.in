@@ -20,9 +20,9 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-VERSION=1.1.2
-VER_STRING=cvs-snapshot
-REL_STRING=
+VERSION=1.2
+VER_STRING=1.2-pre1
+REL_STRING=Tue May 22 23:57:25 EDT 2001
 PREFIX=/usr/local/bochs
 BINPATH=/usr/local/bin
 INSTALL_LIST=bios/BIOS-* CHANGES.txt COPYING README bios/VGABIOS*
@@ -33,6 +33,7 @@ MV=mv
 LN_S=ln -sf
 DLXLINUX_TAR=dlxlinux1.tar.gz
 DLXLINUX_TAR_URL=http://bochs.sourceforge.net/guestos/${DLXLINUX_TAR}
+DLXLINUX_ROMFILE=BIOS-bochs-2001_0517
 GUNZIP=gunzip
 WGET=wget
 SED=sed
@@ -43,6 +44,8 @@ SRPMS=/usr/src/redhat/SRPMS
 MKDIR=mkdir
 TAR=tar
 RPM=rpm
+CHMOD=chmod
+CHOWN=chown
 
 @SUFFIX_LINE@
 
@@ -59,6 +62,9 @@ CXXFLAGS = @CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
+# To compile with readline:
+#   linux needs just -lreadline
+#   solaris needs -lreadline -lcurses
 X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS) -lX11
@@ -112,6 +118,7 @@ DISASM_LIB     = disasm/libdisasm.a
 DYNAMIC_LIB    = dynamic/libdynamic.a
 INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
 FPU_LIB        = fpu/libfpu.a
+READLINE_LIB   = @READLINE_LIB@
 
 BX_OBJS = @NONINLINE_VAR@
 
@@ -140,7 +147,8 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 		$(FPU_LIB) \
 		$(GUI_LINK_OPTS) \
 		$(MCH_LINK_FLAGS) \
-	        $(SIMX86_LINK_FLAGS)
+	        $(SIMX86_LINK_FLAGS) \
+		$(READLINE_LIB)
 
 
 $(BX_OBJS): $(BX_INCLUDES)
@@ -228,6 +236,11 @@ install_dlx::
 	${RM} -rf ${PREFIX}/dlxlinux
 	${GUNZIP} -c ${DLXLINUX_TAR} | (cd ${PREFIX}; tar -xvf -)
 	test -d ${PREFIX}/dlxlinux
+	(cd ${PREFIX}/dlxlinux; ${MV} .bochsrc .bochsrc.orig; ${SED} -e "s/BIOS-bochs-990925a/${DLXLINUX_ROMFILE}/" -e "s/1\.1\.2/${VERSION}/g"< .bochsrc.orig > bochsrc; rm -f .bochsrc.orig)
+	${CHOWN} -R root.root ${PREFIX}/dlxlinux
+	${CHMOD} 777 ${PREFIX}/dlxlinux
+	${CHMOD} 666 ${PREFIX}/dlxlinux/*
+	${CHMOD} 644 ${PREFIX}/dlxlinux/README
 
 erase_install::
 	${RM} -rf ${PREFIX}/${VERSION}

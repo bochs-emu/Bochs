@@ -31,13 +31,26 @@
 #define BX_DEVICE_ID     3
 #define BX_STEPPING_ID   0
 
-BX_CPU_C::BX_CPU_C(void)
+BX_CPU_C::BX_CPU_C()
+#if BX_APIC_SUPPORT
+   : local_apic (this)
+#endif
+{
+  // in case of SMF, you cannot reference any member data
+  // in the constructor because the only access to it is via
+  // global variables which aren't initialized quite yet.
+}
+
+void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
   // BX_CPU_C constructor
-  char cpu[8];
-  snprintf(cpu, 8, "[CPU%d]",BX_SIM_ID);
-
-  setprefix(cpu);
+  BX_CPU_THIS_PTR set_INTR (0);
+#if BX_APIC_SUPPORT
+  local_apic.init ();
+#endif
+  setprefix("[CPU ]");
+  // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
+  // bx_local_apic_c::set_id as soon as the apic ID is assigned.
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
      you can assume there's always a base & index register used.  For
@@ -165,6 +178,9 @@ BX_CPU_C::BX_CPU_C(void)
   DTIndBrHandler = (BxDTShim_t) DTASIndBrHandler;
   DTDirBrHandler = (BxDTShim_t) DTASDirBrHandler;
 #endif
+
+  mem = addrspace;
+  sprintf (name, "CPU %p", this);
 
   BX_INSTR_INIT();
   BX_DEBUG(( "Init.\n"));
@@ -474,8 +490,11 @@ BX_CPU_C::reset(unsigned source)
 #elif BX_CPU_LEVEL == 5
   BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
   BX_CPU_THIS_PTR dr7 = 0x00000400;
+#elif BX_CPU_LEVEL == 6
+  BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
+  BX_CPU_THIS_PTR dr7 = 0x00000400;
 #else
-#  error "DR6,7: CPU > 5"
+#  error "DR6,7: CPU > 6"
 #endif
 
 #if 0
@@ -532,7 +551,7 @@ BX_CPU_C::reset(unsigned source)
 
 
   BX_CPU_THIS_PTR EXT = 0;
-  BX_INTR = 0;
+  //BX_INTR = 0;
 
   TLB_init();
 
@@ -555,6 +574,22 @@ BX_CPU_C::reset(unsigned source)
 
 #if BX_DYNAMIC_TRANSLATION
   dynamic_init();
+#endif
+
+#if (BX_SMP_PROCESSORS > 1)
+  // notice if I'm the bootstrap processor.  If not, do the equivalent of
+  // a HALT instruction.
+  int apic_id = local_apic.get_id ();
+  if (BX_BOOTSTRAP_PROCESSOR == apic_id)
+  {
+    // boot normally
+    BX_INFO(("CPU[%d] is the bootstrap processor\n", apic_id));
+  } else {
+    // it's an application processor, halt until IPI is heard.
+    BX_INFO(("CPU[%d] is an application processor. Halting until IPI.\n", apic_id));
+    debug_trap |= 0x80000000;
+    async_event = 1;
+  }
 #endif
 }
 
@@ -640,5 +675,6 @@ BX_CPU_C::sanity_checks(void)
   void
 BX_CPU_C::set_INTR(Boolean value)
 {
+  BX_CPU_THIS_PTR INTR = value;
   BX_CPU_THIS_PTR async_event = 1;
 }

@@ -55,6 +55,9 @@ clean:
 	@RMCOMMAND@ *.o
 	@RMCOMMAND@ *.a
 	@RMCOMMAND@ _rombios_.c
+	@RMCOMMAND@ biosconfig.h
+	@RMCOMMAND@ as86-sym.txt
+	@RMCOMMAND@ ld86-sym.txt
 
 dist-clean: clean bios-clean
 	@RMCOMMAND@ Makefile
@@ -71,12 +74,17 @@ bios-clean:
 
 
 rombios.bin: rombios.o
-	ld86 -r -s -o rombios.ld86 -i -0 rombios.o
+	ld86 -M -r -s -o rombios.ld86 -i -0 rombios.o > ld86-sym.txt
 	dd if=rombios.ld86 of=$@ ibs=32 skip=1
 	ls -l rombios.bin
 
-rombios.o: rombios.c
+biosconfig.h: ../config.h
+	@RMCOMMAND@ biosconfig.h
+	echo '// This file generated automatically by bios/Makefile using config.h' > biosconfig.h
+	grep '#define.*SMP_PROCESSORS' ../config.h >> biosconfig.h
+
+rombios.o: rombios.c biosconfig.h
 	gcc -E rombios.c | tools86 -E > _rombios_.c
 	bcc-cc1 -o rombios.s -c -D__i86__ -0 _rombios_.c
-	csh dataseghack
-	as86 rombios.s -o rombios.o -u -w -g -0 -j
+	csh ./dataseghack
+	as86 rombios.s -o rombios.o -u -w -0 -j -s as86-sym.txt

@@ -117,8 +117,10 @@ extern "C" {
 #define BX_SET_ENABLE_A20(enabled)  bx_dbg_async_pin_request(BX_DBG_ASYNC_PENDING_A20, \
                                       enabled)
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
+#error FIXME: cosim mode not fixed yet
 
 #else
+
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
 #define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
@@ -138,16 +140,26 @@ extern "C" {
 #define BX_HRQ                      (bx_pc_system.HRQ)
 #define BX_RAISE_HLDA()             bx_pc_system.raise_HLDA()
 #define BX_TICK1()                  bx_pc_system.tick1()
+#define BX_TICKN(n)                 bx_pc_system.tickn(n)
 #define BX_INTR                     bx_pc_system.INTR
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
 #define BX_CPU_C                    bx_cpu_c
-#define BX_CPU                      bx_cpu
+#define BX_CPU(x)                   (bx_cpu_array[x])
 #define BX_MEM_C                    bx_mem_c
-#define BX_MEM                      bx_mem
+#define BX_MEM(x)                   (bx_mem_array[x])
 #define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 
-#endif  // ((BX_DEBUGGER == 1) && (BX_NUM_SIMULATORS >= 2))
+#endif
+
+// you can't use static member functions on the CPU, if there are going
+// to be 2 cpus.  Check this early on.
+#if (BX_SMP_PROCESSORS>1)
+#  if (BX_USE_CPU_SMF!=0)
+#    error For SMP simulation, BX_USE_CPU_SMF must be 0.
+#  endif
+#endif
+
 
 // #define BX_IAC()                 bx_pc_system.IAC()
 #define BX_IAC()                    bx_devices.pic->IAC()
@@ -281,7 +293,25 @@ class iofunctions {
 		  "DEV ",
 		  "MEM ",
 		  "DIS ",
-		  "GUI "
+		  "GUI ",
+		  "IOAP",
+		  "APIC",
+		  "CPU0",
+		  "CPU1",
+		  "CPU2",
+		  "CPU3",
+		  "CPU4",
+		  "CPU5",
+		  "CPU6",
+		  "CPU7",
+		  "CPU8",
+		  "CPU9",
+		  "CPUa",
+		  "CPUb",
+		  "CPUc",
+		  "CPUd",
+		  "CPUe",
+		  "CPUf",
 		};
 		return logclass[i];
 	}
@@ -310,6 +340,24 @@ class iofunctions {
 #define    MEMLOG          20
 #define    DISLOG          21
 #define    GUILOG          22
+#define    IOAPICLOG       23
+#define    APICLOG         24
+#define    CPU0LOG         25
+#define    CPU1LOG         26
+#define    CPU2LOG         27
+#define    CPU3LOG         28
+#define    CPU4LOG         29
+#define    CPU5LOG         30
+#define    CPU6LOG         31
+#define    CPU7LOG         32
+#define    CPU8LOG         33
+#define    CPU9LOG         34
+#define    CPU10LOG         35
+#define    CPU11LOG         36
+#define    CPU12LOG         37
+#define    CPU13LOG         38
+#define    CPU14LOG         39
+#define    CPU15LOG         40
 
 
 public:
@@ -418,9 +466,17 @@ typedef struct {
 #ifdef MAGIC_BREAKPOINT
   Boolean magic_break_enabled;
 #endif /* MAGIC_BREAKPOINT */
+#if BX_APIC_SUPPORT
+  Boolean apic;
+  Boolean ioapic;
+#endif
+#if BX_DEBUG_LINUX
+  Boolean linux_syscall;
+#endif
   void* record_io;
   } bx_debug_t;
 
+#define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%s\n", #x, __FILE__, __LINE__));} while (0)
 void bx_signal_handler (int signum);
 void bx_atexit(void);
 extern bx_debug_t bx_dbg;
@@ -585,6 +641,5 @@ extern bx_options_t bx_options;
 int bx_bochs_init(int argc, char *argv[]);
 
 #include "instrument.h"
-
 
 #endif  /* BX_BOCHS_H */

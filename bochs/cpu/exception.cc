@@ -51,6 +51,11 @@ BX_CPU_C::interrupt(Bit8u vector, Boolean is_INT, Boolean is_error_code,
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
+#if BX_DEBUG_LINUX
+  if (bx_dbg.linux_syscall) {
+    if (vector == 0x80) bx_dbg_linux_syscall ();
+  }
+#endif
 #endif
 
 //BX_DEBUG(( "::interrupt(%u)\n", vector ));

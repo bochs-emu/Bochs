@@ -34,11 +34,15 @@ extern "C" {
 }
 
 #define LOG_THIS genlog->
+#if BX_USE_CPU_SMF
+#define this (BX_CPU(0))
+#endif
 
 // Use this to hold a pointer to the instruction since
 // we can't pass this to the FPU emulation routines, which
 // will ultimately call routines here.
 static BxInstruction_t *fpu_iptr = NULL;
+static BX_CPU_C *fpu_cpu_ptr = NULL;
 
 i387_t i387;
 
@@ -70,6 +74,7 @@ BX_CPU_C::fpu_execute(BxInstruction_t *i)
   Boolean is_32;
 
   fpu_iptr = i;
+  fpu_cpu_ptr = this;
 
 #if 0
   addr_modes.default_mode = VM86;
@@ -111,8 +116,7 @@ access_limit = 0xff;
   // fill in orig eip here in offset
   // fill in CS in selector
   entry_sel_off.offset = BX_CPU_THIS_PTR prev_eip;
-  entry_sel_off.selector =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  entry_sel_off.selector = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
 // should set these fields to 0 if mem operand not used
   data_address = (void *) i->rm_addr;
@@ -127,13 +131,16 @@ access_limit = 0xff;
   unsigned
 fpu_get_ds(void)
 {
-  return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+  return(fpu_cpu_ptr->sregs[BX_SEG_REG_DS].selector.value);
 }
 
   void
 fpu_set_ax(unsigned short val16)
 {
+// define to set AX in the current CPU -- not ideal.
+#define AX (fpu_cpu_ptr->gen_reg[0].word.rx)
   AX = val16;
+#undef AX
 //BX_DEBUG(( "fpu_set_ax(0x%04x)\n", (unsigned) val16));
 }
 
@@ -142,13 +149,13 @@ fpu_verify_area(unsigned what, void *ptr, unsigned n)
 {
   bx_segment_reg_t *seg;
 
-  seg = &BX_CPU_THIS_PTR sregs[fpu_iptr->seg];
+  seg = &fpu_cpu_ptr->sregs[fpu_iptr->seg];
 
   if (what == VERIFY_READ) {
-    BX_CPU.read_virtual_checks(seg, PTR2INT(ptr), n);
+    fpu_cpu_ptr->read_virtual_checks(seg, PTR2INT(ptr), n);
     }
   else {  // VERIFY_WRITE
-    BX_CPU.write_virtual_checks(seg, PTR2INT(ptr), n);
+    fpu_cpu_ptr->write_virtual_checks(seg, PTR2INT(ptr), n);
     }
 //BX_DEBUG(( "verify_area: 0x%x\n", PTR2INT(ptr)));
 }
@@ -170,15 +177,15 @@ fpu_get_user(void *ptr, unsigned len)
 
   switch (len) {
     case 1:
-      BX_CPU.read_virtual_byte(fpu_iptr->seg, PTR2INT(ptr), &val8);
+      fpu_cpu_ptr->read_virtual_byte(fpu_iptr->seg, PTR2INT(ptr), &val8);
       val32 = val8;
       break;
     case 2:
-      BX_CPU.read_virtual_word(fpu_iptr->seg, PTR2INT(ptr), &val16);
+      fpu_cpu_ptr->read_virtual_word(fpu_iptr->seg, PTR2INT(ptr), &val16);
       val32 = val16;
       break;
     case 4:
-      BX_CPU.read_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
+      fpu_cpu_ptr->read_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
       BX_PANIC(("fpu_get_user: len=%u\n", len));
@@ -196,15 +203,15 @@ fpu_put_user(unsigned val, void *ptr, unsigned len)
   switch (len) {
     case 1:
       val8 = val;
-      BX_CPU.write_virtual_byte(fpu_iptr->seg, PTR2INT(ptr), &val8);
+      fpu_cpu_ptr->write_virtual_byte(fpu_iptr->seg, PTR2INT(ptr), &val8);
       break;
     case 2:
       val16 = val;
-      BX_CPU.write_virtual_word(fpu_iptr->seg, PTR2INT(ptr), &val16);
+      fpu_cpu_ptr->write_virtual_word(fpu_iptr->seg, PTR2INT(ptr), &val16);
       break;
     case 4:
       val32 = val;
-      BX_CPU.write_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
+      fpu_cpu_ptr->write_virtual_dword(fpu_iptr->seg, PTR2INT(ptr), &val32);
       break;
     default:
       BX_PANIC(("fpu_put_user: len=%u\n", len));
@@ -223,11 +230,11 @@ math_abort(struct info *info, unsigned int signal)
 //   SIGSEGV : access data beyond segment violation
   switch (signal) {
     case SIGFPE:
-      if (BX_CPU.cr0.ne == 0) {
+      if (fpu_cpu_ptr->cr0.ne == 0) {
         // MSDOS compatibility external interrupt (IRQ13)
         BX_PANIC (("math_abort: MSDOS compatibility not supported yet\n"));
         }
-      BX_CPU.exception(BX_MF_EXCEPTION, 0, 0);
+      fpu_cpu_ptr->exception(BX_MF_EXCEPTION, 0, 0);
       // execution does not reach here
 
     case SIGILL:

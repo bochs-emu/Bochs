@@ -1,127 +1,5 @@
-#megs: 64
-megs: 32
-#megs: 16
-#megs: 8
-boot: c
-vgaromimage: bios/VGABIOS-elpin-2.40
-
 # You many now use double quotes around pathnames, in case
 # your pathname includes spaces.
-
-# For Macintosh, use the style of pathnames in the following
-# examples.  Leave only one of each directive uncommented,
-# if any.
-
-# Bochs now has four severity levels for event logging.
-#   panic: cannot proceed.  If you choose to continue after a panic, 
-#          don't be surprised if you get unstable behavior.
-#   error: something went wrong, but it is probably safe to continue the
-#          simulation.
-#   info: interesting or useful messages, not 1000's per second.
-#   debug: messages useful only when debugging the code.  This may
-#          spit out thousands per second.
-#
-# For events of each level, you can choose to crash, report, or ignore.
-# TODO: allow choice based on the facility: e.g. report debug messages
-#       from the cdrom but ignore debug messages from everything else.
-panic: action=fatal
-error: action=report
-info: action=report
-debug: action=ignore
-
-
-#vgaromimage: :bios:VGABIOS-elpin-2.20
-#romimage: file=:bios:BIOS-bochs-981222a, address=0xf0000
-#floppya: 1_44=[fd:], status=inserted
-#diskc: file=big.img, cyl=900, heads=15, spt=17
-
-#time0: 938581955
-
-#diskc: file=../46M.win95, cyl=940, heads=6, spt=17
-#diskc: file=../112M.bogus, cyl=900, heads=15, spt=17
-#diskc: file=../112M.test, cyl=900, heads=15, spt=17
-#diskc: file=../46M.idsoftware, cyl=940, heads=6, spt=17
-#diskc: file=../30M.dos622, cyl=615, heads=6, spt=17
-#diskc: file=../30M.minix2.0, cyl=615, heads=6, spt=17
-#diskc: file=../30M.minix-1.7.4, cyl=615, heads=6, spt=17
-#diskc: file=../62M, cyl=940, heads=8, spt=17
-#diskc: file=../62M.new, cyl=940, heads=8, spt=17
-
-#diskc: file=../585M, cyl=1162, heads=16, spt=63
-#diskc: file=../528M, cyl=1024, heads=16, spt=63
-
-#diskc: file=../62M.980115, cyl=940, heads=8, spt=17
-diskc: file="../10M.vga", cyl=306, heads=4, spt=17
-#diskc: file=../10M.dos622, cyl=306, heads=4, spt=17
-#diskc: file=../30M.freebsd, cyl=615, heads=6, spt=17
-#diskc: file=../126M.freeBSD_2.2.8, cyl=256, heads=16, spt=63
-
-#diskc: file=../30M.validate, cyl=615, heads=6, spt=17
-#diskc: file="../10M.fpu", cyl=306, heads=4, spt=17
-
-#diskc: file=../472.ws, cyl=1000, heads=15, spt=63
-#diskc: file=../504M.linux, cyl=1024, heads=16, spt=63
-#diskc: file=../126M.linux, cyl=256, heads=16, spt=63
-#diskc: file=../10M.win31, cyl=306, heads=4, spt=17
-#diskc: file=../rrrr, cyl=1, heads=2, spt=18
-#diskc: file=../483M.NT40, cyl=1024, heads=15, spt=63
-
-#cdromd: dev=/dev/cdrom, status=inserted
-#cdromd: dev=/dev/cdrom, status=ejected
-
-
-#floppya: 1_44=/vol/dev/aliases/floppy0, status=inserted
-
-#floppya: 1_44=../1.44, status=inserted
-#floppya: 1_44=../1.44.freebsd, status=inserted
-#floppya: 720k=../720k.dos33, status=inserted
-
-floppya: 1_44=../1.44a, status=inserted
-#floppyb: 1_44=../1.44b, status=inserted
-#floppya: 1_44=/dev/fd0, status=inserted
-#floppyb: 1_44=../1.44b, status=inserted
-
-#floppyb: 1_44=../1.680
-#floppya: 1_44=../1.44.yodlowsk
-#floppya: 1_2=../1.2
-#floppyb: 1_44=../1.680
-
-romimage: file=bios/BIOS-bochs-2001_0517, address=0xf0000
-
-#romimage: file=bios/rombios.bin, address=0xf0000
-#romimage: file=../cbios961203
-#romimage: file=../r980820.rom, address=0xe0000
-#romimage: file=bios/BIOS-bochs-990907a, address=0xf0000
-#romimage: file=/home/kpl/floating_point/bios/rombios.bin, address=0xf0000
-#romimage: file=bios/BIOS-bochs-990218a, address=0xf0000
-#romimage: file=../dttest.bin, address=0xf0000
-
-#romimage: ../cbios961112
-#vgaromimage: ../vgacbios961111
-#romimage: ../cbios961203
-
-#log: /dev/null
-log: ./bochs.out
-keyboard_serial_delay: 200
-floppy_command_delay: 500
-#ips:  1500000
-#ips:  5000000
-
-vga_update_interval: 300000
-
-ips:  1000000
-#ips:   750000
-
-# using for Winstone '98 tests
-#vga_update_interval:  100000
-#ips: 40000000
-
-mouse: enabled=0
-private_colormap: enabled=0
-i440fxsupport: enabled=0
-#cmosimage: pathname
-# As of cvs version on 5/17/2001, newharddrivesupport is on by default.
-#newharddrivesupport: enabled=1
 
 #=======================================================================
 # ROMIMAGE:
@@ -131,19 +9,28 @@ i440fxsupport: enabled=0
 # directory, named BIOS-bochs-yymmdd.  Use the latest one in there.
 #=======================================================================
 #romimage: bios/BIOS-bochs-970717a
+romimage: file=bios/BIOS-bochs-2001_0517, address=0xf0000
+#romimage: file=bios/BIOS-bochs-2-processors, address=0xf0000
+#romimage: file=bios/BIOS-bochs-4-processors, address=0xf0000
+#romimage: file=bios/rombios.bin, address=0xf0000
 
 #=======================================================================
 # MEGS
 # set this to the default number of Megabytes of memory you want
 # to emulate.  You may also pass the '-megs xyz' option to bochs
 #=======================================================================
+#megs: 256
+#megs: 128
+#megs: 64
+megs: 32
+#megs: 16
 #megs: 8
 
 #=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
-#vgaromimage: bios/VGABIOS-elpin-2.20
+vgaromimage: bios/VGABIOS-elpin-2.40
 
 #=======================================================================
 # FLOPPYA:
@@ -165,6 +52,9 @@ i440fxsupport: enabled=0
 # See FLOPPYA above
 #=======================================================================
 
+
+
+
 #=======================================================================
 # DISKC: file=, cyl=, heads=, spt=
 # Point this at a 10M, 20M, or 30M hard disk image file.
@@ -178,6 +68,21 @@ i440fxsupport: enabled=0
 #   diskc: file=112M.sample, cyl=900, heads=15, spt=17
 #   diskc: file=483M.sample, cyl=1024, heads=15, spt=63
 #=======================================================================
+diskc: file="../10M.vga", cyl=306, heads=4, spt=17
+
+#=======================================================================
+* CDROM
+# cdromd: dev=/dev/cdrom, status=inserted
+# cdromd: dev=/dev/cdrom, status=ejected
+#=======================================================================
+#cdromd: dev=/dev/cdrom, status=ejected
+cdromd: dev=/dev/cdrom, status=inserted
+
+#=======================================================================
+# NEWHARDDRIVESUPPORT: enabled=[0|1]
+# As of cvs version on 5/17/2001, newharddrivesupport is on by default.
+#=======================================================================
+#newharddrivesupport: enabled=1
 
 #=======================================================================
 # BOOT:
@@ -186,6 +91,8 @@ i440fxsupport: enabled=0
 #   boot: c
 #   boot: a
 #=======================================================================
+#boot: a
+boot: c
 
 #=======================================================================
 # LOG:
@@ -196,6 +103,29 @@ i440fxsupport: enabled=0
 #   log: ./bochs.out
 #   log: /dev/tty
 #=======================================================================
+#log: /dev/null
+log: bochsout.txt
+
+#=======================================================================
+# LOG CONTROLS
+#
+# Bochs now has four severity levels for event logging.
+#   panic: cannot proceed.  If you choose to continue after a panic, 
+#          don't be surprised if you get strange behavior or crashes.
+#   error: something went wrong, but it is probably safe to continue the
+#          simulation.
+#   info: interesting or useful messages.
+#   debug: messages useful only when debugging the code.  This may
+#          spit out thousands per second.
+#
+# For events of each level, you can choose to crash, report, or ignore.
+# TODO: allow choice based on the facility: e.g. report debug messages
+#       from the cdrom but ignore debug messages from everything else.
+#=======================================================================
+panic: action=fatal
+error: action=report
+info: action=report
+debug: action=ignore
 
 #=======================================================================
 # SB16:
@@ -245,6 +175,10 @@ i440fxsupport: enabled=0
 # Examples:
 #   vga_update_interval: 250000
 #=======================================================================
+vga_update_interval: 300000
+
+# using for Winstone '98 tests
+#vga_update_interval:  100000
 
 #=======================================================================
 # KEYBOARD_SERIAL_DELAY:
@@ -253,6 +187,7 @@ i440fxsupport: enabled=0
 # Examples:
 #   keyboard_serial_delay: 200
 #=======================================================================
+keyboard_serial_delay: 200
 
 #=======================================================================
 # FLOPPY_COMMAND_DELAY:
@@ -263,6 +198,7 @@ i440fxsupport: enabled=0
 # Examples:
 #   floppy_command_delay: 50000
 #=======================================================================
+floppy_command_delay: 500
 
 #=======================================================================
 # IPS:
@@ -278,6 +214,7 @@ i440fxsupport: enabled=0
 # 166Mhz 64bit Sparc with Solaris 2.x             approx 0.75 Mips
 # 200Mhz Pentium with Linux 2.x                   approx 0.5 Mips
 #=======================================================================
+ips: 1000000
 
 #=======================================================================
 # mouse: Not used in any of the GUI specific modules, but the option
@@ -290,6 +227,7 @@ i440fxsupport: enabled=0
 #   mouse: enabled=1
 #   mouse: enabled=0
 #=======================================================================
+mouse: enabled=0
 
 #=======================================================================
 # private_colormap: Request that the GUI create and use it's own
@@ -302,9 +240,25 @@ i440fxsupport: enabled=0
 #   private_colormap: enabled=1
 #   private_colormap: enabled=0
 #=======================================================================
+private_colormap: enabled=0
 
+#=======================================================================
+# other stuff
+#=======================================================================
 # magic_break
 # ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00
-
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
+i440fxsupport: enabled=0
+#time0: 938581955
+
+
+#=======================================================================
+# for Macintosh, use the style of pathnames in the following
+# examples.
+#
+# vgaromimage: :bios:VGABIOS-elpin-2.20
+# romimage: file=:bios:BIOS-bochs-981222a, address=0xf0000
+# floppya: 1_44=[fd:], status=inserted
+#=======================================================================
+

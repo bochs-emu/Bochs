@@ -62,7 +62,7 @@ BX_CPU_C::POP_Ew(BxInstruction_t *i)
     // If used, the value of ESP after the pop is used to calculate
     // the address.
     if (i->as_32 && (i->mod!=0xc0) && (i->rm==4) && (i->base==4)) {
-      i->ResolveModrm(i);
+      BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
       }
     write_virtual_word(i->seg, i->rm_addr, &val16);
     }

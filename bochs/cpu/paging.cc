@@ -35,6 +35,10 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_USE_CPU_SMF
+#define this (BX_CPU(0))
+#endif
+
 
 
 
@@ -493,9 +497,9 @@ priv_check:
       // A/D bits need updating first
       BX_CPU_THIS_PTR TLB.entry[TLB_index].combined_access = new_combined_access;
       pte_addr = BX_CPU_THIS_PTR TLB.entry[TLB_index].pte_addr;
-      BX_MEM.read_physical(pte_addr, 4, &pte); // get old PTE
+      BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte); // get old PTE
       pte |= 0x20 | (is_rw << 6);
-      BX_MEM.write_physical(pte_addr, 4, &pte); // write updated PTE
+      BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte); // write updated PTE
       return(paddress);
       }
 
@@ -507,7 +511,7 @@ priv_check:
   // Get page dir entry
   pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
              ((laddress & 0xffc00000) >> 20);
-  BX_MEM.read_physical(pde_addr, 4, &pde);
+  BX_CPU_THIS_PTR mem->read_physical(this, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
     // Page Directory Entry NOT present
     error_code = 0xfffffff8; // RSVD=1, P=0
@@ -517,12 +521,12 @@ priv_check:
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
-  BX_MEM.read_physical(pte_addr, 4, &pte);
+  BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte);
 
   // update PDE if A bit was not set before
   if ( !(pde & 0x20) ) {
     pde |= 0x20;
-    BX_MEM.write_physical(pde_addr, 4, &pde);
+    BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
     }
 
   if ( !(pte & 0x01) ) {
@@ -534,7 +538,7 @@ priv_check:
   //BW added: update PTE if A bit was not set before
   if ( !(pte & 0x20) ) {
     pte |= 0x20;
-    BX_MEM.write_physical(pte_addr, 4, &pte);
+    BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte);
     }
 
   // 386 and 486+ have different bahaviour for combining
@@ -638,7 +642,7 @@ priv_check:
   // Get page dir entry
   pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
              ((laddress & 0xffc00000) >> 20);
-  BX_MEM.read_physical(pde_addr, 4, &pde);
+  BX_CPU_THIS_PTR mem->read_physical(this, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
     // Page Directory Entry NOT present
     error_code = 0xfffffff8; // RSVD=1, P=0
@@ -648,12 +652,12 @@ priv_check:
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
-  BX_MEM.read_physical(pte_addr, 4, &pte);
+  BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte);
 
   // update PDE if A bit was not set before
   if ( !(pde & 0x20) ) {
     pde |= 0x20;
-    BX_MEM.write_physical(pde_addr, 4, &pde);
+    BX_CPU_THIS_PTR mem->write_physical(this, pde_addr, 4, &pde);
     }
 
   if ( !(pte & 0x01) ) {
@@ -665,7 +669,7 @@ priv_check:
   //BW added: update PTE if A bit was not set before
   if ( !(pte & 0x20) ) {
     pte |= 0x20;
-    BX_MEM.write_physical(pte_addr, 4, &pte);
+    BX_CPU_THIS_PTR mem->write_physical(this, pte_addr, 4, &pte);
     }
 
   // 386 and 486+ have different bahaviour for combining
@@ -728,7 +732,7 @@ BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddress, Bit32u *phy, Boolean *valid)
   // Get page dir entry
   pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
              ((laddress & 0xffc00000) >> 20);
-  BX_MEM.read_physical(pde_addr, 4, &pde);
+  BX_CPU_THIS_PTR mem->read_physical(this, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
     // Page Directory Entry NOT present
     goto page_fault;
@@ -737,7 +741,7 @@ BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddress, Bit32u *phy, Boolean *valid)
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
-  BX_MEM.read_physical(pte_addr, 4, &pte);
+  BX_CPU_THIS_PTR mem->read_physical(this, pte_addr, 4, &pte);
   if ( !(pte & 0x01) ) {
     // Page Table Entry NOT present
     goto page_fault;
@@ -809,11 +813,11 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
 
       if (rw == BX_READ) {
         BX_INSTR_LIN_READ(laddress, BX_CPU_THIS_PTR address_xlation.paddress1, length);
-        BX_MEM.read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
+        BX_CPU_THIS_PTR mem->read_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
         }
       else {
         BX_INSTR_LIN_WRITE(laddress, BX_CPU_THIS_PTR address_xlation.paddress1, length);
-        BX_MEM.write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
+        BX_CPU_THIS_PTR mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
         }
       return;
       }
@@ -831,12 +835,12 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
         BX_INSTR_LIN_READ(laddress,
                           BX_CPU_THIS_PTR address_xlation.paddress1,
                           BX_CPU_THIS_PTR address_xlation.len1);
-        BX_MEM.read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR mem->read_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1,
                              BX_CPU_THIS_PTR address_xlation.len1, data);
         BX_INSTR_LIN_READ(laddress + BX_CPU_THIS_PTR address_xlation.len1,
                           BX_CPU_THIS_PTR address_xlation.paddress2,
                           BX_CPU_THIS_PTR address_xlation.len2);
-        BX_MEM.read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR mem->read_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2,
                              BX_CPU_THIS_PTR address_xlation.len2,
                              ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
         }
@@ -844,12 +848,12 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
         BX_INSTR_LIN_WRITE(laddress,
                            BX_CPU_THIS_PTR address_xlation.paddress1,
                            BX_CPU_THIS_PTR address_xlation.len1);
-        BX_MEM.write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1,
                               BX_CPU_THIS_PTR address_xlation.len1, data);
         BX_INSTR_LIN_WRITE(laddress + BX_CPU_THIS_PTR address_xlation.len1,
                           BX_CPU_THIS_PTR address_xlation.paddress2,
                           BX_CPU_THIS_PTR address_xlation.len2);
-        BX_MEM.write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2,
                               BX_CPU_THIS_PTR address_xlation.len2,
                               ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
         }
@@ -859,26 +863,26 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
         BX_INSTR_LIN_READ(laddress,
                           BX_CPU_THIS_PTR address_xlation.paddress1,
                           BX_CPU_THIS_PTR address_xlation.len1);
-        BX_MEM.read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR mem->read_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1,
                              BX_CPU_THIS_PTR address_xlation.len1,
                              ((Bit8u*)data) + (length - BX_CPU_THIS_PTR address_xlation.len1));
         BX_INSTR_LIN_READ(laddress + BX_CPU_THIS_PTR address_xlation.len1,
                           BX_CPU_THIS_PTR address_xlation.paddress2,
                           BX_CPU_THIS_PTR address_xlation.len2);
-        BX_MEM.read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR mem->read_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2,
                              BX_CPU_THIS_PTR address_xlation.len2, data);
         }
       else {
         BX_INSTR_LIN_WRITE(laddress,
                            BX_CPU_THIS_PTR address_xlation.paddress1,
                            BX_CPU_THIS_PTR address_xlation.len1);
-        BX_MEM.write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress1,
                               BX_CPU_THIS_PTR address_xlation.len1,
                               ((Bit8u*)data) + (length - BX_CPU_THIS_PTR address_xlation.len1));
         BX_INSTR_LIN_WRITE(laddress + BX_CPU_THIS_PTR address_xlation.len1,
                           BX_CPU_THIS_PTR address_xlation.paddress2,
                           BX_CPU_THIS_PTR address_xlation.len2);
-        BX_MEM.write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR mem->write_physical(this, BX_CPU_THIS_PTR address_xlation.paddress2,
                               BX_CPU_THIS_PTR address_xlation.len2, data);
         }
 #endif
@@ -890,11 +894,11 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
     // paging off, pass linear address thru to physical
     if (rw == BX_READ) {
       BX_INSTR_LIN_READ(laddress, laddress, length);
-      BX_MEM.read_physical(laddress, length, data);
+      BX_CPU_THIS_PTR mem->read_physical(this, laddress, length, data);
       }
     else {
       BX_INSTR_LIN_WRITE(laddress, laddress, length);
-      BX_MEM.write_physical(laddress, length, data);
+      BX_CPU_THIS_PTR mem->write_physical(this, laddress, length, data);
       }
     return;
     }
@@ -939,9 +943,9 @@ BX_CPU_C::access_linear(Bit32u laddress, unsigned length, unsigned pl,
    */
   if (BX_CPU_THIS_PTR cr0.pg == 0) {
     if (rw == BX_READ)
-      BX_MEM.read_physical(laddress, length, data);
+      BX_CPU_THIS_PTR mem->read_physical(this, laddress, length, data);
     else
-      BX_MEM.write_physical(laddress, length, data);
+      BX_CPU_THIS_PTR mem->write_physical(this, laddress, length, data);
     return;
     }
 
