@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.92 2004-11-06 10:50:03 vruppert Exp $
+// $Id: cpu.cc,v 1.93 2004-11-15 19:38:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -745,10 +745,10 @@ BX_CPU_C::prefetch(void)
   // Sanity checks
   if ( !BX_CPU_THIS_PTR eipFetchPtr ) {
     if ( pAddr >= BX_CPU_THIS_PTR mem->len ) {
-      BX_PANIC(("prefetch: running in bogus memory"));
+      BX_PANIC(("prefetch : running in bogus memory, pAddr=0x%X", pAddr));
       }
     else {
-      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%x.", pAddr));
+      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%X", pAddr));
       }
     }
 
