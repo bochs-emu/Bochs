@@ -1,9 +1,12 @@
 ----------------------------------------------------------------------
 THIS IS A PATCH FOR WXWINDOWS, NOT FOR BOCHS
 ----------------------------------------------------------------------
-Patch name: patch.wx-raw-keycodes  $Revision: 1.1.2.5 $
+Patch name: patch.wx-raw-keycodes  $Revision: 1.1.2.6 $
 Author: Bryce Denney <bryce@tlw.com>
-Date: Sat Apr  6 17:22:36  2002
+Date: Mon Apr  8 01:00:09 EDT 2002
+
+[This has been edited to match the version that was checked into
+wxWindows CVS by Vadim Zeitlin.]
 
 Detailed description:
 This patch adds two 32-bit fields to the wxKeyEvent structure, m_rawCode1 and
@@ -48,15 +51,94 @@ Notes:
   get warnings when you try to apply the patch.  For example, if you downloaded
   wxMSW, then expect some warnings when it cannot find src/gtk/window.cpp.
 ----------------------------------------------------------------------
-diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
---- wxGTK-2.3.2-orig/src/gtk/window.cpp	Mon Dec 10 14:07:06 2001
-+++ wxGTK-2.3.2/src/gtk/window.cpp	Mon Mar 25 13:26:41 2002
+
+
+Index: include/wx/event.h
+===================================================================
+RCS file: /home/wxcvs/wxWindows/include/wx/event.h,v
+retrieving revision 1.136
+diff -u -b -r1.136 event.h
+--- include/wx/event.h	21 Nov 2001 23:48:49 -0000	1.136
++++ include/wx/event.h	8 Apr 2002 04:56:23 -0000
+@@ -763,6 +763,14 @@
+  wxEVT_KEY_UP
+  */
+ 
++// the raw keyboard codes are generated under wxGTK and wxMSW only
++#if defined(__WXGTK__) || defined(__WXMSW__)
++    #define wxHAS_RAW_KEY_CODES
++#else
++    #undef wxHAS_RAW_KEY_CODES
++#endif
++
++
+ class WXDLLEXPORT wxKeyEvent : public wxEvent
+ {
+ public:
+@@ -782,6 +790,12 @@
+     // get the key code: an ASCII7 char or an element of wxKeyCode enum
+     int GetKeyCode() const { return (int)m_keyCode; }
+ 
++    // get the raw key code (platform-dependent)
++    wxUint32 GetRawKeyCode() const { return m_rawCode; }
++
++    // get the raw key flags (platform-dependent)
++    wxUint32 GetRawKeyFlags() const { return m_rawFlags; }
++
+     // Find the position of the event
+     void GetPosition(wxCoord *xpos, wxCoord *ypos) const
+     {
+@@ -825,6 +839,8 @@
+         m_altDown = evt.m_altDown;
+         m_metaDown = evt.m_metaDown;
+         m_scanCode = evt.m_scanCode;
++        m_rawCode = evt.m_rawCode;
++        m_rawFlags = evt.m_rawFlags;
+ 
+         return *this;
+     }
+@@ -839,6 +855,11 @@
+     bool          m_altDown;
+     bool          m_metaDown;
+     bool          m_scanCode;
++
++    // these fields contain the platform-specific information about the pressed
++    // key
++    wxUint32      m_rawCode;
++    wxUint32      m_rawFlags;
+ 
+ private:
+     DECLARE_DYNAMIC_CLASS(wxKeyEvent)
+Index: include/wx/msw/window.h
+===================================================================
+RCS file: /home/wxcvs/wxWindows/include/wx/msw/window.h,v
+retrieving revision 1.78
+diff -u -b -r1.78 window.h
+--- include/wx/msw/window.h	3 Nov 2001 21:49:33 -0000	1.78
++++ include/wx/msw/window.h	8 Apr 2002 04:56:23 -0000
+@@ -452,7 +452,8 @@
+ #endif // wxUSE_TOOLTIPS
+ 
+     // the helper functions used by HandleChar/KeyXXX methods
+-    wxKeyEvent CreateKeyEvent(wxEventType evType, int id, WXLPARAM lp) const;
++    wxKeyEvent CreateKeyEvent(wxEventType evType, int id,
++                              WXLPARAM lParam = 0, WXWPARAM wParam = 0) const;
+ 
+ private:
+     // common part of all ctors
+Index: src/gtk/window.cpp
+===================================================================
+RCS file: /home/wxcvs/wxWindows/src/gtk/window.cpp,v
+retrieving revision 1.342
+diff -u -b -r1.342 window.cpp
+--- src/gtk/window.cpp	22 Nov 2001 11:38:56 -0000	1.342
++++ src/gtk/window.cpp	8 Apr 2002 04:56:26 -0000
 @@ -1043,6 +1043,8 @@
      event.m_metaDown = (gdk_event->state & GDK_MOD2_MASK);
      event.m_keyCode = key_code;
      event.m_scanCode = gdk_event->keyval;
-+    event.m_rawCode1 = (wxUint32) gdk_event->keyval;
-+    event.m_rawCode2 = 0;
++    event.m_rawCode = (wxUint32) gdk_event->keyval;
++    event.m_rawFlags = 0;
      event.m_x = x;
      event.m_y = y;
      event.SetEventObject( win );
@@ -64,81 +146,48 @@ diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
      event.m_metaDown = (gdk_event->state & GDK_MOD2_MASK);
      event.m_keyCode = key_code;
      event.m_scanCode = gdk_event->keyval;
-+    event.m_rawCode1 = (wxUint32) gdk_event->keyval;
-+    event.m_rawCode2 = 0;
++    event.m_rawCode = (wxUint32) gdk_event->keyval;
++    event.m_rawFlags = 0;
      event.m_x = x;
      event.m_y = y;
      event.SetEventObject( win );
-diff -urb wx232-orig/include/wx/event.h wx232/include/wx/event.h
---- wx232-orig/include/wx/event.h	Thu Nov 22 14:25:34 2001
-+++ wx232/include/wx/event.h	Sat Apr  6 17:10:56 2002
-@@ -763,6 +763,10 @@
-  wxEVT_KEY_UP
-  */
+Index: src/msw/treectrl.cpp
+===================================================================
+RCS file: /home/wxcvs/wxWindows/src/msw/treectrl.cpp,v
+retrieving revision 1.107
+diff -u -b -r1.107 treectrl.cpp
+--- src/msw/treectrl.cpp	1 Dec 2001 12:26:27 -0000	1.107
++++ src/msw/treectrl.cpp	8 Apr 2002 04:56:27 -0000
+@@ -2099,13 +2099,12 @@
+                 eventType = wxEVT_COMMAND_TREE_KEY_DOWN;
+                 TV_KEYDOWN *info = (TV_KEYDOWN *)lParam;
  
-+#if defined(__WXMSW__) || defined(__WXGTK__)
-+#define wxKEY_EVENT_HAS_RAW_CODES 1
-+#endif
-+
- class WXDLLEXPORT wxKeyEvent : public wxEvent
- {
- public:
-@@ -825,6 +829,10 @@
-         m_altDown = evt.m_altDown;
-         m_metaDown = evt.m_metaDown;
-         m_scanCode = evt.m_scanCode;
-+#ifdef wxKEY_EVENT_HAS_RAW_CODES
-+        m_rawCode1 = evt.m_rawCode1;
-+        m_rawCode2 = evt.m_rawCode2;
-+#endif
- 
-         return *this;
-     }
-@@ -839,6 +847,10 @@
-     bool          m_altDown;
-     bool          m_metaDown;
-     bool          m_scanCode;
-+#ifdef wxKEY_EVENT_HAS_RAW_CODES
-+    wxUint32      m_rawCode1;
-+    wxUint32      m_rawCode2;
-+#endif
- 
- private:
-     DECLARE_DYNAMIC_CLASS(wxKeyEvent)
-diff -urb wx232-orig/include/wx/msw/window.h wx232/include/wx/msw/window.h
---- wx232-orig/include/wx/msw/window.h	Wed Nov  7 13:29:52 2001
-+++ wx232/include/wx/msw/window.h	Sat Apr  6 15:44:14 2002
-@@ -452,7 +452,7 @@
- #endif // wxUSE_TOOLTIPS
- 
-     // the helper functions used by HandleChar/KeyXXX methods
--    wxKeyEvent CreateKeyEvent(wxEventType evType, int id, WXLPARAM lp) const;
-+    wxKeyEvent CreateKeyEvent(wxEventType evType, int id, WXLPARAM lp, WXWPARAM wp) const;
- 
- private:
-     // common part of all ctors
-diff -urb wx232-orig/src/msw/treectrl.cpp wx232/src/msw/treectrl.cpp
---- wx232-orig/src/msw/treectrl.cpp	Sat Dec  1 12:26:28 2001
-+++ wx232/src/msw/treectrl.cpp	Sat Apr  6 15:52:42 2002
-@@ -2105,7 +2105,7 @@
+-                // we pass 0 as last CreateKeyEvent() parameter because we
++                // we pass 0 as 2 last CreateKeyEvent() parameters because we
+                 // don't have access to the real key press flags here - but as
+                 // it is only used to determin wxKeyEvent::m_altDown flag it's
                  // not too bad
                  event.m_evtKey = CreateKeyEvent(wxEVT_KEY_DOWN,
-                                                 wxCharCodeMSWToWX(info->wVKey),
+-                                                wxCharCodeMSWToWX(info->wVKey),
 -                                                0);
-+                                                0, 0);
++                                                wxCharCodeMSWToWX(info->wVKey));
  
                  // a separate event for Space/Return
                  if ( !wxIsCtrlDown() && !wxIsShiftDown() &&
-diff -urb wx232-orig/src/msw/window.cpp wx232/src/msw/window.cpp
---- wx232-orig/src/msw/window.cpp	Sun Dec  9 10:30:18 2001
-+++ wx232/src/msw/window.cpp	Sat Apr  6 15:46:50 2002
+Index: src/msw/window.cpp
+===================================================================
+RCS file: /home/wxcvs/wxWindows/src/msw/window.cpp,v
+retrieving revision 1.273
+diff -u -b -r1.273 window.cpp
+--- src/msw/window.cpp	8 Dec 2001 23:13:27 -0000	1.273
++++ src/msw/window.cpp	8 Apr 2002 04:56:29 -0000
 @@ -3779,7 +3779,8 @@
  // HandleChar and HandleKeyDown/Up
  wxKeyEvent wxWindowMSW::CreateKeyEvent(wxEventType evType,
                                         int id,
 -                                       WXLPARAM lParam) const
 +                                       WXLPARAM lParam,
-+									   WXWPARAM wParam) const
++                                       WXWPARAM wParam) const
  {
      wxKeyEvent event(evType);
      event.SetId(GetId());
@@ -146,20 +195,11 @@ diff -urb wx232-orig/src/msw/window.cpp wx232/src/msw/window.cpp
  
      event.m_eventObject = (wxWindow *)this; // const_cast
      event.m_keyCode = id;
-+	event.m_rawCode1 = (wxUint32) wParam;
-+	event.m_rawCode2 = (wxUint32) lParam;
++    event.m_rawCode = (wxUint32) wParam;
++    event.m_rawFlags = (wxUint32) lParam;
      event.SetTimestamp(s_currentMsg.time);
  
      // translate the position to client coords
-@@ -3847,7 +3850,7 @@
- 
-     if ( id != -1 )
-     {
--        wxKeyEvent event(CreateKeyEvent(wxEVT_CHAR, id, lParam));
-+        wxKeyEvent event(CreateKeyEvent(wxEVT_CHAR, id, lParam, wParam));
-         if ( ctrlDown )
-         {
-             event.m_controlDown = TRUE;
 @@ -3872,7 +3875,7 @@
  
      if ( id != -1 ) // VZ: does this ever happen (FIXME)?
