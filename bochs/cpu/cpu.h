@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.97 2002-10-05 10:25:31 ptrumpet Exp $
+// $Id: cpu.h,v 1.98 2002-10-05 14:51:25 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2466,7 +2466,7 @@ union {
 
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32s max_instr_count);
-  BX_SMF void handleAsyncEvent(void);
+  BX_SMF unsigned handleAsyncEvent(void);
   BX_SMF void boundaryFetch(bxInstruction_c *i);
   BX_SMF void decode_exgx16(unsigned need_fetch);
   BX_SMF void decode_exgx32(unsigned need_fetch);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.62 2002-10-05 10:25:30 ptrumpet Exp $
+// $Id: cpu.cc,v 1.63 2002-10-05 14:51:25 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -146,7 +146,10 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   // (traps) and ones which are asynchronous to the CPU
   // (hardware interrupts).
   if (BX_CPU_THIS_PTR async_event) {
-    handleAsyncEvent();
+    if (handleAsyncEvent()) {
+      // If request to return to caller ASAP.
+      return;
+      }
     }
 
 #if BX_DEBUGGER
@@ -480,7 +483,7 @@ debugger_check:
   }  // while (1)
 }
 
-  void
+  unsigned
 BX_CPU_C::handleAsyncEvent(void)
 {
   //
@@ -524,12 +527,12 @@ BX_CPU_C::handleAsyncEvent(void)
 #if BX_DEBUGGER
       BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
 #endif
-      return;
+      return 1; // Return to caller of cpu_loop.
     }
 #endif
   } else if (BX_CPU_THIS_PTR kill_bochs_request) {
     // setting kill_bochs_request causes the cpu loop to return ASAP.
-    return;
+    return 1; // Return to caller of cpu_loop.
   }
 
 
@@ -685,6 +688,8 @@ BX_CPU_C::handleAsyncEvent(void)
          BX_HRQ ||
          BX_CPU_THIS_PTR get_TF ()) )
     BX_CPU_THIS_PTR async_event = 0;
+
+  return 0; // Continue executing cpu_loop.
 }
 
 
