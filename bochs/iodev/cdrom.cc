@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.42 2002-09-23 06:57:57 bdenney Exp $
+// $Id: cdrom.cc,v 1.43 2002-09-24 23:45:43 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -210,7 +210,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.42 2002-09-23 06:57:57 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.43 2002-09-24 23:45:43 cbothamy Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -422,7 +422,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
     buf[3] = 1;
 
     int len = 4;
-    if (start_track == 1) {
+    if (start_track <= 1) {
       buf[len++] = 0; // Reserved
       buf[len++] = 0x14; // ADR, control
       buf[len++] = 1; // Track number
