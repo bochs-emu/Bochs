@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.126 2002-09-24 20:01:59 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.127 2002-09-24 21:35:04 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -23,6 +23,15 @@ if test "$with_win32_vcpp"; then
   echo "   --with-win32 --target=i686-pc-windows"
   target="i686-pc-windows"
   with_win32=yes
+fi
+
+AC_MSG_CHECKING(if you are configuring for another platform)
+if test "$target" = "$build"; then
+  AC_MSG_RESULT(no)
+  cross_configure=0
+else
+  AC_MSG_RESULT(yes)
+  cross_configure=1
 fi
 
 # this case statement defines the compile flags which are needed to
@@ -1268,12 +1277,11 @@ INSTALL_LIST_FOR_PLATFORM=
 
 # check for existence of and usable version of wxWindows.  This comes
 # early so that it could affect which one gets chosen.
-AC_CHECK_PROG(WX_CONFIG, [ wx-config --version ], wx-config, notfound)
+AC_CHECK_PROG(WX_CONFIG, [ wx-config --version ], wx-config, not_found)
 ok_wx_version=0
 AC_MSG_CHECKING(for wxWindows library version)
-if test x$WX_CONFIG != xnotfound; then
+if test x$WX_CONFIG != xnot_found; then
   WX_VERSION=`$WX_CONFIG --version`
-  AC_MSG_RESULT($WX_VERSION)
   [
   # test that version >= 2.3.2.  Anybody have a better way to do this? Yuck.
   case x$WX_VERSION in 
@@ -1287,6 +1295,7 @@ if test x$WX_CONFIG != xnotfound; then
   esac
   ]
 fi
+AC_MSG_RESULT($WX_VERSION)
 
 AC_MSG_CHECKING(for default gui on this platform)
 AC_MSG_RESULT($DEFAULT_GUI)
@@ -1360,10 +1369,14 @@ elif test "$with_term" = yes; then
   use_curses=yes
 elif test "$with_wx" = yes; then
   AC_MSG_RESULT(wxWindows)
-  if test x$ok_wx_version != x1; then
-    echo ERROR: A usable version of wxWindows was not found.  
-    echo Upgrade the library or choose another gui.
-    exit 1
+  if test "$cross_configure" = 1; then
+    true  # do not insist, if configuring for another machine
+  else
+    if test x$ok_wx_version != x1; then
+      echo ERROR: A usable version of wxWindows was not found.  
+      echo Upgrade the library or choose another gui.
+      exit 1
+    fi
   fi
   AC_DEFINE(BX_WITH_WX, 1)
   WX_CFLAGS="\`$WX_CONFIG --cflags\`"
