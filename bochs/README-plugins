@@ -57,7 +57,7 @@ changes:
  - the biosdev and unmapped devices were plugin-ized
 
 TO DO BEFORE RELEASE 2.0:
-- some plugins, such as the GUI, PIT, SB, and NE2000, have several different
+- (LATER) some plugins, such as the GUI, PIT, SB, and NE2000, have several different
   possible implementations.  In this case, all implementations should be
   children of a single stub class.  The stub's methods produce errors or
   panics if they are called, depending on the importance of the device.
@@ -400,7 +400,7 @@ WHERE ARE THE DOCS?
 The Bochs documentation has been overhauled, and it is now
 distributed in a separate package called bochsdoc-VERSION.tar.gz.
 A copy is also online at 
-  http://bochs.sf.net/doc/docbook/alldocs.html
+  http://bochs.sf.net/doc/docbook/index.html
 For now, the old documentation can still be found at
   http://bochs.sf.net/docs-html
 
