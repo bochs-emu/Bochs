@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.212 2002-12-17 05:58:44 bdenney Exp $
+// $Id: main.cc,v 1.213 2002-12-17 20:58:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1767,6 +1767,36 @@ bx_init_main (int argc, char *argv[])
     }
     arg++;
   }
+#if BX_WITH_CARBON
+  if(!getenv("BXSHARE"))
+  {
+    CFBundleRef mainBundle;
+    CFURLRef bxshareDir;
+    char bxshareDirPath[MAXPATHLEN];
+    BX_INFO (("fixing default bxshare location ..."));
+    // set bxshare to the directory that contains our application
+    mainBundle = CFBundleGetMainBundle();
+    BX_ASSERT(mainBundle != NULL);
+    bxshareDir = CFBundleCopyBundleURL(mainBundle);
+    BX_ASSERT(bxshareDir != NULL);
+    // translate this to a unix style full path
+    if(!CFURLGetFileSystemRepresentation(bxshareDir, true, (UInt8 *)bxshareDirPath, MAXPATHLEN))
+    {
+      BX_PANIC(("Unable to work out bxshare path! (Most likely path too long!)"));
+      return -1;
+    }
+    char *c;    
+    c = (char*) bxshareDirPath;
+    while (*c != '\0')  /* go to end */
+      c++;
+    while (*c != '/')   /* back up to parent */
+      c--;
+    *c = '\0';          /* cut off last part (binary name) */
+    setenv("BXSHARE", bxshareDirPath, 1);
+    BX_INFO (("now my BXSHARE is %s", getenv("BXSHARE")));
+    CFRelease(bxshareDir);
+  }
+#endif
 #if BX_PLUGINS
   // set a default plugin path, in case the user did not specify one
 #if BX_WITH_CARBON
