@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.68 2003-06-11 18:44:45 vruppert Exp $
+// $Id: x.cc,v 1.69 2003-06-13 16:05:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,11 +41,16 @@ extern "C" {
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
+#ifdef BX_HAVE_XPM_H
 #include <X11/xpm.h>
+#endif
 }
 
-//#include "icon_bochs.h"
+#ifdef BX_HAVE_XPM_H
 #include "icon_bochs.xpm"
+#else
+#include "icon_bochs.h"
+#endif
 
 #include "font/vga.bitmap.h"
 
@@ -337,7 +342,10 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   char *window_name = "Bochs Pentium emulator, http://bochs.sourceforge.net/";
 #endif
   char *icon_name = "Bochs";
-  Pixmap icon_pixmap, icon_mask;
+  Pixmap icon_pixmap;
+#ifdef BX_HAVE_XPM_H
+  Pixmap icon_mask;
+#endif
   XSizeHints size_hints;
   char *display_name = NULL;
   /* create GC for text and drawing */
@@ -457,11 +465,14 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 
   /* Get available icon sizes from Window manager */
 
-  /* Create pixmap of depth 1 (bitmap) for icon */
-/*  icon_pixmap = XCreateBitmapFromData(bx_x_display, win,
-    (char *) bochs_icon_bits, bochs_icon_width, bochs_icon_height);*/
+#ifdef BX_HAVE_XPM_H
   /* Create pixmap from XPM for icon */
   XCreatePixmapFromData(bx_x_display, win, icon_bochs_xpm, &icon_pixmap, &icon_mask, NULL);
+#else
+  /* Create pixmap of depth 1 (bitmap) for icon */
+  icon_pixmap = XCreateBitmapFromData(bx_x_display, win,
+    (char *) bochs_icon_bits, bochs_icon_width, bochs_icon_height);
+#endif
 
   /* Set size hints for window manager.  The window manager may
    * override these settings.  Note that in a real
@@ -500,9 +511,12 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   wm_hints.initial_state = NormalState;
   wm_hints.input = True;
   wm_hints.icon_pixmap = icon_pixmap;
+#ifdef BX_HAVE_XPM_H
   wm_hints.icon_mask = icon_mask;
   wm_hints.flags = StateHint | IconPixmapHint | IconMaskHint | InputHint;
-
+#else
+  wm_hints.flags = StateHint | IconPixmapHint | InputHint;
+#endif
   class_hints.res_name = progname;
   class_hints.res_class = "Bochs";
 

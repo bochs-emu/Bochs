@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.214 2003-06-06 19:57:25 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.215 2003-06-13 16:05:01 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1826,6 +1826,7 @@ display_libs=""
 # indicate the platform.  Settings that depend on the platform should be
 # handled later.
 
+XPM_LIB=''
 if test "$with_x11" = yes; then
   display_libs="$display_libs X11"
   if test "$no_x" = yes; then
@@ -1837,7 +1838,12 @@ if test "$with_x11" = yes; then
   GUI_CFLAGS="$GUI_CFLAGS \$(X_CFLAGS)"
   GUI_CXXFLAGS="$GUI_CXXFLAGS \$(X_CFLAGS)"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_X)"
+  AC_CHECK_HEADER(X11/xpm.h, [
+      AC_DEFINE(BX_HAVE_XPM_H)
+      XPM_LIB='-lXpm'
+    ])
 fi
+AC_SUBST(XPM_LIB)
 
 if test "$with_beos" = yes; then
   display_libs="$display_libs beos"
