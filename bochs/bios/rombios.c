@@ -256,7 +256,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.10 2001-05-31 20:36:05 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.11 2001-06-07 12:29:22 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -3919,194 +3919,6 @@ int76_handler:
   pop   ax
   iret
 
-.org 0xd000
-
-// For documentation of this config structure, look on developer.intel.com and
-// search for multiprocessor specification.  Note that when you change anything
-// you must update the checksum (a pain!).  It would be better to construct this
-// with C structures, or at least fill in the checksum automatically.
-
-#if (BX_SMP_PROCESSORS==1)
-  // no structure necessary.
-#elif (BX_SMP_PROCESSORS==2)
-// define the Intel MP Configuration Structure for 2 processors at
-// APIC ID 0,1.  I/O APIC at ID=2.
-mp_config_table:
-  db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
-  dw (mp_config_end-mp_config_table)  ;; table length
-  db 4 ;; spec rev
-  db 0xdd ;; checksum
-  db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
-  db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
-  db 0x20, 0x20, 0x20, 0x20 
-  db 0x20, 0x20, 0x20, 0x20
-  dw 0,0 ;; oem table ptr
-  dw 0 ;; oem table size
-  dw 3 ;; entry count
-  dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
-  dw 0 ;; extended table length
-  db 0 ;; extended table checksum
-  db 0 ;; reserved
-mp_config_proc0:
-  db 0 ;; entry type=processor
-  db 0 ;; local APIC id
-  db 0x11 ;; local APIC version number
-  db 3 ;; cpu flags: enabled
-  db 0,6,0,0 ;; cpu signature
-  dw 0x201,0 ;; feature flags
-  dw 0,0 ;; reserved
-  dw 0,0 ;; reserved
-mp_config_proc1:
-  db 0 ;; entry type=processor
-  db 1 ;; local APIC id
-  db 0x11 ;; local APIC version number
-  db 1 ;; cpu flags: enabled
-  db 0,6,0,0 ;; cpu signature
-  dw 0x201,0 ;; feature flags
-  dw 0,0 ;; reserved
-  dw 0,0 ;; reserved
-mp_config_isa_bus:
-  db 1 ;; entry type=bus
-  db 0 ;; bus ID
-  db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
-mp_config_ioapic:
-  db 2 ;; entry type=I/O APIC
-  db 2 ;; apic id=2. linux will set.
-  db 0x11 ;; I/O APIC version number
-  db 1 ;; flags=1=enabled
-  dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
-mp_config_irqs:
-  db 3 ;; entry type=I/O interrupt
-  db 0 ;; interrupt type=vectored interrupt
-  db 0,0 ;; flags po=0, el=0 (linux uses as default)
-  db 0 ;; source bus ID is ISA
-  db 0 ;; source bus IRQ
-  db 2 ;; destination I/O APIC ID
-  db 0 ;; destination I/O APIC interrrupt in
-  ;; repeat pattern for interrupts 0-15
-  db 3,0,0,0,0,1,2,1
-  db 3,0,0,0,0,2,2,2
-  db 3,0,0,0,0,3,2,3
-  db 3,0,0,0,0,4,2,4
-  db 3,0,0,0,0,5,2,5
-  db 3,0,0,0,0,6,2,6
-  db 3,0,0,0,0,7,2,7
-  db 3,0,0,0,0,8,2,8
-  db 3,0,0,0,0,9,2,9
-  db 3,0,0,0,0,10,2,10
-  db 3,0,0,0,0,11,2,11
-  db 3,0,0,0,0,12,2,12
-  db 3,0,0,0,0,13,2,13
-  db 3,0,0,0,0,14,2,14
-  db 3,0,0,0,0,15,2,15
-#elif (BX_SMP_PROCESSORS==4)
-// define the Intel MP Configuration Structure for 4 processors at
-// APIC ID 0,1,2,3.  I/O APIC at ID=4.
-mp_config_table:
-  db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
-  dw (mp_config_end-mp_config_table)  ;; table length
-  db 4 ;; spec rev
-  db 0x55 ;; checksum
-  db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
-  db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
-  db 0x20, 0x20, 0x20, 0x20 
-  db 0x20, 0x20, 0x20, 0x20
-  dw 0,0 ;; oem table ptr
-  dw 0 ;; oem table size
-  dw 5 ;; entry count
-  dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
-  dw 0 ;; extended table length
-  db 0 ;; extended table checksum
-  db 0 ;; reserved
-mp_config_proc0:
-  db 0 ;; entry type=processor
-  db 0 ;; local APIC id
-  db 0x11 ;; local APIC version number
-  db 1 ;; cpu flags: enabled
-  db 0,6,0,0 ;; cpu signature
-  dw 0x201,0 ;; feature flags
-  dw 0,0 ;; reserved
-  dw 0,0 ;; reserved
-mp_config_proc1:
-  db 0 ;; entry type=processor
-  db 1 ;; local APIC id
-  db 0x11 ;; local APIC version number
-  db 1 ;; cpu flags: enabled
-  db 0,6,0,0 ;; cpu signature
-  dw 0x201,0 ;; feature flags
-  dw 0,0 ;; reserved
-  dw 0,0 ;; reserved
-mp_config_proc2:
-  db 0 ;; entry type=processor
-  db 2 ;; local APIC id
-  db 0x11 ;; local APIC version number
-  db 3 ;; cpu flags: enabled, bootstrap processor
-  db 0,6,0,0 ;; cpu signature
-  dw 0x201,0 ;; feature flags
-  dw 0,0 ;; reserved
-  dw 0,0 ;; reserved
-mp_config_proc3:
-  db 0 ;; entry type=processor
-  db 3 ;; local APIC id
-  db 0x11 ;; local APIC version number
-  db 1 ;; cpu flags: enabled
-  db 0,6,0,0 ;; cpu signature
-  dw 0x201,0 ;; feature flags
-  dw 0,0 ;; reserved
-  dw 0,0 ;; reserved
-mp_config_isa_bus:
-  db 1 ;; entry type=bus
-  db 0 ;; bus ID
-  db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
-mp_config_ioapic:
-  db 2 ;; entry type=I/O APIC
-  db 4 ;; apic id=2. linux will set.
-  db 0x11 ;; I/O APIC version number
-  db 1 ;; flags=1=enabled
-  dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
-mp_config_irqs:
-  db 3 ;; entry type=I/O interrupt
-  db 0 ;; interrupt type=vectored interrupt
-  db 0,0 ;; flags po=0, el=0 (linux uses as default)
-  db 0 ;; source bus ID is ISA
-  db 0 ;; source bus IRQ
-  db 4 ;; destination I/O APIC ID
-  db 0 ;; destination I/O APIC interrrupt in
-  ;; repeat pattern for interrupts 0-15
-  db 3,0,0,0,0,1,4,1
-  db 3,0,0,0,0,2,4,2
-  db 3,0,0,0,0,3,4,3
-  db 3,0,0,0,0,4,4,4
-  db 3,0,0,0,0,5,4,5
-  db 3,0,0,0,0,6,4,6
-  db 3,0,0,0,0,7,4,7
-  db 3,0,0,0,0,8,4,8
-  db 3,0,0,0,0,9,4,9
-  db 3,0,0,0,0,10,4,10
-  db 3,0,0,0,0,11,4,11
-  db 3,0,0,0,0,12,4,12
-  db 3,0,0,0,0,13,4,13
-  db 3,0,0,0,0,14,4,14
-  db 3,0,0,0,0,15,4,15
-#else
-#  error Sorry, rombios only has configurations for 1, 2, or 4 processors.
-#endif  // if (BX_SMP_PROCESSORS==...)
-
-mp_config_end:   // this label used to find length of mp structure
-  db 0
-
-#if (BX_SMP_PROCESSORS>1)
-.align 16
-mp_floating_pointer_structure:
-db 0x5f, 0x4d, 0x50, 0x5f   ; "_MP_" signature
-dw mp_config_table, 0xf ;; pointer to MP configuration table
-db 1     ;; length of this struct in 16-bit byte chunks
-db 4     ;; MP spec revision
-db 0xc1  ;; checksum
-db 0     ;; MP feature byte 1.  value 0 means look at the config table
-db 0,0,0,0     ;; MP feature bytes 2-5.
-#endif
-
 ;; for 'C' strings and other data, insert them here with
 ;; a the following hack:
 ;; DATA_SEG_DEFS_HERE
@@ -4871,4 +4683,193 @@ db 0x00   ; filler
 
 .org 0xd000
 // bcc-generated data will be placed here
+
+// For documentation of this config structure, look on developer.intel.com and
+// search for multiprocessor specification.  Note that when you change anything
+// you must update the checksum (a pain!).  It would be better to construct this
+// with C structures, or at least fill in the checksum automatically.
+
+#if (BX_SMP_PROCESSORS==1)
+  // no structure necessary.
+#elif (BX_SMP_PROCESSORS==2)
+// define the Intel MP Configuration Structure for 2 processors at
+// APIC ID 0,1.  I/O APIC at ID=2.
+.align 16
+mp_config_table:
+  db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
+  dw (mp_config_end-mp_config_table)  ;; table length
+  db 4 ;; spec rev
+  db 0xdd ;; checksum
+  db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
+  db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
+  db 0x20, 0x20, 0x20, 0x20 
+  db 0x20, 0x20, 0x20, 0x20
+  dw 0,0 ;; oem table ptr
+  dw 0 ;; oem table size
+  dw 3 ;; entry count
+  dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
+  dw 0 ;; extended table length
+  db 0 ;; extended table checksum
+  db 0 ;; reserved
+mp_config_proc0:
+  db 0 ;; entry type=processor
+  db 0 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 3 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc1:
+  db 0 ;; entry type=processor
+  db 1 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_isa_bus:
+  db 1 ;; entry type=bus
+  db 0 ;; bus ID
+  db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
+mp_config_ioapic:
+  db 2 ;; entry type=I/O APIC
+  db 2 ;; apic id=2. linux will set.
+  db 0x11 ;; I/O APIC version number
+  db 1 ;; flags=1=enabled
+  dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
+mp_config_irqs:
+  db 3 ;; entry type=I/O interrupt
+  db 0 ;; interrupt type=vectored interrupt
+  db 0,0 ;; flags po=0, el=0 (linux uses as default)
+  db 0 ;; source bus ID is ISA
+  db 0 ;; source bus IRQ
+  db 2 ;; destination I/O APIC ID
+  db 0 ;; destination I/O APIC interrrupt in
+  ;; repeat pattern for interrupts 0-15
+  db 3,0,0,0,0,1,2,1
+  db 3,0,0,0,0,2,2,2
+  db 3,0,0,0,0,3,2,3
+  db 3,0,0,0,0,4,2,4
+  db 3,0,0,0,0,5,2,5
+  db 3,0,0,0,0,6,2,6
+  db 3,0,0,0,0,7,2,7
+  db 3,0,0,0,0,8,2,8
+  db 3,0,0,0,0,9,2,9
+  db 3,0,0,0,0,10,2,10
+  db 3,0,0,0,0,11,2,11
+  db 3,0,0,0,0,12,2,12
+  db 3,0,0,0,0,13,2,13
+  db 3,0,0,0,0,14,2,14
+  db 3,0,0,0,0,15,2,15
+#elif (BX_SMP_PROCESSORS==4)
+// define the Intel MP Configuration Structure for 4 processors at
+// APIC ID 0,1,2,3.  I/O APIC at ID=4.
+.align 16
+mp_config_table:
+  db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
+  dw (mp_config_end-mp_config_table)  ;; table length
+  db 4 ;; spec rev
+  db 0x55 ;; checksum
+  db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
+  db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
+  db 0x20, 0x20, 0x20, 0x20 
+  db 0x20, 0x20, 0x20, 0x20
+  dw 0,0 ;; oem table ptr
+  dw 0 ;; oem table size
+  dw 5 ;; entry count
+  dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
+  dw 0 ;; extended table length
+  db 0 ;; extended table checksum
+  db 0 ;; reserved
+mp_config_proc0:
+  db 0 ;; entry type=processor
+  db 0 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc1:
+  db 0 ;; entry type=processor
+  db 1 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc2:
+  db 0 ;; entry type=processor
+  db 2 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 3 ;; cpu flags: enabled, bootstrap processor
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc3:
+  db 0 ;; entry type=processor
+  db 3 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_isa_bus:
+  db 1 ;; entry type=bus
+  db 0 ;; bus ID
+  db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
+mp_config_ioapic:
+  db 2 ;; entry type=I/O APIC
+  db 4 ;; apic id=2. linux will set.
+  db 0x11 ;; I/O APIC version number
+  db 1 ;; flags=1=enabled
+  dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
+mp_config_irqs:
+  db 3 ;; entry type=I/O interrupt
+  db 0 ;; interrupt type=vectored interrupt
+  db 0,0 ;; flags po=0, el=0 (linux uses as default)
+  db 0 ;; source bus ID is ISA
+  db 0 ;; source bus IRQ
+  db 4 ;; destination I/O APIC ID
+  db 0 ;; destination I/O APIC interrrupt in
+  ;; repeat pattern for interrupts 0-15
+  db 3,0,0,0,0,1,4,1
+  db 3,0,0,0,0,2,4,2
+  db 3,0,0,0,0,3,4,3
+  db 3,0,0,0,0,4,4,4
+  db 3,0,0,0,0,5,4,5
+  db 3,0,0,0,0,6,4,6
+  db 3,0,0,0,0,7,4,7
+  db 3,0,0,0,0,8,4,8
+  db 3,0,0,0,0,9,4,9
+  db 3,0,0,0,0,10,4,10
+  db 3,0,0,0,0,11,4,11
+  db 3,0,0,0,0,12,4,12
+  db 3,0,0,0,0,13,4,13
+  db 3,0,0,0,0,14,4,14
+  db 3,0,0,0,0,15,4,15
+#else
+#  error Sorry, rombios only has configurations for 1, 2, or 4 processors.
+#endif  // if (BX_SMP_PROCESSORS==...)
+
+mp_config_end:   // this label used to find length of mp structure
+  db 0
+
+#if (BX_SMP_PROCESSORS>1)
+.align 16
+mp_floating_pointer_structure:
+db 0x5f, 0x4d, 0x50, 0x5f   ; "_MP_" signature
+dw mp_config_table, 0xf ;; pointer to MP configuration table
+db 1     ;; length of this struct in 16-bit byte chunks
+db 4     ;; MP spec revision
+db 0xc1  ;; checksum
+db 0     ;; MP feature byte 1.  value 0 means look at the config table
+db 0,0,0,0     ;; MP feature bytes 2-5.
+#endif
+
 #endasm
