@@ -17,7 +17,7 @@ int load_module (const char *fmt, const char *name)
 {
   char buf[512];
   sprintf (buf, fmt, name);
-  printf ("loading module from %s\n", buf);
+  printf ("loading module from VARIES{%s}\n", buf);
   lt_dlhandle handle = lt_dlopenext (buf);
   printf ("handle is VARIES{%p}\n", handle);
   if (!handle) {
