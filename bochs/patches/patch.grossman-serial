@@ -1,0 +1,339 @@
+From grossman@juniper.net Sat Mar  2 23:34:25 2002
+Date: Sat, 2 Mar 2002 16:31:49 -0800
+From: Stu Grossman <grossman@juniper.net>
+To: Bryce Denney <bryce@tlw.com>
+Subject: Re: [Bochs-developers] Patches for serial I/O under Linux/*BSD
+
+Bryce,
+	Here are the patches (without the serial name fix).  Let me know if you
+want me to change that.  Oh, FYI, my changes also open up the com1 terminal in
+raw mode, which makes the emulation much more accurate.  You'll also notice
+that I added infrastructure for com2->4 in the option parsing.  I didn't add it
+to the serial code, as I think a bunch of things need to be untangled before
+that can work.
+
+Also, my future plans for this are to make it possible to connect comx up to a
+TCP socket.  This way, you can use telnet to connect to the terminal.  This
+would also make it possible to use remote GDB to debug the FreeBSD kernel,
+since GDB can make TCP connections.  Still got a bunch of issues to work though
+on that though.
+
+				Stu
+
+Index: .bochsrc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/.bochsrc,v
+retrieving revision 1.28
+diff -u -p -r1.28 .bochsrc
+--- .bochsrc	30 Jan 2002 10:30:52 -0000	1.28
++++ .bochsrc	2 Mar 2002 23:22:10 -0000
+@@ -2,6 +2,19 @@
+ # your pathname includes spaces.
+ 
+ #=======================================================================
++# com1:
++# Specify the device to use as com1.  This can be a real serial line, or
++# a pty.  To use a pty (under X/Unix), create two windows (xterms,
++# usually).  One of them will run bochs, and the other will act as com1.
++# Find out the tty the com1 window using the `tty' command, and use that
++# as the `dev' parameter.  Then do `sleep 1000000' in the com1 window to
++# keep the shell from messing with things, and run bochs in the other
++# window.  Serial I/O to com1 (port 0x3f8) will all go to the other
++# window.
++#=======================================================================
++#com1: dev=/dev/ttyp9
++
++#=======================================================================
+ # ROMIMAGE:
+ # You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
+ # out most of the BIOS hooks, and replace them with real BIOS
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.58
+diff -u -p -r1.58 bochs.h
+--- bochs.h	30 Jan 2002 10:30:52 -0000	1.58
++++ bochs.h	2 Mar 2002 23:22:10 -0000
+@@ -609,6 +609,10 @@ typedef struct {
+   bx_floppy_options floppyb;
+   bx_disk_options   diskc;
+   bx_disk_options   diskd;
++  bx_serial_options com1;
++  bx_serial_options com2;
++  bx_serial_options com3;
++  bx_serial_options com4;
+   bx_cdrom_options  cdromd; 
+   bx_rom_options    rom;
+   bx_vgarom_options vgarom;
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.85
+diff -u -p -r1.85 main.cc
+--- main.cc	30 Jan 2002 10:30:52 -0000	1.85
++++ main.cc	2 Mar 2002 23:22:10 -0000
+@@ -72,6 +72,10 @@ bx_options_t bx_options = {
+   { NULL, NULL, NULL },   // floppyb
+   { 0, NULL, 0, 0, 0 },                   // diskc
+   { 0, NULL, 0, 0, 0 },                   // diskd
++  { 0, NULL},			// com1
++  { 0, NULL},			// com2
++  { 0, NULL},			// com3
++  { 0, NULL},			// com4
+   { 0, NULL, 0 },                         // cdromd
+   { NULL, NULL },                          // rom
+   { NULL },                             // vgarom
+@@ -398,6 +402,47 @@ void bx_init_options ()
+   bx_options.diskd.Opath->set_handler (bx_param_string_handler);
+   bx_options.diskd.Opath->set ("none");
+ 
++  // com1 options
++  bx_options.com1.Opresent = new bx_param_bool_c (BXP_COM1_PRESENT,
++						  "com1:present",
++						  "Controls whether com1 is installed or not",
++						  0);
++
++  bx_options.com1.Odev = new bx_param_string_c (BXP_COM1_PATH,
++						 "",
++						 "Pathname of the serial device",
++						 "", BX_PATHNAME_LEN);
++  // com2 options
++  bx_options.com2.Opresent = new bx_param_bool_c (BXP_COM2_PRESENT,
++						  "com2:present",
++						  "Controls whether com2 is installed or not",
++						  0);
++
++  bx_options.com2.Odev = new bx_param_string_c (BXP_COM2_PATH,
++						 "",
++						 "Pathname of the serial device",
++						 "", BX_PATHNAME_LEN);
++  // com3 options
++  bx_options.com3.Opresent = new bx_param_bool_c (BXP_COM3_PRESENT,
++						  "com3:present",
++						  "Controls whether com3 is installed or not",
++						  0);
++
++  bx_options.com3.Odev = new bx_param_string_c (BXP_COM3_PATH,
++						 "",
++						 "Pathname of the serial device",
++						 "", BX_PATHNAME_LEN);
++  // com4 options
++  bx_options.com4.Opresent = new bx_param_bool_c (BXP_COM4_PRESENT,
++						  "com4:present",
++						  "Controls whether com4 is installed or not",
++						  0);
++
++  bx_options.com4.Odev = new bx_param_string_c (BXP_COM4_PATH,
++						 "",
++						 "Pathname of the serial device",
++						 "", BX_PATHNAME_LEN);
++
+   // cdrom options
+   bx_options.cdromd.Opresent = new bx_param_bool_c (BXP_CDROM_PRESENT,
+       "CDROM is present",
+@@ -1389,6 +1434,47 @@ parse_line_formatted(char *context, int 
+     bx_options.diskd.Oheads->set     (atol( &params[3][6] ));
+     bx_options.diskd.Ospt->set       (atol( &params[4][4] ));
+     bx_options.diskd.Opresent->set (1);
++    }
++
++  else if (!strcmp(params[0], "com1")) {
++    if (num_params != 2) {
++      BX_PANIC(("%s: com1 directive malformed.", context));
++      }
++    if (strncmp(params[1], "dev=", 4)) {
++      BX_PANIC(("%s: com1 directive malformed.", context));
++      }
++    bx_options.com1.Odev->set (&params[1][4]);
++    bx_options.com1.Opresent->set (1);
++    }
++  else if (!strcmp(params[0], "com2")) {
++    if (num_params != 2) {
++      BX_PANIC(("%s: com2 directive malformed.", context));
++      }
++    if (strncmp(params[1], "dev=", 4)) {
++      BX_PANIC(("%s: com2 directive malformed.", context));
++      }
++    bx_options.com2.Odev->set (&params[1][4]);
++    bx_options.com2.Opresent->set (1);
++    }
++  else if (!strcmp(params[0], "com3")) {
++    if (num_params != 2) {
++      BX_PANIC(("%s: com3 directive malformed.", context));
++      }
++    if (strncmp(params[1], "dev=", 4)) {
++      BX_PANIC(("%s: com3 directive malformed.", context));
++      }
++    bx_options.com3.Odev->set (&params[1][4]);
++    bx_options.com3.Opresent->set (1);
++    }
++  else if (!strcmp(params[0], "com4")) {
++    if (num_params != 2) {
++      BX_PANIC(("%s: com4 directive malformed.", context));
++      }
++    if (strncmp(params[1], "dev=", 4)) {
++      BX_PANIC(("%s: com4 directive malformed.", context));
++      }
++    bx_options.com4.Odev->set (&params[1][4]);
++    bx_options.com4.Opresent->set (1);
+     }
+ 
+   else if (!strcmp(params[0], "cdromd")) {
+Index: doc/man/bochsrc.1
+===================================================================
+RCS file: /cvsroot/bochs/bochs/doc/man/bochsrc.1,v
+retrieving revision 1.6
+diff -u -p -r1.6 bochsrc.1
+--- doc/man/bochsrc.1	12 Dec 2001 10:38:39 -0000	1.6
++++ doc/man/bochsrc.1	2 Mar 2002 23:22:10 -0000
+@@ -100,6 +100,18 @@ Example:
+   diskd: file=483.i, cyl=1024, heads=15, spt=63
+ 
+ .TP
++.I "com1:"
++Point  this at the device you want to  use
++as your com1 serial port. The "dev=" parameter indicates which device to use.
++This can be a Unix pty.  One way to use this would be to run bochs in one window
++and open a second window to use as com1.  Do a `sleep 1000000' in the com1
++window to prevent it's shell from getting in the way.  When you run bochs, all
++I/O to com1 will show up in this window.
++
++Example:
++  com1: dev=/dev/ttyp7
++
++.TP
+ .I "cdromd:"
+ Point this to a pathname of a raw CD-ROM device.
+ There is no cdromc option, only cdromd.
+Index: gui/siminterface.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
+retrieving revision 1.31
+diff -u -p -r1.31 siminterface.h
+--- gui/siminterface.h	22 Dec 2001 20:58:25 -0000	1.31
++++ gui/siminterface.h	2 Mar 2002 23:22:10 -0000
+@@ -54,6 +54,14 @@ typedef enum {
+   BXP_DISKD_HEADS,
+   BXP_DISKD_SPT,
+   BXP_DISKD,
++  BXP_COM1_PRESENT,
++  BXP_COM1_PATH,
++  BXP_COM2_PRESENT,
++  BXP_COM2_PATH,
++  BXP_COM3_PRESENT,
++  BXP_COM3_PATH,
++  BXP_COM4_PRESENT,
++  BXP_COM4_PATH,
+   BXP_CDROM_PRESENT,
+   BXP_CDROM_PATH,
+   BXP_CDROM_INSERTED,
+@@ -323,6 +331,11 @@ typedef struct {
+   bx_param_num_c *Oheads;
+   bx_param_num_c *Ospt;
+   } bx_disk_options;
++
++typedef struct {
++  bx_param_bool_c *Opresent;
++  bx_param_string_c *Odev;
++  } bx_serial_options;
+ 
+ struct bx_cdrom_options
+ {
+Index: iodev/serial.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/serial.cc,v
+retrieving revision 1.17
+diff -u -p -r1.17 serial.cc
+--- iodev/serial.cc	29 Jan 2002 17:20:12 -0000	1.17
++++ iodev/serial.cc	2 Mar 2002 23:22:10 -0000
+@@ -52,7 +52,7 @@
+ #endif
+ 
+ #if defined(__FreeBSD__) || defined(__OpenBSD__)
+-// #define SERIAL_ENABLE
++#define SERIAL_ENABLE
+ #endif
+ 
+ #ifdef SERIAL_ENABLE
+@@ -76,8 +76,28 @@ bx_serial_c::bx_serial_c(void)
+ {
+   put("SER");
+   settype(SERLOG);
++}
++
++bx_serial_c::~bx_serial_c(void)
++{
++#ifdef SERIAL_ENABLE
++  tcsetattr(tty_id, TCSAFLUSH, &term_orig);
++#endif
++  // nothing for now
++}
++
++
++  void
++bx_serial_c::init(bx_devices_c *d)
++{
++  if (!bx_options.com1.Opresent->get ())
++    return;
++
+ #ifdef SERIAL_ENABLE
+-  tty_id = open("/dev/ttyqf",O_RDWR|O_NONBLOCK,600);
++  tty_id = open(bx_options.com1.Odev->getptr (), O_RDWR|O_NONBLOCK,600);
++  if (tty_id < 0)
++    BX_PANIC(("open of %s (%s) failed\n",
++	      "com1", bx_options.com1.Odev->getptr ()));
+   BX_DEBUG(("tty_id: %d",tty_id));
+   tcgetattr(tty_id, &term_orig);
+   bcopy((caddr_t) &term_orig, (caddr_t) &term_new, sizeof(struct termios));
+@@ -93,27 +113,20 @@ bx_serial_c::bx_serial_c(void)
+   term_new.c_iflag |= IGNBRK;
+   term_new.c_iflag &= ~BRKINT;
+ #endif    /* !def TRUE_CTLC */
++  term_new.c_iflag = 0;
++  term_new.c_oflag = 0;
++  term_new.c_cflag = CS8|CREAD|CLOCAL;
++  term_new.c_lflag = 0;
++  term_new.c_cc[VMIN] = 1;
++  term_new.c_cc[VTIME] = 0;
+   //term_new.c_iflag |= IXOFF;
+-  //tcsetattr(tty_id, TCSAFLUSH, &term_new);
++  tcsetattr(tty_id, TCSAFLUSH, &term_new);
+ #endif   /* def SERIAL_ENABLE */
+   // nothing for now
+ #if USE_RAW_SERIAL
+   this->raw = new serial_raw("/dev/cua0", SIGUSR1);
+ #endif // USE_RAW_SERIAL
+-}
+-
+-bx_serial_c::~bx_serial_c(void)
+-{
+-#ifdef SERIAL_ENABLE
+-  tcsetattr(tty_id, TCSAFLUSH, &term_orig);
+-#endif
+-  // nothing for now
+-}
+-
+ 
+-  void
+-bx_serial_c::init(bx_devices_c *d)
+-{
+   BX_SER_THIS devices = d;
+ 
+   BX_SER_THIS devices->register_irq(4, "Serial Port 1");
+@@ -744,6 +757,7 @@ bx_serial_c::rx_timer(void)
+ // declared in the CodeWarrior standard library headers. I'm just
+ // leaving it commented out for the moment.
+ 
++  FD_ZERO(&fds);
+   FD_SET(tty_id, &fds);
+ 
+   if (BX_SER_THIS s[0].line_status.rxdata_ready == 0) {
+@@ -764,7 +778,7 @@ bx_serial_c::rx_timer(void)
+     if (rdy) {
+ 	  chbuf = data;
+ #elif defined(SERIAL_ENABLE)
+-    if (select(1, &fds, NULL, NULL, &tval) == 1) {
++    if (select(tty_id + 1, &fds, NULL, NULL, &tval) == 1) {
+       (void) read(tty_id, &chbuf, 1);
+ 	  BX_DEBUG(("read: '%c'",chbuf));
+ #else
