@@ -32,14 +32,14 @@ For VC++, since you have to configure on a different system.
 
 -------------------------------------------------------------------------
 Changes in 1.4 (FIXME(bdenney):change to release date):
-- Christophe Bothamy added El Torito support in rombios.c, which allows Bochs
-  to boot cdroms.  To use this, you must set the rombios line in your bochsrc
-  to point to BIOS-bochs-eltorito, and the boot line must say "cdrom".
+- Christophe Bothamy added partial El Torito support in rombios.c, which 
+  allows Bochs to boot cdroms.  Booting from win2k or winXP cdrom is not 
+  supported yet.  The default bios includes El Torito functions; the boot 
+  line must say "cdrom".
   Example:
-    romimage: file=bios/BIOS-bochs-eltorito, address=0xf0000
     boot: cdrom
-- updated Christophe Bothamy's free vga bios to version 0.3a.  This consists of
-  a bug fix for function ah=13 and VBE support.
+- updated Christophe Bothamy's LGPL vga bios to version 0.3a.  This consists of
+  a bug fix for function ah=13 and VBE support by Jeroen Janssen.
 - keyboard changes by Christophe Bothamy. FIXME(cbothamy): need details.
   - keyboard mapping?
   - keyboard type?
@@ -66,6 +66,7 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
   (Volker Ruppert)
 - snapshot button works now!  Clicking on snapshot creates a file
   snapshot.txt that shows whatever is on the screen. (Volker Ruppert)
+- Double-Word IO is supported for ATA devices
 
 
 -------------------------------------------------------------------------
