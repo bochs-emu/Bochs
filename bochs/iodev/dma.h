@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.15 2003-05-03 07:41:27 vruppert Exp $
+// $Id: dma.h,v 1.16 2005-04-05 17:57:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,8 +80,7 @@ private:
     bx_bool flip_flop;
     Bit8u   status_reg;
     Bit8u   command_reg;
-    Bit8u   request_reg;
-    Bit8u   temporary_reg;
+    bx_bool ctrl_disabled;
     struct {
       struct {
         Bit8u mode_type;

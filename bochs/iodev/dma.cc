@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.32 2004-08-11 11:48:55 vruppert Exp $
+// $Id: dma.cc,v 1.33 2005-04-05 17:57:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.32 2004-08-11 11:48:55 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.33 2005-04-05 17:57:31 vruppert Exp $"));
 
   /* 8237 DMA controller */
 
@@ -198,10 +198,9 @@ bx_dma_c::reset_controller(unsigned num)
   BX_DMA_THIS s[num].mask[1] = 1;
   BX_DMA_THIS s[num].mask[2] = 1;
   BX_DMA_THIS s[num].mask[3] = 1;
+  BX_DMA_THIS s[num].ctrl_disabled = 0;
   BX_DMA_THIS s[num].command_reg = 0;
   BX_DMA_THIS s[num].status_reg = 0;
-  BX_DMA_THIS s[num].request_reg = 0;
-  BX_DMA_THIS s[num].temporary_reg = 0;
   BX_DMA_THIS s[num].flip_flop = 0;
 }
 
@@ -253,12 +252,11 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
       channel = (address >> (1 + ma_sl)) & 0x03;
       if (BX_DMA_THIS s[ma_sl].flip_flop==0) {
         BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
-        return(BX_DMA_THIS s[ma_sl].chan[channel].current_address & 0xff);
-        }
-      else {
+        return (BX_DMA_THIS s[ma_sl].chan[channel].current_address & 0xff);
+      } else {
         BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
-        return(BX_DMA_THIS s[ma_sl].chan[channel].current_address >> 8);
-        }
+        return (BX_DMA_THIS s[ma_sl].chan[channel].current_address >> 8);
+      }
 
     case 0x01: /* DMA-1 current count, channel 0 */
     case 0x03: /* DMA-1 current count, channel 1 */
@@ -271,12 +269,11 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
       channel = (address >> (1 + ma_sl)) & 0x03;
       if (BX_DMA_THIS s[ma_sl].flip_flop==0) {
         BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
-        return(BX_DMA_THIS s[ma_sl].chan[channel].current_count & 0xff);
-        }
-      else {
+        return (BX_DMA_THIS s[ma_sl].chan[channel].current_count & 0xff);
+      } else {
         BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
-        return(BX_DMA_THIS s[ma_sl].chan[channel].current_count >> 8);
-        }
+        return (BX_DMA_THIS s[ma_sl].chan[channel].current_count >> 8);
+      }
 
     case 0x08: // DMA-1 Status Register
     case 0xd0: // DMA-2 Status Register
@@ -291,28 +288,28 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
       // reading this register clears lower 4 bits (hold flags)
       retval = BX_DMA_THIS s[ma_sl].status_reg;
       BX_DMA_THIS s[ma_sl].status_reg &= 0xf0;
-      return(retval);
-      break;
+      return retval;
+
     case 0x0d: // DMA-1: temporary register
     case 0xda: // DMA-2: temporary register
-      BX_ERROR(("DMA-%d: read of temporary register", ma_sl+1));
-      // Note: write to 0x0D clears temporary register
-      return(0);
-      break;
+      // only used for memory-to-memory transfers
+      // write to 0x0d / 0xda clears temporary register
+      BX_ERROR(("DMA-%d: read of temporary register always returns 0", ma_sl+1));
+      return 0;
 
     case 0x0081: // DMA-1 page register, channel 2
     case 0x0082: // DMA-1 page register, channel 3
     case 0x0083: // DMA-1 page register, channel 1
     case 0x0087: // DMA-1 page register, channel 0
       channel = channelindex[address - 0x81];
-      return( BX_DMA_THIS s[0].chan[channel].page_reg );
+      return BX_DMA_THIS s[0].chan[channel].page_reg;
 
     case 0x0089: // DMA-2 page register, channel 2
     case 0x008a: // DMA-2 page register, channel 3
     case 0x008b: // DMA-2 page register, channel 1
     case 0x008f: // DMA-2 page register, channel 0
       channel = channelindex[address - 0x89];
-      return( BX_DMA_THIS s[1].chan[channel].page_reg );
+      return BX_DMA_THIS s[1].chan[channel].page_reg;
 
     case 0x0084:
     case 0x0085:
@@ -322,7 +319,7 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
     case 0x008d:
     case 0x008e:
       BX_DEBUG(("read: extra page register 0x%04x unsupported", (unsigned) address));
-      return(0);
+      return 0;
 
     case 0x0f: // DMA-1: undocumented: read all mask bits
     case 0xde: // DMA-2: undocumented: read all mask bits
@@ -330,12 +327,12 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
                (BX_DMA_THIS s[ma_sl].mask[1] << 1) |
                (BX_DMA_THIS s[ma_sl].mask[2] << 2) |
                (BX_DMA_THIS s[ma_sl].mask[3] << 3);
-      return(0xf0 | retval);
+      return (0xf0 | retval);
 
     default:
       BX_ERROR(("read: unsupported address=%04x", (unsigned) address));
-      return(0);
-    }
+      return 0;
+  }
 }
 
 
@@ -403,17 +400,15 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       if (BX_DMA_THIS s[ma_sl].flip_flop==0) { /* 1st byte */
         BX_DMA_THIS s[ma_sl].chan[channel].base_address = value;
         BX_DMA_THIS s[ma_sl].chan[channel].current_address = value;
-        }
-      else { /* 2nd byte */
+      } else { /* 2nd byte */
         BX_DMA_THIS s[ma_sl].chan[channel].base_address |= (value << 8);
         BX_DMA_THIS s[ma_sl].chan[channel].current_address |= (value << 8);
         BX_DEBUG(("    base = %04x",
             (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_address));
         BX_DEBUG(("    curr = %04x",
             (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].current_address));
-        }
+      }
       BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
-      return;
       break;
 
     case 0x01:
@@ -429,45 +424,41 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       if (BX_DMA_THIS s[ma_sl].flip_flop==0) { /* 1st byte */
         BX_DMA_THIS s[ma_sl].chan[channel].base_count = value;
         BX_DMA_THIS s[ma_sl].chan[channel].current_count = value;
-        }
-      else { /* 2nd byte */
+      } else { /* 2nd byte */
         BX_DMA_THIS s[ma_sl].chan[channel].base_count |= (value << 8);
         BX_DMA_THIS s[ma_sl].chan[channel].current_count |= (value << 8);
         BX_DEBUG(("    base = %04x",
             (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_count));
         BX_DEBUG(("    curr = %04x",
             (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].current_count));
-        }
+      }
       BX_DMA_THIS s[ma_sl].flip_flop = !BX_DMA_THIS s[ma_sl].flip_flop;
-      return;
       break;
 
     case 0x08: /* DMA-1: command register */
     case 0xd0: /* DMA-2: command register */
-      if (value != 0x00)
-        BX_ERROR(("write to command register: value(%02xh) not 0x00",
+      if ((value & 0xfb) != 0x00)
+        BX_ERROR(("write to command register: value 0x%02x not supported",
           (unsigned) value));
       BX_DMA_THIS s[ma_sl].command_reg = value;
-      return;
+      BX_DMA_THIS s[ma_sl].ctrl_disabled = (value >> 2) & 0x01;
+      control_HRQ(ma_sl);
       break;
 
     case 0x09: // DMA-1: request register
     case 0xd2: // DMA-2: request register
       channel = value & 0x03;
-      BX_ERROR(("DMA-%d: write to request register (%02x)", ma_sl+1, (unsigned) value));
-      // note: write to 0x0d clears this register
+      // note: write to 0x0d / 0xda clears this register
       if (value & 0x04) {
         // set request bit
         BX_DMA_THIS s[ma_sl].status_reg |= (1 << (channel+4));
         BX_DEBUG(("DMA-%d: set request bit for channel %u", ma_sl+1, (unsigned) channel));
-        }
-      else {
+      } else {
         // clear request bit
         BX_DMA_THIS s[ma_sl].status_reg &= ~(1 << (channel+4));
         BX_DEBUG(("DMA-%d: cleared request bit for channel %u", ma_sl+1, (unsigned) channel));
-        }
+      }
       control_HRQ(ma_sl);
-      return;
       break;
 
     case 0x0a:
@@ -478,7 +469,6 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DEBUG(("DMA-%d: set_mask_bit=%u, channel=%u, mask now=%02xh", ma_sl+1,
           (unsigned) set_mask_bit, (unsigned) channel, (unsigned) BX_DMA_THIS s[ma_sl].mask[channel]));
       control_HRQ(ma_sl);
-      return;
       break;
 
     case 0x0b: /* DMA-1 mode register */
@@ -490,14 +480,12 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type = (value >> 2) & 0x03;
       BX_DEBUG(("DMA-%d: mode register[%u] = %02x", ma_sl+1,
           (unsigned) channel, (unsigned) value));
-      return;
       break;
 
     case 0x0c: /* DMA-1 clear byte flip/flop */
     case 0xd8: /* DMA-2 clear byte flip/flop */
       BX_DEBUG(("DMA-%d: clear flip/flop", ma_sl+1));
       BX_DMA_THIS s[ma_sl].flip_flop = 0;
-      return;
       break;
 
     case 0x0d: // DMA-1: master clear
@@ -508,7 +496,6 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       // mask register is set (chan 0..3 disabled)
       // command, status, request, temporary, and byte flip-flop are all cleared
       reset_controller(ma_sl);
-      return;
       break;
 
     case 0x0e: // DMA-1: clear mask register
@@ -519,7 +506,6 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s[ma_sl].mask[2] = 0;
       BX_DMA_THIS s[ma_sl].mask[3] = 0;
       control_HRQ(ma_sl);
-      return;
       break;
 
     case 0x0f: // DMA-1: write all mask bits
@@ -530,7 +516,6 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s[ma_sl].mask[2] = value & 0x01; value >>= 1;
       BX_DMA_THIS s[ma_sl].mask[3] = value & 0x01;
       control_HRQ(ma_sl);
-      return;
       break;
 
     case 0x81: /* DMA-1 page register, channel 2 */
@@ -541,7 +526,6 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       channel = channelindex[address - 0x81];
       BX_DMA_THIS s[0].chan[channel].page_reg = value;
       BX_DEBUG(("DMA-1: page register %d = %02x", channel, (unsigned) value));
-      return;
       break;
 
     case 0x89: /* DMA-2 page register, channel 2 */
@@ -552,7 +536,6 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       channel = channelindex[address - 0x89];
       BX_DMA_THIS s[1].chan[channel].page_reg = value;
       BX_DEBUG(("DMA-2: page register %d = %02x", channel + 4, (unsigned) value));
-      return;
       break;
 
     case 0x0084:
@@ -563,13 +546,12 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x008d:
     case 0x008e:
       BX_DEBUG(("write: extra page register 0x%04x unsupported", (unsigned) address));
-      return;
       break;
 
     default:
       BX_ERROR(("write ignored: %04xh = %02xh",
         (unsigned) address, (unsigned) value));
-    }
+  }
 }
 
   void
@@ -642,6 +624,10 @@ bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
 bx_dma_c::control_HRQ(bx_bool ma_sl)
 {
   unsigned channel;
+
+  // do nothing if controller is disabled
+  if (BX_DMA_THIS s[ma_sl].ctrl_disabled)
+    return;
 
   // deassert HRQ if no DRQ is pending
   if ((BX_DMA_THIS s[ma_sl].status_reg & 0xf0) == 0) {
