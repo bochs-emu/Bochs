@@ -41,7 +41,11 @@ Changes to next release:
   - general
     - handle cpu reset through port 0x92
   - speaker emulation added (David N. Welton)
-  - PCI IDE controller dummy device added
+  - pci
+    - PCI slot configuration added for 5 slots
+    - PCI irq routing, irq sharing and level sensitive irq mode implemented
+    - ne2k device appears as a Realtec 8029 NIC if connected to a PCI slot
+    - PCI IDE controller dummy device added
   - serial
     - multiple serial port support added (4 ports now available)
     - partial raw serial support on win32 (transmit data)
