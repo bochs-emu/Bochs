@@ -36,7 +36,9 @@ CXXFLAGS = @CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-X_LIBS = @X_LIBS@ -lreadline
+# linux needs just -lreadline
+# solaris needs -lreadline -lcurses
+X_LIBS = @X_LIBS@ -lreadline -lcurses
 X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS) -lX11
 GUI_LINK_OPTS_BEOS = -lbe
