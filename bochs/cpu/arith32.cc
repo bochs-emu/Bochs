@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.10 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: arith32.cc,v 1.11 2002-09-15 01:36:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,12 +33,24 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
+#if BX_SUPPORT_X86_64==0
+// Make life easier for merging cpu64 and cpu code.
+#define RAX EAX
+#define RDX EDX
+#endif
+
+
   void
 BX_CPU_C::INC_ERX(BxInstruction_t *i)
 {
   Bit32u erx;
 
+#if BX_SUPPORT_X86_64
+  erx = ++ BX_CPU_THIS_PTR gen_reg[i->nnn].dword.erx;
+  BX_CPU_THIS_PTR gen_reg[i->nnn].dword.hrx = 0;
+#else
   erx = ++ BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx;
+#endif
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
 }
 
@@ -47,7 +59,12 @@ BX_CPU_C::DEC_ERX(BxInstruction_t *i)
 {
   Bit32u erx;
 
+#if BX_SUPPORT_X86_64
+  erx = -- BX_CPU_THIS_PTR gen_reg[i->nnn].dword.erx;
+  BX_CPU_THIS_PTR gen_reg[i->nnn].dword.hrx = 0;
+#else
   erx = -- BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx;
+#endif
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
 }
 
@@ -76,7 +93,7 @@ BX_CPU_C::ADD_EdGd(BxInstruction_t *i)
 
     /* now write sum back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, sum_32);
+      BX_WRITE_32BIT_REGZ(i->rm, sum_32);
       }
     else {
       Write_RMW_virtual_dword(sum_32);
@@ -107,7 +124,7 @@ BX_CPU_C::ADD_GdEd(BxInstruction_t *i)
     sum_32 = op1_32 + op2_32;
 
     /* now write sum back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, sum_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, sum_32);
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 }
@@ -126,7 +143,7 @@ BX_CPU_C::ADD_EAXId(BxInstruction_t *i)
     sum_32 = op1_32 + op2_32;
 
     /* now write sum back to destination */
-    EAX = sum_32;
+    RAX = sum_32;
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 }
@@ -158,7 +175,7 @@ BX_CPU_C::ADC_EdGd(BxInstruction_t *i)
 
     /* now write sum back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, sum_32);
+      BX_WRITE_32BIT_REGZ(i->rm, sum_32);
       }
     else {
       Write_RMW_virtual_dword(sum_32);
@@ -195,7 +212,7 @@ BX_CPU_C::ADC_GdEd(BxInstruction_t *i)
     sum_32 = op1_32 + op2_32 + temp_CF;
 
     /* now write sum back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, sum_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, sum_32);
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, sum_32, BX_INSTR_ADC32,
                              temp_CF);
@@ -219,7 +236,7 @@ BX_CPU_C::ADC_EAXId(BxInstruction_t *i)
     sum_32 = op1_32 + op2_32 + temp_CF;
 
     /* now write sum back to destination */
-    EAX = sum_32;
+    RAX = sum_32;
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, sum_32, BX_INSTR_ADC32,
                            temp_CF);
@@ -255,7 +272,7 @@ BX_CPU_C::SBB_EdGd(BxInstruction_t *i)
 
     /* now write diff back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, diff_32);
+      BX_WRITE_32BIT_REGZ(i->rm, diff_32);
       }
     else {
       Write_RMW_virtual_dword(diff_32);
@@ -292,7 +309,7 @@ BX_CPU_C::SBB_GdEd(BxInstruction_t *i)
     diff_32 = op1_32 - (op2_32 + temp_CF);
 
     /* now write diff back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, diff_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, diff_32);
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, diff_32, BX_INSTR_SBB32,
                               temp_CF);
@@ -316,7 +333,7 @@ BX_CPU_C::SBB_EAXId(BxInstruction_t *i)
     diff_32 = op1_32 - (op2_32 + temp_CF);
 
     /* now write diff back to destination */
-    EAX = diff_32;
+    RAX = diff_32;
 
     SET_FLAGS_OSZAPC_32_CF(op1_32, op2_32, diff_32, BX_INSTR_SBB32,
                               temp_CF);
@@ -350,7 +367,7 @@ BX_CPU_C::SBB_EdId(BxInstruction_t *i)
 
     /* now write diff back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, diff_32);
+      BX_WRITE_32BIT_REGZ(i->rm, diff_32);
       }
     else {
       Write_RMW_virtual_dword(diff_32);
@@ -383,7 +400,7 @@ BX_CPU_C::SUB_EdGd(BxInstruction_t *i)
 
     /* now write diff back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, diff_32);
+      BX_WRITE_32BIT_REGZ(i->rm, diff_32);
       }
     else {
       Write_RMW_virtual_dword(diff_32);
@@ -414,7 +431,7 @@ BX_CPU_C::SUB_GdEd(BxInstruction_t *i)
     diff_32 = op1_32 - op2_32;
 
     /* now write diff back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, diff_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, diff_32);
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
 }
@@ -432,7 +449,7 @@ BX_CPU_C::SUB_EAXId(BxInstruction_t *i)
     diff_32 = op1_32 - op2_32;
 
     /* now write diff back to destination */
-    EAX = diff_32;
+    RAX = diff_32;
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
 }
@@ -506,20 +523,22 @@ BX_CPU_C::CMP_EAXId(BxInstruction_t *i)
 BX_CPU_C::CWDE(BxInstruction_t *i)
 {
   /* CBW: no flags are effected */
+    Bit32u temp;
 
-    EAX = (Bit16s) AX;
+    temp = (Bit16s) AX;
+    RAX = temp;
 }
 
   void
 BX_CPU_C::CDQ(BxInstruction_t *i)
 {
-  /* CWD: no flags are affected */
+  /* CDQ: no flags are affected */
 
     if (EAX & 0x80000000) {
-      EDX = 0xFFFFFFFF;
+      RDX = 0xFFFFFFFF;
       }
     else {
-      EDX = 0x00000000;
+      RDX = 0x00000000;
       }
 }
 
@@ -584,13 +603,13 @@ BX_CPU_C::XADD_EdGd(BxInstruction_t *i)
       // Note: if both op1 & op2 are registers, the last one written
       //       should be the sum, as op1 & op2 may be the same register.
       //       For example:  XADD AL, AL
-      BX_WRITE_32BIT_REG(i->nnn, op1_32);
-      BX_WRITE_32BIT_REG(i->rm, sum_32);
+      BX_WRITE_32BIT_REGZ(i->nnn, op1_32);
+      BX_WRITE_32BIT_REGZ(i->rm, sum_32);
       }
     else {
       Write_RMW_virtual_dword(sum_32);
       /* and write destination into source */
-      BX_WRITE_32BIT_REG(i->nnn, op1_32);
+      BX_WRITE_32BIT_REGZ(i->nnn, op1_32);
       }
 
 
@@ -605,18 +624,18 @@ BX_CPU_C::XADD_EdGd(BxInstruction_t *i)
   void
 BX_CPU_C::ADD_EdId(BxInstruction_t *i)
 {
-  Bit32u op2_32, op1_32, sum_32;
+    Bit32u op2_32, op1_32, sum_32;
 
-  op2_32 = i->Id;
+    op2_32 = i->Id;
 
-  /* op1_32 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op1_32 = BX_READ_32BIT_REG(i->rm);
-    }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
-    }
+    /* op1_32 is a register or memory reference */
+    if (i->mod == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm);
+      }
+    else {
+      /* pointer, segment address pair */
+      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      }
 
 #if (defined(__i386__) && defined(__GNUC__))
   Bit32u flags32;
@@ -629,16 +648,16 @@ BX_CPU_C::ADD_EdId(BxInstruction_t *i)
     : "memory", "cc"
     );
 #else
-  sum_32 = op1_32 + op2_32;
+    sum_32 = op1_32 + op2_32;
 #endif
 
-  /* now write sum back to destination */
-  if (i->mod == 0xc0) {
-    BX_WRITE_32BIT_REG(i->rm, sum_32);
-    }
-  else {
-    Write_RMW_virtual_dword(sum_32);
-    }
+    /* now write sum back to destination */
+    if (i->mod == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm, sum_32);
+      }
+    else {
+      Write_RMW_virtual_dword(sum_32);
+      }
 
 #if (defined(__i386__) && defined(__GNUC__))
   BX_CPU_THIS_PTR eflags.val32 =
@@ -674,7 +693,7 @@ BX_CPU_C::ADC_EdId(BxInstruction_t *i)
 
     /* now write sum back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, sum_32);
+      BX_WRITE_32BIT_REGZ(i->rm, sum_32);
       }
     else {
       Write_RMW_virtual_dword(sum_32);
@@ -706,7 +725,7 @@ BX_CPU_C::SUB_EdId(BxInstruction_t *i)
 
     /* now write diff back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, diff_32);
+      BX_WRITE_32BIT_REGZ(i->rm, diff_32);
       }
     else {
       Write_RMW_virtual_dword(diff_32);
@@ -759,7 +778,7 @@ BX_CPU_C::NEG_Ed(BxInstruction_t *i)
 
     /* now write diff back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, diff_32);
+      BX_WRITE_32BIT_REGZ(i->rm, diff_32);
       }
     else {
       Write_RMW_virtual_dword(diff_32);
@@ -787,7 +806,7 @@ BX_CPU_C::INC_Ed(BxInstruction_t *i)
 
     /* now write sum back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, op1_32);
+      BX_WRITE_32BIT_REGZ(i->rm, op1_32);
       }
     else {
       Write_RMW_virtual_dword(op1_32);
@@ -815,7 +834,7 @@ BX_CPU_C::DEC_Ed(BxInstruction_t *i)
 
     /* now write sum back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, op1_32);
+      BX_WRITE_32BIT_REGZ(i->rm, op1_32);
       }
     else {
       Write_RMW_virtual_dword(op1_32);
@@ -852,7 +871,7 @@ BX_CPU_C::CMPXCHG_EdGd(BxInstruction_t *i)
       op2_32 = BX_READ_32BIT_REG(i->nnn);
 
       if (i->mod == 0xc0) {
-        BX_WRITE_32BIT_REG(i->rm, op2_32);
+        BX_WRITE_32BIT_REGZ(i->rm, op2_32);
         }
       else {
         Write_RMW_virtual_dword(op2_32);
@@ -862,7 +881,7 @@ BX_CPU_C::CMPXCHG_EdGd(BxInstruction_t *i)
       // ZF = 0
       set_ZF(0);
       // accumulator <-- dest
-      EAX = op1_32;
+      RAX = op1_32;
       }
 #else
   BX_PANIC(("CMPXCHG_EdGd:"));
@@ -901,10 +920,10 @@ BX_CPU_C::CMPXCHG8B(BxInstruction_t *i)
       // ZF = 0
       set_ZF(0);
       // accumulator <-- dest
-      EAX = op1_64_lo;
-      EDX = op1_64_hi;
+      RAX = op1_64_lo;
+      RDX = op1_64_hi;
       }
-  
+
 #else
   BX_INFO(("CMPXCHG8B: not implemented yet"));
   UndefinedOpcode(i);
