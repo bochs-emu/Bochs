@@ -892,7 +892,7 @@ void StartThread()
 	_beginthread(ServerThreadInit, 0, NULL);
 #else
 	pthread_t      thread;
-	pthread_create(&thread, NULL, (void *)&ServerThreadInit, NULL);
+	pthread_create(&thread, NULL, (void *(*)(void *))&ServerThreadInit, NULL);
 #endif
 }
 
