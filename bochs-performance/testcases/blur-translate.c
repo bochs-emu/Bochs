@@ -1,6 +1,57 @@
 /*
+ * $Id: blur-translate.c,v 1.4 2002-04-17 22:51:58 bdenney Exp $
  *
- * $Id: blur-translate.c,v 1.3 2002-04-17 21:53:33 bdenney Exp $
+ * This function is a proof of concept for dynamic C code generation.  It
+ * defines a set of simple opcodes which can be used to implement the blur.c
+ * operation.  A block of opcodes can be emulated/interpreted, or translated
+ * into C code, compiled as a dynamic library and loaded into the binary for
+ * much faster execution.
+ *
+ * A CodeBlock structure holds a sequence of opcodes to be translated, and
+ * has fields for the dynamic library handle and a function pointer to the
+ * translated function.  When a block has not been translated, the function
+ * pointer is NULL.  The block may be emulated/interpreted by passing its
+ * opcode_list to the emulate_opcodes() function.  To translate the block,
+ * you pass it into translate_block().
+ *
+ * The translation process begins by writing C code into a file.  One 
+ * CodeBlock is translated as one function.  There is some fixed code that
+ * is always printed at the beginning and end of each function.  Each
+ * opcode turns into one macro call in the function, like this:
+ *       DO_MOVE_REL(-1,-1);
+ *       DO_SET_ACCUM(0);
+ *       DO_ADD_DATA();
+ * The macro definitions are defined in a static header file which is 
+ * #included at the top of the translated C code.
+ *
+ * Once the C code is generated, a helper script called buildshared is 
+ * used to compile the shared library.  The script uses GNU libtool to
+ * compile the C code into a dynamic library.  When it's done, we can
+ * dlopen() the dynamic library and fill in the missing CodeBlock fields:
+ * the handle to the dynamic library (so that it could be closed some day)
+ * and the function pointer to the translated code.
+ *
+ * The function execute_code_block() runs translated code.  In fact, if
+ * the code block has not been translated, it translated it first and then
+ * runs it.
+ *
+ * Performance:
+ *
+ * For these simple opcodes, I regularly see a 10x speedup in translated 
+ * code.
+ *
+ * On a 750MHz Athlon:
+ *   emulated code: 10.1msec per 2D blur
+ *   translated code: 1.08msec per 2D blur
+ *   translation takes 484msec
+ *
+ * To do:
+ * - deal with errors. for example if the compile fails, I could just mark
+ *   the CodeBlock as not compilable and always emulate it.
+ * - there are currently two implementations of each opcode, one in 
+ *   translate2-defs.h and one in blur-translate.c.  I should be able to
+ *   get it down to just one implementation that is used in both contexts.
+ *   This will make it a lot easier to maintain.
  *
  */
 
