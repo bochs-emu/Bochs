@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.16 2003-05-03 16:19:07 cbothamy Exp $
+// $Id: data_xfer8.cc,v 1.17 2003-05-08 17:56:48 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,8 +50,11 @@ BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EEbGb(bxInstruction_c *i)
 {
+  Bit8u op2;
 
-  write_virtual_byte(i->seg(), RMAddr(i), &BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL()));
+  op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
+
+  write_virtual_byte(i->seg(), RMAddr(i), &op2);
 }
 
   void
@@ -68,7 +71,11 @@ BX_CPU_C::MOV_EGbGb(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_GbEEb(bxInstruction_c *i)
 {
-  read_virtual_byte(i->seg(), RMAddr(i), &BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL()));
+  Bit8u op2;
+
+  read_virtual_byte(i->seg(), RMAddr(i), &op2);
+
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op2);
 }
 
   void
@@ -86,23 +93,42 @@ BX_CPU_C::MOV_GbEGb(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_ALOb(bxInstruction_c *i)
 {
+  Bit8u  temp_8;
+  bx_address addr;
+
+  addr = i->Id();
+
+  /* read from memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_byte(i->seg(), i->Id(), &AL);
+    read_virtual_byte(i->seg(), addr, &temp_8);
     }
   else {
-    read_virtual_byte(BX_SEG_REG_DS, i->Id(), &AL);
+    read_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
     }
+
+
+  /* write to register */
+  AL = temp_8;
 }
 
 
   void
 BX_CPU_C::MOV_ObAL(bxInstruction_c *i)
 {
+  Bit8u  temp_8;
+  bx_address addr;
+
+  addr = i->Id();
+
+  /* read from register */
+  temp_8 = AL;
+
+  /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_byte(i->seg(), i->Id(), &AL);
+    write_virtual_byte(i->seg(), addr, &temp_8);
     }
   else {
-    write_virtual_byte(BX_SEG_REG_DS, i->Id(), &AL);
+    write_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
     }
 }
 
@@ -129,6 +155,7 @@ BX_CPU_C::MOV_EbIb(bxInstruction_c *i)
 BX_CPU_C::XLAT(bxInstruction_c *i)
 {
   Bit32u offset_32;
+  Bit8u  al;
 
 
 #if BX_CPU_LEVEL >= 3
@@ -142,11 +169,12 @@ BX_CPU_C::XLAT(bxInstruction_c *i)
     }
 
   if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_byte(i->seg(), offset_32, &AL);
+    read_virtual_byte(i->seg(), offset_32, &al);
     }
   else {
-    read_virtual_byte(BX_SEG_REG_DS, offset_32, &AL);
+    read_virtual_byte(BX_SEG_REG_DS, offset_32, &al);
     }
+  AL = al;
 }
 
   void
