@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.50 2002-09-03 08:44:55 bdenney Exp $
+// $Id: siminterface.cc,v 1.51 2002-09-03 16:00:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -573,8 +573,10 @@ bx_param_bool_c::bx_param_bool_c (bx_id id,
   : bx_param_num_c (id, name, description, 0, 1, initial_val)
 {
   set_type (BXT_PARAM_BOOL);
-  set (initial_val);
+  // dependent_list must be initialized before the set(),
+  // because set calls update_dependents().
   dependent_list = NULL;
+  set (initial_val);
 }
 
 void bx_param_bool_c::update_dependents ()
