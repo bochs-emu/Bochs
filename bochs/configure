@@ -14,7 +14,7 @@ ac_default_prefix=/usr/local
 ac_help="$ac_help
   --with-x                use the X Window System"
 ac_help="$ac_help
-  --enable-cpu-level                select cpu level (3,4,5)"
+  --enable-cpu-level                select cpu level (3,4,5,6)"
 ac_help="$ac_help
   --enable-dynamic                  enable dynamic translation support"
 ac_help="$ac_help
@@ -2254,7 +2254,17 @@ EOF
 EOF
 
        cat >> confdefs.h <<\EOF
-#define BX_CPU_LEVEL_HACKED 5
+#define BX_CPU_LEVEL_HACKED 6
+EOF
+       ;;
+     6)
+       echo "$ac_t""6" 1>&6
+       cat >> confdefs.h <<\EOF
+#define BX_CPU_LEVEL 6
+EOF
+
+       cat >> confdefs.h <<\EOF
+#define BX_CPU_LEVEL_HACKED 6
 EOF
 
        ;;
