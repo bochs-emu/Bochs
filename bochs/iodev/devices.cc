@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.60 2004-01-15 02:08:34 danielg4 Exp $
+// $Id: devices.cc,v 1.61 2004-01-15 18:00:36 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,7 +104,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.60 2004-01-15 02:08:34 danielg4 Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.61 2004-01-15 18:00:36 danielg4 Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -169,6 +169,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();
 
+  // NE2000 NIC
+  if (bx_options.ne2k.Opresent->get ()) {
+#if BX_NE2K_SUPPORT
+    PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
+#else
+    BX_ERROR(("Bochs is not compiled with NE2K support"));
+#endif
+  }
+
   // PCI logic (i440FX)
   if (bx_options.Oi440FXSupport->get ()) {
 #if BX_PCI_SUPPORT
@@ -184,7 +193,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_PCI_PNIC_SUPPORT
+  if (bx_options.ne2k.Opresent->get () && bx_options.pnic.Oenabled->get ()) {
     PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
+  }
 #endif
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
@@ -236,15 +247,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   iodebug = &bx_iodebug;
   iodebug->init();
 #endif
-
-  // NE2000 NIC
-  if (bx_options.ne2k.Opresent->get ()) {
-#if BX_NE2K_SUPPORT
-    PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
-#else
-    BX_ERROR(("Bochs is not compiled with NE2K support"));
-#endif
-  }
 
 #if 0
   // Guest to Host interface.  Used with special guest drivers
