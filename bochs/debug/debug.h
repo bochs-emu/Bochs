@@ -150,7 +150,7 @@ extern int num_read_watchpoints;
 extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 
 typedef enum {
-      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, STOP_TRACE, STOP_MODE_BREAK_POINT
+      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
 } stop_reason_t;
 
 typedef enum {
@@ -285,7 +285,7 @@ typedef struct {
 
 // working information for each simulator to update when a guard
 // is reached (found)
-typedef struct {
+typedef struct bx_guard_found_t {
   unsigned long guard_found;
   unsigned iaddr_index;
   bx_dbg_icount_t icount; // number of completed instructions
@@ -297,7 +297,6 @@ typedef struct {
   } bx_guard_found_t;
 
 extern bx_guard_t        bx_guard;
-extern bx_guard_found_t  bx_guard_found[];
 
 
 
