@@ -80,13 +80,6 @@ Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit32s value)
   return value;
 }
 
-#if BX_SUPPORT_SSE >= 1
-static Bit16u SelectMmxWord(BxPackedMmxRegister mmx, unsigned index)
-{
-  return (MMXUQ(mmx) >> ((index & 0x3) * 16)) & 0xffff;
-}
-#endif
-
 void BX_CPU_C::print_state_MMX(void)
 {
   for(int i=0;i<8;i++) {
@@ -116,6 +109,13 @@ void BX_CPU_C::prepareFPU2MMX(void)
   FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
 }
 
+#endif
+
+#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
+BX_CPP_INLINE Bit16u SelectMmxWord(BxPackedMmxRegister mmx, unsigned index)
+{
+  return (MMXUQ(mmx) >> ((index & 0x3) * 16)) & 0xffff;
+}
 #endif
 
 /* 0F 60 */
