@@ -11568,7 +11568,7 @@ fi
 
 if test "$with_rfb" = yes; then
   if test "$pthread_ok" = yes; then
-    RFB_LIBS="$PTHREAD_LIBS"
+    RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
     CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
     CC="$PTHREAD_CC"
