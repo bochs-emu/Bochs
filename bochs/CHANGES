@@ -110,8 +110,9 @@ Changes to next release:
   [924428] ET bit mismatch between CR0 and MSW
   [869822] a real SVGA implementation by m_suzu
   [867045] fix for compiler errors on VC++ by m_suzu
+  [838601] support for the over 2GB disk size with MSVC++
 
-- these S.F. bugs were closed 
+- these S.F. bugs were closed
   #522111 Host os SIGILL, booting grub from hd
  #1005052 DMA Controller Model Problem
   #552939 Bochs window doesn't resize when win311

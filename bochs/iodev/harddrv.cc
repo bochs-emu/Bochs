@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.122 2004-08-11 11:05:11 vruppert Exp $
+// $Id: harddrv.cc,v 1.123 2004-08-19 19:42:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -161,7 +161,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.122 2004-08-11 11:05:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.123 2004-08-19 19:42:21 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2574,25 +2574,23 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
       off_t logical_sector;
 
       if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-            //bx_printf ("disk: calculate: %d %d %d\n", ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no), ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no), (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no);
-	    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
-		  ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
-		  (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no;
-            //bx_printf ("disk: result: %u\n", logical_sector);
+        logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
+          ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
+          (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no;
       } else
-	    logical_sector = (BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hard_drive->heads *
-			      BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
-		  (BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
-		  (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
+        logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hard_drive->heads *
+          BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
+          (Bit32u)(BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
+          (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
 
       Bit32u sector_count= 
-	   (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->cylinders * 
+           (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->cylinders * 
            (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->heads * 
            (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->sectors;
 
       if (logical_sector >= sector_count) {
             BX_ERROR (("calc_log_addr: out of bounds (%d/%d)", (Bit32u)logical_sector, sector_count));
-	    return false;
+            return false;
       }
       *sector = logical_sector;
       return true;
@@ -3763,7 +3761,7 @@ ssize_t sparse_image_t::read_page_fragment(uint32 read_virtual_page, uint32 read
 
    if (physical_offset != underlying_current_filepos)
    {
-     int ret = ::lseek(fd, physical_offset, SEEK_SET);
+     off_t ret = ::lseek(fd, physical_offset, SEEK_SET);
      // underlying_current_filepos update deferred
      if (ret == -1)
        panic(strerror(errno));
@@ -3942,7 +3940,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
    if (physical_offset != underlying_current_filepos)
    {
-     int ret = ::lseek(fd, physical_offset, SEEK_SET);
+     off_t ret = ::lseek(fd, physical_offset, SEEK_SET);
      // underlying_current_filepos update deferred
      if (ret == -1)
        panic(strerror(errno));
@@ -4135,7 +4133,7 @@ redolog_t::print_header()
                 header.standard.magic, header.standard.type, header.standard.subtype,
                 dtoh32(header.standard.version)/0x10000,
                 dtoh32(header.standard.version)%0x10000));
-        BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = %lld",
+        BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = " FMT_LL "d",
                 dtoh32(header.specific.catalog),
                 dtoh32(header.specific.bitmap),
                 dtoh32(header.specific.extent),

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.21 2004-06-18 14:11:05 sshwarts Exp $
+// $Id: osdep.h,v 1.22 2004-08-19 19:42:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,8 +68,20 @@ extern "C" {
 #undef BX_HAVE_VSNPRINTF
 #define BX_HAVE_SNPRINTF 1
 #define BX_HAVE_VSNPRINTF 1
+
+#if defined(_MSC_VER)
+#define off_t __int64
+#define lseek _lseeki64
+#define fstat _fstati64
+#define stat  _stati64
+#endif
+
 #else   /* ifndef __MINGW32__ */
 #define FMT_LL "%ll"
+
+#define off_t __int64
+#define lseek _lseeki64
+
 #endif  /* ifndef __MINGW32__ */
 #else    /* WIN32 */
 #define FMT_LL "%ll"

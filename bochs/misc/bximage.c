@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.21 2004-08-19 16:03:03 vruppert Exp $
+ * $Id: bximage.c,v 1.22 2004-08-19 19:42:22 vruppert Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -10,6 +10,9 @@
 #  include <conio.h>
 #  include <windows.h>
 #  include <winioctl.h>
+#ifdef _MSC_VER
+#  include <io.h>
+#endif
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +27,8 @@
 #define uint16  Bit16u
 #define uint32  Bit32u
 
+#include "../osdep.h"
+
 #define INCLUDE_ONLY_HD_HEADERS 1
 #include "../iodev/harddrv.h"
 
@@ -33,7 +38,7 @@ typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.21 2004-08-19 16:03:03 vruppert Exp $";
+char *rcsid = "$Id: bximage.c,v 1.22 2004-08-19 19:42:22 vruppert Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -42,9 +47,9 @@ char *fdhd_choices[] = { "fd", "hd" };
 int fdhd_n_choices = 2;
 
 /* menu data for choosing floppy size */
-char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.36, 0.72, 1.2, 1.44, or 2.88. ";
-char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
-int fdsize_n_choices = 5;
+char *fdsize_menu = "\nChoose the size of floppy disk image to create, in megabytes.\nPlease type 0.36, 0.72, 1.2, 1.44, 1.68, 1.72, or 2.88. ";
+char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","1.68","1.72","2.88" };
+int fdsize_n_choices = 7;
 
 /* menu data for choosing disk mode */
 char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse or growing. ";
@@ -511,7 +516,7 @@ int main()
     printf ("  cyl=%d\n", cyl);
     printf ("  heads=%d\n", heads);
     printf ("  sectors per track=%d\n", spt);
-    printf ("  total sectors=%lld\n", sectors);
+    printf ("  total sectors=" FMT_LL "d\n", sectors);
     printf ("  total size=%.2f megabytes\n", (float)(Bit64s)(sectors/2)/1024.0);
     if (ask_string ("\nWhat should I name the image?\n", "c.img", filename) < 0)
       fatal (EOF_ERR);
@@ -542,7 +547,9 @@ int main()
     case 1: name="720k"; cyl=80; heads=2; spt=9; break;   /* 0.72 meg */
     case 2: name="1_2"; cyl=80; heads=2; spt=15; break;   /* 1.2 meg */
     case 3: name="1_44"; cyl=80; heads=2; spt=18; break;   /* 1.44 meg */
-    case 4: name="2_88"; cyl=80; heads=2; spt=36; break;   /* 2.88 meg */
+    case 4: name="1_44"; cyl=80; heads=2; spt=21; break;   /* 1.68 meg */
+    case 5: name="1_44"; cyl=82; heads=2; spt=21; break;   /* 1.72 meg */
+    case 6: name="2_88"; cyl=80; heads=2; spt=36; break;   /* 2.88 meg */
     default:
       fatal ("ERROR: fdsize out of range");
     }
@@ -551,8 +558,8 @@ int main()
     printf ("  cyl=%d\n", cyl);
     printf ("  heads=%d\n", heads);
     printf ("  sectors per track=%d\n", spt);
-    printf ("  total sectors=%lld\n", sectors);
-    printf ("  total bytes=%lld\n", sectors*512);
+    printf ("  total sectors=" FMT_LL "d\n", sectors);
+    printf ("  total bytes=" FMT_LL "d\n", sectors*512);
     if (ask_string ("\nWhat should I name the image?\n", "a.img", filename) < 0)
       fatal (EOF_ERR);
     sprintf (bochsrc_line, "floppya: %s=\"%s\", status=inserted", name, filename);
@@ -573,11 +580,7 @@ int main()
     make_image (sectors, filename, write_function);
   }
 #endif
-#if defined(WIN32) && !defined(__MINGW32__)
-  printf ("\nI wrote %I64u bytes to %s.\n", sectors*512, filename);
-#else
-   printf ("\nI wrote %lld bytes to %s.\n", sectors*512, filename);
-#endif
+  printf ("\nI wrote " FMT_LL "d bytes to %s.\n", sectors*512, filename);
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
 #ifdef WIN32

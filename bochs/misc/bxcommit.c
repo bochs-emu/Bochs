@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.7 2004-04-30 17:26:38 cbothamy Exp $
+ * $Id: bxcommit.c,v 1.8 2004-08-19 19:42:22 vruppert Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -11,6 +11,8 @@
 #include <fcntl.h>
 #ifndef _MSC_VER
 #include <unistd.h>
+#else
+#include <io.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,9 +21,6 @@
 #include <assert.h>
 #ifdef WIN32
 #  include <conio.h>
-#ifndef __MINGW32__
-#  define snprintf _snprintf
-#endif
 #endif
 #include "config.h"
 
@@ -48,11 +47,13 @@ int snprintf (char *s, size_t maxlen, const char *format, ...)
 #define uint16  Bit16u
 #define uint32  Bit32u
 
+#include "../osdep.h"
+
 #define INCLUDE_ONLY_HD_HEADERS 1
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.7 2004-04-30 17:26:38 cbothamy Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.8 2004-08-19 19:42:22 vruppert Exp $";
 char *divider = "========================================================================";
 
 void myexit (int code)
@@ -263,13 +264,13 @@ int commit_redolog (char *flatname, char *redologname )
 
   printf ("\nChecking redolog header: [");
 
-  if (strcmp(header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
+  if (strcmp((char *)header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
      fatal ("\nERROR: bad magic in redolog header!");
 
-  if (strcmp(header.standard.type, REDOLOG_TYPE) != 0)
+  if (strcmp((char *)header.standard.type, REDOLOG_TYPE) != 0)
      fatal ("\nERROR: bad type in redolog header!");
 
-  if (strcmp(header.standard.subtype, REDOLOG_SUBTYPE_UNDOABLE) != 0)
+  if (strcmp((char *)header.standard.subtype, REDOLOG_SUBTYPE_UNDOABLE) != 0)
      fatal ("\nERROR: bad subtype in redolog header!");
 
   if (header.standard.version != htod32(STANDARD_HEADER_VERSION))
