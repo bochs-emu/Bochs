@@ -338,7 +338,6 @@ plex86_release(struct inode *inode, struct file *filp)
   filp->private_data = NULL;
 
   /* Free the virtual memory. */
-  unreserveGuestPhyPages(vm);
   unallocVmPages( vm );
 
   /* Free the VM structure. */
@@ -384,92 +383,9 @@ plex86_mmap(struct inode * inode, struct file * file, struct vm_area_struct * vm
 #endif
 {
   vm_t *vm = (vm_t *)file->private_data;
-  int firstpage, pagesN;
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,1,0)
-  void *inode = NULL; /* Not used; for consistency of passing args. */
-#endif
-  int ret;
-
-  /* Private mappings make no sense ... */
-  if ( !(vma->vm_flags & VM_SHARED) ) {
-    printk(KERN_WARNING "plex86: private mapping\n");
-    return -EINVAL;
-    }
-
-#if LINUX_VERSION_CODE < VERSION_CODE(2,3,25)
-  /* To simplify things, allow only page-aligned offsets */
-  if ( vma->vm_offset & (PAGE_SIZE - 1) ) {
-    printk(KERN_WARNING "plex86: unaligned offset %08lx\n", vma->vm_offset);
-    return -EINVAL;
-    }
-#endif
-
-
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,3,25)
-  firstpage = vma->vm_pgoff;
-#else
-  firstpage = vma->vm_offset >> PAGE_SHIFT;
-#endif
-  pagesN  = (vma->vm_end - vma->vm_start) >> PAGE_SHIFT;
-
-  ret = genericMMap(vm, inode, file, vma, firstpage, pagesN);
-  return( - hostConvertPlex86Errno(ret) );
+  UNUSED(vm);
+  return -EINVAL;
 }
-
-
-  int
-hostMMap(vm_t *vm, void *iV, void *fV, void *vmaV, 
-         unsigned pagesN, Bit32u *pagesArray)
-{
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,1,0)
-  void *inode = NULL;
-#else
-  struct inode * inode = (struct inode *) iV;
-#endif
-  struct file * file = (struct file *) fV;
-  struct vm_area_struct * vma = (struct vm_area_struct *) vmaV;
-  unsigned i;
-
-  UNUSED(file);
-
-  /* Note: this function returns Plex86Errno style errors, since
-   * it reports to the hostOS-independent logic.
-   */
-
-  /* Sanity check. */
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,3,25)
-  if ( ((vma->vm_end - vma->vm_start) >> PAGE_SHIFT) > pagesN ) {
-    printk(KERN_WARNING "plex86: mmap sanity checks failed.\n");
-    return Plex86ErrnoEINVAL;
-    }
-#else
-  if ( (vma->vm_end - vma->vm_start) > (pagesN << PAGE_SHIFT) ) {
-    printk(KERN_WARNING "plex86: mmap sanity checks failed.\n");
-    return Plex86ErrnoEINVAL;
-    }
-#endif
-
-  for (i = 0; i < pagesN; i++) {
-    if ( remap_page_range(vma->vm_start + (i << PAGE_SHIFT),
-                          pagesArray[i] << 12,
-                          PAGE_SIZE,
-                          vma->vm_page_prot) )
-      /* xxx What about fixing partial remaps? */
-      return Plex86ErrnoEAGAIN;
-    }
-
-#if LINUX_VERSION_CODE < VERSION_CODE(2,1,0)
-  /* Enter our inode into the VMA; no need to change the default ops. */
-  vma->vm_inode = inode;
-  if (!inode->i_count)
-    inode->i_count++;
-#else
-  UNUSED(inode);
-#endif
-
-  return 0; /* OK. */
-}
-
 
 
 /************************************************************************/
@@ -653,42 +569,6 @@ retrievePhyPages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
  * these functions needs to be offered for each host-XYZ.c file.
  ************************************************************************/
 
-  void
-hostReservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
-{
-  unsigned p;
-
-  /*
-   * As we want to map these pages to user space, we need to mark
-   * them as 'reserved' pages by setting the PG_reserved bit.
-   *
-   * This has the effect that:
-   *  - remap_page_range accepts them as candidates for remapping
-   *  - the swapper does *not* try to swap these pages out, even
-   *    after they are mapped to user space
-   */
-
-  for (p = 0; p < nPages; p++)
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,4,0)
-    set_bit(PG_reserved, &((mem_map + hostPhyPages[p])->flags));
-#else
-    mem_map_reserve(hostPhyPages[p]);
-#endif
-}
-
-  void
-hostUnreservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages)
-{
-  unsigned p;
-
-  /* Remove the PG_reserved flags before returning the pages. */
-  for (p = 0; p < nPages; p++)
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,4,0)
-    clear_bit(PG_reserved, &((mem_map + hostPhyPages[p])->flags));
-#else
-    mem_map_unreserve(hostPhyPages[p]);
-#endif
-}
 
   unsigned
 hostIdle(void)
@@ -838,43 +718,51 @@ hostCopyToUser(void *to, void *from, unsigned long len)
   return( copy_to_user(to, from, len) );
 }
 
-  unsigned
-hostGetAndPinUserPages(vm_t *vm, Bit32u *pagePhyAddrList, void *userPtr,
-                       unsigned nPages)
+  Bit32u
+hostGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
+                      Bit32u *ppi, Bit32u *kernelAddr)
 {
   int    ret;
-  unsigned p;
-  struct page **linuxKernelPageList;
+  struct page **pagePtr;
+  struct page *page;
 
-  linuxKernelPageList = (struct page **) vm->pages.hostStructPagePtr;
+  pagePtr = (struct page **) osSpecificPtr;
   ret = get_user_pages(current,
                        current->mm,
-                       (unsigned long) userPtr,
-                       nPages,
+                       (unsigned long) userAddr,
+                       1, /* 1 page. */
                        1, /* 'write': intent to write. */
                        0, /* 'force': ? */
-                       linuxKernelPageList,
+                       pagePtr,
                        NULL /* struct vm_area_struct *[] */
                        );
-  if (ret != nPages) {
+  if (ret != 1) {
     printk(KERN_ERR "plex86: hostGetAndPinUserPages: failed.\n");
     return(0); /* Error. */
     }
+
+  page = *pagePtr; /* The returned "struct page *" value. */
 
   /* Now that we have a list of "struct page *", one for each physical
    * page of memory of the user space process's requested area, we can
    * calculate the physical page address by simple pointer arithmetic
    * based on "mem_map".
    */
-  for (p=0; p<nPages; p++) {
-    pagePhyAddrList[p] = linuxKernelPageList[p] - mem_map;
+  *ppi = page - mem_map;
+  if (kernelAddr) {
+    /* Caller wants a kernel address returned which maps to this physical
+     * address.
+     */
+    *kernelAddr = (Bit32u) kmap( page );
+#warning "FIXME: Check return value here."
+#warning "Also, conditionally compile for version and high memory support."
     }
-  
   return(1); /* OK. */
 }
 
   void
-hostReleasePinnedUserPages(vm_t *vm, Bit32u *pageAddrList, unsigned nPages)
+hostUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
+                          Bit32u ppi, Bit32u *kernelAddr, unsigned dirty)
 {
 #if 0
   /* Here is some sample code from Linux 2.4.18, mm/memory.c:__free_pte() */
@@ -887,14 +775,23 @@ hostReleasePinnedUserPages(vm_t *vm, Bit32u *pageAddrList, unsigned nPages)
 #endif
 
 	struct page *page;
-  unsigned p;
 
-static unsigned iteration = 0;
-printk(KERN_WARNING "plex86: Release called %u.\n", iteration++);
-  for (p=0; p<nPages; p++) {
-    page = (struct page *) vm->pages.hostStructPagePtr[p];
-    if (1) /* If dirty. */
-      set_page_dirty(page);
-    put_page(page);
-    }
+  page = (struct page *) osSpecificPtr;
+  /* If a kernel address is passed, that means that previously we created
+   * a mapping for this physical page in the kernel address pace.
+   * We should unmap it.  Only really useful for pages allocated from
+   * high memory.
+   */
+  if (kernelAddr)
+    kunmap(page);
+
+  /* If the page was dirtied due to the guest running in the VM, we
+   * need to tell the kernel about that since it is not aware of
+   * the VM page tables.
+   */
+  if (dirty)
+    set_page_dirty(page);
+
+  /* Release/unpin the page. */
+  put_page(page);
 }

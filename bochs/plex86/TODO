@@ -1,3 +1,8 @@
+Main monitor loop should compare cycles burned thus far vs
+  cycles requested, so it doesn't keep bopping back and forth
+  between host-kernel and monitor spaces without returning to
+  user space.
+
 Fix monPrint and friends.
 monpanic breaks up into 2 monprints which hit user space twice.
 

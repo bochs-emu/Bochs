@@ -27,7 +27,7 @@
 
 
 static unsigned allocatePT(vm_t *, unsigned pdi);
-static unsigned strengthenPagePermissions(vm_t *, phy_page_usage_t *usage,
+static unsigned strengthenPagePermissions(vm_t *, phyPageInfo_t *usage,
                   unsigned new_access_perm);
 /*static void sanity_check_pdir(vm_t *vm, unsigned id, Bit32u guest_laddr); */
 
@@ -69,7 +69,29 @@ page fault because of monP?E.RW==0, but guestP?E==1
 /* +++ what about virtualized linear structs like GDT, IDT, ... */
 #endif
 
+#warning "Have to be careful unpinning a page which is open"
+#warning "  via open_guest_phy_page().  Multiple pages could be"
+#warning "  open in the page walk at one time until D/A bits are set."
 
+
+  static inline Bit32u
+getHostOSPinnedPage(vm_t *vm, Bit32u ppi)
+{
+  /* If physical page is already pinned by host OS, then we already
+   * know the physical address of the page.
+   */
+  if (vm->pageInfo[ppi].attr.fields.pinned)
+    return( vm->pageInfo[ppi].hostPPI );
+
+  /* Page is not already pinned by the host OS.  We need to request
+   * from the host OS, that this page is pinned and find the
+   * physical address.
+   */
+  toHostPinUserPage(vm, ppi);
+  if ( !vm->pageInfo[ppi].attr.fields.pinned )
+    monpanic(vm, "getHostOSPinnedPage: page was not marked pinned.\n");
+  return( vm->pageInfo[ppi].hostPPI );
+}
 
 
   unsigned
@@ -121,7 +143,7 @@ getMonPTi(vm_t *vm, unsigned pdi, unsigned source)
  * this first, before remapping with the new permissions.
  */
   unsigned
-strengthenPagePermissions(vm_t *vm, phy_page_usage_t *pusage,
+strengthenPagePermissions(vm_t *vm, phyPageInfo_t *pusage,
                      unsigned new_access_perm)
 {
   pusage->attr.fields.access_perm = new_access_perm;
@@ -184,12 +206,12 @@ monpanic(vm, "strengthenPP: multiple lin addr\n");
   unsigned
 addPageAttributes(vm_t *vm, Bit32u ppi, Bit32u req_attr)
 {
-  phy_page_usage_t *pusage;
+  phyPageInfo_t *pusage;
   unsigned new_access_perm;
 
   VM_ASSERT(vm, ppi < vm->pages.guest_n_pages);
 
-  pusage = &vm->page_usage[ppi];
+  pusage = &vm->pageInfo[ppi];
   if (pusage->tsc < vm->vpaging_tsc) {
     /* The dynamic attributes for this page are not valid since
      * the last remap.  getPageUsage() has logic to build attributes.
@@ -215,13 +237,13 @@ addPageAttributes(vm_t *vm, Bit32u ppi, Bit32u req_attr)
   return 0;
 }
 
-  phy_page_usage_t *
+  phyPageInfo_t *
 getPageUsage(vm_t *vm, Bit32u ppi)
 {
-  phy_page_usage_t *pusage;
+  phyPageInfo_t *pusage;
 
   VM_ASSERT(vm, ppi < vm->pages.guest_n_pages);
-  pusage = &vm->page_usage[ppi];
+  pusage = &vm->pageInfo[ppi];
 
   if (pusage->tsc < vm->vpaging_tsc) {
     /* The dynamic attributes for this page are not valid since
@@ -258,7 +280,7 @@ open_guest_phy_page(vm_t *vm, Bit32u ppi, Bit8u *mon_offset)
 
   /* Remap the base field.  All the rest of the fields are */
   /* set previously, and can remain the same. */
-  pageTable->pte[pti].fields.base = vm->pages.guestPhyMem[ppi];
+  pageTable->pte[pti].fields.base = getHostOSPinnedPage(vm, ppi);
   invlpg_mon_offset( (Bit32u) mon_offset );
   return(mon_offset);
 }
@@ -341,7 +363,7 @@ mapGuestLinAddr(vm_t *vm, Bit32u guest_laddr, Bit32u *guest_ppi,
   pageEntry_t *guestPDir, guestPDE, *guestPTbl, guestPTE;
   Bit32u       guest_pdir_page_index;
   unsigned     pt_index, us, rw;
-  phy_page_usage_t *pusage;
+  phyPageInfo_t *pusage;
   unsigned wasRemap = 0;
 
   guest_lpage_index = guest_laddr >> 12;
@@ -471,7 +493,7 @@ mapIntoMonitor:
   if (monPDE->fields.P == 0) {
     /* OK, Lazy PT map/allocate */
     if (vm->guest.addr.guest_cpu->cr0.fields.pg) {
-      phy_page_usage_t *pde_pusage;
+      phyPageInfo_t *pde_pusage;
 
       pde_pusage =
           getPageUsage(vm, A20PageIndex(vm, guestPDE.fields.base));
@@ -620,7 +642,7 @@ return(MapLinEmulate);
 
       /* Base/Avail=0/G=0/PS=0/D=d/A=a/PCD=0/PWT=0/US=1/RW=rw/P=1 */
       monPTE->raw =
-          (vm->pages.guestPhyMem[*guest_ppi] << 12) | (guestPTE.raw & 0x60) |
+          (getHostOSPinnedPage(vm, *guest_ppi) << 12) | (guestPTE.raw & 0x60) |
           0x5 | (rw<<1);
       }
     else { /* CR0.PG==0 */
@@ -634,7 +656,7 @@ return(MapLinEmulate);
         return(MapLinEmulate);
       /* Base/Avail=0/G=0/PS=0/D=0/A=0/PCD=0/PWT=0/US=1/RW=rw/P=1 */
       monPTE->raw =
-          (vm->pages.guestPhyMem[*guest_ppi] << 12) | 0x5 | (rw<<1);
+          (getHostOSPinnedPage(vm, *guest_ppi) << 12) | 0x5 | (rw<<1);
       }
 
     /* Mark physical page as having an unvirtualized linear address

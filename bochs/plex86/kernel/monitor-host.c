@@ -150,6 +150,8 @@ initMonitor(vm_t *vm)
   mon_memzero(vm->host.addr.tss, MON_TSS_PAGES*4096);
   mon_memzero(vm->host.addr.idt_stubs, MON_IDT_STUBS_PAGES*4096);
 
+  vm->guestPhyPagePinQueue.nEntries = 0;
+  vm->guestPhyPagePinQueue.tail = 0;
 
   /*
    *  ================
@@ -522,14 +524,14 @@ error:
 initGuestPhyMem(vm_t *vm)
 {
   unsigned i;
-  mon_memzero(vm->page_usage, sizeof(vm->page_usage));
+  mon_memzero(vm->pageInfo, sizeof(vm->pageInfo));
   for (i=0; i<vm->pages.guest_n_pages; i++) {
     /* For now, we start out by preallocating physical pages */
     /* for the guest, though not necessarily mapped into linear */
     /* space. */
-    vm->page_usage[i].attr.raw = 0;
-    vm->page_usage[i].tsc = 0;
-    vm->page_usage[i].attr.fields.allocated = 1;
+    vm->pageInfo[i].attr.raw = 0;
+    vm->pageInfo[i].tsc = 0;
+    vm->pageInfo[i].attr.fields.allocated = 1;
     }
  
   {
@@ -540,13 +542,13 @@ initGuestPhyMem(vm_t *vm)
   rom_page = 0xf0000 >> 12;
   npages = (1 + 0xfffff - 0xf0000) / 4096;
   for (i=0; i<npages; i++)
-    vm->page_usage[rom_page + i].attr.fields.RO = 1;
+    vm->pageInfo[rom_page + i].attr.fields.RO = 1;
 
   /* Mark VGA BIOS ROM area as ReadOnly */
   rom_page = 0xc0000 >> 12;
   npages = (1 + 0xc7fff - 0xc0000) / 4096;
   for (i=0; i<npages; i++)
-    vm->page_usage[rom_page + i].attr.fields.RO = 1;
+    vm->pageInfo[rom_page + i].attr.fields.RO = 1;
   }
  
 #if 1
@@ -558,7 +560,7 @@ initGuestPhyMem(vm_t *vm)
   vga_page = 0xa0000 >> 12;
   npages = (1 + 0xbffff - 0xa0000) / 4096;
   for (i=0; i<npages; i++)
-    vm->page_usage[vga_page + i].attr.fields.memMapIO = 1;
+    vm->pageInfo[vga_page + i].attr.fields.memMapIO = 1;
   }
 #endif
 
@@ -734,7 +736,7 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
      */
     case PLEX86_TEARDOWN:
       /* We can't use the VMStateMMapAll bits, because we don't hook
-       * mmap().
+       * munmap().
        */
       
       if ( hostMMapCheck(inode, filp) ) {
@@ -742,13 +744,8 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
         hostPrint("plex86: guest memory is still mmap()'d!\n");
         return -Plex86ErrnoEBUSY;
         }
-      /* Remove mmap()'d flag bits from state.  The user must have done
-       * all the appropriate mmap() calls.
-       */
-      vm->vmState &= ~VMStateMMapAll;
+vm->vmState &= ~VMStateMMapAll;
 
-#warning "Add check before calling unreserveGuestPhyPages()"
-      unreserveGuestPhyPages(vm);
       unallocVmPages(vm);
 
       /* Reset state to only FD opened. */
@@ -1104,6 +1101,13 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
           retval = 106;
           goto handlePanic;
 
+        case MonReqPinUserPage:
+          if ( !handlePagePinRequest(vm, vm->pinReqPPI) ) {
+            retval = 108;
+            goto handlePanic;
+            }
+          continue; /* Back to VM monitor. */
+
         default:
           hostPrint("ioctlExecute: default case (%u).\n", vm->mon_request);
           retval = 107;
@@ -1123,7 +1127,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
     }
 
   /* Should not get here. */
-  retval = 108;
+  retval = 109;
   goto handlePanic;
 
 handleFail:
@@ -1259,8 +1263,51 @@ ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
     return -Plex86ErrnoEINVAL;
 
   /* Check that the guest memory vector is page aligned. */
-  if ( ((unsigned)registerMemMsg->vector) & 0xfff )
+  if ( registerMemMsg->guestPhyMemVector & 0xfff )
     return -Plex86ErrnoEINVAL;
+
+  /* Check that the log buffer area is page aligned. */
+  if ( registerMemMsg->logBufferWindow & 0xfff )
+    return -Plex86ErrnoEINVAL;
+
+  /* Check that the guest CPU area is page aligned. */
+  if ( registerMemMsg->guestCPUWindow & 0xfff )
+    return -Plex86ErrnoEINVAL;
+
+  /* Check that none of the user areas overlap.  In case we have a
+   * number of regions, use some generic code to handle N regions.
+   */
+  {
+#define NumUserRegions 3
+  struct {
+    Bit32u min, max;
+    } userRegion[NumUserRegions];
+  unsigned i,j;
+
+  userRegion[0].min = registerMemMsg->guestPhyMemVector;
+  userRegion[0].max = userRegion[0].min + (registerMemMsg->nMegs<<20) - 1;
+  userRegion[1].min = registerMemMsg->logBufferWindow;
+  userRegion[1].max = userRegion[1].min + LOG_BUFF_SIZE - 1;
+  userRegion[2].min = registerMemMsg->guestCPUWindow;
+  userRegion[2].max = userRegion[2].min + (4096) - 1;
+
+  for (i=1; i<NumUserRegions; i++) {
+    for (j=1; j<NumUserRegions; j++) {
+      if (j == i)
+        continue; /* Don't compare at the same region. */
+      /* Check for min(j) contained in region(i). */
+      if ( (userRegion[j].min >= userRegion[i].min) &&
+           (userRegion[j].min <= userRegion[i].max) )
+        return -Plex86ErrnoEINVAL;
+      /* Check for max(j) contained in region(i). */
+      if ( (userRegion[j].max >= userRegion[i].min) &&
+           (userRegion[j].max <= userRegion[i].max) )
+        return -Plex86ErrnoEINVAL;
+      }
+    }
+  }
+
+
 
   /* Allocate memory */
   if ( (error = allocVmPages(vm, registerMemMsg)) != 0 ) {
@@ -1269,12 +1316,8 @@ ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
     return -Plex86ErrnoENOMEM;
     }
 
-  /* Mark guest pages as reserved (for mmap()). */
-  reserveGuestPhyPages(vm);
-
   /* Initialize the guests physical memory. */
   if ( initGuestPhyMem(vm) ) {
-    unreserveGuestPhyPages(vm);
     unallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
@@ -1282,7 +1325,6 @@ ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
   /* Initialize the monitor. */
   if ( !initMonitor(vm) ||
        !mapMonitor(vm) ) {
-    unreserveGuestPhyPages(vm);
     unallocVmPages(vm);
     return -Plex86ErrnoEFAULT;
     }
@@ -1319,13 +1361,37 @@ allocVmPages(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
     goto error;
     }
   where++;
-  if ( !hostGetAndPinUserPages(vm, pg->guestPhyMem, registerMemMsg->vector,
-                               pg->guest_n_pages) ) {
-    goto error;
-    }
-  vm->guestPhyMemVector = registerMemMsg->vector;
+
+  vm->guestPhyMemAddr = registerMemMsg->guestPhyMemVector;
+#warning "VMStateMMapPhyMem bogus"
   vm->vmState |= VMStateMMapPhyMem; /* Bogus for now. */
   where++;
+
+  {
+  Bit32u hostPPI, kernelAddr;
+
+  /* Guest CPU state (malloc()'d in user space). */
+  if ( !hostGetAndPinUserPage(vm, registerMemMsg->guestCPUWindow,
+            &pg->guest_cpu_hostOSPtr, &hostPPI, &kernelAddr) ) {
+    goto error;
+    }
+  ad->guest_cpu = (guest_cpu_t *) kernelAddr;
+  pg->guest_cpu = hostPPI;
+vm->vmState |= VMStateMMapGuestCPU; /* For now. */
+  where++;
+
+  /* Log buffer area (malloc()'d in user space). */
+  /* LOG_BUFF_PAGES */
+  if ( !hostGetAndPinUserPage(vm, registerMemMsg->logBufferWindow,
+            &pg->log_buffer_hostOSPtr[0], &hostPPI, &kernelAddr) ) {
+    goto error;
+    }
+  ad->log_buffer = (Bit8u *) kernelAddr;
+  pg->log_buffer[0] = hostPPI;
+  where++;
+vm->vmState |= VMStateMMapPrintBuffer; /* For now. */
+  }
+
 
   /* Monitor page directory */
   if ( !(ad->page_dir = (pageEntry_t *)hostAllocZeroedPage()) ) {
@@ -1370,32 +1436,12 @@ allocVmPages(vm_t *vm, plex86IoctlRegisterMem_t *registerMemMsg)
     }
   where++;
 
-  /* Guest CPU state (mapped into user space also). */
-  if ( !(ad->guest_cpu = (guest_cpu_t *)hostAllocZeroedPage()) ) {
-    goto error;
-    }
-  where++;
-  if ( !(pg->guest_cpu = hostGetAllocedPagePhyPage(ad->guest_cpu)) ) {
-    goto error;
-    }
-  where++;
-
   /* Transition page table */
   if ( !(ad->transition_PT = (page_t *)hostAllocZeroedPage()) ) {
     goto error;
     }
   where++;
   if ( !(pg->transition_PT = hostGetAllocedPagePhyPage(ad->transition_PT)) ) {
-    goto error;
-    }
-  where++;
-
-  if ( !(ad->log_buffer = hostAllocZeroedMem(4096 * LOG_BUFF_PAGES)) ) {
-    goto error;
-    }
-  where++;
-  if (!hostGetAllocedMemPhyPages(pg->log_buffer, LOG_BUFF_PAGES, 
-           ad->log_buffer, 4096 * LOG_BUFF_PAGES)) {
     goto error;
     }
   where++;
@@ -1487,9 +1533,9 @@ unallocVmPages( vm_t *vm )
   vm_addr_t  *ad = &vm->host.addr;
 
   /* Guest physical memory pages */
-  if (vm->guestPhyMemVector) {
-    hostReleasePinnedUserPages(vm, pg->guestPhyMem, pg->guest_n_pages);
-    vm->guestPhyMemVector = 0;
+  if (vm->guestPhyMemAddr) {
+    releasePinnedUserPages(vm);
+    vm->guestPhyMemAddr = 0;
     }
 #warning "Fix bogus VMStateMMapPhyMem."
   vm->vmState &= ~VMStateMMapPhyMem; /* Bogus for now. */
@@ -1696,7 +1742,7 @@ initShadowPaging(vm_t *vm)
    * as such.  In non-paged mode, there is no page directory.
    */
   if (vm->guest_cpu.cr0.fields.pg) {
-    pusage = &vm->page_usage[cr3_page_index];
+    pusage = &vm->pageInfo[cr3_page_index];
     pusage->tsc = vm->vpaging_tsc;
     pusage->attr.raw &= PageUsageSticky;
     pusage->attr.raw |= PageUsagePDir;
@@ -1707,85 +1753,118 @@ initShadowPaging(vm_t *vm)
 #endif
 }
 
-  void
-reserveGuestPhyPages(vm_t *vm)
-{
-  /* Mark guest pages as reserved (for mmap()). */
-  hostReservePhyPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES);
-  hostReservePhyPages(vm, &vm->pages.guest_cpu, 1);
-}
 
   void
-unreserveGuestPhyPages(vm_t *vm)
+releasePinnedUserPages(vm_t *vm)
 {
-  hostUnreservePhyPages(vm, vm->pages.log_buffer, LOG_BUFF_PAGES);
-  hostUnreservePhyPages(vm, &vm->pages.guest_cpu, 1);
+  unsigned ppi;
+  unsigned dirty;
+  unsigned nPages;
+  Bit32u kernelAddr;
+
+  /* Unpin the pages associate with the guest physical memory. */
+  nPages = vm->pages.guest_n_pages;
+  for (ppi=0; ppi<nPages; ppi++) {
+    if ( vm->pageInfo[ppi].attr.fields.pinned ) {
+      void *osSpecificPtr;
+
+      osSpecificPtr = (void *) vm->hostStructPagePtr[ppi];
+#warning "Conditionalize page dirtying before page release."
+      dirty = 1; /* FIXME: 1 for now. */
+      hostUnpinUserPage(vm,
+          vm->guestPhyMemAddr + (ppi<<12),
+          osSpecificPtr,
+          ppi,
+          0 /* There was no host kernel addr mapped for this page. */,
+          dirty);
+      vm->pageInfo[ppi].attr.fields.pinned = 0;
+      }
+    }
+
+  /* Unpin the pages associated with the guest_cpu area. */
+  kernelAddr = (Bit32u) vm->host.addr.guest_cpu;
+  hostUnpinUserPage(vm,
+      0, /* User space address. */
+      vm->pages.guest_cpu_hostOSPtr,
+      vm->pages.guest_cpu,
+      &kernelAddr,
+      1 /* Dirty. */);
+
+  /* Unpin the pages associated with the log buffer area. */
+  kernelAddr = (Bit32u) vm->host.addr.log_buffer;
+  hostUnpinUserPage(vm,
+      0, /* User space address. */
+      vm->pages.log_buffer_hostOSPtr[0],
+      vm->pages.log_buffer[0],
+      &kernelAddr,
+      1 /* Dirty. */);
+#warning "User space address is passed as 0 for now..."
 }
 
-  int
-genericMMap(vm_t *vm, void *inode, void *file, void *vma, unsigned firstPage,
-            unsigned pagesN)
+  unsigned
+handlePagePinRequest(vm_t *vm, Bit32u reqGuestPPI)
 {
-  unsigned stateMask;
-  Bit32u *pagesArray;
-  int ret;
+  Bit32u hostPPI;
+  unsigned qIndex;
 
-  /* The memory map:
-   *   guest physical memory (guest_n_pages)
-   *   log_buffer      (1)
-   *   guest_cpu       (1)
-   */
-
-  /* Must have memory allocated. */
-  if (!vm->pages.guest_n_pages) {
-    hostPrint("plex86: genericMMap: device not initialized\n");
-    return Plex86ErrnoEACCES;
-    }
-
-#if 0
-  if ( firstPage == 0 ) {
-    if (pagesN != vm->pages.guest_n_pages) {
-      hostPrint("plex86: mmap of guest phy mem, "
-                "pagesN of %u != guest_n_pages of %u\n",
-                pagesN, vm->pages.guest_n_pages);
-      return Plex86ErrnoEINVAL;
-      }
-    /* hostPrint("plex86: found mmap of guest phy memory.\n"); */
-    pagesArray = &vm->pages.guest[0];
-    stateMask = VMStateMMapPhyMem;
-    }
-  else
-#endif
-  if ( firstPage == (vm->pages.guest_n_pages+0) ) {
-    if (pagesN != 1) {
-      hostPrint("plex86: mmap of log_buffer, pages>1.\n");
-      return Plex86ErrnoEINVAL;
-      }
-    /* hostPrint("plex86: found mmap of log_buffer.\n"); */
-    pagesArray = &vm->pages.log_buffer[0];
-    stateMask = VMStateMMapPrintBuffer;
-    }
-  else if ( firstPage == (vm->pages.guest_n_pages+1) ) {
-    if (pagesN != 1) {
-      hostPrint("plex86: mmap of guest_cpu, pages>1.\n");
-      return Plex86ErrnoEINVAL;
-      }
-    /* hostPrint("plex86: found mmap of guest_cpu.\n"); */
-    pagesArray = &vm->pages.guest_cpu;
-    stateMask = VMStateMMapGuestCPU;
+#warning "We must not unpin open pages (for page walking) here."
+  if (vm->guestPhyPagePinQueue.nEntries < MaxPhyPagesPinned) {
+    /* There is room in the Q for another entry - we have not reached
+     * the upper limit of allowable number of pinned pages.
+     */
+    qIndex = vm->guestPhyPagePinQueue.nEntries;
     }
   else {
-    hostPrint("plex86: mmap with firstPage of 0x%x.\n", firstPage);
-    return Plex86ErrnoEINVAL;
+    unsigned dirty;
+    Bit32u unpinGuestPPI;
+    /* There is no room in the Q for another entry - we have reached
+     * the upper limit of allowable number of pinned pages.  We must
+     * first unpin a page to free up the limit, then we can pin the
+     * requested page.  This keeps plex86 from pinning an unconstrained
+     * number of pages at one time.
+     */
+    qIndex = vm->guestPhyPagePinQueue.tail;
+    dirty = 1; /* FIXME: 1 for now. */
+    unpinGuestPPI = vm->guestPhyPagePinQueue.ppi[qIndex];
+    hostUnpinUserPage(vm,
+        vm->guestPhyMemAddr + (unpinGuestPPI<<12),
+        vm->hostStructPagePtr[unpinGuestPPI],
+        unpinGuestPPI,
+        0 /* There was no host kernel addr mapped for this page. */,
+        dirty);
+    vm->pageInfo[unpinGuestPPI].attr.fields.pinned = 0;
     }
 
-  /* Call the hostOS-specific mmap code. */
-  ret = hostMMap(vm, inode, file, vma, pagesN, pagesArray);
-  if (ret != 0) {
-    /* Host-specific mmap code returned an error.  Return that. */
-    return( ret );
+  /* Pin the requested guest physical page in the host OS. */
+  if ( !hostGetAndPinUserPage(vm,
+            vm->guestPhyMemAddr + (reqGuestPPI<<12),
+            &vm->hostStructPagePtr[reqGuestPPI],
+            &hostPPI,
+            0 /* Don't need a host kernel address. */
+            ) ) {
+    hostPrint("handlePagePinReq: request to pin failed.\n");
+    return(0); /* Fail. */
     }
 
-  vm->vmState |= stateMask;
-  return 0; /* OK. */
+  /* Pinning activities have succeeded.  Mark this physical page as being
+   * pinnned, and store it's physical address.
+   */
+  vm->pageInfo[reqGuestPPI].attr.fields.pinned = 1;
+  vm->pageInfo[reqGuestPPI].hostPPI = hostPPI;
+
+  /* Now add this entry to the Q. */
+  vm->guestPhyPagePinQueue.ppi[qIndex] = reqGuestPPI;
+
+  if (vm->guestPhyPagePinQueue.nEntries < MaxPhyPagesPinned) {
+    vm->guestPhyPagePinQueue.nEntries++;
+    vm->guestPhyPagePinQueue.tail =
+        vm->guestPhyPagePinQueue.nEntries % MaxPhyPagesPinned;
+    }
+  else {
+    /* Leave .nEntries at the maximum value - Q is full. */
+    vm->guestPhyPagePinQueue.tail =
+        (vm->guestPhyPagePinQueue.tail + 1) % MaxPhyPagesPinned;
+    }
+
+  return(1); /* OK. */
 }

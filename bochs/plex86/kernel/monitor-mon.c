@@ -27,27 +27,37 @@
   void
 sysFlushPrintBuf(vm_t *vm)
 {
-    CLI();
-    vm->mon_request = MonReqFlushPrintBuf;
-    vm->guest.__mon2host();
-    STI();
+  CLI();
+  vm->mon_request = MonReqFlushPrintBuf;
+  vm->guest.__mon2host();
+  STI();
 }
 
   void
 sysRemapMonitor(vm_t *vm)
 {
-    CLI();
-    vm->mon_request = MonReqRemapMonitor;
-    vm->guest.__mon2host();
-    STI();
+  CLI();
+  vm->mon_request = MonReqRemapMonitor;
+  vm->guest.__mon2host();
+  STI();
 }
 
   void
 toHostGuestFault(vm_t *vm, unsigned fault)
 {
-    CLI();
-    vm->mon_request = MonReqGuestFault;
-    vm->guestFaultNo = fault;
-    vm->guest.__mon2host();
-    STI();
+  CLI();
+  vm->mon_request = MonReqGuestFault;
+  vm->guestFaultNo = fault;
+  vm->guest.__mon2host();
+  STI();
+}
+
+  void
+toHostPinUserPage(vm_t *vm, Bit32u ppi)
+{
+  CLI();
+  vm->mon_request = MonReqPinUserPage;
+  vm->pinReqPPI = ppi;
+  vm->guest.__mon2host();
+  STI();
 }

@@ -204,15 +204,6 @@ typedef struct {
   /* pages comprising the vm_t struct itself. */
   Bit32u vm[MAX_VM_STRUCT_PAGES];
 
-  /* for the guest OS/app code */
-  Bit32u guestPhyMem[MAX_MON_GUEST_PAGES];
-
-  /* This is a hack for now.  I need to store the "struct page *"
-   * information returned by get_user_pages() in the Linux kernel.
-   * Should clean this up.
-   */
-  void  *hostStructPagePtr[MAX_MON_GUEST_PAGES];
-
   /* for the monitor's page directory */
   Bit32u page_dir;
 
@@ -228,12 +219,14 @@ typedef struct {
 
   /* For the CPU state passed between user and kernel/monitor space. */
   Bit32u guest_cpu;
+  void  *guest_cpu_hostOSPtr;
 
   /* We need a Page Table for identity mapping the transition code */
   /* between host and monitor spaces. */
   Bit32u transition_PT;
 
   Bit32u log_buffer[LOG_BUFF_PAGES];
+  void  *log_buffer_hostOSPtr[LOG_BUFF_PAGES];
 
   /* Physical addresses of host pages which comprise the actual */
   /* monitor structures.  These will be mapped into the current */
@@ -284,12 +277,12 @@ typedef union {
     Bit32u lmap_count:2;      /* */
     Bit32u ptbl:1;            /* page table */
     Bit32u pdir:1;            /* page directory */
-    Bit32u vcode:1;           /* vcode */
+    Bit32u spare0:1;          /* (spare) */
     Bit32u memMapIO:1;        /* MemMapIO */
     Bit32u RO:1;              /* RO */
     Bit32u allocated:1;       /* Allocated */
-    Bit32u swappable:1;       /* Swappable */
-    Bit32u spare:1;           /* (spare) */
+    Bit32u pinned:1;          /* Pinned by host OS. */
+    Bit32u spare1:1;          /* (spare) */
     Bit32u laddr_backlink:20; /* 1st unvirtualized laddr backlink */
     } __attribute__ ((packed)) fields;
   Bit32u raw;
@@ -298,7 +291,9 @@ typedef union {
 typedef struct {
   phy_page_attr_t attr;
   Bit64u tsc; /* for comparing to CR3 timestamp counter */
-  } __attribute__ ((packed)) phy_page_usage_t;
+
+  Bit32u hostPPI;
+  } __attribute__ ((packed)) phyPageInfo_t;
 
 /* Possible values of the access_perm field above. */
 #define PagePermRW      0
@@ -375,7 +370,7 @@ typedef struct {
  * Complete state of the VM (Virtual Machine).
  */
 typedef struct {
-  Bit8u   *guestPhyMemVector; /* Ptr to malloced memory from user space. */
+  Bit32u guestPhyMemAddr; /* Ptr to malloced memory from user space. */
 
   /* Store eflags values of the guest which are virtualized to
    * run in the monitor
@@ -387,6 +382,7 @@ typedef struct {
 
   unsigned mon_request;
   unsigned guestFaultNo;
+  Bit32u   pinReqPPI;
 
   unsigned redirect_vector;
 
@@ -430,7 +426,27 @@ typedef struct {
   /* pages contains, and maintain some additional attributes. */
   /* We determine which kinds of information reside in the page, */
   /* dynamically. */
-  phy_page_usage_t page_usage[MAX_MON_GUEST_PAGES];
+  phyPageInfo_t pageInfo[MAX_MON_GUEST_PAGES];
+
+  /* This is a hack for now.  I need to store the "struct page *"
+   * information returned by get_user_pages() in the Linux kernel.
+   * Should clean this up.
+   */
+  void  *hostStructPagePtr[MAX_MON_GUEST_PAGES];
+
+  /* A revolving queue, which stores information on guest physical memory
+   * pages which are currently pinned.  Only a certain number of pages
+   * may be pinned at any one time.  This is a really simplistic
+   * strategy - when the Q is full, the page which was pinned the
+   * longest time ago is unpinned to make room.  It's a
+   * "least recently pinned" strategy.
+   */
+#define MaxPhyPagesPinned 1024  /* 4Megs of pinned pages max per VM. */
+  struct {
+    unsigned nEntries; /* Number of entries in table. */
+    unsigned tail;
+    Bit32u ppi[MaxPhyPagesPinned]; /* Physical Page Index of pinned guest page. */
+    } guestPhyPagePinQueue;
 
   struct {
     volatile unsigned event; /* Any log event occurred. */
@@ -601,10 +617,8 @@ int      ioctlGeneric(vm_t *vm, void *inode, void *filp,
 int      ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg);
 int      ioctlRegisterMem(vm_t *vm, plex86IoctlRegisterMem_t *registerMsg);
 void     copyGuestStateToUserSpace(vm_t *vm);
-void     unreserveGuestPhyPages(vm_t *vm);
-void     reserveGuestPhyPages(vm_t *vm);
-int      genericMMap(vm_t *vm, void *inode, void *file, void *vma,
-                     unsigned firstPage, unsigned pagesN);
+void     releasePinnedUserPages(vm_t *vm);
+unsigned handlePagePinRequest(vm_t *vm, Bit32u reqPPI);
 
 /* These are the functions that the host-OS-specific file of the
  * plex86 device driver must define.
@@ -616,21 +630,20 @@ void    *hostAllocZeroedPage(void);
 void     hostFreePage(void *ptr);
 unsigned hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr,
                                    unsigned size);
-unsigned hostGetAndPinUserPages(vm_t *vm, Bit32u *pageList, void *userPtr,
-                                unsigned sizeInPages);
-void     hostReleasePinnedUserPages(vm_t *vm, Bit32u *pageList, unsigned nPages);
+
+Bit32u   hostGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
+             Bit32u *ppi, Bit32u *kernelAddr);
+void     hostUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
+             Bit32u ppi, Bit32u *kernelAddr, unsigned dirty);
+
 Bit32u   hostGetAllocedPagePhyPage(void *ptr);
 void     hostPrint(char *fmt, ...);
 Bit32u   hostKernelOffset(void);
-void     hostReservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages);
-void     hostUnreservePhyPages(vm_t *vm, Bit32u *hostPhyPages, unsigned nPages);
 int      hostConvertPlex86Errno(unsigned ret);
 unsigned hostMMapCheck(void *i, void *f);
 void     hostModuleCountReset(vm_t *vm, void *inode, void *filp);
 unsigned long hostCopyFromUser(void *to, void *from, unsigned long len);
 unsigned long hostCopyToUser(void *to, void *from, unsigned long len);
-int      hostMMap(vm_t *vm, void *iV, void *fV, void *vmaV,
-                  unsigned pagesN, Bit32u *pagesArray);
 
 #endif  /* HOST Space */
 
@@ -658,6 +671,7 @@ void monpanic(vm_t *, char *fmt, ...) __attribute__ ((noreturn));
 void monpanic_nomess(vm_t *);
 
 void toHostGuestFault(vm_t *, unsigned fault);
+void toHostPinUserPage(vm_t *, Bit32u ppi);
 
 void guestPageFault(vm_t *, guest_context_t *context, Bit32u cr2);
 void *open_guest_phy_page(vm_t *, Bit32u ppage_index, Bit8u *mon_offset);
@@ -673,7 +687,7 @@ unsigned mapGuestLinAddr(vm_t *, Bit32u guest_laddr,
                          Bit32u *guest_ppage_index, unsigned us,
                          unsigned rw, Bit32u attr, Bit32u *error);
 unsigned addPageAttributes(vm_t *, Bit32u ppi, Bit32u attr);
-phy_page_usage_t *getPageUsage(vm_t *, Bit32u ppage_index);
+phyPageInfo_t *getPageUsage(vm_t *, Bit32u ppage_index);
 void virtualize_lconstruct(vm_t *, Bit32u l0, Bit32u l1, unsigned perm);
 
 unsigned getMonPTi(vm_t *, unsigned pdi, unsigned source);
