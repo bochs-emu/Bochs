@@ -14,4 +14,4 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-win32
+./configure --with-win32  --enable-cdrom --enable-sb16=win
