@@ -1,0 +1,334 @@
+----------------------------------------------------------------------
+Patch name: patch.sysenterexit-mrieker
+Author: Mike Rieker
+Date: 27 June 2002
+
+Detailed description:
+
+  This patch adds sysenter/sysexit functions support 
+  for cpu >= Pentium-Pro
+  For now, support must be explicitely enabled in config.h
+  #define BX_SUPPORT_SYSENTEREXIT 1
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 27 June 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.50
+diff -u -r1.50 config.h.in
+--- config.h.in	5 Jun 2002 03:59:30 -0000	1.50
++++ config.h.in	27 Jun 2002 21:27:40 -0000
+@@ -189,6 +189,13 @@
+ 
+ #define BX_SUPPORT_V8086_MODE 1
+ 
++// SYSENTER / SYSEXIT support
++#define BX_SUPPORT_SYSENTEREXIT 0
++
++#if (BX_CPU_LEVEL<6 && BX_SUPPORT_SYSENTEREXIT)
++#error SYSENTER/SYSEXIT only supported with CPU_LEVEL >= 6
++#endif
++
+ // Support shadowing of ROM from C0000 to FFFFF.
+ // This allows that region to be written to.
+ #define BX_SHADOW_RAM 0
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.22
+diff -u -r1.22 cpu.h
+--- cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
++++ cpu/cpu.h	27 Jun 2002 21:27:47 -0000
+@@ -219,6 +219,11 @@
+ #define BX_MSR_BBL_CR_TRIG	0x011a
+ #define BX_MSR_BBL_CR_BUSY	0x011b
+ #define BX_MSR_BBL_CR_CTL3	0x011e
++#if BX_SUPPORT_SYSENTEREXIT
++#  define BX_MSR_SYSENTER_CS	0x0174
++#  define BX_MSR_SYSENTER_ESP	0x0175
++#  define BX_MSR_SYSENTER_EIP	0x0176
++#endif
+ #define BX_MSR_MCG_CAP		0x0179
+ #define BX_MSR_MCG_STATUS	0x017a
+ #define BX_MSR_MCG_CTL		0x017b
+@@ -276,7 +281,6 @@
+ #endif
+   } bx_flags_reg_t;
+ 
+-
+ #if BX_CPU_LEVEL >= 2
+ typedef struct {
+   Bit32u  val32; // 32bit value of register
+@@ -581,6 +585,7 @@
+   virtual ~bx_generic_apic_c ();
+   virtual void init ();
+   virtual void hwreset () { }
++  virtual BX_CPU_C *get_cpu (void);
+   Bit32u get_base (void) { return base_addr; }
+   void set_base (Bit32u newbase);
+   void set_id (Bit8u newid);
+@@ -641,7 +646,7 @@
+   BX_CPU_C *cpu;
+   virtual void hwreset ();
+   virtual void init ();
+-  BX_CPU_C *get_cpu (Bit8u id);
++  virtual BX_CPU_C *get_cpu (void);
+   void set_id (Bit8u newid);   // redefine to set cpu->name
+   virtual char *get_name();
+   virtual void write (Bit32u addr, Bit32u *data, unsigned len);
+@@ -820,6 +825,7 @@
+   volatile Boolean async_event;
+   volatile Boolean INTR;
+   volatile Boolean kill_bochs_request;
++  volatile Boolean nmi_queued;
+ 
+   /* wether this CPU is the BSP always set for UP */
+   Boolean bsp;
+@@ -871,6 +877,13 @@
+   bx_guard_found_t guard_found;
+ #endif
+ 
++  // SYSENTER/SYSEXIT instruction msr's
++#if BX_SUPPORT_SYSENTEREXIT
++  Bit32u sysenter_cs_msr;
++  Bit32u sysenter_esp_msr;
++  Bit32u sysenter_eip_msr;
++#endif
++
+   // for paging
+ #if BX_USE_TLB
+   struct {
+@@ -1349,6 +1362,8 @@
+   BX_SMF void WRMSR(BxInstruction_t *);
+   BX_SMF void RDTSC(BxInstruction_t *);
+   BX_SMF void RDMSR(BxInstruction_t *);
++  BX_SMF void SYSENTER(BxInstruction_t *);
++  BX_SMF void SYSEXIT(BxInstruction_t *);
+   BX_SMF void SetCR0(Bit32u val_32);
+   BX_SMF void dynamic_translate(void);
+   BX_SMF void dynamic_init(void);
+Index: cpu/fetchdecode.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/fetchdecode.cc,v
+retrieving revision 1.7
+diff -u -r1.7 fetchdecode.cc
+--- cpu/fetchdecode.cc	3 Oct 2001 13:10:37 -0000	1.7
++++ cpu/fetchdecode.cc	27 Jun 2002 21:27:48 -0000
+@@ -1174,8 +1174,13 @@
+   /* 0F 31 */  { 0,  &BX_CPU_C::RDTSC },
+   /* 0F 32 */  { 0,  &BX_CPU_C::RDMSR },
+   /* 0F 33 */  { 0,  &BX_CPU_C::BxError },
++#if BX_SUPPORT_SYSENTEREXIT
++  /* 0F 34 */  { 0,  &BX_CPU_C::SYSENTER },
++  /* 0F 35 */  { 0,  &BX_CPU_C::SYSEXIT },
++#else
+   /* 0F 34 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 35 */  { 0,  &BX_CPU_C::BxError },
++#endif
+   /* 0F 36 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 37 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 38 */  { 0,  &BX_CPU_C::BxError },
+Index: cpu/proc_ctrl.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
+retrieving revision 1.22
+diff -u -r1.22 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	19 Jun 2002 15:49:07 -0000	1.22
++++ cpu/proc_ctrl.cc	27 Jun 2002 21:27:48 -0000
+@@ -968,8 +968,8 @@
+       // ECX: vendor ID string
+       EAX = 1; // 486 or pentium
+       EBX = 0x756e6547; // "Genu"
+-      EDX = 0x49656e69; // "ineI"
+-      ECX = 0x6c65746e; // "ntel"
++      EDX = 0x42656e69; // "ineB"
++      ECX = 0x7368636f; // "ochs"
+       break;
+ 
+     case 1:
+@@ -1030,16 +1030,20 @@
+       model = 1; // Pentium Pro
+       stepping = 3; // ???
+       features |= (1<<4);   // implement TSC
++      features |= (1<<3);   // implement 4M pages
+ #  if BX_SUPPORT_APIC
+       features |= (1<<9);   // APIC on chip
+ #  endif
+ #  if BX_SUPPORT_FPU
+       features |= 0x01;     // has FPU
+ #  endif
++#  if BX_SUPPORT_SYSENTEREXIT
++      features |= (1<<11);  // SYSENTER/SYSEXIT
++#  endif
++
+ #else
+       BX_PANIC(("CPUID: not implemented for > 6"));
+-#endif
+-      features |= 8; // support page-size extension (4m pages)
++#endif
+ 
+       EAX = (family <<8) | (model<<4) | stepping;
+       EBX = ECX = 0; // reserved
+@@ -1160,6 +1164,11 @@
+ 
+ 	/* We have the requested MSR register in ECX */
+ 	switch(ECX) {
++#if BX_SUPPORT_SYSENTEREXIT
++		case BX_MSR_SYSENTER_CS:  { EAX = BX_CPU_THIS_PTR sysenter_cs_msr;  EDX = 0; return; }
++		case BX_MSR_SYSENTER_ESP: { EAX = BX_CPU_THIS_PTR sysenter_esp_msr; EDX = 0; return; }
++		case BX_MSR_SYSENTER_EIP: { EAX = BX_CPU_THIS_PTR sysenter_eip_msr; EDX = 0; return; }
++#endif
+ #if BX_CPU_LEVEL == 5
+ 		/* The following registers are defined for Pentium only */
+ 		case BX_MSR_P5_MC_ADDR:
+@@ -1236,6 +1245,15 @@
+ 
+ 	/* ECX has the MSR to write to */
+ 	switch(ECX) {
++#if BX_SUPPORT_SYSENTEREXIT
++		case BX_MSR_SYSENTER_CS:  {
++                  if (EAX & 3) BX_PANIC (("writing sysenter_cs_msr with non-kernel mode selector %X", EAX));	// not a bug according to book
++                  BX_CPU_THIS_PTR sysenter_cs_msr  = EAX;							// ... but very stOOpid
++                  return;
++                }
++		case BX_MSR_SYSENTER_ESP: { BX_CPU_THIS_PTR sysenter_esp_msr = EAX; return; }
++		case BX_MSR_SYSENTER_EIP: { BX_CPU_THIS_PTR sysenter_eip_msr = EAX; return; }
++#endif
+ #if BX_CPU_LEVEL == 5
+ 		/* The following registers are defined for Pentium only */
+ 		case BX_MSR_P5_MC_ADDR:
+@@ -1283,6 +1301,127 @@
+ do_exception:
+ 	exception(BX_GP_EXCEPTION, 0, 0);
+ 
++}
++
++  void 
++BX_CPU_C::SYSENTER (BxInstruction_t *i)
++{
++#if BX_SUPPORT_SYSENTEREXIT
++  if (!protected_mode ()) {
++    BX_INFO (("sysenter not from protected mode"));
++    exception (BX_GP_EXCEPTION, 0, 0);
++    return;
++  }
++  if (BX_CPU_THIS_PTR sysenter_cs_msr == 0) {
++    BX_INFO (("sysenter with zero sysenter_cs_msr"));
++    exception (BX_GP_EXCEPTION, 0, 0);
++    return;
++  }
++
++  invalidate_prefetch_q ();
++
++  BX_CPU_THIS_PTR eflags.vm  = 0;	// do this just like the book says to do
++  BX_CPU_THIS_PTR eflags.if_ = 0;
++  BX_CPU_THIS_PTR eflags.rf  = 0;
++
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.index = BX_CPU_THIS_PTR sysenter_cs_msr >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.rpl   = 0;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.executable   = 1;		// code segment
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.c_ed         = 0;		// non-conforming
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.r_w          = 1;		// readable
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.avl          = 0;		// available for use by system
++
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr + 8;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.rpl   = 0;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.executable   = 0;		// data segment
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.c_ed         = 0;		// expand-up
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.r_w          = 1;		// writeable
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.avl          = 0;		// available for use by system
++
++  // BX_INFO (("sysenter: old eip %X, esp %x, new eip %x, esp %X, edx %X", BX_CPU_THIS_PTR prev_eip, ESP, BX_CPU_THIS_PTR sysenter_eip_msr, BX_CPU_THIS_PTR sysenter_esp_msr, EDX));
++
++  ESP = BX_CPU_THIS_PTR sysenter_esp_msr;
++  EIP = BX_CPU_THIS_PTR sysenter_eip_msr;
++#else
++  UndefinedOpcode (i);
++#endif
++}
++
++  void 
++BX_CPU_C::SYSEXIT (BxInstruction_t *i)
++{
++#if BX_SUPPORT_SYSENTEREXIT
++  if (!protected_mode ()) {
++    BX_INFO (("sysexit not from protected mode"));
++    exception (BX_GP_EXCEPTION, 0, 0);
++    return;
++  }
++  if (BX_CPU_THIS_PTR sysenter_cs_msr == 0) {
++    BX_INFO (("sysexit with zero sysenter_cs_msr"));
++    exception (BX_GP_EXCEPTION, 0, 0);
++    return;
++  }
++  if (CPL != 0) {
++    BX_INFO (("sysexit at non-zero cpl %u", CPL));
++    exception (BX_GP_EXCEPTION, 0, 0);
++    return;
++  }
++
++  invalidate_prefetch_q ();
++
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) | 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.rpl   = 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.executable   = 1;		// code segment
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.c_ed         = 0;		// non-conforming
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.r_w          = 1;		// readable
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.avl          = 0;		// available for use by system
++
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.rpl   = 3;
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.executable   = 0;		// data segment
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.c_ed         = 0;		// expand-up
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.r_w          = 1;		// writeable
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.avl          = 0;		// available for use by system
++
++  // BX_INFO (("sysexit: old eip %X, esp %x, new eip %x, esp %X, eax %X", BX_CPU_THIS_PTR prev_eip, ESP, EDX, ECX, EAX));
++
++  ESP = ECX;
++  EIP = EDX;
++#else
++  UndefinedOpcode (i);
++#endif
+ }
+ 
+ #if BX_X86_DEBUGGER
