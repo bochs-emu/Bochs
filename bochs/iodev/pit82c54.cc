@@ -64,38 +64,49 @@
     thisctr.OUT=data;
   }
 
-  void pit_82C54::decrement (counter_type & thisctr) {
+  void pit_82C54::set_count (counter_type & thisctr, Bit32u data) {
+    thisctr.count=data & 0xFFFF;
+    set_binary_to_count(thisctr);
+  }
+
+  void pit_82C54::set_count_to_binary(counter_type & thisctr) {
     if(thisctr.bcd_mode) {
-      if(!thisctr.count) {
+      thisctr.count=
+	(((thisctr.count_binary/1)%10)<<0) |
+	(((thisctr.count_binary/10)%10)<<4) |
+	(((thisctr.count_binary/100)%10)<<8) |
+	(((thisctr.count_binary/1000)%10)<<12)
+	;
+    } else {
+      thisctr.count=thisctr.count_binary;
+    }
+  }
+
+  void pit_82C54::set_binary_to_count(counter_type & thisctr) {
+    if(thisctr.bcd_mode) {
+      thisctr.count_binary=
+	(1*((thisctr.count>>0)&0xF)) +
+	(10*((thisctr.count>>4)&0xF)) +
+	(100*((thisctr.count>>8)&0xF)) +
+	(1000*((thisctr.count>12)&0xF))
+	;
+    } else {
+      thisctr.count_binary=thisctr.count;
+    }
+  }
+
+  void pit_82C54::decrement (counter_type & thisctr) {
+    if(!thisctr.count) {
+      if(thisctr.bcd_mode) {
 	thisctr.count=0x9999;
+	thisctr.count_binary=9999;
       } else {
-	int d0=thisctr.count & 0xF;
-	int d1=(thisctr.count>>4)&0xF;
-	int d2=(thisctr.count>>8)&0xF;
-	int d3=(thisctr.count>>12)&0xF;
-	if(d0) {
-	  d0--;
-	} else {
-	  d0=0x9;
-	  if(d1) {
-	    d1--;
-	  } else {
-	    d1=0x9;
-	    if(d2) {
-	      d2--;
-	    } else {
-	      d2=0x9;
-	      d3--;  //if d3==0, we would use the above zero case.;
-	    }
-	  }
-	}
+	thisctr.count=0xFFFF;
+	thisctr.count_binary=0xFFFF;
       }
     } else {
-      if(!thisctr.count) {
-	thisctr.count=0xFFFF;
-      } else {
-	thisctr.count--;
-      }
+      thisctr.count_binary--;
+      set_count_to_binary(thisctr);
     }
   }
 
@@ -111,6 +122,7 @@
       counter[i].first_pass=0;
       counter[i].bcd_mode=0;
       counter[i].count=0;
+      counter[i].count_binary=0;
       counter[i].state_bit_1=0;
       counter[i].state_bit_2=0;
       counter[i].null_count=0;
@@ -135,7 +147,7 @@
       case 0:
 	if(thisctr.count_written) {
 	  if(thisctr.null_count) {
-	    thisctr.count=thisctr.inlatch;
+	    set_count(thisctr, thisctr.inlatch);
 	    thisctr.null_count=0;
 	  } else {
 	    if(thisctr.GATE && (thisctr.write_state!=MSByte_multiple)) {
@@ -151,7 +163,7 @@
       case 1:
 	if(thisctr.count_written) {
 	  if(thisctr.triggerGATE) {
-	    thisctr.count=thisctr.inlatch;
+	    set_count(thisctr, thisctr.inlatch);
 	    thisctr.null_count=0;
 	    set_OUT(thisctr,0);
 	    if(thisctr.write_state==MSByte_multiple) {
@@ -169,7 +181,7 @@
       case 2:
 	if(thisctr.count_written) {
 	  if(thisctr.triggerGATE || thisctr.first_pass) {
-	    thisctr.count=thisctr.inlatch;
+	    set_count(thisctr, thisctr.inlatch);
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
 	      BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2."));
@@ -197,7 +209,7 @@
 	if(thisctr.count_written) {
 	  if( (thisctr.triggerGATE || thisctr.first_pass
 	     || thisctr.state_bit_2) && thisctr.GATE ) {
-	    thisctr.count=thisctr.inlatch & 0xFFFE;
+	    set_count(thisctr, thisctr.inlatch);
 	    thisctr.state_bit_1=thisctr.inlatch & 0x1;
 	    thisctr.null_count=0;
 	    if(thisctr.inlatch==1) {
@@ -236,7 +248,7 @@
 	    set_OUT(thisctr,1);
 	  }
 	  if(thisctr.null_count) {
-	    thisctr.count=thisctr.inlatch;
+	    set_count(thisctr, thisctr.inlatch);
 	    thisctr.null_count=0;
 	    if(thisctr.write_state==MSByte_multiple) {
 	      BX_ERROR(("Undefined behavior when loading a half loaded count."));
@@ -260,7 +272,7 @@
 	    set_OUT(thisctr,1);
 	  }
 	  if(thisctr.triggerGATE) {
-	    thisctr.count=thisctr.inlatch;
+	    set_count(thisctr, thisctr.inlatch);
 	    thisctr.null_count=0;
 	    if(thisctr.write_state==MSByte_multiple) {
 	      BX_ERROR(("Undefined behavior when loading a half loaded count."));

@@ -10,6 +10,18 @@
 
 class pit_82C54 : public logfunctions {
 
+public:
+  //Please do not use these.  They are public because they have to be
+  // to compile on some platforms.  They are not to be used by other
+  // classes.
+
+  enum rw_status {
+    LSByte=0,
+    MSByte=1,
+    LSByte_multiple=2,
+    MSByte_multiple=3
+  };
+
 private:
 
   enum {
@@ -17,13 +29,6 @@ private:
     MAX_ADDRESS=3,
     CONTROL_ADDRESS=3,
     MAX_MODE=5
-  };
-
-  enum rw_status {
-    LSByte=0,
-    MSByte=1,
-    LSByte_multiple=2,
-    MSByte_multiple=3
   };
 
   enum real_RW_status {
@@ -55,6 +60,7 @@ private:
     bool status_latched;
 
     //Miscelaneous State;
+    Bit32u count_binary; //Value of the count in binary.
     bool triggerGATE; //Whether we saw GATE rise this cycle.
     rw_status write_state; //Read state this cycle
     rw_status read_state; //Read state this cycle
@@ -71,6 +77,12 @@ private:
   void latch_counter(counter_type & thisctr);
 
   void set_OUT (counter_type & thisctr, bool data);
+
+  void set_count (counter_type & thisctr, Bit32u data);
+
+  void set_count_to_binary (counter_type & thisctr);
+
+  void set_binary_to_count (counter_type & thisctr);
 
   void decrement (counter_type & thisctr);
 
