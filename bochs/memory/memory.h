@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.8 2002-09-01 20:12:09 kevinlawton Exp $
+// $Id: memory.h,v 1.9 2002-09-04 02:11:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,12 +37,14 @@
 #  define BX_MEM_THIS this->
 #endif
 
-
+// alignment of memory vector, must be a power of 2
+#define BX_MEM_VECTOR_ALIGN 4096
 
 class BX_MEM_C : public logfunctions {
 
 public:
-  Bit8u   *vector;
+  Bit8u   *actual_vector;
+  Bit8u   *vector;  // aligned correctly
   size_t  len;
   size_t  megabytes;  // (len in Megabytes)
 #if BX_PCI_SUPPORT
@@ -58,6 +60,7 @@ public:
   BX_MEM_C(void);
   BX_MEM_C(size_t memsize);
   ~BX_MEM_C(void);
+  BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment);
   BX_MEM_SMF void    init_memory(int memsize);
   BX_MEM_SMF void    read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
   BX_MEM_SMF void    write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
