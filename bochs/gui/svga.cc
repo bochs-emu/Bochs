@@ -21,7 +21,7 @@
 #define BX_PLUGGABLE
 
 #include <stdlib.h>
-#include "/usr/include/vga.h"
+#include </usr/include/vga.h>
 #include <vgagl.h>
 #include <vgakeyboard.h>
 #include <vgamouse.h>
