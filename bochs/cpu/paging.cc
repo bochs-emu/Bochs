@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.25 2002-09-16 21:10:31 kevinlawton Exp $
+// $Id: paging.cc,v 1.26 2002-09-16 21:55:57 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -571,7 +571,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   InstrTLB_Increment(tlbLookups);
   InstrTLB_Stats();
 
-#if BX_SUPPORT_X86_64
+#if BX_SupportPAE
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
     Bit32u   pdp, pdp_addr;
 
@@ -601,6 +601,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     //  note - we assume physical memory < 4gig so for brevity & speed, we'll use
     //  32 bit entries although cr3 is expanded to 64 bits.
 
+#if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR msr.lma) {
       Bit32u   pml4, pml4_addr;
       // Get PML4 entry
@@ -621,7 +622,9 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
       pdp_addr =  (pml4 & 0xfffff000) |
                   ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27);
       }
-    else {
+    else
+#endif
+      {
       pdp_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
                ((laddr & 0xc0000000) >> 27);
       }
@@ -769,10 +772,10 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 
     return(paddress);
     }
-#endif  // #if BX_SUPPORT_X86_64
+#endif  // #if BX_SupportPAE
 
 
-  // {CR4.PAE==0, MSR.LMA==0}
+  // CR4.PAE==0 (and MSR.LMA==0)
 
   lpf       = laddr & 0xfffff000; // linear page frame
   poffset   = laddr & 0x00000fff; // physical offset

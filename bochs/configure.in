@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.111 2002-09-16 20:39:32 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.112 2002-09-16 21:55:56 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -586,20 +586,38 @@ AC_ARG_ENABLE(pci,
 AC_SUBST(PCI_OBJ)
 
 
-support_big_pages=0
+support_pse=0
 AC_MSG_CHECKING(for 4Meg pages support)
 AC_ARG_ENABLE(4meg-pages,
   [  --enable-4meg-pages               support 4Megabyte pages extensions],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    support_big_pages=1
+    support_pse=1
    else
     AC_MSG_RESULT(no)
-    support_big_pages=0
+    support_pse=0
    fi],
   [
     AC_MSG_RESULT(no)
-    support_big_pages=0
+    support_pse=0
+    ]
+  )
+
+
+support_pae=0
+AC_MSG_CHECKING(for PAE support)
+AC_ARG_ENABLE(pae,
+  [  --enable-pae                      support Physical Address Extensions],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    support_pae=1
+   else
+    AC_MSG_RESULT(no)
+    support_pae=0
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    support_pae=0
     ]
   )
 
@@ -1660,7 +1678,6 @@ if test ! -d instrument; then mkdir instrument; fi
 if test ! -d build; then mkdir build; fi
 if test ! -d build/linux; then mkdir build/linux; fi
 
-support_pae=0
 if test "$use_x86_64" = 1; then
   # For x86-64, force support of the Physical Address Extension (PAE),
   # and Page Global Extension (PGE.
@@ -1669,9 +1686,7 @@ if test "$use_x86_64" = 1; then
   echo 'Because X86-64 is enabled, enabling Page Size Extension (PSE).'
   support_pae=1
   support_global_pages=1
-  support_big_pages=1
-else
-  support_pae=0   # Not an option yet for x86-32.
+  support_pse=1
 fi
 
 if test "$support_global_pages" = 1; then 
@@ -1686,7 +1701,7 @@ else
   AC_DEFINE(BX_SupportPAE, 0)
 fi
 
-if test "$support_big_pages" = 1; then 
+if test "$support_pse" = 1; then 
   AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
 else 
   AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
