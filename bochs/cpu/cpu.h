@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.200 2005-02-28 18:56:03 sshwarts Exp $
+// $Id: cpu.h,v 1.201 2005-03-01 21:44:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -780,10 +780,9 @@ public:
   // code, when a strict 0 or 1 is not necessary.
   BX_CPP_INLINE void initMetaInfo(unsigned seg,
                                   unsigned os32, unsigned as32,
-                                  unsigned os64, unsigned as64,
-                                  unsigned extend8bit, unsigned repUsed) {
-    metaInfo = seg | (os32<<4) | (as32<<5) |
-                 (os64<<6) | (as64<<7) | (extend8bit<<8) | (repUsed<<9);
+                                  unsigned os64, unsigned as64)
+  {
+    metaInfo = seg | (os32<<4) | (as32<<5) | (os64<<6) | (as64<<7);
   }
   BX_CPP_INLINE unsigned seg(void) {
     return metaInfo & 7;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.76 2005-02-16 21:26:51 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.77 2005-03-01 21:44:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1509,11 +1509,9 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
   instruction->ResolveModrm = NULL;
-  instruction->initMetaInfo(
-                  BX_SEG_REG_NULL,
+  instruction->initMetaInfo(BX_SEG_REG_NULL,
                   /*os32*/   is_32,  /*as32*/ is_32,
-                  /*os64*/       0,  /*as64*/     0,
-                  /*extend8bit*/ 0,  /*repUsed*/  0);
+                  /*os64*/       0,  /*as64*/     0);
 
   sse_prefix = SSE_PREFIX_NONE;
   
