@@ -178,9 +178,12 @@ static Bit32u get_std_cpuid_features()
 
 #endif
 
-#if BX_CPU_LEVEL == 6
-      features |= (1<<15);  // Implement CMOV instructions.
+#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
       features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions.
+#endif
+
+#if BX_CPU_LEVEL >= 6
+      features |= (1<<15);  // Implement CMOV instructions.
 #if BX_SUPPORT_APIC
       features |= (1<< 9);   // APIC on chip
 #endif

@@ -58,14 +58,10 @@ More Details:
 
 [+] Added emulation of SSE/SSE2 floating point instructions
 
-  Alsmost all SSE/SSE2 floating point instructions are fully implemented 
-  using free softfloat library (including DAZ support and floating point
-  exceptions).  Correctness of the emulation checked with heavily random 
+  All SSE/SSE2 floating point instructions are fully implemented using 
+  free softfloat library (including DAZ support and floating point
+  exceptions). Correctness of the emulation checked with heavily random 
   testing. 
-
-  Currently only 2 SSE2 opcodes still not implemented:
-
-	RSQRTSS_VssWss, RSQRTPS_VpsWps
 
 [+] Added emulation of SSE3 (PNI) instructions
 
