@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.20.2.9 2002-10-22 23:48:40 bdenney Exp $
+// $Id: cmos.cc,v 1.20.2.10 2002-10-23 15:52:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,7 +80,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.9 2002-10-22 23:48:40 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.20.2.10 2002-10-23 15:52:19 bdenney Exp $"));
 
   // CMOS RAM & RTC
 
@@ -117,7 +117,7 @@ bx_cmos_c::init(void)
   }
   tmptime[strlen(tmptime)-1]='\0';
 
-  BX_INFO(("Setting initial clock to: %s", tmptime));
+  BX_INFO(("Setting initial clock to: %s (time0=%u)", tmptime, (Bit32u)s.timeval));
 
   update_clock();
 
