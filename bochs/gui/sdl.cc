@@ -17,13 +17,18 @@ SDL_Thread *sdl_thread;
 SDL_Surface *sdl_screen, *sdl_menuscreen;
 SDL_Event sdl_event;
 int sdl_fullscreen;
+int sdl_grab;
 int res_x, res_y;
+int headerbar_height;
 int textres_x, textres_y;
 int fontwidth = 8, fontheight = 16;
 unsigned tilewidth, tileheight;
 unsigned char *font = &sdl_font8x16[0][0];
 unsigned char menufont[256][8];
 Uint32 palette[256];
+Bit8u old_mousebuttons=0, new_mousebuttons=0;
+int old_mousex=0, new_mousex=0;
+int old_mousey=0, new_mousey=0;
 
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 #define SWAP16(X)    (X)
@@ -220,38 +225,98 @@ void bx_gui_c::handle_events(void)
       case SDL_VIDEOEXPOSE:
 	SDL_UpdateRect( sdl_screen, 0,0, res_x, res_y );
 	break;
-	
+
+      case SDL_MOUSEMOTION:
+	new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02));
+	cout << "mouse motion: x=" << sdl_event.motion.xrel << " y=" << sdl_event.motion.yrel << " buttons=" << (int)(new_mousebuttons) <<endl;
+	bx_devices.keyboard->mouse_motion(
+	    sdl_event.motion.xrel,
+	    sdl_event.motion.yrel,
+	    new_mousebuttons );
+	old_mousebuttons = new_mousebuttons;
+	old_mousex = (int)(sdl_event.motion.x);
+	old_mousey = (int)(sdl_event.motion.y);
+	break;
+
+      case SDL_MOUSEBUTTONDOWN:
+	if( (sdl_event.button.button == SDL_BUTTON(2))
+	    && (sdl_fullscreen == 0) )
+	{
+	  if( sdl_grab == 0 )
+	  {
+	    SDL_ShowCursor(0);
+	    SDL_WM_GrabInput(SDL_GRAB_ON);
+	  }
+	  else
+	  {
+	    SDL_ShowCursor(1);
+	    SDL_WM_GrabInput(SDL_GRAB_OFF);
+	  }
+	  sdl_grab = ~sdl_grab;
+	  break;
+	}
+      case SDL_MOUSEBUTTONUP:
+	// figure out mouse state
+	new_mousex = (int)(sdl_event.button.x);
+	new_mousey = (int)(sdl_event.button.y);
+	new_mousebuttons =
+	  (sdl_event.button.state & 0x01)	|
+	  ((sdl_event.button.state>>1)&0x02)	|
+	  ((sdl_event.button.state<<1)&0x04)	;
+	// filter out middle button if not fullscreen
+	if( sdl_fullscreen == 0 )
+	  new_mousebuttons &= 0x03;
+	// send motion information
+	bx_devices.keyboard->mouse_motion(
+	    new_mousex - old_mousex,
+	    new_mousey - old_mousey,
+	    new_mousebuttons );
+	// mark current state to diff with next packet
+	old_mousebuttons = new_mousebuttons;
+	old_mousex = new_mousex;
+	old_mousey = new_mousey;
+	break;
+
       case SDL_KEYDOWN:
-	
-//	if( sdl_event.key.keysym.sym == SDLK_SPACE )
-//	{
-//	  SDL_UpdateRect(sdl_menuscreen, (res_x-BX_MENU_WIDTH)>>1,(res_y-BX_MENU_HEIGHT)>>1,BX_MENU_WIDTH,BX_MENU_HEIGHT);
-//	  break;
-//	}
+
+	// Windows/Fullscreen toggle-check
 	if( sdl_event.key.keysym.sym == SDLK_SCROLLOCK )
 	{
 	  SDL_WM_ToggleFullScreen( sdl_screen );
 	  sdl_fullscreen = ~sdl_fullscreen;
+	  if( sdl_fullscreen == 0 )
+	  {
+	    SDL_ShowCursor( 1 );
+	    SDL_WM_GrabInput( SDL_GRAB_OFF );
+	  }
+	  else
+	  {
+	    SDL_ShowCursor( 0 );
+	    SDL_WM_GrabInput( SDL_GRAB_ON );
+	  }
 	  break;
 	}
-	
+
+	// convert scancode->bochs code
 	if( sdl_event.key.keysym.scancode > _SCN2BX_LAST_ ) break;
 	key_event = scancodes2bx[ sdl_event.key.keysym.scancode-8 ][1];
 	if( key_event == 0 ) break;
 	bx_devices.keyboard->gen_scancode( key_event );
 	break;
-	
+
       case SDL_KEYUP:
-	
-	if( (sdl_event.key.keysym.sym == SDLK_SCROLLOCK)
-	    || (sdl_event.key.keysym.scancode > _SCN2BX_LAST_ ))
-	  break;
-	key_event = scancodes2bx[ sdl_event.key.keysym.scancode-8 ][1];
-	if( key_event == 0 ) break;
-	bx_devices.keyboard->gen_scancode( key_event | BX_KEY_RELEASED );
+
+	// filter out release of Windows/Fullscreen toggle and unsupported keys
+	if( (sdl_event.key.keysym.sym != SDLK_SCROLLOCK)
+	    && (sdl_event.key.keysym.scancode < _SCN2BX_LAST_ ))
+	{
+	  // convert scancode->bochs code
+	  key_event = scancodes2bx[ sdl_event.key.keysym.scancode-8 ][1];
+	  if( key_event == 0 ) break;
+	  bx_devices.keyboard->gen_scancode( key_event | BX_KEY_RELEASED );
+	}
 	break;
-	
-	
+
       case SDL_QUIT:
 	LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
 	BX_PANIC (("User requested shutdown."));
