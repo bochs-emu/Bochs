@@ -612,20 +612,20 @@ bx_serial_c::rx_timer_handler(void *this_ptr)
 void
 bx_serial_c::rx_timer(void)
 {
-  struct timeval tval;
 #if BX_HAVE_SELECT
 #if BX_WITH_BEOS == 0
+  struct timeval tval;
   fd_set fds;
 #endif
 #endif
   int bdrate = BX_SER_THIS s[0].baudrate / 8;
   unsigned char chbuf = 0;
 
+#if BX_HAVE_SELECT
+#if BX_WITH_BEOS == 0
   tval.tv_sec  = 0;
   tval.tv_usec = 0;
 
-#if BX_HAVE_SELECT
-#if BX_WITH_BEOS == 0
 // MacOS: I'm not sure what to do with this, since I don't know
 // what an fd_set is or what FD_SET() or select() do. They aren't
 // declared in the CodeWarrior standard library headers. I'm just
