@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.17 2004-08-15 20:31:27 sshwarts Exp $
+// $Id: shift8.cc,v 1.18 2004-08-27 20:13:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,8 @@ BX_CPU_C::ROL_Eb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
-  if (count) {
+    if (! count) return;
+
     result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
 
     /* now write result back to destination */
@@ -66,21 +67,18 @@ BX_CPU_C::ROL_Eb(bxInstruction_c *i)
       }
 
     /* set eflags:
-     * ROL count affects the following flags: C
+     * ROL count affects the following flags: C, O
      */
+    bx_bool temp_CF = (result_8 & 0x01);
 
-    set_CF(result_8 & 0x01);
-    if (count == 1)
-      set_OF(((op1_8 ^ result_8) & 0x80) > 0);
-    }
+    set_CF(temp_CF);
+    set_OF(temp_CF ^ (result_8 >> 7));
 }
-
 
   void
 BX_CPU_C::ROR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
-  Bit8u result_b7;
   unsigned count;
 
   if (i->b1() == 0xc0)
@@ -89,7 +87,6 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     count = 1;
   else // 0xd2
     count = CL;
-
 
   count &= 0x07; /* use only bottom 3 bits */
 
@@ -102,7 +99,8 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
-  if (count) {
+    if (! count) return;
+
     result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
 
     /* now write result back to destination */
@@ -114,16 +112,14 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
       }
 
     /* set eflags:
-     * ROR count affects the following flags: C
+     * ROR count affects the following flags: C, O
      */
-    result_b7 = result_8 & 0x80;
+    bx_bool result_b7 = (result_8 & 0x80) != 0;
 
-    set_CF(result_b7 != 0);
+    set_CF(result_b7);
     if (count == 1)
       set_OF(((op1_8 ^ result_8) & 0x80) > 0);
-    }
 }
-
 
   void
 BX_CPU_C::RCL_Eb(bxInstruction_c *i)
@@ -138,7 +134,8 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count = (count & 0x1F) % 9;
+  count &= 0x1F;
+  count %= 9;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -148,29 +145,34 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
+ 
+  if (! count) return;
 
-  if (count) {
+  if (count==1) {
+    result_8 = (op1_8 << 1) | getB_CF();
+  }
+  else {
     result_8 = (op1_8 << count) |
              (getB_CF() << (count - 1)) |
              (op1_8 >> (9 - count));
+  }
 
-    /* now write result back to destination */
-    if (i->modC0()) {
-      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
-      }
-    else {
-      Write_RMW_virtual_byte(result_8);
-      }
-
-    /* set eflags:
-     * RCL count affects the following flags: C
-     */
-    if (count == 1)
-      set_OF(((op1_8 ^ result_8) & 0x80) > 0);
-    set_CF((op1_8 >> (8 - count)) & 0x01);
+  /* now write result back to destination */
+  if (i->modC0()) {
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
-}
+  else {
+    Write_RMW_virtual_byte(result_8);
+    }
 
+  /* set eflags:
+   * RCL count affects the following flags: C, O
+   */
+  bx_bool temp_CF = (op1_8 >> (8 - count)) & 0x01;
+
+  set_CF(temp_CF);
+  set_OF(temp_CF ^ (result_8 >> 7));
+}
 
   void
 BX_CPU_C::RCR_Eb(bxInstruction_c *i)
@@ -185,7 +187,8 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count = ( count & 0x1F ) % 9;
+  count &= 0x1F;
+  count %= 9;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -196,7 +199,8 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
-  if (count) {
+  if (! count) return;
+
     result_8 = (op1_8 >> count) |
              (getB_CF() << (8 - count)) |
              (op1_8 << (9 - count));
@@ -210,15 +214,13 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
       }
 
     /* set eflags:
-     * RCR count affects the following flags: C
+     * RCR count affects the following flags: C, O
      */
 
     set_CF((op1_8 >> (count - 1)) & 0x01);
     if (count == 1)
       set_OF(((op1_8 ^ result_8) & 0x80) > 0);
-    }
 }
-
 
   void
 BX_CPU_C::SHL_Eb(bxInstruction_c *i)

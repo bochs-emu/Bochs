@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.23 2004-08-15 20:31:27 sshwarts Exp $
+// $Id: shift32.cc,v 1.24 2004-08-27 20:13:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,6 +71,7 @@ BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
     set_CF((op1_32 >> (32 - count)) & 0x01);
     if (count == 1)
       set_OF(((op1_32 ^ result_32) & 0x80000000) > 0);
+    set_AF(0);
     set_ZF(result_32 == 0);
     set_PF_base(result_32);
     set_SF(result_32 >> 31);
@@ -121,6 +122,7 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
     set_CF((op1_32 >> (count - 1)) & 0x01);
     set_ZF(result_32 == 0);
     set_SF(result_32 >> 31);
+    set_AF(0);
     /* for shift of 1, OF set if sign change occurred. */
     if (count == 1)
       set_OF(((op1_32 ^ result_32) & 0x80000000) > 0);
@@ -151,7 +153,8 @@ BX_CPU_C::ROL_Ed(bxInstruction_c *i)
       read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
-    if (count) {
+    if (! count) return;
+
       result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
 
       /* now write result back to destination */
@@ -163,19 +166,18 @@ BX_CPU_C::ROL_Ed(bxInstruction_c *i)
         }
 
       /* set eflags:
-       * ROL count affects the following flags: C
+       * ROL count affects the following flags: C, O
        */
+      bx_bool temp_CF = (result_32 & 0x01);
 
-      set_CF(result_32 & 0x01);
-      if (count == 1)
-        set_OF(((op1_32 ^ result_32) & 0x80000000) > 0);
-      }
+      set_CF(temp_CF);
+      set_OF(temp_CF ^ (result_32 >> 31));
 }
 
   void
 BX_CPU_C::ROR_Ed(bxInstruction_c *i)
 {
-  Bit32u op1_32, result_32, result_b31;
+  Bit32u op1_32, result_32;
   unsigned count;
 
   if (i->b1() == 0xc1)
@@ -194,7 +196,8 @@ BX_CPU_C::ROR_Ed(bxInstruction_c *i)
       read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
-    if (count) {
+    if (! count) return;
+
       result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
 
       /* now write result back to destination */
@@ -206,14 +209,13 @@ BX_CPU_C::ROR_Ed(bxInstruction_c *i)
         }
 
       /* set eflags:
-       * ROR count affects the following flags: C
+       * ROR count affects the following flags: C, O
        */
-      result_b31 = result_32 & 0x80000000;
+      bx_bool result_b31 = (result_32 & 0x80000000) != 0;
 
-      set_CF(result_b31 != 0);
+      set_CF(result_b31);
       if (count == 1)
         set_OF(((op1_32 ^ result_32) & 0x80000000) > 0);
-      }
 }
 
   void
@@ -258,13 +260,13 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
       }
 
     /* set eflags:
-     * RCL count affects the following flags: C
+     * RCL count affects the following flags: C, O
      */
-    if (count == 1)
-      set_OF(((op1_32 ^ result_32) & 0x80000000) > 0);
-    set_CF((op1_32 >> (32 - count)) & 0x01);
-}
+    bx_bool temp_CF = (op1_32 >> (32 - count)) & 0x01;
 
+    set_CF(temp_CF);
+    set_OF(temp_CF ^ (result_32 >> 31));
+}
 
   void
 BX_CPU_C::RCR_Ed(bxInstruction_c *i)
@@ -308,7 +310,7 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
       }
 
     /* set eflags:
-     * RCR count affects the following flags: C
+     * RCR count affects the following flags: C, O
      */
 
     set_CF((op1_32 >> (count - 1)) & 0x01);

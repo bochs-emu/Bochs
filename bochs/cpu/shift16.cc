@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.22 2004-08-15 20:31:27 sshwarts Exp $
+// $Id: shift16.cc,v 1.23 2004-08-27 20:13:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
       }
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-    temp_32 = (op1_16 << 16) | (op2_16); // double formed by op1:op2
+    temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
     result_32 = temp_32 << count;
     if (count > 16) {
       // hack to act like x86 SHLD when count > 16
@@ -81,6 +81,7 @@ BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
     set_CF( (temp_32 >> (32 - count)) & 0x01 );
     if (count == 1)
       set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
+    set_AF(0);
     set_ZF(result_16 == 0);
     set_SF(result_16 >> 15);
     set_PF_base((Bit8u) result_16);
@@ -142,6 +143,7 @@ BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
     set_CF((temp_32 >> (count - 1)) & 0x01);
     set_ZF(result_16 == 0);
     set_SF(result_16 >> 15);
+    set_AF(0);
     /* for shift of 1, OF set if sign change occurred. */
     if (count == 1)
       set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
@@ -174,8 +176,9 @@ BX_CPU_C::ROL_Ew(bxInstruction_c *i)
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
-    if (count) {
-      result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
+    if (! count) return;
+
+    result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
 
       /* now write result back to destination */
       if (i->modC0()) {
@@ -186,19 +189,18 @@ BX_CPU_C::ROL_Ew(bxInstruction_c *i)
         }
 
       /* set eflags:
-       * ROL count affects the following flags: C
+       * ROL count affects the following flags: C, O
        */
+      bx_bool temp_CF = (result_16 & 0x01);
 
-      set_CF(result_16 & 0x01);
-      if (count == 1)
-        set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
-      }
+      set_CF(temp_CF);
+      set_OF(temp_CF ^ (result_16 >> 15));
 }
 
   void
 BX_CPU_C::ROR_Ew(bxInstruction_c *i)
 {
-  Bit16u op1_16, result_16, result_b15;
+  Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1() == 0xc1 )
@@ -219,8 +221,9 @@ BX_CPU_C::ROR_Ew(bxInstruction_c *i)
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
-    if (count) {
-      result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
+    if (! count) return;
+
+    result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
 
       /* now write result back to destination */
       if (i->modC0()) {
@@ -231,14 +234,13 @@ BX_CPU_C::ROR_Ew(bxInstruction_c *i)
         }
 
       /* set eflags:
-       * ROR count affects the following flags: C
+       * ROR count affects the following flags: C, O
        */
-      result_b15 = result_16 & 0x8000;
+      bx_bool result_b15 = (result_16 & 0x8000) != 0;
 
-      set_CF(result_b15 != 0);
+      set_CF(result_b15);
       if (count == 1)
         set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
-      }
 }
 
   void
@@ -255,6 +257,7 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1F;
+  count %= 17;
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {
@@ -264,8 +267,6 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
       /* pointer, segment address pair */
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
-
-    count %= 17;
 
     if (!count) return;
 
@@ -291,14 +292,13 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
       }
 
     /* set eflags:
-     * RCL count affects the following flags: C
+     * RCL count affects the following flags: C, O
      */
+    bx_bool temp_CF = (op1_16 >> (16 - count)) & 0x01;
 
-    if (count == 1)
-      set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
-    set_CF((op1_16 >> (16 - count)) & 0x01);
+    set_CF(temp_CF);
+    set_OF(temp_CF ^ (result_16 >> 15));
 }
-
 
   void
 BX_CPU_C::RCR_Ew(bxInstruction_c *i)
@@ -314,6 +314,7 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
     count = CL;
 
   count = count & 0x1F;
+  count %= 17;
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {
@@ -324,8 +325,8 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
-    count %= 17;
-    if (count) {
+  if (! count) return;
+
       result_16 = (op1_16 >> count) |
           (getB_CF() << (16 - count)) |
           (op1_16 << (17 - count));
@@ -339,15 +340,13 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
         }
 
       /* set eflags:
-       * RCR count affects the following flags: C
+       * RCR count affects the following flags: C, O
        */
 
       set_CF((op1_16 >> (count - 1)) & 0x01);
       if (count == 1)
         set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
-      }
 }
-
 
   void
 BX_CPU_C::SHL_Ew(bxInstruction_c *i)
