@@ -525,3 +525,42 @@ wait for a SIPI from the bootstrap guy.
 
 First, however, I need to be able to compile without static member 
 functions on the CPU.
+
+I have it compiling without static member functions (it took some work),
+but now I have crashes instead.  Specifically, the debugger uses structures
+it calls "callbacks" which are filled with function pointers.  These 
+function pointers point to C++ methods, but somehow the compiler allows
+them to be called without a This pointer, leading to crashes the first time
+you try something like "EAX = 0".
+
+I can't see that plex86 is using this debugger, so I expect nobody is.
+This means it's not a total waste of time to clean it up in the way that
+makes most sense to me.  What C++ structure will I need to implement
+the multiprocessor simulation with debugging?  Instead of a single BX_CPU
+object, there will be several.  I think to make SMF=0 work at all I'll
+need to redo the callback structure in a C++ way.
+
+BX_CPU_C is the type
+BX_CPU is used everywhere as the CPU object.
+But in the SMP model, you need to specify WHICH cpu you're talking about.
+In the debugger it would be acceptable to have a "current" CPU, and commands
+that apply to a particular cpu would automatically go to the current one.
+What other references to BX_CPU are outside of methods?
+
+I'm about to change BX_CPU into an array of BX_CPUs, and I fear
+the resulting explosion of broken things that were never really object
+oriented to begin with.  But it will be worth it when the APIC model can
+actually tell the other cpus to boot up.
+
+Here's a strategy: make BX_CPU an array and start ripping, without being
+constrained by keeping BX_USE_SMF=1 alive.  I hate it anyway.  Then maybe
+it will be clear how to make BX_USE_SMF=1 work again with stupid macros.
+
+What about this debug callback thing?  What's the point?  Replace each
+call of a callback with a call of the real object.  In the debugger, define
+a variable that is the "current" CPU that the user is interested in.
+
+Make both the CPU and the memory space an array.  The CPU structure will
+have a pointer to its memory space.  This allows cosimulation to still 
+happen (cpu0 with mem0, cpu1 with mem1) with any number of processors,
+and also SMP (cpu0 with mem0, cpu1 with mem0, etc.).
