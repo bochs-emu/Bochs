@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly.h                                                                   |
- |  $Id: poly.h,v 1.5 2002-12-26 14:47:02 vruppert Exp $
+ |  $Id: poly.h,v 1.5.8.1 2004-02-10 00:21:49 danielg4 Exp $
  |                                                                           |
  |  Header file for the FPU-emu poly*.c source files.                        |
  |                                                                           |
@@ -21,6 +21,9 @@
    Intended to be used to get results better than 8-byte computation
    allows. 9-byte would probably be sufficient.
    */
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=packed
+#endif
 typedef struct {
 #ifdef EMU_BIG_ENDIAN
   u32 msw;
@@ -32,6 +35,9 @@ typedef struct {
   u32 msw;
 #endif
 } GCC_ATTRIBUTE((packed)) Xsig;
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
 
 asmlinkage void mul64(u64 const *a, u64 const *b,
 		      u64 *result);
