@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.7 2002-11-19 05:47:43 bdenney Exp $
+// $Id: logical64.cc,v 1.8 2004-04-07 19:23:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,7 +68,6 @@ BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_XOR64);
 }
 
-
   void
 BX_CPU_C::XOR_GqEq(bxInstruction_c *i)
 {
@@ -93,7 +92,6 @@ BX_CPU_C::XOR_GqEq(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_XOR64);
 }
-
 
   void
 BX_CPU_C::XOR_RAXId(bxInstruction_c *i)
@@ -141,7 +139,6 @@ BX_CPU_C::XOR_EqId(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_XOR64);
 }
-
 
   void
 BX_CPU_C::OR_EqId(bxInstruction_c *i)
@@ -197,7 +194,6 @@ BX_CPU_C::NOT_Eq(bxInstruction_c *i)
       }
 }
 
-
   void
 BX_CPU_C::OR_EqGq(bxInstruction_c *i)
 {
@@ -228,7 +224,6 @@ BX_CPU_C::OR_EqGq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_OR64);
 }
 
-
   void
 BX_CPU_C::OR_GqEq(bxInstruction_c *i)
 {
@@ -253,7 +248,6 @@ BX_CPU_C::OR_GqEq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_OR64);
 }
 
-
   void
 BX_CPU_C::OR_RAXId(bxInstruction_c *i)
 {
@@ -270,8 +264,6 @@ BX_CPU_C::OR_RAXId(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_OR64);
 }
-
-
 
   void
 BX_CPU_C::AND_EqGq(bxInstruction_c *i)
@@ -303,7 +295,6 @@ BX_CPU_C::AND_EqGq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_AND64);
 }
 
-
   void
 BX_CPU_C::AND_GqEq(bxInstruction_c *i)
 {
@@ -327,7 +318,6 @@ BX_CPU_C::AND_GqEq(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_AND64);
 }
-
 
   void
 BX_CPU_C::AND_RAXId(bxInstruction_c *i)
@@ -375,7 +365,6 @@ BX_CPU_C::AND_EqId(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_AND64);
 }
 
-
   void
 BX_CPU_C::TEST_EqGq(bxInstruction_c *i)
 {
@@ -398,8 +387,6 @@ BX_CPU_C::TEST_EqGq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_TEST64);
 }
 
-
-
   void
 BX_CPU_C::TEST_RAXId(bxInstruction_c *i)
 {
@@ -415,7 +402,6 @@ BX_CPU_C::TEST_RAXId(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_TEST64);
 }
-
 
   void
 BX_CPU_C::TEST_EqId(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.10 2003-12-29 21:47:36 sshwarts Exp $
+// $Id: shift64.cc,v 1.11 2004-04-07 19:23:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -81,7 +81,6 @@ BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
     set_SF(result_64 >> 63);
 }
 
-
   void
 BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
 {
@@ -94,7 +93,6 @@ BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
     count = CL & 0x3f;
 
   if (!count) return; /* NOP */
-
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {
@@ -228,7 +226,6 @@ BX_CPU_C::RCL_Eq(bxInstruction_c *i)
     count = 1;
   else // (i->b1() == 0xd3)
     count = CL & 0x3f;
-
 
     /* op1 is a register or memory reference */
     if (i->modC0()) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.16 2004-02-26 19:17:40 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.17 2004-04-07 19:23:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,15 +71,12 @@ BX_CPU_C::MOV_GqEq(bxInstruction_c *i)
 {
     Bit64u op2_64;
 
-    //BX_DEBUG (("MOV_GqEq mod=%02x nnn=%d rm=%d rm_addr=%08x seg=%d",i->mod(),i->nnn(),i->rm(),RMAddr(i),i->seg()));
     if (i->modC0()) {
       op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
-      //BX_DEBUG (("call read_virtual_qword"));
       read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-      //BX_DEBUG (("done read_virtual_qword"));
       }
 
     BX_WRITE_64BIT_REG(i->nnn(), op2_64);
@@ -105,7 +102,6 @@ BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
   bx_address addr = i->Iq();
 
   /* read from memory address */
-
   if (!BX_NULL_SEG_REG(i->seg())) {
     read_virtual_byte(i->seg(), addr, &temp_8);
     }
@@ -153,7 +149,6 @@ BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
   /* write to register */
   AX = temp_16;
 }
-
 
   void
 BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
@@ -346,7 +341,6 @@ BX_CPU_C::MOVSX_GqEd(bxInstruction_c *i)
     /* sign extend word op2 into qword op1 */
     BX_WRITE_64BIT_REG(i->nnn(), (Bit32s) op2_32);
 }
-
 
   void
 BX_CPU_C::XCHG_EqGq(bxInstruction_c *i)

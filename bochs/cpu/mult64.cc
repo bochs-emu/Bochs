@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.7 2003-12-29 21:47:36 sshwarts Exp $
+// $Id: mult64.cc,v 1.8 2004-04-07 19:23:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,15 +32,14 @@
 
 #if BX_SUPPORT_X86_64
 
-unsigned partial_add(Bit32u *sum,Bit32u b)
+static unsigned partial_add(Bit32u *sum,Bit32u b)
 {
   Bit32u t = *sum;
   *sum += b;
   return (*sum < t);
 }
 
- void
-long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
+void long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
 {
   Bit32u op_1[2],op_2[2];
   Bit32u result[5];
@@ -72,8 +71,7 @@ long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
   product->hi = result[2] + ((Bit64u) result[3] << 32);
 }
 
- void
-long_neg(Bit128s *n)
+void long_neg(Bit128s *n)
 {
   Bit64u t;
 
@@ -83,25 +81,18 @@ long_neg(Bit128s *n)
   n->hi = -n->hi;
 }
 
- void
-long_imul(Bit128s *product, Bit64s op1, Bit64s op2)
+void long_imul(Bit128s *product, Bit64s op1, Bit64s op2)
 {
   unsigned s1,s2;
 
-  //BX_DEBUG (("long_imul %08X%08X X %08X%08X->",(unsigned)(op1 >> 32),(unsigned)op1,(unsigned)(op2 >> 32),(unsigned)op2));
   if (s1 = (op1 < 0)) op1 = -op1;
   if (s2 = (op2 < 0)) op2 = -op2;
   long_mul((Bit128u*)product,(Bit64u)op1,(Bit64u)op2);
-  if (s1 ^ s2) {
+  if (s1 ^ s2)
     long_neg(product);
-  }
-  //BX_DEBUG (("%08X%08X%08X%08X",
-  //     (unsigned)(product->hi >> 32),(unsigned)product->hi,
-  //     (unsigned)(product->lo >> 32),(unsigned)product->lo));
 }
 
- void
-long_shl(Bit128u *a)
+void long_shl(Bit128u *a)
 {
   Bit64u c;
   c = a->lo >> 63;
@@ -110,8 +101,7 @@ long_shl(Bit128u *a)
   a->hi |= c;
 }
 
- void
-long_shr(Bit128u *a)
+void long_shr(Bit128u *a)
 {
   Bit64u c;
   c = a->hi << 63;
@@ -120,8 +110,7 @@ long_shr(Bit128u *a)
   a->lo |= c;
 }
 
- unsigned
-long_sub(Bit128u *a,Bit128u *b)
+unsigned long_sub(Bit128u *a,Bit128u *b)
 {
   Bit64u t;
   int c;
@@ -134,8 +123,7 @@ long_sub(Bit128u *a,Bit128u *b)
   return(a->hi > t);
 }
 
- bx_bool
-long_le(Bit128u *a,Bit128u *b)
+int long_le(Bit128u *a,Bit128u *b)
 {
   if (a->hi == b->hi) {
     return(a->lo <= b->lo);
@@ -144,9 +132,7 @@ long_le(Bit128u *a,Bit128u *b)
   }
 }
 
-
- void
-long_div(Bit128u *quotient,Bit64u *remainder,Bit128u *dividend,Bit64u divisor)
+void long_div(Bit128u *quotient,Bit64u *remainder,Bit128u *dividend,Bit64u divisor)
 {
   /*
   n := 0;
@@ -173,7 +159,6 @@ long_div(Bit128u *quotient,Bit64u *remainder,Bit128u *dividend,Bit64u divisor)
   Bit128u d,acc,q,temp;
   int n,c;
 
-
   d.lo = divisor;
   d.hi = 0;
   acc.lo = dividend->lo;
@@ -182,12 +167,11 @@ long_div(Bit128u *quotient,Bit64u *remainder,Bit128u *dividend,Bit64u divisor)
   q.hi = 0;
   n = 0;
 
-  //BX_DEBUG (("ldiv: n=%d d=%08X acc=%08X",n,d.lo,acc.lo));
   while (long_le(&d,&acc) && n < 128) {
     long_shl(&d);
     n++;
   }
-  //BX_DEBUG (("ldiv: n=%d d=%08X acc=%08X",n,d.lo,acc.lo));
+
   while (n > 0) {
     long_shr(&d);
     long_shl(&q);
@@ -202,14 +186,13 @@ long_div(Bit128u *quotient,Bit64u *remainder,Bit128u *dividend,Bit64u divisor)
     }
     n--;
   }
-  //BX_DEBUG (("ldiv: n=%d d=%08X acc=%08X",n,d.lo,acc.lo));
+
   *remainder = acc.lo;
   quotient->lo  = q.lo;
   quotient->hi  = q.hi;
 }
 
- void
-long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divisor)
+void long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divisor)
 {
   unsigned s1,s2;
   Bit128s temp;
@@ -246,14 +229,13 @@ BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
       read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
-    //product_128 = ((Bit128u) op1_64) * ((Bit128u) op2_64);
+    // product_128 = ((Bit128u) op1_64) * ((Bit128u) op2_64);
+    // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
+    // product_64h = (Bit64u) (product_128 >> 64);
+
     long_mul(&product_128,op1_64,op2_64);
 
-    //product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
-    //product_64h = (Bit64u) (product_128 >> 64);
-
     /* now write product back to destination */
-
     RAX = product_128.lo;
     RDX = product_128.hi;
 
@@ -265,14 +247,11 @@ BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
     SET_FLAGS_OxxxxC(temp_flag, temp_flag);
 }
 
-
-
   void
 BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
 {
     Bit64s op1_64, op2_64;
     Bit128s product_128;
-    //Bit64u product_64h, product_64l;
 
     op1_64 = RAX;
 
@@ -285,14 +264,13 @@ BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
       read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
       }
 
-    //product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
+    // product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
+    // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
+    // product_64h = (Bit64u) (product_128 >> 64);
+
     long_imul(&product_128,op1_64,op2_64);
 
-    //product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
-    //product_64h = (Bit64u) (product_128 >> 64);
-
     /* now write product back to destination */
-
     RAX = product_128.lo;
     RDX = product_128.hi;
 
@@ -332,26 +310,24 @@ BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
       read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
-    if (op2_64 == 0) {
+    if (op2_64 == 0)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
-    //quotient_128 = op1_128 / op2_64;
-    //remainder_64 = (Bit64u) (op1_128 % op2_64);
-    //quotient_64l = (Bit64u) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
+
+    // quotient_128 = op1_128 / op2_64;
+    // remainder_64 = (Bit64u) (op1_128 % op2_64);
+    // quotient_64l = (Bit64u) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
+
     long_div(&quotient_128,&remainder_64,&op1_128,op2_64);
     quotient_64l = quotient_128.lo;
 
-    //if (quotient_128 != quotient_64l) {
-    if (quotient_128.hi != 0) {
+    if (quotient_128.hi != 0)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
 
     /* set EFLAGS:
      * DIV affects the following flags: O,S,Z,A,P,C are undefined
      */
 
     /* now write quotient back to destination */
-
     RAX = quotient_64l;
     RDX = remainder_64;
 }
@@ -375,26 +351,24 @@ BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
       read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
       }
 
-    if (op2_64 == 0) {
+    if (op2_64 == 0)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
-    //quotient_128 = op1_128 / op2_64;
-    //remainder_64 = (Bit64s) (op1_128 % op2_64);
-    //quotient_64l = (Bit64s) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
+
+    // quotient_128 = op1_128 / op2_64;
+    // remainder_64 = (Bit64s) (op1_128 % op2_64);
+    // quotient_64l = (Bit64s) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
+
     long_idiv(&quotient_128,&remainder_64,&op1_128,op2_64);
     quotient_64l = quotient_128.lo;
 
-    //if (quotient_128 != quotient_64l) {
-    if (quotient_128.hi != 0) {
+    if (quotient_128.hi != 0)
       exception(BX_DE_EXCEPTION, 0, 0);
-      }
 
     /* set EFLAGS:
      * IDIV affects the following flags: O,S,Z,A,P,C are undefined
      */
 
     /* now write quotient back to destination */
-
     RAX = quotient_64l;
     RDX = remainder_64;
 }
@@ -418,7 +392,6 @@ BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
       }
 
     product_64 = op2_64 * op3_64;
-    //product_128 = ((Bit128s) op2_64) * ((Bit128s) op3_64);
     long_imul(&product_128,op2_64,op3_64);
 
     /* now write product back to destination */
@@ -438,7 +411,6 @@ BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
       }
 }
 
-
   void
 BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
 {
@@ -457,7 +429,6 @@ BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     product_64 = op1_64 * op2_64;
-    //product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
     long_imul(&product_128,op1_64,op2_64);
 
     /* now write product back to destination */
