@@ -28,6 +28,8 @@
 /* SSE: MEMORY MOVE OPERATIONS */
 /* *************************** */
 
+/* All these opcodes never generate SIMD floating point exections */
+
 /* MOVUPS:    0F 10 */
 /* MOVUPD: 66 0F 10 */
 /* MOVDQU: F3 0F 6F */
@@ -421,54 +423,6 @@ void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::UNPCKLPS_VpsWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("UNPCKLPS_VpsWq: SSE instruction still not implemented"));
-#else
-  BX_INFO(("UNPCKLPS_VpsWq: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::UNPCKHPS_VpsWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("UNPCKHPS_VpsWq: SSE instruction still not implemented"));
-#else
-  BX_INFO(("UNPCKHPS_VpsWq: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::UNPCKLPD_VpdWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("UNPCKLPD_VpdWq: SSE2 instruction still not implemented"));
-#else
-  BX_INFO(("UNPCKLPD_VpdWq: SSE2 not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::UNPCKHPD_VpdWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("UNPCKHPD_VpdWq: SSE2 instruction still not implemented"));
-#else
-  BX_INFO(("UNPCKHPD_VpdWq: SSE2 not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
 /* 66 0F 60 */
 void BX_CPU_C::PUNPCKLBW_VdqWq(bxInstruction_c *i)
 {
@@ -545,10 +499,12 @@ void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
 #endif
 }
 
-/* 66 0F 62 */
+/* UNPCKLPS:     0F 14 */
+/* PUNPCKLDQ: 66 0F 62 */
+
 void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -570,7 +526,7 @@ void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKLDQ_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("UNPCKLPS/PUNPCKLDQ_VdqWq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -651,10 +607,12 @@ void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
 #endif
 }
 
-/* 66 0F 6A */
+/* UNPCKHPS:     0F 15 */
+/* PUNPCKHDQ: 66 0F 6A */
+
 void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
+#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -676,12 +634,14 @@ void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKHDQ_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("UNPCKHPS/PUNPCKHDQ_VdqWq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
-/* 66 0F 6C */
+/* UNPCKLPD:   66 0F 14 */
+/* PUNPCKLQDQ: 66 0F 6C */
+
 void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
@@ -703,12 +663,14 @@ void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PUNPCKLQDQ_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("UNPCKLPD/PUNPCKLQDQ_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
-/* 66 0F 6D */
+/* UNPCKHPD:   66 0F 15 */
+/* PUNPCKHQDQ: 66 0F 6D */
+
 void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
@@ -731,7 +693,7 @@ void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKHQDQ_VdqWq: SSE2 not supported in current configuration"));
+  BX_INFO(("UNPCKHPD/PUNPCKHQDQ_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -864,7 +826,7 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareSSE();
 
   if (i->modC0()) {
-    BX_INFO(("MOVNTPS_MdqVps: must be memory reference"));
+    BX_INFO(("MOVNTPS/PD/MOVNTDQ_MdqVdq: must be memory reference"));
     UndefinedOpcode(i);
   }
 

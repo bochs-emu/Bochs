@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.39 2002-12-20 09:11:37 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.40 2002-12-22 20:42:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -235,6 +235,12 @@ ANDNPS_VpsWps  (0f 55) = ANDNPD_VpdWpd  (66 0f 55) = PANDN_VdqWdq  (66 0f df)
 ORPS_VpsWps    (0f 56) = ORPD_VpdWpd    (66 0f 56) = POR_VdqWdq    (66 0f eb)
 XORPS_VpsWps   (0f 57) = XORPD_VpdWpd   (66 0f 57) = PXOR_VdqWdq   (66 0f ef)
 
+UNPCKHPS_VpsWq    (0f 15) =  PUNPCKHDQ_VdqWq (66 0f 6a)
+UNPCKLPS_VpsWq    (0f 14) =  PUNPCKLDQ_VdqWq (66 0f 62)
+
+UNPCKHPD_VpsWq (66 0f 15) = PUNPCKHQDQ_VdqWq (66 0f 6d)
+UNPCKLPD_VpsWq (66 0f 14) = PUNPCKLQDQ_VdqWq (66 0f 6c)
+
 */
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f10[4] = {
@@ -266,15 +272,15 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f13[4] = {
   };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f14[4] = {
-  /* -- */  { 0, &BX_CPU_C::UNPCKLPS_VpsWq },
-  /* 66 */  { 0, &BX_CPU_C::UNPCKLPD_VpdWq },
+  /* -- */  { 0, &BX_CPU_C::PUNPCKLDQ_VdqWq  },
+  /* 66 */  { 0, &BX_CPU_C::PUNPCKLQDQ_VdqWq },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f15[4] = {
-  /* -- */  { 0, &BX_CPU_C::UNPCKHPS_VpsWq },
-  /* 66 */  { 0, &BX_CPU_C::UNPCKHPD_VpdWq },
+  /* -- */  { 0, &BX_CPU_C::PUNPCKHDQ_VdqWq  },
+  /* 66 */  { 0, &BX_CPU_C::PUNPCKHQDQ_VdqWq },
   /* F2 */  { 0, &BX_CPU_C::BxError },
   /* F3 */  { 0, &BX_CPU_C::BxError }
   };
