@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.8 2001-10-09 21:15:14 bdenney Exp $
+// $Id: tasking.cc,v 1.9 2001-11-11 04:57:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -223,8 +223,8 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   if (BX_CPU_THIS_PTR cr0.pg) {
     //BX_RW, BX_READ, BX_WRITE
     // Old TSS
-    (void) dtranslate_linear(nbase32, 0, /*rw*/ BX_WRITE);
-    (void) dtranslate_linear(nbase32+old_TSS_max, 0, /*rw*/ BX_WRITE);
+    (void) dtranslate_linear(obase32, 0, /*rw*/ BX_WRITE);
+    (void) dtranslate_linear(obase32+old_TSS_max, 0, /*rw*/ BX_WRITE);
 
     // New TSS
     (void) dtranslate_linear(nbase32, 0, /*rw*/ 0);
@@ -474,6 +474,7 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
 
   if (tss_descriptor->type >= 9) {
     CR3_change(newCR3); // Tell paging unit about new cr3 value
+    BX_DEBUG (("task_switch changing CR3 to 0x%08x\n", newCR3));
     BX_INSTR_TLB_CNTRL(BX_INSTR_TASKSWITCH, newCR3);
     }
 
