@@ -29,6 +29,8 @@
 %token <sval> BX_TOKEN_QUIT
 %token <sval> BX_TOKEN_PROGRAM
 %token <sval> BX_TOKEN_REGISTERS
+%token <sval> BX_TOKEN_FPU
+%token <sval> BX_TOKEN_ALL
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_GDT
 %token <sval> BX_TOKEN_LDT
@@ -464,7 +466,17 @@ info_command:
         }
     | BX_TOKEN_INFO BX_TOKEN_REGISTERS '\n'
         {
-        bx_dbg_info_registers_command();
+        bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_FPU '\n'
+        {
+        bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_ALL '\n'
+        {
+        bx_dbg_info_registers_command(BX_INFO_CPU_REGS | BX_INFO_FPU_REGS);
         free($1); free($2);
         }
     | BX_TOKEN_INFO BX_TOKEN_DIRTY '\n'

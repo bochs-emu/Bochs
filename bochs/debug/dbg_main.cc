@@ -2335,55 +2335,60 @@ bx_dbg_take_command(char *what, unsigned n)
 
 
   void
-bx_dbg_info_registers_command(void)
+bx_dbg_info_registers_command(int which_regs_mask)
 {
   Bit32u reg;
   bx_dbg_cpu_t cpu;
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    memset(&cpu, 0, sizeof(cpu));
-    BX_CPU(i)->dbg_get_cpu(&cpu);
+    if (which_regs_mask & BX_INFO_CPU_REGS) {
+      memset(&cpu, 0, sizeof(cpu));
+      BX_CPU(i)->dbg_get_cpu(&cpu);
 
 #if (BX_SMP_PROCESSORS > 1)
-    fprintf(stderr, "%s:\n", BX_CPU(i)->name, i);
+      fprintf(stderr, "%s:\n", BX_CPU(i)->name, i);
 #endif
-    reg = cpu.eax;
-    fprintf(stderr, "eax            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ecx;
-    fprintf(stderr, "ecx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.edx;
-    fprintf(stderr, "edx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ebx;
-    fprintf(stderr, "ebx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.eax;
+      fprintf(stderr, "eax            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ecx;
+      fprintf(stderr, "ecx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.edx;
+      fprintf(stderr, "edx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ebx;
+      fprintf(stderr, "ebx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.esp;
-    fprintf(stderr, "esp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
-    reg = cpu.ebp;
-    fprintf(stderr, "ebp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
-    reg = cpu.esi;
-    fprintf(stderr, "esi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.edi;
-    fprintf(stderr, "edi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.esp;
+      fprintf(stderr, "esp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      reg = cpu.ebp;
+      fprintf(stderr, "ebp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      reg = cpu.esi;
+      fprintf(stderr, "esi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.edi;
+      fprintf(stderr, "edi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.eip;
-    fprintf(stderr, "eip            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      reg = cpu.eip;
+      fprintf(stderr, "eip            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.eflags;
-    fprintf(stderr, "eflags         0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.eflags;
+      fprintf(stderr, "eflags         0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
-    reg = cpu.cs.sel;
-    fprintf(stderr, "cs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ss.sel;
-    fprintf(stderr, "ss             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.ds.sel;
-    fprintf(stderr, "ds             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.es.sel;
-    fprintf(stderr, "es             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.fs.sel;
-    fprintf(stderr, "fs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-    reg = cpu.gs.sel;
-    fprintf(stderr, "gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.cs.sel;
+      fprintf(stderr, "cs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ss.sel;
+      fprintf(stderr, "ss             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.ds.sel;
+      fprintf(stderr, "ds             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.es.sel;
+      fprintf(stderr, "es             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.fs.sel;
+      fprintf(stderr, "fs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      reg = cpu.gs.sel;
+      fprintf(stderr, "gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
     }
+    if (which_regs_mask & BX_INFO_FPU_REGS) {
+      BX_CPU(i)->fpu_print_regs ();
+    }
+  }
 }
 
   void

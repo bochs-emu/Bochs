@@ -61,76 +61,78 @@ typedef union {
 #define BX_TOKEN_QUIT 267
 #define BX_TOKEN_PROGRAM 268
 #define BX_TOKEN_REGISTERS 269
-#define BX_TOKEN_IDT 270
-#define BX_TOKEN_GDT 271
-#define BX_TOKEN_LDT 272
-#define BX_TOKEN_TSS 273
-#define BX_TOKEN_DIRTY 274
-#define BX_TOKEN_LINUX 275
-#define BX_TOKEN_CONTROL_REGS 276
-#define BX_TOKEN_EXAMINE 277
-#define BX_TOKEN_XFORMAT 278
-#define BX_TOKEN_SETPMEM 279
-#define BX_TOKEN_SYMBOLNAME 280
-#define BX_TOKEN_QUERY 281
-#define BX_TOKEN_PENDING 282
-#define BX_TOKEN_TAKE 283
-#define BX_TOKEN_DMA 284
-#define BX_TOKEN_IRQ 285
-#define BX_TOKEN_DUMP_CPU 286
-#define BX_TOKEN_SET_CPU 287
-#define BX_TOKEN_DIS 288
-#define BX_TOKEN_ON 289
-#define BX_TOKEN_OFF 290
-#define BX_TOKEN_DISASSEMBLE 291
-#define BX_TOKEN_INSTRUMENT 292
-#define BX_TOKEN_START 293
-#define BX_TOKEN_STOP 294
-#define BX_TOKEN_RESET 295
-#define BX_TOKEN_PRINT 296
-#define BX_TOKEN_LOADER 297
-#define BX_TOKEN_STRING 298
-#define BX_TOKEN_DOIT 299
-#define BX_TOKEN_CRC 300
-#define BX_TOKEN_TRACEON 301
-#define BX_TOKEN_TRACEOFF 302
-#define BX_TOKEN_PTIME 303
-#define BX_TOKEN_TIMEBP_ABSOLUTE 304
-#define BX_TOKEN_TIMEBP 305
-#define BX_TOKEN_RECORD 306
-#define BX_TOKEN_PLAYBACK 307
-#define BX_TOKEN_MODEBP 308
-#define BX_TOKEN_PRINT_STACK 309
-#define BX_TOKEN_WATCH 310
-#define BX_TOKEN_UNWATCH 311
-#define BX_TOKEN_READ 312
-#define BX_TOKEN_WRITE 313
-#define BX_TOKEN_SHOW 314
-#define BX_TOKEN_SYMBOL 315
-#define BX_TOKEN_GLOBAL 316
-#define BX_TOKEN_WHERE 317
-#define BX_TOKEN_PRINT_STRING 318
-#define BX_TOKEN_DIFF_MEMORY 319
-#define BX_TOKEN_SYNC_MEMORY 320
-#define BX_TOKEN_SYNC_CPU 321
-#define BX_TOKEN_FAST_FORWARD 322
-#define BX_TOKEN_PHY_2_LOG 323
-#define BX_TOKEN_NUMERIC 324
-#define BX_TOKEN_LONG_NUMERIC 325
-#define BX_TOKEN_INFO_ADDRESS 326
-#define BX_TOKEN_CS 327
-#define BX_TOKEN_ES 328
-#define BX_TOKEN_SS 329
-#define BX_TOKEN_DS 330
-#define BX_TOKEN_FS 331
-#define BX_TOKEN_GS 332
-#define BX_TOKEN_ALWAYS_CHECK 333
-#define BX_TOKEN_MATHS 334
-#define BX_TOKEN_ADD 335
-#define BX_TOKEN_SUB 336
-#define BX_TOKEN_MUL 337
-#define BX_TOKEN_DIV 338
-#define BX_TOKEN_V2L 339
+#define BX_TOKEN_FPU 270
+#define BX_TOKEN_ALL 271
+#define BX_TOKEN_IDT 272
+#define BX_TOKEN_GDT 273
+#define BX_TOKEN_LDT 274
+#define BX_TOKEN_TSS 275
+#define BX_TOKEN_DIRTY 276
+#define BX_TOKEN_LINUX 277
+#define BX_TOKEN_CONTROL_REGS 278
+#define BX_TOKEN_EXAMINE 279
+#define BX_TOKEN_XFORMAT 280
+#define BX_TOKEN_SETPMEM 281
+#define BX_TOKEN_SYMBOLNAME 282
+#define BX_TOKEN_QUERY 283
+#define BX_TOKEN_PENDING 284
+#define BX_TOKEN_TAKE 285
+#define BX_TOKEN_DMA 286
+#define BX_TOKEN_IRQ 287
+#define BX_TOKEN_DUMP_CPU 288
+#define BX_TOKEN_SET_CPU 289
+#define BX_TOKEN_DIS 290
+#define BX_TOKEN_ON 291
+#define BX_TOKEN_OFF 292
+#define BX_TOKEN_DISASSEMBLE 293
+#define BX_TOKEN_INSTRUMENT 294
+#define BX_TOKEN_START 295
+#define BX_TOKEN_STOP 296
+#define BX_TOKEN_RESET 297
+#define BX_TOKEN_PRINT 298
+#define BX_TOKEN_LOADER 299
+#define BX_TOKEN_STRING 300
+#define BX_TOKEN_DOIT 301
+#define BX_TOKEN_CRC 302
+#define BX_TOKEN_TRACEON 303
+#define BX_TOKEN_TRACEOFF 304
+#define BX_TOKEN_PTIME 305
+#define BX_TOKEN_TIMEBP_ABSOLUTE 306
+#define BX_TOKEN_TIMEBP 307
+#define BX_TOKEN_RECORD 308
+#define BX_TOKEN_PLAYBACK 309
+#define BX_TOKEN_MODEBP 310
+#define BX_TOKEN_PRINT_STACK 311
+#define BX_TOKEN_WATCH 312
+#define BX_TOKEN_UNWATCH 313
+#define BX_TOKEN_READ 314
+#define BX_TOKEN_WRITE 315
+#define BX_TOKEN_SHOW 316
+#define BX_TOKEN_SYMBOL 317
+#define BX_TOKEN_GLOBAL 318
+#define BX_TOKEN_WHERE 319
+#define BX_TOKEN_PRINT_STRING 320
+#define BX_TOKEN_DIFF_MEMORY 321
+#define BX_TOKEN_SYNC_MEMORY 322
+#define BX_TOKEN_SYNC_CPU 323
+#define BX_TOKEN_FAST_FORWARD 324
+#define BX_TOKEN_PHY_2_LOG 325
+#define BX_TOKEN_NUMERIC 326
+#define BX_TOKEN_LONG_NUMERIC 327
+#define BX_TOKEN_INFO_ADDRESS 328
+#define BX_TOKEN_CS 329
+#define BX_TOKEN_ES 330
+#define BX_TOKEN_SS 331
+#define BX_TOKEN_DS 332
+#define BX_TOKEN_FS 333
+#define BX_TOKEN_GS 334
+#define BX_TOKEN_ALWAYS_CHECK 335
+#define BX_TOKEN_MATHS 336
+#define BX_TOKEN_ADD 337
+#define BX_TOKEN_SUB 338
+#define BX_TOKEN_MUL 339
+#define BX_TOKEN_DIV 340
+#define BX_TOKEN_V2L 341
 #define YYERRCODE 256
 short bxlhs[] = {                                        -1,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -143,10 +145,10 @@ short bxlhs[] = {                                        -1,
    32,   32,   32,   34,   34,   34,   35,   36,    5,    6,
     6,    7,    7,    7,    8,    8,    8,    8,    8,    8,
     8,    9,    9,    9,    9,    9,    9,    9,    9,    9,
-    9,    2,    2,    4,    4,    3,    3,    3,   10,   11,
-   12,   13,   13,   13,   13,   14,   15,   16,   16,   16,
-   17,   18,   19,   19,   19,   19,   20,   21,   22,   23,
-   23,   23,   23,   23,   38,
+    9,    9,    9,    2,    2,    4,    4,    3,    3,    3,
+   10,   11,   12,   13,   13,   13,   13,   14,   15,   16,
+   16,   16,   17,   18,   19,   19,   19,   19,   20,   21,
+   22,   23,   23,   23,   23,   23,   38,
 };
 short bxlen[] = {                                         2,
     1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -158,11 +160,11 @@ short bxlen[] = {                                         2,
     2,    2,    2,    2,    3,    3,    3,    2,    2,    4,
     4,    4,    4,    3,    4,    5,    2,    3,    2,    2,
     3,    4,    4,    5,    2,    5,    2,    3,    2,    3,
-    4,    3,    3,    3,    3,    4,    4,    4,    4,    3,
-    3,    0,    1,    0,    1,    1,    2,    3,    2,    3,
-    2,    4,    3,    3,    2,    5,    3,    3,    4,    3,
-    2,    3,    3,    3,    3,    3,    3,    3,    4,    5,
-    5,    5,    5,    3,    5,
+    4,    3,    3,    3,    3,    3,    3,    4,    4,    4,
+    4,    3,    3,    0,    1,    0,    1,    1,    2,    3,
+    2,    3,    2,    4,    3,    3,    2,    5,    3,    3,
+    4,    3,    2,    3,    3,    3,    3,    3,    3,    3,
+    4,    5,    5,    5,    5,    3,    5,
 };
 short bxdefred[] = {                                      0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -175,62 +177,62 @@ short bxdefred[] = {                                      0,
    25,   26,   27,   28,   29,   30,   31,   32,   33,   34,
    79,    0,   80,    0,    0,    0,   85,    0,   87,    0,
    89,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,  111,    0,    0,  115,    0,    0,    0,
-    0,  109,  121,    0,  105,    0,    0,    0,    0,    0,
-    0,    0,    0,   62,   63,   61,    0,    0,    0,    0,
-    0,   58,    0,   64,    0,    0,    0,    0,   68,    0,
-    0,   69,    0,   60,    0,    0,   77,    0,   37,    0,
-    0,    0,    0,    0,    0,   47,   48,   49,   50,   51,
-   52,    0,    0,    0,    0,    0,    0,    0,    0,   81,
-    0,    0,    0,    0,   88,   90,    0,  110,   92,   93,
-   94,    0,    0,    0,    0,   95,  100,  101,    0,  113,
-  114,    0,  117,    0,  118,  120,  107,    0,  122,  123,
-  124,  125,  126,  127,  128,    0,   54,   53,   55,   56,
-   57,   65,   67,   66,    0,    0,    0,    0,   59,    0,
-   74,    0,   78,   38,   39,   40,   41,   42,   43,    0,
-    0,    0,  134,    0,    0,    0,    0,    0,    0,   82,
-   83,    0,   91,   96,   97,   98,   99,  112,    0,  119,
-  108,  129,   70,   72,   71,   73,   75,    0,    0,   45,
-   46,    0,    0,    0,    0,    0,   84,   86,  116,   76,
-   44,  130,  131,  132,  133,  135,
+    0,    0,    0,    0,    0,  113,    0,    0,  117,    0,
+    0,    0,    0,  111,  123,    0,  107,    0,    0,    0,
+    0,    0,    0,    0,    0,   62,   63,   61,    0,    0,
+    0,    0,    0,   58,    0,   64,    0,    0,    0,    0,
+   68,    0,    0,   69,    0,   60,    0,    0,   77,    0,
+   37,    0,    0,    0,    0,    0,    0,   47,   48,   49,
+   50,   51,   52,    0,    0,    0,    0,    0,    0,    0,
+    0,   81,    0,    0,    0,    0,   88,   90,    0,  112,
+   92,   93,   94,   95,   96,    0,    0,    0,    0,   97,
+  102,  103,    0,  115,  116,    0,  119,    0,  120,  122,
+  109,    0,  124,  125,  126,  127,  128,  129,  130,    0,
+   54,   53,   55,   56,   57,   65,   67,   66,    0,    0,
+    0,    0,   59,    0,   74,    0,   78,   38,   39,   40,
+   41,   42,   43,    0,    0,    0,  136,    0,    0,    0,
+    0,    0,    0,   82,   83,    0,   91,   98,   99,  100,
+  101,  114,    0,  121,  110,  131,   70,   72,   71,   73,
+   75,    0,    0,   45,   46,    0,    0,    0,    0,    0,
+   84,   86,  118,   76,   44,  132,  133,  134,  135,  137,
 };
 short bxdgoto[] = {                                      46,
-  162,    0,  115,  116,   47,   48,   49,   50,   51,   52,
+  164,    0,  117,  118,   47,   48,   49,   50,   51,   52,
    53,   54,   55,   56,   57,   58,   59,   60,   61,   62,
    63,   64,   65,   66,   67,   68,   69,   70,   71,   72,
    73,   74,   75,   76,   77,   78,   79,   80,
 };
 short bxsindex[] = {                                    -10,
-    4,   -7, -267,   -5,   -4,   -9, -302, -234,   19,   -6,
- -281, -238, -268,   35,   44, -257, -243, -232, -256, -255,
-   60,   61,   62, -252, -251, -223, -222,    5,   -3,   45,
-   15,    8, -288,   67, -246,   69, -270, -266, -244, -242,
- -271, -241, -289, -271,    0,    0,    0,    0,    0,    0,
+    6,   -7, -269,   -5,   -4,   -9, -302, -233,   19,   -6,
+ -294, -250, -264,   56,   57, -258, -278, -230, -257, -255,
+   62,   63,   64, -252, -251, -223, -222,    4,   -3,   20,
+   15,    5, -290,   69, -246,   71, -265, -231, -244, -243,
+ -279, -242, -291, -279,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,   71,    0,   23, -263,   27,    0,   76,    0,   77,
-    0, -236,   79,   80,   81,   82, -257, -257, -257, -257,
-   83,   84,   85,    0,   -2,   86,    0, -227,   88,    1,
-   89,    0,    0,  -56,    0,   90,   91,   92,   93,   94,
-   95,   96, -217,    0,    0,    0,   98,   99,  100,  101,
-  102,    0,  103,    0,  104,  105, -208, -207,    0, -206,
- -205,    0,  110,    0,    2, -177,    0,  112,    0,  113,
-  114,  115,  116,  117,  118,    0,    0,    0,    0,    0,
-    0,   72, -258,  119, -193, -192, -191, -190,   78,    0,
- -189,  127,  128, -185,    0,    0,  130,    0,    0,    0,
-    0,  131,  132,  133,  134,    0,    0,    0,  135,    0,
-    0, -178,    0,  137,    0,    0,    0, -176,    0,    0,
-    0,    0,    0,    0,    0,  139,    0,    0,    0,    0,
-    0,    0,    0,    0,  140,  141,  142,  143,    0,  144,
-    0, -169,    0,    0,    0,    0,    0,    0,    0, -168,
-  147,  148,    0, -165, -164, -163, -162, -161,  154,    0,
-    0,  155,    0,    0,    0,    0,    0,    0,  156,    0,
-    0,    0,    0,    0,    0,    0,    0,  157,  158,    0,
-    0,  159,  160,  161,  162,  163,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,
+    0,   75,    0,   25, -229,   29,    0,   78,    0,   79,
+    0, -236,   81,   82,   83,   84,   85,   86, -258, -258,
+ -258, -258,   87,   88,   89,    0,   -2,   90,    0, -225,
+   92,    1,   93,    0,    0,  -56,    0,   94,   95,   96,
+   97,   98,   99,  100, -215,    0,    0,    0,  102,  103,
+  104,  105,  106,    0,  107,    0,  108,  109, -206, -205,
+    0, -204, -203,    0,  114,    0,    2, -175,    0,  116,
+    0,  117,  118,  119,  120,  121,  122,    0,    0,    0,
+    0,    0,    0,   76, -227,  123, -191, -190, -189, -188,
+   91,    0, -187,  130,  131, -184,    0,    0,  133,    0,
+    0,    0,    0,    0,    0,  134,  135,  136,  137,    0,
+    0,    0,  138,    0,    0, -176,    0,  141,    0,    0,
+    0, -174,    0,    0,    0,    0,    0,    0,    0,  143,
+    0,    0,    0,    0,    0,    0,    0,    0,  144,  145,
+  146,  147,    0,  148,    0, -167,    0,    0,    0,    0,
+    0,    0,    0, -166,  151,  152,    0, -163, -162, -161,
+ -160, -159,  158,    0,    0,  159,    0,    0,    0,    0,
+    0,    0,  160,    0,    0,    0,    0,    0,    0,    0,
+    0,  161,  162,    0,    0,  163,  164,  165,  166,  167,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
 };
-short bxrindex[] = {                                    174,
+short bxrindex[] = {                                    178,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,   19,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -240,11 +242,9 @@ short bxrindex[] = {                                    174,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,   19,   19,   19,   19,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,  165,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,   19,   19,
+   19,   19,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,  169,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -258,35 +258,37 @@ short bxrindex[] = {                                    174,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
 };
 short bxgindex[] = {                                      0,
-  136,    0,    0,  -35,    0,    0,    0,    0,    0,    0,
+  139,    0,    0,  -43,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,
 };
-#define YYTABLESIZE 358
+#define YYTABLESIZE 335
 short bxtable[] = {                                      45,
-   91,  198,   83,  107,   87,   89,  134,  190,  164,  145,
-  195,  221,   84,   81,  132,  110,  111,  144,  150,  151,
-   85,   93,  152,  153,  142,  172,  173,  146,  104,   94,
-  231,  232,   92,   95,   96,   97,   98,   99,  100,  101,
-  102,  103,  108,  109,  112,  165,  166,  167,  168,  117,
-  118,  119,  120,  113,  139,  156,  157,  158,  159,  160,
-  161,  182,  183,  184,  185,  121,  114,  122,  123,  124,
-  125,  126,  127,  128,  129,  130,  147,  148,  149,  154,
-  170,  155,  163,  171,  174,  175,  176,  177,  178,  179,
-  180,  181,  186,  187,  188,  191,  192,  193,  196,  199,
-  200,  201,  202,  203,  204,  205,  206,  207,  208,  209,
+   91,  202,   83,  109,   87,   89,  136,  194,  166,  147,
+  199,  225,   84,  134,  146,   81,  119,  120,  121,  122,
+   85,  112,  113,   93,  144,  152,  153,  148,  106,  141,
+   94,  110,   92,  111,   95,   96,   97,   98,   99,  100,
+  101,  102,  103,  104,  105,  167,  168,  169,  170,  158,
+  159,  160,  161,  162,  163,  186,  187,  188,  189,  154,
+  155,  174,  175,  235,  236,  114,  115,  116,  124,  123,
+  125,  126,  127,  128,  129,  130,  131,  132,  149,  150,
+  151,  156,  157,  165,  172,  173,  176,  177,  178,  179,
+  180,  181,  182,  183,  184,  185,  190,  191,  192,  195,
+  196,  197,  200,  203,  204,  205,  206,  207,  208,  209,
   210,  211,  212,  213,  214,  215,  216,  217,  218,  219,
-  222,  223,  224,  225,  226,  227,  228,  229,  233,  230,
-  234,  235,  236,  237,  239,  238,  240,  241,  242,  243,
-  244,  245,  246,  247,  248,  249,  250,  251,  252,  253,
+  220,  221,  222,  223,  226,  227,  228,  229,  230,  231,
+  232,  233,  237,  234,  238,  239,  240,  241,  243,  244,
+  245,  246,  247,  248,  249,  250,  251,  252,  242,  253,
   254,  255,  256,  257,  258,  259,  260,  261,  262,  263,
   264,  265,  266,  267,  268,  269,  270,  271,  272,  273,
-  274,  275,  276,   35,  106,    0,    0,    0,    0,  169,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+  274,  275,  276,  277,  278,  279,  280,   35,  108,    0,
+    0,    0,  171,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -294,37 +296,35 @@ short bxtable[] = {                                      45,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    1,    2,    0,    3,
     0,    4,    5,    6,    7,    8,    9,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,   10,  197,   11,    0,
-   12,  105,   13,    0,    0,   14,   15,    0,    0,    0,
-   16,   17,    0,    0,    0,    0,   18,    0,   19,   20,
-   21,   22,   23,   24,   25,   26,   27,   28,   29,   30,
-   31,  135,  131,   32,   33,  143,   34,   35,   36,   37,
-   38,   39,   40,    0,   90,   41,   82,  106,   86,   88,
-  133,  189,   42,   43,  194,  220,  140,  141,   44,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,  136,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,  137,  138,
+    0,    0,    0,    0,    0,    0,    0,    0,   10,  201,
+   11,    0,   12,  107,   13,    0,  137,   14,   15,    0,
+    0,    0,   16,   17,    0,    0,    0,    0,   18,    0,
+   19,   20,   21,   22,   23,   24,   25,   26,   27,   28,
+   29,   30,   31,  133,  145,   32,   33,    0,   34,   35,
+   36,   37,   38,   39,   40,  138,   90,   41,   82,  108,
+   86,   88,  135,  193,   42,   43,  198,  224,  142,  143,
+   44,    0,    0,  139,  140,
 };
 short bxcheck[] = {                                      10,
-   10,   58,   10,   10,   10,   10,   10,   10,  298,  298,
-   10,   10,  280,   10,   10,  284,  285,   10,  289,  290,
-  288,  324,  289,  290,   10,  289,  290,  316,   10,  264,
-  289,  290,   42,  268,  269,  270,  271,  272,  273,  274,
-  275,  276,  324,  282,   10,  335,  336,  337,  338,  293,
-  294,  295,  296,   10,   10,  327,  328,  329,  330,  331,
-  332,   97,   98,   99,  100,  298,  324,  324,  324,   10,
-   10,   10,  325,  325,  298,  298,   10,  324,   10,  324,
-   10,  324,  324,   61,   58,   10,   10,  324,   10,   10,
-   10,   10,   10,   10,   10,   10,  324,   10,   10,   10,
-   10,   10,   10,   10,   10,   10,  324,   10,   10,   10,
-   10,   10,   10,   10,   10,  324,  324,  324,  324,   10,
-  298,   10,   10,   10,   10,   10,   10,   10,   10,   58,
-  324,  324,  324,  324,  324,   58,   10,   10,  324,   10,
-   10,   10,   10,   10,   10,  324,   10,  324,   10,   10,
-   10,   10,   10,   10,  324,  324,   10,   10,  324,  324,
-  324,  324,  324,   10,   10,   10,   10,   10,   10,   10,
-   10,   10,   10,    0,   10,   -1,   -1,   -1,   -1,   44,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+   10,   58,   10,   10,   10,   10,   10,   10,  300,  300,
+   10,   10,  282,   10,   10,   10,  295,  296,  297,  298,
+  290,  286,  287,  326,   10,  291,  292,  318,   10,   10,
+  264,  326,   42,  284,  268,  269,  270,  271,  272,  273,
+  274,  275,  276,  277,  278,  337,  338,  339,  340,  329,
+  330,  331,  332,  333,  334,   99,  100,  101,  102,  291,
+  292,  291,  292,  291,  292,   10,   10,  326,  326,  300,
+  326,   10,   10,   10,  327,  327,  300,  300,   10,  326,
+   10,  326,  326,  326,   10,   61,   58,   10,   10,  326,
+   10,   10,   10,   10,   10,   10,   10,   10,   10,   10,
+  326,   10,   10,   10,   10,   10,   10,   10,   10,   10,
+  326,   10,   10,   10,   10,   10,   10,   10,   10,  326,
+  326,  326,  326,   10,  300,   10,   10,   10,   10,   10,
+   10,   10,   10,   58,  326,  326,  326,  326,  326,   10,
+   10,  326,   10,   10,   10,   10,   10,   10,   58,  326,
+   10,  326,   10,   10,   10,   10,   10,   10,  326,  326,
+   10,   10,  326,  326,  326,  326,  326,   10,   10,   10,
+   10,   10,   10,   10,   10,   10,   10,    0,   10,   -1,
+   -1,   -1,   44,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
@@ -332,22 +332,20 @@ short bxcheck[] = {                                      10,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,  257,  258,   -1,  260,
    -1,  262,  263,  264,  265,  266,  267,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,  277,  324,  279,   -1,
-  281,  278,  283,   -1,   -1,  286,  287,   -1,   -1,   -1,
-  291,  292,   -1,   -1,   -1,   -1,  297,   -1,  299,  300,
+   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,  279,  326,
+  281,   -1,  283,  280,  285,   -1,  257,  288,  289,   -1,
+   -1,   -1,  293,  294,   -1,   -1,   -1,   -1,  299,   -1,
   301,  302,  303,  304,  305,  306,  307,  308,  309,  310,
-  311,  257,  298,  314,  315,  298,  317,  318,  319,  320,
-  321,  322,  323,   -1,  324,  326,  324,  324,  324,  324,
-  324,  324,  333,  334,  324,  324,  312,  313,  339,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,  294,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,  312,  313,
+  311,  312,  313,  300,  300,  316,  317,   -1,  319,  320,
+  321,  322,  323,  324,  325,  296,  326,  328,  326,  326,
+  326,  326,  326,  326,  335,  336,  326,  326,  314,  315,
+  341,   -1,   -1,  314,  315,
 };
 #define YYFINAL 46
 #ifndef YYDEBUG
 #define YYDEBUG 0
 #endif
-#define YYMAXTOKEN 339
+#define YYMAXTOKEN 341
 #if YYDEBUG
 char *bxname[] = {
 "end-of-file",0,0,0,0,0,0,0,0,0,"'\\n'",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -360,25 +358,25 @@ char *bxname[] = {
 "BX_TOKEN_CONTINUE","BX_TOKEN_STEPN","BX_TOKEN_NEXT_STEP","BX_TOKEN_SET",
 "BX_TOKEN_DEBUGGER","BX_TOKEN_VBREAKPOINT","BX_TOKEN_LBREAKPOINT",
 "BX_TOKEN_PBREAKPOINT","BX_TOKEN_DEL_BREAKPOINT","BX_TOKEN_INFO",
-"BX_TOKEN_QUIT","BX_TOKEN_PROGRAM","BX_TOKEN_REGISTERS","BX_TOKEN_IDT",
-"BX_TOKEN_GDT","BX_TOKEN_LDT","BX_TOKEN_TSS","BX_TOKEN_DIRTY","BX_TOKEN_LINUX",
-"BX_TOKEN_CONTROL_REGS","BX_TOKEN_EXAMINE","BX_TOKEN_XFORMAT",
-"BX_TOKEN_SETPMEM","BX_TOKEN_SYMBOLNAME","BX_TOKEN_QUERY","BX_TOKEN_PENDING",
-"BX_TOKEN_TAKE","BX_TOKEN_DMA","BX_TOKEN_IRQ","BX_TOKEN_DUMP_CPU",
-"BX_TOKEN_SET_CPU","BX_TOKEN_DIS","BX_TOKEN_ON","BX_TOKEN_OFF",
-"BX_TOKEN_DISASSEMBLE","BX_TOKEN_INSTRUMENT","BX_TOKEN_START","BX_TOKEN_STOP",
-"BX_TOKEN_RESET","BX_TOKEN_PRINT","BX_TOKEN_LOADER","BX_TOKEN_STRING",
-"BX_TOKEN_DOIT","BX_TOKEN_CRC","BX_TOKEN_TRACEON","BX_TOKEN_TRACEOFF",
-"BX_TOKEN_PTIME","BX_TOKEN_TIMEBP_ABSOLUTE","BX_TOKEN_TIMEBP","BX_TOKEN_RECORD",
-"BX_TOKEN_PLAYBACK","BX_TOKEN_MODEBP","BX_TOKEN_PRINT_STACK","BX_TOKEN_WATCH",
-"BX_TOKEN_UNWATCH","BX_TOKEN_READ","BX_TOKEN_WRITE","BX_TOKEN_SHOW",
-"BX_TOKEN_SYMBOL","BX_TOKEN_GLOBAL","BX_TOKEN_WHERE","BX_TOKEN_PRINT_STRING",
-"BX_TOKEN_DIFF_MEMORY","BX_TOKEN_SYNC_MEMORY","BX_TOKEN_SYNC_CPU",
-"BX_TOKEN_FAST_FORWARD","BX_TOKEN_PHY_2_LOG","BX_TOKEN_NUMERIC",
-"BX_TOKEN_LONG_NUMERIC","BX_TOKEN_INFO_ADDRESS","BX_TOKEN_CS","BX_TOKEN_ES",
-"BX_TOKEN_SS","BX_TOKEN_DS","BX_TOKEN_FS","BX_TOKEN_GS","BX_TOKEN_ALWAYS_CHECK",
-"BX_TOKEN_MATHS","BX_TOKEN_ADD","BX_TOKEN_SUB","BX_TOKEN_MUL","BX_TOKEN_DIV",
-"BX_TOKEN_V2L",
+"BX_TOKEN_QUIT","BX_TOKEN_PROGRAM","BX_TOKEN_REGISTERS","BX_TOKEN_FPU",
+"BX_TOKEN_ALL","BX_TOKEN_IDT","BX_TOKEN_GDT","BX_TOKEN_LDT","BX_TOKEN_TSS",
+"BX_TOKEN_DIRTY","BX_TOKEN_LINUX","BX_TOKEN_CONTROL_REGS","BX_TOKEN_EXAMINE",
+"BX_TOKEN_XFORMAT","BX_TOKEN_SETPMEM","BX_TOKEN_SYMBOLNAME","BX_TOKEN_QUERY",
+"BX_TOKEN_PENDING","BX_TOKEN_TAKE","BX_TOKEN_DMA","BX_TOKEN_IRQ",
+"BX_TOKEN_DUMP_CPU","BX_TOKEN_SET_CPU","BX_TOKEN_DIS","BX_TOKEN_ON",
+"BX_TOKEN_OFF","BX_TOKEN_DISASSEMBLE","BX_TOKEN_INSTRUMENT","BX_TOKEN_START",
+"BX_TOKEN_STOP","BX_TOKEN_RESET","BX_TOKEN_PRINT","BX_TOKEN_LOADER",
+"BX_TOKEN_STRING","BX_TOKEN_DOIT","BX_TOKEN_CRC","BX_TOKEN_TRACEON",
+"BX_TOKEN_TRACEOFF","BX_TOKEN_PTIME","BX_TOKEN_TIMEBP_ABSOLUTE",
+"BX_TOKEN_TIMEBP","BX_TOKEN_RECORD","BX_TOKEN_PLAYBACK","BX_TOKEN_MODEBP",
+"BX_TOKEN_PRINT_STACK","BX_TOKEN_WATCH","BX_TOKEN_UNWATCH","BX_TOKEN_READ",
+"BX_TOKEN_WRITE","BX_TOKEN_SHOW","BX_TOKEN_SYMBOL","BX_TOKEN_GLOBAL",
+"BX_TOKEN_WHERE","BX_TOKEN_PRINT_STRING","BX_TOKEN_DIFF_MEMORY",
+"BX_TOKEN_SYNC_MEMORY","BX_TOKEN_SYNC_CPU","BX_TOKEN_FAST_FORWARD",
+"BX_TOKEN_PHY_2_LOG","BX_TOKEN_NUMERIC","BX_TOKEN_LONG_NUMERIC",
+"BX_TOKEN_INFO_ADDRESS","BX_TOKEN_CS","BX_TOKEN_ES","BX_TOKEN_SS","BX_TOKEN_DS",
+"BX_TOKEN_FS","BX_TOKEN_GS","BX_TOKEN_ALWAYS_CHECK","BX_TOKEN_MATHS",
+"BX_TOKEN_ADD","BX_TOKEN_SUB","BX_TOKEN_MUL","BX_TOKEN_DIV","BX_TOKEN_V2L",
 };
 char *bxrule[] = {
 "$accept : command",
@@ -476,6 +474,8 @@ char *bxrule[] = {
 "info_command : BX_TOKEN_INFO BX_TOKEN_PBREAKPOINT '\\n'",
 "info_command : BX_TOKEN_INFO BX_TOKEN_PROGRAM '\\n'",
 "info_command : BX_TOKEN_INFO BX_TOKEN_REGISTERS '\\n'",
+"info_command : BX_TOKEN_INFO BX_TOKEN_FPU '\\n'",
+"info_command : BX_TOKEN_INFO BX_TOKEN_ALL '\\n'",
 "info_command : BX_TOKEN_INFO BX_TOKEN_DIRTY '\\n'",
 "info_command : BX_TOKEN_INFO BX_TOKEN_IDT optional_numeric_range '\\n'",
 "info_command : BX_TOKEN_INFO BX_TOKEN_GDT optional_numeric_range '\\n'",
@@ -682,191 +682,191 @@ yyreduce:
     switch (yyn)
     {
 case 36:
-#line 146 "parser.y"
+#line 148 "parser.y"
 {
       }
 break;
 case 37:
-#line 152 "parser.y"
+#line 154 "parser.y"
 {
 		bx_dbg_diff_memory();
 		free(yyvsp[-1].sval);
 	}
 break;
 case 38:
-#line 157 "parser.y"
+#line 159 "parser.y"
 {
 		bx_dbg_sync_memory(1);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 39:
-#line 162 "parser.y"
+#line 164 "parser.y"
 {
 		bx_dbg_sync_memory(0);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 40:
-#line 167 "parser.y"
+#line 169 "parser.y"
 {
 		bx_dbg_sync_cpu(1);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 41:
-#line 172 "parser.y"
+#line 174 "parser.y"
 {
 		bx_dbg_sync_cpu(0);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 42:
-#line 177 "parser.y"
+#line 179 "parser.y"
 {
 		free(yyvsp[-2].sval);
 		bx_dbg_fast_forward(yyvsp[-1].uval);
 	}
 break;
 case 43:
-#line 182 "parser.y"
+#line 184 "parser.y"
 {
 	}
 break;
 case 44:
-#line 185 "parser.y"
+#line 187 "parser.y"
 {
 		free(yyvsp[-4].sval);
 		bx_dbg_info_address(yyvsp[-3].uval, yyvsp[-1].uval);
         }
 break;
 case 45:
-#line 190 "parser.y"
+#line 192 "parser.y"
 {
         }
 break;
 case 46:
-#line 193 "parser.y"
+#line 195 "parser.y"
 {
         }
 break;
 case 47:
-#line 198 "parser.y"
+#line 200 "parser.y"
 { yyval.uval = 1; }
 break;
 case 48:
-#line 199 "parser.y"
+#line 201 "parser.y"
 { yyval.uval = 0; }
 break;
 case 49:
-#line 200 "parser.y"
+#line 202 "parser.y"
 { yyval.uval = 2; }
 break;
 case 50:
-#line 201 "parser.y"
+#line 203 "parser.y"
 { yyval.uval = 3; }
 break;
 case 51:
-#line 202 "parser.y"
+#line 204 "parser.y"
 { yyval.uval = 4; }
 break;
 case 52:
-#line 203 "parser.y"
+#line 205 "parser.y"
 { yyval.uval = 5; }
 break;
 case 53:
-#line 208 "parser.y"
+#line 210 "parser.y"
 {
         bx_dbg_timebp_command(0, yyvsp[-1].ulval);
 	free(yyvsp[-2].sval);
 	}
 break;
 case 54:
-#line 213 "parser.y"
+#line 215 "parser.y"
 {
         bx_dbg_timebp_command(1, yyvsp[-1].ulval);
 	free(yyvsp[-2].sval);
 	}
 break;
 case 55:
-#line 221 "parser.y"
+#line 223 "parser.y"
 {
           bx_dbg_record_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 56:
-#line 229 "parser.y"
+#line 231 "parser.y"
 {
           bx_dbg_playback_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 57:
-#line 237 "parser.y"
+#line 239 "parser.y"
 {
           bx_dbg_modebp_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 58:
-#line 242 "parser.y"
+#line 244 "parser.y"
 {
           bx_dbg_modebp_command(0);
           free(yyvsp[-1].sval);
           }
 break;
 case 59:
-#line 250 "parser.y"
+#line 252 "parser.y"
 {
           bx_dbg_show_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 60:
-#line 255 "parser.y"
+#line 257 "parser.y"
 {
           bx_dbg_show_command(0);
           free(yyvsp[-1].sval);
           }
 break;
 case 61:
-#line 263 "parser.y"
+#line 265 "parser.y"
 {
         bx_dbg_ptime_command();
         free(yyvsp[-1].sval);
 	}
 break;
 case 62:
-#line 271 "parser.y"
+#line 273 "parser.y"
 {
         bx_dbg_trace_on_command();
         free(yyvsp[-1].sval);
 	}
 break;
 case 63:
-#line 279 "parser.y"
+#line 281 "parser.y"
 {
         bx_dbg_trace_off_command();
         free(yyvsp[-1].sval);
 	}
 break;
 case 64:
-#line 287 "parser.y"
+#line 289 "parser.y"
 {
           bx_dbg_print_stack_command(16);
           free(yyvsp[-1].sval);
 	  }
 break;
 case 65:
-#line 292 "parser.y"
+#line 294 "parser.y"
 {
           bx_dbg_print_stack_command(yyvsp[-1].uval);
           free(yyvsp[-2].sval);
 	  }
 break;
 case 66:
-#line 300 "parser.y"
+#line 302 "parser.y"
 {
           watchpoint_continue = 0;
 	  fprintf(stderr, "Will stop on watch points\n");
@@ -874,7 +874,7 @@ case 66:
           }
 break;
 case 67:
-#line 306 "parser.y"
+#line 308 "parser.y"
 {
           watchpoint_continue = 1;
           fprintf(stderr, "Will not stop on watch points (they will still be logged)\n");
@@ -882,292 +882,306 @@ case 67:
           }
 break;
 case 68:
-#line 312 "parser.y"
+#line 314 "parser.y"
 {
           bx_dbg_watch(-1, 0);
           free(yyvsp[-1].sval);
           }
 break;
 case 69:
-#line 317 "parser.y"
+#line 319 "parser.y"
 {
           bx_dbg_unwatch(-1, 0);
           free(yyvsp[-1].sval);
           }
 break;
 case 70:
-#line 322 "parser.y"
+#line 324 "parser.y"
 {
           bx_dbg_watch(1, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 71:
-#line 327 "parser.y"
+#line 329 "parser.y"
 {
           bx_dbg_unwatch(1, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 72:
-#line 332 "parser.y"
+#line 334 "parser.y"
 {
           bx_dbg_watch(0, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 73:
-#line 337 "parser.y"
+#line 339 "parser.y"
 {
           bx_dbg_unwatch(0, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 74:
-#line 345 "parser.y"
+#line 347 "parser.y"
 {
 	bx_dbg_symbol_command(yyvsp[-1].sval, 0, 0);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 75:
-#line 350 "parser.y"
+#line 352 "parser.y"
 {
 	bx_dbg_symbol_command(yyvsp[-2].sval, 0, yyvsp[-1].uval);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 76:
-#line 355 "parser.y"
+#line 357 "parser.y"
 {
 	bx_dbg_symbol_command(yyvsp[-2].sval, 1, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 77:
-#line 363 "parser.y"
+#line 365 "parser.y"
 {
         bx_dbg_where_command();
         free(yyvsp[-1].sval);
         }
 break;
 case 78:
-#line 371 "parser.y"
+#line 373 "parser.y"
 {
         bx_dbg_print_string_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 79:
-#line 379 "parser.y"
+#line 381 "parser.y"
 {
         bx_dbg_continue_command();
         free(yyvsp[-1].sval);
         }
 break;
 case 80:
-#line 387 "parser.y"
+#line 389 "parser.y"
 {
         bx_dbg_stepN_command(1);
         free(yyvsp[-1].sval);
         }
 break;
 case 81:
-#line 392 "parser.y"
+#line 394 "parser.y"
 {
         bx_dbg_stepN_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 82:
-#line 400 "parser.y"
+#line 402 "parser.y"
 {
         bx_dbg_set_command(yyvsp[-3].sval, yyvsp[-2].sval, yyvsp[-1].sval);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 83:
-#line 405 "parser.y"
+#line 407 "parser.y"
 {
         bx_dbg_set_command(yyvsp[-3].sval, yyvsp[-2].sval, yyvsp[-1].sval);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 84:
-#line 410 "parser.y"
+#line 412 "parser.y"
 {
         bx_dbg_set_symbol_command(yyvsp[-3].sval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 85:
-#line 418 "parser.y"
+#line 420 "parser.y"
 {
         bx_dbg_vbreakpoint_command(0, 0, 0);
         free(yyvsp[-1].sval);
         }
 break;
 case 86:
-#line 423 "parser.y"
+#line 425 "parser.y"
 {
         bx_dbg_vbreakpoint_command(1, yyvsp[-3].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval);
         }
 break;
 case 87:
-#line 428 "parser.y"
+#line 430 "parser.y"
 {
         bx_dbg_lbreakpoint_command(0, 0);
         free(yyvsp[-1].sval);
         }
 break;
 case 88:
-#line 433 "parser.y"
+#line 435 "parser.y"
 {
         bx_dbg_lbreakpoint_command(1, yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 89:
-#line 438 "parser.y"
+#line 440 "parser.y"
 {
         bx_dbg_pbreakpoint_command(0, 0);
         free(yyvsp[-1].sval);
         }
 break;
 case 90:
-#line 443 "parser.y"
+#line 445 "parser.y"
 {
         bx_dbg_pbreakpoint_command(1, yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 91:
-#line 448 "parser.y"
+#line 450 "parser.y"
 {
         bx_dbg_pbreakpoint_command(1, yyvsp[-1].uval);
         free(yyvsp[-3].sval);
         }
 break;
 case 92:
-#line 456 "parser.y"
+#line 458 "parser.y"
 {
         bx_dbg_info_bpoints_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 93:
-#line 461 "parser.y"
+#line 463 "parser.y"
 {
         bx_dbg_info_program_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 94:
-#line 466 "parser.y"
+#line 468 "parser.y"
 {
-        bx_dbg_info_registers_command();
+        bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 95:
-#line 471 "parser.y"
+#line 473 "parser.y"
+{
+        bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
+        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+        }
+break;
+case 96:
+#line 478 "parser.y"
+{
+        bx_dbg_info_registers_command(BX_INFO_CPU_REGS | BX_INFO_FPU_REGS);
+        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+        }
+break;
+case 97:
+#line 483 "parser.y"
 {
         bx_dbg_info_dirty_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
-case 96:
-#line 476 "parser.y"
+case 98:
+#line 488 "parser.y"
 {
         bx_dbg_info_idt_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
-case 97:
-#line 481 "parser.y"
+case 99:
+#line 493 "parser.y"
 {
         bx_dbg_info_gdt_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
-case 98:
-#line 486 "parser.y"
+case 100:
+#line 498 "parser.y"
 {
         bx_dbg_info_ldt_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
-case 99:
-#line 491 "parser.y"
+case 101:
+#line 503 "parser.y"
 {
         bx_dbg_info_tss_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
-case 100:
-#line 496 "parser.y"
+case 102:
+#line 508 "parser.y"
 {
         bx_dbg_info_linux_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
-case 101:
-#line 501 "parser.y"
+case 103:
+#line 513 "parser.y"
 {
         bx_dbg_info_control_regs_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
-case 102:
-#line 508 "parser.y"
+case 104:
+#line 520 "parser.y"
 { yyval.uval = EMPTY_ARG; }
 break;
-case 104:
-#line 512 "parser.y"
+case 106:
+#line 524 "parser.y"
 { yyval.uval_range = make_num_range (EMPTY_ARG, EMPTY_ARG); }
 break;
-case 106:
-#line 517 "parser.y"
+case 108:
+#line 529 "parser.y"
 {
     yyval.uval_range = make_num_range (yyvsp[0].uval, yyvsp[0].uval);
-  }
-break;
-case 107:
-#line 522 "parser.y"
-{
-    yyval.uval_range = make_num_range (yyvsp[-1].uval, yyvsp[0].uval);
-  }
-break;
-case 108:
-#line 527 "parser.y"
-{
-    yyval.uval_range = make_num_range (yyvsp[-2].uval, yyvsp[0].uval);
   }
 break;
 case 109:
 #line 534 "parser.y"
 {
+    yyval.uval_range = make_num_range (yyvsp[-1].uval, yyvsp[0].uval);
+  }
+break;
+case 110:
+#line 539 "parser.y"
+{
+    yyval.uval_range = make_num_range (yyvsp[-2].uval, yyvsp[0].uval);
+  }
+break;
+case 111:
+#line 546 "parser.y"
+{
         bx_dbg_dump_cpu_command();
         free(yyvsp[-1].sval);
         }
 break;
-case 110:
-#line 542 "parser.y"
+case 112:
+#line 554 "parser.y"
 {
         bx_dbg_del_breakpoint_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
-case 111:
-#line 550 "parser.y"
+case 113:
+#line 562 "parser.y"
 {
 	  bx_dbg_quit_command();
 	  free(yyvsp[-1].sval);
         }
 break;
-case 112:
-#line 559 "parser.y"
+case 114:
+#line 571 "parser.y"
 {
         bx_dbg_examine_command(yyvsp[-3].sval, yyvsp[-2].sval,1, yyvsp[-1].uval,1, 0);
 #if BX_NUM_SIMULATORS >= 2
@@ -1176,8 +1190,8 @@ case 112:
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
-case 113:
-#line 567 "parser.y"
+case 115:
+#line 579 "parser.y"
 {
         bx_dbg_examine_command(yyvsp[-2].sval, yyvsp[-1].sval,1, 0,0, 0);
 #if BX_NUM_SIMULATORS >= 2
@@ -1186,8 +1200,8 @@ case 113:
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
-case 114:
-#line 575 "parser.y"
+case 116:
+#line 587 "parser.y"
 {
         /*FIXME HanishKVC This method of hunting thro all the */
         /*      simulators may be better than using 2 calls if */
@@ -1201,8 +1215,8 @@ case 114:
         free(yyvsp[-2].sval);
         }
 break;
-case 115:
-#line 588 "parser.y"
+case 117:
+#line 600 "parser.y"
 {
         /*FIXME HanishKVC This method of hunting thro all the */
         /*      simulators may be better than using 2 calls if */
@@ -1216,147 +1230,147 @@ case 115:
         free(yyvsp[-1].sval);
         }
 break;
-case 116:
-#line 604 "parser.y"
+case 118:
+#line 616 "parser.y"
 {
         bx_dbg_setpmem_command(yyvsp[-3].uval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval);
         }
 break;
-case 117:
-#line 612 "parser.y"
+case 119:
+#line 624 "parser.y"
 {
         bx_dbg_query_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
-case 118:
-#line 620 "parser.y"
-{
-        bx_dbg_take_command(yyvsp[-1].sval, 1);
-        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
-        }
-break;
-case 119:
-#line 625 "parser.y"
-{
-        bx_dbg_take_command(yyvsp[-2].sval, yyvsp[-1].uval);
-        free(yyvsp[-3].sval); free(yyvsp[-2].sval);
-        }
-break;
 case 120:
-#line 630 "parser.y"
+#line 632 "parser.y"
 {
         bx_dbg_take_command(yyvsp[-1].sval, 1);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 121:
-#line 638 "parser.y"
+#line 637 "parser.y"
+{
+        bx_dbg_take_command(yyvsp[-2].sval, yyvsp[-1].uval);
+        free(yyvsp[-3].sval); free(yyvsp[-2].sval);
+        }
+break;
+case 122:
+#line 642 "parser.y"
+{
+        bx_dbg_take_command(yyvsp[-1].sval, 1);
+        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+        }
+break;
+case 123:
+#line 650 "parser.y"
 {
         bx_dbg_set_cpu_command();
         free(yyvsp[-1].sval);
         }
 break;
-case 122:
-#line 646 "parser.y"
+case 124:
+#line 658 "parser.y"
 {
         bx_dbg_disassemble_command(yyvsp[-1].uval_range);
         free(yyvsp[-2].sval);
         }
 break;
-case 123:
-#line 654 "parser.y"
-{
-        bx_dbg_instrument_command(yyvsp[-1].sval);
-        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
-        }
-break;
-case 124:
-#line 659 "parser.y"
-{
-        bx_dbg_instrument_command(yyvsp[-1].sval);
-        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
-        }
-break;
 case 125:
-#line 664 "parser.y"
+#line 666 "parser.y"
 {
         bx_dbg_instrument_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 126:
-#line 669 "parser.y"
+#line 671 "parser.y"
 {
         bx_dbg_instrument_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 127:
-#line 677 "parser.y"
+#line 676 "parser.y"
+{
+        bx_dbg_instrument_command(yyvsp[-1].sval);
+        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+        }
+break;
+case 128:
+#line 681 "parser.y"
+{
+        bx_dbg_instrument_command(yyvsp[-1].sval);
+        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+        }
+break;
+case 129:
+#line 689 "parser.y"
 {
         bx_dbg_loader_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
-case 128:
-#line 685 "parser.y"
+case 130:
+#line 697 "parser.y"
 {
         bx_dbg_doit_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
-case 129:
-#line 693 "parser.y"
+case 131:
+#line 705 "parser.y"
 {
         bx_dbg_crc_command(yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-3].sval);
         }
 break;
-case 130:
-#line 701 "parser.y"
-{
-        bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
-        free(yyvsp[-4].sval); free(yyvsp[-3].sval);
-        }
-break;
-case 131:
-#line 706 "parser.y"
-{
-        bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
-        free(yyvsp[-4].sval); free(yyvsp[-3].sval);
-        }
-break;
 case 132:
-#line 711 "parser.y"
+#line 713 "parser.y"
 {
         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 133:
-#line 716 "parser.y"
+#line 718 "parser.y"
 {
         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 134:
-#line 721 "parser.y"
+#line 723 "parser.y"
 {
-        bx_dbg_maths_expression_command(yyvsp[-1].sval);
-        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+        bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
+        free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 135:
 #line 728 "parser.y"
 {
+        bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
+        free(yyvsp[-4].sval); free(yyvsp[-3].sval);
+        }
+break;
+case 136:
+#line 733 "parser.y"
+{
+        bx_dbg_maths_expression_command(yyvsp[-1].sval);
+        free(yyvsp[-2].sval); free(yyvsp[-1].sval);
+        }
+break;
+case 137:
+#line 740 "parser.y"
+{
         bx_dbg_v2l_command(yyvsp[-3].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval);
         }
 break;
-#line 1360 "y.tab.c"
+#line 1374 "y.tab.c"
     }
     yyssp -= yym;
     yystate = *yyssp;

@@ -105,7 +105,9 @@ void bx_dbg_pbreakpoint_command(Boolean specific, Bit32u paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
-void bx_dbg_info_registers_command(void);
+#define BX_INFO_CPU_REGS 1   /* choices for bx_dbg_info_registers_command */
+#define BX_INFO_FPU_REGS 2
+void bx_dbg_info_registers_command(int); 
 void bx_dbg_info_dirty_command(void);
 void bx_dbg_info_idt_command(bx_num_range);
 void bx_dbg_info_gdt_command(bx_num_range);

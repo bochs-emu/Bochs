@@ -1208,6 +1208,7 @@ public: // for now...
 
   BX_SMF void fpu_execute(BxInstruction_t *i);
   BX_SMF void fpu_init(void);
+  BX_SMF void fpu_print_regs (void);
 
   BX_SMF void CMPXCHG_XBTS(BxInstruction_t *);
   BX_SMF void CMPXCHG_IBTS(BxInstruction_t *);
