@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.14 2003-10-09 19:05:13 sshwarts Exp $
+// $Id: instrument.h,v 1.15 2005-03-17 20:50:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -112,6 +112,8 @@ void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned l
 void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
 void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
 
+void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
+
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)            bx_instr_init(cpu_id)
 #  define BX_INSTR_SHUTDOWN(cpu_id)        bx_instr_shutdown(cpu_id)
@@ -162,9 +164,9 @@ void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
                        bx_instr_prefetch_hint(cpu_id, what, seg, offset)
 
 /* execution */
-#  define BX_INSTR_BEFORE_EXECUTION(cpu_id)             bx_instr_before_execution(cpu_id)
-#  define BX_INSTR_AFTER_EXECUTION(cpu_id)              bx_instr_after_execution(cpu_id)
-#  define BX_INSTR_REPEAT_ITERATION(cpu_id)             bx_instr_repeat_iteration(cpu_id)
+#  define BX_INSTR_BEFORE_EXECUTION(cpu_id, i)          bx_instr_before_execution(cpu_id, i)
+#  define BX_INSTR_AFTER_EXECUTION(cpu_id, i)           bx_instr_after_execution(cpu_id, i)
+#  define BX_INSTR_REPEAT_ITERATION(cpu_id, i)          bx_instr_repeat_iteration(cpu_id, i)
 
 /* memory access */
 #  define BX_INSTR_LIN_READ(cpu_id, lin, phy, len)      bx_instr_lin_read(cpu_id, lin, phy, len)
@@ -182,6 +184,9 @@ void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
 #  define BX_INSTR_INP2(addr, len, val)         bx_instr_inp2(addr, len, val)
 #  define BX_INSTR_OUTP(addr, len)              bx_instr_outp(addr, len)
 #  define BX_INSTR_OUTP2(addr, len, val)        bx_instr_outp2(addr, len, val)
+
+/* wrmsr callback */
+#  define BX_INSTR_WRMSR(cpu_id, addr, value)           bx_instr_wrmsr(cpu_id, addr, value)
 
 #else   
 
@@ -232,9 +237,9 @@ void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 /* execution */
-#  define BX_INSTR_BEFORE_EXECUTION(cpu_id)
-#  define BX_INSTR_AFTER_EXECUTION(cpu_id)
-#  define BX_INSTR_REPEAT_ITERATION(cpu_id)
+#  define BX_INSTR_BEFORE_EXECUTION(cpu_id, i)
+#  define BX_INSTR_AFTER_EXECUTION(cpu_id, i)
+#  define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
 /* memory access */
 #  define BX_INSTR_LIN_READ(cpu_id, lin, phy, len)
@@ -252,5 +257,8 @@ void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
 #  define BX_INSTR_INP2(addr, len, val)
 #  define BX_INSTR_OUTP(addr, len)
 #  define BX_INSTR_OUTP2(addr, len, val)
+
+/* wrmsr callback */
+#  define BX_INSTR_WRMSR(cpu_id, addr, value)
 
 #endif  

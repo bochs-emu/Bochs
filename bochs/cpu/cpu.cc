@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.100 2005-03-10 21:22:15 sshwarts Exp $
+// $Id: cpu.cc,v 1.101 2005-03-17 20:50:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -311,7 +311,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 #endif
 
   // decoding instruction compeleted -> continue with execution
-  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
+  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
 
     if ( !(i->repUsedL() && i->repeatableL()) ) {
       // non repeating instruction
@@ -320,7 +320,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
 
-      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID);
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
     }
     else {
@@ -392,7 +392,7 @@ repeat_loop:
       }
       // shouldn't get here from above
 repeat_not_done:
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -410,8 +410,8 @@ repeat_done:
       RIP += i->ilen();
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
-      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID);
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
     }
 

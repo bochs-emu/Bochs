@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.99 2005-03-15 19:00:04 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.100 2005-03-17 20:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1680,6 +1680,8 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
     BX_INFO(("WDMSR: CPL != 0"));
     goto do_exception;
   }
+
+  BX_INSTR_WRMSR(BX_CPU_ID, ECX, ((Bit64u) EDX << 32) + EAX);
 
   /* ECX has the MSR to write to */
   switch(ECX) {

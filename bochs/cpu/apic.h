@@ -157,7 +157,7 @@ public:
   void service_local_apic ();
   void print_status ();
   virtual bx_bool match_logical_addr (Bit8u address);
-  virtual bx_bool is_local_apic () const { return true; }
+  virtual bx_bool is_local_apic () const { return 1; }
   virtual bx_apic_type_t get_type () { return APIC_TYPE_LOCAL_APIC; }
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);

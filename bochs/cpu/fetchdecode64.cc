@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.72 2005-03-01 21:44:01 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.73 2005-03-17 20:50:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,19 +30,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_X86_64
-
-#if 0
-// KPL.  A number of cases are testing field values after they have
-// been 16-register extended, but should be testing the pre-extension
-// value.  Or, are causing use of extended values on 32-bit case arrays
-// which are only 8-registers wide.
-#define ExtendedFieldCheck(panicCondition) { \
-  if ( panicCondition ) \
-    BX_PANIC(("Extended Field Check macro, extended field found.")); \
-  }
-#else
-#define ExtendedFieldCheck(panicCondition) 
-#endif
 
 ///////////////////////////
 // prefix bytes
