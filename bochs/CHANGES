@@ -22,6 +22,9 @@ Changes to next release:
 
 - SF patches applied
   [894595] MSR_APICBASE always returns APIC ADDRESS 0 by Kangmo Kim
+  [907163] ctrl_xfer8 clean/speed up
+  [907161] clean/speed up of io.cc
+  [899972] data xfer performance patch V 2.0.4
 
 - these S.F. bugs were closed 
   #923653 DAA instruction is broken
@@ -34,7 +37,7 @@ Changes to next release:
   #886406 I/O permissions bug
   #883239 undefined symbols in gui/siminterface.h:1215
   #419647 on OSF1, cxx hates C++ inlines
-  #809790 &quot;No rule to make target `devices.cc?...&quot;
+  #809790 "No rule to make target `devices.cc?..."
   #873654 How compile without plug-in support ?
   #837161 Test case for BX_CPU_C::IRET32
   #888116 mmx.cc compile error
@@ -294,7 +297,7 @@ Detailed change log :
    #843433 cdrom.cc on MacOSX: wrong const names 
    #818493 EMU][ (DJGPP app running on FreeDOS) broken 
    #787005 Some MOV instructions are not implemented!!! 
-   #840664 2200136693936p[CPU ] &gt;&gt;PANIC&lt;&lt; prefetch: RIP &gt; CS.limit 
+   #840664 2200136693936p[CPU ] >>PANIC<< prefetch: RIP > CS.limit 
    #837416 V2 OS not compatible !? 
    #650917 Serial port broken under win95 
    #829863 Make bochs 2.0.2 build with gcc3 
@@ -324,7 +327,7 @@ Detailed change log :
    #787134 Config options not saved
    #689201 Disassembler bug
    #666202 Windows 2000 - random screen blanking with linux DLX demo
-   #629242 reset during Doom -&gt; BIOS panic
+   #629242 reset during Doom -> BIOS panic
    #695434 minix floppies won't boot.
    #764473 Freesco Linux crashes on boot
    #656026 error when trying to run some stuff
@@ -345,7 +348,7 @@ Detailed change log :
    #587422 Windows 95j doesn't boot
    #547817 sparc: rfb needs -lsocket
    #480963 RFB: option to wait for client
-   #763893 i've got problems with a &quot;libvga.so.1&quot; and another file
+   #763893 i've got problems with a "libvga.so.1" and another file
    #766490 Documentation mistake
    #766481 Bochs 2.0.2 Fails to compile on YDL3.0
    #626144 %lld is not portable
@@ -356,7 +359,7 @@ Detailed change log :
    #737048 Enabling keyboard resets controllers translation mode
    #717713 Bochs panics on startup on RH 9
    #741108 VGA PANIC
-   #730922 seg fault on &quot;bochs boot: cdrom&quot;
+   #730922 seg fault on "bochs boot: cdrom"
    #658905 VGA read write error
    #564218 Panic on vga_mem_write
    #614231 X11 doesn't support charmap change
