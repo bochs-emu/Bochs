@@ -93,8 +93,9 @@ bx_devices_c::~bx_devices_c(void)
 
 
   void
-bx_devices_c::init(void)
+bx_devices_c::init(BX_MEM_C *newmem)
 {
+  mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
 #if BX_USE_UM_SMF
@@ -240,7 +241,7 @@ bx_devices_c::init(void)
                             "Port 92h System Control" );
 
   // misc. CMOS
-  Bit16u extended_memory_in_k = BX_MEM.get_memory_in_k() - 1024;
+  Bit16u extended_memory_in_k = mem->get_memory_in_k() - 1024;
   cmos->s.reg[0x15] = (Bit8u) BASE_MEMORY_IN_K;
   cmos->s.reg[0x16] = (Bit8u) (BASE_MEMORY_IN_K >> 8);
   cmos->s.reg[0x17] = (Bit8u) extended_memory_in_k;
