@@ -1,20 +1,11 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.13 2001-06-28 14:52:49 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.14 2002-03-14 15:13:45 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
 /////////////////////////////////////////////////////////////////
-
-#include "config.h"
-extern "C" {
-// siminterface needs stdio.h
-#include <stdio.h>
-}
-#include "osdep.h"
-#include "control.h"
-#include "siminterface.h"
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
@@ -27,6 +18,17 @@ extern "C" {
 #ifndef WX_PRECOMP
 #include "wx/wx.h"
 #endif
+
+
+
+#include "config.h"
+extern "C" {
+// siminterface needs stdio.h
+#include <stdio.h>
+}
+#include "osdep.h"
+#include "control.h"
+#include "siminterface.h"
 
 #include "gui/wx.h"
 
@@ -176,6 +178,7 @@ MyFrame::ProcessBochsEvent (void *class_ptr, int id)
   printf ("MyFrame::ProcessBochsEvent\n");
   MyFrame *f = (MyFrame *)class_ptr;
   f->ProcessBochsEvent2 (id);
+  return 0;
 }
 
 int 
@@ -326,6 +329,7 @@ BochsThread::Entry (void)
   int argc=1;
   char *argv[] = {"bochs"};
   bx_continue_after_control_panel (argc, argv);
+  return NULL;
 }
 
 MyPanel::MyPanel (MyFrame *frame, wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size )
