@@ -9,6 +9,7 @@ Changes since 1.2-pre1:
   is displayed as a BX_PANIC message.
 - added additional check for null pointer in debugger exit routine
 - now font/vga.pcf will be installed in the RPM package
+- removed extra paren that broke SHOW_IPS
 
 Changes in version 1.2-pre1 (5/25/2001):
 - major cleanup of .bochsrc

@@ -966,7 +966,7 @@ parse_line_formatted(int num_params, char *params[])
       }
     bx_options.vga_update_interval = atol(params[1]);
     if (bx_options.vga_update_interval < 50000) {
-      BX_PANIC(("%s: vga_update_interval not big enough!\n", bochsrc_path));
+      BX_INFO(("%s: vga_update_interval not big enough!\n", bochsrc_path));
       }
     }
   else if (!strcmp(params[0], "keyboard_serial_delay")) {
@@ -1220,7 +1220,7 @@ bx_signal_handler( int signum)
   extern unsigned long ips_count;
 
   if (signum == SIGALRM ) {
-    BX_INFO((("ips = %lu\n", ips_count));
+    BX_INFO(("ips = %lu\n", ips_count));
     ips_count = 0;
 #ifndef __MINGW32__
     signal(SIGALRM, bx_signal_handler);
