@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.62 2004-01-29 17:33:45 mcb30 Exp $
+// $Id: devices.cc,v 1.63 2004-02-01 23:42:04 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,7 +104,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.62 2004-01-29 17:33:45 mcb30 Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.63 2004-02-01 23:42:04 cbothamy Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -165,6 +165,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_GAME
   PLUG_load_plugin(gameport, PLUGTYPE_OPTIONAL);
 #endif
+  PLUG_load_plugin(speaker, PLUGTYPE_OPTIONAL);
 
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.39 2004-01-15 02:08:35 danielg4 Exp $
+// $Id: iodev.h,v 1.40 2004-02-01 23:42:04 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -272,6 +272,12 @@ class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
   virtual void print_info(FILE *file, int page, int reg, int nodups) {}
 };
 
+class BOCHSAPI bx_speaker_stub_c : public bx_devmodel_c {
+  public:
+  virtual void beep_on(float frequency) {}
+  virtual void beep_off() {}
+};
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -313,32 +319,33 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
-  bx_devmodel_c    *pluginBiosDevice;
-  bx_ioapic_c      *ioapic;
-  bx_pci_stub_c    *pluginPciBridge;
-  bx_devmodel_c    *pluginPci2IsaBridge;
-  bx_devmodel_c    *pluginPciVgaAdapter;
-  bx_devmodel_c    *pluginPciDevAdapter;
-  bx_devmodel_c    *pluginPciUSBAdapter;
-  bx_devmodel_c	   *pluginPciPNicAdapter;
-  bx_pit_c         *pit;
-  bx_keyb_stub_c   *pluginKeyboard;
-  bx_dma_stub_c    *pluginDmaDevice;
-  bx_floppy_stub_c *pluginFloppyDevice;
-  bx_cmos_stub_c   *pluginCmosDevice;
-  bx_devmodel_c    *pluginSerialDevice;
-  bx_devmodel_c    *pluginParallelDevice;
-  bx_devmodel_c    *pluginUnmapped;
-  bx_vga_stub_c    *pluginVgaDevice;
-  bx_pic_stub_c    *pluginPicDevice;
+  bx_devmodel_c     *pluginBiosDevice;
+  bx_ioapic_c       *ioapic;
+  bx_pci_stub_c     *pluginPciBridge;
+  bx_devmodel_c     *pluginPci2IsaBridge;
+  bx_devmodel_c     *pluginPciVgaAdapter;
+  bx_devmodel_c     *pluginPciDevAdapter;
+  bx_devmodel_c     *pluginPciUSBAdapter;
+  bx_devmodel_c	    *pluginPciPNicAdapter;
+  bx_pit_c          *pit;
+  bx_keyb_stub_c    *pluginKeyboard;
+  bx_dma_stub_c     *pluginDmaDevice;
+  bx_floppy_stub_c  *pluginFloppyDevice;
+  bx_cmos_stub_c    *pluginCmosDevice;
+  bx_devmodel_c     *pluginSerialDevice;
+  bx_devmodel_c     *pluginParallelDevice;
+  bx_devmodel_c     *pluginUnmapped;
+  bx_vga_stub_c     *pluginVgaDevice;
+  bx_pic_stub_c     *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
-  bx_devmodel_c    *pluginSB16Device;
-  bx_ne2k_stub_c   *pluginNE2kDevice;
-  bx_g2h_c         *g2h;
-  bx_devmodel_c    *pluginExtFpuIrq;
-  bx_devmodel_c    *pluginGameport;
+  bx_devmodel_c     *pluginSB16Device;
+  bx_ne2k_stub_c    *pluginNE2kDevice;
+  bx_g2h_c          *g2h;
+  bx_devmodel_c     *pluginExtFpuIrq;
+  bx_devmodel_c     *pluginGameport;
+  bx_speaker_stub_c *pluginSpeaker;
 #if BX_IODEBUG_SUPPORT
-  bx_iodebug_c	   *iodebug;
+  bx_iodebug_c	    *iodebug;
 #endif
 
   // stub classes that the pointers (above) can point to until a plugin is
@@ -446,3 +453,4 @@ private:
 #include "iodev/slowdown_timer.h"
 #include "iodev/extfpuirq.h"
 #include "iodev/gameport.h"
+#include "iodev/speaker.h"

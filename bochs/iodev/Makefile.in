@@ -57,7 +57,7 @@ WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
 CDROM_OBJS = @CDROM_OBJS@
 IOAPIC_OBJS = @IOAPIC_OBJS@
 SOUNDLOW_OBJS = @SOUNDLOW_OBJS@
-NETLOW_OBJS = @NETLOW_OBJS@ eth_vnet.o
+NETLOW_OBJS = @NETLOW_OBJS@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
@@ -69,7 +69,6 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
   pit.o pit82c54.o pit_wrap.o \
   virt_timer.o \
   slowdown_timer.o \
-  console.o \
   @IODEBUG_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
@@ -87,6 +86,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   dma.o \
   unmapped.o \
   extfpuirq.o \
+  speaker.o \
   @GAME_OBJS@ \
   @PCI_OBJ@ \
   @SB16_OBJS@ \
@@ -249,7 +249,7 @@ cmos.o: cmos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
-console.o: console.@CPP_SUFFIX@ console.h
+speaker.o: speaker.@CPP_SUFFIX@ speaker.h
 crc32.o: crc32.@CPP_SUFFIX@ crc32.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
@@ -349,6 +349,20 @@ eth_linux.o: eth_linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h ../instrument/stubs/instrument.h
 eth_null.o: eth_null.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../gui/textconfig.h ../gui/keymap.h ../iodev/iodev.h ../iodev/pci.h \
+  ../iodev/pci2isa.h ../iodev/pcivga.h ../iodev/pciusb.h ../iodev/vga.h \
+  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
+  ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/vmware3.h \
+  ../iodev/keyboard.h ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h \
+  ../iodev/pit_wrap.h ../iodev/pit82c54.h ../iodev/virt_timer.h \
+  ../iodev/serial.h ../iodev/sb16.h ../iodev/soundlnx.h \
+  ../iodev/soundwin.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+  ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
+  ../iodev/gameport.h ../instrument/stubs/instrument.h
+eth_vnet.o: eth_vnet.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
   ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
