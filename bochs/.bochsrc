@@ -507,6 +507,16 @@ floppy_command_delay: 500
 ips: 1000000
 
 #=======================================================================
+# PIT:
+# The PIT is the programmable interval timer.  It has an option that tries to
+# keep the PIT in sync with real time.  This feature is still experimental,
+# but it may be useful if you want to prevent Bochs from running too fast, for
+# example a DOS video game.  Be aware that with the realtime pit option, your
+# simulation will not be repeatable; this can a problem if you are debugging.
+#=======================================================================
+#pit: realtime=1
+
+#=======================================================================
 # mouse: Not used in any of the GUI specific modules, but the option
 #        bx_options.mouse_enabled is set to this value.  The idea,
 #        is that the GUI code should not generate mouse events when
