@@ -7,6 +7,10 @@
 // cpu/access.cc, where it checks if a memory access goes over the
 // segment limits.
 //
+// NOTE: The variable called limit is actually "limit_scaled" in the
+// bochs code.  Limit_scaled is equal to the limit when granularity is 0,
+// and equal to (limit << 12) | 0xfff when granularity is 1.
+//
 // Compile with:
 //   cc -I. -Iinstrument/stubs -o test-access-check misc/test-access-check.cc
 // Then run "test-access-check" and see how it goes.  If mismatches=0,
