@@ -30,7 +30,7 @@
 #include <vgamouse.h>
 
 #include "font/vga.bitmap.h"
-#include "icon_bochs.h"
+//#include "icon_bochs.h"
 
 class bx_svga_gui_c : public bx_gui_c {
 public:
@@ -133,11 +133,10 @@ void bx_svga_gui_c::text_update(
     unsigned rows)
 {
    unsigned x, y, i;
-   unsigned char achar;
    unsigned chars, cols;
    char s[] = " ";
-   static int previ;
-   int cursori;
+   static unsigned int previ;
+   unsigned int cursori;
    
    cols = res_x/fontwidth;
 
@@ -339,7 +338,6 @@ void keyboard_handler(int scancode, int press)
 void mouse_handler(int button, int dx, int dy, int dz, 
 		    int drx, int dry, int drz)
 {
-    char a[100];
     int buttons = 0;
 
     if (button & MOUSE_LEFTBUTTON) {
@@ -397,11 +395,8 @@ void bx_svga_gui_c::dimension_update(
     unsigned fwidth,
     unsigned bpp)
 {
-  int newmode;
-    
-  // TODO: remove this stupid check whenever the vga driver is fixed
-  if( y == 208 ) y = 200;
-    
+  int newmode = 0;
+
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
