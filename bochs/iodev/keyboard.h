@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.17 2002-09-26 09:00:52 mlerwill Exp $
+// $Id: keyboard.h,v 1.17.4.1 2002-10-06 23:17:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ class bx_keyb_c : public logfunctions {
 public:
   bx_keyb_c(void);
   ~bx_keyb_c(void);
-  BX_KEY_SMF void     init(bx_devices_c *d, bx_cmos_c *cmos);
+  BX_KEY_SMF void     init(bx_devices_c *d);
   BX_KEY_SMF void     reset(unsigned type);
   BX_KEY_SMF void     gen_scancode(Bit32u   scancode);
   BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
@@ -224,6 +224,10 @@ private:
   BX_KEY_SMF void     controller_enQ(Bit8u   data, unsigned source);
   BX_KEY_SMF Boolean  mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3);
   BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
+
+  static void   timer_handler(void *);
+  void   timer(void);
+  int    timer_handle;
   };
 
 

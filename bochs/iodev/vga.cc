@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: vga.cc,v 1.43.2.1 2002-10-06 23:17:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ bx_vga_c::~bx_vga_c(void)
 
 
   void
-bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
+bx_vga_c::init(bx_devices_c *d)
 {
   unsigned i;
   unsigned x,y;
@@ -197,7 +197,8 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
      bx_options.Ovga_update_interval->get (), 1, 1, "vga");
 
-  cmos->s.reg[0x14] = (cmos->s.reg[0x14] & 0xcf) | 0x00; /* video card with BIOS ROM */
+  /* video card with BIOS ROM */
+  BX_SET_CMOS_REG(BX_VGA_THIS, 0x14, (BX_GET_CMOS_REG(BX_VGA_THIS, 0x14) & 0xcf) | 0x00); 
 
   BX_VGA_THIS s.horiz_tick = 0;
   BX_VGA_THIS s.vert_tick = 0;

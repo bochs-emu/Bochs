@@ -52,21 +52,22 @@ SB16_LINUX_OBJS = sb16.o soundlnx.o
 SB16_WIN_OBJS   = sb16.o soundwin.o
 SLOWDOWN_OBJS = slowdown_timer.o
 
+BX_IODEV_OBJS_EXTERNAL = 
 
-BX_HW_IODEV_OBJS = \
+BX_IODEV_OBJS_NON_PLUGINABLE = \
   devices.o \
   pic.o \
-  pit.o pit82c54.o pit_wrap.o \
-  biosdev.o \
-  unmapped.o \
-  cmos.o \
-  dma.o \
+  pit.o \
   floppy.o \
   harddrv.o \
-  @IODEBUG_OBJS@ \
+  keyboard.o \
+  pit82c54.o pit_wrap.o \
   scancodes.o \
+  @IODEBUG_OBJS@ \
+  \
   parallel.o \
   serial.o \
+  dma.o \
   $(VIDEO_OBJS) \
   @PCI_OBJ@ \
   @NE2K_OBJS@ \
@@ -76,31 +77,51 @@ BX_HW_IODEV_OBJS = \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
 
+BX_IODEV_OBJS_PLUGINABLE = \
+  biosdev.o \
+  cmos.o \
+  unmapped.o 
 
-BX_IODEV_OBJS = $(BX_HW_IODEV_OBJS)
+BX_IODEV_OBJS_NON_PLUGINS=@BX_IODEV_NON_PLUGINS_OBJ@
 
-BX_OBJS     = $(BX_IODEV_OBJS)
+BX_IODEV_OBJS_PLUGINS=@BX_IODEV_PLUGINS_OBJ@
+
+BX_IODEV_OBJS = $(BX_IODEV_OBJS_NON_PLUGINS)
+
+BX_IODEV_SO_OBJS = $(BX_IODEV_OBJS_PLUGINS)
+
+BX_OBJS     = $(BX_IODEV_OBJS_NON_PLUGINS) $(BX_IODEV_OBJS_PLUGINS) $(BX_IODEV_OBJS_EXTERNAL)
 
 BX_INCLUDES = iodev.h
+
+all: libiodev.a plugins
 
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
-all: libiodev.a  libplex-keyboard.la
+keyboard.so: keyboard.o scancodes.o
+	$(CXX) -shared keyboard.o scancodes.o -o keyboard.so
+	mkdir -p ../plugins
+	cp $@ ../plugins
 
-libplex-keyboard.la: plex-keyboard.cc plex-keyboard.h
-	libtool --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) plex-keyboard.cc
-	libtool --mode=link $(CXX) plex-keyboard.lo -o libplex-keyboard.la -rpath /tmp/bochslib 
-	-mkdir /tmp/bochslib
-	libtool --mode=install cp libplex-keyboard.la /tmp/bochslib
+pit.so: pit.o pit82c54.o pit_wrap.o
+	$(CXX) -shared pit.o pit82c54.o pit_wrap.o -o pit.so
+	mkdir -p ../plugins
+	cp $@ ../plugins
 
-libiodev.a: $(BX_OBJS)
+%.so: %.o
+	$(CXX) -shared  $< -o $@
+	mkdir -p ../plugins
+	cp $@ ../plugins
+
+libiodev.a: $(BX_IODEV_OBJS)
 	@RMCOMMAND@ libiodev.a
 	@MAKELIB@ $(BX_IODEV_OBJS)
 	@RANLIB@ libiodev.a
 
-$(BX_OBJS): $(BX_INCLUDES)
+plugins: $(BX_IODEV_SO_OBJS:.o=.so)
 
+$(BX_OBJS): $(BX_INCLUDES)
 
 clean:
 	@RMCOMMAND@ *.o

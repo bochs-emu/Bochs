@@ -847,6 +847,7 @@ Optional Features:
   --enable-realtime-pit                  try to keep clk in sync w/ real time
   --enable-slowdown                 use Greg Alexander's slowdown timer
   --enable-idle-hack                use Roland Mainz's idle hack
+  --enable-plugins                enable plugins
   --enable-processors               select number of processors (1,2,4,8)
   --enable-x86-64                   compile in support for x86-64 instructions
   --enable-cpu-level                select cpu level (3,4,5,6)
@@ -8398,6 +8399,47 @@ _ACEOF
 fi;
 
 
+echo "$as_me:$LINENO: checking for plugins support" >&5
+echo $ECHO_N "checking for plugins support... $ECHO_C" >&6
+# Check whether --enable-plugins or --disable-plugins was given.
+if test "${enable_plugins+set}" = set; then
+  enableval="$enable_plugins"
+  if test "$enableval" = yes; then
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_PLUGINS 1
+_ACEOF
+
+    BX_IODEV_NON_PLUGINS_OBJ='$(BX_IODEV_OBJS_NON_PLUGINABLE)'
+    BX_IODEV_PLUGINS_OBJ='$(BX_IODEV_OBJS_PLUGINABLE) $(BX_IODEV_OBJS_EXTERNAL)'
+   else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_PLUGINS 0
+_ACEOF
+
+    BX_IODEV_NON_PLUGINS_OBJ='$(BX_IODEV_OBJS_NON_PLUGINABLE) $(BX_IODEV_OBJS_PLUGINABLE) $(BX_IODEV_OBJS_EXTERNAL)'
+    BX_IODEV_PLUGINS_OBJ=''
+   fi
+else
+
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_PLUGINS 0
+_ACEOF
+
+    BX_IODEV_NON_PLUGINS_OBJ='$(BX_IODEV_OBJS_NON_PLUGINABLE) $(BX_IODEV_OBJS_PLUGINABLE) $(BX_IODEV_OBJS_EXTERNAL)'
+    BX_IODEV_PLUGINS_OBJ=''
+
+
+fi;
+
+
+
+
 
 echo "$as_me:$LINENO: checking for number of processors" >&5
 echo $ECHO_N "checking for number of processors... $ECHO_C" >&6
@@ -12834,6 +12876,9 @@ s,@BX_USE_REALTIME_PIT@,$BX_USE_REALTIME_PIT,;t t
 s,@BX_USE_SLOWDOWN_TIMER@,$BX_USE_SLOWDOWN_TIMER,;t t
 s,@SLOWDOWN_OBJS@,$SLOWDOWN_OBJS,;t t
 s,@BX_USE_IDLE_HACK@,$BX_USE_IDLE_HACK,;t t
+s,@BX_PLUGINS@,$BX_PLUGINS,;t t
+s,@BX_IODEV_NON_PLUGINS_OBJ@,$BX_IODEV_NON_PLUGINS_OBJ,;t t
+s,@BX_IODEV_PLUGINS_OBJ@,$BX_IODEV_PLUGINS_OBJ,;t t
 s,@OBJS64@,$OBJS64,;t t
 s,@IOAPIC_OBJS@,$IOAPIC_OBJS,;t t
 s,@APIC_OBJS@,$APIC_OBJS,;t t

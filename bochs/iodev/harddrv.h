@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.16 2002-09-30 14:19:46 bdenney Exp $
+// $Id: harddrv.h,v 1.16.2.1 2002-10-06 23:17:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -290,7 +290,7 @@ public:
   bx_hard_drive_c(void);
   ~bx_hard_drive_c(void);
   BX_HD_SMF void   close_harddrive(void);
-  BX_HD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
+  BX_HD_SMF void   init(bx_devices_c *d);
   BX_HD_SMF void   reset(unsigned type);
   BX_HD_SMF Bit32u   get_device_handle(Bit8u channel, Bit8u device);
   BX_HD_SMF Bit32u   get_first_cd_handle(void);

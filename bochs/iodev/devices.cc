@@ -1,5 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34.2.1 2002-10-05 02:37:56 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.2 2002-10-06 23:17:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,20 +47,24 @@ bx_devices_c::bx_devices_c(void)
   put("DEV");
   settype(DEVLOG);
 
+#if !BX_PLUGINS
+  unmapped = NULL;
+  biosdev = NULL;
+  cmos = NULL;
+#endif
+
+  floppy = NULL;
+  dma = NULL;
+
 #if BX_PCI_SUPPORT
   pci = NULL;
   pci2isa = NULL;
 #endif
+
   pit = NULL;
-  // disable so I can use the plex86 keyboard plugin
-  //keyboard = NULL;
-  dma = NULL;
-  floppy = NULL;
-  biosdev = NULL;
-  cmos = NULL;
+  keyboard = NULL;
   serial = NULL;
   parallel = NULL;
-  unmapped = NULL;
   vga = NULL;
   pic = NULL;
   hard_drive = NULL;
@@ -86,15 +89,21 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.1 2002-10-05 02:37:56 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.2 2002-10-06 23:17:51 cbothamy Exp $"));
   mem = newmem;
+
+  devices=this;
 
   /* no read / write handlers defined */
   num_read_handles = 0;
   num_write_handles = 0;
 
+  /* default read/write handler */
+  default_read_handler_id = -1;
+  default_write_handler_id = -1;
+
   /* set unused elements to appropriate values */
-  for (i=0; i < BX_MAX_IO_DEVICES; i++) {
+  for (i=0; i < BX_MAX_IO_DEVICES + 1; i++) {
     io_read_handler[i].funct  = NULL;
     io_write_handler[i].funct = NULL;
     }
@@ -110,10 +119,21 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   timer_handle = BX_NULL_TIMER_HANDLE;
 
+#if !BX_PLUGINS 
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
   unmapped = &bx_unmapped;
   unmapped->init(this);
+ 
+  // BIOS log 
+  biosdev = &bx_biosdev;
+  biosdev->init(this);
+
+  // CMOS RAM & RTC
+  cmos = &bx_cmos;
+  cmos->init(this);
+
+#endif
 
 #if BX_PCI_SUPPORT
   // PCI logic (i440FX)
@@ -124,19 +144,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #endif
 
 #if BX_SUPPORT_APIC
-  // I/O APIC 82093AA
-  ioapic = & bx_ioapic;
-  ioapic->init ();
-  ioapic->set_id (BX_IOAPIC_DEFAULT_ID);
+    // I/O APIC 82093AA
+    ioapic = & bx_ioapic;
+    ioapic->init (this);
 #endif
-
-  // BIOS log 
-  biosdev = &bx_biosdev;
-  biosdev->init(this);
-
-  // CMOS RAM & RTC
-  cmos = &bx_cmos;
-  cmos->init(this);
 
   /*--- 8237 DMA ---*/
   dma = &bx_dma;
@@ -144,11 +155,11 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   /*--- HARD DRIVE ---*/
   hard_drive = &bx_hard_drive;
-  hard_drive->init(this, cmos);
+  hard_drive->init(this);
 
   //--- FLOPPY ---
   floppy = &bx_floppy;
-  floppy->init(this, cmos);
+  floppy->init(this);
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
@@ -159,10 +170,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_VGA
   /*--- VGA adapter ---*/
   vga = & bx_vga;
-  vga->init(this, cmos);
+  vga->init(this);
 #else
   /*--- HGA adapter ---*/
-  bx_init_hga_hardware(cmos);
+  bx_init_hga_hardware();
 #endif
 
   /*--- 8259A PIC ---*/
@@ -177,9 +188,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
   bx_slowdown_timer.init(this);
 #endif
 
-  //disable so I can use plex86 keyboard plugin
-  //keyboard = &bx_keyboard;
-  //keyboard->init(this, cmos);
+  keyboard = &bx_keyboard;
+  keyboard->init(this);
 
 #if BX_IODEBUG_SUPPORT
   iodebug = &bx_iodebug;
@@ -220,15 +230,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   // misc. CMOS
   Bit16u extended_memory_in_k = mem->get_memory_in_k() - 1024;
-  cmos->s.reg[0x15] = (Bit8u) BASE_MEMORY_IN_K;
-  cmos->s.reg[0x16] = (Bit8u) (BASE_MEMORY_IN_K >> 8);
-  cmos->s.reg[0x17] = (Bit8u) extended_memory_in_k;
-  cmos->s.reg[0x18] = (Bit8u) (extended_memory_in_k >> 8);
-  cmos->s.reg[0x30] = (Bit8u) extended_memory_in_k;
-  cmos->s.reg[0x31] = (Bit8u) (extended_memory_in_k >> 8);
+  BX_SET_CMOS_REG(BX_DEV_THIS, 0x15, (Bit8u) BASE_MEMORY_IN_K);
+  BX_SET_CMOS_REG(BX_DEV_THIS, 0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
+  BX_SET_CMOS_REG(BX_DEV_THIS, 0x17, (Bit8u) extended_memory_in_k);
+  BX_SET_CMOS_REG(BX_DEV_THIS, 0x18, (Bit8u) (extended_memory_in_k >> 8));
+  BX_SET_CMOS_REG(BX_DEV_THIS, 0x30, (Bit8u) extended_memory_in_k);
+  BX_SET_CMOS_REG(BX_DEV_THIS, 0x31, (Bit8u) (extended_memory_in_k >> 8));
 
   /* now perform checksum of CMOS memory */
-  cmos->checksum_cmos();
+  BX_CMOS_CHECKSUM(BX_DEV_THIS);
 
   timer_handle = bx_pc_system.register_timer( this, timer_handler,
     (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
@@ -247,14 +257,22 @@ bx_devices_c::reset(unsigned type)
   pci->reset(type);
   pci2isa->reset(type);
 #endif
-#if BX_SUPPORT_IOAPIC
-  ioapic->reset (type);
-#endif
-  biosdev->reset(type);
-  cmos->reset(type);
+
   dma->reset(type);
-  hard_drive->reset(type);
+
+#if !BX_PLUGINS 
+
+#  if BX_SUPPORT_IOAPIC
+    ioapic->reset (type);
+#  endif
+
+  cmos->reset(type);
+  biosdev->reset(type);
+  unmapped->reset(type);
+#endif
+
   floppy->reset(type);
+  hard_drive->reset(type);
 #if BX_SUPPORT_SB16
   sb16->reset(type);
 #endif
@@ -268,7 +286,7 @@ bx_devices_c::reset(unsigned type)
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.reset(type);
 #endif
-  //keyboard->reset(type);
+  keyboard->reset(type);
 #if BX_IODEBUG_SUPPORT
   iodebug->reset(type);
 #endif
@@ -277,6 +295,7 @@ bx_devices_c::reset(unsigned type)
 #if BX_NE2K_SUPPORT
   ne2k->reset(type);
 #endif
+ 
 }
 
 
@@ -358,8 +377,8 @@ bx_devices_c::timer()
     pic->raise_irq(0);
     }
 #endif
- 
-#if 1
+
+
   // separate calls to bx_gui.handle_events from the keyboard code.
   {
     static int multiple=0;
@@ -369,20 +388,6 @@ bx_devices_c::timer()
       bx_gui.handle_events();
     }
   }
-#endif
-
-#if 0
-  // the plex86 keyboard has its own timer handler and triggers IRQs on its
-  // own, so while using the plex86 keyboard plugin, this code is not needed.
-  // Except, that the keyboard->periodic() function happens to call
-  // bx_gui.handle_events for all GUI events.
-  retval = keyboard->periodic( BX_IODEV_HANDLER_PERIOD );
-  if (retval & 0x01)
-    pic->raise_irq(1);
-
-  if (retval & 0x02)
-    pic->raise_irq(12);
-#endif
 
 // KPL Removed lapic periodic timer registration here.
 }
@@ -457,6 +462,7 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
   /* change table to reflect new handler id for that address */
   if (read_handler_id[addr] < BX_MAX_IO_DEVICES) {
     // another handler is already registered for that address
+
     // if it is not the Unmapped port handler, bail
     if ( strcmp( io_read_handler[read_handler_id[addr]].handler_name, "Unmapped" ) ) {
       BX_INFO(("IO device address conflict(read) at IO address %Xh",
@@ -500,6 +506,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
   /* change table to reflect new handler id for that address */
   if (write_handler_id[addr] < BX_MAX_IO_DEVICES) {
     // another handler is already registered for that address
+ 
     // if it is not the Unmapped port handler, bail
     if ( strcmp( io_write_handler[write_handler_id[addr]].handler_name, "Unmapped" ) ) {
       BX_INFO(("IO device address conflict(write) at IO address %Xh",
@@ -511,6 +518,56 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
     }
   write_handler_id[addr] = handle;
   return true; // done!
+}
+
+
+// Registration of default handlers (mainly be the unmapped device)
+// The trick here is to define a handler for the max index, so
+// unregisterd io address will get handled ny the default function
+// This will be helpful when we want to unregister io handlers
+
+  Boolean
+bx_devices_c::register_default_io_read_handler( void *this_ptr, bx_read_handler_t f,
+                                        const char *name )
+{
+  unsigned handle;
+
+  /* handle is fixed to the MAX */
+  handle = BX_MAX_IO_DEVICES;
+
+  if (io_read_handler[handle].funct != NULL) {
+    BX_INFO(("Default io read handler already registered '%s'",io_read_handler[handle].handler_name));
+    return false;
+    }
+
+  io_read_handler[handle].funct          = f;
+  io_read_handler[handle].this_ptr       = this_ptr;
+  io_read_handler[handle].handler_name   = name;
+
+  return true; 
+}
+
+
+
+  Boolean
+bx_devices_c::register_default_io_write_handler( void *this_ptr, bx_write_handler_t f,
+                                        const char *name )
+{
+  unsigned handle;
+
+  /* handle is fixed to the MAX */
+  handle = BX_MAX_IO_DEVICES;
+
+  if (io_write_handler[handle].funct != NULL) {
+    BX_INFO(("Default io write handler already registered '%s'",io_write_handler[handle].handler_name));
+    return false;
+    }
+
+  io_write_handler[handle].funct          = f;
+  io_write_handler[handle].this_ptr       = this_ptr;
+  io_write_handler[handle].handler_name   = name;
+
+  return true; 
 }
 
 

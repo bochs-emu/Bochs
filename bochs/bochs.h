@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.1 2002-10-05 02:37:56 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.2 2002-10-06 23:17:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -81,7 +81,6 @@ extern "C" {
 #include "osdep.h"       /* platform dependent includes and defines */ 
 #include "debug/debug.h"
 #include "bxversion.h"
-#include "plugin.h"
 
 #include "gui/siminterface.h"
 
@@ -178,6 +177,7 @@ extern "C" {
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 
 #endif
+
 
 // you can't use static member functions on the CPU, if there are going
 // to be 2 cpus.  Check this early on.
@@ -356,6 +356,7 @@ class iofunctions {
 #define    PIT82LOG        46
 #define    IODEBUGLOG      47
 #define    PCI2ISALOG      48
+#define    PLUGINLOG       49
 
 
 public:
@@ -543,6 +544,7 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 #include "gui/keymap.h"
 extern bx_gui_c   bx_gui;
 #include "iodev/iodev.h"
+#include "plugin.h"
 
 
 

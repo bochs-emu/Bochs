@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.1 2002-10-05 02:37:56 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.2 2002-10-06 23:17:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,7 +40,7 @@
 
 class bx_biosdev_c;
 class bx_pit_c;
-//class bx_keyb_c;
+class bx_keyb_c;
 class bx_dma_c;
 class bx_floppy_ctrl_c;
 class bx_cmos_c;
@@ -91,6 +91,8 @@ public:
   BX_MEM_C *mem;  // address space associated with these devices
   Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
   Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
+  Boolean register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name );
+  Boolean register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name );
   Boolean register_irq(unsigned irq, const char *name);
   Boolean unregister_irq(unsigned irq, const char *name);
   void iodev_init(void);
@@ -100,18 +102,20 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
-  bx_biosdev_c     *biosdev;
-  bx_ioapic_c      *ioapic;
   bx_pci_c         *pci;
   bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
-  //bx_keyb_c        *keyboard;
-  bx_dma_c         *dma;
+  bx_keyb_c        *keyboard;
   bx_floppy_ctrl_c *floppy;
+  bx_dma_c         *dma;
+  bx_ioapic_c      *ioapic;
+#if !BX_PLUGINS
+  bx_unmapped_c    *unmapped;
+  bx_biosdev_c     *biosdev;
   bx_cmos_c        *cmos;
+#endif
   bx_serial_c      *serial;
   bx_parallel_c    *parallel;
-  bx_unmapped_c    *unmapped;
   bx_vga_c         *vga;
   bx_pic_c         *pic;
   bx_hard_drive_c  *hard_drive;
@@ -132,14 +136,16 @@ public:
   unsigned bulkIOQuantumsRequested;
   unsigned bulkIOQuantumsTransferred;
 
+  bx_devices_c *devices;
 
 private:
+
   Bit8u                 read_handler_id[0x10000];  // 64K
   struct {
     bx_read_handler_t funct;
     void             *this_ptr;
     const char       *handler_name;  // name of device
-    } io_read_handler[BX_MAX_IO_DEVICES];
+    } io_read_handler[BX_MAX_IO_DEVICES + 1];
   unsigned              num_read_handles;
 
   Bit8u                 write_handler_id[0x10000]; // 64K
@@ -147,8 +153,11 @@ private:
     bx_write_handler_t funct;
     void              *this_ptr;
     const char        *handler_name;  // name of device
-    } io_write_handler[BX_MAX_IO_DEVICES];
+    } io_write_handler[BX_MAX_IO_DEVICES + 1];
   unsigned              num_write_handles;
+
+  signed int            default_read_handler_id;
+  signed int            default_write_handler_id;
 
   // more for informative purposes, the names of the devices which
   // are use each of the IRQ 0..15 lines are stored here
@@ -182,8 +191,7 @@ private:
 #if BX_IODEBUG_SUPPORT
 #   include "iodev/iodebug.h"
 #endif
-// maybe should be disabled while testing plex86 keyboard plugin
-//#include "iodev/keyboard.h"
+#include "iodev/keyboard.h"
 #include "iodev/parallel.h"
 #include "iodev/pic.h"
 #include "iodev/pit.h"

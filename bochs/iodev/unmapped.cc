@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $
+// $Id: unmapped.cc,v 1.18.4.1 2002-10-06 23:17:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,8 +35,34 @@ bx_unmapped_c bx_unmapped;
 #define this (&bx_unmapped)
 #endif
 
+#if BX_PLUGINS
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  bx_unmapped_c        *unmapped;
+
+  unmapped = &bx_unmapped;
+
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+
+#endif
+
 bx_unmapped_c::bx_unmapped_c(void)
 {
+
+#if BX_PLUGINS
+
+  // Register plugin basic entry points
+  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_UNMAPPED);
+
+#endif
+
   put("UNMP");
   settype(UNMAPLOG);
   s.port80 = 0x00;
@@ -54,12 +80,8 @@ bx_unmapped_c::init(bx_devices_c *d)
 {
   BX_UM_THIS devices = d;
 
-  for (Bit32u addr=0; addr<0x10000; addr++) {
-    BX_UM_THIS devices->register_io_read_handler(this, read_handler,
-                                      addr, "Unmapped");
-    BX_UM_THIS devices->register_io_write_handler(this, write_handler,
-                                      addr, "Unmapped");
-    }
+  BX_REGISTER_DEFAULT_IOREAD_HANDLER(BX_UM_THIS, this, read_handler, "Unmapped", 7);
+  BX_REGISTER_DEFAULT_IOWRITE_HANDLER(BX_UM_THIS, this, write_handler, "Unmapped", 7);
 }
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.9 2002-08-27 19:54:46 bdenney Exp $
+// $Id: unmapped.h,v 1.9.4.1 2002-10-06 23:17:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,6 +41,7 @@ class bx_unmapped_c : public logfunctions {
 public:
   bx_unmapped_c(void);
   ~bx_unmapped_c(void);
+
   BX_UM_SMF void init(bx_devices_c *d);
   BX_UM_SMF void reset (unsigned type);
 

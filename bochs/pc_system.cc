@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.27 2002-10-04 16:26:08 kevinlawton Exp $
+// $Id: pc_system.cc,v 1.27.2.1 2002-10-06 23:17:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -212,7 +212,7 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   BX_ERROR(( "# bx_pc_system_c::ResetSignal() called" ));
   for (int i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->reset(BX_RESET_SOFTWARE);
-  bx_devices.reset(BX_RESET_SOFTWARE);
+  BX_RESET_DEVICES(BX_RESET_SOFTWARE);
   return(0);
 }
 
@@ -228,7 +228,9 @@ bx_pc_system_c::exit(void)
 {
   if (bx_devices.hard_drive)
     bx_devices.hard_drive->close_harddrive();
-  BX_INFO(("Last time is %d", bx_cmos.s.timeval));
+
+  BX_INFO(("Last time is %d", BX_GET_CMOS_TIMEVAL(bx_devices.)));
+
   bx_gui.exit();
 }
 

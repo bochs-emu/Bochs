@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49.2.1 2002-10-05 02:37:56 bdenney Exp $
+// $Id: x.cc,v 1.49.2.2 2002-10-06 23:17:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1011,7 +1011,7 @@ xkeypress(KeySym keysym, int press_release)
   if (press_release)
     key_event |= BX_KEY_RELEASED;
 
-  BX_EVENT_GEN_SCANCODE (key_event);
+  BX_EVENT_GEN_SCANCODE(key_event);
 }
 
 

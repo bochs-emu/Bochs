@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.1 2002-10-05 02:37:56 bdenney Exp $
+// $Id: main.cc,v 1.156.2.2 2002-10-06 23:17:50 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -167,9 +167,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       }
       break;
     case BXP_KBD_PASTE_DELAY:
-      // FIXME: while adding plugin support, I'm not going to bother
-      // with this function for now.
-      //if (set) bx_keyboard.paste_delay_changed ();
+      if (set) bx_keyboard.paste_delay_changed ();
       break;
     case BXP_ATA0_MASTER_TYPE:
     case BXP_ATA0_SLAVE_TYPE:
@@ -1512,11 +1510,9 @@ bx_continue_after_config_interface (int argc, char *argv[])
   bx_dbg_main(argc, argv);
 #else
 
-  bx_init_hardware();
+  bx_load_plugins ();
 
-  BX_INFO (("Now I will load the plex86 keyboard plugin..."));
-  bx_init_plugin ();
-  BX_INFO (("Done loading the plex86 keyboard plugin"));
+  bx_init_hardware();
 
   if (bx_options.load32bitOSImage.OwhichOS->get ()) {
     void bx_load32bitOSimagehack(void);
@@ -1675,14 +1671,13 @@ bx_init_hardware()
 #endif
 
 #if BX_DEBUGGER == 0
-  bx_devices.init(BX_MEM(0));
-  bx_devices.reset(BX_RESET_HARDWARE);
+  BX_INIT_DEVICES();
+  BX_RESET_DEVICES(BX_RESET_HARDWARE);
   bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif
   BX_DEBUG(("bx_init_hardware is setting signal handlers"));
 // if not using debugger, then we can take control of SIGINT.
-// If using debugger, it needs control of this.
 #if !BX_DEBUGGER
   signal(SIGINT, bx_signal_handler);
 #endif

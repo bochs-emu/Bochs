@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.1 2002-10-06 23:17:52 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,6 +63,18 @@ bx_keyb_c bx_keyboard;
 #define this (&bx_keyboard)
 #endif
 
+  static void
+keybMouseMotion(int dx, int dy, unsigned mouse_button_state)
+{
+  BX_KEY_THIS mouse_motion( dx, dy, mouse_button_state);
+}
+
+  static void
+keybGenScancode(Bit32u key_event)
+{
+  BX_KEY_THIS gen_scancode(key_event);
+}
+
 bx_keyb_c::bx_keyb_c(void)
 {
   // constructor
@@ -70,7 +82,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.1 2002-10-06 23:17:52 cbothamy Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -108,9 +120,9 @@ bx_keyb_c::resetinternals(Boolean powerup)
 
 
   void
-bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
+bx_keyb_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67 2002-09-30 22:23:57 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.1 2002-10-06 23:17:52 cbothamy Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -126,6 +138,9 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
                                       0x0060, "8042 Keyboard controller");
   BX_KEY_THIS devices->register_io_write_handler(this, write_handler,
                                       0x0064, "8042 Keyboard controller");
+  BX_KEY_THIS timer_handle = bx_pc_system.register_timer( this, timer_handler,
+                                 bx_options.Okeyboard_serial_delay->get(), 1, 1,
+				 "8042 Keyboard controller");
 
   resetinternals(1);
 
@@ -183,7 +198,7 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS paste_delay_changed ();
 
   // mouse port installed on system board
-  cmos->s.reg[0x14] |= 0x04;
+  BX_SET_CMOS_REG(BX_KEY_THIS, 0x14, BX_GET_CMOS_REG(BX_KEY_THIS, 0x14) | 0x04);
 
 #if BX_WITH_WX
   static Boolean first_time = 1;
@@ -1133,6 +1148,23 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     }
 }
 
+  void
+bx_keyb_c::timer_handler(void *this_ptr)
+{
+  bx_keyb_c *class_ptr = (bx_keyb_c *) this_ptr;
+  unsigned retval;
+
+  // retval=class_ptr->periodic( bx_options.Okeyboard_serial_delay->get());
+  retval=class_ptr->periodic(1);
+
+  if(retval&0x01)
+    // pluginRaiseIRQ(1);
+    BX_KEY_THIS devices->pic->raise_irq(1);
+  if(retval&0x02)
+    // pluginRaiseIRQ(12);
+    BX_KEY_THIS devices->pic->raise_irq(12);
+}
+
   unsigned
 bx_keyb_c::periodic( Bit32u   usec_delta )
 {
@@ -1147,7 +1179,7 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
     multiple=0;
 	SIM->periodic ();
 	if (BX_CPU(0)->kill_bochs_request) return 0;
-    bx_gui.handle_events();
+    // bx_gui.handle_events();
   }
 
   if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled ) {
@@ -1230,7 +1262,8 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
 bx_keyb_c::activate_timer(void)
 {
   if (BX_KEY_THIS s.kbd_controller.timer_pending == 0) {
-    BX_KEY_THIS s.kbd_controller.timer_pending = bx_options.Okeyboard_serial_delay->get ();
+    // BX_KEY_THIS s.kbd_controller.timer_pending = bx_options.Okeyboard_serial_delay->get ();
+    BX_KEY_THIS s.kbd_controller.timer_pending = 1;
     }
 }
 

@@ -238,6 +238,18 @@
 #define BX_USE_P2I_SMF  1  // PCI-to-ISA bridge
 #define BX_USE_NE2K_SMF 1  // NE2K
 
+#define BX_PLUGINS  0
+
+#if BX_PLUGINS && \
+  (   !BX_USE_HD_SMF || !BX_USE_BIOS_SMF || !BX_USE_CMOS_SMF \
+   || !BX_USE_DMA_SMF || !BX_USE_FD_SMF || !BX_USE_KEY_SMF \
+   || !BX_USE_PAR_SMF || !BX_USE_PIC_SMF || !BX_USE_PIT_SMF \
+   || !BX_USE_SER_SMF || !BX_USE_UM_SMF || !BX_USE_VGA_SMF \
+   || !BX_USE_SB16_SMF || !BX_USE_DEV_SMF || !BX_USE_PCI_SMF \
+   || !BX_USE_P2I_SMF || !BX_USE_NE2K_SMF)
+#error You must use SMF to have plugins
+#endif
+
 #define BX_SUPPORT_SB16 0
 
 #if BX_SUPPORT_SB16
