@@ -146,7 +146,7 @@ BX_CPP_INLINE float32 packFloat32(flag zSign, Bit16s zExp, Bit32u zSig)
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-int float32_is_nan(float32 a)
+BX_CPP_INLINE int float32_is_nan(float32 a)
 {
     return (0xFF000000 < (Bit32u) (a<<1));
 }
@@ -156,7 +156,7 @@ int float32_is_nan(float32 a)
 | NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-int float32_is_signaling_nan(float32 a)
+BX_CPP_INLINE int float32_is_signaling_nan(float32 a)
 {
     return (((a>>22) & 0x1FF) == 0x1FE) && (a & 0x003FFFFF);
 }
@@ -287,7 +287,7 @@ BX_CPP_INLINE float64 packFloat64(flag zSign, Bit16s zExp, Bit64u zSig)
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-int float64_is_nan(float64 a)
+BX_CPP_INLINE int float64_is_nan(float64 a)
 {
     return (BX_CONST64(0xFFE0000000000000) < (Bit64u) (a<<1));
 }
@@ -297,7 +297,7 @@ int float64_is_nan(float64 a)
 | NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-int float64_is_signaling_nan(float64 a)
+BX_CPP_INLINE int float64_is_signaling_nan(float64 a)
 {
     return (((a>>51) & 0xFFF) == 0xFFE) && (a & BX_CONST64(0x0007FFFFFFFFFFFF));
 }
