@@ -1353,7 +1353,7 @@ public: // for now...
   BX_SMF inline Boolean protected_mode(void);
   BX_SMF inline Boolean v8086_mode(void);
 #endif
-#if BX_CPU_LEVEL >= 6
+#if BX_APIC_SUPPORT
   bx_apic_c local_apic;
 #endif
   };
