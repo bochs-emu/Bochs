@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define LT_SCOPE extern /* so that ltdl.h does not export anything */
+
+// set LT_SCOPE so that ltdl.h does not export anything in win32 DLLs
+#define LT_SCOPE extern
 #include <ltdl.h>
+
+// setting MAIN_DLL_EXPORT causes main.h to export main's functions
+// (for win32 DLLs)
 #define MAIN_DLL_EXPORT
 #include "main.h"
 
