@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.5 2001-06-01 05:45:55 bdenney Exp $
+ * $Id: bximage.c,v 1.6 2001-12-08 17:46:02 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -14,7 +14,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.5 2001-06-01 05:45:55 bdenney Exp $";
+char *rcsid = "$Id: bximage.c,v 1.6 2001-12-08 17:46:02 bdenney Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -244,7 +244,7 @@ int main()
     int hdsize, cyl, heads=16, spt=63;
     if (ask_int ("\nEnter the hard disk size in megabytes, between 1 and 32255\n[10] ", 1, 32255, 10, &hdsize) < 0)
       fatal (EOF_ERR);
-    cyl = hdsize*1024*1024/16/63/512;
+    cyl = (int) (hdsize*1024.0*1024.0/16.0/63.0/512.0);
     assert (cyl < 65536);
     sectors = cyl*heads*spt;
     printf ("\nI will create a hard disk image with\n");
