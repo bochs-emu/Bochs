@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.195 2002-11-25 18:17:13 bdenney Exp $
+// $Id: main.cc,v 1.196 2002-11-25 21:28:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1629,7 +1629,7 @@ void RedirectIOToConsole ()
   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),
   &coninfo);
   coninfo.dwSize.Y = MAX_CONSOLE_LINES;
-  SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+//  SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
   // redirect unbuffered STDOUT to the console
   lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
