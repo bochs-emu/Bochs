@@ -85,8 +85,8 @@ struct bx_mxcsr_t {
    Bit32u mxcsr;      /* define bitfields accessors later */
 };
 
-#define MXCSR_MASK  0x00ff  /* reset reserved bits */
-#define MXCSR_RESET 0x1f80  /* reset value of the MXCSR register */
+#define MXCSR_MASK  0x0000ffbf  /* reset reserved bits */
+#define MXCSR_RESET 0x00001f80  /* reset value of the MXCSR register */
 
 /* INTEGER SATURATION */
 
