@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.45 2002-11-19 18:56:38 vruppert Exp $
+// $Id: devices.cc,v 1.46 2002-11-21 17:10:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.45 2002-11-19 18:56:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.46 2002-11-21 17:10:13 vruppert Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -141,13 +141,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();
 
-#if BX_PCI_SUPPORT
   // PCI logic (i440FX)
   if (bx_options.Oi440FXSupport->get ()) {
+#if BX_PCI_SUPPORT
     PLUG_load_plugin(pci, PLUGTYPE_OPTIONAL);
     PLUG_load_plugin(pci2isa, PLUGTYPE_OPTIONAL);
-  }
+#else
+    BX_ERROR(("Bochs is not compiled with PCI support"));
 #endif
+  }
 
 #if BX_SUPPORT_APIC
     // I/O APIC 82093AA
@@ -167,12 +169,14 @@ bx_devices_c::init(BX_MEM_C *newmem)
   //--- FLOPPY ---
   pluginFloppyDevice->init();
 
-#if BX_SUPPORT_SB16
   //--- SOUND ---
   if (bx_options.sb16.Opresent->get ()) {
+#if BX_SUPPORT_SB16
     PLUG_load_plugin(sb16, PLUGTYPE_OPTIONAL);
-  }
+#else
+    BX_ERROR(("Bochs is not compiled with SB16 support"));
 #endif
+  }
 
   /*--- VGA adapter ---*/
   pluginVgaDevice->init ();
@@ -193,12 +197,14 @@ bx_devices_c::init(BX_MEM_C *newmem)
   iodebug->init();
 #endif
 
-#if BX_NE2K_SUPPORT
   // NE2000 NIC
   if (bx_options.ne2k.Opresent->get ()) {
+#if BX_NE2K_SUPPORT
     PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
+#else
+    BX_ERROR(("Bochs is not compiled with NE2K support"));
+#endif
   }
-#endif  // #if BX_NE2K_SUPPORT
 
 #if 0
   // Guest to Host interface.  Used with special guest drivers
