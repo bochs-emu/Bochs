@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.22 2002-03-26 13:59:35 bdenney Exp $
+// $Id: devices.cc,v 1.22.2.1 2002-06-10 21:20:06 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,7 +102,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.22 2002-03-26 13:59:35 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.22.2.1 2002-06-10 21:20:06 cbothamy Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -128,6 +128,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
   cmos = &bx_cmos;
   cmos->init(this);
   cmos->reset();
+
+  /*--- 8237 DMA ---*/
+  dma = &bx_dma;
+  dma->init(this);
 
   /*--- HARD DRIVE ---*/
   hard_drive = &bx_hard_drive;
@@ -164,9 +168,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.init();
 #endif
-
-  dma = &bx_dma;
-  dma->init(this);
 
   keyboard = &bx_keyboard;
   keyboard->init(this, cmos);
