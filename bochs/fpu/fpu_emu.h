@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.13 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.14 2003-08-07 18:54:03 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -24,8 +24,8 @@
 #define EXP_BIAS	(0)
 #define EXP_OVER	(0x4000)    /* smallest invalid large exponent */
 #define	EXP_UNDER	(-0x3fff)   /* largest invalid small exponent */
-#define EXP_WAY_UNDER   (-0x6000)   /* Below the smallest denormal, but
-					    still a 16 bit nr. */
+#define EXP_WAY_UNDER   (-0x6000)   /* Below the smallest denormal, but still a 16 bit nr */
+
 #define EXP_Infinity    EXP_OVER
 #define EXP_NaN         EXP_OVER
 
@@ -48,12 +48,11 @@
 
 #define TAG_Valid	 0 	/* valid */
 #define TAG_Zero	 1 	/* zero */
-#define TAG_Special	 2 	/* De-normal, + or - infinity,
-					   or Not a Number */
+#define TAG_Special	 2 	/* De-normal, + or - infinity, or NaN */
 #define TAG_Empty	 3 	/* empty */
 
-#define LOADED_DATA	(10101)	/* Special st() number to identify
-					   loaded data (not on stack). */
+/* Special st() number to identify loaded data (not on stack). */
+#define LOADED_DATA	(10101)	
 
 /* A few flags (must be >= 0x10). */
 #define REV             0x10
@@ -104,11 +103,11 @@ struct address {
  *
  * Legend: F - fraction/mmx
  *         E - exponent
- *         A - aligment
+ *         A - alignment
  */
 #ifdef EMU_BIG_ENDIAN
 
-struct fpu__reg {
+struct fpu_reg_t {
   u16 aligment1, aligment2, aligment3;
   s16 exp;   /* Signed quantity used in internal arithmetic. */
   u32 sigh;
@@ -122,7 +121,7 @@ struct fpu__reg {
 
 #else
 
-struct fpu__reg {
+struct fpu_reg_t {
   u32 sigl;
   u32 sigh;
   s16 exp;   /* Signed quantity used in internal arithmetic. */
@@ -137,7 +136,7 @@ struct fpu__reg {
 #endif
 
 typedef void (*FUNC)(void);
-typedef struct fpu__reg FPU_REG;
+typedef struct fpu_reg_t FPU_REG;
 typedef void (*FUNC_ST0)(FPU_REG *st0_ptr, u_char st0_tag);
 
 typedef struct { u_char address_size, operand_size, segment; }

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.14 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.15 2003-08-07 18:54:03 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -32,7 +32,6 @@ typedef Bit64s s64;
 #include <cpu/i387.h>
 
 /* bbd: include ported linux headers after config.h for GCC_ATTRIBUTE macro */
-#include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/types.h>
 

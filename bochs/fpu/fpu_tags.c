@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_tags.c                                                               |
- |  $Id: fpu_tags.c,v 1.5 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: fpu_tags.c,v 1.6 2003-08-07 18:54:03 sshwarts Exp $
  |                                                                           |
  |  Set FPU register tags.                                                   |
  |                                                                           |
@@ -129,11 +129,6 @@ FPU_copy_to_reg1(FPU_REG const *r, u_char tag)
 void  BX_CPP_AttrRegparmN(2)
 FPU_copy_to_reg0(FPU_REG const *r, u_char tag)
 {
-  int regnr = FPU_tos;
-  regnr &= 7;
-
   reg_copy(r, &st(0));
-
-  FPU_tag_word &= ~(3 << (regnr*2));
-  FPU_tag_word |= (tag & 3) << (regnr*2);
+  FPU_settagi(0, tag);
 }

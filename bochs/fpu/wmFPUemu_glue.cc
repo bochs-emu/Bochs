@@ -273,10 +273,3 @@ math_abort(void *info, unsigned int signal)
   BX_INFO(("math_abort: CPU<4 not supported yet"));
 #endif
 }
-
-  int
-printk(const char * fmt, ...)
-{
-  BX_INFO(("printk not complete: %s", fmt));
-  return(0); // for now
-}

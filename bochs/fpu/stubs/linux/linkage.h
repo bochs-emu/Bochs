@@ -39,16 +39,4 @@
 #endif /* __mc68000__ */
 #endif /* __arm__ */
 
-#ifdef __ASSEMBLY__
-
-#define ALIGN __ALIGN
-#define ALIGN_STR __ALIGN_STR
-
-#define ENTRY(name) \
-  .globl SYMBOL_NAME(name); \
-  ALIGN; \
-  SYMBOL_NAME_LABEL(name)
-
-#endif
-
 #endif
