@@ -142,22 +142,22 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 	BX_CONTROLLER(1).sector_count = 0;
 	BX_CONTROLLER(1).interrupt_reason.c_d = 1;
 	if (BX_CONTROLLER(1).sector_count != 0x01)
-	      bx_panic("disk: interrupt reason bit field error\n");
+	      BX_PANIC(("disk: interrupt reason bit field error\n"));
 
 	BX_CONTROLLER(1).sector_count = 0;
 	BX_CONTROLLER(1).interrupt_reason.i_o = 1;
 	if (BX_CONTROLLER(1).sector_count != 0x02)
-	      bx_panic("disk: interrupt reason bit field error\n");
+	      BX_PANIC(("disk: interrupt reason bit field error\n"));
 
 	BX_CONTROLLER(1).sector_count = 0;
 	BX_CONTROLLER(1).interrupt_reason.rel = 1;
 	if (BX_CONTROLLER(1).sector_count != 0x04)
-	      bx_panic("disk: interrupt reason bit field error\n");
+	      BX_PANIC(("disk: interrupt reason bit field error\n"));
 
 	BX_CONTROLLER(1).sector_count = 0;
 	BX_CONTROLLER(1).interrupt_reason.tag = 3;
 	if (BX_CONTROLLER(1).sector_count != 0x18)
-	      bx_panic("disk: interrupt reason bit field error\n");
+	      BX_PANIC(("disk: interrupt reason bit field error\n"));
 	BX_CONTROLLER(1).sector_count = 0;
 
 	// allocate low level driver
@@ -188,15 +188,15 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   if (bx_options.diskc.present) {
 	BX_INFO(("Opening image for device 0\n"));
 	if ((BX_HD_THIS s[0].hard_drive->open(bx_options.diskc.path)) < 0) {
-	      bx_panic("could not open hard drive image file '%s'\n",
-		       bx_options.diskc.path);
+	      BX_PANIC(("could not open hard drive image file '%s'\n",
+		       bx_options.diskc.path));
 	}
   }
   if (bx_options.diskd.present && !bx_options.cdromd.present) {
 	BX_INFO(("Opening image for device 1\n"));
 	if ((BX_HD_THIS s[1].hard_drive->open(bx_options.diskd.path)) < 0) {
-	      bx_panic("could not open hard drive image file '%s'\n",
-		       bx_options.diskd.path);
+	      BX_PANIC(("could not open hard drive image file '%s'\n",
+		       bx_options.diskd.path));
 	}
   }
 
@@ -325,24 +325,24 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
   Bit32u value32;
 
   if (io_len==2 && address!=0x1f0) {
-    bx_panic("disk: non-byte IO read to %04x\n", (unsigned) address);
+    BX_PANIC(("disk: non-byte IO read to %04x\n", (unsigned) address));
     }
 
   switch (address) {
     case 0x1f0: // hard disk data (16bit)
       if (BX_SELECTED_CONTROLLER.status.drq == 0) {
-	    bx_panic("disk: IO read(1f0h) with drq == 0: last command was %02xh\n",
-		     (unsigned) BX_SELECTED_CONTROLLER.current_command);
+	    BX_PANIC(("disk: IO read(1f0h) with drq == 0: last command was %02xh\n",
+		     (unsigned) BX_SELECTED_CONTROLLER.current_command));
       }
       switch (BX_SELECTED_CONTROLLER.current_command) {
         case 0x20: // read sectors, with retries
         case 0x21: // read sectors, without retries
           if (io_len != 2) {
-            bx_panic("disk: non-word IO read from %04x\n",
-                     (unsigned) address);
+            BX_PANIC(("disk: non-word IO read from %04x\n",
+                     (unsigned) address));
             }
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
-            bx_panic("disk: IO read(1f0): buffer_index >= 512\n");
+            BX_PANIC(("disk: IO read(1f0): buffer_index >= 512\n"));
           value16  = BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index];
           value16 |= (BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] << 8);
           BX_SELECTED_CONTROLLER.buffer_index += 2;
@@ -382,11 +382,11 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	      ret = BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
 
               if (ret < 0)
-                bx_panic("disk: could lseek() hard drive image file\n");
+                BX_PANIC(("disk: could lseek() hard drive image file\n"));
 	      ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
               if (ret < 512) {
                 BX_INFO(("logical sector was %u\n", (unsigned) logical_sector));
-                bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
+                BX_PANIC(("disk: could not read() hard drive image file at byte %d\n", logical_sector*512));
                 }
 
               BX_SELECTED_CONTROLLER.buffer_index = 0;
@@ -438,8 +438,8 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             }
 	  }
           else
-            bx_panic("disk: IO read(1f0h): current command is %02xh\n",
-              (unsigned) BX_SELECTED_CONTROLLER.current_command);
+            BX_PANIC(("disk: IO read(1f0h): current command is %02xh\n",
+              (unsigned) BX_SELECTED_CONTROLLER.current_command));
 
 	    case 0xa0: {
 		  unsigned index = BX_SELECTED_CONTROLLER.buffer_index;
@@ -447,7 +447,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 		  // Load block if necessary
 		  if (index >= 2048) {
 			if (index > 2048)
-			      bx_panic("disk: index > 2048\n");
+			      BX_PANIC(("disk: index > 2048\n"));
 			switch (BX_SELECTED_HD.atapi.command) {
 			      case 0x28: // read (10)
 			      case 0xa8: // read (12)
@@ -469,7 +469,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 				    BX_SELECTED_HD.atapi.total_bytes_remaining -= 2048;
 				    index = 0;
 #else
-				    bx_panic("Read with no LOWLEVEL_CDROM\n");
+				    BX_PANIC(("Read with no LOWLEVEL_CDROM\n"));
 #endif
 				    break;
 
@@ -540,8 +540,8 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	    }
 
         default:
-          bx_panic("disk: IO read(1f0h): current command is %02xh\n",
-            (unsigned) BX_SELECTED_CONTROLLER.current_command);
+          BX_PANIC(("disk: IO read(1f0h): current command is %02xh\n",
+            (unsigned) BX_SELECTED_CONTROLLER.current_command));
         }
       break;
 
@@ -622,11 +622,11 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
        break;
 #endif
     default:
-      bx_panic("hard drive: io read to address %x unsupported\n",
-        (unsigned) address);
+      BX_PANIC(("hard drive: io read to address %x unsupported\n",
+        (unsigned) address));
     }
 
-  bx_panic("hard drive: shouldnt get here!\n");
+  BX_PANIC(("hard drive: shouldnt get here!\n"));
   return(0);
 
   return_value32:
@@ -672,7 +672,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Boolean prev_control_reset;
 
   if (io_len==2 && address!=0x1f0) {
-    bx_panic("disk: non-byte IO write to %04x\n", (unsigned) address);
+    BX_PANIC(("disk: non-byte IO write to %04x\n", (unsigned) address));
     }
 
   if (bx_dbg.disk || (CDROM_SELECTED && bx_dbg.cdrom)) {
@@ -705,12 +705,12 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0x1f0:
       if (io_len != 2) {
-        bx_panic("disk: non-word IO read from %04x\n", (unsigned) address);
+        BX_PANIC(("disk: non-word IO read from %04x\n", (unsigned) address));
         }
       switch (BX_SELECTED_CONTROLLER.current_command) {
         case 0x30:
           if (BX_SELECTED_CONTROLLER.buffer_index >= 512)
-            bx_panic("disk: IO write(1f0): buffer_index >= 512\n");
+            BX_PANIC(("disk: IO write(1f0): buffer_index >= 512\n"));
           BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index] = value;
           BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (value >> 8);
           BX_SELECTED_CONTROLLER.buffer_index += 2;
@@ -724,11 +724,11 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 	    ret = BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
             if (ret < 0)
-              bx_panic("disk: could lseek() hard drive image file\n");
+              BX_PANIC(("disk: could lseek() hard drive image file\n"));
 
 	    ret = BX_SELECTED_HD.hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
             if (ret < 512)
-              bx_panic("disk: could not write() hard drive image file at byte %d\n", logical_sector*512);
+              BX_PANIC(("disk: could not write() hard drive image file at byte %d\n", logical_sector*512));
 
             BX_SELECTED_CONTROLLER.buffer_index = 0;
 
@@ -765,7 +765,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 	    case 0xa0: // PACKET
 		  if (BX_SELECTED_CONTROLLER.buffer_index >= PACKET_SIZE)
-			bx_panic("disk: IO write(1f0): buffer_index >= PACKET_SIZE\n");
+			BX_PANIC(("disk: IO write(1f0): buffer_index >= PACKET_SIZE\n"));
 		  BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index] = value;
 		  BX_SELECTED_CONTROLLER.buffer[BX_SELECTED_CONTROLLER.buffer_index+1] = (value >> 8);
 		  BX_SELECTED_CONTROLLER.buffer_index += 2;
@@ -823,11 +823,11 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 				    Boolean Start = (BX_SELECTED_CONTROLLER.buffer[4] >> 0) & 1;
 
 				    if (!LoEj && !Start) { // stop the disc
-					  bx_panic("disk: Stop disc not implemented\n");
+					  BX_PANIC(("disk: Stop disc not implemented\n"));
 				    } else if (!LoEj && Start) { // start the disc and read the TOC
-					  bx_panic("disk: Start disc not implemented\n");
+					  BX_PANIC(("disk: Start disc not implemented\n"));
 				    } else if (LoEj && !Start) { // Eject the disc
-					  bx_panic("disk: Eject the disc not implemented\n");
+					  BX_PANIC(("disk: Eject the disc not implemented\n"));
 				    } else { // Load the disc
 					  // My guess is that this command only closes the tray, that's a no-op for us
 					  atapi_cmd_nop();
@@ -840,7 +840,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 				    uint16 alloc_length = read_16bit(BX_SELECTED_CONTROLLER.buffer + 8);
 
 				    if (alloc_length == 0)
-					  bx_panic("disk: Zero allocation length to MECHANISM STATUS not impl.\n");
+					  BX_PANIC(("disk: Zero allocation length to MECHANISM STATUS not impl.\n"));
 
 				    init_send_atapi_command(atapi_command, 8, alloc_length);
 
@@ -910,8 +910,8 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 						      case 0x0d: // CD-ROM
 						      case 0x0e: // CD-ROM audio control
 						      case 0x3f: // all
-							    bx_panic("cdrom: MODE SENSE (curr), code=%x\n",
-								     PageCode);
+							    BX_PANIC(("cdrom: MODE SENSE (curr), code=%x\n",
+								     PageCode));
 							    break;
 
 						      default:
@@ -933,8 +933,8 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 						      case 0x0e: // CD-ROM audio control
 						      case 0x2a: // CD-ROM capabilities & mech. status
 						      case 0x3f: // all
-							    bx_panic("cdrom: MODE SENSE (chg), code=%x\n",
-								     PageCode);
+							    BX_PANIC(("cdrom: MODE SENSE (chg), code=%x\n",
+								     PageCode));
 							    break;
 
 						      default:
@@ -956,8 +956,8 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 						      case 0x0e: // CD-ROM audio control
 						      case 0x2a: // CD-ROM capabilities & mech. status
 						      case 0x3f: // all
-							    bx_panic("cdrom: MODE SENSE (dflt), code=%x\n",
-								     PageCode);
+							    BX_PANIC(("cdrom: MODE SENSE (dflt), code=%x\n",
+								     PageCode));
 							    break;
 
 						      default:
@@ -978,7 +978,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 						break;
 
 					  default:
-						bx_panic("disk: Should not get here!\n");
+						BX_PANIC(("disk: Should not get here!\n"));
 						break;
 				    }
 			      }
@@ -1043,7 +1043,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 			      case 0xbe: { // read cd
 				    if (BX_SELECTED_HD.cdrom.ready) {
-					  bx_panic("Read CD with CD present not implemented\n");
+					  BX_PANIC(("Read CD with CD present not implemented\n"));
 				    } else {
 					  atapi_cmd_error(SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT);
 					  raise_interrupt();
@@ -1075,7 +1075,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 							    ready_to_send_atapi();
 						      }
 #else
-						      bx_panic("LOWLEVEL_CDROM not defined\n");
+						      BX_PANIC(("LOWLEVEL_CDROM not defined\n"));
 #endif
 						      break;
 
@@ -1095,7 +1095,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 						case 2:
 						default:
-						      bx_panic("disk: (READ TOC) Format %d not supported\n", format);
+						      BX_PANIC(("disk: (READ TOC) Format %d not supported\n", format));
 						      break;
 					  }
 				    } else {
@@ -1191,7 +1191,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 					  int ret_len = 4; // header size
 
 					  if (sub_q) { // !sub_q == header only
-						bx_panic("Read sub-channel with SubQ not implemented\n");
+						BX_PANIC(("Read sub-channel with SubQ not implemented\n"));
 					  }
 
 					  init_send_atapi_command(atapi_command, ret_len, alloc_length);
@@ -1213,8 +1213,8 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 			      case 0xbb: // set cd speed
 			      case 0x4e: // stop play/scan
 			      default:
-				    bx_panic("Unknown ATAPI command 0x%x (%d)\n",
-					     atapi_command, atapi_command);
+				    BX_PANIC(("Unknown ATAPI command 0x%x (%d)\n",
+					     atapi_command, atapi_command));
 				    break;
 			}
 		  }
@@ -1222,8 +1222,8 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		  break;
 
         default:
-          bx_panic("disk: IO write(1f0h): current command is %02xh\n",
-            (unsigned) BX_SELECTED_CONTROLLER.current_command);
+          BX_PANIC(("disk: IO write(1f0h): current command is %02xh\n",
+            (unsigned) BX_SELECTED_CONTROLLER.current_command));
         }
       break;
 
@@ -1283,14 +1283,14 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    break;
 
       if (BX_SELECTED_CONTROLLER.status.busy)
-        bx_panic("hard disk: command sent, controller BUSY\n");
+        BX_PANIC(("hard disk: command sent, controller BUSY\n"));
       if ( (value & 0xf0) == 0x10 )
         value = 0x10;
       switch (value) {
 
         case 0x10: // calibrate drive
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
-		bx_panic("disk: calibrate drive issued to non-disk\n");
+		BX_PANIC(("disk: calibrate drive issued to non-disk\n"));
           if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.present) {
             BX_SELECTED_CONTROLLER.error_register = 0x02; // Track 0 not found
             BX_SELECTED_CONTROLLER.status.busy = 0;
@@ -1325,7 +1325,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
            */
 
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
-		bx_panic("disk: read multiple issued to non-disk\n");
+		BX_PANIC(("disk: read multiple issued to non-disk\n"));
 
           BX_SELECTED_CONTROLLER.current_command = value;
 
@@ -1344,13 +1344,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  ret = BX_SELECTED_HD.hard_drive->lseek(logical_sector * 512, SEEK_SET);
 
           if (ret < 0) {
-            bx_panic("disk: could not lseek() hard drive image file\n");
+            BX_PANIC(("disk: could not lseek() hard drive image file\n"));
             }
 
 	  ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
           if (ret < 512) {
             BX_INFO(("logical sector was %u\n", (unsigned) logical_sector));
-            bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
+            BX_PANIC(("disk: could not read() hard drive image file at byte %d\n", logical_sector*512));
             }
 
           BX_SELECTED_CONTROLLER.error_register = 0;
@@ -1374,10 +1374,10 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
            */
 
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
-		bx_panic("disk: write multiple issued to non-disk\n");
+		BX_PANIC(("disk: write multiple issued to non-disk\n"));
 
           if (BX_SELECTED_CONTROLLER.status.busy) {
-            bx_panic("disk: write command: BSY bit set\n");
+            BX_PANIC(("disk: write command: BSY bit set\n"));
             }
           BX_SELECTED_CONTROLLER.current_command = value;
 
@@ -1393,10 +1393,10 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x90: // Drive Diagnostic
           if (BX_SELECTED_CONTROLLER.status.busy) {
-            bx_panic("disk: diagnostic command: BSY bit set\n");
+            BX_PANIC(("disk: diagnostic command: BSY bit set\n"));
             }
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
-		bx_panic("disk: drive diagnostics issued to non-disk\n");
+		BX_PANIC(("disk: drive diagnostics issued to non-disk\n"));
           BX_SELECTED_CONTROLLER.error_register = 0x81; // Drive 1 failed, no error on drive 0
           // BX_SELECTED_CONTROLLER.status.busy = 0; // not needed
           BX_SELECTED_CONTROLLER.status.drq = 0;
@@ -1405,10 +1405,10 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x91: // initialize drive parameters
           if (BX_SELECTED_CONTROLLER.status.busy) {
-            bx_panic("disk: init drive parameters command: BSY bit set\n");
+            BX_PANIC(("disk: init drive parameters command: BSY bit set\n"));
             }
 	  if (BX_SELECTED_HD.device_type != IDE_DISK)
-		bx_panic("disk: initialize drive parameters issued to non-disk\n");
+		BX_PANIC(("disk: initialize drive parameters issued to non-disk\n"));
           // sets logical geometry of specified drive
           BX_INFO(("initialize drive params\n"));
           BX_INFO(("  sector count = %u\n",
@@ -1418,7 +1418,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_INFO(("  head number = %u\n",
             (unsigned) BX_SELECTED_CONTROLLER.head_no));
           if (BX_HD_THIS drive_select != 0 && !bx_options.diskd.present) {
-            bx_panic("disk: init drive params: drive != 0\n");
+            BX_PANIC(("disk: init drive params: drive != 0\n"));
             //BX_SELECTED_CONTROLLER.error_register = 0x12;
             BX_SELECTED_CONTROLLER.status.busy = 0;
             BX_SELECTED_CONTROLLER.status.drive_ready = 1;
@@ -1428,9 +1428,9 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
 	  }
           if (BX_SELECTED_CONTROLLER.sector_count != BX_SELECTED_HD.hard_drive->sectors)
-            bx_panic("disk: init drive params: sector count doesnt match\n");
+            BX_PANIC(("disk: init drive params: sector count doesnt match\n"));
           if ( BX_SELECTED_CONTROLLER.head_no != (BX_SELECTED_HD.hard_drive->heads-1) )
-            bx_panic("disk: init drive params: head number doesn't match\n");
+            BX_PANIC(("disk: init drive params: head number doesn't match\n"));
           BX_SELECTED_CONTROLLER.status.busy = 0;
           BX_SELECTED_CONTROLLER.status.drive_ready = 1;
           BX_SELECTED_CONTROLLER.status.drq = 0;
@@ -1490,14 +1490,14 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    break;
 
 	    default:
-	      bx_panic("disk: SET FEATURES with unknown subcommand: 0x%02x\n", (unsigned) BX_SELECTED_CONTROLLER.features );
+	      BX_PANIC(("disk: SET FEATURES with unknown subcommand: 0x%02x\n", (unsigned) BX_SELECTED_CONTROLLER.features ));
 	  }
 	  break;
 
         case 0x40: //
           if (bx_options.newHardDriveSupport) {
 	    if (BX_SELECTED_HD.device_type != IDE_DISK)
-		bx_panic("disk: read verify issued to non-disk\n");
+		BX_PANIC(("disk: read verify issued to non-disk\n"));
             BX_INFO(("disk: Verify Command : 0x40 ! \n"));
             BX_SELECTED_CONTROLLER.status.busy = 0;
             BX_SELECTED_CONTROLLER.status.drive_ready = 1;
@@ -1521,7 +1521,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		    command_aborted(value);
 
 	      if (BX_SELECTED_HD.device_type != IDE_DISK)
-		bx_panic("disk: set multiple mode issued to non-disk\n");
+		BX_PANIC(("disk: set multiple mode issued to non-disk\n"));
 
 	      BX_SELECTED_CONTROLLER.sectors_per_block = BX_SELECTED_CONTROLLER.sector_count;
 	      BX_SELECTED_CONTROLLER.status.busy = 0;
@@ -1578,9 +1578,9 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
 		    // PACKET
 		    if (BX_SELECTED_CONTROLLER.features & (1 << 0))
-			  bx_panic("disk: PACKET-DMA not supported\n");
+			  BX_PANIC(("disk: PACKET-DMA not supported\n"));
 		    if (BX_SELECTED_CONTROLLER.features & (1 << 1))
-			  bx_panic("disk: PACKET-overlapped not supported\n");
+			  BX_PANIC(("disk: PACKET-overlapped not supported\n"));
 
 		    // We're already ready!
 		    BX_SELECTED_CONTROLLER.sector_count = 1;
@@ -1598,7 +1598,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	      }
         case 0xa2: // ATAPI service (optional)
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
-		    bx_panic("disk: ATAPI SERVICE not implemented\n");
+		    BX_PANIC(("disk: ATAPI SERVICE not implemented\n"));
 	      }
         // non-standard commands
         case 0xf0: // Exabyte enable nest command
@@ -1618,7 +1618,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  break;
 
         default:
-          bx_panic("IO write(1f7h): command 0x%02x\n", (unsigned) value);
+          BX_PANIC(("IO write(1f7h): command 0x%02x\n", (unsigned) value));
         }
       break;
 
@@ -1699,8 +1699,8 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif
 
     default:
-      bx_panic("hard drive: io write to address %x = %02x\n",
-        (unsigned) address, (unsigned) value);
+      BX_PANIC(("hard drive: io write to address %x = %02x\n",
+        (unsigned) address, (unsigned) value));
     }
 }
 
@@ -1712,7 +1712,7 @@ bx_hard_drive_c::close_harddrive(void)
 }
 
 
-#define assert(i) do { if (!((i))) bx_panic("assertion on line %d", __LINE__); } while (0)
+#define assert(i) do { if (!((i))) BX_PANIC(("assertion on line %d", __LINE__)); } while (0)
 
   Bit32u
 bx_hard_drive_c::calculate_logical_address()
@@ -1731,7 +1731,7 @@ bx_hard_drive_c::calculate_logical_address()
 
       if (logical_sector >=
 	  (BX_SELECTED_HD.hard_drive->cylinders * BX_SELECTED_HD.hard_drive->heads * BX_SELECTED_HD.hard_drive->sectors)) {
-            bx_panic("disk: read sectors: out of bounds\n");
+            BX_PANIC(("disk: read sectors: out of bounds\n"));
       }
       return logical_sector;
 }
@@ -1768,7 +1768,7 @@ bx_hard_drive_c::identify_ATAPI_drive(unsigned drive)
   unsigned i;
 
   if (drive != (unsigned)BX_HD_THIS drive_select) {
-	bx_panic("disk: identify_drive panic (drive != drive_select)\n");
+	BX_PANIC(("disk: identify_drive panic (drive != drive_select)\n"));
   }
 
   BX_SELECTED_HD.id_drive[0] = (2 << 14) | (5 << 8) | (1 << 7) | (2 << 5) | (0 << 0); // Removable CDROM, 50us response, 12 byte packets
@@ -1872,7 +1872,7 @@ bx_hard_drive_c::identify_drive(unsigned drive)
   Bit16u temp16;
 
   if (drive != BX_HD_THIS drive_select) {
-	bx_panic("disk: identify_drive panic (drive != drive_select)\n");
+	BX_PANIC(("disk: identify_drive panic (drive != drive_select)\n"));
   }
 
 #if defined(CONNER_CFA540A)
@@ -2217,13 +2217,13 @@ bx_hard_drive_c::identify_drive(unsigned drive)
 bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int alloc_length, bool lazy)
 {
       if (BX_SELECTED_CONTROLLER.byte_count == 0)
-	    bx_panic("disk: ATAPI command with zero byte count\n");
+	    BX_PANIC(("disk: ATAPI command with zero byte count\n"));
 
       if (BX_SELECTED_CONTROLLER.byte_count & 1)
-	    bx_panic("disk: Odd byte count to ATAPI command\n");
+	    BX_PANIC(("disk: Odd byte count to ATAPI command\n"));
 
       if (alloc_length <= 0)
-	    bx_panic("disk: Allocation length <= 0\n");
+	    BX_PANIC(("disk: Allocation length <= 0\n"));
 
       BX_SELECTED_CONTROLLER.interrupt_reason.i_o = 1;
       BX_SELECTED_CONTROLLER.interrupt_reason.c_d = 0;
@@ -2358,7 +2358,7 @@ int default_image_t::open (const char* pathname)
       int ret = fstat(fd, &stat_buf);
       if (ret) {
 	    perror("fstat'ing hard drive image file");
-	    bx_panic("fstat() returns error!\n");
+	    BX_PANIC(("fstat() returns error!\n"));
       }
 
       return fd;
@@ -2428,7 +2428,7 @@ int concat_image_t::open (const char* pathname0)
     int ret = fstat(fd_table[i], &stat_buf);
     if (ret) {
 	  perror("fstat'ing hard drive image file");
-	  bx_panic("fstat() returns error!\n");
+	  BX_PANIC(("fstat() returns error!\n"));
     }
     if ((stat_buf.st_size % 512) != 0) {
       bx_panic ("[HDD] size of disk image must be multiple of 512 bytes");
@@ -2526,7 +2526,7 @@ ssize_t concat_image_t::write (const void* buf, size_t count)
 error_recovery_t::error_recovery_t ()
 {
       if (sizeof(error_recovery_t) != 8) {
-	    bx_panic("error_recovery_t has size != 8\n");
+	    BX_PANIC(("error_recovery_t has size != 8\n"));
       }
 
       data[0] = 0x01;
