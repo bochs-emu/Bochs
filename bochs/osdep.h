@@ -40,6 +40,24 @@ extern "C" {
 #endif   /* __cplusplus */
 
 //////////////////////////////////////////////////////////////////////
+// Hacks for win32, but exclude MINGW32 because it doesn't need them.
+//////////////////////////////////////////////////////////////////////
+#ifdef WIN32
+#ifndef __MINGW32__
+// always return regular file.
+#  define S_ISREG(st_mode) 1
+#  define S_ISCHR(st_mode) 0
+
+  // VCPP includes also are missing these
+#  define off_t long
+#  define ssize_t int
+
+// win32 has snprintf though with different name.
+#define snprintf _snprintf
+#endif  /* ifnndef __MINGW32__ */
+#endif   /* WIN32 */
+
+//////////////////////////////////////////////////////////////////////
 // Missing library functions.
 // These should work on any platform that needs them.
 // 
@@ -51,6 +69,7 @@ extern "C" {
 // If you're considering implementing a missing library function, note 
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
+
 
 #if !BX_HAVE_SNPRINTF
 #define snprintf bx_snprintf
