@@ -299,7 +299,7 @@ extern unsigned (* pluginRegisterDMA16Channel)(
   const char* name
   );
 extern unsigned  (* pluginUnregisterDMAChannel)(unsigned channel);
-extern void     (* pluginDMASetDRQ)(unsigned channel, unsigned val);
+extern void     (* pluginDMASetDRQ)(unsigned channel, Boolean val);
 extern unsigned (* pluginDMAGetTC)(void);
 extern unsigned (* pluginDMAGetTC)(void);
 extern void     (* pluginDMARaiseHLDA)(void);

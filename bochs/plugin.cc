@@ -190,7 +190,7 @@ builtinUnregisterDMAChannel(unsigned channel)
 }
 
   static void
-builtinDMASetDRQ(unsigned channel, unsigned val)
+builtinDMASetDRQ(unsigned channel, Boolean val)
 {
   pluginlog->panic("builtinDMASetDRQ called, no DMA plugin loaded?");
 }
