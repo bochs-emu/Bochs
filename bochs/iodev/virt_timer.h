@@ -1,4 +1,8 @@
 
+#ifndef _BX_VIRT_TIMER_H
+#define _BX_VIRT_TIMER_H
+
+
 #define BX_USE_VIRTUAL_TIMERS 0
 #define BX_VIRTUAL_TIMERS_REALTIME 0
 
@@ -7,7 +11,7 @@
 
 #define BX_MAX_VIRTUAL_TIME (0x7fffffff)
 
-class bx_virt_timer_c {
+class bx_virt_timer_c : public logfunctions {
  private:
 
   struct {
@@ -37,6 +41,21 @@ class bx_virt_timer_c {
   Bit64u virtual_next_event_time;
   Bit64u current_virtual_time;
 
+  //Real time variables:
+  Bit64u last_real_time;
+  Bit64u total_real_usec;
+  Bit64u last_realtime_delta;
+  //System time variables:
+  Bit64u last_usec;
+  Bit64u usec_per_second;
+  Bit64u stored_delta;
+  Bit64u last_system_usec;
+  Bit64u em_last_realtime;
+  //Virtual timer variables:
+  Bit64u total_ticks;
+  Bit64u last_realtime_ticks;
+  Bit64u ticks_per_second;
+
   int system_timer_id;
 
   //Whether or not to use virtual timers.
@@ -51,11 +70,6 @@ class bx_virt_timer_c {
   static void nullTimer(void* this_ptr);
 
 
-  //Cycle count until the next timer handler needs to be called.
-  void update_next_virtual_event_time(void){
-    return timers_next_event_time + current_timers_time - current_virtual_time;
-  }
-
   //Step the given number of cycles, optionally calling any timer handlers.
   void periodic(Bit64u time_passed);
 
@@ -66,9 +80,6 @@ class bx_virt_timer_c {
   //Called to advance the virtual time.
   // calls periodic as needed.
   void advance_virtual_time(Bit64u time_passed);
-
-  //The real timer handler.
-  void timer_handler();
 
  public:
 
@@ -102,9 +113,20 @@ class bx_virt_timer_c {
 
 
   //Timer handler passed to pc_system
-  void pc_system_timer_handler(void* this_ptr);
+  static void pc_system_timer_handler(void* this_ptr);
 
-}
+  //The real timer handler.
+  void timer_handler();
+
+  //Initialization
+  void init(void);
+  bx_virt_timer_c(void);
+  ~bx_virt_timer_c(void);
+
+};
+
 
 
 extern bx_virt_timer_c bx_virt_timer;
+
+#endif // _BX_VIRT_TIMER_H
