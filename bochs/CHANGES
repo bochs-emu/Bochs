@@ -1,3 +1,45 @@
+Changes to next release:
+
+- CPU
+  - fixes for booting OS/2 by Dmitri Froloff
+    - v8086 priveleged instruction processing bug (was also reported by
+      LightCone Aug  7 2003)
+    - exception process bug (was reported by Diego Henriquez Sat Nov 15
+      01:16:51 CET 2003)
+    - segment validation with IRET instruction
+    - CS segment not present exception processing with IRET
+  - add MSVC host asm instructions (patch by suzu)
+  - fixed bug in HADDPD/HSUBPD (SSE3) instructions
+  - fixed bug in float to integer convert instructions
+  - fixed BCD instructions implementation
+  - speed optimizations in MMX and CPU core (sshwarts and psychosmur)
+
+- configuration interface
+  - --enable-ignore-bad-msr (ignore bad MSR references) option is enabled 
+    by default
+  - --enable-mmx enabled by default only if cpu-level > 4
+  - set default IPS to 10000000 in .bochsrc
+
+- SF patches applied
+  [894595] MSR_APICBASE always returns APIC ADDRESS 0 by Kangmo Kim
+
+- these S.F. bugs were closed 
+  #923653 DAA instruction is broken
+  #911225 obscure AAA / AAS bugs
+  #837206 Problems with numerical keys
+  #658765 BOCHS halts in runtime config
+  #890734 Bochsrc Parser Bug with commas included in strings
+  #877285 MSR_APICBASE zero upon startup
+  #526984 SDL compiled in cygwin just quits
+  #886406 I/O permissions bug
+  #883239 undefined symbols in gui/siminterface.h:1215
+  #419647 on OSF1, cxx hates C++ inlines
+  #809790 &quot;No rule to make target `devices.cc?...&quot;
+  #873654 How compile without plug-in support ?
+  #837161 Test case for BX_CPU_C::IRET32
+  #888116 mmx.cc compile error
+
+-------------------------------------------------------------------------
 Changes in 2.1.1 (February 8, 2004):
 
 - fix bug in int15h function 0xe820 (Christian Neubert)
