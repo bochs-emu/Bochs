@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_constant.c                                                           |
- |  $Id: reg_constant.c,v 1.6 2003-10-04 16:47:57 sshwarts Exp $
+ |  $Id: reg_constant.c,v 1.7 2004-03-05 09:19:58 sshwarts Exp $
  |                                                                           |
  | All of the constant FPU_REGs                                              |
  |                                                                           |
@@ -18,8 +18,6 @@
 #include "control_w.h"
 
 FPU_REG const CONST_1    = MAKE_REG(POS, 0, 0x00000000, 0x80000000);
-FPU_REG const CONST_2    = MAKE_REG(POS, 1, 0x00000000, 0x80000000);
-FPU_REG const CONST_HALF = MAKE_REG(POS, -1, 0x00000000, 0x80000000);
 FPU_REG const CONST_L2T  = MAKE_REG(POS, 1, 0xcd1b8afe, 0xd49a784b);
 FPU_REG const CONST_L2E  = MAKE_REG(POS, 0, 0x5c17f0bc, 0xb8aa3b29);
 FPU_REG const CONST_PI   = MAKE_REG(POS, 1, 0x2168c235, 0xc90fdaa2);

@@ -311,6 +311,9 @@ static Float32 approximate_rcp(Float32 op)
 
     case float_NaN:
         return convert_to_QNaN(op);
+
+    case float_normalized:
+        break;
   }
 
   Bit32u fraction = float32_fraction(op);
@@ -687,7 +690,7 @@ static Float32 approximate_rsqrt(Float32 op)
         return convert_to_QNaN(op);
 
     case float_normalized:
-        ;
+        break;
   };
 
   if (sign == 1)

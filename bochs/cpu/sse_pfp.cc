@@ -2553,7 +2553,7 @@ void BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
   result.xmm64u(0) = 
      float64_add(op1.xmm64u(0), op1.xmm64u(1), status_word);
   result.xmm64u(1) = 
-     float64_add(op2.xmm64u(1), op2.xmm64u(1), status_word);
+     float64_add(op2.xmm64u(0), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2656,7 +2656,7 @@ void BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
   result.xmm64u(0) = 
      float64_sub(op1.xmm64u(0), op1.xmm64u(1), status_word);
   result.xmm64u(1) = 
-     float64_sub(op2.xmm64u(1), op2.xmm64u(1), status_word);
+     float64_sub(op2.xmm64u(0), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
