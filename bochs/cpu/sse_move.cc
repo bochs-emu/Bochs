@@ -85,22 +85,22 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BxPackedXmmRegister xmm;
-  Bit16u twd = BX_CPU_THIS_PTR the_i387.soft.twd, tbd = 0;
+  Bit16u twd = BX_CPU_THIS_PTR the_i387.soft.twd, tag_byte = 0;
   unsigned index;
 
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.soft.cwd;
   xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.soft.swd;
 
-  if(twd & 0x0003 == 0x0003) tbd |= 0x0100;
-  if(twd & 0x000c == 0x000c) tbd |= 0x0200;
-  if(twd & 0x0030 == 0x0030) tbd |= 0x0400;
-  if(twd & 0x00c0 == 0x00c0) tbd |= 0x0800;
-  if(twd & 0x0300 == 0x0300) tbd |= 0x1000;
-  if(twd & 0x0c00 == 0x0c00) tbd |= 0x2000;
-  if(twd & 0x3000 == 0x3000) tbd |= 0x4000;
-  if(twd & 0xc000 == 0xc000) tbd |= 0x8000;
+  if(twd & 0x0003 != 0x0003) tag_byte |= 0x0100;
+  if(twd & 0x000c != 0x000c) tag_byte |= 0x0200;
+  if(twd & 0x0030 != 0x0030) tag_byte |= 0x0400;
+  if(twd & 0x00c0 != 0x00c0) tag_byte |= 0x0800;
+  if(twd & 0x0300 != 0x0300) tag_byte |= 0x1000;
+  if(twd & 0x0c00 != 0x0c00) tag_byte |= 0x2000;
+  if(twd & 0x3000 != 0x3000) tag_byte |= 0x4000;
+  if(twd & 0xc000 != 0xc000) tag_byte |= 0x8000;
 
-  xmm.xmm16u(2) = tbd;
+  xmm.xmm16u(2) = tag_byte;
 
   /* x87 FPU Opcode (16 bits) */
   /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
@@ -138,15 +138,15 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   /* store i387 register file */
   for(index=0; index < 8; index++)
   {
-    Bit8u *r387 = (Bit8u *) &(BX_CPU_THIS_PTR the_i387.soft.st_space[index]);
-    writeVirtualDQwordAligned(i->seg(), RMAddr(i)+index*16+32, r387);
+    writeVirtualDQwordAligned(i->seg(), 
+           RMAddr(i)+index*16+32, (Bit8u *) &(BX_FPU_REG(index)));
   }
 
   /* store XMM register file */
   for(index=0; index < BX_XMM_REGISTERS; index++)
   {
-    Bit8u *r128 = (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]);
-    writeVirtualDQwordAligned(i->seg(), RMAddr(i)+index*16+160, r128);
+    writeVirtualDQwordAligned(i->seg(), 
+           RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
   }
 
   /* do not touch reserved fields */
@@ -161,7 +161,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BxPackedXmmRegister xmm;
-  Bit32u tbd, twd = 0;
+  Bit32u tag_byte, tag_byte_mask, twd = 0;
   unsigned index;
 
   readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
@@ -172,55 +172,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   /* TOS restore still not implemented */
   /* FOO/FPU IP restore still not implemented */
 
-  /* 
-   * Note that the original format for FTW can be recreated from the stored 
-   * FTW valid bits and the stored 80-bit FP data (assuming the stored data 
-   * was not the contents of MMX registers) using the following table:
-    
-     | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
-     |  all 1s  |  all 0s  |  all 0s  |          |           |         |
-     -------------------------------------------------------------------
-     |    0     |    0     |    0     |    0x    |     1     | S    10 |
-     |    0     |    0     |    0     |    1x    |     1     | V    00 |
-     -------------------------------------------------------------------
-     |    0     |    0     |    1     |    00    |     1     | S    10 |
-     |    0     |    0     |    1     |    10    |     1     | V    00 |
-     -------------------------------------------------------------------
-     |    0     |    1     |    0     |    0x    |     1     | S    10 |
-     |    0     |    1     |    0     |    1x    |     1     | V    10 |
-     -------------------------------------------------------------------
-     |    0     |    1     |    1     |    00    |     1     | S    01 |
-     |    0     |    1     |    1     |    10    |     1     | V    10 |
-     -------------------------------------------------------------------
-     |    1     |    0     |    0     |    1x    |     1     | S    10 |
-     |    1     |    0     |    0     |    1x    |     1     | V    10 |
-     -------------------------------------------------------------------
-     |    1     |    0     |    1     |    00    |     1     | S    10 |
-     |    1     |    0     |    1     |    10    |     1     | V    10 |
-     -------------------------------------------------------------------
-     |        all combinations above             |     1     | E    11 |
-
-   *
-   * The J-bit is defined to be the 1-bit binary integer to the left 
-   * of the decimal place in the significand.
-   * 
-   * The M-bit is defined to be the most significant bit of the fractional 
-   * portion of the significand (i.e., the bit immediately to the right of 
-   * the decimal place). When the M-bit is the most significant bit of the 
-   * fractional portion  of the significand, it must be  0 if the fraction 
-   * is all 0's.  
-   */                    /* still not implemented */
-
-  tbd = xmm.xmm16u(2);
-  if(tbd & 0x0100) twd |= 0x0003;
-  if(tbd & 0x0200) twd |= 0x000c;
-  if(tbd & 0x0400) twd |= 0x0030;
-  if(tbd & 0x0800) twd |= 0x00c0;
-  if(tbd & 0x1000) twd |= 0x0300;
-  if(tbd & 0x2000) twd |= 0x0c00;
-  if(tbd & 0x4000) twd |= 0x3000;
-  if(tbd & 0x8000) twd |= 0xc000;
-  BX_CPU_THIS_PTR the_i387.soft.twd = twd;
+  tag_byte = xmm.xmm16u(2);
 
   /* FPU DP restore still not implemented */
 
@@ -241,9 +193,76 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   /* load i387 register file */
   for(index=0; index < 8; index++)
   {
-    Bit8u *r387 = (Bit8u *) &(BX_CPU_THIS_PTR the_i387.soft.st_space[index]);
-    readVirtualDQwordAligned(i->seg(), RMAddr(i)+index*16+32, r387);
+    readVirtualDQwordAligned(i->seg(), 
+           RMAddr(i)+index*16+32, (Bit8u *) &(BX_FPU_REG(index)));
   }
+
+  /*                                 FTW
+   *
+   * Note that the original format for FTW can be recreated from the stored 
+   * FTW valid bits and the stored 80-bit FP data (assuming the stored data 
+   * was not the contents of MMX registers) using the following table:
+    
+     | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
+     |  all 1s  |  all 0s  |  all 0s  |          |           |         |
+     -------------------------------------------------------------------
+     |    0     |    0     |    0     |    0x    |     1     | S    10 |
+     |    0     |    0     |    0     |    1x    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    0     |    1     |    00    |     1     | S    10 |
+     |    0     |    0     |    1     |    10    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    0     |    0x    |     1     | S    10 |
+     |    0     |    1     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    1     |    00    |     1     | Z    01 |
+     |    0     |    1     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    1     |    00    |     1     | S    10 |
+     |    1     |    0     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |        all combinations above             |     0     | E    11 |
+
+   *
+   * The J-bit is defined to be the 1-bit binary integer to the left of
+   * the decimal place in the significand.
+   * 
+   * The M-bit is defined to be the most significant bit of the fractional 
+   * portion of the significand (i.e., the bit immediately to the right of 
+   * the decimal place). When the M-bit is the most significant bit of the 
+   * fractional portion  of the significand, it must be  0 if the fraction 
+   * is all 0's.  
+   */
+
+  tag_byte_mask = 0x0100;
+
+#define FPU_TAG_VALID   0x00
+#define FPU_TAG_ZERO    0x01
+#define FPU_TAG_SPECIAL 0x02
+#define FPU_TAG_EMPTY   0x03
+
+  for(index = 0;index < 8; index++, twd <<= 2, tag_byte_mask <<= 1)
+  {
+      if(tag_byte & tag_byte_mask) {
+          BxFpuRegister *fpu_reg = (BxFpuRegister *) &(BX_FPU_REG(index));
+
+          if (fpu_reg->exp == 0) {
+              if(!(fpu_reg->sigl | fpu_reg->sigh)) twd |= FPU_TAG_ZERO;
+              else twd |= FPU_TAG_SPECIAL; 
+          }
+          else if (fpu_reg->exp == 0x7fff) twd |= FPU_TAG_SPECIAL;
+          else if (fpu_reg->sigh & 0x80000000) twd |= FPU_TAG_VALID;
+          else twd |= FPU_TAG_SPECIAL;
+      }
+      else {
+         twd |= FPU_TAG_EMPTY;
+      }
+  }
+
+  BX_CPU_THIS_PTR the_i387.soft.twd = (twd >> 2);
 
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
@@ -252,8 +271,8 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     /* load XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
     {
-      Bit8u *r128 = (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]);
-      readVirtualDQwordAligned(i->seg(), RMAddr(i)+index*16+160, r128);
+      readVirtualDQwordAligned(i->seg(), 
+           RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
     }
   }
 

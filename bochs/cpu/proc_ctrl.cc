@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.66 2003-01-20 20:10:31 cbothamy Exp $
+// $Id: proc_ctrl.cc,v 1.67 2003-01-23 17:53:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1428,7 +1428,7 @@ get_std_cpuid_features()
 BX_CPU_C::CPUID(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
-  unsigned type, family, model, stepping, features;
+  unsigned family, model, stepping, features;
 #endif
 
   invalidate_prefetch_q();

@@ -14,6 +14,22 @@ typedef Bit32s s32;
 typedef Bit64u u64;
 typedef Bit64s s64;
 
+#ifdef BX_BIG_ENDIAN
+struct BxFpuRegister {
+  u16 aligment1, aligment2, aligment3;
+  s16 exp;   /* Signed quantity used in internal arithmetic. */
+  u32 sigh;
+  u32 sigl;
+} GCC_ATTRIBUTE((aligned(16), packed));
+#else
+struct BxFpuRegister {
+  u32 sigl;
+  u32 sigh;
+  s16 exp;   /* Signed quantity used in internal arithmetic. */
+  u16 aligment1, aligment2, aligment3;
+} GCC_ATTRIBUTE((aligned(16), packed));
+#endif
+
 //
 // Minimal i387 structure, pruned from the linux headers.  Only
 // the fields which were necessary are included.
@@ -33,6 +49,9 @@ struct BxFpuRegisters {
     unsigned char   rm;
     unsigned char   alimit;
 };
+
+#define BX_FPU_REG(index) \
+    (BX_CPU_THIS_PTR the_i387.soft.st_space[index*2])
 
 #if BX_SUPPORT_MMX
 typedef union {
@@ -128,7 +147,7 @@ typedef union {
 //         E - exponent
 //         A - aligment
 
-typedef struct mmx_physical_reg_t
+typedef struct
 {
 #ifdef BX_BIG_ENDIAN
    Bit16u aligment1, aligment2, aligment3; 
