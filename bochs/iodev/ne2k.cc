@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.26 2001-12-20 19:44:16 vruppert Exp $
+// $Id: ne2k.cc,v 1.27 2001-12-21 11:56:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.26 2001-12-20 19:44:16 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.27 2001-12-21 11:56:52 vruppert Exp $"));
 	// nothing for now
 }
 
@@ -330,10 +330,10 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
   switch (offset) {
   case 0x0:  // Data register - see asic_read for a description
 
-    if (io_len != (1 + BX_NE2K_THIS s.DCR.wdsize)) {
-      BX_ERROR(("dma write, wrong size %d fixed", io_len));
-      io_len = 1 + BX_NE2K_THIS s.DCR.wdsize;
-      }
+    if ((io_len == 2) && (BX_NE2K_THIS s.DCR.wdsize == 0)) {
+      BX_PANIC(("dma write length 2 on byte mode operation"));
+      break;
+    }
 
     if (BX_NE2K_THIS s.remote_bytes == 0)
       BX_PANIC(("ne2K: dma write, byte count 0"));
@@ -341,10 +341,9 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
     BX_NE2K_THIS s.remote_dma   += io_len;
 
-    if (BX_NE2K_THIS s.remote_bytes > 1)
-	BX_NE2K_THIS s.remote_bytes -= (BX_NE2K_THIS s.DCR.wdsize + 1);
-    else
-	BX_NE2K_THIS s.remote_bytes = 0;
+    BX_NE2K_THIS s.remote_bytes -= io_len;
+    if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ)
+      BX_NE2K_THIS s.remote_bytes = 0;
 
     // If all bytes have been written, signal remote-DMA complete
     if (BX_NE2K_THIS s.remote_bytes == 0) {
@@ -959,7 +958,7 @@ bx_ne2k_c::read(Bit32u address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_NE2K_SMF
   BX_DEBUG(("read addr %x, len %d", address, io_len));
-  Bit32u retval;
+  Bit32u retval = 0;
   int offset = address - BX_NE2K_THIS s.base_address;
 
   if (offset >= 0x10) {
@@ -1219,7 +1218,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.26 2001-12-20 19:44:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.27 2001-12-21 11:56:52 vruppert Exp $"));
   BX_NE2K_THIS devices = d;
 
 
