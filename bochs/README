@@ -53,6 +53,20 @@ TO DO:
 - Solaris: it does not appear to call constructors of global objects that
   are loaded in a plugin.  Maybe we need to link the plugins with some
   c++ library or some piece of one?
+- on linux, if I attempt to set CFLAGS and CXXFLAGS before running configure
+  in the ltdl directory I get
+  > configure: running /bin/sh '../../libltdl/configure'  'CFLAGS=-g -Wall' 'CXXFLAGS=-g -Wall' --enable-ltdl-convenience --cache-file=/dev/null --srcdir=../../libltdl
+  > configure: warning: CFLAGS=-g -Wall: invalid host type
+  > configure: warning: CXXFLAGS=-g -Wall: invalid host type
+  > configure: error: can only configure for one host and one target at a time
+  > configure: error: /bin/sh '../../libltdl/configure' failed for libltdl
+  This can be solved by running autoconf in libltdl.  Interesting.
+- patch.ltdl works fine in Linux.  The only thing missing is the libltdl
+  library itself.  Do I really want to embed 750k of extra library in the
+  source code?  If I grabbed only the .h, .c, and ltdl.m4 then it's more
+  like 120k and only two files, which seems more reasonable.
+
+
 
 DONE:
 - applied patch.plugins5
