@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18 2002-09-16 19:17:51 vruppert Exp $
+// $Id: iodev.h,v 1.18.4.1 2002-10-05 02:37:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,7 +40,7 @@
 
 class bx_biosdev_c;
 class bx_pit_c;
-class bx_keyb_c;
+//class bx_keyb_c;
 class bx_dma_c;
 class bx_floppy_ctrl_c;
 class bx_cmos_c;
@@ -105,7 +105,7 @@ public:
   bx_pci_c         *pci;
   bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
-  bx_keyb_c        *keyboard;
+  //bx_keyb_c        *keyboard;
   bx_dma_c         *dma;
   bx_floppy_ctrl_c *floppy;
   bx_cmos_c        *cmos;
@@ -182,7 +182,8 @@ private:
 #if BX_IODEBUG_SUPPORT
 #   include "iodev/iodebug.h"
 #endif
-#include "iodev/keyboard.h"
+// maybe should be disabled while testing plex86 keyboard plugin
+//#include "iodev/keyboard.h"
 #include "iodev/parallel.h"
 #include "iodev/pic.h"
 #include "iodev/pit.h"

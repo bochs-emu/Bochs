@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34 2002-10-03 15:47:13 kevinlawton Exp $
+// $Id: devices.cc,v 1.34.2.1 2002-10-05 02:37:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,7 +53,8 @@ bx_devices_c::bx_devices_c(void)
   pci2isa = NULL;
 #endif
   pit = NULL;
-  keyboard = NULL;
+  // disable so I can use the plex86 keyboard plugin
+  //keyboard = NULL;
   dma = NULL;
   floppy = NULL;
   biosdev = NULL;
@@ -85,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34 2002-10-03 15:47:13 kevinlawton Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.1 2002-10-05 02:37:56 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -176,8 +177,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
   bx_slowdown_timer.init(this);
 #endif
 
-  keyboard = &bx_keyboard;
-  keyboard->init(this, cmos);
+  //disable so I can use plex86 keyboard plugin
+  //keyboard = &bx_keyboard;
+  //keyboard->init(this, cmos);
 
 #if BX_IODEBUG_SUPPORT
   iodebug = &bx_iodebug;
@@ -266,7 +268,7 @@ bx_devices_c::reset(unsigned type)
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.reset(type);
 #endif
-  keyboard->reset(type);
+  //keyboard->reset(type);
 #if BX_IODEBUG_SUPPORT
   iodebug->reset(type);
 #endif
@@ -356,13 +358,31 @@ bx_devices_c::timer()
     pic->raise_irq(0);
     }
 #endif
+ 
+#if 1
+  // separate calls to bx_gui.handle_events from the keyboard code.
+  {
+    static int multiple=0;
+    if ( ++multiple==10)
+    {
+      multiple=0;
+      bx_gui.handle_events();
+    }
+  }
+#endif
 
+#if 0
+  // the plex86 keyboard has its own timer handler and triggers IRQs on its
+  // own, so while using the plex86 keyboard plugin, this code is not needed.
+  // Except, that the keyboard->periodic() function happens to call
+  // bx_gui.handle_events for all GUI events.
   retval = keyboard->periodic( BX_IODEV_HANDLER_PERIOD );
   if (retval & 0x01)
     pic->raise_irq(1);
 
   if (retval & 0x02)
     pic->raise_irq(12);
+#endif
 
 // KPL Removed lapic periodic timer registration here.
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156 2002-10-03 05:28:56 bdenney Exp $
+// $Id: main.cc,v 1.156.2.1 2002-10-05 02:37:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,9 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       // if after init, notify the GUI
       if (set && SIM->get_init_done ()) {
 	bx_gui.mouse_enabled_changed (val!=0);
-        bx_keyboard.mouse_enabled_changed (val!=0);
+	// FIXME: while adding plugin support, I'm not going to bother
+	// with this function for now.
+        //bx_keyboard.mouse_enabled_changed (val!=0);
       }
       break;
     case BXP_NE2K_VALID:
@@ -165,7 +167,9 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
       }
       break;
     case BXP_KBD_PASTE_DELAY:
-      if (set) bx_keyboard.paste_delay_changed ();
+      // FIXME: while adding plugin support, I'm not going to bother
+      // with this function for now.
+      //if (set) bx_keyboard.paste_delay_changed ();
       break;
     case BXP_ATA0_MASTER_TYPE:
     case BXP_ATA0_SLAVE_TYPE:
@@ -1509,6 +1513,10 @@ bx_continue_after_config_interface (int argc, char *argv[])
 #else
 
   bx_init_hardware();
+
+  BX_INFO (("Now I will load the plex86 keyboard plugin..."));
+  bx_init_plugin ();
+  BX_INFO (("Done loading the plex86 keyboard plugin"));
 
   if (bx_options.load32bitOSImage.OwhichOS->get ()) {
     void bx_load32bitOSimagehack(void);

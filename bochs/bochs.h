@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99 2002-10-03 21:06:58 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.1 2002-10-05 02:37:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -81,6 +81,7 @@ extern "C" {
 #include "osdep.h"       /* platform dependent includes and defines */ 
 #include "debug/debug.h"
 #include "bxversion.h"
+#include "plugin.h"
 
 #include "gui/siminterface.h"
 

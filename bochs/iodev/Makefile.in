@@ -64,7 +64,6 @@ BX_HW_IODEV_OBJS = \
   floppy.o \
   harddrv.o \
   @IODEBUG_OBJS@ \
-  keyboard.o \
   scancodes.o \
   parallel.o \
   serial.o \
@@ -87,7 +86,13 @@ BX_INCLUDES = iodev.h
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
+all: libiodev.a  libplex-keyboard.la
 
+libplex-keyboard.la: plex-keyboard.cc plex-keyboard.h
+	libtool --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) plex-keyboard.cc
+	libtool --mode=link $(CXX) plex-keyboard.lo -o libplex-keyboard.la -rpath /tmp/bochslib 
+	-mkdir /tmp/bochslib
+	libtool --mode=install cp libplex-keyboard.la /tmp/bochslib
 
 libiodev.a: $(BX_OBJS)
 	@RMCOMMAND@ libiodev.a
