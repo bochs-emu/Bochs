@@ -1,0 +1,152 @@
+----------------------------------------------------------------------
+Patch name: BIOS Int 15 Func D8 (EISA CMOS)
+Author: Kory Markevich
+Date: 6/20/2003
+Status: new
+
+Detailed description:
+
+Hello all, I recently tried running an old DOS game that but found that it 
+needed int 15 service 83, Start/Stop Wait Timer.  So, here's a patch that 
+adds support to the BIOS for it.
+
+I've only tested it with MS-DOS 6.22 and one game that utilized it.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: bios/rombios.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bios/rombios.c,v
+retrieving revision 1.93
+diff -u -r1.93 rombios.c
+--- bios/rombios.c	25 Apr 2003 22:13:24 -0000	1.93
++++ bios/rombios.c	12 Jun 2003 01:52:14 -0000
+@@ -3352,6 +3352,48 @@
+       CLEAR_CF();
+       regs.u.r8.ah = 0;  // "ok ejection may proceed"
+       break;
++
++    case 0x83: {
++      if( regs.u.r8.al == 0 ) {
++        // Set Interval requested.
++        if( ( read_byte( 0x40, 0xA0 ) & 1 ) == 0 ) {
++          // Interval not already set.
++          Bit16u bRegister = 0;
++          Bit8u irqDisable = 0;
++
++          write_byte( 0x40, 0xA0, 1 );  // Set status byte.
++          write_word( 0x40, 0x98, ES ); // Byte location, segment.
++          write_word( 0x40, 0x9A, regs.u.r16.bx ); // Byte location, 
+offset.
++          write_word( 0x40, 0x9C, regs.u.r16.dx ); // Low word, delay.
++          write_word( 0x40, 0x9E, regs.u.r16.cx ); // High word, delay.
++          CLEAR_CF( );
++          irqDisable = inb( 0xA1 );
++          outb( 0xA1, irqDisable & 0xFE );
++          bRegister = inb_cmos( 0xB );  // Unmask IRQ8 so INT70 will get 
+through.
++          outb_cmos( 0xB, bRegister | 0x40 ); // Turn on the Periodic 
+Interrupt timer
++        } else {
++          // Interval already set.
++          BX_DEBUG_INT15("int15: Func 83h, failed, already waiting.\n" );
++          SET_CF();
++          regs.u.r8.ah = UNSUPPORTED_FUNCTION;
++        }
++      } else if( regs.u.r8.al == 1 ) {
++        // Clear Interval requested
++        Bit16u bRegister = 0;
++
++        write_byte( 0x40, 0xA0, 0 );  // Clear status byte
++        CLEAR_CF( );
++        bRegister = inb_cmos( 0xB );
++        outb_cmos( 0xB, bRegister & ~0x40 );  // Turn off the Periodic 
+Interrupt timer
++      } else {
++        BX_DEBUG_INT15("int15: Func 83h, failed.\n" );
++        SET_CF();
++        regs.u.r8.ah = UNSUPPORTED_FUNCTION;
++        regs.u.r8.al--;
++      }
++
++      break;
++    }
+
+     case 0x86:
+       // Wait for CX:DX microseconds. currently using the
+@@ -7479,25 +7521,50 @@
+   iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
+{
+   // INT 70h: IRQ 8 - CMOS RTC interrupt from periodic or alarm modes
+-  Bit8u val8;
+-
+-  val8 = inb_cmos(0x0c); // Status Reg C
+-  if (val8 == 0) BX_PANIC("int70: regC 0\n");
+-  if (val8 & 0x40) BX_PANIC("int70: periodic request\n");
+-  if (val8 & 0x20) {
+-    // Alarm Flag indicates alarm time matches current time
+-    // call user INT 4Ah alarm handler
++  Bit8u registerB = 0, registerC = 0;
++
++  // Check which modes are enabled and have occurred.
++  registerB = inb_cmos( 0xB );
++  registerC = inb_cmos( 0xC );
++
++  if( ( registerB & 0x60 ) != 0 ) {
++    if( ( registerC & 0x20 ) != 0 ) {
++      // Handle Alarm Interrupt.
+ASM_START
+-    sti
+-    //pushf
+-    //;; call_ep [ds:loc]
+-    //CALL_EP( 0x4a << 2 )
+-    int #0x4a
+-    cli
++      sti
++      //pushf
++      //;; call_ep [ds:loc]
++      //CALL_EP( 0x4a << 2 )
++      int #0x4a
++      cli
+ASM_END
+     }
+-
+-  ; //FIXME BCC BUG
++    if( ( registerC & 0x40 ) != 0 ) {
++      // Handle Periodic Interrupt.
++
++      if( read_byte( 0x40, 0xA0 ) != 0 ) {
++        // Wait Interval (Int 15, AH=83) active.
++        Bit32u time, toggle;
++
++        time = read_dword( 0x40, 0x9C );  // Time left in microseconds.
++        if( time < 0x3D1 ) {
++          // Done waiting.
++          Bit16u segment, offset;
++
++          offset = read_word( 0x40, 0x98 );
++          segment = read_word( 0x40, 0x9A );
++          write_byte( 0x40, 0xA0, 0 );  // Turn of status byte.
++          outb_cmos( 0xB, registerB & 0x37 ); // Clear the Periodic 
+Interrupt.
++          write_byte( segment, offset, 0x80 );  // Write to specified flag 
+byte.
++        } else {
++          // Continue waiting.
++          time -= 0x3D1;
++          write_dword( 0x40, 0x9C, time );
++        }
++      }
++    }
++  }
++
+ASM_START
+   call eoi_both_pics
+ASM_END
