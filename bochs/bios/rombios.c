@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.103.2.1 2004-01-18 13:30:36 cbothamy Exp $
+// $Id: rombios.c,v 1.103.2.2 2004-02-02 22:39:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.103.2.1 $";
-static char bios_date_string[] = "$Date: 2004-01-18 13:30:36 $";
+static char bios_cvs_version_string[] = "$Revision: 1.103.2.2 $";
+static char bios_date_string[] = "$Date: 2004-02-02 22:39:22 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.103.2.1 2004-01-18 13:30:36 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.103.2.2 2004-02-02 22:39:22 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -4575,7 +4575,7 @@ int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
       // should look at 40:8E also???
       
       // Read the status from controller
-      status = inb(read_word(ebda_seg, &EbdaData->ata.channels[device/2].iobase1 + ATA_CB_STAT));
+      status = inb(read_word(ebda_seg, &EbdaData->ata.channels[device/2].iobase1) + ATA_CB_STAT);
       if ( (status & ( ATA_CB_STAT_BSY | ATA_CB_STAT_RDY )) == ATA_CB_STAT_RDY ) {
         goto int13_success;
         }
