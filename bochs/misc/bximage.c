@@ -1,6 +1,6 @@
 /* 
  * misc/bximage.c
- * $Id: bximage.c,v 1.2 2001-06-01 04:24:12 bdenney Exp $
+ * $Id: bximage.c,v 1.3 2001-06-01 04:28:14 bdenney Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -12,7 +12,7 @@
 #include "config.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Revision: 1.2 $, modified $Date: 2001-06-01 04:24:12 $";
+char *rcsid = "$Id: bximage.c,v 1.3 2001-06-01 04:28:14 bdenney Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
