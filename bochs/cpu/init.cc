@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.21 2002-09-11 03:55:22 bdenney Exp $
+// $Id: init.cc,v 1.22 2002-09-12 06:29:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,7 +156,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.21 2002-09-11 03:55:22 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.22 2002-09-12 06:29:13 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -805,6 +805,8 @@ BX_CPU_C::reset(unsigned source)
     debug_trap |= 0x80000000;
     async_event = 1;
   }
+#else
+  BX_CPU_THIS_PTR async_event = 0;
 #endif
 }
 

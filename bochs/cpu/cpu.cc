@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.38 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: cpu.cc,v 1.39 2002-09-12 06:29:12 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -474,6 +474,10 @@ handle_async_event:
       if (BX_CPU_THIS_PTR INTR && GetEFlagsIFLogical()) {
         break;
         }
+     if (BX_CPU_THIS_PTR async_event == 0) {
+       BX_INFO(("decode: reset detected in halt state"));
+       break;
+       }
       BX_TICK1();
     }
 #else      /* BX_SMP_PROCESSORS != 1 */
