@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.25 2002-09-02 22:53:39 bdenney Exp $
+// $Id: wxmain.cc,v 1.26 2002-09-03 05:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -149,8 +149,13 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
+  EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
+  EVT_MENU(ID_Edit_Cmos, MyFrame::OnEditCmos)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
+  EVT_MENU(ID_Edit_Serial_Parallel, MyFrame::OnEditSerialParallel)
+  EVT_MENU(ID_Edit_LoadHack, MyFrame::OnEditLoadHack)
+  EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
@@ -243,11 +248,13 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append( ID_Edit_HD_1, "Hard Disk 1..." );
   menuEdit->Append( ID_Edit_Cdrom, "Cdrom..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
-  menuEdit->Append( ID_Edit_Vga, "&VGA..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
   menuEdit->Append( ID_Edit_Sound, "&Sound..." );
+  menuEdit->Append( ID_Edit_Cmos, "&CMOS..." );
   menuEdit->Append( ID_Edit_Network, "&Network..." );
   menuEdit->Append( ID_Edit_Keyboard, "&Keyboard..." );
+  menuEdit->Append( ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
+  menuEdit->Append( ID_Edit_LoadHack, "&Loader Hack..." );
   menuEdit->Append( ID_Edit_Other, "&Other..." );
 
   menuSimulate = new wxMenu;
@@ -418,6 +425,25 @@ void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
   }
 }
 
+void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg (this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_SB16);
+  dlg.SetTitle (list->get_name ());
+  for (int i=0; i<list->get_size (); i++)
+    dlg.AddParam (list->get (i));
+  dlg.ShowModal ();
+}
+
+void MyFrame::OnEditCmos(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg (this, -1);
+  dlg.AddParam (SIM->get_param (BXP_CMOS_IMAGE));
+  dlg.AddParam (SIM->get_param (BXP_CMOS_PATH));
+  dlg.AddParam (SIM->get_param (BXP_CMOS_TIME0));
+  dlg.ShowModal ();
+}
+
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   NetConfigDialog dlg (this, -1);
@@ -507,6 +533,46 @@ void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
     safeWxStrcpy (buf, dlg.GetKeymap (), sizeof (buf));
     keymap->set (buf);
   }
+}
+
+void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_SERIAL_PARALLEL);
+  dlg.SetTitle (list->get_name ());
+  for (int i=0; i<list->get_size (); i++)
+    dlg.AddParam (list->get (i));
+  dlg.ShowModal ();
+}
+
+void MyFrame::OnEditLoadHack(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  dlg.AddParam (SIM->get_param (BXP_LOAD32BITOS));
+  dlg.ShowModal ();
+}
+
+void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  dlg.SetTitle ("Other Options");
+  dlg.AddParam (SIM->get_param (BXP_LOG_FILENAME));
+  dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
+  dlg.AddParam (SIM->get_param (BXP_MOUSE_ENABLED));
+  dlg.AddParam (SIM->get_param (BXP_USER_SHORTCUT));
+  dlg.AddParam (SIM->get_param (BXP_FLOPPYSIGCHECK));
+  dlg.AddParam (SIM->get_param (BXP_FLOPPY_CMD_DELAY));
+  dlg.AddParam (SIM->get_param (BXP_NEWHARDDRIVESUPPORT));
+  dlg.AddParam (SIM->get_param (BXP_PRIVATE_COLORMAP));
+#if BX_WITH_AMIGAOS
+  dlg.AddParam (SIM->get_param (BXP_FULLSCREEN));
+  dlg.AddParam (SIM->get_param (BXP_SCREENMODE));
+#endif
+  dlg.AddParam (SIM->get_param (BXP_I440FX_SUPPORT));
+  dlg.AddParam (SIM->get_param (BXP_IPS));
+  dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
+
+  int n = dlg.ShowModal ();
 }
 
 void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
@@ -609,11 +675,13 @@ void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
   menuEdit->Enable (ID_Edit_HD_0, canConfigure);
   menuEdit->Enable (ID_Edit_HD_1, canConfigure);
   menuEdit->Enable( ID_Edit_Boot, canConfigure);
-  menuEdit->Enable( ID_Edit_Vga, canConfigure);
   menuEdit->Enable( ID_Edit_Memory, canConfigure);
   menuEdit->Enable( ID_Edit_Sound, canConfigure);
+  menuEdit->Enable( ID_Edit_Cmos, canConfigure);
   menuEdit->Enable( ID_Edit_Network, canConfigure);
   menuEdit->Enable( ID_Edit_Keyboard, canConfigure);
+  menuEdit->Enable( ID_Edit_Serial_Parallel, canConfigure);
+  menuEdit->Enable( ID_Edit_LoadHack, canConfigure);
   menuEdit->Enable( ID_Edit_Other, canConfigure);
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.17 2002-09-02 22:53:39 bdenney Exp $
+// $Id: wxmain.h,v 1.18 2002-09-03 05:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -31,11 +31,14 @@ enum
   ID_Edit_HD_1,
   ID_Edit_Cdrom,
   ID_Edit_Boot,
-  ID_Edit_Vga,
   ID_Edit_Memory,
   ID_Edit_Sound,
+  ID_Edit_Cmos,
   ID_Edit_Network,
   ID_Edit_Keyboard,
+  ID_Edit_Serial_Parallel,
+  ID_Edit_Parallel,
+  ID_Edit_LoadHack,
   ID_Edit_Other,
   ID_Simulate_Start,
   ID_Simulate_PauseResume,
@@ -82,7 +85,9 @@ enum
   ID_Megs,
   ID_ComputeGeometry,
   // dialog box: LogOptions
-  ID_Advanced
+  ID_Advanced,
+  // that's all
+  ID_LAST_USER_DEFINED
 };
 
 
@@ -137,8 +142,13 @@ public:
   void OnSim2CIEvent(wxCommandEvent& event);
   void OnEditBoot(wxCommandEvent& event);
   void OnEditMemory(wxCommandEvent& event);
+  void OnEditSound(wxCommandEvent& event);
+  void OnEditCmos(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
   void OnEditKeyboard(wxCommandEvent& event);
+  void OnEditSerialParallel(wxCommandEvent& event);
+  void OnEditLoadHack(wxCommandEvent& event);
+  void OnEditOther(wxCommandEvent& event);
   void OnLogPrefs(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);

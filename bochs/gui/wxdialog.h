@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.20 2002-09-02 22:53:39 bdenney Exp $
+// $Id: wxdialog.h,v 1.21 2002-09-03 05:32:49 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -627,6 +627,59 @@ DECLARE_EVENT_TABLE()
 // +---------------------------------------------------------------+
 
 
+////////////////////////////////////////////////////////////////////////////
+// ParamDialog is a general purpose dialog box that displays and edits
+// any combination of parameters.  It's always made up of a
+// wxFlexGridSizer with three columns.  Each parameter takes up one row.
+// Column 1 shows the name of the parameter, column 2 shows the value of
+// the parameter in some sort of control that can be edited.  Column 3
+// is used for anything that needs to appear to the right of the data, for
+// example a Browse button on a filename control.  Several buttons including
+// Cancel and Ok will appear at the bottom.
+//
+// This will allow editing of all the miscellaneous parameters which do
+// not need to be laid out by hand.
+////////////////////////////////////////////////////////////////////////////
+class ParamDialog: public wxDialog 
+{
+private:
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *mainSizer, *buttonSizer;
+  wxFlexGridSizer *gridSizer;
+  wxChoice *type;
+  wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
+  wxCheckBox *enableKeymap;
+  void EnableChanged ();
+  // hash table that maps the ID of a wxWindows control (e.g. wxChoice,
+  // wxTextCtrl) to the associated ParamStruct object.  Data in the hash table
+  // is of ParamStruct*.
+  wxHashTable *hash;
+
+  struct ParamStruct : public wxObject {
+    bx_param_c *param;
+    int id;
+    union _u_tag {
+      wxWindow *window;
+      wxChoice *choice;
+      wxTextCtrl *text;
+      wxCheckBox *checkbox;
+    } u;
+    int browseButtonId;  // only for filename params
+    wxButton *browseButton;  // only for filename params
+  };
+
+  int genId ();
+  bool isGeneratedId (int id);
+  bool CommitChanges ();
+public:
+  ParamDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void AddParam (bx_param_c *param, wxFlexGridSizer *sizer = NULL);
+DECLARE_EVENT_TABLE()
+};
+
 /**************************************************************************
 Everything else in here is a comment!
 
@@ -843,7 +896,8 @@ you can view/edit/load/save key mappings, produce any combination of keys
 
 choose IPS
 select starting time for CMOS clock
-turn on real time PIT or not
+turn on real time PIT or not (?)
+VGA update interval
 
 This dialog can easily allow people to tune the IPS setting, or
 various other speed-related values, at runtime.  If you're running

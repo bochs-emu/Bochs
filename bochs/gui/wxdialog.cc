@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.20 2002-09-02 22:53:39 bdenney Exp $
+// $Id: wxdialog.cc,v 1.21 2002-09-03 05:32:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -36,6 +36,8 @@ enum {
   ID_Button2,
   ID_MY_LAST_ID
 };
+
+wxSize longTextSize (300, -1);  // width=300, height=default
 
 //////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog implementation
@@ -1213,7 +1215,6 @@ ConfigMemoryDialog::ConfigMemoryDialog(
   mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
 
   // box1 contents
-  wxSize textCtrlSize (300, -1);  // width=300, height=default
   box1gridSizer = new wxFlexGridSizer (3);
   box1sizer->Add (box1gridSizer, 0, wxALL, insideStaticBoxMargin);
 #define add(x) box1gridSizer->Add (x, 0, wxALL, 2)
@@ -1221,7 +1222,7 @@ ConfigMemoryDialog::ConfigMemoryDialog(
 #define newlabel(x) new wxStaticText (this, -1, x)
 #define spacer() box1gridSizer->Add (1, 1);
 #define newbrowse() (browseBtn[n_browse++] = new wxButton (this, ID_Browse, BTNLABEL_BROWSE))
-#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, textCtrlSize))
+#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize))
   addrt (newlabel (box1_label[0]));
   add (megs = new wxSpinCtrl (this, -1));
   spacer();
@@ -1392,12 +1393,11 @@ ConfigKeyboardDialog::ConfigKeyboardDialog(
   mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
 
   // box1 contents
-  wxSize textCtrlSize (300, -1);  // width=300, height=default
 #define add(x) gridSizer->Add (x, 0, wxALL, 2)
 #define addrt(x) gridSizer->Add (x, 0, wxALL|wxALIGN_RIGHT, 2)
 #define newlabel(x) new wxStaticText (this, -1, x)
 #define spacer() gridSizer->Add (1, 1);
-#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, textCtrlSize))
+#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize))
   addrt (newlabel (labels[0]));
   add (type = new wxChoice (this, -1));
   spacer();
@@ -1480,6 +1480,257 @@ void ConfigKeyboardDialog::OnEvent(wxCommandEvent& event)
 }
 
 void ConfigKeyboardDialog::ShowHelp ()
+{
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+}
+
+/////////////////////////////////////////////////////////////////
+// ParamDialog
+/////////////////////////////////////////////////////////////////
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(ParamDialog, wxDialog)
+  EVT_BUTTON(-1, ParamDialog::OnEvent)
+  EVT_CHECKBOX(-1, ParamDialog::OnEvent)
+  EVT_TEXT(-1, ParamDialog::OnEvent)
+END_EVENT_TABLE()
+
+ParamDialog::ParamDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  hash = new wxHashTable (wxKEY_INTEGER);
+
+  // top level objects
+  mainSizer = new wxBoxSizer (wxVERTICAL);
+  gridSizer = new wxFlexGridSizer (3);
+  mainSizer->Add (gridSizer);
+
+  // buttonSizer contents
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  wxButton *btn;
+  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // delay adding buttonsizer until Init()
+}
+
+void ParamDialog::Init()
+{
+  //EnableChanged ();
+  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(mainSizer);
+  mainSizer->Fit (this);
+  wxSize size = mainSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+static int _next_id = ID_LAST_USER_DEFINED;
+
+int ParamDialog::genId () {
+  return ++_next_id;
+}
+
+bool ParamDialog::isGeneratedId (int id) { 
+  return (id >= ID_LAST_USER_DEFINED && id < _next_id);
+}
+
+void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer) 
+{
+  if (param_generic == NULL) 
+    return;  // param not registered, probably this option was not compiled in
+  if (sizer == NULL)
+    sizer = gridSizer;
+  ParamStruct *pstr = new ParamStruct ();
+  memset (pstr, 0, sizeof(*pstr));
+  pstr->id = genId ();
+  pstr->param = param_generic;
+  int type = param_generic->get_type ();
+#define ADD_LABEL(x) sizer->Add (new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
+  switch (type) {
+    case BXT_PARAM_BOOL: {
+	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
+	char *prompt = param->get_name ();
+	ADD_LABEL (prompt);
+	wxCheckBox *ckbx = new wxCheckBox (this, pstr->id, "");
+	ckbx->SetValue (param->get ());
+	sizer->Add (ckbx);
+	sizer->Add (1, 1);  // spacer
+	pstr->u.checkbox = ckbx;
+	hash->Put (pstr->id, pstr);
+        break;
+      }
+    case BXT_PARAM_NUM: {
+	bx_param_num_c *param = (bx_param_num_c*) param_generic;
+	char *prompt = param->get_name ();
+	ADD_LABEL (prompt);
+	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
+	char *format = param->get_format ();
+	if (!format)
+	  format = param->get_base () == 16 ? "0x%X" : "%d";
+	SetTextCtrl (textctrl, format, param->get ());
+	sizer->Add (textctrl);
+	sizer->Add (1, 1);  // spacer
+	pstr->u.text = textctrl;
+	hash->Put (pstr->id, pstr);
+        break;
+      }
+    case BXT_PARAM_ENUM: {
+	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
+	char *prompt = param->get_name ();
+	ADD_LABEL (prompt);
+	wxChoice *choice = new wxChoice (this, pstr->id);
+	sizer->Add (choice);
+	sizer->Add (1, 1);  // spacer
+	// fill in the choices
+	int i=0;
+	char *ptr;
+	while (NULL != (ptr = param->get_choice (i++)))
+	  choice->Append (ptr);
+	choice->SetSelection (param->get() - param->get_min ());
+	pstr->u.choice = choice;
+	hash->Put (pstr->id, pstr);
+        break;
+      }
+    case BXT_PARAM_STRING: {
+	bx_param_string_c *param = (bx_param_string_c*) param_generic;
+	char *prompt = param->get_name ();
+	ADD_LABEL (prompt);
+	bool isFilename = param->get_options ()->get () & param->BX_IS_FILENAME;
+	wxTextCtrl *txtctrl = new wxTextCtrl (this, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : wxDefaultSize);
+	txtctrl->SetValue (param->getptr ());
+	sizer->Add (txtctrl);
+	if (isFilename) {
+	  // create Browse button
+	  pstr->browseButtonId = genId ();
+	  pstr->browseButton = new wxButton (this, 
+	      pstr->browseButtonId, BTNLABEL_BROWSE);
+	  sizer->Add (pstr->browseButton, 0, wxALL, 5);
+	  hash->Put (pstr->browseButtonId, pstr);  // register under button id
+	} else {
+	  sizer->Add (1, 1);  // spacer
+	}
+	pstr->u.text = txtctrl;
+	hash->Put (pstr->id, pstr);
+        break;
+      }
+    case BXT_LIST: {
+      bx_list_c *list = (bx_list_c*) param_generic;
+      wxStaticBox *box = new wxStaticBox (this, -1, list->get_name ());
+      wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
+      wxFlexGridSizer *gridSz = new wxFlexGridSizer (3);
+      boxsz->Add (gridSz, 1, wxGROW|wxALL, 20);
+      // put all items in the list inside the boxsz sizer.
+      for (int i=0; i<list->get_size (); i++) {
+        bx_param_c *child = list->get (i);
+	AddParam (child, gridSz);
+      }
+      // add the boxsz to mainSizer
+      mainSizer->Add (boxsz, 0, wxALL, 10);
+      // create new gridSizer so that future items appear below the boxsz.
+      gridSizer = new wxFlexGridSizer (3);
+      mainSizer->Add (gridSizer);
+      break;
+      }
+    default:
+      wxLogError ("ParamDialog::AddParam called with unsupported param type id=%d", (int)type);
+  }
+}
+
+bool ParamDialog::CommitChanges ()
+{
+  // loop through all the parameters
+  hash->BeginFind ();
+  wxNode *node;
+  while ((node = hash->Next ()) != NULL) {
+    ParamStruct *pstr = (ParamStruct*) node->GetData ();
+    wxLogDebug ("commit changes for param %s", pstr->param->get_name ());
+    int type = pstr->param->get_type ();
+    switch (type) {
+      case BXT_PARAM_BOOL: {
+        bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
+        boolp->set (pstr->u.checkbox->GetValue ());
+	break;
+        }
+      case BXT_PARAM_NUM: {
+        bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
+	bool valid;
+	wxString complaint;
+	complaint.Printf ("Invalid integer for %s.", pstr->param->get_name ());
+	int n = GetTextCtrlInt (pstr->u.text, &valid, true, complaint);
+        nump->set (n);
+	break;
+        }
+      case BXT_PARAM_ENUM: {
+        bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
+        enump->set (pstr->u.choice->GetSelection () + enump->get_min ());
+	break;
+        }
+      case BXT_PARAM_STRING: {
+        bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
+	char buf[1024];
+	wxString tmp(pstr->u.text->GetValue ());
+	strncpy (buf, tmp.c_str(), sizeof(buf));
+	stringp->set (buf);
+	break;
+        }
+      default:
+        wxLogError ("ParamDialog::CommitChanges: unsupported param type id=%d", (int)type);
+    }
+  }
+  return true;
+}
+
+void ParamDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("event was from id=%d\n", id);
+  if (isGeneratedId (id)) {
+    wxWindow *window = (wxWindow*)event.GetEventObject ();
+    ParamStruct *pstr = (ParamStruct*) hash->Get (id);
+    if (pstr == NULL) {
+      wxLogDebug ("ParamStruct not found for id=%d", id);
+      return;
+    }
+    if (id == pstr->id) {
+      wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ());
+      return;
+    }
+    if (id == pstr->browseButtonId) {
+      wxLogDebug ("browse button id=%d attached to wxTextCtrl %p", id, pstr->u.text);
+      BrowseTextCtrl (pstr->u.text);
+      return;
+    }
+    wxLogDebug ("id was key to ParamStruct but doesn't match either id inside");
+  }
+  switch (id) {
+    case wxOK:
+      if (CommitChanges ())
+        EndModal (wxOK);
+      break;
+    case wxID_CANCEL:
+      EndModal (wxCANCEL);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void ParamDialog::ShowHelp ()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
