@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.12 2002-12-16 05:46:49 bdenney Exp $
+# $Id: Makefile.in,v 1.13 2002-12-25 10:07:42 vruppert Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -58,7 +58,7 @@ copy_from_srcdir::
 
 $(TARGZ): all copy_from_srcdir fixperm
 	rm -f $(TARGZ)
-	tar cf - $(INSTALL_LIST) | gzip > $(TARGZ)
+	tar cf - $(INSTALL_LIST) --exclude=CVS --exclude=*.dbk | gzip > $(TARGZ)
 
 install: all copy_from_srcdir
 	for i in $(DESTDIR)$(docdir); do if test ! -d $$i; then mkdir $$i; fi; done
