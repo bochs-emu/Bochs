@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.98 2004-12-13 19:10:37 vruppert Exp $
+// $Id: keyboard.cc,v 1.99 2004-12-16 19:03:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.98 2004-12-13 19:10:37 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.99 2004-12-16 19:03:30 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1516,7 +1516,16 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
 
 
 void
-bx_keyb_c::mouse_enabled_changed(bool enabled) {
+bx_keyb_c::mouse_enabled_changed(bool enabled)
+{
+#if BX_SUPPORT_PCIUSB
+  // if type == usb, connect or disconnect the USB mouse
+  if (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_USB) {
+    DEV_usb_mouse_enable(enabled);
+    return;
+  }
+#endif
+
   if (BX_KEY_THIS s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy ||
       BX_KEY_THIS s.mouse.delayed_dz) {
     create_mouse_packet(1);
@@ -1524,7 +1533,7 @@ bx_keyb_c::mouse_enabled_changed(bool enabled) {
   s.mouse.delayed_dx=0;
   s.mouse.delayed_dy=0;
   s.mouse.delayed_dz=0;
-  BX_DEBUG(("Keyboard mouse disable called."));
+  BX_DEBUG(("PS/2 mouse %s", enabled?"enabled":"disabled"));
 }
 
   void

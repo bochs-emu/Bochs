@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.4 2004-12-11 08:35:33 vruppert Exp $
+// $Id: pciusb.h,v 1.5 2004-12-16 19:03:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003  MandrakeSoft S.A.
+//  Copyright (C) 2004  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -24,9 +24,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-// Benjamin D Lunt (fys@cybertrails.com) coded most of this usb emulation.
-//  I hope to add to this code to make it more functionable.
-//
+// Benjamin D Lunt (fys at frontiernet net) coded most of this usb emulation.
 
 #if BX_USE_PCIUSB_SMF
 #  define BX_USB_THIS theUSBDevice->
@@ -75,10 +73,16 @@ enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR
        SYNCH_FRAME
 };
 
+#define SET_FEATURE_TEST_MODE 0 /////////TODO: I don't know yet what this value is to be
+
 // Descriptor types
 enum {  DEVICE=1, CONFIG, STRING, INTERFACE, ENDPOINT,         // USB 1.1
         DEVICE_QUALIFIER, OTHER_SPEED_CONFIG, INTERFACE_POWER  // USB 2.0
 };
+
+#define STATE_DEFAULT    0
+#define STATE_ADDRESS    1
+#define STATE_CONFIGURED 2
 
 // setup packets
 struct REQUEST_PACKET {
@@ -90,21 +94,21 @@ struct REQUEST_PACKET {
 };
 
 // set it to 1 (align on byte) and save so we can pop it
-// (( MS Specific ???? ))
 #pragma pack(push, 1)
 struct USB_DEVICE {
-  Bit8u   address;        // 7 bit address
-  Bit8u   descriptor;     // which descriptor to use
-  Bit8u   config;         // which configuration to use
-  Bit8u   Interface;      // which interface to use
-  Bit8u   alt_interface;  // which alt interface to use ???
-  Bit8u   functions;      // how many functions does this device have
+  Bit8u   address;       // 7 bit address
+  Bit8u   config;        // which configuration to use
+  Bit8u   Interface;     // which interface to use
+  Bit8u   alt_interface; // which alt interface to use
+  Bit8u   endpt;         // which endpt to use
+  unsigned state;        // the state the device is in.  DEFUALT, ADDRESS, or CONFIGURED
   struct {
     Bit8u   direction;
     Bit8u   *in;
     Bit8u   *out;
     Bit16u  in_cnt;
     Bit16u  out_cnt;
+    unsigned configs;
     struct {
       Bit8u  len;
       Bit8u  type;
@@ -121,7 +125,6 @@ struct USB_DEVICE {
       Bit8u  serial_indx;
       Bit8u  configs;
     } device_descr;
-    unsigned configs;
     struct {
       Bit8u  len;
       Bit8u  type;
@@ -131,8 +134,39 @@ struct USB_DEVICE {
       Bit8u  config_indx;
       Bit8u  attrbs;
       Bit8u  max_power;
-      Bit8u  remaining[247];
-    } device_config[2];
+      unsigned interface_cnt;
+      struct {
+        Bit8u  size;
+        Bit8u  type;
+        Bit8u  interface_num;
+        Bit8u  alternate;
+        Bit8u  num_endpts;
+        Bit8u  iclass;
+        Bit8u  subclass;
+        Bit8u  protocol;
+        Bit8u  str_indx;
+        struct {
+          Bit8u  size;
+          Bit8u  type;
+          Bit8u  endpt;
+          Bit8u  attrib;
+          Bit16u max_size;
+          Bit8u  interval;
+        } endpts[4];
+        struct {
+          Bit8u  size;
+          Bit8u  type;
+          Bit16u HID_class;
+          Bit8u  country_code;
+          Bit8u  num_descriptors;
+          struct {
+            Bit8u  type;
+            Bit16u len;
+            Bit8u  dev_hid_descript_report[128];
+          } descriptor[16];
+        } dev_hid_descript;
+      } Interface[4];
+    } device_config[4];
     struct {
       Bit8u  size;
       Bit8u  type;
@@ -142,25 +176,8 @@ struct USB_DEVICE {
       Bit8u  size;
       Bit8u  type;
       Bit8u  unicode_str[64];
-    } string[4];
-    struct {
-      Bit8u  size;
-      Bit8u  type;
-      Bit16u HID_class;
-      Bit8u  country_code;
-      Bit8u  num_descriptors;
-      Bit8u  descriptor_type;
-      Bit16u descriptor_len;
-      Bit8u  op_descriptor_type;
-      Bit16u op_descriptor_len;
-    } dev_hid_descript;
-    struct {
-      Bit8u  size;
-      Bit8u  type;
-      Bit8u  unknown[3];
-    } dev_hid_descript_report;
-    Bit8u interfaces[129];
-  } function[1];     // this device has 1 function
+    } string[6];
+  } function;     // currently, we only support 1 function
 };
 #pragma pack(pop)
 
@@ -317,11 +334,14 @@ class bx_pciusb_c : public bx_usb_stub_c
 public:
   bx_pciusb_c(void);
   ~bx_pciusb_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
-  virtual void   usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  virtual void  init(void);
+  virtual void  reset(unsigned);
+  virtual void  usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  virtual void  usb_mouse_enable(bx_bool enable);
 
 private:
+
+  bx_bool  busy;
 
   bx_usb_t hub[BX_USB_MAXDEV];
   Bit8u    global_reset;
@@ -330,12 +350,22 @@ private:
   int      mouse_delayed_dy;
   int      mouse_delayed_dz;
   unsigned button_state;
+  Bit8s    mouse_x;
+  Bit8s    mouse_y;
+  Bit8s    mouse_z;
+  Bit8u    b_state;
 
   static void set_irq_level(bx_bool level);
+  Bit8u    set_address;
+  Bit8u   *device_buffer;
+
+  bx_bool usb_connect_status;
+  static void  usb_mouse_connect(bx_bool connected);
+
   static void usb_timer_handler(void *);
   void usb_timer(void);
   void DoTransfer(struct TD *);
-  void GetDescriptor(struct USB_DEVICE *, Bit8u, struct REQUEST_PACKET *, Bit8u);
+  void GetDescriptor(struct USB_DEVICE *, struct REQUEST_PACKET *, Bit8u);
   void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
     bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
 
@@ -350,3 +380,4 @@ private:
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
 };
+

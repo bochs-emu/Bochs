@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.25 2004-12-14 19:27:42 vruppert Exp $
+// $Id: config.cc,v 1.26 2004-12-16 19:03:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1142,14 +1142,14 @@ void bx_init_options ()
     "none",
     "ps2",
     "imps2",
-    "serial",
-    "serial_wheel",
 #if BX_SUPPORT_BUSMOUSE
     "bus",
 #endif
 #if BX_SUPPORT_PCIUSB
     "usb",
 #endif
+    "serial",
+    "serial_wheel",
     NULL
   };
   bx_options.Omouse_type = new bx_param_enum_c (BXP_MOUSE_TYPE,

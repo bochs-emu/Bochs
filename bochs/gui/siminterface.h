@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.131 2004-12-14 19:27:42 vruppert Exp $
+// $Id: siminterface.h,v 1.132 2004-12-16 19:03:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1222,6 +1222,20 @@ enum {
   BX_RUN_START
 };
 
+enum {
+  BX_MOUSE_TYPE_NONE,
+  BX_MOUSE_TYPE_PS2,
+  BX_MOUSE_TYPE_IMPS2,
+#if BX_SUPPORT_BUSMOUSE
+  BX_MOUSE_TYPE_BUS,
+#endif
+#if BX_SUPPORT_PCIUSB
+  BX_MOUSE_TYPE_USB,
+#endif
+  BX_MOUSE_TYPE_SERIAL,
+  BX_MOUSE_TYPE_SERIAL_WHEEL
+};
+
 #define BX_FLOPPY_NONE   10 // floppy not present
 #define BX_FLOPPY_1_2    11 // 1.2M  5.25"
 #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
@@ -1272,14 +1286,6 @@ enum {
 
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2
-
-#define BX_MOUSE_TYPE_NONE         0
-#define BX_MOUSE_TYPE_PS2          1
-#define BX_MOUSE_TYPE_IMPS2        2
-#define BX_MOUSE_TYPE_SERIAL       3
-#define BX_MOUSE_TYPE_SERIAL_WHEEL 4
-#define BX_MOUSE_TYPE_BUS          5
-#define BX_MOUSE_TYPE_USB          6
 
 BOCHSAPI extern char *bochs_start_names[];
 BOCHSAPI extern int n_bochs_start_names;
