@@ -106,8 +106,7 @@ extern "C" {
 
 #endif // #if BX_PLUGINS
 
-//////////// FIXME: it's clearly wrong to check hard_drive here.
-#define BX_IOAPIC_PRESENT() (must_fix_this_BX_IOAPIC_PRESENT_macro && bx_devices.hard_drive)
+#define BX_IOAPIC_PRESENT() (bx_devices.ioapic != NULL)
 
 // FIXME Do we really need pluginRegisterTimer ?
 #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
