@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.45 2003-01-09 20:43:32 vruppert Exp $
+// $Id: pit_wrap.cc,v 1.46 2003-02-18 16:54:48 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -203,19 +203,19 @@ bx_pit_c::init( void )
   BX_PIT_THIS s.timer.init();
 
   if (BX_PIT_THIS s.timer_handle[0] == BX_NULL_TIMER_HANDLE) {
-    BX_PIT_THIS s.timer_handle[0] = bx_pc_system.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit_wrap");
+    BX_PIT_THIS s.timer_handle[0] = bx_virt_timer.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit_wrap");
   }
   BX_DEBUG(("pit: RESETting timer."));
-  bx_pc_system.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
+  bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
   BX_DEBUG(("deactivated timer."));
   if(BX_PIT_THIS s.timer.get_next_event_time()) {
-    bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+    bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
 				BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				0);
     BX_DEBUG(("activated timer."));
   }
   BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
-  BX_PIT_THIS s.last_usec=bx_pc_system.time_usec();
+  BX_PIT_THIS s.last_usec=bx_virt_timer.time_usec();
 
   BX_PIT_THIS s.total_ticks=0;
 
@@ -261,7 +261,7 @@ bx_pit_c::timer_handler(void *this_ptr) {
 
 void
 bx_pit_c::handle_timer() {
-  Bit64u time_passed = bx_pc_system.time_usec()-BX_PIT_THIS s.last_usec;
+  Bit64u time_passed = bx_virt_timer.time_usec()-BX_PIT_THIS s.last_usec;
   Bit32u time_passed32 = time_passed;
 
   BX_DEBUG(("pit: entering timer handler"));
@@ -275,10 +275,10 @@ bx_pit_c::handle_timer() {
       != BX_PIT_THIS s.timer.get_next_event_time())
      ) {
     BX_DEBUG(("pit: RESETting timer."));
-    bx_pc_system.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
+    bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
-      bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+      bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
 				  BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
@@ -339,7 +339,7 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 
     case 0x61:
       /* AT, port 61h */
-      BX_PIT_THIS s.refresh_clock_div2 = ((bx_pc_system.time_usec() / 15) & 1);
+      BX_PIT_THIS s.refresh_clock_div2 = ((bx_virt_timer.time_usec() / 15) & 1);
       return( (BX_PIT_THIS s.timer.read_OUT(2)<<5) |
               (BX_PIT_THIS s.refresh_clock_div2<<4) |
               (BX_PIT_THIS s.speaker_data_on<<1) |
@@ -373,7 +373,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
   Bit8u   value;
-  Bit64u time_passed = bx_pc_system.time_usec()-BX_PIT_THIS s.last_usec;
+  Bit64u time_passed = bx_virt_timer.time_usec()-BX_PIT_THIS s.last_usec;
   Bit32u time_passed32 = time_passed;
 
   BX_DEBUG(("pit: entering write handler"));
@@ -436,10 +436,10 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
       != BX_PIT_THIS s.timer.get_next_event_time())
      ) {
     BX_DEBUG(("pit: RESETting timer."));
-    bx_pc_system.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
+    bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
-      bx_pc_system.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+      bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
 				  BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
@@ -494,7 +494,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   Bit32u ticks_delta = 0;
 
 #ifdef BX_SCHEDULED_DIE_TIME
-  if (bx_pc_system.time_ticks() > BX_SCHEDULED_DIE_TIME) {
+  if (bx_virt_timer.time_ticks() > BX_SCHEDULED_DIE_TIME) {
     BX_ERROR (("ticks exceeded scheduled die time, quitting"));
     BX_EXIT (2);
   }
@@ -674,13 +674,13 @@ bx_pit_c::second_update_data(void) {
 
     BX_PIT_THIS s.ticks_per_second = tickstemp;
 
-    //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff));
-    BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff);
+    //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_virt_timer.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff));
+    BX_PIT_THIS s.usec_per_second = ((bx_virt_timer.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff);
     BX_PIT_THIS s.usec_per_second = BX_MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
-    BX_PIT_THIS s.last_sec_usec = bx_pc_system.time_usec();
+    BX_PIT_THIS s.last_sec_usec = bx_virt_timer.time_usec();
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("Parms: ticks_per_second=%llu, usec_per_second=%llu\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
-    printf("total_usec: %llu\n", bx_pc_system.time_usec());
+    printf("total_usec: %llu\n", bx_virt_timer.time_usec());
 #endif
   }
 }
