@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.154 2003-12-29 21:24:35 danielg4 Exp $
+// $Id: cpu.h,v 1.155 2003-12-30 22:12:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1281,6 +1281,7 @@ union {
   Bit32u        cr1;
   bx_address    cr2;
   bx_address    cr3;
+  bx_address    cr3_masked;
 #endif
 
 #if BX_CPU_LEVEL >= 4

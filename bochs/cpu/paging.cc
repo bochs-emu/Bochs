@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.42 2003-03-02 23:59:09 cbothamy Exp $
+// $Id: paging.cc,v 1.43 2003-12-30 22:12:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -422,6 +422,7 @@ BX_CPU_C::CR3_change(bx_address value)
   // flush TLB even if value does not change
   TLB_flush(0); // 0 = Don't flush Global entries.
   BX_CPU_THIS_PTR cr3 = value;
+  BX_CPU_THIS_PTR cr3_masked = value & 0xfffff000;
 }
 
   void
@@ -617,7 +618,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     if (BX_CPU_THIS_PTR msr.lma) {
       Bit32u   pml4, pml4_addr;
       // Get PML4 entry
-      pml4_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
+      pml4_addr = BX_CPU_THIS_PTR cr3_masked |
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
       BX_CPU_THIS_PTR mem->readPhysicalPage(this, pml4_addr, 4, &pml4);
       if ( !(pml4 & 0x01) ) {
@@ -637,7 +638,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
     else
 #endif
       {
-      pdp_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
+      pdp_addr = BX_CPU_THIS_PTR cr3_masked |
                ((laddr & 0xc0000000) >> 27);
       }
 
@@ -812,7 +813,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
   InstrTLB_Increment(tlbMisses);
 
   // Get page dir entry
-  pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
+  pde_addr = BX_CPU_THIS_PTR cr3_masked |
              ((laddr & 0xffc00000) >> 20);
   BX_CPU_THIS_PTR mem->readPhysicalPage(this, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
@@ -1036,7 +1037,7 @@ BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, bx_bool *valid)
     }
 
   // Get page dir entry
-  pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
+  pde_addr = BX_CPU_THIS_PTR cr3_masked |
              ((laddr & 0xffc00000) >> 20);
   BX_CPU_THIS_PTR mem->readPhysicalPage(this, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
