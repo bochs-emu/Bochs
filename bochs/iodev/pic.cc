@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.20 2002-01-29 17:20:11 vruppert Exp $
+// $Id: pic.cc,v 1.21 2002-01-30 18:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -525,6 +525,11 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
   void
 bx_pic_c::lower_irq(unsigned irq_no)
 {
+#if BX_SUPPORT_APIC
+  // forward this function call to the ioapic too
+  BX_PIC_THIS devices->ioapic->untrigger_irq (irq_no, -1);
+#endif
+
   if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
     BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
     BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 0;
@@ -548,6 +553,11 @@ bx_pic_c::lower_irq(unsigned irq_no)
   void
 bx_pic_c::raise_irq(unsigned irq_no)
 {
+#if BX_SUPPORT_APIC
+  // forward this function call to the ioapic too
+  BX_PIC_THIS devices->ioapic->trigger_irq (irq_no, -1);
+#endif
+
   if ((irq_no <= 7) && (!BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
     BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
     BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 1;
