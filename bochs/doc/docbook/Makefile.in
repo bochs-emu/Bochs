@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.14 2003-01-21 23:07:29 cbothamy Exp $
+# $Id: Makefile.in,v 1.15 2003-11-14 00:38:54 cbothamy Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -73,7 +73,8 @@ $(TARGZ): all copy_from_srcdir fixperm
 
 install: all copy_from_srcdir
 	for i in $(DESTDIR)$(docdir); do if test ! -d $$i; then mkdir $$i; fi; done
-	for i in $(INSTALL_LIST); do cp -r $$i $(DESTDIR)$(docdir); done
+	#for i in $(INSTALL_LIST); do cp -r $$i $(DESTDIR)$(docdir); done
+	for i in $(INSTALL_LIST); do tar cf - --exclude=CVS $$i | ( cd $(DESTDIR)$(docdir); tar xf - ); done
 
 test_sfuser:
 	@if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
