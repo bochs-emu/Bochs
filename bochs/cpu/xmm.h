@@ -89,7 +89,7 @@ struct bx_mxcsr_t {
   is  represented  by  the saturated value -128 (0x80). If it is greater
   than 127, it is represented by the saturated value 127 (0x7F).
 */
-Bit8s SaturateWordSToByteS(Bit16s value);
+Bit8s SaturateWordSToByteS(Bit16s value) BX_CPP_AttrRegparmN(1);
 
 /*
   SaturateDwordSToWordS  converts  a  signed 32-bit value to a
@@ -98,7 +98,7 @@ Bit8s SaturateWordSToByteS(Bit16s value);
   greater  than  32767,  it  is represented by the saturated value 32767
   (0x7FFF).
 */
-Bit16s SaturateDwordSToWordS(Bit32s value);
+Bit16s SaturateDwordSToWordS(Bit32s value) BX_CPP_AttrRegparmN(1);
 
 /*
   SaturateWordSToByteU  converts a signed 16-bit value to an
@@ -106,7 +106,7 @@ Bit16s SaturateDwordSToWordS(Bit32s value);
   is  represented  by  the  saturated value zero (0x00).If it is greater
   than 255 it is represented by the saturated value 255 (0xFF).
 */
-Bit8u SaturateWordSToByteU(Bit16s value);
+Bit8u SaturateWordSToByteU(Bit16s value) BX_CPP_AttrRegparmN(1);
 
 /*
   SaturateDwordSToWordU  converts  a signed 32-bit value
@@ -115,6 +115,6 @@ Bit8u SaturateWordSToByteU(Bit16s value);
   (0x0000).  If  it  is greater  than  65535,  it  is represented by
   the saturated value 65535 (0xFFFF).
 */
-Bit16u SaturateDwordSToWordU(Bit32s value);
+Bit16u SaturateDwordSToWordU(Bit32s value) BX_CPP_AttrRegparmN(1);
 
 #endif

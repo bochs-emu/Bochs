@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.23 2002-10-25 11:44:35 bdenney Exp $
+// $Id: segment_ctrl_pro.cc,v 1.24 2003-03-02 23:59:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
 
 
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 {
 #if BX_CPU_LEVEL >= 3
@@ -376,7 +376,7 @@ BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
 
 
 #if BX_CPU_LEVEL >= 2
-  void
+  void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 {
   selector->value  = raw_selector;
@@ -386,7 +386,7 @@ BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 }
 #endif
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 {
   Bit8u AR_byte;
@@ -504,7 +504,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     }
 }
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor)
 {
   /* check for null selector, if so invalidate LDTR */
@@ -527,7 +527,7 @@ BX_CPU_C::load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor)
   BX_CPU_THIS_PTR ldtr.cache.valid = 1;
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
            Bit8u cpl)
 {
@@ -559,7 +559,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
 #endif
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
 {
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
@@ -581,7 +581,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 }
 
 #if BX_CPU_LEVEL >= 2
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetch_raw_descriptor(bx_selector_t *selector,
                         Bit32u *dword1, Bit32u *dword2, Bit8u exception_no)
 {
@@ -624,7 +624,7 @@ BX_INFO(("-----------------------------------"));
 
 
 
-  bx_bool
+  bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetch_raw_descriptor2(bx_selector_t *selector,
                         Bit32u *dword1, Bit32u *dword2)
 {

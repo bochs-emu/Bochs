@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.38 2003-02-28 20:50:54 sshwarts Exp $
+// $Id: access.cc,v 1.39 2003-03-02 23:59:08 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@
 
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
                                unsigned length)
 {
@@ -139,7 +139,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
     }
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
                               unsigned length)
 {
@@ -261,7 +261,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 
 
 
-  char *
+  char * BX_CPP_AttrRegparmN(1)
 BX_CPU_C::strseg(bx_segment_reg_t *seg)
 {
   if (seg == &BX_CPU_THIS_PTR sregs[0]) return("ES");
@@ -277,7 +277,7 @@ BX_CPU_C::strseg(bx_segment_reg_t *seg)
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 {
   bx_address laddr;
@@ -342,7 +342,7 @@ accessOK:
   goto accessOK;
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 {
   bx_address laddr;
@@ -409,7 +409,7 @@ accessOK:
   goto accessOK;
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 {
   bx_address laddr;
@@ -477,7 +477,7 @@ accessOK:
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 {
   bx_address laddr;
@@ -529,7 +529,7 @@ accessOK:
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 {
   bx_address laddr;
@@ -583,7 +583,7 @@ accessOK:
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 {
   bx_address laddr;
@@ -642,7 +642,7 @@ accessOK:
 // address translation info is kept across read/write calls //
 //////////////////////////////////////////////////////////////
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 {
   bx_address laddr;
@@ -711,7 +711,7 @@ accessOK:
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 {
   bx_address laddr;
@@ -779,7 +779,7 @@ accessOK:
   goto accessOK;
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 {
   bx_address laddr;
@@ -847,7 +847,7 @@ accessOK:
   goto accessOK;
 }
 
-  void
+  void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::write_RMW_virtual_byte(Bit8u val8)
 {
   if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
@@ -862,7 +862,7 @@ BX_CPU_C::write_RMW_virtual_byte(Bit8u val8)
     }
 }
 
-  void
+  void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::write_RMW_virtual_word(Bit16u val16)
 {
   if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
@@ -925,7 +925,7 @@ BX_CPU_C::write_RMW_virtual_dword(Bit32u val32)
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 {
   bx_address laddr;
@@ -993,7 +993,7 @@ accessOK:
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 {
   bx_address laddr;
@@ -1081,7 +1081,7 @@ BX_CPU_C::write_RMW_virtual_qword(Bit64u val64)
     }
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 {
   bx_address laddr;

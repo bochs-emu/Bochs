@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_proto.h,v 1.4 2001-10-06 04:35:13 bdenney Exp $
+// $Id: fpu_proto.h,v 1.5 2003-03-02 23:59:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -93,20 +93,20 @@ extern void math_abort(struct info *info, unsigned int signal);
 extern void FPU_etc(void);
 /* fpu_tags.c */
 extern int FPU_gettag0(void);
-extern int FPU_gettagi(int stnr);
-extern int FPU_gettag(int regnr);
-extern void FPU_settag0(int tag);
-extern void FPU_settagi(int stnr, int tag);
-extern void FPU_settag(int regnr, int tag);
-extern int FPU_Special(FPU_REG const *ptr);
-extern int isNaN(FPU_REG const *ptr);
+extern int FPU_gettagi(int stnr) BX_CPP_AttrRegparmN(1);
+extern int FPU_gettag(int regnr) BX_CPP_AttrRegparmN(1);
+extern void FPU_settag0(int tag) BX_CPP_AttrRegparmN(1);
+extern void FPU_settagi(int stnr, int tag) BX_CPP_AttrRegparmN(2);
+extern void FPU_settag(int regnr, int tag) BX_CPP_AttrRegparmN(2);
+extern int FPU_Special(FPU_REG const *ptr) BX_CPP_AttrRegparmN(1);
+extern int isNaN(FPU_REG const *ptr) BX_CPP_AttrRegparmN(1);
 extern void FPU_pop(void);
-extern int FPU_empty_i(int stnr);
+extern int FPU_empty_i(int stnr) BX_CPP_AttrRegparmN(1);
 extern int FPU_stackoverflow(FPU_REG **st_new_ptr);
 extern void FPU_sync_tags(void);
-extern void FPU_copy_to_regi(FPU_REG const *r, u_char tag, int stnr);
-extern void FPU_copy_to_reg1(FPU_REG const *r, u_char tag);
-extern void FPU_copy_to_reg0(FPU_REG const *r, u_char tag);
+extern void FPU_copy_to_regi(FPU_REG const *r, u_char tag, int stnr) BX_CPP_AttrRegparmN(3);
+extern void FPU_copy_to_reg1(FPU_REG const *r, u_char tag) BX_CPP_AttrRegparmN(2);
+extern void FPU_copy_to_reg0(FPU_REG const *r, u_char tag) BX_CPP_AttrRegparmN(2);
 /* fpu_trig.c */
 extern void FPU_triga(void);
 extern void FPU_trigb(void);
@@ -146,32 +146,32 @@ extern void fucompp(void);
 /* reg_constant.c */
 extern void fconst(void);
 /* reg_ld_str.c */
-extern int FPU_load_extended(long double *s, int stnr);
-extern int FPU_load_double(double *dfloat, FPU_REG *loaded_data);
-extern int FPU_load_single(float *single, FPU_REG *loaded_data);
-extern int FPU_load_int64(s64 *_s);
-extern int FPU_load_int32(s32 *_s, FPU_REG *loaded_data);
-extern int FPU_load_int16(s16 *_s, FPU_REG *loaded_data);
-extern int FPU_load_bcd(u_char *s);
+extern int FPU_load_extended(long double *s, int stnr) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_double(double *dfloat, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_single(float *single, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_int64(s64 *_s) BX_CPP_AttrRegparmN(1);
+extern int FPU_load_int32(s32 *_s, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_int16(s16 *_s, FPU_REG *loaded_data) BX_CPP_AttrRegparmN(2);
+extern int FPU_load_bcd(u_char *s) BX_CPP_AttrRegparmN(1);
 extern int FPU_store_extended(FPU_REG *st0_ptr, u_char st0_tag,
-			      long double *d);
-extern int FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat);
-extern int FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single);
-extern int FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d);
-extern int FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d);
-extern int FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d);
-extern int FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d);
-extern int FPU_round_to_int(FPU_REG *r, u_char tag);
-extern u_char *fldenv(fpu_addr_modes addr_modes, u_char *s);
-extern void frstor(fpu_addr_modes addr_modes, u_char *data_address);
-extern u_char *fstenv(fpu_addr_modes addr_modes, u_char *d);
-extern void fsave(fpu_addr_modes addr_modes, u_char *data_address);
-extern int FPU_tagof(FPU_REG *ptr);
+			      long double *d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_double(FPU_REG *st0_ptr, u_char st0_tag, double *dfloat) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_single(FPU_REG *st0_ptr, u_char st0_tag, float *single) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, s64 *d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_int32(FPU_REG *st0_ptr, u_char st0_tag, s32 *d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_int16(FPU_REG *st0_ptr, u_char st0_tag, s16 *d) BX_CPP_AttrRegparmN(3);
+extern int FPU_store_bcd(FPU_REG *st0_ptr, u_char st0_tag, u_char *d) BX_CPP_AttrRegparmN(3);
+extern int FPU_round_to_int(FPU_REG *r, u_char tag) BX_CPP_AttrRegparmN(2);
+extern u_char *fldenv(fpu_addr_modes addr_modes, u_char *s) BX_CPP_AttrRegparmN(2);
+extern void frstor(fpu_addr_modes addr_modes, u_char *data_address) BX_CPP_AttrRegparmN(2);
+extern u_char *fstenv(fpu_addr_modes addr_modes, u_char *d) BX_CPP_AttrRegparmN(2);
+extern void fsave(fpu_addr_modes addr_modes, u_char *data_address) BX_CPP_AttrRegparmN(2);
+extern int FPU_tagof(FPU_REG *ptr) BX_CPP_AttrRegparmN(1);
 /* reg_mul.c */
 extern int FPU_mul(FPU_REG const *b, u_char tagb, int deststnr, int control_w);
 
 extern int FPU_div(int flags, FPU_REG *regrm, int control_w); // bbd: changed arg2 from int to FPU_REG*
 /* reg_convert.c */
-extern int FPU_to_exp16(FPU_REG const *a, FPU_REG *x);
+extern int FPU_to_exp16(FPU_REG const *a, FPU_REG *x) BX_CPP_AttrRegparmN(2);
 #endif /* _FPU_PROTO_H */
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.58 2003-01-30 20:44:32 vruppert Exp $
+// $Id: cdrom.cc,v 1.59 2003-03-02 23:59:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -468,7 +468,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.58 2003-01-30 20:44:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.59 2003-03-02 23:59:10 cbothamy Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -1250,7 +1250,7 @@ cdrom_interface::capacity()
 #endif
 }
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 cdrom_interface::read_block(uint8* buf, int lba)
 {
   // Read a single block from the CD

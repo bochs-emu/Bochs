@@ -189,7 +189,7 @@ fpu_set_ax(unsigned short val16)
 //BX_DEBUG(( "fpu_set_ax(0x%04x)", (unsigned) val16));
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 fpu_verify_area(unsigned what, void *ptr, unsigned n)
 {
   bx_segment_reg_t *seg;
@@ -213,7 +213,7 @@ FPU_printall(void)
 }
 
 
-  unsigned
+  unsigned BX_CPP_AttrRegparmN(2)
 fpu_get_user(void *ptr, unsigned len)
 {
   Bit32u val32;
@@ -238,7 +238,7 @@ fpu_get_user(void *ptr, unsigned len)
   return(val32);
 }
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 fpu_put_user(unsigned val, void *ptr, unsigned len)
 {
   Bit32u val32;

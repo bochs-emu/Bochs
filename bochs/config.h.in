@@ -797,6 +797,16 @@ typedef
 #define GCC_ATTRIBUTE __attribute__
 #endif
 
+// set to use fast function calls
+#define BX_FAST_FUNC_CALL 0
+
+// On gcc2.95+ x86 only
+#if BX_FAST_FUNC_CALL && defined(__i386__) && defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+#  define BX_CPP_AttrRegparmN(X) __attribute__((regparm(X)))
+#else
+#  define BX_CPP_AttrRegparmN(X) /* Not defined */
+#endif
+
 // set if your compiler does not allow label at the end of a {} block
 #define BX_NO_BLANK_LABELS 0
 

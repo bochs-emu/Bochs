@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.41 2003-02-28 02:37:18 ptrumpet Exp $
+// $Id: paging.cc,v 1.42 2003-03-02 23:59:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,7 +387,7 @@ static unsigned tlbEntryInvlpg=0;
 // ==============================================================
 
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
 {
   // Modification of PG,PE flushes TLB cache according to docs.
@@ -400,7 +400,7 @@ BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
     BX_INFO(("pagingCR0Changed(0x%x -> 0x%x):", oldCR0, newCR0));
 }
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 {
   // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
@@ -411,7 +411,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
     BX_INFO(("pagingCR4Changed(0x%x -> 0x%x):", oldCR4, newCR4));
 }
 
-  void
+  void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::CR3_change(bx_address value)
 {
   if (bx_dbg.paging) {
@@ -570,7 +570,7 @@ BX_CPU_C::INVLPG(bxInstruction_c* i)
 // Translate a linear address to a physical address, for
 // a data access (D)
 
-  Bit32u
+  Bit32u BX_CPP_AttrRegparmN(3)
 BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 {
   bx_address   lpf;
@@ -994,7 +994,7 @@ page_fault_not_present:
 // Translate a linear address to a physical address, for
 // an instruction fetch access (I)
 
-  Bit32u
+  Bit32u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 {
   return dtranslate_linear(laddr, pl, BX_READ);
@@ -1069,7 +1069,7 @@ page_fault:
 
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
     unsigned rw, void *data)
 {

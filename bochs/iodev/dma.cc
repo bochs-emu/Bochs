@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.26 2002-11-04 17:29:12 vruppert Exp $
+// $Id: dma.cc,v 1.27 2003-03-02 23:59:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.26 2002-11-04 17:29:12 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.27 2003-03-02 23:59:10 cbothamy Exp $"));
 
   /* 8237 DMA controller */
 
@@ -212,7 +212,7 @@ bx_dma_c::reset_controller(unsigned num)
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions
 
-  Bit32u
+  Bit32u BX_CPP_AttrRegparmN(3)
 bx_dma_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_DMA_SMF
@@ -222,7 +222,7 @@ bx_dma_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 }
 
   /* 8237 DMA controller */
-  Bit32u
+  Bit32u BX_CPP_AttrRegparmN(2)
 bx_dma_c::read( Bit32u   address, unsigned io_len)
 {
 #else
@@ -343,7 +343,7 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
   // static IO port write callback handler
   // redirects to non-static class handler to avoid virtual functions
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 bx_dma_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_DMA_SMF
@@ -354,7 +354,7 @@ bx_dma_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned i
 
 
   /* 8237 DMA controller */
-  void
+  void BX_CPP_AttrRegparmN(3)
 bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
 {
 #else

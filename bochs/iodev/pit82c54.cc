@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.20 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pit82c54.cc,v 1.21 2003-03-02 23:59:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -97,12 +97,14 @@ void pit_82C54::print_cnum(Bit8u cnum) {
     thisctr.OUTpin=data;
   }
 
-  void pit_82C54::set_count (counter_type & thisctr, Bit32u data) {
+  void  BX_CPP_AttrRegparmN(2)
+pit_82C54::set_count (counter_type & thisctr, Bit32u data) {
     thisctr.count=data & 0xFFFF;
     set_binary_to_count(thisctr);
   }
 
-  void pit_82C54::set_count_to_binary(counter_type & thisctr) {
+  void  BX_CPP_AttrRegparmN(1)
+pit_82C54::set_count_to_binary(counter_type & thisctr) {
     if(thisctr.bcd_mode) {
       thisctr.count=
 	(((thisctr.count_binary/1)%10)<<0) |
@@ -115,7 +117,8 @@ void pit_82C54::print_cnum(Bit8u cnum) {
     }
   }
 
-  void pit_82C54::set_binary_to_count(counter_type & thisctr) {
+  void  BX_CPP_AttrRegparmN(1)
+pit_82C54::set_binary_to_count(counter_type & thisctr) {
     if(thisctr.bcd_mode) {
       thisctr.count_binary=
 	(1*((thisctr.count>>0)&0xF)) +
@@ -128,7 +131,8 @@ void pit_82C54::print_cnum(Bit8u cnum) {
     }
   }
 
-  void pit_82C54::decrement (counter_type & thisctr) {
+  void  BX_CPP_AttrRegparmN(1)
+pit_82C54::decrement (counter_type & thisctr) {
     if(!thisctr.count) {
       if(thisctr.bcd_mode) {
 	thisctr.count=0x9999;
@@ -181,7 +185,8 @@ void pit_82C54::print_cnum(Bit8u cnum) {
   void pit_82C54::reset (unsigned type) {
   }
 
-void pit_82C54::decrement_multiple(counter_type & thisctr, Bit32u cycles) {
+void  BX_CPP_AttrRegparmN(2)
+pit_82C54::decrement_multiple(counter_type & thisctr, Bit32u cycles) {
   while(cycles>0) {
     if(cycles<=thisctr.count_binary) {
       thisctr.count_binary-=cycles;
@@ -276,7 +281,8 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
   }
 }
 
-  void pit_82C54::clock(Bit8u cnum) {
+  void  BX_CPP_AttrRegparmN(1)
+pit_82C54::clock(Bit8u cnum) {
     if(cnum>MAX_COUNTER) {
       BX_ERROR(("Counter number too high in clock"));
     } else {

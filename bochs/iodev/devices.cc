@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.51 2003-02-18 03:38:03 yakovlev Exp $
+// $Id: devices.cc,v 1.52 2003-03-02 23:59:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.51 2003-02-18 03:38:03 yakovlev Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.52 2003-03-02 23:59:10 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -601,7 +601,7 @@ bx_devices_c::register_default_io_write_handler( void *this_ptr, bx_write_handle
  * Read a byte of data from the IO memory address space
  */
 
-  Bit32u
+  Bit32u BX_CPP_AttrRegparmN(2)
 bx_devices_c::inp(Bit16u addr, unsigned io_len)
 {
   Bit8u handle;
@@ -623,7 +623,7 @@ bx_devices_c::inp(Bit16u addr, unsigned io_len)
  * Write a byte of data to the IO memory address space.
  */
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
 {
   Bit8u handle;

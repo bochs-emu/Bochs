@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.201 2003-02-21 14:40:59 cisc Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.202 2003-03-02 23:59:08 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -884,7 +884,7 @@ AC_ARG_ENABLE(repeat-speedups,
 
 AC_MSG_CHECKING(for instruction cache support)
 AC_ARG_ENABLE(icache,
-  [  --enable-icache                   support instruction cache (runs faster)],
+  [  --enable-icache                   support instruction cache],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     speedup_iCache=1
@@ -895,6 +895,22 @@ AC_ARG_ENABLE(icache,
   [
     AC_MSG_RESULT(no)
     speedup_iCache=0
+    ]
+  )
+
+AC_MSG_CHECKING(for gcc fast function calls optimization)
+AC_ARG_ENABLE(fast-function-calls,
+  [  --enable-fast-function-calls      support for fast function calls (gcc on x86 only)],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    speedup_fastcall=1
+   else
+    AC_MSG_RESULT(no)
+    speedup_fastcall=0
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    speedup_fastcall=0
     ]
   )
 
@@ -1111,6 +1127,7 @@ if test "$speedups_all" = 1; then
   speedup_repeat=1
   speedup_iCache=1
   speedup_host_specific_asms=1
+  speedup_fastcall=1
 fi
 
 if test "$speedup_guest2host_tlb" = 1; then
@@ -1137,6 +1154,11 @@ else
   AC_DEFINE(BX_SupportHostAsms, 0)
 fi
 
+if test "$speedup_fastcall" = 1; then
+  AC_DEFINE(BX_FAST_FUNC_CALL, 1)
+else
+  AC_DEFINE(BX_FAST_FUNC_CALL, 0)
+fi
 
 
 READLINE_LIB=""

@@ -27,7 +27,8 @@
 
 #if BX_SUPPORT_MMX || BX_SUPPORT_SSE != 0
 
-Bit8s SaturateWordSToByteS(Bit16s value)
+Bit8s  BX_CPP_AttrRegparmN(1)
+SaturateWordSToByteS(Bit16s value)
 {
 /*
   SaturateWordSToByteS   converts   a signed 16-bit value to a
@@ -40,7 +41,8 @@ Bit8s SaturateWordSToByteS(Bit16s value)
   return value;
 }
 
-Bit16s SaturateDwordSToWordS(Bit32s value)
+Bit16s  BX_CPP_AttrRegparmN(1)
+SaturateDwordSToWordS(Bit32s value)
 {
 /*
   SaturateDwordSToWordS  converts  a  signed 32-bit value to a
@@ -54,7 +56,8 @@ Bit16s SaturateDwordSToWordS(Bit32s value)
   return value;
 }
 
-Bit8u SaturateWordSToByteU(Bit16s value)
+Bit8u  BX_CPP_AttrRegparmN(1)
+SaturateWordSToByteU(Bit16s value)
 {
 /*
   SaturateWordSToByteU  converts a signed 16-bit value to an
@@ -67,7 +70,8 @@ Bit8u SaturateWordSToByteU(Bit16s value)
   return value;
 }
 
-Bit16u SaturateDwordSToWordU(Bit32s value)
+Bit16u  BX_CPP_AttrRegparmN(1)
+SaturateDwordSToWordU(Bit32s value)
 {
 /*
   SaturateDwordSToWordU  converts  a signed 32-bit value

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.95 2003-02-01 12:21:43 vruppert Exp $
+// $Id: harddrv.cc,v 1.96 2003-03-02 23:59:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.95 2003-02-01 12:21:43 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.96 2003-03-02 23:59:10 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2388,7 +2388,7 @@ bx_hard_drive_c::close_harddrive(void)
 }
 
 
-  bx_bool
+  bx_bool BX_CPP_AttrRegparmN(2)
 bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
 {
       off_t logical_sector;
@@ -2418,7 +2418,7 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
       return true;
 }
 
-  void
+  void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::increment_address(Bit8u channel)
 {
       BX_SELECTED_CONTROLLER(channel).sector_count--;
@@ -2887,7 +2887,7 @@ bx_hard_drive_c::identify_drive(Bit8u channel)
     }
 }
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bool lazy)
 {
       // BX_SELECTED_CONTROLLER(channel).byte_count is a union of BX_SELECTED_CONTROLLER(channel).cylinder_no;
@@ -2961,7 +2961,7 @@ bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc)
       BX_SELECTED_DRIVE(channel).sense.ascq = 0;
 }
 
-void
+void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::atapi_cmd_nop(Bit8u channel)
 {
       BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
@@ -2990,13 +2990,13 @@ bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int size
       memcpy(BX_SELECTED_CONTROLLER(channel).buffer + 8, src, size);
 }
 
-  void
+  void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::ready_to_send_atapi(Bit8u channel)
 {
       raise_interrupt(channel);
 }
 
-void
+void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::raise_interrupt(Bit8u channel)
 {
 	BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER(channel).control.disable_irq));
@@ -3387,12 +3387,14 @@ error_recovery_t::error_recovery_t ()
       data[7] = 0x00;
 }
 
-uint16 read_16bit(const uint8* buf)
+uint16  BX_CPP_AttrRegparmN(1) 
+read_16bit(const uint8* buf)
 {
       return (buf[0] << 8) | buf[1];
 }
 
-uint32 read_32bit(const uint8* buf)
+uint32  BX_CPP_AttrRegparmN(1)
+read_32bit(const uint8* buf)
 {
       return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 }

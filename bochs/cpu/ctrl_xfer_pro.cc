@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.21 2002-10-03 04:49:47 bdenney Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.22 2003-03-02 23:59:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 
 
 #if BX_CPU_LEVEL >= 2
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 {
   bx_descriptor_t  descriptor;
@@ -456,7 +456,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
 
 #if BX_CPU_LEVEL >= 2
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 {
   bx_selector_t cs_selector;
@@ -1041,7 +1041,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
 
 #if BX_CPU_LEVEL >= 2
-  void
+  void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 {
   Bit16u raw_cs_selector, raw_ss_selector;
@@ -1379,7 +1379,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 
 #if BX_CPU_LEVEL >= 2
-  void
+  void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::iret_protected(bxInstruction_c *i)
 {
   Bit16u raw_cs_selector, raw_ss_selector;

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_tags.c                                                               |
- |  $Id: fpu_tags.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: fpu_tags.c,v 1.3 2003-03-02 23:59:09 cbothamy Exp $
  |                                                                           |
  |  Set FPU register tags.                                                   |
  |                                                                           |
@@ -29,19 +29,22 @@ int FPU_gettag0(void)
 }
 
 
-int FPU_gettagi(int stnr)
+int  __attribute__((regparm(1)))
+FPU_gettagi(int stnr)
 {
   return (fpu_tag_word >> (((top+stnr) & 7)*2)) & 3;
 }
 
 
-int FPU_gettag(int regnr)
+int  __attribute__((regparm(1)))
+FPU_gettag(int regnr)
 {
   return (fpu_tag_word >> ((regnr & 7)*2)) & 3;
 }
 
 
-void FPU_settag0(int tag)
+void  __attribute__((regparm(1)))
+FPU_settag0(int tag)
 {
   int regnr = top;
   regnr &= 7;
@@ -50,7 +53,8 @@ void FPU_settag0(int tag)
 }
 
 
-void FPU_settagi(int stnr, int tag)
+void  __attribute__((regparm(2)))
+FPU_settagi(int stnr, int tag)
 {
   int regnr = stnr+top;
   regnr &= 7;
@@ -59,7 +63,8 @@ void FPU_settagi(int stnr, int tag)
 }
 
 
-void FPU_settag(int regnr, int tag)
+void  __attribute__((regparm(2)))
+FPU_settag(int regnr, int tag)
 {
   regnr &= 7;
   fpu_tag_word &= ~(3 << (regnr*2));
@@ -67,7 +72,8 @@ void FPU_settag(int regnr, int tag)
 }
 
 
-int FPU_Special(FPU_REG const *ptr)
+int  __attribute__((regparm(1)))
+FPU_Special(FPU_REG const *ptr)
 {
   int exp = exponent(ptr);
 
@@ -81,14 +87,16 @@ int FPU_Special(FPU_REG const *ptr)
 }
 
 
-int isNaN(FPU_REG const *ptr)
+int  __attribute__((regparm(1)))
+isNaN(FPU_REG const *ptr)
 {
   return ( (exponent(ptr) == EXP_BIAS+EXP_OVER)
 	   && !((ptr->sigh == 0x80000000) && (ptr->sigl == 0)) );
 }
 
 
-int FPU_empty_i(int stnr)
+int  __attribute__((regparm(1)))
+FPU_empty_i(int stnr)
 {
   int regnr = (top+stnr) & 7;
 
@@ -104,19 +112,22 @@ int FPU_stackoverflow(FPU_REG **st_new_ptr)
 }
 
 
-void FPU_copy_to_regi(FPU_REG const *r, u_char tag, int stnr)
+void  __attribute__((regparm(3)))
+FPU_copy_to_regi(FPU_REG const *r, u_char tag, int stnr)
 {
   reg_copy(r, &st(stnr));
   FPU_settagi(stnr, tag);
 }
 
-void FPU_copy_to_reg1(FPU_REG const *r, u_char tag)
+void  __attribute__((regparm(2)))
+FPU_copy_to_reg1(FPU_REG const *r, u_char tag)
 {
   reg_copy(r, &st(1));
   FPU_settagi(1, tag);
 }
 
-void FPU_copy_to_reg0(FPU_REG const *r, u_char tag)
+void  __attribute__((regparm(2)))
+FPU_copy_to_reg0(FPU_REG const *r, u_char tag)
 {
   int regnr = top;
   regnr &= 7;

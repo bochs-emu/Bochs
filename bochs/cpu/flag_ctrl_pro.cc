@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.13 2002-10-25 11:44:35 bdenney Exp $
+// $Id: flag_ctrl_pro.cc,v 1.14 2003-03-02 23:59:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 
 
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
 {
   Bit32u supportMask, newEFlags;
@@ -58,7 +58,7 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)
 {
   Bit32u changeMask = 0x0dd5;

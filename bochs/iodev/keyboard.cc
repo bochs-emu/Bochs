@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.74 2003-01-05 01:37:21 cbothamy Exp $
+// $Id: keyboard.cc,v 1.75 2003-03-02 23:59:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.74 2003-01-05 01:37:21 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.75 2003-03-02 23:59:11 cbothamy Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -785,7 +785,7 @@ bx_keyb_c::gen_scancode(Bit32u   key)
 
 
 
-  void
+  void BX_CPP_AttrRegparmN(1)
 bx_keyb_c::set_kbd_clock_enable(Bit8u   value)
 {
   bx_bool prev_kbd_clock_enabled;
@@ -930,7 +930,7 @@ bx_keyb_c::kbd_enQ(Bit8u   scancode)
 //BX_DEBUG(( "#   out_buffer = %u", (unsigned) BX_KEY_THIS s.kbd_controller.kbd_output_buffer);
 }
 
-  bx_bool
+  bx_bool BX_CPP_AttrRegparmN(3)
 bx_keyb_c::mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3)
 {
   if ((BX_KEY_THIS s.mouse_internal_buffer.num_elements + 3) >= BX_MOUSE_BUFF_SIZE) {

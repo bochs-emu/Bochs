@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.26 2003-02-13 15:04:10 sshwarts Exp $
+// $Id: memory.cc,v 1.27 2003-03-02 23:59:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 
 #if BX_PROVIDE_CPU_MEMORY
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
@@ -232,7 +232,7 @@ inc_one:
 }
 
 
-  void
+  void BX_CPP_AttrRegparmN(3)
 BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;

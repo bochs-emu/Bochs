@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.10 2002-11-19 18:56:39 vruppert Exp $
+// $Id: ne2k.h,v 1.11 2003-03-02 23:59:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,14 +209,14 @@ private:
   BX_NE2K_SMF Bit32u read_cr(void);
   BX_NE2K_SMF void   write_cr(Bit32u value);
 
-  BX_NE2K_SMF Bit32u chipmem_read(Bit32u address, unsigned io_len);
-  BX_NE2K_SMF Bit32u asic_read(Bit32u offset, unsigned io_len);
+  BX_NE2K_SMF Bit32u chipmem_read(Bit32u address, unsigned io_len) BX_CPP_AttrRegparmN(2);
+  BX_NE2K_SMF Bit32u asic_read(Bit32u offset, unsigned io_len) BX_CPP_AttrRegparmN(2);
   BX_NE2K_SMF Bit32u page0_read(Bit32u offset, unsigned io_len);
   BX_NE2K_SMF Bit32u page1_read(Bit32u offset, unsigned io_len);
   BX_NE2K_SMF Bit32u page2_read(Bit32u offset, unsigned io_len);
   BX_NE2K_SMF Bit32u page3_read(Bit32u offset, unsigned io_len);
 
-  BX_NE2K_SMF void chipmem_write(Bit32u address, Bit32u value, unsigned io_len);
+  BX_NE2K_SMF void chipmem_write(Bit32u address, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
   BX_NE2K_SMF void asic_write(Bit32u address, Bit32u value, unsigned io_len);
   BX_NE2K_SMF void page0_write(Bit32u address, Bit32u value, unsigned io_len);
   BX_NE2K_SMF void page1_write(Bit32u address, Bit32u value, unsigned io_len);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.20 2002-12-26 22:19:44 vruppert Exp $
+// $Id: keyboard.h,v 1.21 2003-03-02 23:59:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -215,7 +215,7 @@ private:
   bx_bool stop_paste;  // stop the current paste operation on hardware reset
 
   BX_KEY_SMF void     resetinternals(bx_bool powerup);
-  BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value);
+  BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value) BX_CPP_AttrRegparmN(1);
   BX_KEY_SMF void     set_aux_clock_enable(Bit8u   value);
   BX_KEY_SMF void     kbd_ctrl_to_kbd(Bit8u   value);
   BX_KEY_SMF void     kbd_ctrl_to_mouse(Bit8u   value);
@@ -223,7 +223,7 @@ private:
   BX_KEY_SMF void     kbd_enQ_imm(Bit8u   val);
   BX_KEY_SMF void     activate_timer(void);
   BX_KEY_SMF void     controller_enQ(Bit8u   data, unsigned source);
-  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3);
+  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3) BX_CPP_AttrRegparmN(3);
   BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
 
   static void   timer_handler(void *);

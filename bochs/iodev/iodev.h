@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.30 2003-02-17 03:58:29 yakovlev Exp $
+// $Id: iodev.h,v 1.31 2003-03-02 23:59:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -287,8 +287,8 @@ public:
   bx_bool register_irq(unsigned irq, const char *name);
   bx_bool unregister_irq(unsigned irq, const char *name);
   void iodev_init(void);
-  Bit32u inp(Bit16u addr, unsigned io_len);
-  void   outp(Bit16u addr, Bit32u value, unsigned io_len);
+  Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
+  void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
 
   static void timer_handler(void *);
   void timer(void);

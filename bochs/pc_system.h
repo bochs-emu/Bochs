@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.24 2003-02-14 04:22:16 yakovlev Exp $
+// $Id: pc_system.h,v 1.25 2003-03-02 23:59:08 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -190,9 +190,9 @@ public:
 
   bx_pc_system_c(void);
 
-  Bit32u  inp(Bit16u addr, unsigned io_len);
-  void    outp(Bit16u addr, Bit32u value, unsigned io_len);
-  void    set_enable_a20(Bit8u value);
+  Bit32u  inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
+  void    outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+  void    set_enable_a20(Bit8u value) BX_CPP_AttrRegparmN(1);
   bx_bool get_enable_a20(void);
   void    exit(void);
 

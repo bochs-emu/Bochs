@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.13 2002-10-25 11:44:41 bdenney Exp $
+// $Id: memory.h,v 1.14 2003-03-02 23:59:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,23 +60,23 @@ public:
   BX_MEM_C(void);
   BX_MEM_C(size_t memsize);
   ~BX_MEM_C(void);
-  BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment);
+  BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment) BX_CPP_AttrRegparmN(2);
   BX_MEM_SMF void    init_memory(int memsize);
   BX_MEM_SMF void    readPhysicalPage(BX_CPU_C *cpu, Bit32u addr,
-                                      unsigned len, void *data);
+                                      unsigned len, void *data) BX_CPP_AttrRegparmN(3);
   BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, Bit32u addr,
-                                       unsigned len, void *data);
+                                       unsigned len, void *data) BX_CPP_AttrRegparmN(3);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
 #if BX_PCI_SUPPORT
-  BX_MEM_SMF Bit8u*  pci_fetch_ptr(Bit32u addr);
+  BX_MEM_SMF Bit8u*  pci_fetch_ptr(Bit32u addr) BX_CPP_AttrRegparmN(1);
 #endif
   BX_MEM_SMF bx_bool dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_crc32(
     unsigned long (*f)(unsigned char *buf, int len),
     Bit32u addr1, Bit32u addr2, Bit32u *crc);
-  BX_MEM_SMF Bit8u * getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op);
+  BX_MEM_SMF Bit8u * getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op) BX_CPP_AttrRegparmN(3);
   };
 
 #if BX_PROVIDE_CPU_MEMORY==1

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.13 2003-02-26 00:59:31 ptrumpet Exp $
+// $Id: stack_pro.cc,v 1.14 2003-03-02 23:59:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 
 
 
-  void
+  void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::push_16(Bit16u value16)
 {
 BailBigRSP("push_16");
@@ -240,7 +240,7 @@ BX_CPU_C::pop_64(Bit64u *value64_ptr)
 
 
 #if BX_CPU_LEVEL >= 2
-  bx_bool
+  bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 {
 #if BX_SUPPORT_X86_64

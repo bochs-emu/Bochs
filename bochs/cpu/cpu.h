@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.131 2003-02-28 02:37:18 ptrumpet Exp $
+// $Id: cpu.h,v 1.132 2003-03-02 23:59:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2687,23 +2687,23 @@ union {
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
     }
 
-  BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length);
-  BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length);
-  BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u *data);
-  BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u *data);
-  BX_SMF void write_virtual_dword(unsigned seg, bx_address offset, Bit32u *data);
-  BX_SMF void write_virtual_qword(unsigned seg, bx_address offset, Bit64u *data);
-  BX_SMF void read_virtual_byte(unsigned seg, bx_address offset, Bit8u *data);
-  BX_SMF void read_virtual_word(unsigned seg, bx_address offset, Bit16u *data);
-  BX_SMF void read_virtual_dword(unsigned seg, bx_address offset, Bit32u *data);
-  BX_SMF void read_virtual_qword(unsigned seg, bx_address offset, Bit64u *data);
+  BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dword(unsigned seg, bx_address offset, Bit32u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_qword(unsigned seg, bx_address offset, Bit64u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_byte(unsigned seg, bx_address offset, Bit8u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_dword(unsigned seg, bx_address offset, Bit32u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_qword(unsigned seg, bx_address offset, Bit64u *data) BX_CPP_AttrRegparmN(3);
 
-  BX_SMF void read_RMW_virtual_byte(unsigned seg, bx_address offset, Bit8u *data);
-  BX_SMF void read_RMW_virtual_word(unsigned seg, bx_address offset, Bit16u *data);
-  BX_SMF void read_RMW_virtual_dword(unsigned seg, bx_address offset, Bit32u *data);
-  BX_SMF void read_RMW_virtual_qword(unsigned seg, bx_address offset, Bit64u *data);
-  BX_SMF void write_RMW_virtual_byte(Bit8u val8);
-  BX_SMF void write_RMW_virtual_word(Bit16u val16);
+  BX_SMF void read_RMW_virtual_byte(unsigned seg, bx_address offset, Bit8u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_RMW_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_RMW_virtual_dword(unsigned seg, bx_address offset, Bit32u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_RMW_virtual_qword(unsigned seg, bx_address offset, Bit64u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_RMW_virtual_byte(Bit8u val8) BX_CPP_AttrRegparmN(1);
+  BX_SMF void write_RMW_virtual_word(Bit16u val16) BX_CPP_AttrRegparmN(1);
   BX_SMF void write_RMW_virtual_dword(Bit32u val32);
   BX_SMF void write_RMW_virtual_qword(Bit64u val64);
 
@@ -2721,13 +2721,13 @@ union {
 
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
-                     unsigned rw, void *data);
-  BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl);
-  BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw);
+                     unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw) BX_CPP_AttrRegparmN(3);
   BX_SMF void TLB_flush(bx_bool invalidateGlobal);
   BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(bx_bool value);
-  BX_SMF char *strseg(bx_segment_reg_t *seg);
+  BX_SMF char *strseg(bx_segment_reg_t *seg) BX_CPP_AttrRegparmN(1);
   BX_SMF void interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
                  Bit16u error_code);
 #if BX_CPU_LEVEL >= 2
@@ -2736,17 +2736,17 @@ union {
 #endif
   BX_SMF int  int_number(bx_segment_reg_t *seg);
   BX_SMF void shutdown_cpu(void);
-  BX_SMF void CR3_change(bx_address value);
-  BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0);
-  BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4);
+  BX_SMF void CR3_change(bx_address value) BX_CPP_AttrRegparmN(1);
+  BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
+  BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingA20Changed(void);
 
   BX_SMF void reset(unsigned source);
 
-  BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp);
-  BX_SMF void call_protected(bxInstruction_c *, Bit16u cs, bx_address disp);
-  BX_SMF void return_protected(bxInstruction_c *, Bit16u pop_bytes);
-  BX_SMF void iret_protected(bxInstruction_c *);
+  BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
+  BX_SMF void call_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
+  BX_SMF void return_protected(bxInstruction_c *, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
+  BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void validate_seg_regs(void);
   BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
                                      Bit32u flags32);
@@ -2761,38 +2761,38 @@ union {
 #if BX_SUPPORT_X86_64
   BX_SMF void get_RSP_from_TSS(unsigned pl, Bit64u *rsp);
 #endif
-  BX_SMF void write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF);
+  BX_SMF void write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_eflags(Bit32u eflags, bx_bool change_IOPL, bx_bool change_IF,
                     bx_bool change_VM, bx_bool change_RF);
-  BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask); // Newer variant.
+  BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask) BX_CPP_AttrRegparmN(2); // Newer variant.
   BX_SMF Bit16u read_flags(void);
   BX_SMF Bit32u read_eflags(void);
   BX_SMF Bit32u get_segment_base(unsigned seg);
 
-  BX_SMF Bit8u   inp8(Bit16u addr);
-  BX_SMF void    outp8(Bit16u addr, Bit8u value);
-  BX_SMF Bit16u  inp16(Bit16u addr);
-  BX_SMF void    outp16(Bit16u addr, Bit16u value);
-  BX_SMF Bit32u  inp32(Bit16u addr);
-  BX_SMF void    outp32(Bit16u addr, Bit32u value);
+  BX_SMF Bit8u   inp8(Bit16u addr) BX_CPP_AttrRegparmN(1);
+  BX_SMF void    outp8(Bit16u addr, Bit8u value) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u  inp16(Bit16u addr) BX_CPP_AttrRegparmN(1);
+  BX_SMF void    outp16(Bit16u addr, Bit16u value) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u  inp32(Bit16u addr) BX_CPP_AttrRegparmN(1);
+  BX_SMF void    outp32(Bit16u addr, Bit32u value) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_bool allow_io(Bit16u addr, unsigned len);
   BX_SMF void    enter_protected_mode(void);
   BX_SMF void    enter_real_mode(void);
-  BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector);
-  BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp);
+  BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
+  BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);
-  BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl);
-  BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl);
+  BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
+  BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    fetch_raw_descriptor(bx_selector_t *selector,
-                               Bit32u *dword1, Bit32u *dword2, Bit8u exception);
-  BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value);
+                               Bit32u *dword1, Bit32u *dword2, Bit8u exception) BX_CPP_AttrRegparmN(3);
+  BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_X86_64
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
                                    bx_address base, unsigned dpl);
 #endif
   BX_SMF bx_bool fetch_raw_descriptor2(bx_selector_t *selector,
-                                Bit32u *dword1, Bit32u *dword2);
-  BX_SMF void    push_16(Bit16u value16);
+                                Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
+  BX_SMF void    push_16(Bit16u value16) BX_CPP_AttrRegparmN(1);
   BX_SMF void    push_32(Bit32u value32);
 #if BX_SUPPORT_X86_64
   BX_SMF void    push_64(Bit64u value64);
@@ -2802,7 +2802,7 @@ union {
 #if BX_SUPPORT_X86_64
   BX_SMF void    pop_64(Bit64u *value64_ptr);
 #endif
-  BX_SMF bx_bool can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes);
+  BX_SMF bx_bool can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_bool can_pop(Bit32u bytes);
   BX_SMF void    sanity_checks(void);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.61 2003-02-09 08:25:22 vruppert Exp $
+// $Id: vga.cc,v 1.62 2003-03-02 23:59:11 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2226,11 +2226,11 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 
 #if BX_SUPPORT_VBE
-  Bit8u
+  Bit8u  BX_CPP_AttrRegparmN(1)
 bx_vga_c::vbe_mem_read(Bit32u addr)
 {
-  Bit32u offset;        
-  
+  Bit32u offset;
+
   if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
   {
     // LFB read
@@ -2249,12 +2249,12 @@ bx_vga_c::vbe_mem_read(Bit32u addr)
   return (BX_VGA_THIS s.vbe_memory[offset]);
 }
 
-  void
+  void BX_CPP_AttrRegparmN(2)
 bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
 {
-  Bit32u offset;        
+  Bit32u offset;
   unsigned x_tileno, y_tileno;
-  
+
   if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
   {
     // LFB write
