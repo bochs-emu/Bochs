@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.26 2002-09-12 07:16:35 bdenney Exp $
+// $Id: logio.cc,v 1.27 2002-09-12 18:52:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -178,7 +178,7 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 #if BX_SUPPORT_X86_64==0
                   fprintf(logfd, "%08x", BX_CPU(0)->eip);
 #else
-                  fprintf(logfd, "%08x", BX_CPU(0)->_long.eip);
+                  fprintf(logfd, "%08x", BX_CPU(0)->dword.eip);
 #endif
 		  break;
 		case 'e':

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.59 2002-09-12 18:10:46 bdenney Exp $
+// $Id: dbg_main.cc,v 1.60 2002-09-12 18:52:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,13 +42,13 @@ extern "C" {
 #endif
 
 // define shortcuts to get register from the default CPU
-#define EBP (BX_CPU(dbg_cpu)->gen_reg[5].erx)
-#if BX_SUPPORT_X86_64==0
-#define EIP (BX_CPU(dbg_cpu)->eip)
+#define EBP (BX_CPU(dbg_cpu)->gen_reg[5].get_erx())
+#if BX_SUPPORT_X86_64
+#define EIP (BX_CPU(dbg_cpu)->dword.eip)
 #else
-#define EIP (BX_CPU(dbg_cpu)->_long.eip)
+#define EIP (BX_CPU(dbg_cpu)->eip)
 #endif
-#define ESP (BX_CPU(dbg_cpu)->gen_reg[4].erx)
+#define ESP (BX_CPU(dbg_cpu)->gen_reg[4].get_erx ())
 #define SP  (BX_CPU(dbg_cpu)->gen_reg[4].word.rx)
 
 
@@ -2111,14 +2111,14 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     if( BX_CPU(dbg_cpu)->trace_reg )
 	    fprintf( stderr,
 		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
-		BX_CPU(which_cpu)->gen_reg[0].erx,
-		BX_CPU(which_cpu)->gen_reg[1].erx,
-		BX_CPU(which_cpu)->gen_reg[2].erx,
-		BX_CPU(which_cpu)->gen_reg[3].erx,
-		BX_CPU(which_cpu)->gen_reg[4].erx,
-		BX_CPU(which_cpu)->gen_reg[5].erx,
-		BX_CPU(which_cpu)->gen_reg[6].erx,
-		BX_CPU(which_cpu)->gen_reg[7].erx,
+		BX_CPU(which_cpu)->gen_reg[0].get_erx(),
+		BX_CPU(which_cpu)->gen_reg[1].get_erx(),
+		BX_CPU(which_cpu)->gen_reg[2].get_erx(),
+		BX_CPU(which_cpu)->gen_reg[3].get_erx(),
+		BX_CPU(which_cpu)->gen_reg[4].get_erx(),
+		BX_CPU(which_cpu)->gen_reg[5].get_erx(),
+		BX_CPU(which_cpu)->gen_reg[6].get_erx(),
+		BX_CPU(which_cpu)->gen_reg[7].get_erx(),
 		!!BX_CPU(which_cpu)->get_CF(),
 		!!BX_CPU(which_cpu)->get_AF(),
 		!!BX_CPU(which_cpu)->get_ZF(),
