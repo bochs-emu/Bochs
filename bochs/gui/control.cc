@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.15 2001-06-13 08:14:49 bdenney Exp $
+ * $Id: control.cc,v 1.16 2001-06-13 13:31:53 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -341,7 +341,7 @@ static char *runtime_menu_prompt =
 "10. Continue simulation\n"
 "11. Quit now\n"
 "\n"
-"Please choose one:  [9] ";
+"Please choose one:  [10] ";
 
 char *menu_prompt_list[BX_CPANEL_N_MENUS] = {
   ask_about_control_panel,
