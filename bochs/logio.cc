@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.23 2002-08-28 03:06:12 bdenney Exp $
+// $Id: logio.cc,v 1.24 2002-09-03 08:32:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -251,7 +251,7 @@ logfunctions::logfunctions(void)
 	// BUG: unfortunately this can be called before the bochsrc is read,
 	// which means that the bochsrc has no effect on the actions.
 	for (int i=0; i<N_LOGLEV; i++)
-	  onoff[i] = bx_options.log.actions[i];
+	  onoff[i] = DEFAULT_LOG_ACTIONS(i);
 }
 
 logfunctions::logfunctions(iofunc_t *iofunc)
@@ -263,7 +263,7 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 	// BUG: unfortunately this can be called before the bochsrc is read,
 	// which means that the bochsrc has no effect on the actions.
 	for (int i=0; i<N_LOGLEV; i++)
-	  onoff[i] = bx_options.log.actions[i];
+	  onoff[i] = DEFAULT_LOG_ACTIONS(i);
 }
 
 logfunctions::~logfunctions(void)
