@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.182 2004-10-29 21:15:47 sshwarts Exp $
+// $Id: cpu.h,v 1.183 2004-11-02 16:10:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2810,7 +2810,7 @@ public: // for now...
   BX_SMF void exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
                   BX_CPP_AttrNoReturn();
 #endif
-  BX_SMF int  int_number(bx_segment_reg_t *seg);
+  BX_SMF int int_number(bx_segment_reg_t *seg);
   BX_SMF void CR3_change(bx_address value) BX_CPP_AttrRegparmN(1);
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);

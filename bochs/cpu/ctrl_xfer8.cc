@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.15 2004-03-02 20:48:47 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.16 2004-11-02 16:10:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ BailBigRSP("JCXZ_Jb");
 #if BX_CPU_LEVEL >= 2
       if (protected_mode()) {
         if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-          BX_PANIC(("jcxz_jb: offset outside of CS limits"));
+          BX_ERROR(("jcxz_jb: offset outside of CS limits"));
           exception(BX_GP_EXCEPTION, 0, 0);
           }
         }
@@ -131,7 +131,7 @@ BailBigRSP("loopne_jb");
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
         if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_PANIC(("loopne_jb: offset outside of CS limits"));
+          BX_ERROR(("loopne_jb: offset outside of CS limits"));
           exception(BX_GP_EXCEPTION, 0, 0);
           }
         }
@@ -189,7 +189,7 @@ BailBigRSP("loope_jb");
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
         if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_PANIC(("loope_jb: offset outside of CS limits"));
+          BX_ERROR(("loope_jb: offset outside of CS limits"));
           exception(BX_GP_EXCEPTION, 0, 0);
           }
         }
@@ -246,7 +246,7 @@ BailBigRSP("loop_jb");
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
         if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_PANIC(("loop_jb: offset outside of CS limits"));
+          BX_ERROR(("loop_jb: offset outside of CS limits"));
           exception(BX_GP_EXCEPTION, 0, 0);
           }
         }

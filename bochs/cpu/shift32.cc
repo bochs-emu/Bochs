@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.24 2004-08-27 20:13:32 sshwarts Exp $
+// $Id: shift32.cc,v 1.25 2004-11-02 16:10:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -81,10 +81,6 @@ BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
   void
 BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("SHRD_EdGd: not supported on < 386"));
-  UndefinedOpcode(i)
-#else
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
 
@@ -127,7 +123,6 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
     if (count == 1)
       set_OF(((op1_32 ^ result_32) & 0x80000000) > 0);
     set_PF_base(result_32);
-#endif /* BX_CPU_LEVEL >= 3 */
 }
 
 

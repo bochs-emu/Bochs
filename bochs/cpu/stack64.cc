@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.15 2004-10-06 20:10:01 sshwarts Exp $
+// $Id: stack64.cc,v 1.16 2004-11-02 16:10:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,9 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -72,7 +69,6 @@ BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 BX_CPU_C::POP_RRX(bxInstruction_c *i)
 {
   Bit64u rrx;
-
   pop_64(&rrx);
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = rrx;
 }
@@ -214,10 +210,7 @@ BX_CPU_C::POPAD64(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
 {
-    Bit64u imm64;
-
-    imm64 = (Bit32s) i->Id();
-
+    Bit64u imm64 = (Bit32s) i->Id();
     push_64(imm64);
 }
 

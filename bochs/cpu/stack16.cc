@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.15 2004-05-10 21:05:50 sshwarts Exp $
+// $Id: stack16.cc,v 1.16 2004-11-02 16:10:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,7 +72,8 @@ BX_CPU_C::POP_Ew(bxInstruction_c *i)
 BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_PANIC(("PUSHAD: not supported on an 8086"));
+  BX_INFO(("PUSHAD: not supported on an 8086"));
+  UndefinedOpcode(i);
 #else
   Bit32u temp_ESP;
   Bit16u sp;
@@ -115,7 +116,8 @@ BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_PANIC(("POPAD not supported on an 8086"));
+  BX_INFO(("POPAD not supported on an 8086"));
+  UndefinedOpcode(i);
 #else /* 286+ */
 
     Bit16u di, si, bp, tmp, bx, dx, cx, ax;
@@ -151,12 +153,7 @@ BX_CPU_C::POPAD16(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("PUSH_Iv: not supported on 8086!"));
-#else
-  Bit16u imm16 = i->Iw();
-  push_16(imm16);
-#endif
+  push_16(i->Iw());
 }
 
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.42 2004-09-14 20:19:54 sshwarts Exp $
+// $Id: exception.cc,v 1.43 2004-11-02 16:10:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -462,13 +462,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
           }
 
         // instruction pointer must be in CS limit, else #GP(0)
-        //if (EIP > cs_descriptor.u.segment.limit_scaled) {}
         if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_PANIC(("exception(): eIP > CS.limit"));
-          exception(BX_GP_EXCEPTION, 0x0000, 0);
-          }
+          BX_ERROR(("exception(): eIP > CS.limit"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+        }
+
         return;
-        break;
 
       case 6: // 286 interrupt gate
       case 7: // 286 trap gate
@@ -604,13 +603,14 @@ BX_CPU_THIS_PTR save_esp = ESP;
             BX_PANIC(("interrupt(): new stack doesn't have room for %u bytes",
                (unsigned) bytes));
             // SS(???)
-            }
+            exception(BX_SS_EXCEPTION, 0, 0);
+          }
 
           // IP must be within CS segment boundaries, else #GP(0)
           if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
             BX_PANIC(("interrupt(): gate eIP > CS.limit"));
             exception(BX_GP_EXCEPTION, 0, 0);
-            }
+          }
 
           old_ESP = ESP;
           old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
@@ -725,15 +725,15 @@ BX_CPU_THIS_PTR save_esp = ESP;
               bytes = 6;
             }
 
-          if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache,
-                         temp_ESP, bytes) ) {
+          if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, bytes))
+          {
             BX_DEBUG(("interrupt(): stack doesn't have room"));
             exception(BX_SS_EXCEPTION, 0, 0);
-            }
+          }
 
           // eIP must be in CS limit else #GP(0)
           if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
-            BX_PANIC(("interrupt(): IP > cs descriptor limit"));
+            BX_ERROR(("interrupt(): IP > cs descriptor limit"));
             exception(BX_GP_EXCEPTION, 0, 0);
             }
 
@@ -1066,9 +1066,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   }
 }
 
-
-  int
-BX_CPU_C::int_number(bx_segment_reg_t *seg)
+int BX_CPU_C::int_number(bx_segment_reg_t *seg)
 {
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS])
     return(BX_SS_EXCEPTION);

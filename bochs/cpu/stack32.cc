@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.21 2004-09-26 20:29:04 sshwarts Exp $
+// $Id: stack32.cc,v 1.22 2004-11-02 16:10:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,16 +33,13 @@
 #define this (BX_CPU(0))
 #endif
 
-
 #if BX_SUPPORT_X86_64==0
 // Make life easier for merging 64&32-bit code.
 #define RBP EBP
 #endif
 
 
-
-  void
-BX_CPU_C::POP_Ed(bxInstruction_c *i)
+void BX_CPU_C::POP_Ed(bxInstruction_c *i)
 {
   Bit32u val32;
 
@@ -64,62 +61,59 @@ BX_CPU_C::POP_Ed(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::PUSH_ERX(bxInstruction_c *i)
+void BX_CPU_C::PUSH_ERX(bxInstruction_c *i)
 {
   push_32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx);
 }
 
-  void
-BX_CPU_C::POP_ERX(bxInstruction_c *i)
+void BX_CPU_C::POP_ERX(bxInstruction_c *i)
 {
   Bit32u erx;
   pop_32(&erx);
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx = erx;
 }
 
-  void
-BX_CPU_C::PUSH_CS(bxInstruction_c *i)
+void BX_CPU_C::PUSH_CS(bxInstruction_c *i)
 {
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
 }
-  void
-BX_CPU_C::PUSH_DS(bxInstruction_c *i)
+
+void BX_CPU_C::PUSH_DS(bxInstruction_c *i)
 {
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
 }
-  void
-BX_CPU_C::PUSH_ES(bxInstruction_c *i)
+
+void BX_CPU_C::PUSH_ES(bxInstruction_c *i)
 {
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
 }
-  void
-BX_CPU_C::PUSH_FS(bxInstruction_c *i)
+
+void BX_CPU_C::PUSH_FS(bxInstruction_c *i)
 {
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
 }
-  void
-BX_CPU_C::PUSH_GS(bxInstruction_c *i)
+
+void BX_CPU_C::PUSH_GS(bxInstruction_c *i)
 {
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
-  void
-BX_CPU_C::PUSH_SS(bxInstruction_c *i)
+
+void BX_CPU_C::PUSH_SS(bxInstruction_c *i)
 {
   if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
@@ -127,8 +121,7 @@ BX_CPU_C::PUSH_SS(bxInstruction_c *i)
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
 }
 
-  void
-BX_CPU_C::POP_DS(bxInstruction_c *i)
+void BX_CPU_C::POP_DS(bxInstruction_c *i)
 {
   if (i->os32L()) {
     Bit32u ds;
@@ -141,8 +134,8 @@ BX_CPU_C::POP_DS(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
     }
 }
-  void
-BX_CPU_C::POP_ES(bxInstruction_c *i)
+
+void BX_CPU_C::POP_ES(bxInstruction_c *i)
 {
   if (i->os32L()) {
     Bit32u es;
@@ -155,8 +148,8 @@ BX_CPU_C::POP_ES(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
     }
 }
-  void
-BX_CPU_C::POP_FS(bxInstruction_c *i)
+
+void BX_CPU_C::POP_FS(bxInstruction_c *i)
 {
   if (i->os32L()) {
     Bit32u fs;
@@ -169,8 +162,8 @@ BX_CPU_C::POP_FS(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
     }
 }
-  void
-BX_CPU_C::POP_GS(bxInstruction_c *i)
+
+void BX_CPU_C::POP_GS(bxInstruction_c *i)
 {
   if (i->os32L()) {
     Bit32u gs;
@@ -183,8 +176,8 @@ BX_CPU_C::POP_GS(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
     }
 }
-  void
-BX_CPU_C::POP_SS(bxInstruction_c *i)
+
+void BX_CPU_C::POP_SS(bxInstruction_c *i)
 {
   if (i->os32L()) {
     Bit32u ss;
@@ -206,12 +199,11 @@ BX_CPU_C::POP_SS(bxInstruction_c *i)
   BX_CPU_THIS_PTR async_event = 1;
 }
 
-
-  void
-BX_CPU_C::PUSHAD32(bxInstruction_c *i)
+void BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_PANIC(("PUSHAD: not supported on an 8086"));
+  BX_INFO(("PUSHAD: not supported on an 8086"));
+  UndefinedOpcode(i);
 #else
   Bit32u temp_ESP;
   Bit32u esp;
@@ -220,7 +212,6 @@ BX_CPU_C::PUSHAD32(bxInstruction_c *i)
     temp_ESP = ESP;
   else
     temp_ESP = SP;
-
 
     if (protected_mode()) {
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 32) ) {
@@ -248,12 +239,12 @@ BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::POPAD32(bxInstruction_c *i)
+void BX_CPU_C::POPAD32(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_PANIC(("POPAD not supported on an 8086"));
-#else /* 286+ */
+  BX_INFO(("POPAD: not supported on an 8086"));
+  UndefinedOpcode(i);
+#else
     Bit32u edi, esi, ebp, etmp, ebx, edx, ecx, eax;
 
     if (protected_mode()) {
@@ -284,19 +275,12 @@ BX_CPU_C::POPAD32(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::PUSH_Id(bxInstruction_c *i)
+void BX_CPU_C::PUSH_Id(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("PUSH_Iv: not supported on 8086!"));
-#else
-  Bit32u imm32 = i->Id();
-  push_32(imm32);
-#endif
+  push_32(i->Id());
 }
 
-  void
-BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
+void BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
 {
     Bit32u op1_32;
 
@@ -312,11 +296,11 @@ BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
     push_32(op1_32);
 }
 
-  void
-BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
+void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_PANIC(("ENTER_IwIb: not supported by 8086!"));
+  BX_INFO(("ENTER_IwIb: not supported by 8086!"));
+  UndefinedOpcode(i);
 #else
   Bit32u frame_ptr32;
   Bit8u level;
@@ -456,7 +440,8 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
 BX_CPU_C::LEAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_PANIC(("LEAVE: not supported by 8086!"));
+  BX_INFO(("LEAVE: not supported by 8086!"));
+  UndefinedOpcode(i);
 #else
   Bit32u temp_EBP;
 

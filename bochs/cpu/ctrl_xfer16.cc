@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.22 2004-10-19 20:05:07 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.23 2004-11-02 16:10:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,11 +50,14 @@ BailBigRSP("RETnear16_Iw");
 
   pop_16(&return_IP);
   if (protected_mode()) {
-    if ( return_IP >
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      BX_PANIC(("retnear_iw: IP > limit"));
-      }
+    if (return_IP >
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) 
+    {
+      BX_ERROR(("retnear_iw: IP > limit"));
+      exception(BX_GP_EXCEPTION, 0, 0);
     }
+  }
+
   EIP = return_IP;
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
     ESP += imm16; /* ??? should it be 2*imm16 ? */
@@ -78,11 +81,13 @@ BailBigRSP("RETnear16");
 
   pop_16(&return_IP);
   if (protected_mode()) {
-    if ( return_IP >
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      BX_PANIC(("retnear: IP > limit"));
-      }
+    if (return_IP >
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) 
+    {
+      BX_ERROR(("retnear: IP > limit"));
+      exception(BX_GP_EXCEPTION, 0, 0);
     }
+  }
   EIP = return_IP;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, EIP);
@@ -111,7 +116,6 @@ BailBigRSP("RETfar16_Iw");
     goto done;
     }
 #endif
-
 
   pop_16(&ip);
   pop_16(&cs_raw);
@@ -173,11 +177,12 @@ BailBigRSP("CALL_Aw");
   new_EIP = EIP + (Bit32s) i->Id();
   new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
-  if ( protected_mode() &&
-       (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) ) {
-    BX_PANIC(("call_aw: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
+  if (protected_mode() &&
+       (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled))
+  {
+    BX_ERROR(("call_aw: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  }
 #endif
 
   /* push 16 bit EA of next instruction */
@@ -242,11 +247,12 @@ BailBigRSP("CALL_Ew");
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if (op1_16 >
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_PANIC(("call_ew: IP out of CS limits!"));
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+    {
+      BX_ERROR(("call_ew: IP out of CS limits!"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
 #endif
 
   push_16(IP);
@@ -306,11 +312,12 @@ BailBigRSP("JMP_Jw");
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
-    if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      BX_PANIC(("jmp_jv: offset outside of CS limits"));
+    if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+    {
+      BX_ERROR(("jmp_jw: offset outside of CS limits"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
 #endif
 
   EIP = new_EIP;
@@ -353,12 +360,13 @@ BailBigRSP("JCC_Jw");
     new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
-      if ( new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        BX_PANIC(("jo_routine: offset outside of CS limits"));
+      if (new_EIP >
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+      {
+        BX_ERROR(("jo_routine: offset outside of CS limits"));
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
       }
+    }
 #endif
     EIP = new_EIP;
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
@@ -380,17 +388,18 @@ BailBigRSP("JZ_Jw");
     new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
-      if ( new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        BX_PANIC(("jo_routine: offset outside of CS limits"));
+      if (new_EIP >
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+      {
+        BX_ERROR(("jz: offset outside of CS limits"));
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
       }
+    }
 #endif
     EIP = new_EIP;
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     revalidate_prefetch_q();
-    }
+  }
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
@@ -407,17 +416,18 @@ BailBigRSP("JNZ_Jw");
     new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
-      if ( new_EIP >
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        BX_PANIC(("jo_routine: offset outside of CS limits"));
+      if (new_EIP >
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) 
+      {
+        BX_ERROR(("jnz: offset outside of CS limits"));
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
       }
+    }
 #endif
     EIP = new_EIP;
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     revalidate_prefetch_q();
-    }
+  }
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
@@ -448,7 +458,7 @@ BailBigRSP("JMP_Ew");
   if (protected_mode()) {
     if (new_EIP >
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_PANIC(("jmp_ev: IP out of CS limits!"));
+      BX_ERROR(("jmp_ev: IP out of CS limits!"));
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
