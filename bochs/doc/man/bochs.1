@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochs 1 "The Bochs Project       bochs @VERSION@        3 Jun 2001"
+.TH bochs 1 "The Bochs Project       bochs @VERSION@        2 Jun 2001"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
@@ -7,13 +7,11 @@ bochs \- Portable x86 Emulator.
 .SH USAGE
 .B bochs [bochsrc syntax]
 .LP
-When you run bochs,  it will search for a  configuration
-file  called .bochsrc in  the current directory and your
-home directory.  You can override the settings from this
-configuration  file  with  command line arguments, using
-the  same  syntax  as the bochsrc file. If you have  any
-spaces in your command line  arguments, they should   be
-enclosed  in  single quotes.  For  more information, see
+If you run bochs with no arguments, it will search for a configuration file
+called .bochsrc, bochsrc, bochsrc.txt, or $HOME/.bochsrc.  You can override
+the settings in the configuration file with command line arguments, with the
+same syntax of the bochsrc file.  If the bochsrc
+line has spaces, be sure to enclose the whole line in single quotes.  See also
 .B bochsrc(1).
 
 Example:
@@ -51,9 +49,6 @@ bochsrc(1), bochs-dlx(1), bximage(1)
 .nf
 The Bochs IA-32 Emulator site on the World Wide Web:
 	http://bochs.sourceforge.net
-
-The Getting Started Guide for Bochs on Linux:
-        /usr/local/bochs/@VERSION@/DOC-linux.html
 .fi
 .\"SKIP_SECTION"
 .SH AUTHORS

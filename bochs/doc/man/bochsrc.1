@@ -19,12 +19,10 @@ home directory.
 .TP
 .I "romimage:"
 You need to load  a ROM BIOS into  F0000-FFFFF.
-The  BIOS  controls  what  the PC does when it
-first  powers  on.  Normally,  you  can use  a
-precompiled BIOS in the
+The BIOS controls what the PC does when it first powers on.  Normally, you can
+use a precompiled BIOS in  the
 .B bios/
-directory, named
-BIOS-bochs-latest.
+directory, named BIOS-bochs-latest.
 
 Example:
   romimage: file=bios/BIOS-bochs-970717
@@ -36,8 +34,7 @@ memory you want to emulate.  You may also pass
 the
 .B 'megs:N'
 option to bochs.  The  default
-is 32MB, since  most OS's won't need more than
-that.
+is 32MB, since most OS's won't need more than that.
 
 Example:
   megs: 32
@@ -51,19 +48,13 @@ Example:
   vgaromimage: bios/VGABIOS-elpin-2.40
 
 .TP
-.I "floppya:"
-or
-.I "floppyb:"
+.I "floppya/floppyb:"
+Point this to  the pathname of  a floppy image file or device.  Floppya is the
+first drive, and floppyb is the second drive.  If you're booting from a floppy,
+floppya should point to a bootable disk.
 
-Point  this to  the pathname of a floppy image
-file or  device.  Floppya is the  first drive,
-and  floppyb is the  second drive.  If  you're
-booting from a floppy, floppya should point to
-a bootable disk.
-
-You can set the initial status of the media to
-'ejected' or 'inserted'. Usually you will want
-to use 'inserted'.
+You can set the initial status of the media to 'ejected' or 'inserted'.
+Usually you will probably want 'inserted'.
 
 Example:
 
@@ -80,10 +71,7 @@ Example:
   floppya: 720k=path, status=inserted
 
 .TP
-.I "diskc:"
-or
-.I "diskd:"
-
+.I "diskc/diskd:"
 Point  this at the disk image you want to  use
 as for a hard disk. If you  use bximage(1)  to
 create   the  image,  it  will  give  you  the
@@ -95,9 +83,9 @@ second hard drive.
 You cannot use both diskd and cdromd together.
 
 Example:
-   diskc: file=10M.i, cyl=306, heads=4, spt=17
- diskc: file=112M.i, cyl=900, heads=15, spt=17
- diskd: file=483.i, cyl=1024, heads=15, spt=63
+  diskc: file=10M.i, cyl=306, heads=4, spt=17
+  diskc: file=112M.i, cyl=900, heads=15, spt=17
+  diskd: file=483.i, cyl=1024, heads=15, spt=63
 
 .TP
 .I "cdromd:"
@@ -145,24 +133,18 @@ Example:
 
 .TP
 .I "panic:"
-If Bochs reaches  a condition  where it cannot
-emulate correctly, it does a panic.  This  can
-be a configuration problem  (like a misspelled
-bochsrc line) or an emulation problem (like an
-unsupported video mode). The  "panic"  setting
-in  bochsrc  tells  Bochs  how to respond to a
-panic.  You  can  set this to fatal (terminate
-the session),  report   (print information  to
-the console), or ignore (do nothing).
+If Bochs reaches a condition where it cannot emulate correctly, it does a
+panic.  This can be a configuration problem (like a misspelled bochsrc line) or
+an emulation problem (like an unsupported video mode).  The "panic" setting in
+bochsrc tells Bochs how to respond to  a panic.   You can set this to fatal
+(terminate the session), report  (print information to the  console),  or
+ignore  (do nothing).
 
-The safest setting is action=fatal. If you are
-getting  panics,  you  can  try  action=report
-instead.  If you allow Bochs to continue after
-a panic, don't be surprised if you get strange
-behavior or crashes if a panic occurs.  Please
-report  panic  messages  unless  it is just  a
-configuration  problem  like  "could  not find
-hard drive image."
+The safest setting is action=fatal.  If you are getting panics, you can try
+action=report instead.  If you allow Bochs to continue  after a panic, don't be
+surprised if you get strange behavior or crashes if a panic occurs.  Please
+report panic messages unless it is just a configuration problem like "could not
+find hard drive image."
 
 Example:
   panic: action=fatal
@@ -170,48 +152,37 @@ Example:
 
 .TP
 .I "error:"
-Bochs produces an error message when it  finds
-a condition that really shouldn't happen,  but
-doesn't endanger the simulation. An example of
-an error  might be  if the  emulated  software
-produces an illegal disk command.
+Bochs produces an an error message when it finds a condition that really
+shouldn't happen, but doesn't endanger the simulation.  An example of an 
+error might be if the emulated software produces an illegal disk command.
 
-The "error" setting tells Bochs how to respond
-to an error condition .  You can set  this  to
-fatal  (terminate the session),  report (print
-information to the  console),  or  ignore  (do
-nothing).
+The "error:"  setting tells Bochs how to respond to an error condition.   You
+can set this to fatal  (terminate the session) , report (print information to
+the  console),  or  ignore  (do nothing).
 
 Example:
   error: action=report
 
 .TP
 .I "info:"
-This setting tells Bochs what to  do  when  an
-event  occurs   that  generates  informational
-messages.  You can  set this  to  fatal  (that
-would not be very smart though), report (print
-information to the  console),  or  ignore  (do
-nothing).   For  general  usage,  the "report"
-option is probably a good choice.
+This setting tells Bochs what to do when an event occurs that generates
+informational messages.  You can set this to fatal (that would not be very
+smart though), report (print information to the console), or ignore (do
+nothing).  For general usage, the "report" option is probably a good choice.
 
 Example:
   info: action=report
 
 .TP
 .I "debug:"
-This  setting  tells  Bochs what  to  do  with
-messages intended to assist in debugging.  You
-can set  this  to  fatal  (but you shouldn't),
-report (print information to the  console), or
-ignore (do nothing). You should generally  set
-this  to  ignore,  unless  you are  trying  to
-diagnose a particular problem.
+This  setting  tells Bochs what to do with messages intended to assist in
+debugging.  You  can set this  to fatal (but you shouldn't),  report (print
+information to the  console),  or  ignore  (do nothing).  You  should
+generally  set  this to ignore, unless you are trying to diagnose a particular
+problem.
 
-.B NOTE: 
-When  action=report,   Bochs   may  spit  out
-thousands of debug messages per second, which
-can impact performance and fill up your disk.
+.B NOTE: When action=report, Bochs may spit out thousands of debug messages per
+second, which can impact performance and fill up your disk.
 
 Example:
   debug: action=ignore
@@ -332,11 +303,9 @@ using  instructions  included in  config.h (in
 the source code),  to find  your workstation's
 capability.
 
-IPS is used to calibrate  many  time-dependent
-events   within   the  bochs  simulation.  For
-example, changing IPS affects the frequency of
-VGA updates, the duration of time before a key
-starts to autorepeat,  and the measurement  of
+IPS is used to calibrate many time-dependent events within the bochs
+simulation. For example, changing IPS affects the frequency of VGA updates, the
+duration of time before a key starts to autorepeat, and the measurement of
 BogoMips and other benchmarks.
 
 Example Specifications[1]
@@ -345,9 +314,9 @@ Example Specifications[1]
 650Mhz Athlon K-7 with Linux 2.4.x    2 to 2.5
 400Mhz Pentium II with Linux 2.0.x    1 to 1.8
 166Mhz 64bit Sparc with Solaris 2.x       0.75
-200Mhz Pentium with Linux 2.x                   0.5
+200Mhz Pentium with Linux 2.x              0.5
 
- [1]  Mips  are  dependant on  OS and compiler
+ [1]  Mips  are  dependant on  OS  and  compiler
 configuration  in addition  to processor clock
 speed.
 
@@ -399,10 +368,7 @@ bochs(1), bochs-dlx(1), bximage(1)
 .PP
 .nf
 The Bochs IA-32 Emulator site on the World Wide Web:
-        http://bochs.sourceforge.net
-
-The Getting Started Guide for Bochs on Linux:
-        /usr/local/bochs/@VERSION@/DOC-linux.html
+  http://bochs.sourceforge.net
 .fi
 .\"SKIP_SECTION"
 .SH AUTHORS
