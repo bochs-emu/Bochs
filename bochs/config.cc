@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.33 2005-03-16 16:36:31 vruppert Exp $
+// $Id: config.cc,v 1.34 2005-04-03 15:00:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2186,6 +2186,7 @@ int get_floppy_type_from_image(const char *filename)
 parse_line_formatted(char *context, int num_params, char *params[])
 {
   int i, slot, t;
+  Bit8u idx;
 
   if (num_params < 1) return 0;
   if (num_params < 2) {
@@ -2518,7 +2519,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
-
   else if (!strcmp(params[0], "boot")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: boot directive malformed.", context));
@@ -2548,109 +2548,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         ((bx_options.Obootdrive[2]->get () != BX_BOOT_NONE) &&
         (bx_options.Obootdrive[1]->get () == bx_options.Obootdrive[2]->get ()))) {
       PARSE_ERR(("%s: a boot drive appears twice in boot sequence.", context));
-      }
-    }
-
-  else if (!strcmp(params[0], "com1")) {
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.com[0].Oenabled->set (atol(&params[i][8]));
-        }
-      else if (!strncmp(params[i], "mode=", 5)) {
-        if (!bx_options.com[0].Omode->set_by_name (strdup(&params[i][5])))
-          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
-        bx_options.com[0].Oenabled->set (1);
-        }
-      else if (!strncmp(params[i], "dev=", 4)) {
-        bx_options.com[0].Odev->set (&params[i][4]);
-        bx_options.com[0].Oenabled->set (1);
-        }
-      else {
-        PARSE_ERR(("%s: unknown parameter for com1 ignored.", context));
-        }
-      }
-    }
-  else if (!strcmp(params[0], "com2")) {
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.com[1].Oenabled->set (atol(&params[i][8]));
-        }
-      else if (!strncmp(params[i], "mode=", 5)) {
-        if (!bx_options.com[1].Omode->set_by_name (strdup(&params[i][5])))
-          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
-        bx_options.com[1].Oenabled->set (1);
-        }
-      else if (!strncmp(params[i], "dev=", 4)) {
-        bx_options.com[1].Odev->set (&params[i][4]);
-        bx_options.com[1].Oenabled->set (1);
-        }
-      else {
-        PARSE_ERR(("%s: unknown parameter for com2 ignored.", context));
-        }
-      }
-    }
-  else if (!strcmp(params[0], "com3")) {
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.com[2].Oenabled->set (atol(&params[i][8]));
-        }
-      else if (!strncmp(params[i], "mode=", 5)) {
-        if (!bx_options.com[2].Omode->set_by_name (strdup(&params[i][5])))
-          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
-        bx_options.com[2].Oenabled->set (1);
-        }
-      else if (!strncmp(params[i], "dev=", 4)) {
-        bx_options.com[2].Odev->set (&params[i][4]);
-        bx_options.com[2].Oenabled->set (1);
-        }
-      else {
-        PARSE_ERR(("%s: unknown parameter for com3 ignored.", context));
-        }
-      }
-    }
-  else if (!strcmp(params[0], "com4")) {
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.com[3].Oenabled->set (atol(&params[i][8]));
-        }
-      else if (!strncmp(params[i], "mode=", 5)) {
-        if (!bx_options.com[3].Omode->set_by_name (strdup(&params[i][5])))
-          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
-        bx_options.com[3].Oenabled->set (1);
-        }
-      else if (!strncmp(params[i], "dev=", 4)) {
-        bx_options.com[3].Odev->set (&params[i][4]);
-        bx_options.com[3].Oenabled->set (1);
-        }
-      else {
-        PARSE_ERR(("%s: unknown parameter for com4 ignored.", context));
-        }
-      }
-    }
-  else if (!strcmp(params[0], "usb1")) {
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.usb[0].Oenabled->set (atol(&params[i][8]));
-        }
-      else if (!strncmp(params[i], "ioaddr=", 7)) {
-        if ( (params[i][7] == '0') && (params[i][8] == 'x') )
-          bx_options.usb[0].Oioaddr->set (strtoul (&params[i][7], NULL, 16));
-        else
-          bx_options.usb[0].Oioaddr->set (strtoul (&params[i][7], NULL, 10));
-        bx_options.usb[0].Oenabled->set (1);
-        }
-      else if (!strncmp(params[i], "port1=", 6)) {
-        bx_options.usb[0].Oport1->set (strdup(&params[i][6]));
-        }
-      else if (!strncmp(params[i], "port2=", 6)) {
-        bx_options.usb[0].Oport2->set (strdup(&params[i][6]));
-        }
-      else if (!strncmp(params[i], "irq=", 4)) {
-        PARSE_WARN(("%s: usb irq is now deprecated (assigned by BIOS).", context));
-        }
-      else {
-        PARSE_WARN(("%s: unknown parameter '%s' for usb1 ignored.", context, params[i]));
-        }
       }
     }
   else if (!strcmp(params[0], "floppy_bootsig_check")) {
@@ -2975,7 +2872,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
     bx_options.Oscreenmode->set (strdup(&params[1][5]));
 #endif
     }
-
   else if (!strcmp(params[0], "sb16")) {
     int enable = 1;
     for (i=1; i<num_params; i++) {
@@ -3012,38 +2908,77 @@ parse_line_formatted(char *context, int num_params, char *params[])
     else
       bx_options.sb16.Oenabled->set (0);
     }
-
-  else if (!strcmp(params[0], "parport1")) {
+  else if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
+    idx = params[0][3];
+    if ((idx < '1') || (idx > '9')) {
+      PARSE_ERR(("%s: comX directive malformed.", context));
+    }
+    idx -= '1';
+    if (idx >= BX_N_SERIAL_PORTS) {
+      PARSE_ERR(("%s: comX port number out of range.", context));
+    }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.par[0].Oenabled->set (atol(&params[i][8]));
-        }
-      else if (!strncmp(params[i], "file=", 5)) {
-        bx_options.par[0].Ooutfile->set (strdup(&params[i][5]));
-        bx_options.par[0].Oenabled->set (1);
-        }
-      else {
-        BX_ERROR(("%s: unknown parameter for parport1 ignored.", context));
-        }
+        bx_options.com[idx].Oenabled->set (atol(&params[i][8]));
+      } else if (!strncmp(params[i], "mode=", 5)) {
+        if (!bx_options.com[idx].Omode->set_by_name (strdup(&params[i][5])))
+          PARSE_ERR(("%s: com%d serial port mode '%s' not available", context, idx+1, strdup(&params[i][5])));
+        bx_options.com[idx].Oenabled->set (1);
+      } else if (!strncmp(params[i], "dev=", 4)) {
+        bx_options.com[idx].Odev->set (&params[i][4]);
+        bx_options.com[idx].Oenabled->set (1);
+      } else {
+        PARSE_ERR(("%s: unknown parameter for com%d ignored.", context, idx+1));
+      }
     }
-  }
-
-  else if (!strcmp(params[0], "parport2")) {
+  } else if ((!strncmp(params[0], "parport", 7)) && (strlen(params[0]) == 8)) {
+    idx = params[0][7];
+    if ((idx < '1') || (idx > '9')) {
+      PARSE_ERR(("%s: parportX directive malformed.", context));
+    }
+    idx -= '1';
+    if (idx >= BX_N_PARALLEL_PORTS) {
+      PARSE_ERR(("%s: parportX port number out of range.", context));
+    }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.par[1].Oenabled->set (atol(&params[i][8]));
-        }
-      else if (!strncmp(params[i], "file=", 5)) {
-        bx_options.par[1].Ooutfile->set (strdup(&params[i][5]));
-        bx_options.par[1].Oenabled->set (1);
-        }
-      else {
-        BX_ERROR(("%s: unknown parameter for parport2 ignored.", context));
-        }
+        bx_options.par[idx].Oenabled->set (atol(&params[i][8]));
+      } else if (!strncmp(params[i], "file=", 5)) {
+        bx_options.par[idx].Ooutfile->set (strdup(&params[i][5]));
+        bx_options.par[idx].Oenabled->set (1);
+      } else {
+        BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx+1));
+      }
     }
-  }
-
-  else if (!strcmp(params[0], "i440fxsupport")) {
+  } else if ((!strncmp(params[0], "usb", 3)) && (strlen(params[0]) == 4)) {
+    idx = params[0][3];
+    if ((idx < '1') || (idx > '9')) {
+      PARSE_ERR(("%s: usbX directive malformed.", context));
+    }
+    idx -= '1';
+    if (idx >= BX_N_USB_HUBS) {
+      PARSE_ERR(("%s: usbX hub number out of range.", context));
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        bx_options.usb[idx].Oenabled->set (atol(&params[i][8]));
+      } else if (!strncmp(params[i], "ioaddr=", 7)) {
+        if ( (params[i][7] == '0') && (params[i][8] == 'x') )
+          bx_options.usb[idx].Oioaddr->set (strtoul (&params[i][7], NULL, 16));
+        else
+          bx_options.usb[idx].Oioaddr->set (strtoul (&params[i][7], NULL, 10));
+        bx_options.usb[idx].Oenabled->set (1);
+      } else if (!strncmp(params[i], "port1=", 6)) {
+        bx_options.usb[idx].Oport1->set (strdup(&params[i][6]));
+      } else if (!strncmp(params[i], "port2=", 6)) {
+        bx_options.usb[idx].Oport2->set (strdup(&params[i][6]));
+      } else if (!strncmp(params[i], "irq=", 4)) {
+        PARSE_WARN(("%s: usb irq is now deprecated (assigned by BIOS).", context));
+      } else {
+        PARSE_WARN(("%s: unknown parameter '%s' for usb%d ignored.", context, params[i], idx+1));
+      }
+    }
+  } else if (!strcmp(params[0], "i440fxsupport")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: i440FXSupport directive malformed.", context));
       }
