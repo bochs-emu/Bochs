@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.152 2005-01-13 19:03:35 sshwarts Exp $
+// $Id: bochs.h,v 1.153 2005-02-01 19:16:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -633,6 +633,7 @@ typedef struct BOCHSAPI {
   bx_sb16_options   sb16;
   bx_param_enum_c   *Obootdrive[3];  
   bx_param_bool_c   *OfloppySigCheck;
+  bx_param_string_c *Ovga_extension;
   bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
   bx_param_num_c    *Okeyboard_paste_delay;

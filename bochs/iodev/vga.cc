@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.112 2004-11-06 17:03:44 vruppert Exp $
+// $Id: vga.cc,v 1.113 2005-02-01 19:16:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -272,56 +272,58 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.y_doublescan = 0;
 
 #if BX_SUPPORT_VBE  
-  // The following is for the vbe display extension
+    // The following is for the vbe display extension
 
-  for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
-    DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
-    DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-  }    
-  if (!BX_SUPPORT_PCIUSB || !bx_options.usb[0].Oenabled->get()) {
-    for (addr=VBE_DISPI_IOPORT_INDEX_OLD; addr<=VBE_DISPI_IOPORT_DATA_OLD; addr++) {
+  BX_VGA_THIS s.vbe_enabled=0;
+  BX_VGA_THIS s.vbe_8bit_dac=0;
+  if (!strcmp(bx_options.Ovga_extension->getptr (), "vbe")) {
+    for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }    
-  }
-  DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
-                               theVga, VBE_DISPI_LFB_PHYSICAL_ADDRESS,
-                               VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
-  BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
-  BX_VGA_THIS s.vbe_xres=640;
-  BX_VGA_THIS s.vbe_yres=480;
-  BX_VGA_THIS s.vbe_bpp=8;
-  BX_VGA_THIS s.vbe_bank=0;
-  BX_VGA_THIS s.vbe_enabled=0;
-  BX_VGA_THIS s.vbe_curindex=0;
-  BX_VGA_THIS s.vbe_offset_x=0;
-  BX_VGA_THIS s.vbe_offset_y=0;
-  BX_VGA_THIS s.vbe_virtual_xres=640;
-  BX_VGA_THIS s.vbe_virtual_yres=480;
-  BX_VGA_THIS s.vbe_bpp_multiplier=1;
-  BX_VGA_THIS s.vbe_virtual_start=0;
-  BX_VGA_THIS s.vbe_lfb_enabled=0;
-  BX_VGA_THIS s.vbe_get_capabilities=0;
-  BX_VGA_THIS s.vbe_8bit_dac=0;
-  bx_gui->get_capabilities(&max_xres, &max_yres,
-                           &max_bpp);
-  if (max_xres > VBE_DISPI_MAX_XRES) {
-    BX_VGA_THIS s.vbe_max_xres=VBE_DISPI_MAX_XRES;
-  } else {
-    BX_VGA_THIS s.vbe_max_xres=max_xres;
-  }
-  if (max_yres > VBE_DISPI_MAX_YRES) {
-    BX_VGA_THIS s.vbe_max_yres=VBE_DISPI_MAX_YRES;
-  } else {
-    BX_VGA_THIS s.vbe_max_yres=max_yres;
-  }
-  if (max_bpp > VBE_DISPI_MAX_BPP) {
-    BX_VGA_THIS s.vbe_max_bpp=VBE_DISPI_MAX_BPP;
-  } else {
-    BX_VGA_THIS s.vbe_max_bpp=max_bpp;
-  }
+    if (!BX_SUPPORT_PCIUSB || !bx_options.usb[0].Oenabled->get()) {
+      for (addr=VBE_DISPI_IOPORT_INDEX_OLD; addr<=VBE_DISPI_IOPORT_DATA_OLD; addr++) {
+        DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
+        DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
+      }    
+    }
+    DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
+                                 theVga, VBE_DISPI_LFB_PHYSICAL_ADDRESS,
+                                 VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
+    BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
+    BX_VGA_THIS s.vbe_xres=640;
+    BX_VGA_THIS s.vbe_yres=480;
+    BX_VGA_THIS s.vbe_bpp=8;
+    BX_VGA_THIS s.vbe_bank=0;
+    BX_VGA_THIS s.vbe_curindex=0;
+    BX_VGA_THIS s.vbe_offset_x=0;
+    BX_VGA_THIS s.vbe_offset_y=0;
+    BX_VGA_THIS s.vbe_virtual_xres=640;
+    BX_VGA_THIS s.vbe_virtual_yres=480;
+    BX_VGA_THIS s.vbe_bpp_multiplier=1;
+    BX_VGA_THIS s.vbe_virtual_start=0;
+    BX_VGA_THIS s.vbe_lfb_enabled=0;
+    BX_VGA_THIS s.vbe_get_capabilities=0;
+    bx_gui->get_capabilities(&max_xres, &max_yres,
+                             &max_bpp);
+    if (max_xres > VBE_DISPI_MAX_XRES) {
+      BX_VGA_THIS s.vbe_max_xres=VBE_DISPI_MAX_XRES;
+    } else {
+      BX_VGA_THIS s.vbe_max_xres=max_xres;
+    }
+    if (max_yres > VBE_DISPI_MAX_YRES) {
+      BX_VGA_THIS s.vbe_max_yres=VBE_DISPI_MAX_YRES;
+    } else {
+      BX_VGA_THIS s.vbe_max_yres=max_yres;
+    }
+    if (max_bpp > VBE_DISPI_MAX_BPP) {
+      BX_VGA_THIS s.vbe_max_bpp=VBE_DISPI_MAX_BPP;
+    } else {
+      BX_VGA_THIS s.vbe_max_bpp=max_bpp;
+    }
   
-  BX_INFO(("VBE Bochs Display Extension Enabled"));
+    BX_INFO(("VBE Bochs Display Extension Enabled"));
+  }
 #endif  
 }
 
@@ -2619,12 +2621,11 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     if (BX_VGA_THIS s.sequencer.map_mask_bit[1])
       plane1[offset] = new_val[1];
     if (BX_VGA_THIS s.sequencer.map_mask_bit[2]) {
-      if ((!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) &&
-          ((offset & 0xe000) == BX_VGA_THIS s.charmap_address)) {
+      if ((offset & 0xe000) == BX_VGA_THIS s.charmap_address) {
         bx_gui->set_text_charbyte((offset & 0x1fff), new_val[2]);
-        }
-      plane2[offset] = new_val[2];
       }
+      plane2[offset] = new_val[2];
+    }
     if (BX_VGA_THIS s.sequencer.map_mask_bit[3])
       plane3[offset] = new_val[3];
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.29 2005-01-24 17:22:34 vruppert Exp $
+// $Id: config.cc,v 1.30 2005-02-01 19:16:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1136,6 +1136,12 @@ void bx_init_options ()
   bx_options.Ovga_update_interval->set_handler (bx_param_handler);
   bx_options.Ovga_update_interval->set_runtime_param (1);
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
+
+  bx_options.Ovga_extension = new bx_param_string_c (BXP_VGA_EXTENSION,
+                "VGA Extension", 
+                "Name of the VGA extension",
+                (BX_SUPPORT_CLGD54XX==1)?"cirrus":"vbe", BX_PATHNAME_LEN);
+
   bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
       "Enable the mouse",
       "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
@@ -1170,7 +1176,7 @@ void bx_init_options ()
       mouse_type_list,
       BX_MOUSE_TYPE_PS2,
       BX_MOUSE_TYPE_NONE);
-  bx_options.com[i].Omode->set_ask_format ("Choose the type of mouse [%s] ");
+  bx_options.Omouse_type->set_ask_format ("Choose the type of mouse [%s] ");
 
   bx_options.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
@@ -1275,6 +1281,7 @@ void bx_init_options ()
     bx_options.Osel_displaylib,
     bx_options.Odisplaylib_options,
     bx_options.Ovga_update_interval,
+    bx_options.Ovga_extension,
     bx_options.Omouse_enabled,
     bx_options.Omouse_type,
     bx_options.Oprivate_colormap,
@@ -1700,6 +1707,7 @@ void bx_init_options ()
 //    bx_options.Osel_config,
 //    bx_options.Osel_displaylib,
       bx_options.Ovga_update_interval,
+      bx_options.Ovga_extension,
       bx_options.log.Oprefix,
       bx_options.Omouse_enabled,
       bx_options.Omouse_type,
@@ -1804,6 +1812,7 @@ void bx_reset_options ()
   // interface
   bx_options.Odisplaylib_options->reset();
   bx_options.Ovga_update_interval->reset();
+  bx_options.Ovga_extension->reset();
   bx_options.Omouse_enabled->reset();
   bx_options.Omouse_type->reset();
   bx_options.Oips->reset();
@@ -2835,6 +2844,14 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_INFO(("%s: vga_update_interval seems awfully small!", context));
       }
     }
+  else if (!strcmp(params[0], "vga")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: vga directive: wrong # args.", context));
+      }
+    if (!strncmp(params[1], "extension=", 10)) {
+      bx_options.Ovga_extension->set (&params[1][10]);
+      }
+    }
   else if (!strcmp(params[0], "keyboard_serial_delay")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_serial_delay directive: wrong # args.", context));
@@ -3808,6 +3825,7 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_sb16_options (fp, &bx_options.sb16);
   fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get ());
   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
+  fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
