@@ -1,0 +1,180 @@
+----------------------------------------------------------------------
+Patch name: keyboard-biosinit-asulmicki
+Author: Adam Sulmicki (uploaded by cbothamy)
+Date: 31 oct 2002
+
+Detailed description:
+  This patch adds real-bios-like keyboard init code.
+  However, it does not work, due to inaccuracies in Bochs
+  keyboard model. 
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bios/rombios.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bios/rombios.c,v
+retrieving revision 1.75
+diff -u -r1.75 rombios.c
+--- bios/rombios.c	30 Oct 2002 21:47:11 -0000	1.75
++++ bios/rombios.c	30 Oct 2002 22:31:06 -0000
+@@ -893,6 +893,7 @@
+ static bx_bool        set_enable_a20();
+ static void           debugger_on();
+ static void           debugger_off();
++static void           keyboard_init();
+ static void           keyboard_panic();
+ static void           shutdown_status_panic();
+ static void           nmi_handler_msg();
+@@ -1565,12 +1566,121 @@
+ }
+ 
+ //--------------------------------------------------------------------------
++// keyboard_init
++//--------------------------------------------------------------------------
++// this file is based on LinuxBIOS implementation of keyboard.c
++  void
++keyboard_init()
++{
++
++	/* ------------------- controller side ----------------------*/
++	printf("reset keyboard \n");
++	/* send cmd = 0xAA, self test 8042 */
++	outb(0x64, 0xaa);
++
++	/* empty input buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x02))
++		keyboard_panic(00);
++	/* empty output buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x01) == 0)
++		keyboard_panic(11);
++
++	/* read self-test result, 0x55 should be returned form 0x60 */
++	if ((inb(0x60) != 0x55)){
++		printf("self test failed\n");
++		keyboard_panic(99);
++	}
++
++	/* send cmd = 0xAA, keyboard interface test */
++	outb(0x64,0xab);
++
++	/* empty input buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x02))
++		keyboard_panic(20);
++	/* empty output buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x01) == 0)
++		keyboard_panic(31);
++
++	/* read keyboard interface test result, */
++	/* 0x00 should be returned form 0x60 */
++	if ((inb(0x60) != 0x00)) {
++		printf("keyboard interface test failed\n");
++		keyboard_panic(100);
++	}
++
++	/* Enable Keyboard clock */
++	outb(0x64,0xae);
++	outb(0x64,0xa8);
++
++	/* ------------------- keyboard side ------------------------*/
++	/* reset kerboard and self test  (keyboard side) */
++	outb(0x60, 0xff);
++	/* empty inut buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x02))
++		keyboard_panic(44);
++	/* empty output buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x01) == 0)
++		keyboard_panic(55);
++	/* keyboard should return ACK */
++	if ((inb(0x60) != 0xfa)) {
++		printf("keyboard self test failed\n");
++		keyboard_panic(101);
++	}
++
++	while ((inb(0x64) & 0x01) == 0)
++		keyboard_panic(66);
++	if ((inb(0x60) != 0xaa)) {
++		printf("keyboard self test failed\n");
++		keyboard_panic(102);
++	}
++
++	/* Disable keyboard */
++	outb(0x60, 0xf5);
++	/* empty inut buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x02))
++		keyboard_panic(74);
++	/* empty output buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x01) == 0)
++		keyboard_panic(85);
++	/* keyboard should return ACK */
++	if ((inb(0x60) != 0xfa)) {
++		printf("disable keyboard failed\n");
++		keyboard_panic(103);
++	}
++
++	/* Write Keyboard Mode */
++	outb(0x64, 0x60);
++	while ((inb(0x64) & 0x02))
++		keyboard_panic(92);
++	/* send cmd: scan code convert, disable mouse, enable IRQ 1 */
++	outb(0x60, 0x61);
++	while ((inb(0x64) & 0x02))
++		keyboard_panic(3);
++
++	/* Enable keyboard */
++	outb(0x60, 0xf4);
++	/* empty inut buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x02))
++		keyboard_panic(4);
++	/* empty output buffer or any other command/data will be lost */
++	while ((inb(0x64) & 0x01) == 0)
++		keyboard_panic(5);
++
++	/* keyboard should return ACK */
++	if ((inb(0x60) != 0xfa)) {
++		printf("enable keyboard failed\n");
++		keyboard_panic(104);
++	}
++}
++
++//--------------------------------------------------------------------------
+ // keyboard_panic
+ //--------------------------------------------------------------------------
+   void
+-keyboard_panic()
++keyboard_panic(status)
++  Bit16u status;
+ {
+-  BX_PANIC("Keyboard RESET error\n");
++  BX_PANIC("Keyboard RESET error:%d\n",(Bit8u)status);
+ }
+ 
+ //--------------------------------------------------------------------------
+@@ -8506,21 +8616,7 @@
+   mov  0x0482, bx
+ 
+   /* clear the output buffer and enable keyboard */
+-  in   al, 0x60
+-  mov  al, #0xae
+-  out  0x64, al
+-  /* (mch) Keyboard self-test */
+-  mov  al, #0xaa
+-  out  0x64, al
+-kbd_wait:
+-  in   al, 0x64
+-  test al, #0x01
+-  jz   kbd_wait
+-  in   al, 0x60
+-  cmp  al, #0x55
+-  je   keyboard_ok
+-  call _keyboard_panic
+-keyboard_ok:
++  call _keyboard_init
+ 
+   ;; mov CMOS Equipment Byte to BDA Equipment Word
+   mov  ax, 0x0410
