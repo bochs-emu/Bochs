@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.41 2002-03-26 13:17:43 bdenney Exp $
+// $Id: rombios.c,v 1.42 2002-03-28 07:10:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1043,10 +1043,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.41 $";
-static char bios_date_string[] = "$Date: 2002-03-26 13:17:43 $";
+static char bios_cvs_version_string[] = "$Revision: 1.42 $";
+static char bios_date_string[] = "$Date: 2002-03-28 07:10:18 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.41 2002-03-26 13:17:43 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.42 2002-03-28 07:10:18 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2635,7 +2635,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     default:
       if (scancode & 0x80) return; /* toss key releases ... */
       if (scancode > MAX_SCAN_CODE) {
-        panic("KBD: int09h_handler(): unknown scancode read!");
+        printf("KBD: int09h_handler(): unknown scancode read!");
         return;
         }
       if (shift_flags & 0x08) { /* ALT */
@@ -2662,7 +2662,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
         scancode = scan_to_scanascii[scancode].normal >> 8;
         }
       if (scancode==0 && asciicode==0) {
-        panic("KBD: int09h_handler(): scancode & asciicode are zero?");
+        printf("KBD: int09h_handler(): scancode & asciicode are zero?");
         }
       enqueue_key(scancode, asciicode);
       break;
