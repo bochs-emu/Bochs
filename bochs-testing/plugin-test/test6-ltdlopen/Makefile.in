@@ -11,23 +11,23 @@ LIBS=@LIBS@ @LIBLTDL@
 LIBTOOL=@LIBTOOL@
 RPATH=`pwd`/lib
 
-all: uselib libmodule1.la libmodule2.la
+# select whether to use libtool or win32-specific target
+all: all_libtool
+#all: all_win32
 
-uselib: libmain.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o uselib libmain.la $(LIBS)
+########### libtool makefile for all platforms except win32 ###########
+all_libtool: uselib libmodule1.la libmodule2.la
 
-libmain.la: main.lo
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmain.la main.lo -rpath ${RPATH} $(LIBS)
-	mkdir -p lib bin
-	$(LIBTOOL) cp libmain.la ${RPATH}
+uselib: main.lo
+	$(LIBTOOL) $(CXX) -export-dynamic $(LDFLAGS) -o uselib main.lo $(LIBS)
 
-libmodule1.la: module1.lo libmain.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule1.la module1.lo -rpath ${RPATH} libmain.la
+libmodule1.la: module1.lo
+	$(LIBTOOL) $(CXX) -module $(LDFLAGS) -o libmodule1.la module1.lo -rpath ${RPATH}
 	mkdir -p lib bin
 	$(LIBTOOL) cp libmodule1.la ${RPATH}
 
-libmodule2.la: module2.lo libmain.la
-	$(LIBTOOL) $(CXX) $(LDFLAGS) -o libmodule2.la module2.lo -rpath ${RPATH} libmain.la
+libmodule2.la: module2.lo
+	$(LIBTOOL) $(CXX) -module $(LDFLAGS) -o libmodule2.la module2.lo -rpath ${RPATH}
 	mkdir -p lib bin
 	$(LIBTOOL) cp libmodule2.la ${RPATH}
 
