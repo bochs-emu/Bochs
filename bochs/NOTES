@@ -1373,6 +1373,21 @@ All Tru64 Unix machines had something called cc/cxx.
 ---------------------------------------------------------
 Make the default be 1 processor again.  It's easy to configure for more.
 
-./configure --enable-processors=2 
+./configure --enable-processors=2 --enable-fpu --enable-debugger
+----------------------------------------------------
 
-Linux will want --enable-fpu
+After release on 4/3/2001, now what?
+text mode regression testing.
+this can do performance testing too, by timing the length of a consistent run.
+the IPS display is one of the best performance tests too.
+
+the runtest script is making progress.  Figure out what's necessary
+to make the output completely repeatable.  I could use a perl filter
+script, but it's better to do it at the source.  Maybe even a
+-batch command that says: don't call readline, don't print the prompt.
+
+Disable READLINE or make the prompt appear more consistently.  Even 
+better, detect when it's not a terminal, though that would probably not
+be portable.  
+
+don't print argv, since that various between simulations.
