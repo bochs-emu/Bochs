@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.81 2003-07-09 20:15:38 vruppert Exp $
+// $Id: vga.cc,v 1.82 2003-07-15 13:05:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2603,18 +2603,13 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
       BX_INFO(("VBE_mem_write out of video memory write at %x",offset));
     }
   }
-  
+
+  offset-=BX_VGA_THIS s.vbe_virtual_start;
+
   // only update the UI when writing 'onscreen'
   if (offset < BX_VGA_THIS s.vbe_visable_screen_size)
   {
-    // incl virtual xres correction
-    Bit32u start_offset = BX_VGA_THIS s.vbe_virtual_start;
-
-    offset=offset-start_offset;
-
     y_tileno = ((offset / BX_VGA_THIS s.vbe_bpp_multiplier) / BX_VGA_THIS s.vbe_virtual_xres) / Y_TILESIZE;
-
-    // FIXME: need virtual_xres!=xres correction for x?
     x_tileno = ((offset / BX_VGA_THIS s.vbe_bpp_multiplier) % BX_VGA_THIS s.vbe_virtual_xres) / X_TILESIZE;
 
     if ((y_tileno < BX_NUM_Y_TILES) && (x_tileno < BX_NUM_X_TILES))
@@ -2926,6 +2921,21 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
                 memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
               }
               bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
+              // some test applications expect these standard VGA settings
+              BX_VGA_THIS s.CRTC.reg[9] = 0x00;
+              BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha = 1;
+              BX_VGA_THIS s.graphics_ctrl.memory_mapping = 1;
+              BX_VGA_THIS s.CRTC.reg[1] = (BX_VGA_THIS s.vbe_xres / 8) - 1;
+              BX_VGA_THIS s.CRTC.reg[19] = BX_VGA_THIS s.vbe_xres >> 2;
+              BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select = 1;
+              BX_VGA_THIS s.CRTC.reg[18] = (BX_VGA_THIS s.vbe_yres - 1) & 0xff;
+              BX_VGA_THIS s.CRTC.reg[7] &= ~0x42;
+              if ((BX_VGA_THIS s.vbe_yres - 1) & 0x0100) {
+                BX_VGA_THIS s.CRTC.reg[7] |= 0x02;
+              }
+              if ((BX_VGA_THIS s.vbe_yres - 1) & 0x0200) {
+                BX_VGA_THIS s.CRTC.reg[7] |= 0x40;
+              }
             }
           }
           else
@@ -2968,7 +2978,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
         case VBE_DISPI_INDEX_VIRT_WIDTH:
         {
-          BX_INFO(("VBE requested virtual width %x",value));
+          BX_INFO(("VBE requested virtual width %d",value));
 
           // calculate virtual width & height dimensions
           // req:
@@ -2984,23 +2994,24 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           //   else
           //        adjust result width based upon virt_height=yres
           Bit16u new_width=value;
-          Bit16u new_height=(sizeof(BX_VGA_THIS s.vbe_memory) * BX_VGA_THIS s.vbe_bpp_multiplier) / new_width;
+          Bit16u new_height=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_width;
           if (new_height >=BX_VGA_THIS s.vbe_yres)
           {
             // we have a decent virtual width & new_height
-            BX_INFO(("VBE decent virtual height %x",new_height));
+            BX_INFO(("VBE decent virtual height %d",new_height));
           }
           else
           {
             // no decent virtual height: adjust width & height
             new_height=BX_VGA_THIS s.vbe_yres;
-            new_width=(sizeof(BX_VGA_THIS s.vbe_memory) * BX_VGA_THIS s.vbe_bpp_multiplier) / new_height;
+            new_width=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_height;
 
-            BX_INFO(("VBE recalc virtual width %x height %x",new_width, new_height));
+            BX_INFO(("VBE recalc virtual width %d height %d",new_width, new_height));
           }
 
           BX_VGA_THIS s.vbe_virtual_xres=new_width;
           BX_VGA_THIS s.vbe_virtual_yres=new_height;
+          BX_VGA_THIS s.vbe_visable_screen_size = (new_width * (BX_VGA_THIS s.vbe_yres)) * BX_VGA_THIS s.vbe_bpp_multiplier;
 
         } break;
 	/*      
