@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.7 2002-12-13 22:41:24 bdenney Exp $
+# $Id: Makefile.in,v 1.8 2002-12-14 04:53:27 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -51,6 +51,7 @@ fixperm::
 	chmod 775 `find $(INSTALL_LIST) -type d -print`
 
 install: all
+	for i in $(DESTDIR)$(docdir); do if test ! -d $$i; then mkdir $$i; fi; done
 	for i in $(INSTALL_LIST); do cp -r $$i $(DESTDIR)$(docdir); done
 
 test_sfuser:
