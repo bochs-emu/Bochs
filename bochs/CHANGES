@@ -1,12 +1,15 @@
-Known bugs in 2.0 which will be fixed in 2.0.1:
-- the "save configuration file" feature is broken in two ways.
-  - It prints a line like "realtime_pit: disabled" instead of the correct
-    format "pit: realtime=0".
-  - It writes a line "debug: action=fatal" which should be 
-    "pass: action=fatal"
-- On FreeBSD, cannot compile with SB16 enabled.
+Changes in 2.0.1 (January 4, 2003):
 
-Changes in 2.0 (December 2002):
+- fix corrupt saved configuration files (Christophe Bothamy)
+- fix missing break statements in apic (Shai Fultheim)
+- fix compiling sb16 under FreeBSD (Volker Ruppert)
+- updates to the documentation (Volker)
+- fix text mode colors 8 to 15 (Volker)
+- fix FPU integer load bug (Volker)
+- stop pasting on hardware reset (Volker)
+
+-------------------------------------------------------------------------
+Changes in 2.0 (December 21, 2002):
 
 Since the change log is hundreds of lines long, here is a very brief summary.
 - 2x emulation speedup!!!
