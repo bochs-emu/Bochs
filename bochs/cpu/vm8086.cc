@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.8 2001-11-05 17:37:16 fries Exp $
+// $Id: vm8086.cc,v 1.9 2002-03-01 17:27:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,7 +125,13 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   void
 BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
 {
-  BX_ERROR(("stack_return_from_v86 may not be implemented right!"));
+  static Bit32u times = 0;
+  times++;
+  if (times<100) {
+    BX_ERROR(("stack_return_from_v86 may not be implemented right!"));
+  } else if (times==100) {
+    BX_ERROR(("stack_return_from_v86 called 100 times. I won't print this error any more"));
+  }
   //exception(BX_GP_EXCEPTION, 0, 0);
 
 #if 1
