@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.118 2002-09-22 01:56:18 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.119 2002-09-23 03:46:47 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1654,4 +1654,5 @@ AC_OUTPUT(Makefile iodev/Makefile debug/Makefile bios/Makefile \
 	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 fpu/Makefile install-x11-fonts build/linux/bochs-dlx \
 	 build/linux/bochs-docs bxversion.h \
-	 build/linux/DOC-linux.html)
+	 build/linux/DOC-linux.html \
+	 build/macosx/Info.plist)
