@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.38 2002-12-11 22:35:46 bdenney Exp $
+// $Id: wxmain.h,v 1.39 2002-12-12 16:31:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -188,7 +188,7 @@ public:
   void OnEditOther(wxCommandEvent& event);
   void OnLogPrefs(wxCommandEvent& event);
   void OnLogPrefsDevice(wxCommandEvent& event);
-  void OnOtherEvent(wxCommandEvent& event);
+  void OnEditATA(wxCommandEvent& event);
   void OnShowCpu(wxCommandEvent& event);
   void OnShowKeyboard(wxCommandEvent& event);
 #if BX_DEBUGGER
@@ -199,7 +199,7 @@ public:
 #endif
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);
-  void editATAConfig (int channel);
+  void editFirstCdrom ();
   void OnToolbarClick(wxCommandEvent& event);
   int HandleAskParam (BxEvent *event);
   int HandleAskParamString (bx_param_string_c *param);

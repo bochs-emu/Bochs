@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.83 2002-12-11 22:55:18 bdenney Exp $
+// $Id: wxmain.cc,v 1.84 2002-12-12 16:31:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -309,10 +309,10 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
   EVT_MENU(ID_Sim2CI_Event, MyFrame::OnSim2CIEvent)
-  EVT_MENU(ID_Edit_ATA0, MyFrame::OnOtherEvent)
-  EVT_MENU(ID_Edit_ATA1, MyFrame::OnOtherEvent)
-  EVT_MENU(ID_Edit_ATA2, MyFrame::OnOtherEvent)
-  EVT_MENU(ID_Edit_ATA3, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_ATA0, MyFrame::OnEditATA)
+  EVT_MENU(ID_Edit_ATA1, MyFrame::OnEditATA)
+  EVT_MENU(ID_Edit_ATA2, MyFrame::OnEditATA)
+  EVT_MENU(ID_Edit_ATA3, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Speed, MyFrame::OnEditSpeed)
@@ -1343,21 +1343,6 @@ void MyFrame::OnLogMsg (BxEvent *be) {
     sim_thread->SendSyncResponse (be);  // only for case #2
 }
 
-void 
-MyFrame::OnOtherEvent (wxCommandEvent& event)
-{
-  int id = event.GetId ();
-  wxLogMessage ("event id=%d", id);
-  switch (id) {
-    case ID_Edit_ATA0: 
-    case ID_Edit_ATA1: 
-    case ID_Edit_ATA2: 
-    case ID_Edit_ATA3: 
-      editATAConfig (id - ID_Edit_ATA0);
-      break;
-  }
-}
-
 bool
 MyFrame::editFloppyValidate (FloppyConfigDialog *dialog)
 {
@@ -1417,10 +1402,23 @@ void MyFrame::editFloppyConfig (int drive)
   }
 }
 
-void MyFrame::editATAConfig (int channel)
+void MyFrame::editFirstCdrom ()
 {
   ParamDialog dlg (this, -1);
-  dlg.SetTitle ("Configure ATA0");
+  bx_param_c *firstcd = SIM->get_first_cdrom ();
+  dlg.SetTitle ("Configure CDROM");
+  dlg.AddParam (firstcd);
+  dlg.ShowModal ();
+}
+
+void MyFrame::OnEditATA (wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  int channel = id - ID_Edit_ATA0;
+  ParamDialog dlg (this, -1);
+  wxString str;
+  str.Printf ("Configure ATA%d", channel);
+  dlg.SetTitle (str);
   dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MENU+channel)));
   dlg.ShowModal ();
 }
@@ -1441,7 +1439,10 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
       // floppy config dialog box
       editFloppyConfig (1);
       break;
-    case ID_Edit_Cdrom: which = BX_TOOLBAR_CDROMD; break;
+    case ID_Edit_Cdrom:
+      // cdrom config dialog box (first cd only)
+      editFirstCdrom ();
+      break;
     case ID_Toolbar_Copy: which = BX_TOOLBAR_COPY; break;
     case ID_Toolbar_Paste: which = BX_TOOLBAR_PASTE; break;
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
