@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.56 2002-10-08 14:43:18 ptrumpet Exp $
+// $Id: proc_ctrl.cc,v 1.57 2002-10-16 17:37:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,14 +47,22 @@
   void
 BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
-  BX_DEBUG(("UndefinedOpcode: %02x causes exception 6",
-              (unsigned) i->b1()));
+  BX_DEBUG(("UndefinedOpcode: %02x causes exception 6", (unsigned) i->b1()));
   exception(BX_UD_EXCEPTION, 0, 0);
 }
 
   void
 BX_CPU_C::NOP(bxInstruction_c *i)
 {
+}
+
+void BX_CPU_C::PREFETCH(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_INSTR_PREFETCH_HINT(CPU_ID, i->nnn(), i->seg(), RMAddr(i));
+#else
+  UndefinedOpcode(i);
+#endif
 }
 
   void
@@ -1430,10 +1438,17 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
       features |= (1<<9);   // APIC on chip
 #  endif
 #  if BX_SUPPORT_FPU
-      features |= 0x01;     // has FPU
+      features |= 0x01;     // support FPU
 #  endif
 #  if BX_SUPPORT_MMX
       features |= (1<<23);  // support MMX
+#  endif
+#  if BX_SUPPORT_SSE
+      features |= (1<<24);  // support FSAVE/FXRSTOR
+      features |= (1<<25);  // support SSE
+#  endif
+#  if BX_SUPPORT_SSE2
+      features |= (1<<26);  // support SSE2
 #  endif
 
 #else
@@ -2020,7 +2035,7 @@ BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
 }
 #endif
 
-
+/*
   void
 BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
@@ -2031,3 +2046,4 @@ BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
   BX_ERROR(("FXRSTOR is only a stub."));
 }
+*/

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.6 2002-09-29 16:05:13 sshwarts Exp $
+// $Id: instrument.h,v 1.7 2002-10-16 17:37:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,17 +33,17 @@
 // possible types passed to BX_INSTR_CACHE_CNTRL()
 #define BX_INSTR_INVD         20
 #define BX_INSTR_WBINVD       21
-#define BX_INSTR_SFENCE       22
-#define BX_INSTR_PREFETCH_T0  23
-#define BX_INSTR_PREFETCH_T1  24
-#define BX_INSTR_PREFETCH_T2  25
-#define BX_INSTR_PREFETCH_NTA 26
 
 #define BX_INSTR_IS_CALL  10
 #define BX_INSTR_IS_RET   11
 #define BX_INSTR_IS_IRET  12
 #define BX_INSTR_IS_JMP   13
 #define BX_INSTR_IS_INT   14
+
+#define BX_INSTR_PREFETCH_NTA 00
+#define BX_INSTR_PREFETCH_T0  01
+#define BX_INSTR_PREFETCH_T1  02
+#define BX_INSTR_PREFETCH_T2  03
 
 
 
@@ -129,6 +129,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 
@@ -195,6 +196,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 

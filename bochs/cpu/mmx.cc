@@ -1,8 +1,31 @@
+/////////////////////////////////////////////////////////////////////////
+//
+//   Copyright (c) 2002 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman <gate@fidonet.org.il>
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+
+
+
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_MMX
+
+#if BX_SUPPORT_MMX || BX_SUPPORT_SSE || BX_SUPPORT_SSE2
 
 #define MMX_REGFILE ((BX_CPU_THIS_PTR the_i387).mmx)
 
@@ -14,9 +37,8 @@
 #define BX_WRITE_MMX_REG(index, value) \
 {                                                      \
    MMX_REGFILE.mmx[index].packed_mmx_register = value; \
-   MMX_REGFILE.mmx[index].exp = 0xFFFF; \
+   MMX_REGFILE.mmx[index].exp = 0xffff; \
 }                                                      
-
 
 static Bit8s SaturateWordSToByteS(Bit16s value)
 {
@@ -72,7 +94,12 @@ static Bit16u SaturateDwordSToWordU(Bit32s value)
   return value;
 }
 
-void BX_CPU_C::PrintMmxRegisters(void)
+static Bit16u SelectMmxWord(BxPackedMmxRegister mmx, unsigned index)
+{
+  return (MMXUQ(mmx) >> ((index & 0x3) * 16)) & 0xffff;
+}
+
+void BX_CPU_C::printMmxRegisters(void)
 {
   for(int i=0;i<8;i++) {
       BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
@@ -80,25 +107,26 @@ void BX_CPU_C::PrintMmxRegisters(void)
   }
 }
 
-void BX_CPU_C::PrepareMmxInstruction(void)
+void BX_CPU_C::prepareMMX(void)
 {
-  MMX_TWD = 0;
-  MMX_TOS = 0; /* Each time an MMX instruction is           */
-  MMX_SWD &= 0xC7FF;  /*    executed, the TOS value is set to 000B */
+  if(BX_CPU_THIS_PTR cr0.ts)
+    exception(BX_NM_EXCEPTION, 0, 0);
 
   if(BX_CPU_THIS_PTR cr0.em)
     exception(BX_UD_EXCEPTION, 0, 0);
 
-  if(BX_CPU_THIS_PTR cr0.ts)
-    exception(BX_NM_EXCEPTION, 0, 0);
+  MMX_TWD = 0;
+  MMX_TOS = 0;        /* Each time an MMX instruction is */
+  MMX_SWD &= 0xc7ff;  /*    executed, the TOS value is set to 000b */
 }
 #endif
+
 
 /* 0F 60 */
 void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), result;
   Bit32u op2;
@@ -114,17 +142,17 @@ void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 
   MMXUB7(result) = (op2) >> 24;
   MMXUB6(result) = MMXUB3(op1);
-  MMXUB5(result) = (op2 & 0x00FF0000) >> 16;
+  MMXUB5(result) = (op2 & 0x00ff0000) >> 16;
   MMXUB4(result) = MMXUB2(op1);
-  MMXUB3(result) = (op2 & 0x0000FF00) >>  8;
+  MMXUB3(result) = (op2 & 0x0000ff00) >>  8;
   MMXUB2(result) = MMXUB1(op1);
-  MMXUB1(result) = (op2 & 0x000000FF);
+  MMXUB1(result) = (op2 & 0x000000ff);
   MMXUB0(result) = MMXUB0(op1);
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -133,7 +161,7 @@ void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), result;
   Bit32u op2;
@@ -149,13 +177,13 @@ void BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
 
   MMXUW3(result) = (op2) >> 16;
   MMXUW2(result) = MMXUW1(op1);
-  MMXUW1(result) = (op2 & 0x0000FFFF);
+  MMXUW1(result) = (op2 & 0x0000ffff);
   MMXUW0(result) = MMXUW0(op1);
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -164,7 +192,7 @@ void BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn());
   Bit32u op2;
@@ -183,7 +211,7 @@ void BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -192,7 +220,7 @@ void BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
 void BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -217,7 +245,7 @@ void BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -226,7 +254,7 @@ void BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -239,19 +267,19 @@ void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB0(result) = (MMXSB0(op1) > MMXSB0(op2)) ? 0xFF : 0;
-  MMXUB1(result) = (MMXSB1(op1) > MMXSB1(op2)) ? 0xFF : 0;
-  MMXUB2(result) = (MMXSB2(op1) > MMXSB2(op2)) ? 0xFF : 0;
-  MMXUB3(result) = (MMXSB3(op1) > MMXSB3(op2)) ? 0xFF : 0;
-  MMXUB4(result) = (MMXSB4(op1) > MMXSB4(op2)) ? 0xFF : 0;
-  MMXUB5(result) = (MMXSB5(op1) > MMXSB5(op2)) ? 0xFF : 0;
-  MMXUB6(result) = (MMXSB6(op1) > MMXSB6(op2)) ? 0xFF : 0;
-  MMXUB7(result) = (MMXSB7(op1) > MMXSB7(op2)) ? 0xFF : 0;
+  MMXUB0(result) = (MMXSB0(op1) > MMXSB0(op2)) ? 0xff : 0;
+  MMXUB1(result) = (MMXSB1(op1) > MMXSB1(op2)) ? 0xff : 0;
+  MMXUB2(result) = (MMXSB2(op1) > MMXSB2(op2)) ? 0xff : 0;
+  MMXUB3(result) = (MMXSB3(op1) > MMXSB3(op2)) ? 0xff : 0;
+  MMXUB4(result) = (MMXSB4(op1) > MMXSB4(op2)) ? 0xff : 0;
+  MMXUB5(result) = (MMXSB5(op1) > MMXSB5(op2)) ? 0xff : 0;
+  MMXUB6(result) = (MMXSB6(op1) > MMXSB6(op2)) ? 0xff : 0;
+  MMXUB7(result) = (MMXSB7(op1) > MMXSB7(op2)) ? 0xff : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -260,7 +288,7 @@ void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -273,15 +301,15 @@ void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUW0(result) = (MMXSW0(op1) > MMXSW0(op2)) ? 0xFFFF : 0;
-  MMXUW1(result) = (MMXSW1(op1) > MMXSW1(op2)) ? 0xFFFF : 0;
-  MMXUW2(result) = (MMXSW2(op1) > MMXSW2(op2)) ? 0xFFFF : 0;
-  MMXUW3(result) = (MMXSW3(op1) > MMXSW3(op2)) ? 0xFFFF : 0;
+  MMXUW0(result) = (MMXSW0(op1) > MMXSW0(op2)) ? 0xffff : 0;
+  MMXUW1(result) = (MMXSW1(op1) > MMXSW1(op2)) ? 0xffff : 0;
+  MMXUW2(result) = (MMXSW2(op1) > MMXSW2(op2)) ? 0xffff : 0;
+  MMXUW3(result) = (MMXSW3(op1) > MMXSW3(op2)) ? 0xffff : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -290,7 +318,7 @@ void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -303,13 +331,13 @@ void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUD0(result) = (MMXSD0(op1) > MMXSD0(op2)) ? 0xFFFFFFFF : 0;
-  MMXUD1(result) = (MMXSD1(op1) > MMXSD1(op2)) ? 0xFFFFFFFF : 0;
+  MMXUD0(result) = (MMXSD0(op1) > MMXSD0(op2)) ? 0xffffffff : 0;
+  MMXUD1(result) = (MMXSD1(op1) > MMXSD1(op2)) ? 0xffffffff : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -318,7 +346,7 @@ void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -343,7 +371,7 @@ void BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -352,7 +380,7 @@ void BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -377,7 +405,7 @@ void BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -386,7 +414,7 @@ void BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -407,7 +435,7 @@ void BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -416,7 +444,7 @@ void BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -435,7 +463,7 @@ void BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -444,7 +472,7 @@ void BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -465,7 +493,7 @@ void BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -474,7 +502,7 @@ void BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op;
   MMXUD1(op) = 0;
@@ -491,7 +519,7 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -500,7 +528,7 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
 void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op;
 
@@ -516,16 +544,46 @@ void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
-/* 0F 74 */
+/* 0F 70 */
+void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op, result;
+  Bit16u order = i->Ib();
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+  }
+
+  MMXUW0(result) = SelectMmxWord(op, order);
+  MMXUW1(result) = SelectMmxWord(op, order >> 2);
+  MMXUW2(result) = SelectMmxWord(op, order >> 4);
+  MMXUW3(result) = SelectMmxWord(op, order >> 5);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
 void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -538,19 +596,19 @@ void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUB0(result) = (MMXUB0(op1) == MMXUB0(op2)) ? 0xFF : 0;
-  MMXUB1(result) = (MMXUB1(op1) == MMXUB1(op2)) ? 0xFF : 0;
-  MMXUB2(result) = (MMXUB2(op1) == MMXUB2(op2)) ? 0xFF : 0;
-  MMXUB3(result) = (MMXUB3(op1) == MMXUB3(op2)) ? 0xFF : 0;
-  MMXUB4(result) = (MMXUB4(op1) == MMXUB4(op2)) ? 0xFF : 0;
-  MMXUB5(result) = (MMXUB5(op1) == MMXUB5(op2)) ? 0xFF : 0;
-  MMXUB6(result) = (MMXUB6(op1) == MMXUB6(op2)) ? 0xFF : 0;
-  MMXUB7(result) = (MMXUB7(op1) == MMXUB7(op2)) ? 0xFF : 0;
+  MMXUB0(result) = (MMXUB0(op1) == MMXUB0(op2)) ? 0xff : 0;
+  MMXUB1(result) = (MMXUB1(op1) == MMXUB1(op2)) ? 0xff : 0;
+  MMXUB2(result) = (MMXUB2(op1) == MMXUB2(op2)) ? 0xff : 0;
+  MMXUB3(result) = (MMXUB3(op1) == MMXUB3(op2)) ? 0xff : 0;
+  MMXUB4(result) = (MMXUB4(op1) == MMXUB4(op2)) ? 0xff : 0;
+  MMXUB5(result) = (MMXUB5(op1) == MMXUB5(op2)) ? 0xff : 0;
+  MMXUB6(result) = (MMXUB6(op1) == MMXUB6(op2)) ? 0xff : 0;
+  MMXUB7(result) = (MMXUB7(op1) == MMXUB7(op2)) ? 0xff : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -559,7 +617,7 @@ void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -572,15 +630,15 @@ void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUW0(result) = (MMXUW0(op1) == MMXUW0(op2)) ? 0xFFFF : 0;
-  MMXUW1(result) = (MMXUW1(op1) == MMXUW1(op2)) ? 0xFFFF : 0;
-  MMXUW2(result) = (MMXUW2(op1) == MMXUW2(op2)) ? 0xFFFF : 0;
-  MMXUW3(result) = (MMXUW3(op1) == MMXUW3(op2)) ? 0xFFFF : 0;
+  MMXUW0(result) = (MMXUW0(op1) == MMXUW0(op2)) ? 0xffff : 0;
+  MMXUW1(result) = (MMXUW1(op1) == MMXUW1(op2)) ? 0xffff : 0;
+  MMXUW2(result) = (MMXUW2(op1) == MMXUW2(op2)) ? 0xffff : 0;
+  MMXUW3(result) = (MMXUW3(op1) == MMXUW3(op2)) ? 0xffff : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -589,7 +647,7 @@ void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -602,13 +660,13 @@ void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUD0(result) = (MMXUD0(op1) == MMXUD0(op2)) ? 0xFFFFFFFF : 0;
-  MMXUD1(result) = (MMXUD1(op1) == MMXUD1(op2)) ? 0xFFFFFFFF : 0;
+  MMXUD0(result) = (MMXUD0(op1) == MMXUD0(op2)) ? 0xffffffff : 0;
+  MMXUD1(result) = (MMXUD1(op1) == MMXUD1(op2)) ? 0xffffffff : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -624,12 +682,12 @@ void BX_CPU_C::EMMS(bxInstruction_c *i)
   if(BX_CPU_THIS_PTR cr0.ts)
     exception(BX_NM_EXCEPTION, 0, 0);
 
-  MMX_TWD = 0xFFFFFFFF;
-  MMX_TOS = 0; /* Each time an MMX instruction is           */
-  MMX_SWD &= 0xC7FF;  /*    executed, the TOS value is set to 000B */
+  MMX_TWD = 0xffffffff;
+  MMX_TOS = 0;        /* Each time an MMX instruction is */
+  MMX_SWD &= 0xc7ff;  /*    executed, the TOS value is set to 000b */
 
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -638,7 +696,7 @@ void BX_CPU_C::EMMS(bxInstruction_c *i)
 void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
@@ -650,7 +708,7 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
     write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
   }
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -659,7 +717,7 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
@@ -671,7 +729,7 @@ void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
     write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -680,7 +738,7 @@ void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
 void BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -707,7 +765,7 @@ void BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -716,7 +774,7 @@ void BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -741,7 +799,7 @@ void BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -750,7 +808,7 @@ void BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -773,7 +831,34 @@ void BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F D4 */
+void BX_CPU_C::PADDQ_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE2
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXUQ(op1) += MMXUQ(op2);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op1);
+#else
+  BX_INFO(("SSE2 instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -782,7 +867,7 @@ void BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -800,15 +885,15 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
   Bit32u product3 = (Bit32u)(MMXUW2(op1)) * (Bit32u)(MMXUW2(op2));
   Bit32u product4 = (Bit32u)(MMXUW3(op1)) * (Bit32u)(MMXUW3(op2));
 
-  MMXUW0(result) = (Bit16u)(product1 & 0xFFFF);
-  MMXUW1(result) = (Bit16u)(product2 & 0xFFFF);
-  MMXUW2(result) = (Bit16u)(product3 & 0xFFFF);
-  MMXUW3(result) = (Bit16u)(product4 & 0xFFFF);
+  MMXUW0(result) = product1 & 0xffff;
+  MMXUW1(result) = product2 & 0xffff;
+  MMXUW2(result) = product3 & 0xffff;
+  MMXUW3(result) = product4 & 0xffff;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -817,7 +902,7 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -844,7 +929,7 @@ void BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -853,7 +938,7 @@ void BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -876,7 +961,41 @@ void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F DA */
+void BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXUB0(result) = (MMXUB0(op1) < MMXUB0(op2)) ? MMXUB0(op1) : MMXUB0(op2);
+  MMXUB1(result) = (MMXUB1(op1) < MMXUB1(op2)) ? MMXUB1(op1) : MMXUB1(op2);
+  MMXUB2(result) = (MMXUB2(op1) < MMXUB2(op2)) ? MMXUB2(op1) : MMXUB2(op2);
+  MMXUB3(result) = (MMXUB3(op1) < MMXUB3(op2)) ? MMXUB3(op1) : MMXUB3(op2);
+  MMXUB4(result) = (MMXUB4(op1) < MMXUB4(op2)) ? MMXUB4(op1) : MMXUB4(op2);
+  MMXUB4(result) = (MMXUB5(op1) < MMXUB5(op2)) ? MMXUB5(op1) : MMXUB5(op2);
+  MMXUB5(result) = (MMXUB6(op1) < MMXUB6(op2)) ? MMXUB6(op1) : MMXUB6(op2);
+  MMXUB6(result) = (MMXUB7(op1) < MMXUB7(op2)) ? MMXUB7(op1) : MMXUB7(op2);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -885,7 +1004,7 @@ void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -903,7 +1022,7 @@ void BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -912,7 +1031,7 @@ void BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -937,7 +1056,7 @@ void BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -946,7 +1065,7 @@ void BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -967,7 +1086,41 @@ void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F DE */
+void BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXUB0(result) = (MMXUB0(op1) > MMXUB0(op2)) ? MMXUB0(op1) : MMXUB0(op2);
+  MMXUB1(result) = (MMXUB1(op1) > MMXUB1(op2)) ? MMXUB1(op1) : MMXUB1(op2);
+  MMXUB2(result) = (MMXUB2(op1) > MMXUB2(op2)) ? MMXUB2(op1) : MMXUB2(op2);
+  MMXUB3(result) = (MMXUB3(op1) > MMXUB3(op2)) ? MMXUB3(op1) : MMXUB3(op2);
+  MMXUB4(result) = (MMXUB4(op1) > MMXUB4(op2)) ? MMXUB4(op1) : MMXUB4(op2);
+  MMXUB4(result) = (MMXUB5(op1) > MMXUB5(op2)) ? MMXUB5(op1) : MMXUB5(op2);
+  MMXUB5(result) = (MMXUB6(op1) > MMXUB6(op2)) ? MMXUB6(op1) : MMXUB6(op2);
+  MMXUB6(result) = (MMXUB7(op1) > MMXUB7(op2)) ? MMXUB7(op1) : MMXUB7(op2);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -976,7 +1129,7 @@ void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -994,7 +1147,41 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F E0 */
+void BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXUB0(result) = (MMXUB0(op1) + MMXUB0(op2) + 1) >> 1;
+  MMXUB1(result) = (MMXUB1(op1) + MMXUB1(op2) + 1) >> 1;
+  MMXUB2(result) = (MMXUB2(op1) + MMXUB2(op2) + 1) >> 1;
+  MMXUB3(result) = (MMXUB3(op1) + MMXUB3(op2) + 1) >> 1;
+  MMXUB4(result) = (MMXUB4(op1) + MMXUB4(op2) + 1) >> 1;
+  MMXUB5(result) = (MMXUB5(op1) + MMXUB5(op2) + 1) >> 1;
+  MMXUB6(result) = (MMXUB6(op1) + MMXUB6(op2) + 1) >> 1;
+  MMXUB7(result) = (MMXUB7(op1) + MMXUB7(op2) + 1) >> 1;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1003,7 +1190,7 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1019,10 +1206,10 @@ void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
   Bit8u shift = MMXUB0(op2);
 
   if(MMXUQ(op2) > 15) {
-    MMXUW0(result) = (MMXUW0(op1) & 0x8000) ? 0xFFFF : 0;
-    MMXUW1(result) = (MMXUW1(op1) & 0x8000) ? 0xFFFF : 0;
-    MMXUW2(result) = (MMXUW2(op1) & 0x8000) ? 0xFFFF : 0;
-    MMXUW3(result) = (MMXUW3(op1) & 0x8000) ? 0xFFFF : 0;
+    MMXUW0(result) = (MMXUW0(op1) & 0x8000) ? 0xffff : 0;
+    MMXUW1(result) = (MMXUW1(op1) & 0x8000) ? 0xffff : 0;
+    MMXUW2(result) = (MMXUW2(op1) & 0x8000) ? 0xffff : 0;
+    MMXUW3(result) = (MMXUW3(op1) & 0x8000) ? 0xffff : 0;
   }
   else {
     MMXUW0(result) = MMXUW0(op1) >> shift;
@@ -1030,16 +1217,16 @@ void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
     MMXUW2(result) = MMXUW2(op1) >> shift;
     MMXUW3(result) = MMXUW3(op1) >> shift;
 
-    if(MMXUW0(op1) & 0x8000) MMXUW0(result) |= (0xFFFF << (16 - shift));
-    if(MMXUW1(op1) & 0x8000) MMXUW1(result) |= (0xFFFF << (16 - shift));
-    if(MMXUW2(op1) & 0x8000) MMXUW2(result) |= (0xFFFF << (16 - shift));
-    if(MMXUW3(op1) & 0x8000) MMXUW3(result) |= (0xFFFF << (16 - shift));
+    if(MMXUW0(op1) & 0x8000) MMXUW0(result) |= (0xffff << (16 - shift));
+    if(MMXUW1(op1) & 0x8000) MMXUW1(result) |= (0xffff << (16 - shift));
+    if(MMXUW2(op1) & 0x8000) MMXUW2(result) |= (0xffff << (16 - shift));
+    if(MMXUW3(op1) & 0x8000) MMXUW3(result) |= (0xffff << (16 - shift));
   }
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1048,7 +1235,7 @@ void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1064,21 +1251,89 @@ void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
   Bit8u shift = MMXUB0(op2);
 
   if(MMXUQ(op2) > 31) {
-    MMXUD0(result) = (MMXUD0(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
-    MMXUD1(result) = (MMXUD1(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
+    MMXUD0(result) = (MMXUD0(op1) & 0x80000000) ? 0xffffffff : 0;
+    MMXUD1(result) = (MMXUD1(op1) & 0x80000000) ? 0xffffffff : 0;
   }
   else {
     MMXUD0(result) = MMXUD0(op1) >> shift;
     MMXUD1(result) = MMXUD1(op1) >> shift;
 
-    if(MMXUD0(op1) & 0x80000000) MMXUD0(result) |= (0xFFFFFFFF << (32 - shift));
-    if(MMXUD1(op1) & 0x80000000) MMXUD1(result) |= (0xFFFFFFFF << (32 - shift));
+    if(MMXUD0(op1) & 0x80000000) 
+       MMXUD0(result) |= (0xffffffff << (32 - shift));
+
+    if(MMXUD1(op1) & 0x80000000) 
+       MMXUD1(result) |= (0xffffffff << (32 - shift));
   }
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F E3 */
+void BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXUW0(result) = (MMXUW0(op1) + MMXUW0(op2) + 1) >> 1;
+  MMXUW1(result) = (MMXUW1(op1) + MMXUW1(op2) + 1) >> 1;
+  MMXUW2(result) = (MMXUW2(op1) + MMXUW2(op2) + 1) >> 1;
+  MMXUW3(result) = (MMXUW3(op1) + MMXUW3(op2) + 1) >> 1;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F E4 */
+void BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  Bit32u product1 = (Bit32u)(MMXUW0(op1)) * (Bit32u)(MMXUW0(op2));
+  Bit32u product2 = (Bit32u)(MMXUW1(op1)) * (Bit32u)(MMXUW1(op2));
+  Bit32u product3 = (Bit32u)(MMXUW2(op1)) * (Bit32u)(MMXUW2(op2));
+  Bit32u product4 = (Bit32u)(MMXUW3(op1)) * (Bit32u)(MMXUW3(op2));
+
+  MMXUW0(result) = (Bit16u)(product1 >> 16);
+  MMXUW1(result) = (Bit16u)(product2 >> 16);
+  MMXUW2(result) = (Bit16u)(product3 >> 16);
+  MMXUW3(result) = (Bit16u)(product4 >> 16);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("SSE instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1087,7 +1342,7 @@ void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1113,7 +1368,7 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1122,7 +1377,7 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1147,7 +1402,7 @@ void BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1156,7 +1411,7 @@ void BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1177,7 +1432,37 @@ void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F EA */
+void BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXSW0(result) = (MMXSW0(op1) < MMXSW0(op2)) ? MMXSW0(op1) : MMXSW0(op2);
+  MMXSW1(result) = (MMXSW1(op1) < MMXSW1(op2)) ? MMXSW1(op1) : MMXSW1(op2);
+  MMXSW2(result) = (MMXSW2(op1) < MMXSW2(op2)) ? MMXSW2(op1) : MMXSW2(op2);
+  MMXSW3(result) = (MMXSW3(op1) < MMXSW3(op2)) ? MMXSW3(op1) : MMXSW3(op2);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1186,7 +1471,7 @@ void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::POR_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1204,7 +1489,7 @@ void BX_CPU_C::POR_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1213,7 +1498,7 @@ void BX_CPU_C::POR_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1238,7 +1523,7 @@ void BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1247,7 +1532,7 @@ void BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1268,7 +1553,37 @@ void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F EE */
+void BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXSW0(result) = (MMXSW0(op1) > MMXSW0(op2)) ? MMXSW0(op1) : MMXSW0(op2);
+  MMXSW1(result) = (MMXSW1(op1) > MMXSW1(op2)) ? MMXSW1(op1) : MMXSW1(op2);
+  MMXSW2(result) = (MMXSW2(op1) > MMXSW2(op2)) ? MMXSW2(op1) : MMXSW2(op2);
+  MMXSW3(result) = (MMXSW3(op1) > MMXSW3(op2)) ? MMXSW3(op1) : MMXSW3(op2);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1277,7 +1592,7 @@ void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1295,7 +1610,7 @@ void BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1304,7 +1619,7 @@ void BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1331,7 +1646,7 @@ void BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1340,7 +1655,7 @@ void BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1365,7 +1680,7 @@ void BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1374,7 +1689,7 @@ void BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1397,7 +1712,34 @@ void BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F F4 */
+void BX_CPU_C::PMULUDQ_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE2
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXUQ(result) = Bit64u(MMXUD0(op1)) * Bit64u(MMXUD0(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("SSE2 instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1406,7 +1748,7 @@ void BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
@@ -1436,7 +1778,44 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F F6 */
+void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  Bit16u temp = 0;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  temp += abs(MMXUB0(op1) - MMXUB0(op2));
+  temp += abs(MMXUB1(op1) - MMXUB1(op2));
+  temp += abs(MMXUB2(op1) - MMXUB2(op2));
+  temp += abs(MMXUB3(op1) - MMXUB3(op2));
+  temp += abs(MMXUB4(op1) - MMXUB4(op2));
+  temp += abs(MMXUB5(op1) - MMXUB5(op2));
+  temp += abs(MMXUB6(op1) - MMXUB6(op2));
+  temp += abs(MMXUB7(op1) - MMXUB7(op2));
+
+  MMXUW0(result) = Bit64u(temp);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else  
+  BX_INFO(("SSE instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1445,7 +1824,7 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1470,7 +1849,7 @@ void BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1479,7 +1858,7 @@ void BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1500,7 +1879,7 @@ void BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1509,7 +1888,7 @@ void BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1528,7 +1907,34 @@ void BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F FB */
+void BX_CPU_C::PSUBQ_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE2
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  MMXUQ(op1) -= MMXUQ(op2);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op1);
+#else
+  BX_INFO(("SSE2 instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1537,7 +1943,7 @@ void BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1563,7 +1969,7 @@ void BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1572,7 +1978,7 @@ void BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1593,7 +1999,7 @@ void BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1602,7 +2008,7 @@ void BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
@@ -1621,7 +2027,7 @@ void BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1630,7 +2036,7 @@ void BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
   Bit8u shift = i->Ib();
@@ -1647,7 +2053,7 @@ void BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1656,16 +2062,16 @@ void BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
   if(shift > 15) {
-    MMXUW0(result) = (MMXUW0(op1) & 0x8000) ? 0xFFFF : 0;
-    MMXUW1(result) = (MMXUW1(op1) & 0x8000) ? 0xFFFF : 0;
-    MMXUW2(result) = (MMXUW2(op1) & 0x8000) ? 0xFFFF : 0;
-    MMXUW3(result) = (MMXUW3(op1) & 0x8000) ? 0xFFFF : 0;
+    MMXUW0(result) = (MMXUW0(op1) & 0x8000) ? 0xffff : 0;
+    MMXUW1(result) = (MMXUW1(op1) & 0x8000) ? 0xffff : 0;
+    MMXUW2(result) = (MMXUW2(op1) & 0x8000) ? 0xffff : 0;
+    MMXUW3(result) = (MMXUW3(op1) & 0x8000) ? 0xffff : 0;
   }
   else {
     MMXUW0(result) = MMXUW0(op1) >> shift;
@@ -1673,16 +2079,16 @@ void BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
     MMXUW2(result) = MMXUW2(op1) >> shift;
     MMXUW3(result) = MMXUW3(op1) >> shift;
 
-    if(MMXUW0(op1) & 0x8000) MMXUW0(result) |= (0xFFFF << (16 - shift));
-    if(MMXUW1(op1) & 0x8000) MMXUW1(result) |= (0xFFFF << (16 - shift));
-    if(MMXUW2(op1) & 0x8000) MMXUW2(result) |= (0xFFFF << (16 - shift));
-    if(MMXUW3(op1) & 0x8000) MMXUW3(result) |= (0xFFFF << (16 - shift));
+    if(MMXUW0(op1) & 0x8000) MMXUW0(result) |= (0xffff << (16 - shift));
+    if(MMXUW1(op1) & 0x8000) MMXUW1(result) |= (0xffff << (16 - shift));
+    if(MMXUW2(op1) & 0x8000) MMXUW2(result) |= (0xffff << (16 - shift));
+    if(MMXUW3(op1) & 0x8000) MMXUW3(result) |= (0xffff << (16 - shift));
   }
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1691,7 +2097,7 @@ void BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
 void BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
   Bit8u shift = i->Ib();
@@ -1708,7 +2114,7 @@ void BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1718,7 +2124,7 @@ void BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
   Bit8u shift = i->Ib();
@@ -1733,7 +2139,7 @@ void BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1742,27 +2148,30 @@ void BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
   if(shift > 31) {
-    MMXUD0(result) = (MMXUD0(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
-    MMXUD1(result) = (MMXUD1(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
+    MMXUD0(result) = (MMXUD0(op1) & 0x80000000) ? 0xffffffff : 0;
+    MMXUD1(result) = (MMXUD1(op1) & 0x80000000) ? 0xffffffff : 0;
   }
   else {
     MMXUD0(result) = MMXUD0(op1) >> shift;
     MMXUD1(result) = MMXUD1(op1) >> shift;
 
-    if(MMXUD0(op1) & 0x80000000) MMXUD0(result) |= (0xFFFFFFFF << (32 - shift));
-    if(MMXUD1(op1) & 0x80000000) MMXUD1(result) |= (0xFFFFFFFF << (32 - shift));
+    if(MMXUD0(op1) & 0x80000000) 
+       MMXUD0(result) |= (0xffffffff << (32 - shift));
+
+    if(MMXUD1(op1) & 0x80000000) 
+       MMXUD1(result) |= (0xffffffff << (32 - shift));
   }
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), result);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1771,7 +2180,7 @@ void BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
 void BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
   Bit8u shift = i->Ib();
@@ -1786,7 +2195,7 @@ void BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1795,7 +2204,7 @@ void BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
 void BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
   Bit8u shift = i->Ib();
@@ -1810,7 +2219,7 @@ void BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1819,7 +2228,7 @@ void BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
 void BX_CPU_C::PSLLQ_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
-  BX_CPU_THIS_PTR PrepareMmxInstruction();
+  BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
   Bit8u shift = i->Ib();
@@ -1834,7 +2243,7 @@ void BX_CPU_C::PSLLQ_PqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->rm(), op1);
 #else
-  BX_INFO(("MMX Instructions Set Not Implemented"));
+  BX_INFO(("MMX instruction set not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }

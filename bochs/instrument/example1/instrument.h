@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.3 2002-09-29 16:50:29 sshwarts Exp $
+// $Id: instrument.h,v 1.4 2002-10-16 17:37:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,17 +33,17 @@
 // possible types passed to BX_INSTR_CACHE_CNTRL()
 #define BX_INSTR_INVD         20
 #define BX_INSTR_WBINVD       21
-#define BX_INSTR_SFENCE       22
-#define BX_INSTR_PREFETCH_T0  23
-#define BX_INSTR_PREFETCH_T1  24
-#define BX_INSTR_PREFETCH_T2  25
-#define BX_INSTR_PREFETCH_NTA 26
 
 #define BX_INSTR_IS_CALL  10
 #define BX_INSTR_IS_RET   11
 #define BX_INSTR_IS_IRET  12
 #define BX_INSTR_IS_JMP   13
 #define BX_INSTR_IS_INT   14
+
+#define BX_INSTR_PREFETCH_NTA 00
+#define BX_INSTR_PREFETCH_T0  01
+#define BX_INSTR_PREFETCH_T1  02
+#define BX_INSTR_PREFETCH_T2  03
 
 
 #if BX_INSTRUMENTATION
@@ -176,6 +176,7 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 
@@ -242,6 +243,7 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 

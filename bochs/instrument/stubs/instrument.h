@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.8 2002-10-08 21:30:50 sshwarts Exp $
+// $Id: instrument.h,v 1.9 2002-10-16 17:37:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,6 +46,9 @@
 #define BX_INSTR_PREFETCH_T2  03
 
 
+
+
+
 #if BX_INSTRUMENTATION
 
 class bxInstruction_c;
@@ -89,6 +92,7 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
 
 void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, Bit32u newval);
 void bx_instr_cache_cntrl(unsigned cpu, unsigned what);
+void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_address offset);
 
 void bx_instr_repeat_iteration(unsigned cpu);
 
@@ -152,6 +156,8 @@ void bx_instr_phy_read(bx_address addr, unsigned len);
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)            bx_instr_cache_cntrl(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)      bx_instr_tlb_cntrl(cpu_id, what, newval)
+#  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset) \
+                       bx_instr_prefetch_hint(cpu_id, what, seg, offset)
 
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)             bx_instr_repeat_iteration(cpu_id)
 
@@ -218,6 +224,7 @@ void bx_instr_phy_read(bx_address addr, unsigned len);
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 
