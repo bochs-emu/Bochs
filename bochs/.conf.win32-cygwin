@@ -17,4 +17,6 @@ export CXXFLAGS
 ./configure --enable-cdrom \
             --enable-sb16=win \
 	    --enable-ne2000 \
-	    --enable-vbe
+	    --enable-vbe \
+		--enable-dc2300-vlb-ide \
+		--enable-all-optimizations
