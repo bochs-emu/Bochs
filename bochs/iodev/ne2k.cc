@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.46 2002-11-19 18:56:39 vruppert Exp $
+// $Id: ne2k.cc,v 1.47 2002-12-13 18:27:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -623,7 +623,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xd:  // TCR
     // Check reserved bits
     if (value & 0xe0)
-      BX_PANIC(("TCR write, reserved bits set"));
+      BX_ERROR(("TCR write, reserved bits set"));
 
     // Test loop mode (not supported)
     if (value & 0x06) {
@@ -1262,7 +1262,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.46 2002-11-19 18:56:39 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.47 2002-12-13 18:27:07 bdenney Exp $"));
 
 
   // Bring the register state into power-up state
