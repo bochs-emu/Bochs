@@ -642,59 +642,35 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_GRAVE:         scancode = 0x29; break;
 
     case BX_KEY_BACKSPACE:     scancode = 0x0e; break;
+    case BX_KEY_KP_ENTER:
     case BX_KEY_ENTER:         scancode = 0x1c; break;
     case BX_KEY_TAB:           scancode = 0x0f; break;
 
     case BX_KEY_LEFT:
-      //fprintf(stderr,"# Grey left-arrow key not on 83-key keyboard\n");
-      scancode = 0x4b; break;
-    case BX_KEY_RIGHT:
-      //fprintf(stderr,"# Grey right-arrow key not on 83-key keyboard\n");
-      scancode = 0x4d; break;
-    case BX_KEY_UP:
-      //fprintf(stderr,"# Grey up-arrow key not on 83-key keyboard\n");
-      scancode = 0x48; break;
-    case BX_KEY_DOWN:
-      //fprintf(stderr,"# Grey down-arrow key not on 83-key keyboard\n");
-      scancode = 0x50; break;
-
     case BX_KEY_KP_LEFT:       scancode = 0x4b; break;
+    case BX_KEY_RIGHT:
     case BX_KEY_KP_RIGHT:      scancode = 0x4d; break;
+    case BX_KEY_UP:
     case BX_KEY_KP_UP:         scancode = 0x48; break;
+    case BX_KEY_DOWN:
     case BX_KEY_KP_DOWN:       scancode = 0x50; break;
 
     case BX_KEY_INSERT:
-      fprintf(stderr,"# Grey insert key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_DELETE:
-      fprintf(stderr,"# Grey delete key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_HOME:
-      fprintf(stderr,"# Grey home key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_END:
-      fprintf(stderr,"# Grey end key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_PAGE_UP:
-      fprintf(stderr,"# Grey page-up key not on 83-key keyboard\n");
-      return;
-    case BX_KEY_PAGE_DOWN:
-      fprintf(stderr,"# Grey page-down key not on 83-key keyboard\n");
-      return;
-
     case BX_KEY_KP_INSERT:        scancode = 0x52; break;
+    case BX_KEY_DELETE:
     case BX_KEY_KP_DELETE:        scancode = 0x53; break;
+    case BX_KEY_HOME:
     case BX_KEY_KP_HOME:          scancode = 0x47; break;
+    case BX_KEY_END:
     case BX_KEY_KP_END:           scancode = 0x4f; break;
+    case BX_KEY_PAGE_UP:
     case BX_KEY_KP_PAGE_UP:       scancode = 0x49; break;
+    case BX_KEY_PAGE_DOWN:
     case BX_KEY_KP_PAGE_DOWN:     scancode = 0x51; break;
 
     case BX_KEY_KP_ADD:           scancode = 0x4e; break;
     case BX_KEY_KP_SUBTRACT:      scancode = 0x4a; break;
     case BX_KEY_KP_5:             scancode = 0x4c; break;
-    case BX_KEY_KP_ENTER:
-      fprintf(stderr,"# Grey Enter key not on 83-key keyboard\n");
-      return;
     case BX_KEY_KP_MULTIPLY:
       fprintf(stderr,"# Grey Multiply key not on 83-key keyboard\n");
       return;
