@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.45 2002-08-24 17:11:33 vruppert Exp $
+// $Id: siminterface.h,v 1.46 2002-08-25 08:31:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.45 2002-08-24 17:11:33 vruppert Exp $
+ * $Id: siminterface.h,v 1.46 2002-08-25 08:31:16 vruppert Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -647,5 +647,5 @@ public:
 extern bx_simulator_interface_c *SIM;
 
 extern void bx_init_siminterface ();
-extern void bx_init_main ();
+extern void bx_init_main (int argc, char *argv[]);
 extern int bx_continue_after_control_panel (int argc, char *argv[]);

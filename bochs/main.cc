@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.116 2002-08-24 17:11:32 vruppert Exp $
+// $Id: main.cc,v 1.117 2002-08-25 08:31:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1096,7 +1096,7 @@ static void setupWorkingDirectory (char *path)
 int main (int argc, char *argv[])
 {
   bx_init_siminterface ();
-  bx_init_main ();
+  bx_init_main (argc, argv);
   bx_do_text_config_interface (argc, argv);
   bx_control_panel (BX_CPANEL_INIT);
   bx_continue_after_control_panel (argc, argv);
@@ -1104,8 +1104,10 @@ int main (int argc, char *argv[])
 #endif
 
 void
-bx_init_main ()
+bx_init_main (int argc, char *argv[])
 {
+  int help = 0;
+
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
   // constructors or functions called by constructors.  The macros test for
@@ -1115,9 +1117,24 @@ bx_init_main ()
   SAFE_GET_IOFUNC();
   SAFE_GET_GENLOG();
 
-  bx_print_header ();
+  if ((argc > 1) && (!strcmp ("--help", argv[1]))) {
+    fprintf(stderr, "Usage: bochs [options] [bochsrc options]\n\n"
+                    "  -q               quickstart with default configuration file\n"
+                    "  -qf configfile   quickstart with specified configuration file\n"
+                    "  --help           display this help and exit\n\n"
+                    "For information on Bochs configuration file arguments, see the\n"
+#if (!defined(WIN32)) && !BX_WITH_MACOS
+		    "bochsrc section in the user documentation or the man page of bochsrc.\n");
+#else
+                    "bochsrc section in the user documentation.\n");
+#endif
+    help = 1;
+  } else {
+    bx_print_header ();
+  }
   bx_init_bx_dbg ();
   bx_init_options ();
+  if (help) exit(0);
 #if BX_WITH_CARBON
     /* "-psn" is passed if we are launched by double-clicking */
    if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 ) {
