@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.29 2002-01-07 15:50:50 bdenney Exp $
+// $Id: x.cc,v 1.30 2002-01-07 16:30:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -458,8 +458,7 @@ lShift l\ Z X C V B N M , . / rShift
 lCtrl lAlt Space rAlt rCtrl
 */
 
-/* ES key mapping, Applied as a diff to the default.
-   Thanks to Vicente Hernando Ara */
+/* ES (Spanish) key mapping, thanks to Vicente Hernando Ara */
 Bit32u keymap_es[][2] = {
   { XK_bar                 , BX_KEY_1 },
   { XK_dead_acute          , BX_KEY_SINGLE_QUOTE }, 
