@@ -242,7 +242,7 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   UNUSED( operation );
   // Reset the processor.
 
-  BX_PANIC(("pc_system.ResetSignal called"));
+  BX_PANIC(("pc_system.ResetSignal called\n"));
   return(0);
 }
 

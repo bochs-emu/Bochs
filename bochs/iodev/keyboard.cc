@@ -535,7 +535,7 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered\n", value));
         case 0xfe: // System Reset, transition to real mode
 	  // software reset is not completely implemented, so for 
 	  // Bochs release 1.2, panic as the old versions did.
-	  BX_PANIC(("system reset"));
+	  BX_PANIC(("system reset\n"));
           break;
 
         default:
