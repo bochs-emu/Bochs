@@ -1,0 +1,30 @@
+--- iodev/keyboard.cc	Wed Oct  3 17:40:43 2001
++++ iodev/keyboard.cc	Sun Oct 14 14:43:53 2001
+@@ -40,6 +40,7 @@
+ // (das)
+ 
+ #include "bochs.h"
++#include "math.h"
+ #define LOG_THIS  bx_keyboard.
+ 
+ 
+@@ -924,13 +925,14 @@
+     BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic = 0;
+     BX_KEY_THIS s.kbd_internal_buffer.delay = (value >> 5) & 0x03;
+     switch (BX_KEY_THIS s.kbd_internal_buffer.delay) {
+-      case 0: BX_INFO(("setting delay to 250 mS")); break;
+-      case 1: BX_INFO(("setting delay to 250 mS")); break;
+-      case 2: BX_INFO(("setting delay to 250 mS")); break;
+-      case 3: BX_INFO(("setting delay to 250 mS")); break;
++      case 0: BX_INFO(("setting delay to 250 mS (unused)")); break;
++      case 1: BX_INFO(("setting delay to 500 mS (unused)")); break;
++      case 2: BX_INFO(("setting delay to 750 mS (unused)")); break;
++      case 3: BX_INFO(("setting delay to 1000 mS (unused)")); break;
+       }
+     BX_KEY_THIS s.kbd_internal_buffer.repeat_rate = value & 0x1f;
+-    BX_INFO(("setting repeat rate to %u", (unsigned) value));
++    double cps = 1 /((8 + (value & 0x07)) * exp(log(2) * ((value >> 3) & 0x03)) * 0.00417);
++    BX_INFO(("setting repeat rate to %.1f cps (unused)", cps));
+     kbd_enQ(0xFA); // send ACK
+     return;
+     }
