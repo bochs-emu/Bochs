@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: lexer.l,v 1.8 2001-11-28 18:39:19 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -84,6 +84,8 @@ loader          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOADER); }
 doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }
 trace-on        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEON); }
 trace-off       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEOFF); }
+trace-reg-on	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGON); }
+trace-reg-off	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGOFF); }
 ptime           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PTIME); }
 sb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TIMEBP); }
 sba             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TIMEBP_ABSOLUTE); }
