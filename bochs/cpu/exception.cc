@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.14 2002-09-12 18:10:40 bdenney Exp $
+// $Id: exception.cc,v 1.15 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -546,7 +546,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
     cs_selector = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
     push_16(cs_selector);
-    ip = BX_CPU_THIS_PTR eip;
+    ip = EIP;
     push_16(ip);
 
     access_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector,     2, 0, BX_READ, &ip);

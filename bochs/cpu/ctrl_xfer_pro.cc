@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.12 2002-09-12 18:10:39 bdenney Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.13 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ BX_CPU_C::jump_protected(BxInstruction_t *i, Bit16u cs_raw, Bit32u disp32)
       /* Load CS-cache with new segment descriptor */
       /* CPL does not change for conforming code segment */
       load_cs(&selector, &descriptor, CPL);
-      BX_CPU_THIS_PTR eip = disp32;
+      EIP = disp32;
       return;
       }
 
@@ -132,7 +132,7 @@ BX_CPU_C::jump_protected(BxInstruction_t *i, Bit16u cs_raw, Bit32u disp32)
       /* load CS-cache with new segment descriptor */
       /* set RPL field of CS register to CPL */
       load_cs(&selector, &descriptor, CPL);
-      BX_CPU_THIS_PTR eip = disp32;
+      EIP = disp32;
       return;
       }
     BX_PANIC(("jump_protected: segment=1"));
@@ -561,9 +561,9 @@ BX_CPU_C::call_protected(BxInstruction_t *i, Bit16u cs_raw, Bit32u disp32)
     // set RPL of CS to CPL
     // load eIP with new offset
     load_cs(&cs_selector, &cs_descriptor, CPL);
-    BX_CPU_THIS_PTR eip = disp32;
+    EIP = disp32;
     if (cs_descriptor.u.segment.d_b==0)
-      BX_CPU_THIS_PTR eip &= 0x0000ffff;
+      EIP &= 0x0000ffff;
     return;
     }
   else { // gate & special segment
@@ -1172,7 +1172,7 @@ BX_CPU_C::return_protected(BxInstruction_t *i, Bit16u pop_bytes)
     // load CS register with descriptor
     // increment eSP
     load_cs(&cs_selector, &cs_descriptor, CPL);
-    BX_CPU_THIS_PTR eip = return_EIP;
+    EIP = return_EIP;
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
       ESP += stack_param_offset + pop_bytes;
     else
@@ -1344,7 +1344,7 @@ BX_CPU_C::return_protected(BxInstruction_t *i, Bit16u pop_bytes)
     /* set CS RPL to CPL */
     /* load the CS-cache with return CS descriptor */
     load_cs(&cs_selector, &cs_descriptor, cs_selector.rpl);
-    BX_CPU_THIS_PTR eip = return_EIP;
+    EIP = return_EIP;
 
     /* load SS:SP from stack */
     /* load SS-cache with return SS descriptor */
@@ -1717,7 +1717,7 @@ BX_CPU_C::iret_protected(BxInstruction_t *i)
       /* set CPL to the RPL of the return CS selector */
       prev_cpl = CPL; /* previous CPL */
       load_cs(&cs_selector, &cs_descriptor, cs_selector.rpl);
-      BX_CPU_THIS_PTR eip = new_eip;
+      EIP = new_eip;
 
       /* load flags from stack */
       // perhaps I should always write_eflags(), thus zeroing

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: ctrl_xfer8.cc,v 1.7 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ BX_CPU_C::LOOPNE_Jb(BxInstruction_t *i)
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
-    BX_CPU_THIS_PTR eip = new_EIP;
+    EIP = new_EIP;
     BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
     revalidate_prefetch_q();
     }
@@ -135,7 +135,7 @@ BX_CPU_C::LOOPE_Jb(BxInstruction_t *i)
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
-    BX_CPU_THIS_PTR eip = new_EIP;
+    EIP = new_EIP;
     BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
     revalidate_prefetch_q();
     }
@@ -175,7 +175,7 @@ BX_CPU_C::LOOP_Jb(BxInstruction_t *i)
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
-    BX_CPU_THIS_PTR eip = new_EIP;
+    EIP = new_EIP;
     BX_INSTR_CNEAR_BRANCH_TAKEN(new_EIP);
     revalidate_prefetch_q();
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.14 2002-09-12 18:10:40 bdenney Exp $
+// $Id: debugstuff.cc,v 1.15 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,16 +105,16 @@ BX_CPU_C::debug(Bit32u offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b));
-  BX_INFO(("| EIP=%08x (%08x)", (unsigned) BX_CPU_THIS_PTR eip,
+  BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
     (unsigned) BX_CPU_THIS_PTR prev_eip));
 
 #if 0
   /* (mch) Hack to display the area round EIP and prev_EIP */
   char buf[100];
-  sprintf(buf, "%04x:%08x  ", BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.value, BX_CPU_THIS_PTR eip);
+  sprintf(buf, "%04x:%08x  ", BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.value, EIP);
   for (int i = 0; i < 8; i++) {
     Bit8u data;
-    BX_CPU_THIS_PTR read_virtual_byte(BX_SREG_CS, BX_CPU_THIS_PTR eip + i, &data);
+    BX_CPU_THIS_PTR read_virtual_byte(BX_SREG_CS, EIP + i, &data);
     sprintf(buf+strlen(buf), "%02x ", data);
     }
   BX_INFO((buf));
@@ -461,7 +461,7 @@ BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   cpu->esp = ESP;
 
   cpu->eflags = dbg_get_eflags();
-  cpu->eip    = BX_CPU_THIS_PTR eip;
+  cpu->eip    = EIP;
 
   cpu->cs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   cpu->cs.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
@@ -658,7 +658,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR set_ID (val & 0x01);
 #endif
 
-  BX_CPU_THIS_PTR eip = cpu->eip;
+  EIP = cpu->eip;
 
 
 

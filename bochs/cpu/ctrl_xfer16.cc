@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: ctrl_xfer16.cc,v 1.7 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ BX_CPU_C::RETnear16_Iw(BxInstruction_t *i)
         /* #GP(0) -or #SS(0) ??? */
         }
 
-      BX_CPU_THIS_PTR eip = return_IP;
+      EIP = return_IP;
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
         ESP += 2 + imm16; /* ??? should it be 2*imm16 ? */
       else
@@ -82,14 +82,14 @@ BX_CPU_C::RETnear16_Iw(BxInstruction_t *i)
       }
     else {
       pop_16(&return_IP);
-      BX_CPU_THIS_PTR eip = return_IP;
+      EIP = return_IP;
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
         ESP += imm16; /* ??? should it be 2*imm16 ? */
       else
         SP  += imm16;
       }
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, EIP);
 }
 
   void
@@ -123,7 +123,7 @@ BX_CPU_C::RETnear16(BxInstruction_t *i)
         BX_PANIC(("retnear: IP > limit"));
         }
 
-      BX_CPU_THIS_PTR eip = return_IP;
+      EIP = return_IP;
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
         ESP += 2;
       else
@@ -131,10 +131,10 @@ BX_CPU_C::RETnear16(BxInstruction_t *i)
       }
     else {
       pop_16(&return_IP);
-      BX_CPU_THIS_PTR eip = return_IP;
+      EIP = return_IP;
       }
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, EIP);
 }
 
   void
@@ -163,7 +163,7 @@ BX_CPU_C::RETfar16_Iw(BxInstruction_t *i)
 
     pop_16(&ip);
     pop_16(&cs_raw);
-    BX_CPU_THIS_PTR eip = (Bit32u) ip;
+    EIP = (Bit32u) ip;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
       ESP += imm16;
@@ -172,7 +172,7 @@ BX_CPU_C::RETfar16_Iw(BxInstruction_t *i)
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -196,12 +196,12 @@ BX_CPU_C::RETfar16(BxInstruction_t *i)
 
     pop_16(&ip);
     pop_16(&cs_raw);
-    BX_CPU_THIS_PTR eip = (Bit32u) ip;
+    EIP = (Bit32u) ip;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -231,9 +231,9 @@ BX_CPU_C::CALL_Aw(BxInstruction_t *i)
   /* push 16 bit EA of next instruction */
   push_16(IP);
 
-  BX_CPU_THIS_PTR eip = new_EIP;
+  EIP = new_EIP;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, EIP);
 }
 
   void
@@ -257,13 +257,13 @@ BX_CPU_C::CALL16_Ap(BxInstruction_t *i)
     }
 #endif
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-  push_16((Bit16u) BX_CPU_THIS_PTR eip);
-  BX_CPU_THIS_PTR eip = (Bit32u) disp16;
+  push_16((Bit16u) EIP);
+  EIP = (Bit32u) disp16;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -307,9 +307,9 @@ BX_CPU_C::CALL_Ew(BxInstruction_t *i)
 
     push_16(IP);
 
-    BX_CPU_THIS_PTR eip = op1_16;
+    EIP = op1_16;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, EIP);
 }
 
   void
@@ -340,12 +340,12 @@ BX_CPU_C::CALL16_Ep(BxInstruction_t *i)
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
     push_16(IP);
 
-    BX_CPU_THIS_PTR eip = op1_16;
+    EIP = op1_16;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -370,7 +370,7 @@ BX_CPU_C::JMP_Jw(BxInstruction_t *i)
     }
 #endif
 
-  BX_CPU_THIS_PTR eip = new_EIP;
+  EIP = new_EIP;
   BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_EIP);
 }
 
@@ -455,7 +455,7 @@ BX_CPU_C::JMP_Ew(BxInstruction_t *i)
     }
 #endif
 
-  BX_CPU_THIS_PTR eip = new_EIP;
+  EIP = new_EIP;
 
   BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_EIP);
 }
@@ -486,12 +486,12 @@ BX_CPU_C::JMP16_Ep(BxInstruction_t *i)
       }
 #endif
 
-    BX_CPU_THIS_PTR eip = op1_16;
+    EIP = op1_16;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -502,7 +502,7 @@ BX_CPU_C::IRET16(BxInstruction_t *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
-  BX_CPU_THIS_PTR show_eip = BX_CPU_THIS_PTR eip;
+  BX_CPU_THIS_PTR show_eip = EIP;
 #endif
 
   invalidate_prefetch_q();
@@ -526,11 +526,11 @@ BX_CPU_C::IRET16(BxInstruction_t *i)
   pop_16(&flags);
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  BX_CPU_THIS_PTR eip = (Bit32u) ip;
+  EIP = (Bit32u) ip;
   write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_IRET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }

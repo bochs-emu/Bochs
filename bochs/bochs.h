@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.92 2002-09-12 07:16:35 bdenney Exp $
+// $Id: bochs.h,v 1.93 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -424,11 +424,7 @@ extern logfunc_t *genlog;
 
 
 #if BX_PROVIDE_CPU_MEMORY==1
-#  if BX_SUPPORT_X86_64
-#    include "cpu64/cpu.h"
-#  else
-#    include "cpu/cpu.h"
-#  endif
+#  include "cpu/cpu.h"
 #endif
 
 #if BX_DISASM

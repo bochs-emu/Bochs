@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.4 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: lazy_flags.h,v 1.5 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -96,6 +96,25 @@
 #define BX_INSTR_SHL16   50
 #define BX_INSTR_SHL32   51
 
+#if BX_SUPPORT_X86_64
+#define BX_INSTR_ADD64   52
+#define BX_INSTR_SUB64   53
+#define BX_INSTR_ADC64   54
+#define BX_INSTR_SBB64   55
+#define BX_INSTR_CMP64   56
+#define BX_INSTR_INC64   57
+#define BX_INSTR_DEC64   58
+#define BX_INSTR_NEG64   59
+#define BX_INSTR_XADD64  60
+#define BX_INSTR_OR64    61
+#define BX_INSTR_AND64   62
+#define BX_INSTR_TEST64  63
+#define BX_INSTR_XOR64   64
+#define BX_INSTR_CMPS64  65
+#define BX_INSTR_SCAS64  66
+#define BX_INSTR_SHR64   67
+#define BX_INSTR_SHL64   68
+#endif
 
 
 #define BX_LF_INDEX_KNOWN   0
@@ -118,6 +137,12 @@ typedef struct {
   Bit32u op1_32;
   Bit32u op2_32;
   Bit32u result_32;
+
+#if BX_SUPPORT_X86_64
+  Bit64u op1_64;
+  Bit64u op2_64;
+  Bit64u result_64;
+#endif
 
   Boolean prev_CF;
   unsigned instr;

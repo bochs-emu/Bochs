@@ -22,21 +22,21 @@ void bx_external_debugger(BX_CPU_C *cpu)
        regs.debug_state = debug_step;
        break;
      case debug_skip:
-       if (cpu->eip != regs.debug_eip ||
+       if (cpu->dword.eip != regs.debug_eip ||
            cpu->sregs[1].selector.value != regs.debug_cs) return;
        regs.debug_state = debug_step;
        break;
      }
 
-     regs.eax = cpu->gen_reg[0].erx;
-     regs.ecx = cpu->gen_reg[1].erx;
-     regs.edx = cpu->gen_reg[2].erx;
-     regs.ebx = cpu->gen_reg[3].erx;
-     regs.esp = cpu->gen_reg[4].erx;
-     regs.ebp = cpu->gen_reg[5].erx;
-     regs.esi = cpu->gen_reg[6].erx;
-     regs.edi = cpu->gen_reg[7].erx;
-     regs.eip = cpu->eip;
+     regs.eax = cpu->gen_reg[0].dword.erx;
+     regs.ecx = cpu->gen_reg[1].dword.erx;
+     regs.edx = cpu->gen_reg[2].dword.erx;
+     regs.ebx = cpu->gen_reg[3].dword.erx;
+     regs.esp = cpu->gen_reg[4].dword.erx;
+     regs.ebp = cpu->gen_reg[5].dword.erx;
+     regs.esi = cpu->gen_reg[6].dword.erx;
+     regs.edi = cpu->gen_reg[7].dword.erx;
+     regs.eip = cpu->dword.eip;
      regs.eflags = cpu->read_eflags();
      regs.es = cpu->sregs[0].selector.value;
      regs.cs = cpu->sregs[1].selector.value;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.8 2002-02-22 05:33:36 yakovlev Exp $
+// $Id: ctrl_xfer32.cc,v 1.9 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,7 +77,7 @@ BX_CPU_C::RETnear32_Iw(BxInstruction_t *i)
         /* #GP(0) -or #SS(0) ??? */
         }
 
-      BX_CPU_THIS_PTR eip = return_EIP;
+      EIP = return_EIP;
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
         ESP += 4 + imm16; /* ??? should it be 2*imm16 ? */
       else
@@ -85,14 +85,14 @@ BX_CPU_C::RETnear32_Iw(BxInstruction_t *i)
       }
     else {
       pop_32(&return_EIP);
-      BX_CPU_THIS_PTR eip = return_EIP;
+      EIP = return_EIP;
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
         ESP += imm16; /* ??? should it be 2*imm16 ? */
       else
         SP  += imm16;
       }
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, EIP);
 }
 
   void
@@ -126,7 +126,7 @@ BX_CPU_C::RETnear32(BxInstruction_t *i)
         BX_PANIC(("retnear: EIP > limit"));
         //exception(BX_GP_EXCEPTION, 0, 0);
         }
-      BX_CPU_THIS_PTR eip = return_EIP;
+      EIP = return_EIP;
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
         ESP += 4;
       else
@@ -134,10 +134,10 @@ BX_CPU_C::RETnear32(BxInstruction_t *i)
       }
     else {
       pop_32(&return_EIP);
-      BX_CPU_THIS_PTR eip = return_EIP;
+      EIP = return_EIP;
       }
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_RET, EIP);
 }
 
   void
@@ -165,7 +165,7 @@ BX_CPU_C::RETfar32_Iw(BxInstruction_t *i)
 
     pop_32(&eip);
     pop_32(&ecs_raw);
-    BX_CPU_THIS_PTR eip = eip;
+    EIP = eip;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
       ESP += imm16;
@@ -174,7 +174,7 @@ BX_CPU_C::RETfar32_Iw(BxInstruction_t *i)
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -199,12 +199,12 @@ BX_CPU_C::RETfar32(BxInstruction_t *i)
 
     pop_32(&eip);
     pop_32(&ecs_raw); /* 32bit pop, MSW discarded */
-    BX_CPU_THIS_PTR eip = eip;
+    EIP = eip;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -233,10 +233,10 @@ BX_CPU_C::CALL_Ad(BxInstruction_t *i)
     }
 
   /* push 32 bit EA of next instruction */
-  push_32(BX_CPU_THIS_PTR eip);
-  BX_CPU_THIS_PTR eip = new_EIP;
+  push_32(EIP);
+  EIP = new_EIP;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, EIP);
 }
 
   void
@@ -258,13 +258,13 @@ BX_CPU_C::CALL32_Ap(BxInstruction_t *i)
     goto done;
     }
   push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-  push_32(BX_CPU_THIS_PTR eip);
-  BX_CPU_THIS_PTR eip = disp32;
+  push_32(EIP);
+  EIP = disp32;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -303,11 +303,11 @@ BX_CPU_C::CALL_Ed(BxInstruction_t *i)
         }
       }
 
-    push_32(BX_CPU_THIS_PTR eip);
+    push_32(EIP);
 
-    BX_CPU_THIS_PTR eip = op1_32;
+    EIP = op1_32;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, BX_CPU_THIS_PTR eip);
+  BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, EIP);
 }
 
   void
@@ -336,14 +336,14 @@ BX_CPU_C::CALL32_Ep(BxInstruction_t *i)
       }
 
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-    push_32(BX_CPU_THIS_PTR eip);
+    push_32(EIP);
 
-    BX_CPU_THIS_PTR eip = op1_32;
+    EIP = op1_32;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_CALL,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -366,7 +366,7 @@ BX_CPU_C::JMP_Jd(BxInstruction_t *i)
     }
 #endif
 
-  BX_CPU_THIS_PTR eip = new_EIP;
+  EIP = new_EIP;
   BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_EIP);
 }
 
@@ -444,11 +444,11 @@ BX_CPU_C::JMP_Ap(BxInstruction_t *i)
 #endif
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  BX_CPU_THIS_PTR eip = disp32;
+  EIP = disp32;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -482,7 +482,7 @@ BX_CPU_C::JMP_Ed(BxInstruction_t *i)
     }
 #endif
 
-  BX_CPU_THIS_PTR eip = new_EIP;
+  EIP = new_EIP;
 
   BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_EIP);
 }
@@ -511,12 +511,12 @@ BX_CPU_C::JMP32_Ep(BxInstruction_t *i)
       goto done;
       }
 
-    BX_CPU_THIS_PTR eip = op1_32;
+    EIP = op1_32;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_JMP,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }
 
@@ -527,7 +527,7 @@ BX_CPU_C::IRET32(BxInstruction_t *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
-  BX_CPU_THIS_PTR show_eip = BX_CPU_THIS_PTR eip;
+  BX_CPU_THIS_PTR show_eip = EIP;
 #endif
 
   invalidate_prefetch_q();
@@ -554,12 +554,12 @@ BX_CPU_C::IRET32(BxInstruction_t *i)
     pop_32(&eflags);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
-    BX_CPU_THIS_PTR eip = eip;
+    EIP = eip;
     //FIXME: this should do (eflags & 0x257FD5) | (EFLAGS | 0x1A0000)
     write_eflags(eflags, /* change IOPL? */ 1, /* change IF? */ 1, 0, 1);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_INSTR_IS_IRET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
   return;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.34 2002-09-12 18:10:42 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.35 2002-09-13 00:15:23 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -479,7 +479,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       // BX_INFO(("MOV_CdRd:CR0: R32 = %08x\n @CS:EIP %04x:%04x ",
       //   (unsigned) val_32,
       //   (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-      //   (unsigned) BX_CPU_THIS_PTR eip));
+      //   (unsigned) EIP));
       SetCR0(val_32);
       break;
 
@@ -573,7 +573,7 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
       BX_INFO(("MOV_RdCd:CR0: R32 = %08x\n @CS:EIP %04x:%04x",
         (unsigned) val_32,
         (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-        (unsigned) BX_CPU_THIS_PTR eip));
+        (unsigned) EIP));
 #endif
       break;
     case 1: /* CR1 */
