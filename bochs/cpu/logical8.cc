@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.20 2002-10-25 17:23:33 sshwarts Exp $
+// $Id: logical8.cc,v 1.21 2002-10-25 18:26:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ BX_CPU_C::XOR_EbGb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 ^ op2;
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_XOR8);
@@ -109,7 +109,7 @@ BX_CPU_C::XOR_EbIb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 ^ op2;
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_XOR8);
@@ -132,7 +132,7 @@ BX_CPU_C::OR_EbIb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 | op2;
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
@@ -152,7 +152,7 @@ BX_CPU_C::NOT_Eb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     result_8 = ~op1_8;
-    write_RMW_virtual_byte(result_8);
+    Write_RMW_virtual_byte(result_8);
     }
 }
 
@@ -172,7 +172,7 @@ BX_CPU_C::OR_EbGb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 | op2;
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
@@ -269,7 +269,7 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     result = op1 & op2;
 #endif
 
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
@@ -371,7 +371,7 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     result = op1 & op2;
 #endif
 
-    write_RMW_virtual_byte(result);
+    Write_RMW_virtual_byte(result);
     }
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)

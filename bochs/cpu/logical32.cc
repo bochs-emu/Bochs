@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.18 2002-10-25 17:23:33 sshwarts Exp $
+// $Id: logical32.cc,v 1.19 2002-10-25 18:26:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::XOR_EdGd(bxInstruction_c *i)
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     result_32 = op1_32 ^ op2_32;
-    write_RMW_virtual_dword(result_32);
+    Write_RMW_virtual_dword(result_32);
     }
 
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
@@ -115,7 +115,7 @@ BX_CPU_C::XOR_EdId(bxInstruction_c *i)
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     result_32 = op1_32 ^ op2_32;
-    write_RMW_virtual_dword(result_32);
+    Write_RMW_virtual_dword(result_32);
     }
 
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
@@ -137,7 +137,7 @@ BX_CPU_C::OR_EdId(bxInstruction_c *i)
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     result_32 = op1_32 | op2_32;
-    write_RMW_virtual_dword(result_32);
+    Write_RMW_virtual_dword(result_32);
     }
 
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
@@ -156,7 +156,7 @@ BX_CPU_C::NOT_Ed(bxInstruction_c *i)
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     result_32 = ~op1_32;
-    write_RMW_virtual_dword(result_32);
+    Write_RMW_virtual_dword(result_32);
     }
 }
 
@@ -176,7 +176,7 @@ BX_CPU_C::OR_EdGd(bxInstruction_c *i)
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     result_32 = op1_32 | op2_32;
-    write_RMW_virtual_dword(result_32);
+    Write_RMW_virtual_dword(result_32);
     }
 
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
@@ -268,7 +268,7 @@ BX_CPU_C::AND_EdGd(bxInstruction_c *i)
     result_32 = op1_32 & op2_32;
 #endif
 
-    write_RMW_virtual_dword(result_32);
+    Write_RMW_virtual_dword(result_32);
     }
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
@@ -369,7 +369,7 @@ BX_CPU_C::AND_EdId(bxInstruction_c *i)
     result_32 = op1_32 & op2_32;
 #endif
 
-    write_RMW_virtual_dword(result_32);
+    Write_RMW_virtual_dword(result_32);
     }
 
 #if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)

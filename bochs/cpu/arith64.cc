@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.11 2002-10-25 17:23:33 sshwarts Exp $
+// $Id: arith64.cc,v 1.12 2002-10-25 18:26:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -81,7 +81,7 @@ BX_CPU_C::ADD_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), sum_64);
       }
     else {
-      write_RMW_virtual_qword(sum_64);
+      Write_RMW_virtual_qword(sum_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
@@ -163,7 +163,7 @@ BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), sum_64);
       }
     else {
-      write_RMW_virtual_qword(sum_64);
+      Write_RMW_virtual_qword(sum_64);
       }
 
     SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64,
@@ -260,7 +260,7 @@ BX_CPU_C::SBB_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), diff_64);
       }
     else {
-      write_RMW_virtual_qword(diff_64);
+      Write_RMW_virtual_qword(diff_64);
       }
 
     SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, diff_64, BX_INSTR_SBB64,
@@ -355,7 +355,7 @@ BX_CPU_C::SBB_EqId(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), diff_64);
       }
     else {
-      write_RMW_virtual_qword(diff_64);
+      Write_RMW_virtual_qword(diff_64);
       }
 
     SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, diff_64, BX_INSTR_SBB64,
@@ -388,7 +388,7 @@ BX_CPU_C::SUB_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), diff_64);
       }
     else {
-      write_RMW_virtual_qword(diff_64);
+      Write_RMW_virtual_qword(diff_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
@@ -603,7 +603,7 @@ BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), sum_64);
       }
     else {
-      write_RMW_virtual_qword(sum_64);
+      Write_RMW_virtual_qword(sum_64);
       /* and write destination into source */
       BX_WRITE_64BIT_REG(i->nnn(), op1_64);
       }
@@ -641,7 +641,7 @@ BX_CPU_C::ADD_EqId(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), sum_64);
       }
     else {
-      write_RMW_virtual_qword(sum_64);
+      Write_RMW_virtual_qword(sum_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
@@ -675,7 +675,7 @@ BX_CPU_C::ADC_EqId(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), sum_64);
       }
     else {
-      write_RMW_virtual_qword(sum_64);
+      Write_RMW_virtual_qword(sum_64);
       }
 
     SET_FLAGS_OSZAPC_64_CF(op1_64, op2_64, sum_64, BX_INSTR_ADC64,
@@ -707,7 +707,7 @@ BX_CPU_C::SUB_EqId(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), diff_64);
       }
     else {
-      write_RMW_virtual_qword(diff_64);
+      Write_RMW_virtual_qword(diff_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
@@ -760,7 +760,7 @@ BX_CPU_C::NEG_Eq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), diff_64);
       }
     else {
-      write_RMW_virtual_qword(diff_64);
+      Write_RMW_virtual_qword(diff_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, 0, diff_64, BX_INSTR_NEG64);
@@ -788,7 +788,7 @@ BX_CPU_C::INC_Eq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), op1_64);
       }
     else {
-      write_RMW_virtual_qword(op1_64);
+      Write_RMW_virtual_qword(op1_64);
       }
 
     SET_FLAGS_OSZAP_64(0, 0, op1_64, BX_INSTR_INC64);
@@ -816,7 +816,7 @@ BX_CPU_C::DEC_Eq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), op1_64);
       }
     else {
-      write_RMW_virtual_qword(op1_64);
+      Write_RMW_virtual_qword(op1_64);
       }
 
     SET_FLAGS_OSZAP_64(0, 0, op1_64, BX_INSTR_DEC64);
@@ -853,7 +853,7 @@ BX_CPU_C::CMPXCHG_EqGq(bxInstruction_c *i)
         BX_WRITE_64BIT_REG(i->rm(), op2_64);
         }
       else {
-        write_RMW_virtual_qword(op2_64);
+        Write_RMW_virtual_qword(op2_64);
         }
       }
     else {

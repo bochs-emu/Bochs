@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.19 2002-10-25 17:23:33 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.20 2002-10-25 18:26:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -330,7 +330,7 @@ BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
     else {
       /* pointer, segment address pair */
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-      write_RMW_virtual_word(op2_16);
+      Write_RMW_virtual_word(op2_16);
       }
 
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);

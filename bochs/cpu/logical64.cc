@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.5 2002-10-25 17:23:33 sshwarts Exp $
+// $Id: logical64.cc,v 1.6 2002-10-25 18:26:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_XOR64);
@@ -135,7 +135,7 @@ BX_CPU_C::XOR_EqId(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_XOR64);
@@ -165,7 +165,7 @@ BX_CPU_C::OR_EqId(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_OR64);
@@ -192,7 +192,7 @@ BX_CPU_C::NOT_Eq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 }
 
@@ -221,7 +221,7 @@ BX_CPU_C::OR_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_OR64);
@@ -296,7 +296,7 @@ BX_CPU_C::AND_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_AND64);
@@ -368,7 +368,7 @@ BX_CPU_C::AND_EqId(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), result_64);
       }
     else {
-      write_RMW_virtual_qword(result_64);
+      Write_RMW_virtual_qword(result_64);
       }
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, result_64, BX_INSTR_AND64);
