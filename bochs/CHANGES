@@ -30,6 +30,7 @@ Changes in 2.1 (October 2, 2003):
         - floatx80_add,        floatx80_sub, 
         - floatx80_mul,        floatx80_div
   - 64-bit addressing support for x86-64 mode (Christophe Bothamy)
+  - implemented FCMOVcc instructions
 
 More Details:
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_compare.c                                                            |
- |  $Id: fpu_compare.c,v 1.1 2003-11-01 18:36:19 sshwarts Exp $
+ |  $Id: fpu_compare.c,v 1.2 2003-11-01 18:45:16 sshwarts Exp $
  |                                                                           |
  | Code to implement FMOVcc and other P6 FPU instructions.                   |
  |                                                                           |
