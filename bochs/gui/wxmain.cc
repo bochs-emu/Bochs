@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.61 2002-09-27 19:12:56 bdenney Exp $
+// $Id: wxmain.cc,v 1.62 2002-10-06 02:37:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -340,10 +340,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit = new wxMenu;
   menuEdit->Append( ID_Edit_FD_0, "Floppy Disk &0..." );
   menuEdit->Append( ID_Edit_FD_1, "Floppy Disk &1..." );
-  menuEdit->Append( ID_Edit_ATA0, "ATA Controller 0..." );
-  menuEdit->Append( ID_Edit_ATA1, "ATA Controller 1..." );
-  menuEdit->Append( ID_Edit_ATA2, "ATA Controller 2..." );
-  menuEdit->Append( ID_Edit_ATA3, "ATA Controller 3..." );
+  menuEdit->Append( ID_Edit_ATA0, "ATA Channel 0..." );
+  menuEdit->Append( ID_Edit_ATA1, "ATA Channel 1..." );
+  menuEdit->Append( ID_Edit_ATA2, "ATA Channel 2..." );
+  menuEdit->Append( ID_Edit_ATA3, "ATA Channel 3..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
   menuEdit->Append( ID_Edit_Sound, "&Sound..." );
@@ -1014,10 +1014,10 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
   if (!msg) msg = param->get_description ();
   char *newval = NULL;
   wxDialog *dialog = NULL;
-  if (n_opt & param->BX_IS_FILENAME) {
+  if (n_opt & param->IS_FILENAME) {
     // use file open dialog
 	long style = 
-	  (n_opt & param->BX_SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
+	  (n_opt & param->SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
         wxLogDebug ("HandleAskParamString: create dialog");
 	wxFileDialog *fdialog = new wxFileDialog (this, msg, "", "", "*.*", style);
         wxLogDebug ("HandleAskParamString: before showmodal");
@@ -1307,9 +1307,7 @@ void MyFrame::editATAConfig (int channel)
 {
   ParamDialog dlg (this, -1);
   dlg.SetTitle ("Configure ATA0");
-  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0+channel)));
-  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MASTER+channel*2)));
-  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_SLAVE+channel*2)));
+  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MENU+channel)));
   dlg.ShowModal ();
 }
 

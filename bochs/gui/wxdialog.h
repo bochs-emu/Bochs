@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.41 2002-09-25 21:28:49 bdenney Exp $
+// $Id: wxdialog.h,v 1.42 2002-10-06 02:37:28 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -729,22 +729,37 @@ struct ParamStruct : public wxObject {
   int id;
   wxStaticText *label;
   union _u_tag {
+    void *ptr;
     wxWindow *window;
     wxChoice *choice;
     wxTextCtrl *text;
     wxCheckBox *checkbox;
     wxStaticBox *staticbox;
+    wxNotebook *notebook;
   } u;
   int browseButtonId;  // only for filename params
   wxButton *browseButton;  // only for filename params
   ParamStruct() { param = NULL; u.window = NULL; browseButton = NULL; }
 };
 
+// This context structure is used by AddParam to keep track of where the
+// next parameter's controls should be added.  When AddParam is called on
+// a list of parameters (bx_list_c), it calls itself recursively to add
+// the child parameters, which in turn could be lists as well.  When it
+// calls itself recursively, it will create a new AddParamContext so that
+// the various children can be added in the right place.
+struct AddParamContext {
+  int depth;
+  wxWindow *parent;
+  wxBoxSizer *vertSizer;
+  wxFlexGridSizer *gridSizer;
+};
+
+
 class ParamDialog: public wxDialog 
 {
 private:
   void ShowHelp ();
-  wxFlexGridSizer *gridSizer;
   wxChoice *type;
   wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
   wxCheckBox *enableKeymap;
@@ -772,7 +787,6 @@ public:
   void OnEvent (wxCommandEvent& event);
   wxButton* AddButton(int id, wxString label);
   virtual void AddDefaultButtons ();
-  void BeginParamGrid (wxFlexGridSizer *gs = NULL) { gridSizer = gs; }
   virtual void Init ();  // called automatically by ShowModal()
   int ShowModal() {
     Init(); 
@@ -782,7 +796,8 @@ public:
     return ret;
   }
   bool Show (bool val) { isShowing = val; return wxDialog::Show (val); }
-  void AddParam (bx_param_c *param, wxFlexGridSizer *sizer = NULL, bool plain = false);
+  void AddParam (bx_param_c *param, wxFlexGridSizer *sizer, bool plain = false);
+  void AddParam (bx_param_c *param, bool plain = false, AddParamContext *context = NULL);
   void AddParamList (bx_id *idList, wxFlexGridSizer *sizer = NULL, bool plain = false);
   virtual void CopyParamToGui ();
   bool IsShowing () { return isShowing; }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.44 2002-09-30 22:15:20 bdenney Exp $
+// $Id: wxdialog.cc,v 1.45 2002-10-06 02:37:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -17,6 +17,7 @@
 #include <wx/spinctrl.h>
 #include <wx/config.h>
 #include <wx/confbase.h>
+#include <wx/notebook.h>
 
 #include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff
@@ -39,6 +40,7 @@ enum {
 };
 
 wxSize longTextSize (300, -1);  // width=300, height=default
+wxSize normalTextSize (180, -1);  // width=200, height=default
 
 //////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog implementation
@@ -208,7 +210,7 @@ FloppyConfigDialog::FloppyConfigDialog(
   wxStaticText *captext = new wxStaticText (this, -1, FLOPPY_CONFIG_CAP);
   capacity = new wxChoice (this, -1);
   capacitySizer->Add (captext, 0, wxALL, 5);
-  capacitySizer->Add (capacity, 0, wxALL, 5);
+  capacitySizer->Add (capacity, 0, wxALL|wxADJUST_MINSIZE, 5);
   // contents of buttonSizer
   btn = new wxButton (this, wxID_HELP, "Help");
   buttonSizer->Add (btn, 0, wxALL, 5);
@@ -222,8 +224,7 @@ FloppyConfigDialog::FloppyConfigDialog(
   // create filename and diskImageRadioBtn so that we can tweak them before
   // Init comes.  However don't add it to any sizer yet because it needs to go
   // in after the last radio button.
-  filename = new wxTextCtrl (this, ID_FilenameText);
-  filename->SetSize (300, filename->GetSize ().GetHeight ());
+  filename = new wxTextCtrl (this, ID_FilenameText, "", wxDefaultPosition, longTextSize);
   diskImageRadioBtn = new wxRadioButton (this, ID_Filename, FLOPPY_CONFIG_DISKIMG);
 
   // the radioSizer contents will be added by successive calls to
@@ -433,8 +434,7 @@ HDConfigDialog::HDConfigDialog(
   wxStaticText *text;
   text = new wxStaticText (this, -1, HD_CONFIG_DISKIMG);
   hsizer[0]->Add (text);
-  filename = new wxTextCtrl (this, ID_FilenameText);
-  filename->SetSize (300, filename->GetSize ().GetHeight ());
+  filename = new wxTextCtrl (this, ID_FilenameText, "", wxDefaultPosition, longTextSize);
   hsizer[0]->Add (filename, 1);
   wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   hsizer[0]->Add (btn);
@@ -650,8 +650,7 @@ CdromConfigDialog::CdromConfigDialog(
   fileSizer = new wxBoxSizer (wxHORIZONTAL);
   diskImageRadioBtn = new wxRadioButton (this, -1, CDROM_CONFIG_DISKIMG);
   fileSizer->Add (diskImageRadioBtn, 0);
-  filename = new wxTextCtrl (this, ID_FilenameText);
-  filename->SetSize (300, filename->GetSize ().GetHeight ());
+  filename = new wxTextCtrl (this, ID_FilenameText, "", wxDefaultPosition, longTextSize);
   fileSizer->Add (filename, 1, wxLEFT, 5);
   wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   fileSizer->Add (btn, 0, wxALL, 5);
@@ -832,7 +831,7 @@ NetConfigDialog::NetConfigDialog(
 
   // gridSizer contents
   gridSizer->AddGrowableCol (1);
-#define add(x) gridSizer->Add (x, 0, wxALL, 5)
+#define add(x) gridSizer->Add (x, 0, wxALL|wxADJUST_MINSIZE, 5)
 #define add_grow(x) gridSizer->Add (x, 1, wxALL|wxGROW, 5)
 #define label(x) (new wxStaticText (this, -1, x))
   add (label (NET_CONFIG_EN));
@@ -840,24 +839,21 @@ NetConfigDialog::NetConfigDialog(
   gridSizer->Add (30, 30);
   gridSizer->Add (30, 30);
   add (label (NET_CONFIG_IO));
-  add (io = new wxTextCtrl (this, -1));
+  add (io = new wxTextCtrl (this, -1, "", wxDefaultPosition, normalTextSize));
   add (label (NET_CONFIG_IRQ));
   add (irq = new wxSpinCtrl (this, -1));
   add (label (NET_CONFIG_MAC));
-  add (mac = new wxTextCtrl (this, -1));
+  add (mac = new wxTextCtrl (this, -1, "", wxDefaultPosition, normalTextSize));
   add (label (NET_CONFIG_CONN));
   add (conn = new wxChoice (this, -1));
   add (label (NET_CONFIG_PHYS));
-  add (phys = new wxTextCtrl (this, -1));
+  add (phys = new wxTextCtrl (this, -1, "", wxDefaultPosition, normalTextSize));
   add (label (NET_CONFIG_SCRIPT));
-  add_grow (script = new wxTextCtrl (this, -1));
+  add_grow (script = new wxTextCtrl (this, -1, "", wxDefaultPosition, normalTextSize));
 #undef label
 #undef add
 
   irq->SetRange (0, 15);
-  conn->SetSizeHints (200, conn->GetSize ().GetHeight ());
-  mac->SetSizeHints (200, mac->GetSize ().GetHeight ());
-  script->SetSizeHints (200, script->GetSize ().GetHeight ());
 
   // buttonSizer contents
   wxButton *btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
@@ -1473,8 +1469,6 @@ ConfigMemoryDialog::ConfigMemoryDialog(
 #undef addrt
 #undef newlabel
 #undef spacer
-  biosImage->SetSizeHints (300, biosImage->GetSize().GetHeight ());
-  vgabiosImage->SetSizeHints (300, biosImage->GetSize().GetHeight ());
 
   // box2 contents
   box2gridSizer = new wxFlexGridSizer (3);
@@ -1486,7 +1480,6 @@ ConfigMemoryDialog::ConfigMemoryDialog(
   for (int i=0; i<CONFIG_MEMORY_N_ROMS; i++) {
     addrt (newlabel (box2_label[2*i]));
     add (rom[i] = newlongtext ());
-    rom[i]->SetSizeHints (300, rom[i]->GetSize().GetHeight ());
     add (newbrowse ());
     addrt (newlabel (box2_label[2*i + 1]));
     add (romAddr[i] = new wxTextCtrl (this, -1));
@@ -1725,7 +1718,6 @@ ParamDialog::ParamDialog(
 
   // top level objects
   mainSizer = new wxBoxSizer (wxVERTICAL);
-  gridSizer = NULL;
 
   // create buttonSizer, which will hold all the buttons.
   buttonSizer = new wxBoxSizer (wxHORIZONTAL);
@@ -1795,38 +1787,64 @@ void ParamDialog::AddParamList (bx_id *idList, wxFlexGridSizer *sizer, bool plai
   bx_id *idptr;
   for (idptr = idList; *idptr != BXP_NULL; idptr++) {
     bx_param_c *param = SIM->get_param (*idptr);
-    if (param != NULL)
+    if (param != NULL) {
       AddParam (param, sizer, plain);
+    }
   }
 }
 
-void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, bool plain) 
+// support "legacy" addparam functions. Easier than changing them.
+void ParamDialog::AddParam (bx_param_c *param, wxFlexGridSizer *sizer, bool plain = false)
 {
+  AddParamContext context;
+  context.depth = 0;
+  context.parent = this;
+  context.vertSizer = mainSizer;
+  context.gridSizer = sizer;
+  AddParam (param, plain, &context);
+}
+
+void ParamDialog::AddParam (
+    bx_param_c *param_generic,
+    bool plain,
+    AddParamContext *context) 
+{
+  AddParamContext defaultContext;
+  if (context == NULL) {
+    context = &defaultContext;
+    context->depth = 0;
+    context->parent = this;
+    context->vertSizer = mainSizer;
+    context->gridSizer = NULL;
+  }
+  wxASSERT (context->parent != NULL);
+  wxASSERT (context->vertSizer != NULL);
   if (param_generic == NULL) 
     return;  // param not registered, probably this option was not compiled in
-  if (sizer == NULL) {
-    // add to default gridSizer.  Create a gridSizer if none exists yet.
-    if (gridSizer == NULL) {
-      gridSizer = new wxFlexGridSizer (3);
-      mainSizer->Add (gridSizer);
-    }
-    sizer = gridSizer;
+  wxLogDebug ("AddParam for param '%s'", param_generic->get_name ());
+  if (context->gridSizer == NULL) {
+    // create a gridSizer if none exists yet.  add it to default vertSizer.  
+    context->gridSizer = new wxFlexGridSizer (3);
+    context->vertSizer->Add (context->gridSizer);
   }
-
+  wxFlexGridSizer *sizer = context->gridSizer;
 
   ParamStruct *pstr = new ParamStruct ();
-  pstr->id = genId ();
   pstr->param = param_generic;
+  pstr->id = genId ();
+  pstr->label = NULL;
+  pstr->u.window = NULL;
+  pstr->browseButton = NULL;
   int type = param_generic->get_type ();
   char *prompt = pstr->param->get_ask_format ();
   if (!prompt) prompt = pstr->param->get_name ();
   wxASSERT (prompt != NULL);
-#define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
+#define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (context->parent, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
   switch (type) {
     case BXT_PARAM_BOOL: {
 	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
-	wxCheckBox *ckbx = new wxCheckBox (this, pstr->id, "");
+	wxCheckBox *ckbx = new wxCheckBox (context->parent, pstr->id, "");
 	ckbx->SetValue (param->get ());
 	sizer->Add (ckbx);
 	if (!plain) sizer->Add (1, 1);  // spacer
@@ -1838,7 +1856,7 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
     case BXT_PARAM_NUM: {
 	bx_param_num_c *param = (bx_param_num_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
-	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
+	wxTextCtrl *textctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, normalTextSize);
 	const char *format = param->get_format ();
 	if (!format)
 	  format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
@@ -1853,8 +1871,8 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
     case BXT_PARAM_ENUM: {
 	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
-	wxChoice *choice = new wxChoice (this, pstr->id);
-	sizer->Add (choice);
+	wxChoice *choice = new wxChoice (context->parent, pstr->id);
+	sizer->Add (choice, 0, wxADJUST_MINSIZE);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	// fill in the choices
 	int i=0;
@@ -1870,15 +1888,15 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
     case BXT_PARAM_STRING: {
 	bx_param_string_c *param = (bx_param_string_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
-	bool isFilename = param->get_options ()->get () & param->BX_IS_FILENAME;
-	wxTextCtrl *txtctrl = new wxTextCtrl (this, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : wxDefaultSize);
+	bool isFilename = param->get_options ()->get () & param->IS_FILENAME;
+	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : normalTextSize);
 	txtctrl->SetValue (param->getptr ());
 	sizer->Add (txtctrl);
 	if (!plain) {
 	  if (isFilename) {
 	    // create Browse button
 	    pstr->browseButtonId = genId ();
-	    pstr->browseButton = new wxButton (this, 
+	    pstr->browseButton = new wxButton (context->parent, 
 		pstr->browseButtonId, BTNLABEL_BROWSE);
 	    sizer->Add (pstr->browseButton, 0, wxALL, 5);
 	    idHash->Put (pstr->browseButtonId, pstr);  // register under button id
@@ -1892,26 +1910,68 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
         break;
       }
     case BXT_LIST: {
-      bx_list_c *list = (bx_list_c*) param_generic;
-      wxStaticBox *box = new wxStaticBox (this, -1, prompt);
-      wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
-      wxFlexGridSizer *gridSz = new wxFlexGridSizer (3);
-      boxsz->Add (gridSz, 1, wxGROW|wxALL, 10);
-      // put all items in the list inside the boxsz sizer.
-      for (int i=0; i<list->get_size (); i++) {
-        bx_param_c *child = list->get (i);
-	AddParam (child, gridSz);
-      }
-      // add the boxsz to mainSizer
-      mainSizer->Add (boxsz, 0, wxALL|wxGROW, 10);
-      // clear gridSizer variable so that any future parameters force
-      // creation of a new one.
-      gridSizer = NULL;
-      // add to hashes
-      pstr->u.staticbox = box;
-      idHash->Put (pstr->id, pstr);
-      paramHash->Put (pstr->param->get_id (), pstr);
-      break;
+	bx_list_c *list = (bx_list_c*) param_generic;
+	if (list->get_options()->get () & bx_list_c::USE_TAB_WINDOW) {
+	  // put each item in a separate tab of a tabbed window
+	  wxNotebook *notebook = new wxNotebook (context->parent, -1);
+	  wxNotebookSizer *nbsizer = new wxNotebookSizer (notebook);
+	  // put all items in the list into a separate page of the notebook.
+	  for (int i=0; i<list->get_size (); i++) {
+	    bx_param_c *child = list->get (i);
+	    wxASSERT (child->get_type() == BXT_LIST);
+	    // the child must be a list!  I could support other things but
+	    // I don't see any reason to.  It wouldn't make sense to devote
+	    // a whole tab to a single parameter.
+	    wxPanel *panel = new wxPanel (notebook);
+	    wxBoxSizer *boxsz = new wxBoxSizer (wxVERTICAL);
+	    AddParamContext newcontext;
+	    newcontext.depth = 1 + context->depth;
+	    newcontext.parent = panel;
+	    newcontext.vertSizer = boxsz;
+	    newcontext.gridSizer = NULL; // will be created if needed
+	    // the child itself is a list. Add the child's children in
+	    // this new context.
+	    bx_list_c *childl = (bx_list_c *)child;
+	    for (int j=0; j<childl->get_size(); j++)
+	      AddParam (childl->get(j), plain, &newcontext);
+	    const char *pagename = child->get_ask_format ();
+	    if (!pagename) pagename = child->get_name ();
+	    panel->SetAutoLayout (TRUE);
+	    panel->SetSizer (boxsz);
+	    notebook->AddPage (panel, wxString(pagename));
+	  }
+	  context->vertSizer->Add (nbsizer, 0, wxALL|wxGROW, 10);
+	  // clear gridSizer variable so that any future parameters force
+	  // creation of a new one.
+	  context->gridSizer = NULL;
+	  // add to hashes
+	  pstr->u.notebook = notebook;
+	  idHash->Put (pstr->id, pstr);
+	  paramHash->Put (pstr->param->get_id (), pstr);
+	} else {
+	  wxStaticBox *box = new wxStaticBox (context->parent, -1, prompt);
+	  wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
+	  AddParamContext newcontext;
+	  newcontext.depth = 1 + context->depth;
+	  newcontext.parent = context->parent;
+	  newcontext.gridSizer = NULL; // it will be created if necessary
+	  newcontext.vertSizer = boxsz;
+	  // put all items in the list inside the boxsz sizer.
+	  for (int i=0; i<list->get_size (); i++) {
+	    bx_param_c *child = list->get (i);
+	    AddParam (child, plain, &newcontext);
+	  }
+	  // add the boxsz to vertSizer
+	  context->vertSizer->Add (boxsz, 0, wxALL|wxGROW, 10);
+	  // clear gridSizer variable so that any future parameters force
+	  // creation of a new one.
+	  context->gridSizer = NULL;
+	  // add to hashes
+	  pstr->u.staticbox = box;
+	  idHash->Put (pstr->id, pstr);
+	  paramHash->Put (pstr->param->get_id (), pstr);
+	}
+	break;
       }
     default:
       wxLogError ("ParamDialog::AddParam called with unsupported param type id=%d", (int)type);

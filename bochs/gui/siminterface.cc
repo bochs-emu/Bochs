@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.70 2002-10-01 13:40:05 bdenney Exp $
+// $Id: siminterface.cc,v 1.71 2002-10-06 02:37:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -473,7 +473,7 @@ bx_real_sim_c::ask_filename (char *filename, int maxlen, char *prompt, char *the
   // ask_param because I don't intend to register this param.
   BxEvent event;
   bx_param_string_c param (BXP_NULL, "filename", prompt, the_default, maxlen);
-  flags |= param.BX_IS_FILENAME;
+  flags |= param.IS_FILENAME;
   param.get_options()->set (flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = &param;
@@ -982,7 +982,7 @@ bx_param_filename_c::bx_param_filename_c (bx_id id,
     int maxsize)
   : bx_param_string_c (id, name, description, initial_val, maxsize)
 {
-  get_options()->set (BX_IS_FILENAME);
+  get_options()->set (IS_FILENAME);
 }
 
 bx_param_string_c::~bx_param_string_c ()
@@ -1021,7 +1021,7 @@ bx_param_string_c::set_handler (param_string_event_handler handler)
 Bit32s
 bx_param_string_c::get (char *buf, int len)
 {
-  if (options->get () & BX_RAW_BYTES)
+  if (options->get () & RAW_BYTES)
     memcpy (buf, val, len);
   else
     strncpy (buf, val, len);
@@ -1036,7 +1036,7 @@ bx_param_string_c::get (char *buf, int len)
 void 
 bx_param_string_c::set (char *buf)
 {
-  if (options->get () & BX_RAW_BYTES)
+  if (options->get () & RAW_BYTES)
     memcpy (val, buf, maxsize);
   else
     strncpy (val, buf, maxsize);

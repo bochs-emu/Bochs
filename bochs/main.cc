@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156 2002-10-03 05:28:56 bdenney Exp $
+// $Id: main.cc,v 1.157 2002-10-06 02:37:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -376,7 +376,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_FLOPPYA, "Floppy Disk 0", "All options for first floppy disk", floppya_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.floppya.Opath->set_handler (bx_param_string_handler);
   bx_options.floppya.Opath->set ("none");
   bx_options.floppya.Otype->set_handler (bx_param_handler);
@@ -422,7 +422,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_FLOPPYB, "Floppy Disk 1", "All options for second floppy disk", floppyb_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.floppyb.Opath->set_handler (bx_param_string_handler);
   bx_options.floppyb.Opath->set ("none");
   bx_options.floppyb.Otype->set_handler (bx_param_handler);
@@ -438,14 +438,14 @@ void bx_init_options ()
     "ATA channel 3",
     };
   char *s_atadevice[4][2] = {
-    { "Master ATA device on channel 0",
-      "Slave ATA device on channel 0" },
-    { "Master ATA device on channel 1",
-    "Slave ATA device on channel 1" },
-    { "Master ATA device on channel 2",
-    "Slave ATA device on channel 2" },
-    { "Master ATA device on channel 3",
-    "Slave ATA device on channel 3" }
+    { "First HD/CD on channel 0",
+      "Second HD/CD on channel 0" },
+    { "First HD/CD on channel 1",
+    "Second HD/CD on channel 1" },
+    { "First HD/CD on channel 2",
+    "Second HD/CD on channel 2" },
+    { "First HD/CD on channel 3",
+    "Second HD/CD on channel 3" }
     };
   Bit16u ata_default_ioaddr1[BX_MAX_ATA_CHANNEL] = {
     0x1f0, 0x170, 0x1e8, 0x168 
@@ -455,12 +455,13 @@ void bx_init_options ()
   };
 
   bx_list_c *ata[BX_MAX_ATA_CHANNEL];
+  bx_list_c *ata_menu[BX_MAX_ATA_CHANNEL];
 
   Bit8u channel;
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
     ata[channel] = new bx_list_c ((bx_id)(BXP_ATA0+channel), s_atachannel[channel], s_atachannel[channel], 8);
-    ata[channel]->get_options ()->set (ata[channel]->BX_SERIES_ASK);
+    ata[channel]->get_options ()->set (bx_list_c::SERIES_ASK);
 
     ata[channel]->add (bx_options.ata[channel].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_PRESENT+channel),
       "ata:present",                                
@@ -498,7 +499,7 @@ void bx_init_options ()
 	  s_atadevice[channel][slave], 
           s_atadevice[channel][slave],
 	  12 /* list max size */);
-      menu->get_options ()->set (menu->BX_SERIES_ASK);
+      menu->get_options ()->set (menu->SERIES_ASK);
 
       menu->add (bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_MASTER_PRESENT+channel*2+slave),
         "ata-device:present",                                
@@ -567,6 +568,17 @@ void bx_init_options ()
       bx_options.ata[channel].Opresent->get_dependent_list()->add (
 	  bx_options.atadevice[channel][slave].Opresent);
       }
+
+      // set up top level menu for ATA[i] controller configuration.  This list
+      // controls what will appear on the ATA configure dialog.  It now
+      // requests the USE_TAB_WINDOW display, which is implemented in wx.
+      char buffer[32];
+      sprintf (buffer, "Configure ATA%d", channel);
+      ata_menu[channel] = new bx_list_c ((bx_id)(BXP_ATA0_MENU+channel), strdup(buffer), "", 4);
+      ata_menu[channel]->add (ata[channel]);
+      ata_menu[channel]->add (bx_options.atadevice[channel][0].Omenu);
+      ata_menu[channel]->add (bx_options.atadevice[channel][1].Omenu);
+      ata_menu[channel]->get_options()->set (bx_list_c::USE_TAB_WINDOW);
     }
 
   // Enable first ata interface by default, disable the others.
@@ -580,7 +592,7 @@ void bx_init_options ()
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
     bx_options.ata[channel].Opresent->set_ask_format (
-	BX_WITH_WX? "Enable?"
+	BX_WITH_WX? "Enable this channel?"
 	: "Channel is enabled: [%s] ");
     bx_options.ata[channel].Oioaddr1->set_ask_format (
 	BX_WITH_WX? "I/O Address 1:"
@@ -603,7 +615,7 @@ void bx_init_options ()
     for (Bit8u slave=0; slave<2; slave++) {
 
       bx_options.atadevice[channel][slave].Opresent->set_ask_format (
-	  BX_WITH_WX? "Enable?"
+	  BX_WITH_WX? "Enable this device?"
 	  : "Device is enabled: [%s] ");
       bx_options.atadevice[channel][slave].Otype->set_ask_format (
 	  BX_WITH_WX? "Type of ATA device:"
@@ -703,7 +715,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "diskmenu", disk_menu_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // memory options menu
   bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
@@ -773,7 +785,7 @@ void bx_init_options ()
 	  "Serial and Parallel Port Options",
 	  "serial_parallel_menu",
 	  par_ser_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
       "romimage",
@@ -861,7 +873,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // interface
   bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
@@ -908,7 +920,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // NE2K options
   bx_options.ne2k.Ovalid = new bx_param_bool_c (BXP_NE2K_VALID,
@@ -930,7 +942,7 @@ void bx_init_options ()
       "MAC Address",
       "to be written",
       "", 6);
-  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->BX_RAW_BYTES);
+  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
   bx_options.ne2k.Omacaddr->set_separator (':');
   bx_options.ne2k.Oethmod = new bx_param_string_c (BXP_NE2K_ETHMOD,
       "Ethernet module",
@@ -956,7 +968,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
   bx_options.ne2k.Ovalid->set_handler (bx_param_handler);
   bx_options.ne2k.Ovalid->set (0);
 
@@ -1009,7 +1021,7 @@ void bx_init_options ()
     NULL
   };
   menu = new bx_list_c (BXP_SB16, "SB16 Configuration", "", sb16_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
   // sb16_dependent_list is a null-terminated list including all the
   // sb16 fields except for the "present" field.  These will all be enabled/
   // disabled according to the value of the present field.
@@ -1064,7 +1076,7 @@ void bx_init_options ()
   bx_options.load32bitOSImage.Oiolog->set_ask_format ("Enter pathname of I/O log: [%s] ");
   bx_options.load32bitOSImage.Oinitrd->set_ask_format ("Enter pathname of initrd: [%s] ");
   menu = new bx_list_c (BXP_LOAD32BITOS, "32-bit OS Loader", "", loader_init_list);
-  menu->get_options ()->set (menu->BX_SERIES_ASK);
+  menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.load32bitOSImage.OwhichOS->set_handler (bx_param_handler);
   bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
 
@@ -1158,7 +1170,7 @@ void bx_init_options ()
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
-  menu->get_options ()->set (menu->BX_SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_PARENT);
 
 
 

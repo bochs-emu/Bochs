@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.75 2002-10-05 23:11:59 bdenney Exp $
+// $Id: siminterface.h,v 1.76 2002-10-06 02:37:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -149,6 +149,10 @@ typedef enum {
   BXP_FLOPPYB_TYPE,
   BXP_FLOPPYB_STATUS,
   BXP_FLOPPYB,
+  BXP_ATA0_MENU,
+  BXP_ATA1_MENU,
+  BXP_ATA2_MENU,
+  BXP_ATA3_MENU,
   BXP_ATA0,
   BXP_ATA1,
   BXP_ATA2,
@@ -928,11 +932,11 @@ class bx_param_string_c : public bx_param_c {
   char separator;
 public:
   enum {
-    BX_RAW_BYTES = 1,         // use binary text editor, like MAC addr
-    BX_IS_FILENAME = 2,       // 1=yes it's a filename, 0=not a filename.
-                              // Some guis have a file browser. This
-                              // bit suggests that they use it.
-    BX_SAVE_FILE_DIALOG = 4   // Use save dialog opposed to open file dialog
+    RAW_BYTES = 1,         // use binary text editor, like MAC addr
+    IS_FILENAME = 2,       // 1=yes it's a filename, 0=not a filename.
+                           // Some guis have a file browser. This
+                           // bit suggests that they use it.
+    SAVE_FILE_DIALOG = 4   // Use save dialog opposed to open file dialog
   } bx_string_opt_bits;
   bx_param_string_c (bx_id id,
       char *name,
@@ -955,7 +959,7 @@ public:
 
 // Declare a filename class.  It is identical to a string, except that
 // it initializes the options differently.  This is just a shortcut
-// for declaring a string param and setting the options with BX_IS_FILENAME.
+// for declaring a string param and setting the options with IS_FILENAME.
 class bx_param_filename_c : public bx_param_string_c {
 public:
   bx_param_filename_c (bx_id id,
@@ -990,11 +994,16 @@ public:
   enum {
     // When a bx_list_c is displayed as a menu, SHOW_PARENT controls whether or
     // not the menu shows a "Return to parent menu" choice or not.
-    BX_SHOW_PARENT = (1<<0),
+    SHOW_PARENT = (1<<0),
     // Some lists are best displayed shown as menus, others as a series of
-    // related questions.  This bit suggests to the CI that the
-    // series of questions format is preferred.
-    BX_SERIES_ASK = (1<<1)
+    // related questions.  This bit suggests to the CI that the series of
+    // questions format is preferred.
+    SERIES_ASK = (1<<1),
+    // When a bx_list_c is displayed in a dialog, BX_USE_TAB_WINDOW suggests
+    // to the CI that each item in the list should be shown as a separate
+    // tab.  This would be most appropriate when each item is another list
+    // of parameters.
+    USE_TAB_WINDOW = (1<<2)
   } bx_listopt_bits;
   bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
