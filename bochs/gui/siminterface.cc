@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.37 2001-12-21 19:33:18 bdenney Exp $
+// $Id: siminterface.cc,v 1.38 2001-12-22 20:58:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.37 2001-12-21 19:33:18 bdenney Exp $
+ * $Id: siminterface.cc,v 1.38 2001-12-22 20:58:25 vruppert Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -32,7 +32,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   int enabled;
 public:
   bx_real_sim_c ();
-  ~bx_real_sim_c ();
+  virtual ~bx_real_sim_c ();
   virtual int get_init_done () { return init_done; }
   virtual int set_init_done (int n) { init_done = n; return 0;}
   virtual int register_param (bx_id id, bx_param_c *it);

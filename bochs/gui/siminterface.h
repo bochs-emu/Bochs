@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.30 2001-12-21 19:33:18 bdenney Exp $
+// $Id: siminterface.h,v 1.31 2001-12-22 20:58:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.30 2001-12-21 19:33:18 bdenney Exp $
+ * $Id: siminterface.h,v 1.31 2001-12-22 20:58:25 vruppert Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -229,7 +229,7 @@ public:
       char *description,
       char *initial_val,
       int maxsize=-1);
-  ~bx_param_string_c ();
+  virtual ~bx_param_string_c ();
   void reset ();
   void set_handler (param_string_event_handler handler);
   Bit32s get (char *buf, int len);
@@ -275,7 +275,7 @@ public:
   } bx_listopt_bits;
   //bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
-  ~bx_list_c();
+  virtual ~bx_list_c();
   void add (bx_param_c *param);
   bx_param_c *get (int index);
   bx_param_num_c *get_options () { return options; }

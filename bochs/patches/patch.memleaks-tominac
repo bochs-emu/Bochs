@@ -11,6 +11,8 @@ and memory leaks.
 Bryce took the modified files, edited them a bit, and made
 it into this patch.
 
+Volker Ruppert added 'virtual' to the destructors.
+
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
@@ -163,7 +165,7 @@ diff -u -b -r1.36 siminterface.cc
    int enabled;
  public:
    bx_real_sim_c ();
-+  ~bx_real_sim_c ();
++  virtual ~bx_real_sim_c ();
    virtual int get_init_done () { return init_done; }
    virtual int set_init_done (int n) { init_done = n; return 0;}
    virtual int register_param (bx_id id, bx_param_c *it);
@@ -252,7 +254,7 @@ diff -u -b -r1.29 siminterface.h
        char *description,
        char *initial_val,
        int maxsize=-1);
-+  ~bx_param_string_c ();
++  virtual ~bx_param_string_c ();
    void reset ();
    void set_handler (param_string_event_handler handler);
    Bit32s get (char *buf, int len);
@@ -260,7 +262,7 @@ diff -u -b -r1.29 siminterface.h
    } bx_listopt_bits;
    //bx_list_c (bx_id id, int maxsize);
    bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
-+  ~bx_list_c();
++  virtual ~bx_list_c();
    void add (bx_param_c *param);
    bx_param_c *get (int index);
    bx_param_num_c *get_options () { return options; }
