@@ -1,0 +1,182 @@
+From sobomax@FreeBSD.ORG Wed May 16 11:59:12 2001
+Date: Wed, 16 May 2001 18:43:08 +0300
+From: Maxim Sobolev <sobomax@FreeBSD.ORG>
+To: bryce.denney@bigfoot.com
+Cc: ports@FreeBSD.ORG
+Subject: Re: bochs port
+
+    [ The following text is in the "koi8-r" character set. ]
+    [ Your display is set for the "US-ASCII" character set.  ]
+    [ Some characters may be displayed incorrectly. ]
+
+Bryce Denney wrote:
+
+> Please forward to whoever is maintaining the bochs port to FreeBSD.
+>
+> A group of us from the bochs-developers mailing list have taken over
+> development of Bochs, with Kevin Lawton's support.  He has redirected
+> http://www.bochs.com to our new site at http://bochs.sourceforge.net.  We
+> have made a few bugfix releases to improve the most common problems, and
+> have an active CVS tree with lots of new features in progress.
+>
+> I expect your Bochs port has some diffs since Kevin's 3/25/2000 release
+> last year.  If you would like to submit those diffs as a patch, or (even
+> better) check out our CVS tree and submit patches against the current CVS,
+> we will have better FreeBSD support in the future releases.  Feel free to
+> ask for merging advice if you want it, since we've made quite a few
+> changes since last year.
+>
+> The web site describes how to join bochs-developers if you want.
+
+Thank you for notification. Attached please fix set of patches against current
+bochs cvs that required to make it working on FreeBSD. It would be nice if you
+can itegrate them into the mainline.
+
+-Maxim
+
+    [ Part 2: "Attached Text" ]
+
+    [ The following text is in the "koi8-r" character set. ]
+    [ Your display is set for the "US-ASCII" character set.  ]
+    [ Some characters may be displayed incorrectly. ]
+
+--- iodev/serial.cc.orig	Thu Nov 11 21:44:52 1999
++++ iodev/serial.cc	Fri Jan 14 00:59:57 2000
+@@ -75,8 +75,8 @@
+   term_new.c_iflag |= IGNBRK;
+   term_new.c_iflag &= ~BRKINT;
+ #endif
+-  term_new.c_iflag |= IXOFF;
+-  tcsetattr(0, TCSAFLUSH, &term_new);
++  // term_new.c_iflag |= IXOFF;
++  // tcsetattr(0, TCSAFLUSH, &term_new);
+ #endif
+   // nothing for now
+ #if USE_RAW_SERIAL
+
+    [ Part 3: "Attached Text" ]
+
+    [ The following text is in the "koi8-r" character set. ]
+    [ Your display is set for the "US-ASCII" character set.  ]
+    [ Some characters may be displayed incorrectly. ]
+
+--- .bochsrc.orig	Sun Nov 14 16:01:27 1999
++++ .bochsrc	Mon Nov 22 17:44:06 1999
+@@ -84,4 +84,4 @@
+ 
+-#log: /dev/null
+-log: ./bochs.out
++log: /dev/null
++#log: ./bochs.out
+ keyboard_serial_delay: 200
+
+    [ Part 4: "Attached Text" ]
+
+    [ The following text is in the "koi8-r" character set. ]
+    [ Your display is set for the "US-ASCII" character set.  ]
+    [ Some characters may be displayed incorrectly. ]
+
+
+$FreeBSD$
+
+--- iodev/cdrom.cc.orig	Tue May 15 17:49:56 2001
++++ iodev/cdrom.cc	Wed May 16 18:21:21 2001
+@@ -52,7 +52,7 @@
+ }
+ #endif /* __sun */
+ 
+-#ifdef __OpenBSD__
++#if (defined(__OpenBSD__) || defined(__FreeBSD__))
+ // OpenBSD pre version 2.7 may require extern "C" { } structure around
+ // all the includes, because the i386 sys/disklabel.h contains code which 
+ // c++ considers invalid.
+@@ -154,7 +154,7 @@
+   // some ioctl() calls to really eject the CD as well.
+ 
+   if (fd >= 0) {
+-#ifdef __OpenBSD__
++#if (defined(__OpenBSD__) || defined(__FreeBSD__))
+     (void) ioctl (fd, CDIOCALLOW);
+     if (ioctl (fd, CDIOCEJECT) < 0)
+ 	  BX_DEBUG(( "eject_cdrom: eject returns error.\n" ));
+@@ -264,7 +264,7 @@
+ 
+   return true;
+   }
+-#elif defined(__OpenBSD__)
++#elif (defined(__OpenBSD__) || defined(__FreeBSD__))
+   {
+   struct ioc_toc_header h;
+   struct ioc_read_toc_entry t;
+@@ -402,6 +402,53 @@
+ 
+   BX_DEBUG(( "capacity: %u\n", lp.d_secperunit ));
+   return(lp.d_secperunit);
++  }
++#elif defined(__FreeBSD__)
++  {
++  // Read the TOC to get the data size, since disklabel doesn't appear
++  // to work, sadly.
++  // Keith Jones, 16 January 2000
++
++#define MAX_TRACKS 100
++
++  int i, num_tracks, num_sectors;
++  struct ioc_toc_header td;
++  struct ioc_read_toc_entry rte;
++  struct cd_toc_entry toc_buffer[MAX_TRACKS + 1];
++
++  if (fd < 0)
++    BX_PANIC(("cdrom: capacity: file not open.\n"));
++
++  if (ioctl(fd, CDIOREADTOCHEADER, &td) < 0)
++    BX_PANIC(("cdrom: ioctl(CDIOREADTOCHEADER) failed\n"));
++
++  num_tracks = (td.ending_track - td.starting_track) + 1;
++  if (num_tracks > MAX_TRACKS)
++    BX_PANIC(("cdrom: TOC is too large\n"));
++
++  rte.address_format = CD_LBA_FORMAT;
++  rte.starting_track = td.starting_track;
++  rte.data_len = (num_tracks + 1) * sizeof(struct cd_toc_entry);
++  rte.data = toc_buffer;
++  if (ioctl(fd, CDIOREADTOCENTRYS, &rte) < 0)
++    BX_PANIC(("cdrom: ioctl(CDIOREADTOCENTRYS) failed\n"));
++
++  num_sectors = -1;
++  for (i = 0; i < num_tracks; i++) {
++    if (rte.data[i].control & 4) {	/* data track */
++      num_sectors = ntohl(rte.data[i + 1].addr.lba)
++          - ntohl(rte.data[i].addr.lba);
++      fprintf(stderr, "cdrom: Data track %d, length %d\n",
++        rte.data[i].track, num_sectors);
++      break;
++      }
++    }
++
++  if (num_sectors < 0)
++    BX_PANIC(("cdrom: no data track found\n"));
++
++  return(num_sectors);
++
+   }
+ #elif defined WIN32
+   {
+
+    [ Part 5: "Attached Text" ]
+
+    [ The following text is in the "koi8-r" character set. ]
+    [ Your display is set for the "US-ASCII" character set.  ]
+    [ Some characters may be displayed incorrectly. ]
+
+--- debug/lexer.c.orig	Wed Feb  2 17:00:44 2000
++++ debug/lexer.c	Wed Feb  2 17:00:02 2000
+@@ -1272,7 +1272,7 @@
+ case 92:
+ YY_RULE_SETUP
+ #line 108 "lexer.l"
+-{ bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
++{ bxlval.ulval = strtouq(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
+ 	YY_BREAK
+ case 93:
+ YY_RULE_SETUP
