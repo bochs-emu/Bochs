@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.22 2002-09-05 02:31:23 kevinlawton Exp $
+// $Id: pc_system.cc,v 1.23 2002-09-20 15:35:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,8 +97,7 @@ bx_pc_system_c::set_INTR(Boolean value)
   if (bx_dbg.interrupts)
     BX_INFO(("pc_system: Setting INTR=%d on bootstrap processor %d", (int)value, BX_BOOTSTRAP_PROCESSOR));
   //INTR = value;
-  int cpu = BX_BOOTSTRAP_PROCESSOR;
-  BX_CPU(cpu)->set_INTR(value);
+  BX_CPU(BX_BOOTSTRAP_PROCESSOR)->set_INTR(value);
 }
 #endif
 
