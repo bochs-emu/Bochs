@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.7 2002-10-08 17:16:32 cbothamy Exp $
+// $Id: gui.cc,v 1.49.4.8 2002-10-10 04:58:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,6 +49,10 @@ bx_gui_c::bx_gui_c(void)
 {
   put("GUI"); // Init in specific_init
   settype(GUILOG);
+}
+
+bx_gui_c::~bx_gui_c()
+{
 }
 
   void

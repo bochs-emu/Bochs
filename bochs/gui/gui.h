@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.4 2002-10-09 00:22:14 bdenney Exp $
+// $Id: gui.h,v 1.31.4.5 2002-10-10 04:58:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,6 +32,7 @@ extern class bx_gui_c *bx_gui;
 class bx_gui_c : public logfunctions {
 public:
   bx_gui_c (void);
+  virtual ~bx_gui_c ();
   // Define the following functions in the module for your particular GUI
   // (x.cc, beos.cc, ...)
   virtual void specific_init(int argc, char **argv,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.7 2002-10-08 21:00:23 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.8 2002-10-10 04:58:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,6 +87,7 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 // virtual (= 0).
 class bx_devmodel_c : public logfunctions {
   public:
+  virtual ~bx_devmodel_c () {}
   virtual void init_mem(BX_MEM_C *) {}
   virtual void init(bx_devices_c *d) {}
   virtual void reset(unsigned type) {}
@@ -103,6 +104,7 @@ class bx_devmodel_c : public logfunctions {
 
 class bx_keyb_stub_c : public bx_devmodel_c {
   public:
+  virtual ~bx_keyb_stub_c () {}
   // stubs for bx_keyb_c methods
   virtual void mouse_motion(int delta_x, int delta_y, unsigned button_state) {
     STUBFUNC(keyboard, mouse_motion);
