@@ -69,6 +69,7 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
   pit.o pit82c54.o pit_wrap.o \
   virt_timer.o \
   slowdown_timer.o \
+  console.o \
   @IODEBUG_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
@@ -82,7 +83,6 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   vga.o \
   biosdev.o \
   cmos.o \
-  console.o \
   harddrv.o \
   dma.o \
   unmapped.o \
