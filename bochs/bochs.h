@@ -257,6 +257,7 @@ typedef struct {
   void* record_io;
   } bx_debug_t;
 
+#define bx_assert(x) do {if (!(x)) bx_panic ("failed assertion \"%s\" at %s:%s\n", #x, __FILE__, __LINE__);} while (0)
 void bx_printf(char *fmt, ...);
 void bx_panic(char *fmt, ...);
 void bx_atexit(void);
