@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.24 2004-11-27 14:38:13 vruppert Exp $
+// $Id: keyboard.h,v 1.25 2004-11-30 21:03:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,6 +45,10 @@
 #define MOUSE_MODE_STREAM 11
 #define MOUSE_MODE_REMOTE 12
 #define MOUSE_MODE_WRAP   13
+
+#define MOUSE_TYPE_PS2    0
+#define MOUSE_TYPE_IMPS2  1
+#define MOUSE_TYPE_SERIAL 2
 
 class bx_keyb_c : public bx_keyb_stub_c {
 public:
@@ -113,6 +117,7 @@ private:
       } kbd_controller;
 
     struct mouseStruct {
+      Bit8u   type;
       Bit8u   sample_rate;
       Bit8u   resolution_cpmm; // resolution in counts per mm
       Bit8u   scaling;
@@ -215,16 +220,16 @@ private:
   bx_bool stop_paste;  // stop the current paste operation on hardware reset
 
   BX_KEY_SMF void     resetinternals(bx_bool powerup);
-  BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value) BX_CPP_AttrRegparmN(1);
-  BX_KEY_SMF void     set_aux_clock_enable(Bit8u   value);
-  BX_KEY_SMF void     kbd_ctrl_to_kbd(Bit8u   value);
-  BX_KEY_SMF void     kbd_ctrl_to_mouse(Bit8u   value);
-  BX_KEY_SMF void     kbd_enQ(Bit8u   scancode);
-  BX_KEY_SMF void     kbd_enQ_imm(Bit8u   val);
+  BX_KEY_SMF void     set_kbd_clock_enable(Bit8u value) BX_CPP_AttrRegparmN(1);
+  BX_KEY_SMF void     set_aux_clock_enable(Bit8u value);
+  BX_KEY_SMF void     kbd_ctrl_to_kbd(Bit8u value);
+  BX_KEY_SMF void     kbd_ctrl_to_mouse(Bit8u value);
+  BX_KEY_SMF void     kbd_enQ(Bit8u scancode);
+  BX_KEY_SMF void     kbd_enQ_imm(Bit8u val);
   BX_KEY_SMF void     activate_timer(void);
-  BX_KEY_SMF void     controller_enQ(Bit8u   data, unsigned source);
-  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3) BX_CPP_AttrRegparmN(3);
-  BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
+  BX_KEY_SMF void     controller_enQ(Bit8u data, unsigned source);
+  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3) BX_CPP_AttrRegparmN(3);
+  BX_KEY_SMF void     mouse_enQ(Bit8u mouse_data);
 
   static void   timer_handler(void *);
   void   timer(void);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.90 2004-11-27 14:38:12 vruppert Exp $
+// $Id: keyboard.cc,v 1.91 2004-11-30 21:02:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.90 2004-11-27 14:38:12 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.91 2004-11-30 21:02:56 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -177,6 +177,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
   // Mouse initialization stuff
+  BX_KEY_THIS s.mouse.type            = bx_options.Omouse_type->get();
   BX_KEY_THIS s.mouse.sample_rate     = 100; // reports per second
   BX_KEY_THIS s.mouse.resolution_cpmm = 4;   // 4 counts per millimeter
   BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
@@ -899,7 +900,7 @@ bx_keyb_c::kbd_enQ(Bit8u scancode)
 }
 
   bx_bool BX_CPP_AttrRegparmN(3)
-bx_keyb_c::mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3)
+bx_keyb_c::mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3)
 {
   if ((BX_KEY_THIS s.mouse_internal_buffer.num_elements + 3) >= BX_MOUSE_BUFF_SIZE) {
     return(0); /* buffer doesn't have the space */
@@ -1236,7 +1237,11 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
         } else if ((value == 100) && (BX_KEY_THIS s.mouse.im_request == 1)) {
           BX_KEY_THIS s.mouse.im_request = 2;
         } else if ((value == 80) && (BX_KEY_THIS s.mouse.im_request == 2)) {
-          BX_INFO(("wheel mouse mode requested (not implemented)"));
+          if (BX_KEY_THIS s.mouse.type == MOUSE_TYPE_IMPS2) {
+            BX_INFO(("wheel mouse mode request (not implemented)"));
+          } else {
+            BX_INFO(("wheel mouse mode request rejected"));
+          }
           BX_KEY_THIS s.mouse.im_request = 0;
         } else {
           BX_KEY_THIS s.mouse.im_request = 0;
@@ -1343,7 +1348,7 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
 
       case 0xf2: // Read Device Type
         controller_enQ(0xFA, 1); // ACK
-        controller_enQ(0x00, 1); // Device ID
+        controller_enQ(0x00, 1); // Device ID (standard)
         BX_DEBUG(("[mouse] Read mouse ID"));
         break;
 
@@ -1477,7 +1482,7 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
 
 void
 bx_keyb_c::mouse_enabled_changed(bool enabled) {
-  if(s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy) {
+  if (s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy) {
     create_mouse_packet(1);
   }
   s.mouse.delayed_dx=0;
@@ -1495,6 +1500,11 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
   if (bx_options.Omouse_enabled->get () == 0)
     return;
 
+
+  if (BX_KEY_THIS s.mouse.type == MOUSE_TYPE_SERIAL) {
+    // TODO: forward mouse motion to the serial device
+    return;
+  }
 
   // don't generate interrupts if we are in remote mode.
   if ( BX_KEY_THIS s.mouse.mode == MOUSE_MODE_REMOTE)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.18 2004-11-27 10:09:26 vruppert Exp $
+// $Id: config.cc,v 1.19 2004-11-30 21:02:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -880,7 +880,7 @@ void bx_init_options ()
                 strdup(descr), 
                 (i==0)?1 : 0);  // only enable the first by default
         sprintf (name, "I/O mode of the serial device for COM%d", i+1);
-        sprintf (descr, "The mode can be one these: 'null', 'file', 'term', 'raw'");
+        sprintf (descr, "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse'");
         bx_options.com[i].Omode = new bx_param_enum_c (
                 BXP_COMx_MODE(i+1),
                 strdup(name), 
@@ -1137,6 +1137,21 @@ void bx_init_options ()
       0);
   bx_options.Omouse_enabled->set_handler (bx_param_handler);
   bx_options.Omouse_enabled->set_runtime_param (1);
+
+  static char *mouse_type_list[] = {
+    "ps2",
+    "imps2",
+    "serial",
+    NULL
+  };
+  bx_options.Omouse_type = new bx_param_enum_c (BXP_MOUSE_TYPE,
+      "Mouse type", 
+      "The mouse type can be one of these: 'ps2', 'imps2'", 
+      mouse_type_list,
+      0,
+      0);
+  bx_options.com[i].Omode->set_ask_format ("Choose the type of mouse [%s] ");
+
   bx_options.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
@@ -1241,6 +1256,7 @@ void bx_init_options ()
     bx_options.Odisplaylib_options,
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
+    bx_options.Omouse_type,
     bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS
     bx_options.Ofullscreen,
@@ -1665,6 +1681,7 @@ void bx_init_options ()
       bx_options.Ovga_update_interval,
       bx_options.log.Oprefix,
       bx_options.Omouse_enabled,
+      bx_options.Omouse_type,
       bx_options.Ofloppy_command_delay,
       bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS
@@ -1761,6 +1778,7 @@ void bx_reset_options ()
   bx_options.Odisplaylib_options->reset();
   bx_options.Ovga_update_interval->reset();
   bx_options.Omouse_enabled->reset();
+  bx_options.Omouse_type->reset();
   bx_options.Oips->reset();
   bx_options.Oprivate_colormap->reset();
 #if BX_WITH_AMIGAOS
@@ -2987,16 +3005,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
     else bx_options.Otext_snapshot_check->set (!!(atol(params[1])));
     }
   else if (!strcmp(params[0], "mouse")) {
-    if (num_params != 2) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: mouse directive malformed.", context));
       }
-    if (strncmp(params[1], "enabled=", 8)) {
-      PARSE_ERR(("%s: mouse directive malformed.", context));
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        if (params[i][8] == '0' || params[i][8] == '1')
+          bx_options.Omouse_enabled->set (params[i][8] - '0');
+        else
+          PARSE_ERR(("%s: mouse directive malformed.", context));
+      } else if (!strncmp(params[i], "type=", 5)) {
+        if (!bx_options.Omouse_type->set_by_name (strdup(&params[i][5])))
+          PARSE_ERR(("%s: mouse type '%s' not available", context, strdup(&params[i][5])));
+        }
+      else {
+        PARSE_ERR(("%s: mouse directive malformed.", context));
+        }
       }
-    if (params[1][8] == '0' || params[1][8] == '1')
-      bx_options.Omouse_enabled->set (params[1][8] - '0');
-    else
-      PARSE_ERR(("%s: mouse directive malformed.", context));
     }
   else if (!strcmp(params[0], "private_colormap")) {
     if (num_params != 2) {
