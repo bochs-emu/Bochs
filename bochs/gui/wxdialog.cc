@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.27 2002-09-05 17:27:50 bdenney Exp $
+// $Id: wxdialog.cc,v 1.28 2002-09-05 20:16:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1467,7 +1467,7 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
 	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
 	char *format = param->get_format ();
 	if (!format)
-	  format = param->get_base () == 16 ? "0x%X" : "%d";
+	  format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
 	SetTextCtrl (textctrl, format, param->get ());
 	sizer->Add (textctrl);
 	sizer->Add (1, 1);  // spacer
