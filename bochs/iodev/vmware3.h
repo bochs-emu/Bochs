@@ -37,7 +37,7 @@ class vmware3_image_t : public device_image_t
       ssize_t write (const void* buf, size_t count);
 
   private:
-      static const off_t INVALID_OFFSET = (off_t)-1;
+      static const off_t INVALID_OFFSET;
 
 #if defined(_MSC_VER) && (_MSC_VER<1300)
 #pragma pack(push, 1)
@@ -105,5 +105,4 @@ class vmware3_image_t : public device_image_t
       unsigned slb_count;
       unsigned tlb_size;
 };
-
 #endif

@@ -1,0 +1,3679 @@
+----------------------------------------------------------------------
+Patch name: Debugger and disassembler fixes
+Author: Vitaly Vorobyov
+Date: 03/08/2003
+Status: New
+
+Detailed description:
+
+Debugger enhancements
+
+ [x] next|n|p command added, this is 'step over' command, it execute
+     ints, calls, loops and so on in one step.
+ [x] r|reg|registers reg=expression new command semantic
+    (for existing command symbols) added, it allow set general
+             purpose register to value of expression
+ [x] bug in print-stack command fixed
+ [x] bpe/bpd commands added for enabling/disabling breakpoints of
+     all kinds
+ [x] fixed load-symbols command, symbol file now opened in text
+     mode
+    "rt" instead of "r", this is not actual for unixes (that simply
+    ignore 't'), but very actual for win32 for translating 0xD 0xA
+    sequence to 0xA.
+ [x] slist [string] (info symbols as alias) command added for
+     viewing symbols whose prefix is string (symbols beginning from
+string)
+ [x] lbreak string  command added for setting breakpoint on symbol
+     string
+ [x] info pic command added. It shows master & slave pic's registers.
+
+Disassembler enhancements
+
+ [x] fixed bug in relative addresses in Jmp, Jcc, Call and so on
+ [x] added symbols support (if debugger compiled in BX_DEBUGGER==1),
+     commands like jmp, call, loop display symbols if they loaded
+ [x] new instructions and disassembler groups added
+
+To use the patch it may be needed some update of configure.in:
+
+Find hash_map.h & set.h in configure.in and add missing hash_map & set 
+as below:
+---- Cut Here
+                           AC_LANG_SAVE
+                           AC_LANG_CPLUSPLUS
+                           AC_MSG_CHECKING(for hash_map)
+                           AC_TRY_COMPILE([#include <hash_map>], [],
+                              [
+                                AC_MSG_RESULT(yes)
+                                AC_DEFINE(BX_HAVE_HASH_MAP)
+                              ], AC_MSG_RESULT(no))
+
+                           AC_MSG_CHECKING(for hash_map.h)
+                           AC_TRY_COMPILE([#include <hash_map.h>], [],
+                              [
+                                AC_MSG_RESULT(yes)
+                                AC_DEFINE(BX_HAVE_HASH_MAP_H)
+                              ], AC_MSG_RESULT(no))
+                           AC_MSG_CHECKING(for set)
+                           AC_TRY_COMPILE([#include <set>], [],
+                              [
+                                AC_MSG_RESULT(yes)
+                                AC_DEFINE(BX_HAVE_SET)
+                              ], AC_MSG_RESULT(no))
+                           AC_MSG_CHECKING(for set.h)
+                           AC_TRY_COMPILE([#include <set.h>], [],
+                              [
+                                AC_MSG_RESULT(yes)
+                                AC_DEFINE(BX_HAVE_SET_H)
+                              ], AC_MSG_RESULT(no))
+                           AC_LANG_RESTORE
+---- Cut Here
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.122
+diff -u -w -r1.122 bochs.h
+--- bochs.h	28 Jul 2003 13:55:20 -0000	1.122
++++ bochs.h	2 Aug 2003 19:41:39 -0000
+@@ -77,6 +77,7 @@
+ #include <ctype.h>
+ #include <string.h>
+ #include <fcntl.h>
++#include <limits.h>
+ #ifdef macintosh
+ #  define SuperDrive "[fd:]"
+ #endif
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.115
+diff -u -w -r1.115 config.h.in
+--- config.h.in	21 Jun 2003 12:55:19 -0000	1.115
++++ config.h.in	2 Aug 2003 19:41:47 -0000
+@@ -83,6 +83,9 @@
+ // adds support for the GNU readline library in the debugger command 
+ // prompt.
+ 
++#define HAVE_LOCALE_H 0
++// Define to 1 if you have <locale.h>
++
+ // I rebuilt the code which provides timers to IO devices.
+ // Setting this to 1 will introduce a little code which
+ // will panic out if cases which shouldn't happen occur.
+@@ -821,8 +824,17 @@
+ // set if your compiler does not allow label at the end of a {} block
+ #define BX_NO_BLANK_LABELS 0
+ 
+-// set if you don't have <hash_map.h>, used in debug/dbg_main.c
++// set if you don't have <hash_map>, used in debug/dbg_main.c
+ #define BX_HAVE_HASH_MAP 0
++
++// set if you don't have <hash_map.h>, used in debug/dbg_main.c
++#define BX_HAVE_HASH_MAP_H 0
++
++// set if you don't have <set>, used in debug/dbg_main.c
++#define BX_HAVE_SET 0
++
++// set if you don't have <set.h>, used in debug/dbg_main.c
++#define BX_HAVE_SET_H 0
+ 
+ // Support x86 hardware debugger registers and facilites.
+ // These are the debug facilites offered by the x86 architecture,
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.231
+diff -u -w -r1.231 main.cc
+--- main.cc	1 Aug 2003 01:20:00 -0000	1.231
++++ main.cc	2 Aug 2003 19:42:03 -0000
+@@ -29,6 +29,10 @@
+ #include <assert.h>
+ #include "state_file.h"
+ 
++#ifdef HAVE_LOCALE_H
++#include <locale.h>
++#endif
++
+ #if BX_WITH_SDL
+ // since SDL redefines main() to SDL_main(), we must include SDL.h so that the
+ // C language prototype is found.  Otherwise SDL_main() will get its name 
+@@ -1525,6 +1529,10 @@
+ #endif
+ 
+ int bxmain () {
++#ifdef HAVE_LOCALE_H
++  // Initialize locale (for isprint() and other functions)
++  setlocale (LC_ALL, "");
++#endif
+   bx_user_quit = 0;
+   bx_init_siminterface ();   // create the SIM object
+   static jmp_buf context;
+@@ -1806,7 +1814,7 @@
+       // there is no stdin/stdout so disable the text-based config interface.
+       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
+       char cwd[MAXPATHLEN];
+-      getwd (cwd);
++      getcwd (cwd);
+       BX_INFO (("Now my working directory is %s", cwd));
+       // if it was started from command line, there could be some args still.
+       for (int a=0; a<argc; a++) {
+Index: plugin.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/plugin.h,v
+retrieving revision 1.19
+diff -u -w -r1.19 plugin.h
+--- plugin.h	31 Jul 2003 12:04:47 -0000	1.19
++++ plugin.h	2 Aug 2003 19:42:04 -0000
+@@ -140,6 +140,7 @@
+ #define DEV_pic_lower_irq(b)  (bx_devices.pluginPicDevice->lower_irq(b))
+ #define DEV_pic_raise_irq(b)  (bx_devices.pluginPicDevice->raise_irq(b))
+ #define DEV_pic_iac()         (bx_devices.pluginPicDevice->IAC())
++#define DEV_pic_show_pic_state() (bx_devices.pluginPicDevice->show_pic_state())
+ 
+ ///////// VGA macros
+ #define DEV_vga_mem_read(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
+Index: cpu/cpu.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.cc,v
+retrieving revision 1.79
+diff -u -w -r1.79 cpu.cc
+--- cpu/cpu.cc	7 Jun 2003 19:16:52 -0000	1.79
++++ cpu/cpu.cc	2 Aug 2003 19:42:55 -0000
+@@ -672,8 +672,8 @@
+       if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
+                                        BX_HWDebugInstruction)) ) {
+         // Add to the list of debug events thus far.
+-        BX_CPU_THIS_PTR debug_trap |= dr6_bits;
+         BX_CPU_THIS_PTR async_event = 1;
++        BX_CPU_THIS_PTR debug_trap |= dr6_bits;
+         // If debug events are not inhibited on this boundary,
+         // fire off a debug fault.  Otherwise handle it on the next
+         // boundary. (becomes a trap)
+@@ -695,7 +695,11 @@
+   if ( !(BX_CPU_INTR ||
+          BX_CPU_THIS_PTR debug_trap ||
+          BX_HRQ ||
+-         BX_CPU_THIS_PTR get_TF ()) )
++         BX_CPU_THIS_PTR get_TF () 
++#if BX_X86_DEBUGGER
++         || (BX_CPU_THIS_PTR dr7 & 0xff)
++#endif
++        ))
+     BX_CPU_THIS_PTR async_event = 0;
+ 
+   return 0; // Continue executing cpu_loop.
+@@ -762,8 +766,7 @@
+   BX_CPU_THIS_PTR eipPageBias = - eipPageOffset0;
+   BX_CPU_THIS_PTR eipPageWindowSize = 4096; // FIXME:
+   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
+-  BX_CPU_THIS_PTR eipFetchPtr =
+-      BX_CPU_THIS_PTR mem->getHostMemAddr(this, BX_CPU_THIS_PTR pAddrA20Page,
++  BX_CPU_THIS_PTR eipFetchPtr=BX_CPU_THIS_PTR mem->getHostMemAddr(this, BX_CPU_THIS_PTR pAddrA20Page,
+                                           BX_READ);
+ 
+   // Sanity checks
+@@ -921,7 +924,8 @@
+     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
+       if (BX_CPU_THIS_PTR guard_found.icount!=0) {
+         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
+-          if ( (bx_guard.iaddr.vir[i].cs  == cs) &&
++          if ( bx_guard.iaddr.vir[i].enabled &&
++               (bx_guard.iaddr.vir[i].cs  == cs) &&
+                (bx_guard.iaddr.vir[i].eip == eip) ) {
+             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
+             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
+@@ -935,7 +939,8 @@
+     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
+       if (BX_CPU_THIS_PTR guard_found.icount!=0) {
+         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
+-          if ( bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr ) {
++          if (bx_guard.iaddr.lin[i].enabled && 
++              (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr) ) {
+             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
+             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
+             return(1); // on a breakpoint
+@@ -956,7 +961,8 @@
+       // Not pretty.
+       if (valid && (BX_CPU_THIS_PTR guard_found.icount!=0)) {
+         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
+-          if ( bx_guard.iaddr.phy[i].addr == phy ) {
++          if ( bx_guard.iaddr.phy[i].enabled && 
++               (bx_guard.iaddr.phy[i].addr == phy) ) {
+             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
+             return(1); // on a breakpoint
+Index: cpu/debugstuff.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/debugstuff.cc,v
+retrieving revision 1.28
+diff -u -w -r1.28 debugstuff.cc
+--- cpu/debugstuff.cc	27 Oct 2002 15:15:12 -0000	1.28
++++ cpu/debugstuff.cc	2 Aug 2003 19:42:57 -0000
+@@ -147,17 +147,25 @@
+ 
+ #if BX_DISASM
+   bx_bool valid;
+-  Bit32u  phy_addr;
++  Bit32u  phy_addr, Base;
+   Bit8u   instr_buf[32];
+   char    char_buf[256];
+   unsigned isize;
+ 
++  if (BX_CPU(which_cpu)->protectedMode) { // 16bit & 32bit protected mode
++   Base=BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base;
++  }
++  else {
++   Base=BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value<<4;
++  }
++
+   dbg_xlate_linear2phy(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + offset,
+                        &phy_addr, &valid);
+   if (valid && BX_CPU_THIS_PTR mem!=NULL) {
+     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
+     isize = bx_disassemble.disasm(
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
++        Base, 
+         EIP, instr_buf, char_buf);
+     for (unsigned j=0; j<isize; j++)
+       BX_INFO((">> %02x", (unsigned) instr_buf[j]));
+Index: debug/dbg_main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/dbg_main.cc,v
+retrieving revision 1.101
+diff -u -w -r1.101 dbg_main.cc
+--- debug/dbg_main.cc	1 Aug 2003 10:14:47 -0000	1.101
++++ debug/dbg_main.cc	2 Aug 2003 19:43:16 -0000
+@@ -60,6 +60,7 @@
+ static void bx_dbg_usage(void);
+ static char bx_debug_rc_fname[BX_MAX_PATH];
+ static char tmp_buf[512];
++static char tmp_buf_prev[512];
+ static char *tmp_buf_ptr;
+ static char *argv0 = NULL;
+ 
+@@ -242,6 +243,9 @@
+   char **sim2_argv = NULL;
+   argc = 1;
+   
++  setbuf (stdout, NULL);
++  setbuf (stderr, NULL);
++
+   bx_dbg_batch_dma.this_many = 1;
+   bx_dbg_batch_dma.Qsize     = 0;
+ 
+@@ -476,9 +480,13 @@
+     SIM->refresh_ci ();
+     SIM->set_display_mode (DISP_MODE_CONFIG);
+     bx_get_command();
+-    if ( (*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0) ) {
+-      if (bx_infile_stack_index == 0)
+-        dbg_printf ( "\n");
++reparse:
++    if ((*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0))
++      {
++        if ((*tmp_buf_prev != '\n') && (*tmp_buf_prev != 0)) {
++          strncpy(tmp_buf, tmp_buf_prev, sizeof(tmp_buf_prev));
++          goto reparse;
++	  }
+       }
+     else if ( (strncmp(tmp_buf_ptr, BX_INCLUDE_CMD, include_cmd_len) == 0) &&
+               (tmp_buf_ptr[include_cmd_len] == ' ' ||
+@@ -558,14 +566,15 @@
+       charptr_ret = &tmp_buf[0];
+     }
+   } else {
+-    charptr_ret = fgets(tmp_buf, 512,
++    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf),
+       bx_infile_stack[bx_infile_stack_index].fp);
+   }
+ #else /* !HAVE_LIBREADLINE */
+   else {
+     if (bx_infile_stack_index == 0)
+       dbg_printf ( "%s", prompt);
+-    charptr_ret = fgets(tmp_buf, 512,
++      strncpy(tmp_buf_prev, tmp_buf, sizeof(tmp_buf));
++    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf),
+       bx_infile_stack[bx_infile_stack_index].fp);
+   }
+ #endif
+@@ -705,8 +714,6 @@
+   bx_guard.interrupt_requested = 1;
+ }
+ 
+-
+-
+   void
+ bx_dbg_exit(int code)
+ {
+@@ -791,7 +798,7 @@
+   Bit64u diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
+   Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
+ 
+-  if (diff < 0) {
++  if (time < bx_pc_system.time_ticks()) {
+     dbg_printf ( "Request for time break point in the past. I can't let you do that.\n");
+     return;
+   }
+@@ -1291,7 +1298,7 @@
+   Bit64u diff = time - last_playback_time;
+   last_playback_time = time;
+ 
+-  if (diff < 0) {
++  if (time < last_playback_time) {
+     BX_PANIC(("Negative diff in playback"));
+   } else if (diff == 0) {
+     playback_entry.trigger();
+@@ -1319,30 +1326,30 @@
+ bx_dbg_print_stack_command(int nwords)
+ {
+   // Get linear address for stack top
+-  Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b)?
+-    BX_CPU(dbg_cpu)->get_ESP ()
+-    : BX_CPU(dbg_cpu)->get_SP ();
+-  Bit32u linear_sp = sp + BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base;
++  bool UseESP=BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
++  Bit32u linear_sp = BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base+
++    (UseESP?BX_CPU(dbg_cpu)->get_ESP():BX_CPU(dbg_cpu)->get_SP());
+   Bit8u buf[8];
+ 
+   for (int i = 0; i < nwords; i++) {
+     Bit32u paddr;
+     bx_bool paddr_valid;
+-    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(sp, &paddr, &paddr_valid);
++    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(linear_sp, &paddr, &paddr_valid);
+     if (paddr_valid) {
+-      if (BX_MEM(0)->dbg_fetch_mem(paddr, 2, buf))
+-        dbg_printf ( "   %08x [%08x]  %04x\n", linear_sp, paddr, (int)buf[0] | ((int)buf[1] << 8));
++      if (BX_MEM(0)->dbg_fetch_mem(paddr, (UseESP?4:2), buf))
++        dbg_printf ( "   %08x [%08x]  %04x\n", linear_sp, paddr, 
++         (Bit32u)buf[0] | ((Bit32u)buf[1] << 8) | 
++         (UseESP?(((Bit32u)buf[2] << 16) | ((Bit32u)buf[3] << 24)):0));
+       else
+-        dbg_printf ( "   %08x [%08x]  <read error>\n", paddr, linear_sp);
++        dbg_printf ( "   %08x [%08x]  <read error>\n", linear_sp, paddr);
+     } else {
+       dbg_printf ( "   %08x   <could not translate>\n", linear_sp);
+     }
+-    sp += 2;
+-    linear_sp += 2;
++    linear_sp += (UseESP?4:2);
+   }
+ }
+ 
+-#if !BX_HAVE_HASH_MAP
++#if !((BX_HAVE_HASH_MAP || BX_HAVE_HASH_MAP_H) && (BX_HAVE_SET || BX_HAVE_SET_H))
+ 
+ static char *BX_HAVE_HASH_MAP_ERR = "context not implemented because BX_HAVE_HASH_MAP=0\n";
+ char*
+@@ -1370,15 +1377,50 @@
+   dbg_printf ( BX_HAVE_HASH_MAP_ERR);
+ }
+ 
++void
++bx_dbg_info_symbols_command(char *Symbol)
++{
++  dbg_printf ( BX_HAVE_HASH_MAP_ERR);
++}
++
++int 
++bx_dbg_lbreakpoint_symbol_command(char *Symbol)
++{
++  dbg_printf ( BX_HAVE_HASH_MAP_ERR);
++  return -1;
++}
++
++Bit32u
++bx_dbg_get_symbol_value(const char *Symbol)
++{
++ return 0;
++}
++
++char* 
++bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
++{
++ return 0;
++}
++
+ #else   /* if BX_HAVE_HASH_MAP == 1 */
+ 
+ /* Haven't figured out how to port this code to OSF1 cxx compiler.
+    Until a more portable solution is found, at least make it easy
+    to disable the template code:  just set BX_HAVE_HASH_MAP=0
+    in config.h */
+-
++#if BX_HAVE_HASH_MAP
++#include <hash_map>
++#elif BX_HAVE_HASH_MAP_H
+ #include <hash_map.h>
++#endif
++
++#if BX_HAVE_SET
++#include <set>
++#elif BX_HAVE_SET_H
+ #include <set.h>
++#endif
++
++using namespace std;
+ 
+ struct symbol_entry_t
+ {
+@@ -1400,16 +1442,30 @@
+   }
+ };
+ 
++struct lt_rsymbol_entry_t
++{
++  bool operator()(const symbol_entry_t* s1, const symbol_entry_t* s2) const
++  {
++  return strcoll(s1->name, s2->name) < 0;
++  }
++};
++
+ struct context_t
+ {
+   context_t (Bit32u);
++  ~context_t();
+   static context_t* get_context(Bit32u);
+   symbol_entry_t* get_symbol_entry(Bit32u);
++  symbol_entry_t* get_symbol_entry(const char *Symbol) const;
+   void add_symbol(symbol_entry_t*);
+-
++  const set<symbol_entry_t*,lt_symbol_entry_t>* get_all_symbols() const {return syms;}
++  const set<symbol_entry_t*,lt_rsymbol_entry_t>* get_all_rsymbols() const {return rsyms;}
+ private:
+   static hash_map<int,context_t*>* map;
++  // Forvard references (find name by address)
+   set<symbol_entry_t*,lt_symbol_entry_t>* syms;
++  // Reverse references (find address by name)
++  set<symbol_entry_t*,lt_rsymbol_entry_t>* rsyms;
+   Bit32u id;
+ };
+ 
+@@ -1419,9 +1475,26 @@
+ {
+   id = _id;
+   syms = new set<symbol_entry_t*, lt_symbol_entry_t>;
++  rsyms = new set<symbol_entry_t*, lt_rsymbol_entry_t>;
+   (*map)[id] = this;
+ }
+ 
++context_t::~context_t()
++{
++ set<symbol_entry_t*>::iterator iter;
++ if(syms) {
++  for(iter=syms->begin();iter!=syms->end();++iter)
++   if(*iter)
++    delete *iter;
++ }
++
++ if(rsyms) {
++  for(iter=rsyms->begin();iter!=rsyms->end();++iter)
++   if(*iter)
++    delete *iter;
++ }
++}
++
+ context_t*
+ context_t::get_context(Bit32u i)
+ {
+@@ -1436,24 +1509,53 @@
+   // find the first symbol whose address is greater than ip.
+   if (syms->empty ()) return 0;
+   set<symbol_entry_t*>::iterator iter = syms->upper_bound(&probe);
+-  if (iter == syms->end()) {
+-    // return the last symbol
+-    return *iter;
+-  } else if (iter == syms->begin()) {
+-    // ip is before the first symbol.  Return no symbol.
++
++  if (iter == syms->end()) { // No symbol found
+     return 0;
+-  } else {
+-    // return previous symbol, so that the reported address is
+-    // prev_symbol+offset.
+-    iter--;
+-    return *iter;
+   }
++
++  return *(--iter);
++}
++
++symbol_entry_t*
++context_t::get_symbol_entry(const char *Symbol) const
++{
++  symbol_entry_t probe;
++  probe.name=(char *)Symbol;
++
++  if (rsyms->empty ()) 
++   return 0;
++
++  set<symbol_entry_t*>::const_iterator iter;
++  iter=rsyms->find(&probe);
++  if(iter==rsyms->end()) // No symbol found
++   return 0;
++  return *iter;
+ }
+ 
+ void
+ context_t::add_symbol(symbol_entry_t* sym)
+ {
+   syms->insert(sym);
++  rsyms->insert(sym);
++}
++
++Bit32u
++bx_dbg_get_symbol_value(char *Symbol)
++{
++ context_t* cntx = context_t::get_context(0);
++ if(!cntx) // Context not found
++  return 0;
++
++ if (Symbol[0]=='\"') Symbol++;
++ int len = strlen(Symbol);
++ if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
++
++ symbol_entry_t* sym=cntx->get_symbol_entry(Symbol);
++ if(!sym) // Symbol not found
++  return 0;
++
++ return sym->start;
+ }
+ 
+ char*
+@@ -1479,13 +1581,33 @@
+       return buf;
+     }
+   }
+-
+-  symbol_entry_t* entr = cntx->get_symbol_entry(eip);
++  // full linear address not only eip (for nonzero based segments)
++  symbol_entry_t* entr = cntx->get_symbol_entry(base+eip); 
+   if (!entr) {
+     snprintf (buf, 80, "no symbol");
+     return buf;
+   }
+-  snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
++  snprintf (buf, 80, "%s+%x", entr->name, (base+eip) - entr->start);
++  return buf;
++}
++
++char*
++bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
++{
++  static char buf[80];
++
++  // Try global context
++  context_t* cntx = context_t::get_context(0);
++  if (!cntx) {
++    return 0;
++  }
++
++  // full linear address not only eip (for nonzero based segments)
++  symbol_entry_t* entr = cntx->get_symbol_entry(base+eip); 
++  if (!entr) {
++    return 0;
++  }
++  snprintf (buf, 80, "%s+%x", entr->name, (base+eip) - entr->start);
+   return buf;
+ }
+ 
+@@ -1520,7 +1642,7 @@
+        : new context_t((BX_CPU(dbg_cpu)->cr3) >> 12);
+   }
+ 
+-  FILE* fp = fopen(filename, "r");
++  FILE* fp = fopen(filename, "rt"); // 't' is need for win32, unixes simply ignore it
+   if (!fp) {
+     dbg_printf ( "Could not open symbol file '%s'\n", filename);
+     return;
+@@ -1529,6 +1651,7 @@
+   while (fgets(buf, 200, fp)) {
+     // Parse
+     char* sym_name = buf;
++    
+     for (int i = 0; i < 200 && buf[i]; i++) {
+       if (buf[i] == ' ') {
+         buf[i] = '\0';
+@@ -1547,6 +1670,90 @@
+     cntx->add_symbol(sym);
+   }
+ }
++
++// chack if s1 is prefix of s2
++static bool 
++bx_dbg_strprefix(const char *s1, const char *s2)
++{
++ if(!s1 || !s2)
++  return false;
++
++ int len=strlen(s1);
++
++ if(len>strlen(s2))
++  return false;
++ return strncmp(s1, s2, len)==0;
++}
++
++void
++bx_dbg_info_symbols_command(char *Symbol)
++{
++  context_t* cntx = context_t::get_context(0);
++
++  if(!cntx) {
++   dbg_printf ( "Global context not available\n");
++   return;
++  }
++
++  if(Symbol) {
++   const set<symbol_entry_t*,lt_rsymbol_entry_t>* rsyms;
++
++   rsyms=cntx->get_all_rsymbols();
++   if (rsyms->empty ()) {
++    dbg_printf ( "Symbols not loaded\n");
++    return;
++   }
++   // remove leading and trailing quotas
++   if (Symbol[0]=='\"') Symbol++;
++   int len = strlen(Symbol);
++   if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
++
++   symbol_entry_t probe;
++   probe.name=Symbol;
++   set<symbol_entry_t*>::const_iterator iter;
++   iter=rsyms->lower_bound(&probe);
++
++   if(iter==rsyms->end() || !bx_dbg_strprefix(Symbol, (*iter)->name))
++    dbg_printf ( "No symbols found\n");
++   else
++   for(;iter!=rsyms->end() && bx_dbg_strprefix(Symbol, (*iter)->name);++iter) {
++    dbg_printf ( "%08x: %s\n", (*iter)->start, (*iter)->name);
++   }
++  }
++  else {
++   const set<symbol_entry_t*,lt_symbol_entry_t>* syms;
++
++   syms=cntx->get_all_symbols();
++   if (syms->empty ()) {
++    dbg_printf ( "Symbols not loaded\n");
++    return;
++   }
++
++   set<symbol_entry_t*>::const_iterator iter;
++   for(iter = syms->begin();iter!=syms->end();++iter) {
++    dbg_printf ( "%08x: %s\n", (*iter)->start, (*iter)->name);
++   }
++  }
++}
++
++int 
++bx_dbg_lbreakpoint_symbol_command(char *Symbol)
++{
++ context_t* cntx = context_t::get_context(0);
++ if(!cntx) {
++  dbg_printf ( "Global context not available\n");
++  return -1;
++ }
++ if (Symbol[0]=='\"') Symbol++;
++ int len = strlen(Symbol);
++ if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
++
++ const symbol_entry_t* sym=cntx->get_symbol_entry(Symbol);
++ if(sym)
++  return bx_dbg_lbreakpoint_command(bkRegular, sym->start);
++ dbg_printf ( "Symbol not found\n");
++ return -1;
++}
+ #endif
+ 
+ int num_write_watchpoints = 0;
+@@ -2190,10 +2397,19 @@
+ 
+   if (valid) {
+     unsigned ilen;
++    Bit32u Base;
+ 
+     BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
++
++    if (BX_CPU(which_cpu)->protectedMode) { // 16bit & 32bit protected mode
++     Base=BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.base;
++    }
++    else {
++     Base=BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value<<4;
++    }
++
+     ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
+-      BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
++      Base, BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
+ 
+     // Note: it would be nice to display only the modified registers here, the easy
+     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
+@@ -2228,14 +2444,14 @@
+       dbg_printf ( "(%u).[" FMT_LL "d] ", which_cpu, bx_pc_system.time_ticks());
+     else
+       dbg_printf ( "(%u) ", which_cpu);
+-    if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
++    if (BX_CPU(which_cpu)->protectedMode) { // 16bit & 32bit protected mode
+       dbg_printf ( "[0x%08x] %04x:%08x (%s): ", 
+ 	phy,
+         (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
+         bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.base));
+       }
+-    else {
++    else { // Real & V86 mode
+       dbg_printf ( "[0x%08x] %04x:%04x (%s): ", 
+ 	phy,
+         (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+@@ -2280,6 +2496,7 @@
+ #if BX_DBG_SUPPORT_LIN_BPOINT
+   else if (found & BX_DBG_GUARD_IADDR_LIN) {
+     i = BX_CPU(sim)->guard_found.iaddr_index;
++    if (bx_guard.iaddr.lin[i].bpoint_id != 0)
+     dbg_printf ( "(%u) Breakpoint %u, 0x%x in ?? ()\n",
+             sim,
+             bx_guard.iaddr.lin[i].bpoint_id,
+@@ -2360,135 +2577,244 @@
+ }
+ 
+   void
+-bx_dbg_del_breakpoint_command(unsigned handle)
++bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable)
+ {
+-  unsigned i;
+-
+ #if BX_DBG_SUPPORT_VIR_BPOINT
+-  // see if breakpoint is a virtual breakpoint
+-  for (i=0; i<bx_guard.iaddr.num_virtual; i++) {
+-    if (bx_guard.iaddr.vir[i].bpoint_id == handle) {
+-      // found breakpoint, delete it by shifting remaining entries left
+-      for (unsigned j=i; j<(bx_guard.iaddr.num_virtual-1); j++) {
+-        bx_guard.iaddr.vir[j] = bx_guard.iaddr.vir[j+1];
+-        }
+-      bx_guard.iaddr.num_virtual--;
++  if (bx_dbg_en_dis_vbreak (handle, enable))
++   goto done;
++#endif
++
++#if BX_DBG_SUPPORT_LIN_BPOINT
++  if (bx_dbg_en_dis_lbreak (handle, enable))
++   goto done;
++#endif
++
++#if BX_DBG_SUPPORT_PHY_BPOINT
++  if (bx_dbg_en_dis_pbreak (handle, enable))
+       goto done;
++#endif
++
++  dbg_printf ( "Error: breakpoint %u not found.\n", handle);
++  return;
++
++done:
++  bx_dbg_breakpoint_changed();
++}
++
++bx_bool
++bx_dbg_en_dis_pbreak (unsigned handle, bx_bool enable)
++{
++#if BX_DBG_SUPPORT_PHY_BPOINT
++  // see if breakpoint is a physical breakpoint
++  for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
++    if (bx_guard.iaddr.phy[i].bpoint_id == handle) {
++      bx_guard.iaddr.phy[i].enabled=enable;
++      return (bx_bool)true;
+       }
+     }
+ #endif
++  return (bx_bool)false;
++}
+ 
++bx_bool
++bx_dbg_en_dis_lbreak (unsigned handle, bx_bool enable)
++{
+ #if BX_DBG_SUPPORT_LIN_BPOINT
+   // see if breakpoint is a linear breakpoint
+-  for (i=0; i<bx_guard.iaddr.num_linear; i++) {
++  for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
+     if (bx_guard.iaddr.lin[i].bpoint_id == handle) {
+-      // found breakpoint, delete it by shifting remaining entries left
+-      for (unsigned j=i; j<(bx_guard.iaddr.num_linear-1); j++) {
+-        bx_guard.iaddr.lin[j] = bx_guard.iaddr.lin[j+1];
++      bx_guard.iaddr.lin[i].enabled=enable;
++      return (bx_bool)true;
++    }
++  }
++#endif
++  return (bx_bool)false;
++}
++
++bx_bool
++bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable)
++{
++#if BX_DBG_SUPPORT_VIR_BPOINT
++  // see if breakpoint is a virtual breakpoint
++  for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
++    if (bx_guard.iaddr.vir[i].bpoint_id == handle) {
++      bx_guard.iaddr.vir[i].enabled=enable;
++      return (bx_bool)true;
+         }
+-      bx_guard.iaddr.num_linear--;
+-      goto done;
+       }
++#endif
++  return (bx_bool)false;
+     }
++
++  void
++bx_dbg_del_breakpoint_command(unsigned handle)
++{
++#if BX_DBG_SUPPORT_VIR_BPOINT
++  if (bx_dbg_del_vbreak (handle))
++   goto done;
++#endif
++
++#if BX_DBG_SUPPORT_LIN_BPOINT
++  if (bx_dbg_del_lbreak (handle))
++   goto done;
++#endif
++
++#if BX_DBG_SUPPORT_PHY_BPOINT
++  if (bx_dbg_del_pbreak (handle))
++   goto done;
+ #endif
+ 
++  dbg_printf ( "Error: breakpoint %u not found.\n", handle);
++  return;
++
++done:
++  bx_dbg_breakpoint_changed();
++}
++
++  bx_bool
++bx_dbg_del_pbreak (unsigned handle)
++{
+ #if BX_DBG_SUPPORT_PHY_BPOINT
+   // see if breakpoint is a physical breakpoint
+-  for (i=0; i<bx_guard.iaddr.num_physical; i++) {
++  for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
+     if (bx_guard.iaddr.phy[i].bpoint_id == handle) {
+       // found breakpoint, delete it by shifting remaining entries left
+       for (unsigned j=i; j<(bx_guard.iaddr.num_physical-1); j++) {
+         bx_guard.iaddr.phy[j] = bx_guard.iaddr.phy[j+1];
+         }
+       bx_guard.iaddr.num_physical--;
+-      goto done;
++      return (bx_bool)true;
+       }
+     }
+ #endif
++  return (bx_bool)false;
++}
+ 
+-  dbg_printf ( "Error: breakpoint %u not found.\n", handle);
+-  return;
++  bx_bool
++bx_dbg_del_lbreak (unsigned handle)
++{
++#if BX_DBG_SUPPORT_LIN_BPOINT
++  // see if breakpoint is a linear breakpoint
++  for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
++    if (bx_guard.iaddr.lin[i].bpoint_id == handle) {
++      // found breakpoint, delete it by shifting remaining entries left
++      for (unsigned j=i; j<(bx_guard.iaddr.num_linear-1); j++) {
++        bx_guard.iaddr.lin[j] = bx_guard.iaddr.lin[j+1];
++        }
++      bx_guard.iaddr.num_linear--;
++      return (bx_bool)true;
++      }
++    }
++#endif
++  return (bx_bool)false;
++}
+ 
+-done:
+-  bx_dbg_breakpoint_changed();
++  bx_bool
++bx_dbg_del_vbreak (unsigned handle)
++{
++#if BX_DBG_SUPPORT_VIR_BPOINT
++  // see if breakpoint is a virtual breakpoint
++  for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
++    if (bx_guard.iaddr.vir[i].bpoint_id == handle) {
++      // found breakpoint, delete it by shifting remaining entries left
++      for (unsigned j=i; j<(bx_guard.iaddr.num_virtual-1); j++) {
++        bx_guard.iaddr.vir[j] = bx_guard.iaddr.vir[j+1];
++        }
++      bx_guard.iaddr.num_virtual--;
++      return (bx_bool)true;
++      }
++    }
++#endif
++  return (bx_bool)false;
+ }
+ 
+-  void
+-bx_dbg_vbreakpoint_command(bx_bool specific, Bit32u cs, Bit32u eip)
++  int
++bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, Bit32u eip)
+ {
+ #if BX_DBG_SUPPORT_VIR_BPOINT
+-  if (specific == 0) {
+-    dbg_printf ( "Error: vbreak without address not implemented yet.\n");
+-    return;
++  if (bk != bkRegular) {
++    dbg_printf ( "Error: vbreak of this kind not implemented yet.\n");
++    return -1;
+     }
+ 
+   if (bx_guard.iaddr.num_virtual >= BX_DBG_MAX_VIR_BPOINTS) {
+     dbg_printf ( "Error: no more virtual breakpoint slots left.\n");
+     dbg_printf ( "Error: see BX_DBG_MAX_VIR_BPOINTS.\n");
+-    return;
++    return -1;
+     }
+ 
+   bx_guard.iaddr.vir[bx_guard.iaddr.num_virtual].cs  = cs;
+   bx_guard.iaddr.vir[bx_guard.iaddr.num_virtual].eip = eip;
+   bx_guard.iaddr.vir[bx_guard.iaddr.num_virtual].bpoint_id = bx_debugger.next_bpoint_id++;
++  int BpId = (int)bx_guard.iaddr.vir[bx_guard.iaddr.num_virtual].bpoint_id;
++  bx_guard.iaddr.vir[bx_guard.iaddr.num_virtual].enabled=1;
+   bx_guard.iaddr.num_virtual++;
+   bx_guard.guard_for |= BX_DBG_GUARD_IADDR_VIR;
++  return BpId;
+ 
+ #else
+   dbg_printf ( "Error: virtual breakpoint support not compiled in.\n");
+   dbg_printf ( "Error: see BX_DBG_SUPPORT_VIR_BPOINT.\n");
++  return -1;
+ #endif
+ }
+ 
+-  void
+-bx_dbg_lbreakpoint_command(bx_bool specific, Bit32u laddress)
++  int
++bx_dbg_lbreakpoint_command(BreakpointKind bk, Bit32u laddress)
+ {
+ #if BX_DBG_SUPPORT_LIN_BPOINT
+-  if (specific == 0) {
+-    dbg_printf ( "Error: lbreak without address not implemented yet.\n");
+-    return;
++  if (bk == bkAtIP) {
++    dbg_printf ( "Error: lbreak of this kind not implemented yet.\n");
++    return -1;
+     }
+ 
+   if (bx_guard.iaddr.num_linear >= BX_DBG_MAX_LIN_BPOINTS) {
+     dbg_printf ( "Error: no more linear breakpoint slots left.\n");
+     dbg_printf ( "Error: see BX_DBG_MAX_LIN_BPOINTS.\n");
+-    return;
++    return -1;
+     }
+ 
+   bx_guard.iaddr.lin[bx_guard.iaddr.num_linear].addr = laddress;
+-  bx_guard.iaddr.lin[bx_guard.iaddr.num_linear].bpoint_id = bx_debugger.next_bpoint_id++;
++  int BpId = (bk == bkStepOver) ? 0 : bx_debugger.next_bpoint_id++;
++  bx_guard.iaddr.lin[bx_guard.iaddr.num_linear].bpoint_id = BpId;
++  bx_guard.iaddr.lin[bx_guard.iaddr.num_linear].enabled=1;
+   bx_guard.iaddr.num_linear++;
+   bx_guard.guard_for |= BX_DBG_GUARD_IADDR_LIN;
++  return BpId;
+ 
+ #else
+   dbg_printf ( "Error: linear breakpoint support not compiled in.\n");
+   dbg_printf ( "Error: see BX_DBG_SUPPORT_LIN_BPOINT.\n");
++  return -1;
+ #endif
+ }
+ 
+-  void
+-bx_dbg_pbreakpoint_command(bx_bool specific, Bit32u paddress)
++  int
++bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress)
+ {
+ #if BX_DBG_SUPPORT_PHY_BPOINT
+-  if (specific == 0) {
+-    dbg_printf ( "Error: pbreak without address not implemented yet.\n");
+-    return;
++  if (bk != bkRegular) {
++    dbg_printf ( "Error: pbreak of this kind not implemented yet.\n");
++    return -1;
+     }
+ 
+   if (bx_guard.iaddr.num_physical >= BX_DBG_MAX_PHY_BPOINTS) {
+     dbg_printf ( "Error: no more physical breakpoint slots left.\n");
+     dbg_printf ( "Error: see BX_DBG_MAX_PHY_BPOINTS.\n");
+-    return;
++    return -1;
+     }
+ 
+   bx_guard.iaddr.phy[bx_guard.iaddr.num_physical].addr = paddress;
+   bx_guard.iaddr.phy[bx_guard.iaddr.num_physical].bpoint_id = bx_debugger.next_bpoint_id++;
++  int BpId = (int)bx_guard.iaddr.phy[bx_guard.iaddr.num_physical].bpoint_id;
++  bx_guard.iaddr.phy[bx_guard.iaddr.num_physical].enabled=1;
+   bx_guard.iaddr.num_physical++;
+   bx_guard.guard_for |= BX_DBG_GUARD_IADDR_PHY;
+-
++  return BpId;
+ #else
+   dbg_printf ( "Error: physical breakpoint support not compiled in.\n");
+   dbg_printf ( "Error: see BX_DBG_SUPPORT_PHY_BPOINT.\n");
++  return -1;
+ #endif
+ }
+ 
+@@ -2505,7 +2831,7 @@
+     dbg_printf ( "%3u ", bx_guard.iaddr.vir[i].bpoint_id);
+     dbg_printf ( "vbreakpoint    ");
+     dbg_printf ( "keep ");
+-    dbg_printf ( "y   ");
++    dbg_printf ( bx_guard.iaddr.vir[i].enabled?"y   ":"n   ");
+     dbg_printf ( "0x%04x:0x%08x\n",
+                   bx_guard.iaddr.vir[i].cs,
+                   bx_guard.iaddr.vir[i].eip);
+@@ -2517,7 +2843,7 @@
+     dbg_printf ( "%3u ", bx_guard.iaddr.lin[i].bpoint_id);
+     dbg_printf ( "lbreakpoint    ");
+     dbg_printf ( "keep ");
+-    dbg_printf ( "y   ");
++    dbg_printf ( bx_guard.iaddr.lin[i].enabled?"y   ":"n   ");
+     dbg_printf ( "0x%08x\n",
+                   bx_guard.iaddr.lin[i].addr);
+     }
+@@ -2528,7 +2854,7 @@
+     dbg_printf ( "%3u ", bx_guard.iaddr.phy[i].bpoint_id);
+     dbg_printf ( "pbreakpoint    ");
+     dbg_printf ( "keep ");
+-    dbg_printf ( "y   ");
++    dbg_printf ( bx_guard.iaddr.phy[i].enabled?"y   ":"n   ");
+     dbg_printf ( "0x%08x\n",
+                   bx_guard.iaddr.phy[i].addr);
+     }
+@@ -2627,9 +2953,9 @@
+       reg = cpu.gs.sel;
+       dbg_printf ( "gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+     }
+-    if (which_regs_mask & BX_INFO_FPU_REGS) {
+-      BX_CPU(i)->fpu_print_regs ();
+-    }
++//    if (which_regs_mask & BX_INFO_FPU_REGS) {
++//      BX_CPU(i)->fpu_print_regs ();
++//    }
+   }
+ }
+ 
+@@ -2747,12 +3073,24 @@
+ }
+ 
+   void
+-bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+-               Bit32u addr, bx_bool addr_passed, int simulator)
++dbg_printf_binary (char *format, Bit32u data, int bits)
+ {
+-  unsigned repeat_count, i;
+-  char ch, display_format, unit_size;
+-  bx_bool iteration;
++  int b,len = 0;
++  char num[33];
++
++  for (b = 1 << (bits - 1); b; b >>= 1)
++    num [len++] = (data & b) ? '1' : '0';
++  num [len] = 0;
++  dbg_printf (format, num);
++}
++
++  void
++bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
++               Bit32u addr, bx_bool addr_passed, int simulator)
++{
++  unsigned repeat_count, i;
++  char ch, display_format, unit_size;
++  bx_bool iteration, memory_dump = false;
+   unsigned data_size;
+   bx_bool paddr_valid;
+   Bit32u  paddr;
+@@ -2760,8 +3098,6 @@
+   Bit16u  data16;
+   Bit32u  data32;
+   unsigned columns, per_line, offset;
+-  unsigned char digit;
+-  unsigned biti;
+   bx_bool is_linear;
+   unsigned char databuf[8];
+ 
+@@ -2830,9 +3166,8 @@
+     display_format = bx_debugger.default_display_format;
+     unit_size      = bx_debugger.default_unit_size;
+ 
+-    for (i=0; i<=1; i++) {
+-      if (ch==0) break; // bail on null character
+-      switch (ch) {
++    for (i = 0; format [i]; i++) {
++      switch (ch = format [i]) {
+         case 'x': // hex
+         case 'd': // signed decimal
+         case 'u': // unsigned decimal
+@@ -2850,13 +3185,16 @@
+         case 'g': // giant words (8 bytes)
+           unit_size = ch;
+           break;
++
++	case 'm': // memory dump
++	  memory_dump = true;
++          break;
++
+         default:
+-          dbg_printf ( "dbg_examine: invalid format passed.\n");
++          dbg_printf ( "dbg_examine: invalid format passed. \'%c\'\n", ch);
+           bx_dbg_exit(1);
+           break;
+         }
+-      format++;
+-      ch = *format;
+       }
+ 
+     // store current options as default
+@@ -2882,6 +3220,25 @@
+   per_line  = 0;
+   offset = 0;
+ 
++  if (memory_dump) {
++    if (display_format == 'c') {
++      // Display character dump in lines of 64 characters
++      unit_size = 'b';
++      data_size = 1;
++      per_line = 64;
++      }
++    else
++      switch (unit_size) {
++        case 'b': data_size = 1; per_line = 16; break;
++        case 'h': data_size = 2; per_line = 8; break;
++        case 'w': data_size = 4; per_line = 4; break;
++        //case 'g': data_size = 8; per_line = 2; break;
++        }
++    // binary format is quite large
++    if (display_format == 't')
++      per_line /= 4;
++    }
++  else
+   switch (unit_size) {
+     case 'b': data_size = 1; per_line = 8; break;
+     case 'h': data_size = 2; per_line = 8; break;
+@@ -2897,10 +3254,19 @@
+       // if not 1st run, need a newline from last line
+       if (i!=1)
+         dbg_printf ( "\n");
+-      dbg_printf ( "0x%x <bogus+%u>:", addr, offset);
++      if (memory_dump)
++        dbg_printf ( "%08X  ", addr );
++      else
++        dbg_printf ( "0x%08x <bogus+%8u>:", addr, offset);
+       columns = 1;
+       }
+ 
++    /* Put a space in the middle of dump, for readability */
++    if ((columns - 1) == per_line / 2
++     && memory_dump
++     && display_format != 'c')
++      dbg_printf (" ");
++
+     if (is_linear) {
+       BX_CPU(simulator)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
+       if (!paddr_valid) {
+@@ -2920,22 +3286,23 @@
+     switch (data_size) {
+       case 1:
+         data8 = databuf[0];
++        if (memory_dump)
++          switch (display_format) {
++	    case 'd': dbg_printf ("%03d ", data8); break;
++	    case 'u': dbg_printf ("%03u ", data8); break;
++	    case 'o': dbg_printf ("%03o ", data8); break;
++	    case 't': dbg_printf_binary ("%s ", data8, 8); break;
++            case 'c': dbg_printf ("%c", isprint(data8) ? data8 : '.'); break;
++	    default : dbg_printf ("%02X ", data8); break;
++	  }
++	else
+         switch (display_format) {
+           case 'x': dbg_printf ( "\t0x%02x", (unsigned) data8); break;
+           case 'd': dbg_printf ( "\t%d", (int) (Bit8s) data8); break;
+           case 'u': dbg_printf ( "\t%u", (unsigned) data8); break;
+           case 'o': dbg_printf ( "\t%o", (unsigned) data8); break;
+-          case 't':
+-            fputc('\t', stderr);
+-            for (biti=7; ; biti--) {
+-              digit = (data8 >> biti) & 0x01;
+-              fputc(digit + '0', stderr);
+-              if (biti==0) break;
+-              }
+-            break;
+-          case 'c': 
+-            bx_print_char (data8);
+-            break;
++            case 't': dbg_printf_binary ("\t%s", data8, 8); break;
++            case 'c': bx_print_char (data8); break;
+           }
+         break;
+ 
+@@ -2945,19 +3312,21 @@
+ #else
+         data16 = (databuf[1]<<8)  |  databuf[0];
+ #endif
++        if (memory_dump)
++          switch (display_format) {
++	    case 'd': dbg_printf ("%05d ", data16); break;
++	    case 'u': dbg_printf ("%05u ", data16); break;
++	    case 'o': dbg_printf ("%06o ", data16); break;
++	    case 't': dbg_printf_binary ("%s ", data16, 16); break;
++	    default : dbg_printf ("%04X ", data16); break;
++	  }
++	else
+         switch (display_format) {
+           case 'x': dbg_printf ( "\t0x%04x", (unsigned) data16); break;
+           case 'd': dbg_printf ( "\t%d", (int) (Bit16s) data16); break;
+           case 'u': dbg_printf ( "\t%u", (unsigned) data16); break;
+           case 'o': dbg_printf ( "\t%o", (unsigned) data16); break;
+-          case 't':
+-            fputc('\t', stderr);
+-            for (biti=15; ; biti--) {
+-              digit = (data16 >> biti) & 0x01;
+-              fputc(digit + '0', stderr);
+-              if (biti==0) break;
+-              }
+-            break;
++            case 't': dbg_printf_binary ("\t%s", data16, 16); break;
+           case 'c': 
+             bx_print_char (data16>>8);
+             bx_print_char (data16 & 0xff);
+@@ -2972,19 +3341,21 @@
+         data32 = (databuf[3]<<24) | (databuf[2]<<16) |
+                  (databuf[1]<<8)  |  databuf[0];
+ #endif
++        if (memory_dump)
++          switch (display_format) {
++	    case 'd': dbg_printf ("%10d ", data32); break;
++	    case 'u': dbg_printf ("%10u ", data32); break;
++	    case 'o': dbg_printf ("%12o ", data32); break;
++	    case 't': dbg_printf_binary ("%s ", data32, 32); break;
++	    default : dbg_printf ("%08X ", data32); break;
++	  }
++	else
+         switch (display_format) {
+           case 'x': dbg_printf ( "\t0x%08x", (unsigned) data32); break;
+           case 'd': dbg_printf ( "\t%d", (int) (Bit32s) data32); break;
+           case 'u': dbg_printf ( "\t%u", (unsigned) data32); break;
+           case 'o': dbg_printf ( "\t%o", (unsigned) data32); break;
+-          case 't':
+-            fputc('\t', stderr);
+-            for (biti=31; ; biti--) {
+-              digit = (data32 >> biti) & 0x01;
+-              fputc(digit + '0', stderr);
+-              if (biti==0) break;
+-              }
+-            break;
++            case 't': dbg_printf_binary ("\t%s", data32, 32); break;
+     case 'c': 
+             bx_print_char (0xff & (data32>>24));
+             bx_print_char (0xff & (data32>>16));
+@@ -3037,7 +3408,7 @@
+   void
+ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
+ {
+-  bx_bool is_OK;
++  bx_bool is_OK = false;
+   symbol++; // get past '$'
+ 
+   if ( !strcmp(symbol, "eax") ) {
+@@ -3389,21 +3760,38 @@
+ }
+ 
+   void
+-bx_dbg_disassemble_command(bx_num_range range)
++bx_dbg_disassemble_command(const char *format, bx_num_range range)
+ {
+ #if BX_DISASM
+   bx_bool paddr_valid;
+-  Bit32u  paddr;
++  Bit32u  paddr, Base;
+   unsigned ilen;
++  int numlines = INT_MAX;
+ 
+-  if (range.to == EMPTY_ARG) {
+-    // should set to cs:eip. FIXME
+-    BX_INFO(("Error: type 'disassemble ADDR' or 'disassemble ADDR:ADDR'"));
+-    return;
++  if (range.from == EMPTY_ARG) {
++    range.from = bx_dbg_get_laddr(bx_dbg_get_selector_value(1), BX_CPU(dbg_cpu)->get_EIP());
++    range.to = range.from;
+   }
+ 
++  if (format) {
++    // format always begins with '/' (checked in lexer)
++    // so we won't bother checking it here second time.
++    numlines = atoi(format + 1);
++    if (range.to == range.from)
++      range.to = BX_MAX_BIT64S; // Disassemble just X lines
++    }
++/*
++  if (BX_CPU(dbg_cpu)->protectedMode) { // 16bit & 32bit protected mode
++   Base=BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.base;
++  }
++  else {
++   Base=BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_CS].selector.value<<4;
++  }
++*/
+   do {
+-    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(range.from, &paddr, &paddr_valid);
++    numlines--;
++
++    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy((Bit32u)range.from, &paddr, &paddr_valid);
+ 
+     if (paddr_valid) {
+       unsigned dis_size = bx_debugger.disassemble_size;
+@@ -3414,9 +3802,12 @@
+       }
+       BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
+       ilen = bx_disassemble.disasm(dis_size==32,
+-        range.from, bx_disasm_ibuf, bx_disasm_tbuf);
++        0, (Bit32u)range.from, bx_disasm_ibuf, bx_disasm_tbuf);
++
++      char *Sym=bx_dbg_disasm_symbolic_address(range.from, 0);
+ 
+       dbg_printf ( "%08x: ", (unsigned) range.from);
++      dbg_printf ( "(%20s): ", Sym?Sym:"");
+       dbg_printf ( "%-25s ; ", bx_disasm_tbuf);
+ 
+       for (unsigned j=0; j<ilen; j++)
+@@ -3429,141 +3820,13 @@
+       range.from = range.to; // bail out
+       }
+       range.from += ilen;
+-    } while (range.from < range.to);
++    } while ((range.from < range.to) && numlines > 0);
+ #else
++  UNUSED(format);
+   UNUSED(range);
+ #endif  // #if BX_DISASM
+ }
+ 
+-//NOTE simple minded maths logic
+-  void
+-bx_dbg_maths_command(char *command, int data1, int data2)
+-{
+-  if(strcmp(command,"add") == 0)
+-  {
+-    dbg_printf (" %x + %x = %x ", data1, data2, data1+data2);
+-  }
+-  else if(strcmp(command,"sub") == 0)
+-  {
+-    dbg_printf (" %x - %x = %x ", data1, data2, data1-data2); 
+-  }
+-  else if(strcmp(command,"mul") == 0)
+-  {
+-    dbg_printf (" %x * %x = %x ", data1, data2, data1*data2); 
+-  }
+-  else if(strcmp(command,"div") == 0)
+-  {
+-    dbg_printf (" %x / %x = %x ", data1, data2, data1/data2); 
+-  }
+-  dbg_printf ("\n");
+-}
+-
+-//FIXME HanishKVC requires better error checking in POST FIX expression
+-//NOTE Uses POST FIX EXPRESSION handling for better maths
+-  void
+-bx_dbg_maths_expression_command(char *expr)
+-{
+-  int data1, data2, res;
+-  int biti,digit;
+-  char *next_token;
+-
+-  dbg_printf ("%s\n",expr);
+-
+-  expr++; // skip " in the string token passed
+-  while(expr[0] == ' ')expr++; // skip any spaces following the " 
+-
+-  next_token = strtok(expr," ");
+-  if(next_token == NULL) return;
+-  data1 = res = strtol(next_token,NULL,0);
+-  do
+-  {
+-    switch(next_token[0])
+-    {
+-      case '+':  
+-        res = data1+data2;
+-        dbg_printf (" %x + %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '-':  
+-        res = data1-data2;
+-        dbg_printf (" %x - %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '*':  
+-        res = data1*data2;
+-        dbg_printf (" %x * %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '/':  
+-        res = data1/data2;
+-        dbg_printf (" %x / %x = %x ",data1,data2,res);
+-        data1 = res;
+-  break;
+-      case '&':
+-        res = data1 & data2;
+-        dbg_printf (" %x & %x = %x ",data1,data2,res);
+-        data1 = res;
+-        break;
+-      case '|':
+-        res = data1 | data2;
+-        dbg_printf (" %x | %x = %x ",data1,data2,res);
+-        data1 = res;
+-        break;
+-      case '~':
+-        res = ~data1;
+-        dbg_printf (" ~ %x = %x ",data1,res);
+-        data1 = res;
+-        break;
+-     default:
+-       data2 = strtol(next_token,NULL,0);
+-       break;
+-    }
+-    next_token = strtok(NULL," ");
+-    if(next_token == NULL) break;
+-  }while(1);
+-  dbg_printf ("\n");
+-  //FIXME HanishKVC If sizeof changes from a Byte addressed to 
+-  //      Word addressed machine & so on then the logic 
+-  //      below requires to be updated
+-  dbg_printf (" Binary of %x : ",res);
+-  for(biti=(sizeof(int)*8)-1; ; biti--) 
+-  {
+-    digit = (res >> biti) & 0x01;
+-    fputc(digit + '0', stderr);
+-    if(biti==0) break;
+-    if((biti%4) == 0) fputc(' ',stderr);
+-  }
+-  dbg_printf ("\n");
+-}
+-
+-  void
+-bx_dbg_v2l_command(unsigned seg_no, Bit32u offset)
+-{
+-#if BX_NUM_SIMULATORS > 1
+-  dbg_printf ( "Error: v2l not supported for nsim > 1\n"
+-#else
+-  bx_dbg_sreg_t sreg;
+-  Bit32u laddr;
+-
+-  if (seg_no > 5) {
+-    dbg_printf ( "Error: seg_no out of bounds\n");
+-    return;
+-    }
+-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, seg_no);
+-  if (!sreg.valid) {
+-    dbg_printf ( "Error: segment valid bit cleared\n");
+-    return;
+-    }
+-  laddr = (sreg.des_l>>16) |
+-          ((sreg.des_h<<16)&0x00ff0000) |
+-          (sreg.des_h & 0xff000000);
+-  laddr += offset;
+-  
+-  dbg_printf ( "laddr: 0x%x (%u)\n",
+-    (unsigned) laddr, (unsigned) laddr);
+-#endif
+-}
+-
+   void
+ bx_dbg_instrument_command(char *comm)
+ {
+@@ -3787,7 +4050,7 @@
+     break;
+   default:
+     // task, int, trap, or call gate.
+-    dbg_printf ( "target=%04x:%08x, DPL=%d", segment, offset, dpl);
++    dbg_printf ( "target=0x%04x:0x%08x, DPL=%d", segment, offset, dpl);
+       }
+     }
+     dbg_printf ( "\n");
+@@ -3807,12 +4070,12 @@
+   }
+   if (print_table)
+     dbg_printf ( "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
+-  for (n = range.from; n<=range.to; n++) {
++  for (n = (int)range.from; n<=(int)range.to; n++) {
+     Bit32u paddr;
+     bx_bool paddr_valid;
+     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.idtr.base + 8*n, &paddr, &paddr_valid);
+     if (!paddr_valid) {
+-      dbg_printf ( "error: IDTR+8*%d points to invalid linear address %p\n",
++      dbg_printf ( "error: IDTR+8*%d points to invalid linear address 0x%-08x\n",
+    n, cpu.idtr.base);
+       return;
+     }
+@@ -3838,12 +4101,12 @@
+   }
+   if (print_table)
+     dbg_printf ( "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
+-  for (n = range.from; n<=range.to; n++) {
++  for (n = (int)range.from; n<=(int)range.to; n++) {
+     Bit32u paddr;
+     bx_bool paddr_valid;
+     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(cpu.gdtr.base + 8*n, &paddr, &paddr_valid);
+     if (!paddr_valid) {
+-      dbg_printf ( "error: GDTR+8*%d points to invalid linear address %p\n",
++      dbg_printf ( "error: GDTR+8*%d points to invalid linear address 0x%-08x\n",
+     n, cpu.gdtr.base);
+       return;
+     }
+@@ -3863,11 +4126,64 @@
+   dbg_printf ( "Local Descriptor Table output not implemented\n");
+ }
+ 
++static void 
++bx_dbg_print_tss (unsigned char *tss, int len)
++{
++  if (len<104) {
++    dbg_printf ("Invalid tss length (limit must be greater then 103)\n");
++    return;
++    }
++
++  dbg_printf ("ss:esp(0): 0x%04x:0x%08x\n",
++    *(Bit16u*)(tss+8), *(Bit32u*)(tss+4));
++  dbg_printf ("ss:esp(1): 0x%04x:0x%08x\n",
++    *(Bit16u*)(tss+0x10), *(Bit32u*)(tss+0xc));
++  dbg_printf ("ss:esp(2): 0x%04x:0x%08x\n",
++    *(Bit16u*)(tss+0x18), *(Bit32u*)(tss+0x14));
++  dbg_printf ("cr3: 0x%08x\n", *(Bit32u*)(tss+0x1c));
++  dbg_printf ("eip: 0x%08x\n", *(Bit32u*)(tss+0x20));
++  dbg_printf ("eflags: 0x%08x\n", *(Bit32u*)(tss+0x24));
++
++  dbg_printf ("cs: 0x%04x ds: 0x%04x ss: 0x%04x\n",
++    *(Bit16u*)(tss+76), *(Bit16u*)(tss+84), *(Bit16u*)(tss+80));
++  dbg_printf ("es: 0x%04x fs: 0x%04x gs: 0x%04x\n",
++    *(Bit16u*)(tss+72), *(Bit16u*)(tss+88), *(Bit16u*)(tss+92));
++
++  dbg_printf ("eax: 0x%08x  ebx: 0x%08x  ecx: 0x%08x  edx: 0x%08x\n",
++    *(Bit32u*)(tss+0x28), *(Bit32u*)(tss+0x34), *(Bit32u*)(tss+0x2c), *(Bit32u*)(tss+0x30));
++  dbg_printf ("esi: 0x%08x  edi: 0x%08x  ebp: 0x%08x  esp: 0x%08x\n",
++    *(Bit32u*)(tss+0x40), *(Bit32u*)(tss+0x44), *(Bit32u*)(tss+0x3c), *(Bit32u*)(tss+0x38));
++
++  dbg_printf ("ldt: 0x%04x\n", *(Bit16u*)(tss+0x60));
++  dbg_printf ("i/o map: 0x%04x\n", *(Bit16u*)(tss+0x66));
++}
++
+ void
+-bx_dbg_info_tss_command(bx_num_range n) {
++bx_dbg_info_tss_command(bx_num_range range) {
+   bx_dbg_cpu_t cpu;
+   BX_CPU(0)->dbg_get_cpu(&cpu);
+-  dbg_printf ( "TSS output not implemented\n");
++
++  int print_table = 0;
++  if (range.to == EMPTY_ARG) {
++    // show all entries
++    Bit32u laddr = (cpu.tr.des_l>>16) |
++                   ((cpu.tr.des_h<<16)&0x00ff0000) |
++                   (cpu.tr.des_h & 0xff000000);
++    Bit32u len = (cpu.tr.des_l & 0xffff) + 1;
++
++    dbg_printf ( "tr:s=0x%x, base=0x%x, valid=%u\n",
++      (unsigned) cpu.tr.sel, laddr, (unsigned) cpu.tr.valid);
++
++    Bit32u paddr;
++    bx_bool paddr_valid;
++    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &paddr_valid);
++
++    bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
++
++    range.from = 0;
++    range.to = (cpu.gdtr.limit) / 8;
++    print_table = 1;
++  }
+ }
+ 
+ bx_num_range 
+@@ -3941,6 +4257,15 @@
+ #endif
+ }
+ 
++/*
++ * this implements the info pic command in the debugger.
++ * info pic - shows pic registers
++ */
++void
++bx_dbg_info_pic()
++{
++ DEV_pic_show_pic_state();
++}
+ //
+ // Reports from various events
+ //
+@@ -4855,21 +5180,27 @@
+ 
+   if (command == NULL)
+   {
+-    dbg_printf("help - show list of debugger commands\n");
+-    dbg_printf("help \"command\" - show short command description\n");
+-    dbg_printf("debugger commands are:\n");
+-    dbg_printf("help, quit, q, c, stepi, si, step, s, vbreak, v, lbreak, lb, pbreak, pb, break\n");
+-    dbg_printf("b, delete, del, d, xp, x, setpmem, crc, info, set, dump_cpu, set_cpu, disas\n");
+-    dbg_printf("disassemble, instrument, trace-on, trace-off, ptime, sb, sba, record, playback\n");
+-    dbg_printf("print-stack, watch, unwatch, load-symbols, show, modebp\n");
++    fprintf(stderr, "help - show list of debugger commands\n");
++    fprintf(stderr, "help \'command\'- show short command description\n");
++    fprintf(stderr, "-*- Debugger control -*-\n");
++    fprintf(stderr, "    help, q|quit|exit, set, instrument, show, trace-on, trace-off,\n");
++    fprintf(stderr, "    record, playback, load-symbols, slist\n");
++    fprintf(stderr, "-*- Execution control -*-\n");
++    fprintf(stderr, "    c|cont, s|step|stepi, p|n|next, modebp\n");
++    fprintf(stderr, "-*- Breakpoint management -*-\n");
++    fprintf(stderr, "    v|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
++    fprintf(stderr, "    bpe, bpd, d|del|delete\n");
++    fprintf(stderr, "-*- CPU and memory contents -*-\n");
++    fprintf(stderr, "    x, xp, u|disas|disassemble, r|reg|registers, setpmem, crc, info, dump_cpu,\n");
++    fprintf(stderr, "    set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
+   }
+   else
+   {
+     p = command;
+-    for (; *p != 0 && *p != '\"'; p++); p++;
+-    for (; *p != 0 && *p != '\"'; p++); *p = 0;
++    for (; *p != 0 && *p != '\"' && *p != '\''; p++); p++;
++    for (; *p != 0 && *p != '\"' && *p != '\''; p++); *p = 0;
+     p = command;
+-    for (; *p != 0 && *p != '\"'; p++); p++;
++    for (; *p != 0 && *p != '\"' && *p != '\''; p++); p++;
+ 
+     dbg_printf("help %s\n", p);
+ 
+@@ -4884,19 +5215,26 @@
+       dbg_printf("%s - quit debugger and execution\n", p);
+     }
+     else
+-    if (strcmp(p, "c") == 0)
++    if ((strcmp(p, "c") == 0) ||
++        (strcmp(p, "cont") == 0))
+     {
+       dbg_printf("%s - continue executing\n", p);
+     }
+     else
+     if ((strcmp(p, "stepi") == 0) ||
+         (strcmp(p, "step") == 0) ||
+-        (strcmp(p, "si") == 0) ||
+        (strcmp(p, "s") == 0))
+     {
+       dbg_printf("%s [count] - execute count instructions, default is 1\n", p);
+     }
+     else
++    if ((strcmp(p, "next") == 0) ||
++        (strcmp(p, "n") == 0) ||
++        (strcmp(p, "p") == 0))
++    {
++      fprintf(stderr, "%s - execute instructions, stepping over subroutines\n", p);
++    }
++    else
+     if ((strcmp(p, "vbreak") == 0) ||
+         (strcmp(p, "vb") == 0))
+     {
+@@ -4924,14 +5262,46 @@
+       dbg_printf("%s n - delete a breakpoint\n", p);
+     }
+     else
++    if ((strcmp(p, "bpe") == 0))
++    {
++      fprintf(stderr, "%s n - enable a breakpoint\n", p);
++    }
++    else
++    if ((strcmp(p, "bpd") == 0))
++    {
++      fprintf(stderr, "%s n - disable a breakpoint\n", p);
++    }
++    else
++    if ((strcmp(p, "blist") == 0))
++    {
++      fprintf(stderr, "%s - list all breakpoints (same as 'info break')\n", p);
++    }
++    else
+     if (strcmp(p, "xp") == 0)
+     {
+-      dbg_printf("%s /nuf addr - examine memory at physical address\n", p);
++      fprintf(stderr, "%s /nuf addr - examine memory at physical address\n", p);
++      goto nuf_help;
+     }
+     else
+     if (strcmp(p, "x") == 0)
+     {
+-      dbg_printf("%s /nuf addr - examine memory at linear address\n", p);
++      fprintf(stderr, "%s /nuf addr - examine memory at linear address\n", p);
++nuf_help:
++      fprintf(stderr, "    nuf is a sequence of numbers (how much values\n");
++      fprintf(stderr, "    to display) and one or more of the [mxduotcsibhwg]\n");
++      fprintf(stderr, "    format specificators:\n");
++      fprintf(stderr, "    x,d,u,o,t,c,s,i select the format of the output (they stand for\n");
++      fprintf(stderr, "        hex, decimal, unsigned, octal, binary, char, asciiz, instr)\n");
++      fprintf(stderr, "    b,h,w,g select the size of a data element (for byte, half-word,\n");
++      fprintf(stderr, "        word and giant word)\n");
++      fprintf(stderr, "    m selects an alternative output format (memory dump)\n");
++    }
++    else
++    if ((strcmp(p, "r") == 0)||
++        (strcmp(p, "reg") == 0)||
++        (strcmp(p, "registers") == 0))
++    {
++      fprintf(stderr, "%s = expression - set register value to expression\n", p);
+     }
+     else
+     if (strcmp(p, "setpmem") == 0)
+@@ -4946,17 +5316,21 @@
+     else
+     if (strcmp(p, "info") == 0)
+     {
+-      dbg_printf("%s break - show information about current breakpoint status\n", p);
+-      dbg_printf("%s dirty - show physical pages dirtied (written to) since last display\n", p);
+-      dbg_printf("%s program - execution status of the program\n", p);
+-      dbg_printf("%s registers - list of CPU integer registers and their contents\n", p);
+-      dbg_printf("%s fpu - list of FPU registers and their contents\n", p);
+-      dbg_printf("%s idt - show interrupt descriptor table\n", p);
+-      dbg_printf("%s ivt - show interrupt vector table\n", p);
+-      dbg_printf("%s gdt - show global descriptor table\n", p);
+-      dbg_printf("%s tss - show task ???\n", p);
+-      dbg_printf("%s cr - show CR0-4 registers\n", p);
+-      dbg_printf("%s ne2000 - show NE2000 registers\n", p);
++      fprintf(stderr, "%s break - show information about current breakpoint status\n", p);
++      fprintf(stderr, "%s dirty - show physical pages dirtied (written to) since last display\n", p);
++      fprintf(stderr, "%s program - execution status of the program\n", p);
++      fprintf(stderr, "%s r|reg|registers - list of CPU integer registers and their contents\n", p);
++      fprintf(stderr, "%s cpu - list of CPU registers and their contents\n", p);
++      fprintf(stderr, "%s fpu - list of FPU registers and their contents\n", p);
++      fprintf(stderr, "%s idt - show interrupt descriptor table\n", p);
++      fprintf(stderr, "%s ivt - show interrupt vector table\n", p);
++      fprintf(stderr, "%s gdt - show global descriptor table\n", p);
++      fprintf(stderr, "%s tss - show current task state segment\n", p);
++      fprintf(stderr, "%s cr - show CR0-4 registers\n", p);
++      fprintf(stderr, "%s flags - show decoded EFLAGS register\n", p);
++      fprintf(stderr, "%s symbols [string] - list symbols whose prefix is string\n", p);
++      fprintf(stderr, "%s pic - show PICs registers\n", p);
++      fprintf(stderr, "%s ne2000 - show NE2000 registers\n", p);
+     }
+     else
+     if (strcmp(p, "set") == 0)
+@@ -4981,7 +5355,8 @@
+     if ((strcmp(p, "disassemble") == 0) ||
+         (strcmp(p, "disas") == 0))
+     {
+-      dbg_printf("%s start end - disassemble instructions for given linear adress\n", p);
++      fprintf(stderr, "%s [/count] start end - disassemble instructions for given linear adress\n", p);
++      fprintf(stderr, "    Optional 'count' is the number of disassembled instructions");
+     }
+     else
+     if (strcmp(p, "instrument") == 0)
+@@ -5053,6 +5428,11 @@
+       dbg_printf("%s [global] filename [offset] - load symbols from file filename\n", p);
+     }
+     else
++    if ((strcmp(p, "slist") == 0))
++    {
++      fprintf(stderr, "%s [string] - list symbols whose preffix is string (same as 'info symbols')\n", p);
++    }
++    else
+     if (strcmp(p, "modebp") == 0)
+     {
+       dbg_printf("%s - toggles vm86 mode switch breakpoint\n", p);
+@@ -5072,6 +5452,17 @@
+       dbg_printf("%s \"tab\" - show page tables\n", p);
+     }
+     else
++    if ((strcmp(p, "calc") == 0) ||
++        (strcmp(p, "?") == 0))
++    {
++      fprintf(stderr, "%s expr - calculate a expression and display the result.\n", p);
++      fprintf(stderr, "    'expr' can reference any general-purpose and segment\n");
++      fprintf(stderr, "    registers, use any arithmetic and logic operations, and\n");
++      fprintf(stderr, "    also the special ':' operator which computes the linear\n");
++      fprintf(stderr, "    address for a segment:offset (in real and v86 mode) or\n");
++      fprintf(stderr, "    of a selector:offset (in protected mode) pair.\n");
++    }
++    else
+     {
+       dbg_printf("%s - unknow command, try help\n", p);
+     }
+@@ -5079,5 +5470,404 @@
+   return;
+ }
+ 
++void
++bx_dbg_calc_command(Bit64u value)
++{
++ dbg_printf ("0x" FMT_LL "x\n", value);
++}
++
++Bit32u
++bx_dbg_get_reg_value(Regs reg)
++{
++ switch(reg)
++ {
++  case rAL:
++   return BX_CPU(dbg_cpu)->get_AL();
++  case rBL:
++   return BX_CPU(dbg_cpu)->get_BL();
++  case rCL:
++   return BX_CPU(dbg_cpu)->get_CL();
++  case rDL:
++   return BX_CPU(dbg_cpu)->get_DL();
++  case rAH:
++   return BX_CPU(dbg_cpu)->get_AH();
++  case rBH:
++   return BX_CPU(dbg_cpu)->get_BH();
++  case rCH:
++   return BX_CPU(dbg_cpu)->get_CH();
++  case rDH:
++   return BX_CPU(dbg_cpu)->get_DH();
++  case rAX:
++   return BX_CPU(dbg_cpu)->get_AX();
++  case rBX:
++   return BX_CPU(dbg_cpu)->get_BX();
++  case rCX:
++   return BX_CPU(dbg_cpu)->get_CX();
++  case rDX:
++   return BX_CPU(dbg_cpu)->get_DX();
++  case rEAX:
++   return BX_CPU(dbg_cpu)->get_EAX();
++  case rEBX:
++   return BX_CPU(dbg_cpu)->get_EBX();
++  case rECX:
++   return BX_CPU(dbg_cpu)->get_ECX();
++  case rEDX:
++   return BX_CPU(dbg_cpu)->get_EDX();
++
++  case rSI:
++   return BX_CPU(dbg_cpu)->get_SI();
++  case rDI:
++   return BX_CPU(dbg_cpu)->get_DI();
++  case rESI:
++   return BX_CPU(dbg_cpu)->get_ESI();
++  case rEDI:
++   return BX_CPU(dbg_cpu)->get_EDI();
++
++  case rBP:
++   return BX_CPU(dbg_cpu)->get_BP();
++  case rEBP:
++   return BX_CPU(dbg_cpu)->get_EBP();
++  case rSP:
++   return BX_CPU(dbg_cpu)->get_SP();
++  case rESP:
++   return BX_CPU(dbg_cpu)->get_ESP();
++  case rIP:
++   return (Bit16u)BX_CPU(dbg_cpu)->get_EIP();
++  case rEIP:
++   return BX_CPU(dbg_cpu)->get_EIP();
++  default:
++    fprintf(stderr, "unknown register ??? (BUG!!!)\n");
++   return 0;
++ }
++}
++
++void
++bx_dbg_set_reg_value (Regs reg, Bit32u value)
++{
++ switch(reg)
++ {
++  case rAL:
++   BX_CPU(dbg_cpu)->set_AL(value);
++   break;
++  case rBL:
++   BX_CPU(dbg_cpu)->set_BL(value);
++   break;
++  case rCL:
++   BX_CPU(dbg_cpu)->set_CL(value);
++   break;
++  case rDL:
++   BX_CPU(dbg_cpu)->set_DL(value);
++   break;
++  case rAH:
++   BX_CPU(dbg_cpu)->set_AH(value>>8);
++   break;
++  case rBH:
++   BX_CPU(dbg_cpu)->set_BH(value>>8);
++   break;
++  case rCH:
++   BX_CPU(dbg_cpu)->set_CH(value>>8);
++   break;
++  case rDH:
++   BX_CPU(dbg_cpu)->set_DH(value>>8);
++   break;
++  case rAX:
++   BX_CPU(dbg_cpu)->set_AX(value);
++   break;
++  case rBX:
++   BX_CPU(dbg_cpu)->set_BX(value);
++   break;
++  case rCX:
++   BX_CPU(dbg_cpu)->set_CX(value);
++   break;
++  case rDX:
++   BX_CPU(dbg_cpu)->set_DX(value);
++   break;
++  case rEAX:
++   BX_CPU(dbg_cpu)->set_EAX(value);
++   break;
++  case rEBX:
++   BX_CPU(dbg_cpu)->set_EBX(value);
++   break;
++  case rECX:
++   BX_CPU(dbg_cpu)->set_ECX(value);
++   break;
++  case rEDX:
++   BX_CPU(dbg_cpu)->set_EDX(value);
++   break;
++
++  case rSI:
++   BX_CPU(dbg_cpu)->set_SI(value);
++   break;
++  case rDI:
++   BX_CPU(dbg_cpu)->set_DI(value);
++   break;
++  case rESI:
++   BX_CPU(dbg_cpu)->set_ESI(value);
++   break;
++  case rEDI:
++   BX_CPU(dbg_cpu)->set_EDI(value);
++   break;
++
++  case rBP:
++   BX_CPU(dbg_cpu)->set_BP(value);
++   break;
++  case rEBP:
++   BX_CPU(dbg_cpu)->set_EBP(value);
++   break;
++  case rSP:
++   BX_CPU(dbg_cpu)->set_SP(value);
++   break;
++  case rESP:
++   BX_CPU(dbg_cpu)->set_ESP(value);
++   break;
++/*
++  case rIP:
++   BX_CPU(dbg_cpu)->set_IP(value);
++   break;
++  case rEIP:
++   BX_CPU(dbg_cpu)->set_EIP(value);
++   break;
++*/
++  default:
++    fprintf(stderr, "unknown register ??? (BUG!!!)\n");
++ }
++}
++
++Bit16u 
++bx_dbg_get_selector_value(unsigned int seg_no)
++{
++  bx_dbg_sreg_t sreg;
++
++  if (seg_no > 5) {
++    dbg_printf ( "Error: seg_no out of bounds\n");
++    return 0;
++  }
++  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, seg_no);
++  if (!sreg.valid) {
++    dbg_printf ( "Error: segment valid bit cleared\n");
++    return 0;
++  }
++  return sreg.sel;
++}
++
++Bit32u
++bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
++{
++  bool protmode = (BX_CPU(dbg_cpu)->cr0.pe)
++   && !(BX_CPU(dbg_cpu)->get_VM());
++
++  if (protmode) {
++    bx_descriptor_t descriptor;
++    bx_selector_t selector;
++    Bit32u dword1, dword2;
++
++    /* if selector is NULL, error */
++    if ((sel & 0xfffc) == 0) {
++      dbg_printf ("ERROR: Dereferencing a NULL selector!\n");
++      return 0;
++      }
++
++    /* parse fields in selector */
++    BX_CPU(dbg_cpu)->parse_selector(sel, &selector);
++
++    Bit32u desc_base;
++    if (selector.ti) {
++      // LDT
++      if ((selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.ldt.limit) {
++        dbg_printf ("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
++        return 0;
++        }
++      desc_base = BX_CPU(dbg_cpu)->ldtr.cache.u.ldt.base;
++      }
++    else {
++      // GDT
++      if ((selector.index*8 + 7) > BX_CPU(dbg_cpu)->gdtr.limit) {
++        dbg_printf ("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
++        return 0;
++        }
++      desc_base = BX_CPU(dbg_cpu)->gdtr.base;
++      }
++
++    BX_CPU(dbg_cpu)->access_linear(desc_base + selector.index * 8,     4, 0, BX_READ, &dword1);
++    BX_CPU(dbg_cpu)->access_linear(desc_base + selector.index * 8 + 4, 4, 0, BX_READ, &dword2);
++
++    memset (&descriptor, 0, sizeof (descriptor));
++    BX_CPU(dbg_cpu)->parse_descriptor(dword1, dword2, &descriptor);
++
++    if (!descriptor.segment) {
++      dbg_printf ("ERROR: selector %04x points to a system descriptor and is not supported!\n", sel);
++      return 0;
++      }
++
++    /* #NP(selector) if descriptor is not present */
++    if (descriptor.p==0) {
++      dbg_printf ("ERROR: descriptor %04x not present!\n", sel);
++      return 0;
++      }
++
++    Bit32u lowaddr, highaddr;
++    if (descriptor.u.segment.c_ed && !descriptor.u.segment.executable) // expand-down
++      lowaddr = descriptor.u.segment.limit_scaled,
++      highaddr = descriptor.u.segment.g ? 0xffffffff : 0xffff;
++    else
++      lowaddr = 0, highaddr = descriptor.u.segment.limit_scaled;
++
++    if ((ofs < lowaddr) || (ofs > highaddr)) {
++      dbg_printf ("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n",
++        ofs, sel, lowaddr, highaddr);
++      }
++
++    return descriptor.u.segment.base + ofs;
++    }
++  else {
++    return sel * 16 + ofs;
++    }
++}
++
++void
++bx_dbg_step_over_command ()
++{
++  Bit8u *fetchPtr;
++  bxInstruction_c iStorage BX_CPP_AlignN (32);
++  bxInstruction_c *i = &iStorage;
++  Bit32u Laddr = BX_CPU (dbg_cpu)->sregs [BX_SEG_REG_CS].cache.u.segment.base +
++                 BX_CPU (dbg_cpu)->get_EIP ();
++  Bit32u Paddr;
++  bx_bool paddr_valid;
++
++  BX_CPU (dbg_cpu)->dbg_xlate_linear2phy (Laddr, &Paddr, &paddr_valid);
++
++  if(!paddr_valid) {
++    dbg_printf ("bx_dbg_step_over_command:: Invalid physical address\n");
++    return;
++  }
++  fetchPtr = BX_CPU (dbg_cpu)->mem->getHostMemAddr (BX_CPU(dbg_cpu), Paddr, BX_READ);
++  unsigned ret = BX_CPU (dbg_cpu)->fetchDecode (fetchPtr, i, 15);
++
++  if (ret == 0)
++    BX_CPU (dbg_cpu)->boundaryFetch (i);
+ 
++  unsigned b1 = i->b1 ();
++
++  switch(b1) {
++    // Jcc short
++    case 0x70:
++    case 0x71:
++    case 0x72:
++    case 0x73:
++    case 0x74:
++    case 0x75:
++    case 0x76:
++    case 0x77:
++    case 0x78:
++    case 0x79:
++    case 0x7A:
++    case 0x7B:
++    case 0x7C:
++    case 0x7D:
++    case 0x7E:
++    case 0x7F:
++    
++    // Jcc near
++    case 0x180:
++    case 0x181:
++    case 0x182:
++    case 0x183:
++    case 0x184:
++    case 0x185:
++    case 0x186:
++    case 0x187:
++    case 0x188:
++    case 0x189:
++    case 0x18A:
++    case 0x18B:
++    case 0x18C:
++    case 0x18D:
++    case 0x18E:
++    case 0x18F:
++
++    // jcxz
++    case 0xE3:
++
++    // retn n
++    case 0xC2:
++    // retn
++    case 0xC3:
++    // retf n
++    case 0xCA:
++    // retf
++    case 0xCB:
++    // iret
++    case 0xCF:
++
++    // jmp near
++    case 0xE9:
++    // jmp far
++    case 0xEA:
++    // jmp short
++    case 0xEB:
++      bx_dbg_stepN_command (1);
++      return;
++    // jmp absolute indirect
++    case 0xFF:
++      switch (i->nnn ()) {
++        // near
++        case 4:
++        // far
++        case 5:
++         bx_dbg_stepN_command (1);
++         return;
++      }
++  }
++
++  // calls, ints, loops and so on
++  int BpId = bx_dbg_lbreakpoint_command (bkStepOver, Laddr + i->ilen ());
++  if (BpId == -1)
++    return;
++  
++  bx_dbg_continue_command ();
++  
++  if (bx_dbg_del_lbreak (BpId))
++    bx_dbg_breakpoint_changed ();
++}
++
++void 
++bx_dbg_info_flags(void)
++{
++ if(BX_CPU(dbg_cpu)->getB_ID())
++  dbg_printf ("ID ");
++ if(BX_CPU(dbg_cpu)->getB_VP())
++  dbg_printf ("VIP ");
++ if(BX_CPU(dbg_cpu)->getB_VF())
++  dbg_printf ("VIF ");
++ if(BX_CPU(dbg_cpu)->getB_AC())
++  dbg_printf ("AC ");
++ if(BX_CPU(dbg_cpu)->getB_VM())
++  dbg_printf ("VM ");
++ if(BX_CPU(dbg_cpu)->getB_RF())
++  dbg_printf ("RF ");
++ if(BX_CPU(dbg_cpu)->getB_NT())
++  dbg_printf ("NT ");
++ dbg_printf ("IOPL=%d ", BX_CPU(dbg_cpu)->get_IOPL());
++ if(BX_CPU(dbg_cpu)->eflags.val32 & EFlagsOFMask)
++  dbg_printf ("OF ");
++ if(BX_CPU(dbg_cpu)->getB_DF())
++  dbg_printf ("DF ");
++ if(BX_CPU(dbg_cpu)->getB_IF())
++  dbg_printf ("IF ");
++ if(BX_CPU(dbg_cpu)->getB_TF())
++  dbg_printf ("TF ");
++ if(BX_CPU(dbg_cpu)->getB_SF())
++  dbg_printf ("SF ");
++ if(BX_CPU(dbg_cpu)->getB_ZF())
++  dbg_printf ("ZF ");
++ if(BX_CPU(dbg_cpu)->getB_AF())
++  dbg_printf ("AF ");
++ if(BX_CPU(dbg_cpu)->getB_PF())
++  dbg_printf ("PF ");
++ if(BX_CPU(dbg_cpu)->getB_CF())
++  dbg_printf ("CF");
++ dbg_printf ("\n");
++}
+ #endif /* if BX_DEBUGGER */
++
+Index: debug/debug.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/debug.h,v
+retrieving revision 1.18
+diff -u -w -r1.18 debug.h
+--- debug/debug.h	1 Aug 2003 10:14:48 -0000	1.18
++++ debug/debug.h	2 Aug 2003 19:43:18 -0000
+@@ -56,6 +56,24 @@
+ extern "C" {
+ #endif
+ 
++typedef enum 
++{
++ rAL, rBL, rCL, rDL, 
++ rAH, rBH, rCH, rDH, 
++ rAX, rBX, rCX, rDX, 
++ rEAX, rEBX, rECX, rEDX, 
++ rSI, rDI, rESI, rEDI, 
++ rBP, rEBP, rSP, rESP, 
++ rIP, rEIP
++} Regs;
++
++typedef enum
++{
++  bkRegular,
++  bkAtIP,
++  bkStepOver
++} BreakpointKind;
++
+ // Flex defs
+ extern int bxlex(void);
+ extern char *bxtext;  // Using the pointer option rather than array
+@@ -72,8 +90,15 @@
+ } bx_num_range;
+ #define EMPTY_ARG (-1)
+ 
++Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
++Bit32u bx_dbg_get_reg_value(Regs reg);
++void bx_dbg_set_reg_value (Regs reg, Bit32u value);
++Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
++void bx_dbg_step_over_command(void);
+ bx_num_range make_num_range (Bit64s from, Bit64s to);
+ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
++char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
++Bit32u bx_dbg_get_symbol_value(char *Symbol);
+ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
+ void bx_dbg_trace_on_command(void);
+ void bx_dbg_trace_off_command(void);
+@@ -97,7 +122,7 @@
+ void bx_dbg_where_command(void);
+ void bx_dbg_print_string_command(Bit32u addr);
+ void bx_dbg_show_command(char*); /* BW */
+-void enter_playback_entry();
++void enter_playback_entry(void);
+ void bx_dbg_print_stack_command(int nwords);
+ void bx_dbg_watch(int read, Bit32u address);
+ void bx_dbg_unwatch(int read, Bit32u address);
+@@ -105,9 +130,17 @@
+ void bx_dbg_stepN_command(bx_dbg_icount_t count);
+ void bx_dbg_set_command(char *p1, char *p2, char *p3);
+ void bx_dbg_del_breakpoint_command(unsigned handle);
+-void bx_dbg_vbreakpoint_command(bx_bool specific, Bit32u cs, Bit32u eip);
+-void bx_dbg_lbreakpoint_command(bx_bool specific, Bit32u laddress);
+-void bx_dbg_pbreakpoint_command(bx_bool specific, Bit32u paddress);
++void bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable);
++bx_bool bx_dbg_en_dis_pbreak (unsigned handle, bx_bool enable);
++bx_bool bx_dbg_en_dis_lbreak (unsigned handle, bx_bool enable);
++bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable);
++bx_bool bx_dbg_del_pbreak(unsigned handle);
++bx_bool bx_dbg_del_lbreak (unsigned handle);
++bx_bool bx_dbg_del_vbreak (unsigned handle);
++int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, Bit32u eip);
++int bx_dbg_lbreakpoint_command(BreakpointKind bk, Bit32u laddress);
++int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
++int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress);
+ void bx_dbg_info_bpoints_command(void);
+ void bx_dbg_quit_command(void);
+ void bx_dbg_info_program_command(void);
+@@ -120,7 +153,9 @@
+ void bx_dbg_info_ldt_command(bx_num_range);
+ void bx_dbg_info_tss_command(bx_num_range);
+ void bx_dbg_info_control_regs_command(void);
++void bx_dbg_info_flags(void);
+ void bx_dbg_info_linux_command(void);
++void bx_dbg_info_symbols_command(char *Symbol);
+ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+                     Bit32u addr, bx_bool addr_passed, int simulator);
+ void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
+@@ -129,18 +164,17 @@
+ void bx_dbg_take_command(char *, unsigned n);
+ void bx_dbg_dump_cpu_command(void);
+ void bx_dbg_set_cpu_command(void);
+-void bx_dbg_disassemble_command(bx_num_range);
++void bx_dbg_disassemble_command(const char *,bx_num_range);
+ void bx_dbg_instrument_command(char *);
+ void bx_dbg_loader_command(char *);
+ void bx_dbg_doit_command(unsigned);
+ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
+-void bx_dbg_maths_command(char *command, int data1, int data2);
+-void bx_dbg_maths_expression_command(char *expr);
+-void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
+ extern bx_bool watchpoint_continue;
+-void bx_dbg_linux_syscall ();
++void bx_dbg_linux_syscall (void);
+ void bx_dbg_info_ne2k(int page, int reg);
++void bx_dbg_info_pic(void);
+ void bx_dbg_help_command(char* command);
++void bx_dbg_calc_command(Bit64u value);
+ void bx_dbg_info_ivt_command(bx_num_range);
+ #ifdef __cplusplus
+ }
+@@ -235,6 +269,7 @@
+       Bit32u cs;  // only use 16 bits
+       Bit32u eip;
+       unsigned bpoint_id;
++      bx_bool enabled;
+       } vir[BX_DBG_MAX_VIR_BPOINTS];
+ #endif
+ 
+@@ -243,6 +278,7 @@
+     struct {
+       Bit32u addr;
+       unsigned bpoint_id;
++      bx_bool enabled;
+       } lin[BX_DBG_MAX_LIN_BPOINTS];
+ #endif
+ 
+@@ -251,6 +287,7 @@
+     struct {
+       Bit32u addr;
+       unsigned bpoint_id;
++      bx_bool enabled;
+       } phy[BX_DBG_MAX_PHY_BPOINTS];
+ #endif
+     } iaddr;
+Index: debug/lexer.l
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/lexer.l,v
+retrieving revision 1.11
+diff -u -w -r1.11 lexer.l
+--- debug/lexer.l	1 Aug 2003 10:14:48 -0000	1.11
++++ debug/lexer.l	2 Aug 2003 19:43:27 -0000
+@@ -19,28 +19,34 @@
+ static unsigned lex_input_size = 0;
+ %}
+ 
++%x EXAMINE
++%x DISASM
+ 
+ %%
+-[ \t]+          ; // eat up whitespace
++<*>[ \t]+       ; // eat up whitespace
+ set             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET); }
+ dis             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIS); }
+ on              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ON); }
+ off             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_OFF); }
+ crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
+-c               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
++c               |
++cont            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
+ stepi           |
+ step            |
+-si              |
+ s               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEPN); }
+-vb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VBREAKPOINT); }
++next            |
++n               |
++p               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEP_OVER); }
++blist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_BREAK); }
++vb              |
+ vbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VBREAKPOINT); }
+-lb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LBREAKPOINT); }
++lb              |
+ lbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LBREAKPOINT); }
+-pb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
++break           |
++b               |
++pb              |
+ pbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
+ info            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO); }
+-break           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
+-b               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
+ program         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PROGRAM); }
+ cr		|
+ creg		|
+@@ -49,6 +55,7 @@
+ reg		|
+ registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
+ fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
++cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }
+ all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
+ idt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }
+ ivt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IVT); }
+@@ -58,27 +65,27 @@
+ dirty           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIRTY); }
+ linux           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LINUX); }
+ dump_cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DUMP_CPU); }
+-delete          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
+-del             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
++delete          |
++del             |
+ d               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
+-quit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
++bpe             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ENABLE_BREAKPOINT); }
++bpd             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISABLE_BREAKPOINT); }
++quit            |
++exit            |
+ q               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
+-x               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
+-xp              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
++x               |
++xp              { BEGIN(EXAMINE); bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
+ setpmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SETPMEM); }
+ query           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUERY); }
+ pending         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PENDING); }
+ take            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TAKE); }
+ dma             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DMA); }
+ irq             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IRQ); }
++pic             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PIC); }
+ set_cpu         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET_CPU); }
++u               |
+ disas           |
+-disassemble     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
+-maths           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MATHS); }
+-add             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ADD); }
+-sub             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SUB); }
+-mul             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MUL); }
+-div             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIV); }
++disassemble     { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
+ instrument      { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INSTRUMENT); }
+ start           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_START); }
+ stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
+@@ -104,6 +111,8 @@
+ continue        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
+ show            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SHOW); }
+ load-symbols    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOL); }
++symbols         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLS); }
++slist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_SYMBOLS); }
+ global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
+ where           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WHERE); }
+ print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
+@@ -116,27 +125,69 @@
+ ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
++al              { bxlval.reg=rAL; return (BX_TOKEN_REG_AL);}
++bl              { bxlval.reg=rBL; return (BX_TOKEN_REG_BL);}
++cl              { bxlval.reg=rCL; return (BX_TOKEN_REG_CL);}
++dl              { bxlval.reg=rDL; return (BX_TOKEN_REG_DL);}
++ah              { bxlval.reg=rAH; return (BX_TOKEN_REG_AH);}
++bh              { bxlval.reg=rBH; return (BX_TOKEN_REG_BH);}
++ch              { bxlval.reg=rCH; return (BX_TOKEN_REG_CH);}
++dh              { bxlval.reg=rDH; return (BX_TOKEN_REG_DH);}
++ax              { bxlval.reg=rAX; return (BX_TOKEN_REG_AX);}
++bx              { bxlval.reg=rBX; return (BX_TOKEN_REG_BX);}
++cx              { bxlval.reg=rCX; return (BX_TOKEN_REG_CX);}
++dx              { bxlval.reg=rDX; return (BX_TOKEN_REG_DX);}
++eax             { bxlval.reg=rEAX; return (BX_TOKEN_REG_EAX);}
++ebx             { bxlval.reg=rEBX; return (BX_TOKEN_REG_EBX);}
++ecx             { bxlval.reg=rECX; return (BX_TOKEN_REG_ECX);}
++edx             { bxlval.reg=rEDX; return (BX_TOKEN_REG_EDX);}
++si              { bxlval.reg=rSI; return (BX_TOKEN_REG_SI);}
++di              { bxlval.reg=rDI; return (BX_TOKEN_REG_DI);}
++bp              { bxlval.reg=rBP; return (BX_TOKEN_REG_BP);}
++sp              { bxlval.reg=rSP; return (BX_TOKEN_REG_SP);}
++ip              { bxlval.reg=rIP; return (BX_TOKEN_REG_IP);}
++esi             { bxlval.reg=rESI; return (BX_TOKEN_REG_ESI);}
++edi             { bxlval.reg=rEDI; return (BX_TOKEN_REG_EDI);}
++ebp             { bxlval.reg=rEBP; return (BX_TOKEN_REG_EBP);}
++esp             { bxlval.reg=rESP; return (BX_TOKEN_REG_ESP);}
++eip             { bxlval.reg=rEIP; return (BX_TOKEN_REG_EIP);}
+ cs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CS); }
+ es              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ES); }
+ ss              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SS); }
+ ds              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DS); }
+ fs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FS); }
+ gs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GS); }
++flags           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FLAGS); }
+ force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
+-v2l             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_V2L); }
+ help            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
++\?              |
++calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
++<EXAMINE>\/[0-9]+                 { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
++<EXAMINE>\/[0-9]*[mxduotcsibhwg]+ { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
++<DISASM>\/[0-9]+        { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISFORMAT); }
++"+"             { return ('+'); }
++"-"             { return ('-'); }
++"*"             { return ('*'); }
++"/"             { return ('/'); }
++">>"            { return (BX_TOKEN_RSHIFT); }
++"<<"            { return (BX_TOKEN_LSHIFT); }
++"&"             { return ('&'); }
++"|"             { return ('|'); }
++"^"             { return ('^'); }
++"!"             { return ('!'); }
++"("             { return ('('); }
++")"             { return (')'); }
++\'[^\'\n]*\'    |
+ \"[^\"\n]*\"    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STRING); }
+-\/[0-9]*[xduotcsibhwg][xduotcsibhwg] { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+-\/[0-9]*[xduotcsibhwg]              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+-\/[0-9]+                           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+ 0x[0-9a-fA-F]+  { bxlval.uval = strtoul(bxtext+2, NULL, 16); return(BX_TOKEN_NUMERIC); }
+ 0[0-7]+         { bxlval.uval = strtoul(bxtext+1, NULL, 8); return(BX_TOKEN_NUMERIC); }
+ [0-9]+L         { bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
+ [0-9]+          { bxlval.uval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_NUMERIC); }
+ $[a-zA-Z_][a-zA-Z0-9_]* { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLNAME); }
+-\n              { return('\n'); }
++<*>\n           { return('\n'); }
+ [#][^\n]*    ; // eat up comments '//'
+ .               { return(bxtext[0]); }
++<EXAMINE,DISASM>. { BEGIN(INITIAL); unput(*bxtext); }
+ %%
+ 
+ // [A-Za-z_][A-Za-z0-9_]*   { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GENERIC); }
+Index: debug/parser.y
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/parser.y,v
+retrieving revision 1.9
+diff -u -w -r1.9 parser.y
+--- debug/parser.y	1 Aug 2003 10:14:48 -0000	1.9
++++ debug/parser.y	2 Aug 2003 19:43:34 -0000
+@@ -8,10 +8,6 @@
+ #include "debug.h"
+ 
+ #if BX_DEBUGGER
+-/*
+-NOTE: The #if comes from parser.y.  The makefile will add the matching #endif
+-at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
+-*/
+ 
+ // %left '-' '+'
+ // %left '*' '/'
+@@ -25,21 +21,59 @@
+   Bit32u   uval;
+   Bit64u   ulval;
+   bx_num_range   uval_range;
++  Regs     reg;
+   }
+ 
++// Common registers
++%type<reg> BX_TOKEN_COMMON_REG
++%type<reg> BX_TOKEN_INDEX_REG
++%type<reg> BX_TOKEN_PTR_REG
++%type<reg> BX_TOKEN_NONSEG_REG
++%token<reg> BX_TOKEN_REG_AL
++%token<reg> BX_TOKEN_REG_BL
++%token<reg> BX_TOKEN_REG_CL
++%token<reg> BX_TOKEN_REG_DL
++%token<reg> BX_TOKEN_REG_AH
++%token<reg> BX_TOKEN_REG_BH
++%token<reg> BX_TOKEN_REG_CH
++%token<reg> BX_TOKEN_REG_DH
++%token<reg> BX_TOKEN_REG_AX
++%token<reg> BX_TOKEN_REG_BX
++%token<reg> BX_TOKEN_REG_CX
++%token<reg> BX_TOKEN_REG_DX
++%token<reg> BX_TOKEN_REG_EAX
++%token<reg> BX_TOKEN_REG_EBX
++%token<reg> BX_TOKEN_REG_ECX
++%token<reg> BX_TOKEN_REG_EDX
++%token<reg> BX_TOKEN_REG_SI
++%token<reg> BX_TOKEN_REG_DI
++%token<reg> BX_TOKEN_REG_BP
++%token<reg> BX_TOKEN_REG_SP
++%token<reg> BX_TOKEN_REG_IP
++%token<reg> BX_TOKEN_REG_ESI
++%token<reg> BX_TOKEN_REG_EDI
++%token<reg> BX_TOKEN_REG_EBP
++%token<reg> BX_TOKEN_REG_ESP
++%token<reg> BX_TOKEN_REG_EIP
++
+ %token <sval> BX_TOKEN_CONTINUE
+ %token <sval> BX_TOKEN_STEPN
++%token <sval> BX_TOKEN_STEP_OVER
+ %token <sval> BX_TOKEN_NEXT_STEP
+ %token <sval> BX_TOKEN_SET
+ %token <sval> BX_TOKEN_DEBUGGER
++%token <sval> BX_TOKEN_LIST_BREAK
+ %token <sval> BX_TOKEN_VBREAKPOINT
+ %token <sval> BX_TOKEN_LBREAKPOINT
+ %token <sval> BX_TOKEN_PBREAKPOINT
+ %token <sval> BX_TOKEN_DEL_BREAKPOINT
++%token <sval> BX_TOKEN_ENABLE_BREAKPOINT
++%token <sval> BX_TOKEN_DISABLE_BREAKPOINT
+ %token <sval> BX_TOKEN_INFO
+ %token <sval> BX_TOKEN_QUIT
+ %token <sval> BX_TOKEN_PROGRAM
+ %token <sval> BX_TOKEN_REGISTERS
++%token <sval> BX_TOKEN_CPU
+ %token <sval> BX_TOKEN_FPU
+ %token <sval> BX_TOKEN_ALL
+ %token <sval> BX_TOKEN_IDT
+@@ -51,6 +85,7 @@
+ %token <sval> BX_TOKEN_CONTROL_REGS
+ %token <sval> BX_TOKEN_EXAMINE
+ %token <sval> BX_TOKEN_XFORMAT
++%token <sval> BX_TOKEN_DISFORMAT
+ %token <sval> BX_TOKEN_SETPMEM
+ %token <sval> BX_TOKEN_SYMBOLNAME
+ %token <sval> BX_TOKEN_QUERY
+@@ -88,6 +123,8 @@
+ %token <sval> BX_TOKEN_WRITE
+ %token <sval> BX_TOKEN_SHOW
+ %token <sval> BX_TOKEN_SYMBOL
++%token <sval> BX_TOKEN_SYMBOLS
++%token <sval> BX_TOKEN_LIST_SYMBOLS
+ %token <sval> BX_TOKEN_GLOBAL
+ %token <sval> BX_TOKEN_WHERE
+ %token <sval> BX_TOKEN_PRINT_STRING
+@@ -100,6 +137,7 @@
+ %token <ulval> BX_TOKEN_LONG_NUMERIC
+ %token <sval> BX_TOKEN_INFO_ADDRESS
+ %token <sval> BX_TOKEN_NE2000
++%token <sval> BX_TOKEN_PIC
+ %token <sval> BX_TOKEN_PAGE
+ %token <sval> BX_TOKEN_CS
+ %token <sval> BX_TOKEN_ES
+@@ -107,20 +145,24 @@
+ %token <sval> BX_TOKEN_DS
+ %token <sval> BX_TOKEN_FS
+ %token <sval> BX_TOKEN_GS
++%token <sval> BX_TOKEN_FLAGS
+ %token <sval> BX_TOKEN_ALWAYS_CHECK
+-%token <sval> BX_TOKEN_MATHS
+-%token <sval> BX_TOKEN_ADD
+-%token <sval> BX_TOKEN_SUB
+-%token <sval> BX_TOKEN_MUL
+-%token <sval> BX_TOKEN_DIV
+-%token <sval> BX_TOKEN_V2L
+ %token <sval> BX_TOKEN_TRACEREGON
+ %token <sval> BX_TOKEN_TRACEREGOFF
+ %token <sval> BX_TOKEN_HELP
++%token <sval> BX_TOKEN_CALC
++%token BX_TOKEN_RSHIFT
++%token BX_TOKEN_LSHIFT
+ %token <sval> BX_TOKEN_IVT
+ %type <uval> segment_register
+ %type <uval> optional_numeric
+ %type <uval_range> numeric_range optional_numeric_range
++%type <ulval> vexpression
++%type <ulval> expression
++
++%left '+' '-' '|' '^'
++%left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
++%left NOT NEG
+ 
+ %start command
+ 
+@@ -128,11 +170,17 @@
+ command:
+       continue_command
+     | stepN_command
++    | step_over_command
+     | set_command
++    | set_reg_command
+     | breakpoint_command
+     | info_command
++    | blist_command
++    | slist_command
+     | dump_cpu_command
+     | delete_command
++    | bpe_command
++    | bpd_command
+     | quit_command
+     | examine_command
+     | setpmem_command
+@@ -144,7 +192,6 @@
+     | loader_command
+     | doit_command
+     | crc_command
+-    | maths_command
+     | trace_on_command
+     | trace_off_command
+     | ptime_command
+@@ -159,10 +206,10 @@
+     | where_command
+     | print_string_command
+     | cosim_commands
+-    | v2l_command
+     | trace_reg_on_command
+     | trace_reg_off_command
+     | help_command
++    | calc_command
+     | 
+     | '\n'
+       {
+@@ -417,6 +464,14 @@
+         }
+     ;
+ 
++step_over_command:
++      BX_TOKEN_STEP_OVER '\n'
++        {
++        bx_dbg_step_over_command();
++        free($1);
++        }
++    ;
++
+ set_command:
+       BX_TOKEN_SET BX_TOKEN_DIS BX_TOKEN_ON '\n'
+         {
+@@ -438,47 +493,78 @@
+ breakpoint_command:
+       BX_TOKEN_VBREAKPOINT '\n'
+         {
+-        bx_dbg_vbreakpoint_command(0, 0, 0);
++        bx_dbg_vbreakpoint_command(bkAtIP, 0, 0);
+         free($1);
+         }
+-    | BX_TOKEN_VBREAKPOINT BX_TOKEN_NUMERIC ':' BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_VBREAKPOINT vexpression ':' expression '\n'
+         {
+-        bx_dbg_vbreakpoint_command(1, $2, $4);
++        bx_dbg_vbreakpoint_command(bkRegular, $2, $4);
+         free($1);
+         }
+     | BX_TOKEN_LBREAKPOINT '\n'
+         {
+-        bx_dbg_lbreakpoint_command(0, 0);
++        bx_dbg_lbreakpoint_command(bkAtIP, 0);
+         free($1);
+         }
+-    | BX_TOKEN_LBREAKPOINT BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_LBREAKPOINT expression '\n'
+         {
+-        bx_dbg_lbreakpoint_command(1, $2);
++        bx_dbg_lbreakpoint_command(bkRegular, $2);
+         free($1);
+         }
++    | BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING '\n'
++        {
++        bx_dbg_lbreakpoint_symbol_command($2);
++        free($1);free($2);
++        }
+     | BX_TOKEN_PBREAKPOINT '\n'
+         {
+-        bx_dbg_pbreakpoint_command(0, 0);
++        bx_dbg_pbreakpoint_command(bkAtIP, 0);
+         free($1);
+         }
+-    | BX_TOKEN_PBREAKPOINT BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_PBREAKPOINT expression '\n'
+         {
+-        bx_dbg_pbreakpoint_command(1, $2);
++        bx_dbg_pbreakpoint_command(bkRegular, $2);
+         free($1);
+         }
+-    | BX_TOKEN_PBREAKPOINT '*' BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_PBREAKPOINT '*' expression '\n'
+         {
+-        bx_dbg_pbreakpoint_command(1, $3);
++        bx_dbg_pbreakpoint_command(bkRegular, $3);
+         free($1);
+         }
+     ;
+ 
++blist_command:
++      BX_TOKEN_LIST_BREAK '\n'
++        {
++        bx_dbg_info_bpoints_command();
++        free($1);
++        }
++    ;
++
++slist_command:
++      BX_TOKEN_LIST_SYMBOLS '\n'
++        {
++        bx_dbg_info_symbols_command(0);
++        free($1);
++        }
++    | BX_TOKEN_LIST_SYMBOLS BX_TOKEN_STRING '\n'
++        {
++        bx_dbg_info_symbols_command($2);
++        free($1);free($2);
++        }
++    ;
++
+ info_command:
+       BX_TOKEN_INFO BX_TOKEN_PBREAKPOINT '\n'
+         {
+         bx_dbg_info_bpoints_command();
+         free($1); free($2);
+         }
++    | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
++        {
++        bx_dbg_dump_cpu_command();
++        free($1); free($2);
++        }
+     | BX_TOKEN_INFO BX_TOKEN_PROGRAM '\n'
+         {
+         bx_dbg_info_program_command();
+@@ -529,11 +615,26 @@
+         bx_dbg_info_tss_command($3);
+         free($1); free($2);
+         }
++    | BX_TOKEN_INFO BX_TOKEN_FLAGS '\n'
++        {
++        bx_dbg_info_flags();
++        free($1); free($2);
++        }
+     | BX_TOKEN_INFO BX_TOKEN_LINUX '\n'
+         {
+         bx_dbg_info_linux_command();
+         free($1); free($2);
+         }
++    | BX_TOKEN_INFO BX_TOKEN_SYMBOLS '\n'
++        {
++        bx_dbg_info_symbols_command(0);
++        free($1); free($2);
++        }
++    | BX_TOKEN_INFO BX_TOKEN_SYMBOLS BX_TOKEN_STRING '\n'
++        {
++        bx_dbg_info_symbols_command($3);
++        free($1); free($2); free($3);
++        }
+     | BX_TOKEN_INFO BX_TOKEN_CONTROL_REGS '\n'
+         {
+         bx_dbg_info_control_regs_command();
+@@ -554,6 +655,11 @@
+         free($1); free($2); free($3); free($5);
+         bx_dbg_info_ne2k($4, $6);
+         }
++    | BX_TOKEN_INFO BX_TOKEN_PIC '\n'
++        {
++        bx_dbg_info_pic();
++        free($1); free($2);
++        }
+     ;
+ 
+ optional_numeric :
+@@ -565,19 +671,14 @@
+   | numeric_range;
+ 
+ numeric_range :
+-  BX_TOKEN_NUMERIC
++  expression
+   {
+     $$ = make_num_range ($1, $1);
+   }
+   | 
+-  BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC
++  expression expression
+   {
+     $$ = make_num_range ($1, $2);
+-  }
+-  | 
+-  BX_TOKEN_NUMERIC ':' BX_TOKEN_NUMERIC
+-  {
+-    $$ = make_num_range ($1, $3);
+   };
+    
+ 
+@@ -597,6 +698,21 @@
+         }
+     ;
+ 
++bpe_command:
++      BX_TOKEN_ENABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'
++       {
++        bx_dbg_en_dis_breakpoint_command($2, 1);
++        free($1);
++       }
++    ;
++bpd_command:
++      BX_TOKEN_DISABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'
++       {
++        bx_dbg_en_dis_breakpoint_command($2, 0);
++        free($1);
++       }
++    ;
++
+ quit_command:
+       BX_TOKEN_QUIT '\n'
+         {
+@@ -607,7 +723,7 @@
+ 
+ 
+ examine_command:
+-      BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT BX_TOKEN_NUMERIC '\n'
++      BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'
+         {
+         bx_dbg_examine_command($1, $2,1, $3,1, 0);
+ #if BX_NUM_SIMULATORS >= 2
+@@ -623,7 +739,7 @@
+ #endif
+         free($1); free($2);
+         }
+-    | BX_TOKEN_EXAMINE BX_TOKEN_NUMERIC '\n'
++    | BX_TOKEN_EXAMINE expression '\n'
+         {
+         //FIXME HanishKVC This method of hunting thro all the 
+         //      simulators may be better than using 2 calls if 
+@@ -696,9 +812,14 @@
+ disassemble_command:
+       BX_TOKEN_DISASSEMBLE optional_numeric_range '\n'
+         {
+-        bx_dbg_disassemble_command($2);
++        bx_dbg_disassemble_command(NULL, $2);
+         free($1);
+         }
++    | BX_TOKEN_DISASSEMBLE BX_TOKEN_DISFORMAT optional_numeric_range '\n'
++        {
++        bx_dbg_disassemble_command($2, $3);
++	free($1); free($2);
++        }
+     ;
+ 
+ instrument_command:
+@@ -748,41 +869,6 @@
+         }
+     ;
+ 
+-maths_command:
+-      BX_TOKEN_MATHS BX_TOKEN_ADD BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_SUB BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_MUL BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_DIV BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_maths_command($2, $3, $4);
+-        free($1); free($2);
+-        }
+-    | BX_TOKEN_MATHS BX_TOKEN_STRING '\n'
+-        {
+-        bx_dbg_maths_expression_command($2);
+-        free($1); free($2);
+-        }
+-
+-v2l_command:
+-      BX_TOKEN_V2L segment_register ':' BX_TOKEN_NUMERIC '\n'
+-        {
+-        bx_dbg_v2l_command($2, $4);
+-        free($1);
+-        }
+-    ;
+-
+ trace_reg_on_command:
+       BX_TOKEN_TRACEREGON '\n'
+         {
+@@ -812,4 +898,103 @@
+          }
+     ;
+ 
++calc_command:
++   BX_TOKEN_CALC expression '\n'
++     {
++     bx_dbg_calc_command($2);
++     free($1);
++     }
++;
++
++BX_TOKEN_COMMON_REG:
++     BX_TOKEN_REG_AL
++   | BX_TOKEN_REG_BL
++   | BX_TOKEN_REG_CL
++   | BX_TOKEN_REG_DL
++   | BX_TOKEN_REG_AH
++   | BX_TOKEN_REG_BH
++   | BX_TOKEN_REG_CH
++   | BX_TOKEN_REG_DH
++   | BX_TOKEN_REG_AX
++   | BX_TOKEN_REG_BX
++   | BX_TOKEN_REG_CX
++   | BX_TOKEN_REG_DX
++   | BX_TOKEN_REG_EAX
++   | BX_TOKEN_REG_EBX
++   | BX_TOKEN_REG_ECX
++   | BX_TOKEN_REG_EDX
++   { $$=$1; }
++;
++
++BX_TOKEN_INDEX_REG:
++     BX_TOKEN_REG_SI
++   | BX_TOKEN_REG_DI
++   | BX_TOKEN_REG_ESI
++   | BX_TOKEN_REG_EDI
++   { $$=$1; }
++;
++
++BX_TOKEN_PTR_REG:
++     BX_TOKEN_REG_BP
++   | BX_TOKEN_REG_SP
++   | BX_TOKEN_REG_IP
++   | BX_TOKEN_REG_EBP
++   | BX_TOKEN_REG_ESP
++   | BX_TOKEN_REG_EIP
++   { $$=$1; }
++;
++
++BX_TOKEN_NONSEG_REG:
++     BX_TOKEN_COMMON_REG
++   | BX_TOKEN_INDEX_REG
++   | BX_TOKEN_PTR_REG
++   { $$=$1; }
++;
++
++/* Arithmetic expression for vbreak command */
++vexpression:
++     BX_TOKEN_NUMERIC                { $$ = $1; }
++   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
++   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1); }
++   | segment_register                { $$ = bx_dbg_get_selector_value($1); }
++   | vexpression '+' vexpression     { $$ = $1 + $3; }
++   | vexpression '-' vexpression     { $$ = $1 - $3; }
++   | vexpression '*' vexpression     { $$ = $1 * $3; }
++   | vexpression '/' vexpression     { $$ = $1 / $3; }
++   | vexpression BX_TOKEN_RSHIFT vexpression { $$ = $1 >> $3; }
++   | vexpression BX_TOKEN_LSHIFT vexpression { $$ = $1 << $3; }
++   | vexpression '|' vexpression     { $$ = $1 | $3; }
++   | vexpression '^' vexpression     { $$ = $1 ^ $3; }
++   | vexpression '&' vexpression     { $$ = $1 & $3; }
++   | '!' vexpression %prec NOT       { $$ = !$2; }
++   | '-' vexpression %prec NEG       { $$ = -$2; }
++   | '(' vexpression ')'             { $$ = $2; }
++;
++
++/* Same as vexpression but includes the ':' operator - used in most commands */
++expression:
++     BX_TOKEN_NUMERIC                { $$ = $1; }
++   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
++   | BX_TOKEN_STRING                 { $$ = bx_dbg_get_symbol_value($1); free($1);}
++   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1);}
++   | segment_register                { $$ = bx_dbg_get_selector_value($1);}
++   | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
++   | expression '+' expression       { $$ = $1 + $3; }
++   | expression '-' expression       { $$ = $1 - $3; }
++   | expression '*' expression       { $$ = $1 * $3; }
++   | expression '/' expression       { $$ = $1 / $3; }
++   | expression BX_TOKEN_RSHIFT expression { $$ = $1 >> $3; }
++   | expression BX_TOKEN_LSHIFT expression { $$ = $1 << $3; }
++   | expression '|' expression       { $$ = $1 | $3; }
++   | expression '^' expression       { $$ = $1 ^ $3; }
++   | expression '&' expression       { $$ = $1 & $3; }
++   | '!' expression %prec NOT        { $$ = !$2; }
++   | '-' expression %prec NEG        { $$ = -$2; }
++   | '(' expression ')'              { $$ = $2; }
++;
++
++set_reg_command: 
++     BX_TOKEN_REGISTERS BX_TOKEN_NONSEG_REG '=' expression '\n'
++     { bx_dbg_set_reg_value($2, $4); }
++;
+ %%
+Index: disasm/dis_decode.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/dis_decode.cc,v
+retrieving revision 1.13
+diff -u -w -r1.13 dis_decode.cc
+--- disasm/dis_decode.cc	21 Jan 2003 13:23:47 -0000	1.13
++++ disasm/dis_decode.cc	2 Aug 2003 19:43:37 -0000
+@@ -324,7 +324,7 @@
+ 
+ 
+   unsigned
+-bx_disassemble_c::disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf)
++bx_disassemble_c::disasm(bx_bool is_32, Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf)
+ {
+   int byte_count;
+   Bit8u next_byte;
+@@ -333,6 +333,7 @@
+   db_32bit_opsize = is_32;
+   db_32bit_addrsize = is_32;
+   db_eip = ip;
++  db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
+   instruction_begin = instruction = instr;
+ 
+   seg_override = NULL;
+@@ -396,7 +397,7 @@
+               case 0x04: dis_sprintf("smsw "); Ew(); goto done;
+               case 0x05: invalid_opcode(); goto done;
+               case 0x06: dis_sprintf("lmsw "); Ew(); goto done;
+-              case 0x07: invalid_opcode(); goto done;
++              case 0x07: dis_sprintf("invlpg "); Mb(); goto done;
+               default: BX_PANIC(("debugger: invalid opcode")); goto done;
+               }
+ 
+@@ -408,8 +409,8 @@
+           case 0x07: invalid_opcode(); goto done;
+           case 0x08: dis_sprintf("invd"); goto done;
+           case 0x09: dis_sprintf("wbinvd"); goto done;
+-	  case 0x0A:
+-	  case 0x0B:
++	  case 0x0A: invalid_opcode(); goto done;
++          case 0x0B: dis_sprintf("ud2"); goto done;
+ 	  case 0x0C:
+ 	  case 0x0D:
+ 	  case 0x0E:
+@@ -423,7 +424,25 @@
+ 	  case 0x15:
+ 	  case 0x16:
+ 	  case 0x17:
+-	  case 0x18:
++	  case 0x18: /* Group 16 */
++            mod_rm_byte = peek_byte();
++            BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
++            if(mod&3!=3) { // only mem allowed
++             invalid_opcode(); goto done;
++            }
++
++            switch (opcode) {
++              case 0x00: dis_sprintf("prefetchnta "); Mb(); goto done;
++              case 0x01: dis_sprintf("prefetcht0 "); Mb(); goto done;
++              case 0x02: dis_sprintf("prefetcht1 "); Mb(); goto done;
++              case 0x03: dis_sprintf("prefetcht2 "); Mb(); goto done;
++              case 0x04: 
++              case 0x05: 
++              case 0x06: 
++              case 0x07: invalid_opcode(); goto done;
++              default: BX_PANIC(("debugger: invalid opcode")); goto done;
++              }
++
+ 	  case 0x19:
+ 	  case 0x1A:
+ 	  case 0x1B:
+@@ -449,12 +468,13 @@
+           case 0x2E:
+           case 0x2F: invalid_opcode(); goto done;
+ 
+-          case 0x30:
+-	  case 0x31:
+-	  case 0x32:
+-	  case 0x33:
+-	  case 0x34:
+-	  case 0x35:
++          case 0x30: dis_sprintf("wrmsr"); goto done;
++	  case 0x31: dis_sprintf("rdtsc"); goto done;
++	  case 0x32: dis_sprintf("rdmsr"); goto done;
++	  case 0x33: dis_sprintf("rdpmc"); goto done;
++	  case 0x34: dis_sprintf("sysenter"); goto done;
++	  case 0x35: dis_sprintf("sysexit"); goto done;
++
+ 	  case 0x36:
+ 	  case 0x37:
+ 	  case 0x38:
+@@ -466,22 +486,22 @@
+ 	  case 0x3E:
+ 	  case 0x3F: invalid_opcode(); goto done;
+ 
+-          case 0x40:
+-	  case 0x41:
+-	  case 0x42:
+-	  case 0x43:
+-	  case 0x44:
+-	  case 0x45:
+-	  case 0x46:
+-	  case 0x47:
+-	  case 0x48:
+-	  case 0x49:
+-	  case 0x4A:
+-	  case 0x4B:
+-	  case 0x4C:
+-	  case 0x4D:
+-	  case 0x4E:
+-	  case 0x4F: invalid_opcode(); goto done;
++          case 0x40: dis_sprintf("cmovo "); GvEv(); goto done;
++	  case 0x41: dis_sprintf("cmovno "); GvEv(); goto done;
++	  case 0x42: dis_sprintf("cmovc "); GvEv(); goto done;
++	  case 0x43: dis_sprintf("cmovnc "); GvEv(); goto done;
++	  case 0x44: dis_sprintf("cmovz "); GvEv(); goto done;
++	  case 0x45: dis_sprintf("cmovnz "); GvEv(); goto done;
++	  case 0x46: dis_sprintf("cmovna "); GvEv(); goto done;
++	  case 0x47: dis_sprintf("cmova "); GvEv(); goto done;
++	  case 0x48: dis_sprintf("cmovs "); GvEv(); goto done;
++	  case 0x49: dis_sprintf("cmovns "); GvEv(); goto done;
++	  case 0x4A: dis_sprintf("cmovp "); GvEv(); goto done;
++	  case 0x4B: dis_sprintf("cmovnp "); GvEv(); goto done;
++	  case 0x4C: dis_sprintf("cmovl "); GvEv(); goto done;
++	  case 0x4D: dis_sprintf("cmovnl "); GvEv(); goto done;
++	  case 0x4E: dis_sprintf("cmovng "); GvEv(); goto done;
++	  case 0x4F: dis_sprintf("cmovg "); GvEv(); goto done;
+ 
+           case 0x50:
+ 	  case 0x51:
+@@ -570,7 +590,7 @@
+ 
+           case 0xA0: dis_sprintf("push fs"); goto done;
+           case 0xA1: dis_sprintf("pop fs"); goto done;
+-          case 0xA2: invalid_opcode(); goto done;
++          case 0xA2: dis_sprintf("cpuid"); goto done;
+           case 0xA3: dis_sprintf("bt "); EvGv(); goto done;
+           case 0xA4: dis_sprintf("shld "); EvGv(); dis_sprintf(", "); Ib(); goto done;
+           case 0xA5: dis_sprintf("shld "); EvGv(); dis_sprintf(", CL"); goto done;
+@@ -578,11 +598,40 @@
+           case 0xA7: dis_sprintf("cmpxchg "); IBTS(); goto done;
+           case 0xA8: dis_sprintf("push gs"); goto done;
+           case 0xA9: dis_sprintf("pop gs"); goto done;
+-          case 0xAA: invalid_opcode(); goto done;
++          case 0xAA: dis_sprintf("rsm"); goto done;
+           case 0xAB: dis_sprintf("bts "); EvGv(); goto done;
+           case 0xAC: dis_sprintf("shrd "); EvGv(); dis_sprintf(", "); Ib(); goto done;
+           case 0xAD: dis_sprintf("shrd "); EvGv(); dis_sprintf(", CL"); goto done;
+-          case 0xAE: invalid_opcode(); goto done;
++          case 0xAE:  /* Group 15 */
++            mod_rm_byte = peek_byte();
++            BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
++            if(mod&3==3) {
++              switch (opcode) {
++                case 0x00:
++                case 0x01:
++                case 0x02:
++                case 0x03: 
++                case 0x04: invalid_opcode(); goto done;
++                case 0x05: dis_sprintf("lfence"); goto done;
++                case 0x06: dis_sprintf("mfence"); goto done;
++                case 0x07: dis_sprintf("sfence"); goto done;
++                default: BX_PANIC(("debugger: invalid opcode")); goto done;
++                }
++            }
++            else {
++              switch (opcode) {
++                case 0x00: dis_sprintf("fxsave"); goto done;
++                case 0x01: dis_sprintf("fxstor"); goto done;
++                case 0x02: dis_sprintf("ldmxcsr"); goto done;
++                case 0x03: dis_sprintf("stmxcsr"); goto done;
++                case 0x04: 
++                case 0x05: 
++                case 0x06: invalid_opcode(); goto done;
++                case 0x07: dis_sprintf("clflush"); goto done;
++                default: BX_PANIC(("debugger: invalid opcode")); goto done;
++                }
++            }
++
+           case 0xAF: dis_sprintf("imul "); GvEv(); goto done;
+ 
+           case 0xB0: dis_sprintf("cmpxchg "); EbGb(); goto done;
+@@ -609,7 +658,6 @@
+               case 0x07: dis_sprintf("btc "); EvIb(); goto done;
+               default: BX_PANIC(("debugger: invalid opcode")); goto done;
+               }
+-
+           case 0xBB: dis_sprintf("btc "); EvGv(); goto done;
+           case 0xBC: dis_sprintf("bsf "); GvEv(); goto done;
+           case 0xBD: dis_sprintf("bsr "); GvEv(); goto done;
+@@ -622,8 +670,25 @@
+           case 0xC3:
+           case 0xC4:
+           case 0xC5:
+-          case 0xC6:
+-          case 0xC7: invalid_opcode(); goto done;
++          case 0xC6: invalid_opcode(); goto done;
++          case 0xC7: /* Group 9 */
++            mod_rm_byte = peek_byte();
++            BX_DECODE_MODRM(mod_rm_byte, mod, opcode, rm);
++            if(mod&3==3) {// no regs allowed
++              invalid_opcode(); goto done;
++            }
++
++            switch (opcode) {
++              case 0x00: invalid_opcode(); goto done;
++              case 0x01: dis_sprintf("cmpxchg8b "); Mq(); goto done;
++              case 0x02:
++              case 0x03: 
++              case 0x04: 
++              case 0x05: 
++              case 0x06: 
++              case 0x07: invalid_opcode(); goto done;
++              default: BX_PANIC(("debugger: invalid opcode")); goto done;
++              }
+           case 0xC8: dis_sprintf("bswap "); eAX(); goto done;
+           case 0xC9: dis_sprintf("bswap "); eCX(); goto done;
+           case 0xCA: dis_sprintf("bswap "); eDX(); goto done;
+@@ -938,8 +1003,20 @@
+       case 0x99: dis_sprintf("cwd"); goto done;
+       case 0x9A: dis_sprintf("call "); Ap(); goto done;
+       case 0x9B: dis_sprintf("wait"); goto done;
+-      case 0x9C: dis_sprintf("pushf"); goto done;
+-      case 0x9D: dis_sprintf("popf"); goto done;
++      case 0x9C: 
++        if (db_32bit_opsize) 
++          dis_sprintf("pushfd"); 
++        else
++          dis_sprintf("pushf"); 
++        goto done;
++
++      case 0x9D: 
++        if (db_32bit_opsize) 
++          dis_sprintf("popfd"); 
++        else
++          dis_sprintf("popf"); 
++        goto done;
++
+       case 0x9E: dis_sprintf("sahf"); goto done;
+       case 0x9F: dis_sprintf("lahf"); goto done;
+ 
+@@ -1056,21 +1133,26 @@
+           default: BX_PANIC(("debugger: invalid opcode")); goto done;
+           }
+ 
+-      case 0xC2: dis_sprintf("ret_near "); Iw(); goto done;
+-      case 0xC3: dis_sprintf("ret_near"); goto done;
++      case 0xC2: dis_sprintf("retn "); Iw(); goto done;
++      case 0xC3: dis_sprintf("retn"); goto done;
+       case 0xC4: dis_sprintf("les "); GvMp(); goto done;
+       case 0xC5: dis_sprintf("lds "); GvMp(); goto done;
+       case 0xC6: dis_sprintf("mov "); EbIb(); goto done;
+       case 0xC7: dis_sprintf("mov "); EvIv(); goto done;
+       case 0xC8: dis_sprintf("enter "); Iw(); dis_sprintf(", "); Ib(); goto done;
+       case 0xC9: dis_sprintf("leave"); goto done;
+-      case 0xCA: dis_sprintf("ret_far "); Iw(); goto done;
+-      case 0xCB: dis_sprintf("ret_far"); goto done;
++      case 0xCA: dis_sprintf("retf "); Iw(); goto done;
++      case 0xCB: dis_sprintf("retf"); goto done;
+       case 0xCC: dis_sprintf("int3"); goto done;
+       case 0xCD: dis_sprintf("int "); Ib(); goto done;
+       case 0xCE: dis_sprintf("into"); goto done;
+-      case 0xCF: dis_sprintf("iret"); goto done;
+-
++      case 0xCF: 
++        if (db_32bit_opsize) {
++         dis_sprintf("iretd"); goto done;
++        }
++        else {
++         dis_sprintf("iret"); goto done;
++        }
+ 
+       case 0xD0: /* Group 2 Eb,1 */
+         mod_rm_byte = peek_byte();
+@@ -1442,7 +1524,7 @@
+       case 0xE5: dis_sprintf("in "); eAX(); dis_sprintf(", "); Ib(); goto done;
+       case 0xE6: dis_sprintf("out "); Ib(); dis_sprintf(", AL"); goto done;
+       case 0xE7: dis_sprintf("out "); Ib(); dis_sprintf(", "); eAX(); goto done;
+-      case 0xE8: dis_sprintf("call "); Av(); goto done;
++      case 0xE8: dis_sprintf("call "); Jv(); goto done;
+       case 0xE9: dis_sprintf("jmp "); Jv(); goto done;
+       case 0xEA: dis_sprintf("jmp "); Ap(); goto done;
+       case 0xEB: dis_sprintf("jmp "); Jb(); goto done;
+@@ -1454,7 +1536,7 @@
+       case 0xF0: /* LOCK */
+         dis_sprintf("LOCK: ");
+         break;
+-      case 0xF1: invalid_opcode(); goto done;
++      case 0xF1: dis_sprintf("int1"); goto done;
+       case 0xF2: /* REPNE/REPNZ */
+         db_repne_prefix = 1;
+         dis_sprintf("REPNE: ");
+Index: disasm/dis_groups.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/dis_groups.cc,v
+retrieving revision 1.8
+diff -u -w -r1.8 dis_groups.cc
+--- disasm/dis_groups.cc	21 Jan 2003 13:23:47 -0000	1.8
++++ disasm/dis_groups.cc	2 Aug 2003 19:43:38 -0000
+@@ -157,6 +157,18 @@
+ }
+ 
+   void
++bx_disassemble_c::Mq(void)
++{
++ Ms();
++}
++
++void
++bx_disassemble_c::Mb(void)
++{
++ Ms();
++}
++
++  void
+ bx_disassemble_c::GvMa(void)
+ {
+   Bit8u mod_rm_byte, mod, opcode, rm;
+@@ -414,21 +426,6 @@
+ 
+ 
+   void
+-bx_disassemble_c::Av(void)
+-{
+-  if (db_32bit_opsize) {
+-    Bit32s imm32;
+-    imm32 = fetch_dword();
+-    dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
+-    }
+-  else {
+-    Bit16s imm16;
+-    imm16 = fetch_word();
+-    dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
+-    }
+-}
+-
+-  void
+ bx_disassemble_c::Eb(void)
+ {
+   decode_exgx(BX_GENERAL_8BIT_REG, BX_NO_REG_TYPE);
+@@ -520,19 +517,36 @@
+   void
+ bx_disassemble_c::Jv(void)
+ {
++
+ #if BX_CPU_LEVEL > 2
+   if (db_32bit_opsize) {
+-    Bit32u imm32;
++    Bit32s imm32;
+ 
+-    imm32 = fetch_dword();
++    imm32 = (Bit32s)fetch_dword();
++
++#if BX_DEBUGGER
++    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm32 + db_eip), db_base);
++    if(Sym) {
++     dis_sprintf("%s", Sym);
++    }
++    else // Symbol not found
++#endif
+     dis_sprintf("%08x", (unsigned) (imm32 + db_eip));
+     }
+   else
+ #endif
+     {
+-    Bit16u imm16;
++    Bit16s imm16;
+ 
+-    imm16 = fetch_word();
++    imm16 = (Bit16s)fetch_word();
++
++#if BX_DEBUGGER
++    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm16 + db_eip) & 0xFFFF), db_base);
++    if(Sym) {
++     dis_sprintf("%s", Sym);
++    }
++    else // Symbol not found
++#endif
+     dis_sprintf("%04x", (unsigned) ((imm16 + db_eip) & 0xFFFF));
+     }
+ }
+@@ -591,16 +605,30 @@
+   void
+ bx_disassemble_c::Jb(void)
+ {
+-  Bit8u imm8;
++  Bit8s imm8;
+ 
+-  imm8 = fetch_byte();
++  imm8 = (Bit8s)fetch_byte();
+ #if BX_CPU_LEVEL > 2
+   if (db_32bit_opsize) {
++#if BX_DEBUGGER
++    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm8 + db_eip), db_base);
++    if(Sym) {
++     dis_sprintf("%s", Sym);
++    }
++    else // Symbol not found
++#endif
+     dis_sprintf("%08x", (unsigned) (imm8 + db_eip));
+     }
+   else
+ #endif
+   {
++#if BX_DEBUGGER
++    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)((imm8 + db_eip) & 0xFFFF), db_base);
++    if(Sym) {
++     dis_sprintf("%s", Sym);
++    }
++    else // Symbol not found
++#endif
+     dis_sprintf("%04x", (unsigned) ((imm8 + db_eip) & 0xFFFF));
+   }
+ }
+Index: disasm/disasm.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/disasm.h,v
+retrieving revision 1.8
+diff -u -w -r1.8 disasm.h
+--- disasm/disasm.h	25 Oct 2002 11:44:35 -0000	1.8
++++ disasm/disasm.h	2 Aug 2003 19:43:38 -0000
+@@ -40,7 +40,7 @@
+ class bx_disassemble_c : public logfunctions {
+ public:
+   bx_disassemble_c(void);
+-  unsigned disasm(bx_bool is_32, Bit32u ip, Bit8u *instr, char *disbuf);
++  unsigned disasm(bx_bool is_32, Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf);
+ 
+ private:
+   bx_bool db_32bit_opsize;
+@@ -48,6 +48,7 @@
+   bx_bool db_rep_prefix;
+   bx_bool db_repne_prefix;
+   Bit32u db_eip;
++  Bit32u db_base;
+   Bit8u *instruction_begin;  // keep track of where instruction starts
+   Bit8u *instruction;        // for fetching of next byte of instruction
+ 
+@@ -133,6 +134,8 @@
+   void XBTS(void);
+   void IBTS(void);
+   void Mp(void);
++  void Mq(void);
++  void Mb(void);
+   void EvIb(void);
+   void GvEb(void);
+   void GvMa(void);
+@@ -183,7 +186,6 @@
+   void El(void);
+   void STi_ST(void);
+   void Eq(void);
+-  void Av(void);
+   void eAXEv(void);
+   void Ep(void);
+   };
+Index: instrument/example0/instrument.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/instrument/example0/instrument.cc,v
+retrieving revision 1.10
+diff -u -w -r1.10 instrument.cc
+--- instrument/example0/instrument.cc	28 Feb 2003 20:51:07 -0000	1.10
++++ instrument/example0/instrument.cc	2 Aug 2003 19:43:40 -0000
+@@ -84,7 +84,7 @@
+     char disasm_tbuf[512];	// buffer for instruction disassembly
+     unsigned length = i->opcode_size, n;
+ 
+-    bx_disassemble.disasm(i->is32, 0, i->opcode, disasm_tbuf);
++    bx_disassemble.disasm(i->is32, 0, 0, i->opcode, disasm_tbuf);
+  
+     if(length != 0)	
+     {
+Index: instrument/example1/instrument.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/instrument/example1/instrument.cc,v
+retrieving revision 1.6
+diff -u -w -r1.6 instrument.cc
+--- instrument/example1/instrument.cc	13 Feb 2003 15:04:09 -0000	1.6
++++ instrument/example1/instrument.cc	2 Aug 2003 19:43:41 -0000
+@@ -48,7 +48,7 @@
+   {
+     char disasm_tbuf[512];	// buffer for instruction disassembly
+     unsigned length = opcode_size, n;
+-    bx_disassemble.disasm(is32, 0, opcode, disasm_tbuf);
++    bx_disassemble.disasm(is32, 0, 0, opcode, disasm_tbuf);
+     if(length != 0)	
+     {
+       fprintf(stderr, "----------------------------------------------------------\n");
+Index: iodev/iodev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
+retrieving revision 1.36
+diff -u -w -r1.36 iodev.h
+--- iodev/iodev.h	31 Jul 2003 15:29:34 -0000	1.36
++++ iodev/iodev.h	2 Aug 2003 19:43:41 -0000
+@@ -213,6 +213,9 @@
+   virtual Bit8u IAC(void) {
+     STUBFUNC(pic, IAC); return 0;
+   }
++  virtual void show_pic_state(void) {
++    STUBFUNC(pic, show_pic_state);
++  }
+ };
+ 
+ class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
+Index: iodev/pic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.cc,v
+retrieving revision 1.31
+diff -u -w -r1.31 pic.cc
+--- iodev/pic.cc	31 Jul 2003 19:51:42 -0000	1.31
++++ iodev/pic.cc	2 Aug 2003 19:43:43 -0000
+@@ -167,7 +167,7 @@
+     clear_highest_interrupt(& BX_PIC_THIS s.master_pic);
+     BX_PIC_THIS s.master_pic.polled = 0;
+     service_master_pic();
+-    return BX_PIC_THIS s.master_pic.irq;  // Return the current irq requested
++    return io_len==1?BX_PIC_THIS s.master_pic.irq:(BX_PIC_THIS s.master_pic.irq)<<8|(BX_PIC_THIS s.master_pic.irq);  // Return the current irq requested
+   }
+ 
+   if((address == 0xa0 || address == 0xa1) && BX_PIC_THIS s.slave_pic.polled) {
+@@ -175,7 +175,7 @@
+     clear_highest_interrupt(& BX_PIC_THIS s.slave_pic);
+     BX_PIC_THIS s.slave_pic.polled = 0;
+     service_slave_pic();
+-    return BX_PIC_THIS s.slave_pic.irq;  // Return the current irq requested
++    return io_len==1?BX_PIC_THIS s.slave_pic.irq:(BX_PIC_THIS s.slave_pic.irq)<<8|(BX_PIC_THIS s.slave_pic.irq);  // Return the current irq requested
+   }
+ 
+ 
+@@ -859,8 +859,12 @@
+   void
+ bx_pic_c::show_pic_state(void)
+ {
+-BX_INFO(("s.master_pic.imr = %02x", BX_PIC_THIS s.master_pic.imr));
+-BX_INFO(("s.master_pic.isr = %02x", BX_PIC_THIS s.master_pic.isr));
+-BX_INFO(("s.master_pic.irr = %02x", BX_PIC_THIS s.master_pic.irr));
+-BX_INFO(("s.master_pic.irq = %02x", BX_PIC_THIS s.master_pic.irq));
++dbg_printf("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
++dbg_printf("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
++dbg_printf("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
++dbg_printf("s.master_pic.irq = %02x\n", BX_PIC_THIS s.master_pic.irq);
++dbg_printf("s.slave_pic.imr = %02x\n", BX_PIC_THIS s.slave_pic.imr);
++dbg_printf("s.slave_pic.isr = %02x\n", BX_PIC_THIS s.slave_pic.isr);
++dbg_printf("s.slave_pic.irr = %02x\n", BX_PIC_THIS s.slave_pic.irr);
++dbg_printf("s.slave_pic.irq = %02x\n", BX_PIC_THIS s.slave_pic.irq);
+ }
+Index: iodev/pic.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.h,v
+retrieving revision 1.10
+diff -u -w -r1.10 pic.h
+--- iodev/pic.h	25 Oct 2002 11:44:40 -0000	1.10
++++ iodev/pic.h	2 Aug 2003 19:43:43 -0000
+@@ -76,6 +76,7 @@
+   virtual void   lower_irq(unsigned irq_no);
+   virtual void   raise_irq(unsigned irq_no);
+   virtual Bit8u  IAC(void);
++  virtual void   show_pic_state(void);
+ 
+ private:
+   struct {
+@@ -92,6 +93,5 @@
+ 
+   BX_PIC_SMF void   service_master_pic(void);
+   BX_PIC_SMF void   service_slave_pic(void);
+-  BX_PIC_SMF void   show_pic_state(void);
+   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
+   };

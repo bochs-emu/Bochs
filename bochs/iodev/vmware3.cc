@@ -29,6 +29,7 @@
 
 #include "bochs.h"
 
+const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 /* Not very friendly... */
 extern bx_hard_drive_c *theHardDrive;
 #define LOG_THIS theHardDrive->
@@ -138,7 +139,8 @@ int vmware3_image_t::open(const char * pathname)
         if(current->slb == 0)
             BX_PANIC(("cannot allocate %d bytes for slb in vmware3 COW Disk '%s'", current->header.flb_count * 4, filename));
         
-        for(unsigned j = 0; j < current->header.flb_count; ++j)
+        unsigned j;
+        for(j = 0; j < current->header.flb_count; ++j)
         {
             current->slb[j] = new unsigned [slb_count];
             if(current->slb[j] == 0)
@@ -155,7 +157,7 @@ int vmware3_image_t::open(const char * pathname)
         if(::read(current->fd, (char*)current->flb, current->header.flb_count * 4) < 0)
             BX_PANIC(("unable to read flb from vmware3 COW Disk file '%s'", filename));
 
-        for(unsigned j = 0; j < current->header.flb_count; ++j)
+        for(j = 0; j < current->header.flb_count; ++j)
             if(current->flb[j] != 0)
             {
                 if(::lseek(current->fd, current->flb[j] * 512, SEEK_SET) < 0)

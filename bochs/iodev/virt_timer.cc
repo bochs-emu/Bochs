@@ -223,7 +223,7 @@ bx_virt_timer_c::register_timer( void *this_ptr, bx_timer_handler_t handler,
   timer[i].funct = handler;
   timer[i].this_ptr = this_ptr;
   strncpy(timer[i].id, id, BxMaxTimerIDLen);
-  timer[i].id[BxMaxTimerIDLen]=0; //I like null terminated strings.
+  timer[i].id[BxMaxTimerIDLen-1]=0; //I like null terminated strings.
 
   if(useconds < timers_next_event_time) {
     timers_next_event_time = useconds;
@@ -257,7 +257,8 @@ bx_virt_timer_c::unregisterTimer(int timerID) {
 void
 bx_virt_timer_c::start_timers(void) {
   if(!use_virtual_timers) {
-    return bx_pc_system.start_timers();
+    bx_pc_system.start_timers();
+    return;
   }
   //FIXME
 }
@@ -267,7 +268,8 @@ void
 bx_virt_timer_c::activate_timer( unsigned timer_index, Bit32u useconds,
 		       bx_bool continuous ) {
   if(!use_virtual_timers) {
-    return bx_pc_system.activate_timer(timer_index, useconds, continuous);
+    bx_pc_system.activate_timer(timer_index, useconds, continuous);
+    return;
   }
 
   BX_ASSERT(timer_index >= 0);
@@ -292,7 +294,8 @@ bx_virt_timer_c::activate_timer( unsigned timer_index, Bit32u useconds,
 void
 bx_virt_timer_c::deactivate_timer( unsigned timer_index ) {
   if(!use_virtual_timers) {
-    return bx_pc_system.deactivate_timer(timer_index);
+    bx_pc_system.deactivate_timer(timer_index);
+    return;
   }
 
   BX_ASSERT(timer_index >= 0);
