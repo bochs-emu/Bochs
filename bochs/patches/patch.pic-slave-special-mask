@@ -1,0 +1,70 @@
+----------------------------------------------------------------------
+Patch name: patch.pic-slave-special-mask
+Author: Bryce Denney <bryce@tlw.com>
+Date: Sat Nov 10 19:36:46 EST 2001
+RCS Id: $Id: patch.pic-slave-special-mask,v 1.1 2001-11-11 00:43:52 bdenney Exp $
+
+Detailed description:
+The service_master_pic() method supported special mask mode but
+service_slave_pic() did not.  I added the code to service_slave_pic().  I have
+no clear way to test that this is actually working right.  If I can put a gdb
+breakpoint in the pic.cc code and then step through and watch it work, I'll be
+more confident.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: iodev/pic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.cc,v
+retrieving revision 1.12
+diff -u -r1.12 pic.cc
+--- iodev/pic.cc	2001/10/03 13:10:38	1.12
++++ iodev/pic.cc	2001/11/11 00:41:45
+@@ -400,8 +400,7 @@
+         else if (special_mask == 0x03) { /* set specific mask */
+           BX_PIC_THIS s.slave_pic.special_mask = 1;
+           service_slave_pic();
+-          BX_ERROR(("slave: OCW3 not implemented (%02x)",
+-            (unsigned) value));
++	  BX_ERROR(("Congratulations, you found a test case for bug [ #468340 ] pic:slave: OCW3 not implemented.  The bug has been fixed, but Bryce needs a way to test it.  Please report exactly how you got to this point.  It is perfectly safe to continue."));
+           }
+         return;
+         }
+@@ -625,6 +624,13 @@
+     return;
+     }
+ 
++  if (BX_PIC_THIS s.master_pic.special_mask) {
++    /* all priorities may be enabled.  check all IRR bits except ones
++     * which have corresponding ISR bits set
++     */
++    lowest_priority_irq = 8;
++    }
++  else {
+   /* Find the highest priority IRQ that is enabled due to current ISR */
+   isr = BX_PIC_THIS s.slave_pic.isr;
+   if (isr) {
+@@ -637,11 +643,17 @@
+     }
+   else
+     lowest_priority_irq = 8;
++  }
+ 
+ 
+   /* now, see if there are any higher priority requests */
+   if ((unmasked_requests = (BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr)) ) {
+     for (irq=0; irq<lowest_priority_irq; irq++) {
++      /* for special mode, since we're looking at all IRQ's, skip if
++       * current IRQ is already in-service
++       */
++      if ( BX_PIC_THIS s.slave_pic.special_mask && ((BX_PIC_THIS s.slave_pic.isr >> irq) & 0x01) )
++        continue;
+       if (unmasked_requests & (1 << irq)) {
+         if (bx_dbg.pic)
+           BX_DEBUG(("slave: signalling IRQ(%u)",
