@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.32 2004-09-15 21:48:56 sshwarts Exp $
+// $Id: apic.cc,v 1.33 2004-10-13 20:58:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -729,8 +729,7 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
     BX_INFO(("%s: read from APIC address %08x = %08x", cpu->name, addr, *data));
 }
 
-int 
-bx_local_apic_c::highest_priority_int (Bit8u *array)
+int bx_local_apic_c::highest_priority_int (Bit8u *array)
 {
   for (int i=0; i<BX_LOCAL_APIC_MAX_INTS; i++)
     if (array[i]) return i;
@@ -895,6 +894,16 @@ Bit8u bx_local_apic_c::get_ppr ()
     BX_DEBUG(("%s: get_ppr returning %#x", cpu->name, proc_priority));
 
   return (Bit8u) proc_priority;
+}
+
+Bit8u bx_local_apic_c::get_tpr ()
+{
+  return task_priority;
+}
+
+void  bx_local_apic_c::set_tpr (Bit8u priority)
+{
+  task_priority = priority;
 }
 
 Bit8u bx_local_apic_c::get_apr ()

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.83 2004-10-03 21:52:10 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.84 2004-10-13 20:58:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -685,17 +685,14 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       // invalidate_prefetch_q(); // Already done.
       break;
     case 4: // CR4
-      {
 #if BX_CPU_LEVEL == 3
       BX_PANIC(("MOV_CdRd: write to CR4 of 0x%08x on 386", val_32));
       UndefinedOpcode(i);
 #else
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
-
       SetCR4(val_32);
 #endif
-      }
       break;
     default:
       BX_PANIC(("MOV_CdRd: control register index out of range"));
@@ -712,7 +709,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 #else
   Bit32u val_32;
 
-  if (v8086_mode()) {
+  if (v8086_mode()){
     BX_INFO(("MOV_RdCd: v8086 mode causes #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -772,7 +769,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
     default:
       BX_PANIC(("MOV_RdCd: control register index out of range"));
       val_32 = 0;
-    }
+  }
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
 #endif
 }
@@ -783,7 +780,8 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
   // mov general register data to control register
   Bit64u val_64;
 
-  if (v8086_mode()) {
+  if (v8086_mode())
+  {
     BX_INFO(("MOV_CqRq: v8086 mode causes #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -818,7 +816,6 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       //   (unsigned) EIP));
       SetCR0(val_64);
       break;
-
     case 1: /* CR1 */
       BX_PANIC(("MOV_CqRq: CR1 not implemented yet"));
       break;
@@ -847,7 +844,16 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       // returns not-supported for all of these features.
       SetCR4(val_64);
       break;
-
+#if BX_SUPPORT_APIC
+    case 7: // CR8
+      // CR8 is aliased to APIC->TASK PRIORITY register
+      //   APIC.TPR[7:4] = CR8[3:0]
+      //   APIC.TPR[3:0] = 0
+      // Reads of CR8 return zero extended APIC.TPR[7:4]
+      // Write to CR8 update APIC.TPR[7:4]
+      BX_CPU_THIS_PTR local_apic.set_tpr((val_64 & 0xF) << 0x4);
+      break;
+#endif
     default:
       BX_PANIC(("MOV_CqRq: control register index out of range"));
       break;
@@ -910,15 +916,24 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       BX_INFO(("MOV_RqCq: read of CR4"));
       val_64 = BX_CPU_THIS_PTR cr4.getRegister();
       break;
+#if BX_SUPPORT_APIC
+    case 7: // CR8
+      // CR8 is aliased to APIC->TASK PRIORITY register
+      //   APIC.TPR[7:4] = CR8[3:0]
+      //   APIC.TPR[3:0] = 0
+      // Reads of CR8 return zero extended APIC.TPR[7:4]
+      // Write to CR8 update APIC.TPR[7:4]
+      val_64 = (BX_CPU_THIS_PTR local_apic.get_tpr() & 0xF) >> 4;
+      break;
+#endif
     default:
       BX_PANIC(("MOV_RqCq: control register index out of range"));
       val_64 = 0;
-    }
+  }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
 }
 #endif  // #if BX_SUPPORT_X86_64
-
 
 void BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 {

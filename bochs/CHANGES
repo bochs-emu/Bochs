@@ -149,6 +149,13 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #708847 CR8 access should not panic X86-64
+ #1039499 Compile error pcipnic.cc (cygwin)
+  #978024 compile against wxGTK-2.5.2 fails
+  #639073 MacOSX: Networking not implemented
+  #639074 MacOSX: Soundblaster not implemented
+  #963264 Latest CVS --enable-pcidev fails to configue on YDL Linux
+  #586282 Mac OS X, will not "make"
   #699532 CVS (as of 2003/03/07) cannot read disk images
   #639275 wrong more than 2GB size DVD-ROM
   #766020 info registers / dump_cpu get old eflags

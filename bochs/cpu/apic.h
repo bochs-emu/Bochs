@@ -168,6 +168,8 @@ public:
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   Bit8u get_ppr ();
+  Bit8u get_tpr ();
+  void  set_tpr (Bit8u tpr);
   Bit8u get_apr ();
   Bit8u get_apr_lowpri();
   bx_bool is_focus(Bit32u vector);
