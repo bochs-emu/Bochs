@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.236 2003-08-19 00:10:38 cbothamy Exp $
+// $Id: main.cc,v 1.237 2003-08-22 01:00:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1352,8 +1352,10 @@ void bx_init_options ()
     bx_options.clock.Otime0,
     NULL
   };
+#if !BX_WITH_WX
   bx_options.clock.Osync->set_format ("sync=%s");
   bx_options.clock.Otime0->set_format (", Initial time=%d");
+#endif
   bx_options.clock.Osync->set_ask_format ("Enter Synchronisation method: [%s] ");
   bx_options.clock.Otime0->set_ask_format ("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
   menu = new bx_list_c (BXP_CLOCK, "Clock parameters", "", clock_init_list);
@@ -2958,9 +2960,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strcmp(params[i], "mode=vmware3")) {
         bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_VMWARE3);
         }
-      else if (!strcmp(params[i], "mode=split")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_SPLIT);
-        }
+//      else if (!strcmp(params[i], "mode=split")) {
+//        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_SPLIT);
+//        }
       else if (!strcmp(params[i], "mode=undoable")) {
         bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_UNDOABLE);
         }
@@ -3931,9 +3933,9 @@ bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_o
         case BX_ATA_MODE_VMWARE3:
           fprintf (fp, ", mode=vmware3");
           break;
-        case BX_ATA_MODE_SPLIT:
-          fprintf (fp, ", mode=split");
-          break;
+//        case BX_ATA_MODE_SPLIT:
+//          fprintf (fp, ", mode=split");
+//          break;
         case BX_ATA_MODE_UNDOABLE:
           fprintf (fp, ", mode=undoable");
           break;
