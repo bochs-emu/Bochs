@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.198 2002-11-26 20:40:50 vruppert Exp $
+// $Id: main.cc,v 1.199 2002-12-01 14:18:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1525,6 +1525,9 @@ int bxmain () {
 //
 // I'm sure other people have written this same function, and they may have
 // done it better, but I don't know where to find it. -BBD
+#ifndef MAX_ARGLEN
+#define MAX_ARGLEN 80
+#endif
 int split_string_into_argv (
   char *string,
   int *argc_out,
