@@ -34,10 +34,12 @@ Changes in 1.2.1 (June 12, 2001):
   increase MAX_LOGFNS since we ran out of them on an SMP simulation with
   4 processors
 <li> changes to compile clean on cygwin:
-  - don't use the WIN32 snprintf define for cygwin
-  - add ssize_t definition for cygwin
-  - only compile "struct timeval tval" if select is available
+<ul>
+  <li> don't use the WIN32 snprintf define for cygwin
+  <li> add ssize_t definition for cygwin
+  <li> only compile "struct timeval tval" if select is available
     on that platform.
+</ul>
 <li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=432491">#432491</a>  ] SMP: CPUID says no APIC feature <BR>
   clean up inconsistent use of BX_SUPPORT_APIC and BX_APIC_SUPPORT, which
   caused the CPUID to report no APIC was present
@@ -61,7 +63,7 @@ Changes in 1.2.1 (June 12, 2001):
     SMP structures were getting overwritten by BCC-generated data, 
     preventing SMP operating systems from detecting that other processors
     were available.
-  <li> [ #431016 ] bios: SMP struct has wrong entry count
+  <li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=431016">#431016</a> ] bios: SMP struct has wrong entry count
     SMP structure had the wrong entry counts
 </ul>
 <li> very minor doc updates (typos, replace broken link to mtools info)
