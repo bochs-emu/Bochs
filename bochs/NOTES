@@ -1,7 +1,7 @@
 ./configure --enable-cpu-level=6 --enable-fpu
 This ^^^ is the minimal config line to allow SMP.
 
-./configure --enable-cpu-level=6 --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
+./configure --enable-cpu-level=6 --enable-debugger --enable-disasm --enable-fpu
 
 my disk image is a duplicate of debussy's 212MB disk
 12 heads
