@@ -7,7 +7,31 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.1</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.1.1</font><BR><BR>
+
+Version 2.1.1 is a bugfix release :
+<ul>
+<li> fix bug in int15h function 0xe820
+<li> fix vmware3 disk support on big-endian platforms
+<li> fix conditions for NM exception on FWAIT instruction
+<li> fix symbol conflict in rfb and x display libraries
+<li> allow 16 bit writes to ne2k page 0
+<li> notify display libraries on change of bpp
+<li> fix bug in int13h function 0x10
+<li> fix floppy dialog error on win2k
+<li> fix adress check in TSS IO permission bitmap 
+<li> fix buffer overflow vulnerability 
+<li> updates for MacOS compile 
+</ul>
+
+<BR/>
+<a href="http://cvs.sourceforge.net/viewcvs.py/bochs/bochs/CHANGES?rev=REL_2_1_1_FINAL&content-type=text/vnd.viewcvs-markup">
+Details on what has changed since version 2.1
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.1</font><BR><BR>
 
 It's been nearly one year since the last stable release :
 <ul>
