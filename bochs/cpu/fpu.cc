@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.5 2003-12-28 18:58:15 sshwarts Exp $
+// $Id: fpu.cc,v 1.6 2004-01-18 16:42:05 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
@@ -50,7 +50,9 @@ void BX_CPU_C::FWAIT(bxInstruction_c *i)
 #else // BX_CPU_LEVEL >= 3
 
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU();
+  if (BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp) {
+    exception(BX_NM_EXCEPTION, 0, 0);
+  }
 
   if (FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
       exception(BX_MF_EXCEPTION, 0, 0);
