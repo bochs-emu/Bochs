@@ -231,7 +231,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
     //set up cmos for second hard drive
     if (bx_options.diskd.present) {
-      BX_INFO(("[diskd] I will put 0xf into the second hard disk field\n"));
+      BX_DEBUG(("1: I will put 0xf into the second hard disk field\n"));
       // fill in lower 4 bits of 0x12 for second HD
       cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0xf0) | 0x0f;
       cmos->s.reg[0x1a] = 47; // user definable type
@@ -2397,14 +2397,13 @@ void concat_image_t::increment_string (char *str)
   assert (p>str);  // choke on zero length strings
   p--;  // point to last character of the string
   ++(*p);  // increment to next ascii code.
-  if (bx_dbg.disk)
-    BX_INFO(("concat_image.increment string returning '%s'\n", str));
+  BX_DEBUG(("concat_image.increment string returning '%s'\n", str));
 }
 
 int concat_image_t::open (const char* pathname0)
 {
   char *pathname = strdup (pathname0);
-  BX_INFO(("concat_image_t.open\n"));
+  BX_DEBUG(("concat_image_t.open\n"));
   ssize_t start_offset = 0;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
     fd_table[i] = ::open(pathname, O_RDWR
@@ -2421,8 +2420,7 @@ int concat_image_t::open (const char* pathname0)
       maxfd = i; 
       break;
     }
-    if (bx_dbg.disk)
-      BX_INFO(("concat_image: open image %s, fd[%d] = %d\n", pathname, i, fd_table[i]));
+    BX_DEBUG(("concat_image: open image %s, fd[%d] = %d\n", pathname, i, fd_table[i]));
     /* look at size of image file to calculate disk geometry */
     struct stat stat_buf;
     int ret = fstat(fd_table[i], &stat_buf);
@@ -2448,7 +2446,7 @@ int concat_image_t::open (const char* pathname0)
 
 void concat_image_t::close ()
 {
-  BX_INFO(("concat_image_t.close\n"));
+  BX_DEBUG(("concat_image_t.close\n"));
   if (fd > -1) {
     ::close(fd);
   }
@@ -2458,8 +2456,7 @@ off_t concat_image_t::lseek (off_t offset, int whence)
 {
   if ((offset % 512) != 0) 
     BX_PANIC( ("lseek HD with offset not multiple of 512\n"));
-  if (bx_dbg.disk)
-    BX_INFO(("concat_image_t.lseek(%d)\n", whence));
+  BX_DEBUG(("concat_image_t.lseek(%d)\n", whence));
   // is this offset in this disk image?
   if (offset < thismin) {
     // no, look at previous images
@@ -2469,8 +2466,7 @@ off_t concat_image_t::lseek (off_t offset, int whence)
 	fd = fd_table[i];
 	thismin = start_offset_table[i];
 	thismax = thismin + length_table[i] - 1;
-	if (bx_dbg.disk)
-	  BX_INFO(("concat_image_t.lseek to earlier image, index=%d\n", index));
+	BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d\n", index));
 	break;
       }
     }
@@ -2482,8 +2478,7 @@ off_t concat_image_t::lseek (off_t offset, int whence)
 	fd = fd_table[i];
 	thismin = start_offset_table[i];
 	thismax = thismin + length_table[i] - 1;
-	if (bx_dbg.disk)
-	  BX_INFO(("concat_image_t.lseek to earlier image, index=%d\n", index));
+	BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d\n", index));
 	break;
       }
     }
@@ -2491,7 +2486,7 @@ off_t concat_image_t::lseek (off_t offset, int whence)
   // now offset should be within the current image.
   offset -= start_offset_table[index];
   if (offset < 0 || offset >= length_table[index])
-    BX_PANIC( ("concat_image_t.lseek to byte %ld failed\n", (long)offset));
+    BX_PANIC(("concat_image_t.lseek to byte %ld failed\n", (long)offset));
 
   seek_was_last_op = 1;
   return ::lseek(fd, offset, whence);
@@ -2500,7 +2495,7 @@ off_t concat_image_t::lseek (off_t offset, int whence)
 ssize_t concat_image_t::read (void* buf, size_t count)
 {
   if (bx_dbg.disk)
-    BX_INFO(("concat_image_t.read %ld bytes\n", (long)count));
+    BX_DEBUG(("concat_image_t.read %ld bytes\n", (long)count));
   // notice if anyone does sequential read or write without seek in between.
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
@@ -2511,8 +2506,7 @@ ssize_t concat_image_t::read (void* buf, size_t count)
 
 ssize_t concat_image_t::write (const void* buf, size_t count)
 {
-  if (bx_dbg.disk)
-    BX_INFO(("concat_image_t.write %ld bytes\n", (long)count));
+  BX_DEBUG(("concat_image_t.write %ld bytes\n", (long)count));
   // notice if anyone does sequential read or write without seek in between.
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
