@@ -1,0 +1,74 @@
+----------------------------------------------------------------------
+Patch name: patch.logfilefmteip
+Author: Carl Sopchak
+Date: May, 1st 2002
+
+Detailed description:
+ While working with Bela Lubkin of Caldera, trying to
+ get bochs to install SCO OSR5, Bela asked me to add the
+ EIP to the log file. The attached patch changes the
+ timestamp portion of a log file entry to
+
+ tttttttttt-x-@eeeeeee[sssss]
+
+ where tttttttttt is the ticks, x is the type of entry
+ (error, panic, info, debug), eeeeeeee is the EIP (in
+ hex), and sssss remains the subsystem (e.g., HD, FDD,
+ BIOS, etc)
+
+ Please make this part of the standard bochs package.
+
+ Thanks,
+
+ Carl
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on May, 1st 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.63
+diff -u -r1.63 bochs.h
+--- bochs.h	23 Apr 2002 07:44:34 -0000	1.63
++++ bochs.h	1 May 2002 18:11:54 -0000
+@@ -265,6 +265,7 @@
+ 
+ class iofunctions {
+ 	int showtick,magic;
++	int showeip;
+ 	FILE *logfd;
+ 	class logfunctions *log;
+ 	void init(void);
+Index: logio.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/logio.cc,v
+retrieving revision 1.17
+diff -u -r1.17 logio.cc
+--- logio.cc	18 Apr 2002 00:22:19 -0000	1.17
++++ logio.cc	1 May 2002 18:11:54 -0000
+@@ -51,6 +51,7 @@
+ 	// number is set.
+ 	magic=MAGIC_LOGNUM;
+ 	showtick = 1;
++	showeip = 1;
+ 	n_logfn = 0;
+ 	init_log(stderr);
+ 	log = new logfunc_t(this);
+@@ -145,7 +146,10 @@
+ 		case LOGLEV_DEBUG: c='d'; break;
+ 		default: break;
+ 	}
+-	fprintf(logfd, "%c",c);
++	fprintf(logfd, "-%c",c);
++
++	if( showeip )
++		fprintf(logfd, "-@%08x", BX_CPU(0)->eip);
+ 
+ 	if(prefix != NULL)
+ 		fprintf(logfd, "%s ", prefix);
