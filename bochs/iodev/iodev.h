@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.24 2002-10-23 21:02:16 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.25 2002-10-24 03:31:02 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,19 +37,6 @@
 #define BX_MAX_IRQS 16
 #define BX_NO_IRQ  -1
 
-
-#if !BX_PLUGINS
-class bx_biosdev_c;
-class bx_floppy_ctrl_c;
-class bx_cmos_c;
-class bx_vga_c;
-class bx_unmapped_c;
-class bx_parallel_c;
-class bx_serial_c;
-class bx_hard_drive_c;
-class bx_dma_c;
-class bx_pic_c;
-#endif
 
 class bx_pit_c;
 class bx_keyb_c;
