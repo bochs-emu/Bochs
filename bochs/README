@@ -1,3 +1,61 @@
+Bochs Pentium Emulator
+Upated: Fri Apr  6 15:47:04 EDT 2001
+Version: bugfix-20010406-beta
+
+Since the number of patches on SourceForge is getting large, I collected
+them all into this snapshot file.  Once we get the source moved into
+public CVS, it will be much easier to manage.
+
+Please try compiling and running Bochs with this beta version.
+If you have to hack it to make it compile or run, please submit your
+diffs to sourceforge.  Be sure to mention that the diff should be
+applied to bugfix-20010406-beta.  If you don't have diff, do a make
+all-clean, and send a ZIP or TAR of the whole directory to Bryce.
+
+The following patches were applied to bochs-2000_0325a.tar.gz from
+ftp.bochs.com:
+
+  patch.portable1
+  patch.portable2
+  patch.const64bit
+  patch.fabs-conflict
+  patch.hd-abort-features
+  patch.inlines
+  patch.macos-no-strdup
+  patch.mouse-fix-linux-bsd
+  patch.panic-is-fatal
+  patch.pit-panic
+  patch.sun-cdrom
+  patch.vga-3c3
+  patch.win32-rawcd
+  patch.win32-rawfloppy
+  patch.copyrights2
+
+The changes in these patches came from many different sources,
+including Don Becker (win32-VC++ port, fpu portability), Greg
+Alexander (mouse, hard drive, vga fixes), Roland Mainz (sun cdrom),
+and others on bochs-developers@redhat.com.
+
+For a summary of fixed bugs, see BUGS.txt.  A copy of all the patches
+can be found in the patches directory.  All patches are, of course,
+open for discussion.  If you think a patch is an incomplete or poor
+solution to a problem, improve it and share your changes.
+
+Whether you have success or failure with this version, please send
+feedback to bochs-developers@redhat.com or post a bug report or patch
+on sourceforge.  Please don't send bugs to Kevin, since he's working
+on plex86 now.  Before making an "official" release, we must verify
+that it compiles and runs on a variety of target hosts, and that a
+variety of guest operating systems functions correctly in emulation.
+So please, report your results!
+
+Have fun,
+Bryce Denney
+bryce.denney@bigfoot.com
+
+----------------------------------------------------------------------
+The original README from the 3/25/2000 snapshot follows.
+----------------------------------------------------------------------
 Hello,
 
 All documentation is now located in the docs-html directory.
