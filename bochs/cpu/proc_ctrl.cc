@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.25 2002-08-10 12:06:26 cbothamy Exp $
+// $Id: proc_ctrl.cc,v 1.26 2002-09-01 04:01:14 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1029,6 +1029,7 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
       model = 1; // Pentium Pro
       stepping = 3; // ???
       features |= (1<<4);   // implement TSC
+      features |= (1<<15);  // Implement CMOV instructions.
 #  if BX_SUPPORT_APIC
       features |= (1<<9);   // APIC on chip
 #  endif

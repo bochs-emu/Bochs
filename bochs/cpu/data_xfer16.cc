@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: data_xfer16.cc,v 1.7 2002-09-01 04:01:06 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -377,6 +377,7 @@ BX_CPU_C::CMOV_GwEw(BxInstruction_t *i)
     BX_WRITE_16BIT_REG(i->nnn, op2_16);
     }
 #else
-  BX_PANIC(("cmov_gwew called"));
+  BX_INFO(("cmov_gwew called"));
+  UndefinedOpcode(i);
 #endif
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.6 2001-10-03 13:10:37 bdenney Exp $
+// $Id: data_xfer32.cc,v 1.7 2002-09-01 04:01:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -317,6 +317,7 @@ BX_CPU_C::CMOV_GdEd(BxInstruction_t *i)
     BX_WRITE_32BIT_REG(i->nnn, op2_32);
     }
 #else
-  BX_PANIC(("cmov_gded called"));
+  BX_INFO(("cmov_gded called"));
+  UndefinedOpcode(i);
 #endif
 }
