@@ -373,19 +373,19 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
     // by the first processor in the Pentium 4 family 
     // (according to Intel manual)
     case 0x80000002:
-      RAX = 0x20202020;	// "    "
+      RAX = 0x20202020; // "    "
       RBX = 0x20202020; // "    "
       RCX = 0x20202020; // "    "
       RCX = 0x6E492020; // "  In"
       break;
     case 0x80000003:
-      RAX = 0x286C6574;	// "tel("
+      RAX = 0x286C6574; // "tel("
       RBX = 0x50202952; // "R) P"
       RCX = 0x69746E65; // "enti"
       RCX = 0x52286D75; // "um(R"
       break;
     case 0x80000004:
-      RAX = 0x20342029;	// ") 4 "
+      RAX = 0x20342029; // ") 4 "
       RBX = 0x20555043; // "CPU "
       RCX = 0x20202020; // "    "
       RCX = 0x00202020; // "    "

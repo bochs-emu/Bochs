@@ -170,12 +170,39 @@ char* mem2hex(char* mem, char* buf, int count)
    return(buf);
 }
 
+int hexdigit(char c)
+{
+  if (isdigit(c))
+    return c - '0';
+  else if (isupper(c))
+    return c - 'A' + 10;
+  else
+    return c - 'a' + 10;
+}
+
+Bit64u read_little_endian_hex(char *&buf)
+{
+  int byte;
+  Bit64u ret = 0;
+  int n = 0;
+  while (isxdigit(*buf)) {
+    byte = hexdigit(*buf++);
+    if (isxdigit(*buf))
+      byte = (byte << 4) | hexdigit(*buf++);
+    ret |= (unsigned long long)byte << (n*8);
+    ++n;
+  }
+  return ret;
+}
+
 static int continue_thread = -1;
 static int other_thread = 0;
 
+#ifndef BX_SUPPORT_X86_64
 #define NUMREGS (16)
 #define NUMREGSBYTES (NUMREGS * 4)
 static int registers[NUMREGS];
+#endif
 
 #define MAX_BREAKPOINTS (255)
 static unsigned int breakpoints[MAX_BREAKPOINTS] = {0,};
@@ -286,6 +313,31 @@ static void insert_breakpoint(unsigned int addr)
    BX_INFO (("No slot for breakpoint"));
 }
 
+static void do_pc_breakpoint(int insert, unsigned long long addr, int len)
+{
+  for (int i = 0; i < len; ++i)
+    if (insert)
+      insert_breakpoint(addr);
+    else
+      remove_breakpoint(addr, 1);
+}
+
+static void do_breakpoint(int insert, char* buffer)
+{
+  char* ebuf;
+  unsigned long type = strtoul(&buffer[1], &ebuf, 16);
+  unsigned long long addr = strtoull(ebuf+1, &ebuf, 16);
+  unsigned long len = strtoul(ebuf+1, &ebuf, 16);
+  switch (type) {
+  case 0:
+  case 1:
+    do_pc_breakpoint(insert, addr, len);
+    put_reply("OK");
+  default:
+    put_reply("");
+  }
+}
+
 static void write_signal(char* buf, int signal)
 {
    buf[0] = hexchars[signal >> 4];
@@ -293,7 +345,7 @@ static void write_signal(char* buf, int signal)
    buf[2] = 0;
 }
 
-static int access_linear(Bit32u laddress,
+static int access_linear(Bit64u laddress,
                         unsigned len,
                         unsigned int rw,
                         Bit8u* data)
@@ -319,7 +371,7 @@ static int access_linear(Bit32u laddress,
        return(valid);
      }
    
-   BX_CPU(0)->dbg_xlate_linear2phy((Bit32u)laddress, 
+   BX_CPU(0)->dbg_xlate_linear2phy(laddress, 
                                        (Bit32u*)&phys, 
                                        (bx_bool*)&valid);
    if (!valid)
@@ -432,12 +484,12 @@ static void debug_loop(void)
             
           case 'M':
               {
-                 int addr;
+                 Bit64u addr;
                  int len;
                  unsigned char mem[255];
                  char* ebuf;
                  
-                 addr = strtoul(&buffer[1], &ebuf, 16);
+                 addr = strtoull(&buffer[1], &ebuf, 16);
                  len = strtoul(ebuf + 1, &ebuf, 16);
                  hex2mem(ebuf + 1, mem, len);          
                  
@@ -469,11 +521,11 @@ static void debug_loop(void)
             
           case 'm':
               {
-                 int addr;
+                 Bit64u addr;
                  int len;
                  char* ebuf;
                  
-                 addr = strtoul(&buffer[1], &ebuf, 16);
+                 addr = strtoull(&buffer[1], &ebuf, 16);
                  len = strtoul(ebuf + 1, NULL, 16);
                  BX_INFO (("addr %x len %x", addr, len));
                  
@@ -488,14 +540,15 @@ static void debug_loop(void)
           case 'P':
               {
                  int reg;
-                 int value;
+                 unsigned long long value;
                  char* ebuf;
                  
                  reg = strtoul(&buffer[1], &ebuf, 16);
-                 value = ntohl(strtoul(ebuf + 1, &ebuf, 16));
+		 ++ebuf;
+                 value = read_little_endian_hex(ebuf);
                  
-                 BX_INFO (("reg %d set to %x", reg, value));
-                 
+                 BX_INFO (("reg %d set to %llx", reg, value));
+#ifndef BX_SUPPORT_X86_64                 
                  switch (reg)
                    {
                     case 1:
@@ -534,13 +587,89 @@ static void debug_loop(void)
                     default:
                       break;
                    }
-                 
+#else
+                 switch (reg)
+                   {
+                    case 0:
+                      RAX = value;
+                      break;
+                      
+                    case 1:
+                      RBX = value;
+                      break;
+                      
+                    case 2:
+                      RCX = value;
+                      break;
+                      
+                    case 3:
+                      RDX = value;
+                      break;
+                      
+                    case 4:
+                      RSI = value;
+                      break;
+                      
+                    case 5:
+                      RDI = value;
+                      break;
+                      
+                    case 6:
+                      ESP = value;
+                      break;
+                      
+                    case 7:
+		      RBP = value;
+		      break;
+
+                    case 8:
+		      R8 = value;
+		      break;
+
+                    case 9:
+		      R9 = value;
+		      break;
+
+                    case 10:
+		      R10 = value;
+		      break;
+
+                    case 11:
+		      R11 = value;
+		      break;
+
+                    case 12:
+		      R12 = value;
+		      break;
+
+                    case 13:
+		      R13 = value;
+		      break;
+
+                    case 14:
+		      R15 = value;
+		      break;
+
+                    case 15:
+		      R15 = value;
+		      break;
+
+		    case 16:
+                      RIP = value;
+                      BX_CPU_THIS_PTR invalidate_prefetch_q();
+                      break;
+                      
+                    default:
+                      break;
+                   }
+#endif                 
                  put_reply("OK");
                  
                  break;
               }
             
           case 'g':
+#ifndef BX_SUPPORT_X86_64
             registers[0] = EAX;
             registers[1] = ECX;
             registers[2] = EDX;
@@ -571,6 +700,44 @@ static void debug_loop(void)
             registers[15] = 
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
             mem2hex((char *)registers, obuf, NUMREGSBYTES);
+#else
+#define PUTREG(buf, val, len) do { \
+         Bit64u u = (val); \
+         (buf) = mem2hex((char*)&u, (buf), (len)); \
+      } while (0)
+            char* buf;
+	    buf = obuf;
+            PUTREG(buf, RAX, 8);
+            PUTREG(buf, RBX, 8);
+            PUTREG(buf, RCX, 8);
+            PUTREG(buf, RDX, 8);
+            PUTREG(buf, RSI, 8);
+            PUTREG(buf, RDI, 8);
+            PUTREG(buf, RSP, 8);
+            PUTREG(buf, RBP, 8);
+            PUTREG(buf, R8,  8);
+            PUTREG(buf, R9,  8);
+            PUTREG(buf, R10, 8);
+            PUTREG(buf, R11, 8);
+            PUTREG(buf, R12, 8);
+            PUTREG(buf, R13, 8);
+            PUTREG(buf, R14, 8);
+            PUTREG(buf, R15, 8);
+	    Bit64u rip;
+	    rip = RIP;
+            if (last_stop_reason == GDBSTUB_EXECUTION_BREAKPOINT)
+              {
+		++rip;
+              }
+            PUTREG(buf, rip, 8);
+	    PUTREG(buf, BX_CPU_THIS_PTR read_eflags(), 4);
+            PUTREG(buf, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, 4);
+            PUTREG(buf, BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value, 4);
+            PUTREG(buf, BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value, 4);
+            PUTREG(buf, BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value, 4);
+            PUTREG(buf, BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value, 4);
+            PUTREG(buf, BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value, 4);
+#endif
             put_reply(obuf);
             break;
             
@@ -616,7 +783,13 @@ static void debug_loop(void)
                  put_reply("ENN");
               }          
             break;
-            
+
+	  case 'Z':
+	    do_breakpoint(1, buffer+1);
+	    break;
+	  case 'z':
+	    do_breakpoint(0, buffer+1);
+	    break;
           case 'k':
             BX_PANIC (("Debugger asked us to quit\n"));
             break;

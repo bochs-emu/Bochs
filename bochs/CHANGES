@@ -14,7 +14,6 @@ Changes to next release:
   - fixed BCD instructions implementation
   - execution speed improvements (sshwarts and psychosmur)
   - fix MSR_APICBASE base address (Kangmo Kim, Christian Neubert)
-  - fetchdecode fixes for AMD64 and 3DNow!
   - change BX_PANIC messages to BX_INFO when behaviour exactly 
     matches Intel docs
   - EIP > CS.limit case should always cause #GP(0), even in real mode.
@@ -24,18 +23,20 @@ Changes to next release:
   - fixed possible simulator #DIVZERO fault when executing IDIV instruction
   - fixed undocumented flags handling for BTS, BTR, SHR, SHLD, MUL and IMUL
     instructions (Stanislav Shwartsman)
-  - fixed CF flag handling for SHL instruction in x86-64 mode
-    (Stanislav Shwartsman)
   - added missed #GP(0) exception when loading incorrect flags combination 
     to CR0 (Stanislav Shwartsman)
-  - implemented CR8 register (aliased to APIC.TPR[7:4]) in x86-64 mode
-  - implemented NXE bit (No-Execute page protection) support for x86-64
   - in case of --enable-ignore-bad-msr enabled read ignored MSRs as zero
   - enabled #DE, #TSD and #MCE bits in CR4 register, previosly setting
     of one of these bits generated #GP(0) (Stanislav, Volker Ruppert)
   - exceeding the instruction length limit of 15 bytes (this only can
     occur when redundant prefixes are placed before an instruction)
     generate #GP(0) (Stanislav)
+
+- CPU (x86-64) (Stanislav)
+  - fetchdecode fixes for x86-64 and 3DNow!
+  - fixed CF flag handling for SHL instruction in x86-64 mode
+  - implemented CR8 register (aliased to APIC.TPR[7:4]) in x86-64 mode
+  - implemented NXE bit (No-Execute page protection) support for x86-64
 
 - FPU
   - totally rewritten all FPU code based on softfloat library 
@@ -196,9 +197,12 @@ Changes to next release:
  [1093796] Fix for bug #1093786 (Nigel Horne)
  [1082584] The start of Bus mice and USB mice by Ben Lunt
  [1104695] msvc6 compatibility update (Royce Mitchell III)
- [1059199] VGA text font bug fix
+ [1059199] VGA text font bug fix (Anonymous)
  [1108001] Null pointer on bx_atexit() (Ben Lunt)
- [1112093] Fixed mouse cursor remain area drawing
+ [1112093] Fixed mouse cursor remain area drawing (Anonymous)
+ [1114826] Fix PCIBIOS (Destruction prevention of esi and edi)
+ [1095473] Reading from a CDRW (Fixed) by Ben Lunt
+ [1123895] x86-64 gdb/debugger fixes by Avi Kivity
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
@@ -211,6 +215,11 @@ Changes to next release:
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
+  #809574 rm -f segfaults
+  #593952 SuSE rm segfaults
+  #929783 floppy not recogniced since 2.1
+ #1099298 SB16 for Win98 Bogus
+ #1079483 Reading from a CDRW 
   #549793 flaw in interrupt gate handling(exception.cc)
   #692055 SMP Error
   #805479 Booting from disk causes illegal instruction warnings

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.196 2005-02-12 14:00:13 sshwarts Exp $
+// $Id: cpu.h,v 1.197 2005-02-16 18:58:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2689,7 +2689,7 @@ public: // for now...
                                           Bit32u laddr, Bit32u is_32);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
-  BX_SMF void     dbg_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid);
+  BX_SMF void     dbg_xlate_linear2phy(bx_address linear, Bit32u *phy, bx_bool *valid);
 #endif
   BX_SMF void     atexit(void);
   
