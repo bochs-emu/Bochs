@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.10 2003-07-25 08:59:45 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.11 2003-07-25 11:44:06 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -21,9 +21,11 @@
  */
 #define PECULIAR_486
 
-// change a pointer to an int, with type conversions that make it legal.
-// On machines with 64-bit pointers, compilers complain when you typecast
-// a 64-bit pointer into a 32-bit integer.
+/*
+ * change a pointer to an int, with type conversions that make it legal.
+ * On machines with 64-bit pointers, compilers complain when you typecast
+ * a 64-bit pointer into a 32-bit integer. 
+ */
 #define PTR2INT(x) ((bx_ptr_equiv_t)(void *)(x))
 
 #ifdef __ASSEMBLY__
@@ -128,15 +130,16 @@ struct address {
 #endif
 } GCC_ATTRIBUTE((packed));
 
-// Endian  Host byte order         Guest (x86) byte order
-// ======================================================
-// Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
-// Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
-//
-// Legend: F - fraction/mmx
-//         E - exponent
-//         A - aligment
-
+/*
+ * Endian  Host byte order         Guest (x86) byte order
+ * ======================================================
+ * Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
+ * Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
+ *
+ * Legend: F - fraction/mmx
+ *         E - exponent
+ *         A - aligment
+ */
 #ifdef EMU_BIG_ENDIAN
 
 struct fpu__reg {

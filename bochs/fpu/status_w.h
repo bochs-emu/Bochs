@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  status_w.h                                                               |
- |  $Id: status_w.h,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: status_w.h,v 1.4 2003-07-25 11:44:06 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993                                                   |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -49,8 +49,11 @@
 
 #define status_word() \
   ((partial_status & ~SW_Top & 0xffff) | ((top << SW_Top_Shift) & SW_Top))
-// bbd: use do {...} while (0) structure instead of using curly brackets
-// inside parens, which most compilers do not like.
+
+/*
+ * bbd: use do {...} while (0) structure instead of using curly brackets
+ * inside parens, which most compilers do not like.
+ */
 #define setcc(cc) do { \
   partial_status &= ~(SW_C0|SW_C1|SW_C2|SW_C3); \
   partial_status |= (cc) & (SW_C0|SW_C1|SW_C2|SW_C3); } while(0)

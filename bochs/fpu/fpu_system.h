@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.10 2003-07-25 08:59:45 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.11 2003-07-25 11:44:06 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -93,16 +93,20 @@ extern struct i387_t *current_i387;
 
 #define FPU_DS  (fpu_get_ds())
 
-// bbd: Change a pointer to an int, with type conversions that make it legal.
-// First make it a void pointer, then convert to an integer of the same
-// size as the pointer.  Otherwise, on machines with 64-bit pointers, 
-// compilers complain when you typecast a 64-bit pointer into a 32-bit integer.
-#define PTR2INT(x) ((bx_ptr_equiv_t)(void *)(x))
+/*
+ * bbd: Change a pointer to an int, with type conversions that make it legal.
+ * First make it a void pointer, then convert to an integer of the same
+ * size as the pointer.  Otherwise, on machines with 64-bit pointers, 
+ * compilers complain when you typecast a 64-bit pointer into a 32-bit integer.
+ */
+#define PTR2INT(x)   ((bx_ptr_equiv_t)(void *)(x))
 
-// bbd: Change an int to a pointer, with type conversions that make it legal.
-// Same strategy as PTR2INT: change to bx_ptr_equiv_t which is an integer
-// type of the same size as FPU_REG*.  Then the conversion to pointer
-// is legal.
-#define REGNO2PTR(x)		((FPU_REG*)((bx_ptr_equiv_t)(x)))
+/*
+ * bbd: Change an int to a pointer, with type conversions that make it legal.
+ * Same strategy as PTR2INT: change to bx_ptr_equiv_t which is an integer
+ * type of the same size as FPU_REG*.  Then the conversion to pointer
+ * is legal.
+ */
+#define REGNO2PTR(x) ((FPU_REG*)((bx_ptr_equiv_t)(x)))
 
 #endif
