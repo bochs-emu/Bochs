@@ -145,8 +145,13 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   /* store i387 register file */
   for(index=0; index < 8; index++)
   {
-    writeVirtualDQwordAligned(i->seg(), 
-           RMAddr(i)+index*16+32, (Bit8u *) &(BX_FPU_REG(index)));
+    const floatx80 &fp = BX_FPU_REG(index);
+
+    xmm.xmm64u(0) = fp.fraction;
+    xmm.xmm64u(1) = 0;
+    xmm.xmm16u(4) = fp.exp;
+    
+    writeVirtualDQwordAligned(i->seg(), RMAddr(i)+index*16+32, (Bit8u *) &xmm);
   }
 
 #if BX_SUPPORT_SSE >= 1
@@ -206,8 +211,8 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   /* load i387 register file */
   for(index=0; index < 8; index++)
   {
-    readVirtualDQwordAligned(i->seg(), 
-           RMAddr(i)+index*16+32, (Bit8u *) &(BX_FPU_REG(index)));
+    read_virtual_tword(i->seg(), 
+           RMAddr(i)+index*16+32, &(BX_FPU_REG(index)));
   }
 
   /*                                 FTW
@@ -255,7 +260,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   for(index = 0;index < 8; index++, twd <<= 2, tag_byte_mask <<= 1)
   {
       if(tag_byte & tag_byte_mask) {
-          floatx80 &fpu_reg = BX_FPU_REG(index);
+          const floatx80 &fpu_reg = BX_FPU_REG(index);
           twd = FPU_tagof(fpu_reg);
       }
       else {

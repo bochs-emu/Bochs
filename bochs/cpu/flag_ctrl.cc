@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.15 2003-03-13 00:49:20 ptrumpet Exp $
+// $Id: flag_ctrl.cc,v 1.16 2004-07-02 20:24:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -158,9 +158,7 @@ BX_CPU_C::PUSHF_Fv(bxInstruction_c *i)
       }
     else
       {
-      Bit16u flags16;
-
-      flags16 = read_flags();
+      Bit16u flags16 = read_flags();
       write_virtual_word(BX_SEG_REG_SS, RSP-2, &flags16);
       RSP -= 2;
       }
@@ -240,53 +238,49 @@ BX_CPU_C::POPF_Fv(bxInstruction_c *i)
     // Protected-mode: VIP/VIF cleared, VM unaffected.
     // Does this happen for 16 bit case?  fixme!
     flags32 &= ~( (1<<20) | (1<<19) ); // Clear VIP/VIF
-    }
-
+  }
   else if (v8086_mode()) {
     if (BX_CPU_THIS_PTR get_IOPL() < 3) {
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
-      }
+    }
     if (i->os32L()) {
       pop_32(&flags32);
       changeMask |= 0x240000; // ID,AC
-      }
+    }
     else {
       Bit16u flags16;
       pop_16(&flags16);
       flags32 = flags16;
-      }
+    }
     // v8086-mode: VM,RF,IOPL,VIP,VIF are unaffected.
     changeMask |= (1<<9); // IF
-    }
-
+  }
   else { // Real-mode
     if (i->os32L()) {
       pop_32(&flags32);
       changeMask |= 0x243200; // ID,AC,IOPL,IF
-      }
+    }
     else { /* 16 bit opsize */
       Bit16u flags16;
-
       pop_16(&flags16);
       flags32 = flags16;
       changeMask |= 0x3200; // IOPL,IF
-      }
+    }
     // Real-mode: VIP/VIF cleared, VM unaffected.
     flags32 &= ~( (1<<20) | (1<<19) ); // Clear VIP/VIF
-    }
+  }
 
   writeEFlags(flags32, changeMask);
 }
-
 
   void
 BX_CPU_C::SALC(bxInstruction_c *i)
 {
   if ( get_CF() ) {
     AL = 0xff;
-    }
+  }
   else {
     AL = 0x00;
-    }
+  }
 }
