@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.51 2002-12-07 16:52:05 cbothamy Exp $
+// $Id: wxdialog.cc,v 1.52 2002-12-08 09:16:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1627,6 +1627,8 @@ DebugLogDialog::DebugLogDialog(
   : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
+  lengthMax = DEBUG_LOG_DEFAULT_LENGTH_MAX;
+  lengthTolerance = DEBUG_LOG_DEFAULT_TOLERANCE;
   SetTitle (DEBUG_LOG_TITLE);
   mainSizer = new wxBoxSizer (wxVERTICAL);
   log = new wxTextCtrl (this, -1, "",
@@ -1675,6 +1677,34 @@ void DebugLogDialog::Execute(bool clear)
   if (clear) command->Clear ();
 }
 
+void DebugLogDialog::CheckLogLength ()
+{
+  // truncate the text control periodically to avoid a 
+  // serious memory leak.
+  wxString str = log->GetValue ();
+  Bit32u len = str.Length ();
+  if (len > lengthMax + lengthTolerance) {
+    // Truncate the string.  Start from length - lengthMax, search 
+    // forward until we find the first \n.
+    for (int i = len - lengthMax; i<len-1; i++) {
+      if (str.GetChar (i) == '\n') {
+	// remove the \n and everything before it.  Done.
+	//printf ("truncating from 0 to %d\n", i+1);
+	//printf ("\n");
+	log->Remove (0, i+1);
+	return;
+      }
+    }
+    // no newline found?!
+    //printf ("no newline found! truncating from 0 to %d", len - lengthMax);
+    //printf ("\n");
+    log->Remove (0, len - lengthMax);
+  } else {
+    //printf ("log length is %d, no truncation yet", len);
+    //printf ("\n");
+  }
+}
+
 void DebugLogDialog::AppendCommand (const char *cmd)
 {
   log->AppendText (wxT(">>> "));
@@ -1683,6 +1713,7 @@ void DebugLogDialog::AppendCommand (const char *cmd)
   int n = log->GetLastPosition ();
   if (n>0) n--;
   log->ShowPosition (n);
+  CheckLogLength ();
 }
 
 void DebugLogDialog::AppendText (wxString text) {
@@ -1690,6 +1721,7 @@ void DebugLogDialog::AppendText (wxString text) {
   int n = log->GetLastPosition ();
   if (n>0) n--;
   log->ShowPosition (n);
+  CheckLogLength ();
 }
 
 void DebugLogDialog::OnEvent(wxCommandEvent& event)
