@@ -6,7 +6,7 @@
 
 CC="gcc"
 CXX="g++"
-CFLAGS="-mno-cygwin -DWIN32 -O6 -march=pentium -mpentium"
+CFLAGS="-O6 -march=pentium -mpentium"
 CXXFLAGS="$CFLAGS"
 
 export CC
@@ -14,4 +14,4 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-win32  --enable-cdrom --enable-sb16=win
+./configure --enable-cdrom --enable-sb16=win

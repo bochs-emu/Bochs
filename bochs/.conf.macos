@@ -18,6 +18,6 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-macos
+./configure --target=mac-macos
 
 unset echo

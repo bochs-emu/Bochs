@@ -13,6 +13,71 @@ REL_STRING="March 5, 2002"
 changequote(<<, >>)
 changequote([, ])
 
+dnl Detect host and target
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+if test "$with_win32_vcpp"; then
+  echo "WARNING: The --with-win32-vcpp option will be treated as:"
+  echo "   --with-win32 --target=i686-pc-windows"
+  target="i686-pc-windows"
+  with_win32=yes
+fi
+
+# this case statement defines the compile flags which are needed to
+# compile bochs on a platform.  Don't put things like optimization settings 
+# into the configure.in file, since people will want to be able to change
+# those settings by defining CFLAGS and CXXFLAGS before running configure.
+case "$target" in
+  *-pc-windows* | *-pc-winnt*)
+    DEFAULT_GUI=win32                 # default to win32 gui
+    ;;
+  *-pc-cygwin*)
+    ADD_FLAGS="-mno-cygwin -DWIN32"   # required for cygwin compile
+    DEFAULT_GUI=win32                 # default to win32 gui
+    ;;
+  *-macosx* | *-darwin*)
+    ADD_FLAGS="-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh"      # required for macosx compile
+    DEFAULT_GUI=carbon                # default to carbon
+    ;;
+  *-macos*)
+    DEFAULT_GUI=macos                 # macos defaults to macos
+    ;;
+  *-beos*)
+    DEFAULT_GUI=beos                  # beos defaults to beos
+    ;;
+  *-amigaos*)
+    DEFAULT_GUI=amigaos               # amigaos defaults to amigaos
+    ;;
+  *)
+    DEFAULT_GUI=x11
+    ;;
+esac
+CFLAGS="$CFLAGS $ADD_FLAGS"
+CXXFLAGS="$CXXFLAGS $ADD_FLAGS"
+
+AC_MSG_CHECKING(for standard CFLAGS on this platform)
+AC_MSG_RESULT($ADD_FLAGS)
+AC_MSG_CHECKING(for default library on this platform)
+AC_MSG_RESULT($DEFAULT_GUI)
+
+dnl // make sure X Windows is default if no other chosen
+if (test "$with_sdl" != yes) && \
+   (test "$with_x11" != yes) && \
+   (test "$with_beos" != yes) && \
+   (test "$with_win32" != yes) && \
+   (test "$with_nogui" != yes) && \
+   (test "$with_term" != yes) && \
+   (test "$with_rfb" != yes) && \
+   (test "$with_amigaos" != yes) && \
+   (test "$with_carbon" != yes) && \
+   (test "$with_macos" != yes); then
+  # use DEFAULT_GUI.  Set the appropriate variable.
+  # DEFAULT_GUI must be set to one of the names above.  Otherwise, no
+  # valid $with_* variable will be set and who knows what will happen?
+  eval "with_${DEFAULT_GUI}=yes"
+fi
+
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
@@ -379,7 +444,7 @@ AC_ARG_ENABLE(ne2000,
     NE2K_OBJS='ne2k.o eth.o eth_null.o'
     AC_CHECK_HEADER(net/bpf.h, NE2K_OBJS="$NE2K_OBJS eth_fbsd.o")
     AC_CHECK_HEADER(netpacket/packet.h, NE2K_OBJS="$NE2K_OBJS eth_linux.o")
-    if test "$with_win32" = yes -o "$with_win32_vcpp" = yes; then
+    if test "$with_win32" = yes; then
       NE2K_OBJS="$NE2K_OBJS eth_win32.o"
     fi
     networking=yes
@@ -928,23 +993,6 @@ AC_ARG_WITH(sdl,
   [  --with-sdl                        use SDL libraries],
   )
 
-AC_MSG_CHECKING(for gui library to use)
-
-dnl // make sure X Windows is default if no other chosen
-if (test "$with_sdl" != yes) && \
-   (test "$with_x11" != yes) && \
-   (test "$with_beos" != yes) && \
-   (test "$with_win32" != yes) && \
-   (test "$with_nogui" != yes) && \
-   (test "$with_win32_vcpp" != yes) && \
-   (test "$with_term" != yes) && \
-   (test "$with_rfb" != yes) && \
-   (test "$with_amigaos" != yes) && \
-   (test "$with_carbon" != yes) && \
-   (test "$with_macos" != yes); then
-  with_x11=yes
-fi
-
 dnl // DASH is option prefix for your platform
 dnl // SLASH is directory for your platform
 dnl // CXXFP is C++ File Prefix; the flag that tells the compiler
@@ -969,6 +1017,12 @@ CD_UP_TWO="echo done"
 INSTALL_TARGET=install_unix
 INSTALL_LIST_FOR_PLATFORM=
 
+AC_MSG_CHECKING(for gui library to use)
+
+# the $with_* variable tells the gui library to use, but does NOT necessarily
+# indicate the platform.  Settings that depend on the platform should be
+# handled later.
+
 if test "$with_x11" = yes; then
   AC_MSG_RESULT(X windows)
   if test "$no_x" = yes; then
@@ -979,12 +1033,6 @@ if test "$with_x11" = yes; then
   GUI_OBJS='$(GUI_OBJS_X11)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
-elif test "$with_win32" = yes; then
-  AC_MSG_RESULT(win32)
-  AC_DEFINE(BX_WITH_WIN32, 1)
-  GUI_OBJS='$(GUI_OBJS_WIN32)'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32)'
-  INSTALL_TARGET='install_win32'
 elif test "$with_beos" = yes; then
   AC_MSG_RESULT(beos)
   AC_DEFINE(BX_WITH_BEOS, 1)
@@ -1005,51 +1053,23 @@ elif test "$with_amigaos" = yes; then
   AC_DEFINE(BX_WITH_AMIGAOS, 1)
   GUI_OBJS='$(GUI_OBJS_AMIGAOS)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_AMIGAOS)'
-elif test "$with_win32_vcpp" = yes; then
-  AC_MSG_RESULT(win32-vcpp)
+elif test "$with_win32" = yes; then
+  AC_MSG_RESULT(win32)
   AC_DEFINE(BX_WITH_WIN32, 1)
   GUI_OBJS='$(GUI_OBJS_WIN32)'
-  INSTALL_TARGET='install_win32'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'
-
-  CC="cl"
-  CXX="$CC"
-  #C_OPT="/Zi"   # for debugging
-  C_OPT="/O2"   # optimize for speed
-  CFLAGS="/nologo /G6 /MT /W3 /GX /DNDEBUG /DWIN32 /D_WINDOWS $C_OPT"
-  CXXFLAGS="$CFLAGS"
-  DASH="/"
-  SLASH="\\"
-  CXXFP="/Tp"
-  CFP="/Tc"
-  OFP="/Fo"
-  MAKELIB="lib.exe /nologo /subsystem:console /machine:I386 /verbose /out:\$@"
-  RMCOMMAND="-del"
-  RANLIB="echo"
-  #L_OPT="/debug"    # for debugging
-  L_OPT=""           # no debug info
-  LINK="link $L_OPT /nologo /subsystem:console /incremental:no /machine:I386 /out:\$@ BINMODE.OBJ"
-  EXE=".exe"
-  PRIMARY_TARGET="bochs.exe"
-  # also compile niclist if networking is on
-  if test "$networking" = yes; then
-    PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
-  fi
-  COMMAND_SEPARATOR=""
-  CD_UP_ONE="cd .."
-  CD_UP_TWO="cd ..\.."
-  AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
-  AC_DEFINE(inline, __inline)
-  AC_DEFINE(BX_NO_EMPTY_STRUCTS, 1)
-  AC_DEFINE(BX_NO_ATTRIBUTES, 1)
-  AC_DEFINE(BX_HAVE_HASH_MAP, 0)
-  AC_DEFINE(BX_HAVE_STRTOULL, 0)
-  AC_DEFINE(BX_HAVE_STRTOUQ, 0)
-  AC_DEFINE(HAVE_LIBREADLINE, 0)
+  case $target in
+    *-pc-windows*)
+       GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'  # native libs for win gui
+       ;;
+    *-cygwin*)
+       GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32)'   # cygwin/mingw libs for win gui
+       ;;
+    *) echo Unsupported compile setup: GUI library is win32, but target is neither windows nor cygwin.
+       ;;
+  esac
 elif test "$with_macos" = yes; then
   AC_MSG_RESULT(macos)
   AC_DEFINE(BX_WITH_MACOS, 1)
-  AC_DEFINE(BX_HAVE_STRDUP, 0)
   GUI_OBJS='$(GUI_OBJS_MACOS)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
 elif test "$with_carbon" = yes; then
@@ -1057,7 +1077,7 @@ elif test "$with_carbon" = yes; then
   AC_DEFINE(BX_WITH_CARBON, 1)
   GUI_OBJS='$(GUI_OBJS_CARBON)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_CARBON)'
-  PRIMARY_TARGET=bochs.app/.build
+  PRIMARY_TARGET=bochs.app/.build   # only for carbon application
 elif test "$with_term" = yes; then
   AC_MSG_RESULT(term)
   AC_DEFINE(BX_WITH_TERM, 1)
@@ -1070,6 +1090,50 @@ else
   GUI_OBJS='$(GUI_OBJS_NOGUI)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
 fi
+
+# modify settings based on target platform
+case "$target" in
+  *-macos*)
+    AC_DEFINE(BX_HAVE_STRDUP, 0)
+    ;;
+  *-pc-windows*)
+    INSTALL_TARGET='install_win32'
+    CC="cl"
+    CXX="$CC"
+    #C_OPT="/Zi"   # for debugging
+    C_OPT="/O2"   # optimize for speed
+    CFLAGS="/nologo /G6 /MT /W3 /GX /DNDEBUG /DWIN32 /D_WINDOWS $C_OPT"
+    CXXFLAGS="$CFLAGS"
+    DASH="/"
+    SLASH="\\"
+    CXXFP="/Tp"
+    CFP="/Tc"
+    OFP="/Fo"
+    MAKELIB="lib.exe /nologo /subsystem:console /machine:I386 /verbose /out:\$@"
+    RMCOMMAND="-del"
+    RANLIB="echo"
+    #L_OPT="/debug"    # for debugging
+    L_OPT=""           # no debug info
+    LINK="link $L_OPT /nologo /subsystem:console /incremental:no /machine:I386 /out:\$@ BINMODE.OBJ"
+    EXE=".exe"
+    PRIMARY_TARGET="bochs.exe"
+    # also compile niclist if networking is on
+    if test "$networking" = yes; then
+      PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
+    fi
+    COMMAND_SEPARATOR=""
+    CD_UP_ONE="cd .."
+    CD_UP_TWO="cd ..\.."
+    AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
+    AC_DEFINE(inline, __inline)
+    AC_DEFINE(BX_NO_EMPTY_STRUCTS, 1)
+    AC_DEFINE(BX_NO_ATTRIBUTES, 1)
+    AC_DEFINE(BX_HAVE_HASH_MAP, 0)
+    AC_DEFINE(BX_HAVE_STRTOULL, 0)
+    AC_DEFINE(BX_HAVE_STRTOUQ, 0)
+    AC_DEFINE(HAVE_LIBREADLINE, 0)
+    ;;
+esac
 
 if test "$use_curses" = yes; then
   AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')

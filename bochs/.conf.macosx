@@ -4,7 +4,7 @@
 
 set echo
 CC="cc"
-CFLAGS="-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh -pipe -g"
+CFLAGS="-pipe -g"
 CXX="$CC"
 CXXFLAGS="$CFLAGS"
 
@@ -13,6 +13,6 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-carbon
+./configure
 
 unset echo

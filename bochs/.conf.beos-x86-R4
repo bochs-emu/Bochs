@@ -15,4 +15,4 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-beos
+./configure

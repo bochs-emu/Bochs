@@ -15,7 +15,7 @@ set echo
 #./configure --with-win32-vcpp --enable-debugger --enable-disasm
 #./configure --with-win32-vcpp --enable-disasm
 
-./configure --with-win32-vcpp --enable-cdrom --enable-sb16=win --enable-ne2000 --enable-cpp --disable-readline
+./configure --target=pentium-windows --enable-cdrom --enable-sb16=win --enable-ne2000 --enable-cpp --disable-readline
 
 unset echo
 
