@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.16 2002-10-20 20:49:04 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.17 2002-10-20 21:13:00 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ bx_devices_c::bx_devices_c(void)
   pluginUnmapped = NULL;
   pluginBiosDevice = NULL;
   pluginCmosDevice = &stubCmos;
-  pluginDmaDevice = NULL;
+  pluginDmaDevice = &stubDma;
   pluginPicDevice = NULL;
   pluginVgaDevice = NULL;
   pluginFloppyDevice = NULL;
@@ -82,7 +82,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.16 2002-10-20 20:49:04 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.17 2002-10-20 21:13:00 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -130,8 +130,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
     BX_LOAD_PLUGIN(parallel, PLUGTYPE_OPTIONAL);
 
 
-  // Start with all IO port address registered to unmapped handler
-  // MUST be called first
+  // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();
 
   // BIOS log 
