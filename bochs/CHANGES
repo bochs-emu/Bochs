@@ -231,6 +231,8 @@ Patches applied:
 - these S.F. bugs were fixed 
 // CB : I ran the request on SF, these bugs have definitely been closed 
 // since 2.0.2). There might have been others, during 2.0 to 2.0.2 times
+   #837416 V2 OS not compatible !?
+   #816971 main.cc: getcwd() missing argument²
    #813556 Compile error under gcc 3.3.1
    #809758 RIGHT ALT does not function properly
    #809695 CVS complains about unknown files after compilation
