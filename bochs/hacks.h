@@ -13,14 +13,15 @@ int gui_button_pressed (int which);
 ///////////////////////////////////////////////////////////////////
 
 typedef enum {
-  BX_EVT_KEY_PRESS,         // vga gui -> simulator
-  BX_EVT_KEY_RELEASE,       // vga gui -> simulator
-  BX_EVT_MOUSE,             // vga gui -> simulator
-  BX_EVT_GET_PARAM,         // cpanel -> simulator -> cpanel
-  BX_EVT_SET_PARAM,         // cpanel -> simulator
-  BX_EVT_LOG_MSG,           // simulator -> cpanel
-  BX_EVT_VALUE_CHANGED,     // simulator -> cpanel
-  BX_EVT_ASK_PARAM,         // simulator -> cpanel -> simulator
+  BX_ASYNC_EVT_KEY_PRESS,         // vga gui -> simulator
+  BX_ASYNC_EVT_KEY_RELEASE,       // vga gui -> simulator
+  BX_ASYNC_EVT_MOUSE,             // vga gui -> simulator
+  BX_SYNC_EVT_GET_PARAM,          // cpanel -> simulator -> cpanel
+  BX_ASYNC_EVT_SET_PARAM,         // cpanel -> simulator
+  BX_ASYNC_EVT_LOG_MSG,           // simulator -> cpanel
+  BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> cpanel
+  BX_SYNC_EVT_ASK_PARAM,          // simulator -> cpanel -> simulator
+  BX_SYNC_TICK,                   // simulator -> cpanel, wait for response.
 } BxEventType;
 
 typedef union {
