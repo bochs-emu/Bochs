@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.5 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.6 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -233,7 +233,7 @@ BX_CPU_C::CALL_Eq(bxInstruction_c *i)
       op1_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
-      read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
     invalidate_prefetch_q();
 
@@ -264,8 +264,8 @@ BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
     }
 
   /* pointer, segment address pair */
-  read_virtual_qword(i->seg, i->rm_addr, &op1_64);
-  read_virtual_word(i->seg, i->rm_addr+8, &cs_raw);
+  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
   invalidate_prefetch_q();
 
   if ( protected_mode() ) {
@@ -345,7 +345,7 @@ BX_CPU_C::JMP64_Ap(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  if (i->os_32) {
+  if (i->os32L()) {
     disp64 = (Bit32s) i->Id();
     }
   else {
@@ -384,7 +384,7 @@ BX_CPU_C::JMP_Eq(bxInstruction_c *i)
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+    read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     }
 
   invalidate_prefetch_q();
@@ -409,8 +409,8 @@ BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
     }
 
   /* pointer, segment address pair */
-  read_virtual_qword(i->seg, i->rm_addr, &op1_64);
-  read_virtual_word(i->seg, i->rm_addr+8, &cs_raw);
+  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
   invalidate_prefetch_q();
 
   if ( protected_mode() ) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.40 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.41 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -598,7 +598,7 @@ BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw = BX_READ_16BIT_REG(i->rm());
     }
   else {
-    read_virtual_word(i->seg, i->rm_addr, &msw);
+    read_virtual_word(i->seg(), RMAddr(i), &msw);
     }
 
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
@@ -641,7 +641,7 @@ BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
 
 
   if (i->mod() == 0xc0) {
-    if (i->os_32) {
+    if (i->os32L()) {
       BX_WRITE_32BIT_REGZ(i->rm(), msw);  // zeros out high 16bits
       }
     else {
@@ -649,7 +649,7 @@ BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
       }
     }
   else {
-    write_virtual_word(i->seg, i->rm_addr, &msw);
+    write_virtual_word(i->seg(), RMAddr(i), &msw);
     }
 
 #endif
@@ -1485,9 +1485,6 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 
   prev_pe = BX_CPU_THIS_PTR cr0.pe;
   prev_pg = BX_CPU_THIS_PTR cr0.pg;
-#if BX_CPU_LEVEL >= 4
-  Boolean prev_wp = BX_CPU_THIS_PTR cr0.wp;
-#endif
 
   BX_CPU_THIS_PTR cr0.pe = val_32 & 0x01;
   BX_CPU_THIS_PTR cr0.mp = (val_32 >> 1) & 0x01;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.14 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: vm8086.cc,v 1.15 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -136,7 +136,7 @@ BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
     return;
     }
 
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u eip, ecs_raw, eflags_tmp;
 
     if( !can_pop(12) )

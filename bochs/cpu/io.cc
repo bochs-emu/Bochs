@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.15 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: io.cc,v 1.16 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
       }
     }
 
-  if (i->as_64) {
+  if (i->as64L()) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
     write_virtual_byte(BX_SEG_REG_ES, RDI, &value8);
@@ -72,7 +72,7 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
       RDI = RDI + 1;
       }
     }
-  else if (i->as_32) {
+  else if (i->as32L()) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
     write_virtual_byte(BX_SEG_REG_ES, EDI, &value8);
@@ -115,14 +115,14 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
   bx_address edi;
   unsigned int incr;
 
-  if (i->as_64)  // This was coded as   if (i->as_64) ???
+  if (i->as64L())  // This was coded as   if (i->as_64) ???
     edi = RDI;
-  else if (i->as_32)
+  else if (i->as32L())
     edi = EDI;
   else
     edi = DI;
 
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u value32=0;
 
     if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
@@ -159,7 +159,7 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
     if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
-      if (i->as_32)
+      if (i->as32L())
         wordCount = ECX;
       else
         wordCount = CX;
@@ -220,7 +220,7 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
             // For 16-bit addressing mode, clamp the segment limits to 16bits
             // so we don't have to worry about computations using si/di
             // rolling over 16-bit boundaries.
-            if (!i->as_32) {
+            if (!i->as32L()) {
               if (dstSegLimit > 0xffff)
                 dstSegLimit = 0xffff;
               }
@@ -278,7 +278,7 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
             BX_TICKN(j-1); // Main cpu loop also decrements one more.
-            if (i->as_32)
+            if (i->as32L())
               ECX -= (wordCount-1);
             else
               CX  -= (wordCount-1);
@@ -314,14 +314,14 @@ doIncr:
 #endif
 #endif
 
-  if (i->as_64) {
+  if (i->as64L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RDI = RDI - incr;
     else
       RDI = RDI + incr;
     }
   else
-  if (i->as_32) {
+  if (i->as32L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RDI = EDI - incr;
     else
@@ -348,16 +348,16 @@ BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
       }
     }
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
     }
 
-  if (i->as_64)
+  if (i->as64L())
     esi = RSI;
-  else if (i->as_32)
+  else if (i->as32L())
     esi = ESI;
   else
     esi = SI;
@@ -366,13 +366,13 @@ BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 
   BX_OUTP(DX, value8, 1);
 
-  if (i->as_64) {
+  if (i->as64L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI -= 1;
     else
       RSI += 1;
     }
-  else if (i->as_32) {
+  else if (i->as32L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI -= 1;
     else
@@ -394,21 +394,21 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
   Bit32u esi;
   unsigned int incr;
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
     }
 
-  if (i->as_64)
+  if (i->as64L())
     esi = RSI;
-  else if (i->as_32)
+  else if (i->as32L())
     esi = ESI;
   else
     esi = SI;
 
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u value32;
 
     if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
@@ -440,7 +440,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
     if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
-      if (i->as_32)
+      if (i->as32L())
         wordCount = ECX;
       else
         wordCount = CX;
@@ -501,7 +501,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
             // For 16-bit addressing mode, clamp the segment limits to 16bits
             // so we don't have to worry about computations using si/di
             // rolling over 16-bit boundaries.
-            if (!i->as_32) {
+            if (!i->as32L()) {
               if (srcSegLimit > 0xffff)
                 srcSegLimit = 0xffff;
               }
@@ -559,7 +559,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
             BX_TICKN(j-1); // Main cpu loop also decrements one more.
-            if (i->as_32)
+            if (i->as32L())
               ECX -= (wordCount-1);
             else
               CX  -= (wordCount-1);
@@ -590,13 +590,13 @@ doIncr:
 #endif
 #endif
 
-  if (i->as_64) {
+  if (i->as64L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI = RSI - incr;
     else
       RSI = RSI + incr;
     }
-  else if (i->as_32) {
+  else if (i->as32L()) {
     if (BX_CPU_THIS_PTR get_DF ())
       RSI = ESI - incr;
     else
@@ -632,7 +632,7 @@ BX_CPU_C::IN_eAXIb(bxInstruction_c *i)
   imm8 = i->Ib();
 
 #if BX_CPU_LEVEL > 2
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u eax;
 
     eax = BX_CPU_THIS_PTR inp32(imm8);
@@ -668,7 +668,7 @@ BX_CPU_C::OUT_IbeAX(bxInstruction_c *i)
   imm8 = i->Ib();
 
 #if BX_CPU_LEVEL > 2
-  if (i->os_32) {
+  if (i->os32L()) {
     BX_CPU_THIS_PTR outp32(imm8, EAX);
     }
   else
@@ -692,7 +692,7 @@ BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 BX_CPU_C::IN_eAXDX(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL > 2
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u eax;
 
     eax = BX_CPU_THIS_PTR inp32(DX);
@@ -728,7 +728,7 @@ BX_CPU_C::OUT_DXeAX(bxInstruction_c *i)
   dx = DX;
 
 #if BX_CPU_LEVEL > 2
-  if (i->os_32) {
+  if (i->os32L()) {
     BX_CPU_THIS_PTR outp32(dx, EAX);
     }
   else

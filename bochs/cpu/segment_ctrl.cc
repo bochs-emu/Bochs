@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.8 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: segment_ctrl.cc,v 1.9 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,12 +51,12 @@ BX_CPU_C::LES_GvMp(bxInstruction_c *i)
     }
 
 #if BX_CPU_LEVEL > 2
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit16u es;
     Bit32u reg_32;
 
-    read_virtual_dword(i->seg, i->rm_addr, &reg_32);
-    read_virtual_word(i->seg, i->rm_addr + 4, &es);
+    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+    read_virtual_word(i->seg(), RMAddr(i) + 4, &es);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
@@ -67,8 +67,8 @@ BX_CPU_C::LES_GvMp(bxInstruction_c *i)
     { /* 16 bit mode */
     Bit16u reg_16, es;
 
-    read_virtual_word(i->seg, i->rm_addr, &reg_16);
-    read_virtual_word(i->seg, i->rm_addr + 2, &es);
+    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+    read_virtual_word(i->seg(), RMAddr(i) + 2, &es);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
@@ -85,12 +85,12 @@ BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
     }
 
 #if BX_CPU_LEVEL > 2
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit16u ds;
     Bit32u reg_32;
 
-    read_virtual_dword(i->seg, i->rm_addr, &reg_32);
-    read_virtual_word(i->seg, i->rm_addr + 4, &ds);
+    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+    read_virtual_word(i->seg(), RMAddr(i) + 4, &ds);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
@@ -101,8 +101,8 @@ BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
     { /* 16 bit mode */
     Bit16u reg_16, ds;
 
-    read_virtual_word(i->seg, i->rm_addr, &reg_16);
-    read_virtual_word(i->seg, i->rm_addr + 2, &ds);
+    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+    read_virtual_word(i->seg(), RMAddr(i) + 2, &ds);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
@@ -122,12 +122,12 @@ BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
     UndefinedOpcode(i);
     }
 
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u reg_32;
     Bit16u fs;
 
-    read_virtual_dword(i->seg, i->rm_addr, &reg_32);
-    read_virtual_word(i->seg, i->rm_addr + 4, &fs);
+    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+    read_virtual_word(i->seg(), RMAddr(i) + 4, &fs);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
@@ -137,8 +137,8 @@ BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
     Bit16u reg_16;
     Bit16u fs;
 
-    read_virtual_word(i->seg, i->rm_addr, &reg_16);
-    read_virtual_word(i->seg, i->rm_addr + 2, &fs);
+    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+    read_virtual_word(i->seg(), RMAddr(i) + 2, &fs);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
@@ -159,12 +159,12 @@ BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
     UndefinedOpcode(i);
     }
 
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u reg_32;
     Bit16u gs;
 
-    read_virtual_dword(i->seg, i->rm_addr, &reg_32);
-    read_virtual_word(i->seg, i->rm_addr + 4, &gs);
+    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+    read_virtual_word(i->seg(), RMAddr(i) + 4, &gs);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
@@ -174,8 +174,8 @@ BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
     Bit16u reg_16;
     Bit16u gs;
 
-    read_virtual_word(i->seg, i->rm_addr, &reg_16);
-    read_virtual_word(i->seg, i->rm_addr + 2, &gs);
+    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+    read_virtual_word(i->seg(), RMAddr(i) + 2, &gs);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
@@ -196,12 +196,12 @@ BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
     UndefinedOpcode(i);
     }
 
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u reg_32;
     Bit16u ss_raw;
 
-    read_virtual_dword(i->seg, i->rm_addr, &reg_32);
-    read_virtual_word(i->seg, i->rm_addr + 4, &ss_raw);
+    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+    read_virtual_word(i->seg(), RMAddr(i) + 4, &ss_raw);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss_raw);
 
@@ -211,8 +211,8 @@ BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
     Bit16u reg_16;
     Bit16u ss_raw;
 
-    read_virtual_word(i->seg, i->rm_addr, &reg_16);
-    read_virtual_word(i->seg, i->rm_addr + 2, &ss_raw);
+    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+    read_virtual_word(i->seg(), RMAddr(i) + 2, &ss_raw);
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss_raw);
 

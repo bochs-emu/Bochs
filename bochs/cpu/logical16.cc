@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.7 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: logical16.cc,v 1.8 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 ^ op2_16;
@@ -81,7 +81,7 @@ BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     result_16 = op1_16 ^ op2_16;
@@ -124,7 +124,7 @@ BX_CPU_C::XOR_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 ^ op2_16;
@@ -155,7 +155,7 @@ BX_CPU_C::OR_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 | op2_16;
@@ -183,7 +183,7 @@ BX_CPU_C::NOT_Ew(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = ~op1_16;
@@ -213,7 +213,7 @@ BX_CPU_C::OR_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 | op2_16;
@@ -244,7 +244,7 @@ BX_CPU_C::OR_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     result_16 = op1_16 | op2_16;
@@ -291,7 +291,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 & op2_16;
@@ -322,7 +322,7 @@ BX_CPU_C::AND_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     result_16 = op1_16 & op2_16;
@@ -364,7 +364,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 & op2_16;
@@ -396,7 +396,7 @@ BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 & op2_16;
@@ -437,7 +437,7 @@ BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     result_16 = op1_16 & op2_16;

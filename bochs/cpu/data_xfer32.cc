@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.11 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: data_xfer32.cc,v 1.12 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,7 +80,7 @@ BX_CPU_C::MOV_EdGd(bxInstruction_c *i)
       BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
       }
     else {
-      write_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      write_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 }
 
@@ -95,7 +95,7 @@ BX_CPU_C::MOV_GdEd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
@@ -112,7 +112,7 @@ BX_CPU_C::LEA_GdM(bxInstruction_c *i)
     }
 
     /* write effective address of op2 in op1 */
-    BX_WRITE_32BIT_REGZ(i->nnn(), i->rm_addr);
+    BX_WRITE_32BIT_REGZ(i->nnn(), RMAddr(i));
 }
 
 
@@ -126,8 +126,8 @@ BX_CPU_C::MOV_EAXOd(bxInstruction_c *i)
 
   /* read from memory address */
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    read_virtual_dword(i->seg, addr, &temp_32);
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    read_virtual_dword(i->seg(), addr, &temp_32);
     }
   else {
     read_virtual_dword(BX_SEG_REG_DS, addr, &temp_32);
@@ -154,8 +154,8 @@ BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
   temp_32 = EAX;
 
   /* write to memory address */
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    write_virtual_dword(i->seg, addr, &temp_32);
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    write_virtual_dword(i->seg(), addr, &temp_32);
     }
   else {
     write_virtual_dword(BX_SEG_REG_DS, addr, &temp_32);
@@ -176,7 +176,7 @@ BX_CPU_C::MOV_EdId(bxInstruction_c *i)
       BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
       }
     else {
-      write_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      write_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 }
 
@@ -190,11 +190,11 @@ BX_CPU_C::MOVZX_GdEb(bxInstruction_c *i)
   Bit8u  op2_8;
 
   if (i->mod() == 0xc0) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_byte(i->seg, i->rm_addr, &op2_8);
+    read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
     }
 
     /* zero extend byte op2 into dword op1 */
@@ -215,7 +215,7 @@ BX_CPU_C::MOVZX_GdEw(bxInstruction_c *i)
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg, i->rm_addr, &op2_16);
+    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
     }
 
     /* zero extend word op2 into dword op1 */
@@ -232,11 +232,11 @@ BX_CPU_C::MOVSX_GdEb(bxInstruction_c *i)
   Bit8u op2_8;
 
   if (i->mod() == 0xc0) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_byte(i->seg, i->rm_addr, &op2_8);
+    read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
     }
 
     /* sign extend byte op2 into dword op1 */
@@ -257,7 +257,7 @@ BX_CPU_C::MOVSX_GdEw(bxInstruction_c *i)
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg, i->rm_addr, &op2_16);
+    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
     }
 
     /* sign extend word op2 into dword op1 */
@@ -281,7 +281,7 @@ BX_CPU_C::XCHG_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       Write_RMW_virtual_dword(op2_32);
       }
 
@@ -329,7 +329,7 @@ BX_CPU_C::CMOV_GdEd(bxInstruction_c *i)
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
     }
 
   if (condition) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.2 2002-09-17 22:50:51 kevinlawton Exp $
+// $Id: arith64.cc,v 1.3 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ BX_CPU_C::ADD_EqGq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, sum_64;
 
-    /* op2_64 is a register, i->rm_addr is an index of a register */
+    /* op2_64 is a register, RMAddr(i) is an index of a register */
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
@@ -73,7 +73,7 @@ BX_CPU_C::ADD_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     sum_64 = op1_64 + op2_64;
@@ -96,7 +96,7 @@ BX_CPU_C::ADD_GqEq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, sum_64;
 
-    /* op1_64 is a register, i->rm_addr is an index of a register */
+    /* op1_64 is a register, RMAddr(i) is an index of a register */
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
@@ -105,7 +105,7 @@ BX_CPU_C::ADD_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     sum_64 = op1_64 + op2_64;
@@ -146,7 +146,7 @@ BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, sum_64;
 
-    /* op2_64 is a register, i->rm_addr is an index of a register */
+    /* op2_64 is a register, RMAddr(i) is an index of a register */
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
@@ -155,7 +155,7 @@ BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     sum_64 = op1_64 + op2_64 + temp_CF;
@@ -184,7 +184,7 @@ BX_CPU_C::ADC_GqEq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, sum_64;
 
-    /* op1_64 is a register, i->rm_addr is an index of a register */
+    /* op1_64 is a register, RMAddr(i) is an index of a register */
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
@@ -193,7 +193,7 @@ BX_CPU_C::ADC_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     sum_64 = op1_64 + op2_64 + temp_CF;
@@ -243,7 +243,7 @@ BX_CPU_C::SBB_EqGq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, diff_64;
 
-    /* op2_64 is a register, i->rm_addr is an index of a register */
+    /* op2_64 is a register, RMAddr(i) is an index of a register */
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
@@ -252,7 +252,7 @@ BX_CPU_C::SBB_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = op1_64 - (op2_64 + temp_CF);
@@ -281,7 +281,7 @@ BX_CPU_C::SBB_GqEq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, diff_64;
 
-    /* op1_64 is a register, i->rm_addr is an index of a register */
+    /* op1_64 is a register, RMAddr(i) is an index of a register */
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
@@ -290,7 +290,7 @@ BX_CPU_C::SBB_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     diff_64 = op1_64 - (op2_64 + temp_CF);
@@ -347,7 +347,7 @@ BX_CPU_C::SBB_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = op1_64 - (op2_64 + temp_CF);
@@ -371,7 +371,7 @@ BX_CPU_C::SUB_EqGq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, diff_64;
 
-    /* op2_64 is a register, i->rm_addr is an index of a register */
+    /* op2_64 is a register, RMAddr(i) is an index of a register */
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
@@ -380,7 +380,7 @@ BX_CPU_C::SUB_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = op1_64 - op2_64;
@@ -403,7 +403,7 @@ BX_CPU_C::SUB_GqEq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, diff_64;
 
-    /* op1_64 is a register, i->rm_addr is an index of a register */
+    /* op1_64 is a register, RMAddr(i) is an index of a register */
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
@@ -412,7 +412,7 @@ BX_CPU_C::SUB_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     diff_64 = op1_64 - op2_64;
@@ -448,7 +448,7 @@ BX_CPU_C::CMP_EqGq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, diff_64;
 
-    /* op2_64 is a register, i->rm_addr is an index of a register */
+    /* op2_64 is a register, RMAddr(i) is an index of a register */
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
@@ -457,7 +457,7 @@ BX_CPU_C::CMP_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = op1_64 - op2_64;
@@ -472,7 +472,7 @@ BX_CPU_C::CMP_GqEq(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, diff_64;
 
-    /* op1_64 is a register, i->rm_addr is an index of a register */
+    /* op1_64 is a register, RMAddr(i) is an index of a register */
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op2_64 is a register or memory reference */
@@ -481,7 +481,7 @@ BX_CPU_C::CMP_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     diff_64 = op1_64 - op2_64;
@@ -581,7 +581,7 @@ BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
      * dst  <-- tmp               | op1 = sum
      */
 
-    /* op2 is a register, i->rm_addr is an index of a register */
+    /* op2 is a register, RMAddr(i) is an index of a register */
     op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1 is a register or memory reference */
@@ -590,7 +590,7 @@ BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     sum_64 = op1_64 + op2_64;
@@ -633,7 +633,7 @@ BX_CPU_C::ADD_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     sum_64 = op1_64 + op2_64;
@@ -667,7 +667,7 @@ BX_CPU_C::ADC_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     sum_64 = op1_64 + op2_64 + temp_CF;
@@ -699,7 +699,7 @@ BX_CPU_C::SUB_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = op1_64 - op2_64;
@@ -729,7 +729,7 @@ BX_CPU_C::CMP_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = op1_64 - op2_64;
@@ -752,7 +752,7 @@ BX_CPU_C::NEG_Eq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = 0 - op1_64;
@@ -780,7 +780,7 @@ BX_CPU_C::INC_Eq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     op1_64++;
@@ -808,7 +808,7 @@ BX_CPU_C::DEC_Eq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     op1_64--;
@@ -838,7 +838,7 @@ BX_CPU_C::CMPXCHG_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     diff_64 = RAX - op1_64;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.15 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.16 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -528,7 +528,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
       temp_ESP = SP;
 
     // stack must be big enough for return addr, else #SS(0)
-    if (i->os_32) {
+    if (i->os32L()) {
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 8) ) {
         BX_PANIC(("call_protected: stack doesn't have room for ret addr"));
         exception(BX_SS_EXCEPTION, 0, 0);
@@ -978,7 +978,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
             temp_ESP = SP;
 
           if (gate_descriptor.type==12) {
-          //if (i->os_32) {}
+          //if (i->os32L()) {}
             // stack must room for 8-byte return address (2 are padding)
             //   else #SS(0)
             if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 8) ) {
@@ -1061,7 +1061,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   /* + 0:     IP      | + 0:        EIP */
 
 #if BX_CPU_LEVEL >= 3
-  if ( i->os_32 ) {
+  if ( i->os32L() ) {
     /* operand size=32: third word on stack must be within stack limits,
      *   else #SS(0); */
     if (!can_pop(6)) {
@@ -1160,7 +1160,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     // eIP must be in code segment limit, else #GP(0)
 #if BX_CPU_LEVEL >= 3
-    if (i->os_32) {
+    if (i->os32L()) {
       access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
         4, CPL==3, BX_READ, &return_EIP);
       }
@@ -1206,7 +1206,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 //  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
 //  BX_CPU_THIS_PTR prev_eip));
 
-    if (i->os_32) {
+    if (i->os32L()) {
       /* top 16+immediate bytes on stack must be within stack limits, else #SS(0) */
       if ( !can_pop(16 + pop_bytes) ) {
         BX_PANIC(("return_protected: 8 bytes not within stack limits"));
@@ -1273,7 +1273,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       }
 
     /* examine return SS selector and associated descriptor: */
-    if (i->os_32) {
+    if (i->os32L()) {
       access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 12 + pop_bytes,
         2, 0, BX_READ, &raw_ss_selector);
       access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 8 + pop_bytes,
@@ -1710,7 +1710,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
      * IP     eSP+0  |   EIP    eSP+0
      */
 
-    if (i->os_32) {
+    if (i->os32L()) {
       top_nbytes_same    = 12;
       top_nbytes_outer   = 20;
       cs_offset = 4;
@@ -1738,7 +1738,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + cs_offset,
       2, CPL==3, BX_READ, &raw_cs_selector);
 
-    if (i->os_32) {
+    if (i->os32L()) {
       access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
         4, CPL==3, BX_READ, &new_eip);
       access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 8,
@@ -1822,7 +1822,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       /* top 6/12 bytes on stack must be within limits, else #SS(0) */
       /* satisfied above */
 
-      if (i->os_32) {
+      if (i->os32L()) {
         /* return EIP must be in code segment limit else #GP(0) */
         if ( new_eip > cs_descriptor.u.segment.limit_scaled ) {
           BX_PANIC(("iret: IP > descriptor limit"));
@@ -1932,7 +1932,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         }
 
 
-      if (i->os_32) {
+      if (i->os32L()) {
         access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 0,
           4, 0, BX_READ, &new_eip);
         access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP + 8,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.9 2002-09-17 22:50:51 kevinlawton Exp $
+// $Id: bit.cc,v 1.10 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,10 +63,10 @@ BX_CPU_C::SETO_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -87,10 +87,10 @@ BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -111,10 +111,10 @@ BX_CPU_C::SETB_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -135,10 +135,10 @@ BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -159,10 +159,10 @@ BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -183,10 +183,10 @@ BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -207,10 +207,10 @@ BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -231,10 +231,10 @@ BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -255,10 +255,10 @@ BX_CPU_C::SETS_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -279,10 +279,10 @@ BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -303,10 +303,10 @@ BX_CPU_C::SETP_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -327,10 +327,10 @@ BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -351,10 +351,10 @@ BX_CPU_C::SETL_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -375,10 +375,10 @@ BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -399,10 +399,10 @@ BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -423,10 +423,10 @@ BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
-    write_virtual_byte(i->seg, i->rm_addr, &result_8);
+    write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
 #endif
 }
@@ -441,7 +441,7 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
 
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64;
 
@@ -451,7 +451,7 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     if (op2_64 == 0) {
@@ -472,7 +472,7 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32;
 
@@ -482,7 +482,7 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     if (op2_32 == 0) {
@@ -510,7 +510,7 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     if (op2_16 == 0) {
@@ -541,7 +541,7 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
 
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64;
 
@@ -551,7 +551,7 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     if (op2_64 == 0) {
@@ -572,7 +572,7 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32;
 
@@ -582,7 +582,7 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     if (op2_32 == 0) {
@@ -610,7 +610,7 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     if (op2_16 == 0) {
@@ -970,7 +970,7 @@ BX_CPU_C::BT_EvGv(bxInstruction_c *i)
   bx_address op1_addr;
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64;
     Bit64s displacement64;
@@ -989,16 +989,16 @@ BX_CPU_C::BT_EvGv(bxInstruction_c *i)
 
     index = op2_64 & 0x3f;
     displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
-    op1_addr = i->rm_addr + 8 * displacement64;
+    op1_addr = RMAddr(i) + 8 * displacement64;
 
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, op1_addr, &op1_64);
+    read_virtual_qword(i->seg(), op1_addr, &op1_64);
 
     set_CF((op1_64 >> index) & 0x01);
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, index;
     Bit32s displacement32;
@@ -1016,10 +1016,10 @@ BX_CPU_C::BT_EvGv(bxInstruction_c *i)
 
     index = op2_32 & 0x1f;
     displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
-    op1_addr = i->rm_addr + 4 * displacement32;
+    op1_addr = RMAddr(i) + 4 * displacement32;
 
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg, op1_addr, &op1_32);
+    read_virtual_dword(i->seg(), op1_addr, &op1_32);
 
     set_CF((op1_32 >> index) & 0x01);
     }
@@ -1040,10 +1040,10 @@ BX_CPU_C::BT_EvGv(bxInstruction_c *i)
 
     index = op2_16 & 0x0f;
     displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
-    op1_addr = i->rm_addr + 2 * displacement32;
+    op1_addr = RMAddr(i) + 2 * displacement32;
 
     /* pointer, segment address pair */
-    read_virtual_word(i->seg, op1_addr, &op1_16);
+    read_virtual_word(i->seg(), op1_addr, &op1_16);
 
     set_CF((op1_16 >> index) & 0x01);
     }
@@ -1059,7 +1059,7 @@ BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
   bx_address op1_addr;
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, index;
     Bit64s displacement64;
@@ -1082,10 +1082,10 @@ BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
 
     index = op2_64 & 0x3f;
     displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
-    op1_addr = i->rm_addr + 8 * displacement64;
+    op1_addr = RMAddr(i) + 8 * displacement64;
 
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg, op1_addr, &op1_64);
+    read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
 
     bit_i = (op1_64 >> index) & 0x01;
     op1_64 |= (((Bit64u) 1) << index);
@@ -1096,7 +1096,7 @@ BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, bit_i, index;
     Bit32s displacement32;
@@ -1118,10 +1118,10 @@ BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
 
     index = op2_32 & 0x1f;
     displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
-    op1_addr = i->rm_addr + 4 * displacement32;
+    op1_addr = RMAddr(i) + 4 * displacement32;
 
     /* pointer, segment address pair */
-    read_RMW_virtual_dword(i->seg, op1_addr, &op1_32);
+    read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
 
     bit_i = (op1_32 >> index) & 0x01;
     op1_32 |= (((Bit32u) 1) << index);
@@ -1151,10 +1151,10 @@ BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
 
     index = op2_16 & 0x0f;
     displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
-    op1_addr = i->rm_addr + 2 * displacement32;
+    op1_addr = RMAddr(i) + 2 * displacement32;
 
     /* pointer, segment address pair */
-    read_RMW_virtual_word(i->seg, op1_addr, &op1_16);
+    read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
 
     bit_i = (op1_16 >> index) & 0x01;
     op1_16 |= (((Bit16u) 1) << index);
@@ -1176,7 +1176,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
 
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, index;
     Bit64s displacement64;
@@ -1199,10 +1199,10 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
 
     index = op2_64 & 0x3f;
     displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
-    op1_addr = i->rm_addr + 8 * displacement64;
+    op1_addr = RMAddr(i) + 8 * displacement64;
 
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg, op1_addr, &op1_64);
+    read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
 
     temp_cf = (op1_64 >> index) & 0x01;
     op1_64 &= ~(((Bit64u) 1) << index);
@@ -1214,7 +1214,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, index, temp_cf;
     Bit32s displacement32;
@@ -1236,10 +1236,10 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
 
     index = op2_32 & 0x1f;
     displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
-    op1_addr = i->rm_addr + 4 * displacement32;
+    op1_addr = RMAddr(i) + 4 * displacement32;
 
     /* pointer, segment address pair */
-    read_RMW_virtual_dword(i->seg, op1_addr, &op1_32);
+    read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
 
     temp_cf = (op1_32 >> index) & 0x01;
     op1_32 &= ~(((Bit32u) 1) << index);
@@ -1270,10 +1270,10 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
 
     index = op2_16 & 0x0f;
     displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
-    op1_addr = i->rm_addr + 2 * displacement32;
+    op1_addr = RMAddr(i) + 2 * displacement32;
 
     /* pointer, segment address pair */
-    read_RMW_virtual_word(i->seg, op1_addr, &op1_16);
+    read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
 
     temp_cf = (op1_16 >> index) & 0x01;
     op1_16 &= ~(((Bit16u) 1) << index);
@@ -1295,7 +1295,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
   bx_address op1_addr;
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64;
     Bit64s displacement64;
@@ -1311,8 +1311,8 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       }
     else {
       displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
-      op1_addr = i->rm_addr + 8 * displacement64;
-      read_RMW_virtual_qword(i->seg, op1_addr, &op1_64);
+      op1_addr = RMAddr(i) + 8 * displacement64;
+      read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
       }
 
     temp_CF = (op1_64 >> index) & 0x01;
@@ -1335,7 +1335,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, index_32, temp_CF;
     Bit32s displacement32;
@@ -1350,8 +1350,8 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       }
     else {
       displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
-      op1_addr = i->rm_addr + 4 * displacement32;
-      read_RMW_virtual_dword(i->seg, op1_addr, &op1_32);
+      op1_addr = RMAddr(i) + 4 * displacement32;
+      read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
       }
 
     temp_CF = (op1_32 >> index_32) & 0x01;
@@ -1381,8 +1381,8 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       }
     else {
       displacement16 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
-      op1_addr = i->rm_addr + 2 * displacement16;
-      read_RMW_virtual_word(i->seg, op1_addr, &op1_16);
+      op1_addr = RMAddr(i) + 2 * displacement16;
+      read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
       }
 
     temp_CF = (op1_16 >> index_16) & 0x01;
@@ -1409,7 +1409,7 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
 #else
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64;
     Bit8u  op2_8;
@@ -1423,14 +1423,14 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     set_CF((op1_64 >> op2_8) & 0x01);
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32;
     Bit8u  op2_8;
@@ -1444,7 +1444,7 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     set_CF((op1_32 >> op2_8) & 0x01);
@@ -1463,7 +1463,7 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     set_CF((op1_16 >> op2_8) & 0x01);
@@ -1479,7 +1479,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
 #else
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, temp_CF;
     Bit8u  op2_8;
@@ -1493,7 +1493,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     temp_CF = (op1_64 >> op2_8) & 0x01;
@@ -1510,7 +1510,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, temp_CF;
     Bit8u  op2_8;
@@ -1524,7 +1524,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     temp_CF = (op1_32 >> op2_8) & 0x01;
@@ -1553,7 +1553,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     temp_CF = (op1_16 >> op2_8) & 0x01;
@@ -1579,7 +1579,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
 #else
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, temp_CF;
     Bit8u  op2_8;
@@ -1593,7 +1593,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     temp_CF = (op1_64 >> op2_8) & 0x01;
@@ -1614,7 +1614,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, temp_CF;
     Bit8u  op2_8;
@@ -1628,7 +1628,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     temp_CF = (op1_32 >> op2_8) & 0x01;
@@ -1659,7 +1659,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     temp_CF = (op1_16 >> op2_8) & 0x01;
@@ -1686,7 +1686,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
 #else
 
 #if BX_SUPPORT_X86_64
-  if (i->os_64) { /* 64 bit operand size mode */
+  if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64, temp_CF;
     Bit8u  op2_8;
@@ -1700,7 +1700,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     temp_CF = (op1_64 >> op2_8) & 0x01;
@@ -1717,7 +1717,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) { /* 32 bit operand size mode */
+  if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32, temp_CF;
     Bit8u  op2_8;
@@ -1731,7 +1731,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     temp_CF = (op1_32 >> op2_8) & 0x01;
@@ -1760,7 +1760,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     temp_CF = (op1_16 >> op2_8) & 0x01;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.9 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: ctrl_xfer16.cc,v 1.10 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -286,7 +286,7 @@ BX_CPU_C::CALL_Ew(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
     invalidate_prefetch_q();
 
@@ -325,8 +325,8 @@ BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
       }
 
     /* pointer, segment address pair */
-    read_virtual_word(i->seg, i->rm_addr, &op1_16);
-    read_virtual_word(i->seg, i->rm_addr+2, &cs_raw);
+    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+    read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
     invalidate_prefetch_q();
 
     if ( protected_mode() ) {
@@ -436,7 +436,7 @@ BX_CPU_C::JMP_Ew(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     invalidate_prefetch_q();
@@ -471,8 +471,8 @@ BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
       }
 
     /* pointer, segment address pair */
-    read_virtual_word(i->seg, i->rm_addr, &op1_16);
-    read_virtual_word(i->seg, i->rm_addr+2, &cs_raw);
+    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+    read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
     invalidate_prefetch_q();
 
 #if BX_CPU_LEVEL >= 2

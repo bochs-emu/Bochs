@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.8 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: mult8.cc,v 1.9 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,11 +46,11 @@ BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
 
   /* op2 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_byte(i->seg, i->rm_addr, &op2);
+    read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
   product_16 = op1 * op2;
@@ -80,11 +80,11 @@ BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
 
   /* op2 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_byte(i->seg, i->rm_addr, (Bit8u *) &op2);
+    read_virtual_byte(i->seg(), RMAddr(i), (Bit8u *) &op2);
     }
 
   product_16 = op1 * op2;
@@ -120,11 +120,11 @@ BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
 
   /* op2 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_byte(i->seg, i->rm_addr, &op2);
+    read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
   if (op2 == 0) {
@@ -165,11 +165,11 @@ BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
 
   /* op2 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_virtual_byte(i->seg, i->rm_addr, (Bit8u *) &op2);
+    read_virtual_byte(i->seg(), RMAddr(i), (Bit8u *) &op2);
     }
 
   if (op2 == 0) {

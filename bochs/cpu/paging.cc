@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.27 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: paging.cc,v 1.28 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -540,7 +540,7 @@ BX_CPU_C::INVLPG(bxInstruction_c* i)
     }
 
 #if BX_USE_TLB
-  laddr = BX_CPU_THIS_PTR sregs[i->seg].cache.u.segment.base + i->rm_addr;
+  laddr = BX_CPU_THIS_PTR sregs[i->seg()].cache.u.segment.base + RMAddr(i);
   TLB_index = BX_TLB_INDEX_OF(laddr);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
   InstrTLB_Increment(tlbEntryInvlpg);

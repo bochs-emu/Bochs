@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.12 2002-09-17 22:50:51 kevinlawton Exp $
+// $Id: arith32.cc,v 1.13 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ BX_CPU_C::ADD_EdGd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op2_32, op1_32, sum_32;
 
-    /* op2_32 is a register, i->rm_addr is an index of a register */
+    /* op2_32 is a register, RMAddr(i) is an index of a register */
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
@@ -96,7 +96,7 @@ BX_CPU_C::ADD_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     sum_32 = op1_32 + op2_32;
@@ -119,7 +119,7 @@ BX_CPU_C::ADD_GdEd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, sum_32;
 
-    /* op1_32 is a register, i->rm_addr is an index of a register */
+    /* op1_32 is a register, RMAddr(i) is an index of a register */
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
@@ -128,7 +128,7 @@ BX_CPU_C::ADD_GdEd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     sum_32 = op1_32 + op2_32;
@@ -169,7 +169,7 @@ BX_CPU_C::ADC_EdGd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op2_32, op1_32, sum_32;
 
-    /* op2_32 is a register, i->rm_addr is an index of a register */
+    /* op2_32 is a register, RMAddr(i) is an index of a register */
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
@@ -178,7 +178,7 @@ BX_CPU_C::ADC_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     sum_32 = op1_32 + op2_32 + temp_CF;
@@ -207,7 +207,7 @@ BX_CPU_C::ADC_GdEd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, sum_32;
 
-    /* op1_32 is a register, i->rm_addr is an index of a register */
+    /* op1_32 is a register, RMAddr(i) is an index of a register */
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
@@ -216,7 +216,7 @@ BX_CPU_C::ADC_GdEd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     sum_32 = op1_32 + op2_32 + temp_CF;
@@ -266,7 +266,7 @@ BX_CPU_C::SBB_EdGd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op2_32, op1_32, diff_32;
 
-    /* op2_32 is a register, i->rm_addr is an index of a register */
+    /* op2_32 is a register, RMAddr(i) is an index of a register */
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
@@ -275,7 +275,7 @@ BX_CPU_C::SBB_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = op1_32 - (op2_32 + temp_CF);
@@ -304,7 +304,7 @@ BX_CPU_C::SBB_GdEd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, diff_32;
 
-    /* op1_32 is a register, i->rm_addr is an index of a register */
+    /* op1_32 is a register, RMAddr(i) is an index of a register */
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
@@ -313,7 +313,7 @@ BX_CPU_C::SBB_GdEd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     diff_32 = op1_32 - (op2_32 + temp_CF);
@@ -370,7 +370,7 @@ BX_CPU_C::SBB_EdId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = op1_32 - (op2_32 + temp_CF);
@@ -394,7 +394,7 @@ BX_CPU_C::SUB_EdGd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op2_32, op1_32, diff_32;
 
-    /* op2_32 is a register, i->rm_addr is an index of a register */
+    /* op2_32 is a register, RMAddr(i) is an index of a register */
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
@@ -403,7 +403,7 @@ BX_CPU_C::SUB_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = op1_32 - op2_32;
@@ -426,7 +426,7 @@ BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, diff_32;
 
-    /* op1_32 is a register, i->rm_addr is an index of a register */
+    /* op1_32 is a register, RMAddr(i) is an index of a register */
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
@@ -435,7 +435,7 @@ BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     diff_32 = op1_32 - op2_32;
@@ -471,7 +471,7 @@ BX_CPU_C::CMP_EdGd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op2_32, op1_32, diff_32;
 
-    /* op2_32 is a register, i->rm_addr is an index of a register */
+    /* op2_32 is a register, RMAddr(i) is an index of a register */
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
@@ -480,7 +480,7 @@ BX_CPU_C::CMP_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = op1_32 - op2_32;
@@ -495,7 +495,7 @@ BX_CPU_C::CMP_GdEd(bxInstruction_c *i)
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, diff_32;
 
-    /* op1_32 is a register, i->rm_addr is an index of a register */
+    /* op1_32 is a register, RMAddr(i) is an index of a register */
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op2_32 is a register or memory reference */
@@ -504,7 +504,7 @@ BX_CPU_C::CMP_GdEd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op2_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
       }
 
     diff_32 = op1_32 - op2_32;
@@ -593,7 +593,7 @@ BX_CPU_C::XADD_EdGd(bxInstruction_c *i)
      * dst  <-- tmp               | op1 = sum
      */
 
-    /* op2 is a register, i->rm_addr is an index of a register */
+    /* op2 is a register, RMAddr(i) is an index of a register */
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1 is a register or memory reference */
@@ -602,7 +602,7 @@ BX_CPU_C::XADD_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     sum_32 = op1_32 + op2_32;
@@ -644,7 +644,7 @@ BX_CPU_C::ADD_EdId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
 #if (defined(__i386__) && defined(__GNUC__))
@@ -696,7 +696,7 @@ BX_CPU_C::ADC_EdId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     sum_32 = op1_32 + op2_32 + temp_CF;
@@ -728,7 +728,7 @@ BX_CPU_C::SUB_EdId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = op1_32 - op2_32;
@@ -758,7 +758,7 @@ BX_CPU_C::CMP_EdId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = op1_32 - op2_32;
@@ -781,7 +781,7 @@ BX_CPU_C::NEG_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = 0 - op1_32;
@@ -809,7 +809,7 @@ BX_CPU_C::INC_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     op1_32++;
@@ -837,7 +837,7 @@ BX_CPU_C::DEC_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     op1_32--;
@@ -867,7 +867,7 @@ BX_CPU_C::CMPXCHG_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     diff_32 = EAX - op1_32;
@@ -911,8 +911,8 @@ BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
       }
 
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg, i->rm_addr, &op1_64_lo);
-    read_RMW_virtual_dword(i->seg, i->rm_addr + 4, &op1_64_hi);
+    read_virtual_dword(i->seg(), RMAddr(i), &op1_64_lo);
+    read_RMW_virtual_dword(i->seg(), RMAddr(i) + 4, &op1_64_hi);
 
     diff = EAX - op1_64_lo;
     diff |= EDX - op1_64_hi;
@@ -924,7 +924,7 @@ BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
       set_ZF(1);
       // dest <-- src
       Write_RMW_virtual_dword(ECX);
-      write_virtual_dword(i->seg, i->rm_addr, &EBX);
+      write_virtual_dword(i->seg(), RMAddr(i), &EBX);
       }
     else {
       // ZF = 0

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.8 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: shift8.cc,v 1.9 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,11 +54,11 @@ BX_CPU_C::ROL_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg, i->rm_addr, &op1_8);
+    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
   if (count) {
@@ -66,7 +66,7 @@ BX_CPU_C::ROL_Eb(bxInstruction_c *i)
 
     /* now write result back to destination */
     if (i->mod() == 0xc0) {
-      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
       Write_RMW_virtual_byte(result_8);
@@ -104,11 +104,11 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg, i->rm_addr, &op1_8);
+    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
   if (count) {
@@ -116,7 +116,7 @@ BX_CPU_C::ROR_Eb(bxInstruction_c *i)
 
     /* now write result back to destination */
     if (i->mod() == 0xc0) {
-      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
       Write_RMW_virtual_byte(result_8);
@@ -153,11 +153,11 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg, i->rm_addr, &op1_8);
+    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
   if (count) {
@@ -167,7 +167,7 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
 
     /* now write result back to destination */
     if (i->mod() == 0xc0) {
-      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
       Write_RMW_virtual_byte(result_8);
@@ -201,11 +201,11 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg, i->rm_addr, &op1_8);
+    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
   if (count) {
@@ -215,7 +215,7 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
 
     /* now write result back to destination */
     if (i->mod() == 0xc0) {
-      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
       }
     else {
       Write_RMW_virtual_byte(result_8);
@@ -251,11 +251,11 @@ BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg, i->rm_addr, &op1_8);
+    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
   if (!count) return;
@@ -264,7 +264,7 @@ BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
     Write_RMW_virtual_byte(result_8);
@@ -292,11 +292,11 @@ BX_CPU_C::SHR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg, i->rm_addr, &op1_8);
+    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
   if (!count) return;
@@ -305,7 +305,7 @@ BX_CPU_C::SHR_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
     Write_RMW_virtual_byte(result_8);
@@ -334,11 +334,11 @@ BX_CPU_C::SAR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->mod() == 0xc0) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
+    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg, i->rm_addr, &op1_8);
+    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     }
 
   if (!count) return;
@@ -362,7 +362,7 @@ BX_CPU_C::SAR_Eb(bxInstruction_c *i)
 
   /* now write result back to destination */
   if (i->mod() == 0xc0) {
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bit, result_8);
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
     }
   else {
     Write_RMW_virtual_byte(result_8);

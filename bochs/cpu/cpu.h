@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.61 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: cpu.h,v 1.62 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,8 +53,9 @@ typedef Bit32u bx_address;
 #define BX_SEG_REG_DS    3
 #define BX_SEG_REG_FS    4
 #define BX_SEG_REG_GS    5
-#define BX_SEG_REG_NULL  8
-#define BX_NULL_SEG_REG(seg) ((seg) & BX_SEG_REG_NULL)
+// NULL now has to fit in 3 bits.
+#define BX_SEG_REG_NULL  7
+#define BX_NULL_SEG_REG(seg) ((seg) == BX_SEG_REG_NULL)
 
 
 #ifdef BX_LITTLE_ENDIAN
@@ -650,23 +651,37 @@ class BX_CPU_C;
 
 class bxInstruction_c {
 public:
+  // Function pointers; a function to resolve the modRM address
+  // given the current state of the CPU and the instruction data,
+  // and a function to execute the instruction after resolving
+  // the memory address (if any).
+#if BX_USE_CPU_SMF
+  void (*ResolveModrm)(bxInstruction_c *);
+  void (*execute)(bxInstruction_c *);
+#else
+  void (BX_CPU_C::*ResolveModrm)(bxInstruction_c *);
+  void (BX_CPU_C::*execute)(bxInstruction_c *);
+#endif
+
+  unsigned ilen; // instruction length
+
+
+  //  8...8  extend8bit
+  //  7...7  as64
+  //  6...6  os64
+  //  5...5  as32
+  //  4...4  os32
+  //  3...3  rex_b (Note: needs to be bit3, so value is 0x8)
+  //  2...0  seg
+  unsigned metaInfo;
+
   // prefix stuff here...
   unsigned attr; // attribute from fetchdecode
   unsigned b1; // opcode1 byte
-  unsigned os_32, as_32; // OperandSize/AddressSize is 32bit
   unsigned rep_used;
-  unsigned seg;
-#if BX_SUPPORT_X86_64
-  unsigned os_64, as_64; // OperandSize/AddressSize is 64bit (overrides os_32/as_32)
-  unsigned extend8bit;
-  unsigned rexB;
-#else
-  enum { os_64=0, as_64=0 };  // x86-32: hardcode to 0.
-  enum { rexB=0 };
-#endif
 
   union {
-    // Form (longest case): opcode/modrm/sib/displacement32/immediate32
+    // Form (longest case): [opcode/modrm/sib/displacement32/immediate32]
     struct {
       //  Note: if you add more bits, mask the previously upper field,
       //        in the accessor.
@@ -680,46 +695,37 @@ public:
       Bit32u modRMData;
 
       union {
-        Bit16u displ16u; // for 16-bit modrm forms
-        Bit32u displ32u; // for 32-bit modrm forms
+        union {
+          Bit16u displ16u; // for 16-bit modrm forms
+          Bit32u displ32u; // for 32-bit modrm forms
+          };
+
+        // Opcodes of the form: [opcode Immediate Immediate] never use
+        // the modrm fields.  I union the 2nd immediate here with the
+        // displacement from a longer modrm sequence, and the 1st
+        // immediate goes in the following union where modrm and
+        // non-modrm immediates live.
+        union {
+          Bit16u   Iw2;
+          Bit8u    Ib2;
+          };
         };
+
       union {
         Bit32u   Id;
         Bit16u   Iw;
         Bit8u    Ib;
         };
-      union { // This is legacy and will change to the form below
-        Bit16u   Iw2;
-        Bit8u    Ib2;
-        };
       } modRMForm;
 
-    // Form (longest case): opcode/Id1/Iw2
-    struct {
-      Bit32u   Id1; // Not used yet
-      Bit16u   Iw2; // Not used yet
-      } IxIxForm;
-
 #if BX_SUPPORT_X86_64
-    // Form: opcode/Iq
+    // Form: [opcode/Iq].  These opcode never use a modrm sequence.
     struct {
       Bit64u   Iq;  // for MOV Rx,imm64
       } IqForm;
 #endif
     };
 
-  bx_address   rm_addr;
-  unsigned ilen; // instruction length
-
-#if BX_USE_CPU_SMF
-  void (*ResolveModrm)(bxInstruction_c *);
-  void (*execute)(bxInstruction_c *);
-#else
-  void (BX_CPU_C::*ResolveModrm)(bxInstruction_c *);
-  void (BX_CPU_C::*execute)(bxInstruction_c *);
-#endif
-
-  BX_CPP_INLINE unsigned rex_b() { return rexB; }
   BX_CPP_INLINE unsigned modrm() { return modRMForm.modRMData>>20; }
   BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData & 0xc0; }
   BX_CPP_INLINE unsigned nnn() {
@@ -745,6 +751,79 @@ public:
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE Bit64u   Iq()  { return IqForm.Iq; }
 #endif
+
+  // Info in the metaInfo field.
+  // Note: the 'L' at the end of certain flags, means the value returned
+  // is for Logical comparisons, eg if (i->os32L() && i->as32L()).  If you
+  // want a Boolean value, use os32B() etc.  This makes for smaller
+  // code, when a strict 0 or 1 is not necessary.
+  BX_CPP_INLINE void initMetaInfo(unsigned seg, unsigned rex_b,
+                                  unsigned os32, unsigned as32,
+                                  unsigned os64, unsigned as64,
+                                  unsigned extend8bit) {
+      metaInfo = seg | (rex_b<<3) | (os32<<4) | (as32<<5) |
+                 (os64<<6) | (as64<<7) | (extend8bit<<8);
+      }
+  BX_CPP_INLINE unsigned seg(void) {
+      return metaInfo & 7;
+      }
+  BX_CPP_INLINE void setSeg(unsigned val) {
+      metaInfo = (metaInfo & ~7) | val;
+      }
+
+  BX_CPP_INLINE unsigned rex_b(void) {
+      return metaInfo & (1<<3); // Returns 0 or 8 for upper 8 register accessing.
+      }
+  BX_CPP_INLINE void assertRex_b(void) {
+      metaInfo |= (1<<3);
+      }
+
+  BX_CPP_INLINE unsigned os32L(void) {
+      return metaInfo & (1<<4);
+      }
+  BX_CPP_INLINE unsigned os32B(void) {
+      return (metaInfo >> 4) & 1;
+      }
+  BX_CPP_INLINE void setOs32B(unsigned bit) {
+      metaInfo = (metaInfo & ~(1<<4)) | (bit<<4);
+      }
+  BX_CPP_INLINE void assertOs32(void) {
+      metaInfo |= (1<<4);
+      }
+
+  BX_CPP_INLINE unsigned as32L(void) {
+      return metaInfo & (1<<5);
+      }
+  BX_CPP_INLINE unsigned as32B(void) {
+      return (metaInfo >> 5) & 1;
+      }
+  BX_CPP_INLINE void setAs32B(unsigned bit) {
+      metaInfo = (metaInfo & ~(1<<5)) | (bit<<5);
+      }
+
+  BX_CPP_INLINE unsigned os64L(void) {
+      return metaInfo & (1<<6);
+      }
+  BX_CPP_INLINE void setOs64B(unsigned bit) {
+      metaInfo = (metaInfo & ~(1<<6)) | (bit<<6);
+      }
+  BX_CPP_INLINE void assertOs64(void) {
+      metaInfo |= (1<<6);
+      }
+
+  BX_CPP_INLINE unsigned as64L(void) {
+      return metaInfo & (1<<7);
+      }
+  BX_CPP_INLINE void setAs64B(unsigned bit) {
+      metaInfo = (metaInfo & ~(1<<7)) | (bit<<7);
+      }
+
+  BX_CPP_INLINE unsigned extend8bitL(void) {
+      return metaInfo & (1<<8);
+      }
+  BX_CPP_INLINE void assertExtend8bit(void) {
+      metaInfo |= (1<<8);
+      }
   };
 
 
@@ -1220,6 +1299,7 @@ union {
 #endif  // #if BX_USE_TLB
 
   struct {
+    bx_address  rm_addr; // The address offset after resolution.
     Bit32u  paddress1;  // physical address after translation of 1st len1 bytes of data
     Bit32u  paddress2;  // physical address after translation of 2nd len2 bytes of data
     Bit32u  len1;       // Number of bytes in page 1
@@ -2103,7 +2183,9 @@ union {
   BX_SMF void decode_exgx32(unsigned need_fetch);
 
   BX_SMF void prefetch(void);
-  BX_SMF void revalidate_prefetch_q(void);
+  // revalidate_prefetch_q is now a no-op, due to the newer EIP window
+  // technique.
+  BX_SMF BX_CPP_INLINE void revalidate_prefetch_q(void) { }
   BX_SMF void invalidate_prefetch_q(void);
 
   BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length);
@@ -2640,5 +2722,8 @@ typedef enum _show_flags {
       Flag_intsig = 0x10
 } show_flags_t;
 #endif
+
+// Can be used as LHS or RHS.
+#define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
 #endif  // #ifndef BX_CPU_H

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.9 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: shift32.cc,v 1.10 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
@@ -104,7 +104,7 @@ BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
     op2_32 = BX_READ_32BIT_REG(i->nnn());
 
@@ -154,7 +154,7 @@ BX_CPU_C::ROL_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     if (count) {
@@ -200,7 +200,7 @@ BX_CPU_C::ROR_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     if (count) {
@@ -247,7 +247,7 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     if (!count) return;
@@ -299,7 +299,7 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     if (!count) return;
@@ -352,7 +352,7 @@ BX_CPU_C::SHL_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     if (!count) return;
@@ -392,7 +392,7 @@ BX_CPU_C::SHR_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     if (!count) return;
@@ -431,7 +431,7 @@ BX_CPU_C::SAR_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     if (!count) return;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.2 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: stack64.cc,v 1.3 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,11 +52,11 @@ BX_CPU_C::POP_Eq(bxInstruction_c *i)
     // is used, it is possible to use RSP in the modrm addressing.
     // If used, the value of RSP after the pop is used to calculate
     // the address.
-    if (i->as_64 && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
+    if (i->as64L() && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
       BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
       }
-    write_virtual_qword(i->seg, i->rm_addr, &val64);
+    write_virtual_qword(i->seg(), RMAddr(i), &val64);
     }
 }
 
@@ -245,7 +245,7 @@ BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     push_64(op1_64);
@@ -273,7 +273,7 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
     BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
     first_time = 0;
   }
-//if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os_64==0) {
+//if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os64L()==0) {
 //  BX_INFO(("enter(): stacksize!=opsize: I'm unsure of the code for this"));
 //  BX_PANIC(("         The Intel manuals are a mess on this one!"));
 //  }

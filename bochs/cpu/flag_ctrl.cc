@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.11 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: flag_ctrl.cc,v 1.12 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -157,7 +157,7 @@ BX_CPU_C::PUSHF_Fv(bxInstruction_c *i)
     }
   else
 #endif
-  if (i->os_32) {
+  if (i->os32L()) {
     push_32(read_eflags() & 0x00fcffff);
     }
   else
@@ -178,7 +178,7 @@ BX_CPU_C::POPF_Fv(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u eflags_tmp;
 
       pop_32(&eflags_tmp);
@@ -205,7 +205,7 @@ BX_CPU_C::POPF_Fv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u eflags_tmp;
 
     pop_32(&eflags_tmp);

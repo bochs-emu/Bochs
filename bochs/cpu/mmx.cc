@@ -109,7 +109,7 @@ void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg, i->rm_addr, &op2);
+    read_virtual_dword(i->seg(), RMAddr(i), &op2);
   }
 
   MMXUB7(result) = (op2) >> 24;
@@ -144,7 +144,7 @@ void BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg, i->rm_addr, &op2);
+    read_virtual_dword(i->seg(), RMAddr(i), &op2);
   }
 
   MMXUW3(result) = (op2) >> 16;
@@ -175,7 +175,7 @@ void BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg, i->rm_addr, &op2);
+    read_virtual_dword(i->seg(), RMAddr(i), &op2);
   }
 
   MMXUD1(op1) = op2;
@@ -202,7 +202,7 @@ void BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXSB0(result) = SaturateWordSToByteS(MMXSW0(op1));
@@ -236,7 +236,7 @@ void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUB0(result) = (MMXSB0(op1) > MMXSB0(op2)) ? 0xFF : 0;
@@ -270,7 +270,7 @@ void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUW0(result) = (MMXSW0(op1) > MMXSW0(op2)) ? 0xFFFF : 0;
@@ -300,7 +300,7 @@ void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUD0(result) = (MMXSD0(op1) > MMXSD0(op2)) ? 0xFFFFFFFF : 0;
@@ -328,7 +328,7 @@ void BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUB0(result) = SaturateWordSToByteU(MMXSW0(op1));
@@ -362,7 +362,7 @@ void BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUB7(result) = MMXUB7(op2);
@@ -396,7 +396,7 @@ void BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUW3(result) = MMXUW3(op2);
@@ -426,7 +426,7 @@ void BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUD1(result) = MMXUD1(op2);
@@ -454,7 +454,7 @@ void BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(MMXSD0(op1));
@@ -485,7 +485,7 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg, i->rm_addr, &(MMXUD0(op)));
+    read_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
   }
 
   /* now write result back to destination */
@@ -510,7 +510,7 @@ void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 
   /* now write result back to destination */
@@ -535,7 +535,7 @@ void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUB0(result) = (MMXUB0(op1) == MMXUB0(op2)) ? 0xFF : 0;
@@ -569,7 +569,7 @@ void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUW0(result) = (MMXUW0(op1) == MMXUW0(op2)) ? 0xFFFF : 0;
@@ -599,7 +599,7 @@ void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUD0(result) = (MMXUD0(op1) == MMXUD0(op2)) ? 0xFFFFFFFF : 0;
@@ -647,7 +647,7 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
     BX_WRITE_32BIT_REG(i->rm(), MMXUD0(op));
   }
   else {
-    write_virtual_dword(i->seg, i->rm_addr, &(MMXUD0(op)));
+    write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
   }
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
@@ -668,7 +668,7 @@ void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
     BX_WRITE_MMX_REG(i->rm(), op);
   }
   else {
-    write_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op);
+    write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
@@ -690,7 +690,7 @@ void BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   if(MMXUQ(op2) > 15) MMXUQ(op1) = 0;
@@ -726,7 +726,7 @@ void BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   if(MMXUQ(op2) > 31) MMXUQ(op1) = 0;
@@ -760,7 +760,7 @@ void BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   if(MMXUQ(op2) > 63) {
@@ -792,7 +792,7 @@ void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   Bit32u product1 = (Bit32u)(MMXUW0(op1)) * (Bit32u)(MMXUW0(op2));
@@ -827,7 +827,7 @@ void BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUQ(result) = 0;
@@ -863,7 +863,7 @@ void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUQ(result) = 0;
@@ -895,7 +895,7 @@ void BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUQ(op1) &= MMXUQ(op2);
@@ -922,7 +922,7 @@ void BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUB0(result) = SaturateWordSToByteU(Bit16s(MMXUB0(op1)) + Bit16s(MMXUB0(op2)));
@@ -956,7 +956,7 @@ void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUW0(result) = SaturateDwordSToWordU(Bit32s(MMXUW0(op1)) + Bit32s(MMXUW0(op2)));
@@ -986,7 +986,7 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUQ(result) = ~(MMXUQ(op1)) & MMXUQ(op2);
@@ -1013,7 +1013,7 @@ void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   Bit8u shift = MMXUB0(op2);
@@ -1058,7 +1058,7 @@ void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   Bit8u shift = MMXUB0(op2);
@@ -1097,7 +1097,7 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   Bit32s product1 = (Bit32s)(MMXSW0(op1)) * (Bit32s)(MMXSW0(op2));
@@ -1132,7 +1132,7 @@ void BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXSB0(result) = SaturateWordSToByteS(Bit16s(MMXSB0(op1)) - Bit16s(MMXSB0(op2)));
@@ -1166,7 +1166,7 @@ void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) - Bit32s(MMXSW0(op2)));
@@ -1196,7 +1196,7 @@ void BX_CPU_C::POR_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUQ(op1) |= MMXUQ(op2);
@@ -1223,7 +1223,7 @@ void BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXSB0(result) = SaturateWordSToByteS(Bit16s(MMXSB0(op1)) + Bit16s(MMXSB0(op2)));
@@ -1257,7 +1257,7 @@ void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) + Bit32s(MMXSW0(op2)));
@@ -1287,7 +1287,7 @@ void BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUQ(op1) ^= MMXUQ(op2);
@@ -1314,7 +1314,7 @@ void BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   if(MMXUQ(op2) > 15) MMXUQ(op1) = 0;
@@ -1350,7 +1350,7 @@ void BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   if(MMXUQ(op2) > 31) MMXUQ(op1) = 0;
@@ -1384,7 +1384,7 @@ void BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   if(MMXUQ(op2) > 63) {
@@ -1416,7 +1416,7 @@ void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   if(MMXUW0(op1) == 0x80008000 && MMXUW0(op2) == 0x80008000) {
@@ -1455,7 +1455,7 @@ void BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUB0(op1) -= MMXUB0(op2);
@@ -1489,7 +1489,7 @@ void BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUW0(op1) -= MMXUW0(op2);
@@ -1519,7 +1519,7 @@ void BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUD0(op1) -= MMXUD0(op2);
@@ -1547,7 +1547,7 @@ void BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
 
@@ -1582,7 +1582,7 @@ void BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUW0(op1) += MMXUW0(op2);
@@ -1612,7 +1612,7 @@ void BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
   MMXUD0(op1) += MMXUD0(op2);

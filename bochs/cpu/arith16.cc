@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.10 2002-09-17 22:50:51 kevinlawton Exp $
+// $Id: arith16.cc,v 1.11 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,7 +68,7 @@ BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
     Bit16u op2_16, op1_16, sum_16;
 
 
-    /* op2_16 is a register, i->rm_addr is an index of a register */
+    /* op2_16 is a register, RMAddr(i) is an index of a register */
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
@@ -77,7 +77,7 @@ BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     sum_16 = op1_16 + op2_16;
@@ -87,7 +87,7 @@ BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
       BX_WRITE_16BIT_REG(i->rm(), sum_16);
       }
     else {
-      write_virtual_word(i->seg, i->rm_addr, &sum_16);
+      write_virtual_word(i->seg(), RMAddr(i), &sum_16);
       }
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
@@ -100,7 +100,7 @@ BX_CPU_C::ADD_GwEw(bxInstruction_c *i)
     Bit16u op1_16, op2_16, sum_16;
 
 
-    /* op1_16 is a register, i->rm_addr is an index of a register */
+    /* op1_16 is a register, RMAddr(i) is an index of a register */
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
@@ -109,7 +109,7 @@ BX_CPU_C::ADD_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     sum_16 = op1_16 + op2_16;
@@ -149,7 +149,7 @@ BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
 
 
 
-    /* op2_16 is a register, i->rm_addr is an index of a register */
+    /* op2_16 is a register, RMAddr(i) is an index of a register */
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
@@ -158,7 +158,7 @@ BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     sum_16 = op1_16 + op2_16 + temp_CF;
@@ -185,7 +185,7 @@ BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
   temp_CF = get_CF();
 
 
-    /* op1_16 is a register, i->rm_addr is an index of a register */
+    /* op1_16 is a register, RMAddr(i) is an index of a register */
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
@@ -194,7 +194,7 @@ BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     sum_16 = op1_16 + op2_16 + temp_CF;
@@ -241,7 +241,7 @@ BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
   temp_CF = get_CF();
 
 
-    /* op2_16 is a register, i->rm_addr is an index of a register */
+    /* op2_16 is a register, RMAddr(i) is an index of a register */
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
@@ -250,7 +250,7 @@ BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = op1_16 - (op2_16 + temp_CF);
@@ -279,7 +279,7 @@ BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
     Bit16u op1_16, op2_16, diff_16;
 
 
-    /* op1_16 is a register, i->rm_addr is an index of a register */
+    /* op1_16 is a register, RMAddr(i) is an index of a register */
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
@@ -288,7 +288,7 @@ BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     diff_16 = op1_16 - (op2_16 + temp_CF);
@@ -344,7 +344,7 @@ BX_CPU_C::SBB_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = op1_16 - (op2_16 + temp_CF);
@@ -368,7 +368,7 @@ BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
     Bit16u op2_16, op1_16, diff_16;
 
 
-    /* op2_16 is a register, i->rm_addr is an index of a register */
+    /* op2_16 is a register, RMAddr(i) is an index of a register */
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
@@ -377,7 +377,7 @@ BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = op1_16 - op2_16;
@@ -400,7 +400,7 @@ BX_CPU_C::SUB_GwEw(bxInstruction_c *i)
     Bit16u op1_16, op2_16, diff_16;
 
 
-    /* op1_16 is a register, i->rm_addr is an index of a register */
+    /* op1_16 is a register, RMAddr(i) is an index of a register */
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
@@ -409,7 +409,7 @@ BX_CPU_C::SUB_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     diff_16 = op1_16 - op2_16;
@@ -445,7 +445,7 @@ BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
     Bit16u op2_16, op1_16, diff_16;
 
 
-    /* op2_16 is a register, i->rm_addr is an index of a register */
+    /* op2_16 is a register, RMAddr(i) is an index of a register */
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
@@ -454,7 +454,7 @@ BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = op1_16 - op2_16;
@@ -469,7 +469,7 @@ BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
     Bit16u op1_16, op2_16, diff_16;
 
 
-    /* op1_16 is a register, i->rm_addr is an index of a register */
+    /* op1_16 is a register, RMAddr(i) is an index of a register */
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
@@ -478,7 +478,7 @@ BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op2_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op2_16);
       }
 
     diff_16 = op1_16 - op2_16;
@@ -537,7 +537,7 @@ BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
      * dst  <-- tmp               | op1 = sum
      */
 
-    /* op2 is a register, i->rm_addr is an index of a register */
+    /* op2 is a register, RMAddr(i) is an index of a register */
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1 is a register or memory reference */
@@ -546,7 +546,7 @@ BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     sum_16 = op1_16 + op2_16;
@@ -588,7 +588,7 @@ BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
     }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
 #if (defined(__i386__) && defined(__GNUC__))
@@ -639,7 +639,7 @@ BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     sum_16 = op1_16 + op2_16 + temp_CF;
@@ -671,7 +671,7 @@ BX_CPU_C::SUB_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = op1_16 - op2_16;
@@ -701,7 +701,7 @@ BX_CPU_C::CMP_EwIw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = op1_16 - op2_16;
@@ -723,7 +723,7 @@ BX_CPU_C::NEG_Ew(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = 0 - op1_16;
@@ -751,7 +751,7 @@ BX_CPU_C::INC_Ew(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     op1_16++;
@@ -779,7 +779,7 @@ BX_CPU_C::DEC_Ew(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     op1_16--;
@@ -809,7 +809,7 @@ BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     diff_16 = AX - op1_16;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.12 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: string.cc,v 1.13 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,8 +52,8 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
   unsigned seg;
   Bit8u temp8;
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
@@ -61,7 +61,7 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rsi, rdi;
 
     rsi = RSI;
@@ -87,7 +87,7 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u esi, edi;
 
     esi = ESI;
@@ -131,7 +131,7 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
       Bit32u byteCount;
 
-      if (i->as_32)
+      if (i->as32L())
         byteCount = ECX;
       else
         byteCount = CX;
@@ -211,7 +211,7 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
             // For 16-bit addressing mode, clamp the segment limits to 16bits
             // so we don't have to worry about computations using si/di
             // rolling over 16-bit boundaries.
-            if (!i->as_32) {
+            if (!i->as32L()) {
               if (srcSegLimit > 0xffff)
                 srcSegLimit = 0xffff;
               if (dstSegLimit > 0xffff)
@@ -263,7 +263,7 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
-            if (i->as_32)
+            if (i->as32L())
               ECX -= (byteCount-1);
             else
               CX  -= (byteCount-1);
@@ -312,8 +312,8 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
   unsigned seg;
   unsigned incr;
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
@@ -321,14 +321,14 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
 
     Bit64u rsi, rdi;
 
     rsi = RSI;
     rdi = RDI;
 
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u  temp64;
       read_virtual_qword(seg, rsi, &temp64);
 
@@ -344,9 +344,9 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
         rsi += 8;
         rdi += 8;
         }
-      } /* if (i->os_64) ... */
+      } /* if (i->os64L()) ... */
     else
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u  temp32;
       read_virtual_dword(seg, rsi, &temp32);
 
@@ -362,7 +362,7 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
         rsi += 4;
         rdi += 4;
         }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else { /* 16 bit opsize mode */
       Bit16u  temp16;
 
@@ -388,7 +388,7 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
 
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
 
     Bit32u esi, edi;
 
@@ -396,7 +396,7 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
     edi = EDI;
 
 #if BX_SUPPORT_X86_64
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u  temp64;
       read_virtual_qword(seg, esi, &temp64);
 
@@ -412,10 +412,10 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
         esi += 8;
         edi += 8;
         }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else
 #endif  // #if BX_SUPPORT_X86_64
-    if (i->os_32) {
+    if (i->os32L()) {
 
       Bit32u  temp32;
 
@@ -428,7 +428,7 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
     if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
       Bit32u dwordCount;
 
-      if (i->as_32)
+      if (i->as32L())
         dwordCount = ECX;
       else
         dwordCount = CX;
@@ -512,7 +512,7 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
             // For 16-bit addressing mode, clamp the segment limits to 16bits
             // so we don't have to worry about computations using si/di
             // rolling over 16-bit boundaries.
-            if (!i->as_32) {
+            if (!i->as32L()) {
               if (srcSegLimit > 0xffff)
                 srcSegLimit = 0xffff;
               if (dstSegLimit > 0xffff)
@@ -564,7 +564,7 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
-            if (i->as_32)
+            if (i->as32L())
               ECX -= (dwordCount-1);
             else
               CX  -= (dwordCount-1);
@@ -604,7 +604,7 @@ doIncr32:
         esi += incr;
         edi += incr;
         }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else { /* 16 bit opsize mode */
       Bit16u  temp16;
 
@@ -639,7 +639,7 @@ doIncr32:
     di = DI;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u temp32;
 
       read_virtual_dword(seg, si, &temp32);
@@ -656,7 +656,7 @@ doIncr32:
         si += 4;
         di += 4;
         }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else
 #endif /* BX_CPU_LEVEL >= 3 */
       { /* 16 bit opsize mode */
@@ -671,7 +671,7 @@ doIncr32:
     if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
       Bit32u wordCount;
 
-      if (i->as_32)
+      if (i->as32L())
         wordCount = ECX;
       else
         wordCount = CX;
@@ -755,7 +755,7 @@ doIncr32:
             // For 16-bit addressing mode, clamp the segment limits to 16bits
             // so we don't have to worry about computations using si/di
             // rolling over 16-bit boundaries.
-            if (!i->as_32) {
+            if (!i->as32L()) {
               if (srcSegLimit > 0xffff)
                 srcSegLimit = 0xffff;
               if (dstSegLimit > 0xffff)
@@ -807,7 +807,7 @@ doIncr32:
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
-            if (i->as_32)
+            if (i->as32L())
               ECX -= (wordCount-1);
             else
               CX  -= (wordCount-1);
@@ -861,8 +861,8 @@ BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
   Bit8u op1_8, op2_8, diff_8;
 
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
@@ -870,7 +870,7 @@ BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rsi, rdi;
 
     rsi = RSI;
@@ -900,7 +900,7 @@ BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u esi, edi;
 
     esi = ESI;
@@ -968,8 +968,8 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
   unsigned seg;
 
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
@@ -977,14 +977,14 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rsi, rdi;
 
     rsi = RSI;
     rdi = RDI;
 
 
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u op1_64, op2_64, diff_64;
 
       read_virtual_qword(seg, rsi, &op1_64);
@@ -1007,7 +1007,7 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
         }
       }
     else
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u op1_32, op2_32, diff_32;
 
       read_virtual_dword(seg, rsi, &op1_32);
@@ -1058,7 +1058,7 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u esi, edi;
 
     esi = ESI;
@@ -1066,7 +1066,7 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
 
 
 #if BX_SUPPORT_X86_64
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u op1_64, op2_64, diff_64;
       read_virtual_qword(seg, esi, &op1_64);
 
@@ -1089,7 +1089,7 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
       }
     else
 #endif  // #if BX_SUPPORT_X86_64
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u op1_32, op2_32, diff_32;
       read_virtual_dword(seg, esi, &op1_32);
 
@@ -1148,7 +1148,7 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
     di = DI;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u op1_32, op2_32, diff_32;
 
       read_virtual_dword(seg, si, &op1_32);
@@ -1209,7 +1209,7 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rdi;
 
     rdi = RDI;
@@ -1237,7 +1237,7 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u edi;
 
     edi = EDI;
@@ -1298,12 +1298,12 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rdi;
 
     rdi = RDI;
 
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u op1_64, op2_64, diff_64;
 
       op1_64 = RAX;
@@ -1323,7 +1323,7 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
         }
       }
     else
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u op1_32, op2_32, diff_32;
 
       op1_32 = EAX;
@@ -1366,13 +1366,13 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u edi;
 
     edi = EDI;
 
 #if BX_SUPPORT_X86_64
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u op1_64, op2_64, diff_64;
 
       op1_64 = RAX;
@@ -1393,7 +1393,7 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
       }
     else
 #endif  // #if BX_SUPPORT_X86_64
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u op1_32, op2_32, diff_32;
 
       op1_32 = EAX;
@@ -1444,7 +1444,7 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
     di = DI;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u op1_32, op2_32, diff_32;
 
       op1_32 = EAX;
@@ -1495,7 +1495,7 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
   Bit8u al;
 
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rdi;
 
     rdi = RDI;
@@ -1521,7 +1521,7 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
   unsigned incr;
 
 #if BX_CPU_LEVEL >= 3
-  if (i->as_32) {
+  if (i->as32L()) {
     edi = EDI;
     }
   else
@@ -1541,7 +1541,7 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
     if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
       Bit32u byteCount;
 
-      if (i->as_32)
+      if (i->as32L())
         byteCount = ECX;
       else
         byteCount = CX;
@@ -1602,7 +1602,7 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
             // For 16-bit addressing mode, clamp the segment limits to 16bits
             // so we don't have to worry about computations using si/di
             // rolling over 16-bit boundaries.
-            if (!i->as_32) {
+            if (!i->as32L()) {
               if (dstSegLimit > 0xffff)
                 dstSegLimit = 0xffff;
               }
@@ -1645,7 +1645,7 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
 
             // Decrement eCX.  Note, the main loop will decrement 1 also, so
             // decrement by one less than expected, like the case above.
-            if (i->as_32)
+            if (i->as32L())
               ECX -= (byteCount-1);
             else
               CX  -= (byteCount-1);
@@ -1681,7 +1681,7 @@ doIncr16:
     }
 
 #if BX_CPU_LEVEL >= 3
-  if (i->as_32)
+  if (i->as32L())
     // zero extension of RDI
     RDI = edi;
   else
@@ -1695,12 +1695,12 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rdi;
 
     rdi = RDI;
 
-    if (i->os_64) {
+    if (i->os64L()) {
         Bit64u rax;
 
         rax = RAX;
@@ -1714,9 +1714,9 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
           /* increment EDI */
           rdi += 8;
           }
-      } /* if (i->os_64) ... */
+      } /* if (i->os64L()) ... */
     else
-    if (i->os_32) {
+    if (i->os32L()) {
         Bit32u eax;
 
         eax = EAX;
@@ -1730,7 +1730,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
           /* increment EDI */
           rdi += 4;
           }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else { /* 16 bit opsize mode */
         Bit16u ax;
 
@@ -1752,13 +1752,13 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
 
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u edi;
 
     edi = EDI;
 
 #if BX_SUPPORT_X86_64
-    if (i->os_64) {
+    if (i->os64L()) {
         Bit64u rax;
 
         rax = RAX;
@@ -1775,7 +1775,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
       } /* if (i->os_4) ... */
     else
 #endif  // #if BX_SUPPORT_X86_64
-    if (i->os_32) {
+    if (i->os32L()) {
         Bit32u eax;
 
         eax = EAX;
@@ -1789,7 +1789,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
           /* increment EDI */
           edi += 4;
           }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else { /* 16 bit opsize mode */
         Bit16u ax;
 
@@ -1819,7 +1819,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
     di = DI;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->os_32) {
+    if (i->os32L()) {
         Bit32u eax;
 
         eax = EAX;
@@ -1833,7 +1833,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
           /* increment EDI */
           di += 4;
           }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else
 #endif /* BX_CPU_LEVEL >= 3 */
       { /* 16 bit opsize mode */
@@ -1863,8 +1863,8 @@ BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
   unsigned seg;
   Bit8u al;
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
@@ -1872,7 +1872,7 @@ BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rsi;
 
     rsi = RSI;
@@ -1893,7 +1893,7 @@ BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u esi;
 
     esi = ESI;
@@ -1942,8 +1942,8 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
 {
   unsigned seg;
 
-  if (!BX_NULL_SEG_REG(i->seg)) {
-    seg = i->seg;
+  if (!BX_NULL_SEG_REG(i->seg())) {
+    seg = i->seg();
     }
   else {
     seg = BX_SEG_REG_DS;
@@ -1951,12 +1951,12 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
-  if (i->as_64) {
+  if (i->as64L()) {
     Bit64u rsi;
 
     rsi = RSI;
 
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u rax;
 
       read_virtual_qword(seg, rsi, &rax);
@@ -1970,9 +1970,9 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
         /* increment ESI */
         rsi += 8;
         }
-      } /* if (i->os_64) ... */
+      } /* if (i->os64L()) ... */
     else
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u eax;
 
       read_virtual_dword(seg, rsi, &eax);
@@ -1986,7 +1986,7 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
         /* increment ESI */
         rsi += 4;
         }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else { /* 16 bit opsize mode */
       Bit16u ax;
       read_virtual_word(seg, rsi, &ax);
@@ -2006,13 +2006,13 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
     }
   else
 #endif  // #if BX_SUPPORT_X86_64
-  if (i->as_32) {
+  if (i->as32L()) {
     Bit32u esi;
 
     esi = ESI;
 
 #if BX_SUPPORT_X86_64
-    if (i->os_64) {
+    if (i->os64L()) {
       Bit64u rax;
 
       read_virtual_qword(seg, esi, &rax);
@@ -2026,10 +2026,10 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
         /* increment ESI */
         esi += 8;
         }
-      } /* if (i->os_64) ... */
+      } /* if (i->os64L()) ... */
     else
 #endif  // #if BX_SUPPORT_X86_64
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u eax;
 
       read_virtual_dword(seg, esi, &eax);
@@ -2043,7 +2043,7 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
         /* increment ESI */
         esi += 4;
         }
-      } /* if (i->os_32) ... */
+      } /* if (i->os32L()) ... */
     else { /* 16 bit opsize mode */
       Bit16u ax;
       read_virtual_word(seg, esi, &ax);
@@ -2071,7 +2071,7 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
     si = SI;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->os_32) {
+    if (i->os32L()) {
       Bit32u eax;
 
       read_virtual_dword(seg, si, &eax);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.44 2002-09-17 22:50:51 kevinlawton Exp $
+// $Id: cpu.cc,v 1.45 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -281,7 +281,7 @@ fetch_decode_OK:
 repeat_loop:
       if (i.attr & BxRepeatableZF) {
 #if BX_SUPPORT_X86_64
-        if (i.as_64) {
+        if (i.as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(i.execute, (&i));
             RCX -= 1;
@@ -293,7 +293,7 @@ repeat_loop:
           }
         else
 #endif
-        if (i.as_32) {
+        if (i.as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(i.execute, (&i));
             ECX -= 1;
@@ -316,7 +316,7 @@ repeat_loop:
         }
       else { // normal repeat, no concern for ZF
 #if BX_SUPPORT_X86_64
-        if (i.as_64) {
+        if (i.as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(i.execute, (&i));
             RCX -= 1;
@@ -326,7 +326,7 @@ repeat_loop:
           }
         else
 #endif
-        if (i.as_32) {
+        if (i.as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(i.execute, (&i));
             ECX -= 1;
@@ -746,12 +746,16 @@ BX_CPU_C::prefetch(void)
 }
 
 
+#if 0
+// Now a no-op.
+
   // If control has transfered locally, it is possible the prefetch Q is
   // still valid.  This would happen for repeat instructions, and small
   // branches.
   void
 BX_CPU_C::revalidate_prefetch_q(void)
 {
+#warning "::revalidate_prefetch_q() is ifdef'd out."
   bx_address eipBiased;
 
   eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
@@ -764,6 +768,7 @@ BX_CPU_C::revalidate_prefetch_q(void)
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
     }
 }
+#endif
 
   void
 BX_CPU_C::invalidate_prefetch_q(void)

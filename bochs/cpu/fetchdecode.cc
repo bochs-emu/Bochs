@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.12 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.13 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1435,17 +1435,16 @@ BX_CPU_C::FetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
 {
   // remain must be at least 1
 
-  unsigned b1, b2, ilen=1, attr;
+  unsigned b1, b2, ilen=1, attr, os_32=is_32;
   unsigned imm_mode, offset;
   unsigned rm, mod, nnn;
 
-  instruction->os_32 = instruction->as_32 = is_32;
-#if BX_SUPPORT_X86_64
-  instruction->os_64 = instruction->as_64 = instruction->extend8bit = 0;
-  instruction->rexB  = 0;
-#endif
   instruction->ResolveModrm = NULL;
-  instruction->seg = BX_SEG_REG_NULL;
+  instruction->initMetaInfo(
+                  BX_SEG_REG_NULL,   /*rex_b*/    0,
+                  /*os32*/   is_32,  /*as32*/ is_32,
+                  /*os64*/       0,  /*as64*/     0,
+                  /*extend8bit*/ 0);
   instruction->rep_used = 0;
 
 
@@ -1453,7 +1452,7 @@ fetch_b1:
   b1 = *iptr++;
 
 another_byte:
-  offset = instruction->os_32 << 9; // * 512
+  offset = os_32 << 9; // * 512
   instruction->attr = attr = BxOpcodeInfo[b1+offset].Attr;
 
   if ( !(attr & BxAnother) ) {
@@ -1478,7 +1477,8 @@ another_byte:
     if (attr & BxPrefix) {
       switch (b1) {
         case 0x66: // OpSize
-          instruction->os_32 = !is_32;
+          os_32 = !is_32;
+          instruction->setOs32B(os_32);
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
@@ -1486,7 +1486,7 @@ another_byte:
           return(0);
 
         case 0x67: // AddrSize
-          instruction->as_32 = !is_32;
+          instruction->setAs32B(!is_32);
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
@@ -1504,27 +1504,27 @@ another_byte:
           break;
 
         case 0x2e: // CS:
-          instruction->seg = BX_SEG_REG_CS;
+          instruction->setSeg(BX_SEG_REG_CS);
           ilen++; goto fetch_b1;
           break;
         case 0x26: // ES:
-          instruction->seg = BX_SEG_REG_ES;
+          instruction->setSeg(BX_SEG_REG_ES);
           ilen++; goto fetch_b1;
           break;
         case 0x36: // SS:
-          instruction->seg = BX_SEG_REG_SS;
+          instruction->setSeg(BX_SEG_REG_SS);
           ilen++; goto fetch_b1;
           break;
         case 0x3e: // DS:
-          instruction->seg = BX_SEG_REG_DS;
+          instruction->setSeg(BX_SEG_REG_DS);
           ilen++; goto fetch_b1;
           break;
         case 0x64: // FS:
-          instruction->seg = BX_SEG_REG_FS;
+          instruction->setSeg(BX_SEG_REG_FS);
           ilen++; goto fetch_b1;
           break;
         case 0x65: // GS:
-          instruction->seg = BX_SEG_REG_GS;
+          instruction->setSeg(BX_SEG_REG_GS);
           ilen++; goto fetch_b1;
           break;
         case 0xf0: // LOCK:
@@ -1560,7 +1560,7 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
     if (mod == 0xc0) { // mod == 11b
       goto modrm_done;
       }
-    if (instruction->as_32) {
+    if (instruction->as32L()) {
       // 32-bit addressing modes; note that mod==11b handled above
       if (rm != 4) { // no s-i-b byte
 #if BX_DYNAMIC_TRANSLATION
@@ -1571,8 +1571,8 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod0[rm];
 #endif
-          if (BX_NULL_SEG_REG(instruction->seg))
-            instruction->seg = BX_SEG_REG_DS;
+          if (BX_NULL_SEG_REG(instruction->seg()))
+            instruction->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
             if ((ilen+3) < remain) {
               Bit32u imm32u;
@@ -1580,7 +1580,7 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
               imm32u |= (*iptr++) << 8;
               imm32u |= (*iptr++) << 16;
               imm32u |= (*iptr++) << 24;
-              instruction->rm_addr = imm32u;
+              RMAddr(instruction) = imm32u;
               ilen += 4;
 #if BX_DYNAMIC_TRANSLATION
               instruction->DTMemRegsUsed = 0;
@@ -1599,8 +1599,8 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2[rm];
 #endif
-          if (BX_NULL_SEG_REG(instruction->seg))
-            instruction->seg = BX_CPU_THIS_PTR sreg_mod01_rm32[rm];
+          if (BX_NULL_SEG_REG(instruction->seg()))
+            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01_rm32[rm]);
 get_8bit_displ:
           if (ilen < remain) {
             // 8 sign extended to 32
@@ -1617,8 +1617,8 @@ get_8bit_displ:
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2[rm];
 #endif
-        if (BX_NULL_SEG_REG(instruction->seg))
-          instruction->seg = BX_CPU_THIS_PTR sreg_mod10_rm32[rm];
+        if (BX_NULL_SEG_REG(instruction->seg()))
+          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm32[rm]);
 get_32bit_displ:
         if ((ilen+3) < remain) {
           Bit32u imm32u;
@@ -1660,8 +1660,8 @@ get_32bit_displ:
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod0Base[base];
 #endif
-          if (BX_NULL_SEG_REG(instruction->seg))
-            instruction->seg = BX_CPU_THIS_PTR sreg_mod0_base32[base];
+          if (BX_NULL_SEG_REG(instruction->seg()))
+            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
           if (base == 0x05) {
             goto get_32bit_displ;
             }
@@ -1680,8 +1680,8 @@ get_32bit_displ:
 #if BX_DYNAMIC_TRANSLATION
           instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2Base[base];
 #endif
-          if (BX_NULL_SEG_REG(instruction->seg))
-            instruction->seg = BX_CPU_THIS_PTR sreg_mod1or2_base32[base];
+          if (BX_NULL_SEG_REG(instruction->seg()))
+            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
           }
         // (mod == 0x80),  mod==10b, rm==4
@@ -1689,8 +1689,8 @@ get_32bit_displ:
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve32Mod1or2Base[base];
 #endif
-        if (BX_NULL_SEG_REG(instruction->seg))
-          instruction->seg = BX_CPU_THIS_PTR sreg_mod1or2_base32[base];
+        if (BX_NULL_SEG_REG(instruction->seg()))
+          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
         goto get_32bit_displ;
         }
       }
@@ -1701,8 +1701,8 @@ get_32bit_displ:
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve16Mod1or2[rm];
 #endif
-        if (BX_NULL_SEG_REG(instruction->seg))
-          instruction->seg = BX_CPU_THIS_PTR sreg_mod01_rm16[rm];
+        if (BX_NULL_SEG_REG(instruction->seg()))
+          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01_rm16[rm]);
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTMemRegsUsed = BxMemRegsUsed16[rm];
 #endif
@@ -1721,8 +1721,8 @@ get_32bit_displ:
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve16Mod1or2[rm];
 #endif
-        if (BX_NULL_SEG_REG(instruction->seg))
-          instruction->seg = BX_CPU_THIS_PTR sreg_mod10_rm16[rm];
+        if (BX_NULL_SEG_REG(instruction->seg()))
+          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm16[rm]);
 #if BX_DYNAMIC_TRANSLATION
         instruction->DTMemRegsUsed = BxMemRegsUsed16[rm];
 #endif
@@ -1743,14 +1743,14 @@ get_32bit_displ:
 #if BX_DYNAMIC_TRANSLATION
       instruction->DTResolveModrm = (BxVoidFPtr_t) BxDTResolve16Mod0[rm];
 #endif
-      if (BX_NULL_SEG_REG(instruction->seg))
-        instruction->seg = BX_CPU_THIS_PTR sreg_mod00_rm16[rm];
+      if (BX_NULL_SEG_REG(instruction->seg()))
+        instruction->setSeg(BX_CPU_THIS_PTR sreg_mod00_rm16[rm]);
       if (rm == 0x06) {
         if ((ilen+1) < remain) {
           Bit16u displ16u;
           displ16u = *iptr++;
           displ16u |= (*iptr++) << 8;
-          instruction->rm_addr = displ16u;
+          RMAddr(instruction) = displ16u;
           ilen += 2;
           goto modrm_done;
           }
@@ -1804,7 +1804,7 @@ modrm_done:
         if (ilen < remain) {
           Bit8s temp8s;
           temp8s = *iptr;
-          if (instruction->os_32)
+          if (instruction->os32L())
             instruction->modRMForm.Id = (Bit32s) temp8s;
           else
             instruction->modRMForm.Iw = (Bit16s) temp8s;
@@ -1816,7 +1816,7 @@ modrm_done:
         break;
       case BxImmediate_Iv: // same as BxImmediate_BrOff32
       case BxImmediate_IvIw: // CALL_Ap
-        if (instruction->os_32) {
+        if (instruction->os32L()) {
           if ((ilen+3) < remain) {
             Bit32u imm32u;
             imm32u = *iptr++;
@@ -1858,7 +1858,7 @@ modrm_done:
           }
         break;
       case BxImmediate_O:
-        if (instruction->as_32) {
+        if (instruction->as32L()) {
           // fetch 32bit address into Id
           if ((ilen+3) < remain) {
             Bit32u imm32u;

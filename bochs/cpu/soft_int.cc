@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.9 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: soft_int.cc,v 1.10 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,14 +52,14 @@ BX_CPU_C::BOUND_GvMa(bxInstruction_c *i)
     UndefinedOpcode(i);
     }
 
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32s bound_min, bound_max;
     Bit32s op1_32;
 
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
-    read_virtual_dword(i->seg, i->rm_addr, (Bit32u *) &bound_min);
-    read_virtual_dword(i->seg, i->rm_addr+4, (Bit32u *) &bound_max);
+    read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &bound_min);
+    read_virtual_dword(i->seg(), RMAddr(i)+4, (Bit32u *) &bound_max);
 
     /* ??? */
     if ( (op1_32 < bound_min) || (op1_32 > bound_max) ) {
@@ -73,8 +73,8 @@ BX_CPU_C::BOUND_GvMa(bxInstruction_c *i)
 
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-    read_virtual_word(i->seg, i->rm_addr, (Bit16u *) &bound_min);
-    read_virtual_word(i->seg, i->rm_addr+2, (Bit16u *) &bound_max);
+    read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &bound_min);
+    read_virtual_word(i->seg(), RMAddr(i)+2, (Bit16u *) &bound_max);
 
     /* ??? */
     if ( (op1_16 < bound_min) || (op1_16 > bound_max) ) {

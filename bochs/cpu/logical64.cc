@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.2 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: logical64.cc,v 1.3 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 ^ op2_64;
@@ -82,7 +82,7 @@ BX_CPU_C::XOR_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     result_64 = op1_64 ^ op2_64;
@@ -125,7 +125,7 @@ BX_CPU_C::XOR_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 ^ op2_64;
@@ -155,7 +155,7 @@ BX_CPU_C::OR_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 | op2_64;
@@ -182,7 +182,7 @@ BX_CPU_C::NOT_Eq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = ~op1_64;
@@ -211,7 +211,7 @@ BX_CPU_C::OR_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 | op2_64;
@@ -241,7 +241,7 @@ BX_CPU_C::OR_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     result_64 = op1_64 | op2_64;
@@ -286,7 +286,7 @@ BX_CPU_C::AND_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 & op2_64;
@@ -316,7 +316,7 @@ BX_CPU_C::AND_GqEq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op2_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
       }
 
     result_64 = op1_64 & op2_64;
@@ -358,7 +358,7 @@ BX_CPU_C::AND_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 & op2_64;
@@ -389,7 +389,7 @@ BX_CPU_C::TEST_EqGq(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 & op2_64;
@@ -430,7 +430,7 @@ BX_CPU_C::TEST_EqId(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg, i->rm_addr, &op1_64);
+      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
     result_64 = op1_64 & op2_64;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.9 2002-09-17 22:50:52 kevinlawton Exp $
+// $Id: ctrl_xfer8.cc,v 1.10 2002-09-18 05:36:47 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@
 BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 {
 
-  if (i->as_64) {
+  if (i->as64L()) {
     if ( RCX == 0 ) {
       RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(new_RIP);
@@ -58,7 +58,7 @@ BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
   else {
     Bit32u temp_ECX;
 
-    if (i->as_32)
+    if (i->as32L())
       temp_ECX = ECX;
     else
       temp_ECX = CX;
@@ -67,7 +67,7 @@ BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
       Bit32u new_EIP;
 
       new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os_32==0)
+      if (i->os32L()==0)
         new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
       if (protected_mode()) {
@@ -94,7 +94,7 @@ BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
   void
 BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
 {
-  if (i->as_64) {
+  if (i->as64L()) {
 
     if ( ((--RCX)!=0) && (get_ZF()==0) ) {
 
@@ -112,7 +112,7 @@ BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
     Bit32u count, new_EIP;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->as_32)
+    if (i->as32L())
       count = ECX;
     else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -122,7 +122,7 @@ BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
     if ( (count!=0) && (get_ZF()==0) ) {
 
       new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os_32==0)
+      if (i->os32L()==0)
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
         if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -140,7 +140,7 @@ BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
       }
 #endif
 
-    if (i->as_32)
+    if (i->as32L())
       RCX = ECX - 1;  // zero extend
     else
       CX--;
@@ -150,7 +150,7 @@ BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
   void
 BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
 {
-  if (i->as_64) {
+  if (i->as64L()) {
 
     if ( ((--RCX)!=0) && (get_ZF()) ) {
 
@@ -168,7 +168,7 @@ BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
     Bit32u count, new_EIP;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->as_32)
+    if (i->as32L())
       count = ECX;
     else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -178,7 +178,7 @@ BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
     if ( (count!=0) && get_ZF()) {
 
       new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os_32==0)
+      if (i->os32L()==0)
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
         if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -196,7 +196,7 @@ BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
       }
 #endif
 
-    if (i->as_32)
+    if (i->as32L())
       RCX = ECX - 1;   // zero extend
     else
       CX--;
@@ -206,7 +206,7 @@ BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
   void
 BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
 {
-  if (i->as_64) {
+  if (i->as64L()) {
 
     if ( ((--RCX)!=0) ) {
 
@@ -224,7 +224,7 @@ BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
     Bit32u count, new_EIP;
 
 #if BX_CPU_LEVEL >= 3
-    if (i->as_32)
+    if (i->as32L())
       count = ECX;
     else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -234,7 +234,7 @@ BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
     if (count != 0) {
 
       new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os_32==0)
+      if (i->os32L()==0)
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
         if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -252,7 +252,7 @@ BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
       }
 #endif
 
-    if (i->as_32)
+    if (i->as32L())
       RCX = ECX - 1;         // zero extend
     else
       CX--;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.9 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: stack16.cc,v 1.10 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,10 +76,10 @@ BX_CPU_C::POP_Ew(bxInstruction_c *i)
     // is used, it is possible to use ESP in the modrm addressing.
     // If used, the value of ESP after the pop is used to calculate
     // the address.
-    if (i->as_32 && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
+    if (i->as32L() && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
       BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
       }
-    write_virtual_word(i->seg, i->rm_addr, &val16);
+    write_virtual_word(i->seg(), RMAddr(i), &val16);
     }
 }
 
@@ -190,7 +190,7 @@ BX_CPU_C::PUSH_Ew(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_word(i->seg, i->rm_addr, &op1_16);
+      read_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
     push_16(op1_16);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.11 2002-09-17 22:50:53 kevinlawton Exp $
+// $Id: stack32.cc,v 1.12 2002-09-18 05:36:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,11 +59,11 @@ BX_CPU_C::POP_Ed(bxInstruction_c *i)
     // is used, it is possible to use ESP in the modrm addressing.
     // If used, the value of ESP after the pop is used to calculate
     // the address.
-    if (i->as_32 && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
+    if (i->as32L() && (i->mod()!=0xc0) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
       BX_CPU_CALL_METHOD (i->ResolveModrm, (i));
       }
-    write_virtual_dword(i->seg, i->rm_addr, &val32);
+    write_virtual_dword(i->seg(), RMAddr(i), &val32);
     }
 }
 
@@ -96,7 +96,7 @@ BX_CPU_C::POP_ERX(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_CS(bxInstruction_c *i)
 {
-  if (i->os_32)
+  if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
@@ -104,7 +104,7 @@ BX_CPU_C::PUSH_CS(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_DS(bxInstruction_c *i)
 {
-  if (i->os_32)
+  if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
@@ -112,7 +112,7 @@ BX_CPU_C::PUSH_DS(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_ES(bxInstruction_c *i)
 {
-  if (i->os_32)
+  if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
@@ -120,7 +120,7 @@ BX_CPU_C::PUSH_ES(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_FS(bxInstruction_c *i)
 {
-  if (i->os_32)
+  if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
@@ -128,7 +128,7 @@ BX_CPU_C::PUSH_FS(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_GS(bxInstruction_c *i)
 {
-  if (i->os_32)
+  if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
@@ -136,7 +136,7 @@ BX_CPU_C::PUSH_GS(bxInstruction_c *i)
   void
 BX_CPU_C::PUSH_SS(bxInstruction_c *i)
 {
-  if (i->os_32)
+  if (i->os32L())
     push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
   else
     push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
@@ -146,7 +146,7 @@ BX_CPU_C::PUSH_SS(bxInstruction_c *i)
   void
 BX_CPU_C::POP_DS(bxInstruction_c *i)
 {
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u ds;
     pop_32(&ds);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], (Bit16u) ds);
@@ -160,7 +160,7 @@ BX_CPU_C::POP_DS(bxInstruction_c *i)
   void
 BX_CPU_C::POP_ES(bxInstruction_c *i)
 {
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u es;
     pop_32(&es);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], (Bit16u) es);
@@ -174,7 +174,7 @@ BX_CPU_C::POP_ES(bxInstruction_c *i)
   void
 BX_CPU_C::POP_FS(bxInstruction_c *i)
 {
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u fs;
     pop_32(&fs);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
@@ -188,7 +188,7 @@ BX_CPU_C::POP_FS(bxInstruction_c *i)
   void
 BX_CPU_C::POP_GS(bxInstruction_c *i)
 {
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u gs;
     pop_32(&gs);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
@@ -202,7 +202,7 @@ BX_CPU_C::POP_GS(bxInstruction_c *i)
   void
 BX_CPU_C::POP_SS(bxInstruction_c *i)
 {
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u ss;
     pop_32(&ss);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], (Bit16u) ss);
@@ -326,7 +326,7 @@ BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
       }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
     push_32(op1_32);
@@ -354,7 +354,7 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
     BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
     first_time = 0;
   }
-//if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os_32==0) {
+//if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os32L()==0) {
 //  BX_INFO(("enter(): stacksize!=opsize: I'm unsure of the code for this"));
 //  BX_PANIC(("         The Intel manuals are a mess on this one!"));
 //  }
@@ -363,13 +363,13 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
     Bit32u bytes_to_push, temp_ESP;
 
     if (level == 0) {
-      if (i->os_32)
+      if (i->os32L())
         bytes_to_push = 4 + i->Iw();
       else
         bytes_to_push = 2 + i->Iw();
       }
     else { /* level > 0 */
-      if (i->os_32)
+      if (i->os32L())
         bytes_to_push = 4 + (level-1)*4 + 4 + i->Iw();
       else
         bytes_to_push = 2 + (level-1)*2 + 2 + i->Iw();
@@ -384,7 +384,7 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
       }
     }
 
-  if (i->os_32)
+  if (i->os32L())
     push_32(EBP);
   else
     push_16(BP);
@@ -398,7 +398,7 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
   if (level > 0) {
     /* do level-1 times */
     while (--level) {
-      if (i->os_32) {
+      if (i->os32L()) {
         Bit32u temp32;
 
         if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
@@ -433,7 +433,7 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
       } /* while (--level) */
 
     /* push(frame pointer) */
-    if (i->os_32) {
+    if (i->os32L()) {
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
         ESP -= 4;
         write_virtual_dword(BX_SEG_REG_SS, ESP, &frame_ptr32);
@@ -457,7 +457,7 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
       }
     } /* if (level > 0) ... */
 
-  if (i->os_32)
+  if (i->os32L())
     RBP = frame_ptr32;
   else
     BP = frame_ptr32;
@@ -517,7 +517,7 @@ BX_CPU_C::LEAVE(bxInstruction_c *i)
 
   // restore frame pointer
 #if BX_CPU_LEVEL >= 3
-  if (i->os_32) {
+  if (i->os32L()) {
     Bit32u temp32;
 
     pop_32(&temp32);
