@@ -26,9 +26,6 @@
 
 // ROM BIOS for use with Bochs x86 emulation environment
 
-#define PANIC_PORT 0x400
-#define HALT(line) mov dx,PANIC_PORT; mov ax,line; out dx,ax; hlt
-
 
 // ROM BIOS compatability entry points:
 // ===================================
@@ -96,17 +93,7 @@
 #define BASE_MEM_IN_K (640 - 1)
 #define EBDA_SEG 0x9FC0
 
-#define JMPL(label) db 0xe9!!!dw (label-(*+2)) ; jmp near label
-#define JMP_EP(loc) db 0xff!!!db 0x2e!!!dw loc ; jmp_ep [loc]
-#define CALL_AP(seg, off) db 0x9a!!!dw off!!!dw seg ; call_ap seg:off
-#define CALL_EP(loc) db 0xff!!!db 0x1e!!!dw loc ; call_ep [ds:loc]
-#define SET_INT_VECTOR(vec, seg, off) \
-  mov ax, off !!!\
-  mov vec*4, ax  !!!\
-  mov ax, seg  !!!\
-  mov vec*4+2, ax
-#define JMP_AP(seg, off) db 0xea!!!dw off!!!dw seg ; jmp_ap seg:off
-#define ASM(pound, s) !!!##pound##asm!!!s!!!##pound##endasm
+#define PANIC_PORT 0x400
 
 // #20  is dec 20
 // #$20 is hex 20 = 32
@@ -124,18 +111,34 @@
 
 
 #asm
-.text
 .rom
 .org 0x0000
 
-isru: ;; shift right unsigned? (compiler needs this)
-      ;; operation: ax = ax >> bl
-  push  cx
-  mov   cl, bl
-  shr   ax, cl
-  pop   cx
-  ret
+#if BX_CPU >= 3
+use16 386
+#else
+use16 286
+#endif
 
+MACRO HALT
+  mov dx,PANIC_PORT
+  mov ax,#?1
+  out dx,ax
+  hlt
+MEND
+
+MACRO JMP_AP
+  db 0xea
+  dw ?2
+  dw ?1
+MEND
+
+MACRO SET_INT_VECTOR
+  mov ax, ?3
+  mov ?1*4, ax
+  mov ax, ?2
+  mov ?1*4+2, ax
+MEND
 
 #endasm
 
@@ -646,6 +649,26 @@ UDIV(a, b)
 #endasm
 }
 
+Bit16u
+UDIV16(a, b)
+  Bit16u a, b;
+{
+  // divide a by b, discarding remainder
+#asm
+  push bp
+  mov bp, sp
+
+    push dx
+    push bx
+    xor dx,dx
+    mov ax, 4[bp] ;; a
+    mov bx, 6[bp] ;; b
+    div bx ;; DX:AX / BX -> AX, DX = remainder
+    pop bx
+    pop dx
+  pop bp
+#endasm
+}
 
 //  Bit16u
 //get_DS()
@@ -680,6 +703,21 @@ get_SS()
 #endasm
 }
 
+  void
+put_int(val, width, neg)
+  short val, width;
+  Boolean neg;
+{
+  short nval = UDIV16(val, 10);
+  if (nval)
+    put_int(nval, width - 1, neg);
+  else {
+    while (--width > 0) outb(0xfff0, ' ');
+    if (neg) outb(0xfff0, '-');
+  }
+  outb(0xfff0, val - (nval * 10) + '0');
+}
+
 //--------------------------------------------------------------------------
 // bios_printf()
 //   A compact variable argument printf function which prints its output via
@@ -693,9 +731,9 @@ bios_printf(bomb, s)
 {
   Bit8u c, format_char;
   Boolean  in_format;
-  unsigned format_width, i;
+  short i;
   Bit16u  *arg_ptr;
-  Bit16u   arg_seg, arg, digit, nibble, shift_count;
+  Bit16u   arg_seg, arg, nibble, shift_count, format_width;
 
   arg_ptr = &s;
   arg_seg = get_SS();
@@ -717,21 +755,24 @@ bios_printf(bomb, s)
         arg = read_word(arg_seg, arg_ptr);
         if (format_width == 0)
           format_width = 4;
-        i = 0;
-        digit = format_width - 1;
-        for (i=0; i<format_width; i++) {
-          nibble = (arg >> (4 * digit)) & 0x000f;
+        for (i=format_width-1; i>=0; i--) {
+          nibble = (arg >> (4 * i)) & 0x000f;
           if (nibble <= 9)
             outb(0xfff0, nibble + '0');
           else
             outb(0xfff0, (nibble - 10) + 'A');
-          digit--;
           }
         in_format = 0;
         }
-      //else if (c == 'd') {
-      //  in_format = 0;
-      //  }
+      else if (c == 'd') {
+        arg_ptr++; // increment to next arg
+        arg = read_word(arg_seg, arg_ptr);
+        if (arg & 0x8000)
+          put_int(-arg, format_width - 1, 1);
+        else
+          put_int(arg, format_width, 0);
+        in_format = 0;
+        }
       else
         panic("bios_printf: unknown format\n");
       }
@@ -767,37 +808,20 @@ keyboard_panic()
 set_enable_a20(val)
   Boolean val;
 {
-  Boolean oldval;
-  Bit8u  temp8;
+  Bit8u  oldval;
 
-  // Use keyboard conroller to set A20 enable
+  // Use PS2 System Control port A to set A20 enable
 
-  // get current Output Port settings first
-  if ( (inb(0x64) & 0x02) != 0 )
-    panic("set_a20(1): ctrl busy\n");
-  outb(0x64, 0xd0); // send Read Output Port Command
-  if ( (inb(0x64) & 0x01) != 1 )
-    panic("set_a20(2): ctrl busy\n");
-  temp8 = inb(0x60);
+  // get current setting first
+  oldval = inb(0x92);
 
-  // store old value for return
-  oldval = (temp8 >> 1) & 0x01;
-
-  // change A20 status in Output Port settings
+  // change A20 status
   if (val)
-    temp8 |= 0x02;
+    outb(0x92, oldval | 0x02);
   else
-    temp8 &= 0xfd;
+    outb(0x92, oldval & 0xfd);
 
-  // write new Output Port back
-  if ( (inb(0x64) & 0x02) != 0 )
-    panic("set_a20(3): ctrl busy\n");
-  outb(0x64, 0xd1); // send Write Output Port Command
-  if ( (inb(0x64) & 0x02) != 0 )
-    panic("set_a20(4): ctrl busy\n");
-  outb(0x60, temp8);
-
-  return(oldval);
+  return((oldval & 0x02) != 0);
 }
 
   void
@@ -845,14 +869,9 @@ int15_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, DS, FLAGS)
 
     case 0x4f:
       /* keyboard intercept, ignore */
-#if BX_CPU < 2
-      /* XT keyboard doesn't use */
       SET_CF();
+#if BX_CPU < 2
       SET_AH(UNSUPPORTED_FUNCTION);
-#else
-      /* AT keyboard.  BIOS just does an IRET */
-      /* nothing required */
-if (GET_CF() == 0) printf("int15h: default handler encounters CF=0\n");
 #endif
       break;
 
@@ -3031,26 +3050,36 @@ int1a_function(regs, ds, iret_addr)
 {
   Bit8u val8;
 
-  ASM(#, sti)
+  #asm
+  sti
+  #endasm
 
   switch (regs.u.r8.ah) {
     case 0: // get current clock count
-      ASM(#, cli)
+      #asm
+      cli
+      #endasm
       regs.u.r16.cx = BiosData->ticks_high;
       regs.u.r16.dx = BiosData->ticks_low;
       regs.u.r8.al  = BiosData->midnight_flag;
       BiosData->midnight_flag = 0; // reset flag
-      ASM(#, sti)
+      #asm
+      sti
+      #endasm
       // AH already 0
       ClearCF(iret_addr.flags); // OK
       break;
 
     case 1: // Set Current Clock Count
-      ASM(#, cli)
+      #asm
+      cli
+      #endasm
       BiosData->ticks_high = regs.u.r16.cx;
       BiosData->ticks_low  = regs.u.r16.dx;
       BiosData->midnight_flag = 0; // reset flag
-      ASM(#, sti)
+      #asm
+      sti
+      #endasm
       regs.u.r8.ah = 0;
       ClearCF(iret_addr.flags); // OK
       break;
@@ -3211,9 +3240,10 @@ int70_function(regs, ds, iret_addr)
     // call user INT 4Ah alarm handler
 #asm
     sti
-    pushf
-    ;; call_ep [ds:loc]
-    CALL_EP( 0x4a << 2 )
+    //pushf
+    //;; call_ep [ds:loc]
+    //CALL_EP( 0x4a << 2 )
+    int #0x4a
     cli
 #endasm
     }
@@ -3250,8 +3280,8 @@ int74_handler:
   pop ds
   push 0x040E     ;; push 0000:040E (opcodes 0xff, 0x36, 0x0E, 0x04)
   pop ds
-  CALL_EP(0x0022) ;; call far routine (call_Ep DS:0022 :opcodes 0xff, 0x1e, 0x22, 0x00)
-
+  //CALL_EP(0x0022) ;; call far routine (call_Ep DS:0022 :opcodes 0xff, 0x1e, 0x22, 0x00)
+  call far ptr[0x22]
 int74_done:
   cli
   mov  al, #0x20
@@ -3298,12 +3328,12 @@ int13_disk:
   popa
   pop   es
   popf
-  JMPL(iret_modify_cf)
-
+  //  JMPL(iret_modify_cf)
+  jmp iret_modify_cf
 int13_floppy:
   popf
-  JMPL(int13_diskette)
-
+  // JMPL(int13_diskette)
+  jmp int13_diskette
 
 
 ;----------------------
@@ -4264,17 +4294,30 @@ post_default_ints:
   ;; Video setup
   SET_INT_VECTOR(0x10, #0xF000, #int10_handler)
 
-  ;; VGA: If video BIOS exists, call video ROM
-  ;;   initialization routine.
+  ;; Call extension ROMs - scan C0000 to F4000 in 800 steps
+
   mov  bx, #0xc000
+romscan:
   mov  ds, bx
   mov  ax, 0x0000
-  mov  bx, #0x0000
-  mov  ds, bx
   cmp  ax, #0xAA55
-  jne  nocall
-  CALL_AP(0xc000,0x0003)
-nocall:
+  jne  notrom
+  xor  ax,ax
+  mov  ds,ax
+  push bx
+  push #3
+  mov  bp,sp
+  db   0xff  ; call 0[bp]
+  db   0x5e
+  db   0
+  pop  ax
+  pop  bx
+notrom:
+  add  bx,#0x80
+  cmp  bx,#0xf400
+  jne  romscan
+  xor  ax,ax
+  mov  ds,ax
 
   ;; PIC
   mov  al, #0x00
@@ -4291,7 +4334,8 @@ nocall:
   ;;
   call floppy_drive_post
 
-  JMP_EP(0x0064) ; INT 19h location
+  int  #0x19
+  //JMP_EP(0x0064) ; INT 19h location
 
 
 .org 0xe2c3 ; NMI Handler Entry Point
@@ -4302,7 +4346,8 @@ nocall:
 ;-------------------------------------------
 .org 0xe3fe ; INT 13h Fixed Disk Services Entry Point
 int13_handler:
-  JMPL(int13_relocated)
+  //JMPL(int13_relocated)
+  jmp int13_relocated
 .org 0xe401 ; Fixed Disk Parameter Table
 
 
@@ -4311,37 +4356,65 @@ int13_handler:
 ;----------
 .org 0xe6f2 ; INT 19h Boot Load Service Entry Point
 int19_handler:
-  JMPL(int19_relocated)
-
+  //JMPL(int19_relocated)
+  jmp int19_relocated
 ;-------------------------------------------
 ;- System BIOS Configuration Data Table
 ;-------------------------------------------
 .org BIOS_CONFIG_TABLE
-db 0x08
-db 0x00
+db 0x08                  ; Table size (bytes) -Lo
+     db 0x00             ; Table size (bytes) -Hi
 db SYS_MODEL_ID
 db SYS_SUBMODEL_ID
 db BIOS_REVISION
-// b7: 1=DMA channel 3 used by hard disk
-// b6: 1=2 interrupt controllers present
-// b5: 1=RTC present
-// b4: 1=BIOS calls int 15h, 4Fh every key
-// b3: 1=wait for extern event supported
-// b2: 1=extended BIOS data area used
-// b1: 0=AT or ESDI bus, 1=MicroChannel
-// b0: (unused)
+; Feature byte 1
+; b7: 1=DMA channel 3 used by hard disk
+; b6: 1=2 interrupt controllers present
+; b5: 1=RTC present
+; b4: 1=BIOS calls int 15h/4Fh every key
+; b3: 1=wait for extern event supported (Int 15h/41h)
+; b2: 1=extended BIOS data area used
+; b1: 0=AT or ESDI bus, 1=MicroChannel
+; b0: 1=Dual bus (MicroChannel + ISA)
 db (0 << 7) | \
    (1 << 6) | \
-   (0 << 5) | \
+   (1 << 5) | \
    (BX_CALL_INT15_4F << 4) | \
    (0 << 3) | \
    (BX_USE_EBDA << 2) | \
    (0 << 1) | \
    (0 << 0)
-// b6: 1=int16h, function 9 supported
+; Feature byte 2
+; b7: 1=32-bit DMA supported
+; b6: 1=int16h, function 9 supported
+; b5: 1=int15h/C6h (get POS data) supported
+; b4: 1=int15h/C7h (get mem map info) supported
+; b3: 1=int15h/C8h (en/dis CPU) supported
+; b2: 1=non-8042 kb controller
+; b1: 1=data streaming supported
+; b0: reserved
 db 0x00
+; Feature byte 3
+; b7: not used
+; b6: reserved
+; b5: reserved
+; b4: POST supports ROM-to-RAM enable/disable
+; b3: SCSI on system board
+; b2: info panel installed
+; b1: Initial Machine Load (IML) system - BIOS on disk
+; b0: SCSI supported in IML
 db 0x00
+; Feature byte 4
+; b7: IBM private
+; b6: EEPROM present
+; b5-3: ABIOS presence (011 = not supported)
+; b2: private
+; b1: memory split above 16Mb supported
+; b0: POSTEXT directly supported by POST
 db 0x00
+; Feature byte 5 (IBM)
+; b1: enhanced mouse
+; b0: flash EPROM
 db 0x00
 
 
@@ -4381,14 +4454,16 @@ int16_handler:
 int16_zero_clear:
   push bp
   mov  bp, sp
-  SEG SS !!! and  BYTE [bp + 0x06], #0xbf
+  //SEG SS
+  and  BYTE [bp + 0x06], #0xbf
   pop  bp
   iret
 
 int16_zero_set:
   push bp
   mov  bp, sp
-  SEG SS !!! or   BYTE [bp + 0x06], #0x40
+  //SEG SS
+  or   BYTE [bp + 0x06], #0x40
   pop  bp
   iret
 
@@ -4450,8 +4525,8 @@ int09_handler:
   jz   int09_done    ;; nope, skip processing
 
   in  al, #0x60             ;;read key from keyboard controller
-  test al, #0x80            ;;look for key release
-  jnz  int09_process_key    ;; dont pass releases to intercept?
+  //test al, #0x80            ;;look for key release
+  //jnz  int09_process_key    ;; dont pass releases to intercept?
 
 #ifdef BX_CALL_INT15_4F
   mov  ah, #0x4f     ;; allow for keyboard intercept
@@ -4461,7 +4536,7 @@ int09_handler:
 #endif
 
 
-int09_process_key:
+//int09_process_key:
   push  ds
   pusha
   mov   bx, #0xf000
@@ -4502,7 +4577,8 @@ int13_diskette:
   popa
   pop   es
   popf
-  JMPL(iret_modify_cf)
+  //JMPL(iret_modify_cf)
+  jmp iret_modify_cf
 
 #if 0
   pushf
@@ -4516,8 +4592,8 @@ int13_diskette:
   popa
   pop   es
   popf
-  JMPL(iret_modify_cf)
-
+  //JMPL(iret_modify_cf)
+  jmp iret_modify_cf
 i13d_f01:
   popf
   push  ds
@@ -4529,7 +4605,8 @@ i13d_f01:
   pop   ds
   clc
   ;; ??? dont know if this service changes the return status
-  JMPL(iret_modify_cf)
+  //JMPL(iret_modify_cf)
+  jmp iret_modify_cf
 #endif
 
 
@@ -4630,7 +4707,8 @@ int15_handler:
   pop   es
   pop   ds
   popf
-  JMPL(iret_modify_cf)
+  //JMPL(iret_modify_cf)
+  jmp iret_modify_cf
 
 ;; Protected mode IDT descriptor
 ;;
@@ -4711,9 +4789,10 @@ int08_handler:
 int08_store_ticks:
   mov 0x046c, eax ;; store new ticks dword
   ;; chain to user timer tick INT #0x1c
-  pushf
-  ;; call_ep [ds:loc]
-  CALL_EP( 0x1c << 2 )
+  //pushf
+  //;; call_ep [ds:loc]
+  //CALL_EP( 0x1c << 2 )
+  int #0x1c
   cli
   mov al, #0x20
   out 0x20, al  ; send EOI to PIC
@@ -4737,7 +4816,8 @@ dummy_iret_handler:
 ; .ascii "(c) 1994-2000 Kevin P. Lawton"
 
 .org 0xfff0 ; Power-up Entry Point
-  JMPL(post)
+  //JMPL(post)
+  jmp post
 
 .org 0xfff5 ; ASCII Date ROM was built - 8 characters in MM/DD/YY
 .ascii "06/23/99"
@@ -4745,6 +4825,7 @@ dummy_iret_handler:
 .org 0xfffe ; System Model ID
 db SYS_MODEL_ID
 db 0x00   ; filler
-;; BLOCK_STRINGS_BEGIN
 
+.org 0xd000
+// bcc-generated data will be placed here
 #endasm
