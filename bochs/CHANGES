@@ -111,9 +111,13 @@ Changes to next release:
   [869822] a real SVGA implementation by m_suzu
   [867045] fix for compiler errors on VC++ by m_suzu
   [838601] support for the over 2GB disk size with MSVC++
+  [874816] local ARP/ping/DHCP simulator by m_suzu
+  [976066] Keyboard: Get controller version by Ben Lunt
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
+ [1005422] Improve mouse cursol Grub when 2 buttons-mouse use (WIN32)
+           (TODO: improved japanese keyboard support)
 
 - these S.F. bugs were closed
   #651510 bximage won't create larger than 2GB
