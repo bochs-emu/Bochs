@@ -198,26 +198,30 @@ Patches applied:
 - Peter's changes...
 
 - SF patches applied
-  #658950  Bug in FPU                               (???)
-  #678117  build fail due to bad SGML punctuation   (???)
-  #671873  minimal USB support (UHCI)               (Ben Lunt)
-  #682539  Fix CapsLock and NumLock behavior        (rock at gimp.org)
-  #720776  REX MOVB immediate broken for x86_64     (Arnd Bergmann)
-  #729450  new keymap x11-pc-be.map                 (Wouter Verhelst)
-  #735990  Limited patches for VC++                 (???)
-  #742670  fix library dependencies in GUI plugins  (Robert Millan)
-  #742782  LFB bugfix                               (Jan L. Hauffa)
-  #748414  load32bitOShack bug                      (kyriazis at nvidia.com)
-  #830079  Fix bochs's application error if ...     (???)
-  #724466  enable building with CC=gcc-3.2 CXX=...  (Leonard Norrgard)
-  #834962  Fixed drawing graphics is broken         (???)
-  #838401  Fixed redrawing of ToolBar on Win32GUI   (???)
-  #850236  Fixed accessing DVD-ROM with direct ...  (???)
+  #658950  Bug in FPU                                                  (???)
+  #678117  build fail due to bad SGML punctuation                      (???)
+  #671873  minimal USB support (UHCI)                                  (Ben Lunt)
+  #682539  Fix CapsLock and NumLock behavior                           (rock at gimp.org)
+  #720776  REX MOVB immediate broken for x86_64                        (Arnd Bergmann)
+  #729450  new keymap x11-pc-be.map                                    (Wouter Verhelst)
+  #735990  Limited patches for VC++                                    (???)
+  #742670  fix library dependencies in GUI plugins                     (Robert Millan)
+  #742782  LFB bugfix                                                  (Jan L. Hauffa)
+  #748414  load32bitOShack bug                                         (kyriazis at nvidia.com)
+  #830079  Fix bochs's application error if unsupported key pressed    (???)
+  #724466  enable building with CC=gcc-3.2 CXX=g++-3.2; dist-clean adds(Leonard Norrgard)
+  #834962  Fixed drawing graphics is broken                            (???)
+  #838401  Fixed redrawing of ToolBar on Win32GUI                      (???)
+  #850236  Fixed accessing DVD-ROM with direct device access on Win32  (???)
   #847822  Bochs crash when exmining memory that crosses page boundary (ortal at jungo.com)
 
 - SF patches partially applied
-  #707931  Support EGA/VGA write mode 2 and others  (???)
+  #707931  Support EGA/VGA write mode 2 and others                     (???)
            already applied: disable IME, split screen, write mode 2
+  #856506  Patch to fix compile-time iodev/cd-rom.cc error             (alden.dima at nist.gov)
+           see below
+  #856510  Missing patch file for 856506                               (alden.dima at nist.gov)
+           supplied patch would have broken the code
 
 - patches applied
   - patch.highmem by Zwane Mwaikambo (memory allocation)
