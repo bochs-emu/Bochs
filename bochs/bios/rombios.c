@@ -254,7 +254,7 @@ static void           debugger_on();
 static void           debugger_off();
 static void           keyboard_panic();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.8 2001-05-31 15:21:25 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.9 2001-05-31 15:23:10 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -814,7 +814,6 @@ print_bios_banner()
 {
   bios_printf(0, bios_version_string);
   bios_printf(0, "\n");
-  panic ("oh crap");
 }
 
 
