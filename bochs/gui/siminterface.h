@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.54 2002-08-31 04:57:21 bdenney Exp $
+// $Id: siminterface.h,v 1.55 2002-09-03 05:31:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -691,6 +691,7 @@ public:
   virtual ~bx_list_c();
   void add (bx_param_c *param);
   bx_param_c *get (int index);
+  int get_size () { return size; }
   bx_param_num_c *get_options () { return options; }
   bx_param_num_c *get_choice () { return choice; }
   bx_param_string_c *get_title () { return title; }
