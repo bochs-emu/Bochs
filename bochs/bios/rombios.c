@@ -3683,7 +3683,6 @@ int76_handler:
   iret
 
 .org 0xd000
-#if BX_SIMULATE_SMP
 
 // For documentation of this config structure, look on developer.intel.com and
 // search for multiprocessor specification.  Note that when you change anything
@@ -3859,6 +3858,7 @@ mp_config_irqs:
 mp_config_end:   // this label used to find length of mp structure
   db 0
 
+#if (BX_SMP_PROCESSORS>1)
 .align 16
 mp_floating_pointer_structure:
 db 0x5f, 0x4d, 0x50, 0x5f   ; "_MP_" signature
@@ -3868,9 +3868,7 @@ db 4     ;; MP spec revision
 db 0xc1  ;; checksum
 db 0     ;; MP feature byte 1.  value 0 means look at the config table
 db 0,0,0,0     ;; MP feature bytes 2-5.
-
-
-#endif  /* BX_SIMULATE_SMP */
+#endif
 
 ;; for 'C' strings and other data, insert them here with
 ;; a the following hack:
