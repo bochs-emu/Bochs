@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.164 2005-03-09 21:59:33 vruppert Exp $
+$Id: user.dbk,v 1.165 2005-03-22 18:12:52 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -370,7 +370,8 @@ currently work with.
   <row>
     <entry>Enhanced BIOS</entry>
     <entry>Yes</entry>
-    <entry>Implements ElTorito, EDD v3.0, PCI32 directory service specifications 
+    <entry>Implements ElTorito, EDD v3.0, basic PCIBIOS features and the
+    PCI interrupt routing table.
     </entry>
   </row>
   <row>
@@ -484,15 +485,17 @@ currently work with.
   <row>
     <entry>PCI</entry>
     <entry>incomplete</entry>
-    <entry>The Host-to-PCI bridge, and Primary Memory Controller are available.
-    However, PCI-to-IDE or other PCI cards are not implemented yet.
+    <entry>Emulates most of the i440FX PCI chipset. The Host-to-PCI bridge
+    (PMC/DBX), the PCI-to-ISA bridge and the PCI IDE controller (PIIX3) are
+    available. For PCI cards there are 5 PCI slots supported. PCI IDE currently
+    does not support Busmaster-DMA.
     </entry>
   </row>
   <row>
     <entry>USB</entry>
     <entry>incomplete</entry>
-    <entry>The USB root hub is available, USB devices with access to real hardware
-    are not implemented yet.
+    <entry>The USB root hub is available, USB devices are under construction.
+    Access to real hardware is not implemented yet.
     </entry>
   </row>
   <row>
@@ -2006,17 +2009,17 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-sb16={<option>dummy, win, linux, freebsd</option>}</entry>
+      <entry>--enable-sb16={<option>dummy</option>}</entry>
       <entry>no</entry>
       <entry>
-      Enable Sound Blaster emulation. SB16 output is only supported on
-      Windows, Linux and FreeBSD host systems.  
-      The <constant>dummy</constant> option means to support
-      an SB16, but don't use an output device.  So for example, you might use
-      <option>--enable-sb16=linux</option> on a linux host. 
-      See section <link linkend="sb16-emulation">Sound Blaster 16 Emulation</link> for more info.
-      This option also enables the standard PC gameport which is a part of the SB16.
-      If you don't want to use it, you might use <option>--disable-gameport</option>.
+      Enable Sound Blaster emulation. SB16 output to the host sound interface is
+      currently supported on Windows, Linux, FreeBSD, MacOS 9 and MacOSX host systems.
+      The <constant>dummy</constant> option means to support an SB16, but don't
+      use an output device. By default the lowlevel sound interface is autodetected.
+      See section <link linkend="sb16-emulation">Sound Blaster 16 Emulation</link>
+      for more info. This option also enables the standard PC gameport which is a
+      part of the SB16. If you don't want to use it, you might use
+      <option>--disable-gameport</option>.
       </entry>
     </row>
     <row>
@@ -2090,7 +2093,9 @@ turn it off.
     <row>
       <entry>--enable-clgd54xx</entry>
       <entry>no</entry>
-      <entry>Enable Cirrus Logic GD54xx (CL-GD54xx) video card support.</entry>
+      <entry>Enable Cirrus Logic GD54xx (CL-GD5430 ISA or CL-GD5446 PCI) video
+      card support. For more information see <xref linkend="cirrus-notes">.
+      </entry>
     </row>
     <row>
       <entry>--enable-fpu</entry>
@@ -2273,8 +2278,8 @@ turn it off.
     <row>
       <entry>--enable-pci</entry>
       <entry>no</entry>
-      <entry>Enable limited i440FX PCI support.  This is not complete.
-          Don't use this option yet.</entry>
+      <entry>Enable limited i440FX PCI support. THis is still incomplete, but usable.
+      </entry>
     </row>
     <row>
       <entry>--enable-pcidev</entry>
@@ -2603,8 +2608,8 @@ commands are
 These options are known to work in Cygwin, so they are enabled in the configure
 shortcut file:
 <screen>
-  --enable-cdrom 
-  --enable-sb16=win 
+  --enable-cdrom
+  --enable-sb16
   --enable-ne2000
   --enable-vbe
 </screen>
@@ -4079,7 +4084,7 @@ section.
 Sound Blaster 16 (SB16) emulation for Bochs was written and donated by
 Josef Drexler, who has a
 <ulink url="http://publish.uwo.ca/~jdrexler/bochs/">web page</ulink> on the topic.
-  The entire set of his SB16 patches have been integrated into
+The entire set of his SB16 patches have been integrated into
 Bochs, however, so you can find everything you need here.
 </para>
 
@@ -6811,6 +6816,37 @@ Bochs VBE Display Drivers for Windows NT/2000
 <ulink url="http://dhenriq.en.eresmas.com/"></ulink>
 </screen>
 </section>
+</section>
+
+<section id="cirrus-notes">
+  <title>Notes about Cirrus SVGA usage</title>
+
+  <para>
+    Since Bochs 2.2 it is possible to use Cirrus SVGA graphics. The Cirrus device
+    supports both ISA and PCI depending on the <filename>bochsrc</filename> settings.
+    If PCI is disabled or the Cirrus card is not assigned to a PCI slot, it appears
+    as a CL-GD5430 ISA with 2MB VRAM. If you assign the Cirrus card to a PCI slot,
+    it appears as a CL-GD5446 PCI with 4MB VRAM.
+  </para>
+  <para>
+    In order to use Cirrus SVGA, you need to compile Bochs using the <option>--enable-clgd54xx</option>
+    option and enable it in your <filename>bochsrc</filename> by setting the
+    <link linkend="bochsopt-vga">vga option</link> to <parameter>cirrus</parameter>.
+    Finally, you need to use the Cirrus version of the
+    <ulink url="http://savannah.nongnu.org/projects/vgabios/">LGPL'd VGABIOS</ulink>
+    as <link linkend="bochsopt-vgaromimage">vgaromimage option</link> for
+    applications to correctly detect Cirrus support.
+  </para>
+  <screen>
+  # Enable CL-GD5446 PCI
+  vga: extension=cirrus
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
+  i440fxsupport: enabled=1, slot1=cirrus
+  </screen>
+
+  <note><para>
+    The VGABIOS is already included in the Bochs release, so no separate download is necessary.
+  </para></note>
 </section>
 
 <section id="harddisk-modes"><title>Disk Image Modes</title>
