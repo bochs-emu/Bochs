@@ -97,6 +97,7 @@ GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lwinmm -lcomdlg32 -lcomctl32
 GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
   comdlg32.lib comctl32.lib wsock32.lib
 GUI_LINK_OPTS_MACOS =
+GUI_LINK_OPTS_CARBON = -framework Carbon
 GUI_LINK_OPTS_NOGUI =
 GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
 GUI_LINK_OPTS = @GUI_LINK_OPTS@
@@ -410,3 +411,26 @@ dist-clean: local-dist-clean
 	$(MAKE) dist-clean
 	@CD_UP_ONE@
 	@RMCOMMAND@ Makefile
+
+###########################################
+# Build app on MacOS X
+###########################################
+APP=bochs.app
+MACOSX_STUFF=build/macosx
+REZ=/Developer/Tools/Rez
+RINCLUDES=/System/Library/Frameworks/Carbon.framework/Libraries/RIncludes
+REZ_ARGS=-append -i $RINCLUDES -d SystemSevenOrLater=1 -useDF
+
+$(APP)/.build: bochs
+	rm -f $(APP)/.build
+	$(MKDIR) -p $(APP)
+	$(MKDIR) -p $(APP)/Contents
+	$(CP) -f $(MACOSX_STUFF)/Info.plist $(APP)/Contents
+	$(CP) -f $(MACOSX_STUFF)/pbdevelopment.plist $(APP)/Contents
+	echo -n "APPL????"  > $(APP)/Contents/PkgInfo
+	$(MKDIR) -p $(APP)/Contents/MacOS
+	$(CP) bochs $(APP)/Contents/MacOS
+	$(MKDIR) -p $(APP)/Contents/Resources
+	$(REZ) $(REZ_ARGS) $(MACOSX_STUFF)/bochs.r -o $(APP)/Contents/Resources/bochs.rsrc
+	ls -ld $(APP)
+	touch $(APP)/.build
