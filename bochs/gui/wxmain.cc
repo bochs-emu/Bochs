@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.72 2002-10-25 12:36:43 bdenney Exp $
+// $Id: wxmain.cc,v 1.73 2002-10-26 13:22:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -1028,19 +1028,20 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
 	  "Already Running", wxOK | wxICON_ERROR);
 	return;
   }
-  // check that vga library is set to wx.  If not, give a warning and change it
-  // to wx.  It is technically possible to use other vga libraries with the wx
-  // config interface, but there are still some significant problems.
+  // check that display library is set to wx.  If not, give a warning and
+  // change it to wx.  It is technically possible to use other vga libraries
+  // with the wx config interface, but there are still some significant
+  // problems.
   bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_DISPLAY_LIBRARY);
   char *gui_name = gui_param->get_choice (gui_param->get ());
   if (strcmp (gui_name, "wx") != 0) {
     wxMessageBox (
-      "The VGA library setting was not set to wxWindows.  When you use the\n"
-      "wxWindows configuration interface, you must also use the wxWindows\n"
-      "VGA screen.  I will change it to 'wx' now.",
-      "VGA library error", wxOK | wxICON_WARNING);
+    "The display library was not set to wxWindows.  When you use the\n"
+    "wxWindows configuration interface, you must also select the wxWindows\n"
+    "display library.  I will change it to 'wx' now.",
+    "display library error", wxOK | wxICON_WARNING);
     if (!gui_param->set_by_name ("wx")) {
-      wxASSERT (0 && "Could not set VGA library setting to 'wx");
+      wxASSERT (0 && "Could not set display library setting to 'wx");
     }
   }
   // give warning about restarting the simulation

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.166 2002-10-26 13:14:04 bdenney Exp $
+// $Id: main.cc,v 1.167 2002-10-26 13:22:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1557,15 +1557,15 @@ bx_bool load_and_init_display_lib () {
   if (!strcmp (gui_name, "wx")) {
     // they must not have used wx as the configuration interface, or bx_gui
     // would already be initialized.  Sorry, it doesn't work that way.
-    BX_ERROR (("wxWindows was not used as the configuration interface, so it cannot be used as the VGA library"));
+    BX_ERROR (("wxWindows was not used as the configuration interface, so it cannot be used as the display library"));
     // choose another, hopefully different!
     gui_param->set (0);
     gui_name = gui_param->get_choice (gui_param->get ());
     if (!strcmp (gui_name, "wx")) {
-      BX_PANIC (("no alternative VGA libraries are available"));
+      BX_PANIC (("no alternative display libraries are available"));
       return false;
     }
-    BX_ERROR (("changing VGA library to '%s' instead", gui_name));
+    BX_ERROR (("changing display library to '%s' instead", gui_name));
   }
 #if BX_WITH_AMIGAOS
   if (!strcmp (gui_name, "amigaos")) 
@@ -3051,7 +3051,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR(("%s: display_library directive: wrong # args.", context));
       }
     if (!bx_options.Osel_displaylib->set_by_name (params[1]))
-      PARSE_ERR(("%s: VGA library '%s' not available", context, params[1]));
+      PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
     }
   else {
     PARSE_ERR(( "%s: directive '%s' not understood", context, params[0]));
