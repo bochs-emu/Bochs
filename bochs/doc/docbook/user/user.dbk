@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.110 2003-01-17 10:02:18 cbothamy Exp $
+$Id: user.dbk,v 1.111 2003-01-21 22:59:35 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4947,11 +4947,11 @@ Print the current time (number of ticks since start of simulation
 
 <screen>sb <varname>delta</varname></screen>
 
-Insert a time break point "delta" instructions into the future.
+Insert a time break point "delta" instructions into the future ("delta" is a 64-bit integer followed by "L", for example 1000L).
 
 <screen>sba <varname>time</varname></screen>
 
-Insert a time break point at "time".
+Insert a time break point at "time" ("time" is a 64-bit integer followed by "L", for example 1000L).
 
 <screen>record <varname>filename</varname></screen>
 
@@ -5037,29 +5037,6 @@ The symbol file consists of zero or more lines of the format <screen>"%x %s"</sc
   show "none" - turn off all show flags
 </screen>
 </para>
-</section>
-
-<section>
-<title>
-Resource file extensions
-</title>
-<para>
-
-<screen>time0: <varname>time</varname></screen>
-
-Specifies the start (boot) time of the virtual machine. Use a
-<varname>time</varname> value as returned by the time(2) system call. <varname>Time</varname>
-equal to 1 is a special case which starts the virtual machine at the
-current time of the simulator host.
-
-<screen>cdromd: dev=<varname>device</varname>, status=(inserted|ejected)</screen>
-
-LoseNT needs a CD in order to boot properly. Our simulated CD-ROM unit
-communicates directly with the CD-ROM driver in Linux. <varname>Device</varname>
-is a device special file to which the CD-ROM driver is connected
-(typically /dev/hdc). <varname>Device</varname> is ignored if status=ejected.
-</para>
-
 </section>
 
 <section>
