@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.16 2002-01-13 17:06:33 vruppert Exp $
+// $Id: dma.cc,v 1.17 2002-01-18 16:33:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ bx_dma_c::~bx_dma_c(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.16 2002-01-13 17:06:33 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.17 2002-01-18 16:33:47 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -377,19 +377,20 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
     case 0x09: // DMA-1: request register
     case 0xd2: // DMA-2: request register
       ma_sl = (address == 0xd2);
+      channel = value & 0x03;
       BX_ERROR(("DMA-%d: write to request register (%02x)", ma_sl+1, (unsigned) value));
       // note: write to 0x0d clears this register
       if (value & 0x04) {
         // set request bit
+        BX_DMA_THIS s[ma_sl].status_reg |= (1 << (channel+4));
+        BX_DEBUG(("DMA-%d: set request bit for channel %u", ma_sl+1, (unsigned) channel));
         }
       else {
-        Bit8u channel;
-
         // clear request bit
-        channel = value & 0x03;
         BX_DMA_THIS s[ma_sl].status_reg &= ~(1 << (channel+4));
         BX_DEBUG(("DMA-%d: cleared request bit for channel %u", ma_sl+1, (unsigned) channel));
         }
+      control_HRQ(ma_sl);
       return;
       break;
 
@@ -401,6 +402,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s[ma_sl].mask[channel] = (set_mask_bit > 0);
       BX_DEBUG(("DMA-%d: set_mask_bit=%u, channel=%u, mask now=%02xh", ma_sl+1,
           (unsigned) set_mask_bit, (unsigned) channel, (unsigned) BX_DMA_THIS s[ma_sl].mask[channel]));
+      control_HRQ(ma_sl);
       return;
       break;
 
@@ -454,6 +456,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s[ma_sl].mask[1] = 0;
       BX_DMA_THIS s[ma_sl].mask[2] = 0;
       BX_DMA_THIS s[ma_sl].mask[3] = 0;
+      control_HRQ(ma_sl);
       return;
       break;
 
@@ -465,6 +468,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       BX_DMA_THIS s[ma_sl].mask[1] = value & 0x01; value >>= 1;
       BX_DMA_THIS s[ma_sl].mask[2] = value & 0x01; value >>= 1;
       BX_DMA_THIS s[ma_sl].mask[3] = value & 0x01;
+      control_HRQ(ma_sl);
       return;
       break;
 
@@ -531,14 +535,7 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
     // clear bit in status reg
     BX_DMA_THIS s[ma_sl].status_reg &= ~(1 << (channel+4));
 
-    // deassert HRQ if no DRQ is pending
-    if ((BX_DMA_THIS s[ma_sl].status_reg & 0xf0) == 0) {
-      if (ma_sl) {
-        bx_pc_system.set_HRQ(0);
-      } else {
-        bx_pc_system.set_DRQ(4, 0);
-      }
-    }
+    control_HRQ(ma_sl);
     return;
   }
 
@@ -558,10 +555,6 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
 #endif
 
   BX_DMA_THIS s[ma_sl].status_reg |= (1 << (channel+4));
-
-  //  if (BX_DMA_THIS s.mask[channel])
-  //    BX_PANIC(("bx_dma_c::DRQ(): BX_DMA_THIS s.mask[] is set"));
-
 
   if ( (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_SINGLE) &&
        (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_DEMAND) &&
@@ -583,13 +576,36 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
     BX_PANIC(("request outside %dk boundary", 64 << ma_sl));
   }
 
-  if (ma_sl) {
-    // should check mask register VS DREQ's in status register here?
-    // assert Hold ReQuest line to CPU
-    bx_pc_system.set_HRQ(1);
-  } else {
-    // send DRQ to cascade channel of the master
-    bx_pc_system.set_DRQ(4, 1);
+  control_HRQ(ma_sl);
+}
+
+  void
+bx_dma_c::control_HRQ(Boolean ma_sl)
+{
+  unsigned channel;
+
+  // deassert HRQ if no DRQ is pending
+  if ((BX_DMA_THIS s[ma_sl].status_reg & 0xf0) == 0) {
+    if (ma_sl) {
+      bx_pc_system.set_HRQ(0);
+    } else {
+      bx_pc_system.set_DRQ(4, 0);
+    }
+    return;
+  }
+  // find highest priority channel
+  for (channel=0; channel<4; channel++) {
+    if ( (BX_DMA_THIS s[ma_sl].status_reg & (1 << (channel+4))) &&
+         (BX_DMA_THIS s[ma_sl].mask[channel]==0) ) {
+      if (ma_sl) {
+        // assert Hold ReQuest line to CPU
+        bx_pc_system.set_HRQ(1);
+      } else {
+        // send DRQ to cascade channel of the master
+        bx_pc_system.set_DRQ(4, 1);
+      }
+      break;
+    }
   }
 }
 
