@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.3 2002-08-28 15:27:25 bdenney Exp $
+// $Id: wxdialog.h,v 1.4 2002-08-28 21:06:14 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -125,7 +125,7 @@ public:
   int GetRadio ();
   int GetCapacity () { return capacity->GetSelection (); }
   char *GetFilename ();
-  void SetDriveName (char *name);
+  void SetDriveName (const char *name);
   void SetValidateFunc (validateFunc_t v) { validate = v; }
   void AddRadio (char *description, char *filename);
 DECLARE_EVENT_TABLE()
@@ -177,7 +177,7 @@ public:
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   void SetFilename (char *f);
   char *GetFilename ();
-  void SetDriveName (char *name);
+  void SetDriveName (const char *name);
   void SetGeom (int n, int value);
   int GetGeom (int n) { return geom[n]->GetValue (); }
   void SetGeomRange (int n, int min, int max) { geom[n]->SetRange (min, max); }

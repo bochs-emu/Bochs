@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.3 2002-08-28 15:27:25 bdenney Exp $
+// $Id: wxdialog.cc,v 1.4 2002-08-28 21:06:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -236,7 +236,7 @@ void FloppyConfigDialog::AddRadio (char *description, char *filename)
   n_rbtns++;
 }
 
-void FloppyConfigDialog::SetDriveName (char *name)
+void FloppyConfigDialog::SetDriveName (const char *name)
 {
   wxString text;
   text.Printf (FLOPPY_CONFIG_TITLE, name);
@@ -336,7 +336,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       long style = wxOPEN;
       wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
       if (fdialog->ShowModal () == wxID_OK)
-	SetFilename ((char *)fdialog->GetPath().c_str ());
+	SetFilename (fdialog->GetPath().c_str ());
       }
       break;
     case wxCANCEL:
@@ -446,7 +446,7 @@ HDConfigDialog::HDConfigDialog(
   Center ();
 }
 
-void HDConfigDialog::SetDriveName (char *name)
+void HDConfigDialog::SetDriveName (const char *name)
 {
   wxString text;
   text.Printf (HD_CONFIG_TITLE, name);
@@ -524,7 +524,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
       long style = wxOPEN;
       wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
       if (fdialog->ShowModal () == wxID_OK)
-	SetFilename ((char *)fdialog->GetPath().c_str ());
+	SetFilename (fdialog->GetPath().c_str ());
       }
       break;
     case wxCANCEL:
