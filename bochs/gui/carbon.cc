@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.23 2003-11-08 06:46:03 danielg4 Exp $
+// $Id: carbon.cc,v 1.24 2003-11-17 04:21:16 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -138,6 +138,7 @@ GWorldPtr            gOffWorld;
 Ptr                  gMyBuffer;
 ProcessSerialNumber  gProcessSerNum;
 static unsigned      vga_bpp=8;
+static EventModifiers oldMods = 0;
 
 enum {
   TEXT_MODE,
@@ -878,17 +879,20 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
       }
       else
       {
-        if (modifiers & shiftKey)
+/*        if (modifiers & shiftKey)
           DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | keyState);
         if (modifiers & controlKey)
           DEV_kbd_gen_scancode(BX_KEY_CTRL_L | keyState);
         if (modifiers & optionKey)
-          DEV_kbd_gen_scancode(BX_KEY_ALT_L | keyState);
+          DEV_kbd_gen_scancode(BX_KEY_ALT_L | keyState);*/
         
 //        key = (event->message & keyCodeMask) >> 8;
         
         trans = KeyTranslate(KCHR, key, &transState);
-        
+        if ((trans == BX_KEY_PRINT) && ((oldMods & optionKey) || (oldMods & rightOptionKey)))
+          trans = BX_KEY_ALT_SYSREQ;
+        if ((trans == BX_KEY_PAUSE) && ((oldMods & controlKey) || (oldMods & rightControlKey)))
+          trans = BX_KEY_CTRL_BREAK;
         // KeyTranslate maps Mac virtual key codes to any type of character code
         // you like (in this case, Bochs key codes). Much nicer than a huge switch
         // statement!
@@ -896,12 +900,12 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
         if (trans > 0)
           DEV_kbd_gen_scancode(trans | keyState);
 
-        if (modifiers & shiftKey)
+/*        if (modifiers & shiftKey)
           DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
         if (modifiers & controlKey)
           DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
         if (modifiers & optionKey)
-          DEV_kbd_gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
+          DEV_kbd_gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);*/
       }
     }
   }
@@ -930,7 +934,7 @@ void bx_carbon_gui_c::handle_events(void)
   EventRecord event;
   Point mousePt;
   int dx, dy;
-  int oldMods=0;
+  EventModifiers newMods;
   unsigned curstate;
   GrafPtr oldport;
 
@@ -961,11 +965,31 @@ void bx_carbon_gui_c::handle_events(void)
         // fprintf(stderr, "# Classic apple event handler called\n");
         AEProcessAppleEvent(&event);
         show_headerbar(); // Update if necessary (example, clipboard change)
+        break;
         
       default:
         break;
     }
   }
+  else if (oldMods != (newMods = (event.modifiers & 0xfe00)))
+  {
+    if ((newMods ^ oldMods) & shiftKey)
+      DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | ((newMods & shiftKey)?BX_KEY_PRESSED:BX_KEY_RELEASED));
+    if ((newMods ^ oldMods) & alphaLock)
+      DEV_kbd_gen_scancode(BX_KEY_CAPS_LOCK | ((newMods & alphaLock)?BX_KEY_PRESSED:BX_KEY_RELEASED));
+    if ((newMods ^ oldMods) & optionKey)
+      DEV_kbd_gen_scancode(BX_KEY_ALT_L | ((newMods & optionKey)?BX_KEY_PRESSED:BX_KEY_RELEASED));
+    if ((newMods ^ oldMods) & controlKey)
+      DEV_kbd_gen_scancode(BX_KEY_CTRL_L | ((newMods & controlKey)?BX_KEY_PRESSED:BX_KEY_RELEASED));
+    if ((newMods ^ oldMods) & rightShiftKey)
+      DEV_kbd_gen_scancode(BX_KEY_SHIFT_R | ((newMods & rightShiftKey)?BX_KEY_PRESSED:BX_KEY_RELEASED));
+    if ((newMods ^ oldMods) & rightOptionKey)
+      DEV_kbd_gen_scancode(BX_KEY_ALT_R | ((newMods & rightOptionKey)?BX_KEY_PRESSED:BX_KEY_RELEASED));
+    if ((newMods ^ oldMods) & rightControlKey)
+      DEV_kbd_gen_scancode(BX_KEY_CTRL_R | ((newMods & rightControlKey)?BX_KEY_PRESSED:BX_KEY_RELEASED));
+    oldMods = newMods;
+  }
+
   
   // Only update mouse if we're not in the dock
   // and we are the frontmost app.
