@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.65 2003-05-11 15:07:54 vruppert Exp $
+// $Id: x.cc,v 1.66 2003-05-14 16:09:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,12 +77,11 @@ static unsigned long white_pixel=0, black_pixel=0;
 
 static char *progname; /* name this program was invoked by */
 
-static int rows=25, columns=80;
+static unsigned int rows=25, columns=80;
 
 static Window win;
 static GC gc, gc_inv, gc_headerbar, gc_headerbar_inv;
 static unsigned font_width, font_height;
-static Bit8u blank_line[80];
 static unsigned dimension_x=0, dimension_y=0;
 
 static XImage *ximage = NULL;
@@ -355,10 +354,6 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   x_tilesize = tilewidth;
   y_tilesize = tileheight;
   bx_headerbar_y = headerbar_y;
-
-  for (i=0; i<80; i++) {
-    blank_line[i] = ' ';
-    }
 
   progname = argv[0];
 
@@ -1071,28 +1066,32 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 {
   unsigned char *old_line, *new_line, *new_start;
   unsigned char cChar;
-  unsigned int ncols = dimension_x / font_width;
-  unsigned int curs, hchars, i, rows, x, y;
+  unsigned int curs, hchars, i, j, rows, x, y;
   unsigned new_foreground, new_background;
   bx_bool force_update=0;
-  unsigned char cell[32];
+  unsigned char cell[64];
 
   if (charmap_updated) {
     BX_INFO(("charmap update. Font Height is %d",font_height));
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
         XFreePixmap(bx_x_display, vgafont[c]);
-        
+        bx_bool gfxchar = tm_info.line_graphics && ((c & 0xE0) == 0xC0);
+        j = 0;
         memset(cell, 0, sizeof(cell));
-        for(i=0; i<font_height; i++) {
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x01)<<7);
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x02)<<5);
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x04)<<3);
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x08)<<1);
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x10)>>1);
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x20)>>3);
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x40)>>5);
-          cell[i] |= ((vga_charmap[(c<<5)+i] & 0x80)>>7);
+        for(i=0; i<font_height*2; i+=2) {
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x01)<<7);
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x02)<<5);
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x04)<<3);
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x08)<<1);
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x10)>>1);
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x20)>>3);
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x40)>>5);
+          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x80)>>7);
+          if (gfxchar) {
+            cell[i+1] = (vga_charmap[(c<<5)+j] & 0x01);
+          }
+          j++;
         }
 
         vgafont[c]=XCreateBitmapFromData(bx_x_display, win, 
@@ -1108,7 +1107,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   }
 
   // first draw over character at original block cursor location
-  if ( (prev_block_cursor_y < nrows) && (prev_block_cursor_x < ncols) ) {
+  if ( (prev_block_cursor_y < nrows) && (prev_block_cursor_x < columns) ) {
     curs = prev_block_cursor_y * tm_info.line_offset + prev_block_cursor_x * 2;
     cChar = new_text[curs];
     XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_text[curs+1] & 0x0f)]);
@@ -1122,7 +1121,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   rows = nrows;
   y = 0;
   do {
-    hchars = ncols;
+    hchars = columns;
     new_line = new_text;
     old_line = old_text;
     x = 0;
@@ -1153,7 +1152,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ( (cursor_y < nrows) && (cursor_x < ncols ) && (tm_info.cs_start <= tm_info.cs_end) ) {
+  if ( (cursor_y < nrows) && (cursor_x < columns ) && (tm_info.cs_start <= tm_info.cs_end) ) {
     curs = cursor_y * tm_info.line_offset + cursor_x * 2;
     cChar = new_start[curs];
     XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx((new_start[curs+1] & 0xf0) >> 4)]);
@@ -1302,11 +1301,8 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
 bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth)
 {
   if (fheight > 0) {
-    if (fwidth != 8) {
-      x = x * 8 / fwidth;
-    }
     font_height = fheight;
-    font_width = 8;
+    font_width = fwidth;
     columns = x / font_width;
   }
   if ( (x != dimension_x) || (y != (dimension_y-bx_headerbar_y)) ) {
