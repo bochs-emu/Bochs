@@ -72,6 +72,24 @@ GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
 OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o textconfig.o @DIALOG_OBJS@
 OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
 
+X_LIBS = @X_LIBS@
+X_PRE_LIBS = @X_PRE_LIBS@
+GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS) -lX11 -lXpm
+GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
+GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
+GUI_LINK_OPTS_BEOS = -lbe
+GUI_LINK_OPTS_RFB = @RFB_LIBS@
+GUI_LINK_OPTS_AMIGAOS = 
+GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
+  comdlg32.lib comctl32.lib wsock32.lib
+GUI_LINK_OPTS_MACOS =
+GUI_LINK_OPTS_CARBON = -framework Carbon
+GUI_LINK_OPTS_NOGUI =
+GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
+GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
+GUI_LINK_OPTS = @GUI_LINK_OPTS@  @DEVICE_LINK_OPTS@
+
 NONPLUGIN_OBJS = @GUI_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
 
@@ -99,9 +117,42 @@ libgui.a: $(NONPLUGIN_OBJS)
 libbx_%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
+libbx_x.la: x.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_X)
+
+libbx_sdl.la: sdl.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL)
+
+libbx_svga.la: svga.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SVGA)
+
+libbx_beos.la: beos.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_BEOS)
+
+libbx_rfb.la: rfb.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_RFB)
+
+libbx_amigaos.la: amigaos.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_AMIGAOS)
+
+libbx_win32.la: win32.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_WIN32)
+
+libbx_macos.la: macos.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_MACOS)
+
+libbx_carbon.la: carbon.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_CARBON)
+
+libbx_nogui.la: nogui.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_NOGUI)
+
+libbx_term.la: term.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_TERM)
+
 # special link rules for plugins that require more than one object file
 libbx_wx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
-	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libbx_wx.la `wx-config --cxxflags` -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libbx_wx.la -rpath $(PLUGIN_PATH)  $(GUI_LINK_OPTS_WX)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
