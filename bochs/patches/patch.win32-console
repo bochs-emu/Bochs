@@ -1,0 +1,260 @@
+----------------------------------------------------------------------
+Patch name: win32-console.patch
+Author: Hartmut Birr <hartmut.birr@tesionmail.de>
+Date:
+
+Detailed description:
+Add support for text modes with 8x8 characters on win32 gui. 
+This is usefull for ROS (50 lines console).
+ 
+Apply patch to:
+  bochs-1.2.1
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+--- clean-bochs-1.2.1\gui\win32.cc	Mon Jun 04 02:44:30 2001
++++ bochs-1.2.1\gui\win32.cc	Thu Aug 16 15:25:40 2001
+@@ -112,6 +112,9 @@
+ static unsigned prev_block_cursor_y = 0;
+ static HBITMAP vgafont[256];
+ static unsigned x_edge=0, y_edge=0, y_caption=0;
++static yChar = 16;
++static HFONT hFont[2];
++static int FontId = 2;
+ 
+ static char szAppName[] = "Bochs for Windows";
+ static char szWindowName[] = "Bochs for Windows - Display";
+@@ -136,9 +139,11 @@
+ void create_vga_font(void);
+ static unsigned char reverse_bitorder(unsigned char);
+ void DrawBitmap (HDC, HBITMAP, int, int, DWORD, unsigned char cColor);
++void DrawChar (HDC, unsigned char, int, int, unsigned char cColor);
+ void updateUpdated(int,int,int,int);
+ static void headerbar_click(int x);
+-
++void InitFont(void);
++void DestroyFont(void);
+ 
+ /* Macro to convert WM_ button state to BX button state */
+ 
+@@ -277,7 +282,7 @@
+ 
+   bx_headerbar_y = headerbar_y;
+   dimension_x = 640;
+-  dimension_y = 480 + bx_headerbar_y;
++  dimension_y = 800 + bx_headerbar_y;
+   stretched_x = dimension_x;
+   stretched_y = dimension_y;
+   stretch_factor = 1;
+@@ -367,6 +372,9 @@
+ 
+   if (stInfo.hwnd) {
+     ShowWindow (stInfo.hwnd, SW_SHOW);
++    SetWindowPos (stInfo.hwnd, NULL, 0, 0, stretched_x + x_edge * 2,
++                  480 + y_edge * 2 + y_caption, SWP_NOMOVE|SWP_NOZORDER);
++
+     UpdateWindow (stInfo.hwnd);
+ 
+     ShowCursor(!mouseCaptureMode);
+@@ -404,6 +412,7 @@
+ 
+   switch (iMsg) {
+   case WM_CREATE:
++    InitFont();
+     SetTimer (hwnd, 1, 330, NULL);
+     if (mouseCaptureMode)
+       SetWindowText(hwnd, "Bochs for Windows      [Press F12 to release mouse capture]");
+@@ -476,6 +485,7 @@
+   case WM_DESTROY:
+     KillTimer (hwnd, 1);
+     stInfo.UIinited = FALSE;
++    DestroyFont();
+ 
+     PostQuitMessage (0);
+     return 0;
+@@ -690,12 +700,21 @@
+ 
+   // Number of characters on screen, variable number of rows
+   nchars = 80*nrows;
+-	
++
+   if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars) {
+     cChar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
+-    DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
+-	              prev_block_cursor_y*16 + bx_headerbar_y, SRCCOPY, 
++    if(yChar<16)
++    {
++      DrawChar(hdc, cChar, prev_block_cursor_x*8,
++	           prev_block_cursor_y*yChar + bx_headerbar_y,
++			   new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
++    }
++    else
++    {
++      DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
++	              prev_block_cursor_y*16 + bx_headerbar_y, SRCCOPY,
+ 				  new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
++    }
+   }
+ 
+   for (i=0; i<nchars*2; i+=2) {
+@@ -707,7 +726,14 @@
+       x = (i/2) % 80;
+       y = (i/2) / 80;
+ 
+-      DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
++      if(yChar<16)
++      {
++        DrawChar(hdc, cChar, x*8, y*yChar + bx_headerbar_y, new_text[i+1]);
++      }
++      else
++      {
++        DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
++      }
+     }
+   }
+ 
+@@ -720,8 +746,15 @@
+ 	//reverse background and foreground colors
+ 	char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
+ 	cAttr = ((cAttr>>4)&0xf)+((cAttr&0xf)<<4);
+-    DrawBitmap(hdc, vgafont[cChar], cursor_x*8, cursor_y*16 + bx_headerbar_y,
++    if (yChar<16)
++    {
++      DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar + bx_headerbar_y, cAttr);
++    }
++    else
++    {
++      DrawBitmap(hdc, vgafont[cChar], cursor_x*8, cursor_y*16 + bx_headerbar_y,
+ 	           SRCCOPY, cAttr);
++    }
+   }
+ 
+   ReleaseDC(stInfo.hwnd, hdc);
+@@ -809,7 +842,22 @@
+     stretched_y *= 2;
+     stretch_factor *= 2;
+   }
+-  
++  FontId = 2;   // 16
++  yChar = 16;
++  if (y > 480)
++  {
++    FontId = 1; // 14
++    yChar = 14;
++    dimension_y = y * yChar / 16 + bx_headerbar_y;
++    stretched_y = dimension_y * stretch_factor;
++  }
++  if (y > 600)
++  {
++    FontId = 0; // 12
++    yChar = 12;
++    dimension_y = y * yChar / 16 + bx_headerbar_y;
++    stretched_y = dimension_y * stretch_factor;
++  }
+   SetWindowPos(stInfo.hwnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
+               stretched_y+ y_edge * 2 + y_caption,
+                SWP_NOMOVE | SWP_NOZORDER);
+@@ -1116,3 +1164,102 @@
+ }
+ #endif
+ #endif
++
++void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
++		       unsigned char cColor) {
++  HDC hdcMem;
++  POINT ptSize, ptOrg;
++  HGDIOBJ oldObj;
++  char str[2];
++  HFONT hFontOld;
++
++  hdcMem = CreateCompatibleDC (hdc);
++  SetMapMode (hdcMem, GetMapMode (hdc));
++
++  ptSize.x = 8;
++  ptSize.y = yChar;
++
++  DPtoLP (hdc, &ptSize, 1);
++
++  ptOrg.x = 0;
++  ptOrg.y = 0;
++
++  DPtoLP (hdcMem, &ptOrg, 1);
++
++  oldObj = SelectObject(MemoryDC, MemoryBitmap);
++  hFontOld=(HFONT)SelectObject(MemoryDC, hFont[FontId]);
++
++  //Colors taken from Ralf Browns interrupt list.
++//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)
++//The highest background bit usually means blinking characters. No idea
++//how to implement that so for now it's just implemented as color.
++//Note: it is also possible to program the VGA controller to have the
++//high bit for the foreground color enable blinking characters.
++	const COLORREF crPal[16] = {
++									RGB(0 ,0 ,0 ),	//0 black
++									RGB(0 ,0 ,0x80 ),	//1 dark blue
++									RGB(0 ,0x80 ,0 ),	//2 dark green
++									RGB(0 ,0x80 ,0x80 ),		//3 dark cyan
++									RGB(0x80 ,0 ,0 ),	//4 dark red
++									RGB(0x80 ,0 ,0x80 ),		//5 dark magenta
++									RGB(0x80 ,0x80 ,0 ),		//6 brown
++									RGB(0xC0 ,0xC0 ,0xC0 ),	//7 light gray
++									RGB(0x80 ,0x80 ,0x80 ),	//8 dark gray
++									RGB(0 ,0 ,0xFF ),	//9 light blue
++									RGB(0 ,0xFF ,0 ),	//10 green
++									RGB(0 ,0xFF ,0xFF ),		//11 cyan
++									RGB(0xFF ,0 ,0 ),	//12 light red
++									RGB(0xFF ,0 ,0xFF ),		//13 magenta
++									RGB(0xFF ,0xFF ,0 ),		//14 yellow
++									RGB(0xFF ,0xFF ,0xFF )};	//15 white
++
++	COLORREF crFore = SetTextColor(MemoryDC, crPal[cColor&0xf]);
++	COLORREF crBack = SetBkColor(MemoryDC, crPal[(cColor>>4)&0xf]);
++    str[0]=c;
++    str[1]=0;
++    TextOut(MemoryDC, xStart, yStart, str, 1);
++	SetBkColor(MemoryDC, crBack);
++	SetTextColor(MemoryDC, crFore);
++
++  SelectObject(MemoryDC, hFontOld);
++  SelectObject(MemoryDC, oldObj);
++
++  updateUpdated(xStart, yStart, ptSize.x + xStart - 1, ptSize.y + yStart - 1);
++
++  DeleteDC (hdcMem);
++}
++
++void InitFont(void)
++{
++  LOGFONT lf;
++  int i;
++
++  lf.lfWidth = 8;
++  lf.lfEscapement = 0;
++  lf.lfOrientation = 0;
++  lf.lfWeight = FW_MEDIUM;
++  lf.lfItalic = FALSE;
++  lf.lfUnderline=FALSE;
++  lf.lfStrikeOut=FALSE;
++  lf.lfCharSet=OEM_CHARSET;
++  lf.lfOutPrecision=OUT_DEFAULT_PRECIS;
++  lf.lfClipPrecision=CLIP_DEFAULT_PRECIS;
++  lf.lfQuality=DEFAULT_QUALITY;
++  lf.lfPitchAndFamily=FIXED_PITCH | FF_DONTCARE;
++  wsprintf(lf.lfFaceName, "Lucida Console");
++
++  for (i=0; i < 3; i++)
++  {
++    lf.lfHeight = 12 + i * 2;
++    hFont[i]=CreateFontIndirect(&lf);
++  }
++}
++
++void DestroyFont(void)
++{
++  int i;
++  for(i = 0; i < 3; i++)
++  {
++    DeleteObject(hFont[i]);
++  }
++}
