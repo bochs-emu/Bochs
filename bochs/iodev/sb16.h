@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.12 2003-02-24 18:35:48 vruppert Exp $
+// $Id: sb16.h,v 1.13 2003-04-07 17:08:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -255,7 +255,7 @@ private:
     int outputinit;	// have the output functions been initialized
   } dsp;
 
-  enum bx_sb16_fm_mode {single, adlib, dual, opl3};
+  enum bx_sb16_fm_mode {single, adlib, dual, opl3, fminit};
 
   // the variables common to all FM emulations
   struct bx_sb16_opl_struct {

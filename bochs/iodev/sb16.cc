@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.31 2003-02-24 18:35:46 vruppert Exp $
+// $Id: sb16.cc,v 1.32 2003-04-07 17:08:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -210,6 +210,10 @@ void bx_sb16_c::init(void)
   MPU.last_delta_time = 0xffffffff;
 
   // reset the DSP
+  DSP.dma.highspeed = 0;
+  DSP.dma.mode = 0;
+  DSP.irqpending = 0;
+  DSP.midiuartmode = 0;
   DSP.resetport = 1;  // so that one call to dsp_reset is sufficient
   dsp_reset(0);       // (reset is 1 to 0 transition)
 
@@ -225,7 +229,8 @@ void bx_sb16_c::init(void)
   mixer_writedata(0x00);
 
   // reset the FM emulation
-  OPL.mode = dual;
+  OPL.mode = fminit;
+  OPL.timer_running = 0;
   opl_entermode(single);
 
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
@@ -1947,6 +1952,7 @@ void bx_sb16_c::opl_entermode(bx_sb16_fm_mode newmode)
       OPL.chan[i].afreq = 0;
       OPL.chan[i].midichan = 0xff;
       OPL.chan[i].needprogch = 0;
+      OPL.chan[i].midion = 0;
       OPL.chan[i].midinote = 0;
       OPL.chan[i].midibend = 0;
       OPL.chan[i].midivol = 0;
@@ -2553,6 +2559,9 @@ void bx_sb16_c::opl_setfreq(int channel)
 void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
 {
   int i;
+
+  if (OPL.mode == fminit)
+    return;
 
   // first check if there really is a change in the state
   if (onoff == OPL.chan[channel].midion)
