@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.45 2002-08-26 15:31:23 bdenney Exp $
+// $Id: x.cc,v 1.46 2002-09-05 15:57:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1091,7 +1091,16 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   int
 bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
-  *bytes = (Bit8u *)XFetchBytes (bx_x_display, nbytes);
+  int len;
+  Bit8u *tmp = (Bit8u *)XFetchBytes (bx_x_display, &len);
+  // according to man XFetchBytes, tmp must be freed by XFree().  So allocate
+  // a new buffer with "new".  The keyboard code will free it with delete []
+  // when the paste is done.
+  Bit8u *buf = new Bit8u[len];
+  memcpy (buf, tmp, len);
+  *bytes = buf;
+  *nbytes = len;
+  XFree (tmp);
   return 1;
 }
 

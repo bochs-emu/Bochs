@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.16 2002-09-05 15:13:34 bdenney Exp $
+// $Id: wx.cc,v 1.17 2002-09-05 15:57:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -1008,13 +1008,15 @@ bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
       wxTheClipboard->GetData (data);
       wxString str = data.GetText ();
       int len = str.Len ();
-      Bit8u *buf = (Bit8u *) malloc (len);
+      Bit8u *buf = new Bit8u[len];
       memcpy (buf, str.c_str (), len);
       *bytes = buf;
       *nbytes = len;
       ret = 1;
-      // buf will be free()d in bx_keyb_c::paste_bytes or 
-      // bx_keyb_c::service_paste_buf.
+      // buf will be freed in bx_keyb_c::paste_bytes or 
+      // bx_keyb_c::service_paste_buf, using delete [].
+    } else {
+      BX_ERROR (("paste: could not open wxWindows clipboard"));
     }
     wxTheClipboard->Close ();
   }
