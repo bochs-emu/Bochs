@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.15 2001-11-13 07:00:09 bdenney Exp $
+$Id: user.dbk,v 1.16 2001-11-14 01:45:47 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -510,6 +510,13 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
       not had time to maintain the page or the Mac port since early 2000. If
       you have Mac development tools and want to contribute, contact the
       &devlist;. </entry>
+   </row>
+
+   <row>
+      <entry>Amiga MorphOS</entry>
+      <entry>
+      This port is written and maintained by Nicholai Benalal.
+      </entry>
    </row>
 
    <row>
@@ -1197,12 +1204,12 @@ How to build an RPM in Linux
 
 <section id="config-opts"><title>Configure Options</title>
 <para>
-This section describes the configure options for Bochs.  The first, 
-and perhaps most important option is <option>--help</option>, since it
-gives you a list of all the other options.  The options in the first table 
-choose which GUI library to use.  The default is <option>--with-x11</option>
-so if you don't include <option>--with-*</option> it will try to compile for X
-windows.
+This section describes the configure options for Bochs.  Perhaps the
+most important option is <option>--help</option>, since it gives you a list of
+all the other options.  The options in the first table choose which GUI library
+to use.  The default is <option>--with-x11</option> so if you don't include
+<option>--with-*</option> it will try to compile for X windows.
+</para>
 
 <table><title>Configure Options to select the GUI</title>
 <tgroup cols=3>
@@ -1217,8 +1224,8 @@ windows.
     <row>
       <entry>--with-x11</entry>
       <entry>yes</entry>
-      <entry>Use X11 GUI.  This is the default and you don't need
-	  this option if you are using X11.</entry>
+      <entry>Use X windows user interface.  This is the default, so you
+       never actually need to type it.</entry>
     </row>
     <row>
       <entry>--with-win32-vcpp</entry>
@@ -1226,8 +1233,30 @@ windows.
       <entry>Use Win32 GUI/Visual C++ environment.  This is for running
 	  configure on a platform which supports running configure, so
 	  that you may then transfer the configured code over to
-	  an MS Win32/Visual C++ environment.</entry>
+	  an MS Win32/Visual C++ environment.  See 
+	  <xref linkend="compiling-win32"> for details.
+	  </entry>
     </row>
+    <row>
+      <entry>--with-win32</entry>
+      <entry>no</entry>
+      <entry>Use Win32 GUI, but compile with a Win32/gcc
+      environment such as cygwin.  For cygwin, see .conf.win32-cygwin
+      for the correct compile options.
+    </row>
+    <row>
+      <entry>--with-carbon</entry>
+      <entry>no</entry>
+      <entry>Compile for MacOS X with the Carbon GUI.  See the
+      .conf.macosx file for the correct MacOS X compile options.
+    </row>
+    <row>
+      <entry>--with-amigaos</entry>
+      <entry>no</entry>
+      <entry>Compile for Amiga MorphOS.  This code is written by Nicholai
+      Benalal.</entry>
+    </row>
+
     <row>
       <entry>--with-rfb</entry>
       <entry>no</entry>
@@ -1236,30 +1265,30 @@ windows.
       code was written by Don Becker <email>x-odus@iname.com</email>,
       who has a Bochs-RFB web page on his site, 
       <ulink url="http://www.psyon.org/bochs-rfb/">http://www.psyon.org/bochs-rfb</ulink>.
+      RFB mode has been tested in Linux and Win32.
       </entry>
       </row>
     <row>
       <entry>--with-beos</entry>
       <entry>no</entry>
       <entry>Use BeOS GUI.  The configure script will run natively
-	  on BeOS; use this option when doing so.</entry>
+       on BeOS; use this option when doing so.</entry>
     </row>
     <row>
       <entry>--with-term</entry>
       <entry>no</entry>
-      <entry>Use text-only gui with curses library.
+      <entry>Use text-only gui with curses library.  Almost certainly
+      won't work right with the debugger or the control panel.
       </entry>
     </row>
     <row>
       <entry>--with-macos</entry>
       <entry>no</entry>
-      <entry>Use Macintosh/CodeWarrior environment</entry>
-    </row>
-    <row>
-      <entry>--with-win32</entry>
-      <entry>no</entry>
-      <entry>Use Win32 GUI, but compile with a Win32/gcc
-          environment.  This is used with cygwin.
+      <entry>Use Macintosh/CodeWarrior environment.  This is for running
+        configure on a platform which supports running configure, so that
+	you may then transfer the configured code over to the
+	real compile environment.  (Hasn't been tested in a long time.)
+	</entry>
     </row>
     <row>
       <entry>--with-nogui</entry>
@@ -1271,6 +1300,12 @@ windows.
   </tbody>
 </tgroup>
 </table>
+
+<para>
+The remaining options can generally be used with any GUI.  For each option
+such as --enable-cdrom, you can also write --disable-cdrom to explicitly
+turn it off.
+</para>
 
 <table><title>Frequently Used Configure Options</title>
 <tgroup cols=3>
@@ -1286,23 +1321,9 @@ windows.
       <entry>--enable-cpu-level={<option>3,4,5,6</option>}</entry>
       <entry>5</entry>
       <entry>
-      Select which CPU level to emulate.  Choices are 3,4,5,6 which mean target
-      386, 486, Pentium, or Pentium Pro emulation.  Pentium Pro support is
-      quite incomplete.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-processors={<option>1,2,3,...,15</option>}</entry>
-      <entry>1</entry>
-      <entry>
-      By changing to more than 1 processor, you enable SMP simulation.  This
-      allows you to boot Linux and maybe other OSes in SMP mode, and bochs will
-      simulate all the different CPUs and communication between them.  Do not
-      expect this option to speed up your simulation!  On the contrary, it has
-      to spend extra time simulating the different CPUs (even if they're mostly
-      idle) and the communication between them.  Use it to try out an SMP OS if
-      you don't have an SMP machine, or to debug your SMP OS drivers.  Click
-      here &FIXME; for more details on SMP in Bochs.
+      Select which CPU level to emulate.  Choices are 3,4,5,6 which mean to
+      target 386, 486, Pentium, or Pentium Pro emulation.  Pentium Pro support
+      is quite incomplete, so level 5 is the best choice for now.
       </entry>
     </row>
     <row>
@@ -1331,6 +1352,92 @@ windows.
       </entry>
     </row>
     <row>
+      <entry>--enable-control-panel</entry>
+      <entry>yes</entry>
+      <entry>
+      Enables text-mode configuration menus when you first start Bochs.  The
+      menus let you read in a bochsrc file, edit some options, and safe the new
+      bochsrc before starting the simulation.  Also enables a runtime
+      menu (controlled by a Config button on the Bochs display) which
+      lets you change certain settings during simulation.  The control panel
+      was added by Bryce Denney.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-new-pit</entry>
+      <entry>yes</entry>
+      <entry>
+      Enables Greg Alexander's PIT model, written during Summer 2001.  This
+      model was written from scratch to be much more complete than the old
+      Bochs PIT model, which was missing many registers and features.
+      If you disable this option, the old PIT model will be used instead.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-slowdown</entry>
+      <entry>no</entry>
+      <entry>
+      Enables Greg Alexander's experimental "slowdown timer" which tries to
+      keep the Bochs simulation time in sync with real time.  When Bochs
+      is executing many instructions, the slowdown timer will have no effect.
+      When Bochs is idle, or just waiting around for an interrupt, the 
+      slowdown timer kicks in to prevent Bochs time from speeding ahead.
+      This should solve problems like, "Why does my screen saver turn on
+      after 30 seconds?"
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-idle-hack</entry>
+      <entry>no</entry>
+      <entry>
+      Enables Roland Mainz's experimental idle code, which is intended to
+      keep Bochs from always using 100% of CPU time.  When Bochs is waiting
+      around for an interrupt, the idle code uses a select() loop and some
+      X11 tricks to wait until user input arrives.  This is designed to 
+      keep Bochs responsive while still yielding to other processes when
+      Bochs is idle.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-ne2000</entry>
+      <entry>no</entry>
+      <entry>Enable NE2000 network card support.  This requires a
+      low-level component to be written for each OS.  The NE2000
+      option is only supported on FreeBSD, OpenBSD, Linux, and Windows 
+      NT/2K<footnote> <para>Windows support was very recently added by
+      Don Becker, and will not work on Windows 95/98.</para> </footnote>.  When
+      enabled and configured, the NE2000 device model can talk to any computer
+      on the network EXCEPT FOR the local host.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-vga</entry>
+      <entry>yes</entry>
+      <entry>Use VGA emulation.  VGA is the only supported option and
+	  since it's the default, you don't need to include this option.</entry>
+    </row>
+    <row>
+      <entry>--enable-fpu</entry>
+      <entry>yes</entry>
+      <entry>If you want to compile bochs to make use of the FPU emulator
+	  written by Bill Metzenthen (the one used by the Linux kernel),
+	  use this option.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-split-hd</entry>
+      <entry>yes</entry>
+      <entry>
+      When enabled, this allows a series of partial hard disk image files to be
+      treated as if it was one large file.  The .bochsrc specifies the first
+      partial HD image (example win95-1) and then bochs searches for the other
+      partial images in as a sequence (win95-2, win95-3, etc.) and opens them
+      all.  Then, it treats the series as if there was a single large file
+      created by "cat win95-1 win95-2 win95-3".  This trick works for both
+      diskc and diskd.  All files must be a multiple of 512 bytes.
+      </entry>
+    </row>
+    <row>
       <entry>--enable-debugger</entry>
       <entry>no</entry>
       <entry>
@@ -1353,28 +1460,12 @@ windows.
 	  panic in bochs.  You don't need this option.</entry>
     </row>
     <row>
-      <entry>--enable-vga</entry>
-      <entry>yes</entry>
-      <entry>Use VGA emulation.  VGA is the only supported option and
-	  since it's the default, you don't need to include this option.</entry>
-    </row>
-    <row>
-      <entry>--enable-fpu</entry>
-      <entry>yes</entry>
-      <entry>If you want to compile bochs to make use of the FPU emulator
-	  written by Bill Metzenthen (the one used by the Linux kernel),
-	  use this option.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-ne2000</entry>
+      <entry>--enable-cpp</entry>
       <entry>no</entry>
-      <entry>Enable NE2000 network card support.  This requires a
-      low-level component to be written for each OS.  The NE2000
-      option is only supported on FreeBSD, OpenBSD, and Linux<footnote>
-      <para> Windows network support coming soon!  </para>
-      </footnote>.  When enabled and configured, the NE2000 device model
-      can talk to any computer on the network EXCEPT FOR the local host.
+      <entry>
+      Use .cpp as C++ suffix.  Renames all the .cc files to .cpp for use with
+      compilers which want that, like MS C++ compilers.  Don't use this option
+      unless you know you need it.
       </entry>
     </row>
   </tbody>
@@ -1393,12 +1484,15 @@ windows.
   </thead>
   <tbody>
     <row>
-      <entry>--enable-cpp</entry>
+      <entry>--enable-iodebug</entry>
       <entry>no</entry>
       <entry>
-      Use .cpp as C++ suffix.  Moves all the .cc files to .cpp for use with
-      compilers which want that, like MS C++ compilers.  Don't use this option
-      unless you know you need it.
+      Dave Poirier has written an experimental interface to the debugger
+      using I/O ports, so that software running in the guest OS can access
+      features of the debugger.  You only want this option if you are 
+      developing guest OS code for use in Bochs.  In other words, most people
+      don't.  Also, it should only be used with --enable-debugger.  See section
+      &FIXME; in the Developer's Guide for details.
       </entry>
     </row>
     <row>
@@ -1423,6 +1517,32 @@ windows.
 	  this option, you don't.</entry>
     </row>
     <row>
+      <entry>--enable-processors={<option>1,2,3,...,15</option>}</entry>
+      <entry>1</entry>
+      <entry>
+      By changing to more than 1 processor, you enable SMP simulation.  This
+      allows you to boot Linux and maybe other OSes in SMP mode, and bochs will
+      simulate all the different CPUs and communication between them.  Do not
+      expect this option to speed up your simulation!  On the contrary, it has
+      to spend extra time simulating the different CPUs (even if they're mostly
+      idle) and the communication between them.  Use it to try out an SMP OS if
+      you don't have an SMP machine, or to debug SMP OS drivers.  Click
+      here &FIXME; for more details on SMP in Bochs.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-apic</entry>
+      <entry>no</entry>
+      <entry>
+      In an SMP machine, there is an APIC (Advanced Programmable Interrupt
+      Controller) built into each processor and a separate I/O APIC.  The
+      APICs are used for inter-processor communication, so they must be
+      enabled for SMP to work.  The default is "no" when there is one
+      processor and "yes" when there is more than one processor.  Normally,
+      the default is correct and you would never need to type this option.
+      </entry>
+    </row>
+    <row>
       <entry>--enable-loader</entry>
       <entry>no</entry>
       <entry>Support calling external loader from debugger.  This
@@ -1433,33 +1553,33 @@ windows.
       <entry>no</entry>
       <entry>
       Compile in support for instrumentation.  This allows you to collect
-      instrumentation data from bochs as it executes code.  You have to create your
-      own instrumentation library and define the instrumentation macros (hooks in
-      bochs) to either call your library functions or not, depending upon whether
-      you want to collect each piece of data.  [Kevin wrote: I broke some of the
-      hooks when I recoded the fetch/decode loop.]
+      instrumentation data from bochs as it executes code.  You have to create
+      your own instrumentation library and define the instrumentation macros
+      (hooks in bochs) to either call your library functions or not, depending
+      upon whether you want to collect each piece of data.  [Kevin wrote: I
+      broke some of the hooks when I recoded the fetch/decode loop.]
       </entry>
     </row>
     <row>
       <entry>--enable-simid={0, 1}</entry>
       <entry>0
       <entry>
-      CPU simulator ID.  You likely don't need this option.  If you are using bochs
-      to cosimulate, that is to run multiple simulators in parallel so that you can
-      compare results and check for divergence, each simulator needs an ID.  When
-      you only have one CPU simulator (as usual) the default of 0 is fine.  [Kevin
-      wrote: I use this option occasionally to run 2 versions of bochs against each
-      other and check for divergence, to find bugs etc.  This option gets broken
-      more than not due to architectural changes, and I usually end of fixing it
-      each time I use it.]
+      CPU simulator ID.  You likely don't need this option.  If you are using
+      bochs to cosimulate, that is to run multiple simulators in parallel so
+      that you can compare results and check for divergence, each simulator
+      needs an ID.  When you only have one CPU simulator (as usual) the default
+      of 0 is fine.  [Kevin wrote: I use this option occasionally to run 2
+      versions of bochs against each other and check for divergence, to find
+      bugs etc.  This option gets broken more than not due to architectural
+      changes, and I usually end of fixing it each time I use it.]
       </entry>
     </row>
     <row>
       <entry>--enable-num-sim={1, 2}</entry>
       <entry>1</entry>
       <entry>
-      Number of CPU simulators.  The default of 1 is likely what you want, so don't
-      use this option.  It is for assigning an ID to the simulator, for
+      Number of CPU simulators.  The default of 1 is likely what you want, so
+      don't use this option.  It is for assigning an ID to the simulator, for
       cosimulation described above.
       </entry>
     </row>
@@ -1467,15 +1587,16 @@ windows.
       <entry>--enable-time0=n</entry>
       <entry>no</entry>
       <entry>
-      Start CMOS clock at at time0 of n instead of using time().  You likely don't
-      want this option.  When debugging, it is very helpful to have deterministic
-      execution, and the clock is something that can skew determinism.  If you
-      supply this option, pass it a value returned by the time(NULL) call, relating
-      to the time you want bochs to start the CMOS clock from.  For instance,
-      '--enable-time0=917385580'.  If you use this option but don't provide a
-      value, configure uses a default value.  Note that the time0 option in
-      .bochsrc will override this value.  Without this option, the CMOS clock uses
-      a time0 based on the value of time(NULL), which is probably what you want.
+      Start CMOS clock at at time0 of n instead of using time().  You likely
+      don't want this option.  When debugging, it is very helpful to have
+      deterministic execution, and the clock is something that can skew
+      determinism.  If you supply this option, pass it a value returned by the
+      time(NULL) call, relating to the time you want bochs to start the CMOS
+      clock from.  For instance, '--enable-time0=917385580'.  If you use this
+      option but don't provide a value, configure uses a default value.  Note
+      that the time0 option in .bochsrc will override this value.  Without this
+      option, the CMOS clock uses a time0 based on the value of time(NULL),
+      which is probably what you want.
       </entry>
     </row>
     <row>
@@ -1488,7 +1609,6 @@ windows.
 </tgroup>
 </table>
 
-</para>
 </section> <!-- end of Configure Options -->
 
 <section><title>Transcript of Successful Compilation</title>
