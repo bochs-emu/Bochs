@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.22.2.10 2002-03-18 20:13:46 bdenney Exp $
+// $Id: siminterface.h,v 1.22.2.11 2002-03-25 18:27:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.10 2002-03-18 20:13:46 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.11 2002-03-25 18:27:24 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -162,8 +162,7 @@ typedef enum {
   BX_SYNC_EVT_ASK_PARAM,          // simulator -> cpanel -> simulator
   BX_SYNC_EVT_TICK,               // simulator -> cpanel, wait for response.
   __ALL_EVENTS_BELOW_ARE_ASYNC__,
-  BX_ASYNC_EVT_KEY_PRESS,  // vga gui -> simulator
-  BX_ASYNC_EVT_KEY_RELEASE,       // vga gui -> simulator
+  BX_ASYNC_EVT_KEY,               // vga gui -> simulator
   BX_ASYNC_EVT_MOUSE,             // vga gui -> simulator
   BX_ASYNC_EVT_SET_PARAM,         // cpanel -> simulator
   BX_ASYNC_EVT_LOG_MSG,           // simulator -> cpanel
@@ -189,13 +188,15 @@ typedef union {
 // mentioning watched values that changed, but so far it's just for 
 // that one thing.  There is no data associated with a tick event.
 
-// Event type: BX_ASYNC_EVT_KEY_PRESS or BX_ASYNC_EVT_KEY_RELEASE
+// Event type: BX_ASYNC_EVT_KEY
 // (unused)
 // A key event can be sent from the GUI to the Bochs simulator.  It is
 // asynchronous.  Currently not used, but when Psyon's wxwindows gui is
 // integrated, we will need key events.
 typedef struct {
-  Bit16u scancode;   // what was pressed?
+  // what was pressed?  This is a BX_KEY_* value.  For key releases,
+  // BX_KEY_RELEASED is ORed with the base BX_KEY_*.
+  Bit32u bx_key;
 } BxKeyEvent;
 
 // Event type: BX_ASYNC_EVT_MOUSE
