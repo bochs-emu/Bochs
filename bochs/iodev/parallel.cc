@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.9 2002-10-23 19:31:53 bdenney Exp $
+// $Id: parallel.cc,v 1.20.4.10 2002-10-24 05:32:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,10 +35,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
-
 #define LOG_THIS theParallelDevice->
-
-#define OUTPUT (BX_PAR_THIS s.output)
 
 bx_parallel_c *theParallelDevice = NULL;
 
@@ -72,7 +69,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.9 2002-10-23 19:31:53 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.10 2002-10-24 05:32:17 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
@@ -102,8 +99,8 @@ bx_parallel_c::init(void)
     BX_PAR_THIS s.initmode = 0;
 
     if (strlen(bx_options.par[0].Ooutfile->getptr ()) > 0) {
-      OUTPUT = fopen(bx_options.par[0].Ooutfile->getptr (), "wb");
-      if (!OUTPUT)
+      s.output = fopen(bx_options.par[0].Ooutfile->getptr (), "wb");
+      if (!s.output)
         BX_PANIC (("Could not open '%s' to write parport1 output",
                    bx_options.par[0].Ooutfile->getptr ()));
     }
@@ -119,9 +116,9 @@ bx_parallel_c::reset(unsigned type)
 bx_parallel_c::virtual_printer(void)
 {
   if (BX_PAR_THIS s.STATUS.slct) {
-    if (OUTPUT != NULL) {
-      fputc(BX_PAR_THIS s.data, OUTPUT);
-      fflush (OUTPUT);
+    if (BX_PAR_THIS s.output != NULL) {
+      fputc(BX_PAR_THIS s.data, BX_PAR_THIS s.output);
+      fflush (BX_PAR_THIS s.output);
       }
     if (BX_PAR_THIS s.CONTROL.irq == 1) {
       BX_PIC_RAISE_IRQ(7);
