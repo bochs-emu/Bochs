@@ -2781,7 +2781,6 @@ void bx_sb16_c::writedeltatime(Bit32u deltatime)
 
 void bx_sb16_c::finishmidifile()
 {
-  fpos_t tracklen;
   struct { 
     Bit8u delta, statusbyte, metaevent, length;
   } metatrackend = { 0, 0xff, 0x2f, 0 };
@@ -2789,19 +2788,20 @@ void bx_sb16_c::finishmidifile()
      // Meta event track end (0xff 0x2f 0x00) plus leading delta time
   fwrite(&metatrackend, 1, sizeof metatrackend, MIDIDATA );
 
-  fgetpos(MIDIDATA, &tracklen);
+  Bit32u tracklen = ftell(MIDIDATA);
+  if (tracklen < 0)
+    BX_PANIC (("ftell failed in finishmidifile"));
+  if (tracklen < 22)
+    BX_PANIC (("finishmidifile with track length too short"));
   tracklen -= 22;    // subtract the midi file and track header
-
   fseek(MIDIDATA, 22 - 4, SEEK_SET);
-
-     // value has to be in big endian
+  // value has to be in big endian
 #ifdef BX_LITTLE_ENDIAN
   tracklen = (tracklen << 24) | (tracklen >> 24) |
-        ((tracklen & 0x00ff0000) >> 8) |
-        ((tracklen & 0x0000ff00) << 8);
+	((tracklen & 0x00ff0000) >> 8) |
+	((tracklen & 0x0000ff00) << 8);
 #endif
   fwrite(&tracklen, 4, 1, MIDIDATA);
-
   return;
 }
 
