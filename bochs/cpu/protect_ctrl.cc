@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.17 2002-10-08 14:43:18 ptrumpet Exp $
+// $Id: protect_ctrl.cc,v 1.18 2002-10-11 01:11:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -459,7 +459,10 @@ BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     bx_descriptor_t  descriptor;
     bx_selector_t    selector;
     Bit16u raw_selector;
-    Bit32u dword1, dword2, dword3;
+    Bit32u dword1, dword2;
+#if BX_SUPPORT_X86_64
+    Bit32u dword3;
+#endif
 
 
     /* #GP(0) if the current privilege level is not 0 */

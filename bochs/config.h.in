@@ -618,6 +618,8 @@ typedef
 
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_MMX 0
+#define BX_SUPPORT_SSE  0
+#define BX_SUPPORT_SSE2 0
 #define BX_SUPPORT_4MEG_PAGES 0
 #define BX_SupportGuest2HostTLB 0
 #define BX_SupportRepeatSpeedups 0
@@ -661,7 +663,13 @@ typedef
 #endif
 
 #if (BX_SUPPORT_MMX && !BX_SUPPORT_FPU)
-#error "MMX cannot be compiled without FPU support";
+#error "MMX cannot be compiled without FPU support"
+#endif
+
+#if (BX_SUPPORT_SSE || BX_SUPPORT_SSE2)
+#if (!BX_SUPPORT_FPU) || (!BX_SUPPORT_MMX)
+#error "SSE cannot be compiled without FPU+MMX support"
+#endif
 #endif
 
 #if BX_SUPPORT_X86_64

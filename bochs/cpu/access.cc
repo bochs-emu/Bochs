@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.30 2002-09-28 00:54:04 kevinlawton Exp $
+// $Id: access.cc,v 1.31 2002-10-11 01:11:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1156,3 +1156,29 @@ accessOK:
   write_virtual_checks(seg, offset, 8);
   goto accessOK;
 }
+
+
+#if BX_SUPPORT_SSE
+
+  void
+BX_CPU_C::readVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
+{
+}
+
+  void
+BX_CPU_C::readVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
+{
+}
+
+  void
+BX_CPU_C::writeVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
+{
+}
+
+
+  void
+BX_CPU_C::writeVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
+{
+}
+
+#endif  // #if BX_SUPPORT_SSE
