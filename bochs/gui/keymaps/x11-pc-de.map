@@ -1,6 +1,6 @@
 # Bochs Keymap file
-# $Id: x11-pc-de.map,v 1.3 2002-03-11 20:35:28 vruppert Exp $
-# Target: PC(x86) keyboard, US keymap
+# $Id: x11-pc-de.map,v 1.4 2002-03-12 23:56:01 cbothamy Exp $
+# Target: PC(x86) keyboard, DE keymap
 # Author: Volker Ruppert
 #
 # The keymap file describes the layout of a keyboard, and how it translates
