@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.20 2004-08-06 15:49:54 vruppert Exp $
+// $Id: pci2isa.cc,v 1.21 2004-09-12 18:04:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -156,6 +156,9 @@ bx_pci2isa_c::reset(unsigned type)
 bx_pci2isa_c::pci_register_irq(unsigned pirq, unsigned irq)
 {
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
+    if (BX_P2I_THIS s.pci_conf[0x60 + pirq] < 16) {
+      pci_unregister_irq(pirq);
+    }
     BX_P2I_THIS s.pci_conf[0x60 + pirq] = irq;
     if (!BX_P2I_THIS s.irq_registry[irq]) {
       DEV_register_irq(irq, "PIIX3 IRQ routing");
@@ -171,6 +174,7 @@ bx_pci2isa_c::pci_unregister_irq(unsigned pirq)
   if (irq < 16) {
     BX_P2I_THIS s.irq_registry[irq] &= ~(1 << pirq);
     if (!BX_P2I_THIS s.irq_registry[irq]) {
+      BX_P2I_THIS pci_set_irq(0x08, pirq+1, 0);
       DEV_unregister_irq(irq, "PIIX3 IRQ routing");
     }
     BX_P2I_THIS s.pci_conf[0x60 + pirq] = 0x80;
