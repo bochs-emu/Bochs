@@ -25,6 +25,14 @@
 // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
 ///////////////////////////////////////////////////////////////////
 
+#define BX_DEBUG_LINUX 0
+// if simulating Linux, this provides a few more debugging options
+// such as tracing all system calls.
+
+#define USE_READLINE 0
+// adds support for the GNU readline library in the debugger command 
+// prompt.
+
 // I rebuilt the code which provides timers to IO devices.
 // Setting this to 1 will introduce a little code which
 // will panic out if cases which shouldn't happen occur.
