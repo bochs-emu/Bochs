@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.60 2002-09-15 12:07:09 bdenney Exp $
+// $Id: siminterface.cc,v 1.61 2002-09-15 12:08:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -82,7 +82,7 @@ public:
   virtual void debug_break ();
   virtual void debug_interpret_cmd (char *cmd);
   virtual char *debug_get_next_command ();
-  virtual void debug_fputs (const char *cmd);
+  virtual void debug_puts (const char *cmd);
 #endif
 };
 
@@ -551,7 +551,7 @@ char *bx_real_sim_c::debug_get_next_command ()
   return NULL;
 }
 
-void bx_real_sim_c::debug_fputs (const char *text)
+void bx_real_sim_c::debug_puts (const char *text)
 {
 #if BX_WITH_WX
   // send message to the GUI

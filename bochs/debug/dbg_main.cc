@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.64 2002-09-15 12:07:08 bdenney Exp $
+// $Id: dbg_main.cc,v 1.65 2002-09-15 12:08:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -224,7 +224,7 @@ void dbg_printf (const char *fmt, ...)
   char *buf = new char[1024];
   vsprintf (buf, fmt, ap);
   va_end(ap);
-  SIM->debug_fputs (buf); // send to debugger, which will free buf when done.
+  SIM->debug_puts (buf); // send to debugger, which will free buf when done.
 }
 
   int
