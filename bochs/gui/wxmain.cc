@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.53 2002-09-20 21:25:09 bdenney Exp $
+// $Id: wxmain.cc,v 1.54 2002-09-22 02:43:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -358,6 +358,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // create a MyPanel that covers the whole frame
   panel = new MyPanel (this, -1);
   panel->SetBackgroundColour (wxColour (0,0,0));
+  panel->SetFocus ();
   wxGridSizer *sz = new wxGridSizer (1, 1);
   sz->Add (panel, 0, wxGROW);
   SetAutoLayout (TRUE);
@@ -1121,7 +1122,7 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
       }
     } else {
       // a debugger command is waiting for us!
-      wxLogDebug ("sending debugger command '%s' that was waiting", debugCommandEvent);
+      wxLogDebug ("sending debugger command '%s' that was waiting", debugCommand);
       be->u.debugcmd.command = debugCommand;
       debugCommand = NULL;  // ready for the next one
       debugCommandEvent = NULL;
