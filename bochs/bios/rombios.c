@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.26 2001-12-26 14:53:40 vruppert Exp $
+// $Id: rombios.c,v 1.27 2002-01-01 21:39:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -273,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.26 $";
-static char bios_date_string[] = "$Date: 2001-12-26 14:53:40 $";
+static char bios_cvs_version_string[] = "$Revision: 1.27 $";
+static char bios_date_string[] = "$Date: 2002-01-01 21:39:28 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.26 2001-12-26 14:53:40 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.27 2002-01-01 21:39:28 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -3157,27 +3157,148 @@ printf("floppy f05\n");
       head        = GET_DH();
       drive       = GET_DL();
 
-      if (drive > 1) {
+      if ((drive > 1) || (head > 1) || (track > 79) ||
+          (num_sectors == 0) || (num_sectors > 18)) {
         SET_AH(1);
         set_diskette_ret_status(1);
         SET_CF(); // error occurred
 	}
-      drive_type = inb_cmos(0x10);
-      if (drive == 0)
-        drive_type >>= 4;
-      else
-        drive_type &= 0x0f;
-      if (drive_type == 0) {
+
+      // see if drive exists
+      if (floppy_drive_exists(drive) == 0) {
         SET_AH(0x80); // drive not responding
         set_diskette_ret_status(0x80);
         SET_CF(); // error occurred
         return;
         }
 
-      /* nop */
+      // see if media in drive, and type is known
+      if (floppy_media_known(drive) == 0) {
+        if (floppy_media_sense(drive) == 0) {
+          SET_AH(0x0C); // Media type not found
+          set_diskette_ret_status(0x0C);
+          SET_AL(0); // no sectors read
+          SET_CF(); // error occurred
+          return;
+          }
+        }
+
+      // set up DMA controller for transfer
+      page = (ES >> 12);   // upper 4 bits
+      base_es = (ES << 4); // lower 16bits contributed by ES
+      base_address = base_es + BX; // lower 16 bits of address
+                                   // contributed by ES:BX
+      if ( base_address < base_es ) {
+        // in case of carry, adjust page by 1
+        page++;
+        }
+      base_count = (num_sectors * 4) - 1;
+
+      // check for 64K boundary overrun
+      last_addr = base_address + base_count;
+      if (last_addr < base_address) {
+        SET_AH(0x09);
+        set_diskette_ret_status(0x09);
+        SET_AL(0); // no sectors read
+        SET_CF(); // error occurred
+        return;
+        }
+
+      outb(0x000a, 0x06);
+      outb(0x000c, 0x00); // clear flip-flop
+      outb(0x0004, base_address);
+      outb(0x0004, base_address>>8);
+      outb(0x000c, 0x00); // clear flip-flop
+      outb(0x0005, base_count);
+      outb(0x0005, base_count>>8);
+      mode_register = 0x4a; // single mode, increment, autoinit disable,
+                            // transfer type=read, channel 2
+      outb(0x000b, mode_register);
+      // port 81: DMA-1 Page Register, channel 2
+      outb(0x0081, page);
+      outb(0x000a, 0x02);
+
+      // set up floppy controller for transfer
+      val8 = read_byte(0x0000, 0x043e);
+      val8 &= 0x7f;
+      write_byte(0x0000, 0x043e, val8);
+      // turn on motor of selected drive, DMA & int enabled, normal operation
+      if (drive)
+        dor = 0x20;
+      else
+        dor = 0x10;
+      dor |= 0x0c;
+      dor |= drive;
+      outb(0x03f2, dor);
+      // check port 3f4 for drive readiness
+      val8 = inb(0x3f4);
+      if ( (val8 & 0xf0) != 0x80 )
+        panic("int13_diskette:f05: ctrl not ready");
+
+      // send read-normal-data command (6 bytes) to controller
+      outb(0x03f5, 0x4d); // 4d: format track
+      outb(0x03f5, (head << 2) | drive); // HD DR1 DR2
+      outb(0x03f5, 2); // 512 byte sector size
+      outb(0x03f5, num_sectors); // number of sectors per track
+      outb(0x03f5, 0); // Gap length
+      outb(0x03f5, 0xf6); // Fill byte
+      // turn on interrupts
+  #asm
+      sti
+  #endasm
+      // wait on 40:3e bit 7 to become 1
+      val8 = (read_byte(0x0000, 0x043e) & 0x80);
+      while ( val8 == 0 ) {
+        val8 = (read_byte(0x0000, 0x043e) & 0x80);
+        }
+     val8 = 0; // separate asm from while() loop
+     // turn off interrupts
+  #asm
+      cli
+  #endasm
+      // set 40:3e bit 7 to 0
+      val8 = read_byte(0x0000, 0x043e);
+      val8 &= 0x7f;
+      write_byte(0x0000, 0x043e, val8);
+      // check port 3f4 for accessibility to status bytes
+      val8 = inb(0x3f4);
+      if ( (val8 & 0xc0) != 0xc0 )
+        panic("int13_diskette: ctrl not ready");
+
+      // read 7 return status bytes from controller
+      // using loop index broken, have to unroll...
+      return_status[0] = inb(0x3f5);
+      return_status[1] = inb(0x3f5);
+      return_status[2] = inb(0x3f5);
+      return_status[3] = inb(0x3f5);
+      return_status[4] = inb(0x3f5);
+      return_status[5] = inb(0x3f5);
+      return_status[6] = inb(0x3f5);
+      // record in BIOS Data Area
+      write_byte(0x0040, 0x0042, return_status[0]);
+      write_byte(0x0040, 0x0043, return_status[1]);
+      write_byte(0x0040, 0x0044, return_status[2]);
+      write_byte(0x0040, 0x0045, return_status[3]);
+      write_byte(0x0040, 0x0046, return_status[4]);
+      write_byte(0x0040, 0x0047, return_status[5]);
+      write_byte(0x0040, 0x0048, return_status[6]);
+
+      if ( (return_status[0] & 0xc0) != 0 ) {
+        if ( (return_status[1] & 0x02) != 0 ) {
+          // diskette not writable.
+          // AH=status code=0x03 (tried to write on write-protected disk)
+          // AL=number of sectors written=0
+          AX = 0x0300;
+          SET_CF();
+          return;
+        } else {
+          panic("int13_diskette_function: write error");
+        }
+      }
+
       SET_AH(0);
       set_diskette_ret_status(0);
-      set_diskette_current_cyl(drive, track);
+      set_diskette_current_cyl(drive, 0);
       CLEAR_CF(); // successful
       return;
 
@@ -4580,7 +4701,8 @@ post_default_ints:
 
 
   ;; DMA
-  ;; nothing for now
+  mov al, #0xC0
+  out 0xD6, al ; cascade mode of channel 4 enabled
 
   ;; Parallel setup
   SET_INT_VECTOR(0x0F, #0xF000, #dummy_iret_handler)
@@ -4642,6 +4764,20 @@ notrom:
   mov  ds,ax
 
   ;; PIC
+  mov al, #0x11 ; send initialisation commands
+  out 0x20, al
+  out 0xa0, al
+  mov al, #0x08
+  out 0x21, al
+  mov al, #0x70
+  out 0xa1, al
+  mov al, #0x04
+  out 0x21, al
+  mov al, #0x02
+  out 0xa1, al
+  mov al, #0x01
+  out 0x21, al
+  out 0xa1, al
   mov  al, #0x00
   out  0x21, AL ;master pic: all IRQs unmasked
   out  0xA1, AL ;slave  pic: all IRQs unmasked
