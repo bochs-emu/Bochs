@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.51 2002-11-19 05:47:44 bdenney Exp $
+// $Id: cdrom.cc,v 1.52 2002-11-20 12:23:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,6 +72,14 @@ extern "C" {
 #define BX_CD_FRAMESIZE CDROM_BLK_2048
 }
 #endif /* __sun */
+
+#ifdef __DJGPP__
+extern "C" {
+#include <sys/ioctl.h>
+#define BX_CD_FRAMESIZE 2048
+#define CD_FRAMESIZE 2048
+}
+#endif
 
 #ifdef __BEOS__
 #include "cdrom_beos.h"
@@ -455,7 +463,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.51 2002-11-19 05:47:44 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.52 2002-11-20 12:23:41 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

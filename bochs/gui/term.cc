@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.24 2002-11-19 05:47:44 bdenney Exp $
+// $Id: term.cc,v 1.25 2002-11-20 12:23:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -108,8 +108,12 @@ bx_term_gui_c::get_sighandler_mask ()
     (1<<SIGHUP)
     | (1<<SIGINT)
     | (1<<SIGQUIT)
+#ifdef SIGSTOP
     | (1<<SIGSTOP)
+#endif
+#ifdef SIGTSTP
     | (1<<SIGTSTP)
+#endif
     | (1<<SIGTERM);
 }
 
@@ -120,12 +124,16 @@ bx_term_gui_c::sighandler(int signo)
 	case SIGINT:
 		do_scan(BX_KEY_C,0,1,0);
 		break;
+#ifdef SIGSTOP
 	case SIGSTOP:
 		do_scan(BX_KEY_S,0,1,0);
 		break;
+#endif
+#ifdef SIGTSTP
 	case SIGTSTP:
 		do_scan(BX_KEY_Z,0,1,0);
 		break;
+#endif
 	default:
 		BX_INFO(("sig %d caught",signo));
 		break;

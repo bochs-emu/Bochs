@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.169 2002-11-19 16:36:17 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.170 2002-11-20 12:23:42 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1867,8 +1867,9 @@ if test "$use_curses" = yes -a "$cross_configure" = 0; then
   AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
   AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM='-lncurses')
   AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM='-ltermlib')
+  AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM='-lpdcurses')
   if test "$GUI_LINK_OPTS_TERM" = ""; then
-    echo Curses library not found: tried curses, ncurses, and termlib.
+    echo Curses library not found: tried curses, ncurses, termlib and pdcurses.
     exit 1
   fi
 fi
