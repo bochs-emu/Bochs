@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.29 2004-11-03 06:35:48 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.30 2005-02-16 19:59:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1092,7 +1092,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     // return selector must be non-null, else #GP(0) (???)
     if ( (raw_cs_selector & 0xfffc) == 0 ) {
-      BX_PANIC(("return_protected: CS null"));
+      BX_INFO(("return_protected: CS null"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -1211,7 +1211,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     /* selector must be non-null else #GP(0) (???) */
     if ( (raw_cs_selector & 0xfffc) == 0 ) {
-      BX_PANIC(("return_protected: CS selector null"));
+      BX_INFO(("return_protected: CS selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
@@ -1226,7 +1226,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
         cs_descriptor.segment==0  ||
         cs_descriptor.u.segment.executable==0)
     {
-      BX_PANIC(("return_protected: AR byte not code"));
+      BX_INFO(("return_protected: AR byte not code"));
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
     }
@@ -1236,7 +1236,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     if (cs_descriptor.u.segment.c_ed==0 &&
         cs_descriptor.dpl!=cs_selector.rpl)
     {
-      BX_PANIC(("return_protected: non-conforming seg DPL != selector.rpl"));
+      BX_INFO(("return_protected: non-conforming seg DPL != selector.rpl"));
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
     }
