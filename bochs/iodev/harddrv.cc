@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.101 2003-06-07 19:16:54 vruppert Exp $
+// $Id: harddrv.cc,v 1.102 2003-06-08 08:21:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.101 2003-06-07 19:16:54 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.102 2003-06-08 08:21:12 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3455,7 +3455,7 @@ void sparse_image_t::read_header()
  pagesize_shift = 0;
  while ((pagesize >> pagesize_shift) > 1) pagesize_shift++;
 
- if ((1 << pagesize_shift) != pagesize)
+ if ((uint32)(1 << pagesize_shift) != pagesize)
  {
    panic("failed block size header check");
  }
@@ -3503,7 +3503,7 @@ void sparse_image_t::read_header()
        panic(strerror(errno));
    }
 
-   if ((sizeof(uint32) * numpages) != ret)
+   if ((int)(sizeof(uint32) * numpages) != ret)
    {
      panic("could not read entire block table");
    }
@@ -3680,7 +3680,7 @@ ssize_t sparse_image_t::read_page_fragment(uint32 read_virtual_page, uint32 read
      panic(strerror(errno));
    }
 
-   if (readret != read_size)
+   if ((size_t)readret != read_size)
    {
      panic("could not read block contents from file");
    }
@@ -3809,7 +3809,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
        if (-1 == ret) panic(strerror(errno));
 
-       if (pagesize != ret) panic("failed to write entire merged page to disk");
+       if (pagesize != (uint32)ret) panic("failed to write entire merged page to disk");
 
        if (can_write != pagesize)
        {
@@ -3859,7 +3859,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      panic(strerror(errno));
    }
 
-   if (writeret != can_write)
+   if ((size_t)writeret != can_write)
    {
      panic("could not write block contents to file");
    }
@@ -3912,7 +3912,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      //printf("Writing header at position %ld size %ld\n", (long) pagetable_write_from, (long) write_bytecount);
      ret = ::write(fd, &pagetable[update_pagetable_start], write_bytecount);
      if (ret == -1) panic(strerror(errno));
-     if (ret != write_bytecount) panic("could not write entire updated block header");
+     if ((size_t)ret != write_bytecount) panic("could not write entire updated block header");
 
      underlying_current_filepos = pagetable_write_from + write_bytecount;
    }
@@ -4199,7 +4199,7 @@ redolog_t::open (const char* filename, const char *type, Bit64u size)
         ::lseek(fd,dtoh32(header.standard.header),SEEK_SET);
         res = ::read(fd, catalog, dtoh32(header.specific.catalog) * sizeof(Bit32u)) ;
 
-        if (res !=  dtoh32(header.specific.catalog) * sizeof(Bit32u))
+        if (res !=  (ssize_t)(dtoh32(header.specific.catalog) * sizeof(Bit32u)))
         {
                BX_PANIC(("redolog : could not read catalog %d=%d",res, dtoh32(header.specific.catalog))); 
                return -1;
@@ -4225,6 +4225,8 @@ redolog_t::open (const char* filename, const char *type, Bit64u size)
 
         BX_DEBUG(("redolog : each bitmap is %d blocs", bitmap_blocs));
         BX_DEBUG(("redolog : each extent is %d blocs", extent_blocs));
+
+        return 0;
 }
 
 void 
@@ -4243,12 +4245,15 @@ redolog_t::close ()
 off_t
 redolog_t::lseek (off_t offset, int whence)
 {
-        if ((offset % 512) != 0)
+        if ((offset % 512) != 0) {
                 BX_PANIC( ("redolog : lseek HD with offset not multiple of 512"));
-        if (whence != SEEK_SET)
+                return -1;
+        }
+        if (whence != SEEK_SET) {
                 BX_PANIC( ("redolog : lseek HD with whence not SEEK_SET"));
-
-        if (offset > dtoh64(header.specific.disk))
+                return -1;
+        }
+        if (offset > (off_t)dtoh64(header.specific.disk))
         {
                 BX_PANIC(("redolog : lseek to byte %ld failed", (long)offset));
                 return -1;
@@ -4258,6 +4263,8 @@ redolog_t::lseek (off_t offset, int whence)
         extent_offset = (offset % dtoh32(header.specific.extent)) / 512;
 
         BX_DEBUG(("redolog : lseeking extent index %d, offset %d",extent_index, extent_offset));
+
+        return offset;
 }
 
 ssize_t
@@ -4288,9 +4295,9 @@ redolog_t::read (void* buf, size_t count)
 
         ::lseek(fd, bitmap_offset, SEEK_SET);
 
-        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != dtoh32(header.specific.bitmap))
+        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != (ssize_t)dtoh32(header.specific.bitmap))
         {
-                BX_PANIC(("redolog : failed to read bitmap for extent %ld", extent_index));
+                BX_PANIC(("redolog : failed to read bitmap for extent %d", extent_index));
                 return 0;
         }
 
@@ -4370,9 +4377,9 @@ redolog_t::write (const void* buf, size_t count)
         // Write bitmap
         // FIXME if same extent_index as before we can skip bitmap read
         ::lseek(fd, bitmap_offset, SEEK_SET);
-        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != dtoh32(header.specific.bitmap))
+        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != (ssize_t)dtoh32(header.specific.bitmap))
         {
-                BX_PANIC(("redolog : failed to read bitmap for extent %ld", extent_index));
+                BX_PANIC(("redolog : failed to read bitmap for extent %d", extent_index));
                 return 0;
         }
 
@@ -4483,7 +4490,7 @@ off_t undoable_image_t::lseek (off_t offset, int whence)
 ssize_t undoable_image_t::read (void* buf, size_t count)
 {
       // This should be fixed if count != 512
-      if (redolog->read((char*) buf, count) != count)
+      if ((size_t)redolog->read((char*) buf, count) != count)
               return ro_disk->read((char*) buf, count);
       else 
               return count;
@@ -4554,7 +4561,7 @@ off_t volatile_image_t::lseek (off_t offset, int whence)
 ssize_t volatile_image_t::read (void* buf, size_t count)
 {
       // This should be fixed if count != 512
-      if (redolog->read((char*) buf, count) != count)
+      if ((size_t)redolog->read((char*) buf, count) != count)
               return ro_disk->read((char*) buf, count);
       else 
               return count;
