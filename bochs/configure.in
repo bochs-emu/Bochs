@@ -557,8 +557,8 @@ if test "$want_readline" = yes; then
   )
   LIBS=$OLD_LIBS
   if test "$rl_without_curses_ok" = no -a "$rl_with_curses_ok" = no; then
-    echo ERROR: readline enabled but it is broken, with or without the -lcurses link option
-    exit 1
+    echo WARNING: readline enabled but it is broken, with or without the -lcurses link option
+    #exit 1
   elif test "$rl_without_curses_ok" = no; then
     # we must add -lcurses!
     if test "$READLINE_LIB" != ""; then
