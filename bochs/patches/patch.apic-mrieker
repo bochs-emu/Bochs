@@ -64,32 +64,9 @@ diff -u -r1.14 apic.cc
  }
  
  bx_generic_apic_c::~bx_generic_apic_c () 
-@@ -115,6 +118,12 @@
-   BX_PANIC(("write not implemented in base class bx_generic_apic_c"));
- }
- 
-+BX_CPU_C *bx_generic_apic_c::get_cpu (void)
-+{
-+  BX_PANIC(("get_cpu called on base class"));
-+  return NULL;
-+}
-+
- void bx_generic_apic_c::startup_msg (Bit32u vector)
- {
-   BX_PANIC(("startup message sent to an I/O APIC"));
-@@ -155,7 +164,7 @@
-       mask = 0xff; 
-     } else BX_PANIC(("bx_generic_apic_c::deliver: illegal physical destination %02x", dest));
-   } else {
--    // logical destination. call match_logical_addr for each APIC.
-+    // logical destination. call match_logical_addr for each local APIC.
-     if (dest == 0) return 0;
-     for (int i=0; i<APIC_MAX_ID; i++) {
-       if (apic_index[i] && apic_index[i]->match_logical_addr(dest))
 @@ -169,32 +178,51 @@
  
- Boolean
- bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
+ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
 +
  {
    // return false if we can't deliver for any reason, so that the caller
@@ -185,29 +162,6 @@ diff -u -r1.14 apic.cc
      default:
        BX_PANIC(("APIC delivery mode %d not implemented", delivery_mode));
    }
-+
-   // Fixed delivery mode
-+
-   if (bx_dbg.apic)
-     BX_INFO(("delivering vector=0x%02x to bitmask=%04x", (int)vector, deliver_bitmask));
-+
-   for (int bit=0; bit<APIC_MAX_ID; bit++) {
-     if (deliver_bitmask & (1<<bit)) {
--      if (apic_index[bit] == NULL)
--	BX_INFO(("IOAPIC: delivering int0x%x to nonexistent id=%d!", (unsigned)vector, bit));
-+      if (apic_index[bit] == NULL) BX_INFO(("IOAPIC: delivering int0x%x to nonexistent id=%d!", (unsigned)vector, bit));
-       else {
--        if (bx_dbg.apic)
--	  BX_INFO(("IOAPIC: delivering int0x%x to apic#%d", (unsigned)vector, bit));
-+        if (bx_dbg.apic) BX_INFO(("IOAPIC: delivering int0x%x to apic#%d", (unsigned)vector, bit));
- 	apic_index[bit]->trigger_irq (vector, id);
-       }
-     }
-   }
-+
-   return true;
- }
- 
 @@ -269,9 +316,9 @@
  bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
    : bx_generic_apic_c ()
@@ -220,17 +174,6 @@ diff -u -r1.14 apic.cc
  }
  
  void
-@@ -312,9 +359,8 @@
- }
- 
- BX_CPU_C 
--*bx_local_apic_c::get_cpu (Bit8u id)
-+*bx_local_apic_c::get_cpu (void)
- {
--  BX_ASSERT (id < APIC_MAX_ID);
-   return cpu;
- }
- 
 @@ -369,16 +415,19 @@
        break;
      case 0x80: // task priority
@@ -254,43 +197,6 @@ diff -u -r1.14 apic.cc
  	  service_local_apic ();
  	}
  	if (bx_dbg.apic)
-@@ -407,6 +456,7 @@
-       break;
-     case 0x300: // interrupt command reg 0-31
-       {
-+        Boolean accepted;
- 	icr_low = *data & ~(1<<12);  // force delivery status bit = 0 (idle)
- 	int dest = (icr_high >> 24) & 0xff;
- 	int trig_mode = (icr_low >> 15) & 1;
-@@ -414,15 +464,14 @@
- 	int dest_mode = (icr_low >> 11) & 1;
- 	int delivery_mode = (icr_low >> 8) & 7;
- 	int vector = (icr_low & 0xff);
--	//
-+
- 	// deliver will call get_delivery_bitmask to decide who to send to.
- 	// This local_apic class redefines get_delivery_bitmask to 
- 	// implement the destination shorthand field, which doesn't exist
- 	// for all APICs.
--	Boolean accepted = 
--	   deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
--	if (!accepted)
--	  err_status |= APIC_ERR_TX_ACCEPT_ERR;
-+
-+	accepted = deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
-+	if (!accepted) err_status |= APIC_ERR_TX_ACCEPT_ERR;
-       }
-       break;
-     case 0x310: // interrupt command reg 31-63
-@@ -490,7 +539,7 @@
-     cpu->debug_trap &= ~0x80000000;
-     cpu->eip = 0;
-     cpu->load_seg_reg (&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
--    BX_INFO(("%s started up at 0x%x by APIC", cpu->name, cpu->eip));
-+    BX_INFO(("%s started up at %04X:%08X by APIC", cpu->name, vector*0x100, cpu->eip));
-   } else {
-     BX_INFO(("%s started up by APIC, but was not halted at the time", cpu->name));
-   }
 @@ -498,6 +547,10 @@
  
  void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
@@ -367,20 +273,6 @@ diff -u -r1.14 apic.cc
    BX_DEBUG(("service_local_apic(): setting INTR=1 for vector 0x%02x", first_irr));
    cpu->set_INTR (1);
    cpu->int_from_local_apic = 1;
-@@ -599,9 +667,10 @@
- 
- void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from)
- {
--  BX_DEBUG(("Local apic on %s: trigger interrupt vector=0x%x", cpu->name, vector));
--  irr[vector] = 1;
--  service_local_apic ();
-+  BX_DEBUG (("Local apic on %s*: trigger interrupt vector=0x%X", this->cpu->name, vector));
-+  this->irr[vector] = 1;
-+  //print_status ();
-+  this->service_local_apic ();
- }
- 
- void bx_local_apic_c::untrigger_irq (unsigned vector, unsigned from)
 @@ -617,20 +686,34 @@
  Bit8u
  bx_local_apic_c::acknowledge_int ()
@@ -496,21 +388,12 @@ retrieving revision 1.32
 diff -u -r1.32 cpu.cc
 --- cpu/cpu.cc	6 Jun 2002 23:03:09 -0000	1.32
 +++ cpu/cpu.cc	27 Jun 2002 19:36:18 -0000
-@@ -154,7 +154,7 @@
-   // first instruction of int/trap handlers.
-   BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
-   BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
--  
-+
-   // Now we can handle things which are synchronous to instruction
-   // execution.
-   if (BX_CPU_THIS_PTR eflags.rf) {
 @@ -539,7 +539,7 @@
  #else
      while (1) {
  #endif
--      if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
-+      if ((BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) || BX_CPU_THIS_PTR nmi_queued) {
+-      if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
++      if ((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) || BX_CPU_THIS_PTR nmi_queued) {
          break;
          }
        BX_TICK1();
@@ -518,19 +401,11 @@ diff -u -r1.32 cpu.cc
      // must give the others a chance to simulate.  If an interrupt has 
      // arrived, then clear the HALT condition; otherwise just return from
      // the CPU loop with stop_reason STOP_CPU_HALTED.
--    if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
-+    if ((BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) || BX_CPU_THIS_PTR nmi_queued) {
+-    if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
++    if ((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) || BX_CPU_THIS_PTR nmi_queued) {
        // interrupt ends the HALT condition
        BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
        BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
-@@ -603,6 +603,7 @@
-   // Priority 5: External Interrupts
-   //   NMI Interrupts
-   //   Maskable Hardware Interrupts
-+
-   if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS) {
-     // Processing external interrupts is inhibited on this
-     // boundary because of certain instructions like STI.
 @@ -610,6 +611,16 @@
      // an opportunity to check interrupts on the next instruction
      // boundary.
@@ -542,7 +417,7 @@ diff -u -r1.32 cpu.cc
 +    BX_CPU_THIS_PTR errorno = 0;
 +    BX_CPU_THIS_PTR EXT   = 1; /* external event */
 +    interrupt (2, 0, 0, 0);
-+    BX_INSTR_HWINTERRUPT (2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
++    BX_INSTR_HWINTERRUPT (2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 +  }
 +
    else if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_ && BX_DBG_ASYNC_INTR) {
@@ -555,49 +430,14 @@ retrieving revision 1.22
 diff -u -r1.22 cpu.h
 --- cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
 +++ cpu/cpu.h	27 Jun 2002 19:36:19 -0000
-@@ -276,7 +276,6 @@
- #endif
-   } bx_flags_reg_t;
- 
--
- #if BX_CPU_LEVEL >= 2
- typedef struct {
-   Bit32u  val32; // 32bit value of register
-@@ -581,6 +580,7 @@
-   virtual ~bx_generic_apic_c ();
-   virtual void init ();
-   virtual void hwreset () { }
-+  virtual BX_CPU_C *get_cpu (void);
-   Bit32u get_base (void) { return base_addr; }
-   void set_base (Bit32u newbase);
-   void set_id (Bit8u newid);
-@@ -641,7 +641,7 @@
-   BX_CPU_C *cpu;
-   virtual void hwreset ();
-   virtual void init ();
--  BX_CPU_C *get_cpu (Bit8u id);
-+  virtual BX_CPU_C *get_cpu (void);
-   void set_id (Bit8u newid);   // redefine to set cpu->name
-   virtual char *get_name();
-   virtual void write (Bit32u addr, Bit32u *data, unsigned len);
 @@ -820,6 +820,7 @@
-   volatile Boolean async_event;
-   volatile Boolean INTR;
-   volatile Boolean kill_bochs_request;
-+  volatile Boolean nmi_queued;
+   volatile bx_bool async_event;
+   volatile bx_bool INTR;
+   volatile bx_bool kill_bochs_request;
++  volatile bx_bool nmi_queued;
  
    /* wether this CPU is the BSP always set for UP */
-   Boolean bsp;
-@@ -855,8 +856,8 @@
-   Bit32u prev_phy_page;
-   Bit32u max_phy_addr;
- 
--#if BX_DEBUGGER
-   Bit32u watchpoint;
-+#if BX_DEBUGGER
-   Bit8u break_point;
- #ifdef MAGIC_BREAKPOINT
-   Bit8u magic_break;
+   bx_bool bsp;
 Index: cpu/init.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
