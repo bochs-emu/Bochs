@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.50 2002-09-24 13:57:37 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.51 2002-09-25 14:09:08 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1739,38 +1739,38 @@ BX_CPU_C::RDMSR(bxInstruction_c *i)
                         return;
 
                 case BX_MSR_STAR:
-                        RAX = BX_CPU_THIS_PTR msr.star;
-                        RDX = BX_CPU_THIS_PTR msr.star >> 32;
+                        RAX = MSR_STAR;
+                        RDX = MSR_STAR >> 32;
                         return;
 
                 case BX_MSR_LSTAR:
-                        RAX = BX_CPU_THIS_PTR msr.lstar;
-                        RDX = BX_CPU_THIS_PTR msr.lstar >> 32;
+                        RAX = MSR_LSTAR;
+                        RDX = MSR_LSTAR >> 32;
                         return;
 
                 case BX_MSR_CSTAR:
-                        RAX = BX_CPU_THIS_PTR msr.cstar;
-                        RDX = BX_CPU_THIS_PTR msr.cstar >> 32;
+                        RAX = MSR_CSTAR;
+                        RDX = MSR_CSTAR >> 32;
                         return;
 
                 case BX_MSR_FMASK:
-                        RAX = BX_CPU_THIS_PTR msr.fmask;
-                        RDX = BX_CPU_THIS_PTR msr.fmask >> 32;
+                        RAX = MSR_FMASK;
+                        RDX = MSR_FMASK >> 32;
                         return;
 
                 case BX_MSR_FSBASE:
-                        RAX = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base;
-                        RDX = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base >> 32;
+                        RAX = MSR_FSBASE;
+                        RDX = MSR_FSBASE >> 32;
                         return;
 
                 case BX_MSR_GSBASE:
-                        RAX = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base;
-                        RDX = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base >> 32;
+                        RAX = MSR_GSBASE;
+                        RDX = MSR_GSBASE >> 32;
                         return;
 
                 case BX_MSR_KERNELGSBASE:
-                        RAX = BX_CPU_THIS_PTR msr.kernelgsbase;
-                        RDX = BX_CPU_THIS_PTR msr.kernelgsbase >> 32;
+                        RAX = MSR_KERNELGSBASE;
+                        RDX = MSR_KERNELGSBASE >> 32;
                         return;
 #endif  // #if BX_SUPPORT_X86_64
 
@@ -1857,25 +1857,25 @@ BX_CPU_C::WRMSR(bxInstruction_c *i)
                         BX_CPU_THIS_PTR msr.lme = (EAX >> 8) & 1;
                         return;
                 case BX_MSR_STAR:
-                        BX_CPU_THIS_PTR msr.star = ((Bit64u) EDX << 32) + EAX;
+                        MSR_STAR = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_LSTAR:
-                        BX_CPU_THIS_PTR msr.lstar = ((Bit64u) EDX << 32) + EAX;
+                        MSR_LSTAR = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_CSTAR:
-                        BX_CPU_THIS_PTR msr.cstar = ((Bit64u) EDX << 32) + EAX;
+                        MSR_CSTAR = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_FMASK:
-                        BX_CPU_THIS_PTR msr.fmask = ((Bit64u) EDX << 32) + EAX;
+                        MSR_FMASK = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_FSBASE:
-                        BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base = ((Bit64u) EDX << 32) + EAX;
+                        MSR_FSBASE = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_GSBASE:
-                        BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base = ((Bit64u) EDX << 32) + EAX;
+                        MSR_GSBASE = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_KERNELGSBASE:
-                        BX_CPU_THIS_PTR msr.kernelgsbase = ((Bit64u) EDX << 32) + EAX;
+                        MSR_KERNELGSBASE = ((Bit64u) EDX << 32) + EAX;
                         return;
 #endif  // #if BX_SUPPORT_X86_64
 
@@ -1895,6 +1895,22 @@ do_exception:
 	exception(BX_GP_EXCEPTION, 0, 0);
 
 }
+
+#if BX_SUPPORT_X86_64
+  void
+BX_CPU_C::SWAPGS(bxInstruction_c *i)
+{
+  Bit64u temp_GS_base;
+
+  if(CPL != 0) {
+    exception(BX_GP_EXCEPTION, 0, 0);
+    }
+  temp_GS_base = MSR_GSBASE;
+  MSR_GSBASE = MSR_KERNELGSBASE;
+  MSR_KERNELGSBASE = MSR_GSBASE;
+
+}
+#endif
 
 #if BX_X86_DEBUGGER
   Bit32u
