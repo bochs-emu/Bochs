@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.11 2002-08-30 06:06:36 bdenney Exp $
+// $Id: wxmain.h,v 1.12 2002-08-30 16:23:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -121,6 +121,7 @@ public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
   enum StatusChange { Start, Stop, Pause, Resume };
   void simStatusChanged (StatusChange change, Boolean popupNotify=false);
+  void OnConfigNew(wxCommandEvent& event);
   void OnConfigRead(wxCommandEvent& event);
   void OnConfigSave(wxCommandEvent& event);
   void OnQuit(wxCommandEvent& event);

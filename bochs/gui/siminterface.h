@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.52 2002-08-30 06:06:36 bdenney Exp $
+// $Id: siminterface.h,v 1.53 2002-08-30 16:23:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -762,6 +762,7 @@ public:
   virtual int set_init_done (int n) {return -1;}
   virtual void get_param_id_range (int *min, int *max) {}
   virtual int register_param (bx_id id, bx_param_c *it) {return -1;}
+  virtual void reset_all_param () {}
   virtual bx_param_c *get_param (bx_id id) {return NULL;}
   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}

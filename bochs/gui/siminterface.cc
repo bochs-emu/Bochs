@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.48 2002-08-29 20:13:03 bdenney Exp $
+// $Id: siminterface.cc,v 1.49 2002-08-30 16:23:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -45,6 +45,7 @@ public:
     *max = BXP_THIS_IS_THE_LAST-1;
   }
   virtual int register_param (bx_id id, bx_param_c *it);
+  virtual void reset_all_param ();
   virtual bx_param_c *get_param (bx_id id);
   virtual bx_param_num_c *get_param_num (bx_id id);
   virtual bx_param_string_c *get_param_string (bx_id id);
@@ -166,6 +167,12 @@ bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
   }
   this->param_registry[index] = it;
   return 0;
+}
+
+void 
+bx_real_sim_c::reset_all_param ()
+{
+  bx_reset_options ();
 }
 
 int 
