@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.36 2004-02-11 23:47:55 cbothamy Exp $
+// $Id: exception.cc,v 1.37 2004-04-08 20:57:33 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -871,10 +871,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   if (BX_CPU_THIS_PTR errorno >= 3) {
 #if BX_RESET_ON_TRIPLE_FAULT
     BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector,  DEV_cmos_get_reg(0x0f)));
-    {
-    for (int i=0; i<BX_SMP_PROCESSORS; i++)
-      BX_CPU(i)->reset(BX_RESET_HARDWARE);
-    }
+    bx_pc_system.ResetCpus( BX_RESET_HARDWARE );
 #else
     BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
