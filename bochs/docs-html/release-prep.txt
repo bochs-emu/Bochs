@@ -40,5 +40,6 @@ Linux RPM:
   mv /usr/src/redhat/RPMS/i386/bochs-$VERSION-1.i386.rpm bochs-$VERSION.i386.rpm
 
 win32 binary:
+  insert some stuff at top of README.txt
   for windows, no automation yet.  Look at old package and copy new files in.
 
