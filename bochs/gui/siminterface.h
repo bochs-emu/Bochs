@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.39 2002-07-04 19:24:30 vruppert Exp $
+// $Id: siminterface.h,v 1.40 2002-07-24 17:52:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.39 2002-07-04 19:24:30 vruppert Exp $
+ * $Id: siminterface.h,v 1.40 2002-07-24 17:52:34 cbothamy Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -61,6 +61,14 @@ typedef enum {
   BXP_ROM_PATH,
   BXP_ROM_ADDRESS,
   BXP_VGA_ROM_PATH,
+  BXP_OPTROM1_PATH,
+  BXP_OPTROM1_ADDRESS,
+  BXP_OPTROM2_PATH,
+  BXP_OPTROM2_ADDRESS,
+  BXP_OPTROM3_PATH,
+  BXP_OPTROM3_ADDRESS,
+  BXP_OPTROM4_PATH,
+  BXP_OPTROM4_ADDRESS,
   BXP_KBD_SERIAL_DELAY,
   BXP_KBD_PASTE_DELAY,
   BXP_KBD_TYPE,

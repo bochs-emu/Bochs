@@ -6,7 +6,7 @@
 # You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
 # out most of the BIOS hooks, and replace them with real BIOS
 # support.  Normally, you can use a precompiled BIOS in the bios/
-# directory, named BIOS-bochs-yymmdd.  Use the latest one in there.
+# directory, named BIOS-bochs-latest. 
 #=======================================================================
 #romimage: bios/BIOS-bochs-970717a
 romimage: file=bios/BIOS-bochs-latest, address=0xf0000
@@ -27,6 +27,22 @@ romimage: file=bios/BIOS-bochs-latest, address=0xf0000
 megs: 32
 #megs: 16
 #megs: 8
+
+#=======================================================================
+# OPTROMIMAGE[1-4]:
+# You may now load up to 4 optional ROM images. Be sure to use a 
+# read-only area, typically between C8000 and EFFFF. These optional
+# ROM images should not overwrite the rombios (located at
+# F0000-FFFFF) and the videobios (located at C0000-C7FFF).
+# Those ROM images will be initialized by the bios if they contain 
+# the right signature (0x55AA).
+# It can also be a convenient way to upload some arbitary code/data
+# in the simulation, that can be retrieved by the boot loader
+#=======================================================================
+#optromimage1: file=optionalrom.bin, address=0xd0000
+#optromimage2: file=optionalrom.bin, address=0xd1000
+#optromimage3: file=optionalrom.bin, address=0xd2000
+#optromimage4: file=optionalrom.bin, address=0xd3000
 
 #=======================================================================
 # VGAROMIMAGE

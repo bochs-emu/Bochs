@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.106 2002-07-15 20:12:14 vruppert Exp $
+// $Id: main.cc,v 1.107 2002-07-24 17:52:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,9 +76,13 @@ bx_options_t bx_options = {
   { 0, NULL},			// com2
   { 0, NULL},			// com3
   { 0, NULL},			// com4
-  { 0, NULL, 0 },                         // cdromd
-  { NULL, NULL },                          // rom
-  { NULL },                             // vgarom
+  { 0, NULL, 0 },               // cdromd
+  { NULL, NULL },               // rom
+  { NULL },                     // vgarom
+  { NULL, NULL },               // optrom1
+  { NULL, NULL },               // optrom2
+  { NULL, NULL },               // optrom3
+  { NULL, NULL },               // optrom4
   { NULL },              // memory
   { 0, NULL },          // parallel port 1
   { 0, NULL },          // parallel port 2
@@ -661,6 +665,59 @@ void bx_init_options ()
       0);
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
   bx_options.rom.Oaddress->set_base (16);
+
+  bx_options.optrom1.Opath = new bx_param_filename_c (BXP_OPTROM1_PATH,
+      "optional romimage #1",
+      "Pathname of optional ROM image #1 to load",
+      "", BX_PATHNAME_LEN);
+  bx_options.optrom1.Opath->set_format ("Name of optional ROM image #1 : %s");
+  bx_options.optrom1.Oaddress = new bx_param_num_c (BXP_OPTROM1_ADDRESS,
+      "optional romaddr #1",
+      "The address at which the optional ROM image #1 should be loaded",
+      0, BX_MAX_INT, 
+      0);
+  bx_options.optrom1.Oaddress->set_format ("optional ROM #1 address: 0x%05x");
+  bx_options.optrom1.Oaddress->set_base (16);
+
+  bx_options.optrom2.Opath = new bx_param_filename_c (BXP_OPTROM2_PATH,
+      "optional romimage #2",
+      "Pathname of optional ROM image #2 to load",
+      "", BX_PATHNAME_LEN);
+  bx_options.optrom2.Opath->set_format ("Name of optional ROM image #2 : %s");
+  bx_options.optrom2.Oaddress = new bx_param_num_c (BXP_OPTROM2_ADDRESS,
+      "optional romaddr #2",
+      "The address at which the optional ROM image #2 should be loaded",
+      0, BX_MAX_INT, 
+      0);
+  bx_options.optrom2.Oaddress->set_format ("optional ROM #2 address: 0x%05x");
+  bx_options.optrom2.Oaddress->set_base (16);
+
+  bx_options.optrom3.Opath = new bx_param_filename_c (BXP_OPTROM3_PATH,
+      "optional romimage #3",
+      "Pathname of optional ROM image #3 to load",
+      "", BX_PATHNAME_LEN);
+  bx_options.optrom3.Opath->set_format ("Name of optional ROM image #3 : %s");
+  bx_options.optrom3.Oaddress = new bx_param_num_c (BXP_OPTROM3_ADDRESS,
+      "optional romaddr #3",
+      "The address at which the optional ROM image #3 should be loaded",
+      0, BX_MAX_INT, 
+      0);
+  bx_options.optrom3.Oaddress->set_format ("optional ROM #3 address: 0x%05x");
+  bx_options.optrom3.Oaddress->set_base (16);
+
+  bx_options.optrom4.Opath = new bx_param_filename_c (BXP_OPTROM4_PATH,
+      "optional romimage #4",
+      "Pathname of optional ROM image #4 to load",
+      "", BX_PATHNAME_LEN);
+  bx_options.optrom4.Opath->set_format ("Name of optional ROM image #4 : %s");
+  bx_options.optrom4.Oaddress = new bx_param_num_c (BXP_OPTROM4_ADDRESS,
+      "optional romaddr #4",
+      "The address at which the optional ROM image #4 should be loaded",
+      0, BX_MAX_INT, 
+      0);
+  bx_options.optrom4.Oaddress->set_format ("optional ROM #4 address: 0x%05x");
+  bx_options.optrom4.Oaddress->set_base (16);
+
   bx_options.vgarom.Opath = new bx_param_filename_c (BXP_VGA_ROM_PATH,
       "vgaromimage",
       "Pathname of VGA ROM image to load",
@@ -671,6 +728,14 @@ void bx_init_options ()
     bx_options.vgarom.Opath,
     bx_options.rom.Opath,
     bx_options.rom.Oaddress,
+    bx_options.optrom1.Opath,
+    bx_options.optrom1.Oaddress,
+    bx_options.optrom2.Opath,
+    bx_options.optrom2.Oaddress,
+    bx_options.optrom3.Opath,
+    bx_options.optrom3.Oaddress,
+    bx_options.optrom4.Opath,
+    bx_options.optrom4.Oaddress,
     NULL
   };
   menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
@@ -1249,8 +1314,21 @@ bx_init_hardware()
 
 #if BX_SMP_PROCESSORS==1
   BX_MEM(0)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
+
+  // First load the optional ROM images
+  if (bx_options.optrom1.Opath->getptr () > 0)
+    BX_MEM(0)->load_ROM(bx_options.optrom1.Opath->getptr (), bx_options.optrom1.Oaddress->get ());
+  if (bx_options.optrom2.Opath->getptr () > 0)
+    BX_MEM(0)->load_ROM(bx_options.optrom2.Opath->getptr (), bx_options.optrom2.Oaddress->get ());
+  if (bx_options.optrom3.Opath->getptr () > 0)
+    BX_MEM(0)->load_ROM(bx_options.optrom3.Opath->getptr (), bx_options.optrom3.Oaddress->get ());
+  if (bx_options.optrom4.Opath->getptr () > 0)
+    BX_MEM(0)->load_ROM(bx_options.optrom4.Opath->getptr (), bx_options.optrom4.Oaddress->get ());
+
+  // Then Load the BIOS and VGABIOS
   BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
   BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
+
   BX_CPU(0)->init (BX_MEM(0));
 #if BX_SUPPORT_APIC
   BX_CPU(0)->local_apic.set_id (0);
@@ -1260,8 +1338,22 @@ bx_init_hardware()
   // SMP initialization
   bx_mem_array[0] = new BX_MEM_C ();
   bx_mem_array[0]->init_memory(bx_options.memory.Osize->get () * 1024*1024);
+
+  // First load the optional ROM images
+  if (bx_options.optrom1.Opath->getptr () > 0)
+    bx_mem_array[0]->load_ROM(bx_options.optrom1.Opath->getptr (), bx_options.optrom1.Oaddress->get ());
+  if (bx_options.optrom2.Opath->getptr () > 0)
+    bx_mem_array[0]->load_ROM(bx_options.optrom2.Opath->getptr (), bx_options.optrom2.Oaddress->get ());
+  if (bx_options.optrom3.Opath->getptr () > 0)
+    BX_MEM(0)->load_ROM(bx_options.optrom3.Opath->getptr (), bx_options.optrom3.Oaddress->get ());
+    bx_mem_array[0]->load_ROM(bx_options.optrom3.Opath->getptr (), bx_options.optrom3.Oaddress->get ());
+  if (bx_options.optrom4.Opath->getptr () > 0)
+    bx_mem_array[0]->load_ROM(bx_options.optrom4.Opath->getptr (), bx_options.optrom4.Oaddress->get ());
+
+  // Then Load the BIOS and VGABIOS
   bx_mem_array[0]->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
   bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
+
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C ();
     BX_CPU(i)->init (bx_mem_array[0]);
@@ -1809,6 +1901,70 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 16));
     else
       bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 10));
+    }
+  else if (!strcmp(params[0], "optromimage1")) {
+    if (num_params != 3) {
+      BX_PANIC(("%s: optromimage1 directive: wrong # args.", context));
+      }
+    if (strncmp(params[1], "file=", 5)) {
+      BX_PANIC(("%s: optromimage1 directive malformed.", context));
+      }
+    if (strncmp(params[2], "address=", 8)) {
+      BX_PANIC(("%s: optromimage2 directive malformed.", context));
+      }
+    bx_options.optrom1.Opath->set (&params[1][5]);
+    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
+      bx_options.optrom1.Oaddress->set (strtoul (&params[2][8], NULL, 16));
+    else
+      bx_options.optrom1.Oaddress->set (strtoul (&params[2][8], NULL, 10));
+    }
+  else if (!strcmp(params[0], "optromimage2")) {
+    if (num_params != 3) {
+      BX_PANIC(("%s: optromimage2 directive: wrong # args.", context));
+      }
+    if (strncmp(params[1], "file=", 5)) {
+      BX_PANIC(("%s: optromimage2 directive malformed.", context));
+      }
+    if (strncmp(params[2], "address=", 8)) {
+      BX_PANIC(("%s: optromimage2 directive malformed.", context));
+      }
+    bx_options.optrom2.Opath->set (&params[1][5]);
+    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
+      bx_options.optrom2.Oaddress->set (strtoul (&params[2][8], NULL, 16));
+    else
+      bx_options.optrom2.Oaddress->set (strtoul (&params[2][8], NULL, 10));
+    }
+  else if (!strcmp(params[0], "optromimage3")) {
+    if (num_params != 3) {
+      BX_PANIC(("%s: optromimage3 directive: wrong # args.", context));
+      }
+    if (strncmp(params[1], "file=", 5)) {
+      BX_PANIC(("%s: optromimage3 directive malformed.", context));
+      }
+    if (strncmp(params[2], "address=", 8)) {
+      BX_PANIC(("%s: optromimage2 directive malformed.", context));
+      }
+    bx_options.optrom3.Opath->set (&params[1][5]);
+    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
+      bx_options.optrom3.Oaddress->set (strtoul (&params[2][8], NULL, 16));
+    else
+      bx_options.optrom3.Oaddress->set (strtoul (&params[2][8], NULL, 10));
+    }
+  else if (!strcmp(params[0], "optromimage4")) {
+    if (num_params != 3) {
+      BX_PANIC(("%s: optromimage4 directive: wrong # args.", context));
+      }
+    if (strncmp(params[1], "file=", 5)) {
+      BX_PANIC(("%s: optromimage4 directive malformed.", context));
+      }
+    if (strncmp(params[2], "address=", 8)) {
+      BX_PANIC(("%s: optromimage2 directive malformed.", context));
+      }
+    bx_options.optrom4.Opath->set (&params[1][5]);
+    if ( (params[2][8] == '0') && (params[2][9] == 'x') )
+      bx_options.optrom4.Oaddress->set (strtoul (&params[2][8], NULL, 16));
+    else
+      bx_options.optrom4.Oaddress->set (strtoul (&params[2][8], NULL, 10));
     }
   else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
@@ -2377,6 +2533,14 @@ bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, "vgaromimage: %s\n", bx_options.vgarom.Opath->getptr ());
   else
     fprintf (fp, "# no vgaromimage\n");
+  if (strlen (bx_options.optrom1.Opath->getptr ()) > 0)
+    fprintf (fp, "optromimage1: file=%s, address=0x%05x\n", bx_options.optrom1.Opath->getptr(), (unsigned int)bx_options.optrom1.Oaddress->get ());
+  if (strlen (bx_options.optrom2.Opath->getptr ()) > 0)
+    fprintf (fp, "optromimage2: file=%s, address=0x%05x\n", bx_options.optrom2.Opath->getptr(), (unsigned int)bx_options.optrom2.Oaddress->get ());
+  if (strlen (bx_options.optrom3.Opath->getptr ()) > 0)
+    fprintf (fp, "optromimage3: file=%s, address=0x%05x\n", bx_options.optrom3.Opath->getptr(), (unsigned int)bx_options.optrom3.Oaddress->get ());
+  if (strlen (bx_options.optrom4.Opath->getptr ()) > 0)
+    fprintf (fp, "optromimage4: file=%s, address=0x%05x\n", bx_options.optrom4.Opath->getptr(), (unsigned int)bx_options.optrom4.Oaddress->get ());
   fprintf (fp, "megs: %d\n", bx_options.memory.Osize->get ());
   bx_write_parport_options (fp, &bx_options.par1, 1);
   //bx_write_parport_options (fp, &bx_options.par2);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.71 2002-07-21 02:55:04 bdenney Exp $
+// $Id: bochs.h,v 1.72 2002-07-24 17:52:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -633,6 +633,10 @@ typedef struct {
   bx_cdrom_options  cdromd; 
   bx_rom_options    rom;
   bx_vgarom_options vgarom;
+  bx_rom_options    optrom1; // Optional rom image (1)
+  bx_rom_options    optrom2; // Optional rom image (2)
+  bx_rom_options    optrom3; // Optional rom image (3)
+  bx_rom_options    optrom4; // Optional rom image (4)
   bx_mem_options    memory;
   bx_parport_options par1; // parallel port #1
   bx_parport_options par2; // parallel port #2  (not implemented)
