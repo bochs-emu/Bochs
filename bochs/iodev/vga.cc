@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.46 2002-10-06 19:38:54 vruppert Exp $
+// $Id: vga.cc,v 1.47 2002-10-13 08:14:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,8 +173,8 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   for (i=0; i<4; i++) {
     BX_VGA_THIS s.sequencer.map_mask_bit[i] = 0;
     }
-  BX_VGA_THIS s.sequencer.bit0 = 0;
-  BX_VGA_THIS s.sequencer.bit1 = 0;
+  BX_VGA_THIS s.sequencer.reset1 = 1;
+  BX_VGA_THIS s.sequencer.reset2 = 1;
   BX_VGA_THIS s.sequencer.reg1 = 0;
   BX_VGA_THIS s.sequencer.char_map_select = 0;
   BX_VGA_THIS s.sequencer.extended_mem = 1; // display mem greater than 64K
@@ -500,11 +500,11 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
     case 0x03c5: /* Sequencer Registers 00..04 */
       switch (BX_VGA_THIS s.sequencer.index) {
         case 0: /* sequencer: reset */
-		  BX_DEBUG(("io read 3c5 case 0: sequencer reset"));
-          RETURN(BX_VGA_THIS s.sequencer.bit0 | (BX_VGA_THIS s.sequencer.bit1<<1));
+          BX_DEBUG(("read 0x3c5: sequencer reset"));
+          RETURN(BX_VGA_THIS s.sequencer.reset1 | (BX_VGA_THIS s.sequencer.reset2<<1));
           break;
         case 1: /* sequencer: clocking mode */
-		  BX_DEBUG(("io read 3c5 case 1: sequencer clocking mode"));
+          BX_DEBUG(("read 0x3c5: sequencer clocking mode"));
           RETURN(BX_VGA_THIS s.sequencer.reg1);
           break;
         case 2: /* sequencer: map mask register */
@@ -919,11 +919,17 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log)
       switch (BX_VGA_THIS s.sequencer.index) {
         case 0: /* sequencer: reset */
 #if !defined(VGA_TRACE_FEATURE)
-          BX_DEBUG(("io write 3c5=%02x: reset reg: ignoring",
-                      (unsigned) value);
+          BX_DEBUG(("write 0x3c5: sequencer reset: value=0x%02x",
+                      (unsigned) value));
 #endif
-BX_VGA_THIS s.sequencer.bit0 = (value >> 0) & 0x01;
-BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
+          if (BX_VGA_THIS s.sequencer.reset1 && ((value & 0x01) == 0)) {
+            BX_VGA_THIS s.sequencer.char_map_select = 0;
+            BX_VGA_THIS s.charmap_address = 0;
+            bx_gui.set_text_charmap(
+              & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+          }
+          BX_VGA_THIS s.sequencer.reset1 = (value >> 0) & 0x01;
+          BX_VGA_THIS s.sequencer.reset2 = (value >> 1) & 0x01;
           break;
         case 1: /* sequencer: clocking mode */
 #if !defined(VGA_TRACE_FEATURE)
@@ -1204,11 +1210,14 @@ bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
 
+  /* skip screen update when the sequencer is in reset mode */
+  if (!BX_VGA_THIS s.sequencer.reset1 || !BX_VGA_THIS s.sequencer.reset2)
+    return;
+
   if (BX_VGA_THIS s.vga_mem_updated==0) {
     /* BX_DEBUG(("update(): updated=%u enabled=%u", (unsigned) BX_VGA_THIS s.vga_mem_updated, (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled)); */
     return;
     }
-  BX_VGA_THIS s.vga_mem_updated = 0;
 
 #if BX_SUPPORT_VBE  
   if (BX_VGA_THIS s.vbe_enabled)
@@ -1252,6 +1261,7 @@ bx_vga_c::update(void)
         }
       }
     
+    BX_VGA_THIS s.vga_mem_updated = 0;
     // after a vbe display update, don't try to do any 'normal vga' updates anymore
     return;
   }
@@ -1560,6 +1570,10 @@ bx_vga_c::update(void)
               ((bx_vga.s.CRTC.reg[0x07]<<3)&0x200);
         // Maximum Scan Line: height of character cell
         MSL = bx_vga.s.CRTC.reg[0x09] & 0x1f;
+        if (MSL == 0) {
+          BX_ERROR(("character height = 1, skipping text update"));
+          return;
+        }
         rows = (VDE+1)/(MSL+1);
         if (rows > BX_MAX_TEXT_LINES)
           BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.17 2002-09-22 11:31:48 japj Exp $
+// $Id: vga.h,v 1.18 2002-10-13 08:14:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -207,8 +207,8 @@ private:
       Bit8u   index;
       Bit8u   map_mask;
       Boolean map_mask_bit[4];
-      Boolean bit0;
-      Boolean bit1;
+      Boolean reset1;
+      Boolean reset2;
       Bit8u   reg1;
       Bit8u   char_map_select;
       Boolean extended_mem;
