@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.36 2002-03-09 01:50:52 cbothamy Exp $
+// $Id: rombios.c,v 1.37 2002-03-11 00:17:30 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -138,8 +138,8 @@
 #define BX_SUPPORT_FLOPPY 1
 #define BX_PCIBIOS       1
 
-#define BX_USE_ATADRV		0
-#define BX_ELTORITO_BOOT	0
+#define BX_USE_ATADRV		1
+#define BX_ELTORITO_BOOT	1
 
 #define BX_MAX_ATA_DEVICES	2
 
@@ -895,7 +895,7 @@ static Bit8u          get_mouse_data();
 static void           set_kbd_command_byte();
 
 static void           int09_function();
-static void           int13_function();
+static void           int13_harddisk();
 static void           int13_cdrom();
 static void           int13_cdemu();
 static void           int13_diskette_function();
@@ -995,10 +995,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.36 $";
-static char bios_date_string[] = "$Date: 2002-03-09 01:50:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.37 $";
+static char bios_date_string[] = "$Date: 2002-03-11 00:17:30 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.36 2002-03-09 01:50:52 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.37 2002-03-11 00:17:30 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2760,7 +2760,7 @@ outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
 }
 
   void
-int13_function(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
+int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
 {
   Bit8u    drive, num_sectors, sector, head, status, mod;
@@ -2865,7 +2865,7 @@ printf("int13_f01\n");
         }
 
       if ( (num_sectors > 128) || (num_sectors == 0) )
-        panic("int13_function(): num_sectors out of range!");
+        panic("int13_harddisk(): num_sectors out of range!");
 
       if (head > 15)
         panic("hard drive BIOS:(read/verify) head > 15\n");
@@ -2919,7 +2919,7 @@ printf("CHS: %x %x %x\n", cylinder, head, sector);
         ;; store temp bx in real DI register
         push bp
         mov  bp, sp
-        mov  di, _int13_function.tempbx + 2 [bp]
+        mov  di, _int13_harddisk.tempbx + 2 [bp]
         pop  bp
 
         ;; adjust if there will be an overrun
@@ -2942,7 +2942,7 @@ i13_f02_done:
         ;; store real DI register back to temp bx
         push bp
         mov  bp, sp
-        mov  _int13_function.tempbx + 2 [bp], di
+        mov  _int13_harddisk.tempbx + 2 [bp], di
         pop  bp
 #endasm
 
@@ -3011,7 +3011,7 @@ printf("int13_f03\n");
         }
 
       if ( (num_sectors > 128) || (num_sectors == 0) )
-        panic("int13_function(): num_sectors out of range!");
+        panic("int13_harddisk(): num_sectors out of range!");
 
       if (head > 15)
         panic("hard drive BIOS:(read) head > 15\n");
@@ -3059,7 +3059,7 @@ printf("CHS (write): %x %x %x\n", cylinder, head, sector);
         ;; store temp bx in real SI register
         push bp
         mov  bp, sp
-        mov  si, _int13_function.tempbx + 2 [bp]
+        mov  si, _int13_harddisk.tempbx + 2 [bp]
         pop  bp
 
         ;; adjust if there will be an overrun
@@ -3082,7 +3082,7 @@ i13_f03_no_adjust:
         ;; store real SI register back to temp bx
         push bp
         mov  bp, sp
-        mov  _int13_function.tempbx + 2 [bp], si
+        mov  _int13_harddisk.tempbx + 2 [bp], si
         pop  bp
 #endasm
 
@@ -3241,17 +3241,17 @@ printf("int13_f14\n");
 #asm
       push bp
       mov  bp, sp
-      mov  al, _int13_function.hd_heads + 2 [bp]
-      mov  ah, _int13_function.hd_sectors + 2 [bp]
+      mov  al, _int13_harddisk.hd_heads + 2 [bp]
+      mov  ah, _int13_harddisk.hd_sectors + 2 [bp]
       mul  al, ah ;; ax = heads * sectors
-      mov  bx, _int13_function.hd_cylinders + 2 [bp]
+      mov  bx, _int13_harddisk.hd_cylinders + 2 [bp]
       dec  bx     ;; use (cylinders - 1) ???
       mul  ax, bx ;; dx:ax = (cylinders -1) * (heads * sectors)
       ;; now we need to move the 32bit result dx:ax to what the
       ;; BIOS wants which is cx:dx.
       ;; and then into CX:DX on the stack
-      mov  _int13_function.CX + 2 [bp], dx
-      mov  _int13_function.DX + 2 [bp], ax
+      mov  _int13_harddisk.CX + 2 [bp], dx
+      mov  _int13_harddisk.DX + 2 [bp], ax
       pop  bp
 #endasm
       SET_AH(3);  // hard disk accessible
@@ -3286,7 +3286,7 @@ printf("int13_f18,41-50\n");
       break;
 
     default:
-      panic("case 0x%x found in int13_function()", (unsigned) GET_AH());
+      panic("case 0x%x found in int13_harddisk()", (unsigned) GET_AH());
       break;
     }
 }
@@ -4798,7 +4798,6 @@ int19_function()
       return 0x00000000;
       }
 
-    // FIXME bootseg hardcoded;
     bootseg=read_word(ebda_seg,&EbdaData->cdemu_data.load_segment);
     bootdrv=(Bit8u)(status>>8);
     }
@@ -8095,10 +8094,6 @@ cdrom_boot()
   boot_segment=buffer[0x23]*0x100+buffer[0x22];
   if(boot_segment==0x0000)boot_segment=0x07C0;
 
-  // FIXME ElTorito Bootsegment. this implies modifying int19 code
-  if(boot_segment!=0x07C0) 
-    panic("El-Torito: Cannot boot at %04X yet\n",boot_segment);
-
   write_word(ebda_seg,&EbdaData->cdemu_data.load_segment,boot_segment);
   write_word(ebda_seg,&EbdaData->cdemu_data.buffer_segment,0x0000);
   
@@ -8288,7 +8283,7 @@ int13_disk:
   push  ss
   pop   ds
   pusha
-  call  _int13_function
+  call  _int13_harddisk
   popa
   pop   ds
   pop   es
