@@ -22,11 +22,11 @@
 
 
 
-#define BX_USE_MEM_SMF 1
+#define BX_USE_MEM_SMF 0
 
 #if BX_USE_MEM_SMF
 #  define BX_MEM_SMF  static
-#  define BX_MEM_THIS BX_MEM.
+#  define BX_MEM_THIS BX_MEM[0]->
 #else
 #  define BX_MEM_SMF
 #  define BX_MEM_THIS this->
@@ -42,14 +42,17 @@ public:
   size_t  megabytes;  // (len in Megabytes)
 #if BX_DEBUGGER
   unsigned char dbg_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
+  Bit32u dbg_count_dirty_pages () {
+    return (BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096;
+  }
 #endif
 
   BX_MEM_C(void);
   BX_MEM_C(size_t memsize);
   ~BX_MEM_C(void);
   BX_MEM_SMF void    init_memory(int memsize);
-  BX_MEM_SMF void    read_physical(Bit32u addr, unsigned len, void *data);
-  BX_MEM_SMF void    write_physical(Bit32u addr, unsigned len, void *data);
+  BX_MEM_SMF void    read_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
+  BX_MEM_SMF void    write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
   BX_MEM_SMF Boolean dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
@@ -60,11 +63,11 @@ public:
   };
 
 #if BX_PROVIDE_CPU_MEMORY==1
-extern BX_MEM_C    BX_MEM;
+extern BX_MEM_C    *BX_MEM[BX_ADDRESS_SPACES];
 #endif
 
 #if BX_DEBUGGER
-#  define BX_DBG_DIRTY_PAGE(page) BX_MEM.dbg_dirty_pages[page] = 1;
+#  define BX_DBG_DIRTY_PAGE(page) BX_MEM[0]->dbg_dirty_pages[page] = 1;
 #else
 #  define BX_DBG_DIRTY_PAGE(page)
 #endif

@@ -1,4 +1,4 @@
-# Copyright (C) 2001  MandrakeSoft S.A.
+# Copyright (C) 2000  MandrakeSoft S.A.
 #
 #   MandrakeSoft S.A.
 #   43, rue d'Aboukir
@@ -33,8 +33,6 @@ CC = @CC@
 CXX = @CXX@
 CFLAGS = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 CXXFLAGS = @CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
-TAR = @TAR@
-GZIP = @GZIP@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -79,8 +77,7 @@ NONINLINE_OBJS = \
 	main.o \
 	load32bitOShack.o \
 	state_file.o \
-	pc_system.o \
-	osdep.o
+	pc_system.o
 
 EXTERN_ENVIRONMENT_OBJS = \
 	main.o \
@@ -93,11 +90,10 @@ DISASM_LIB     = disasm/libdisasm.a
 DYNAMIC_LIB    = dynamic/libdynamic.a
 INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
 FPU_LIB        = fpu/libfpu.a
-READLINE_LIB   = @READLINE_LIB@
 
 BX_OBJS = @NONINLINE_VAR@
 
-BX_INCLUDES = bochs.h config.h osdep.h
+BX_INCLUDES = bochs.h config.h
 
 
 .@CPP_SUFFIX@.o:
@@ -122,54 +118,53 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 		$(FPU_LIB) \
 		$(GUI_LINK_OPTS) \
 		$(MCH_LINK_FLAGS) \
-	        $(SIMX86_LINK_FLAGS) \
-		$(READLINE_LIB)
+	        $(SIMX86_LINK_FLAGS)
 
 
 $(BX_OBJS): $(BX_INCLUDES)
 
 
-iodev/libiodev.a::
+iodev/libiodev.a:
 	cd iodev @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libiodev.a
 	@CD_UP_ONE@
 
-debug/libdebug.a::
+debug/libdebug.a:
 	cd debug @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libdebug.a
 	@CD_UP_ONE@
 
-cpu/libcpu.a::
+cpu/libcpu.a:
 	cd cpu @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libcpu.a
 	@CD_UP_ONE@
 
-memory/libmemory.a::
+memory/libmemory.a:
 	cd memory @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libmemory.a
 	@CD_UP_ONE@
 
-gui/libgui.a::
+gui/libgui.a:
 	cd gui @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libgui.a
 	@CD_UP_ONE@
 
-disasm/libdisasm.a::
+disasm/libdisasm.a:
 	cd disasm @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libdisasm.a
 	@CD_UP_ONE@
 
-dynamic/libdynamic.a::
+dynamic/libdynamic.a:
 	cd dynamic @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libdynamic.a
 	@CD_UP_ONE@
 
-@INSTRUMENT_DIR@/libinstrument.a::
+@INSTRUMENT_DIR@/libinstrument.a:
 	cd @INSTRUMENT_DIR@ @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libinstrument.a
 	@CD_UP_TWO@
 
-fpu/libfpu.a::
+fpu/libfpu.a:
 	cd fpu @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libfpu.a
 	@CD_UP_ONE@
@@ -183,9 +178,6 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	-rm -f libbochs_cpu.a
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
-
-tar: dist-clean
-	(NAME=`pwd | sed -e 's/.*\///'`; cd ..; $(TAR) cf - $$NAME | $(GZIP) > $$NAME.tar.gz; cd $$NAME; ls -l ../$$NAME.tar.gz)
 
 clean:
 	@RMCOMMAND@ *.o

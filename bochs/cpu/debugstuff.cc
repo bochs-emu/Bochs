@@ -286,7 +286,7 @@ BX_CPU_C::dbg_query_pending(void)
     ret |= BX_DBG_PENDING_DMA;
     }
 
-  if ( BX_INTR && BX_CPU_THIS_PTR eflags.if_ ) {
+  if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_ ) {
     ret |= BX_DBG_PENDING_IRQ;
     }
 
@@ -964,29 +964,29 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
   UNUSED(argv);
 
 #warning hardcoding mem[0] and cpu[0]
-  callback->setphymem           = BX_MEM[0].dbg_set_mem;
-  callback->getphymem           = BX_MEM[0].dbg_fetch_mem;
-  callback->xlate_linear2phy    = BX_CPU[0].dbg_xlate_linear2phy;
-  callback->set_reg             = BX_CPU[0].dbg_set_reg;
-  callback->get_reg             = BX_CPU[0].dbg_get_reg;
-  callback->get_sreg            = BX_CPU[0].dbg_get_sreg;
-  callback->get_cpu             = BX_CPU[0].dbg_get_cpu;
-  callback->set_cpu             = BX_CPU[0].dbg_set_cpu;
-  callback->dirty_page_tbl_size = sizeof(BX_MEM[0].dbg_dirty_pages);
-  callback->dirty_page_tbl      = BX_MEM[0].dbg_dirty_pages;
-  callback->atexit              = BX_CPU[0].atexit;
-  callback->query_pending       = BX_CPU[0].dbg_query_pending;
-  callback->execute             = BX_CPU[0].cpu_loop;
-  callback->take_irq            = BX_CPU[0].dbg_take_irq;
-  callback->take_dma            = BX_CPU[0].dbg_take_dma;
-  callback->reset_cpu           = BX_CPU[0].reset;
-  callback->init_mem            = BX_MEM[0].init_memory;
-  callback->load_ROM            = BX_MEM[0].load_ROM;
+  callback->setphymem           = BX_MEM[0]->dbg_set_mem;
+  callback->getphymem           = BX_MEM[0]->dbg_fetch_mem;
+  callback->xlate_linear2phy    = BX_CPU[0]->dbg_xlate_linear2phy;
+  callback->set_reg             = BX_CPU[0]->dbg_set_reg;
+  callback->get_reg             = BX_CPU[0]->dbg_get_reg;
+  callback->get_sreg            = BX_CPU[0]->dbg_get_sreg;
+  callback->get_cpu             = BX_CPU[0]->dbg_get_cpu;
+  callback->set_cpu             = BX_CPU[0]->dbg_set_cpu;
+  callback->dirty_page_tbl_size = sizeof(BX_MEM[0]->dbg_dirty_pages);
+  callback->dirty_page_tbl      = BX_MEM[0]->dbg_dirty_pages;
+  callback->atexit              = BX_CPU[0]->atexit;
+  callback->query_pending       = BX_CPU[0]->dbg_query_pending;
+  callback->execute             = BX_CPU[0]->cpu_loop;
+  callback->take_irq            = BX_CPU[0]->dbg_take_irq;
+  callback->take_dma            = BX_CPU[0]->dbg_take_dma;
+  callback->reset_cpu           = BX_CPU[0]->reset;
+  callback->init_mem            = BX_MEM[0]->init_memory;
+  callback->load_ROM            = BX_MEM[0]->load_ROM;
   callback->set_A20             = NULL;
   callback->set_NMI             = BX_DBG_NULL_CALLBACK;
   callback->set_RESET           = BX_DBG_NULL_CALLBACK;
-  callback->set_INTR            = BX_CPU[0].set_INTR;
-  callback->force_interrupt     = BX_CPU[0].dbg_force_interrupt;
+  callback->set_INTR            = BX_CPU[0]->set_INTR;
+  callback->force_interrupt     = BX_CPU[0]->dbg_force_interrupt;
 
 #if BX_INSTRUMENTATION
   callback->instr_start         = bx_instr_start;
@@ -997,7 +997,7 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
 #if BX_USE_LOADER
   callback->loader              = bx_dbg_loader;
 #endif
-  callback->crc32               = BX_MEM[0].dbg_crc32;
+  callback->crc32               = BX_MEM[0]->dbg_crc32;
 }
 
 #endif  // #if BX_DEBUGGER
@@ -1005,7 +1005,7 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
   void
 BX_CPU_C::atexit(void)
 {
-  bx_printf("\nCPU:%u\n", BX_SIM_ID);
+  bx_printf("\n%s:\n", name);
   if (protected_mode()) bx_printf("protected mode\n");
   else if (v8086_mode()) bx_printf("v8086 mode\n");
   else bx_printf("real mode\n");

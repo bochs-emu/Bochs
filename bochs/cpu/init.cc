@@ -33,9 +33,13 @@
 
 
 
-BX_CPU_C::BX_CPU_C(void)
+BX_CPU_C::BX_CPU_C(BX_MEM_C *addrspace)
+   : local_apic (this)
 {
   // BX_CPU_C constructor
+
+  BX_CPU_THIS_PTR set_INTR (0);
+  local_apic.init ();
 
   bx_printf("(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
 
@@ -166,8 +170,8 @@ fprintf(stderr, "&DTReadRMW8vShim is %x\n", (unsigned) &DTReadRMW8vShim);
   DTDirBrHandler = (BxDTShim_t) DTASDirBrHandler;
 #endif
 
-#warning BX_CPU always uses memory space 0
-  mem = &BX_MEM[0];
+  mem = addrspace;
+  sprintf (name, "CPU %p", this);
 
   BX_INSTR_INIT();
 }
@@ -537,7 +541,7 @@ BX_CPU_C::reset(unsigned source)
 
 
   BX_CPU_THIS_PTR EXT = 0;
-  BX_INTR = 0;
+  //BX_INTR = 0;
 
   TLB_init();
 
@@ -561,6 +565,20 @@ BX_CPU_C::reset(unsigned source)
 #if BX_DYNAMIC_TRANSLATION
   dynamic_init();
 #endif
+
+  // notice if I'm the bootstrap processor.  If not, do the equivalent of
+  // a HALT instruction.
+  int apic_id = local_apic.get_id ();
+  if (BX_BOOTSTRAP_PROCESSOR == apic_id)
+  {
+    // boot normally
+    bx_printf ("CPU[%d] is the bootstrap processor\n", apic_id);
+  } else {
+    // it's an application processor, halt until IPI is heard.
+    bx_printf ("CPU[%d] is an application processor. Halting until IPI.\n", apic_id);
+    debug_trap |= 0x80000000;
+    async_event = 1;
+  }
 }
 
 
@@ -645,5 +663,6 @@ BX_CPU_C::sanity_checks(void)
   void
 BX_CPU_C::set_INTR(Boolean value)
 {
+  this->INTR = value;
   BX_CPU_THIS_PTR async_event = 1;
 }

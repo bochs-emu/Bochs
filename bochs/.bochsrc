@@ -4,7 +4,7 @@ vgaromimage: bios/VGABIOS-elpin-2.20
 floppya: 1_44=../images/a.img, status=inserted
 floppyb: 1_44=../images/b.img, status=inserted
 diskc: file=../images/c.img, cyl=989, heads=12, spt=35
-boot: a
+boot: c
 #log: /dev/tty
 log: out.bochs
 mouse: enabled=0

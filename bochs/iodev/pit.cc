@@ -322,9 +322,10 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
       command  = value >> 4;
       mode     = (value >> 1) & 0x07;
       bcd_mode = value & 0x01;
-#if 0
-bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
-  (unsigned) command, (unsigned) mode, (unsigned) bcd_mode);
+#if 1
+      if (bx_dbg.pit)
+	bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
+	  (unsigned) command, (unsigned) mode, (unsigned) bcd_mode);
 #endif
 
       if ( (mode > 5) || (command > 0x0e) )
@@ -387,7 +388,7 @@ bx_printf("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u\n",
           BX_PIT_THIS s.timer[2].input_latch_value = 0;
           BX_PIT_THIS s.timer[2].input_latch_toggle = 0;
           BX_PIT_THIS s.timer[2].bcd_mode    = bcd_mode;
-          if ( (mode!=3 && mode!=2) || bcd_mode!=0 )
+          if ( (mode!=3 && mode!=2 && mode != 0) || bcd_mode!=0 )
             bx_panic("pit: outp(43h): comm Bh, mode %02x, bcd %02x unhandled\n",
               (unsigned) mode, bcd_mode);
           break;

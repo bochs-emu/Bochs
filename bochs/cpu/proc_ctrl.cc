@@ -526,7 +526,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       bx_printf("MOV_CdRd: ignoring write to CR4 of 0x%08x\n",
         val_32);
       if (val_32) {
-        bx_panic("MOV_CdRd: (CR4) write of 0x%08x\n",
+        bx_printf("MOV_CdRd: (CR4) write of 0x%08x not supported!\n",
           val_32);
         }
       // Only allow writes of 0 to CR4 for now.
@@ -668,7 +668,7 @@ BX_CPU_C::LOADALL(BxInstruction_t *i)
 
 bx_panic("LOADALL: handle CR0.val32\n");
   /* MSW */
-  mem->read_physical(0x806, 2, &msw);
+  mem->read_physical(this, 0x806, 2, &msw);
   BX_CPU_THIS_PTR cr0.pe = (msw & 0x01); msw >>= 1;
   BX_CPU_THIS_PTR cr0.mp = (msw & 0x01); msw >>= 1;
   BX_CPU_THIS_PTR cr0.em = (msw & 0x01); msw >>= 1;
@@ -682,15 +682,15 @@ bx_panic("LOADALL: handle CR0.val32\n");
     bx_panic("LOADALL set PE, MP, EM or TS bits in MSW!\n");
 
   /* TR */
-  mem->read_physical(0x816, 2, &tr);
+  mem->read_physical(this, 0x816, 2, &tr);
   BX_CPU_THIS_PTR tr.selector.value = tr;
   BX_CPU_THIS_PTR tr.selector.rpl   = (tr & 0x03);  tr >>= 2;
   BX_CPU_THIS_PTR tr.selector.ti    = (tr & 0x01);  tr >>= 1;
   BX_CPU_THIS_PTR tr.selector.index = tr;
-  mem->read_physical(0x860, 2, &base_15_0);
-  mem->read_physical(0x862, 1, &base_23_16);
-  mem->read_physical(0x863, 1, &access);
-  mem->read_physical(0x864, 2, &limit);
+  mem->read_physical(this, 0x860, 2, &base_15_0);
+  mem->read_physical(this, 0x862, 1, &base_23_16);
+  mem->read_physical(this, 0x863, 1, &access);
+  mem->read_physical(this, 0x864, 2, &limit);
 
 
   BX_CPU_THIS_PTR tr.cache.valid =
@@ -727,15 +727,15 @@ bx_panic("LOADALL: handle CR0.val32\n");
 
 
   /* FLAGS */
-  mem->read_physical(0x818, 2, &flags);
+  mem->read_physical(this, 0x818, 2, &flags);
   write_flags(flags, 1, 1);
 
   /* IP */
-  mem->read_physical(0x81a, 2, &ip);
+  mem->read_physical(this, 0x81a, 2, &ip);
   IP = ip;
 
   /* LDTR */
-  mem->read_physical(0x81c, 2, &ldtr);
+  mem->read_physical(this, 0x81c, 2, &ldtr);
   BX_CPU_THIS_PTR ldtr.selector.value = ldtr;
   BX_CPU_THIS_PTR ldtr.selector.rpl   = (ldtr & 0x03);  ldtr >>= 2;
   BX_CPU_THIS_PTR ldtr.selector.ti    = (ldtr & 0x01);  ldtr >>= 1;
@@ -752,10 +752,10 @@ bx_panic("LOADALL: handle CR0.val32\n");
     BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
     }
   else {
-    mem->read_physical(0x854, 2, &base_15_0);
-    mem->read_physical(0x856, 1, &base_23_16);
-    mem->read_physical(0x857, 1, &access);
-    mem->read_physical(0x858, 2, &limit);
+    mem->read_physical(this, 0x854, 2, &base_15_0);
+    mem->read_physical(this, 0x856, 1, &base_23_16);
+    mem->read_physical(this, 0x857, 1, &access);
+    mem->read_physical(this, 0x858, 2, &limit);
     BX_CPU_THIS_PTR ldtr.cache.valid      =
     BX_CPU_THIS_PTR ldtr.cache.p          = access >> 7;
     BX_CPU_THIS_PTR ldtr.cache.dpl        = (access >> 5) & 0x03;
@@ -780,15 +780,15 @@ bx_panic("LOADALL: handle CR0.val32\n");
     }
 
   /* DS */
-  mem->read_physical(0x81e, 2, &ds_raw);
+  mem->read_physical(this, 0x81e, 2, &ds_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = ds_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl   = (ds_raw & 0x03);  ds_raw >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti    = (ds_raw & 0x01);  ds_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = ds_raw;
-  mem->read_physical(0x848, 2, &base_15_0);
-  mem->read_physical(0x84a, 1, &base_23_16);
-  mem->read_physical(0x84b, 1, &access);
-  mem->read_physical(0x84c, 2, &limit);
+  mem->read_physical(this, 0x848, 2, &base_15_0);
+  mem->read_physical(this, 0x84a, 1, &base_23_16);
+  mem->read_physical(this, 0x84b, 1, &access);
+  mem->read_physical(this, 0x84c, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit = limit;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.a          = (access & 0x01); access >>= 1;
@@ -809,15 +809,15 @@ bx_panic("LOADALL: handle CR0.val32\n");
     }
 
   /* SS */
-  mem->read_physical(0x820, 2, &ss_raw);
+  mem->read_physical(this, 0x820, 2, &ss_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = ss_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = (ss_raw & 0x03); ss_raw >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (ss_raw & 0x01); ss_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = ss_raw;
-  mem->read_physical(0x842, 2, &base_15_0);
-  mem->read_physical(0x844, 1, &base_23_16);
-  mem->read_physical(0x845, 1, &access);
-  mem->read_physical(0x846, 2, &limit);
+  mem->read_physical(this, 0x842, 2, &base_15_0);
+  mem->read_physical(this, 0x844, 1, &base_23_16);
+  mem->read_physical(this, 0x845, 1, &access);
+  mem->read_physical(this, 0x846, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit = limit;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a          = (access & 0x01); access >>= 1;
@@ -838,7 +838,7 @@ bx_panic("LOADALL: handle CR0.val32\n");
 
 
   /* CS */
-  mem->read_physical(0x822, 2, &cs_raw);
+  mem->read_physical(this, 0x822, 2, &cs_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cs_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = (cs_raw & 0x03); cs_raw >>= 2;
 
@@ -847,10 +847,10 @@ bx_panic("LOADALL: handle CR0.val32\n");
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (cs_raw & 0x01); cs_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = cs_raw;
-  mem->read_physical(0x83c, 2, &base_15_0);
-  mem->read_physical(0x83e, 1, &base_23_16);
-  mem->read_physical(0x83f, 1, &access);
-  mem->read_physical(0x840, 2, &limit);
+  mem->read_physical(this, 0x83c, 2, &base_15_0);
+  mem->read_physical(this, 0x83e, 1, &base_23_16);
+  mem->read_physical(this, 0x83f, 1, &access);
+  mem->read_physical(this, 0x840, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit = limit;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a          = (access & 0x01); access >>= 1;
@@ -870,15 +870,15 @@ bx_panic("LOADALL: handle CR0.val32\n");
     }
 
   /* ES */
-  mem->read_physical(0x824, 2, &es_raw);
+  mem->read_physical(this, 0x824, 2, &es_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = es_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl   = (es_raw & 0x03); es_raw >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.ti    = (es_raw & 0x01); es_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index = es_raw;
-  mem->read_physical(0x836, 2, &base_15_0);
-  mem->read_physical(0x838, 1, &base_23_16);
-  mem->read_physical(0x839, 1, &access);
-  mem->read_physical(0x83a, 2, &limit);
+  mem->read_physical(this, 0x836, 2, &base_15_0);
+  mem->read_physical(this, 0x838, 1, &base_23_16);
+  mem->read_physical(this, 0x839, 1, &access);
+  mem->read_physical(this, 0x83a, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit = limit;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.a          = (access & 0x01); access >>= 1;
@@ -913,42 +913,42 @@ bx_panic("LOADALL: handle CR0.val32\n");
     }
 
   /* DI */
-  mem->read_physical(0x826, 2, &di);
+  mem->read_physical(this, 0x826, 2, &di);
   DI = di;
 
   /* SI */
-  mem->read_physical(0x828, 2, &si);
+  mem->read_physical(this, 0x828, 2, &si);
   SI = si;
 
   /* BP */
-  mem->read_physical(0x82a, 2, &bp);
+  mem->read_physical(this, 0x82a, 2, &bp);
   BP = bp;
 
   /* SP */
-  mem->read_physical(0x82c, 2, &sp);
+  mem->read_physical(this, 0x82c, 2, &sp);
   SP = sp;
 
   /* BX */
-  mem->read_physical(0x82e, 2, &bx);
+  mem->read_physical(this, 0x82e, 2, &bx);
   BX = bx;
 
   /* DX */
-  mem->read_physical(0x830, 2, &dx);
+  mem->read_physical(this, 0x830, 2, &dx);
   DX = dx;
 
   /* CX */
-  mem->read_physical(0x832, 2, &cx);
+  mem->read_physical(this, 0x832, 2, &cx);
   CX = cx;
 
   /* AX */
-  mem->read_physical(0x834, 2, &ax);
+  mem->read_physical(this, 0x834, 2, &ax);
   AX = ax;
 
   /* GDTR */
-  mem->read_physical(0x84e, 2, &base_15_0);
-  mem->read_physical(0x850, 1, &base_23_16);
-  mem->read_physical(0x851, 1, &access);
-  mem->read_physical(0x852, 2, &limit);
+  mem->read_physical(this, 0x84e, 2, &base_15_0);
+  mem->read_physical(this, 0x850, 1, &base_23_16);
+  mem->read_physical(this, 0x851, 1, &access);
+  mem->read_physical(this, 0x852, 2, &limit);
   BX_CPU_THIS_PTR gdtr.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR gdtr.limit = limit;
 
@@ -959,10 +959,10 @@ bx_panic("LOADALL: handle CR0.val32\n");
 #endif
 
   /* IDTR */
-  mem->read_physical(0x85a, 2, &base_15_0);
-  mem->read_physical(0x85c, 1, &base_23_16);
-  mem->read_physical(0x85d, 1, &access);
-  mem->read_physical(0x85e, 2, &limit);
+  mem->read_physical(this, 0x85a, 2, &base_15_0);
+  mem->read_physical(this, 0x85c, 1, &base_23_16);
+  mem->read_physical(this, 0x85d, 1, &access);
+  mem->read_physical(this, 0x85e, 2, &limit);
   BX_CPU_THIS_PTR idtr.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR idtr.limit = limit;
 #endif

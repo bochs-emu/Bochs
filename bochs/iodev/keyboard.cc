@@ -505,7 +505,7 @@ bx_panic("kbd: OUTB set and command 0x%02x encountered\n", value);
           break;
 
         case 0xd3: // write mouse output buffer
-          bx_panic("KBD: io write 0x64: command = 0xD3(write mouse outb)\n");
+          bx_printf("KBD: io write 0x64: command = 0xD3(write mouse outb)\n");
           BX_KEY_THIS s.kbd_controller.expecting_port60h = 1;
           break;
 

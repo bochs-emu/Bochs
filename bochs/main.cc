@@ -126,7 +126,14 @@ main(int argc, char *argv[])
     bx_load32bitOSimagehack();
     }
 
-  BX_CPU.cpu_loop();
+  int processor = 0;
+  while (1) {
+    // do 5 instructions in each processor
+    BX_CPU[processor]->cpu_loop(100);
+    processor = (processor+1) % BX_SMP_PROCESSORS;
+    if (processor == 0) 
+      BX_TICK1();
+  }
 #endif
 
   return(0);
@@ -176,18 +183,26 @@ bx_bochs_init(int argc, char *argv[])
       }
     }
 
-#if BX_DEBUGGER == 0
-  // debugger will do this work, if enabled
-  BX_CPU.reset(BX_RESET_HARDWARE);
-  BX_MEM.init_memory(bx_options.memory.megs * 1024*1024);
-  BX_MEM.load_ROM(bx_options.rom.path, bx_options.rom.address);
-  BX_MEM.load_ROM(bx_options.vgarom.path, 0xc0000);
+  // set up memory and CPU objects
+#if BX_APIC_SUPPORT
+  memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
 #endif
+  BX_MEM[0] = new BX_MEM_C ();
+  BX_MEM[0]->init_memory(bx_options.memory.megs * 1024*1024);
+  BX_MEM[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  BX_MEM[0]->load_ROM(bx_options.vgarom.path, 0xc0000);
+  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
+    BX_CPU[i] = new BX_CPU_C (BX_MEM[0]);
+#if BX_APIC_SUPPORT
+    BX_CPU[i]->local_apic.set_id (i);
+#endif
+    BX_CPU[i]->reset(BX_RESET_HARDWARE);
+  }
 
   bx_init_debug();
 
 #if BX_DEBUGGER == 0
-  bx_devices.init();
+  bx_devices.init(BX_MEM[0]);
 
   bx_pc_system.start_timers();
 #endif
@@ -275,7 +290,8 @@ bx_atexit(void)
 #endif
 
 #if BX_DEBUGGER == 0
-  BX_CPU.atexit();
+  for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
+    BX_CPU[cpu]->atexit();
 #endif
 
   if (bx_logfd) {
@@ -284,6 +300,7 @@ bx_atexit(void)
       bx_devices.pci->print_i440fx_state(bx_logfd);
       }
 #endif
+    bx_printf("bochs exited, log file was '%s'\n", logfilename);
     fprintf(stderr, "bochs exited, log file was '%s'\n",
       logfilename);
     fflush(bx_logfd);

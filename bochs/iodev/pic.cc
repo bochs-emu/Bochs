@@ -494,6 +494,11 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
   void
 bx_pic_c::trigger_irq(unsigned irq_no)
 {
+#if BX_APIC_SUPPORT
+  // forward this function call to the ioapic too
+  BX_PIC_THIS devices->ioapic->trigger_irq (irq_no, -1);
+#endif
+
   int irq_no_bitmask;
 
 #if BX_DEBUG
@@ -519,6 +524,11 @@ bx_pic_c::trigger_irq(unsigned irq_no)
   void
 bx_pic_c::untrigger_irq(unsigned irq_no)
 {
+#if BX_APIC_SUPPORT
+  // forward this function call to the ioapic too
+  BX_PIC_THIS devices->ioapic->untrigger_irq (irq_no, -1);
+#endif
+
   int irq_no_bitmask;
 
 #if BX_DEBUG

@@ -1,4 +1,4 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2000  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -24,7 +24,6 @@
 // if including from C parser, need basic types etc
 #ifndef __cplusplus
 #include "config.h"
-#include "osdep.h"
 #endif
 
 #if BX_USE_LOADER
@@ -42,6 +41,8 @@ void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
 
 
 #define BX_DBG_NO_HANDLE 1000
+
+#define EMPTY_ARG (-999)
 
 extern Bit32u dbg_cpu;
 
@@ -65,12 +66,11 @@ extern int bxparse(void);
 extern void bxerror(char *s);
 
 typedef struct {
-  Bit64s from;
-  Bit64s to;
+  Bit32u from;
+  Bit32u to;
 } bx_num_range;
-#define EMPTY_ARG (-1)
 
-bx_num_range make_num_range (Bit64s from, Bit64s to);
+bx_num_range make_num_range (Bit32u from, Bit32u to);
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 void bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset);
 void bx_dbg_trace_on_command(void);
@@ -95,8 +95,8 @@ void bx_dbg_print_string_command(Bit32u addr);
 void bx_dbg_show_command(char*); /* BW */
 void enter_playback_entry();
 void bx_dbg_print_stack_command(int nwords);
-void bx_dbg_watch(int read, Bit32u address);
-void bx_dbg_unwatch(int read, Bit32u address);
+void bx_dbg_watch(Boolean read, Bit32u address);
+void bx_dbg_unwatch(Boolean read, Bit32u address);
 void bx_dbg_continue_command(void);
 void bx_dbg_stepN_command(bx_dbg_icount_t count);
 void bx_dbg_set_command(char *p1, char *p2, char *p3);

@@ -1,4 +1,4 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2000  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -32,11 +32,11 @@ extern "C" {
 
 #include "bochs.h"
 
-#if HAVE_LIBREADLINE
+#if USE_READLINE
 extern "C" {
 #include <stdio.h>
 #include <readline/readline.h>
-#if HAVE_READLINE_HISTORY_H
+#if READLINE_NEEDS_HISTORY_H
 #include <readline/history.h>
 #endif
 }
@@ -462,17 +462,17 @@ bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
     }
-#if HAVE_LIBREADLINE
+#if USE_READLINE
   if (bx_infile_stack_index == 0) {
+    // disable ^C handling during readline so that I get get to GDB
+    //set_ctrlc_handler (0);
     charptr_ret = readline (prompt);
-    // beward, returns NULL on end of file
-    if (charptr_ret && strlen(charptr_ret) > 0) {
-      add_history (charptr_ret);
-      strcpy (tmp_buf, charptr_ret);
-      strcat (tmp_buf, "\n");
-      free (charptr_ret);
-      charptr_ret = &tmp_buf[0];
-    }
+    //set_ctrlc_handler (1);
+    if (strlen(charptr_ret) > 0) add_history (charptr_ret);
+    strcpy (tmp_buf, charptr_ret);
+    strcat (tmp_buf, "\n");
+    free (charptr_ret);
+    charptr_ret = &tmp_buf[0];
   } else {
     charptr_ret = fgets(tmp_buf, 512,
       bx_infile_stack[bx_infile_stack_index].fp);
@@ -997,7 +997,7 @@ bx_dbg_print_string_command(Bit32u start_addr)
       for (int i = 0; ; i++) {
 	    Bit32u paddr;
 	    Bit32u paddr_valid;
-	    Bit8u buf[1];
+	    Bit8u buf[0];
 	    BX_CPU[dbg_cpu]->dbg_xlate_linear2phy(start_addr+i, &paddr, &paddr_valid);
 	    if (paddr_valid) {
 		  if (BX_MEM[0]->dbg_fetch_mem(paddr, 1, buf)) {
@@ -1083,34 +1083,6 @@ void bx_dbg_show_command(char* arg)
 		    bx_dbg.unsupported_io = 1;
 		    /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
 		    printf("Turned on all bx_dbg flags\n");
-		    return;
-	    } else if(!strcmp(arg,"\"none\"")){
-		    bx_dbg.floppy = 0;
-		    bx_dbg.keyboard = 0;
-		    bx_dbg.video = 0;
-		    bx_dbg.disk = 0;
-		    bx_dbg.pit = 0;
-		    bx_dbg.pic = 0;
-		    bx_dbg.bios = 0;
-		    bx_dbg.cmos = 0;
-		    bx_dbg.a20 = 0;
-		    bx_dbg.interrupts = 0;
-		    bx_dbg.exceptions = 0;
-		    bx_dbg.unsupported = 0;
-		    bx_dbg.temp = 0;
-		    bx_dbg.reset = 0;
-		    bx_dbg.mouse = 0;
-		    bx_dbg.io = 0;
-		    bx_dbg.debugger = 0;
-		    bx_dbg.xms = 0;
-		    bx_dbg.v8086 = 0;
-		    bx_dbg.paging = 0;
-		    bx_dbg.creg = 0;
-		    bx_dbg.dreg = 0;
-		    bx_dbg.dma = 0;
-		    bx_dbg.unsupported_io = 0;
-		    /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
-		    printf("Turned off all bx_dbg flags\n");
 		    return;
 	    } else {
 		  printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
@@ -1212,33 +1184,6 @@ bx_dbg_print_stack_command(int nwords)
 	}
 }
 
-#if !BX_HAVE_HASH_MAP
-
-static char *BX_HAVE_HASH_MAP_ERR = "context not implemented because BX_HAVE_HASH_MAP=0\n";
-char*
-bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
-{
-  static Boolean first = true;
-  if (first) {
-    fprintf (stderr, BX_HAVE_HASH_MAP_ERR);
-    first = false;
-  }
-  return "unknown context";
-}
-
-void
-bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
-{
-  fprintf (stderr, BX_HAVE_HASH_MAP_ERR);
-}
-
-#else   /* if BX_HAVE_HASH_MAP == 1 */
-
-/* Haven't figured out how to port this code to OSF1 cxx compiler.
-   Until a more portable solution is found, at least make it easy
-   to disable the template code:  just set BX_HAVE_HASH_MAP=0
-   in config.h */
-
 #include <hash_map.h>
 #include <set.h>
 
@@ -1317,7 +1262,7 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
       static char buf[80];
       if (base != 0) {
-	    snprintf (buf, 80, "non-zero base");
+	    snprintf(buf, 80, "non-zero base");
 	    return buf;
       }
       // Look up this context
@@ -1326,17 +1271,17 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 	    // Try global context
 	    cntx = context_t::get_context(0);
 	    if (!cntx) {
-		  snprintf (buf, 80, "unknown context");
+		  snprintf(buf, 80, "unknown context");
 		  return buf;
 	    }
       }
 
       symbol_entry_t* entr = cntx->get_symbol_entry(eip);
       if (!entr) {
-	    snprintf (buf, 80, "no symbol");
+	    snprintf(buf, 80, "no symbol");
 	    return buf;
       }
-      snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
+      snprintf(buf, 80, "%s+%x", entr->name, eip - entr->start);
       return buf;
 }
 
@@ -1389,7 +1334,6 @@ bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
 	    cntx->add_symbol(sym);
       }
 }
-#endif
 
 int num_write_watchpoints = 0;
 int num_read_watchpoints = 0;
@@ -1398,7 +1342,7 @@ Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 Boolean watchpoint_continue = 0;
 
 void
-bx_dbg_watch(int read, Bit32u address)
+bx_dbg_watch(Boolean read, Bit32u address)
 {
       if (read == -1) {
 	    // print watch point info
@@ -1436,7 +1380,7 @@ bx_dbg_watch(int read, Bit32u address)
 }
 
 void
-bx_dbg_unwatch(int read, Bit32u address)
+bx_dbg_unwatch(Boolean read, Bit32u address)
 {
       if (read == -1) {
 	    // unwatch all
@@ -1494,13 +1438,10 @@ bx_dbg_continue_command(void)
 			} else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
 				stop = 1;
 				which = cpu;
-			}
-			// even if stop==1, finish cycling through all processors.
-			// "which" remembers which cpu set the stop flag.  If multiple
-			// cpus set stop, too bad.
+		    }
 		}
-		// increment time tick only after all processors have had their chance.
-		BX_TICKN(quantum);
+		// should probably remove all TICK1's from cpu loop
+		BX_TICK1();
 	}
 #endif
 
@@ -1535,7 +1476,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
   bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT; // looking for icount
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
 	// for now, step each CPU one BX_DBG_DEFAULT_ICOUNT_QUANTUM at a time
-  //bx_printf ("Stepping each CPU a total of %d cycles\n", count);
+  bx_printf ("Stepping each CPU a total of %d cycles\n", count);
 	for (unsigned cycle=0; cycle < count; cycle++) {
 		for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
 		  //bx_printf ("Stepping %s\n", BX_CPU[cpu]->name);
@@ -1547,7 +1488,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 		}
 		BX_TICK1 ();
 	}
-  //bx_printf ("Stepped each CPU a total of %d cycles\n", count);
+  bx_printf ("Stepped each CPU a total of %d cycles\n", count);
 #endif
 
   BX_INSTR_DEBUG_PROMPT();
@@ -2800,13 +2741,13 @@ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   else if ( !strcmp(symbol, "gs") ) {
     is_OK = BX_CPU[dbg_cpu]->dbg_set_reg(BX_DBG_REG_GS, val);
     }
-  else if ( !strcmp(symbol, "cpu") ) {
-      if ((val >= APIC_MAX_ID) || (apic_index[val] == NULL)) {
-        fprintf (stderr, "invalid cpu id number\n");
-        return;
-      }
-      dbg_cpu = val;
-    }
+	else if ( !strcmp(symbol, "cpu") ) {
+		  if (!(val >= 0 && val < APIC_MAX_ID) || (apic_index[val] == NULL)) {
+				fprintf (stderr, "invalid cpu id number\n");
+			  return;
+			}
+		  dbg_cpu = val;
+	  }
   else if ( !strcmp(symbol, "synchronous_dma") ) {
     bx_guard.async.dma = !val;
     return;
@@ -3183,7 +3124,7 @@ bx_dbg_maths_expression_command(char *expr)
         res = data1+data2;
         fprintf(stderr," %x + %x = %x ",data1,data2,res);
         data1 = res;
-  break;
+	break;
       case '-':  
         res = data1-data2;
         fprintf(stderr," %x - %x = %x ",data1,data2,res);
@@ -3557,7 +3498,7 @@ bx_dbg_info_tss_command(bx_num_range n) {
 }
 
 bx_num_range 
-make_num_range (Bit64s from, Bit64s to)
+make_num_range (Bit32u from, Bit32u to)
 {
   bx_num_range x;
   x.from = from;

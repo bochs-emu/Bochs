@@ -21,6 +21,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 
 
@@ -40,7 +41,7 @@
   void
 BX_CPU_C::ESC0(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_FPU
@@ -53,7 +54,7 @@ BX_CPU_C::ESC0(BxInstruction_t *i)
   void
 BX_CPU_C::ESC1(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_FPU
@@ -66,7 +67,7 @@ BX_CPU_C::ESC1(BxInstruction_t *i)
   void
 BX_CPU_C::ESC2(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_FPU
@@ -79,7 +80,7 @@ BX_CPU_C::ESC2(BxInstruction_t *i)
   void
 BX_CPU_C::ESC3(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 
@@ -96,7 +97,7 @@ BX_CPU_C::ESC3(BxInstruction_t *i)
   void
 BX_CPU_C::ESC4(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_FPU
@@ -109,7 +110,7 @@ BX_CPU_C::ESC4(BxInstruction_t *i)
   void
 BX_CPU_C::ESC5(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_FPU
@@ -122,7 +123,7 @@ BX_CPU_C::ESC5(BxInstruction_t *i)
   void
 BX_CPU_C::ESC6(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_FPU
@@ -135,7 +136,7 @@ BX_CPU_C::ESC6(BxInstruction_t *i)
   void
 BX_CPU_C::ESC7(BxInstruction_t *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
+  if ( cr0.em || cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_FPU
@@ -152,11 +153,11 @@ BX_CPU_C::FWAIT(BxInstruction_t *i)
   // WAIT doesn't generate single steps on 8086.
   // The same goes for prefix instructions, and instructions which
   // modify segment registers. (pg4-16)
-  // BX_CPU_THIS_PTR single_step_event = 0;
+  // single_step_event = 0;
   bx_panic("WAIT: not implemented for < 386\n");
 #else // BX_CPU_LEVEL >= 3
 
-  if ( BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp ) {
+  if ( cr0.ts && cr0.mp ) {
     exception(BX_NM_EXCEPTION, 0, 0); // no error
     }
 #if BX_SUPPORT_FPU
