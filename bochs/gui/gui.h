@@ -23,6 +23,7 @@
 
 class bx_gui_c : public logfunctions {
 public:
+  bx_gui_c (void);
   // Define the following functions in the module for your
   // particular GUI (x.cc, beos.cc, ...)
   static void specific_init(bx_gui_c *th, int argc, char **argv,

@@ -41,6 +41,13 @@ bx_gui_c   bx_gui;
 #define BX_GUI_THIS bx_gui.
 #define LOG_THIS BX_GUI_THIS
 
+bx_gui_c::bx_gui_c(void)
+{
+  setprefix("[GUI ]",__FILE__,__LINE__);
+  settype(GUILOG);
+  setio(SAFE_GET_IOFUNC());
+}
+
   void
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 {
