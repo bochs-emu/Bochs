@@ -140,9 +140,9 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   //
   if ((this->fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1) {
     if (errno == EACCES)
-      BX_INFO(("eth_linux: must be root or have CAP_NET_RAW capability to open socket\n"));
+      BX_INFO(("eth_linux: must be root or have CAP_NET_RAW capability to open socket"));
     else
-      BX_INFO(("eth_linux: could not open socket\n"));
+      BX_INFO(("eth_linux: could not open socket"));
     this->fd = -1;
     return;
   }
@@ -186,7 +186,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
 
   // Set up non-blocking i/o
   if (fcntl(this->fd, F_SETFL, O_NONBLOCK) == -1) {
-    BX_INFO(("eth_linux: could not set non-blocking i/o on socket\n"));
+    BX_INFO(("eth_linux: could not set non-blocking i/o on socket"));
     close(this->fd);
     this->fd = -1;
     return;

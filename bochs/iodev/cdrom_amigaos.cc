@@ -210,7 +210,7 @@ cdrom_interface::capacity()
         return(cap.sectors);
 
   else
-      BX_PANIC (("Couldn't get media capacity\n"));
+      BX_PANIC (("Couldn't get media capacity"));
 }
 
   void

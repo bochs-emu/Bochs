@@ -121,16 +121,16 @@ setup_inputhandler(void)
                 DoIO((struct IORequest *)inputReqBlk);
                 }
             else
-                BX_PANIC(("Amiga: Could not open input.device\n"));
+                BX_PANIC(("Amiga: Could not open input.device"));
             }
         else
-       		BX_PANIC(("Amiga: Could not create I/O request\n"));
+       		BX_PANIC(("Amiga: Could not create I/O request"));
         }
     else
-        BX_PANIC(("Amiga: Could not allocate interrupt struct memory\n"));
+        BX_PANIC(("Amiga: Could not allocate interrupt struct memory"));
     }
 	else
-    	printf(("Amiga: Could not create message port\n"));
+    	printf(("Amiga: Could not create message port"));
 }
 
 Boolean
@@ -170,7 +170,7 @@ open_screen(void)
         FreeAslRequest(smr);
       }
     	else
-        	BX_PANIC(("Amiga: Can't start without a screen\n"));
+        	BX_PANIC(("Amiga: Can't start without a screen"));
 
   		h = GetCyberIDAttr(CYBRIDATTR_HEIGHT, id);
         w = GetCyberIDAttr(CYBRIDATTR_WIDTH, id);
@@ -191,7 +191,7 @@ open_screen(void)
       TAG_DONE);
 
       if(!screen)
-      	BX_PANIC(("Amiga: Couldn't open screen\n"));
+      	BX_PANIC(("Amiga: Couldn't open screen"));
 
       window = OpenWindowTags(NULL,
              WA_CustomScreen,(int)screen,
@@ -217,7 +217,7 @@ open_screen(void)
             d = GetCyberIDAttr(CYBRIDATTR_DEPTH, id);
         }
     	else
-            BX_PANIC(("Amiga: Couldn't get ScreenDrawInfo\n"));
+            BX_PANIC(("Amiga: Couldn't get ScreenDrawInfo"));
 
       window = OpenWindowTags(NULL,
              WA_Width,w,
@@ -233,14 +233,14 @@ open_screen(void)
              UnlockPubScreen(NULL,pub_screen);
    }
    else
-   	BX_PANIC(("Amiga: Couldn't lock the public screen\n"));
+   	BX_PANIC(("Amiga: Couldn't lock the public screen"));
    }
 
     if (!window)
          bx_gui_c::exit();
 
     if ((emptypointer = (UWORD *)AllocVec (16, MEMF_CLEAR)) == NULL)
-        BX_PANIC(("Amiga: Couldn't allocate memory\n"));
+        BX_PANIC(("Amiga: Couldn't allocate memory"));
 
     vgafont = OpenDiskFont(&vgata);
 
@@ -248,7 +248,7 @@ open_screen(void)
 		hide_pointer();
 
     if(!vgafont)
-        BX_PANIC(("Amiga: Couldn't open the vga font\n"));
+        BX_PANIC(("Amiga: Couldn't open the vga font"));
 
      SetFont(window->RPort, vgafont);
 
@@ -284,28 +284,28 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
   IntuitionBase = (struct IntuitionBase *)OpenLibrary("intuition.library", 39);
   if (IntuitionBase == NULL)
-    BX_PANIC(("Amiga: Failed to open intuition.library v39 or later!\n"));
+    BX_PANIC(("Amiga: Failed to open intuition.library v39 or later!"));
 
 
   GfxBase = (struct GfxBase *)OpenLibrary("graphics.library", 39);
   if (GfxBase == NULL)
-    BX_PANIC(("Amiga: Failed to open graphics.library v39 or later!\n"));
+    BX_PANIC(("Amiga: Failed to open graphics.library v39 or later!"));
 
   GadToolsBase = OpenLibrary("gadtools.library", 37);
     if (GadToolsBase == NULL)
-    BX_PANIC(("Amiga: Failed to open gadtools.library v37 or later!\n"));
+    BX_PANIC(("Amiga: Failed to open gadtools.library v37 or later!"));
 
   CyberGfxBase = OpenLibrary("cybergraphics.library", 40);
   if (CyberGfxBase == NULL)
-    BX_PANIC(("Amiga: Failed to open cybergraphics.library v40 or later!\n"));
+    BX_PANIC(("Amiga: Failed to open cybergraphics.library v40 or later!"));
 
   AslBase = OpenLibrary("asl.library", 38);
   if (AslBase == NULL)
-    BX_PANIC(("Amiga: Failed to open asl.library v38 or later!\n"));
+    BX_PANIC(("Amiga: Failed to open asl.library v38 or later!"));
 
   DiskfontBase = OpenLibrary("diskfont.library", 38);
   if (DiskfontBase == NULL)
-   	BX_PANIC(("Amiga: Failed to open diskfont.library v38 or later!\n"));
+   	BX_PANIC(("Amiga: Failed to open diskfont.library v38 or later!"));
 
     open_screen();
     setup_inputhandler();
@@ -498,7 +498,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
     Bit8u *a;
 
     if (bx_image_entries >= BX_MAX_PIXMAPS) {
-    BX_PANIC(("amiga: too many pixmaps, increase BX_MAX_PIXMAPS\n"));
+    BX_PANIC(("amiga: too many pixmaps, increase BX_MAX_PIXMAPS"));
     }
 
 	bx_header_image[bx_headerbar_entries].LeftEdge    = 0;
