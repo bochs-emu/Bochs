@@ -924,10 +924,15 @@ AC_ARG_WITH(amigaos,
   [  --with-amigaos                    use MorphOS (Amiga)],
   )
 
+AC_ARG_WITH(sdl,
+  [  --with-sdl                        use SDL libraries],
+  )
+
 AC_MSG_CHECKING(for gui library to use)
 
 dnl // make sure X Windows is default if no other chosen
-if (test "$with_x11" != yes) && \
+if (test "$with_sdl" != yes) && \
+   (test "$with_x11" != yes) && \
    (test "$with_beos" != yes) && \
    (test "$with_win32" != yes) && \
    (test "$with_nogui" != yes) && \
@@ -985,6 +990,11 @@ elif test "$with_beos" = yes; then
   AC_DEFINE(BX_WITH_BEOS, 1)
   GUI_OBJS='$(GUI_OBJS_BEOS)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
+elif test "$with_sdl" = yes; then
+  AC_MSG_RESULT(sdl)
+  AC_DEFINE(BX_WITH_SDL, 1)
+  GUI_OBJS='$(GUI_OBJS_SDL)'
+  GUI_LINK_OPTS='$(GUI_LINK_OPTS_SDL)'
 elif test "$with_rfb" = yes; then
   AC_MSG_RESULT(rfb)
   AC_DEFINE(BX_WITH_RFB, 1)
