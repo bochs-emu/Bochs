@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.13 2002-09-10 18:56:36 bdenney Exp $
+// $Id: tasking.cc,v 1.14 2002-09-13 16:23:02 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -487,6 +487,16 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
 
   BX_CPU_THIS_PTR prev_eip = EIP = newEIP;
   write_eflags(newEFLAGS, 1,1,1,1);
+#if BX_SUPPORT_X86_64
+  RAX = newEAX;
+  RCX = newECX;
+  RDX = newEDX;
+  RBX = newEBX;
+  RSP = newESP;
+  RBP = newEBP;
+  RSI = newESI;
+  RDI = newEDI;
+#else
   EAX = newEAX;
   ECX = newECX;
   EDX = newEDX;
@@ -495,6 +505,7 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
   EBP = newEBP;
   ESI = newESI;
   EDI = newEDI;
+#endif
 
   // Fill in selectors for all segment registers.  If errors
   // occur later, the selectors will at least be loaded.
@@ -964,4 +975,26 @@ BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
              (unsigned) BX_CPU_THIS_PTR tr.cache.type));
     }
 }
+
+#if BX_SUPPORT_X86_64
+  void
+BX_CPU_C::get_RSP_from_TSS(unsigned pl, Bit64u *rsp)
+{
+  if (BX_CPU_THIS_PTR tr.cache.valid==0)
+    BX_PANIC(("get_RSP_from_TSS: TR.cache invalid"));
+
+  // 32-bit TSS
+  Bit32u TSSstackaddr, save_upper;
+
+  TSSstackaddr = 8*pl + 4;
+  if ( (TSSstackaddr+7) >
+       BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled )
+    exception(BX_TS_EXCEPTION,
+              BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
+
+  access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base +
+    TSSstackaddr,   8, 0, BX_READ, rsp);
+}
+#endif  // #if BX_SUPPORT_X86_64
+
 #endif

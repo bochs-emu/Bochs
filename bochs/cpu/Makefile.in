@@ -51,7 +51,7 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # been synced yet.
 OBJS32 = \
 	init.o \
-	cpu.o resolve32.o fetchdecode.o \
+	cpu.o fetchdecode.o \
 	exception.o \
 	ctrl_xfer_pro.o \
 	flag_ctrl_pro.o \
@@ -61,7 +61,6 @@ OBJS32 = \
 	lazy_flags.o \
 	paging.o \
 	vm8086.o \
-	tasking.o \
 	debugstuff.o \
 	arith32.o \
 	mult32.o \
@@ -90,6 +89,7 @@ OBJS32 = \
 # Objects which are synced between the cpu and cpu64 code and
 # are used for either compile.
 OBJSXX = \
+	resolve32.o \
 	access.o \
 	shift16.o \
 	logical16.o \
@@ -102,6 +102,8 @@ OBJSXX = \
 	$(APIC_OBJS) \
 	bcd.o \
 	mult16.o \
+	tasking.o \
+
 	
 # Objects which are only used for x86-64 code, but which have been
 # moved to the cpu/ directory since they cause no conflict at all
