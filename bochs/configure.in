@@ -58,8 +58,6 @@ CXXFLAGS="$CXXFLAGS $ADD_FLAGS"
 
 AC_MSG_CHECKING(for standard CFLAGS on this platform)
 AC_MSG_RESULT($ADD_FLAGS)
-AC_MSG_CHECKING(for default library on this platform)
-AC_MSG_RESULT($DEFAULT_GUI)
 
 dnl // make sure X Windows is default if no other chosen
 if (test "$with_sdl" != yes) && \
@@ -1018,6 +1016,8 @@ CD_UP_TWO="echo done"
 INSTALL_TARGET=install_unix
 INSTALL_LIST_FOR_PLATFORM=
 
+AC_MSG_CHECKING(for default gui on this platform)
+AC_MSG_RESULT($DEFAULT_GUI)
 AC_MSG_CHECKING(for gui library to use)
 
 # the $with_* variable tells the gui library to use, but does NOT necessarily
