@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.120 2004-10-04 19:28:55 vruppert Exp $
+// $Id: rombios.c,v 1.121 2004-10-15 15:34:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -119,10 +119,6 @@
 //     This is ok. But DL should be reincremented afterwards. 
 //   - Fix all "FIXME ElTorito Various"
 //   - should be able to boot any cdrom instead of the first one
-//
-//   Boot
-//   - the bios should try to boot from different devices. 
-//     Use cmos regs 0x3d & high nibble of 0x38 to store up to 3 boot devices from 16
 //
 //   BCC Bug: find a generic way to handle the bug of #asm after an "if"  (fixed in 0.16.7)
 
@@ -916,10 +912,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.120 $";
-static char bios_date_string[] = "$Date: 2004-10-04 19:28:55 $";
+static char bios_cvs_version_string[] = "$Revision: 1.121 $";
+static char bios_date_string[] = "$Date: 2004-10-15 15:34:44 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.120 2004-10-04 19:28:55 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.121 2004-10-15 15:34:44 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1765,14 +1761,15 @@ print_boot_device(cdboot, drive)
 //   displays the reason why boot failed
 //--------------------------------------------------------------------------
   void
-print_boot_failure(cdboot, drive, reason)
-  Bit8u cdboot; Bit8u drive;
+print_boot_failure(cdboot, drive, reason, lastdrive)
+  Bit8u cdboot; Bit8u drive; Bit8u lastdrive;
 {
   Bit16u drivenum = drive&0x7f;
 
   // cdboot: 1 if boot from cd, 0 otherwise
   // drive : drive number
   // reason: 0 signature check failed, 1 read error
+  // lastdrive: 1 boot drive is the last one in boot sequence
  
   if (cdboot)
     bios_printf(BIOS_PRINTF_INFO | BIOS_PRINTF_SCREEN, "Boot from %s failed\n",drivetypes[2]);
@@ -1781,10 +1778,12 @@ print_boot_failure(cdboot, drive, reason)
   else
     bios_printf(BIOS_PRINTF_INFO | BIOS_PRINTF_SCREEN, "Boot from %s %d failed\n", drivetypes[0],drivenum);
 
-  if (reason==0)
-    BX_PANIC("Not a bootable disk\n");
-  else
-    BX_PANIC("Could not read the boot disk\n");
+  if (lastdrive==1) {
+    if (reason==0)
+      BX_PANIC("Not a bootable disk\n");
+    else
+      BX_PANIC("Could not read the boot disk\n");
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -7299,15 +7298,17 @@ int17_function(regs, ds, iret_addr)
 
 // returns bootsegment in ax, drive in bl
   Bit32u 
-int19_function()
+int19_function(bseqnr)
+Bit8u bseqnr;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
-  Bit8u  bootseq;
+  Bit16u bootseq;
   Bit8u  bootdrv;
   Bit8u  bootcd;
   Bit8u  bootchk;
   Bit16u bootseg;
   Bit16u status;
+  Bit8u  lastdrive=0;
 
   // if BX_ELTORITO_BOOT is not defined, old behavior
   //   check bit 5 in CMOS reg 0x2d.  load either 0x00 or 0x80 into DL
@@ -7315,25 +7316,39 @@ int19_function()
   //     0: system boot sequence, first drive C: then A:
   //     1: system boot sequence, first drive A: then C:
   // else BX_ELTORITO_BOOT is defined
-  //   CMOS reg 0x3D contains the boot device :
-  //     0x01 : floppy 
-  //     0x02 : harddrive
-  //     0x03 : cdrom
-  //     else : floppy for now.
+  //   CMOS regs 0x3D and 0x38 contain the boot sequence:
+  //     CMOS reg 0x3D & 0x0f : 1st boot device
+  //     CMOS reg 0x3D & 0xf0 : 2nd boot device
+  //     CMOS reg 0x38 & 0xf0 : 3rd boot device
+  //   boot device codes:
+  //     0x00 : not defined
+  //     0x01 : first floppy 
+  //     0x02 : first harddrive
+  //     0x03 : first cdrom
+  //     else : boot failure
 
   // Get the boot sequence
 #if BX_ELTORITO_BOOT
   bootseq=inb_cmos(0x3d);
+  bootseq|=((inb_cmos(0x38) & 0xf0) << 4);
 
+  if (bseqnr==2) bootseq >>= 4;
+  if (bseqnr==3) bootseq >>= 8;
+  if (bootseq<0x10) lastdrive = 1;
   bootdrv=0x00; bootcd=0;
-  switch(bootseq) {
+  switch(bootseq & 0x0f) {
     case 0x01: bootdrv=0x00; bootcd=0; break;
     case 0x02: bootdrv=0x80; bootcd=0; break;
     case 0x03: bootdrv=0x00; bootcd=1; break;
+    default:   return 0x00000000;
     }
 #else
   bootseq=inb_cmos(0x2d);
 
+  if (bseqnr==2) {
+    bootseq ^= 0x20;
+    lastdrive = 1;
+  }
   bootdrv=0x00; bootcd=0;
   if((bootseq&0x20)==0) bootdrv=0x80;
 #endif // BX_ELTORITO_BOOT
@@ -7346,7 +7361,7 @@ int19_function()
     // If failure
     if ( (status & 0x00ff) !=0 ) {
       print_cdromboot_failure(status);
-      print_boot_failure(bootcd, bootdrv, 1);
+      print_boot_failure(bootcd, bootdrv, 1, lastdrive);
       return 0x00000000;
       }
 
@@ -7385,7 +7400,7 @@ int19_load_done:
 ASM_END
     
     if (status != 0) {
-      print_boot_failure(bootcd, bootdrv, 1);
+      print_boot_failure(bootcd, bootdrv, 1, lastdrive);
       return 0x00000000;
       }
     }
@@ -7394,7 +7409,7 @@ ASM_END
   // bootchk = 1 : signature check disabled
   // bootchk = 0 : signature check enabled
   if (bootdrv != 0) bootchk = 0;
-  else bootchk = inb_cmos(0x38);
+  else bootchk = inb_cmos(0x38) & 0x01;
 
 #if BX_ELTORITO_BOOT
   // if boot from cd, no signature check
@@ -7404,7 +7419,7 @@ ASM_END
 
   if (bootchk == 0) {
     if (read_word(bootseg,0x1fe) != 0xaa55) {
-      print_boot_failure(bootcd, bootdrv, 0);
+      print_boot_failure(bootcd, bootdrv, 0, lastdrive);
       return 0x00000000;
       }
     }
@@ -7602,7 +7617,7 @@ int1a_function(regs, ds, iret_addr)
       // real mode PCI BIOS functions now handled in assembler code
       // this C code handles the error code for information only
       if (regs.u.r8.al == 0xff) {
-        BX_INFO("PCI BIOS not present\n");
+        BX_INFO("PCI BIOS: PCI not present\n");
       } else if (regs.u.r8.al == 0x81) {
         BX_INFO("unsupported PCI BIOS function 0x%02x\n", regs.u.r8.al);
       } else if (regs.u.r8.al == 0x83) {
@@ -7906,13 +7921,37 @@ int19_relocated: ;; Boot function, relocated
   xor  ax, ax
   mov  ds, ax
 
+  ;; 1st boot device
+  mov  ax, #0x0001
+  push ax
   call _int19_function
+  inc  sp
+  inc  sp
   ;; bl contains the boot drive
   ;; ax contains the boot segment or 0 if failure
 
+  test       ax, ax  ;; if ax is 0 try next boot device
+  jnz        boot_setup
+
+  ;; 2nd boot device
+  mov  ax, #0x0002
+  push ax
+  call _int19_function
+  inc  sp
+  inc  sp
+  test       ax, ax  ;; if ax is 0 try next boot device
+  jnz        boot_setup
+
+  ;; 3rd boot device
+  mov  ax, #0x0003
+  push ax
+  call _int19_function
+  inc  sp
+  inc  sp
   test       ax, ax  ;; if ax is 0 call int18
   jz         int18_handler
 
+boot_setup:
   mov dl,    bl      ;; set drive so guest os find it
   shl eax,   #0x04   ;; convert seg to ip
   mov 2[bp], ax      ;; set ip
