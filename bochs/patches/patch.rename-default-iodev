@@ -1,0 +1,118 @@
+Index: iodev/iodev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
+retrieving revision 1.18.4.23
+diff -u -r1.18.4.23 iodev.h
+--- iodev/iodev.h	22 Oct 2002 23:48:41 -0000	1.18.4.23
++++ iodev/iodev.h	23 Oct 2002 17:55:12 -0000
+@@ -29,7 +29,10 @@
+ /* maximum number of emulated devices allowed.  floppy, mda, etc...
+    you can increase this to anything below 256 since an 8-bit handle
+    is used for each device */
+-#define BX_MAX_IO_DEVICES 20
++#define BX_MAX_IO_DEVICES 21
++
++/* the last device in the array is the "default" I/O device */
++#define BX_DEFAULT_IO_DEVICE   (BX_MAX_IO_DEVICES-1)
+ 
+ /* number of IRQ lines supported.  In an ISA PC there are two
+    PIC chips cascaded together.  each has 8 IRQ lines, so there
+@@ -330,7 +333,7 @@
+     bx_read_handler_t funct;
+     void             *this_ptr;
+     const char       *handler_name;  // name of device
+-    } io_read_handler[BX_MAX_IO_DEVICES + 1];
++    } io_read_handler[BX_MAX_IO_DEVICES];
+   unsigned              num_read_handles;
+ 
+   Bit8u                 write_handler_id[0x10000]; // 64K
+@@ -338,7 +341,7 @@
+     bx_write_handler_t funct;
+     void              *this_ptr;
+     const char        *handler_name;  // name of device
+-    } io_write_handler[BX_MAX_IO_DEVICES + 1];
++    } io_write_handler[BX_MAX_IO_DEVICES];
+   unsigned              num_write_handles;
+ 
+   signed int            default_read_handler_id;
+Index: iodev/devices.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/devices.cc,v
+retrieving revision 1.34.2.23
+diff -u -r1.34.2.23 devices.cc
+--- iodev/devices.cc	23 Oct 2002 17:33:21 -0000	1.34.2.23
++++ iodev/devices.cc	23 Oct 2002 17:55:13 -0000
+@@ -96,14 +96,14 @@
+   default_write_handler_id = -1;
+ 
+   /* set unused elements to appropriate values */
+-  for (i=0; i < BX_MAX_IO_DEVICES + 1; i++) {
++  for (i=0; i < BX_MAX_IO_DEVICES; i++) {
+     io_read_handler[i].funct  = NULL;
+     io_write_handler[i].funct = NULL;
+     }
+ 
+   for (i=0; i < 0x10000; i++) {
+-    read_handler_id[i] = BX_MAX_IO_DEVICES;  // not assigned
+-    write_handler_id[i] = BX_MAX_IO_DEVICES;  // not assigned
++    read_handler_id[i] = BX_DEFAULT_IO_DEVICE;  // not assigned
++    write_handler_id[i] = BX_DEFAULT_IO_DEVICE;  // not assigned
+     }
+ 
+   for (i=0; i < BX_MAX_IRQS; i++) {
+@@ -425,7 +425,7 @@
+ 
+   if (handle >= num_read_handles) {
+     /* no existing handle found, create new one */
+-    if (num_read_handles >= BX_MAX_IO_DEVICES) {
++    if (num_read_handles >= BX_DEFAULT_IO_DEVICE) {
+       BX_INFO(("too many IO devices installed."));
+       BX_PANIC(("  try increasing BX_MAX_IO_DEVICES"));
+       }
+@@ -436,7 +436,7 @@
+     }
+ 
+   /* change table to reflect new handler id for that address */
+-  if (read_handler_id[addr] < BX_MAX_IO_DEVICES) {
++  if (read_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
+     // another handler is already registered for that address
+ 
+     // if it is not the Unmapped port handler, bail
+@@ -469,7 +469,7 @@
+ 
+   if (handle >= num_write_handles) {
+     /* no existing handle found, create new one */
+-    if (num_write_handles >= BX_MAX_IO_DEVICES) {
++    if (num_write_handles >= BX_DEFAULT_IO_DEVICE) {
+       BX_INFO(("too many IO devices installed."));
+       BX_PANIC(("  try increasing BX_MAX_IO_DEVICES"));
+       }
+@@ -480,7 +480,7 @@
+     }
+ 
+   /* change table to reflect new handler id for that address */
+-  if (write_handler_id[addr] < BX_MAX_IO_DEVICES) {
++  if (write_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
+     // another handler is already registered for that address
+  
+     // if it is not the Unmapped port handler, bail
+@@ -508,8 +508,8 @@
+ {
+   unsigned handle;
+ 
+-  /* handle is fixed to the MAX */
+-  handle = BX_MAX_IO_DEVICES;
++  /* handle is fixed to the default I/O device */
++  handle = BX_DEFAULT_IO_DEVICE;
+ 
+   if (io_read_handler[handle].funct != NULL) {
+     BX_INFO(("Default io read handler already registered '%s'",io_read_handler[handle].handler_name));
+@@ -532,7 +532,7 @@
+   unsigned handle;
+ 
+   /* handle is fixed to the MAX */
+-  handle = BX_MAX_IO_DEVICES;
++  handle = BX_DEFAULT_IO_DEVICE;
+ 
+   if (io_write_handler[handle].funct != NULL) {
+     BX_INFO(("Default io write handler already registered '%s'",io_write_handler[handle].handler_name));
