@@ -21,27 +21,27 @@
 #define	HIPOWERon	6	/* odd poly, negative terms */
 static const u64 oddnegterms[HIPOWERon] =
 {
-  0x0000000000000000LL, /* Dummy (not for - 1.0) */
-  0x015328437f756467LL,
-  0x0005dda27b73dec6LL,
-  0x0000226bf2bfb91aLL,
-  0x000000ccc439c5f7LL,
-  0x0000000355438407LL
+  BX_CONST64(0x0000000000000000), /* Dummy (not for - 1.0) */
+  BX_CONST64(0x015328437f756467),
+  BX_CONST64(0x0005dda27b73dec6),
+  BX_CONST64(0x0000226bf2bfb91a),
+  BX_CONST64(0x000000ccc439c5f7),
+  BX_CONST64(0x0000000355438407)
 } ;
 
 #define	HIPOWERop	6	/* odd poly, positive terms */
 static const u64 oddplterms[HIPOWERop] =
 {
-/*  0xaaaaaaaaaaaaaaabLL,  transferred to fixedpterm[] */
-  0x0db55a71875c9ac2LL,
-  0x0029fce2d67880b0LL,
-  0x0000dfd3908b4596LL,
-  0x00000550fd61dab4LL,
-  0x0000001c9422b3f9LL,
-  0x000000003e3301e1LL
+/*  BX_CONST64(0xaaaaaaaaaaaaaaab),  transferred to fixedpterm[] */
+  BX_CONST64(0x0db55a71875c9ac2),
+  BX_CONST64(0x0029fce2d67880b0),
+  BX_CONST64(0x0000dfd3908b4596),
+  BX_CONST64(0x00000550fd61dab4),
+  BX_CONST64(0x0000001c9422b3f9),
+  BX_CONST64(0x000000003e3301e1)
 };
 
-static const u64 denomterm = 0xebd9b842c5c53a0eLL;
+static const u64 denomterm = BX_CONST64(0xebd9b842c5c53a0e);
 
 static const Xsig fixedpterm = MK_XSIG(0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa);
 

@@ -273,6 +273,14 @@
 #define SIZEOF_UNSIGNED_LONG_LONG 0
 #define SIZEOF_INT_P              0
 
+#define BX_64BIT_CONSTANTS_USE_LL 1
+#if BX_64BIT_CONSTANTS_USE_LL
+// doesn't work on Microsoft Visual C++, maybe others
+#define BX_CONST64(x)  (x##LL)
+#else
+#define BX_CONST64(x)  (x)
+#endif
+
 #if BX_WITH_WIN32
   typedef unsigned char      Bit8u;
   typedef   signed char      Bit8s;

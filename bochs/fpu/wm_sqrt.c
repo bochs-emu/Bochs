@@ -87,7 +87,7 @@ int wm_sqrt(FPU_REG *n, s32 dummy1, s32 dummy2, u16 control_w, u8 sign)
   work += ((u64)guess32) << 32;
 
   if ( work == 0 )  /* This happens in one or two special cases */
-    work = 0xffffffffffffffffLL;
+    work = BX_CONST64(0xffffffffffffffff);
 
   guess = work;
 

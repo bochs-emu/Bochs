@@ -25,18 +25,18 @@
 
 static const u64 pos_terms_l[N_COEFF_P] =
 {
-  0xaaaaaaaaaaaaaaabLL,
-  0x00d00d00d00cf906LL,
-  0x000006b99159a8bbLL,
-  0x000000000d7392e6LL
+  BX_CONST64(0xaaaaaaaaaaaaaaab),
+  BX_CONST64(0x00d00d00d00cf906),
+  BX_CONST64(0x000006b99159a8bb),
+  BX_CONST64(0x000000000d7392e6)
 };
 
 static const u64 neg_terms_l[N_COEFF_N] =
 {
-  0x2222222222222167LL,
-  0x0002e3bc74aab624LL,
-  0x0000000b09229062LL,
-  0x00000000000c7973LL
+  BX_CONST64(0x2222222222222167),
+  BX_CONST64(0x0002e3bc74aab624),
+  BX_CONST64(0x0000000b09229062),
+  BX_CONST64(0x00000000000c7973)
 };
 
 
@@ -45,18 +45,18 @@ static const u64 neg_terms_l[N_COEFF_N] =
 #define	N_COEFF_NH	4
 static const u64 pos_terms_h[N_COEFF_PH] =
 {
-  0x0000000000000000LL,
-  0x05b05b05b05b0406LL,
-  0x000049f93edd91a9LL,
-  0x00000000c9c9ed62LL
+  BX_CONST64(0x0000000000000000),
+  BX_CONST64(0x05b05b05b05b0406),
+  BX_CONST64(0x000049f93edd91a9),
+  BX_CONST64(0x00000000c9c9ed62)
 };
 
 static const u64 neg_terms_h[N_COEFF_NH] =
 {
-  0xaaaaaaaaaaaaaa98LL,
-  0x001a01a01a019064LL,
-  0x0000008f76c68a77LL,
-  0x0000000000d58f5eLL
+  BX_CONST64(0xaaaaaaaaaaaaaa98),
+  BX_CONST64(0x001a01a01a019064),
+  BX_CONST64(0x0000008f76c68a77),
+  BX_CONST64(0x0000000000d58f5e)
 };
 
 
@@ -131,9 +131,9 @@ void	poly_sine(FPU_REG *st0_ptr)
 	  fixed_arg <<= 1;
 	}
       /* pi/2 in hex is: 1.921fb54442d18469 898CC51701B839A2 52049C1 */
-      fixed_arg = 0x921fb54442d18469LL - fixed_arg;
+      fixed_arg = BX_CONST64(0x921fb54442d18469) - fixed_arg;
       /* There is a special case which arises due to rounding, to fix here. */
-      if ( fixed_arg == 0xffffffffffffffffLL )
+      if ( fixed_arg == BX_CONST64(0xffffffffffffffff))
 	fixed_arg = 0;
 
       XSIG_LL(argSqrd) = fixed_arg; argSqrd.lsw = 0;
@@ -195,7 +195,7 @@ void	poly_sine(FPU_REG *st0_ptr)
 
 #ifdef PARANOID
   if ( (exponent(&result) >= 0)
-      && (significand(&result) > 0x8000000000000000LL) )
+      && (significand(&result) > BX_CONST64(0x8000000000000000)) )
     {
       EXCEPTION(EX_INTERNAL|0x150);
     }
@@ -218,7 +218,7 @@ void	poly_cos(FPU_REG *st0_ptr)
 #ifdef PARANOID
   if ( (exponent(st0_ptr) > 0)
       || ((exponent(st0_ptr) == 0)
-	  && (significand(st0_ptr) > 0xc90fdaa22168c234LL)) )
+	  && (significand(st0_ptr) > BX_CONST64(0xc90fdaa22168c234))) )
     {
       EXCEPTION(EX_Invalid);
       FPU_copy_to_reg0(&CONST_QNaN, TAG_Special);
@@ -300,9 +300,9 @@ void	poly_cos(FPU_REG *st0_ptr)
 	  fixed_arg <<= 1;
 	}
       /* pi/2 in hex is: 1.921fb54442d18469 898CC51701B839A2 52049C1 */
-      fixed_arg = 0x921fb54442d18469LL - fixed_arg;
+      fixed_arg = BX_CONST64(0x921fb54442d18469) - fixed_arg;
       /* There is a special case which arises due to rounding, to fix here. */
-      if ( fixed_arg == 0xffffffffffffffffLL )
+      if ( fixed_arg == BX_CONST64(0xffffffffffffffff))
 	fixed_arg = 0;
 
       exponent = -1;
@@ -360,7 +360,7 @@ void	poly_cos(FPU_REG *st0_ptr)
 	 */
 
       /* This has an exponent of -65 */
-      XSIG_LL(fix_up) = 0x898cc51701b839a2ll;
+      XSIG_LL(fix_up) = BX_CONST64(0x898cc51701b839a2);
       fix_up.lsw = 0;
 
       /* The fix-up needs to be improved for larger args */
@@ -388,7 +388,7 @@ void	poly_cos(FPU_REG *st0_ptr)
 
 #ifdef PARANOID
   if ( (exponent(&result) >= 0)
-      && (significand(&result) > 0x8000000000000000LL) )
+      && (significand(&result) > BX_CONST64(0x8000000000000000)) )
     {
       EXCEPTION(EX_INTERNAL|0x151);
     }

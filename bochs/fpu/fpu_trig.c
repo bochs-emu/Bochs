@@ -707,7 +707,7 @@ static int f_cos(FPU_REG *st0_ptr, u_char tag)
 	{
 	  if ( (exponent(st0_ptr) < 0)
 	      || ((exponent(st0_ptr) == 0)
-		  && (significand(st0_ptr) <= 0xc90fdaa22168c234LL)) )
+		  && (significand(st0_ptr) <= BX_CONST64(0xc90fdaa22168c234))) )
 	    {
 	      poly_cos(st0_ptr);
 

@@ -72,10 +72,10 @@ int FPU_u_mul(const FPU_REG *a, const FPU_REG *b, FPU_REG *c, u16 cw,
 
   c->exp = expon;
 
-  if ( ! (mu & 0x8000000000000000LL) )
+  if ( ! (mu & BX_CONST64(0x8000000000000000)) )
     {
       mu <<= 1;
-      if ( ml & 0x8000000000000000LL )
+      if ( ml & BX_CONST64(0x8000000000000000) )
 	mu |= 1;
       ml <<= 1;
       c->exp --;
