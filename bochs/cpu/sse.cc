@@ -89,8 +89,7 @@ void BX_CPU_C::PCMPGTB_VdqWq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     result.xmmsbyte(j) = (op1.xmmsbyte(j) > op2.xmmsbyte(j)) ? 0xff : 0;
   }
 
@@ -261,8 +260,7 @@ void BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++)
-  {
+  for(unsigned j=0; j<16; j++) {
     result.xmmubyte(j) = (op1.xmmubyte(j) == op2.xmmubyte(j)) ? 0xff : 0;
   }
 
@@ -699,8 +697,7 @@ void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     if(op2.xmmubyte(j) < op1.xmmubyte(j)) op1.xmmubyte(j) = op2.xmmubyte(j);
   }
 
@@ -760,8 +757,7 @@ void BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     result.xmmubyte(j) = SaturateWordSToByteU(Bit16s(op1.xmmubyte(j)) + Bit16s(op2.xmmubyte(j)));
   }
 
@@ -824,8 +820,7 @@ void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     if(op2.xmmubyte(j) > op1.xmmubyte(j)) op1.xmmubyte(j) = op2.xmmubyte(j);
   }
 
@@ -885,8 +880,7 @@ void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++)
-  {
+  for(unsigned j=0; j<16; j++) {
     result.xmmubyte(j) = (op1.xmmubyte(j) + op2.xmmubyte(j) + 1) >> 1;
   }
 
@@ -1153,8 +1147,7 @@ void BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     result.xmmsbyte(j) = SaturateWordSToByteS(Bit16s(op1.xmmsbyte(j)) - Bit16s(op2.xmmsbyte(j)));
   }
 
@@ -1282,8 +1275,7 @@ void BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     result.xmmsbyte(j) = SaturateWordSToByteS(Bit16s(op1.xmmsbyte(j)) + Bit16s(op2.xmmsbyte(j)));
   }
 
@@ -1564,12 +1556,12 @@ void BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
   for(unsigned j=0; j<4; j++)
   {
     if(op1.xmm32u(j) == 0x80008000 && op2.xmm32u(j) == 0x80008000) {
-      result.xmm32u(j) = 0x80000000;
+        result.xmm32u(j) = 0x80000000;
     }
     else
       result.xmm32u(j) = 
-		Bit32s(op1.xmm16s(2*j))   * Bit32s(op2.xmm16s(2*j)) +
-		Bit32s(op1.xmm16s(2*j+1)) * Bit32s(op2.xmm16s(2*j+1));
+        Bit32s(op1.xmm16s(2*j+0)) * Bit32s(op2.xmm16s(2*j+0)) +
+        Bit32s(op1.xmm16s(2*j+1)) * Bit32s(op2.xmm16s(2*j+1));
   }
 
   /* now write result back to destination */
@@ -1644,8 +1636,7 @@ void BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     op1.xmmubyte(j) -= op2.xmmubyte(j);
   }
 
@@ -1766,8 +1757,7 @@ void BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
-  {
+  for(unsigned j=0; j<16; j++) {
     op1.xmmubyte(j) += op2.xmmubyte(j);
   }
 
@@ -1852,13 +1842,11 @@ void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift > 15)
-  {
+  if(shift > 15) {
     op.xmm64u(0) = 0;
     op.xmm64u(1) = 0;
   }
-  else
-  {
+  else {
     op.xmm16u(0) >>= shift;
     op.xmm16u(1) >>= shift;
     op.xmm16u(2) >>= shift;
@@ -1939,13 +1927,11 @@ void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift > 15)
-  {
+  if(shift > 15) {
     op.xmm64u(0) = 0;
     op.xmm64u(1) = 0;
   }
-  else
-  {
+  else {
     op.xmm16u(0) <<= shift;
     op.xmm16u(1) <<= shift;
     op.xmm16u(2) <<= shift;
@@ -1973,13 +1959,11 @@ void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift > 31)
-  {
+  if(shift > 31) {
     op.xmm64u(0) = 0;
     op.xmm64u(1) = 0;
   }
-  else
-  {
+  else {
     op.xmm32u(0) >>= shift;
     op.xmm32u(1) >>= shift;
     op.xmm32u(2) >>= shift;
@@ -2044,13 +2028,11 @@ void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift > 31)
-  {
+  if(shift > 31) {
     op.xmm64u(0) = 0;
     op.xmm64u(1) = 0;
   }
-  else
-  {
+  else {
     op.xmm32u(0) <<= shift;
     op.xmm32u(1) <<= shift;
     op.xmm32u(2) <<= shift;
@@ -2074,13 +2056,11 @@ void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift > 63)
-  {
+  if(shift > 63) {
     op.xmm64u(0) = 0;
     op.xmm64u(1) = 0;
   }
-  else
-  {
+  else {
     op.xmm64u(0) >>= shift;
     op.xmm64u(1) >>= shift;
   }
@@ -2104,8 +2084,7 @@ void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
   result.xmm64u(0) = 0;
   result.xmm64u(1) = 0;
 
-  for(unsigned j=shift; j<16; j++)
-  {
+  for(unsigned j=shift; j<16; j++) {
     result.xmmubyte(j-shift) = op.xmmubyte(j);
   }
 
@@ -2126,13 +2105,11 @@ void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift > 63)
-  {
+  if(shift > 63) {
     op.xmm64u(0) = 0;
     op.xmm64u(1) = 0;
   }
-  else
-  {
+  else {
     op.xmm64u(0) <<= shift;
     op.xmm64u(1) <<= shift;
   }
@@ -2157,8 +2134,7 @@ void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
   result.xmm64u(0) = 0;
   result.xmm64u(1) = 0;
 
-  for(unsigned j=shift; j<16; j++)
-  {
+  for(unsigned j=shift; j<16; j++) {
     result.xmmubyte(j) = op.xmmubyte(j-shift);
   }
 

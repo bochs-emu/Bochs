@@ -651,7 +651,28 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MASKMOVDQU_VdqVRdq: SSE2 instruction still not implemented"));
+  if (! i->modC0()) {
+    BX_INFO(("MASKMOVDQU_VdqVRdq: unexpected memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn()), 
+    mask = BX_READ_XMM_REG(i->rm());
+
+  if (i->as32L()) {
+      edi = EDI;
+  }
+  else {   /* 16 bit address mode */
+      edi = DI;
+  }
+
+  /* partial write, no data will be written to memory if mask is all 0s */
+  for(unsigned j=0; j<16; j++) 
+  {
+    if(mask.xmmubyte(j) & 0x80)
+        write_virtual_byte(BX_SEG_REG_DS, edi+j, &op.xmmubyte(j));
+  }
+
 #else
   BX_INFO(("MASKMOVDQU_VdqVRdq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
