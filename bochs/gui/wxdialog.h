@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.10 2002-08-30 06:06:36 bdenney Exp $
+// $Id: wxdialog.h,v 1.11 2002-08-30 06:49:19 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -314,3 +314,228 @@ public:
 DECLARE_EVENT_TABLE()
 };
 
+/**************************************************************************
+Everything else in here is a comment!
+
+
+
+
+////////////////////////////////////////////////////////////////////////////
+// proposed dialogs, not implemented 
+////////////////////////////////////////////////////////////////////////////
+
+Here are some quick sketches of what different parts of the interface
+could look like.  None of these is implemented yet, and everything is
+open for debate.  Whoever writes the wxwindows code for any of these
+screens gets several thousand votes!
+
+
+////////////////////////////////////////////////////////////////////////////
+// ChooseConfigDialog
+////////////////////////////////////////////////////////////////////////////
+The idea is that you could choose from a set of configurations 
+(individual bochsrc files, basically).  When you first install
+Bochs, it would just have DLX Linux Demo, and Create New.
+As you create new configurations and save them, the list
+could grow.
++--------------------------------------------------------+
+|                                                        |
+|   Choose a configuration for the Bochs simulator:      |
+|                                                        |
+|   +---+                                                |
+|   | O |    DLX Linux Demo                              |
+|   | | |    Boot 10MB Hard Disk                         |
+|   +---+                                                |
+|                                                        |
+|   +---+                                                |
+|   | O |    Redhat Linux Image                          |
+|   | | |    Boot 10MB Hard Disk                         |
+|   +---+                                                |
+|                                                        |
+|   +---+                                                |
+|   | O |    FreeDOS                                     |
+|   | | |    Boot 40MB Hard Disk                         |
+|   +---+                                                |
+|                                                        |
+|    ??      Create new configuration                    |
+|                                                        |
++--------------------------------------------------------+
+
+
+////////////////////////////////////////////////////////////////////////////
+// ChooseBootDialog
+////////////////////////////////////////////////////////////////////////////
+
+This dialog basically lets you choose which disk you want to boot: floppy A,
+disk c, or cdrom.  The boot selection could be as simple as
++-------------------------------------------+
+|  Choose boot drive                        |
+|    [ ] Floppy A                           |
+|    [X] Hard Disk C                        |
+|    [ ] CD-ROM                             |
+|    [ ] CD-ROM                             |
+|                [ Help ] [ Cancel ] [ Ok ] |
++-------------------------------------------+
+or fancier with icons for the device types, and Edit buttons that
+let you go right to the configure screen for that disk drive.
++---------------------------------------------------------------+
+|                                                               |
+|          /----+                                               |
+|          |=  =|   A Drive                             +----+  |
+| [    ]   | __ |   Raw Floppy Drive                    |Edit|  |
+|          ||  ||   A:                                  +----+  |
+|          ++--++                                               |
+|                                                               |
+|          /----+                                               |
+|          |=  =|   B Drive                             +----+  |
+| [    ]   | __ |   Floppy Disk Image                   |Edit|  |
+|          ||  ||   C:\Bochs\Images\A.img               +----+  |
+|          ++--++                                               |
+|                                                               |
+|          +-----+  C Drive                                     |
+|          |=====|  Hard Disk Image                     +----+  | 
+| [BOOT]   |    o|  C:\Bochs\Images\HD30meg.img         |Edit|  |
+|          +-----+                                      +----+  |
+|                                                               |
+|            ___                                                |
+|           /   \   D Drive                             +----+  |
+| [    ]   |  O  |  ISO CD Image                        |Edit|  |
+|           \___/   C:\Bochs\Images\BootCD.img          +----+  |
+|                                                               |
+|                                    [ Help ] [ Cancel ] [ Ok ] |
++---------------------------------------------------------------+
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigNetworkDialog
+////////////////////////////////////////////////////////////////////////////
+Edit network settings
++---------------------------------------------------------------+
+|                                                               |
+|  Bochs can emulate an NE2000-compatible network card.  Would  |
+|  you like to enable it?                                       |
+|                                                               |
+|      Enable networking?  [X]                                  |
+|                                                               |
+|      NE2000 I/O address: [ 0x280 ]                            |
+|                     IRQ: [   9   ]                            |
+|             MAC address: [ b0:c4:00:00:00:00 ]                |
+|    Connection to the OS: [ Linux Packet Filter ]              |
+|     Physical NIC to use: [ eth0 ]                             |
+|   NE2000 Debug messages: [ ]                                  |
+|                                                               |
+|                                    [ Help ] [ Cancel ] [ Ok ] |
++---------------------------------------------------------------+
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigMemoryDialog
+////////////////////////////////////////////////////////////////////////////
+
+This edits options related to RAM and ROM, similar to the text menu
+1. Memory size in megabytes: 4
+2. Name of VGA BIOS image: 
+3. Name of ROM BIOS image: 
+4. ROM BIOS address: 0x00000
+5. Name of optional ROM image #1 : 
+6. optional ROM #1 address: 0x00000
+7. Name of optional ROM image #2 : 
+8. optional ROM #2 address: 0x00000
+9. Name of optional ROM image #3 : 
+10. optional ROM #3 address: 0x00000
+11. Name of optional ROM image #4 : 
+12. optional ROM #4 address: 0x00000
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigSoundDialog
+////////////////////////////////////////////////////////////////////////////
+
+This edits options related to sound blaster emulation, similar to the
+text menu
+1. SB16 is present: yes
+2. Midi file: /dev/midi00
+3. Wave file: /dev/dsp
+4. Log file: sb16.log
+5. Midi mode: 1
+6. Wave mode: 1
+7. Log mode: 2
+8. DMA timer: 600000
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigKeyboardDialog
+////////////////////////////////////////////////////////////////////////////
+keyboard related settings
+
+keyboard_mapping: enabled=1, map=US,France,Germany,Spain
+keyboard_type: xt,at,mf
+keyboard_serial_delay: 250
+paste delay
+
+more ambitious: create a button for each key on a standard keyboard, so that
+you can view/edit/load/save key mappings, produce any combination of keys 
+(esp. ones that your OS or window manager won't allow)
+
+////////////////////////////////////////////////////////////////////////////
+// ConfigTimeDialog
+////////////////////////////////////////////////////////////////////////////
+
+choose IPS
+select starting time for CMOS clock
+turn on real time PIT or not
+
+////////////////////////////////////////////////////////////////////////////
+// OtherOptionsDialog
+////////////////////////////////////////////////////////////////////////////
+
+everything in the bochsrc that doesn't fit into some other category,
+or that is used so rarely (e.g. floppy command delay) that it's not worth
+laying out manually in a dialog box.  This will probably be done in
+sort of a grid with parameter name, and value(editable) in different columns
+
+////////////////////////////////////////////////////////////////////////////
+// LogOptionsDialog
+////////////////////////////////////////////////////////////////////////////
+lets you choose which events you want to write to the log, which you
+want to ignore, etc.  You can do this at a high level, like
+
+Event type    Action
+panic          ask
+error          report
+info           ignore
+debug          ignore
+
+Or when you want more control:
+
+            panic        error        info          debug
+	    -----        ------       -----         ----- 
+keyboard     ask        report        report        report
+vga          ask        report        report        report
+network      ask        report        report        ignore
+cpu          ask        report        report        ignore
+sound        ask        report        report        ignore
+
+////////////////////////////////////////////////////////////////////////////
+// CpuRegistersDialog
+////////////////////////////////////////////////////////////////////////////
+
+this would display the current values of all CPU registers, possibly you can
+enable different groups like debug, FPU, MMX registers.  Certainly if you
+interrupt the simulation, these would be updated.  we could update periodically
+during simulation if it was useful.  If we get the debugger integrated with
+wxwindows, you could single step and update the cpu registeres, with regs that
+change marked in a different color.  Modeless dialog.
+
+////////////////////////////////////////////////////////////////////////////
+// ViewMemoryDialog
+////////////////////////////////////////////////////////////////////////////
+
+shows portions of memory, in hex or hex+ASCII or disassembled.  updates
+whenever simulation stops (after single steps for example), or we could
+update periodically.  Modeless dialog, and there could be many
+of them at once, showing different regions of memory.
+
+////////////////////////////////////////////////////////////////////////////
+// DebugControlDialog
+////////////////////////////////////////////////////////////////////////////
+has buttons for most common debugger commands such as step, breakpoint,
+display registers, or whatever.
+
+*****************************************************************/
