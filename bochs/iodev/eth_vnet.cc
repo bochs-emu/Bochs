@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.10 2004-10-07 17:38:03 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.11 2004-10-13 19:42:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -685,17 +685,18 @@ bx_vnet_pktmover_c::host_to_guest_udpipv4_packet(
   }
 
   // udp pseudo-header
-  memcpy(&ipbuf[34U-12U],host_ipv4addr,4);
-  memcpy(&ipbuf[34U-8U],guest_ipv4addr,4);
-  ipbuf[34U-4U]=0;
-  ipbuf[34U-3U]=0x11; // UDP
-  put_net2(&ipbuf[34U-2U],8U+udpdata_len);
+  ipbuf[34U-12U]=0;
+  ipbuf[34U-11U]=0x11; // UDP
+  put_net2(&ipbuf[34U-10U],8U+udpdata_len);
+  memcpy(&ipbuf[34U-8U],host_ipv4addr,4);
+  memcpy(&ipbuf[34U-4U],guest_ipv4addr,4);
   // udp header
   put_net2(&ipbuf[34U+0],source_port);
   put_net2(&ipbuf[34U+2],target_port);
   put_net2(&ipbuf[34U+4],8U+udpdata_len);
   put_net2(&ipbuf[34U+6],0);
-  put_net2(&ipbuf[34U+6], ip_checksum(&ipbuf[34U-12U],12U+8U+udpdata_len));
+  memcpy(&ipbuf[42U],udpdata,udpdata_len);
+  put_net2(&ipbuf[34U+6], ip_checksum(&ipbuf[34U-12U],12U+8U+udpdata_len) ^ (Bit16u)0xffff);
   // ip header
   memset(&ipbuf[14U],0,20U);
   ipbuf[14U+0] = 0x45;
@@ -706,7 +707,6 @@ bx_vnet_pktmover_c::host_to_guest_udpipv4_packet(
   ipbuf[14U+7] = 0x00;
   ipbuf[14U+8] = 0x07; // TTL
   ipbuf[14U+9] = 0x11; // UDP
-  memcpy(&ipbuf[42U],udpdata,udpdata_len);
 
   host_to_guest_ipv4(ipbuf,udpdata_len + 42U);
 }
