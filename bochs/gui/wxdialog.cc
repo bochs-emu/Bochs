@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.66 2003-09-05 22:07:54 vruppert Exp $
+// $Id: wxdialog.cc,v 1.67 2003-09-09 16:41:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -405,7 +405,6 @@ void FloppyConfigDialog::ShowHelp ()
 //       debuggerlogfile
 //       browse button
 //     buttonSizer:
-//       advanced
 //       help
 //       cancel
 //       ok
@@ -466,8 +465,6 @@ LogOptionsDialog::LogOptionsDialog(
   }
 
   // buttonSizer contents
-  btn = new wxButton (this, ID_Advanced, BTNLABEL_ADVANCED);
-  buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add (btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
@@ -525,9 +522,6 @@ void LogOptionsDialog::OnEvent(wxCommandEvent& event)
       break;
     case ID_Browse2:
       BrowseTextCtrl (debuggerlogfile);
-      break;
-    case ID_Advanced:
-      wxMessageBox ("The advanced dialog is not implemented yet.", "Info", wxOK, this);
       break;
     case wxID_OK:
       EndModal (wxID_OK);

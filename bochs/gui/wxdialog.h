@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.52 2003-09-05 22:07:54 vruppert Exp $
+// $Id: wxdialog.h,v 1.53 2003-09-09 16:41:25 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -16,7 +16,6 @@
 #define BTNLABEL_CANCEL "Cancel"
 #define BTNLABEL_OK "Ok"
 #define BTNLABEL_CREATE_IMG "Create Image"
-#define BTNLABEL_ADVANCED "Advanced"
 #define BTNLABEL_BROWSE "<--Browse"
 #define BTNLABEL_DEBUG_CONTINUE "Continue"
 #define BTNLABEL_DEBUG_STOP "Stop"
@@ -227,7 +226,7 @@ DECLARE_EVENT_TABLE()
 // |            Panic events: [ask   ]                       |
 // |                                                         |
 // | For additional control over how each device responds    |
-// | to events, press the "Advanced" button.                 |
+// | to events, use the menu option "Log ... By Device".     |
 // |                                                         |
 // | Debugger log file is [____________________]  [ Browse ] |
 // |                                                         |
@@ -263,7 +262,7 @@ private:
    /* can't ignore panics or errors */ \
    || (type >= 2 && choice==0) \
    )
-#define LOG_OPTS_ADV "For additional control over how each device responds to events, press the \"Advanced\" button."
+#define LOG_OPTS_ADV "For additional control over how each device responds to events, use the menu option \"Log ... By Device\"."
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
   wxBoxSizer *vertSizer, *logfileSizer, *debuggerlogfileSizer, *buttonSizer;
