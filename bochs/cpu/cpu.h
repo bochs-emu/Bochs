@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.78 2002-09-24 18:33:37 kevinlawton Exp $
+// $Id: cpu.h,v 1.79 2002-09-25 12:54:39 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,6 +166,13 @@ typedef Bit32u bx_address;
 #if BX_SUPPORT_X86_64
 // access to 64 bit instruction pointer
 #define RIP BX_CPU_THIS_PTR rip
+
+// access to 64 bit MSR registers
+#define MSR_STAR    (BX_CPU_THIS_PTR msr.star)
+#define MSR_LSTAR   (BX_CPU_THIS_PTR msr.lstar)
+#define MSR_CSTAR   (BX_CPU_THIS_PTR msr.cstar)
+#define MSR_FMASK   (BX_CPU_THIS_PTR msr.fmask)
+
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -2226,6 +2233,10 @@ union {
   BX_SMF void POP64_GS(bxInstruction_c *);
   BX_SMF void PUSH64_SS(bxInstruction_c *);
   BX_SMF void POP64_SS(bxInstruction_c *);
+
+  BX_SMF void SYSCALL(bxInstruction_c *i);
+  BX_SMF void SYSRET(bxInstruction_c *i);
+
 #endif  // #if BX_SUPPORT_X86_64
 
   // mch added

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.19 2002-09-25 06:36:42 ptrumpet Exp $
+// $Id: exception.cc,v 1.20 2002-09-25 12:54:40 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1059,3 +1059,262 @@ BX_CPU_C::shutdown_cpu(void)
   BX_PANIC(("shutdown_cpu(): not finished"));
 
 }
+
+#if BX_SUPPORT_X86_64
+  void
+BX_CPU_C::SYSCALL(bxInstruction_c *i)
+{
+
+/* pseudo code from AMD manual.
+
+SYSCALL_START:
+
+  IF (MSR_EFER.SCE = 0) // Check if syscall/sysret are enabled.
+    EXCEPTION [#UD]
+
+  IF (LONG_MODE)
+    SYSCALL_LONG_MODE
+  ELSE // (LEGACY_MODE)
+    SYSCALL_LEGACY_MODE
+
+
+SYSCALL_LONG_MODE:
+
+  RCX.q = next_RIP
+  R11.q = RFLAGS // with rf cleared
+
+  IF (64BIT_MODE)
+      temp_RIP.q = MSR_LSTAR
+  ELSE // (COMPATIBILITY_MODE)
+      temp_RIP.q = MSR_CSTAR
+
+  CS.sel = MSR_STAR.SYSCALL_CS AND 0xFFFC
+  CS.attr = 64-bit code,dpl0 // Always switch to 64-bit mode in long mode.
+  CS.base = 0x00000000
+  CS.limit = 0xFFFFFFFF
+
+  SS.sel = MSR_STAR.SYSCALL_CS + 8
+  SS.attr = 64-bit stack,dpl0
+  SS.base = 0x00000000
+  SS.limit = 0xFFFFFFFF
+
+  RFLAGS = RFLAGS AND ~MSR_SFMASK
+  RFLAGS.RF = 0
+
+  CPL = 0
+
+  RIP = temp_RIP
+  EXIT
+
+SYSCALL_LEGACY_MODE:
+
+  RCX.d = next_RIP
+
+  temp_RIP.d = MSR_STAR.EIP
+
+  CS.sel = MSR_STAR.SYSCALL_CS AND 0xFFFC
+  CS.attr = 32-bit code,dpl0 // Always switch to 32-bit mode in legacy mode.
+  CS.base = 0x00000000
+  CS.limit = 0xFFFFFFFF
+
+  SS.sel = MSR_STAR.SYSCALL_CS + 8
+  SS.attr = 32-bit stack,dpl0
+  SS.base = 0x00000000
+  SS.limit = 0xFFFFFFFF
+
+  RFLAGS.VM,IF,RF=0
+
+  CPL = 0
+
+  RIP = temp_RIP
+  EXIT
+
+*/
+
+  bx_address temp_RIP;
+  bx_descriptor_t cs_descriptor,ss_descriptor;
+  bx_selector_t cs_selector,ss_selector;
+  Bit32u  dword1, dword2;
+
+
+
+  if (!BX_CPU_THIS_PTR msr.sce) {
+    exception(BX_GP_EXCEPTION, 0, 0);
+    }
+  invalidate_prefetch_q();
+  if (BX_CPU_THIS_PTR msr.lma) {
+
+    RCX = RIP;
+#warning - PRT: SYSCALL --  do we reset RF/VM before saving to R11?
+    R11 = read_eflags();
+
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      temp_RIP = MSR_LSTAR;
+      }
+    else {
+      temp_RIP = MSR_CSTAR;
+      }
+
+    parse_selector((MSR_STAR >> 32) & 0xFFFC, &cs_selector);
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &cs_descriptor);
+    load_cs(&cs_selector, &cs_descriptor, 0);
+
+    parse_selector((MSR_STAR >> 32) + 8, &ss_selector);
+    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &ss_descriptor);
+    load_ss(&ss_selector, &ss_descriptor, 0);
+
+    write_eflags(read_eflags() & MSR_FMASK,1,1,1,0);
+    BX_CPU_THIS_PTR clear_RF ();
+    RIP = temp_RIP;
+    }
+  else {
+    // legacy mode
+
+    ECX = EIP;
+
+    temp_RIP = MSR_STAR & 0xFFFFFFFF;
+
+    parse_selector((MSR_STAR >> 32) & 0xFFFC, &cs_selector);
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &cs_descriptor);
+    load_cs(&cs_selector, &cs_descriptor, 0);
+
+    parse_selector((MSR_STAR >> 32) + 8, &ss_selector);
+    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &ss_descriptor);
+    load_ss(&ss_selector, &ss_descriptor, 0);
+
+    BX_CPU_THIS_PTR clear_VM ();
+    BX_CPU_THIS_PTR clear_IF ();
+    BX_CPU_THIS_PTR clear_RF ();
+    RIP = temp_RIP;
+    }
+
+}
+
+  void
+BX_CPU_C::SYSRET(bxInstruction_c *i)
+{
+/* from AMD manual
+
+SYSRET_START:
+
+  IF (MSR_EFER.SCE = 0) // Check if syscall/sysret are enabled.
+    EXCEPTION [#UD]
+
+  IF ((!PROTECTED_MODE) || (CPL != 0))
+    EXCEPTION [#GP(0)] // SYSRET requires protected mode, cpl0
+
+  IF (64BIT_MODE)
+    SYSRET_64BIT_MODE
+  ELSE // (!64BIT_MODE)
+    SYSRET_NON_64BIT_MODE
+
+SYSRET_64BIT_MODE:
+  IF (OPERAND_SIZE = 64) // Return to 64-bit mode.
+    {
+    CS.sel = (MSR_STAR.SYSRET_CS + 16) OR 3
+    CS.base = 0x00000000
+    CS.limit = 0xFFFFFFFF
+    CS.attr = 64-bit code,dpl3
+    temp_RIP.q = RCX
+    }
+  ELSE // Return to 32-bit compatibility mode.
+    {
+    CS.sel = MSR_STAR.SYSRET_CS OR 3
+    CS.base = 0x00000000
+    CS.limit = 0xFFFFFFFF
+    CS.attr = 32-bit code,dpl3
+    temp_RIP.d = RCX
+    }
+  SS.sel = MSR_STAR.SYSRET_CS + 8 // SS selector is changed,
+  // SS base, limit, attributes unchanged.
+  RFLAGS.q = R11 // RF=0,VM=0
+  CPL = 3
+  RIP = temp_RIP
+  EXIT
+
+SYSRET_NON_64BIT_MODE:
+  CS.sel = MSR_STAR.SYSRET_CS OR 3 // Return to 32-bit legacy protected mode.
+  CS.base = 0x00000000
+  CS.limit = 0xFFFFFFFF
+  CS.attr = 32-bit code,dpl3
+  temp_RIP.d = RCX
+  SS.sel = MSR_STAR.SYSRET_CS + 8 // SS selector is changed.
+  // SS base, limit, attributes unchanged.
+  RFLAGS.IF = 1
+  CPL = 3
+  RIP = temp_RIP
+  EXIT
+
+*/
+
+  bx_address temp_RIP;
+  bx_descriptor_t cs_descriptor,ss_descriptor;
+  bx_selector_t cs_selector,ss_selector;
+  Bit32u  dword1, dword2;
+
+  if (!BX_CPU_THIS_PTR msr.sce) {
+    exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+  if(real_mode() || CPL != 0) {
+    exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (i->os64L()) { // Return to 64-bit mode.
+
+      parse_selector(((MSR_STAR >> 48) + 16) | 3, &cs_selector);
+      fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+      parse_descriptor(dword1, dword2, &cs_descriptor);
+      load_cs(&cs_selector, &cs_descriptor, 3);
+
+      temp_RIP = RCX;
+
+      }
+    else { // Return to 32-bit compatibility mode.
+
+      parse_selector((MSR_STAR >> 48) | 3, &cs_selector);
+      fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+      parse_descriptor(dword1, dword2, &cs_descriptor);
+      load_cs(&cs_selector, &cs_descriptor, 3);
+
+      temp_RIP = ECX;
+
+      }
+
+    parse_selector((MSR_STAR >> 48) + 8, &ss_selector);
+    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &ss_descriptor);
+    load_ss(&ss_selector, &ss_descriptor, 0);
+
+    // SS base, limit, attributes unchanged.
+    write_eflags(R11,1,1,1,1);
+
+    RIP = temp_RIP;
+
+    }
+  else { // (!64BIT_MODE)
+
+    parse_selector((MSR_STAR >> 48) + 16, &cs_selector);
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &cs_descriptor);
+    load_cs(&cs_selector, &cs_descriptor, 3);
+
+    temp_RIP = ECX;
+
+    parse_selector((MSR_STAR >> 48) + 8, &ss_selector);
+    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &ss_descriptor);
+    load_ss(&ss_selector, &ss_descriptor, 0);
+
+    BX_CPU_THIS_PTR assert_IF ();
+
+    RIP = temp_RIP;
+    }
+
+}
+#endif // BX_SUPPORT_X86_64
