@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.104 2002-10-16 17:37:33 sshwarts Exp $
+// $Id: cpu.h,v 1.105 2002-10-16 22:10:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,13 +31,6 @@
 #include <setjmp.h>
 
 #include "cpu/lazy_flags.h"
-
-#define BX_SREG_ES    0
-#define BX_SREG_CS    1
-#define BX_SREG_SS    2
-#define BX_SREG_DS    3
-#define BX_SREG_FS    4
-#define BX_SREG_GS    5
 
 // segment register encoding
 #define BX_SEG_REG_ES    0

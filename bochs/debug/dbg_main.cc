@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.76 2002-10-16 21:32:56 bdenney Exp $
+// $Id: dbg_main.cc,v 1.77 2002-10-16 22:10:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1029,7 +1029,7 @@ bx_dbg_where_command()
 	    dbg_printf ( "'where' only supported in protected mode\n");
 	    return;
       }
-      if (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.base != 0) {
+      if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base != 0) {
 	    dbg_printf ( "non-zero stack base\n");
 	    return;
       }
@@ -1278,10 +1278,10 @@ void
 bx_dbg_print_stack_command(int nwords)
 {
 	// Get linear address for stack top
-	Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.d_b)?
+	Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b)?
 	  BX_CPU(dbg_cpu)->get_ESP ()
 	  : BX_CPU(dbg_cpu)->get_SP ();
-	Bit32u linear_sp = sp + BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.base;
+	Bit32u linear_sp = sp + BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base;
 	Bit8u buf[8];
 
 	for (int i = 0; i < nwords; i++) {
@@ -2180,13 +2180,13 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
       dbg_printf ( "%04x:%08x (%s): ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
 	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
+	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.base));
       }
     else {
       dbg_printf ( "%04x:%04x (%s): ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
 	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-	      bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].selector.value));
+	      bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
       }
     for (unsigned j=0; j<ilen; j++)
       dbg_printf ( "%02x", (unsigned) bx_disasm_ibuf[j]);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.20 2002-10-04 17:04:33 kevinlawton Exp $
+// $Id: segment_ctrl_pro.cc,v 1.21 2002-10-16 22:10:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,7 +49,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     seg->cache.p = 1;
     seg->cache.dpl = 3;
     seg->cache.segment = 1; /* regular segment */
-    if (seg == &BX_CPU_THIS_PTR sregs[BX_SREG_CS]) {
+    if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
       seg->cache.u.segment.executable = 1; /* code segment */
 #if BX_SupportICache
       BX_CPU_THIS_PTR iCache.fetchModeMask =
@@ -77,7 +77,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
-    if (seg == &BX_CPU_THIS_PTR sregs[BX_SREG_SS]) {
+    if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]) {
       Bit16u index;
       Bit8u ti;
       Bit8u rpl;
@@ -181,11 +181,11 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       return;
       }
-    else if ( (seg==&BX_CPU_THIS_PTR sregs[BX_SREG_DS]) ||
-              (seg==&BX_CPU_THIS_PTR sregs[BX_SREG_ES])
+    else if ( (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]) ||
+              (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES])
 #if BX_CPU_LEVEL >= 3
-           || (seg==&BX_CPU_THIS_PTR sregs[BX_SREG_FS]) ||
-              (seg==&BX_CPU_THIS_PTR sregs[BX_SREG_GS])
+           || (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) ||
+              (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS])
 #endif
             ) {
       Bit16u index;
@@ -311,7 +311,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   /* something about honoring previous values */
 
   /* ??? */
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SREG_CS]) {
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = new_value;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 1;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p = 1;

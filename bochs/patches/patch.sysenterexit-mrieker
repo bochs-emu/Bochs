@@ -231,35 +231,35 @@ diff -u -r1.22 proc_ctrl.cc
 +  BX_CPU_THIS_PTR eflags.if_ = 0;
 +  BX_CPU_THIS_PTR eflags.rf  = 0;
 +
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.index = BX_CPU_THIS_PTR sysenter_cs_msr >> 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.rpl   = 0;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.executable   = 1;		// code segment
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.c_ed         = 0;		// non-conforming
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.r_w          = 1;		// readable
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.a            = 1;		// accessed
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base         = 0;		// base address
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit        = 0xFFFF;	// segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.g            = 1;		// 4k granularity
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.d_b          = 1;		// 32-bit mode
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.avl          = 0;		// available for use by system
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = BX_CPU_THIS_PTR sysenter_cs_msr >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 0;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;		// code segment
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;		// non-conforming
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1;		// readable
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;		// available for use by system
 +
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr + 8;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.rpl   = 0;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.executable   = 0;		// data segment
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.c_ed         = 0;		// expand-up
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.r_w          = 1;		// writeable
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.a            = 1;		// accessed
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.base         = 0;		// base address
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit        = 0xFFFF;	// segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.g            = 1;		// 4k granularity
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.d_b          = 1;		// 32-bit mode
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.avl          = 0;		// available for use by system
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr + 8;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 0;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;		// data segment
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;		// expand-up
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1;		// writeable
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;		// available for use by system
 +
 +  // BX_INFO (("sysenter: old eip %X, esp %x, new eip %x, esp %X, edx %X", BX_CPU_THIS_PTR prev_eip, ESP, BX_CPU_THIS_PTR sysenter_eip_msr, BX_CPU_THIS_PTR sysenter_esp_msr, EDX));
 +
@@ -292,35 +292,35 @@ diff -u -r1.22 proc_ctrl.cc
 +
 +  invalidate_prefetch_q ();
 +
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) | 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].selector.rpl   = 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.executable   = 1;		// code segment
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.c_ed         = 0;		// non-conforming
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.r_w          = 1;		// readable
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.a            = 1;		// accessed
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base         = 0;		// base address
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit        = 0xFFFF;	// segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.g            = 1;		// 4k granularity
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.d_b          = 1;		// 32-bit mode
-+  BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.avl          = 0;		// available for use by system
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) | 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;		// code segment
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;		// non-conforming
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1;		// readable
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;		// available for use by system
 +
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].selector.rpl   = 3;
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.executable   = 0;		// data segment
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.c_ed         = 0;		// expand-up
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.r_w          = 1;		// writeable
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.a            = 1;		// accessed
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.base         = 0;		// base address
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit        = 0xFFFF;	// segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.g            = 1;		// 4k granularity
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.d_b          = 1;		// 32-bit mode
-+  BX_CPU_THIS_PTR sregs[BX_SREG_SS].cache.u.segment.avl          = 0;		// available for use by system
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 3;
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;		// data segment
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;		// expand-up
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1;		// writeable
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1;		// accessed
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;		// base address
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;	// segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;	// scaled segment limit
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;		// 4k granularity
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;		// 32-bit mode
++  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;		// available for use by system
 +
 +  // BX_INFO (("sysexit: old eip %X, esp %x, new eip %x, esp %X, eax %X", BX_CPU_THIS_PTR prev_eip, ESP, EDX, ECX, EAX));
 +

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.19 2002-09-24 04:43:59 kevinlawton Exp $
+// $Id: io.cc,v 1.20 2002-10-16 22:10:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -182,7 +182,7 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
         bx_segment_reg_t *dstSegPtr;
         int pointerDelta;
 
-        dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SREG_ES];
+        dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
 
         // Do segment checks for the 1st word.  We do not want to
         // trip an exception beyond this, because the address would
