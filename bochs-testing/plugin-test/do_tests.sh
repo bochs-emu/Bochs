@@ -16,9 +16,9 @@ make dist-clean >$OUT 2>&1
 rm -f $OUT
 echo "*** Starting configure, results to $OUT" 
 echo "*** do_tests output file"                        >> $OUT 2>&1
-echo "*** date: `date`                                 >> $OUT 2>&1
-echo "*** host: `hostname`                             >> $OUT 2>&1
-echo "*** uname -a: `uname -a`                         >> $OUT 2>&1
+echo "*** date: `date`"                                >> $OUT 2>&1
+echo "*** host: `hostname`"                            >> $OUT 2>&1
+echo "*** uname -a: `uname -a`"                        >> $OUT 2>&1
 echo "*** Starting configure"                          >> $OUT 2>&1
 ./configure                                            >> $OUT 2>&1
 echo "*** Copying config.log and config.status into the output file"
