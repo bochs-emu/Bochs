@@ -184,6 +184,7 @@
 
 // Use Greg Alexander's new PIT model (summer 2001) instead of the original.
 #define BX_USE_NEW_PIT 0
+#define BX_USE_REALTIME_PIT 0
 
 #define BX_USE_SLOWDOWN_TIMER 0
 #define BX_HAVE_SLEEP 0

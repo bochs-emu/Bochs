@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.7 2002-01-31 16:52:00 yakovlev Exp $
+// $Id: pit_wrap.h,v 1.8 2002-02-07 21:22:55 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,8 +71,16 @@ private:
     int  timer_handle[3];
     Bit64u last_usec;
     Bit32u last_next_event_time;
-    Bit64u total_usec;
     Bit64u total_ticks;
+#if BX_USE_REALTIME_PIT
+    Bit64u usec_per_second;
+    Bit64u ticks_per_second;
+    Bit64u total_sec;
+    Bit64u last_time;
+    Bit64u last_sec_usec;
+#else
+    Bit64u total_usec;
+#endif
     } s;
 
   bx_devices_c *devices;
@@ -85,6 +93,8 @@ private:
   BX_PIT_SMF void  latch( unsigned timerid );
   BX_PIT_SMF void  set_GATE(unsigned pit_id, unsigned value);
   BX_PIT_SMF void  start(unsigned timerid);
+
+  BX_PIT_SMF void  second_update_data(void);
 };
 
 extern bx_pit_c bx_pit;
