@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.27 2004-12-30 14:50:36 vruppert Exp $
+// $Id: config.cc,v 1.28 2005-01-08 19:55:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2381,14 +2381,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
       slave = 1;
       }
 
-    // This was originally meant to warn users about both diskc
-    // and ata0-master defined, but it also prevent users to
-    // override settings on the command line 
-    // (see [ 661010 ] cannot override ata-settings from cmdline)
-    // if (bx_options.atadevice[channel][slave].Opresent->get()) {
-    //   BX_INFO(("%s: %s device of ata channel %d already defined.", context, slave?"slave":"master",channel));
-    //   }
-
     for (i=1; i<num_params; i++) {
       if (!strcmp(params[i], "type=disk")) {
         bx_options.atadevice[channel][slave].Otype->set (BX_ATA_DEVICE_DISK);
@@ -2511,75 +2503,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         PARSE_WARN(("%s: ataX-master/slave: type should be specified", context));
         }
       }
-    }
-
-  // Legacy disk options emulation
-  else if (!strcmp(params[0], "diskc")) { // DEPRECATED
-    BX_INFO(("WARNING: diskc directive is deprecated, use ata0-master: instead"));
-    if (bx_options.atadevice[0][0].Opresent->get()) {
-      PARSE_ERR(("%s: master device of ata channel 0 already defined.", context));
-      }
-    if (num_params != 5) {
-      PARSE_ERR(("%s: diskc directive malformed.", context));
-      }
-    if (strncmp(params[1], "file=", 5) ||
-        strncmp(params[2], "cyl=", 4) ||
-        strncmp(params[3], "heads=", 6) ||
-        strncmp(params[4], "spt=", 4)) {
-      PARSE_ERR(("%s: diskc directive malformed.", context));
-      }
-    bx_options.ata[0].Opresent->set(1);
-    bx_options.atadevice[0][0].Otype->set (BX_ATA_DEVICE_DISK);
-    bx_options.atadevice[0][0].Opath->set (&params[1][5]);
-    bx_options.atadevice[0][0].Ocylinders->set (atol(&params[2][4]));
-    bx_options.atadevice[0][0].Oheads->set     (atol(&params[3][6]));
-    bx_options.atadevice[0][0].Ospt->set       (atol(&params[4][4]));
-    bx_options.atadevice[0][0].Opresent->set (1);
-    }
-  else if (!strcmp(params[0], "diskd")) { // DEPRECATED
-    BX_INFO(("WARNING: diskd directive is deprecated, use ata0-slave: instead"));
-    if (bx_options.atadevice[0][1].Opresent->get()) {
-      PARSE_ERR(("%s: slave device of ata channel 0 already defined.", context));
-      }
-    if (num_params != 5) {
-      PARSE_ERR(("%s: diskd directive malformed.", context));
-      }
-    if (strncmp(params[1], "file=", 5) ||
-        strncmp(params[2], "cyl=", 4) ||
-        strncmp(params[3], "heads=", 6) ||
-        strncmp(params[4], "spt=", 4)) {
-      PARSE_ERR(("%s: diskd directive malformed.", context));
-      }
-    bx_options.ata[0].Opresent->set(1);
-    bx_options.atadevice[0][1].Otype->set (BX_ATA_DEVICE_DISK);
-    bx_options.atadevice[0][1].Opath->set (&params[1][5]);
-    bx_options.atadevice[0][1].Ocylinders->set (atol( &params[2][4]));
-    bx_options.atadevice[0][1].Oheads->set     (atol( &params[3][6]));
-    bx_options.atadevice[0][1].Ospt->set       (atol( &params[4][4]));
-    bx_options.atadevice[0][1].Opresent->set (1);
-    }
-  else if (!strcmp(params[0], "cdromd")) { // DEPRECATED
-    BX_INFO(("WARNING: cdromd directive is deprecated, use ata0-slave: instead"));
-    if (bx_options.atadevice[0][1].Opresent->get()) {
-      PARSE_ERR(("%s: slave device of ata channel 0 already defined.", context));
-      }
-    if (num_params != 3) {
-      PARSE_ERR(("%s: cdromd directive malformed.", context));
-      }
-    if (strncmp(params[1], "dev=", 4) || strncmp(params[2], "status=", 7)) {
-      PARSE_ERR(("%s: cdromd directive malformed.", context));
-      }
-    bx_options.ata[0].Opresent->set(1);
-    bx_options.atadevice[0][1].Otype->set (BX_ATA_DEVICE_CDROM);
-    bx_options.atadevice[0][1].Opath->set (&params[1][4]);
-    if (!strcmp(params[2], "status=inserted"))
-      bx_options.atadevice[0][1].Ostatus->set (BX_INSERTED);
-    else if (!strcmp(params[2], "status=ejected"))
-      bx_options.atadevice[0][1].Ostatus->set (BX_EJECTED);
-    else {
-      PARSE_ERR(("%s: cdromd directive malformed.", context));
-      }
-    bx_options.atadevice[0][1].Opresent->set (1);
     }
 
   else if (!strcmp(params[0], "boot")) {
@@ -2954,22 +2877,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_ERROR(("%s: WARNING: ips is AWFULLY low!", context));
       }
     }
-  else if (!strcmp(params[0], "pit")) { // Deprecated
-    if (num_params != 2) {
-      PARSE_ERR(("%s: pit directive: wrong # args.", context));
-      }
-    BX_INFO(("WARNING: pit directive is deprecated, use clock: instead"));
-    if (!strncmp(params[1], "realtime=", 9)) {
-      switch (params[1][9]) {
-        case '0': 
-          BX_INFO(("WARNING: not disabling realtime pit"));
-          break;
-        case '1': bx_options.clock.Osync->set (BX_CLOCK_SYNC_REALTIME); break;
-        default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
-        }
-      }
-    else PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
-    }
   else if (!strcmp(params[0], "max_ips")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: max_ips directive: wrong # args.", context));
@@ -3168,35 +3075,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     }
   }
-  else if (!strcmp(params[0], "newharddrivesupport")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: newharddrivesupport directive malformed.", context));
-      }
-    if (strncmp(params[1], "enabled=", 8)) {
-      PARSE_ERR(("%s: newharddrivesupport directive malformed.", context));
-      }
-    BX_INFO(("WARNING: newharddrivesupport directive is deprecated and should be removed."));
-    if (params[1][8] == '0')
-      bx_options.OnewHardDriveSupport->set (0);
-    else if (params[1][8] == '1')
-      bx_options.OnewHardDriveSupport->set (1);
-    else {
-      PARSE_ERR(("%s: newharddrivesupport directive malformed.", context));
-      }
-    }
   else if (!strcmp(params[0], "cmosimage")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: cmosimage directive: wrong # args.", context));
       }
     bx_options.cmos.Opath->set (strdup(params[1]));
     bx_options.cmos.OcmosImage->set (1);                // CMOS Image is true
-    }
-  else if (!strcmp(params[0], "time0")) { // Deprectated
-    BX_INFO(("WARNING: time0 directive is deprecated, use clock: instead"));
-    if (num_params != 2) {
-      PARSE_ERR(("%s: time0 directive: wrong # args.", context));
-      }
-    bx_options.clock.Otime0->set (atoi(params[1]));
     }
   else if (!strcmp(params[0], "clock")) {
     for (i=1; i<num_params; i++) {
@@ -3484,6 +3368,45 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.Odisplaylib_options->set (strdup(&params[2][8]));
         }
       }
+    }
+
+  // Old timing options have been replaced by the 'clock' option
+  else if (!strcmp(params[0], "pit")) { // Deprecated
+    if (num_params != 2) {
+      PARSE_ERR(("%s: pit directive: wrong # args.", context));
+      }
+    BX_INFO(("WARNING: pit directive is deprecated, use clock: instead"));
+    if (!strncmp(params[1], "realtime=", 9)) {
+      switch (params[1][9]) {
+        case '0': 
+          BX_INFO(("WARNING: not disabling realtime pit"));
+          break;
+        case '1': bx_options.clock.Osync->set (BX_CLOCK_SYNC_REALTIME); break;
+        default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
+        }
+      }
+    else PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
+    }
+  else if (!strcmp(params[0], "time0")) { // Deprectated
+    BX_INFO(("WARNING: time0 directive is deprecated, use clock: instead"));
+    if (num_params != 2) {
+      PARSE_ERR(("%s: time0 directive: wrong # args.", context));
+      }
+    bx_options.clock.Otime0->set (atoi(params[1]));
+    }
+
+  // Old disk options are no longer supported
+  else if (!strcmp(params[0], "diskc")) { // DEPRECATED
+    PARSE_ERR(("diskc directive is deprecated, use ata0-master: instead"));
+    }
+  else if (!strcmp(params[0], "diskd")) { // DEPRECATED
+    PARSE_ERR(("diskd directive is deprecated, use ata0-slave: instead"));
+    }
+  else if (!strcmp(params[0], "cdromd")) { // DEPRECATED
+    PARSE_ERR(("cdromd directive is deprecated, use ata0-slave: instead"));
+    }
+  else if (!strcmp(params[0], "newharddrivesupport")) { // DEPRECATED
+    PARSE_ERR(("newharddrivesupport directive is deprecated and should be removed."));
     }
   else {
     PARSE_ERR(( "%s: directive '%s' not understood", context, params[0]));

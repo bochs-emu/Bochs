@@ -17,7 +17,7 @@ home directory.
 Starting with Bochs 1.3, you can use environment variables in
 the bochsrc file, for example: 
 
-  diskc: file="$IMAGES/30M.sample", cyl=615, heads=6, spt=17
+  floppya: 1_44="$IMAGES/bootdisk.img", status=inserted
 
 Starting with version 2.0, two environment variables have a built-in
 default value which is set at compile time.  $BXSHARE points to the
@@ -130,13 +130,12 @@ Example:
 
 .TP
 .I "vgaromimage:"
-You  also  need to load a VGA  ROM  BIOS  into
-C0000.
+You also need to load a VGA ROM BIOS into 0xC0000.
 
 Examples:
-  vgaromimage: bios/VGABIOS-elpin-2.40
-  vgaromimage: bios/VGABIOS-lgpl-latest
-  vgaromimage: $BXSHARE/VGABIOS-lgpl-latest
+  vgaromimage: file=bios/VGABIOS-elpin-2.40
+  vgaromimage: file=bios/VGABIOS-lgpl-latest
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
 .TP
 .I "floppya: \fPor \fIfloppyb:"
@@ -244,22 +243,28 @@ Examples:
    ata3-slave:  type=cdrom, path=iso.sample, status=inserted
 
 .TP
-.I "com1:"
-This defines a serial (COM) port. You can specify a device to use as com1.
-This can be a real serial line, or a pty.  To use a pty (under X/Unix),
-create two windows (xterms, usually).  One of them will run bochs, and the
-other will act as com1. Find out the tty the com1 window using the `tty'
-command, and use that as the `dev' parameter.  Then do `sleep 1000000' in
-the com1 window to keep the shell from messing with things, and run bochs in
-the other window.  Serial I/O to com1 (port 0x3f8) will all go to the other
-window.
+.I "com1: \fP, \fIcom2: \fP, \fIcom3: \fPor \fIcom4:"
+This defines a serial port (UART type 16550A). In the 'term' you can specify
+a device to use as com1. This can be a real serial line, or a pty.  To use
+a pty (under X/Unix), create two windows (xterms, usually).  One of them will
+run bochs, and the other will act as com1. Find out the tty the com1 window
+using the `tty' command, and use that as the `dev' parameter.  Then do
+`sleep 1000000' in the com1 window to keep the shell from messing with things,
+and run bochs in the other window.  Serial I/O to com1 (port 0x3f8) will all
+go to the other window.
+
+Other serial modes are 'null' (no input/output), 'file' (output to a file
+specified as the 'dev' parameter), 'raw' (use the real serial port - under
+construction for win32) and 'mouse' (standard serial mouse - requires
+mouse option setting 'type=serial' or 'type=serial_wheel')
 
 Examples:
-  com1: enabled=1, dev=/dev/ttyp7
-  com1: enabled=0
+  com1: enabled=term, dev=/dev/ttyp7
+  com2: enabled=1, mode=file, dev=serial.out
+  com1: enabled=1, mode=mouse
 
 .TP
-.I "parport1:"
+.I "parport1: \fPor \fIparport2:"
 This defines a parallel (printer) port. When turned on and an output file is
 defined the emulated printer port sends characters printed by the guest
 OS into the output file. On some platforms a device filename can be used to
@@ -267,29 +272,17 @@ send the data to the real parallel port (e.g. "/dev/lp0" on Linux).
 
 Examples:
   parport1: enabled=1, file=parport.out
-  parport1: enabled=1, file="/dev/lp0"
+  parport2: enabled=1, file="/dev/lp0"
   parport1: enabled=0
 
 .TP
-.I "newharddrivesupport:"
-This  setting enables  support for large  hard
-disks,  better  CD  recognition,  and  various
-other  useful  functions.  You  can set it  to
-"enabled=1" (on)  or "enabled=0" (off).  It is
-recommended  that  this  setting  is  left  on
-unless you are having trouble with it.
-
-Example:
-  newharddrivesupport: enabled=1
-
-.TP
 .I "boot:"
-This defines  your boot drive. You can  either
-boot from 'floppy', 'disk' or 'cdrom'.
+This defines the boot sequence. Now you can specify up to 3 boot drives.
+You can either boot from 'floppy', 'disk' or 'cdrom'
 (legacy 'a' and 'c' are also supported)
 
 Example:
-  boot: disk
+  boot: cdrom, floppy, disk
 
 .TP
 .I "floppy_bootsig_check:"
@@ -588,18 +581,23 @@ Example:
 
 .TP
 .I "mouse:"
-This option prevents Bochs from creating mouse
-"events"  unless  a  mouse  is  enabled.  The
-hardware emulation  itself is not disabled  by
-this. You  can  turn the mouse on  by  setting
-enabled to  1,  or  turn  it  off  by  setting
-enabled to 0. Unless  you  have  a  particular
-reason  for enabling  the  mouse  by  default,
-it is recommended that you leave it off.
+This option prevents Bochs from creating mouse "events"
+unless a mouse is enabled. The hardware emulation itself
+is not disabled  by this. You can turn the mouse on by
+setting enabled to  1, or turn it off by setting enabled
+to 0. Unless you have a particular reason  for enabling
+the mouse by default, it is recommended that you leave
+it off. You can also toggle the mouse usage at runtime
+(control key + middle mouse button).
+With the mouse type option you can select the type of mouse to emulate.
+The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
+on PS/2), 'serial', 'serial_wheel' (one com port requires setting
+'mode=mouse') and 'usb' (3-button mouse on USB port #1 - requires PCI and
+USB support).
 
-Example:
-  mouse: enabled=1
+Examples:
   mouse: enabled=0
+  mouse: enabled=1, type=imps2
 
 .TP
 .I "private_colormap:"
@@ -722,50 +720,12 @@ Example:
 
 .TP
 .I "usb1:"
-Enables the i440fx PCI USB root hub. USB devices with access to real hardware
-are not implemented yet. PCI support must be enabled, too.
+Controls the presence of the USB root hub which is a part of the i440FX PCI
+chipset. If you enable USB and use the mouse option 'type=usb' you'll have
+a 3-button mouse connected to port #1. PCI support must be enabled, too.
 
 Example:
-  usb1: enabled=1, ioaddr=0xFF80, irq=10
-
-.TP
-.I "diskc:"
-or
-.I "diskd:"
-
-The \fBdiskc\fR and \fBdiskd\fR options are deprecated. Use \fBata*\fR
-options instead.
-
-Point  this at the disk image you want to  use
-as for a hard disk. If you  use bximage(1)  to
-create   the  image,  it  will  give  you  the
-required  cyl,  head, and spt information.
-diskc is the first hard drive, and diskd is the
-second hard drive.
-
-.B NOTE:
-You cannot use both diskd and cdromd together.
-
-Example:
-  diskc: file=10M.i, cyl=306, heads=4, spt=17
-  diskc: file=112M.i, cyl=900, heads=15, spt=17
-  diskd: file=483.i, cyl=1024, heads=15, spt=63
-
-.TP
-.I "cdromd:"
-
-The \fBcdromd\fR option is deprecated. Use \fBata*\fR options instead.
-
-Point this to a pathname of a raw CD-ROM device.
-There is no cdromc option, only cdromd.
-
-.B NOTE:
-You cannot use both diskd and cdromd together.
-
-
-Example:
-  cdromd: dev=/dev/cdrom, status=inserted
-  cdromd: dev=/dev/cdrom, status=ejected
+  usb1: enabled=1, ioaddr=0xFF80
 
 .TP
 .I "pit:"

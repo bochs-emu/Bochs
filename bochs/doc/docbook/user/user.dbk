@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.158 2005-01-01 15:39:20 vruppert Exp $
+$Id: user.dbk,v 1.159 2005-01-08 19:55:54 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2873,8 +2873,8 @@ where to look for disk images, how the Bochs emulation layer should work, etc.
 When you first start up Bochs, it looks around for its configuration file, and
 parses it.  Here are a few lines from a sample file:
 <screen>
-  diskc: file="30M.sample", cyl=615, heads=6, spt=17
-  boot: c
+  ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
+  boot: disk
 </screen>
 The format is very strict, so be sure to put the right number of spaces and
 use lowercase letters.  As you can see, most lines have a keyword telling what
@@ -2891,7 +2891,7 @@ The syntax used for bochsrc can also be used as command line arguments for Bochs
 If you have any spaces in your command line arguments, they should be enclosed
 in single quotes, for example:
 <screen>
-  bochs 'boot:a' 'floppya: 1_44=a.img, status=inserted'
+  bochs 'boot:floppy' 'floppya: 1_44=a.img, status=inserted'
 </screen>
 For other arguments, see section <link linkend="commandline">Command line arguments</link>.
 </para>
@@ -2900,8 +2900,8 @@ For other arguments, see section <link linkend="commandline">Command line argume
 Starting with version 1.3, you can use environment variables in
 the bochsrc file, for example: 
 <screen>
-  diskc: file="$IMAGES/30M.sample", cyl=615, heads=6, spt=17
-  boot: c
+  floppya: 1_44="$IMAGES/bootdisk.img", status=inserted
+  boot: floppy
 </screen>
 Starting with version 2.0, two environment variables have a built-in
 default value which is set at compile time.  $BXSHARE points to the
@@ -3179,19 +3179,6 @@ The biosdetect option has currently no effect on the bios
 </para>
 </section>
 
-<section><title>newharddrivesupport</title>
-<para>
-Examples:
-<screen>
-  newharddrivesupport: enabled=1
-</screen>
-This  setting enables  support for large  hard disks,  better  CD  recognition,
-and  various other  useful  functions.  You  can set it  to "enabled=1" (on)
-or "enabled=0" (off).  It is recommended  that  this  setting  is  left  on
-unless you are having trouble with it.
-</para>
-</section>
-
 <section><title>boot</title>
 <para>
 Examples:
@@ -3300,9 +3287,12 @@ Examples:
   log: bochsout.txt
   log: /dev/tty               (Unix only)
   log: /dev/null              (Unix only)
+  log: nul                    (win32 only)
 </screen>
 Give the path of the log file you'd like Bochs debug and misc. verbage to be
-written to.   If you really don't want it, make it /dev/null.
+to be written to. If you don't use this option or set the filename to '-'
+the output is written to the console. If you really don't want it,
+make it "/dev/null" (Unix) or "nul" (win32). :^(
 </para>
 </section>
 
@@ -3721,9 +3711,11 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 <para>
 Example:
 <screen>
-  usb1: enabled=1, ioaddr=0xFF80, irq=10
+  usb1: enabled=1, ioaddr=0xFF80
 </screen>
-Enables the i440fx PCI USB root hub. PCI support must be enabled, too.
+Controls the presence of the USB root hub which is a part of the i440FX PCI
+chipset. If you enable USB and use the mouse option 'type=usb' you'll have
+a 3-button mouse connected to port #1. PCI support must be enabled, too.
 </para>
 </section>
 
@@ -3937,60 +3929,6 @@ Example:
   cmosimage: cmos.img
 </screen>
 This defines image file that can be loaded into the CMOS RAM at startup.
-</para>
-</section>
-
-<section><title>diskc/diskd</title>
-<para>
-The diskc and diskd options are deprecated. Use
-<link linkend="bochsopt-ata-master-slave">ataX-*: type=disk,... option</link>
-instead.
-</para>
-<para>
-Examples:
-<screen>
-  diskc: file=10M.img, cyl=306, heads=4, spt=17
-  diskc: file=112M.img, cyl=900, heads=15, spt=17
-  diskd: file=483.img, cyl=1024, heads=15, spt=63
-</screen>
-
-The diskc/diskd lines tell Bochs what disk image file to use as the constants
-of the emulated hard drive, and what geometry it should have.  Diskc is the
-first hard drive, and diskd is the second hard drive.  Using a raw
-hard drive is possible under Unix but WE DON'T RECOMMEND IT for safety reasons.
-The file should be a
-disk image file, which must be exactly 512*cyl*heads*spt bytes long.  The
-geometry settings are cylinder (cyl), heads, and sectors per track (spt).  If
-you use bximage (see <xref linkend="diskimagehowto">) to create an image, it
-will give you the required cyl, head, and spt information.
-
-<note><para>
-You cannot use both diskd and cdromd together.
-</para></note>
-
-</para>
-</section>
-
-<section><title>cdromd</title>
-<para>
-The cdromd option is deprecated. Use
-<link linkend="bochsopt-ata-master-slave">ataX-*: type=cdrom,... option</link>
-instead.
-</para>
-<para>
-Examples:
-<screen>
-  cdromd: dev=/dev/cdrom, status=inserted         (Unix only)
-  cdromd: dev=e:, status=inserted                 (Windows only)
-  cdromd: dev=cdromimage.iso, status=inserted
-</screen>
-
-The cdromd line tells Bochs to emulate a CD-ROM device.
-
-<note><para>
-You cannot use both diskd and cdromd together, and there is no cdromc option.
-</para></note>
-
 </para>
 </section>
 
@@ -7593,7 +7531,7 @@ This has been contributed by Volker Ruppert
 
 7. Set up Bochs for the FreeDOS installation:
 
-   boot: a
+   boot: floppy
    floppya: 1_44=FDB8_144.DSK, status=inserted
    floppyb: 1_44=base1.img, status=inserted
    ata0-master: type=disk, path=c.img, cylinders=20, heads=16, spt=63
@@ -7771,11 +7709,11 @@ on your home directory and edit it with your favorite editor (GNU Emacs, i hope 
 <screen>
 romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xf0000
 megs: 128
-vgaromimage: /usr/share/vgabios/vgabios.bin
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
 floppya: 1_44=/dev/fd0, status=ejected
-diskc: file="/home/asyd/travail/hurd/gnu.img", cyl=227, heads=16, spt=63 # edit me
-cdromd: dev=/dev/cdrom, status=inserted
-boot: c
+ata0-master: type=disk, path="/home/asyd/travail/hurd/gnu.img", cylinders=227, heads=16, spt=63 # edit me
+ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
+boot: disk
 log: /dev/stdout
 panic: action=ask
 error: action=report
@@ -8070,11 +8008,11 @@ the following settings in '.bochsrc':
 </para>
 
 <programlisting>
-  diskc: file=62M, cyl=940, heads=8, spt=17
+  ata0-master: type=disk, path=62M.img, cylinders=940, heads=8, spt=17
 
 use (940 * 8 * 17 * 512bytes-per-sector = 127840):
 
-  unix-> dd if=/dev/zero of=62M bs=512 count=127840
+  unix-> dd if=/dev/zero of=62M.img bs=512 count=127840
 </programlisting>
 
 <para>
@@ -8083,11 +8021,11 @@ Setup your '.bochsrc' file.  For example:
 
 <programlisting>
   megs: 16
-  boot: c
-  diskc: file=62M, cyl=940, heads=8, spt=17
+  boot: disk
+  ata0-master: type=disk, path=62M.img, cylinders=940, heads=8, spt=17
   floppya: 1_44=1.44, status=inserted
-  vgaromimage: bios/VGABIOS-elpin-2.40
-  romimage: bios/BIOS-bochs-latest (use newest one)
+  vgaromimage: file=bios/VGABIOS-lgpl-latest
+  romimage: file=bios/BIOS-bochs-latest # use newest one
   log: ./bochs.out
   vga_update_interval: 300000
   keyboard_serial_delay: 200
@@ -8113,7 +8051,7 @@ Fire up bochs and boot the Win'95 boot diskette:
 </para>
 
 <programlisting>
-  unix-> bochs boot:a
+  unix-> bochs boot:floppy
 
   Microsoft Windows 95 Setup
 </programlisting>
@@ -8143,7 +8081,7 @@ in the GUI toolbar.  Fire up bochs again.
 </para>
 
 <programlisting>
-  unix-> bochs boot:a
+  unix-> bochs boot:floppy
 
   Microsoft Windows 95 Setup
 
@@ -8399,12 +8337,12 @@ attempt to reboot.
 </para>
 
 <para>
-Fire up bochs again.  The 'boot:c' is not necessary if
-you have the 'boot: c' directive in your '.bochsrc' file.
+Fire up bochs again.  The 'boot:disk' is not necessary if
+you have the 'boot: disk' directive in your '.bochsrc' file.
 </para>
 
 <programlisting>
-  unix-> bochs boot:c
+  unix-> bochs boot:disk
 </programlisting>
 
 <para>
@@ -8498,7 +8436,7 @@ execution.  Make a backup copy.
 </para>
 
 <programlisting>
-  unix-> cp 62M 62M.win95.installedOK
+  unix-> cp 62M.img 62M.win95.installedOK
 </programlisting>
 
 <para>
@@ -8519,7 +8457,7 @@ associated with your hard disk image file, for example:
 </para>
 
 <programlisting>
-  ~/.mtoolsrc: drive c: file="/path/62M" partition=1
+  ~/.mtoolsrc: drive c: file="/path/62M.img" partition=1
 </programlisting>
 
 <para>
@@ -8586,7 +8524,7 @@ image files, used to facilitate installation.
 
 <para>
 OK, you're done!!!  Make sure you tell bochs to boot the
-hard drive either in '.bochsrc' or by the 'boot:c' option,
+hard drive either in '.bochsrc' or by the 'boot:disk' option,
 and fire it up.
 </para>
 
@@ -9041,29 +8979,27 @@ megs: 64
 # Filename of ROM images go here.  Be sure to check your installation for the location
 # of these two files (type: man find).  Paths must be absolute.
 romimage: file=/usr/local/etc/bochs/bios/BIOS-bochs-latest, address=0xf0000
-vgaromimage: /usr/local/etc/bochs/bios/VGABIOS-elpin-2.40
+vgaromimage: file=/usr/local/etc/bochs/bios/VGABIOS-lgpl-latest
 
 # Floppies are commented out, but you may need them later.
 # floppya: 1_44=/dev/fd0, status=inserted
 # floppyb: 1_44=/home/david/win98/floppyb.img, status=inserted
 
 # Cylinder, head, and spt info taken from bximage program output
-diskc: file="/home/david/win98/c.img", cyl=3657, heads=16, spt=63
+ata0-master: type=disk, path="/home/david/win98/c.img", cylinders=3657, heads=16, spt=63
 
 # Have your Windows 98 CD in the drive, but always boot from hard disk.
 # Comment this line out if you are using a disk image for the CD-ROM
 # (See next comment).
-cdromd: dev=/dev/cdrom, status=inserted
+ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 
 # You can optionally run the following command:
 # dd if=/dev/cdrom of=/home/david/win98/win98.iso
 # and uncomment the next line
-# cdromd: dev=/home/david/win98/win98.iso, status=inserted
-
-newharddrivesupport: enabled=1
+# ata0-slave: type=cdrom, path=/home/david/win98/win98.iso, status=inserted
 
 # choose the boot disk.
-boot: c
+boot: disk
 
 # where do we send log messages?
 log: bochsout.txt
@@ -9356,27 +9292,24 @@ megs: 64
 # Filename of ROM images go here.  Be sure to check your installation for the location
 # of these two files (type: man find).  Paths must be absolute.
 romimage: file=/usr/local/etc/bochs/bios/BIOS-bochs-latest, address=0xf0000
-vgaromimage: /usr/local/etc/bochs/bios/VGABIOS-elpin-2.40
+vgaromimage: file=/usr/local/etc/bochs/bios/VGABIOS-lgpl-latest
 
 # Floppies are commented out, but you may need them later.
 # floppya: 1_44=/dev/fd0, status=inserted
 # floppyb: 1_44=/home/david/win98/floppyb.img, status=inserted
 
 # Cylinder, head, and spt info taken from bximage program output
-diskc: file="/home/david/win98/c.img", cyl=2031, heads=16, spt=63
+ata0-master: type=disk, path="/home/david/win98/c.img", cylinders=2031, heads=16, spt=63
 
 # If you ran the following command:
 #      dd if=/dev/cdrom of=/home/david/win98/win98.iso
 #   you can use the CD-ROM image on your hard drive:
-cdromd: dev=/home/david/win98/win98.iso, status=inserted
+ata0-slave: type=cdrom, path=/home/david/win98/win98.iso, status=inserted
 
 # Optionally, if you have your Windows 98 CD in the drive
 #   you can uncomment the next line, but the installation
 #   process will be slower.
-# cdromd: dev=/dev/cdrom, status=inserted
-
-
-newharddrivesupport: enabled=1
+# ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 
 # choose the boot disk.
 boot: cdrom
@@ -9721,8 +9654,8 @@ Parts/Attachments:
 4) Prepare the instalation Bochs
 
    I edit the bochsrc.txt file so
-   - WinMe.img is diskc
-   - Win98.img is diskd
+   - WinMe.img is ata0-master
+   - Win98.img is ata0-slave
 
 5) Running setup
 
@@ -9884,7 +9817,7 @@ Parts/Attachments:
 
 11) That's all
 
-   Now you can comment out the diskd line in the bochsrc.txt. WinMe.img
+   Now you can comment out the ata0-slave line in the bochsrc.txt. WinMe.img
    contains a working WinMe.
 
    NOTE: if you lower the IPS, WinMe will be unstable ... surelly 
@@ -10042,7 +9975,7 @@ ata1: enabled=0
 ata2: enabled=0
 ata3: enabled=0
 romimage: file=bios/BIOS-bochs-latest, address=0xf0000
-vgaromimage: bios/VGABIOS-elpin-2.40
+vgaromimage: file=bios/VGABIOS-lgpl-latest
 megs: 64
 parport1: enabled=1, file="lp.pipe"
 com1: enabled=0
@@ -10054,14 +9987,12 @@ keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
 floppy_command_delay: 500
 ips: 3000000
-pit: realtime=1
+clock: sync=realtime, time0=0
 text_snapshot_check: 0
 mouse: enabled=0
 private_colormap: enabled=0
 i440fxsupport: enabled=0
-time0: 0
 # no ne2k
-newharddrivesupport: enabled=1
 # no loader
 log: osr5.log
 logprefix: %t-%e-%i%d
@@ -10114,7 +10045,7 @@ step took just over eight hours!  (BTW, it was MUCH longer in version 1.4.1.  Gr
 After the install finishes, you will need to change the following lines in .bochsrc file:
 <programlisting>
 ne2k: ioaddr=0x280, irq=10, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
-boot: c
+boot: disk
 </programlisting>
 Obviously, if you're not using Linux, the ethmode and ethdev values on the ne2k line will be different.
 Also, since Bochs uses "raw" network card access, you'll have to "setuid root" on the Bochs executable:
