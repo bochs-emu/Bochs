@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.34 2001-10-03 13:10:38 bdenney Exp $
+// $Id: keyboard.cc,v 1.35 2001-11-14 01:28:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,6 +40,7 @@
 // (das)
 
 #include "bochs.h"
+#include "math.h"
 #define LOG_THIS  bx_keyboard.
 
 
@@ -61,7 +62,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.34 2001-10-03 13:10:38 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.35 2001-11-14 01:28:53 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -96,7 +97,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.34 2001-10-03 13:10:38 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.35 2001-11-14 01:28:53 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -924,13 +925,14 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic = 0;
     BX_KEY_THIS s.kbd_internal_buffer.delay = (value >> 5) & 0x03;
     switch (BX_KEY_THIS s.kbd_internal_buffer.delay) {
-      case 0: BX_INFO(("setting delay to 250 mS")); break;
-      case 1: BX_INFO(("setting delay to 250 mS")); break;
-      case 2: BX_INFO(("setting delay to 250 mS")); break;
-      case 3: BX_INFO(("setting delay to 250 mS")); break;
+      case 0: BX_INFO(("setting delay to 250 mS (unused)")); break;
+      case 1: BX_INFO(("setting delay to 500 mS (unused)")); break;
+      case 2: BX_INFO(("setting delay to 750 mS (unused)")); break;
+      case 3: BX_INFO(("setting delay to 1000 mS (unused)")); break;
       }
     BX_KEY_THIS s.kbd_internal_buffer.repeat_rate = value & 0x1f;
-    BX_INFO(("setting repeat rate to %u", (unsigned) value));
+    double cps = 1 /((8 + (value & 0x07)) * exp(log(2) * ((value >> 3) & 0x03)) * 0.00417);
+    BX_INFO(("setting repeat rate to %.1f cps (unused)", cps));
     kbd_enQ(0xFA); // send ACK
     return;
     }
