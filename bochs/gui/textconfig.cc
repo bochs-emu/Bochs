@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.24 2004-05-31 13:08:43 vruppert Exp $
+// $Id: textconfig.cc,v 1.25 2004-06-05 08:40:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -460,44 +460,45 @@ int bx_config_interface (int menu)
      choice = RuntimeOptionsDialog();
 #else
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
-     if (ask_uint (prompt, 1, 13, 12, &choice, 10) < 0) return -1;
+     if (ask_uint (prompt, 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
 #endif
      switch (choice) {
-       case 1: 
+       case BX_CI_RT_FLOPPYA: 
          SIM->get_floppy_options (0, &floppyop);
-	 if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYA);
-	 break;
-       case 2:
+         if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYA);
+         break;
+       case BX_CI_RT_FLOPPYB:
          SIM->get_floppy_options (1, &floppyop);
-	 if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYB);
-	 break;
-       case 3:
-       case 4:
-       case 5:
-       case 6:
-	 int device;
+         if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYB);
+         break;
+       case BX_CI_RT_CDROM1:
+       case BX_CI_RT_CDROM2:
+       case BX_CI_RT_CDROM3:
+       case BX_CI_RT_CDROM4:
+         int device;
          if (SIM->get_cdrom_options (choice - 3, &cdromop, &device) && cdromop.Opresent->get ()) {
-	   // disable type selection
-	   SIM->get_param((bx_id)(BXP_ATA0_MASTER_TYPE + device))->set_enabled(0);
-	   SIM->get_param((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled(0);
-	   SIM->get_param((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled(0);
+           // disable type selection
+           SIM->get_param((bx_id)(BXP_ATA0_MASTER_TYPE + device))->set_enabled(0);
+           SIM->get_param((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled(0);
+           SIM->get_param((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled(0);
            do_menu ((bx_id)(BXP_ATA0_MASTER + device));
-           }
-	 break;
-       case 7: // not implemented yet because I would have to mess with
-	       // resetting timers and pits and everything on the fly.
-               // askparam (BXP_IPS);
-	       break;
-       case 8: bx_log_options (0); break;
-       case 9: bx_log_options (1); break;
-       case 10: NOT_IMPLEMENTED (choice); break;
-       case 11: do_menu (BXP_MENU_RUNTIME); break;
-       case 12: fprintf (stderr, "Continuing simulation\n"); return 0;
-       case 13:
-	 fprintf (stderr, "You chose quit on the configuration interface.\n");
+         }
+         break;
+       case BX_CI_RT_IPS:
+         // not implemented yet because I would have to mess with
+         // resetting timers and pits and everything on the fly.
+         // askparam (BXP_IPS);
+         break;
+       case BX_CI_RT_LOGOPTS1: bx_log_options (0); break;
+       case BX_CI_RT_LOGOPTS2: bx_log_options (1); break;
+       case BX_CI_RT_INST_TR: NOT_IMPLEMENTED (choice); break;
+       case BX_CI_RT_MISC: do_menu (BXP_MENU_RUNTIME); break;
+       case BX_CI_RT_CONT: fprintf (stderr, "Continuing simulation\n"); return 0;
+       case BX_CI_RT_QUIT:
+         fprintf (stderr, "You chose quit on the configuration interface.\n");
          bx_user_quit = 1;
-	 SIM->quit_sim (1);
-	 return -1;
+         SIM->quit_sim (1);
+         return -1;
        default: fprintf (stderr, "Menu choice %d not implemented.\n", choice);
      }
      break;

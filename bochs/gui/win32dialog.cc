@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.21 2004-05-23 10:47:00 vruppert Exp $
+// $Id: win32dialog.cc,v 1.22 2004-06-05 08:40:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -13,6 +13,7 @@ extern "C" {
 }
 #include "win32res.h"
 #include "siminterface.h"
+#include "textconfig.h"
 #include "win32dialog.h"
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
@@ -309,6 +310,7 @@ void RuntimeDlgSetTab(HWND hDlg, int tabnum)
   ShowWindow(GetDlgItem(hDlg, IDMOUSE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDKBDPASTE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDUSERBTN), (tabnum == 2) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDSB16TIMER), (tabnum == 2) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDSBLOGLEV), (tabnum == 2) ? SW_SHOW : SW_HIDE);
 }
 
@@ -450,7 +452,7 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
       for (device=1; device<devcount; device++) {
         cdromop[device].Opath->set(origpath[device]);
       }
-      EndDialog(hDlg, 16);
+      EndDialog(hDlg, BX_CI_RT_QUIT);
       break;
     case WM_COMMAND:
       old_changed = changed;
@@ -585,13 +587,13 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
               changed = 0;
               break;
             case IDOK:
-              EndDialog(hDlg, 15);
+              EndDialog(hDlg, BX_CI_RT_CONT);
               break;
             case IDCANCEL:
               for (device=1; device<devcount; device++) {
                 cdromop[device].Opath->set(origpath[device]);
               }
-              EndDialog(hDlg, 16);
+              EndDialog(hDlg, BX_CI_RT_QUIT);
               break;
           }
       }
