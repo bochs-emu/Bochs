@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.19 2002-12-11 19:16:19 bdenney Exp $
+$Id: misc.txt,v 1.20 2002-12-13 17:16:10 bdenney Exp $
 
 Testing testing....
 
@@ -445,4 +445,23 @@ and how it might be useful to you.
 </para>
 
 </section>
+
+------------------------------------------
+Windows 3.1 install hints
+
+Date: Fri, 13 Dec 2002 09:56:48 -0700
+From: Ben Lunt <fys@cybertrails.com>
+To: bochs-devel <bochs-developers@lists.sourceforge.net>
+
+I was playing with bochs a bit last night and successfully
+got windows 3.1 installed on a c.img file and run with
+almost no errors.
+
+I first started with three original DOS 5.0 720k images,
+FDISKed, FORMATed, and then install.
+
+Then changed to seven 1_44m disks and installed Win16.
+Each time either OS asked for a new disk, I simply
+copied the expected image to a.img and continued.
+
 
