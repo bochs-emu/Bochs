@@ -129,7 +129,6 @@ private:
 	    break;
 
 	  default:
-	    extern bx_devices_c bx_devices;
 #define LOG_THIS bx_keyboard.
 	    BX_PANIC(("mouse: invalid resolution_cpmm"));
 #undef LOG_THIS
