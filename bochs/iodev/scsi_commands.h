@@ -1,4 +1,5 @@
 /* scsi/commands.h
+   Used only in cdrom_amigaos.cc.
 
 	Operation codes for SCSI-2 commands
 
