@@ -358,15 +358,18 @@ AC_ARG_ENABLE(ne2000,
     if test "$with_win32" = yes -o "$with_win32_vcpp" = yes; then
       NE2K_OBJS="$NE2K_OBJS eth_win32.o"
     fi
+    networking=yes
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_NE2K_SUPPORT, 0)
     NE2K_OBJS=''
+    networking=no
    fi],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_NE2K_SUPPORT, 0)
     NE2K_OBJS=''
+    networking=no
     ]
   )
 AC_SUBST(NE2K_OBJS)
@@ -981,6 +984,10 @@ elif test "$with_win32_vcpp" = yes; then
   LINK="link $L_OPT /nologo /subsystem:console /incremental:no /machine:I386 /out:\$@ BINMODE.OBJ"
   EXE=".exe"
   PRIMARY_TARGET="bochs.exe"
+  # also compile niclist if networking is on
+  if test "$networking" = yes; then
+    PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
+  fi
   COMMAND_SEPARATOR=""
   CD_UP_ONE="cd .."
   CD_UP_TWO="cd ..\.."

@@ -183,6 +183,9 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 bximage@EXE@: misc/bximage.o
 	@LINK@ misc/bximage.o
 
+niclist@EXE@: misc/bximage.o
+	@LINK@ misc/bximage.o
+
 $(BX_OBJS): $(BX_INCLUDES)
 
 bxversion.h:
