@@ -310,11 +310,11 @@ bx_panic(char *fmt, ...)
     va_end(ap);
     }
 
-  bx_atexit();
-
 #if !BX_PANIC_IS_FATAL
   return;
 #endif    
+
+  bx_atexit();
 
 #if !BX_DEBUGGER
   exit(1);
