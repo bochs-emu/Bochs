@@ -62,7 +62,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+FAQ&url=http://bochs.sourceforge.net/docs-html/faq.html" class="sidebar">Bochs FAQ</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Help+Documents&url=http://bochs.sourceforge.net/docs-html/" class="sidebar">Old Docs</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/alldocs.html" class="sidebar">New Docs</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook" class="sidebar">New Docs</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/user/book1.html" class="sidebar">User Guide</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/development/book1.html" class="sidebar">Devel. Guide</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/documentation/book1.html" class="sidebar">Doc. Guide</a>
