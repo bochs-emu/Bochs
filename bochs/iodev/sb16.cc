@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.25 2002-10-21 00:34:04 bdenney Exp $
+// $Id: sb16.cc,v 1.26 2002-10-21 00:59:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,13 +173,10 @@ void bx_sb16_c::init(bx_devices_c *d)
     }
 
   BX_INFO(("midi=%d,%s  wave=%d,%s  log=%d,%s  dmatimer=%d",
-	    (int)bx_options.sb16.Omidimode->get (),
-	    MIGHT_BE_NULL(bx_options.sb16.Omidifile->getptr ()),
-	    (int)bx_options.sb16.Owavemode->get (),
-	    MIGHT_BE_NULL(bx_options.sb16.Owavefile->getptr ()),
-	    (int)bx_options.sb16.Ologlevel->get (),
-	    MIGHT_BE_NULL(bx_options.sb16.Ologfile->getptr ()),
-	    (int)bx_options.sb16.Odmatimer->get ()));
+	    bx_options.sb16.Omidimode->get (), MIGHT_BE_NULL(bx_options.sb16.Omidifile->getptr ()),
+	    bx_options.sb16.Owavemode->get (), MIGHT_BE_NULL(bx_options.sb16.Owavefile->getptr ()),
+	    bx_options.sb16.Ologlevel->get (), MIGHT_BE_NULL(bx_options.sb16.Ologfile->getptr ()),
+	    bx_options.sb16.Odmatimer->get ()));
 
   // allocate the FIFO buffers - except for the MPUMIDICMD buffer
   // these sizes are generous, 16 or 8 would probably be sufficient
