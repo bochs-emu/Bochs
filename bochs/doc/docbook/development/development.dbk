@@ -1,12 +1,18 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.2 2001-09-10 03:59:11 bdenney Exp $
+$Id: development.dbk,v 1.3 2001-11-17 17:15:38 bdenney Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+<!-- include definitions that are common to all bochs documentation -->
+<!ENTITY % bochsdefs SYSTEM "../include/defs.sgm">
+%bochsdefs;
+
+]>
 <book>
 <bookinfo>
    <title>Bochs Developers Guide</title>
@@ -14,58 +20,226 @@ This is the top level file for the Bochs Developers Manual.
    <author><firstname>Kevin</firstname><surname>Lawton</surname></author>
    <author><firstname>Bryce</firstname><surname>Denney</surname></author>
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
+   <editor><firstname>Vasudeva</firstname></editor>
    </authorgroup>
 </bookinfo>
 
 <!-- *************************************************************** -->
 <chapter><title>Resources for developers</title>
-      <section><title>All the resources for users</title>
-         <para>
-         </para>
-      </section>
+<para>
+The development guide describes resources that are intended for developers
+in particular.  Many Bochs resources are also covered in the User Guide,
+including compile instructions, bochsrc options, how to find the mailing
+lists, etc.
+</para>
 
-      <section><title>CVS</title>
-        <para>
-        how to browse on web interface
-	anonymous CVS (read only)
-	write access CVS (must be officially a developer)
-	how to make a patch using CVS
-        </para>
-      </section>
+
+<section><title>Setting up CVS write access</title>
+<para>
+If you are an official SourceForge developer, then you can use CVS with write
+access.  The CVS contains the most recent copy of the source code, and with
+write access you can upload any changes you make to the CVS server for others
+to use.  A few extra steps are required the first time you use CVS write
+access.
+</para>
+
+<section><title>Install ssh and cvs</title>
+<para>
+First you need to install both cvs (Concurrent Version System) and ssh (Secure
+Shell).  These are already installed on many UNIX systems and also Cygwin
+(win32 platform).  If not, you can install binaries or compile cvs and ssh
+yourself.  The links below should help you get going.
+</para>
+<itemizedlist>
+<listitem> <para> CVS software and instructions are available at <ulink url="http://www.cvshome.org">www.cvshome.org</ulink>. </para> </listitem>
+<listitem> <para> A free version of secure shell called OpenSSH is at <ulink url="http://www.openssh.org">www.openssh.org</ulink>. </para> </listitem>
+<listitem> <para> OpenSSH requires a library called OpenSSL from <ulink url="http://www.openssl.org">www.openssl.org</ulink>.  Be sure to install OpenSSL before trying to compile OpenSSH. </para> </listitem>
+</itemizedlist>
+</section> 
+
+<section><title>ssh to cvs.sf.net</title>
+<para>
+Next, you need to use secure shell to connect to cvs.sf.net.  This step is a
+little strange, because you can't actually log in and get a shell prompt.  All
+that will happen, when you get the username and password right, is that it
+will create a home directory on that machine for you.  That's it!  If you try
+it again, it will say "This is a restricted Shell Account.  You cannot execute
+anything here."   At this point, you've succeeded and you never have to do
+this step again, ever.
+
+<screen>
+  ssh <replaceable>sfusername</replaceable>@cvs.sf.net
+</screen>
+</para>
+
+<para>
+Replace <replaceable>sfusername</replaceable> with your Source Forge username,
+of course.  The first time, you will probably get a message like 
+<screen>
+The authenticity of host 'cvs.sf.net' can't be established.
+Are you sure you want to continue?</screen>
+
+Just type yes.  When it asks for a password, be sure to type your source 
+forge password.  If you have trouble logging in, be sure to use your SOURCE
+FORGE username and password in the ssh line, which isn't necessarily the same
+as your local username and password.  Add the "-v" option to ssh to see more
+information about what is failing.  If you have ssh version 2, it is possible
+that you might need to add "-1" to the ssh command to force it to use the
+version 1 protocol.  </para> </section> 
+
+<section><title>Set CVS_RSH environment variable to ssh</title>
+<para>
+Every time you connect to the Source Forge CVS server (including cvs update,
+stat, commit, etc.), you must set the CVS_RSH environment variable to ssh.  So
+just take the time now to add one of these lines to your .bashrc/.cshrc, so
+that the CVS_RSH setting will be there every time you log in.
+</para>
+
+<screen>
+  export CVS_RSH=ssh           (bash syntax)
+  setenv CVS_RSH ssh           (csh syntax)
+</screen>
+</section> <!--end of "Set environment variable"-->
+
+<section><title>cvs checkout</title>
+<para>
+Finally, you should be able to do the checkout!  If you already have a bochs
+subdirectory directory, move it out of the way because the checkout will
+overwrite it.
+</para>
+
+<screen>
+  export CVSROOT=":ext:<replaceable>sfusername</replaceable>@cvs.bochs.sourceforge.net:/cvsroot/bochs"
+  cvs -z3 checkout bochs
+  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+</screen>
+
+<para>
+In the CVSROOT variable, replace <replaceable>sfusername</replaceable> with your SF username.  There's
+no need to add CVSROOT to your rc files because CVS will remember it
+after the checkout.  The -z3 (optional) just adds some compression to make 
+the checkout go faster.  Once all the files have been downloaded, you will
+have a bochs directory which is checked out with write access!
+</para>
+</section> <!-- end cvs checkout -->
+
+</section> <!-- end setting up cvs write access -->
+
+<section><title>Using CVS write access</title>
+
+<section><title>Checking in files</title>
+<para>
+Once you have a bochs directory with cvs write access, you can compile the
+files, edit them, test them, etc.  See the documentation section, "Tracking
+the source code with CVS" for more info on CVS, in the User Manual.
+(FIXME: add cross reference) But what's new and different is that you can now
+do cvs commits.  When a file is all fixed and ready to share with the rest of
+the world, you run a commit command to upload your version to the server.
+First, it's good to do a cvs update to make sure nobody else has changed it
+since you downloaded it last.
+</para>
+
+<screen>
+  $ cvs update file.cc
+  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  $ cvs commit file.cc
+  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  [editor opens. type log message, save, and exit.]
+</screen>
+
+<para>
+When CVS starts an editor, The default is usually vi.  If you want a different
+editor, set the EDITOR environment variable to the name of your preferred
+editor.  When you're done, just save the file and quit the editor.  Unless
+there's some problem, you will see a message that says what the new revision
+number for the file is, and then "done".  If while you're editing the log
+message, you decide that you don't want to commit after all, don't save the
+file.  Quit the editor, and when it asks where the log message went, tell it
+to abort.
+</para>
+
+<para>
+Here is an example of a successful checkin:
+
+<screen>
+  $ cvs commit misc.txt
+  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  [edit log msg]
+  Checking in misc.txt;
+  /cvsroot/bochs/bochs/doc/docbook/misc.txt,v  <--  misc.txt
+  new revision: 1.6; previous revision: 1.5
+  done
+</screen>
+
+And here is an aborted one:
+
+<screen>
+  $ cvs commit misc.txt
+  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  [quit editor without saving]
+  Log message unchanged or not specified
+  a)bort, c)ontinue, e)dit, !)reuse this message unchanged for remaining dirs
+  Action: a
+  cvs [commit aborted]: aborted by user
+</screen>
+
+</para>
+</section> <!--end of "Checking in Files" -->
+
+</section> <!--end of "Using CVS write access" -->
 
       <section><title>SourceForge bug, feature, and patch trackers</title>
          <para>
+	 &FIXME;
          </para>
       </section>
+
+<section><title>Ideas for other sections</title>
+<para>
+<screen>
+Ideas:
+- how to browse code with cvsweb
+- how to find an identifier, variable, or specific text in the code
+- write access CVS (must be an official developer on SF)
+- how to make patches with CVS
+</screen>
+</para>
+</section>
+
 </chapter>
 
  <chapter><title>About the code</title>
     <section><title>Directory Structure</title>
       <para>
+      &FIXME;
       cpu directory does this, iodev does that, gui does that
       </para>
     </section>
 
-     <section><title>Confure Scripting</title>
+     <section><title>Configure Scripting</title>
       <para>
+      &FIXME;
       configure script, makefiles, header files
       </para>
      </section>
 
       <section><title>Log Functions</title>
       <para>
+      &FIXME;
       log functions: what is a panic, what is an error, etc.
       </para>
       </section>
 
       <section><title>Emulator Objects</title>
        <para>
+      &FIXME;
       objects that do all the work (cpu, mem)
       </para>
       </section>
 
       <section><title>timers</title>
       <para>
+      &FIXME;
       </para>
       </section>
 </chapter>
@@ -73,18 +247,22 @@ This is the top level file for the Bochs Developers Manual.
 <chapter><title>Debugger</title>
       <section><title>compile with debugger support</title>
       <para>
+      &FIXME;
       </para>
       </section>
       <section><title>get started in debugger</title>
       <para>
+      &FIXME;
       </para>
       </section>
       <section><title>command reference</title>
       <para>
+      &FIXME;
       </para>
       </section>
       <section><title>techniques</title>
       <para>
+      &FIXME;
       </para>
       </section>
 </chapter>
@@ -92,16 +270,19 @@ This is the top level file for the Bochs Developers Manual.
 <chapter><title>Coding</title>
       <section><title>coding conventions</title>
       <para>
+      &FIXME;
       </para>
       </section>
       <section><title>patches:</title>
       <para>
+      &FIXME;
       how to make, where to submit, what happens then?
       </para
       </section>
 
       <section><title>life cycle of a CVS release</title>
       <para>
+      &FIXME;
       </para>
       </section>
 </chapter>
