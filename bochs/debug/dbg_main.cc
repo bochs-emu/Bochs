@@ -32,7 +32,7 @@ extern "C" {
 
 #include "bochs.h"
 
-#if HAVE_READLINE
+#if HAVE_LIBREADLINE
 extern "C" {
 #include <stdio.h>
 #include <readline/readline.h>
@@ -462,7 +462,7 @@ bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
     }
-#if USE_READLINE
+#if HAVE_LIBREADLINE
   if (bx_infile_stack_index == 0) {
     // disable ^C handling during readline so that I get get to GDB
     //set_ctrlc_handler (0);
@@ -1438,9 +1438,12 @@ bx_dbg_continue_command(void)
 			} else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
 				stop = 1;
 				which = cpu;
-		    }
+			}
+			// even if stop==1, finish cycling through all processors.
+			// "which" remembers which cpu set the stop flag.  If multiple
+			// cpus set stop, too bad.
 		}
-		// should probably remove all TICK1's from cpu loop
+		// increment time tick only after all processors have had their chance.
 		BX_TICK1();
 	}
 #endif
