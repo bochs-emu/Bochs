@@ -35,12 +35,6 @@ struct BxFpuRegisters {
 };
 
 #if BX_SUPPORT_MMX
-    #if BX_SUPPORT_FPU == 0
-        #error "MMX cannot be compiled without FPU support";
-    #endif
-#endif
-
-#if BX_SUPPORT_MMX
 typedef union {
   Bit8u u8;
   Bit8s s8;
