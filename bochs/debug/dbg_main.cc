@@ -607,12 +607,12 @@ bx_dbg_exit(int code)
 {
   BX_DEBUG(( "dbg: before sim1_exit\n" ));
   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-    BX_CPU(cpu)->atexit();
+    if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
   }
 
 #if BX_NUM_SIMULATORS >= 2
   fprintf(stderr, "before sim2_exit\n");
-  BX_CPU(1)->atexit();
+  if (BX_CPU(1)) BX_CPU(1)->atexit();
 #endif
 
   bx_atexit();
