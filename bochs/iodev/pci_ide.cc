@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.9 2005-02-08 18:32:27 vruppert Exp $
+// $Id: pci_ide.cc,v 1.10 2005-03-24 19:19:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -99,6 +99,7 @@ bx_pci_ide_c::init(void)
   BX_PIDE_THIS s.pci_conf[0x0a] = 0x01;
   BX_PIDE_THIS s.pci_conf[0x0b] = 0x01;
   BX_PIDE_THIS s.pci_conf[0x0e] = 0x00;
+  BX_PIDE_THIS s.bmdma_addr = 0;
 }
 
   void
