@@ -1,10 +1,17 @@
 #!/bin/sh
 
 # this sets up the compile for MacOS X
+#
+# To support plugins on macosx, you must have "dlcompat" installed.  You can
+# get dlcompat by installing the fink package "dlcompat-devel".  On the SF
+# compile farm, dlcompat is in /sw/include and /sw/lib, so we have added
+# those paths to the environment variables.
 
 set echo
-CFLAGS="-pipe -O2"
+CFLAGS="-pipe -O2 -I/sw/include"
+CPPFLAGS="$CFLAGS"
 CXXFLAGS="$CFLAGS"
+LDFLAGS="-L/sw/lib"
 
 export CFLAGS
 export CXXFLAGS
