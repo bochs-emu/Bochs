@@ -12,7 +12,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 
 #include "bochs.h"
-#include "gdbstub.h"
 
 #define LOG_THIS genlog->
 #define IFDBG(x) x
