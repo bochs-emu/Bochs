@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.30 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: misc_mem.cc,v 1.31 2002-10-03 05:15:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.30 2002-09-19 19:17:20 kevinlawton Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.31 2002-10-03 05:15:28 bdenney Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -229,7 +229,7 @@ BX_MEM_C::pci_fetch_ptr(Bit32u addr)
 #endif
 
 
-#if ( BX_DEBUGGER || BX_DISASM )
+#if ( BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
   Boolean
 BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
@@ -275,7 +275,7 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 }
 #endif
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER || BX_GDBSTUB
   Boolean
 BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
