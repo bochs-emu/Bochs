@@ -9,6 +9,11 @@ Notes by Bryce:
 - test with BX_CPU_LEVEL<5: does it still compile?
   tried --enable-cpu-level=4.  compiles ok
 
+compile warning:
+proc_ctrl.cc: In method `void bx_cpu_c::WRMSR(struct BxInstruction_t *)':
+proc_ctrl.cc:1273: warning: left shift count >= width of type
+
+
 -----------------
 I've managed to boot linux 2.2.21-pre1 with this patch, i was having 
 problems before when it tried to enable the APIC via the MSR registers. 
