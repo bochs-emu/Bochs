@@ -1220,7 +1220,7 @@ bx_signal_handler( int signum)
   extern unsigned long ips_count;
 
   if (signum == SIGALRM ) {
-    BX_INFO((("ips = %lu\n", ips_count));
+    BX_INFO(("ips = %lu\n", ips_count));
     ips_count = 0;
 #ifndef __MINGW32__
     signal(SIGALRM, bx_signal_handler);
