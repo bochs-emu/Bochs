@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.49 2002-11-14 05:13:33 bdenney Exp $
+// $Id: wx.cc,v 1.50 2002-11-18 02:40:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -122,7 +122,7 @@ END_EVENT_TABLE()
 MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
   : wxPanel (parent, id, pos, size, style, name)
 {
-  wxLogDebug ("MyPanel constructor"); 
+  wxLogDebug (wxT ("MyPanel constructor")); 
   refreshTimer.SetOwner (this);
   refreshTimer.Start (100);
   needRefresh = true;
@@ -139,9 +139,9 @@ MyPanel::~MyPanel ()
 
 void MyPanel::OnTimer(wxCommandEvent& WXUNUSED(event))
 {
-  IFDBG_VGA(wxLogDebug ("timer"));
+  IFDBG_VGA(wxLogDebug (wxT ("timer")));
   if (needRefresh) {
-    IFDBG_VGA(wxLogDebug ("calling refresh"));
+    IFDBG_VGA(wxLogDebug (wxT ("calling refresh")));
     Refresh (FALSE);
   }
 }
@@ -149,16 +149,16 @@ void MyPanel::OnTimer(wxCommandEvent& WXUNUSED(event))
 void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
   wxPaintDC dc(this);
-  IFDBG_VGA (wxLogDebug ("OnPaint"));
+  IFDBG_VGA (wxLogDebug (wxT ("OnPaint")));
   //PrepareDC(dc);
 
-  IFDBG_VGA(wxLogDebug ("MyPanel::OnPaint trying to get lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::OnPaint trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
-  IFDBG_VGA(wxLogDebug ("MyPanel::OnPaint got lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::OnPaint got lock. wxScreen=%p", wxScreen)));
   if(wxScreen != NULL) {
     wxPoint pt = GetClientAreaOrigin();
     wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
-    IFDBG_VGA(wxLogDebug ("drawBitmap"));
+    IFDBG_VGA(wxLogDebug (wxT ("drawBitmap")));
     dc.DrawBitmap(screenImage.ConvertToBitmap(), pt.x, pt.y, FALSE);
   }
   needRefresh = false;
@@ -183,7 +183,7 @@ void MyPanel::ToggleMouse (bool fromToolbar)
     first_enable = false;
   }
   enable->set (en);
-  IFDBG_MOUSE (wxLogDebug ("now mouse is %sabled", en ? "en" : "dis"));
+  IFDBG_MOUSE (wxLogDebug (wxT ("now mouse is %sabled", en ? "en" : "dis")));
   if (en) {
     mouseSavedX = wxScreenX / 2;
     mouseSavedY = wxScreenY / 2;
@@ -201,15 +201,15 @@ void MyPanel::OnMouse(wxMouseEvent& event)
   event.GetPosition (&x, &y);
   IFDBG_MOUSE (
     if (event.IsButton ()) {
-      wxLogDebug ("mouse button event at %d,%d", x, y);
+      wxLogDebug (wxT ("mouse button event at %d,%d", x, y));
     } else if (event.Entering ()) {
-      wxLogDebug ("mouse entering at %d,%d", x, y);
+      wxLogDebug (wxT ("mouse entering at %d,%d", x, y));
     } else if (event.Leaving ()) {
-      wxLogDebug ("mouse leaving at %d,%d", x, y);
+      wxLogDebug (wxT ("mouse leaving at %d,%d", x, y));
     } else if (event.Moving() || event.Dragging ()) {
-      wxLogDebug ("mouse moved to %d,%d", x, y);
+      wxLogDebug (wxT ("mouse moved to %d,%d", x, y));
     } else {
-      wxLogDebug ("other mouse event at %d,%d", x, y);
+      wxLogDebug (wxT ("other mouse event at %d,%d", x, y));
     }
   )
 
@@ -233,7 +233,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
       wxCriticalSectionLocker lock(event_thread_lock);
       Bit16s dx = x - mouseSavedX;
       Bit16s dy = y - mouseSavedY;
-      IFDBG_MOUSE (wxLogDebug ("mouse moved by delta %d,%d", dx, dy));
+      IFDBG_MOUSE (wxLogDebug (wxT ("mouse moved by delta %d,%d", dx, dy)));
       event_queue[num_events].type = BX_ASYNC_EVT_MOUSE;
       event_queue[num_events].u.mouse.dx = dx;
       event_queue[num_events].u.mouse.dy = -dy;
@@ -242,7 +242,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
       mouseSavedX = x;
       mouseSavedY = y;
     } else {
-      wxLogDebug ("mouse event skipped because event queue full");
+      wxLogDebug (wxT ("mouse event skipped because event queue full"));
     }
   }
 
@@ -258,7 +258,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
 void 
 MyPanel::MyRefresh ()
 {
-  IFDBG_VGA (wxLogDebug ("set needRefresh=true"));
+  IFDBG_VGA (wxLogDebug (wxT ("set needRefresh=true")));
   needRefresh = true;
 }
 
@@ -425,7 +425,7 @@ bx_bool
 MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 {
 #if defined(wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
-  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_MSW. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags));
+  IFDBG_KEY(wxLogDebug (wxT ("fillBxKeyEvent_MSW. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags)));
   // this code was grabbed from gui/win32.cpp
   Bit32u lParam = wxev.m_rawFlags;
   Bit32u key = HIWORD (lParam) & 0x01FF;
@@ -455,7 +455,7 @@ bx_bool
 MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 {
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
-  IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_GTK. key code %ld, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags));
+  IFDBG_KEY(wxLogDebug (wxT ("fillBxKeyEvent_GTK. key code %ld, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags)));
   // GTK has only 16bit key codes
   Bit16u keysym = (Bit32u) wxev.m_rawCode;
   Bit32u key_event = 0;
@@ -608,7 +608,7 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release
 #endif
 
         default:
-          wxLogError( "fillBxKeyEvent_GTK(): keysym %x unhandled!", (unsigned) keysym );
+          wxLogError(wxT ("fillBxKeyEvent_GTK(): keysym %x unhandled!"), (unsigned) keysym );
           return BX_KEY_UNHANDLED;
     }
   } else {
@@ -647,7 +647,7 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 
   // otherwise fall back to using portable WXK_* keycodes.  Not all keys
   // can be mapped correctly using WXK_* codes but it should be usable.
-  IFDBG_KEY (wxLogDebug ("fillBxKeyEvent. key code %ld", wxev.m_keyCode));
+  IFDBG_KEY (wxLogDebug (wxT ("fillBxKeyEvent. key code %ld", wxev.m_keyCode)));
   Bit32u key = wxev.m_keyCode;
   Bit32u bx_key;
   
@@ -742,11 +742,11 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
     case 392: bx_key = BX_KEY_KP_ADD;        break; // keypad plus
 
     default:
-      wxLogMessage("Unhandled key event: %i (0x%x)", key, key);
+      wxLogMessage(wxT ("Unhandled key event: %i (0x%x)"), key, key);
       return 0;
     }
   }
-  IFDBG_KEY (wxLogDebug ("fillBxKeyEvent: after remapping, key=%d", bx_key));
+  IFDBG_KEY (wxLogDebug (wxT ("fillBxKeyEvent: after remapping, key=%d"), bx_key));
   bxev.bx_key = bx_key | (release? BX_KEY_RELEASED : BX_KEY_PRESSED);
   bxev.raw_scancode = false;
   return true;
@@ -789,9 +789,9 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
 
   wxScreenX = 640;
   wxScreenY = 480;
-  IFDBG_VGA(wxLogDebug ("MyPanel::specific_init trying to get lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::specific_init trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
-  IFDBG_VGA(wxLogDebug ("MyPanel::specific_init got lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::specific_init got lock. wxScreen=%p", wxScreen)));
   wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 
@@ -833,7 +833,7 @@ void bx_wx_gui_c::handle_events(void)
           case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse (true); break;
           case BX_TOOLBAR_USER: userbutton_handler (); break;
           default:
-            wxLogDebug ("unknown toolbar id %d", event_queue[i].u.toolbar.button);
+            wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
         }
         break;
       case BX_ASYNC_EVT_KEY:
@@ -848,15 +848,15 @@ void bx_wx_gui_c::handle_events(void)
               DEV_kbd_put_scancode (&scancode, 1);
             }
             scancode = 0xFF & (bx_key>>8);
-            IFDBG_KEY (wxLogDebug ("sending raw scancode 0x%02x (extended key)", (int)scancode));
+            IFDBG_KEY (wxLogDebug (wxT ("sending raw scancode 0x%02x (extended key))", (int)scancode)));
             DEV_kbd_put_scancode(&scancode, 1);
           }
           scancode = 0xFF & bx_key;
-          IFDBG_KEY (wxLogDebug ("sending raw scancode 0x%02x", (int)scancode));
+          IFDBG_KEY (wxLogDebug (wxT ("sending raw scancode 0x%02x", (int))scancode));
           DEV_kbd_put_scancode(&scancode, 1);
         } else {
           // event contains BX_KEY_* codes: use gen_scancode
-          IFDBG_KEY (wxLogDebug ("sending key event 0x%02x", bx_key));
+          IFDBG_KEY (wxLogDebug (wxT ("sending key event 0x%02x", bx_key)));
           DEV_kbd_gen_scancode(bx_key);
         }
         break;
@@ -867,7 +867,7 @@ void bx_wx_gui_c::handle_events(void)
             event_queue[i].u.mouse.buttons);
         break;
       default:
-        wxLogError ("handle_events received unhandled event type %d in queue", (int)event_queue[i].type);
+        wxLogError (wxT ("handle_events received unhandled event type %d in queue"), (int)event_queue[i].type);
     }
   }
   num_events = 0;
@@ -892,9 +892,9 @@ bx_wx_gui_c::flush(void)
   void
 bx_wx_gui_c::clear_screen(void)
 {
-  IFDBG_VGA(wxLogDebug ("MyPanel::clear_screen trying to get lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::clear_screen trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
-  IFDBG_VGA(wxLogDebug ("MyPanel::clear_screen got lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::clear_screen got lock. wxScreen=%p", wxScreen)));
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
   thePanel->MyRefresh ();
 }
@@ -902,9 +902,9 @@ bx_wx_gui_c::clear_screen(void)
 static void 
 UpdateScreen(unsigned char *newBits, int x, int y, int width, int height) 
 {
-  IFDBG_VGA(wxLogDebug ("MyPanel::UpdateScreen trying to get lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
-  IFDBG_VGA(wxLogDebug ("MyPanel::UpdateScreen got lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen got lock. wxScreen=%p", wxScreen)));
   if(wxScreen != NULL) {
     for(int i = 0; i < height; i++) {
       for(int c = 0; c < width; c++) {
@@ -916,7 +916,7 @@ UpdateScreen(unsigned char *newBits, int x, int y, int width, int height)
       if(y >= wxScreenY) break;
     }
   } else {
-    IFDBG_VGA (wxLogDebug ("UpdateScreen with null wxScreen"));
+    IFDBG_VGA (wxLogDebug (wxT ("UpdateScreen with null wxScreen")));
   }
 }
 
@@ -973,7 +973,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
           Bit16u cursor_state, unsigned nrows)
 {
-  IFDBG_VGA(wxLogDebug ("text_update"));
+  IFDBG_VGA(wxLogDebug (wxT ("text_update")));
   //static Bit32u counter = 0;
   //BX_INFO (("text_update executed %d times", ++counter));
 
@@ -1025,7 +1025,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   bx_bool
 bx_wx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
-  IFDBG_VGA(wxLogDebug ("palette_change"));
+  IFDBG_VGA(wxLogDebug (wxT ("palette_change")));
   wxBochsPalette[index].red = red;
   wxBochsPalette[index].green = green;
   wxBochsPalette[index].blue = blue;
@@ -1050,7 +1050,7 @@ bx_wx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsign
 
 void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-  IFDBG_VGA (wxLogDebug ("graphics_tile_update"));
+  IFDBG_VGA (wxLogDebug (wxT ("graphics_tile_update")));
   //static Bit32u counter = 0;
   //BX_INFO (("graphics_tile_update executed %d times", ++counter));
   UpdateScreen(tile, x0, y0, wxTileX, wxTileY);
@@ -1068,9 +1068,9 @@ void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
-  IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen)));
   wxScreen_lock.Enter ();
-  IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen)));
   BX_INFO (("dimension update x=%d y=%d fontheight=%d", x, y, fheight));
   if (fheight > 0) {
   wxFontY = fheight;
@@ -1080,7 +1080,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
   wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
   wxASSERT (wxScreen != NULL);
   wxScreen_lock.Leave ();
-  IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update gave up lock. wxScreen=%p", wxScreen));
+  IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update gave up lock. wxScreen=%p", wxScreen)));
   // Note: give up wxScreen_lock before calling SetClientSize.  I did
   // this because I was sometimes seeing thread deadlock in win32, apparantly 
   // related to wxStreen_lock.  The wxWindows GUI thread was sitting in OnPaint
