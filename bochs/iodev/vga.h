@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.44 2004-11-06 17:03:44 vruppert Exp $
+// $Id: vga.h,v 1.45 2005-02-10 09:48:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -322,13 +322,15 @@ protected:
 #endif
 
   int timer_id;
+  bx_bool extension_init;
+  bx_bool extension_checked;
 
   public:
-  static void   timer_handler(void *);
-  BX_VGA_SMF void   timer(void);
+  static void     timer_handler(void *);
+  BX_VGA_SMF void timer(void);
 
   protected:
-  BX_VGA_SMF void   update(void);
+  BX_VGA_SMF void update(void);
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight,
                                               unsigned *piWidth);
   };

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.113 2005-02-01 19:16:39 vruppert Exp $
+// $Id: vga.cc,v 1.114 2005-02-10 09:48:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,6 +134,8 @@ bx_vga_c::init(void)
   unsigned addr;
 #endif
 
+  BX_VGA_THIS extension_init = 0;
+  BX_VGA_THIS extension_checked = 0;
 #if !BX_SUPPORT_CLGD54XX
   BX_VGA_THIS init_iohandlers(read_handler,write_handler);
 #endif // !BX_SUPPORT_CLGD54XX
@@ -321,6 +323,7 @@ bx_vga_c::init(void)
     } else {
       BX_VGA_THIS s.vbe_max_bpp=max_bpp;
     }
+    BX_VGA_THIS extension_init = 1;
   
     BX_INFO(("VBE Bochs Display Extension Enabled"));
   }
@@ -373,6 +376,14 @@ bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer)
   void
 bx_vga_c::reset(unsigned type)
 {
+  if (!BX_VGA_THIS extension_checked) {
+    if (!BX_VGA_THIS extension_init &&
+        (strlen(bx_options.Ovga_extension->getptr()) > 0) &&
+        strcmp(bx_options.Ovga_extension->getptr(), "none")) {
+      BX_PANIC(("unknown display extension: %s", bx_options.Ovga_extension->getptr()));
+    }
+    BX_VGA_THIS extension_checked = 1;
+  }
 }
 
 

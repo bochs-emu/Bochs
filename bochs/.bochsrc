@@ -112,6 +112,15 @@ megs: 32
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
 #=======================================================================
+# VGA:
+# Here you can specify the display extension to be used. With the value
+# 'none' you can use standard VGA with no extension. Other supported
+# values are 'vbe' for Bochs VBE and 'cirrus' for Cirrus SVGA support.
+#=======================================================================
+#vga: extension=cirrus
+vga: extension=vbe
+
+#=======================================================================
 # FLOPPYA:
 # Point this to pathname of floppy image file or device
 # This should be of a bootable floppy(image/device) if you're
@@ -639,7 +648,7 @@ keyboard_mapping: enabled=0, map=
 # also specify the devices connected to PCI slots. Up to 5 slots are
 # available now. These devices are currently supported: ne2k, pcivga,
 # pcidev and pcipnic. If Bochs is compiled with Cirrus SVGA support
-# you'll have the choice 'cirrus' instead of 'pcivga'.
+# you'll have the additional choice 'cirrus'.
 #
 # Example:
 #   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
