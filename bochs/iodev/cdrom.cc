@@ -51,12 +51,9 @@ extern "C" {
 #endif /* __sun */
 
 #ifdef __OpenBSD__
-// Here is a diff for cdrom.cc which adds support for OpenBSD.
-//
-// Note that since the i386 sys/disklabel.h contains code which c++ considers
-// invalid, it will not work with a default release until OpenBSD 2.7.
-// (I will fix disklabel.h as soon as 2.6 is done and the tree is unlocked.)
-extern "C" {
+// OpenBSD pre version 2.7 may require extern "C" { } structure around
+// all the includes, because the i386 sys/disklabel.h contains code which 
+// c++ considers invalid.
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/file.h>
@@ -67,7 +64,6 @@ extern "C" {
 // XXX
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE	2048
-}
 #endif
 
 #ifdef WIN32
