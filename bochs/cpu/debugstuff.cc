@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.23 2002-10-16 22:10:05 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.24 2002-10-24 06:26:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -154,7 +154,7 @@ BX_CPU_C::debug(Bit32u offset)
 
   dbg_xlate_linear2phy(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + offset,
                        &phy_addr, &valid);
-  if (valid) {
+  if (valid && mem!=NULL) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
     isize = bx_disassemble.disasm(
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
