@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.81 2004-03-08 05:30:38 sshwarts Exp $
+// $Id: win32.cc,v 1.82 2004-04-11 08:01:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,6 +140,7 @@ static BOOL BxTextMode = TRUE;
 static BOOL legacyF12 = FALSE;
 #if !BX_USE_WINDOWS_FONTS
 static Bit8u h_panning = 0, v_panning = 0;
+static Bit16u line_compare = 1023;
 #else
 static HFONT hFont[3];
 static int FontId = 2;
@@ -1234,11 +1235,12 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 {
   HDC hdc;
   unsigned char data[64];
-  unsigned char *old_line, *new_line;
-  unsigned char cAttr, cChar;
-  unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2;
+  Bit8u *old_line, *new_line, *text_base;
+  Bit8u cAttr, cChar;
+  unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2, cs_y;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
-  BOOL forceUpdate = FALSE;
+  Bit8u split_textrow, split_fontrows;
+  BOOL forceUpdate = FALSE, split_screen;
 
   if (!stInfo.UIinited) return;
 
@@ -1250,7 +1252,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       if (char_changed[c]) {
         memset(data, 0, sizeof(data));
         BOOL gfxchar = tm_info.line_graphics && ((c & 0xE0) == 0xC0);
-        for (unsigned i=0; i<32; i++) {
+        for (unsigned i=0; i<yChar; i++) {
           data[i*2] = vga_charmap[c*32+i];
           if (gfxchar) {
             data[i*2+1] = (data[i*2] << 7);
@@ -1272,6 +1274,10 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     h_panning = tm_info.h_panning;
     v_panning = tm_info.v_panning;
   }
+  if(tm_info.line_compare != line_compare) {
+    forceUpdate = 1;
+    line_compare = tm_info.line_compare;
+  }
 #endif
 
   // first invalidate character at previous and new cursor location
@@ -1291,10 +1297,24 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
+  cs_y = 0;
+  text_base = new_text - tm_info.start_address;
+  split_textrow = (line_compare + v_panning) / yChar;
+  split_fontrows = ((line_compare + v_panning) % yChar) + 1;
+  split_screen = 0;
   do {
     hchars = text_cols;
     if (h_panning) hchars++;
-    if (v_panning) {
+    if (split_screen) {
+      yc = line_compare + cs_y * yChar + 1;
+      font_row = 0;
+      if (rows == 1) {
+        cfheight = (dimension_y - line_compare - 1) % yChar;
+        if (cfheight == 0) cfheight = yChar;
+      } else {
+        cfheight = yChar;
+      }
+    } else if (v_panning) {
       if (y == 0) {
         yc = 0;
         font_row = v_panning;
@@ -1313,10 +1333,13 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       font_row = 0;
       cfheight = yChar;
     }
+    if (!split_screen && (y == split_textrow)) {
+      if (split_fontrows < cfheight) cfheight = split_fontrows;
+    }
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = y * tm_info.line_offset;
+    offset = cs_y * tm_info.line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1369,10 +1392,22 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       old_text+=2;
       offset+=2;
     } while (--hchars);
-    y++;
-    new_text = new_line + tm_info.line_offset;
-    old_text = old_line + tm_info.line_offset;
+    if (!split_screen && (y == split_textrow)) {
+      new_text = text_base;
+      forceUpdate = 1;
+      cs_y = 0;
+      if (tm_info.split_hpanning) h_panning = 0;
+      rows = ((dimension_y - line_compare + yChar - 2) / yChar) + 1;
+      split_screen = 1;
+    } else {
+      y++;
+      cs_y++;
+      new_text = new_line + tm_info.line_offset;
+      old_text = old_line + tm_info.line_offset;
+    }
   } while (--rows);
+
+  h_panning = tm_info.h_panning;
 #else
   rows = text_rows;
   y = 0;
