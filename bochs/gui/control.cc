@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.33 2001-10-06 08:45:18 bdenney Exp $
+// $Id: control.cc,v 1.34 2001-10-06 22:31:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.33 2001-10-06 08:45:18 bdenney Exp $
+ * $Id: control.cc,v 1.34 2001-10-06 22:31:31 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -393,25 +393,15 @@ void askparam (bx_id id)
   param->text_ask (stdin, stderr);
 }
 
-// return value of bx_control_panel:
-//   -1: error while reading, like if stdin closed
-//    0: no error
-//   BX_DISABLE_CONTROL_PANEL: returned from BX_CPANEL_START_MAIN if 
-//       user chooses to revert to the normal way of running without the
-//       control panel.
 int bx_control_panel (int menu)
 {
  Bit32u choice;
  while (1) {
   switch (menu)
   {
-   case BX_CPANEL_START_MAIN:
+   case BX_CPANEL_INIT:
      bx_control_panel_init ();
-     {
-     if (ask_yn (ask_about_control_panel, 1, &choice) < 0) return -1;
-     if (choice == 0) return BX_DISABLE_CONTROL_PANEL;
-     else return bx_control_panel (BX_CPANEL_START_MENU);
-     }
+     return 0;
    case BX_CPANEL_START_MENU:
      {
        static int read_rc = 0;

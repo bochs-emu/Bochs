@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.h,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: control.h,v 1.6 2001-10-06 22:31:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 enum {
-  BX_CPANEL_START_MAIN,
+  BX_CPANEL_INIT,
   BX_CPANEL_START_MENU,
   BX_CPANEL_START_OPTS,
   BX_CPANEL_START_OPTS_MEM,
@@ -15,7 +15,7 @@ enum {
   BX_CPANEL_N_MENUS
 };
 
-/* special return value from bx_control_panl */
+/* special return value from bx_control_panel */
 #define BX_DISABLE_CONTROL_PANEL 10 
 
 int bx_control_panel (int menu);

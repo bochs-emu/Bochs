@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.70 2001-10-03 12:56:51 bdenney Exp $
+// $Id: main.cc,v 1.71 2001-10-06 22:31:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,7 +29,7 @@
 #include <assert.h>
 #include "state_file.h"
 
-int force_no_control_panel = 0;
+int enable_control_panel = 1;
 
 extern "C" {
 #include <signal.h>
@@ -775,6 +775,7 @@ static void setupWorkingDirectory (char *path)
 int
 main(int argc, char *argv[])
 {
+  int arg = 1;
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
   // constructors or functions called by constructors.  The macros test for
@@ -788,14 +789,18 @@ main(int argc, char *argv[])
   bx_init_bx_dbg ();
 
 #if BX_WITH_CARBON
-    /* This is passed if we are launched by double-clicking */
+    /* "-psn" is passed if we are launched by double-clicking */
    if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 ) {
+     // ugly hack.  I don't know how to open a window to print messages in,
+     // so put them in /tmp/early-bochs-out.txt.  Sorry. -bbd
      io->init_log("/tmp/early-bochs-out.txt");
      BX_INFO (("I was launched by double clicking.  Fixing home directory."));
-     argc = 1;
+     argc = 1; // ignore all other args.
      setupWorkingDirectory (argv[0]);
-     force_no_control_panel = 1;
+     // there is no stdin/stdout so disable the text-based config interface.
+     enable_control_panel = 0;
    }
+   // if it was started from command line, there could be some args still.
    for (int a=0; a<argc; a++) {
      BX_INFO (("argument %d is %s", a, argv[a]));
    }
@@ -805,38 +810,33 @@ main(int argc, char *argv[])
   BX_INFO (("Now my working directory is %s", cwd));
 #endif
 
-  int read_rc_already = 0;
   init_siminterface ();
+  bx_control_panel (BX_CPANEL_INIT);
   bx_init_options ();
 
-#if BX_USE_CONTROL_PANEL
-  if (force_no_control_panel) {
-    SIM->set_enabled (0);
-  } if (argc > 1 && (!strcmp ("-nocontrolpanel", argv[1]))) {
+  // detect -nocontrolpanel or -nocp argument before anything else
+  if (argc > 1 && 
+       ((!strcmp ("-nocontrolpanel", argv[1]))
+        || (!strcmp ("-nocp", argv[1])))) {
     // skip the control panel
-    argc++;
+    arg++;
     SIM->set_enabled (0);
-  } else {
-    // Display the pre-simulation control panel.
-    if ((bx_control_panel (BX_CPANEL_START_MAIN)) == BX_DISABLE_CONTROL_PANEL)
-      SIM->set_enabled (0);
-    else {
-      SIM->set_enabled (1);
-      read_rc_already = 1;
-    }
+    enable_control_panel = 0;
   }
+#if !BX_USE_CONTROL_PANEL
+  enable_control_panel = 0;
 #endif
 
-  if (!read_rc_already) {
-    /* parse configuration file and command line arguments */
+  if (!enable_control_panel) {
+    // if we don't intend to run the control panel, parse the .bochsrc now.
     char *bochsrc = bx_find_bochsrc ();
     if (bochsrc)
       bx_read_configuration (bochsrc);
 
-    if (bochsrc == NULL && argc == 1) {
-      // no bochsrc used.  This is legal since they may have 
-      // everything on the command line.  However if they have no
-      // arguments then give them some friendly advice.
+    if (bochsrc == NULL && arg>=argc) {
+      // no bochsrc used.  This is legal since they may have everything on the
+      // command line.  However if they have no arguments then give them some
+      // friendly advice.
       fprintf (stderr, "%s\n", divider);
       fprintf (stderr, "Before running Bochs, you should cd to a directory which contains\n");
       fprintf (stderr, "a .bochsrc file and a disk image.  If you downloaded a binary package,\n");
@@ -854,17 +854,24 @@ main(int argc, char *argv[])
     }
   }
 
+  // parse the rest of the command line.
+  if (bx_parse_cmdline (arg, argc, argv)) {
+    fprintf (stderr, "There were errors while parsing the command line.\n");
+    fprintf (stderr, "Bochs is exiting.\n");
+    exit (1);
+  }
+
+  if (enable_control_panel) {
+    // Display the pre-simulation control panel.
+    bx_control_panel (BX_CPANEL_START_MENU);
+    SIM->set_enabled (1);
+  }
+
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
   bx_dbg_main(argc, argv);
 #else
-
-  if (bx_parse_cmdline (argc, argv)) {
-    fprintf (stderr, "There were errors while parsing the command line.\n");
-    fprintf (stderr, "Bochs is exiting.\n");
-    exit (1);
-  }
 
   bx_init_hardware();
 
@@ -917,15 +924,14 @@ bx_read_configuration (char *rcfile)
   return 0;
 }
 
-int bx_parse_cmdline (int argc, char *argv[])
+int bx_parse_cmdline (int arg, int argc, char *argv[])
 {
-  if (argc > 1)
-    BX_INFO (("parsing command line arguments"));
+  //if (arg < argc) BX_INFO (("parsing command line arguments"));
 
-  int n = 2;
-  while (n <= argc) {
-    parse_line_unformatted("cmdline args", argv[n-1]);
-    n++;
+  while (arg < argc) {
+    BX_INFO (("parsing arg %d, %s", arg, argv[arg]));
+    parse_line_unformatted("cmdline args", argv[arg]);
+    arg++;
   }
   return 0;
 }

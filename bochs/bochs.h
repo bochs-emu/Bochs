@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.50 2001-10-03 13:10:37 bdenney Exp $
+// $Id: bochs.h,v 1.51 2001-10-06 22:31:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -517,7 +517,7 @@ extern bx_devices_c   bx_devices;
 
 
 char *bx_find_bochsrc (void);
-int bx_parse_cmdline (int argc, char *argv[]);
+int bx_parse_cmdline (int arg, int argc, char *argv[]);
 int bx_read_configuration (char *rcfile);
 int bx_write_configuration (char *rcfile, int overwrite);
 
