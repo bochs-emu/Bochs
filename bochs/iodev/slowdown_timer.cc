@@ -1,8 +1,24 @@
 #include "bochs.h"
+#include <errno.h>
 
 #ifdef BX_USE_SLOWDOWN_TIMER
 
+//These need to stay printfs because they are useless in the log file.
 #define BX_SLOWDOWN_PRINTF_FEEDBACK 0
+
+#define SECINUSEC 1000000
+#define usectosec(a) ((a)/SECINUSEC)
+#define sectousec(a) ((a)*SECINUSEC)
+#define nsectousec(a) ((a)/1000)
+
+#if BX_HAVE_USLEEP
+#  define Qval 100000
+#else
+#  define Qval SECINUSEC
+#endif
+
+#define MAXMULT 1.5
+#define REALTIME_Q SECINUSEC
 
 bx_slowdown_timer_c bx_slowdown_timer;
 
@@ -14,18 +30,18 @@ bx_slowdown_timer_c::bx_slowdown_timer_c() {
 
 int
 bx_slowdown_timer_c::init() {
-  s.MAXmultiplier=2;
-  s.Q=1000000;
+  s.MAXmultiplier=MAXMULT;
+  s.Q=Qval;
 
   if(s.MAXmultiplier<1)
     s.MAXmultiplier=1;
 
-  s.start_time=time(NULL)*1000000;
+  s.start_time=sectousec(time(NULL));
   s.start_emulated_time = bx_pc_system.time_usec();
   s.lasttime=0;
   s.timer_handle=bx_pc_system.register_timer(this, timer_handler, 100 , 1, 1);
   bx_pc_system.deactivate_timer(s.timer_handle);
-  bx_pc_system.activate_timer(s.timer_handle,s.Q,0);
+  bx_pc_system.activate_timer(s.timer_handle,(Bit32u)s.Q,0);
   return 0;
 }
 
@@ -40,7 +56,7 @@ void
 bx_slowdown_timer_c::handle_timer() {
   Bit64u total_emu_time = (bx_pc_system.time_usec()) - s.start_emulated_time;
   Bit64u wanttime = s.lasttime+s.Q;
-  Bit64u totaltime = (time(NULL)*1000000) - s.start_time;
+  Bit64u totaltime = sectousec(time(NULL)) - s.start_time;
   Bit64u thistime=(wanttime>totaltime)?wanttime:totaltime;
 
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
@@ -51,7 +67,10 @@ bx_slowdown_timer_c::handle_timer() {
    * Set interrupt interval accordingly. */
   if(totaltime > total_emu_time) {
     bx_pc_system.deactivate_timer(s.timer_handle);
-    bx_pc_system.activate_timer(s.timer_handle,s.MAXmultiplier * s.Q,0);
+    bx_pc_system.activate_timer(s.timer_handle,
+				(Bit32u)((Bit64u)
+					 (s.MAXmultiplier * (float)s.Q)),
+				0);
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
     printf("running at MAX speed\n");
 #endif
@@ -64,18 +83,49 @@ bx_slowdown_timer_c::handle_timer() {
   }
 
   /* Make sure we took at least one time quantum. */
-  if(wanttime > totaltime) {
-    sleep(s.Q/1000000);
+  /* This is a little strange.  I'll try to explain.
+   * We're running bochs one second ahead of real time.
+   *  this gives us a very precise division on whether
+   *  we're ahead or behind the second line.
+   * Basically, here's how it works:
+   * *****|******************|***********...
+   *      Time               Time+1sec
+   *                        <^Bochs doesn't delay.
+   *                          ^>Bochs delays.
+   *    <^Bochs runs at MAX speed.
+   *      ^>Bochs runs at normal
+   */
+  if(wanttime > (totaltime+REALTIME_Q)) {
+#if BX_HAVE_USLEEP
+    usleep(s.Q);
+#else
+    sleep(usectosec(s.Q));
+#endif
     //delay(wanttime-totaltime);
     /*alternatively: delay(Q);
      * This works okay because we share the delay between
      * two time quantums.
      */
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
-    printf("Delaying for a quantum\n");
+    printf("DELAYING for a quantum\n");
 #endif
   }
   s.lasttime=thistime;
+
+  //Diagnostic info:
+  if(wanttime > (totaltime+REALTIME_Q)) {
+    if(totaltime > total_emu_time) {
+      if(1) printf("Solving OpenBSD problem.\n");
+    } else {
+      if(0) printf("too fast.\n");
+    }
+  } else {
+    if(totaltime > total_emu_time) {
+      if(0) printf("too slow.\n");
+    } else {
+      if(0) printf("sometimes invalid state, normally okay.\n");
+    }
+  }
 }
 
 #endif

@@ -1,6 +1,8 @@
 
 #ifdef BX_USE_SLOWDOWN_TIMER
 
+#define BX_HAVE_USLEEP 1
+
 class bx_slowdown_timer_c {
 
 private:
@@ -11,7 +13,7 @@ private:
 
     int timer_handle;
 
-    Bit64u MAXmultiplier;
+    float MAXmultiplier;
     Bit64u Q; // (Q (in seconds))
   } s;
 
