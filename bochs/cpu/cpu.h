@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.48 2002-09-13 05:03:37 kevinlawton Exp $
+// $Id: cpu.h,v 1.49 2002-09-13 17:04:11 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ typedef Bit32u bx_address;
 #endif
 
 #if BX_SUPPORT_X86_64
-#define BX_READ_8BIT_REG(index,extended)  ((((index) < 4) || (extended)) ? \
+#define BX_READ_8BIT_REGx(index,extended)  ((((index) < 4) || (extended)) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
   (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
 #define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
@@ -180,6 +180,7 @@ typedef Bit32u bx_address;
 #define BX_READ_8BIT_REG(index)  (((index) < 4) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
   (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
+#define BX_READ_8BIT_REGx(index,ext) BX_READ_8BIT_REG(index)
 #define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
 #define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].dword.erx)
 #endif
@@ -193,7 +194,7 @@ typedef Bit32u bx_address;
   }
 
 #if BX_SUPPORT_X86_64
-#define BX_WRITE_8BIT_REG(index, extended, val) {\
+#define BX_WRITE_8BIT_REGx(index, extended, val) {\
   if (((index) < 4) || (extended)) \
     BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
   else \
@@ -221,11 +222,17 @@ typedef Bit32u bx_address;
   else \
     BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
   }
+#define BX_WRITE_8BIT_REGx(index, ext, val) BX_WRITE_8BIT_REG(index, val)
 #define BX_WRITE_16BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
   }
 #define BX_WRITE_32BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = val; \
+  }
+// For x86-32, I just pretend this one is like the macro above,
+// so common code can be used.
+#define BX_WRITE_32BIT_REGZ(index, val) {\
+  BX_CPU_THIS_PTR gen_reg[index].dword.erx = (Bit32u) val; \
   }
 #endif
 

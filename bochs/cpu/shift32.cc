@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.7 2002-09-06 21:54:58 kevinlawton Exp $
+// $Id: shift32.cc,v 1.8 2002-09-13 17:04:13 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ BX_CPU_C::SHLD_EdGd(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -112,7 +112,7 @@ BX_CPU_C::SHRD_EdGd(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -162,7 +162,7 @@ BX_CPU_C::ROL_Ed(BxInstruction_t *i)
 
       /* now write result back to destination */
       if (i->mod == 0xc0) {
-        BX_WRITE_32BIT_REG(i->rm, result_32);
+        BX_WRITE_32BIT_REGZ(i->rm, result_32);
         }
       else {
         Write_RMW_virtual_dword(result_32);
@@ -208,7 +208,7 @@ BX_CPU_C::ROR_Ed(BxInstruction_t *i)
 
       /* now write result back to destination */
       if (i->mod == 0xc0) {
-        BX_WRITE_32BIT_REG(i->rm, result_32);
+        BX_WRITE_32BIT_REGZ(i->rm, result_32);
         }
       else {
         Write_RMW_virtual_dword(result_32);
@@ -263,7 +263,7 @@ BX_CPU_C::RCL_Ed(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -315,7 +315,7 @@ BX_CPU_C::RCR_Ed(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -361,7 +361,7 @@ BX_CPU_C::SHL_Ed(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -401,7 +401,7 @@ BX_CPU_C::SHR_Ed(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -446,7 +446,7 @@ BX_CPU_C::SAR_Ed(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
