@@ -7,7 +7,8 @@ TO DO LIST:
 - check logs in main directory
   - (DONE) check logs of configure.in
   - (DONE) Makefile.in
-  - main.cc
+  - (DONE) main.cc
+  - the rest of the directory (Bryce is working on this)
 - check logs in documentation (Christophe is working on this)
   - (DONE) Makefile, Makefile.in logs
 - summarize SF bugs/features/requests
@@ -119,9 +120,12 @@ documentation
     - display_library: select which display lib to use
     - optromimage: load optional rom images
     - ataN (N=0,1,2,3): up to 4 ATA controllers for hard disks, cdroms
-    - ataN-master, ataN-slave, N=0,1,2,3: defines a hard disk or cdrom
+    - ataN-master, ataN-slave, N=0,1,2,3: defines a hard disk or cdrom.
+      The "ata*" options replace diskc, diskd, and cdromd, which are
+      now deprecated.
     - floppy_bootsig_check: control the 0xaa55 signature check on boot floppies
     - logprefix: lets you change the format of log messages
+      (patch by Carl Sopchak, help from Christophe)
     - debugger_log: log all output from bochs debugger
     - user_shortcut: allow you to type key combinations like Ctrl-Alt-Del
     - pit: control the PIT model, including realtime option to try to
@@ -136,27 +140,50 @@ documentation
     is installed correctly, the defaults will be correct and the user will 
     not need to override them.
     - $LTDL_LIBRARY_PATH is the path name where the plugins can be found.
-      The default value comes from $(plugdir) in the makefile.  (This is only
-      important if plugins are enabled.)
+      The default value comes from $(plugdir) in the makefile.  This is only
+      important if plugins are enabled. (Bryce)
     - $BXSHARE is the path where the BIOSes and keymaps are installed.
       The default value comes from $(sharedir) in the makefile.  Disk
       images on the Bochs website will begin to use BIOS pathnames like
-      $BXSHARE/BIOS-bios-latest.
+      $BXSHARE/BIOS-bios-latest.  On win32, the $BXSHARE default is 
+      set by the NSIS installer and read from the registry.  On MacoSX,
+      the $BXSHARE default is set to the path containing bochs.app.
+      (Bryce, Volker, Br'fin)
   - new option in the configuration interface to reset all bochsrc 
     settings to initial defaults.  A reset occurs just before reading
     a new configuration file, so that leftover parameters from a
     previous configuration do not affect the new configuration.  Also, 
     you can request a reset using the configuration interface. (Volker, Bryce)
+  - ne2k line can now specify a script to set up the interface (Christophe)
+  - on Unix, also search /etc/bochsrc (Bernhard Bablok)
   - you can use #include in the bochsrc to read configuration from other 
     files (Volker)
 
 - CPU
-  - speed optimizations (Kevin)
-    - FIXME: add details
-    - guest2host_tlb
-    - repeat
-    - icache
-    - host specific asm
+  - speed optimizations from Kevin Lawton
+    - guest2host_tlb : for entries in the paging TLB which point to normal
+      physical memory pages, a pointer to the host address of the emulated
+      physical memory (from malloc()) page is stored in the TLB entry.  In
+      many cases, this pointer can be used in memory accesses to directly
+      read/write the guest memory address.  In exceptional cases, the physical
+      memory access routines are used.
+    - repeat IO/string : for some variants of repeatable IO and string
+      instructions, the segmentation and paging checks are done in batch along
+      with the data transfers, constrained within page boundaries and the
+      segment limits.
+    - icache : The structure holding instruction decode information was
+      reduced to 32 bytes.  24 bytes for the actual decode data, and 4 each
+      for pointers to the address resolution routine (not always needed) and
+      the instruction emulation routine.  With a reasonably small
+      per-instruction decode size, an instruction cache (iCache) was created,
+      which is simply a hash table.  The main cpu loop looks in the table
+      first; if the instruction has already been decoded, execution can begin
+      immediately without decoding.
+    - host specific asm : when compiling on an x86 platform, use of
+      x86-specific asms can be enabled to accelerate several facets of
+      emulating instructions.  For example, the EFLAGS values are much more
+      efficient to calculate when the actual x86 instructions are used to
+      generate the EFLAGS values.
   - add support for AMD's x86-64 instruction set.  To enable, configure
     with --enable-x86-64.  (Peter Tattam)
   - add MMX support. To enable, configure with --enable-mmx. (Stanislav)
@@ -183,6 +210,7 @@ documentation
     - added multiple cdrom support for win32 (NT/2000 version untested). The
       ASPI version uses the cdrom drives in the system's order. Drive letters
       are not used by ASPI. (Volker)
+    - fix physical CD change at runtime (Bryce)
     - FIXME
   - cmos
     - FIXME
@@ -193,15 +221,15 @@ documentation
     - implementation of the DMA controller reset (Volker)
     - the value of the command register must be always 0x00 (BX_ERROR fixed)
     - FIXME
-  - floppy
+  - floppy (Volker)
     - added support for 360k floppy images
     - the skip flag (SK) in command 'read sector' is ignored now
     - floppy read and write function do not set the 'seek end' bit in status
       register 0 (fixes SF bug #553377)
-    - minor changes to most of the floppy commands
     - the status of the 'disk changed' line depends on the selected drive.
       The digital input register is now an array (DIR[4]).
-    - apply patch [ 635021 ] floppy cleanup by Alex Thiel  (Volker)
+    - apply patch [ 635021 ] floppy cleanup by Alex Thiel 
+    - distinguish between floppy drive type and media type
     - FIXME
   - hard drive
     - missing conditions for lower_irq() added (Volker)
@@ -391,6 +419,13 @@ wxWindows
   - displays the address of the caught watchpoint, feature #435271 (Dave)
   - remove obsolete "loader"
 
+- utilities
+  - fixed bug [ 487758 ] bximage fails on file creation >2048meg 
+    Bximage should now work up to 32gig. (Bryce)
+  - on win32, both bximage and niclist now ask the user to press
+    return before exiting, so that you have time to read the results
+    before the window disappears. (Bryce)
+   
 
 ----list of closed bugs since 1.4.1----
 We don't want a line of changelog for each of these, but it 
@@ -475,7 +510,6 @@ bug [ 619528 ] Double-Clicking Bochs fails to Run
 bug [ 622782 ] interpreting cmdline is a mess
 bug [ 619885 ] on beos, fd_set not found
 bug [ 620989 ] logical8.cc fails to compile
-bug [ 487758 ] bximage fails on file creation >2048meg
 bug [ 493981 ] resetting/cd-rom bug
 bug [ 619283 ] SDL: os mouse pointer leaves the window
 bug [ 554949 ] INACCESSIBLE_BOOT_DEVICE on NT4 install
