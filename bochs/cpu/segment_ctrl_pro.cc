@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.28 2004-07-29 20:15:18 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.29 2004-11-14 19:29:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,11 +52,10 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
       seg->cache.u.segment.executable = 1; /* code segment */
 #if BX_SUPPORT_ICACHE
-      BX_CPU_THIS_PTR iCache.fetchModeMask =
-          BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
+      BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
       invalidate_prefetch_q();
-      }
+    }
     else
       seg->cache.u.segment.executable = 0; /* data segment */
     seg->cache.u.segment.c_ed = 0; /* expand up */
@@ -335,11 +334,10 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 #endif
 
 #if BX_SUPPORT_ICACHE
-      BX_CPU_THIS_PTR iCache.fetchModeMask =
-          BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
+      BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
     invalidate_prefetch_q();
-    }
+  }
   else { /* SS, DS, ES, FS, GS */
     seg->selector.value = new_value;
     seg->cache.valid = 1;
@@ -556,9 +554,9 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
 #endif
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR iCache.fetchModeMask =
-      BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
+
   // Loading CS will invalidate the EIP fetch window.
   invalidate_prefetch_q();
 }

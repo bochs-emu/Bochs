@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.185 2004-11-03 06:35:48 sshwarts Exp $
+// $Id: cpu.h,v 1.186 2004-11-14 19:29:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -999,69 +999,8 @@ typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN
 
 // ========== iCache =============================================
 #if BX_SUPPORT_ICACHE
-
-#define BxICacheEntries (32 * 1024)  // Must be a power of 2.
-  // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
-  // bit30: 1=Long Mode, 0=not Long Mode.
-  // bit29: 1=iCache page, 0=Data.
-#define ICacheWriteStampInvalid   0x1fffffff
-#define ICacheWriteStampMax       0x1fffffff // Decrements from here.
-#define ICacheWriteStampMask      0x1fffffff
-#define ICacheFetchModeMask       (~ICacheWriteStampMask)
-
-class bxICacheEntry_c {
-  public:
-
-  Bit32u pAddr;       // Physical address of the instruction.
-  Bit32u writeStamp;  // Generation ID.  Each write to a physical page
-                      // decrements this value.
-  bxInstruction_c i;  // The instruction decode information.
-  };
-
-class BOCHSAPI bxICache_c {
-  public:
-
-  bxICacheEntry_c entry[BxICacheEntries];
-
-  // A table (dynamically allocated) to store write-stamp
-  // generation IDs.  Each time a write occurs to a physical page,
-  // a generation ID is decremented.  Only iCache entries which have
-  // write stamps matching the physical page write stamp are valid.
-  Bit32u *pageWriteStampTable; // Allocated later.
-
-  Bit32u  fetchModeMask;
-
-  bxICache_c() {
-    // Initially clear the iCache;
-    memset(this, 0, sizeof(*this));
-    pageWriteStampTable = NULL;
-    for (unsigned i=0; i<BxICacheEntries; i++) {
-      entry[i].writeStamp = ICacheWriteStampInvalid;
-      }
-    }
-
-  BX_CPP_INLINE void alloc(unsigned memSizeInBytes) {
-    pageWriteStampTable =
-        (Bit32u*) malloc(sizeof(Bit32u) * (memSizeInBytes>>12));
-    for (unsigned i=0; i<(memSizeInBytes>>12); i++) {
-      pageWriteStampTable[i] = ICacheWriteStampInvalid;
-      }
-    }
-
-  BX_CPP_INLINE void decWriteStamp(Bit32u a20Addr);
-
-  BX_CPP_INLINE void clear(void) {
-    memset(this, 0, sizeof(*this));
-    }
-  BX_CPP_INLINE unsigned hash(Bit32u pAddr) {
-    // A pretty dumb hash function for now.
-    return pAddr & (BxICacheEntries-1);
-    }
-  BX_CPP_INLINE Bit32u createFetchModeMask(BX_CPU_C *cpu);
-  };
+#include "icache.h"
 #endif
-// ===============================================================
-
 
 #if BX_CPU_LEVEL < 2
   /* no GDTR or IDTR register in an 8086 */
@@ -1071,7 +1010,6 @@ typedef struct {
   Bit16u                 limit;     /* limit, 16bits */
   } bx_global_segment_reg_t;
 #endif
-
 
 #if BX_USE_TLB
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
@@ -2964,38 +2902,8 @@ public: // for now...
 };
 
 #if BX_SUPPORT_ICACHE
-BX_CPP_INLINE void bxICache_c::decWriteStamp(Bit32u a20Addr)
-{
-  // Increment page write stamp, so iCache entries with older stamps
-  // are effectively invalidated.
-  Bit32u pageIndex = a20Addr >> 12;
-  Bit32u writeStamp = this->pageWriteStampTable[pageIndex];
-  if (writeStamp & 0x20000000)
-  {
-    // Page possibly contains iCache code.
-    if (writeStamp & ICacheWriteStampMask) {
-      // Short case: there is room to decrement the generation counter.
-      this->pageWriteStampTable[pageIndex]--;
-    }
-    else {
-      // Long case: there is no more room to decrement.  We have dump
-      // all iCache entries which can possibly hash to this page since
-      // we don't keep track of individual entries.
 
-      // Take the hash of the 0th page offset.
-      unsigned iCacheHash = this->hash(a20Addr & 0xfffff000);
-      for (unsigned o=0; o<4096; o++) {
-        this->entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
-        iCacheHash = (iCacheHash + 1) % BxICacheEntries;
-      }
-      // Reset write stamp to highest value to begin the decrementing process
-      // again.
-      this->pageWriteStampTable[pageIndex] = ICacheWriteStampInvalid;
-    }
-  }
-}
-
-BX_CPP_INLINE Bit32u bxICache_c::createFetchModeMask(BX_CPU_C *cpu)
+BX_CPP_INLINE Bit32u createFetchModeMask(BX_CPU_C *cpu)
 {
   return (cpu->sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
 #if BX_SUPPORT_X86_64

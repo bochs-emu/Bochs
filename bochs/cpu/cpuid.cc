@@ -36,8 +36,9 @@
 #define RDX EDX
 #endif
 
+
 /* Get CPU version information. */
-static Bit32u get_cpu_version_information()
+Bit32u get_cpu_version_information()
 {
   Bit32u family = 0, model = 0, stepping = 0;
   Bit32u extended_model = 0;
@@ -118,7 +119,7 @@ static Bit32u get_extended_cpuid_features()
 }
 
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
-static Bit32u get_std_cpuid_features()
+Bit32u get_std_cpuid_features()
 {
   Bit32u features = 0; // start with none
 

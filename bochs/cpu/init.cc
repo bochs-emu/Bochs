@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.55 2004-10-16 10:18:01 sshwarts Exp $
+// $Id: init.cc,v 1.56 2004-11-14 19:29:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,12 +29,7 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-
-/* the device id and stepping id are loaded into DH & DL upon processor
-   startup.  for device id: 3 = 80386, 4 = 80486.  just make up a
-   number for the stepping (revision) id. */
-#define BX_DEVICE_ID     3
-#define BX_STEPPING_ID   0
+extern Bit32u get_cpu_version_information();
 
 BX_CPU_C::BX_CPU_C(): bx_cpuid(0)
 #if BX_SUPPORT_APIC
@@ -47,7 +42,6 @@ BX_CPU_C::BX_CPU_C(): bx_cpuid(0)
   put("CPU");
   settype (CPU0LOG);
 }
-
 
 #if BX_WITH_WX
 
@@ -168,7 +162,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.55 2004-10-16 10:18:01 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.56 2004-11-14 19:29:34 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -475,15 +469,34 @@ void BX_CPU_C::reset(unsigned source)
 {
   UNUSED(source); // either BX_RESET_HARDWARE or BX_RESET_SOFTWARE
 
+#if BX_SUPPORT_X86_64
+  RAX = 0; // processor passed test :-)
+  RBX = 0;
+  RCX = 0;
+  RDX = get_cpu_version_information();
+  RBP = 0;
+  RSI = 0;
+  RDI = 0;
+  RSP = 0;
+  R8  = 0;
+  R9  = 0;
+  R10 = 0;
+  R11 = 0;
+  R12 = 0;
+  R13 = 0;
+  R14 = 0;
+  R15 = 0;
+#else
   // general registers
   EAX = 0; // processor passed test :-)
-  EBX = 0; // undefined
-  ECX = 0; // undefined
-  EDX = (BX_DEVICE_ID << 8) | BX_STEPPING_ID; // ???
-  EBP = 0; // undefined
-  ESI = 0; // undefined
-  EDI = 0; // undefined
-  ESP = 0; // undefined
+  EBX = 0;
+  ECX = 0;
+  EDX = get_cpu_version_information();
+  EBP = 0;
+  ESI = 0;
+  EDI = 0;
+  ESP = 0;
+#endif
 
   // all status flags at known values, use BX_CPU_THIS_PTR eflags structure
   BX_CPU_THIS_PTR lf_flags_status = 0x000000;
