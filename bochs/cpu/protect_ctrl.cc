@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.9 2001-10-03 13:10:37 bdenney Exp $
+// $Id: protect_ctrl.cc,v 1.10 2001-10-09 21:15:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -524,6 +524,9 @@ BX_CPU_C::LTR_Ew(BxInstruction_t *i)
     BX_CPU_THIS_PTR tr.selector = selector;
     BX_CPU_THIS_PTR tr.cache    = descriptor;
     BX_CPU_THIS_PTR tr.cache.valid = 1;
+    // tr.cache.type should not have busy bit, or it would not get 
+    // through the conditions above.
+    BX_ASSERT((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
 
     /* mark as busy */
     dword2 |= 0x00000200; /* set busy bit */

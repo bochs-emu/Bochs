@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.14 2001-10-03 13:10:37 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.15 2001-10-09 21:15:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -681,7 +681,8 @@ BX_PANIC(("LOADALL: handle CR0.val32"));
   BX_CPU_THIS_PTR tr.cache.p           = (access & 0x80) >> 7;
   BX_CPU_THIS_PTR tr.cache.dpl         = (access & 0x60) >> 5;
   BX_CPU_THIS_PTR tr.cache.segment     = (access & 0x10) >> 4;
-  BX_CPU_THIS_PTR tr.cache.type        = (access & 0x0f);
+  // don't allow busy bit in tr.cache.type, so bit 2 is masked away too.
+  BX_CPU_THIS_PTR tr.cache.type        = (access & 0x0d);
   BX_CPU_THIS_PTR tr.cache.u.tss286.base  = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR tr.cache.u.tss286.limit = limit;
 

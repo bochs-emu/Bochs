@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: tasking.cc,v 1.8 2001-10-09 21:15:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -180,6 +180,8 @@ BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Gather info about old TSS
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    // sanity check type: cannot have busy bit
+    BX_ASSERT ((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
     obase32 = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
     old_TSS_max   = 43;
     old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
@@ -342,6 +344,8 @@ if (ss_descriptor.u.segment.d_b && (tss_descriptor->type<9)) {
   //
 
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    // sanity check: tr.cache.type cannot have busy bit
+    BX_ASSERT ((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
     temp16 = IP; access_linear(obase32 + 14, 2, 0, BX_WRITE, &temp16);
     temp16 = oldEFLAGS; access_linear(obase32 + 16, 2, 0, BX_WRITE, &temp16);
     temp16 = AX; access_linear(obase32 + 18, 2, 0, BX_WRITE, &temp16);
@@ -454,6 +458,9 @@ if ( source==BX_TASK_FROM_CALL_OR_INT ) {
 
   BX_CPU_THIS_PTR tr.selector = *tss_selector;
   BX_CPU_THIS_PTR tr.cache    = *tss_descriptor;
+  // Reset the busy-flag, because all functions expect non-busy types in
+  // tr.cache.  From Peter Lammich <peterl@sourceforge.net>.
+  BX_CPU_THIS_PTR tr.cache.type &= ~2;
 
 
   //

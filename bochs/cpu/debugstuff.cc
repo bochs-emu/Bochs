@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.10 2001-10-03 13:10:37 bdenney Exp $
+// $Id: debugstuff.cc,v 1.11 2001-10-09 21:15:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -866,6 +866,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
 
   // TR
   type = (cpu->tr.des_h >> 8) & 0x0f;
+  type &= ~2; // never allow busy bit in tr.cache.type
   BX_CPU_THIS_PTR tr.selector.value = cpu->tr.sel;
   BX_CPU_THIS_PTR tr.selector.index = cpu->tr.sel >> 3;
   BX_CPU_THIS_PTR tr.selector.ti    = (cpu->tr.sel >> 2) & 0x01;
