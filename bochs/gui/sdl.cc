@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.50 2004-04-10 16:35:47 vruppert Exp $
+// $Id: sdl.cc,v 1.51 2004-06-05 12:16:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -322,7 +322,7 @@ void sdl_set_status_text(int element, const char *text, bx_bool active)
   x = 0;
   do
   {
-    pfont_row = &menufont[text[x]][0];
+    pfont_row = &menufont[(unsigned)text[x]][0];
     buf_row = buf;
     rowsleft = 8;
     do
@@ -993,6 +993,9 @@ void bx_sdl_gui_c::handle_events(void)
 	}
 	if( key_event == BX_KEY_UNHANDLED ) break;
 	DEV_kbd_gen_scancode( key_event );
+        if ((key_event == BX_KEY_NUM_LOCK) || (key_event == BX_KEY_CAPS_LOCK)) {
+	  DEV_kbd_gen_scancode( key_event | BX_KEY_RELEASED );
+        }
 	break;
 
       case SDL_KEYUP:
@@ -1016,6 +1019,9 @@ void bx_sdl_gui_c::handle_events(void)
             key_event = entry->baseKey;
           }
 	  if( key_event == BX_KEY_UNHANDLED ) break;
+          if ((key_event == BX_KEY_NUM_LOCK) || (key_event == BX_KEY_CAPS_LOCK)) {
+            DEV_kbd_gen_scancode( key_event );
+          }
 	  DEV_kbd_gen_scancode( key_event | BX_KEY_RELEASED );
 	}
 	break;
