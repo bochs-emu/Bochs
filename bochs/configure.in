@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.156 2002-10-27 13:28:30 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.157 2002-10-28 05:49:42 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1717,6 +1717,7 @@ if test "$with_wx" = yes; then
   fi
   AC_DEFINE(BX_WITH_WX, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WX)"
+  SPECIFIC_GUI_SUPPORT_OBJS="$SPECIFIC_GUI_SUPPORT_OBJS \$(GUI_OBJS_WX_SUPPORT)"
   WX_CFLAGS="\`$WX_CONFIG --cflags\`"
   WX_CXXFLAGS="\`$WX_CONFIG --cxxflags\`"
   GUI_LINK_OPTS_WX="\`$WX_CONFIG --libs\`"
@@ -1775,9 +1776,12 @@ if test "$display_libs" = " wxWindows"; then
 fi
 
 if test "$bx_plugins" = 1; then
+  # every item in this list will be compiled as a plugin. Do not include
+  # support objs; they will be mentioned in plugin-specific makefile rules.
   GUI_PLUGIN_OBJS="$GUI_PLUGIN_OBJS $SPECIFIC_GUI_OBJS"
 else
-  GUI_NON_PLUGIN_OBJS="$GUI_NON_PLUGIN_OBJS $SPECIFIC_GUI_OBJS"
+  # include support objs
+  GUI_NON_PLUGIN_OBJS="$GUI_NON_PLUGIN_OBJS $SPECIFIC_GUI_OBJS $SPECIFIC_GUI_SUPPORT_OBJS"
 fi
 
 AC_SUBST(GUI_CFLAGS)

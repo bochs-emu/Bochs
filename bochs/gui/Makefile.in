@@ -57,7 +57,8 @@ GUI_OBJS_NOGUI = nogui.o
 GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
-GUI_OBJS_WX = wx.o wxmain.o wxdialog.o
+GUI_OBJS_WX = wx.o
+GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
 OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o control.o
 OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
 
@@ -89,15 +90,15 @@ lib%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libwx.la: $(GUI_OBJS_WX:.o=.lo)
-	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) -o libwx.la `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
+libwx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
+	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libwx.la `wx-config --cxxflags` -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 %.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY) -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
-wx.dll: $(GUI_OBJS_WX)
-	$(CXX) $(CXXFLAGS) -shared -o wx.dll $(GUI_OBJS_WX) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
+	$(CXX) $(CXXFLAGS) -shared -o wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
 # no need to build DLLs for beos.o
 # no need to build DLLs for x.o
