@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.265 2004-10-16 21:17:44 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.266 2004-10-23 19:31:13 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1114,7 +1114,7 @@ AC_ARG_ENABLE(port-e9-hack,
   )
 
 AC_MSG_CHECKING(show IPS)
-AC_ARG_ENABLE(show_ips,
+AC_ARG_ENABLE(show-ips,
   [  --enable-show-ips                 show IPS],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
