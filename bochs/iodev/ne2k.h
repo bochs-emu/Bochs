@@ -189,7 +189,7 @@ typedef struct {
 
 
 
-class bx_ne2k_c {
+class bx_ne2k_c : public logfunctions {
 public:
   bx_ne2k_c(void);
   ~bx_ne2k_c(void);
@@ -238,4 +238,3 @@ private:
 #if BX_USE_NE2K_SMF
 extern bx_ne2k_c bx_ne2k;
 #endif
-

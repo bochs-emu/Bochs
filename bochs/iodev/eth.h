@@ -36,7 +36,7 @@ typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 // system, an NDIS driver in promisc mode on WinNT, or maybe
 // a simulated network that talks to another process.
 //
-class eth_pktmover_c {
+class eth_pktmover_c : public logfunctions {
 public:
   virtual void sendpkt(void *buf, unsigned io_len) = 0;
 protected:
@@ -71,6 +71,6 @@ private:
 
 // Define the known pktmover modules
 #define ETH_NULL  1
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
 #define ETH_FBSD  1
 #endif

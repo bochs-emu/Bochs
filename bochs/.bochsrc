@@ -304,7 +304,7 @@ i440fxsupport: enabled=0
 #=======================================================================
 
 # magic_break
-# ne2k
+# ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00
 
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
