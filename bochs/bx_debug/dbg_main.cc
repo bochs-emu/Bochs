@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.10 2004-09-19 18:38:09 vruppert Exp $
+// $Id: dbg_main.cc,v 1.11 2004-11-01 12:53:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -410,14 +410,15 @@ process_sim2:
   // (mch) Moved from main.cc
   DEV_init_devices();
   DEV_reset_devices(BX_RESET_HARDWARE);
+  bx_gui->init_signal_handlers ();
+  bx_pc_system.start_timers();
+
   SIM->set_init_done (1);
 
   // update headerbar buttons since drive status can change during init
   bx_gui->update_drive_status_buttons ();
-
-
-  bx_gui->init_signal_handlers ();
-  bx_pc_system.start_timers();
+  // iniialize statusbar and set all items inactive
+  bx_gui->statusbar_setitem(-1, 0);
 
   // create a boolean parameter that will tell if the simulation is
   // running (continue command) or waiting for user response.  This affects
