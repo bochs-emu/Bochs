@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.105 2002-07-14 13:22:38 vruppert Exp $
+// $Id: main.cc,v 1.106 2002-07-15 20:12:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -1427,6 +1427,7 @@ parse_bochsrc(char *rcfile)
       parse_line_unformatted(rcfile, line);
       }
     } while (!feof(fd));
+  fclose(fd);
   return 0;
 }
 
