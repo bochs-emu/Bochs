@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.26 2002-02-04 20:31:35 vruppert Exp $
+// $Id: gui.cc,v 1.27 2002-02-12 17:09:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -228,20 +228,47 @@ bx_gui_c::power_handler(void)
 bx_gui_c::snapshot_handler(void)
 {
   Bit8u* text_snapshot = NULL;
-  unsigned line_addr, txHeight, txWidth;
+  char *snapshot_txt;
+  unsigned line_addr, txt_addr, txHeight, txWidth;
+#ifdef WIN32
+  HANDLE hMem;
+#else
   FILE *OUTPUT;
+#endif
 
   bx_vga.get_text_snapshot(&text_snapshot, &txHeight, &txWidth);
   if (txHeight > 0) {
-    OUTPUT = fopen("snapshot.txt", "w");
+    snapshot_txt = (char*) malloc(txHeight*(txWidth+2)+1);
+    txt_addr = 0;
     for (unsigned i=0; i<txHeight; i++) {
       line_addr = i * txWidth * 2;
       for (unsigned j=0; j<(txWidth*2); j+=2) {
-        if (OUTPUT) fputc(text_snapshot[line_addr+j], OUTPUT);
+        snapshot_txt[txt_addr] = text_snapshot[line_addr+j];
+        txt_addr++;
       }
-      fprintf(OUTPUT, "\n");
+#ifdef WIN32
+      snapshot_txt[txt_addr] = 13;
+      txt_addr++;
+#endif
+      snapshot_txt[txt_addr] = 10;
+      txt_addr++;
     }
+    snapshot_txt[txt_addr] = 0;
+#ifdef WIN32
+    if (OpenClipboard(NULL)) {
+      hMem = GlobalAlloc(GMEM_ZEROINIT, txHeight*(txWidth+2)+1);
+      EmptyClipboard();
+      lstrcpy((char *)hMem, snapshot_txt);
+      SetClipboardData(CF_TEXT, hMem);
+      CloseClipboard();
+      GlobalFree(hMem);
+    }
+#else
+    OUTPUT = fopen("snapshot.txt", "w");
+    fwrite(snapshot_txt, 1, strlen(snapshot_txt), OUTPUT);
     fclose(OUTPUT);
+#endif
+    free(snapshot_txt);
   } else {
     BX_INFO(( "# SNAPSHOT callback (graphics mode unimplemented)." ));
   }
