@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.243 2003-08-26 20:24:34 cbothamy Exp $
+// $Id: main.cc,v 1.244 2003-08-27 17:52:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -816,9 +816,6 @@ void bx_init_options ()
   bx_param_c *disk_menu_init_list[] = {
     SIM->get_param (BXP_FLOPPYA),
     SIM->get_param (BXP_FLOPPYB),
-    //SIM->get_param (BXP_DISKC),
-    //SIM->get_param (BXP_DISKD),
-    //SIM->get_param (BXP_CDROMD),
     SIM->get_param (BXP_ATA0),
     SIM->get_param (BXP_ATA0_MASTER),
     SIM->get_param (BXP_ATA0_SLAVE),
@@ -1093,7 +1090,6 @@ void bx_init_options ()
     0,
     0);
   bx_options.Osel_config->set_by_name (BX_DEFAULT_CONFIG_INTERFACE);
-  bx_options.Osel_config->set_format ("Configuration interface: %s");
   bx_options.Osel_config->set_ask_format ("Choose which configuration interface to use: [%s] ");
   // this is a list of gui libraries that are known to be available at
   // compile time.  The one that is listed first will be the default,
@@ -1145,7 +1141,6 @@ void bx_init_options ()
     0,
     0);
   bx_options.Osel_displaylib->set_by_name (BX_DEFAULT_DISPLAY_LIBRARY);
-  bx_options.Osel_displaylib->set_format ("Display library: %s");
   bx_options.Osel_displaylib->set_ask_format ("Choose which library to use for the Bochs display: [%s] ");
   bx_param_c *interface_init_list[] = {
     bx_options.Osel_config,
@@ -1165,8 +1160,8 @@ void bx_init_options ()
 
   // NE2K options
   bx_options.ne2k.Opresent = new bx_param_bool_c (BXP_NE2K_PRESENT,
-      "NE2K is present",
-      "to be written",
+      "Enable NE2K NIC emulation",
+      "Enables the NE2K NIC emulation",
       0);
   bx_options.ne2k.Oioaddr = new bx_param_num_c (BXP_NE2K_IOADDR,
       "NE2K I/O Address",
@@ -1222,7 +1217,9 @@ void bx_init_options ()
       "Device configuration script",
       "to be written",
       "none", BX_PATHNAME_LEN);
+#if !BX_WITH_WX
   bx_options.ne2k.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
+#endif
   bx_param_c *ne2k_init_list[] = {
     bx_options.ne2k.Opresent,
     bx_options.ne2k.Oioaddr,
@@ -1243,8 +1240,8 @@ void bx_init_options ()
 
   // SB16 options
   bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,
-      "SB16 is present",
-      "to be written",
+      "Enable SB16 emulation",
+      "Enables the SB16 emulation",
       0);
   bx_options.sb16.Omidifile = new bx_param_filename_c (BXP_SB16_MIDIFILE,
       "Midi file",
@@ -1434,7 +1431,6 @@ void bx_init_options ()
       keyboard_type_names,
       BX_KBD_MF_TYPE,
       BX_KBD_XT_TYPE);
-  bx_options.Okeyboard_type->set_format ("Keyboard type: %s");
   bx_options.Okeyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
 
   // Userbutton shortcut
@@ -2520,7 +2516,9 @@ bx_find_bochsrc ()
     case 0: strcpy (rcfile, ".bochsrc"); break;
     case 1: strcpy (rcfile, "bochsrc"); break;
     case 2: strcpy (rcfile, "bochsrc.txt"); break;
-#if (!defined(WIN32)) && !BX_WITH_MACOS
+#ifdef WIN32
+    case 3: strcpy (rcfile, "bochsrc.bxrc"); break;
+#elif !BX_WITH_MACOS
       // only try this on unix
     case 3:
       {
