@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.74 2004-10-24 20:04:51 vruppert Exp $
+// $Id: wxdialog.cc,v 1.75 2004-12-04 13:49:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -803,7 +803,7 @@ BEGIN_EVENT_TABLE(DebugLogDialog, wxDialog)
   EVT_CHECKBOX(-1, DebugLogDialog::OnEvent)
   EVT_KEY_DOWN(DebugLogDialog::OnKeyEvent)
   EVT_KEY_UP(DebugLogDialog::OnKeyEvent)
-  EVT_CHAR(DebugLogDialog::OnEvent)
+  EVT_CHAR(DebugLogDialog::OnKeyEvent)
   EVT_TEXT(-1, DebugLogDialog::OnEvent)
   EVT_TEXT_ENTER(-1, DebugLogDialog::OnEnterEvent)
 END_EVENT_TABLE()
