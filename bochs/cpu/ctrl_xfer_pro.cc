@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.9 2001-10-03 13:10:37 bdenney Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.10 2001-11-10 23:00:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1350,9 +1350,9 @@ BX_CPU_C::return_protected(BxInstruction_t *i, Bit16u pop_bytes)
     /* load SS-cache with return SS descriptor */
     load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
     if (ss_descriptor.u.segment.d_b)
-      ESP = return_ESP;
+      ESP = return_ESP + pop_bytes;
     else
-      SP  = (Bit16u) return_ESP;
+      SP  = (Bit16u) return_ESP + pop_bytes;
 
     /* check ES, DS, FS, GS for validity */
     validate_seg_regs();
