@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.52 2002-10-06 19:04:47 bdenney Exp $
+// $Id: floppy.cc,v 1.53 2002-10-06 19:38:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,7 +88,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.52 2002-10-06 19:04:47 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.53 2002-10-06 19:38:53 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -563,7 +563,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
    default:
-      BX_ERROR(("io_write ignored: 0x%04h = 0x%02h", (unsigned) address, (unsigned) value));
+      BX_ERROR(("io_write ignored: 0x%04x = 0x%02x", (unsigned) address, (unsigned) value));
       break;
 #endif  // #if BX_DMA_FLOPPY_IO
     }

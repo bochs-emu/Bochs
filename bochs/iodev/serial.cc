@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.27 2002-10-06 19:04:47 bdenney Exp $
+// $Id: serial.cc,v 1.28 2002-10-06 19:38:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -727,7 +727,7 @@ bx_serial_c::tx_timer(void)
 #endif
 #if defined(SERIAL_ENABLE)
     { char *s = (char *)(BX_SER_THIS s[0].txbuffer);
-	BX_DEBUG(("write: '%c'",(bx_ptr_t) & s));
+	BX_DEBUG(("write: '%c'", BX_SER_THIS s[0].txbuffer));
 	}
     if (tty_id >= 0) write(tty_id, (bx_ptr_t) & BX_SER_THIS s[0].txbuffer, 1);
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20 2002-08-27 19:54:46 bdenney Exp $
+// $Id: parallel.cc,v 1.21 2002-10-06 19:38:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20 2002-08-27 19:54:46 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.21 2002-10-06 19:38:53 vruppert Exp $"));
   BX_PAR_THIS devices = d;
 
   if (bx_options.par[0].Oenabled->get ()) {
@@ -93,7 +93,8 @@ bx_parallel_c::init(bx_devices_c *d)
     if (strlen(bx_options.par[0].Ooutfile->getptr ()) > 0) {
       OUTPUT = fopen(bx_options.par[0].Ooutfile->getptr (), "wb");
       if (!OUTPUT)
-        BX_PANIC (("Could not open '%s' to write parport1 output"));
+        BX_PANIC (("Could not open '%s' to write parport1 output",
+                   bx_options.par[0].Ooutfile->getptr ()));
     }
   }
 }

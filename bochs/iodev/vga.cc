@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.45 2002-10-06 19:04:47 bdenney Exp $
+// $Id: vga.cc,v 1.46 2002-10-06 19:38:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -194,7 +194,7 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   bx_gui.init(1, &argv[0], BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
   }
 
-  BX_INFO(("interval=%lu", bx_options.Ovga_update_interval->get ()));
+  BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
        bx_options.Ovga_update_interval->get (), 1, 1, "vga");
@@ -975,7 +975,7 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
     case 0x03c6: /* PEL mask */
       BX_VGA_THIS s.pel.mask = value;
       if (BX_VGA_THIS s.pel.mask != 0xff)
-        BX_DEBUG(("io write 3c6: PEL mask=0x%02x != 0xFF"));
+        BX_DEBUG(("io write 3c6: PEL mask=0x%02x != 0xFF", value));
       // BX_VGA_THIS s.pel.mask should be and'd with final value before
       // indexing into color registerBX_VGA_THIS s.
       break;
