@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.204 2003-05-03 16:37:16 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.205 2003-05-04 12:57:16 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -716,21 +716,25 @@ AC_ARG_ENABLE(ne2000,
     AC_CHECK_HEADER(net/bpf.h, NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o")
     AC_CHECK_HEADER(netpacket/packet.h, NETLOW_OBJS="$NETLOW_OBJS eth_linux.o")
     AC_CHECK_HEADER(net/if.h, [
-        NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
-        AC_DEFINE(HAVE_ETHERTAP, 1)
+        use_ethertap=yes
       ], [],
       [
 	#include <sys/types.h>
 	#include <sys/socket.h>
       ])
     AC_CHECK_HEADER(linux/netlink.h, [
-        NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
-        AC_DEFINE(HAVE_ETHERTAP, 1)
+        use_ethertap=yes
       ], [], 
       [
 	#include <asm/types.h>
 	#include <sys/socket.h>
       ])
+
+    if test "$use_ethertap" = yes; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
+      AC_DEFINE(HAVE_ETHERTAP, 1)
+    fi
+
     AC_CHECK_HEADER(linux/if_tun.h, [
         NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
         AC_DEFINE(HAVE_TUNTAP, 1)
