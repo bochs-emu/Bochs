@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.23 2002-10-04 10:52:43 vruppert Exp $
+// $Id: sdl.cc,v 1.24 2002-10-06 17:17:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,6 +70,7 @@ SDL_Event sdl_event;
 int sdl_fullscreen_toggle;
 int sdl_grab;
 unsigned res_x, res_y;
+unsigned half_res_x, half_res_y;
 int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
@@ -82,6 +83,7 @@ Uint32 headerbar_fg, headerbar_bg;
 Bit8u old_mousebuttons=0, new_mousebuttons=0;
 int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
+Boolean just_warped = false;
 bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
 
@@ -232,7 +234,7 @@ void bx_gui_c::specific_init(
       "Bochs Pentium emulator, http://bochs.sourceforge.net/",
 #endif
       "Bochs" );
-  SDL_WarpMouse(res_x/2, res_y/2);
+  SDL_WarpMouse(half_res_x, half_res_y);
 }
 
 void bx_gui_c::text_update(
@@ -576,6 +578,21 @@ void bx_gui_c::handle_events(void)
 	break;
 
       case SDL_MOUSEMOTION:
+	//fprintf (stderr, "mouse event to (%d,%d), relative (%d,%d)\n", (int)(sdl_event.motion.x), (int)(sdl_event.motion.y), (int)sdl_event.motion.xrel, (int)sdl_event.motion.yrel);
+	if (!sdl_grab) {
+	  //fprintf (stderr, "ignore mouse event because sdl_grab is off\n");
+	  break;
+	}
+	if (just_warped 
+	    && sdl_event.motion.x == half_res_x
+	    && sdl_event.motion.y == half_res_y) {
+	  // This event was generated as a side effect of the WarpMouse,
+	  // and it must be ignored.
+	  //fprintf (stderr, "ignore mouse event because it is a side effect of SDL_WarpMouse\n");
+	  just_warped = false;
+	  break;
+	}
+	//fprintf (stderr, "processing relative mouse event\n");
 	new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02));
 	bx_devices.keyboard->mouse_motion(
 	    sdl_event.motion.xrel,
@@ -584,6 +601,9 @@ void bx_gui_c::handle_events(void)
 	old_mousebuttons = new_mousebuttons;
 	old_mousex = (int)(sdl_event.motion.x);
 	old_mousey = (int)(sdl_event.motion.y);
+	//fprintf (stderr, "warping mouse to center\n");
+	SDL_WarpMouse(half_res_x, half_res_y);
+	just_warped = 1;
 	break;
 
       case SDL_MOUSEBUTTONDOWN:
@@ -801,6 +821,8 @@ void bx_gui_c::dimension_update(
   }
   res_x = x;
   res_y = y;
+  half_res_x = x/2;
+  half_res_y = y/2;
   if( fheight > 0 )
   {
     textres_x = x / fontwidth;
