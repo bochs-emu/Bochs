@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35.2.2 2002-10-07 19:59:11 bdenney Exp $
+// $Id: wx.cc,v 1.35.2.3 2002-10-07 21:49:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -22,7 +22,7 @@
 //   The VGA panel accepts only paint, key, and mouse events.  As it
 //   receives events, it builds BxEvents and places them into a 
 //   thread-safe BxEvent queue.  The simulation thread periodically
-//   processes events from the BxEvent queue (bx_gui_c::handle_events)
+//   processes events from the BxEvent queue (bx_wx_gui_c::handle_events)
 //   and notifies the appropriate emulated I/O device.
 //
 /////////////////////////////////////////////////////////////////
@@ -51,10 +51,42 @@
 // shared elements between wxmain.cc and this file
 #include "wxmain.h"
 
+
 //////////////////////////////////////////////////////////////
 // constants
 //////////////////////////////////////////////////////////////
-#define LOG_THIS bx_gui.
+#define LOG_THIS bx_gui->
+
+//////////////////////////////////////////////////////////////
+// declare the bx_wx_gui_c class (child of bx_gui_c)
+//////////////////////////////////////////////////////////////
+
+class bx_wx_gui_c : public bx_gui_c {
+public:
+  bx_wx_gui_c (void) {}
+  // Define the following functions in the module for your
+  // particular GUI (x.cc, beos.cc, ...)
+  virtual void specific_init(int argc, char **argv,
+                 unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
+  virtual void text_update(Bit8u *old_text, Bit8u *new_text,
+                          unsigned long cursor_x, unsigned long cursor_y,
+                          Bit16u cursor_state, unsigned rows);
+  virtual void graphics_update(Bit8u *snapshot) {}
+  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
+  virtual void handle_events(void);
+  virtual void flush(void);
+  virtual void clear_screen(void);
+  virtual Boolean palette_change(unsigned index, unsigned red, unsigned green, unsigned blue);
+  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0);
+  virtual unsigned create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim);
+  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void));
+  virtual void replace_bitmap(unsigned hbar_id, unsigned bmap_id);
+  virtual void show_headerbar(void);
+  virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes);
+  virtual int set_clipboard_text(char *snapshot, Bit32u len);
+  virtual void mouse_enabled_changed_specific (Boolean val);
+  virtual void exit(void);
+};
 
 //////////////////////////////////////////////////////////////
 // data for wx gui
@@ -698,7 +730,7 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 //////////////////////////////////////////////////////////////
 
   void
-bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   int b,i,j;
@@ -723,7 +755,7 @@ bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tile
         fc |= (vc & 0x01) << (7 - b);
         vc >>= 1;
       }
-      bx_gui.vga_charmap[i*32+j] = fc;
+      vga_charmap[i*32+j] = fc;
     }
   }
 
@@ -749,7 +781,7 @@ bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tile
 // the gui code can poll for keyboard, mouse, and other
 // relevant events.
 
-void bx_gui_c::handle_events(void)
+void bx_wx_gui_c::handle_events(void)
 {
   wxCriticalSectionLocker lock(event_thread_lock);
   Bit32u bx_key = 0;
@@ -810,7 +842,7 @@ void bx_gui_c::handle_events(void)
 // screen update requests.
 
   void
-bx_gui_c::flush(void)
+bx_wx_gui_c::flush(void)
 {
 }
 
@@ -821,7 +853,7 @@ bx_gui_c::flush(void)
 // clear the area that defines the headerbar.
 
   void
-bx_gui_c::clear_screen(void)
+bx_wx_gui_c::clear_screen(void)
 {
   IFDBG_VGA(wxLogDebug ("MyPanel::clear_screen trying to get lock. wxScreen=%p", wxScreen));
   wxCriticalSectionLocker lock(wxScreen_lock);
@@ -900,7 +932,7 @@ DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
 
-void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
 		      Bit16u cursor_state, unsigned nrows)
 {
@@ -914,13 +946,13 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned int ncols = wxScreenX / 8;
 	unsigned int nchars = ncols * nrows;
 	Boolean forceUpdate = 0;
-	if(bx_gui.charmap_updated) {
+	if(charmap_updated) {
 		forceUpdate = 1;
-		bx_gui.charmap_updated = 0;
+		charmap_updated = 0;
 	}
 	if((wxCursorY * ncols + wxCursorX) < nchars) {
 		cChar = new_text[(wxCursorY * ncols + wxCursorX) * 2];
-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&bx_gui.vga_charmap[cChar<<5], new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1], 1, 0);
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1], 1, 0);
 	}
 	
 	for(unsigned int i = 0; i < nchars * 2; i += 2) {
@@ -929,7 +961,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			cChar = new_text[i];
 			int x = (i / 2) % ncols;
 			int y = (i / 2) / ncols;
-			DrawBochsBitmap(x * 8, y * wxFontY, 8, wxFontY, (char *)&bx_gui.vga_charmap[cChar<<5], new_text[i+1], 1, 0);
+			DrawBochsBitmap(x * 8, y * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], new_text[i+1], 1, 0);
 		}
 	}
 	wxCursorX = cursor_x;
@@ -939,7 +971,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		cChar = new_text[(cursor_y * ncols + cursor_x) * 2];
 		char cAttr = new_text[((cursor_y * ncols + cursor_x) * 2) + 1];
 		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&bx_gui.vga_charmap[cChar<<5], cAttr, cs_start, cs_end);
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], cAttr, cs_start, cs_end);
 	}
 
 	thePanel->MyRefresh ();
@@ -954,7 +986,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 //          1=screen updated needed (redraw using current colormap)
 
   Boolean
-bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_wx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   IFDBG_VGA(wxLogDebug ("palette_change"));
   wxBochsPalette[index].red = red;
@@ -980,7 +1012,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 // note: origin of tile and of window based on (0,0) being in the upper
 //       left of the window.
 
-void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   IFDBG_VGA (wxLogDebug ("graphics_tile_update"));
   //static Bit32u counter = 0;
@@ -998,7 +1030,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
-void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen));
   wxScreen_lock.Enter ();
@@ -1045,7 +1077,7 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 // ydim: y dimension of bitmap
 
   unsigned
-bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+bx_wx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   UNUSED(bmap);
   UNUSED(xdim);
@@ -1069,7 +1101,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 //     the boundaries of this bitmap.
 
   unsigned
-bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+bx_wx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
   UNUSED(bmap_id);
   UNUSED(alignment);
@@ -1084,7 +1116,7 @@ bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void)
 // currently installed bitmaps.
 
   void
-bx_gui_c::show_headerbar(void)
+bx_wx_gui_c::show_headerbar(void)
 {
 }
 
@@ -1103,7 +1135,7 @@ bx_gui_c::show_headerbar(void)
 // bmap_id: bitmap ID
 
   void
-bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   UNUSED(hbar_id);
   UNUSED(bmap_id);
@@ -1116,19 +1148,19 @@ bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // exit from the native GUI mechanism.
 
   void
-bx_gui_c::exit(void)
+bx_wx_gui_c::exit(void)
 {
-  BX_INFO(("bx_gui_c::exit() not implemented yet."));
+  BX_INFO(("bx_wx_gui_c::exit() not implemented yet."));
 }
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_wx_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
 }
 
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_wx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   int ret = 0;
   wxMutexGuiEnter ();
@@ -1155,7 +1187,7 @@ bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   wxMutexGuiEnter ();
   int ret = 0;
@@ -1168,3 +1200,25 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   wxMutexGuiLeave ();
   return ret;
 }
+
+#if BX_PLUGINS
+  int
+plugin_init(plugin_t *plugin, int argc, char *argv[])
+{
+  genlog->info("installing wxWindows gui as the bx_gui");
+  bx_gui = new bx_wx_gui_c ();
+  return(0); // Success
+}
+
+  void
+plugin_fini(void)
+{
+}
+#else
+// This is the !BX_PLUGINS case.
+//
+// When building with plugins, the bx_gui pointer is provided by plugins.cc.
+// But when building without plugins, the GUI code must supply bx_gui, like
+// this:
+bx_gui_c *bx_gui = new bx_wx_gui_c ();
+#endif

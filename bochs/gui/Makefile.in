@@ -39,9 +39,6 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 X_CFLAGS = @X_CFLAGS@
 BEOS_CFLAGS = -Wno-multichar
-RFB_CFLAGS =
-SDL_CFLAGS = 
-WX_CXXFLAGS = 
 RANLIB = @RANLIB@
 
 GUI_OBJS_X11  = x.o
@@ -101,20 +98,11 @@ x.o: x.@CPP_SUFFIX@
 	mkdir -p ../plugins
 	cp $@ ../plugins
 
-sdl.o: sdl.@CPP_SUFFIX@ sdl.h
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $<
-
-rfb.o: rfb.@CPP_SUFFIX@ rfb.h rfbproto.h
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(RFB_CFLAGS) $<
-
-wx.o: wx.@CPP_SUFFIX@
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $<
-
-wxmain.o: wxmain.@CPP_SUFFIX@
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $<
-
-wxdialog.o: wxdialog.@CPP_SUFFIX@
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $<
+# special rule for wx, since it has 3 files
+wx.so: $(GUI_OBJS_WX)
+	$(CXX) -shared $(GUI_OBJS_WX) -o $@ `@WX_CONFIG@ --cxxflags`
+	mkdir -p ../plugins
+	cp $@ ../plugins
 
 plugins: $(GUI_SO_OBJS:.o=.so)
 
