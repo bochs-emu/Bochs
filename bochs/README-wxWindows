@@ -367,3 +367,7 @@ control even if its text is changed during run-time.
 relayouting?  sounds like s/size/layout/g gone wrong.
 
 Call Add() with wxADJUST_MINSIZE flag!
+--------------
+mno-cygwin guide on mingw webpage
+http://www.xraylith.wisc.edu/~khan/software/gnu-win32/mno-cygwin-howto.txt
+www.mingw.org
