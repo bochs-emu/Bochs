@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ltdl.c,v 1.1.2.1 2002-10-10 17:25:40 bdenney Exp $
+// $Id: ltdl.c,v 1.1.2.2 2002-10-17 16:01:14 bdenney Exp $
 //
 // NOTE: The ltdl library comes from the Libtool package.  Bochs uses
 // ltdl and libtool to build and load plugins.  The libtool
@@ -101,8 +101,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #if HAVE_ASSERT_H
 #  include <assert.h>
 #else
-#  define assert(arg)	((void) 0)
+#  warning using my own assert
+#  define assert(cond)   while (!(cond)) { fprintf (stderr, "Assert failed at %s:%d: '%s'\n", __FILE__, __LINE__, #cond); abort(); }
 #endif
+
+#define LTDEBUG_PRINTF(x) /* debug output disabled */
+//#define LTDEBUG_PRINTF(x) do{ printf("LT_DEBUG: "); printf x; } while (0)
 
 #include "ltdl.h"
 
@@ -1861,6 +1865,8 @@ lt_dlexit ()
   return errors;
 }
 
+// returns number of errors, so 0=success
+// returns handle in *handle, if one is found.
 static int
 tryall_dlopen (handle, filename)
      lt_dlhandle *handle;
@@ -1917,14 +1923,24 @@ tryall_dlopen (handle, filename)
       cur->info.filename = 0;
     }
 
+  // Call access() to see if it exists first.  If not return FILE_NOT_FOUND
+  // instead of CANNOT_OPEN.
+  if (access (cur->info.filename, R_OK) != 0) {
+    LT_DLFREE (cur->info.filename);
+    LT_DLMUTEX_SETERROR (LT_DLSTRERROR (FILE_NOT_FOUND));
+    ++errors;
+    goto done;
+  }
+
   while (loader)
     {
       lt_user_data data = loader->dlloader_data;
-
+	  LTDEBUG_PRINTF(("Trying to open '%s' using loader '%s'\n", filename, loader->loader_name));
       cur->module = loader->module_open (data, filename);
 
       if (cur->module != 0)
 	{
+	  LTDEBUG_PRINTF(("Load '%s' succeeded.\n", filename));
 	  break;
 	}
       loader = loader->next;
@@ -1956,7 +1972,13 @@ tryall_dlopen_module (handle, prefix, dirname, dlname)
   int      error	= 0;
   char     *filename	= 0;
   size_t   filename_len	= 0;
+#warning dirname could be null
   size_t   dirname_len	= LT_STRLEN (dirname);
+
+  if (dirname == NULL) {
+    LTDEBUG_PRINTF(("leaving tryall_dlopen_module early because dirname is NULL\n"));
+    return 1;
+  }
 
   assert (handle);
   assert (dirname);
@@ -2230,6 +2252,7 @@ find_file_callback (filename, data1, data2)
   if ((*pfile = fopen (filename, LT_READTEXT_MODE)))
     {
       char *dirend = strrchr (filename, '/');
+      LTDEBUG_PRINTF(("find_file_callback opening file '%s'...ok\n", filename));
 
       if (dirend > filename)
 	*dirend   = LT_EOS_CHAR;
@@ -2238,6 +2261,10 @@ find_file_callback (filename, data1, data2)
       *pdir   = lt_estrdup (filename);
       is_done = (*pdir == 0) ? -1 : 1;
     }
+	else
+	{
+      LTDEBUG_PRINTF(("find_file_callback opening file '%s'...failed\n", filename));
+	}
 
   return is_done;
 }
@@ -2262,7 +2289,8 @@ find_handle_callback (filename, data, ignored)
      lt_ptr ignored;
 {
   lt_dlhandle  *handle	= (lt_dlhandle *) data;
-  int		found	= access (filename, R_OK);
+  int		found	= (0 == access (filename, R_OK));
+  LTDEBUG_PRINTF(("find_handle_callback searching for '%s'...%s\n", filename, found?"found":"not found"));
 
   /* Bail out if file cannot be read...  */
   if (!found)
@@ -2523,6 +2551,10 @@ free_vars (dlname, oldname, libdir, deplibs)
   return 0;
 }
 
+// returns number of errors, so 0=success.
+// phandle is a pointer to an lt_dlhandle, which must initially be NULL.
+// On success (return value=0), *phandle is changed to point to the new
+// lt_dlhandle.
 int
 try_dlopen (phandle, filename)
      lt_dlhandle *phandle;
@@ -2557,7 +2589,7 @@ try_dlopen (phandle, filename)
 
       if (tryall_dlopen (&newhandle, 0) != 0)
 	{
-	  LT_DLFREE (*phandle);
+	  LT_DLFREE (*phandle);  // this sets *phandle=NULL
 	  return 1;
 	}
 
@@ -2592,9 +2624,12 @@ try_dlopen (phandle, filename)
       dir[dirlen] = LT_EOS_CHAR;
 
       ++base_name;
+      LTDEBUG_PRINTF(("in base_name not NULL section. dir='%s', base_name='%s', canonical='%s'\n", dir, base_name, canonical));
     }
-  else
+  else {
     LT_DLMEM_REASSIGN (base_name, canonical);
+    LTDEBUG_PRINTF(("in base_name=NULL section. dir=NULL, base_name='%s', canonical='%s'\n", base_name, canonical));
+  }
 
   assert (base_name && *base_name);
 
@@ -2677,7 +2712,9 @@ try_dlopen (phandle, filename)
 	}
       if (!file)
 	{
+	  LTDEBUG_PRINTF(("try_dlopen opening file '%s'\n", filename));
 	  file = fopen (filename, LT_READTEXT_MODE);
+#warning dir is still NULL
 	}
 
       /* If we didn't find the file by now, it really isn't there.  Set
@@ -2821,7 +2858,7 @@ try_dlopen (phandle, filename)
       free_vars (dlname, old_name, libdir, deplibs);
       if (errors)
 	{
-	  LT_DLFREE (*phandle);
+	  LT_DLFREE (*phandle);  // sets *phandle=NULL
 	  goto cleanup;
 	}
 
@@ -2859,10 +2896,12 @@ try_dlopen (phandle, filename)
 #endif
 		   )))
 	{
-	  tryall_dlopen (&newhandle, filename);
+	  // Directory component was specified, or all find_handle() calls
+	  // failed to find the lib.  This is our last try.
+	  errors = tryall_dlopen (&newhandle, filename);
 	}
 
-      if (!newhandle)
+      if (!newhandle || errors>0)
 	{
 	  LT_DLFREE (*phandle);
 	  ++errors;
@@ -2905,6 +2944,12 @@ lt_dlopen (filename)
   if (try_dlopen (&handle, filename) != 0)
     return 0;
 
+  // If we're going to return a handle, be sure that has its loader
+  // field filled in.  This is in response to some bugs in which dlopen()
+  // would return valid-looking handle with NULL loader, causing crashes
+  // later.
+  if (handle) assert (handle->loader != NULL);
+
   return handle;
 }
 
@@ -2935,8 +2980,7 @@ lt_dlopenext (filename)
   char *	ext		= 0;
   int		len;
   int		errors		= 0;
-  // Disabled to eliminate gcc -Wall warning -BBD
-  //int		file_found	= 1; /* until proven otherwise */
+  int		file_found	= 1; /* until proven otherwise */
 
   if (!filename)
     {
@@ -2973,9 +3017,16 @@ lt_dlopenext (filename)
      failed, it is better to return an error message here than to
      report FILE_NOT_FOUND when the alternatives (foo.so etc) are not
      in the module search path.  */
-  if (handle || ((errors > 0) && file_not_found ()))
+  if (handle || ((errors > 0) && !file_not_found ()))
     {
       LT_DLFREE (tmp);
+
+      // If we're going to return a handle, be sure that has its loader
+      // field filled in.  This is in response to some bugs in which dlopen()
+      // would return valid-looking handle with NULL loader, causing crashes
+      // later.
+      if (handle) assert (handle->loader != NULL);
+
       return handle;
     }
 
@@ -3000,9 +3051,14 @@ lt_dlopenext (filename)
 
   /* As before, if the file was found but loading failed, return now
      with the current error message.  */
-  if (handle || ((errors > 0) && file_not_found ()))
+  if (handle || ((errors > 0) && !file_not_found ()))
     {
       LT_DLFREE (tmp);
+      // If we're going to return a handle, be sure that has its loader
+      // field filled in.  This is in response to some bugs in which dlopen()
+      // would return valid-looking handle with NULL loader, causing crashes
+      // later.
+      if (handle) assert (handle->loader != NULL);
       return handle;
     }
 #endif
@@ -3340,6 +3396,10 @@ lt_dlsym (handle, symbol)
       return 0;
     }
 
+  // Due to bugs in lt_dlopen*, some handles were being returned that have a
+  // NULL loader field.  Check for this.
+  assert (handle->loader);
+
   lensym = LT_STRLEN (symbol) + LT_STRLEN (handle->loader->sym_prefix)
 					+ LT_STRLEN (handle->info.name);
 
@@ -3379,6 +3439,7 @@ lt_dlsym (handle, symbol)
       strcat(sym, symbol);
 
       /* try "modulename_LTX_symbol" */
+      LTDEBUG_PRINTF(("dlsym looking for '%s'\n", sym));
       address = handle->loader->find_sym (data, handle->module, sym);
       if (address)
 	{
@@ -3402,6 +3463,7 @@ lt_dlsym (handle, symbol)
       strcpy(sym, symbol);
     }
 
+  LTDEBUG_PRINTF(("dlsym looking for '%s'\n", sym));
   address = handle->loader->find_sym (data, handle->module, sym);
   if (sym != lsym)
     {
