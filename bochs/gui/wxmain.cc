@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.48 2002-09-16 15:28:19 bdenney Exp $
+// $Id: wxmain.cc,v 1.49 2002-09-18 20:59:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
