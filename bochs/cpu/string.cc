@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.21 2002-10-24 21:05:55 bdenney Exp $
+// $Id: string.cc,v 1.22 2004-04-28 19:57:37 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -150,7 +150,7 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
       if (byteCount) {
         Bit32u bytesFitSrc, bytesFitDst;
         Bit8u  *hostAddrSrc, *hostAddrDst;
-        unsigned pointerDelta;
+        signed int pointerDelta;
         bx_segment_reg_t *srcSegPtr, *dstSegPtr;
         bx_address laddrDst, laddrSrc;
         Bit32u     paddrDst, paddrSrc;
@@ -198,13 +198,13 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
             // Counting downward.
             bytesFitSrc = 1 + (paddrSrc & 0xfff);
             bytesFitDst = 1 + (paddrDst & 0xfff);
-            pointerDelta = (unsigned) -1;
+            pointerDelta = (signed int) -1;
             }
           else {
             // Counting upward.
             bytesFitSrc = (0x1000 - (paddrSrc & 0xfff));
             bytesFitDst = (0x1000 - (paddrDst & 0xfff));
-            pointerDelta =  1;
+            pointerDelta =  (signed int) 1;
             }
           // Restrict count to the number that will fit in either
           // source or dest pages.
@@ -462,7 +462,7 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
       if (dwordCount) {
         Bit32u dwordsFitSrc, dwordsFitDst;
         Bit8u  *hostAddrSrc, *hostAddrDst;
-        unsigned pointerDelta;
+        signed int pointerDelta;
         bx_segment_reg_t *srcSegPtr, *dstSegPtr;
         bx_address laddrDst, laddrSrc;
         Bit32u     paddrDst, paddrSrc;
@@ -514,13 +514,13 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
               goto noAcceleration32;
             dwordsFitSrc = (4 + (paddrSrc & 0xfff)) >> 2;
             dwordsFitDst = (4 + (paddrDst & 0xfff)) >> 2;
-            pointerDelta = (unsigned) -4;
+            pointerDelta = (signed int) -4;
             }
           else {
             // Counting upward.
             dwordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 2;
             dwordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 2;
-            pointerDelta =  4;
+            pointerDelta =  (signed int) 4;
             }
           // Restrict dword count to the number that will fit in either
           // source or dest pages.
@@ -720,7 +720,7 @@ doIncr32:
       if (wordCount) {
         Bit32u wordsFitSrc, wordsFitDst;
         Bit8u  *hostAddrSrc, *hostAddrDst;
-        unsigned pointerDelta;
+        signed int pointerDelta;
         bx_segment_reg_t *srcSegPtr, *dstSegPtr;
         bx_address laddrDst, laddrSrc;
         Bit32u     paddrDst, paddrSrc;
@@ -772,13 +772,13 @@ doIncr32:
               goto noAcceleration16;
             wordsFitSrc = (2 + (paddrSrc & 0xfff)) >> 1;
             wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
-            pointerDelta = (unsigned) -2;
+            pointerDelta = (signed int) -2;
             }
           else {
             // Counting upward.
             wordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 1;
             wordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 1;
-            pointerDelta =  2;
+            pointerDelta =  (signed int) 2;
             }
           // Restrict word count to the number that will fit in either
           // source or dest pages.
@@ -1659,7 +1659,7 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
       if (byteCount) {
         Bit32u bytesFitDst;
         Bit8u  *hostAddrDst;
-        unsigned pointerDelta;
+        signed int pointerDelta;
         bx_segment_reg_t *dstSegPtr;
         bx_address laddrDst;
         Bit32u     paddrDst;
@@ -1691,12 +1691,12 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
           if (BX_CPU_THIS_PTR get_DF ()) {
             // Counting downward.
             bytesFitDst = 1 + (paddrDst & 0xfff);
-            pointerDelta = (unsigned) -1;
+            pointerDelta = (signed int) -1;
             }
           else {
             // Counting upward.
             bytesFitDst = (0x1000 - (paddrDst & 0xfff));
-            pointerDelta =  1;
+            pointerDelta =  (signed int) 1;
             }
           // Restrict count to the number that will fit in either
           // source or dest pages.
