@@ -69,14 +69,14 @@ private:
   char *index_name16[8];
   char *index_name32[8];
 
-  inline Bit8u  fetch_byte(void) {
+  BX_CPP_INLINE Bit8u  fetch_byte(void) {
     return(*instruction++);
     };
-  inline Bit8u  peek_byte(void) {
+  BX_CPP_INLINE Bit8u  peek_byte(void) {
     return(*instruction);
     };
 
-  inline Bit16u fetch_word(void) {
+  BX_CPP_INLINE Bit16u fetch_word(void) {
     Bit16u ret16;
     Bit8u  b1, b0;
 
@@ -86,7 +86,7 @@ private:
     return(ret16);
     };
 
-  inline Bit32u fetch_dword(void) {
+  BX_CPP_INLINE Bit32u fetch_dword(void) {
     Bit32u ret32;
     Bit8u  b3, b2, b1, b0;
 

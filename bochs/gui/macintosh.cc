@@ -119,10 +119,10 @@ struct {
 } bx_tool_pixmap[BX_MAX_PIXMAPS];
 
 // Event handlers
-inline void HandleKey(EventRecord *event, Bit32u keyState);
-inline void HandleToolClick(Point where);
+BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState);
+BX_CPP_INLINE void HandleToolClick(Point where);
 void HandleMenuChoice(long menuChoice);
-inline void HandleClick(EventRecord *event);
+BX_CPP_INLINE void HandleClick(EventRecord *event);
 
 // Update routines
 void UpdateWindow(WindowPtr window);
@@ -363,7 +363,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 //
 // Handles keyboard-related events.
 
-inline void HandleKey(EventRecord *event, Bit32u keyState)
+BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
 {
 	int	key;
 	UInt32 trans;
@@ -412,7 +412,7 @@ inline void HandleKey(EventRecord *event, Bit32u keyState)
 //
 // Handles mouse clicks in the Bochs tool window
 
-inline void HandleToolClick(Point where)
+BX_CPP_INLINE void HandleToolClick(Point where)
 {
 	unsigned i;
 	int xorigin;
@@ -433,7 +433,7 @@ inline void HandleToolClick(Point where)
 	thisGUI->show_headerbar();
 }
 
-inline void ResetPointer(void)
+BX_CPP_INLINE void ResetPointer(void)
 {
 #if 0
 	CursorDevice *theMouse;
@@ -567,7 +567,7 @@ void HandleMenuChoice(long menuChoice)
 	HiliteMenu(0);	
 }
 
-inline void HandleClick(EventRecord *event)
+BX_CPP_INLINE void HandleClick(EventRecord *event)
 {
 	short part;
 	WindowPtr whichWindow;

@@ -42,7 +42,8 @@
 #endif
 
 // If the buffer commands are to be inlined:
-#define BX_SB16_BUFINL inline
+#define BX_SB16_BUFINL BX_CPP_INLINE
+// BX_CPP_INLINE is defined to the inline keyword for the C++ compiler.
 
 // maximum number of patch translations
 #define BX_SB16_PATCHTABLESIZE 1024

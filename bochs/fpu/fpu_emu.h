@@ -198,7 +198,8 @@ extern u_char const data_sizes_16[32];
 #define significand(x) ( ((u64 *)&((x)->sigl))[0] )
 #endif
 
-static inline void reg_copy(FPU_REG const *x, FPU_REG *y)
+BX_C_INLINE
+void reg_copy(FPU_REG const *x, FPU_REG *y)
 {
   y->exp = x->exp;
   significand(y) = significand(x);
