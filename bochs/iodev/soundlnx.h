@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.4 2001-10-03 13:10:38 bdenney Exp $
+// $Id: soundlnx.h,v 1.5 2002-12-24 10:12:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 // This file (SOUNDLNX.H) written and donated by Josef Drexler
 
 
-#if defined(linux)
+#if (defined(linux) || defined(__FreeBSD__))
 
 #include "bochs.h"
 
