@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.25 2002-09-13 19:39:37 bdenney Exp $
+// $Id: init.cc,v 1.26 2002-09-14 00:51:46 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,6 +47,7 @@ BX_CPU_C::BX_CPU_C()
   put("CPU");
   settype (CPU0LOG);
 }
+
 
 #if BX_WITH_WX
 
@@ -156,7 +157,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.25 2002-09-13 19:39:37 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.26 2002-09-14 00:51:46 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -233,6 +234,16 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sreg_mod01_rm32[5] = BX_SEG_REG_SS;
   sreg_mod01_rm32[6] = BX_SEG_REG_DS;
   sreg_mod01_rm32[7] = BX_SEG_REG_DS;
+#if BX_SUPPORT_X86_64
+  sreg_mod01_rm32[8] = BX_SEG_REG_DS;
+  sreg_mod01_rm32[9] = BX_SEG_REG_DS;
+  sreg_mod01_rm32[10] = BX_SEG_REG_DS;
+  sreg_mod01_rm32[11] = BX_SEG_REG_DS;
+  sreg_mod01_rm32[12] = BX_SEG_REG_DS;
+  sreg_mod01_rm32[13] = BX_SEG_REG_DS;
+  sreg_mod01_rm32[14] = BX_SEG_REG_DS;
+  sreg_mod01_rm32[15] = BX_SEG_REG_DS;
+#endif
 
   // the default segment to use for a one-byte modrm with mod==10b
   // and rm==i
@@ -247,6 +258,16 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sreg_mod10_rm32[5] = BX_SEG_REG_SS;
   sreg_mod10_rm32[6] = BX_SEG_REG_DS;
   sreg_mod10_rm32[7] = BX_SEG_REG_DS;
+#if BX_SUPPORT_X86_64
+  sreg_mod10_rm32[8] = BX_SEG_REG_DS;
+  sreg_mod10_rm32[9] = BX_SEG_REG_DS;
+  sreg_mod10_rm32[10] = BX_SEG_REG_DS;
+  sreg_mod10_rm32[11] = BX_SEG_REG_DS;
+  sreg_mod10_rm32[12] = BX_SEG_REG_DS;
+  sreg_mod10_rm32[13] = BX_SEG_REG_DS;
+  sreg_mod10_rm32[14] = BX_SEG_REG_DS;
+  sreg_mod10_rm32[15] = BX_SEG_REG_DS;
+#endif
 
 
   // the default segment to use for a two-byte modrm with mod==00b
@@ -260,6 +281,16 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sreg_mod0_base32[5] = BX_SEG_REG_DS;
   sreg_mod0_base32[6] = BX_SEG_REG_DS;
   sreg_mod0_base32[7] = BX_SEG_REG_DS;
+#if BX_SUPPORT_X86_64
+  sreg_mod0_base32[8] = BX_SEG_REG_DS;
+  sreg_mod0_base32[9] = BX_SEG_REG_DS;
+  sreg_mod0_base32[10] = BX_SEG_REG_DS;
+  sreg_mod0_base32[11] = BX_SEG_REG_DS;
+  sreg_mod0_base32[12] = BX_SEG_REG_DS;
+  sreg_mod0_base32[13] = BX_SEG_REG_DS;
+  sreg_mod0_base32[14] = BX_SEG_REG_DS;
+  sreg_mod0_base32[15] = BX_SEG_REG_DS;
+#endif
 
   // the default segment to use for a two-byte modrm with
   // mod==01b or mod==10b and base==i
@@ -271,6 +302,17 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sreg_mod1or2_base32[5] = BX_SEG_REG_SS;
   sreg_mod1or2_base32[6] = BX_SEG_REG_DS;
   sreg_mod1or2_base32[7] = BX_SEG_REG_DS;
+#if BX_SUPPORT_X86_64
+  sreg_mod1or2_base32[8] = BX_SEG_REG_DS;
+  sreg_mod1or2_base32[9] = BX_SEG_REG_DS;
+  sreg_mod1or2_base32[10] = BX_SEG_REG_DS;
+  sreg_mod1or2_base32[11] = BX_SEG_REG_DS;
+  sreg_mod1or2_base32[12] = BX_SEG_REG_DS;
+  sreg_mod1or2_base32[13] = BX_SEG_REG_DS;
+  sreg_mod1or2_base32[14] = BX_SEG_REG_DS;
+#warning "KPL: The following was 14, I changed to 15.  Typo?"
+  sreg_mod1or2_base32[15] = BX_SEG_REG_DS;
+#endif
 
 #if BX_DYNAMIC_TRANSLATION
   DTWrite8vShim = NULL;
@@ -326,6 +368,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     DEFPARAM_NORMAL (DR3, dr3);
     DEFPARAM_NORMAL (DR6, dr6);
     DEFPARAM_NORMAL (DR7, dr7);
+#if BX_SUPPORT_X86_64==0
 #if BX_CPU_LEVEL >= 2
     DEFPARAM_NORMAL (CR0, cr0.val32);
     DEFPARAM_NORMAL (CR1, cr1);
@@ -335,6 +378,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 #if BX_CPU_LEVEL >= 4
     DEFPARAM_NORMAL (CR4, cr4);
 #endif
+#endif  // #if BX_SUPPORT_X86_64==0
 
   // segment registers require a handler function because they have
   // special get/set requirements.
@@ -363,8 +407,10 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   DEFPARAM_GLOBAL_SEG_REG(IDTR, idtr);
 #undef DEFPARAM_SEGREG
 
-  list->add (param = new bx_shadow_num_c (BXP_CPU_EFLAGS, "EFLAGS", 
-	&BX_CPU_THIS_PTR eflags.val32));
+#if BX_SUPPORT_X86_64==0
+  list->add (param = new bx_shadow_num_c (BXP_CPU_EFLAGS, "EFLAGS",
+  &BX_CPU_THIS_PTR eflags.val32));
+#endif
 
   // flags implemented in lazy_flags.cc must be done with a handler
   // that calls their get function, to force them to be computed.
@@ -400,7 +446,9 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
         "IOPL", "", 0, 3, 
 	&eflags.val32,
 	12, 13));
+#if BX_SUPPORT_X86_64==0
   param->set_format ("%d");
+#endif
 #endif
   DEFPARAM_LAZY_EFLAG(OF);
   DEFPARAM_EFLAG(DF);
@@ -467,8 +515,13 @@ BX_CPU_C::reset(unsigned source)
   EIP = 0x00000000;
 #else /* from 286 up */
   BX_CPU_THIS_PTR prev_eip =
-  BX_CPU_THIS_PTR dword.eip = 0x0000FFF0;
+#if BX_SUPPORT_X86_64
+  RIP = 0x0000FFF0;
+#else
+  EIP = 0x0000FFF0;
 #endif
+#endif
+
 
 
   /* CS (Code Segment) and descriptor cache */
@@ -763,13 +816,36 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr3 = 0;
 #endif
 #if BX_CPU_LEVEL >= 4
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR cr4.val32 = 0;
+  BX_CPU_THIS_PTR cr4.vme = 0;
+  BX_CPU_THIS_PTR cr4.pvi = 0;
+  BX_CPU_THIS_PTR cr4.tsd = 0;
+  BX_CPU_THIS_PTR cr4.de  = 0;
+  BX_CPU_THIS_PTR cr4.pse = 0;
+  BX_CPU_THIS_PTR cr4.pae = 0;
+  BX_CPU_THIS_PTR cr4.mce = 0;
+  BX_CPU_THIS_PTR cr4.pge = 0;
+  BX_CPU_THIS_PTR cr4.pce = 0;
+  BX_CPU_THIS_PTR cr4.osfxsr = 0;
+  BX_CPU_THIS_PTR cr4.osxmmexcpt = 0;
+#else
   BX_CPU_THIS_PTR cr4 = 0;
 #endif
+#endif
+
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32;
+#endif
+
 
 /* initialise MSR registers to defaults */
 #if BX_CPU_LEVEL >= 5
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = (APIC_BASE_ADDR << 12) + 0x900;
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR msr.lme = BX_CPU_THIS_PTR msr.lma = 0;
+#endif
 #endif
 
   BX_CPU_THIS_PTR EXT = 0;
@@ -857,7 +933,7 @@ BX_CPU_C::sanity_checks(void)
        ch != ((ECX >> 8) & 0xFF) ||
        dh != ((EDX >> 8) & 0xFF) ||
        bh != ((EBX >> 8) & 0xFF) ) {
-    BX_PANIC(("problems using BX_READ_8BIT_REG()!"));
+    BX_PANIC(("problems using BX_READ_8BIT_REGx()!"));
     }
 
   ax = AX;
