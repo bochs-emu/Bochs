@@ -36,7 +36,7 @@ BX_CPU_C::BOUND_GvMa(bxInstruction_c *i)
 #else
 
   if (i->modC0()) {
-    BX_PANIC(("BOUND: op2 must be memory reference"));
+    BX_INFO(("BOUND: op2 must be memory reference"));
     UndefinedOpcode(i);
   }
 
