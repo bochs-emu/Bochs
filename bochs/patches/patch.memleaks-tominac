@@ -19,14 +19,13 @@ Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-
 Index: logio.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/logio.cc,v
 retrieving revision 1.14
 diff -u -b -r1.14 logio.cc
 --- logio.cc	2001/12/08 18:08:24	1.14
-+++ logio.cc	2001/12/21 19:03:24
++++ logio.cc	2001/12/21 19:26:23
 @@ -195,9 +195,10 @@
  
  logfunctions::logfunctions(void)
@@ -84,11 +83,11 @@ diff -u -b -r1.14 logio.cc
 Index: main.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/main.cc,v
-retrieving revision 1.79
-diff -u -b -r1.79 main.cc
---- main.cc	2001/11/12 02:35:09	1.79
-+++ main.cc	2001/12/21 19:03:26
-@@ -1170,13 +1170,15 @@
+retrieving revision 1.81
+diff -u -b -r1.81 main.cc
+--- main.cc	2001/12/14 17:55:51	1.81
++++ main.cc	2001/12/21 19:26:26
+@@ -1195,13 +1195,15 @@
    static void
  parse_line_unformatted(char *context, char *line)
  {
@@ -105,7 +104,7 @@ diff -u -b -r1.79 main.cc
    if (line == NULL) return;
  
    // if passed nothing but whitespace, just return
-@@ -1222,10 +1224,30 @@
+@@ -1247,10 +1249,30 @@
        }
      }
      string[string_i] = '\0';
@@ -142,7 +141,7 @@ RCS file: /cvsroot/bochs/bochs/state_file.cc,v
 retrieving revision 1.8
 diff -u -b -r1.8 state_file.cc
 --- state_file.cc	2001/10/03 13:10:37	1.8
-+++ state_file.cc	2001/12/21 19:03:27
++++ state_file.cc	2001/12/21 19:26:26
 @@ -128,4 +128,9 @@
  state_file::~state_file()
  {
@@ -156,10 +155,10 @@ diff -u -b -r1.8 state_file.cc
 Index: gui/siminterface.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
-retrieving revision 1.35
-diff -u -b -r1.35 siminterface.cc
---- gui/siminterface.cc	2001/11/14 00:23:08	1.35
-+++ gui/siminterface.cc	2001/12/21 19:03:28
+retrieving revision 1.36
+diff -u -b -r1.36 siminterface.cc
+--- gui/siminterface.cc	2001/12/12 10:38:39	1.36
++++ gui/siminterface.cc	2001/12/21 19:26:27
 @@ -32,6 +32,7 @@
    int enabled;
  public:
@@ -184,7 +183,7 @@ diff -u -b -r1.35 siminterface.cc
  int
  bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
  {
-@@ -447,6 +457,26 @@
+@@ -449,6 +459,26 @@
    set (initial_val);
  }
  
@@ -211,7 +210,7 @@ diff -u -b -r1.35 siminterface.cc
  void 
  bx_param_string_c::reset () {
    strncpy (this->val, this->initial_val, maxsize);
-@@ -512,6 +542,30 @@
+@@ -514,6 +544,30 @@
    for (int i=0; i<this->size; i++)
      this->list[i] = init_list[i];
    init ();
@@ -245,11 +244,11 @@ diff -u -b -r1.35 siminterface.cc
 Index: gui/siminterface.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
-retrieving revision 1.27
-diff -u -b -r1.27 siminterface.h
---- gui/siminterface.h	2001/11/14 00:23:08	1.27
-+++ gui/siminterface.h	2001/12/21 19:03:28
-@@ -225,6 +225,7 @@
+retrieving revision 1.29
+diff -u -b -r1.29 siminterface.h
+--- gui/siminterface.h	2001/12/14 17:54:58	1.29
++++ gui/siminterface.h	2001/12/21 19:26:27
+@@ -229,6 +229,7 @@
        char *description,
        char *initial_val,
        int maxsize=-1);
@@ -257,7 +256,7 @@ diff -u -b -r1.27 siminterface.h
    void reset ();
    void set_handler (param_string_event_handler handler);
    Bit32s get (char *buf, int len);
-@@ -270,6 +271,7 @@
+@@ -274,6 +275,7 @@
    } bx_listopt_bits;
    //bx_list_c (bx_id id, int maxsize);
    bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
@@ -268,11 +267,11 @@ diff -u -b -r1.27 siminterface.h
 Index: gui/win32.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/win32.cc,v
-retrieving revision 1.20
-diff -u -b -r1.20 win32.cc
---- gui/win32.cc	2001/11/26 07:24:16	1.20
-+++ gui/win32.cc	2001/12/21 19:03:30
-@@ -851,7 +851,8 @@
+retrieving revision 1.21
+diff -u -b -r1.21 win32.cc
+--- gui/win32.cc	2001/12/13 18:36:29	1.21
++++ gui/win32.cc	2001/12/21 19:26:30
+@@ -855,7 +855,8 @@
    for (unsigned i=0; i<ydim * xdim/8; i++)
      data[i] = reverse_bitorder(bmap[i]);
    SetBitmapBits(bx_bitmaps[bx_bitmap_entries].bmap, ydim * xdim/8, data);
@@ -288,7 +287,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
 retrieving revision 1.41
 diff -u -b -r1.41 harddrv.cc
 --- iodev/harddrv.cc	2001/11/12 03:34:45	1.41
-+++ iodev/harddrv.cc	2001/12/21 19:03:34
++++ iodev/harddrv.cc	2001/12/21 19:26:34
 @@ -85,6 +85,8 @@
  
  bx_hard_drive_c::bx_hard_drive_c(void)
@@ -328,7 +327,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/unmapped.cc,v
 retrieving revision 1.13
 diff -u -b -r1.13 unmapped.cc
 --- iodev/unmapped.cc	2001/10/03 13:10:38	1.13
-+++ iodev/unmapped.cc	2001/12/21 19:03:34
++++ iodev/unmapped.cc	2001/12/21 19:26:34
 @@ -52,7 +52,11 @@
  
  bx_unmapped_c::~bx_unmapped_c(void)
