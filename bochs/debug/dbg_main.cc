@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.105 2003-08-04 16:35:49 akrisak Exp $
+// $Id: dbg_main.cc,v 1.106 2003-08-10 13:26:02 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -5489,7 +5489,7 @@ nuf_help:
 void
 bx_dbg_calc_command(Bit64u value)
 {
- dbg_printf ("0x" FMT_LL "x\n", value);
+ dbg_printf ("0x" FMT_LL "x " FMT_LL "d\n", value, value);
 }
 
 Bit32u
