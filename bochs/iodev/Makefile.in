@@ -67,7 +67,7 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
   devices.o \
   pit.o pit82c54.o pit_wrap.o \
   @IODEBUG_OBJS@ \
-  @NE2K_OBJS@ \
+  @NE2K_OBJS@ @NETLOW_OBJS@ \
   @SLOWDOWN_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)

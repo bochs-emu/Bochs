@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.166 2002-11-16 13:43:38 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.167 2002-11-17 12:49:46 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -666,11 +666,12 @@ AC_ARG_ENABLE(ne2000,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_NE2K_SUPPORT, 1)
-    NE2K_OBJS='ne2k.o eth.o eth_null.o'
-    AC_CHECK_HEADER(net/bpf.h, NE2K_OBJS="$NE2K_OBJS eth_fbsd.o")
-    AC_CHECK_HEADER(netpacket/packet.h, NE2K_OBJS="$NE2K_OBJS eth_linux.o")
+    NE2K_OBJS='ne2k.o'
+    NETLOW_OBJS='eth.o eth_null.o'
+    AC_CHECK_HEADER(net/bpf.h, NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o")
+    AC_CHECK_HEADER(netpacket/packet.h, NETLOW_OBJS="$NETLOW_OBJS eth_linux.o")
     AC_CHECK_HEADER(linux/netlink.h, [
-        NE2K_OBJS="$NE2K_OBJS eth_tap.o"
+        NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
         AC_DEFINE(HAVE_ETHERTAP, 1)
       ], [], 
       [
@@ -678,7 +679,7 @@ AC_ARG_ENABLE(ne2000,
 	#include <sys/socket.h>
       ])
     AC_CHECK_HEADER(linux/if_tun.h, [
-        NE2K_OBJS="$NE2K_OBJS eth_tuntap.o"
+        NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
         AC_DEFINE(HAVE_TUNTAP, 1)
       ], [], 
       [
@@ -687,7 +688,7 @@ AC_ARG_ENABLE(ne2000,
       ])
     case "$target" in
       *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
-      NE2K_OBJS="$NE2K_OBJS eth_win32.o"
+      NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
       ;;
     esac
     networking=yes
@@ -695,16 +696,19 @@ AC_ARG_ENABLE(ne2000,
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_NE2K_SUPPORT, 0)
     NE2K_OBJS=''
+    NETLOW_OBJS=''
     networking=no
    fi],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_NE2K_SUPPORT, 0)
     NE2K_OBJS=''
+    NETLOW_OBJS=''
     networking=no
     ]
   )
 AC_SUBST(NE2K_OBJS)
+AC_SUBST(NETLOW_OBJS)
 
 
 AC_MSG_CHECKING(for i440FX PCI support)
