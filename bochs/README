@@ -1,88 +1,122 @@
 --------------------------------------------------------------------
 SMP-bochs
-Bochs pentium simulator, hacked to simulate a multiprocessor system
-Updated Fri Mar 30 21:01:51 EST 2001
+Bochs pentium simulator, with multiprocessor support
+Updated Tue Apr  3 12:39:56 EDT 2001
 Bryce Denney  (bryce.denney@bigfoot.com)
 --------------------------------------------------------------------
 
 What is this?
-- This is Kevin Lawton's Bochs pentium simulator, modified during the last week
-  by me to simulate several processors instead of one.  The starting point was
-  the 3/25/2000 snapshot from ftp.bochs.com.  My goal was to boot up Linux with
-  multiprocessor support, and it has reached that goal as of yesterday.
-- I have implemented a number of features required for Linux SMP, including
-  RDTSC instruction, local APIC on each processor, and one I/O APIC.
+- SMP-bochs is Kevin Lawton's Bochs pentium simulator, with modifications to
+  simulate several processors.  The starting point was the 3/25/2000 snapshot
+  from ftp.bochs.com.
+- Bochs is released under LGPL, so this version is the same.
+- I have tried to keep this code "mainstream" in that the default configure
+  file uses the same settings as the last official Bochs snapshot.
+- I have implemented the features required for Linux SMP, including RDTSC
+  instruction, local APIC on each processor (with timer), and one I/O APIC.
+  Other operating systems may work, but I haven't tried them.  
 - I modified the rombios.c file to add a data structure called the Intel
   Multiprocessor Configuration.  An SMP-aware operating system such as Linux
   probes BIOS memory to find the structure, which contains information about
   how many processors, their IDs, interrupt sources, etc.
-- I've made some minor additions to the debugger, such as an "info idt" command 
-  that prints the Interrupt Descriptor Table in a readable form.  The debugger
-  can also use the readline library if set USE_READLINE=1.
-- Bochs is released under LGPL, so my changes are as well.
+- Minor additions to the debugger, such as an "info idt" command that prints
+  the Interrupt Descriptor Table in a readable form.  The debugger will also
+  use the GNU readline library if configure can locate it.
+- This release should be much more portable than the bochs snapshot, since
+  a number of new checks have been added to the configure script:
+    checking size of int *... 4
+    checking for snprintf... yes
+    checking for strtoull... yes
+    checking if compiler allows empty structs... yes
+    checking if compiler allows __attribute__... yes
+    checking for hash_map.h... yes
+  as well as sanity-checks such as "if the debugger is enabled, then
+  disassembly must be enabled."
+- With some help of www.testdrive.compaq.com, I was able to compile this
+  version on the platforms listed below.  This doesn't mean extensive 
+  testing(!) but at least it will compile.  All platforms used gcc except
+  for Tru64 Unix, which used Compaq C++ V6.2-024.
+    Intel   Caldera OpenLinux eDesktop 2.4
+    Intel   Debian 2.2 Linux
+    Intel   RedHat 7.0 Linux
+    Intel   Kondara 2000 Linux
+    Intel   TurboLinux 6.0
+    Intel   Mandrake 7.0 Linux
+    Intel   FreeBSD 4.2
+    Intel   SuSE 7.0 Linux
+    Sun4    Solaris (SunOS 5.6)
+    Alpha   Compaq Tru64 Unix 5.1
+    Alpha   Compaq Tru64 Unix 4.0g
+    Alpha   Kondara 2000 Linux
+    Alpha   Debian 2.2 Linux
+    Alpha   SuSE 7.0 Linux
+    Alpha   FreeBSD 4.2
+    Alpha   NetBSD 1.5   (had to rm fpu/*.S first, due to wierd make behavior)
+    IA64    Linux64
 
 What is this NOT?
-- Do not expect this code to give you better performance than the standard 
-  bochs.  On the contrary, it has to spend time simulating idle processors as
-  well as the ones doing your task.  My point was to simulate an SMP system,
-  not to speed up the completion of your simulated applications!
-- It is not well tested.  I have booted Linux several times and typed a few
-  commands, but that's it so far.  I'm making it public early so that people
-  can take a look and try it out.
-- I recommend getting Linux under Bochs working first with the 03-25-2000 
-  release, before messing around with SMP.
-- I have no idea if other operating systems will notice the other processors, 
-  or even boot up.  They should be able to find the MP configuration structure,
-  but who knows?
+- Do not expect that configuring bochs for 4 processors will make your
+  single-threaded applications run faster in general.  On the contrary, it has
+  to spend time simulating idle processors as well as the ones doing your task.
+  My point was to simulate an SMP system, not to speed up a uniprocessor
+  application.
+- A number of people have suggested using threads to simulate each CPU in
+  a different thread.  Then on a real SMP machine, the threads can execute
+  in parallel.  This is a great idea, but it's not done at present.
+- I have not tested any SMP-aware operating systems other that Linux 2.2.14.
+  There are no Linux-specific hacks in the models, but other OSes may depend
+  on features that haven't been implemented yet.
+- Multiprocessor support requires multiple instances of BX_CPU, so it
+  is NOT compatible with Bochs's preprocessor controlled
+  static-member-function idea.  I have turned off SMF for the CPU
+  object, and this may lead to a reduction in performance.  C++ vs C
+  speed arguments apply.  Probably with sufficient macro tricks, one
+  could make SMF work again when it's configured for one processor,
+  but I haven't seen this as a high priority.
 
-Here's how to get your own SMP Linux bochs running.  First run the configure script.
+CONFIGURATION
 
-  ./configure --enable-cpu-level=6 --enable-fpu
+To configure a single-processor system, just run configure as you would 
+with the bochs snapshot.  The defaults are still cpu level=5, all devices
+except for VGA off.
 
-or if you want the debugger, try this:
+   ./configure
+   fix errors if necessary
+   make
+   edit .bochsrc to point to your disk images, etc.
+   ./bochs
 
-  ./configure --enable-cpu-level=6 --enable-fpu --enable-debugger --enable-disasm
+If you want to try multiple processors, use the --enable-processors=<N>
+option to configure.  For Linux (maybe others) you will probably want
+--enable-fpu.  Much faster to let bochs C code emulate the floating
+point than bochs-emulated kernel instructions!
 
-By default, I've set up config.h.in to create a 2-processor system.  See the
-preprocessor variable BX_SMP_PROCESSORS to change it around.  For each 
-configuration of processors, in general you'll need to compile a new 
-BIOS (bios/rombios.bin).  I've included a few in the bios directory to save the 
-trouble.
+  ./configure --enable-processors=<N> --enable-fpu              (<N>=2 or 4)
+  fix errors if necessary
+  make
+  edit .bochsrc.  the romimage should point to bios/BIOS-bochs-<N>-processors
+  ./bochs
 
-The default configuration is:
-  BX_SMP_PROCESSORS=2         (in config.h)
-  BX_BOOTSTRAP_PROCESSOR=0    (in config.h)
-  BX_IOAPIC_DEFAULT_ID=2      (in config.h)
-  romimage: file=bios/BIOS-bochs-2-processors, address=0xf0000       (in .bochsrc)
+Now there's no reason you can't have 3 or 7 processors, but you'll
+need to hack bios/rombios.c to change MP configuration data structure.
+This takes me about 10 minutes per configuration, since you have to get
+the data checksums right.  There may be a maximum of 15, but I haven't
+tried.  I have provided bios/BIOS-bochs-2-processors and
+bios/BIOS-bochs-4-processors in the TAR files.
 
-A 4-processor configuration that should work is:
-  BX_SMP_PROCESSORS=4         (in config.h)
-  BX_BOOTSTRAP_PROCESSOR=2    (in config.h)
-  BX_IOAPIC_DEFAULT_ID=4      (in config.h)
-  romimage: file=bios/BIOS-bochs-4-processors, address=0xf0000       (in .bochsrc)
+You can enable the debugger using --enable-debugger.  This option will
+turn on --enbable-disassembler automatically.
 
-Or a single-processor machine:
-  BX_SMP_PROCESSORS=1         (in config.h)
-  BX_BOOTSTRAP_PROCESSOR=0    (in config.h)
-  BX_IOAPIC_DEFAULT_ID=1      (in config.h)
-  romimage: file=bios/BIOS-bochs-990925a, address=0xf0000       (in .bochsrc)
+Refer to docs-html/* for normal Bochs setup questions.  For anything
+else related to Bochs or SMP, please write to bryce.denney@bigfoot.com.  
+I'll be interested to hear if anyone gets it going.
 
-When all this configuration is done, do a "make" to build it.  Then edit the
-.bochsrc file to point to your floppy image and/or hard disk image.  And
-run it!  If you compile with debugger, you'll have to type "c <return>" before
-bochs will start.
-
-Refer to docs-html/* for normal Bochs setup questions.  For anything else related
-to Bochs or SMP, please write to bryce.denney@bigfoot.com.  I'll be interested
-to hear if anyone gets it going.
-
-
-And the biggest question of all: WHY?
+And the biggest question of all: WHY SMP bochs?
 
 First it must be said that Bochs is an amazing achievement as-is.  The IA32 
 architecture has grown into such a tangled mess and I'm MOST IMPRESSED with
-Kevin's accuracy in simulating it, and coming up with device models that allow
-you to boot Win, Unix, etc.
+Kevin's and the bochs developers' accuracy in simulating it, and coming up
+with device models that allow you to boot DOS, Win, Unix, etc.
 
 I have been interested in learning about how the Linux kernel works: memory
 management, task switching, system calls, interrupt handlers, etc.  For this,
@@ -98,14 +132,8 @@ The APIC models still need some work (timer doesn't count, no task priority,
 etc.) and it doesn't compile with BX_APIC_SUPPORT turned off.  There's
 certainly room for improvement.
 
-From the limited activity on the bochs-developer list at Red Hat and the
-sourceforge project with 2 members, it looks like only a handful of people are
-actually working on bochs (which I think is a shame).  I would be interested to
-talk with those people to see how I could help out.  I've tried to keep these
-SMP-related changes done in a way that can be enabled/disabled by preprocessor
-defines like everything else.  For this release, I'm sure it won't compile clean
-with some combinations of options, but I will work on cleaning it up again.
-Let me know what I've broken.  A log of my changes is in CHANGES.bbd.  
+I keep my changes in a local CVS tree, which I will make public if
+requested.  A log of my changes is in CHANGES.bbd.  
 
 Have fun!
 Bryce Denney
