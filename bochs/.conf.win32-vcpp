@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# This configure file should be used for Win32 systems using MS Visual C++ 5.0
+# I first untar/gzip the source on a unix machine.  Run this script
+# to generate the Makefile's and config.h file.  Then copy everything
+# over to your Win32/Visual C++ system.
+
+set echo
+
+# These really just make ./configure happy on your Unix machine.
+# They are not the options passed to Visual C++
+CC="egcs"
+CFLAGS=""
+CXX="$CC"
+CXXFLAGS="$CFLAGS"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+#./configure --with-win32-vcpp --enable-port-e9-hack
+#./configure --with-win32-vcpp --enable-debugger --enable-disasm --enable-instrumentation="instrument/example0"
+#./configure --with-win32-vcpp --enable-debugger --enable-disasm
+#./configure --with-win32-vcpp --enable-disasm
+
+./configure --with-win32-vcpp --enable-cdrom --enable-sb16=win
+
+unset echo
+
+
+for i in `find . -name Makefile`; do
+  echo Removing curly brackets in $i for NMAKE.
+  mv $i $i.tmp
+  sed -e 's/{/(/g' -e 's/}/)/g' < $i.tmp > $i
+  rm -f $i.tmp
+done

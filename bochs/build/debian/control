@@ -1,0 +1,17 @@
+Source: bochs
+Section: unknown
+Priority: optional
+Maintainer: Rob Lemley <rjlemley@calypsoblue.org>
+Build-Depends: debhelper (>> 3.0.0)
+Standards-Version: 3.5.2
+
+Package: bochs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: IA-32 Emulator Project
+ Bochs is a highly portable open source IA-32 (x86) PC emulator written in C++,
+ that runs on most popular platforms. It includes emulation of the Intel x86
+ CPU, common I/O devices, and a custom BIOS. Currently, bochs can be compiled
+ to emulate a 386, 486 or Pentium CPU. Bochs is capable of running most
+ Operating Systems inside the emulation including Linux, Windows 95, DOS,
+ and recently Windows NT 4.

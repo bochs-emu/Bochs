@@ -1,0 +1,826 @@
+<HTML>
+
+<HEAD>
+  <META NAME="copyright" CONTENT="Copyright 2001 by MandrakeSoft S.A.">
+  <META NAME="Author" CONTENT="Kevin Lawton">
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
+  <TITLE>ChangeLog</TITLE>
+</HEAD>
+
+<BODY TEXT="#000000" BGCOLOR="#ececec"  LINK="#3333cc" VLINK="#666666">
+
+<CENTER><H1>ChangeLog</H1></CENTER>
+<HR>
+
+<UL>
+
+<br>
+<li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.tar.gz">Version 1.2</a> (6/3/2001)
+</h2>
+This version is the first feature release from the Bochs project on Sourceforge.
+The following list describes the changes since 1.2.pre1.
+
+  <ul>
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=427259">#427259</a>  ] rombios HALT calls don't print <br>
+  Fixed bios/rombios.c HALT macro so that it writes the line number of the
+  panic to the PANIC_PORT (port 0x400) and then does NOT do a halt 
+  instruction.  Also changed iodev/unmapped.cc so that the line number written
+  to PANIC_PORT is displayed as a BX_PANIC message.  Because the HALT
+  macro now triggers the normal panic behavior, it can be controlled by
+  the bochsrc.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429016">#429016</a>  ] crash if no hard drive <br>
+  rombios used to call HALT macro if no hard drive was found. Now it only
+  calls HALT if a hard drive has an illegal geometry.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=425388">#425388</a>  ] include source for simple disk img tool <br>
+  [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428478">#428478</a>  ] mkimg tool creates image 1 byte too big
+  Added bximage tool, which makes empty floppy and hard disk images.
+  It is now included in the top level Makefile, so it will get built
+  by default on all platforms.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=426036">#426036</a>  ] eth_fbsd.cc compile problem on solaris26 <br>
+  added configure test so that "configure --enable-ne2000" only
+  includes the Berkeley Packet Filter code (eth_fbsd) if the header
+  file <net/bpf.h> can be found.  If you don't have BPF the ne2000
+  will not actually move packets, but at least it will compile clean now.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428214">#428214</a>  ] 1.2.pre1 need documentation for binaries <br>
+  Write windows and linux specific documentation to be installed in
+  binary releases.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429258">#429258</a>  ] disable RESET for version 1.2 <br>
+  Since soft reset was not completely working, I reverted the reset patch.
+  Now it does panics on reset instead of trying to reboot, as the old
+  bochs versions did.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428222">#428222</a>  ] Should the linux RPM install vga font? <br>
+  now font/vga.pcf will be installed in the RPM package
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429020">#429020</a>  ] stop renaming the BIOS!!! <br>
+  new BIOS changes are now in BIOS-bochs-latest, instead of a BIOS 
+  whose name changes every time we change anything!  To help distinguish
+  different BIOS versions, the BIOS now prints its RCS Id into the
+  log file.
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428625">#428625</a>  ] compile problem if SHOW_IPS is on <br>
+  removed extra paren that broke SHOW_IPS
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=428219">#428219</a>  ] PCI doesn't compile with SMF=1
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429375">#429375</a>  ] pthreads detection broken
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429073">#429073</a>  ] configure: if no X11, makes bad config
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=429229">#429229</a>  ] install current .bochsrc in binary rels
+<li> install Tim's man pages on linux RPM
+<li> BIOS prints messages in log in case of boot failure
+<li> rewrote instructions for compiling in win32 (win32.txt)
+<li> fixed link in HTML changelog.html to point to the real sources on SF.
+<li> added missing LOG_THIS definition to gui/nogui.cc and gui/rfb.cc
+<li> added additional check for null pointer in debugger exit routine
+<li> added diskd to .bochsrc
+  </ul>
+
+<br>
+<li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.pre1.tar.gz">Version 1.2-pre1</a> (5/25/2001)
+</h2>
+  This version is the first feature release from the Bochs project on Sourceforge.  It is marked "pre1" because some of the new features have not had widespread testing yet.  When more features/platforms/OSes have been tested (and bugs fixed) we will make a real 1.2 release.
+  <ul>
+  <li> major cleanup of .bochsrc
+  <li> major cleanup of stderr output: prints bochs version information when
+    starting, and at the end it tries to print the message that caused
+    bochs to quit.
+  <li> two hard disk support (diskd).  At present, you cannot have two 
+    hard drives and a cdrom at the same time, because there is only
+    one IDE controller with two channels. 
+  <li> split hard disk support allows different partitions to be stored in
+    different image files
+  <li> two new GUI choices: term mode and RFB mode.  Term is a text-only
+    interface, and RFB creates a server that can be accessed using 
+    the AT&T VNC viewer.
+  <li> now Bochs can simulate an SMP machine, if you configure with
+    --enable-processors=N.  Configuring more than one processor has
+    a major performance impact, so the default is 1 processor.
+    See <a href="smp-simulation.html">SMP documentation</a> for more details.
+  <li> to make SMP work, bx_mem and bx_cpu have been replaced with
+    bx_mem_array[] and bx_cpu_array[].  The cpus are referenced through
+    the BX_CPU(n) macro and memories through the BX_MEM(n).  Normal
+    mode has one cpu and one memory, SMP mode has multiple cpu's and
+    one memory, cosimulation mode has multiple cpus and multiple memories.
+  <li> use --enable-cpu-level=6 to make Bochs claim to be a Pentium Pro.
+    The only feature that requires CPU level 6 is apic support.
+  <li> new logging system by Todd Fries, which has 4 levels of event
+    severity (panic, error, info, debug).  There are new .bochsrc
+    options that control what action to take when a 
+    panic/error/info/debug event occurs.
+  <li> now searches for .bochsrc, bochsrc, bochsrc.txt, and (on unix only)
+    $HOME/.bochsrc.
+  <li> use GNU readline library if --enable-debugger is on, as long as readline
+    can be found on the machine
+  <li> configure checks for existence strtoull and strtouq. if neither exists,
+    Bochs uses its own implementation
+  <li> applied patches from Cliff Hones <cliff@aonix.co.uk> to fix up the
+    rombios.  This includes many improvements, which you can list by
+    doing "cvs log -r 1.6 bios/rombios.c" or looking at cvsweb.
+  <li> added suggested geometries of larger disks to the documentation
+  <li> this is the first release to have official binary packages for win32
+    and Linux.  There is a new "make rpm" in the top-level Makefile which
+    will create an RPM of the current bochs directory.  To use this,
+    become root and type "configure; make rpm".
+  <li> applied some FreeBSD patches from Maxim Sobolev (cdrom and serial).
+  </ul>
+
+<br>
+<li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.1.2.tar.gz">Version 1.1.2 (bugfix3)</a> (5/16/2001)
+</h2>
+  <ul>
+  <li> FPU is now compiled in by default.
+  <li> updated Elpin VGA BIOS to version 2.40, and changed pointer in .bochsrc
+  <li> fixed .conf.x86 script so that it uses c++ instead of egcs for C++ files
+  <li> now Makefile targets that recurse into subdirectories use double colons,
+    so that it will always recurse into subdirectories.  Now a single make
+    command should notice a modified source file in a subdir.
+  <li> fixed bug in bx_panic.  If BX_PANIC_IS_FATAL==0 and a (non-fatal) panic 
+    occurs, it used to call bx_atexit() and then return.  It should never
+    call bx_atexit, which starts to shut down the simulator, unless it's
+    really going to quit!
+  <li> support 2.88 MB floppy disks (Todd Fries)
+  <li> since dataseghack is checked in as non-executable, invoke it with
+    "csh dataseghack"
+  <li> double fault patch from Thomas Petazzoni &lt; <a href="mailto:thomas.petazzoni@ifrance.com">thomas.petazzoni@ifrance.com</a> &gt;,
+    sourceforge patch <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=423726">#423726</a>.  
+  <li> removed -fno-builtin from fpu makefiles
+  <li> redefine u_char, u_short, etc. in order to not conflict with system
+    definitions of these same types.
+  <li> in cdrom.cc, remove the extern "C" { } structure around some of the
+    header files.  This is no longer necessary.
+  <li> do not panic on hard disk command 0x1f2 (read sector count)
+  <li> in keyboard.cc:
+     <ul>
+       <li> apply Todd Fries' reset patch 
+       <li> recognize most of the "Grey" insert/delete/home/end/etc. keys the
+	same as keypad keys.
+       <li> removed panic on "kbd_ctrl_to_kbd(): got value of 0x??"
+       <li> implement mouse command 0xf6 (set defaults)
+     </ul>
+  <li> apply Suboner@aol.com's Xwindows timing patch, <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=418730">#418730</a>.
+  <li> remove all patches from patches subdir which have already been applied.
+    The remaining ones are under consideration but not applied.
+  </ul>
+
+<br>
+<li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010409-beta.tar.gz">Version 1.1.1 (bugfix2)</a> (4/9/2001)
+</h2>
+  <ul>
+  <li> fixed type error in win32 soundwin.cc, added typecast to (LPWAVEFORMATEX)
+  <li> now configure --with-win32-vcpp provides correct #defines for VC++
+  </ul>
+
+<br>
+<li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010406-beta.tar.gz">Version 1.1 bugfix1</a> (4/6/2001)
+</h2>
+  <ul>
+  <li>This was the first SourceForge release by Bryce Denney, with patches from many sources on the bochs-developers list.
+  <li>add BX_PANIC_IS_FATAL option.  <br>WARNING: Due to a implementation bug, nonfatal panics can create problems.  If you need to use BX_PANIC_IS_FATAL=0, move the bx_atexit() after the return line.  This problem was corrected in CVS after 5/2/2001, and appears in version 1.1.2 and later.
+  <li>win32:
+    <ul>
+    <li>CDROM drive letter is no longer hardcoded
+    <li>bypass fstat when opening WIN32 raw floppy disk
+    </ul>
+  <li>device models:
+    <ul>
+      <li>support sun cdrom
+      <li>mouse: fix panics on 0xd3, 0xeb commands
+      <li>harddrv: implement aborts on a few SET FEATURE commands
+      <li>vga: implement VGA enable register 0x3c3
+      <li>pit: allow modes 0,2,3 on any timer
+    </ul>
+  <li>many portability fixes
+    <ul>
+      <li>fix compile problems in FPU related to inline keyword
+      <li>configure checks if compiler allows "LL" for 64-bit constant
+      <li>renamed fpu function fabs, conflicts with math library
+      <li>fix pointer crashes in FPU on 64-bit machines
+      <li>provide libc functions snprintf, strtoull if missing
+      <li>check if compiler allows __attribute__
+      <li>comment out sigcontext struct definition because it conflicted with sigcontext on host system
+    </ul>
+  </ul>
+
+<br>
+<li><h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-2000-03-25.tar.gz">bochs-2000_0315</a>
+</h2>
+  <ul>
+  <li>Kevin removed all references to Bochs Software Company and "this is commercial software," and replaced them with Mandrake copyrights and LGPL.
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-2000_0104c.tar.gz">bochs-2000_0104c</a>
+</h2>
+  <ul>
+  <li> FPU mods:
+    <ul>
+    <li> Integrated new FPU emulator mods from Bill Metzenthen.
+    <li> Bill ported x86 specific assembly files to C.
+    <li> I helped port the FPU emulator to work on big-endian machines.
+         (tested on SPARC so far)
+    <li> The FPU emulator is now integrated into the main bochs
+         source code (in fpu/) for ease of compilation.
+    <li> Tested on x86 and SPARC.
+    <li> The '--enable-fpu' option no longer needs an argument.
+    </ul>
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-991114a.tar.gz">bochs-991114a</a>
+</h2>
+  <ul>
+  <li> CDROM emulation works on win32. &nbsp;Mods from Nick Behnken.
+  <li> Cleaned up some problems with win32 compile with VC++.
+  <li> Fixed ::call_protected() for protected mode call to same level
+       via call gate.
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-991107c.tar.gz">bochs-991107c</a>
+</h2>
+  <ul>
+  <li> Sound Blaster 16 emulation.
+    <ul>
+    <li> Integrated Sound Blaster 16 emulation from Josef Drexler.
+    <li> Check out <a href="sound.html">sound.html</a> for SB16 notes.
+    <li> Added configure option <a href="configure.html">--enable-sb16=</a>.
+    </ul>
+  <li> Started work on special guest driver to host interface, which
+       will ultimately be used by disk/video/network etc drivers
+       to enhance performance in bochs. &nbsp;Not usable yet.
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-991102a.tar.gz">bochs-991102a</a>
+</h2>
+  <ul>
+  <li> NT4.0 installs in bochs (Pentium+FPU+CDROM options).
+  <li> Please wait until next release for running NT unless you really
+       need it.
+  <li> Created (incomplete) docs-html/guestNT.html to outline process
+       of installing NT4.0 in bochs.
+  <li> More fixes to ::exception().
+  <li> Fixes to ::stack_return_to_v86().
+  <li> Mods to configure to handle win32 config again.
+  <li> Integrates mods from win32 developers.
+  <li> vga.cc handles variable number of lines in text mode. &nbsp;
+       Updated GUI code for all platforms, to receive number of
+       lines of text in ::text_update().
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-991023a.tar.gz">bochs-991023a</a>
+</h2>
+  <ul>
+  <li> Integrated diffs submitted for OpenBSD cdrom support.
+  <li> Fixed up v8086 mode and exception handling.
+  <li> Fixed real-mode handling of IOPL flag WRT POPF/IRET.
+  <li> Fixed handling of a bunch of weird 16/32-bit transitions.
+       &nbsp;In the doing, I ended up recoding the following:
+    <ul>
+    <li> Recoded ::exception()
+    <li> Recoded ::interrupt()
+    <li> Recoded ::task_switch()
+    </ul>
+  <li> Cleaned up most warnings.
+  <li> Added docs-html/codingguidelines.html.  Please peruse it, if
+       you are a code submitter, and would like to comply with
+       my code tyranny. :^)
+  <li> Integrated new submitted Mac build files and gui code.
+  <li> Have a few more issues to take care of before playing
+       in the dynamic translation sandbox again.
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-991014a.tar.gz">bochs-991014a</a>
+</h2>
+  <ul>
+  <li> CDROM emulation:
+    <ul>
+    <li> New ./configure option '--enable-cdrom'.  So far, there is
+         only support for Linux.
+    <li> I created a Linux specific CDROM component.  Mostly
+         just ioctl()s needed to access a few functions of the
+         cdrom.
+    <li> Created 'iodev/cdrom.cc' and 'iodev/cdrom.h' which contain
+         the low-level code.  Essentially, all the OS specific code
+         is contained in these files.
+    <li> Should be fairly easy to add code for other OSes.
+    <li> Use .bochsrc directive 'cdromd: dev=/dev/cdrom, status=inserted'.
+    <li> Will add an icon for cdrom to the UI later.
+    <li> Tested cdrom emulation running Linux in bochs.  Use something
+         like 'mount -r /dev/hdb /mnt/cdrom'.  Haven't checked out
+         using it in Windows yet.
+    </ul>
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-991012a.tar.gz">bochs-991012a</a>
+</h2>
+  <ul>
+  <li> Moved default cpu level to Pentium.
+  <li> Created docs-html/configure.html to explain options to configure.
+  <li> Fixes to high-level CDROM support.
+  <li> Added optional x86 hardware debug support:
+    <ul>
+    <li> '--enable-x86-debugger' is a new option to ./configure.
+    <li> This is the debug support offered by an x86 CPU,
+         not the native bochs debugger.
+    <li> Added instruction and data breakpoint capabilities.
+    <li> Added proper RF handling with or without hw debugging.
+    <li> You can configure without this option for more speed.
+    </ul>
+  <li> FWAIT now calls FPU emulator like it should.
+  <li> Changes to LMSW.
+  <li> Moved a bunch of initial stderr messages to bochs.out.
+  <li> More Pentium behaviour enhancements.
+  <li> Modified HLT instruction.
+  <li> GRUB now works in bochs and can load programs.
+  <li> Compiled a new wm-FPU-emu version for this bochs version
+       (only very minor mods).
+  <li> Work on further Pentium emulation continues...
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-991004a.tar.gz">bochs-991004a</a>
+</h2>
+  <ul>
+  <li> Added partial Pentium emulation:
+    <ul>
+    <li> --enable-cpu-level=5 is now possible from ./configure.
+    <li> Default level still at 4 without above option.
+    <li> Win'95 boots and recognizes Pentium emulation.
+    <li> Linux boots and recognizes Pentium emulation.
+    </ul>
+  <li> Work on further Pentium emulation continues...
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-990925a.tar.gz">bochs-990925a</a>
+</h2>
+  <ul>
+  <li> Generated new BIOS (bios/BIOS-bochs-990925a).
+  <li> Fix to mouse BIOS code (int15h:c2:06:00).  The use of
+       local code block/variables is not handled correctly by
+       the bcc compiler.  Removed braces, and moved local variable
+       to top level of function.
+  <li> Fix to extended mem access BIOS function (int15h:87).
+       This was killing Minix.
+  <li> Fix to floppy.cc, was reading one extra sector.
+  <li> Fix to Makefiles etc for compiling without floating point.
+  <li> Minix boots again inside bochs.  Though, the keyboard code
+       is not yet right for running Minix.  For some reason, if
+       you comment out the 2 keyboard ACKs at lines 947 and
+       966 in iodev/keyboard.cc, it works.
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-990923a.tar.gz">bochs-990923a</a>
+</h2>
+  <ul>
+  <li> Fixes to vga.cc for odd VGA graphics modes.  Even the
+       Windows'95 splash screen works now! (Craig Ballantyne)
+  <li> Addition of postfix expression evaluator in the debugger.
+       (Hanish Menon)
+  <li> Support for 1.76MB floppies. (Hanish Menon)
+  <li> Bug fix for debugger. (Hanish Menon)
+  </ul>
+
+<br>
+<li><h2>
+<a href="ftp://bochs.com/pub/bochs-990920a.tar.gz">bochs-990920a</a>
+</h2>
+  <ul>
+  <li> Fixed bug in crc command from debug prompt
+  <li> Bochs now can be compiled to use wm-FPU-emu,
+       the x87 FPU emulator included in the Linux kernel.  It
+       was written by Bill Metzenthen.  Look in fpu.html for
+       more info.  Added "--enable-fpu=" to configure.  For now,
+       this will only work on x86, since wm-FPU-emu has some
+       assembly components.
+  <li> Coded illegal instruction exception for old XBTS and IBTS
+       opcodes.
+  <li> Moved default cpu level to 486.
+  <li> Decoupled main web page from user documentation in "docs-html".
+  </ul>
+
+<br>
+<li><h2><font color="#000066">bochs-990907a</font></h2>
+  <ul>
+  <li> Fixed bug in rombios.c, new bios is bios/BIOS-bochs-990907a
+  <li> Commented out load32bitOSImage directive in .bochsrc,
+       should not have been left uncommented.
+  <li> <b>Working on Pentium emulation next...</b>
+  </ul>
+
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-990708a</FONT></H2>
+  <UL>
+  <LI> integrated submitted mods to BeOS gui stuff
+  <LI> integrated ne2k emulation (only FreeBSD low-level implemented)
+  <LI> integrated mega patches which allow bochs to boot
+       and run NT4/SP4 (simulating a 486sx)
+    <UL>
+    <LI> - Magic breakpoint
+    <LI> - IDE CD-ROM (needs low-level OS stuff for all OSs)
+    <LI> - Current time in time0
+    <LI> - Instruction based simulation clock
+    <LI> - Time breakpoints
+    <LI> - Bios improvements [rombios-new.c]
+    <LI> - Read/write breakpoints
+    <LI> - Mode switch breakpoints
+    <LI> - Bugfixes in iret
+    <LI> - Bugfixes in the fetch/decode tables
+    <LI> - CPUID instruction implemented
+    <LI> - Additional support for the AC and ID bits
+    <LI> - Intel division 'emulation'
+    <LI> - Floating point fixes
+    <LI>  - INVLPG instruction implemented
+    <LI>  - Read-modify-write fault behavior fix
+    <LI>  - Paging bugfixes
+    <LI>  - Minor LES fix
+    <LI>  - Interrupt handling bugfix
+    <LI>  - V86 mode bugfixes
+    <LI>  - Debugger bugfixes
+    <LI>  - Sync on cpu implemented
+    <LI>  - Sync on memory implemented
+    <LI>  - New debugger commands:
+      <UL>
+      <LI> trace-on
+      <LI> trace-off
+      <LI> ptime
+      <LI> sb
+      <LI> sba
+      <LI> diff-memory
+      <LI> sync-memory
+      <LI> sync-cpu
+      <LI> fast-forward
+      <LI> info-addr
+      <LI> record
+      <LI> playback
+      <LI> modebp
+      <LI> where
+      <LI> print-string
+      <LI> show
+      <LI> print-stack
+      <LI> load-symbols
+      <LI> watch
+      <LI> unwatch
+      <LI> phy2log
+      <LI> force-check
+      </UL>
+    <LI> - Mouse support through PS/2 interface
+    <LI> - IDE improvements and bugfixes
+    <LI> - External disk simulation interface
+    <LI> - Keyboard bugfixes
+    <LI> - Mouse support in the X11 gui
+    <LI> - Improved debug support in I/O devices
+    <LI> - VGA improvements and bugfixes
+    </UL>
+  <LI> New .bochsrc directives: "time0", "magic_break", "ne2k", "cdromd".
+  <LI> Task switch bug fixed
+  <LI> Integrated Mac port enhancements
+  </UL>
+
+<BR>
+<A NAME="DTTeaser"></A>
+<LI><H2><FONT COLOR="#000066">bochs-990312b</FONT></H2>
+  <UL>
+  <LI> (ftp://ftp.bochs.com/pub/DT/bochs-990312b.tar.gz)
+  <LI> First teaser release with dynamic translation framework!
+  <LI> Only a few instructions translated, but the framework
+       is coming along nicely.  Read "readme.990312b" in the
+       ftp directory above for more info.  I include some
+       preliminary performance tests, and you can benchmark
+       bochs with dynamic translation on your own machine.
+  <LI> Many more optimizations are possible.
+  <LI> Here's an excerpt from the readme file:
+<PRE>
+         dynamic translation:        interpreter:
+-------------------------------------------------
+dttest1:      2.4Mips                  1.9Mips
+dttest2:     15.0Mips                  3.2Mips
+dttest3:     10.5Mips                  3.5Mips
+dttest4:     21.2Mips                  3.1Mips
+</PRE>
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-990219a</FONT></H2>
+  <UL>
+  <LI> Converted all read-modify-write instructions to use
+       RMW versions of write_virtual_xyz() & read_virtual_xyz().
+  <LI> Addition of Linux/PPC to successful port matrix.
+  <LI> Dynamic translation framework is coming along nicely,
+       but not included here yet.  I'll include it soon in
+       an upcoming release.
+  <LI> Roadrunner OS booted.
+  <LI> Integrated many patches from bochs users:
+    <UL>
+    <LI> Floppy: change line support.
+    <LI> Beos: BX_KEY_{LEFT,RIGHT}_ARROW, omitted _ARROW.
+    <LI> Bochs port to Cygwin32 without cygnus layer (pure win32 mode).
+    <LI> New version of win32.cc, fixes to fetchdecode.cc for win32.
+    <LI> Fixes to keyboard.
+    <LI> Fixes to X11 cursor problem.
+    <LI> Added --enable-port-e9-hack for sending port output to console.
+    <LI> New version of macintosh.cc.
+    <LI> Changes to allow quoting pathnames in .bochsrc so you
+         can have filenames with spaces.
+    <LI> Harddrv.cc: implemented command 0x21 as 0x20.
+    </UL>
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-990127d</FONT></H2>
+  <UL>
+  <LI> Rehashed CPU code in preparation for dynamic translation.
+    <UL>
+    <LI> Fetch-decode, address resolve, and execute phases are
+         all distinct now.
+    <LI> Each instruction gets it's parameters from a pointer to
+         a structure passed to it.
+    </UL>
+  <LI> Added '--enable-time0' option to configure.  Use this only
+         if you want to always start the cmos clock at the same
+         value every time.  This is valuable for reproducable runs.
+         It was invaluable to me during cosimulation of this version
+         of bochs against an older one to find bugs.
+  <LI> Fix in cpu/paging.cc.  Set all segment register descriptor
+       caches to invalid, until they were properly loaded.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-990110b</FONT></H2>
+  <UL>
+  <LI> Fixed handling of CR0.val32 shadow to individual flags.
+       Oops, I goofed in bochs-990110a.
+  <LI> Redhat 5.2 boot floppy image works again.
+  <LI> Incorporated new serial port diffs.
+  <LI> Configure senses if you have select().  New macro BX_HAVE_SELECT.
+  <LI> Added future configure option '--enable-dynamic-translation'.
+       Don't use this, as its not yet supported.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-990110a</FONT></H2>
+  <UL>
+  <LI> Direct floppy disk access fix.  I was only checking if
+       file was a character-special file.  Added check for
+       block-special file.
+  <LI> Minor fixes for Macintosh platform.
+  <LI> Small changes to compile bochs on BeOS R4 for x86 using gcc.
+  <LI> Fix to timer framework code in pc_system.cc.
+  <LI> Fix to iodev/floppy.cc, was using AND instead of OR.
+  <LI> Fix to handling of IOPL flag in real-mode.
+  <LI> change CR0 reserved bits handling to model actual x86
+  <LI> added .conf.beos-x86-R4 script
+  <LI> completely rehashed INT 1A BIOS time-of-day services.
+  <LI> LOADLIN.EXE no longer complains about being in v86 mode.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-981229a</FONT></H2>
+  <UL>
+  <LI> Changed configure option '--with-win32-vc50' to '--with-win32-vcpp'
+  <LI> Changed script file '.conf.win32-vc50' to '.conf.win32-vcpp'
+  <LI> Integrated Macintosh port of bochs by David Batterham
+    <UL>
+    <LI> Added '--with-macos' option to configure.
+    <LI> Updated web pages with pointer to MacBochs site and local info.
+    </UL>
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-981222a</FONT></H2>
+  <UL>
+  <LI> Generated new bios 'bios/BIOS-bochs-981222a'
+  <LI> Serial port: integrated diffs I received which implement a single
+       8259 UART with IO attached to console
+  <LI> Partially integrated mods from some limited i440fx PCI support
+    <UL>
+    <LI> A few more mods to integrate, DON'T USE YET
+    <LI> Added '--enable-pci' to ./configure and BX_PCI_SUPPORT macro
+    <LI> Added 'i440fxsupport: enabled=' option to .bochsrc
+    </UL>
+  <LI> Added settable BX_SHADOW_RAM macro to config.h.in, in case
+       your software counts on C0000..FFFFF being writable.
+  <LI> Added 'cmosimage:' option to .bocshrc.  If you use this,
+       an image file is read into CMOS registers upon startup.
+       Then certain values are written over, as the IO devices
+       initialize.  Not complete yet.  DON'T USE YET
+  <LI> Added 'newharddrivesupport: enabled=' option to .bochsrc.
+       Set this to 0 or 1.  If set to 1, some new hard drive commands
+       are accepted and some behaviour is changed per some diffs I
+       received.  After I have time to look at these more, I'll
+       integrate them permanently and get rid of this option.
+  <LI> Some fixes to keyboard/floppy/hard-drive support.
+  <LI> Rehashed the CMOS code.  Now support the RTC, interval timer
+       and alarm clock.  This code has not been tested properly.
+  <LI> Rehashed the bochs native timer support which some of
+       the IO devices use.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-981102b</FONT></H2>
+  <UL>
+  <LI>Rehashed paging.cc and TLB.  Fixed problem with dirty bit not
+      being set after a read operation cached an entry in the TLB.
+      Also, added in legwork for supporting 486+ syle paging behaviour
+      for use with OS's which have copy-on-write strategies.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-981015a</FONT></H2>
+  <UL>
+  <LI>cosimulation support for verifying a 2nd CPU simulator (lot's of files touched)
+  <LI>moved web pages and ftp to bochs.com
+  <LI>developer's email list now hosted by RedHat
+  <LI>planning dynamic translation
+  </UL>
+<LI><H2><FONT COLOR="#000066">bochs-980707a</FONT></H2>
+  <UL>
+  <LI>added commands to debugger
+    <UL>
+    <LI>CRC debugger command to checksum regions of memory
+    <LI>"info dirty" command, to display pages dirtied since last display
+    <LI>"take dma" now takes optional count.
+    </UL>
+  <LI>rehashed phyical read/write routines for effeciency
+  <LI>Winstone'98 success so far:
+    <UL>
+    <LI>Access 97
+    <LI>CorelDRAW! 7
+    <LI>Excel 97
+    <LI>Lotus 1-2-3 97
+    <LI>Word 97
+    <LI>PowerPoint 97
+    <LI>Quattro Pro 7
+    <LI>WordPerfect 7
+    </UL>
+  <LI>Winstone'98 tests remaining:
+    <UL>
+    <LI>Netscape Navigator
+    <LI>Task Switching 1
+    <LI>Task Switching 2
+    </UL>
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980629a</FONT></H2>
+  <UL>
+  <LI>much in the way of x86 validation; many x86 emulation fixes!
+  <LI>you can now pass all .bochsrc options on command line
+  <LI>deleted breakpoints can now be reused, in debugger
+  <LI>added user-level 486 instructions (set config.h:BX_CPU_HACKED to 4 to use)
+  <LI>some minor speed-ups
+  <LI>Unix machine can generate complete Win32/MS Visual C++ Makefiles, config files
+  <LI>You may now create your own instrumentation library, with
+      --enable-instrumentation="instrument/mydir"
+  <LI>Winstone'98 success so far:
+    <UL>
+    <LI>Access 97
+    <LI>CorelDRAW! 7
+    <LI>Excel 97
+    <LI>Lotus 1-2-3 97
+    <LI>Word 97
+    </UL>
+  <LI>Winstone'98 tests remaining:
+    <UL>
+    <LI>Netscape Navigator
+    <LI>PowerPoint 97
+    <LI>Quattro Pro 7
+    <LI>WordPerfect 7
+    <LI>Task Switching 1
+    <LI>Task Switching 2
+    </UL>
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980512a</FONT></H2>
+  <UL>
+  <LI>added disassembly commands to debugger interface
+  <LI>fixed bx_panic() calls when using debugger
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980512a</FONT></H2>
+  <UL>
+  <LI>more debugger commands and features
+  <LI>co-emulation debugger commands
+  <LI>added more instrumentation macros to CPU code
+  <LI>added handling of EEh (echo) from keyboard ctrl to keyboard
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980407a</FONT></H2>
+  <UL>
+  <LI>added some instrumentation features:
+    <UL>
+    <LI>added '--enable-instrumentation' to configure
+    <LI>added "instrumentation.h" that defines instrumenation macros
+    <LI>added macros to some main decode loop and some instructions in cpu/
+    </UL>
+  <LI>added "win32.txt", updated "gui/win32.cc", added "bochsrc.win32"
+      from David Ross (dross@pobox.com).  win32 GUI code now filled out.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980331a</FONT></H2>
+  <UL>
+  <LI>added '--with-nogui' option to configure to run without any GUI.  Also provides
+      documentation for the GUI specific functions.
+  <LI>recoded the PS2 mouse BIOS and some mouse hardware emulation.  Mouse now
+      works on X11.  Haven't implemented it for BeOS yet.  Double click timing
+      doesn't work yet though.
+  <LI>(possibly) fixed the panic during Win'95 install due to keyboard.
+  <LI>added private_colormap option to .bochsrc.  requests a non-shared
+      colormap from your GUI.  Only implemented on X11 so far.
+  <LI>added mouse option to .bochsrc.  Not implemented yet for any of
+      the GUI specific modules, but it will request that mouse events not
+      be generated by the GUI.
+  <LI>changed palette change technique to tell GUI of each individual
+      palette element change.  The GUI has a chance now, to tell
+      the VGA code if a redraw of the screen is necessary.  Redraw
+      is not necessary if using a private colormap.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980311d</FONT></H2>
+  <UL>
+  <LI>configure works with any permutation of disassembler and debugger
+  <LI>fixed endian changes, messed up on 980304a
+  <LI>Makefiles now use CC, CXX, CFLAGS, CXXFLAGS
+  <LI>added --enable-cpp option to configure for use with that C++ suffix
+  <LI>got BeOS code up to speed on the cursor changes.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980304a</FONT></H2>
+  <UL>
+  <LI>changed BIG_ENDIAN & LITTLE_ENDIAN to use BX_ prefix
+  <LI>added text mode video block cursor
+  <LI>added vi package to Redhat install script
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980303a</FONT></H2>
+  <UL>
+  <LI>debugger command "info break" to display breakpoints
+  <LI>debugger command "d[elete] xyz" to delete breakpoints
+  <LI>patch to gui/x.cc for 24bit displays
+  <LI>added instructions and script for installing RedHat 5.0 from CD
+  <LI>rehashed CMOS RTC code so Linux works
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980224a</FONT></H2>
+  <UL>
+  <LI>added 32bit hardware task switching (only from jump's so far)
+  <LI>fixes to floppy emulation
+  <LI>created new optional debug interface, similar to GDB
+  <LI>rehased disassembler for use in debug environment
+  <LI>added hardware scrolling to VGA
+  <LI>fixed handling of errorcode returned for paging errors
+  <LI>Linux now boots!!!
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980124c</FONT></H2>
+  <UL>
+  <LI>BIOS floppy read/write fix.  AH was not being set.
+  <LI>moved config.h:BX_PROCESSOR_IPS to .bochsrc 'ips' directive.
+      Now you can run the same binary on different speed machines
+      of the same type.  Just tune the 'ips' directive.
+  <LI>converted vga.bdf font to bitmaps for use with BeOS.
+      The BeOS module no longer uses any BeOS system fonts,
+      but just includes the bitmaps in the source code.
+  <LI>included patches for 980118.
+  <LI>Changed 'mips' field to 'm_ips'.  Hopefully, this
+      will fix compiles for MIPS processor based machines.
+  </UL>
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-980118a</FONT></H2>
+  <UL>
+  <LI>Added toolbar to top of GUI
+  <LI>Floppy drive can switch between 1.44M & 1.680M formats
+  <LI>Implemented Int15 function 87h in real BIOS
+  <LI>bochs BIOS is now 100% clean of any 'C' hacks.
+  </UL>
+
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-971216b</FONT></H2>
+  <UL>
+  <LI>Several optimizations
+  <LI>Added prefetch queue
+  <LI>Made all device models into C++ classes
+  <LI>Moved state information for each device model into state
+      structure within class for future save/restore of device state.
+  </UL>
+
+<BR>
+<LI><H2><FONT COLOR="#000066">bochs-971118a</FONT></H2>
+  <UL>
+  <LI>Moved all GUI specific files (X11 and BeOS) into gui/ subdir
+  <LI>Put in temp fix for exception handling restoring original eSP
+  <LI>Began process of removing any knowlege of scancodes from GUI code
+  <LI>Added better key handling for BeOS
+  </UL>
+</UL>
+
+
+</BODY>
+</HTML>

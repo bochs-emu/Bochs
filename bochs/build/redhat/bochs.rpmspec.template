@@ -1,0 +1,59 @@
+Summary: Bochs Project x86 PC Emulator
+Name: bochs
+Version: @VERSION@
+Release: 1
+License: LGPL
+Group: Applications/Emulators
+URL:http://bochs.sourceforge.net
+Packager:Bryce Denney <bryce.denney@bigfoot.com>
+Source:bochs.tar.gz
+BuildRoot: /var/tmp/%{name}-buildroot
+
+%description
+Bochs is a portable x86 PC emulation software package that emulates enough of
+the x86 CPU, related AT hardware, and BIOS to run DOS, Windows '95, Minix 2.0,
+and other OS's, all on your workstation. 
+
+%prep
+	rm -rf $RPM_BUILD_DIR/bochs
+	tar xzvf $RPM_SOURCE_DIR/bochs.tar.gz
+%build
+	cd $RPM_BUILD_DIR/bochs
+	CONFIGURE_ARGS="--prefix $RPM_BUILD_ROOT/usr/local --mandir=$RPM_BUILD_ROOT/usr/man"
+	export CONFIGURE_ARGS
+	sh .conf.linux
+	make
+%install
+	pwd
+	cd $RPM_BUILD_DIR/bochs
+	for i in "" usr usr/local usr/local/bin usr/man usr/man/man1; do 
+	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
+	done
+	make install install_dlx
+	# fix up symlinks that point to buildroot
+        cd $RPM_BUILD_ROOT/usr/local/bin
+        rm bochs; ln -sf /usr/local/bochs/@VERSION@/bochs .
+        rm bximage; ln -sf /usr/local/bochs/@VERSION@/bximage .
+
+%files
+	/usr/local/bin/bochs
+	/usr/local/bin/bochs-docs
+	/usr/local/bin/bochs-dlx
+	/usr/local/bin/bximage
+	/usr/local/bochs/@VERSION@
+	/usr/local/bochs/dlxlinux
+	/usr/local/bochs/latest
+	/usr/man/man1/*
+%clean
+	rm -rf $RPM_BUILD_DIR/bochs
+	if test "/" != $RPM_BUILD_ROOT; then
+	  rm -rf $RPM_BUILD_ROOT
+	fi
+%post
+	/usr/local/bochs/@VERSION@/install-x11-fonts
+%preun
+	# clean up the bochsout.txt that is always produced if you 
+	# run bochs-dlx.
+	rm -rf /usr/local/bochs/dlxlinux/bochsout.txt core
+%postun
+	rmdir /usr/local/bochs > /dev/null 2>&1
