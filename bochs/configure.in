@@ -1126,6 +1126,13 @@ elif test "$with_wx" = yes; then
   AC_DEFINE(BX_WITH_WX, 1)
   CFLAGS="$CFLAGS `wx-config --cflags`"
   CXXFLAGS="$CFLAGS `wx-config --cxxflags`"
+  # if gtk-config exists, then add it to the cflags.
+  gtkconf=`gtk-config --cflags`
+  if test $? = 0; then
+    # gtk-config was found and returned 0, so it must return valid output
+    CFLAGS="$CFLAGS `gtk-config --cflags`"
+    CXXFLAGS="$CXXFLAGS `gtk-config --cflags`"
+  fi
   # wxwindows is the only one without control.o in GUI_OBJS
   GUI_OBJS='$(GUI_OBJS_WX)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
