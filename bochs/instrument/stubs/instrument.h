@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.7 2002-09-29 16:10:27 sshwarts Exp $
+// $Id: instrument.h,v 1.8 2002-10-08 21:30:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,11 +33,6 @@
 // possible types passed to BX_INSTR_CACHE_CNTRL()
 #define BX_INSTR_INVD         20
 #define BX_INSTR_WBINVD       21
-#define BX_INSTR_SFENCE       22
-#define BX_INSTR_PREFETCH_T0  23
-#define BX_INSTR_PREFETCH_T1  24
-#define BX_INSTR_PREFETCH_T2  25
-#define BX_INSTR_PREFETCH_NTA 26
 
 #define BX_INSTR_IS_CALL  10
 #define BX_INSTR_IS_RET   11
@@ -45,6 +40,10 @@
 #define BX_INSTR_IS_JMP   13
 #define BX_INSTR_IS_INT   14
 
+#define BX_INSTR_PREFETCH_NTA 00
+#define BX_INSTR_PREFETCH_T0  01
+#define BX_INSTR_PREFETCH_T1  02
+#define BX_INSTR_PREFETCH_T2  03
 
 
 #if BX_INSTRUMENTATION
@@ -154,7 +153,7 @@ void bx_instr_phy_read(bx_address addr, unsigned len);
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)            bx_instr_cache_cntrl(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)      bx_instr_tlb_cntrl(cpu_id, what, newval)
 
-#  define BX_INSTR_REPEAT_ITERATION(cpu_id)             bx_instr_repeat_iteration(cpu_id, )
+#  define BX_INSTR_REPEAT_ITERATION(cpu_id)             bx_instr_repeat_iteration(cpu_id)
 
 /* memory access */
 #  define BX_INSTR_LIN_READ(cpu_id, lin, phy, len)      bx_instr_lin_read(cpu_id, lin, phy, len)
