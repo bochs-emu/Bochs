@@ -692,7 +692,7 @@ int bx_load_plugins (void)
       "If you get undefined symbols when you choose term, relink with -lncurses.\n"
       "If you get undefined symbols when you choose sdl, relink with -lSDL -pthread.\n"
       "Good luck!\n\n");
-  fprintf (stderr, "Choose your gui.\n 1. X windows\n 2. SDL\n 3. Term\n--> ");
+  fprintf (stderr, "Choose your gui.\n 1. X windows\n 2. SDL\n 3. Term\n 4. RFB/VNC\n--> ");
   int which = -1;
   while (scanf ("%d", &which) != 1 && !(which>=1 && which<=3)) {
     fprintf (stderr, "--> ");
@@ -706,6 +706,9 @@ int bx_load_plugins (void)
       break;
     case 3:
       bx_load_plugin("term.so");
+      break;
+    case 4:
+      bx_load_plugin("rfb.so");
       break;
     default:
       BX_ASSERT(0);
