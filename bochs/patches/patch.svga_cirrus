@@ -37,35 +37,46 @@ Detailed description:
     modified to avoid confliction.
     modified access rights from private to protected.
 
-  Changes by vruppert (June 6th 2004)
+  Changes by vruppert (June 10th 2004)
     - updated for current CVS
     - PCI host bridge is now a core plugin and initialized earlier
     - plugin version works now (CLGD54xx included in the vga plugin)
     - fixed possible floating point exception in vga mem_write()
     - detect device conflicts in config.h
     - return device ID (CRTC reg 0x27)
+    - fixed sequencer register 0x06 (WHATVGA.EXE detects Cirrus VGA)
+    - fixed some compile problems
+    - prepared memory PnP support
 
 Patch was created with:
   diff -urN
 Apply patch to what version:
-  cvs snapshot on June 6th 2004
+  cvs snapshot on June 10th 2004
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 diff -urN ../bochs/config.h.in ./config.h.in
---- ../bochs/config.h.in	2004-04-11 20:20:00.000000000 +0200
-+++ ./config.h.in	2004-06-06 14:10:13.000000000 +0200
-@@ -696,7 +696,7 @@
- #define BX_PCI_SUPPORT 0
+--- ../bochs/config.h.in	2004-06-09 22:58:01.000000000 +0200
++++ ./config.h.in	2004-06-10 08:43:34.000000000 +0200
+@@ -266,6 +266,7 @@
+ #define BX_USE_NE2K_SMF    1  // NE2K
+ #define BX_USE_EFI_SMF     1  // External FPU IRQ
+ #define BX_USE_GAME_SMF    1  // Gameport
++#define BX_USE_CIRRUS_SMF  1  // SVGA Cirrus
  
- // Experimental VGA on PCI
--#define BX_PCI_VGA_SUPPORT 1
-+#define BX_PCI_VGA_SUPPORT 0
+ #define BX_PLUGINS  0
+ #define BX_HAVE_DLFCN_H 0
+@@ -279,7 +280,7 @@
+    || !BX_USE_P2I_SMF || !BX_USE_PCIVGA_SMF || !BX_USE_PCIUSB_SMF \
+    || !BX_USE_PCIPNIC_SMF || !BX_USE_PIDE_SMF \
+    || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF || !BX_USE_GAME_SMF \
+-   || !BX_USE_PCIDEV_SMF)
++   || !BX_USE_PCIDEV_SMF || !BX_USE_CIRRUS_SMF)
+ #error You must use SMF to have plugins
+ #endif
  
- // Experimental host PCI device mapping
- #define BX_PCI_DEV_SUPPORT 0
-@@ -712,6 +712,19 @@
+@@ -713,6 +714,19 @@
  #error To enable USB, you must also enable PCI
  #endif
  
@@ -78,7 +89,7 @@ diff -urN ../bochs/config.h.in ./config.h.in
 +#error With SVGA Cirrus support, you must disable Bochs VBE support
 +#endif
 +
-+#if (BX_SUPPORT_SVGA_CIRRUS_PCI && BX_PVI_VGA_SUPPORT)
++#if (BX_SUPPORT_SVGA_CIRRUS_PCI && BX_PCI_VGA_SUPPORT)
 +#error With SVGA Cirrus PCI support, you must disable PCI VGA support
 +#endif
 +
@@ -86,18 +97,18 @@ diff -urN ../bochs/config.h.in ./config.h.in
  #define BX_PDC20230C_VLBIDE_SUPPORT 0
  
 diff -urN ../bochs/iodev/devices.cc ./iodev/devices.cc
---- ../bochs/iodev/devices.cc	2004-04-09 11:21:04.000000000 +0200
-+++ ./iodev/devices.cc	2004-06-06 13:09:58.000000000 +0200
-@@ -183,7 +183,7 @@
+--- ../bochs/iodev/devices.cc	2004-06-09 22:55:58.000000000 +0200
++++ ./iodev/devices.cc	2004-06-09 23:23:36.000000000 +0200
+@@ -184,7 +184,7 @@
    // PCI logic (i440FX)
    if (bx_options.Oi440FXSupport->get ()) {
  #if BX_PCI_SUPPORT
 -    PLUG_load_plugin(pci, PLUGTYPE_OPTIONAL);
 +    PLUG_load_plugin(pci, PLUGTYPE_CORE);
      PLUG_load_plugin(pci2isa, PLUGTYPE_OPTIONAL);
+     PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
  #if BX_PCI_VGA_SUPPORT
-     PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
-@@ -231,6 +231,10 @@
+@@ -233,6 +233,10 @@
  #endif
    }
  
@@ -110,7 +121,7 @@ diff -urN ../bochs/iodev/devices.cc ./iodev/devices.cc
  
 diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
 --- ../bochs/iodev/Makefile.in	2004-02-18 19:29:33.000000000 +0100
-+++ ./iodev/Makefile.in	2004-06-06 13:09:58.000000000 +0200
++++ ./iodev/Makefile.in	2004-06-06 21:13:46.000000000 +0200
 @@ -95,6 +95,7 @@
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
    scancodes.o \
@@ -150,8 +161,8 @@ diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
    ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
 diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 --- ../bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.cc	2004-06-06 13:57:16.000000000 +0200
-@@ -0,0 +1,2709 @@
++++ ./iodev/svga_cirrus.cc	2004-06-10 09:37:48.000000000 +0200
+@@ -0,0 +1,2758 @@
 +//
 +// limited PCI/ISA CLGD5446 support.
 +//
@@ -536,6 +547,29 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    }
 +}
 +
++  bx_bool
++bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned long len,
++                                          void *data, void *param)
++{
++  Bit8u *data_ptr;
++
++#ifdef BX_LITTLE_ENDIAN
++  data_ptr = (Bit8u *) data;
++#else // BX_BIG_ENDIAN
++  data_ptr = (Bit8u *) data + (len - 1);
++#endif
++  for (unsigned i = 0; i < len; i++) {
++    *data_ptr = BX_CIRRUS_THIS mem_read(addr);
++    addr++;
++#ifdef BX_LITTLE_ENDIAN
++    data_ptr++;
++#else // BX_BIG_ENDIAN
++    data_ptr--;
++#endif
++  }
++  return 1;
++}
++
 +  Bit8u
 +bx_svga_cirrus_c::mem_read(Bit32u addr)
 +{
@@ -629,6 +663,29 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    }
 +
 +  return 0xff;
++}
++
++  bx_bool
++bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len,
++                                void *data, void *param)
++{
++  Bit8u *data_ptr;
++
++#ifdef BX_LITTLE_ENDIAN
++  data_ptr = (Bit8u *) data;
++#else // BX_BIG_ENDIAN
++  data_ptr = (Bit8u *) data + (len - 1);
++#endif
++  for (unsigned i = 0; i < len; i++) {
++    BX_CIRRUS_THIS mem_write(addr, *data_ptr);
++    addr++;
++#ifdef BX_LITTLE_ENDIAN
++    data_ptr++;
++#else // BX_BIG_ENDIAN
++    data_ptr--;
++#endif
++  }
++  return 1;
 +}
 +
 +  void
@@ -1288,12 +1345,14 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      if (value == 0x12) {
 +        BX_CIRRUS_THIS svga_unlock_special = true;
 +        BX_CIRRUS_THIS svga_needs_update_mode = true;
++        BX_CIRRUS_THIS sequencer.reg[0x6] = 0x12;
++        return;
 +        }
 +      else if (value == 0xf) {
 +        BX_CIRRUS_THIS svga_unlock_special = false;
 +        BX_CIRRUS_THIS svga_needs_update_mode = true;
 +        }
-+      BX_CIRRUS_THIS sequencer.reg[0x6] = value;
++      BX_CIRRUS_THIS sequencer.reg[0x6] = 0x0f;
 +      return;
 +    case 0x12:
 +      // FIXME - update only the cursor region.
@@ -1824,17 +1883,18 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +{
 +  int i;
 +
-+#if BX_USE_CIRRUS_SMF
-+  DEV_register_pci_handlers(theSvga,
++  DEV_register_pci_handlers(BX_CIRRUS_THIS_PTR,
 +     pci_read_handler, pci_write_handler,
 +     BX_PCI_DEVICE(2,0),
 +     "PCI SVGA Cirrus");
-+#else // BX_USE_CIRRUS_SMF
-+  DEV_register_pci_handlers(this,
-+     pci_read_handler, pci_write_handler,
-+     BX_PCI_DEVICE(2,0),
-+     "PCI SVGA Cirrus");
-+#endif // BX_USE_CIRRUS_SMF
++  DEV_register_memory_handlers(cirrus_mem_read_handler, BX_CIRRUS_THIS_PTR,
++                               cirrus_mem_write_handler, BX_CIRRUS_THIS_PTR,
++                               CIRRUS_PNPMEM_BASE_ADDRESS,
++                               CIRRUS_PNPMEM_BASE_ADDRESS + CIRRUS_PNPMEM_SIZE - 1);
++  DEV_register_memory_handlers(cirrus_mem_read_handler, BX_CIRRUS_THIS_PTR,
++                               cirrus_mem_write_handler, BX_CIRRUS_THIS_PTR,
++                               CIRRUS_PNPMMIO_BASE_ADDRESS,
++                               CIRRUS_PNPMMIO_BASE_ADDRESS + CIRRUS_PNPMMIO_SIZE - 1);
 +
 +  for (i=0; i<256; i++) {
 +    BX_CIRRUS_THIS pci_conf[i] = 0x0;
@@ -2863,8 +2923,8 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +#endif // BX_SUPPORT_SVGA_CIRRUS
 diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 --- ../bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.h	2004-06-06 13:09:58.000000000 +0200
-@@ -0,0 +1,222 @@
++++ ./iodev/svga_cirrus.h	2004-06-10 09:29:04.000000000 +0200
+@@ -0,0 +1,227 @@
 +#if BX_SUPPORT_SVGA_CIRRUS
 +
 +#if !BX_PCI_SUPPORT
@@ -2872,14 +2932,14 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +#define BX_SUPPORT_SVGA_CIRRUS_PCI 0
 +#endif // BX_PCI_SUPPORT
 +
-+#define BX_USE_CIRRUS_SMF 1
-+
 +#if BX_USE_CIRRUS_SMF
 +#  define BX_CIRRUS_SMF  static
 +#  define BX_CIRRUS_THIS theSvga->
++#  define BX_CIRRUS_THIS_PTR theSvga
 +#else
 +#  define BX_CIRRUS_SMF
 +#  define BX_CIRRUS_THIS this->
++#  define BX_CIRRUS_THIS_PTR this
 +#endif // BX_USE_CIRRUS_SMF
 +
 +// 0x3b4,0x3d4
@@ -2895,7 +2955,9 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +// Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
 +#define CIRRUS_BLT_CACHESIZE 256
 +
-+#define CIRRUS_VIDEO_MEMORY_BYTES (2U << 20)
++#define CIRRUS_VIDEO_MEMORY_MB    2
++#define CIRRUS_VIDEO_MEMORY_KB    (CIRRUS_VIDEO_MEMORY_MB * 1024)
++#define CIRRUS_VIDEO_MEMORY_BYTES (CIRRUS_VIDEO_MEMORY_KB * 1024)
 +
 +typedef void (*bx_cirrus_bitblt_rop_t)(
 +    Bit8u *dst,const Bit8u *src,
@@ -3074,6 +3136,9 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +
 +  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
 +  static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
++
++  BX_CIRRUS_SMF bx_bool cirrus_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);
++  BX_CIRRUS_SMF bx_bool cirrus_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param);
 +#if !BX_USE_CIRRUS_SMF
 +  Bit32u pci_read(Bit8u address, unsigned io_len);
 +  void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
@@ -3088,8 +3153,8 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +
 +#endif // BX_SUPPORT_SVGA_CIRRUS
 diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
---- ../bochs/iodev/vga.cc	2004-05-04 22:41:52.000000000 +0200
-+++ ./iodev/vga.cc	2004-06-06 14:19:06.000000000 +0200
+--- ../bochs/iodev/vga.cc	2004-06-06 19:01:12.000000000 +0200
++++ ./iodev/vga.cc	2004-06-06 21:13:46.000000000 +0200
 @@ -93,6 +93,13 @@
  
  unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0, old_BPP = 0;
@@ -3175,7 +3240,7 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
    for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
      DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
      DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-@@ -347,6 +333,47 @@
+@@ -350,6 +336,47 @@
  }
  
    void
@@ -3223,7 +3288,7 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
  bx_vga_c::reset(unsigned type)
  {
  }
-@@ -2082,20 +2109,22 @@
+@@ -2085,20 +2112,22 @@
  
        // 320 x 200 256 color mode: chained pixel representation
        BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] = value;
@@ -3257,8 +3322,8 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
    switch (BX_VGA_THIS s.graphics_ctrl.write_mode) {
      unsigned i;
 diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
---- ../bochs/iodev/vga.h	2004-05-04 22:41:53.000000000 +0200
-+++ ./iodev/vga.h	2004-06-06 14:15:32.000000000 +0200
+--- ../bochs/iodev/vga.h	2004-06-06 19:01:18.000000000 +0200
++++ ./iodev/vga.h	2004-06-10 09:38:36.000000000 +0200
 @@ -79,6 +79,11 @@
  #define BX_MAX_XRES VBE_DISPI_MAX_XRES
  #define BX_MAX_YRES VBE_DISPI_MAX_YRES
@@ -3271,7 +3336,7 @@ diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
  #else
  
  #define BX_MAX_XRES 800
-@@ -130,7 +135,9 @@
+@@ -133,7 +138,9 @@
                                     unsigned *txWidth);
    virtual Bit8u  get_actl_palette_idx(Bit8u index);
  
@@ -3282,7 +3347,7 @@ diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
  
    static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
    static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-@@ -300,9 +307,15 @@
+@@ -303,9 +310,15 @@
    static void   timer_handler(void *);
    BX_VGA_SMF void   timer(void);
  
@@ -3301,7 +3366,7 @@ diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
 +#endif // BX_SUPPORT_SVGA_CIRRUS
 diff -urN ../bochs/Makefile.in ./Makefile.in
 --- ../bochs/Makefile.in	2004-06-05 10:44:54.000000000 +0200
-+++ ./Makefile.in	2004-06-06 13:09:58.000000000 +0200
++++ ./Makefile.in	2004-06-06 21:13:46.000000000 +0200
 @@ -108,7 +108,7 @@
  GUI_LINK_OPTS_AMIGAOS = 
  GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
