@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.13 2004-09-18 12:35:13 vruppert Exp $
+// $Id: eth.h,v 1.14 2004-10-03 19:30:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,9 @@
 // NE2000/ether stuff.
 
 //  eth.h  - see eth_null.cc for implementation details
+
+#ifndef BX_ETH_H
+#define BX_ETH_H
 
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 
@@ -76,3 +79,4 @@ private:
   const char *type;
 };
 
+#endif

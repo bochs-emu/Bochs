@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.9 2004-09-25 22:15:02 vruppert Exp $
+// $Id: pcipnic.cc,v 1.10 2004-10-03 19:30:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -26,6 +26,8 @@
 
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIPNIC
+
+#include "eth.h"
 
 #define LOG_THIS thePNICDevice->
 
