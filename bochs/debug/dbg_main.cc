@@ -1500,18 +1500,23 @@ bx_dbg_continue_command(void)
   bx_guard.interrupt_requested = 0;
 	int stop = 0;
 	int which = -1;
-	int max_instr_executed = 0;
 	while (!stop) {
-		int quantum = 1;   // arbitrary number of cycles to run in each
-		for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+		// the quantum is an arbitrary number of cycles to run in each
+		// processor.  In SMP mode, when this limit is reached, the
+		// cpu_loop exits so that another processor can be simulated
+		// for a few cycles.  With a single processor, the quantum
+		// setting should have no effect, although a low setting does
+		// lead to poor performance because cpu_loop is returning and 
+		// getting called again, over and over.
+		int quantum = 25;
+		int cpu;
+		for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
 			BX_CPU(cpu)->guard_found.guard_found = 0;
 			BX_CPU(cpu)->guard_found.icount = 0;
 			bx_guard.icount = quantum;
 			BX_CPU(cpu)->cpu_loop (-1);
 			/// check out BX_CPU(cpu)->guard_found.icount
 			//fprintf (stderr, "dbg_cont: after cpu_loop guard_found.icount=%d\n", BX_CPU(cpu)->guard_found.icount);
-			if (BX_CPU(cpu)->guard_found.icount > max_instr_executed)
-			  max_instr_executed = BX_CPU(cpu)->guard_found.icount;
 			// set stop flag if a guard found other than icount or halted
 			unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
 			stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
@@ -1530,15 +1535,23 @@ bx_dbg_continue_command(void)
 			// cpus set stop, too bad.
 		}
 		// increment time tick only after all processors have had their chance.
-		// MAJOR PROBLEM: we should tick by the number of instructions
-		// that were ACTUALLY executed, not the number that we asked it
-		// to execute.  When tracing is on, only one instruction is
-		// executed, not quantum.  As a result, when you trace you get
-		// ticks speeding ahead at 5x normal speed.
-		BX_TICKN(max_instr_executed);
-		//BX_TICKN(quantum);
+#if BX_SMP_PROCESSORS==1
+		// all ticks are handled inside the cpu loop
+#else
+		// We must tick by the number of instructions that were
+		// ACTUALLY executed, not the number that we asked it to
+		// execute.  Even this is tricky with SMP because one might
+		// have hit a breakpoint, while others executed the whole
+		// quantum.
+	    int max_executed = 0;
+		for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
+		  if (BX_CPU(cpu)->guard_found.icount > max_executed)
+			max_executed = BX_CPU(cpu)->guard_found.icount;
+		}
+		BX_TICKN(max_executed);
+#endif /* BX_SMP_PROCESSORS>1 */
 	}
-#endif
+#endif /* BX_NUM_SIMULATORS */
 
   // (mch) hack
   bx_vga.timer_handler(&bx_vga);
@@ -1577,7 +1590,11 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 			BX_CPU(cpu)->guard_found.icount = 0;
 			BX_CPU(cpu)->cpu_loop(-1);
 		}
+#if BX_SMP_PROCESSORS==1
+		// ticks are handled inside the cpu loop
+#else
 		BX_TICK1 ();
+#endif
 	}
   //BX_INFO(("Stepped each CPU a total of %d cycles", count));
 #endif
