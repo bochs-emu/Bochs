@@ -20,7 +20,9 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-#define BX_SIMULATE_SMP 0
+/* includes a subset of config.h that can be compiled by bcc, and applies
+   to this file */
+#include "biosconfig.h"
 
 // ROM BIOS for use with Bochs x86 emulation environment
 
@@ -3681,20 +3683,75 @@ int76_handler:
   iret
 
 .org 0xd000
+#if BX_SIMULATE_SMP
+mp_config_table:
+  db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
+  dw (mp_config_end-mp_config_table)  ;; table length
+  db 4 ;; spec rev
+  db 0x80 ;; checksum
+  db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
+  db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
+  db 0x20, 0x20, 0x20, 0x20 
+  db 0x20, 0x20, 0x20, 0x20
+  dw 0,0 ;; oem table ptr
+  dw 0 ;; oem table size
+  dw 4 ;; entry count
+  dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
+  dw 0 ;; extended table length
+  db 0 ;; extended table checksum
+  db 0 ;; reserved
+mp_config_proc0:
+  db 0 ;; entry type=processor
+  db 1 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags
+  dw 0,0 ;; cpu signature
+  dw 0,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc1:
+  db 0 ;; entry type=processor
+  db 2 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 0 ;; cpu flags
+  dw 0,0 ;; cpu signature
+  dw 0,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc2:
+  db 0 ;; entry type=processor
+  db 3 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 0 ;; cpu flags
+  dw 0,0 ;; cpu signature
+  dw 0,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc3:
+  db 0 ;; entry type=processor
+  db 4 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 0 ;; cpu flags
+  dw 0,0 ;; cpu signature
+  dw 0,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_end:
+  dw 0,0
+
+mp_floating_pointer_structure:
+db 0x5f, 0x4d, 0x50, 0x5f   ; "_MP_" signature
+dw 0, mp_config_table ;; pointer to MP configuration table
+db 1     ;; length of this struct in 16-bit byte chunks
+db 4     ;; MP spec revision
+db 0xd0  ;; checksum
+db 0     ;; MP feature byte 1.  value 0 means look at the config table
+db 0,0,0,0     ;; MP feature bytes 2-5.
+#endif  /* BX_SIMULATE_SMP */
+
 ;; for 'C' strings and other data, insert them here with
 ;; a the following hack:
 ;; DATA_SEG_DEFS_HERE
-
-#if BX_SIMULATE_SMP
-mp_floating_pointer_structure:
-db 0x5f, 0x4d, 0x50, 0x5f   ; "_MP_" signature
-dw 0,0   ;; pointer to MP configuration table, if exists
-db 1     ;; length of this struct in 16-bit byte chunks
-db 4     ;; MP spec revision
-db 0x9f  ;; checksum
-db 1     ;; MP feature byte 1.  value 1=default configuration 1
-db 0,0,0,0     ;; MP feature bytes 2-5.
-#endif  /* BX_SIMULATE_SMP */
 
 
 ;--------
