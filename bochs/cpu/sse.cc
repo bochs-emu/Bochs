@@ -251,14 +251,29 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 #endif
 }
 
+/* MOVUPS:    0F 10 */
+/* MOVUPD: 66 0F 10 */
+/* MOVDQU: F3 0F 6F */
 void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVUPS_VpsWps: SSE instruction still not implemented"));
+  BxPackedXmmRegister op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVUPS_VpsWps: SSE not supported in current configuration"));
+  BX_INFO(("MOVUPS/MOVUPD/MOVDQU_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -275,14 +290,25 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 #endif
 }
 
+/* MOVUPS:    0F 11 */
+/* MOVUPD: 66 0F 11 */
+/* MOVDQU: F3 0F 7F */
 void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVUPS_WpsVps: SSE instruction still not implemented"));
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_XMM_REG(i->rm(), op);
+  }
+  else {
+    writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
 #else
-  BX_INFO(("MOVUPS_WpsVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVUPS/MOVUPD/MOVDQU_WpsVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -371,26 +397,52 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 #endif
 }
 
+/* MOVAPS:    0F 28 */
+/* MOVAPD: 66 0F 28 */
+/* MOVDQA: F3 0F 6F */
 void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVAPS_VpsWps: SSE instruction still not implemented"));
+  BxPackedXmmRegister op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVAPS_VpsWps: SSE not supported in current configuration"));
+  BX_INFO(("MOVAPS/MOVAPD/MOVDQA_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* MOVAPS:    0F 29 */
+/* MOVAPD: 66 0F 29 */
+/* MOVDQA: F3 0F 7F */
 void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVAPS_WpsVps: SSE instruction still not implemented"));
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_XMM_REG(i->rm(), op);
+  }
+  else {
+    writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
 #else
-  BX_INFO(("MOVAPS_WpsVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVAPS/MOVAPD/MOVDQA_WpsVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -419,6 +471,7 @@ void BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
 #endif
 }
 
+/* 0F 2B */
 void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
@@ -433,7 +486,7 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
   writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *)(&val128));
 
 #else
-  BX_INFO(("MOVNTPS_MdqVps: SSE not supported in current configuration"));
+  BX_INFO(("MOVNTPS/MOVNTPD_MdqVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -590,54 +643,6 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
   BX_PANIC(("RCPSS_VssWss: SSE instruction still not implemented"));
 #else
   BX_INFO(("RCPSS_VssWss: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("ANDPS_VpsWps: SSE instruction still not implemented"));
-#else
-  BX_INFO(("ANDPS_VpsWps: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("ANDNPS_VpsWps: SSE instruction still not implemented"));
-#else
-  BX_INFO(("ANDNPS_VpsWps: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("ORPS_VpsWps: SSE instruction still not implemented"));
-#else
-  BX_INFO(("ORPS_VpsWps: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
-void BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BX_PANIC(("XORPS_VpsWps: SSE instruction still not implemented"));
-#else
-  BX_INFO(("XORPS_VpsWps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -852,6 +857,126 @@ void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
   BX_PANIC(("MASKMOVQ_PqPRq: SSE instruction still not implemented"));
 #else
   BX_INFO(("MASKMOVQ_PqPRq: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* ANDPS:    0F 54 */
+/* ANDPD: 66 0F 54 */
+/* PAND:  F3 0F DB */
+void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) &= op2.xmm64u(0);
+  op1.xmm64u(1) &= op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
+#else
+  BX_INFO(("ANDPS/ANDPD/PAND_VdqWdq: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* ANDNPS:    0F 55 */
+/* ANDNPD: 66 0F 55 */
+/* PANDN:  F3 0F DF */
+void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm64u(0) = ~(op1.xmm64u(0)) & op2.xmm64u(0);
+  result.xmm64u(1) = ~(op1.xmm64u(1)) & op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("ANDNPS/ANDNPD/PANDN_VdqWdq: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* ORPS:    0F 56 */
+/* ORPD: 66 0F 56 */
+/* POR:  F3 0F EB */
+void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) |= op2.xmm64u(0);
+  op1.xmm64u(1) |= op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
+#else
+  BX_INFO(("ORPS/ORPD/POR_VdqWdq: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* XORPS:    0F 57 */
+/* XORPD: 66 0F 57 */
+/* PXOR:  F3 0F EF */
+void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) ^= op2.xmm64u(0);
+  op1.xmm64u(1) ^= op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
+#else
+  BX_INFO(("XORPS/XORPD/PXOR_VdqWdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }

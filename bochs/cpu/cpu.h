@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.118 2002-11-21 18:22:03 bdenney Exp $
+// $Id: cpu.h,v 1.119 2002-11-25 21:58:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2067,8 +2067,6 @@ union {
   BX_SMF void MOVHPS_MqVps(bxInstruction_c *i);
   BX_SMF void MOVAPS_VpsWps(bxInstruction_c *i);
   BX_SMF void MOVAPS_WpsVps(bxInstruction_c *i);
-  BX_SMF void MOVAPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void MOVAPD_WpdVpd(bxInstruction_c *i);
   BX_SMF void CVTPI2PS_VpsQq(bxInstruction_c *i);
   BX_SMF void CVTSI2SS_VssEd(bxInstruction_c *i);
   BX_SMF void MOVNTPS_MdqVps(bxInstruction_c *i);
@@ -2085,10 +2083,6 @@ union {
   BX_SMF void RSQRTSS_VssWss(bxInstruction_c *i);
   BX_SMF void RCPPS_VpsWps(bxInstruction_c *i);
   BX_SMF void RCPSS_VssWss(bxInstruction_c *i);
-  BX_SMF void ANDPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void ANDNPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void ORPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void XORPS_VpsWps(bxInstruction_c *i);
   BX_SMF void ADDPS_VpsWps(bxInstruction_c *i);
   BX_SMF void ADDSS_VssWss(bxInstruction_c *i);
   BX_SMF void MULPS_VpsWps(bxInstruction_c *i);
@@ -2122,9 +2116,7 @@ union {
   /* SSE */
 
   /* SSE2 */
-  BX_SMF void MOVUPD_VpdWpd(bxInstruction_c *i);
   BX_SMF void MOVSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void MOVUPD_WpdVpd(bxInstruction_c *i);
   BX_SMF void MOVSD_WsdVsd(bxInstruction_c *i);
   BX_SMF void UNPCKLPD_VpdWq(bxInstruction_c *i);
   BX_SMF void UNPCKHPD_VpdWq(bxInstruction_c *i);
@@ -2139,10 +2131,6 @@ union {
   BX_SMF void MOVMSKPD_EdVRpd(bxInstruction_c *i);
   BX_SMF void SQRTPD_VpdWpd(bxInstruction_c *i);
   BX_SMF void SQRTSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void ANDPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void ANDNPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void ORPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void XORPD_VpdWpd(bxInstruction_c *i);
   BX_SMF void ADDPD_VpdWpd(bxInstruction_c *i);
   BX_SMF void ADDSD_VsdWsd(bxInstruction_c *i);
   BX_SMF void MULPD_VpdWpd(bxInstruction_c *i);
@@ -2177,8 +2165,6 @@ union {
   BX_SMF void PUNPCKLQDQ_VdqWq(bxInstruction_c *i);
   BX_SMF void PUNPCKHQDQ_VdqWq(bxInstruction_c *i);
   BX_SMF void MOVD_VdqEd(bxInstruction_c *i);
-  BX_SMF void MOVDQA_VdqWdq(bxInstruction_c *i);
-  BX_SMF void MOVDQU_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSHUFD_VdqWdqIb(bxInstruction_c *i);
   BX_SMF void PSHUFHW_VqWqIb(bxInstruction_c *i);
   BX_SMF void PCMPEQB_VdqWdq(bxInstruction_c *i);
@@ -2186,8 +2172,6 @@ union {
   BX_SMF void PCMPEQD_VdqWdq(bxInstruction_c *i);
   BX_SMF void MOVD_EdVd(bxInstruction_c *i);
   BX_SMF void MOVQ_VqWq(bxInstruction_c *i);
-  BX_SMF void MOVDQA_WdqVdq(bxInstruction_c *i);
-  BX_SMF void MOVDQU_WdqVdq(bxInstruction_c *i);
   BX_SMF void CMPPD_VpdWpdIb(bxInstruction_c *i);
   BX_SMF void CMPSD_VsdWsdIb(bxInstruction_c *i);
   BX_SMF void MOVNTI_MdGd(bxInstruction_c *i);
