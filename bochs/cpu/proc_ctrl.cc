@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.91 2005-01-23 21:13:49 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.92 2005-02-03 18:25:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,7 +68,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
   if (CPL!=0) {
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
-    }
+  }
 
   if (! BX_CPU_THIS_PTR get_IF ()) {
     BX_INFO(("WARNING: HLT instruction with IF=0!"));
@@ -104,7 +104,7 @@ BX_CPU_C::CLTS(bxInstruction_c *i)
     BX_INFO(("CLTS: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
-    }
+  }
 
   BX_CPU_THIS_PTR cr0.ts = 0;
   BX_CPU_THIS_PTR cr0.val32 &= ~0x08;
@@ -125,8 +125,8 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
     if (CPL!=0) {
       BX_INFO(("INVD: #GP(0) if CPL is not 0"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
 #else
   UndefinedOpcode(i);
@@ -144,8 +144,8 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
     if (CPL!=0) {
       BX_INFO(("WBINVD: #GP(0) if CPL is not 0"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
 #else
   UndefinedOpcode(i);
@@ -212,7 +212,7 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
         // Debug extensions on
         BX_INFO(("MOV_DdRd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
-        }
+      }
 #endif
 #if BX_CPU_LEVEL <= 4
       // On 386/486 bit12 is settable
@@ -238,35 +238,36 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
         // Debug extensions (CR4.DE) on
         BX_INFO(("MOV_DdRd: access to DR5 causes #UD"));
         UndefinedOpcode(i);
-        }
+      }
 #endif
       // Some sanity checks...
       if ( val_32 & 0x00002000 ) {
         BX_PANIC(("MOV_DdRd: GD bit not supported yet"));
         // Note: processor clears GD upon entering debug exception
         // handler, to allow access to the debug registers
-        }
+      }
       if ( (((val_32>>16) & 3)==2) ||
            (((val_32>>20) & 3)==2) ||
            (((val_32>>24) & 3)==2) ||
            (((val_32>>28) & 3)==2) ) {
         // IO breakpoints (10b) are not yet supported.
         BX_PANIC(("MOV_DdRd: write of %08x contains IO breakpoint", val_32));
-        }
+      }
       if ( (((val_32>>18) & 3)==2) ||
            (((val_32>>22) & 3)==2) ||
            (((val_32>>26) & 3)==2) ||
            (((val_32>>30) & 3)==2) ) {
         // LEN0..3 contains undefined length specifier (10b)
         BX_PANIC(("MOV_DdRd: write of %08x contains undefined LENx", val_32));
-        }
+      }
       if ( ((((val_32>>16) & 3)==0) && (((val_32>>18) & 3)!=0)) ||
            ((((val_32>>20) & 3)==0) && (((val_32>>22) & 3)!=0)) ||
            ((((val_32>>24) & 3)==0) && (((val_32>>26) & 3)!=0)) ||
-           ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)) ) {
+           ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)) )
+      {
         // Instruction breakpoint with LENx not 00b (1-byte length)
         BX_PANIC(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
-        }
+      }
 #if BX_CPU_LEVEL <= 4
       // 386/486: you can play with all the bits except b10 is always 1
       BX_CPU_THIS_PTR dr7 = val_32 | 0x00000400;
@@ -298,7 +299,7 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   if (v8086_mode()) {
     BX_INFO(("MOV_RdDd: v8086 mode causes #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  }
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
@@ -338,7 +339,7 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
         // Debug extensions on
         BX_INFO(("MOV_RdDd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
-        }
+      }
 #endif
       val_32 = BX_CPU_THIS_PTR dr6;
       break;
@@ -352,7 +353,7 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
         // Debug extensions on
         BX_INFO(("MOV_RdDd: access to DR5 causes #UD"));
         UndefinedOpcode(i);
-        }
+      }
 #endif
       val_32 = BX_CPU_THIS_PTR dr7;
       break;
@@ -373,7 +374,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   if (v8086_mode()) {
     BX_INFO(("MOV_DqRq: v8086 mode causes #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  }
 
   /* NOTES:
    *   64bit operands always used
@@ -447,7 +448,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
         BX_PANIC(("MOV_DqRq: GD bit not supported yet"));
         // Note: processor clears GD upon entering debug exception
         // handler, to allow access to the debug registers
-        }
+      }
       if ( (((val_64>>16) & 3)==2) ||
            (((val_64>>20) & 3)==2) ||
            (((val_64>>24) & 3)==2) ||
@@ -494,7 +495,7 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   if (v8086_mode()) {
     BX_INFO(("MOV_RqDq: v8086 mode causes #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  }
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
@@ -552,7 +553,7 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
     default:
       BX_PANIC(("MOV_RqDq: control register index out of range"));
       val_64 = 0;
-    }
+  }
   BX_WRITE_64BIT_REG(i->rm(), val_64);
 }
 #endif  // #if BX_SUPPORT_X86_64
@@ -571,15 +572,15 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     if (CPL != 0) {
       BX_INFO(("LMSW: CPL != 0, CPL=%u", (unsigned) CPL));
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
 
   if (i->modC0()) {
     msw = BX_READ_16BIT_REG(i->rm());
-    }
+  }
   else {
     read_virtual_word(i->seg(), RMAddr(i), &msw);
-    }
+  }
 
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
 
@@ -613,14 +614,14 @@ void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
   if (i->modC0()) {
     if (i->os32L()) {
       BX_WRITE_32BIT_REGZ(i->rm(), msw);  // zeros out high 16bits
-      }
+    }
     else {
       BX_WRITE_16BIT_REG(i->rm(), msw);
-      }
     }
+  }
   else {
     write_virtual_word(i->seg(), RMAddr(i), &msw);
-    }
+  }
 
 #endif
 }
@@ -699,7 +700,7 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
     default:
       BX_PANIC(("MOV_CdRd: control register index out of range"));
       break;
-    }
+  }
 #endif
 }
 
@@ -711,7 +712,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 #else
   Bit32u val_32;
 
-  if (v8086_mode()){
+  if (v8086_mode()) {
     BX_INFO(("MOV_RdCd: v8086 mode causes #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -855,7 +856,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
     default:
       BX_PANIC(("MOV_CqRq: control register index out of range"));
       break;
-    }
+  }
 }
 
 void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
@@ -1006,21 +1007,22 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR tr.cache.u.tss286.base  = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR tr.cache.u.tss286.limit = limit;
 
-  if ( (BX_CPU_THIS_PTR tr.selector.value & 0xfffc) == 0 ) {
+  if ((BX_CPU_THIS_PTR tr.selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
-    }
-  if ( BX_CPU_THIS_PTR tr.cache.valid == 0 ) {
-    }
-  if ( BX_CPU_THIS_PTR tr.cache.u.tss286.limit < 43 ) {
+  }
+  if (BX_CPU_THIS_PTR tr.cache.valid == 0) {
+  }
+  if (BX_CPU_THIS_PTR tr.cache.u.tss286.limit < 43) {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
-    }
-  if ( BX_CPU_THIS_PTR tr.cache.type != 1 ) {
+  }
+  if (BX_CPU_THIS_PTR tr.cache.type != 1) {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
-    }
-  if ( BX_CPU_THIS_PTR tr.cache.segment ) {
+  }
+  if (BX_CPU_THIS_PTR tr.cache.segment) {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
-    }
-  if (BX_CPU_THIS_PTR tr.cache.valid==0) {
+  }
+  if (BX_CPU_THIS_PTR tr.cache.valid==0)
+  {
     BX_CPU_THIS_PTR tr.cache.u.tss286.base   = 0;
     BX_CPU_THIS_PTR tr.cache.u.tss286.limit  = 0;
     BX_CPU_THIS_PTR tr.cache.p            = 0;
@@ -1028,7 +1030,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR tr.selector.index     = 0;
     BX_CPU_THIS_PTR tr.selector.ti        = 0;
     BX_CPU_THIS_PTR tr.selector.rpl       = 0;
-    }
+  }
 
   /* FLAGS */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x818, 2, &flags);
@@ -1044,7 +1046,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR ldtr.selector.rpl   = (ldtr & 0x03);  ldtr >>= 2;
   BX_CPU_THIS_PTR ldtr.selector.ti    = (ldtr & 0x01);  ldtr >>= 1;
   BX_CPU_THIS_PTR ldtr.selector.index = ldtr;
-  if ( (BX_CPU_THIS_PTR ldtr.selector.value & 0xfffc) == 0 ) {
+  if ((BX_CPU_THIS_PTR ldtr.selector.value & 0xfffc) == 0)
+  {
     BX_CPU_THIS_PTR ldtr.cache.valid   = 0;
     BX_CPU_THIS_PTR ldtr.cache.p       = 0;
     BX_CPU_THIS_PTR ldtr.cache.segment = 0;
@@ -1054,7 +1057,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR ldtr.selector.value = 0;
     BX_CPU_THIS_PTR ldtr.selector.index = 0;
     BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
-    }
+  }
   else {
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x854, 2, &base_15_0);
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x856, 1, &base_23_16);
@@ -1070,18 +1073,18 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
     if (access == 0) {
       BX_PANIC(("loadall: LDTR case access byte=0."));
-      }
-    if ( BX_CPU_THIS_PTR ldtr.cache.valid==0 ) {
+    }
+    if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_PANIC(("loadall: ldtr.valid=0"));
-      }
+    }
     if (BX_CPU_THIS_PTR ldtr.cache.segment) { /* not a system segment */
       BX_INFO(("         AR byte = %02x", (unsigned) access));
       BX_PANIC(("loadall: LDTR descriptor cache loaded with non system segment"));
-      }
-    if ( BX_CPU_THIS_PTR ldtr.cache.type != 2 ) {
-      BX_PANIC(("loadall: LDTR.type(%u) != 2", (unsigned) (access & 0x0f)));
-      }
     }
+    if (BX_CPU_THIS_PTR ldtr.cache.type != 2) {
+      BX_PANIC(("loadall: LDTR.type(%u) != 2", (unsigned) (access & 0x0f)));
+    }
+  }
 
   /* DS */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81e, 2, &ds_raw);
@@ -1106,11 +1109,12 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value & 0xfffc) == 0 ) {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
-    }
+  }
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid==0  ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment==0) {
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment==0)
+  {
     BX_PANIC(("loadall: DS invalid"));
-    }
+  }
 
   /* SS */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x820, 2, &ss_raw);
@@ -1132,15 +1136,15 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl        = (access & 0x03); access >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p          = (access & 0x01);
 
-  if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0 ) {
+  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 0;
-    }
+  }
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0  ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment==0) {
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment==0)
+  {
     BX_PANIC(("loadall: SS invalid"));
-    }
-
-
+  }
+  
   /* CS */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x822, 2, &cs_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cs_raw;
@@ -1165,13 +1169,15 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl        = (access & 0x03); access >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p          = (access & 0x01);
 
-  if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value & 0xfffc) == 0 ) {
+  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value & 0xfffc) == 0)
+  {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 0;
-    }
+  }
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid==0  ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment==0) {
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment==0)
+  {
     BX_PANIC(("loadall: CS invalid"));
-    }
+  }
 
   /* ES */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x824, 2, &es_raw);
@@ -1208,13 +1214,15 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl));
 #endif
 
-  if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value & 0xfffc) == 0 ) {
+  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value & 0xfffc) == 0)
+  {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
-    }
+  }
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid==0  ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment==0) {
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment==0)
+  {
     BX_PANIC(("loadall: ES invalid"));
-    }
+  }
 
   /* DI */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &di);
@@ -1333,13 +1341,13 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
     BX_CPU_THIS_PTR protectedMode = 1;
     BX_CPU_THIS_PTR v8086Mode = 0;
     BX_CPU_THIS_PTR realMode = 0;
-    }
+  }
   else if (prev_pe==1 && BX_CPU_THIS_PTR cr0.pe==0) {
     enter_real_mode();
     BX_CPU_THIS_PTR protectedMode = 0;
     BX_CPU_THIS_PTR v8086Mode = 0;
     BX_CPU_THIS_PTR realMode = 1;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (prev_pg==0 && BX_CPU_THIS_PTR cr0.pg) {
@@ -1347,26 +1355,26 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
       if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
         BX_PANIC(("SetCR0: attempt to enter x86-64 LONG mode without enabling CR4.PAE !!!"));
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
+      }
       BX_CPU_THIS_PTR msr.lma = 1;
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
 #if BX_EXTERNAL_DEBUGGER
       //trap_debugger(0);
 #endif
-      }
     }
+  }
   else if (prev_pg==1 && BX_CPU_THIS_PTR cr0.pg==0) {
     if (BX_CPU_THIS_PTR msr.lma) {
       if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
-        }
+      }
       BX_CPU_THIS_PTR msr.lma = 0;
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32;
 #if BX_EXTERNAL_DEBUGGER
       //trap_debugger(0);
 #endif
-      }
     }
+  }
 #endif  // #if BX_SUPPORT_X86_64
 
   // Give the paging unit a chance to look for changes in bits
@@ -1377,6 +1385,9 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 #if BX_CPU_LEVEL >= 4
 void BX_CPU_C::SetCR4(Bit32u val_32)
 {
+  Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
+  Bit32u allowMask = 0;
+
   // CR4 bit definitions from AMD Hammer manual:
   //   [63-11] Reserved, Must be Zero
   //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
@@ -1391,8 +1402,7 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
   //   [1]     PVI: Protected-Mode Virtual Interrupts R/W
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
-  Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
-  Bit32u allowMask = 0;
+  allowMask |= (1<<3);   /* DE  */
 
 #if BX_CPU_LEVEL >= 5
   allowMask |= (1<<2);   /* TSD */
@@ -1531,12 +1541,12 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
   if (v8086_mode()) {
     BX_INFO(("RDMSR: Invalid in virtual 8086 mode"));
     goto do_exception;
-    }
+  }
 
   if (CPL!= 0) {
-    BX_INFO(("RDMSR: CPL!= 0"));
+    BX_INFO(("RDMSR: CPL != 0"));
     goto do_exception;
-    }
+  }
 
   /* We have the requested MSR register in ECX */
   switch(ECX) {
@@ -1641,6 +1651,8 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
     default:
       BX_ERROR(("RDMSR: Unknown register %#x", ECX));
 #if BX_IGNORE_BAD_MSR
+      RAX = 0;
+      RDX = 0;
       return;
 #endif
   }
@@ -1662,12 +1674,12 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
   if (v8086_mode()) {
     BX_INFO(("WRMSR: Invalid in virtual 8086 mode"));
     goto do_exception;
-    }
+  }
 
   if (CPL!= 0) {
-    BX_INFO(("WDMSR: CPL!= 0"));
+    BX_INFO(("WDMSR: CPL != 0"));
     goto do_exception;
-    }
+  }
 
   /* ECX has the MSR to write to */
   switch(ECX) {
@@ -1734,7 +1746,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
                         if (  (BX_CPU_THIS_PTR msr.lme != (EAX >> 8) & 1)
                            && (BX_CPU_THIS_PTR cr0.pg == 1)) {
                           exception(BX_GP_EXCEPTION, 0, 0);
-                          }
+                        }
                         BX_CPU_THIS_PTR msr.sce = (EAX >> 0) & 1;
                         BX_CPU_THIS_PTR msr.lme = (EAX >> 8) & 1;
                         return;

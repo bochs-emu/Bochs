@@ -26,10 +26,13 @@ Changes to next release:
     instructions (Stanislav Shwartsman)
   - fixed CF flag handling for SHL instruction in x86-64 mode
     (Stanislav Shwartsman)
-  - added missed GP(0) exception when loading incorrect flags combination 
+  - added missed #GP(0) exception when loading incorrect flags combination 
     to CR0 (Stanislav Shwartsman)
   - implemented CR8 register (aliased to APIC.TPR[7:4]) in x86-64 mode
   - implemented NXE bit (No-Execute page protection) support for x86-64
+  - in case of --enable-ignore-bad-msr enabled read ignored MSRs as zero
+  - enabled #DE and #TSD and #MCE bits in CR4 register, previosly setting
+    of one of these bits generated #GP(0) (Stanislav, Volker Ruppert)
 
 - FPU
   - totally rewritten all FPU code based on softfloat library 
@@ -202,6 +205,7 @@ Changes to next release:
 - patches applied
   - patch.rombios.markevich (Start/Stop Wait Timer) (Kory Markevich)
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
+  - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
   #549793 flaw in interrupt gate handling(exception.cc)
