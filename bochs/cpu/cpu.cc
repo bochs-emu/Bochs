@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.20 2001-10-05 21:05:11 bdenney Exp $
+// $Id: cpu.cc,v 1.21 2001-10-06 00:00:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,6 +276,13 @@ repeat_not_done:
 #ifdef REGISTER_IADDR
       REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
+
+#if BX_DEBUGGER
+    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that was just executed.
+      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+    }
+#endif
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -304,6 +311,13 @@ repeat_done:
 #ifdef REGISTER_IADDR
     REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
+
+#if BX_DEBUGGER
+    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that was just executed.
+      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
+    }
+#endif
     BX_TICK1_IF_SINGLE_PROCESSOR();
 
 debugger_check:
@@ -319,13 +333,6 @@ debugger_check:
 #endif
 
 #if BX_DEBUGGER
-    if (BX_CPU_THIS_PTR trace) {
-      // print the instruction that was just executed.  This used to 
-      // return with a certain stop reason, but as a result the tracing
-      // affected simulation, which is obviously bad when you're trying
-      // to debug a problem.
-      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
-    }
 
     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
     // note instr generating exceptions never reach this point.
