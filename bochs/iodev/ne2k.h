@@ -38,7 +38,7 @@
 #  define BX_NE2K_THIS this->
 #endif
 
-#define  BX_NE2K_MEMSIZ    (16*1024)
+#define  BX_NE2K_MEMSIZ    (32*1024)
 #define  BX_NE2K_MEMSTART  (16*1024)
 #define  BX_NE2K_MEMEND    (BX_NE2K_MEMSTART + BX_NE2K_MEMSIZ)
 

@@ -259,22 +259,26 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
 
   switch (offset) {
   case 0x0:  // Data register
-    // 
-    // The device must have been set up to perform DMA in
-    // the same size as is being requested (the WTS bit
-    // in the DCR), a read remote-DMA command must have
-    // been issued, and the source-address and length
-    // registers must have been initialised.
     //
-    if (io_len != (1 + BX_NE2K_THIS s.DCR.wdsize))
-      BX_PANIC(("dma read, wrong size %d", io_len));
-
-    if (BX_NE2K_THIS s.remote_bytes == 0)
-      BX_PANIC(("ne2K: dma read, byte count 0"));
+    // A read remote-DMA command must have been issued,
+    // and the source-address and length registers must  
+    // have been initialised.
+    //
+    if (io_len > BX_NE2K_THIS s.remote_bytes)
+      BX_PANIC(("ne2K: dma read underrun"));
     
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
-    BX_NE2K_THIS s.remote_dma   += io_len;
-    BX_NE2K_THIS s.remote_bytes -= io_len;
+    //
+    // The 8390 bumps the address and decreases the byte count
+    // by the selected word size after every access, not by
+    // the amount of data requested by the host (io_len).
+    //
+    BX_NE2K_THIS s.remote_dma += (BX_NE2K_THIS s.DCR.wdsize + 1);
+    // keep s.remote_bytes from underflowing
+    if (BX_NE2K_THIS s.remote_bytes > 1)
+      BX_NE2K_THIS s.remote_bytes -= (BX_NE2K_THIS s.DCR.wdsize + 1);
+    else
+      BX_NE2K_THIS s.remote_bytes = 0;
     break;
 
   case 0xf:  // Reset register
