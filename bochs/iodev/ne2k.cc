@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.66 2004-08-06 15:49:54 vruppert Exp $
+// $Id: ne2k.cc,v 1.67 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,8 @@
  
 #include "iodev.h"
 #if BX_SUPPORT_NE2K
+
+#include "eth.h"
 
 //Never completely fill the ne2k ring so that we never
 // hit the unclear completely full buffer condition.
@@ -1303,7 +1305,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.66 2004-08-06 15:49:54 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.67 2004-09-05 10:30:19 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.55 2004-07-28 19:36:42 vruppert Exp $
+// $Id: serial.cc,v 1.56 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -38,6 +38,10 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+
+#if USE_RAW_SERIAL
+#include "serial_raw.h"
+#endif // USE_RAW_SERIAL
 
 #define LOG_THIS theSerialDevice->
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.15 2004-08-06 15:49:54 vruppert Exp $
+// $Id: ne2k.h,v 1.16 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,6 +47,8 @@
 #define  BX_NE2K_MEMSIZ    (32*1024)
 #define  BX_NE2K_MEMSTART  (16*1024)
 #define  BX_NE2K_MEMEND    (BX_NE2K_MEMSTART + BX_NE2K_MEMSIZ)
+
+class eth_pktmover_c;
 
 typedef struct {
     //

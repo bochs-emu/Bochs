@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.72 2004-08-30 10:47:09 vruppert Exp $
+// $Id: cdrom.cc,v 1.73 2004-09-05 10:30:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,8 +37,10 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "iodev.h"
+#include "bochs.h"
 #if BX_SUPPORT_CDROM
+
+#include "cdrom.h"
 
 #define LOG_THIS /* no SMF tricks here, not needed */
 
@@ -521,7 +523,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.72 2004-08-30 10:47:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.73 2004-09-05 10:30:18 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.18 2004-08-11 11:05:11 vruppert Exp $
+// $Id: sb16.h,v 1.19 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -411,7 +411,3 @@ public:
 #define BOTHLOG(x)      (x)
 #define MIDILOG(x)      ((bx_options.sb16.Omidimode->get ()>0?x:0x7f))
 #define WAVELOG(x)      ((bx_options.sb16.Owavemode->get ()>0?x:0x7f))
-
-#include "soundlnx.h"
-#include "soundwin.h"
-#include "soundosx.h"

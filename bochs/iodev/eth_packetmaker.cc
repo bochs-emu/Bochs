@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.10 2004-08-06 15:49:54 vruppert Exp $
+// $Id: eth_packetmaker.cc,v 1.11 2004-09-05 10:30:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -16,6 +16,7 @@
 
 bx_bool sendable(const eth_packet& outpacket) {
   //FINISH ME!
+  return 0;
 }
 
 Bit32u eth_IPmaker::datalen(const eth_packet& outpacket) {
@@ -72,8 +73,7 @@ Bit32u eth_IPmaker::build_packet_header(Bit32u source, Bit32u dest, Bit8u protoc
 }
 
 Bit8u eth_IPmaker::protocol(const eth_packet& outpacket) {
-  Bit8u out;
-  out=0xFF & *(outpacket.buf+23);
+  return (*(outpacket.buf+23) & 0xff);
 }
 
 Bit32u eth_IPmaker::source(const eth_packet& outpacket) {
@@ -165,7 +165,7 @@ eth_ARPmaker::sendpacket(const eth_packet& outpacket) {
   if(is_pending || !ishandler(outpacket)) {
     return 0;
   } else {
-    Bit32u tempcrc;
+    //Bit32u tempcrc;
     memcpy(pending.buf,outpacket.buf,outpacket.len); //move to temporary buffer
     memcpy(pending.buf, pending.buf+6, 6); //set destination to sender
     memcpy(pending.buf+6, external_mac, 6); //set sender to us

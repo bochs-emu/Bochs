@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.4 2004-06-19 15:20:14 sshwarts Exp $
+// $Id: soundosx.cc,v 1.5 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -16,6 +16,8 @@
 
 #if defined(macintosh) && BX_SUPPORT_SB16
 #define LOG_THIS bx_sb16.
+
+#include "soundosx.h"
 
 #if BX_WITH_MACOS
 #include <QuickTimeMusic.h>

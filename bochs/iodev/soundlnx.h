@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.5 2002-12-24 10:12:26 vruppert Exp $
+// $Id: soundlnx.h,v 1.6 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,8 +28,6 @@
 
 
 #if (defined(linux) || defined(__FreeBSD__))
-
-#include "bochs.h"
 
 #define BX_SOUND_LINUX_BUFSIZE   BX_SOUND_OUTPUT_WAVEPACKETSIZE
 

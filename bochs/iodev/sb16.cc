@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.40 2004-06-19 15:20:14 sshwarts Exp $
+// $Id: sb16.cc,v 1.41 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,6 +33,10 @@
 
 #include "iodev.h"
 #if BX_SUPPORT_SB16
+
+#include "soundlnx.h"
+#include "soundwin.h"
+#include "soundosx.h"
 
 #define LOG_THIS theSB16Device->
 

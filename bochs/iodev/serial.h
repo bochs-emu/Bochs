@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.19 2004-07-28 19:36:42 vruppert Exp $
+// $Id: serial.h,v 1.20 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -35,10 +35,6 @@
 #  define BX_SER_SMF
 #  define BX_SER_THIS this->
 #endif
-
-#if USE_RAW_SERIAL
-#include "serial_raw.h"
-#endif // USE_RAW_SERIAL
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__GNU__) || defined(__APPLE__)
 #define SERIAL_ENABLE

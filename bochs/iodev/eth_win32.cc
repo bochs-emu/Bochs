@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.19 2004-08-06 15:49:54 vruppert Exp $
+// $Id: eth_win32.cc,v 1.20 2004-09-05 10:30:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,6 +43,8 @@
 
 #include "iodev.h"
 #if BX_SUPPORT_NE2K
+
+#include "eth.h"
 
 // windows.h included by bochs.h
 #define LOG_THIS bx_devices.pluginNE2kDevice->

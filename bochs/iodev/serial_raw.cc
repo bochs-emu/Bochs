@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.16 2004-06-19 15:20:14 sshwarts Exp $
+// $Id: serial_raw.cc,v 1.17 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -33,6 +33,8 @@
 #include "iodev.h"
 
 #if USE_RAW_SERIAL
+
+#include "serial_raw.h"
 
 #define LOG_THIS
 

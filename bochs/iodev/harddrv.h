@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.25 2004-02-09 18:59:50 vruppert Exp $
+// $Id: harddrv.h,v 1.26 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -637,11 +637,6 @@ struct error_recovery_t {
 
 uint16 read_16bit(const uint8* buf) BX_CPP_AttrRegparmN(1);
 uint32 read_32bit(const uint8* buf) BX_CPP_AttrRegparmN(1);
-
-
-#ifdef LOWLEVEL_CDROM
-#  include "cdrom.h"
-#endif
 
 
 struct cdrom_t

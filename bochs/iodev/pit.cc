@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.18 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pit.cc,v 1.19 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,8 @@
 #include "iodev.h"
 
 #if (BX_USE_NEW_PIT==0)
+
+#include "speaker.h"
 
 #define LOG_THIS bx_pit.
 

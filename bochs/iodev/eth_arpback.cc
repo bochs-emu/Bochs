@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.13 2004-08-06 15:49:54 vruppert Exp $
+// $Id: eth_arpback.cc,v 1.14 2004-09-05 10:30:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,6 +40,7 @@
 
 #if BX_SUPPORT_NE2K && defined(ETH_ARPBACK)
 
+#include "eth.h"
 #include "crc32.h"
 #include "eth_packetmaker.h"
 #define LOG_THIS bx_devices.pluginNE2kDevice->
@@ -159,11 +160,11 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
   int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed", io_len));
+  if (n != 1) BX_ERROR (("fwrite to txlog failed, length %u", io_len));
   // dump packet in hex into an ascii log file
   fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
-  for (n=0; n<io_len; n++) {
+  for (n=0; n<(int)io_len; n++) {
     if (((n % 16) == 0) && n>0)
       fprintf (txlog_txt, "\n");
     fprintf (txlog_txt, "%02x ", charbuf[n]);
@@ -187,8 +188,8 @@ void bx_arpback_pktmover_c::rx_timer_handler (void * this_ptr)
 
 void bx_arpback_pktmover_c::rx_timer (void)
 {
-  int nbytes = 0;
-  struct bpf_hdr *bhdr;
+//int nbytes = 0;
+//struct bpf_hdr *bhdr;
   eth_packet rubble;
   
   if(packetmaker.getpacket(rubble)) {

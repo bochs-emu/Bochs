@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.h,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: soundwin.h,v 1.4 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,7 +29,6 @@
 
 #if defined(WIN32)
 
-#include "bochs.h"
 #include <windows.h>
 
 // uncomment one of the following two #defines

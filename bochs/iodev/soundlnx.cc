@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.7 2004-06-19 15:20:14 sshwarts Exp $
+// $Id: soundlnx.cc,v 1.8 2004-09-05 10:30:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,8 @@
 #include "iodev.h"
 #if (defined(linux) || defined(__FreeBSD__)) && BX_SUPPORT_SB16
 #define LOG_THIS bx_sb16.
+
+#include "soundlnx.h"
 
 #include <errno.h>
 #include <sys/ioctl.h>

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc32.h,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: crc32.h,v 1.4 2004-09-05 10:30:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /* CRC-32 calculator
@@ -9,7 +9,7 @@
 #ifndef _CRC_32_H_
 #define _CRC_32_H_
 
-#include "bochs.h"
+#include "../config.h"
 
 class CRC_Generator {
 private:
