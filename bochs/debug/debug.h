@@ -44,6 +44,7 @@ void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
 
 #define EMPTY_ARG (-999)
 
+extern Bit32u dbg_cpu;
 
 unsigned long crc32(unsigned char *buf, int len);
 
