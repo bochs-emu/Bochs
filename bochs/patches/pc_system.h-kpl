@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h-kpl,v 1.1 2002-10-01 21:27:34 kevinlawton Exp $
+// $Id: pc_system.h-kpl,v 1.2 2002-10-02 05:54:34 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,6 +61,8 @@ private:
                                //   timer fires.
     void *this_ptr;            // The this-> pointer for C++ callbacks
                                //   has to be stored as well.
+#define BxMaxTimerIDLen 32
+    char id[BxMaxTimerIDLen]; // String ID of timer.
     } timer[BX_MAX_TIMERS];
 
   unsigned   numTimers;  // Number of currently allocated timers.
@@ -94,7 +96,7 @@ public:
 
   void   init_ips(Bit32u ips);
   int    register_timer( void *this_ptr, bx_timer_handler_t, Bit32u useconds,
-                         Boolean continuous, Boolean active);
+                         Boolean continuous, Boolean active, const char *id);
   void   start_timers(void);
   void   activate_timer( unsigned timer_index, Bit32u useconds,
                          Boolean continuous );
@@ -128,8 +130,10 @@ public:
     bx_pc_system.currCountdown -= n;
     }
 
-  int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks, Boolean continuous, Boolean active);
-  void activate_timer_ticks(unsigned index, Bit64u instructions, Boolean continuous);
+  int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
+                           Boolean continuous, Boolean active, const char *id);
+  void activate_timer_ticks(unsigned index, Bit64u instructions,
+                            Boolean continuous);
   Bit64u time_usec();
   static BX_CPP_INLINE Bit64u time_ticks() {
     return bx_pc_system.ticksTotal +

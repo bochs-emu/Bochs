@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc-kpl,v 1.1 2002-10-01 21:27:33 kevinlawton Exp $
+// $Id: pc_system.cc-kpl,v 1.2 2002-10-02 05:54:34 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,11 +47,18 @@ double     m_ips; // Millions of Instructions Per Second
 // Option for turning off BX_TIMER_DEBUG?
 // Check out m_ips and ips
 
+#define SpewPeriodicTimerInfo 0
 #define MinAllowableTimerPeriod 1
 
 
+#if SpewPeriodicTimerInfo
+// If debugging, set the heartbeat to 5M cycles.  Each heartbeat
+// spews the active timer info.
+const Bit64u bx_pc_system_c::NullTimerInterval = 5000000;
+#else
 // This must be the maximum 32-bit unsigned int value, NOT (Bit64u) -1.
 const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
+#endif
 
   // constructor
 bx_pc_system_c::bx_pc_system_c(void)
@@ -232,19 +239,19 @@ bx_pc_system_c::exit(void)
 
   int
 bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
-  Bit32u useconds, Boolean continuous, Boolean active)
+  Bit32u useconds, Boolean continuous, Boolean active, const char *id)
 {
   Bit64u ticks;
 
   // Convert useconds to number of ticks.
   ticks = (Bit64u) (double(useconds) * m_ips);
 
-  return register_timer_ticks(this_ptr, funct, ticks, continuous, active);
+  return register_timer_ticks(this_ptr, funct, ticks, continuous, active, id);
 }
 
   int
 bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
-    Bit64u ticks, Boolean continuous, Boolean active)
+    Bit64u ticks, Boolean continuous, Boolean active, const char *id)
 {
   unsigned i;
 
@@ -274,6 +281,8 @@ bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
   timer[i].continuous = continuous;
   timer[i].funct      = funct;
   timer[i].this_ptr   = this_ptr;
+  strncpy(timer[i].id, id, BxMaxTimerIDLen);
+  timer[i].id[BxMaxTimerIDLen-1] = 0; // Null terminate if not already.
 
   if (active) {
     if (ticks < currCountdown) {
@@ -371,6 +380,17 @@ bx_pc_system_c::nullTimer(void* this_ptr)
   // the host computer's wall clock.
 
   UNUSED(this_ptr);
+
+#if SpewPeriodicTimerInfo
+  BX_INFO(("==================================="));
+  for (unsigned i=0; i < bx_pc_system.numTimers; i++) {
+    if (bx_pc_system.timer[i].active) {
+      BX_INFO(("BxTimer(%s): period=%llu, continuous=%u",
+               bx_pc_system.timer[i].id, bx_pc_system.timer[i].period,
+               bx_pc_system.timer[i].continuous));
+      }
+    }
+#endif
 }
 
 #if BX_DEBUGGER
