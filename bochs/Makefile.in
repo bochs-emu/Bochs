@@ -20,9 +20,9 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-VERSION=1.2
-VER_STRING=1.2-pre1
-REL_STRING=Tue May 22 23:57:25 EDT 2001
+VERSION=1.1.x
+VER_STRING=cvs-snapshot
+REL_STRING=
 PREFIX=/usr/local/bochs
 BINPATH=/usr/local/bin
 INSTALL_LIST=bios/BIOS-* CHANGES.txt COPYING README bios/VGABIOS*
