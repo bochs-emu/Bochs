@@ -118,37 +118,6 @@ extern "C" {
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 #error FIXME: cosim mode not fixed yet
 
-#elif ((BX_SMP_PROCESSORS >= 1))
-// =-=-=-=-=-=-=- SMP simulation with >1 processor -=-=-=-=-=-=-=-=
-#define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
-#define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
-#if BX_SUPPORT_A20
-#  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
-#else
-#  define A20ADDR(x)               (x)
-#endif
-//
-// some pc_systems functions just redirect to the IO devices so optimize
-// by eliminating call here
-//
-// #define BX_INP(addr, len)        bx_pc_system.inp(addr, len)
-// #define BX_OUTP(addr, val, len)  bx_pc_system.outp(addr, val, len)
-#define BX_INP(addr, len)           bx_devices.inp(addr, len)
-#define BX_OUTP(addr, val, len)     bx_devices.outp(addr, val, len)
-#define BX_HRQ                      (bx_pc_system.HRQ)
-#define BX_RAISE_HLDA()             bx_pc_system.raise_HLDA()
-#define BX_TICK1()                  bx_pc_system.tick1()
-#define BX_TICKN(n)                 bx_pc_system.tickn(n)
-#define BX_INTR                     bx_pc_system.INTR
-#define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
-#define BX_CPU_C                    bx_cpu_c
-#define BX_CPU(x)                   (bx_cpu_array[x])
-#define BX_MEM_C                    bx_mem_c
-#define BX_MEM(x)                   (bx_mem_array[x])
-#warning This may be wrong to have BX_MEM point to bx_mem_array, but I'm not sure.  So far you either have 1 mem and N processors, or N mems and N processors (cosim).
-#define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
-#define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
-
 #else
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -180,7 +149,15 @@ extern "C" {
 #define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 
-#endif  // ((BX_DEBUGGER == 1) && (BX_NUM_SIMULATORS >= 2))
+#endif
+
+// check that in an SMP simulation, BX_USE_SMF=0 and BX_USE_APIC_SMF=0.
+#if (BX_SMP_PROCESSORS>1)
+#  if (BX_USE_SMF!=0 || BX_USE_APIC_SMF!=0)
+#    error For SMP simulation, BX_USE_SMF and BX_USE_APIC_SMF must be 0.
+#  endif
+#endif
+
 
 // #define BX_IAC()                 bx_pc_system.IAC()
 #define BX_IAC()                    bx_devices.pic->IAC()
