@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.63 2002-10-05 14:51:25 kevinlawton Exp $
+// $Id: cpu.cc,v 1.64 2002-10-06 22:08:18 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -129,6 +129,15 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   }
 #else
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
+#endif
+
+#if BX_DEBUGGER
+  // If the exception() routine has encountered a nasty fault scenario,
+  // the debugger may request that control is returned to it so that
+  // the situation may be examined.
+  if (bx_guard.special_unwind_stack) {
+    return;
+    }
 #endif
 
   // We get here either by a normal function call, or by a longjmp
