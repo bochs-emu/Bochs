@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.25 2002-03-20 23:50:23 bdenney Exp $
+// $Id: cpu.cc,v 1.26 2002-04-01 04:02:02 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -441,7 +441,7 @@ handle_async_event:
     BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     // for one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
-    while (1) {
+    while (bx_guard.interrupt_requested != 1) {
       if (BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR eflags.if_) {
         break;
         }
