@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.57 2002-05-11 13:43:44 vruppert Exp $
+// $Id: rombios.c,v 1.58 2002-06-04 17:43:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1067,10 +1067,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.57 $";
-static char bios_date_string[] = "$Date: 2002-05-11 13:43:44 $";
+static char bios_cvs_version_string[] = "$Revision: 1.58 $";
+static char bios_date_string[] = "$Date: 2002-06-04 17:43:18 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.57 2002-05-11 13:43:44 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.58 2002-06-04 17:43:18 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -5208,14 +5208,6 @@ int1a_function(regs, ds, iret_addr)
         SetCF(iret_addr.flags);
       } else {
         switch (regs.u.r8.al) {
-	  case 0x01: // Installation check
-	    regs.u.r8.ah = 0;
-	    regs.u.r8.al = 1;
-	    regs.u.r8.bh = 0x02;
-	    regs.u.r8.bl = 0x10;
-	    regs.u.r8.cl = 0;
-	    ClearCF(iret_addr.flags);
-	    break;
 	  case 0x09: // Read configuration word
 	    setPCIaddr(regs.u.r8.bh, regs.u.r8.bl, (Bit8u)(regs.u.r16.di & 0xfc));
 	    regs.u.r16.cx = inw(0x0cfc + (regs.u.r16.di & 0x0002));
@@ -9082,6 +9074,178 @@ int76_handler:
   pop   ax
   iret
 
+#if BX_PCIBIOS
+use32 386
+.align 16
+bios32_structure:
+  db 0x5f, 0x33, 0x32, 0x5f  ;; "_32_" signature
+  dw bios32_entry_point, 0xf ;; 32 bit physical address
+  db 0             ;; revision level
+  db 1             ;; length in paragraphs
+  db ~(((((bios32_entry_point >> 8) + (bios32_entry_point & 0xff)) & 0xff) \
+        + 0x32) & 0xff)
+  db 0,0,0,0,0     ;; reserved
+
+.align 16
+bios32_entry_point:
+  pushf
+  cmp eax, #0x49435024
+  jne unknown_service
+  mov eax, #0x80000000
+  mov dx, #0x0cf8
+  out dx, eax
+  mov dx, #0x0cfc
+  in  eax, dx
+  cmp eax, #0x12378086
+  jne unknown_service
+  mov ebx, #0x000f0000
+  mov ecx, #0
+  mov edx, #pcibios_protected
+  xor al, al
+  jmp bios32_end
+unknown_service:
+  mov al, #0x80
+bios32_end:
+  popf
+  retf
+
+.align 16
+pcibios_protected:
+  pushf
+  cli
+  cmp al, #0x01 ;; installation check
+  jne check_f02
+  mov bx, #0x0210
+  mov cx, #0
+  mov edx, #0x20494350
+  mov al, #0x01
+  jmp pcibios_ok
+check_f02: ;; find pci device
+  cmp al, #0x02
+  jne check_f08
+  shl ecx, #16
+  or  ecx, edx
+  mov bx, #0x0000
+  mov di, #0x00
+pcidev_loop:
+  call pcibios_select_reg
+  mov dx, #0x0cfc
+  in  eax, dx
+  cmp eax, ecx
+  jne pcidev_next
+  cmp si, #0
+  je  pcibios_ok
+  dec si
+pcidev_next:
+  inc bx
+  cmp bx, #0x0100
+  jnb pcidev_loop
+  mov ah, #0x86
+  jmp pcibios_fail
+check_f08: ;; read configuration byte
+  cmp al, #0x08
+  jne check_f09
+  call pcibios_select_reg
+  mov dx, di
+  and dx, #0x03
+  add dx, #0x0cfc
+  in  al, dx
+  mov cl, al
+  jmp pcibios_ok
+check_f09: ;; read configuration word
+  cmp al, #0x09
+  jne check_f0a
+  call pcibios_select_reg
+  mov dx, di
+  and dx, #0x02
+  add dx, #0x0cfc
+  in  ax, dx
+  mov cx, ax
+  jmp pcibios_ok
+check_f0a: ;; read configuration dword
+  cmp al, #0x0a
+  jne check_f0b
+  call pcibios_select_reg
+  mov dx, #0x0cfc
+  in  eax, dx
+  mov ecx, eax
+  jmp pcibios_ok
+check_f0b: ;; write configuration byte
+  cmp al, #0x0b
+  jne check_f0c
+  call pcibios_select_reg
+  mov dx, di
+  and dx, #0x03
+  add dx, #0x0cfc
+  mov al, cl
+  out dx, al
+  jmp pcibios_ok
+check_f0c: ;; write configuration word
+  cmp al, #0x0c
+  jne check_f0d
+  call pcibios_select_reg
+  mov dx, di
+  and dx, #0x02
+  add dx, #0x0cfc
+  mov ax, cx
+  out dx, ax
+  jmp pcibios_ok
+check_f0d: ;; write configuration dword
+  cmp al, #0x0d
+  jne pcibios_unknown
+  call pcibios_select_reg
+  mov dx, #0x0cfc
+  mov eax, ecx
+  out dx, eax
+  jmp pcibios_ok
+pcibios_unknown:
+  mov ah, #0x81
+pcibios_fail:
+  sti
+  popf
+  stc
+  retf
+pcibios_ok:
+  xor ah, ah
+  sti
+  popf
+  clc
+  retf
+
+pcibios_select_reg:
+  mov eax, #0x800000
+  mov ax,  bx
+  shl eax, #8
+  and di,  #0xff
+  or  ax,  di
+  and al,  #0xfc
+  mov edx, #0x0cf8
+  out dx,  eax
+  ret
+
+use16 386
+
+pcibios_real: ;; installation check
+  mov eax, #0x80000000
+  mov dx, #0x0cf8
+  out dx, eax
+  mov dx, #0x0cfc
+  in  eax, dx
+  cmp eax, #0x12378086
+  jne no_pci
+  mov ax, #0x0001
+  mov bx, #0x0210
+  mov cx, #0
+  mov edx, #0x20494350
+  mov edi, #pcibios_protected
+  or  edi, #0xf0000
+  clc
+  iret
+no_pci:
+  stc
+  iret
+#endif
+
 ;; for 'C' strings and other data, insert them here with
 ;; a the following hack:
 ;; DATA_SEG_DEFS_HERE
@@ -9852,6 +10016,12 @@ db 0x00    ;; base  23:16
 ;----------
 .org 0xfe6e ; INT 1Ah Time-of-day Service Entry Point
 int1a_handler:
+#if BX_PCIBIOS
+  cmp  ax, #0xb101
+  jne  int1a_normal
+  jmp  pcibios_real
+int1a_normal:
+#endif
   push ds
   pusha
   mov  ax, #0x0000
