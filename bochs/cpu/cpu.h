@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.76 2002-09-24 16:35:43 kevinlawton Exp $
+// $Id: cpu.h,v 1.77 2002-09-24 16:39:33 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2497,8 +2497,10 @@ union {
   BX_SMF void    fetch_raw_descriptor(bx_selector_t *selector,
                                Bit32u *dword1, Bit32u *dword2, Bit8u exception);
   BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value);
+#if BX_SUPPORT_X86_64
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
                                    bx_address base, unsigned dpl);
+#endif
   BX_SMF Boolean fetch_raw_descriptor2(bx_selector_t *selector,
                                 Bit32u *dword1, Bit32u *dword2);
   BX_SMF void    push_16(Bit16u value16);
