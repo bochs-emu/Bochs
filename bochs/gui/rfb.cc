@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.32 2004-04-08 17:36:24 cbothamy Exp $
+// $Id: rfb.cc,v 1.33 2004-04-09 10:25:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -302,7 +302,7 @@ void ServerThreadInit(void *indata)
         BX_PANIC(( "could not create socket." ));
         goto end_of_thread;
     }
-    if (setsockopt(sServer, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) == -1)  {
+    if (setsockopt(sServer, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof(int)) == -1)  {
         BX_PANIC(( "could not set socket option." ));
         goto end_of_thread;
     }
