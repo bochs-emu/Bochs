@@ -17,4 +17,5 @@ export CXXFLAGS
 ./configure --enable-cdrom \
             --enable-sb16=win \
 	    --enable-ne2000 \
-	    --enable-vbe
+	    --enable-vbe \
+		--enable-all-optimizations

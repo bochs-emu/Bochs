@@ -18,5 +18,4 @@ export CXXFLAGS
 ./configure --with-sdl \
    --enable-cdrom \
    --enable-sb16=dummy \
-   --enable-dc2300-vlb-ide \
    --enable-all-optimizations 

@@ -3,7 +3,6 @@
   --enable-x86-64 \
   --enable-ne2000 \
   --enable-pci \
-  --enable-dc2300-vlb-ide \
   --enable-4meg-pages \
   --enable-pae \
   --enable-guest2host-tlb \

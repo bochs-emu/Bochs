@@ -30,7 +30,6 @@ case $which_config in
                 --enable-sb16=linux \
                 --enable-ne2000 \
                 --enable-vbe \
-                --enable-dc2300-vlb-ide \
                 --enable-all-optimizations \
                 ${CONFIGURE_ARGS}
     ;;
@@ -45,7 +44,6 @@ case $which_config in
                 --enable-sb16=linux \
                 --enable-ne2000 \
                 --enable-vbe \
-                --enable-dc2300-vlb-ide \
                 --enable-all-optimizations \
                 ${CONFIGURE_ARGS} \
                 --enable-plugins \
