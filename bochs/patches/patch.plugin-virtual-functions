@@ -1,0 +1,642 @@
+----------------------------------------------------------------------
+Patch name: patch.plugin-virtual-functions
+Author: Bryce Denney
+Date: Tue Oct  8 16:54:36 EDT 2002
+
+Changes to plugin architecture:
+- set up a class hierarchy as follows:
+  - bx_devmodel_c is a child of logfunctions.  (see iodev.h)
+  - bx_keyb_stub_c is a child of bx_keyb_stub_c.  (see iodev.h)
+  - bx_keyb_c is a child of bx_keyb_stub_c.  (see keyboard.h)
+  see README for better description of these classes.
+- create an alternate plugin registration method that takes a bx_devmodel_c
+  pointer instead of a whole list of static function pointers.  Only the
+  keyboard uses this new method, at present.  Devices registered using
+  this method have a flag use_devmodel_interface=1.  This flag will
+  be eliminated once we settle on just one registration model.
+- When the plugin.cc code needs to call functions on a device with
+  use_devmodel_interface=1, it uses the bx_devmodel_c virtual functions
+  instead of the function pointers in device_t.
+
+Changes specific to keyboard plugin:
+- change keyboard plugin so that it uses a different registration method
+  based on virtual functions instead of macros, callbacks, etc.
+- eliminate callback functions pluginMouseMotion, pluginGenScancode,
+  pluginPutScancode, pluginKbdPasteBytes, pluginKbdPasteDelayChanged,
+  and also the builtin* functions containing just a panic.
+  These are replaced by the virtual methods in the stub class.
+- now the same definition of BX_EVENT_MOUSE_MOTION, BX_EVENT_GEN_SCANCODE,
+  etc. can be used for the plugin and non-plugin cases.  In either case,
+  the macro now maps to a virtual method call on pluginKeyboard.  Because
+  there is only one definition, it means that this macro-ization could
+  be eliminated if we choose to do it.
+- made a lot of methods virtual that had been static before.  This allows
+  the bx_keyb_c class to override the methods of the stub class
+  bx_keyb_stub_c.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.99.2.6
+diff -u -r1.99.2.6 bochs.h
+--- bochs.h	8 Oct 2002 17:16:26 -0000	1.99.2.6
++++ bochs.h	8 Oct 2002 20:53:55 -0000
+@@ -493,12 +493,13 @@
+ 
+ #include "pc_system.h"
+ 
++class bx_devices_c;  // forward decl needed for plugin.h
++#include "plugin.h"
+ #include "gui/gui.h"
+ #include "gui/control.h"
+ #include "gui/keymap.h"
+ extern bx_gui_c   *bx_gui;
+ #include "iodev/iodev.h"
+-#include "plugin.h"
+ 
+ 
+ 
+Index: plugin.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Attic/plugin.cc,v
+retrieving revision 1.1.2.12
+diff -u -r1.1.2.12 plugin.cc
+--- plugin.cc	8 Oct 2002 17:16:32 -0000	1.1.2.12
++++ plugin.cc	8 Oct 2002 20:53:56 -0000
+@@ -29,11 +29,6 @@
+ void     (* pluginSetCMOSReg)(unsigned reg, Bit32u val) = 0;
+ void     (* pluginCMOSChecksum)(void) = 0;
+ time_t   (* pluginGetCMOSTimeval)(void) = 0;
+-void     (* pluginMouseMotion)(int d_x, int d_y, unsigned button_state) = 0;
+-void     (* pluginGenScancode)(Bit32u scancode) = 0;
+-void     (* pluginPutScancode)(unsigned char *code, int count);
+-void     (* pluginKbdPasteBytes)(Bit8u *bytes, Bit32s length);
+-void     (* pluginKbdPasteDelayChanged)();
+ 
+ unsigned (* pluginRegisterDMA8Channel)(
+                 unsigned channel,
+@@ -106,6 +101,18 @@
+ 
+ logfunctions  *pluginlog;
+ 
++#if BX_PLUGINS
++// When compiling with plugins, plugin.cc will provide the pluginKeyboard
++// pointer.  At first it will point to the stub so that calls to the functions
++// will panic instead of segfaulting.  The pointer will be replaced with a real
++// bx_keyb_c object by plugin_init of the keyboard plugin.
++bx_keyb_stub_c pluginKeyboardStub;
++bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
++#else
++// When plugins are turned off, the device will provide the pluginKeyboard
++// pointer instead.  It will be initialized to point to a real bx_keyb_c
++// immediately, instead of ever pointing at an instance of a stub class.
++#endif
+ 
+ #if BX_PLUGINS
+ // When building with plugins, the bx_gui variable is created right
+@@ -150,29 +157,6 @@
+   pluginlog->panic("builtinbuiltinGetCMOSTimeval called, no CMOS plugin loaded?");
+   return 0;
+ }
+-  static void
+-builtinMouseMotion(int d_x, int d_y, unsigned button_state)
+-{
+-  pluginlog->panic("builtinMouseMotion called, not overloaded by keyboard plugin?");
+-}
+-
+-  static void
+-builtinGenScancode(Bit32u scancode)
+-{
+-  pluginlog->panic("builtinGenScancode called, not overloaded by keyboard plugin?");
+-}
+-
+-void builtinPutScancode(unsigned char *code, int count) {
+-  pluginlog->panic("builtinPutScancode called, not overloaded by keyboard plugin?");
+-}
+-
+-void builtinKbdPasteBytes(Bit8u *bytes, Bit32s length) {
+-  pluginlog->panic("builtinPutScancode called, not overloaded by keyboard plugin?");
+-}
+-
+-void builtinKbdPasteDelayChanged() {
+-  pluginlog->panic("builtinKbdPasteDelayChanged, not overloaded by keyboard plugin?");
+-}
+ 
+   static unsigned
+ builtinRegisterDMA8Channel(
+@@ -634,12 +618,6 @@
+   pluginSetCMOSReg   = builtinSetCMOSReg;
+   pluginCMOSChecksum = builtinCMOSChecksum;
+   pluginGetCMOSTimeval  = builtinGetCMOSTimeval;
+-  pluginMouseMotion  = builtinMouseMotion;
+-  pluginGenScancode  = builtinGenScancode;
+-  pluginPutScancode = builtinPutScancode;
+-  pluginKbdPasteBytes = builtinKbdPasteBytes;
+-  pluginKbdPasteDelayChanged = builtinKbdPasteDelayChanged;
+-
+   pluginRegisterDMA8Channel = builtinRegisterDMA8Channel;
+   pluginRegisterDMA16Channel = builtinRegisterDMA16Channel;
+   pluginUnregisterDMAChannel = builtinUnregisterDMAChannel;
+@@ -692,8 +670,8 @@
+ /************************************************************************/
+ 
+ void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
+-		          deviceReset_t reset, deviceLoad_t load, 
+-                          deviceSave_t save, char *name)
++			  deviceReset_t reset, deviceLoad_t load, 
++			  deviceSave_t save, char *name)
+ {
+     device_t *device;
+ 
+@@ -704,6 +682,7 @@
+     }
+ 
+     device->name = name;
++    device->use_devmodel_interface = 0;
+     device->device_init_mem = init1;
+     device->device_init_dev = init2;
+     device->device_reset = reset;
+@@ -728,6 +707,50 @@
+     }
+ }
+ 
++void pluginRegisterDeviceDevmodel(bx_devmodel_c *devmodel, char *name)
++{
++    device_t *device;
++
++    device = (device_t *)malloc (sizeof (device_t));
++    if (!device)
++    {
++        pluginlog->panic("can't allocate device_t");
++    }
++
++    device->name = name;
++    device->devmodel = devmodel;
++    device->use_devmodel_interface = 1;
++    device->device_init_mem = NULL;  // maybe should use 1 to detect any use?
++    device->device_init_dev = NULL;
++    device->device_reset = NULL;
++    device->device_load_state = NULL;
++    device->device_save_state = NULL;
++    device->next = NULL;
++
++    if (!devices)
++    {
++        /* Empty list, this become the first entry. */
++        devices = device;
++    }
++    else
++    {
++        /* Non-empty list.  Add to end. */
++        device_t *temp = devices;
++
++        while (temp->next)
++            temp = temp->next;
++
++        temp->next = device;
++    }
++    // BBD hack
++    if (devmodel) {
++      device->use_devmodel_interface = 1;
++      device->devmodel = devmodel;
++    } else {
++      device->use_devmodel_interface = 0;
++    }
++}
++
+ /************************************************************************/
+ /* Plugin system: Check if a plugin is loaded                           */
+ /************************************************************************/
+@@ -843,19 +866,27 @@
+     // two loops
+     for (device = devices; device; device = device->next)
+     {
++      if (!device->use_devmodel_interface) {
+         if (device->device_init_mem != NULL) {
+             pluginlog->info("Initialisation of '%s' plugin device",device->name);
+             device->device_init_mem(BX_MEM(0));
+ 	}
++      } else {
++	device->devmodel->init_mem (BX_MEM(0));
++      }
+     }
+ 
+     for (device = devices; device; device = device->next)
+     {
++      if (!device->use_devmodel_interface) {
+         if (device->device_init_dev != NULL) {
+             pluginlog->info("Initialisation of '%s' plugin device",device->name);
+             device->device_init_dev(NULL);
+ 	}
+-    }
++      } else {
++	device->devmodel->init (NULL);
++      }
++    } 
+ }
+ 
+ /**************************************************************************/
+@@ -867,10 +898,14 @@
+     device_t *device;
+     for (device = devices; device; device = device->next)
+     {
++      if (!device->use_devmodel_interface) {
+         if (device->device_reset != NULL) {
+             pluginlog->info("Reset of '%s' plugin device",device->name);
+             device->device_reset(signal);
+         }
++      } else {
++	device->devmodel->reset (signal);
++      }
+     }
+ }
+ 
+Index: plugin.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Attic/plugin.h,v
+retrieving revision 1.1.2.9
+diff -u -r1.1.2.9 plugin.h
+--- plugin.h	8 Oct 2002 17:16:32 -0000	1.1.2.9
++++ plugin.h	8 Oct 2002 20:53:58 -0000
+@@ -20,6 +20,8 @@
+ #ifndef __PLUGIN_H
+ #define __PLUGIN_H
+ 
++extern logfunctions  *pluginlog;
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -37,6 +39,7 @@
+ #define BX_PLUGIN_PIC      "PIC"
+ 
+ #define BX_REGISTER_DEVICE pluginRegisterDevice
++#define BX_REGISTER_DEVICE_DEVMODEL pluginRegisterDeviceDevmodel
+ 
+ #if BX_PLUGINS
+ 
+@@ -171,34 +174,20 @@
+ #define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
+ 
+ 
+-#if BX_PLUGINS
+-#define BX_EVENT_MOUSE_MOTION(dx, dy, state) \
+-    ((*pluginMouseMotion)(dx, dy, state))
+-#define BX_EVENT_GEN_SCANCODE(scancode) \
+-    ((*pluginGenScancode)(scancode))
+-#define BX_EVENT_PUT_SCANCODE(scancode, count) \
+-    ((*pluginPutScancode)(scancode, count))
+-#define BX_KBD_PASTE_BYTES(bytes, count) \
+-    ((*pluginKbdPasteBytes)(bytes,count))
+-#define BX_KBD_PASTE_DELAY_CHANGED() \
+-    ((*pluginKbdPasteDelayChanged)())
+ 
+-#else
++
++extern class bx_keyb_stub_c *pluginKeyboard;
+ 
+ #define BX_EVENT_MOUSE_MOTION(dx, dy, state) \
+-    (bx_devices.keyboard->mouse_motion(dx, dy, state))
++    (pluginKeyboard->mouse_motion(dx, dy, state))
+ #define BX_EVENT_GEN_SCANCODE(scancode) \
+-    (bx_devices.keyboard->gen_scancode(scancode))
++    (pluginKeyboard->gen_scancode(scancode))
+ #define BX_EVENT_PUT_SCANCODE(scancode, count) \
+-    (bx_devices.keyboard->put_scancode(scancode, count))
++    (pluginKeyboard->put_scancode(scancode, count))
+ #define BX_KBD_PASTE_BYTES(bytes, count) \
+-    (bx_devices.keyboard->paste_bytes(bytes, count))
++    (pluginKeyboard->paste_bytes(bytes,count))
+ #define BX_KBD_PASTE_DELAY_CHANGED() \
+-    (bx_devices.keyboard->paste_delay_changed ())
+-
+-#endif
+-
+-
++    (pluginKeyboard->paste_delay_changed())
+ 
+ #include <dlfcn.h>
+ 
+@@ -230,9 +219,13 @@
+     void (*device_load_state)();
+     void (*device_save_state)();
+ 
++    int use_devmodel_interface;  // BBD hack
++    class bx_devmodel_c *devmodel;  // BBD hack
++
+     struct _device_t *next;
+ } device_t;
+ 
++
+ extern device_t *devices;
+ 
+ void plugin_startup (void);
+@@ -251,6 +244,7 @@
+ void pluginRegisterDevice(deviceInitMem_t init_mem, deviceInitDev_t init_dev,
+                           deviceReset_t reset, deviceLoad_t load, 
+                           deviceSave_t save, char *name);
++void pluginRegisterDeviceDevmodel(bx_devmodel_c *dev, char *name);
+ Boolean pluginDevicePresent(char *name);
+ 
+ /* === IO port stuff === */
+@@ -286,14 +280,6 @@
+ /* === A20 enable line stuff === */
+ extern unsigned (*pluginGetA20E)(void);
+ extern void     (*pluginSetA20E)(unsigned val);
+-
+-
+-/* === Keyboard/Mouse input stuff === */
+-extern void (* pluginMouseMotion)(int d_x, int d_y, unsigned button_state);
+-extern void (* pluginGenScancode)(Bit32u scancode);
+-extern void (* pluginPutScancode)(unsigned char *code, int count);
+-extern void (* pluginKbdPasteBytes)(Bit8u *bytes, Bit32s length);
+-extern void (* pluginKbdPasteDelayChanged)(void);
+ 
+ 
+ /* === DMA stuff === */
+Index: iodev/devices.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/devices.cc,v
+retrieving revision 1.34.2.8
+diff -u -r1.34.2.8 devices.cc
+--- iodev/devices.cc	8 Oct 2002 17:16:34 -0000	1.34.2.8
++++ iodev/devices.cc	8 Oct 2002 20:53:59 -0000
+@@ -56,7 +56,7 @@
+   hard_drive = NULL;
+   parallel = NULL;
+   serial = NULL;
+-  keyboard = NULL;
++  //keyboard = NULL;
+   dma = NULL;
+   pic = NULL;
+ #endif
+@@ -181,8 +181,7 @@
+   serial->init(this);
+ 
+   /*--- KEYBOARD ---*/
+-  keyboard = &bx_keyboard;
+-  keyboard->init(this);
++  pluginKeyboard->init(this);
+ 
+   /*--- 8259A PIC ---*/
+   pic = & bx_pic;
+@@ -286,7 +285,7 @@
+   hard_drive->reset(type);
+   parallel->reset(type);
+   serial->reset(type);
+-  keyboard->reset(type);
++  pluginKeyboard->reset(type);
+   pic->reset(type);
+ #endif
+ 
+Index: iodev/iodev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
+retrieving revision 1.18.4.6
+diff -u -r1.18.4.6 iodev.h
+--- iodev/iodev.h	8 Oct 2002 17:16:35 -0000	1.18.4.6
++++ iodev/iodev.h	8 Oct 2002 20:53:59 -0000
+@@ -77,6 +77,54 @@
+ #  define BX_DEV_THIS this->
+ #endif
+ 
++//////////////////////////////////////////////////////////////////////
++// bx_devmodel_c declaration
++//////////////////////////////////////////////////////////////////////
++
++// This class defines virtual methods that are common to all devices. 
++// Child classes do not need to implement all of them, because in this 
++// definition they are defined as empty, as opposed to being pure 
++// virtual (= 0).
++class bx_devmodel_c : public logfunctions {
++  public:
++  virtual void init_mem(BX_MEM_C *) {}
++  virtual void init(bx_devices_c *d) {}
++  virtual void reset(unsigned type) {}
++  virtual void device_load_state () {}
++  virtual void device_save_state () {}
++};
++
++//////////////////////////////////////////////////////////////////////
++// declare stubs for devices
++//////////////////////////////////////////////////////////////////////
++
++#define STUBFUNC(dev,method) \
++   pluginlog->panic("%s called in %s stub. you must not have loaded the %s plugin", #dev, #method, #dev )
++
++class bx_keyb_stub_c : public bx_devmodel_c {
++  public:
++  // stubs for bx_keyb_c methods
++  virtual void mouse_motion(int delta_x, int delta_y, unsigned button_state) {
++    STUBFUNC(keyboard, mouse_motion);
++  }
++  virtual void gen_scancode(Bit32u   scancode) {
++    STUBFUNC(keyboard, gen_scancode);
++  }
++  virtual void put_scancode( unsigned char *code, int count ) {
++    STUBFUNC(keyboard, put_scancode);
++  }
++  virtual void paste_bytes(Bit8u *data, Bit32s length) {
++    STUBFUNC(keyboard, paste_bytes);
++  }
++  virtual void paste_delay_changed () {
++    STUBFUNC(keyboard, paste_delay_changed);
++  }
++};
++
++extern bx_keyb_stub_c pluginKeyboardStub;
++
++
++
+ 
+ 
+ class bx_devices_c : public logfunctions {
+@@ -110,7 +158,7 @@
+   bx_pit_c         *pit;
+   bx_ioapic_c      *ioapic;
+ #if !BX_PLUGINS
+-  bx_keyb_c        *keyboard;
++  //bx_keyb_c   *keyboard;
+   bx_dma_c         *dma;
+   bx_unmapped_c    *unmapped;
+   bx_biosdev_c     *biosdev;
+Index: iodev/keyboard.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.cc,v
+retrieving revision 1.67.2.5
+diff -u -r1.67.2.5 keyboard.cc
+--- iodev/keyboard.cc	8 Oct 2002 17:16:36 -0000	1.67.2.5
++++ iodev/keyboard.cc	8 Oct 2002 20:54:01 -0000
+@@ -55,22 +55,18 @@
+ #include "keyboard.h"
+ #endif
+ 
+-#define LOG_THIS  bx_keyboard.
+-
+-
++#define LOG_THIS  pluginKeyboard->
+ #define VERBOSE_KBD_DEBUG 0
+ 
+-
+-bx_keyb_c bx_keyboard;
+-
+-#if BX_USE_KEY_SMF
+-#define this (&bx_keyboard)
+-#endif
++bx_keyb_c theKeyboard;
+ 
+ #if BX_PLUGINS
+   int
+ plugin_init(plugin_t *plugin, int argc, char *argv[])
+ {
++  // Before this plugin was loaded, pluginKeyboard pointed to a stub.
++  // Now make it point to the real thing.
++  pluginKeyboard = &theKeyboard;
+   return(0); // Success
+ }
+ 
+@@ -78,26 +74,35 @@
+ plugin_fini(void)
+ {
+ }
+-
++#else
++// When plugins are turned off, we have to create a bx_keyb_c object.
++// Also provide the pluginKeyboard pointer which every other object
++// will use to reference this object.
++bx_keyb_stub_c *pluginKeyboard = &theKeyboard;
++
++// NOTE: It would be possible to put pluginKeyboard in plugin.cc all the time,
++// but when I did that I had a strange linking problem.  I tried to rely on the
++// bx_keyb_c constructor to register the object.  It should have worked because
++// there was a global variable of type bx_keyb_c declared in this file!  But
++// the linker (ld 2.9.5) saw that there were no references to this file from
++// the outside, and it decided not to link it in.  So the device was never
++// registered.  I solved it by putting pluginKeyboard into this file in the
++// !plugin case, so that there are external references that force the linker to
++// link it in.
+ #endif
+ 
++
+ bx_keyb_c::bx_keyb_c(void)
+ {
++  fprintf (stderr, "bx_keyb_c constructor\n");
+   // constructor
+   // should zero out state info here???
+   memset( &s, 0, sizeof(s) );
+   BX_KEY_THIS put("KBD");
+   BX_KEY_THIS settype(KBDLOG);
+-  BX_DEBUG(("Init $Id: patch.plugin-virtual-functions,v 1.1.2.1 2002-10-08 21:01:46 bdenney Exp $"));
+ #if BX_PLUGINS
+-  pluginMouseMotion = bx_keyboard.mouse_motion;
+-  pluginGenScancode = bx_keyboard.gen_scancode;
+-  pluginPutScancode = bx_keyboard.put_scancode;
+-  pluginKbdPasteBytes = bx_keyboard.paste_bytes;
+-  pluginKbdPasteDelayChanged = bx_keyboard.paste_delay_changed;
+-
+   // Register plugin basic entry points
+-  BX_REGISTER_DEVICE(NULL, init, reset, NULL, NULL, BX_PLUGIN_KEYBOARD);
++  BX_REGISTER_DEVICE_DEVMODEL (this, BX_PLUGIN_KEYBOARD);
+ #endif
+ }
+ 
+@@ -1282,7 +1287,6 @@
+ }
+ 
+ 
+-
+   void
+ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
+ {
+@@ -1648,3 +1652,4 @@
+   fd->read_check ("keyboard end");
+   return(0);
+ }
++
+Index: iodev/keyboard.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.h,v
+retrieving revision 1.17.4.1
+diff -u -r1.17.4.1 keyboard.h
+--- iodev/keyboard.h	6 Oct 2002 23:17:52 -0000	1.17.4.1
++++ iodev/keyboard.h	8 Oct 2002 20:54:01 -0000
+@@ -32,12 +32,13 @@
+ #define BX_KBD_ELEMENTS 16
+ #define BX_MOUSE_BUFF_SIZE 48
+ 
++// these keywords should only be used in keyboard.cc
+ #if BX_USE_KEY_SMF
+ #  define BX_KEY_SMF  static
+-#  define BX_KEY_THIS bx_keyboard.
++#  define BX_KEY_THIS theKeyboard.
+ #else
+ #  define BX_KEY_SMF
+-#  define BX_KEY_THIS this->
++#  define BX_KEY_THIS 
+ #endif
+ 
+ #define MOUSE_MODE_RESET  10
+@@ -45,31 +46,32 @@
+ #define MOUSE_MODE_REMOTE 12
+ #define MOUSE_MODE_WRAP   13
+ 
+-extern bx_keyb_c bx_keyboard;
+-
+-class bx_keyb_c : public logfunctions {
++class bx_keyb_c : public bx_keyb_stub_c {
+ public:
+   bx_keyb_c(void);
+   ~bx_keyb_c(void);
+-  BX_KEY_SMF void     init(bx_devices_c *d);
+-  BX_KEY_SMF void     reset(unsigned type);
+-  BX_KEY_SMF void     gen_scancode(Bit32u   scancode);
+-  BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
+-  BX_KEY_SMF void     service_paste_buf ();
++  // implement bx_devmodel_c interface
++  virtual void     init(bx_devices_c *d);
++  virtual void     reset(unsigned type);
++  // override stubs from bx_keyb_stub_c
++  virtual void     gen_scancode(Bit32u   scancode);
++  virtual void     paste_bytes(Bit8u *data, Bit32s length);
++  virtual void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
++  virtual void     put_scancode( unsigned char *code, int count );
++
++  // update the paste delay based on bx_options.Okeyboard_paste_delay
++  virtual void     paste_delay_changed ();
++
++private:
+   BX_KEY_SMF Bit8u    get_kbd_enable(void);
+-  BX_KEY_SMF void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
++  BX_KEY_SMF void     service_paste_buf ();
+   BX_KEY_SMF void     mouse_enabled_changed(bool enabled);
+   BX_KEY_SMF void     create_mouse_packet(bool force_enq);
+   BX_KEY_SMF void     mouse_button(unsigned mouse_state);
+   BX_KEY_SMF int      SaveState( class state_file *fd );
+   BX_KEY_SMF int      LoadState( class state_file *fd );
+   BX_KEY_SMF unsigned periodic( Bit32u   usec_delta );
+-  BX_KEY_SMF void     put_scancode( unsigned char *code, int count );
+ 
+-  // update the paste delay based on bx_options.Okeyboard_paste_delay
+-  BX_KEY_SMF void     paste_delay_changed ();
+-
+-private:
+ 
+   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+@@ -152,7 +154,7 @@
+ 	    break;
+ 
+ 	  default:
+-	    bx_keyboard.panic("mouse: invalid resolution_cpmm");
++	    pluginKeyboard->panic("mouse: invalid resolution_cpmm");
+ 	  };
+ 	  return ret;
+ 	}
