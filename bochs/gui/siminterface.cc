@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.76 2002-10-21 11:13:54 bdenney Exp $
+// $Id: siminterface.cc,v 1.77 2002-10-24 21:06:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -26,8 +26,11 @@ logfunctions *siminterface_log = NULL;
 // 
 
 class bx_real_sim_c : public bx_simulator_interface_c {
-  sim_interface_callback_t callback;
-  void *callback_ptr;
+  bxevent_handler bxevent_callback;
+  void *bxevent_callback_data;
+  const char *registered_ci_name;
+  config_interface_callback_t ci_callback;
+  void *ci_callback_data;
   int init_done;
   bx_param_c **param_registry;
   int registry_alloc_size;
@@ -75,8 +78,8 @@ public:
   virtual int get_floppy_options (int drive, bx_floppy_options *out);
   virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *device = NULL);
   virtual char *get_floppy_type_name (int type);
-  virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
-  virtual void get_notify_callback (sim_interface_callback_t *func, void **arg);
+  virtual void set_notify_callback (bxevent_handler func, void *arg);
+  virtual void get_notify_callback (bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event (BxEvent *event);
   virtual int log_msg (const char *prefix, int level, const char *msg);
   virtual int ask_param (bx_id which);
@@ -88,11 +91,11 @@ public:
   virtual void refresh_ci ();
   virtual void refresh_vga () {
     // maybe need to check if something has been initialized yet?
-    bx_vga.timer_handler (&bx_vga); 
+    DEV_vga_refresh();
   }
   virtual void handle_events () {
     // maybe need to check if something has been initialized yet?
-    bx_gui.handle_events ();
+    bx_gui->handle_events ();
   }
   bx_param_c *get_first_cdrom ();
 #if BX_DEBUGGER
@@ -101,6 +104,14 @@ public:
   virtual char *debug_get_next_command ();
   virtual void debug_puts (const char *cmd);
 #endif
+  virtual void register_configuration_interface (
+    const char* name, 
+    config_interface_callback_t callback,
+    void *userdata);
+  virtual int configuration_interface(const char* name, ci_command_t command);
+  virtual int begin_simulation (int argc, char *argv[]);
+  virtual void set_sim_thread_func (is_sim_thread_func_t func) {}
+  virtual bool is_sim_thread ();
 };
 
 bx_param_c *
@@ -182,8 +193,11 @@ bx_simulator_interface_c::bx_simulator_interface_c ()
 
 bx_real_sim_c::bx_real_sim_c ()
 {
-  callback = NULL;
-  callback_ptr = NULL;
+  bxevent_callback = NULL;
+  bxevent_callback_data = NULL;
+  ci_callback = NULL;
+  ci_callback_data = NULL;
+  is_sim_thread_func = NULL;
   
   enabled = 1;
   int i;
@@ -411,28 +425,28 @@ bx_real_sim_c::get_floppy_type_name (int type)
 }
 
 void 
-bx_real_sim_c::set_notify_callback (sim_interface_callback_t func, void *arg)
+bx_real_sim_c::set_notify_callback (bxevent_handler func, void *arg)
 {
-  callback = func;
-  callback_ptr = arg;
+  bxevent_callback = func;
+  bxevent_callback_data = arg;
 }
 
 void bx_real_sim_c::get_notify_callback (
-    sim_interface_callback_t *func,
+    bxevent_handler *func,
     void **arg)
 {
-  *func = callback;
-  *arg = callback_ptr;
+  *func = bxevent_callback;
+  *arg = bxevent_callback_data;
 }
 
 BxEvent *
 bx_real_sim_c::sim_to_ci_event (BxEvent *event)
 {
-  if (callback == NULL) {
-    BX_ERROR (("notify called, but no callback function is registered"));
+  if (bxevent_callback == NULL) {
+    BX_ERROR (("notify called, but no bxevent_callback function is registered"));
     return NULL;
   } else {
-    return (*callback)(callback_ptr, event);
+    return (*bxevent_callback)(bxevent_callback_data, event);
   }
 }
 
@@ -445,6 +459,8 @@ bx_real_sim_c::log_msg (const char *prefix, int level, const char *msg)
   be.u.logmsg.prefix = prefix;
   be.u.logmsg.level = level;
   be.u.logmsg.msg = msg;
+  // default return value in case something goes wrong.
+  be.retcode = BX_LOG_ASK_CHOICE_DIE;
   //fprintf (stderr, "calling notify.\n");
   sim_to_ci_event (&be);
   return be.retcode;
@@ -610,12 +626,10 @@ void bx_real_sim_c::debug_break () {
 
 // this should only be called from the sim_thread.
 void bx_real_sim_c::debug_interpret_cmd (char *cmd) {
-#if BX_WITH_WX
-  if (!isSimThread ()) {
+  if (!is_sim_thread ()) {
     fprintf (stderr, "ERROR: debug_interpret_cmd called but not from sim_thread\n");
     return;
   }
-#endif
   bx_dbg_interpret_line (cmd);
 }
 
@@ -648,6 +662,46 @@ void bx_real_sim_c::debug_puts (const char *text)
 #endif
 }
 #endif
+
+void 
+bx_real_sim_c::register_configuration_interface (
+  const char* name, 
+  config_interface_callback_t callback,
+  void *userdata)
+{
+  ci_callback = callback;
+  ci_callback_data = userdata;
+  registered_ci_name = name;
+}
+
+int 
+bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
+{
+  bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
+  char *name = ci_param->get_choice (ci_param->get ());
+  if (!ci_callback) {
+    BX_PANIC (("no configuration interface was loaded"));
+    return -1;
+  }
+  if (strcmp (name, registered_ci_name) != 0) {
+    BX_PANIC (("siminterface does not support loading one configuration interface and then calling another"));
+    return -1;
+  }
+  return (*ci_callback)(ci_callback_data, command);
+}
+
+int 
+bx_real_sim_c::begin_simulation (int argc, char *argv[])
+{
+#warning does the config interface actually need to pass these args into bx_begin_simulation??  None of them is actually doing it.
+  return bx_begin_simulation (argc, argv);
+}
+
+bool bx_real_sim_c::is_sim_thread ()
+{
+  if (is_sim_thread_func == NULL) return true;
+  return (*is_sim_thread_func)();
+}
 
 /////////////////////////////////////////////////////////////////////////
 // define methods of bx_param_* and family
@@ -1029,6 +1083,26 @@ bx_param_enum_c::bx_param_enum_c (bx_id id,
   // class constructor with the real max.
   this->max = value_base + (p - choices - 1);
   set (initial_val);
+}
+
+int 
+bx_param_enum_c::find_by_name (const char *string)
+{
+  char **p;
+  for (p=&choices[0]; *p; p++) {
+    if (!strcmp (string, *p))
+      return p-choices;
+  }
+  return -1;
+}
+
+bool 
+bx_param_enum_c::set_by_name (const char *string)
+{
+  int n = find_by_name (string);
+  if (n<0) return false;
+  set (n);
+  return true;
 }
 
 bx_param_string_c::bx_param_string_c (bx_id id,

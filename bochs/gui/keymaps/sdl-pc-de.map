@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: sdl-pc-de.map,v 1.1 2002-10-10 18:30:16 vruppert Exp $
+# $Id: sdl-pc-de.map,v 1.2 2002-10-24 21:06:55 bdenney Exp $
 # Target: PC(x86) keyboard, DE keymap, SDL gui on X11
 # Author: Volker Ruppert
 #

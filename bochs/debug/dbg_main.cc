@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.79 2002-10-17 15:48:55 bdenney Exp $
+// $Id: dbg_main.cc,v 1.80 2002-10-24 21:05:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -383,11 +383,11 @@ process_sim2:
 
 
   // (mch) Moved from main.cc
-  bx_devices.init(BX_MEM(0));
-  bx_devices.reset(BX_RESET_HARDWARE);
+  DEV_init_devices();
+  DEV_reset_devices(BX_RESET_HARDWARE);
   SIM->set_init_done (1);
 
-  bx_gui.init_signal_handlers ();
+  bx_gui->init_signal_handlers ();
   bx_pc_system.start_timers();
 
   // create a boolean parameter that will tell if the simulation is
@@ -655,7 +655,7 @@ bx_debug_ctrlc_handler(int signum)
   // Otherwise the BX_PANIC() below can be called in multiple threads at
   // once, leading to multiple threads trying to display a dialog box,
   // leading to GUI deadlock.
-  if (!isSimThread ()) {
+  if (!SIM->is_sim_thread ()) {
     BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
     return;
   }
@@ -862,7 +862,7 @@ bx_dbg_fast_forward(Bit32u num)
 	bx_debugger.fast_forward_mode = 0;
 	// bx_debugger.icount_quantum = save_icount_quantum;
 
-	bx_vga.timer_handler(&bx_vga);
+	DEV_vga_refresh();
 
 	printf("Copying CPU...\n");
 	bx_dbg_cpu_t cpu;
@@ -1205,7 +1205,7 @@ void bx_dbg_show_command(char* arg)
 		    printf("Turned off all bx_dbg flags\n");
 		    return;
 	    } else if(!strcmp(arg,"\"vga\"")){
-	      bx_vga.timer ();
+	      DEV_vga_refresh();
 	      return;
 	    } else {
 		  printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
@@ -1273,7 +1273,7 @@ void
 playback_entry_t::trigger ()
 {
       if (!strcmp("gen_scancode", command)) {
-	    bx_devices.keyboard->gen_scancode(argument);
+	    DEV_kbd_gen_scancode(argument);
       } else {
 	    dbg_printf ( "Unknown playback command '%s'\n", command);
 	    return;
@@ -1668,7 +1668,7 @@ bx_dbg_continue_command(void)
   SIM->refresh_ci ();
 
   // (mch) hack
-  bx_vga.timer_handler(&bx_vga);
+  DEV_vga_refresh();
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
@@ -4120,7 +4120,7 @@ bx_dbg_ucmem_read(Bit32u addr)
 			  bx_dbg_exit(0);
 		  }
 
-		  value = bx_devices.vga->mem_read(addr);
+		  value = DEV_vga_mem_read(addr);
 		  bx_dbg_ucmem_report(addr, 1, BX_READ, value);
 		  bx_debugger.UCmem_journal.element[tail].op    = BX_READ;
 		  bx_debugger.UCmem_journal.element[tail].len   = 1;
@@ -4138,7 +4138,7 @@ bx_dbg_ucmem_read(Bit32u addr)
 
 		  return(value);
 	  } else {
-		  value = bx_devices.vga->mem_read(addr);
+		  value = DEV_vga_mem_read(addr);
 		  return(value);
 	  }
   }
@@ -4204,10 +4204,10 @@ bx_dbg_ucmem_write(Bit32u addr, Bit8u value)
 		  if (bx_debugger.UCmem_journal.size)
 			  bx_debugger.UCmem_journal.tail++;
 		  bx_debugger.UCmem_journal.size++;
-		  bx_devices.vga->mem_write(addr, value);
+		  DEV_vga_mem_write(addr, value);
 		  bx_dbg_ucmem_report(addr, 1, BX_WRITE, value);
 	  } else {
-		  bx_devices.vga->mem_write(addr, value);
+		  DEV_vga_mem_write(addr, value);
 	  }
   }
   else {
@@ -4454,7 +4454,7 @@ bx_dbg_IAC(void)
   // the PIC code.
   unsigned iac;
 
-  iac = bx_devices.pic->IAC();
+  iac = BX_PIC_AIC ();
   return(iac);
 }
 

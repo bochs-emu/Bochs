@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.7 2002-08-27 19:54:46 bdenney Exp $
+// $Id: serial.h,v 1.8 2002-10-24 21:07:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 
 #if BX_USE_SER_SMF
 #  define BX_SER_SMF  static
-#  define BX_SER_THIS bx_serial.
+#  define BX_SER_THIS theSerialDevice->
 #else
 #  define BX_SER_SMF
 #  define BX_SER_THIS this->
@@ -149,20 +149,18 @@ typedef struct {
 
 
 
-class bx_serial_c : public logfunctions {
+class bx_serial_c : public bx_devmodel_c {
 public:
   bx_serial_c(void);
   ~bx_serial_c(void);
-  BX_SER_SMF void   init(bx_devices_c *);
-  BX_SER_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
 #if USE_RAW_SERIAL
   serial_raw* raw;
 #endif // USE_RAW_SERIAL
 
 private:
     bx_serial_t s[BX_SERIAL_MAXDEV];
-
-  bx_devices_c *devices;
 
   static void tx_timer_handler(void *);
   BX_SER_SMF void tx_timer(void);
@@ -178,5 +176,3 @@ private:
 #endif
   };
 
-
-extern bx_serial_c bx_serial;

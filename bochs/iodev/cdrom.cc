@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.47 2002-10-06 20:19:03 vruppert Exp $
+// $Id: cdrom.cc,v 1.48 2002-10-24 21:07:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,6 +31,11 @@
 // ioctl() calls and such.  Should be fairly easy to add support
 // for your OS if it is not supported yet.
 
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 
@@ -208,7 +213,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.47 2002-10-06 20:19:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.48 2002-10-24 21:07:10 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

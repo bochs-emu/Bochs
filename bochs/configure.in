@@ -2,8 +2,9 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.152 2002-10-16 20:19:35 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.153 2002-10-24 21:04:27 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
@@ -62,6 +63,7 @@ case "$target" in
     DEFAULT_GUI=macos                 # macos defaults to macos
     ;;
   *-beos*)
+    ADD_FLAGS="-Wno-multichar"
     DEFAULT_GUI=beos                  # beos defaults to beos
     ;;
   *-amigaos*)
@@ -74,6 +76,7 @@ esac
 if test "${ADD_FLAGS:+set}" = set; then
       CFLAGS="$CFLAGS $ADD_FLAGS"
       CXXFLAGS="$CXXFLAGS $ADD_FLAGS"
+	  CPPFLAGS="$CPPFLAGS $ADD_FLAGS"
 fi
 
 AC_MSG_CHECKING(for standard CFLAGS on this platform)
@@ -100,7 +103,19 @@ fi
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
+
+dnl------------ libtool configuration
+dnl Configure libtool, and default to shared libraries.  Libtool will only be
+dnl used for compiling and linking plugins.
+AC_DISABLE_STATIC
+dnl Check for dlopen support
+AC_LIBTOOL_DLOPEN
+dnl Configure libtool
+AC_PROG_LIBTOOL
+dnl Configure the ltdl library.  This must go after AC_PROG_LIBTOOL or
+dnl else it disables shared libraries somehow.  The values from this macro
+dnl are written to ltdlconf.h.
+AC_LIB_LTDL
 
 AC_PATH_XTRA
 
@@ -188,6 +203,109 @@ AC_TRY_COMPILE([#include <hash_map.h>], [],
      AC_DEFINE(BX_HAVE_HASH_MAP)
    ], AC_MSG_RESULT(no))
 AC_LANG_RESTORE
+
+dnl Implement a check for each gui library to see if has a chance of compiling.
+if test "$with_all_libs" = yes; then
+  if test "$cross_configure" = 1; then
+    AC_MSG_WARN([[Using --with-all-libs while cross configuring is very unlikely to be what you want.  You should specify the --with-* args yourself.]])
+  fi
+  if test "$with_beos" != yes; then
+    can_compile_beos=1
+    AC_CHECK_HEADER([app/Application.h], [], [ can_compile_beos=0 ])
+    AC_CHECK_HEADER([interface/Window.h], [], [ can_compile_beos=0 ])
+    AC_CHECK_HEADER([interface/View.h], [], [ can_compile_beos=0 ])
+    if test $can_compile_beos = 1; then
+      with_beos=yes
+    fi
+  fi
+
+  if test "$with_amigaos" != yes; then
+    can_compile_amigaos=1
+    AC_CHECK_HEADER([proto/intuition.h], [], [ can_compile_amigaos=0 ])
+    AC_CHECK_HEADER([intuition/IntuitionBase.h], [], [ can_compile_amigaos=0 ])
+    AC_CHECK_HEADER([cybergraphics/cybergraphics.h], [], [ can_compile_amigaos=0 ])
+    AC_CHECK_HEADER([devices/trackdisk.h], [], [ can_compile_amigaos=0 ])
+    if test $can_compile_amigaos = 1; then
+      with_amigaos=yes
+    fi
+  fi
+
+  if test "$with_macos" != yes; then
+    can_compile_macos=1
+    AC_CHECK_HEADER([Quickdraw.h], [], [ can_compile_macos=0 ])
+    AC_CHECK_HEADER([Dialogs.h], [], [ can_compile_macos=0 ])
+    if test $can_compile_macos = 1; then
+      with_macos=yes
+    fi
+  fi
+
+  if test "$with_carbon" != yes; then
+    can_compile_carbon=1
+    AC_CHECK_HEADER([Carbon.h], [], [ can_compile_carbon=0 ])
+    AC_CHECK_HEADER([ApplicationServices/ApplicationServices.h], [], [ can_compile_carbon=0 ])
+    if test $can_compile_carbon = 1; then
+      with_carbon=yes
+    fi
+  fi
+
+  if test "$with_win32" != yes; then
+    can_compile_win32=1
+    AC_CHECK_HEADER([windows.h], [], [ can_compile_win32=0 ])
+    AC_CHECK_HEADER([commctrl.h], [], [ can_compile_win32=0 ])
+    if test $can_compile_win32 = 1; then
+      with_win32=yes
+    fi
+  fi
+
+  if test "$with_sdl" != yes; then
+    can_compile_sdl=1
+    AC_CHECK_HEADER([SDL/SDL.h], [], [ can_compile_sdl=0 ])
+    AC_CHECK_HEADER([SDL/SDL_main.h], [], [ can_compile_sdl=0 ])
+    if test $can_compile_sdl = 1; then
+      with_sdl=yes
+    fi
+  fi
+
+  if test "$with_x11" != yes; then
+    can_compile_x11=1
+    AC_CHECK_HEADER([X11/Xlib.h], [], [ can_compile_x11=0 ])
+    AC_CHECK_HEADER([X11/Xutil.h], [], [ can_compile_x11=0 ])
+    if test $can_compile_x11 = 1; then
+      with_x11=yes
+    fi
+  fi
+
+  if test "$with_rfb" != yes; then
+    can_compile_rfb=1
+    case $target in
+      *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
+	AC_CHECK_HEADER([winsock.h], [], [ can_compile_rfb=0 ])
+	AC_CHECK_HEADER([process.h], [], [ can_compile_rfb=0 ])
+        ;;
+      *)
+	AC_CHECK_HEADER([sys/socket.h], [], [ can_compile_rfb=0 ])
+	AC_CHECK_HEADER([netinet/tcp.h], [], [ can_compile_rfb=0 ])
+	AC_CHECK_HEADER([pthread.h], [], [ can_compile_rfb=0 ])
+	;;
+    esac
+    if test $can_compile_rfb = 1; then
+      with_rfb=yes
+    fi
+  fi
+
+  if test "$with_term" != yes; then
+    can_compile_term=1
+    AC_CHECK_HEADER([curses.h], [], [ can_compile_term=0 ])
+    AC_CHECK_HEADER([signal.h], [], [ can_compile_term=0 ])
+    if test $can_compile_term = 1; then
+      with_term=yes
+    fi
+  fi
+
+  if test "$with_nogui" != yes; then
+    with_nogui=yes
+  fi
+fi    # end of if $with_all_libs = yes
 
 use_config_interface=1
 AC_MSG_CHECKING(for configuration interface)
@@ -302,6 +420,45 @@ AC_ARG_ENABLE(idle-hack,
   )
 AC_SUBST(BX_USE_IDLE_HACK)
 
+AC_CHECK_HEADER(dlfcn.h, AC_DEFINE(BX_HAVE_DLFCN_H, 1))
+AC_CHECK_HEADER(assert.h, AC_DEFINE(HAVE_ASSERT_H, 1))
+
+AC_MSG_CHECKING(for plugins support)
+AC_ARG_ENABLE(plugins,
+  [  --enable-plugins                enable plugins],
+  [if test "$enableval" = yes; then
+     bx_plugins=1
+   else
+     bx_plugins=0
+   fi],
+  [
+    bx_plugins=0
+    ]
+  )
+
+if test "$bx_plugins" = 1; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(BX_PLUGINS, 1)
+  GUI_NON_PLUGIN_OBJS='$(OBJS_THAT_CANNOT_BE_PLUGINS)'
+  GUI_PLUGIN_OBJS='$(OBJS_THAT_CAN_BE_PLUGINS)'
+  # and the $(OBJS_THAT_SUPPORT_OTHER_PLUGINS) will be built and linked
+  # by special link rules for the plugins that they support.
+  LIBS="$LIBS $LIBADD_DL"
+  PLUGIN_VAR='ltdl.o'
+  PLUGIN_TARGET=bochs_plugins
+  INSTALL_PLUGINS_VAR=install_libtool_plugins
+else 
+  AC_MSG_RESULT(no)
+  bx_plugins=0
+  AC_DEFINE(BX_PLUGINS, 0)
+  GUI_NON_PLUGIN_OBJS='$(OBJS_THAT_CANNOT_BE_PLUGINS) $(OBJS_THAT_CAN_BE_PLUGINS) $(OBJS_THAT_SUPPORT_OTHER_PLUGINS)'
+  GUI_PLUGIN_OBJS=''
+fi
+
+# copy gui variables into iodev variables.  Later, we will add to the gui
+# objs list, according to which display libraries are enabled.
+IODEV_NON_PLUGIN_OBJS=$GUI_NON_PLUGIN_OBJS
+IODEV_PLUGIN_OBJS=$GUI_PLUGIN_OBJS
 
 AC_MSG_CHECKING(for number of processors)
 AC_ARG_ENABLE(processors,
@@ -1220,7 +1377,7 @@ AC_ARG_ENABLE(cdrom,
    else
     AC_MSG_RESULT(yes)
     CDROM_OBJS='cdrom.o'
-    if test "$with_amigaos" = yes; then
+    if test "$can_compile_amigaos" = yes; then
       # use the amiga cdrom file instead.
       CDROM_OBJS="cdrom_amigaos.o"
     elif test "$can_use_osx_cdrom" = yes; then
@@ -1309,7 +1466,7 @@ AC_ARG_ENABLE(gdb-stub,
     AC_DEFINE(BX_GDBSTUB, 1)
     GDBSTUB_VAR='$(GDBSTUB_OBJS)'
     if test "$bx_debugger" = 1; then
-      AC_MSG_ERROR(--enable-debugger and --enable-gdb-stub are mutually exclusive)
+      AC_MSG_ERROR([[--enable-debugger and --enable-gdb-stub are mutually exclusive]])
     fi
    else
     AC_MSG_RESULT(no)
@@ -1359,6 +1516,7 @@ AC_SUBST(IODEBUG_OBJS)
 
 
 PRIMARY_TARGET='bochs'
+PLUGIN_LIBNAME_TRANSFORMATION='%.o=lib%.la'
 
 AC_DEFINE(BX_PROVIDE_DEVICE_MODELS, 1)
 IODEV_LIB_VAR='iodev/libiodev.a'
@@ -1421,6 +1579,10 @@ AC_ARG_WITH(wx,
   [  --with-wx                         use wxWindows libraries],
   )
 
+AC_ARG_WITH(all-libs,
+  [  --with-all-libs                   compile all guis that Bochs supports],
+  )
+
 dnl // DASH is option prefix for your platform
 dnl // SLASH is directory for your platform
 dnl // CXXFP is C++ File Prefix; the flag that tells the compiler
@@ -1436,8 +1598,8 @@ CFP=""
 OFP="-o "
 MAKELIB="ar rv \$@"
 RMCOMMAND="rm -f "
-LINK="\$(CXX) -o \$@ \$(CXXFLAGS)"
-LINK_CONSOLE="\$(CXX) -o \$@ \$(CXXFLAGS_CONSOLE)"
+LINK="\$(CXX) -o \$@ \$(CXXFLAGS) \$(LDFLAGS)"
+LINK_CONSOLE="\$(CXX) -o \$@ \$(CXXFLAGS_CONSOLE) \$(LDFLAGS)"
 EXE=""
 COMMAND_SEPARATOR="&& \\"
 CD_UP_ONE="echo done"
@@ -1472,82 +1634,114 @@ if test x$WX_CONFIG != xnot_found; then
   ]
 fi
 AC_MSG_RESULT($WX_VERSION)
+if test "$cross_configure" = 0; then
+  if test "$ok_wx_version" = 1; then
+    # detected a usable version
+    if test "$with_all_libs" = yes; then
+      with_wx=yes
+    fi
+  else
+    AC_MSG_WARN([Bochs for wxWindows cannot be compiled here, disabling it])
+    with_wx=no
+  fi
+fi
 
 AC_MSG_CHECKING(for default gui on this platform)
 AC_MSG_RESULT($DEFAULT_GUI)
-AC_MSG_CHECKING(for gui library to use)
+
+display_libs=""
 
 # the $with_* variable tells the gui library to use, but does NOT necessarily
 # indicate the platform.  Settings that depend on the platform should be
 # handled later.
 
 if test "$with_x11" = yes; then
-  AC_MSG_RESULT(X windows)
+  display_libs="$display_libs X11"
   if test "$no_x" = yes; then
     echo ERROR: X windows gui was selected, but X windows libraries were not found.
     exit 1
   fi
   AC_DEFINE(BX_WITH_X11, 1)
-  GUI_OBJS='$(GUI_OBJS_X11) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_X11)"
+  GUI_CFLAGS="$GUI_CFLAGS \$(X_CFLAGS)"
+  GUI_CXXFLAGS="$GUI_CXXFLAGS \$(X_CFLAGS)"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_X)"
   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
-elif test "$with_beos" = yes; then
-  AC_MSG_RESULT(beos)
+fi
+
+if test "$with_beos" = yes; then
+  display_libs="$display_libs beos"
   AC_DEFINE(BX_WITH_BEOS, 1)
-  GUI_OBJS='$(GUI_OBJS_BEOS) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
-elif test "$with_sdl" = yes; then
-  AC_MSG_RESULT(sdl)
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_BEOS)"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_BEOS)"
+fi
+
+if test "$with_sdl" = yes; then
+  display_libs="$display_libs sdl"
+  AC_DEFINE(BX_WITH_SDL, 1)
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL)"
   # GUI_*FLAGS are added to the compilation of every bochs file, not just
   # the files in gui/*.cc.
-  GUI_CFLAGS="$CFLAGS \`sdl-config --cflags\`"
-  GUI_CXXFLAGS="$CXXFLAGS \`sdl-config --cflags\`"
-  AC_DEFINE(BX_WITH_SDL, 1)
-  GUI_OBJS='$(GUI_OBJS_SDL) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_SDL)'
-elif test "$with_rfb" = yes; then
-  AC_MSG_RESULT(rfb)
+  GUI_CFLAGS="$GUI_CFLAGS \`sdl-config --cflags\`"
+  GUI_CXXFLAGS="$GUI_CXXFLAGS \`sdl-config --cflags\`"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
+fi
+
+if test "$with_rfb" = yes; then
+  display_libs="$display_libs rfb"
   AC_DEFINE(BX_WITH_RFB, 1)
-  GUI_OBJS='$(GUI_OBJS_RFB) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_RFB)'
-elif test "$with_amigaos" = yes; then
-  AC_MSG_RESULT(amigaos)
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_RFB)"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_RFB)"
+fi
+
+if test "$with_amigaos" = yes; then
+  display_libs="$display_libs amigaos"
   AC_DEFINE(BX_WITH_AMIGAOS, 1)
-  GUI_OBJS='$(GUI_OBJS_AMIGAOS) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_AMIGAOS)'
-elif test "$with_win32" = yes; then
-  AC_MSG_RESULT(win32)
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_AMIGAOS)"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_AMIGAOS)"
+fi
+
+if test "$with_win32" = yes; then
+  display_libs="$display_libs win32"
   AC_DEFINE(BX_WITH_WIN32, 1)
-  GUI_OBJS='$(GUI_OBJS_WIN32) control.o'
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WIN32)"
   case $target in
     *-pc-windows*)
-       GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'  # native libs for win gui
+       GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32_VCPP)"
        ;;
     *-cygwin* | *-mingw32*)
-       GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32)'   # cygwin/mingw libs for win gui
+       GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32)"
        ;;
     *) echo Unsupported compile setup: GUI library is win32, but target is neither windows nor cygwin.
        ;;
   esac
-elif test "$with_macos" = yes; then
-  AC_MSG_RESULT(macos)
+fi
+
+if test "$with_macos" = yes; then
+  display_libs="$display_libs macos"
   AC_DEFINE(BX_WITH_MACOS, 1)
-  GUI_OBJS='$(GUI_OBJS_MACOS) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
-elif test "$with_carbon" = yes; then
-  AC_MSG_RESULT(carbon)
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_MACOS)"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_MACOS)"
+fi
+
+if test "$with_carbon" = yes; then
+  display_libs="$display_libs carbon"
   AC_DEFINE(BX_WITH_CARBON, 1)
-  GUI_OBJS='$(GUI_OBJS_CARBON) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_CARBON)'
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_CARBON)"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_CARBON)"
   PRIMARY_TARGET=bochs.app/.build   # only for carbon application
-elif test "$with_term" = yes; then
-  AC_MSG_RESULT(term)
+fi
+
+if test "$with_term" = yes; then
+  display_libs="$display_libs term"
   AC_DEFINE(BX_WITH_TERM, 1)
-  GUI_OBJS='$(GUI_OBJS_TERM) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_TERM)'
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_TERM)"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_TERM)"
   use_curses=yes
-elif test "$with_wx" = yes; then
-  AC_MSG_RESULT(wxWindows)
+fi
+
+if test "$with_wx" = yes; then
+  display_libs="$display_libs wxWindows"
   if test "$cross_configure" = 1; then
     true  # do not insist, if configuring for another machine
   else
@@ -1558,6 +1752,7 @@ elif test "$with_wx" = yes; then
     fi
   fi
   AC_DEFINE(BX_WITH_WX, 1)
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WX)"
   WX_CFLAGS="\`$WX_CONFIG --cflags\`"
   WX_CXXFLAGS="\`$WX_CONFIG --cxxflags\`"
   GUI_LINK_OPTS_WX="\`$WX_CONFIG --libs\`"
@@ -1568,13 +1763,12 @@ elif test "$with_wx" = yes; then
     WX_CFLAGS="$WX_CFLAGS \`gtk-config --cflags\`"
     WX_CXXFLAGS="$WX_CXXFLAGS \`gtk-config --cflags\`"
   fi
-  # GUI_*FLAGS are added to the compilation of every bochs file, not just
-  # the files in gui/*.cc.
-  GUI_CFLAGS="$CFLAGS $WX_CFLAGS"
-  GUI_CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS"
-  # wxwindows is the only one without control.o in GUI_OBJS
-  GUI_OBJS='$(GUI_OBJS_WX)'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
+  # GUI_C*FLAGS are added to the compilation of every bochs file, not just
+  # the files in gui/*.cc.  They are not used when building other things
+  # such as bximage.
+  GUI_CFLAGS="$GUI_CFLAGS $WX_CFLAGS"
+  GUI_CXXFLAGS="$GUI_CXXFLAGS $WX_CXXFLAGS"
+  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WX)"
   # using debugger with readline is failing due to thread/signal handler
   # problems.
   case $target in
@@ -1583,11 +1777,43 @@ elif test "$with_wx" = yes; then
 	   GUI_LINK_OPTS_WX="$GUI_LINK_OPTS_WX --subsystem,windows -mwindows"
        ;;
   esac
-else
-  AC_MSG_RESULT(none)
+fi
+
+if test "$with_nogui" = yes; then
+  display_libs="$display_libs nogui"
   AC_DEFINE(BX_WITH_NOGUI, 1)
-  GUI_OBJS='$(GUI_OBJS_NOGUI) control.o'
-  GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
+  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_NOGUI)"
+fi
+
+AC_MSG_CHECKING(for display libraries)
+AC_MSG_RESULT($display_libs)
+
+if test "$display_libs" = ""; then
+  echo "No display libraries were selected. Use --with-* options to enable"
+  echo "individual display libraries, or --with-all-libs to detect the ones"
+  echo "that Bochs supports."
+  exit 1
+fi
+
+dnl To use wxWindows you must select it as both the configuration interface
+dnl and the display library.  In the simplest case where the user has
+dnl only configured with --with-wx, set both defaults to wxWindows.  
+dnl Without this setting, the config interface would default to the text
+dnl mode config interface, and then the wxWindows display library would not
+dnl be usable.
+if test "$display_libs" = " wxWindows"; then
+  AC_MSG_CHECKING(for default configuration interface)
+  AC_MSG_RESULT(wxWindows)
+  AC_MSG_CHECKING(for default display library)
+  AC_MSG_RESULT(wxWindows)
+  AC_DEFINE(BX_DEFAULT_CONFIG_INTERFACE, "wx")
+  AC_DEFINE(BX_DEFAULT_DISPLAY_LIBRARY, "wx")
+fi
+
+if test "$bx_plugins" = 1; then
+  GUI_PLUGIN_OBJS="$GUI_PLUGIN_OBJS $SPECIFIC_GUI_OBJS"
+else
+  GUI_NON_PLUGIN_OBJS="$GUI_NON_PLUGIN_OBJS $SPECIFIC_GUI_OBJS"
 fi
 
 AC_SUBST(GUI_CFLAGS)
@@ -1622,7 +1848,7 @@ case "$target" in
     LINK="link $L_OPT /nologo /subsystem:console /incremental:no /machine:I386 /out:\$@ BINMODE.OBJ"
     LINK_CONSOLE=$LINK
     EXE=".exe"
-    PRIMARY_TARGET="bochs.exe"
+	PRIMARY_TARGET="bochs.exe"
     # also compile niclist if networking is on
     if test "$networking" = yes; then
       PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
@@ -1640,8 +1866,20 @@ case "$target" in
     AC_DEFINE(BX_HAVE_STRTOUQ, 0)
     AC_DEFINE(HAVE_LIBREADLINE, 0)
     AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
+    AC_DEFINE(BX_HAVE_DLFCN_H, 0)
     ;;
 esac
+
+case $target in 
+  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw*)
+	if test "$bx_plugins" = 1; then 
+	  # set variables for building DLL plugins
+	  PRIMARY_TARGET=".win32_dll_plugin_target"
+	  PLUGIN_LIBNAME_TRANSFORMATION='%.o=%.dll'
+      INSTALL_PLUGINS_VAR=install_dll_plugins
+	fi
+    ;;
+esac 
 
 if test "$use_curses" = yes -a "$cross_configure" = 0; then
   AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
@@ -1918,6 +2156,7 @@ AC_SUBST(LINK)
 AC_SUBST(LINK_CONSOLE)
 AC_SUBST(EXE)
 AC_SUBST(PRIMARY_TARGET)
+AC_SUBST(PLUGIN_LIBNAME_TRANSFORMATION)
 AC_SUBST(COMMAND_SEPARATOR)
 AC_SUBST(CD_UP_ONE)
 AC_SUBST(CD_UP_TWO)
@@ -1925,6 +2164,13 @@ AC_SUBST(VERSION)
 AC_SUBST(VER_STRING)
 AC_SUBST(REL_STRING)
 AC_SUBST(EXTRA_LINK_OPTS)
+AC_SUBST(GUI_NON_PLUGIN_OBJS)
+AC_SUBST(GUI_PLUGIN_OBJS)
+AC_SUBST(IODEV_NON_PLUGIN_OBJS)
+AC_SUBST(IODEV_PLUGIN_OBJS)
+AC_SUBST(PLUGIN_VAR)
+AC_SUBST(PLUGIN_TARGET)
+AC_SUBST(INSTALL_PLUGINS_VAR)
 
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.8 2002-04-20 07:19:34 vruppert Exp $
+// $Id: amigaos.cc,v 1.9 2002-10-24 21:06:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -25,11 +25,27 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
 #include "icon_bochs.h"
 #include "amigagui.h"
 
-#define LOG_THIS bx_gui.
+class bx_amigaos_gui_c : public bx_gui_c {
+public:
+  bx_amigaos_gui_c (void) {}
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+static bx_amigaos_gui_c *theGui = NULL;
+IMPLEMENT_GUI_PLUGIN_CODE(amigaos)
+
+#define LOG_THIS theGui->
 
 static void hide_pointer();
 static void show_pointer();
@@ -57,7 +73,7 @@ MyInputHandler(void)
         case IECODE_LBUTTON:
     	{
         	mouse_button_state |= 0x01;
-        	bx_devices.keyboard->mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
         	
 			return NULL;
     	}
@@ -65,28 +81,28 @@ MyInputHandler(void)
     	case (IECODE_LBUTTON | IECODE_UP_PREFIX):
     	{
         	mouse_button_state &= ~0x01;
-        	bx_devices.keyboard->mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
 			return NULL;
     	}
 
         case IECODE_RBUTTON:
     	{
             mouse_button_state |= 0x02;
-        	bx_devices.keyboard->mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
 			return NULL;
     	}
 
     	case (IECODE_RBUTTON | IECODE_UP_PREFIX):
     	{
             mouse_button_state &= 0x01;
-        	bx_devices.keyboard->mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
 			return NULL;
     	}
         }
 
         if (event->ie_Class == IECLASS_RAWMOUSE)
     	{
-        	bx_devices.keyboard->mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
+        	DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
         	return NULL;
     	}
 
@@ -240,7 +256,7 @@ open_screen(void)
    }
 
     if (!window)
-         bx_gui_c::exit();
+         bx_amigaos_gui_c::exit();
 
     if ((emptypointer = (UWORD *)AllocVec (16, MEMF_CLEAR)) == NULL)
         BX_PANIC(("Amiga: Couldn't allocate memory"));
@@ -276,7 +292,7 @@ open_screen(void)
 }
 
   void
-bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   
@@ -320,7 +336,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
 
   void
-bx_gui_c::handle_events(void)
+bx_amigaos_gui_c::handle_events(void)
 {
     void (*func) (void);
     struct IntuiMessage *imsg = NULL;
@@ -351,7 +367,7 @@ bx_gui_c::handle_events(void)
             if(imCode >= 128)
              	key_event = raw_to_bochs[imCode-128] | BX_KEY_RELEASED;
             if(key_event)
-        		bx_devices.keyboard->gen_scancode(key_event);
+        		DEV_kbd_gen_scancode(key_event);
      		break;
 
         case GADGETUP:
@@ -363,12 +379,12 @@ bx_gui_c::handle_events(void)
 
 
   void
-bx_gui_c::flush(void)
+bx_amigaos_gui_c::flush(void)
 {
 }
 
   void
-bx_gui_c::clear_screen(void)
+bx_amigaos_gui_c::clear_screen(void)
 {
     if(d > 8 || !bx_options.Ofullscreen->get ())
     	SetAPen(window->RPort, black);
@@ -378,7 +394,7 @@ bx_gui_c::clear_screen(void)
 }
 
   void
-bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+bx_amigaos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       Bit16u cursor_state, unsigned nrows)
 {
@@ -432,20 +448,20 @@ unsigned int fgcolor, bgcolor;
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_amigaos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
 
 
   Boolean
-bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 
   Bit8u *ptr;
@@ -476,7 +492,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 
   void
-bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+bx_amigaos_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
  if (d == 8)
  {
@@ -488,7 +504,7 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
         if (fheight > 0) {
           if (fheight != 16) {
@@ -508,7 +524,7 @@ bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
  
 
   unsigned
-bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+bx_amigaos_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
     int i = 0;
     Bit8u *a;
@@ -544,7 +560,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 }
 
   unsigned
-bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+bx_amigaos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
 struct NewGadget ng;
 
@@ -582,7 +598,7 @@ return(bx_headerbar_entries - 1);
 
  
   void
-bx_gui_c::show_headerbar(void)
+bx_amigaos_gui_c::show_headerbar(void)
 {
     if(d > 8 || !bx_options.Ofullscreen->get ())
     	SetAPen(window->RPort, white);
@@ -596,14 +612,14 @@ bx_gui_c::show_headerbar(void)
 
 
   void
-bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+bx_amigaos_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
 	bx_header_gadget[hbar_id]->GadgetRender = &bx_header_image[bmap_id];
     RefreshGList(bx_glistptr, window, NULL, bx_headerbar_entries + 1);
 }
 
   void
-bx_gui_c::exit(void)
+bx_amigaos_gui_c::exit(void)
 {
 	if(window)
   	{
@@ -670,7 +686,7 @@ hide_pointer(void)
 }
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_amigaos_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
   BX_INFO (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {

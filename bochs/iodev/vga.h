@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.18 2002-10-13 08:14:31 vruppert Exp $
+// $Id: vga.h,v 1.19 2002-10-24 21:07:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,32 +85,37 @@
 
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static
-#  define BX_VGA_THIS bx_vga.
+#  define BX_VGA_THIS theVga->
 #else
 #  define BX_VGA_SMF
 #  define BX_VGA_THIS this->
 #endif
 
 
-class bx_vga_c : public logfunctions {
+class bx_vga_c : public bx_vga_stub_c {
 public:
 
   bx_vga_c(void);
   ~bx_vga_c(void);
-  BX_VGA_SMF void   init(bx_devices_c *, bx_cmos_c *cmos);
-  BX_VGA_SMF void   reset(unsigned type);
-  BX_VGA_SMF Bit8u  mem_read(Bit32u addr);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
+  virtual Bit8u  mem_read(Bit32u addr);
   // Note: either leave value of type Bit8u, or mask it when
   //       used to 8 bits, in memory.cc
-  BX_VGA_SMF void   mem_write(Bit32u addr, Bit8u value);
+  virtual void   mem_write(Bit32u addr, Bit8u value);
+  virtual void   trigger_timer(void *this_ptr);
 
 #if BX_SUPPORT_VBE 
   BX_VGA_SMF Bit8u  vbe_mem_read(Bit32u addr);
   BX_VGA_SMF void   vbe_mem_write(Bit32u addr, Bit8u value);  
 #endif
   
-  BX_VGA_SMF void   redraw_area(unsigned x0, unsigned y0,
-                                unsigned width, unsigned height);
+  virtual void   redraw_area(unsigned x0, unsigned y0,
+                             unsigned width, unsigned height);
+
+  virtual void   set_update_interval (unsigned interval);
+  virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
+                                   unsigned *txWidth);
 
 private:
 
@@ -247,8 +252,6 @@ private:
     } s;  // state information
 
 
-  bx_devices_c *devices;
-
 #if !BX_USE_VGA_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len, Boolean no_log);
@@ -270,14 +273,10 @@ private:
   public:
   static void   timer_handler(void *);
   BX_VGA_SMF void   timer(void);
-  BX_VGA_SMF void set_update_interval (unsigned interval);
-  BX_VGA_SMF void  get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
-                                                            unsigned *txWidth);
+
   private:
   BX_VGA_SMF void   update(void);
   BX_VGA_SMF void   dump_status(void);
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight,
                                               unsigned *piWidth);
   };
-
-extern bx_vga_c bx_vga;

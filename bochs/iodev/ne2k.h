@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.7 2002-08-27 19:54:46 bdenney Exp $
+// $Id: ne2k.h,v 1.8 2002-10-24 21:07:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,14 +197,12 @@ class bx_ne2k_c : public logfunctions {
 public:
   bx_ne2k_c(void);
   ~bx_ne2k_c(void);
-  BX_NE2K_SMF void   init(bx_devices_c *);
+  BX_NE2K_SMF void   init(void);
   BX_NE2K_SMF void   reset(unsigned type);
   void print_info (FILE *file, int page, int reg, int nodups);
 
 private:
   bx_ne2k_t s;
-
-  bx_devices_c *devices;
 
   eth_pktmover_c *ethdev;
 

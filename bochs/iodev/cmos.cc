@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.24 2002-10-23 19:37:36 bdenney Exp $
+// $Id: cmos.cc,v 1.25 2002-10-24 21:07:12 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,15 +28,16 @@
 
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
-#define LOG_THIS bx_cmos.
 
-bx_cmos_c bx_cmos;
+#define LOG_THIS theCmosDevice->
 
-#if BX_USE_CMOS_SMF
-#define this (&bx_cmos)
-#endif
-
+bx_cmos_c *theCmosDevice = NULL;
 
 // check that BX_NUM_CMOS_REGS is 64 or 128
 #if (BX_NUM_CMOS_REGS == 64)
@@ -46,12 +47,27 @@ bx_cmos_c bx_cmos;
 #endif
 
 
+  int
+libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theCmosDevice = new bx_cmos_c ();
+  bx_devices.pluginCmosDevice = theCmosDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
+  return(0); // Success
+}
+
+  void
+libcmos_LTX_plugin_fini(void)
+{
+}
+
 bx_cmos_c::bx_cmos_c(void)
 {
-  put("CMOS");
-  settype(CMOSLOG);
-  BX_CMOS_THIS s.periodic_timer_index = BX_NULL_TIMER_HANDLE;
-  BX_CMOS_THIS s.one_second_timer_index = BX_NULL_TIMER_HANDLE;
+  unsigned i;
+  for (i=0; i<BX_NUM_CMOS_REGS; i++)
+    s.reg[i] = 0;
+  s.periodic_timer_index = BX_NULL_TIMER_HANDLE;
+  s.one_second_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_cmos_c::~bx_cmos_c(void)
@@ -61,44 +77,26 @@ bx_cmos_c::~bx_cmos_c(void)
 
 
   void
-bx_cmos_c::init(bx_devices_c *d)
+bx_cmos_c::init(void)
 {
-  unsigned i;
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.24 2002-10-23 19:37:36 bdenney Exp $"));
-
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.25 2002-10-24 21:07:12 bdenney Exp $"));
   // CMOS RAM & RTC
 
-  BX_CMOS_THIS devices = d;
-
-  BX_CMOS_THIS devices->register_io_read_handler(this,
-    read_handler, 0x0070,
-    "CMOS RAM");
-  BX_CMOS_THIS devices->register_io_read_handler(this,
-    read_handler,
-    0x0071,
-    "CMOS RAM");
-  BX_CMOS_THIS devices->register_io_write_handler(this,
-    write_handler,
-    0x0070, "CMOS RAM");
-  BX_CMOS_THIS devices->register_io_write_handler(this,
-    write_handler,
-    0x0071, "CMOS RAM");
-  BX_CMOS_THIS devices->register_irq(8, "CMOS RTC");
-
+  DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x0071, "CMOS RAM", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0070, "CMOS RAM", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0071, "CMOS RAM", 7);
+  DEV_register_irq(8, "CMOS RTC"); 
   if (BX_CMOS_THIS s.periodic_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_CMOS_THIS s.periodic_timer_index =
-      bx_pc_system.register_timer(this, periodic_timer_handler,
+      DEV_register_timer(this, periodic_timer_handler,
 	1000000, 1,0, "cmos"); // continuous, not-active
   }
   if (BX_CMOS_THIS s.one_second_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_CMOS_THIS s.one_second_timer_index =
-      bx_pc_system.register_timer(this, one_second_timer_handler,
+      DEV_register_timer(this, one_second_timer_handler,
 	1000000, 1,0, "cmos"); // continuous, not-active
   }
-
-  for (i=0; i<BX_NUM_CMOS_REGS; i++) {
-    BX_CMOS_THIS s.reg[i] = 0;
-    }
 
 #if BX_USE_SPECIFIED_TIME0 == 0
   // ??? this will not be correct for using an image file.
@@ -162,7 +160,7 @@ bx_cmos_c::init(bx_devices_c *d)
     BX_CMOS_THIS s.reg[0x0c] = 0x00;
     BX_CMOS_THIS s.reg[0x0d] = 0x80;
 #if BX_SUPPORT_FPU == 1
-    BX_CMOS_THIS s.reg[0x14] = 0x02;
+    BX_CMOS_THIS s.reg[0x14] |= 0x02;
 #endif
     }
 }
@@ -257,7 +255,7 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
       // all bits of Register C are cleared after a read occurs.
       if (BX_CMOS_THIS s.cmos_mem_address == 0x0c) {
         BX_CMOS_THIS s.reg[0x0c] = 0x00;
-        BX_CMOS_THIS devices->pic->lower_irq(8);
+        DEV_pic_lower_irq(8);
         }
       return(ret8);
       break;
@@ -543,7 +541,7 @@ bx_cmos_c::periodic_timer()
   // update status register C
   if (BX_CMOS_THIS s.reg[0x0b] & 0x40) {
     BX_CMOS_THIS s.reg[0x0c] |= 0xc0; // Interrupt Request, Periodic Int
-    BX_CMOS_THIS devices->pic->raise_irq(8);
+    DEV_pic_raise_irq(8);
     }
 }
 
@@ -572,7 +570,7 @@ bx_cmos_c::one_second_timer()
   // update status register C
   if (BX_CMOS_THIS s.reg[0x0b] & 0x10) {
     BX_CMOS_THIS s.reg[0x0c] |= 0x90; // Interrupt Request, Update Ended
-    BX_CMOS_THIS devices->pic->raise_irq(8);
+    DEV_pic_raise_irq(8);
     }
 
   // compare CMOS user copy of time/date to alarm time/date here
@@ -596,7 +594,7 @@ bx_cmos_c::one_second_timer()
       }
     if (alarm_match) {
       BX_CMOS_THIS s.reg[0x0c] |= 0xa0; // Interrupt Request, Alarm Int
-      BX_CMOS_THIS devices->pic->raise_irq(8);
+      DEV_pic_raise_irq(8);
       }
     }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.69 2002-10-16 19:39:27 bdenney Exp $
+// $Id: keyboard.cc,v 1.70 2002-10-24 21:07:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,30 +47,45 @@
 // Ability to switch between scancodes sets
 // Ability to turn translation on or off
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
 #include <math.h>
 #include "scancodes.h"
 
-#define LOG_THIS  bx_keyboard.
-
-
+#define LOG_THIS  theKeyboard->
 #define VERBOSE_KBD_DEBUG 0
 
 
-bx_keyb_c bx_keyboard;
+bx_keyb_c *theKeyboard = NULL;
 
-#if BX_USE_KEY_SMF
-#define this (&bx_keyboard)
-#endif
+  int
+libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  // Create one instance of the keyboard device object.
+  theKeyboard = new bx_keyb_c ();
+  // Before this plugin was loaded, pluginKeyboard pointed to a stub.
+  // Now make it point to the real thing.
+  bx_devices.pluginKeyboard = theKeyboard;
+  // Register this device.
+  BX_REGISTER_DEVICE_DEVMODEL (plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
+  return(0); // Success
+}
+
+  void
+libkeyboard_LTX_plugin_fini(void)
+{
+  BX_INFO (("keyboard plugin_fini"));
+}
 
 bx_keyb_c::bx_keyb_c(void)
 {
   // constructor
-  // should zero out state info here???
-  memset( &s, 0, sizeof(s) );
-  BX_KEY_THIS put("KBD");
-  BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.69 2002-10-16 19:39:27 bdenney Exp $"));
+  put("KBD");
+  settype(KBDLOG);
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -108,24 +123,25 @@ bx_keyb_c::resetinternals(Boolean powerup)
 
 
   void
-bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
+bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.69 2002-10-16 19:39:27 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.70 2002-10-24 21:07:39 bdenney Exp $"));
   Bit32u   i;
 
-  BX_KEY_THIS devices = d;
+  DEV_register_irq(1, "8042 Keyboard controller");
+  DEV_register_irq(12, "8042 Keyboard controller (PS/2 mouse)");
 
-  BX_KEY_THIS devices->register_irq(1, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_irq(12, "8042 Keyboard controller (PS/2 mouse)");
-
-  BX_KEY_THIS devices->register_io_read_handler(this, read_handler,
-                                      0x0060, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_io_read_handler(this, read_handler,
-                                      0x0064, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0060, "8042 Keyboard controller");
-  BX_KEY_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0064, "8042 Keyboard controller");
+  DEV_register_ioread_handler(this, read_handler,
+                                      0x0060, "8042 Keyboard controller", 3);
+  DEV_register_ioread_handler(this, read_handler,
+                                      0x0064, "8042 Keyboard controller", 3);
+  DEV_register_iowrite_handler(this, write_handler,
+                                      0x0060, "8042 Keyboard controller", 3);
+  DEV_register_iowrite_handler(this, write_handler,
+                                      0x0064, "8042 Keyboard controller", 3);
+  BX_KEY_THIS timer_handle = bx_pc_system.register_timer( this, timer_handler,
+                                 bx_options.Okeyboard_serial_delay->get(), 1, 1,
+				 "8042 Keyboard controller");
 
   resetinternals(1);
 
@@ -157,6 +173,7 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS s.kbd_controller.expecting_port60h = 0;
   BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
+  BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
 
 //BX_DEBUG(( "# Okeyboard_serial_delay is %u usec",
 //        (unsigned) bx_options.Okeyboard_serial_delay->get ()));
@@ -183,7 +200,7 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS paste_delay_changed ();
 
   // mouse port installed on system board
-  cmos->s.reg[0x14] |= 0x04;
+  DEV_cmos_set_reg(0x14, DEV_cmos_get_reg(0x14) | 0x04);
 
 #if BX_WITH_WX
   static Boolean first_time = 1;
@@ -301,7 +318,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
 
 //BX_DEBUG(("mouse: ___io_read aux = 0x%02x", (unsigned) val));
 
-      BX_KEY_THIS devices->pic->lower_irq(12);
+      DEV_pic_lower_irq(12);
       activate_timer();
       BX_DEBUG(("READ(%02x) (from mouse) = %02x", (unsigned) address,
           (unsigned) val));
@@ -331,7 +348,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
         BX_KEY_THIS s.controller_Qsize--;
         }
 
-      BX_KEY_THIS devices->pic->lower_irq(1);
+      DEV_pic_lower_irq(1);
       activate_timer();
       BX_DEBUG(("READ(%02x) = %02x", (unsigned) address,
           (unsigned) val));
@@ -678,11 +695,11 @@ bx_keyb_c::service_paste_buf ()
     } else {
       BX_DEBUG (("pasting character 0x%02x. baseKey is %04x", byte, entry->baseKey));
       if (entry->modKey != BX_KEYMAP_UNKNOWN)
-        bx_devices.keyboard->gen_scancode(entry->modKey);
-      bx_devices.keyboard->gen_scancode(entry->baseKey);
-      bx_devices.keyboard->gen_scancode(entry->baseKey | BX_KEY_RELEASED);
+        BX_KEY_THIS gen_scancode (entry->modKey);
+      BX_KEY_THIS gen_scancode (entry->baseKey);
+      BX_KEY_THIS gen_scancode (entry->baseKey | BX_KEY_RELEASED);
       if (entry->modKey != BX_KEYMAP_UNKNOWN)
-        bx_devices.keyboard->gen_scancode(entry->modKey | BX_KEY_RELEASED);
+        BX_KEY_THIS gen_scancode (entry->modKey | BX_KEY_RELEASED);
     }
     BX_KEY_THIS pastebuf_ptr++;
   }
@@ -1133,6 +1150,21 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     }
 }
 
+  void
+bx_keyb_c::timer_handler(void *this_ptr)
+{
+  bx_keyb_c *class_ptr = (bx_keyb_c *) this_ptr;
+  unsigned retval;
+
+  // retval=class_ptr->periodic( bx_options.Okeyboard_serial_delay->get());
+  retval=class_ptr->periodic(1);
+
+  if(retval&0x01)
+    DEV_pic_raise_irq(1);
+  if(retval&0x02)
+    DEV_pic_raise_irq(12);
+}
+
   unsigned
 bx_keyb_c::periodic( Bit32u   usec_delta )
 {
@@ -1141,14 +1173,6 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   Bit8u   retval;
 
   UNUSED( usec_delta );
-
-  if ( ++multiple==10)
-  {
-    multiple=0;
-	SIM->periodic ();
-	if (BX_CPU(0)->kill_bochs_request) return 0;
-    bx_gui.handle_events();
-  }
 
   if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled ) {
     if(++count_before_paste>=BX_KEY_THIS pastedelay) {
@@ -1230,10 +1254,10 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
 bx_keyb_c::activate_timer(void)
 {
   if (BX_KEY_THIS s.kbd_controller.timer_pending == 0) {
-    BX_KEY_THIS s.kbd_controller.timer_pending = bx_options.Okeyboard_serial_delay->get ();
+    // BX_KEY_THIS s.kbd_controller.timer_pending = bx_options.Okeyboard_serial_delay->get ();
+    BX_KEY_THIS s.kbd_controller.timer_pending = 1;
     }
 }
-
 
 
   void
@@ -1500,11 +1524,11 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
 
 void
 bx_keyb_c::mouse_enabled_changed(bool enabled) {
-  if(BX_KEY_THIS s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy) {
+  if(s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy) {
     create_mouse_packet(1);
   }
-  BX_KEY_THIS s.mouse.delayed_dx=0;
-  BX_KEY_THIS s.mouse.delayed_dy=0;
+  s.mouse.delayed_dx=0;
+  s.mouse.delayed_dy=0;
   BX_DEBUG(("Keyboard mouse disable called."));
 }
 
@@ -1601,3 +1625,4 @@ bx_keyb_c::LoadState( class state_file *fd )
   fd->read_check ("keyboard end");
   return(0);
 }
+

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.21 2002-10-06 19:38:53 vruppert Exp $
+// $Id: parallel.cc,v 1.22 2002-10-24 21:07:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,51 +29,59 @@
 // fixed it up in November 2001.
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
-#define LOG_THIS bx_parallel.
+#define LOG_THIS theParallelDevice->
 
-#define OUTPUT (BX_PAR_THIS s.output)
+bx_parallel_c *theParallelDevice = NULL;
 
-bx_parallel_c bx_parallel;
+  int
+libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theParallelDevice = new bx_parallel_c ();
+  bx_devices.pluginParallelDevice = theParallelDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
+  return(0); // Success
+}
 
-#if BX_USE_PAR_SMF
-#define this (&bx_parallel)
-#endif
-
-
+  void
+libparallel_LTX_plugin_fini(void)
+{
+}
 
 bx_parallel_c::bx_parallel_c(void)
 {
-	put("PAR");
-	settype(PARLOG);
-	OUTPUT = NULL;
+  put("PAR");
+  settype(PARLOG);
+  s.output = NULL;
 }
 
 bx_parallel_c::~bx_parallel_c(void)
 {
-  if (OUTPUT != NULL)
-    fclose(OUTPUT);
+  if (s.output != NULL)
+    fclose(s.output);
 }
 
   void
-bx_parallel_c::init(bx_devices_c *d)
+bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.21 2002-10-06 19:38:53 vruppert Exp $"));
-  BX_PAR_THIS devices = d;
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.22 2002-10-24 21:07:43 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
     /* PARALLEL PORT 1 */
 
-    BX_PAR_THIS devices->register_irq(7, "Parallel Port 1");
+    DEV_register_irq(7, "Parallel Port 1");
+    BX_INFO (("parallel port 1 at 0x378"));
     for (unsigned addr=0x0378; addr<=0x037A; addr++) {
-      BX_PAR_THIS devices->register_io_read_handler(this,
-           read_handler, addr, "Parallel Port 1");
+      DEV_register_ioread_handler(this, read_handler, addr, "Parallel Port 1", 7);
       }
-    BX_PAR_THIS devices->register_io_write_handler(this,
-         write_handler, 0x0378, "Parallel Port 1");
-    BX_PAR_THIS devices->register_io_write_handler(this,
-         write_handler, 0x037A, "Parallel Port 1");
+    DEV_register_iowrite_handler(this, write_handler, 0x0378, "Parallel Port 1", 7);
+    DEV_register_iowrite_handler(this, write_handler, 0x037A, "Parallel Port 1", 7);
 
     BX_PAR_THIS s.STATUS.error = 1;
     BX_PAR_THIS s.STATUS.slct  = 1;
@@ -91,8 +99,8 @@ bx_parallel_c::init(bx_devices_c *d)
     BX_PAR_THIS s.initmode = 0;
 
     if (strlen(bx_options.par[0].Ooutfile->getptr ()) > 0) {
-      OUTPUT = fopen(bx_options.par[0].Ooutfile->getptr (), "wb");
-      if (!OUTPUT)
+      s.output = fopen(bx_options.par[0].Ooutfile->getptr (), "wb");
+      if (!s.output)
         BX_PANIC (("Could not open '%s' to write parport1 output",
                    bx_options.par[0].Ooutfile->getptr ()));
     }
@@ -108,12 +116,12 @@ bx_parallel_c::reset(unsigned type)
 bx_parallel_c::virtual_printer(void)
 {
   if (BX_PAR_THIS s.STATUS.slct) {
-    if (OUTPUT != NULL) {
-      fputc(BX_PAR_THIS s.data, OUTPUT);
-      fflush (OUTPUT);
+    if (BX_PAR_THIS s.output != NULL) {
+      fputc(BX_PAR_THIS s.data, BX_PAR_THIS s.output);
+      fflush (BX_PAR_THIS s.output);
       }
     if (BX_PAR_THIS s.CONTROL.irq == 1) {
-      BX_PAR_THIS devices->pic->raise_irq(7);
+      DEV_pic_raise_irq(7);
       }
     BX_PAR_THIS s.STATUS.ack = 0;
     BX_PAR_THIS s.STATUS.busy = 1;
@@ -166,7 +174,7 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
 	  if (BX_PAR_THIS s.STATUS.ack == 0) {
 	    BX_PAR_THIS s.STATUS.ack = 1;
             if (BX_PAR_THIS s.CONTROL.irq == 1) {
-              BX_PAR_THIS devices->pic->lower_irq(7);
+              DEV_pic_lower_irq(7);
 	      }
 	    }
 	  if (BX_PAR_THIS s.initmode == 1) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.36 2002-10-16 07:38:37 cbothamy Exp $
+// $Id: devices.cc,v 1.37 2002-10-24 21:07:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,17 +53,17 @@ bx_devices_c::bx_devices_c(void)
   pci2isa = NULL;
 #endif
   pit = NULL;
-  keyboard = NULL;
-  dma = NULL;
-  floppy = NULL;
-  biosdev = NULL;
-  cmos = NULL;
-  serial = NULL;
-  parallel = NULL;
-  unmapped = NULL;
-  vga = NULL;
-  pic = NULL;
-  hard_drive = NULL;
+  pluginKeyboard = &stubKeyboard;
+  pluginDmaDevice = &stubDma;
+  pluginFloppyDevice = &stubFloppy;
+  pluginBiosDevice = NULL;
+  pluginCmosDevice = &stubCmos;
+  pluginSerialDevice = NULL;
+  pluginParallelDevice = NULL;
+  pluginUnmapped = NULL;
+  pluginVgaDevice = &stubVga;
+  pluginPicDevice = &stubPic;
+  pluginHardDrive = &stubHardDrive;
   sb16 = NULL;
   ne2k = NULL;
   g2h = NULL;
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.36 2002-10-16 07:38:37 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.37 2002-10-24 21:07:18 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -99,102 +99,106 @@ bx_devices_c::init(BX_MEM_C *newmem)
     io_write_handler[i].funct = NULL;
     }
 
+  /* set no-default handlers, will be overwritten by the real default handler */
+  io_read_handler[BX_DEFAULT_IO_DEVICE].handler_name  = "Default";
+  io_read_handler[BX_DEFAULT_IO_DEVICE].funct         = &default_read_handler;
+  io_read_handler[BX_DEFAULT_IO_DEVICE].this_ptr      = NULL;
+  io_write_handler[BX_DEFAULT_IO_DEVICE].handler_name = "Default";
+  io_write_handler[BX_DEFAULT_IO_DEVICE].funct        = &default_write_handler;
+  io_write_handler[BX_DEFAULT_IO_DEVICE].this_ptr     = NULL;
+
+  /* set handlers to the default one */
   for (i=0; i < 0x10000; i++) {
-    read_handler_id[i] = BX_MAX_IO_DEVICES;  // not assigned
-    write_handler_id[i] = BX_MAX_IO_DEVICES;  // not assigned
+    read_handler_id[i] = BX_DEFAULT_IO_DEVICE; 
+    write_handler_id[i] = BX_DEFAULT_IO_DEVICE;
     }
 
   for (i=0; i < BX_MAX_IRQS; i++) {
     irq_handler_name[i] = NULL;
     }
 
-  // Start with all IO port address registered to unmapped handler
-  // MUST be called first
-  unmapped = &bx_unmapped;
-  unmapped->init(this);
+#warning CB: UNMAPPED and BIOSDEV should maybe be optional
+  PLUG_load_plugin(unmapped, PLUGTYPE_CORE);
+  PLUG_load_plugin(biosdev, PLUGTYPE_CORE);
+
+#warning these should only be loaded if they are enabled.
+#warning and they should only be optional if the init order is irrelevant
+  PLUG_load_plugin(cmos, PLUGTYPE_CORE);
+  PLUG_load_plugin(dma, PLUGTYPE_CORE);
+  PLUG_load_plugin(pic, PLUGTYPE_CORE);
+  PLUG_load_plugin(vga, PLUGTYPE_CORE);
+  /// optional plugins
+  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+  PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
+  PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
+  if (is_serial_enabled ())
+    PLUG_load_plugin(serial, PLUGTYPE_OPTIONAL);
+  if (is_parallel_enabled ()) 
+    PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
+
+  // Start with registering the default (unmapped) handler
+  pluginUnmapped->init ();
 
 #if BX_PCI_SUPPORT
   // PCI logic (i440FX)
   pci = & bx_pci;
-  pci->init(this);
+  pci->init();
   pci2isa = & bx_pci2isa;
-  pci2isa->init(this);
+  pci2isa->init();
 #endif
 
 #if BX_SUPPORT_APIC
-  // I/O APIC 82093AA
-  ioapic = & bx_ioapic;
-  ioapic->init ();
-  ioapic->set_id (BX_IOAPIC_DEFAULT_ID);
+    // I/O APIC 82093AA
+    ioapic = & bx_ioapic;
+    ioapic->init ();
 #endif
 
   // BIOS log 
-  biosdev = &bx_biosdev;
-  biosdev->init(this);
+  pluginBiosDevice->init ();
 
   // CMOS RAM & RTC
-  cmos = &bx_cmos;
-  cmos->init(this);
+  pluginCmosDevice->init ();
 
   /*--- 8237 DMA ---*/
-  dma = &bx_dma;
-  dma->init(this);
-
-  /*--- HARD DRIVE ---*/
-  hard_drive = &bx_hard_drive;
-  hard_drive->init(this, cmos);
+  pluginDmaDevice->init();
 
   //--- FLOPPY ---
-  floppy = &bx_floppy;
-  floppy->init(this, cmos);
+  pluginFloppyDevice->init();
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
   sb16 = &bx_sb16;
-  sb16->init(this);
+  sb16->init();
 #endif
 
 #if BX_SUPPORT_VGA
   /*--- VGA adapter ---*/
-  vga = & bx_vga;
-  vga->init(this, cmos);
+  pluginVgaDevice->init ();
 #else
   /*--- HGA adapter ---*/
-  bx_init_hga_hardware(cmos);
+  bx_init_hga_hardware();
 #endif
 
   /*--- 8259A PIC ---*/
-  pic = & bx_pic;
-  pic->init(this);
+  pluginPicDevice->init();
 
   /*--- 8254 PIT ---*/
   pit = & bx_pit;
-  pit->init(this);
+  pit->init();
 
 #if BX_USE_SLOWDOWN_TIMER
-  bx_slowdown_timer.init(this);
+  bx_slowdown_timer.init();
 #endif
-
-  keyboard = &bx_keyboard;
-  keyboard->init(this, cmos);
 
 #if BX_IODEBUG_SUPPORT
   iodebug = &bx_iodebug;
-  iodebug->init(this);
+  iodebug->init();
 #endif
-
-  /*--- PARALLEL PORT ---*/
-  parallel = &bx_parallel;
-  parallel->init(this);
-
-  /*--- SERIAL PORT ---*/
-  serial = &bx_serial;
-  serial->init(this);
 
 #if BX_NE2K_SUPPORT
   // NE2000 NIC
   ne2k = &bx_ne2k;
-  ne2k->init(this);
+  ne2k->init();
   BX_DEBUG(("ne2k"));
 #endif  // #if BX_NE2K_SUPPORT
 
@@ -202,7 +206,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // Guest to Host interface.  Used with special guest drivers
   // which move data to/from the host environment.
   g2h = &bx_g2h;
-  g2h->init(this);
+  g2h->init();
 #endif
 
   // system hardware
@@ -217,19 +221,19 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   // misc. CMOS
   Bit16u extended_memory_in_k = mem->get_memory_in_k() - 1024;
-  cmos->s.reg[0x15] = (Bit8u) BASE_MEMORY_IN_K;
-  cmos->s.reg[0x16] = (Bit8u) (BASE_MEMORY_IN_K >> 8);
-  cmos->s.reg[0x17] = (Bit8u) extended_memory_in_k;
-  cmos->s.reg[0x18] = (Bit8u) (extended_memory_in_k >> 8);
-  cmos->s.reg[0x30] = (Bit8u) extended_memory_in_k;
-  cmos->s.reg[0x31] = (Bit8u) (extended_memory_in_k >> 8);
+  DEV_cmos_set_reg(0x15, (Bit8u) BASE_MEMORY_IN_K);
+  DEV_cmos_set_reg(0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
+  DEV_cmos_set_reg(0x17, (Bit8u) extended_memory_in_k);
+  DEV_cmos_set_reg(0x18, (Bit8u) (extended_memory_in_k >> 8));
+  DEV_cmos_set_reg(0x30, (Bit8u) extended_memory_in_k);
+  DEV_cmos_set_reg(0x31, (Bit8u) (extended_memory_in_k >> 8));
 
   Bit16u extended_memory_in_64k = mem->get_memory_in_k() > 16384 ? (mem->get_memory_in_k() - 16384) / 64 : 0;
-  cmos->s.reg[0x34] = (Bit8u) extended_memory_in_64k;
-  cmos->s.reg[0x35] = (Bit8u) (extended_memory_in_64k >> 8);
+  DEV_cmos_set_reg(0x34, (Bit8u) extended_memory_in_64k);
+  DEV_cmos_set_reg(0x35, (Bit8u) (extended_memory_in_64k >> 8));
 
   /* now perform checksum of CMOS memory */
-  cmos->checksum_cmos();
+  DEV_cmos_checksum();
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {
     timer_handle = bx_pc_system.register_timer( this, timer_handler,
@@ -240,12 +244,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
   bulkIOHostAddr = 0;
   bulkIOQuantumsRequested = 0;
   bulkIOQuantumsTransferred = 0;
+
+  bx_init_plugins();
 }
 
 
   void
 bx_devices_c::reset(unsigned type)
 {
+  pluginUnmapped->reset(type);
 #if BX_PCI_SUPPORT
   pci->reset(type);
   pci2isa->reset(type);
@@ -253,33 +260,31 @@ bx_devices_c::reset(unsigned type)
 #if BX_SUPPORT_IOAPIC
   ioapic->reset (type);
 #endif
-  biosdev->reset(type);
-  cmos->reset(type);
-  dma->reset(type);
-  hard_drive->reset(type);
-  floppy->reset(type);
+  pluginBiosDevice->reset(type);
+  pluginCmosDevice->reset(type);
+  pluginDmaDevice->reset(type);
+  pluginFloppyDevice->reset(type);
 #if BX_SUPPORT_SB16
   sb16->reset(type);
 #endif
 #if BX_SUPPORT_VGA
-  vga->reset(type);
+  pluginVgaDevice->reset(type);
 #else
   // reset hga hardware?
 #endif
-  pic->reset(type);
+  pluginPicDevice->reset(type);
   pit->reset(type);
 #if BX_USE_SLOWDOWN_TIMER
   bx_slowdown_timer.reset(type);
 #endif
-  keyboard->reset(type);
 #if BX_IODEBUG_SUPPORT
   iodebug->reset(type);
 #endif
-  parallel->reset(type);
-  serial->reset(type);
 #if BX_NE2K_SUPPORT
   ne2k->reset(type);
 #endif
+
+  bx_reset_plugins(type);
 }
 
 
@@ -341,6 +346,26 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
     }
 }
 
+
+// This defines a no-default read handler, 
+// so Bochs does not segfault if unmapped is not loaded
+  Bit32u
+bx_devices_c::default_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+{
+  UNUSED(this_ptr);
+  BX_PANIC(("No default io-read handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
+  return 0xffffffff;
+}
+
+// This defines a no-default write handler, 
+// so Bochs does not segfault if unmapped is not loaded
+  void
+bx_devices_c::default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+{
+  UNUSED(this_ptr);
+  BX_PANIC(("No default io-write handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
+}
+
   void
 bx_devices_c::timer_handler(void *this_ptr)
 {
@@ -352,22 +377,26 @@ bx_devices_c::timer_handler(void *this_ptr)
   void
 bx_devices_c::timer()
 {
-  unsigned retval;
-
 #if (BX_USE_NEW_PIT==0)
   if ( pit->periodic( BX_IODEV_HANDLER_PERIOD ) ) {
     // This is a hack to make the IRQ0 work
-    pic->lower_irq(0);
-    pic->raise_irq(0);
+    DEV_pic_lower_irq(0);
+    DEV_pic_raise_irq(0);
     }
 #endif
 
-  retval = keyboard->periodic( BX_IODEV_HANDLER_PERIOD );
-  if (retval & 0x01)
-    pic->raise_irq(1);
 
-  if (retval & 0x02)
-    pic->raise_irq(12);
+  // separate calls to bx_gui->handle_events from the keyboard code.
+  {
+    static int multiple=0;
+    if ( ++multiple==10)
+    {
+      multiple=0;
+      SIM->periodic ();
+      if (!BX_CPU(0)->kill_bochs_request)
+	bx_gui->handle_events();
+    }
+  }
 
 // KPL Removed lapic periodic timer registration here.
 }
@@ -429,7 +458,7 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
 
   if (handle >= num_read_handles) {
     /* no existing handle found, create new one */
-    if (num_read_handles >= BX_MAX_IO_DEVICES) {
+    if (num_read_handles >= BX_DEFAULT_IO_DEVICE) {
       BX_INFO(("too many IO devices installed."));
       BX_PANIC(("  try increasing BX_MAX_IO_DEVICES"));
       }
@@ -440,16 +469,13 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
     }
 
   /* change table to reflect new handler id for that address */
-  if (read_handler_id[addr] < BX_MAX_IO_DEVICES) {
+  if (read_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
     // another handler is already registered for that address
-    // if it is not the Unmapped port handler, bail
-    if ( strcmp( io_read_handler[read_handler_id[addr]].handler_name, "Unmapped" ) ) {
-      BX_INFO(("IO device address conflict(read) at IO address %Xh",
-        (unsigned) addr));
-      BX_INFO(("  conflicting devices: %s & %s",
-        io_read_handler[handle].handler_name, io_read_handler[read_handler_id[addr]].handler_name));
-      return false; // address not available, return false.
-      }
+    BX_ERROR(("IO device address conflict(read) at IO address %Xh",
+      (unsigned) addr));
+    BX_ERROR(("  conflicting devices: %s & %s",
+      io_read_handler[handle].handler_name, io_read_handler[read_handler_id[addr]].handler_name));
+    return false; // address not available, return false.
     }
   read_handler_id[addr] = handle;
   return true; // address mapped successfully
@@ -472,7 +498,7 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
 
   if (handle >= num_write_handles) {
     /* no existing handle found, create new one */
-    if (num_write_handles >= BX_MAX_IO_DEVICES) {
+    if (num_write_handles >= BX_DEFAULT_IO_DEVICE) {
       BX_INFO(("too many IO devices installed."));
       BX_PANIC(("  try increasing BX_MAX_IO_DEVICES"));
       }
@@ -483,19 +509,66 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
     }
 
   /* change table to reflect new handler id for that address */
-  if (write_handler_id[addr] < BX_MAX_IO_DEVICES) {
+  if (write_handler_id[addr] < BX_DEFAULT_IO_DEVICE) {
     // another handler is already registered for that address
-    // if it is not the Unmapped port handler, bail
-    if ( strcmp( io_write_handler[write_handler_id[addr]].handler_name, "Unmapped" ) ) {
-      BX_INFO(("IO device address conflict(write) at IO address %Xh",
-        (unsigned) addr));
-      BX_INFO(("  conflicting devices: %s & %s",
-        io_write_handler[handle].handler_name, io_write_handler[write_handler_id[addr]].handler_name));
-      return false; //unable to map iodevice.
-      }
+    BX_ERROR(("IO device address conflict(write) at IO address %Xh",
+      (unsigned) addr));
+    BX_ERROR(("  conflicting devices: %s & %s",
+      io_write_handler[handle].handler_name, io_write_handler[write_handler_id[addr]].handler_name));
+    return false; //unable to map iodevice.
     }
   write_handler_id[addr] = handle;
   return true; // done!
+}
+
+
+// Registration of default handlers (mainly be the unmapped device)
+// The trick here is to define a handler for the max index, so
+// unregisterd io address will get handled by the default function
+// This will be helpful when we want to unregister io handlers
+
+  Boolean
+bx_devices_c::register_default_io_read_handler( void *this_ptr, bx_read_handler_t f,
+                                        const char *name )
+{
+  unsigned handle;
+
+  /* handle is fixed to the default I/O device */
+  handle = BX_DEFAULT_IO_DEVICE;
+
+  if (strcmp(io_read_handler[handle].handler_name, "Default")) {
+    BX_ERROR(("Default io read handler already registered '%s'",io_read_handler[handle].handler_name));
+    return false;
+    }
+
+  io_read_handler[handle].funct          = f;
+  io_read_handler[handle].this_ptr       = this_ptr;
+  io_read_handler[handle].handler_name   = name;
+
+  return true; 
+}
+
+
+
+  Boolean
+bx_devices_c::register_default_io_write_handler( void *this_ptr, bx_write_handler_t f,
+                                        const char *name )
+{
+  unsigned handle;
+
+  /* handle is fixed to the MAX */
+  handle = BX_DEFAULT_IO_DEVICE;
+
+  if (strcmp(io_write_handler[handle].handler_name, "Default")) {
+    BX_ERROR(("Default io write handler already registered '%s'",io_write_handler[handle].handler_name));
+    return false;
+    }
+
+  io_write_handler[handle].funct          = f;
+  io_write_handler[handle].this_ptr       = this_ptr;
+  io_write_handler[handle].handler_name   = name;
+
+  return true; 
 }
 
 
@@ -513,6 +586,7 @@ bx_devices_c::inp(Bit16u addr, unsigned io_len)
   BX_INSTR_INP(addr, io_len);
 
   handle = read_handler_id[addr];
+  // FIXME, we want to make sure that there is a default handler there
   ret = (* io_read_handler[handle].funct)(io_read_handler[handle].this_ptr,
                            (Bit32u) addr, io_len);
   BX_INSTR_INP2(addr, io_len, ret);
@@ -535,6 +609,25 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
 
   BX_DBG_IO_REPORT(addr, io_len, BX_WRITE, value);
   handle = write_handler_id[addr];
+  // FIXME, we want to make sure that there is a default handler there
   (* io_write_handler[handle].funct)(io_write_handler[handle].this_ptr,
                      (Bit32u) addr, value, io_len);
+}
+
+Boolean bx_devices_c::is_serial_enabled ()
+{
+  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+    if (SIM->get_param_bool (BXP_COMx_ENABLED(i+1))->get())
+      return true;
+  }
+  return false;
+}
+
+Boolean bx_devices_c::is_parallel_enabled ()
+{
+  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+    if (SIM->get_param_bool (BXP_PARPORTx_ENABLED(i+1))->get())
+      return true;
+  }
+  return false;
 }

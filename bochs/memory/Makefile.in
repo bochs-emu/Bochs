@@ -25,6 +25,8 @@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
 
 SHELL = /bin/sh
 
@@ -47,9 +49,10 @@ BX_OBJS = \
 
 BX_INCLUDES = ../bochs.h ../config.h
 
+all: libmemory.a
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 libmemory.a: $(BX_OBJS)
@@ -72,21 +75,24 @@ dist-clean: clean
 ###########################################
 memory.o: memory.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
- ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
- ../gui/control.h ../iodev/iodev.h ../iodev/pci.h ../iodev/vga.h \
+ ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
+ ../gui/gui.h ../gui/control.h ../gui/keymap.h ../iodev/iodev.h \
+ ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h ../iodev/biosdev.h \
  ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
- ../iodev/keyboard.h ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h \
- ../iodev/pit_wrap.h ../iodev/pit82c54.h ../iodev/serial.h \
- ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
- ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../iodev/cdrom.h ../iodev/keyboard.h ../iodev/parallel.h \
+ ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
+ ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+ ../iodev/guest2host.h ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h
 misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
- ../cpu/cpu.h ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h \
- ../gui/gui.h ../gui/control.h ../iodev/iodev.h ../iodev/pci.h \
- ../iodev/vga.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
- ../iodev/harddrv.h ../iodev/keyboard.h ../iodev/parallel.h \
- ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
- ../iodev/serial.h ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
- ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+ ../cpu/cpu.h ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h \
+ ../pc_system.h ../gui/gui.h ../gui/control.h ../gui/keymap.h \
+ ../iodev/iodev.h ../iodev/pci.h ../iodev/pci2isa.h ../iodev/vga.h \
+ ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
+ ../iodev/harddrv.h ../iodev/cdrom.h ../iodev/keyboard.h \
+ ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+ ../iodev/pit82c54.h ../iodev/serial.h ../iodev/unmapped.h \
+ ../iodev/eth.h ../iodev/ne2k.h ../iodev/guest2host.h \
+ ../iodev/slowdown_timer.h ../plugin.h \
  ../instrument/stubs/instrument.h

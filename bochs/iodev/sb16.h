@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.7 2002-08-27 19:54:46 bdenney Exp $
+// $Id: sb16.h,v 1.8 2002-10-24 21:07:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -194,7 +194,7 @@ public:
 
   bx_sb16_c(void);
   ~bx_sb16_c(void);
-  BX_SB16_SMF void init(bx_devices_c *);
+  BX_SB16_SMF void init(void);
   BX_SB16_SMF void reset(unsigned type);
 
       /* DMA input and output, 8 and 16 bit, have to be public */
@@ -302,8 +302,6 @@ private:
     bx_sb16_ins_map remaplist[256];
     int remaps;
   } emuldata;
-
-  bx_devices_c *devices;
 
       /* the MPU 401 part of the emulator */
   BX_SB16_SMF Bit32u mpu_status();                   // read status port   3x1

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: state_file.h,v 1.4 2001-10-03 13:10:37 bdenney Exp $
+// $Id: state_file.h,v 1.5 2002-10-24 21:05:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,7 +33,7 @@
 #include <stddef.h>
 
 
-class state_file {
+class BOCHSAPI state_file {
   void init(void);
 public:
   FILE *file;

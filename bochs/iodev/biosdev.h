@@ -1,5 +1,5 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.h,v 1.2 2002-08-27 19:54:46 bdenney Exp $
+
+// $Id: biosdev.h,v 1.3 2002-10-24 21:07:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,20 +30,20 @@
 
 #if BX_USE_BIOS_SMF
 #  define BX_BIOS_SMF  static
-#  define BX_BIOS_THIS bx_biosdev.
+#  define BX_BIOS_THIS theBiosDevice->
 #else
 #  define BX_BIOS_SMF
 #  define BX_BIOS_THIS this->
 #endif
 
 
-class bx_biosdev_c {
+class bx_biosdev_c : public bx_devmodel_c {
 public:
   bx_biosdev_c(void);
   ~bx_biosdev_c(void);
 
-  BX_BIOS_SMF void init(bx_devices_c *d);
-  BX_BIOS_SMF void reset (unsigned type);
+  virtual void init(void);
+  virtual void reset (unsigned type);
 
 private:
 
@@ -60,7 +60,4 @@ private:
     unsigned int vgabios_message_i;
     } s;  // state information
 
-  bx_devices_c *devices;
   };
-
-extern bx_biosdev_c bx_biosdev;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.11 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pit.cc,v 1.12 2002-10-24 21:07:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,10 +158,8 @@ bx_pit_c::~bx_pit_c( void )
 
 
   int
-bx_pit_c::init( bx_devices_c *d )
+bx_pit_c::init( void )
 {
-  BX_PIT_THIS devices = d;
-
   BX_PIT_THIS devices->register_irq(0, "8254 PIT");
   BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0040, "8254 PIT");
   BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0041, "8254 PIT");

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.2 2002-09-21 11:38:12 vruppert Exp $
+// $Id: pci2isa.cc,v 1.3 2002-10-24 21:07:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -57,28 +57,26 @@ bx_pci2isa_c::~bx_pci2isa_c(void)
 
 
   void
-bx_pci2isa_c::init(bx_devices_c *d)
+bx_pci2isa_c::init(void)
 {
   // called once when bochs initializes
-
-  BX_P2I_THIS devices = d;
 
   if (bx_options.Oi440FXSupport->get ()) {
     BX_REGISTER_PCI_HANDLERS(this, pci_read_handler, pci_write_handler,
                              0x08, "PIIX3 PCI-to-ISA bridge");
 
-    d->register_io_write_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_write_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_write_handler(this, write_handler, 0x00F0, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_write_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_write_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_write_handler(this, write_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_write_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_write_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_write_handler(this, write_handler, 0x00F0, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_write_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_write_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_write_handler(this, write_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge");
 
-    d->register_io_read_handler(this, read_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_read_handler(this, read_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_read_handler(this, read_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_read_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge");
-    d->register_io_read_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_read_handler(this, read_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_read_handler(this, read_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_read_handler(this, read_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_read_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge");
+    bx_devices.register_io_read_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge");
 
     for (unsigned i=0; i<256; i++)
       BX_P2I_THIS s.pci_conf[i] = 0x0;

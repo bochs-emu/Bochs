@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.30 2002-10-23 18:59:25 bdenney Exp $
+// $Id: serial.cc,v 1.31 2002-10-24 21:07:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,8 +36,14 @@
 // define USE_TTY_HACK to connect an xterm or similar (depends on tty.c)
 // to the serial port /AM
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
-#define LOG_THIS bx_serial.
+
+#define LOG_THIS theSerialDevice->
 
 #if USE_RAW_SERIAL
 #include <signal.h>
@@ -61,16 +67,27 @@ extern "C" {
 };
 #endif
 
-bx_serial_c bx_serial;
-#if BX_USE_SER_SMF
-#define this (&bx_serial)
-#endif
-
 #ifdef SERIAL_ENABLE
 static struct termios term_orig, term_new;
 #endif
 
 static int tty_id;
+
+bx_serial_c *theSerialDevice = NULL;
+
+  int
+libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theSerialDevice = new bx_serial_c ();
+  bx_devices.pluginSerialDevice = theSerialDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
+  return(0); // Success
+}
+
+  void
+libserial_LTX_plugin_fini(void)
+{
+}
 
 bx_serial_c::bx_serial_c(void)
 {
@@ -94,7 +111,7 @@ bx_serial_c::~bx_serial_c(void)
 
 
   void
-bx_serial_c::init(bx_devices_c *d)
+bx_serial_c::init(void)
 {
   if (!bx_options.com[0].Oenabled->get ())
     return;
@@ -135,9 +152,7 @@ bx_serial_c::init(bx_devices_c *d)
   this->raw = new serial_raw("/dev/cua0", SIGUSR1);
 #endif // USE_RAW_SERIAL
 
-  BX_SER_THIS devices = d;
-
-  BX_SER_THIS devices->register_irq(4, "Serial Port 1");
+  DEV_register_irq(4, "Serial Port 1");
 
 #if defined (USE_TTY_HACK)
   tty_id = tty_alloc("Bx Serial Console, Your Window to the 8250");
@@ -239,12 +254,8 @@ bx_serial_c::init(bx_devices_c *d)
 
   for (unsigned addr=0x03F8; addr<=0x03FF; addr++) {
 	BX_DEBUG(("register read/write: 0x%04x",addr));
-    BX_SER_THIS devices->register_io_read_handler(this,
-       read_handler,
-       addr, "Serial Port 1");
-    BX_SER_THIS devices->register_io_write_handler(this,
-       write_handler,
-       addr, "Serial Port 1");
+    DEV_register_ioread_handler(this, read_handler, addr, "Serial Port 1", 7);
+    DEV_register_iowrite_handler(this, write_handler, addr, "Serial Port 1", 7);
     }
 
   BX_INFO(( "com1 at 0x3f8/8 irq 4" ));
@@ -300,7 +311,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
         if ((BX_SER_THIS s[0].tx_interrupt == 0) &&
             (BX_SER_THIS s[0].ls_interrupt == 0) &&
             (BX_SER_THIS s[0].ms_interrupt == 0)) {
-          BX_SER_THIS devices->pic->lower_irq(4);
+          DEV_pic_lower_irq(4);
         }
         BX_SER_THIS s[0].rx_interrupt = 0;
         BX_SER_THIS s[0].rx_ipending = 0;
@@ -343,7 +354,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].ls_interrupt == 0) &&
           (BX_SER_THIS s[0].ms_interrupt == 0)) {
-        BX_SER_THIS devices->pic->lower_irq(4);
+        DEV_pic_lower_irq(4);
       }
 
       BX_SER_THIS s[0].tx_interrupt = 0;
@@ -387,7 +398,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].tx_interrupt == 0) &&
           (BX_SER_THIS s[0].ms_interrupt == 0)) {
-        BX_SER_THIS devices->pic->lower_irq(4);
+        DEV_pic_lower_irq(4);
       }
       BX_SER_THIS s[0].ls_interrupt = 0;
       BX_SER_THIS s[0].ls_ipending = 0;
@@ -410,7 +421,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].tx_interrupt == 0) &&
           (BX_SER_THIS s[0].ls_interrupt == 0)) {
-        BX_SER_THIS devices->pic->lower_irq(4);
+        DEV_pic_lower_irq(4);
       }
       BX_SER_THIS s[0].ms_interrupt = 0;
       BX_SER_THIS s[0].ms_ipending = 0;
@@ -485,7 +496,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
               (BX_SER_THIS s[0].ls_interrupt == 0) &&
               (BX_SER_THIS s[0].ms_interrupt == 0)) {
-            BX_SER_THIS devices->pic->lower_irq(4);
+            DEV_pic_lower_irq(4);
           }
           BX_SER_THIS s[0].tx_interrupt = 0;
           BX_SER_THIS s[0].tx_ipending = 0;
@@ -542,7 +553,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         }
         if (gen_int == 1)
-          BX_SER_THIS devices->pic->raise_irq(4);
+          DEV_pic_raise_irq(4);
       }
       break;
 
@@ -732,7 +743,7 @@ bx_serial_c::tx_timer(void)
   }
 
   if (gen_int) {
-    BX_SER_THIS devices->pic->raise_irq(4);
+    DEV_pic_raise_irq(4);
   }
 }
 
@@ -802,7 +813,7 @@ bx_serial_c::rx_timer(void)
         BX_SER_THIS s[0].rx_empty = 0;
         if (BX_SER_THIS s[0].int_enable.rxdata_enable) {
           BX_SER_THIS s[0].rx_interrupt = 1;
-          BX_SER_THIS devices->pic->raise_irq(4);
+          DEV_pic_raise_irq(4);
         } else {
           BX_SER_THIS s[0].rx_ipending = 1;
         }

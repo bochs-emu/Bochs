@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.27 2002-10-12 13:10:09 vruppert Exp $
+// $Id: sdl.cc,v 1.28 2002-10-24 21:06:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,6 +26,11 @@
 
 #define _MULTI_THREAD
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include <stdlib.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_endian.h>
@@ -35,7 +40,18 @@
 #include "icon_bochs.h"
 #include "sdl.h"
 
-#define LOG_THIS bx_gui.
+class bx_sdl_gui_c : public bx_gui_c {
+public:
+  bx_sdl_gui_c (void);
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+static bx_sdl_gui_c *theGui = NULL;
+IMPLEMENT_GUI_PLUGIN_CODE(sdl)
+
+#define LOG_THIS theGui->
 
 #define _SDL_DEBUG_ME_
 
@@ -138,7 +154,7 @@ void switch_to_windowed(void)
 
   SDL_ShowCursor(1);
   SDL_WM_GrabInput(SDL_GRAB_OFF);
-  bx_gui.show_headerbar();
+  bx_gui->show_headerbar();
   sdl_grab = 0;
 }
 
@@ -183,8 +199,11 @@ void switch_to_fullscreen(void)
   sdl_grab = 1;
 }
 
-void bx_gui_c::specific_init(
-    bx_gui_c *th,
+bx_sdl_gui_c::bx_sdl_gui_c ()
+{
+}
+
+void bx_sdl_gui_c::specific_init(
     int argc,
     char **argv,
     unsigned x_tilesize,
@@ -193,7 +212,7 @@ void bx_gui_c::specific_init(
 {
   int i,j;
 
-  th->put("SDL");
+  put("SDL");
 
   tilewidth = x_tilesize;
   tileheight = y_tilesize;
@@ -201,7 +220,7 @@ void bx_gui_c::specific_init(
 
   for(i=0;i<256;i++)
     for(j=0;j<16;j++)
-      bx_gui.vga_charmap[i*32+j] = sdl_font8x16[i][j];
+      vga_charmap[i*32+j] = sdl_font8x16[i][j];
 
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
@@ -216,7 +235,7 @@ void bx_gui_c::specific_init(
   atexit(SDL_Quit);
 
   sdl_screen = NULL;
-  th->dimension_update(640,480);
+  dimension_update(640,480);
 
   sdl_fullscreen_toggle = 0;
 
@@ -242,7 +261,7 @@ void bx_gui_c::specific_init(
   }
 }
 
-void bx_gui_c::text_update(
+void bx_sdl_gui_c::text_update(
     Bit8u *old_text,
     Bit8u *new_text,
     unsigned long cursor_x,
@@ -266,10 +285,10 @@ void bx_gui_c::text_update(
   cs_end = cursor_state & 0x1f;
 
   forceUpdate = 0;
-  if(bx_gui.charmap_updated)
+  if(charmap_updated)
   {
     forceUpdate = 1;
-    bx_gui.charmap_updated = 0;
+    charmap_updated = 0;
   }
   if( sdl_screen )
   {
@@ -306,7 +325,7 @@ void bx_gui_c::text_update(
 	
 	// Display this one char
 	fontrows = fontheight;
-	pfont_row = &bx_gui.vga_charmap[(new_text[0] << 5)];
+	pfont_row = &vga_charmap[(new_text[0] << 5)];
 	buf_char = buf;
 	do
 	{
@@ -352,19 +371,19 @@ void bx_gui_c::text_update(
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_sdl_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_sdl_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
 
 
-void bx_gui_c::graphics_tile_update(
+void bx_sdl_gui_c::graphics_tile_update(
     Bit8u *snapshot,
     unsigned x,
     unsigned y)
@@ -566,7 +585,7 @@ static Bit32u sdl_sym_to_bx_key (SDLKey sym)
 }
 
 
-void bx_gui_c::handle_events(void)
+void bx_sdl_gui_c::handle_events(void)
 {
   Bit32u key_event;
   Bit8u mouse_state;
@@ -599,7 +618,7 @@ void bx_gui_c::handle_events(void)
 	}
 	//fprintf (stderr, "processing relative mouse event\n");
 	new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02));
-	bx_devices.keyboard->mouse_motion(
+	DEV_mouse_motion(
 	    sdl_event.motion.xrel,
 	    -sdl_event.motion.yrel,
 	    new_mousebuttons );
@@ -646,7 +665,7 @@ void bx_gui_c::handle_events(void)
 	if( sdl_fullscreen_toggle == 0 )
 	  new_mousebuttons &= 0x03;
 	// send motion information
-	bx_devices.keyboard->mouse_motion(
+	DEV_mouse_motion(
 	    new_mousex - old_mousex,
 	    -(new_mousey - old_mousey),
 	    new_mousebuttons );
@@ -667,8 +686,8 @@ void bx_gui_c::handle_events(void)
 	    switch_to_windowed();
 	  else
 	    switch_to_fullscreen();
-	  bx_gui.show_headerbar();
-	  bx_gui.flush();
+	  bx_gui->show_headerbar();
+	  bx_gui->flush();
 	  break;
 	}
 
@@ -689,7 +708,7 @@ void bx_gui_c::handle_events(void)
 	  key_event = entry->baseKey;
 	}
 	if( key_event == BX_KEY_UNHANDLED ) break;
-	bx_devices.keyboard->gen_scancode( key_event );
+	DEV_kbd_gen_scancode( key_event );
 	break;
 
       case SDL_KEYUP:
@@ -713,7 +732,7 @@ void bx_gui_c::handle_events(void)
             key_event = entry->baseKey;
           }
 	  if( key_event == BX_KEY_UNHANDLED ) break;
-	  bx_devices.keyboard->gen_scancode( key_event | BX_KEY_RELEASED );
+	  DEV_kbd_gen_scancode( key_event | BX_KEY_RELEASED );
 	}
 	break;
 
@@ -726,7 +745,7 @@ void bx_gui_c::handle_events(void)
 
 
 
-void bx_gui_c::flush(void)
+void bx_sdl_gui_c::flush(void)
 {
   if( sdl_screen )
     SDL_UpdateRect( sdl_screen,0,0,res_x,res_y+headerbar_height );
@@ -735,7 +754,7 @@ void bx_gui_c::flush(void)
 }
 
 
-void bx_gui_c::clear_screen(void)
+void bx_sdl_gui_c::clear_screen(void)
 {
   int i = res_y, j;
   Uint32 color;
@@ -772,7 +791,7 @@ void bx_gui_c::clear_screen(void)
 
 
 
-Boolean bx_gui_c::palette_change(
+Boolean bx_sdl_gui_c::palette_change(
     unsigned index,
     unsigned red,
     unsigned green,
@@ -793,7 +812,7 @@ Boolean bx_gui_c::palette_change(
 }
 
 
-void bx_gui_c::dimension_update(
+void bx_sdl_gui_c::dimension_update(
     unsigned x,
     unsigned y,
     unsigned fheight)
@@ -857,11 +876,11 @@ void bx_gui_c::dimension_update(
     textres_x = x / fontwidth;
     textres_y = y / fontheight;
   }
-  bx_gui.show_headerbar();
+  bx_gui->show_headerbar();
 }
 
 
-unsigned bx_gui_c::create_bitmap(
+unsigned bx_sdl_gui_c::create_bitmap(
     const unsigned char *bmap,
     unsigned xdim,
     unsigned ydim)
@@ -896,7 +915,7 @@ unsigned bx_gui_c::create_bitmap(
   if( !tmp->surface )
   {
     delete tmp;
-    bx_gui.exit();
+    bx_gui->exit();
     LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
     BX_PANIC (("Unable to create requested bitmap"));
   }
@@ -939,7 +958,7 @@ unsigned bx_gui_c::create_bitmap(
 }
 
 
-unsigned bx_gui_c::headerbar_bitmap(
+unsigned bx_sdl_gui_c::headerbar_bitmap(
     unsigned bmap_id,
     unsigned alignment,
     void (*f)(void))
@@ -968,7 +987,7 @@ unsigned bx_gui_c::headerbar_bitmap(
 }
 
 
-void bx_gui_c::replace_bitmap(
+void bx_sdl_gui_c::replace_bitmap(
     unsigned hbar_id,
     unsigned bmap_id)
 {
@@ -1000,7 +1019,7 @@ void bx_gui_c::replace_bitmap(
 }
 
 
-void bx_gui_c::show_headerbar(void)
+void bx_sdl_gui_c::show_headerbar(void)
 {
   Uint32 *buf;
   Uint32 *buf_row;
@@ -1055,7 +1074,7 @@ void bx_gui_c::show_headerbar(void)
 }
 
 
-void bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+void bx_sdl_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
   if( val == 1 )
   {
@@ -1088,7 +1107,7 @@ void headerbar_click(int x)
     }
 }
 
-void bx_gui_c::exit(void)
+void bx_sdl_gui_c::exit(void)
 {
   if( sdl_screen )
     SDL_FreeSurface(sdl_screen);
@@ -1131,4 +1150,3 @@ static Bit32u convertStringToSDLKey (const char *string)
   }
   return BX_KEYMAP_UNKNOWN;
 }
-

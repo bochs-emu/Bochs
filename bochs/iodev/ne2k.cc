@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.41 2002-10-19 08:21:24 vruppert Exp $
+// $Id: ne2k.cc,v 1.42 2002-10-24 21:07:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
   put("NE2K");
   settype(NE2KLOG);
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.41 2002-10-19 08:21:24 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.42 2002-10-24 21:07:42 bdenney Exp $"));
   BX_NE2K_THIS s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -97,7 +97,7 @@ bx_ne2k_c::reset(unsigned type)
     BX_NE2K_THIS s.CR.rdma_cmd  = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
-  BX_NE2K_THIS devices->pic->lower_irq(BX_NE2K_THIS s.base_irq);
+  DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
 }
 
 //
@@ -208,7 +208,7 @@ bx_ne2k_c::write_cr(Bit32u value)
       BX_NE2K_THIS s.remote_bytes == 0) {
     BX_NE2K_THIS s.ISR.rdma_done = 1;
     if (BX_NE2K_THIS s.IMR.rdma_inte) {
-      BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+      DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
     }
   }
 }
@@ -313,7 +313,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
 	if (BX_NE2K_THIS s.remote_bytes == 0) {
 	    BX_NE2K_THIS s.ISR.rdma_done = 1;
 	    if (BX_NE2K_THIS s.IMR.rdma_inte) {
-		BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+		DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
 	    }
 	}
     break;
@@ -360,7 +360,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     if (BX_NE2K_THIS s.remote_bytes == 0) {
       BX_NE2K_THIS s.ISR.rdma_done = 1;
       if (BX_NE2K_THIS s.IMR.rdma_inte) {
-	  BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+	  DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
       }
     }
     break;
@@ -557,7 +557,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
               (BX_NE2K_THIS s.IMR.tx_inte << 1) |
               (BX_NE2K_THIS s.IMR.rx_inte));
     if (value == 0)
-      BX_NE2K_THIS devices->pic->lower_irq(BX_NE2K_THIS s.base_irq);
+      DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
     break;
 
   case 0x8:  // RSAR0
@@ -958,7 +958,7 @@ bx_ne2k_c::tx_timer(void)
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
     BX_NE2K_THIS s.ISR.pkt_tx = 1;
-    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+    DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
   }
   BX_NE2K_THIS s.tx_timer_active = 0;
 }
@@ -1238,16 +1238,15 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   BX_NE2K_THIS s.ISR.pkt_rx = 1;
 
   if (BX_NE2K_THIS s.IMR.rx_inte) {
-    BX_NE2K_THIS devices->pic->raise_irq(BX_NE2K_THIS s.base_irq);
+    DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
   }
 
 }
 
 void
-bx_ne2k_c::init(bx_devices_c *d)
+bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.41 2002-10-19 08:21:24 vruppert Exp $"));
-  BX_NE2K_THIS devices = d;
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.42 2002-10-24 21:07:42 bdenney Exp $"));
 
 
   if (bx_options.ne2k.Ovalid->get ()) {
@@ -1265,20 +1264,14 @@ bx_ne2k_c::init(bx_devices_c *d)
 				    0,0, "ne2k"); // one-shot, inactive
     }
     // Register the IRQ and i/o port addresses
-    BX_NE2K_THIS devices->register_irq(BX_NE2K_THIS s.base_irq,
+    DEV_register_irq(BX_NE2K_THIS s.base_irq,
 				       "ne2000 ethernet NIC");
 
     for (unsigned addr = BX_NE2K_THIS s.base_address; 
 	 addr <= BX_NE2K_THIS s.base_address + 0x20; 
 	 addr++) {
-      BX_NE2K_THIS devices->register_io_read_handler(this,
-						     read_handler,
-						     addr, 
-						     "ne2000 NIC");
-      BX_NE2K_THIS devices->register_io_write_handler(this,
-						      write_handler,
-						      addr, 
-						      "ne2000 NIC");
+      DEV_register_ioread_handler(this, read_handler, addr, "ne2000 NIC", 1);
+      DEV_register_iowrite_handler(this, write_handler, addr, "ne2000 NIC", 1);
     }
 	BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
 				BX_NE2K_THIS s.base_address,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.78 2002-10-21 01:05:53 bdenney Exp $
+// $Id: siminterface.h,v 1.79 2002-10-24 21:06:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -101,7 +101,7 @@
 // implementations for example).  This argues for keeping UI-specific
 // structures out of the simulator interface.  It certainly works ok for the
 // text interface, but that's because FILE* is standard and portable.
-#define BX_UI_TEXT (!BX_WITH_WX)
+#define BX_UI_TEXT 1
 
 //////////////////////////////////////////////////////
 
@@ -400,6 +400,8 @@ typedef enum {
   // This is only modified by debugger code, not by the user.
   BXP_DEBUG_RUNNING,
 #endif
+  BXP_SEL_CONFIG_INTERFACE,
+  BXP_SEL_DISPLAY_LIBRARY,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -743,7 +745,7 @@ class bx_param_string_c;
 class bx_param_filename_c;
 class bx_list_c;
 
-class bx_object_c {
+class BOCHSAPI bx_object_c {
 private:
   bx_id id;
   bx_objtype type;
@@ -755,8 +757,8 @@ public:
   Bit8u get_type () { return type; }
 };
 
-class bx_param_c : public bx_object_c {
-  static const char *default_text_format;
+class BOCHSAPI bx_param_c : public bx_object_c {
+  BOCHSAPI static const char *default_text_format;
 protected:
   char *name;
   char *description;
@@ -788,8 +790,8 @@ public:
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
 
-class bx_param_num_c : public bx_param_c {
-  static Bit32u default_base;
+class BOCHSAPI bx_param_num_c : public bx_param_c {
+  BOCHSAPI static Bit32u default_base;
   // The dependent_list is initialized to NULL.  If dependent_list is modified
   // to point to a bx_list_c of other parameters, the set() method of
   // bx_param_bool_c will enable those parameters when this bool is true, and
@@ -840,7 +842,7 @@ public:
 // to keep a pointer to the actual data.  This is used to register
 // existing variables as parameters, without have to access it via
 // set/get methods.
-class bx_shadow_num_c : public bx_param_num_c {
+class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
   Bit8u varsize;   // must be 64, 32, 16, or 8
   Bit8u lowbit;   // range of bits associated with this param
   Bit64u mask;     // mask is ANDed with value before it is returned from get
@@ -897,7 +899,7 @@ public:
   virtual void set (Bit64s val);
 };
 
-class bx_param_bool_c : public bx_param_num_c {
+class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
   // many boolean variables are used to enable/disable modules.  In the
   // user interface, the enable variable should enable/disable all the
   // other parameters associated with that module.
@@ -913,7 +915,7 @@ public:
 };
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
-class bx_shadow_bool_c : public bx_param_bool_c {
+class BOCHSAPI bx_shadow_bool_c : public bx_param_bool_c {
   // each bit of a bitfield can be a separate value.  bitnum tells which
   // bit is used.  get/set will only modify that bit.
   Bit8u bitnum;
@@ -928,7 +930,7 @@ public:
 };
 
 
-class bx_param_enum_c : public bx_param_num_c {
+class BOCHSAPI bx_param_enum_c : public bx_param_num_c {
   char **choices;
 public:
   bx_param_enum_c (bx_id id, 
@@ -938,6 +940,8 @@ public:
       Bit64s initial_val,
       Bit64s value_base = 0);
   char *get_choice (int n) { return choices[n]; }
+  int find_by_name (const char *string);
+  bool set_by_name (const char *string);
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -946,7 +950,7 @@ public:
 
 typedef char* (*param_string_event_handler)(class bx_param_string_c *, int set, char *val, int maxlen);
 
-class bx_param_string_c : public bx_param_c {
+class BOCHSAPI bx_param_string_c : public bx_param_c {
   int maxsize;
   char *val, *initial_val;
   param_string_event_handler handler;
@@ -982,7 +986,7 @@ public:
 // Declare a filename class.  It is identical to a string, except that
 // it initializes the options differently.  This is just a shortcut
 // for declaring a string param and setting the options with IS_FILENAME.
-class bx_param_filename_c : public bx_param_string_c {
+class BOCHSAPI bx_param_filename_c : public bx_param_string_c {
 public:
   bx_param_filename_c (bx_id id,
       char *name,
@@ -991,7 +995,7 @@ public:
       int maxsize=-1);
 };
 
-class bx_list_c : public bx_param_c {
+class BOCHSAPI bx_list_c : public bx_param_c {
 private:
   // just a list of bx_param_c objects.  size tells current number of
   // objects in the list, and maxsize tells how many list items are
@@ -1126,7 +1130,10 @@ typedef struct {
 
 #include <setjmp.h>
 
-class bx_simulator_interface_c {
+enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
+typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
+
+class BOCHSAPI bx_simulator_interface_c {
 public:
   bx_simulator_interface_c ();
   virtual void set_quit_context (jmp_buf *context) {}
@@ -1179,9 +1186,9 @@ public:
   // etc.) are displayed and handled by gui.cc, not by the CI or siminterface.
   // gui.cc uses its own callback functions to implement the behavior of
   // the buttons.  Some of these implementations call the siminterface.
-  typedef BxEvent* (*sim_interface_callback_t)(void *theclass, BxEvent *event);
-  virtual void set_notify_callback (sim_interface_callback_t func, void *arg) {}
-  virtual void get_notify_callback (sim_interface_callback_t *func, void **arg) {}
+  typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
+  virtual void set_notify_callback (bxevent_handler func, void *arg) {}
+  virtual void get_notify_callback (bxevent_handler *func, void **arg) {}
 
   // send an event from the simulator to the CI.
   virtual BxEvent* sim_to_ci_event (BxEvent *event) {return NULL;}
@@ -1219,16 +1226,21 @@ public:
   virtual char *debug_get_next_command () {return NULL;}
   virtual void debug_puts (const char *text) {}
 #endif
+  virtual void register_configuration_interface (
+    const char* name, 
+    config_interface_callback_t callback,
+    void *userdata) {}
+  virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
+  virtual int begin_simulation (int argc, char *argv[]) {return -1;}
+  typedef bool (*is_sim_thread_func_t)();
+  is_sim_thread_func_t is_sim_thread_func;
+  virtual void set_sim_thread_func (is_sim_thread_func_t func) {
+    is_sim_thread_func = func;
+  }
+  virtual bool is_sim_thread () {return true;}
 };
 
-extern bx_simulator_interface_c *SIM;
+BOCHSAPI extern bx_simulator_interface_c *SIM;
 
-extern void bx_init_siminterface ();
-extern int bx_init_main (int argc, char *argv[]);
-extern int bx_continue_after_config_interface (int argc, char *argv[]);
-
-#if BX_WITH_WX
-// returns true if called from the simulator thread.
-// defined in wxmain.cc, usable anywhere.
-bool isSimThread ();
-#endif
+BOCHSAPI extern void bx_init_siminterface ();
+BOCHSAPI extern int bx_init_main (int argc, char *argv[]);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.h,v 1.5 2002-08-27 19:54:46 bdenney Exp $
+// $Id: iodebug.h,v 1.6 2002-10-24 21:07:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #ifndef _BX_IODEBUG_H
@@ -16,7 +16,7 @@ class bx_iodebug_c : public logfunctions
 public:
   bx_iodebug_c( void );
   ~bx_iodebug_c( void );
-  int init( bx_devices_c * );
+  int init(void);
   void reset (unsigned type);
   static void mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
   static void mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
@@ -29,8 +29,6 @@ private:
   static unsigned int range_test(Bit32u addr, unsigned int len);
   static void add_range( Bit32u addr_start, Bit32u addr_end);
 
-
-  bx_devices_c *devices;
 };
 
 extern bx_iodebug_c bx_iodebug;

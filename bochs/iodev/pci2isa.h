@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.2 2002-09-21 11:38:12 vruppert Exp $
+// $Id: pci2isa.h,v 1.3 2002-10-24 21:07:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,11 +41,10 @@ class bx_pci2isa_c : public logfunctions {
 public:
   bx_pci2isa_c(void);
   ~bx_pci2isa_c(void);
-  BX_PCI_SMF void   init(bx_devices_c *);
+  BX_PCI_SMF void   init(void);
   BX_PCI_SMF void   reset(unsigned type);
 
 private:
-  bx_devices_c *devices;
 
   struct {
     Bit8u pci_conf[256];

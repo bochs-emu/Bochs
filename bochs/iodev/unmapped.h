@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.9 2002-08-27 19:54:46 bdenney Exp $
+// $Id: unmapped.h,v 1.10 2002-10-24 21:07:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,7 +29,7 @@
 
 #if BX_USE_UM_SMF
 #  define BX_UM_SMF  static
-#  define BX_UM_THIS bx_unmapped.
+#  define BX_UM_THIS theUnmappedDevice->
 #else
 #  define BX_UM_SMF
 #  define BX_UM_THIS this->
@@ -37,12 +37,13 @@
 
 
 
-class bx_unmapped_c : public logfunctions {
+class bx_unmapped_c : public bx_devmodel_c {
 public:
   bx_unmapped_c(void);
   ~bx_unmapped_c(void);
-  BX_UM_SMF void init(bx_devices_c *d);
-  BX_UM_SMF void reset (unsigned type);
+
+  virtual void init(void);
+  virtual void reset (unsigned type);
 
 private:
 
@@ -60,7 +61,4 @@ private:
     Bit8u shutdown;
     } s;  // state information
 
-  bx_devices_c *devices;
   };
-
-extern bx_unmapped_c bx_unmapped;

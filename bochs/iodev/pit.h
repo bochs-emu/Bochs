@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.h,v 1.8 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pit.h,v 1.9 2002-10-24 21:07:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,7 +67,7 @@ class bx_pit_c : public logfunctions {
 public:
   bx_pit_c( void );
   ~bx_pit_c( void );
-  BX_PIT_SMF int init( bx_devices_c *);
+  BX_PIT_SMF int init(void);
   BX_PIT_SMF void reset( unsigned type);
   BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
 
@@ -89,8 +89,6 @@ private:
     Boolean refresh_clock_div2;
     int  timer_handle[3];
     } s;
-
-  bx_devices_c *devices;
 
   BX_PIT_SMF void  write_count_reg( Bit8u   value, unsigned timerid );
   BX_PIT_SMF Bit8u read_counter( unsigned timerid );

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.18 2002-08-27 19:54:46 bdenney Exp $
+// $Id: unmapped.cc,v 1.19 2002-10-24 21:07:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,14 +26,31 @@
 
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
-#define LOG_THIS bx_unmapped.
+
+#define LOG_THIS theUnmappedDevice->
 
 
-bx_unmapped_c bx_unmapped;
-#if BX_USE_UM_SMF
-#define this (&bx_unmapped)
-#endif
+bx_unmapped_c *theUnmappedDevice = NULL;
+
+  int
+libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theUnmappedDevice = new bx_unmapped_c ();
+  bx_devices.pluginUnmapped = theUnmappedDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
+  return(0); // Success
+}
+
+  void
+libunmapped_LTX_plugin_fini(void)
+{
+}
 
 bx_unmapped_c::bx_unmapped_c(void)
 {
@@ -50,16 +67,10 @@ bx_unmapped_c::~bx_unmapped_c(void)
 }
 
   void
-bx_unmapped_c::init(bx_devices_c *d)
+bx_unmapped_c::init(void)
 {
-  BX_UM_THIS devices = d;
-
-  for (Bit32u addr=0; addr<0x10000; addr++) {
-    BX_UM_THIS devices->register_io_read_handler(this, read_handler,
-                                      addr, "Unmapped");
-    BX_UM_THIS devices->register_io_write_handler(this, write_handler,
-                                      addr, "Unmapped");
-    }
+  DEV_register_default_ioread_handler(this, read_handler, "Unmapped", 7);
+  DEV_register_default_iowrite_handler(this, write_handler, "Unmapped", 7);
 }
 
   void

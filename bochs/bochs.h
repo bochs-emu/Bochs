@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.101 2002-10-22 12:50:55 bdenney Exp $
+// $Id: bochs.h,v 1.102 2002-10-24 21:03:51 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -84,6 +84,9 @@ extern "C" {
 
 #include "gui/siminterface.h"
 
+// prototypes
+int bx_begin_simulation (int argc, char *argv[]);
+
 //
 // some macros to interface the CPU and memory to external environment
 // so that these functions can be redirected to the debugger when
@@ -92,8 +95,9 @@ extern "C" {
 
 #if ((BX_DEBUGGER == 1) && (BX_NUM_SIMULATORS >= 2))
 // =-=-=-=-=-=-=- Redirected to cosimulation debugger -=-=-=-=-=-=-=
-#define BX_VGA_MEM_READ(addr)       bx_dbg_ucmem_read(addr)
-#define BX_VGA_MEM_WRITE(addr, val) bx_dbg_ucmem_write(addr, val)
+#define DEV_vga_mem_read(addr)       bx_dbg_ucmem_read(addr)
+#define DEV_vga_mem_write(addr, val) bx_dbg_ucmem_write(addr, val)
+
 #if BX_SUPPORT_A20
 #  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
 #else
@@ -125,8 +129,6 @@ extern "C" {
 #else
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
-#define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
-#define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
 #if BX_SUPPORT_A20
 #  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
 #else
@@ -146,17 +148,7 @@ extern "C" {
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
 #define BX_CPU_C                    bx_cpu_c
 #define BX_MEM_C                    bx_mem_c
-// macros for DMA handling
-#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  bx_dma.registerDMA8Channel(channel, dmaRead, dmaWrite, name)
-#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  bx_dma.registerDMA16Channel(channel, dmaRead, dmaWrite, name)
-#define BX_UNREGISTER_DMA_CHANNEL(channel) \
-  bx_dma.unregisterDMAChannel(channel)
-#define BX_DMA_SET_DRQ(channel, val) bx_dma.set_DRQ(channel, val)
-#define BX_DMA_GET_TC()             bx_dma.get_TC()
 #define BX_HRQ                      (bx_pc_system.HRQ)
-#define BX_RAISE_HLDA()             bx_dma.raise_HLDA()
 #define BX_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
   BX_MEM(0)->readPhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 #define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
@@ -178,6 +170,7 @@ extern "C" {
 
 #endif
 
+
 // you can't use static member functions on the CPU, if there are going
 // to be 2 cpus.  Check this early on.
 #if (BX_SMP_PROCESSORS>1)
@@ -188,7 +181,6 @@ extern "C" {
 
 
 // #define BX_IAC()                 bx_pc_system.IAC()
-#define BX_IAC()                    bx_devices.pic->IAC()
 //#define BX_IAC()                    bx_dbg_IAC()
 
 //
@@ -248,7 +240,7 @@ extern Bit8u DTPageDirty[];
 #define MAGIC_LOGNUM 0x12345678
 
 
-typedef class logfunctions {
+typedef class BOCHSAPI logfunctions {
 	char *prefix;
 	int type;
 // values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
@@ -261,7 +253,7 @@ typedef class logfunctions {
 	class iofunctions *logio;
 	// default log actions for all devices, declared and initialized
 	// in logio.cc.
-	static int default_onoff[N_LOGLEV];
+	BOCHSAPI static int default_onoff[N_LOGLEV];
 public:
 	logfunctions(void);
 	logfunctions(class iofunctions *);
@@ -298,65 +290,26 @@ public:
 
 #define BX_LOGPREFIX_SIZE 51
 
-class iofunctions {
+enum {
+  IOLOG=0, FDLOG, GENLOG, CMOSLOG, CDLOG, DMALOG, ETHLOG, G2HLOG, HDLOG, KBDLOG,
+  NE2KLOG, PARLOG, PCILOG, PICLOG, PITLOG, SB16LOG, SERLOG, VGALOG,
+  STLOG, // state_file.cc 
+  DEVLOG, MEMLOG, DISLOG, GUILOG, IOAPICLOG, APICLOG, CPU0LOG, CPU1LOG,
+  CPU2LOG, CPU3LOG, CPU4LOG, CPU5LOG, CPU6LOG, CPU7LOG, CPU8LOG, CPU9LOG,
+  CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
+  UNMAPLOG, SERRLOG, BIOSLOG, PIT81LOG, PIT82LOG, IODEBUGLOG, PCI2ISALOG,
+  PLUGINLOG 
+};
+
+class BOCHSAPI iofunctions {
 	int magic;
 	char logprefix[BX_LOGPREFIX_SIZE];
 	FILE *logfd;
 	class logfunctions *log;
 	void init(void);
 	void flush(void);
-// Log Class defines
-#define    IOLOG           0
-#define    FDLOG           1
-#define    GENLOG          2
-#define    CMOSLOG         3
-#define    CDLOG           4
-#define    DMALOG          5
-#define    ETHLOG          6
-#define    G2HLOG          7
-#define    HDLOG           8
-#define    KBDLOG          9
-#define    NE2KLOG         10
-#define    PARLOG          11
-#define    PCILOG          12
-#define    PICLOG          13
-#define    PITLOG          14
-#define    SB16LOG         15
-#define    SERLOG          16
-#define    VGALOG          17
-#define    STLOG           18   // state_file.cc
-#define    DEVLOG          19
-#define    MEMLOG          20
-#define    DISLOG          21
-#define    GUILOG          22
-#define    IOAPICLOG       23
-#define    APICLOG         24
-#define    CPU0LOG         25
-#define    CPU1LOG         26
-#define    CPU2LOG         27
-#define    CPU3LOG         28
-#define    CPU4LOG         29
-#define    CPU5LOG         30
-#define    CPU6LOG         31
-#define    CPU7LOG         32
-#define    CPU8LOG         33
-#define    CPU9LOG         34
-#define    CPU10LOG         35
-#define    CPU11LOG         36
-#define    CPU12LOG         37
-#define    CPU13LOG         38
-#define    CPU14LOG         39
-#define    CPU15LOG         40
-#define    CTRLLOG         41
-#define    UNMAPLOG        42
-#define    SERRLOG         43
-#define    BIOSLOG         42
-#define    PIT81LOG        45
-#define    PIT82LOG        46
-#define    IODEBUGLOG      47
-#define    PCI2ISALOG      48
 
-
+// Log Class types
 public:
 	iofunctions(void);
 	iofunctions(FILE *);
@@ -399,7 +352,7 @@ protected:
 
 };
 
-typedef class iofunctions iofunc_t;
+typedef class BOCHSAPI iofunctions iofunc_t;
 
 
 #define SAFE_GET_IOFUNC() \
@@ -425,8 +378,8 @@ typedef class iofunctions iofunc_t;
 
 #endif
 
-extern iofunc_t *io;
-extern logfunc_t *genlog;
+BOCHSAPI extern iofunc_t *io;
+BOCHSAPI extern logfunc_t *genlog;
 
 #include "state_file.h"
 
@@ -515,7 +468,7 @@ typedef struct {
 #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 void bx_signal_handler (int signum);
 int bx_atexit(void);
-extern bx_debug_t bx_dbg;
+BOCHSAPI extern bx_debug_t bx_dbg;
 
 
 
@@ -544,11 +497,10 @@ extern bx_debug_t bx_dbg;
 enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 
 #include "pc_system.h"
-
+#include "plugin.h"
 #include "gui/gui.h"
 #include "gui/control.h"
 #include "gui/keymap.h"
-extern bx_gui_c   bx_gui;
 #include "iodev/iodev.h"
 
 
@@ -560,10 +512,8 @@ extern bx_gui_c   bx_gui;
 /* --- EXTERNS --- */
 
 #if ( BX_PROVIDE_DEVICE_MODELS==1 )
-extern bx_devices_c   bx_devices;
+BOCHSAPI extern bx_devices_c   bx_devices;
 #endif
-
-void bx_init_before_config_interface ();
 
 // This value controls how often each I/O device's periodic() method
 // gets called.  The timer is set up in iodev/devices.cc.
@@ -671,7 +621,7 @@ typedef struct {
 #define BX_N_SERIAL_PORTS 1
 #define BX_N_PARALLEL_PORTS 1
 
-typedef struct {
+typedef struct BOCHSAPI {
   bx_floppy_options floppya;
   bx_floppy_options floppyb;
   bx_ata_options    ata[BX_MAX_ATA_CHANNEL];
@@ -709,9 +659,11 @@ typedef struct {
   bx_keyboard_options keyboard;
   bx_param_string_c *Ouser_shortcut;
   bx_gdbstub_t      gdbstub;
+  bx_param_enum_c *Osel_config;
+  bx_param_enum_c *Osel_displaylib;
   } bx_options_t;
 
-extern bx_options_t bx_options;
+BOCHSAPI extern bx_options_t bx_options;
 
 void bx_center_print (FILE *file, char *line, int maxwidth);
 

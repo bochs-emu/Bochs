@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.20 2002-10-23 15:13:10 bdenney Exp $
+// $Id: pc_system.h,v 1.21 2002-10-24 21:04:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,13 +39,13 @@ extern unsigned long ips_count;
 typedef void (*bx_timer_handler_t)(void *);
 
 
-extern class bx_pc_system_c bx_pc_system;
+BOCHSAPI extern class bx_pc_system_c bx_pc_system;
 
 #ifdef PROVIDE_M_IPS
 extern double m_ips;
 #endif
 
-class bx_pc_system_c : private logfunctions {
+class BOCHSAPI bx_pc_system_c : private logfunctions {
 private:
 
   // ===============================

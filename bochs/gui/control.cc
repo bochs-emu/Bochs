@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.65 2002-10-14 13:37:18 bdenney Exp $
+// $Id: control.cc,v 1.66 2002-10-24 21:06:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -23,6 +23,7 @@ extern "C" {
 #include "osdep.h"
 #include "control.h"
 #include "siminterface.h"
+#include "extplugin.h"
 
 #define CI_PATH_LENGTH 512
 
@@ -164,7 +165,8 @@ ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out
 	return 0;
       }
     }
-    printf ("Your choice (%s) did not match any of the choices:\n", clean);
+    if (clean[0] != '?')
+      printf ("Your choice (%s) did not match any of the choices:\n", clean);
     for (i=0; i<n_choices; i++) {
       if (i>0) printf (", ");
       printf ("%s", choice[i]);
@@ -403,6 +405,13 @@ int bx_config_interface (int menu)
    case BX_CI_INIT:
      bx_config_interface_init ();
      return 0;
+   case BX_CI_START_SIMULATION: {
+     char *myargv[] = {"manufactured-argv"};
+     SIM->begin_simulation (1, myargv);
+     // we don't expect it to return, but if it does, quit
+     SIM->quit_sim(1);
+     break;
+     }
    case BX_CI_START_MENU:
      {
        static int read_rc = 0;
@@ -421,7 +430,7 @@ int bx_config_interface (int menu)
 	   break;
 	 case 3: bx_config_interface (BX_CI_START_OPTS); break;
 	 case 4: bx_write_rc (NULL); break;
-	 case 5: return 0;   // return from menu
+	 case 5: bx_config_interface (BX_CI_START_SIMULATION); break;
 	 case 6: SIM->quit_sim (1); return -1;
 	 default: BAD_OPTION(menu, choice);
        }
@@ -642,7 +651,7 @@ config_interface_notify_callback (void *unused, BxEvent *event)
       event->retcode = 0;
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
-      fprintf (stderr, "BX_SYNC_EVT_ASK_PARAM\n");
+      event->u.param.param->text_ask (stdin, stderr);
       return event;
     case BX_SYNC_EVT_LOG_ASK:
     {
@@ -675,8 +684,9 @@ ask:
     return event;
   case BX_ASYNC_EVT_REFRESH:
   case BX_ASYNC_EVT_DBG_MSG:
-    // The text mode interface does not use these events, so I commented
-    // out the code that produces them in siminterface.cc.
+    // The text mode interface does not use these events, so just ignore
+    // them.
+    return event;
   default:
     fprintf (stderr, "Control panel: notify callback called with event type %04x\n", event->type);
     return event;
@@ -936,4 +946,33 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
   return 0;
 }
 
-///////////////////////////////////////////////////////////
+static int ci_callback (void *userdata, ci_command_t command)
+{
+  switch (command)
+  {
+    case CI_START:
+      //fprintf (stderr, "control.cc: start\n");
+      bx_config_interface_init ();
+      if (SIM->get_param_bool(BXP_QUICK_START)->get ())
+	bx_config_interface (BX_CI_START_SIMULATION);
+      else
+        bx_config_interface (BX_CI_START_MENU);
+      break;
+    case CI_RUNTIME_CONFIG:
+      bx_config_interface (BX_CI_RUNTIME);
+      break;
+    case CI_SHUTDOWN:
+      //fprintf (stderr, "control.cc: shutdown\n");
+      break;
+  }
+  return 0;
+}
+
+// if I can make things compile without this module linked in, then
+// this file can become a plugin too.
+int init_text_config_interface ()
+{
+  //fprintf (stderr, "plugin_init for control.cc\n");
+  SIM->register_configuration_interface ("control", ci_callback, NULL);
+  return 0;  // success
+}

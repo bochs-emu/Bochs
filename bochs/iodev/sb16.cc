@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.26 2002-10-21 00:59:17 bdenney Exp $
+// $Id: sb16.cc,v 1.27 2002-10-24 21:07:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,9 +104,8 @@ bx_sb16_c::~bx_sb16_c(void)
     fclose(LOGFILE);
 }
 
-void bx_sb16_c::init(bx_devices_c *d)
+void bx_sb16_c::init(void)
 {
-  BX_SB16_THIS devices = d;
   unsigned addr;
 
   if (!bx_options.sb16.Opresent->get ())
@@ -220,22 +219,22 @@ void bx_sb16_c::init(bx_devices_c *d)
 
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
-    BX_SB16_THIS devices->register_io_read_handler(this,
-       &read_handler, addr, "SB16");
-    BX_SB16_THIS devices->register_io_write_handler(this,
-       &write_handler, addr, "SB16");
+    DEV_register_ioread_handler(this,
+       &read_handler, addr, "SB16", 7);
+    DEV_register_iowrite_handler(this,
+       &write_handler, addr, "SB16", 7);
     }
   for (addr=BX_SB16_IOMPU; addr<BX_SB16_IOMPU+BX_SB16_IOMPULEN; addr++) {
-    BX_SB16_THIS devices->register_io_read_handler(this,
-       &read_handler, addr, "SB16");
-    BX_SB16_THIS devices->register_io_write_handler(this,
-       &write_handler, addr, "SB16");
+    DEV_register_ioread_handler(this,
+       &read_handler, addr, "SB16", 7);
+    DEV_register_iowrite_handler(this,
+       &write_handler, addr, "SB16", 7);
     }
   for (addr=BX_SB16_IOADLIB; addr<BX_SB16_IOADLIB+BX_SB16_IOADLIBLEN; addr++) {
-    BX_SB16_THIS devices->register_io_read_handler(this,
-       read_handler, addr, "SB16");
-    BX_SB16_THIS devices->register_io_write_handler(this,
-       write_handler, addr, "SB16");
+    DEV_register_ioread_handler(this,
+       read_handler, addr, "SB16", 7);
+    DEV_register_iowrite_handler(this,
+       write_handler, addr, "SB16", 7);
     }
 
   writelog(BOTHLOG(3),
@@ -291,9 +290,9 @@ void bx_sb16_c::dsp_dmatimer (void *this_ptr)
 	 (This->dsp.dma.count > 0) ) ||
        (This->output->waveready() == BX_SOUND_OUTPUT_OK) ) {
     if (DSP.dma.bits == 8)
-      BX_DMA_SET_DRQ(BX_SB16_DMAL, 1);
+      DEV_dma_set_drq(BX_SB16_DMAL, 1);
     else
-      BX_DMA_SET_DRQ(BX_SB16_DMAH, 1);
+      DEV_dma_set_drq(BX_SB16_DMAH, 1);
     }
 }
 
@@ -342,7 +341,7 @@ void bx_sb16_c::dsp_reset(Bit32u value)
 
       if (DSP.irqpending != 0)
 	{
-	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+	  DEV_pic_lower_irq(BX_SB16_IRQ);
 	  writelog(WAVELOG(4), "DSP reset: IRQ untriggered");
 	}
       if (DSP.dma.mode != 0)
@@ -876,7 +875,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 	  DSP.dataout.put(0xaa);
 	  DSP.irqpending = 1;
 	  MIXER.reg[0x82] |= 1; // reg 82 shows the kind of IRQ
-	  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
+	  DEV_pic_raise_irq(BX_SB16_IRQ);
 	  break;
 
 	  // unknown command
@@ -1018,7 +1017,7 @@ Bit32u bx_sb16_c::dsp_status()
       writelog( WAVELOG(4), "8-bit DMA or SBMIDI IRQ acknowledged");
       if (MIXER.reg[0x82] == 0) {
         DSP.irqpending = 0;
-        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+        DEV_pic_lower_irq(BX_SB16_IRQ);
       }
     }
 
@@ -1041,7 +1040,7 @@ Bit32u bx_sb16_c::dsp_irq16ack()
       MIXER.reg[0x82] &= (~0x02);
       if (MIXER.reg[0x82] == 0) {
         DSP.irqpending = 0;
-        BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQ);
+        DEV_pic_lower_irq(BX_SB16_IRQ);
       }
       writelog( WAVELOG(4), "16-bit DMA IRQ acknowledged");
     }
@@ -1166,7 +1165,7 @@ void bx_sb16_c::dsp_dmadone()
  else
     MIXER.reg[0x82] |= 2;
 
-  BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQ);
+  DEV_pic_raise_irq(BX_SB16_IRQ);
   DSP.irqpending = 1;
 
   //if auto-DMA, reinitialize
@@ -1187,7 +1186,7 @@ void bx_sb16_c::dsp_dmadone()
 // and write = from soundcard to application (input)
 void bx_sb16_c::dma_read8(Bit8u *data_byte)
 {
-  BX_DMA_SET_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
+  DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
 
   if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
     writelog( WAVELOG(5), "Received 8-bit DMA %2x, %d remaining ",
@@ -1202,7 +1201,7 @@ void bx_sb16_c::dma_read8(Bit8u *data_byte)
 
 void bx_sb16_c::dma_write8(Bit8u *data_byte)
 {
-  BX_DMA_SET_DRQ(BX_SB16_DMAL, 0);  // the timer will raise it again
+  DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
 
   DSP.dma.count--;
 
@@ -1218,7 +1217,7 @@ void bx_sb16_c::dma_write8(Bit8u *data_byte)
 
 void bx_sb16_c::dma_read16(Bit16u *data_word)
 {
-  BX_DMA_SET_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
+  DEV_dma_set_drq(BX_SB16_DMAH, 0);  // the timer will raise it again
 
   if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
     writelog( WAVELOG(5), "Received 16-bit DMA %4x, %d remaining ",
@@ -1237,7 +1236,7 @@ void bx_sb16_c::dma_write16(Bit16u *data_word)
 {
   Bit8u byte1, byte2;
 
-  BX_DMA_SET_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
+  DEV_dma_set_drq(BX_SB16_DMAH, 0);  // the timer will raise it again
 
   DSP.dma.count--;
 
@@ -1335,10 +1334,10 @@ void bx_sb16_c::set_irq_dma()
   if (newirq != BX_SB16_IRQ)   // a different IRQ was set
     {
       if (BX_SB16_IRQ > 0)
-	BX_SB16_THIS devices->unregister_irq(BX_SB16_IRQ, "SB16");
+	DEV_unregister_irq(BX_SB16_IRQ, "SB16");
 
       BX_SB16_IRQ = newirq;
-      BX_SB16_THIS devices->register_irq(BX_SB16_IRQ, "SB16");
+      DEV_register_irq(BX_SB16_IRQ, "SB16");
     }
 
   // set the 8 bit DMA
@@ -1364,12 +1363,12 @@ void bx_sb16_c::set_irq_dma()
 
   // Unregister the previous DMA if initialized
   if ( (isInitialized) && (oldDMA8 != BX_SB16_DMAL) ) {
-    BX_UNREGISTER_DMA_CHANNEL(oldDMA8);
+    DEV_dma_unregister_channel(oldDMA8);
   }
 
   // And register the new 8bits DMA Channel
   if ( (!isInitialized) || (oldDMA8 != BX_SB16_DMAL) ) {
-    BX_REGISTER_DMA8_CHANNEL(BX_SB16_DMAL, bx_sb16.dma_read8, bx_sb16.dma_write8, "SB16");
+    DEV_dma_register_8bit_channel(BX_SB16_DMAL, bx_sb16.dma_read8, bx_sb16.dma_write8, "SB16");
   }
 
   // and the 16 bit DMA
@@ -1399,12 +1398,12 @@ void bx_sb16_c::set_irq_dma()
 
   // Unregister the previous DMA if initialized
   if ( (isInitialized) && (oldDMA16 != 0) && (oldDMA16 != BX_SB16_DMAH) ) {
-    BX_UNREGISTER_DMA_CHANNEL(oldDMA16);
+    DEV_dma_unregister_channel(oldDMA16);
   }
 
   // And register the new 16bits DMA Channel
   if ( (BX_SB16_DMAH != 0) && (oldDMA16 != BX_SB16_DMAH) ) {
-    BX_REGISTER_DMA16_CHANNEL(BX_SB16_DMAH, bx_sb16.dma_read16, bx_sb16.dma_write16, "SB16");
+    DEV_dma_register_16bit_channel(BX_SB16_DMAH, bx_sb16.dma_read16, bx_sb16.dma_write16, "SB16");
   }
 
   // If not already initialized
@@ -1480,7 +1479,7 @@ void bx_sb16_c::mpu_command(Bit32u value)
 	  if (BX_SB16_IRQMPU != -1)
 	    {
 	      MIXER.reg[0x82] |= 4;
-	      BX_SB16_THIS devices->pic->raise_irq(BX_SB16_IRQMPU);
+	      DEV_pic_raise_irq(BX_SB16_IRQMPU);
 	    }
 	  break;
 
@@ -1543,7 +1542,7 @@ Bit32u bx_sb16_c::mpu_dataread()
 	MPU.irqpending = 0;
 	MIXER.reg[0x82] &= (~4);
 	if (MIXER.reg[0x82] == 0)
-	  BX_SB16_THIS devices->pic->lower_irq(BX_SB16_IRQMPU);
+	  DEV_pic_lower_irq(BX_SB16_IRQMPU);
 	writelog(MIDILOG(4), "MPU IRQ acknowledged");
       }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.12 2002-08-27 19:54:46 bdenney Exp $
+// $Id: floppy.h,v 1.13 2002-10-24 21:07:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 
 #if BX_USE_FD_SMF
 #  define BX_FD_SMF  static
-#  define BX_FD_THIS bx_floppy.
+#  define BX_FD_THIS theFloppyController->
 #else
 #  define BX_FD_SMF
 #  define BX_FD_THIS this->
@@ -47,17 +47,17 @@ typedef struct {
   unsigned write_protected;
   } floppy_t;
 
-class bx_floppy_ctrl_c : public logfunctions {
+class bx_floppy_ctrl_c : public bx_floppy_stub_c {
 public:
 
   bx_floppy_ctrl_c(void);
   ~bx_floppy_ctrl_c(void);
-  BX_FD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
-  BX_FD_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
   BX_FD_SMF void   dma_write(Bit8u *data_byte);
   BX_FD_SMF void   dma_read(Bit8u *data_byte);
-  BX_FD_SMF unsigned set_media_status(unsigned drive, unsigned status);
-  BX_FD_SMF unsigned get_media_status(unsigned drive);
+  virtual unsigned set_media_status(unsigned drive, unsigned status);
+  virtual unsigned get_media_status(unsigned drive);
 
 private:
 
@@ -118,8 +118,6 @@ private:
                   //     1=diskette missing or changed
     } s;  // state information
 
-  bx_devices_c *devices;
-
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_FD_SMF
@@ -136,5 +134,3 @@ public:
   BX_FD_SMF void   increment_sector(void);
   BX_FD_SMF Boolean evaluate_media(unsigned type, char *path, floppy_t *floppy);
   };
-
-extern bx_floppy_ctrl_c bx_floppy;

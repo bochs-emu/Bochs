@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.32 2002-09-25 18:35:06 bdenney Exp $
+// $Id: logio.cc,v 1.33 2002-10-24 21:04:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -433,7 +433,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   // are printed on the screen just before a panic.  It's also potentially
   // dangerous if this function calls ask again...  That's why I added
   // the reentry check above.
-  if (SIM->get_init_done()) bx_vga.timer_handler(&bx_vga);
+  if (SIM->get_init_done()) DEV_vga_refresh();
 
 #if !BX_EXTERNAL_DEBUGGER
   int val = SIM->log_msg (prefix, level, buf1);

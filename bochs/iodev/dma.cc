@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.23 2002-09-28 13:36:32 vruppert Exp $
+// $Id: dma.cc,v 1.24 2002-10-24 21:07:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,21 +26,35 @@
 
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
-#define LOG_THIS bx_dma.
+
+#define LOG_THIS theDmaDevice->
 
 #define DMA_MODE_DEMAND  0
 #define DMA_MODE_SINGLE  1
 #define DMA_MODE_BLOCK   2
 #define DMA_MODE_CASCADE 3
 
+bx_dma_c *theDmaDevice = NULL;
 
+  int
+libdma_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theDmaDevice = new bx_dma_c ();
+  bx_devices.pluginDmaDevice = theDmaDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theDmaDevice, BX_PLUGIN_DMA);
+  return(0); // Success
+}
 
-bx_dma_c bx_dma;
-#if BX_USE_DMA_SMF
-#define this (&bx_dma)
-#endif
-
+  void
+libdma_LTX_plugin_fini(void)
+{
+}
 
 bx_dma_c::bx_dma_c(void)
 {
@@ -65,14 +79,14 @@ bx_dma_c::registerDMA8Channel(
     BX_PANIC(("registerDMA8Channel: invalid channel number(%u).", channel));
     return 0; // Fail.
     }
-  if (bx_dma.s[0].chan[channel].used) {
+  if (BX_DMA_THIS s[0].chan[channel].used) {
     BX_PANIC(("registerDMA8Channel: channel(%u) already in use.", channel));
     return 0; // Fail.
     }
   BX_INFO(("channel %u used by %s", channel, name));
-  bx_dma.h[channel].dmaRead8  = dmaRead;
-  bx_dma.h[channel].dmaWrite8 = dmaWrite;
-  bx_dma.s[0].chan[channel].used = 1;
+  BX_DMA_THIS h[channel].dmaRead8  = dmaRead;
+  BX_DMA_THIS h[channel].dmaWrite8 = dmaWrite;
+  BX_DMA_THIS s[0].chan[channel].used = 1;
   return 1; // OK.
 }
 
@@ -88,15 +102,15 @@ bx_dma_c::registerDMA16Channel(
     BX_PANIC(("registerDMA16Channel: invalid channel number(%u).", channel));
     return 0; // Fail.
     }
-  if (bx_dma.s[1].chan[channel & 0x03].used) {
+  if (BX_DMA_THIS s[1].chan[channel & 0x03].used) {
     BX_PANIC(("registerDMA16Channel: channel(%u) already in use.", channel));
     return 0; // Fail.
     }
   BX_INFO(("channel %u used by %s", channel, name));
   channel &= 0x03;
-  bx_dma.h[channel].dmaRead16  = dmaRead;
-  bx_dma.h[channel].dmaWrite16 = dmaWrite;
-  bx_dma.s[1].chan[channel].used = 1;
+  BX_DMA_THIS h[channel].dmaRead16  = dmaRead;
+  BX_DMA_THIS h[channel].dmaWrite16 = dmaWrite;
+  BX_DMA_THIS s[1].chan[channel].used = 1;
   return 1; // OK.
 }
 
@@ -104,7 +118,7 @@ bx_dma_c::registerDMA16Channel(
 bx_dma_c::unregisterDMAChannel(unsigned channel)
 {
   Boolean ma_sl = (channel > 3);
-  bx_dma.s[ma_sl].chan[channel & 0x03].used = 0;
+  BX_DMA_THIS s[ma_sl].chan[channel & 0x03].used = 0;
   BX_INFO(("channel %u no longer used", channel));
   return 1;
 }
@@ -117,12 +131,10 @@ bx_dma_c::get_TC(void)
 
 
   void
-bx_dma_c::init(bx_devices_c *d)
+bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.23 2002-09-28 13:36:32 vruppert Exp $"));
-
-  BX_DMA_THIS devices = d;
+  BX_DEBUG(("Init $Id: dma.cc,v 1.24 2002-10-24 21:07:21 bdenney Exp $"));
 
   /* 8237 DMA controller */
 
@@ -137,26 +149,20 @@ bx_dma_c::init(bx_devices_c *d)
 
   // 0000..000F
   for (i=0x0000; i<=0x000F; i++) {
-    BX_DMA_THIS devices->register_io_read_handler(this, read_handler,
-                                        i, "DMA controller");
-    BX_DMA_THIS devices->register_io_write_handler(this, write_handler,
-                                        i, "DMA controller");
+    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 7);
+    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 7);
     }
 
   // 00081..008F
   for (i=0x0081; i<=0x008F; i++) {
-    BX_DMA_THIS devices->register_io_read_handler(this, read_handler,
-                                        i, "DMA controller");
-    BX_DMA_THIS devices->register_io_write_handler(this, write_handler,
-                                        i, "DMA controller");
+    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 7);
+    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 7);
     }
 
   // 000C0..00DE
   for (i=0x00C0; i<=0x00DE; i+=2) {
-    BX_DMA_THIS devices->register_io_read_handler(this, read_handler,
-                                        i, "DMA controller");
-    BX_DMA_THIS devices->register_io_write_handler(this, write_handler,
-                                        i, "DMA controller");
+    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 7);
+    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 7);
     }
 
 

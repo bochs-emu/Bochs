@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.8 2002-08-27 19:54:46 bdenney Exp $
+// $Id: pic.h,v 1.9 2002-10-24 21:07:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 #if BX_USE_PIC_SMF
 #  define BX_PIC_SMF  static
-#  define BX_PIC_THIS bx_pic.
+#  define BX_PIC_THIS thePic->
 #else
 #  define BX_PIC_SMF
 #  define BX_PIC_THIS this->
@@ -66,24 +66,22 @@ typedef struct {
   } bx_pic_t;
 
 
-class bx_pic_c : public logfunctions {
+class bx_pic_c : public bx_pic_stub_c {
 
 public:
   bx_pic_c(void);
   ~bx_pic_c(void);
-  BX_PIC_SMF void   init(bx_devices_c *);
-  BX_PIC_SMF void   reset(unsigned type);
-  BX_PIC_SMF void   lower_irq(unsigned irq_no);
-  BX_PIC_SMF void   raise_irq(unsigned irq_no);
-  BX_PIC_SMF Bit8u  IAC(void);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
+  virtual void   lower_irq(unsigned irq_no);
+  virtual void   raise_irq(unsigned irq_no);
+  virtual Bit8u  IAC(void);
 
 private:
   struct {
     bx_pic_t master_pic;
     bx_pic_t slave_pic;
     } s;
-
-  bx_devices_c *devices;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -97,5 +95,3 @@ private:
   BX_PIC_SMF void   show_pic_state(void);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
   };
-
-extern bx_pic_c bx_pic;

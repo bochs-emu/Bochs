@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.6 2002-08-27 19:54:46 bdenney Exp $
+// $Id: cmos.h,v 1.7 2002-10-24 21:07:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,21 +30,31 @@
 
 #if BX_USE_CMOS_SMF
 #  define BX_CMOS_SMF  static
-#  define BX_CMOS_THIS bx_cmos.
+#  define BX_CMOS_THIS theCmosDevice->
 #else
 #  define BX_CMOS_SMF
 #  define BX_CMOS_THIS this->
 #endif
 
 
-class bx_cmos_c : public logfunctions {
+class bx_cmos_c : public bx_cmos_stub_c {
 public:
   bx_cmos_c(void);
   ~bx_cmos_c(void);
 
-  BX_CMOS_SMF void init(bx_devices_c *);
-  BX_CMOS_SMF void checksum_cmos(void);
-  BX_CMOS_SMF void reset(unsigned type);
+  virtual void init(void);
+  virtual void checksum_cmos(void);
+  virtual void reset(unsigned type);
+
+  virtual Bit32u get_reg(unsigned reg) {
+    return s.reg[reg];
+  }
+  virtual void set_reg(unsigned reg, Bit32u val) {
+    s.reg[reg] = val;
+  }
+  virtual time_t get_timeval() {
+    return s.timeval;
+  }
 
   struct {
     int     periodic_timer_index;
@@ -57,8 +67,6 @@ public:
     } s;  // state information
 
 private:
-  bx_devices_c *devices;
-
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_CMOS_SMF
@@ -75,6 +83,3 @@ private:
   BX_CMOS_SMF void update_clock(void);
   BX_CMOS_SMF void CRA_change(void);
   };
-
-
-extern bx_cmos_c bx_cmos;

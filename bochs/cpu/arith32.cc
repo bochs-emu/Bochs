@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.26 2002-10-07 22:51:56 kevinlawton Exp $
+// $Id: arith32.cc,v 1.27 2002-10-24 21:05:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -591,7 +591,7 @@ BX_CPU_C::XADD_EdGd(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_XADD32);
 #else
-  BX_INFO (("XADD_EdGd not supported for cpulevel <= 3"))
+  BX_INFO (("XADD_EdGd not supported for cpulevel <= 3"));
   UndefinedOpcode(i);
 #endif
 }

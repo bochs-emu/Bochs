@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18 2002-09-16 19:17:51 vruppert Exp $
+// $Id: iodev.h,v 1.19 2002-10-24 21:07:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,10 @@
 /* maximum number of emulated devices allowed.  floppy, mda, etc...
    you can increase this to anything below 256 since an 8-bit handle
    is used for each device */
-#define BX_MAX_IO_DEVICES 20
+#define BX_MAX_IO_DEVICES 21
+
+/* the last device in the array is the "default" I/O device */
+#define BX_DEFAULT_IO_DEVICE   (BX_MAX_IO_DEVICES-1)
 
 /* number of IRQ lines supported.  In an ISA PC there are two
    PIC chips cascaded together.  each has 8 IRQ lines, so there
@@ -38,18 +41,8 @@
 #define BX_NO_IRQ  -1
 
 
-class bx_biosdev_c;
 class bx_pit_c;
 class bx_keyb_c;
-class bx_dma_c;
-class bx_floppy_ctrl_c;
-class bx_cmos_c;
-class bx_serial_c;
-class bx_parallel_c;
-class bx_unmapped_c;
-class bx_vga_c;
-class bx_pic_c;
-class bx_hard_drive_c;
 class bx_sb16_c;
 class bx_pci_c;
 class bx_pci2isa_c;
@@ -74,9 +67,185 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 #  define BX_DEV_THIS this->
 #endif
 
+//////////////////////////////////////////////////////////////////////
+// bx_devmodel_c declaration
+//////////////////////////////////////////////////////////////////////
 
+// This class defines virtual methods that are common to all devices. 
+// Child classes do not need to implement all of them, because in this 
+// definition they are defined as empty, as opposed to being pure 
+// virtual (= 0).
+class BOCHSAPI bx_devmodel_c : public logfunctions {
+  public:
+  virtual ~bx_devmodel_c () {}
+  virtual void init_mem(BX_MEM_C *) {}
+  virtual void init(void) {}
+  virtual void reset(unsigned type) {}
+  virtual void device_load_state () {}
+  virtual void device_save_state () {}
+};
 
-class bx_devices_c : public logfunctions {
+//////////////////////////////////////////////////////////////////////
+// declare stubs for devices
+//////////////////////////////////////////////////////////////////////
+
+#define STUBFUNC(dev,method) \
+   pluginlog->panic("%s called in %s stub. you must not have loaded the %s plugin", #dev, #method, #dev )
+
+class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
+  public:
+  virtual ~bx_keyb_stub_c () {}
+  // stubs for bx_keyb_c methods
+  virtual void mouse_motion(int delta_x, int delta_y, unsigned button_state) {
+    STUBFUNC(keyboard, mouse_motion);
+  }
+  virtual void gen_scancode(Bit32u   scancode) {
+    STUBFUNC(keyboard, gen_scancode);
+  }
+  virtual void put_scancode( unsigned char *code, int count ) {
+    STUBFUNC(keyboard, put_scancode);
+  }
+  virtual void paste_bytes(Bit8u *data, Bit32s length) {
+    STUBFUNC(keyboard, paste_bytes);
+  }
+  virtual void paste_delay_changed () {
+    STUBFUNC(keyboard, paste_delay_changed);
+  }
+  virtual void mouse_enabled_changed(bool enabled) {
+    STUBFUNC(keyboard, mouse_enabled_changed);
+  }
+};
+
+class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
+  public:
+  virtual void   close_harddrive(void) {
+    STUBFUNC(HD, close_harddrive);
+  }
+  virtual void   init() {
+    STUBFUNC(HD, init);
+  }
+  virtual void   reset(unsigned type) {
+    STUBFUNC(HD, reset);
+  }
+  virtual Bit32u   get_device_handle(Bit8u channel, Bit8u device) {
+    STUBFUNC(HD, get_device_handle); return 0;
+  }
+  virtual Bit32u   get_first_cd_handle(void) {
+    STUBFUNC(HD, get_first_cd_handle); return 0;
+  }
+  virtual unsigned get_cd_media_status(Bit32u handle) {
+    STUBFUNC(HD, get_cd_media_status); return 0;
+  }
+  virtual unsigned set_cd_media_status(Bit32u handle, unsigned status) {
+    STUBFUNC(HD, set_cd_media_status); return 0;
+  }
+  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) 
+  {
+    STUBFUNC(HD, virt_read_handler); return 0;
+  }
+  virtual void   virt_write_handler(Bit32u address,
+      Bit32u value, unsigned io_len) 
+  {
+    STUBFUNC(HD, virt_write_handler);
+  }
+};
+
+class BOCHSAPI bx_floppy_stub_c : public bx_devmodel_c {
+  public:
+  virtual unsigned get_media_status(unsigned drive) {
+    STUBFUNC(floppy,  get_media_status); return 0;
+  }
+  virtual unsigned set_media_status(unsigned drive, unsigned status) {
+    STUBFUNC(floppy, set_media_status); return 0;
+  }
+};
+
+class BOCHSAPI bx_cmos_stub_c : public bx_devmodel_c {
+  public:
+  virtual Bit32u get_reg(unsigned reg) {
+    STUBFUNC(cmos, get_reg); return 0;
+  }
+  virtual void set_reg(unsigned reg, Bit32u val) {
+    STUBFUNC(cmos, set_reg);
+  }
+  virtual time_t get_timeval() {
+    STUBFUNC(cmos, get_timeval); return 0;
+  }
+  virtual void checksum_cmos(void) {
+    STUBFUNC(cmos, checksum);
+  }
+};
+
+class BOCHSAPI bx_dma_stub_c : public bx_devmodel_c {
+  public:
+  virtual unsigned registerDMA8Channel(
+    unsigned channel,
+    void (* dmaRead)(Bit8u *data_byte),
+    void (* dmaWrite)(Bit8u *data_byte),
+    const char *name
+    ) {
+    STUBFUNC(dma, registerDMA8Channel); return 0;
+  }
+  virtual unsigned registerDMA16Channel(
+    unsigned channel,
+    void (* dmaRead)(Bit16u *data_word),
+    void (* dmaWrite)(Bit16u *data_word),   
+    const char *name
+    ) {
+    STUBFUNC(dma, registerDMA16Channel); return 0;
+  }
+  virtual unsigned unregisterDMAChannel(unsigned channel) {
+    STUBFUNC(dma, unregisterDMAChannel); return 0;
+  }
+  virtual unsigned get_TC(void) {
+    STUBFUNC(dma, get_TC); return 0;
+  }
+  virtual void set_DRQ(unsigned channel, Boolean val) {
+    STUBFUNC(dma, set_DRQ);
+  }
+  virtual void raise_HLDA(void) {
+    STUBFUNC(dma, raise_HLDA);
+  }
+};
+
+class BOCHSAPI bx_pic_stub_c : public bx_devmodel_c {
+  public:
+  virtual void raise_irq(unsigned irq_no) {
+    STUBFUNC(pic, raise_irq); 
+  }
+  virtual void lower_irq(unsigned irq_no) {
+    STUBFUNC(pic, lower_irq); 
+  }
+  virtual Bit8u IAC(void) {
+    STUBFUNC(pic, IAC); return 0;
+  }
+};
+
+class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
+  public:
+  virtual void redraw_area(unsigned x0, unsigned y0, 
+                           unsigned width, unsigned height) {
+    STUBFUNC(vga, redraw_area);  
+  }
+  virtual Bit8u mem_read(Bit32u addr) {
+    STUBFUNC(vga, mem_read);  return 0;
+  }
+  virtual void mem_write(Bit32u addr, Bit8u value) {
+    STUBFUNC(vga, mem_write);
+  }
+  virtual void get_text_snapshot(Bit8u **text_snapshot, 
+                                 unsigned *txHeight, unsigned *txWidth) {
+    STUBFUNC(vga, get_text_snapshot); 
+  }
+  virtual void trigger_timer(void *this_ptr) {
+    STUBFUNC(vga, trigger_timer); 
+  }
+  virtual void set_update_interval (unsigned interval) {
+    STUBFUNC(vga, set_update_interval); 
+  }
+};
+
+class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
   ~bx_devices_c(void);
@@ -91,6 +260,8 @@ public:
   BX_MEM_C *mem;  // address space associated with these devices
   Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
   Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
+  Boolean register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name );
+  Boolean register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name );
   Boolean register_irq(unsigned irq, const char *name);
   Boolean unregister_irq(unsigned irq, const char *name);
   void iodev_init(void);
@@ -100,27 +271,37 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
-  bx_biosdev_c     *biosdev;
+  bx_devmodel_c    *pluginBiosDevice;
   bx_ioapic_c      *ioapic;
   bx_pci_c         *pci;
   bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
-  bx_keyb_c        *keyboard;
-  bx_dma_c         *dma;
-  bx_floppy_ctrl_c *floppy;
-  bx_cmos_c        *cmos;
-  bx_serial_c      *serial;
-  bx_parallel_c    *parallel;
-  bx_unmapped_c    *unmapped;
-  bx_vga_c         *vga;
-  bx_pic_c         *pic;
-  bx_hard_drive_c  *hard_drive;
+  bx_keyb_stub_c   *pluginKeyboard;
+  bx_dma_stub_c    *pluginDmaDevice;
+  bx_floppy_stub_c *pluginFloppyDevice;
+  bx_cmos_stub_c   *pluginCmosDevice;
+  bx_devmodel_c    *pluginSerialDevice;
+  bx_devmodel_c    *pluginParallelDevice;
+  bx_devmodel_c    *pluginUnmapped;
+  bx_vga_stub_c    *pluginVgaDevice;
+  bx_pic_stub_c    *pluginPicDevice;
+  bx_hard_drive_stub_c *pluginHardDrive;
   bx_sb16_c        *sb16;
   bx_ne2k_c        *ne2k;
   bx_g2h_c         *g2h;
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c	   *iodebug;
 #endif
+
+  // stub classes that the pointers (above) can point to until a plugin is
+  // loaded
+  bx_cmos_stub_c stubCmos;
+  bx_keyb_stub_c stubKeyboard;
+  bx_hard_drive_stub_c stubHardDrive;
+  bx_dma_stub_c  stubDma;
+  bx_pic_stub_c  stubPic;
+  bx_floppy_stub_c  stubFloppy;
+  bx_vga_stub_c  stubVga;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
@@ -132,8 +313,8 @@ public:
   unsigned bulkIOQuantumsRequested;
   unsigned bulkIOQuantumsTransferred;
 
-
 private:
+
   Bit8u                 read_handler_id[0x10000];  // 64K
   struct {
     bx_read_handler_t funct;
@@ -159,7 +340,12 @@ private:
   BX_DEV_SMF Bit32u port92_read(Bit32u address, unsigned io_len);
   BX_DEV_SMF void   port92_write(Bit32u address, Bit32u value, unsigned io_len);
 
+  static Bit32u default_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
   int timer_handle;
+  Boolean is_serial_enabled ();
+  Boolean is_parallel_enabled ();
   };
 
 

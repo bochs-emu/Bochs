@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.66 2002-10-16 22:10:02 sshwarts Exp $
+// $Id: cpu.cc,v 1.67 2002-10-24 21:05:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,12 +62,12 @@ const Boolean bx_parity_lookup[256] = {
 
 #if BX_SMP_PROCESSORS==1
 // single processor simulation, so there's one of everything
-BX_CPU_C    bx_cpu;
-BX_MEM_C    bx_mem;
+BOCHSAPI BX_CPU_C    bx_cpu;
+BOCHSAPI BX_MEM_C    bx_mem;
 #else
 // multiprocessor simulation, we need an array of cpus and memories
-BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
-BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
+BOCHSAPI BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
+BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 #endif
 
 
@@ -596,10 +596,10 @@ BX_CPU_C::handleAsyncEvent(void)
     if (BX_CPU_THIS_PTR local_apic.INTR)
       vector = BX_CPU_THIS_PTR local_apic.acknowledge_int ();
     else
-      vector = BX_IAC(); // may set INTR with next interrupt
+      vector = DEV_pic_iac(); // may set INTR with next interrupt
 #else
     // if no local APIC, always acknowledge the PIC.
-    vector = BX_IAC(); // may set INTR with next interrupt
+    vector = DEV_pic_iac(); // may set INTR with next interrupt
 #endif
     //BX_DEBUG(("decode: interrupt %u",
     //                                   (unsigned) vector));
@@ -621,7 +621,7 @@ BX_CPU_C::handleAsyncEvent(void)
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
     // NOTE: similar code in ::take_dma()
     // assert Hold Acknowledge (HLDA) and go into a bus hold state
-    BX_RAISE_HLDA();
+    DEV_dma_raise_hlda();
     }
 
   // Priority 6: Faults from fetching next instruction
@@ -1032,7 +1032,7 @@ BX_CPU_C::dbg_take_irq(void)
   if ( BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () ) {
     if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
       // normal return from setjmp setup
-      vector = BX_IAC(); // may set INTR with next interrupt
+      vector = DEV_pic_iac(); // may set INTR with next interrupt
       BX_CPU_THIS_PTR errorno = 0;
       BX_CPU_THIS_PTR EXT   = 1; // external event
       BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
@@ -1062,7 +1062,7 @@ BX_CPU_C::dbg_take_dma(void)
   // NOTE: similar code in ::cpu_loop()
   if ( BX_HRQ ) {
     BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
-    BX_RAISE_HLDA();
+    DEV_dma_raise_hlda();
     }
 }
 #endif  // #if BX_DEBUGGER

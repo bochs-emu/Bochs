@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.6 2002-10-08 06:14:52 bdenney Exp $
+// $Id: keymap.h,v 1.7 2002-10-24 21:06:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,14 +47,14 @@
 #define BX_KEYMAP_UNKNOWN   0xFFFFFFFF
 
 // Structure of an element of the keymap table
-typedef struct { 
+typedef struct BOCHSAPI { 
   Bit32u baseKey;   // base key
   Bit32u modKey;   // modifier key that must be held down
   Bit32s ascii;    // ascii equivalent, if any
   Bit32u hostKey;  // value that the host's OS or library recognizes
   } BXKeyEntry;
 
-class bx_keymap_c : public logfunctions {
+class BOCHSAPI bx_keymap_c : public logfunctions {
 public:
   bx_keymap_c(void);
   ~bx_keymap_c(void);
@@ -73,4 +73,4 @@ private:
   Bit16u   keymapCount;
   };
 
-extern bx_keymap_c bx_keymap;
+BOCHSAPI extern bx_keymap_c bx_keymap;

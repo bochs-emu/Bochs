@@ -28,11 +28,14 @@
 prefix          = @prefix@
 exec_prefix     = @exec_prefix@
 bindir          = @bindir@
+libdir          = @libdir@
 mandir          = @mandir@
 man1dir         = $(mandir)/man1
 man5dir         = $(mandir)/man5
 docdir          = $(prefix)/share/doc/bochs
 sharedir        = $(prefix)/share/bochs
+top_builddir    = .
+top_srcdir      = $(srcdir)
 
 DESTDIR =
 
@@ -43,8 +46,8 @@ MAN_PAGE_1_LIST=bochs bximage bochs-dlx
 MAN_PAGE_5_LIST=bochsrc
 INSTALL_LIST_SHARE=bios/BIOS-* bios/VGABIOS* @INSTALL_LIST_FOR_PLATFORM@
 INSTALL_LIST_DOC=CHANGES COPYING README
-INSTALL_LIST_BIN=bochs bximage $(srcdir)/build/linux/bochs-docs
-INSTALL_LIST_BIN_OPTIONAL=bochsdbg
+INSTALL_LIST_BIN=bochs bximage 
+INSTALL_LIST_BIN_OPTIONAL=bochsdbg $(srcdir)/build/linux/bochs-docs
 INSTALL_LIST=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN)
 INSTALL_LIST_X11=install-x11-fonts test-x11-fonts
 INSTALL_LIST_SED=DOC-linux.html
@@ -67,6 +70,8 @@ GZIP=gzip -9
 GUNZIP=gunzip
 ZIP=zip
 UNIX2DOS=unix2dos
+LIBTOOL=@LIBTOOL@
+DLLTOOL=dlltool
 
 @SUFFIX_LINE@
 
@@ -110,12 +115,6 @@ CXXFLAGS_CONSOLE = @CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 
 BX_INCDIRS = -I. -I$(srcdir)/. -I@INSTRUMENT_DIR@ -I$(srcdir)/@INSTRUMENT_DIR@
 
-MDEFINES = CC="$(CC)" CXX="$(CXX)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" \
-  LDFLAGS="$(LDFLAGS)" LIBS="$(LIBS)" \
-  X_LIBS="$(X_LIBS)" X_PRE_LIBS="$(X_PRE_LIBS)" \
-  prefix="$(prefix)" exec_prefix="$(exec_prefix)" \
-  bindir="$(bindir)" infodir="$(infodir)"
-
 #SUBDIRS = iodev debug
 
 #all install uninstall: config.h#
@@ -137,6 +136,7 @@ NONINLINE_OBJS = \
 	state_file.o \
 	pc_system.o \
 	osdep.o \
+	plugin.o \
 	@EXTRA_BX_OBJS@
 
 EXTERN_ENVIRONMENT_OBJS = \
@@ -160,43 +160,75 @@ BX_INCLUDES = bochs.h config.h osdep.h
 
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 .c.o:
-	$(CC) @DASH@c $(CFLAGS) $(FPU_FLAGS) $(BX_INCDIRS) $< @OFP@$@
+	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
 
 
-all: @PRIMARY_TARGET@  bximage@EXE@
-
+all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@  
 
 @EXTERNAL_DEPENDENCY@
 
 bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
            cpu/libcpu.a memory/libmemory.a gui/libgui.a \
            @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
-           $(SIMX86_OBJS) \
-           $(FPU_LIB) \
-	   @GDBSTUB_VAR@
-
-	@LINK@ $(BX_OBJS) \
-                $(SIMX86_OBJS) \
-		iodev/libiodev.a \
-		cpu/libcpu.a \
-		memory/libmemory.a gui/libgui.a \
-		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ \
+           $(SIMX86_OBJS) $(FPU_LIB) @GDBSTUB_VAR@ @PLUGIN_VAR@
+	$(LIBTOOL) @LINK@ -export-dynamic $(BX_OBJS) $(SIMX86_OBJS) \
+		iodev/libiodev.a cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ \
 		$(FPU_LIB) \
 		$(GUI_LINK_OPTS) \
 		$(MCH_LINK_FLAGS) \
-	        $(SIMX86_LINK_FLAGS) \
+		$(SIMX86_LINK_FLAGS) \
 		$(READLINE_LIB) \
-		$(EXTRA_LINK_OPTS)
+		$(EXTRA_LINK_OPTS) \
+		$(LIBS)
+
+# Special make target for cygwin/mingw using dlltool instead of
+# libtool.  This creates a .DEF file, and exports file, an import library,
+# and then links bochs.exe with the exports file.
+.win32_dll_plugin_target: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
+           cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+           @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
+           $(SIMX86_OBJS) $(FPU_LIB) @GDBSTUB_VAR@ @PLUGIN_VAR@
+	$(DLLTOOL) --output-def bochs.def $(BX_OBJS) $(SIMX86_OBJS) \
+		@IODEV_LIB_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
+		@GDBSTUB_VAR@ \
+		$(FPU_LIB) \
+		$(GUI_LINK_OPTS) \
+		$(MCH_LINK_FLAGS) \
+		$(SIMX86_LINK_FLAGS) \
+		$(READLINE_LIB) \
+		$(EXTRA_LINK_OPTS) \
+		$(LIBS)
+	$(DLLTOOL) --dllname bochs.exe --def bochs.def --output-lib dllexports.a
+	$(DLLTOOL) --dllname bochs.exe --output-exp bochs.exp --def bochs.def
+	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) -export-dynamic \
+	    $(BX_OBJS) bochs.exp $(SIMX86_OBJS) \
+		@IODEV_LIB_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
+		@GDBSTUB_VAR@ \
+		$(FPU_LIB) \
+		$(GUI_LINK_OPTS) \
+		$(MCH_LINK_FLAGS) \
+		$(SIMX86_LINK_FLAGS) \
+		$(READLINE_LIB) \
+		$(EXTRA_LINK_OPTS) \
+		$(LIBS)
+	touch .win32_dll_plugin_target
+
+bochs_plugins:
+	cd gui && $(MAKE) plugins
+	cd iodev && $(MAKE) plugins
 
 bximage@EXE@: misc/bximage.o
 	@LINK_CONSOLE@ misc/bximage.o
 
 # compile with console CXXFLAGS, not gui CXXFLAGS
 misc/bximage.o: misc/bximage.c
-	$(CXX) @DASH@c $(CXXFLAGS_CONSOLE) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) @CXXFP@$< @OFP@$@
 
 niclist@EXE@: misc/niclist.o
 	@LINK@ misc/niclist.o
@@ -206,7 +238,7 @@ $(BX_OBJS): $(BX_INCLUDES)
 bxversion.h:
 	$(RM) -f bxversion.h
 	echo '/////////////////////////////////////////////////////////////////////////' > bxversion.h
-	echo '// $$Id: Makefile.in,v 1.95 2002-10-21 11:38:38 bdenney Exp $$' >> bxversion.h
+	echo '// $$Id: Makefile.in,v 1.96 2002-10-24 21:03:47 bdenney Exp $$' >> bxversion.h
 	echo '/////////////////////////////////////////////////////////////////////////' >> bxversion.h
 	echo '// This file is generated by "make bxversion.h"' >> bxversion.h
 	echo "#define VER_STRING \"$(VER_STRING)\"" >> bxversion.h
@@ -304,13 +336,25 @@ install_win32: download_dlx
 # install target for unix
 #####################################################################
 
-install_unix: install_bin install_man install_share install_doc
+install_unix: install_bin @INSTALL_PLUGINS_VAR@ install_man install_share install_doc
 
 install_bin::
 	for i in $(DESTDIR)$(bindir); do mkdir -p $$i && test -d $$i && test -w $$i; done
-	$(CHMOD) a+x install-x11-fonts test-x11-fonts
+	if test -f install-x11-fonts; then $(CHMOD) a+x install-x11-fonts; fi
+	if test -f test-x11-fonts; then $(CHMOD) a+x test-x11-fonts; fi
 	for i in $(INSTALL_LIST_BIN); do if test -f $$i; then cp $$i $(DESTDIR)$(bindir); else cp $(srcdir)/$$i $(DESTDIR)$(bindir); fi; done
 	-for i in $(INSTALL_LIST_BIN_OPTIONAL); do if test -f $$i; then cp $$i $(DESTDIR)$(bindir); else cp $(srcdir)/$$i $(DESTDIR)$(bindir); fi; done
+
+install_libtool_plugins::
+	for i in $(DESTDIR)$(libdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
+	list=`cd gui && echo *.la`; for i in $$list; do $(LIBTOOL) cp gui/$$i $(DESTDIR)$(libdir); done
+	list=`cd iodev && echo *.la`; for i in $$list; do $(LIBTOOL) cp iodev/$$i $(DESTDIR)$(libdir); done
+	$(LIBTOOL) --finish $(DESTDIR)$(libdir)
+
+install_dll_plugins::
+	for i in $(DESTDIR)$(libdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
+	list=`cd gui && echo *.dll`; for i in $$list; do cp gui/$$i $(DESTDIR)$(libdir); done
+	list=`cd iodev && echo *.dll`; for i in $$list; do cp iodev/$$i $(DESTDIR)$(libdir); done
 
 install_share::
 	for i in $(DESTDIR)$(sharedir);	do mkdir -p $$i && test -d $$i && test -w $$i; done
@@ -320,7 +364,7 @@ install_share::
 
 install_doc::
 	for i in $(DESTDIR)$(docdir); do mkdir -p $$i && test -d $$i && test -w $$i; done
-	for i in $(INSTALL_LIST_SED); do install -m644 $(srcdir)/build/linux/$$i $(DESTDIR)$(docdir)/$$i; done
+	-for i in $(INSTALL_LIST_SED); do install -m644 $(srcdir)/build/linux/$$i $(DESTDIR)$(docdir)/$$i; done
 	for i in $(INSTALL_LIST_DOC); do if test -f $$i; then cp $$i $(DESTDIR)$(docdir); else cp $(srcdir)/$$i $(DESTDIR)$(docdir); fi; done
 	$(CP) -r $(srcdir)/docs-html $(DESTDIR)$(docdir)
 	$(RM) -f $(DESTDIR)$(docdir)/README
@@ -392,15 +436,24 @@ clean:
 	@RMCOMMAND@ */*.o
 	@RMCOMMAND@ *.a
 	@RMCOMMAND@ */*.a
-	@RMCOMMAND@ bochs@EXE@
-	@RMCOMMAND@ bximage@EXE@
+	@RMCOMMAND@ bochs
+	@RMCOMMAND@ bochs.exe
+	@RMCOMMAND@ bximage
+	@RMCOMMAND@ bximage.exe
+	@RMCOMMAND@ niclist
+	@RMCOMMAND@ niclist.exe
 	@RMCOMMAND@ bochs.out
 	@RMCOMMAND@ bochsout.txt
+	@RMCOMMAND@ bochs.exp
+	@RMCOMMAND@ bochs.def
+	@RMCOMMAND@ .win32_dll_plugin_target
 
 local-dist-clean: clean
 	@RMCOMMAND@ config.h config.status config.log config.cache
 	@RMCOMMAND@ .dummy `find . -name '*.dsp' -o -name '*.dsw' -o -name '*.opt'`
 	@RMCOMMAND@ bxversion.h install-x11-fonts build/linux/bochs-dlx build/linux/bochs-docs build/linux/DOC-linux.html _rpm_top *.rpm
+	@RMCOMMAND@ libtool
+	@RMCOMMAND@ ltdlconf.h
 
 all-clean: clean
 	cd iodev @COMMAND_SEPARATOR@
@@ -502,60 +555,79 @@ $(APP)/.build: bochs
 # dependencies generated by
 #  gcc -MM -I. -Iinstrument/stubs *.cc | sed -e 's/\.cc/.@CPP_SUFFIX@/g' -e 's,cpu/,cpu/,g'
 ###########################################
-load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
- debug/debug.h bxversion.h gui/siminterface.h state_file.h cpu/cpu.h \
+gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h debug/debug.h \
+ bxversion.h gui/siminterface.h state_file.h cpu/cpu.h \
  cpu/lazy_flags.h cpu/i387.h memory/memory.h pc_system.h gui/gui.h \
- gui/control.h gui/keymap.h iodev/iodev.h iodev/pci.h iodev/vga.h \
- iodev/biosdev.h iodev/cmos.h iodev/dma.h iodev/floppy.h \
+ gui/control.h gui/keymap.h iodev/iodev.h iodev/pci.h iodev/pci2isa.h \
+ iodev/vga.h iodev/biosdev.h iodev/cmos.h iodev/dma.h iodev/floppy.h \
  iodev/harddrv.h iodev/cdrom.h iodev/keyboard.h iodev/parallel.h \
  iodev/pic.h iodev/pit.h iodev/pit_wrap.h iodev/pit82c54.h \
  iodev/serial.h iodev/unmapped.h iodev/eth.h iodev/ne2k.h \
- iodev/guest2host.h iodev/slowdown_timer.h \
+ iodev/guest2host.h iodev/slowdown_timer.h plugin.h \
+ instrument/stubs/instrument.h
+load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
+ debug/debug.h bxversion.h gui/siminterface.h state_file.h cpu/cpu.h \
+ cpu/lazy_flags.h cpu/i387.h memory/memory.h pc_system.h gui/gui.h \
+ gui/control.h gui/keymap.h iodev/iodev.h iodev/pci.h iodev/pci2isa.h \
+ iodev/vga.h iodev/biosdev.h iodev/cmos.h iodev/dma.h iodev/floppy.h \
+ iodev/harddrv.h iodev/cdrom.h iodev/keyboard.h iodev/parallel.h \
+ iodev/pic.h iodev/pit.h iodev/pit_wrap.h iodev/pit82c54.h \
+ iodev/serial.h iodev/unmapped.h iodev/eth.h iodev/ne2k.h \
+ iodev/guest2host.h iodev/slowdown_timer.h plugin.h \
  instrument/stubs/instrument.h
 logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h debug/debug.h bxversion.h \
  gui/siminterface.h state_file.h cpu/cpu.h cpu/lazy_flags.h cpu/i387.h \
  memory/memory.h pc_system.h gui/gui.h gui/control.h gui/keymap.h \
- iodev/iodev.h iodev/pci.h iodev/vga.h iodev/biosdev.h iodev/cmos.h \
- iodev/dma.h iodev/floppy.h iodev/harddrv.h iodev/cdrom.h \
+ iodev/iodev.h iodev/pci.h iodev/pci2isa.h iodev/vga.h iodev/biosdev.h \
+ iodev/cmos.h iodev/dma.h iodev/floppy.h iodev/harddrv.h iodev/cdrom.h \
  iodev/keyboard.h iodev/parallel.h iodev/pic.h iodev/pit.h \
  iodev/pit_wrap.h iodev/pit82c54.h iodev/serial.h iodev/unmapped.h \
  iodev/eth.h iodev/ne2k.h iodev/guest2host.h iodev/slowdown_timer.h \
- instrument/stubs/instrument.h
+ plugin.h instrument/stubs/instrument.h
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h debug/debug.h bxversion.h \
  gui/siminterface.h state_file.h cpu/cpu.h cpu/lazy_flags.h cpu/i387.h \
  memory/memory.h pc_system.h gui/gui.h gui/control.h gui/keymap.h \
- iodev/iodev.h iodev/pci.h iodev/vga.h iodev/biosdev.h iodev/cmos.h \
- iodev/dma.h iodev/floppy.h iodev/harddrv.h iodev/cdrom.h \
+ iodev/iodev.h iodev/pci.h iodev/pci2isa.h iodev/vga.h iodev/biosdev.h \
+ iodev/cmos.h iodev/dma.h iodev/floppy.h iodev/harddrv.h iodev/cdrom.h \
  iodev/keyboard.h iodev/parallel.h iodev/pic.h iodev/pit.h \
  iodev/pit_wrap.h iodev/pit82c54.h iodev/serial.h iodev/unmapped.h \
  iodev/eth.h iodev/ne2k.h iodev/guest2host.h iodev/slowdown_timer.h \
- instrument/stubs/instrument.h
+ plugin.h instrument/stubs/instrument.h
 osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h debug/debug.h bxversion.h \
  gui/siminterface.h state_file.h cpu/cpu.h cpu/lazy_flags.h cpu/i387.h \
  memory/memory.h pc_system.h gui/gui.h gui/control.h gui/keymap.h \
- iodev/iodev.h iodev/pci.h iodev/vga.h iodev/biosdev.h iodev/cmos.h \
- iodev/dma.h iodev/floppy.h iodev/harddrv.h iodev/cdrom.h \
+ iodev/iodev.h iodev/pci.h iodev/pci2isa.h iodev/vga.h iodev/biosdev.h \
+ iodev/cmos.h iodev/dma.h iodev/floppy.h iodev/harddrv.h iodev/cdrom.h \
  iodev/keyboard.h iodev/parallel.h iodev/pic.h iodev/pit.h \
  iodev/pit_wrap.h iodev/pit82c54.h iodev/serial.h iodev/unmapped.h \
  iodev/eth.h iodev/ne2k.h iodev/guest2host.h iodev/slowdown_timer.h \
- instrument/stubs/instrument.h
+ plugin.h instrument/stubs/instrument.h
 pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h debug/debug.h \
  bxversion.h gui/siminterface.h state_file.h cpu/cpu.h \
  cpu/lazy_flags.h cpu/i387.h memory/memory.h pc_system.h gui/gui.h \
- gui/control.h gui/keymap.h iodev/iodev.h iodev/pci.h iodev/vga.h \
- iodev/biosdev.h iodev/cmos.h iodev/dma.h iodev/floppy.h \
+ gui/control.h gui/keymap.h iodev/iodev.h iodev/pci.h iodev/pci2isa.h \
+ iodev/vga.h iodev/biosdev.h iodev/cmos.h iodev/dma.h iodev/floppy.h \
  iodev/harddrv.h iodev/cdrom.h iodev/keyboard.h iodev/parallel.h \
  iodev/pic.h iodev/pit.h iodev/pit_wrap.h iodev/pit82c54.h \
  iodev/serial.h iodev/unmapped.h iodev/eth.h iodev/ne2k.h \
- iodev/guest2host.h iodev/slowdown_timer.h \
+ iodev/guest2host.h iodev/slowdown_timer.h plugin.h \
  instrument/stubs/instrument.h
+plugin.o: plugin.@CPP_SUFFIX@ bochs.h config.h osdep.h debug/debug.h bxversion.h \
+ gui/siminterface.h state_file.h cpu/cpu.h cpu/lazy_flags.h cpu/i387.h \
+ memory/memory.h pc_system.h gui/gui.h gui/control.h gui/keymap.h \
+ iodev/iodev.h iodev/pci.h iodev/pci2isa.h iodev/vga.h iodev/biosdev.h \
+ iodev/cmos.h iodev/dma.h iodev/floppy.h iodev/harddrv.h iodev/cdrom.h \
+ iodev/keyboard.h iodev/parallel.h iodev/pic.h iodev/pit.h \
+ iodev/pit_wrap.h iodev/pit82c54.h iodev/serial.h iodev/unmapped.h \
+ iodev/eth.h iodev/ne2k.h iodev/guest2host.h iodev/slowdown_timer.h \
+ plugin.h instrument/stubs/instrument.h
 state_file.o: state_file.@CPP_SUFFIX@ bochs.h config.h osdep.h debug/debug.h \
  bxversion.h gui/siminterface.h state_file.h cpu/cpu.h \
  cpu/lazy_flags.h cpu/i387.h memory/memory.h pc_system.h gui/gui.h \
- gui/control.h gui/keymap.h iodev/iodev.h iodev/pci.h iodev/vga.h \
- iodev/biosdev.h iodev/cmos.h iodev/dma.h iodev/floppy.h \
+ gui/control.h gui/keymap.h iodev/iodev.h iodev/pci.h iodev/pci2isa.h \
+ iodev/vga.h iodev/biosdev.h iodev/cmos.h iodev/dma.h iodev/floppy.h \
  iodev/harddrv.h iodev/cdrom.h iodev/keyboard.h iodev/parallel.h \
  iodev/pic.h iodev/pit.h iodev/pit_wrap.h iodev/pit82c54.h \
  iodev/serial.h iodev/unmapped.h iodev/eth.h iodev/ne2k.h \
- iodev/guest2host.h iodev/slowdown_timer.h \
+ iodev/guest2host.h iodev/slowdown_timer.h plugin.h \
  instrument/stubs/instrument.h

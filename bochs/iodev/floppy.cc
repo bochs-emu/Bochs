@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.55 2002-10-21 16:57:35 bdenney Exp $
+// $Id: floppy.cc,v 1.56 2002-10-24 21:07:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,21 +36,20 @@
 //   http://mudlist.eorbit.net/~adam/pickey/ports.html
 //
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
+
 extern "C" {
 #include <errno.h>
 }
 #include "bochs.h"
 // windows.h included by bochs.h
-#define LOG_THIS bx_floppy.
+#define LOG_THIS theFloppyController->
 
-
-bx_floppy_ctrl_c bx_floppy;
-
-#if BX_USE_FD_SMF
-#define this (&bx_floppy)
-#endif
-
-
+bx_floppy_ctrl_c *theFloppyController;
 
 /* for main status register */
 #define FD_MS_MRQ  0x80
@@ -68,12 +67,26 @@ bx_floppy_ctrl_c bx_floppy;
 #define FLOPPY_DMA_CHAN 2
 
 
+  int
+libfloppy_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theFloppyController = new bx_floppy_ctrl_c ();
+  bx_devices.pluginFloppyDevice = theFloppyController;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theFloppyController, BX_PLUGIN_FLOPPY);
+  return(0); // Success
+}
+
+  void
+libfloppy_LTX_plugin_fini(void)
+{
+}
+
 
 bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
   put("FDD");
   settype(FDLOG);
-  BX_FD_THIS s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
+  s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
@@ -84,24 +97,20 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
 
 
   void
-bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
+bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.55 2002-10-21 16:57:35 bdenney Exp $"));
-  BX_FD_THIS devices = d;
-
-  BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
-  BX_FD_THIS devices->register_irq(6, "Floppy Drive");
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.56 2002-10-24 21:07:30 bdenney Exp $"));
+  DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
+  DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
-    BX_FD_THIS devices->register_io_read_handler(this, read_handler,
-                                      addr, "Floppy Drive");
-    BX_FD_THIS devices->register_io_write_handler(this, write_handler,
-                                      addr, "Floppy Drive");
+    DEV_register_ioread_handler(this, read_handler, addr, "Floppy Drive", 7);
+    DEV_register_iowrite_handler(this, write_handler, addr, "Floppy Drive", 7);
     }
 
 
-  cmos->s.reg[0x10] = 0x00; /* start out with: no drive 0, no drive 1 */
+  DEV_cmos_set_reg(0x10, 0x00); /* start out with: no drive 0, no drive 1 */
 
   BX_FD_THIS s.num_supported_floppies = 0;
 
@@ -123,22 +132,22 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   switch (BX_FD_THIS s.device_type[0]) {
     case BX_FLOPPY_NONE:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0x0f) | 0x00;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x00);
       break;
     case BX_FLOPPY_360K:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0x0f) | 0x10;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x10);
       break;
     case BX_FLOPPY_1_2:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0x0f) | 0x20;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x20);
       break;
     case BX_FLOPPY_720K:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0x0f) | 0x30;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x30);
       break;
     case BX_FLOPPY_1_44:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0x0f) | 0x40;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x40);
       break;
     case BX_FLOPPY_2_88:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0x0f) | 0x50;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x50);
       break;
     default:
       BX_PANIC(("unknown floppya type"));
@@ -174,22 +183,22 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   switch (BX_FD_THIS s.device_type[1]) {
     case BX_FLOPPY_NONE:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0xf0) | 0x00;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x00);
       break;
     case BX_FLOPPY_360K:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0xf0) | 0x01;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x01);
       break;
     case BX_FLOPPY_1_2:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0xf0) | 0x02;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x02);
       break;
     case BX_FLOPPY_720K:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0xf0) | 0x03;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x03);
       break;
     case BX_FLOPPY_1_44:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0xf0) | 0x04;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x04);
       break;
     case BX_FLOPPY_2_88:
-      cmos->s.reg[0x10] = (cmos->s.reg[0x10] & 0xf0) | 0x05;
+      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x05);
       break;
     default:
       BX_PANIC(("unknown floppyb type"));
@@ -215,11 +224,10 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   /* CMOS Equipment Byte register */
   if (BX_FD_THIS s.num_supported_floppies > 0)
-    cmos->s.reg[0x14] = (cmos->s.reg[0x14] & 0x3e) |
-                        ((BX_FD_THIS s.num_supported_floppies-1) << 6) |
-                        1;
+    DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e) |
+                          ((BX_FD_THIS s.num_supported_floppies-1) << 6) | 1);
   else
-    cmos->s.reg[0x14] = (cmos->s.reg[0x14] & 0x3e);
+    DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e));
 
 
   if (BX_FD_THIS s.floppy_timer_index == BX_NULL_TIMER_HANDLE) {
@@ -280,8 +288,8 @@ bx_floppy_ctrl_c::reset(unsigned type)
 
   BX_FD_THIS s.floppy_buffer_index = 0;
 
-  BX_FD_THIS devices->pic->lower_irq(6);
-  BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+  DEV_pic_lower_irq(6);
+  DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
 }
 
 
@@ -341,7 +349,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
         BX_FD_THIS s.result[0] = value;
         BX_FD_THIS s.main_status_reg = FD_MS_MRQ;
         if (!BX_FD_THIS s.reset_sensei) BX_FD_THIS s.pending_irq = 0;
-        BX_FD_THIS devices->pic->lower_irq(6);
+	DEV_pic_lower_irq(6);
         }
       return(value);
       break;
@@ -363,7 +371,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       
     case 0x3F6: // Reserved for future floppy controllers
                 // This address shared with the hard drive controller
-      value = BX_FD_THIS devices->hard_drive->read_handler(BX_FD_THIS devices->hard_drive, address, io_len);
+      value = DEV_hd_read_handler(bx_devices.pluginHardDrive, address, io_len);
       return( value );
       break;
 
@@ -371,7 +379,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       // This address shared with the hard drive controller:
       //   Bit  7   : floppy
       //   Bits 6..0: hard drive
-      value = BX_FD_THIS devices->hard_drive->read_handler(BX_FD_THIS devices->hard_drive, address, io_len);
+      value = DEV_hd_read_handler(bx_devices.pluginHardDrive, address, io_len);
       value &= 0x7f;
       // add in diskette change line
       value |= (BX_FD_THIS s.DIR[BX_FD_THIS s.DOR & 0x03] & 0x80);
@@ -546,7 +554,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3F6: /* diskette controller (reserved) */
       BX_DEBUG(("io_write: reserved register 0x3f6 unsupported"));
       // this address shared with the hard drive controller
-      BX_FD_THIS devices->hard_drive->write_handler(BX_FD_THIS devices->hard_drive, address, value, io_len);
+      DEV_hd_write_handler(bx_devices.pluginHardDrive, address, value, io_len);
       break;
 
 #if BX_DMA_FLOPPY_IO
@@ -807,7 +815,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       /* 4 header bytes per sector are required */
       BX_FD_THIS s.format_count <<= 2;
 
-      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 1);
+      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
 
       /* data reg not ready, controller busy */
       BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
@@ -963,7 +971,7 @@ bx_floppy_ctrl_c::floppy_command(void)
                     512, FROM_FLOPPY);
         BX_FD_THIS s.floppy_buffer_index = 0;
 
-        BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 1);
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
 
         /* data reg not ready, controller busy */
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
@@ -973,7 +981,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       else if ((BX_FD_THIS s.command[0] & 0x7f) == 0x45) { // write
         BX_FD_THIS s.floppy_buffer_index = 0;
 
-        BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 1);
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
 
         /* data reg not ready, controller busy */
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
@@ -1132,7 +1140,7 @@ bx_floppy_ctrl_c::timer()
       break;
 
     case 0xfe: // (contrived) RESET
-      reset(BX_RESET_SOFTWARE);
+      theFloppyController->reset(BX_RESET_SOFTWARE);
       BX_FD_THIS s.pending_command = 0;
       BX_FD_THIS s.status_reg0 = 0xc0;
       raise_interrupt();
@@ -1170,7 +1178,7 @@ bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
     drive = BX_FD_THIS s.DOR & 0x03;
     increment_sector(); // increment to next sector before retrieving next one
     BX_FD_THIS s.floppy_buffer_index = 0;
-    if (BX_DMA_GET_TC()) { // Terminal Count line, done
+    if (DEV_dma_get_tc()) { // Terminal Count line, done
       BX_FD_THIS s.pending_command = 0;
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
       BX_FD_THIS s.result_size = 7;
@@ -1194,7 +1202,7 @@ bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
         }
 
       raise_interrupt();
-      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
       }
     else { // more data to transfer
       Bit32u logical_sector;
@@ -1248,7 +1256,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
                     512, TO_FLOPPY);
         break;
       }
-    if ((BX_FD_THIS s.format_count == 0) || (BX_DMA_GET_TC())) {
+    if ((BX_FD_THIS s.format_count == 0) || (DEV_dma_get_tc())) {
       BX_FD_THIS s.format_count = 0;
       BX_FD_THIS s.pending_command = 0;
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
@@ -1260,7 +1268,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
       BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
       // 4 result bytes are unused
       raise_interrupt();
-      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
       }
     return;
     }
@@ -1296,7 +1304,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
                 512, TO_FLOPPY);
     increment_sector(); // increment to next sector after writing current one
     BX_FD_THIS s.floppy_buffer_index = 0;
-    if (BX_DMA_GET_TC()) { // Terminal Count line, done
+    if (DEV_dma_get_tc()) { // Terminal Count line, done
       BX_FD_THIS s.pending_command = 0;
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
       BX_FD_THIS s.result_size = 7;
@@ -1319,7 +1327,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
         }
 
       raise_interrupt();
-      BX_DMA_SET_DRQ(FLOPPY_DMA_CHAN, 0);
+      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
       }
     else { // more data to transfer
       } // else
@@ -1329,7 +1337,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
   void
 bx_floppy_ctrl_c::raise_interrupt(void)
 {
-  BX_FD_THIS devices->pic->raise_irq(6);
+  DEV_pic_raise_irq(6);
   BX_FD_THIS s.pending_irq = 1;
   BX_FD_THIS s.reset_sensei = 0;
 }

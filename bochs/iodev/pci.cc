@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.20 2002-08-31 15:35:51 vruppert Exp $
+// $Id: pci.cc,v 1.21 2002-10-24 21:07:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,21 +71,19 @@ bx_pci_c::~bx_pci_c(void)
 
 
   void
-bx_pci_c::init(bx_devices_c *d)
+bx_pci_c::init(void)
 {
   // called once when bochs initializes
 
-  BX_PCI_THIS devices = d;
-
   if (bx_options.Oi440FXSupport->get ()) {
-    d->register_io_read_handler(this, read_handler, 0x0CF8, "i440FX");
+    bx_devices.register_io_read_handler(this, read_handler, 0x0CF8, "i440FX");
     for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
-      d->register_io_read_handler(this, read_handler, i, "i440FX");
+      bx_devices.register_io_read_handler(this, read_handler, i, "i440FX");
       }
 
-    d->register_io_write_handler(this, write_handler, 0x0CF8, "i440FX");
+    bx_devices.register_io_write_handler(this, write_handler, 0x0CF8, "i440FX");
     for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
-      d->register_io_write_handler(this, write_handler, i, "i440FX");
+      bx_devices.register_io_write_handler(this, write_handler, i, "i440FX");
       }
 
     BX_REGISTER_PCI_HANDLERS(this, pci_read_handler, pci_write_handler,

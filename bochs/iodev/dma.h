@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.10 2002-08-28 19:39:00 vruppert Exp $
+// $Id: dma.h,v 1.11 2002-10-24 21:07:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 
 #if BX_USE_DMA_SMF
 #  define BX_DMA_SMF  static
-#  define BX_DMA_THIS bx_dma.
+#  define BX_DMA_THIS theDmaDevice->
 #else
 #  define BX_DMA_SMF
 #  define BX_DMA_THIS this->
@@ -39,27 +39,27 @@
 
 
 
-class bx_dma_c : public logfunctions {
+class bx_dma_c : public bx_dma_stub_c {
 public:
 
   bx_dma_c();
   ~bx_dma_c(void);
 
-  BX_DMA_SMF void     init(bx_devices_c *);
-  BX_DMA_SMF void     reset(unsigned type);
-  BX_DMA_SMF void     raise_HLDA(void);
-  BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
-  BX_DMA_SMF unsigned get_TC(void);
+  virtual void     init(void);
+  virtual void     reset(unsigned type);
+  virtual void     raise_HLDA(void);
+  virtual void     set_DRQ(unsigned channel, Boolean val);
+  virtual unsigned get_TC(void);
 
-  BX_DMA_SMF unsigned registerDMA8Channel(unsigned channel,
+  virtual unsigned registerDMA8Channel(unsigned channel,
     void (* dmaRead)(Bit8u *data_byte),
     void (* dmaWrite)(Bit8u *data_byte),
     const char *name);
-  BX_DMA_SMF unsigned registerDMA16Channel(unsigned channel,
+  virtual unsigned registerDMA16Channel(unsigned channel,
     void (* dmaRead)(Bit16u *data_word),
     void (* dmaWrite)(Bit16u *data_word),
     const char *name);
-  BX_DMA_SMF unsigned unregisterDMAChannel(unsigned channel);
+  virtual unsigned unregisterDMAChannel(unsigned channel);
 
 private:
 
@@ -108,9 +108,6 @@ private:
     void (* dmaWrite16)(Bit16u *data_word);
     } h[4]; // DMA read and write handlers
 
-  bx_devices_c *devices;
   };
-
-extern bx_dma_c bx_dma;
 
 #endif  // #ifndef _PCDMA_H

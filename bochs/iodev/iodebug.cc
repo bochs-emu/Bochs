@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.10 2002-08-27 19:54:46 bdenney Exp $
+// $Id: iodebug.cc,v 1.11 2002-10-24 21:07:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -41,11 +41,10 @@ bx_iodebug_c::~bx_iodebug_c( void )
 
 
 
-int bx_iodebug_c::init( bx_devices_c *d )
+int bx_iodebug_c::init( void )
 {
   int i;
 
-  BX_IODEBUG_THIS devices = d;
   BX_IODEBUG_THIS devices->register_io_read_handler(this, read_handler, 0x8A00,"BOCHS IODEBUG");
   BX_IODEBUG_THIS devices->register_io_write_handler(this, write_handler, 0x8A00,"BOCHS IODEBUG");
   BX_IODEBUG_THIS devices->register_io_write_handler(this, write_handler, 0x8A01,"BOCHS IODEBUG");

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.83 2002-10-21 23:51:49 cbothamy Exp $
+// $Id: harddrv.cc,v 1.84 2002-10-24 21:07:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,8 +30,14 @@
 
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
-#define LOG_THIS bx_hard_drive.
+
+#define LOG_THIS theHardDrive->
 
 // WARNING: dangerous options!
 // These options provoke certain kinds of errors for testing purposes when they
@@ -49,12 +55,6 @@
 #define INDEX_PULSE_CYCLE 10
 
 #define PACKET_SIZE 12
-
-bx_hard_drive_c bx_hard_drive;
-#if BX_USE_HD_SMF
-#define this (&bx_hard_drive)
-#endif
-
 
 static unsigned max_multiple_sectors  = 0; // was 0x3f
 static unsigned curr_multiple_sectors = 0; // was 0x3f
@@ -96,13 +96,26 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 #define WRITE_HEAD_NO(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).head_no = _a; BX_CONTROLLER((c),1).head_no = _a; } while(0)
 #define WRITE_LBA_MODE(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).lba_mode = _a; BX_CONTROLLER((c),1).lba_mode = _a; } while(0)
 
+bx_hard_drive_c *theHardDrive = NULL;
 
-//static unsigned im_here = 0;
+  int
+libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theHardDrive = new bx_hard_drive_c ();
+  bx_devices.pluginHardDrive = theHardDrive;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHardDrive, BX_PLUGIN_HARDDRV);
+  return(0); // Success
+}
+
+  void
+libharddrv_LTX_plugin_fini(void)
+{
+}
 
 bx_hard_drive_c::bx_hard_drive_c(void)
 {
 #if DLL_HD_SUPPORT
-#    error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
+#   error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
 #endif
       
     for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
@@ -156,13 +169,12 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 
 
   void
-bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
+bx_hard_drive_c::init(void)
 {
   Bit8u channel;
   char  string[5];
 
-  BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.83 2002-10-21 23:51:49 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.84 2002-10-24 21:07:35 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -192,24 +204,24 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
     sprintf(string ,"ATA%d", channel);
 
     if (BX_HD_THIS channels[channel].irq != 0) 
-      BX_HD_THIS devices->register_irq(BX_HD_THIS channels[channel].irq, strdup(string));
+      DEV_register_irq(BX_HD_THIS channels[channel].irq, strdup(string));
 
     if (BX_HD_THIS channels[channel].ioaddr1 != 0) {
       for (unsigned addr=0x0; addr<=0x7; addr++) {
-        BX_HD_THIS devices->register_io_read_handler(this, read_handler,
-                                            BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string));
-        BX_HD_THIS devices->register_io_write_handler(this, write_handler,
-                                            BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string));
+        DEV_register_ioread_handler(this, read_handler,
+                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
+        DEV_register_iowrite_handler(this, write_handler,
+                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 7);
         }
       }
 
     // We don't want to register addresses 0x3f6 and 0x3f7 as they are handled by the floppy controller
     if ((BX_HD_THIS channels[channel].ioaddr2 != 0) && (BX_HD_THIS channels[channel].ioaddr2 != 0x3f0)) {
       for (unsigned addr=0x6; addr<=0x7; addr++) {
-        BX_HD_THIS devices->register_io_read_handler(this, read_handler,
-                                            BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string));
-        BX_HD_THIS devices->register_io_write_handler(this, write_handler,
-                                            BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string));
+        DEV_register_ioread_handler(this, read_handler,
+                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
+        DEV_register_iowrite_handler(this, write_handler,
+                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 7);
         }
       }
      
@@ -347,88 +359,88 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   // generate CMOS values for hard drive if not using a CMOS image
   if (!bx_options.cmos.OcmosImage->get ()) {
-    cmos->s.reg[0x12] = 0x00; // start out with: no drive 0, no drive 1
+    DEV_cmos_set_reg(0x12, 0x00); // start out with: no drive 0, no drive 1
 
     if (BX_DRIVE_IS_HD(0,0)) {
       // Flag drive type as Fh, use extended CMOS location as real type
-      cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0x0f) | 0xf0;
-      cmos->s.reg[0x19] = 47; // user definable type
+      DEV_cmos_set_reg(0x12, (DEV_cmos_get_reg(0x12) & 0x0f) | 0xf0);
+      DEV_cmos_set_reg(0x19, 47); // user definable type
       // AMI BIOS: 1st hard disk #cyl low byte
-      cmos->s.reg[0x1b] = (bx_options.atadevice[0][0].Ocylinders->get () & 0x00ff);
+      DEV_cmos_set_reg(0x1b, (bx_options.atadevice[0][0].Ocylinders->get () & 0x00ff));
       // AMI BIOS: 1st hard disk #cyl high byte
-      cmos->s.reg[0x1c] = (bx_options.atadevice[0][0].Ocylinders->get () & 0xff00) >> 8;
+      DEV_cmos_set_reg(0x1c, (bx_options.atadevice[0][0].Ocylinders->get () & 0xff00) >> 8);
       // AMI BIOS: 1st hard disk #heads
-      cmos->s.reg[0x1d] = (bx_options.atadevice[0][0].Oheads->get ());
+      DEV_cmos_set_reg(0x1d, (bx_options.atadevice[0][0].Oheads->get ()));
       // AMI BIOS: 1st hard disk write precompensation cylinder, low byte
-      cmos->s.reg[0x1e] = 0xff; // -1
+      DEV_cmos_set_reg(0x1e, 0xff); // -1
       // AMI BIOS: 1st hard disk write precompensation cylinder, high byte
-      cmos->s.reg[0x1f] = 0xff; // -1
+      DEV_cmos_set_reg(0x1f, 0xff); // -1
       // AMI BIOS: 1st hard disk control byte
-      cmos->s.reg[0x20] = 0xc0 | ((bx_options.atadevice[0][0].Oheads->get () > 8) << 3);
+      DEV_cmos_set_reg(0x20, (0xc0 | ((bx_options.atadevice[0][0].Oheads->get () > 8) << 3)));
       // AMI BIOS: 1st hard disk landing zone, low byte
-      cmos->s.reg[0x21] = cmos->s.reg[0x1b];
+      DEV_cmos_set_reg(0x21, DEV_cmos_get_reg(0x1b));
       // AMI BIOS: 1st hard disk landing zone, high byte
-      cmos->s.reg[0x22] = cmos->s.reg[0x1c];
+      DEV_cmos_set_reg(0x22, DEV_cmos_get_reg(0x1c));
       // AMI BIOS: 1st hard disk sectors/track
-      cmos->s.reg[0x23] = bx_options.atadevice[0][0].Ospt->get ();
+      DEV_cmos_set_reg(0x23, bx_options.atadevice[0][0].Ospt->get ());
     }
 
     //set up cmos for second hard drive
     if (BX_DRIVE_IS_HD(0,1)) {
       BX_DEBUG(("1: I will put 0xf into the second hard disk field"));
       // fill in lower 4 bits of 0x12 for second HD
-      cmos->s.reg[0x12] = (cmos->s.reg[0x12] & 0xf0) | 0x0f;
-      cmos->s.reg[0x1a] = 47; // user definable type
+      DEV_cmos_set_reg(0x12, (DEV_cmos_get_reg(0x12) & 0xf0) | 0x0f);
+      DEV_cmos_set_reg(0x1a, 47); // user definable type
       // AMI BIOS: 2nd hard disk #cyl low byte
-      cmos->s.reg[0x24] = (bx_options.atadevice[0][1].Ocylinders->get () & 0x00ff);
+      DEV_cmos_set_reg(0x24, (bx_options.atadevice[0][1].Ocylinders->get () & 0x00ff));
       // AMI BIOS: 2nd hard disk #cyl high byte
-      cmos->s.reg[0x25] = (bx_options.atadevice[0][1].Ocylinders->get () & 0xff00) >> 8;
+      DEV_cmos_set_reg(0x25, (bx_options.atadevice[0][1].Ocylinders->get () & 0xff00) >> 8);
       // AMI BIOS: 2nd hard disk #heads
-      cmos->s.reg[0x26] = (bx_options.atadevice[0][1].Oheads->get ());
+      DEV_cmos_set_reg(0x26, (bx_options.atadevice[0][1].Oheads->get ()));
       // AMI BIOS: 2nd hard disk write precompensation cylinder, low byte
-      cmos->s.reg[0x27] = 0xff; // -1
+      DEV_cmos_set_reg(0x27, 0xff); // -1
       // AMI BIOS: 2nd hard disk write precompensation cylinder, high byte
-      cmos->s.reg[0x28] = 0xff; // -1
+      DEV_cmos_set_reg(0x28, 0xff); // -1
       // AMI BIOS: 2nd hard disk, 0x80 if heads>8
-      cmos->s.reg[0x29] = (bx_options.atadevice[0][1].Oheads->get () > 8) ? 0x80 : 0x00;
+      DEV_cmos_set_reg(0x29, (bx_options.atadevice[0][1].Oheads->get () > 8) ? 0x80 : 0x00);
       // AMI BIOS: 2nd hard disk landing zone, low byte
-      cmos->s.reg[0x2a] = cmos->s.reg[0x24];
+      DEV_cmos_set_reg(0x2a, DEV_cmos_get_reg(0x24));
       // AMI BIOS: 2nd hard disk landing zone, high byte
-      cmos->s.reg[0x2b] = cmos->s.reg[0x25];
+      DEV_cmos_set_reg(0x2b, DEV_cmos_get_reg(0x25));
       // AMI BIOS: 2nd hard disk sectors/track
-      cmos->s.reg[0x2c] = bx_options.atadevice[0][1].Ospt->get ();
+      DEV_cmos_set_reg(0x2c, bx_options.atadevice[0][1].Ospt->get ());
     }
 
 
     // Set the "non-extended" boot device. This will default to DISKC if cdrom
     if ( bx_options.Obootdrive->get () != BX_BOOT_FLOPPYA) {
       // system boot sequence C:, A:
-      cmos->s.reg[0x2d] &= 0xdf;
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) & 0xdf);
       }
     else { // 'a'
       // system boot sequence A:, C:
-      cmos->s.reg[0x2d] |= 0x20;
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) | 0x20);
       }
 
     // Set the "extended" boot device, byte 0x3D (needed for cdrom booting)
     if ( bx_options.Obootdrive->get () == BX_BOOT_FLOPPYA) {
       // system boot sequence A:
-      cmos->s.reg[0x3d] = 0x01;
+      DEV_cmos_set_reg(0x3d, 0x01);
       BX_INFO(("Boot device will be 'a'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_DISKC) { 
       // system boot sequence C:
-      cmos->s.reg[0x3d] = 0x02;
+      DEV_cmos_set_reg(0x3d, 0x02);
       BX_INFO(("Boot device will be 'c'"));
       }
     else if ( bx_options.Obootdrive->get () == BX_BOOT_CDROM) { 
       // system boot sequence cdrom
-      cmos->s.reg[0x3d] = 0x03;
+      DEV_cmos_set_reg(0x3d, 0x03);
       BX_INFO(("Boot device will be 'cdrom'"));
       }
       
     // Set the signature check flag in cmos, inverted for compatibility
-    cmos->s.reg[0x38] = bx_options.OfloppySigCheck->get();
+    DEV_cmos_set_reg(0x38, bx_options.OfloppySigCheck->get());
     BX_INFO(("Floppy boot signature check is %sabled", bx_options.OfloppySigCheck->get() ? "dis" : "en"));
     }
 
@@ -439,7 +451,7 @@ bx_hard_drive_c::reset(unsigned type)
 {
   for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (BX_HD_THIS channels[channel].irq)
-      BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
+      DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
   }
 }
 
@@ -582,22 +594,22 @@ if (channel == 0) {
             BX_PANIC(("IO read(1f0): buffer_index >= 512"));
 
 #if BX_SupportRepeatSpeedups
-          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+          if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
 
             quantumsMax =
               (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
 if ( quantumsMax == 0)
   BX_PANIC(("IO read(1f0): not enough space for read"));
-            BX_HD_THIS devices->bulkIOQuantumsTransferred =
-                BX_HD_THIS devices->bulkIOQuantumsRequested;
-            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
-              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
-            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
-            memcpy((Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+            DEV_bulk_io_quantum_transferred() =
+                DEV_bulk_io_quantum_requested();
+            if (quantumsMax < DEV_bulk_io_quantum_transferred())
+              DEV_bulk_io_quantum_transferred() = quantumsMax;
+            transferLen = io_len * DEV_bulk_io_quantum_transferred();
+            memcpy((Bit8u*) DEV_bulk_io_host_addr(),
               &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], 
               transferLen);
-            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+            DEV_bulk_io_host_addr() += transferLen;
             BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             value32 = 0; // Value returned not important;
             }
@@ -949,7 +961,9 @@ if ( quantumsMax == 0)
         BX_SELECTED_CONTROLLER(channel).status.index_pulse_count = 0;
         }
       }
-      if (port == 0x07) BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
+      if (port == 0x07) {
+        DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
+        }
       goto return_value8;
       break;
 
@@ -1091,23 +1105,23 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
             BX_PANIC(("IO write(1f0): buffer_index >= 512"));
 
 #if BX_SupportRepeatSpeedups
-          if (BX_HD_THIS devices->bulkIOQuantumsRequested) {
+          if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
 
             quantumsMax =
               (512 - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
 if ( quantumsMax == 0)
   BX_PANIC(("IO write(1f0): not enough space for write"));
-            BX_HD_THIS devices->bulkIOQuantumsTransferred =
-                BX_HD_THIS devices->bulkIOQuantumsRequested;
-            if (quantumsMax < BX_HD_THIS devices->bulkIOQuantumsTransferred)
-              BX_HD_THIS devices->bulkIOQuantumsTransferred = quantumsMax;
-            transferLen = io_len * BX_HD_THIS devices->bulkIOQuantumsTransferred;
+            DEV_bulk_io_quantum_transferred() =
+                DEV_bulk_io_quantum_requested();
+            if (quantumsMax < DEV_bulk_io_quantum_transferred())
+              DEV_bulk_io_quantum_transferred() = quantumsMax;
+            transferLen = io_len * DEV_bulk_io_quantum_transferred();
             memcpy(
               &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], 
-              (Bit8u*) BX_HD_THIS devices->bulkIOHostAddr,
+              (Bit8u*) DEV_bulk_io_host_addr(),
               transferLen);
-            BX_HD_THIS devices->bulkIOHostAddr += transferLen;
+	    DEV_bulk_io_host_addr() += transferLen;
             BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             }
           else
@@ -1260,7 +1274,7 @@ if ( quantumsMax == 0)
 #endif
 					    BX_SELECTED_DRIVE(channel).cdrom.ready = 0;
                                             bx_options.atadevice[channel][BX_SLAVE_SELECTED(channel)].Ostatus->set(BX_EJECTED);
-                                            bx_gui.update_drive_status_buttons();
+                                            bx_gui->update_drive_status_buttons();
                                           }
                                           raise_interrupt(channel);
 				    } else { // Load the disc
@@ -1751,7 +1765,7 @@ if ( quantumsMax == 0)
       if ((BX_SLAVE_SELECTED(channel)) && (!BX_SLAVE_IS_PRESENT(channel)))
 	    break;
       // Writes to the command register clear the IRQ
-      BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
+      DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
 
       if (BX_SELECTED_CONTROLLER(channel).status.busy)
         BX_PANIC(("hard disk: command sent, controller BUSY"));
@@ -2255,7 +2269,7 @@ if ( quantumsMax == 0)
 		      BX_CONTROLLER(channel,id).lba_mode          = 0;
 
 		      BX_CONTROLLER(channel,id).control.disable_irq = 0;
-		      BX_HD_THIS devices->pic->lower_irq(BX_HD_THIS channels[channel].irq);
+		      DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
 		}
 	  } else if (BX_SELECTED_CONTROLLER(channel).reset_in_progress &&
 		     !BX_SELECTED_CONTROLLER(channel).control.reset) {
@@ -2910,12 +2924,12 @@ bx_hard_drive_c::raise_interrupt(Bit8u channel)
 	BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER(channel).control.disable_irq));
 	if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) { BX_DEBUG(("raising interrupt")); } else { BX_DEBUG(("Not raising interrupt")); }
       if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) {
-	    Bit32u irq = BX_HD_THIS channels[channel].irq; 
-   	    BX_DEBUG(("Raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
-	    BX_HD_THIS devices->pic->raise_irq(irq);
+          Bit32u irq = BX_HD_THIS channels[channel].irq; 
+          BX_DEBUG(("Raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
+          DEV_pic_raise_irq(irq);
       } else {
-	    if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-		  BX_INFO(("Interrupt masked {%s}", BX_SELECTED_TYPE_STRING(channel)));
+          if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
+              BX_INFO(("Interrupt masked {%s}", BX_SELECTED_TYPE_STRING(channel)));
       }
 }
 

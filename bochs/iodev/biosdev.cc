@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.4 2002-08-27 19:54:46 bdenney Exp $
+// $Id: biosdev.cc,v 1.5 2002-10-24 21:07:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,13 +39,28 @@
 //  0x0503 : vgabios Debug port with message
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
 
-bx_biosdev_c bx_biosdev;
+bx_biosdev_c *theBiosDevice;
 
-#if BX_USE_BIOS_SMF
-#define this (&bx_biosdev)
-#endif
+  int
+libbiosdev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theBiosDevice = new bx_biosdev_c ();
+  bx_devices.pluginBiosDevice = theBiosDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBiosDevice, BX_PLUGIN_BIOSDEV);
+  return(0); // Success
+}
+
+  void
+libbiosdev_LTX_plugin_fini(void)
+{
+}
 
 logfunctions  *bioslog;
 logfunctions  *vgabioslog;
@@ -79,29 +94,18 @@ bx_biosdev_c::~bx_biosdev_c(void)
 }
 
   void
-bx_biosdev_c::init(bx_devices_c *d)
+bx_biosdev_c::init(void)
 {
-  BX_BIOS_THIS devices = d;
+  DEV_register_iowrite_handler(this, write_handler, 0x0400, "Bios Panic Port 1", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0401, "Bios Panic Port 2", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0403, "Bios Debug Port", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0402, "Bios Info Port", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0xfff0, "Bios Info Port (legacy)", 7);
 
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0400, "Bios Panic Port 1");
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0401, "Bios Panic Port 2");
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0403, "Bios Debug Port");
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0402, "Bios Info Port");
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0xfff0, "Bios Info Port (legacy)");
-
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0501, "VGABios Panic Port 1");
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0502, "VGABios Panic Port 2");
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0503, "VGABios Debug Port");
-  BX_BIOS_THIS devices->register_io_write_handler(this, write_handler,
-                                      0x0500, "VGABios Info Port");
+  DEV_register_iowrite_handler(this, write_handler, 0x0501, "VGABios Panic Port 1", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0502, "VGABios Panic Port 2", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0503, "VGABios Debug Port", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0500, "VGABios Info Port", 7);
 }
 
   void

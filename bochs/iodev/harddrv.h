@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.16 2002-09-30 14:19:46 bdenney Exp $
+// $Id: harddrv.h,v 1.17 2002-10-24 21:07:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -274,7 +274,7 @@ struct atapi_t
 
 #if BX_USE_HD_SMF
 #  define BX_HD_SMF  static
-#  define BX_HD_THIS bx_hard_drive.
+#  define BX_HD_THIS theHardDrive->
 #else
 #  define BX_HD_SMF
 #  define BX_HD_THIS this->
@@ -284,19 +284,27 @@ typedef enum {
       IDE_NONE, IDE_DISK, IDE_CDROM
 } device_type_t;
 
-class bx_hard_drive_c : public logfunctions {
+class bx_hard_drive_c : public bx_hard_drive_stub_c {
 public:
 
   bx_hard_drive_c(void);
-  ~bx_hard_drive_c(void);
-  BX_HD_SMF void   close_harddrive(void);
-  BX_HD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
-  BX_HD_SMF void   reset(unsigned type);
-  BX_HD_SMF Bit32u   get_device_handle(Bit8u channel, Bit8u device);
-  BX_HD_SMF Bit32u   get_first_cd_handle(void);
-  BX_HD_SMF unsigned get_cd_media_status(Bit32u handle);
-  BX_HD_SMF unsigned set_cd_media_status(Bit32u handle, unsigned status);
+  virtual ~bx_hard_drive_c(void);
+  virtual void   close_harddrive(void);
+  virtual void   init();
+  virtual void   reset(unsigned type);
+  virtual Bit32u   get_device_handle(Bit8u channel, Bit8u device);
+  virtual Bit32u   get_first_cd_handle(void);
+  virtual unsigned get_cd_media_status(Bit32u handle);
+  virtual unsigned set_cd_media_status(Bit32u handle, unsigned status);
 
+  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) {
+    return read_handler (this, address, io_len);
+  }
+  virtual void virt_write_handler(Bit32u address, 
+      Bit32u value, unsigned io_len)
+  {
+    write_handler(this, address, value, io_len);
+  }
 #if !BX_USE_HD_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
@@ -358,7 +366,4 @@ private:
     } pdc20230c;
 #endif
 
-  bx_devices_c *devices;
   };
-
-extern bx_hard_drive_c bx_hard_drive;

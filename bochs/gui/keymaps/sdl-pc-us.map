@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: sdl-pc-us.map,v 1.1 2002-10-08 06:14:53 bdenney Exp $
+# $Id: sdl-pc-us.map,v 1.2 2002-10-24 21:06:55 bdenney Exp $
 # Target: PC(x86) keyboard, US keymap, SDL gui
 # Author: Bryce Denney
 #

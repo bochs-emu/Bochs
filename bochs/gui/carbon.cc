@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.12 2002-10-18 11:46:19 bdenney Exp $
+// $Id: carbon.cc,v 1.13 2002-10-24 21:06:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,12 @@
 // Carbon polishing by Jeremy Parsons (Br'fin) <brefin@mac.com>
 // slight overhaul of Carbon key event, graphics and window handling
 //		and SIM->notify alert support by Chris Thomas <cjack@cjack.com>
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 
 // BOCHS INCLUDES
 #include "bochs.h"
@@ -102,7 +108,6 @@ const RGBColor	ltGrey = 	{0xEEEE, 0xEEEE, 0xEEEE};
 
 WindowPtr			win, toolwin, fullwin, backdrop, hidden, SouixWin;
 WindowGroupRef			fullwinGroup;
-bx_gui_c			*thisGUI;
 SInt16				gOldMBarHeight;
 Boolean				menubarVisible = true, cursorVisible = true;
 Boolean				windowUpdatesPending = true, mouseMoved = false;
@@ -190,10 +195,18 @@ unsigned char reverse_bitorder(unsigned char);
 
 static pascal OSErr QuitAppleEventHandler(const AppleEvent *appleEvt, AppleEvent* reply, SInt32 refcon);
 
-extern bx_gui_c   bx_gui;
+class bx_carbon_gui_c : public bx_gui_c {
+public:
+  bx_carbon_gui_c (void) {}
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
 
-#define BX_GUI_THIS bx_gui.
-#define LOG_THIS BX_GUI_THIS
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+static bx_carbon_gui_c *theGui = NULL;
+IMPLEMENT_GUI_PLUGIN_CODE(carbon)
+
+#define LOG_THIS theGui->
 
 // Carbon Event Handlers
 
@@ -221,7 +234,7 @@ pascal OSStatus CEvtHandleWindowToolUpdate (EventHandlerCallRef nextHandler,
     EventRef theEvent,
     void* userData)
 {
-	thisGUI->show_headerbar();
+	theGui->show_headerbar();
 
 	return noErr; // Report success
 }
@@ -277,7 +290,7 @@ pascal OSStatus CEvtHandleWindowEmulatorUpdate (EventHandlerCallRef nextHandler,
             NULL, sizeof(WindowRef), NULL, &myWindow);
 
 	GetWindowPortBounds(myWindow, &box);
-	bx_vga.redraw_area(box.left, box.top, box.right, box.bottom);
+	DEV_vga_redraw_area(box.left, box.top, box.right, box.bottom);
 
 	return noErr; // Report success
 }
@@ -698,8 +711,6 @@ void CreateWindows(void)
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, BeOS, ...) to be initialized.
 //
-// th: a 'this' pointer to the gui class.  If a function external to the
-//     class needs access, store this pointer and use later.
 // argc, argv: not used right now, but the intention is to pass native GUI
 //     specific options from the command line.  (X11 options, BeOS options,...)
 //
@@ -711,13 +722,12 @@ void CreateWindows(void)
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 										 unsigned headerbar_y)
 {	
-	th->put("MGUI");
+	put("MGUI");
 	InitToolbox();
 	
-	thisGUI = th;
 	gheaderbar_y = headerbar_y + TOOL_MARGIN_SPACE + TOOL_MARGIN_SPACE;
 	
 	CreateKeyMap();
@@ -794,11 +804,11 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
             else
             {
                 if (modifiers & shiftKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | keyState);
+                        DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | keyState);
                 if (modifiers & controlKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | keyState);
+                        DEV_kbd_gen_scancode(BX_KEY_CTRL_L | keyState);
                 if (modifiers & optionKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | keyState);
+                        DEV_kbd_gen_scancode(BX_KEY_ALT_L | keyState);
                 
         //            key = (event->message & keyCodeMask) >> 8;
                 
@@ -809,14 +819,14 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
                 // statement!
                 
                 if (trans > 0)
-                        bx_devices.keyboard->gen_scancode(trans | keyState);
+                        DEV_kbd_gen_scancode(trans | keyState);
         
                 if (modifiers & shiftKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
+                        DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | BX_KEY_RELEASED);
                 if (modifiers & controlKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+                        DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
                 if (modifiers & optionKey)
-                        bx_devices.keyboard->gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
+                        DEV_kbd_gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);
             }
         }
     }
@@ -840,7 +850,7 @@ BX_CPP_INLINE void ResetPointer(void)
 // the gui code can poll for keyboard, mouse, and other
 // relevant events.
 
-void bx_gui_c::handle_events(void)
+void bx_carbon_gui_c::handle_events(void)
 {
 	EventRecord	event;
 	Point	mousePt;
@@ -933,7 +943,7 @@ void bx_gui_c::handle_events(void)
                             dy = 0;
                     }
                     
-                    bx_devices.keyboard->mouse_motion(dx, dy, mouse_button_state);
+                    DEV_mouse_motion(dx, dy, mouse_button_state);
                     
                     if (!cursorVisible && mouseMoved)
                     {
@@ -957,7 +967,7 @@ void bx_gui_c::handle_events(void)
 // Called periodically, requesting that the gui code flush all pending
 // screen update requests.
 
-void bx_gui_c::flush(void)
+void bx_carbon_gui_c::flush(void)
 {
 	// an opportunity to make the Window Manager happy.
 	// not needed on the macintosh....
@@ -988,7 +998,7 @@ void bx_gui_c::flush(void)
 // Called to request that the VGA region is cleared.	Don't
 // clear the area that defines the headerbar.
 
-void bx_gui_c::clear_screen(void)
+void bx_carbon_gui_c::clear_screen(void)
 {
         Rect r;
         
@@ -1023,7 +1033,7 @@ void bx_gui_c::clear_screen(void)
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
 
-void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 											unsigned long cursor_x, unsigned long cursor_y,
          Bit16u cursor_state, unsigned nrows)
 {
@@ -1104,7 +1114,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_carbon_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
 	ScrapRef         theScrap;
 	ScrapFlavorFlags theScrapFlags;
@@ -1132,7 +1142,7 @@ bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_carbon_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
 	ScrapRef theScrap;
 	
@@ -1152,7 +1162,7 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-Boolean bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+Boolean bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	PaletteHandle	thePal, oldpal;
 	GDHandle	saveDevice;
@@ -1205,7 +1215,7 @@ Boolean bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, u
 // note: origin of tile and of window based on (0,0) being in the upper
 //       left of the window.
 
-void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+void bx_carbon_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
 	Rect					destRect;
 /*	GDHandle	saveDevice;
@@ -1242,7 +1252,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // x: new VGA x size
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
-void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   if (fheight > 0) {
     if (fheight != 16) {
@@ -1290,8 +1300,9 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 
 // We need to have a cicn resource for each and every call to create_bitmap
 // If this fails, it is probably because more icons were added to bochs and
-// we need to create more cicns in bochs.r to match with create_bitmap calls in gui.cc
-unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+// we need to create more cicns in bochs.r to match with create_bitmap calls in
+// gui.cc
+unsigned bx_carbon_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
 	unsigned i;
 	unsigned char *data;
@@ -1317,7 +1328,7 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsig
 // f: a 'C' function pointer to callback when the mouse is clicked in
 //     the boundaries of this bitmap.
 
-unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+unsigned bx_carbon_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
 	unsigned hb_index;
 	Rect destRect, r;
@@ -1366,7 +1377,7 @@ unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (
 // Show (redraw) the current headerbar, which is composed of
 // currently installed bitmaps.
 
-void bx_gui_c::show_headerbar(void)
+void bx_carbon_gui_c::show_headerbar(void)
 {
 	UpdateTools();
 	DrawControls(toolwin);
@@ -1386,7 +1397,7 @@ void bx_gui_c::show_headerbar(void)
 // hbar_id: headerbar slot ID
 // bmap_id: bitmap ID
 
-void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_carbon_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
 //	bx_tool_pixmap[hbar_id].pm = bx_pixmap[bmap_id];
 //	bx_tool_pixmap[hbar_id].cicn = bx_cicn[bmap_id];
@@ -1406,7 +1417,7 @@ void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // Called before bochs terminates, to allow for a graceful
 // exit from the native GUI mechanism.
 
-void bx_gui_c::exit(void)
+void bx_carbon_gui_c::exit(void)
 {
 	if (!menubarVisible)
 		ShowMenubar(); // Make the menubar visible again
@@ -1417,7 +1428,7 @@ void bx_gui_c::exit(void)
 }
 
 #if 0
-void bx_gui_c::snapshot_handler(void)
+void bx_carbon_gui_c::snapshot_handler(void)
 {
 	PicHandle	ScreenShot;
 	long val;
@@ -1566,7 +1577,7 @@ void ShowTools()
 	}
 #endif
 	ShowWindow(toolwin);
-//	thisGUI->show_headerbar();
+//	theGui->show_headerbar();
 	CheckMenuItem(GetMenuHandle(mBochs), iTool, true);
 	HiliteWindow(win, true);
 }
@@ -1864,7 +1875,7 @@ unsigned char reverse_bitorder(unsigned char b)
 }
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_carbon_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
 }
 

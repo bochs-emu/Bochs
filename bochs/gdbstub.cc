@@ -685,13 +685,7 @@ static void wait_for_connect(int portn)
 
 void bx_gdbstub_init(int argc, char* argv[])
 {
-   int portn;
-      
-   /* Do bochs init */
-   // parse any remaining args in the usual way
-   bx_parse_cmdline (1, argc, argv);
-   
-   portn = bx_options.gdbstub.port;
+   int portn = bx_options.gdbstub.port;
 
    bx_init_hardware();
 

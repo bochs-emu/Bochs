@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.h,v 1.5 2002-08-27 19:54:46 bdenney Exp $
+// $Id: guest2host.h,v 1.6 2002-10-24 21:07:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ class bx_g2h_c : public logfunctions {
 public:
   bx_g2h_c(void);
   ~bx_g2h_c(void);
-  static void   init(bx_devices_c *d);
+  static void   init(void);
   void reset (unsigned type);
   unsigned aquire_channel(bx_g2h_callback_t);
   unsigned deaquire_channel(unsigned channel);

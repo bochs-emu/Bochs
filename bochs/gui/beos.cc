@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.17 2002-08-26 15:31:19 bdenney Exp $
+// $Id: beos.cc,v 1.18 2002-10-24 21:06:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,6 +25,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include <app/Application.h>
 #include <interface/Window.h>
 #include <interface/View.h>
@@ -42,7 +47,16 @@
 //#include "icon_bochs.h"
 #include "font/vga.bitmap.h"
 
-#define LOG_THIS bx_gui.
+class bx_beos_gui_c : public bx_gui_c {
+public:
+  bx_beos_gui_c (void) {}
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+static bx_beos_gui_c *theGui = NULL;
+IMPLEMENT_GUI_PLUGIN_CODE(beos)
 
 #define PAD_NEAREST(n, quantum) (( ((n) + ((quantum) - 1)) / (n) ) * (n))
 
@@ -187,10 +201,8 @@ static unsigned char reverse_bitorder(unsigned char b);
 static void create_vga_font(void);
 static BBitmap *vgafont[256];
 
-static bx_gui_c *bx_gui_c_ptr;
-
   void
-bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv,
+bx_beos_gui_c::specific_init(int argc, char **argv,
                         unsigned tilewidth, unsigned tileheight,
                         unsigned header_bar_y)
 {
@@ -205,11 +217,10 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv,
   char *window_name = "Bochs 80386+ emulator, http://world.std.com/~bochs";
 #endif
 
-  bx_gui_c_ptr = th;
 UNUSED(argc);
 UNUSED(argv);
 UNUSED(window_name);
-  th->put("BGUI");
+  put("BGUI");
 
 if (bx_options.Oprivate_colormap->get ()) {
   BX_INFO(( "BeOS: private_colormap option not handled yet."));
@@ -276,13 +287,13 @@ BX_INFO(("font_height = %u", (unsigned) font_height));
 
 
   void
-bx_gui_c::handle_events(void)
+bx_beos_gui_c::handle_events(void)
 {
   Bit32u key;
 
   while ( head != tail ) {
     key = deq_key_event();
-    bx_devices.keyboard->gen_scancode(key);
+    DEV_kbd_gen_scancode(key);
     }
 //IRA=> Start
   if (aView) {
@@ -303,7 +314,7 @@ bx_gui_c::handle_events(void)
 	  	  mouse_button_state != newstate) {
 	    int dx = (int)(current.x - previous.x) *2;
 	    int dy = -(int)((current.y - previous.y) *2);
-	    bx_devices.keyboard->mouse_motion( dx, dy, newstate);
+	    DEV_mouse_motion( dx, dy, newstate);
 	    mouse_button_state = newstate;
 	    previous = current;
       }
@@ -312,7 +323,7 @@ bx_gui_c::handle_events(void)
 }
 
   void
-bx_gui_c::flush(void)
+bx_beos_gui_c::flush(void)
 {
   if (view_attached)
     aView->Flush();
@@ -320,7 +331,7 @@ bx_gui_c::flush(void)
 
 
   void
-bx_gui_c::clear_screen(void)
+bx_beos_gui_c::clear_screen(void)
 {
   aWindow->Lock();
   aView->FillRect(BRect(0, bx_headerbar_y, dimension_x-1, dimension_y-1), B_SOLID_LOW);
@@ -330,7 +341,7 @@ bx_gui_c::clear_screen(void)
 
 
   void
-bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       Bit16u cursor_state, unsigned nrows)
 {
@@ -382,20 +393,20 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_beos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_beos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
 
 
   void
-bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+bx_beos_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   for (unsigned y=0; y<y_tilesize; y++) {
     for (unsigned x=0; x<x_tilesize; x++) {
@@ -412,7 +423,7 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 
   Boolean
-bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_beos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   cmap_index[index] = screen->IndexForColor(
     red, green, blue);
@@ -421,7 +432,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_beos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   if (fheight > 0) {
     if (fheight != 16) {
@@ -496,8 +507,7 @@ BochsWindow::FrameResized(float width, float height)
 {
   dimension_x = unsigned(width);
   dimension_y = unsigned(height) + bx_headerbar_y;
-  if ( bx_gui_c_ptr )
-    bx_gui_c_ptr->show_headerbar();
+  theGui->show_headerbar();
 }
 
 
@@ -1034,7 +1044,7 @@ reverse_bitorder(unsigned char b)
 }
 
   unsigned
-bx_gui_c::create_bitmap(const unsigned char *bmap,
+bx_beos_gui_c::create_bitmap(const unsigned char *bmap,
                         unsigned xdim, unsigned ydim)
 {
   BRect rect(0.0, 0.0, xdim-1, ydim-1);
@@ -1066,7 +1076,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap,
 }
 
   unsigned
-bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
+bx_beos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
                            void (*f)(void))
 {
   unsigned hb_index;
@@ -1096,7 +1106,7 @@ bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 }
 
   void
-bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+bx_beos_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   unsigned xorigin;
 
@@ -1114,7 +1124,7 @@ bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 }
 
   void
-bx_gui_c::show_headerbar(void)
+bx_beos_gui_c::show_headerbar(void)
 {
   unsigned xorigin;
   BPoint origin;
@@ -1186,9 +1196,9 @@ create_vga_font(void)
 
 
   void
-bx_gui_c::exit(void)
+bx_beos_gui_c::exit(void)
 {
-  fprintf(stderr, "# WARNING: BEOS: bx_gui_c::exit() not implemented yet.\n");
+  fprintf(stderr, "# WARNING: BEOS: bx_beos_gui_c::exit() not implemented yet.\n");
 }
 
 //IRA=> Start
@@ -1198,7 +1208,7 @@ bx_gui_c::exit(void)
 // In all those cases, setting the parameter value will get you here.
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_beos_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
   BX_DEBUG (("mouse_enabled=%d, BeOS specific code", val?1:0));
   if (val) {

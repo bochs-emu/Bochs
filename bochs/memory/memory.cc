@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.23 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: memory.cc,v 1.24 2002-10-24 21:07:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,7 +121,7 @@ inc_one:
       }
     if (a20addr <= 0x000bffff) {
       // VGA memory A0000 .. BFFFF
-      BX_VGA_MEM_WRITE(a20addr, *data_ptr);
+      DEV_vga_mem_write(a20addr, *data_ptr);
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
       BX_DBG_UCMEM_REPORT(a20addr, 1, BX_WRITE, *data_ptr); // obsolete
       goto inc_one;
@@ -184,7 +184,7 @@ inc_one:
         //if (a20addr < BX_MEM_THIS len) {
           //vector[a20addr] = *data_ptr;
           //BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          BX_VGA_MEM_WRITE(a20addr, *data_ptr);
+          DEV_vga_mem_write(a20addr, *data_ptr);
         //  }
         
         // otherwise ignore byte, since it overruns memory
@@ -309,7 +309,7 @@ inc_one:
       goto inc_one;
       }
     // VGA memory A0000 .. BFFFF
-    *data_ptr = BX_VGA_MEM_READ(a20addr);
+    *data_ptr = DEV_vga_mem_read(a20addr);
     BX_DBG_UCMEM_REPORT(a20addr, 1, BX_READ, *data_ptr); // obsolete
     goto inc_one;
 #else   // #if BX_PCI_SUPPORT == 0
@@ -319,7 +319,7 @@ inc_one:
       }
     if (a20addr <= 0x000BFFFF) {
       // VGA memory A0000 .. BFFFF
-      *data_ptr = BX_VGA_MEM_READ(a20addr);
+      *data_ptr = DEV_vga_mem_read(a20addr);
       BX_DBG_UCMEM_REPORT(a20addr, 1, BX_READ, *data_ptr);
       goto inc_one;
       }
@@ -368,7 +368,7 @@ inc_one:
         //if (a20addr < BX_MEM_THIS len) {
           //vector[a20addr] = *data_ptr;
           //BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          *data_ptr = BX_VGA_MEM_READ(a20addr);
+          *data_ptr = DEV_vga_mem_read(a20addr);
         //  }
         
         // otherwise ignore byte, since it overruns memory

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.17 2002-04-20 07:19:35 vruppert Exp $
+// $Id: rfb.cc,v 1.18 2002-10-24 21:06:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -21,10 +21,27 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
-#define LOG_THIS bx_gui.
+
+class bx_rfb_gui_c : public bx_gui_c {
+public:
+  bx_rfb_gui_c (void) {}
+  DECLARE_GUI_VIRTUAL_METHODS()
+};
+
+// declare one instance of the gui object and call macro to insert the
+// plugin code
+static bx_rfb_gui_c *theGui = NULL;
+IMPLEMENT_GUI_PLUGIN_CODE(rfb)
+
+#define LOG_THIS theGui->
 
 #ifdef WIN32
 
@@ -153,8 +170,6 @@ static const int rfbEndianTest = 1;
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, BeOS, ...) to be initialized.
 //
-// th: a 'this' pointer to the gui class.  If a function external to the
-//     class needs access, store this pointer and use later.
 // argc, argv: not used right now, but the intention is to pass native GUI
 //     specific options from the command line.  (X11 options, BeOS options,...)
 //
@@ -166,7 +181,7 @@ static const int rfbEndianTest = 1;
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight, unsigned headerbar_y)
+void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight, unsigned headerbar_y)
 {
 	rfbHeaderbarY = headerbar_y;
 	rfbDimensionX = 640;
@@ -454,7 +469,7 @@ void HandleRfbClient(SOCKET sClient)
 // the gui code can poll for keyboard, mouse, and other
 // relevant events.
 
-void bx_gui_c::handle_events(void)
+void bx_rfb_gui_c::handle_events(void)
 {
 	unsigned int i = 0;
 	while(bKeyboardInUse);
@@ -487,7 +502,7 @@ void bx_gui_c::handle_events(void)
 // Called periodically, requesting that the gui code flush all pending
 // screen update requests.
 
-void bx_gui_c::flush(void)
+void bx_rfb_gui_c::flush(void)
 {
 }
 
@@ -496,7 +511,7 @@ void bx_gui_c::flush(void)
 //
 // Called to request that the VGA region is cleared.  Don't
 // clear the area that defines the headerbar.
-void bx_gui_c::clear_screen(void)
+void bx_rfb_gui_c::clear_screen(void)
 {
 	memset(&rfbScreen[rfbDimensionX * rfbHeaderbarY], 0, rfbDimensionX * (rfbDimensionY - rfbHeaderbarY));
 }
@@ -522,7 +537,7 @@ void bx_gui_c::clear_screen(void)
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
 
-void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, Bit16u cursor_state, unsigned nrows)
+void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, Bit16u cursor_state, unsigned nrows)
 {
 	unsigned char cChar;
 	unsigned int  nchars;
@@ -561,13 +576,13 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long curso
 }
 
   int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+bx_rfb_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
   int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+bx_rfb_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
@@ -580,7 +595,7 @@ bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-Boolean bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+Boolean bx_rfb_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
 	rfbPallet[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
 	return(1);
@@ -601,7 +616,7 @@ Boolean bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, u
 //
 // note: origin of tile and of window based on (0,0) being in the upper
 //       left of the window.
-void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
 	UpdateScreen((char *)tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
 	if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
@@ -623,7 +638,7 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // y: new VGA y size (add headerbar_y parameter from ::specific_init().
 
   void
-bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
+bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 {
   UNUSED(x);
   UNUSED(y);
@@ -642,7 +657,7 @@ bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 // xdim: x dimension of bitmap
 // ydim: y dimension of bitmap
 
-unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+unsigned bx_rfb_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
 	if(rfbBitmapCount >= BX_MAX_PIXMAPS) {
 		fprintf(stderr, "# RFB: too many pixmaps.\n");
@@ -672,7 +687,7 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsig
 // f: a 'C' function pointer to callback when the mouse is clicked in
 //     the boundaries of this bitmap.
 
-unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+unsigned bx_rfb_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
 	int hb_index;
 
@@ -703,7 +718,7 @@ unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (
 // Show (redraw) the current headerbar, which is composed of
 // currently installed bitmaps.
 
-void bx_gui_c::show_headerbar(void)
+void bx_rfb_gui_c::show_headerbar(void)
 {
 	unsigned int i, xorigin;
 
@@ -731,7 +746,7 @@ void bx_gui_c::show_headerbar(void)
 // hbar_id: headerbar slot ID
 // bmap_id: bitmap ID
 
-void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_rfb_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
 	rfbHeaderbarBitmaps[hbar_id].index = bmap_id;
 }
@@ -741,7 +756,7 @@ void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 //
 // Called before bochs terminates, to allow for a graceful
 // exit from the native GUI mechanism.
-void bx_gui_c::exit(void)
+void bx_rfb_gui_c::exit(void)
 {
 	unsigned int i;
 	keep_alive = false;
@@ -750,7 +765,7 @@ void bx_gui_c::exit(void)
 	for(i = 0; i < rfbBitmapCount; i++) {
 		free(rfbBitmaps[i].bmap);
 	}
-	fprintf(stderr, "# RFB: bx_gui_c::exit()\n");
+	fprintf(stderr, "# RFB: bx_rfb_gui_c::exit()\n");
 }
 
 /*
@@ -1284,7 +1299,7 @@ void rfbKeyPressed(Bit32u key, int press_release)
 	}
 
 	if (press_release) key_event |= 0x80;
-	bx_devices.keyboard->put_scancode((unsigned char *)&key_event, 1);
+	DEV_kbd_put_scancode((unsigned char *)&key_event, 1);
 }
 
 void rfbMouseMove(int x, int y, int bmask)
@@ -1299,14 +1314,14 @@ void rfbMouseMove(int x, int y, int bmask)
 		return;
 	}
 	if(y > rfbHeaderbarY) {
-		//bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
-		bx_devices.keyboard->mouse_motion(x - oldx, oldy - y, bmask);
+		//DEV_mouse_motion(x, y - rfbHeaderbarY, buttons);
+		DEV_mouse_motion(x - oldx, oldy - y, bmask);
 		oldx = x;
 		oldy = y;
 	}
 }
 
   void
-bx_gui_c::mouse_enabled_changed_specific (Boolean val)
+bx_rfb_gui_c::mouse_enabled_changed_specific (Boolean val)
 {
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.162 2002-10-21 11:22:26 bdenney Exp $
+// $Id: main.cc,v 1.163 2002-10-24 21:04:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,6 +68,8 @@ void   bx_close_harddrive(void);
 void bx_init_bx_dbg (void);
 void bx_emulate_hga_dumps_timer(void);
 static char *divider = "========================================================================";
+static logfunctions thePluginLog;
+logfunctions *pluginlog = &thePluginLog;
 
 
 /* typedefs */
@@ -87,9 +89,6 @@ char *bochsrc_filename = NULL;
 static Bit32s parse_line_unformatted(char *context, char *line);
 static Bit32s parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
-#if !BX_WITH_WX
-static void bx_do_text_config_interface (int first_arg, int argc, char *argv[]);
-#endif
 
 static Bit64s
 bx_param_handler (bx_param_c *param, int set, Bit64s val)
@@ -99,13 +98,13 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_VGA_UPDATE_INTERVAL:
       // if after init, notify the vga device to change its timer.
       if (set && SIM->get_init_done ())
-	bx_vga.set_update_interval (val);
+	DEV_vga_set_update_interval (val);
       break;
     case BXP_MOUSE_ENABLED:
       // if after init, notify the GUI
       if (set && SIM->get_init_done ()) {
-	bx_gui.mouse_enabled_changed (val!=0);
-        bx_keyboard.mouse_enabled_changed (val!=0);
+	bx_gui->mouse_enabled_changed (val!=0);
+	DEV_mouse_enabled_changed (val!=0);
       }
       break;
     case BXP_NE2K_VALID:
@@ -137,9 +136,9 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_ATA3_SLAVE_STATUS:
       if ((set) && (SIM->get_init_done ())) {
 	Bit8u device = id - BXP_ATA0_MASTER_STATUS;
-	Bit32u handle = bx_devices.hard_drive->get_device_handle (device/2, device%2);
-        bx_devices.hard_drive->set_cd_media_status(handle, val == BX_INSERTED);
-        bx_gui.update_drive_status_buttons ();
+	Bit32u handle = DEV_hd_get_device_handle (device/2, device%2);
+        DEV_hd_set_cd_media_status(handle, val == BX_INSERTED);
+        bx_gui->update_drive_status_buttons ();
       }
       break;
     case BXP_FLOPPYA_TYPE:
@@ -149,8 +148,8 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       break;
     case BXP_FLOPPYA_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-        bx_devices.floppy->set_media_status(0, val == BX_INSERTED);
-        bx_gui.update_drive_status_buttons ();
+        DEV_floppy_set_media_status(0, val == BX_INSERTED);
+        bx_gui->update_drive_status_buttons ();
       }
       break;
     case BXP_FLOPPYB_TYPE:
@@ -160,12 +159,14 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       break;
     case BXP_FLOPPYB_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-        bx_devices.floppy->set_media_status(1, val == BX_INSERTED);
-        bx_gui.update_drive_status_buttons ();
+        DEV_floppy_set_media_status(1, val == BX_INSERTED);
+        bx_gui->update_drive_status_buttons ();
       }
       break;
     case BXP_KBD_PASTE_DELAY:
-      if (set) bx_keyboard.paste_delay_changed ();
+      if ((set) && (SIM->get_init_done ())) {
+        DEV_kbd_paste_delay_changed ();
+        }
       break;
     case BXP_ATA0_MASTER_TYPE:
     case BXP_ATA0_SLAVE_TYPE:
@@ -224,19 +225,19 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       if (set==1) {
         if (SIM->get_init_done ()) {
           if (empty) {
-            bx_devices.floppy->set_media_status(0, 0);
-            bx_gui.update_drive_status_buttons ();
+            DEV_floppy_set_media_status(0, 0);
+            bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYA_TYPE)->get_enabled()) {
               BX_ERROR(("Cannot add a floppy drive at runtime"));
               bx_options.floppya.Opath->set ("none");
             }
           }
-          if ((bx_devices.floppy) &&
+          if ((DEV_floppy_present()) &&
               (SIM->get_param_num(BXP_FLOPPYA_STATUS)->get () == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the disk
-            bx_devices.floppy->set_media_status(0, 0);
-            bx_devices.floppy->set_media_status(0, 1);
+            DEV_floppy_set_media_status(0, 0);
+            DEV_floppy_set_media_status(0, 1);
           }
         } else {
           SIM->get_param_num(BXP_FLOPPYA_DEVTYPE)->set_enabled (!empty);
@@ -249,19 +250,19 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       if (set==1) {
         if (SIM->get_init_done ()) {
           if (empty) {
-            bx_devices.floppy->set_media_status(1, 0);
-            bx_gui.update_drive_status_buttons ();
+            DEV_floppy_set_media_status(1, 0);
+            bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYB_TYPE)->get_enabled ()) {
               BX_ERROR(("Cannot add a floppy drive at runtime"));
               bx_options.floppyb.Opath->set ("none");
             }
           }
-          if ((bx_devices.floppy) &&
+          if ((DEV_floppy_present()) &&
               (SIM->get_param_num(BXP_FLOPPYB_STATUS)->get () == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the disk
-            bx_devices.floppy->set_media_status(1, 0);
-            bx_devices.floppy->set_media_status(1, 1);
+            DEV_floppy_set_media_status(1, 0);
+            DEV_floppy_set_media_status(1, 1);
           }
         } else {
           SIM->get_param_num(BXP_FLOPPYB_DEVTYPE)->set_enabled (!empty);
@@ -280,13 +281,14 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
     case BXP_ATA3_MASTER_PATH:
     case BXP_ATA3_SLAVE_PATH:
       if (set==1) {
-        Bit8u device = id - BXP_ATA0_MASTER_PATH;
-	Bit32u handle = bx_devices.hard_drive->get_device_handle(device/2, device%2);
-
         if (SIM->get_init_done ()) {
+
+          Bit8u device = id - BXP_ATA0_MASTER_PATH;
+	  Bit32u handle = DEV_hd_get_device_handle(device/2, device%2);
+
           if (empty) {
-            bx_devices.hard_drive->set_cd_media_status(handle, 0);
-            bx_gui.update_drive_status_buttons ();
+            DEV_hd_set_cd_media_status(handle, 0);
+            bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->get ()) {
               BX_ERROR(("Cannot add a cdrom drive at runtime"));
@@ -297,12 +299,12 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
               bx_options.atadevice[device/2][device%2].Opresent->set (0);
             }
           }
-          if ((bx_devices.hard_drive) &&
+          if (DEV_hd_present() &&
               (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_STATUS + device))->get () == BX_INSERTED) &&
               (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get () == BX_ATA_DEVICE_CDROM)) {
             // tell the device model that we removed, then inserted the cd
-            bx_devices.hard_drive->set_cd_media_status(handle, 0);
-            bx_devices.hard_drive->set_cd_media_status(handle, 1);
+            DEV_hd_set_cd_media_status(handle, 0);
+            DEV_hd_set_cd_media_status(handle, 1);
           }
         }
       }
@@ -908,7 +910,75 @@ void bx_init_options ()
       "", BX_PATHNAME_LEN);
   bx_options.Oscreenmode->set_handler (bx_param_string_handler);
 #endif
+  static char *config_interface_list[] = {
+    "control",
+#if BX_WITH_WX
+    "wx",
+#endif
+    NULL
+  };
+  bx_options.Osel_config = new bx_param_enum_c (
+    BXP_SEL_CONFIG_INTERFACE,
+    "Configuration interface",
+    "Select configuration interface",
+    config_interface_list,
+    0,
+    0);
+  bx_options.Osel_config->set_by_name (BX_DEFAULT_CONFIG_INTERFACE);
+  bx_options.Osel_config->set_format ("Configuration interface: %s");
+  bx_options.Osel_config->set_ask_format ("Choose which configuration interface to use: [%s] ");
+  // this is a list of gui libraries that are known to be available at
+  // compile time.  The one that is listed first will be the default,
+  // which is used unless the user overrides it on the command line or
+  // in a configuration file.
+  static char *display_library_list[] = {
+#if BX_WITH_X11
+    "x",
+#endif
+#if BX_WITH_WIN32
+    "win32",
+#endif
+#if BX_WITH_CARBON
+    "carbon",
+#endif
+#if BX_WITH_BEOS
+    "beos",
+#endif
+#if BX_WITH_MACOS
+    "macos",
+#endif
+#if BX_WITH_AMIGAOS
+    "amigaos",
+#endif
+#if BX_WITH_SDL
+    "sdl",
+#endif
+#if BX_WITH_TERM
+    "term",
+#endif
+#if BX_WITH_RFB
+    "rfb",
+#endif
+#if BX_WITH_WX
+    "wx",
+#endif
+#if BX_WITH_NOGUI
+    "nogui",
+#endif
+    NULL
+  };
+  bx_options.Osel_displaylib = new bx_param_enum_c (BXP_SEL_DISPLAY_LIBRARY,
+    "VGA Display Library",
+    "Select VGA Display Library",
+    display_library_list,
+    0,
+    0);
+  bx_options.Osel_displaylib->set_by_name (BX_DEFAULT_DISPLAY_LIBRARY);
+  bx_options.Osel_displaylib->set_format ("Display libarary: %s");
+  bx_options.Osel_displaylib->set_ask_format ("Choose which libary to use for the Bochs display: [%s] ");
   bx_param_c *interface_init_list[] = {
+    bx_options.Osel_config,
+    bx_options.Osel_displaylib,
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
     bx_options.Oips,
@@ -1171,9 +1241,6 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
-
-
-
 }
 
 void bx_reset_options ()
@@ -1330,30 +1397,35 @@ static void setupWorkingDirectory (char *path)
 }
 #endif
 
-#if !BX_WITH_WX
-// main() is the entry point for all configurations, except for
-// wxWindows.
-int main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
   bx_init_siminterface ();   // create the SIM object
   static jmp_buf context;
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
     if (bx_init_main (argc, argv) < 0) return 0;
-    bx_config_interface (BX_CI_INIT);
-    if (! SIM->get_param_bool(BXP_QUICK_START)->get ()) {
-      // Display the pre-simulation configuration interface.
-      bx_config_interface (BX_CI_START_MENU);
+    // read a param to decide which config interface to start.
+    // If one exists, start it.  If not, just begin.
+    bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
+    char *ci_name = ci_param->get_choice (ci_param->get ());
+    if (!strcmp(ci_name, "control")) {
+      init_text_config_interface ();
     }
-    bx_continue_after_config_interface (argc, argv);
-    // function returned normally
+#if BX_WITH_WX
+    else if (!strcmp(ci_name, "wx")) {
+      PLUG_load_plugin(wx, PLUGTYPE_CORE);
+    }
+#endif
+    else {
+      BX_PANIC (("unsupported configuration interface '%s'", ci_name));
+    }
+    SIM->configuration_interface (ci_name, CI_START);
+    // user quit the config interface, so just quit
   } else {
     // quit via longjmp
   }
   SIM->set_quit_context (NULL);
   return 0;
 }
-#endif
 
 void
 print_usage ()
@@ -1466,19 +1538,101 @@ bx_init_main (int argc, char *argv[])
     BX_PANIC(("There were errors while parsing the command line"));
     return -1;
   }
+  // initialize plugin system. This must happen before we attempt to
+  // load any modules.
+  plugin_startup();
   return 0;
 }
 
+Boolean load_and_init_display_lib () {
+  if (bx_gui != NULL) {
+    // bx_gui has already been filled in.  This happens when you start
+    // the simulation for the second time.
+    // Also, if you load wxWindows as the configuration interface.  Its
+    // plugin_init will install wxWindows as the bx_gui.
+    return true;
+  }
+  BX_ASSERT (bx_gui == NULL);
+  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_DISPLAY_LIBRARY);
+  char *gui_name = gui_param->get_choice (gui_param->get ());
+  if (!strcmp (gui_name, "wx")) {
+    // they must not have used wx as the configuration interface, or bx_gui
+    // would already be initialized.  Sorry, it doesn't work that way.
+    BX_ERROR (("wxWindows was not used as the configuration interface, so it cannot be used as the VGA library"));
+    // choose another, hopefully different!
+    gui_param->set (0);
+    gui_name = gui_param->get_choice (gui_param->get ());
+    if (!strcmp (gui_name, "wx")) {
+      BX_PANIC (("no alternative VGA libraries are available"));
+      return false;
+    }
+    BX_ERROR (("changing VGA library to '%s' instead", gui_name));
+  }
+#if BX_WITH_AMIGAOS
+  if (!strcmp (gui_name, "amigaos")) 
+    PLUG_load_plugin (amigaos, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_BEOS
+  if (!strcmp (gui_name, "beos")) 
+    PLUG_load_plugin (beos, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_CARBON
+  if (!strcmp (gui_name, "carbon")) 
+    PLUG_load_plugin (carbon, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_MACOS
+  if (!strcmp (gui_name, "macintosh")) 
+    PLUG_load_plugin (macintosh, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_NOGUI
+  if (!strcmp (gui_name, "nogui")) 
+    PLUG_load_plugin (nogui, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_RFB
+  if (!strcmp (gui_name, "rfb")) 
+    PLUG_load_plugin (rfb, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_SDL
+  if (!strcmp (gui_name, "sdl")) 
+    PLUG_load_plugin (sdl, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_TERM
+  if (!strcmp (gui_name, "term")) 
+    PLUG_load_plugin (term, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_WIN32
+  if (!strcmp (gui_name, "win32")) 
+    PLUG_load_plugin (win32, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_WITH_X11
+  if (!strcmp (gui_name, "x")) 
+    PLUG_load_plugin (x, PLUGTYPE_OPTIONAL);
+#endif
+  BX_ASSERT (bx_gui != NULL);
+  return true;
+}
+
 int
-bx_continue_after_config_interface (int argc, char *argv[])
+bx_begin_simulation (int argc, char *argv[])
 {
+  // deal with gui selection
+  if (!load_and_init_display_lib ()) {
+    BX_PANIC (("no gui module was loaded"));
+    return 0;
+  }
 #if BX_GDBSTUB
+  // If using gdbstub, it will take control and call
+  // bx_init_hardware() and cpu_loop()
   bx_gdbstub_init (argc, argv);
 #elif BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
   bx_dbg_main(argc, argv);
 #else
+#if BX_PLUGINS
+#warning bx_load_plugins doesnt do much anymore and should maybe be removed
+  bx_load_plugins ();
+#endif
 
   bx_init_hardware();
 
@@ -1642,14 +1796,13 @@ bx_init_hardware()
 #endif
 
 #if BX_DEBUGGER == 0
-  bx_devices.init(BX_MEM(0));
-  bx_devices.reset(BX_RESET_HARDWARE);
-  bx_gui.init_signal_handlers ();
+  DEV_init_devices();
+  DEV_reset_devices(BX_RESET_HARDWARE);
+  bx_gui->init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif
   BX_DEBUG(("bx_init_hardware is setting signal handlers"));
 // if not using debugger, then we can take control of SIGINT.
-// If using debugger, it needs control of this.
 #if !BX_DEBUGGER
   signal(SIGINT, bx_signal_handler);
 #endif
@@ -2895,6 +3048,20 @@ parse_line_formatted(char *context, int num_params, char *params[])
       bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
       }
     }
+  else if (!strcmp(params[0], "config_interface")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: config_interface directive: wrong # args.", context));
+      }
+    if (!bx_options.Osel_config->set_by_name (params[1]))
+      PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
+    }
+  else if (!strcmp(params[0], "display_library")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: display_library directive: wrong # args.", context));
+      }
+    if (!bx_options.Osel_displaylib->set_by_name (params[1]))
+      PARSE_ERR(("%s: VGA library '%s' not available", context, params[1]));
+    }
   else {
     PARSE_ERR(( "%s: directive '%s' not understood", context, params[0]));
     }
@@ -3161,22 +3328,20 @@ bx_write_configuration (char *rc, int overwrite)
   void
 bx_signal_handler( int signum)
 {
-#if BX_WITH_WX
   // in a multithreaded environment, a signal such as SIGINT can be sent to all
   // threads.  This function is only intended to handle signals in the
   // simulator thread.  It will simply return if called from any other thread.
   // Otherwise the BX_PANIC() below can be called in multiple threads at
   // once, leading to multiple threads trying to display a dialog box,
   // leading to GUI deadlock.
-  if (!isSimThread ()) {
+  if (!SIM->is_sim_thread ()) {
     BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
     return;
   }
-#endif
 #if BX_GUI_SIGHANDLER
   // GUI signal handler gets first priority, if the mask says it's wanted
-  if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
-    bx_gui.sighandler (signum);
+  if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
+    bx_gui->sighandler (signum);
     return;
   }
 #endif
@@ -3196,8 +3361,8 @@ bx_signal_handler( int signum)
 #endif
 
 #if BX_GUI_SIGHANDLER
-  if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
-    bx_gui.sighandler (signum);
+  if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
+    bx_gui->sighandler (signum);
     return;
   }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.17 2002-09-26 09:00:52 mlerwill Exp $
+// $Id: keyboard.h,v 1.18 2002-10-24 21:07:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,12 +32,13 @@
 #define BX_KBD_ELEMENTS 16
 #define BX_MOUSE_BUFF_SIZE 48
 
+// these keywords should only be used in keyboard.cc
 #if BX_USE_KEY_SMF
 #  define BX_KEY_SMF  static
-#  define BX_KEY_THIS bx_keyboard.
+#  define BX_KEY_THIS theKeyboard->
 #else
 #  define BX_KEY_SMF
-#  define BX_KEY_THIS this->
+#  define BX_KEY_THIS 
 #endif
 
 #define MOUSE_MODE_RESET  10
@@ -45,31 +46,32 @@
 #define MOUSE_MODE_REMOTE 12
 #define MOUSE_MODE_WRAP   13
 
-extern bx_keyb_c bx_keyboard;
-
-class bx_keyb_c : public logfunctions {
+class bx_keyb_c : public bx_keyb_stub_c {
 public:
   bx_keyb_c(void);
   ~bx_keyb_c(void);
-  BX_KEY_SMF void     init(bx_devices_c *d, bx_cmos_c *cmos);
-  BX_KEY_SMF void     reset(unsigned type);
-  BX_KEY_SMF void     gen_scancode(Bit32u   scancode);
-  BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
-  BX_KEY_SMF void     service_paste_buf ();
+  // implement bx_devmodel_c interface
+  virtual void     init(void);
+  virtual void     reset(unsigned type);
+  // override stubs from bx_keyb_stub_c
+  virtual void     gen_scancode(Bit32u   scancode);
+  virtual void     paste_bytes(Bit8u *data, Bit32s length);
+  virtual void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
+  virtual void     put_scancode( unsigned char *code, int count );
+
+  // update the paste delay based on bx_options.Okeyboard_paste_delay
+  virtual void     paste_delay_changed ();
+  virtual void     mouse_enabled_changed(bool enabled);
+
+private:
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
-  BX_KEY_SMF void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
-  BX_KEY_SMF void     mouse_enabled_changed(bool enabled);
+  BX_KEY_SMF void     service_paste_buf ();
   BX_KEY_SMF void     create_mouse_packet(bool force_enq);
   BX_KEY_SMF void     mouse_button(unsigned mouse_state);
   BX_KEY_SMF int      SaveState( class state_file *fd );
   BX_KEY_SMF int      LoadState( class state_file *fd );
   BX_KEY_SMF unsigned periodic( Bit32u   usec_delta );
-  BX_KEY_SMF void     put_scancode( unsigned char *code, int count );
 
-  // update the paste delay based on bx_options.Okeyboard_paste_delay
-  BX_KEY_SMF void     paste_delay_changed ();
-
-private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -152,7 +154,7 @@ private:
 	    break;
 
 	  default:
-	    bx_keyboard.panic("mouse: invalid resolution_cpmm");
+	    genlog->panic("mouse: invalid resolution_cpmm");
 	  };
 	  return ret;
 	}
@@ -184,8 +186,6 @@ private:
     unsigned controller_Qsize;
     unsigned controller_Qsource; // 0=keyboard, 1=mouse
     } s; // State information for saving/loading
-
-  bx_devices_c *devices;
 
   // The paste buffer does NOT exist in the hardware.  It is a bochs
   // construction that allows the user to "paste" arbitrary length sequences of
@@ -224,6 +224,10 @@ private:
   BX_KEY_SMF void     controller_enQ(Bit8u   data, unsigned source);
   BX_KEY_SMF Boolean  mouse_enQ_packet(Bit8u   b1, Bit8u   b2, Bit8u   b3);
   BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
+
+  static void   timer_handler(void *);
+  void   timer(void);
+  int    timer_handle;
   };
 
 

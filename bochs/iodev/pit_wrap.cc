@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.30 2002-10-06 19:04:47 bdenney Exp $
+// $Id: pit_wrap.cc,v 1.31 2002-10-24 21:07:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,22 +128,20 @@ bx_pit_c::~bx_pit_c( void )
 }
 
   int
-bx_pit_c::init( bx_devices_c *d )
+bx_pit_c::init( void )
 {
-  BX_PIT_THIS devices = d;
+  bx_devices.register_irq(0, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0040, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0041, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0042, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0043, "8254 PIT");
+  bx_devices.register_io_read_handler(this, read_handler, 0x0061, "8254 PIT");
 
-  BX_PIT_THIS devices->register_irq(0, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0040, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0041, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0042, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0043, "8254 PIT");
-  BX_PIT_THIS devices->register_io_read_handler(this, read_handler, 0x0061, "8254 PIT");
-
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0040, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0041, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0042, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0043, "8254 PIT");
-  BX_PIT_THIS devices->register_io_write_handler(this, write_handler, 0x0061, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0040, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0041, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0042, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0043, "8254 PIT");
+  bx_devices.register_io_write_handler(this, write_handler, 0x0061, "8254 PIT");
 
   BX_DEBUG(("pit: starting init"));
 
@@ -373,9 +371,9 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   }
 
   if ((BX_PIT_THIS s.timer.read_OUT(0))==1) {
-    bx_pic.raise_irq(0);
+    DEV_pic_raise_irq(0);
   } else {
-    bx_pic.lower_irq(0);
+    DEV_pic_lower_irq(0);
   }
 
   if(time_passed ||
@@ -536,12 +534,12 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     BX_PIT_THIS s.timer.clock_all(timedelta);
     if ( (prev_timer0_out==0) ) {
       if ((BX_PIT_THIS s.timer.read_OUT(0))==1) {
-        bx_pic.raise_irq(0);
+	DEV_pic_raise_irq(0);
         prev_timer0_out=1;
       }
     } else {
       if ((BX_PIT_THIS s.timer.read_OUT(0))==0) {
-        bx_pic.lower_irq(0);
+	DEV_pic_lower_irq(0);
         prev_timer0_out=0;
       }
     }

@@ -2,6 +2,62 @@
 # your pathname includes spaces.
 
 #=======================================================================
+# CONFIG_INTERFACE
+#
+# The configuration interface is a series of menus or dialog boxes that
+# allows you to change all the settings that control Bochs's behavior.
+# There are two choices of configuration interface: a text mode version
+# called "control" and a graphical version called "wx".  The text
+# mode version uses stdin/stdout and is always compiled in.  The graphical
+# version is only available when you use "--with-wx" on the configure 
+# command.  If you do not write a config_interface line, Bochs will 
+# choose a default for you.
+#
+# NOTE: if you use the "wx" configuration interface, you must also use
+# the "wx" display library.
+#=======================================================================
+#config_interface: control
+#config_interface: wx
+
+#=======================================================================
+# DISPLAY_LIBRARY
+#
+# The display library is the code that displays the Bochs VGA screen.  Bochs 
+# has a selection of about 10 different display library implementations for 
+# different platforms.  If you run configure with multiple --with-* options, 
+# the display_library command lets you choose which one you want to run with.
+# If you do not write a display_library line, Bochs will choose a default for
+# you.
+#
+# The choices are: 
+#   x              use X windows interface, cross platform
+#   win32          use native win32 libraries
+#   carbon         use Carbon library (for MacOS X)
+#   beos           use native BeOS libraries
+#   macintosh      use MacOS pre-10
+#   amigaos        use native AmigaOS libraries
+#   sdl            use SDL library, cross platform
+#   term           text only, uses curses/ncurses library, cross platform
+#   rfb            provides an interface to AT&T's VNC viewer, cross platform
+#   wx             use wxWindows library, cross platform
+#   nogui          no display at all
+#
+# NOTE: if you use the "wx" configuration interface, you must also use
+# the "wx" display library.
+#=======================================================================
+#display_library: amigaos
+#display_library: beos
+#display_library: carbon
+#display_library: macintosh
+#display_library: nogui
+#display_library: rfb
+#display_library: sdl
+#display_library: term
+#display_library: win32
+#display_library: wx
+#display_library: x
+
+#=======================================================================
 # ROMIMAGE:
 # You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
 # out most of the BIOS hooks, and replace them with real BIOS
