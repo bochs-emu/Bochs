@@ -14,6 +14,10 @@ Changes to next release:
   - fixed BCD instructions implementation
   - speed optimizations in MMX and CPU core (sshwarts and psychosmur)
 
+- I/O devices
+  - general
+    - handle cpu reset through port 0x92
+
 - configuration interface
   - --enable-ignore-bad-msr (ignore bad MSR references) option is enabled 
     by default
