@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.208 2005-03-22 18:19:50 kevinlawton Exp $
+// $Id: cpu.h,v 1.209 2005-03-23 01:45:15 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2112,6 +2112,71 @@ public: // for now...
   BX_SMF void PSLLQ_PdqIb(bxInstruction_c *i);
   BX_SMF void PSLLDQ_WdqIb(bxInstruction_c *i);
   /* SSE2 */
+
+  /*** Duplicate SSE/SSE2 instructions ***/
+  // Although in implementation, these instructions are aliased to the
+  // another function, it's nice to have them call a seperate function when
+  // the decoder is being tested in stand-alone mode.
+#ifdef StandAloneDecoder
+  BX_SMF void MOVUPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void MOVUPD_WpdVpd(bxInstruction_c *);
+  BX_SMF void MOVAPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void MOVAPD_WpdVpd(bxInstruction_c *);
+  BX_SMF void MOVDQU_VdqWdq(bxInstruction_c *);
+  BX_SMF void MOVDQU_WdqVdq(bxInstruction_c *);
+  BX_SMF void MOVDQA_VdqWdq(bxInstruction_c *);
+  BX_SMF void MOVDQA_WdqVdq(bxInstruction_c *);
+  BX_SMF void UNPCKHPS_VpsWq(bxInstruction_c *);
+  BX_SMF void UNPCKLPS_VpsWq(bxInstruction_c *);
+  BX_SMF void ANDPS_VpsWps(bxInstruction_c *);
+  BX_SMF void ANDPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void ANDNPS_VpsWps(bxInstruction_c *);
+  BX_SMF void ANDNPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void ORPS_VpsWps(bxInstruction_c *);
+  BX_SMF void ORPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void XORPS_VpsWps(bxInstruction_c *);
+  BX_SMF void XORPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void UNPCKHPD_VpdWq(bxInstruction_c *);
+  BX_SMF void UNPCKLPD_VpdWq(bxInstruction_c *);
+  BX_SMF void MOVLPD_VsdMq(bxInstruction_c *);
+  BX_SMF void MOVLPD_MqVsd(bxInstruction_c *);
+  BX_SMF void MOVHPD_VsdMq(bxInstruction_c *);
+  BX_SMF void MOVHPD_MqVsd(bxInstruction_c *);
+  BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *);
+  BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *);
+#else
+#define MOVUPD_VpdWpd  /* 66 0f 10 */ MOVUPS_VpsWps    /*    0f 10 */
+#define MOVUPD_WpdVpd  /* 66 0f 11 */ MOVUPS_WpsVps    /*    0f 11 */
+#define MOVAPD_VpdWpd  /* 66 0f 28 */ MOVAPS_VpsWps    /*    0f 28 */
+#define MOVAPD_WpdVpd  /* 66 0f 29 */ MOVAPS_WpsVps    /*    0f 29 */
+#define MOVDQU_VdqWdq  /* f3 0f 6f */ MOVUPS_VpsWps    /*    0f 10 */
+#define MOVDQU_WdqVdq  /* f3 0f 7f */ MOVUPS_WpsVps    /*    0f 11 */
+#define MOVDQA_VdqWdq  /* 66 0f 6f */ MOVAPS_VpsWps    /*    0f 28 */
+#define MOVDQA_WdqVdq  /* 66 0f 7f */ MOVAPS_WpsVps    /*    0f 29 */
+
+#define UNPCKHPS_VpsWq /*    0f 15 */ PUNPCKHDQ_VdqWq  /* 66 0f 6a */
+#define UNPCKLPS_VpsWq /*    0f 14 */ PUNPCKLDQ_VdqWq  /* 66 0f 62 */
+
+#define ANDPS_VpsWps   /*    0f 54 */ PAND_VdqWdq      /* 66 0f db */
+#define ANDPD_VpdWpd   /* 66 0f 54 */ PAND_VdqWdq      /* 66 0f db */
+#define ANDNPS_VpsWps  /*    0f 55 */ PANDN_VdqWdq     /* 66 0f df */
+#define ANDNPD_VpdWpd  /* 66 0f 55 */ PANDN_VdqWdq     /* 66 0f df */
+#define ORPS_VpsWps    /*    0f 56 */ POR_VdqWdq       /* 66 0f eb */
+#define ORPD_VpdWpd    /* 66 0f 56 */ POR_VdqWdq       /* 66 0f eb */
+#define XORPS_VpsWps   /*    0f 57 */ PXOR_VdqWdq      /* 66 0f ef */
+#define XORPD_VpdWpd   /* 66 0f 57 */ PXOR_VdqWdq      /* 66 0f ef */
+
+#define UNPCKHPD_VpdWq /* 66 0f 15 */ PUNPCKHQDQ_VdqWq /* 66 0f 6d */
+#define UNPCKLPD_VpdWq /* 66 0f 14 */ PUNPCKLQDQ_VdqWq /* 66 0f 6c */
+
+#define MOVLPD_VsdMq   /* 66 0f 12 */ MOVLPS_VpsMq     /*    0f 12 */
+#define MOVLPD_MqVsd   /* 66 0f 13 */ MOVLPS_MqVps     /*    0f 13 */
+#define MOVHPD_VsdMq   /* 66 0f 16 */ MOVHPS_VpsMq     /*    0f 16 */
+#define MOVHPD_MqVsd   /* 66 0f 17 */ MOVHPS_MqVps     /*    0f 17 */
+
+#define MOVNTPD_MdqVpd /* 66 0f 2b */ MOVNTPS_MdqVps   /*    0f 2b */
+#define MOVNTDQ_MdqVdq /* 66 0f e7 */ MOVNTPD_MdqVpd   /* 66 0f 2b */
+#endif  // #ifdef StandAloneDecoder
 
   /* PNI */
   BX_SMF void MOVDDUP_VpdWq(bxInstruction_c *i);
