@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.18 2001-10-05 23:58:45 bdenney Exp $
+// $Id: rombios.c,v 1.19 2001-10-06 08:48:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -271,7 +271,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.18 2001-10-05 23:58:45 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.19 2001-10-06 08:48:28 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -1897,10 +1897,12 @@ printf("CHS: %x %x %x\n", cylinder, head, sector);
         if ( !(status & 0x80) ) break;
         }
 
-      if ( !(status & 0x08) ) {
+      if (status & 0x01) {
+        panic("hard drive BIOS:(read/verify) read error");
+      } else if ( !(status & 0x08) ) {
         printf("status was %02x\n", (unsigned) status);
-        panic("hard drive BIOS:(read/verify) data-request bit not set");
-        }
+        panic("hard drive BIOS:(read/verify) expected DRQ=1");
+      }
 
       sector_count = 0;
       tempbx = BX;
