@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.24 2002-10-24 21:07:55 bdenney Exp $
+// $Id: memory.cc,v 1.25 2002-11-03 17:17:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -143,7 +143,7 @@ inc_one:
     // Write Based on 440fx Programming
     if (bx_options.Oi440FXSupport->get () &&
         ((a20addr >= 0xC0000) && (a20addr <= 0xFFFFF))) {
-      switch (bx_devices.pci->wr_memType(a20addr & 0xFC000)) {
+      switch (DEV_pci_wr_memtype(a20addr & 0xFC000)) {
         case 0x1:   // Writes to ShadowRAM
 //        BX_INFO(("Writing to ShadowRAM %08x, len %u ! ", (unsigned) a20addr, (unsigned) len));
           shadow[a20addr - 0xc0000] = *data_ptr;
@@ -330,7 +330,7 @@ inc_one:
       goto inc_one;
       }
     else {
-      switch (bx_devices.pci->rd_memType(a20addr & 0xFC000)) {
+      switch (DEV_pci_rd_memtype(a20addr & 0xFC000)) {
         case 0x1:   // Read from ShadowRAM
           *data_ptr = shadow[a20addr - 0xc0000];
           BX_INFO(("Reading from ShadowRAM %08x, Data %02x ", (unsigned) a20addr, *data_ptr));
@@ -409,7 +409,7 @@ inc_one:
           if (!bx_options.Oi440FXSupport->get ())
             *data_ptr = vector[a20addr];
           else {
-            switch (bx_devices.pci->rd_memType(a20addr & 0xFC000)) {
+            switch (DEV_pci_rd_memtype(a20addr & 0xFC000)) {
               case 0x0:   // Read from ROM
                 *data_ptr = vector[a20addr];
                 //BX_INFO(("Reading from ROM %08x, Data %02x ", (unsigned) a20addr, *data_ptr));

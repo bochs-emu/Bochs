@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.105 2002-10-29 22:26:30 yakovlev Exp $
+// $Id: bochs.h,v 1.106 2002-11-03 17:17:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -153,9 +153,6 @@ int bx_begin_simulation (int argc, char *argv[]);
   BX_MEM(0)->readPhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 #define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
   BX_MEM(0)->writePhysicalPage(BX_CPU(0), phy_addr, len, ptr)
-// macro for PCI handling
-#define BX_REGISTER_PCI_HANDLERS(this_ptr, pci_read, pci_write, devfunc, name) \
-  bx_pci.register_pci_handlers(this_ptr, pci_read, pci_write, devfunc, name)
 
 #if BX_SMP_PROCESSORS==1
 #define BX_CPU(x)                   (&bx_cpu)

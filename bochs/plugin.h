@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.3 2002-10-25 11:44:34 bdenney Exp $
+// $Id: plugin.h,v 1.4 2002-11-03 17:17:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -146,6 +146,12 @@ extern "C" {
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
 #define DEV_vga_set_update_interval(val) \
   (bx_devices.pluginVgaDevice->set_update_interval(val))
+
+///////// PCI macros
+#define DEV_register_pci_handlers(b,c,d,e,f) \
+  (bx_pci.register_pci_handlers(b,c,d,e,f))
+#define DEV_pci_rd_memtype(addr) bx_pci.rd_memType(addr)
+#define DEV_pci_wr_memtype(addr) bx_pci.wr_memType(addr)
 
 
 #if BX_HAVE_DLFCN_H
