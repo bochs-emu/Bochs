@@ -30,7 +30,7 @@ AC_MSG_CHECKING(if compiler allows empty structs)
 AC_TRY_COMPILE([], [typedef struct { } junk;], 
     AC_MSG_RESULT(yes),
     [
-      AC_DEFINE(BX_NO_EMPTY_STRUCTS),
+      AC_DEFINE(BX_NO_EMPTY_STRUCTS)
       AC_MSG_RESULT(no)
     ])
 
@@ -38,8 +38,8 @@ AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
     AC_MSG_RESULT(yes),
     [
-      AC_DEFINE(BX_NO_ATTRIBUTES),
       AC_MSG_RESULT(no)
+      AC_DEFINE(BX_NO_ATTRIBUTES)
     ])
 
 AC_LANG_SAVE
@@ -47,8 +47,8 @@ AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for hash_map.h)
 AC_TRY_COMPILE([#include <hash_map.h>], [],
    [
-     AC_DEFINE(HAVE_HASH_MAP)
      AC_MSG_RESULT(yes)
+     AC_DEFINE(HAVE_HASH_MAP)
    ], AC_MSG_RESULT(no))
 AC_LANG_SAVE
 
