@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.17 2002-09-24 18:33:37 kevinlawton Exp $
+// $Id: arith8.cc,v 1.18 2002-09-28 01:16:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -431,7 +431,7 @@ BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit8u diff_8;
@@ -467,7 +467,7 @@ BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit8u diff_8;
@@ -499,7 +499,7 @@ BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit8u diff_8;
@@ -679,7 +679,7 @@ BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit8u diff_8;

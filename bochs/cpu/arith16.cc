@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.19 2002-09-24 18:33:37 kevinlawton Exp $
+// $Id: arith16.cc,v 1.20 2002-09-28 01:16:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@ BX_CPU_C::INC_RX(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d4) | (flags32 & 0x000008d4);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) | (flags32 & EFlagsOSZAPMask);
   BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
 #else
   Bit16u rx;
@@ -71,7 +71,7 @@ BX_CPU_C::DEC_RX(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d4) | (flags32 & 0x000008d4);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) | (flags32 & EFlagsOSZAPMask);
   BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;
 #else
   Bit16u rx;
@@ -144,7 +144,7 @@ BX_CPU_C::ADD_GwEw(bxInstruction_c *i)
       : "cc"
       );
     BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
     BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
     sum_16 = op1_16 + op2_16;
@@ -501,7 +501,7 @@ BX_CPU_C::CMP_EwGw(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit16u diff_16;
@@ -537,7 +537,7 @@ BX_CPU_C::CMP_GwEw(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit16u diff_16;
@@ -568,7 +568,7 @@ BX_CPU_C::CMP_AXIw(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit16u diff_16;
@@ -674,7 +674,7 @@ BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
       : "cc"
       );
     BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
     BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
     sum_16 = op1_16 + op2_16;
@@ -696,7 +696,7 @@ BX_CPU_C::ADD_EwIw(bxInstruction_c *i)
       : "cc"
       );
     BX_CPU_THIS_PTR eflags.val32 =
-      (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+      (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
     BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
     sum_16 = op1_16 + op2_16;
@@ -799,7 +799,7 @@ BX_CPU_C::CMP_EwIw(bxInstruction_c *i)
     : "cc"
     );
   BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~0x000008d5) | (flags32 & 0x000008d5);
+    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | (flags32 & EFlagsOSZAPCMask);
   BX_CPU_THIS_PTR lf_flags_status = 0;
 #else
   Bit16u diff_16;
