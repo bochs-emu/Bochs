@@ -75,16 +75,28 @@ void bx_apic_c::write_handler (Bit32u addr, Bit32u *data, unsigned len)
     break;
   case 0x300: // interrupt command reg 0-31
     {
-    icr_low = *data & ~(1<<12);  // force delivery status bit = 0 (idle)
-    // and trigger an interrupt to be sent
-    int dest_shorthand = (icr_low >> 18) & 3;
-    char *dests[4] = {NULL, "self", "all including self", "all except self" };
-    char buf[32];
-    sprintf (buf, "APIC 0x%02x\n", icr_high >> 24);
-    bx_printf ("APIC 0x%02x sending interrupt to destination %s",
-       id,
-       (dest_shorthand==0) ? buf : dests[dest_shorthand]);
-    bx_printf ("low word of APIC 0x%02x ICR = 0x%04x\n", id, icr_low & 0xffff);
+      icr_low = *data & ~(1<<12);  // force delivery status bit = 0 (idle)
+      // and trigger an interrupt to be sent
+      int dest_shorthand = (icr_low >> 18) & 3;
+      char *dests[4] = {NULL, "self", "all including self", "all except self" };
+      char buf[32];
+      unsigned int target_id = (icr_high >> 24);
+      sprintf (buf, "APIC 0x%02x\n", target_id);
+      bx_printf ("APIC 0x%02x sending interrupt to destination %s",
+	 id,
+	 (dest_shorthand==0) ? buf : dests[dest_shorthand]);
+      bx_printf ("low word of APIC 0x%02x ICR = 0x%04x\n", id, icr_low & 0xffff);
+      int delivery_mode = (icr_low >> 8) & 7;
+      int vector = (icr_low & 0xff);
+      if (delivery_mode == 6 && dest_shorthand == 0) {
+	// tell target to start up
+	if (target_id > APIC_MAX_ID) bx_panic ("target apic id out of range");
+	BX_CPU_C *target = apic_index[target_id];
+	if (target == NULL) bx_panic ("apic target id not found");
+	target->local_apic.startup_msg (vector);
+      } else {
+	  bx_printf ("APIC operation not supported");
+      }
     }
     break;
   case 0x310: // interrupt command reg 31-63
@@ -101,6 +113,18 @@ void bx_apic_c::write_handler (Bit32u addr, Bit32u *data, unsigned len)
   case 0x3e0: // timer divide configuration
   default:
     bx_printf ("APIC register %08x not implemented\n", addr);
+  }
+}
+
+void bx_apic_c::startup_msg (Bit32u vector)
+{
+  if (cpu->debug_trap & 0x80000000) {
+    cpu->debug_trap &= ~0x80000000;
+    cpu->eip = 0;
+    cpu->load_seg_reg (&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
+    bx_printf ("%s started up at 0x%x by APIC\n", cpu->name, cpu->eip);
+  } else {
+    bx_printf ("%s started up by APIC, but was not halted at the time\n", cpu->name);
   }
 }
 
@@ -150,5 +174,5 @@ void bx_apic_c::read_handler (Bit32u addr, Bit32u *data, unsigned len)
 BX_CPU_C 
 bx_apic_c::*get_cpu (Bit8u id)
 {
-  bx_assert (id >= 0 && id < APIC_MAX_ID);
+  bx_assert (id < APIC_MAX_ID);
 }
