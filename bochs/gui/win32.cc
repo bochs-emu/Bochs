@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.19 2001-11-23 18:03:23 vruppert Exp $
+// $Id: win32.cc,v 1.20 2001-11-26 07:24:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -605,8 +605,8 @@ void bx_gui_c::handle_events(void) {
       headerbar_click(LOWORD(key));
     }
     else {
-      // Its an extended key
-      if (key & 0x0100) {
+      if (((key & 0x0100) && ((key & 0x01ff) != 0x0145)) | ((key & 0x01ff) == 0x45)) {
+        // Its an extended key
         scancode = 0xE0;
         bx_devices.keyboard->put_scancode(&scancode, 1);
       }
