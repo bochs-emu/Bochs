@@ -150,9 +150,15 @@ hostCopyToUser(void *to, void *from, unsigned long len)
   return 0;
 }
 
-  int
-hostMMap(vm_t *vm, void *iV, void *fV, void *vmaV, 
-         unsigned pagesN, Bit32u *pagesArray)
+  Bit32u
+hostGetAndPinUserPage(vm_t *vm, Bit32u userAddr, void **osSpecificPtr,
+                      Bit32u *ppi, Bit32u *kernelAddr)
 {
   return 0;
+}
+
+  void
+hostUnpinUserPage(vm_t *vm, Bit32u userAddr, void *osSpecificPtr,
+                          Bit32u ppi, Bit32u *kernelAddr, unsigned dirty)
+{
 }
