@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.53 2003-05-29 19:44:59 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.54 2003-06-12 17:01:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1597,12 +1597,15 @@ another_byte:
 #endif
     // Simple instruction, nothing left to do.
     if (attr == 0) {
+      if (lock) {
+        BX_INFO(("LOCK prefix unallowed (op1=0x%x, attr=0x%x, mod=0x%x, nnn=%u)", b1, attr, mod, nnn));
+        UndefinedOpcode(instruction);
+      }
       instruction->setB1(b1);
       instruction->setILen(ilen);
       return(1);
-      }
+    }
   }
-
   else {
     if (attr & BxPrefix) {
       switch (b1) {
