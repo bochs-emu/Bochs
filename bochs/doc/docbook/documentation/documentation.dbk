@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.12 2002-12-23 22:15:30 vruppert Exp $
+$Id: documentation.dbk,v 1.13 2004-10-09 08:13:35 vruppert Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -266,7 +266,7 @@ be used in a docbook.
 <para>
 The easiest way to get jade working in Linux is to install packages.  The
 recent RedHat, Suse, and Mandrake Linux distributions all include
-include openjade and SGML tools.  If you can get the right packages installed,
+openjade and SGML tools.  If you can get the right packages installed,
 you may save yourself a few hours of compiling and configuring from scratch.
 For plex86, which also uses docbook, Kevin Lawton listed the packages that
 he installed on Mandrake to get jade working:
@@ -294,6 +294,20 @@ DocBook and get it to render Bochs documentation into reader-friendly formats:
 It's worth mentioning that, at the time of this writing, at least some of
 the above-mentioned packages were in the testing or unstable branches of
 Debian.
+</para>
+
+<para>
+Under FreeBSD, just install the following ports:
+
+<programlisting>
+  textproc/jade
+  textproc/dsssl-docbook-modular
+  textproc/docbook-410
+</programlisting>
+
+&NEEDHELP; The generated HTML output doesn't look exactly the same as the Bochs
+documentation on the web, so it seems as if some kind of configuration is still
+needed.
 </para>
 
 <para>
