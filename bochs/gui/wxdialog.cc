@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.56 2003-08-23 17:53:27 vruppert Exp $
+// $Id: wxdialog.cc,v 1.57 2003-08-24 10:08:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1789,6 +1789,7 @@ void ParamDialog::EnumChanged (ParamStruct *pstr)
       if (type == BX_ATA_DEVICE_DISK) {
 	// enable cylinders, heads, spt
 	wxLogDebug ("enabling disk parameters");
+	EnableParam (BXP_ATA0_MASTER_MODE+delta, 1);
 	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 1);
 	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 1);
 	EnableParam (BXP_ATA0_MASTER_SPT+delta, 1);
@@ -1796,12 +1797,27 @@ void ParamDialog::EnumChanged (ParamStruct *pstr)
       } else {
 	// enable inserted
 	wxLogDebug ("enabling cdrom parameters");
+	EnableParam (BXP_ATA0_MASTER_MODE+delta, 0);
 	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 0);
 	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 0);
 	EnableParam (BXP_ATA0_MASTER_SPT+delta, 0);
 	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 1);
       }
     }
+    break;
+    case BXP_LOAD32BITOS_WHICH: {
+      int os = pstr->u.choice->GetSelection ();
+      if (os != Load32bitOSNone) {
+	EnableParam (BXP_LOAD32BITOS_PATH, 1);
+	EnableParam (BXP_LOAD32BITOS_IOLOG, 1);
+	EnableParam (BXP_LOAD32BITOS_INITRD, 1);
+      } else {
+	EnableParam (BXP_LOAD32BITOS_PATH, 0);
+	EnableParam (BXP_LOAD32BITOS_IOLOG, 0);
+	EnableParam (BXP_LOAD32BITOS_INITRD, 0);
+      }
+    }
+
   }
 }
 

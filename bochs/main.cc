@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.239 2003-08-23 15:28:05 vruppert Exp $
+// $Id: main.cc,v 1.240 2003-08-24 10:08:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       break;
     case BXP_LOAD32BITOS_WHICH:
       if (set) {
-        int enable = (val != 0);
+        int enable = (val != Load32bitOSNone);
         SIM->get_param (BXP_LOAD32BITOS_PATH)->set_enabled (enable);
         SIM->get_param (BXP_LOAD32BITOS_IOLOG)->set_enabled (enable);
         SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
@@ -1210,6 +1210,9 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
+  bx_param_c **ne2k_dependent_list = &ne2k_init_list[1];
+  bx_options.ne2k.Opresent->set_dependent_list (
+      new bx_list_c (BXP_NULL, "", "", ne2k_dependent_list));
   bx_options.ne2k.Opresent->set_handler (bx_param_handler);
   bx_options.ne2k.Opresent->set (0);
 

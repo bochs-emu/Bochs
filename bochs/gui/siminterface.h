@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.106 2003-08-23 15:28:06 vruppert Exp $
+// $Id: siminterface.h,v 1.107 2003-08-24 10:08:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -524,6 +524,11 @@ typedef enum {
 #define BX_BOOT_DISKC   1
 #define BX_BOOT_CDROM   2
 
+// loader hack
+#define Load32bitOSNone        0
+#define Load32bitOSLinux       1
+#define Load32bitOSNullKernel  2 // being developed for plex86
+#define Load32bitOSLast        2
 
 ///////////////////////////////////////////////////////////////////
 // event structures for communication between simulator and CI
