@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.8 2004-08-24 10:15:55 vruppert Exp $
+// $Id: dbg_main.cc,v 1.9 2004-09-19 07:56:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1251,7 +1251,7 @@ void bx_dbg_show_command(char* arg)
       DEV_vga_refresh();
       return;
     } else {
-      printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
+      printf("Unrecognized arg: %s (\"mode\" \"int\" \"call\" \"ret\" \"off\" \"tab\" \"c\" \"dbg-all\" \"none\" are valid)\n",arg);
       return;
     }
   } else {
@@ -1680,7 +1680,7 @@ bx_dbg_strprefix(const char *s1, const char *s2)
  if(!s1 || !s2)
   return false;
 
- int len=strlen(s1);
+ size_t len=strlen(s1);
 
  if(len>strlen(s2))
   return false;
@@ -3773,7 +3773,7 @@ bx_dbg_disassemble_command(const char *format, bx_num_range range)
 {
 #if BX_DISASM
   bx_bool paddr_valid;
-  Bit32u  paddr, Base;
+  Bit32u  paddr/*, Base */;
   unsigned ilen;
   int numlines = INT_MAX;
 
