@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile,v 1.9 2002-10-29 07:00:01 bdenney Exp $
+# $Id: Makefile,v 1.10 2002-11-02 16:48:32 ndavidg Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -35,8 +35,8 @@ all: $(SECTIONS)
 # user.
 $(SECTIONS)::
 	# render the docbook for a section
-	cd $@; docbook2ps $@.dbk
-	cd $@; docbook2pdf $@.dbk
+#	cd $@; docbook2ps $@.dbk
+#	cd $@; docbook2pdf $@.dbk
 	cd $@; docbook2html $@.dbk
 
 # install the stuff on the remote server using ssh the bryce->bdenney
