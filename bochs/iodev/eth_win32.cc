@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.7 2002-03-08 16:37:01 bdenney Exp $
+// $Id: eth_win32.cc,v 1.8 2002-03-08 18:41:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,8 +24,9 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-// eth_win32.cc  - skeleton code for an ethernet pktmover
+// eth_win32.cc  - packet mover for win32
 // All win32 coding by Don Becker <x-odus@iname.com>
+// with patches from various sources
 //
 // Various networking docs:
 // http://www.graphcomp.com/info/rfc/
