@@ -95,9 +95,9 @@ second hard drive.
 You cannot use both diskd and cdromd together.
 
 Example:
-   diskc: file=10M.i, cyl=306, heads=4, spt=17
- diskc: file=112M.i, cyl=900, heads=15, spt=17
- diskd: file=483.i, cyl=1024, heads=15, spt=63
+  diskc: file=10M.i, cyl=306, heads=4, spt=17
+  diskc: file=112M.i, cyl=900, heads=15, spt=17
+  diskd: file=483.i, cyl=1024, heads=15, spt=63
 
 .TP
 .I "cdromd:"
@@ -135,7 +135,7 @@ Example:
 .TP
 .I "log:"
 Give the path of the log file you'd like Bochs
-debug and misc. verbage to be written to .  If
+debug and misc. verbage to be written to.   If
 you really don't want it, make it /dev/null.
 
 Example:
@@ -177,7 +177,7 @@ an error  might be  if the  emulated  software
 produces an illegal disk command.
 
 The "error" setting tells Bochs how to respond
-to an error condition .  You can set  this  to
+to an error condition.   You can set  this  to
 fatal  (terminate the session),  report (print
 information to the  console),  or  ignore  (do
 nothing).
@@ -237,7 +237,7 @@ midimode:
  0 = No data should be output.
  1 = output to device (system dependent - midi
  denotes the device driver).
- 2 = SMF file output, including headers .
+ 2 = SMF file output, including headers.
  3 = Output  the midi  data stream to the file
  (no  midi headers  and  no delta  times, just
  command and data bytes).
@@ -273,7 +273,7 @@ dmatimer:
 
 Microseconds per second for a DMA cycle.  Make
 it smaller to fix non-continous sound.  750000
-is  usually  a  good  value .   This  needs  a
+is  usually  a  good  value.    This  needs  a
 reasonably  correct   setting  for  IPS   (see
 below).
 
@@ -292,7 +292,7 @@ one line in the actual bochsrc file.
 .I "vga_update_interval:"
 Video memory is scanned for updates and screen
 updated  every so many virtual  seconds.   The
-default  is  300000,   about  3Hz .   This  is
+default  is  300000,   about  3Hz.    This  is
 generally plenty.  Keep in mind that you  must
 tweak  the 'ips:' directive to be as close  to
 the number of emulated instructions-per-second
@@ -408,13 +408,13 @@ The Getting Started Guide for Bochs on Linux:
 .SH AUTHORS
 The   Bochs  emulator  was   created   by  Kevin   Lawton
 (kevin@mandrakesoft.com),  and  is  currently  maintained
-by the  members of  the  Bochs x86 Emulator Project . You
+by the  members of  the  Bochs x86 Emulator Project.  You
 can see a current roster of members at:
   http://bochs.sourceforge.net/getinvolved.html
 .\"SKIP_SECTION"
 .SH BUGS
 Please  report all  bugs to the bug tracker  on  our  web
-site. Just go to http://bochs.sourceforge.net , and click
+site. Just go to http://bochs.sourceforge.net, and click
 "Bug Reports" on the sidebar under "Features."
 .PP
 Provide a detailed description of the bug, the version of
