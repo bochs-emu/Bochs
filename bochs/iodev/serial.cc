@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.19 2002-03-05 15:40:23 grossman Exp $
+// $Id: serial.cc,v 1.19.2.1 2002-06-10 21:23:44 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,7 +51,7 @@
 #endif
 #endif
 
-#if defined(__FreeBSD__) || defined(__OpenBSD__)
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__GNU__)
 #define SERIAL_ENABLE
 #endif
 
@@ -81,7 +81,8 @@ bx_serial_c::bx_serial_c(void)
 bx_serial_c::~bx_serial_c(void)
 {
 #ifdef SERIAL_ENABLE
-  tcsetattr(tty_id, TCSAFLUSH, &term_orig);
+  if (bx_options.com1.Opresent->get ())
+    tcsetattr(tty_id, TCSAFLUSH, &term_orig);
 #endif
   // nothing for now
 }
@@ -235,7 +236,7 @@ bx_serial_c::init(bx_devices_c *d)
        addr, "Serial Port 1");
     }
 
-  BX_INFO(( "com0 at 0x3f8/8 irq 4" ));
+  BX_INFO(( "com1 at 0x3f8/8 irq 4" ));
 
 }
 
