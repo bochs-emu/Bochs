@@ -27,6 +27,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #include "softfloatx80.h"
 #include "softfloat-round-pack.h"
+#include "fpu_constant.h"
 
 static const floatx80 floatx80_one =
     packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
@@ -35,11 +36,7 @@ static const float128 float128_one =
     packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
 static const float128 float128_two =
     packFloat128(BX_CONST64(0x4000000000000000), BX_CONST64(0x0000000000000000));
-static const float128 float128_ln2 = 
-    packFloat128(BX_CONST64(0x3ffe62e42fefa39e), BX_CONST64(0xf35793c7673007e6));
 
-static const float128 float128_ln2inv  = 
-    packFloat128(BX_CONST64(0x3FFF71547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
 static const float128 float128_ln2inv2 = 
     packFloat128(BX_CONST64(0x400071547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
 
@@ -321,15 +318,36 @@ invalid:
         return fyl2x(floatx80_add(a, floatx80_one, status), b, status);
     }
 
+    // handle tiny argument
+    if (aExp < EXP_BIAS-70)
+    {
+        // first order approximation, return (a*b)/ln(2)
+        Bit64u zSig0, zSig1, zSig2;
+        Bit32s zExp = aExp + FLOAT_LN2INV_EXP - 0x3FFE;
+
+	mul128By64To192(FLOAT_LN2INV_HI, FLOAT_LN2INV_LO, aSig, &zSig0, &zSig1, &zSig2);
+        if (0 < (Bit64s) zSig0) {
+            shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
+            --zExp;
+        }
+
+        zExp = zExp + bExp - 0x3FFE;
+	mul128By64To192(zSig0, zSig1, bSig, &zSig0, &zSig1, &zSig2);
+        if (0 < (Bit64s) zSig0) {
+            shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
+            --zExp;
+        }
+
+        return
+            normalizeRoundAndPackFloatx80(80, aSign ^ bSign, zExp, zSig0, zSig1, status);
+    }
+
     /* ******************************** */
     /* using float128 for approximation */
     /* ******************************** */
 
     float128 x = normalizeRoundAndPackFloat128(aSign, aExp-0x10, aSig, 0, status);
-    if (aExp < EXP_BIAS-70) // handle tiny argument
-        x = float128_mul(x, float128_ln2inv, status);
-    else                    // regular polynomial approximation
-        x = poly_l2p1(x, status);
+    x = poly_l2p1(x, status);
     floatx80 r = float128_to_floatx80(x, status);
     return floatx80_mul(r, b, status);
 }
