@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.133 2003-12-28 22:48:40 vruppert Exp $
+$Id: user.dbk,v 1.134 2003-12-29 09:40:13 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1864,12 +1864,23 @@ turn it off.
       <entry>--enable-sb16={<option>dummy, win, linux, freebsd</option>}</entry>
       <entry>no</entry>
       <entry>
-      Enable Sound Blaster emulation.  SB16 output is only supported on
+      Enable Sound Blaster emulation. SB16 output is only supported on
       Windows, Linux and FreeBSD host systems.  
       The <constant>dummy</constant> option means to support
       an SB16, but don't use an output device.  So for example, you might use
       <option>--enable-sb16=linux</option> on a linux host. 
       See section <link linkend="sb16-emulation">Sound Blaster 16 Emulation</link> for more info.
+      This option also enables the standard PC gameport which is a part of the SB16.
+      If you don't want to use it, you might use <option>--disable-gameport</option>.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-gameport</entry>
+      <entry>no</entry>
+      <entry>
+      Enables the standard PC gameport. This option is only necessary if you want to
+      have a gameport, but no SB16 (see above). The connection to a real joystick is
+      currently supported on Linux and win32 only.
       </entry>
     </row>
     <row>
@@ -1892,19 +1903,6 @@ turn it off.
       model was written from scratch to be much more complete than the old
       Bochs PIT model, which was missing many registers and features.
       If you disable this option, the old PIT model will be used instead.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-slowdown</entry>
-      <entry>no</entry>
-      <entry>
-      Enables Greg Alexander's experimental "slowdown timer" which tries to
-      keep the Bochs simulation time in sync with real time.  When Bochs
-      is executing many instructions, the slowdown timer will have no effect.
-      When Bochs is idle, or just waiting around for an interrupt, the 
-      slowdown timer kicks in to prevent Bochs time from speeding ahead.
-      This should solve problems like, "Why does my screen saver turn on
-      after 30 seconds?"
       </entry>
     </row>
     <row>
@@ -2204,6 +2202,14 @@ turn it off.
       that the time0 option in .bochsrc will override this value.  Without this
       option, the CMOS clock uses a time0 based on the value of time(NULL),
       which is probably what you want.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-xpm</entry>
+      <entry>yes</entry>
+      <entry>
+      Enables the check for the XPM library. This option is only valid if the
+      x display library is enabled (<option>--with-x11</option>).
       </entry>
     </row>
   </tbody>
@@ -9450,7 +9456,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.133 2003-12-28 22:48:40 vruppert Exp $
+        $Id: user.dbk,v 1.134 2003-12-29 09:40:13 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
