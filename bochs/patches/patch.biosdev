@@ -2,7 +2,7 @@
 Patch name: patch.biosdev
 Author: Christophe Bothamy
 Date: April, 1st 2002
-RCS Id: $Id: patch.biosdev,v 1.1 2002-04-01 21:53:23 cbothamy Exp $
+RCS Id: $Id: patch.biosdev,v 1.1.2.1 2002-04-10 05:55:28 bdenney Exp $
 
 Detailed description:
   this patch adds a biosdev "pseudo device" to handle the log

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.10.2.1 2002-03-17 08:57:03 bdenney Exp $
+// $Id: sb16.cc,v 1.10.2.2 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ bx_sb16_c::~bx_sb16_c(void)
 
   delete(BX_SB16_OUTPUT);
 
-  delete(DSP.dma.chunk);
+  delete [] DSP.dma.chunk;
 
   if ((bx_options.sb16.Ologlevel->get () > 0) && LOGFILE)
     fclose(LOGFILE);
@@ -3185,7 +3185,7 @@ void bx_sb16_buffer::reset()
 bx_sb16_buffer::~bx_sb16_buffer(void)
 {
   if (buffer != NULL)
-    delete buffer;
+    delete [] buffer;
 
   buffer = NULL;
   length = 0;

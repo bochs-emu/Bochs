@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.22.2.2 2002-04-05 06:53:48 bdenney Exp $
+// $Id: harddrv.cc,v 1.22.2.3 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.22.2.2 2002-04-05 06:53:48 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.22.2.3 2002-04-10 05:55:27 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -2740,6 +2740,11 @@ ssize_t default_image_t::write (const void* buf, size_t count)
 
 #if BX_SPLIT_HD_SUPPORT
 /*** concat_image_t function definitions ***/
+
+concat_image_t::concat_image_t ()
+{
+  fd = -1;
+}
 
 void concat_image_t::increment_string (char *str)
 {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.8.2.3 2002-04-05 06:53:47 bdenney Exp $
+// $Id: cpu.h,v 1.8.2.4 2002-04-10 05:55:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -856,6 +856,7 @@ public: // for now...
   Bit32u max_phy_addr;
 
 #if BX_DEBUGGER
+  Bit32u watchpoint;
   Bit8u break_point;
 #ifdef MAGIC_BREAKPOINT
   Bit8u magic_break;

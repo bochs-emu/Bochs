@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.12.2.3 2002-04-05 06:53:48 bdenney Exp $
+// $Id: win32.cc,v 1.12.2.4 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -625,7 +625,14 @@ void bx_gui_c::handle_events(void) {
       headerbar_click(LOWORD(key));
     }
     else {
-      if (((key & 0x0100) && ((key & 0x01ff) != 0x0145)) | ((key & 0x01ff) == 0x45)) {
+      // Swap the scancodes of "numlock" and "pause"
+      if ((key & 0xff)==0x45) key ^= 0x100;
+      if (key & 0x0100) {
+        // This makes the "AltGr" key on European keyboards work
+	if (key==0x138) {
+          scancode = 0x9d; // left control key released
+          bx_devices.keyboard->put_scancode(&scancode, 1);
+	}
         // Its an extended key
         scancode = 0xE0;
         bx_devices.keyboard->put_scancode(&scancode, 1);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.3.4.1 2002-03-17 08:50:39 bdenney Exp $
+// $Id: unmapped.h,v 1.3.4.2 2002-04-10 05:55:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,9 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-#define BX_BIOS_MESSAGE_SIZE 80
 
 
 #if BX_USE_UM_SMF
@@ -58,9 +55,6 @@ private:
   struct {
     Bit8u port80;
     Bit8u port8e;
-
-    char bios_message[BX_BIOS_MESSAGE_SIZE];
-    unsigned int bios_message_i;
     } s;  // state information
 
   bx_devices_c *devices;

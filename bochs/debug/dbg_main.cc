@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.18.2.3 2002-04-05 06:53:47 bdenney Exp $
+// $Id: dbg_main.cc,v 1.18.2.4 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2189,9 +2189,9 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 	fprintf(stderr, "(%u) Caught vm mode switch breakpoint to %s mode\n",
 		sim, BX_CPU(sim)->eflags.vm ? "virtual 86" : "protected");
   } else if (BX_CPU(sim)->stop_reason == STOP_READ_WATCH_POINT) {
-	fprintf(stderr, "(%u) Caught read watch point\n", sim);
+	fprintf(stderr, "(%u) Caught read watch point at %08X\n", sim, BX_CPU(sim)->watchpoint);
   } else if (BX_CPU(sim)->stop_reason == STOP_WRITE_WATCH_POINT) {
-	fprintf(stderr, "(%u) Caught write watch point\n", sim);
+	fprintf(stderr, "(%u) Caught write watch point at %08X\n", sim, BX_CPU(sim)->watchpoint);
   }
   else {
     fprintf(stderr, "Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n", 

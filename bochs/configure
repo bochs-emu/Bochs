@@ -1248,9 +1248,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ac_config_headers="$ac_config_headers config.h"
 
 
-VERSION="1.4"
-VER_STRING="1.4"
-REL_STRING="March 27, 2002"
+VERSION="1.4.cvs"
+VER_STRING="cvs-snapshot"
+REL_STRING=""
 
 
 
@@ -7957,6 +7957,26 @@ _ACEOF
 
        cat >>confdefs.h <<\_ACEOF
 #define BX_IOAPIC_DEFAULT_ID 4
+_ACEOF
+
+       cat >>confdefs.h <<\_ACEOF
+#define BX_USE_CPU_SMF 0
+_ACEOF
+
+       ;;
+     8)
+       echo "$as_me:$LINENO: result: 8" >&5
+echo "${ECHO_T}8" >&6
+       cat >>confdefs.h <<\_ACEOF
+#define BX_SMP_PROCESSORS 8
+_ACEOF
+
+       cat >>confdefs.h <<\_ACEOF
+#define BX_BOOTSTRAP_PROCESSOR 0
+_ACEOF
+
+       cat >>confdefs.h <<\_ACEOF
+#define BX_IOAPIC_DEFAULT_ID 0x11
 _ACEOF
 
        cat >>confdefs.h <<\_ACEOF

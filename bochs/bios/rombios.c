@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.14.2.2 2002-04-05 06:53:46 bdenney Exp $
+// $Id: rombios.c,v 1.14.2.3 2002-04-10 05:55:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,7 +28,7 @@
    to this file */
 #include "biosconfig.h"
 
-// ROM BIOS for use with Bochs x86 emulation environment
+// ROM BIOS for use with Bochs/Plex x86 emulation environment
 
 
 // ROM BIOS compatability entry points:
@@ -147,11 +147,18 @@
 #define SYS_MODEL_ID     0xFC
 #define SYS_SUBMODEL_ID  0x00
 #define BIOS_REVISION    1
-#define BIOS_CONFIG_TABLE 0xe716
+#define BIOS_CONFIG_TABLE 0xe71F
   // 1K of base memory used for Extended Bios Data Area (EBDA)
   // EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
 #define BASE_MEM_IN_K   (640 - 1)
 #define EBDA_SEG           0x9FC0
+
+  // Define the application NAME
+#ifdef PLEX86
+#  define BX_APPNAME "Plex86"
+#else
+#  define BX_APPNAME "Bochs"
+#endif
 
   // Sanity Checks
 #if BX_USE_ATADRV && BX_CPU<3
@@ -184,6 +191,7 @@
 
 #asm
 .rom
+
 .org 0x0000
 
 #if BX_CPU >= 3
@@ -194,8 +202,8 @@ use16 286
 
 MACRO HALT
   ;; the HALT macro is called with the line number of the HALT call.
-  ;; The line number is then sent to the PANIC_PORT, causing Bochs to
-  ;; print a BX_PANIC message.  This will normally halt the simulation
+  ;; The line number is then sent to the PANIC_PORT, causing Bochs/Plex 
+  ;; to print a BX_PANIC message.  This will normally halt the simulation
   ;; with a message such as "BIOS panic at rombios.c, line 4091".
   ;; However, users can choose to make panics non-fatal and continue.
   mov dx,#PANIC_PORT
@@ -205,8 +213,8 @@ MEND
 
 MACRO HALT2
   ;; the HALT macro is called with the line number of the HALT call.
-  ;; The line number is then sent to the PANIC_PORT, causing Bochs to
-  ;; print a BX_PANIC message.  This will normally halt the simulation
+  ;; The line number is then sent to the PANIC_PORT, causing Bochs/Plex
+  ;; to print a BX_PANIC message.  This will normally halt the simulation
   ;; with a message such as "BIOS panic at rombios.c, line 4091".
   ;; However, users can choose to make panics non-fatal and continue.
   mov dx,#0x401
@@ -1043,10 +1051,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.14.2.2 $";
-static char bios_date_string[] = "$Date: 2002-04-05 06:53:46 $";
+static char bios_cvs_version_string[] = "$Revision: 1.14.2.3 $";
+static char bios_date_string[] = "$Date: 2002-04-10 05:55:25 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.14.2.2 2002-04-05 06:53:46 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.14.2.3 2002-04-10 05:55:25 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1588,8 +1596,8 @@ put_int(action, val, width, neg)
 //--------------------------------------------------------------------------
 // bios_printf()
 //   A compact variable argument printf function which prints its output via
-//   an I/O port so that it can be logged by Bochs.  Currently, only %x is
-//   supported (or %02x, %04x, etc).
+//   an I/O port so that it can be logged by Bochs/Plex.  
+//   Currently, only %x is supported (or %02x, %04x, etc).
 //
 //   Supports %[format_width][format]
 //   where format can be d,x,c,s
@@ -1727,7 +1735,7 @@ log_bios_start()
 void
 print_bios_banner()
 {
-  bios_printf(BIOS_PRINTF_SCREEN, "Bochs BIOS, %s %s\n\n", 
+  bios_printf(BIOS_PRINTF_SCREEN, BX_APPNAME" BIOS, %s %s\n\n", 
     bios_cvs_version_string, bios_date_string);
   /*
   bios_printf(BIOS_PRINTF_SCREEN, "Test: x234=%3x, d-123=%d, c=%c, s=%s\n",
@@ -2349,6 +2357,14 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       SET_AL(shift_flags);
       shift_flags = read_byte(0x0040, 0x18);
       SET_AH(shift_flags);
+      break;
+
+    case 0x92: /* keyboard capability check called by DOS 5.0+ keyb */
+      SET_AH(0x80); // function int16 ah=0x10-0x12 supported
+      break;
+
+    case 0xA2: /* 122 keys capability check called by DOS 5.0+ keyb */
+      SET_AH(0xFF); // function int16 ah=0x20-0x22 NOT supported
       break;
 
     default:
@@ -8944,8 +8960,6 @@ normal_post:
   mov  ds, ax
   mov  ss, ax
 
-  call _log_bios_start
-
   ;; zero out BIOS data area (40:00..40:ff)
   mov  es, ax
   mov  cx, #0x0080 ;; 128 words
@@ -8953,6 +8967,8 @@ normal_post:
   cld
   rep
     stosw
+
+  call _log_bios_start
 
   ;; set all interrupts to default handler
   mov  bx, #0x0000    ;; offset index
@@ -9253,18 +9269,22 @@ int19_handler:
   ;; bl contains the boot drive
   ;; ax contains the boot segment or 0 if failure
 
-  cmp ax, #0x0000
-  je  int19_fail
+  test ax, ax
+  jz  int19_fail
 
-  mov dl, bl       ;; set drive so guest os find it
-  mov 4[bp], ax    ;; set cs
-  xor ax, ax
-  mov 2[bp], ax    ;; set ip
-  mov [bp], ax     ;; set bp
-  mov ax, #0xaa55  ;; set ok flag
+  mov dl,    bl      ;; set drive so guest os find it
+  shl eax,   #0x04   ;; convert seg to ip
+  mov 2[bp], ax      ;; set ip
+
+  shr eax,   #0x04   ;; get cs back
+  and ax,    #0xF000 ;; remove what went in ip
+  mov 4[bp], ax      ;; set cs
+  xor ax,    ax
+  mov [bp],  ax      ;; set bp 
+  mov ax,    #0xaa55 ;; set ok flag
 
   pop bp
-  iret             ;; Beam me up Scotty
+  iret               ;; Beam me up Scotty
 
 int19_fail:
   hlt
@@ -9277,7 +9297,7 @@ int19_fail:
 ;-------------------------------------------
 .org BIOS_CONFIG_TABLE
 db 0x08                  ; Table size (bytes) -Lo
-     db 0x00             ; Table size (bytes) -Hi
+db 0x00                  ; Table size (bytes) -Hi
 db SYS_MODEL_ID
 db SYS_SUBMODEL_ID
 db BIOS_REVISION
@@ -9439,16 +9459,17 @@ int09_handler:
   mov al, #0xAD      ;;disable keyboard
   out #0x64, al
 
-  sti
-
-  ;; see if there is really a key to read from the controller
-  in   al, #0x64
-  test al, #0x01
-  jz   int09_done    ;; nope, skip processing
+  mov al, #0x0B
+  out #0x20, al
+  in  al, #0x20
+  and al, #0x02
+  jz  int09_finish
 
   in  al, #0x60             ;;read key from keyboard controller
   //test al, #0x80            ;;look for key release
   //jnz  int09_process_key    ;; dont pass releases to intercept?
+
+  sti
 
 #ifdef BX_CALL_INT15_4F
   mov  ah, #0x4f     ;; allow for keyboard intercept
@@ -9469,12 +9490,6 @@ int09_handler:
 
 int09_done:
   cli
-  ;; look at PIC in-service-register to see if EOI required
-  mov  al, #0x0B
-  out  #0x20, al
-  in   al, #0x20
-  and  al, #0x02     ;; IRQ 1 in service
-  jz   int09_finish
   mov  al, #0x20     ;; send EOI to master PIC
   out  #0x20, al
 
@@ -9954,6 +9969,132 @@ mp_config_irqs:
   db 3,0,0,0,0,13,4,13
   db 3,0,0,0,0,14,4,14
   db 3,0,0,0,0,15,4,15
+#elif (BX_SMP_PROCESSORS==8)
+// define the Intel MP Configuration Structure for 4 processors at
+// APIC ID 0,1,2,3.  I/O APIC at ID=4.
+.align 16
+mp_config_table:
+  db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
+  dw (mp_config_end-mp_config_table)  ;; table length
+  db 4 ;; spec rev
+  db 0x2e ;; checksum
+  .ascii "BOCHSCPU"     ;; OEM id = "BOCHSCPU"
+  db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
+  db 0x20, 0x20, 0x20, 0x20 
+  db 0x20, 0x20, 0x20, 0x20
+  dw 0,0 ;; oem table ptr
+  dw 0 ;; oem table size
+  dw 22 ;; entry count
+  dw 0x0000, 0xfee0 ;; memory mapped address of local APIC
+  dw 0 ;; extended table length
+  db 0 ;; extended table checksum
+  db 0 ;; reserved
+mp_config_proc0:
+  db 0 ;; entry type=processor
+  db 0 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 3 ;; cpu flags: bootstrap cpu
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc1:
+  db 0 ;; entry type=processor
+  db 1 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc2:
+  db 0 ;; entry type=processor
+  db 2 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc3:
+  db 0 ;; entry type=processor
+  db 3 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc4:
+  db 0 ;; entry type=processor
+  db 4 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc5:
+  db 0 ;; entry type=processor
+  db 5 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc6:
+  db 0 ;; entry type=processor
+  db 6 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_proc7:
+  db 0 ;; entry type=processor
+  db 7 ;; local APIC id
+  db 0x11 ;; local APIC version number
+  db 1 ;; cpu flags: enabled
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
+  dw 0,0 ;; reserved
+  dw 0,0 ;; reserved
+mp_config_isa_bus:
+  db 1 ;; entry type=bus
+  db 0 ;; bus ID
+  db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
+mp_config_ioapic:
+  db 2 ;; entry type=I/O APIC
+  db 0x11 ;; apic id=2. linux will set.
+  db 0x11 ;; I/O APIC version number
+  db 1 ;; flags=1=enabled
+  dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC
+mp_config_irqs:
+  db 3 ;; entry type=I/O interrupt
+  db 0 ;; interrupt type=vectored interrupt
+  db 0,0 ;; flags po=0, el=0 (linux uses as default)
+  db 0 ;; source bus ID is ISA
+  db 0 ;; source bus IRQ
+  db 0x11 ;; destination I/O APIC ID, Linux can't address it but won't need to
+  db 0 ;; destination I/O APIC interrrupt in
+  ;; repeat pattern for interrupts 0-15
+  db 3,0,0,0,0,1,0x11,1
+  db 3,0,0,0,0,2,0x11,2
+  db 3,0,0,0,0,3,0x11,3
+  db 3,0,0,0,0,4,0x11,4
+  db 3,0,0,0,0,5,0x11,5
+  db 3,0,0,0,0,6,0x11,6
+  db 3,0,0,0,0,7,0x11,7
+  db 3,0,0,0,0,8,0x11,8
+  db 3,0,0,0,0,9,0x11,9
+  db 3,0,0,0,0,10,0x11,10
+  db 3,0,0,0,0,11,0x11,11
+  db 3,0,0,0,0,12,0x11,12
+  db 3,0,0,0,0,13,0x11,13
+  db 3,0,0,0,0,14,0x11,14
+  db 3,0,0,0,0,15,0x11,15
 #else
 #  error Sorry, rombios only has configurations for 1, 2, or 4 processors.
 #endif  // if (BX_SMP_PROCESSORS==...)

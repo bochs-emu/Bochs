@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.11.2.2 2002-04-05 06:53:47 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.11.2.3 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1270,7 +1270,7 @@ BX_CPU_C::WRMSR(BxInstruction_t *i)
 		*/
 
 		case BX_MSR_APICBASE:
-			BX_CPU_THIS_PTR msr.apicbase = (EDX << 32) + EAX;
+			BX_CPU_THIS_PTR msr.apicbase = ((Bit64u)EDX << 32) + EAX;
 			BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", EDX, EAX));
 			return;
 			

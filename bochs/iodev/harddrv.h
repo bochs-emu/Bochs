@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.4.4.1 2002-03-17 08:50:39 bdenney Exp $
+// $Id: harddrv.h,v 1.4.4.2 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,6 +95,9 @@ class default_image_t : public device_image_t
 class concat_image_t : public device_image_t
 {
   public:
+      // Default constructor
+      concat_image_t();
+      
       // Open a image. Returns non-negative if successful.
       int open (const char* pathname);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.13.2.3 2002-04-05 06:53:48 bdenney Exp $
+// $Id: x.cc,v 1.13.2.4 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -596,7 +596,9 @@ load_font(void)
   /* Load font and get font information structure. */
   if ((font_info = XLoadQueryFont(bx_x_display,"bochsvga")) == NULL) {
     if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
-      BX_PANIC(("Could not open vga font. See docs-html/install.html"));
+      if ((font_info = XLoadQueryFont(bx_x_display,"-*-vga-*")) == NULL) {
+	BX_PANIC(("Could not open vga font. See docs-html/install.html"));
+      }
     }
   }
 }
@@ -882,6 +884,9 @@ xkeypress(KeySym keysym, int press_release)
         key_event = BX_KEY_KP_LEFT; break;
 
       case XK_KP_5:
+#ifdef XK_KP_Begin
+      case XK_KP_Begin:
+#endif
         key_event = BX_KEY_KP_5; break;
 
       case XK_KP_6:

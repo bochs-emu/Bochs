@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.18.2.10 2002-04-08 06:19:23 bdenney Exp $
+// $Id: gui.cc,v 1.18.2.11 2002-04-10 05:55:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,10 +39,6 @@
 #include "gui/bitmaps/cdromd.h"
 #if BX_WITH_MACOS
 #  include <Disks.h>
-#endif
-
-#if BX_WITH_X11
-#include <X11/Xlib.h>
 #endif
 
 bx_gui_c   bx_gui;

@@ -6,9 +6,9 @@ AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="1.4"
-VER_STRING="1.4"
-REL_STRING="March 27, 2002"
+VERSION="1.4.cvs"
+VER_STRING="cvs-snapshot"
+REL_STRING=""
 
 changequote(<<, >>)
 changequote([, ])
@@ -235,6 +235,13 @@ AC_ARG_ENABLE(processors,
        AC_DEFINE(BX_SMP_PROCESSORS, 4)
        AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 2)
        AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 4)
+       AC_DEFINE(BX_USE_CPU_SMF, 0)
+       ;;
+     8)
+       AC_MSG_RESULT(8)
+       AC_DEFINE(BX_SMP_PROCESSORS, 8)
+       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
+       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 0x11)
        AC_DEFINE(BX_USE_CPU_SMF, 0)
        ;;
      *)

@@ -1,0 +1,23 @@
+#!/bin/csh -f
+
+awk \
+  'BEGIN { }\
+  /^\.text/,/DATA_SEG_DEFS_HERE/ { print }\
+  END { }'\
+  rombios.s > temp.awk.1
+
+awk \
+  'BEGIN { i = 0; last = "hello" }\
+  /BLOCK_STRINGS_BEGIN/,/^\.bss/ { if ( i > 1 ) { print last } last = $0; i = i + 1 }\
+  END { }'\
+  rombios.s > temp.awk.2
+
+awk \
+  'BEGIN { }\
+  /DATA_SEG_DEFS_HERE/,/BLOCK_STRINGS_BEGIN/ { print }\
+  END { }'\
+  rombios.s > temp.awk.3
+
+cp rombios.s rombios.s.orig
+cat temp.awk.{1,2,3} | sed -e 's/^\.data//' -e 's/^\.bss//' -e 's/^\.text//' >! rombios.s
+/bin/rm -f temp.awk.{1,2,3}
