@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.21 2001-10-06 17:32:58 bdenney Exp $
+// $Id: cdrom.cc,v 1.22 2001-10-07 03:34:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,9 @@
 
 #define LOG_THIS /* no SMF tricks here, not needed */
 
+extern "C" {
 #include <errno.h>
+}
 
 #ifdef __linux__
 extern "C" {
@@ -195,7 +197,7 @@ cdrom_interface::cdrom_interface(char *dev)
 }
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.21 2001-10-06 17:32:58 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.22 2001-10-07 03:34:54 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -213,6 +215,7 @@ cdrom_interface::insert_cdrom()
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
   ssize_t ret;
+  struct stat stat_buf;
 
   // Load CD-ROM. Returns false if CD is not ready.
   BX_INFO (("load cdrom with path=%s", path));
@@ -241,7 +244,7 @@ cdrom_interface::insert_cdrom()
     {
       strcpy(drive,path);
       using_file = 1;
-      BX_INFO (("opening image file as a cd"));
+      BX_INFO (("Opening image file as a cd"));
     }
 	if(bUseASPI) {
 		DWORD d, cnt, max;
@@ -303,7 +306,7 @@ cdrom_interface::insert_cdrom()
       fd = open(path, O_RDONLY);
 #endif
     if (fd < 0) {
-       BX_ERROR(( "open cd failed on dev '%s': %s", path, strerror(errno)));
+       BX_ERROR(( "open cd failed for %s: %s", path, strerror(errno)));
        return(false);
     }
 
@@ -320,11 +323,24 @@ cdrom_interface::insert_cdrom()
       }
 	}
 #else
+    // do fstat to determine if it's a file or a device, then set using_file.
+    ret = fstat (fd, &stat_buf);
+    if (ret) {
+      BX_PANIC (("fstat cdrom file returned error: %s", strerror (errno)));
+    }
+    if (S_ISREG (stat_buf.st_mode)) {
+      using_file = 1;
+      BX_INFO (("Opening image file %s as a cd.", path));
+    } else {
+      using_file = 0;
+      BX_INFO (("Using direct access for cdrom."));
+    }
+
     ret = read(fd, &buffer, BX_CD_FRAMESIZE);
     if (ret < 0) {
        close(fd);
        fd = -1;
-       BX_DEBUG(( "insert_cdrom: read returns error." ));
+       BX_DEBUG(( "insert_cdrom: read returns error: %s", strerror (errno) ));
        return(false);
         }
 #endif
@@ -377,10 +393,16 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
      #define IOCTL_CDROM_READ_TOC         CTL_CODE(IOCTL_CDROM_BASE, 0x0000, METHOD_BUFFERED, FILE_READ_ACCESS)
      unsigned long iBytesReturned;
      DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC, NULL, 0, NULL, 0, &iBytesReturned, NULL);       */
-         return true;
+    BX_ERROR (("WARNING: read_toc is not implemented, just returning 0"));
+    *length = 1;
+    return true;
   }
 #elif __linux__ || defined(__sun)
-  {
+  if (using_file) {
+    BX_ERROR (("WARNING: read_toc is not implemented, just returning 0"));
+    *length = 1;
+    return true;
+  } else {
   struct cdrom_tochdr tochdr;
   if (ioctl(fd, CDROMREADTOCHDR, &tochdr))
     BX_PANIC(("cdrom: read_toc: READTOCHDR failed."));
@@ -549,6 +571,24 @@ cdrom_interface::capacity()
 {
   // Return CD-ROM capacity.  I believe you want to return
   // the number of bytes of capacity the actual media has.
+
+#if !defined WIN32
+  // win32 has its own way of doing this
+  if (using_file) {
+    // return length of the image file
+    struct stat stat_buf;
+    int ret = fstat (fd, &stat_buf);
+    if (ret) {
+       BX_PANIC (("fstat on cdrom image returned err: %s", strerror(errno)));
+    }
+    BX_INFO (("cdrom size is %d bytes", stat_buf.st_size));
+    if ((stat_buf.st_size % 2048) != 0)  {
+      BX_ERROR (("expected cdrom image to be a multiple of 2048 bytes"));
+    }
+    return stat_buf.st_size / 2048;
+  }
+#endif
+
 #ifdef __sun
   {
     struct stat buf = {0};
@@ -662,7 +702,7 @@ cdrom_interface::capacity()
     if (rte.data[i].control & 4) {	/* data track */
       num_sectors = ntohl(rte.data[i + 1].addr.lba)
           - ntohl(rte.data[i].addr.lba);
-      BX_ERROR(( "cdrom: Data track %d, length %d",
+      BX_INFO(( "cdrom: Data track %d, length %d",
         rte.data[i].track, num_sectors));
       break;
       }
