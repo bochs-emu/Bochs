@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.20 2002-09-06 16:59:54 bdenney Exp $
+// $Id: wx.cc,v 1.21 2002-09-08 09:23:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -67,6 +67,7 @@ static long wxTileX = 0;
 static long wxTileY = 0;
 static unsigned long wxCursorX = 0;
 static unsigned long wxCursorY = 0;
+static unsigned long wxFontY = 0;
 static unsigned long wxMouseCaptured = 0;
 struct {
 	unsigned char red;
@@ -608,15 +609,30 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
+  int b,i,j;
+  unsigned char fc, vc;
+
   th->put("NGUI");
   if (bx_options.Oprivate_colormap->get ()) {
     BX_INFO(("private_colormap option ignored."));
   }
 
-  for(int i = 0; i < 256; i++) {
+  for(i = 0; i < 256; i++) {
 	  wxBochsPalette[i].red = 0;
 	  wxBochsPalette[i].green = 0;
 	  wxBochsPalette[i].blue = 0;
+  }
+
+  for(i = 0; i < 256; i++) {
+    for(j = 0; j < 16; j++) {
+      vc = bx_vgafont[i].data[j];
+      fc = 0;
+      for (b = 0; b < 8; b++) {
+        fc |= (vc & 0x01) << (7 - b);
+        vc >>= 1;
+      }
+      bx_gui.vga_charmap[i*32+j] = fc;
+    }
   }
 
   wxScreenX = 640;
@@ -748,14 +764,14 @@ DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int
 	char *newBits = (char *)malloc(width * height);
 	memset(newBits, 0, (width * height));
 	for(int i = 0; i < (width * height) / 8; i++) {
-		newBits[i * 8 + 0] = (bmap[j] & 0x01) ? fgcolor : bgcolor;
-		newBits[i * 8 + 1] = (bmap[j] & 0x02) ? fgcolor : bgcolor;
-		newBits[i * 8 + 2] = (bmap[j] & 0x04) ? fgcolor : bgcolor;
-		newBits[i * 8 + 3] = (bmap[j] & 0x08) ? fgcolor : bgcolor;
-		newBits[i * 8 + 4] = (bmap[j] & 0x10) ? fgcolor : bgcolor;
-		newBits[i * 8 + 5] = (bmap[j] & 0x20) ? fgcolor : bgcolor;
-		newBits[i * 8 + 6] = (bmap[j] & 0x40) ? fgcolor : bgcolor;
-		newBits[i * 8 + 7] = (bmap[j] & 0x80) ? fgcolor : bgcolor;
+		newBits[i * 8 + 0] = (bmap[j] & 0x80) ? fgcolor : bgcolor;
+		newBits[i * 8 + 1] = (bmap[j] & 0x40) ? fgcolor : bgcolor;
+		newBits[i * 8 + 2] = (bmap[j] & 0x20) ? fgcolor : bgcolor;
+		newBits[i * 8 + 3] = (bmap[j] & 0x10) ? fgcolor : bgcolor;
+		newBits[i * 8 + 4] = (bmap[j] & 0x08) ? fgcolor : bgcolor;
+		newBits[i * 8 + 5] = (bmap[j] & 0x04) ? fgcolor : bgcolor;
+		newBits[i * 8 + 6] = (bmap[j] & 0x02) ? fgcolor : bgcolor;
+		newBits[i * 8 + 7] = (bmap[j] & 0x01) ? fgcolor : bgcolor;
 		j++;
 	}
 	UpdateScreen(newBits, x, y, width, height);
@@ -794,7 +810,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned int nchars = ncols * nrows;
 	if((wxCursorY * ncols + wxCursorX) < nchars) {
 		cChar = new_text[(wxCursorY * ncols + wxCursorX) * 2];
-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1], 1, 0);
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&bx_gui.vga_charmap[cChar<<5], new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1], 1, 0);
 	}
 	
 	for(unsigned int i = 0; i < nchars * 2; i += 2) {
@@ -802,7 +818,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			cChar = new_text[i];
 			int x = (i / 2) % ncols;
 			int y = (i / 2) / ncols;
-			DrawBochsBitmap(x * 8, y * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i+1], 1, 0);
+			DrawBochsBitmap(x * 8, y * wxFontY, 8, wxFontY, (char *)&bx_gui.vga_charmap[cChar<<5], new_text[i+1], 1, 0);
 		}
 	}
 	wxCursorX = cursor_x;
@@ -812,7 +828,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		cChar = new_text[(cursor_y * ncols + cursor_x) * 2];
 		char cAttr = new_text[((cursor_y * ncols + cursor_x) * 2) + 1];
 		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr, cs_start, cs_end);
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&bx_gui.vga_charmap[cChar<<5], cAttr, cs_start, cs_end);
 	}
 
 	thePanel->MyRefresh ();
@@ -874,9 +890,7 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
   wxScreen_lock.Enter ();
   IFDBG_VGA(wxLogDebug ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen));
   if (fheight > 0) {
-	if (fheight != 16) {
-	  y = y * 16 / fheight;
-	}
+	wxFontY = fheight;
   }
   wxScreenX = x;
   wxScreenY = y;
