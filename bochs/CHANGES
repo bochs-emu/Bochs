@@ -59,7 +59,7 @@ Changes in 1.4 (FIXME(bdenney):change to release date):
   - implementation of int13 diskette function 5 (format track) (Volker)
   - initialisation of PIC and DMA-2 added to POST code (Volker)
 - VGA
-  - added VESA BIOS Extensions code by Jeroen Janssen
+  - added VESA BIOS Extensions code by Jeroen Janssen (banked mode only, LFB support in patches/)
   - vga memory read/write functions in text mode fixed
   - implementation of CGA mode 320*200*4 (patch from Sebastien Bechet)
 - VGA BIOS
