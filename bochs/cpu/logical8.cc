@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.21 2002-10-25 18:26:28 sshwarts Exp $
+// $Id: logical8.cc,v 1.22 2004-02-15 17:57:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -193,7 +193,7 @@ BX_CPU_C::OR_GbEb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Or8)
   Bit32u flags32;
 
   asmOr8(result, op1, op2, flags32);
@@ -204,7 +204,7 @@ BX_CPU_C::OR_GbEb(bxInstruction_c *i)
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Or8)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
 #endif
 }
@@ -218,7 +218,7 @@ BX_CPU_C::OR_ALIb(bxInstruction_c *i)
   op1 = AL;
   op2 = i->Ib();
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Or8)
   Bit32u flags32;
 
   asmOr8(result, op1, op2, flags32);
@@ -229,7 +229,7 @@ BX_CPU_C::OR_ALIb(bxInstruction_c *i)
 
   AL = result;
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Or8)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
 #endif
 }
@@ -246,7 +246,7 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
   if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And8)
     Bit32u flags32;
 
     asmAnd8(result, op1, op2, flags32);
@@ -260,7 +260,7 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And8)
     Bit32u flags32;
 
     asmAnd8(result, op1, op2, flags32);
@@ -272,7 +272,7 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And8)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
@@ -292,7 +292,7 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And8)
   Bit32u flags32;
 
   asmAnd8(result, op1, op2, flags32);
@@ -303,7 +303,7 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And8)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
@@ -318,7 +318,7 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
   op1 = AL;
   op2 = i->Ib();
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And8)
   Bit32u flags32;
 
   asmAnd8(result, op1, op2, flags32);
@@ -329,7 +329,7 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
 
   AL = result;
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And8)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
@@ -348,7 +348,7 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
   if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And8)
     Bit32u flags32;
 
     asmAnd8(result, op1, op2, flags32);
@@ -362,7 +362,7 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And8)
     Bit32u flags32;
 
     asmAnd8(result, op1, op2, flags32);
@@ -374,7 +374,7 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And8)
   SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
 #endif
 }
@@ -394,7 +394,7 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Test8)
   Bit32u flags32;
 
   asmTest8(op1, op2, flags32);
@@ -416,7 +416,7 @@ BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
   op1 = AL;
   op2 = i->Ib();
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Test8)
   Bit32u flags32;
 
   asmTest8(op1, op2, flags32);
@@ -445,7 +445,7 @@ BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Test8)
   Bit32u flags32;
 
   asmTest8(op1, op2, flags32);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.18 2002-10-25 18:26:28 sshwarts Exp $
+// $Id: logical16.cc,v 1.19 2004-02-15 17:57:44 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Xor16)
     Bit32u flags32;
 
     asmXor16(result_16, op1_16, op2_16, flags32);
@@ -58,7 +58,7 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
     }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Xor16)
     Bit32u flags32;
 
     asmXor16(result_16, op1_16, op2_16, flags32);
@@ -69,7 +69,7 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Xor16)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
 #endif
 }
@@ -213,7 +213,7 @@ BX_CPU_C::OR_GwEw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Or16)
   Bit32u flags32;
 
   asmOr16(result_16, op1_16, op2_16, flags32);
@@ -224,7 +224,7 @@ BX_CPU_C::OR_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Or16)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_OR16);
 #endif
 }
@@ -257,7 +257,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And16)
     Bit32u flags32;
 
     asmAnd16(result_16, op1_16, op2_16, flags32);
@@ -271,7 +271,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And16)
     Bit32u flags32;
 
     asmAnd16(result_16, op1_16, op2_16, flags32);
@@ -283,7 +283,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And16)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
 #endif
 }
@@ -303,7 +303,7 @@ BX_CPU_C::AND_GwEw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And16)
   Bit32u flags32;
 
   asmAnd16(result_16, op1_16, op2_16, flags32);
@@ -314,7 +314,7 @@ BX_CPU_C::AND_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And16)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
 #endif
 }
@@ -328,7 +328,7 @@ BX_CPU_C::AND_AXIw(bxInstruction_c *i)
   op1_16 = AX;
   op2_16 = i->Iw();
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And16)
   Bit32u flags32;
 
   asmAnd16(result_16, op1_16, op2_16, flags32);
@@ -339,7 +339,7 @@ BX_CPU_C::AND_AXIw(bxInstruction_c *i)
 
   AX = result_16;
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And16)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
 #endif
 }
@@ -354,7 +354,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And16)
     Bit32u flags32;
 
     asmAnd16(result_16, op1_16, op2_16, flags32);
@@ -368,7 +368,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_And16)
     Bit32u flags32;
 
     asmAnd16(result_16, op1_16, op2_16, flags32);
@@ -380,7 +380,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_And16)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
 #endif
 }
@@ -400,7 +400,7 @@ BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Test16)
   Bit32u flags32;
 
   asmTest16(op1_16, op2_16, flags32);
@@ -423,7 +423,7 @@ BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
   op1_16 = AX;
   op2_16 = i->Iw();
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Test16)
   Bit32u flags32;
 
   asmTest16(op1_16, op2_16, flags32);
@@ -451,7 +451,7 @@ BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Test16)
   Bit32u flags32;
 
   asmTest16(op1_16, op2_16, flags32);

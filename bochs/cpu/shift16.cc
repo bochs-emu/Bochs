@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.17 2002-10-25 18:26:29 sshwarts Exp $
+// $Id: shift16.cc,v 1.18 2004-02-15 17:57:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -432,7 +432,7 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
 
     if (!count) return;
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Shr16)
     Bit32u flags32;
 
     asmShr16(result_16, op1_16, count, flags32);
@@ -450,7 +450,7 @@ BX_CPU_C::SHR_Ew(bxInstruction_c *i)
       Write_RMW_virtual_word(result_16);
       }
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Shr16)
     SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHR16);
 #endif
 }

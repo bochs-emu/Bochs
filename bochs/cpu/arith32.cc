@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.31 2003-04-05 12:16:48 sshwarts Exp $
+// $Id: arith32.cc,v 1.32 2004-02-15 17:57:43 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@
   void
 BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Inc32)
   Bit32u flags32;
 
   asmInc32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
@@ -58,7 +58,7 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
 #endif
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Inc32)
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
 #endif
 }
@@ -66,7 +66,7 @@ BX_CPU_C::INC_ERX(bxInstruction_c *i)
   void
 BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Dec32)
   Bit32u flags32;
 
   asmDec32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx, flags32);
@@ -81,7 +81,7 @@ BX_CPU_C::DEC_ERX(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.hrx = 0;
 #endif
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Dec32)
   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
 #endif
 }
@@ -121,7 +121,7 @@ BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
 
   read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Add32)
   Bit32u flags32;
 
   asmAdd32(sum_32, op1_32, op2_32, flags32);
@@ -132,7 +132,7 @@ BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(nnn, sum_32);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Add32)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 }
@@ -146,7 +146,7 @@ BX_CPU_C::ADD_GdEGd(bxInstruction_c *i)
   op1_32 = BX_READ_32BIT_REG(nnn);
   op2_32 = BX_READ_32BIT_REG(i->rm());
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Add32)
   Bit32u flags32;
 
   asmAdd32(sum_32, op1_32, op2_32, flags32);
@@ -157,7 +157,7 @@ BX_CPU_C::ADD_GdEGd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(nnn, sum_32);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Add32)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 }
@@ -395,7 +395,7 @@ BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Sub32)
   Bit32u flags32;
 
   asmSub32(diff_32, op1_32, op2_32, flags32);
@@ -406,7 +406,7 @@ BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(nnn, diff_32);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Sub32)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
 #endif
 }
@@ -441,7 +441,7 @@ BX_CPU_C::CMP_EdGd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Cmp32)
   Bit32u flags32;
 
   asmCmp32(op1_32, op2_32, flags32);
@@ -469,7 +469,7 @@ BX_CPU_C::CMP_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Cmp32)
   Bit32u flags32;
 
   asmCmp32(op1_32, op2_32, flags32);
@@ -491,7 +491,7 @@ BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
   op1_32 = EAX;
   op2_32 = i->Id();
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Cmp32)
   Bit32u flags32;
 
   asmCmp32(op1_32, op2_32, flags32);
@@ -607,7 +607,7 @@ BX_CPU_C::ADD_EEdId(bxInstruction_c *i)
 
   read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Add32)
   Bit32u flags32;
 
   asmAdd32(sum_32, op1_32, op2_32, flags32);
@@ -618,7 +618,7 @@ BX_CPU_C::ADD_EEdId(bxInstruction_c *i)
 
   Write_RMW_virtual_dword(sum_32);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Add32)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 }
@@ -631,7 +631,7 @@ BX_CPU_C::ADD_EGdId(bxInstruction_c *i)
   op2_32 = i->Id();
   op1_32 = BX_READ_32BIT_REG(i->rm());
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Add32)
   Bit32u flags32;
 
   asmAdd32(sum_32, op1_32, op2_32, flags32);
@@ -642,7 +642,7 @@ BX_CPU_C::ADD_EGdId(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->rm(), sum_32);
 
-#if !(defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if !defined(BX_HostAsm_Add32)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
 #endif
 }
@@ -709,7 +709,7 @@ BX_CPU_C::CMP_EdId(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     }
 
-#if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
+#if defined(BX_HostAsm_Cmp32)
   Bit32u flags32;
 
   asmCmp32(op1_32, op2_32, flags32);
