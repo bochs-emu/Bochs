@@ -1,0 +1,2823 @@
+----------------------------------------------------------------------
+Patch name: bochs-1.4.1-mmx.patch-endian-support 
+Author: Stanislav Shwartsman
+Date: 01/09/2002
+
+Detailed description: MMX instruction set support.
+Also supports BIG_ENDIAN systems. Tested on Solaris and HP1100.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -r -u -N bochs-1.4.1/config.h.in bochs-1.4.1-mmx-release-endian/config.h.in
+--- bochs-1.4.1/config.h.in	2002-06-24 00:19:42.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/config.h.in	2002-08-25 13:41:34.000000000 +0200
+@@ -533,6 +533,7 @@
+ #define BX_DYNAMIC_CPU_SPARC   0
+ 
+ #define BX_SUPPORT_FPU 0
++#define BX_SUPPORT_MMX 1
+ 
+ #define BX_HAVE_GETENV 0
+ #define BX_HAVE_SELECT 0
+diff -r -u -N bochs-1.4.1/cpu/Makefile.in bochs-1.4.1-mmx-release-endian/cpu/Makefile.in
+--- bochs-1.4.1/cpu/Makefile.in	2001-10-07 22:19:04.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/cpu/Makefile.in	2002-08-24 18:05:28.000000000 +0200
+@@ -48,7 +48,7 @@
+ OBJS = \
+ 	init.o \
+ 	access.o \
+-	cpu.o resolve32.o fetchdecode.o \
++	cpu.o mmx.o resolve32.o fetchdecode.o \
+ 	exception.o \
+ 	ctrl_xfer_pro.o \
+ 	flag_ctrl_pro.o \
+@@ -198,6 +198,16 @@
+  ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
+  ../iodev/guest2host.h ../iodev/slowdown_timer.h \
+  ../instrument/stubs/instrument.h
++mmx.o: mmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
++ ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
++ ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
++ ../gui/control.h ../iodev/iodev.h ../iodev/pci.h ../iodev/vga.h \
++ ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h \
++ ../iodev/keyboard.h ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h \
++ ../iodev/pit_wrap.h ../iodev/pit82c54.h ../iodev/serial.h \
++ ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
++ ../iodev/guest2host.h ../iodev/slowdown_timer.h \
++ ../instrument/stubs/instrument.h
+ ctrl_xfer16.o: ctrl_xfer16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../debug/debug.h ../bxversion.h ../gui/siminterface.h ../state_file.h \
+  ../cpu/cpu.h ../cpu/lazy_flags.h ../memory/memory.h ../pc_system.h \
+diff -r -u -N bochs-1.4.1/cpu/access.cc bochs-1.4.1-mmx-release-endian/cpu/access.cc
+--- bochs-1.4.1/cpu/access.cc	2001-10-03 15:10:38.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/cpu/access.cc	2002-08-24 18:17:36.000000000 +0200
+@@ -228,105 +228,84 @@
+     }
+ }
+ 
+-
+-
+-
+   void
+-BX_CPU_C::write_virtual_byte(unsigned s, Bit32u offset, Bit8u *data)
++BX_CPU_C::write_virtual(unsigned s, Bit32u offset, unsigned len, void *data)
+ {
+   Bit32u laddr;
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 1);
++  write_virtual_checks(seg, offset, len);
+ 
+   laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 1, BX_WRITE);
++  BX_INSTR_MEM_DATA(laddr, len, BX_WRITE);
+ 
+   // all checks OK
+-  access_linear(laddr, 1, CPL==3, BX_WRITE, (void *) data);
++  access_linear(laddr, len, CPL==3, BX_WRITE, data);
+ }
+ 
+   void
+-BX_CPU_C::write_virtual_word(unsigned s, Bit32u offset, Bit16u *data)
++BX_CPU_C::write_virtual_byte(unsigned s, Bit32u offset, Bit8u *data)
+ {
+-  Bit32u laddr;
+-  bx_segment_reg_t *seg;
+-
+-  seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 2);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 2, BX_WRITE);
++  write_virtual(s, offset, 1, (void*) data);
++}
+ 
+-  // all checks OK
+-  access_linear(laddr, 2, CPL==3, BX_WRITE, (void *) data);
++  void
++BX_CPU_C::write_virtual_word(unsigned s, Bit32u offset, Bit16u *data)
++{
++  write_virtual(s, offset, 2, (void*) data);
+ }
+ 
+   void
+ BX_CPU_C::write_virtual_dword(unsigned s, Bit32u offset, Bit32u *data)
+ {
+-  Bit32u laddr;
+-  bx_segment_reg_t *seg;
+-
+-  seg = &BX_CPU_THIS_PTR sregs[s];
+-  write_virtual_checks(seg, offset, 4);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 4, BX_WRITE);
+-
+-  // all checks OK
+-  access_linear(laddr, 4, CPL==3, BX_WRITE, (void *) data);
++  write_virtual(s, offset, 4, (void*) data);
+ }
+ 
+   void
+-BX_CPU_C::read_virtual_byte(unsigned s, Bit32u offset, Bit8u *data)
++BX_CPU_C::write_virtual_qword(unsigned s, Bit32u offset, Bit64u *data)
++{
++  write_virtual(s, offset, 8, (void*) data);
++}
++
++ void
++BX_CPU_C::read_virtual(unsigned s, Bit32u offset, unsigned len, void *data)
+ {
+   Bit32u laddr;
+   bx_segment_reg_t *seg;
+ 
+   seg = &BX_CPU_THIS_PTR sregs[s];
+-  read_virtual_checks(seg, offset, 1);
++  read_virtual_checks(seg, offset, len);
+ 
+   laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 1, BX_READ);
++  BX_INSTR_MEM_DATA(laddr, len, BX_READ);
+ 
+   // all checks OK
+-  access_linear(laddr, 1, CPL==3, BX_READ, (void *) data);
++  access_linear(laddr, len, CPL==3, BX_READ, data);
+ }
+ 
++  void
++BX_CPU_C::read_virtual_byte(unsigned s, Bit32u offset, Bit8u *data)
++{
++  read_virtual(s, offset, 1, (void*) data);
++}
+ 
+   void
+ BX_CPU_C::read_virtual_word(unsigned s, Bit32u offset, Bit16u *data)
+ {
+-  Bit32u laddr;
+-  bx_segment_reg_t *seg;
+-
+-  seg = &BX_CPU_THIS_PTR sregs[s];
+-  read_virtual_checks(seg, offset, 2);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 2, BX_READ);
+-
+-  // all checks OK
+-  access_linear(laddr, 2, CPL==3, BX_READ, (void *) data);
++  read_virtual(s, offset, 2, (void*) data);
+ }
+ 
+-
+   void
+ BX_CPU_C::read_virtual_dword(unsigned s, Bit32u offset, Bit32u *data)
+ {
+-  Bit32u laddr;
+-  bx_segment_reg_t *seg;
+-
+-  seg = &BX_CPU_THIS_PTR sregs[s];
+-  read_virtual_checks(seg, offset, 4);
+-
+-  laddr = seg->cache.u.segment.base + offset;
+-  BX_INSTR_MEM_DATA(laddr, 4, BX_READ);
++  read_virtual(s, offset, 4, (void*) data);
++}
+ 
+-  // all checks OK
+-  access_linear(laddr, 4, CPL==3, BX_READ, (void *) data);
++ void
++BX_CPU_C::read_virtual_qword(unsigned s, Bit32u offset, Bit64u *data)
++{
++  read_virtual(s, offset, 8, (void*) data);
+ }
+ 
+ //////////////////////////////////////////////////////////////
+diff -r -u -N bochs-1.4.1/cpu/cpu.h bochs-1.4.1-mmx-release-endian/cpu/cpu.h
+--- bochs-1.4.1/cpu/cpu.h	2002-07-16 22:01:29.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/cpu/cpu.h	2002-08-29 19:53:51.000000000 +0200
+@@ -707,6 +707,8 @@
+ 
+ class BX_MEM_C;
+ 
++#include "cpu/i387.h"
++
+ class BX_CPU_C : public logfunctions {
+ 
+ public: // for now...
+@@ -808,6 +810,8 @@
+   bx_regs_msr_t	msr;  
+ #endif
+ 
++  i387_t the_i387;
++
+   // pointer to the address space that this processor uses.
+   BX_MEM_C *mem;
+ 
+@@ -1267,6 +1271,71 @@
+   BX_SMF void ESC6(BxInstruction_t *);
+   BX_SMF void ESC7(BxInstruction_t *);
+ 
++  /* MMX */
++  BX_SMF void PUNPCKLBW_PqQd(BxInstruction_t *i);
++  BX_SMF void PUNPCKLWD_PqQd(BxInstruction_t *i);
++  BX_SMF void PUNPCKLDQ_PqQd(BxInstruction_t *i);
++  BX_SMF void PACKSSWB_PqQq(BxInstruction_t *i);
++  BX_SMF void PCMPGTB_PqQq(BxInstruction_t *i);
++  BX_SMF void PCMPGTW_PqQq(BxInstruction_t *i);
++  BX_SMF void PCMPGTD_PqQq(BxInstruction_t *i);
++  BX_SMF void PACKUSWB_PqQq(BxInstruction_t *i);
++  BX_SMF void PUNPCKHBW_PqQq(BxInstruction_t *i);
++  BX_SMF void PUNPCKHWD_PqQq(BxInstruction_t *i);
++  BX_SMF void PUNPCKHDQ_PqQq(BxInstruction_t *i);
++  BX_SMF void PACKSSDW_PqQq(BxInstruction_t *i);
++  BX_SMF void MOVD_PqEd(BxInstruction_t *i);
++  BX_SMF void MOVQ_PqQq(BxInstruction_t *i);
++  BX_SMF void PCMPEQB_PqQq(BxInstruction_t *i);
++  BX_SMF void PCMPEQW_PqQq(BxInstruction_t *i);
++  BX_SMF void PCMPEQD_PqQq(BxInstruction_t *i);
++  BX_SMF void EMMS(BxInstruction_t *i);
++  BX_SMF void MOVD_EdPd(BxInstruction_t *i);
++  BX_SMF void MOVQ_QqPq(BxInstruction_t *i);
++  BX_SMF void PSRLW_PqQq(BxInstruction_t *i);
++  BX_SMF void PSRLD_PqQq(BxInstruction_t *i);
++  BX_SMF void PSRLQ_PqQq(BxInstruction_t *i);
++  BX_SMF void PMULLW_PqQq(BxInstruction_t *i);
++  BX_SMF void PSUBUSB_PqQq(BxInstruction_t *i);
++  BX_SMF void PSUBUSW_PqQq(BxInstruction_t *i);
++  BX_SMF void PAND_PqQq(BxInstruction_t *i);
++  BX_SMF void PADDUSB_PqQq(BxInstruction_t *i);
++  BX_SMF void PADDUSW_PqQq(BxInstruction_t *i);
++  BX_SMF void PANDN_PqQq(BxInstruction_t *i);
++  BX_SMF void PSRAW_PqQq(BxInstruction_t *i);
++  BX_SMF void PSRAD_PqQq(BxInstruction_t *i);
++  BX_SMF void PMULHW_PqQq(BxInstruction_t *i);
++  BX_SMF void PSUBSB_PqQq(BxInstruction_t *i);
++  BX_SMF void PSUBSW_PqQq(BxInstruction_t *i);
++  BX_SMF void POR_PqQq(BxInstruction_t *i);
++  BX_SMF void PADDSB_PqQq(BxInstruction_t *i);
++  BX_SMF void PADDSW_PqQq(BxInstruction_t *i);
++  BX_SMF void PXOR_PqQq(BxInstruction_t *i);
++  BX_SMF void PSLLW_PqQq(BxInstruction_t *i);
++  BX_SMF void PSLLD_PqQq(BxInstruction_t *i);
++  BX_SMF void PSLLQ_PqQq(BxInstruction_t *i);
++  BX_SMF void PMADDWD_PqQq(BxInstruction_t *i);
++  BX_SMF void PSUBB_PqQq(BxInstruction_t *i);
++  BX_SMF void PSUBW_PqQq(BxInstruction_t *i);
++  BX_SMF void PSUBD_PqQq(BxInstruction_t *i);
++  BX_SMF void PADDB_PqQq(BxInstruction_t *i);
++  BX_SMF void PADDW_PqQq(BxInstruction_t *i);
++  BX_SMF void PADDD_PqQq(BxInstruction_t *i);
++  BX_SMF void PSRLW_PqIb(BxInstruction_t *i);
++  BX_SMF void PSRAW_PqIb(BxInstruction_t *i);
++  BX_SMF void PSLLW_PqIb(BxInstruction_t *i);
++  BX_SMF void PSRLD_PqIb(BxInstruction_t *i);
++  BX_SMF void PSRAD_PqIb(BxInstruction_t *i);
++  BX_SMF void PSLLD_PqIb(BxInstruction_t *i);
++  BX_SMF void PSRLQ_PqIb(BxInstruction_t *i);
++  BX_SMF void PSLLQ_PqIb(BxInstruction_t *i);
++  /* MMX */
++
++#if BX_SUPPORT_MMX
++  BX_SMF void PrepareMmxInstruction(void);
++  BX_SMF void PrintMmxRegisters(void);
++#endif
++
+   BX_SMF void fpu_execute(BxInstruction_t *i);
+   BX_SMF void fpu_init(void);
+   BX_SMF void fpu_print_regs (void);
+@@ -1439,14 +1508,18 @@
+   BX_SMF void revalidate_prefetch_q(void);
+   BX_SMF void invalidate_prefetch_q(void);
+ 
++  BX_SMF void write_virtual(unsigned seg, Bit32u offset, unsigned len, void *data);
++  BX_SMF void read_virtual(unsigned seg, Bit32u offset, unsigned len, void *data);
+   BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length);
+   BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length);
+   BX_SMF void write_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);
+   BX_SMF void write_virtual_word(unsigned seg, Bit32u offset, Bit16u *data);
+   BX_SMF void write_virtual_dword(unsigned seg, Bit32u offset, Bit32u *data);
++  BX_SMF void write_virtual_qword(unsigned seg, Bit32u offset, Bit64u *data);
+   BX_SMF void read_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);
+   BX_SMF void read_virtual_word(unsigned seg, Bit32u offset, Bit16u *data);
+   BX_SMF void read_virtual_dword(unsigned seg, Bit32u offset, Bit32u *data);
++  BX_SMF void read_virtual_qword(unsigned seg, Bit32u offset, Bit64u *data);
+ 
+   BX_SMF void read_RMW_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);
+   BX_SMF void read_RMW_virtual_word(unsigned seg, Bit32u offset, Bit16u *data);
+@@ -1568,6 +1641,8 @@
+   BX_SMF BX_CPP_INLINE Bit16u get_CX(void);
+   BX_SMF BX_CPP_INLINE Bit16u get_DX(void);
+ 
++  BX_SMF BX_CPP_INLINE int which_cpu(void);
++
+ #if BX_CPU_LEVEL >= 2
+   BX_SMF BX_CPP_INLINE Boolean real_mode(void);
+ #endif
+@@ -1589,6 +1664,14 @@
+ #define BX_HWDebugMemRW         0x03
+ #endif
+ 
++BX_SMF BX_CPP_INLINE int BX_CPU_C_PREFIX which_cpu(void)
++{ 
++#if (BX_SMP_PROCESSORS==1)
++   return 0;
++#else
++   return local_apic.get_id();
++#endif
++}
+ 
+ #if BX_SMP_PROCESSORS==1
+ // single processor simulation, so there's one of everything
+@@ -1840,7 +1923,13 @@
+ #define BxGroup7          BxGroupN
+ #define BxGroup8          BxGroupN
+ #define BxGroup9          BxGroupN
+-#define BxGroupa          BxGroupN
++#define BxGroupA          BxGroupN
++
++#if BX_SUPPORT_MMX
++#define BxAnotherMMX      BxAnother
++#else
++#define BxAnotherMMX      (0)
++#endif
+ 
+ #if BX_DEBUGGER
+ typedef enum _show_flags {
+diff -r -u -N bochs-1.4.1/cpu/fetchdecode.cc bochs-1.4.1-mmx-release-endian/cpu/fetchdecode.cc
+--- bochs-1.4.1/cpu/fetchdecode.cc	2001-10-03 15:10:38.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/cpu/fetchdecode.cc	2002-08-25 13:01:36.000000000 +0200
+@@ -344,6 +344,40 @@
+   /* 7 */  { 0,  &BX_CPU_C::BxError }
+   };
+ 
++#if BX_SUPPORT_MMX
++static BxOpcodeInfo_t BxOpcodeInfoGAw[8] = {	        /* MMX */
++  /* 0 */  { 0,  &BX_CPU_C::BxError },
++  /* 1 */  { 0,  &BX_CPU_C::BxError },
++  /* 2 */  { BxImmediate_Ib,  &BX_CPU_C::PSRLW_PqIb },
++  /* 3 */  { 0,  &BX_CPU_C::BxError },
++  /* 4 */  { BxImmediate_Ib,  &BX_CPU_C::PSRAW_PqIb },
++  /* 5 */  { 0,  &BX_CPU_C::BxError },
++  /* 6 */  { BxImmediate_Ib,  &BX_CPU_C::PSLLW_PqIb },
++  /* 7 */  { 0,  &BX_CPU_C::BxError }
++  };
++
++static BxOpcodeInfo_t BxOpcodeInfoGAd[8] = {		/* MMX */
++  /* 0 */  { 0,  &BX_CPU_C::BxError },
++  /* 1 */  { 0,  &BX_CPU_C::BxError },
++  /* 2 */  { BxImmediate_Ib,  &BX_CPU_C::PSRLD_PqIb },
++  /* 3 */  { 0,  &BX_CPU_C::BxError },
++  /* 4 */  { BxImmediate_Ib,  &BX_CPU_C::PSRAD_PqIb },
++  /* 5 */  { 0,  &BX_CPU_C::BxError },
++  /* 6 */  { BxImmediate_Ib,  &BX_CPU_C::PSLLD_PqIb },
++  /* 7 */  { 0,  &BX_CPU_C::BxError }
++  };
++
++static BxOpcodeInfo_t BxOpcodeInfoGAq[8] = {		/* MMX */
++  /* 0 */  { 0,  &BX_CPU_C::BxError },
++  /* 1 */  { 0,  &BX_CPU_C::BxError },
++  /* 2 */  { BxImmediate_Ib,  &BX_CPU_C::PSRLQ_PqIb },
++  /* 3 */  { 0,  &BX_CPU_C::BxError },
++  /* 4 */  { 0,  &BX_CPU_C::BxError },
++  /* 5 */  { 0,  &BX_CPU_C::BxError },
++  /* 6 */  { BxImmediate_Ib,  &BX_CPU_C::PSLLQ_PqIb },
++  /* 7 */  { 0,  &BX_CPU_C::BxError }
++  };
++#endif
+ 
+ // 512 entries for 16bit mode
+ // 512 entries for 32bit mode
+@@ -703,38 +737,44 @@
+   /* 0F 5D */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 5E */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 5F */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 60 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 61 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 62 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 63 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 64 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 65 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 66 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 67 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 68 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 69 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6A */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6B */  { 0,  &BX_CPU_C::BxError },
++  /* 0F 60 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKLBW_PqQd },	/* MMX */
++  /* 0F 61 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKLWD_PqQd },	/* MMX */
++  /* 0F 62 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKLDQ_PqQd },	/* MMX */
++  /* 0F 63 */  { BxAnotherMMX,  &BX_CPU_C::PACKSSWB_PqQq },	/* MMX */
++  /* 0F 64 */  { BxAnotherMMX,  &BX_CPU_C::PCMPGTB_PqQq },	/* MMX */
++  /* 0F 65 */  { BxAnotherMMX,  &BX_CPU_C::PCMPGTW_PqQq },	/* MMX */
++  /* 0F 66 */  { BxAnotherMMX,  &BX_CPU_C::PCMPGTD_PqQq },	/* MMX */
++  /* 0F 67 */  { BxAnotherMMX,  &BX_CPU_C::PACKUSWB_PqQq },	/* MMX */
++  /* 0F 68 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKHBW_PqQq },	/* MMX */
++  /* 0F 69 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKHWD_PqQq },	/* MMX */
++  /* 0F 6A */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKHDQ_PqQq },	/* MMX */
++  /* 0F 6B */  { BxAnotherMMX,  &BX_CPU_C::PACKSSDW_PqQq },	/* MMX */
+   /* 0F 6C */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 6D */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6E */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6F */  { 0,  &BX_CPU_C::BxError },
++  /* 0F 6E */  { BxAnotherMMX,  &BX_CPU_C::MOVD_PqEd },		/* MMX */
++  /* 0F 6F */  { BxAnotherMMX,  &BX_CPU_C::MOVQ_PqQq },		/* MMX */
+   /* 0F 70 */  { 0,  &BX_CPU_C::BxError },
++#if BX_SUPPORT_MMX
++  /* 0F 71 */  { BxAnother | BxGroupA, NULL, BxOpcodeInfoGAw },
++  /* 0F 72 */  { BxAnother | BxGroupA, NULL, BxOpcodeInfoGAd },
++  /* 0F 73 */  { BxAnother | BxGroupA, NULL, BxOpcodeInfoGAq },
++#else
+   /* 0F 71 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 72 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 73 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 74 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 75 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 76 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 77 */  { 0,  &BX_CPU_C::BxError },
++#endif
++  /* 0F 74 */  { BxAnotherMMX,  &BX_CPU_C::PCMPEQB_PqQq },	/* MMX */
++  /* 0F 75 */  { BxAnotherMMX,  &BX_CPU_C::PCMPEQW_PqQq },	/* MMX */
++  /* 0F 76 */  { BxAnotherMMX,  &BX_CPU_C::PCMPEQD_PqQq },	/* MMX */
++  /* 0F 77 */  { 0,  &BX_CPU_C::EMMS },				/* MMX */
+   /* 0F 78 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 79 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7A */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7B */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7C */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7D */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 7E */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 7F */  { 0,  &BX_CPU_C::BxError },
++  /* 0F 7E */  { BxAnotherMMX,  &BX_CPU_C::MOVD_EdPd },		/* MMX */
++  /* 0F 7F */  { BxAnotherMMX,  &BX_CPU_C::MOVQ_QqPq },		/* MMX */
+   /* 0F 80 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
+   /* 0F 81 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
+   /* 0F 82 */  { BxImmediate_BrOff16,  &BX_CPU_C::JCC_Jw },
+@@ -816,53 +856,53 @@
+   /* 0F CE */  { 0,  &BX_CPU_C::BSWAP_ESI },
+   /* 0F CF */  { 0,  &BX_CPU_C::BSWAP_EDI },
+   /* 0F D0 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D1 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D2 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D3 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F D1 */  { BxAnotherMMX,  &BX_CPU_C::PSRLW_PqQq },	/* MMX */
++  /* 0F D2 */  { BxAnotherMMX,  &BX_CPU_C::PSRLD_PqQq },	/* MMX */
++  /* 0F D3 */  { BxAnotherMMX,  &BX_CPU_C::PSRLQ_PqQq },	/* MMX */
+   /* 0F D4 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D5 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F D5 */  { BxAnotherMMX,  &BX_CPU_C::PMULLW_PqQq },	/* MMX */
+   /* 0F D6 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F D7 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D8 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D9 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F D8 */  { BxAnotherMMX,  &BX_CPU_C::PSUBUSB_PqQq },	/* MMX */
++  /* 0F D9 */  { BxAnotherMMX,  &BX_CPU_C::PSUBUSW_PqQq },	/* MMX */
+   /* 0F DA */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DB */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DC */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DD */  { 0,  &BX_CPU_C::BxError },
++  /* 0F DB */  { BxAnotherMMX,  &BX_CPU_C::PAND_PqQq },		/* MMX */
++  /* 0F DC */  { BxAnotherMMX,  &BX_CPU_C::PADDUSB_PqQq },	/* MMX */
++  /* 0F DD */  { BxAnotherMMX,  &BX_CPU_C::PADDUSW_PqQq },	/* MMX */
+   /* 0F DE */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DF */  { 0,  &BX_CPU_C::BxError },
++  /* 0F DF */  { BxAnotherMMX,  &BX_CPU_C::PANDN_PqQq },	/* MMX */
+   /* 0F E0 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E1 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E2 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F E1 */  { BxAnotherMMX,  &BX_CPU_C::PSRAW_PqQq },	/* MMX */
++  /* 0F E2 */  { BxAnotherMMX,  &BX_CPU_C::PSRAD_PqQq },	/* MMX */
+   /* 0F E3 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F E4 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E5 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F E5 */  { BxAnotherMMX,  &BX_CPU_C::PMULHW_PqQq },	/* MMX */
+   /* 0F E6 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F E7 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E8 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E9 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F E8 */  { BxAnotherMMX,  &BX_CPU_C::PSUBSB_PqQq },	/* MMX */
++  /* 0F E9 */  { BxAnotherMMX,  &BX_CPU_C::PSUBSW_PqQq },	/* MMX */
+   /* 0F EA */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F EB */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F EC */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F ED */  { 0,  &BX_CPU_C::BxError },
++  /* 0F EB */  { BxAnotherMMX,  &BX_CPU_C::POR_PqQq },		/* MMX */
++  /* 0F EC */  { BxAnotherMMX,  &BX_CPU_C::PADDSB_PqQq },	/* MMX */
++  /* 0F ED */  { BxAnotherMMX,  &BX_CPU_C::PADDSW_PqQq },	/* MMX */
+   /* 0F EE */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F EF */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F F0 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F1 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F2 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F3 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F4 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F5 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F6 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F7 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F8 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F9 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FA */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FB */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FC */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FD */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FE */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FF */  { 0,  &BX_CPU_C::UndefinedOpcode },
++  /* 0F EF */  { BxAnotherMMX,  &BX_CPU_C::PXOR_PqQq },		/* MMX */
++  /* 0F F0 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F1 */  { BxAnotherMMX,  &BX_CPU_C::PSLLW_PqQq },	/* MMX */
++  /* 0F F2 */  { BxAnotherMMX,  &BX_CPU_C::PSLLD_PqQq },	/* MMX */
++  /* 0F F3 */  { BxAnotherMMX,  &BX_CPU_C::PSLLQ_PqQq },	/* MMX */
++  /* 0F F4 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F5 */  { BxAnotherMMX,  &BX_CPU_C::PMADDWD_PqQq },	/* MMX */
++  /* 0F F6 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F7 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F8 */  { BxAnotherMMX,  &BX_CPU_C::PSUBB_PqQq },	/* MMX */
++  /* 0F F9 */  { BxAnotherMMX,  &BX_CPU_C::PSUBW_PqQq },	/* MMX */
++  /* 0F FA */  { BxAnotherMMX,  &BX_CPU_C::PSUBD_PqQq },	/* MMX */
++  /* 0F FB */  { 0,  &BX_CPU_C::BxError },
++  /* 0F FC */  { BxAnotherMMX,  &BX_CPU_C::PADDB_PqQq },	/* MMX */
++  /* 0F FD */  { BxAnotherMMX,  &BX_CPU_C::PADDW_PqQq },	/* MMX */
++  /* 0F FE */  { BxAnotherMMX,  &BX_CPU_C::PADDD_PqQq },	/* MMX */
++  /* 0F FF */  { 0,  &BX_CPU_C::BxError },
+ 
+   // 512 entries for 32bit mod
+   /* 00 */  { BxAnother,  &BX_CPU_C::ADD_EbGb },
+@@ -1218,38 +1258,44 @@
+   /* 0F 5D */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 5E */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 5F */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 60 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 61 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 62 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 63 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 64 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 65 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 66 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 67 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 68 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 69 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6A */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6B */  { 0,  &BX_CPU_C::BxError },
++  /* 0F 60 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKLBW_PqQd },	/* MMX */
++  /* 0F 61 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKLWD_PqQd },	/* MMX */
++  /* 0F 62 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKLDQ_PqQd },	/* MMX */
++  /* 0F 63 */  { BxAnotherMMX,  &BX_CPU_C::PACKSSWB_PqQq },	/* MMX */
++  /* 0F 64 */  { BxAnotherMMX,  &BX_CPU_C::PCMPGTB_PqQq },	/* MMX */
++  /* 0F 65 */  { BxAnotherMMX,  &BX_CPU_C::PCMPGTW_PqQq },	/* MMX */
++  /* 0F 66 */  { BxAnotherMMX,  &BX_CPU_C::PCMPGTD_PqQq },	/* MMX */
++  /* 0F 67 */  { BxAnotherMMX,  &BX_CPU_C::PACKUSWB_PqQq },	/* MMX */
++  /* 0F 68 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKHBW_PqQq },	/* MMX */
++  /* 0F 69 */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKHWD_PqQq },	/* MMX */
++  /* 0F 6A */  { BxAnotherMMX,  &BX_CPU_C::PUNPCKHDQ_PqQq },	/* MMX */
++  /* 0F 6B */  { BxAnotherMMX,  &BX_CPU_C::PACKSSDW_PqQq },	/* MMX */
+   /* 0F 6C */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 6D */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6E */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 6F */  { 0,  &BX_CPU_C::BxError },
++  /* 0F 6E */  { BxAnotherMMX,  &BX_CPU_C::MOVD_PqEd },		/* MMX */
++  /* 0F 6F */  { BxAnotherMMX,  &BX_CPU_C::MOVQ_PqQq },		/* MMX */
+   /* 0F 70 */  { 0,  &BX_CPU_C::BxError },
++#if BX_SUPPORT_MMX
++  /* 0F 71 */  { BxAnother | BxGroupA, NULL, BxOpcodeInfoGAw },
++  /* 0F 72 */  { BxAnother | BxGroupA, NULL, BxOpcodeInfoGAd },
++  /* 0F 73 */  { BxAnother | BxGroupA, NULL, BxOpcodeInfoGAq },
++#else
+   /* 0F 71 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 72 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 73 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 74 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 75 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 76 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 77 */  { 0,  &BX_CPU_C::BxError },
++#endif
++  /* 0F 74 */  { BxAnotherMMX,  &BX_CPU_C::PCMPEQB_PqQq },	/* MMX */
++  /* 0F 75 */  { BxAnotherMMX,  &BX_CPU_C::PCMPEQW_PqQq },	/* MMX */
++  /* 0F 76 */  { BxAnotherMMX,  &BX_CPU_C::PCMPEQD_PqQq },	/* MMX */
++  /* 0F 77 */  { 0,  &BX_CPU_C::EMMS },				/* MMX */
+   /* 0F 78 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 79 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7A */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7B */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7C */  { 0,  &BX_CPU_C::BxError },
+   /* 0F 7D */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 7E */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F 7F */  { 0,  &BX_CPU_C::BxError },
++  /* 0F 7E */  { BxAnotherMMX,  &BX_CPU_C::MOVD_EdPd },		/* MMX */
++  /* 0F 7F */  { BxAnotherMMX,  &BX_CPU_C::MOVQ_QqPq },		/* MMX */
+   /* 0F 80 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
+   /* 0F 81 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
+   /* 0F 82 */  { BxImmediate_BrOff32,  &BX_CPU_C::JCC_Jd },
+@@ -1331,53 +1377,53 @@
+   /* 0F CE */  { 0,  &BX_CPU_C::BSWAP_ESI },
+   /* 0F CF */  { 0,  &BX_CPU_C::BSWAP_EDI },
+   /* 0F D0 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D1 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D2 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D3 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F D1 */  { BxAnotherMMX,  &BX_CPU_C::PSRLW_PqQq },	/* MMX */
++  /* 0F D2 */  { BxAnotherMMX,  &BX_CPU_C::PSRLD_PqQq },	/* MMX */
++  /* 0F D3 */  { BxAnotherMMX,  &BX_CPU_C::PSRLQ_PqQq },	/* MMX */
+   /* 0F D4 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D5 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F D5 */  { BxAnotherMMX,  &BX_CPU_C::PMULLW_PqQq },	/* MMX */
+   /* 0F D6 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F D7 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D8 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F D9 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F D8 */  { BxAnotherMMX,  &BX_CPU_C::PSUBUSB_PqQq },	/* MMX */
++  /* 0F D9 */  { BxAnotherMMX,  &BX_CPU_C::PSUBUSW_PqQq },	/* MMX */
+   /* 0F DA */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DB */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DC */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DD */  { 0,  &BX_CPU_C::BxError },
++  /* 0F DB */  { BxAnotherMMX,  &BX_CPU_C::PAND_PqQq },		/* MMX */
++  /* 0F DC */  { BxAnotherMMX,  &BX_CPU_C::PADDUSB_PqQq },	/* MMX */
++  /* 0F DD */  { BxAnotherMMX,  &BX_CPU_C::PADDUSW_PqQq },	/* MMX */
+   /* 0F DE */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F DF */  { 0,  &BX_CPU_C::BxError },
++  /* 0F DF */  { BxAnotherMMX,  &BX_CPU_C::PANDN_PqQq },	/* MMX */
+   /* 0F E0 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E1 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E2 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F E1 */  { BxAnotherMMX,  &BX_CPU_C::PSRAW_PqQq },	/* MMX */
++  /* 0F E2 */  { BxAnotherMMX,  &BX_CPU_C::PSRAD_PqQq },	/* MMX */
+   /* 0F E3 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F E4 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E5 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F E5 */  { BxAnotherMMX,  &BX_CPU_C::PMULHW_PqQq },	/* MMX */
+   /* 0F E6 */  { 0,  &BX_CPU_C::BxError },
+   /* 0F E7 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E8 */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F E9 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F E8 */  { BxAnotherMMX,  &BX_CPU_C::PSUBSB_PqQq },	/* MMX */
++  /* 0F E9 */  { BxAnotherMMX,  &BX_CPU_C::PSUBSW_PqQq },	/* MMX */
+   /* 0F EA */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F EB */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F EC */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F ED */  { 0,  &BX_CPU_C::BxError },
++  /* 0F EB */  { BxAnotherMMX,  &BX_CPU_C::POR_PqQq },		/* MMX */
++  /* 0F EC */  { BxAnotherMMX,  &BX_CPU_C::PADDSB_PqQq },	/* MMX */
++  /* 0F ED */  { BxAnotherMMX,  &BX_CPU_C::PADDSW_PqQq },	/* MMX */
+   /* 0F EE */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F EF */  { 0,  &BX_CPU_C::BxError },
+-  /* 0F F0 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F1 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F2 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F3 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F4 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F5 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F6 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F7 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F8 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F F9 */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FA */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FB */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FC */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FD */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FE */  { 0,  &BX_CPU_C::UndefinedOpcode },
+-  /* 0F FF */  { 0,  &BX_CPU_C::UndefinedOpcode },
++  /* 0F EF */  { BxAnotherMMX,  &BX_CPU_C::PXOR_PqQq },		/* MMX */
++  /* 0F F0 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F1 */  { BxAnotherMMX,  &BX_CPU_C::PSLLW_PqQq },	/* MMX */
++  /* 0F F2 */  { BxAnotherMMX,  &BX_CPU_C::PSLLD_PqQq },	/* MMX */
++  /* 0F F3 */  { BxAnotherMMX,  &BX_CPU_C::PSLLQ_PqQq },	/* MMX */
++  /* 0F F4 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F5 */  { BxAnotherMMX,  &BX_CPU_C::PMADDWD_PqQq },	/* MMX */
++  /* 0F F6 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F7 */  { 0,  &BX_CPU_C::BxError },
++  /* 0F F8 */  { BxAnotherMMX,  &BX_CPU_C::PSUBB_PqQq },	/* MMX */
++  /* 0F F9 */  { BxAnotherMMX,  &BX_CPU_C::PSUBW_PqQq },	/* MMX */
++  /* 0F FA */  { BxAnotherMMX,  &BX_CPU_C::PSUBD_PqQq },	/* MMX */
++  /* 0F FB */  { 0,  &BX_CPU_C::BxError },
++  /* 0F FC */  { BxAnotherMMX,  &BX_CPU_C::PADDB_PqQq },	/* MMX */
++  /* 0F FD */  { BxAnotherMMX,  &BX_CPU_C::PADDW_PqQq },	/* MMX */
++  /* 0F FE */  { BxAnotherMMX,  &BX_CPU_C::PADDD_PqQq },	/* MMX */
++  /* 0F FF */  { 0,  &BX_CPU_C::BxError }
+   };
+ 
+ 
+diff -r -u -N bochs-1.4.1/cpu/i387.h bochs-1.4.1-mmx-release-endian/cpu/i387.h
+--- bochs-1.4.1/cpu/i387.h	1970-01-01 02:00:00.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/cpu/i387.h	2002-09-04 16:03:49.000000000 +0200
+@@ -0,0 +1,157 @@
++#ifndef BX_I387_RELATED_EXTENSIONS_H
++#define BX_I387_RELATED_EXTENSIONS_H
++
++/* Get data sizes from config.h generated from simulator's
++ * configure script
++ */
++#include "config.h"
++typedef Bit8u  u8;	/* for FPU only */
++typedef Bit8s  s8;
++typedef Bit16u u16;
++typedef Bit16s s16;
++typedef Bit32u u32;
++typedef Bit32s s32;
++typedef Bit64u u64;
++typedef Bit64s s64;
++
++//
++// Minimal i387 structure, pruned from the linux headers.  Only
++// the fields which were necessary are included.
++//
++struct BxFpuRegisters {
++    s32      cwd;
++    s32      swd;
++    s32      twd;
++    s32      fip;
++    s32      fcs;
++    s32      foo;
++    s32      fos;
++    u32      fill0; /* to make sure the following aligns on an 8byte boundary */
++    u64      st_space[16];   /* 8*16 bytes per FP-reg (aligned) = 128 bytes */
++    unsigned char   ftop;
++    unsigned char   no_update;
++    unsigned char   rm;
++    unsigned char   alimit;
++};
++
++#if BX_SUPPORT_MMX
++typedef union {
++  Bit8u u8;
++  Bit8s s8;
++} MMX_BYTE;
++
++typedef union {
++  Bit16u u16;
++  Bit16s s16;
++  struct {
++#ifdef BX_BIG_ENDIAN
++    MMX_BYTE hi;
++    MMX_BYTE lo;
++#else
++    MMX_BYTE lo;
++    MMX_BYTE hi;
++#endif
++  } bytes;
++} MMX_WORD;
++
++typedef union {
++  Bit32u u32;
++  Bit32s s32;
++  struct {
++#ifdef BX_BIG_ENDIAN
++    MMX_WORD hi;
++    MMX_WORD lo;
++#else
++    MMX_WORD lo;
++    MMX_WORD hi;
++#endif
++  } words;
++} MMX_DWORD;
++
++typedef union {
++  Bit64u u64;
++  Bit64s s64;
++  struct {
++#ifdef BX_BIG_ENDIAN
++    MMX_DWORD hi;
++    MMX_DWORD lo;
++#else
++    MMX_DWORD lo;
++    MMX_DWORD hi;
++#endif
++  } dwords;
++} MMX_QWORD, BxPackedMmxRegister;
++
++#define MMXSB0(reg) (reg.dwords.lo.words.lo.bytes.lo.s8)
++#define MMXSB1(reg) (reg.dwords.lo.words.lo.bytes.hi.s8)
++#define MMXSB2(reg) (reg.dwords.lo.words.hi.bytes.lo.s8)
++#define MMXSB3(reg) (reg.dwords.lo.words.hi.bytes.hi.s8)
++#define MMXSB4(reg) (reg.dwords.hi.words.lo.bytes.lo.s8)
++#define MMXSB5(reg) (reg.dwords.hi.words.lo.bytes.hi.s8)
++#define MMXSB6(reg) (reg.dwords.hi.words.hi.bytes.lo.s8)
++#define MMXSB7(reg) (reg.dwords.hi.words.hi.bytes.hi.s8)
++
++#define MMXUB0(reg) (reg.dwords.lo.words.lo.bytes.lo.u8)
++#define MMXUB1(reg) (reg.dwords.lo.words.lo.bytes.hi.u8)
++#define MMXUB2(reg) (reg.dwords.lo.words.hi.bytes.lo.u8)
++#define MMXUB3(reg) (reg.dwords.lo.words.hi.bytes.hi.u8)
++#define MMXUB4(reg) (reg.dwords.hi.words.lo.bytes.lo.u8)
++#define MMXUB5(reg) (reg.dwords.hi.words.lo.bytes.hi.u8)
++#define MMXUB6(reg) (reg.dwords.hi.words.hi.bytes.lo.u8)
++#define MMXUB7(reg) (reg.dwords.hi.words.hi.bytes.hi.u8)
++
++#define MMXSW0(reg) (reg.dwords.lo.words.lo.s16)
++#define MMXSW1(reg) (reg.dwords.lo.words.hi.s16)
++#define MMXSW2(reg) (reg.dwords.hi.words.lo.s16)
++#define MMXSW3(reg) (reg.dwords.hi.words.hi.s16)
++
++#define MMXUW0(reg) (reg.dwords.lo.words.lo.u16)
++#define MMXUW1(reg) (reg.dwords.lo.words.hi.u16)
++#define MMXUW2(reg) (reg.dwords.hi.words.lo.u16)
++#define MMXUW3(reg) (reg.dwords.hi.words.hi.u16)
++                                
++#define MMXSD0(reg) (reg.dwords.lo.s32)
++#define MMXSD1(reg) (reg.dwords.hi.s32)
++
++#define MMXUD0(reg) (reg.dwords.lo.u32)
++#define MMXUD1(reg) (reg.dwords.hi.u32)
++
++#define MMXSQ(reg)  (reg.s64)
++#define MMXUQ(reg)  (reg.u64)
++
++typedef struct mmx_physical_reg_t
++{
++   BxPackedMmxRegister packed_mmx_register;
++   Bit16u exp;		/* 4 bytes: exponent of fp register, 
++                                    set to 0xFFFF by all mmx commands */
++   Bit32u aligment;	/* 4 bytes: aligment */
++} BxMmxRegister;
++
++/* to be compatible with fpu register file */
++struct BxMmxRegisters
++{
++   Bit32u      cwd;		/* fpu control word */
++   Bit32u      swd;		/* fpu status  word */
++   Bit32u      twd;    		/* fpu tag     word */
++   Bit32u      fip;
++   Bit32u      fcs;
++   Bit32u      foo;
++   Bit32u      fos;
++   Bit32u      alignment;
++   BxMmxRegister mmx[8];   
++   unsigned char tos;		/* top-of-stack */
++   unsigned char no_update;
++   unsigned char rm;
++   unsigned char alimit;
++};
++#endif /* BX_SUPPORT_MMX */
++
++typedef union FpuMmxRegisters
++{
++    struct BxFpuRegisters soft;
++#if BX_SUPPORT_MMX
++    struct BxMmxRegisters mmx;
++#endif
++} i387_t;
++
++#endif
+diff -r -u -N bochs-1.4.1/cpu/mmx.cc bochs-1.4.1-mmx-release-endian/cpu/mmx.cc
+--- bochs-1.4.1/cpu/mmx.cc	1970-01-01 02:00:00.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/cpu/mmx.cc	2002-09-04 21:44:15.000000000 +0200
+@@ -0,0 +1,1842 @@
++#define NEED_CPU_REG_SHORTCUTS 1
++#include "bochs.h"
++#define LOG_THIS BX_CPU_THIS_PTR
++
++#if BX_SUPPORT_MMX
++
++#define MMX_REGFILE ((BX_CPU_THIS_PTR the_i387).mmx)
++
++#define MMX_TWD                (MMX_REGFILE.twd)
++#define MMX_SWD                (MMX_REGFILE.swd)
++#define MMX_TOS                (MMX_REGFILE.tos)
++#define BX_READ_MMX_REG(index) (MMX_REGFILE.mmx[index].packed_mmx_register)
++
++#define BX_WRITE_MMX_REG(index, value)		       \
++{                                                      \
++   MMX_REGFILE.mmx[index].packed_mmx_register = value; \
++   MMX_REGFILE.mmx[index].exp = 0xFFFF;		       \
++}                                                      
++
++#endif
++
++static Bit8s SaturateWordSToByteS(Bit16s value)
++{
++/*
++  SaturateWordSToByteS   converts   a signed 16-bit value to a
++  signed  8-bit  value. If the signed 16-bit value is less than -128, it
++  is  represented  by  the saturated value -128 (0x80). If it is greater
++  than 127, it is represented by the saturated value 127 (0x7F).
++*/
++  if(value < -128) return -128;
++  if(value >  127) return  127;
++  return value;
++}
++
++static Bit16s SaturateDwordSToWordS(Bit32s value)
++{
++/*
++  SaturateDwordSToWordS  converts  a  signed 32-bit value to a
++  signed  16-bit  value. If the signed 32-bit value is less than -32768,
++  it  is  represented  by  the saturated value -32768 (0x8000). If it is
++  greater  than  32767,  it  is represented by the saturated value 32767
++  (0x7FFF).
++*/
++  if(value < -32768) return -32768;
++  if(value >  32767) return  32767;
++  return value;
++}
++
++static Bit8u SaturateWordSToByteU(Bit16s value)
++{
++/*
++  SaturateWordSToByteU  converts a signed 16-bit value to an
++  unsigned  8-bit value. If the signed 16-bit value is less than zero it
++  is  represented  by  the  saturated value zero (0x00).If it is greater
++  than 255 it is represented by the saturated value 255 (0xFF).
++*/
++  if(value < 0) return 0;
++  if(value > 255) return 255;
++  return value;
++}
++
++static Bit16u SaturateDwordSToWordU(Bit32s value)
++{
++/*
++  SaturateDwordSToWordU  converts  a signed 32-bit value
++  to  an  unsigned  16-bit value. If the signed 32-bit value is less
++  than   zero,   it   is  represented  by  the saturated value 65535
++  (0x0000).  If  it  is greater  than  65535,  it  is represented by
++  the saturated value 65535 (0xFFFF).
++*/
++  if(value < 0) return 0;
++  if(value > 65535) return 65535;
++  return value;
++}
++
++#if BX_SUPPORT_MMX
++void BX_CPU_C::PrintMmxRegisters(void)
++{
++  for(int i=0;i<8;i++) {
++      BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
++      fprintf(stderr, "MM%d: %.16llx\n", i, MMXUQ(mm));
++  }
++}
++
++void BX_CPU_C::PrepareMmxInstruction(void)
++{
++  MMX_TWD = 0;
++  MMX_TOS = 0;	      /* Each time an MMX instruction is           */
++  MMX_SWD &= 0xC7FF;  /*    executed, the TOS value is set to 000B */
++
++  if(BX_CPU_THIS_PTR cr0.em)
++    exception(BX_UD_EXCEPTION, 0, 0);
++
++  if(BX_CPU_THIS_PTR cr0.ts)
++    exception(BX_NM_EXCEPTION, 0, 0);
++}
++#endif
++
++/* 0F 60 */
++void BX_CPU_C::PUNPCKLBW_PqQd(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), result;
++  Bit32u op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_32BIT_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_dword(i->seg, i->rm_addr, &op2);
++  }
++
++  MMXUB7(result) = (op2) >> 24;
++  MMXUB6(result) = MMXUB3(op1);
++  MMXUB5(result) = (op2 & 0x00FF0000) >> 16;
++  MMXUB4(result) = MMXUB2(op1);
++  MMXUB3(result) = (op2 & 0x0000FF00) >>  8;
++  MMXUB2(result) = MMXUB1(op1);
++  MMXUB1(result) = (op2 & 0x000000FF);
++  MMXUB0(result) = MMXUB0(op1);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 61 */
++void BX_CPU_C::PUNPCKLWD_PqQd(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), result;
++  Bit32u op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_32BIT_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_dword(i->seg, i->rm_addr, &op2);
++  }
++
++  MMXUW3(result) = (op2) >> 16;
++  MMXUW2(result) = MMXUW1(op1);
++  MMXUW1(result) = (op2 & 0x0000FFFF);
++  MMXUW0(result) = MMXUW0(op1);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 62 */
++void BX_CPU_C::PUNPCKLDQ_PqQd(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn);
++  Bit32u op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_32BIT_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_dword(i->seg, i->rm_addr, &op2);
++  }
++
++  MMXUD1(op1) = op2;
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 63 */
++void BX_CPU_C::PACKSSWB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXSB0(result) = SaturateWordSToByteS(MMXSW0(op1));
++  MMXSB1(result) = SaturateWordSToByteS(MMXSW1(op1));
++  MMXSB2(result) = SaturateWordSToByteS(MMXSW2(op1));
++  MMXSB3(result) = SaturateWordSToByteS(MMXSW3(op1));
++  MMXSB4(result) = SaturateWordSToByteS(MMXSW0(op2));
++  MMXSB5(result) = SaturateWordSToByteS(MMXSW1(op2));
++  MMXSB6(result) = SaturateWordSToByteS(MMXSW2(op2));
++  MMXSB7(result) = SaturateWordSToByteS(MMXSW3(op2));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 64 */
++void BX_CPU_C::PCMPGTB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUB0(result) = (MMXSB0(op1) > MMXSB0(op2)) ? 0xFF : 0;
++  MMXUB1(result) = (MMXSB1(op1) > MMXSB1(op2)) ? 0xFF : 0;
++  MMXUB2(result) = (MMXSB2(op1) > MMXSB2(op2)) ? 0xFF : 0;
++  MMXUB3(result) = (MMXSB3(op1) > MMXSB3(op2)) ? 0xFF : 0;
++  MMXUB4(result) = (MMXSB4(op1) > MMXSB4(op2)) ? 0xFF : 0;
++  MMXUB5(result) = (MMXSB5(op1) > MMXSB5(op2)) ? 0xFF : 0;
++  MMXUB6(result) = (MMXSB6(op1) > MMXSB6(op2)) ? 0xFF : 0;
++  MMXUB7(result) = (MMXSB7(op1) > MMXSB7(op2)) ? 0xFF : 0;
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 65 */
++void BX_CPU_C::PCMPGTW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUW0(result) = (MMXSW0(op1) > MMXSW0(op2)) ? 0xFFFF : 0;
++  MMXUW1(result) = (MMXSW1(op1) > MMXSW1(op2)) ? 0xFFFF : 0;
++  MMXUW2(result) = (MMXSW2(op1) > MMXSW2(op2)) ? 0xFFFF : 0;
++  MMXUW3(result) = (MMXSW3(op1) > MMXSW3(op2)) ? 0xFFFF : 0;
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 66 */
++void BX_CPU_C::PCMPGTD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUD0(result) = (MMXSD0(op1) > MMXSD0(op2)) ? 0xFFFFFFFF : 0;
++  MMXUD1(result) = (MMXSD1(op1) > MMXSD1(op2)) ? 0xFFFFFFFF : 0;
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 67 */
++void BX_CPU_C::PACKUSWB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUB0(result) = SaturateWordSToByteU(MMXSW0(op1));
++  MMXUB1(result) = SaturateWordSToByteU(MMXSW1(op1));
++  MMXUB2(result) = SaturateWordSToByteU(MMXSW2(op1));
++  MMXUB3(result) = SaturateWordSToByteU(MMXSW3(op1));
++  MMXUB4(result) = SaturateWordSToByteU(MMXSW0(op2));
++  MMXUB5(result) = SaturateWordSToByteU(MMXSW1(op2));
++  MMXUB6(result) = SaturateWordSToByteU(MMXSW2(op2));
++  MMXUB7(result) = SaturateWordSToByteU(MMXSW3(op2));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 68 */
++void BX_CPU_C::PUNPCKHBW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUB7(result) = MMXUB7(op2);
++  MMXUB6(result) = MMXUB7(op1);
++  MMXUB5(result) = MMXUB6(op2);
++  MMXUB4(result) = MMXUB6(op1);
++  MMXUB3(result) = MMXUB5(op2);
++  MMXUB2(result) = MMXUB5(op1);
++  MMXUB1(result) = MMXUB4(op2);
++  MMXUB0(result) = MMXUB4(op1);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 69 */
++void BX_CPU_C::PUNPCKHWD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUW3(result) = MMXUW3(op2);
++  MMXUW2(result) = MMXUW3(op1);
++  MMXUW1(result) = MMXUW2(op2);
++  MMXUW0(result) = MMXUW2(op1);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 6A */
++void BX_CPU_C::PUNPCKHDQ_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUD1(result) = MMXUD1(op2);
++  MMXUD0(result) = MMXUD1(op1);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 6B */
++void BX_CPU_C::PACKSSDW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXSW0(result) = SaturateDwordSToWordS(MMXSD0(op1));
++  MMXSW1(result) = SaturateDwordSToWordS(MMXSD1(op1));
++  MMXSW2(result) = SaturateDwordSToWordS(MMXSD0(op2));
++  MMXSW3(result) = SaturateDwordSToWordS(MMXSD1(op2));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 6E */
++void BX_CPU_C::MOVD_PqEd(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op;
++  MMXUD1(op) = 0;
++
++  /* op is a register or memory reference */
++  if (i->mod == 0xc0) {
++    MMXUD0(op) = BX_READ_32BIT_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_dword(i->seg, i->rm_addr, &(MMXUD0(op)));
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 6F */
++void BX_CPU_C::MOVQ_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op;
++
++  /* op is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op);
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 74 */
++void BX_CPU_C::PCMPEQB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUB0(result) = (MMXUB0(op1) == MMXUB0(op2)) ? 0xFF : 0;
++  MMXUB1(result) = (MMXUB1(op1) == MMXUB1(op2)) ? 0xFF : 0;
++  MMXUB2(result) = (MMXUB2(op1) == MMXUB2(op2)) ? 0xFF : 0;
++  MMXUB3(result) = (MMXUB3(op1) == MMXUB3(op2)) ? 0xFF : 0;
++  MMXUB4(result) = (MMXUB4(op1) == MMXUB4(op2)) ? 0xFF : 0;
++  MMXUB5(result) = (MMXUB5(op1) == MMXUB5(op2)) ? 0xFF : 0;
++  MMXUB6(result) = (MMXUB6(op1) == MMXUB6(op2)) ? 0xFF : 0;
++  MMXUB7(result) = (MMXUB7(op1) == MMXUB7(op2)) ? 0xFF : 0;
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 75 */
++void BX_CPU_C::PCMPEQW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUW0(result) = (MMXUW0(op1) == MMXUW0(op2)) ? 0xFFFF : 0;
++  MMXUW1(result) = (MMXUW1(op1) == MMXUW1(op2)) ? 0xFFFF : 0;
++  MMXUW2(result) = (MMXUW2(op1) == MMXUW2(op2)) ? 0xFFFF : 0;
++  MMXUW3(result) = (MMXUW3(op1) == MMXUW3(op2)) ? 0xFFFF : 0;
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 76 */
++void BX_CPU_C::PCMPEQD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUD0(result) = (MMXUD0(op1) == MMXUD0(op2)) ? 0xFFFFFFFF : 0;
++  MMXUD1(result) = (MMXUD1(op1) == MMXUD1(op2)) ? 0xFFFFFFFF : 0;
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 77 */
++void BX_CPU_C::EMMS(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++
++  if(BX_CPU_THIS_PTR cr0.em)
++    exception(BX_UD_EXCEPTION, 0, 0);
++
++  if(BX_CPU_THIS_PTR cr0.ts)
++    exception(BX_NM_EXCEPTION, 0, 0);
++
++  MMX_TWD = 0xFFFFFFFF;
++  MMX_TOS = 0;	      /* Each time an MMX instruction is           */
++  MMX_SWD &= 0xC7FF;  /*    executed, the TOS value is set to 000B */
++
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 7E */
++void BX_CPU_C::MOVD_EdPd(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn);
++
++  /* op is a register or memory reference */
++  if (i->mod == 0xc0) {
++    BX_WRITE_32BIT_REG(i->rm, MMXUD0(op));
++  }
++  else {
++    write_virtual_dword(i->seg, i->rm_addr, &(MMXUD0(op)));
++  }
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 7F */
++void BX_CPU_C::MOVQ_QqPq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn);
++
++  /* op is a register or memory reference */
++  if (i->mod == 0xc0) {
++    BX_WRITE_MMX_REG(i->rm, op);
++  }
++  else {
++    write_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op);
++  }
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F D1 */
++void BX_CPU_C::PSRLW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  if(MMXUQ(op2) > 15) MMXUQ(op1) = 0;
++  else
++  {
++    Bit8u shift = MMXUB0(op2);
++ 
++    MMXUW0(op1) >>= shift;
++    MMXUW1(op1) >>= shift;
++    MMXUW2(op1) >>= shift;
++    MMXUW3(op1) >>= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F D2 */
++void BX_CPU_C::PSRLD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  if(MMXUQ(op2) > 31) MMXUQ(op1) = 0;
++  else
++  {
++    Bit8u shift = MMXUB0(op2);
++
++    MMXUD0(op1) >>= shift;
++    MMXUD1(op1) >>= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F D3 */
++void BX_CPU_C::PSRLQ_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  if(MMXUQ(op2) > 63) {
++    MMXUQ(op1) = 0;
++  }
++  else {
++    MMXUQ(op1) >>= MMXUB0(op2);
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F D5 */
++void BX_CPU_C::PMULLW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  Bit32u product1 = (Bit32u)(MMXUW0(op1)) * (Bit32u)(MMXUW0(op2));
++  Bit32u product2 = (Bit32u)(MMXUW1(op1)) * (Bit32u)(MMXUW1(op2));
++  Bit32u product3 = (Bit32u)(MMXUW2(op1)) * (Bit32u)(MMXUW2(op2));
++  Bit32u product4 = (Bit32u)(MMXUW3(op1)) * (Bit32u)(MMXUW3(op2));
++
++  MMXUW0(result) = (Bit16u)(product1 & 0xFFFF);
++  MMXUW1(result) = (Bit16u)(product2 & 0xFFFF);
++  MMXUW2(result) = (Bit16u)(product3 & 0xFFFF);
++  MMXUW3(result) = (Bit16u)(product4 & 0xFFFF);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F D8 */
++void BX_CPU_C::PSUBUSB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUQ(result) = 0;
++
++  if(MMXUB0(op1) > MMXUB0(op2)) MMXUB0(result) = MMXUB0(op1) - MMXUB0(op2);
++  if(MMXUB1(op1) > MMXUB1(op2)) MMXUB1(result) = MMXUB1(op1) - MMXUB1(op2);
++  if(MMXUB2(op1) > MMXUB2(op2)) MMXUB2(result) = MMXUB2(op1) - MMXUB2(op2);
++  if(MMXUB3(op1) > MMXUB3(op2)) MMXUB3(result) = MMXUB3(op1) - MMXUB3(op2);
++  if(MMXUB4(op1) > MMXUB4(op2)) MMXUB4(result) = MMXUB4(op1) - MMXUB4(op2);
++  if(MMXUB5(op1) > MMXUB5(op2)) MMXUB5(result) = MMXUB5(op1) - MMXUB5(op2);
++  if(MMXUB6(op1) > MMXUB6(op2)) MMXUB6(result) = MMXUB6(op1) - MMXUB6(op2);
++  if(MMXUB7(op1) > MMXUB7(op2)) MMXUB7(result) = MMXUB7(op1) - MMXUB7(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F D9 */
++void BX_CPU_C::PSUBUSW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUQ(result) = 0;
++
++  if(MMXUW0(op1) > MMXUW0(op2)) MMXUW0(result) = MMXUW0(op1) - MMXUW0(op2);
++  if(MMXUW1(op1) > MMXUW1(op2)) MMXUW1(result) = MMXUW1(op1) - MMXUW1(op2);
++  if(MMXUW2(op1) > MMXUW2(op2)) MMXUW2(result) = MMXUW2(op1) - MMXUW2(op2);
++  if(MMXUW3(op1) > MMXUW3(op2)) MMXUW3(result) = MMXUW3(op1) - MMXUW3(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F DB */
++void BX_CPU_C::PAND_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUQ(op1) &= MMXUQ(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F DC */
++void BX_CPU_C::PADDUSB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUB0(result) = SaturateWordSToByteU(Bit16s(MMXUB0(op1)) + Bit16s(MMXUB0(op2)));
++  MMXUB1(result) = SaturateWordSToByteU(Bit16s(MMXUB1(op1)) + Bit16s(MMXUB1(op2)));
++  MMXUB2(result) = SaturateWordSToByteU(Bit16s(MMXUB2(op1)) + Bit16s(MMXUB2(op2)));
++  MMXUB3(result) = SaturateWordSToByteU(Bit16s(MMXUB3(op1)) + Bit16s(MMXUB3(op2)));
++  MMXUB4(result) = SaturateWordSToByteU(Bit16s(MMXUB4(op1)) + Bit16s(MMXUB4(op2)));
++  MMXUB5(result) = SaturateWordSToByteU(Bit16s(MMXUB5(op1)) + Bit16s(MMXUB5(op2)));
++  MMXUB6(result) = SaturateWordSToByteU(Bit16s(MMXUB6(op1)) + Bit16s(MMXUB6(op2)));
++  MMXUB7(result) = SaturateWordSToByteU(Bit16s(MMXUB7(op1)) + Bit16s(MMXUB7(op2)));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F DD */
++void BX_CPU_C::PADDUSW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUW0(result) = SaturateDwordSToWordU(Bit32s(MMXUW0(op1)) + Bit32s(MMXUW0(op2)));
++  MMXUW1(result) = SaturateDwordSToWordU(Bit32s(MMXUW1(op1)) + Bit32s(MMXUW1(op2)));
++  MMXUW2(result) = SaturateDwordSToWordU(Bit32s(MMXUW2(op1)) + Bit32s(MMXUW2(op2)));
++  MMXUW3(result) = SaturateDwordSToWordU(Bit32s(MMXUW3(op1)) + Bit32s(MMXUW3(op2)));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F DF */
++void BX_CPU_C::PANDN_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUQ(result) = ~(MMXUQ(op1)) & MMXUQ(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F E1 */
++void BX_CPU_C::PSRAW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  Bit8u shift = MMXUB0(op2);
++
++  if(MMXUQ(op2) > 15) {
++    MMXUW0(result) = (MMXUW0(op1) & 0x8000) ? 0xFFFF : 0;
++    MMXUW1(result) = (MMXUW1(op1) & 0x8000) ? 0xFFFF : 0;
++    MMXUW2(result) = (MMXUW2(op1) & 0x8000) ? 0xFFFF : 0;
++    MMXUW3(result) = (MMXUW3(op1) & 0x8000) ? 0xFFFF : 0;
++  }
++  else {
++    MMXUW0(result) = MMXUW0(op1) >> shift;
++    MMXUW1(result) = MMXUW1(op1) >> shift;
++    MMXUW2(result) = MMXUW2(op1) >> shift;
++    MMXUW3(result) = MMXUW3(op1) >> shift;
++
++    if(MMXUW0(op1) & 0x8000) MMXUW0(result) |= (0xFFFF << (16 - shift));
++    if(MMXUW1(op1) & 0x8000) MMXUW1(result) |= (0xFFFF << (16 - shift));
++    if(MMXUW2(op1) & 0x8000) MMXUW2(result) |= (0xFFFF << (16 - shift));
++    if(MMXUW3(op1) & 0x8000) MMXUW3(result) |= (0xFFFF << (16 - shift));
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F E2 */
++void BX_CPU_C::PSRAD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  Bit8u shift = MMXUB0(op2);
++
++  if(MMXUQ(op2) > 31) {
++    MMXUD0(result) = (MMXUD0(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
++    MMXUD1(result) = (MMXUD1(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
++  }
++  else {
++    MMXUD0(result) = MMXUD0(op1) >> shift;
++    MMXUD1(result) = MMXUD1(op1) >> shift;
++
++    if(MMXUD0(op1) & 0x80000000) MMXUD0(result) |= (0xFFFFFFFF << (32 - shift));
++    if(MMXUD1(op1) & 0x80000000) MMXUD1(result) |= (0xFFFFFFFF << (32 - shift));
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F E5 */
++void BX_CPU_C::PMULHW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  Bit32s product1 = (Bit32s)(MMXSW0(op1)) * (Bit32s)(MMXSW0(op2));
++  Bit32s product2 = (Bit32s)(MMXSW1(op1)) * (Bit32s)(MMXSW1(op2));
++  Bit32s product3 = (Bit32s)(MMXSW2(op1)) * (Bit32s)(MMXSW2(op2));
++  Bit32s product4 = (Bit32s)(MMXSW3(op1)) * (Bit32s)(MMXSW3(op2));
++
++  MMXUW0(result) = (Bit16u)(product1 >> 16);
++  MMXUW1(result) = (Bit16u)(product2 >> 16);
++  MMXUW2(result) = (Bit16u)(product3 >> 16);
++  MMXUW3(result) = (Bit16u)(product4 >> 16);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F E8 */
++void BX_CPU_C::PSUBSB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXSB0(result) = SaturateWordSToByteS(Bit16s(MMXSB0(op1)) - Bit16s(MMXSB0(op2)));
++  MMXSB1(result) = SaturateWordSToByteS(Bit16s(MMXSB1(op1)) - Bit16s(MMXSB1(op2)));
++  MMXSB2(result) = SaturateWordSToByteS(Bit16s(MMXSB2(op1)) - Bit16s(MMXSB2(op2)));
++  MMXSB3(result) = SaturateWordSToByteS(Bit16s(MMXSB3(op1)) - Bit16s(MMXSB3(op2)));
++  MMXSB4(result) = SaturateWordSToByteS(Bit16s(MMXSB4(op1)) - Bit16s(MMXSB4(op2)));
++  MMXSB5(result) = SaturateWordSToByteS(Bit16s(MMXSB5(op1)) - Bit16s(MMXSB5(op2)));
++  MMXSB6(result) = SaturateWordSToByteS(Bit16s(MMXSB6(op1)) - Bit16s(MMXSB6(op2)));
++  MMXSB7(result) = SaturateWordSToByteS(Bit16s(MMXSB7(op1)) - Bit16s(MMXSB7(op2)));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F E9 */
++void BX_CPU_C::PSUBSW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) - Bit32s(MMXSW0(op2)));
++  MMXSW1(result) = SaturateDwordSToWordS(Bit32s(MMXSW1(op1)) - Bit32s(MMXSW1(op2)));
++  MMXSW2(result) = SaturateDwordSToWordS(Bit32s(MMXSW2(op1)) - Bit32s(MMXSW2(op2)));
++  MMXSW3(result) = SaturateDwordSToWordS(Bit32s(MMXSW3(op1)) - Bit32s(MMXSW3(op2)));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F EB */
++void BX_CPU_C::POR_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUQ(op1) |= MMXUQ(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F EC */
++void BX_CPU_C::PADDSB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXSB0(result) = SaturateWordSToByteS(Bit16s(MMXSB0(op1)) + Bit16s(MMXSB0(op2)));
++  MMXSB1(result) = SaturateWordSToByteS(Bit16s(MMXSB1(op1)) + Bit16s(MMXSB1(op2)));
++  MMXSB2(result) = SaturateWordSToByteS(Bit16s(MMXSB2(op1)) + Bit16s(MMXSB2(op2)));
++  MMXSB3(result) = SaturateWordSToByteS(Bit16s(MMXSB3(op1)) + Bit16s(MMXSB3(op2)));
++  MMXSB4(result) = SaturateWordSToByteS(Bit16s(MMXSB4(op1)) + Bit16s(MMXSB4(op2)));
++  MMXSB5(result) = SaturateWordSToByteS(Bit16s(MMXSB5(op1)) + Bit16s(MMXSB5(op2)));
++  MMXSB6(result) = SaturateWordSToByteS(Bit16s(MMXSB6(op1)) + Bit16s(MMXSB6(op2)));
++  MMXSB7(result) = SaturateWordSToByteS(Bit16s(MMXSB7(op1)) + Bit16s(MMXSB7(op2)));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F ED */
++void BX_CPU_C::PADDSW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) + Bit32s(MMXSW0(op2)));
++  MMXSW1(result) = SaturateDwordSToWordS(Bit32s(MMXSW1(op1)) + Bit32s(MMXSW1(op2)));
++  MMXSW2(result) = SaturateDwordSToWordS(Bit32s(MMXSW2(op1)) + Bit32s(MMXSW2(op2)));
++  MMXSW3(result) = SaturateDwordSToWordS(Bit32s(MMXSW3(op1)) + Bit32s(MMXSW3(op2)));
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F EF */
++void BX_CPU_C::PXOR_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUQ(op1) ^= MMXUQ(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F F1 */
++void BX_CPU_C::PSLLW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  if(MMXUQ(op2) > 15) MMXUQ(op1) = 0;
++  else
++  {
++    Bit8u shift = MMXUB0(op2);
++
++    MMXUW0(op1) <<= shift;
++    MMXUW1(op1) <<= shift;
++    MMXUW2(op1) <<= shift;
++    MMXUW3(op1) <<= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F F2 */
++void BX_CPU_C::PSLLD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  if(MMXUQ(op2) > 31) MMXUQ(op1) = 0;
++  else
++  {
++    Bit8u shift = MMXUB0(op2);
++
++    MMXUD0(op1) <<= shift;
++    MMXUD1(op1) <<= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F F3 */
++void BX_CPU_C::PSLLQ_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  if(MMXUQ(op2) > 63) {
++    MMXUQ(op1) = 0;
++  }
++  else {
++    MMXUQ(op1) <<= MMXUB0(op2);
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F F5 */
++void BX_CPU_C::PMADDWD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  if(MMXUW0(op1) == 0x80008000 && MMXUW0(op2) == 0x80008000) {
++    MMXUD0(result) = 0x80000000;
++  }
++  else {
++    MMXUD0(result) = Bit32s(MMXSW0(op1))*Bit32s(MMXSW0(op2)) + Bit32s(MMXSW1(op1))*Bit32s(MMXSW1(op2));
++  }
++
++  if(MMXUW2(op1) == 0x80008000 && MMXUW2(op2) == 0x80008000) {
++    MMXUD1(result) = 0x80000000;
++  }
++  else {
++    MMXUD1(result) = Bit32s(MMXSW2(op1))*Bit32s(MMXSW2(op2)) + Bit32s(MMXSW3(op1))*Bit32s(MMXSW3(op2));
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F F8 */
++void BX_CPU_C::PSUBB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUB0(op1) -= MMXUB0(op2);
++  MMXUB1(op1) -= MMXUB1(op2);
++  MMXUB2(op1) -= MMXUB2(op2);
++  MMXUB3(op1) -= MMXUB3(op2);
++  MMXUB4(op1) -= MMXUB4(op2);
++  MMXUB5(op1) -= MMXUB5(op2);
++  MMXUB6(op1) -= MMXUB6(op2);
++  MMXUB7(op1) -= MMXUB7(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F F9 */
++void BX_CPU_C::PSUBW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUW0(op1) -= MMXUW0(op2);
++  MMXUW1(op1) -= MMXUW1(op2);
++  MMXUW2(op1) -= MMXUW2(op2);
++  MMXUW3(op1) -= MMXUW3(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F FA */
++void BX_CPU_C::PSUBD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUD0(op1) -= MMXUD0(op2);
++  MMXUD1(op1) -= MMXUD1(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F FC */
++void BX_CPU_C::PADDB_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++
++  MMXUB0(op1) += MMXUB0(op2);
++  MMXUB1(op1) += MMXUB1(op2);
++  MMXUB2(op1) += MMXUB2(op2);
++  MMXUB3(op1) += MMXUB3(op2);
++  MMXUB4(op1) += MMXUB4(op2);
++  MMXUB5(op1) += MMXUB5(op2);
++  MMXUB6(op1) += MMXUB6(op2);
++  MMXUB7(op1) += MMXUB7(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F FD */
++void BX_CPU_C::PADDW_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUW0(op1) += MMXUW0(op2);
++  MMXUW1(op1) += MMXUW1(op2);
++  MMXUW2(op1) += MMXUW2(op2);
++  MMXUW3(op1) += MMXUW3(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F FE */
++void BX_CPU_C::PADDD_PqQq(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
++
++  /* op2 is a register or memory reference */
++  if (i->mod == 0xc0) {
++    op2 = BX_READ_MMX_REG(i->rm);
++  }
++  else {
++    /* pointer, segment address pair */
++    read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2);
++  }
++
++  MMXUD0(op1) += MMXUD0(op2);
++  MMXUD1(op1) += MMXUD1(op2);
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->nnn, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 71 GrpA 010 */
++void BX_CPU_C::PSRLW_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
++  Bit8u shift = i->Ib;
++
++  if(shift > 15) MMXUQ(op1) = 0;
++  else
++  {
++    MMXUW0(op1) >>= shift;
++    MMXUW1(op1) >>= shift;
++    MMXUW2(op1) >>= shift;
++    MMXUW3(op1) >>= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 71 GrpA 100 */
++void BX_CPU_C::PSRAW_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm), result;
++  Bit8u shift = i->Ib;
++
++  if(shift > 15) {
++    MMXUW0(result) = (MMXUW0(op1) & 0x8000) ? 0xFFFF : 0;
++    MMXUW1(result) = (MMXUW1(op1) & 0x8000) ? 0xFFFF : 0;
++    MMXUW2(result) = (MMXUW2(op1) & 0x8000) ? 0xFFFF : 0;
++    MMXUW3(result) = (MMXUW3(op1) & 0x8000) ? 0xFFFF : 0;
++  }
++  else {
++    MMXUW0(result) = MMXUW0(op1) >> shift;
++    MMXUW1(result) = MMXUW1(op1) >> shift;
++    MMXUW2(result) = MMXUW2(op1) >> shift;
++    MMXUW3(result) = MMXUW3(op1) >> shift;
++
++    if(MMXUW0(op1) & 0x8000) MMXUW0(result) |= (0xFFFF << (16 - shift));
++    if(MMXUW1(op1) & 0x8000) MMXUW1(result) |= (0xFFFF << (16 - shift));
++    if(MMXUW2(op1) & 0x8000) MMXUW2(result) |= (0xFFFF << (16 - shift));
++    if(MMXUW3(op1) & 0x8000) MMXUW3(result) |= (0xFFFF << (16 - shift));
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 71 GrpA 110 */
++void BX_CPU_C::PSLLW_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
++  Bit8u shift = i->Ib;
++
++  if(shift > 15) MMXUQ(op1) = 0;
++  else
++  {
++    MMXUW0(op1) <<= shift;
++    MMXUW1(op1) <<= shift;
++    MMXUW2(op1) <<= shift;
++    MMXUW3(op1) <<= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++
++/* 0F 72 GrpA 010 */
++void BX_CPU_C::PSRLD_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
++  Bit8u shift = i->Ib;
++
++  if(shift > 31) MMXUQ(op1) = 0;
++  else
++  {
++    MMXUD0(op1) <<= shift;
++    MMXUD1(op1) <<= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 72 GrpA 100 */
++void BX_CPU_C::PSRAD_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm), result;
++  Bit8u shift = i->Ib;
++
++  if(shift > 31) {
++    MMXUD0(result) = (MMXUD0(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
++    MMXUD1(result) = (MMXUD1(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
++  }
++  else {
++    MMXUD0(result) = MMXUD0(op1) >> shift;
++    MMXUD1(result) = MMXUD1(op1) >> shift;
++
++    if(MMXUD0(op1) & 0x80000000) MMXUD0(result) |= (0xFFFFFFFF << (32 - shift));
++    if(MMXUD1(op1) & 0x80000000) MMXUD1(result) |= (0xFFFFFFFF << (32 - shift));
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, result);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 72 GrpA 110 */
++void BX_CPU_C::PSLLD_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
++  Bit8u shift = i->Ib;
++
++  if(shift > 31) MMXUQ(op1) = 0;
++  else
++  {
++    MMXUD0(op1) <<= shift;
++    MMXUD1(op1) <<= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 73 GrpA 010 */
++void BX_CPU_C::PSRLQ_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
++  Bit8u shift = i->Ib;
++
++  if(shift > 63) {
++    MMXUQ(op1) = 0;
++  }
++  else {
++    MMXUQ(op1) >>= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
++
++/* 0F 73 GrpA 110 */
++void BX_CPU_C::PSLLQ_PqIb(BxInstruction_t *i)
++{
++#if BX_SUPPORT_MMX
++  BX_CPU_THIS_PTR PrepareMmxInstruction();
++
++  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
++  Bit8u shift = i->Ib;
++
++  if(shift > 63) {
++    MMXUQ(op1) = 0;
++  }
++  else {
++    MMXUQ(op1) <<= shift;
++  }
++
++  /* now write result back to destination */
++  BX_WRITE_MMX_REG(i->rm, op1);
++#else
++  BX_INFO(("MMX Instructions Set Not Implemented"));
++  UndefinedOpcode(i);
++#endif
++}
+diff -r -u -N bochs-1.4.1/cpu/proc_ctrl.cc bochs-1.4.1-mmx-release-endian/cpu/proc_ctrl.cc
+--- bochs-1.4.1/cpu/proc_ctrl.cc	2002-06-24 00:19:44.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/cpu/proc_ctrl.cc	2002-08-23 17:00:30.000000000 +0200
+@@ -1026,6 +1026,9 @@
+ #  if BX_SUPPORT_FPU
+       features |= 0x01;
+ #  endif
++#  if BX_SUPPORT_MMX
++      features |= (1<<23);  // support MMX
++#  endif
+ 
+ #elif BX_CPU_LEVEL == 6
+       family = 6;
+@@ -1038,6 +1041,9 @@
+ #  if BX_SUPPORT_FPU
+       features |= 0x01;     // has FPU
+ #  endif
++#  if BX_SUPPORT_MMX
++      features |= (1<<23);  // support MMX
++#  endif
+ #else
+       BX_PANIC(("CPUID: not implemented for > 6"));
+ #endif
+diff -r -u -N bochs-1.4.1/fpu/fpu_system.h bochs-1.4.1-mmx-release-endian/fpu/fpu_system.h
+--- bochs-1.4.1/fpu/fpu_system.h	2001-10-06 05:53:46.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/fpu/fpu_system.h	2002-08-24 18:57:12.000000000 +0200
+@@ -96,18 +96,7 @@
+  * rather than a kernel (ported by Kevin Lawton)
+  * ------------------------------------------------------------ */
+ 
+-/* Get data sizes from config.h generated from simulator's
+- * configure script
+- */
+-#include "config.h"
+-typedef Bit8u  u8;
+-typedef Bit8s  s8;
+-typedef Bit16u u16;
+-typedef Bit16s s16;
+-typedef Bit32u u32;
+-typedef Bit32s s32;
+-typedef Bit64u u64;
+-typedef Bit64s s64;
++#include <cpu/i387.h>
+ 
+ /* bbd: include ported linux headers after config.h for GCC_ATTRIBUTE macro */
+ #include <linux/kernel.h>
+@@ -144,36 +133,13 @@
+ 
+ #define FPU_info ((struct info *) NULL)
+ 
+-
+-//
+-// Minimal i387 structure, pruned from the linux headers.  Only
+-// the fields which were necessary are included.
+-//
+-typedef struct {
+-  struct {
+-    s32      cwd;
+-    s32      swd;
+-    s32      twd;
+-    s32      fip;
+-    s32      fcs;
+-    s32      foo;
+-    s32      fos;
+-    u32      fill0; /* to make sure the following aligns on an 8byte boundary */
+-    u64      st_space[16];   /* 8*16 bytes per FP-reg (aligned) = 128 bytes */
+-    unsigned char   ftop;
+-    unsigned char   no_update;
+-    unsigned char   rm;
+-    unsigned char   alimit;
+-    } GCC_ATTRIBUTE((aligned(16), packed)) soft;
+-  } i387_t;
+-
+-extern i387_t i387;
+-
+-
+ #endif
+ 
+ #define SIGSEGV  11
+ 
++extern i387_t *current_i387;
++
++#define i387     (*current_i387)
+ #define I387     i387
+ 
+ 
+diff -r -u -N bochs-1.4.1/fpu/wmFPUemu_glue.cc bochs-1.4.1-mmx-release-endian/fpu/wmFPUemu_glue.cc
+--- bochs-1.4.1/fpu/wmFPUemu_glue.cc	2001-09-15 08:55:14.000000000 +0200
++++ bochs-1.4.1-mmx-release-endian/fpu/wmFPUemu_glue.cc	2002-08-24 19:28:36.000000000 +0200
+@@ -45,7 +45,7 @@
+ static BxInstruction_t *fpu_iptr = NULL;
+ static BX_CPU_C *fpu_cpu_ptr = NULL;
+ 
+-i387_t i387;
++i387_t *current_i387;
+ 
+ extern "C" void
+ math_emulate2(fpu_addr_modes addr_modes,
+@@ -62,6 +62,7 @@
+   void
+ BX_CPU_C::fpu_init(void)
+ {
++  current_i387 = &(BX_CPU_THIS_PTR the_i387);
+   finit();
+ }
+ 
+@@ -76,6 +77,7 @@
+ 
+   fpu_iptr = i;
+   fpu_cpu_ptr = this;
++  current_i387 = &(BX_CPU_THIS_PTR the_i387);
+ 
+ #if 0
+   addr_modes.default_mode = VM86;
