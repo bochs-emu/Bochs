@@ -2,15 +2,15 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.272 2005-03-13 08:36:20 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.273 2005-03-20 09:28:43 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.2.pre1"
-VER_STRING="2.2.pre1"
-REL_STRING="Build from CVS snapshot on March 13, 2005"
+VERSION="2.2.pre1.cvs"
+VER_STRING="2.2.pre1.cvs"
+REL_STRING="Build from CVS, after 2.2.pre1"
 
 changequote(<<, >>)
 changequote([, ])
@@ -1783,6 +1783,38 @@ AC_ARG_ENABLE(sb16,
          AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
          AC_MSG_RESULT(osx)
 		 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
+         ;;
+       yes)
+         case "$target" in
+           *-linux* | *-freebsd*)
+             SOUNDLOW_OBJS='soundlnx.o'
+             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
+             AC_MSG_RESULT(linux)
+             ;;
+           *-pc-windows*)
+             SOUNDLOW_OBJS='soundwin.o'
+             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
+             AC_MSG_RESULT(win)
+             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
+             ;;
+           *-cygwin* | *-mingw32*)
+             SOUNDLOW_OBJS='soundwin.o'
+             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
+             AC_MSG_RESULT(win)
+             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
+             ;;
+           *-macosx*)
+             SOUNDLOW_OBJS='soundosx.o'
+             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
+             AC_MSG_RESULT(osx)
+             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
+             ;;
+           *)
+             SOUNDLOW_OBJS=''
+             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_output_c)
+             AC_MSG_RESULT(dummy)
+             ;;
+         esac
          ;;
        *)
          echo " "
