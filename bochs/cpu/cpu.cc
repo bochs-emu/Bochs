@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.33 2002-08-31 12:24:39 vruppert Exp $
+// $Id: cpu.cc,v 1.34 2002-09-01 20:12:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -148,13 +148,6 @@ main_cpu_loop:
     goto handle_async_event;
 
 async_events_processed:
-  // added so that all debugging/tracing code uses the correct EIP even in the
-  // instruction just after a trap/interrupt.  If you use the prev_eip that was
-  // set before handle_async_event, traces and breakpoints fail to show the
-  // first instruction of int/trap handlers.
-  BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
-  BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
-  
   // Now we can handle things which are synchronous to instruction
   // execution.
   if (BX_CPU_THIS_PTR eflags.rf) {
@@ -629,6 +622,10 @@ handle_async_event:
     BX_CPU_THIS_PTR EXT   = 1; /* external event */
     interrupt(vector, 0, 0, 0);
     BX_INSTR_HWINTERRUPT(vector, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR eip);
+    // added so that all debugging/tracing code uses the correct EIP even in the
+    // instruction just after a trap/interrupt.
+    BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+    BX_CPU_THIS_PTR prev_esp = ESP; // commit new ESP
     }
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
     // NOTE: similar code in ::take_dma()

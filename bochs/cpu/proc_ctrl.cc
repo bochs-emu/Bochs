@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.26 2002-09-01 04:01:14 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.27 2002-09-01 20:12:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -497,23 +497,29 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       BX_INSTR_TLB_CNTRL(BX_INSTR_MOV_CR3, val_32);
       break;
     case 4: // CR4
+      {
 #if BX_CPU_LEVEL == 3
       BX_PANIC(("MOV_CdRd: write to CR4 of 0x%08x on 386",
         val_32));
       UndefinedOpcode(i);
 #else
+      Bit32u allowMask = 0;
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
 
-      if (val_32 & ~ 0x10) { // support CR4<PSE> (to allow 4M pages)
+#if BX_SUPPORT_4MEG_PAGES
+      allowMask |= 0x00000010;
+#endif
+
+      if (val_32 & ~allowMask) {
         BX_INFO(("MOV_CdRd: (CR4) write of 0x%08x not supported!",
           val_32));
         }
-      // Only allow writes of 0 to CR4 for now.
-      // Writes to bits in CR4 should not be 1s as CPUID
-      // returns not-supported for all of these features.
-      BX_CPU_THIS_PTR cr4 = val_32 & 0x10;
+
+      val_32 = val_32 & allowMask; // Screen out unsupported bits.
+      BX_CPU_THIS_PTR cr4 = val_32;
 #endif
+      }
       break;
     default:
       BX_PANIC(("MOV_CdRd: control register index out of range"));
@@ -1039,7 +1045,10 @@ BX_CPU_C::CPUID(BxInstruction_t *i)
 #else
       BX_PANIC(("CPUID: not implemented for > 6"));
 #endif
+
+#if BX_SUPPORT_4MEG_PAGES
       features |= 8; // support page-size extension (4m pages)
+#endif
 
       EAX = (family <<8) | (model<<4) | stepping;
       EBX = ECX = 0; // reserved

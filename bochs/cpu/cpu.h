@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.22 2002-06-05 21:51:30 yakovlev Exp $
+// $Id: cpu.h,v 1.23 2002-09-01 20:12:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -347,7 +347,13 @@ typedef struct { /* bx_selector_t */
 
 
 typedef struct {
-  Boolean valid;         /* 0 = invalid, 1 = valid */
+
+#define SegValidCache 0x1
+#define SegAccessROK  0x2
+#define SegAccessWOK  0x4
+  Boolean valid;         // Holds above values, Or'd together.  Used to
+                         // hold only 0 or 1.
+
   Boolean p;             /* present */
   Bit8u   dpl;           /* descriptor privilege level 0..3 */
   Boolean segment;       /* 0 = system/gate, 1 = data/code segment */
@@ -519,7 +525,6 @@ typedef struct {
   typedef struct {
     Bit32u lpf; // linear page frame
     Bit32u ppf; // physical page frame
-    Bit32u pte_addr; // Page Table Address for updating A & D bits
     Bit32u combined_access;
     } bx_TLB_entry;
 #endif  // #if BX_USE_TLB

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.5 2001-10-03 13:10:37 bdenney Exp $
+// $Id: io.cc,v 1.6 2002-09-01 20:12:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,8 +33,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-
 
 
 
@@ -125,6 +123,104 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
         }
       }
 
+#if (BX_DEBUGGER == 0)
+#if (defined(__i386__) && __i386__)
+    /* If conditions are right, we can transfer IO to physical memory
+     * in a batch, rather than one instruction at a time.
+     */
+    if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
+      Bit32u wordCount;
+      bx_segment_reg_t *dstSegPtr;
+
+      if (i->as_32)
+        wordCount = ECX;
+      else
+        wordCount = CX;
+      dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SREG_ES];
+      // Do segment checks for the 1st word.  We do not want to
+      // trip an exception beyond this, because the address would
+      // be incorrect.  After we know how many bytes we will directly
+      // transfer, we can do the full segment limit check ourselves
+      // without generating an exception.
+      write_virtual_checks(dstSegPtr, edi, 2);
+      if (wordCount) {
+        Bit32u laddr, paddr, wordsCanFit;
+        Bit8u *hostAddrDst;
+
+        laddr = dstSegPtr->cache.u.segment.base + edi;
+        if (BX_CPU_THIS_PTR cr0.pg)
+          paddr = dtranslate_linear(laddr, CPL==3, BX_WRITE);
+        else
+          paddr = laddr;
+        // If we want to write directly into the physical memory array,
+        // we need the A20 address.
+        paddr = A20ADDR(paddr);
+
+        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(paddr, BX_WRITE);
+
+        // Check that native host access was not vetoed for that page, and
+        // that the address is word aligned.
+        if ( hostAddrDst && ! (paddr & 1) ) {
+          // See how many words can fit in the rest of this page.
+          wordsCanFit = (0x1000 - (paddr & 0xfff)) >> 1;
+          // Restrict word count to the number that will fit in this page.
+          if (wordCount > wordsCanFit)
+            wordCount = wordsCanFit;
+
+          // If after all the restrictions, there is anything left to do...
+          if (wordCount) {
+            unsigned transferLen;
+            Bit32u roomDst;
+            unsigned j;
+            unsigned pointerDelta;
+
+            transferLen = wordCount<<1; // Number bytes to transfer.
+
+            // Before we copy memory, we need to make sure that the segments
+            // allow the accesses up to the given source and dest offset.  If
+            // the cache.valid bits have SegAccessWOK and ROK, we know that
+            // the cache is valid for those operations, and that the segments
+            // are non-expand down (thus we can make a simple limit check).
+            if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) {
+              goto noAcceleration;
+              }
+            roomDst = (dstSegPtr->cache.u.segment.limit_scaled - edi) + 1; 
+            if ( roomDst < transferLen ) {
+              goto noAcceleration;
+              }
+
+            if (BX_CPU_THIS_PTR eflags.df)
+              pointerDelta = (unsigned) -2;
+            else
+              pointerDelta =  2;
+            for (j=0; j<wordCount; ) {
+              Bit16u temp16;
+              temp16 = BX_INP(DX, 2);
+              * (Bit16u *) hostAddrDst = temp16;
+              hostAddrDst += pointerDelta;
+              j++;
+              BX_TICK1();
+              if ( BX_CPU_THIS_PTR async_event )
+                break;
+              }
+            wordCount = j;
+            // Decrement eCX.  Note, the main loop will decrement 1 also, so
+            // decrement by one less than expected, like the case above.
+            if (i->as_32)
+              ECX -= (wordCount-1);
+            else
+              CX  -= (wordCount-1);
+            incr = wordCount << 1; // count * 2.
+            goto doIncr;
+            }
+          }
+        }
+      }
+#endif // __i386__
+#endif
+
+noAcceleration:
+
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
     write_virtual_word(BX_SEG_REG_ES, edi, &value16);
@@ -135,6 +231,10 @@ BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
     write_virtual_word(BX_SEG_REG_ES, edi, &value16);
     incr = 2;
     }
+
+#if (BX_DEBUGGER == 0)
+doIncr:
+#endif
 
   if (i->as_32) {
     if (BX_CPU_THIS_PTR eflags.df)
@@ -236,11 +336,113 @@ BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
         }
       }
 
+#if (BX_DEBUGGER == 0)
+#if (defined(__i386__) && __i386__)
+    /* If conditions are right, we can transfer IO to physical memory
+     * in a batch, rather than one instruction at a time.
+     */
+    if (i->rep_used && !BX_CPU_THIS_PTR async_event) {
+      Bit32u wordCount;
+      bx_segment_reg_t *srcSegPtr;
+
+      if (i->as_32)
+        wordCount = ECX;
+      else
+        wordCount = CX;
+      srcSegPtr = &BX_CPU_THIS_PTR sregs[seg];
+      // Do segment checks for the 1st word.  We do not want to
+      // trip an exception beyond this, because the address would
+      // be incorrect.  After we know how many bytes we will directly
+      // transfer, we can do the full segment limit check ourselves
+      // without generating an exception.
+      read_virtual_checks(srcSegPtr, esi, 2);
+      if (wordCount) {
+        Bit32u laddr, paddr, wordsCanFit;
+        Bit8u *hostAddrSrc;
+
+        laddr = srcSegPtr->cache.u.segment.base + esi;
+        if (BX_CPU_THIS_PTR cr0.pg)
+          paddr = dtranslate_linear(laddr, CPL==3, BX_READ);
+        else
+          paddr = laddr;
+        // If we want to write directly into the physical memory array,
+        // we need the A20 address.
+        paddr = A20ADDR(paddr);
+
+        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(paddr, BX_READ);
+
+        // Check that native host access was not vetoed for that page, and
+        // that the address is word aligned.
+        if ( hostAddrSrc && ! (paddr & 1) ) {
+          // See how many words can fit in the rest of this page.
+          wordsCanFit = (0x1000 - (paddr & 0xfff)) >> 1;
+          // Restrict word count to the number that will fit in this page.
+          if (wordCount > wordsCanFit)
+            wordCount = wordsCanFit;
+
+          // If after all the restrictions, there is anything left to do...
+          if (wordCount) {
+            unsigned transferLen;
+            Bit32u roomSrc;
+            unsigned j;
+            unsigned pointerDelta;
+
+            transferLen = wordCount<<1; // Number bytes to transfer.
+
+            // Before we copy memory, we need to make sure that the segments
+            // allow the accesses up to the given source and dest offset.  If
+            // the cache.valid bits have SegAccessWOK and ROK, we know that
+            // the cache is valid for those operations, and that the segments
+            // are non-expand down (thus we can make a simple limit check).
+            if ( !(srcSegPtr->cache.valid & SegAccessROK) ) {
+              goto noAcceleration;
+              }
+            roomSrc = (srcSegPtr->cache.u.segment.limit_scaled - esi) + 1; 
+            if ( roomSrc < transferLen ) {
+              goto noAcceleration;
+              }
+
+            if (BX_CPU_THIS_PTR eflags.df)
+              pointerDelta = (unsigned) -2;
+            else
+              pointerDelta =  2;
+            for (j=0; j<wordCount; ) {
+              Bit16u temp16;
+              temp16 = * (Bit16u *) hostAddrSrc;
+              hostAddrSrc += pointerDelta;
+              BX_OUTP(DX, temp16, 2);
+              j++;
+              BX_TICK1();
+              if ( BX_CPU_THIS_PTR async_event )
+                break;
+              }
+            wordCount = j;
+            // Decrement eCX.  Note, the main loop will decrement 1 also, so
+            // decrement by one less than expected, like the case above.
+            if (i->as_32)
+              ECX -= (wordCount-1);
+            else
+              CX  -= (wordCount-1);
+            incr = wordCount << 1; // count * 2.
+            goto doIncr;
+            }
+          }
+        }
+      }
+#endif // __i386__
+#endif
+
+noAcceleration:
+
     read_virtual_word(seg, esi, &value16);
 
     BX_OUTP(DX, value16, 2);
     incr = 2;
     }
+
+#if (BX_DEBUGGER == 0)
+doIncr:
+#endif
 
   if (i->as_32) {
     if (BX_CPU_THIS_PTR eflags.df)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.11 2002-06-16 15:02:27 vruppert Exp $
+// $Id: pc_system.h,v 1.12 2002-09-01 20:12:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,7 +59,6 @@ private:
     } timer[BX_MAX_TIMERS];
   unsigned   num_timers;
   Bit64u     num_cpu_ticks_in_period;
-  Bit64u     num_cpu_ticks_left;
   void       expire_ticks(void);
 
 #if !defined(PROVIDE_M_IPS)
@@ -67,6 +66,7 @@ private:
 #endif
 
 public:
+  Bit64u     num_cpu_ticks_left;
 
   Boolean HRQ;     // Hold Request
   //Boolean INTR;    // Interrupt

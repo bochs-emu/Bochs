@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.25 2002-08-31 15:35:51 vruppert Exp $
+// $Id: misc_mem.cc,v 1.26 2002-09-01 20:12:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,6 +68,14 @@ BX_MEM_C::BX_MEM_C(size_t memsize)
   vector = new Bit8u[memsize];
   len    = memsize;
   megabytes = len / (1024*1024);
+  if ( ((unsigned) vector) & 0x7 ) {
+    // Memory needs to be at least aligned to 8-byte boundaries for
+    // the TLB method of storing the host page address in the same
+    // field as 'combined_access' because the bottom 3 bits are used
+    // to cache access values.
+    delete [] vector;
+    BX_PANIC( ("BX_MEM_C constructor: memory not suitably aligned.") );
+    }
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
@@ -90,7 +98,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.25 2002-08-31 15:35:51 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.26 2002-09-01 20:12:09 kevinlawton Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -100,6 +108,11 @@ BX_MEM_C::init_memory(int memsize)
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
+    if ( ((unsigned) vector) & 0x7 ) {
+      // See note above, similar check.
+      delete [] vector;
+      BX_PANIC( ("BX_MEM_C constructor: memory not suitably aligned.") );
+      }
     }
   // initialize all memory to 0x00
   memset(BX_MEM_THIS vector, 0x00, BX_MEM_THIS len);
@@ -285,4 +298,59 @@ BX_MEM_C::dbg_crc32(unsigned long (*f)(unsigned char *buf, int len),
   *crc = f(vector + addr1, len);
 
   return(1);
+}
+
+
+  Bit8u *
+BX_MEM_C::getHostMemAddr(Bit32u a20Addr, unsigned op)
+  // Return a host address corresponding to the guest physical memory
+  // address (with A20 already applied), given that the calling
+  // code will perform an 'op' operation.  This address will be
+  // used for direct access to guest memory as an acceleration by
+  // a few instructions, like REP {MOV, INS, OUTS, etc}.
+  // Values of 'op' are { BX_READ, BX_WRITE, BX_RW }.
+
+  // The other assumption is that the calling code _only_ accesses memory
+  // directly within the page that encompasses the address requested.
+{
+  if ( a20Addr >= BX_MEM_THIS len )
+    return(NULL); // Error, requested addr is out of bounds.
+  if (op == BX_READ) {
+    if ( (a20Addr > 0x9ffff) && (a20Addr < 0xc0000) )
+      return(NULL); // Vetoed!  Mem mapped IO (VGA)
+#if !BX_PCI_SUPPORT
+    return( (Bit8u *) & vector[a20Addr] );
+#else
+    else if ( (a20Addr < 0xa0000) || (a20Addr > 0xfffff)
+              || (!bx_options.Oi440FXSupport->get ()) )
+      return( (Bit8u *) & vector[a20Addr] );
+    else {
+      switch (bx_devices.pci->rd_memType (a20Addr)) {
+        case 0x0:   // Read from ROM
+          return ( (Bit8u *) & vector[a20Addr]);
+        case 0x1:   // Read from ShadowRAM
+          return( (Bit8u *) & shadow[a20Addr - 0xc0000]);
+        default:
+          BX_PANIC(("getHostMemAddr(): default case"));
+          return(0);
+        }
+      }
+#endif
+    }
+  else { // op == {BX_WRITE, BX_RW}
+    if ( (a20Addr < 0xa0000) || (a20Addr > 0xfffff) )
+      return( (Bit8u *) & vector[a20Addr] );
+#if !BX_PCI_SUPPORT
+    return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
+#else
+    else if ( (a20Addr < 0xc0000) || (!bx_options.Oi440FXSupport->get ()) 
+)
+      return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
+    else if (bx_devices.pci->wr_memType (a20Addr) == 1)
+      // Write to ShadowRAM
+      return( (Bit8u *) & shadow[a20Addr - 0xc0000]);
+    else
+      return(NULL); // Vetoed!  ROMs
+#endif
+    }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.7 2002-08-31 12:24:41 vruppert Exp $
+// $Id: memory.h,v 1.8 2002-09-01 20:12:09 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,6 +71,7 @@ public:
   BX_MEM_SMF Boolean dbg_crc32(
     unsigned long (*f)(unsigned char *buf, int len),
     Bit32u addr1, Bit32u addr2, Bit32u *crc);
+  BX_MEM_SMF Bit8u * getHostMemAddr(Bit32u a20Addr, unsigned op);
   };
 
 #if BX_PROVIDE_CPU_MEMORY==1
