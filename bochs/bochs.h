@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.110 2002-12-02 21:26:03 cbothamy Exp $
+// $Id: bochs.h,v 1.111 2002-12-12 06:21:43 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -647,6 +647,7 @@ typedef struct BOCHSAPI {
   bx_param_num_c    *Ofloppy_command_delay;
   bx_param_num_c    *Oips;
   bx_param_bool_c   *Orealtime_pit;
+  bx_param_bool_c   *Otext_snapshot_check;
   bx_param_bool_c   *Omouse_enabled;
   bx_param_bool_c   *Oprivate_colormap;
 #if BX_WITH_AMIGAOS

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.58 2002-12-12 03:41:51 yakovlev Exp $
+// $Id: gui.cc,v 1.59 2002-12-12 06:21:43 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -160,6 +160,10 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   // User button
   BX_GUI_THIS user_hbar_id = headerbar_bitmap(BX_GUI_THIS user_bmap_id,
                           BX_GRAVITY_RIGHT, userbutton_handler);
+
+  if(bx_options.Otext_snapshot_check) {
+    bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 10000000, 1, 1, "snap_chk");
+  }
 
   show_headerbar();
 }
@@ -349,6 +353,31 @@ bx_gui_c::copy_handler(void)
     fclose(fp);
   }
   free(text_snapshot);
+}
+
+// Check the current text snapshot against file snapchk.txt.
+  void
+bx_gui_c::snapshot_checker(void * this_ptr)
+{
+  char *text_snapshot;
+  Bit32u len;
+  if (make_text_snapshot (&text_snapshot, &len) < 0) {
+    return;
+  }
+  char filename[BX_PATHNAME_LEN];
+  strcpy(filename,"snapchk.txt");
+  char *compare_snapshot = (char *) malloc((len+1) * sizeof(char));
+  FILE *fp = fopen(filename, "rb");
+  if(fp) {
+    fread(compare_snapshot, 1, len, fp);
+    fclose(fp);
+    if(!memcmp(text_snapshot,compare_snapshot,len)) {
+      BX_PANIC(("Test Passed."));
+    }
+  }
+  free(compare_snapshot);
+  free(text_snapshot);
+  
 }
 
 // create a text snapshot and dump it to a file

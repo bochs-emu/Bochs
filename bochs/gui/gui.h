@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.35 2002-12-06 19:34:30 bdenney Exp $
+// $Id: gui.h,v 1.36 2002-12-12 06:21:43 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -96,6 +96,7 @@ protected:
   static void copy_handler(void);
   static void paste_handler(void);
   static void snapshot_handler(void);
+  static void snapshot_checker(void *);
   static void config_handler(void);
   static void toggle_mouse_enable(void);
   static void userbutton_handler(void);

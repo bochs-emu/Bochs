@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.203 2002-12-06 19:34:28 bdenney Exp $
+// $Id: main.cc,v 1.204 2002-12-12 06:21:43 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -908,6 +908,10 @@ void bx_init_options ()
       "Enable the realtime PIT",
       "Keeps bochs in sync with real time, but sacrifices reproducibility",
       0);
+  bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
+      "Enable panic for use in bochs testing",
+      "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.",
+      0);
   bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
       "Use a private colormap",
       "Request that the GUI create and use it's own non-shared colormap.  This colormap will be used when in the bochs window.  If not enabled, a shared colormap scheme may be used.  Not implemented on all GUI's.",
@@ -1378,6 +1382,7 @@ void bx_reset_options ()
   bx_options.cmos.OcmosImage->reset();
   bx_options.cmos.Opath->reset();
   bx_options.cmos.Otime0->reset();
+  bx_options.Otext_snapshot_check->reset();
 }
 
 void bx_print_header ()
@@ -3181,6 +3186,18 @@ parse_line_formatted(char *context, int num_params, char *params[])
     else
       PARSE_ERR(("%s: system_clock_sync directive malformed.", context));
     }
+  else if (!strcmp(params[0], "text_snapshot_check")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: text_snapshot_check directive: wrong # args.", context));
+      }
+    if (!strncmp(params[1], "enable", 6)) {
+      bx_options.Otext_snapshot_check->set (1);
+      }
+    else if (!strncmp(params[1], "disable", 7)) {
+      bx_options.Otext_snapshot_check->set (0);
+      }
+    else bx_options.Otext_snapshot_check->set (!!(atol(params[1])));
+    }
   else if (!strcmp(params[0], "mouse")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: mouse directive malformed.", context));
@@ -3737,6 +3754,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
   fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
   fprintf (fp, "realtime_pit: %d\n", bx_options.Orealtime_pit->get ());
+  fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
 #if BX_WITH_AMIGAOS
