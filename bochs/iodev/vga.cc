@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.66 2003-04-26 16:43:22 vruppert Exp $
+// $Id: vga.cc,v 1.67 2003-04-27 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -64,6 +64,25 @@
   ((((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))?           \
      BX_VGA_THIS s.vga_tile_updated[(xtile)][(ytile)]                    \
      : 0)
+
+static const Bit8u ccdat[16][4] = {
+  { 0x00, 0x00, 0x00, 0x00 },
+  { 0xff, 0x00, 0x00, 0x00 },
+  { 0x00, 0xff, 0x00, 0x00 },
+  { 0xff, 0xff, 0x00, 0x00 },
+  { 0x00, 0x00, 0xff, 0x00 },
+  { 0xff, 0x00, 0xff, 0x00 },
+  { 0x00, 0xff, 0xff, 0x00 },
+  { 0xff, 0xff, 0xff, 0x00 },
+  { 0x00, 0x00, 0x00, 0xff },
+  { 0xff, 0x00, 0x00, 0xff },
+  { 0x00, 0xff, 0x00, 0xff },
+  { 0xff, 0xff, 0x00, 0xff },
+  { 0x00, 0x00, 0xff, 0xff },
+  { 0xff, 0x00, 0xff, 0xff },
+  { 0x00, 0xff, 0xff, 0xff },
+  { 0xff, 0xff, 0xff, 0xff },
+};
 
 bx_vga_c *theVga = NULL;
 
@@ -1194,16 +1213,31 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           (unsigned) BX_VGA_THIS s.CRTC.address));
         return;
       }
-      BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
-      //BX_DEBUG(("color CRTC Reg[%u] = %02x",
-      //  (unsigned) BX_VGA_THIS s.CRTC.address, (unsigned) value));
-      if (BX_VGA_THIS s.CRTC.address==0x09) {
-        BX_VGA_THIS s.y_doublescan = ((value & 0x9f) > 0);
-      }
+      if (value != BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]) {
+        BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
+        if (BX_VGA_THIS s.CRTC.address==0x09) {
+          BX_VGA_THIS s.y_doublescan = ((value & 0x9f) > 0);
+        }
 
-      if (BX_VGA_THIS s.CRTC.address>=0x0A && BX_VGA_THIS s.CRTC.address<=0x0F) {
-        // Start address or cursor size / location change
-        BX_VGA_THIS s.vga_mem_updated = 1;
+        if (BX_VGA_THIS s.CRTC.address==0x0C || BX_VGA_THIS s.CRTC.address==0x0D) {
+          // Start address change
+          if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+            BX_VGA_THIS s.vga_mem_updated = 1;
+            for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
+              for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
+                SET_TILE_UPDATED (xti, yti, 1);
+                }
+              }
+            }
+          else {
+            memset(BX_VGA_THIS s.text_snapshot, 0,
+                   sizeof(BX_VGA_THIS s.text_snapshot));
+            }
+          }
+        else if (BX_VGA_THIS s.CRTC.address>=0x0A && BX_VGA_THIS s.CRTC.address<=0x0F) {
+          // cursor size / location change
+          BX_VGA_THIS s.vga_mem_updated = 1;
+          }
         }
       break;
 
@@ -1746,52 +1780,28 @@ bx_vga_c::mem_read(Bit32u addr)
      }
 #endif
 
-  if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
-    if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // 0xB8000 .. 0xBFFFF
-      if (addr < 0xB8000)
-        return(0xff);
-      offset = addr - 0xB8000;
-
-      return(BX_VGA_THIS s.vga_memory[offset]);
-      }
-
-    if (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 1) {
-      BX_DEBUG(("  location %08x", (unsigned) addr));
-      BX_PANIC(("vga_mem_read: graphics: mapping = %u?",
-        (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
-      return(0);
-      }
-    if (addr > 0xAFFFF)
-      return(0xff);
-
-    // addr between 0xA0000 and 0xAFFFF
-    offset = addr - 0xA0000;
-    if ( BX_VGA_THIS s.sequencer.chain_four ) {
-
-      // Mode 13h: 320 x 200 256 color mode: chained pixel representation
-      return( BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] );
-      }
-
+  switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
+    case 1: // 0xA0000 .. 0xAFFFF
+      if (addr > 0xAFFFF) return 0xff;
+      offset = addr - 0xA0000;
+      break;
+    case 2: // 0xB0000 .. 0xB7FFF
+      if ((addr < 0xB0000) || (addr > 0xB7FFF)) return 0xff;
+      return BX_VGA_THIS s.vga_memory[addr - 0xB0000];
+      break;
+    case 3: // 0xB8000 .. 0xBFFFF
+      if (addr < 0xB8000) return 0xff;
+      return BX_VGA_THIS s.vga_memory[addr - 0xB8000];
+      break;
+    default: // 0xA0000 .. 0xBFFFF
+      return BX_VGA_THIS s.vga_memory[addr - 0xA0000];
     }
-  else {
-    switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
-      case 1: // 0xA0000 .. 0xAFFFF
-        if (addr > 0xAFFFF) return(0xff);
-        offset = addr - 0xA0000;
-        break;
-      case 2: // 0xB0000 .. 0xB7FFF
-        if ((addr < 0xB0000) || (addr > 0xB7FFF)) return(0xff);
-        offset = addr - 0xB0000;
-        break;
-      case 3: // 0xB8000 .. 0xBFFFF
-        if (addr < 0xB8000) return(0xff);
-        offset = addr - 0xB8000;
-        break;
-      default: // 0xA0000 .. 0xBFFFF
-        offset = addr - 0xA0000;
-      }
-    if (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 1)
-      return(BX_VGA_THIS s.vga_memory[offset]);
+
+  // addr between 0xA0000 and 0xAFFFF
+  if ( BX_VGA_THIS s.sequencer.chain_four ) {
+
+    // Mode 13h: 320 x 200 256 color mode: chained pixel representation
+    return BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536];
     }
 
   /* addr between 0xA0000 and 0xAFFFF */
@@ -1807,7 +1817,7 @@ bx_vga_c::mem_read(Bit32u addr)
     case 1: /* read mode 1 */
       {
       Bit8u color_compare, color_dont_care;
-      Bit8u latch0, latch1, latch2, latch3, retval, pixel_val;
+      Bit8u latch0, latch1, latch2, latch3, retval;
 
       color_compare   = BX_VGA_THIS s.graphics_ctrl.color_compare & 0x0f;
       color_dont_care = BX_VGA_THIS s.graphics_ctrl.color_dont_care & 0x0f;
@@ -1815,26 +1825,24 @@ bx_vga_c::mem_read(Bit32u addr)
       latch1 = BX_VGA_THIS s.graphics_ctrl.latch[1] = BX_VGA_THIS s.vga_memory[1*65536 + offset];
       latch2 = BX_VGA_THIS s.graphics_ctrl.latch[2] = BX_VGA_THIS s.vga_memory[2*65536 + offset];
       latch3 = BX_VGA_THIS s.graphics_ctrl.latch[3] = BX_VGA_THIS s.vga_memory[3*65536 + offset];
-      retval = 0;
-      for (unsigned b=0; b<8; b++) {
-        pixel_val =
-          ((latch0 << 0) & 0x01) |
-          ((latch1 << 1) & 0x02) |
-          ((latch2 << 2) & 0x04) |
-          ((latch3 << 3) & 0x08);
-        latch0 >>= 1;
-        latch1 >>= 1;
-        latch2 >>= 1;
-        latch3 >>= 1;
-        if ( (pixel_val & color_dont_care) ==
-             (color_compare & color_dont_care) )
-        retval |= (1 << b);
-        }
-      return(retval);
+
+      latch0 ^= ccdat[color_compare][0];
+      latch1 ^= ccdat[color_compare][1];
+      latch2 ^= ccdat[color_compare][2];
+      latch3 ^= ccdat[color_compare][3];
+
+      latch0 &= ccdat[color_dont_care][0];
+      latch1 &= ccdat[color_dont_care][1];
+      latch2 &= ccdat[color_dont_care][2];
+      latch3 &= ccdat[color_dont_care][3];
+
+      retval = ~(latch0 | latch1 | latch2 | latch3);
+
+      return retval;
       }
       break;
     default:
-      return(0);
+      return 0;
     }
 }
 
@@ -1871,23 +1879,28 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     }
 #endif
 
+  switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
+    case 1: // 0xA0000 .. 0xAFFFF
+      if (addr > 0xAFFFF) return;
+      offset = addr - 0xA0000;
+      break;
+    case 2: // 0xB0000 .. 0xB7FFF
+      if ((addr < 0xB0000) || (addr > 0xB7FFF)) return;
+      offset = addr - 0xB0000;
+      break;
+    case 3: // 0xB8000 .. 0xBFFFF
+      if (addr < 0xB8000) return;
+      offset = addr - 0xB8000;
+      break;
+    default: // 0xA0000 .. 0xBFFFF
+      offset = addr - 0xA0000;
+    }
 
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
-    if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 1) { // 0xA0000 .. 0xAFFFF
-      // unsigned x_tileno, y_tileno;
-
-      if ( (addr < 0xA0000) || (addr > 0xAFFFF) )
-        return;
-      offset = addr - 0xA0000;
-      }
-    else if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // 0xB8000 .. 0xBFFFF
+    if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // 0xB8000 .. 0xBFFFF
       unsigned x_tileno, x_tileno2, y_tileno, isEven;
 
-      if ( (addr < 0xB8000) || (addr > 0xBFFFF) )
-        return;
-      offset = addr - 0xB8000;
-
-      /* CGA 320x200x4 start */
+      /* CGA 320x200x4 / 640x200x2 start */
       BX_VGA_THIS s.vga_memory[offset] = value;
       isEven = (offset>=0x2000)?1:0;
       if (isEven) {
@@ -1921,10 +1934,11 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
         SET_TILE_UPDATED (x_tileno2, y_tileno, 1);
       }
       return;
-      /* CGA 320x200x4 end */
+      /* CGA 320x200x4 / 640x200x2 end */
       }
-    else {
-      BX_PANIC(("vga_mem_write: graphics: mapping = %u",
+    else if (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 1) {
+
+      BX_PANIC(("mem_write: graphics: mapping = %u",
                (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
       return;
       }
@@ -1932,10 +1946,8 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     if ( BX_VGA_THIS s.sequencer.chain_four ) {
       unsigned x_tileno, y_tileno;
 
-      offset = addr - 0xA0000;
-
-      BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] = value;
       // 320 x 200 256 color mode: chained pixel representation
+      BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] = value;
       if (BX_VGA_THIS s.y_doublescan) {
         y_tileno = (offset / BX_VGA_THIS s.scan_bits) / (Y_TILESIZE/2);
       } else {
@@ -1947,24 +1959,6 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       return;
       }
 
-    }
-  else {
-    switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
-      case 1: // 0xA0000 .. 0xAFFFF
-        if (addr > 0xAFFFF) return;
-        offset = addr - 0xA0000;
-        break;
-      case 2: // 0xB0000 .. 0xB7FFF
-        if ((addr < 0xB0000) || (addr > 0xB7FFF)) return;
-        offset = addr - 0xB0000;
-        break;
-      case 3: // 0xB8000 .. 0xBFFFF
-        if (addr < 0xB8000) return;
-        offset = addr - 0xB8000;
-        break;
-      default: // 0xA0000 .. 0xBFFFF
-        offset = addr - 0xA0000;
-      }
     }
 
   /* addr between 0xA0000 and 0xAFFFF */
