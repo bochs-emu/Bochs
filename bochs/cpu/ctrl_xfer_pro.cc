@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.20 2002-09-24 16:35:44 kevinlawton Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.21 2002-10-03 04:49:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1525,7 +1525,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     if ( cs_descriptor.valid==0 ||
          cs_descriptor.segment==0  ||
          cs_descriptor.u.segment.executable==0 ) {
-      BX_PANIC(("iret: AR byte indicated non code segment"));
+      BX_PANIC(("iret: AR byte indicated non code segment (%x) %x:%x",
+raw_cs_selector, dword1, dword2));
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
       }
