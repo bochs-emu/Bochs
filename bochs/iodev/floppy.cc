@@ -35,7 +35,6 @@
 extern "C" {
 #include <errno.h>
 }
-
 #include "bochs.h"
 #define LOG_THIS bx_floppy.
 
@@ -81,7 +80,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.21 2001-09-29 03:29:27 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.22 2001-10-01 17:20:08 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -1203,6 +1202,14 @@ bx_floppy_ctrl_c::get_media_status(unsigned drive)
   return( BX_FD_THIS s.media_present[drive] );
 }
 
+#ifdef O_BINARY
+#define BX_RDONLY O_RDONLY | O_BINARY
+#define BX_RDWR O_RDWR | O_BINARY
+#else
+#define BX_RDONLY O_RDONLY
+#define BX_RDWR O_RDWR
+#endif
+
   Boolean
 bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 {
@@ -1225,11 +1232,16 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-    media->fd = open(path, O_RDWR
-#ifdef O_BINARY
-                   | O_BINARY
+#ifdef BX_WITH_WIN32
+    if ( (path[1] == ':') && (strlen(path) == 2) ) {
+	  wsprintf(sTemp, "\\\\.\\%s", path);
+	  media->fd = open(sTemp, BX_RDWR);
+	} else {
+		media->fd = open(path, BX_RDWR);
+	} 
+#else
+    media->fd = open(path, BX_RDWR);
 #endif
-                  );
 
   if (media->fd < 0) {
     BX_INFO(( "tried to open %s read/write: %s",path,strerror(errno) ));
@@ -1239,11 +1251,16 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   media->fd = 0;
   if (strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
 #endif
-    media->fd = open(path, O_RDONLY
-#ifdef O_BINARY
-                   | O_BINARY
+#ifdef BX_WITH_WIN32
+    if ( (path[1] == ':') && (strlen(path) == 2) ) {
+	  wsprintf(sTemp, "\\\\.\\%s", path);
+	  media->fd = open(sTemp, BX_RDONLY);
+	} else {
+		media->fd = open(path, BX_RDONLY);
+	}
+#else
+    media->fd = open(path, BX_RDONLY);
 #endif
-                  );
     if (media->fd < 0) {
       // failed to open read-only too
       BX_INFO(( "tried to open %s read only: %s",path,strerror(errno) ));
@@ -1257,9 +1274,14 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   else
     ret = fstat(media->fd, &stat_buf);
 #elif BX_WITH_WIN32
-  stat_buf.st_mode = S_IFCHR;
-  // maybe replace with code that sets ret to -1 if the disk is not available
-  ret = 0;
+//  if ( (path[1] == ':') && (strlen(path) == 2) ) {
+    stat_buf.st_mode = S_IFCHR;
+    // maybe replace with code that sets ret to -1 if the disk is not available
+    ret = 0;
+//  } else {
+	// put code here for disk images
+//	ret = fstat(media->fd, &stat_buf);
+//  }
 #else
   // unix
   ret = fstat(media->fd, &stat_buf);
@@ -1323,7 +1345,7 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   else if ( S_ISCHR(stat_buf.st_mode)
 #if BX_WITH_MACOS == 0
 #ifdef S_ISBLK
-            || S_ISBLK(stat_buf.st_mode)
+            || stat_buf.st_mode == S_IFBLK)
 #endif
 #endif
            ) {
@@ -1366,3 +1388,4 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     return(0);
     }
 }
+
