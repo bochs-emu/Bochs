@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.9 2002-03-16 11:30:05 vruppert Exp $
+// $Id: carbon.cc,v 1.9.2.1 2002-03-17 09:05:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1084,18 +1084,6 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	SetPort(oldPort);
 
 	windowUpdatesPending = true;
-}
-
-  int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
-{
-  return 0;
-}
-
-  int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
-{
-  return 0;
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.12 2002-03-16 13:20:58 vruppert Exp $
+// $Id: sdl.cc,v 1.12.2.1 2002-03-17 09:05:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -207,9 +207,9 @@ void bx_gui_c::specific_init(
 
   sdl_screen = NULL;
   th->dimension_update(640,480);
+    
 
   sdl_fullscreen_toggle = 0;
-
   SDL_EnableKeyRepeat(250,50);
   SDL_WM_SetCaption(
 #if BX_CPU_LEVEL < 2
@@ -249,8 +249,8 @@ void bx_gui_c::text_update(
   Bit8u cs_start, cs_end, cs_line, mask;
   Boolean invert;
 
-  cs_start = (cursor_state >> 8) & 0x3f;
-  cs_end = cursor_state & 0x1f;
+  cs_start = cursor_state >> 8;
+  cs_end = cursor_state & 0xff;
 
   if( sdl_screen )
   {
@@ -268,7 +268,7 @@ void bx_gui_c::text_update(
     buf = buf_row;
     hchars = textres_x;
     x = 0;
-    y = textres_y - rows;
+    y = 25 - rows;
     do
     {
       // check if char needs to be updated
@@ -293,7 +293,7 @@ void bx_gui_c::text_update(
 	{
 	  font_row = *pfont_row++;
 	  fontpixels = fontwidth;
-	  cs_line = (fontheight - fontrows);
+	  cs_line = (16 - fontrows);
 	  if( (invert) && (cs_line >= cs_start) && (cs_line <= cs_end) )
 	    mask = 0x80;
 	  else
@@ -332,18 +332,6 @@ void bx_gui_c::text_update(
   prev_cursor_y = cursor_y;
 }
 
-  int
-bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
-{
-  return 0;
-}
-
-  int
-bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
-{
-  return 0;
-}
-
 
 void bx_gui_c::graphics_tile_update(
     Bit8u *snapshot,
@@ -367,9 +355,6 @@ void bx_gui_c::graphics_tile_update(
 
   i = tileheight;
   if( i + y > res_y ) i = res_y - y;
-
-  // FIXME
-  if( i<=0 ) return;
 
   do
   {
@@ -622,7 +607,6 @@ void bx_gui_c::dimension_update(
 	BX_HEADERBAR_FG_RED,
 	BX_HEADERBAR_FG_GREEN,
 	BX_HEADERBAR_FG_BLUE );
-    headerbar_fg=0xffffffff;
     headerbar_bg = SDL_MapRGB(
 	sdl_screen->format,
 	BX_HEADERBAR_BG_RED,
@@ -705,11 +689,11 @@ unsigned bx_gui_c::create_bitmap(
       pixels = *bmap++;
       for(unsigned i=0;i<8;i++)
       {
-	if( (pixels & 0x01) == 0 )
+	if( (pixels & 0x80) == 0 )
 	  *buf++ = headerbar_bg;
 	else
 	  *buf++ = headerbar_fg;
-	pixels = pixels >> 1;
+	pixels = pixels << 1;
       }
     } while( --xdim );
     buf = buf_row + disp;

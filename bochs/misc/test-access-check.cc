@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // test-access-check.cc
-// $Id: test-access-check.cc,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: test-access-check.cc,v 1.3.4.1 2002-03-17 09:05:55 bdenney Exp $
 // by Bryce Denney
 //
 // This whole program is intended to test just a few lines in
