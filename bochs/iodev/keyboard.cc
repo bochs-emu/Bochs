@@ -561,6 +561,7 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered\n", value));
 bx_keyb_c::gen_scancode(Bit32u   key)
 {
   Bit8u   scancode;
+  int extended;
 
   BX_DEBUG(( "gen_scancode %lld %x\n", bx_pc_system.time_ticks(), key));
 
@@ -580,14 +581,16 @@ bx_keyb_c::gen_scancode(Bit32u   key)
 
   // should deal with conversions from KSCAN to system scan codes here
 
+  extended = 0;
   switch (key & 0xff) {
     case BX_KEY_CTRL_L:  scancode = 0x1d; break;
-    case BX_KEY_CTRL_R:  scancode = 0x1d; break;
+    case BX_KEY_CTRL_R:  extended = 1; scancode = 0x1d; break;
     case BX_KEY_SHIFT_L: scancode = 0x2a; break;
     case BX_KEY_SHIFT_R: scancode = 0x36; break;
     case BX_KEY_ESC:   scancode = 0x01; break;
 
     case BX_KEY_ALT_L: scancode = 0x38; break;
+    case BX_KEY_ALT_R: extended = 1; scancode = 0x38; break;
 
     case BX_KEY_A:     scancode = 0x1e; break;
     case BX_KEY_B:     scancode = 0x30; break;
@@ -647,26 +650,26 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_ENTER:         scancode = 0x1c; break;
     case BX_KEY_TAB:           scancode = 0x0f; break;
 
-    case BX_KEY_LEFT:
+    case BX_KEY_LEFT:          extended = 1;
     case BX_KEY_KP_LEFT:       scancode = 0x4b; break;
-    case BX_KEY_RIGHT:
+    case BX_KEY_RIGHT:         extended = 1;
     case BX_KEY_KP_RIGHT:      scancode = 0x4d; break;
-    case BX_KEY_UP:
+    case BX_KEY_UP:            extended = 1;
     case BX_KEY_KP_UP:         scancode = 0x48; break;
-    case BX_KEY_DOWN:
+    case BX_KEY_DOWN:          extended = 1;
     case BX_KEY_KP_DOWN:       scancode = 0x50; break;
 
-    case BX_KEY_INSERT:
+    case BX_KEY_INSERT:        extended = 1;
     case BX_KEY_KP_INSERT:        scancode = 0x52; break;
-    case BX_KEY_DELETE:
+    case BX_KEY_DELETE:        extended = 1;
     case BX_KEY_KP_DELETE:        scancode = 0x53; break;
-    case BX_KEY_HOME:
+    case BX_KEY_HOME:          extended = 1;
     case BX_KEY_KP_HOME:          scancode = 0x47; break;
-    case BX_KEY_END:
+    case BX_KEY_END:           extended = 1;
     case BX_KEY_KP_END:           scancode = 0x4f; break;
-    case BX_KEY_PAGE_UP:
+    case BX_KEY_PAGE_UP:       extended = 1;
     case BX_KEY_KP_PAGE_UP:       scancode = 0x49; break;
-    case BX_KEY_PAGE_DOWN:
+    case BX_KEY_PAGE_DOWN:     extended = 1;
     case BX_KEY_KP_PAGE_DOWN:     scancode = 0x51; break;
 
     case BX_KEY_KP_ADD:           scancode = 0x4e; break;
@@ -690,12 +693,15 @@ bx_keyb_c::gen_scancode(Bit32u   key)
     case BX_KEY_F8:               scancode = 0x42; break;
     case BX_KEY_F9:               scancode = 0x43; break;
     case BX_KEY_F10:              scancode = 0x44; break;
+    case BX_KEY_F11:              scancode = 0x57; break;
+    case BX_KEY_F12:              scancode = 0x58; break;
 
     default:
       BX_DEBUG(( "bx_keyb_c::gen_scancode : Unhandled %u\n",
         (unsigned) key));
       return;
     }
+  if (extended) kbd_enQ(0xE0);
   if (key & BX_KEY_RELEASED)
     scancode |= 0x80;
   kbd_enQ(scancode);
