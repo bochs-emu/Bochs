@@ -549,6 +549,8 @@ void BX_CPU_C::FTST(bxInstruction_c *i)
       return;
   }
 
+  extern const floatx80 Const_Z;
+
   float_status_t status = 
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 

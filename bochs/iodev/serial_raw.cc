@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.15 2004-05-13 16:23:14 vruppert Exp $
+// $Id: serial_raw.cc,v 1.16 2004-06-19 15:20:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 
 #if USE_RAW_SERIAL
 

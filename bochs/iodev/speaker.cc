@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.1 2004-02-01 23:42:04 cbothamy Exp $
+// $Id: speaker.cc,v 1.2 2004-06-19 15:20:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -20,7 +20,8 @@
 
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
+
 #ifdef __linux__
 #include <unistd.h>
 #include <stdio.h>

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.13 2003-04-05 08:26:49 vruppert Exp $
+// $Id: soundwin.cc,v 1.14 2004-06-19 15:20:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #if defined(WIN32) && BX_SUPPORT_SB16
 
 #define LOG_THIS bx_devices.pluginSB16Device->

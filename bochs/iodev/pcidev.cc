@@ -26,7 +26,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #if BX_PCI_SUPPORT && BX_PCI_DEV_SUPPORT
 
 #include "kernel_pcidev.h"

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.14 2004-02-03 02:03:24 cbothamy Exp $
+// $Id: io_pro.cc,v 1.15 2004-06-19 15:20:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,16 +25,10 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "iodev/iodev.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-
 
 
   Bit16u BX_CPP_AttrRegparmN(1)

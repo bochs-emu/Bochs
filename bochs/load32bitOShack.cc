@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.14 2003-08-08 00:05:53 cbothamy Exp $
+// $Id: load32bitOShack.cc,v 1.15 2004-06-19 15:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,7 @@
 
 
 #include "bochs.h"
+#include "iodev/iodev.h"
 #define LOG_THIS genlog->
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.14 2003-02-16 19:35:57 vruppert Exp $
+// $Id: eth_linux.cc,v 1.15 2004-06-19 15:20:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
-#include "bochs.h"
+#include "iodev.h"
 #if BX_NE2K_SUPPORT && defined (ETH_LINUX)
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 

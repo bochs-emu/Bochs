@@ -13,7 +13,7 @@
 
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #if BX_NE2K_SUPPORT
 
 #define LOG_THIS bx_devices.pluginNE2kDevice->

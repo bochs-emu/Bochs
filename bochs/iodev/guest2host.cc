@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.cc,v 1.13 2002-12-06 18:48:07 bdenney Exp $
+// $Id: guest2host.cc,v 1.14 2004-06-19 15:20:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,7 +26,7 @@
 
 
 
-#include "bochs.h"
+#include "iodev.h"
 #define LOG_THIS  bx_g2h.
 
 bx_g2h_c bx_g2h;
@@ -52,7 +52,7 @@ bx_g2h_c::~bx_g2h_c(void)
   void
 bx_g2h_c::init(void)
 {
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.13 2002-12-06 18:48:07 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.14 2004-06-19 15:20:12 sshwarts Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     bx_devices.register_io_read_handler(&bx_g2h,

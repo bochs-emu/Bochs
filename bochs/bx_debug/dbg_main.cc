@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.4 2004-01-17 08:36:29 danielg4 Exp $
+// $Id: dbg_main.cc,v 1.5 2004-06-19 15:20:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,7 @@ extern "C" {
 }
 
 #include "bochs.h"
+#include "iodev/iodev.h"
 #if BX_DEBUGGER
 
 #define LOG_THIS genlog->

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.36 2004-04-08 20:56:34 cbothamy Exp $
+// $Id: pc_system.cc,v 1.37 2004-06-19 15:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 
 #include "bochs.h"
+#include "iodev/iodev.h"
 #define LOG_THIS bx_pc_system.
 
 #ifdef WIN32

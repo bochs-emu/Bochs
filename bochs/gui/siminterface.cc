@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.106 2004-05-30 08:28:51 vruppert Exp $
+// $Id: siminterface.cc,v 1.107 2004-06-19 15:20:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -7,6 +7,7 @@
 // the configuration user interface, and allows them to talk to each other.
 
 #include "bochs.h"
+#include "iodev.h"
 
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;

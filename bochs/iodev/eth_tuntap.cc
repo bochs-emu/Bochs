@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.12 2004-01-18 06:15:38 danielg4 Exp $
+// $Id: eth_tuntap.cc,v 1.13 2004-06-19 15:20:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -86,7 +86,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
-#include "bochs.h"
+#include "iodev.h"
 #if BX_NE2K_SUPPORT
 
 #define LOG_THIS bx_devices.pluginNE2kDevice->

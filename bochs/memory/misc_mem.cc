@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.43 2004-06-06 17:01:19 vruppert Exp $
+// $Id: misc_mem.cc,v 1.44 2004-06-19 15:20:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,17 +29,13 @@
 
 
 
-
-
-
-#include "bochs.h"
+#include "iodev/iodev.h"
 #define LOG_THIS BX_MEM(0)->
 
 
 
 #if BX_PROVIDE_CPU_MEMORY
-  Bit32u
-BX_MEM_C::get_memory_in_k(void)
+Bit32u BX_MEM_C::get_memory_in_k(void)
 {
   return(BX_MEM_THIS megabytes * 1024);
 }
@@ -135,7 +131,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.43 2004-06-06 17:01:19 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.44 2004-06-19 15:20:15 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.77 2004-02-22 13:02:54 vruppert Exp $
+// $Id: gui.cc,v 1.78 2004-06-19 15:20:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 #include <signal.h>
 #include "bochs.h"
+#include "iodev.h"
 #include "gui/bitmaps/floppya.h"
 #include "gui/bitmaps/floppyb.h"
 #include "gui/bitmaps/mouse.h"

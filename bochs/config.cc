@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.1 2004-06-04 22:06:54 sshwarts Exp $
+// $Id: config.cc,v 1.2 2004-06-19 15:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 #include "bochs.h"
+#include "iodev/iodev.h"
 #include <assert.h>
 
 #ifdef HAVE_LOCALE_H

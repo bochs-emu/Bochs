@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.83 2004-04-11 10:58:09 vruppert Exp $
+// $Id: x.cc,v 1.84 2004-06-19 15:20:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "iodev.h"
 #if BX_WITH_X11
 
 extern "C" {

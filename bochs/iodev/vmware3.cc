@@ -27,7 +27,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 
 const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 /* Not very friendly... */

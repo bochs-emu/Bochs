@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.82 2004-04-11 08:01:22 vruppert Exp $
+// $Id: win32.cc,v 1.83 2004-06-19 15:20:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "iodev.h"
 #if BX_WITH_WIN32
 
 #include "win32res.h"

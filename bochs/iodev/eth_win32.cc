@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.17 2003-06-07 19:16:54 vruppert Exp $
+// $Id: eth_win32.cc,v 1.18 2004-06-19 15:20:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #if BX_NE2K_SUPPORT
 
 // windows.h included by bochs.h

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.85 2004-04-08 21:21:22 cbothamy Exp $
+// $Id: keyboard.cc,v 1.86 2004-06-19 15:20:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,7 +52,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #include <math.h>
 #include "scancodes.h"
 
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.85 2004-04-08 21:21:22 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.86 2004-06-19 15:20:12 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");

@@ -99,9 +99,6 @@ public:
 #define IS_TAG_EMPTY(i) 		\
   ((BX_CPU_THIS_PTR the_i387.FPU_gettagi(i)) == FPU_Tag_Empty)
 
-#define IS_IA_MASKED()			\
-  (BX_CPU_THIS_PTR the_i387.get_control_word() & FPU_CW_Invalid)
-
 #define BX_READ_FPU_REG(i)		\
   (BX_CPU_THIS_PTR the_i387.FPU_read_regi(i))
 
@@ -173,9 +170,6 @@ BX_CPP_INLINE void i387_t::reset()
 
   memset(st_space, 0, sizeof(floatx80)*8);
 }
-
-extern const floatx80 Const_Z;
-extern const floatx80 Const_1;
 
 #if BX_SUPPORT_MMX
 
@@ -262,7 +256,8 @@ typedef union bx_packed_mmx_reg_t {
 #pragma options align=mac68k
 #endif
 struct bx_mmx_reg_t {
-   Bit16u alignment1, alignment2, alignment3; 
+   Bit32u alignment2;
+   Bit16u alignment1;
    Bit16u exp; /* 2 byte FP-reg exponent */
    BxPackedMmxRegister packed_mmx_register;
 } GCC_ATTRIBUTE((aligned(16), packed));
@@ -273,7 +268,8 @@ struct bx_mmx_reg_t {
 struct bx_mmx_reg_t {
    BxPackedMmxRegister packed_mmx_register;
    Bit16u exp; /* 2 byte FP reg exponent */
-   Bit16u alignment1, alignment2, alignment3; 
+   Bit16u alignment1;
+   Bit32u alignment2;
 } GCC_ATTRIBUTE((aligned(16), packed));
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.3 2004-02-18 20:10:19 danielg4 Exp $
+// $Id: soundosx.cc,v 1.4 2004-06-19 15:20:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -10,7 +10,7 @@
 #define Float32 KLUDGE_Float32
 #define Float64 KLUDGE_Float64
 #endif
-#include "bochs.h"
+#include "iodev.h"
 #undef Float32
 #undef Float64
 

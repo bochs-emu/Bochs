@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.2 2004-06-09 22:05:28 vruppert Exp $
+// $Id: pci_ide.cc,v 1.3 2004-06-19 15:20:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,7 +33,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #if BX_PCI_SUPPORT
 
 #define LOG_THIS thePciIdeController->

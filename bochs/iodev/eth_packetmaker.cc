@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.8 2002-11-20 19:06:23 bdenney Exp $
+// $Id: eth_packetmaker.cc,v 1.9 2004-06-19 15:20:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -7,7 +7,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
-#include "bochs.h"
+#include "iodev.h"
 
 #if BX_NE2K_SUPPORT && defined(ETH_ARPBACK)
 

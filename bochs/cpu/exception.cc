@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.37 2004-04-08 20:57:33 cbothamy Exp $
+// $Id: exception.cc,v 1.38 2004-06-19 15:20:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "iodev/iodev.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
@@ -880,7 +881,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     bx_guard.special_unwind_stack = true;
 #endif
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-    }
+  }
 
   /* careful not to get here with curr_exception[1]==DOUBLE_FAULT */
   /* ...index on DOUBLE_FAULT below, will be out of bounds */

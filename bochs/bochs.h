@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.139 2004-06-09 20:55:43 vruppert Exp $
+// $Id: bochs.h,v 1.140 2004-06-19 15:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -502,7 +502,6 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 #include "gui/gui.h"
 #include "gui/textconfig.h"
 #include "gui/keymap.h"
-#include "iodev/iodev.h"
 
 
 
@@ -511,10 +510,6 @@ enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 
 
 /* --- EXTERNS --- */
-
-#if ( BX_PROVIDE_DEVICE_MODELS==1 )
-BOCHSAPI extern bx_devices_c   bx_devices;
-#endif
 
 #if BX_GUI_SIGHANDLER
 extern bx_bool bx_gui_sighandler;

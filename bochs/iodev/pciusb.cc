@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.3 2003-02-06 19:09:24 vruppert Exp $
+// $Id: pciusb.cc,v 1.4 2004-06-19 15:20:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #if BX_PCI_SUPPORT && BX_PCI_USB_SUPPORT
 
 #define LOG_THIS theUSBDevice->

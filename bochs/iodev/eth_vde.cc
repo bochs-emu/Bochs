@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.2 2004-01-16 15:15:49 danielg4 Exp $
+// $Id: eth_vde.cc,v 1.3 2004-06-19 15:20:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -26,7 +26,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
-#include "bochs.h"
+#include "iodev.h"
 #if BX_NE2K_SUPPORT
 
 #define LOG_THIS bx_devices.pluginNE2kDevice->

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.19 2003-06-28 08:04:31 vruppert Exp $
+// $Id: amigaos.cc,v 1.20 2004-06-19 15:20:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "iodev.h"
 #if BX_WITH_AMIGAOS
 #include "icon_bochs.h"
 #include "amigagui.h"

@@ -1,8 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.15 2002-11-19 05:47:45 bdenney Exp $
+// $Id: iodebug.cc,v 1.16 2004-06-19 15:20:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
-#include "bochs.h"
+
+
+#include "iodev.h"
 #if BX_IODEBUG_SUPPORT
 
 
@@ -19,8 +20,6 @@ bx_iodebug_c *bx_iodebug_ptr;
   } bx_iodebug_s;
 
 
-
-
 // Constructor
 bx_iodebug_c::bx_iodebug_c( void )
 {
@@ -29,18 +28,10 @@ bx_iodebug_c::bx_iodebug_c( void )
 
 }
 
-
-
-
-
 // Destructor
 bx_iodebug_c::~bx_iodebug_c( void )
 {
 }
-
-
-
-
 
 void bx_iodebug_c::init(void)
 {
@@ -63,32 +54,17 @@ void bx_iodebug_c::reset(unsigned type)
 {
 }
 
-
 Bit32u bx_iodebug_c::read_handler(void *this_ptr, Bit32u addr, unsigned io_len)
 {
   bx_iodebug_ptr = (bx_iodebug_c *) this_ptr;
   return( bx_iodebug_ptr->read(addr, io_len) );
 }
 
-
-
-
-
-
 Bit32u bx_iodebug_c::read( Bit32u addr, unsigned io_len )
 {
-
   if(bx_iodebug_s.enabled) return(0x8A00);
   return(0);
 }
-
-
-
-
-
-
-
-
 
 
 void bx_iodebug_c::write_handler(void *this_ptr, Bit32u addr, Bit32u dvalue, unsigned io_len)
@@ -98,14 +74,8 @@ void bx_iodebug_c::write_handler(void *this_ptr, Bit32u addr, Bit32u dvalue, uns
 }
 
 
-
-
-
-
 void bx_iodebug_c::write( Bit32u addr, Bit32u dvalue, unsigned int io_len )
 {
-
-
 //  fprintf(stderr, "IODEBUG addr: %4x\tdvalue: %8x\tio_len: %8x\n", (unsigned int)addr, (unsigned int)dvalue, io_len);
 
   if( addr == 0x8A01 && io_len == 2 )
@@ -189,12 +159,6 @@ void bx_iodebug_c::write( Bit32u addr, Bit32u dvalue, unsigned int io_len )
 }
 
 
-
-
-
-
-
-
 // Static function
 void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
@@ -247,13 +211,6 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
   }
 }
 
-
-
-
-
-
-
-
 void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit32u data32;
@@ -304,12 +261,6 @@ void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
   }
 }
 
-
-
-
-
-
-
 unsigned int bx_iodebug_c::range_test( Bit32u addr, unsigned int len )
 {
   unsigned int i;
@@ -331,10 +282,6 @@ unsigned int bx_iodebug_c::range_test( Bit32u addr, unsigned int len )
 }
 
 
-
-
-
-
 void bx_iodebug_c::add_range( Bit32u addr_start, Bit32u addr_end )
 {
   unsigned int i;
@@ -351,4 +298,5 @@ void bx_iodebug_c::add_range( Bit32u addr_start, Bit32u addr_end )
   }
 //  fprintf(stderr, "IODEBUG unable to register memory range, all slots taken\n");
 }
+
 #endif /* if BX_IODEBUG_SUPPORT */

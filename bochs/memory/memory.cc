@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.29 2004-06-06 17:01:19 vruppert Exp $
+// $Id: memory.cc,v 1.30 2004-06-19 15:20:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,12 +25,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
-
-
-#include "bochs.h"
+#include "iodev/iodev.h"
 #define LOG_THIS BX_MEM_THIS
 
 #if BX_PROVIDE_CPU_MEMORY

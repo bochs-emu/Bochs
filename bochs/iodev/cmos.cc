@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.44 2003-12-27 13:43:41 vruppert Exp $
+// $Id: cmos.cc,v 1.45 2004-06-19 15:20:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,7 +33,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 
 #define LOG_THIS theCmosDevice->
 
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.44 2003-12-27 13:43:41 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.45 2004-06-19 15:20:10 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);

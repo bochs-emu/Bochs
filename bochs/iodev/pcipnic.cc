@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.4 2004-03-26 03:22:46 mcb30 Exp $
+// $Id: pcipnic.cc,v 1.5 2004-06-19 15:20:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -24,7 +24,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #if BX_PCI_SUPPORT && BX_PCI_PNIC_SUPPORT
 
 #define LOG_THIS thePNICDevice->

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.277 2004-06-04 22:06:55 sshwarts Exp $
+// $Id: main.cc,v 1.278 2004-06-19 15:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,6 +26,7 @@
 
 #include "bochs.h"
 #include "state_file.h"
+#include "iodev/iodev.h"
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>

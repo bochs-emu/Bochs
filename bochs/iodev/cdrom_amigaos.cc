@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.5 2003-02-21 14:51:12 cisc Exp $
+// $Id: cdrom_amigaos.cc,v 1.6 2004-06-19 15:20:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 // for your OS if it is not supported yet.
 
 
-#include "bochs.h"
+#include "iodev.h"
 #include "scsi_commands.h"
 
 #include <exec/types.h>

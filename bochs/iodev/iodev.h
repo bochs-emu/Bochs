@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.42 2004-06-09 20:55:58 vruppert Exp $
+// $Id: iodev.h,v 1.43 2004-06-19 15:20:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,7 +26,10 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#ifndef IODEV_H
+#define IODEV_H
 
+#include "bochs.h"
 
 /* maximum number of emulated devices allowed.  floppy, vga, etc...
    you can increase this to anything below 256 since an 8-bit handle
@@ -457,3 +460,9 @@ private:
 #include "iodev/extfpuirq.h"
 #include "iodev/gameport.h"
 #include "iodev/speaker.h"
+
+#if ( BX_PROVIDE_DEVICE_MODELS==1 )
+BOCHSAPI extern bx_devices_c   bx_devices;
+#endif
+
+#endif /* IODEV_H */

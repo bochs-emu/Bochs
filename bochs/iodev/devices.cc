@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.67 2004-06-09 20:55:58 vruppert Exp $
+// $Id: devices.cc,v 1.68 2004-06-19 15:20:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-#include "bochs.h"
+#include "iodev.h"
 #define LOG_THIS bx_devices.
 
 
@@ -106,7 +106,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.67 2004-06-09 20:55:58 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.68 2004-06-19 15:20:10 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

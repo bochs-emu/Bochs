@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.30 2003-07-31 15:29:34 vruppert Exp $
+// $Id: dma.cc,v 1.31 2004-06-19 15:20:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 
 #define LOG_THIS theDmaDevice->
 
@@ -134,7 +134,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.30 2003-07-31 15:29:34 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.31 2004-06-19 15:20:11 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.10 2004-02-20 18:29:58 vruppert Exp $
+// $Id: svga.cc,v 1.11 2004-06-19 15:20:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "iodev.h"
 #if BX_WITH_SVGA
 
 #include <stdlib.h>

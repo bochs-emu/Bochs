@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.69 2004-04-10 20:58:42 vruppert Exp $
+// $Id: wx.cc,v 1.70 2004-06-19 15:20:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -37,6 +37,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "iodev.h"
 #if BX_WITH_WX
 
 // For compilers that support precompilation, includes <wx/wx.h>.

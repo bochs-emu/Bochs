@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.45 2004-02-14 06:33:29 danielg4 Exp $
+// $Id: logio.cc,v 1.46 2004-06-19 15:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,7 +26,7 @@
 
 
 
-#include "bochs.h"
+#include "iodev/iodev.h"
 #include <assert.h>
 #include "state_file.h"
 

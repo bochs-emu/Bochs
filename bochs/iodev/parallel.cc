@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.25 2004-01-27 21:38:51 vruppert Exp $
+// $Id: parallel.cc,v 1.26 2004-06-19 15:20:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 #define LOG_THIS theParallelDevice->
 
 bx_parallel_c *theParallelDevice = NULL;
@@ -77,7 +77,7 @@ bx_parallel_c::init(void)
   Bit8u irqs[BX_PARPORT_MAXDEV] = {7, 5};
   char name[16];
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.25 2004-01-27 21:38:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.26 2004-06-19 15:20:13 sshwarts Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     if (bx_options.par[i].Oenabled->get ()) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.10 2004-01-19 21:43:50 cbothamy Exp $
+// $Id: plugin.cc,v 1.11 2004-06-19 15:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -13,6 +13,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#include "iodev/iodev.h"
 #include "plugin.h"
 
 #define LOG_THIS genlog->

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.23 2004-02-08 18:11:45 danielg4 Exp $
+// $Id: macintosh.cc,v 1.24 2004-06-19 15:20:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,6 +37,7 @@
 // BOCHS INCLUDES
 #include <MacTypes.h>
 #include "bochs.h"
+#include "iodev.h"
 
 // decide whether to enable this file or not
 #if BX_WITH_MACOS

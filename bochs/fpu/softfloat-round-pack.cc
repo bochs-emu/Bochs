@@ -425,6 +425,7 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
             roundBits = zSig0 & roundMask;
             if (isTiny && roundBits) float_raise(status, float_flag_underflow);
             if (roundBits) float_raise(status, float_flag_inexact);
+            if (roundIncrement) set_float_rounding_up(status);
             zSig0 += roundIncrement;
             if ((Bit64s) zSig0 < 0) zExp = 1;
             roundIncrement = roundMask + 1;
@@ -435,6 +436,7 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
         }
     }
     if (roundBits) float_raise(status, float_flag_inexact);
+    if (roundIncrement) set_float_rounding_up(status);
     zSig0 += roundIncrement;
     if (zSig0 < roundIncrement) {
         ++zExp;
@@ -494,9 +496,10 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
                 }
             }
             if (increment) {
-                ++zSig0;
+                zSig0++;
                 zSig0 &= ~(((Bit64u) (zSig1<<1) == 0) & roundNearestEven);
                 if ((Bit64s) zSig0 < 0) zExp = 1;
+                set_float_rounding_up(status);
             }
             return packFloatx80(zSign, zExp, zSig0);
         }
@@ -504,6 +507,7 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
     if (zSig1) float_raise(status, float_flag_inexact);
     if (increment) {
         ++zSig0;
+        set_float_rounding_up(status);
         if (zSig0 == 0) {
             ++zExp;
             zSig0 = BX_CONST64(0x8000000000000000);

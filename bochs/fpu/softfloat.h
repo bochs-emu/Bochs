@@ -153,6 +153,17 @@ BX_CPP_INLINE int get_float_nan_handling_mode(float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
+| Raise floating point precision lost up flag (floatx80 only).
+*----------------------------------------------------------------------------*/
+
+#ifdef FLOATX80
+BX_CPP_INLINE void set_float_rounding_up(float_status_t &status)
+{
+    status.float_precision_lost_up = 1;
+}
+#endif
+
+/*----------------------------------------------------------------------------
 | Returns 1 if the <flush-underflow-to-zero> feature is supported;
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
@@ -256,9 +267,8 @@ int float64_is_signaling_nan(float64);
 #pragma options align=mac68k
 #endif
 struct floatx80 {
-    Bit16u align1;
+    Bit32u align1;
     Bit16u align2;
-    Bit16u align3;
     Bit16u exp;
     Bit64u fraction;
 } GCC_ATTRIBUTE((aligned(16), packed));
@@ -270,8 +280,7 @@ struct floatx80 {
     Bit64u fraction;
     Bit16u exp;
     Bit16u align1;
-    Bit16u align2;
-    Bit16u align3;
+    Bit32u align2;
 } GCC_ATTRIBUTE((aligned(16), packed));
 #endif
 

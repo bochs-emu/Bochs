@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.25 2003-06-28 08:04:31 vruppert Exp $
+// $Id: beos.cc,v 1.26 2004-06-19 15:20:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "bochs.h"
+#include "iodev.h"
 #if BX_WITH_BEOS
 
 #include <app/Application.h>

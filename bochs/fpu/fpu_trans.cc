@@ -115,6 +115,8 @@ void BX_CPU_C::FPTAN(bxInstruction_c *i)
       return; 
   }
 
+  extern const floatx80 Const_1;
+
   float_status_t status = 
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 

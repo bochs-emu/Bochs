@@ -25,7 +25,7 @@
 #if BX_SUPPORT_3DNOW
 
 static void prepare_softfloat_status_word
-	(softfloat_status_word_t &status, int rounding_mode)
+	(float_status_t &status, int rounding_mode)
 {
   status.float_exception_flags = 0; // clear exceptions before execution
   status.float_nan_handling_mode = float_first_operand_nan;
@@ -53,7 +53,7 @@ void BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 
-  softfloat_status_word_t status_word;
+  float_status_t status_word;
   prepare_softfloat_status_word(status_word, float_round_to_zero);
 
   MMXUD0(result) = 
@@ -79,7 +79,7 @@ void BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 
-  softfloat_status_word_t status_word;
+  float_status_t status_word;
   prepare_softfloat_status_word(status_word, float_round_to_zero);
 
   MMXUD0(result) = 
@@ -110,7 +110,7 @@ void BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
   }
 
-  softfloat_status_word_t status_word;
+  float_status_t status_word;
   prepare_softfloat_status_word(status_word, float_round_to_zero);
 
   MMXSD0(result) = 

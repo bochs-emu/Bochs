@@ -1,9 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.11 2002-11-19 05:47:45 bdenney Exp $
+// $Id: ioapic.cc,v 1.12 2004-06-19 15:20:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
-#include  "bochs.h"
+
+#include "iodev.h"
 #if BX_SUPPORT_APIC
 
 class bx_ioapic_c bx_ioapic;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.58 2004-05-01 14:05:07 cbothamy Exp $
+// $Id: ne2k.cc,v 1.59 2004-06-19 15:20:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
-#include "bochs.h"
+#include "iodev.h"
 #if BX_NE2K_SUPPORT
 
 //Never completely fill the ne2k ring so that we never
@@ -1275,7 +1275,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.58 2004-05-01 14:05:07 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.59 2004-06-19 15:20:13 sshwarts Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
