@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.22.2.14 2002-04-06 21:50:40 bdenney Exp $
+// $Id: siminterface.h,v 1.22.2.15 2002-04-08 06:21:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.14 2002-04-06 21:50:40 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.15 2002-04-08 06:21:14 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -37,7 +37,7 @@
 // for keeping GUI-specific structures out of the simulator interface.  It
 // certainly works well for the text interface, but that's because FILE* is
 // standard and portable.
-#define BX_UI_TEXT 0
+#define BX_UI_TEXT (!BX_WITH_WX)
 
 //////////////////////////////////////////////////////
 
@@ -619,4 +619,4 @@ public:
 extern bx_simulator_interface_c *SIM;
 
 extern void siminterface_init ();
-extern int bx_continue_after_control_panel (int argc, char *argv[]);
+extern int bx_continue_after_control_panel (int arg, int argc, char *argv[]);
