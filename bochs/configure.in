@@ -1089,9 +1089,12 @@ if test "$with_rfb" = yes; then
     ])
 fi
 
-if test ! -d instrument; then
-  mkdir instrument
-fi
+# Create some subdirectories for when you run configure from some other 
+# directory.
+if test ! -d instrument; then mkdir instrument; fi
+if test ! -d build; then mkdir build; fi
+if test ! -d build/linux; then mkdir build/linux; fi
+
 
 AC_SUBST(INSTALL_TARGET)
 AC_SUBST(INSTALL_LIST_FOR_PLATFORM)

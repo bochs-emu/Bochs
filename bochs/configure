@@ -4931,9 +4931,12 @@ fi
 rm -f conftest*
 fi
 
-if test ! -d instrument; then
-  mkdir instrument
-fi
+# Create some subdirectories for when you run configure from some other 
+# directory.
+if test ! -d instrument; then mkdir instrument; fi
+if test ! -d build; then mkdir build; fi
+if test ! -d build/linux; then mkdir build/linux; fi
+
 
 
 
@@ -4961,7 +4964,7 @@ fi
 # Extract the first word of "gzip", so it can be a program name with args.
 set dummy gzip; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4965: checking for $ac_word" >&5
+echo "configure:4968: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_GZIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4996,7 +4999,7 @@ fi
 # Extract the first word of "tar", so it can be a program name with args.
 set dummy tar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:5000: checking for $ac_word" >&5
+echo "configure:5003: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
