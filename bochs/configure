@@ -3272,6 +3272,8 @@ else
 #define BX_SUPPORT_FPU 1
 EOF
 
+    FPU_VAR='$(FPU_LIB)'
+    FPU_GLUE_OBJ='$(FPU_GLUE_OBJ)'
     
   
 fi
@@ -3282,7 +3284,7 @@ fi
 
 
 echo $ac_n "checking for x86 debugger support""... $ac_c" 1>&6
-echo "configure:3286: checking for x86 debugger support" >&5
+echo "configure:3288: checking for x86 debugger support" >&5
 # Check whether --enable-x86-debugger or --disable-x86-debugger was given.
 if test "${enable_x86_debugger+set}" = set; then
   enableval="$enable_x86_debugger"
@@ -3318,7 +3320,7 @@ fi
 
 
 echo $ac_n "checking for CDROM support""... $ac_c" 1>&6
-echo "configure:3322: checking for CDROM support" >&5
+echo "configure:3324: checking for CDROM support" >&5
 # Check whether --enable-cdrom or --disable-cdrom was given.
 if test "${enable_cdrom+set}" = set; then
   enableval="$enable_cdrom"
@@ -3360,7 +3362,7 @@ fi
 
 
 echo $ac_n "checking for Sound Blaster 16 support""... $ac_c" 1>&6
-echo "configure:3364: checking for Sound Blaster 16 support" >&5
+echo "configure:3366: checking for Sound Blaster 16 support" >&5
 # Check whether --enable-sb16 or --disable-sb16 was given.
 if test "${enable_sb16+set}" = set; then
   enableval="$enable_sb16"
