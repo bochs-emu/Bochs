@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.98 2003-10-16 19:29:12 vruppert Exp $
+// $Id: rombios.c,v 1.99 2003-11-02 12:39:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.98 $";
-static char bios_date_string[] = "$Date: 2003-10-16 19:29:12 $";
+static char bios_cvs_version_string[] = "$Revision: 1.99 $";
+static char bios_date_string[] = "$Date: 2003-11-02 12:39:54 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.98 2003-10-16 19:29:12 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.99 2003-11-02 12:39:54 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8594,48 +8594,51 @@ pci_real_select_reg:
 #endif
 
 detect_parport:
+  push dx
   add  dx, #2
   in   al, dx
   and  al, #0xdf ; clear input mode
   out  dx, al
-  sub  dx, #2
+  pop  dx
   mov  al, #0xaa
   out  dx, al
   in   al, dx
   cmp  al, #0xaa
   jne  no_parport
+  push bx
   shl  bx, #1
   mov  [bx+0x408], dx ; Parallel I/O address
-  shr  bx, #1
+  pop  bx
   mov  [bx+0x478], cl ; Parallel printer timeout
   inc  bx
 no_parport:
   ret
 
 detect_serial:
-  add  dx, #4
-  in   al, dx
-  or   al, #0x10 ; enable loopback mode
+  push dx
+  inc  dx
+  mov  al, #0x02
   out  dx, al
-  and  al, #0xf0
-  or   al, #0x0a
-  out  dx, al
-  add  dx, #2
   in   al, dx
-  and  al, #0xf0
-  cmp  al, #0x90
+  cmp  al, #0x02
   jne  no_serial
-  sub  dx, #2
+  inc  dx
   in   al, dx
-  and  al, #0xe0
+  cmp  al, #0x02
+  jne  no_serial
+  dec  dx
+  xor  al, al
   out  dx, al
-  sub  dx, #4
+  pop  dx
+  push bx
   shl  bx, #1
   mov  [bx+0x400], dx ; Serial I/O address
-  shr  bx, #1
+  pop  bx
   mov  [bx+0x47c], cl ; Serial timeout
   inc  bx
+  ret
 no_serial:
+  pop  dx
   ret
 
 ;; for 'C' strings and other data, insert them here with
