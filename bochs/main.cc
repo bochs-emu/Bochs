@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.171 2002-10-30 18:30:29 yakovlev Exp $
+// $Id: main.cc,v 1.172 2002-11-01 15:19:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,6 +70,7 @@ static char *divider = "========================================================
 static logfunctions thePluginLog;
 logfunctions *pluginlog = &thePluginLog;
 
+bx_startup_flags_t bx_startup_flags;
 
 /* typedefs */
 
@@ -1402,12 +1403,13 @@ static void setupWorkingDirectory (char *path)
 }
 #endif
 
-int main (int argc, char *argv[]) {
+int bxmain () {
   bx_init_siminterface ();   // create the SIM object
   static jmp_buf context;
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
-    if (bx_init_main (argc, argv) < 0) return 0;
+    if (bx_init_main (bx_startup_flags.argc, bx_startup_flags.argv) < 0) 
+      return 0;
     // read a param to decide which config interface to start.
     // If one exists, start it.  If not, just begin.
     bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
@@ -1431,6 +1433,34 @@ int main (int argc, char *argv[]) {
   SIM->set_quit_context (NULL);
   return 0;
 }
+
+#if defined(__WXMSW__)
+extern "C" int WinMain(
+  HINSTANCE hInstance,
+  HINSTANCE hPrevInstance,
+  LPSTR m_lpCmdLine, int nCmdShow)
+{
+  bx_startup_flags.hInstance = hInstance;
+  bx_startup_flags.hPrevInstance = hPrevInstance;
+  bx_startup_flags.m_lpCmdLine = m_lpCmdLine;
+  bx_startup_flags.nCmdShow = nCmdShow;
+#ifdef __GNUC__
+#warning should split m_lpCmdLine and fill argc,argv for real.
+#endif
+  // make fake argc,argv.
+  bx_startup_flags.argc=1;
+  static char *my_argv[] = {"bochs"};
+  bx_startup_flags.argv=my_argv;
+  return bxmain ();
+}
+#else
+int main (int argc, char *argv[])
+{
+  bx_startup_flags.argc = argc;
+  bx_startup_flags.argv = argv;
+  return bxmain ();
+}
+#endif
 
 void
 print_usage ()

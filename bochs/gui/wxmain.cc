@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.73 2002-10-26 13:22:47 bdenney Exp $
+// $Id: wxmain.cc,v 1.74 2002-11-01 15:19:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -158,12 +158,22 @@ static int ci_callback (void *userdata, ci_command_t command)
 {
   switch (command)
   {
-    case CI_START: {
+    case CI_START:
       //fprintf (stderr, "wxmain.cc: start\n");
-      char *argv[] = {"manufactured-argv"};
-      wxEntry (1, argv);
+#ifdef __WXMSW__
+	  // on Windows only, wxEntry needs some data that is passed into WinMain.
+	  // So, in main.cc we define WinMain and fill in the bx_startup_flags
+	  // structure with the data, so that when we're ready to call wxEntry
+	  // it has access to the data.
+	  wxEntry (
+		bx_startup_flags.hInstance,
+		bx_startup_flags.hPrevInstance,
+		bx_startup_flags.m_lpCmdLine,
+		bx_startup_flags.nCmdShow);
+#else
+      wxEntry (bx_startup_flags.argc, bx_startup_flags.argv);
+#endif
       break;
-      }
     case CI_RUNTIME_CONFIG:
       fprintf (stderr, "wxmain.cc: runtime config not implemented\n");
       break;
@@ -1477,9 +1487,7 @@ SimThread::Entry (void)
   static jmp_buf context;  // this must not go out of scope. maybe static not needed
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
-    int argc=1;
-    char *argv[] = {"bochs"};
-    SIM->begin_simulation (argc, argv);
+    SIM->begin_simulation (bx_startup_flags.argc, bx_startup_flags.argv);
     wxLogDebug ("in SimThread, SIM->begin_simulation() exited normally");
   } else {
     wxLogDebug ("in SimThread, SIM->begin_simulation() exited by longjmp");
