@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.39 2002-03-28 07:50:34 bdenney Exp $
+$Id: user.dbk,v 1.39.2.1 2002-06-10 21:09:36 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -430,6 +430,7 @@ currently work with.
       Kevin's Lawton's main development platform.  Bryce Denney maintains
       the Unix/X11 platform now.  Most features and fixes (not all) are
       tried first in Unix and then ported to the others.
+      </entry>
    </row>
 
    <row>
@@ -1647,6 +1648,7 @@ are required.  To try it, type:
   configure --with-rfb
   make
 </screen>
+</para>
 </section>
 
 <section><title>Compiling with the SDL interface</title>
@@ -1783,6 +1785,7 @@ In Bochs 1.3 and before, the X11 gui was always the default.
     </entry>
   </row>
 </tbody>
+</tgroup>
 </table>
 
 <table><title>Configure Options to Select the GUI (optional)</title>
@@ -1814,11 +1817,13 @@ In Bochs 1.3 and before, the X11 gui was always the default.
       <entry>Use Win32 GUI, but compile with a Win32/gcc
       environment such as Cygwin.  For Cygwin, see .conf.win32-cygwin
       for the correct compile options.
+      </entry>
     </row>
     <row>
       <entry>--with-carbon</entry>
       <entry>Compile for MacOS X with the Carbon GUI.  See the
       .conf.macosx file for the correct MacOS X compile options.
+      </entry>
     </row>
     <row>
       <entry>--with-amigaos</entry>
@@ -1931,7 +1936,7 @@ turn it off.
       <entry>yes</entry>
       <entry>
       Enables text-mode configuration menus when you first start Bochs.  The
-      menus let you read in a bochsrc file, edit some options, and safe the new
+      menus let you read in a bochsrc file, edit some options, and save the new
       bochsrc before starting the simulation.  Also enables a runtime
       menu (controlled by a Config button on the Bochs display) which
       lets you change certain settings during simulation.  The control panel
@@ -2146,7 +2151,7 @@ turn it off.
     </row>
     <row>
       <entry>--enable-simid={0, 1}</entry>
-      <entry>0
+      <entry>0</entry>
       <entry>
       CPU simulator ID.  You likely don't need this option.  If you are using
       bochs to cosimulate, that is to run multiple simulators in parallel so
@@ -2673,7 +2678,8 @@ This option prevents Bochs from creating mouse "events"  unless  a  mouse  is
 enabled.  The hardware emulation  itself is not disabled  by this. You  can
 turn the mouse on  by  setting enabled to  1,  or  turn  it  off  by  setting
 enabled to 0. Unless  you  have  a  particular reason  for enabling  the  mouse
-by  default, it is recommended that you leave it off.
+by default, it is recommended that you leave it off. You can also toggle the
+mouse usage at runtime (middle mouse button on X11 and SDL, F12 on Win32).
 </para>
 </section>
 
@@ -2687,6 +2693,7 @@ Requests that the GUI create and use its  own non-shared colormap.  This
 colormap  will  be used when in the bochs window. If not enabled, a shared
 colormap  scheme  may be used.  Once again, enabled=1  turns on this feature
 and 0 turns it off.
+</para>
 </section>
 
 <section><title>ne2k</title>
@@ -2970,6 +2977,7 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 <row><entry>BX_KEY_POWER_WAKE</entry><entry> Powerkeys - wake </entry></row>
 
 </tbody>
+</tgroup>
 </table>
 </section>
 
@@ -3478,6 +3486,7 @@ that Linux detects the NE2000 card.  Eventually it gets to a login prompt.
   NE*000 ethercard probe at 0x280: b0 c4 20 00 00 00
   eth0: NE2000 found at 0x280, using IRQ 9.
 </screen>
+</para>
 
 <para>
 At the login prompt, type "root" to log in as root. Then type the ifconfig and
@@ -3493,6 +3502,7 @@ network.
   dlx:~# route add default gw 192.168.0.1   # your gateway to the net
   dlx:~# _
 </screen>
+</para>
 
 <note>
 <para>
@@ -3586,7 +3596,7 @@ can even boot DOS inside Bochs and run <filename>sbide121.exe</filename> to
 extract it.  The driver is called SBIDE.SYS.  </para>
 </footnote> and OAKCDROM.SYS that comes with several versions of Windows.
 Copy the driver to your boot disk, and then set up the startup files as follows.
-<para>
+</para>
 <screen>
 config.sys:
   device=himem.sys
