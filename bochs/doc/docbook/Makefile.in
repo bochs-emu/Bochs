@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.5 2002-12-13 19:26:11 bdenney Exp $
+# $Id: Makefile.in,v 1.6 2002-12-13 19:59:08 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -17,7 +17,7 @@ SECTIONS=user documentation development
 SECTION_HTML=$(SECTIONS:%=%/book1.html)
 
 # these files get installed in addition to the sections
-EXTRAS=$(srcdir)/README $(srcdir)/index.html
+EXTRAS=README index.html
 
 # complete list of what to install
 INSTALL_LIST=$(SECTIONS) $(EXTRAS)
@@ -62,6 +62,7 @@ test_sfuser:
 # local username is the same as your Source Forge username, unless you define
 # an environment variable SFUSER.
 webinst: all fixperm
+	for i in $(INSTALL_LIST); do if test -a $(srcdir)/$$i -a ! -a $$i; then cp $(srcdir)/$$i $$i; fi; done
 	# copy to remote
 	@echo Installing documentation on $(REMOTE_PATH)
 	if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
