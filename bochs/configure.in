@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.100 2002-09-13 23:59:23 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.101 2002-09-14 05:46:57 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -307,29 +307,37 @@ AC_ARG_ENABLE(x86-64,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     CPUDIR=cpu64
-    LIBCPU32_A=""
-    OBJS64_CPU='$(OBJS64_CPU)'
+    OBJS32=''
+    OBJS64='$(OBJS64)'
+    CPU32LIB='cpu/libcpu.a'
+    CPU32OBJS='cpu/*.o'
     AC_DEFINE(BX_SUPPORT_X86_64, 1)
     use_x86_64=1
    else
     AC_MSG_RESULT(no)
     CPUDIR=cpu
-    LIBCPU32_A=libcpu.a
-    OBJS64_CPU=''
+    OBJS32='$(OBJS32)'
+    OBJS64=''
+    CPU32LIB=''
+    CPU32OBJS=''
     AC_DEFINE(BX_SUPPORT_X86_64, 0)
    fi
    ],
   [
     AC_MSG_RESULT(no)
     CPUDIR=cpu
-    LIBCPU32_A=libcpu.a
-    OBJS64_CPU=''
+    OBJS32='$(OBJS32)'
+    OBJS64=''
+    CPU32LIB=''
+    CPU32OBJS=''
     AC_DEFINE(BX_SUPPORT_X86_64, 0)
     ]
   )
 AC_SUBST(CPUDIR)
-AC_SUBST(LIBCPU32_A)
-AC_SUBST(OBJS64_CPU)
+AC_SUBST(OBJS32)
+AC_SUBST(OBJS64)
+AC_SUBST(CPU32LIB)
+AC_SUBST(CPU32OBJS)
 
 AC_MSG_CHECKING(for cpu level)
 AC_ARG_ENABLE(cpu-level,
@@ -1245,9 +1253,9 @@ CFP=""
 OFP="-o "
 # (KPL) Changed following. Loader was not finding symbols between
 # cpu and cpu64 directory due to circular dependencies.
-#MAKELIB="ar rv \$@"
-MAKELIB="ld -i -o \$@"
-RANLIB="echo"
+MAKELIB="ar rv \$@"
+#MAKELIB="ld -i -o \$@"
+#RANLIB="echo"
 RMCOMMAND="rm -f "
 LINK="\$(CXX) -o \$@ \$(CXXFLAGS)"
 EXE=""

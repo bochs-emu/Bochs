@@ -109,7 +109,7 @@ OBJSXX = \
 # Objects which are only used for x86-64 code, but which have been
 # moved to the cpu/ directory since they cause no conflict at all
 # by being here.
-OBJS64_CPU = \
+OBJS64 = \
 	arith64.o \
 	ctrl_xfer64.o \
 	data_xfer64.o \
@@ -127,18 +127,11 @@ BX_INCLUDES = ../bochs.h ../config.h
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
-all: @LIBCPU32_A@ libcpuXX.a
 
-
-libcpu.a: $(OBJS32)
+libcpu.a: @OBJS32@ $(OBJSXX) @OBJS64@
 	@RMCOMMAND@ libcpu.a
-	@MAKELIB@ $(OBJS32)
+	@MAKELIB@ @OBJS32@ $(OBJSXX) @OBJS64@
 	$(RANLIB) libcpu.a
-
-libcpuXX.a: $(OBJSXX) @OBJS64_CPU@
-	@RMCOMMAND@ libcpuXX.a
-	@MAKELIB@ $(OBJSXX) @OBJS64_CPU@
-	$(RANLIB) libcpuXX.a
 
 $(OBJS32): $(BX_INCLUDES)
 
