@@ -2974,23 +2974,28 @@ scanf_error:
 }
 
   void
-bx_dbg_disassemble_command(Bit32u addr1, Bit32u addr2)
+bx_dbg_disassemble_command(bx_num_range range)
 {
 #if BX_DISASM
   Boolean paddr_valid;
   Bit32u  paddr;
   unsigned ilen;
 
+  if (range.to == EMPTY_ARG) {
+    // should set to cs:eip. FIXME
+    bx_printf ("Error: type 'disassemble ADDR' or 'disassemble ADDR:ADDR'\n");
+    return;
+  }
 
   do {
-    bx_dbg_callback[0].xlate_linear2phy(addr1, &paddr, &paddr_valid);
+    bx_dbg_callback[0].xlate_linear2phy(range.from, &paddr, &paddr_valid);
 
     if (paddr_valid) {
       bx_dbg_callback[0].getphymem(paddr, 16, bx_disasm_ibuf);
       ilen = bx_disassemble.disasm(bx_debugger.disassemble_size==32,
                                    bx_disasm_ibuf, bx_disasm_tbuf);
 
-      fprintf(stderr, "%08x: ", (unsigned) addr1);
+      fprintf(stderr, "%08x: ", (unsigned) range.from);
       for (unsigned j=0; j<ilen; j++)
         fprintf(stderr, "%02x", (unsigned) bx_disasm_ibuf[j]);
       fprintf(stderr, ": %s\n", bx_disasm_tbuf);
@@ -2998,13 +3003,12 @@ bx_dbg_disassemble_command(Bit32u addr1, Bit32u addr2)
     else {
       fprintf(stderr, "??? (physical address not available)\n");
       ilen = 0; // keep compiler happy
-      addr1 = addr2; // bail out
+      range.from = range.to; // bail out
       }
-      addr1 += ilen;
-    } while (addr1 < addr2);
+      range.from += ilen;
+    } while (range.from < range.to);
 #else
-  UNUSED(addr1);
-  UNUSED(addr2);
+  UNUSED(range);
 #endif  // #if BX_DISASM
 }
 
@@ -3259,11 +3263,11 @@ bx_dbg_info_dirty_command(void)
     }
 }
 
-void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8])
+void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8], int verbose)
 {
   int lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
   int hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
-  fprintf (fp, "descriptor hi,lo = %08x,%08x\n", hi, lo);
+  //fprintf (fp, "descriptor hi,lo = %08x,%08x\n", hi, lo);
   int base = ((lo >> 16) & 0xffff)
              | ((hi << 16) & 0xff0000)
              | (hi & 0xff000000);
@@ -3279,11 +3283,6 @@ void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8])
   int g = (hi >> 23) & 0x01;
   int base_is_jump_addr;
 #if 0
-  if (!present) {
-    fprintf (fp, "P=present=0\n");
-    return;
-  }
-#endif
   if (s) {
     // either a code or a data segment. bit 11 (type file MSB) then says 
     // 0=data segment, 1=code seg
@@ -3320,66 +3319,127 @@ void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8])
     fprintf (fp, "AVL=available to OS=%d\n", avl);
   }
   fprintf (fp, "P=present=%d\n", present);
+#endif
+  /* brief output */
+// 32-bit trap gate, target=0010:c0108ec4, DPL=0, present=1
+// code segment, base=0000:00cfffff, length=0xffff
+  if (s) {
+    // either a code or a data segment. bit 11 (type file MSB) then says 
+    // 0=data segment, 1=code seg
+    if (type&8) {
+      fprintf (fp, "Code segment, linearaddr=%08x, len=%04x %s, %s%s%s, %d-bit addrs\n", 
+	base, limit, g ? "* 4Kbytes" : "bytes",
+	(type&2)? "Execute/Read" : "Execute-Only",
+	(type&4)? ", Conforming" : "",
+	(type&1)? ", Accessed" : "",
+	d_b? 32 : 16);
+    } else {
+      fprintf (fp, "Data segment, linearaddr=%08x, len=%04x %s, %s%s%s\n",
+	base, limit, g ? "* 4Kbytes" : "bytes",
+	(type&2)? "Read/Write" : "Read-Only",
+	(type&4)? ", Expand-down" : "",
+	(type&1)? ", Accessed" : "");
+    }
+  } else {
+    // types from IA32-devel-guide-3, page 3-15.
+    static char *undef = "???";
+    static char *type_names[16] = { undef, "16-Bit TSS (available)", "LDT", "16-Bit TSS (Busy)", "16-Bit Call Gate", "Task Gate", "16-Bit Interrupt Gate", "16-Bit Trap Gate", undef, "32-Bit TSS (Available)", undef, "32-Bit TSS (Busy)", "32-Bit Call Gate", undef, "32-Bit Interrupt Gate", "32-Bit Trap Gate" };
+    fprintf (fp, "%s ", type_names[type]);
+    // only print more if type is valid
+    if (type_names[type] == undef)  {
+      fprintf (fp, "descriptor hi=%08x, lo=%08x", hi, lo);
+    } else {
+      fprintf (fp, "target=%04x:%08x, DPL=%d", segment, offset, dpl);
+      // for call gates, print segment:offset and parameter count p.4-15
+      // for task gate, only present,dpl,TSS segment selector exist. p.5-13
+      // for interrupt gate, segment:offset,p,dpl
+      // for trap gate, segment:offset,p,dpl
+    }
+    fprintf (fp, "\n");
+  }
 }
 
 void
-bx_dbg_info_idt_command(void) {
+bx_dbg_info_idt_command(bx_num_range range) {
   bx_dbg_cpu_t cpu;
   bx_dbg_callback[0].get_cpu(&cpu);
-  int intr_max = (cpu.idtr.limit + 1) / 8;
-  Bit32u paddr, paddr_valid;
-  bx_dbg_callback[0].xlate_linear2phy(cpu.idtr.base, &paddr, &paddr_valid);
-  if (!paddr_valid) {
-    fprintf (stderr, "error: IDTR register points to invalid linear address %p\n", cpu.idtr.base);
-    return;
+  int n, print_table = 0;
+  if (range.to == EMPTY_ARG) {
+    // show all entries
+    range.from = 0;
+    range.to = (cpu.idtr.limit) / 8;
+    print_table = 1;
   }
-  unsigned char entry[8];
-  fprintf (stderr, "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
-  for (int intr=0; intr<intr_max; intr++) {
+  if (print_table)
+    fprintf (stderr, "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
+  for (n = range.from; n<=range.to; n++) {
+    Bit32u paddr, paddr_valid;
+    bx_dbg_callback[0].xlate_linear2phy(cpu.idtr.base + 8*n, &paddr, &paddr_valid);
+    if (!paddr_valid) {
+      fprintf (stderr, "error: IDTR+8*%d points to invalid linear address %p\n",
+	 n, cpu.idtr.base);
+      return;
+    }
     // read 8-byte entry from IDT
+    unsigned char entry[8];
     bx_dbg_callback[0].getphymem (paddr, 8, entry);
-    // it could be a task-gate descriptor, interrupt-gate descriptor, or trap-gate descriptor.
-    fprintf (stderr, "IDT[%d]=", intr);
-    bx_dbg_print_descriptor (stderr, entry);
-    paddr+=8;
+    fprintf (stderr, "IDT[0x%02x]=", n);
+    bx_dbg_print_descriptor (stderr, entry, 0);
   }
+  if (print_table) fprintf (stderr, "You can list individual entries with 'info idt NUM' or groups with 'info idt NUM:NUM'\n");
 }
 
 void
-bx_dbg_info_gdt_command(void) {
+bx_dbg_info_gdt_command(bx_num_range range) {
   bx_dbg_cpu_t cpu;
   bx_dbg_callback[0].get_cpu(&cpu);
-  int gdt_max = (cpu.gdtr.limit + 1) / 8;
-  Bit32u paddr, paddr_valid;
-  bx_dbg_callback[0].xlate_linear2phy(cpu.gdtr.base, &paddr, &paddr_valid);
-  if (!paddr_valid) {
-    fprintf (stderr, "error: GDTR register points to invalid linear address %p\n", cpu.gdtr.base);
-    return;
+  int n, print_table = 0;
+  if (range.to == EMPTY_ARG) {
+    // show all entries
+    range.from = 0;
+    range.to = (cpu.gdtr.limit) / 8;
+    print_table = 1;
   }
-  unsigned char entry[8];
-  fprintf (stderr, "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
-  for (int i=0; i<gdt_max; i++) {
+  if (print_table)
+    fprintf (stderr, "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
+  for (n = range.from; n<=range.to; n++) {
+    Bit32u paddr, paddr_valid;
+    bx_dbg_callback[0].xlate_linear2phy(cpu.gdtr.base + 8*n, &paddr, &paddr_valid);
+    if (!paddr_valid) {
+      fprintf (stderr, "error: GDTR+8*%d points to invalid linear address %p\n",
+	  n, cpu.gdtr.base);
+      return;
+    }
+    unsigned char entry[8];
     // read 8-byte entry from GDT
     bx_dbg_callback[0].getphymem (paddr, 8, entry);
-    // it could be a task-gate descriptor, interrupt-gate descriptor, or trap-gate descriptor.
-    fprintf (stderr, "\nIDT[%d]=", i);
-    bx_dbg_print_descriptor (stderr, entry);
-    paddr+=8;
+    fprintf (stderr, "GDT[0x%02x]=", n);
+    bx_dbg_print_descriptor (stderr, entry, 0);
   }
+  if (print_table) fprintf (stderr, "You can list individual interrupts with 'info gdt NUM'.\n");
 }
 
 void
-bx_dbg_info_ldt_command(void) {
+bx_dbg_info_ldt_command(bx_num_range n) {
   bx_dbg_cpu_t cpu;
   bx_dbg_callback[0].get_cpu(&cpu);
   fprintf (stderr, "Local Descriptor Table output not implemented\n");
 }
 
 void
-bx_dbg_info_tss_command(void) {
+bx_dbg_info_tss_command(bx_num_range n) {
   bx_dbg_cpu_t cpu;
   bx_dbg_callback[0].get_cpu(&cpu);
   fprintf (stderr, "TSS output not implemented\n");
+}
+
+bx_num_range 
+make_num_range (Bit32u from, Bit32u to)
+{
+  bx_num_range x;
+  x.from = from;
+  x.to = to;
+  return x;
 }
 
   void
