@@ -78,9 +78,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #=======================================================================
 # MEGS
 # set this to the default number of Megabytes of memory you want
-# to emulate.  You may also pass the '-megs xyz' option to bochs
-#
-# The default is 32MB, most OS's won't need more than that. 
+# to emulate. The default is 32MB, most OS's won't need more than that. 
 #=======================================================================
 #megs: 256
 #megs: 128
@@ -96,7 +94,7 @@ megs: 32
 # ROM images should not overwrite the rombios (located at
 # F0000-FFFFF) and the videobios (located at C0000-C7FFF).
 # Those ROM images will be initialized by the bios if they contain 
-# the right signature (0x55AA).
+# the right signature (0x55AA) and a valid checksum.
 # It can also be a convenient way to upload some arbitary code/data
 # in the simulation, that can be retrieved by the boot loader
 #=======================================================================
@@ -131,7 +129,7 @@ vgaromimage: file=$BXSHARE/VGABIOS-elpin-2.40
 #   floppya: image=path, status=inserted           (guess type from image size)
 #
 # The path should be the name of a disk image file.  On unix, you can use a raw
-# device name such as /dev/fd0 on Linux.  On WinNT and Win2k, use drive letters
+# device name such as /dev/fd0 on Linux.  On win32 platforms, use drive letters
 # such as a: or b: as the path.  The parameter 'image' works with image files
 # only. In that case the size must match one of the supported types.
 #=======================================================================
@@ -227,7 +225,7 @@ ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, sp
 
 #=======================================================================
 # BOOT:
-# This defines your boot drive.  
+# This defines the boot sequence. Now you can specify up to 3 boot drives.
 # You can either boot from 'floppy', 'disk' or 'cdrom'
 # legacy 'a' and 'c' are also supported
 # Examples:
@@ -236,6 +234,7 @@ ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, sp
 #   boot: cdrom
 #   boot: c
 #   boot: a
+#   boot: cdrom, floppy, disk
 #=======================================================================
 #boot: floppy
 boot: disk
