@@ -4315,6 +4315,9 @@ EOF
     if test "$with_amigaos" = yes; then
       # use the amiga cdrom file instead.
       CDROM_OBJS="cdrom_amigaos.o"
+    elif test "$with_beos" = yes; then
+      # use the beos cdrom file instead
+      CDROM_OBJS="cdrom_beos.o"
     fi
     cat >> confdefs.h <<\EOF
 #define BX_SUPPORT_CDROM 1
@@ -4337,7 +4340,7 @@ fi
 
 
 echo $ac_n "checking for Sound Blaster 16 support""... $ac_c" 1>&6
-echo "configure:4341: checking for Sound Blaster 16 support" >&5
+echo "configure:4344: checking for Sound Blaster 16 support" >&5
 # Check whether --enable-sb16 or --disable-sb16 was given.
 if test "${enable_sb16+set}" = set; then
   enableval="$enable_sb16"
@@ -4411,7 +4414,7 @@ fi
 
 
 echo $ac_n "checking for I/O Interface to the debugger""... $ac_c" 1>&6
-echo "configure:4415: checking for I/O Interface to the debugger" >&5
+echo "configure:4418: checking for I/O Interface to the debugger" >&5
 IODEBUG_OBJS=''
 # Check whether --enable-iodebug or --disable-iodebug was given.
 if test "${enable_iodebug+set}" = set; then
@@ -4536,7 +4539,7 @@ fi
 
 
 echo $ac_n "checking for gui library to use""... $ac_c" 1>&6
-echo "configure:4540: checking for gui library to use" >&5
+echo "configure:4543: checking for gui library to use" >&5
 
 if (test "$with_x11" != yes) && \
    (test "$with_beos" != yes) && \
@@ -4723,7 +4726,7 @@ fi
 
 if test "$use_curses" = yes; then
   echo $ac_n "checking for mvaddch in -lcurses""... $ac_c" 1>&6
-echo "configure:4727: checking for mvaddch in -lcurses" >&5
+echo "configure:4730: checking for mvaddch in -lcurses" >&5
 ac_lib_var=`echo curses'_'mvaddch | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4731,7 +4734,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcurses  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4735 "configure"
+#line 4738 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4742,7 +4745,7 @@ int main() {
 mvaddch()
 ; return 0; }
 EOF
-if { (eval echo configure:4746: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4749: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4763,7 +4766,7 @@ else
 fi
 
   echo $ac_n "checking for mvaddch in -lncurses""... $ac_c" 1>&6
-echo "configure:4767: checking for mvaddch in -lncurses" >&5
+echo "configure:4770: checking for mvaddch in -lncurses" >&5
 ac_lib_var=`echo ncurses'_'mvaddch | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4771,7 +4774,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lncurses  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4775 "configure"
+#line 4778 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4782,7 +4785,7 @@ int main() {
 mvaddch()
 ; return 0; }
 EOF
-if { (eval echo configure:4786: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4789: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4803,7 +4806,7 @@ else
 fi
 
   echo $ac_n "checking for mvaddch in -ltermlib""... $ac_c" 1>&6
-echo "configure:4807: checking for mvaddch in -ltermlib" >&5
+echo "configure:4810: checking for mvaddch in -ltermlib" >&5
 ac_lib_var=`echo termlib'_'mvaddch | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4811,7 +4814,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ltermlib  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4815 "configure"
+#line 4818 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4822,7 +4825,7 @@ int main() {
 mvaddch()
 ; return 0; }
 EOF
-if { (eval echo configure:4826: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4829: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4851,18 +4854,18 @@ fi
 if test "$with_rfb" = yes; then
   # first see if compiler takes "-pthread" argument
   echo $ac_n "checking for -pthread arg to compiler""... $ac_c" 1>&6
-echo "configure:4855: checking for -pthread arg to compiler" >&5
+echo "configure:4858: checking for -pthread arg to compiler" >&5
   CFLAGS_SAVE="$CFLAGS"
   CFLAGS="$CFLAGS -pthread"
   cat > conftest.$ac_ext <<EOF
-#line 4859 "configure"
+#line 4862 "configure"
 #include "confdefs.h"
  #include <pthread.h> 
 int main() {
  pthread_create(0,0,0,0); 
 ; return 0; }
 EOF
-if { (eval echo configure:4866: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4869: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
    
       # it compiles with -pthread
@@ -4878,7 +4881,7 @@ else
       # now try with -lpthread
       CFLAGS="$CFLAGS_SAVE"
       echo $ac_n "checking for pthread_create in -lpthread""... $ac_c" 1>&6
-echo "configure:4882: checking for pthread_create in -lpthread" >&5
+echo "configure:4885: checking for pthread_create in -lpthread" >&5
 ac_lib_var=`echo pthread'_'pthread_create | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4886,7 +4889,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lpthread  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4890 "configure"
+#line 4893 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4897,7 +4900,7 @@ int main() {
 pthread_create()
 ; return 0; }
 EOF
-if { (eval echo configure:4901: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4904: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4958,7 +4961,7 @@ fi
 # Extract the first word of "gzip", so it can be a program name with args.
 set dummy gzip; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4962: checking for $ac_word" >&5
+echo "configure:4965: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_GZIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4993,7 +4996,7 @@ fi
 # Extract the first word of "tar", so it can be a program name with args.
 set dummy tar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4997: checking for $ac_word" >&5
+echo "configure:5000: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_TAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
