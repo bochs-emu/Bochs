@@ -555,11 +555,9 @@ if test "$want_readline" = yes; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(HAVE_LIBREADLINE, 1)
       READLINE_LIB="-lreadline -lcurses"
-      echo Adding -lcurses since readline requires it.
     else
       AC_MSG_RESULT(no)
-      echo WARNING: The readline library was found, but it is broken, with 
-      echo or without the -lcurses link option.
+      echo WARNING: The readline library was disabled because it was not found.
     fi
   else
     AC_MSG_RESULT(no)
