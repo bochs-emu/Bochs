@@ -116,6 +116,8 @@ Changes to next release:
   [832330] ROMBIOS improvement (reduce stack consumption, etc.)
   [977900] READ_CDROM_TOC and base address by Ben Lunt
   [961665] WinXP patch to read physical CDROM's TOC by Ben Lunt
+  [978793] CDROM_SENSE_MODE medium_type by Ben Lunt
+  [615457] gif to png migration
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
@@ -126,6 +128,7 @@ Changes to next release:
   - patch.rombios.markevich (Start/Stop Wait Timer) (Kory Markevich)
 
 - these S.F. bugs were closed
+ #1014361 Bximage on WinXP won't create image
   #651510 bximage won't create larger than 2GB
   #759206 bximage fails on Win32 for hd images over 2Gb
   #759210 Bochs fails on image files over 2Gb on Win32
