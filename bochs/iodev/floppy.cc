@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.50 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: floppy.cc,v 1.51 2002-10-03 21:07:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,9 +40,7 @@ extern "C" {
 #include <errno.h>
 }
 #include "bochs.h"
-#ifdef WIN32
-#include <windows.h>     // for wsprintf
-#endif
+// windows.h included by bochs.h
 #define LOG_THIS bx_floppy.
 
 
@@ -89,7 +87,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.50 2002-10-02 05:16:01 kevinlawton Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.51 2002-10-03 21:07:04 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");

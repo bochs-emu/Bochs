@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.33 2002-10-03 13:12:20 vruppert Exp $
+// $Id: wx.cc,v 1.34 2002-10-03 21:07:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -376,7 +376,8 @@ wxAsciiKey[0x5f] = {
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
 // get windows specific definitions. At present the only thing needed
 // is the definition of HIWORD.
-#include <windows.h>
+
+// windows.h included by bochs.h, so nothing extra is required here.
 #endif
 
 // MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode & 2.

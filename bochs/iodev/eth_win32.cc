@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.13 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: eth_win32.cc,v 1.14 2002-10-03 21:07:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,8 +36,8 @@
 // For ethernet support under win32 to work, you must install WinPCap.
 // Download it from http://netgroup-serv.polito.it/winpcap
 
-#include <windows.h>
 #include "bochs.h"
+// windows.h included by bochs.h
 #define LOG_THIS bx_ne2k.
 
 #define NDIS_PACKET_TYPE_PROMISCUOUS			0x0020

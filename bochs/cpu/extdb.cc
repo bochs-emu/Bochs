@@ -1,6 +1,6 @@
 #include "bochs.h"
 #ifdef WIN32
-#  include <windows.h>
+// windows.h included in bochs.h
 #else
 //#  error "extdb.cc only supported in win32 environment"
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.42 2002-09-21 19:38:47 vruppert Exp $
+// $Id: win32.cc,v 1.43 2002-10-03 21:06:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 #include "bochs.h"
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
-#include <windows.h>
+// windows.h is included by bochs.h
 #include <commctrl.h>
 #include <process.h>
 
