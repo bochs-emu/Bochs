@@ -44,12 +44,45 @@ TO DO:
   takes over your main() function and inserts its own app init code.
   We'll have to figure out what that app init code does and put it
   in plugin_init.
-- Bryce is experimenting with using classes with virtual functions
-  to make the plugin interface cleaner.  The keyboard plugin has been
-  implemented this way, and all the gui modules are implemented in a
-  very similar way.
-- convert remaining devices
 
+  - wxWindows and text config menu are working in the nonplugin case.
+  - now I need to compile libwx.la and libcontrol.la, add a bochsrc
+    option (config_interface: [text|wx]), and I think it will work.
+  - what needs to be tested?
+    - noplug: no plugins, just X11 selected
+      - it starts up ok, quickstart works
+    - noplug-wx: no plugins, wxWindows selected
+      - I had to add BX_DEFAULT_CONFIG_INTERFACE and BX_DEFAULT_VGA_LIBRARY
+        because now I'm trying to support many BX_WITH_* variables being
+	on.
+      - it starts up ok, quickstart works
+    - plug: plugins, X11 is default
+      - it starts up ok, quickstart works
+      - config interface selection: ok for control, wx
+      - gui selection: ok for x, sdl, rfb
+      - this works: bochs 'config_interface: control' 'vga_library: sdl'
+      - this works: bochs 'config_interface: control' 'vga_library: x'
+      - this works: bochs 'config_interface: wx' 'vga_library: wx'
+      - this works: bochs 'config_interface: wx' 'vga_library: sdl'
+        But you get a wxWindows warning and it changes the vga_library to wx.
+      - this fails: bochs 'config_interface: control' 'vga_library: wx'
+        I made this panic because I had trouble getting wxWindows started 
+	up and shut down properly in this configuration.
+    - plug-wx: plugins, wxWindows is default
+      - it starts up ok, quickstart works
+      - exactly the same behavior as "plug" above.  These are not that
+        different anymore, since there are multiple BX_WITH_* variables set.
+
+How can I let the user set the preferred gui, if many guis are possible now?
+#define BX_DEFAULT_CONFIG_INTERFACE "wx"
+#define BX_DEFAULT_VGA_LIBRARY "wx"
+this could be set by the first --with-NAME on the configure line
+
+
+
+- convert remaining devices
+- make dist-clean doesn't delete the .libs directories and the *.lo files
+- --enable-all-optimizations fails at harddrv.cc
 - platform specific issues
   - make sure LTDL works on VC++
   - to support plugins on win32, we must add special tags on any function or
