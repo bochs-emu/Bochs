@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.223 2003-02-13 15:51:12 sshwarts Exp $
+// $Id: main.cc,v 1.224 2003-04-02 17:03:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2183,17 +2183,17 @@ bx_init_hardware()
 
   // First load the optional ROM images
   if (strcmp(bx_options.optrom[0].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[0].Opath->getptr (), bx_options.optrom[0].Oaddress->get ());
+    BX_MEM(0)->load_ROM(bx_options.optrom[0].Opath->getptr (), bx_options.optrom[0].Oaddress->get (), 0);
   if (strcmp(bx_options.optrom[1].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[1].Opath->getptr (), bx_options.optrom[1].Oaddress->get ());
+    BX_MEM(0)->load_ROM(bx_options.optrom[1].Opath->getptr (), bx_options.optrom[1].Oaddress->get (), 0);
   if (strcmp(bx_options.optrom[2].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get ());
+    BX_MEM(0)->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get (), 0);
   if (strcmp(bx_options.optrom[3].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get ());
+    BX_MEM(0)->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get (), 0);
 
   // Then Load the BIOS and VGABIOS
-  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
-  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
+  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get (), 1);
+  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000, 2);
 
   BX_CPU(0)->init (BX_MEM(0));
   BX_CPU(0)->set_cpu_id(0);
@@ -2209,18 +2209,18 @@ bx_init_hardware()
 
   // First load the optional ROM images
   if (bx_options.optrom[0].Opath->getptr () > 0)
-    bx_mem_array[0]->load_ROM(bx_options.optrom[0].Opath->getptr (), bx_options.optrom[0].Oaddress->get ());
+    bx_mem_array[0]->load_ROM(bx_options.optrom[0].Opath->getptr (), bx_options.optrom[0].Oaddress->get (), 0);
   if (bx_options.optrom[1].Opath->getptr () > 0)
-    bx_mem_array[0]->load_ROM(bx_options.optrom[1].Opath->getptr (), bx_options.optrom[1].Oaddress->get ());
+    bx_mem_array[0]->load_ROM(bx_options.optrom[1].Opath->getptr (), bx_options.optrom[1].Oaddress->get (), 0);
   if (bx_options.optrom[2].Opath->getptr () > 0)
     BX_MEM(0)->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get ());
-    bx_mem_array[0]->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get ());
+    bx_mem_array[0]->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get (), 0);
   if (bx_options.optrom[3].Opath->getptr () > 0)
-    bx_mem_array[0]->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get ());
+    bx_mem_array[0]->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get (), 0);
 
   // Then Load the BIOS and VGABIOS
-  bx_mem_array[0]->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
-  bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
+  bx_mem_array[0]->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get (), 1);
+  bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000, 2);
 
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.16 2002-10-25 11:44:35 bdenney Exp $
+// $Id: debug.h,v 1.17 2003-04-02 17:03:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -383,7 +383,7 @@ typedef struct {
   void     (*take_dma)(void);
   void     (*reset_cpu)(unsigned source);
   void     (*init_mem)(int size_in_bytes);
-  void     (*load_ROM)(const char *path, Bit32u romaddress);
+  void     (*load_ROM)(const char *path, Bit32u romaddress, Bit8u type);
 
   // for asynchronous environment handling
   void     (*set_A20)(unsigned val);

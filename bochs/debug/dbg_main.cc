@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.98 2002-12-17 03:36:53 yakovlev Exp $
+// $Id: dbg_main.cc,v 1.99 2003-04-02 17:03:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -397,8 +397,8 @@ process_sim2:
   BX_CPU(1) = new BX_CPU_C (BX_MEM(1));
   BX_CPU(1)->reset(BX_RESET_HARDWARE);
   BX_MEM(1)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
-  BX_MEM(1)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get ());
-  BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
+  BX_MEM(1)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get (), 1);
+  BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000, 2);
 #endif
 
   // (mch) Moved from main.cc

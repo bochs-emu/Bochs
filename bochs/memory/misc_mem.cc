@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.36 2003-03-02 23:59:12 cbothamy Exp $
+// $Id: misc_mem.cc,v 1.37 2003-04-02 17:03:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.36 2003-03-02 23:59:12 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.37 2003-04-02 17:03:34 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -146,14 +146,21 @@ BX_MEM_C::init_memory(int memsize)
 
 #if BX_PROVIDE_CPU_MEMORY
   void
-BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
+BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 {
   struct stat stat_buf;
   int fd, ret;
   unsigned long size, offset;
 
-  if (*path == '\0')
+  if (*path == '\0') {
+    if (type == 1) {
+      BX_PANIC(( "ROM: System BIOS image undefined."));
+      }
+    else {
+      BX_PANIC(( "ROM: VGA BIOS image undefined."));
+      }
     return;
+    }
   // read in ROM BIOS image file
   fd = open(path, O_RDONLY
 #ifdef O_BINARY
@@ -161,12 +168,22 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
 #endif
            );
   if (fd < 0) {
-    BX_PANIC(( "ROM: couldn't open ROM image file '%s'.", path));
+    if (type > 0) {
+      BX_PANIC(( "ROM: couldn't open ROM image file '%s'.", path));
+      }
+    else {
+      BX_ERROR(( "ROM: couldn't open ROM image file '%s'.", path));
+      }
     return;
     }
   ret = fstat(fd, &stat_buf);
   if (ret) {
-    BX_PANIC(( "ROM: couldn't stat ROM image file '%s'.", path));
+    if (type > 0) {
+      BX_PANIC(( "ROM: couldn't stat ROM image file '%s'.", path));
+      }
+    else {
+      BX_ERROR(( "ROM: couldn't stat ROM image file '%s'.", path));
+      }
     return;
     }
 
