@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.88 2004-12-14 20:41:55 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.89 2005-01-09 08:14:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1404,6 +1404,11 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
 
 #if BX_SupportPAE
   allowMask |= (1<<5);
+#endif
+
+#if BX_CPU_LEVEL >= 5
+  // NOTE: exception 18 never appears in Bochs
+  allowMask |= (1<<6);   /* MCE */
 #endif
 
 #if BX_CPU_LEVEL >= 6
