@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.103 2002-12-27 12:44:39 vruppert Exp $
+$Id: user.dbk,v 1.104 2003-01-01 21:33:48 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2305,7 +2305,7 @@ to date.
 
 <para>
 If you are interested and have the required MacOS development tools, please
-let use know.  Someone requests a MacOS port almost once a month, but none of
+let us know.  Someone requests a MacOS port almost once a month, but none of
 the developers know how to help them.
 </para>
 </section>
