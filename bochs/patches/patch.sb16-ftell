@@ -1,0 +1,63 @@
+----------------------------------------------------------------------
+Patch name: patch.sb16-ftell
+Author: Bryce Denney
+Date: Tue Jun  5 20:13:23 EDT 2001
+
+Detailed description:
+  [ #425640 ] sb16 assumes fpos_t is long int
+  Use ftell since it returns an int, rather than fgetpos which returns
+  a fpos_t.  Without the patch, Bochs gets an fpos_t and assumes it
+  is an integer type, but on some systems (like linux with newer
+  glibc libraries) this assumption is not valid.
+
+  Malte Cornils <malte@cornils.net> first reported this bug, and he
+  warned me that ftell is not portable to some platforms, and that's
+  why I haven't checked in the change.
+
+Apply patch to:
+  current CVS
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+RCS file: /cvsroot/bochs/bochs/iodev/sb16.cc,v
+retrieving revision 1.7
+diff -u -r1.7 sb16.cc
+--- iodev/sb16.cc	2001/05/30 18:56:01	1.7
++++ iodev/sb16.cc	2001/06/06 00:12:58
+@@ -2781,7 +2781,6 @@
+ 
+ void bx_sb16_c::finishmidifile()
+ {
+-  fpos_t tracklen;
+   struct { 
+     Bit8u delta, statusbyte, metaevent, length;
+   } metatrackend = { 0, 0xff, 0x2f, 0 };
+@@ -2789,19 +2788,20 @@
+      // Meta event track end (0xff 0x2f 0x00) plus leading delta time
+   fwrite(&metatrackend, 1, sizeof metatrackend, MIDIDATA );
+ 
+-  fgetpos(MIDIDATA, &tracklen);
++  Bit32u tracklen = ftell(MIDIDATA);
++  if (tracklen < 0)
++    BX_PANIC (("ftell failed in finishmidifile"));
++  if (tracklen < 22)
++    BX_PANIC (("finishmidifile with track length too short"));
+   tracklen -= 22;    // subtract the midi file and track header
+-
+   fseek(MIDIDATA, 22 - 4, SEEK_SET);
+-
+-     // value has to be in big endian
++  // value has to be in big endian
+ #ifdef BX_LITTLE_ENDIAN
+   tracklen = (tracklen << 24) | (tracklen >> 24) |
+-        ((tracklen & 0x00ff0000) >> 8) |
+-        ((tracklen & 0x0000ff00) << 8);
++	((tracklen & 0x00ff0000) >> 8) |
++	((tracklen & 0x0000ff00) << 8);
+ #endif
+   fwrite(&tracklen, 4, 1, MIDIDATA);
+-
+   return;
+ }
+ 
