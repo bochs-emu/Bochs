@@ -59,6 +59,13 @@ Testing so far:
 - (OK) configure --with-sdl;make in i686 redhat linux.
 - (OK) configure --with-rfb;make in i686 redhat linux.
 - (OK) configure;make in cygwin (win32 gui).
+- (FAIL) SDL gui in cygwin.
+  ./configure --with-sdl
+  This can be made to compile, but bochs doesn't actually work.  It quits
+  before a window even comes up.  See bug #526984: SDL compiled in cygwin
+  just quits.
+- (FAIL) RFB in cygwin fails because I don't have a pthread library.
+  ./configure --with-rfb
 - (OK) Use cygwin to configure for for VC++, standard win32 gui.
   ./configure --target=pentium-windows --enable-cdrom --enable-sb16=win \
        --enable-ne2000 --enable-cpp --disable-readline
@@ -67,12 +74,9 @@ Testing so far:
   instead of win32.cc, and to find the SDL headers and library.
   ./configure --with-sdl --target=pentium-windows --enable-cdrom \
        --enable-sb16=win --enable-ne2000 --enable-cpp --disable-readline
-- (FAIL) SDL gui in cygwin.
-  ./configure --with-sdl
-  This can be made to compile, but bochs doesn't actually work.  It quits
-  before a window even comes up.  See bug #526984: SDL compiled in cygwin
-  just quits.
-
+- (?) configure;make on MacOSX (carbon gui).
+  My compiler is broken so I can't test it completely, but it did detect
+  the platform, add correct CFLAGS, and default to the carbon library.
 
 Patch was created with:
   diff -urN between two directories
