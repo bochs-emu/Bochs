@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.68 2003-04-28 18:15:25 vruppert Exp $
+// $Id: vga.cc,v 1.69 2003-05-01 12:07:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1827,7 +1827,7 @@ bx_vga_c::mem_read(Bit32u addr)
 bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 {
   Bit32u offset;
-  Bit8u new_bit, new_val[4], cpu_data_b[4];
+  Bit8u new_val[4];
 
 #if BX_SUPPORT_VBE
   // if in a vbe enabled mode, write to the vbe_memory
@@ -1940,65 +1940,115 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 
   /* addr between 0xA0000 and 0xAFFFF */
   switch (BX_VGA_THIS s.graphics_ctrl.write_mode) {
-    Bit8u and_mask, bitmask;
-    Bit8u set_reset_b[4];
-    unsigned i, b;
+    unsigned i;
 
     case 0: /* write mode 0 */
-      /* perform rotate on CPU data in case its needed */
-      value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
-              (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
-      bitmask = BX_VGA_THIS s.graphics_ctrl.bitmask;
-      for (i=0; i<4; i++ ) {
-        new_val[i] = 0;
+      {
+        const Bit8u bitmask = BX_VGA_THIS s.graphics_ctrl.bitmask;
+        const Bit8u set_reset = BX_VGA_THIS s.graphics_ctrl.set_reset;
+        const Bit8u enable_set_reset = BX_VGA_THIS s.graphics_ctrl.enable_set_reset;
+        /* perform rotate on CPU data in case its needed */
+        value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
+                (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
+
+        new_val[0] = BX_VGA_THIS s.graphics_ctrl.latch[0] & ~bitmask;
+        new_val[1] = BX_VGA_THIS s.graphics_ctrl.latch[1] & ~bitmask;
+        new_val[2] = BX_VGA_THIS s.graphics_ctrl.latch[2] & ~bitmask;
+        new_val[3] = BX_VGA_THIS s.graphics_ctrl.latch[3] & ~bitmask;
+        switch (BX_VGA_THIS s.graphics_ctrl.raster_op) {
+          case 0: // replace
+            new_val[0] |= ((enable_set_reset & 1)
+                           ? ((set_reset & 1) ? bitmask : 0)
+                           : (value & bitmask));
+            new_val[1] |= ((enable_set_reset & 2)
+                           ? ((set_reset & 2) ? bitmask : 0)
+                           : (value & bitmask));
+            new_val[2] |= ((enable_set_reset & 4)
+                           ? ((set_reset & 4) ? bitmask : 0)
+                           : (value & bitmask));
+            new_val[3] |= ((enable_set_reset & 8)
+                           ? ((set_reset & 8) ? bitmask : 0)
+                           : (value & bitmask));
+            break;
+          case 1: // AND
+            new_val[0] |= ((enable_set_reset & 1)
+                           ? ((set_reset & 1)
+                              ? (BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask)
+                              : 0)
+                           : (value & BX_VGA_THIS s.graphics_ctrl.latch[0]) & bitmask);
+            new_val[1] |= ((enable_set_reset & 2)
+                           ? ((set_reset & 2)
+                              ? (BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask)
+                              : 0)
+                           : (value & BX_VGA_THIS s.graphics_ctrl.latch[1]) & bitmask);
+            new_val[2] |= ((enable_set_reset & 4)
+                           ? ((set_reset & 4)
+                              ? (BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask)
+                              : 0)
+                           : (value & BX_VGA_THIS s.graphics_ctrl.latch[2]) & bitmask);
+            new_val[3] |= ((enable_set_reset & 8)
+                           ? ((set_reset & 8)
+                              ? (BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask)
+                              : 0)
+                           : (value & BX_VGA_THIS s.graphics_ctrl.latch[3]) & bitmask);
+            break;
+          case 2: // OR
+            new_val[0]
+              |= ((enable_set_reset & 1)
+                  ? ((set_reset & 1)
+                     ? bitmask
+                     : (BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask))
+                  : ((value | BX_VGA_THIS s.graphics_ctrl.latch[0]) & bitmask));
+            new_val[1]
+              |= ((enable_set_reset & 2)
+                  ? ((set_reset & 2)
+                     ? bitmask
+                     : (BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask))
+                  : ((value | BX_VGA_THIS s.graphics_ctrl.latch[1]) & bitmask));
+            new_val[2]
+              |= ((enable_set_reset & 4)
+                  ? ((set_reset & 4)
+                     ? bitmask
+                     : (BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask))
+                  : ((value | BX_VGA_THIS s.graphics_ctrl.latch[2]) & bitmask));
+            new_val[3]
+              |= ((enable_set_reset & 8)
+                  ? ((set_reset & 8)
+                     ? bitmask
+                     : (BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask))
+                  : ((value | BX_VGA_THIS s.graphics_ctrl.latch[3]) & bitmask));
+            break;
+          case 3: // XOR
+            new_val[0]
+              |= ((enable_set_reset & 1)
+                 ? ((set_reset & 1)
+                    ? (~BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask)
+                    : (BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask))
+                 : (value ^ BX_VGA_THIS s.graphics_ctrl.latch[0]) & bitmask);
+            new_val[1]
+              |= ((enable_set_reset & 2)
+                 ? ((set_reset & 2)
+                    ? (~BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask)
+                    : (BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask))
+                 : (value ^ BX_VGA_THIS s.graphics_ctrl.latch[1]) & bitmask);
+            new_val[2]
+              |= ((enable_set_reset & 4)
+                 ? ((set_reset & 4)
+                    ? (~BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask)
+                    : (BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask))
+                 : (value ^ BX_VGA_THIS s.graphics_ctrl.latch[2]) & bitmask);
+            new_val[3]
+              |= ((enable_set_reset & 8)
+                 ? ((set_reset & 8)
+                    ? (~BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask)
+                    : (BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask))
+                 : (value ^ BX_VGA_THIS s.graphics_ctrl.latch[3]) & bitmask);
+            break;
+          default:
+            BX_PANIC(("vga_mem_write: write mode 0: op = %u",
+                      (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op));
         }
-      set_reset_b[0] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 0) & 0x01;
-      set_reset_b[1] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 1) & 0x01;
-      set_reset_b[2] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 2) & 0x01;
-      set_reset_b[3] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 3) & 0x01;
-      and_mask = 1;
-      for (b=0; b<8; b++) {
-        if (bitmask & 0x01) { /* bit-mask bit set, perform op */
-          for (i=0; i<4; i++) {
-            /* derive bit from set/reset register */
-            if ( (BX_VGA_THIS s.graphics_ctrl.enable_set_reset >> i) & 0x01 ) {
-              new_bit = (set_reset_b[i] << b);
-              }
-            /* derive bit from rotated CPU data */
-            else {
-              new_bit = (value & and_mask);
-              }
-            switch (BX_VGA_THIS s.graphics_ctrl.raster_op) {
-              case 0: /* replace */
-                new_val[i] |= new_bit;
-                break;
-              case 1: /* AND with latch data */
-                new_val[i] |=
-                  (new_bit & (BX_VGA_THIS s.graphics_ctrl.latch[i] & and_mask));
-                break;
-              case 2: /* OR with latch data */
-                new_val[i] |=
-                  (new_bit | (BX_VGA_THIS s.graphics_ctrl.latch[i] & and_mask));
-                break;
-              case 3: /* XOR with latch data */
-                new_val[i] |=
-                  (new_bit ^ (BX_VGA_THIS s.graphics_ctrl.latch[i] & and_mask));
-                break;
-              default:
-                BX_PANIC(("vga_mem_write: write mode 0: op = %u",
-                  (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op));
-              }
-            }
-          }
-        else { /* bit-mask bit clear, pass data thru from latch */
-          new_val[0] |= (BX_VGA_THIS s.graphics_ctrl.latch[0] & and_mask);
-          new_val[1] |= (BX_VGA_THIS s.graphics_ctrl.latch[1] & and_mask);
-          new_val[2] |= (BX_VGA_THIS s.graphics_ctrl.latch[2] & and_mask);
-          new_val[3] |= (BX_VGA_THIS s.graphics_ctrl.latch[3] & and_mask);
-          }
-        bitmask >>= 1;
-        and_mask <<= 1;
-        }
+      }
       break;
 
     case 1: /* write mode 1 */
@@ -2008,117 +2058,127 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       break;
 
     case 2: /* write mode 2 */
-      bitmask = BX_VGA_THIS s.graphics_ctrl.bitmask;
-      for (i=0; i<4; i++ ) {
-        new_val[i] = 0;
+      {
+        const Bit8u bitmask = BX_VGA_THIS s.graphics_ctrl.bitmask;
+
+        new_val[0] = BX_VGA_THIS s.graphics_ctrl.latch[0] & ~bitmask;
+        new_val[1] = BX_VGA_THIS s.graphics_ctrl.latch[1] & ~bitmask;
+        new_val[2] = BX_VGA_THIS s.graphics_ctrl.latch[2] & ~bitmask;
+        new_val[3] = BX_VGA_THIS s.graphics_ctrl.latch[3] & ~bitmask;
+        switch (BX_VGA_THIS s.graphics_ctrl.raster_op) {
+          case 0: // write
+            new_val[0] |= (value & 1) ? bitmask : 0;
+            new_val[1] |= (value & 2) ? bitmask : 0;
+            new_val[2] |= (value & 4) ? bitmask : 0;
+            new_val[3] |= (value & 8) ? bitmask : 0;
+            break;
+          case 1: // AND
+            new_val[0] |= (value & 1)
+              ? (BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask)
+              : 0;
+            new_val[1] |= (value & 2)
+              ? (BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask)
+              : 0;
+            new_val[2] |= (value & 4)
+              ? (BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask)
+              : 0;
+            new_val[3] |= (value & 8)
+              ? (BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask)
+              : 0;
+            break;
+          case 2: // OR
+            new_val[0] |= (value & 1)
+              ? bitmask
+              : (BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask);
+            new_val[1] |= (value & 2)
+              ? bitmask
+              : (BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask);
+            new_val[2] |= (value & 4)
+              ? bitmask
+              : (BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask);
+            new_val[3] |= (value & 8)
+              ? bitmask
+              : (BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask);
+            break;
+          case 3: // XOR
+            new_val[0] |= (value & 1)
+              ? (~BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask)
+              : (BX_VGA_THIS s.graphics_ctrl.latch[0] & bitmask);
+            new_val[1] |= (value & 2)
+              ? (~BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask)
+              : (BX_VGA_THIS s.graphics_ctrl.latch[1] & bitmask);
+            new_val[2] |= (value & 4)
+              ? (~BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask)
+              : (BX_VGA_THIS s.graphics_ctrl.latch[2] & bitmask);
+            new_val[3] |= (value & 8)
+              ? (~BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask)
+              : (BX_VGA_THIS s.graphics_ctrl.latch[3] & bitmask);
+            break;
         }
-      cpu_data_b[0] = (value >> 0) & 0x01;
-      cpu_data_b[1] = (value >> 1) & 0x01;
-      cpu_data_b[2] = (value >> 2) & 0x01;
-      cpu_data_b[3] = (value >> 3) & 0x01;
-      and_mask = 1;
-      for (b=0; b<8; b++) {
-        if (bitmask & 0x01) { /* bit-mask bit set, perform op */
-          switch (BX_VGA_THIS s.graphics_ctrl.raster_op) {
-            case 0: /* replace: write cpu data unmodified */
-              new_val[0] |= cpu_data_b[0] << b;
-              new_val[1] |= cpu_data_b[1] << b;
-              new_val[2] |= cpu_data_b[2] << b;
-              new_val[3] |= cpu_data_b[3] << b;
-              break;
-            case 1: /* AND */
-              new_val[0] |= (cpu_data_b[0] << b) & (BX_VGA_THIS s.graphics_ctrl.latch[0] & and_mask);
-              new_val[1] |= (cpu_data_b[1] << b) & (BX_VGA_THIS s.graphics_ctrl.latch[1] & and_mask);
-              new_val[2] |= (cpu_data_b[2] << b) & (BX_VGA_THIS s.graphics_ctrl.latch[2] & and_mask);
-              new_val[3] |= (cpu_data_b[3] << b) & (BX_VGA_THIS s.graphics_ctrl.latch[3] & and_mask);
-              break;
-            case 2: /* OR */
-              new_val[0] |= (cpu_data_b[0] << b) | (BX_VGA_THIS s.graphics_ctrl.latch[0] & and_mask);
-              new_val[1] |= (cpu_data_b[1] << b) | (BX_VGA_THIS s.graphics_ctrl.latch[1] & and_mask);
-              new_val[2] |= (cpu_data_b[2] << b) | (BX_VGA_THIS s.graphics_ctrl.latch[2] & and_mask);
-              new_val[3] |= (cpu_data_b[3] << b) | (BX_VGA_THIS s.graphics_ctrl.latch[3] & and_mask);
-              break;
-            case 3: /* XOR */
-              new_val[0] |= (cpu_data_b[0] << b) ^ (BX_VGA_THIS s.graphics_ctrl.latch[0] & and_mask);
-              new_val[1] |= (cpu_data_b[1] << b) ^ (BX_VGA_THIS s.graphics_ctrl.latch[1] & and_mask);
-              new_val[2] |= (cpu_data_b[2] << b) ^ (BX_VGA_THIS s.graphics_ctrl.latch[2] & and_mask);
-              new_val[3] |= (cpu_data_b[3] << b) ^ (BX_VGA_THIS s.graphics_ctrl.latch[3] & and_mask);
-              break;
-            default:
-              BX_PANIC(("vga_mem_write: raster_op = %u?",
-                (unsigned) BX_VGA_THIS s.graphics_ctrl.raster_op));
-            }
-          }
-        else { /* bit-mask bit clear, pass data thru from latch */
-          new_val[0] |= (BX_VGA_THIS s.graphics_ctrl.latch[0] & and_mask);
-          new_val[1] |= (BX_VGA_THIS s.graphics_ctrl.latch[1] & and_mask);
-          new_val[2] |= (BX_VGA_THIS s.graphics_ctrl.latch[2] & and_mask);
-          new_val[3] |= (BX_VGA_THIS s.graphics_ctrl.latch[3] & and_mask);
-          }
-        bitmask >>= 1;
-        and_mask <<= 1;
-        }
+      }
       break;
 
     case 3: /* write mode 3 */
-      /* perform rotate on CPU data */
-      value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
-              (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
-      bitmask = (value & BX_VGA_THIS s.graphics_ctrl.bitmask);
-      for (i=0; i<4; i++ ) {
-        new_val[i] = 0;
+      {
+        const Bit8u bitmask = BX_VGA_THIS s.graphics_ctrl.bitmask & value;
+        const Bit8u set_reset = BX_VGA_THIS s.graphics_ctrl.set_reset;
+
+        /* perform rotate on CPU data */
+        value = (value >> BX_VGA_THIS s.graphics_ctrl.data_rotate) |
+                (value << (8 - BX_VGA_THIS s.graphics_ctrl.data_rotate));
+
+        new_val[0] = BX_VGA_THIS s.graphics_ctrl.latch[0] & ~bitmask;
+        new_val[1] = BX_VGA_THIS s.graphics_ctrl.latch[1] & ~bitmask;
+        new_val[2] = BX_VGA_THIS s.graphics_ctrl.latch[2] & ~bitmask;
+        new_val[3] = BX_VGA_THIS s.graphics_ctrl.latch[3] & ~bitmask;
+
+        value &= bitmask;
+
+        switch (BX_VGA_THIS s.graphics_ctrl.raster_op) {
+          case 0: // write
+            new_val[0] |= (set_reset & 1) ? value : 0;
+            new_val[1] |= (set_reset & 2) ? value : 0;
+            new_val[2] |= (set_reset & 4) ? value : 0;
+            new_val[3] |= (set_reset & 8) ? value : 0;
+            break;
+          case 1: // AND
+            new_val[0] |= ((set_reset & 1) ? value : 0)
+              & BX_VGA_THIS s.graphics_ctrl.latch[0];
+            new_val[1] |= ((set_reset & 2) ? value : 0)
+              & BX_VGA_THIS s.graphics_ctrl.latch[1];
+            new_val[2] |= ((set_reset & 4) ? value : 0)
+              & BX_VGA_THIS s.graphics_ctrl.latch[2];
+            new_val[3] |= ((set_reset & 8) ? value : 0)
+              & BX_VGA_THIS s.graphics_ctrl.latch[3];
+            break;
+          case 2: // OR
+            new_val[0] |= ((set_reset & 1) ? value : 0)
+              | BX_VGA_THIS s.graphics_ctrl.latch[0];
+            new_val[1] |= ((set_reset & 2) ? value : 0)
+              | BX_VGA_THIS s.graphics_ctrl.latch[1];
+            new_val[2] |= ((set_reset & 4) ? value : 0)
+              | BX_VGA_THIS s.graphics_ctrl.latch[2];
+            new_val[3] |= ((set_reset & 8) ? value : 0)
+              | BX_VGA_THIS s.graphics_ctrl.latch[3];
+            break;
+          case 3: // XOR
+            new_val[0] |= ((set_reset & 1) ? value : 0)
+              ^ BX_VGA_THIS s.graphics_ctrl.latch[0];
+            new_val[1] |= ((set_reset & 2) ? value : 0)
+              ^ BX_VGA_THIS s.graphics_ctrl.latch[1];
+            new_val[2] |= ((set_reset & 4) ? value : 0)
+              ^ BX_VGA_THIS s.graphics_ctrl.latch[2];
+            new_val[3] |= ((set_reset & 8) ? value : 0)
+              ^ BX_VGA_THIS s.graphics_ctrl.latch[3];
+            break;
         }
-      set_reset_b[0] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 0) & 0x01;
-      set_reset_b[1] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 1) & 0x01;
-      set_reset_b[2] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 2) & 0x01;
-      set_reset_b[3] = (BX_VGA_THIS s.graphics_ctrl.set_reset >> 3) & 0x01;
-      and_mask = 1;
-      for (b=0; b<8; b++) {
-        if (bitmask & 0x01) { /* bit-mask bit set, perform op */
-          for (i=0; i<4; i++) {
-            /* derive bit from set/reset register */
-            /* (mch) I can't find any justification for this... */
-            if ( /* (mch) */ 1 || ((BX_VGA_THIS s.graphics_ctrl.enable_set_reset >> i) & 0x01 )) {
-              // (mch) My guess is that the function select logic should go here
-              switch (BX_VGA_THIS s.graphics_ctrl.raster_op) {
-                case 0: // write
-                  new_val[i] |= (set_reset_b[i] << b);
-                  break;
-                case 1: // AND
-                  new_val[i] |= ((set_reset_b[i] << b) &
-                  BX_VGA_THIS s.graphics_ctrl.latch[i] & (1 << b));
-                  break;
-                case 2: // OR
-                  new_val[i] |= (set_reset_b[i] << b) |
-                  (BX_VGA_THIS s.graphics_ctrl.latch[i] & (1 << b));
-                  break;
-                case 3: // XOR
-                  new_val[i] |= ((set_reset_b[i] << b) ^
-                  BX_VGA_THIS s.graphics_ctrl.latch[i] & (1 << b));
-                  break;
-                }
-              }
-            /* derive bit from rotated CPU data */
-            else {
-              new_val[i] |= (value & and_mask);
-              }
-            }
-          }
-        else { /* bit-mask bit clear, pass data thru from latch */
-          new_val[0] |= (BX_VGA_THIS s.graphics_ctrl.latch[0] & and_mask);
-          new_val[1] |= (BX_VGA_THIS s.graphics_ctrl.latch[1] & and_mask);
-          new_val[2] |= (BX_VGA_THIS s.graphics_ctrl.latch[2] & and_mask);
-          new_val[3] |= (BX_VGA_THIS s.graphics_ctrl.latch[3] & and_mask);
-          }
-        bitmask >>= 1;
-        and_mask <<= 1;
-        }
+      }
       break;
 
     default:
       BX_PANIC(("vga_mem_write: write mode %u ?",
         (unsigned) BX_VGA_THIS s.graphics_ctrl.write_mode));
-    }
+  }
 
   if (BX_VGA_THIS s.sequencer.map_mask & 0x0f) {
     BX_VGA_THIS s.vga_mem_updated = 1;
