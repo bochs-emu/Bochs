@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.10 2002-04-18 00:33:58 bdenney Exp $
+// $Id: eth_win32.cc,v 1.11 2002-09-12 06:44:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -301,14 +301,14 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(const char *netif,
      if((pkRecv = PacketAllocatePacket()) == NULL) {
            BX_PANIC(("Could not allocate a recv packet"));
      }
-     rx_timer_index = bx_pc_system.register_timer(this, this->rx_timer_handler, 1000000, 1, 1);
+     rx_timer_index = bx_pc_system.register_timer(this, this->rx_timer_handler, 10000, 1, 1);
 }
 
 void
 bx_win32_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
 	// SendPacket Here.
-    fprintf(stderr, "[ETH-WIN32] Sending Packet: size=%i\n", io_len);
+    //fprintf(stderr, "[ETH-WIN32] Sending Packet: size=%i\n", io_len);
 	PacketInitPacket(pkSend, (char *)buf, io_len);
 
 	if(!PacketSendPacket(lpAdapter, pkSend, TRUE)) {
@@ -326,24 +326,27 @@ void bx_win32_pktmover_c::rx_timer_handler (void *this_ptr)
 	int pktlen;
 	static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 	PacketInitPacket(pkRecv, (char *)buffer, 256000);
+        //fprintf(stderr, "[ETH-WIN32] poll packet\n");
+        if (WaitForSingleObject(lpAdapter->ReadEvent,0) == WAIT_OBJECT_0) {
 	PacketReceivePacket(lpAdapter, pkRecv, TRUE);
 	pBuf = (char *)pkRecv->Buffer;
 	iOffset = 0;
-	while(iOffset < pkRecv->ulBytesReceived) 
+	while(iOffset < pkRecv->ulBytesReceived)
 	{
 		hdr = (struct bpf_hdr *)(pBuf + iOffset);
 		pPacket = (unsigned char *)(pBuf + iOffset + hdr->bh_hdrlen);
 		if (memcmp(pPacket + 6, cMacAddr, 6) != 0) // src field != ours
 		{
-			if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, bcast_addr, 6) == 0) 
+			if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, bcast_addr, 6) == 0)
 			{
-				fprintf(stderr, "[ETH-WIN32] RX packet: size=%i, dst=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x, src=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n", hdr->bh_caplen, pPacket[0], pPacket[1], pPacket[2], pPacket[3], pPacket[4], pPacket[5], pPacket[6], pPacket[7], pPacket[8], pPacket[9], pPacket[10], pPacket[11]);
-				pktlen = hdr->bh_caplen;
-				if (pktlen < 60) pktlen = 60;
+				//fprintf(stderr, "[ETH-WIN32] RX packet: size=%i, dst=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x, src=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n", hdr->bh_caplen, pPacket[0], pPacket[1], pPacket[2], pPacket[3], pPacket[4], pPacket[5], pPacket[6], pPacket[7], pPacket[8], pPacket[9], pPacket[10], pPacket[11]);
+                                pktlen = hdr->bh_caplen;
+                                if (pktlen < 60) pktlen = 60;
 				(*rx_handler)(rx_Arg, pPacket, pktlen);
 			}
 		}
 		iOffset = Packet_WORDALIGN(iOffset + (hdr->bh_hdrlen + hdr->bh_caplen));
 	}
+        }
 }
 
