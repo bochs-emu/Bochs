@@ -32,11 +32,11 @@ extern "C" {
 
 #include "bochs.h"
 
-#if USE_READLINE
+#if HAVE_READLINE
 extern "C" {
 #include <stdio.h>
 #include <readline/readline.h>
-#if READLINE_NEEDS_HISTORY_H
+#if HAVE_READLINE_HISTORY_H
 #include <readline/history.h>
 #endif
 }
