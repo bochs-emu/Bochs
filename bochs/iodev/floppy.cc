@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.28 2001-12-28 16:38:13 vruppert Exp $
+// $Id: floppy.cc,v 1.29 2002-01-17 21:20:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.28 2001-12-28 16:38:13 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.29 2002-01-17 21:20:12 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
@@ -287,11 +287,6 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
     BX_PANIC(("io read from address %08x, len=%u",
              (unsigned) address, (unsigned) io_len));
 
-// ???
-//if (bx_cpu.cs.selector.value != 0xf000) {
-//  BX_INFO(("BIOS: floppy: read access to port %04x", (unsigned) address);
-//  }
-
   if (bx_dbg.floppy)
     BX_INFO(("read access to port %04x", (unsigned) address));
 
@@ -342,12 +337,11 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       value |= (BX_FD_THIS s.DIR & 0x80);
       return( value );
       break;
+    default:
+      BX_ERROR(("io_read: unsupported address 0x%04x", (unsigned) address));
+      return(0);
+      break;
     }
-
-#if BX_DMA_FLOPPY_IO
-  BX_PANIC(("io_read: bailing"));
-  return(0);
-#endif  // #if BX_DMA_FLOPPY_IO
 }
 
 
@@ -378,12 +372,6 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   if (io_len > 1)
     BX_PANIC(("io write to address %08x, len=%u",
              (unsigned) address, (unsigned) io_len));
-
-// ???
-//if (bx_cpu.cs.selector.value != 0xf000) {
-//  BX_INFO(("BIOS: floppy: write access to port %04x, value=%02x",
-//      (unsigned) address, (unsigned) value));
-//  }
 
   if (bx_dbg.floppy)
     BX_INFO(("write access to port %04x, value=%02x",
@@ -475,7 +463,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
 
           case 0x13: // Configure command (Enhanced)
-            BX_FD_THIS s.command_size = 3;
+            BX_FD_THIS s.command_size = 4;
             break;
 
           case 0x0e: // dump registers (Enhanced drives)
@@ -533,7 +521,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
    default:
-      BX_PANIC(("io_write: unknown port %04h", (unsigned) address));
+      BX_ERROR(("io_write ignored: 0x%04h = 0x%02h", (unsigned) address, (unsigned) value));
       break;
 #endif  // #if BX_DMA_FLOPPY_IO
     }
@@ -584,6 +572,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       drive = (BX_FD_THIS s.command[1] & 0x03);
       BX_FD_THIS s.result[0] = 0x28 | (BX_FD_THIS s.head[drive]<<2) | drive
         | (BX_FD_THIS s.media[drive].write_protected ? 0x40 : 0x00);
+      if (BX_FD_THIS s.cylinder[drive] == 0) BX_FD_THIS s.result[0] |= 0x10;
       BX_FD_THIS s.result_size = 1;
       BX_FD_THIS s.result_index = 0;
       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
@@ -1080,7 +1069,7 @@ bx_floppy_ctrl_c::timer()
     case 0xc5:
       BX_FD_THIS s.pending_command = 0;
       /* read ready, busy */
-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | (1 << drive);
+      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
       BX_FD_THIS s.status_reg0 = 0x20 | drive;
       BX_FD_THIS devices->pic->trigger_irq(6);
       BX_FD_THIS s.pending_irq = 1;
