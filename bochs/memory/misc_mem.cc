@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.22 2002-08-17 09:46:27 vruppert Exp $
+// $Id: misc_mem.cc,v 1.23 2002-08-18 08:53:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.22 2002-08-17 09:46:27 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.23 2002-08-18 08:53:26 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -223,7 +223,7 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
             break;
 
           case 0x1:  // Fetch from ROM
-            *buf = bx_pci.s.i440fx.shadow[(addr - 0xC0000)];
+            *buf = BX_PCI_MEM_READ(addr - 0xC0000);
 //          BX_INFO(("Fetching from ROM %06x, Data %02x ", (unsigned)addr, *buf));
             break;
           default:
