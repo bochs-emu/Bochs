@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.68 2004-09-17 20:47:18 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.69 2004-10-08 19:29:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -989,7 +989,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F FE */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffe }, 
   /* 0F FF */  { 0, &BX_CPU_C::BxError },
 
-  // 512 entries for 32bit mod
+  // 512 entries for 32bit mode
   /* 00 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EbGb },
   /* 01 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EdGd },
   /* 02 */  { BxAnother, &BX_CPU_C::ADD_GbEb },
