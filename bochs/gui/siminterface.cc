@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.41 2002-04-23 07:44:34 cbothamy Exp $
+// $Id: siminterface.cc,v 1.42 2002-06-26 14:42:35 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.41 2002-04-23 07:44:34 cbothamy Exp $
+ * $Id: siminterface.cc,v 1.42 2002-06-26 14:42:35 cbothamy Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -69,6 +69,8 @@ public:
   virtual int write_rc (char *path, int overwrite);
   virtual int get_log_file (char *path, int len);
   virtual int set_log_file (char *path);
+  virtual int get_log_prefix (char *prefix, int len);
+  virtual int set_log_prefix (char *prefix);
   virtual int get_floppy_options (int drive, bx_floppy_options *out);
   virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
   virtual char *get_floppy_type_name (int type);
@@ -290,6 +292,20 @@ int
 bx_real_sim_c::set_log_file (char *path)
 {
   bx_options.log.Ofilename->set (path);
+  return 0;
+}
+
+int 
+bx_real_sim_c::get_log_prefix (char *prefix, int len)
+{
+  strncpy (prefix, bx_options.log.Oprefix->getptr (), len);
+  return 0;
+}
+
+int 
+bx_real_sim_c::set_log_prefix (char *prefix)
+{
+  bx_options.log.Oprefix->set (prefix);
   return 0;
 }
 

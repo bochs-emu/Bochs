@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.50 2002-06-23 18:02:55 vruppert Exp $
+// $Id: control.cc,v 1.51 2002-06-26 14:42:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.50 2002-06-23 18:02:55 vruppert Exp $
+ * $Id: control.cc,v 1.51 2002-06-26 14:42:34 cbothamy Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -100,6 +100,30 @@ clean_string (char *s0)
     ptr++;
   *ptr = 0;
   return s;
+}
+
+void
+double_percent (char *s, int max_len)
+{
+  char d[CPANEL_PATH_LEN];
+  int  i=0,j=0;
+
+  if (max_len>CPANEL_PATH_LEN)
+    max_len=CPANEL_PATH_LEN;
+
+  max_len--;
+
+  while((s[i]!=0)&&(j<max_len))
+  {
+    d[j++]=s[i];
+    if((s[i]=='%')&&(j<max_len))
+    {
+      d[j++]=s[i];
+    }
+    i++;
+  }
+  d[j]=0;
+  strcpy(s,d);
 }
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
@@ -292,15 +316,16 @@ static char *startup_options_prompt =
 "------------------\n"
 "0. Return to previous menu\n"
 "1. Log file: %s\n"
-"2. Log options for all devices\n"
-"3. Log options for individual devices\n"
-"4. Memory options\n"
-"5. Interface options\n"
-"6. Disk options\n"
-"7. Serial or Parallel port options\n"
-"8. Sound Blaster 16 options\n"
-"9. NE2000 network card options\n"
-"10. Other options\n"
+"2. Log prefix: %s\n"
+"3. Log options for all devices\n"
+"4. Log options for individual devices\n"
+"5. Memory options\n"
+"6. Interface options\n"
+"7. Disk options\n"
+"8. Serial or Parallel port options\n"
+"9. Sound Blaster 16 options\n"
+"10. NE2000 network card options\n"
+"11. Other options\n"
 "\n"
 "Please choose one: [0] ";
 
@@ -444,23 +469,32 @@ int bx_control_panel (int menu)
    case BX_CPANEL_START_OPTS:
      {
        char prompt[CPANEL_PATH_LEN];
-       char oldpath[CPANEL_PATH_LEN];     
-	   int retval = SIM->get_log_file (oldpath, CPANEL_PATH_LEN);
-	   assert (retval >= 0);
-       sprintf (prompt, startup_options_prompt, oldpath);
-       if (ask_uint (prompt, 0, 10, 0, &choice, 10) < 0) return -1;
+       char oldpath[CPANEL_PATH_LEN];
+       char oldprefix[CPANEL_PATH_LEN];
+       int  retval;
+
+       retval = SIM->get_log_file (oldpath, CPANEL_PATH_LEN);
+       assert (retval >= 0);
+       double_percent(oldpath,CPANEL_PATH_LEN);
+       retval = SIM->get_log_prefix (oldprefix, CPANEL_PATH_LEN);
+       assert (retval >= 0);
+       double_percent(oldprefix,CPANEL_PATH_LEN);
+
+       sprintf (prompt, startup_options_prompt, oldpath, oldprefix);
+       if (ask_uint (prompt, 0, 11, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: askparam (BXP_LOG_FILENAME); break;
-	 case 2: bx_log_options (0); break;
-	 case 3: bx_log_options (1); break;
-	 case 4: do_menu (BXP_MENU_MEMORY); break;
-	 case 5: do_menu (BXP_MENU_INTERFACE); break;
-	 case 6: do_menu (BXP_MENU_DISK); break;
-	 case 7: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
-	 case 8: do_menu (BXP_SB16); break;
-	 case 9: do_menu (BXP_NE2K); break;
-	 case 10: do_menu (BXP_MENU_MISC); break;
+	 case 2: askparam (BXP_LOG_PREFIX); break;
+	 case 3: bx_log_options (0); break;
+	 case 4: bx_log_options (1); break;
+	 case 5: do_menu (BXP_MENU_MEMORY); break;
+	 case 6: do_menu (BXP_MENU_INTERFACE); break;
+	 case 7: do_menu (BXP_MENU_DISK); break;
+	 case 8: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
+	 case 9: do_menu (BXP_SB16); break;
+	 case 10: do_menu (BXP_NE2K); break;
+	 case 11: do_menu (BXP_MENU_MISC); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }

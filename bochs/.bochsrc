@@ -152,6 +152,22 @@ floppy_bootsig_check: disabled=0
 log: bochsout.txt
 
 #=======================================================================
+# LOGPREFIX:
+# This handles the format of the string prepended to each log line :
+# You may use those special tokens :
+#   %t : 11 decimal digits timer tick
+#   %i : 8 hexadecimal digits of cpu0 current eip
+#   %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
+#   %d : 5 characters string of the device, between brackets
+# 
+# Default : %t%e%d
+# Examples:
+#   logprefix: %t-%e-@%i-%d
+#   logprefix: %i%e%d
+#=======================================================================
+#logprefix: %t%e%d
+
+#=======================================================================
 # LOG CONTROLS
 #
 # Bochs now has four severity levels for event logging.

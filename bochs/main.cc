@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.101 2002-05-25 13:16:55 vruppert Exp $
+// $Id: main.cc,v 1.102 2002-06-26 14:42:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -103,7 +103,7 @@ bx_options_t bx_options = {
   NULL,          // newHardDriveSupport
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
   // log options: ignore debug, report info and error, crash on panic.
-  { NULL, { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_ASK } },
+  { NULL, NULL, { ACT_IGNORE, ACT_REPORT, ACT_REPORT, ACT_ASK } },
   { NULL, NULL }, // KeyboardMapping
   };
 
@@ -831,6 +831,12 @@ void bx_init_options ()
       "Pathname of bochs log file",
       "-", BX_PATHNAME_LEN);
   bx_options.log.Ofilename->set_ask_format ("Enter log filename: [%s] ");
+
+  bx_options.log.Oprefix = new bx_param_string_c (BXP_LOG_PREFIX,
+      "logprefix:prefix",
+      "Prefix prepended to log output",
+      "%t%e%d", BX_PATHNAME_LEN);
+  bx_options.log.Oprefix->set_ask_format ("Enter log prefix: [%s] ");
 
   // loader
   bx_options.load32bitOSImage.OwhichOS = new bx_param_enum_c (BXP_LOAD32BITOS_WHICH,
@@ -1693,6 +1699,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     bx_options.log.Ofilename->set (params[1]);
     }
+  else if (!strcmp(params[0], "logprefix")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: logprefix directive has wrong # args.", context));
+      }
+    bx_options.log.Oprefix->set (params[1]);
+    }
   else if (!strcmp(params[0], "panic")) {
     if (num_params != 2) {
       BX_PANIC(("%s: panic directive malformed.", context));
@@ -2277,6 +2289,7 @@ int
 bx_write_log_options (FILE *fp, bx_log_options *opt)
 {
   fprintf (fp, "log: %s\n", opt->Ofilename->getptr ());
+  fprintf (fp, "logprefix: %s\n", opt->Oprefix->getptr ());
   // no syntax to describe all the possible action settings for every 
   // device.  Instead, take a vote and record the most popular action
   // for each level of event.

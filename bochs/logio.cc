@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.18 2002-06-01 07:39:19 vruppert Exp $
+// $Id: logio.cc,v 1.19 2002-06-26 14:42:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,12 +45,48 @@ iofunctions::flush(void) {
 	}
 }
 
+// This converts the option string to a printf style string with the following args:
+// 1. timer, 2. event, 3. cpu0 eip, 4. device
+void 
+iofunctions::setlogprefix(void) {
+	int  i=0;
+	char *s;
+	char *f;
+	
+	s=bx_options.log.Oprefix->getptr ();
+	strcpy(logprefix,"");
+	while (*s!=0) {
+		if (*s!='%') {
+			if (strlen(logprefix)<sizeof(logprefix)-1) 
+				strncat(logprefix,s,1);
+			else break;
+		}
+		else {
+			f="";
+			switch (*(++s)) {
+				case 't': f="%1$011lld"; break;
+				case 'i': f="%3$08x"; break;
+				case 'e': f="%2$c"; break;
+				case 'd': f="%4$s"; break;
+				case '%': f="%%"; break;
+			}
+			if(strlen(logprefix)+strlen(f)<sizeof(logprefix)-1)
+				strcat(logprefix,f);
+			else break;
+			if(*s==0)break;
+		}
+		s++;
+	}
+}
+
 void
 iofunctions::init(void) {
 	// iofunctions methods must not be called before this magic
 	// number is set.
 	magic=MAGIC_LOGNUM;
-	showtick = 1;
+
+	// sets the default logprefix
+	strcpy(logprefix,"%1$011lld%2$c%4$s");
 	n_logfn = 0;
 	init_log(stderr);
 	log = new logfunc_t(this);
@@ -92,6 +128,8 @@ iofunctions::init_log(const char *fn)
 	}
 	logfd = newfd;
 	logfn = newfn;
+
+	setlogprefix();
 }
 
 void
@@ -107,6 +145,7 @@ iofunctions::init_log(FILE *fs)
 	} else {
 		logfn = "(unknown)";
 	}
+
 }
 
 void
@@ -135,8 +174,8 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 	assert (this != NULL);
 	assert (logfd != NULL);
 
-	if( showtick )
-		fprintf(logfd, "%011lld", bx_pc_system.time_ticks());
+	//if( showtick )
+	//	fprintf(logfd, "%011lld", bx_pc_system.time_ticks());
 
 	switch(l) {
 		case LOGLEV_INFO: c='i'; break;
@@ -145,10 +184,13 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 		case LOGLEV_DEBUG: c='d'; break;
 		default: break;
 	}
-	fprintf(logfd, "%c",c);
+	//fprintf(logfd, "-%c",c);
 
-	if(prefix != NULL)
-		fprintf(logfd, "%s ", prefix);
+	//if(prefix != NULL)
+	//	fprintf(logfd, "%s ", prefix);
+
+	fprintf(logfd, logprefix, bx_pc_system.time_ticks(), c, BX_CPU(0)->eip, prefix==NULL?"":prefix);
+        fprintf(logfd," ");
 
 	if(l==LOGLEV_PANIC)
 		fprintf(logfd, ">>PANIC<< ");

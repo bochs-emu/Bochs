@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.65 2002-06-16 15:02:27 vruppert Exp $
+// $Id: bochs.h,v 1.66 2002-06-26 14:42:34 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -277,12 +277,16 @@ public:
         }
 } logfunc_t;
 
+#define BX_LOGPREFIX_SIZE 51
+
 class iofunctions {
-	int showtick,magic;
+	int magic;
+	char logprefix[BX_LOGPREFIX_SIZE];
 	FILE *logfd;
 	class logfunctions *log;
 	void init(void);
 	void flush(void);
+	void setlogprefix(void);
 // Log Class defines
 #define    IOLOG           0
 #define    FDLOG           1
@@ -589,6 +593,7 @@ typedef struct {
 
 typedef struct {
   bx_param_string_c *Ofilename;
+  bx_param_string_c *Oprefix;
   // one array item for each log level, indexed by LOGLEV_*.
   // values: ACT_IGNORE, ACT_REPORT, ACT_ASK, ACT_FATAL
   unsigned char actions[N_LOGLEV];  
