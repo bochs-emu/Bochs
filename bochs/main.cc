@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.217 2003-01-10 20:33:12 vruppert Exp $
+// $Id: main.cc,v 1.218 2003-01-13 17:55:12 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2691,9 +2691,13 @@ parse_line_formatted(char *context, int num_params, char *params[])
       slave = 1;
       }
 
-    if (bx_options.atadevice[channel][slave].Opresent->get()) {
-      PARSE_ERR(("%s: %s device of ata channel %d already defined.", context, slave?"slave":"master",channel));
-      }
+    // This was originally meant to warn users about both diskc
+    // and ata0-master defined, but it also prevent users to
+    // override settings on the command line 
+    // (see [ 661010 ] cannot override ata-settings from cmdline)
+    // if (bx_options.atadevice[channel][slave].Opresent->get()) {
+    //   BX_INFO(("%s: %s device of ata channel %d already defined.", context, slave?"slave":"master",channel));
+    //   }
 
     for (i=1; i<num_params; i++) {
       if (!strcmp(params[i], "type=disk")) {
