@@ -36,7 +36,7 @@ directory, named
 BIOS-bochs-latest.
 
 Example:
-  romimage: file=bios/BIOS-bochs-970717
+  romimage: file=bios/BIOS-bochs-latest
 
 .TP
 .I "megs:"
@@ -52,12 +52,27 @@ Example:
   megs: 32
 
 .TP
+.I "optromimage1: \fP, \fIoptromimage2: \fP, \fIoptromimage3: \fPor \fIoptromimage4:"
+You may now load up to 4 optional ROM images. Be sure to use a
+read-only area, typically between C8000 and EFFFF. These optional
+ROM images should not overwrite the rombios (located at
+F0000-FFFFF) and the videobios (located at C0000-C7FFF).
+Those ROM images will be initialized by the bios if they contain
+the right signature (0x55AA).
+It can also be a convenient way to upload some arbitary code/data
+in the simulation, that can be retrieved by the boot loader
+
+Example:
+  optromimage1: file=optionalrom.bin, address=0xd0000
+
+.TP
 .I "vgaromimage:"
 You  also  need to load a VGA  ROM  BIOS  into
 C0000.
 
-Example:
+Examples:
   vgaromimage: bios/VGABIOS-elpin-2.40
+  vgaromimage: bios/VGABIOS-lgpl-latest
 
 .TP
 .I "floppya: \fPor \fIfloppyb:"
@@ -93,7 +108,7 @@ Example:
 .I "ata0: \fP, \fIata1: \fP, \fIata2: \fPor \fIata3:"
 
 These options enables up to 4 ata channels. For each channel
-the two base io address and the irq must be specified.
+the two base io addresses and the irq must be specified.
 ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 
 Examples:
@@ -113,25 +128,33 @@ This defines the type and characteristics of all attached ata devices:
    spt=        only valid for disks
    status=     only valid for cdroms [inserted|ejected]
    biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
-   translation=type of transation of the bios, only for disks [none|lba|large]
+   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
    model=      string returned by identify device command
    
-Point this at a 10M, 20M, or 30M hard disk image file, cdrom iso file,
-or physical cdrom device.  
+Point this at a hard disk image file, cdrom iso file,
+or a physical cdrom device.  
 To create a hard disk image, try running bximage.  
 It will help you choose the size and then suggest a line that 
 works with it.
 
-In UNIX it may be possible to use a raw device as a Bochs hard disk, 
+In UNIX it is possible to use a raw device as a Bochs hard disk, 
 but WE DON'T RECOMMEND IT.
 
 The path, cylinders, heads, and spt are mandatory for type=disk
 The path is mandatory for type=cdrom
 
-Default values are:
-   biosdetect=auto, translation=lba, model="Generic 1234"
+The disk translation scheme (implemented in legacy int13 bios functions, and used by
+older operating systems like MS-DOS), can be defined as:
+  - none : no translation, for disks up to 528MB (1032192 sectors)
+  - large : a standard bitshift algorithm, for disks up to 4.2GB (8257536 sectors)
+  - rechs : a revised bitshift algorithm, using a 15 heads fake physical geometry, for disks up to 7.9GB (15482880 sectors). (don't use this unless you understand what you're doing)
+  - lba : a standard lba-assisted algorithm, for disks up to 8.4GB (16450560 sectors)
+  - auto : autoselection of best translation scheme. (it should be changed if system does not boot)
 
-The biosdetect and translation options have currently no effect on the bios
+Default values are:
+   biosdetect=auto, translation=auto, model="Generic 1234"
+
+The biosdetect option has currently no effect on the bios
 
 Examples:
    ata0-master: type=disk, path=10M.sample, cylinders=306, heads=4, spt=17
@@ -224,10 +247,19 @@ Example:
 .TP
 .I "boot:"
 This defines  your boot drive. You can  either
-boot from 'a', 'c' or 'cdrom'.
+boot from 'floppy', 'disk' or 'cdrom'.
+(legacy 'a' and 'c' are also supported)
 
 Example:
-  boot: c
+  boot: disk
+
+.TP
+.I "floppy_bootsig_check:"
+This disables the 0xaa55 signature check on boot floppies
+The check is enabled by default.
+
+Example:
+  floppy_bootsig_check: disabled=1
 
 .TP
 .I "log:"
@@ -239,6 +271,21 @@ Example:
   log: bochs.out
   log: /dev/tty               (unix only)
   log: /dev/null              (unix only)
+
+.TP
+.I "logprefix:"
+This handles the format of the string prepended to each log line :
+You may use those special tokens :
+  %t : 11 decimal digits timer tick
+  %i : 8 hexadecimal digits of cpu0 current eip
+  %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
+  %d : 5 characters string of the device, between brackets
+ 
+Default : %t%e%d
+
+Examples:
+  logprefix: %t-%e-@%i-%d
+  logprefix: %i%e%d
 
 .TP
 .I "panic:"
@@ -410,15 +457,6 @@ Example:
   keyboard_serial_delay: 200
 
 .TP
-.I "keyboard_type:"
-Type of emulated keyboard sent back  to the OS
-to a "keyboard identify"  command.  It must be 
-one of "xt", "at" or "mf". 
-
-Example:
-  keyboard_type: mf
-
-.TP
 .I "floppy_command_delay:"
 Time in microseconds to wait before completing
 some  floppy  commands  such  as read,  write,
@@ -446,12 +484,12 @@ starts to autorepeat,  and the measurement  of
 BogoMips and other benchmarks.
 
 Example Specifications[1]
-  Machine                           Mips
----------------------------------------------------
-650Mhz Athlon K-7 with Linux 2.4.x    2 to 2.5
-400Mhz Pentium II with Linux 2.0.x    1 to 1.8
-166Mhz 64bit Sparc with Solaris 2.x       0.75
-200Mhz Pentium with Linux 2.x                   0.5
+   Machine                           Mips
+ ---------------------------------------------------
+ 650Mhz Athlon K-7 with Linux 2.4.x    2 to 2.5
+ 400Mhz Pentium II with Linux 2.0.x    1 to 1.8
+ 166Mhz 64bit Sparc with Solaris 2.x       0.75
+ 200Mhz Pentium with Linux 2.x              0.5
 
  [1]  Mips  are  dependant on  OS and compiler
 configuration  in addition  to processor clock
@@ -487,6 +525,86 @@ turns it off.
 
 Example:
   private_colormap: enabled=1
+
+.TP
+.I "ne2k:"
+Defines the characteristics of an attached ne2000 isa card :
+   ioaddr=IOADDR,
+   irq=IRQ, 
+   mac=MACADDR, 
+   ethmod=MODULE, 
+   ethdev=DEVICE, 
+   script=SCRIPT
+
+.B PROPERTIES FOR sb16:
+
+ioaddr, irq:
+You probably won't need to change ioaddr and irq, unless there are IRQ conflicts.
+
+mac:
+The MAC address MUST NOT match the address of any machine on the net.
+Also, the first byte must be an even number (bit 0 set means a multicast
+address), and you cannot use ff:ff:ff:ff:ff:ff because that's the broadcast
+address.  For the ethertap module, you must use fe:fd:00:00:00:01.  There may
+be other restrictions too.  To be safe, just use the b0:c4... address.
+
+ethmod:
+The ethmod value defines which low level OS specific module to be used
+to access pysical ethernet interface. Current implemented values include
+ - fbsd : ethernet on freebsd and openbsd
+ - linux : ethernet on linux
+ - win32 : ethernet on win32
+ - tap : ethernet through a linux tap interface
+ - tuntap : ethernet through a linux tuntap interface
+
+ethdev:
+The ethdev value is the name of the network interface on your host
+platform.  On UNIX machines, you can get the name by running ifconfig.  On
+Windows machines, you must run niclist to get the name of the ethdev.
+Niclist source code is in misc/niclist.c and it is included in Windows
+binary releases.
+
+script:
+The script value is optionnal, and is the name of a script that
+is executed after bochs initialize the network interface. You can use
+this script to configure this network interface, or enable masquerading.
+This is mainly useful for the tun/tap devices that only exist during
+Bochs execution. The network interface name is supplied to the script
+as first parameter
+
+Examples:
+  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xlo
+  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+  ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
+  ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+  ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
+
+.TP
+.I "keyboard_mapping:"
+This enables a remap of a physical localized keyboard to a
+virtualized us keyboard, as the PC architecture expects.
+If enabled, the keymap file must be specified.
+
+ Examples:
+   keyboard_mapping: enabled=1, map=gui/keymaps/x11-pc-de.map
+
+.TP
+.I "keyboard_type:"
+Type of emulated keyboard sent back  to the OS
+to a "keyboard identify"  command.  It must be 
+one of "xt", "at" or "mf". 
+
+Example:
+  keyboard_type: mf
+
+.TP
+.I "user_shortcut:"
+This defines the keyboard shortcut to be sent when you press the "user"
+button in the headerbar. These shortcuts are currently recognized:
+ctrlaltdel, ctrlaltesc, ctrlaltf1, alttab
+
+Example:
+  user_shortcut: keys=ctrlaltdel
 
 .\"SKIP_SECTION"
 .SH LICENSE
