@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.11 2001-11-13 05:11:41 bdenney Exp $
+// $Id: segment_ctrl_pro.cc,v 1.12 2002-09-15 02:23:12 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,6 +60,9 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     seg->cache.u.segment.limit_scaled = 0xffff;
     seg->cache.u.segment.g     = 0; /* byte granular */
     seg->cache.u.segment.d_b   = 0; /* default 16bit size */
+#if BX_SUPPORT_X86_64
+    seg->cache.u.segment.l     = 0; /* default 16bit size */
+#endif
     seg->cache.u.segment.avl   = 0;
 
     return;
@@ -318,6 +321,9 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 #if BX_CPU_LEVEL >= 3
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g     = 0; /* byte granular */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b   = 0; /* default 16bit size */
+#if BX_SUPPORT_X86_64
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l     = 0; /* default 16bit size */
+#endif
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl   = 0;
 #endif
     }
@@ -378,6 +384,9 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.limit        |= (dword2 & 0x000F0000);
     temp->u.segment.g            =  (dword2 & 0x00800000) > 0;
     temp->u.segment.d_b          =  (dword2 & 0x00400000) > 0;
+#if BX_SUPPORT_X86_64
+    temp->u.segment.l            =  (dword2 & 0x00200000) > 0;
+#endif
     temp->u.segment.avl          =  (dword2 & 0x00100000) > 0;
     temp->u.segment.base         |= (dword2 & 0xFF000000);
     if (temp->u.segment.g) {
@@ -501,6 +510,16 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
   // (BW) Added cpl to the selector value.
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value =
     (0xfffc & BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value) | cpl;
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR msr.lma) {
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
+      }
+    else {
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
+      }
+    }
+#endif
 }
 
   void
@@ -517,6 +536,16 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
     BX_PANIC(("load_ss(): invalid selector/descriptor passed."));
     }
 }
+
+#if BX_SUPPORT_X86_64
+  void
+BX_CPU_C::load_ss_null(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
+{
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
+}
+#endif
 
 
 
