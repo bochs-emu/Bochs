@@ -114,26 +114,26 @@ libiodev.a: $(NONPLUGIN_OBJS)
 
 ##### building plugins with libtool
 %.lo: %.@CPP_SUFFIX@
-	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+	$(LIBTOOL) --mode=compile $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 libbx_%.la: %.lo
-	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
 libbx_harddrv.la: harddrv.lo vmware3.lo $(CDROM_OBJS:.o=.lo)
-	$(LIBTOOL) $(CXX) -module harddrv.lo vmware3.lo $(CDROM_OBJS:.o=.lo) -o libbx_harddrv.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link $(CXX) -module harddrv.lo vmware3.lo $(CDROM_OBJS:.o=.lo) -o libbx_harddrv.la -rpath $(PLUGIN_PATH)
 
 libbx_keyboard.la: keyboard.lo scancodes.lo
-	$(LIBTOOL) $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
 
 libbx_pit.la: pit.lo pit82c54.lo pit_wrap.lo
-	$(LIBTOOL) $(CXX) -module pit.lo pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link $(CXX) -module pit.lo pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
 libbx_sb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
-	$(LIBTOOL) $(CXX) -module sb16.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_sb16.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link $(CXX) -module sb16.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_sb16.la -rpath $(PLUGIN_PATH)
 
 libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
-	$(LIBTOOL) $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
