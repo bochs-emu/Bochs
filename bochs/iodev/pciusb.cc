@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.2 2003-02-02 10:24:26 vruppert Exp $
+// $Id: pciusb.cc,v 1.3 2003-02-06 19:09:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -88,7 +88,7 @@ bx_pciusb_c::init(void)
   BX_USB_THIS hub[0].timer_index =
                    bx_pc_system.register_timer(this, usb_timer_handler, 1000, 1,1, "usb.timer");
 
-  for (unsigned addr=base_ioaddr; addr<=(unsigned)(base_ioaddr+0x14); addr++) {
+  for (unsigned addr=base_ioaddr; addr<(unsigned)(base_ioaddr+0x14); addr++) {
     BX_DEBUG(("register read/write: 0x%04x", addr));
     DEV_register_ioread_handler(this, read_handler, addr, "USB Hub #1", 7);
     DEV_register_iowrite_handler(this, write_handler, addr, "USB Hub #1", 7);
