@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.4 2002-08-28 21:06:14 bdenney Exp $
+// $Id: wxdialog.h,v 1.5 2002-08-29 20:09:54 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -119,7 +119,7 @@ public:
   void OnTextEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   void SetRadio (int val);
-  void SetFilename (char *f);
+  void SetFilename (const char *f);
   void SetCapacityChoices (int n, char *choices[]);
   void SetCapacity (int cap) { capacity->SetSelection (cap); }
   int GetRadio ();
@@ -175,7 +175,7 @@ public:
   HDConfigDialog(wxWindow* parent, wxWindowID id);
   void OnEvent (wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetFilename (char *f);
+  void SetFilename (const char *f);
   char *GetFilename ();
   void SetDriveName (const char *name);
   void SetGeom (int n, int value);
