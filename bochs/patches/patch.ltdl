@@ -35,7 +35,7 @@ RCS file: /cvsroot/bochs/bochs/Makefile.in,v
 retrieving revision 1.93.2.7
 diff -u -r1.93.2.7 Makefile.in
 --- Makefile.in	9 Oct 2002 06:10:35 -0000	1.93.2.7
-+++ Makefile.in	9 Oct 2002 17:11:26 -0000
++++ Makefile.in	10 Oct 2002 04:57:19 -0000
 @@ -34,6 +34,7 @@
  docdir          = $(prefix)/share/doc/bochs
  sharedir        = $(prefix)/share/bochs
@@ -106,7 +106,7 @@ RCS file: /cvsroot/bochs/bochs/configure.in,v
 retrieving revision 1.147.2.7
 diff -u -r1.147.2.7 configure.in
 --- configure.in	9 Oct 2002 06:23:07 -0000	1.147.2.7
-+++ configure.in	9 Oct 2002 17:11:26 -0000
++++ configure.in	10 Oct 2002 04:57:35 -0000
 @@ -101,10 +101,25 @@
  AC_PROG_CXX
  AC_PROG_MAKE_SET
@@ -159,7 +159,7 @@ RCS file: /cvsroot/bochs/bochs/Attic/plugin.cc,v
 retrieving revision 1.1.2.18
 diff -u -r1.1.2.18 plugin.cc
 --- plugin.cc	9 Oct 2002 07:05:36 -0000	1.1.2.18
-+++ plugin.cc	9 Oct 2002 17:11:26 -0000
++++ plugin.cc	10 Oct 2002 04:57:36 -0000
 @@ -152,7 +152,7 @@
    static time_t
  builtinGetCMOSTimeval(void)
@@ -256,9 +256,20 @@ diff -u -r1.1.2.18 plugin.cc
  }
  
  
-@@ -777,10 +779,10 @@
-   sprintf(plugin_filename,"%s%s",PLUGIN_PATH,name);
+@@ -770,17 +772,16 @@
+ /************************************************************************/
  
+ #define PLUGIN_PATH ""
+-int bx_load_plugin (const char *name)
++int bx_load_plugin (const char *format, const char *name)
+ {
+-  char plugin_filename[BX_PATHNAME_LEN];
+-
+-  sprintf(plugin_filename,"%s%s",PLUGIN_PATH,name);
+-
++  char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
++  sprintf (buf, format, name);
++  sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
    plugin_load (plugin_filename, "");
 -  void *handle = dlopen (plugin_filename, RTLD_LAZY);
 +  lt_dlhandle handle = lt_dlopen (plugin_filename);
@@ -269,16 +280,44 @@ diff -u -r1.1.2.18 plugin.cc
    }
    pluginlog->info("loaded plugin %s",plugin_filename);
    return 0;
-@@ -834,9 +836,9 @@
+@@ -800,17 +801,18 @@
+   plugin_startup();
+ 
+ #if BX_PLUGINS
+-  bx_load_plugin("libunmapped.so");
+-  bx_load_plugin("libbiosdev.so");
+-  bx_load_plugin("libcmos.so");
+-  bx_load_plugin("libdma.so");
+-  bx_load_plugin("libpic.so");
+-  bx_load_plugin("libvga.so");
+-  bx_load_plugin("libfloppy.so");
+-  bx_load_plugin("libparallel.so");
+-  bx_load_plugin("libserial.so");
+-  bx_load_plugin("libkeyboard.so");
+-  bx_load_plugin("libharddrv.so");
++  const char *format = "lib%s.la";
++  bx_load_plugin(format, "unmapped");
++  bx_load_plugin(format, "biosdev");
++  bx_load_plugin(format, "cmos");
++  bx_load_plugin(format, "dma");
++  bx_load_plugin(format, "pic");
++  bx_load_plugin(format, "vga");
++  bx_load_plugin(format, "floppy");
++  bx_load_plugin(format, "parallel");
++  bx_load_plugin(format, "serial");
++  bx_load_plugin(format, "keyboard");
++  bx_load_plugin(format, "harddrv");
+ 
+ 
+   // quick and dirty gui plugin selection
+@@ -834,9 +836,7 @@
    do {
      fprintf (stderr, "--> ");
    } while (scanf ("%d", &which) != 1 || !(which>=0 && which<imax));
 -  char soname[64];
 -  sprintf (soname, "lib%s.so", gui_names[which]);
 -  bx_load_plugin (soname);
-+  char libname[64];
-+  sprintf (libname, "lib%s.so", gui_names[which]);
-+  bx_load_plugin (libname);
++  bx_load_plugin (format, gui_names[which]);
  
    if (bx_gui == NULL) {
      BX_PANIC (("No gui has been loaded.  It is not safe to continue. Exiting."));
@@ -288,7 +327,7 @@ RCS file: /cvsroot/bochs/bochs/Attic/plugin.h,v
 retrieving revision 1.1.2.13
 diff -u -r1.1.2.13 plugin.h
 --- plugin.h	9 Oct 2002 06:58:56 -0000	1.1.2.13
-+++ plugin.h	9 Oct 2002 17:11:26 -0000
++++ plugin.h	10 Oct 2002 04:57:36 -0000
 @@ -20,6 +20,8 @@
  #ifndef __PLUGIN_H
  #define __PLUGIN_H
@@ -313,7 +352,7 @@ RCS file: /cvsroot/bochs/bochs/bios/Makefile.in,v
 retrieving revision 1.12
 diff -u -r1.12 Makefile.in
 --- bios/Makefile.in	4 Oct 2002 06:08:38 -0000	1.12
-+++ bios/Makefile.in	9 Oct 2002 17:11:26 -0000
++++ bios/Makefile.in	10 Oct 2002 04:57:36 -0000
 @@ -48,7 +48,7 @@
  
  
@@ -329,7 +368,7 @@ RCS file: /cvsroot/bochs/bochs/cpu/Makefile.in,v
 retrieving revision 1.45.2.2
 diff -u -r1.45.2.2 Makefile.in
 --- cpu/Makefile.in	9 Oct 2002 05:14:57 -0000	1.45.2.2
-+++ cpu/Makefile.in	9 Oct 2002 17:11:26 -0000
++++ cpu/Makefile.in	10 Oct 2002 04:57:38 -0000
 @@ -25,6 +25,8 @@
  
  srcdir = @srcdir@
@@ -363,7 +402,7 @@ RCS file: /cvsroot/bochs/bochs/debug/Makefile.in,v
 retrieving revision 1.10.2.2
 diff -u -r1.10.2.2 Makefile.in
 --- debug/Makefile.in	9 Oct 2002 05:14:57 -0000	1.10.2.2
-+++ debug/Makefile.in	9 Oct 2002 17:11:27 -0000
++++ debug/Makefile.in	10 Oct 2002 04:57:38 -0000
 @@ -26,6 +26,8 @@
  
  srcdir = @srcdir@
@@ -399,7 +438,7 @@ RCS file: /cvsroot/bochs/bochs/disasm/Makefile.in,v
 retrieving revision 1.7.2.2
 diff -u -r1.7.2.2 Makefile.in
 --- disasm/Makefile.in	9 Oct 2002 05:14:57 -0000	1.7.2.2
-+++ disasm/Makefile.in	9 Oct 2002 17:11:27 -0000
++++ disasm/Makefile.in	10 Oct 2002 04:57:38 -0000
 @@ -25,6 +25,8 @@
  
  srcdir = @srcdir@
@@ -430,7 +469,7 @@ RCS file: /cvsroot/bochs/bochs/dynamic/Makefile.in,v
 retrieving revision 1.4
 diff -u -r1.4 Makefile.in
 --- dynamic/Makefile.in	1 Oct 2002 23:37:49 -0000	1.4
-+++ dynamic/Makefile.in	9 Oct 2002 17:11:27 -0000
++++ dynamic/Makefile.in	10 Oct 2002 04:57:38 -0000
 @@ -26,6 +26,8 @@
  
  srcdir = @srcdir@
@@ -464,7 +503,7 @@ RCS file: /cvsroot/bochs/bochs/fpu/Makefile.in,v
 retrieving revision 1.8.2.2
 diff -u -r1.8.2.2 Makefile.in
 --- fpu/Makefile.in	9 Oct 2002 05:14:57 -0000	1.8.2.2
-+++ fpu/Makefile.in	9 Oct 2002 17:11:27 -0000
++++ fpu/Makefile.in	10 Oct 2002 04:57:39 -0000
 @@ -24,6 +24,8 @@
  
  srcdir = @srcdir@
@@ -498,7 +537,7 @@ RCS file: /cvsroot/bochs/bochs/gui/Makefile.in,v
 retrieving revision 1.32.2.7
 diff -u -r1.32.2.7 Makefile.in
 --- gui/Makefile.in	9 Oct 2002 07:25:59 -0000	1.32.2.7
-+++ gui/Makefile.in	9 Oct 2002 17:11:27 -0000
++++ gui/Makefile.in	10 Oct 2002 04:57:40 -0000
 @@ -27,6 +27,8 @@
  
  srcdir = @srcdir@
@@ -545,7 +584,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
 retrieving revision 1.20.2.12
 diff -u -r1.20.2.12 Makefile.in
 --- iodev/Makefile.in	9 Oct 2002 07:20:07 -0000	1.20.2.12
-+++ iodev/Makefile.in	9 Oct 2002 17:11:27 -0000
++++ iodev/Makefile.in	10 Oct 2002 04:57:41 -0000
 @@ -27,6 +27,8 @@
  
  srcdir = @srcdir@
@@ -589,7 +628,7 @@ RCS file: /cvsroot/bochs/bochs/memory/Makefile.in,v
 retrieving revision 1.6.2.2
 diff -u -r1.6.2.2 Makefile.in
 --- memory/Makefile.in	9 Oct 2002 05:14:58 -0000	1.6.2.2
-+++ memory/Makefile.in	9 Oct 2002 17:11:27 -0000
++++ memory/Makefile.in	10 Oct 2002 04:57:42 -0000
 @@ -25,6 +25,8 @@
  
  srcdir = @srcdir@
