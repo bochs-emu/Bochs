@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.22 2001-10-03 13:10:38 bdenney Exp $
+// $Id: ne2k.cc,v 1.23 2001-10-07 14:43:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.22 2001-10-03 13:10:38 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.23 2001-10-07 14:43:59 bdenney Exp $"));
 	// nothing for now
 }
 
@@ -1170,7 +1170,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.22 2001-10-03 13:10:38 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.23 2001-10-07 14:43:59 bdenney Exp $"));
   BX_NE2K_THIS devices = d;
 
 
@@ -1267,7 +1267,7 @@ bx_ne2k_c::init(bx_devices_c *d)
 } while (0);
 #define BX_HIGH_BYTE(x) ((0xff00 & (x)) >> 8)
 #define BX_LOW_BYTE(x) (0x00ff & (x))
-#define DUPLICATE(n) if (brief && num!=n) break;
+#define BX_DUPLICATE(n) if (brief && num!=n) break;
 
 void
 bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
@@ -1336,7 +1336,7 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
       fprintf (fp, "TPSR = Transmit Page Start = 0x%02x\n", BX_NE2K_THIS s.tx_page_start);
       break;
     case 0x0005:
-    case 0x0006:  DUPLICATE(0x0005);
+    case 0x0006:  BX_DUPLICATE(0x0005);
       fprintf (fp, "NCR = Number of Collisions Register (read-only) = 0x%02x\n", BX_NE2K_THIS s.num_coll);
       fprintf (fp, "TBCR1,TBCR0 = Transmit Byte Count = %02x %02x\n", 
 	  BX_HIGH_BYTE (BX_NE2K_THIS s.tx_bytes),
@@ -1356,7 +1356,7 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
       fprintf (fp, "\n");
       break;
     case 0x0008:
-    case 0x0009:  DUPLICATE(0x0008);
+    case 0x0009:  BX_DUPLICATE(0x0008);
       fprintf (fp, "CRDA1,0 = Current remote DMA address = %02x %02x\n", 
 	  BX_HIGH_BYTE (BX_NE2K_THIS s.remote_dma),
 	  BX_LOW_BYTE (BX_NE2K_THIS s.remote_dma));
@@ -1365,7 +1365,7 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
 	  BX_LOW_BYTE(s.remote_start));
       break;
     case 0x000a:
-    case 0x000b:  DUPLICATE(0x000a);
+    case 0x000b:  BX_DUPLICATE(0x000a);
       fprintf (fp, "RCBR1,0 = Remote byte count = %02x\n", BX_NE2K_THIS s.remote_bytes);
       break;
     case 0x000c:
@@ -1435,11 +1435,11 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
       fprintf (fp, "\n");
       break;
     case 0x0101:
-    case 0x0102:  DUPLICATE(0x0101);
-    case 0x0103:  DUPLICATE(0x0101);
-    case 0x0104:  DUPLICATE(0x0101);
-    case 0x0105:  DUPLICATE(0x0101);
-    case 0x0106:  DUPLICATE(0x0101);
+    case 0x0102:  BX_DUPLICATE(0x0101);
+    case 0x0103:  BX_DUPLICATE(0x0101);
+    case 0x0104:  BX_DUPLICATE(0x0101);
+    case 0x0105:  BX_DUPLICATE(0x0101);
+    case 0x0106:  BX_DUPLICATE(0x0101);
       fprintf (fp, "MAC address registers are located at page 1, registers 1-6.\n");
       fprintf (fp, "The MAC address is ");
       for (i=0; i<=5; i++) 
@@ -1449,21 +1449,21 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
       fprintf (fp, "Current page is 0x%02x\n", BX_NE2K_THIS s.curr_page);
       break;
     case 0x0108:
-    case 0x0109:  DUPLICATE(0x0108);
-    case 0x010A:  DUPLICATE(0x0108);
-    case 0x010B:  DUPLICATE(0x0108);
-    case 0x010C:  DUPLICATE(0x0108);
-    case 0x010D:  DUPLICATE(0x0108);
-    case 0x010E:  DUPLICATE(0x0108);
-    case 0x010F:  DUPLICATE(0x0108);
+    case 0x0109:  BX_DUPLICATE(0x0108);
+    case 0x010A:  BX_DUPLICATE(0x0108);
+    case 0x010B:  BX_DUPLICATE(0x0108);
+    case 0x010C:  BX_DUPLICATE(0x0108);
+    case 0x010D:  BX_DUPLICATE(0x0108);
+    case 0x010E:  BX_DUPLICATE(0x0108);
+    case 0x010F:  BX_DUPLICATE(0x0108);
       fprintf (fp, "MAR0-7 (Multicast address registers 0-7) are set to:\n");
       for (i=0; i<8; i++) fprintf (fp, "%02x ", BX_NE2K_THIS s.mchash[i]);
       fprintf (fp, "\nMAR0 is listed first.\n");
       break;
     case 0x0001:
-    case 0x0002:  DUPLICATE(0x0001);
-    case 0x0201:  DUPLICATE(0x0001);
-    case 0x0202:  DUPLICATE(0x0001);
+    case 0x0002:  BX_DUPLICATE(0x0001);
+    case 0x0201:  BX_DUPLICATE(0x0001);
+    case 0x0202:  BX_DUPLICATE(0x0001);
       fprintf (fp, "PSTART = Page start register = %02x\n", BX_NE2K_THIS s.page_start);
       fprintf (fp, "PSTOP = Page stop register = %02x\n", BX_NE2K_THIS s.page_stop);
       fprintf (fp, "Local DMA address = %02x %02x\n", 
@@ -1477,15 +1477,15 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
       fprintf (fp, "Local Next Packet Pointer = %02x\n", BX_NE2K_THIS s.localpkt_ptr);
       break;
     case 0x0206:
-    case 0x0207:  DUPLICATE(0x0206);
+    case 0x0207:  BX_DUPLICATE(0x0206);
       fprintf (fp, "Address Counter= %02x %02x\n", 
 	 BX_HIGH_BYTE(BX_NE2K_THIS s.address_cnt),
 	 BX_LOW_BYTE(BX_NE2K_THIS s.address_cnt));
       break;
     case 0x0208:
-    case 0x0209:  DUPLICATE(0x0208);
-    case 0x020A:  DUPLICATE(0x0208);
-    case 0x020B:  DUPLICATE(0x0208);
+    case 0x0209:  BX_DUPLICATE(0x0208);
+    case 0x020A:  BX_DUPLICATE(0x0208);
+    case 0x020B:  BX_DUPLICATE(0x0208);
       if (!brief) fprintf (fp, "Reserved\n");
     case 0xffff:
       fprintf (fp, "IMR (Interrupt Mask Register):\n  ");
