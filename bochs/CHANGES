@@ -13,7 +13,7 @@ Changes to next release:
   - fixed bug in float to integer SSE/SSE2 convert instructions
   - fixed BCD instructions implementation
   - execution speed improvements (sshwarts and psychosmur)
-  - fix MSR_APICBASE always returning APIC ADDRESS 0 (Kangmo Kim)
+  - fix MSR_APICBASE base address (Kangmo Kim, Christian Neubert)
   - fetchdecode fixes for AMD64 and 3DNow!
   - change BX_PANIC messages to BX_INFO when behaviour exactly 
     matches Intel docs
@@ -193,6 +193,11 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #661060 Problem with Win98SE
+  #837377 Norton Ghost don't boot
+  #876689 Unknown register 0x17 [CPU] / WIN98SE
+  #947282 Bochs segfault
+  #963317 Persistent Win98SE  
  #1101168 APIC base address change
   #680737 panic when installing winme
  #1097187 Install FC3 on bochs-win failed
