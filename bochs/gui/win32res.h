@@ -39,6 +39,7 @@
 #define IDSTATUS2   2452
 #define IDSTATUS3   2453
 #define IDSTATUS4   2454
+#define IDDEVLIST   2460
 #define IDLOGLBL1   2461
 #define IDLOGLBL2   2462
 #define IDLOGLBL3   2463

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.16 2004-02-02 18:34:24 vruppert Exp $
+// $Id: win32dialog.cc,v 1.17 2004-02-03 22:40:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -274,6 +274,7 @@ void RuntimeDlgSetTab(HWND hDlg, int tabnum)
   ShowWindow(GetDlgItem(hDlg, IDSTATUS2), (tabnum == 0) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDSTATUS3), (tabnum == 0) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDSTATUS4), (tabnum == 0) ? SW_SHOW : SW_HIDE);
+  ShowWindow(GetDlgItem(hDlg, IDDEVLIST), (tabnum == 1) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDLOGLBL1), (tabnum == 1) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDLOGLBL2), (tabnum == 1) ? SW_SHOW : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDLOGLBL3), (tabnum == 1) ? SW_SHOW : SW_HIDE);
@@ -298,16 +299,17 @@ void RuntimeDlgSetTab(HWND hDlg, int tabnum)
 void RuntimeDlgInitLogOpt(HWND hDlg)
 {
   char choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
-  int level, idx;
+  int level, idx, mod, mod_max;
   int defchoice[5];
 
+  mod_max = SIM->get_n_log_modules ();
   for (level=0; level<5; level++) {
-    int mod = 0;
+    mod = 0;
     int first = SIM->get_log_action (mod, level);
     BOOL consensus = true;
     // now compare all others to first.  If all match, then use "first" as
     // the initial value.
-    for (mod=1; mod<SIM->get_n_log_modules (); mod++) {
+    for (mod=1; mod<mod_max; mod++) {
       if (first != SIM->get_log_action (mod, level)) {
         consensus = false;
         break;
@@ -331,6 +333,15 @@ void RuntimeDlgInitLogOpt(HWND hDlg)
       }
     }
   }
+  idx = 0;
+  for (mod=0; mod<mod_max; mod++) {
+    if (strcmp(SIM->get_prefix(mod), "[     ]")) {
+      SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)SIM->get_prefix(mod));
+      SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
+      idx++;
+    }
+  }
+  EnableWindow(GetDlgItem(hDlg, IDDEVLIST), FALSE);
 }
 
 static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -559,7 +570,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext)
       ret = -1;
     } else {
       if (errcode == 0x3002) {
-        wsprintf(errtext, "CommDlgExtendedError: illegal filename");
+        wsprintf(errtext, "CommDlgExtendedError: invalid filename");
       } else {
         wsprintf(errtext, "CommDlgExtendedError returns 0x%04x", errcode);
       }

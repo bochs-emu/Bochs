@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.21 2004-02-01 01:40:14 vruppert Exp $
+// $Id: textconfig.cc,v 1.22 2004-02-03 22:40:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -273,6 +273,7 @@ static char *startup_options_prompt =
 "\n"
 "Please choose one: [0] ";
 
+#ifndef WIN32
 static char *runtime_menu_prompt =
 "---------------------\n"
 "Bochs Runtime Options\n"
@@ -295,6 +296,7 @@ static char *runtime_menu_prompt =
 "16. Quit now\n"
 "\n"
 "Please choose one:  [15] ";
+#endif
 
 #define NOT_IMPLEMENTED(choice) \
   fprintf (stderr, "ERROR: choice %d not implemented\n", choice);
@@ -303,6 +305,7 @@ static char *runtime_menu_prompt =
   do {fprintf (stderr, "ERROR: menu %d has no choice %d\n", menu, choice); \
       assert (0); } while (0)
 
+#ifndef WIN32
 void build_runtime_options_prompt (char *format, char *buf, int size)
 {
   bx_floppy_options floppyop;
@@ -340,6 +343,7 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
       SIM->get_param_num (BXP_KBD_PASTE_DELAY)->get (),
       SIM->get_param_string (BXP_USER_SHORTCUT)->getptr ());
 }
+#endif
 
 int do_menu (bx_id id) {
   bx_list_c *menu = (bx_list_c *)SIM->get_param (id);
