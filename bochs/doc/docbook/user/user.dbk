@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.123 2003-08-03 08:56:02 vruppert Exp $
+$Id: user.dbk,v 1.124 2003-08-09 11:42:22 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4009,8 +4009,6 @@ your country specific X11 symbols in <filename>X11/keysymdef.h</filename>.
 <chapter id="using-bochs"><title>Using Bochs</title>
     <para>
     <screen>
-- using the control panel
-- the graphical elements in bochs window
 - using plugins ?
 - Resources for users
 testing status page: tells what has been tried and who got it working
@@ -4064,6 +4062,123 @@ is not disabled, Bochs searches for a default configuration file. This is the se
 5. (Unix only) <command>bochsrc</command> in the <emphasis>/etc</emphasis> directory
 </screen>
 </para>
+</section>
+<section id="textconfig"><title>The configuration interface 'textconfig'</title>
+<para>
+The configuration interface 'textconfig' is the text mode version of the Bochs
+configuration system. It is a series of menus (using stdin/stdout) that allows
+you to edit all the settings that control Bochs's behavior. If you do not write
+a config_interface line, Bochs will choose it as the default for you (unless Bochs
+is compiled for wxWindows only).
+</para>
+<para>
+It consists of these three parts:
+<itemizedlist>
+<listitem><para>the start menu</para></listitem>
+<listitem><para>the headerbar buttons</para></listitem>
+<listitem><para>the runtime configuration</para></listitem>
+</itemizedlist>
+</para>
+<section><title>The start menu</title>
+<para>
+If you start Bochs without the quickstart argument (-q), the Bochs configuration
+main menu appears:
+<screen>
+------------------------------
+Bochs Configuration: Main Menu
+------------------------------
+
+This is the Bochs Configuration Interface, where you can describe the
+machine that you want to simulate.  Bochs has already searched for a
+configuration file (typically called bochsrc.txt) and loaded it if it
+could be found.  When you are satisfied with the configuration, go
+ahead and start the simulation.
+
+You can also start bochs with the -q option to skip these menus.
+
+1. Restore factory default configuration
+2. Read options from...
+3. Edit options
+4. Save options to...
+5. Begin simulation
+6. Quit now
+
+Please choose one: [5]
+</screen>
+</para>
+<para>
+Here you can load, edit and save the configuration and finally start the simulation.
+It is possible to start Bochs without a config file and to edit all the settings using
+the item "Edit options". Don't forget to save the configuration if you want to use this
+setup for another Bochs session.
+</para>
+</section>
+<section><title>The Bochs headerbar</title>
+<para>
+<graphic format="PNG" fileref="../images/headerbar.png">
+</para>
+<para>
+The headerbar appears on top of the Bochs simulation window. Here you can control the
+behavoiur of Bochs at runtime if you click on one of these buttons:
+<itemizedlist>
+<listitem>
+<para>floppy buttons</para>
+<para>Here you can toggle the status of the floppy media (inserted/ejected). Bochs for
+win32 presents you a small dialog box for changing the floppy image.</para>
+</listitem>
+<listitem>
+<para>cdrom button</para>
+<para>Here you can toggle the status of the cdrom media (inserted/ejected).</para>
+</listitem>
+<listitem>
+<para>mouse button</para>
+<para>Here you can enable/disable the creation of mouse events by the host.</para>
+</listitem>
+<listitem>
+<para>user button</para>
+<para>Press this button if you want to send the keyboard shortcut defined with the
+'user_shortcut' option to the guest.</para>
+</listitem>
+<listitem>
+<para>copy button</para>
+<para>The text mode screen text can be exported to the clipboard after pressing this
+button. The button has no effect in graphics mode.</para>
+</listitem>
+<listitem>
+<para>paste button</para>
+<para>Text in the clipboard can also be pasted, through Bochs, to the
+guest OS, as simulated keystrokes. Keyboard mapping must be enabled to make this
+feature work.</para>
+</listitem>
+<listitem>
+<para>snapshot button</para>
+<para>Press this button if you want to save a snapshot of the text mode screen.
+Bochs for win32 presents you a "Save as..." dialog box. All other platforms are
+using the fixed filename "snapshot.txt".</para>
+</listitem>
+<listitem><para>config button</para>
+<para>This button stops the Bochs simulation and starts the runtime configuration.
+(see below).</para>
+</listitem>
+<listitem>
+<para>reset button</para>
+<para>Press this button to trigger a hardware reset.</para>
+</listitem>
+<listitem>
+<para>power button</para>
+<para>This button stops the simulation and quits bochs.</para>
+</listitem>
+</itemizedlist>
+</para>
+<para>
+Some of this features may not be implemented or work different on your host platform.
+</para>
+</section>
+<section><title>The runtime configuration</title>
+<para>
+&FIXME; not written yet.
+</para>
+</section>
 </section>
 </chapter>
 
@@ -6021,7 +6136,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.123 2003-08-03 08:56:02 vruppert Exp $
+      $Id: user.dbk,v 1.124 2003-08-09 11:42:22 vruppert Exp $
 ========================================================================
 
 What is the flat image name?
@@ -8484,7 +8599,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.123 2003-08-03 08:56:02 vruppert Exp $
+        $Id: user.dbk,v 1.124 2003-08-09 11:42:22 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
