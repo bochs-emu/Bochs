@@ -31,6 +31,7 @@ Changes to next release:
   - exceeding the instruction length limit of 15 bytes (this only can
     occur when redundant prefixes are placed before an instruction)
     generate #GP(0) (Stanislav)
+  - several CPU bug fixes made by Kevin Lawton
 
 - CPU (x86-64) (Stanislav)
   - fetchdecode fixes for x86-64 and 3DNow!
@@ -203,6 +204,7 @@ Changes to next release:
  [1114826] Fix PCIBIOS (Destruction prevention of esi and edi)
  [1095473] Reading from a CDRW (Fixed) by Ben Lunt
  [1123895] x86-64 gdb/debugger fixes by Avi Kivity
+ [1145423] stosq simulation bugfix by Avi Kivity
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
@@ -215,6 +217,8 @@ Changes to next release:
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
+ #1123043 fpu stack pointer changed *despite* fault occured (e.g. #pf)
+ #1122066 PANIC: iret: IP > descriptor limit when installing os/2 warp 
   #809574 rm -f segfaults
   #593952 SuSE rm segfaults
   #929783 floppy not recogniced since 2.1
