@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.2 2002-11-01 15:19:47 bdenney Exp $
+// $Id: textconfig.cc,v 1.3 2002-11-09 14:12:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -413,8 +413,16 @@ int bx_config_interface (int menu)
      }
    case BX_CI_START_MENU:
      {
-       static int read_rc = 0;
-       Bit32u default_choice = 5;
+       Bit32u default_choice;
+       switch (SIM->get_param_enum(BXP_BOCHS_START)->get ()) {
+         case BX_LOAD_START: 
+           default_choice = 2; break;
+         case BX_EDIT_START: 
+           default_choice = 3; break;
+         default: 
+           default_choice = 5; break;
+       }
+
        if (ask_uint (startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 1:
@@ -425,9 +433,12 @@ int bx_config_interface (int menu)
 	   // original state.
 	   SIM->reset_all_param ();
 	   if (bx_read_rc (NULL) >= 0)
-	     read_rc=1; 
+	     SIM->get_param_enum(BXP_BOCHS_START)->set(BX_RUN_START);
 	   break;
-	 case 3: bx_config_interface (BX_CI_START_OPTS); break;
+	 case 3: 
+           bx_config_interface (BX_CI_START_OPTS); 
+	   SIM->get_param_enum(BXP_BOCHS_START)->set(BX_RUN_START);
+           break;
 	 case 4: bx_write_rc (NULL); break;
 	 case 5: bx_config_interface (BX_CI_START_SIMULATION); break;
 	 case 6: SIM->quit_sim (1); return -1;
@@ -952,7 +963,7 @@ static int ci_callback (void *userdata, ci_command_t command)
     case CI_START:
       //fprintf (stderr, "textconfig.cc: start\n");
       bx_config_interface_init ();
-      if (SIM->get_param_bool(BXP_QUICK_START)->get ())
+      if (SIM->get_param_enum(BXP_BOCHS_START)->get () == BX_QUICK_START)
 	bx_config_interface (BX_CI_START_SIMULATION);
       else
         bx_config_interface (BX_CI_START_MENU);

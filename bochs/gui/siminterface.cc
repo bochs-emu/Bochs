@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.82 2002-11-08 13:18:05 vruppert Exp $
+// $Id: siminterface.cc,v 1.83 2002-11-09 14:12:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -396,6 +396,8 @@ bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *whe
   return 0;
 }
 
+char *bochs_start_names[] = { "quick", "load", "edit", "run" };
+int n_bochs_start_names = 3;
 char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", NULL };
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9 };
 int n_floppy_type_names = 6;

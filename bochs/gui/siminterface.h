@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.83 2002-11-01 15:19:43 bdenney Exp $
+// $Id: siminterface.h,v 1.84 2002-11-09 14:12:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -119,7 +119,7 @@ typedef enum {
 // list if parameter id values.  The actual values are not important;
 // it's only important that they all be different from each other.
 typedef enum {
-  BXP_NULL = 101,
+  BXP_NULL = 301,
   BXP_IPS,
   BXP_REALTIME_PIT,
   BXP_VGA_UPDATE_INTERVAL,
@@ -325,7 +325,7 @@ typedef enum {
   BXP_KEYBOARD,
   BXP_USER_SHORTCUT,
   BXP_ASK_FOR_PATHNAME,   // for general file selection dialog
-  BXP_QUICK_START,        // read bochsrc and start simulation immediately
+  BXP_BOCHS_START,        // How Bochs starts
   // experiment: add params for CPU registers
   BXP_CPU_PARAMETERS,
   BXP_CPU_EAX,
@@ -1055,6 +1055,11 @@ public:
 ////////////////////////////////////////////////////////////////
 
 
+#define BX_QUICK_START 0        // read bochsrc and start simulation immediately
+#define BX_LOAD_START  1        // default action load conf file 
+#define BX_EDIT_START  2        // default action edit conf file 
+#define BX_RUN_START   3        // default action start execution
+
 #define BX_FLOPPY_NONE   10 // floppy not present
 #define BX_FLOPPY_1_2    11 // 1.2M  5.25"
 #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
@@ -1079,6 +1084,8 @@ public:
 #define BX_ATA_TRANSLATION_AUTO      4
 #define BX_ATA_TRANSLATION_LAST      4
 
+extern char *bochs_start_names[];
+extern int n_bochs_start_names;
 extern char *floppy_type_names[];
 extern int floppy_type_n_sectors[];
 extern int n_floppy_type_names;

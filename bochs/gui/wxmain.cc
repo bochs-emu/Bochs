@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.75 2002-11-01 15:28:41 bdenney Exp $
+// $Id: wxmain.cc,v 1.76 2002-11-09 14:12:10 cbothamy Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -234,7 +234,7 @@ bool MyApp::OnInit()
   SetTopWindow( frame );
   wxTheClipboard->UsePrimarySelection (true);
   // if quickstart is enabled, kick off the simulation
-  if (SIM->get_param_bool(BXP_QUICK_START)->get ()) {
+  if (SIM->get_param_enum(BXP_BOCHS_START)->get () == BX_QUICK_START) {
     wxCommandEvent unusedEvent;
     frame->OnStartSim (unusedEvent);
   }

@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.160 2002-11-08 21:29:16 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.161 2002-11-09 14:12:09 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -326,21 +326,20 @@ AC_ARG_ENABLE(config-interface,
     ]
   )
 
-# continue to support --enable-control-panel and make it do the same
+# continue to support --enable-control-panel and make it do the same, but with no default
 # as before.
 AC_MSG_CHECKING(for control panel)
 AC_ARG_ENABLE(control-panel,
   [  --enable-control-panel           Deprecated. Use --enable-config-interface.],
   [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
+    AC_MSG_RESULT(yes, overrides config-interface setting)
 	use_config_interface=1
    else
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT(no, overrides config-interface setting)
 	use_config_interface=0
    fi],
   [
-    AC_MSG_RESULT(yes)
-	use_config_interface=1
+    AC_MSG_RESULT(same as config-interface setting)
     ]
   )
 
