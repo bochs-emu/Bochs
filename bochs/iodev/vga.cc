@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.70 2003-05-02 07:32:06 vruppert Exp $
+// $Id: vga.cc,v 1.71 2003-05-03 16:09:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -257,6 +257,7 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.vert_tick = 0;
 
   BX_VGA_THIS s.charmap_address = 0;
+  BX_VGA_THIS s.x_dotclockdiv2 = 0;
   BX_VGA_THIS s.y_doublescan = 0;
 
 #if BX_SUPPORT_VBE  
@@ -326,6 +327,7 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
         *piHeight = 240;
         }
       else {
+        if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
         *piWidth = h;
         *piHeight = v;
         }
@@ -351,8 +353,9 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
     }
   else
     {
-    *piWidth = 640;
-    *piHeight = 400;
+    if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
+    *piWidth = h;
+    *piHeight = v;
     }
 }
 
@@ -981,6 +984,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
                       (unsigned) value);
 #endif
           BX_VGA_THIS s.sequencer.reg1 = value & 0x3f;
+          BX_VGA_THIS s.x_dotclockdiv2 = ((value & 0x08) > 0);
           break;
         case 2: /* sequencer: map mask register */
           BX_VGA_THIS s.sequencer.map_mask = (value & 0x0f);
@@ -1311,28 +1315,28 @@ bx_vga_c::update(void)
     unsigned r, c;
     unsigned long byte_offset;
     unsigned long pixely, pixelx;
-    
+
     iWidth=BX_VGA_THIS s.vbe_xres;
     iHeight=BX_VGA_THIS s.vbe_yres;
 
     // incl virtual xres correction
     Bit32u start_offset = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_virtual_xres)) + BX_VGA_THIS s.vbe_offset_x;
     y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
-    
+
     for (yti=0; yti<y_tiles; yti++)
-      for (xti=0; xti<iWidth/X_TILESIZE; xti++) 
+      for (xti=0; xti<iWidth/X_TILESIZE; xti++)
       {
         if (GET_TILE_UPDATED (xti, yti))
-        { 
-          for (r=0; r<Y_TILESIZE; r++) 
+        {
+          for (r=0; r<Y_TILESIZE; r++)
           {
             pixely = ((yti*Y_TILESIZE) + r);
 
-            for (c=0; c<X_TILESIZE; c++) 
+            for (c=0; c<X_TILESIZE; c++)
             {
               pixelx = ((xti*X_TILESIZE) + c);
 
-              // incl virtual xres correction    	          
+              // incl virtual xres correction
               byte_offset = (pixely*(BX_VGA_THIS s.vbe_virtual_xres)) + (pixelx);
               color = BX_VGA_THIS s.vbe_memory[start_offset + byte_offset];
               BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
@@ -1435,12 +1439,14 @@ bx_vga_c::update(void)
                   y = yti*Y_TILESIZE + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                   for (c=0; c<X_TILESIZE; c++) {
-                    bit_no = 7 - (c % 8);
+                    x = xti*X_TILESIZE + c;
+                    if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
+                    bit_no = 7 - (x % 8);
                     if (y > line_compare) {
-                      byte_offset = start_addr + (xti*X_TILESIZE+c)/8 +
+                      byte_offset = start_addr + x / 8 +
                         ((y - line_compare - 1) * BX_VGA_THIS s.line_offset);
                     } else {
-                      byte_offset = start_addr + (xti*X_TILESIZE+c)/8 +
+                      byte_offset = start_addr + x / 8 +
                         (y * BX_VGA_THIS s.line_offset);
                     }
                     attribute =
@@ -1482,7 +1488,7 @@ bx_vga_c::update(void)
               // mode.  (modes 4 & 5)
 
         /* CGA 320x200x4 start */
-        iHeight=200; iWidth=320;
+        determine_screen_dimensions(&iHeight, &iWidth);
 	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
 	{
 	  bx_gui->dimension_update(iWidth, iHeight);
@@ -1497,9 +1503,11 @@ bx_vga_c::update(void)
             if (GET_TILE_UPDATED (xti, yti)) {
               for (r=0; r<Y_TILESIZE; r++) {
                 y = yti*Y_TILESIZE + r;
+                if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                 for (c=0; c<X_TILESIZE; c++) {
 
                   x = xti*X_TILESIZE + c;
+                  if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
                   /* 0 or 0x2000 */
                   byte_offset = (y & 1) << 13;
                   /* to the start of the line */
@@ -1919,15 +1927,22 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
         x_tileno <<= 2; //*=4;
       }
       x_tileno2=x_tileno;
-      if (BX_VGA_THIS s.y_doublescan && (BX_VGA_THIS s.graphics_ctrl.shift_reg==0)) {
+      if (BX_VGA_THIS s.graphics_ctrl.shift_reg==0) {
+        x_tileno*=2;
         x_tileno2+=7;
-        x_tileno/=(X_TILESIZE/2);
-        x_tileno2/=(X_TILESIZE/2);
-        y_tileno/=(Y_TILESIZE/2);
       } else {
         x_tileno2+=3;
+      }
+      if (BX_VGA_THIS s.x_dotclockdiv2) {
+        x_tileno/=(X_TILESIZE/2);
+        x_tileno2/=(X_TILESIZE/2);
+      } else {
         x_tileno/=X_TILESIZE;
         x_tileno2/=X_TILESIZE;
+      }
+      if (BX_VGA_THIS s.y_doublescan) {
+        y_tileno/=(Y_TILESIZE/2);
+      } else {
         y_tileno/=Y_TILESIZE;
       }
       BX_VGA_THIS s.vga_mem_updated = 1;
@@ -2235,7 +2250,11 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       SET_TILE_UPDATED (x_tileno, y_tileno, 1);
     } else {
       if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
-        x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+        if (BX_VGA_THIS s.x_dotclockdiv2) {
+          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
+        } else {
+          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+        }
         if (BX_VGA_THIS s.y_doublescan) {
           y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
         } else {
@@ -2245,7 +2264,11 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       }
       if (offset >= start_addr) {
         offset -= start_addr;
-        x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+        if (BX_VGA_THIS s.x_dotclockdiv2) {
+          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
+        } else {
+          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+        }
         if (BX_VGA_THIS s.y_doublescan) {
           y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
         } else {
