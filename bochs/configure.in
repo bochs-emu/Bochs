@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.263 2004-09-21 21:07:39 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.264 2004-10-03 20:02:08 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -721,79 +721,21 @@ AC_ARG_ENABLE(ne2000,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_NE2K, 1)
     NE2K_OBJS='ne2k.o'
-    NETLOW_OBJS='eth.o eth_null.o eth_vnet.o'
-    AC_CHECK_HEADER(net/bpf.h, NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o")
-    AC_CHECK_HEADER(netpacket/packet.h, NETLOW_OBJS="$NETLOW_OBJS eth_linux.o")
-    case "$target" in
-      *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
-      NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
-      ;;
-      *-macosx* | *-darwin*)
-      NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
-      AC_DEFINE(HAVE_TUNTAP, 1)
-      ;;
-      *)
-      AC_CHECK_HEADER(net/if.h, [
-          use_ethertap=yes
-          ], [],
-          [
-  	  #include <sys/types.h>
-  	  #include <sys/socket.h>
-        ])
-      AC_CHECK_HEADER(linux/netlink.h, [
-          use_ethertap=yes
-        ], [], 
-        [
-    	  #include <asm/types.h>
-	  #include <sys/socket.h>
-        ])
-
-      if test "$use_ethertap" = yes; then
-        NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
-        AC_DEFINE(HAVE_ETHERTAP, 1)
-      fi
-
-      AC_CHECK_HEADER(net/if_tun.h, [
-	  use_tuntap=yes
-	  ], [],
-	  [
-	  #include <sys/types.h>
-	  #include <sys/socket.h>
-	  #include <net/if.h>
-	])
-      AC_CHECK_HEADER(linux/if_tun.h, [
-	  use_tuntap=yes
-	  ], [],
-	  [
-	  #include <asm/types.h>
-	  #include <sys/socket.h>
-	])
-      if test "$use_tuntap" = yes; then
-	NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
-	AC_DEFINE(HAVE_TUNTAP, 1)
-      fi
-
-      ;;
-    esac
     networking=yes
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_NE2K, 0)
     NE2K_OBJS=''
-    NETLOW_OBJS=''
     networking=no
    fi],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_NE2K, 0)
     NE2K_OBJS=''
-    NETLOW_OBJS=''
     networking=no
     ]
   )
 AC_SUBST(NE2K_OBJS)
-AC_SUBST(NETLOW_OBJS)
-
 
 AC_MSG_CHECKING(for i440FX PCI support)
 AC_ARG_ENABLE(pci,
@@ -901,6 +843,7 @@ AC_ARG_ENABLE(pnic,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCIPNIC, 1)
     PCI_OBJ="$PCI_OBJ pcipnic.o"
+    networking=yes
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
@@ -910,6 +853,70 @@ AC_ARG_ENABLE(pnic,
     AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
     ]
   )
+
+NETLOW_OBJS=''
+if test "$networking" = yes; then
+  NETLOW_OBJS='eth.o eth_null.o eth_vnet.o'
+  AC_CHECK_HEADER(net/bpf.h, NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o")
+  AC_CHECK_HEADER(netpacket/packet.h, NETLOW_OBJS="$NETLOW_OBJS eth_linux.o")
+  case "$target" in
+    *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
+    NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
+    ;;
+    *-macosx* | *-darwin*)
+    NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
+    AC_DEFINE(HAVE_TUNTAP, 1)
+    ;;
+    *)
+    AC_CHECK_HEADER(net/if.h, [
+        use_ethertap=yes
+      ], [],
+      [
+      #include <sys/types.h>
+      #include <sys/socket.h>
+    ])
+    AC_CHECK_HEADER(linux/netlink.h, [
+        use_ethertap=yes
+      ], [], 
+      [
+      #include <asm/types.h>
+      #include <sys/socket.h>
+    ])
+
+    if test "$use_ethertap" = yes; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
+      AC_DEFINE(HAVE_ETHERTAP, 1)
+    fi
+
+    AC_CHECK_HEADER(net/if_tun.h, [
+        use_tuntap=yes
+      ], [],
+      [
+      #include <sys/types.h>
+      #include <sys/socket.h>
+      #include <net/if.h>
+    ])
+    AC_CHECK_HEADER(linux/if_tun.h, [
+        use_tuntap=yes
+      ], [],
+      [
+      #include <asm/types.h>
+      #include <sys/socket.h>
+    ])
+    if test "$use_tuntap" = yes; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
+      AC_DEFINE(HAVE_TUNTAP, 1)
+    fi
+
+    ;;
+  esac
+  AC_DEFINE(BX_NETWORKING, 1)
+else
+  AC_DEFINE(BX_NETWORKING, 0)
+fi
+
+AC_SUBST(NETLOW_OBJS)
+
 
 AC_MSG_CHECKING(for Promise DC2300 VLB-IDE support)
 AC_ARG_ENABLE(dc2300-vlb-ide,

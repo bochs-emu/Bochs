@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.29 2004-09-05 10:30:18 vruppert Exp $
+// $Id: eth_fbsd.cc,v 1.30 2004-10-03 20:02:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_SUPPORT_NE2K && defined(ETH_FBSD)
+#if BX_NETWORKING && defined(ETH_FBSD)
 
 #include "eth.h"
 
@@ -383,5 +383,5 @@ bx_fbsd_pktmover_c::rx_timer(void)
   }  
 }
 
-#endif /* if BX_SUPPORT_NE2K && defined(ETH_FBSD) */
+#endif /* if BX_NETWORKING && defined(ETH_FBSD) */
 

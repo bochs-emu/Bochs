@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.6 2004-09-26 15:38:24 vruppert Exp $
+// $Id: eth_vde.cc,v 1.7 2004-10-03 20:02:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -27,7 +27,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_SUPPORT_NE2K
+#if BX_NETWORKING && defined(HAVE_VDE)
 
 #include "eth.h"
 
@@ -337,4 +337,4 @@ int vde_alloc(char *dev, int *fdp, struct sockaddr_un *pdataout)
       return fd;
 }              
 
-#endif /* if BX_SUPPORT_NE2K */
+#endif /* if BX_NETWORKING && defined HAVE_VDE */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.22 2004-09-26 15:38:23 vruppert Exp $
+// $Id: eth_tap.cc,v 1.23 2004-10-03 20:02:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,7 +85,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_SUPPORT_NE2K
+#if BX_NETWORKING && defined(HAVE_ETHERTAP)
 
 #include "eth.h"
 
@@ -372,4 +372,4 @@ void bx_tap_pktmover_c::rx_timer ()
   (*rxh)(rxarg, rxbuf, nbytes);
 }
 
-#endif /* if BX_SUPPORT_NE2K */
+#endif /* if BX_NETWORKING && defined HAVE_ETHERTAP */

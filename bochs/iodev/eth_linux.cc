@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.18 2004-09-18 12:35:13 vruppert Exp $
+// $Id: eth_linux.cc,v 1.19 2004-10-03 20:02:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_SUPPORT_NE2K && defined (ETH_LINUX)
+#if BX_NETWORKING && defined (ETH_LINUX)
 
 #include "eth.h"
 
@@ -285,4 +285,4 @@ bx_linux_pktmover_c::rx_timer(void)
     (*rxh)(rxarg, rxbuf, nbytes);
 //  }
 }
-#endif /* if BX_SUPPORT_NE2K && defined ETH_LINUX */
+#endif /* if BX_NETWORKING && defined ETH_LINUX */

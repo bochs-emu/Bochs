@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.12 2004-09-18 12:35:13 vruppert Exp $
+// $Id: eth_packetmaker.cc,v 1.13 2004-10-03 20:02:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -9,7 +9,7 @@
  
 #include "iodev.h"
 
-#if BX_SUPPORT_NE2K && defined(ETH_ARPBACK)
+#if BX_NETWORKING && defined(ETH_ARPBACK)
 
 #include "eth_packetmaker.h"
 
@@ -181,4 +181,4 @@ eth_ARPmaker::sendpacket(const eth_packet& outpacket) {
   }
 }
 
-#endif /* if BX_SUPPORT_NE2K && defined(ETH_ARPBACK) */
+#endif /* if BX_NETWORKING && defined(ETH_ARPBACK) */

@@ -146,6 +146,9 @@ libbx_sb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
 libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
 	$(LIBTOOL) --mode=link $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)
 
+libbx_pcipnic.la: pcipnic.lo $(NETLOW_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link $(CXX) -module pcipnic.lo $(NETLOW_OBJS:.o=.lo) -o libbx_pcipnic.la -rpath $(PLUGIN_PATH)
+
 libbx_serial.la: serial.lo serial_raw.lo
 	$(LIBTOOL) --mode=link $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
 
@@ -171,6 +174,9 @@ bx_sb16.dll: sb16.o $(SOUNDLOW_OBJS)
 
 bx_ne2k.dll: ne2k.o $(NETLOW_OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o bx_ne2k.dll ne2k.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_pcipnic.dll: pcipnic.o $(NETLOW_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_pcipnic.dll pcipnic.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_gameport.dll: gameport.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_gameport.dll gameport.o $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm

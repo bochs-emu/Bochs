@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.21 2004-09-05 10:30:18 vruppert Exp $
+// $Id: eth.cc,v 1.22 2004-10-03 20:02:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_SUPPORT_NE2K
+#if BX_NETWORKING
 
 #include "eth.h"
 
@@ -74,9 +74,6 @@ extern class bx_tuntap_locator_c bx_tuntap_match;
 #endif
 #if HAVE_VDE
 extern class bx_vde_locator_c bx_vde_match;
-#endif
-#ifdef ETH_TEST
-extern bx_test_match;
 #endif
 #ifdef ETH_ARPBACK
 extern class bx_arpback_locator_c bx_arpback_match;
@@ -148,12 +145,6 @@ eth_locator_c::create(const char *type, const char *netif,
       ptr = (eth_locator_c *) &bx_win32_match;
   }
 #endif
-#ifdef ETH_TEST
-  {
-    if (!strcmp(type, "test"))    
-      ptr = (eth_locator_c *) &bx_test_match;
-  }
-#endif
   {
     if (!strcmp(type, "vnet"))    
       ptr = (eth_locator_c *) &bx_vnet_match;
@@ -207,4 +198,4 @@ int execute_script( char* scriptname, char* arg1 )
 
 #endif // (HAVE_ETHERTAP==1) || (HAVE_TUNTAP==1)
 
-#endif /* if BX_SUPPORT_NE2K */
+#endif /* if BX_NETWORKING */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.17 2004-09-26 15:38:24 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.18 2004-10-03 20:02:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_SUPPORT_NE2K
+#if BX_NETWORKING && defined(HAVE_TUNTAP)
 
 #include "eth.h"
 
@@ -384,4 +384,4 @@ int tun_alloc(char *dev)
   return fd;
 }              
 
-#endif /* if BX_SUPPORT_NE2K */
+#endif /* if BX_NETWORKING && defined HAVE_TUNTAP */
