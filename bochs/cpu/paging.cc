@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.18 2002-09-06 19:21:55 yakovlev Exp $
+// $Id: paging.cc,v 1.19 2002-09-07 05:21:28 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -347,18 +347,27 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 
   void
-BX_CPU_C::enable_paging(void)
+BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
 {
-  TLB_flush();
-  if (bx_dbg.paging) BX_INFO(("enable_paging():"));
-//BX_DEBUG(( "enable_paging():-------------------------" ));
+  // Modification of PG,PE flushes TLB cache according to docs.
+  // Additionally, the TLB strategy is based on the current value of
+  // WP, so if that changes we must also flush the TLB.
+  if ( (oldCR0 & 0x80010001) != (newCR0 & 0x80010001) )
+    TLB_flush(1); // 1 = Flush Global entries also.
+
+  if (bx_dbg.paging)
+    BX_INFO(("pagingCR0Changed(0x%x -> 0x%x):", oldCR0, newCR0));
 }
 
   void
-BX_CPU_C::disable_paging(void)
+BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 {
-  TLB_flush();
-  if (bx_dbg.paging) BX_INFO(("disable_paging():"));
+  // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
+  if ( (oldCR4 & 0x000000b0) != (newCR4 & 0x000000b0) )
+    TLB_flush(1); // 1 = Flush Global entries also.
+
+  if (bx_dbg.paging)
+    BX_INFO(("pagingCR4Changed(0x%x -> 0x%x):", oldCR4, newCR4));
 }
 
   void
@@ -370,26 +379,14 @@ BX_CPU_C::CR3_change(Bit32u value32)
     }
 
   // flush TLB even if value does not change
-  TLB_flush();
+  TLB_flush(0); // 0 = Don't flush Global entries.
   BX_CPU_THIS_PTR cr3 = value32;
-}
-
-  void
-BX_CPU_C::pagingWPChanged(void)
-{
-  // Since our TLB contains markings dependent on the previous value
-  // of CR0.WP, clear the cache and start over.
-  TLB_clear();
-#ifndef _MSC_VER
-#warning "duplicate with disable_paging etc?"
-// maybe just do pagingCR0Changed()
-#endif
 }
 
   void
 BX_CPU_C::pagingA20Changed(void)
 {
-  TLB_clear();
+  TLB_flush(1); // 1 = Flush Global entries too.
 }
 
   void
@@ -447,7 +444,7 @@ BX_CPU_C::TLB_init(void)
 }
 
   void
-BX_CPU_C::TLB_flush(void)
+BX_CPU_C::TLB_flush(Boolean invalidateGlobal)
 {
 #if BX_USE_TLB
 #if BX_USE_QUICK_TLB_INVALIDATE
@@ -457,31 +454,11 @@ BX_CPU_C::TLB_flush(void)
 #endif
 
     for (unsigned i=0; i<BX_TLB_SIZE; i++) {
-      BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
-    }
-
-#if BX_USE_QUICK_TLB_INVALIDATE
-    BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
-  }
-#endif
-#endif  // #if BX_USE_TLB
-
-  invalidate_prefetch_q();
-}
-
-  void
-BX_CPU_C::TLB_clear(void)
-{
-#if BX_USE_TLB
-#if BX_USE_QUICK_TLB_INVALIDATE
-  BX_CPU_THIS_PTR TLB.tlb_invalidate--;
-
-  if(BX_CPU_THIS_PTR TLB.tlb_invalidate == 0 ) {
-#endif
-
-    for (unsigned i=0; i<BX_TLB_SIZE; i++) {
-      BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
-    }
+      // To be conscious of the native cache line usage, only
+      // write to (invalidate) entries which need it.
+      if (BX_CPU_THIS_PTR TLB.entry[i].lpf != BX_INVALID_TLB_ENTRY)
+        BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
+      }
 
 #if BX_USE_QUICK_TLB_INVALIDATE
     BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
@@ -494,6 +471,9 @@ BX_CPU_C::TLB_clear(void)
 BX_CPU_C::INVLPG(BxInstruction_t* i)
 {
 #if BX_CPU_LEVEL >= 4
+  Bit32u   TLB_index;
+  Bit32u laddr;
+
   invalidate_prefetch_q();
 
   // Operand must not be a register
@@ -514,8 +494,11 @@ BX_CPU_C::INVLPG(BxInstruction_t* i)
     }
 
 #if BX_USE_TLB
-  // Just clear the entire TLB, ugh!
-  TLB_clear();
+  //TLB_flush(1); // Just clear the entire TLB, ugh!
+  laddr = BX_CPU_THIS_PTR sregs[i->seg].cache.u.segment.base + i->rm_addr;
+  TLB_index = BX_TLB_INDEX_OF(laddr);
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
+
 #endif // BX_USE_TLB
   BX_INSTR_TLB_CNTRL(BX_INSTR_INVLPG, 0);
 

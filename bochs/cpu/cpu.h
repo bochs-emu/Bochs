@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.35 2002-09-06 21:54:57 kevinlawton Exp $
+// $Id: cpu.h,v 1.36 2002-09-07 05:21:28 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1485,8 +1485,7 @@ public: // for now...
                      unsigned rw, void *data);
   BX_SMF Bit32u itranslate_linear(Bit32u laddress, unsigned pl);
   BX_SMF Bit32u dtranslate_linear(Bit32u laddress, unsigned pl, unsigned rw);
-  BX_SMF void TLB_flush(void);
-  BX_SMF void TLB_clear(void);
+  BX_SMF void TLB_flush(Boolean invalidateGlobal);
   BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(Boolean value);
   BX_SMF char *strseg(bx_segment_reg_t *seg);
@@ -1497,10 +1496,9 @@ public: // for now...
 #endif
   BX_SMF int  int_number(bx_segment_reg_t *seg);
   BX_SMF void shutdown_cpu(void);
-  BX_SMF void enable_paging(void);
-  BX_SMF void disable_paging(void);
   BX_SMF void CR3_change(Bit32u value32);
-  BX_SMF void pagingWPChanged(void);
+  BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0);
+  BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4);
   BX_SMF void pagingA20Changed(void);
 
   BX_SMF void reset(unsigned source);

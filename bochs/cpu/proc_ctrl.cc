@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.29 2002-09-05 02:31:24 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.30 2002-09-07 05:21:28 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -366,6 +366,8 @@ BX_CPU_C::LMSW_Ew(BxInstruction_t *i)
   Bit16u msw;
   Bit32u cr0;
 
+  invalidate_prefetch_q();
+
   if (v8086_mode()) BX_PANIC(("proc_ctrl: LMSW in v8086 mode unsupported"));
 
   if ( protected_mode() ) {
@@ -495,6 +497,8 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       // Reserved bits take on value of MOV instruction
       CR3_change(val_32);
       BX_INSTR_TLB_CNTRL(BX_INSTR_MOV_CR3, val_32);
+      // Reload of CR3 always serializes.
+      // invalidate_prefetch_q(); // Already done.
       break;
     case 4: // CR4
       {
@@ -504,6 +508,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
       UndefinedOpcode(i);
 #else
       Bit32u allowMask = 0;
+      Bit32u oldCR4 = BX_CPU_THIS_PTR cr4;
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
 
@@ -518,6 +523,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
 
       val_32 = val_32 & allowMask; // Screen out unsupported bits.
       BX_CPU_THIS_PTR cr4 = val_32;
+      pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4);
 #endif
       }
       break;
@@ -1073,6 +1079,7 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 #if BX_CPU_LEVEL >= 4
   Boolean prev_wp;
 #endif
+  Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
 
   prev_pe = BX_CPU_THIS_PTR cr0.pe;
   prev_pg = BX_CPU_THIS_PTR cr0.pg;
@@ -1094,16 +1101,17 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 
   // handle reserved bits behaviour
 #if BX_CPU_LEVEL == 3
-  BX_CPU_THIS_PTR cr0.val32 = val_32 | 0x7ffffff0;
+  newCR0 = val_32 | 0x7ffffff0;
 #elif BX_CPU_LEVEL == 4
-  BX_CPU_THIS_PTR cr0.val32 = (val_32 | 0x00000010) & 0xe005003f;
+  newCR0 = (val_32 | 0x00000010) & 0xe005003f;
 #elif BX_CPU_LEVEL == 5
-  BX_CPU_THIS_PTR cr0.val32 = val_32 | 0x00000010;
+  newCR0 = val_32 | 0x00000010;
 #elif BX_CPU_LEVEL == 6
-  BX_CPU_THIS_PTR cr0.val32 = (val_32 | 0x00000010) & 0xe005003f;
+  newCR0 = (val_32 | 0x00000010) & 0xe005003f;
 #else
 #error "MOV_CdRd: implement reserved bits behaviour for this CPU_LEVEL"
 #endif
+  BX_CPU_THIS_PTR cr0.val32 = newCR0;
 
   //if (BX_CPU_THIS_PTR cr0.ts)
   //  BX_INFO(("MOV_CdRd:CR0.TS set 0x%x", (unsigned) val_32));
@@ -1115,12 +1123,9 @@ BX_CPU_C::SetCR0(Bit32u val_32)
     enter_real_mode();
     }
 
-  if (prev_pg==0 && BX_CPU_THIS_PTR cr0.pg)
-    enable_paging();
-  else if (prev_pg==1 && BX_CPU_THIS_PTR cr0.pg==0)
-    disable_paging();
-  if (prev_wp != BX_CPU_THIS_PTR cr0.wp)
-    pagingWPChanged();
+  // Give the paging unit a chance to look for changes in bits
+  // it cares about, like {PG,PE}, so it can flush cache entries etc.
+  pagingCR0Changed(oldCR0, newCR0);
 }
 
 
