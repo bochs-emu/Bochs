@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.harddisk-modes
 Author: justin SB, Sharvil Nanavati, Christophe Bothamy
-Date: Sun Mar 16 01:09:43 CET 2003
+Date: Tue Mar 18 00:38:18 CET 2003
 Status: proposed, applyable
 
 Detailed description:
@@ -36,15 +36,16 @@ Detailed description:
     - update bximage to create growable disks
     - implement redolog class
     - implement additionnal mode growable
+    - implement additionnal mode undoable
+    - implement additionnal mode volatile
 
   Still to do :
     - update bximage to create split disks
     - add command line switches to bximage
     - check availability of zlib for win32
     - check for zlib in ./configure
-    - implement additionnal mode undoable
     - implement additionnal mode split
-    - implement additionnal mode volatile
+    - check for mkstemp on win32/configure. Provide a replacement
     - implement additionnal mode z-undowable
     - implement additionnal mode z-volatile
     - handle new "mode" option in wxwindow config interface
@@ -65,7 +66,7 @@ RCS file: /cvsroot/bochs/bochs/.bochsrc,v
 retrieving revision 1.67
 diff -u -r1.67 .bochsrc
 --- .bochsrc	10 Mar 2003 11:45:26 -0000	1.67
-+++ .bochsrc	16 Mar 2003 00:08:53 -0000
++++ .bochsrc	17 Mar 2003 23:42:12 -0000
 @@ -150,7 +150,7 @@
  # ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
  # 
@@ -121,7 +122,7 @@ RCS file: /cvsroot/bochs/bochs/bochs.h,v
 retrieving revision 1.120
 diff -u -r1.120 bochs.h
 --- bochs.h	26 Feb 2003 02:41:29 -0000	1.120
-+++ bochs.h	16 Mar 2003 00:08:55 -0000
++++ bochs.h	17 Mar 2003 23:42:12 -0000
 @@ -49,6 +49,8 @@
  #include <stdio.h>
  #include <stdlib.h>
@@ -137,7 +138,7 @@ RCS file: /cvsroot/bochs/bochs/config.h.in,v
 retrieving revision 1.108
 diff -u -r1.108 config.h.in
 --- config.h.in	11 Mar 2003 19:45:34 -0000	1.108
-+++ config.h.in	16 Mar 2003 00:08:57 -0000
++++ config.h.in	17 Mar 2003 23:42:14 -0000
 @@ -285,15 +285,8 @@
  
  #define BX_GDBSTUB 0
@@ -162,7 +163,7 @@ RCS file: /cvsroot/bochs/bochs/configure,v
 retrieving revision 1.202
 diff -u -r1.202 configure
 --- configure	2 Mar 2003 23:59:03 -0000	1.202
-+++ configure	16 Mar 2003 00:09:53 -0000
++++ configure	17 Mar 2003 23:43:09 -0000
 @@ -1,5 +1,5 @@
  #! /bin/sh
 -# From configure.in Id: configure.in,v 1.201 2003/02/21 14:40:59 cisc Exp .
@@ -243,7 +244,7 @@ RCS file: /cvsroot/bochs/bochs/configure.in,v
 retrieving revision 1.202
 diff -u -r1.202 configure.in
 --- configure.in	2 Mar 2003 23:59:08 -0000	1.202
-+++ configure.in	16 Mar 2003 00:09:58 -0000
++++ configure.in	17 Mar 2003 23:43:13 -0000
 @@ -684,22 +684,22 @@
  AC_SUBST(IOAPIC_OBJS)
  AC_SUBST(APIC_OBJS)
@@ -280,7 +281,7 @@ RCS file: /cvsroot/bochs/bochs/main.cc,v
 retrieving revision 1.223
 diff -u -r1.223 main.cc
 --- main.cc	13 Feb 2003 15:51:12 -0000	1.223
-+++ main.cc	16 Mar 2003 00:10:09 -0000
++++ main.cc	17 Mar 2003 23:43:24 -0000
 @@ -195,6 +195,7 @@
          switch (val) {
            case BX_ATA_DEVICE_DISK:
@@ -446,7 +447,7 @@ RCS file: /cvsroot/bochs/bochs/doc/docbook/misc.txt,v
 retrieving revision 1.21
 diff -u -r1.21 misc.txt
 --- doc/docbook/misc.txt	15 Dec 2002 18:00:28 -0000	1.21
-+++ doc/docbook/misc.txt	16 Mar 2003 00:10:11 -0000
++++ doc/docbook/misc.txt	17 Mar 2003 23:43:27 -0000
 @@ -476,3 +476,70 @@
  copied the expected image to a.img and continued.
  
@@ -524,7 +525,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
 retrieving revision 1.94
 diff -u -r1.94 siminterface.cc
 --- gui/siminterface.cc	6 Feb 2003 23:16:55 -0000	1.94
-+++ gui/siminterface.cc	16 Mar 2003 00:10:16 -0000
++++ gui/siminterface.cc	17 Mar 2003 23:43:30 -0000
 @@ -442,14 +442,17 @@
  
  char *floppy_status_names[] = { "ejected", "inserted", NULL };
@@ -551,7 +552,7 @@ RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
 retrieving revision 1.99
 diff -u -r1.99 siminterface.h
 --- gui/siminterface.h	6 Feb 2003 23:16:54 -0000	1.99
-+++ gui/siminterface.h	16 Mar 2003 00:10:20 -0000
++++ gui/siminterface.h	17 Mar 2003 23:43:34 -0000
 @@ -199,6 +199,14 @@
    BXP_ATA2_SLAVE_TYPE,
    BXP_ATA3_MASTER_TYPE,
@@ -611,7 +612,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
 retrieving revision 1.40
 diff -u -r1.40 Makefile.in
 --- iodev/Makefile.in	3 Mar 2003 17:39:16 -0000	1.40
-+++ iodev/Makefile.in	16 Mar 2003 00:10:27 -0000
++++ iodev/Makefile.in	17 Mar 2003 23:43:41 -0000
 @@ -92,6 +92,7 @@
  
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
@@ -2213,10 +2214,10 @@ RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
 retrieving revision 1.97
 diff -u -r1.97 harddrv.cc
 --- iodev/harddrv.cc	5 Mar 2003 10:43:52 -0000	1.97
-+++ iodev/harddrv.cc	16 Mar 2003 00:10:42 -0000
++++ iodev/harddrv.cc	17 Mar 2003 23:43:54 -0000
 @@ -1,4 +1,3 @@
 -/////////////////////////////////////////////////////////////////////////
- // $Id: patch.harddisk-modes,v 1.4 2003-03-16 00:28:04 cbothamy Exp $
+ // $Id: patch.harddisk-modes,v 1.5 2003-03-17 23:48:33 cbothamy Exp $
  /////////////////////////////////////////////////////////////////////////
  //
 @@ -31,12 +30,14 @@
@@ -2284,7 +2285,7 @@ diff -u -r1.97 harddrv.cc
          int cyl = bx_options.atadevice[channel][device].Ocylinders->get ();
          int heads = bx_options.atadevice[channel][device].Oheads->get ();
          int spt = bx_options.atadevice[channel][device].Ospt->get ();
-+        Bit64u disk_size = (Bit64u)cyl * heads * heads * spt * 512;
++        Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
 +
 +        /* instantiate the right class */
 +        switch (bx_options.atadevice[channel][device].Omode->get()) {
@@ -2335,13 +2336,13 @@ diff -u -r1.97 harddrv.cc
 +                                    bx_options.atadevice[channel][device].Opath->getptr ()));
 +            channels[channel].drives[device].hard_drive = new split_image_t();
 +            break;
++#endif
 +
 +          case BX_ATA_MODE_UNDOABLE:
 +            BX_INFO(("HD on ata%d-%d: '%s' 'undoable' mode ", channel, device, 
 +                                    bx_options.atadevice[channel][device].Opath->getptr ()));
-+            channels[channel].drives[device].hard_drive = new undoable_image_t();
++            channels[channel].drives[device].hard_drive = new undoable_image_t(disk_size);
 +            break;
-+#endif
 +
 +          case BX_ATA_MODE_GROWABLE:
 +            BX_INFO(("HD on ata%d-%d: '%s' 'growable' mode ", channel, device, 
@@ -2349,13 +2350,13 @@ diff -u -r1.97 harddrv.cc
 +            channels[channel].drives[device].hard_drive = new growable_image_t(disk_size);
 +            break;
 +
-+#if 0
 +          case BX_ATA_MODE_VOLATILE:
 +            BX_INFO(("HD on ata%d-%d: '%s' 'volatile' mode ", channel, device, 
 +                                    bx_options.atadevice[channel][device].Opath->getptr ()));
-+            channels[channel].drives[device].hard_drive = new volatile_image_t();
++            channels[channel].drives[device].hard_drive = new volatile_image_t(disk_size);
 +            break;
 +
++#if 0
 +#if BX_SUPPORT_COMPRESSED_HD
 +          case BX_ATA_MODE_Z_UNDOABLE:
 +            BX_INFO(("HD on ata%d-%d: '%s' 'z-undoable' mode ", channel, device, 
@@ -3006,7 +3007,7 @@ diff -u -r1.97 harddrv.cc
  
  error_recovery_t::error_recovery_t ()
  {
-@@ -3405,3 +4019,400 @@
+@@ -3405,3 +4019,543 @@
  {
        return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
  }
@@ -3025,9 +3026,10 @@ diff -u -r1.97 harddrv.cc
 +void
 +redolog_t::print_header()
 +{
-+        BX_INFO(("redolog : Standard Header : magic='%s', type='%s', version = %d",
++        BX_INFO(("redolog : Standard Header : magic='%s', type='%s', version = %d.%d",
 +                header.standard.magic, header.standard.type,
-+                dtoh32(header.standard.version)));
++                dtoh32(header.standard.version)/0x10000,
++                dtoh32(header.standard.version)%0x10000));
 +        BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = %lld",
 +                dtoh32(header.specific.catalog),
 +                dtoh32(header.specific.bitmap),
@@ -3078,7 +3080,7 @@ diff -u -r1.97 harddrv.cc
 +        if ((catalog == NULL) || (bitmap==NULL))
 +                BX_PANIC(("redolog : could not malloc catalog or bitmap"));
 +
-+        for (Bit32u i=0; i<header.specific.catalog; i++)
++        for (Bit32u i=0; i<dtoh32(header.specific.catalog); i++)
 +                catalog[i] = htod32(REDOLOG_PAGE_NOT_ALLOCATED);
 +
 +        bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
@@ -3093,29 +3095,41 @@ diff -u -r1.97 harddrv.cc
 +int 
 +redolog_t::create (const char* filename, const char* type, Bit64u size)
 +{
-+        if (make_header(type, size) < 0)
-+        {
-+                return -1;
-+        }
++        int filedes;
 +
-+        fd = ::open(filename, O_RDWR | O_CREAT | O_TRUNC
++        BX_INFO(("redolog : creating redolog %s", filename));
++
++        filedes = ::open(filename, O_RDWR | O_CREAT | O_TRUNC
 +#ifdef O_BINARY
 +            | O_BINARY
 +#endif
 +              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
++
++        return create(filedes, type, size);
++}
++
++int 
++redolog_t::create (int filedes, const char* type, Bit64u size)
++{
++        fd = filedes;
++
 +        if (fd < 0)
 +        {
 +                // open failed.
 +                return -1;
 +        }
-+        BX_INFO(("redolog : created image %s", filename));
-+      
++
++        if (make_header(type, size) < 0)
++        {
++                return -1;
++        }
++
 +        // Write header
-+        ::write(fd, &header, header.standard.header);
++        ::write(fd, &header, dtoh32(header.standard.header));
 +
 +        // Write catalog
 +        // FIXME could mmap
-+        ::write(fd, &catalog, header.specific.catalog * sizeof (Bit32u));
++        ::write(fd, catalog, dtoh32(header.specific.catalog) * sizeof (Bit32u));
 +
 +        return 0;
 +}
@@ -3125,7 +3139,7 @@ diff -u -r1.97 harddrv.cc
 +{
 +        int res;
 +
-+        fd = ::open(filename, O_RDWR 
++        fd = ::open(filename, O_RDWR
 +#ifdef O_BINARY
 +            | O_BINARY
 +#endif
@@ -3266,8 +3280,10 @@ diff -u -r1.97 harddrv.cc
 +                return 0;
 +        }
 +
-+        if ( (bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01 == 0x00 )
++        if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
 +        {
++                BX_DEBUG(("read not in redolog"));
++
 +                // bitmap says bloc not in reloglog
 +                return 0;
 +        }
@@ -3346,12 +3362,10 @@ diff -u -r1.97 harddrv.cc
 +                return 0;
 +        }
 +
-+        // If bloc belongs to extent
-+        if ( (bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01 != 0x00 )
++        // If bloc does not belong to extent yet
++        if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
 +        {
-+                BX_DEBUG(("redolog : writing bitmap"));
-+
-+                bitmap[extent_offset/8] = 1 << (extent_offset%8);
++                bitmap[extent_offset/8] |= 1 << (extent_offset%8);
 +                ::lseek(fd, bitmap_offset, SEEK_SET);
 +                ::write(fd, bitmap,  dtoh32(header.specific.bitmap));
 +        }
@@ -3407,14 +3421,144 @@ diff -u -r1.97 harddrv.cc
 +      return redolog->write((char*) buf, count);
 +}
 +
++
++/*** undoable_image_t function definitions ***/
++
++undoable_image_t::undoable_image_t(Bit64u _size)
++{
++        redolog = new redolog_t();
++        ro_disk = new default_image_t();
++        size = _size;
++}
++
++int undoable_image_t::open (const char* pathname)
++{
++        char *redolog_name;
++
++        if (ro_disk->open(pathname, O_RDONLY)<0)
++                return -1;
++
++        redolog_name = (char*)malloc(strlen(pathname) + strlen(REDOLOG_EXTENSION) + 1);
++        sprintf (redolog_name, "%s%s", pathname, REDOLOG_EXTENSION);
++        if (redolog->open(redolog_name,REDOLOG_TYPE_UNDOABLE,size) < 0)
++        {
++                if (redolog->create(redolog_name, REDOLOG_TYPE_UNDOABLE, size) < 0)
++                {
++                        BX_PANIC(("Can't open or create redolog %s",redolog_name));
++                        return -1;
++                }
++        }
++
++        free(redolog_name);
++
++        return 0;
++}
++
++void undoable_image_t::close ()
++{
++        redolog->close();
++        ro_disk->close();
++}
++
++off_t undoable_image_t::lseek (off_t offset, int whence)
++{
++      redolog->lseek(offset, whence);
++      return ro_disk->lseek(offset, whence);
++}
++
++ssize_t undoable_image_t::read (void* buf, size_t count)
++{
++      // This should be fixed if count != 512
++      if (redolog->read((char*) buf, count) != count)
++              return ro_disk->read((char*) buf, count);
++      else 
++              return count;
++}
++
++ssize_t undoable_image_t::write (const void* buf, size_t count)
++{
++      return redolog->write((char*) buf, count);
++}
++
++
++/*** volatile_image_t function definitions ***/
++
++volatile_image_t::volatile_image_t(Bit64u _size)
++{
++        redolog = new redolog_t();
++        ro_disk = new default_image_t();
++        size = _size;
++        redolog_name = NULL;
++}
++
++int volatile_image_t::open (const char* pathname)
++{
++        int filedes;
++
++        if (ro_disk->open(pathname, O_RDONLY)<0)
++                return -1;
++
++        redolog_name = (char*)malloc(strlen(pathname) + strlen(".XXXXXX") + 1);
++        sprintf (redolog_name, "%s%s", pathname, ".XXXXXX");
++#if defined(WIN32)
++#error mkstemp does not exist on win32
++#endif
++        if ((filedes=mkstemp (redolog_name)) < 0)
++        {
++                BX_PANIC(("Can't create temporary redolog"));
++                return -1;
++        }
++        if (redolog->create(filedes, REDOLOG_TYPE_VOLATILE, size) < 0)
++        {
++                BX_PANIC(("Can't create temporary redolog"));
++                return -1;
++        }
++        
++#if (!defined(WIN32)) && !BX_WITH_MACOS
++        unlink(redolog_name);
++#endif
++        return 0;
++}
++
++void volatile_image_t::close ()
++{
++        redolog->close();
++        ro_disk->close();
++
++#if defined(WIN32) || BX_WITH_MACOS
++        unlink(redolog_name);
++#endif
++        free(redolog_name);
++}
++
++off_t volatile_image_t::lseek (off_t offset, int whence)
++{
++      redolog->lseek(offset, whence);
++      return ro_disk->lseek(offset, whence);
++}
++
++ssize_t volatile_image_t::read (void* buf, size_t count)
++{
++      // This should be fixed if count != 512
++      if (redolog->read((char*) buf, count) != count)
++              return ro_disk->read((char*) buf, count);
++      else 
++              return count;
++}
++
++ssize_t volatile_image_t::write (const void* buf, size_t count)
++{
++      return redolog->write((char*) buf, count);
++}
++
 Index: iodev/harddrv.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
 retrieving revision 1.19
 diff -u -r1.19 harddrv.h
 --- iodev/harddrv.h	2 Mar 2003 23:59:11 -0000	1.19
-+++ iodev/harddrv.h	16 Mar 2003 00:10:44 -0000
-@@ -24,6 +24,73 @@
++++ iodev/harddrv.h	17 Mar 2003 23:43:56 -0000
+@@ -24,6 +24,76 @@
  //  License along with this library; if not, write to the Free Software
  //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  
@@ -3453,6 +3597,9 @@ diff -u -r1.19 harddrv.h
 +#define REDOLOG_TYPE_GROWABLE "Growable"
 +
 +#define REDOLOG_PAGE_NOT_ALLOCATED (0xffffffff)
++
++#define REDOLOG_EXTENSION ".redolog"
++
 + typedef struct
 + {
 +   Bit32u  catalog;
@@ -3488,7 +3635,7 @@ diff -u -r1.19 harddrv.h
  typedef enum _sense {
        SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
        SENSE_UNIT_ATTENTION = 6
-@@ -64,12 +131,16 @@
+@@ -64,12 +134,16 @@
        unsigned sectors;
  };
  
@@ -3505,7 +3652,7 @@ diff -u -r1.19 harddrv.h
        // Close the image.
        void close ();
  
-@@ -87,10 +158,10 @@
+@@ -87,10 +161,10 @@
  
    private:
        int fd;
@@ -3518,7 +3665,7 @@ diff -u -r1.19 harddrv.h
  class concat_image_t : public device_image_t
  {
    public:
-@@ -135,7 +206,81 @@
+@@ -135,7 +209,81 @@
        int fd;     // fd to use for reads and writes
        off_t thismin, thismax; // byte offset boundary of this image
  };
@@ -3601,7 +3748,7 @@ diff -u -r1.19 harddrv.h
  
  #if EXTERNAL_DISK_SIMULATOR
  #include "external-disk-simulator.h"
-@@ -169,6 +314,64 @@
+@@ -169,6 +317,129 @@
  };
  #endif
  
@@ -3612,6 +3759,7 @@ diff -u -r1.19 harddrv.h
 +      redolog_t();
 +      int make_header (const char* type, Bit64u size);
 +      int create (const char* filename, const char* type, Bit64u size);
++      int create (int filedes, const char* type, Bit64u size);
 +      int open (const char* filename, const char* type, Bit64u size);
 +      void close ();
 +
@@ -3663,10 +3811,74 @@ diff -u -r1.19 harddrv.h
 +      Bit64u    size;
 +};
 +
++// UNDOABLE MODE
++class undoable_image_t : public device_image_t
++{
++  public:
++      // Contructor
++      undoable_image_t(Bit64u size);
++
++      // Open a image. Returns non-negative if successful.
++      int open (const char* pathname);
++
++      // Close the image.
++      void close ();
++
++      // Position ourselves. Return the resulting offset from the
++      // beginning of the file.
++      off_t lseek (off_t offset, int whence);
++
++      // Read count bytes to the buffer buf. Return the number of
++      // bytes read (count).
++      ssize_t read (void* buf, size_t count);
++
++      // Write count bytes from buf. Return the number of bytes
++      // written (count).
++      ssize_t write (const void* buf, size_t count);
++
++  private:
++      redolog_t *redolog;
++      default_image_t *ro_disk;
++      Bit64u    size;
++};
++
++
++// VOLATILE MODE
++class volatile_image_t : public device_image_t
++{
++  public:
++      // Contructor
++      volatile_image_t(Bit64u size);
++
++      // Open a image. Returns non-negative if successful.
++      int open (const char* pathname);
++
++      // Close the image.
++      void close ();
++
++      // Position ourselves. Return the resulting offset from the
++      // beginning of the file.
++      off_t lseek (off_t offset, int whence);
++
++      // Read count bytes to the buffer buf. Return the number of
++      // bytes read (count).
++      ssize_t read (void* buf, size_t count);
++
++      // Write count bytes from buf. Return the number of bytes
++      // written (count).
++      ssize_t write (const void* buf, size_t count);
++
++  private:
++      redolog_t *redolog;
++      default_image_t *ro_disk;
++      Bit64u    size;
++      char *redolog_name;
++};
++
  
  typedef struct {
    struct {
-@@ -367,3 +570,5 @@
+@@ -367,3 +638,5 @@
  #endif
  
    };
@@ -3678,7 +3890,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
 retrieving revision 1.31
 diff -u -r1.31 iodev.h
 --- iodev/iodev.h	2 Mar 2003 23:59:11 -0000	1.31
-+++ iodev/iodev.h	16 Mar 2003 00:10:45 -0000
++++ iodev/iodev.h	17 Mar 2003 23:43:57 -0000
 @@ -397,6 +397,7 @@
  #include "iodev/dma.h"
  #include "iodev/floppy.h"
@@ -3693,12 +3905,12 @@ RCS file: /cvsroot/bochs/bochs/misc/bximage.c,v
 retrieving revision 1.17
 diff -u -r1.17 bximage.c
 --- misc/bximage.c	26 Nov 2002 11:21:31 -0000	1.17
-+++ misc/bximage.c	16 Mar 2003 00:10:46 -0000
++++ misc/bximage.c	17 Mar 2003 23:43:58 -0000
 @@ -1,4 +1,4 @@
 -/* 
 +/*
   * misc/bximage.c
-  * $Id: patch.harddisk-modes,v 1.4 2003-03-16 00:28:04 cbothamy Exp $
+  * $Id: patch.harddisk-modes,v 1.5 2003-03-17 23:48:33 cbothamy Exp $
   *
 @@ -16,6 +16,15 @@
  #endif
@@ -3714,7 +3926,7 @@ diff -u -r1.17 bximage.c
 +#include "../iodev/harddrv.h"
 +
  char *EOF_ERR = "ERROR: End of input";
- char *rcsid = "$Id: patch.harddisk-modes,v 1.4 2003-03-16 00:28:04 cbothamy Exp $";
+ char *rcsid = "$Id: patch.harddisk-modes,v 1.5 2003-03-17 23:48:33 cbothamy Exp $";
  char *divider = "========================================================================";
 @@ -30,6 +39,11 @@
  char *fdsize_choices[] = { "0.36","0.72","1.2","1.44","2.88" };
@@ -4021,7 +4233,7 @@ diff -u -r1.17 bximage.c
    return 0;
  }
 --- /dev/null	2003-02-09 00:55:40.000000000 +0100
-+++ iodev/vmware3.cc	2003-03-15 12:33:14.000000000 +0100
++++ iodev/vmware3.cc	2003-03-17 22:44:51.000000000 +0100
 @@ -0,0 +1,392 @@
 +/*
 + * This file provides support for VMWare's virtual disk image
@@ -4416,7 +4628,7 @@ diff -u -r1.17 bximage.c
 +    current = 0;
 +}
 --- /dev/null	2003-02-09 00:55:40.000000000 +0100
-+++ iodev/vmware3.h	2003-03-15 12:33:14.000000000 +0100
++++ iodev/vmware3.h	2003-03-17 22:44:51.000000000 +0100
 @@ -0,0 +1,95 @@
 +/*
 + * This file provides the interface for using VMWare's virtual
