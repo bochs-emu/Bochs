@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.52 2004-09-25 22:15:02 vruppert Exp $
+// $Id: iodev.h,v 1.53 2004-12-02 21:34:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -304,6 +304,13 @@ class BOCHSAPI bx_speaker_stub_c : public bx_devmodel_c {
   virtual void beep_off() {}
 };
 
+class BOCHSAPI bx_serial_stub_c : public bx_devmodel_c {
+  public:
+  virtual void serial_mouse_enq(int delta_x, int delta_y, unsigned button_state) {
+    STUBFUNC(serial, serial_mouse_enq);
+  }
+};
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -359,7 +366,7 @@ public:
   bx_dma_stub_c     *pluginDmaDevice;
   bx_floppy_stub_c  *pluginFloppyDevice;
   bx_cmos_stub_c    *pluginCmosDevice;
-  bx_devmodel_c     *pluginSerialDevice;
+  bx_serial_stub_c  *pluginSerialDevice;
   bx_devmodel_c     *pluginParallelDevice;
   bx_devmodel_c     *pluginUnmapped;
   bx_vga_stub_c     *pluginVgaDevice;
@@ -385,9 +392,10 @@ public:
   bx_floppy_stub_c  stubFloppy;
   bx_vga_stub_c  stubVga;
   bx_pci_stub_c  stubPci;
-  bx_pci2isa_stub_c  stubPci2Isa;
-  bx_ne2k_stub_c stubNE2k;
+  bx_pci2isa_stub_c stubPci2Isa;
+  bx_ne2k_stub_c    stubNE2k;
   bx_speaker_stub_c stubSpeaker;
+  bx_serial_stub_c  stubSerial;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle

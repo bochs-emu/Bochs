@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.58 2004-11-27 10:09:27 vruppert Exp $
+// $Id: serial.cc,v 1.59 2004-12-02 21:34:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -106,6 +106,13 @@ bx_serial_c::init(void)
   Bit16u ports[BX_SERIAL_MAXDEV] = {0x03f8, 0x02f8, 0x03e8, 0x02e8};
   char name[16];
 
+  BX_SER_THIS mouse_port = -1;
+  BX_SER_THIS mouse_internal_buffer.num_elements = 0;
+  for (int i=0; i<BX_MOUSE_BUFF_SIZE; i++)
+    BX_SER_THIS mouse_internal_buffer.buffer[i] = 0;
+  BX_SER_THIS mouse_internal_buffer.head = 0;
+  BX_SER_THIS mouse_delayed_dx = 0;
+  BX_SER_THIS mouse_delayed_dy = 0;
   /*
    * Put the UART registers into their RESET state
    */
@@ -263,6 +270,7 @@ bx_serial_c::init(void)
 #endif
       } else if (!strcmp(mode, "mouse")) {
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_MOUSE;
+        BX_SER_THIS mouse_port = i;
       } else if (strcmp(mode, "null")) {
         BX_PANIC(("unknown serial i/o mode"));
       }
@@ -804,7 +812,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case BX_SER_MCR: /* MODEM control register */
-      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) {
+      if ((BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) &&
+          (BX_SER_THIS s[port].line_cntl.wordlen_sel == 2)) {
         detect_mouse = (new_b0 & new_b1);
       }
       if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
@@ -1149,7 +1158,13 @@ bx_serial_c::rx_timer(void)
 #endif
         break;
       case BX_SER_MODE_MOUSE:
-        // TODO: get data from mouse queue
+        if (BX_SER_THIS mouse_internal_buffer.num_elements > 0) {
+          chbuf = BX_SER_THIS mouse_internal_buffer.buffer[BX_SER_THIS mouse_internal_buffer.head];
+          BX_SER_THIS mouse_internal_buffer.head = (BX_SER_THIS mouse_internal_buffer.head + 1) %
+            BX_MOUSE_BUFF_SIZE;
+          BX_SER_THIS mouse_internal_buffer.num_elements--;
+          data_ready = 1;
+        }
         break;
     }
     if (data_ready) {
@@ -1200,4 +1215,71 @@ bx_serial_c::fifo_timer(void)
   }
   BX_SER_THIS s[port].line_status.rxdata_ready = 1;
   raise_interrupt(port, BX_SER_INT_FIFO);
+}
+
+
+  void
+bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, unsigned button_state)
+{
+  Bit8u b1, b2, mouse_data[3];
+  int tail;
+
+  if (BX_SER_THIS mouse_port == -1) {
+    BX_ERROR(("mouse not connected to a serial port"));
+    return;
+  }
+
+  // scale down the motion
+  if ( (delta_x < -1) || (delta_x > 1) )
+    delta_x /= 2;
+  if ( (delta_y < -1) || (delta_y > 1) )
+    delta_y /= 2;
+
+  if(delta_x>127) delta_x=127;
+  if(delta_y>127) delta_y=127;
+  if(delta_x<-128) delta_x=-128;
+  if(delta_y<-128) delta_y=-128;
+
+  BX_SER_THIS mouse_delayed_dx+=delta_x;
+  BX_SER_THIS mouse_delayed_dy-=delta_y;
+
+  if ((BX_SER_THIS mouse_internal_buffer.num_elements + 3) >= BX_MOUSE_BUFF_SIZE) {
+    return; /* buffer doesn't have the space */
+  }
+
+  if (BX_SER_THIS mouse_delayed_dx > 127) {
+    delta_x = 127;
+    BX_SER_THIS mouse_delayed_dx -= 127;
+  } else if (BX_SER_THIS mouse_delayed_dx < -128) {
+    delta_x = -128;
+    BX_SER_THIS mouse_delayed_dx += 128;
+  } else {
+    delta_x = BX_SER_THIS mouse_delayed_dx;
+    BX_SER_THIS mouse_delayed_dx = 0;
+  }
+  if (BX_SER_THIS mouse_delayed_dy > 127) {
+    delta_y = 127;
+    BX_SER_THIS mouse_delayed_dy -= 127;
+  } else if (BX_SER_THIS mouse_delayed_dy < -128) {
+    delta_y = -128;
+    BX_SER_THIS mouse_delayed_dy += 128;
+  } else {
+    delta_y = BX_SER_THIS mouse_delayed_dy;
+    BX_SER_THIS mouse_delayed_dy = 0;
+  }
+
+  b1 = (Bit8u)delta_x;
+  b2 = (Bit8u)delta_y;
+  mouse_data[0] = 0x40 | ((b1 & 0xc0) >> 6) | ((b2 & 0xc0) >> 4);
+  mouse_data[0] |= ((button_state & 0x01) << 5) | ((button_state & 0x02) << 3);
+  mouse_data[1] = b1 & 0x3f;
+  mouse_data[2] = b2 & 0x3f;
+
+  /* enqueue mouse data in multibyte internal mouse buffer */
+  for (int i = 0; i < 3; i++) {
+    tail = (BX_SER_THIS mouse_internal_buffer.head + BX_SER_THIS mouse_internal_buffer.num_elements) %
+      BX_MOUSE_BUFF_SIZE;
+    BX_SER_THIS mouse_internal_buffer.buffer[tail] = mouse_data[i];
+    BX_SER_THIS mouse_internal_buffer.num_elements++;
+  }
 }

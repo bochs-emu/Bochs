@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.91 2004-11-30 21:02:56 vruppert Exp $
+// $Id: keyboard.cc,v 1.92 2004-12-02 21:34:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.91 2004-11-30 21:02:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.92 2004-12-02 21:34:25 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1500,9 +1500,9 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
   if (bx_options.Omouse_enabled->get () == 0)
     return;
 
-
+  // redirect mouse data to the serial device
   if (BX_KEY_THIS s.mouse.type == MOUSE_TYPE_SERIAL) {
-    // TODO: forward mouse motion to the serial device
+    DEV_serial_mouse_enq(delta_x, delta_y, button_state);
     return;
   }
 
@@ -1511,7 +1511,6 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
     // is there any point in doing any work if we don't act on the result
     // so go home.
     return;
-
 
   // Note: enable only applies in STREAM MODE.
   if ( BX_KEY_THIS s.mouse.enable==0 )

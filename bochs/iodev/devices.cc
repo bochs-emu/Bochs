@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.76 2004-10-03 20:02:09 vruppert Exp $
+// $Id: devices.cc,v 1.77 2004-12-02 21:34:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ bx_devices_c::bx_devices_c(void)
   pluginFloppyDevice = &stubFloppy;
   pluginBiosDevice = NULL;
   pluginCmosDevice = &stubCmos;
-  pluginSerialDevice = NULL;
+  pluginSerialDevice = &stubSerial;
   pluginParallelDevice = NULL;
   pluginUnmapped = NULL;
   pluginVgaDevice = &stubVga;
@@ -106,7 +106,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.76 2004-10-03 20:02:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.77 2004-12-02 21:34:25 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.32 2004-09-25 22:15:01 vruppert Exp $
+// $Id: plugin.h,v 1.33 2004-12-02 21:34:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -190,9 +190,13 @@ extern "C" {
 #define DEV_ne2k_print_info(file,page,reg,brief) \
     bx_devices.pluginNE2kDevice->print_info(file,page,reg,brief)
 
-///////// Speaker macro
+///////// Speaker macros
 #define DEV_speaker_beep_on(frequency) bx_devices.pluginSpeaker->beep_on(frequency)
 #define DEV_speaker_beep_off() bx_devices.pluginSpeaker->beep_off()
+
+///////// Serial macro
+#define DEV_serial_mouse_enq(dx, dy, state) \
+    (bx_devices.pluginSerialDevice->serial_mouse_enq(dx, dy, state))
 
 //////// Memory macros
 #define DEV_register_memory_handlers(rh,rp,wh,wp,b,e) \

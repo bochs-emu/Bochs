@@ -384,11 +384,13 @@ debugger_log: -
 # messing with things, and run bochs in the other window.  Serial I/O to
 # com1 (port 0x3f8) will all go to the other window.
 # Other serial modes are 'null' (no input/output), 'file' (output to a file
-# specified as the 'dev' parameter) and 'raw' (use the real serial port - under
-# construction for win32).
+# specified as the 'dev' parameter), 'raw' (use the real serial port - under
+# construction for win32) and 'mouse' (standard serial mouse - requires
+# mouse option setting 'type=serial')
 #
 # Examples:
 #   com1: enabled=1, mode=null
+#   com1: enabled=1, mode=mouse
 #   com2: enabled=1, mode=file, dev=serial.out
 #   com3: enabled=1, mode=raw, dev=com1
 #=======================================================================
@@ -507,11 +509,16 @@ floppy_command_delay: 500
 # You can turn the mouse on by setting enabled to 1, or turn it off by
 # setting enabled to 0. Unless you have a particular reason for enabling
 # the mouse by default, it is recommended that you leave it off.
-# You can also toggle the mouse usage at runtime (middle mouse button on
-# X11 and SDL, F12 on Win32).
+# You can also toggle the mouse usage at runtime (control key + middle
+# mouse button on X11, SDL, wxWidgets and Win32).
+# With the new mouse type option you can select the type of mouse to emulate.
+# The default value is 'ps2'. The other choices are 'imps2' (under
+# construction) and 'serial' (one com port requires setting 'mode=mouse').
 #
 # Examples:
 #   mouse: enabled=1
+#   mouse: enabled=1, type=imps2
+#   mouse: enabled=1, type=serial
 #   mouse: enabled=0
 #=======================================================================
 mouse: enabled=0
