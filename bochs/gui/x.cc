@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49.2.5 2002-10-07 19:59:11 bdenney Exp $
+// $Id: x.cc,v 1.49.2.6 2002-10-07 21:05:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1577,4 +1577,11 @@ plugin_init(plugin_t *plugin, int argc, char *argv[])
 plugin_fini(void)
 {
 }
+#else
+// This is the !BX_PLUGINS case.
+//
+// When building with plugins, the bx_gui pointer is provided by plugins.cc.
+// But when building without plugins, the GUI code must supply bx_gui, like
+// this:
+bx_gui_c *bx_gui = new bx_x11_gui_c ();
 #endif

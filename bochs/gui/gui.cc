@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.5 2002-10-07 19:59:10 bdenney Exp $
+// $Id: gui.cc,v 1.49.4.6 2002-10-07 21:05:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,8 +41,6 @@
 #if BX_WITH_MACOS
 #  include <Disks.h>
 #endif
-
-bx_gui_c   *bx_gui = NULL;
 
 #define BX_GUI_THIS bx_gui->
 #define LOG_THIS BX_GUI_THIS

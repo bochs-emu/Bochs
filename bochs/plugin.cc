@@ -90,6 +90,20 @@ device_t *devices = NULL;      /* Head of the linked list of registered devices 
 
 logfunctions  *pluginlog;
 
+
+#if BX_PLUGINS
+// When building with plugins, the bx_gui variable is created right
+// here in plugins.cc, initialized to NULL.  When a gui plugin is loaded,
+// it will create the appropriate type of gui object and set bx_gui
+// in plugin_init.
+bx_gui_c   *bx_gui = NULL;
+#else
+// When building without plugins, the bx_gui pointer will be created by
+// the GUI code that is linked into the binary, for example x.cc or sdl.cc.  
+// Do not define bx_gui here or you will get multiple definitions.
+#endif
+
+
 /************************************************************************/
 /* Builtins declarations                                                */
 /************************************************************************/
