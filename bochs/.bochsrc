@@ -360,7 +360,7 @@ screenmode: name="sample"
 # ne2k: NE2000 compatible ethernet adapter
 #
 # Examples:
-# ne2k: ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE
+# ne2k: ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
 #
 # ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
 # are IRQ conflicts.
@@ -376,12 +376,19 @@ screenmode: name="sample"
 # Windows machines, you must run niclist to get the name of the ethdev.
 # Niclist source code is in misc/niclist.c and it is included in Windows 
 # binary releases.
+#
+# script: The script value is optionnal, and is the name of a script that 
+# is executed after bochs initialize the network interface. You can use 
+# this script to configure this network interface, or enable masquerading.
+# This is mainly useful for the tun/tap devices that only exist during
+# Bochs execution. The network interface name is supplied to the script
+# as first parameter
 #=======================================================================
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
 # ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
-# ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0
+# ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
 
 #=======================================================================
 # KEYBOARD_MAPPING:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.2 2002-04-30 13:33:30 cbothamy Exp $
+// $Id: eth_tuntap.cc,v 1.3 2002-05-02 07:54:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -106,6 +106,7 @@
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
 int tun_alloc(char *dev);
+int execute_script(char *name, char* arg1);
 
 //
 //  Define the class. This is private to this module
@@ -210,6 +211,15 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
   }
 
   BX_INFO (("eth_tuntap: opened %s device", netif));
+
+  /* Execute the configuration script */
+  char *scriptname=bx_options.ne2k.Oscript->getptr();
+  if((scriptname != NULL)
+   &&(strcmp(scriptname, "") != 0)
+   &&(strcmp(scriptname, "none") != 0)) {
+    if (execute_script(scriptname, intname) < 0)
+      BX_ERROR (("execute script '%s' on %s failed", scriptname, intname));
+    }
 
   // Start the rx poll 
   this->rx_timer_index = 
@@ -382,3 +392,32 @@ void bx_tuntap_pktmover_c::rx_timer ()
       return fd;
   }              
 
+int execute_script( char* scriptname, char* arg1 )
+{
+  int pid,status;
+
+  if (!(pid=fork())) {
+    char filename[BX_PATHNAME_LEN];
+    if ( scriptname[0]=='/' ) {
+      strcpy (filename, scriptname);
+    }
+    else {
+      getcwd (filename, BX_PATHNAME_LEN);
+      strcat (filename, "/");
+      strcat (filename, scriptname);
+    }
+
+    // execute the script
+    BX_INFO(("Executing script '%s %s'",filename,arg1));
+    execle(filename, scriptname, arg1, NULL, NULL);
+
+    // if we get here there has been a problem
+    exit(-1);
+  }
+
+  wait (&status);
+  if (!WIFEXITED(status)) {
+    return -1;
+  }
+  return WEXITSTATUS(status);
+}

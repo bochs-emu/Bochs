@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.63 2002-04-23 07:44:34 cbothamy Exp $
+// $Id: bochs.h,v 1.64 2002-05-02 07:54:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -554,6 +554,7 @@ typedef struct {
   bx_param_string_c *Omacaddr;
   bx_param_string_c *Oethmod;
   bx_param_string_c *Oethdev;
+  bx_param_string_c *Oscript;
   } bx_ne2k_options;
 
 typedef struct {

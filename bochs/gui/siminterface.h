@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.36 2002-04-23 07:44:34 cbothamy Exp $
+// $Id: siminterface.h,v 1.37 2002-05-02 07:54:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.36 2002-04-23 07:44:34 cbothamy Exp $
+ * $Id: siminterface.h,v 1.37 2002-05-02 07:54:22 cbothamy Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -129,6 +129,7 @@ typedef enum {
   BXP_NE2K_MACADDR,
   BXP_NE2K_ETHMOD,
   BXP_NE2K_ETHDEV,
+  BXP_NE2K_SCRIPT,
   BXP_NE2K,
   BXP_SB16_PRESENT,
   BXP_SB16_MIDIFILE,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.98 2002-04-23 07:44:34 cbothamy Exp $
+// $Id: main.cc,v 1.99 2002-05-02 07:54:22 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -99,7 +99,7 @@ bx_options_t bx_options = {
 #endif
   NULL,          // default i440FXSupport
   {NULL, NULL},  // cmos path, cmos image boolean
-  { NULL, NULL, NULL, NULL, NULL, NULL }, // ne2k
+  { NULL, NULL, NULL, NULL, NULL, NULL, NULL }, // ne2k
   NULL,          // newHardDriveSupport
   { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
   // log options: ignore debug, report info and error, crash on panic.
@@ -167,6 +167,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 	SIM->get_param (BXP_NE2K_MACADDR)->set_enabled (enable);
 	SIM->get_param (BXP_NE2K_ETHMOD)->set_enabled (enable);
 	SIM->get_param (BXP_NE2K_ETHDEV)->set_enabled (enable);
+	SIM->get_param (BXP_NE2K_SCRIPT)->set_enabled (enable);
       }
       break;
     case BXP_LOAD32BITOS_WHICH:
@@ -752,6 +753,11 @@ void bx_init_options ()
       "Ethernet device",
       "to be written",
       "xl0", BX_PATHNAME_LEN);
+  bx_options.ne2k.Oscript = new bx_param_string_c (BXP_NE2K_SCRIPT,
+      "Device configuration script",
+      "to be written",
+      "none", BX_PATHNAME_LEN);
+  bx_options.ne2k.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
   bx_param_c *ne2k_init_list[] = {
     bx_options.ne2k.Ovalid,
     bx_options.ne2k.Oioaddr,
@@ -759,6 +765,7 @@ void bx_init_options ()
     bx_options.ne2k.Omacaddr,
     bx_options.ne2k.Oethmod,
     bx_options.ne2k.Oethdev,
+    bx_options.ne2k.Oscript,
     NULL
   };
   menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
@@ -2028,7 +2035,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     int tmp[6];
     char tmpchar[6];
     bx_options.ne2k.Ovalid->set (0);
-    if ((num_params < 4) || (num_params > 6)) {
+    if ((num_params < 4) || (num_params > 7)) {
       BX_PANIC(("%s: ne2k directive malformed.", context));
       return;
       }
@@ -2058,16 +2065,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
     bx_options.ne2k.Omacaddr->set (tmpchar);
     if (num_params > 4) {
       if (strncmp(params[4], "ethmod=", 7)) {
-      BX_PANIC(("%s: ne2k directive malformed.", context));
-      return;
+        BX_PANIC(("%s: ne2k directive malformed.", context));
+        return;
         }
       bx_options.ne2k.Oethmod->set (strdup(&params[4][7]));
-      if (num_params == 6) {
-      if (strncmp(params[5], "ethdev=", 7)) {
-      BX_PANIC(("%s: ne2k directive malformed.", context));
-      return;
+      if (num_params > 5) {
+        if (strncmp(params[5], "ethdev=", 7)) {
+          BX_PANIC(("%s: ne2k directive malformed.", context));
+          return;
           }
-      bx_options.ne2k.Oethdev->set (strdup(&params[5][7]));
+        bx_options.ne2k.Oethdev->set (strdup(&params[5][7]));
+        if (num_params > 6) {
+          if (strncmp(params[6], "script=", 7)) {
+            BX_PANIC(("%s: ne2k directive malformed.", context));
+            return;
+            }
+          bx_options.ne2k.Oscript->set (strdup(&params[6][7]));
+          }
         }
       }
     bx_options.ne2k.Ovalid->set (1);
@@ -2228,7 +2242,7 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
     return 0;
   }
   char *ptr = opt->Omacaddr->getptr ();
-  fprintf (fp, "ne2k: ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s\n",
+  fprintf (fp, "ne2k: ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s\n",
       opt->Oioaddr->get (), 
       opt->Oirq->get (),
       (unsigned int)(0xff & ptr[0]),
@@ -2238,7 +2252,8 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
       (unsigned int)(0xff & ptr[4]),
       (unsigned int)(0xff & ptr[5]),
       opt->Oethmod->getptr (),
-      opt->Oethdev->getptr ());
+      opt->Oethdev->getptr (),
+      opt->Oscript->getptr ());
   return 0;
 }
 
