@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.13.2.1 2002-03-17 08:57:02 bdenney Exp $
+// $Id: cdrom.cc,v 1.13.2.2 2002-03-18 02:48:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -203,7 +203,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.13.2.1 2002-03-17 08:57:02 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.13.2.2 2002-03-18 02:48:19 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -251,6 +251,7 @@ cdrom_interface::insert_cdrom(char *dev)
     {
       strcpy(drive,path);
       using_file = 1;
+	  bUseASPI = FALSE;
       BX_INFO (("Opening image file as a cd"));
     }
 	if(bUseASPI) {
