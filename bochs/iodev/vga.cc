@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.19 2001-12-13 18:34:30 vruppert Exp $
+// $Id: vga.cc,v 1.20 2002-01-20 00:28:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -411,7 +411,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
         RETURN(retval);
         }
       else {
-        BX_PANIC(("vga_io_read: 3c0: flip_flop = 0"));
+        BX_ERROR(("io_read: 0x3c0: flip_flop != 0"));
         return(0);
         }
       break;
@@ -515,7 +515,6 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
           retval = BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.read_data_register].blue;
           break;
         default:
-          BX_PANIC(("io write 3c9: data cyle is bad value"));
           retval = 0; // keep compiler happy
         }
       BX_VGA_THIS s.pel.read_data_cycle++;
@@ -597,7 +596,6 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
             (unsigned) BX_VGA_THIS s.graphics_ctrl.index));
           RETURN(0);
         }
-      BX_PANIC(("io read: 3cf: shouldn't get here"));
       break;
 
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
@@ -981,8 +979,6 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
               }
             }
           break;
-        default:
-          BX_PANIC(("io write 3c9: data cyle is bad value"));
         }
 
       BX_VGA_THIS s.pel.write_data_cycle++;
@@ -1113,7 +1109,7 @@ BX_VGA_THIS s.sequencer.bit1 = (value >> 1) & 0x01;
 
     case 0x03c1: /* */
     default:
-      BX_PANIC(("unsupported io write to port %x, val=%02x",
+      BX_ERROR(("unsupported io write to port 0x%04x, val=0x%02x",
         (unsigned) address, (unsigned) value));
     }
 }
