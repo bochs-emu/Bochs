@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.35 2002-11-13 21:00:03 sshwarts Exp $
+// $Id: access.cc,v 1.36 2003-02-13 15:03:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -289,7 +289,7 @@ BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 1, BX_WRITE);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_WRITE);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -354,7 +354,7 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 2, BX_WRITE);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -421,7 +421,7 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 4, BX_WRITE);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -489,7 +489,7 @@ BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 1, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -541,7 +541,7 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset, Bit16u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 2, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -595,7 +595,7 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 4, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -654,7 +654,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 1, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -723,7 +723,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset, Bit16u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 2, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -791,7 +791,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 4, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -850,7 +850,7 @@ accessOK:
   void
 BX_CPU_C::write_RMW_virtual_byte(Bit8u val8)
 {
-  BX_INSTR_MEM_DATA(CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE);
+  BX_INSTR_MEM_DATA(BX_CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE);
 
   if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
     // Pages > 2 means it stores a host address for direct access.
@@ -867,7 +867,7 @@ BX_CPU_C::write_RMW_virtual_byte(Bit8u val8)
   void
 BX_CPU_C::write_RMW_virtual_word(Bit16u val16)
 {
-  BX_INSTR_MEM_DATA(CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 2, BX_WRITE);
+  BX_INSTR_MEM_DATA(BX_CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 2, BX_WRITE);
 
   if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
     // Pages > 2 means it stores a host address for direct access.
@@ -896,7 +896,7 @@ BX_CPU_C::write_RMW_virtual_word(Bit16u val16)
   void
 BX_CPU_C::write_RMW_virtual_dword(Bit32u val32)
 {
-  BX_INSTR_MEM_DATA(CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 4, BX_WRITE);
+  BX_INSTR_MEM_DATA(BX_CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 4, BX_WRITE);
 
   if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
     // Pages > 2 means it stores a host address for direct access.
@@ -943,7 +943,7 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 8, BX_WRITE);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -1011,7 +1011,7 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 8, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB
@@ -1055,7 +1055,7 @@ accessOK:
   void
 BX_CPU_C::write_RMW_virtual_qword(Bit64u val64)
 {
-  BX_INSTR_MEM_DATA(CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 8, BX_WRITE);
+  BX_INSTR_MEM_DATA(BX_CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 8, BX_WRITE);
 
   if (BX_CPU_THIS_PTR address_xlation.pages > 2) {
     // Pages > 2 means it stores a host address for direct access.
@@ -1101,7 +1101,7 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
       unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
-      BX_INSTR_MEM_DATA(CPU_ID, laddr, 8, BX_READ);
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_READ);
       pl = (CPL==3);
 
 #if BX_SupportGuest2HostTLB

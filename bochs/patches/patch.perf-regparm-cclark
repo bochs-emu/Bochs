@@ -319,7 +319,7 @@ diff -u -r1.35 access.cc
 +  void __attribute__((regparm(1)))
  BX_CPU_C::write_RMW_virtual_byte(Bit8u val8)
  {
-   BX_INSTR_MEM_DATA(CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE);
+   BX_INSTR_MEM_DATA(BX_CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 1, BX_WRITE);
 @@ -864,7 +864,7 @@
      }
  }
@@ -328,7 +328,7 @@ diff -u -r1.35 access.cc
 +  void __attribute__((regparm(1)))
  BX_CPU_C::write_RMW_virtual_word(Bit16u val16)
  {
-   BX_INSTR_MEM_DATA(CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 2, BX_WRITE);
+   BX_INSTR_MEM_DATA(BX_CPU_ID, BX_CPU_THIS_PTR address_xlation.paddress1, 2, BX_WRITE);
 @@ -931,7 +931,7 @@
  }
  

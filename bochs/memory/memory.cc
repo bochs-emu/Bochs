@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.25 2002-11-03 17:17:11 vruppert Exp $
+// $Id: memory.cc,v 1.26 2003-02-13 15:04:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,7 +33,6 @@
 #include "bochs.h"
 #define LOG_THIS BX_MEM_THIS
 
-
 #if BX_PROVIDE_CPU_MEMORY
 
   void
@@ -45,11 +44,11 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   // Note: accesses should always be contained within a single page now.
 
 #if BX_IODEBUG_SUPPORT
-  bx_iodebug_c::mem_write( cpu, addr, len, data);
+  bx_iodebug_c::mem_write(cpu, addr, len, data);
 #endif
 
   a20addr = A20ADDR(addr);
-  BX_INSTR_PHY_WRITE(a20addr, len);
+  BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
   // (mch) Check for physical write break points, TODO
@@ -240,12 +239,12 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   Bit32u a20addr;
 
 #if BX_IODEBUG_SUPPORT
-  bx_iodebug_c::mem_read( cpu, addr, len, data);
+  bx_iodebug_c::mem_read(cpu, addr, len, data);
 #endif
   
 
   a20addr = A20ADDR(addr);
-  BX_INSTR_PHY_READ(a20addr, len);
+  BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
   // (mch) Check for physical read break points, TODO

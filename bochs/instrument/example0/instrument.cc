@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.8 2002-11-20 17:55:40 bdenney Exp $
+// $Id: instrument.cc,v 1.9 2003-02-13 15:04:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,7 +26,6 @@
 
 
 #include "bochs.h"
-#include "cpu/cpu.h"
 
 
 // maximum size of an instruction

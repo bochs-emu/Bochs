@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.127 2003-02-09 13:30:39 bdenney Exp $
+// $Id: cpu.h,v 1.128 2003-02-13 15:03:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -233,17 +233,9 @@
   }
 #endif
 
-
-#if BX_SMP_PROCESSORS==1
-#define CPU_ID 0
-#else
-#define CPU_ID (BX_CPU_THIS - BX_CPU(0))
-#endif
-
 #ifndef CPL
 #define CPL  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
 #endif
-
 
 #endif  // defined(NEED_CPU_REG_SHORTCUTS)
 
@@ -362,6 +354,12 @@ BOCHSAPI extern BX_CPU_C       bx_cpu;
 BOCHSAPI extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 #endif
 
+
+#if BX_SMP_PROCESSORS==1
+#define BX_CPU_ID 0
+#else
+#define BX_CPU_ID (BX_CPU_THIS - BX_CPU(0))
+#endif
 
 
 typedef struct {
@@ -2396,8 +2394,6 @@ union {
   //BX_SMF void IN_eAXDX(bxInstruction_c *);
   //BX_SMF void OUT_DXeAX(bxInstruction_c *);
 
-
-
   BX_SMF void MOV_CqRq(bxInstruction_c *);
   BX_SMF void MOV_DqRq(bxInstruction_c *);
   BX_SMF void MOV_RqCq(bxInstruction_c *);
@@ -2460,7 +2456,6 @@ union {
   BX_SMF void JMP_Eq(bxInstruction_c *);
   BX_SMF void JMP64_Ep(bxInstruction_c *);
   BX_SMF void PUSH_Eq(bxInstruction_c *);
-
 
   BX_SMF void CMPXCHG_EqGq(bxInstruction_c *);
   BX_SMF void CDQE(bxInstruction_c *);
@@ -2673,7 +2668,7 @@ union {
   BX_SMF void     dbg_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid);
 #endif
   BX_SMF void     atexit(void);
-
+  
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32s max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
@@ -2820,6 +2815,7 @@ union {
                                  unsigned opa, unsigned opb);
 #endif
 
+  BX_CPP_INLINE unsigned which_cpu(void);
   BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }
 
   DECLARE_EFLAGS_ACCESSORS()
@@ -2959,9 +2955,14 @@ IMPLEMENT_32BIT_REGISTER_ACCESSORS(EBP);
 IMPLEMENT_32BIT_REGISTER_ACCESSORS(ESI);
 IMPLEMENT_32BIT_REGISTER_ACCESSORS(EDI);
 
-BX_SMF BX_CPP_INLINE Bit8u  BX_CPU_C_PREFIX get_CPL(void) { 
+
+BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_CPL(void) { 
    return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); 
 } 
+
+BX_CPP_INLINE unsigned BX_CPU_C::which_cpu(void) {
+   return (BX_CPU_ID);
+}
 
 BX_CPP_INLINE Bit32u BX_CPU_C::get_EIP(void) {
    return (BX_CPU_THIS_PTR dword.eip); 
@@ -2971,21 +2972,17 @@ BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
    return (BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }
 
+BX_CPP_INLINE bx_bool BX_CPU_C::real_mode(void) {
+  return (BX_CPU_THIS_PTR realMode);
+}
 
-  BX_CPP_INLINE bx_bool
-BX_CPU_C::real_mode(void) {
-  return( BX_CPU_THIS_PTR realMode );
-  };
+BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void) {
+  return (BX_CPU_THIS_PTR v8086Mode);
+}
 
-  BX_CPP_INLINE bx_bool
-BX_CPU_C::v8086_mode(void) {
-  return( BX_CPU_THIS_PTR v8086Mode );
-  }
-
-  BX_CPP_INLINE bx_bool
-BX_CPU_C::protected_mode(void) {
-  return( BX_CPU_THIS_PTR protectedMode );
-  }
+BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void) {
+  return (BX_CPU_THIS_PTR protectedMode);
+}
 
     BX_CPP_INLINE void
 BX_CPU_C::set_CF(bx_bool val) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.39 2003-02-08 05:51:38 ptrumpet Exp $
+// $Id: fetchdecode64.cc,v 1.40 2003-02-13 15:04:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3014,7 +3014,7 @@ another_byte:
     if (attr & BxPrefix) {
       switch (b1) {
         case 0x66: // OpSize
-          BX_INSTR_PREFIX_OS(CPU_ID);
+          BX_INSTR_PREFIX_OS(BX_CPU_ID);
           sse_prefix |= SSE_PREFIX_66;
           if (!instruction->os64L()) {
             instruction->setOs32B(0);
@@ -3027,7 +3027,7 @@ another_byte:
           return(0);
 
         case 0x67: // AddrSize
-          BX_INSTR_PREFIX_AS(CPU_ID);
+          BX_INSTR_PREFIX_AS(BX_CPU_ID);
           instruction->setAs64B(0);
           if (ilen < remain) {
             ilen++;
@@ -3051,7 +3051,7 @@ another_byte:
         case 0x4D:
         case 0x4E:
         case 0x4F:
-          BX_INSTR_PREFIX_EXTEND8B(CPU_ID);
+          BX_INSTR_PREFIX_EXTEND8B(BX_CPU_ID);
 
           instruction->assertExtend8bit();
           //BX_DEBUG (("REX byte = %02x",b1));
@@ -3080,7 +3080,7 @@ another_byte:
           return(0);
 
         case 0xf2: // REPNE/REPNZ
-          BX_INSTR_PREFIX_REPNE(CPU_ID);
+          BX_INSTR_PREFIX_REPNE(BX_CPU_ID);
           sse_prefix |= SSE_PREFIX_F2;
           instruction->setRepUsed(b1 & 3);
           if (ilen < remain) {
@@ -3090,7 +3090,7 @@ another_byte:
           return(0);
 
         case 0xf3: // REP/REPE/REPZ
-          BX_INSTR_PREFIX_REP(CPU_ID);
+          BX_INSTR_PREFIX_REP(BX_CPU_ID);
           sse_prefix |= SSE_PREFIX_F3;
           instruction->setRepUsed(b1 & 3);
           if (ilen < remain) {
@@ -3100,7 +3100,7 @@ another_byte:
           return(0);
 
         case 0x2e: // CS:
-          BX_INSTR_PREFIX_CS(CPU_ID);
+          BX_INSTR_PREFIX_CS(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_CS);
           if (ilen < remain) {
             ilen++;
@@ -3108,7 +3108,7 @@ another_byte:
             }
           return(0);
         case 0x26: // ES:
-          BX_INSTR_PREFIX_ES(CPU_ID);
+          BX_INSTR_PREFIX_ES(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_ES);
           if (ilen < remain) {
             ilen++;
@@ -3116,7 +3116,7 @@ another_byte:
             }
           return(0);
         case 0x36: // SS:
-          BX_INSTR_PREFIX_SS(CPU_ID);
+          BX_INSTR_PREFIX_SS(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_SS);
           if (ilen < remain) {
             ilen++;
@@ -3124,7 +3124,7 @@ another_byte:
             }
           return(0);
         case 0x3e: // DS:
-          BX_INSTR_PREFIX_DS(CPU_ID);
+          BX_INSTR_PREFIX_DS(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_DS);
           if (ilen < remain) {
             ilen++;
@@ -3132,7 +3132,7 @@ another_byte:
             }
           return(0);
         case 0x64: // FS:
-          BX_INSTR_PREFIX_FS(CPU_ID);
+          BX_INSTR_PREFIX_FS(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_FS);
           if (ilen < remain) {
             ilen++;
@@ -3140,7 +3140,7 @@ another_byte:
             }
           return(0);
         case 0x65: // GS:
-          BX_INSTR_PREFIX_GS(CPU_ID);
+          BX_INSTR_PREFIX_GS(BX_CPU_ID);
           instruction->setSeg(BX_SEG_REG_GS);
           if (ilen < remain) {
             ilen++;
@@ -3148,7 +3148,7 @@ another_byte:
             }
           return(0);
         case 0xf0: // LOCK:
-          BX_INSTR_PREFIX_LOCK(CPU_ID);
+          BX_INSTR_PREFIX_LOCK(BX_CPU_ID);
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;

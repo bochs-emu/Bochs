@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.67 2003-01-23 17:53:10 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.68 2003-02-13 15:04:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_CPU_C::NOP(bxInstruction_c *i)
 void BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE != 0
-  BX_INSTR_PREFETCH_HINT(CPU_ID, i->nnn(), i->seg(), RMAddr(i));
+  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), RMAddr(i));
 #else
   UndefinedOpcode(i);
 #endif
@@ -141,7 +141,7 @@ BX_CPU_C::INVD(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
-  BX_INSTR_CACHE_CNTRL(CPU_ID, BX_INSTR_INVD);
+  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
 #else
   UndefinedOpcode(i);
 #endif
@@ -161,7 +161,7 @@ BX_CPU_C::WBINVD(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
-  BX_INSTR_CACHE_CNTRL(CPU_ID, BX_INSTR_WBINVD);
+  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
 #else
   UndefinedOpcode(i);
 #endif
@@ -720,7 +720,7 @@ BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
         BX_INFO(("MOV_CdRd:CR3 = %08x", (unsigned) val_32));
       // Reserved bits take on value of MOV instruction
       CR3_change(val_32);
-      BX_INSTR_TLB_CNTRL(CPU_ID, BX_INSTR_MOV_CR3, val_32);
+      BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
       // Reload of CR3 always serializes.
       // invalidate_prefetch_q(); // Already done.
       break;
@@ -873,7 +873,7 @@ BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
         BX_INFO(("MOV_CqRq:CR3 = %08x", (unsigned) val_64));
       // Reserved bits take on value of MOV instruction
       CR3_change(val_64);
-      BX_INSTR_TLB_CNTRL(CPU_ID, BX_INSTR_MOV_CR3, val_64);
+      BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL == 3

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.73 2002-12-26 20:22:35 sshwarts Exp $
+// $Id: cpu.cc,v 1.74 2003-02-13 15:03:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   if (setjmp( BX_CPU_THIS_PTR jmp_buf_env )) 
   { 
     // only from exception function can we get here ...
-    BX_INSTR_NEW_INSTRUCTION(CPU_ID);
+    BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
   }
 #else
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
@@ -216,7 +216,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     }
 #if BX_INSTRUMENTATION
     // An instruction was found in the iCache.
-    BX_INSTR_OPCODE(CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased, 
+    BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased, 
           i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 #endif
     }
@@ -276,7 +276,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     else
     {
       // An instruction was either fetched, or found in the iCache.
-      BX_INSTR_OPCODE(CPU_ID, fetchPtr, i->ilen(),
+      BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, i->ilen(),
                   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
     }
 #endif
@@ -289,12 +289,12 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
     // An instruction will have been fetched using either the normal case,
     // or the boundary fetch (across pages), by this point.
-    BX_INSTR_FETCH_DECODE_COMPLETED(CPU_ID, i);
+    BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
 #if BX_DEBUGGER
     if (BX_CPU_THIS_PTR trace) {
       // print the instruction that is about to be executed.
-      bx_dbg_disassemble_current (CPU_ID, 1);  // only one cpu, print time stamp
+      bx_dbg_disassemble_current (BX_CPU_ID, 1);  // only one cpu, print time stamp
     }
 #endif
 
@@ -384,7 +384,7 @@ repeat_not_done:
       REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
 
-      BX_INSTR_REPEAT_ITERATION(CPU_ID);
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -408,14 +408,14 @@ repeat_done:
       REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
 
-      BX_INSTR_REPEAT_ITERATION(CPU_ID);
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
       BX_TICK1_IF_SINGLE_PROCESSOR();
       }
 
 debugger_check:
 
     // inform instrumentation about new instruction
-    BX_INSTR_NEW_INSTRUCTION(CPU_ID);
+    BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
 #if (BX_SMP_PROCESSORS>1 && BX_DEBUGGER==0)
     // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
@@ -606,7 +606,7 @@ BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT   = 1; /* external event */
     interrupt(vector, 0, 0, 0);
-    BX_INSTR_HWINTERRUPT(CPU_ID, vector,
+    BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
     // Set up environment, as would be when this main cpu loop gets
     // invoked.  At the end of normal instructions, we always commmit
@@ -833,7 +833,7 @@ BX_CPU_C::boundaryFetch(bxInstruction_c *i)
 // think about repeated instructions, etc.
 BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
 
-  BX_INSTR_OPCODE(CPU_ID, fetchBuffer, i->ilen(),
+  BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
                   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 }
 

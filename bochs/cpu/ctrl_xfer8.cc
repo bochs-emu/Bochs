@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.13 2002-09-29 15:06:58 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.14 2003-02-13 15:04:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,12 +46,12 @@ BailBigRSP("JCXZ_Jb");
   if (i->as64L()) {
     if ( RCX == 0 ) {
       RIP += (Bit32s) i->Id();
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
     }
@@ -78,12 +78,12 @@ BailBigRSP("JCXZ_Jb");
         }
 #endif
       EIP = new_EIP;
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
   }
@@ -100,12 +100,12 @@ BailBigRSP("loopne_jb");
     if ( ((--RCX)!=0) && (get_ZF()==0) ) {
 
       RIP += (Bit32s) i->Id();
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
     }
@@ -132,12 +132,12 @@ BailBigRSP("loopne_jb");
           }
         }
       EIP = new_EIP;
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
 
@@ -157,12 +157,12 @@ BailBigRSP("loope_jb");
     if ( ((--RCX)!=0) && (get_ZF()) ) {
 
       RIP += (Bit32s) i->Id();
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
     }
@@ -189,12 +189,12 @@ BailBigRSP("loope_jb");
           }
         }
       EIP = new_EIP;
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
 
@@ -214,12 +214,12 @@ BailBigRSP("loop_jb");
     if ( ((--RCX)!=0) ) {
 
       RIP += (Bit32s) i->Id();
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, RIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
     }
@@ -246,12 +246,12 @@ BailBigRSP("loop_jb");
           }
         }
       EIP = new_EIP;
-      BX_INSTR_CNEAR_BRANCH_TAKEN(CPU_ID, new_EIP);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
       revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
-      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(CPU_ID);
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
       }
 #endif
 

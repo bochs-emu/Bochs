@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.44 2002-11-22 09:36:28 sshwarts Exp $
+// $Id: init.cc,v 1.45 2003-02-13 15:04:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.44 2002-11-22 09:36:28 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.45 2003-02-13 15:04:02 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -468,7 +468,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 
 BX_CPU_C::~BX_CPU_C(void)
 {
-  BX_INSTR_SHUTDOWN(CPU_ID);
+  BX_INSTR_SHUTDOWN(BX_CPU_ID);
   BX_DEBUG(( "Exit."));
 }
 
@@ -889,7 +889,7 @@ BX_CPU_C::reset(unsigned source)
 #endif
   BX_CPU_THIS_PTR kill_bochs_request = 0;
 
-  BX_INSTR_RESET(CPU_ID);
+  BX_INSTR_RESET(BX_CPU_ID);
 }
 
 
