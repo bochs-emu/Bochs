@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.142 2002-09-20 17:56:21 bdenney Exp $
+// $Id: main.cc,v 1.143 2002-09-20 18:14:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2642,41 +2642,14 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
 {
   fprintf (fp, "log: %s\n", opt->Ofilename->getptr ());
   fprintf (fp, "logprefix: %s\n", opt->Oprefix->getptr ());
-  // no syntax to describe all the possible action settings for every 
-  // device.  Instead, take a vote and record the most popular action
-  // for each level of event.
-  int action_tally[N_ACT];
-  int most_popular_action[N_LOGLEV];
-  int i,lev;
-  for (lev = 0; lev < N_LOGLEV; lev++) {
-    // clear tally
-    for (i=0; i<N_ACT; i++)
-      action_tally[i] = 0;
-    // count how many devices use each action
-    for (i=0; i<io->get_n_logfns (); i++) {
-      logfunc_t *fn = io->get_logfn (i);
-      int action = fn->getonoff(lev);
-      BX_ASSERT (action >= 0 && action < N_ACT);
-      action_tally[action]++;
-    }
-    // count the votes
-    int best = 0, best_votes = action_tally[0];
-    for (i=1; i<N_ACT; i++) {
-      if (action_tally[i] > best_votes) {
-	best = i;
-	best_votes = action_tally[i];
-      }
-    }
-    most_popular_action[lev] = best;
-  }
   fprintf (fp, "panic: action=%s\n",
-      io->getaction(most_popular_action[LOGLEV_PANIC]));
+      io->getaction(logfunctions::get_default_action (LOGLEV_PANIC)));
   fprintf (fp, "error: action=%s\n",
-      io->getaction(most_popular_action[LOGLEV_ERROR]));
+      io->getaction(logfunctions::get_default_action (LOGLEV_ERROR)));
   fprintf (fp, "info: action=%s\n",
-      io->getaction(most_popular_action[LOGLEV_INFO]));
+      io->getaction(logfunctions::get_default_action (LOGLEV_INFO)));
   fprintf (fp, "debug: action=%s\n",
-      io->getaction(most_popular_action[LOGLEV_DEBUG]));
+      io->getaction(logfunctions::get_default_action (LOGLEV_DEBUG)));
   return 0;
 }
 

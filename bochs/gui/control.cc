@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.60 2002-09-06 16:43:23 bdenney Exp $
+// $Id: control.cc,v 1.61 2002-09-20 18:14:27 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -551,8 +551,8 @@ void bx_log_options (int individual)
       if (ask_menu (prompt, log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
 	return;
       if (action < 3) {
-	for (int i=0; i<SIM->get_n_log_modules (); i++)
-          SIM->set_log_action (i, level, action);
+	SIM->set_default_log_action (level, action);
+	SIM->set_log_action (-1, level, action);
       }
     }
   }
