@@ -5,7 +5,7 @@
 #include "../bx_debug/debug.h"
 #endif
 
-// 32-bit general purpose register
+// 16/32-bit general purpose register
 void disassembler::REG32 (unsigned attr)
 {
   if (i32bit_opsize)

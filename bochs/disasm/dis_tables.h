@@ -2283,7 +2283,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 7F */  { "jnle",      0,  Jb,  XX, Cond_Jump },
   /* 80 */  { GRPN(G1EbIb) },
   /* 81 */  { GRPN(G1EvIv) },
-  /* 82 */  { "(invalid)", 0,  XX,  XX, XX },
+  /* 82 */  { GRPN(G1EbIb) },
   /* 83 */  { GRPN(G1EvIb) },
   /* 84 */  { "testB",     0,  Eb,  Gb, XX },
   /* 85 */  { "testV",     0,  Ev,  Gv, XX },
