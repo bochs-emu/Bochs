@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.172 2002-11-01 15:19:34 bdenney Exp $
+// $Id: main.cc,v 1.173 2002-11-01 16:30:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -98,32 +98,32 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_VGA_UPDATE_INTERVAL:
       // if after init, notify the vga device to change its timer.
       if (set && SIM->get_init_done ())
-	DEV_vga_set_update_interval (val);
+        DEV_vga_set_update_interval (val);
       break;
     case BXP_MOUSE_ENABLED:
       // if after init, notify the GUI
       if (set && SIM->get_init_done ()) {
-	bx_gui->mouse_enabled_changed (val!=0);
-	DEV_mouse_enabled_changed (val!=0);
+        bx_gui->mouse_enabled_changed (val!=0);
+        DEV_mouse_enabled_changed (val!=0);
       }
       break;
     case BXP_NE2K_VALID:
       if (set) {
-	int enable = (val != 0);
-	SIM->get_param (BXP_NE2K_IOADDR)->set_enabled (enable);
-	SIM->get_param (BXP_NE2K_IRQ)->set_enabled (enable);
-	SIM->get_param (BXP_NE2K_MACADDR)->set_enabled (enable);
-	SIM->get_param (BXP_NE2K_ETHMOD)->set_enabled (enable);
-	SIM->get_param (BXP_NE2K_ETHDEV)->set_enabled (enable);
-	SIM->get_param (BXP_NE2K_SCRIPT)->set_enabled (enable);
+        int enable = (val != 0);
+        SIM->get_param (BXP_NE2K_IOADDR)->set_enabled (enable);
+        SIM->get_param (BXP_NE2K_IRQ)->set_enabled (enable);
+        SIM->get_param (BXP_NE2K_MACADDR)->set_enabled (enable);
+        SIM->get_param (BXP_NE2K_ETHMOD)->set_enabled (enable);
+        SIM->get_param (BXP_NE2K_ETHDEV)->set_enabled (enable);
+        SIM->get_param (BXP_NE2K_SCRIPT)->set_enabled (enable);
       }
       break;
     case BXP_LOAD32BITOS_WHICH:
       if (set) {
-	int enable = (val != 0);
-	SIM->get_param (BXP_LOAD32BITOS_PATH)->set_enabled (enable);
-	SIM->get_param (BXP_LOAD32BITOS_IOLOG)->set_enabled (enable);
-	SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
+        int enable = (val != 0);
+        SIM->get_param (BXP_LOAD32BITOS_PATH)->set_enabled (enable);
+        SIM->get_param (BXP_LOAD32BITOS_IOLOG)->set_enabled (enable);
+        SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
       }
       break;
     case BXP_ATA0_MASTER_STATUS:
@@ -135,8 +135,8 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_ATA3_MASTER_STATUS:
     case BXP_ATA3_SLAVE_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-	Bit8u device = id - BXP_ATA0_MASTER_STATUS;
-	Bit32u handle = DEV_hd_get_device_handle (device/2, device%2);
+        Bit8u device = id - BXP_ATA0_MASTER_STATUS;
+        Bit32u handle = DEV_hd_get_device_handle (device/2, device%2);
         DEV_hd_set_cd_media_status(handle, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons ();
       }
@@ -178,7 +178,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_ATA3_SLAVE_TYPE:
       if (set) {
         int device = id - BXP_ATA0_MASTER_TYPE;
-	switch (val) {
+        switch (val) {
           case BX_ATA_DEVICE_DISK:
             SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
@@ -284,7 +284,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
 
           Bit8u device = id - BXP_ATA0_MASTER_PATH;
-	  Bit32u handle = DEV_hd_get_device_handle(device/2, device%2);
+          Bit32u handle = DEV_hd_get_device_handle(device/2, device%2);
 
           if (empty) {
             DEV_hd_set_cd_media_status(handle, 0);
@@ -312,7 +312,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
     
     case BXP_SCREENMODE:
       if (set==1) {
-	BX_INFO (("Screen mode changed to %s", val));
+        BX_INFO (("Screen mode changed to %s", val));
       }
       break;
     default:
@@ -493,14 +493,14 @@ void bx_init_options ()
     // be added later.  Use clone() to make a copy of the dependent_list
     // so that it can be changed without affecting the menu.
     bx_options.ata[channel].Opresent->set_dependent_list (
-	ata[channel]->clone());
+        ata[channel]->clone());
 
     for (Bit8u slave=0; slave<2; slave++) {
 
       menu = bx_options.atadevice[channel][slave].Omenu = new bx_list_c ((bx_id)(BXP_ATA0_MASTER+channel*2+slave),
-	  s_atadevice[channel][slave], 
+          s_atadevice[channel][slave], 
           s_atadevice[channel][slave],
-	  12 /* list max size */);
+          12 /* list max size */);
       menu->get_options ()->set (menu->SERIES_ASK);
 
       menu->add (bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_MASTER_PRESENT+channel*2+slave),
@@ -563,12 +563,12 @@ void bx_init_options ()
        BX_ATA_TRANSLATION_NONE));
 
       bx_options.atadevice[channel][slave].Opresent->set_dependent_list (
-	  menu->clone ());
+          menu->clone ());
       // the menu and all items on it depend on the Opresent flag
       bx_options.atadevice[channel][slave].Opresent->get_dependent_list()->add(menu);
       // the present flag depends on the ATA channel's present flag
       bx_options.ata[channel].Opresent->get_dependent_list()->add (
-	  bx_options.atadevice[channel][slave].Opresent);
+          bx_options.atadevice[channel][slave].Opresent);
       }
 
       // set up top level menu for ATA[i] controller configuration.  This list
@@ -594,17 +594,17 @@ void bx_init_options ()
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
     bx_options.ata[channel].Opresent->set_ask_format (
-	BX_WITH_WX? "Enable this channel?"
-	: "Channel is enabled: [%s] ");
+        BX_WITH_WX? "Enable this channel?"
+        : "Channel is enabled: [%s] ");
     bx_options.ata[channel].Oioaddr1->set_ask_format (
-	BX_WITH_WX? "I/O Address 1:"
-	: "Enter new ioaddr1: [0x%x] ");
+        BX_WITH_WX? "I/O Address 1:"
+        : "Enter new ioaddr1: [0x%x] ");
     bx_options.ata[channel].Oioaddr2->set_ask_format (
-	BX_WITH_WX? "I/O Address 2:"
-	: "Enter new ioaddr2: [0x%x] ");
+        BX_WITH_WX? "I/O Address 2:"
+        : "Enter new ioaddr2: [0x%x] ");
     bx_options.ata[channel].Oirq->set_ask_format (
-	BX_WITH_WX? "IRQ:"
-	: "Enter new IRQ: [%d] ");
+        BX_WITH_WX? "IRQ:"
+        : "Enter new IRQ: [%d] ");
 #if !BX_WITH_WX
     bx_options.ata[channel].Opresent->set_format ("enabled: %s");
     bx_options.ata[channel].Oioaddr1->set_format (", ioaddr1: 0x%x");
@@ -617,35 +617,35 @@ void bx_init_options ()
     for (Bit8u slave=0; slave<2; slave++) {
 
       bx_options.atadevice[channel][slave].Opresent->set_ask_format (
-	  BX_WITH_WX? "Enable this device?"
-	  : "Device is enabled: [%s] ");
+          BX_WITH_WX? "Enable this device?"
+          : "Device is enabled: [%s] ");
       bx_options.atadevice[channel][slave].Otype->set_ask_format (
-	  BX_WITH_WX? "Type of ATA device:"
-	  : "Enter type of ATA device, disk or cdrom: [%s] ");
+          BX_WITH_WX? "Type of ATA device:"
+          : "Enter type of ATA device, disk or cdrom: [%s] ");
       bx_options.atadevice[channel][slave].Opath->set_ask_format (
-	  BX_WITH_WX? "Path or physical device name:"
-	  : "Enter new filename: [%s] ");
+          BX_WITH_WX? "Path or physical device name:"
+          : "Enter new filename: [%s] ");
       bx_options.atadevice[channel][slave].Ocylinders->set_ask_format (
-	  BX_WITH_WX? "Cylinders:"
-	  : "Enter number of cylinders: [%d] ");
+          BX_WITH_WX? "Cylinders:"
+          : "Enter number of cylinders: [%d] ");
       bx_options.atadevice[channel][slave].Oheads->set_ask_format (
-	  BX_WITH_WX? "Heads:"
-	  : "Enter number of heads: [%d] ");
+          BX_WITH_WX? "Heads:"
+          : "Enter number of heads: [%d] ");
       bx_options.atadevice[channel][slave].Ospt->set_ask_format (
-	  BX_WITH_WX? "Sectors per track:"
-	  : "Enter number of sectors per track: [%d] ");
+          BX_WITH_WX? "Sectors per track:"
+          : "Enter number of sectors per track: [%d] ");
       bx_options.atadevice[channel][slave].Ostatus->set_ask_format (
-	  BX_WITH_WX? "Inserted?"
-	  : "Is the device inserted or ejected? [%s] ");
+          BX_WITH_WX? "Inserted?"
+          : "Is the device inserted or ejected? [%s] ");
       bx_options.atadevice[channel][slave].Omodel->set_ask_format (
-	  BX_WITH_WX? "Model name:"
-	  : "Enter new model name: [%s]");
+          BX_WITH_WX? "Model name:"
+          : "Enter new model name: [%s]");
       bx_options.atadevice[channel][slave].Otranslation->set_ask_format (
-	  BX_WITH_WX? "Translation type:"
-	  : "Enter translation type: [%s]");
+          BX_WITH_WX? "Translation type:"
+          : "Enter translation type: [%s]");
       bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format (
-	  BX_WITH_WX? "BIOS Detection:"
-	  : "Enter bios detection type: [%s]");
+          BX_WITH_WX? "BIOS Detection:"
+          : "Enter bios detection type: [%s]");
 
 #if !BX_WITH_WX
       bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
@@ -737,56 +737,56 @@ void bx_init_options ()
 
   // parallel ports
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-	sprintf (name, "Enable parallel port #%d", i+1);
-	bx_options.par[i].Oenabled = new bx_param_bool_c (
-		BXP_PARPORTx_ENABLED(i+1), 
-		strdup(name), 
-		"",
-		(i==0)? 1 : 0);  // only enable #1 by default
-	sprintf (name, "Parallel port #%d output file", i+1);
-	sprintf (descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
-	bx_options.par[i].Ooutfile = new bx_param_filename_c (
-		BXP_PARPORTx_OUTFILE(i+1), 
-		strdup(name), 
-		strdup(descr),
-		"", BX_PATHNAME_LEN);
-	deplist = new bx_list_c (BXP_NULL, 1);
-	deplist->add (bx_options.par[i].Ooutfile);
-	bx_options.par[i].Oenabled->set_dependent_list (deplist);
-	// add to menu
-	*par_ser_ptr++ = bx_options.par[i].Oenabled;
-	*par_ser_ptr++ = bx_options.par[i].Ooutfile;
+        sprintf (name, "Enable parallel port #%d", i+1);
+        bx_options.par[i].Oenabled = new bx_param_bool_c (
+                BXP_PARPORTx_ENABLED(i+1), 
+                strdup(name), 
+                "",
+                (i==0)? 1 : 0);  // only enable #1 by default
+        sprintf (name, "Parallel port #%d output file", i+1);
+        sprintf (descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
+        bx_options.par[i].Ooutfile = new bx_param_filename_c (
+                BXP_PARPORTx_OUTFILE(i+1), 
+                strdup(name), 
+                strdup(descr),
+                "", BX_PATHNAME_LEN);
+        deplist = new bx_list_c (BXP_NULL, 1);
+        deplist->add (bx_options.par[i].Ooutfile);
+        bx_options.par[i].Oenabled->set_dependent_list (deplist);
+        // add to menu
+        *par_ser_ptr++ = bx_options.par[i].Oenabled;
+        *par_ser_ptr++ = bx_options.par[i].Ooutfile;
   }
 
   // serial ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-	// options for COM port
-	sprintf (name, "Enable serial port #%d (COM%d)", i+1, i+1);
-	sprintf (descr, "Controls whether COM%d is installed or not", i+1);
-	bx_options.com[i].Oenabled = new bx_param_bool_c (
-		BXP_COMx_ENABLED(i+1),
-		strdup(name), 
-		strdup(descr), 
-		(i==0)?1 : 0);  // only enable the first by default
-	sprintf (name, "Pathname of the serial device for COM%d", i+1);
-	bx_options.com[i].Odev = new bx_param_filename_c (
-		BXP_COMx_PATH(i+1),
-		strdup(name), 
-		"",
-		"", BX_PATHNAME_LEN);
-	deplist = new bx_list_c (BXP_NULL, 1);
-	deplist->add (bx_options.com[i].Odev);
-	bx_options.com[i].Oenabled->set_dependent_list (deplist);
-	// add to menu
-	*par_ser_ptr++ = bx_options.com[i].Oenabled;
-	*par_ser_ptr++ = bx_options.com[i].Odev;
+        // options for COM port
+        sprintf (name, "Enable serial port #%d (COM%d)", i+1, i+1);
+        sprintf (descr, "Controls whether COM%d is installed or not", i+1);
+        bx_options.com[i].Oenabled = new bx_param_bool_c (
+                BXP_COMx_ENABLED(i+1),
+                strdup(name), 
+                strdup(descr), 
+                (i==0)?1 : 0);  // only enable the first by default
+        sprintf (name, "Pathname of the serial device for COM%d", i+1);
+        bx_options.com[i].Odev = new bx_param_filename_c (
+                BXP_COMx_PATH(i+1),
+                strdup(name), 
+                "",
+                "", BX_PATHNAME_LEN);
+        deplist = new bx_list_c (BXP_NULL, 1);
+        deplist->add (bx_options.com[i].Odev);
+        bx_options.com[i].Oenabled->set_dependent_list (deplist);
+        // add to menu
+        *par_ser_ptr++ = bx_options.com[i].Oenabled;
+        *par_ser_ptr++ = bx_options.com[i].Odev;
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
   menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL,
-	  "Serial and Parallel Port Options",
-	  "serial_parallel_menu",
-	  par_ser_init_list);
+          "Serial and Parallel Port Options",
+          "serial_parallel_menu",
+          par_ser_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
 
   bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
@@ -1393,12 +1393,12 @@ static void setupWorkingDirectory (char *path)
     
     *c = '\0';             /* cut off last part (binary name) */
     
-	/* chdir to the binary app's parent */
-	int n;
+        /* chdir to the binary app's parent */
+        int n;
         n = chdir (parentdir);
-	if (n) BX_PANIC (("failed to change dir to parent"));
-	/* chdir to the .app's parent */
-	n = chdir ("../../../");
+        if (n) BX_PANIC (("failed to change dir to parent"));
+        /* chdir to the .app's parent */
+        n = chdir ("../../../");
     if (n) BX_PANIC (("failed to change to ../../.."));
 }
 #endif
@@ -1690,8 +1690,8 @@ bx_begin_simulation (int argc, char *argv[])
     // only one processor, run as fast as possible by not messing with
     // quantums and loops.
     BX_CPU(0)->cpu_loop(1);
-	// for one processor, the only reason for cpu_loop to return is
-	// that kill_bochs_request was set by the GUI interface.
+        // for one processor, the only reason for cpu_loop to return is
+        // that kill_bochs_request was set by the GUI interface.
   } else {
     // SMP simulation: do a few instructions on each processor, then switch
     // to another.  Increasing quantum speeds up overall performance, but
@@ -1702,10 +1702,10 @@ bx_begin_simulation (int argc, char *argv[])
       // do some instructions in each processor
       BX_CPU(processor)->cpu_loop(quantum);
       processor = (processor+1) % BX_SMP_PROCESSORS;
-	  if (BX_CPU(0)->kill_bochs_request) 
-	    break;
+          if (BX_CPU(0)->kill_bochs_request) 
+            break;
       if (processor == 0) 
-	    BX_TICKN(quantum);
+            BX_TICKN(quantum);
     }
   }
 #endif
@@ -1929,7 +1929,7 @@ bx_atexit(void)
   signal(SIGALRM, SIG_DFL);
 #endif
 #endif
-	return 0;
+        return 0;
 }
 
 #if BX_PROVIDE_MAIN
@@ -1994,8 +1994,8 @@ parse_bochsrc(char *rcfile)
       line[len-1] = '\0';
     if ((ret != NULL) && strlen(line)) {
       if (parse_line_unformatted(rcfile, line) < 0) {
-	retval = -1;
-	break;  // quit parsing after first error
+        retval = -1;
+        break;  // quit parsing after first error
         }
       }
     } while (!feof(fd));
@@ -2038,29 +2038,29 @@ parse_line_unformatted(char *context, char *line)
         inquotes = !inquotes;
       else {
 #if BX_HAVE_GETENV
-	// substitute environment variables.
-	if (ptr[i] == '$') {
-	  char varname[512];
-	  char *pv = varname;
-	  char *value;
-	  *pv = 0;
-	  i++;
-	  while (isalpha(ptr[i]) || ptr[i]=='_') {
-	    *pv = ptr[i]; pv++; i++;
-	  }
-	  *pv = 0;
-	  if (strlen(varname)<1 || !(value = getenv(varname))) {
-	    BX_PANIC (("could not look up environment variable '%s'\n", varname));
-	  } else {
-	    // append value to the string
-	    for (pv=value; *pv; pv++)
-		string[string_i++] = *pv;
-	  }
-	}
+        // substitute environment variables.
+        if (ptr[i] == '$') {
+          char varname[512];
+          char *pv = varname;
+          char *value;
+          *pv = 0;
+          i++;
+          while (isalpha(ptr[i]) || ptr[i]=='_') {
+            *pv = ptr[i]; pv++; i++;
+          }
+          *pv = 0;
+          if (strlen(varname)<1 || !(value = getenv(varname))) {
+            BX_PANIC (("could not look up environment variable '%s'\n", varname));
+          } else {
+            // append value to the string
+            for (pv=value; *pv; pv++)
+                string[string_i++] = *pv;
+          }
+        }
 #endif
         if (!isspace(ptr[i]) || inquotes) {
-	  string[string_i++] = ptr[i];
-	}
+          string[string_i++] = ptr[i];
+        }
       }
     }
     string[string_i] = '\0';
@@ -2121,23 +2121,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "floppya")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "2_88=", 5)) {
-	bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_2_88);
         }
       else if (!strncmp(params[i], "1_44=", 5)) {
-	bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_1_44);
         }
       else if (!strncmp(params[i], "1_2=", 4)) {
-	bx_options.floppya.Opath->set (&params[i][4]);
+        bx_options.floppya.Opath->set (&params[i][4]);
         bx_options.floppya.Otype->set (BX_FLOPPY_1_2);
         }
       else if (!strncmp(params[i], "720k=", 5)) {
-	bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_720K);
         }
       else if (!strncmp(params[i], "360k=", 5)) {
-	bx_options.floppya.Opath->set (&params[i][5]);
+        bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_360K);
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
@@ -2192,23 +2192,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "floppyb")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "2_88=", 5)) {
-	bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_2_88);
         }
       else if (!strncmp(params[i], "1_44=", 5)) {
-	bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_1_44);
         }
       else if (!strncmp(params[i], "1_2=", 4)) {
-	bx_options.floppyb.Opath->set (&params[i][4]);
+        bx_options.floppyb.Opath->set (&params[i][4]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_1_2);
         }
       else if (!strncmp(params[i], "720k=", 5)) {
-	bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_720K);
         }
       else if (!strncmp(params[i], "360k=", 5)) {
-	bx_options.floppyb.Opath->set (&params[i][5]);
+        bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_360K);
         }
       else if (!strncmp(params[i], "status=ejected", 14)) {
@@ -2325,40 +2325,40 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.atadevice[channel][slave].Ospt->set (atol(&params[i][4]));
         }
       else if (!strncmp(params[i], "model=", 6)) {
-	bx_options.atadevice[channel][slave].Omodel->set(&params[i][6]);
+        bx_options.atadevice[channel][slave].Omodel->set(&params[i][6]);
         }
       else if (!strcmp(params[i], "biosdetect=none")) {
-	bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_NONE);
+        bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_NONE);
         }
       else if (!strcmp(params[i], "biosdetect=cmos")) {
-	bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_CMOS);
+        bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_CMOS);
         }
       else if (!strcmp(params[i], "biosdetect=auto")) {
-	bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_AUTO);
+        bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_AUTO);
         }
       else if (!strcmp(params[i], "translation=none")) {
-	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_NONE);
+        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_NONE);
         }
       else if (!strcmp(params[i], "translation=lba")) {
-	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LBA);
+        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LBA);
         }
       else if (!strcmp(params[i], "translation=large")) { 
-	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
+        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
         }
       else if (!strcmp(params[i], "translation=echs")) { // synonym of large
-	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
+        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
         }
       else if (!strcmp(params[i], "translation=rechs")) {
-	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_RECHS);
+        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_RECHS);
         }
       else if (!strcmp(params[i], "translation=auto")) {
-	bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_AUTO);
+        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_AUTO);
         }
       else if (!strcmp(params[i], "status=ejected")) {
-	bx_options.atadevice[channel][slave].Ostatus->set(BX_EJECTED);
+        bx_options.atadevice[channel][slave].Ostatus->set(BX_EJECTED);
         }
       else if (!strcmp(params[i], "status=inserted")) {
-	bx_options.atadevice[channel][slave].Ostatus->set(BX_INSERTED);
+        bx_options.atadevice[channel][slave].Ostatus->set(BX_INSERTED);
         }
       else {
         PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
@@ -2372,8 +2372,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (bx_options.atadevice[channel][slave].Opresent->get() == 1) {
       if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_DISK) {
         if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) ==0)
-	  PARSE_WARN(("%s: ataX-master/slave has empty path", context));
-	if ((bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
+          PARSE_WARN(("%s: ataX-master/slave has empty path", context));
+        if ((bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
             (bx_options.atadevice[channel][slave].Oheads->get() ==0 ) ||
             (bx_options.atadevice[channel][slave].Ospt->get() == 0)) {
           PARSE_WARN(("%s: ataX-master/slave cannot have zero cylinders, heads, or sectors/track", context));
@@ -2475,11 +2475,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "com1")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.com[0].Oenabled->set (atol(&params[i][8]));
+        bx_options.com[0].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[0].Odev->set (&params[i][4]);
-	bx_options.com[0].Oenabled->set (1);
+        bx_options.com[0].Oenabled->set (1);
         }
       else {
         PARSE_ERR(("%s: unknown parameter for com1 ignored.", context));
@@ -2490,11 +2490,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "com2")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.com[1].Oenabled->set (atol(&params[i][8]));
+        bx_options.com[1].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[1].Odev->set (&params[i][4]);
-	bx_options.com[1].Oenabled->set (1);
+        bx_options.com[1].Oenabled->set (1);
         }
       else {
         PARSE_ERR(("%s: unknown parameter for com2 ignored.", context));
@@ -2504,11 +2504,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "com3")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.com[2].Oenabled->set (atol(&params[i][8]));
+        bx_options.com[2].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[2].Odev->set (&params[i][4]);
-	bx_options.com[2].Oenabled->set (1);
+        bx_options.com[2].Oenabled->set (1);
         }
       else {
         PARSE_ERR(("%s: unknown parameter for com3 ignored.", context));
@@ -2518,11 +2518,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "com4")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.com[3].Oenabled->set (atol(&params[i][8]));
+        bx_options.com[3].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[3].Odev->set (&params[i][4]);
-	bx_options.com[3].Oenabled->set (1);
+        bx_options.com[3].Oenabled->set (1);
         }
       else {
         PARSE_ERR(("%s: unknown parameter for com4 ignored.", context));
@@ -2867,25 +2867,25 @@ parse_line_formatted(char *context, int num_params, char *params[])
     for (i=1; i<num_params; i++) {
         bx_options.sb16.Opresent->set (1);
       if (!strncmp(params[i], "midi=", 5)) {
-	bx_options.sb16.Omidifile->set (strdup(&params[i][5]));
+        bx_options.sb16.Omidifile->set (strdup(&params[i][5]));
         }
       else if (!strncmp(params[i], "midimode=", 9)) {
-	bx_options.sb16.Omidimode->set (atol(&params[i][9]));
+        bx_options.sb16.Omidimode->set (atol(&params[i][9]));
         }
       else if (!strncmp(params[i], "wave=", 5)) {
-	bx_options.sb16.Owavefile->set (strdup(&params[i][5]));
+        bx_options.sb16.Owavefile->set (strdup(&params[i][5]));
         }
       else if (!strncmp(params[i], "wavemode=", 9)) {
-	bx_options.sb16.Owavemode->set (atol(&params[i][9]));
+        bx_options.sb16.Owavemode->set (atol(&params[i][9]));
         }
       else if (!strncmp(params[i], "log=", 4)) {
-	bx_options.sb16.Ologfile->set (strdup(&params[i][4]));
+        bx_options.sb16.Ologfile->set (strdup(&params[i][4]));
         }
       else if (!strncmp(params[i], "loglevel=", 9)) {
-	bx_options.sb16.Ologlevel->set (atol(&params[i][9]));
+        bx_options.sb16.Ologlevel->set (atol(&params[i][9]));
         }
       else if (!strncmp(params[i], "dmatimer=", 9)) {
-	bx_options.sb16.Odmatimer->set (atol(&params[i][9]));
+        bx_options.sb16.Odmatimer->set (atol(&params[i][9]));
         }
       }
     }
@@ -2893,11 +2893,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "parport1")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.par[0].Oenabled->set (atol(&params[i][8]));
+        bx_options.par[0].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "file=", 5)) {
-	bx_options.par[0].Ooutfile->set (strdup(&params[i][5]));
-	bx_options.par[0].Oenabled->set (1);
+        bx_options.par[0].Ooutfile->set (strdup(&params[i][5]));
+        bx_options.par[0].Oenabled->set (1);
         }
       else {
         BX_ERROR(("%s: unknown parameter for parport1 ignored.", context));
@@ -2909,11 +2909,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "parport2")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.par[1].Oenabled->set (atol(&params[i][8]));
+        bx_options.par[1].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "file=", 5)) {
-	bx_options.par[1].Ooutfile->set (strdup(&params[i][5]));
-	bx_options.par[1].Oenabled->set (1);
+        bx_options.par[1].Ooutfile->set (strdup(&params[i][5]));
+        bx_options.par[1].Oenabled->set (1);
         }
       else {
         BX_ERROR(("%s: unknown parameter for parport2 ignored.", context));
