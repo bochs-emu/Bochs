@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.5 2001-11-14 14:42:04 bdenney Exp $
+$Id: misc.txt,v 1.6 2001-11-15 17:38:52 bdenney Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -245,3 +245,85 @@ Some bugs i've found
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
+
+How to prepare for the CVS checkout with write access:
+
+Fortunately you only need to do this once.  Here are the steps, followed by
+a better description of each step.
+
+1. Install ssh and cvs
+2. Ssh to cvs.sf.net to set up your home directory.
+3. Set environment variable CVS_RSH to "ssh".
+4. cvs checkout 
+
+Now for some details.  
+
+1. First you need to install both cvs and ssh.  These are already installed on
+some UNIX systems and also Cygwin (win32 platform).  If not, you can install
+binaries or compile cvs and ssh yourself.
+
+2. Use SSH to connect to cvs.sf.net.
+
+  ssh bdenney@cvs.sf.net
+
+Replace "bdenney" with your source forge username, of course.  The first
+time, you will probably get a message like "The authenticity of host
+'cvs.sf.net' can't be established? Are you sure you want to continue?" and
+just say yes.  It will also ask for your source forge password.  This step
+is a little strange, because you can't actually log in and get a shell prompt.
+All that will happen, when you get the username and password right, is that
+it will create a home directory on that machine for you.  That's it!  If you
+try it again, it will say "Welcome to cvs.sourceforge.net. This is a
+restricted Shell Account.  You cannot execute anything here."   At this point,
+you've succeeded and you never have to do this step again, ever.
+
+If you have trouble logging in, be sure to put your SOURCE FORGE username, 
+which isn't necessarily the same as your local username, and your SF password
+too.  Add the "-v" option to ssh to see more information about what is
+failing.  If you have ssh version 2, it is possible that you might need
+to add "-1" to the ssh command to force it to use the version 1 protocol.
+
+3. Set environment variable CVS_RSH to "ssh".  Every time you connect
+to the Source Forge CVS server (including cvs update, stat, commit, etc.), you
+must set the CVS_RSH environment variable.  So just take the time to add
+it to your .bashrc/.cshrc/etc.
+
+  export CVS_RSH=ssh    (bash syntax)
+
+(Csh syntax is "setenv variable value" with no equal sign.)
+
+4. Finally, you should be able to do the checkout!  If you already have a
+bochs subdirectory directory, move it out of the way because the checkout will
+create one.
+
+  export CVSROOT=":ext:bdenney@cvs.bochs.sourceforge.net:/cvsroot/bochs"
+  cvs -z3 checkout bochs
+  bdenney@cvs.sf.net's password:   <--type your password
+
+In the CVSROOT variable, replace bdenney with your SF username.  There's
+no need to add CVSROOT to your rc files because CVS will store it
+after the checkout.  The -z3 just adds some compression to make it go faster.
+Once all the files have been downloaded, you will have a bochs directory
+which is checked out with write access!
+
+Using cvs write access:
+
+Once you have a bochs directory with cvs write access, you basically just
+compile the files, edit them, test them, etc.  See the documentation section,
+"Tracking the source code with CVS" for more info on CVS, at
+http://bochs.sourceforge.net/doc/docbook/user/book1.html
+
+But what's new and different is that you can now do cvs commits.  When a
+file is all fixed and ready to share with the rest of the world, you run
+a commit command to upload your version to the server.  First, it's good
+to do a cvs update to make sure nobody else has changed it since you 
+downloaded it last.
+
+  $ cvs update file.cc
+  bdenney@cvs.sf.net's password:   <--password
+  $ cvs commit file.cc
+  bdenney@cvs.sf.net's password:   <--password
+  [then it starts an editor so you can type a log message.  The default is
+  usually vi.  If you want a different editor, set the EDITOR env variable
+  to the name of your preferred editor.]
+
