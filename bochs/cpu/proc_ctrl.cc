@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.55 2002-10-04 17:04:33 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.56 2002-10-08 14:43:18 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1919,7 +1919,7 @@ BX_CPU_C::SWAPGS(bxInstruction_c *i)
     }
   temp_GS_base = MSR_GSBASE;
   MSR_GSBASE = MSR_KERNELGSBASE;
-  MSR_KERNELGSBASE = MSR_GSBASE;
+  MSR_KERNELGSBASE = temp_GS_base;
 
 }
 #endif
@@ -2019,3 +2019,15 @@ BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
   return(0);
 }
 #endif
+
+
+  void
+BX_CPU_C::FXSAVE(bxInstruction_c *i)
+{
+  BX_ERROR(("FXSAVE is only a stub."));
+}
+  void
+BX_CPU_C::FXRSTOR(bxInstruction_c *i)
+{
+  BX_ERROR(("FXRSTOR is only a stub."));
+}

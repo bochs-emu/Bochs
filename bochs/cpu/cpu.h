@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.100 2002-10-07 22:51:57 kevinlawton Exp $
+// $Id: cpu.h,v 1.101 2002-10-08 14:43:18 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2293,6 +2293,9 @@ union {
   BX_SMF void LOOP64_Jb(bxInstruction_c *);
   BX_SMF void JCXZ64_Jb(bxInstruction_c *);
 #endif  // #if BX_SUPPORT_X86_64
+
+  BX_SMF void FXSAVE(bxInstruction_c *i);
+  BX_SMF void FXRSTOR(bxInstruction_c *i);
 
   // mch added
   BX_SMF void INVLPG(bxInstruction_c *);

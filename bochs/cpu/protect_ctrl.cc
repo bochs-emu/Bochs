@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.16 2002-09-25 14:09:08 ptrumpet Exp $
+// $Id: protect_ctrl.cc,v 1.17 2002-10-08 14:43:18 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -459,7 +459,7 @@ BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     bx_descriptor_t  descriptor;
     bx_selector_t    selector;
     Bit16u raw_selector;
-    Bit32u dword1, dword2;
+    Bit32u dword1, dword2, dword3;
 
 
     /* #GP(0) if the current privilege level is not 0 */
@@ -498,6 +498,16 @@ BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
     parse_descriptor(dword1, dword2, &descriptor);
+
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      // set upper 32 bits of tss base
+      access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0,
+        BX_READ, &dword3);
+      descriptor.u.tss386.base |= ((Bit64u)dword3 << 32);
+      }
+#endif
+
 
     /* #GP(selector) if object is not a TSS or is already busy */
     if ( (descriptor.valid==0) || descriptor.segment  ||
@@ -729,16 +739,6 @@ BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-#warning PRT: check this is right. instruction is "0F 01 F8"  see AMD manual.
-      if ((i->rm() == 0) && (i->nnn() == 7)) {
-        BX_CPU_THIS_PTR SWAPGS(i);
-        return;
-        }
-      }
-#endif
 
     /* undefined opcode exception */
     BX_PANIC(("SGDT_Ms: use of register is undefined opcode."));

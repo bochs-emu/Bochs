@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.27 2002-10-06 22:08:18 kevinlawton Exp $
+// $Id: exception.cc,v 1.28 2002-10-08 14:43:18 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -238,6 +238,9 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
       // load new CS:IP values from gate
       // set CPL to new code segment DPL
+
+      CPL = cs_descriptor.dpl;
+
       // set RPL of CS to CPL
 
       // push long pointer to old stack onto new stack

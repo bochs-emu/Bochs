@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.32 2002-10-03 04:53:53 bdenney Exp $
+// $Id: paging.cc,v 1.33 2002-10-08 14:43:18 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -524,6 +524,17 @@ BX_CPU_C::INVLPG(bxInstruction_c* i)
 
   // Operand must not be a register
   if (i->modC0()) {
+
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+#warning PRT: check this is right. instruction is "0F 01 F8"  see AMD manual.
+      if ((i->rm() == 0) && (i->nnn() == 7)) {
+        BX_CPU_THIS_PTR SWAPGS(i);
+        return;
+        }
+      }
+#endif
+
     BX_INFO(("INVLPG: op is a register"));
     UndefinedOpcode(i);
     }
@@ -964,6 +975,9 @@ page_fault_not_present:
   BX_CPU_THIS_PTR cr2 = laddr;
   // Invalidate TLB entry.
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
+#if BX_EXTERNAL_DEBUGGER
+  printf("page fault for address %08x%08x\n",(Bit32u)(laddr >> 32),(Bit32u)(laddr & 0xffffffff));  
+#endif
   exception(BX_PF_EXCEPTION, error_code, 0);
   return(0); // keep compiler happy
 }

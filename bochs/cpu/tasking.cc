@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.15 2002-09-28 00:54:05 kevinlawton Exp $
+// $Id: tasking.cc,v 1.16 2002-10-08 14:43:18 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -984,7 +984,7 @@ BX_CPU_C::get_RSP_from_TSS(unsigned pl, Bit64u *rsp)
     BX_PANIC(("get_RSP_from_TSS: TR.cache invalid"));
 
   // 32-bit TSS
-  Bit32u TSSstackaddr, save_upper;
+  Bit32u TSSstackaddr;
 
   TSSstackaddr = 8*pl + 4;
   if ( (TSSstackaddr+7) >
