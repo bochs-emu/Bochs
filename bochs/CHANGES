@@ -201,6 +201,9 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #831751 behaviour unrealistic
+  #661213 CR4.TSD is broken
+  #685508 PANIC: prefetch: RIP > CS.limit 
  #1037923 Non-executable page support missed (NX bit, x86-64)
  #1106530 wrong disassemble result 
  #1105208 drive order for boot gets saved wrong

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.90 2005-01-13 19:03:39 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.91 2005-01-23 21:13:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1391,15 +1391,15 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
   //   [1]     PVI: Protected-Mode Virtual Interrupts R/W
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
-  Bit32u allowMask = 0;
   Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
+  Bit32u allowMask = 0;
+
+#if BX_CPU_LEVEL >= 5
+  allowMask |= (1<<2);   /* TSD */
+#endif
 
 #if BX_SUPPORT_4MEG_PAGES
   allowMask |= (1<<4);
-#endif
-
-#if BX_SupportGlobalPages
-  allowMask |= (1<<7);
 #endif
 
 #if BX_SupportPAE
@@ -1409,6 +1409,10 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
 #if BX_CPU_LEVEL >= 5
   // NOTE: exception 18 never appears in Bochs
   allowMask |= (1<<6);   /* MCE */
+#endif
+
+#if BX_SupportGlobalPages
+  allowMask |= (1<<7);
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -1503,8 +1507,7 @@ void BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   bx_bool tsd = BX_CPU_THIS_PTR cr4.get_TSD();
-  bx_bool cpl = CPL;
-  if ((tsd==0) || (tsd==1 && cpl==0)) {
+  if ((tsd==0) || (tsd==1 && CPL==0)) {
     // return ticks
     Bit64u ticks = bx_pc_system.time_ticks ();
     RAX = (Bit32u) (ticks & 0xffffffff);
