@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.31 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: init.cc,v 1.32 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.31 2002-09-19 19:17:20 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.32 2002-09-22 18:22:24 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -488,7 +488,7 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR lf_flags_status = 0x000000;
 
   // status and control flags register set
-  BX_CPU_THIS_PTR eflags.val32 = 0x2; // Bit1 is always set
+  BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
   BX_CPU_THIS_PTR clear_IF ();
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR clear_RF ();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.15 2002-09-22 01:52:21 kevinlawton Exp $
+// $Id: arith16.cc,v 1.16 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -181,7 +181,7 @@ BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
   Boolean temp_CF;
   Bit16u op2_16, op1_16, sum_16;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
 
@@ -219,7 +219,7 @@ BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
   Boolean temp_CF;
   Bit16u op1_16, op2_16, sum_16;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* op1_16 is a register, RMAddr(i) is an index of a register */
@@ -250,7 +250,7 @@ BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
   Boolean temp_CF;
   Bit16u op1_16, op2_16, sum_16;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
     op1_16 = AX;
 
@@ -275,7 +275,7 @@ BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
   Bit16u op2_16, op1_16, diff_16;
 
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* op2_16 is a register, RMAddr(i) is an index of a register */
@@ -310,7 +310,7 @@ BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     Bit16u op1_16, op2_16, diff_16;
@@ -344,7 +344,7 @@ BX_CPU_C::SBB_AXIw(bxInstruction_c *i)
   Boolean temp_CF;
   Bit16u op1_16, op2_16, diff_16;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     op1_16 = AX;
@@ -368,7 +368,7 @@ BX_CPU_C::SBB_EwIw(bxInstruction_c *i)
   Boolean temp_CF;
   Bit16u op2_16, op1_16, diff_16;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
 
@@ -675,7 +675,7 @@ BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
   Boolean temp_CF;
   Bit16u op2_16, op1_16, sum_16;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     op2_16 = i->Iw();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.6 2002-09-20 23:17:50 kevinlawton Exp $
+// $Id: arith64.cc,v 1.7 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -138,7 +138,7 @@ BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 64 bit operand size mode */
@@ -176,7 +176,7 @@ BX_CPU_C::ADC_GqEq(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 64 bit operand size mode */
@@ -209,7 +209,7 @@ BX_CPU_C::ADC_RAXId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, sum_64;
@@ -235,7 +235,7 @@ BX_CPU_C::SBB_EqGq(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 64 bit operand size mode */
@@ -273,7 +273,7 @@ BX_CPU_C::SBB_GqEq(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 64 bit operand size mode */
@@ -306,7 +306,7 @@ BX_CPU_C::SBB_RAXId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, diff_64;
@@ -331,7 +331,7 @@ BX_CPU_C::SBB_EqId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 64 bit operand size mode */
@@ -652,7 +652,7 @@ BX_CPU_C::ADC_EqId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
     /* for 64 bit operand size mode */
     Bit64u op2_64, op1_64, sum_64;

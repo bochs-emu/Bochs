@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.49 2002-09-22 01:52:21 kevinlawton Exp $
+// $Id: cpu.cc,v 1.50 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -645,7 +645,7 @@ handle_async_event:
 
   // Now we can handle things which are synchronous to instruction
   // execution.
-  if (BX_CPU_THIS_PTR getL_RF ()) {
+  if (BX_CPU_THIS_PTR get_RF ()) {
     BX_CPU_THIS_PTR clear_RF ();
     }
 #if BX_X86_DEBUGGER
@@ -898,9 +898,9 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   // Downside is that we show the instruction about to be executed
   // (not the one generating the mode switch).
   if (BX_CPU_THIS_PTR mode_break && 
-      (BX_CPU_THIS_PTR debug_vm != BX_CPU_THIS_PTR get_VM ())) {
+      (BX_CPU_THIS_PTR debug_vm != !!BX_CPU_THIS_PTR get_VM ())) {
     BX_INFO(("Caught vm mode switch breakpoint"));
-    BX_CPU_THIS_PTR debug_vm = BX_CPU_THIS_PTR get_VM ();
+    BX_CPU_THIS_PTR debug_vm = !!BX_CPU_THIS_PTR get_VM ();
     BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
     return 1;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.65 2002-09-15 12:08:39 bdenney Exp $
+// $Id: dbg_main.cc,v 1.66 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1013,7 +1013,7 @@ bx_dbg_playback_command(char* path_quoted)
 void
 bx_dbg_modebp_command(char* dummy)
 {
-      BX_CPU(dbg_cpu)->debug_vm = BX_CPU(dbg_cpu)->get_VM ();
+      BX_CPU(dbg_cpu)->debug_vm = !!BX_CPU(dbg_cpu)->get_VM ();
       BX_CPU(dbg_cpu)->mode_break = !BX_CPU(dbg_cpu)->mode_break;
       dbg_printf (" mode switch break %s\n", 
 	      BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
@@ -1217,7 +1217,7 @@ void bx_dbg_show_command(char* arg)
       BX_CPU(dbg_cpu)->show_flag = 0;
       last_cr3 = BX_CPU(dbg_cpu)->cr3;
       last_pe = BX_CPU(dbg_cpu)->cr0.pe;
-      last_vm = BX_CPU(dbg_cpu)->get_VM ();
+      last_vm = !!BX_CPU(dbg_cpu)->get_VM ();
 
       dbg_printf ("%10lld: address %04x:%08x %08x\n\n", 
 	      bx_pc_system.time_ticks(),
@@ -2170,7 +2170,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 		BX_CPU(which_cpu)->get_IOPL (),
 		BX_CPU(which_cpu)->get_NT (),
 		BX_CPU(which_cpu)->get_RF (),
-		BX_CPU(which_cpu)->get_VM ());
+		!!BX_CPU(which_cpu)->get_VM ());
 
     if (print_time)
       dbg_printf ( "(%u).[%lld] ", which_cpu, bx_pc_system.time_ticks());
@@ -4480,7 +4480,7 @@ bx_dbg_symbolic_output(void)
 	    last_pe = !last_pe;
       }
 
-      if(last_vm != BX_CPU(dbg_cpu)->get_VM ()) {
+      if(last_vm != !!BX_CPU(dbg_cpu)->get_VM ()) {
 	    dbg_printf ("%10lld: %s V86 mode\n", 
 		    bx_pc_system.time_ticks(), 
 		    last_vm ? "Exited" : "Entered");

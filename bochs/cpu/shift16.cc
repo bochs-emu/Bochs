@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.11 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: shift16.cc,v 1.12 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -282,15 +282,15 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
     if (!count) return;
 
     if (count==1) {
-      result_16 = (op1_16 << 1) | get_CF();
+      result_16 = (op1_16 << 1) | getB_CF();
       }
     else if (count==16) {
-      result_16 = (get_CF() << 15) |
+      result_16 = (getB_CF() << 15) |
                   (op1_16 >> 1);
       }
     else { // 2..15
       result_16 = (op1_16 << count) |
-                  (get_CF() << (count - 1)) |
+                  (getB_CF() << (count - 1)) |
                   (op1_16 >> (17 - count));
       }
 
@@ -340,7 +340,7 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
     count %= 17;
     if (count) {
       result_16 = (op1_16 >> count) |
-		(get_CF() << (16 - count)) |
+		(getB_CF() << (16 - count)) |
 		(op1_16 << (17 - count));
 
       /* now write result back to destination */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.22 2002-09-22 11:31:48 japj Exp $
+// $Id: memory.cc,v 1.23 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,6 +42,8 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   Bit8u *data_ptr;
   Bit32u a20addr;
 
+  // Note: accesses should always be contained within a single page now.
+
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c::mem_write( cpu, addr, len, data);
 #endif
@@ -65,77 +67,25 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
     cpu->iCache.decWriteStamp(cpu, a20addr);
 #endif
 
-  if ( (a20addr + len) <= BX_MEM_THIS len ) {
+  if ( a20addr <= BX_MEM_THIS len ) {
     // all of data is within limits of physical memory
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
       if (len == 4) {
-        if ((a20addr & 0x00000003) == 0) {
-          // write 4byte data to aligned memory location
-          Bit32u data32;
-
-          data32 = * (Bit32u *) data;
-#ifdef BX_BIG_ENDIAN
-          data32 = (data32 << 24) | (data32 >> 24) |
-            ((data32&0x00ff0000)>>8) | ((data32&0x0000ff00)<<8);
-#endif
-          * ((Bit32u *) (&vector[a20addr])) = data32;
-          BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          return;
-          }
-        else {
-          Bit32u data32;
-
-          data32 = * (Bit32u *) data;
-          * ((Bit8u *) (&vector[a20addr]))         = data32; data32 >>= 8;
-          BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          * ((Bit8u *) (&vector[addr+1])) = data32; data32 >>= 8;
-          * ((Bit8u *) (&vector[addr+2])) = data32; data32 >>= 8;
-          * ((Bit8u *) (&vector[addr+3])) = data32;
-          // worst case, last byte is in different page; possible extra dirty page
-          BX_DBG_DIRTY_PAGE((addr+3) >> 12);
-          BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          return;
-          }
-        }
-      if (len == 2) {
-        if ((a20addr & 0x00000001) == 0) {
-          // write 2-byte data to aligned memory location
-          Bit16u data16;
-
-          data16 = * (Bit16u *) data;
-#ifdef BX_BIG_ENDIAN
-          data16 = (data16 >> 8) | (data16 << 8);
-#endif
-          * ((Bit16u *) (&vector[a20addr])) = data16;
-          BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          return;
-          }
-        else {
-          Bit16u data16;
-
-          data16 = * (Bit16u *) data;
-          * ((Bit8u *) (&vector[a20addr])) = (Bit8u) data16;
-          BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          * ((Bit8u *) (&vector[a20addr+1])) = (data16 >> 8);
-          BX_DBG_DIRTY_PAGE((a20addr+1) >> 12);
-          BX_DYN_DIRTY_PAGE(a20addr >> 12);
-          return;
-          }
-        }
-      if (len == 1) {
-        Bit8u data8;
-
-        data8 = * (Bit8u *) data;
-        * ((Bit8u *) (&vector[a20addr])) = data8;
+        WriteHostDWordToLittleEndian(&vector[a20addr], *(Bit32u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
-        BX_DYN_DIRTY_PAGE(a20addr >> 12);
         return;
         }
-      // len == 3 case can just fall thru to special cases handling
+      if (len == 2) {
+        WriteHostWordToLittleEndian(&vector[a20addr], *(Bit16u*)data);
+        BX_DBG_DIRTY_PAGE(a20addr >> 12);
+        return;
+        }
+      if (len == 1) {
+        * ((Bit8u *) (&vector[a20addr])) = * (Bit8u *) data;
+        BX_DBG_DIRTY_PAGE(a20addr >> 12);
+        return;
+        }
+      // len == other, just fall thru to special cases handling
       }
 
 #ifdef BX_LITTLE_ENDIAN
@@ -149,12 +99,10 @@ write_one:
       // addr *not* in range 00080000 .. 000FFFFF
       vector[a20addr] = *data_ptr;
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
-      BX_DYN_DIRTY_PAGE(a20addr >> 12);
 inc_one:
       if (len == 1) return;
       len--;
-      addr++;
-      a20addr = (addr);
+      a20addr++;
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -169,14 +117,12 @@ inc_one:
       // regular memory 80000 .. 9FFFF
       vector[a20addr] = *data_ptr;
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
-      BX_DYN_DIRTY_PAGE(a20addr >> 12);
       goto inc_one;
       }
     if (a20addr <= 0x000bffff) {
       // VGA memory A0000 .. BFFFF
       BX_VGA_MEM_WRITE(a20addr, *data_ptr);
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
-      BX_DYN_DIRTY_PAGE(a20addr >> 12);
       BX_DBG_UCMEM_REPORT(a20addr, 1, BX_WRITE, *data_ptr); // obsolete
       goto inc_one;
       }
@@ -190,7 +136,6 @@ inc_one:
     // Write it since its in shadow RAM
     vector[a20addr] = *data_ptr;
     BX_DBG_DIRTY_PAGE(a20addr >> 12);
-    BX_DYN_DIRTY_PAGE(a20addr >> 12);
 #else
     // ignore write to ROM
 #endif
@@ -203,7 +148,6 @@ inc_one:
 //        BX_INFO(("Writing to ShadowRAM %08x, len %u ! ", (unsigned) a20addr, (unsigned) len));
           shadow[a20addr - 0xc0000] = *data_ptr;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          BX_DYN_DIRTY_PAGE(a20addr >> 12);
           goto inc_one;
 
         case 0x0:   // Writes to ROM, Inhibit
@@ -240,7 +184,6 @@ inc_one:
         //if (a20addr < BX_MEM_THIS len) {
           //vector[a20addr] = *data_ptr;
           //BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          //BX_DYN_DIRTY_PAGE(a20addr >> 12);
           BX_VGA_MEM_WRITE(a20addr, *data_ptr);
         //  }
         
@@ -275,7 +218,6 @@ inc_one:
       if (a20addr < BX_MEM_THIS len) {
         vector[a20addr] = *data_ptr;
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
-        BX_DYN_DIRTY_PAGE(a20addr >> 12);
         }
       // otherwise ignore byte, since it overruns memory
       addr++;
@@ -320,58 +262,15 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
     // all of data is within limits of physical memory
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
       if (len == 4) {
-        if ((a20addr & 0x00000003) == 0) {
-          // read 4-byte data from aligned memory location
-          Bit32u data32;
-
-          data32 = * ((Bit32u *) (&vector[a20addr]));
-#ifdef BX_BIG_ENDIAN
-          data32 = (data32 << 24) | (data32 >> 24) |
-                   ((data32&0x00ff0000)>>8) | ((data32&0x0000ff00)<<8);
-#endif
-          * (Bit32u *) data = data32;
-          return;
-          }
-        else {
-          Bit32u data32;
-
-          data32  = * ((Bit8u *) (&vector[addr+3])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&vector[addr+2])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&vector[addr+1])); data32 <<= 8;
-          data32 |= * ((Bit8u *) (&vector[a20addr]));
-
-          * (Bit32u *) data = data32;
-          return;
-          }
+        ReadHostDWordFromLittleEndian(&vector[a20addr], * (Bit32u*) data);
+        return;
         }
       if (len == 2) {
-        if ((a20addr & 0x00000001) == 0) {
-          // read 2-byte data from aligned memory location
-          Bit16u data16;
-
-          data16 = * ((Bit16u *) (&vector[a20addr]));
-#ifdef BX_BIG_ENDIAN
-          data16 = (data16 >> 8) | (data16 << 8);
-#endif
-
-          * (Bit16u *) data =  data16;
-          return;
-          }
-        else {
-          Bit16u data16;
-
-          data16  = * ((Bit8u *) (&vector[addr+1])); data16 <<= 8;
-          data16 |= * ((Bit8u *) (&vector[a20addr]));
-
-          * (Bit16u *) data = data16;
-          return;
-          }
+        ReadHostWordFromLittleEndian(&vector[a20addr], * (Bit16u*) data);
+        return;
         }
       if (len == 1) {
-        Bit8u data8;
-
-        data8 = * ((Bit8u *) (&vector[a20addr]));
-        * (Bit8u *) data = data8;
+        * (Bit8u *) data =  * ((Bit8u *) (&vector[a20addr]));
         return;
         }
       // len == 3 case can just fall thru to special cases handling
@@ -393,8 +292,7 @@ read_one:
 inc_one:
       if (len == 1) return;
       len--;
-      addr++;
-      a20addr = (addr);
+      a20addr++;
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -470,7 +368,6 @@ inc_one:
         //if (a20addr < BX_MEM_THIS len) {
           //vector[a20addr] = *data_ptr;
           //BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          //BX_DYN_DIRTY_PAGE(a20addr >> 12);
           *data_ptr = BX_VGA_MEM_READ(a20addr);
         //  }
         

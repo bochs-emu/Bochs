@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.9 2002-09-12 18:10:40 bdenney Exp $
+// $Id: flag_ctrl_pro.cc,v 1.10 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,8 +57,8 @@ BX_CPU_C::write_flags(Bit16u flags, Boolean change_IOPL, Boolean change_IF)
     changeMask |= (1<<9);
 
 
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (flags & changeMask);
+  BX_CPU_THIS_PTR setEFlags(
+      (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (flags & changeMask) );
   BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
 
 #if 0
@@ -102,8 +102,8 @@ BX_CPU_C::write_eflags(Bit32u eflags_raw, Boolean change_IOPL, Boolean change_IF
   if (change_RF)
     changeMask |= (1<<16);
 
-  BX_CPU_THIS_PTR eflags.val32 =
-    (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (eflags_raw & changeMask);
+  BX_CPU_THIS_PTR setEFlags(
+    (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) | (eflags_raw & changeMask) );
   BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
 
 #if 0

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.5 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: shift64.cc,v 1.6 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -253,11 +253,11 @@ BX_CPU_C::RCL_Eq(bxInstruction_c *i)
     if (!count) return;
 
     if (count==1) {
-      result_64 = (op1_64 << 1) | get_CF();
+      result_64 = (op1_64 << 1) | getB_CF();
       }
     else {
       result_64 = (op1_64 << count) |
-                (get_CF() << (count - 1)) |
+                (getB_CF() << (count - 1)) |
                 (op1_64 >> (65 - count));
       }
 
@@ -305,11 +305,11 @@ BX_CPU_C::RCR_Eq(bxInstruction_c *i)
     if (!count) return;
 
     if (count==1) {
-      result_64 = (op1_64 >> 1) | (((Bit64u) get_CF()) << 63);
+      result_64 = (op1_64 >> 1) | (((Bit64u) getB_CF()) << 63);
       }
     else {
       result_64 = (op1_64 >> count) |
-                (get_CF() << (64 - count)) |
+                (getB_CF() << (64 - count)) |
                 (op1_64 << (65 - count));
       }
 

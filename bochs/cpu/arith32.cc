@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.17 2002-09-22 01:52:21 kevinlawton Exp $
+// $Id: arith32.cc,v 1.18 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -204,7 +204,7 @@ BX_CPU_C::ADC_EdGd(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 32 bit operand size mode */
@@ -242,7 +242,7 @@ BX_CPU_C::ADC_GdEd(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 32 bit operand size mode */
@@ -275,7 +275,7 @@ BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, sum_32;
@@ -301,7 +301,7 @@ BX_CPU_C::SBB_EdGd(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 32 bit operand size mode */
@@ -339,7 +339,7 @@ BX_CPU_C::SBB_GdEd(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 32 bit operand size mode */
@@ -372,7 +372,7 @@ BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
     /* for 32 bit operand size mode */
     Bit32u op1_32, op2_32, diff_32;
@@ -397,7 +397,7 @@ BX_CPU_C::SBB_EdId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
 
     /* for 32 bit operand size mode */
@@ -736,7 +736,7 @@ BX_CPU_C::ADC_EdId(bxInstruction_c *i)
 {
   Boolean temp_CF;
 
-  temp_CF = get_CF();
+  temp_CF = !!get_CF();
 
     /* for 32 bit operand size mode */
     Bit32u op2_32, op1_32, sum_32;

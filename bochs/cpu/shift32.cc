@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.12 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: shift32.cc,v 1.13 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -253,11 +253,11 @@ BX_CPU_C::RCL_Ed(bxInstruction_c *i)
     if (!count) return;
 
     if (count==1) {
-      result_32 = (op1_32 << 1) | get_CF();
+      result_32 = (op1_32 << 1) | getB_CF();
       }
     else {
       result_32 = (op1_32 << count) |
-                (get_CF() << (count - 1)) |
+                (getB_CF() << (count - 1)) |
                 (op1_32 >> (33 - count));
       }
 
@@ -305,11 +305,11 @@ BX_CPU_C::RCR_Ed(bxInstruction_c *i)
     if (!count) return;
 
     if (count==1) {
-      result_32 = (op1_32 >> 1) | (get_CF() << 31);
+      result_32 = (op1_32 >> 1) | (getB_CF() << 31);
       }
     else {
       result_32 = (op1_32 >> count) |
-                (get_CF() << (32 - count)) |
+                (getB_CF() << (32 - count)) |
                 (op1_32 << (33 - count));
       }
 

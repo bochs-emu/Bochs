@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.69 2002-09-22 02:53:09 bdenney Exp $
+// $Id: cpu.h,v 1.70 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -372,36 +372,82 @@ typedef struct {
    */
   Bit32u val32; // Raw 32-bit value in x86 bit position.  Used to store
                 //   some eflags which are not cached in separate fields.
-  } bx_flags_reg_t;
+  Bit32u VM_cached;
+
+#define DECLARE_EFLAGS_ACCESSORS()                                           \
+  BX_CPP_INLINE void BX_CPU_C::setEFlags(Bit32u val);
+#define IMPLEMENT_EFLAGS_ACCESSORS()                                         \
+  BX_CPP_INLINE void BX_CPU_C::setEFlags(Bit32u val) {                       \
+    BX_CPU_THIS_PTR eflags.val32 = val;                                      \
+    BX_CPU_THIS_PTR eflags.VM_cached = val & (1<<17);                        \
+    }
 
   // accessors for all eflags in bx_flags_reg_t
   // The macro is used once for each flag bit.
-#define DECLARE_EFLAGS_ACCESSORS(name,bitnum)                                \
+#define DECLARE_EFLAG_ACCESSOR(name,bitnum)                                  \
   BX_CPP_INLINE void    assert_##name ();                                    \
   BX_CPP_INLINE void    clear_##name ();                                     \
   BX_CPP_INLINE Boolean get_##name ();                                       \
-  BX_CPP_INLINE Boolean getL_##name ();                                      \
+  BX_CPP_INLINE Boolean getB_##name ();                                      \
   BX_CPP_INLINE void    set_##name (Bit8u val);
-  // end of DECLARE_EFLAGS_ACCESSORS
 
-#define IMPLEMENT_EFLAGS_ACCESSORS(name,bitnum)                              \
+#define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                                \
   BX_CPP_INLINE void BX_CPU_C::assert_##name () {                            \
     BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                             \
   }                                                                          \
   BX_CPP_INLINE void BX_CPU_C::clear_##name () {                             \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                            \
   }                                                                          \
-  BX_CPP_INLINE Boolean BX_CPU_C::get_##name () {                            \
+  BX_CPP_INLINE Boolean BX_CPU_C::getB_##name () {                           \
     return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);                     \
   }                                                                          \
-  BX_CPP_INLINE Boolean BX_CPU_C::getL_##name () {                           \
+  BX_CPP_INLINE Boolean BX_CPU_C::get_##name () {                            \
     return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);                     \
   }                                                                          \
   BX_CPP_INLINE void BX_CPU_C::set_##name (Bit8u val) {                      \
     BX_CPU_THIS_PTR eflags.val32 =                                           \
-      (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
+      (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | ((!!val)<<bitnum);       \
   }
-  // end of IMPLEMENT_EFLAGS_ACCESSORS
+
+#define DECLARE_EFLAG_ACCESSOR_VM(bitnum)                                    \
+  BX_CPP_INLINE void    assert_VM();                                         \
+  BX_CPP_INLINE void    clear_VM();                                          \
+  BX_CPP_INLINE Boolean get_VM();                                            \
+  BX_CPP_INLINE void    set_VM(Bit32u val);
+
+#define IMPLEMENT_EFLAG_ACCESSOR_VM(bitnum)                                  \
+  BX_CPP_INLINE void BX_CPU_C::assert_VM() {                                 \
+    BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                             \
+    BX_CPU_THIS_PTR eflags.VM_cached = 1;                                    \
+    }                                                                        \
+  BX_CPP_INLINE void BX_CPU_C::clear_VM() {                                  \
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                            \
+    BX_CPU_THIS_PTR eflags.VM_cached = 0;                                    \
+    }                                                                        \
+  BX_CPP_INLINE Boolean BX_CPU_C::get_VM() {                                 \
+    return BX_CPU_THIS_PTR eflags.VM_cached;                                 \
+    }                                                                        \
+  BX_CPP_INLINE void BX_CPU_C::set_VM(Bit32u val) {                          \
+    BX_CPU_THIS_PTR eflags.val32 =                                           \
+      (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
+    BX_CPU_THIS_PTR eflags.VM_cached = val;                                  \
+    }
+
+#define DECLARE_EFLAG_ACCESSOR_IOPL(bitnum)                                  \
+  BX_CPP_INLINE void set_IOPL(Bit32u val);                                   \
+  BX_CPP_INLINE Boolean get_IOPL(void);
+
+#define IMPLEMENT_EFLAG_ACCESSOR_IOPL(bitnum)                                \
+  BX_CPP_INLINE void BX_CPU_C::set_IOPL(Bit32u val) {                        \
+    BX_CPU_THIS_PTR eflags.val32 &= ~(3<<12);                                \
+    BX_CPU_THIS_PTR eflags.val32 |= ((3&val) << 12);                         \
+    }                                                                        \
+  BX_CPP_INLINE Boolean BX_CPU_C::get_IOPL() {                               \
+    return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12);                         \
+    }
+
+  } bx_flags_reg_t;
+
 
 #define DECLARE_8BIT_REGISTER_ACCESSORS(name)                                \
   BX_SMF BX_CPP_INLINE Bit8u get_##name(void);                               \
@@ -915,7 +961,7 @@ typedef void (BX_CPU_C::*BxExecutePtr_t)(bxInstruction_c *);
 
 #if BX_SupportICache
 
-#define BxICacheEntries 32768  // Must be a power of 2.
+#define BxICacheEntries (32 * 1024)  // Must be a power of 2.
   // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
   // bit30: 1=Long Mode, 0=not Long Mode.
   // bit29: 1=iCache page, 0=Data.
@@ -1470,10 +1516,17 @@ union {
 
 #define ArithmeticalFlag(flag, lfMaskShift, eflagsBitShift) \
   BX_SMF Boolean get_##flag##Lazy(void); \
+  BX_SMF Boolean getB_##flag##(void) { \
+    if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
+         ((Bit32u) (BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
+      return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
+    else \
+      return get_##flag##Lazy(); \
+    } \
   BX_SMF Boolean get_##flag##(void) { \
     if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
-         ((Bit32u)(BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
-      return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
+         ((Bit32u) (BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
+      return BX_CPU_THIS_PTR eflags.val32 & (1<<eflagsBitShift); \
     else \
       return get_##flag##Lazy(); \
     }
@@ -2474,17 +2527,18 @@ union {
 
   BX_CPP_INLINE const bx_gen_reg_t *get_gen_reg() { return gen_reg; }
 
-  DECLARE_EFLAGS_ACCESSORS(DF,  10);
-  DECLARE_EFLAGS_ACCESSORS(ID,  21)
-  DECLARE_EFLAGS_ACCESSORS(VP,  20)
-  DECLARE_EFLAGS_ACCESSORS(VF,  19)
-  DECLARE_EFLAGS_ACCESSORS(AC,  18)
-  DECLARE_EFLAGS_ACCESSORS(VM,  17)
-  DECLARE_EFLAGS_ACCESSORS(RF,  16)
-  DECLARE_EFLAGS_ACCESSORS(NT,  14)
-  DECLARE_EFLAGS_ACCESSORS(IOPL, 12)
-  DECLARE_EFLAGS_ACCESSORS(IF,   9)
-  DECLARE_EFLAGS_ACCESSORS(TF,   8)
+  DECLARE_EFLAGS_ACCESSORS()
+  DECLARE_EFLAG_ACCESSOR   (DF,  10)
+  DECLARE_EFLAG_ACCESSOR   (ID,  21)
+  DECLARE_EFLAG_ACCESSOR   (VP,  20)
+  DECLARE_EFLAG_ACCESSOR   (VF,  19)
+  DECLARE_EFLAG_ACCESSOR   (AC,  18)
+  DECLARE_EFLAG_ACCESSOR_VM(     17)
+  DECLARE_EFLAG_ACCESSOR   (RF,  16)
+  DECLARE_EFLAG_ACCESSOR   (NT,  14)
+  DECLARE_EFLAG_ACCESSOR_IOPL(   12)
+  DECLARE_EFLAG_ACCESSOR   (IF,   9)
+  DECLARE_EFLAG_ACCESSOR   (TF,   8)
 
   BX_SMF BX_CPP_INLINE void set_CF(Boolean val);
   BX_SMF BX_CPP_INLINE void set_AF(Boolean val);
@@ -2835,28 +2889,19 @@ BX_CPU_C::set_PF_base(Bit8u val) {
     }
 
 
-IMPLEMENT_EFLAGS_ACCESSORS(DF, 10);
-IMPLEMENT_EFLAGS_ACCESSORS(ID, 21)
-IMPLEMENT_EFLAGS_ACCESSORS(VP, 20)
-IMPLEMENT_EFLAGS_ACCESSORS(VF, 19)
-IMPLEMENT_EFLAGS_ACCESSORS(AC, 18)
-IMPLEMENT_EFLAGS_ACCESSORS(VM, 17)
-IMPLEMENT_EFLAGS_ACCESSORS(RF, 16)
-IMPLEMENT_EFLAGS_ACCESSORS(NT, 14)
-IMPLEMENT_EFLAGS_ACCESSORS(IF,  9)
-IMPLEMENT_EFLAGS_ACCESSORS(TF,  8)
+IMPLEMENT_EFLAGS_ACCESSORS()
+IMPLEMENT_EFLAG_ACCESSOR   (DF, 10)
+IMPLEMENT_EFLAG_ACCESSOR   (ID, 21)
+IMPLEMENT_EFLAG_ACCESSOR   (VP, 20)
+IMPLEMENT_EFLAG_ACCESSOR   (VF, 19)
+IMPLEMENT_EFLAG_ACCESSOR   (AC, 18)
+IMPLEMENT_EFLAG_ACCESSOR_VM(    17)
+IMPLEMENT_EFLAG_ACCESSOR   (RF, 16)
+IMPLEMENT_EFLAG_ACCESSOR   (NT, 14)
+IMPLEMENT_EFLAG_ACCESSOR_IOPL(  12)
+IMPLEMENT_EFLAG_ACCESSOR   (IF,  9)
+IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 
-    BX_CPP_INLINE void
-BX_CPU_C::set_IOPL(Bit8u val) {
-    const Bit32u mask = (1<<12) | (1<<13);
-    BX_CPU_THIS_PTR eflags.val32 &= ~mask;
-    BX_CPU_THIS_PTR eflags.val32 |= ((3&val) << 12);
-  }
-
-  BX_CPP_INLINE Boolean 
-BX_CPU_C::get_IOPL() {
-    return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12); 
-  }
 
 
 

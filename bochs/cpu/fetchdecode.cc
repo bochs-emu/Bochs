@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.18 2002-09-22 01:52:21 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.19 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1506,38 +1506,60 @@ another_byte:
             goto fetch_b1;
             }
           return(0);
-          break;
 
         case 0x2e: // CS:
           instruction->setSeg(BX_SEG_REG_CS);
-          ilen++; goto fetch_b1;
-          break;
+          if (ilen < remain) {
+            ilen++;
+            goto fetch_b1;
+            }
+          return(0);
         case 0x26: // ES:
           instruction->setSeg(BX_SEG_REG_ES);
-          ilen++; goto fetch_b1;
-          break;
+          if (ilen < remain) {
+            ilen++;
+            goto fetch_b1;
+            }
+          return(0);
         case 0x36: // SS:
           instruction->setSeg(BX_SEG_REG_SS);
-          ilen++; goto fetch_b1;
-          break;
+          if (ilen < remain) {
+            ilen++;
+            goto fetch_b1;
+            }
+          return(0);
         case 0x3e: // DS:
           instruction->setSeg(BX_SEG_REG_DS);
-          ilen++; goto fetch_b1;
-          break;
+          if (ilen < remain) {
+            ilen++;
+            goto fetch_b1;
+            }
+          return(0);
         case 0x64: // FS:
           instruction->setSeg(BX_SEG_REG_FS);
-          ilen++; goto fetch_b1;
-          break;
+          if (ilen < remain) {
+            ilen++;
+            goto fetch_b1;
+            }
+          return(0);
         case 0x65: // GS:
           instruction->setSeg(BX_SEG_REG_GS);
-          ilen++; goto fetch_b1;
-          break;
+          if (ilen < remain) {
+            ilen++;
+            goto fetch_b1;
+            }
+          return(0);
+
         case 0xf0: // LOCK:
-          ilen++; goto fetch_b1;
-          break;
+          if (ilen < remain) {
+            ilen++;
+            goto fetch_b1;
+            }
+          return(0);
 
         default:
 BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
+          return(0);
         }
       }
     // opcode requires another byte

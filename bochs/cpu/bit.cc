@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.11 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: bit.cc,v 1.12 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -344,7 +344,7 @@ BX_CPU_C::SETL_Eb(bxInstruction_c *i)
   Bit8u result_8;
 
 
-  if (get_SF() != get_OF())
+  if (getB_SF() != getB_OF())
     result_8 = 1;
   else
     result_8 = 0;
@@ -368,7 +368,7 @@ BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
   Bit8u result_8;
 
 
-  if (get_SF() == get_OF())
+  if (getB_SF() == getB_OF())
     result_8 = 1;
   else
     result_8 = 0;
@@ -392,7 +392,7 @@ BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
   Bit8u result_8;
 
 
-  if (get_ZF() || (get_SF()!=get_OF()))
+  if (get_ZF() || (getB_SF()!=getB_OF()))
     result_8 = 1;
   else
     result_8 = 0;
@@ -416,7 +416,7 @@ BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
   Bit8u result_8;
 
 
-  if ((get_ZF()==0) && (get_SF()==get_OF()))
+  if ((get_ZF()==0) && (getB_SF()==getB_OF()))
     result_8 = 1;
   else
     result_8 = 0;

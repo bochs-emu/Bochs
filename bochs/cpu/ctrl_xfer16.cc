@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.13 2002-09-22 01:52:21 kevinlawton Exp $
+// $Id: ctrl_xfer16.cc,v 1.14 2002-09-22 18:22:24 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -388,11 +388,11 @@ BX_CPU_C::JCC_Jw(bxInstruction_c *i)
     case 0x09: /* JNS */ condition = !get_SF(); break;
     case 0x0A: /* JP */ condition = get_PF(); break;
     case 0x0B: /* JNP */ condition = !get_PF(); break;
-    case 0x0C: /* JL */ condition = get_SF() != get_OF(); break;
-    case 0x0D: /* JNL */ condition = get_SF() == get_OF(); break;
-    case 0x0E: /* JLE */ condition = get_ZF() || (get_SF() != get_OF());
+    case 0x0C: /* JL */ condition = getB_SF() != getB_OF(); break;
+    case 0x0D: /* JNL */ condition = getB_SF() == getB_OF(); break;
+    case 0x0E: /* JLE */ condition = get_ZF() || (getB_SF() != getB_OF());
       break;
-    case 0x0F: /* JNLE */ condition = (get_SF() == get_OF()) &&
+    case 0x0F: /* JNLE */ condition = (getB_SF() == getB_OF()) &&
                             !get_ZF();
       break;
     default:
