@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.44 2004-11-04 22:41:23 sshwarts Exp $
+// $Id: exception.cc,v 1.45 2005-02-01 21:17:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,8 +48,7 @@ static const bx_bool is_exception_OK[3][3] = {
 };
 
 
-  void
-BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
 #if BX_DEBUGGER
   if (bx_guard.special_unwind_stack) {
@@ -80,15 +79,16 @@ BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u 
   BX_DEBUG(("interrupt(): vector = %u, INT = %u, EXT = %u",
       (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT));
 
-BX_CPU_THIS_PTR save_cs  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
-BX_CPU_THIS_PTR save_ss  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
-BX_CPU_THIS_PTR save_eip = EIP;
-BX_CPU_THIS_PTR save_esp = ESP;
+  BX_CPU_THIS_PTR save_cs  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+  BX_CPU_THIS_PTR save_ss  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+  BX_CPU_THIS_PTR save_eip = EIP;
+  BX_CPU_THIS_PTR save_esp = ESP;
 
 //  prev_errno = BX_CPU_THIS_PTR errorno;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.lma) {
+  if (BX_CPU_THIS_PTR msr.lma)
+  {
     // long mode interrupt
 
     Bit64u idtindex;
@@ -112,10 +112,10 @@ BX_CPU_THIS_PTR save_esp = ESP;
       BX_DEBUG(("interrupt(): vector > idtr.limit"));
 
       exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
-      }
+    }
+
     // descriptor AR byte must indicate interrupt gate, trap gate,
     // or task gate, else #GP(vector*8 + 2 + EXT)
-
     idtindex += BX_CPU_THIS_PTR idtr.base;
 
     access_linear(idtindex,     4, 0, BX_READ, &dword1);
@@ -124,10 +124,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
     parse_descriptor(dword1, dword2, &gate_descriptor);
 
-    if ( (gate_descriptor.valid==0) || gate_descriptor.segment) {
+    if ((gate_descriptor.valid==0) || gate_descriptor.segment)
+    {
       BX_DEBUG(("interrupt(): gate descriptor is not valid sys seg"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
-      }
+    }
+
     switch (gate_descriptor.type) {
       //case 5: // task gate
       //case 6: // 286 interrupt gate
@@ -140,22 +142,23 @@ BX_CPU_THIS_PTR save_esp = ESP;
           (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
         return;
-      }
+    }
 
     // if software interrupt, then gate descripor DPL must be >= CPL,
     // else #GP(vector * 8 + 2 + EXT)
-    if (is_INT  &&  (gate_descriptor.dpl < CPL)) {
-/* ??? */
+    if (is_INT && (gate_descriptor.dpl < CPL))
+    {
       BX_DEBUG(("interrupt(): is_INT && (dpl < CPL)"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
       return;
-      }
+    }
 
     // Gate must be present, else #NP(vector * 8 + 2 + EXT)
     if (gate_descriptor.p == 0) {
       BX_DEBUG(("interrupt(): p == 0"));
       exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
-      }
+    }
+
     gate_dest_selector = gate_descriptor.u.gate386.dest_selector;
     gate_dest_offset   = ((Bit64u)dword3 << 32) +
                          gate_descriptor.u.gate386.dest_offset;
@@ -167,7 +170,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
     if ( (gate_dest_selector & 0xfffc) == 0 ) {
       BX_PANIC(("int_trap_gate(): selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
+    }
 
     parse_selector(gate_dest_selector, &cs_selector);
 
@@ -187,6 +190,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
       BX_DEBUG(("interrupt(): not code segment"));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
+
     // check that it's a 64 bit segment
     if ( cs_descriptor.u.segment.l == 0 ||
          cs_descriptor.u.segment.d_b == 1)
@@ -217,7 +221,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
       if (ist > 0) {
         BX_DEBUG(("trap to IST, vector = %d\n",ist));
         get_RSP_from_TSS(ist+3,&RSP_for_cpl_x);
-        }
+      }
       else {
         get_RSP_from_TSS(cs_descriptor.dpl,&RSP_for_cpl_x);
       }
@@ -276,7 +280,6 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
       RIP = gate_dest_offset;
 
-
       // if INTERRUPT GATE set IF to 0
       if ( !(gate_descriptor.type & 1) ) // even is int-gate
         BX_CPU_THIS_PTR clear_IF ();
@@ -289,7 +292,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
     // if code segment is conforming OR code segment DPL = CPL then
     // INTERRUPT TO SAME PRIVILEGE LEVEL:
-    if (cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL )
+    if (cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL)
     {
       BX_DEBUG(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE"));
 
@@ -367,15 +370,15 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
     parse_descriptor(dword1, dword2, &gate_descriptor);
 
-    if ( (gate_descriptor.valid==0) || gate_descriptor.segment) {
+    if ((gate_descriptor.valid==0) || gate_descriptor.segment) {
       BX_DEBUG(("interrupt(): gate descriptor is not valid sys seg"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
-      }
+    }
 
     switch (gate_descriptor.type) {
-      case 5: // task gate
-      case 6: // 286 interrupt gate
-      case 7: // 286 trap gate
+      case  5: // task gate
+      case  6: // 286 interrupt gate
+      case  7: // 286 trap gate
       case 14: // 386 interrupt gate
       case 15: // 386 trap gate
         break;
@@ -388,18 +391,16 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
     // if software interrupt, then gate descripor DPL must be >= CPL,
     // else #GP(vector * 8 + 2 + EXT)
-    if (is_INT  &&  (gate_descriptor.dpl < CPL)) {
-/* ??? */
+    if (is_INT && (gate_descriptor.dpl < CPL)) {
       BX_DEBUG(("interrupt(): is_INT && (dpl < CPL)"));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
-      return;
-      }
+    }
 
     // Gate must be present, else #NP(vector * 8 + 2 + EXT)
     if (gate_descriptor.p == 0) {
-      BX_DEBUG(("interrupt(): p == 0"));
+      BX_DEBUG(("interrupt(): gate not present"));
       exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
-      }
+    }
 
     switch (gate_descriptor.type) {
       case 5: // 286/386 task gate
@@ -409,14 +410,14 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
         // must specify global in the local/global bit,
         //      else #TS(TSS selector)
-// +++
-// 486/Pent books say #TSS(selector)
-// PPro+ says #GP(selector)
+        // +++
+        // 486/Pent books say #TSS(selector)
+        // PPro+ says #GP(selector)
         if (tss_selector.ti) {
           BX_PANIC(("interrupt: tss_selector.ti=1"));
           exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
           return;
-          }
+        }
 
         // index must be within GDT limits, else #TS(TSS selector)
         fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
@@ -424,16 +425,17 @@ BX_CPU_THIS_PTR save_esp = ESP;
         // AR byte must specify available TSS,
         //   else #TS(TSS selector)
         parse_descriptor(dword1, dword2, &tss_descriptor);
+
         if (tss_descriptor.valid==0 || tss_descriptor.segment) {
           BX_PANIC(("exception: TSS selector points to bad TSS"));
           exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
           return;
-          }
+        }
         if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
           BX_PANIC(("exception: TSS selector points to bad TSS"));
           exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
           return;
-          }
+        }
 
         // TSS must be present, else #NP(TSS selector)
         // done in task_switch()
@@ -453,7 +455,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
             push_32(error_code);
           else
             push_16(error_code);
-          }
+        }
 
         // instruction pointer must be in CS limit, else #GP(0)
         if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -463,32 +465,31 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
         return;
 
-      case 6: // 286 interrupt gate
-      case 7: // 286 trap gate
+      case  6: // 286 interrupt gate
+      case  7: // 286 trap gate
       case 14: // 386 interrupt gate
       case 15: // 386 trap gate
         if ( gate_descriptor.type >= 14 ) { // 386 gate
           gate_dest_selector = gate_descriptor.u.gate386.dest_selector;
           gate_dest_offset   = gate_descriptor.u.gate386.dest_offset;
-          }
+        }
         else { // 286 gate
           gate_dest_selector = gate_descriptor.u.gate286.dest_selector;
           gate_dest_offset   = gate_descriptor.u.gate286.dest_offset;
-          }
+        }
 
         // examine CS selector and descriptor given in gate descriptor
         // selector must be non-null else #GP(EXT)
         if ( (gate_dest_selector & 0xfffc) == 0 ) {
           BX_PANIC(("int_trap_gate(): selector null"));
           exception(BX_GP_EXCEPTION, 0, 0);
-          }
+        }
 
         parse_selector(gate_dest_selector, &cs_selector);
 
         // selector must be within its descriptor table limits
         // else #GP(selector+EXT)
-        fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-                                BX_GP_EXCEPTION);
+        fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
         parse_descriptor(dword1, dword2, &cs_descriptor);
 
         // descriptor AR byte must indicate code seg
@@ -496,20 +497,22 @@ BX_CPU_THIS_PTR save_esp = ESP;
         if ( cs_descriptor.valid==0 ||
              cs_descriptor.segment==0 ||
              cs_descriptor.u.segment.executable==0 ||
-             cs_descriptor.dpl>CPL ) {
+             cs_descriptor.dpl>CPL )
+        {
           BX_DEBUG(("interrupt(): not code segment"));
           exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-          }
+        }
 
         // segment must be present, else #NP(selector + EXT)
         if ( cs_descriptor.p==0 ) {
           BX_DEBUG(("interrupt(): segment not present"));
           exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-          }
+        }
 
         // if code segment is non-conforming and DPL < CPL then
         // INTERRUPT TO INNER PRIVILEGE:
-        if ( cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL ) {
+        if ( cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL )
+        {
           Bit16u old_SS, old_CS, SS_for_cpl_x;
           Bit32u ESP_for_cpl_x, old_EIP, old_ESP;
           bx_descriptor_t ss_descriptor;
@@ -527,14 +530,13 @@ BX_CPU_THIS_PTR save_esp = ESP;
             BX_PANIC(("interrupt(): SS selector null"));
             /* TS(ext) */
             exception(BX_TS_EXCEPTION, 0, 0);
-            }
+          }
 
           // selector index must be within its descriptor table limits
           // else #TS(SS selector + EXT)
           parse_selector(SS_for_cpl_x, &ss_selector);
           // fetch 2 dwords of descriptor; call handles out of limits checks
-          fetch_raw_descriptor(&ss_selector, &dword1, &dword2,
-                                  BX_TS_EXCEPTION);
+          fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
           parse_descriptor(dword1, dword2, &ss_descriptor);
 
           // selector rpl must = dpl of code segment,
@@ -542,30 +544,31 @@ BX_CPU_THIS_PTR save_esp = ESP;
           if (ss_selector.rpl != cs_descriptor.dpl) {
             BX_PANIC(("interrupt(): SS.rpl != CS.dpl"));
             exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
+          }
 
           // stack seg DPL must = DPL of code segment,
           // else #TS(SS selector + ext)
           if (ss_descriptor.dpl != cs_descriptor.dpl) {
             BX_PANIC(("interrupt(): SS.dpl != CS.dpl"));
             exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
+          }
 
           // descriptor must indicate writable data segment,
           // else #TS(SS selector + EXT)
           if (ss_descriptor.valid==0 ||
               ss_descriptor.segment==0  ||
               ss_descriptor.u.segment.executable==1  ||
-              ss_descriptor.u.segment.r_w==0) {
+              ss_descriptor.u.segment.r_w==0)
+          {
             BX_PANIC(("interrupt(): SS not writable data segment"));
             exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
+          }
 
           // seg must be present, else #SS(SS selector + ext)
           if (ss_descriptor.p==0) {
             BX_PANIC(("interrupt(): SS not present"));
             exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
+          }
 
           if (gate_descriptor.type>=14) {
             // 386 int/trap gate
@@ -576,7 +579,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
               bytes = 20;
             if (v8086_mode())
               bytes += 16;
-            }
+          }
           else {
             // new stack must have room for 10|12 bytes, else #SS(0)
             if ( is_error_code )
@@ -586,18 +589,17 @@ BX_CPU_THIS_PTR save_esp = ESP;
             if (v8086_mode()) {
               bytes += 8;
               BX_PANIC(("interrupt: int/trap gate VM"));
-              }
             }
+          }
 
-// 486,Pentium books
-// new stack must have room for 10/12 bytes, else #SS(0) 486 book
-// PPro+
-// new stack must have room for 10/12 bytes, else #SS(seg selector)
-          if ( !can_push(&ss_descriptor, ESP_for_cpl_x, bytes) ) {
-            BX_PANIC(("interrupt(): new stack doesn't have room for %u bytes",
-               (unsigned) bytes));
-            // SS(???)
-            exception(BX_SS_EXCEPTION, 0, 0);
+          // 486,Pentium books
+          // new stack must have room for 10/12 bytes, else #SS(0) 486 book
+          // PPro+
+          // new stack must have room for 10/12 bytes, else #SS(seg selector)
+          if ( !can_push(&ss_descriptor, ESP_for_cpl_x, bytes) )
+          {
+            BX_PANIC(("interrupt(): new stack doesn't have room for %u bytes", (unsigned) bytes));
+            exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
           }
 
           // IP must be within CS segment boundaries, else #GP(0)
@@ -617,7 +619,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
           if (ss_descriptor.u.segment.d_b)
             ESP = ESP_for_cpl_x;
           else
-            SP = ESP_for_cpl_x; // leave upper 16bits
+             SP = ESP_for_cpl_x; // leave upper 16bits
 
           // load new CS:IP values from gate
           // set CPL to new code segment DPL
@@ -651,7 +653,8 @@ BX_CPU_THIS_PTR save_esp = ESP;
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0;
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
-              }
+            }
+
             // push long pointer to old stack onto new stack
             push_32(old_SS);
             push_32(old_ESP);
@@ -665,11 +668,11 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
             if ( is_error_code )
               push_32(error_code);
-            }
+          }
           else { // 286 int/trap gate
             if (is_v8086_mode) {
               BX_PANIC(("286 int/trap gate, VM"));
-              }
+            }
             // push long pointer to old stack onto new stack
             push_16(old_SS);
             push_16(old_ESP); // ignores upper 16bits
@@ -683,18 +686,19 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
             if ( is_error_code )
               push_16(error_code);
-            }
+          }
 
           return;
-          }
+        }
 
         if (v8086_mode()) {
           exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-          }
+        }
 
         // if code segment is conforming OR code segment DPL = CPL then
         // INTERRUPT TO SAME PRIVILEGE LEVEL:
-        if ( cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL ) {
+        if ( cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL )
+        {
           int bytes;
           Bit32u temp_ESP;
 
@@ -711,13 +715,13 @@ BX_CPU_THIS_PTR save_esp = ESP;
               bytes = 16;
             else
               bytes = 12;
-            }
+          }
           else { // 286 gate
             if ( is_error_code )
               bytes = 8;
             else
               bytes = 6;
-            }
+          }
 
           if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, bytes))
           {
@@ -729,7 +733,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
           if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
             BX_ERROR(("interrupt(): IP > cs descriptor limit"));
             exception(BX_GP_EXCEPTION, 0, 0);
-            }
+          }
 
           // push flags onto stack
           // push current CS selector onto stack
@@ -740,14 +744,14 @@ BX_CPU_THIS_PTR save_esp = ESP;
             push_32(EIP);
             if ( is_error_code )
               push_32(error_code);
-            }
+          }
           else { // 286 gate
             push_16(read_flags());
             push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
             push_16(IP);
             if ( is_error_code )
               push_16(error_code);
-            }
+          }
 
           // load CS:IP from gate
           // load CS descriptor
@@ -763,7 +767,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
           BX_CPU_THIS_PTR clear_VM ();
           BX_CPU_THIS_PTR clear_RF ();
           return;
-          }
+        }
 
         // else #GP(CS selector + ext)
         BX_DEBUG(("interrupt: bad descriptor"));
@@ -778,15 +782,18 @@ BX_CPU_THIS_PTR save_esp = ESP;
       default:
         BX_PANIC(("bad descriptor type in interrupt()!"));
         break;
-      }
     }
+  }
   else
 #endif
-    { /* real mode */
+  { /* real mode */
     Bit16u cs_selector, ip;
 
     if ( (vector*4+3) > BX_CPU_THIS_PTR idtr.limit )
-      BX_PANIC(("interrupt(real mode) vector > limit"));
+    {
+      BX_ERROR(("interrupt(real mode) vector > idtr.limit"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
 
     push_16(read_flags());
 
@@ -796,7 +803,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
     push_16(ip);
 
     access_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector,     2, 0, BX_READ, &ip);
-    IP = ip;
+    EIP = (Bit32u) ip;
     access_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2, 2, 0, BX_READ, &cs_selector);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_selector);
 
@@ -807,13 +814,12 @@ BX_CPU_THIS_PTR save_esp = ESP;
     BX_CPU_THIS_PTR clear_AC ();
 #endif
     BX_CPU_THIS_PTR clear_RF ();
-    }
+  }
 }
 
-  void
-BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
-  // vector:     0..255: vector in IDT
-  // error_code: if exception generates and error, push this error code
+// vector:     0..255: vector in IDT
+// error_code: if exception generates and error, push this error code
+void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 {
   bx_bool  push_error;
   Bit8u    exception_type;
@@ -826,7 +832,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   if (bx_guard.special_unwind_stack) {
     BX_INFO (("exception() returning early because special_unwind_stack is set"));
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-    }
+  }
 #endif
 
 #if BX_EXTERNAL_DEBUGGER
@@ -844,7 +850,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]  = BX_CPU_THIS_PTR save_ss;
     EIP = BX_CPU_THIS_PTR save_eip;
     ESP = BX_CPU_THIS_PTR save_esp;
-    }
+  }
 
   BX_CPU_THIS_PTR errorno++;
   if (BX_CPU_THIS_PTR errorno >= 3) {
@@ -1001,12 +1007,12 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       push_error = 0;     // keep compiler happy for now
       exception_type = 0; // keep compiler happy for now
       break;
-    }
+  }
 
   if (exception_type != BX_ET_PAGE_FAULT) {
     // Page faults have different format
     error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
-    }
+  }
   BX_CPU_THIS_PTR EXT = 1;
 
   /* if we've already had 1st exception, see if 2nd causes a
@@ -1049,7 +1055,7 @@ BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 //      }
     BX_CPU_THIS_PTR errorno = 0; // error resolved
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-    }
+  }
   else // real mode
 #endif
   {
@@ -1142,7 +1148,7 @@ SYSCALL_LEGACY_MODE:
   bx_address temp_RIP;
   bx_descriptor_t cs_descriptor,ss_descriptor;
   bx_selector_t cs_selector,ss_selector;
-  Bit32u  dword1, dword2;
+  Bit32u dword1, dword2;
 
   if (!BX_CPU_THIS_PTR msr.sce) {
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -1326,4 +1332,5 @@ SYSRET_NON_64BIT_MODE:
     RIP = temp_RIP;
   }
 }
+
 #endif // BX_SUPPORT_X86_64

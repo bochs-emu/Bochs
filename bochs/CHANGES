@@ -190,6 +190,9 @@ Changes to next release:
  [1093796] Fix for bug #1093786 (Nigel Horne)
  [1082584] The start of Bus mice and USB mice by Ben Lunt
  [1104695] msvc6 compatibility update (Royce Mitchell III)
+ [1059199] VGA text font bug fix
+ [1108001] Null pointer on bx_atexit() (Ben Lunt)
+ [1112093] Fixed mouse cursor remain area drawing
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
@@ -201,6 +204,10 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #549793 flaw in interrupt gate handling(exception.cc)
+  #692055 SMP Error
+  #805479 Booting from disk causes illegal instruction warnings
+  #909677 pc-speaker doesn't work 
   #831751 behaviour unrealistic
   #661213 CR4.TSD is broken
   #685508 PANIC: prefetch: RIP > CS.limit 

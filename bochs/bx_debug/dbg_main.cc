@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.13 2005-01-05 19:50:54 vruppert Exp $
+// $Id: dbg_main.cc,v 1.14 2005-02-01 21:17:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -5908,5 +5908,5 @@ bx_dbg_info_flags(void)
   dbg_printf ("CF");
  dbg_printf ("\n");
 }
-#endif /* if BX_DEBUGGER */
 
+#endif /* if BX_DEBUGGER */

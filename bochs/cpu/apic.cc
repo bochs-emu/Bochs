@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.37 2005-01-13 19:03:36 sshwarts Exp $
+// $Id: apic.cc,v 1.38 2005-02-01 21:17:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -224,8 +224,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
     case APIC_DM_INIT:
       // normal INIT IPI sent to processors
       for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
-        if (deliver_bitmask & (1<<i))
-	local_apic_index[i]->init();
+        if (deliver_bitmask & (1<<i)) local_apic_index[i]->init();
       }
       // HACK! We need to do some IOAPIC init after the CPUs
       // are fired up
@@ -234,8 +233,8 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
     
     case APIC_DM_EXTINT:
       for (int i = 0; i < BX_LOCAL_APIC_NUM; i++)
-      if (deliver_bitmask & (1<<i))
-	local_apic_index[i]->bypass_irr_isr = true;
+        if (deliver_bitmask & (1<<i))
+	  local_apic_index[i]->bypass_irr_isr = true;
        break;
     case APIC_DM_SMI:
     case APIC_DM_NMI:
