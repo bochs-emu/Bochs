@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.18 2004-06-06 17:01:19 vruppert Exp $
+// $Id: memory.h,v 1.19 2004-08-06 15:49:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ public:
   Bit8u   *vector;  // aligned correctly
   size_t  len;
   size_t  megabytes;  // (len in Megabytes)
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   Bit8u   shadow[4*16*4096]; // 256k of memory
 #endif
 #if BX_DEBUGGER
@@ -85,7 +85,7 @@ public:
                                        unsigned len, void *data) BX_CPP_AttrRegparmN(3);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress, Bit8u type);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   BX_MEM_SMF Bit8u*  pci_fetch_ptr(Bit32u addr) BX_CPP_AttrRegparmN(1);
 #endif
   BX_MEM_SMF bx_bool dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);

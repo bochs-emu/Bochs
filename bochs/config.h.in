@@ -694,22 +694,22 @@ typedef
 #define BX_NUM_SIMULATORS 1
 
 // limited i440FX PCI support
-#define BX_PCI_SUPPORT 0
+#define BX_SUPPORT_PCI 0
 
 // Experimental VGA on PCI
-#define BX_PCI_VGA_SUPPORT 1
+#define BX_SUPPORT_PCIVGA 1
 
 // Experimental host PCI device mapping
-#define BX_PCI_DEV_SUPPORT 0
+#define BX_SUPPORT_PCIDEV 0
 	
-#if (BX_PCI_DEV_SUPPORT && !BX_PCI_SUPPORT)
+#if (BX_SUPPORT_PCIDEV && !BX_SUPPORT_PCI)
 #error To enable PCI host device mapping, you must also enable PCI
 #endif
 
 // limited USB on PCI
-#define BX_PCI_USB_SUPPORT 0
+#define BX_SUPPORT_PCIUSB 0
 
-#if (BX_PCI_USB_SUPPORT && !BX_PCI_SUPPORT)
+#if (BX_SUPPORT_PCIUSB && !BX_SUPPORT_PCI)
 #error To enable USB, you must also enable PCI
 #endif
 
@@ -883,7 +883,7 @@ typedef
 #endif
 
 // NE2K network emulation
-#define BX_NE2K_SUPPORT 0
+#define BX_SUPPORT_NE2K 0
 #define BX_ETH_NULL_LOGGING 1
 #define BX_ETH_FBSD_LOGGING 1
 
@@ -911,21 +911,21 @@ typedef
 
 
 // Pseudo PCI NIC
-#define BX_PCI_PNIC_SUPPORT 0
+#define BX_SUPPORT_PCIPNIC 0
 
-#if (BX_PCI_PNIC_SUPPORT && !BX_PCI_SUPPORT)
+#if (BX_SUPPORT_PCIPNIC && !BX_SUPPORT_PCI)
 #error To enable the PCI pseudo NIC, you must also enable PCI
 #endif
 
 // Check for NE2K support, since all the networking code is ifdeffed
 // under that.  There should probably be a more generic "enable-networking"
-#if (BX_PCI_PNIC_SUPPORT && !BX_NE2K_SUPPORT)
+#if (BX_SUPPORT_PCIPNIC && !BX_SUPPORT_NE2K)
 #error To enable the pseudo NIC, you must also enable ne2000
 #endif
 
 
 // I/O Interface to debug
-#define BX_IODEBUG_SUPPORT 0
+#define BX_SUPPORT_IODEBUG 0
 
 // External Debugger
 #define BX_EXTERNAL_DEBUGGER 0

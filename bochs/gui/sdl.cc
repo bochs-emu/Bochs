@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.52 2004-06-19 15:20:09 sshwarts Exp $
+// $Id: sdl.cc,v 1.53 2004-08-06 15:49:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,9 +36,9 @@
 #if BX_WITH_SDL
 
 #include <stdlib.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
-#include <SDL/SDL_thread.h>
+#include <SDL.h>
+#include <SDL_endian.h>
+#include <SDL_thread.h>
 
 #include "icon_bochs.h"
 #include "sdl.h"

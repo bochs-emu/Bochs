@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.3 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: eth_vde.cc,v 1.4 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -27,7 +27,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_NE2K_SUPPORT
+#if BX_SUPPORT_NE2K
 
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 
@@ -336,4 +336,4 @@ static int send_fd(char *name, int fddata, struct sockaddr_un *datasock, int gro
       return fd;
   }              
 
-#endif /* if BX_NE2K_SUPPORT */
+#endif /* if BX_SUPPORT_NE2K */

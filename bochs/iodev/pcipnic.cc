@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.7 2004-07-13 17:45:34 vruppert Exp $
+// $Id: pcipnic.cc,v 1.8 2004-08-06 15:49:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -25,7 +25,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#if BX_PCI_SUPPORT && BX_PCI_PNIC_SUPPORT
+#if BX_SUPPORT_PCI && BX_SUPPORT_PCIPNIC
 
 #define LOG_THIS thePNICDevice->
 
@@ -634,4 +634,4 @@ bx_pcipnic_c::rx_frame(const void *buf, unsigned io_len)
   }
 }
 
-#endif // BX_PCI_SUPPORT && BX_PCI_PNIC_SUPPORT
+#endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIPNIC

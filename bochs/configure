@@ -31657,7 +31657,7 @@ if test "${enable_ne2000+set}" = set; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_NE2K_SUPPORT 1
+#define BX_SUPPORT_NE2K 1
 _ACEOF
 
     NE2K_OBJS='ne2k.o'
@@ -32163,7 +32163,7 @@ _ACEOF
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_NE2K_SUPPORT 0
+#define BX_SUPPORT_NE2K 0
 _ACEOF
 
     NE2K_OBJS=''
@@ -32175,7 +32175,7 @@ else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_NE2K_SUPPORT 0
+#define BX_SUPPORT_NE2K 0
 _ACEOF
 
     NE2K_OBJS=''
@@ -32197,7 +32197,7 @@ if test "${enable_pci+set}" = set; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_SUPPORT 1
+#define BX_SUPPORT_PCI 1
 _ACEOF
 
     pci=1
@@ -32206,7 +32206,7 @@ _ACEOF
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_SUPPORT 0
+#define BX_SUPPORT_PCI 0
 _ACEOF
 
     pci=0
@@ -32217,7 +32217,7 @@ else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_SUPPORT 0
+#define BX_SUPPORT_PCI 0
 _ACEOF
 
     pci=0
@@ -32284,7 +32284,7 @@ echo "$as_me: error: PCI host device mapping requires Linux as host" >&2;}
         ;;
       esac
       cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_DEV_SUPPORT 1
+#define BX_SUPPORT_PCIDEV 1
 _ACEOF
 
       PCI_OBJ="$PCI_OBJ pcidev.o"
@@ -32292,7 +32292,7 @@ _ACEOF
       echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
       cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_DEV_SUPPORT 0
+#define BX_SUPPORT_PCIDEV 0
 _ACEOF
 
     fi
@@ -32302,7 +32302,7 @@ else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_DEV_SUPPORT 0
+#define BX_SUPPORT_PCIDEV 0
 _ACEOF
 
 
@@ -32318,7 +32318,7 @@ if test "${enable_usb+set}" = set; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_USB_SUPPORT 1
+#define BX_SUPPORT_PCIUSB 1
 _ACEOF
 
     PCI_OBJ="$PCI_OBJ pciusb.o"
@@ -32326,7 +32326,7 @@ _ACEOF
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_USB_SUPPORT 0
+#define BX_SUPPORT_PCIUSB 0
 _ACEOF
 
    fi
@@ -32335,7 +32335,7 @@ else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_USB_SUPPORT 0
+#define BX_SUPPORT_PCIUSB 0
 _ACEOF
 
 
@@ -32351,7 +32351,7 @@ if test "${enable_pnic+set}" = set; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_PNIC_SUPPORT 1
+#define BX_SUPPORT_PCIPNIC 1
 _ACEOF
 
     PCI_OBJ="$PCI_OBJ pcipnic.o"
@@ -32359,7 +32359,7 @@ _ACEOF
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_PNIC_SUPPORT 0
+#define BX_SUPPORT_PCIPNIC 0
 _ACEOF
 
    fi
@@ -32368,7 +32368,7 @@ else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_PCI_PNIC_SUPPORT 0
+#define BX_SUPPORT_PCIPNIC 0
 _ACEOF
 
 
@@ -34211,7 +34211,7 @@ if test "${enable_iodebug+set}" = set; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_IODEBUG_SUPPORT 1
+#define BX_SUPPORT_IODEBUG 1
 _ACEOF
 
     IODEBUG_OBJS='iodebug.o'
@@ -34219,7 +34219,7 @@ _ACEOF
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_IODEBUG_SUPPORT 0
+#define BX_SUPPORT_IODEBUG 0
 _ACEOF
 
    fi
@@ -34231,7 +34231,7 @@ else
       echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
       cat >>confdefs.h <<\_ACEOF
-#define BX_IODEBUG_SUPPORT 1
+#define BX_SUPPORT_IODEBUG 1
 _ACEOF
 
       IODEBUG_OBJS='iodebug.o'

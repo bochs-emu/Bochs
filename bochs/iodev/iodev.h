@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.48 2004-07-11 20:38:48 vruppert Exp $
+// $Id: iodev.h,v 1.49 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ class bx_pit_c;
 class bx_keyb_c;
 class bx_ioapic_c;
 class bx_g2h_c;
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
 class bx_iodebug_c;
 #endif
 
@@ -373,7 +373,7 @@ public:
   bx_devmodel_c     *pluginExtFpuIrq;
   bx_devmodel_c     *pluginGameport;
   bx_speaker_stub_c *pluginSpeaker;
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
   bx_iodebug_c	    *iodebug;
 #endif
 
@@ -438,17 +438,17 @@ private:
 
 
 
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
 #include "iodev/pci_ide.h"
-#if BX_PCI_VGA_SUPPORT
+#if BX_SUPPORT_PCIVGA
 #include "iodev/pcivga.h"
 #endif
-#if BX_PCI_DEV_SUPPORT
+#if BX_SUPPORT_PCIDEV
 #include "iodev/pcidev.h"
 #endif
-#if BX_PCI_USB_SUPPORT
+#if BX_SUPPORT_PCIUSB
 #include "iodev/pciusb.h"
 #endif
 #endif
@@ -462,7 +462,7 @@ private:
 #include "iodev/floppy.h"
 #include "iodev/harddrv.h"
 #include "iodev/vmware3.h"
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
 #   include "iodev/iodebug.h"
 #endif
 #include "iodev/keyboard.h"
@@ -478,7 +478,7 @@ private:
 #include "iodev/unmapped.h"
 #include "iodev/eth.h"
 #include "iodev/ne2k.h"
-#if BX_PCI_PNIC_SUPPORT
+#if BX_SUPPORT_PCIPNIC
 #include "iodev/pcipnic.h"
 #endif
 #include "iodev/guest2host.h"

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.27 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: eth_fbsd.cc,v 1.28 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_NE2K_SUPPORT && defined(ETH_FBSD)
+#if BX_SUPPORT_NE2K && defined(ETH_FBSD)
 
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 
@@ -381,5 +381,5 @@ bx_fbsd_pktmover_c::rx_timer(void)
   }  
 }
 
-#endif /* if BX_NE2K_SUPPORT && defined(ETH_FBSD) */
+#endif /* if BX_SUPPORT_NE2K && defined(ETH_FBSD) */
 

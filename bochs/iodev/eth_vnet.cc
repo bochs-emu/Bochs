@@ -14,7 +14,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#if BX_NE2K_SUPPORT
+#if BX_SUPPORT_NE2K
 
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 
@@ -974,4 +974,4 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
 
 
 
-#endif /* if BX_NE2K_SUPPORT */
+#endif /* if BX_SUPPORT_NE2K */

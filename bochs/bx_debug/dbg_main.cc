@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.5 2004-06-19 15:20:07 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.6 2004-08-06 15:49:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3061,7 +3061,7 @@ bx_dbg_dump_cpu_command(void)
     dbg_printf ( "inhibit_mask:%u\n", cpu.inhibit_mask);
     }
 
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   if (bx_options.Oi440FXSupport->get ()) {
     DEV_pci_print_i440fx_state();
     }
@@ -4259,7 +4259,7 @@ bx_dbg_info_control_regs_command(void)
 void
 bx_dbg_info_ne2k(int page, int reg)
 {
-#if BX_NE2K_SUPPORT
+#if BX_SUPPORT_NE2K
   DEV_ne2k_print_info (stderr, page, reg, 0);
 #else
   dbg_printf ( "NE2000 support is not compiled in.\n");

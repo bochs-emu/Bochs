@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.257 2004-07-29 20:15:16 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.258 2004-08-06 15:49:52 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -715,7 +715,7 @@ AC_ARG_ENABLE(ne2000,
   [  --enable-ne2000                   enable limited ne2000 support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_NE2K_SUPPORT, 1)
+    AC_DEFINE(BX_SUPPORT_NE2K, 1)
     NE2K_OBJS='ne2k.o'
     NETLOW_OBJS='eth.o eth_null.o eth_vnet.o'
     AC_CHECK_HEADER(net/bpf.h, NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o")
@@ -774,14 +774,14 @@ AC_ARG_ENABLE(ne2000,
     networking=yes
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_NE2K_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_NE2K, 0)
     NE2K_OBJS=''
     NETLOW_OBJS=''
     networking=no
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_NE2K_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_NE2K, 0)
     NE2K_OBJS=''
     NETLOW_OBJS=''
     networking=no
@@ -796,18 +796,18 @@ AC_ARG_ENABLE(pci,
   [  --enable-pci                      enable limited i440FX PCI support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_PCI_SUPPORT, 1)
+    AC_DEFINE(BX_SUPPORT_PCI, 1)
     pci=1
     PCI_OBJ='pci.o pci2isa.o pci_ide.o pcivga.o'
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PCI_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_PCI, 0)
     pci=0
     PCI_OBJ=''
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PCI_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_PCI, 0)
     pci=0
     PCI_OBJ=''
     ]
@@ -860,16 +860,16 @@ AC_ARG_ENABLE(pcidev,
           AC_MSG_ERROR([PCI host device mapping requires Linux as host])
         ;;
       esac
-      AC_DEFINE(BX_PCI_DEV_SUPPORT, 1)
+      AC_DEFINE(BX_SUPPORT_PCIDEV, 1)
       PCI_OBJ="$PCI_OBJ pcidev.o"
     else
       AC_MSG_RESULT(no)
-      AC_DEFINE(BX_PCI_DEV_SUPPORT, 0)
+      AC_DEFINE(BX_SUPPORT_PCIDEV, 0)
     fi
   ],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PCI_DEV_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_PCIDEV, 0)
   ]
 )
 
@@ -878,15 +878,15 @@ AC_ARG_ENABLE(usb,
   [  --enable-usb                      enable limited USB support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_PCI_USB_SUPPORT, 1)
+    AC_DEFINE(BX_SUPPORT_PCIUSB, 1)
     PCI_OBJ="$PCI_OBJ pciusb.o"
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PCI_USB_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_PCIUSB, 0)
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PCI_USB_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_PCIUSB, 0)
     ]
   )
 
@@ -895,15 +895,15 @@ AC_ARG_ENABLE(pnic,
   [  --enable-pnic                     enable pseudo NIC support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_PCI_PNIC_SUPPORT, 1)
+    AC_DEFINE(BX_SUPPORT_PCIPNIC, 1)
     PCI_OBJ="$PCI_OBJ pcipnic.o"
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PCI_PNIC_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PCI_PNIC_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_PCIPNIC, 0)
     ]
   )
 
@@ -1811,18 +1811,18 @@ AC_ARG_ENABLE(iodebug,
   [  --enable-iodebug                  enable I/O interface to debugger],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_IODEBUG_SUPPORT, 1)
+    AC_DEFINE(BX_SUPPORT_IODEBUG, 1)
     IODEBUG_OBJS='iodebug.o'
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_IODEBUG_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_IODEBUG, 0)
    fi
    ],
   [
     if test "" = 1; then
       # enable by default if debugger is on
       AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_IODEBUG_SUPPORT, 1)
+      AC_DEFINE(BX_SUPPORT_IODEBUG, 1)
       IODEBUG_OBJS='iodebug.o'
     else
       AC_MSG_RESULT(no)

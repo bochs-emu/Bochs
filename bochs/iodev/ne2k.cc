@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.65 2004-07-26 16:04:31 vruppert Exp $
+// $Id: ne2k.cc,v 1.66 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,7 +33,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_NE2K_SUPPORT
+#if BX_SUPPORT_NE2K
 
 //Never completely fill the ne2k ring so that we never
 // hit the unclear completely full buffer condition.
@@ -120,7 +120,7 @@ bx_ne2k_c::reset(unsigned type)
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
 
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   if ((type == BX_RESET_HARDWARE) && (BX_NE2K_THIS s.pci_enabled)) {
     // This should be done by the PCI BIOS
     Bit32u baseaddr = bx_options.ne2k.Oioaddr->get ();
@@ -1303,14 +1303,14 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.65 2004-07-26 16:04:31 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.66 2004-08-06 15:49:54 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
   BX_NE2K_THIS s.pci_enabled = 0;
   strcpy(devname, "NE2000 NIC");
 
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   if ((bx_options.Oi440FXSupport->get()) &&
       (DEV_is_pci_device(BX_PLUGIN_NE2K))) {
     BX_NE2K_THIS s.pci_enabled = 1;
@@ -1423,7 +1423,7 @@ bx_ne2k_c::init(void)
 bx_ne2k_c::set_irq_level(bx_bool level)
 {
   if (BX_NE2K_THIS s.pci_enabled) {
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
     DEV_pci_set_irq(BX_NE2K_THIS s.devfunc, BX_NE2K_THIS s.pci_conf[0x3d], level);
 #endif
   } else {
@@ -1435,7 +1435,7 @@ bx_ne2k_c::set_irq_level(bx_bool level)
   }
 }
 
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
 
   // static pci configuration space read callback handler
   // redirects to non-static class handler to avoid virtual functions
@@ -1532,7 +1532,7 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   }
 }
 
-#endif /* BX_PCI_SUPPORT */
+#endif /* BX_SUPPORT_PCI */
 
 #if BX_DEBUGGER
 
@@ -1790,4 +1790,4 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
 
 #endif
 
-#endif /* if BX_NE2K_SUPPORT */
+#endif /* if BX_SUPPORT_NE2K */

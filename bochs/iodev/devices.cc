@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.74 2004-07-03 08:20:19 vruppert Exp $
+// $Id: devices.cc,v 1.75 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,20 +52,20 @@ bx_devices_c::bx_devices_c(void)
 
   read_port_to_handler = NULL;
   write_port_to_handler = NULL;
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   pluginPciBridge = &stubPci;
   pluginPci2IsaBridge = &stubPci2Isa;
   pluginPciIdeController = NULL;
-#if BX_PCI_VGA_SUPPORT
+#if BX_SUPPORT_PCIVGA
     pluginPciVgaAdapter = NULL;
 #endif
-#if BX_PCI_DEV_SUPPORT
+#if BX_SUPPORT_PCIDEV
     pluginPciDevAdapter = NULL;
 #endif
-#if BX_PCI_USB_SUPPORT
+#if BX_SUPPORT_PCIUSB
     pluginPciUSBAdapter = NULL;
 #endif        
-#if BX_PCI_PNIC_SUPPORT
+#if BX_SUPPORT_PCIPNIC
     pluginPciPNicAdapter = NULL;
 #endif
 #endif
@@ -87,7 +87,7 @@ bx_devices_c::bx_devices_c(void)
   pluginGameport = NULL;
   pluginSpeaker = &stubSpeaker;
   g2h = NULL;
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
   iodebug = NULL;
 #endif
 }
@@ -106,7 +106,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.74 2004-07-03 08:20:19 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.75 2004-08-06 15:49:54 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -174,20 +174,20 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   // PCI logic (i440FX)
   if (bx_options.Oi440FXSupport->get ()) {
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
     PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
-#if BX_PCI_VGA_SUPPORT
+#if BX_SUPPORT_PCIVGA
     PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
 #endif
-#if BX_PCI_USB_SUPPORT
+#if BX_SUPPORT_PCIUSB
     PLUG_load_plugin(pciusb, PLUGTYPE_OPTIONAL);
 #endif
-#if BX_PCI_DEV_SUPPORT
+#if BX_SUPPORT_PCIDEV
     PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
 #endif
-#if BX_PCI_PNIC_SUPPORT && BX_NE2K_SUPPORT
+#if BX_SUPPORT_PCIPNIC && BX_SUPPORT_NE2K
   if (bx_options.ne2k.Opresent->get ()) {
     PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
   }
@@ -199,7 +199,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   // NE2000 NIC
   if (bx_options.ne2k.Opresent->get ()) {
-#if BX_NE2K_SUPPORT
+#if BX_SUPPORT_NE2K
     PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
 #else
     BX_ERROR(("Bochs is not compiled with NE2K support"));
@@ -233,7 +233,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #endif
   }
 
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   pluginPciBridge->init ();
   pluginPci2IsaBridge->init ();
 #endif
@@ -252,7 +252,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   bx_slowdown_timer.init();
 
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
   iodebug = &bx_iodebug;
   iodebug->init();
 #endif
@@ -312,7 +312,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 bx_devices_c::reset(unsigned type)
 {
   pluginUnmapped->reset(type);
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   if (bx_options.Oi440FXSupport->get ()) {
     pluginPciBridge->reset(type);
     pluginPci2IsaBridge->reset(type);
@@ -329,7 +329,7 @@ bx_devices_c::reset(unsigned type)
   pluginPicDevice->reset(type);
   pit->reset(type);
   bx_slowdown_timer.reset(type);
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
   iodebug->reset(type);
 #endif
   // now reset optional plugins

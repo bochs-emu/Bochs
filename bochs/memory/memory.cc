@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.32 2004-07-29 20:15:18 sshwarts Exp $
+// $Id: memory.cc,v 1.33 2004-08-06 15:49:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,7 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
 
   // Note: accesses should always be contained within a single page now.
 
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
   bx_iodebug_c::mem_write(cpu, addr, len, data);
 #endif
 
@@ -127,7 +127,7 @@ inc_one:
     // (ignore write)
     //BX_INFO(("ROM lock %08x: len=%u",
     //  (unsigned) a20addr, (unsigned) len));
-#if BX_PCI_SUPPORT == 0
+#if BX_SUPPORT_PCI == 0
 #if BX_SHADOW_RAM
     // Write it since its in shadow RAM
     vector[a20addr] = *data_ptr;
@@ -206,7 +206,7 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   Bit8u *data_ptr;
   Bit32u a20addr;
 
-#if BX_IODEBUG_SUPPORT
+#if BX_SUPPORT_IODEBUG
   bx_iodebug_c::mem_read(cpu, addr, len, data);
 #endif
  
@@ -277,13 +277,13 @@ inc_one:
       }
 
     // addr in range 00080000 .. 000FFFFF
-#if BX_PCI_SUPPORT == 0
+#if BX_SUPPORT_PCI == 0
     if ((a20addr <= 0x0009ffff) || (a20addr >= 0x000c0000) ) {
       // regular memory 80000 .. 9FFFF, C0000 .. F0000
       *data_ptr = vector[a20addr];
       goto inc_one;
       }
-#else   // #if BX_PCI_SUPPORT == 0
+#else   // #if BX_SUPPORT_PCI == 0
     if (a20addr <= 0x0009ffff) {
       *data_ptr = vector[a20addr];
       goto inc_one;
@@ -311,7 +311,7 @@ inc_one:
         }
       goto inc_one;
       }
-#endif  // #if BX_PCI_SUPPORT == 0
+#endif  // #if BX_SUPPORT_PCI == 0
     }
   else {
     // some or all of data is outside limits of physical memory
@@ -336,12 +336,12 @@ inc_one:
     }
 #endif
     for (i = 0; i < len; i++) {
-#if BX_PCI_SUPPORT == 0
+#if BX_SUPPORT_PCI == 0
       if (a20addr < BX_MEM_THIS len)
         *data_ptr = vector[a20addr];
       else
         *data_ptr = 0xff;
-#else   // BX_PCI_SUPPORT == 0
+#else   // BX_SUPPORT_PCI == 0
       if (a20addr < BX_MEM_THIS len) {
         if ((a20addr >= 0x000C0000) && (a20addr <= 0x000FFFFF)) {
           if (!bx_options.Oi440FXSupport->get ())
@@ -369,7 +369,7 @@ inc_one:
         }
       else 
         *data_ptr = 0xff;
-#endif  // BX_PCI_SUPPORT == 0
+#endif  // BX_SUPPORT_PCI == 0
       addr++;
       a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN

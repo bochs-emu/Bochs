@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.14 2004-07-04 17:07:49 vruppert Exp $
+// $Id: ne2k.h,v 1.15 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -193,7 +193,7 @@ typedef struct {
 
     // pci stuff
     bx_bool pci_enabled;
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
     Bit8u devfunc;
     Bit8u pci_conf[256];
 #endif
@@ -241,14 +241,14 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
   static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
 #endif
 #if !BX_USE_NE2K_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
   Bit32u pci_read(Bit8u address, unsigned io_len);
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif

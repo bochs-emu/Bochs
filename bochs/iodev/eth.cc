@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.19 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: eth.cc,v 1.20 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_NE2K_SUPPORT
+#if BX_SUPPORT_NE2K
 
 #define LOG_THIS /* not needed */
 
@@ -205,4 +205,4 @@ int execute_script( char* scriptname, char* arg1 )
 
 #endif // (HAVE_ETHERTAP==1) || (HAVE_TUNTAP==1)
 
-#endif /* if BX_NE2K_SUPPORT */
+#endif /* if BX_SUPPORT_NE2K */

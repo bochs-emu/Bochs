@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.6 2004-07-11 20:38:48 vruppert Exp $
+// $Id: pci_ide.cc,v 1.7 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
 
 #define LOG_THIS thePciIdeController->
 
@@ -262,4 +262,4 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   }
 }
 
-#endif /* BX_PCI_SUPPORT */
+#endif /* BX_SUPPORT_PCI */

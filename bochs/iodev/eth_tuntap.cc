@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.13 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: eth_tuntap.cc,v 1.14 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,7 +87,7 @@
 #define BX_PLUGGABLE
  
 #include "iodev.h"
-#if BX_NE2K_SUPPORT
+#if BX_SUPPORT_NE2K
 
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 
@@ -437,4 +437,4 @@ void bx_tuntap_pktmover_c::rx_timer ()
       return fd;
   }              
 
-#endif /* if BX_NE2K_SUPPORT */
+#endif /* if BX_SUPPORT_NE2K */

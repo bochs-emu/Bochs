@@ -27,7 +27,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#if BX_PCI_SUPPORT && BX_PCI_DEV_SUPPORT
+#if BX_SUPPORT_PCI && BX_SUPPORT_PCIDEV
 
 #include "kernel_pcidev.h"
 
@@ -591,4 +591,4 @@ bx_pcidev_c::write(void *param, Bit32u address, Bit32u value, unsigned io_len)
     BX_ERROR(("pcidev I/O write error"));
 }
 
-#endif // BX_PCI_SUPPORT && BX_PCI_DEV_SUPPORT
+#endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIDEV

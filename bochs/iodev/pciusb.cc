@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.9 2004-07-12 17:34:28 vruppert Exp $
+// $Id: pciusb.cc,v 1.10 2004-08-06 15:49:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#if BX_PCI_SUPPORT && BX_PCI_USB_SUPPORT
+#if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 
 #define LOG_THIS theUSBDevice->
 
@@ -653,4 +653,4 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   BX_DEBUG(("Experimental USB PCI write register 0x%02x value 0x%s", address, szTmp));
 }
 
-#endif // BX_PCI_SUPPORT && BX_PCI_USB_SUPPORT
+#endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

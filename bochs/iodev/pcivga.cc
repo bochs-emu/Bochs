@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.5 2004-06-29 19:24:34 vruppert Exp $
+// $Id: pcivga.cc,v 1.6 2004-08-06 15:49:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -34,7 +34,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#if BX_PCI_SUPPORT && BX_PCI_VGA_SUPPORT
+#if BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA
 
 #define LOG_THIS thePciVgaAdapter->
 
@@ -246,4 +246,4 @@ bx_pcivga_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   BX_DEBUG(("Experimental PCIVGA write register 0x%02x value 0x%s", address, szTmp));
 }
 
-#endif // BX_PCI_SUPPORT && BX_PCI_VGA_SUPPORT
+#endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA

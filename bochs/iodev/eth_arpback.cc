@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.12 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: eth_arpback.cc,v 1.13 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
  
 #include "iodev.h"
 
-#if BX_NE2K_SUPPORT && defined(ETH_ARPBACK)
+#if BX_SUPPORT_NE2K && defined(ETH_ARPBACK)
 
 #include "crc32.h"
 #include "eth_packetmaker.h"
@@ -210,5 +210,5 @@ void bx_arpback_pktmover_c::rx_timer (void)
   }
 }
 
-#endif /* if BX_NE2K_SUPPORT && defined(ETH_ARPBACK) */
+#endif /* if BX_SUPPORT_NE2K && defined(ETH_ARPBACK) */
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.19 2004-07-12 18:16:16 vruppert Exp $
+// $Id: pci2isa.cc,v 1.20 2004-08-06 15:49:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#if BX_PCI_SUPPORT
+#if BX_SUPPORT_PCI
 
 #define LOG_THIS thePci2IsaBridge->
 
@@ -392,4 +392,4 @@ bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
     }
 }
 
-#endif /* BX_PCI_SUPPORT */
+#endif /* BX_SUPPORT_PCI */
