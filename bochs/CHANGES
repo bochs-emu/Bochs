@@ -4,7 +4,7 @@ TO DO LIST:
 - (DONE) check logs in cpu
 - check logs in gui
   - (DONE) carbon.cc
-  - everyting else
+  - everything else
 - check logs in iodev (Christophe is working on this, done biosdev to keyboard)
 - (DONE) check logs in main directory
   - (DONE) check logs of configure.in
@@ -25,6 +25,22 @@ TO DO LIST:
 
 
 Changes in 2.0 (December 2002):
+
+Since the change log is hundreds of lines long, here is a very brief summary.
+- 2x emulation speedup!!!
+- added plugin devices and guis. Now you can compile with many more
+  options, and choose between them at runtime.
+- added emulation of AMD x86-64, MMX, SSE, SSE2 instructions
+- add wxWindows port (a graphical configuration interface and display lib)
+  and SVGAlib port (full screen display for Linux without X11)
+- improvements in many I/O devices: for example up to 8 hard disks/cdroms,
+  TUN/TAP network interface, 360k floppies,
+- improved MacOSX/Carbon interface and updated MacOS9 port
+- GDB remote stub, allows symbolic debugging with Bochs simulation.
+- support for up to 32gig hard disk images
+
+
+Detailed change log follows.
 
 - configure script/compile/porting to other OSes/installation
   - added plugin architecture
@@ -78,7 +94,6 @@ Changes in 2.0 (December 2002):
   - add -lm when it's needed, and not when it's not (Bryce)
   - add configure support for 8 processors. Bochs can support up to 15
     with some work on the BIOS.
-  - fix cdrom detection on BeOS (Bryce)
   - fix nmake makefile generation (Psyon)
   - improved pthread detection function from ac-archive project on SF
   - add installer package for Windows, using Nullsoft
@@ -269,6 +284,7 @@ I'm listing them here to remind us about them:
     - added multiple cdrom support for win32 (NT/2000 version untested). The
       ASPI version uses the cdrom drives in the system's order. Drive letters
       are not used by ASPI. (Volker)
+    - fix configure script's cdrom detection on BeOS (Bryce)
     - fix physical CD change at runtime (Bryce)
   - cmos
     - fix panic when WinXP read port 70h (Christophe)
