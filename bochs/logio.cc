@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.20 2002-06-28 14:03:47 cbothamy Exp $
+// $Id: logio.cc,v 1.21 2002-07-16 12:04:46 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ iofunctions::init(void) {
 	magic=MAGIC_LOGNUM;
 
 	// sets the default logprefix
-	strcpy(logprefix,"%1$011lld%2$c%4$s");
+	strcpy(logprefix,"%t%e%d");
 	n_logfn = 0;
 	init_log(stderr);
 	log = new logfunc_t(this);
@@ -130,33 +130,8 @@ iofunctions::init_log(int fd)
 // 1. timer, 2. event, 3. cpu0 eip, 4. device
 void 
 iofunctions::set_log_prefix(const char* prefix) {
-	int   i=0;
-	char *s=(char *)prefix;
-	char *f;
 	
-	strcpy(logprefix,"");
-	while (*s!=0) {
-		if (*s!='%') {
-			if (strlen(logprefix)<sizeof(logprefix)-1) 
-				strncat(logprefix,s,1);
-			else break;
-		}
-		else {
-			f="";
-			switch (*(++s)) {
-				case 't': f="%1$011lld"; break;
-				case 'i': f="%3$08x"; break;
-				case 'e': f="%2$c"; break;
-				case 'd': f="%4$s"; break;
-				case '%': f="%%"; break;
-			}
-			if(strlen(logprefix)+strlen(f)<sizeof(logprefix)-1)
-				strcat(logprefix,f);
-			else break;
-			if(*s==0)break;
-		}
-		s++;
-	}
+	strcpy(logprefix,prefix);
 }
 
 //  iofunctions::out( class, level, prefix, fmt, ap)
@@ -166,7 +141,7 @@ iofunctions::set_log_prefix(const char* prefix) {
 void
 iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 {
-	char c=' ';
+	char c=' ', *s;
 	assert (magic==MAGIC_LOGNUM);
 	assert (this != NULL);
 	assert (logfd != NULL);
@@ -186,7 +161,38 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 	//if(prefix != NULL)
 	//	fprintf(logfd, "%s ", prefix);
 
-	fprintf(logfd, logprefix, bx_pc_system.time_ticks(), c, BX_CPU(0)->eip, prefix==NULL?"":prefix);
+	s=logprefix;
+	while(*s) {
+	  switch(*s) {
+	    case '%':
+	      if(*(s+1))s++;
+	      else break;
+	      switch(*s) {
+		case 'd':
+                  fprintf(logfd, "%s", prefix==NULL?"":prefix);
+		  break;
+		case 't':
+                  fprintf(logfd, "%011lld", bx_pc_system.time_ticks());
+		  break;
+		case 'i':
+                  fprintf(logfd, "%08x", BX_CPU(0)->eip);
+		  break;
+		case 'e':
+                  fprintf(logfd, "%c", c);
+		  break;
+		case '%':
+                  fprintf(logfd,"%%");
+		  break;
+		default:
+                  fprintf(logfd,"%%%c",*s);
+	        }
+              break;
+	    default :
+              fprintf(logfd,"%c",*s);
+	    }
+	  s++;
+          }
+
         fprintf(logfd," ");
 
 	if(l==LOGLEV_PANIC)
