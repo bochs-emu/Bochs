@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.89 2002-03-06 23:31:02 cbothamy Exp $
+// $Id: main.cc,v 1.90 2002-03-14 20:14:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -177,6 +177,24 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
     case BXP_CMOS_IMAGE:
       SIM->get_param (BXP_CMOS_PATH)->set_enabled (val);
       break;
+    case BXP_CDROM_INSERTED:
+      if ((set) && (SIM->get_init_done ())) {
+        bx_devices.hard_drive->set_cd_media_status(val == BX_INSERTED);
+        bx_gui.update_floppy_status_buttons ();
+      }
+      break;
+    case BXP_FLOPPYA_STATUS:
+      if ((set) && (SIM->get_init_done ())) {
+        bx_devices.floppy->set_media_status(0, val == BX_INSERTED);
+        bx_gui.update_floppy_status_buttons ();
+      }
+      break;
+    case BXP_FLOPPYB_STATUS:
+      if ((set) && (SIM->get_init_done ())) {
+        bx_devices.floppy->set_media_status(1, val == BX_INSERTED);
+        bx_gui.update_floppy_status_buttons ();
+      }
+      break;
     default:
       BX_PANIC (("bx_param_handler called with unknown id %d", id));
       return -1;
@@ -194,28 +212,50 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
   switch (param->get_id ()) {
     case BXP_FLOPPYA_PATH:
       if (set==1) {
-	SIM->get_param_num(BXP_FLOPPYA_TYPE)->set_enabled (!empty);
-	SIM->get_param_num(BXP_FLOPPYA_STATUS)->set_enabled (!empty);
-	if (bx_devices.floppy) {
-	  // tell the device model that we removed, then inserted the disk
-	  bx_devices.floppy->set_media_status(0, 0);
-	  bx_devices.floppy->set_media_status(0, 1);
-	}
-	// update the UI, if it exists
-	if (SIM->get_init_done ()) bx_gui.update_floppy_status_buttons ();
+        if (SIM->get_init_done ()) {
+          if (empty) {
+            bx_devices.floppy->set_media_status(0, 0);
+            bx_gui.update_floppy_status_buttons ();
+          } else {
+            if (!SIM->get_param_num(BXP_FLOPPYA_TYPE)->get_enabled()) {
+              BX_ERROR(("Cannot add a floppy drive at runtime"));
+              bx_options.floppya.Opath->set ("none");
+            }
+          }
+          if ((bx_devices.floppy) &&
+              (SIM->get_param_num(BXP_FLOPPYA_STATUS)->get () == BX_INSERTED)) {
+            // tell the device model that we removed, then inserted the disk
+            bx_devices.floppy->set_media_status(0, 0);
+            bx_devices.floppy->set_media_status(0, 1);
+          }
+        } else {
+          SIM->get_param_num(BXP_FLOPPYA_TYPE)->set_enabled (!empty);
+          SIM->get_param_num(BXP_FLOPPYA_STATUS)->set_enabled (!empty);
+        }
       }
       break;
     case BXP_FLOPPYB_PATH:
       if (set==1) {
-	SIM->get_param_num(BXP_FLOPPYB_TYPE)->set_enabled (!empty);
-	SIM->get_param_num(BXP_FLOPPYB_STATUS)->set_enabled (!empty);
-	if (bx_devices.floppy) {
-	  // tell the device model that we removed, then inserted the disk
-	  bx_devices.floppy->set_media_status(1, 0);
-	  bx_devices.floppy->set_media_status(1, 1);
-	}
-	// update the UI, if it exists
-	if (SIM->get_init_done ()) bx_gui.update_floppy_status_buttons ();
+        if (SIM->get_init_done ()) {
+          if (empty) {
+            bx_devices.floppy->set_media_status(1, 0);
+            bx_gui.update_floppy_status_buttons ();
+          } else {
+            if (!SIM->get_param_num(BXP_FLOPPYB_TYPE)->get_enabled ()) {
+              BX_ERROR(("Cannot add a floppy drive at runtime"));
+              bx_options.floppyb.Opath->set ("none");
+            }
+          }
+          if ((bx_devices.floppy) &&
+              (SIM->get_param_num(BXP_FLOPPYB_STATUS)->get () == BX_INSERTED)) {
+            // tell the device model that we removed, then inserted the disk
+            bx_devices.floppy->set_media_status(1, 0);
+            bx_devices.floppy->set_media_status(1, 1);
+          }
+        } else {
+          SIM->get_param_num(BXP_FLOPPYB_TYPE)->set_enabled (!empty);
+          SIM->get_param_num(BXP_FLOPPYB_STATUS)->set_enabled (!empty);
+        }
       }
       break;
     case BXP_DISKC_PATH:
@@ -236,8 +276,26 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       break;
     case BXP_CDROM_PATH:
       if (set==1) {
-	SIM->get_param_num(BXP_CDROM_PRESENT)->set (!empty);
-	SIM->get_param_num(BXP_CDROM_INSERTED)->set_enabled (!empty);
+        if (SIM->get_init_done ()) {
+          if (empty) {
+            bx_devices.hard_drive->set_cd_media_status(0);
+            bx_gui.update_floppy_status_buttons ();
+          } else {
+            if (!SIM->get_param_num(BXP_CDROM_PRESENT)->get ()) {
+              BX_ERROR(("Cannot add a cdrom drive at runtime"));
+              bx_options.cdromd.Opath->set ("none");
+            }
+          }
+          if ((bx_devices.hard_drive) &&
+              (SIM->get_param_num(BXP_CDROM_INSERTED)->get () == BX_INSERTED)) {
+            // tell the device model that we removed, then inserted the cd
+            bx_devices.hard_drive->set_cd_media_status(0);
+            bx_devices.hard_drive->set_cd_media_status(1);
+          }
+        } else {
+          SIM->get_param_num(BXP_CDROM_PRESENT)->set (!empty);
+          SIM->get_param_num(BXP_CDROM_INSERTED)->set_enabled (!empty);
+        }
       }
       break;
     case BXP_SCREENMODE:
@@ -289,6 +347,7 @@ void bx_init_options ()
   menu->get_options ()->set (menu->BX_SERIES_ASK);
   bx_options.floppya.Opath->set_handler (bx_param_string_handler);
   bx_options.floppya.Opath->set ("none");
+  bx_options.floppya.Oinitial_status->set_handler (bx_param_handler);
 
   bx_options.floppyb.Opath = new bx_param_string_c (BXP_FLOPPYB_PATH,
       "floppyb:path",
@@ -323,6 +382,7 @@ void bx_init_options ()
   menu->get_options ()->set (menu->BX_SERIES_ASK);
   bx_options.floppyb.Opath->set_handler (bx_param_string_handler);
   bx_options.floppyb.Opath->set ("none");
+  bx_options.floppyb.Oinitial_status->set_handler (bx_param_handler);
 
   // diskc options
   bx_options.diskc.Opresent = new bx_param_bool_c (BXP_DISKC_PRESENT,
@@ -489,6 +549,7 @@ void bx_init_options ()
   menu->get_options ()->set (menu->BX_SERIES_ASK);
   bx_options.cdromd.Opath->set_handler (bx_param_string_handler);
   bx_options.cdromd.Opath->set ("none");
+  bx_options.cdromd.Oinserted->set_handler (bx_param_handler);
 
   bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
       "New Hard Drive Support",
@@ -2031,9 +2092,9 @@ bx_write_cdrom_options (FILE *fp, int drive, bx_cdrom_options *opt)
     fprintf (fp, "# no cdromd\n");
     return 0;
   }
-  fprintf (fp, "cdromd: dev=%s, status=%s\n", 
+  fprintf (fp, "cdromd: dev=%s, status=%s\n",
     opt->Opath->getptr (),
-    opt->Oinserted ? "inserted" : "ejected");
+    opt->Oinserted->get ()==BX_INSERTED ? "inserted" : "ejected");
   return 0;
 }
 
