@@ -2,7 +2,7 @@
 Patch name: patch.ne2k-start-bit
 Author: ece lca <ecelca@yahoo.com>
 Date: Wed, 8 Aug 2001 17:53:06 -0700 (PDT)
-RCS Id: $Id: patch.ne2k-start-bit,v 1.1 2001-08-10 17:19:18 bdenney Exp $
+RCS Id: $Id: patch.ne2k-start-bit,v 1.2 2001-09-29 04:34:00 bdenney Exp $
 
 Detailed description:
 I compiled Bochs on Linux and installed a linux
@@ -14,6 +14,10 @@ bit is misused in ne2k.cc. According to the chip
 specification, even if START=0, the chip does not stop
 working. 
 
+Bryce messed up version 1.1 of this patch.  Version 1.2 should be
+what ecelca@yahoo.com intended.
+
+
 Patch was created with:
   cvs diff -c
 Apply patch to what version:
@@ -23,24 +27,18 @@ Instructions:
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 RCS file: /cvsroot/bochs/bochs/iodev/ne2k.cc,v
-retrieving revision 1.18
-diff -c -r1.18 ne2k.cc
-*** iodev/ne2k.cc	2001/06/27 20:27:49	1.18
---- iodev/ne2k.cc	2001/08/10 17:15:45
-***************
-*** 1063,1069 ****
-  
-    BX_DEBUG(("rx_frame with length %d", io_len));
-  
-!   if ((BX_NE2K_THIS s.CR.start == 0) ||
-        (BX_NE2K_THIS s.page_start == 0) ||
-        (BX_NE2K_THIS s.TCR.loop_cntl != 0)) {
-      return;
---- 1063,1069 ----
-  
-    BX_DEBUG(("rx_frame with length %d", io_len));
-  
-!   if ((BX_NE2K_THIS s.CR.stop == 0) ||
-        (BX_NE2K_THIS s.page_start == 0) ||
-        (BX_NE2K_THIS s.TCR.loop_cntl != 0)) {
-      return;
+retrieving revision 1.19
+diff -u -r1.19 ne2k.cc
+--- iodev/ne2k.cc       2001/08/31 22:02:29     1.19
++++ iodev/ne2k.cc       2001/09/29 04:31:43
+@@ -1063,7 +1063,8 @@
+ 
+   BX_DEBUG(("rx_frame with length %d", io_len));
+ 
+-  if ((BX_NE2K_THIS s.CR.start == 0) ||
++
++  if ((BX_NE2K_THIS s.CR.stop != 0) ||
+       (BX_NE2K_THIS s.page_start == 0) ||
+       (BX_NE2K_THIS s.TCR.loop_cntl != 0)) {
+     return;
+
