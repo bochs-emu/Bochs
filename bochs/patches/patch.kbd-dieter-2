@@ -1,0 +1,299 @@
+----------------------------------------------------------------------
+Patch name: patch.kbd-dieter-2
+Author: Dieter Mittelmaier <dieter.mittelmaier@freenet.de>
+Date: Wed, 4 Jul 2001 22:12:28 +0200
+RCS Id: $Id: patch.kbd-dieter-2,v 1.1 2001-11-19 18:36:35 bdenney Exp $
+
+Detailed description:
+New keyboard patch
+
+Short description:
+We now use a virtual keyboard with US-layout. X translate keycodes to
+keysyms using this virtual keyboard. So we must not think about keycodes.
+Read also comments in gui/x.cc.
+This should work with all keyboards and languages X supports.
+Hope this works on all X-servers.
+
+Cause your current keyboard implementation is a US-keyboard to BIOS-scancodes
+I must not change BX_KEY-defines.
+Changes in iodev/keyboard.cc and gui/gui.h are additional and don't hurt your
+current implementation.
+Main changes in gui/x.cc I have included in #ifdef NEW_KEYBOARD which is
+defined at top of x.cc. So you can use your current keyboard implementation
+too. Or make a configure-option.
+
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  current cvs
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+diff -urN bochs/gui/gui.h bochs/gui/gui.h
+--- bochs/gui/gui.h	Tue May 15 16:49:56 2001
++++ bochs/gui/gui.h	Mon Jul  2 15:01:56 2001
+@@ -175,6 +175,13 @@
+ #define BX_KEY_ENTER         70
+ #define BX_KEY_TAB           71
+ 
++/* need this key for german keyboards "<>|" */
++#define BX_KEY_LSGT          72
++/* just for completeness */
++#define BX_KEY_PRSC          73
++#define BX_KEY_SCLK          74
++#define BX_KEY_PAUS          75
++
+ #define BX_KEY_INSERT        76
+ #define BX_KEY_DELETE        77
+ #define BX_KEY_HOME          78
+diff -urN bochs/gui/x.cc bochs/gui/x.cc
+--- bochs/gui/x.cc	Thu May 24 16:08:54 2001
++++ bochs/gui/x.cc	Wed Jul  4 21:24:17 2001
+@@ -20,6 +20,8 @@
+ //  License along with this library; if not, write to the Free Software
+ //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ 
++/* Change this to 0 if it does't work */
++#define NEW_KEYBOARD 1
+ 
+ extern "C" {
+ #include <X11/Xlib.h>
+@@ -27,6 +29,10 @@
+ #include <X11/Xos.h>
+ #include <X11/Xatom.h>
+ #include <X11/keysym.h>
++#ifdef NEW_KEYBOARD
++#include <X11/XKBlib.h>
++#endif
++
+ }
+ 
+ #include "bochs.h"
+@@ -37,6 +43,12 @@
+ 
+ #define MAX_MAPPED_STRING_LENGTH 10
+ 
++#ifdef NEW_KEYBOARD
++XkbDescPtr bx_xkb;  /* Our virtual keyboard with US-layout */
++XkbDescPtr bx_xkb_orig;
++static void init_keyboard(void);
++#endif
++
+ /* These are used as arguments to nearly every Xlib routine, so it saves
+  * routine arguments to declare them global.  If there were
+  * additional source files, they would be declared extern there. */
+@@ -303,6 +315,10 @@
+         progname, XDisplayName(display_name)));
+   }
+ 
++#ifdef NEW_KEYBOARD
++  init_keyboard();
++#endif
++
+   /* get screen size from display structure macro */
+   bx_x_screen_num = DefaultScreen(bx_x_display);
+ 
+@@ -515,6 +531,125 @@
+   XFlush(bx_x_display);
+ }
+ 
++#ifdef NEW_KEYBOARD
++  void
++init_keyboard(void)
++{
++  XkbComponentNamesRec  kcomp;
++  char * bx_symbols= "+us";
++  char * orig_symbols = NULL;
++  char * orig_keycodes = NULL;
++  char * orig_types = NULL;
++  char * orig_compat = NULL;
++  char *tmp = NULL;
++
++  /* 
++     Using XkbGetKeyboardByName(bx_x_display,XkbUseCoreKbd,
++              &kcomp,XkbGBN_AllComponentsMask,XkbGBN_AllComponentsMask,False);
++     should give us a keyboard description without loading it into the server,
++     but it crashs. Maybe this is a bug in XFree86, I don't know.
++     So we use this workaround.
++     We must store current keyboard description. Then we change symbols to
++     US-layout. The server load this layout. At this time we have it in all
++     clients. So we must restore previous keyboard-layout.
++     
++     We should free our virtual keyboard description if bochs closed.
++     Can anybody tell me where.
++  */
++     
++  /* Get a full copy from current keyboard */
++  bx_xkb_orig = NULL;
++  bx_xkb_orig = XkbGetKeyboard(bx_x_display,XkbAllComponentsMask,XkbUseCoreKbd);
++  if (bx_xkb_orig) {
++    if (XkbGetNames(bx_x_display,XkbAllNamesMask,bx_xkb_orig)!=Success) {
++      BX_PANIC(("Xkeyb:Could not load names\n"));
++    } else {
++      /* store description to restore it later */
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->symbols);
++      orig_symbols = (char *) malloc(strlen(tmp));
++      sprintf(orig_symbols, "%s", tmp);
++      
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->keycodes);
++      orig_keycodes = (char *) malloc(strlen(tmp));
++      sprintf(orig_keycodes, "%s", tmp);
++      
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->types);
++      orig_types = (char *) malloc(strlen(tmp));
++      sprintf(orig_types, "%s", tmp);
++
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->compat);
++      orig_compat = (char *) malloc(strlen(tmp));
++      sprintf(orig_compat, "%s", tmp);
++      
++      BX_DEBUG(("Xkeyb:orig_symbols %s\n",orig_symbols));
++      BX_DEBUG(("Xkeyb:orig_keycodes %s\n",orig_keycodes));
++      BX_DEBUG(("Xkeyb:orig_types %s\n",orig_types));
++      BX_DEBUG(("Xkeyb:orig_compat %s\n",orig_compat));
++    }
++    XkbFreeKeyboard(bx_xkb_orig,XkbAllComponentsMask,True);
++  } else {
++    BX_PANIC(("Xkeyb:Could not load keyboard description\n"));
++  }
++
++  /* Now change symbols to US-layout */
++  kcomp.keymap = NULL;
++  kcomp.keycodes = NULL;
++  kcomp.types = NULL;
++  kcomp.compat  = NULL;
++  kcomp.symbols = bx_symbols;
++  kcomp.geometry = NULL;
++  bx_xkb = NULL;
++  bx_xkb = XkbGetKeyboardByName(bx_x_display,XkbUseCoreKbd, &kcomp,XkbGBN_AllComponentsMask,XkbGBN_AllComponentsMask,True);
++  if (!bx_xkb)
++    BX_ERROR(("Xkeyb:Could not load us-symbols\n"));
++
++  /* Finally restore original keyboard layout */
++  kcomp.keymap = NULL;
++  kcomp.keycodes = orig_keycodes;
++  kcomp.types = orig_types;
++  kcomp.compat  = orig_compat;
++  kcomp.symbols = orig_symbols;
++  kcomp.geometry = NULL;
++  bx_xkb_orig = NULL;
++  bx_xkb_orig = XkbGetKeyboardByName(bx_x_display,XkbUseCoreKbd, &kcomp,XkbGBN_AllComponentsMask,XkbGBN_AllComponentsMask,True);
++  
++  if (bx_xkb_orig) {
++    /* Only needed to check if original keyboard is proper restored */
++    if (XkbGetNames(bx_x_display,XkbAllNamesMask,bx_xkb_orig)!=Success) {
++        BX_PANIC(("Xkeyb:Could not load names\n"));
++    } else {
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->symbols);
++      orig_symbols = (char *) malloc(strlen(tmp));
++      sprintf(orig_symbols, "%s", tmp);
++      
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->keycodes);
++      orig_keycodes = (char *) malloc(strlen(tmp));
++      sprintf(orig_keycodes, "%s", tmp);
++      
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->types);
++      orig_types = (char *) malloc(strlen(tmp));
++      sprintf(orig_types, "%s", tmp);
++
++      tmp = XGetAtomName(bx_x_display,bx_xkb_orig->names->compat);
++      orig_compat = (char *) malloc(strlen(tmp));
++      sprintf(orig_compat, "%s", tmp);
++      
++      BX_DEBUG(("Xkeyb:restored_symbols %s\n",orig_symbols));
++      BX_DEBUG(("Xkeyb:restored_keycodes %s\n",orig_keycodes));
++      BX_DEBUG(("Xkeyb:restored_types %s\n",orig_types));
++      BX_DEBUG(("Xkeyb:restored_compat %s\n",orig_compat));
++    }
++    XkbFreeKeyboard(bx_xkb_orig,XkbAllComponentsMask,True);
++  } else {
++    BX_PANIC(("Xkeyb:Cannot restore previous keyboard\n"));
++  }
++
++  free(orig_symbols);
++  free(orig_keycodes);
++  free(orig_types);
++  free(orig_compat);
++}
++#endif
+ 
+   void
+ load_font(void)
+@@ -533,10 +668,14 @@
+   XEvent report;
+   XKeyEvent *key_event;
+   KeySym keysym;
++#ifdef NEW_KEYBOARD
++  unsigned int mods_rtrn;
++#else
+   XComposeStatus compose;
+   char buffer[MAX_MAPPED_STRING_LENGTH];
+   int bufsize = MAX_MAPPED_STRING_LENGTH;
+   int charcount;
++#endif
+   Boolean mouse_update;
+ 
+ 
+@@ -679,13 +818,23 @@
+ 
+     case KeyPress:
+       key_event = (XKeyEvent *) &report;
++#ifdef NEW_KEYBOARD
++      /* Now get keysym from virtual US-keyboard */
++      XkbTranslateKeyCode(bx_xkb, key_event->keycode, 0, &mods_rtrn, &keysym);
++#else
+       charcount = XLookupString(key_event, buffer, bufsize, &keysym, &compose);
++#endif
+       xkeypress(keysym, 0);
+       break;
+ 
+     case KeyRelease:
+       key_event = (XKeyEvent *) &report;
++#ifdef NEW_KEYBOARD
++      /* Now get keysym from virtual US-keyboard */
++      XkbTranslateKeyCode(bx_xkb, key_event->keycode, 0, &mods_rtrn, &keysym);
++#else
+       charcount = XLookupString(key_event, buffer, bufsize, &keysym, &compose);
++#endif
+       xkeypress(keysym, 1);
+       break;
+ 
+@@ -792,9 +941,12 @@
+   // correspond to the ascii characters space .. tilde
+   // are in consequtive order.
+   if ((keysym >= XK_space) && (keysym <= XK_asciitilde)) {
+-    key_event = ascii_to_key_event[keysym - XK_space];
++    if ((keysym == XK_less) || (keysym == XK_greater)) {
++      key_event = BX_KEY_LSGT;
++    } else {
++      key_event = ascii_to_key_event[keysym - XK_space];
+     }
+-  else switch (keysym) {
++  } else switch (keysym) {
+     case XK_KP_1:
+ #ifdef XK_KP_End
+     case XK_KP_End:
+@@ -899,6 +1051,7 @@
+     case XK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
+     case XK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
+     case XK_Alt_L:       key_event = BX_KEY_ALT_L; break;
++    case XK_Mode_switch: key_event = BX_KEY_ALT_R; break;
+ 
+     case XK_Insert:      key_event = BX_KEY_INSERT; break;
+     case XK_Home:        key_event = BX_KEY_HOME; break;
+diff -urN bochs/iodev/keyboard.cc bochs/iodev/keyboard.cc
+--- bochs/iodev/keyboard.cc	Tue Jun 12 19:30:11 2001
++++ bochs/iodev/keyboard.cc	Mon Jul  2 14:51:44 2001
+@@ -695,7 +695,8 @@
+     case BX_KEY_F10:              scancode = 0x44; break;
+     case BX_KEY_F11:              scancode = 0x57; break;
+     case BX_KEY_F12:              scancode = 0x58; break;
+-
++    case BX_KEY_LSGT:             scancode = 0x56; break;
++    
+     default:
+       BX_DEBUG(( "bx_keyb_c::gen_scancode : Unhandled %u\n",
+         (unsigned) key));
