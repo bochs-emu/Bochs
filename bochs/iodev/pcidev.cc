@@ -80,18 +80,19 @@ static void pcidev_sighandler(int param)
 }
 
 
-static bool  pcidev_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param)
+static bx_bool  pcidev_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param)
 {
 	struct region_struct *region = (struct region_struct *)param;
 	bx_pcidev_c *pcidev = region->pcidev;
 	int fd = pcidev->pcidev_fd;
+	int ret = -1;
+
 	if (fd == -1)
 		return false; /* we failed to handle the request, so let a default handler do it for us */
 
-	BX_INFO(("Reading I/O memory at %#x", addr));
+	BX_INFO(("Reading I/O memory at 0x%08x", (unsigned)addr));
 	struct pcidev_io_struct io;
 	io.address = addr + region->host_start - region->start;
-	int ret;
 	switch(len) {
 		case 1:
 			ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_BYTE, &io);
@@ -116,18 +117,19 @@ static bool  pcidev_mem_read_handler(unsigned long addr, unsigned long len, void
 }
 
 
-static bool pcidev_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param)
+static bx_bool pcidev_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param)
 {
 	struct region_struct *region = (struct region_struct *)param;
 	bx_pcidev_c *pcidev = region->pcidev;
 	int fd = pcidev->pcidev_fd;
+	int ret = -1;
+
 	if (fd == -1)
 		return false; /* we failed to handle the request, so let a default handler do it for us */
 
-	BX_INFO(("Writing I/O memory at %#x", addr));
+	BX_INFO(("Writing I/O memory at 0x%08x", (unsigned)addr));
 	struct pcidev_io_struct io;
 	io.address = addr + region->host_start - region->start;
-	int ret;
 	switch(len) {
 		case 1:
 			io.value = *(unsigned char *)data;
@@ -194,9 +196,9 @@ bx_pcidev_c::init(void)
     BX_PCIDEV_THIS pcidev_fd = -1;
     return;
   }
-  BX_INFO(("vendor: %x; device: %x @ host %x:%x.%d", vendor, device,
-	find.bus, find.device, find.func));
-  
+  BX_INFO(("vendor: %04x; device: %04x @ host %04x:%04x.%d", vendor, device,
+	(unsigned)find.bus, (unsigned)find.device, (unsigned)find.func));
+
   Bit8u devfunc = 0x00;
   DEV_register_pci_handlers(this,
                             pci_read_handler,
@@ -215,8 +217,8 @@ bx_pcidev_c::init(void)
   for (int idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++) {
 	  if (!find.resources[idx].start)
 		  continue;
-	  BX_INFO(("PCI resource @ %x-%x (%s)", find.resources[idx].start,
-				  find.resources[idx].end,
+	  BX_INFO(("PCI resource @ %x-%x (%s)", (unsigned)find.resources[idx].start,
+				  (unsigned)find.resources[idx].end,
 				  (find.resources[idx].flags & PCIDEV_RESOURCE_IO ? "I/O" : "Mem")));
 	  BX_PCIDEV_THIS regions[idx].start = find.resources[idx].start;
 	  BX_PCIDEV_THIS regions[idx].end = find.resources[idx].end;
@@ -234,22 +236,25 @@ bx_pcidev_c::init(void)
 	  BX_PCIDEV_THIS regions[idx].pcidev = this;
 	  unsigned long flags = find.resources[idx].flags;
 	  if (flags & PCIDEV_RESOURCE_IO) {
-		  BX_INFO(("Registering I/O port handler for %#x to %#x", find.resources[idx].start,
-					find.resources[idx].end));
+		  BX_INFO(("Registering I/O port handler for %x to %x", (unsigned)find.resources[idx].start,
+					(unsigned)find.resources[idx].end));
 		  if (!DEV_register_ioread_handler_range(&(BX_PCIDEV_THIS regions[idx]), 
 				  read_handler, find.resources[idx].start, 
 				  find.resources[idx].end, "pcidev", 7))
 			  BX_ERROR(("Could not register I/O port read handler range %#x to %#x", 
-						  find.resources[idx].start, find.resources[idx].end));
+						  (unsigned)find.resources[idx].start,
+						  (unsigned)find.resources[idx].end));
 		  if (!DEV_register_iowrite_handler_range(&(BX_PCIDEV_THIS regions[idx]), 
 				  write_handler, find.resources[idx].start, 
 				  find.resources[idx].end, "pcidev", 7))
 			  BX_ERROR(("Could not register I/O port write handler range %#x to %#x", 
-						  find.resources[idx].start, find.resources[idx].end));
+						  (unsigned)find.resources[idx].start,
+						  (unsigned)find.resources[idx].end));
 	  }
 	  else if (flags & PCIDEV_RESOURCE_MEM) {
-		BX_INFO(("Registering memory I/O handler for %#x to %#x", find.resources[idx].start,
-					find.resources[idx].end));
+		BX_INFO(("Registering memory I/O handler for %#x to %#x",
+						  (unsigned)find.resources[idx].start,
+						  (unsigned)find.resources[idx].end));
 		DEV_register_memory_handlers(pcidev_mem_read_handler, 
 				&(BX_PCIDEV_THIS regions[idx]), 
 				pcidev_mem_write_handler, 
@@ -302,6 +307,7 @@ bx_pcidev_c::pci_read(Bit8u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_PCIDEV_SMF
+  int ret = -1;
 
   if (io_len > 4 || io_len == 0) {
     BX_DEBUG(("Experimental PCIDEV read register 0x%02x, len=%u !",
@@ -314,7 +320,6 @@ bx_pcidev_c::pci_read(Bit8u address, unsigned io_len)
     return 0xffffffff;
 
   struct pcidev_io_struct io;
-  int ret;
   io.address = address;
   switch(io_len) {
   case 1:
@@ -364,6 +369,7 @@ bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_PCIDEV_SMF
+  int ret = -1;
 
   if (io_len > 4 || io_len == 0) {
     BX_DEBUG(("Experimental PCIDEV write register 0x%02x, len=%u !",
@@ -401,7 +407,6 @@ bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 	}
 	int io_reg_idx = (address - PCI_BASE_ADDRESS_0) >> 2;
 	struct pcidev_io_struct io;
-	int ret;
 	io.address = address;
 	io.value = value;
 	ret = ioctl(fd, PCIDEV_IOCTL_PROBE_CONFIG_DWORD, &io);
@@ -418,8 +423,8 @@ bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 	 */
 	if ((base & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_MEMORY) {
 		BX_INFO(("Remapping memory region from %#x to %#x", 
-					BX_PCIDEV_THIS regions[io_reg_idx].start, 
-					base & PCI_BASE_ADDRESS_MEM_MASK));
+					(unsigned)BX_PCIDEV_THIS regions[io_reg_idx].start, 
+					(unsigned)(base & PCI_BASE_ADDRESS_MEM_MASK)));
 		if (BX_PCIDEV_THIS regions[io_reg_idx].start &&  // dirty hack
 				!DEV_unregister_memory_handlers(pcidev_mem_read_handler, 
 					pcidev_mem_write_handler, 
@@ -443,9 +448,9 @@ bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 		/*
 		 * Remap our I/O port handlers here.
 		 */
-		BX_INFO(("Remapping I/O port region from %#x to %#x", 
-					BX_PCIDEV_THIS regions[io_reg_idx].start, 
-					base & PCI_BASE_ADDRESS_IO_MASK));
+		BX_INFO(("Remapping I/O port region from %x to %x", 
+					(unsigned)BX_PCIDEV_THIS regions[io_reg_idx].start, 
+					(unsigned)(base & PCI_BASE_ADDRESS_IO_MASK)));
 		if (BX_PCIDEV_THIS regions[io_reg_idx].start) { // dirty hack
 			if (!DEV_unregister_ioread_handler_range(&(BX_PCIDEV_THIS regions[io_reg_idx]), 
 						read_handler, 
@@ -484,7 +489,6 @@ bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   }
 
   struct pcidev_io_struct io;
-  int ret;
   io.address = address;
   io.value = value;
 
@@ -517,9 +521,8 @@ bx_pcidev_c::read_handler(void *param, Bit32u address, unsigned io_len)
 bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
 {
 #endif  // !BX_USE_PCIDEV_SMF
-  
   struct region_struct *region = (struct region_struct *)param;
-  Bit32u value;
+  int ret = -1;
   
   int fd = BX_PCIDEV_THIS pcidev_fd;
   if (fd == -1)
@@ -528,7 +531,6 @@ bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
   struct pcidev_io_struct io;
   // here we map the io address
   io.address = address + region->host_start - region->start;
-  int ret;
   switch(io_len) {
 	case 1:
   		ret = ioctl(fd, PCIDEV_IOCTL_READ_IO_BYTE, &io);
@@ -563,15 +565,14 @@ bx_pcidev_c::write(void *param, Bit32u address, Bit32u value, unsigned io_len)
 #else
   //UNUSED(this_ptr);
 #endif  // !BX_USE_PCIDEV_SMF
-
   struct region_struct *region = (struct region_struct *)param;
+  int ret = -1;
 
   int fd = BX_PCIDEV_THIS pcidev_fd;
   if (fd == -1)
     return;
 
   struct pcidev_io_struct io;
-  int ret;
   // here we map the I/O address
   io.address = address + region->host_start - region->start;
   io.value = value;
