@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.47 2002-09-15 11:21:34 bdenney Exp $
+// $Id: wxmain.cc,v 1.48 2002-09-16 15:28:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -177,7 +177,9 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   EVT_MENU(ID_Debug_ShowCpu, MyFrame::OnShowCpu)
   EVT_MENU(ID_Debug_ShowKeyboard, MyFrame::OnShowKeyboard)
+#if BX_DEBUGGER
   EVT_MENU(ID_Debug_Log, MyFrame::OnDebugLog)
+#endif
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
@@ -680,7 +682,11 @@ void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
   }
   if (showCpu == NULL) {
     showCpu = new CpuRegistersDialog (this, -1);
+#if BX_DEBUGGER
     showCpu->SetTitle ("Bochs Debugger");
+#else
+    showCpu->SetTitle ("CPU Registers");
+#endif
     showCpu->Init ();
   } else {
     showCpu->Refresh ();
@@ -701,9 +707,10 @@ void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
   showKbd->Show (TRUE);
 }
 
+#if BX_DEBUGGER
 void MyFrame::OnDebugLog(wxCommandEvent& WXUNUSED(event))
 {
-  wxASSERT (showDebugLog != NULL);
+	wxASSERT (showDebugLog != NULL);
   showDebugLog->Refresh ();
   showDebugLog->Show (TRUE);
 }
@@ -711,7 +718,6 @@ void MyFrame::OnDebugLog(wxCommandEvent& WXUNUSED(event))
 void
 MyFrame::DebugBreak ()
 {
-#if BX_DEBUGGER
   if (debugCommand) {
     delete debugCommand;
     debugCommand = NULL;
@@ -719,7 +725,6 @@ MyFrame::DebugBreak ()
   wxASSERT (showDebugLog != NULL);
   showDebugLog->AppendCommand ("*** break ***");
   SIM->debug_break ();
-#endif
 }
 
 void
@@ -760,6 +765,7 @@ MyFrame::DebugCommand (const char *cmd)
     debugCommand = tmp;
   }
 }
+#endif
 
 void MyFrame::OnQuit(wxCommandEvent& event)
 {
@@ -1042,13 +1048,15 @@ MyFrame::OnSim2CIEvent (wxCommandEvent& event)
     sim_thread->SendSyncResponse(be);
     wxLogDebug ("after SendSyncResponse");
     return;
+#if BX_DEBUGGER
   case BX_ASYNC_EVT_DBG_MSG:
     showDebugLog->AppendText (be->u.logmsg.msg);
     // free the char* which was allocated in dbg_printf
-    delete be->u.logmsg.msg;
+    delete [] ((char*) be->u.logmsg.msg);
     // free the whole event
     delete be;
     return;
+#endif
   case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
     {

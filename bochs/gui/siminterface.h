@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.64 2002-09-16 13:04:13 bdenney Exp $
+// $Id: siminterface.h,v 1.65 2002-09-16 15:28:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -295,9 +295,11 @@ typedef enum {
   BXP_KBD_TIMER_PENDING,
   BXP_KBD_IRQ1_REQ,
   BXP_KBD_IRQ12_REQ,
+#if BX_DEBUGGER
   // in debugger, is the simulation running (continue command) or waiting.
   // This is only modified by debugger code, not by the user.
   BXP_DEBUG_RUNNING,
+#endif
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 

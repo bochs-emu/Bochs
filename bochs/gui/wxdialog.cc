@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.35 2002-09-15 11:21:34 bdenney Exp $
+// $Id: wxdialog.cc,v 1.36 2002-09-16 15:28:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1372,6 +1372,7 @@ void ConfigMemoryDialog::ShowHelp ()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
+#if BX_DEBUGGER
 //////////////////////////////////////////////////////////////////////
 // DebugLogDialog implementation
 //////////////////////////////////////////////////////////////////////
@@ -1487,6 +1488,7 @@ void DebugLogDialog::OnKeyEvent(wxKeyEvent& event)
 {
   wxLogDebug ("key event");
 }
+#endif
 
 /////////////////////////////////////////////////////////////////
 // ParamDialog
@@ -2016,16 +2018,20 @@ CpuRegistersDialog::Init ()
 void
 CpuRegistersDialog::stateChanged (bool simRunning)
 {
+#if BX_DEBUGGER
   contButton->Enable (!simRunning);
   stepButton->Enable (!simRunning);
   stopButton->Enable (simRunning);
+#endif
 }
 
 void 
 CpuRegistersDialog::Refresh ()
 {
   ParamDialog::Refresh ();
+#if BX_DEBUGGER
   stateChanged (SIM->get_param_bool (BXP_DEBUG_RUNNING)->get ());
+#endif
 }
 
 // How am I going to communicate with the debugger?
@@ -2060,7 +2066,11 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
   switch (id) {
-    case ID_Debug_Stop:
+    case ID_Close:
+      Show (FALSE);
+      break;
+#if BX_DEBUGGER
+  case ID_Debug_Stop:
       wxLogDebug ("wxWindows triggered a break");
       theFrame->DebugBreak ();
       break;
@@ -2073,9 +2083,7 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
     case ID_Debug_Commit:
       CommitChanges ();
       break;
-    case ID_Close:
-      Show (FALSE);
-      break;
+#endif
     default:
       ParamDialog::OnEvent (event);
   }
