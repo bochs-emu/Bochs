@@ -320,8 +320,17 @@ screenmode: name="sample"
 # Examples:
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
 # ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
-# ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=win32, ethdev=MYCARD
+# ne2k: ioaddr=0x280, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
 # ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+#
+# You probably won't need to change ioaddr and irq, unless there are IRQ
+# conflicts.  The MAC address MUST NOT match the address of any other
+# machine on the net.  The b0:c4... address is probably safe.  For ethertap,
+# you must use the address in the example.  The ethdev value is the name
+# of the network interface on your host platform.  On UNIX machines, you can
+# get the name by running ifconfig.  On Windows machines, you must run
+# niclist to get the name of the ethdev.  Niclist is included in Windows
+# binary releases.
 #=======================================================================
 
 #=======================================================================
