@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.46 2002-04-06 15:59:29 cbothamy Exp $
+// $Id: rombios.c,v 1.47 2002-04-08 01:19:35 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1051,10 +1051,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.46 $";
-static char bios_date_string[] = "$Date: 2002-04-06 15:59:29 $";
+static char bios_cvs_version_string[] = "$Revision: 1.47 $";
+static char bios_date_string[] = "$Date: 2002-04-08 01:19:35 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.46 2002-04-06 15:59:29 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.47 2002-04-08 01:19:35 instinc Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -9459,16 +9459,17 @@ int09_handler:
   mov al, #0xAD      ;;disable keyboard
   out #0x64, al
 
-  sti
-
-  ;; see if there is really a key to read from the controller
-  in   al, #0x64
-  test al, #0x01
-  jz   int09_done    ;; nope, skip processing
+  mov al, #0x0B
+  out #0x20, al
+  in  al, #0x20
+  and al, #0x02
+  jz  int09_finish
 
   in  al, #0x60             ;;read key from keyboard controller
   //test al, #0x80            ;;look for key release
   //jnz  int09_process_key    ;; dont pass releases to intercept?
+
+  sti
 
 #ifdef BX_CALL_INT15_4F
   mov  ah, #0x4f     ;; allow for keyboard intercept
@@ -9489,12 +9490,6 @@ int09_handler:
 
 int09_done:
   cli
-  ;; look at PIC in-service-register to see if EOI required
-  mov  al, #0x0B
-  out  #0x20, al
-  in   al, #0x20
-  and  al, #0x02     ;; IRQ 1 in service
-  jz   int09_finish
   mov  al, #0x20     ;; send EOI to master PIC
   out  #0x20, al
 
