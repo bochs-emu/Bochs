@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.14 2002-10-25 18:26:27 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.15 2003-04-26 10:02:02 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
   void
 BX_CPU_C::MOV_RLIb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[i->b1() & 0x03].word.byte.rl = i->Ib();
+  BX_READ_8BIT_REGx(i->opcodeReg(),i->extend8bitL()) = i->Ib();
 }
 
   void

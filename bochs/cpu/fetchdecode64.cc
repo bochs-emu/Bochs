@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.47 2003-04-23 17:52:59 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.48 2003-04-26 10:02:03 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1597,10 +1597,10 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* B1 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B2 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B3 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
-  /* B4 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B5 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B6 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B7 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
+  /* B4 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B5 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B6 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B7 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B8 */  { BxImmediate_Iv, &BX_CPU_C::MOV_RXIw },
   /* B9 */  { BxImmediate_Iv, &BX_CPU_C::MOV_RXIw },
   /* BA */  { BxImmediate_Iv, &BX_CPU_C::MOV_RXIw },
@@ -2115,10 +2115,10 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* B1 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B2 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B3 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
-  /* B4 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B5 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B6 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B7 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
+  /* B4 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B5 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B6 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B7 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B8 */  { BxImmediate_Iv, &BX_CPU_C::MOV_ERXId },
   /* B9 */  { BxImmediate_Iv, &BX_CPU_C::MOV_ERXId },
   /* BA */  { BxImmediate_Iv, &BX_CPU_C::MOV_ERXId },
@@ -2630,10 +2630,10 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* B1 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B2 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B3 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
-  /* B4 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B5 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B6 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
-  /* B7 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RHIb },
+  /* B4 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B5 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B6 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
+  /* B7 */  { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb },
   /* B8 */  { BxImmediate_Iq, &BX_CPU_C::MOV_RRXIq },
   /* B9 */  { BxImmediate_Iq, &BX_CPU_C::MOV_RRXIq },
   /* BA */  { BxImmediate_Iq, &BX_CPU_C::MOV_RRXIq },
