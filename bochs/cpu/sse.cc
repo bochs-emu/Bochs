@@ -74,7 +74,7 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
-  BX_PANIC(("FXSAVE: SSE instruction still not implemented"));
+  BX_INFO(("FXSAVE: SSE instruction still not implemented"));
 #else
   BX_INFO(("FXSAVE: SSE not supported in current configuration"));
   UndefinedOpcode(i);
@@ -84,7 +84,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
-  BX_PANIC(("FXRSTOR : SSE instruction still not implemented"));
+  BX_INFO(("FXRSTOR : SSE instruction still not implemented"));
 #else
   BX_INFO(("FXRSTOR: SSE not supported in current configuration"));
   UndefinedOpcode(i);
