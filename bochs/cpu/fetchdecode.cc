@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.69 2004-10-08 19:29:03 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.70 2004-11-12 16:47:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -669,14 +669,14 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* DE */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
   /* DF */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
 #else
-  /* D8 */  { 0, &BX_CPU_C::FPU_ESC },
-  /* D9 */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DA */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DB */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DC */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DD */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DE */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DF */  { 0, &BX_CPU_C::FPU_ESC },
+  /* D8 */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* D9 */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DA */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DB */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DC */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DD */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DE */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DF */  { BxAnother, &BX_CPU_C::FPU_ESC },
 #endif
   /* E0 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPNE_Jb },
   /* E1 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPE_Jb },
@@ -1217,14 +1217,14 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* DE */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
   /* DF */  { BxAnother | BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
 #else
-  /* D8 */  { 0, &BX_CPU_C::FPU_ESC },
-  /* D9 */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DA */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DB */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DC */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DD */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DE */  { 0, &BX_CPU_C::FPU_ESC },
-  /* DF */  { 0, &BX_CPU_C::FPU_ESC },
+  /* D8 */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* D9 */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DA */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DB */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DC */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DD */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DE */  { BxAnother, &BX_CPU_C::FPU_ESC },
+  /* DF */  { BxAnother, &BX_CPU_C::FPU_ESC },
 #endif
   /* E0 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPNE_Jb },
   /* E1 */  { BxImmediate_BrOff8, &BX_CPU_C::LOOPE_Jb },
