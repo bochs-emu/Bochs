@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.37 2004-08-15 19:27:14 vruppert Exp $
+// $Id: rfb.cc,v 1.38 2004-11-20 16:44:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -1666,7 +1666,7 @@ void rfbKeyPressed(Bit32u key, int press_release)
     }
   }
 
-  if (press_release) key_event |= BX_KEY_RELEASED;
+  if (!press_release) key_event |= BX_KEY_RELEASED;
   DEV_kbd_gen_scancode(key_event);
 }
 
