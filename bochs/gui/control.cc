@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.53 2002-08-07 07:24:32 vruppert Exp $
+// $Id: control.cc,v 1.54 2002-08-09 06:16:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.53 2002-08-07 07:24:32 vruppert Exp $
+ * $Id: control.cc,v 1.54 2002-08-09 06:16:43 vruppert Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -368,11 +368,12 @@ static char *runtime_menu_prompt =
 "7. VGA Update Interval: %d\n"
 "8. Mouse: %s\n"
 "9. Keyboard paste delay: %d\n"
-"10. Instruction tracing: off (doesn't exist yet)\n"
-"11. Continue simulation\n"
-"12. Quit now\n"
+"10. Userbutton shortcut: %s\n"
+"11. Instruction tracing: off (doesn't exist yet)\n"
+"12. Continue simulation\n"
+"13. Quit now\n"
 "\n"
-"Please choose one:  [11] ";
+"Please choose one:  [12] ";
 
 char *menu_prompt_list[BX_CPANEL_N_MENUS] = {
   ask_about_control_panel,
@@ -421,7 +422,8 @@ void build_runtime_options_prompt (char *format, char *buf, int size)
       /* ips->get (), */
       SIM->get_param_num (BXP_VGA_UPDATE_INTERVAL)->get (), 
       SIM->get_param_num (BXP_MOUSE_ENABLED)->get () ? "enabled" : "disabled",
-      SIM->get_param_num (BXP_KBD_PASTE_DELAY)->get ());
+      SIM->get_param_num (BXP_KBD_PASTE_DELAY)->get (),
+      SIM->get_param_string (BXP_USER_SHORTCUT)->getptr ());
 }
 
 int do_menu (bx_id id) {
@@ -511,7 +513,7 @@ int bx_control_panel (int menu)
      bx_floppy_options floppyop;
      bx_cdrom_options cdromop;
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
-     if (ask_uint (prompt, 1, 12, 11, &choice, 10) < 0) return -1;
+     if (ask_uint (prompt, 1, 13, 12, &choice, 10) < 0) return -1;
      switch (choice) {
        case 1: 
          SIM->get_floppy_options (0, &floppyop);
@@ -534,9 +536,10 @@ int bx_control_panel (int menu)
        case 7: askparam (BXP_VGA_UPDATE_INTERVAL); break;
        case 8: askparam (BXP_MOUSE_ENABLED); break;
        case 9: askparam (BXP_KBD_PASTE_DELAY); break;
-       case 10: NOT_IMPLEMENTED (choice); break;
-       case 11: fprintf (stderr, "Continuing simulation\n"); return 0;
-       case 12:
+       case 10: askparam (BXP_USER_SHORTCUT); break;
+       case 11: NOT_IMPLEMENTED (choice); break;
+       case 12: fprintf (stderr, "Continuing simulation\n"); return 0;
+       case 13:
 	 fprintf (stderr, "You chose quit on the control panel.\n");
 	 SIM->quit_sim (1);
 	 return -1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.27 2002-04-20 07:19:35 vruppert Exp $
+// $Id: gui.h,v 1.28 2002-08-09 06:16:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -83,6 +83,7 @@ private:
   static void snapshot_handler(void);
   static void config_handler(void);
   static void toggle_mouse_enable(void);
+  static void userbutton_handler(void);
   static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
 
   Boolean floppyA_status;
@@ -98,11 +99,12 @@ private:
   unsigned snapshot_bmap_id, snapshot_hbar_id;
   unsigned config_bmap_id, config_hbar_id;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
+  unsigned user_bmap_id, user_hbar_id;
   };
 
 
 #define BX_MAX_PIXMAPS 16
-#define BX_MAX_HEADERBAR_ENTRIES 10
+#define BX_MAX_HEADERBAR_ENTRIES 11
 #define BX_HEADER_BAR_Y 32
 
 // align pixmaps towards left or right side of header bar

@@ -1,6 +1,6 @@
 //
 // gui/wxmain.cc
-// $Id: wxmain.cc,v 1.3 2002-06-01 15:44:54 vruppert Exp $
+// $Id: wxmain.cc,v 1.4 2002-08-09 06:16:43 vruppert Exp $
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -55,6 +55,7 @@
 #include "bitmaps/snapshot.xpm"
 #include "bitmaps/mouse.xpm"
 #include "bitmaps/configbutton.xpm"
+#include "bitmaps/userbutton.xpm"
 
 // FIXME: ugly global variables that the bx_gui_c object in wx.cc can use
 // to access the MyFrame and the MyPanel.
@@ -96,7 +97,8 @@ enum
   ID_Toolbar_Paste,
   ID_Toolbar_Snapshot,
   ID_Toolbar_Config,
-  ID_Toolbar_Mouse_en
+  ID_Toolbar_Mouse_en,
+  ID_Toolbar_User
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -174,6 +176,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Config, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Mouse_en, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
 END_EVENT_TABLE()
 
 
@@ -253,6 +256,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, "Save screen snapshot");
   BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, "Mouse Enable/Disable");
+  BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, "Keyboard shortcut");
 
   tb->Realize();
 
@@ -540,6 +544,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
     case ID_Toolbar_Config: which = BX_TOOLBAR_CONFIG; break;
     case ID_Toolbar_Mouse_en: which = BX_TOOLBAR_MOUSE_EN; break;
+    case ID_Toolbar_User: which = BX_TOOLBAR_USER; break;
     default:
       wxLogError ("unknown toolbar id %d", id);
   }

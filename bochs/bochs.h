@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.74 2002-08-01 07:34:58 vruppert Exp $
+// $Id: bochs.h,v 1.75 2002-08-09 06:16:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -660,6 +660,7 @@ typedef struct {
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;
   bx_keyboard_options keyboard;
+  bx_param_string_c *Ouser_shortcut;
   } bx_options_t;
 
 extern bx_options_t bx_options;

@@ -447,6 +447,17 @@ keyboard_mapping: enabled=0, map=
 #keyboard_type: mf
 
 #=======================================================================
+# USER_SHORTCUT:
+# This defines the keyboard shortcut to be sent when you press the "user"
+# button in the headerbar. These shortcuts are currently recognized:
+# ctrlaltdel, ctrlaltesc, ctrlaltf1, alttab
+#
+# Example:
+#   user_shortcut: keys=ctrlaltdel
+#=======================================================================
+#user_shortcut: keys=ctrlaltdel
+
+#=======================================================================
 # other stuff
 #=======================================================================
 # magic_break

@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.4 2002-04-20 07:19:35 vruppert Exp $
+// $Id: wx.cc,v 1.5 2002-08-09 06:16:43 vruppert Exp $
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
 // wxPanel called a MyPanel, which has methods to display
@@ -612,6 +612,7 @@ void bx_gui_c::handle_events(void)
           case BX_TOOLBAR_SNAPSHOT: snapshot_handler (); break;
           case BX_TOOLBAR_CONFIG: config_handler (); break;
           case BX_TOOLBAR_MOUSE_EN: toggle_mouse_enable (); break;
+          case BX_TOOLBAR_USER: userbutton_handler (); break;
           default:
             wxLogDebug ("unknown toolbar id %d", event_queue[i].u.toolbar.button);
         }

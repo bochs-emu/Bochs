@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.110 2002-08-04 08:42:34 vruppert Exp $
+// $Id: main.cc,v 1.111 2002-08-09 06:16:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1023,6 +1023,12 @@ void bx_init_options ()
   bx_options.Okeyboard_type->set_format ("Keyboard type: %s");
   bx_options.Okeyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
 
+  // Userbutton shortcut
+  bx_options.Ouser_shortcut = new bx_param_string_c (BXP_USER_SHORTCUT,
+      "Userbutton shortcut",
+      "Userbutton shortcut",
+      "none", 16);
+
   bx_param_c *other_init_list[] = {
       bx_options.Okeyboard_serial_delay,
       bx_options.Okeyboard_paste_delay,
@@ -1035,6 +1041,7 @@ void bx_init_options ()
       bx_options.keyboard.OuseMapping,
       bx_options.keyboard.Okeymap,
       bx_options.Okeyboard_type,
+      bx_options.Ouser_shortcut,
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
@@ -2357,7 +2364,15 @@ parse_line_formatted(char *context, int num_params, char *params[])
       else if (!strncmp(params[i], "map=", 4)) {
         bx_options.keyboard.Okeymap->set (strdup(&params[i][4]));
         }
+      }
     }
+  else if (!strcmp(params[0], "user_shortcut")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: user_shortcut directive: wrong # args.", context));
+      }
+    if(!strncmp(params[1], "keys=", 4)) {
+      bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
+      }
   }
 
 

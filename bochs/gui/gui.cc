@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.42 2002-08-04 08:42:34 vruppert Exp $
+// $Id: gui.cc,v 1.43 2002-08-09 06:16:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,6 +37,7 @@
 #include "gui/bitmaps/paste.h"
 #include "gui/bitmaps/configbutton.h"
 #include "gui/bitmaps/cdromd.h"
+#include "gui/bitmaps/userbutton.h"
 #if BX_WITH_MACOS
 #  include <Disks.h>
 #endif
@@ -82,6 +83,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS copy_bmap_id = create_bitmap(bx_copy_bmap, BX_COPY_BMAP_X, BX_COPY_BMAP_Y);
   BX_GUI_THIS paste_bmap_id = create_bitmap(bx_paste_bmap, BX_PASTE_BMAP_X, BX_PASTE_BMAP_Y);
   BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_CONFIG_BMAP_X, BX_CONFIG_BMAP_Y);
+  BX_GUI_THIS user_bmap_id = create_bitmap(bx_user_bmap, BX_USER_BMAP_X, BX_USER_BMAP_Y);
 
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
@@ -145,6 +147,9 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   // Copy button
   BX_GUI_THIS copy_hbar_id = headerbar_bitmap(BX_GUI_THIS copy_bmap_id,
                           BX_GRAVITY_RIGHT, copy_handler);
+  // User button
+  BX_GUI_THIS user_hbar_id = headerbar_bitmap(BX_GUI_THIS user_bmap_id,
+                          BX_GRAVITY_RIGHT, userbutton_handler);
 
   show_headerbar();
 }
@@ -389,6 +394,53 @@ bx_gui_c::toggle_mouse_enable(void)
   int old = bx_options.Omouse_enabled->get ();
   BX_DEBUG (("toggle mouse_enabled, now %d", !old));
   bx_options.Omouse_enabled->set (!old);
+}
+
+  void
+bx_gui_c::userbutton_handler(void)
+{
+  unsigned shortcut[4];
+  char *user_shortcut;
+  int i, len;
+
+  len = 0;
+  user_shortcut = bx_options.Ouser_shortcut->getptr();
+  i = 0;
+  if (user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
+    if (!strcmp(user_shortcut, "ctrlaltdel")) {
+      shortcut[0] = BX_KEY_CTRL_L;
+      shortcut[1] = BX_KEY_ALT_L;
+      shortcut[2] = BX_KEY_DELETE;
+      len = 3;
+      }
+    else if (!strcmp(user_shortcut, "ctrlaltesc")) {
+      shortcut[0] = BX_KEY_CTRL_L;
+      shortcut[1] = BX_KEY_ALT_L;
+      shortcut[2] = BX_KEY_ESC;
+      len = 3;
+      }
+    else if (!strcmp(user_shortcut, "ctrlaltf1")) {
+      shortcut[0] = BX_KEY_CTRL_L;
+      shortcut[1] = BX_KEY_ALT_L;
+      shortcut[2] = BX_KEY_F1;
+      len = 3;
+      }
+    else if (!strcmp(user_shortcut, "alttab")) {
+      shortcut[0] = BX_KEY_ALT_L;
+      shortcut[1] = BX_KEY_TAB;
+      len = 2;
+      }
+    else {
+      BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
+      }
+    while (i < len) {
+      bx_devices.keyboard->gen_scancode(shortcut[i++]);
+    }
+    i--;
+    while (i >= 0) {
+      bx_devices.keyboard->gen_scancode(shortcut[i--] | BX_KEY_RELEASED);
+    }
+  }
 }
 
   void

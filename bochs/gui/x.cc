@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.43 2002-05-18 16:02:20 vruppert Exp $
+// $Id: x.cc,v 1.44 2002-08-09 06:16:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1245,15 +1245,23 @@ bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 bx_gui_c::show_headerbar(void)
 {
   unsigned xorigin;
+  int xleft, xright;
 
   // clear header bar area to white
   XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,0, dimension_x, bx_headerbar_y);
 
+  xleft = 0;
+  xright = dimension_x;
   for (unsigned i=0; i<bx_headerbar_entries; i++) {
-    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
+    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT) {
       xorigin = bx_headerbar_entry[i].xorigin;
-    else
+      xleft += bx_headerbar_entry[i].xdim;
+      }
+    else {
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
+      xright = xorigin;
+      }
+    if (xright < xleft) break;
     XCopyPlane(bx_x_display, bx_headerbar_entry[i].bitmap, win, gc_headerbar,
       0,0, bx_headerbar_entry[i].xdim, bx_headerbar_entry[i].ydim,
               xorigin, 0, 1);
