@@ -580,6 +580,7 @@ void BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
 #endif
 }
 
+/* 0F 74 */
 void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX

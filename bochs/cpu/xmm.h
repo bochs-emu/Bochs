@@ -24,23 +24,23 @@ typedef union bx_xmm_reg_t {
 #endif
 
 #ifdef BX_BIG_ENDIAN
-#define xmm64s(i)   (_s64[1 - (i)])
-#define xmm32s(i)   (_s32[3 - (i)])
-#define xmm16s(i)   (_s16[7 - (i)])
-#define xmmsbyte(i) (_sbyte[15 - (i)])
-#define xmmubyte(i) (_ubyte[15 - (i)])
-#define xmm16u(i)   (_u16[7 - (i)])
-#define xmm32u(i)   (_u32[3 - (i)])
-#define xmm64u(i)   (_u64[1 - (i)])
+#define xmm64s(i)   _s64[1 - (i)]
+#define xmm32s(i)   _s32[3 - (i)]
+#define xmm16s(i)   _s16[7 - (i)]
+#define xmmsbyte(i) _sbyte[15 - (i)]
+#define xmmubyte(i) _ubyte[15 - (i)]
+#define xmm16u(i)   _u16[7 - (i)]
+#define xmm32u(i)   _u32[3 - (i)]
+#define xmm64u(i)   _u64[1 - (i)]
 #else
-#define xmm64s(i)   (_s64[i])
-#define xmm32s(i)   (_s32[i])
-#define xmm16s(i)   (_s16[i])
-#define xmmsbyte(i) (_sbyte[i])
-#define xmmubyte(i) (_ubyte[i])
-#define xmm16u(i)   (_u16[i])
-#define xmm32u(i)   (_u32[i])
-#define xmm64u(i)   (_u64[i])
+#define xmm64s(i)   _s64[(i)]
+#define xmm32s(i)   _s32[(i)]
+#define xmm16s(i)   _s16[(i)]
+#define xmmsbyte(i) _sbyte[(i)]
+#define xmmubyte(i) _ubyte[(i)]
+#define xmm16u(i)   _u16[(i)]
+#define xmm32u(i)   _u32[(i)]
+#define xmm64u(i)   _u64[(i)]
 #endif
 
 /* floating point representation: single and double precission */

@@ -624,60 +624,180 @@ void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F 63 */
 void BX_CPU_C::PACKSSWB_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PACKSSWB_VdqWq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmmsbyte(0)  = SaturateWordSToByteS(op1.xmm16s(0));
+  result.xmmsbyte(1)  = SaturateWordSToByteS(op1.xmm16s(1));
+  result.xmmsbyte(2)  = SaturateWordSToByteS(op1.xmm16s(2));
+  result.xmmsbyte(3)  = SaturateWordSToByteS(op1.xmm16s(3));
+  result.xmmsbyte(4)  = SaturateWordSToByteS(op1.xmm16s(4));
+  result.xmmsbyte(5)  = SaturateWordSToByteS(op1.xmm16s(5));
+  result.xmmsbyte(6)  = SaturateWordSToByteS(op1.xmm16s(6));
+  result.xmmsbyte(7)  = SaturateWordSToByteS(op1.xmm16s(7));
+
+  result.xmmsbyte(8)  = SaturateWordSToByteS(op2.xmm16s(0));
+  result.xmmsbyte(9)  = SaturateWordSToByteS(op2.xmm16s(1));
+  result.xmmsbyte(10) = SaturateWordSToByteS(op2.xmm16s(2));
+  result.xmmsbyte(11) = SaturateWordSToByteS(op2.xmm16s(3));
+  result.xmmsbyte(12) = SaturateWordSToByteS(op2.xmm16s(4));
+  result.xmmsbyte(13) = SaturateWordSToByteS(op2.xmm16s(5));
+  result.xmmsbyte(14) = SaturateWordSToByteS(op2.xmm16s(6));
+  result.xmmsbyte(15) = SaturateWordSToByteS(op2.xmm16s(7));
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PACKSSWB_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F 64 */
 void BX_CPU_C::PCMPGTB_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PCMPGTB_VdqWq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  for(unsigned j=0; j<16; j++) 
+  {
+      result.xmmsbyte(j) = (op1.xmmsbyte(j) > op2.xmmsbyte(j)) ? 0xff : 0;
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PCMPGTB_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F 65 */
 void BX_CPU_C::PCMPGTW_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PCMPGTW_VdqWq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm16s(0) = (op1.xmm16s(0) > op2.xmm16s(0)) ? 0xffff : 0;
+  result.xmm16s(1) = (op1.xmm16s(1) > op2.xmm16s(1)) ? 0xffff : 0;
+  result.xmm16s(2) = (op1.xmm16s(2) > op2.xmm16s(2)) ? 0xffff : 0;
+  result.xmm16s(3) = (op1.xmm16s(3) > op2.xmm16s(3)) ? 0xffff : 0;
+  result.xmm16s(4) = (op1.xmm16s(4) > op2.xmm16s(4)) ? 0xffff : 0;
+  result.xmm16s(5) = (op1.xmm16s(5) > op2.xmm16s(5)) ? 0xffff : 0;
+  result.xmm16s(6) = (op1.xmm16s(6) > op2.xmm16s(6)) ? 0xffff : 0;
+  result.xmm16s(7) = (op1.xmm16s(7) > op2.xmm16s(7)) ? 0xffff : 0;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PCMPGTW_VdqWq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F 66 */
 void BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PCMPGTD_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm32s(0) = (op1.xmm32s(0) > op2.xmm32s(0)) ? 0xffffffff : 0;
+  result.xmm32s(1) = (op1.xmm32s(1) > op2.xmm32s(1)) ? 0xffffffff : 0;
+  result.xmm32s(2) = (op1.xmm32s(2) > op2.xmm32s(2)) ? 0xffffffff : 0;
+  result.xmm32s(3) = (op1.xmm32s(3) > op2.xmm32s(3)) ? 0xffffffff : 0;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PCMPGTD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F 67 */
 void BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PACKUSWB_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmmubyte(0)  = SaturateWordSToByteU(op1.xmm16s(0));
+  result.xmmubyte(1)  = SaturateWordSToByteU(op1.xmm16s(1));
+  result.xmmubyte(2)  = SaturateWordSToByteU(op1.xmm16s(2));
+  result.xmmubyte(3)  = SaturateWordSToByteU(op1.xmm16s(3));
+  result.xmmubyte(4)  = SaturateWordSToByteU(op1.xmm16s(4));
+  result.xmmubyte(5)  = SaturateWordSToByteU(op1.xmm16s(5));
+  result.xmmubyte(6)  = SaturateWordSToByteU(op1.xmm16s(6));
+  result.xmmubyte(7)  = SaturateWordSToByteU(op1.xmm16s(7));
+
+  result.xmmubyte(8)  = SaturateWordSToByteU(op2.xmm16s(0));
+  result.xmmubyte(9)  = SaturateWordSToByteU(op2.xmm16s(1));
+  result.xmmubyte(10) = SaturateWordSToByteU(op2.xmm16s(2));
+  result.xmmubyte(11) = SaturateWordSToByteU(op2.xmm16s(3));
+  result.xmmubyte(12) = SaturateWordSToByteU(op2.xmm16s(4));
+  result.xmmubyte(13) = SaturateWordSToByteU(op2.xmm16s(5));
+  result.xmmubyte(14) = SaturateWordSToByteU(op2.xmm16s(6));
+  result.xmmubyte(15) = SaturateWordSToByteU(op2.xmm16s(7));
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PACKUSWB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -816,36 +936,94 @@ void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F 74 */
 void BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PCMPEQB_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  for(unsigned j=0; j<16; j++)
+  {
+      result.xmmubyte(j) = (op1.xmmubyte(j) == op2.xmmubyte(j)) ? 0xff : 0;
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PCMPEQB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F 75 */
 void BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PCMPEQW_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm16u(0) = (op1.xmm16u(0) == op2.xmm16u(0)) ? 0xffff : 0;
+  result.xmm16u(1) = (op1.xmm16u(1) == op2.xmm16u(1)) ? 0xffff : 0;
+  result.xmm16u(2) = (op1.xmm16u(2) == op2.xmm16u(2)) ? 0xffff : 0;
+  result.xmm16u(3) = (op1.xmm16u(3) == op2.xmm16u(3)) ? 0xffff : 0;
+  result.xmm16u(4) = (op1.xmm16u(4) == op2.xmm16u(4)) ? 0xffff : 0;
+  result.xmm16u(5) = (op1.xmm16u(5) == op2.xmm16u(5)) ? 0xffff : 0;
+  result.xmm16u(6) = (op1.xmm16u(6) == op2.xmm16u(6)) ? 0xffff : 0;
+  result.xmm16u(7) = (op1.xmm16u(7) == op2.xmm16u(7)) ? 0xffff : 0;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PCMPEQW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F 76 */
 void BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PCMPEQD_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm32u(0) = (op1.xmm32u(0) == op2.xmm32u(0)) ? 0xffffffff : 0;
+  result.xmm32u(1) = (op1.xmm32u(1) == op2.xmm32u(1)) ? 0xffffffff : 0;
+  result.xmm32u(2) = (op1.xmm32u(2) == op2.xmm32u(2)) ? 0xffffffff : 0;
+  result.xmm32u(3) = (op1.xmm32u(3) == op2.xmm32u(3)) ? 0xffffffff : 0;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PCMPEQD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1008,12 +1186,28 @@ void BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F D4 */
 void BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PADDQ_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) += op2.xmm64u(0);
+  op1.xmm64u(1) += op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDQ_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1080,24 +1274,68 @@ void BX_CPU_C::PMOVMSKB_GdVRdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F D8 */
 void BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSUBUSB_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm64u(0) = result.xmm64u(1) = 0;
+
+  for(unsigned j=0; j<16; j++) 
+  {
+      if(op1.xmmubyte(j) > op2.xmmubyte(j)) {
+           result.xmmubyte(j) = op1.xmmubyte(j) - op2.xmmubyte(j);
+      }
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PSUBUSB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F D9 */
 void BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSUBUSW_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm64u(0) = result.xmm64u(1) = 0;
+
+  for(unsigned j=0; j<8; j++) 
+  {
+      if(op1.xmm16u(j) > op2.xmm16u(j)) {
+           result.xmm16u(j) = op1.xmm16u(j) - op2.xmm16u(j);
+      }
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PSUBUSW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1109,19 +1347,35 @@ void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PMINUB_VdqWdq: SSE2 instruction still not implemented"));
+  BX_INFO(("PMINUB_VdqWdq: SSE2 instruction still not implemented"));
 #else
   BX_INFO(("PMINUB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F DB */
 void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PAND_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) &= op2.xmm64u(0);
+  op1.xmm64u(1) &= op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PAND_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1164,24 +1418,58 @@ void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F DF */
 void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PANDN_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm64u(0) = ~(op1.xmm64u(0) & op2.xmm64u(0));
+  result.xmm64u(1) = ~(op1.xmm64u(1) & op2.xmm64u(1));
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PANDN_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F E0 */
 void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PAVGB_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  for(unsigned j=0; j<16; j++)
+  {
+      result.xmmubyte(j) = (op1.xmmubyte(j) + op2.xmmubyte(j) + 1) >> 1;
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PAVGB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1212,12 +1500,34 @@ void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F E3 */
 void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PAVGW_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  result.xmm16u(0) = (op1.xmm16u(0) + op2.xmm16u(0) + 1) >> 1;
+  result.xmm16u(1) = (op1.xmm16u(1) + op2.xmm16u(1) + 1) >> 1;
+  result.xmm16u(2) = (op1.xmm16u(2) + op2.xmm16u(2) + 1) >> 1;
+  result.xmm16u(3) = (op1.xmm16u(3) + op2.xmm16u(3) + 1) >> 1;
+  result.xmm16u(4) = (op1.xmm16u(4) + op2.xmm16u(4) + 1) >> 1;
+  result.xmm16u(5) = (op1.xmm16u(5) + op2.xmm16u(5) + 1) >> 1;
+  result.xmm16u(6) = (op1.xmm16u(6) + op2.xmm16u(6) + 1) >> 1;
+  result.xmm16u(7) = (op1.xmm16u(7) + op2.xmm16u(7) + 1) >> 1;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PAVGW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1332,12 +1642,28 @@ void BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F EB */
 void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("POR_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) |= op2.xmm64u(0);
+  op1.xmm64u(1) |= op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("POR_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1380,12 +1706,28 @@ void BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F EF */
 void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PXOR_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) ^= op2.xmm64u(0);
+  op1.xmm64u(1) ^= op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PXOR_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
@@ -1476,84 +1818,216 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
 #endif
 }
 
+/* 66 0F F8 */
 void BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSUBB_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  for(unsigned j=0; j<16; j++) 
+  {
+     op1.xmmubyte(j) -= op2.xmmubyte(j);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F F9 */
 void BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSUBW_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm16u(0) -= op2.xmm16u(0);
+  op1.xmm16u(1) -= op2.xmm16u(1);
+  op1.xmm16u(2) -= op2.xmm16u(2);
+  op1.xmm16u(3) -= op2.xmm16u(3);
+  op1.xmm16u(4) -= op2.xmm16u(4);
+  op1.xmm16u(5) -= op2.xmm16u(5);
+  op1.xmm16u(6) -= op2.xmm16u(6);
+  op1.xmm16u(7) -= op2.xmm16u(7);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F FA */
 void BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSUBD_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm32u(0) -= op2.xmm32u(0);
+  op1.xmm32u(1) -= op2.xmm32u(1);
+  op1.xmm32u(2) -= op2.xmm32u(2);
+  op1.xmm32u(3) -= op2.xmm32u(3);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F FB */
 void BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PSUBQ_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm64u(0) -= op2.xmm64u(0);
+  op1.xmm64u(1) -= op2.xmm64u(1);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBQ_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F FC */
 void BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PADDB_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  for(unsigned j=0; j<16; j++) 
+  {
+     op1.xmmubyte(j) += op2.xmmubyte(j);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDB_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F FD */
 void BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PADDW_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm16u(0) += op2.xmm16u(0);
+  op1.xmm16u(1) += op2.xmm16u(1);
+  op1.xmm16u(2) += op2.xmm16u(2);
+  op1.xmm16u(3) += op2.xmm16u(3);
+  op1.xmm16u(4) += op2.xmm16u(4);
+  op1.xmm16u(5) += op2.xmm16u(5);
+  op1.xmm16u(6) += op2.xmm16u(6);
+  op1.xmm16u(7) += op2.xmm16u(7);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDW_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
 
+/* 66 0F FE */
 void BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("PADDD_VdqWdq: SSE2 instruction still not implemented"));
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  op1.xmm32u(0) += op2.xmm32u(0);
+  op1.xmm32u(1) += op2.xmm32u(1);
+  op1.xmm32u(2) += op2.xmm32u(2);
+  op1.xmm32u(3) += op2.xmm32u(3);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDD_VdqWdq: SSE2 not supported in current configuration"));
   UndefinedOpcode(i);
