@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.9 2001-11-12 01:33:01 bdenney Exp $
+// $Id: parallel.cc,v 1.10 2001-11-12 01:45:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,8 +23,10 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
+//
+////////////////////////////////////////////////////////
+// This code was just a few stubs until Volker.Ruppert@t-online.de 
+// fixed it up in November 2001.
 
 
 #include "bochs.h"
@@ -54,7 +56,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.9 2001-11-12 01:33:01 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.10 2001-11-12 01:45:21 bdenney Exp $"));
   BX_PAR_THIS devices = d;
 
   /* PARALLEL PORT 1 */
@@ -90,6 +92,7 @@ bx_parallel_c::init(bx_devices_c *d)
 bx_parallel_c::virtual_printer(void)
 {
   fprintf(OUTPUT, "%c", BX_PAR_THIS s.data);
+  fflush (OUTPUT);
   if (BX_PAR_THIS s.CONTROL.irq == 1) {
     BX_PAR_THIS devices->pic->trigger_irq(7);
     }
