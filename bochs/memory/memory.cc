@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.11 2002-04-03 16:48:15 japj Exp $
+// $Id: memory.cc,v 1.12 2002-06-03 22:39:11 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,6 +48,27 @@ BX_MEM_C::write_physical(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 
   a20addr = A20ADDR(addr);
   BX_INSTR_PHY_WRITE(a20addr, len);
+
+#if BX_FETCHDECODE_CACHE
+  // NOTE: This piece should be put, if possible, where a write to the memory
+  //   takes place.
+  // Here it trashes cache even for writes that would end up to ROM
+
+  // Invalidate instruction cache for written addresses
+  // Instructions can be up to 16 bytes long, so I have to trash up to 15 bytes
+  //   before write address (costly!)
+  // I think it would NOT be safe to invalidate up to the last instruction
+  //   before the write because there COULD be programs which use
+  //   jump-in-the-middle-of-an-instruction schemes (esp. copyprotection
+  //   schemes)
+  unsigned long bx_fdcache_idx = addr - 15;
+  for (int count = 15+len; count > 0; --count) {
+    if (cpu->fdcache_ip[bx_fdcache_idx & BX_FDCACHE_MASK] == bx_fdcache_idx) {
+      cpu->fdcache_ip[bx_fdcache_idx & BX_FDCACHE_MASK] = 0xFFFFFFFF;
+    }
+    ++bx_fdcache_idx;
+  }
+#endif // #if BX_FETCHDECODE_CACHE
 
 #if BX_DEBUGGER
   // (mch) Check for physical write break points, TODO

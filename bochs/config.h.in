@@ -546,6 +546,15 @@ typedef unsigned int Boolean;
 #define BX_DYNAMIC_CPU_I386    0
 #define BX_DYNAMIC_CPU_SPARC   0
 
+// caching of fetchdecode() calls
+#define BX_FETCHDECODE_CACHE 0
+
+#if BX_FETCHDECODE_CACHE
+  // The number of entries. MUST be a power of 2
+  #define BX_FDCACHE_SIZE 0x0800
+  #define BX_FDCACHE_MASK (BX_FDCACHE_SIZE-1)
+#endif // BX_FETCHDECODE_CACHE
+
 #define BX_SUPPORT_FPU 0
 
 #define BX_HAVE_GETENV 0

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.19 2002-04-18 00:22:19 bdenney Exp $
+// $Id: cpu.h,v 1.20 2002-06-03 22:39:10 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1582,6 +1582,14 @@ public: // for now...
   bx_local_apic_c local_apic;
   Boolean int_from_local_apic;
 #endif
+
+  #if BX_FETCHDECODE_CACHE
+    Bit32u fdcache_ip[BX_FDCACHE_SIZE]; // will store operation's IP
+    // NOTE: This struct should really be aligned!
+    BxInstruction_t fdcache_i[BX_FDCACHE_SIZE]; // stores decoded instruction
+    Boolean fdcache_is32[BX_FDCACHE_SIZE];
+  #endif // #if BX_FETCHDECODE_CACHE
+                                              
   };
 
 
