@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.139 2002-09-05 16:40:18 bdenney Exp $
+// $Id: main.cc,v 1.140 2002-09-07 09:57:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1394,15 +1394,15 @@ bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-#if !BX_USE_CONFIG_INTERFACE
   if (!enable_config_interface) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
+#if !BX_USE_CONFIG_INTERFACE
       if (action == ACT_ASK) action = ACT_FATAL;
+#endif
       io->set_log_action (level, action);
     }
   }
-#endif
 
   bx_pc_system.init_ips(bx_options.Oips->get ());
 
