@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.40 2003-08-19 00:10:38 cbothamy Exp $
+// $Id: cmos.cc,v 1.41 2003-09-05 23:17:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.40 2003-08-19 00:10:38 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.41 2003-09-05 23:17:51 cbothamy Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -142,25 +142,47 @@ bx_cmos_c::init(void)
         244, 0, 0, "cmos"); // one-shot, not-active
   }
 
-#if BX_USE_SPECIFIED_TIME0 == 0
+#if BX_USE_SPECIFIED_TIME0 != 0
   // ??? this will not be correct for using an image file.
   // perhaps take values in CMOS and work backwards to find
   // s.timeval from values read in.
-  BX_CMOS_THIS s.timeval = time(NULL);
-#else
   BX_CMOS_THIS s.timeval = BX_USE_SPECIFIED_TIME0;
-#endif
+
+#else // BX_USE_SPECIFIED_TIME0 != 0
 
   // localtime
-  if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_LOCAL)
-       BX_CMOS_THIS s.timeval = time(NULL);
-  // utc
-  if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_UTC) {
-       BX_ERROR(("Using UTC time is not supported yet"));
+  if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_LOCAL) {
+       BX_INFO(("Using local time for initial clock"));
        BX_CMOS_THIS s.timeval = time(NULL);
   }
-  else if (bx_options.clock.Otime0->get () != 0)
+  // utc
+  else if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_UTC) {
+       bx_bool utc_ok = 0;
+
+       BX_INFO(("Using utc time for initial clock"));
+       
+       BX_CMOS_THIS s.timeval = time(NULL);
+
+#if BX_HAVE_LOCALTIME
+       localtime(&BX_CMOS_THIS s.timeval);
+#if BX_HAVE_TIMEZONE
+       utc_ok = 1;
+       BX_CMOS_THIS s.timeval += timezone;
+#endif // BX_HAVE_TIMEZONE
+#if BX_HAVE_DAYLIGHT
+       BX_CMOS_THIS s.timeval -= (daylight*3600);
+#endif // BX_HAVE_DAYLIGHT
+#endif // BX_HAVE_LOCALTIME
+
+       if (!utc_ok) {
+           BX_ERROR(("UTC time is not supported on your platform. Using current localtime"));
+       }
+  }
+  else {
+       BX_INFO(("Using specified time for initial clock"));
        BX_CMOS_THIS s.timeval = bx_options.clock.Otime0->get ();
+  }
+#endif // BX_USE_SPECIFIED_TIME0 != 0
 
   char *tmptime;
   while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
