@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.5 2004-07-09 21:40:48 vruppert Exp $
+// $Id: config.cc,v 1.6 2004-07-10 11:05:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,17 +73,6 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       if (set && SIM->get_init_done ()) {
         bx_gui->mouse_enabled_changed (val!=0);
         DEV_mouse_enabled_changed (val!=0);
-      }
-      break;
-    case BXP_NE2K_PRESENT:
-      if (set) {
-        int enable = (val != 0);
-        SIM->get_param (BXP_NE2K_IOADDR)->set_enabled (enable);
-        SIM->get_param (BXP_NE2K_IRQ)->set_enabled (enable);
-        SIM->get_param (BXP_NE2K_MACADDR)->set_enabled (enable);
-        SIM->get_param (BXP_NE2K_ETHMOD)->set_enabled (enable);
-        SIM->get_param (BXP_NE2K_ETHDEV)->set_enabled (enable);
-        SIM->get_param (BXP_NE2K_SCRIPT)->set_enabled (enable);
       }
       break;
     case BXP_LOAD32BITOS_WHICH:
@@ -385,7 +374,7 @@ void bx_init_options ()
   int i;
   bx_list_c *menu;
   bx_list_c *deplist;
-  char name[1024], descr[1024], label[1024];
+  char name[1024], descr[1024], group[16];
 
   memset (&bx_options, 0, sizeof(bx_options));
 
@@ -883,9 +872,9 @@ void bx_init_options ()
   // usb hubs
   for (i=0; i<BX_N_USB_HUBS; i++) {
         // options for USB hub
-        sprintf (name, "usb%d:enabled", i+1);
-        sprintf (descr, "Controls whether USB%d is installed or not", i+1);
-        sprintf (label, "Enable usb hub #%d (USB%d)", i+1, i+1);
+        sprintf (group, "USB%d", i+1);
+        sprintf (name, "Enable usb hub #%d (%s)", i+1, group);
+        sprintf (descr, "Controls whether %s is installed or not", group);
         bx_options.usb[i].Oenabled = new bx_param_bool_c (
                 BXP_USBx_ENABLED(i+1),
                 strdup(name), 
@@ -893,13 +882,13 @@ void bx_init_options ()
                 (i==0)?1 : 0);  // only enable the first by default
         bx_options.usb[i].Oioaddr = new bx_param_num_c (
                 BXP_USBx_IOADDR(i+1),
-                "usb:ioaddr",
+                "I/O Address",
                 "I/O base adress of USB hub",
                 0, 0xffe0,
                 (i==0)?0xff80 : 0);
         bx_options.usb[i].Oirq = new bx_param_num_c (
                 BXP_USBx_IRQ(i+1),
-                "usb:irq",
+                "IRQ",
                 "IRQ used by USB hub",
                 0, 15,
                 (i==0)?10 : 0);
@@ -913,11 +902,11 @@ void bx_init_options ()
         *par_ser_ptr++ = bx_options.usb[i].Oirq;
 
         bx_options.usb[i].Oioaddr->set_ask_format ("Enter new ioaddr: [0x%x] ");
-        bx_options.usb[i].Oioaddr->set_label ("I/O Address");
         bx_options.usb[i].Oioaddr->set_base (16);
-        bx_options.usb[i].Oenabled->set_label (strdup(label));
-        bx_options.usb[i].Oirq->set_label ("USB IRQ");
+        bx_options.usb[i].Oioaddr->set_group (strdup(group));
+        bx_options.usb[i].Oioaddr->set_ask_format ("Enter new IRQ: [%d] ");
         bx_options.usb[i].Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+        bx_options.usb[i].Oirq->set_group (strdup(group));
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
@@ -926,6 +915,7 @@ void bx_init_options ()
           "serial_parallel_menu",
           par_ser_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
+  menu->get_options ()->set (menu->SHOW_GROUP_NAME);
 
   // initialize pci options
 #define PCICONF_INIT_LIST_MAX \
@@ -1377,11 +1367,10 @@ void bx_init_options ()
   menu->get_options ()->set (menu->SHOW_PARENT);
   bx_options.ne2k.Opresent->set_dependent_list (
       new bx_list_c (BXP_NULL, "", "", ne2k_deps_list));
-  bx_options.ne2k.Opresent->set_handler (bx_param_handler);
-  bx_options.ne2k.Opresent->set (0);
   bx_param_c **pnic_dependent_list = &netdev_init_list[8];
   bx_options.pnic.Oenabled->set_dependent_list (
       new bx_list_c (BXP_NULL, "", "", pnic_dependent_list));
+  bx_options.ne2k.Opresent->set (0);
 
   // SB16 options
   bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,
@@ -1614,7 +1603,6 @@ void bx_init_options ()
 
   bx_param_c *other_init_list[] = {
       bx_options.Ofloppy_command_delay,
-      bx_options.Oi440FXSupport,
       bx_options.cmos.OcmosImage,
       bx_options.cmos.Opath,
       SIM->get_param (BXP_CLOCK),

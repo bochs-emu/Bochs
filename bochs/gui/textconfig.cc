@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.25 2004-06-05 08:40:24 vruppert Exp $
+// $Id: textconfig.cc,v 1.26 2004-07-10 11:05:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -269,7 +269,8 @@ static char *startup_options_prompt =
 "10. Sound Blaster 16 options\n"
 "11. NE2000 network card options\n"
 "12. Keyboard options\n"
-"13. Other options\n"
+"13. PCI options\n"
+"14. Other options\n"
 "\n"
 "Please choose one: [0] ";
 
@@ -350,7 +351,9 @@ int do_menu (bx_id id) {
       int index = choice->get () - 1;  // choosing 1 means list[0]
       bx_param_c *chosen = menu->get (index);
       assert (chosen != NULL);
-      chosen->text_ask (stdin, stderr);
+      if (chosen->get_enabled ()) {
+        chosen->text_ask (stdin, stderr);
+      }
     }
   }
 }
@@ -432,7 +435,7 @@ int bx_config_interface (int menu)
        double_percent(olddebuggerpath,CI_PATH_LENGTH);
 
        sprintf (prompt, startup_options_prompt, oldpath, oldprefix, olddebuggerpath);
-       if (ask_uint (prompt, 0, 13, 0, &choice, 10) < 0) return -1;
+       if (ask_uint (prompt, 0, 14, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: askparam (BXP_LOG_FILENAME); break;
@@ -447,7 +450,8 @@ int bx_config_interface (int menu)
 	 case 10: do_menu (BXP_SB16); break;
 	 case 11: do_menu (BXP_NE2K); break;
 	 case 12: do_menu (BXP_MENU_KEYBOARD); break;
-	 case 13: do_menu (BXP_MENU_MISC); break;
+	 case 13: do_menu (BXP_PCI); break;
+	 case 14: do_menu (BXP_MENU_MISC); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
