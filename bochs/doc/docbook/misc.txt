@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.17 2002-12-05 19:17:27 bdenney Exp $
+$Id: misc.txt,v 1.18 2002-12-05 19:29:16 bdenney Exp $
 
 Testing testing....
 
@@ -268,12 +268,38 @@ window, run the .BAT file that sets up the environment variables
 (C:\vc98\bin\vcvars32.bat on my system), and then run NMAKE in the Bochs
 source directory.  You will get lots of compile warnings, but hopefully no
 fatal errors!  At the end, you should see Bochs.exe in the source directory.
------
+
+
+
 
 --------------------------------------------------
-Building a release on win32
+Steps for building a Bochs release
 Thu Dec  5 14:23:20  2002
 Bryce Denney
+
+Make sure that README and configure.in have the correct version number.
+Run autoconf to regenerate configure and check them in.  Create a 
+CVS tag to mark which revision of each file was used in the release.
+
+For prereleases I make a normal CVS tag like this:
+  cvs tag REL_2_0_pre3_FINAL
+
+But for a real release, I make a CVS branch tag AND a normal tag.
+  cvs tag REL_2_0_BASE
+  cvs tag -b REL_2_0
+The base tag marks where the branch split off of the main trunk.
+This is very useful in maintaining the branch since you can do diffs
+against it.
+   cvs diff -r REL_2_0_BASE -r HEAD
+   cvs diff -r REL_2_0_BASE -r REL_2_0
+   cvs upd -j REL_2_0_BASE -j HEAD file
+   etc.
+The release and all bugfix releases after it are on the REL_2_0 branch.
+When the release is actually finalized,
+  cvs tag REL_2_0_FINAL
+
+Building the release on win32.
+These instructions require cygwin and MSVC++.
 
 In Cygwin:
   sh .conf.win32-vcpp         # runs configure 
@@ -321,4 +347,35 @@ make
 
 That gives an installer called 'Bochs-2.0.pre3.exe'.
 Test and upload.
-------------------------------------
+
+--------------
+Building the release on Linux
+
+Do a clean checkout using anonymous cvs, so that the source tarball
+will be all set up for anonymous cvs.  First I'll create a clean
+directory called "clean-anon".
+
+cvs -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs login
+cvs -z3 -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs \
+  checkout -d clean-anon bochs
+
+Start with clean-anon which tracks the CVS head.  Change its sticky tag
+so that it sticks to the release tag.
+
+cp -a clean-anon bochs-2.0.pre3
+cd bochs-2.0.pre3
+cvs upd -r REL_2_0_pre3_FINAL
+cd ..
+tar czvf bochs-2.0.pre3.tar.gz bochs-2.0.pre3
+
+The source TAR file bochs-2.0.pre3.tar.gz is ready to upload.
+
+The RPM will be building using the configuration in .conf.linux with
+a few parameters from build/redhat/make-rpm.  Make any last minute changes
+to .conf.linux.  Any changes will go into the source RPM.
+
+./build/redhat/make-rpm | tee ../build.txt
+
+This produces two rpm files in the current directory.  Test and upload.
+
+------
