@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.16 2001-10-08 00:38:22 bdenney Exp $
+// $Id: win32.cc,v 1.17 2001-10-08 00:42:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -420,15 +420,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
     // If mouse escaped, bring it back
     if ( mouseCaptureMode)
     {
-      GetCursorPos( &ptCursorPos);
       GetWindowRect(hwnd, &wndRect);
-      if ( ptCursorPos.x<wndRect.left || ptCursorPos.x>wndRect.right
-        || ptCursorPos.y<( wndRect.top+BX_HEADER_BAR_Y*stretch_factor) || ptCursorPos.y>wndRect.bottom)
-      {
-        SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-                   wndRect.top + stretched_y/2 + y_edge + y_caption);
-        cursorWarped();
-      }
+      SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
+                 wndRect.top + stretched_y/2 + y_edge + y_caption);
+      cursorWarped();
     }
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     
