@@ -19,10 +19,12 @@ create new disk images (?), and then start a simulation.
 
 Right now, the wxWindows window appears first.  This will be where
 you can choose a preset configuration or create one from scratch, then
-edit the bochsrc options using the GUI.  Then, by clicking on some button or a
-menu option, you can start up the Bochs simulation.  For now, the simulation
+edit the bochsrc options using the GUI.  Then, by clicking on Simulate:Start, 
+you can start up the Bochs simulation.  For now, the simulation
 creates its own window for vga display and the traditional buttons, which
-still use the platform-dependent gui code (not wxwindows).
+still use the platform-dependent gui code (not wxwindows).  However,
+Psyon's screen shot shows that he's very close to having a wxwindows
+vga display too.
 
 WARNING: Don't expect stable or complete code yet!
 
@@ -51,15 +53,45 @@ version of wxwindows for reference.
 What works right now:
 - cd to a directory with a bochsrc and disk images in it (I use dlxlinux)
 - start up bochs.  You get a small wxwindows window with a File menu.
-- choose "start bochs" on the file menu.
-- a new window pops up with is the normal bochs window
-- click on the floppy icon for A or B.  You get a modal dialog box from
-  the control panel that lets you choose a new image file name.  Click
-  the new image file, and ok.  Now you can read the new image file in
-  Bochs.  If the file you select or type is readable, the floppy icon shows a
-  good floppy disk.  If you type "none" or choose an unreadable file,
-  the floopy icon will show a disk with an X through it.
-- That's all.  Nothing else works except for quit.
+- choose "Start" on the Simulate menu.
+- a new window pops up with is the normal bochs window.  Bochs starts running.
+  You can pause it, resume it, or kill it on the Simulate menu.
+- the only visible change is that I've made several of the toolbar
+  icons bring up wxwindows dialog boxes.  There is a lot going on behind
+  the scenes to make this possible--trust me!  The 2 floppy icons, CDROM
+  icon, and snapshot icon all bring up appropriate dialog boxes to let
+  you choose a file.
+- That's all.  The other menu options are not implemented except for quit.
+
+To do:
+- sketch the GUI pieces that need to be made, with text description of
+  basically what they should do.  See README.gui-sketch for latest ideas.
+- have a few people look over the sketches so that we don't waste lots of
+  time building dialogs that people will hate.
+- code some dialog boxes in wxwindows.  Just get it looking right at first, and
+  Bryce can help you to get it connected to the simulator using the event
+  infrastructure that he has made.  Again, after one or two is done there will
+  be some good examples to look at.
+- implement gui_to_sim_event() which allows the GUI to initiate events
+  in the simulator thread.  Currently all events are the opposite direction.
+  This will probably look like a queue of BxEvent structures, with 
+  thread-safe put() and get() methods.
+- implement ASK_PARAM gui event for all types of parameters.  Currently only
+  string params are supported, meaning that when you call ask_param() on
+  a string parameter, the GUI gives the user a chance to edit that parameter's
+  value.  We will need to implement boolean, enum, numerical parameters, and
+  lists.  Lists should probably be displayed as a table or a dialog box
+  with several things to select.
+- wxwindows vga screen.  Psyon has made a great start on this, so I want
+  to get his code integrated ASAP.  I'm sure it will need some tweaking
+  to fix up mouse support, key mapping, colors, screen sizes, etc.
+- debugger interface.  There's lots of demand for a debugger interface
+  to Bochs: possibly more demand than for a configuration interface.  We
+  should talk about what this will look like, and when we have a plan we
+  can start sketching and coding dialogs for the debugger interface too.
+- clean up the biggest memory leaks and init/cleanup code.  The gui allows you
+  to kill the simulator and restart, but it doesn't do well after the first
+  time.
 ------------------------------------------------------
 
 Added some sketches in README.gui-sketch.  I'm thinking that the control
