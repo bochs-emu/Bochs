@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
+ |  $Id: fpu_entry.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |

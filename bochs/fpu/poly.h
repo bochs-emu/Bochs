@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly.h                                                                   |
+ |  $Id: poly.h,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  |  Header file for the FPU-emu poly*.c source files.                        |
  |                                                                           |

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_l2.c                                                                |
+ |  $Id: poly_l2.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Compute the base 2 log of a FPU_REG, using a polynomial approximation.    |
  |                                                                           |

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  wm_sqrt.c                                                                |
+ |  $Id: wm_sqrt.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Fixed point arithmetic square root evaluation.                            |
  |                                                                           |

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_aux.c                                                                |
+ |  $Id: fpu_aux.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Code to implement some of the FPU auxiliary instructions.                 |
  |                                                                           |

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  mul_Xsig.S                                                               |
+ |  $Id: mul_Xsig.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Multiply a 12 byte fixed point number by another fixed point number.      |
  |                                                                           |

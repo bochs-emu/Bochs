@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_add.c                                                              |
+ |  $Id: reg_u_add.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Add two valid (TAG_Valid) FPU_REG numbers, of the same sign, and put the  |
  |   result in a destination FPU_REG.                                        |

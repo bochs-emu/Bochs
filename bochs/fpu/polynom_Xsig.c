@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  polynomial_Xsig.c                                                        |
+ |  $Id: polynom_Xsig.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Fixed point arithmetic polynomial evaluation.                             |
  |                                                                           |

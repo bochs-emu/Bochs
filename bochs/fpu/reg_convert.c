@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_convert.c                                                            |
+ |  $Id: reg_convert.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  |  Convert register representation.                                         |
  |                                                                           |

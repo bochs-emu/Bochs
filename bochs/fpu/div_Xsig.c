@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  div_Xsig.S                                                               |
+ |  $Id: div_Xsig.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Division subroutine for 96 bit quantities                                 |
  |                                                                           |

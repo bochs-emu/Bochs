@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
+ |  $Id: reg_ld_str.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |

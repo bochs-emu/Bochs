@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
+ |  $Id: load_store.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |

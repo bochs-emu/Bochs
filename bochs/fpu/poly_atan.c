@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_atan.c                                                              |
+ |  $Id: poly_atan.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Compute the arctan of a FPU_REG, using a polynomial approximation.        |
  |                                                                           |

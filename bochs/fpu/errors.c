@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
+ |  $Id: errors.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |

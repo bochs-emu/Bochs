@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_sin.c                                                               |
+ |  $Id: poly_sin.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  |  Computation of an approximation of the sin function and the cosine       |
  |  function by a polynomial.                                                |

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  exception.h                                                              |
+ |  $Id: exception.h,v 1.3 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Copyright (C) 1992    W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
  |                       Australia.  E-mail   billm@vaxc.cc.monash.edu.au    |

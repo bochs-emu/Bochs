@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_add_sub.c                                                            |
+ |  $Id: reg_add_sub.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Functions to add or subtract two registers and put the result in a third. |
  |                                                                           |

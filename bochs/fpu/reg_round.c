@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_round.c                                                              |
+ |  $Id: reg_round.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Rounding/truncation/etc for FPU basic arithmetic functions.               |
  |                                                                           |

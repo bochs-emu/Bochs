@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_constant.c                                                           |
+ |  $Id: reg_constant.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | All of the constant FPU_REGs                                              |
  |                                                                           |

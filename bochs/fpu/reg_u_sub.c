@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_sub.c                                                              |
+ |  $Id: reg_u_sub.c,v 1.2 2001-10-06 03:53:46 bdenney Exp $
  |                                                                           |
  | Core floating point subtraction routine.                                  |
  |                                                                           |

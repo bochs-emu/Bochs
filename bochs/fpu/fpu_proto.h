@@ -1,5 +1,6 @@
 #ifndef _FPU_PROTO_H
 #define _FPU_PROTO_H
+|  $Id: fpu_proto.h,v 1.3 2001-10-06 03:53:46 bdenney Exp $
 
 /* errors.c */
 extern void Un_impl(void);
