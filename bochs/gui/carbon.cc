@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.11 2002-09-30 14:03:20 bdenney Exp $
+// $Id: carbon.cc,v 1.12 2002-10-18 11:46:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,7 @@
 // written by David Batterham <drbatter@progsoc.uts.edu.au>
 // with contributions from Tim Senecal
 // port to Carbon API by Emmanuel Maillard <e.rsz@libertysurf.fr>
+// Carbon polishing by Jeremy Parsons (Br'fin) <brefin@mac.com>
 // slight overhaul of Carbon key event, graphics and window handling
 //		and SIM->notify alert support by Chris Thomas <cjack@cjack.com>
 
@@ -49,6 +50,11 @@
 #define mFile 129
 #define iQuit 1
 #define mEdit 130
+#define iUndo 1
+#define iCut 3
+#define iCopy 4
+#define iPaste 5
+#define iClear 6
 #define mBochs 131
 #define iFloppy 1
 #define iCursor 3
@@ -58,6 +64,15 @@
 #define iConsole 7
 #define iSnapshot 9
 #define iReset 10
+
+enum {
+	RESET_TOOL_BUTTON = 5,
+	CONFIGURE_TOOL_BUTTON,
+	SNAPSHOT_TOOL_BUTTON,
+	PASTE_TOOL_BUTTON,
+	COPY_TOOL_BUTTON,
+	USER_TOOL_BUTTON
+};
 
 const MenuCommand kCommandFloppy = FOUR_CHAR_CODE ('FLPY');
 const MenuCommand kCommandCursor = FOUR_CHAR_CODE ('CRSR');
@@ -105,16 +120,24 @@ unsigned			width, height, gMinTop, gMaxTop, gLeft;
 GWorldPtr			gOffWorld;
 ProcessSerialNumber		gProcessSerNum;
 
+enum {
+	TEXT_MODE,
+	GRAPHIC_MODE
+} last_screen_state = TEXT_MODE, screen_state = TEXT_MODE;
+
 // HEADERBAR STUFF
+#define TOOL_SPACING 10
+#define TOOL_MARGIN_SPACE 4
 int 					numPixMaps = 0, toolPixMaps = 0;
-unsigned			bx_bitmap_left_xorigin = 2; // pixels from left
-unsigned			bx_bitmap_right_xorigin = 2; // pixels from right
+unsigned			bx_bitmap_left_xorigin = 2+TOOL_SPACING; // pixels from left
+unsigned			bx_bitmap_right_xorigin = 2+TOOL_SPACING; // pixels from right
 //PixMapHandle	bx_pixmap[BX_MAX_PIXMAPS];
 CIconHandle bx_cicn[BX_MAX_PIXMAPS];
 
 struct {
-	CIconHandle cicn;
+//	CIconHandle cicn;
 //	PixMapHandle pm;
+	ControlRef control;
 	unsigned xdim;
 	unsigned ydim;
 	unsigned xorigin;
@@ -124,7 +147,7 @@ struct {
 } bx_tool_pixmap[BX_MAX_PIXMAPS];
 
 // Carbon Event Handlers
-pascal OSStatus CEvtHandleWindowToolClick       (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
+pascal OSStatus CEvtHandleWindowToolCommand     (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
 pascal OSStatus CEvtHandleWindowToolUpdate      (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
 pascal OSStatus CEvtHandleWindowBackdropUpdate  (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
 pascal OSStatus CEvtHandleWindowEmulatorClick   (EventHandlerCallRef nextHandler, EventRef theEvent, void* userData);
@@ -138,7 +161,6 @@ pascal OSStatus CEvtHandleApplicationMenus      (EventHandlerCallRef nextHandler
 
 // Event handlers
 OSStatus HandleKey(EventRef theEvent, Bit32u keyState);
-void HandleToolClick(Point where);
 static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event);
 
 
@@ -151,6 +173,8 @@ void HideMenubar(void);
 void ShowMenubar(void);
 // void HideConsole(void);
 // void ShowConsole(void);
+
+void UpdateTools(void);
 
 // Initialisation
 void InitToolbox(void);
@@ -173,17 +197,23 @@ extern bx_gui_c   bx_gui;
 
 // Carbon Event Handlers
 
-pascal OSStatus CEvtHandleWindowToolClick (EventHandlerCallRef nextHandler,
+pascal OSStatus CEvtHandleWindowToolCommand (EventHandlerCallRef nextHandler,
     EventRef theEvent,
     void* userData)
 {
-	Point wheresMyMouse;
-	GetEventParameter (theEvent, kEventParamMouseLocation, typeQDPoint,
-            NULL, sizeof(Point), NULL, &wheresMyMouse);
+	HICommand commandStruct;
+	UInt32 theCommandID;
 
-	HiliteWindow(win, true);
-	HandleToolClick(wheresMyMouse);
+	GetEventParameter (theEvent, kEventParamDirectObject,
+		typeHICommand, NULL, sizeof(HICommand), 
+		NULL, &commandStruct);
 
+	theCommandID = commandStruct.commandID;
+	
+	if(theCommandID < toolPixMaps ) {
+		bx_tool_pixmap[theCommandID].f();
+	}
+	
 	return noErr; // Report success
 }
 
@@ -428,8 +458,19 @@ pascal OSStatus CEvtHandleApplicationMenus (EventHandlerCallRef nextHandler,
                     break;
 */
             case kCommandSnapshot:
-                    //the following will break if snapshot is not last bitmap button instantiated
-                    bx_tool_pixmap[toolPixMaps-1].f();
+                    bx_tool_pixmap[SNAPSHOT_TOOL_BUTTON].f();
+                    break;
+
+            case kCommandReset:
+                    bx_tool_pixmap[RESET_TOOL_BUTTON].f();
+                    break;
+
+            case kHICommandCopy:
+                    bx_tool_pixmap[COPY_TOOL_BUTTON].f();
+                    break;
+
+            case kHICommandPaste:
+                    bx_tool_pixmap[PASTE_TOOL_BUTTON].f();
                     break;
         }
         
@@ -523,6 +564,8 @@ void CreateMenus(void)
         
         SetMenuItemCommandID (GetMenuRef(mApple), iAbout,      kHICommandAbout);
         SetMenuItemCommandID (GetMenuRef(mFile),  iQuit,       kHICommandQuit);
+        SetMenuItemCommandID (GetMenuRef(mEdit),  iCopy,       kHICommandCopy);
+        SetMenuItemCommandID (GetMenuRef(mEdit),  iPaste,      kHICommandPaste);
         SetMenuItemCommandID (GetMenuRef(mBochs), iFloppy,     kCommandFloppy);
         SetMenuItemCommandID (GetMenuRef(mBochs), iCursor,     kCommandCursor);
         SetMenuItemCommandID (GetMenuRef(mBochs), iTool,       kCommandTool);
@@ -531,6 +574,11 @@ void CreateMenus(void)
         SetMenuItemCommandID (GetMenuRef(mBochs), iSnapshot,   kCommandSnapshot);
         SetMenuItemCommandID (GetMenuRef(mBochs), iReset,      kCommandReset);
         
+        DisableMenuItem(GetMenuRef(mEdit), iUndo);
+        DisableMenuItem(GetMenuRef(mEdit), iCut);
+        DisableMenuItem(GetMenuRef(mEdit), iClear);
+        DisableMenuItem(GetMenuRef(mBochs), iFloppy);
+
         EventTypeSpec commandEvents = {kEventClassCommand, kEventCommandProcess};
         EventTypeSpec menuEvents = {kEventClassMouse, kEventMouseDown};
         InstallApplicationEventHandler(NewEventHandlerUPP(CEvtHandleApplicationMenus),
@@ -550,6 +598,7 @@ void CreateWindows(void)
 	EventTypeSpec keyboardEvents[3] = {
             { kEventClassKeyboard, kEventRawKeyDown }, { kEventClassKeyboard, kEventRawKeyRepeat },
             { kEventClassKeyboard, kEventRawKeyUp }};
+	EventTypeSpec eventCommand =  { kEventClassCommand, kEventCommandProcess };
 
 	// Create a backdrop window for fullscreen mode
 //        GetRegionBounds(GetGrayRgn(), &screenBounds);
@@ -559,7 +608,7 @@ void CreateWindows(void)
 	GetAvailableWindowPositioningBounds(GetMainDevice(), &positioningBounds);
 	
 	SetRect(&winRect, 0, 0, screenBounds.right, screenBounds.bottom + GetMBarHeight());
-	CreateNewWindow(kDocumentWindowClass, (kWindowStandardHandlerAttribute ), &winRect, &backdrop);
+	CreateNewWindow(kPlainWindowClass, (kWindowStandardHandlerAttribute ), &winRect, &backdrop);
 	if (backdrop == NULL)
 		{BX_PANIC(("mac: can't create backdrop window"));}
 	InstallWindowEventHandler(backdrop, NewEventHandlerUPP(CEvtHandleWindowBackdropUpdate), 1, &eventUpdate, NULL, NULL);
@@ -586,7 +635,8 @@ void CreateWindows(void)
 	SetThemeWindowBackground(toolwin, kThemeBrushUtilityWindowBackgroundActive, false);
 
 	SetWindowTitleWithCFString (toolwin, CFSTR("MacBochs Hardware Controls")); // Set title
-	InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolClick),  1, &eventClick, NULL, NULL);
+	//InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolClick),  1, &eventClick, NULL, NULL);
+	InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolCommand),  1, &eventCommand, NULL, NULL);
 	InstallWindowEventHandler(toolwin, NewEventHandlerUPP(CEvtHandleWindowToolUpdate), 1, &eventUpdate, NULL, NULL);
 
 	// Create the emulator window for full screen mode
@@ -668,7 +718,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 	InitToolbox();
 	
 	thisGUI = th;
-	gheaderbar_y = headerbar_y;
+	gheaderbar_y = headerbar_y + TOOL_MARGIN_SPACE + TOOL_MARGIN_SPACE;
 	
 	CreateKeyMap();
 
@@ -700,6 +750,10 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 	UNUSED(argc);
 	UNUSED(argv);
 
+	// loads keymap for x11
+	if(bx_options.keyboard.OuseMapping->get()) {
+		bx_keymap.loadKeymap(NULL); // I have no function to convert X windows symbols
+	}
 }
 
 // HandleKey()
@@ -770,35 +824,6 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
     return status;
 }
 
-// HandleToolClick()
-//
-// Handles mouse clicks in the Bochs tool window
-
-void HandleToolClick(Point where)
-{
-	unsigned i;
-	int xorigin;
-	Rect bounds;
-        Rect toolwinRect;
-        
-	GetWindowPortBounds (toolwin, &toolwinRect);
-        
-	SetPortWindowPort(toolwin);
-	GlobalToLocal(&where);
-	for (i=0; i<toolPixMaps; i++)
-	{
-		if (bx_tool_pixmap[i].alignment == BX_GRAVITY_LEFT)
-			xorigin = bx_tool_pixmap[i].xorigin;
-		else
-			xorigin = toolwinRect.right - bx_tool_pixmap[i].xorigin;
-                        
-		SetRect(&bounds, xorigin, 0, xorigin+32, 32);
-		if (PtInRect(where, &bounds))
-			bx_tool_pixmap[i].f();
-	}
-	thisGUI->show_headerbar();
-}
-
 BX_CPP_INLINE void ResetPointer(void)
 {
     // this appears to work well, especially when combined with
@@ -848,8 +873,9 @@ void bx_gui_c::handle_events(void)
                                 break;
                                 
                         case kHighLevelEvent:
-                            fprintf(stderr, "# Classic apple event handler called\n");
+                            // fprintf(stderr, "# Classic apple event handler called\n");
                             AEProcessAppleEvent(&event);
+			    show_headerbar();	// Update if necessary (example, clipboard change)
 				
 			default:
 				break;
@@ -941,9 +967,17 @@ void bx_gui_c::flush(void)
         // A further note, UpdateCollapsedWindowDockTile is not
         // recommended for animation. Setup like this my performance
         // seems reasonable for little fuss.
-	if(windowUpdatesPending && IsWindowCollapsed(win))
+	if(windowUpdatesPending)
 	{
-            UpdateCollapsedWindowDockTile(win);
+		if(IsWindowCollapsed(win))
+		{
+			UpdateCollapsedWindowDockTile(win);
+		}
+		if(last_screen_state != screen_state)
+		{
+			last_screen_state = screen_state;
+			UpdateTools();
+		}
 	}
 	windowUpdatesPending = false;
 }
@@ -1003,6 +1037,8 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	GrafPtr		oldPort;
         GrafPtr winGrafPtr = GetWindowPort(win);
 	unsigned nchars, ncols;
+	
+	screen_state = TEXT_MODE;
 	
 	GetPort(&oldPort);
 	
@@ -1070,13 +1106,42 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   int
 bx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
-  return 0;
+	ScrapRef         theScrap;
+	ScrapFlavorFlags theScrapFlags;
+	Size             theScrapSize;
+	OSStatus         err;
+
+	GetCurrentScrap( &theScrap );
+	
+	// Make sure there is text to paste
+	err= GetScrapFlavorFlags( theScrap, kScrapFlavorTypeText, &theScrapFlags);
+	if(err == noErr)
+	{
+		GetScrapFlavorSize( theScrap, kScrapFlavorTypeText, &theScrapSize);
+		*nbytes = theScrapSize;
+		*bytes = new Bit8u[1 + *nbytes];
+		BX_INFO (("found %d bytes on the clipboard", *nbytes));
+		err= GetScrapFlavorData( theScrap, kScrapFlavorTypeText, &theScrapSize, *bytes);
+		BX_INFO (("first byte is 0x%02x", *bytes[0]));
+	}
+	else
+	{
+		BX_INFO (("No text found on clipboard..."));
+	}
+	return (err == noErr);
 }
 
   int
 bx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
-  return 0;
+	ScrapRef theScrap;
+	
+	// Clear out the existing clipboard
+	ClearCurrentScrap ();
+	
+	GetCurrentScrap( &theScrap );
+	PutScrapFlavor ( theScrap, kScrapFlavorTypeText, kScrapFlavorMaskNone, len, text_snapshot);
+	return 1;
 }
 
 
@@ -1121,7 +1186,7 @@ Boolean bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, u
 		SetPalette(hidden, thePal, false);
 	}
 
-	return(0);
+	return(1);
 }
 
 
@@ -1150,6 +1215,8 @@ void bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 	SetGWorld(gOffWorld, NULL);	*/
         
+	screen_state = GRAPHIC_MODE;
+
 	// SetPort - Otherwise an update happens to the headerbar and ooomph, we're drawing weirdly on the screen
 	SetPortWindowPort(win);
 	destRect = srcTileRect;
@@ -1221,6 +1288,9 @@ void bx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight)
 
 // rewritten by tim senecal to use the cicn (color icon) resources instead
 
+// We need to have a cicn resource for each and every call to create_bitmap
+// If this fails, it is probably because more icons were added to bochs and
+// we need to create more cicns in bochs.r to match with create_bitmap calls in gui.cc
 unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
 	unsigned i;
@@ -1228,6 +1298,7 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsig
 	long row_bytes, bytecount;
 	
 	bx_cicn[numPixMaps] = GetCIcon(numPixMaps+128);
+	BX_ASSERT(bx_cicn[numPixMaps]);
 	
 	numPixMaps++;
 
@@ -1249,28 +1320,43 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsig
 unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
 	unsigned hb_index;
+	Rect destRect, r;
+	GetWindowPortBounds(toolwin, &r);
+	int xorigin, yorigin = TOOL_MARGIN_SPACE;
+	ControlButtonContentInfo info;
 	
 	toolPixMaps++;
 	hb_index = toolPixMaps-1;
 //	bx_tool_pixmap[hb_index].pm = bx_pixmap[bmap_id];
-	bx_tool_pixmap[hb_index].cicn = bx_cicn[bmap_id];
+//	bx_tool_pixmap[hb_index].cicn = bx_cicn[bmap_id];
 	bx_tool_pixmap[hb_index].alignment = alignment;
 	bx_tool_pixmap[hb_index].f = f;
 
 	if (alignment == BX_GRAVITY_LEFT)
 	{
 		bx_tool_pixmap[hb_index].xorigin = bx_bitmap_left_xorigin;
-		bx_tool_pixmap[hb_index].yorigin = 0;
+		bx_tool_pixmap[hb_index].yorigin = TOOL_MARGIN_SPACE;
 //		bx_bitmap_left_xorigin += (**bx_pixmap[bmap_id]).bounds.right;
-		bx_bitmap_left_xorigin += 34;
+		bx_bitmap_left_xorigin += 32 + TOOL_SPACING;
+		xorigin = bx_tool_pixmap[hb_index].xorigin;
 	}
 	else
 	{
 //		bx_bitmap_right_xorigin += (**bx_pixmap[bmap_id]).bounds.right;
-		bx_bitmap_right_xorigin += 34;
+		bx_bitmap_right_xorigin += 32;
 		bx_tool_pixmap[hb_index].xorigin = bx_bitmap_right_xorigin;
-		bx_tool_pixmap[hb_index].yorigin = 0;
+		bx_tool_pixmap[hb_index].yorigin = TOOL_MARGIN_SPACE;
+		xorigin = r.right - bx_tool_pixmap[hb_index].xorigin;
+		bx_bitmap_right_xorigin += TOOL_SPACING;
 	}
+
+	SetRect(&destRect, xorigin, yorigin, xorigin+32, yorigin+32);
+	
+	info.contentType = kControlContentCIconHandle;
+	info.u.cIconHandle = bx_cicn[bmap_id];
+	
+	CreateIconControl( toolwin, &destRect, &info, false, &(bx_tool_pixmap[hb_index].control) );
+	SetControlCommandID(bx_tool_pixmap[hb_index].control, hb_index);
 	return(hb_index);
 }
 
@@ -1282,33 +1368,8 @@ unsigned bx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (
 
 void bx_gui_c::show_headerbar(void)
 {
-	Rect	destRect;
-        Rect r;
-        GetWindowPortBounds(toolwin, &r);
-	int		i, xorigin;
-	Pattern qdBlackPattern;
-        
-        GetQDGlobalsBlack(&qdBlackPattern);
-        
-	SetPortWindowPort(toolwin);
-        
-//	RGBForeColor(&medGrey);
-//	FillRect(&r, &qdBlackPattern); //&qd.black);
-        
-	for (i=0; i<toolPixMaps; i++)
-	{
-		if (bx_tool_pixmap[i].alignment == BX_GRAVITY_LEFT)
-			xorigin = bx_tool_pixmap[i].xorigin;
-		else
-			xorigin = r.right - bx_tool_pixmap[i].xorigin;
-			
-		SetRect(&destRect, xorigin, 0, xorigin+32, 32);
-		
-		//changed, simply plot the cicn for that button, in the prescribed rectangle
-		PlotCIcon(&destRect, bx_tool_pixmap[i].cicn);		
-	}
-	RGBForeColor(&black);
-
+	UpdateTools();
+	DrawControls(toolwin);
 }
 
 
@@ -1328,7 +1389,14 @@ void bx_gui_c::show_headerbar(void)
 void bx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
 //	bx_tool_pixmap[hbar_id].pm = bx_pixmap[bmap_id];
-	bx_tool_pixmap[hbar_id].cicn = bx_cicn[bmap_id];
+//	bx_tool_pixmap[hbar_id].cicn = bx_cicn[bmap_id];
+	ControlButtonContentInfo info;
+
+	info.contentType = kControlContentCIconHandle;
+	info.u.cIconHandle = bx_cicn[bmap_id];
+
+	SetControlData(bx_tool_pixmap[hbar_id].control,
+		kControlEntireControl, kControlIconContentTag, sizeof(ControlButtonContentInfo), &info);
 	show_headerbar();
 }
 
@@ -1343,6 +1411,9 @@ void bx_gui_c::exit(void)
 	if (!menubarVisible)
 		ShowMenubar(); // Make the menubar visible again
 	InitCursor();
+	
+	// Make the clipboard all happy before we go
+	CallInScrapPromises();
 }
 
 #if 0
@@ -1396,6 +1467,65 @@ void ShowPointer()
 	cursorVisible = true;
 	CheckMenuItem(GetMenuHandle(mBochs), iCursor, true);
       //CheckItem(GetMenuHandle(mBochs), iCursor, true);
+}
+
+// UpdateTools()
+//
+// Check the state of the emulation and use it to tell which tools are available or not.
+void UpdateTools()
+{
+	ScrapRef         theScrap;
+	ScrapFlavorFlags theScrapFlags;
+	
+	GetCurrentScrap( &theScrap );
+
+	// If keyboard mapping is on AND there is text on the clipboard enable pasting
+	if(bx_options.keyboard.OuseMapping->get() &&
+		(GetScrapFlavorFlags( theScrap, kScrapFlavorTypeText, &theScrapFlags) == noErr))
+	{
+		EnableMenuItem(GetMenuRef(mEdit), iPaste);
+		EnableControl(bx_tool_pixmap[PASTE_TOOL_BUTTON].control);
+	}
+	else
+	{
+		DisableMenuItem(GetMenuRef(mEdit), iPaste);
+		DisableControl(bx_tool_pixmap[PASTE_TOOL_BUTTON].control);
+	}
+
+	// Currently copy and snapshot aren't available if we aren't in text mode
+	if (screen_state == GRAPHIC_MODE) {
+		DisableMenuItem(GetMenuRef(mEdit), iCopy);
+		DisableMenuItem(GetMenuRef(mBochs), iSnapshot);
+		DisableControl(bx_tool_pixmap[COPY_TOOL_BUTTON].control);
+		DisableControl(bx_tool_pixmap[SNAPSHOT_TOOL_BUTTON].control);
+	} else
+	{
+		EnableMenuItem(GetMenuRef(mEdit), iCopy);
+		EnableMenuItem(GetMenuRef(mBochs), iSnapshot);
+		EnableControl(bx_tool_pixmap[COPY_TOOL_BUTTON].control);
+		EnableControl(bx_tool_pixmap[SNAPSHOT_TOOL_BUTTON].control);
+	}
+	
+	// User control active if keys defined
+	char *user_shortcut;
+	user_shortcut = bx_options.Ouser_shortcut->getptr();
+	if (user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
+		EnableControl(bx_tool_pixmap[USER_TOOL_BUTTON].control);
+	}
+	else
+	{
+		DisableControl(bx_tool_pixmap[USER_TOOL_BUTTON].control);
+	}
+	
+	// Config panel only available if user has a terminal or equivalent
+	if(isatty(STDIN_FILENO))
+	{
+		EnableControl(bx_tool_pixmap[CONFIGURE_TOOL_BUTTON].control);
+	}
+	else
+	{
+		DisableControl(bx_tool_pixmap[CONFIGURE_TOOL_BUTTON].control);
+	}
 }
 
 // HideTools()
@@ -1744,7 +1874,7 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
 {
     event->retcode = 0;  // default return code
     
-    if( event->type == BX_ASYNC_EVT_LOG_MSG )
+    if( event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
     {
 		DialogRef						alertDialog;
         CFStringRef						title;
@@ -1801,5 +1931,25 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
 		}
     }
 
+#if 0
+    // Track down the message that exiting leaves...
+    switch(event->type)
+    {
+	case BX_SYNC_EVT_TICK:
+	case BX_SYNC_EVT_LOG_ASK:
+		break;
+	default:
+		BX_INFO(("Callback tracing: Evt: %d (%s)", event->type,
+			((BX_EVT_IS_ASYNC(event->type))?"async":"sync")));
+		if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
+		{
+			if( event->u.logmsg.prefix != NULL )
+			{
+			BX_INFO(("Callback log:     Prefix: %s", event->u.logmsg.prefix));
+			}
+			BX_INFO(("Callback log:     Message: %s", event->u.logmsg.msg));
+		}
+    }
+#endif
     return event;
 }
