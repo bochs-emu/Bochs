@@ -1,6 +1,6 @@
 ###################################################################
 # Makefile
-# $Id: Makefile,v 1.2 2001-06-17 05:25:56 bdenney Exp $
+# $Id: Makefile,v 1.3 2001-06-17 05:30:52 bdenney Exp $
 #
 # Runs a cvs update on the source forge shell account.
 # This will only work if you are a developer on the Bochs
@@ -22,3 +22,9 @@ do_commit::
 	cvs commit
 
 commit:: do_commit remote_update
+
+update::
+	cvs update -A -d
+
+diff:
+	cvs diff
