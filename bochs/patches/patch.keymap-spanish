@@ -84,12 +84,11 @@ Here is the diff file:
  Bit32u keymap_fr[][2] = {
 @@ -1031,6 +1072,7 @@
   
-bx_keymap.addTable("us",&keymap_us,sizeof(keymap_us)/(sizeof(Bit32u)*2));
+ bx_keymap.addTable("us",&keymap_us,sizeof(keymap_us)/(sizeof(Bit32u)*2));
   
-bx_keymap.addTable("fr",&keymap_fr,sizeof(keymap_fr)/(sizeof(Bit32u)*2));
+ bx_keymap.addTable("fr",&keymap_fr,sizeof(keymap_fr)/(sizeof(Bit32u)*2));
   
-bx_keymap.addTable("de",&keymap_de,sizeof(keymap_de)/(sizeof(Bit32u)*2));
-+ 
-bx_keymap.addTable("es",&keymap_es,sizeof(keymap_es)/(sizeof(Bit32u)*2));
+ bx_keymap.addTable("de",&keymap_de,sizeof(keymap_de)/(sizeof(Bit32u)*2));
++bx_keymap.addTable("es",&keymap_es,sizeof(keymap_es)/(sizeof(Bit32u)*2));
    bx_keymap.setDefault("us");
  }
