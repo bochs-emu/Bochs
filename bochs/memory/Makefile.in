@@ -23,6 +23,8 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 SHELL = /bin/sh
 
@@ -38,7 +40,7 @@ X_PRE_LIBS = @X_PRE_LIBS@
 RANLIB = @RANLIB@
 
 
-BX_INCDIRS = -I.. -I../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
 BX_OBJS = \
 	memory.o misc_mem.o

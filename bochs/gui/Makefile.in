@@ -25,6 +25,8 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 SHELL = /bin/sh
 
@@ -50,7 +52,7 @@ GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS = gui.o control.o siminterface.o @GUI_OBJS@
 
-BX_INCDIRS = -I.. -I../iodev -I../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
 
 #
@@ -75,13 +77,13 @@ libgui.a: $(BX_GUI_OBJS)
 $(BX_GUI_OBJS) : $(BX_INCLUDES)
 
 beos.o: beos.@CPP_SUFFIX@
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(BEOS_CFLAGS) beos.@CPP_SUFFIX@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(BEOS_CFLAGS) $<
 
 x.o: x.@CPP_SUFFIX@
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(X_CFLAGS) x.@CPP_SUFFIX@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(X_CFLAGS) $<
 
 rfb.o: rfb.cc rfb.h rfbproto.h
-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(RFB_CFLAGS) rfb.@CPP_SUFFIX@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(RFB_CFLAGS) $<
 
 x.cc: gui.h
 

@@ -23,6 +23,8 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 SHELL = /bin/sh
 
@@ -47,7 +49,7 @@ BX_OBJS = \
 
 BX_INCLUDES = disasm.h
 
-BX_INCDIRS = -I.. -I../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@

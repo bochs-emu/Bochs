@@ -22,6 +22,8 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 SHELL = /bin/sh
 
@@ -46,7 +48,7 @@ PARANOID = -DPARANOID
 L_TARGET = libfpu.a
 
 
-BX_INCDIRS = -I.. -I../@INSTRUMENT_DIR@ -I. -I./stubs
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@ -I. -I$(srcdir)/. -I./stubs -I$(srcdir)/./stubs
 
 FPU_FLAGS = -DUSE_WITH_CPU_SIM $(PARANOID) $(DEBUG) -DNO_ASSEMBLER
 FPU_GLUE_OBJ = wmFPUemu_glue.o

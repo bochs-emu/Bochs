@@ -24,6 +24,9 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
+
 SHELL = /bin/sh
 
 @SET_MAKE@
@@ -59,7 +62,7 @@ BX_PARSER_OBJS = \
 
 BX_INCLUDES = debug.h
 
-BX_INCDIRS = -I.. -I../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
 .@CPP_SUFFIX@.o:
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
@@ -96,9 +99,9 @@ sim2.o: debug.h
 parser.c: parser.y
 	@/bin/rm -f y.tab.c parser.c
 	@/bin/rm -f y.tab.h parser.h
-	$(YACC) -p bx -d parser.y
+	$(YACC) -p bx -d $<
 	@/bin/mv -f y.tab.c parser.c
 	@/bin/mv -f y.tab.h parser.h
 
 lexer.c: lexer.l
-	$(LEX) -Pbx -t lexer.l > lexer.c
+	$(LEX) -Pbx -t $< > lexer.c

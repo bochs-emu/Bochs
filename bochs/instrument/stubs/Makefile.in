@@ -24,6 +24,9 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
+
 SHELL = /bin/sh
 
 @SET_MAKE@
@@ -48,7 +51,7 @@ BX_OBJS = \
 
 BX_INCLUDES =
 
-BX_INCDIRS = -I../.. -I.
+BX_INCDIRS = -I../.. -I$(srcdir)/../.. -I. -I$(srcdir)/.
 
 .@CPP_SUFFIX@.o:
 	$(CXX) -c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@

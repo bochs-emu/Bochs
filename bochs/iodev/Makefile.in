@@ -25,6 +25,8 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 SHELL = /bin/sh
 
@@ -42,7 +44,7 @@ VIDEO_OBJS_HGA = hga.o
 VIDEO_OBJS = @VIDEO_OBJS@
 IOAPIC_OBJS = @IOAPIC_OBJS@
 
-BX_INCDIRS = @DASH@I.. -I../@INSTRUMENT_DIR@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
 SB16_DUMMY_OBJS = sb16.o
