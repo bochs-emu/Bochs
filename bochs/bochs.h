@@ -260,6 +260,7 @@ typedef struct {
   void* record_io;
   } bx_debug_t;
 
+void bx_signal_handler (int signum);
 void bx_printf(char *fmt, ...);
 void bx_panic(char *fmt, ...);
 void bx_atexit(void);

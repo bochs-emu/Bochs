@@ -353,6 +353,7 @@ process_sim2:
 
   // (mch) Moved from main.cc
   bx_devices.init();
+  bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 
   // setup Ctrl-C handler

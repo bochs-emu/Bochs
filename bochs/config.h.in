@@ -404,6 +404,9 @@ typedef unsigned int Boolean;
 #endif
 #endif // BX_WITH_WIN32
 
+// for now only term.cc requires a GUI sighandler.
+#define BX_GUI_SIGHANDLER (BX_WITH_TERM)
+
 #define HAVE_SIGACTION 1
 
 // configure will change the definition of "inline" to the value

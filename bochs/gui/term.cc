@@ -79,8 +79,20 @@ do_scan(int key_event, int shift, int ctrl, int alt)
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-static void
-guisig(int signo)
+Bit32u 
+bx_gui_c::get_sighandler_mask ()
+{
+  return 
+    (1<<SIGHUP)
+    | (1<<SIGINT)
+    | (1<<SIGQUIT)
+    | (1<<SIGSTOP)
+    | (1<<SIGTSTP)
+    | (1<<SIGTERM);
+}
+
+void
+bx_gui_c::sighandler(int signo)
 {
 	switch(signo) {
 	case SIGINT:
@@ -123,14 +135,6 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 	keypad(stdscr,TRUE);
 	nodelay(stdscr, TRUE);
 	noecho();
-
-	bx_printf ("bx_gui_c::specific_init is defining signal handlers now");
-	(void)signal(SIGHUP, guisig);
-	(void)signal(SIGINT, guisig);
-	(void)signal(SIGQUIT, guisig);
-	(void)signal(SIGSTOP, guisig);
-	(void)signal(SIGTSTP, guisig);
-	(void)signal(SIGTERM, guisig);
 
 	if (bx_options.private_colormap)
 		if(bx_dbg.video)

@@ -22,14 +22,6 @@
 
 
 
-
-
-
-
-void bx_signal_handler(int signum);
-
-
-
 #include "bochs.h"
 #include "state_file.h"
 
@@ -188,7 +180,7 @@ bx_bochs_init(int argc, char *argv[])
 
 #if BX_DEBUGGER == 0
   bx_devices.init();
-
+  bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif
 
@@ -926,6 +918,13 @@ bx_signal_handler( int signum)
 #endif
     return;
     }
+#endif
+
+#if BX_GUI_SIGHANDLER
+  if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
+    bx_gui.sighandler (signum);
+    return;
+  }
 #endif
 
   bx_panic("SIGNAL %u caught\n", signum);
