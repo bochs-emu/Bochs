@@ -703,16 +703,6 @@ void BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE
-  BX_PANIC(("MOVNTQ_MqPq: SSE instruction still not implemented"));
-#else
-  BX_INFO(("MOVNTQ_MqPq: SSE not supported in current configuration"));
-  UndefinedOpcode(i);
-#endif
-}
-
 void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE

@@ -1373,6 +1373,26 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 #endif
 }
 
+/* 0F E7 */
+void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE
+  BX_CPU_THIS_PTR prepareMMX();
+
+  if (i->modC0()) {
+    BX_PANIC(("MOVNTQ_MqPq: must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  BxPackedMmxRegister reg = BX_READ_MMX_REG(i->nnn());
+  write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &reg);
+
+#else
+  BX_INFO(("MOVNTQ_MqPq: SSE not supported in current configuration"));
+  UndefinedOpcode(i);
+#endif
+}
+
 /* 0F E8 */
 void BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
 {
