@@ -33,6 +33,8 @@ local $imageName    = "'$fullfolderPath.dmg'";
 local $imageSectors = undef;
 local $imageTemp    = "'$fullfolderPath-tmp.dmg'";
 
+local $mount_point = "bochs-image-mount";
+
 die "err: $folderName is not a directory\n" if(!-d $fullfolderPath);
 
 # Know a better way to get the first value from du? 
@@ -53,8 +55,8 @@ if($imageSectors < $fiveMBImage)
 die "err: hdiutil create failed with $?\n" if($?);
 
 # Initialize the image
-local $hdid_info=`hdid -nomount $imageTemp`;
-die "err: hdid -nomount failed with $?\n" if($?);
+local $hdid_info=`hdiutil attach -nomount $imageTemp`;
+die "err: hdiutil attach -nomount failed with $?\n" if($?);
 
 $hdid_info =~ s/( |\t|\n)+/~!/g;
 local (@hdid_info) = split(m/~!/, $hdid_info);
@@ -63,6 +65,7 @@ local ($disk_dev, $hfs_dev);
 
 $disk_dev = $hdid_info[0];
 $hfs_dev = $hdid_info[4];
+$mount_dev = $hdid_info[4];
 
 $disk_dev =~ s{/dev/}{};
 $hfs_dev =~ s/disk/rdisk/;
@@ -71,31 +74,38 @@ $hfs_dev =~ s/disk/rdisk/;
 if($?)
 {
 	local $err = $?;
-	`hdiutil eject $disk_dev`;
+	`hdiutil detach $disk_dev`;
 	die "err: newfs_hfs failed with $err\n";
 }
 
-`hdiutil eject $disk_dev`;
-
 # Fill the image
-$hdid_info = `hdid $imageTemp`;
-die "err: hdid failed with $?\n" if($?);
 
-$hdid_info =~ s/( |\t|\n)+/~!/g;
-@hdid_info = split(m/~!/, $hdid_info);
-
-$disk_dev = $hdid_info[0];
-$disk_dev =~ s{/dev/}{};
-
-`ditto -rsrcFork "$fullfolderPath" "/Volumes/$folderName"`;
+`mkdir $mount_point`;
+`/sbin/mount -t hfs $mount_dev $mount_point`;
 if($?)
 {
 	local $err = $?;
-	`hdiutil eject $disk_dev`;
+	`hdiutil detach $disk_dev`;
+	die "err: mount failed with $err\n";
+}
+
+`ditto -rsrcFork "$fullfolderPath" $mount_point`;
+if($?)
+{
+	local $err = $?;
+	`umount $mount_dev`;
+	`hdiutil detach $disk_dev`;
+	`rmdir $mount_point`;
 	die "err: ditto failed with $err\n";
 }
-`hdiutil eject $disk_dev`;
+`umount $mount_dev`;
+`hdiutil detach $disk_dev`;
+`rmdir $mount_point`;
 
 # Create the compressed image
 `hdiutil convert $imageTemp -format UDCO -o $imageName`;
 die "err: hdiutil convert failed with $?\n" if($?);
+
+`rm $imageTemp`;
+
+print "$imageName is your new diskimage\n";
