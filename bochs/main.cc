@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.72 2001-10-07 00:58:10 bdenney Exp $
+// $Id: main.cc,v 1.73 2001-10-07 01:07:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,8 +82,6 @@ bx_options_t bx_options = {
   NULL,  // default keyboard serial path delay (usec)
   NULL,  // default floppy command delay (usec)
   NULL,    // ips
-  NULL,    // max_ips
-  NULL,    // system clock sync
   NULL,    // default mouse_enabled
   NULL,       // default private_colormap
 #if BX_WITH_AMIGAOS
@@ -1877,7 +1875,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
-  fprintf (fp, "system_clock_sync: enabled=%d\n", bx_options.Osystem_clock_sync->get ());
+  fprintf (fp, "ips: enabled=%d\n", bx_options.Oips->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
 #if BX_WITH_AMIGAOS
