@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.18 2002-10-20 21:56:36 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.19 2002-10-21 15:44:01 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.18 2002-10-20 21:56:36 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.19 2002-10-21 15:44:01 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -158,7 +158,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_APIC
     // I/O APIC 82093AA
     ioapic = & bx_ioapic;
-    ioapic->init (this);
+    ioapic->init ();
 #endif
 
   /*--- 8237 DMA ---*/
