@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.11 2004-03-12 14:33:22 vruppert Exp $
+// $Id: serial_raw.cc,v 1.12 2004-03-17 17:08:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 
 #if USE_RAW_SERIAL
 
-#define LOG_THIS bx_devices.pluginSerialDevice->
+#define LOG_THIS
 
 serial_raw::serial_raw (char *devname)
 {
@@ -67,6 +67,9 @@ serial_raw::serial_raw (char *devname)
 #else
   present = 0;
 #endif
+  set_modem_control(0x00);
+  set_break(0);
+  rxdata_count = 0;
 }
 
 serial_raw::~serial_raw (void)
@@ -244,6 +247,8 @@ serial_raw::transmit (int val)
       }
     }
     if (Len2 != 1) BX_ERROR(("transmit failed: len = %d", Len2));
+    ClearCommError(hCOM, &DErr, NULL);
+    CloseHandle(tx_ovl.hEvent);
 #endif
   }
 }
@@ -258,18 +263,24 @@ serial_raw::ready_transmit ()
 int 
 serial_raw::ready_receive ()
 {
-  BX_DEBUG (("ready_receive returning %d", present));
-  return present;
+  BX_DEBUG (("ready_receive returning %d", (rxdata_count > 0)));
+  return (rxdata_count > 0);
 }
 
 int 
 serial_raw::receive ()
 {
+#ifdef WIN32
+  DWORD DErr;
+#endif
+
   BX_DEBUG (("receive returning 'A'"));
   if (present) {
 #ifdef WIN32
     if (DCBchanged) {
       setup_port();
+    } else {
+      ClearCommError(hCOM, &DErr, NULL);
     }
 #endif
     return (int)'A';

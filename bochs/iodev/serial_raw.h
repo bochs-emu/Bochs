@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.7 2004-03-08 21:51:19 vruppert Exp $
+// $Id: serial_raw.h,v 1.8 2004-03-17 17:08:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -35,6 +35,7 @@ class serial_raw : public logfunctions {
   private:
     void setup_port ();
     bx_bool present;
+    Bit8u rxdata_count;
 #ifdef WIN32
     HANDLE hCOM;
     DCB dcb;
