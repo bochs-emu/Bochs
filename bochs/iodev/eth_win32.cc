@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.8 2002-03-08 18:41:33 bdenney Exp $
+// $Id: eth_win32.cc,v 1.9 2002-03-08 18:46:54 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -320,24 +320,27 @@ void bx_win32_pktmover_c::rx_timer_handler (void *this_ptr)
 {
 	// Recieve Packet ????
 	char           *pBuf;
-    unsigned char  *pPacket;
+	unsigned char  *pPacket;
 	unsigned int   iOffset = 0;
 	struct bpf_hdr *hdr;
-    static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
-
-    PacketInitPacket(pkRecv, (char *)buffer, 256000);
-    PacketReceivePacket(lpAdapter, pkRecv, TRUE);
-
+	static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
+	PacketInitPacket(pkRecv, (char *)buffer, 256000);
+	PacketReceivePacket(lpAdapter, pkRecv, TRUE);
 	pBuf = (char *)pkRecv->Buffer;
 	iOffset = 0;
-	while(iOffset < pkRecv->ulBytesReceived) {
+	while(iOffset < pkRecv->ulBytesReceived) 
+	{
 		hdr = (struct bpf_hdr *)(pBuf + iOffset);
 		pPacket = (unsigned char *)(pBuf + iOffset + hdr->bh_hdrlen);
-        if(memcmp(pPacket + 6, cMacAddr, 6) == 0) return;
-        if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, bcast_addr, 6) == 0 || pPacket[0] & 0x01) {
-	        fprintf(stderr, "[ETH-WIN32] packet: size=%i, dst=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x, src=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n", hdr->bh_caplen, pPacket[0], pPacket[1], pPacket[2], pPacket[3], pPacket[4], pPacket[5], pPacket[6], pPacket[7], pPacket[8], pPacket[9], pPacket[10], pPacket[11]);
-           (*rx_handler)(rx_Arg, pPacket, hdr->bh_caplen);
-        }
+		if (memcmp(pPacket + 6, cMacAddr, 6) != 0) // src field != ours
+		{
+			if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, bcast_addr, 6) == 0) 
+			{
+				fprintf(stderr, "[ETH-WIN32] RX packet: size=%i, dst=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x, src=%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n", hdr->bh_caplen, pPacket[0], pPacket[1], pPacket[2], pPacket[3], pPacket[4], pPacket[5], pPacket[6], pPacket[7], pPacket[8], pPacket[9], pPacket[10], pPacket[11]);
+				(*rx_handler)(rx_Arg, pPacket, hdr->bh_caplen);
+			}
+		}
 		iOffset = Packet_WORDALIGN(iOffset + (hdr->bh_hdrlen + hdr->bh_caplen));
 	}
 }
+
