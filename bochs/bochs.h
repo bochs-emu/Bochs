@@ -265,7 +265,6 @@ typedef struct {
 #endif
 #if BX_DEBUG_LINUX
   Boolean linux_syscall;
-  Boolean linux_task;
 #endif
   void* record_io;
   } bx_debug_t;
