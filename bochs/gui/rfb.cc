@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.12 2001-11-12 16:45:28 bdenney Exp $
+// $Id: rfb.cc,v 1.13 2001-11-12 17:56:47 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -220,7 +220,7 @@ void ServerThreadInit(void *indata)
 	SOCKET             sServer;
 	SOCKET             sClient;
 	struct sockaddr_in sai;
-	int       sai_size;
+	unsigned int       sai_size;
 	int port_ok = 0;
 
 #ifdef WIN32
@@ -263,7 +263,7 @@ void ServerThreadInit(void *indata)
 	fprintf (stderr, "RFB: listening for connections on port %i\n", rfbPort);
 	sai_size = sizeof(sai);
 	while(keep_alive) {
-		sClient = accept(sServer, (struct sockaddr *)&sai, &sai_size);
+		sClient = accept(sServer, (struct sockaddr *)&sai, (socklen_t*)&sai_size);
 		if(sClient != -1) {
 			HandleRfbClient(sClient);
 			sGlobal = -1;
@@ -1276,9 +1276,20 @@ void rfbKeyPressed(Bit32u key, int press_release)
 
 void rfbMouseMove(int x, int y, int bmask)
 {
+	static int oldx = -1;
+	static int oldy = -1;
 	int buttons = 0;
+
+	if (oldx == oldy == -1) {
+		oldx = x;
+		oldy = y;
+		return;
+	}
 	if(y > rfbHeaderbarY) {
-		bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
+		//bx_devices.keyboard->mouse_motion(x, y - rfbHeaderbarY, buttons);
+		bx_devices.keyboard->mouse_motion(x - oldx, oldy - y, bmask);
+		oldx = x;
+		oldy = y;
 	}
 }
 
