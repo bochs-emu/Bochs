@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.26 2002-09-22 02:44:31 bdenney Exp $
+// $Id: wx.cc,v 1.27 2002-09-22 04:04:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -116,9 +116,8 @@ void MyPanel::OnTimer(wxCommandEvent& WXUNUSED(event))
 {
   IFDBG_VGA(wxLogDebug ("timer"));
   if (needRefresh) {
-    IFDBG_VGA(wxLogDebug ("painting"));
-    wxPaintEvent unused;
-    OnPaint (unused);
+    IFDBG_VGA(wxLogDebug ("calling refresh"));
+	Refresh (FALSE);
   }
 }
 
@@ -134,6 +133,7 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 	if(wxScreen != NULL) {
 	  wxPoint pt = GetClientAreaOrigin();
 	  wxImage screenImage(wxScreenX, wxScreenY, (unsigned char *)wxScreen, TRUE);
+	  IFDBG_VGA(wxLogDebug ("drawBitmap"));
 	  dc.DrawBitmap(screenImage.ConvertToBitmap(), pt.x, pt.y, FALSE);
 	}
 	needRefresh = false;
