@@ -1,7 +1,7 @@
 #include "bochs.h"
 
-#define BX_USE_VIRTUAL_TIMERS 0
-#define BX_VIRTUAL_TIMERS_REALTIME 0
+#define BX_USE_VIRTUAL_TIMERS 1
+#define BX_VIRTUAL_TIMERS_REALTIME 1
 
 //Important constant #defines:
 #define USEC_PER_SECOND (1000000)
@@ -31,7 +31,7 @@
 //DEBUG configuration:
 
 //Debug with printf options.
-#define DEBUG_REALTIME_WITH_PRINTF 0
+#define DEBUG_REALTIME_WITH_PRINTF 1
 
 //Use to test execution at multiples of real time.
 #define TIME_DIVIDER (1)
@@ -69,6 +69,17 @@ bx_virt_timer_c::bx_virt_timer_c( void )
 {
   put("VTIMER");
   settype(VTIMERLOG);
+
+  numTimers = 0;
+  current_timers_time = 0;
+  timers_next_event_time = BX_MAX_VIRTUAL_TIME;
+  last_sequential_time = 0;
+  in_timer_handler = 0;
+  virtual_next_event_time = BX_MAX_VIRTUAL_TIME;
+  current_virtual_time = 0;
+
+  use_virtual_timers = BX_USE_VIRTUAL_TIMERS;
+  init_done = 0;
 }
 
 bx_virt_timer_c::~bx_virt_timer_c( void )
@@ -132,6 +143,7 @@ bx_virt_timer_c::periodic(Bit64u time_passed) {
     }
   }
   timers_next_event_time-=current_timers_time;
+  next_event_time_update();
   //FIXME
 }
 
@@ -210,8 +222,10 @@ bx_virt_timer_c::register_timer( void *this_ptr, bx_timer_handler_t handler,
 
   if(useconds < timers_next_event_time) {
     timers_next_event_time = useconds;
+    next_event_time_update();
     //FIXME
   }
+  return i;
 }
 
 //unregister a previously registered timer.
@@ -257,6 +271,7 @@ bx_virt_timer_c::activate_timer( unsigned timer_index, Bit32u useconds,
 
   if(useconds < timers_next_event_time) {
     timers_next_event_time = useconds;
+    next_event_time_update();
     //FIXME
   }
 }
@@ -291,24 +306,22 @@ bx_virt_timer_c::advance_virtual_time(Bit64u time_passed) {
 void
 bx_virt_timer_c::next_event_time_update(void) {
   virtual_next_event_time = timers_next_event_time + current_timers_time - current_virtual_time;
+  if(init_done) {
+    bx_pc_system.deactivate_timer(system_timer_id);
+    BX_ASSERT(virtual_next_event_time);
+    bx_pc_system.activate_timer(system_timer_id, 
+				BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time)),
+				0);
+  }
 }
 
 void
 bx_virt_timer_c::init(void) {
-  numTimers = 0;
-  current_timers_time = 0;
-  timers_next_event_time = BX_MAX_VIRTUAL_TIME;
-  last_sequential_time = 0;
-  in_timer_handler = 0;
-  virtual_next_event_time = 0;
-  current_virtual_time = 0;
-
-  use_virtual_timers = BX_USE_VIRTUAL_TIMERS;
   virtual_timers_realtime = BX_VIRTUAL_TIMERS_REALTIME;
 
   register_timer(this, nullTimer, NullTimerInterval, 1, 1, "Null Timer");
 
-  system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler, BX_MAX_VIRTUAL_TIME, 0, 1, "Virtual Timer");
+  system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler,virtual_next_event_time , 0, 1, "Virtual Timer");
 
   //Real time variables:
   last_real_time=GET_VIRT_REALTIME64_USEC()+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
@@ -325,6 +338,7 @@ bx_virt_timer_c::init(void) {
   last_realtime_ticks=0;
   ticks_per_second = USEC_PER_SECOND;
 
+  init_done = 1;
 }
 
 void

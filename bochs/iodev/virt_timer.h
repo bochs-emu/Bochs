@@ -53,6 +53,8 @@ class bx_virt_timer_c : public logfunctions {
   Bit64u last_realtime_ticks;
   Bit64u ticks_per_second;
 
+  bx_bool init_done;
+
   int system_timer_id;
 
   //Whether or not to use virtual timers.
