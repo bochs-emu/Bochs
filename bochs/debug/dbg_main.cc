@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.75.2.1 2002-10-06 23:17:51 cbothamy Exp $
+// $Id: dbg_main.cc,v 1.75.2.2 2002-10-18 19:58:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -855,7 +855,7 @@ bx_dbg_fast_forward(Bit32u num)
 	bx_debugger.fast_forward_mode = 0;
 	// bx_debugger.icount_quantum = save_icount_quantum;
 
-	bx_vga.timer_handler(&bx_vga);
+	BX_VGA_REFRESH();
 
 	printf("Copying CPU...\n");
 	bx_dbg_cpu_t cpu;
@@ -1198,7 +1198,7 @@ void bx_dbg_show_command(char* arg)
 		    printf("Turned off all bx_dbg flags\n");
 		    return;
 	    } else if(!strcmp(arg,"\"vga\"")){
-	      bx_vga.timer ();
+	      BX_VGA_REFRESH();
 	      return;
 	    } else {
 		  printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
@@ -1661,7 +1661,7 @@ bx_dbg_continue_command(void)
   SIM->refresh_ci ();
 
   // (mch) hack
-  bx_vga.timer_handler(&bx_vga);
+  BX_VGA_REFRESH();
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
@@ -4113,7 +4113,7 @@ bx_dbg_ucmem_read(Bit32u addr)
 			  bx_dbg_exit(0);
 		  }
 
-		  value = bx_devices.vga->mem_read(addr);
+		  value = BX_VGA_MEM_READ(addr);
 		  bx_dbg_ucmem_report(addr, 1, BX_READ, value);
 		  bx_debugger.UCmem_journal.element[tail].op    = BX_READ;
 		  bx_debugger.UCmem_journal.element[tail].len   = 1;
@@ -4131,7 +4131,7 @@ bx_dbg_ucmem_read(Bit32u addr)
 
 		  return(value);
 	  } else {
-		  value = bx_devices.vga->mem_read(addr);
+		  value = BX_VGA_MEM_READ(addr);
 		  return(value);
 	  }
   }
@@ -4197,10 +4197,10 @@ bx_dbg_ucmem_write(Bit32u addr, Bit8u value)
 		  if (bx_debugger.UCmem_journal.size)
 			  bx_debugger.UCmem_journal.tail++;
 		  bx_debugger.UCmem_journal.size++;
-		  bx_devices.vga->mem_write(addr, value);
+		  BX_VGA_MEM_WRITE(addr, value);
 		  bx_dbg_ucmem_report(addr, 1, BX_WRITE, value);
 	  } else {
-		  bx_devices.vga->mem_write(addr, value);
+		  BX_VGA_MEM_WRITE(addr, value);
 	  }
   }
   else {
@@ -4447,7 +4447,7 @@ bx_dbg_IAC(void)
   // the PIC code.
   unsigned iac;
 
-  iac = bx_devices.pic->IAC();
+  iac = BX_PIC_AIC ();
   return(iac);
 }
 
