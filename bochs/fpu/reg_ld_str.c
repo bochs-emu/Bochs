@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.4 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: reg_ld_str.c,v 1.4.18.1 2003-01-03 00:30:43 cbothamy Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -316,7 +316,7 @@ int FPU_load_int32(s32 *_s, FPU_REG *loaded_data)
 /* Get a short from user memory */
 int FPU_load_int16(s16 *_s, FPU_REG *loaded_data)
 {
-  int s, negative;
+  s16 s, negative;
 
   RE_ENTRANT_CHECK_OFF;
   FPU_verify_area(VERIFY_READ, _s, 2);
