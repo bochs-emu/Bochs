@@ -156,8 +156,13 @@ bx_virt_timer_c::time_usec(void) {
     return bx_pc_system.time_usec();
   }
 
-  //I might choose to update the time here, but this is
-  // safer, since it prevents call stack loops.
+  //Update the time here only if we're not in a timer handler.
+  //If we're in a timer handler we're up-to-date, and otherwise
+  // this prevents call stack loops.
+  if(!in_timer_handler) {
+    timer_handler();
+  }
+
   return current_timers_time;
 }
 

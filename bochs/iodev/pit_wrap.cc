@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.48 2003-02-23 22:55:50 cbothamy Exp $
+// $Id: pit_wrap.cc,v 1.49 2003-04-03 21:59:20 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -202,6 +202,8 @@ bx_pit_c::init( void )
 
   BX_PIT_THIS s.timer.init();
 
+  Bit64u my_time_usec = bx_virt_timer.time_usec();
+
   if (BX_PIT_THIS s.timer_handle[0] == BX_NULL_TIMER_HANDLE) {
     BX_PIT_THIS s.timer_handle[0] = bx_virt_timer.register_timer(this, timer_handler, (unsigned) 100 , 1, 1, "pit_wrap");
   }
@@ -215,7 +217,7 @@ bx_pit_c::init( void )
     BX_DEBUG(("activated timer."));
   }
   BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
-  BX_PIT_THIS s.last_usec=bx_virt_timer.time_usec();
+  BX_PIT_THIS s.last_usec=my_time_usec;
 
   BX_PIT_THIS s.total_ticks=0;
 
@@ -261,7 +263,8 @@ bx_pit_c::timer_handler(void *this_ptr) {
 
 void
 bx_pit_c::handle_timer() {
-  Bit64u time_passed = bx_virt_timer.time_usec()-BX_PIT_THIS s.last_usec;
+  Bit64u my_time_usec = bx_virt_timer.time_usec();
+  Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
   Bit32u time_passed32 = time_passed;
 
   BX_DEBUG(("pit: entering timer handler"));
@@ -315,6 +318,8 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 
   handle_timer();
 
+  Bit64u my_time_usec = bx_virt_timer.time_usec();
+
   if (io_len > 1)
     BX_PANIC(("pit: io read from port %04x, len=%u", (unsigned) address,
              (unsigned) io_len));
@@ -339,7 +344,7 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 
     case 0x61:
       /* AT, port 61h */
-      BX_PIT_THIS s.refresh_clock_div2 = ((bx_virt_timer.time_usec() / 15) & 1);
+      BX_PIT_THIS s.refresh_clock_div2 = ((my_time_usec / 15) & 1);
       return( (BX_PIT_THIS s.timer.read_OUT(2)<<5) |
               (BX_PIT_THIS s.refresh_clock_div2<<4) |
               (BX_PIT_THIS s.speaker_data_on<<1) |
@@ -373,7 +378,8 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
   Bit8u   value;
-  Bit64u time_passed = bx_virt_timer.time_usec()-BX_PIT_THIS s.last_usec;
+  Bit64u my_time_usec = bx_virt_timer.time_usec();
+  Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
   Bit32u time_passed32 = time_passed;
 
   BX_DEBUG(("pit: entering write handler"));
@@ -623,6 +629,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 #if !BX_HAVE_REALTIME_USEC
 void
 bx_pit_c::second_update_data(void) {
+  Bit64u my_time_usec = bx_virt_timer.time_usec();
   Bit64u timediff;
   timediff=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)*USEC_PER_SECOND)-BX_PIT_THIS s.last_time;
   BX_PIT_THIS s.last_time += timediff;
@@ -674,13 +681,13 @@ bx_pit_c::second_update_data(void) {
 
     BX_PIT_THIS s.ticks_per_second = tickstemp;
 
-    //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_virt_timer.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff));
-    BX_PIT_THIS s.usec_per_second = ((bx_virt_timer.time_usec()-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff);
+    //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((my_time_usec-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff));
+    BX_PIT_THIS s.usec_per_second = ((my_time_usec-BX_PIT_THIS s.last_sec_usec)*USEC_PER_SECOND/timediff);
     BX_PIT_THIS s.usec_per_second = BX_MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
-    BX_PIT_THIS s.last_sec_usec = bx_virt_timer.time_usec();
+    BX_PIT_THIS s.last_sec_usec = my_time_usec;
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("Parms: ticks_per_second=%llu, usec_per_second=%llu\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
-    printf("total_usec: %llu\n", bx_virt_timer.time_usec());
+    printf("total_usec: %llu\n", my_time_usec);
 #endif
   }
 }
