@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.14 2003-07-28 13:55:53 vruppert Exp $
+// $Id: textconfig.cc,v 1.15 2003-08-25 18:36:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -266,33 +266,8 @@ static char *startup_options_prompt =
 "9. Serial or Parallel port options\n"
 "10. Sound Blaster 16 options\n"
 "11. NE2000 network card options\n"
-"12. Other options\n"
-"\n"
-"Please choose one: [0] ";
-
-static char *startup_sound_options_prompt =
-"------------------\n"
-"Bochs Sound Options\n"
-"------------------\n"
-"0. Return to previous menu\n"
-"1. Sound Blaster 16: disabled\n"
-"2. MIDI mode: 1, \n"
-"3. MIDI output file: /dev/midi00\n"
-"4. Wave mode: 1\n"
-"5. Wave output file: dev/dsp\n"
-"6. SB16 log level: 2\n"
-"7. SB16 log file: sb16.log\n"
-"8. DMA Timer: 600000\n"
-"\n"
-"Please choose one: [0] ";
-
-static char *startup_misc_options_prompt =
-"---------------------------\n"
-"Bochs Miscellaneous Options\n"
-"---------------------------\n"
-"1. Keyboard Serial Delay: 250\n"
-"2. Floppy command delay: 500\n"
-"To be added someday: magic_break, ne2k, load32bitOSImage,i440fxsupport,time0"
+"12. Keyboard options\n"
+"13. Other options\n"
 "\n"
 "Please choose one: [0] ";
 
@@ -318,18 +293,6 @@ static char *runtime_menu_prompt =
 "16. Quit now\n"
 "\n"
 "Please choose one:  [15] ";
-
-char *menu_prompt_list[BX_CI_N_MENUS] = {
-  NULL,
-  startup_menu_prompt,
-  startup_options_prompt,
-  NULL,
-  NULL,
-  NULL,
-  startup_sound_options_prompt,
-  startup_misc_options_prompt,
-  runtime_menu_prompt
-};
 
 #define NOT_IMPLEMENTED(choice) \
   fprintf (stderr, "ERROR: choice %d not implemented\n", choice);
@@ -471,7 +434,7 @@ int bx_config_interface (int menu)
        double_percent(olddebuggerpath,CI_PATH_LENGTH);
 
        sprintf (prompt, startup_options_prompt, oldpath, oldprefix, olddebuggerpath);
-       if (ask_uint (prompt, 0, 12, 0, &choice, 10) < 0) return -1;
+       if (ask_uint (prompt, 0, 13, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: askparam (BXP_LOG_FILENAME); break;
@@ -485,7 +448,8 @@ int bx_config_interface (int menu)
 	 case 9: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
 	 case 10: do_menu (BXP_SB16); break;
 	 case 11: do_menu (BXP_NE2K); break;
-	 case 12: do_menu (BXP_MENU_MISC); break;
+	 case 12: do_menu (BXP_MENU_KEYBOARD); break;
+	 case 13: do_menu (BXP_MENU_MISC); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
@@ -538,11 +502,8 @@ int bx_config_interface (int menu)
      }
      break;
    default:
+     fprintf (stderr, "Unknown config interface menu type.\n");
      assert (menu >=0 && menu < BX_CI_N_MENUS);
-     fprintf (stderr, "--THIS IS A SAMPLE MENU, NO OPTIONS ARE IMPLEMENTED EXCEPT #0--\n");
-     if (ask_uint (menu_prompt_list[menu], 0, 99, 0, &choice, 10) < 0) return -1;
-     if (choice == 0) return 0;
-     fprintf (stderr, "This is a sample menu.  Option %d is not implemented.\n", choice);
   }
  }
 }
@@ -788,7 +749,7 @@ bx_param_enum_c::text_print (FILE *fp)
     fprintf (fp, get_format (), choice);
   } else {
     char *format = "%s: %s"; 
-    fprintf (fp, format, get_name (), get () ? "yes" : "no");
+    fprintf (fp, format, get_name (), get_choice (get ()));
   }
 }
 
