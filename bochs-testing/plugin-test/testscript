@@ -1,0 +1,39 @@
+#!/bin/bash
+
+subdirs=`grep 'SUBDIRS *='  Makefile|sed 's/.*=//'`
+topdir=`pwd`
+retval_success=77
+
+for dir in $subdirs; do
+  echo Testing in $dir
+  test_status=1
+  if test ! -x "$dir/uselib"; then
+    test_status='binary not found'
+  fi
+  if test "$test_status" = 1; then
+    cd $dir
+    rm -f uselib.out
+    ./uselib > uselib.out
+    retval=$?
+    if test "$retval" != $retval_success; then
+      test_status="failed with exit code $retval"
+    else
+      if test -f uselib.out.expected; then
+	cat uselib.out |
+	  ../filter-test-output |
+          diff -u - uselib.out.expected > uselib.out.diffs 2>/dev/null
+	if test $? != 0; then
+	  test_status="output mismatch, see $dir/uselib.out.diffs"
+	else
+	  rm -f uselib.out.diffs
+	fi
+      fi
+    fi
+  fi
+  cd $topdir
+  if test "$test_status" = 1; then
+    echo ...ok
+  else
+    echo ...FAIL: $test_status
+  fi
+done
