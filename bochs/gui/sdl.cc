@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.46 2004-02-24 19:21:44 vruppert Exp $
+// $Id: sdl.cc,v 1.47 2004-02-29 21:16:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,8 +59,10 @@ IMPLEMENT_GUI_PLUGIN_CODE(sdl)
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 const Uint32 status_led_green = 0x00ff0000;
+const Uint32 status_gray_text = 0x80808000;
 #else
 const Uint32 status_led_green = 0x0000ff00;
+const Uint32 status_gray_text = 0x00808080;
 #endif
 
 static unsigned prev_cursor_x=0;
@@ -282,14 +284,14 @@ void bx_sdl_gui_c::specific_init(
   }
 }
 
-void sdl_set_status(int element, bx_bool active)
+void sdl_set_status_text(int element, const char *text, bx_bool active)
 {
-  Uint32 *buf;
-  Uint32 *buf_row;
-  Uint32 disp, color;
+  Uint32 *buf, *buf_row;
+  Uint32 disp, fgcolor, bgcolor;
+  unsigned char *pfont_row, font_row;
   int rowsleft = statusbar_height - 2;
-  int colsleft;
-  int xleft, xsize;
+  int colsleft, textlen;
+  int x, xleft, xsize;
 
   statusitem_active[element] = active;
   if( !sdl_screen ) return;
@@ -298,17 +300,47 @@ void sdl_set_status(int element, bx_bool active)
   xsize = statusitem_pos[element+1] - xleft - 1;
   buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 1) * disp + xleft;
   rowsleft = statusbar_height - 2;
-  color = active?status_led_green:headerbar_bg;
+  fgcolor = active?headerbar_fg:status_gray_text;
+  bgcolor = active?status_led_green:headerbar_bg;
   do
   {
     colsleft = xsize;
     buf_row = buf;
     do
     {
-      *buf++ = color;
+      *buf++ = bgcolor;
     } while( --colsleft );
     buf = buf_row + disp;
   } while( --rowsleft );
+  if (strlen(text) < 4) {
+    textlen = strlen(text);
+  } else {
+    textlen = 4;
+  }
+  buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 5) * disp + xleft;
+  x = 0;
+  do
+  {
+    pfont_row = &menufont[text[x]][0];
+    buf_row = buf;
+    rowsleft = 8;
+    do
+    {
+      font_row = *pfont_row++;
+      colsleft = 8;
+      do
+      {
+        if( (font_row & 0x80) != 0x00 )
+          *buf++ = fgcolor;
+        else
+          buf++;
+        font_row <<= 1;
+      } while( --colsleft );
+      buf += (disp - 8);
+    } while( --rowsleft );
+    buf = buf_row + 8;
+    x++;
+  } while (--textlen);
   SDL_UpdateRect( sdl_screen, xleft,res_y+headerbar_height+1,xsize,statusbar_height-2);
 }
 
@@ -316,10 +348,10 @@ void bx_sdl_gui_c::statusbar_setitem(int element, bx_bool active)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      sdl_set_status(i+1, active);
+      sdl_set_status_text(i+1, statusitem_text[i], active);
     }
   } else if ((unsigned)element < statusitem_count) {
-    sdl_set_status(element+1, active);
+    sdl_set_status_text(element+1, statusitem_text[element], active);
   }
 }
 
@@ -1308,8 +1340,8 @@ void bx_sdl_gui_c::show_headerbar(void)
     buf = buf_row + disp;
   } while( --rowsleft );
   SDL_UpdateRect( sdl_screen, 0,res_y+headerbar_height,res_x,statusbar_height);
-  for (unsigned i=1; i<=statusitem_count; i++) {
-    sdl_set_status(i, statusitem_active[i]);
+  for (unsigned i=0; i<statusitem_count; i++) {
+    sdl_set_status_text(i+1, statusitem_text[i], statusitem_active[i]);
   }
 }
 
