@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.247 2004-02-08 10:22:18 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.248 2004-02-09 22:23:52 danielg4 Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1716,7 +1716,7 @@ SOUNDLOW_OBJS=''
 GAME_OBJS=''
 gameport_present=0
 AC_ARG_ENABLE(sb16,
-  [  --enable-sb16=xxx                 Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd)],
+  [  --enable-sb16=xxx                 Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd|osx)],
   [if test "$enableval" = no; then
      AC_MSG_RESULT(no)
      AC_DEFINE(BX_SUPPORT_SB16, 0)
@@ -1739,10 +1739,16 @@ AC_ARG_ENABLE(sb16,
          AC_MSG_RESULT(win)
 		 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
          ;;
+       osx)
+         SOUNDLOW_OBJS='soundosx.o'
+         AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
+         AC_MSG_RESULT(osx)
+		 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
+         ;;
        *)
          echo " "
          echo \!\!\!Error\!\!\!
-         echo "You must pass one of dummy, linux, win, freebsd to --enable-sb16"
+         echo "You must pass one of dummy, linux, win, freebsd, osx to --enable-sb16"
          exit 1 ;;
      esac
      SB16_OBJS='sb16.o'

@@ -56,12 +56,18 @@ struct i387_t
 //         A - alignment
 
 #ifdef BX_BIG_ENDIAN
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=mac68k
+#endif
 struct bx_fpu_reg_t {
   Bit16u alignment1, alignment2, alignment3;
   Bit16s exp;   /* Signed quantity used in internal arithmetic. */
   Bit32u sigh;
   Bit32u sigl;
 } GCC_ATTRIBUTE((aligned(16), packed));
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
 #else
 struct bx_fpu_reg_t {
   Bit32u sigl;
@@ -188,11 +194,17 @@ typedef union {
 //         A - alignment
 
 #ifdef BX_BIG_ENDIAN
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=mac68k
+#endif
 struct bx_mmx_reg_t {
    Bit16u alignment1, alignment2, alignment3; 
    Bit16u exp; /* 2 byte FP-reg exponent */
    BxPackedMmxRegister packed_mmx_register;
 } GCC_ATTRIBUTE((aligned(16), packed));
+#if defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
 #else
 struct bx_mmx_reg_t {
    BxPackedMmxRegister packed_mmx_register;
