@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.31 2002-01-27 09:24:50 vruppert Exp $
+// $Id: x.cc,v 1.32 2002-03-05 15:42:02 grossman Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -489,7 +489,9 @@ Bit32u keymap_es[][2] = {
   { XK_question            , BX_KEY_MINUS },
   { XK_masculine           , BX_KEY_GRAVE },
   { XK_backslash           , BX_KEY_GRAVE },
+#ifdef XK_EuroSign
   { XK_EuroSign            , BX_KEY_E },
+#endif
   { XK_dead_circumflex     , BX_KEY_LEFT_BRACKET },
   { XK_ccedilla            , BX_KEY_BACKSLASH },
   { XK_asterisk            , BX_KEY_RIGHT_BRACKET },
@@ -755,7 +757,9 @@ Bit32u keymap_de[][2] = {
   { XK_Break               , BX_KEY_PAUSE }, 
   { XK_ISO_Left_Tab        , BX_KEY_TAB }, 
   { XK_lstroke             , BX_KEY_W }, 
+#ifdef XK_EuroSign
   { XK_EuroSign            , BX_KEY_E }, 
+#endif
   { XK_paragraph           , BX_KEY_R }, 
   { XK_tslash              , BX_KEY_T }, 
   { XK_leftarrow           , BX_KEY_Y }, 
