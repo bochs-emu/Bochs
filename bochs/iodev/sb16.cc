@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.38 2003-12-20 17:04:07 vruppert Exp $
+// $Id: sb16.cc,v 1.39 2003-12-26 10:06:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2122,9 +2122,6 @@ Bit32u bx_sb16_c::opl_status(int chipid)
 {
   Bit32u status = OPL.tflag[chipid];
 
-  if ( (OPL.mode == single) || (OPL.mode == opl3) )
-    status |= 0x06;  // this is for OPL3 detections
-
   writelog( MIDILOG(5), "OPL status of chip %d is %02x", chipid, status);
 
   return status;
@@ -2231,15 +2228,14 @@ break_here:
 
       // only OPL3: OPL3 enable
     case 0x05:
-      if ( ( OPL.mode == single ) || ( OPL.mode == opl3 ) )
+      if (chipid == 1)
 	{
 	  if ( (value & 1) != 0)
 	    opl_entermode(opl3);
 	  else
 	    opl_entermode(single);
-	  break;
 	}
-      // otherwise let default: catch it
+      break;
 
       // Composite Sine Wave and Note-sel (ignored)
     case 0x08:
