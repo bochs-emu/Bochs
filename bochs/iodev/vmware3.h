@@ -39,11 +39,11 @@ class vmware3_image_t : public device_image_t
   private:
       static const off_t INVALID_OFFSET = (off_t)-1;
 
-#if (_MSC_VER<1300)
+#if defined(_MSC_VER) && (_MSC_VER<1300)
 #pragma pack(push, 1)
 #endif
       typedef
-#if (_MSC_VER>=1300)
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
              __declspec(align(1))
 #endif
         struct _COW_Header {
@@ -77,7 +77,7 @@ class vmware3_image_t : public device_image_t
         __attribute__((packed))
 #endif
       ;
-#if (_MSC_VER<1300)
+#if defined(_MSC_VER) && (_MSC_VER<1300)
 #pragma pack(pop)
 #endif
 
