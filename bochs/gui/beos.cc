@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.19 2002-10-25 11:44:36 bdenney Exp $
+// $Id: beos.cc,v 1.20 2002-10-26 21:03:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,6 +57,8 @@ public:
 // plugin code
 static bx_beos_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(beos)
+
+#define LOG_THIS theGui->
 
 #define PAD_NEAREST(n, quantum) (( ((n) + ((quantum) - 1)) / (n) ) * (n))
 
