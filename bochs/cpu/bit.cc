@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.15 2004-01-10 19:45:53 sshwarts Exp $
+// $Id: bit.cc,v 1.16 2004-07-08 20:15:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,6 @@ BX_CPU_C::SETO_Eb(bxInstruction_c *i)
 #else
   Bit8u result_8;
 
-
   if (get_OF())
     result_8 = 1;
   else
@@ -78,7 +77,6 @@ BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
   BX_PANIC(("SETNO: not available on < 386"));
 #else
   Bit8u result_8;
-
 
   if (get_OF()==0)
     result_8 = 1;
@@ -103,7 +101,6 @@ BX_CPU_C::SETB_Eb(bxInstruction_c *i)
 #else
   Bit8u result_8;
 
-
   if (get_CF())
     result_8 = 1;
   else
@@ -126,7 +123,6 @@ BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
   BX_PANIC(("SETNB: not available on < 386"));
 #else
   Bit8u result_8;
-
 
   if (get_CF()==0)
     result_8 = 1;
@@ -151,7 +147,6 @@ BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
 #else
   Bit8u result_8;
 
-
   if (get_ZF())
     result_8 = 1;
   else
@@ -174,7 +169,6 @@ BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
   BX_PANIC(("SETNZ: not available on < 386"));
 #else
   Bit8u result_8;
-
 
   if (get_ZF()==0)
     result_8 = 1;
@@ -199,7 +193,6 @@ BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
 #else
   Bit8u result_8;
 
-
   if (get_CF() || get_ZF())
     result_8 = 1;
   else
@@ -222,7 +215,6 @@ BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
   BX_PANIC(("SETNBE: not available on < 386"));
 #else
   Bit8u result_8;
-
 
   if ((get_CF()==0) && (get_ZF()==0))
     result_8 = 1;
@@ -247,7 +239,6 @@ BX_CPU_C::SETS_Eb(bxInstruction_c *i)
 #else
   Bit8u result_8;
 
-
   if (get_SF())
     result_8 = 1;
   else
@@ -271,7 +262,6 @@ BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
 #else
   Bit8u result_8;
 
-
   if (get_SF()==0)
     result_8 = 1;
   else
@@ -294,8 +284,7 @@ BX_CPU_C::SETP_Eb(bxInstruction_c *i)
   BX_PANIC(("SETP: not available on < 386"));
 #else
   Bit8u result_8;
-
-
+ 
   if (get_PF())
     result_8 = 1;
   else
@@ -319,8 +308,7 @@ BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
 #else
   Bit8u result_8;
 
-
-  if (get_PF() == 0)
+   if (get_PF() == 0)
     result_8 = 1;
   else
     result_8 = 0;
@@ -342,8 +330,7 @@ BX_CPU_C::SETL_Eb(bxInstruction_c *i)
   BX_PANIC(("SETL: not available on < 386"));
 #else
   Bit8u result_8;
-
-
+ 
   if (getB_SF() != getB_OF())
     result_8 = 1;
   else
@@ -366,8 +353,7 @@ BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
   BX_PANIC(("SETNL: not available on < 386"));
 #else
   Bit8u result_8;
-
-
+ 
   if (getB_SF() == getB_OF())
     result_8 = 1;
   else
@@ -390,8 +376,7 @@ BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
   BX_PANIC(("SETLE: not available on < 386"));
 #else
   Bit8u result_8;
-
-
+ 
   if (get_ZF() || (getB_SF()!=getB_OF()))
     result_8 = 1;
   else
@@ -414,8 +399,7 @@ BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
   BX_PANIC(("SETNLE: not available on < 386"));
 #else
   Bit8u result_8;
-
-
+ 
   if ((get_ZF()==0) && (getB_SF()==getB_OF()))
     result_8 = 1;
   else
@@ -430,16 +414,14 @@ BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
     }
 #endif
 }
-
-
+ 
   void
 BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("BSF_GvEv(): not supported on < 386"));
 #else
-
-
+ 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
@@ -448,23 +430,22 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
     /* op2_64 is a register or memory reference */
     if (i->modC0()) {
       op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
+    }
     else {
       /* pointer, segment address pair */
       read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-      }
+    }
 
     if (op2_64 == 0) {
-      set_ZF(1);
-      /* op1_64 undefined */
+      set_ZF(1); /* op1_64 undefined */
       return;
-      }
+    }
 
     op1_64 = 0;
     while ( (op2_64 & 0x01) == 0 ) {
       op1_64++;
       op2_64 >>= 1;
-      }
+    }
     set_ZF(0);
 
     /* now write result back to destination */
@@ -486,21 +467,20 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       }
 
     if (op2_32 == 0) {
-      set_ZF(1);
-      /* op1_32 undefined */
+      set_ZF(1); /* op1_32 undefined */
       return;
-      }
+    }
 
     op1_32 = 0;
     while ( (op2_32 & 0x01) == 0 ) {
       op1_32++;
       op2_32 >>= 1;
-      }
+    }
     set_ZF(0);
 
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
-    }
+  }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, op2_16;
 
@@ -514,21 +494,20 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
       }
 
     if (op2_16 == 0) {
-      set_ZF(1);
-      /* op1_16 undefined */
+      set_ZF(1); /* op1_16 undefined */
       return;
-      }
+    }
 
     op1_16 = 0;
     while ( (op2_16 & 0x01) == 0 ) {
       op1_16++;
       op2_16 >>= 1;
-      }
+    }
     set_ZF(0);
 
     /* now write result back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
-    }
+  }
 #endif
 }
 
@@ -539,7 +518,6 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
   BX_PANIC(("BSR_GvEv(): not supported on < 386"));
 #else
 
-
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
@@ -555,21 +533,20 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       }
 
     if (op2_64 == 0) {
-      set_ZF(1);
-      /* op1_64 undefined */
+      set_ZF(1); /* op1_64 undefined */
       return;
-      }
+    }
 
     op1_64 = 63;
     while ( (op2_64 & BX_CONST64(0x8000000000000000)) == 0 ) {
       op1_64--;
       op2_64 <<= 1;
-      }
+    }
     set_ZF(0);
 
     /* now write result back to destination */
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
@@ -586,21 +563,20 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       }
 
     if (op2_32 == 0) {
-      set_ZF(1);
-      /* op1_32 undefined */
+      set_ZF(1); /* op1_32 undefined */
       return;
-      }
+    }
 
     op1_32 = 31;
     while ( (op2_32 & 0x80000000) == 0 ) {
       op1_32--;
       op2_32 <<= 1;
-      }
+    }
     set_ZF(0);
 
     /* now write result back to destination */
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
-    }
+  }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, op2_16;
 
@@ -614,16 +590,15 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
       }
 
     if (op2_16 == 0) {
-      set_ZF(1);
-      /* op1_16 undefined */
+      set_ZF(1); /* op1_16 undefined */
       return;
-      }
+    }
 
     op1_16 = 15;
     while ( (op2_16 & 0x8000) == 0 ) {
       op1_16--;
       op2_16 <<= 1;
-      }
+    }
     set_ZF(0);
 
     /* now write result back to destination */
@@ -631,7 +606,6 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
     }
 #endif
 }
-
 
   void
 BX_CPU_C::BSWAP_EAX(bxInstruction_c *i)
@@ -1169,7 +1143,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
       /* now write diff back to destination */
       BX_WRITE_64BIT_REG(i->rm(), op1_64);
       return;
-      }
+    }
 
     index = op2_64 & 0x3f;
     displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
@@ -1222,7 +1196,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
     Write_RMW_virtual_dword(op1_32);
 
     set_CF(temp_cf);
-    }
+  }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, op2_16, index, temp_cf;
     Bit32s displacement32;
@@ -1240,7 +1214,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
       /* now write diff back to destination */
       BX_WRITE_16BIT_REG(i->rm(), op1_16);
       return;
-      }
+    }
 
     index = op2_16 & 0x0f;
     displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
@@ -1282,12 +1256,12 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     if (i->modC0()) {
       op1_64 = BX_READ_64BIT_REG(i->rm());
       op1_addr = 0; // keep compiler happy
-      }
+    }
     else {
       displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
       op1_addr = RMAddr(i) + 8 * displacement64;
       read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
-      }
+    }
 
     temp_CF = (op1_64 >> index) & 0x01;
 
@@ -1306,7 +1280,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       Write_RMW_virtual_qword(op1_64);
       }
     set_CF(temp_CF);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
@@ -1321,12 +1295,12 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     if (i->modC0()) {
       op1_32 = BX_READ_32BIT_REG(i->rm());
       op1_addr = 0; // keep compiler happy
-      }
+    }
     else {
       displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
       op1_addr = RMAddr(i) + 4 * displacement32;
       read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
-      }
+    }
 
     temp_CF = (op1_32 >> index_32) & 0x01;
     op1_32 &= ~(((Bit32u) 1) << index_32);  /* clear out bit */
@@ -1352,12 +1326,12 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
       op1_addr = 0; // keep compiler happy
-      }
+    }
     else {
       displacement16 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
       op1_addr = RMAddr(i) + 2 * displacement16;
       read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
-      }
+    }
 
     temp_CF = (op1_16 >> index_16) & 0x01;
     op1_16 &= ~(((Bit16u) 1) << index_16);  /* clear out bit */
@@ -1371,7 +1345,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       Write_RMW_virtual_word(op1_16);
       }
     set_CF(temp_CF);
-    }
+  }
 #endif
 }
 
@@ -1401,7 +1375,7 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
       }
 
     set_CF((op1_64 >> op2_8) & 0x01);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
@@ -1422,11 +1396,10 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
       }
 
     set_CF((op1_32 >> op2_8) & 0x01);
-    }
+  }
   else { /* 16 bit operand size mode */
     Bit16u op1_16;
     Bit8u  op2_8;
-
 
     op2_8 = i->Ib();
     op2_8 %= 16;
@@ -1481,7 +1454,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_qword(op1_64);
       }
     set_CF(temp_CF);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
@@ -1512,11 +1485,10 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_dword(op1_32);
       }
     set_CF(temp_CF);
-    }
+  }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, temp_CF;
     Bit8u  op2_8;
-
 
     op2_8 = i->Ib();
     op2_8 %= 16;
@@ -1541,7 +1513,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_word(op1_16);
       }
     set_CF(temp_CF);
-    }
+  }
 #endif
 }
 
@@ -1576,7 +1548,6 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
     op1_64 |= (((Bit64u) !temp_CF) << op2_8); /* set to complement */
     //op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
 
-
     /* now write diff back to destination */
     if (i->modC0()) {
       BX_WRITE_64BIT_REG(i->rm(), op1_64);
@@ -1585,7 +1556,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_qword(op1_64);
       }
     set_CF(temp_CF);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
@@ -1618,11 +1589,10 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_dword(op1_32);
       }
     set_CF(temp_CF);
-    }
+  }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, temp_CF;
     Bit8u  op2_8;
-
 
     op2_8 = i->Ib();
     op2_8 %= 16;
@@ -1647,8 +1617,9 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_word(op1_16);
       }
+
     set_CF(temp_CF);
-    }
+  }
 #endif
 }
 
@@ -1688,7 +1659,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_qword(op1_64);
       }
     set_CF(temp_CF);
-    }
+  }
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
@@ -1718,12 +1689,12 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
     else {
       Write_RMW_virtual_dword(op1_32);
       }
+
     set_CF(temp_CF);
-    }
+  }
   else { /* 16 bit operand size mode */
     Bit16u op1_16, temp_CF;
     Bit8u  op2_8;
-
 
     op2_8 = i->Ib();
     op2_8 %= 16;
@@ -1748,6 +1719,6 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_word(op1_16);
       }
     set_CF(temp_CF);
-    }
+  }
 #endif
 }

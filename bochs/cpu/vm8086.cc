@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.15 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: vm8086.cc,v 1.16 2004-07-08 20:15:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,9 +46,7 @@
 
 #if BX_SUPPORT_V8086_MODE
 
-
 #if BX_CPU_LEVEL >= 3
-
 
   void
 BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
@@ -79,17 +77,17 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   else
     temp_ESP = SP;
 
-  // top 36 bytes of stack must be within stack limits, else #GP(0)
+  // top 36 bytes of stack must be within stack limits, else #SS(0)
   if ( !can_pop(36) ) {
-    BX_PANIC(("iret: VM: top 36 bytes not within limits"));
+    BX_INFO(("iret: VM: top 36 bytes not within limits"));
     exception(BX_SS_EXCEPTION, 0, 0);
     return;
-    }
+  }
 
   if ( new_eip & 0xffff0000 ) {
     BX_INFO(("IRET to V86-mode: ignoring upper 16-bits"));
     new_eip = new_eip & 0xffff;
-    }
+  }
 
   esp_laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base +
               temp_ESP;
@@ -125,7 +123,6 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   init_v8086_mode();
 }
 
-
   void
 BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
 {
@@ -152,7 +149,7 @@ BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
     EIP = eip;
     write_eflags(eflags_tmp, /*IOPL*/ 0, /*IF*/ 1, /*VM*/ 0, /*RF*/ 1);
-    }
+  }
   else {
     Bit16u ip, cs_raw, flags;
 
@@ -169,7 +166,7 @@ BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
     EIP = (Bit32u) ip;
     write_flags(flags, /*IOPL*/ 0, /*IF*/ 1);
-    }
+  }
 }
 
 
