@@ -1,29 +1,40 @@
 diff -urN clean/iodev/eth.cc bochs-tap/iodev/eth.cc
 --- clean/iodev/eth.cc	Wed Dec 12 17:49:26 2001
-+++ bochs-tap/iodev/eth.cc	Fri Mar  8 17:12:47 2002
-@@ -45,6 +45,8 @@
++++ bochs-tap/iodev/eth.cc	Fri Mar  8 19:29:20 2002
+@@ -45,6 +45,10 @@
    this->type = type;
  }
  
 +#define ETH_TAP 1
 +
++#define ETH_TAP 1
++
  #ifdef ETH_NULL
  extern class bx_null_locator_c bx_null_match;
  #endif
-@@ -57,6 +59,9 @@
+@@ -57,6 +61,12 @@
  #ifdef ETH_WIN32
  extern class bx_win32_locator_c bx_win32_match;
  #endif
 +#ifdef ETH_TAP
 +extern class bx_tap_locator_c bx_tap_match;
 +#endif
++#ifdef ETH_TAP
++extern class bx_tap_locator_c bx_tap_match;
++#endif
  #ifdef ETH_TEST
  extern bx_test_match;
  #endif
-@@ -103,6 +108,12 @@
+@@ -103,6 +113,18 @@
    {
      if (!strcmp(type, "linux"))    
        ptr = (eth_locator_c *) &bx_linux_match;
++  }
++#endif
++#ifdef ETH_TAP
++  {
++    if (!strcmp(type, "tap"))    
++      ptr = (eth_locator_c *) &bx_tap_match;
 +  }
 +#endif
 +#ifdef ETH_TAP
@@ -35,10 +46,10 @@ diff -urN clean/iodev/eth.cc bochs-tap/iodev/eth.cc
  #ifdef ETH_WIN32
 diff -urN clean/iodev/eth_tap.cc bochs-tap/iodev/eth_tap.cc
 --- clean/iodev/eth_tap.cc	Wed Dec 31 19:00:00 1969
-+++ bochs-tap/iodev/eth_tap.cc	Fri Mar  8 17:12:54 2002
-@@ -0,0 +1,356 @@
++++ bochs-tap/iodev/eth_tap.cc	Fri Mar  8 19:29:20 2002
+@@ -0,0 +1,327 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.ethertap,v 1.1 2002-03-08 22:14:55 bdenney Exp $
++// $Id: patch.ethertap,v 1.2 2002-03-09 00:30:49 bdenney Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2001  MandrakeSoft S.A.
@@ -97,7 +108,7 @@ diff -urN clean/iodev/eth_tap.cc bochs-tap/iodev/eth_tap.cc
 +#define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 +
 +int check_netdev( char *ifname );
-+int tap_open( char *intf_name, int *sigio_capable );
++int tap_open( char *intf_name);
 +
 +//
 +//  Define the class. This is private to this module
@@ -143,25 +154,23 @@ diff -urN clean/iodev/eth_tap.cc bochs-tap/iodev/eth_tap.cc
 +				       eth_rx_handler_t rxh,
 +				       void *rxarg)
 +{
-+  int sigio_capable;
 +  int flags;
-+  fd = tap_open ("tap0", &sigio_capable);
++  fd = tap_open (netif);
 +  if (fd < 0) {
-+    BX_PANIC (("tap_open failed on tap0"));
++    BX_PANIC (("tap_open failed on %s", netif));
 +    return;
 +  }
 +
-+  sigio_capable=0; // try: stop using async.
 +/* setup O_ASYNC, O_NONBLOCK */
 +if( (flags = fcntl( fd, F_GETFL)) == -1 ) {
 +  BX_PANIC (("getflags on tap device failed"));
 +}
-+flags |= O_NONBLOCK | (sigio_capable? O_ASYNC : 0);
++flags |= O_NONBLOCK;
 +if( fcntl( fd, F_SETFL, flags ) == -1 ) {
 +  BX_PANIC (("could not set tap device flags"));
 +}
 +
-+BX_INFO (("opened tap0 device"));
++BX_INFO (("eth_tap: opened %s device", netif));
 +
 +#if BX_ETH_TAP_LOGGING
 +  // Start the rx poll 
@@ -285,6 +294,10 @@ diff -urN clean/iodev/eth_tap.cc bochs-tap/iodev/eth_tap.cc
 +  }
 +#endif
 +  BX_DEBUG(("eth_tap: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
++  if (nbytes < 60) {
++    BX_INFO (("packet too short (%d), padding to 60", nbytes));
++    nbytes = 60;
++  }
 +  (*rxh)(rxarg, rxbuf, nbytes);
 +}
 +
@@ -329,7 +342,7 @@ diff -urN clean/iodev/eth_tap.cc bochs-tap/iodev/eth_tap.cc
 +
 +
 +
-+int tap_open(char *intf_name, int *sigio_capable )
++int tap_open(char *intf_name)
 +{
 +struct sockaddr_nl nladdr;
 +int fd, tapnum=0;
@@ -357,39 +370,8 @@ diff -urN clean/iodev/eth_tap.cc bochs-tap/iodev/eth_tap.cc
 +if( check_netdev( intf_name ) )
 +return -1;
 +
-+#if 0
-+// method from Maconlinux: socket/bind
-+if( (fd = socket( PF_NETLINK, SOCK_RAW, NETLINK_TAPBASE+tapnum )) < 0 ) {
-+perror("socket");
-+printf("Does the kernel lack netlink support (CONFIG_NETLINK)?\n");
-+return -1;
++fd = open ("/dev/tap0", O_RDWR);
++if (fd < 0) {
++  return -1;
 +}
-+memset( &nladdr, 0, sizeof(nladdr) );
-+nladdr.nl_family = AF_NETLINK;
-+nladdr.nl_groups = ~0;
-+nladdr.nl_pid = TAP_VIRTUAL_HW_ADDR;
-+/* nladdr.nl_pid = getpid(); */
-+if( bind( fd, (struct sockaddr*)&nladdr, sizeof(nladdr) ) < 0 ) {
-+perror("bind");
-+close( fd );
-+return -1;
 +}
-+#else
-+  fd = open ("/dev/tap0", O_RDWR);
-+  if (fd < 0) {
-+    return -1;
-+  }
-+#endif
-+
-+//BBD   is->eth_addr[0] = is->eth_addr[1] = 0;
-+//BBD   *(ulong*)&is->eth_addr[2] = TAP_VIRTUAL_HW_ADDR;
-+/* *(ulong*)&is->eth_addr[2] = getpid(); */
-+
-+//BBD   is->net_dev = fd;
-+//BBD   is->packet_pad = TAP_PACKET_PAD;
-+*sigio_capable = 1;
-+//BBD   snprintf(is->drv_name, sizeof(is->drv_name), "tap-<tap%d>", tapnum );
-+return fd;
-+}
-+
-+
