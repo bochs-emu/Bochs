@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.2 2002-10-06 23:17:50 cbothamy Exp $
+// $Id: bochs.h,v 1.99.2.3 2002-10-07 06:29:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -299,6 +299,17 @@ public:
 
 #define BX_LOGPREFIX_SIZE 51
 
+enum {
+  IOLOG=0, FDLOG, GENLOG, CMOSLOG, CDLOG, DMALOG, ETHLOG, G2HLOG, HDLOG, KBDLOG,
+  NE2KLOG, PARLOG, PCILOG, PICLOG, PITLOG, SB16LOG, SERLOG, VGALOG,
+  STLOG, // state_file.cc 
+  DEVLOG, MEMLOG, DISLOG, GUILOG, IOAPICLOG, APICLOG, CPU0LOG, CPU1LOG,
+  CPU2LOG, CPU3LOG, CPU4LOG, CPU5LOG, CPU6LOG, CPU7LOG, CPU8LOG, CPU9LOG,
+  CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
+  UNMAPLOG, SERRLOG, BIOSLOG, PIT81LOG, PIT82LOG, IODEBUGLOG, PCI2ISALOG,
+  PLUGINLOG 
+};
+
 class iofunctions {
 	int magic;
 	char logprefix[BX_LOGPREFIX_SIZE];
@@ -306,59 +317,8 @@ class iofunctions {
 	class logfunctions *log;
 	void init(void);
 	void flush(void);
-// Log Class defines
-#define    IOLOG           0
-#define    FDLOG           1
-#define    GENLOG          2
-#define    CMOSLOG         3
-#define    CDLOG           4
-#define    DMALOG          5
-#define    ETHLOG          6
-#define    G2HLOG          7
-#define    HDLOG           8
-#define    KBDLOG          9
-#define    NE2KLOG         10
-#define    PARLOG          11
-#define    PCILOG          12
-#define    PICLOG          13
-#define    PITLOG          14
-#define    SB16LOG         15
-#define    SERLOG          16
-#define    VGALOG          17
-#define    STLOG           18   // state_file.cc
-#define    DEVLOG          19
-#define    MEMLOG          20
-#define    DISLOG          21
-#define    GUILOG          22
-#define    IOAPICLOG       23
-#define    APICLOG         24
-#define    CPU0LOG         25
-#define    CPU1LOG         26
-#define    CPU2LOG         27
-#define    CPU3LOG         28
-#define    CPU4LOG         29
-#define    CPU5LOG         30
-#define    CPU6LOG         31
-#define    CPU7LOG         32
-#define    CPU8LOG         33
-#define    CPU9LOG         34
-#define    CPU10LOG         35
-#define    CPU11LOG         36
-#define    CPU12LOG         37
-#define    CPU13LOG         38
-#define    CPU14LOG         39
-#define    CPU15LOG         40
-#define    CTRLLOG         41
-#define    UNMAPLOG        42
-#define    SERRLOG         43
-#define    BIOSLOG         42
-#define    PIT81LOG        45
-#define    PIT82LOG        46
-#define    IODEBUGLOG      47
-#define    PCI2ISALOG      48
-#define    PLUGINLOG       49
 
-
+// Log Class types
 public:
 	iofunctions(void);
 	iofunctions(FILE *);
