@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.14 2004-10-16 15:44:00 vruppert Exp $
+// $Id: config.cc,v 1.15 2004-10-17 16:25:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -761,9 +761,9 @@ void bx_init_options ()
     bx_options.Obootdrive[i] = new bx_param_enum_c ((bx_id)(BXP_BOOTDRIVE1+i),
         strdup(name),
         strdup(descr),
-        bochs_bootdisk_names,
+        &bochs_bootdisk_names[(i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE],
         (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE,
-        BX_BOOT_NONE);
+        (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE);
     bx_options.Obootdrive[i]->set_ask_format ("Boot from floppy drive, hard drive or cdrom ? [%s] ");
   }
 
@@ -802,6 +802,17 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "diskmenu", disk_menu_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
+
+#if BX_WITH_WX
+  bx_param_c *boot_init_list[] = {
+    bx_options.Obootdrive[0],
+    bx_options.Obootdrive[1],
+    bx_options.Obootdrive[2],
+    bx_options.OfloppySigCheck,
+    NULL
+  };
+  menu = new bx_list_c (BXP_BOOT, "Boot options", "", boot_init_list);
+#endif
 
   // memory options menu
   bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
@@ -1647,7 +1658,6 @@ void bx_init_options ()
       bx_options.Ovga_update_interval,
       bx_options.log.Oprefix,
       bx_options.Omouse_enabled,
-      bx_options.OfloppySigCheck,
       bx_options.Ofloppy_command_delay,
       bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS

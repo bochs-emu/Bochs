@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.107 2004-10-16 15:44:00 vruppert Exp $
+// $Id: wxmain.cc,v 1.108 2004-10-17 16:25:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -567,21 +567,17 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 {
 #define MAX_BOOT_DEVICES 3
   int bootDevices = 0;
-  wxString devices[MAX_BOOT_DEVICES];
   int dev_id[MAX_BOOT_DEVICES];
   bx_param_enum_c *floppy = SIM->get_param_enum (BXP_FLOPPYA_DEVTYPE);
   if (floppy->get () != BX_FLOPPY_NONE) {
-    devices[bootDevices] = wxT("First floppy drive");
     dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
   }
   bx_param_c *firsthd = SIM->get_first_hd ();
   if (firsthd != NULL) {
-    devices[bootDevices] = wxT("First hard drive");
     dev_id[bootDevices++] = BX_BOOT_DISKC;
   }
   bx_param_c *firstcd = SIM->get_first_cdrom ();
   if (firstcd != NULL) {
-    devices[bootDevices] = wxT("CD-ROM drive");
     dev_id[bootDevices++] = BX_BOOT_CDROM;
   }
   if (bootDevices == 0) {
@@ -589,11 +585,11 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
                   "None enabled", wxOK | wxICON_ERROR, this );
     return;
   }
-  int which = wxGetSingleChoiceIndex ("Select the device to boot from", "Boot Device", bootDevices, devices, this);
-  if (which<0) return;  // cancelled
-  bx_param_enum_c *bootdevice = (bx_param_enum_c *) 
-    SIM->get_param(BXP_BOOTDRIVE1);
-  bootdevice->set (dev_id[which]);
+  ParamDialog dlg (this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_BOOT);
+  dlg.SetTitle (list->get_name ());
+  dlg.AddParam (list);
+  dlg.ShowModal ();
 }
 
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))

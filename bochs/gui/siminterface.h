@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.125 2004-10-16 15:44:00 vruppert Exp $
+// $Id: siminterface.h,v 1.126 2004-10-17 16:25:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -361,6 +361,7 @@ typedef enum {
   BXP_BOOTDRIVE2,
   BXP_BOOTDRIVE3,
   BXP_FLOPPYSIGCHECK,
+  BXP_BOOT,
   BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
   BXP_MENU_INTERFACE,
