@@ -822,6 +822,10 @@ AC_ARG_WITH(macos,
   [  --with-macos                      use Macintosh/CodeWarrior environment],
   )
 
+AC_ARG_WITH(carbon,
+  [  --with-carbon                     compile for MacOS X with Carbon GUI],
+  )
+
 AC_ARG_WITH(nogui,
   [  --with-nogui                      no native GUI, just use blank stubs],
   )
@@ -849,6 +853,7 @@ if (test "$with_x11" != yes) && \
    (test "$with_term" != yes) && \
    (test "$with_rfb" != yes) && \
    (test "$with_amigaos" != yes) && \
+   (test "$with_carbon" != yes) && \
    (test "$with_macos" != yes); then
   with_x11=yes
 fi
@@ -944,6 +949,11 @@ elif test "$with_macos" = yes; then
   AC_DEFINE(BX_HAVE_STRDUP, 0)
   GUI_OBJS='$(GUI_OBJS_MACOS)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
+elif test "$with_carbon" = yes; then
+  AC_MSG_RESULT(carbon)
+  AC_DEFINE(BX_WITH_CARBON, 1)
+  GUI_OBJS='$(GUI_OBJS_CARBON)'
+  GUI_LINK_OPTS='$(GUI_LINK_OPTS_CARBON)'
 elif test "$with_term" = yes; then
   AC_MSG_RESULT(term)
   AC_DEFINE(BX_WITH_TERM, 1)
