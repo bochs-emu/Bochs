@@ -100,7 +100,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.33 2001-09-28 07:14:50 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.34 2001-09-28 07:18:55 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1492,7 +1492,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	    }
 	  }
           else {
-	    BX_INFO(("old hard drive"));
+	    BX_INFO(("sent IDENTIFY DEVICE (0xec) to old hard drive"));
             command_aborted(value);
 	  }
           break;
@@ -1524,10 +1524,11 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	    raise_interrupt();
             }
           else {
-	    BX_INFO(("old hard drive"));
+	    BX_INFO(("sent READ VERIFY SECTORS (0x40) to old hard drive"));
             command_aborted(value);
 	  }
           break;
+
 	case 0xc6: // SET MULTIPLE MODE (mch)
 	      if (BX_SELECTED_CONTROLLER.sector_count != 128 &&
 		  BX_SELECTED_CONTROLLER.sector_count != 64 &&
@@ -1594,6 +1595,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 		command_aborted(0x08);
 	      }
 	      break;
+
         case 0xa0: // SEND PACKET (atapi)
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
 		    // PACKET
@@ -1613,18 +1615,18 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 		    // NOTE: no interrupt here
 		    BX_SELECTED_CONTROLLER.current_command = value;
 		    BX_SELECTED_CONTROLLER.buffer_index = 0;
-
-		    break;
+	      } else {
+		command_aborted (0xa0);
 	      }
+	      break;
+
         case 0xa2: // SERVICE (atapi), optional
 	      if (BX_SELECTED_HD.device_type == IDE_CDROM) {
 		    BX_PANIC(("ATAPI SERVICE not implemented"));
+	      } else {
+		command_aborted (0xa2);
 	      }
-        // non-standard commands
-        case 0xf0: // Exabyte enable nest command
-	  BX_INFO(("Not implemented command 0xf0: exabyte enable nest"));
-          command_aborted(value);
-          break;
+	      break;
 
 	case 0xe1: // IDLE IMMEDIATE
 	  BX_INFO (("IO write(1f7h): idle immediate ignored"));
@@ -1647,8 +1649,13 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  BX_INFO(("IO write(1f7h): flush cache ignored"));
           command_aborted(value);
           break;
-	
-        default:
+
+        case 0xf0: // Exabyte enable nest command (non-standard)
+	  BX_INFO(("Not implemented command 0xf0: exabyte enable nest"));
+          command_aborted(value);
+          break;
+
+	default:
           BX_PANIC(("IO write(1f7h): command 0x%02x", (unsigned) value));
 	  // if user foolishly decides to continue, abort the command
 	  // so that the software knows the drive didn't understand it.
