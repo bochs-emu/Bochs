@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.72 2002-10-04 14:57:33 bdenney Exp $
+// $Id: dbg_main.cc,v 1.73 2002-10-04 15:10:13 mlerwill Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -4675,7 +4675,7 @@ static void dbg_dump_table(Boolean all)
 	    break;
       lina += 0x1000;
   }
-  if(all & start_lina != 1)
+  if(all && start_lina != 1)
 	printf("%08x - %08x: %8x - %8x\n",
 	       start_lina, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lina));
 }
