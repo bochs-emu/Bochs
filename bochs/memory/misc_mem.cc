@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.52 2004-10-29 21:15:48 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.53 2004-11-11 20:55:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,17 +95,18 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.52 2004-10-29 21:15:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.53 2004-11-11 20:55:29 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
-    alloc_vector_aligned (memsize, BX_MEM_VECTOR_ALIGN);
+    alloc_vector_aligned (memsize + (1 << 18), BX_MEM_VECTOR_ALIGN);
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
     BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
+    BX_MEM_THIS rom = &BX_MEM_THIS vector[len];
     for (idx = 0; idx < 1024 * 1024; idx++)
 	    BX_MEM_THIS memory_handlers[idx] = NULL;
     for (idx = 0; idx < 65; idx++)
@@ -225,7 +226,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   }
   offset = 0;
   while (size > 0) {
-    ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
+    ret = read(fd, (bx_ptr_t) &BX_MEM_THIS rom[romaddress - 0xc0000 + offset], size);
     if (ret <= 0) {
       BX_PANIC(( "ROM: read failed on BIOS image: '%s'",path));
       }
@@ -235,7 +236,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   close(fd);
   Bit8u checksum = 0;
   for (i = 0; i < stat_buf.st_size; i++) {
-    checksum += BX_MEM_THIS vector[romaddress + i];
+    checksum += BX_MEM_THIS rom[romaddress - 0xc0000 + i];
   }
   if (checksum != 0) {
     if (type < 2) {
@@ -260,38 +261,39 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
     BX_INFO(("dbg_fetch_mem out of range. 0x%x > 0x%x",
       addr+len, this->len));
     return(0); // error, beyond limits of memory
-    }
+  }
   for (; len>0; len--) {
-    if ( (addr & 0xfffe0000) == 0x000a0000 ) {
+    if ( (addr & 0xfffe0000) == 0x000a0000 )
       *buf = DEV_vga_mem_read(addr);
+#if BX_SUPPORT_PCI
+    else if ( bx_options.Oi440FXSupport->get () &&
+          ((addr & 0xfffc0000) == 0x000c0000) )
+    {
+      switch (DEV_pci_rd_memtype (addr)) {
+        case 0x0:  // Read from ROM
+          *buf = rom[addr - 0xc0000];
+          break;
+        case 0x1:  // Read from ShadowRAM
+          *buf = vector[addr];
+          break;
+        default:
+          BX_PANIC(("dbg_fetch_mem: default case"));
       }
-    else {
-#if BX_SUPPORT_PCI == 0
-      *buf = vector[addr];
-#else
-      if ( bx_options.Oi440FXSupport->get () &&
-          ((addr >= 0x000C0000) && (addr <= 0x000FFFFF)) ) {
-        switch (DEV_pci_rd_memtype (addr)) {
-          case 0x1:  // Fetch from ShadowRAM
-            *buf = shadow[addr - 0xc0000];
-//          BX_INFO(("Fetching from ShadowRAM %06x, len %u !", (unsigned)addr, (unsigned)len));
-            break;
-
-          case 0x0:  // Fetch from ROM
-            *buf = vector[addr];
-//          BX_INFO(("Fetching from ROM %06x, Data %02x ", (unsigned)addr, *buf));
-            break;
-          default:
-            BX_PANIC(("dbg_fetch_mem: default case"));
-          }
-        }
+    }
+#endif  // #if BX_SUPPORT_PCI
+    else
+    {
+      if ( (addr & 0xfffc0000) == 0x000c0000 ) {
+        *buf = rom[addr - 0xc0000];
+      }
       else
+      {
         *buf = vector[addr];
-#endif  // #if BX_SUPPORT_PCI == 0
       }
+    }
     buf++;
     addr++;
-    }
+  }
   return(1);
 }
 #endif
@@ -304,14 +306,30 @@ BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
     return(0); // error, beyond limits of memory
     }
   for (; len>0; len--) {
-    if ( (addr & 0xfffe0000) == 0x000a0000 ) {
+    if ( (addr & 0xfffe0000) == 0x000a0000 )
       DEV_vga_mem_write(addr, *buf);
+#if BX_SUPPORT_PCI
+    else if ( bx_options.Oi440FXSupport->get () &&
+          ((addr & 0xfffc0000) == 0x000c0000) )
+    {
+      switch (DEV_pci_wr_memtype (addr)) {
+        case 0x0:  // Ignore write to ROM
+          break;
+        case 0x1:  // Write to ShadowRAM
+          vector[addr] = *buf;
+          break;
+        default:
+          BX_PANIC(("dbg_fetch_mem: default case"));
       }
-    else
+    }
+#endif  // #if BX_SUPPORT_PCI
+    else if ( (addr & 0xfffc0000) != 0x000c0000 )
+    {
       vector[addr] = *buf;
+    }
     buf++;
     addr++;
-    }
+  }
   return(1);
 }
 #endif
@@ -364,52 +382,71 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
 #endif
 
   if (op == BX_READ) {
-    if ( (a20Addr > 0x9ffff) && (a20Addr < 0xc0000) )
+    if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
-#if !BX_SUPPORT_PCI
-    return( (Bit8u *) & vector[a20Addr] );
-#else
-    else if ( (a20Addr < 0xa0000) || (a20Addr > 0xfffff)
-              || (!bx_options.Oi440FXSupport->get ()) )
-      return( (Bit8u *) & vector[a20Addr] );
-    else {
+#if BX_SUPPORT_PCI
+    else if ( bx_options.Oi440FXSupport->get () &&
+             ((a20Addr & 0xfffc0000) == 0x000c0000) )
+    {
       switch (DEV_pci_rd_memtype (a20Addr)) {
         case 0x0:   // Read from ROM
-          return ( (Bit8u *) & vector[a20Addr]);
+          return( (Bit8u *) & rom[a20Addr - 0xc0000]);
         case 0x1:   // Read from ShadowRAM
-          return( (Bit8u *) & shadow[a20Addr - 0xc0000]);
+          return( (Bit8u *) & vector[a20Addr]);
         default:
           BX_PANIC(("getHostMemAddr(): default case"));
           return(0);
-        }
       }
-#endif
     }
-  else { // op == {BX_WRITE, BX_RW}
+#endif
+    else
+    {
+      if ( (a20Addr & 0xfffc0000) == 0x000c0000 ) {
+        return( (Bit8u *) & rom[a20Addr - 0xc0000]);
+      }
+      else
+      {
+        return( (Bit8u *) & vector[a20Addr]);
+      }
+    }
+  }
+  else
+  { // op == {BX_WRITE, BX_RW}
     Bit8u *retAddr;
-    if ((a20Addr < 0xa0000) || (a20Addr > 0xfffff)) {
-      retAddr = (Bit8u *) & vector[a20Addr];
-    }
-#if !BX_SUPPORT_PCI
-    else
-      return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
-#else
-    else if ( (a20Addr < 0xc0000) || (!bx_options.Oi440FXSupport->get ()) )
-      return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
-    else if (DEV_pci_wr_memtype (a20Addr) == 1) {
-      // Write to ShadowRAM
-      retAddr = (Bit8u *) & shadow[a20Addr - 0xc0000];
+    if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
+      return(NULL); // Vetoed!  Mem mapped IO (VGA)
+#if BX_SUPPORT_PCI
+    else if ( bx_options.Oi440FXSupport->get () &&
+             ((a20Addr & 0xfffc0000) == 0x000c0000) )
+    {
+      switch (DEV_pci_wr_memtype (a20Addr)) {
+        case 0x0:   // Vetoed!  ROMs
+          return(NULL);
+        case 0x1:   // Write to ShadowRAM
+          retAddr = (Bit8u *) & vector[a20Addr];
+        default:
+          BX_PANIC(("getHostMemAddr(): default case"));
+          return(0);
       }
-    else
-      return(NULL); // Vetoed!  ROMs
+    }
 #endif
+    else
+    {
+      if ( (a20Addr & 0xfffc0000) != 0x000c0000 ) {
+        retAddr = (Bit8u *) & vector[a20Addr];
+      }
+      else
+      {
+        return(NULL);  // Vetoed!  ROMs
+      }
+    }
 
 #if BX_SUPPORT_ICACHE
     cpu->iCache.decWriteStamp(a20Addr);
 #endif
 
     return(retAddr);
-    }
+  }
 }
 
 /*

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.35 2004-10-21 18:20:36 sshwarts Exp $
+// $Id: memory.cc,v 1.36 2004-11-11 20:55:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -128,12 +128,13 @@ inc_one:
     // ignore write to ROM
 #else
     // Write Based on 440fx Programming
-    if (bx_options.Oi440FXSupport->get () &&
-        ((a20addr >= 0xC0000) && (a20addr <= 0xFFFFF))) {
+    if ( bx_options.Oi440FXSupport->get () &&
+          ((a20addr & 0xfffc0000) == 0x000c0000) )
+    {
       switch (DEV_pci_wr_memtype(a20addr & 0xFC000)) {
         case 0x1:   // Writes to ShadowRAM
           BX_DEBUG(("Writing to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
-          shadow[a20addr - 0xc0000] = *data_ptr;
+          vector[a20addr] = *data_ptr;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           goto inc_one;
 
@@ -268,43 +269,37 @@ inc_one:
       }
 
     // addr in range 00080000 .. 000FFFFF
-#if BX_SUPPORT_PCI == 0
-    if ((a20addr <= 0x0009ffff) || (a20addr >= 0x000c0000) ) {
-      // regular memory 80000 .. 9FFFF, C0000 .. F0000
-      *data_ptr = vector[a20addr];
-      goto inc_one;
+#if BX_SUPPORT_PCI
+    if ( bx_options.Oi440FXSupport->get () &&
+          ((a20addr & 0xfffc0000) == 0x000c0000) )
+    {
+      switch (DEV_pci_rd_memtype (a20addr)) {
+        case 0x0:  // Read from ROM
+          *data_ptr = rom[a20addr - 0xc0000];
+          goto inc_one;
+        case 0x1:  // Read from ShadowRAM
+          *data_ptr = vector[a20addr];
+          goto inc_one;
+        default:
+          BX_PANIC(("readPhysicalPage: default case"));
       }
-#else   // #if BX_SUPPORT_PCI == 0
-    if (a20addr <= 0x0009ffff) {
-      *data_ptr = vector[a20addr];
       goto inc_one;
-      }
-
-    if ((a20addr >= 0xC0000) && (a20addr <= 0xFFFFF)) {
-      if (!bx_options.Oi440FXSupport->get ()) {
-        *data_ptr = vector[a20addr];
-        goto inc_one;
-        }
-      else {
-        switch (DEV_pci_rd_memtype(a20addr & 0xFC000)) {
-          case 0x1:   // Read from ShadowRAM
-            *data_ptr = shadow[a20addr - 0xc0000];
-            BX_DEBUG(("Reading to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
-            goto inc_one;
-
-          case 0x0:   // Read from ROM
-            *data_ptr = vector[a20addr];
-            goto inc_one;
-          default:
-            BX_PANIC(("::readPhysicalPage: default case"));
-          }
-        }
-      goto inc_one;
-      }
-#endif  // #if BX_SUPPORT_PCI == 0
     }
-  else {
-    // some or all of data is outside limits of physical memory
+    else
+#endif  // #if BX_SUPPORT_PCI
+    {
+      if ( (a20addr & 0xfffc0000) == 0x000c0000 ) {
+        *data_ptr = rom[a20addr - 0xc0000];
+      }
+      else
+      {
+        *data_ptr = vector[a20addr];
+      }
+      goto inc_one;
+    }
+  }
+  else
+  {  // some or all of data is outside limits of physical memory
     unsigned i;
 
 #ifdef BX_LITTLE_ENDIAN
@@ -326,39 +321,10 @@ inc_one:
     }
 #endif
     for (i = 0; i < len; i++) {
-#if BX_SUPPORT_PCI == 0
       if (a20addr < BX_MEM_THIS len)
         *data_ptr = vector[a20addr];
       else
         *data_ptr = 0xff;
-#else   // BX_SUPPORT_PCI == 0
-      if (a20addr < BX_MEM_THIS len) {
-        if ((a20addr >= 0x000C0000) && (a20addr <= 0x000FFFFF)) {
-          if (!bx_options.Oi440FXSupport->get ())
-            *data_ptr = vector[a20addr];
-          else {
-            switch (DEV_pci_rd_memtype(a20addr & 0xFC000)) {
-              case 0x0:   // Read from ROM
-                *data_ptr = vector[a20addr];
-                break;
-
-              case 0x1:   // Read from Shadow RAM
-                *data_ptr = shadow[a20addr - 0xc0000];
-                BX_DEBUG(("Reading to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
-                break;
-              default:
-                BX_PANIC(("readPhysicalPage: default case"));
-              } // Switch
-            }
-          }
-        else {
-          *data_ptr = vector[a20addr];
-          BX_INFO(("Reading from Norm %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
-          }
-        }
-      else 
-        *data_ptr = 0xff;
-#endif  // BX_SUPPORT_PCI == 0
       addr++;
       a20addr = (addr);
 #ifdef BX_LITTLE_ENDIAN
