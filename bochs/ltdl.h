@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ltdl.h,v 1.1.2.2 2002-10-23 22:44:57 bdenney Exp $
+// $Id: ltdl.h,v 1.1.2.3 2002-10-24 18:34:29 bdenney Exp $
 //
 // NOTE: The ltdl library comes from the Libtool package.  Bochs uses
 // ltdl and libtool to build and load plugins.  The libtool
@@ -315,38 +315,60 @@ extern	int		lt_dlloader_remove  LT_PARAMS((
 
 /* --- ERROR MESSAGE HANDLING --- */
 
+/* Bryce rewrote the error table in a way that would be likely to work
+   on all compilers.  VC++ was not able to handle it the way it was
+   done originally. */
 
-/* Defining error strings alongside their symbolic names in a macro in
-   this way allows us to expand the macro in different contexts with
+/* ORIG COMMENT: Defining error strings alongside their symbolic names in a
+   macro in this way allows us to expand the macro in different contexts with
    confidence that the enumeration of symbolic names will map correctly
    onto the table of error strings.  */
-#define lt_dlerror_table						\
-    LT_ERROR(UNKNOWN,		    "unknown error")			\
-    LT_ERROR(DLOPEN_NOT_SUPPORTED,  "dlopen support not available")	\
-    LT_ERROR(INVALID_LOADER,	    "invalid loader")			\
-    LT_ERROR(INIT_LOADER,	    "loader initialization failed")	\
-    LT_ERROR(REMOVE_LOADER,	    "loader removal failed")		\
-    LT_ERROR(FILE_NOT_FOUND,	    "file not found")			\
-    LT_ERROR(DEPLIB_NOT_FOUND,      "dependency library not found")	\
-    LT_ERROR(NO_SYMBOLS,	    "no symbols defined")		\
-    LT_ERROR(CANNOT_OPEN,	    "can't open the module")		\
-    LT_ERROR(CANNOT_CLOSE,	    "can't close the module")		\
-    LT_ERROR(SYMBOL_NOT_FOUND,      "symbol not found")			\
-    LT_ERROR(NO_MEMORY,		    "not enough memory")		\
-    LT_ERROR(INVALID_HANDLE,	    "invalid module handle")		\
-    LT_ERROR(BUFFER_OVERFLOW,	    "internal buffer overflow")		\
-    LT_ERROR(INVALID_ERRORCODE,     "invalid errorcode")		\
-    LT_ERROR(SHUTDOWN,		    "library already shutdown")		\
-    LT_ERROR(CLOSE_RESIDENT_MODULE, "can't close resident module")	\
-    LT_ERROR(INVALID_MUTEX_ARGS,    "invalid mutex handler registration") \
-    LT_ERROR(INVALID_POSITION,	    "invalid search path insert position")
+
+#define lt_dlerror_symbols_list						\
+  LT_ERROR_UNKNOWN,							\
+  LT_ERROR_DLOPEN_NOT_SUPPORTED,					\
+  LT_ERROR_INVALID_LOADER,						\
+  LT_ERROR_INIT_LOADER,							\
+  LT_ERROR_REMOVE_LOADER,						\
+  LT_ERROR_FILE_NOT_FOUND,						\
+  LT_ERROR_DEPLIB_NOT_FOUND,						\
+  LT_ERROR_NO_SYMBOLS,							\
+  LT_ERROR_CANNOT_OPEN,							\
+  LT_ERROR_CANNOT_CLOSE,						\
+  LT_ERROR_SYMBOL_NOT_FOUND,						\
+  LT_ERROR_NO_MEMORY,							\
+  LT_ERROR_INVALID_HANDLE,						\
+  LT_ERROR_BUFFER_OVERFLOW,						\
+  LT_ERROR_INVALID_ERRORCODE,						\
+  LT_ERROR_SHUTDOWN,							\
+  LT_ERROR_CLOSE_RESIDENT_MODULE,					\
+  LT_ERROR_INVALID_MUTEX_ARGS,						\
+  LT_ERROR_INVALID_POSITION,
+
+#define lt_dlerror_names_list						\
+    "unknown error",							\
+    "dlopen support not available",					\
+    "invalid loader",							\
+    "loader initialization failed",					\
+    "loader removal failed",						\
+    "file not found",							\
+    "dependency library not found",					\
+    "no symbols defined",						\
+    "can't open the module",						\
+    "can't close the module",						\
+    "symbol not found",							\
+    "not enough memory",						\
+    "invalid module handle",						\
+    "internal buffer overflow",						\
+    "invalid errorcode",						\
+    "library already shutdown",						\
+    "can't close resident module",					\
+    "invalid mutex handler registration", 	 	 	 	\
+    "invalid search path insert position",
 
 /* Enumerate the symbolic error names. */
 enum {
-#define LT_ERROR(name, diagnostic)	LT_CONC(LT_ERROR_, name),
-	lt_dlerror_table
-#undef LT_ERROR
-
+	lt_dlerror_symbols_list
 	LT_ERROR_MAX
 };
 

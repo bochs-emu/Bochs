@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ltdl.c,v 1.1.2.2 2002-10-17 16:01:14 bdenney Exp $
+// $Id: ltdl.c,v 1.1.2.3 2002-10-24 18:34:29 bdenney Exp $
 //
 // NOTE: The ltdl library comes from the Libtool package.  Bochs uses
 // ltdl and libtool to build and load plugins.  The libtool
@@ -679,10 +679,7 @@ typedef struct {
 
 static const char *lt_dlerror_strings[] =
   {
-#define LT_ERROR(name, diagnostic)	(diagnostic),
-    lt_dlerror_table
-#undef LT_ERROR
-
+    lt_dlerror_names_list
     0
   };
 
