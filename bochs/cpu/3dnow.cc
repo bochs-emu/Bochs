@@ -27,7 +27,7 @@
 #include "softfloat.h"
 
 static void prepare_softfloat_status_word
-	(softfloat_status_word_t &status_word, int rounding_mode)
+	(softfloat_status_word_t &status, int rounding_mode)
 {
   status.float_precision = 32;
   status.float_detect_tininess = float_tininess_before_rounding;
