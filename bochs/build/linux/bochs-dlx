@@ -13,16 +13,18 @@ makedlxdir() {
   echo DEBUG: Creating $HOME/.bochs/bochsrc
   echo DLXPATH=$DLXPATH > $CONFFILE
   . $CONFFILE
-  if [ ! -f $DLXPATH/bochsrc.txt ]; then
-    cp -av $DLXINST/bochsrc.txt $DLXPATH/.
-  else
-    echo "ERROR: bochsrc.txt already exists in $DLXPATH. Remove it to replace"
-  fi
+  for file in bochsrc.txt README testform.txt; do
+    if [ ! -f $DLXPATH/$file ]; then
+      cp -av $DLXINST/$file $DLXPATH/.
+    else
+      echo "ERROR: $file already exists in $DLXPATH. Remove it to replace."
+    fi;
+  done
   if [ ! -f $DLXPATH/hd10meg.img ]; then
     echo Uncompressing $DLXINST/hd10meg.img.gz '->' $DLXPATH/hd10meg.img
     $GZIP -dc $DLXINST/hd10meg.img.gz > $DLXPATH/hd10meg.img
   else
-    echo "ERROR: hd10meg.img already exists in $DLXPATH. Remove it to replace"
+    echo "ERROR: hd10meg.img already exists in $DLXPATH. Remove it to replace."
   fi
 }
 
@@ -80,4 +82,4 @@ fi
 echo Running bochs
 
 # ok now try it
-$BOCHS
+$BOCHS -nocontrolpanel
