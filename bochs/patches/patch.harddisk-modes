@@ -3044,13 +3044,13 @@ diff -u -r1.19 harddrv.h
 +{
 +
 +// Format of a sparse file:
-+// 512 byte header, containing details such as page size and number of pages
++// 256 byte header, containing details such as page size and number of pages
 +// Page indirection table, mapping virtual pages to physical pages within file
 +// Physical pages till end of file
 +
 +#define SPARSE_HEADER_MAGIC  (0x02468ace)
 +#define SPARSE_HEADER_VERSION  1
-+#define HEADER_SIZE        (512) // Plenty of room for later
++#define HEADER_SIZE        (256) // Plenty of room for later
 +#define PAGE_NOT_ALLOCATED (0xffffffff)
 +
 + typedef struct
@@ -3162,7 +3162,7 @@ diff -u -r1.17 bximage.c
 -/* 
 +/*
   * misc/bximage.c
-  * $Id: patch.harddisk-modes,v 1.1 2003-03-04 21:08:39 cbothamy Exp $
+  * $Id: patch.harddisk-modes,v 1.2 2003-03-04 22:08:52 cbothamy Exp $
   *
 @@ -16,6 +16,18 @@
  #endif
@@ -3181,7 +3181,7 @@ diff -u -r1.17 bximage.c
 +#endif // BX_SPARSE_HD_SUPPORT
 +
  char *EOF_ERR = "ERROR: End of input";
- char *rcsid = "$Id: patch.harddisk-modes,v 1.1 2003-03-04 21:08:39 cbothamy Exp $";
+ char *rcsid = "$Id: patch.harddisk-modes,v 1.2 2003-03-04 22:08:52 cbothamy Exp $";
  char *divider = "========================================================================";
 @@ -190,12 +202,41 @@
    return 0;
