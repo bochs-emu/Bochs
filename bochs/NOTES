@@ -1213,3 +1213,106 @@ With iterations=8:  2.80user, 0.01system, 2.78elapsed 100%CPU
 
 iterations=8, try two at once.
 work & work &
+
+
+------
+NOTES: Porting to occs
+- no snprintf, made a macro
+- comment out sigcontext
+- no strtoull defined
+- yacc didn't ever put 
+    extern YYSTYPE bxlval;
+  into parser.h.  Instead it just put
+    extern YYSTYPE yylval;
+  To fix this, I put
+    #define bxlval yylval 
+  into lexer.l after the #includes
+  see debug-source.tar.gz
+
+- undefined bxtext, yylval, bx_flush_buffer, bxlex
+  I can take care of it with four defines in debug.h
+  #define bxlval yylval
+  #define bxtext yytext
+  #define bxlex yylex
+  #define bx_flush_buffer(x) /* does not exist */
+
+
+damn it never did work.
+I tried stripping the libraries to save more space, but then
+it said all sorts of C++ symbols were missing.
+
+remove aligned tag on the i387_t structure.  surely that's not
+portable.
+
+major problems with yacc and flex on occs.
+known to work with flex 2.5.4 and yacc 1.9
+
+my god, %ld seems to not be supported on OSF1, can it be?
+
+linux booted up to "calibrating delay loop"
+crashes sith segfault, apparantly in FPU_div
+stack trace:
+
+#0  FPU_div (flags=64, rm=536868936, control_w=895) at reg_divide.c:76
+#1  0x120096120 in math_emulate2 (addr_modes={override = {
+        address_size = 0 '\000', operand_size = 0 '\000', segment = 39 '\''}, 
+      default_mode = 4 '\004'}, FPU_modrm=53 '5', byte1=0 '\000', 
+    data_address=0x0, data_sel_off={offset = -1071936440, selector = 24, 
+      opcode = -1400897536, empty = -341016576}, entry_sel_off={
+      offset = -1071971976, selector = 70582288, opcode = 888669237, 
+      empty = -332072956}) at fpu_entry.c:959
+#2  0x120094a70 in bx_cpu_c::fpu_execute (this=0x40, i=0x1ffff848)
+    at wmFPUemu_glue.cc:123
+#3  0x120095230 in bx_cpu_c::ESC4 (this=0x1440c5f60, i=0x11ffff8f0)
+    at fpu.cc:104
+#4  0x120048b50 in bx_cpu_c::cpu_loop (this=0x1440c5f60, 
+    max_instr_count=536868936) at cpu.cc:268
+#5  0x120080cc0 in bx_dbg_continue_command () at dbg_main.cc:1428
+#6  0x12008cd80 in bxparse () at parser.y:382
+#7  0x12007e1f0 in bx_dbg_user_input_loop () at dbg_main.cc:448
+#8  0x12007deb8 in bx_dbg_main (argc=1074182344, argv=0x11ffffae8)
+    at dbg_main.cc:388
+#9  0x12002b5e0 in main (argc=64, argv=0x1ffff848) at main.cc:119
+
+the "b" pointer points outside of allowed address
+flags=64
+REV=16
+run again, break at first FPU_div
+first FPU_div.  
+flags&REV = false, goes to 59
+flags&LOADED = false, goes to 69
+b=&st(rm) returns 0xf1, which points to crap
+confusing because of -O2 I expect
+or maybe it returns 0x1400837a0, {sigl = 0, sigh = 0, exp = 0}
+this one finishes ok.
+
+second FPU_div, flags=64
+flags&REV=false, to 59
+flags&LOADED=true, to 64
+b is (FPU_REG *)rm, 0x1ffff848.  this is illegal address.
+calls getsign(b), crashes.
+what is rm? passed into FPU_div as 2nd argument (int!)
+
+the problem is that a pointer was cast as an int. On this machine
+pointers are 8 bytes, ints are 4 bytes!
+
+There are typecasts to FPU_REG* in the following places.
+These could crash any 64-bit machine.
+
+fpu_entry.c:713:          tag = FPU_tagof((FPU_REG *)((u_char *)S387->st_space + 10*regnr));
+reg_add_sub.c:151:      b = (FPU_REG *)rm;
+reg_divide.c:47:          a = (FPU_REG *)rm;
+reg_divide.c:64:          b = (FPU_REG *)rm;
+reg_divide.c:149:       return real_2op_NaN((FPU_REG *)rm, flags & 0x0f, 0, st0_ptr);
+reg_ld_str.c:1316:  fpu_reg_p = (FPU_REG *) (register_base+offset);
+reg_ld_str.c:1325:  fpu_reg_p = (FPU_REG *) register_base;
+reg_ld_str.c:1435:  fpu_reg_p = (FPU_REG *) (register_base+offset);
+reg_ld_str.c:1444:  fpu_reg_p = (FPU_REG *) register_base;
+
+Fix reg_add_sub.c and reg_divide.c!
+What is &st(rm)?  it uses rm as an integer
+
+rm can be an integer offset of an array, or a pointer.  This is hideous.
+Try this: send it as a pointer instead, and if it's supposed to be an 
+integer cast it to an integer.
+----- end of occs notes
