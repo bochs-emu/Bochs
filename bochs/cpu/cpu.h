@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.66 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: cpu.h,v 1.67 2002-09-20 23:17:50 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -669,7 +669,8 @@ public:
   void (BX_CPU_C::*execute)(bxInstruction_c *);
 #endif
 
-  // 25..22  ilen (0..15).  Leave this one on top so no mask is needed.
+  // 26..23  ilen (0..15).  Leave this one on top so no mask is needed.
+  // 22..22  mod==c0 (modrm)
   // 21..13  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511.
   // 12..12  BxRepeatableZF (pass-thru from fetchdecode attributes)
   // 11..11  BxRepeatable   (pass-thru from fetchdecode attributes)
@@ -679,16 +680,15 @@ public:
   //  6...6  os64
   //  5...5  as32
   //  4...4  os32
-  //  3...3  rex_b (Note: needs to be bit3, so value is 0x8)
+  //  3...3  (unused)
   //  2...0  seg
   unsigned metaInfo;
 
   union {
-    // Form (longest case): [opcode/modrm/sib/displacement32/immediate32]
+    // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
     struct {
       //  Note: if you add more bits, mask the previously upper field,
       //        in the accessor.
-      //  28..28 mod==c0 (modrm)
       //  27..20 modRM   (modrm)
       //  19..16 index           (sib)
       //  15..12 base            (sib)
@@ -699,37 +699,59 @@ public:
       Bit32u modRMData;
 
       union {
-        union {
-          Bit16u displ16u; // for 16-bit modrm forms
-          Bit32u displ32u; // for 32-bit modrm forms
-          };
-
-        // Opcodes of the form: [opcode Immediate Immediate] never use
-        // the modrm fields.  I union the 2nd immediate here with the
-        // displacement from a longer modrm sequence, and the 1st
-        // immediate goes in the following union where modrm and
-        // non-modrm immediates live.
-        union {
-          Bit16u   Iw2;
-          Bit8u    Ib2;
-          };
+        Bit32u   Id;
+        Bit16u   Iw;
+        Bit8u    Ib;
         };
 
+      union {
+        Bit16u displ16u; // for 16-bit modrm forms
+        Bit32u displ32u; // for 32-bit modrm forms
+        };
+      } modRMForm;
+
+    struct {
+      Bit32u dummy;
       union {
         Bit32u   Id;
         Bit16u   Iw;
         Bit8u    Ib;
         };
-      } modRMForm;
+      union {
+        Bit32u   Id2; // Not used (for alignment)
+        Bit16u   Iw2;
+        Bit8u    Ib2;
+        };
+      } IxIxForm;
+
+    struct {
+      // For opcodes which don't use modRM, but which encode the
+      // register in the low 3 bits of the opcode, extended by the
+      // REX.B bit on x86-64, the register value is cached in opcodeReg.
+      Bit32u opcodeReg;
+      union {
+        Bit32u   Id;
+        Bit16u   Iw;
+        Bit8u    Ib;
+        };
+      Bit32u dummy;
+      } IxForm;
 
 #if BX_SUPPORT_X86_64
     // Form: [opcode/Iq].  These opcode never use a modrm sequence.
     struct {
+      Bit32u opcodeReg;
       Bit64u   Iq;  // for MOV Rx,imm64
       } IqForm;
 #endif
     };
 
+  BX_CPP_INLINE unsigned opcodeReg() {
+    // The opcodeReg form (low 3 bits of the opcode byte (extended
+    // by REX.B on x86-64) can be accessed by IxForm or IqForm.  They
+    // are aligned in the same place, so it doesn't matter.
+    return IxForm.opcodeReg;
+    }
   BX_CPP_INLINE unsigned modrm() { return (modRMForm.modRMData>>20) & 0xff; }
   BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData & 0xc0; }
   BX_CPP_INLINE unsigned modC0()
@@ -737,7 +759,7 @@ public:
     // This is a cheaper way to test for modRM instructions where
     // the mod field is 0xc0.  FetchDecode flags this condition since
     // it is quite common to be tested for.
-    return modRMForm.modRMData & (1<<28);
+    return metaInfo & (1<<22);
     }
   BX_CPP_INLINE unsigned nnn() {
       return (modRMForm.modRMData >> 8) & 0xf;
@@ -757,8 +779,8 @@ public:
   BX_CPP_INLINE Bit32u   Id()  { return modRMForm.Id; }
   BX_CPP_INLINE Bit16u   Iw()  { return modRMForm.Iw; }
   BX_CPP_INLINE Bit8u    Ib()  { return modRMForm.Ib; }
-  BX_CPP_INLINE Bit16u   Iw2() { return modRMForm.Iw2; } // Legacy
-  BX_CPP_INLINE Bit8u    Ib2() { return modRMForm.Ib2; } // Legacy
+  BX_CPP_INLINE Bit16u   Iw2() { return IxIxForm.Iw2; } // Legacy
+  BX_CPP_INLINE Bit8u    Ib2() { return IxIxForm.Ib2; } // Legacy
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE Bit64u   Iq()  { return IqForm.Iq; }
 #endif
@@ -768,11 +790,11 @@ public:
   // is for Logical comparisons, eg if (i->os32L() && i->as32L()).  If you
   // want a Boolean value, use os32B() etc.  This makes for smaller
   // code, when a strict 0 or 1 is not necessary.
-  BX_CPP_INLINE void initMetaInfo(unsigned seg, unsigned rex_b,
+  BX_CPP_INLINE void initMetaInfo(unsigned seg,
                                   unsigned os32, unsigned as32,
                                   unsigned os64, unsigned as64,
                                   unsigned extend8bit, unsigned repUsed) {
-      metaInfo = seg | (rex_b<<3) | (os32<<4) | (as32<<5) |
+      metaInfo = seg | (os32<<4) | (as32<<5) |
                  (os64<<6) | (as64<<7) | (extend8bit<<8) | (repUsed<<9);
       }
   BX_CPP_INLINE unsigned seg(void) {
@@ -781,17 +803,6 @@ public:
   BX_CPP_INLINE void setSeg(unsigned val) {
       metaInfo = (metaInfo & ~7) | val;
       }
-
-#if BX_SUPPORT_X86_64
-  BX_CPP_INLINE unsigned rex_b(void) {
-      return metaInfo & (1<<3); // Returns 0 or 8 for upper 8 register accessing.
-      }
-  BX_CPP_INLINE void assertRex_b(void) {
-      metaInfo |= (1<<3);
-      }
-#else
-  BX_CPP_INLINE unsigned rex_b(void) { return 0; }
-#endif
 
   BX_CPP_INLINE unsigned os32L(void) {
       return metaInfo & (1<<4);
@@ -885,10 +896,10 @@ public:
   // Note this is the highest field, and thus needs no masking.
   // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
   BX_CPP_INLINE unsigned ilen(void) {
-      return metaInfo >> 22;
+      return metaInfo >> 23;
       }
   BX_CPP_INLINE void setILen(unsigned ilen) {
-      metaInfo |= (ilen<<22);
+      metaInfo |= (ilen<<23);
       }
   };
 

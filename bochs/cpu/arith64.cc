@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.5 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: arith64.cc,v 1.6 2002-09-20 23:17:50 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,8 +39,7 @@ BX_CPU_C::INC_RRX(bxInstruction_c *i)
 {
   Bit32u rrx;
 
-  rrx = ++ BX_CPU_THIS_PTR gen_reg[(i->b1() & 0x07) + i->rex_b()].rrx;
-  //rrx = ++ BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx;
+  rrx = ++ BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx;
   SET_FLAGS_OSZAP_64(0, 0, rrx, BX_INSTR_INC64);
 }
 
@@ -49,8 +48,7 @@ BX_CPU_C::DEC_RRX(bxInstruction_c *i)
 {
   Bit32u rrx;
 
-  rrx = -- BX_CPU_THIS_PTR gen_reg[(i->b1() & 0x07) + i->rex_b()].rrx;
-  //rrx = -- BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx;
+  rrx = -- BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx;
   SET_FLAGS_OSZAP_64(0, 0, rrx, BX_INSTR_DEC64);
 }
 

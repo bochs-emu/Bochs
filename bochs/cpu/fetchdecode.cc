@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.16 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.17 2002-09-20 23:17:51 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1441,7 +1441,7 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction,
 
   instruction->ResolveModrm = NULL;
   instruction->initMetaInfo(
-                  BX_SEG_REG_NULL,   /*rex_b*/    0,
+                  BX_SEG_REG_NULL,
                   /*os32*/   is_32,  /*as32*/ is_32,
                   /*os64*/       0,  /*as64*/     0,
                   /*extend8bit*/ 0,  /*repUsed*/  0);
@@ -1461,6 +1461,7 @@ another_byte:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
     instruction->execute = BxOpcodeInfo[b1+offset].ExecutePtr;
+    instruction->IxForm.opcodeReg = b1 & 7;
 #if BX_DYNAMIC_TRANSLATION
     instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
     instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
@@ -1558,7 +1559,7 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
     instruction->modRMForm.modRMData |= rm;
 
     if (mod == 0xc0) { // mod == 11b
-      instruction->modRMForm.modRMData |= (1<<28); // (modC0)
+      instruction->metaInfo |= (1<<22); // (modC0)
       goto modrm_done;
       }
     if (instruction->as32L()) {
@@ -1853,7 +1854,7 @@ modrm_done:
           Bit16u imm16u;
           imm16u = *iptr++;
           imm16u |= (*iptr) << 8;
-          instruction->modRMForm.Iw2 = imm16u;
+          instruction->IxIxForm.Iw2 = imm16u;
           ilen += 2;
           }
         else {
@@ -1905,7 +1906,7 @@ modrm_done:
         if (imm_mode == BxImmediate_Iw) break;
         iptr++;
         if (ilen < remain) {
-          instruction->modRMForm.Ib2 = *iptr;
+          instruction->IxIxForm.Ib2 = *iptr;
           ilen++;
           }
         else {

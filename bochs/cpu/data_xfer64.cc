@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.6 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: data_xfer64.cc,v 1.7 2002-09-20 23:17:51 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,17 +41,14 @@ BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
   Bit64u temp64;
 
   temp64 = RAX;
-  RAX = BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx;
-  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx = temp64;
-  //RAX = BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx;
-  //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = temp64;
+  RAX = BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx;
+  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = temp64;
 }
 
   void
 BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[(i->b1() & 7) + i->rex_b()].rrx = i->Iq();
-  //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = i->Iq();
+  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = i->Iq();
 }
 
   void

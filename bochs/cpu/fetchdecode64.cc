@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.7 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: fetchdecode64.cc,v 1.8 2002-09-20 23:17:51 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2027,7 +2027,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction,
   rex_b = 0;
   instruction->ResolveModrm = NULL;
   instruction->initMetaInfo(
-                  BX_SEG_REG_NULL,   /*rex_b*/    0,
+                  BX_SEG_REG_NULL,
                   /*os32*/       1, // operand size 32 override defaults to 1
                   /*as32*/       1, // address size 32 override defaults to 1
                   /*os64*/       0, // operand size 64 override defaults to 0
@@ -2103,7 +2103,6 @@ another_byte:
             }
           if (b1 & 0x1) {
             rex_b = 8;
-            instruction->assertRex_b();
             //BX_DEBUG((" base+8"));
             }
           if (ilen < remain) {
@@ -2169,20 +2168,20 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
 
     // Parse mod-nnn-rm and related bytes
     mod = b2 & 0xc0;
-    nnn   = ((b2 >> 3) & 0x07) + rex_r;
+    nnn   = ((b2 >> 3) & 0x07) | rex_r;
     rm  = b2 & 0x07;
     instruction->modRMForm.modRMData = (b2<<20);
     instruction->modRMForm.modRMData |= mod;
     instruction->modRMForm.modRMData |= (nnn<<8);
 
     if (mod == 0xc0) { // mod == 11b
-      rm += rex_b;
+      rm |= rex_b;
       instruction->modRMForm.modRMData |= rm;
-      instruction->modRMForm.modRMData |= (1<<28); // (modC0)
+      instruction->metaInfo |= (1<<22); // (modC0)
       goto modrm_done;
       }
     if (rm != 4) {
-      rm += rex_b;
+      rm |= rex_b;
       }
     instruction->modRMForm.modRMData |= rm;
     if (instruction->as64L()) {
@@ -2268,8 +2267,8 @@ get_32bit_displ_1:
         else {
           return(0);
           }
-        base = (sib & 0x07) + rex_b; sib >>= 3;
-        index = (sib & 0x07) + rex_x; sib >>= 3;
+        base = (sib & 0x07) | rex_b; sib >>= 3;
+        index = (sib & 0x07) | rex_x; sib >>= 3;
         scale = sib;
         instruction->modRMForm.modRMData |= (base<<12);
         instruction->modRMForm.modRMData |= (index<<16);
@@ -2403,8 +2402,8 @@ get_32bit_displ:
         else {
           return(0);
           }
-        base  = (sib & 0x07) + rex_b; sib >>= 3;
-        index = (sib & 0x07) + rex_x; sib >>= 3;
+        base  = (sib & 0x07) | rex_b; sib >>= 3;
+        index = (sib & 0x07) | rex_x; sib >>= 3;
         scale = sib;
         instruction->modRMForm.modRMData |= (base<<12);
         instruction->modRMForm.modRMData |= (index<<16);
@@ -2494,6 +2493,7 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
     instruction->execute = BxOpcodeInfo64[b1+offset].ExecutePtr;
+    instruction->IxForm.opcodeReg = (b1 & 7) | rex_b;
 #if BX_DYNAMIC_TRANSLATION
     instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
     instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
@@ -2564,7 +2564,7 @@ modrm_done:
           Bit16u imm16u;
           imm16u = *iptr++;
           imm16u |= (*iptr) << 8;
-          instruction->modRMForm.Iw2 = imm16u;
+          instruction->IxIxForm.Iw2 = imm16u;
           ilen += 2;
           }
         else {
@@ -2635,7 +2635,7 @@ modrm_done:
         if (imm_mode == BxImmediate_Iw) break;
         iptr++;
         if (ilen < remain) {
-          instruction->modRMForm.Ib2 = *iptr;
+          instruction->IxIxForm.Ib2 = *iptr;
           ilen++;
           }
         else {
