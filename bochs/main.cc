@@ -21,10 +21,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #include "bochs.h"
 #include <assert.h>
 #include "state_file.h"
+
+int force_no_control_panel = 0;
 
 extern "C" {
 #include <signal.h>
@@ -770,19 +771,30 @@ main(int argc, char *argv[])
 
 #if BX_WITH_CARBON
     /* This is passed if we are launched by double-clicking */
-   if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 )
-        argc = 1;
+   if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 ) {
+     io->init_log("/tmp/early-bochs-out.txt");
+     BX_INFO (("I was launched by double clicking.  Fixing home directory."));
+     argc = 1;
+     setupWorkingDirectory (argv[0]);
+     force_no_control_panel = 1;
+   }
+   for (int a=0; a<argc; a++) {
+     BX_INFO (("argument %d is %s", a, argv[a]));
+   }
         
-    setupWorkingDirectory (argv[0]);
+  char cwd[MAXPATHLEN];
+  getwd (cwd);
+  BX_INFO (("Now my working directory is %s", cwd));
 #endif
-
 
   int read_rc_already = 0;
   init_siminterface ();
   bx_init_options ();
 
 #if BX_USE_CONTROL_PANEL
-  if (argc > 1 && (!strcmp ("-nocontrolpanel", argv[1]))) {
+  if (force_no_control_panel) {
+    SIM->set_enabled (0);
+  } if (argc > 1 && (!strcmp ("-nocontrolpanel", argv[1]))) {
     // skip the control panel
     argc++;
     SIM->set_enabled (0);
