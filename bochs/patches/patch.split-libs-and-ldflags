@@ -1,0 +1,335 @@
+Index: Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Makefile.in,v
+retrieving revision 1.96
+diff -u -r1.96 Makefile.in
+--- Makefile.in	24 Oct 2002 21:03:47 -0000	1.96
++++ Makefile.in	28 Oct 2002 08:17:06 -0000
+@@ -94,20 +94,22 @@
+ #   solaris needs -lreadline -lcurses
+ X_LIBS = @X_LIBS@
+ X_PRE_LIBS = @X_PRE_LIBS@
+-GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS) -lX11
+-GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
+-GUI_LINK_OPTS_BEOS = -lbe
+-GUI_LINK_OPTS_RFB = @RFB_LIBS@
+-GUI_LINK_OPTS_AMIGAOS = 
+-GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+-GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
++GUI_LINK_LIBS_X = $(X_LIBS) $(X_PRE_LIBS) -lX11
++GUI_LINK_FLAGS_SDL = `sdl-config --libs`
++GUI_LINK_LIBS_BEOS = -lbe
++GUI_LINK_LIBS_RFB = @RFB_LIBS@
++GUI_LINK_LIBS_AMIGAOS = 
++GUI_LINK_LIBS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
++GUI_LINK_LIBS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
+   comdlg32.lib comctl32.lib wsock32.lib
+-GUI_LINK_OPTS_MACOS =
+-GUI_LINK_OPTS_CARBON = -framework Carbon
+-GUI_LINK_OPTS_NOGUI =
+-GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
+-GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
+-GUI_LINK_OPTS = @GUI_LINK_OPTS@  @DEVICE_LINK_OPTS@
++GUI_LINK_LIBS_MACOS =
++GUI_LINK_FLAGS_CARBON = -framework Carbon
++GUI_LINK_LIBS_NOGUI =
++GUI_LINK_FLAGS_TERM = @GUI_LINK_FLAGS_TERM@
++GUI_LINK_FLAGS_WX = @GUI_LINK_FLAGS_WX@
++
++GUI_LINK_FLAGS = @GUI_LINK_FLAGS@ @DEVICE_LINK_FLAGS@
++GUI_LINK_LIBS = @GUI_LINK_LIBS@ @DEVICE_LINK_LIBS@
+ RANLIB = @RANLIB@
+ 
+ CFLAGS_CONSOLE = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
+@@ -150,7 +152,6 @@
+ INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
+ FPU_LIB        = fpu/libfpu.a
+ READLINE_LIB   = @READLINE_LIB@
+-EXTRA_LINK_OPTS = @EXTRA_LINK_OPTS@
+ 
+ GDBSTUB_OBJS = gdbstub.o
+ 
+@@ -169,54 +170,38 @@
+ 
+ @EXTERNAL_DEPENDENCY@
+ 
+-bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
+-           cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+-           @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
+-           $(SIMX86_OBJS) $(FPU_LIB) @GDBSTUB_VAR@ @PLUGIN_VAR@
+-	$(LIBTOOL) @LINK@ -export-dynamic $(BX_OBJS) $(SIMX86_OBJS) \
+-		iodev/libiodev.a cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+-		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
+-		@GDBSTUB_VAR@ \
+-		$(FPU_LIB) \
+-		$(GUI_LINK_OPTS) \
+-		$(MCH_LINK_FLAGS) \
+-		$(SIMX86_LINK_FLAGS) \
+-		$(READLINE_LIB) \
+-		$(EXTRA_LINK_OPTS) \
+-		$(LIBS)
++PRIMARY_TARGET_PREREQS = \
++  @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
++  cpu/libcpu.a memory/libmemory.a gui/libgui.a \
++  @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
++  $(FPU_LIB) @GDBSTUB_VAR@ @PLUGIN_VAR@
++
++PRIMARY_TARGET_OBJS = \
++  $(BX_OBJS) \
++  iodev/libiodev.a cpu/libcpu.a memory/libmemory.a gui/libgui.a  \
++  $(FPU_LIB) $(READLINE_LIB) $(LIBS) \
++  $(GUI_LINK_LIBS) 
++
++PRIMARY_TARGET_LDFLAGS = \
++  $(CXXFLAGS) $(LDFLAGS) -export-dynamic $(GUI_LINK_LIBS) $(DEVICE_LINK_LIBS)
++
++bochs: $(PRIMARY_TARGET_PREREQS)
++	$(LIBTOOL) @LINK@ $(PRIMARY_TARGET_LDFLAGS) $(PRIMARY_TARGET_OBJS)
++
++# Special make target for cygwin/mingw with plugins disabled.
++# Bryce added this because libtool 1.4.2. was not able to link the binary.
++.win32_noplugin_target: $(PRIMARY_TARGET_PREREQS)
++	$(CXX) -o $@ $(PRIMARY_TARGET_LDFLAGS) $(PRIMARY_TARGET_OBJS)
++	touch .win32_noplugin_target
+ 
+ # Special make target for cygwin/mingw using dlltool instead of
+ # libtool.  This creates a .DEF file, and exports file, an import library,
+ # and then links bochs.exe with the exports file.
+-.win32_dll_plugin_target: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
+-           cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+-           @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
+-           $(SIMX86_OBJS) $(FPU_LIB) @GDBSTUB_VAR@ @PLUGIN_VAR@
+-	$(DLLTOOL) --output-def bochs.def $(BX_OBJS) $(SIMX86_OBJS) \
+-		@IODEV_LIB_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+-		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
+-		@GDBSTUB_VAR@ \
+-		$(FPU_LIB) \
+-		$(GUI_LINK_OPTS) \
+-		$(MCH_LINK_FLAGS) \
+-		$(SIMX86_LINK_FLAGS) \
+-		$(READLINE_LIB) \
+-		$(EXTRA_LINK_OPTS) \
+-		$(LIBS)
++.win32_dll_plugin_target: $(PRIMARY_TARGET_PREREQS)
++	$(DLLTOOL) --output-def bochs.def $(PRIMARY_TARGET_OBJS)
+ 	$(DLLTOOL) --dllname bochs.exe --def bochs.def --output-lib dllexports.a
+ 	$(DLLTOOL) --dllname bochs.exe --output-exp bochs.exp --def bochs.def
+-	$(CXX) -o bochs.exe $(CXXFLAGS) $(LDFLAGS) -export-dynamic \
+-	    $(BX_OBJS) bochs.exp $(SIMX86_OBJS) \
+-		@IODEV_LIB_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+-		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
+-		@GDBSTUB_VAR@ \
+-		$(FPU_LIB) \
+-		$(GUI_LINK_OPTS) \
+-		$(MCH_LINK_FLAGS) \
+-		$(SIMX86_LINK_FLAGS) \
+-		$(READLINE_LIB) \
+-		$(EXTRA_LINK_OPTS) \
+-		$(LIBS)
++	$(CXX) -o bochs.exe $(PRIMARY_TARGET_LDFLAGS) bochs.exp $(PRIMARY_TARGET_OBJS)
+ 	touch .win32_dll_plugin_target
+ 
+ bochs_plugins:
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure.in,v
+retrieving revision 1.157
+diff -u -r1.157 configure.in
+--- configure.in	28 Oct 2002 05:49:42 -0000	1.157
++++ configure.in	28 Oct 2002 08:17:09 -0000
+@@ -1367,7 +1367,7 @@
+       # use cdrom_osx
+       AC_MSG_RESULT(Using OSX IOKit CD Interface)	
+       CDROM_OBJS="cdrom_osx.o"
+-      EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -framework IOKit -framework CoreFoundation"
++      DEVICE_LINK_FLAGS="${DEVICE_LINK_FLAGS} -framework IOKit -framework CoreFoundation"
+     fi
+     case $target in
+       *-beos*)
+@@ -1407,7 +1407,7 @@
+          SB16_OBJS='$(SB16_WIN_OBJS)'
+          AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
+          AC_MSG_RESULT(win)
+-		 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
++		 DEVICE_LINK_LIBS="$DEVICE_LINK_LIBS -lwinmm"
+          ;;
+        *)
+          echo " "
+@@ -1629,7 +1629,7 @@
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_X11)"
+   GUI_CFLAGS="$GUI_CFLAGS \$(X_CFLAGS)"
+   GUI_CXXFLAGS="$GUI_CXXFLAGS \$(X_CFLAGS)"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_X)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_LIBS_X)"
+   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
+ fi
+ 
+@@ -1637,7 +1637,7 @@
+   display_libs="$display_libs beos"
+   AC_DEFINE(BX_WITH_BEOS, 1)
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_BEOS)"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_BEOS)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_LIBS_BEOS)"
+ fi
+ 
+ if test "$with_sdl" = yes; then
+@@ -1648,21 +1648,21 @@
+   # the files in gui/*.cc.
+   GUI_CFLAGS="$GUI_CFLAGS \`sdl-config --cflags\`"
+   GUI_CXXFLAGS="$GUI_CXXFLAGS \`sdl-config --cflags\`"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
++  GUI_LINK_FLAGS="$GUI_LINK_FLAGS \$(GUI_LINK_FLAGS_SDL)"
+ fi
+ 
+ if test "$with_rfb" = yes; then
+   display_libs="$display_libs rfb"
+   AC_DEFINE(BX_WITH_RFB, 1)
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_RFB)"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_RFB)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_LIBS_RFB)"
+ fi
+ 
+ if test "$with_amigaos" = yes; then
+   display_libs="$display_libs amigaos"
+   AC_DEFINE(BX_WITH_AMIGAOS, 1)
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_AMIGAOS)"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_AMIGAOS)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_LIBS_AMIGAOS)"
+ fi
+ 
+ if test "$with_win32" = yes; then
+@@ -1671,10 +1671,10 @@
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WIN32)"
+   case $target in
+     *-pc-windows*)
+-       GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32_VCPP)"
++       GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_LIBS_WIN32_VCPP)"
+        ;;
+     *-cygwin* | *-mingw32*)
+-       GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32)"
++       GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_LIBS_WIN32)"
+        ;;
+     *) echo Unsupported compile setup: GUI library is win32, but target is neither windows nor cygwin.
+        ;;
+@@ -1685,14 +1685,14 @@
+   display_libs="$display_libs macos"
+   AC_DEFINE(BX_WITH_MACOS, 1)
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_MACOS)"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_MACOS)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_LIBS_MACOS)"
+ fi
+ 
+ if test "$with_carbon" = yes; then
+   display_libs="$display_libs carbon"
+   AC_DEFINE(BX_WITH_CARBON, 1)
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_CARBON)"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_CARBON)"
++  GUI_LINK_FLAGS="$GUI_LINK_FLAGS \$(GUI_LINK_FLAGS_CARBON)"
+   PRIMARY_TARGET=bochs.app/.build   # only for carbon application
+ fi
+ 
+@@ -1700,7 +1700,7 @@
+   display_libs="$display_libs term"
+   AC_DEFINE(BX_WITH_TERM, 1)
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_TERM)"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_TERM)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_FLAGS_TERM)"
+   use_curses=yes
+ fi
+ 
+@@ -1720,7 +1720,7 @@
+   SPECIFIC_GUI_SUPPORT_OBJS="$SPECIFIC_GUI_SUPPORT_OBJS \$(GUI_OBJS_WX_SUPPORT)"
+   WX_CFLAGS="\`$WX_CONFIG --cflags\`"
+   WX_CXXFLAGS="\`$WX_CONFIG --cxxflags\`"
+-  GUI_LINK_OPTS_WX="\`$WX_CONFIG --libs\`"
++  GUI_LINK_FLAGS_WX="\`$WX_CONFIG --libs\`"
+   # if gtk-config exists, then add it to the cflags.
+   gtkconf=`gtk-config --cflags`
+   if test $? = 0; then
+@@ -1733,13 +1733,13 @@
+   # such as bximage.
+   GUI_CFLAGS="$GUI_CFLAGS $WX_CFLAGS"
+   GUI_CXXFLAGS="$GUI_CXXFLAGS $WX_CXXFLAGS"
+-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WX)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_FLAGS_WX)"
+   # using debugger with readline is failing due to thread/signal handler
+   # problems.
+   case $target in
+     *-pc-windows* | *-cygwin* | *-mingw32*)
+        EXTRA_BX_OBJS="$EXTRA_BX_OBJS wxbochs_resources.o"
+-	   GUI_LINK_OPTS_WX="$GUI_LINK_OPTS_WX --subsystem,windows -mwindows"
++	   GUI_LINK_FLAGS_WX="$GUI_LINK_FLAGS_WX --subsystem,windows -mwindows"
+        ;;
+   esac
+ fi
+@@ -1748,6 +1748,7 @@
+   display_libs="$display_libs nogui"
+   AC_DEFINE(BX_WITH_NOGUI, 1)
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_NOGUI)"
++  GUI_LINK_LIBS="$GUI_LINK_LIBS \$(GUI_LINK_FLAGS_TERM)"
+ fi
+ 
+ AC_MSG_CHECKING(for display libraries)
+@@ -1786,6 +1787,7 @@
+ 
+ AC_SUBST(GUI_CFLAGS)
+ AC_SUBST(GUI_CXXFLAGS)
++AC_SUBST(GUI_LINK_FLAGS)
+ AC_SUBST(WX_CONFIG)
+ AC_SUBST(WX_CFLAGS)
+ AC_SUBST(WX_CXXFLAGS)
+@@ -1845,15 +1847,17 @@
+ 	  PRIMARY_TARGET=".win32_dll_plugin_target"
+ 	  PLUGIN_LIBNAME_TRANSFORMATION='%.o=%.dll'
+       INSTALL_PLUGINS_VAR=install_dll_plugins
++	else
++	  PRIMARY_TARGET=".win32_noplugin_target"
+ 	fi
+     ;;
+ esac 
+ 
+ if test "$use_curses" = yes -a "$cross_configure" = 0; then
+-  AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
+-  AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM='-lncurses')
+-  AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM='-ltermlib')
+-  if test "$GUI_LINK_OPTS_TERM" = ""; then
++  AC_CHECK_LIB(curses, mvaddch, GUI_LINK_FLAGS_TERM='-lcurses')
++  AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_FLAGS_TERM='-lncurses')
++  AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_FLAGS_TERM='-ltermlib')
++  if test "$GUI_LINK_FLAGS_TERM" = ""; then
+     echo Curses library not found: tried curses, ncurses, and termlib.
+     exit 1
+   fi
+@@ -1861,7 +1865,7 @@
+ 
+ if test "$with_term" = yes; then
+   old_LIBS="$LIBS"
+-  LIBS="$LIBS $GUI_LINK_OPTS_TERM"
++  LIBS="$LIBS $GUI_LINK_FLAGS_TERM"
+   AC_CHECK_FUNCS(color_set, AC_DEFINE(BX_HAVE_COLOR_SET, 1))
+   LIBS="$old_LIBS"
+ fi
+@@ -2109,10 +2113,10 @@
+ AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
+ AC_SUBST(RFB_LIBS)
+ AC_SUBST(GUI_OBJS)
+-AC_SUBST(DEVICE_LINK_OPTS)
+-AC_SUBST(GUI_LINK_OPTS)
+-AC_SUBST(GUI_LINK_OPTS_TERM)
+-AC_SUBST(GUI_LINK_OPTS_WX)
++AC_SUBST(DEVICE_LINK_LIBS)
++AC_SUBST(GUI_LINK_LIBS)
++AC_SUBST(GUI_LINK_FLAGS_TERM)
++AC_SUBST(GUI_LINK_FLAGS_WX)
+ AC_SUBST(DASH)
+ AC_SUBST(SLASH)
+ AC_SUBST(CXXFP)
+@@ -2131,7 +2135,7 @@
+ AC_SUBST(VERSION)
+ AC_SUBST(VER_STRING)
+ AC_SUBST(REL_STRING)
+-AC_SUBST(EXTRA_LINK_OPTS)
++AC_SUBST(EXTRA_LINK_LIBS)
+ AC_SUBST(GUI_NON_PLUGIN_OBJS)
+ AC_SUBST(GUI_PLUGIN_OBJS)
+ AC_SUBST(IODEV_NON_PLUGIN_OBJS)
