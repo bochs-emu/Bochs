@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.62 2003-07-04 17:11:37 vruppert Exp $
+// $Id: wx.cc,v 1.63 2003-07-12 23:03:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -958,6 +958,20 @@ UpdateScreen(unsigned char *newBits, int x, int y, int width, int height)
           if(y >= wxScreenY) break;
         }
         break;
+      case 15:
+        for(int i = 0; i < height; i++) {
+          char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
+          for(int c = 0; c < width; c++) {
+            unsigned pixel = (i * width) + c;
+            pwxScreen[0] = (newBits16[pixel] & 0x7c00) >> 7;
+            pwxScreen[1] = (newBits16[pixel] & 0x03e0) >> 2;
+            pwxScreen[2] = (newBits16[pixel] & 0x001f) << 3;
+            pwxScreen += 3;
+          }
+          y++;
+          if(y >= wxScreenY) break;
+        }
+        break;
       default: /* 8 bpp */
         for(int i = 0; i < height; i++) {
           char *pwxScreen = &wxScreen[(y * wxScreenX * 3) + (x * 3)];
@@ -1217,7 +1231,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   wxScreen_lock.Enter ();
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen)));
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
-  if ((bpp == 8) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
+  if ((bpp == 8) || (bpp == 15) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
     if (bpp == 32) BX_INFO(("wxWindows ignores bit 24..31 in 32bpp mode"));
     vga_bpp = bpp;
   }
