@@ -34,54 +34,68 @@
          <tgroup cols=2 align=left colsep=1 rowsep=1>
          <tbody>
          <row>
-            <entry>Unix/X11</entry><entry>This is my main development platform.</entry>
+            <entry>Unix/X11</entry>
+            <entry>This is my main development platform.</entry>
          </row>
          <row>
-            <entry>BeOS</entry><entry>I also did this port, originally to R3/PPC using CodeWarrior.
+            <entry>BeOS</entry>
+            <entry>I also did this port, originally to R3/PPC using CodeWarrior.
             It now works on R4/x86 with egcs. Simon Huet picked up
-            maintaining/reworking the BeOS GUI port. Check out Simon's BeBochs page.
+            maintaining/reworking the BeOS GUI port. Check out Simon's 
+            BeBochs page.
             </entry>
          </row>
 
          <row>
-            <entry>Win32</entry><entry> This port was done by David Ross. I've enhanced the build process
+            <entry>Win32</entry>
+            <entry> This port was done by David Ross. I've enhanced
+            the build process
             for Win32. You can compile with either the MS Visual C++ 5.0
             or GNU-Win32 environments. Go to Compiling Bochs on Win32 </entry>
          </row>
 
          <row>
-            <entry>OS/2</entry><entry> Nick Behnken used PE2LX to translate David Ross's Win32
-            port to an OS/2 program. Check out Nick Behnken's page. </entry>
+            <entry>OS/2</entry>
+            <entry> Nick Behnken used PE2LX to translate David Ross's Win32
+            port to an OS/2 program. Check out Nick Behnken's page. 
+            </entry>
          </row>
          <row>
-            <entry>OS/2</entry><entry> Craig Ballantyne ported bochs to OS/2. I will integrate this back
+            <entry>OS/2</entry>
+            <entry> Craig Ballantyne ported bochs to OS/2. I will 
+            integrate this back
             into the main bochs source soon. Check out the guiSoft Corp.
             home page.
             </entry>
          </row>
 
          <row>
-            <entry>Macintosh</entry><entry>David Batterham drbatter@socs.uts.edu.au or
+            <entry>Macintosh</entry>
+            <entry>David Batterham drbatter@socs.uts.edu.au or
             drbatter@yahoo.com ported bochs to the Mac. His changes are
-            integrated, though it is work in progress. He compiled with CodeWarrior
-            Pro R1 (CW12), and included a project file 'Bochs.proj' in the top-level
+            integrated, though it is work in progress. 
+            He compiled with CodeWarrior
+            Pro R1 (CW12), and included a project file 'Bochs.proj'
+            in the top-level
             directory of source code, which you may need to modify. I
             added a '--with-macos' option to configure, so you can use a Unix
             machine to generate header files for the Mac. Check out David's
             MacBochs website. David has not had time to maintain the page or the
-            Mac port since early 2000. If you have Mac development tools and want
+            Mac port since early 2000. If you have Mac 
+            development tools and want
             to contribute, contact the developers list. </entry>
          </row>
          <row>
-            <entry>FreeDOS for Bochs</entry><entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
+            <entry>FreeDOS for Bochs</entry>
+            <entry> David Batterham also offers information on running FreeDOS inside of bochs. You can download a disk image with a pre-installed copy of FreeDOS, a completely free DOS-like operating system. Check out his website at http://members.xoom.com/macbochs/freedos.html.
             For more info about FreeDOS, see FreeDOS Web page</entry>
          </row>
          </tbody>
          </tgroup>
       </table>
-    <para>
-    There's more! You can find more detailed testing information on the testing status page on bochs.sourceforge.net.
-    </para>
+      <para>
+      There's more! You can find more detailed testing information on the testing status page on bochs.sourceforge.net.
+      </para>
 
    </section>
 
@@ -91,7 +105,7 @@
        much thanks to <ulink url="http://www.linux-mandrake.com">MandrakeSoft</ulink>, makers
        of the Linux-Mandrake distribution.
       </para>
-   </section
+   </section>
 </chapter>
 
 <!-- *************************************************************** -->
@@ -124,6 +138,79 @@
        </para>
      </answer>
   </qandaentry>
+
+  <qandaentry>
+     <question>
+       <para>How do you pronounce "bochs"?</para>
+     </question>
+     <answer>
+       <para>
+       Phonetically the same as the English word "box". It's just a play on the word "box", since techies like to call their machines a "Linux box", "Windows box", ... Bochs emulates a box inside a box. 
+       </para>
+     </answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question>
+       <para>Who is the author of bochs?</para>
+     </question>
+     <answer>
+       <para>
+       Kevin Lawton is the primary author of bochs. There have been bug fixes, enhancements, and code contributions from some few hundred people, so it is not possible to list them all. Kevin is presently working on a PC virtualization project called <ulink url="http://www.plex86.org">plex86</ulink> and no longer maintain bochs.
+       </para>
+     </answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Who maintains bochs now?
+     </para></question>
+     <answer><para>
+      With Kevin's help, in April 2001, the members of the bochs-developers mailing list set up a new official bochs site hosted by <ulink url="http://sourcefourge.net">Source Forge</ulink>. The current admins on this project are Bryce Denney and Greg Alexander.
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Tell me about peformance when running bochs?
+     </para></question>
+     <answer><para>
+     Because Bochs emulates every x86 instruction and all the devices in a PC system, it does not reach high emulation speeds. Kevin reported approximately 1.5MIPS using bochs on a 400Mhz PII Linux machine. Users who have an x86 processor and want the highest emulation speeds may want to consider PC virtualization sotware uch as plex86 (free) or vmware (commercial). 
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Does bochs use a disk partition to install the OS? 
+     </para></question>
+     <answer><para>
+     No. You use a disk image file, which is simply a large file, like any other file, on your platform's disk. 
+     </para></answer>
+  </qandaentry>
+
+  <qandaentry>
+     <question><para>
+     Why can't I use Bochs with my current Win95 installation? 
+     </para></question>
+     <answer><para>
+     Think about this. If you had two different PC's, they would require different hardware drivers. So you may not be able to safely move a disk drive with Win95 on it, from one to the other. Bochs is no different. It emulates a certain set of hardware devices, and requires each OS be configured for those devices. 
+     </para></answer>
+  </qandaentry>
+
+<!-- ......................................................
+     A blank question to fill in copy and paste to create
+     a new entry (8 lines to yank)
+     ......................................................
+  <qandaentry>
+     <question><para>
+     Question is put here
+     </para></question>
+     <answer><para>
+       Answer is put here. 
+     </para></answer>
+  </qandaentry>
+-->
+
 </qandaset>
 </chapter>
 

@@ -13,13 +13,13 @@ all:
 	#each book needs it own directory 
 	# or there will be a naming conflict 
 	mkdir user
-	cd user; docbook2html ../user.dbk
+	docbook2html -o user user.dbk
 
 	mkdir documentation
-	cd documentation; docbook2html ../documentation.dbk
+	docbook2html -o documentation documentation.dbk
 
 	mkdir development
-	cd development; docbook2html ../development.dbk
+	docbook2html -o development development.dbk
 
 clean:
 	#remove html files
