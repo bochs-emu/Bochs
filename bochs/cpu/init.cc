@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.65 2005-01-13 19:03:38 sshwarts Exp $
+// $Id: init.cc,v 1.66 2005-01-13 19:18:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.65 2005-01-13 19:03:38 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.66 2005-01-13 19:18:27 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -780,6 +780,7 @@ void BX_CPU_C::reset(unsigned source)
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = APIC_BASE_ADDR;
 #if BX_SUPPORT_APIC
+  BX_CPU_THIS_PTR local_apic.init ();
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
 #else
   BX_CPU_THIS_PTR msr.apicbase |= 0x100;
