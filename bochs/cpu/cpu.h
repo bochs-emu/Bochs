@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.14 2001-10-03 13:10:37 bdenney Exp $
+// $Id: cpu.h,v 1.15 2001-10-03 19:53:48 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -804,6 +804,7 @@ public: // for now...
 #endif
   Bit8u stop_reason;
   Bit8u trace;
+  Bit8u trace_reg;
   Bit8u mode_break;		/* BW */
   Boolean debug_vm;		/* BW contains current mode*/
   Bit8u show_eip;		/* BW record eip at special instr f.ex eip */
