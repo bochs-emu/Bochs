@@ -780,6 +780,12 @@ main(int argc, char *argv[])
 
   SIM->set_init_done (1);
 
+  // The set handler for mouse_enabled does not actually update the gui
+  // until init_done is set.  This forces the set handler to be called,
+  // which sets up the mouse enabled GUI-specific stuff correctly.
+  // Not a great solution but it works. BBD
+  bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get ());
+
   if (BX_SMP_PROCESSORS == 1) {
     // only one processor, run as fast as possible by not messing with
     // quantums and loops.
