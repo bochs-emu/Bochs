@@ -169,8 +169,8 @@ Currently the callbacks are not supported in case of guest-to-host-tlb feature
 enabled.
 
 
-	void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
 	void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
+	void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
 
 These callback functions are a feedback from external memory system.
 
@@ -181,3 +181,18 @@ These callback functions are a feedback from external memory system.
 	void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val);
 
 These callback functions are a feedback from various system devices.
+
+-----------------------------------------------------------------------------
+Known problems:
+
+1. BX_INSTR_MEM_DATA callback doesn't work for RMW requests 
+   (substitutes physical address instead of linear).
+2. BX_INSTR_MEM_CODE never called from Bochs's code.
+3. BX_INSTR_LIN_READ doesn't work when Guest-To-Host-TLB feature is enabled.
+4. BX_INSTR_LIN_WRITE doesn't work when Guest-To-Host-TLB feature is enabled.
+
+
+Feature requests:
+
+1. BX_INSTR_CNEAR_BRANCH_NOT_TAKEN callback should have an additional 
+   'not taken' new_EIP parameter.
