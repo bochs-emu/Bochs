@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.25 2002-08-27 19:54:46 bdenney Exp $
+// $Id: serial.cc,v 1.26 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -163,11 +163,11 @@ bx_serial_c::init(bx_devices_c *d)
 
     BX_SER_THIS s[i].tx_timer_index =
       bx_pc_system.register_timer(this, tx_timer_handler, 0,
-				  0,0); // one-shot, inactive
+				  0,0, "serial.tx"); // one-shot, inactive
 
     BX_SER_THIS s[i].rx_timer_index =
       bx_pc_system.register_timer(this, rx_timer_handler, 0,
-				  0,0); // one-shot, inactive
+				  0,0, "serial.rx"); // one-shot, inactive
     BX_SER_THIS s[i].rx_pollstate = BX_SER_RXIDLE;
 
     /* int enable: b0000 0000 */

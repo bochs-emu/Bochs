@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.70 2002-09-28 06:29:55 ptrumpet Exp $
+// $Id: dbg_main.cc,v 1.71 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -790,7 +790,7 @@ bx_dbg_timebp_command(Boolean absolute, Bit64u time)
       } else {
 	    timebp_queue_size = 1;
 	    timebp_queue[0] = abs_time;
-	    timebp_timer = bx_pc_system.register_timer_ticks(&bx_pc_system, bx_pc_system_c::timebp_handler, diff, 0, 1);
+	    timebp_timer = bx_pc_system.register_timer_ticks(&bx_pc_system, bx_pc_system_c::timebp_handler, diff, 0, 1, "debug.timebp");
       }
 
       dbg_printf ( "Time breakpoint inserted. Delta = %d\n", diff);
@@ -1258,7 +1258,7 @@ enter_playback_entry()
 	    if (playback_timer_index >= 0)
 		  bx_pc_system.activate_timer_ticks(playback_timer_index, diff, 0);
 	    else
-		  playback_timer_index = bx_pc_system.register_timer_ticks(&playback_entry, playback_function, diff, 0, 1);
+		  playback_timer_index = bx_pc_system.register_timer_ticks(&playback_entry, playback_function, diff, 0, 1, "debug.playback");
       }
 }
 

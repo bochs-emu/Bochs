@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.12 2002-09-22 14:58:49 bdenney Exp $
+// $Id: eth_win32.cc,v 1.13 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -301,7 +301,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(const char *netif,
      if((pkRecv = PacketAllocatePacket()) == NULL) {
            BX_PANIC(("Could not allocate a recv packet"));
      }
-     rx_timer_index = bx_pc_system.register_timer(this, this->rx_timer_handler, 10000, 1, 1);
+     rx_timer_index = bx_pc_system.register_timer(this, this->rx_timer_handler, 10000, 1, 1, "eth_win32");
 }
 
 void

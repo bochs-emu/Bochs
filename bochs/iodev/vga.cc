@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.42 2002-09-22 11:31:48 japj Exp $
+// $Id: vga.cc,v 1.43 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -195,7 +195,7 @@ bx_vga_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 
   BX_INFO(("interval=%lu", bx_options.Ovga_update_interval->get ()));
   BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, timer_handler,
-     bx_options.Ovga_update_interval->get (), 1, 1);
+     bx_options.Ovga_update_interval->get (), 1, 1, "vga");
 
   cmos->s.reg[0x14] = (cmos->s.reg[0x14] & 0xcf) | 0x00; /* video card with BIOS ROM */
 

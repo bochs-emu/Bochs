@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.32 2002-09-22 02:29:59 bdenney Exp $
+// $Id: devices.cc,v 1.33 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,7 +85,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.32 2002-09-22 02:29:59 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.33 2002-10-02 05:16:01 kevinlawton Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -229,7 +229,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   cmos->checksum_cmos();
 
   timer_handle = bx_pc_system.register_timer( this, timer_handler,
-    (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1);
+    (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
 
   // Clear fields for bulk IO acceleration transfers.
   bulkIOHostAddr = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.20 2002-09-02 16:56:24 bdenney Exp $
+// $Id: eth_fbsd.cc,v 1.21 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -255,7 +255,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // Start the rx poll 
   this->rx_timer_index = 
     bx_pc_system.register_timer(this, this->rx_timer_handler, BX_BPF_POLL,
-				1, 1); // continuous, active
+				1, 1, "eth_fbsd"); // continuous, active
 
   this->rxh   = rxh;
   this->rxarg = rxarg;

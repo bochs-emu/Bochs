@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: eth_arpback.cc,v 1.7 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,7 @@ bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
 {
   this->rx_timer_index = 
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-				1, 1); // continuous, active
+				1, 1, "eth_arpback"); // continuous, active
   this->rxh   = rxh;
   this->rxarg = rxarg;
   //bufvalid=0;

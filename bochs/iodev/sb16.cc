@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.22 2002-08-27 19:54:46 bdenney Exp $
+// $Id: sb16.cc,v 1.23 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -242,15 +242,15 @@ void bx_sb16_c::init(bx_devices_c *d)
 
   // initialize the timers
   MPU.timer_handle = bx_pc_system.register_timer
-    (BX_SB16_THISP, mpu_timer, 500000 / 384, 1, 1);
+    (BX_SB16_THISP, mpu_timer, 500000 / 384, 1, 1, "sb16.mpu");
       // midi timer: active, continuous, 500000 / 384 seconds (384 = delta time, 500000 = sec per beat at 120 bpm. Don't change this!)
 
   DSP.timer_handle = bx_pc_system.register_timer
-    (BX_SB16_THISP, dsp_dmatimer, 1, 1, 0);
+    (BX_SB16_THISP, dsp_dmatimer, 1, 1, 0, "sb16.dsp");
       // dma timer: inactive, continous, frequency variable
 
   OPL.timer_handle = bx_pc_system.register_timer
-    (BX_SB16_THISP, opl_timer, 80, 1, 0);
+    (BX_SB16_THISP, opl_timer, 80, 1, 0, "sb16.opl");
       // opl timer: inactive, continuous, frequency 80us
 
   writelog(MIDILOG(4), "Timers initialized, midi %d, dma %d, opl %d",

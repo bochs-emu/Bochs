@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.14 2002-09-30 17:32:34 kevinlawton Exp $
+// $Id: pc_system.h,v 1.15 2002-10-02 05:16:01 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -106,7 +106,7 @@ public:
 
   void   init_ips(Bit32u ips);
   int    register_timer( void *this_ptr, bx_timer_handler_t, Bit32u useconds,
-                         Boolean continuous, Boolean active);
+                         Boolean continuous, Boolean active, const char *id);
   void   start_timers(void);
   void   activate_timer( unsigned timer_index, Bit32u useconds,
                          Boolean continuous );
@@ -140,7 +140,7 @@ public:
       }
     }
 
-  int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks, Boolean continuous, Boolean active);
+  int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks, Boolean continuous, Boolean active, const char *id);
   void activate_timer_ticks(unsigned index, Bit64u instructions, Boolean continuous);
   Bit64u time_usec();
   Bit64u time_ticks();

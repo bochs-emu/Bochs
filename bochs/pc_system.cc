@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.24 2002-09-30 17:32:34 kevinlawton Exp $
+// $Id: pc_system.cc,v 1.25 2002-10-02 05:16:00 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ bx_pc_system_c::init_ips(Bit32u ips)
 #endif
 
   counter = 0;
-  counter_timer_index = register_timer_ticks(this, bx_pc_system_c::counter_timer_handler, COUNTER_INTERVAL, 1, 1);
+  counter_timer_index = register_timer_ticks(this, bx_pc_system_c::counter_timer_handler, COUNTER_INTERVAL, 1, 1, "pc_system");
 
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
@@ -300,7 +300,7 @@ for (unsigned j=0; j<num_timers; j++) {
 
   int
 bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
-  Bit32u useconds, Boolean continuous, Boolean active)
+  Bit32u useconds, Boolean continuous, Boolean active, const char *id)
 {
   Bit64u instructions;
 
@@ -320,11 +320,12 @@ bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
   instructions = (Bit64u) (double(useconds) * m_ips);
   if((useconds!=0) && (instructions==0)) instructions = 1;
 
-  return register_timer_ticks(this_ptr, funct, instructions, continuous, active);
+  return register_timer_ticks(this_ptr, funct, instructions, continuous, active,
+      id);
 }
 
   int
-bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct, Bit64u instructions, Boolean continuous, Boolean active)
+bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct, Bit64u instructions, Boolean continuous, Boolean active, const char *id)
 {
   unsigned i;
 
