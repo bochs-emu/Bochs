@@ -23,14 +23,17 @@
 
 extern "C" {
 #include <signal.h>
-#ifdef USE_READLINE
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
 }
 
 #include "bochs.h"
+
+#if USE_READLINE
+extern "C" {
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+}
+#endif
 
 static unsigned doit = 0;
 
@@ -3254,6 +3257,129 @@ bx_dbg_info_dirty_command(void)
       page_tbl[i] = 0; // reset to clean
       }
     }
+}
+
+void bx_dbg_print_descriptor (FILE *fp, unsigned char desc[8])
+{
+  int lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
+  int hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
+  fprintf (fp, "descriptor hi,lo = %08x,%08x\n", hi, lo);
+  int base = ((lo >> 16) & 0xffff)
+             | ((hi << 16) & 0xff0000)
+             | (hi & 0xff000000);
+  int limit = (lo & 0xffff);
+  int segment = (lo >> 16) & 0xffff;
+  int offset = (lo & 0xffff) | (hi & 0xffff0000);
+  int type = (hi >> 8) & 0x0f;
+  int dpl = (hi >> 13) & 0x03;
+  int s = (hi >> 12) & 0x01;
+  int present = (hi >> 15) & 0x01;
+  int avl = (hi >> 20) & 0x01;
+  int d_b = (hi >> 22) & 0x01;
+  int g = (hi >> 23) & 0x01;
+  int base_is_jump_addr;
+#if 0
+  if (!present) {
+    fprintf (fp, "P=present=0\n");
+    return;
+  }
+#endif
+  if (s) {
+    // either a code or a data segment. bit 11 (type file MSB) then says 
+    // 0=data segment, 1=code seg
+    if (type&8) {
+      fprintf (fp, "Segment type: Code, %s%s%s\n",
+	(type&2)? "Execute/Read" : "Execute-Only",
+	(type&4)? ", Conforming" : "",
+	(type&1)? ", Accessed" : "");
+      fprintf (fp, "D flag=%d (use %d-bit addresses, %d-bit or 8-bit operands)\n", d_b, d_b? 32 : 16);
+    } else {
+      fprintf (fp, "Segment type: Data, %s%s%s\n",
+	(type&2)? "Read/Write" : "Read-Only",
+	(type&4)? ", Expand-down" : "",
+	(type&1)? ", Accessed" : "");
+    }
+  } else {
+    // types from IA32-devel-guide-3, page 3-15.
+    static char *type_names[16] = { "Reserved", "16-Bit TSS (available)", "LDT", "16-Bit TSS (Busy)", "16-Bit Call Gate", "Task Gate", "16-Bit Interrupt Gate", "16-Bit Trap Gate", "Reserved", "32-Bit TSS (Available)", "Reserved", "32-Bit TSS (Busy)", "32-Bit Call Gate", "Reserved", "32-Bit Interrupt Gate", "32-Bit Trap Gate" };
+    // some kind of gate?
+    fprintf (fp, "System segment, type=0x%x=%s\n", type, type_names[type]);
+    base_is_jump_addr = 1;
+    // for call gates, print segment:offset and parameter count p.40-15
+    // for task gate, only present,dpl,TSS segment selector exist. p.5-13
+    // for interrupt gate, segment:offset,p,dpl
+    // for trap gate, segment:offset,p,dpl
+  }
+  fprintf (fp, "DPL=descriptor privilege level=%d\n", dpl);
+  if (base_is_jump_addr) {
+    fprintf (fp, "target address=%04x:%08x\n", segment, offset);
+  } else {
+    fprintf (fp, "base address=%p\n", base);
+    fprintf (fp, "G=granularity=%d\n", g);
+    fprintf (fp, "limit=0x%x %s (see G)\n", limit, g?"4K-byte units" : "bytes");
+    fprintf (fp, "AVL=available to OS=%d\n", avl);
+  }
+  fprintf (fp, "P=present=%d\n", present);
+}
+
+void
+bx_dbg_info_idt_command(void) {
+  bx_dbg_cpu_t cpu;
+  bx_dbg_callback[0].get_cpu(&cpu);
+  int intr_max = (cpu.idtr.limit + 1) / 8;
+  Bit32u paddr, paddr_valid;
+  bx_dbg_callback[0].xlate_linear2phy(cpu.idtr.base, &paddr, &paddr_valid);
+  if (!paddr_valid) {
+    fprintf (stderr, "error: IDTR register points to invalid linear address %p\n", cpu.idtr.base);
+    return;
+  }
+  unsigned char entry[8];
+  fprintf (stderr, "Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
+  for (int intr=0; intr<intr_max; intr++) {
+    // read 8-byte entry from IDT
+    bx_dbg_callback[0].getphymem (paddr, 8, entry);
+    // it could be a task-gate descriptor, interrupt-gate descriptor, or trap-gate descriptor.
+    fprintf (stderr, "IDT[%d]=", intr);
+    bx_dbg_print_descriptor (stderr, entry);
+    paddr+=8;
+  }
+}
+
+void
+bx_dbg_info_gdt_command(void) {
+  bx_dbg_cpu_t cpu;
+  bx_dbg_callback[0].get_cpu(&cpu);
+  int gdt_max = (cpu.gdtr.limit + 1) / 8;
+  Bit32u paddr, paddr_valid;
+  bx_dbg_callback[0].xlate_linear2phy(cpu.gdtr.base, &paddr, &paddr_valid);
+  if (!paddr_valid) {
+    fprintf (stderr, "error: GDTR register points to invalid linear address %p\n", cpu.gdtr.base);
+    return;
+  }
+  unsigned char entry[8];
+  fprintf (stderr, "Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
+  for (int i=0; i<gdt_max; i++) {
+    // read 8-byte entry from GDT
+    bx_dbg_callback[0].getphymem (paddr, 8, entry);
+    // it could be a task-gate descriptor, interrupt-gate descriptor, or trap-gate descriptor.
+    fprintf (stderr, "\nIDT[%d]=", i);
+    bx_dbg_print_descriptor (stderr, entry);
+    paddr+=8;
+  }
+}
+
+void
+bx_dbg_info_ldt_command(void) {
+  bx_dbg_cpu_t cpu;
+  bx_dbg_callback[0].get_cpu(&cpu);
+  fprintf (stderr, "Local Descriptor Table output not implemented\n");
+}
+
+void
+bx_dbg_info_tss_command(void) {
+  bx_dbg_cpu_t cpu;
+  bx_dbg_callback[0].get_cpu(&cpu);
+  fprintf (stderr, "TSS output not implemented\n");
 }
 
   void
