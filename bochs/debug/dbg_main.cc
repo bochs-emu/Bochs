@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.108 2003-08-12 11:23:10 akrisak Exp $
+// $Id: dbg_main.cc,v 1.109 2003-08-24 10:30:07 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -5175,7 +5175,7 @@ bx_dbg_info_ivt_command(bx_num_range r)
       return;
     }
     for (i = r.from; i < r.to; i++)
-    { BX_MEM(simulator)->dbg_fetch_mem(cpu.idtr.base + i * 4, sizeof(buff), buff);
+    { BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + i * 4, sizeof(buff), buff);
 #ifdef BX_LITTLE_ENDIAN
       seg = *(Bit16u*)(&buff[2]);
       off = *(Bit16u*)(&buff[0]);
@@ -5183,7 +5183,7 @@ bx_dbg_info_ivt_command(bx_num_range r)
       seg = (buff[3] << 8) | buff[2];
       off = (buff[1] << 8) | buff[0];
 #endif
-      BX_MEM(simulator)->dbg_fetch_mem(cpu.idtr.base + ((seg << 4) + off), sizeof(buff), buff);
+      BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + ((seg << 4) + off), sizeof(buff), buff);
       dbg_printf("INT# %02x > %04X:%04X (%08X) %s%s\n", i, seg, off, cpu.idtr.base + ((seg << 4) + off), bx_dbg_ivt_desc(i), (buff[0] == 0xcf) ? " ; dummy iret" : "");
     }
     if (tail == 1) dbg_printf ( "You can list individual entries with 'info ivt NUM' or groups with 'info ivt NUM NUM'\n");

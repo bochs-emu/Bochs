@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.29 2003-08-04 16:03:09 akrisak Exp $
+// $Id: debugstuff.cc,v 1.30 2003-08-24 10:30:07 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -152,7 +152,7 @@ BX_CPU_C::debug(Bit32u offset)
   char    char_buf[256];
   unsigned isize;
 
-  if (BX_CPU(which_cpu)->protectedMode) { // 16bit & 32bit protected mode
+  if (BX_CPU_THIS_PTR protectedMode) { // 16bit & 32bit protected mode
    Base=BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base;
   }
   else {
