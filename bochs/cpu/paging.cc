@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.37 2002-11-04 05:27:25 ptrumpet Exp $
+// $Id: paging.cc,v 1.38 2002-11-04 05:38:12 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -980,7 +980,7 @@ page_fault_not_present:
 #if BX_SUPPORT_X86_64
   printf("page fault for address %08x%08x\n",(Bit32u)(laddr >> 32),(Bit32u)(laddr & 0xffffffff));
 #else
-  printf("page fault for address %08xx\n",(laddr >> 32));
+  printf("page fault for address %08x\n",laddr);
 #endif
 #endif
   exception(BX_PF_EXCEPTION, error_code, 0);
