@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.83 2002-09-27 07:01:01 kevinlawton Exp $
+// $Id: cpu.h,v 1.84 2002-09-27 09:56:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2977,6 +2977,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 #define BxGroup8          BxGroupN
 #define BxGroup9          BxGroupN
 #define BxGroupA          BxGroupN
+
+#if BX_SUPPORT_FPU
+#define BxAnotherFPU      BxAnother
+#else
+#define BxAnotherFPU      (0)
+#endif
 
 #if BX_SUPPORT_MMX
 #define BxAnotherMMX      BxAnother

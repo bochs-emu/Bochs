@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.21 2002-09-26 18:58:50 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.22 2002-09-27 09:56:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -600,14 +600,14 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* D5 */  { BxImmediate_Ib,  &BX_CPU_C::AAD },
   /* D6 */  { 0,  &BX_CPU_C::SALC },
   /* D7 */  { 0,  &BX_CPU_C::XLAT },
-  /* D8 */  { BxAnother,  &BX_CPU_C::ESC0 },
-  /* D9 */  { BxAnother,  &BX_CPU_C::ESC1 },
-  /* DA */  { BxAnother,  &BX_CPU_C::ESC2 },
-  /* DB */  { BxAnother,  &BX_CPU_C::ESC3 },
-  /* DC */  { BxAnother,  &BX_CPU_C::ESC4 },
-  /* DD */  { BxAnother,  &BX_CPU_C::ESC5 },
-  /* DE */  { BxAnother,  &BX_CPU_C::ESC6 },
-  /* DF */  { BxAnother,  &BX_CPU_C::ESC7 },
+  /* D8 */  { BxAnotherFPU,  &BX_CPU_C::ESC0 },
+  /* D9 */  { BxAnotherFPU,  &BX_CPU_C::ESC1 },
+  /* DA */  { BxAnotherFPU,  &BX_CPU_C::ESC2 },
+  /* DB */  { BxAnotherFPU,  &BX_CPU_C::ESC3 },
+  /* DC */  { BxAnotherFPU,  &BX_CPU_C::ESC4 },
+  /* DD */  { BxAnotherFPU,  &BX_CPU_C::ESC5 },
+  /* DE */  { BxAnotherFPU,  &BX_CPU_C::ESC6 },
+  /* DF */  { BxAnotherFPU,  &BX_CPU_C::ESC7 },
   /* E0 */  { BxImmediate_BrOff8,  &BX_CPU_C::LOOPNE_Jb },
   /* E1 */  { BxImmediate_BrOff8,  &BX_CPU_C::LOOPE_Jb },
   /* E2 */  { BxImmediate_BrOff8,  &BX_CPU_C::LOOP_Jb },
@@ -660,7 +660,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 08 */  { 0,  &BX_CPU_C::INVD },
   /* 0F 09 */  { 0,  &BX_CPU_C::WBINVD },
   /* 0F 0A */  { 0,  &BX_CPU_C::BxError },
-  /* 0F 0B */  { 0,  &BX_CPU_C::UndefinedOpcode }, /* UD2 undefined opcode */
+  /* 0F 0B */  { 0,  &BX_CPU_C::UndefinedOpcode }, /* UD2 opcode */
   /* 0F 0C */  { 0,  &BX_CPU_C::BxError },
   /* 0F 0D */  { 0,  &BX_CPU_C::BxError },
   /* 0F 0E */  { 0,  &BX_CPU_C::BxError },
@@ -1129,14 +1129,14 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* D5 */  { BxImmediate_Ib,  &BX_CPU_C::AAD },
   /* D6 */  { 0,  &BX_CPU_C::SALC },
   /* D7 */  { 0,  &BX_CPU_C::XLAT },
-  /* D8 */  { BxAnother,  &BX_CPU_C::ESC0 },
-  /* D9 */  { BxAnother,  &BX_CPU_C::ESC1 },
-  /* DA */  { BxAnother,  &BX_CPU_C::ESC2 },
-  /* DB */  { BxAnother,  &BX_CPU_C::ESC3 },
-  /* DC */  { BxAnother,  &BX_CPU_C::ESC4 },
-  /* DD */  { BxAnother,  &BX_CPU_C::ESC5 },
-  /* DE */  { BxAnother,  &BX_CPU_C::ESC6 },
-  /* DF */  { BxAnother,  &BX_CPU_C::ESC7 },
+  /* D8 */  { BxAnotherFPU,  &BX_CPU_C::ESC0 },
+  /* D9 */  { BxAnotherFPU,  &BX_CPU_C::ESC1 },
+  /* DA */  { BxAnotherFPU,  &BX_CPU_C::ESC2 },
+  /* DB */  { BxAnotherFPU,  &BX_CPU_C::ESC3 },
+  /* DC */  { BxAnotherFPU,  &BX_CPU_C::ESC4 },
+  /* DD */  { BxAnotherFPU,  &BX_CPU_C::ESC5 },
+  /* DE */  { BxAnotherFPU,  &BX_CPU_C::ESC6 },
+  /* DF */  { BxAnotherFPU,  &BX_CPU_C::ESC7 },
   /* E0 */  { BxImmediate_BrOff8,  &BX_CPU_C::LOOPNE_Jb },
   /* E1 */  { BxImmediate_BrOff8,  &BX_CPU_C::LOOPE_Jb },
   /* E2 */  { BxImmediate_BrOff8,  &BX_CPU_C::LOOP_Jb },
@@ -1189,7 +1189,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 08 */  { 0,  &BX_CPU_C::INVD },
   /* 0F 09 */  { 0,  &BX_CPU_C::WBINVD },
   /* 0F 0A */  { 0,  &BX_CPU_C::BxError },
-  /* 0F 0B */  { 0,  &BX_CPU_C::BxError },
+  /* 0F 0B */  { 0,  &BX_CPU_C::UndefinedOpcode }, /* UD2 opcode */
   /* 0F 0C */  { 0,  &BX_CPU_C::BxError },
   /* 0F 0D */  { 0,  &BX_CPU_C::BxError },
   /* 0F 0E */  { 0,  &BX_CPU_C::BxError },
