@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.102 2003-11-25 22:56:11 cbothamy Exp $
+// $Id: rombios.c,v 1.103 2003-12-18 16:48:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -877,7 +877,7 @@ static void           int74_function();
 //static Bit16u         get_DS();
 //static void           set_DS();
 static Bit16u         get_SS();
-static void           enqueue_key();
+static unsigned int   enqueue_key();
 static unsigned int   dequeue_key();
 static void           get_hd_geometry();
 static void           set_diskette_ret_status();
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.102 $";
-static char bios_date_string[] = "$Date: 2003-11-25 22:56:11 $";
+static char bios_cvs_version_string[] = "$Revision: 1.103 $";
+static char bios_date_string[] = "$Date: 2003-12-18 16:48:19 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.102 2003-11-25 22:56:11 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.103 2003-12-18 16:48:19 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3959,6 +3959,15 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
       SET_AL(shift_flags);
       break;
 
+    case 0x05: /* store key-stroke into buffer */
+      if ( !enqueue_key(GET_CH(), GET_CL()) ) {
+        SET_AL(1);
+        }
+      else {
+        SET_AL(0);
+        }
+      break;
+
     case 0x09: /* GET KEYBOARD FUNCTIONALITY */
       // bit Bochs Description     
       //  7    0   reserved
@@ -4346,7 +4355,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   mf2_state &= ~0x01;
 }
 
-  void
+  unsigned int
 enqueue_key(scan_code, ascii_code)
   Bit8u scan_code, ascii_code;
 {
@@ -4372,14 +4381,13 @@ enqueue_key(scan_code, ascii_code)
     buffer_tail = buffer_start;
 
   if (buffer_tail == buffer_head) {
-    BX_PANIC("KBD: dropped key scan=%02x, ascii=%02x\n",
-      (int) scan_code, (int) ascii_code);
-    return;
+    return(0);
     }
 
    write_byte(0x0040, temp_tail, ascii_code);
    write_byte(0x0040, temp_tail+1, scan_code);
    write_word(0x0040, 0x001C, buffer_tail);
+   return(1);
 }
 
 
