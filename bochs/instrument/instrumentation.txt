@@ -157,6 +157,20 @@ The  callback  is  called  each time, when Bochs simulator starts a new repeat
 iteration.
 
 
+	void bx_instr_before_execution(unsigned cpu);
+
+The  callback  is  called  each time, when Bochs simulator starts a new
+instruction execution. In case of repeat instruction the callback will
+be called only once before the first iteration will be started. 
+
+
+	void bx_instr_after_execution(unsigned cpu);
+
+The  callback  is  called  each time, when Bochs simulator finishes any
+instruction execution. In case of repeat instruction the callback will
+be called only once after all repeat iterations. 
+
+
 	void bx_instr_mem_code(unsigned cpu, bx_address linear, unsigned len);
 	void bx_instr_mem_data(unsigned cpu, bx_address linear, unsigned len, unsigned rw);
 

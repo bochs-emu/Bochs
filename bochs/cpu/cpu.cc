@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.80 2003-08-04 16:03:09 akrisak Exp $
+// $Id: cpu.cc,v 1.81 2003-10-09 19:05:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -300,11 +300,13 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
     if ( !(i->repUsedL() && i->repeatableL()) ) {
       // non repeating instruction
+      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
       RIP += i->ilen();
       BX_CPU_CALL_METHOD(execute, (i));
-
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID);
+
 #ifdef REGISTER_IADDR
       REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
@@ -313,13 +315,15 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
       }
 
     else {
+      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID);
+
 repeat_loop:
       if (i->repeatableZFL()) {
 #if BX_SUPPORT_X86_64
         if (i->as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
-            RCX -= 1;
+            RCX --;
             }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
           if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
@@ -331,7 +335,7 @@ repeat_loop:
         if (i->as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
-            ECX -= 1;
+            ECX --;
             }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
           if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
@@ -341,7 +345,7 @@ repeat_loop:
         else {
           if (CX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
-            CX -= 1;
+            CX --;
             }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
           if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
@@ -354,7 +358,7 @@ repeat_loop:
         if (i->as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
-            RCX -= 1;
+            RCX --;
             }
           if (RCX == 0) goto repeat_done;
           goto repeat_not_done;
@@ -364,7 +368,7 @@ repeat_loop:
         if (i->as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
-            ECX -= 1;
+            ECX --;
             }
           if (ECX == 0) goto repeat_done;
           goto repeat_not_done;
@@ -372,7 +376,7 @@ repeat_loop:
         else { // 16bit addrsize
           if (CX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
-            CX -= 1;
+            CX --;
             }
           if (CX == 0) goto repeat_done;
           goto repeat_not_done;
@@ -380,11 +384,12 @@ repeat_loop:
         }
       // shouldn't get here from above
 repeat_not_done:
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
+
 #ifdef REGISTER_IADDR
       REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
 
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
@@ -398,22 +403,21 @@ repeat_not_done:
       goto debugger_check;
 #endif
 
-
 repeat_done:
       RIP += i->ilen();
-
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID);
+
 #ifdef REGISTER_IADDR
       REGISTER_IADDR(RIP + BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base);
 #endif
 
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID);
       BX_TICK1_IF_SINGLE_PROCESSOR();
-      }
+    }
 
 debugger_check:
-
     // inform instrumentation about new instruction
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 

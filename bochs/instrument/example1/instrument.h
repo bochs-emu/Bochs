@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.8 2003-02-28 20:51:08 sshwarts Exp $
+// $Id: instrument.h,v 1.9 2003-10-09 19:05:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -178,6 +178,9 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
+/* execution */
+#  define BX_INSTR_BEFORE_EXECUTION(cpu_id)
+#  define BX_INSTR_AFTER_EXECUTION(cpu_id)
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 
 /* memory access */
@@ -245,6 +248,9 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
+/* execution */
+#  define BX_INSTR_BEFORE_EXECUTION(cpu_id)
+#  define BX_INSTR_AFTER_EXECUTION(cpu_id)
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 
 /* memory access */

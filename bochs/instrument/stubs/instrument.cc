@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.10 2003-02-13 15:04:10 sshwarts Exp $
+// $Id: instrument.cc,v 1.11 2003-10-09 19:05:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,6 +67,8 @@ void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, Bit32u newval) {}
 void bx_instr_cache_cntrl(unsigned cpu, unsigned what) {}
 void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_address offset) {}
 
+void bx_instr_before_execution(unsigned cpu) {}
+void bx_instr_after_execution(unsigned cpu) {}
 void bx_instr_repeat_iteration(unsigned cpu) {}
 
 void bx_instr_inp(Bit16u addr, unsigned len) {}
