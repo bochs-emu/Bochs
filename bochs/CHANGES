@@ -14,6 +14,7 @@ Changes to next release:
   - fixed BCD instructions implementation
   - speed optimizations in MMX and CPU core (sshwarts and psychosmur)
   - fix MSR_APICBASE always returning APIC ADDRESS 0 (Kangmo Kim)
+  - fetchdecode fixes for AMD64 and 3DNow!
 
 - FPU
   - fixed #NM exception on when FPU is disabled for FPU opcodes
@@ -61,6 +62,10 @@ Changes to next release:
   [907161] clean/speed up of io.cc
   [899972] data xfer performance patch V 2.0.4
   [904549] imul gives incorrect result in long mode
+  [877510] amd64 fixes...
+  [903465] SEGV in iodev/ne2k.cc line 1211 on Alpha architecture
+  [903332] copy the bximage result to clipboard, etc
+
 
 - these S.F. bugs were closed 
   #923653 DAA instruction is broken
