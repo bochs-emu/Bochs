@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.8 2002-12-14 04:53:27 bdenney Exp $
+# $Id: Makefile.in,v 1.9 2002-12-14 21:24:55 bdenney Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -11,13 +11,16 @@ prefix          = @prefix@
 srcdir          = @srcdir@
 docdir          = $(prefix)/share/doc/bochs
 DOCBOOK2HTML = @DOCBOOK2HTML@
+WGET = wget
+TARGZ = bochsdoc.tar.gz
+RENDERED_DOC_URL = http://bochs.sf.net/doc/docbook/$(TARGZ)
 
 # name of the major documentation sections
 SECTIONS=user documentation development
 SECTION_HTML=$(SECTIONS:%=%/book1.html)
 
 # these files get installed in addition to the sections
-EXTRAS=README index.html
+EXTRAS=index.html
 
 # complete list of what to install
 INSTALL_LIST=$(SECTIONS) $(EXTRAS)
@@ -50,7 +53,14 @@ fixperm::
 	chmod 664 `find $(INSTALL_LIST) -type f -print`
 	chmod 775 `find $(INSTALL_LIST) -type d -print`
 
-install: all
+copy_from_srcdir::
+	for i in $(INSTALL_LIST); do if test -a $(srcdir)/$$i -a ! -a $$i; then cp -r $(srcdir)/$$i $$i; fi; done
+
+$(TARGZ): all copy_from_srcdir fixperm
+	rm -f $(TARGZ)
+	tar cf - $(INSTALL_LIST) | gzip > $(TARGZ)
+
+install: all copy_from_srcdir
 	for i in $(DESTDIR)$(docdir); do if test ! -d $$i; then mkdir $$i; fi; done
 	for i in $(INSTALL_LIST); do cp -r $$i $(DESTDIR)$(docdir); done
 
@@ -62,21 +72,28 @@ test_sfuser:
 # Install the stuff on the remote server using ssh.  It will assume that your
 # local username is the same as your Source Forge username, unless you define
 # an environment variable SFUSER.
-webinst: all fixperm
-	for i in $(INSTALL_LIST); do if test -a $(srcdir)/$$i -a ! -a $$i; then cp $(srcdir)/$$i $$i; fi; done
+webinst: $(TARGZ)
 	# copy to remote
 	@echo Installing documentation on $(REMOTE_PATH)
-	tar cf - $(INSTALL_LIST) | gzip > bochsdoc.tar.gz
 	if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
-	  gunzip -c bochsdoc.tar.gz | \
-	  $(SSH) $${SFUSER}@$(REMOTE_HOST) "cd $(REMOTE_PATH) && umask 002 && tar xvf -"
+	  scp $(TARGZ) $${SFUSER}@$(REMOTE_HOST):$(REMOTE_PATH); \
+	  $(SSH) $${SFUSER}@$(REMOTE_HOST) "cd $(REMOTE_PATH) && umask 002 && gunzip -c $(TARGZ) | tar xvf -"
+
+# Download rendered docs in a TAR file from the Bochs web site using wget.
+# This is useful for getting documentation onto platforms that don't have
+# docbook tools.
+dl_docs::
+	rm -f $(TARGZ)
+	$(WGET) $(RENDERED_DOC_URL)
+	gunzip -c $(TARGZ) | tar xvf -
+	touch */*.html
 
 clean:
 	#remove generated files
 	for S in $(SECTIONS); do \
 	  rm -f $$S/*.html $$S/*.htm $$S/*.ps $$S/*.pdf $$S/*.out; \
 	done
-	@RMCOMMAND@ bochsdoc.tar.gz
+	@RMCOMMAND@ $(TARGZ)
 
 dist-clean: clean
 	rm -f  Makefile
