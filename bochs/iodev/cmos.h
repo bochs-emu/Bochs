@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.7 2002-10-24 21:07:17 bdenney Exp $
+// $Id: cmos.h,v 1.8 2002-12-07 15:53:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,6 +62,7 @@ public:
     int     one_second_timer_index;
     time_t  timeval;
     Bit8u   cmos_mem_address;
+    bx_bool timeval_change;
 
     Bit8u   reg[BX_NUM_CMOS_REGS];
     } s;  // state information
@@ -81,5 +82,6 @@ public:
   BX_CMOS_SMF void one_second_timer(void);
 private:
   BX_CMOS_SMF void update_clock(void);
+  BX_CMOS_SMF void update_timeval(void);
   BX_CMOS_SMF void CRA_change(void);
   };

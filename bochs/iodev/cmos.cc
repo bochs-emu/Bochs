@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.32 2002-12-06 22:37:37 bdenney Exp $
+// $Id: cmos.cc,v 1.33 2002-12-07 15:53:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,7 +108,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.32 2002-12-06 22:37:37 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.33 2002-12-07 15:53:02 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -150,6 +150,7 @@ bx_cmos_c::init(void)
   BX_INFO(("Setting initial clock to: %s (time0=%u)", tmptime, (Bit32u)BX_CMOS_THIS s.timeval));
 
   update_clock();
+  BX_CMOS_THIS s.timeval_change = 0;
 
   // load CMOS from image file if requested.
   if (bx_options.cmos.OcmosImage->get ()) {
@@ -348,12 +349,18 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
      return;
      }
       switch (BX_CMOS_THIS s.cmos_mem_address) {
-     case REG_SEC:                   // seconds
      case REG_SEC_ALARM:             // seconds alarm
-     case REG_MIN:                   // minutes
      case REG_MIN_ALARM:             // minutes alarm
-     case REG_HOUR:                  // hours
      case REG_HOUR_ALARM:            // hours alarm
+       BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
+       BX_DEBUG(("alarm time changed to %02x:%02x:%02x", BX_CMOS_THIS s.reg[REG_HOUR_ALARM],
+                 BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM]));
+       return;
+       break;
+
+     case REG_SEC:                   // seconds
+     case REG_MIN:                   // minutes
+     case REG_HOUR:                  // hours
      case REG_WEEK_DAY:              // day of the week
      case REG_MONTH_DAY:             // day of the month
      case REG_MONTH:                 // month
@@ -363,7 +370,11 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        //BX_INFO(("write reg 0x%02x: value = 0x%02x",
        //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
        BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
-       BX_ERROR(("changing time and date not supported yet"));
+       if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x80) {
+         BX_CMOS_THIS s.timeval_change = 1;
+       } else {
+         update_timeval();
+       }
        return;
        break;
 
@@ -465,6 +476,10 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
              BX_CMOS_THIS s.periodic_interval_usec, 1);
            }
          }
+       }
+       if ( (prev_CRB >= 0x80) && (value < 0x80) && BX_CMOS_THIS s.timeval_change) {
+         update_timeval();
+         BX_CMOS_THIS s.timeval_change = 0;
        }
        return;
        break;
@@ -690,4 +705,10 @@ bx_cmos_c::update_clock()
   // century byte.  Tony Heller says this is critical in getting WinXP to run.
   BX_CMOS_THIS s.reg[REG_IBM_PS2_CENTURY_BYTE] = 
     BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE];
+}
+
+  void
+bx_cmos_c::update_timeval()
+{
+  BX_ERROR(("changing time and date not supported yet"));
 }
