@@ -1,0 +1,28 @@
+#!/bin/sh
+
+LOG=/tmp/buildshared.log
+
+if test $# != 1; then
+  echo Usage: $0 libraryname
+  exit 1
+fi
+
+if test ! -f "$1.c"; then
+  echo Cannot find $1.c
+  exit 2
+fi
+
+libtool gcc -O2 -c $1.c >> $LOG 2>&1
+if test $? != 0; then
+  echo Compile failed for $1.c
+  exit 3
+fi
+
+libtool gcc -O2 $1.lo -o lib$1.la -rpath /tmp/bochslib >> $LOG 2>&1
+if test $? != 0; then
+  echo Link failed for $1.c
+  exit 4
+fi
+
+echo Build completed for lib$1.la >> $LOG 2>&1
+exit 0
