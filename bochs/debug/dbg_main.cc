@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.52 2002-09-06 14:58:56 yakovlev Exp $
+// $Id: dbg_main.cc,v 1.53 2002-09-06 16:29:49 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -4527,7 +4527,7 @@ dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
   // see if page is in the TLB first
-  if (cpu->TLB.entry[TLB_index].lpf == lpf | cpu->TLB.tlb_invalidate) {
+  if (cpu->TLB.entry[TLB_index].lpf == (lpf | cpu->TLB.tlb_invalidate)) {
 	*tlb_phy        = cpu->TLB.entry[TLB_index].ppf | poffset;
 	*tlb_valid = 1;
   }
