@@ -44,9 +44,9 @@
 //  * processors=1, bootstrap=0, ioapic_id=1   (uniprocessor system)
 //  * processors=2, bootstrap=0, ioapic_id=2
 //  * processors=4, bootstrap=2, ioapic_id=4
-#define BX_SMP_PROCESSORS 2
+#define BX_SMP_PROCESSORS 1
 #define BX_BOOTSTRAP_PROCESSOR 0
-#define BX_IOAPIC_DEFAULT_ID 2
+#define BX_IOAPIC_DEFAULT_ID 1
 
 #define BX_ADDRESS_SPACES 1
 // controls how many instances of BX_MEM_C are created.  For
@@ -54,7 +54,7 @@
 // For cosimulation, you could use two processors and two address
 // spaces.
 
-#define BX_APIC_SUPPORT 1
+#define BX_APIC_SUPPORT 0
 // include in APIC models, required for a multiprocessor system.
 // May not compile with BX_APIC_SUPPORT=0, I haven't tried.
 
