@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.48 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: ne2k.cc,v 1.49 2003-04-26 14:07:58 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,11 +135,13 @@ bx_ne2k_c::read_cr(void)
 void
 bx_ne2k_c::write_cr(Bit32u value)
 {
-    BX_DEBUG(("wrote 0x%02x to CR", value));
+  BX_DEBUG(("wrote 0x%02x to CR", value));
+
   // Validate remote-DMA
-  if ((value & 0x38) == 0x00)
-    return;
-  //  BX_PANIC(("CR write - invalid rDMA value 0"));
+  if ((value & 0x38) == 0x00) {
+    BX_DEBUG(("CR write - invalid rDMA value 0"));
+    value |= 0x20; /* dma_cmd == 4 is a safe default */
+  }
 
   // Check for s/w reset
   if (value & 0x01) {
@@ -1262,7 +1264,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.48 2003-03-02 23:59:11 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.49 2003-04-26 14:07:58 cbothamy Exp $"));
 
 
   // Bring the register state into power-up state
