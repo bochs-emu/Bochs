@@ -20,6 +20,11 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+// stupid define shortcuts to get register from the default CPU
+#define EBP (BX_CPU[dbg_cpu]->gen_reg[5].erx)
+#define EIP (BX_CPU[dbg_cpu]->eip)
+#define ESP (BX_CPU[dbg_cpu]->gen_reg[4].erx)
+#define SP  (BX_CPU[dbg_cpu]->gen_reg[4].word.rx)
 
 extern "C" {
 #include <signal.h>
@@ -180,7 +185,7 @@ static void bx_debug_ctrlc_handler(int signum);
 
 static void bx_unnest_infile(void);
 static void bx_get_command(void);
-static void bx_dbg_print_guard_results(Bit32u cpu);
+static void bx_dbg_print_guard_results();
 static void bx_dbg_breakpoint_changed(void);
 
 bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
@@ -591,9 +596,9 @@ bx_debug_ctrlc_handler(int signum)
   void
 bx_dbg_exit(int code)
 {
-	for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-		BX_CPU[cpu]->atexit();
-	}
+  for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+    BX_CPU[cpu]->atexit();
+  }
 
 #if BX_NUM_SIMULATORS >= 2
   fprintf(stderr, "before sim2_exit\n");
@@ -621,15 +626,15 @@ bx_dbg_quit_command(void)
 void
 bx_dbg_trace_on_command(void)
 {
-	BX_CPU[dbg_cpu]->trace = 1;
-	fprintf (stderr, "Tracing enabled for %s\n", BX_CPU[dbg_cpu]->name);
+  BX_CPU[dbg_cpu]->trace = 1;
+  fprintf (stderr, "Tracing enabled for %s\n", BX_CPU[dbg_cpu]->name);
 }
 
 void
 bx_dbg_trace_off_command(void)
 {
-	BX_CPU[dbg_cpu]->trace = 0;
-	fprintf (stderr, "Tracing disabled for %s\n", BX_CPU[dbg_cpu]->name);
+  BX_CPU[dbg_cpu]->trace = 0;
+  fprintf (stderr, "Tracing disabled for %s\n", BX_CPU[dbg_cpu]->name);
 }
 
 void
@@ -660,8 +665,8 @@ bx_dbg_timebp_command(Boolean absolute, Bit64u time)
       long long abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
 
       if (diff < 0) {
-	    fprintf(stderr, "Request for time break point in the past. I can't let you do that.\n");
-	    return;
+        fprintf(stderr, "Request for time break point in the past. I can't let you do that.\n");
+        return;
       }
 
       if (timebp_queue_size == MAX_CONCURRENT_BPS) {
@@ -1402,9 +1407,10 @@ bx_dbg_continue_command(void)
       break;
     }
 #else
-  // run indefinitely
   bx_guard.icount = 0;
-  bx_guard.guard_for |= ~BX_DBG_GUARD_ICOUNT; // not looking for icount
+  // I must guard for ICOUNT or one CPU could run forever without giving
+  // the others a chance.
+  bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT;
   bx_guard.guard_for |=  BX_DBG_GUARD_CTRL_C; // stop on Ctrl-C
 
 
@@ -1420,17 +1426,20 @@ bx_dbg_continue_command(void)
 			BX_CPU[cpu]->cpu_loop ();
 			// set stop flag if a guard found other than icount or halted
 			unsigned long found = BX_CPU[cpu]->guard_found.guard_found;
+			stop_reason_t reason = BX_CPU[cpu]->stop_reason;
 			if (found & BX_DBG_GUARD_ICOUNT) {
 				// I expected this guard, don't stop
-			} else if (BX_CPU[cpu]->stop_reason != STOP_NO_REASON) {
-				stop = 1;
-				which = cpu;
 			} else if (found!=0) {
 				bx_printf ("found guard other than icount in %s..stopping\n", BX_CPU[cpu]->name);
 				stop = 1;
 				which = cpu;
-			}
+			} else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
+				stop = 1;
+				which = cpu;
+		    }
 		}
+		// should probably remove all TICK1's from cpu loop
+		BX_TICK1();
 	}
 #endif
 
@@ -1438,7 +1447,7 @@ bx_dbg_continue_command(void)
   bx_vga.timer_handler(&bx_vga);
 
   BX_INSTR_DEBUG_PROMPT();
-  bx_dbg_print_guard_results(-1);
+  bx_dbg_print_guard_results();
 
   if (BX_CPU[which]->stop_reason == STOP_TRACE
 			|| BX_CPU[which]->stop_reason == STOP_CPU_HALTED)
@@ -1475,6 +1484,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 			BX_CPU[cpu]->guard_found.icount = 0;
 			BX_CPU[cpu]->cpu_loop();
 		}
+		BX_TICK1 ();
 	}
   bx_printf ("Stepped each CPU a total of %d cycles\n", count);
 #endif
@@ -4247,14 +4257,14 @@ bx_dbg_symbolic_output(void)
 // BW added to dump page table
 
 static void 
-dbg_lin2phys(Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u *tlb_phy, Boolean *tlb_valid) {
+dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u *tlb_phy, Boolean *tlb_valid) {
   Bit32u   lpf, ppf, poffset, TLB_index, paddress;
   Bit32u   pde, pde_addr;
   Bit32u   pte, pte_addr;
   
   *tlb_valid = 0;
 
-  if (BX_CPU_THIS_PTR cr0.pg == 0) {
+  if (cpu->cr0.pg == 0) {
     *phy = laddress;
     *valid = 1;
     return;
@@ -4265,15 +4275,15 @@ dbg_lin2phys(Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u *tlb_phy, Bool
   TLB_index = BX_TLB_INDEX_OF(lpf);
 
   // see if page is in the TLB first
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == lpf) {
-	*tlb_phy        = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
+  if (cpu->TLB.entry[TLB_index].lpf == lpf) {
+	*tlb_phy        = cpu->TLB.entry[TLB_index].ppf | poffset;
 	*tlb_valid = 1;
   }
 
   // Get page dir entry
-  pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
+  pde_addr = (cpu->cr3 & 0xfffff000) |
              ((laddress & 0xffc00000) >> 20);
-  BX_MEM[0]->read_physical(pde_addr, 4, &pde);
+  BX_MEM[0]->read_physical(cpu, pde_addr, 4, &pde);
   if ( !(pde & 0x01) ) {
     // Page Directory Entry NOT present
     goto page_fault;
@@ -4282,7 +4292,7 @@ dbg_lin2phys(Bit32u laddress, Bit32u *phy, Boolean *valid, Bit32u *tlb_phy, Bool
   // Get page table entry
   pte_addr = (pde & 0xfffff000) |
              ((laddress & 0x003ff000) >> 10);
-  BX_MEM[0]->read_physical(pte_addr, 4, &pte);
+  BX_MEM[0]->read_physical(cpu, pte_addr, 4, &pte);
   if ( !(pte & 0x01) ) {
     // Page Table Entry NOT present
     goto page_fault;
@@ -4301,7 +4311,8 @@ page_fault:
   return;
 }
 
-static void dbg_dump_table(Boolean all) {
+static void dbg_dump_table(Boolean all) 
+{
   Bit32u   lina;
   Bit32u phy, tlb_phy;
   Boolean valid, tlb_valid;
@@ -4319,7 +4330,7 @@ static void dbg_dump_table(Boolean all) {
   start_lina = 1;
   start_phy = 2;
   while(1) {
-	dbg_lin2phys(lina, &phy, &valid, &tlb_phy, &tlb_valid);
+	dbg_lin2phys(BX_CPU[dbg_cpu], lina, &phy, &valid, &tlb_phy, &tlb_valid);
 	if(valid) {
 	      if( (lina - start_lina != phy - start_phy) || tlb_valid) {
 		    if(all && (start_lina != 1))
