@@ -367,17 +367,17 @@ process_sim2:
 #endif
 
 #if BX_SMP_PROCESSORS==1
-  BX_MEM(0)->init_memory(bx_options.memory.size->get () * 1024*1024);
-  BX_MEM(0)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get ());
-  BX_MEM(0)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
+  BX_MEM(0)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
+  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
+  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
   BX_CPU(0)->init (BX_MEM(0));
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
   // SMP initialization
   bx_mem_array[0] = new BX_MEM_C ();
-  bx_mem_array[0]->init_memory(bx_options.memory.size->get () * 1024*1024);
-  bx_mem_array[0]->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get ());
-  bx_mem_array[0]->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
+  bx_mem_array[0]->init_memory(bx_options.memory.Osize->get () * 1024*1024);
+  bx_mem_array[0]->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
+  bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C ();
     BX_CPU(i)->init (BX_MEM(0));
@@ -393,7 +393,7 @@ process_sim2:
   BX_MEM(1) = new BX_MEM_C ();
   BX_CPU(1) = new BX_CPU_C (BX_MEM(1));
   BX_CPU(1)->reset(BX_RESET_HARDWARE);
-  BX_MEM(1)->init_memory(bx_options.memory.size->get () * 1024*1024);
+  BX_MEM(1)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
   BX_MEM(1)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get ());
   BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000);
 #endif
@@ -738,7 +738,7 @@ bx_dbg_diff_memory(void)
 #if BX_NUM_SIMULATORS < 2
 	printf("diff-memory supported only in cosimulation mode\n");
 #else
-	int num_pages = bx_options.memory.size->get () * 1024 / 4;
+	int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
 	for (int i = 0; i < num_pages; i++) {
 		BX_CPU(dbg_cpu)->dbg_dirty_pages[i] = 1;
 	}
@@ -799,7 +799,7 @@ bx_dbg_fast_forward(Bit32u num)
 		printf("Error copying CPU data!\n");
 
 	printf("Copying memory...\n");
-	int num_pages = bx_options.memory.size->get () * 1024 / 4;
+	int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
 	for (int i = 0; i < num_pages; i++) {
 		if (BX_CPU(0)->dbg_dirty_pages[i]) {
 			Bit32u page_start = i * 1024 * 4;
