@@ -1,17 +1,14 @@
 ----------------------------------------------------------------------
 Patch name: patches/patch.4ata-channels.bbd
 Author: Bryce Denney
-Date: Tue Sep 17 09:44:40 EDT 2002
+Date: Tue Sep 17 14:09:33 EDT 2002
 
 This patch applies on top of Christophe Bothamy's 4ata-channels patch.
 I'm keeping a separate patch in case Christophe wants to make revisions
 to his patch without my changes getting in the way.
 
-I have just been working on the configuration interface part, for
-example making it so that when you disable the ata[0123] channel, all the
-devices controlled by that channel will be disabled as well.  I haven't
-gotten around to the wxWindows part, but these changes will make the 
-wxWindows work much easier.
+I have just been working on the configuration interface part, in both the
+text interface and wxWindows.
 
 - set default I/O address for all ata channels, even the ones which are
   disabled by default.  It's easier to configure from scratch if we have
@@ -20,6 +17,7 @@ wxWindows work much easier.
 - eliminate huge initialization lists atachannel_init_list[][] and
   atadevice_init_list[][] by creating the bx_list_c and calling the add()
   method from inside a loop.
+- fix bugs in the bochsrc output code (extra or missing comma problems)
 - Also I'm using a trick: since the dependent_list and the menus contain almost
   the same items, I build just one list at first.  Then since I need to add a
   few more items to the dependent list (but I don't want them to show on the
@@ -29,7 +27,7 @@ wxWindows work much easier.
       BXP_ATA0_PRESENT, BXP_ATA0_IOADDR1, BXP_ATA0_IOADDR2, BXP_ATA0_IRQ
     dependent list for BXP_ATA0_PRESENT:
       BXP_ATA0_PRESENT, BXP_ATA0_IOADDR1, BXP_ATA0_IOADDR2, BXP_ATA0_IRQ,
-      BXP_ATA0_MASTER, BXP_ATA0_SLAVE
+      BXP_ATA0_MASTER_PRESENT, BXP_ATA0_SLAVE_PRESENT
 - the ata devices have both a "present" boolean parameter and a "type" enum
   parameter.  I removed the "none" value in the type enum, because it was
   the same as having present=false.  This made the enable/disable logic
@@ -50,6 +48,23 @@ wxWindows work much easier.
   - when a parameter with dependents is enabled/disabled, it now calls 
     update_dependents() as well.  Before this only happened when the value was
     changed.
+- in wxdialog.cc, I've added equivalent logic in EnableChanged and EnumChanged
+  so that the wxWindows dialogs follow the same dependency rules.  It doesn't
+  work in quite the same way because the text interface changes the params
+  immediately while the wxWindows interface only changes the params when Ok
+  is pressed, but it is very similar.
+- in wxWindows, replace the Edit Hard Disk and Edit Cdrom menu items with ATA
+  Controller items.
+- in ParamDialog, I now add the wxStaticText label for each parameter to 
+  the ParamStruct.  If the param is enabled/disabled, the label will be
+  changed as well.  Esp. since gtk wxCheckboxes do not change visibly when
+  disabled, having the label change to grey is good.
+- in the selection of boot disk, I didn't check for all possibilities of
+  hard disks and cdroms.  If you want to boot from a hard disk, you should
+  make it ata0-master, and if you want to boot from a cdrom, you should
+  make it ata0-slave.  This is just a wxwindows limitation, because Christophe
+  says the BIOS would be able to boot a hard disk on ata3-slave if that 
+  was the first one, but I think we can live with it for now.
 - add clone() method of bx_list_c, which makes a copy.
 
 I could not use the dependent_list trick to handle the "type" field of
@@ -75,6 +90,8 @@ value.
 3) for special cases such as enabling C/H/S when type=disk, duplicate
 the enable/disable code in each implementation of the user interface.
 
+#3 is what I've done in ParamDialog::EnumChanged.
+
 Patch was created with:
   diff -ur between two directories
 Apply patch to what version:
@@ -84,21 +101,99 @@ Instructions:
   Type "patch -p1 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 
+diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/gui.cc fourata/gui/gui.cc
+--- fourata-clean/gui/gui.cc	Mon Sep 16 23:23:45 2002
++++ fourata/gui/gui.cc	Tue Sep 17 11:09:56 2002
+@@ -246,7 +246,13 @@
+ #if BX_WITH_WX
+   // instead of just toggling the status, call wxWindows to bring up 
+   // a dialog asking what disk image you want to switch to.
+-  int ret = SIM->ask_param (BXP_CDROM_PATH);
++  // BBD: for now, find the first cdrom and call ask_param on that.
++  // Since we could have multiple cdroms now, maybe we should be adding
++  // one cdrom button for each?
++  bx_param_c *cdrom = SIM->get_first_cdrom ();
++  if (cdrom == NULL)
++    return;  // no cdrom found
++  int ret = SIM->ask_param (cdrom->get_id ());
+   if (ret < 0) return;  // cancelled
+   // eject and then insert the disk.  If the new path is invalid,
+   // the status will return 0.
 diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.cc fourata/gui/siminterface.cc
 --- fourata-clean/gui/siminterface.cc	Tue Sep 17 09:21:00 2002
-+++ fourata/gui/siminterface.cc	Tue Sep 17 09:35:03 2002
-@@ -354,8 +354,8 @@
++++ fourata/gui/siminterface.cc	Tue Sep 17 14:00:21 2002
+@@ -50,6 +50,7 @@
+   virtual bx_param_num_c *get_param_num (bx_id id);
+   virtual bx_param_string_c *get_param_string (bx_id id);
+   virtual bx_param_bool_c *get_param_bool (bx_id id);
++  virtual bx_param_enum_c *get_param_enum (bx_id id);
+   virtual int get_n_log_modules ();
+   virtual char *get_prefix (int mod);
+   virtual int get_log_action (int mod, int level);
+@@ -78,6 +79,7 @@
+   virtual void periodic ();
+   virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite);
+   virtual void refresh_ci ();
++  bx_param_c *get_first_cdrom ();
+ #if BX_DEBUGGER
+   virtual void debug_break ();
+   virtual void debug_interpret_cmd (char *cmd);
+@@ -137,6 +139,19 @@
+   return NULL;
+ }
+ 
++bx_param_enum_c *
++bx_real_sim_c::get_param_enum (bx_id id) {
++  bx_param_c *generic = get_param(id);
++  if (generic==NULL) {
++    BX_PANIC (("get_param_enum(%u) could not find a parameter", id));
++    return NULL;
++  }
++  if (generic->get_type () == BXT_PARAM_ENUM)
++    return (bx_param_enum_c *)generic;
++  BX_PANIC (("get_param_enum %u could not find a enum parameter with that id", id));
++  return NULL;
++}
++
+ void bx_init_siminterface ()
+ {
+   siminterface_log = new logfunctions ();
+@@ -354,8 +369,8 @@
  int n_loader_os_names = 3;
  char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
  int n_keyboard_type_names = 3;
 -char *atadevice_type_names[] = { "none", "disk", "cdrom", NULL };
 -int n_atadevice_type_names = 3;
-+char *atadevice_type_names[] = { "disk", "cdrom", NULL };
++char *atadevice_type_names[] = { "hard disk", "cdrom", NULL };
 +int n_atadevice_type_names = 2;
  char *atadevice_status_names[] = { "ejected", "inserted", NULL };
  int n_atadevice_status_names = 2;
  char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
-@@ -692,12 +692,22 @@
+@@ -537,6 +552,23 @@
+   // the event will be freed by the recipient
+ }
+ 
++bx_param_c *
++bx_real_sim_c::get_first_cdrom ()
++{
++  for (int channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
++    if (!bx_options.ata[channel].Opresent->get ())
++      continue;
++    for (int slave=0; slave<2; slave++) {
++      Bit32u present = bx_options.atadevice[channel][slave].Opresent->get ();
++      Bit32u type = bx_options.atadevice[channel][slave].Otype->get ();
++      if (present && type == BX_ATA_DEVICE_CDROM) {
++	return bx_options.atadevice[channel][slave].Omenu;
++      }
++    }
++  }
++  return NULL;
++}
++
+ #if BX_DEBUGGER
+ 
+ // this can be safely called from either thread.
+@@ -692,12 +724,22 @@
  void bx_param_num_c::update_dependents ()
  {
    if (dependent_list) {
@@ -124,7 +219,7 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.cc fourata/gui
  bx_shadow_num_c::bx_shadow_num_c (bx_id id,
      char *name,
      char *description,
-@@ -1046,6 +1056,17 @@
+@@ -1046,6 +1088,17 @@
    this->parent = NULL;
  }
  
@@ -142,7 +237,7 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.cc fourata/gui
  void
  bx_list_c::add (bx_param_c *param)
  {
-@@ -1062,8 +1083,3 @@
+@@ -1062,8 +1115,3 @@
    return list[index];
  }
  
@@ -153,7 +248,7 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.cc fourata/gui
 -}
 diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.h fourata/gui/siminterface.h
 --- fourata-clean/gui/siminterface.h	Tue Sep 17 09:21:01 2002
-+++ fourata/gui/siminterface.h	Tue Sep 17 09:34:08 2002
++++ fourata/gui/siminterface.h	Tue Sep 17 14:00:31 2002
 @@ -145,7 +145,6 @@
    BXP_FLOPPYB_TYPE,
    BXP_FLOPPYB_STATUS,
@@ -170,7 +265,7 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.h fourata/gui/
  #define BXP_PARAMS_PER_SERIAL_PORT 2
    BXP_COM1_ENABLED,
    BXP_COM1_PATH,
-@@ -760,7 +758,7 @@
+@@ -760,11 +758,12 @@
    char *get_name () { return name; }
    char *get_description () { return description; }
    int get_enabled () { return enabled; }
@@ -179,7 +274,18 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.h fourata/gui/
    void reset () {}
    int getint () {return -1;}
    static const char* set_default_format (const char *f);
-@@ -804,6 +802,7 @@
+   static const char *get_default_format () { return default_text_format; }
++  virtual bx_list_c *get_dependent_list () { return NULL; }
+ #if BX_UI_TEXT
+   virtual void text_print (FILE *fp) {}
+   virtual int text_ask (FILE *fpin, FILE *fpout) {return -1;}
+@@ -799,11 +798,12 @@
+       Bit32s min, Bit32s max, Bit32s initial_val);
+   void reset ();
+   void set_handler (param_event_handler handler);
+-  bx_list_c *get_dependent_list () { return dependent_list; }
++  virtual bx_list_c *get_dependent_list () { return dependent_list; }
+   void set_dependent_list (bx_list_c *l) {
      dependent_list = l; 
      update_dependents ();
    }
@@ -187,7 +293,7 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.h fourata/gui/
    virtual Bit32s get ();
    virtual void set (Bit32s val);
    void set_base (int base) { this->base = base; }
-@@ -988,13 +987,16 @@
+@@ -988,13 +988,16 @@
    bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
    bx_list_c (bx_id id, char *name, char *description, int maxsize);
    virtual ~bx_list_c();
@@ -205,7 +311,7 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.h fourata/gui/
  #if BX_UI_TEXT
    virtual void text_print (FILE *);
    virtual int text_ask (FILE *fpin, FILE *fpout);
-@@ -1013,10 +1015,9 @@
+@@ -1013,10 +1016,9 @@
  #define BX_FLOPPY_LAST   15 // last legal value of floppy type
  #define BX_FLOPPY_GUESS  20 // decide based on image size
  
@@ -219,9 +325,551 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/siminterface.h fourata/gui/
  
  #define BX_ATA_BIOSDETECT_NONE      0
  #define BX_ATA_BIOSDETECT_AUTO      1
+@@ -1055,6 +1057,7 @@
+   } bx_floppy_options;
+ 
+ typedef struct {
++  bx_list_c *Omenu;
+   bx_param_bool_c *Opresent;
+   bx_param_enum_c *Otype;
+   bx_param_string_c *Opath;
+@@ -1093,6 +1096,7 @@
+   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
+   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}
+   virtual bx_param_bool_c *get_param_bool (bx_id id) {return NULL;}
++  virtual bx_param_enum_c *get_param_enum (bx_id id) {return NULL;}
+   virtual int get_n_log_modules () {return -1;}
+   virtual char *get_prefix (int mod) {return 0;}
+   virtual int get_log_action (int mod, int level) {return -1;}
+@@ -1152,6 +1156,8 @@
+   // changed.  The CI will reread the parameters and change its display if it's
+   // appropriate.  Maybe later: mention which params have changed to save time.
+   virtual void refresh_ci () {}
++  // return first cdrom in ATA interface
++  bx_param_c *get_first_cdrom () {return NULL;}
+ #if BX_DEBUGGER
+   // for debugger: same behavior as pressing control-C
+   virtual void debug_break () {}
+diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/wxdialog.cc fourata/gui/wxdialog.cc
+--- fourata-clean/gui/wxdialog.cc	Mon Sep 16 13:48:07 2002
++++ fourata/gui/wxdialog.cc	Tue Sep 17 13:26:05 2002
+@@ -1502,6 +1502,7 @@
+ BEGIN_EVENT_TABLE(ParamDialog, wxDialog)
+   EVT_BUTTON(-1, ParamDialog::OnEvent)
+   EVT_CHECKBOX(-1, ParamDialog::OnEvent)
++  EVT_CHOICE(-1, ParamDialog::OnEvent)
+   EVT_TEXT(-1, ParamDialog::OnEvent)
+ END_EVENT_TABLE()
+ 
+@@ -1596,14 +1597,14 @@
+   pstr->id = genId ();
+   pstr->param = param_generic;
+   int type = param_generic->get_type ();
+-#define ADD_LABEL(x) sizer->Add (new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
++  char *prompt = pstr->param->get_ask_format ();
++  if (!prompt) prompt = pstr->param->get_name ();
++  wxASSERT (prompt != NULL);
++#define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
+   switch (type) {
+     case BXT_PARAM_BOOL: {
+ 	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	wxCheckBox *ckbx = new wxCheckBox (this, pstr->id, "");
+ 	ckbx->SetValue (param->get ());
+ 	sizer->Add (ckbx);
+@@ -1615,10 +1616,7 @@
+       }
+     case BXT_PARAM_NUM: {
+ 	bx_param_num_c *param = (bx_param_num_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
+ 	const char *format = param->get_format ();
+ 	if (!format)
+@@ -1633,10 +1631,7 @@
+       }
+     case BXT_PARAM_ENUM: {
+ 	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	wxChoice *choice = new wxChoice (this, pstr->id);
+ 	sizer->Add (choice);
+ 	if (!plain) sizer->Add (1, 1);  // spacer
+@@ -1653,10 +1648,7 @@
+       }
+     case BXT_PARAM_STRING: {
+ 	bx_param_string_c *param = (bx_param_string_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	bool isFilename = param->get_options ()->get () & param->BX_IS_FILENAME;
+ 	wxTextCtrl *txtctrl = new wxTextCtrl (this, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : wxDefaultSize);
+ 	txtctrl->SetValue (param->getptr ());
+@@ -1681,20 +1673,24 @@
+       }
+     case BXT_LIST: {
+       bx_list_c *list = (bx_list_c*) param_generic;
+-      wxStaticBox *box = new wxStaticBox (this, -1, list->get_name ());
++      wxStaticBox *box = new wxStaticBox (this, -1, prompt);
+       wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
+       wxFlexGridSizer *gridSz = new wxFlexGridSizer (3);
+-      boxsz->Add (gridSz, 1, wxGROW|wxALL, 20);
++      boxsz->Add (gridSz, 1, wxGROW|wxALL, 10);
+       // put all items in the list inside the boxsz sizer.
+       for (int i=0; i<list->get_size (); i++) {
+         bx_param_c *child = list->get (i);
+ 	AddParam (child, gridSz);
+       }
+       // add the boxsz to mainSizer
+-      mainSizer->Add (boxsz, 0, wxALL, 10);
++      mainSizer->Add (boxsz, 0, wxALL|wxGROW, 10);
+       // clear gridSizer variable so that any future parameters force
+       // creation of a new one.
+       gridSizer = NULL;
++      // add to hashes
++      pstr->u.staticbox = box;
++      idHash->Put (pstr->id, pstr);
++      paramHash->Put (pstr->param->get_id (), pstr);
+       break;
+       }
+     default:
+@@ -1754,26 +1750,108 @@
+     ParamStruct *pstr = (ParamStruct*) node->GetData ();
+     if (pstr->param->get_type () == BXT_PARAM_BOOL)
+       EnableChanged (pstr);
++    // special cases that can't be handled in the usual way
+   }
+ }
+ 
+ void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
+ {
++  wxLogDebug ("EnableChanged on checkbox %s", pstrOfCheckbox->param->get_name ());
+   bx_param_bool_c *enableParam = (bx_param_bool_c*) pstrOfCheckbox->param;
+   wxASSERT (enableParam->get_type () == BXT_PARAM_BOOL); // or we wouldn't be here
+-  // if nothing depends on this "enableParam", then we're done
+-  bx_list_c *list = enableParam->get_dependent_list ();
+-  if (list == NULL) return;
+-  // Now we know the object has dependents. Step through the list of
+-  // dependents, use the paramHash table to find their ParamStruct,
+-  // and enable/disable them as needed.
+   bool en = pstrOfCheckbox->u.checkbox->GetValue ();
++  EnableChangedRecursive (enableParam->get_dependent_list (), en, pstrOfCheckbox);
++}
++
++void ParamDialog::EnableChangedRecursive (
++    bx_list_c *list,
++    bool en,
++    ParamStruct *pstrOfCheckbox)
++{
++  if (list==NULL) return;
+   for (int i=0; i<list->get_size (); i++) {
+     bx_param_c *param = list->get(i);
+     ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
+     if (pstr) {
++      if (param == pstrOfCheckbox->param) {
++	wxLogDebug ("not setting enable on checkbox '%s' that triggered the enable change", pstrOfCheckbox->param->get_name ());
++	continue;
++      }
+       wxLogDebug ("setting enable for param '%s' to %d", pstr->param->get_name (), en?1:0);
+-      pstr->u.window->Enable (en);
++      if (en != pstr->u.window->IsEnabled ()) {
++	EnableParam (pstr->param->get_id (), en);
++	//pstr->u.window->Enable (en);
++	//if (pstr->browseButton) pstr->browseButton->Enable (en);
++	//if (pstr->label) pstr->label->Enable (en);
++	bx_list_c *deps = pstr->param->get_dependent_list ();
++	if (deps) {
++	  wxLogDebug ("recursing on dependent list of %s", list->get_name ());
++	  wxASSERT (pstr->param->get_type () == BXT_PARAM_BOOL);
++          bool dep_en = pstr->u.window->IsEnabled () && pstr->u.checkbox->GetValue ();
++	  EnableChangedRecursive (deps, dep_en, pstr);
++	}
++      }
++    }
++  }
++  // if any enums changed, give them a chance to update
++  for (int i=0; i<list->get_size (); i++) {
++    bx_param_c *param = list->get(i);
++    ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
++    if (pstr) {
++      if (pstr->param->get_type () == BXT_PARAM_ENUM)
++	EnumChanged (pstr);
++    }
++  }
++}
++
++void ParamDialog::EnableParam (int param_id, bool enabled)
++{
++  ParamStruct *pstr = (ParamStruct*) paramHash->Get (param_id);
++  if (!pstr) return;
++  if (pstr->label) pstr->label->Enable (enabled);
++  if (pstr->browseButton) pstr->browseButton->Enable (enabled);
++  if (pstr->u.window) pstr->u.window->Enable (enabled);
++}
++
++void ParamDialog::EnumChanged (ParamStruct *pstr)
++{
++  wxLogDebug ("EnumChanged");
++  int id = pstr->param->get_id ();
++  switch (id) {
++    case BXP_ATA0_MASTER_TYPE:
++    case BXP_ATA0_SLAVE_TYPE:
++    case BXP_ATA1_MASTER_TYPE:
++    case BXP_ATA1_SLAVE_TYPE:
++    case BXP_ATA2_MASTER_TYPE:
++    case BXP_ATA2_SLAVE_TYPE:
++    case BXP_ATA3_MASTER_TYPE:
++    case BXP_ATA3_SLAVE_TYPE: {
++      int delta = id - BXP_ATA0_MASTER_TYPE;
++      // find out if "present" checkbox is checked
++      bx_id present_id = (bx_id) (BXP_ATA0_MASTER_PRESENT+delta);
++      ParamStruct *present = (ParamStruct*) paramHash->Get (present_id);
++      wxASSERT (present && present->param->get_type () == BXT_PARAM_BOOL);
++      if (!present->u.checkbox->GetValue ())
++	break;  // device not enabled, leave it alone
++      if (!present->u.checkbox->IsEnabled ())
++	break;  // enable button for the device is not enabled
++      wxASSERT (pstr->param->get_type () == BXT_PARAM_ENUM);
++      int type = pstr->u.choice->GetSelection ();
++      if (type == BX_ATA_DEVICE_DISK) {
++	// enable cylinders, heads, spt
++	wxLogDebug ("enabling disk parameters");
++	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 1);
++	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 1);
++	EnableParam (BXP_ATA0_MASTER_SPT+delta, 1);
++	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 0);
++      } else {
++	// enable inserted
++	wxLogDebug ("enabling cdrom parameters");
++	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 0);
++	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 0);
++	EnableParam (BXP_ATA0_MASTER_SPT+delta, 0);
++	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 1);
++      }
+     }
+   }
+ }
+@@ -1821,7 +1899,7 @@
+ void ParamDialog::OnEvent(wxCommandEvent& event)
+ {
+   int id = event.GetId ();
+-  //wxLogMessage ("event was from id=%d", id);
++  wxLogMessage ("event was from id=%d", id);
+   if (isGeneratedId (id)) {
+     ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
+     if (pstr == NULL) {
+@@ -1830,10 +1908,13 @@
+     }
+     if (id == pstr->id) {
+       IFDBG_DLG (wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ()));
+-      if (pstr->param->get_type () == BXT_PARAM_BOOL) {
+-	// we know that a wxCheckBox changed state.  We don't yet know
+-	// if that checkbox was enabling anything.
+-	EnableChanged (pstr);
++      switch (pstr->param->get_type ()) {
++	case BXT_PARAM_BOOL:
++	  EnableChanged (pstr);
++	  break;
++	case BXT_PARAM_ENUM:
++	  EnumChanged (pstr);
++	  break;
+       }
+       return;
+     }
+diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/wxdialog.h fourata/gui/wxdialog.h
+--- fourata-clean/gui/wxdialog.h	Mon Sep 16 13:48:07 2002
++++ fourata/gui/wxdialog.h	Tue Sep 17 13:06:19 2002
+@@ -665,11 +665,13 @@
+   struct ParamStruct : public wxObject {
+     bx_param_c *param;
+     int id;
++    wxStaticText *label;
+     union _u_tag {
+       wxWindow *window;
+       wxChoice *choice;
+       wxTextCtrl *text;
+       wxCheckBox *checkbox;
++      wxStaticBox *staticbox;
+     } u;
+     int browseButtonId;  // only for filename params
+     wxButton *browseButton;  // only for filename params
+@@ -692,6 +694,9 @@
+   // map parameter ID (BXP_*) onto ParamStruct.
+   wxHashTable *paramHash;
+   virtual void EnableChanged ();
++  void EnableParam (int param_id, bool enabled);
++  void EnumChanged (ParamStruct *pstr);
++  void EnableChangedRecursive (bx_list_c *list, bool en, ParamStruct *pstrOfCheckbox);
+   void EnableChanged (ParamStruct *pstr);
+   bool CommitChanges ();
+ public:
+diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/wxmain.cc fourata/gui/wxmain.cc
+--- fourata-clean/gui/wxmain.cc	Mon Sep 16 13:48:07 2002
++++ fourata/gui/wxmain.cc	Tue Sep 17 14:02:30 2002
+@@ -162,9 +162,10 @@
+   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
+   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
+   EVT_MENU(ID_Sim2CI_Event, MyFrame::OnSim2CIEvent)
+-  EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
+-  EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
+-  EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA0, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA1, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA2, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA3, MyFrame::OnOtherEvent)
+   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
+   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
+   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
+@@ -272,9 +273,10 @@
+   menuEdit = new wxMenu;
+   menuEdit->Append( ID_Edit_FD_0, "Floppy Disk &0..." );
+   menuEdit->Append( ID_Edit_FD_1, "Floppy Disk &1..." );
+-  menuEdit->Append( ID_Edit_HD_0, "Hard Disk 0..." );
+-  menuEdit->Append( ID_Edit_HD_1, "Hard Disk 1..." );
+-  menuEdit->Append( ID_Edit_Cdrom, "Cdrom..." );
++  menuEdit->Append( ID_Edit_ATA0, "ATA Controller 0..." );
++  menuEdit->Append( ID_Edit_ATA1, "ATA Controller 1..." );
++  menuEdit->Append( ID_Edit_ATA2, "ATA Controller 2..." );
++  menuEdit->Append( ID_Edit_ATA3, "ATA Controller 3..." );
+   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
+   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
+   menuEdit->Append( ID_Edit_Sound, "&Sound..." );
+@@ -396,24 +398,22 @@
+   int bootDevices = 0;
+   wxString devices[MAX_BOOT_DEVICES];
+   int dev_id[MAX_BOOT_DEVICES];
+-  bx_param_bool_c *floppy = (bx_param_bool_c *)
+-    SIM->get_param (BXP_FLOPPYA_DEVTYPE);
+-  bx_param_bool_c *hd = (bx_param_bool_c *)
+-    SIM->get_param (BXP_DISKC_PRESENT);
+-  bx_param_bool_c *cdrom = (bx_param_bool_c *)
+-    SIM->get_param (BXP_CDROM_PRESENT);
+-  wxASSERT (floppy->get_type () == BXT_PARAM_ENUM
+-      && hd->get_type () == BXT_PARAM_BOOL
+-      && cdrom->get_type () == BXT_PARAM_BOOL);
++  bx_param_enum_c *floppy = SIM->get_param_enum (BXP_FLOPPYA_DEVTYPE);
++  bx_param_bool_c *ata0_mpres = SIM->get_param_bool (BXP_ATA0_MASTER_PRESENT);
++  bx_param_enum_c *ata0_mtype = SIM->get_param_enum (BXP_ATA0_MASTER_TYPE);
++  bx_param_bool_c *ata0_spres = SIM->get_param_bool (BXP_ATA0_SLAVE_PRESENT);
++  bx_param_enum_c *ata0_stype = SIM->get_param_enum (BXP_ATA0_SLAVE_TYPE);
+   if (floppy->get () != BX_FLOPPY_NONE) {
+     devices[bootDevices] = wxT("First floppy drive");
+     dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
+   }
+-  if (hd->get ()) {
++#warning wxwindows interface will only allow booting from hard disk if it is on ATA0 master
++  if (ata0_mpres->get() && ata0_mtype->get() == BX_ATA_DEVICE_DISK) {
+     devices[bootDevices] = wxT("First hard drive");
+     dev_id[bootDevices++] = BX_BOOT_DISKC;
+   }
+-  if (cdrom->get ()) {
++#warning wxwindows interface will only allow booting from cdrom if it is on ATA0 slave
++  if (ata0_spres->get() && ata0_stype->get() == BX_ATA_DEVICE_CDROM) {
+     devices[bootDevices] = wxT("CD-ROM drive");
+     dev_id[bootDevices++] = BX_BOOT_CDROM;
+   }
+@@ -819,8 +819,11 @@
+   bool canConfigure = (change == Stop);
+   menuConfiguration->Enable (ID_Config_New, canConfigure);
+   menuConfiguration->Enable (ID_Config_Read, canConfigure);
+-  menuEdit->Enable (ID_Edit_HD_0, canConfigure);
+-  menuEdit->Enable (ID_Edit_HD_1, canConfigure);
++#warning For now, leave ATA devices so that you configure them during runtime. Otherwise you cannot change the CD image at runtime.
++  //menuEdit->Enable (ID_Edit_ATA0, canConfigure);
++  //menuEdit->Enable (ID_Edit_ATA1, canConfigure);
++  //menuEdit->Enable (ID_Edit_ATA2, canConfigure);
++  //menuEdit->Enable (ID_Edit_ATA3, canConfigure);
+   menuEdit->Enable( ID_Edit_Boot, canConfigure);
+   menuEdit->Enable( ID_Edit_Memory, canConfigure);
+   menuEdit->Enable( ID_Edit_Sound, canConfigure);
+@@ -838,8 +841,12 @@
+   menuEdit->Enable (ID_Edit_FD_0, canConfigure || param->get_enabled ());
+   param = SIM->get_param(BXP_FLOPPYB);
+   menuEdit->Enable (ID_Edit_FD_1, canConfigure || param->get_enabled ());
+-  param = SIM->get_param(BXP_CDROMD);
+-  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || param->get_enabled ());
++  /*
++  // this menu item removed, since you can configure the cdrom from the
++  // ATA controller menu items instead.
++  param = SIM->get_first_cdrom ();
++  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || (param&&param->get_enabled ()));
++  */
+ }
+ 
+ void MyFrame::OnStartSim(wxCommandEvent& event)
+@@ -1137,9 +1144,12 @@
+   int id = event.GetId ();
+   wxLogMessage ("event id=%d", id);
+   switch (id) {
+-    case ID_Edit_HD_0: editHDConfig (0); break;
+-    case ID_Edit_HD_1: editHDConfig (1); break;
+-    case ID_Edit_Cdrom: editCdromConfig (); break;
++    case ID_Edit_ATA0: 
++    case ID_Edit_ATA1: 
++    case ID_Edit_ATA2: 
++    case ID_Edit_ATA3: 
++      editATAConfig (id - ID_Edit_ATA0);
++      break;
+   }
+ }
+ 
+@@ -1202,106 +1212,14 @@
+   }
+ }
+ 
+-void MyFrame::editHDConfig (int drive)
+-{
+-  HDConfigDialog dlg (this, -1);
+-  dlg.SetDriveName (drive==0? BX_HARD_DISK0_NAME : BX_HARD_DISK1_NAME);
+-  bx_list_c *list = (bx_list_c*) SIM->get_param ((drive==0)? BXP_DISKC : BXP_DISKD);
+-  if (!list) { wxLogError ("HD object param is null"); return; }
+-  bx_param_filename_c *fname = (bx_param_filename_c*) list->get(0);
+-  bx_param_num_c *cyl = (bx_param_num_c *) list->get(1);
+-  bx_param_num_c *heads = (bx_param_num_c *) list->get(2);
+-  bx_param_num_c *spt = (bx_param_num_c *) list->get(3);
+-  bx_param_bool_c *present = (bx_param_bool_c *)
+-    SIM->get_param (drive==0? BXP_DISKC_PRESENT : BXP_DISKD_PRESENT);
+-  wxASSERT (fname->get_type () == BXT_PARAM_STRING
+-      && cyl->get_type () == BXT_PARAM_NUM 
+-      && heads->get_type () == BXT_PARAM_NUM 
+-      && spt->get_type() == BXT_PARAM_NUM
+-      && present->get_type() == BXT_PARAM_BOOL);
+-  dlg.SetFilename (fname->getptr ());
+-  dlg.SetGeomRange (0, cyl->get_min(), cyl->get_max ());
+-  dlg.SetGeomRange (1, heads->get_min(), heads->get_max ());
+-  dlg.SetGeomRange (2, spt->get_min(), spt->get_max ());
+-  dlg.SetGeom (0, cyl->get ());
+-  dlg.SetGeom (1, heads->get ());
+-  dlg.SetGeom (2, spt->get ());
+-  dlg.SetEnable (present->get ());
+-  int n = dlg.ShowModal ();
+-  wxLogMessage ("HD config returned %d", n);
+-  if (n==wxID_OK) {
+-    char filename[1024];
+-    wxString fn (dlg.GetFilename ());
+-    strncpy (filename, fn.c_str (), sizeof (filename));
+-    wxLogMessage ("filename is '%s'", filename);
+-    fname->set (filename);
+-    cyl->set (dlg.GetGeom (0));
+-    heads->set (dlg.GetGeom (1));
+-    spt->set (dlg.GetGeom (2));
+-    present->set (dlg.GetEnable ());
+-    wxLogMessage ("present=%d cyl=%d heads=%d spt=%d", present->get (), cyl->get(), heads->get(), spt->get());
+-    if (drive==1 && present->get ()) {
+-      // check that diskD and cdrom are not enabled at the same time
+-      bx_param_bool_c *cdromd = (bx_param_bool_c*)
+-	SIM->get_param(BXP_CDROM_PRESENT);
+-      if (cdromd->get ()) {
+-	wxString msg;
+-	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
+-	    BX_HARD_DISK1_NAME, BX_CDROM_NAME, BX_CDROM_NAME);
+-	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
+-	cdromd->set (0);
+-      }
+-    }
+-  }
+-}
+-
+-void MyFrame::editCdromConfig ()
++void MyFrame::editATAConfig (int channel)
+ {
+-  CdromConfigDialog dlg (this, -1);
+-  dlg.SetDriveName (BX_CDROM_NAME);
+-  bx_param_filename_c *fname = 
+-    (bx_param_filename_c*) SIM->get_param(BXP_CDROM_PATH);
+-  bx_param_bool_c *present =
+-    (bx_param_bool_c*) SIM->get_param(BXP_CDROM_PRESENT);
+-  bx_param_enum_c *status =
+-    (bx_param_enum_c*) SIM->get_param(BXP_CDROM_STATUS);
+-  wxASSERT (fname->get_type () == BXT_PARAM_STRING
+-      && present->get_type () == BXT_PARAM_BOOL
+-      && status->get_type () == BXT_PARAM_ENUM);
+-#if defined(__linux__)
+-  dlg.AddRadio ("Physical CD-ROM drive /dev/cdrom", "/dev/cdrom");
+-#elif defined (WIN32)
+-  dlg.AddRadio ("Physical CD-ROM drive D:", "D:");
+-#else
+-  // add your favorite operating system here
+-#endif
+-  dlg.SetEnable (present->get () ? TRUE : FALSE);
+-  dlg.SetFilename (fname->getptr ());
+-  dlg.SetEjected (status->get () == BX_EJECTED);
+-  int n = dlg.ShowModal ();
+-  wxLogMessage ("cdrom config returned %d", n);
+-  if (n==wxID_OK) {
+-    char filename[1024];
+-    wxString fn (dlg.GetFilename ());
+-    strncpy (filename, fn.c_str (), sizeof(filename));
+-    fname->set (filename);
+-    present->set (dlg.GetEnable ());
+-    status->set (dlg.GetEjected () ? BX_EJECTED : BX_INSERTED);
+-    wxLogMessage ("filename is '%s'", filename);
+-    wxLogMessage ("enabled=%d ejected=%d", present->get(), status->get());
+-    // cdrom and hard disk D cannot both be enabled.
+-    if (present->get ()) {
+-      bx_param_bool_c *diskd = (bx_param_bool_c*)
+-	SIM->get_param(BXP_DISKD_PRESENT);
+-      if (diskd->get ()) {
+-	wxString msg;
+-	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
+-	    BX_CDROM_NAME, BX_HARD_DISK1_NAME, BX_HARD_DISK1_NAME);
+-	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
+-	diskd->set (0);
+-      }
+-    }
+-  }
++  ParamDialog dlg (this, -1);
++  dlg.SetTitle ("Configure ATA0");
++  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0+channel)));
++  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MASTER+channel*2)));
++  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_SLAVE+channel*2)));
++  dlg.ShowModal ();
+ }
+ 
+ void MyFrame::OnToolbarClick(wxCommandEvent& event)
+diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/gui/wxmain.h fourata/gui/wxmain.h
+--- fourata-clean/gui/wxmain.h	Mon Sep 16 13:48:07 2002
++++ fourata/gui/wxmain.h	Tue Sep 17 13:40:55 2002
+@@ -28,9 +28,11 @@
+   ID_Config_Save,
+   ID_Edit_FD_0,
+   ID_Edit_FD_1,
+-  ID_Edit_HD_0,
+-  ID_Edit_HD_1,
+-  ID_Edit_Cdrom,
++  ID_Edit_ATA0,
++  ID_Edit_ATA1,
++  ID_Edit_ATA2,
++  ID_Edit_ATA3,
++  ID_Edit_Cdrom,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
+   ID_Edit_Boot,
+   ID_Edit_Memory,
+   ID_Edit_Sound,
+@@ -184,8 +186,7 @@
+ #endif
+   static bool editFloppyValidate (FloppyConfigDialog *dialog);
+   void editFloppyConfig (int drive);
+-  void editHDConfig (int drive);
+-  void editCdromConfig ();
++  void editATAConfig (int channel);
+   void OnToolbarClick(wxCommandEvent& event);
+   int HandleAskParam (BxEvent *event);
+   int HandleAskParamString (bx_param_string_c *param);
 diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/main.cc fourata/main.cc
 --- fourata-clean/main.cc	Mon Sep 16 23:23:45 2002
-+++ fourata/main.cc	Tue Sep 17 09:37:26 2002
++++ fourata/main.cc	Tue Sep 17 13:44:46 2002
 @@ -153,20 +153,6 @@
      case BXP_KBD_PASTE_DELAY:
        if (set) bx_keyboard.paste_delay_changed ();
@@ -261,7 +909,15 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/main.cc fourata/main.cc
            case BX_ATA_DEVICE_DISK:
              SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
              SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
-@@ -445,249 +420,148 @@
+@@ -330,7 +305,6 @@
+   return val;
+ }
+ 
+-
+ void bx_init_options ()
+ {
+   int i;
+@@ -445,281 +419,213 @@
    bx_options.floppyb.Ostatus->set_handler (bx_param_handler);
  
    // disk options
@@ -343,8 +999,10 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/main.cc fourata/main.cc
 -          atadevice_type_names,
 -          BX_ATA_DEVICE_NONE,
 -          BX_ATA_DEVICE_NONE);
-+      menu = new bx_list_c ((bx_id)(BXP_ATA0_MASTER+channel*2+slave), s_atadevice[channel][slave], 
-+               s_atadevice[channel][slave], 12);
++      menu = bx_options.atadevice[channel][slave].Omenu = new bx_list_c ((bx_id)(BXP_ATA0_MASTER+channel*2+slave),
++	  s_atadevice[channel][slave], 
++          s_atadevice[channel][slave],
++	  12 /* list max size */);
 +      menu->get_options ()->set (menu->BX_SERIES_ASK);
  
 -      bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_MASTER_PRESENT+channel*2+slave),
@@ -424,10 +1082,13 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/main.cc fourata/main.cc
 -       BX_ATA_TRANSLATION_NONE);
 +       BX_ATA_TRANSLATION_NONE));
  
-+      bx_options.atadevice[channel][slave].Opresent->set_dependent_list (menu);
-+      bx_options.ata[channel].Opresent->get_dependent_list()->add (menu);
-+      //bx_options.ata[channel].Opresent->get_dependent_list()->add (
-+	  //bx_options.atadevice[channel][slave].Opresent);
++      bx_options.atadevice[channel][slave].Opresent->set_dependent_list (
++	  menu->clone ());
++      // the menu and all items on it depend on the Opresent flag
++      bx_options.atadevice[channel][slave].Opresent->get_dependent_list()->add(menu);
++      // the present flag depends on the ATA channel's present flag
++      bx_options.ata[channel].Opresent->get_dependent_list()->add (
++	  bx_options.atadevice[channel][slave].Opresent);
        }
      }
  
@@ -592,8 +1253,28 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/main.cc fourata/main.cc
 -  
    for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
  
-     bx_options.ata[channel].Opresent->set_ask_format ("Channel is enabled: [%s] ");
-@@ -701,14 +575,10 @@
+-    bx_options.ata[channel].Opresent->set_ask_format ("Channel is enabled: [%s] ");
+-    bx_options.ata[channel].Oioaddr1->set_ask_format ("Enter new ioaddr1: [0x%x] ");
+-    bx_options.ata[channel].Oioaddr2->set_ask_format ("Enter new ioaddr2: [0x%x] ");
+-    bx_options.ata[channel].Oirq->set_ask_format ("Enter new irq: [%d] ");
++    bx_options.ata[channel].Opresent->set_ask_format (
++	BX_WITH_WX? "Enable?"
++	: "Channel is enabled: [%s] ");
++    bx_options.ata[channel].Oioaddr1->set_ask_format (
++	BX_WITH_WX? "I/O Address 1:"
++	: "Enter new ioaddr1: [0x%x] ");
++    bx_options.ata[channel].Oioaddr2->set_ask_format (
++	BX_WITH_WX? "I/O Address 2:"
++	: "Enter new ioaddr2: [0x%x] ");
++    bx_options.ata[channel].Oirq->set_ask_format (
++	BX_WITH_WX? "IRQ:"
++	: "Enter new IRQ: [%d] ");
++#if !BX_WITH_WX
+     bx_options.ata[channel].Opresent->set_format ("enabled: %s");
+     bx_options.ata[channel].Oioaddr1->set_format (", ioaddr1: 0x%x");
+     bx_options.ata[channel].Oioaddr2->set_format (", ioaddr2: 0x%x");
+     bx_options.ata[channel].Oirq->set_format (", irq: %d");
++#endif
      bx_options.ata[channel].Oioaddr1->set_base (16);
      bx_options.ata[channel].Oioaddr2->set_base (16);
  
@@ -605,33 +1286,102 @@ diff -ur -x *CVS* -x .conf* -x .#* fourata-clean/main.cc fourata/main.cc
      for (Bit8u slave=0; slave<2; slave++) {
  
 -      bx_options.atadevice[channel][slave].Otype->set_ask_format ("Enter type of ATA device or 'none' for no device: [%s] ");
-+      bx_options.atadevice[channel][slave].Opresent->set_ask_format ("Device is enabled: [%s] ");
-+      bx_options.atadevice[channel][slave].Otype->set_ask_format ("Enter type of ATA device, disk or cdrom: [%s] ");
-       bx_options.atadevice[channel][slave].Opath->set_ask_format ("Enter new filename: [%s] ");
-       bx_options.atadevice[channel][slave].Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
-       bx_options.atadevice[channel][slave].Oheads->set_ask_format ("Enter number of heads: [%d] ");
-@@ -718,8 +588,9 @@
-       bx_options.atadevice[channel][slave].Otranslation->set_ask_format ("Enter translation type: [%s]");
-       bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format ("Enter bios detection type: [%s]");
+-      bx_options.atadevice[channel][slave].Opath->set_ask_format ("Enter new filename: [%s] ");
+-      bx_options.atadevice[channel][slave].Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
+-      bx_options.atadevice[channel][slave].Oheads->set_ask_format ("Enter number of heads: [%d] ");
+-      bx_options.atadevice[channel][slave].Ospt->set_ask_format ("Enter number of sectors per track: [%d] ");
+-      bx_options.atadevice[channel][slave].Ostatus->set_ask_format ("Is the device inserted or ejected? [%s] ");
+-      bx_options.atadevice[channel][slave].Omodel->set_ask_format ("Enter new model name: [%s]");
+-      bx_options.atadevice[channel][slave].Otranslation->set_ask_format ("Enter translation type: [%s]");
+-      bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format ("Enter bios detection type: [%s]");
++      bx_options.atadevice[channel][slave].Opresent->set_ask_format (
++	  BX_WITH_WX? "Enable?"
++	  : "Device is enabled: [%s] ");
++      bx_options.atadevice[channel][slave].Otype->set_ask_format (
++	  BX_WITH_WX? "Type of ATA device:"
++	  : "Enter type of ATA device, disk or cdrom: [%s] ");
++      bx_options.atadevice[channel][slave].Opath->set_ask_format (
++	  BX_WITH_WX? "Path or physical device name:"
++	  : "Enter new filename: [%s] ");
++      bx_options.atadevice[channel][slave].Ocylinders->set_ask_format (
++	  BX_WITH_WX? "Cylinders:"
++	  : "Enter number of cylinders: [%d] ");
++      bx_options.atadevice[channel][slave].Oheads->set_ask_format (
++	  BX_WITH_WX? "Heads:"
++	  : "Enter number of heads: [%d] ");
++      bx_options.atadevice[channel][slave].Ospt->set_ask_format (
++	  BX_WITH_WX? "Sectors per track:"
++	  : "Enter number of sectors per track: [%d] ");
++      bx_options.atadevice[channel][slave].Ostatus->set_ask_format (
++	  BX_WITH_WX? "Inserted?"
++	  : "Is the device inserted or ejected? [%s] ");
++      bx_options.atadevice[channel][slave].Omodel->set_ask_format (
++	  BX_WITH_WX? "Model name:"
++	  : "Enter new model name: [%s]");
++      bx_options.atadevice[channel][slave].Otranslation->set_ask_format (
++	  BX_WITH_WX? "Translation type:"
++	  : "Enter translation type: [%s]");
++      bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format (
++	  BX_WITH_WX? "BIOS Detection:"
++	  : "Enter bios detection type: [%s]");
  
 -      bx_options.atadevice[channel][slave].Otype->set_format ("%s");
 -      bx_options.atadevice[channel][slave].Opath->set_format (" on %s");
++#if !BX_WITH_WX
 +      bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
 +      bx_options.atadevice[channel][slave].Otype->set_format (", %s");
 +      bx_options.atadevice[channel][slave].Opath->set_format (" on '%s'");
        bx_options.atadevice[channel][slave].Ocylinders->set_format (", %d cylinders");
        bx_options.atadevice[channel][slave].Oheads->set_format (", %d heads");
        bx_options.atadevice[channel][slave].Ospt->set_format (", %d sectors/track");
-@@ -728,12 +599,7 @@
+@@ -727,13 +633,9 @@
+       bx_options.atadevice[channel][slave].Omodel->set_format (", model '%s'");
        bx_options.atadevice[channel][slave].Otranslation->set_format (", translation '%s'");
        bx_options.atadevice[channel][slave].Obiosdetect->set_format (", biosdetect '%s'");
- 
+-
 -      menu = new bx_list_c ((bx_id)(BXP_ATA0_MASTER+channel*2+slave), s_atadevice[channel][slave], 
 -               s_atadevice[channel][slave], atadevice_init_list[channel*2+slave]);
 -      menu->get_options ()->set (menu->BX_SERIES_ASK);
--
++#endif
+ 
        bx_options.atadevice[channel][slave].Otype->set_handler (bx_param_handler);
 -      bx_options.atadevice[channel][slave].Otype->set(BX_ATA_DEVICE_NONE);
        
        bx_options.atadevice[channel][slave].Ostatus->set_handler (bx_param_handler);
        bx_options.atadevice[channel][slave].Opath->set_handler (bx_param_string_handler);
+@@ -2983,7 +2885,7 @@
+   fprintf (fp, "ata%d: enabled=%d", channel, opt->Opresent->get());
+ 
+   if (opt->Opresent->get()) {
+-    fprintf (fp, ", ioaddr1=0x%x ioaddr2=0x%x, irq=%d", opt->Oioaddr1->get(), 
++    fprintf (fp, ", ioaddr1=0x%x, ioaddr2=0x%x, irq=%d", opt->Oioaddr1->get(), 
+       opt->Oioaddr2->get(), opt->Oirq->get());
+     }
+ 
+@@ -2998,7 +2900,7 @@
+     fprintf (fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
+ 
+     if (opt->Otype->get() == BX_ATA_DEVICE_DISK) {
+-      fprintf (fp, ", type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d",
++      fprintf (fp, "type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d",
+           opt->Opath->getptr(), opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
+ 
+       switch(opt->Otranslation->get()) {
+@@ -3014,7 +2916,7 @@
+         }
+       }
+     else if (opt->Otype->get() == BX_ATA_DEVICE_CDROM) {
+-      fprintf (fp, ", type=cdrom, path=\"%s\", status=%s", 
++      fprintf (fp, "type=cdrom, path=\"%s\", status=%s", 
+         opt->Opath->getptr(), 
+         opt->Ostatus->get ()==BX_EJECTED ? "ejected" : "inserted");
+       }
+@@ -3031,7 +2933,7 @@
+         break;
+       }
+     if (strlen(opt->Omodel->getptr())>0) {
+-        fprintf (fp, " model=\"%s\"", opt->Omodel->getptr());
++        fprintf (fp, ", model=\"%s\"", opt->Omodel->getptr());
+       }
+ 
+     fprintf (fp, "\n");
