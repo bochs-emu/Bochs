@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.39 2002-09-05 16:41:54 bdenney Exp $
+// $Id: wxmain.cc,v 1.40 2002-09-05 17:27:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -331,7 +331,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, "Copy to clipboard");
   BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, "Paste from clipboard");
   BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, "Save screen snapshot");
-  BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
+  // Omit config button because the whole wxWindows interface is like
+  // one really big config button.
+  //BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, "(Mouse Not Implemented Yet!)");
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, "Keyboard shortcut");
 
@@ -572,7 +574,6 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
   dlg.SetTitle ("Other Options");
   dlg.AddParam (SIM->get_param (BXP_IPS));
   dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
-  dlg.AddParam (SIM->get_param (BXP_LOG_FILENAME));
   dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
   dlg.AddParam (SIM->get_param (BXP_MOUSE_ENABLED));
   dlg.AddParam (SIM->get_param (BXP_USER_SHORTCUT));
@@ -585,8 +586,7 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
   dlg.AddParam (SIM->get_param (BXP_SCREENMODE));
 #endif
   dlg.AddParam (SIM->get_param (BXP_I440FX_SUPPORT));
-
-  int n = dlg.ShowModal ();
+  dlg.ShowModal ();
 }
 
 void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
@@ -596,6 +596,8 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   // At least I can verify that the expected numbers are the same.
   wxASSERT (SIM->get_max_log_level() == LOG_OPTS_N_TYPES);
   LogOptionsDialog dlg (this, -1);
+  bx_param_string_c *logfile = SIM->get_param_string (BXP_LOG_FILENAME);
+  dlg.SetLogfile (wxString (logfile->getptr ()));
 
   // The inital values of the dialog are complicated.  If the panic action
   // for all modules is "ask", then clearly the inital value in the dialog
@@ -625,6 +627,9 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   }
   int n = dlg.ShowModal ();   // show the dialog!
   if (n == wxID_OK) {
+    char buf[1024];
+    safeWxStrcpy (buf, dlg.GetLogfile (), sizeof (buf));
+    logfile->set (buf);
     for (int level=0; level < SIM->get_max_log_level (); level++) {
       // ask the dialog what action the user chose for this type of event
       int action = dlg.GetAction (level);

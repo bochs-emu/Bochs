@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.26 2002-09-05 16:27:06 bdenney Exp $
+// $Id: wxdialog.cc,v 1.27 2002-09-05 17:27:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -991,6 +991,10 @@ void NetConfigDialog::ShowHelp ()
 //////////////////////////////////////////////////////////////////////
 // Structure:
 //   vertSizer:
+//     logfileSizer
+//       prompt
+//       logfile
+//       browse button
 //     prompt
 //     gridSizer 2 columns:
 //       "debug"
@@ -1027,14 +1031,24 @@ LogOptionsDialog::LogOptionsDialog(
   SetTitle (LOG_OPTS_TITLE);
   vertSizer = new wxBoxSizer (wxVERTICAL);
   // top level objects
+  logfileSizer = new wxBoxSizer (wxHORIZONTAL);
+  vertSizer->Add (logfileSizer, 0, wxTOP|wxLEFT, 20);
   wxStaticText *text = new wxStaticText (this, -1, LOG_OPTS_PROMPT);
-  vertSizer->Add (text, 0, wxALL, 20);
+  vertSizer->Add (text, 0, wxALL, 10);
   gridSizer = new wxFlexGridSizer (2);
   vertSizer->Add (gridSizer, 1, wxLEFT, 40);
   text = new wxStaticText (this, -1, LOG_OPTS_ADV);
   vertSizer->Add (text, 0, wxALL, 20);
   buttonSizer = new wxBoxSizer (wxHORIZONTAL);
   vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+
+  // logfileSizer contents
+  text = new wxStaticText (this, -1, LOG_OPTS_LOGFILE);
+  logfileSizer->Add (text);
+  logfile = new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize);
+  logfileSizer->Add (logfile);
+  wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
+  logfileSizer->Add (btn, 0, wxALL, 5);
 
   // figure out how wide the wxChoice boxes need to be for longest string
   int choiceWidth;
@@ -1074,7 +1088,6 @@ LogOptionsDialog::LogOptionsDialog(
   }
 
   // buttonSizer contents
-  wxButton *btn;
   btn = new wxButton (this, ID_Advanced, BTNLABEL_ADVANCED);
   buttonSizer->Add (btn, 0, wxALL, 5);
   btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
@@ -1128,6 +1141,9 @@ void LogOptionsDialog::OnEvent(wxCommandEvent& event)
   int id = event.GetId ();
   wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
+    case ID_Browse:
+      BrowseTextCtrl (logfile);
+      break;
     case ID_Advanced:
       wxMessageBox ("The advanced dialog is not implemented yet.");
       break;

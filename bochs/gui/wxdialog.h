@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.26 2002-09-05 15:58:39 bdenney Exp $
+// $Id: wxdialog.h,v 1.27 2002-09-05 17:27:50 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -506,6 +506,8 @@ DECLARE_EVENT_TABLE()
 //
 // +---- Configure events -----------------------------------+
 // |                                                         |
+// | Log file is [_____________________________]  [ Browse ] |
+// |                                                         |
 // | How should Bochs respond to each type of event?         |
 // |                                                         |
 // |            Debug events: [ignore]                       |
@@ -530,6 +532,7 @@ class LogOptionsDialog: public wxDialog
 {
 private:
 #define LOG_OPTS_TITLE "Configure Log Events"
+#define LOG_OPTS_LOGFILE "Log file is "
 #define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
 #define LOG_OPTS_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: " }
 #define LOG_OPTS_N_TYPES 4
@@ -552,8 +555,9 @@ private:
 #define LOG_OPTS_ADV "For additional control over how each device responds to events, press the \"Advanced\" button."
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
-  wxBoxSizer *vertSizer, *buttonSizer;
+  wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
   wxFlexGridSizer *gridSizer;
+  wxTextCtrl *logfile;
   wxChoice *action[LOG_OPTS_N_TYPES];
 public:
   LogOptionsDialog(wxWindow* parent, wxWindowID id);
@@ -561,6 +565,8 @@ public:
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
   int GetAction (int evtype);
   void SetAction (int evtype, int action);
+  void SetLogfile (wxString f) { logfile->SetValue (f); }
+  wxString GetLogfile () { return logfile->GetValue (); }
 DECLARE_EVENT_TABLE()
 };
 
