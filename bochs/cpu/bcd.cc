@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.7 2002-09-17 22:50:51 kevinlawton Exp $
+// $Id: bcd.cc,v 1.8 2004-03-09 20:45:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,9 +38,6 @@
   void
 BX_CPU_C::DAS(bxInstruction_c *)
 {
-  Bit8u tmpCF, tmpAL;
-
-  /* ??? */
   /* the algorithm for DAS is fashioned after the pseudo code in the
    * Pentium Processor Family Developer's Manual, volume 3.  It seems
    * to have changed from earlier processor's manuals.  I'm not sure
@@ -49,69 +46,74 @@ BX_CPU_C::DAS(bxInstruction_c *)
    * correct yet...
    */
 
-  tmpCF = 0;
-  tmpAL = AL;
+  Bit8u tmpAL = AL;
+  int tmpCF = 0;
 
   /* DAS effect the following flags: A,C,S,Z,P */
 
-  if (((tmpAL & 0x0F) > 0x09) || get_AF()) {
+  if (((AL & 0x0F) > 0x09) || get_AF())
+  {
+    tmpAL = AL - 0x06;
+    if ((AL < 0x06) || get_CF()) tmpCF = 1;
     set_AF(1);
-    tmpCF = (AL < 0x06) || get_CF();
-    AL = AL - 0x06;
-    /*tmpCF = (AL < 0) || CF;*/
-    }
-  if ( (tmpAL > 0x99) || get_CF() ) {
+  }
+  else
+    set_AF(0);
+
+  if ((AL > 0x99) || get_CF())
+  {
     AL = AL - 0x60;
     tmpCF = 1;
-    }
+  }
+  else
+    tmpCF = 0;
+
+  AL = tmpAL;
 
   set_CF(tmpCF);
-  set_SF(AL >> 7);
-  set_ZF(AL==0);
-  set_PF_base(AL);
+  set_SF(tmpAL >> 7);
+  set_ZF(tmpAL==0);
+  set_PF_base(tmpAL);
 }
 
   void
 BX_CPU_C::AAA(bxInstruction_c *)
 {
-  Bit8u ALcarry;
+  /* AAA affects the following flags: A,C */
 
-  ALcarry = AL > 0xf9;
-
-  /* AAA effects the following flags: A,C */
-  if ( ((AL & 0x0f) > 9) || get_AF() ) {
-    AL = (AL + 6) & 0x0f;
-    AH = AH + 1 + ALcarry;
+  if ( ((AL & 0x0f) > 9) || get_AF() )
+  {
+    AL = AL + 6;
+    AH = AH + 1;
     set_AF(1);
     set_CF(1);
-    }
+  }
   else {
     set_AF(0);
     set_CF(0);
-    AL = AL & 0x0f;
-    }
+  }
+
+  AL = AL & 0x0f;
 }
 
   void
 BX_CPU_C::AAS(bxInstruction_c *)
 {
-  Bit8u ALborrow;
-
   /* AAS affects the following flags: A,C */
 
-  ALborrow = AL < 6;
-
-  if ( ((AL & 0x0F) > 0x09) || get_AF() ) {
-    AL = (AL - 6) & 0x0f;
-    AH = AH - 1 - ALborrow;
+  if ( ((AL & 0x0F) > 0x09) || get_AF() )
+  {
+    AL = AL - 6;
+    AH = AH - 1;
     set_AF(1);
     set_CF(1);
-    }
+  }
   else {
     set_CF(0);
     set_AF(0);
-    AL = AL & 0x0f;
-    }
+  }
+
+  AL = AL & 0x0f;
 }
 
   void
@@ -121,9 +123,8 @@ BX_CPU_C::AAM(bxInstruction_c *i)
 
   imm8 = i->Ib();
 
-  if (imm8 == 0) {
+  if (imm8 == 0)
     exception(BX_DE_EXCEPTION, 0, 0);
-    }
 
   al = AL;
   AH = al / imm8;
@@ -132,6 +133,7 @@ BX_CPU_C::AAM(bxInstruction_c *i)
   /* AAM always clears the flags A and C */
   set_AF(0);
   set_CF(0);
+
   /* AAM affects the following flags: S,Z,P */
   set_SF((AL & 0x80) > 0);
   set_ZF(AL == 0);
@@ -149,7 +151,7 @@ BX_CPU_C::AAD(bxInstruction_c *i)
   ax1 = AH * imm8;
   ax2 = ax1 + AL;
   al = AL;
-  AL = (Bit8u)ax2;
+  AL = (Bit8u)(ax2 & 0xFF);
   AH = 0;
 
   /* AAD effects the following flags: A,C,O,S,Z,P */
@@ -165,30 +167,32 @@ BX_CPU_C::AAD(bxInstruction_c *i)
   void
 BX_CPU_C::DAA(bxInstruction_c *)
 {
-  Bit8u al;
-
-  al = AL;
+  Bit8u tmpAL = AL;
+  int tmpCF = 0;
 
   // DAA affects the following flags: S,Z,A,P,C
-  // ???
 
-  if (((al & 0x0F) > 0x09) || get_AF()) {
-    al = al + 0x06;
+  if (((AL & 0x0F) > 0x09) || get_AF())
+  {
+    tmpAL = AL + 0x06;
+    if (get_CF() || (tmpAL < AL)) tmpCF = 1;
     set_AF(1);
-    }
+  }
   else
     set_AF(0);
 
-  if ((al > 0x9F) || get_CF()) {
-    al = al + 0x60;
-    set_CF(1);
-    }
+  if ((AL > 0x99) || get_CF())
+  {
+    tmpAL = AL + 0x60;
+    tmpCF = 1;
+  }
   else
-    set_CF(0);
+    tmpCF = 0;
 
-  AL = al;
+  AL = tmpAL;
 
-  set_SF(al >> 7);
-  set_ZF(al==0);
-  set_PF_base(al);
+  set_CF(tmpCF);
+  set_SF(tmpAL >> 7);
+  set_ZF(tmpAL==0);
+  set_PF_base(tmpAL);
 }
