@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.45 2002-11-19 05:47:45 bdenney Exp $
+// $Id: ne2k.cc,v 1.46 2002-11-19 18:56:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,24 +27,37 @@
 // Peter Grehan (grehan@iprg.nokia.com) coded all of this
 // NE2000/ether stuff.
 
-
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+ 
 #include "bochs.h"
 #if BX_NE2K_SUPPORT
 
-#define LOG_THIS bx_ne2k.
+#define LOG_THIS theNE2kDevice->
 
-bx_ne2k_c bx_ne2k;
+bx_ne2k_c *theNE2kDevice = NULL;
 
-#if BX_USE_NE2K_SMF
-#define this (&bx_ne2k)
-#endif
+  int
+libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theNE2kDevice = new bx_ne2k_c ();
+  bx_devices.pluginNE2kDevice = theNE2kDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theNE2kDevice, BX_PLUGIN_NE2K);
+  return(0); // Success
+}
 
+  void
+libne2k_LTX_plugin_fini(void)
+{
+}
+  
 bx_ne2k_c::bx_ne2k_c(void)
 {
   put("NE2K");
   settype(NE2KLOG);
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.45 2002-11-19 05:47:45 bdenney Exp $"));
-  BX_NE2K_THIS s.tx_timer_index = BX_NULL_TIMER_HANDLE;
+  s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 
@@ -322,7 +335,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0xf:  // Reset register
-    reset(BX_RESET_SOFTWARE);
+    theNE2kDevice->reset(BX_RESET_SOFTWARE);
     break;
 
   default:
@@ -369,7 +382,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0xf:  // Reset register
-    reset(BX_RESET_SOFTWARE);
+    theNE2kDevice->reset(BX_RESET_SOFTWARE);
     break;
 
   default: // this is invalid, but happens under win95 device detection
@@ -1249,81 +1262,78 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.45 2002-11-19 05:47:45 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.46 2002-11-19 18:56:39 vruppert Exp $"));
 
 
-  if (bx_options.ne2k.Opresent->get ()) {
-    // Bring the register state into power-up state
-    reset(BX_RESET_HARDWARE);
+  // Bring the register state into power-up state
+  theNE2kDevice->reset(BX_RESET_HARDWARE);
 
-    // Read in values from config file
-    BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
-    BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
-    memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
+  // Read in values from config file
+  BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
+  BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
+  memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
 
-    if (BX_NE2K_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
-      BX_NE2K_THIS s.tx_timer_index =
-	bx_pc_system.register_timer(this, tx_timer_handler, 0,
-				    0,0, "ne2k"); // one-shot, inactive
-    }
-    // Register the IRQ and i/o port addresses
-    DEV_register_irq(BX_NE2K_THIS s.base_irq,
-				       "ne2000 ethernet NIC");
+  if (BX_NE2K_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_NE2K_THIS s.tx_timer_index =
+      bx_pc_system.register_timer(this, tx_timer_handler, 0,
+                                  0,0, "ne2k"); // one-shot, inactive
+  }
+  // Register the IRQ and i/o port addresses
+  DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
 
-    for (unsigned addr = BX_NE2K_THIS s.base_address; 
-	 addr <= BX_NE2K_THIS s.base_address + 0x20; 
-	 addr++) {
-      DEV_register_ioread_handler(this, read_handler, addr, "ne2000 NIC", 1);
-      DEV_register_iowrite_handler(this, write_handler, addr, "ne2000 NIC", 1);
-    }
-	BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
-				BX_NE2K_THIS s.base_address,
-				BX_NE2K_THIS s.base_irq,
-				BX_NE2K_THIS s.physaddr[0],
-				BX_NE2K_THIS s.physaddr[1],
-				BX_NE2K_THIS s.physaddr[2],
-				BX_NE2K_THIS s.physaddr[3],
-				BX_NE2K_THIS s.physaddr[4],
-				BX_NE2K_THIS s.physaddr[5]));
+  for (unsigned addr = BX_NE2K_THIS s.base_address; 
+       addr <= BX_NE2K_THIS s.base_address + 0x20; 
+       addr++) {
+    DEV_register_ioread_handler(this, read_handler, addr, "ne2000 NIC", 1);
+    DEV_register_iowrite_handler(this, write_handler, addr, "ne2000 NIC", 1);
+  }
+  BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
+           BX_NE2K_THIS s.base_address,
+           BX_NE2K_THIS s.base_irq,
+           BX_NE2K_THIS s.physaddr[0],
+           BX_NE2K_THIS s.physaddr[1],
+           BX_NE2K_THIS s.physaddr[2],
+           BX_NE2K_THIS s.physaddr[3],
+           BX_NE2K_THIS s.physaddr[4],
+           BX_NE2K_THIS s.physaddr[5]));
+
+  // Initialise the mac address area by doubling the physical address
+  BX_NE2K_THIS s.macaddr[0]  = BX_NE2K_THIS s.physaddr[0];
+  BX_NE2K_THIS s.macaddr[1]  = BX_NE2K_THIS s.physaddr[0];
+  BX_NE2K_THIS s.macaddr[2]  = BX_NE2K_THIS s.physaddr[1];
+  BX_NE2K_THIS s.macaddr[3]  = BX_NE2K_THIS s.physaddr[1];
+  BX_NE2K_THIS s.macaddr[4]  = BX_NE2K_THIS s.physaddr[2];
+  BX_NE2K_THIS s.macaddr[5]  = BX_NE2K_THIS s.physaddr[2];
+  BX_NE2K_THIS s.macaddr[6]  = BX_NE2K_THIS s.physaddr[3];
+  BX_NE2K_THIS s.macaddr[7]  = BX_NE2K_THIS s.physaddr[3];
+  BX_NE2K_THIS s.macaddr[8]  = BX_NE2K_THIS s.physaddr[4];
+  BX_NE2K_THIS s.macaddr[9]  = BX_NE2K_THIS s.physaddr[4];
+  BX_NE2K_THIS s.macaddr[10] = BX_NE2K_THIS s.physaddr[5];
+  BX_NE2K_THIS s.macaddr[11] = BX_NE2K_THIS s.physaddr[5];
     
-    // Initialise the mac address area by doubling the physical address
-    BX_NE2K_THIS s.macaddr[0]  = BX_NE2K_THIS s.physaddr[0];
-    BX_NE2K_THIS s.macaddr[1]  = BX_NE2K_THIS s.physaddr[0];
-    BX_NE2K_THIS s.macaddr[2]  = BX_NE2K_THIS s.physaddr[1];
-    BX_NE2K_THIS s.macaddr[3]  = BX_NE2K_THIS s.physaddr[1];
-    BX_NE2K_THIS s.macaddr[4]  = BX_NE2K_THIS s.physaddr[2];
-    BX_NE2K_THIS s.macaddr[5]  = BX_NE2K_THIS s.physaddr[2];
-    BX_NE2K_THIS s.macaddr[6]  = BX_NE2K_THIS s.physaddr[3];
-    BX_NE2K_THIS s.macaddr[7]  = BX_NE2K_THIS s.physaddr[3];
-    BX_NE2K_THIS s.macaddr[8]  = BX_NE2K_THIS s.physaddr[4];
-    BX_NE2K_THIS s.macaddr[9]  = BX_NE2K_THIS s.physaddr[4];
-    BX_NE2K_THIS s.macaddr[10] = BX_NE2K_THIS s.physaddr[5];
-    BX_NE2K_THIS s.macaddr[11] = BX_NE2K_THIS s.physaddr[5];
+  // ne2k signature
+  for (int i = 12; i < 32; i++) 
+    BX_NE2K_THIS s.macaddr[i] = 0x57;
     
-    // ne2k signature
-    for (int i = 12; i < 32; i++) 
-      BX_NE2K_THIS s.macaddr[i] = 0x57;
-    
-    // Attach to the simulated ethernet dev
-    BX_NE2K_THIS ethdev = eth_locator_c::create(bx_options.ne2k.Oethmod->getptr (), 
-						bx_options.ne2k.Oethdev->getptr (),
-				    (const char *) bx_options.ne2k.Omacaddr->getptr (),
-						rx_handler, 
-						this);
-    
-    if (BX_NE2K_THIS ethdev == NULL) {
-      BX_PANIC(("could not find eth module %s", bx_options.ne2k.Oethmod->getptr ()));
-      // if they continue, use null.
-      BX_INFO(("could not find eth module %s - using null instead",
-		bx_options.ne2k.Oethmod->getptr ()));
-      
-      BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
-				    (const char *) bx_options.ne2k.Omacaddr->getptr (),
-						  rx_handler, 
-						  this);
-      if (BX_NE2K_THIS ethdev == NULL)
-	BX_PANIC(("could not locate null module"));
-    }
+  // Attach to the simulated ethernet dev
+  BX_NE2K_THIS ethdev = eth_locator_c::create(bx_options.ne2k.Oethmod->getptr (), 
+                                              bx_options.ne2k.Oethdev->getptr (),
+                                              (const char *) bx_options.ne2k.Omacaddr->getptr (),
+                                              rx_handler, 
+                                              this);
+
+  if (BX_NE2K_THIS ethdev == NULL) {
+    BX_PANIC(("could not find eth module %s", bx_options.ne2k.Oethmod->getptr ()));
+    // if they continue, use null.
+    BX_INFO(("could not find eth module %s - using null instead",
+             bx_options.ne2k.Oethmod->getptr ()));
+
+    BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
+                                                (const char *) bx_options.ne2k.Omacaddr->getptr (),
+                                                rx_handler, 
+                                                this);
+    if (BX_NE2K_THIS ethdev == NULL)
+      BX_PANIC(("could not locate null module"));
   }
 }
 
@@ -1352,7 +1362,7 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
   int n = 0;
   if (page < 0) {
     for (page=0; page<=2; page++)
-      BX_NE2K_THIS print_info (fp, page, reg, 1);
+      theNE2kDevice->print_info (fp, page, reg, 1);
     // tell them how to use this command
     dbg_printf ("\nHow to use the info ne2k command:\n");
     dbg_printf ("info ne2k - show all registers\n");
@@ -1368,7 +1378,7 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     dbg_printf ("NE2K registers, page %d\n", page);
     dbg_printf ("----------------------\n");
     for (reg=0; reg<=15; reg++)
-      BX_NE2K_THIS print_info (fp, page, reg, 1);
+      theNE2kDevice->print_info (fp, page, reg, 1);
     dbg_printf ("----------------------\n");
     return;
   }
@@ -1572,6 +1582,13 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
   }
   if (!brief)
     dbg_printf ("\n");
+}
+
+#else
+
+void
+bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
+{
 }
 
 #endif

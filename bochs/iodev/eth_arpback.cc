@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.9 2002-11-19 05:47:45 bdenney Exp $
+// $Id: eth_arpback.cc,v 1.10 2002-11-19 18:56:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
 
 #include "crc32.h"
 #include "eth_packetmaker.h"
-#define LOG_THIS bx_ne2k.
+#define LOG_THIS bx_devices.pluginNE2kDevice->
 
 
 //static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};

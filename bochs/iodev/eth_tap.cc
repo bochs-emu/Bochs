@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.9 2002-11-19 05:47:45 bdenney Exp $
+// $Id: eth_tap.cc,v 1.10 2002-11-19 18:56:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,7 +82,7 @@
 #include "bochs.h"
 #if BX_NE2K_SUPPORT
 
-#define LOG_THIS bx_ne2k.
+#define LOG_THIS bx_devices.pluginNE2kDevice->
 
 #include <signal.h>
 #include <sys/param.h>

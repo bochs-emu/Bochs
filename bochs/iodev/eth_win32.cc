@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.15 2002-11-19 05:47:45 bdenney Exp $
+// $Id: eth_win32.cc,v 1.16 2002-11-19 18:56:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,11 +36,16 @@
 // For ethernet support under win32 to work, you must install WinPCap.
 // Download it from http://netgroup-serv.polito.it/winpcap
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "bochs.h"
 #if BX_NE2K_SUPPORT
 
 // windows.h included by bochs.h
-#define LOG_THIS bx_ne2k.
+#define LOG_THIS bx_devices.pluginNE2kDevice->
 
 #define NDIS_PACKET_TYPE_PROMISCUOUS			0x0020
 #define Packet_ALIGNMENT sizeof(int)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.24 2002-11-13 18:39:40 vruppert Exp $
+// $Id: iodev.h,v 1.25 2002-11-19 18:56:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,7 +44,6 @@
 class bx_pit_c;
 class bx_keyb_c;
 class bx_ioapic_c;
-class bx_ne2k_c;
 class bx_g2h_c;
 #if BX_IODEBUG_SUPPORT
 class bx_iodebug_c;
@@ -260,6 +259,11 @@ class BOCHSAPI bx_pci_stub_c : public bx_devmodel_c {
   virtual void print_i440fx_state(void) {}
 };
 
+class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
+  public:
+  virtual void print_info(FILE *file, int page, int reg, int nodups) {}
+};
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -302,7 +306,7 @@ public:
   bx_pic_stub_c    *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_devmodel_c    *pluginSB16Device;
-  bx_ne2k_c        *ne2k;
+  bx_ne2k_stub_c   *pluginNE2kDevice;
   bx_g2h_c         *g2h;
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c	   *iodebug;
@@ -318,6 +322,7 @@ public:
   bx_floppy_stub_c  stubFloppy;
   bx_vga_stub_c  stubVga;
   bx_pci_stub_c  stubPci;
+  bx_ne2k_stub_c stubNE2k;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle

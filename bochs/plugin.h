@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.7 2002-11-15 22:11:23 cbothamy Exp $
+// $Id: plugin.h,v 1.8 2002-11-19 18:56:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -35,6 +35,7 @@ extern "C" {
 #define BX_PLUGIN_PCI      "pci"
 #define BX_PLUGIN_PCI2ISA  "pci2isa"
 #define BX_PLUGIN_SB16     "sb16"
+#define BX_PLUGIN_NE2K     "ne2k"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
@@ -156,6 +157,9 @@ extern "C" {
 #define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
 #define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
 #define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()
+
+///////// NE2000 macro
+#define DEV_ne2k_print_info() bx_devices.pluginNE2kDevice->print_info()
 
 
 #if BX_HAVE_DLFCN_H
@@ -292,6 +296,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ne2k)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(amigaos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(beos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(carbon)

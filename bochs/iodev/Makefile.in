@@ -57,6 +57,7 @@ WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
 CDROM_OBJS = @CDROM_OBJS@
 IOAPIC_OBJS = @IOAPIC_OBJS@
 SOUNDLOW_OBJS = @SOUNDLOW_OBJS@
+NETLOW_OBJS = @NETLOW_OBJS@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
@@ -67,7 +68,6 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
   devices.o \
   pit.o pit82c54.o pit_wrap.o \
   @IODEBUG_OBJS@ \
-  @NE2K_OBJS@ @NETLOW_OBJS@ \
   @SLOWDOWN_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
@@ -85,12 +85,14 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   dma.o \
   unmapped.o \
   @PCI_OBJ@ \
-  @SB16_OBJS@
+  @SB16_OBJS@ \
+  @NE2K_OBJS@
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   scancodes.o \
   $(CDROM_OBJS) \
-  $(SOUNDLOW_OBJS)
+  $(SOUNDLOW_OBJS) \
+  $(NETLOW_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_PLUGIN_OBJS@
@@ -128,6 +130,9 @@ libbx_pit.la: pit.lo pit82c54.lo pit_wrap.lo
 libbx_sb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
 	$(LIBTOOL) $(CXX) -module sb16.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_sb16.la -rpath $(PLUGIN_PATH)
 
+libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
+	$(LIBTOOL) $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)
+
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
@@ -144,6 +149,9 @@ bx_pit.dll: pit.o pit82c54.o pit_wrap.o
 
 bx_sb16.dll: sb16.o $(SOUNDLOW_OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o bx_sb16.dll sb16.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
+
+bx_ne2k.dll: ne2k.o $(NETLOW_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_ne2k.dll ne2k.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 ##### end DLL section
 
 clean:
