@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.16 2002-08-12 12:00:11 vruppert Exp $
+// $Id: term.cc,v 1.17 2002-08-15 10:02:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -173,13 +173,10 @@ void
 do_char(int character,int alt)
 {
 	switch (character) {
+	// control keys
 	case   0x9: do_scan(BX_KEY_TAB,0,0,alt); break;
 	case   0xa: do_scan(BX_KEY_KP_ENTER,0,0,alt); break;
 	case   0xd: do_scan(BX_KEY_KP_DELETE,0,0,alt); break;
-	//case  '-': do_scan(BX_KEY_KP_SUBTRACT,0,0,alt); break;
-	//case  '+': do_scan(BX_KEY_KP_ADD,0,0,alt); break;
-	//case  '*': do_scan(BX_KEY_KP_MULTIPLY,0,0,alt); break;
-	//case  '/': do_scan(BX_KEY_KP_DIVIDE,0,0,alt); break;
 	case   0x1: do_scan(BX_KEY_A,0,1,alt); break;
 	case   0x2: do_scan(BX_KEY_B,0,1,alt); break;
 	case   0x3: do_scan(BX_KEY_C,0,1,alt); break;
@@ -349,6 +346,16 @@ do_char(int character,int alt)
 	case KEY_F(11): do_scan(BX_KEY_F11,0,0,alt); break;
 	case KEY_F(12): do_scan(BX_KEY_F12,0,0,alt); break;
 
+	// shifted function keys
+	case KEY_F(13): do_scan(BX_KEY_F1,1,0,alt); break;
+	case KEY_F(14): do_scan(BX_KEY_F2,1,0,alt); break;
+	case KEY_F(15): do_scan(BX_KEY_F3,1,0,alt); break;
+	case KEY_F(16): do_scan(BX_KEY_F4,1,0,alt); break;
+	case KEY_F(17): do_scan(BX_KEY_F5,1,0,alt); break;
+	case KEY_F(18): do_scan(BX_KEY_F6,1,0,alt); break;
+	case KEY_F(19): do_scan(BX_KEY_F7,1,0,alt); break;
+	case KEY_F(20): do_scan(BX_KEY_F8,1,0,alt); break;
+
 	default:
 		if(character > 0x79) {
 			do_char(character - 0x80,1);
@@ -413,11 +420,14 @@ get_color_pair(Bit8u vga_attr)
 }
 
 chtype
-get_term_char(Bit8u vga_char)
+get_term_char(Bit8u vga_char[])
 {
 	int term_char;
 
-	switch (vga_char) {
+	if ((vga_char[1] & 0x0f) == ((vga_char[1] >> 4) & 0x0f)) {
+		return ' ';
+	}
+	switch (vga_char[0]) {
 		case 0x00: term_char = ' '; break;
 		case 0x04: term_char = ACS_DIAMOND; break;
 		case 0x18: term_char = ACS_UARROW; break;
@@ -450,7 +460,7 @@ get_term_char(Bit8u vga_char)
 		case 0xb1: term_char = ACS_CKBOARD; break;
 		case 0xb2: term_char = ACS_BOARD; break;
 		case 0xdb: term_char = ACS_BLOCK; break;
-		default: term_char = vga_char;
+		default: term_char = vga_char[0];
 	}
 	return term_char;
 }
@@ -490,7 +500,7 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			if (has_colors()) {
 				color_set(get_color_pair(new_text[i+1]), NULL);
 			}
-			ch = get_term_char(new_text[i]);
+			ch = get_term_char(&new_text[i]);
 			if ((new_text[i+1] & 0x08) > 0) ch |= A_BOLD;
 			if ((new_text[i+1] & 0x80) > 0) ch |= A_REVERSE;
 			mvaddch((i/2)/ncols,(i/2)%ncols, ch);
@@ -506,7 +516,7 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	if (has_colors()) {
 		color_set(get_color_pair(new_text[(cursor_y*80+cursor_x)*2+1]), NULL);
 	}
-	ch = get_term_char(new_text[(cursor_y*80+cursor_x)*2]);
+	ch = get_term_char(&new_text[(cursor_y*80+cursor_x)*2]);
 	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) ch |= A_BOLD;
 	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x80) > 0) ch |= A_REVERSE;
 	mvaddch(cursor_y, cursor_x, ch);
