@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.114 2004-08-21 13:31:48 vruppert Exp $
+// $Id: rombios.c,v 1.115 2004-09-03 19:49:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -916,10 +916,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.114 $";
-static char bios_date_string[] = "$Date: 2004-08-21 13:31:48 $";
+static char bios_cvs_version_string[] = "$Revision: 1.115 $";
+static char bios_date_string[] = "$Date: 2004-09-03 19:49:37 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.114 2004-08-21 13:31:48 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.115 2004-09-03 19:49:37 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8926,6 +8926,25 @@ no_serial:
   pop  dx
   ret
 
+rom_checksum:
+  push ax
+  push bx
+  push cx
+  xor  ax, ax
+  xor  bx, bx
+  xor  cx, cx
+  mov  ch, [2]
+  shl  cx, #1
+checksum_loop:
+  add  al, [bx]
+  inc  bx
+  loop checksum_loop
+  and  al, #0xff
+  pop  cx
+  pop  bx
+  pop  ax
+  ret
+
 rom_scan:
   ;; Scan for existence of valid expansion ROMS.
   ;;   Video ROM:   from 0xC0000..0xC7FFF in 2k increments
@@ -8945,6 +8964,8 @@ rom_scan_loop:
   mov  ax, #0x0004 ;; start with increment of 4 (512-byte) blocks = 2k
   cmp [0], #0xAA55 ;; look for signature
   jne  rom_scan_increment
+  call rom_checksum
+  jnz  rom_scan_increment
   mov  al, [2]  ;; change increment to ROM length in 512-byte blocks
 
   ;; We want our increment in 512-byte quantities, rounded to
