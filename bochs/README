@@ -42,10 +42,43 @@ changes:
  - a device registration mechanism was set up
  - the biosdev and unmapped devices were plugin-ized
 
-TO DO:
-- decide between DEV_function_name() macros and BX_DEV_FUNCTION_NAME() macros.
+TO DO BEFORE MERGE:
+
+- decide between DEV_function_name() macros and BX_DEV_FUNCTION_NAME() macros
+  and make it consistent.  Bryce would like some feedback on this, and
+  then maybe some help with the massive search&replace that may follow.
+
+- (assigned to Christophe)
+  apply patch patch.rename-default-iodev, or something like it
+
+- (assigned to Bryce)
+  some plugins require multiple object files, like harddrv needs cdrom, 
+  and keyboard needs scancodes.  In fact on win32 which is really picky
+  when linking DLLs you aren't even allowed to compile them separately.
+  We have two categories for .o files: pluggable or nonpluggable.  Maybe
+  we need a third category for files like scancodes.cc that are part of a
+  plugin, but we shouldn't try to make a separate shared library for them.
+
+  Right now I think we are building a scancodes plugin, but then never
+  using it.
+
+- #warnings should have #ifdef __GNUC__ or something around them so that
+  Psyon doesn't have to manually remove them.
+
+- clean up the diffs:
+  cvs diff -u -r BRANCH_PLUGINS_BASE2
+
+- (assigned to Bryce)
+  write change log for BRANCH_PLUGINS
+  - Bryce is working on this in patches/patch.plugins.  It's about 80% done.
+
+TO DO BEFORE RELEASE 2.0:
 - convert remaining devices
+
 - does bx_start_simulation actually need argc,argv???  Who uses this stuff?
+  If it is needed, Bryce should add some arguments to SIM->begin_simulation
+  or something like that.
+
 - some plugins, such as the GUI, PIT, SB, and NE2000, have several different
   possible implementations.  In this case, all implementations should be
   children of a single stub class.  The stub's methods produce errors or
@@ -53,13 +86,6 @@ TO DO:
   There is always one instance of the stub class lying around, which will be
   used if none of the implementation plugins is loaded.  Either an optional
   plugin or a user plugin can fill in these slots.
-
-- some plugins require multiple object files, like harddrv needs cdrom, 
-  and keyboard needs scancodes.  In fact on win32 which is really picky
-  when linking DLLs you aren't even allowed to compile them separately.
-  We have two categories for .o files: pluggable or nonpluggable.  Maybe
-  we need a third for files like scancodes.cc that are part of a plugin, 
-  but we shouldn't try to make a separate shared library for them.
 
 - platform specific issues
   - make sure LTDL works on VC++
