@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.89 2003-10-04 15:58:21 danielg4 Exp $
+// $Id: vga.cc,v 1.90 2003-10-31 15:49:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -259,7 +259,6 @@ bx_vga_c::init(void)
 
 #if BX_SUPPORT_VBE  
   // The following is for the vbe display extension
-  // FIXME: change 0xff80 & 0xff81 into some nice constants
   
   for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
     DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
@@ -302,16 +301,6 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
 
   h = (ai[1] + 1) * 8;
   v = (ai[18] | ((ai[7] & 0x02) << 7) | ((ai[7] & 0x40) << 3)) + 1;
-
-  /*
-  switch ( ( BX_VGA_THIS s.misc_output.vert_sync_pol << 1) | BX_VGA_THIS s.misc_output.horiz_sync_pol )
-   {
-   case 0: *piHeight = 200; break;
-   case 1: *piHeight = 400; break;
-   case 2: *piHeight = 350; break;
-   case 3: *piHeight = 480; break;
-   }
-  */
 
   if ( BX_VGA_THIS s.graphics_ctrl.shift_reg == 0 )
     {
@@ -1758,7 +1747,6 @@ bx_vga_c::update(void)
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
-//BX_DEBUG(("update(): case 2"));
         /* pass old text snapshot & new VGA memory contents */
         start_address = 0x0;
         cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) |
@@ -1790,7 +1778,6 @@ bx_vga_c::update(void)
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	}
-//BX_DEBUG(("update(): case 2"));
         /* pass old text snapshot & new VGA memory contents */
         start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
         cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) |
