@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.50 2003-01-02 09:49:48 vruppert Exp $
+// $Id: win32.cc,v 1.51 2003-02-17 19:08:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -167,6 +167,104 @@ static void headerbar_click(int x);
 void InitFont(void);
 void DestroyFont(void);
 
+
+Bit32u win32_to_bx_key[0x59] = {
+  /* 0x00 - 0x0f */
+  0,
+  BX_KEY_ESC,
+  BX_KEY_1,
+  BX_KEY_2,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_6,
+  BX_KEY_7,
+  BX_KEY_8,
+  BX_KEY_9,
+  BX_KEY_0,
+  BX_KEY_MINUS,
+  BX_KEY_EQUALS,
+  BX_KEY_BACKSPACE,
+  BX_KEY_TAB,
+  /* 0x10 - 0x1f */
+  BX_KEY_Q,
+  BX_KEY_W,
+  BX_KEY_E,
+  BX_KEY_R,
+  BX_KEY_T,
+  BX_KEY_Y,
+  BX_KEY_U,
+  BX_KEY_I,
+  BX_KEY_O,
+  BX_KEY_P,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_ENTER,
+  BX_KEY_CTRL_L,
+  BX_KEY_A,
+  BX_KEY_S,
+  /* 0x20 - 0x2f */
+  BX_KEY_D,
+  BX_KEY_F,
+  BX_KEY_G,
+  BX_KEY_H,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_SEMICOLON,
+  BX_KEY_SINGLE_QUOTE,
+  BX_KEY_GRAVE,
+  BX_KEY_SHIFT_L,
+  BX_KEY_BACKSLASH,
+  BX_KEY_Z,
+  BX_KEY_X,
+  BX_KEY_C,
+  BX_KEY_V,
+  /* 0x30 - 0x3f */
+  BX_KEY_B,
+  BX_KEY_N,
+  BX_KEY_M,
+  BX_KEY_COMMA,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+  BX_KEY_SHIFT_R,
+  BX_KEY_KP_MULTIPLY,
+  BX_KEY_ALT_L,
+  BX_KEY_SPACE,
+  BX_KEY_CAPS_LOCK,
+  BX_KEY_F1,
+  BX_KEY_F2,
+  BX_KEY_F3,
+  BX_KEY_F4,
+  BX_KEY_F5,
+  /* 0x40 - 0x4f */
+  BX_KEY_F6,
+  BX_KEY_F7,
+  BX_KEY_F8,
+  BX_KEY_F9,
+  BX_KEY_F10,
+  BX_KEY_PAUSE,
+  BX_KEY_SCRL_LOCK,
+  BX_KEY_KP_HOME,
+  BX_KEY_KP_UP,
+  BX_KEY_KP_PAGE_UP,
+  BX_KEY_KP_SUBTRACT,
+  BX_KEY_KP_LEFT,
+  BX_KEY_KP_5,
+  BX_KEY_KP_RIGHT,
+  BX_KEY_KP_ADD,
+  BX_KEY_KP_END,
+  /* 0x50 - 0x58 */
+  BX_KEY_KP_DOWN,
+  BX_KEY_KP_PAGE_DOWN,
+  BX_KEY_KP_INSERT,
+  BX_KEY_KP_DELETE,
+  0,
+  0,
+  BX_KEY_LEFT_BACKSLASH,
+  BX_KEY_F11,
+  BX_KEY_F12
+};
 
 /* Macro to convert WM_ button state to BX button state */
 
@@ -670,7 +768,7 @@ QueueEvent* deq_key_event(void) {
 
 void bx_win32_gui_c::handle_events(void) {
   Bit32u key;
-  unsigned char scancode;
+  Bit32u key_event;
 
   // printf("# Hey!!!\n");
 
@@ -685,9 +783,6 @@ void bx_win32_gui_c::handle_events(void) {
     QueueEvent* queue_event=deq_key_event();
     if ( ! queue_event)
       break;
-    // Bypass DEV_kbd_gen_scancode so we may enter
-    //  a scancode directly
-    // DEV_kbd_gen_scancode(deq_key_event());
     key = queue_event->key_event;
     if ( key==MOUSE_MOTION)
     {
@@ -703,23 +798,71 @@ void bx_win32_gui_c::handle_events(void) {
       headerbar_click(LOWORD(key));
     }
     else {
-      // Swap the scancodes of "numlock" and "pause"
-      if ((key & 0xff)==0x45) key ^= 0x100;
       if (key & 0x0100) {
-        // This makes the "AltGr" key on European keyboards work
-	if (key==0x138) {
-          scancode = 0x9d; // left control key released
-          DEV_kbd_put_scancode(&scancode, 1);
-	}
-        // Its an extended key
-        scancode = 0xE0;
-        DEV_kbd_put_scancode(&scancode, 1);
+        // It's an extended key
+        switch (key & 0xff) {
+          case 0x1C:
+            key_event = BX_KEY_KP_ENTER;
+            break;
+          case 0x1D:
+            key_event = BX_KEY_CTRL_R;
+            break;
+          case 0x35:
+            key_event = BX_KEY_KP_DIVIDE;
+            break;
+          case 0x38:
+            // This makes the "AltGr" key on European keyboards work
+            DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
+            key_event = BX_KEY_ALT_R;
+            break;
+          case 0x45:
+            key_event = BX_KEY_NUM_LOCK;
+            break;
+          case 0x47:
+            key_event = BX_KEY_HOME;
+            break;
+          case 0x48:
+            key_event = BX_KEY_UP;
+            break;
+          case 0x49:
+            key_event = BX_KEY_PAGE_UP;
+            break;
+          case 0x4B:
+            key_event = BX_KEY_LEFT;
+            break;
+          case 0x4D:
+            key_event = BX_KEY_RIGHT;
+            break;
+          case 0x4F:
+            key_event = BX_KEY_END;
+            break;
+          case 0x50:
+            key_event = BX_KEY_DOWN;
+            break;
+          case 0x51:
+            key_event = BX_KEY_PAGE_DOWN;
+            break;
+          case 0x52:
+            key_event = BX_KEY_INSERT;
+            break;
+          case 0x53:
+            key_event = BX_KEY_DELETE;
+            break;
+          case 0x5B:
+            key_event = BX_KEY_WIN_L;
+            break;
+          case 0x5C:
+            key_event = BX_KEY_WIN_R;
+            break;
+          case 0x5D:
+            key_event = BX_KEY_MENU;
+            break;
+        }
+      } else {
+        key_event = win32_to_bx_key[key & 0xff];
       }
-      // Its a key
-      scancode = LOBYTE(LOWORD(key));
-      // printf("# key = %d, scancode = %d\n",key,scancode);
-      if (key & BX_KEY_RELEASED) scancode |= 0x80;
-      DEV_kbd_put_scancode(&scancode, 1);
+      if (key & BX_KEY_RELEASED) key_event |= BX_KEY_RELEASED;
+      DEV_kbd_gen_scancode(key_event);
     }
   }
   LeaveCriticalSection(&stInfo.keyCS);
