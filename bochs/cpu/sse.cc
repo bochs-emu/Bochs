@@ -738,7 +738,7 @@ void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("ANDPS/PD/PAND_VdqWdq: SSE not supported in current configuration"));
+  BX_INFO(("PAND_VdqWdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -863,7 +863,7 @@ void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("ANDNPS/PD/PANDN_VdqWdq: SSE not supported in current configuration"));
+  BX_INFO(("PANDN_VdqWdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1260,7 +1260,7 @@ void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("ORPS/PD/POR_VdqWdq: SSE not supported in current configuration"));
+  BX_INFO(("POR_VdqWdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1389,7 +1389,7 @@ void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("XORPS/PD/PXOR_VdqWdq: SSE not supported in current configuration"));
+  BX_INFO(("PXOR_VdqWdq: SSE not supported in current configuration"));
   UndefinedOpcode(i);
 #endif
 }
