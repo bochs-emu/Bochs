@@ -865,19 +865,34 @@ if test "$use_curses" = yes; then
 fi
 
 if test "$with_rfb" = yes; then
-  # if RFB, check if pthread library is available
-  AC_CHECK_LIB(pthread, 
-    pthread_create,
-    [],
+  # first see if compiler takes "-pthread" argument
+  AC_MSG_CHECKING(for -pthread arg to compiler)
+  CFLAGS_SAVE="$CFLAGS"
+  CFLAGS="$CFLAGS -pthread"
+  AC_TRY_LINK([ #include <pthread.h> ],
+    [ pthread_create(0,0,0,0); ], 
+    [ 
+      # it compiles with -pthread
+      AC_MSG_RESULT(yes) 
+      CXXFLAGS="$CXXFLAGS -pthread"
+    ],
     [
-      echo ERROR: --with-rfb requires the pthread library, which could not be found.
-      exit 1
-    ]
-  )
+      AC_MSG_RESULT(no)
+      # now try with -lpthread
+      CFLAGS="$CFLAGS_SAVE"
+      AC_CHECK_LIB(pthread, 
+	pthread_create,
+	[
+	  # it compiles with -lpthread
+	  RFB_LIBS='-lpthread'
+	],
+	[
+	    echo ERROR: --with-rfb requires the pthread library, which could not be found.; exit 1
+	])
+    ])
 fi
 
-
-
+AC_SUBST(RFB_LIBS)
 AC_SUBST(GUI_OBJS)
 AC_SUBST(GUI_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS_TERM)
