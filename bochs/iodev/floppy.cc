@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.59 2002-12-11 15:41:24 bdenney Exp $
+// $Id: floppy.cc,v 1.60 2002-12-11 15:45:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,7 +101,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.59 2002-12-11 15:41:24 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.60 2002-12-11 15:45:10 bdenney Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -828,7 +828,8 @@ bx_floppy_ctrl_c::floppy_command(void)
         // media not in drive, return error
 
         BX_INFO(("attempt to read/write sector %u,"
-                     " sectors/track=%u", (unsigned) sector,
+                     " sectors/track=%u with media not present", 
+		     (unsigned) sector,
                      (unsigned) BX_FD_THIS s.media[drive].sectors_per_track));
         BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
         BX_FD_THIS s.status_reg1 = 0x25; // 0010 0101
