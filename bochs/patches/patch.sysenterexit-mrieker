@@ -249,7 +249,7 @@ diff -u -r1.41 fetchdecode.cc
    /* 0F 33 */  { 0, &BX_CPU_C::BxError },
 -  /* 0F 34 */  { 0, &BX_CPU_C::BxError },
 -  /* 0F 35 */  { 0, &BX_CPU_C::BxError },
-+#if BX_SUPPORT_SYSENTEREXIT
++#if BX_SUPPORT_SEP
 +  /* 0F 34 */  { 0,  &BX_CPU_C::SYSENTER },
 +  /* 0F 35 */  { 0,  &BX_CPU_C::SYSEXIT },
 +#else
