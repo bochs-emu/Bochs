@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.58 2002-11-30 09:39:29 vruppert Exp $
+// $Id: floppy.cc,v 1.59 2002-12-11 15:41:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,7 +101,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.58 2002-11-30 09:39:29 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.59 2002-12-11 15:41:24 bdenney Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -864,11 +864,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.status_reg1 = 0x85;
         // 0000 0000
         BX_FD_THIS s.status_reg2 = 0x00;
-
-        bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
-          bx_options.Ofloppy_command_delay->get (), 0 );
-        /* data reg not ready, controller busy */
-        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+        enter_result_phase();
         return;
         }
 
