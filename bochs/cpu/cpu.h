@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.165 2004-07-12 19:20:55 sshwarts Exp $
+// $Id: cpu.h,v 1.166 2004-07-15 19:45:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1991,6 +1991,7 @@ union {
   BX_SMF void FDECSTP(bxInstruction_c *);
   BX_SMF void FINCSTP(bxInstruction_c *);
   BX_SMF void FFREE_STi(bxInstruction_c *);
+  BX_SMF void FFREEP_STi(bxInstruction_c *);
 
   BX_SMF void F2XM1(bxInstruction_c *);
   BX_SMF void FYL2X(bxInstruction_c *);

@@ -624,14 +624,14 @@ static BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DE FF */  { 0,  &BX_CPU_C::FDIV_STi_ST0  },
 
   // DF (modrm is outside 00h - BFh) (mod == 11)
-  /* DF C0 */  { 0,  &BX_CPU_C::BxError },
-  /* DF C1 */  { 0,  &BX_CPU_C::BxError },
-  /* DF C2 */  { 0,  &BX_CPU_C::BxError },
-  /* DF C3 */  { 0,  &BX_CPU_C::BxError },
-  /* DF C4 */  { 0,  &BX_CPU_C::BxError },
-  /* DF C5 */  { 0,  &BX_CPU_C::BxError },
-  /* DF C6 */  { 0,  &BX_CPU_C::BxError },
-  /* DF C7 */  { 0,  &BX_CPU_C::BxError },
+  /* DF C0 */  { 0,  &BX_CPU_C::FFREEP_STi },   // 287+ compatibility opcode
+  /* DF C1 */  { 0,  &BX_CPU_C::FFREEP_STi },
+  /* DF C2 */  { 0,  &BX_CPU_C::FFREEP_STi },
+  /* DF C3 */  { 0,  &BX_CPU_C::FFREEP_STi },
+  /* DF C4 */  { 0,  &BX_CPU_C::FFREEP_STi },
+  /* DF C5 */  { 0,  &BX_CPU_C::FFREEP_STi },
+  /* DF C6 */  { 0,  &BX_CPU_C::FFREEP_STi },
+  /* DF C7 */  { 0,  &BX_CPU_C::FFREEP_STi },
   /* DF C8 */  { 0,  &BX_CPU_C::BxError },
   /* DF C9 */  { 0,  &BX_CPU_C::BxError },
   /* DF CA */  { 0,  &BX_CPU_C::BxError },

@@ -156,3 +156,20 @@ void BX_CPU_C::FFREE_STi(bxInstruction_c *i)
   BX_INFO(("FFREE_STi: required FPU, configure --enable-fpu"));
 #endif
 }
+
+/* 
+ * Free the st(0) register and pop it from the FPU stack.
+ * "Undocumented" by Intel & AMD but mentioned in AMDs Athlon Docs.
+ */
+
+/* DF C0 */
+void BX_CPU_C::FFREEP_STi(bxInstruction_c *i)
+{
+#if BX_SUPPORT_FPU
+  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR the_i387.FPU_settagi(FPU_Tag_Empty, i->rm());
+  BX_CPU_THIS_PTR the_i387.FPU_pop();
+#else
+  BX_INFO(("FFREEP_STi: required FPU, configure --enable-fpu"));
+#endif
+}

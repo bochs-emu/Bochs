@@ -2073,14 +2073,14 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodeInfoFP[512] = {
   /* DE FF */  { "fdivp",     0, STj, STj, XX },
 
   // DF (modrm is outside 00h - BFh) (mod == 11)
-  /* DF C0 */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF C1 */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF C2 */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF C3 */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF C4 */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF C5 */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF C6 */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF C7 */  { "(invalid)", 0,  XX,  XX, XX },
+  /* DF C0 */  { "ffreep",    0, STj,  XX, XX }, // 287+ compatility opcode
+  /* DF C1 */  { "ffreep",    0, STj,  XX, XX },
+  /* DF C2 */  { "ffreep",    0, STj,  XX, XX },
+  /* DF C3 */  { "ffreep",    0, STj,  XX, XX },
+  /* DF C4 */  { "ffreep",    0, STj,  XX, XX },
+  /* DF C5 */  { "ffreep",    0, STj,  XX, XX },
+  /* DF C6 */  { "ffreep",    0, STj,  XX, XX },
+  /* DF C7 */  { "ffreep",    0, STj,  XX, XX },
   /* DF C8 */  { "(invalid)", 0,  XX,  XX, XX },
   /* DF C9 */  { "(invalid)", 0,  XX,  XX, XX },
   /* DF CA */  { "(invalid)", 0,  XX,  XX, XX },
