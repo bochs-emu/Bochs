@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.15 2002-01-05 10:28:49 vruppert Exp $
+// $Id: dma.cc,v 1.16 2002-01-13 17:06:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -59,7 +59,7 @@ bx_dma_c::~bx_dma_c(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.15 2002-01-05 10:28:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.16 2002-01-13 17:06:33 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -568,12 +568,14 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
        (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_CASCADE) )
     BX_PANIC(("DRQ: mode_type(%02x) not handled",
       (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
-  if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement != 0)
-    BX_PANIC(("DRQ: address_decrement != 0"));
 
   dma_base = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
              (BX_DMA_THIS s[ma_sl].chan[channel].base_address << ma_sl);
-  dma_roof = dma_base + (BX_DMA_THIS s[ma_sl].chan[channel].base_count << ma_sl);
+  if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement==0) {
+    dma_roof = dma_base + (BX_DMA_THIS s[ma_sl].chan[channel].base_count << ma_sl);
+  } else {
+    dma_roof = dma_base - (BX_DMA_THIS s[ma_sl].chan[channel].base_count << ma_sl);
+  }
   if ( (dma_base & (0x7fff0000 << ma_sl)) != (dma_roof & (0x7fff0000 << ma_sl)) ) {
     BX_INFO(("dma_base = %08x", (unsigned) dma_base));
     BX_INFO(("dma_base_count = %08x", (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_count));
@@ -582,7 +584,6 @@ bx_dma_c::DRQ(unsigned channel, Boolean val)
   }
 
   if (ma_sl) {
-    //BX_DEBUG(("DRQ set up for single mode, increment, auto-init disabled, write"));
     // should check mask register VS DREQ's in status register here?
     // assert Hold ReQuest line to CPU
     bx_pc_system.set_HRQ(1);
@@ -630,30 +631,29 @@ bx_dma_c::raise_HLDA(bx_pc_system_c *pc_sys)
   bx_pc_system.set_DACK(channel + (ma_sl << 2), 1);
   // check for expiration of count, so we can signal TC and DACK(n)
   // at the same time.
-  if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement==0) {
-    // address increment
+  if (BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement==0)
     BX_DMA_THIS s[ma_sl].chan[channel].current_address++;
-    BX_DMA_THIS s[ma_sl].chan[channel].current_count--;
-    if (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0xffff) 
-      if (BX_DMA_THIS s[ma_sl].chan[channel].mode.autoinit_enable == 0) {
-	// count expired, done with transfer
-	// assert TC, deassert HRQ & DACK(n) lines
-	BX_DMA_THIS s[ma_sl].status_reg |= (1 << channel); // hold TC in status reg
-	bx_pc_system.set_TC(1);
-	count_expired = 1;
-      } else {
-	// count expired, but in autoinit mode
-	// reload count and base address
-	BX_DMA_THIS s[ma_sl].chan[channel].current_address = 
-	  BX_DMA_THIS s[ma_sl].chan[channel].base_address;
-	BX_DMA_THIS s[ma_sl].chan[channel].current_count =
-	  BX_DMA_THIS s[ma_sl].chan[channel].base_count;
+  else
+    BX_DMA_THIS s[ma_sl].chan[channel].current_address--;
+  BX_DMA_THIS s[ma_sl].chan[channel].current_count--;
+  if (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0xffff) {
+    // count expired, done with transfer
+    // assert TC, deassert HRQ & DACK(n) lines
+    BX_DMA_THIS s[ma_sl].status_reg |= (1 << channel); // hold TC in status reg
+    bx_pc_system.set_TC(1);
+    count_expired = 1;
+    if (BX_DMA_THIS s[ma_sl].chan[channel].mode.autoinit_enable == 0) {
+      // set mask bit if not in autoinit mode
+      BX_DMA_THIS s[ma_sl].mask[channel] = 1;
       }
-    
-    }
-  else {
-    // address decrement
-    BX_PANIC(("hlda: decrement not implemented"));
+    else {
+      // count expired, but in autoinit mode
+      // reload count and base address
+      BX_DMA_THIS s[ma_sl].chan[channel].current_address =
+        BX_DMA_THIS s[ma_sl].chan[channel].base_address;
+      BX_DMA_THIS s[ma_sl].chan[channel].current_count =
+        BX_DMA_THIS s[ma_sl].chan[channel].base_count;
+      }
     }
 
   if (BX_DMA_THIS s[ma_sl].chan[channel].mode.transfer_type == 1) { // write
