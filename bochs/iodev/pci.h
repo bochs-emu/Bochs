@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.4 2001-10-03 13:10:38 bdenney Exp $
+// $Id: pci.h,v 1.5 2001-11-14 01:39:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@
 typedef struct {
   Bit32u confAddr;
   Bit32u confData;
-  Bit32u array[256];
+  Bit8u array[256];
   Bit8u  shadow[4*16*4096];     // 256k of memory
   } bx_def440fx_t;
 

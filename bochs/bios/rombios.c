@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.20 2001-11-12 01:33:01 bdenney Exp $
+// $Id: rombios.c,v 1.21 2001-11-14 01:39:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -86,6 +86,7 @@
 #define BX_CALL_INT15_4F 1
 #define BX_USE_EBDA      1
 #define BX_SUPPORT_FLOPPY 1
+#define BX_PCIBIOS       1
 
    /* model byte 0xFC = AT */
 #define SYS_MODEL_ID     0xFC
@@ -272,7 +273,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.20 2001-11-12 01:33:01 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.21 2001-11-14 01:39:22 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -426,7 +427,7 @@ inb(port)
 #endasm
 }
 
-#if 0
+#if BX_PCIBIOS
   Bit16u
 inw(port)
   Bit16u port;
@@ -467,7 +468,7 @@ outb(port, val)
 #endasm
 }
 
-#if 0
+#if BX_PCIBIOS
   void
 outw(port, val)
   Bit16u port;
@@ -652,6 +653,33 @@ write_word(seg, offset, data)
 #endasm
 }
 
+#if BX_PCIBIOS
+  void
+setPCIaddr(bus, devfunc, regnum)
+  Bit8u bus;
+  Bit8u devfunc;
+  Bit8u regnum;
+{
+#asm
+  push bp
+  mov  bp, sp
+  push dx
+  push eax
+
+    mov  eax, #0x800000
+    mov  ah, 4[bp] ;; bus
+    mov  al, 6[bp] ;; devfunc
+    shl  eax, 8
+    mov  al, 8[bp] ;; regnum
+    mov  dx, #0x0cf8
+    out dx, eax
+
+  pop  eax
+  pop  dx
+  pop  bp
+#endasm
+}
+#endif
 
   Bit16u
 UDIV(a, b)
@@ -3391,6 +3419,41 @@ int1a_function(regs, ds, iret_addr)
       regs.u.r8.al = val8; // val last written to Reg B
       ClearCF(iret_addr.flags); // OK
       break;
+#if BX_PCIBIOS
+    case 0xb1:
+      setPCIaddr(0, 0, 0);
+      if (inw(0x0cfc) != 0x8086) {
+	bios_printf(0, "PCI BIOS not present\n");
+        SetCF(iret_addr.flags);
+      } else {
+        switch (regs.u.r8.al) {
+	  case 0x01: // Installation check
+	    regs.u.r8.ah = 0;
+	    regs.u.r8.al = 1;
+	    regs.u.r8.bh = 1;
+	    regs.u.r8.cl = 0;
+	    ClearCF(iret_addr.flags);
+	    break;
+	  case 0x09: // Read configuration word
+	    setPCIaddr(regs.u.r8.bh, regs.u.r8.bl, (Bit8u)(regs.u.r16.di & 0xfc));
+	    regs.u.r16.cx = inw(0x0cfc + (regs.u.r16.di & 0x0002));
+	    regs.u.r8.ah = 0;
+	    ClearCF(iret_addr.flags);
+	    break;
+	  case 0x0c: // Write configuration word
+	    bios_printf(0, "reg: 0x%02x value: 0x%02x\n",(Bit8u)(regs.u.r16.di & 0xff),regs.u.r16.cx);
+	    setPCIaddr(regs.u.r8.bh, regs.u.r8.bl, (Bit8u)(regs.u.r16.di & 0xfc));
+	    outw(0x0cfc + (regs.u.r16.di & 0x0002), regs.u.r16.cx);
+	    regs.u.r8.ah = 0;
+	    ClearCF(iret_addr.flags);
+	    break;
+	  default:
+	    bios_printf(0, "unsupported PCI BIOS function 0x%02x\n", regs.u.r8.al);
+	    SetCF(iret_addr.flags);
+	}
+      }
+      break;
+#endif
 
     default:
       SetCF(iret_addr.flags); // Unsupported
