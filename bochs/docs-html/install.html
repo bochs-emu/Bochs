@@ -358,6 +358,12 @@ in a sector, just use the number of "Sectors Total" from the table as the
 'count=' option to dd, and tell dd to use a block size ('bs=') the same as
 a disk sector size (512).  For example, for a 112MB drive, there are 229500
 (900*15*17) sectors.
+<p>
+For hard disk sizes larger than 528MB, be sure that newharddrivesupport is 
+enabled.  This will be the compiled default in a future release, but for now
+your .bochsrc still needs the line "newharddrivesupport: enabled=1" in order 
+to support >1024 cylinders.
+
 
 <PRE>
     unix-> dd if=/dev/zero of=112M bs=512 count=229500
