@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.33 2004-08-14 20:09:22 sshwarts Exp $
+// $Id: arith16.cc,v 1.34 2004-08-14 20:44:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -499,7 +499,7 @@ BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
     }
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_XADD16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 #else
   BX_PANIC(("XADD_EvGv: not supported on < 80486"));
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.19 2004-08-14 20:09:22 sshwarts Exp $
+// $Id: arith64.cc,v 1.20 2004-08-14 20:44:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -489,7 +489,7 @@ BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->nnn(), op1_64);
       }
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_XADD64);
+    SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
 }
 
   void

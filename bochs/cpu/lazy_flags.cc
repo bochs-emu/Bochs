@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.15 2004-08-14 20:00:24 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.16 2004-08-14 20:44:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,23 +40,19 @@ bx_bool BX_CPU_C::get_CFLazy(void)
     case BX_LF_INDEX_OSZAPC:
       switch (BX_CPU_THIS_PTR oszapc.instr) {
         case BX_INSTR_ADD8:
-        case BX_INSTR_XADD8:
           cf = (BX_CPU_THIS_PTR oszapc.result_8 <
                               BX_CPU_THIS_PTR oszapc.op1_8);
           break;
         case BX_INSTR_ADD16:
-        case BX_INSTR_XADD16:
           cf = (BX_CPU_THIS_PTR oszapc.result_16 <
                               BX_CPU_THIS_PTR oszapc.op1_16);
           break;
         case BX_INSTR_ADD32:
-        case BX_INSTR_XADD32:
           cf = (BX_CPU_THIS_PTR oszapc.result_32 <
                               BX_CPU_THIS_PTR oszapc.op1_32);
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_ADD64:
-        case BX_INSTR_XADD64:
           cf = (BX_CPU_THIS_PTR oszapc.result_64 <
                               BX_CPU_THIS_PTR oszapc.op1_64);
           break;
@@ -262,7 +258,6 @@ bx_bool BX_CPU_C::get_AFLazy(void)
         case BX_INSTR_SUB8:
         case BX_INSTR_SBB8:
         case BX_INSTR_CMP8:
-        case BX_INSTR_XADD8:
         case BX_INSTR_CMPS8:
         case BX_INSTR_SCAS8:
           af =
@@ -275,7 +270,6 @@ bx_bool BX_CPU_C::get_AFLazy(void)
         case BX_INSTR_SUB16:
         case BX_INSTR_SBB16:
         case BX_INSTR_CMP16:
-        case BX_INSTR_XADD16:
         case BX_INSTR_CMPS16:
         case BX_INSTR_SCAS16:
           af =
@@ -288,7 +282,6 @@ bx_bool BX_CPU_C::get_AFLazy(void)
         case BX_INSTR_SUB32:
         case BX_INSTR_SBB32:
         case BX_INSTR_CMP32:
-        case BX_INSTR_XADD32:
         case BX_INSTR_CMPS32:
         case BX_INSTR_SCAS32:
           af =
@@ -302,7 +295,6 @@ bx_bool BX_CPU_C::get_AFLazy(void)
         case BX_INSTR_SUB64:
         case BX_INSTR_SBB64:
         case BX_INSTR_CMP64:
-        case BX_INSTR_XADD64:
         case BX_INSTR_CMPS64:
         case BX_INSTR_SCAS64:
           af =
@@ -414,7 +406,6 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
         case BX_INSTR_SBB8:
         case BX_INSTR_CMP8:
         case BX_INSTR_NEG8:
-        case BX_INSTR_XADD8:
         case BX_INSTR_CMPS8:
         case BX_INSTR_SCAS8:
         case BX_INSTR_SHR8:
@@ -428,7 +419,6 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
         case BX_INSTR_SBB16:
         case BX_INSTR_CMP16:
         case BX_INSTR_NEG16:
-        case BX_INSTR_XADD16:
         case BX_INSTR_CMPS16:
         case BX_INSTR_SCAS16:
         case BX_INSTR_SHR16:
@@ -442,7 +432,6 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
         case BX_INSTR_SBB32:
         case BX_INSTR_CMP32:
         case BX_INSTR_NEG32:
-        case BX_INSTR_XADD32:
         case BX_INSTR_CMPS32:
         case BX_INSTR_SCAS32:
         case BX_INSTR_SHR32:
@@ -457,7 +446,6 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
         case BX_INSTR_SBB64:
         case BX_INSTR_CMP64:
         case BX_INSTR_NEG64:
-        case BX_INSTR_XADD64:
         case BX_INSTR_CMPS64:
         case BX_INSTR_SCAS64:
         case BX_INSTR_SHR64:
@@ -530,7 +518,6 @@ bx_bool BX_CPU_C::get_SFLazy(void)
         case BX_INSTR_SBB8:
         case BX_INSTR_CMP8:
         case BX_INSTR_NEG8:
-        case BX_INSTR_XADD8:
         case BX_INSTR_CMPS8:
         case BX_INSTR_SCAS8:
         case BX_INSTR_SHR8:
@@ -544,7 +531,6 @@ bx_bool BX_CPU_C::get_SFLazy(void)
         case BX_INSTR_SBB16:
         case BX_INSTR_CMP16:
         case BX_INSTR_NEG16:
-        case BX_INSTR_XADD16:
         case BX_INSTR_CMPS16:
         case BX_INSTR_SCAS16:
         case BX_INSTR_SHR16:
@@ -559,7 +545,6 @@ bx_bool BX_CPU_C::get_SFLazy(void)
         case BX_INSTR_SBB32:
         case BX_INSTR_CMP32:
         case BX_INSTR_NEG32:
-        case BX_INSTR_XADD32:
         case BX_INSTR_CMPS32:
         case BX_INSTR_SCAS32:
         case BX_INSTR_SHR32:
@@ -575,7 +560,6 @@ bx_bool BX_CPU_C::get_SFLazy(void)
         case BX_INSTR_SBB64:
         case BX_INSTR_CMP64:
         case BX_INSTR_NEG64:
-        case BX_INSTR_XADD64:
         case BX_INSTR_CMPS64:
         case BX_INSTR_SCAS64:
         case BX_INSTR_SHR64:
@@ -643,36 +627,32 @@ bx_bool BX_CPU_C::get_OFLazy(void)
       switch (BX_CPU_THIS_PTR oszapc.instr) {
         case BX_INSTR_ADD8:
         case BX_INSTR_ADC8:
-        case BX_INSTR_XADD8:
           op1_b7 = BX_CPU_THIS_PTR oszapc.op1_8 & 0x80;
           op2_b7 = BX_CPU_THIS_PTR oszapc.op2_8 & 0x80;
           result_b7 = BX_CPU_THIS_PTR oszapc.result_8 & 0x80;
-          of =  (op1_b7 == op2_b7) && (result_b7 ^ op2_b7);
+          of = (op1_b7 == op2_b7) && (result_b7 ^ op2_b7);
           break;
         case BX_INSTR_ADD16:
         case BX_INSTR_ADC16:
-        case BX_INSTR_XADD16:
           op1_b15 = BX_CPU_THIS_PTR oszapc.op1_16 & 0x8000;
           op2_b15 = BX_CPU_THIS_PTR oszapc.op2_16 & 0x8000;
           result_b15 = BX_CPU_THIS_PTR oszapc.result_16 & 0x8000;
-          of =  (op1_b15 == op2_b15) && (result_b15 ^ op2_b15);
+          of = (op1_b15 == op2_b15) && (result_b15 ^ op2_b15);
           break;
         case BX_INSTR_ADD32:
         case BX_INSTR_ADC32:
-        case BX_INSTR_XADD32:
           op1_b31 = BX_CPU_THIS_PTR oszapc.op1_32 & 0x80000000;
           op2_b31 = BX_CPU_THIS_PTR oszapc.op2_32 & 0x80000000;
           result_b31 = BX_CPU_THIS_PTR oszapc.result_32 & 0x80000000;
-          of =  (op1_b31 == op2_b31) && (result_b31 ^ op2_b31);
+          of = (op1_b31 == op2_b31) && (result_b31 ^ op2_b31);
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_ADD64:
         case BX_INSTR_ADC64:
-        case BX_INSTR_XADD64:
           op1_b63 = BX_CPU_THIS_PTR oszapc.op1_64 & BX_CONST64(0x8000000000000000);
           op2_b63 = BX_CPU_THIS_PTR oszapc.op2_64 & BX_CONST64(0x8000000000000000);
           result_b63 = BX_CPU_THIS_PTR oszapc.result_64 & BX_CONST64(0x8000000000000000);
-          of =  (op1_b63 == op2_b63) && (result_b63 ^ op2_b63);
+          of = (op1_b63 == op2_b63) && (result_b63 ^ op2_b63);
           break;
 #endif
         case BX_INSTR_SUB8:
@@ -683,7 +663,7 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           op1_b7 = BX_CPU_THIS_PTR oszapc.op1_8 & 0x80;
           op2_b7 = BX_CPU_THIS_PTR oszapc.op2_8 & 0x80;
           result_b7 = BX_CPU_THIS_PTR oszapc.result_8 & 0x80;
-          of =  (op1_b7 ^ op2_b7) && (op1_b7 ^ result_b7);
+          of = (op1_b7 ^ op2_b7) && (op1_b7 ^ result_b7);
           break;
         case BX_INSTR_SUB16:
         case BX_INSTR_SBB16:
@@ -693,7 +673,7 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           op1_b15 = BX_CPU_THIS_PTR oszapc.op1_16 & 0x8000;
           op2_b15 = BX_CPU_THIS_PTR oszapc.op2_16 & 0x8000;
           result_b15 = BX_CPU_THIS_PTR oszapc.result_16 & 0x8000;
-          of =  (op1_b15 ^ op2_b15) && (op1_b15 ^ result_b15);
+          of = (op1_b15 ^ op2_b15) && (op1_b15 ^ result_b15);
           break;
         case BX_INSTR_SUB32:
         case BX_INSTR_SBB32:
@@ -703,7 +683,7 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           op1_b31 = BX_CPU_THIS_PTR oszapc.op1_32 & 0x80000000;
           op2_b31 = BX_CPU_THIS_PTR oszapc.op2_32 & 0x80000000;
           result_b31 = BX_CPU_THIS_PTR oszapc.result_32 & 0x80000000;
-          of =  (op1_b31 ^ op2_b31) && (op1_b31 ^ result_b31);
+          of = (op1_b31 ^ op2_b31) && (op1_b31 ^ result_b31);
           break;
 #if BX_SUPPORT_X86_64
         case BX_INSTR_SUB64:
@@ -714,7 +694,7 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           op1_b63 = BX_CPU_THIS_PTR oszapc.op1_64 & BX_CONST64(0x8000000000000000);
           op2_b63 = BX_CPU_THIS_PTR oszapc.op2_64 & BX_CONST64(0x8000000000000000);
           result_b63 = BX_CPU_THIS_PTR oszapc.result_64 & BX_CONST64(0x8000000000000000);
-          of =  (op1_b63 ^ op2_b63) && (op1_b63 ^ result_b63);
+          of = (op1_b63 ^ op2_b63) && (op1_b63 ^ result_b63);
           break;
 #endif
         case BX_INSTR_NEG8:
@@ -866,7 +846,6 @@ bx_bool BX_CPU_C::get_PFLazy(void)
         case BX_INSTR_SBB8:
         case BX_INSTR_CMP8:
         case BX_INSTR_NEG8:
-        case BX_INSTR_XADD8:
         case BX_INSTR_CMPS8:
         case BX_INSTR_SCAS8:
         case BX_INSTR_SHR8:
@@ -880,7 +859,6 @@ bx_bool BX_CPU_C::get_PFLazy(void)
         case BX_INSTR_SBB16:
         case BX_INSTR_CMP16:
         case BX_INSTR_NEG16:
-        case BX_INSTR_XADD16:
         case BX_INSTR_CMPS16:
         case BX_INSTR_SCAS16:
         case BX_INSTR_SHR16:
@@ -895,7 +873,6 @@ bx_bool BX_CPU_C::get_PFLazy(void)
         case BX_INSTR_SBB32:
         case BX_INSTR_CMP32:
         case BX_INSTR_NEG32:
-        case BX_INSTR_XADD32:
         case BX_INSTR_CMPS32:
         case BX_INSTR_SCAS32:
         case BX_INSTR_SHR32:
@@ -911,7 +888,6 @@ bx_bool BX_CPU_C::get_PFLazy(void)
         case BX_INSTR_SBB64:
         case BX_INSTR_CMP64:
         case BX_INSTR_NEG64:
-        case BX_INSTR_XADD64:
         case BX_INSTR_CMPS64:
         case BX_INSTR_SCAS64:
         case BX_INSTR_SHR64:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.22 2004-04-28 19:57:37 cbothamy Exp $
+// $Id: string.cc,v 1.23 2004-08-14 20:44:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,9 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
 
 
 
@@ -911,7 +908,6 @@ BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
   unsigned seg;
   Bit8u op1_8, op2_8, diff_8;
 
-
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
     }
@@ -1149,8 +1145,8 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
     if (i->os32L()) {
       Bit32u op1_32, op2_32, diff_32;
-      read_virtual_dword(seg, esi, &op1_32);
 
+      read_virtual_dword(seg, esi, &op1_32);
       read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
 
       diff_32 = op1_32 - op2_32;
@@ -1172,18 +1168,15 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
       Bit16u op1_16, op2_16;
 
       read_virtual_word(seg, esi, &op1_16);
-
       read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
       Bit32u flags32;
-
       asmCmp16(op1_16, op2_16, flags32);
       setEFlagsOSZAPC(flags32);
 #else
       Bit16u diff_16;
       diff_16 = op1_16 - op2_16;
-
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMPS16);
 #endif
 
@@ -1198,7 +1191,6 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
         edi += 2;
         }
       }
-
 
     // zero extension of RSI/RDI
 
@@ -1218,7 +1210,6 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
       Bit32u op1_32, op2_32, diff_32;
 
       read_virtual_dword(seg, si, &op1_32);
-
       read_virtual_dword(BX_SEG_REG_ES, di, &op2_32);
 
       diff_32 = op1_32 - op2_32;
@@ -1242,7 +1233,6 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
       Bit16u op1_16, op2_16;
 
       read_virtual_word(seg, si, &op1_16);
-
       read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
@@ -1269,7 +1259,6 @@ BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
         }
       }
 
-
     DI = di;
     SI = si;
     }
@@ -1280,14 +1269,12 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8;
 
-
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rdi;
     Bit8u  diff_8;
 
-    rdi = RDI;
+    Bit64u rdi = RDI;
 
     op1_8 = AL;
 
@@ -1312,9 +1299,7 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L()) {
-    Bit32u edi;
-
-    edi = EDI;
+    Bit32u edi = EDI;
 
     op1_8 = AL;
 
@@ -1322,13 +1307,10 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-
     asmCmp8(op1_8, op2_8, flags32);
     setEFlagsOSZAPC(flags32);
 #else
-    Bit8u  diff_8;
-    diff_8 = op1_8 - op2_8;
-
+    Bit8u diff_8 = op1_8 - op2_8;
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
 #endif
 
@@ -1342,16 +1324,13 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
       }
 
     // zero extension of RDI
-
     RDI = edi;
     }
 
   else
 #endif /* BX_CPU_LEVEL >= 3 */
     { /* 16bit address mode */
-    Bit16u di;
-
-    di = DI;
+    Bit16u di = DI;
 
     op1_8 = AL;
 
@@ -1359,13 +1338,10 @@ BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
     Bit32u flags32;
-
     asmCmp8(op1_8, op2_8, flags32);
     setEFlagsOSZAPC(flags32);
 #else
-    Bit8u  diff_8;
-    diff_8 = op1_8 - op2_8;
-
+    Bit8u diff_8 = op1_8 - op2_8;
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
 #endif
 
@@ -1388,9 +1364,7 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rdi;
-
-    rdi = RDI;
+    Bit64u rdi = RDI;
 
     if (i->os64L()) {
       Bit64u op1_64, op2_64, diff_64;
@@ -1456,9 +1430,7 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L()) {
-    Bit32u edi;
-
-    edi = EDI;
+    Bit32u edi = EDI;
 
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
@@ -1509,13 +1481,10 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
       Bit32u flags32;
-
       asmCmp16(op1_16, op2_16, flags32);
       setEFlagsOSZAPC(flags32);
 #else
-      Bit16u diff_16;
-      diff_16 = op1_16 - op2_16;
-
+      Bit16u diff_16 = op1_16 - op2_16;
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SCAS16);
 #endif
 
@@ -1536,9 +1505,7 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
   else
 #endif /* BX_CPU_LEVEL >= 3 */
     { /* 16bit address mode */
-    Bit16u di;
-
-    di = DI;
+    Bit16u di = DI;
 
 #if BX_CPU_LEVEL >= 3
     if (i->os32L()) {
@@ -1570,13 +1537,10 @@ BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
 
 #if (defined(__i386__) && defined(__GNUC__) && BX_SupportHostAsms)
       Bit32u flags32;
-
       asmCmp16(op1_16, op2_16, flags32);
       setEFlagsOSZAPC(flags32);
 #else
-      Bit16u diff_16;
-      diff_16 = op1_16 - op2_16;
-
+      Bit16u diff_16 = op1_16 - op2_16;
       SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SCAS16);
 #endif
 
@@ -1601,9 +1565,7 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rdi;
-
-    rdi = RDI;
+    Bit64u rdi = RDI;
 
     al = AL;
     write_virtual_byte(BX_SEG_REG_ES, rdi, &al);
@@ -1636,7 +1598,6 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
     }
 
   al = AL;
-
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -1815,14 +1776,10 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rdi;
-
-    rdi = RDI;
+    Bit64u rdi = RDI;
 
     if (i->os64L()) {
-        Bit64u rax;
-
-        rax = RAX;
+        Bit64u rax = RAX;
         write_virtual_qword(BX_SEG_REG_ES, rdi, &rax);
 
         if (BX_CPU_THIS_PTR get_DF ()) {
@@ -1836,9 +1793,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
       } /* if (i->os64L()) ... */
     else
     if (i->os32L()) {
-        Bit32u eax;
-
-        eax = EAX;
+        Bit32u eax = EAX;
         write_virtual_dword(BX_SEG_REG_ES, rdi, &eax);
 
         if (BX_CPU_THIS_PTR get_DF ()) {
@@ -1851,9 +1806,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
           }
       } /* if (i->os32L()) ... */
     else { /* 16 bit opsize mode */
-        Bit16u ax;
-
-        ax = AX;
+        Bit16u ax = AX;
         write_virtual_word(BX_SEG_REG_ES, rdi, &ax);
 
         if (BX_CPU_THIS_PTR get_DF ()) {
@@ -1872,15 +1825,11 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L()) {
-    Bit32u edi;
-
-    edi = EDI;
+    Bit32u edi = EDI;
 
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
-        Bit64u rax;
-
-        rax = RAX;
+        Bit64u rax = RAX;
         write_virtual_qword(BX_SEG_REG_ES, edi, &rax);
 
         if (BX_CPU_THIS_PTR get_DF ()) {
@@ -1895,9 +1844,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
     else
 #endif  // #if BX_SUPPORT_X86_64
     if (i->os32L()) {
-        Bit32u eax;
-
-        eax = EAX;
+        Bit32u eax = EAX;
         write_virtual_dword(BX_SEG_REG_ES, edi, &eax);
 
         if (BX_CPU_THIS_PTR get_DF ()) {
@@ -1926,22 +1873,16 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
       }
 
     // zero extension of RDI
-
     RDI = edi;
-    }
-
+  }
   else
 #endif /* BX_CPU_LEVEL >= 3 */
     { /* 16bit address size */
-    Bit16u di;
-
-    di = DI;
+    Bit16u di = DI;
 
 #if BX_CPU_LEVEL >= 3
     if (i->os32L()) {
-        Bit32u eax;
-
-        eax = EAX;
+        Bit32u eax = EAX;
         write_virtual_dword(BX_SEG_REG_ES, di, &eax);
 
         if (BX_CPU_THIS_PTR get_DF ()) {
@@ -1956,9 +1897,7 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
     else
 #endif /* BX_CPU_LEVEL >= 3 */
       { /* 16 bit opsize mode */
-        Bit16u ax;
-
-        ax = AX;
+        Bit16u ax = AX;
         write_virtual_word(BX_SEG_REG_ES, di, &ax);
 
         if (BX_CPU_THIS_PTR get_DF ()) {
@@ -1974,7 +1913,6 @@ BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
     DI = di;
     }
 }
-
 
   void
 BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
@@ -1992,9 +1930,7 @@ BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rsi;
-
-    rsi = RSI;
+    Bit64u rsi = RSI;
 
     read_virtual_byte(seg, rsi, &al);
 
@@ -2013,9 +1949,7 @@ BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L()) {
-    Bit32u esi;
-
-    esi = ESI;
+    Bit32u esi = ESI;
 
     read_virtual_byte(seg, esi, &al);
 
@@ -2036,9 +1970,7 @@ BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
   else
 #endif /* BX_CPU_LEVEL >= 3 */
     { /* 16bit address mode */
-    Bit16u si;
-
-    si = SI;
+    Bit16u si = SI;
 
     read_virtual_byte(seg, si, &al);
 
@@ -2071,9 +2003,7 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rsi;
-
-    rsi = RSI;
+    Bit64u rsi = RSI;
 
     if (i->os64L()) {
       Bit64u rax;
@@ -2126,9 +2056,7 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
   else
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L()) {
-    Bit32u esi;
-
-    esi = ESI;
+    Bit32u esi = ESI;
 
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
@@ -2185,9 +2113,7 @@ BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
   else
 #endif /* BX_CPU_LEVEL >= 3 */
     { /* 16bit address mode */
-    Bit16u si;
-
-    si = SI;
+    Bit16u si = SI;
 
 #if BX_CPU_LEVEL >= 3
     if (i->os32L()) {
