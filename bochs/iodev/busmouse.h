@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.h,v 1.1 2004-12-11 08:35:32 vruppert Exp $
+// $Id: busmouse.h,v 1.2 2004-12-25 09:29:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2004  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir

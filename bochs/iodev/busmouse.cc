@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.1 2004-12-11 08:35:32 vruppert Exp $
+// $Id: busmouse.cc,v 1.2 2004-12-25 09:29:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
+//  Copyright (C) 2004  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -75,7 +75,7 @@ bx_busm_c::~bx_busm_c(void)
   void
 bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.1 2004-12-11 08:35:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.2 2004-12-25 09:29:31 vruppert Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 
@@ -97,6 +97,7 @@ bx_busm_c::init(void)
   BX_BUSM_THIS sig_port_sequ = 0;
   BX_BUSM_THIS interrupts    = 0;   // interrupts off
   BX_BUSM_THIS command_val   = 0;   // command byte
+  BX_BUSM_THIS cur_command   = 0;
 
   // the control port values
   BX_BUSM_THIS control_val             = 
@@ -141,13 +142,13 @@ bx_busm_c::read(Bit32u address, unsigned io_len)
   switch (address) {
     case 0x023C:
       value = BX_BUSM_THIS control_val;
-/*			value = (BX_BUSM_THIS control.mode_set        ? 1<<7 : 0)
- *				    | (BX_BUSM_THIS control.modeA_select       <<5)
- *				    | (BX_BUSM_THIS control.portA_dir       ? 1<<4 : 0)
- *						| (BX_BUSM_THIS control.portC_upper_dir ? 1<<3 : 0)
- *						| (BX_BUSM_THIS control.modeBC_select   ? 1<<2 : 0)
- *						| (BX_BUSM_THIS control.portB_dir       ? 1<<1 : 0)
- *						| (BX_BUSM_THIS control.portC_lower_dir ? 1<<0 : 0);
+/*      value = (BX_BUSM_THIS control.mode_set        ? 1<<7 : 0)
+ *            | (BX_BUSM_THIS control.modeA_select       <<5)
+ *            | (BX_BUSM_THIS control.portA_dir       ? 1<<4 : 0)
+ *            | (BX_BUSM_THIS control.portC_upper_dir ? 1<<3 : 0)
+ *            | (BX_BUSM_THIS control.modeBC_select   ? 1<<2 : 0)
+ *            | (BX_BUSM_THIS control.portB_dir       ? 1<<1 : 0)
+ *            | (BX_BUSM_THIS control.portC_lower_dir ? 1<<0 : 0);
  */   break;
     case 0x023D:  // data
       switch (BX_BUSM_THIS cur_command) {
@@ -224,13 +225,13 @@ bx_busm_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         case 0x02:  // read y
         case 0x07:
           BX_BUSM_THIS cur_command = (Bit8u) value;
-          break;			
+          break;      
         case 0x80: // reset
           BX_BUSM_THIS cur_command = 0x00;
           BX_BUSM_THIS command_val = 0x80;
           break;
         default:
-					BX_PANIC(("Unknown command to control port %x", value));
+          BX_PANIC(("Unknown command to control port %x", value));
       }
 */
       break;
