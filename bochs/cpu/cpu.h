@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.121 2002-12-18 22:33:43 sshwarts Exp $
+// $Id: cpu.h,v 1.122 2002-12-19 05:53:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2205,6 +2205,7 @@ union {
   BX_SMF void CVTTPD2DQ_VqWpd(bxInstruction_c *i);
   BX_SMF void CVTPD2DQ_VqWpd(bxInstruction_c *i);
   BX_SMF void CVTDQ2PD_VpdWq(bxInstruction_c *i);
+  BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *i);
   BX_SMF void PSUBSB_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSUBSW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PMINSW_VdqWdq(bxInstruction_c *i);
