@@ -312,6 +312,10 @@ bx_panic(char *fmt, ...)
 
   bx_atexit();
 
+#if !BX_PANIC_IS_FATAL
+  return;
+#endif    
+
 #if !BX_DEBUGGER
   exit(1);
 #else
