@@ -36,6 +36,8 @@ Linux RPM:
   tar xzvf bochs-$VERSION.tar.gz
   su
   (cd $DIR && ./configure && make rpm)
+  mv /usr/src/redhat/SRPMS/bochs-$VERSION-1.src.rpm bochs-$VERSION.src.rpm
+  mv /usr/src/redhat/RPMS/i386/bochs-$VERSION-1.i386.rpm bochs-$VERSION.i386.rpm
 
 win32 binary:
   for windows, no automation yet.  Look at old package and copy new files in.
