@@ -1,0 +1,309 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Kevin Lawton">
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#ececec"  LINK="#3333cc" VLINK="#666666">
+
+
+<H1>
+<CENTER>
+Help on installing Windows '95 within Bochs
+</CENTER>
+</H1>
+<PRE>
+<B>NOTE: Please read message regarding licensing of software packages
+    which you run within Bochs, and use of temporary files created to
+    facilitate installation. <A HREF="3rdparty.license.html">3rd Party Software Licensing and Temporary Files</A></B>
+
+What you will need before you start:
+
+  * Bootable floppy image with at least:
+    COMMAND.COM
+    FDISK.EXE
+    FORMAT.COM
+
+    Note: To create this, format a floppy on a real DOS machine.  You need the
+          system files, so do something like:
+
+      C:\> format /u /s a:
+      C:\> copy \dos\fdisk.exe a:
+      C:\> copy \dos\format.com a:
+
+    Then, copy the boot floppy to an file on a workstation that has a floppy
+    disk drive.  <A HREF="install.html#Creating a floppy image file">Creating a floppy image file</A>.
+
+  * Windows '95 distribution:
+
+      * Windows '95 Upgrade CDROM distribution.
+        This won't work as of yet, since the SETUP program is unable to
+        read the floppy drive to confirm you have a previous version of Windows.
+        You'll need MTOOLS for this.
+
+      * Windows '95 for PC's without Windows CDROM distribution.
+        This should work fine.  I only have the CDROM version above,
+        so I can't complete the install, but I have the floppy version,
+        and have enough info.
+        You'll need MTOOLS for this.
+
+      * Windows '95 Upgrade floppy distribution.
+        This should work fine.
+        Note: floppies 2 onward are in 1.68M format.
+
+      * Windows '95 for PC's without Windows floppy distribution.
+        This works fine.  I use this one.
+
+  * Floppy image of the first floppy from previous Windows distribution,
+    if you're Win '95 is an upgrade version.  This is for proof of
+    license since you paid less for the upgrade.
+    <A HREF="install.html#Creating a floppy image file">Creating a floppy image file</A>.
+
+  * Compile Bochs and setup for the Win '95 environment.
+    <A HREF="install.html#Compiling source code">Compiling source code</A>
+    <A HREF="install.html#Setting up environment">Setting up environment before running</A>
+
+  * Install the 'mtools' package on your workstation.  This will
+    allow you to copy files from your mounted CDROM to your hard
+    disk image file, which you will create.
+    <A HREF="mtools.html">Getting mtools</A>
+
+
+<HR WIDTH="100%">
+<H2>
+Creating and Preparing a Disk Image File for Windows '95 Installation.
+</H2>
+Create a blank hard disk image file.  Bochs will use this file as
+though it's your PC's hard drive, and all software is stored within it,
+as it would be on a real hard drive.  For this example, I chose
+to create a 112Meg image file.  The 'diskc:' directive in your
+'.bochsrc' file should point to this file.  <A HREF="install.html#Creating a hard disk image file">Creating a hard disk image file</A>
+
+  (.bochsrc) diskc: file=../112M, cyl=900, heads=15, spt=17
+
+  unix-> dd if=/dev/zero of=112M bs=512 count=229500
+
+Boot bochs with your 1.44Meg floppy image file.  Set the 'floppya:' directive
+in your '.bocshrc' file to the path of the DOS boot floppy image you made.
+
+  (.bochsrc) floppya: 1_44=../1.44
+
+  unix-> bochs boot:a
+  A:\> fdisk
+    [answer defaults to all questions]
+    [hit key to reboot, but Bochs will actually exit]
+
+Boot bochs again, format the C: drive, and make directories to
+hold the Win '95 distribution files and the contents of the
+first floppy of your previous Windows version if doing an upgrade.
+
+  unix-> bochs boot:a
+  A:\> format /u /s c:
+    >Proceed with Format (Y/N)?< [y]
+  A:\> mkdir c:\win95
+  [quit out of bochs by typiing Ctrl-C in the window you started bochs from]
+
+Define an entry for your hard disk image file in your ~/.mtools file.
+Make sure all other 'c:' defs are commented out.
+
+  (.mtoolsrc) drive c: file="<path>/112M" partition=1
+
+Test it out.  You should see a directory of C:, which will probably
+have very little on it, and lots of free space:
+
+  unix-> mdir c:
+</PRE>
+
+<HR WIDTH="100%">
+<H2>
+Installation from CD media
+</H2>
+Insert CDROM with Win'95 and mount it (the system automounter may do
+this for you automatically).
+
+<P>
+Go to the 'win95' subdirectory within the CD mount point and use
+mtools to copy the distribution files to your hard drive:
+
+<PRE>
+  unix-> cd &lt;CD-mount-point&gt;/win95
+  unix-> mcopy * c:/win95
+</PRE>
+
+Now fire up bochs again, and start up the setup program:
+
+<PRE>
+  unix-> bochs boot:c
+
+  C:\> cd win95
+  C:\WIN95> setup /C /im /id /is /iq /in
+</PRE>
+
+Go to <A HREF="#Running Setup">Running Windows '95 Setup Program</A>.
+
+<HR WIDTH="100%">
+<H2>
+Installation from floppy media
+</H2>
+
+Unfortunately, the first disk of the Windows '95 floppy distribution is
+not the same format as the rest.  Disk #1 is the standard 1.44M format.
+Disk #2 .. Disk #13 are 1.680M format, to save floppies.  Since you can't
+change what kind of floppy you're reading from in mid-stream (at least
+not yet) in bochs, you'll have to transfer Disk #1 to a 1.680 format
+image file also.  Then you'll be ready to go.
+
+<P>
+You'll need to copy all 13 of the floppies to image files.  To do this
+it's likely you will need a Linux system.  The problem is that you need
+a sytem that you can tell what the geometry of the floppy that you want
+to read is, when it's non-standard.  On a Linux system, you can use the
+'setfdprm' command for this.  The configuration file for setfdprm is
+'/etc/fdprm'.  On my system, there already existed the following entry:
+
+<PRE>
+  # Non-standard disk formats:
+  #		size sec/t hds trk stre gap  rate spec1 fmt_gap
+  1680/1440	3360	21   2  80    0 0x0C 0x00 0xCF     0x6C # ?????
+</PRE>
+
+Without doing anything special, you can copy an image of the first floppy.
+<PRE>
+  unix-> dd if=/dev/fd0 ibs=512 of=win95_d1
+</PRE>
+Now insert disk #2 in the drive.  Tell Linux you have a non-standard disk in
+there now with:
+<PRE>
+  unix-> setfdprm -p /dev/fd0 1680/1440
+</PRE>
+Make an image file of all the rest of the disks (2..13) by using 'dd'.
+<PRE>
+  unix-> dd if=/dev/fd0 ibs=512 of=win95_d2
+     ...
+  unix-> dd if=/dev/fd0 ibs=512 of=win95_d13
+</PRE>
+
+You should now have 13 image files, win95_d1 .. win95_d13.  Before
+running setup, you have to get the contents of the first one, onto
+a 1.680 format image file, like the rest.  To do that:
+<PRE>
+  unix-> cp win95_d2 temp_1680
+
+  # make entries in ~/.mtools
+  (~/.mtools) drive a: file='path/win95_d1'
+  (~/.mtools) drive b: file='path/temp_1680'
+
+  # test out your mtools entries:
+  unix-> mdir a:
+  unix-> mdir b:
+
+  # wipe out everything on b: to prepare to copy from a:
+  unix-> minfo b:
+  # a bunch of stats are displayed, along with the proper mformat command
+  unix-> mformat -t 80 -h 2 -s 21 b:
+  unix-> mdir b:
+
+  # copy files from a: to b:
+  unix-> mcopy a: b:
+</PRE>
+
+OK, now 'temp_1680' has the contents of disk #1, except its in the
+same format as the rest of them.  You might as well over-write the
+old one:
+<PRE>
+  unix-> cp temp_1680 win95_d1
+</PRE>
+
+At this point, you should have something like:
+<PRE>
+  unix-> ls -l win95*
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d1
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d2
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d3
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d4
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d5
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d6
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d7
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d8
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d9
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d10
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d11
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d12
+  -rw-r--r--   1 user      grp      1720320 Fri 13 17:21 win95_d13
+</PRE>
+
+You probably don't want to overwrite any of those disk images now,
+in case you have to re-run setup, so create one more working file,
+and edit your '.bochsrc' file to point to it:
+<PRE>
+  unix-> cp win95_d1 floppya.1680
+  (~/.bochsrc) floppya: 1_680=path/floppya.1680
+</PRE>
+
+Fire up bochs, and run the Windows '95 setup program:
+<PRE>
+  unix-> bochs boot:c
+
+  C:\> a:
+  A:\> setup /C /im /id /is /iq /in
+</PRE>
+
+Now, any time the Windows '95 setup program wants a new disk,
+just go to a Unix window, and copy the corresponding disk image file to the
+working floppy image file.  When it's done copying, type Return in the
+Bochs window.
+<PRE>
+  unix-> cp win95_d[2..13] floppya.1680
+</PRE>
+
+Go to <A HREF="#Running Setup">Running Windows '95 Setup Program</A>.
+
+<HR WIDTH="100%">
+<A NAME="Running Setup"></A>
+<H2>
+Running Windows '95 Setup Program
+</H2>
+
+<PRE>
+  (Sorry, I'll fill this out after I re-install Win'95 and write it all
+   down this time.  But for now...)
+
+  Windows will take 30 to 60 minutes message
+    [type Return]
+  Windows '95 Setup Wizard (progress bar)
+  License
+    [type TAB, then Return to accept license]
+  Choose Directory
+    [type Return to accept default]
+  Preparing Directory
+  Setup Options
+    [Down-Arrow 3 times to select Custom, then hit Return]
+  .
+  .
+  .
+
+  When setup asks if you want Windows to find the devices, select manual.
+  In each catagory, unselect everything with the space-bar.  Then manually
+  select only the hardware you need.  You can accomplish this with the
+  space bar, Tab key, and Down-Arrow key.  From what I remember you need:
+
+    standard AT/IDE drive
+    standard floppy
+    basic keyboard
+    Default VGA Adapter card
+    PS/2 Mouse
+    no network adapter
+    no sound adapter
+
+  .
+  .
+  .
+
+  I forget if at the end, Windows bombs out when it reboots.  If not, quit
+  out of Bochs with a Ctrl-C.  Then restart it.  Windows completes the install
+  then.
+
+</PRE>
+<HR WIDTH="100%">
+
+</BODY>
+</HTML>

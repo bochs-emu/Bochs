@@ -1,0 +1,193 @@
+#!/bin/csh -f
+
+## Script file to Install some packages from the RedHat 5.0
+## CD into a hard drive disk image file for use with bochs
+## by KPL
+
+# Note: this script file used about 102Meg of disk space,
+#       on the disk image file
+
+#############################
+# User Configurable Section #
+#############################
+
+## Name of actual image file to create with dd
+## The parent directory should have enough disk
+## space available to hold the size file you are
+## creating.
+set ddfile = /mnt/oldroot/linux.image
+
+## a unix directory (mountpoint) where you will mount
+## the loopback drive image.  Make this with mkdir
+## before running this script.
+set root = /mnt/loopback
+
+## Where your RedHat CD is mounted
+## Please mount this ahead of time
+set redhat_cd_mountpoint = /mnt/cdrom
+
+## 504Meg drive image
+#set cylinders = 1024
+#set heads     =   16
+#set spt       =   63
+
+## 126Meg drive image
+set cylinders =  256
+set heads     =   16
+set spt       =   63
+
+####################################
+# End of User Configurable Section #
+####################################
+
+set sectors = 0
+set kbytes  = 0
+set mbytes  = 0
+@ sectors = $cylinders * $heads * $spt
+@ kbytes  = $sectors / 2
+@ mbytes  = $kbytes /  1024
+echo "number of 512 byte sectors on disk image is" $sectors
+echo "number of KBytes is" $kbytes
+echo "number of MBytes is" $mbytes
+
+echo "creating blank disk image file with dd"
+dd if=/dev/zero of=$ddfile bs=512 count=$sectors
+
+echo "attaching disk image file to loopback device"
+losetup /dev/loop0 $ddfile
+
+echo "creating ext2 filesystem on disk image"
+mkfs -t ext2 /dev/loop0 $kbytes
+
+echo "mounting ext2 filesystem"
+mount -t ext2 /dev/loop0 $root
+
+
+echo "creating /var/lib/rpm directory on new filesystem"
+mkdir $root/var
+mkdir $root/var/lib
+mkdir $root/var/lib/rpm
+
+echo "changing directory to RedHat 5.0 CD"
+pushd $redhat_cd_mountpoint/RedHat/RPMS
+
+echo "installing some basic and useful packages to new filesystem"
+rpm -i --root $root setup-1.9-2.noarch.rpm
+rpm -i --root $root filesystem-1.3.1-2.noarch.rpm
+rpm -i --root $root basesystem-4.9-1.noarch.rpm
+rpm -i --root $root ldconfig-1.9.5-2.i386.rpm
+rpm -i --root $root ld.so-1.9.5-3.i386.rpm
+rpm -i --root $root redhat-release-5.0-1.noarch.rpm
+rpm -i --root $root termcap-9.12.6-7.noarch.rpm
+rpm -i --root $root libtermcap-2.0.8-6.i386.rpm
+rpm -i --root $root --nodeps glibc-2.0.5c-10.i386.rpm
+rpm -i --root $root fileutils-3.16-6.i386.rpm
+rpm -i --root $root grep-2.1-1.i386.rpm
+rpm -i --root $root bash-1.14.7-6.i386.rpm
+rpm -i --root $root shadow-utils-970616-9.i386.rpm
+rpm -i --root $root dev-2.5.4-1.i386.rpm
+rpm -i --root $root MAKEDEV-2.3.1-1.noarch.rpm
+rpm -i --root $root libc-5.3.12-24.i386.rpm
+rpm -i --root $root SysVinit-2.71-3.i386.rpm
+rpm -i --root $root rootfiles-1.5-3.noarch.rpm
+rpm -i --root $root slang-0.99.38-2.i386.rpm
+rpm -i --root $root newt-0.21-1.i386.rpm
+rpm -i --root $root chkconfig-0.9-2.i386.rpm
+rpm -i --root $root mktemp-1.4-2.i386.rpm
+rpm -i --root $root mingetty-0.9.4-5.i386.rpm
+rpm -i --root $root initscripts-3.25-1.i386.rpm
+rpm -i --root $root adjtimex-1.3-2.i386.rpm
+rpm -i --root $root aout-libs-1.4-8.i386.rpm
+rpm -i --root $root at-3.1.7-2.i386.rpm
+rpm -i --root $root gawk-3.0.2-2.i386.rpm
+rpm -i --root $root ncurses-1.9.9e-6.i386.rpm
+rpm -i --root $root zlib-1.0.4-2.i386.rpm
+rpm -i --root $root info-3.9-7.i386.rpm
+rpm -i --root $root m4-1.4-8.i386.rpm
+rpm -i --root $root gdbm-1.7.3-14.i386.rpm
+rpm -i --root $root tcsh-6.07-1.i386.rpm
+rpm -i --root $root perl-5.004-1.i386.rpm
+rpm -i --root $root autoconf-2.12-3.noarch.rpm
+rpm -i --root $root bdflush-1.5-7.i386.rpm
+rpm -i --root $root bin86-0.4-3.i386.rpm
+rpm -i --root $root binutils-2.8.1.0.1-1.i386.rpm
+rpm -i --root $root bison-1.25-3.i386.rpm
+rpm -i --root $root byacc-1.9-6.i386.rpm
+rpm -i --root $root cpio-2.4.2-6.i386.rpm
+rpm -i --root $root tmpwatch-1.4-1.i386.rpm
+rpm -i --root $root crontabs-1.6-1.noarch.rpm
+rpm -i --root $root diffutils-2.7-8.i386.rpm
+rpm -i --root $root e2fsprogs-1.10-4.i386.rpm
+rpm -i --root $root etcskel-1.3-4.noarch.rpm
+rpm -i --root $root file-3.22-6.i386.rpm
+rpm -i --root $root findutils-4.1-20.i386.rpm
+rpm -i --root $root flex-2.5.4a-2.i386.rpm
+rpm -i --root $root gcc-2.7.2.3-8.i386.rpm
+rpm -i --root $root gcc-c++-2.7.2.3-8.i386.rpm
+rpm -i --root $root gdb-4.16-9.i386.rpm
+rpm -i --root $root glibc-debug-2.0.5c-10.i386.rpm
+rpm -i --root $root kernel-headers-2.0.31-7.i386.rpm
+rpm -i --root $root glibc-devel-2.0.5c-10.i386.rpm
+rpm -i --root $root gzip-1.2.4-9.i386.rpm
+rpm -i --root $root iBCS-2.0-10.i386.rpm
+rpm -i --root $root kbd-0.94-5.i386.rpm
+rpm -i --root $root kbdconfig-1.5-1.i386.rpm
+rpm -i --root $root kernel-2.0.31-7.i386.rpm
+rpm -i --root $root kernel-modules-2.0.31-7.i386.rpm
+rpm -i --root $root kernel-source-2.0.31-7.i386.rpm
+rpm -i --root $root libelf-0.6.4-1.i386.rpm
+rpm -i --root $root lilo-0.20-1.i386.rpm
+rpm -i --root $root losetup-2.7f-1.i386.rpm
+rpm -i --root $root make-3.76.1-2.i386.rpm
+rpm -i --root $root mkdosfs-ygg-0.3b-5.i386.rpm
+rpm -i --root $root modutils-2.1.55-4.i386.rpm
+rpm -i --root $root mount-2.7f-1.i386.rpm
+rpm -i --root $root mouseconfig-2.21-1.i386.rpm
+rpm -i --root $root mtools-3.6-4.i386.rpm
+rpm -i --root $root ncompress-4.2.4-9.i386.rpm
+rpm -i --root $root net-tools-1.33-4.i386.rpm
+rpm -i --root $root patch-2.1-5.i386.rpm
+rpm -i --root $root portmap-4.0-7.i386.rpm
+rpm -i --root $root procinfo-0.11-1.i386.rpm
+rpm -i --root $root procps-1.2.4-1.i386.rpm
+rpm -i --root $root psacct-6.3-2.i386.rpm
+rpm -i --root $root psmisc-16-1.i386.rpm
+rpm -i --root $root pwdb-0.54-6.i386.rpm
+rpm -i --root $root rgrep-0.98.4-2.i386.rpm
+rpm -i --root $root screen-3.7.4-1.i386.rpm
+rpm -i --root $root sed-2.05-9.i386.rpm
+rpm -i --root $root stat-1.5-6.i386.rpm
+rpm -i --root $root strace-3.1-3.i386.rpm
+rpm -i --root $root tar-1.12-1.i386.rpm
+rpm -i --root $root textutils-1.22-4.i386.rpm
+rpm -i --root $root time-1.7-4.i386.rpm
+rpm -i --root $root timeconfig-2.1-3.i386.rpm
+rpm -i --root $root unzip-5.31-1.i386.rpm
+rpm -i --root $root which-1.0-7.i386.rpm
+rpm -i --root $root zip-2.1-2.i386.rpm
+rpm -i --root $root setconsole-1.0-3.noarch.rpm
+rpm -i --root $root cracklib-2.5-4.i386.rpm
+rpm -i --root $root cracklib-dicts-2.5-4.i386.rpm
+rpm -i --nodeps --root $root pam-0.59-5.i386.rpm
+rpm -i --root $root sh-utils-1.16-8.i386.rpm
+rpm -i --root $root util-linux-2.7-11.i386.rpm
+rpm -i --root $root vim-4.6-4.i386.rpm
+echo "done with packages"
+echo " "
+
+## create a few basic setup files
+echo "creating /etc/lilo.conf /etc/fstab /etc/sysconfig/network /etc/mtab"
+echo "  on new filesystem"
+popd
+/bin/cp ./lilo.conf $root/etc/
+/bin/cp ./fstab     $root/etc/
+/bin/cp ./network   $root/etc/sysconfig/
+touch               $root/etc/mtab
+/bin/cp ./hello.cc  $root/root/
+
+## we're done, unmount and detach loop device
+echo "unmounting filesystem"
+umount $root
+
+echo "detaching loopback device from image file"
+losetup -d /dev/loop0

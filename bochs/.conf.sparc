@@ -1,0 +1,39 @@
+#!/bin/sh
+
+#
+# These are the steps I typically use to configure and compile Bochs.
+#
+
+# superSPARC w/ Solaris 2.x
+set echo
+CC="gcc"
+CXX="$CC"
+CFLAGS="-Wall -O2 -mv8 -msupersparc -mno-epilogue"
+#CFLAGS="-Wall -O2 -mv8 -msupersparc"
+#CFLAGS="-Wall -O2 -g"
+CXXFLAGS="$CFLAGS"
+
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --enable-fpu
+#./configure
+#./configure --enable-instrumentation
+#./configure --with-nogui
+#./configure --enable-disasm
+#./configure --enable-debugger
+#./configure --enable-debugger --enable-disasm
+#./configure --enable-debugger --enable-disasm --enable-loader
+#./configure --enable-debugger --enable-disasm --enable-instrumentation
+#./configure --enable-debugger --enable-disasm --enable-instrumentation="instrument/stubs"
+
+#./configure --enable-debugger --enable-disasm --enable-instrumentation="instrument/example0"
+#./configure --enable-instrumentation="instrument/example0"
+
+#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=0
+#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=1
+
+unset echo

@@ -1,0 +1,16 @@
+The file "hercules.bdf" is a font file I created using "vga.bdf"
+as a base.
+
+"vga.bdf" is composed of characters which are 8 pixels wide by 16 pixels high.
+I needed to go to 9 pixels wide by 14 pixels high, so I chopped the top
+and bottom row of pixels off, and added another column in width.
+
+A few characters I moved down a pixel, since I had to chop the top tow off,
+and otherwise they would have lost information.
+
+On the Hercules, the 9th column is not stored in ROM.  For characters,
+0 to 191, and 224 to 255, a blank column is generated.  For characters,
+192.223 the 8th column is repeated, so I added those pixels as
+would be expected.
+
+-Kevin Lawton

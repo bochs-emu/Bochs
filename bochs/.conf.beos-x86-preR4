@@ -1,0 +1,18 @@
+#!/bin/sh
+
+#
+# These are the steps I typically use to configure and compile Bochs,
+# on an x86 BeOS machine
+#
+
+CC=mwcc
+CXX=$CC
+CFLAGS="-w8 -O2"
+CXXFLAGS=$CFLAGS
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --with-beos

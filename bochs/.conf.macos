@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# This script will run configure for a Macintosh/CodeWarrior Pro
+# environment.  I actually run this on my Linux machine, but
+# the generated files are for a Mac.
+
+set echo
+
+# These really just make ./configure happy on your Unix machine.
+# They are not the options used on your Mac.
+CC="egcs"
+CFLAGS=""
+CXX="$CC"
+CXXFLAGS="$CFLAGS"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --with-macos
+
+unset echo

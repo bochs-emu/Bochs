@@ -1,0 +1,6 @@
+#
+# /etc/fstab
+#
+
+/dev/hda                  /                         ext2   defaults 1 1
+none                      /proc                     proc   defaults

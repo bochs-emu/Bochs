@@ -1,0 +1,2 @@
+xmodmap -e "keycode 107 = 0xffff"
+xmodmap -e "keycode 22 = 0xff08"
