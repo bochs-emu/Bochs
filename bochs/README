@@ -29,7 +29,11 @@ plex86.  Here are the comments from that patch:
 > plex_* just to reduce confusion and mayhem when I was compiling with both
 > kbd implementations.  I didn't change anything except to get it to compile.
 
-The difference between plugins3 and plugins5 is........  FIXME(cbothamy)
+plugins5 is based on plugins3, with the following changes :
+ - plex86 keyboard device was marged with Bochs keyboard, as a plugin
+ - plugin.cc was cleaned up
+ - a device registration mechanism was set up
+ - the biosdev and unmapped device were plugin-ized
 
 The branch is called BRANCH_PLUGINS.  There is a normal tag called
 BRANCH_PLUGINS_BASE that marks the point where the branch began.  This
@@ -105,6 +109,7 @@ TO DO:
     we can allow a bochsrc line such as "plugin_gui: sdl" or
     "plugin_device: mypit".  I'm distinguishing between gui and device 
     plugins, because they are used in quite different ways.
+
 - how do we locate plugins on the disk?
   - bochsrc could say "plugin_search_directory: /path/to/libs".  If possible
     the user specified directory should be tried first.  If there are multiple
@@ -115,6 +120,7 @@ TO DO:
   - just attempt to load it and see if it works, using the system's default
     search routine.  On some systems the LD_LIBRARY_PATH variable will control
     what directories are checked.
+
 - (assigned to Bryce) how does the user select which gui to use?  Add a bochsrc
   parameter "gui_select: sdl".  This variable can also be edited in
   configuration menus.  If there is no user-specified value when it's time to
