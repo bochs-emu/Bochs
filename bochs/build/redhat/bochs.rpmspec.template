@@ -50,7 +50,10 @@ and other OS's, all on your workstation.
 	  rm -rf $RPM_BUILD_ROOT
 	fi
 %post
-	/usr/share/bochs/install-x11-fonts
+	# for non-X-windows RPM, this script doesn't exist.
+	if test -x /usr/share/bochs/install-x11-fonts; then
+          /usr/share/bochs/install-x11-fonts
+	fi
 %preun
 	# clean up the bochsout.txt that is always produced if you 
 	# run bochs-dlx.
