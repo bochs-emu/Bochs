@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.41 2002-12-07 19:51:42 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.42 2002-12-07 20:01:09 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,11 +72,6 @@
 //1.193181MHz Clock
 #define TICKS_PER_SECOND (1193181)
 
-//FIXME
-Bit64u em_last_realtime;
-Bit64u last_realtime_delta;
-Bit64u last_realtime_ticks;
-Bit64u timer_accuracy;
 
 // define a macro to convert floating point numbers into 64-bit integers.
 // In MSVC++ you can convert a 64-bit float into a 64-bit signed integer,
@@ -231,11 +226,9 @@ bx_pit_c::init( void )
     BX_PIT_THIS s.stored_delta=0;
 #if BX_HAVE_REALTIME_USEC
     BX_PIT_THIS s.last_time=GET_PIT_REALTIME64_USEC()+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
-    //FIXME
-    em_last_realtime=0;
-    last_realtime_delta=0;
-    last_realtime_ticks=0;
-    timer_accuracy = USEC_PER_SECOND;
+    BX_PIT_THIS s.em_last_realtime=0;
+    BX_PIT_THIS s.last_realtime_delta=0;
+    BX_PIT_THIS s.last_realtime_ticks=0;
 #else
     BX_PIT_THIS s.last_time=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART)*USEC_PER_SECOND;
     BX_PIT_THIS s.max_ticks = AHEAD_CEILING;
@@ -513,10 +506,8 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     Bit64u real_time_total = real_time_delta + BX_PIT_THIS s.total_sec;
     Bit64u em_time_delta = (Bit64u)usec_delta + (Bit64u)BX_PIT_THIS s.stored_delta;
     if(real_time_delta) {
-      last_realtime_delta = real_time_delta;
-      last_realtime_ticks = BX_PIT_THIS s.total_ticks;
-      if(real_time_delta < timer_accuracy)
-	timer_accuracy = real_time_delta;
+      BX_PIT_THIS s.last_realtime_delta = real_time_delta;
+      BX_PIT_THIS s.last_realtime_ticks = BX_PIT_THIS s.total_ticks;
     }
     BX_PIT_THIS s.ticks_per_second = TICKS_PER_SECOND;
 
@@ -528,9 +519,9 @@ bx_pit_c::periodic( Bit32u   usec_delta )
       //  probably only an issue on startup, but it solves some problems.
       ticks_delta = 0;
     }
-    if(ticks_delta + BX_PIT_THIS s.total_ticks - last_realtime_ticks > REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(last_realtime_delta)))) {
+    if(ticks_delta + BX_PIT_THIS s.total_ticks - BX_PIT_THIS s.last_realtime_ticks > REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(BX_PIT_THIS s.last_realtime_delta)))) {
       //This keeps us from going too fast in relation to real time.
-      ticks_delta = REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(last_realtime_delta))) + last_realtime_ticks - BX_PIT_THIS s.total_ticks;
+      ticks_delta = REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(BX_PIT_THIS s.last_realtime_delta))) + BX_PIT_THIS s.last_realtime_ticks - BX_PIT_THIS s.total_ticks;
       BX_PIT_THIS s.ticks_per_second = F2I(MAX_MULT * I2F(TICKS_PER_SECOND));
     }
     if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
@@ -571,9 +562,9 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     a=(BX_PIT_THIS s.usec_per_second);
     if(real_time_delta) {
       //FIXME
-      Bit64u em_realtime_delta = BX_PIT_THIS s.last_sec_usec + BX_PIT_THIS s.stored_delta - em_last_realtime;
+      Bit64u em_realtime_delta = BX_PIT_THIS s.last_sec_usec + BX_PIT_THIS s.stored_delta - BX_PIT_THIS s.em_last_realtime;
       b=((Bit64u)USEC_PER_SECOND * em_realtime_delta / real_time_delta);
-      em_last_realtime = BX_PIT_THIS s.last_sec_usec + BX_PIT_THIS s.stored_delta;
+      BX_PIT_THIS s.em_last_realtime = BX_PIT_THIS s.last_sec_usec + BX_PIT_THIS s.stored_delta;
     } else {
       b=a;
     }

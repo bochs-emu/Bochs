@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.15 2002-10-28 05:55:47 yakovlev Exp $
+// $Id: pit_wrap.h,v 1.16 2002-12-07 20:01:10 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,6 +82,9 @@ private:
     Bit64u stored_delta;
     Bit64u total_usec;
     Bit64u use_realtime;
+    Bit64u em_last_realtime;
+    Bit64u last_realtime_delta;
+    Bit64u last_realtime_ticks;
     } s;
 
   static void timer_handler(void *this_ptr);
