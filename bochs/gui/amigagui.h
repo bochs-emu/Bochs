@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigagui.h,v 1.4 2003-04-04 22:27:47 nicholai Exp $
+// $Id: amigagui.h,v 1.5 2003-04-06 15:48:58 nicholai Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <exec/types.h>
@@ -12,6 +12,7 @@
 #include <proto/cybergraphics.h>
 #include <proto/diskfont.h>
 #include <proto/gadtools.h>
+#include <proto/iffparse.h>
 #include <diskfont/diskfont.h>
 #include <intuition/intuitionbase.h>
 #include <intuition/pointerclass.h>
@@ -21,7 +22,11 @@
 #include <graphics/videocontrol.h>
 #include <cybergraphx/cybergraphics.h>
 #include <libraries/gadtools.h>
+
 #define FULL(x) (x*0x01010101)
+#define  ID_FTXT	MAKE_ID('F','T','X','T')
+#define  ID_CHRS	MAKE_ID('C','H','R','S')
+
 
 void check_toolbar(void);
 
@@ -33,6 +38,7 @@ struct Library       	*GadToolsBase;
 struct Library 			*CyberGfxBase;
 struct Library 			*AslBase;
 struct Library 			*DiskfontBase;
+struct Library          *IFFParseBase;
 struct Screen 			*screen = NULL, *pub_screen = NULL;
 struct Window 			*window = NULL;
 struct TextFont 		*vgafont;
@@ -191,4 +197,4 @@ const unsigned char raw_to_bochs [130] = {
             BX_KEY_INT_FORWARD,
             BX_KEY_INT_HOME,
             BX_KEY_INT_SEARCH
-            };
+};

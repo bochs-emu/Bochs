@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.13 2003-04-04 22:27:47 nicholai Exp $
+// $Id: amigaos.cc,v 1.14 2003-04-06 15:48:58 nicholai Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -52,6 +52,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(amigaos)
 
 static void hide_pointer();
 static void show_pointer();
+static void freeiff(struct IFFHandle *iff);
 
 
 static ULONG screenreqfunc(struct Hook *hook, struct ScreenModeRequester *smr, ULONG id)
@@ -353,6 +354,10 @@ bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsig
 	if (DiskfontBase == NULL)
 	BX_PANIC(("Amiga: Failed to open diskfont.library v38 or later!"));
 
+	IFFParseBase = OpenLibrary("iffparse.library", 39);
+	if (DiskfontBase == NULL)
+	BX_PANIC(("Amiga: Failed to open iffparse.library v39 or later!"));
+
 	open_screen();
 	setup_inputhandler();
 	/*
@@ -492,15 +497,126 @@ unsigned int fgcolor, bgcolor;
   int
 bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
-  return 0;
+	struct IFFHandle *iff = NULL;
+	long err = 0;
+    struct ContextNode  *cn;
+    
+
+	if (!(iff = AllocIFF ()))
+	{
+		BX_INFO(("Amiga: Failed to allocate iff handle"));
+		return 0;
+	}
+
+	if (!(iff->iff_Stream = (ULONG) OpenClipboard (0)))
+	{
+		BX_INFO(("Amiga: Failed to open clipboard device"));
+		freeiff(iff);
+		return 0;
+	}
+
+	InitIFFasClip (iff);
+
+	if (err = OpenIFF (iff, IFFF_READ))
+	{
+		BX_INFO(("Amiga: Failed to open clipboard for reading"));
+		freeiff(iff);
+		return 0;
+	}
+
+	if (err = StopChunk(iff, ID_FTXT, ID_CHRS))
+	{
+		BX_INFO(("Amiga: Failed StopChunk()"));
+		freeiff(iff);
+		return 0;
+	}
+
+	while(1)
+		{
+			UBYTE readbuf[1024];
+			int len = 0;
+			
+			err = ParseIFF(iff, IFFPARSE_SCAN);
+			if(err == IFFERR_EOC) continue;
+			else if(err) break;
+
+	        cn = CurrentChunk(iff);
+
+			if((cn) && (cn->cn_Type == ID_FTXT) && (cn->cn_ID == ID_CHRS))
+			{
+				while((len = ReadChunkBytes(iff,readbuf, 1024)) > 0)
+				{
+					Bit8u *buf = new Bit8u[len];
+					memcpy (buf, readbuf, len);
+					*bytes = buf;
+					*nbytes = len;
+				}
+				if(len < 0)	   err = len;
+			}
+		}
+
+	if((err) && (err != IFFERR_EOF))
+	{
+		BX_INFO(("Amiga: Failed to read from clipboard"));
+		freeiff(iff);
+		return 0;
+	}
+	
+	return 1;
 }
 
   int
 bx_amigaos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
-  return 0;
-}
+	struct IFFHandle *iff = NULL;
+	long err = 0;
 
+	BX_INFO(("Amiga: set_clipboard_text"));
+
+	if (!(iff = AllocIFF ()))
+	{
+		BX_INFO(("Amiga: Failed to allocate iff handle"));
+		return 0;
+	}
+
+	if (!(iff->iff_Stream = (ULONG) OpenClipboard (0)))
+	{
+		BX_INFO(("Amiga: Failed to open clipboard device"));
+		freeiff(iff);
+		return 0;
+	}
+
+	InitIFFasClip (iff);
+
+	if (err = OpenIFF (iff, IFFF_WRITE))
+	{
+		BX_INFO(("Amiga: Failed to open clipboard for writing"));
+		freeiff(iff);
+		return 0;
+	}
+
+	if(!(err = PushChunk(iff, ID_FTXT, ID_FORM, IFFSIZE_UNKNOWN)))
+	{
+		if(!(err=PushChunk(iff, 0, ID_CHRS, IFFSIZE_UNKNOWN)))
+		{
+			if(WriteChunkBytes(iff, text_snapshot, len) != len)
+				err = IFFERR_WRITE;
+		}
+		if(!err) err = PopChunk(iff);
+	}
+    if(!err) err = PopChunk(iff);
+
+	if(err)
+	{
+		BX_INFO(("Amiga: Failed to write text to clipboard"));
+		freeiff(iff);
+        return 0;
+	}
+
+	freeiff(iff);
+
+	return 1;
+}
 
   bx_bool
 bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
@@ -731,6 +847,8 @@ bx_amigaos_gui_c::exit(void)
   		CloseLibrary(DiskfontBase);
   	if(AslBase)
   		CloseLibrary(AslBase);
+    if(IFFParseBase)
+  		CloseLibrary(IFFParseBase);
 
 	if(!input_error)
 	{
@@ -771,4 +889,19 @@ bx_amigaos_gui_c::mouse_enabled_changed_specific (bx_bool val)
 	show_pointer();
   }
 }
+
+void
+freeiff(struct IFFHandle *iff)
+{
+	if(iff)
+	{
+        CloseIFF (iff);
+        if (iff->iff_Stream)
+			CloseClipboard ((struct ClipboardHandle *) iff->iff_Stream);
+		FreeIFF (iff);
+	}
+}
+
+
+
 #endif /* if BX_WITH_AMIGAOS */
