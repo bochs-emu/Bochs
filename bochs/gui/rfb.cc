@@ -20,6 +20,7 @@
 #include "bochs.h"
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
+#define LOG_THIS bx_gui.
 
 #ifdef WIN32
 
