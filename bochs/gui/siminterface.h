@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.122 2004-07-09 21:40:48 vruppert Exp $
+// $Id: siminterface.h,v 1.123 2004-07-28 19:36:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -314,14 +314,18 @@ typedef enum {
   BXP_ATA3_SLAVE_JOURNAL,
 #define BXP_ATAx_DEVICE_JOURNAL(i, s) (BXP_ATA0_MASTER_JOURNAL + (2*(i)) + (s))
 
-#define BXP_PARAMS_PER_SERIAL_PORT 2
+#define BXP_PARAMS_PER_SERIAL_PORT 3
   BXP_COM1_ENABLED,
+  BXP_COM1_MODE,
   BXP_COM1_PATH,
   BXP_COM2_ENABLED,
+  BXP_COM2_MODE,
   BXP_COM2_PATH,
   BXP_COM3_ENABLED,
+  BXP_COM3_MODE,
   BXP_COM3_PATH,
   BXP_COM4_ENABLED,
+  BXP_COM4_MODE,
   BXP_COM4_PATH,
 #define BXP_PARAMS_PER_USB_HUB 3
   BXP_USB1_ENABLED,
@@ -492,6 +496,8 @@ typedef enum {
 // use x=1,2,3,4
 #define BXP_COMx_ENABLED(x) \
    (bx_id)(BXP_COM1_ENABLED + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
+#define BXP_COMx_MODE(x) \
+   (bx_id)(BXP_COM1_MODE + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
 #define BXP_COMx_PATH(x) \
   (bx_id)(BXP_COM1_PATH + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
 
@@ -1310,6 +1316,7 @@ typedef struct {
 
 typedef struct {
   bx_param_bool_c *Oenabled;
+  bx_param_enum_c *Omode;
   bx_param_string_c *Odev;
   } bx_serial_options;
 

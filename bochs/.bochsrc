@@ -370,21 +370,29 @@ debug: action=ignore
 debugger_log: -
 
 #=======================================================================
-# COM1:
-# This defines a serial port (UART type 16550A). You can specify a device
-# to use as com1. This can be a real serial line, or a pty.  To use a pty
-# (under X/Unix), create two windows (xterms, usually).  One of them will
+# COM1, COM2, COM3, COM4:
+# This defines a serial port (UART type 16550A). In the 'term' you can specify
+# a device to use as com1. This can be a real serial line, or a pty.  To use
+# a pty (under X/Unix), create two windows (xterms, usually).  One of them will
 # run bochs, and the other will act as com1. Find out the tty the com1
 # window using the `tty' command, and use that as the `dev' parameter.
 # Then do `sleep 1000000' in the com1 window to keep the shell from
 # messing with things, and run bochs in the other window.  Serial I/O to
 # com1 (port 0x3f8) will all go to the other window.
+# Other serial modes are 'null' (no input/output), 'file' (output to a file
+# specified as the 'dev' parameter) and 'raw' (use the real serial port - under
+# construction for win32).
+#
+# Examples:
+#   com1: enabled=1, mode=null
+#   com2: enabled=1, mode=file, dev=serial.out
+#   com3: enabled=1, mode=raw, dev=com1
 #=======================================================================
-#com1: enabled=1, dev=/dev/ttyp9
+#com1: enabled=1, mode=term, dev=/dev/ttyp9
 
 
 #=======================================================================
-# PARPORT1:
+# PARPORT1, PARPORT2:
 # This defines a parallel (printer) port. When turned on and an output file is
 # defined the emulated printer port sends characters printed by the guest OS
 # into the output file. On some platforms a device filename can be used to
@@ -393,7 +401,7 @@ debugger_log: -
 #
 # Examples:
 #   parport1: enabled=1, file="parport.out"
-#   parport1: enabled=1, file="/dev/lp0"
+#   parport2: enabled=1, file="/dev/lp0"
 #   parport1: enabled=0
 #=======================================================================
 parport1: enabled=1, file="parport.out"

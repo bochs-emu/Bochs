@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.7 2004-07-18 17:18:19 vruppert Exp $
+// $Id: config.cc,v 1.8 2004-07-28 19:36:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -843,6 +843,14 @@ void bx_init_options ()
         *par_ser_ptr++ = bx_options.par[i].Ooutfile;
   }
 
+  static char *serial_mode_list[] = {
+    "null",
+    "file",
+    "term",
+    "raw",
+    NULL
+  };
+
   // serial ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
         // options for COM port
@@ -853,6 +861,15 @@ void bx_init_options ()
                 strdup(name), 
                 strdup(descr), 
                 (i==0)?1 : 0);  // only enable the first by default
+        sprintf (name, "I/O mode of the serial device for COM%d", i+1);
+        sprintf (descr, "The mode can be one these: 'null', 'file', 'term', 'raw'");
+        bx_options.com[i].Omode = new bx_param_enum_c (
+                BXP_COMx_MODE(i+1),
+                strdup(name), 
+                strdup(descr), 
+                serial_mode_list,
+                0,
+                0);
         sprintf (name, "Pathname of the serial device for COM%d", i+1);
         sprintf (descr, "The path can be a real serial device or a pty (X/Unix only)");
         bx_options.com[i].Odev = new bx_param_filename_c (
@@ -860,11 +877,13 @@ void bx_init_options ()
                 strdup(name), 
                 strdup(descr), 
                 "", BX_PATHNAME_LEN);
-        deplist = new bx_list_c (BXP_NULL, 1);
+        deplist = new bx_list_c (BXP_NULL, 2);
+        deplist->add (bx_options.com[i].Omode);
         deplist->add (bx_options.com[i].Odev);
         bx_options.com[i].Oenabled->set_dependent_list (deplist);
         // add to menu
         *par_ser_ptr++ = bx_options.com[i].Oenabled;
+        *par_ser_ptr++ = bx_options.com[i].Omode;
         *par_ser_ptr++ = bx_options.com[i].Odev;
   }
 
@@ -1688,6 +1707,7 @@ void bx_reset_options ()
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     bx_options.com[i].Oenabled->reset();
+    bx_options.com[i].Omode->reset();
     bx_options.com[i].Odev->reset();
     }
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
@@ -2480,6 +2500,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.com[0].Oenabled->set (atol(&params[i][8]));
         }
+      else if (!strncmp(params[i], "mode=", 5)) {
+        if (!bx_options.com[0].Omode->set_by_name (strdup(&params[i][5])))
+          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
+        bx_options.com[0].Oenabled->set (1);
+        }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[0].Odev->set (&params[i][4]);
         bx_options.com[0].Oenabled->set (1);
@@ -2493,6 +2518,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.com[1].Oenabled->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "mode=", 5)) {
+        if (!bx_options.com[1].Omode->set_by_name (strdup(&params[i][5])))
+          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
+        bx_options.com[1].Oenabled->set (1);
         }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[1].Odev->set (&params[i][4]);
@@ -2508,6 +2538,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.com[2].Oenabled->set (atol(&params[i][8]));
         }
+      else if (!strncmp(params[i], "mode=", 5)) {
+        if (!bx_options.com[2].Omode->set_by_name (strdup(&params[i][5])))
+          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
+        bx_options.com[2].Oenabled->set (1);
+        }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[2].Odev->set (&params[i][4]);
         bx_options.com[2].Oenabled->set (1);
@@ -2521,6 +2556,11 @@ parse_line_formatted(char *context, int num_params, char *params[])
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.com[3].Oenabled->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "mode=", 5)) {
+        if (!bx_options.com[3].Omode->set_by_name (strdup(&params[i][5])))
+          PARSE_ERR(("%s: serial port mode '%s' not available", context, strdup(&params[i][5])));
+        bx_options.com[3].Oenabled->set (1);
         }
       else if (!strncmp(params[i], "dev=", 4)) {
         bx_options.com[3].Odev->set (&params[i][4]);
@@ -3436,6 +3476,7 @@ bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
 {
   fprintf (fp, "com%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
+    fprintf (fp, ", mode=\"%s\"", opt->Omode->get_choice(opt->Omode->get()));
     fprintf (fp, ", dev=\"%s\"", opt->Odev->getptr ());
   }
   fprintf (fp, "\n");
