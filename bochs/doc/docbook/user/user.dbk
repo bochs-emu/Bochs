@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.138 2004-01-11 10:29:51 vruppert Exp $
+$Id: user.dbk,v 1.139 2004-01-17 02:13:37 danielg4 Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -446,8 +446,8 @@ currently work with.
     the network BUT NOT the host machine.  On Windows and on systems that
     allow the TAP or TUN/TAP interface, there is no such limitation.  Often
     the host machine may be configured so the guest OS has access to the
-    internet. On MacOSX, it is not possible yet to forward packets between the
-    guest and the host.
+    internet. On MacOSX, you may download the TUN driver from:
+    http://chrisp.de/en/projects/tunnel.html
     </entry>
   </row>
   <row>
@@ -3611,7 +3611,7 @@ ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0 #macos
 ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replaceable>MYCARD</replaceable>
 ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
-ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=tun0, script=./tunconfig
+ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
 
 ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts.
@@ -5237,7 +5237,7 @@ Some of the other options in this group is probably also needed,
         </para>
         <para>edit your <replaceable>.bochsrc</replaceable> configuration file and add something like :
                 <screen>  ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, 
-                          ethmod=tuntap, ethdev=tun0, script=<replaceable>/path/to/tunconfig</replaceable>
+                          ethmod=tuntap, ethdev=/dev/net/tun0, script=<replaceable>/path/to/tunconfig</replaceable>
                 </screen>
         </para>
         <para>
@@ -9530,7 +9530,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.138 2004-01-11 10:29:51 vruppert Exp $
+        $Id: user.dbk,v 1.139 2004-01-17 02:13:37 danielg4 Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

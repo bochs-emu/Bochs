@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.9 2003-04-26 14:48:45 cbothamy Exp $
+// $Id: eth_tuntap.cc,v 1.10 2004-01-17 02:13:36 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -97,13 +97,22 @@
 #include <sys/poll.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#ifdef __linux__
 #include <asm/types.h>
+#else
+#include <sys/types.h>
+#endif
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
+#ifdef __linux__
 #include <linux/netlink.h>
 #include <linux/if.h>
 #include <linux/if_tun.h>
+#else
+#include <net/if.h>
+#include <net/if_tap.h>
+#endif
 #include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -159,10 +168,11 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 				       void *rxarg)
 {
   int flags;
+
+#ifdef NEVERDEF
   if (strncmp (netif, "tun", 3) != 0) {
     BX_PANIC (("eth_tuntap: interface name (%s) must be tun", netif));
   }
-#ifdef NEVERDEF
   char filename[BX_PATHNAME_LEN];
   sprintf (filename, "/dev/net/%s", netif);
 
@@ -373,9 +383,10 @@ void bx_tuntap_pktmover_c::rx_timer ()
       struct ifreq ifr;
       int fd, err;
 
-      if( (fd = open("/dev/net/tun", O_RDWR)) < 0 )
+      if( (fd = open(dev, O_RDWR)) < 0 )
          return -1;
 
+#ifdef __linux__
       memset(&ifr, 0, sizeof(ifr));
 
       /* Flags: IFF_TUN   - TUN device (no Ethernet headers) 
@@ -394,6 +405,7 @@ void bx_tuntap_pktmover_c::rx_timer ()
 
       //strcpy(dev, ifr.ifr_name);
       ioctl( fd, TUNSETNOCSUM, 1 );
+#endif
 
       return fd;
   }              
