@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.19 2003-02-13 15:03:59 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.20 2003-05-10 22:25:51 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@ BailBigRSP("RETnear16_Iw");
   Bit16u imm16;
   Bit16u return_IP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -70,7 +70,7 @@ BX_CPU_C::RETnear16(bxInstruction_c *i)
 BailBigRSP("RETnear16");
   Bit16u return_IP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -164,7 +164,7 @@ BX_CPU_C::CALL_Aw(bxInstruction_c *i)
 BailBigRSP("CALL_Aw");
   Bit32u new_EIP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -226,7 +226,7 @@ BX_CPU_C::CALL_Ew(bxInstruction_c *i)
 BailBigRSP("CALL_Ew");
   Bit16u op1_16;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -298,7 +298,7 @@ BX_CPU_C::JMP_Jw(bxInstruction_c *i)
 BailBigRSP("JMP_Jw");
   Bit32u new_EIP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
   new_EIP = EIP + (Bit32s) i->Id();
   new_EIP &= 0x0000ffff;
@@ -438,7 +438,7 @@ BailBigRSP("JMP_Ew");
   Bit32u new_EIP;
   Bit16u op1_16;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());

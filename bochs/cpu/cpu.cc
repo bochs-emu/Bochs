@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.76 2003-03-17 00:40:57 cbothamy Exp $
+// $Id: cpu.cc,v 1.77 2003-05-10 22:25:43 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -193,18 +193,16 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
 #if BX_SupportICache
   unsigned iCacheHash;
-  Bit32u pAddr, pageWriteStamp, fetchModeMask;
+  Bit32u pAddr, pageWriteStamp;
 
   pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
   iCacheHash = BX_CPU_THIS_PTR iCache.hash( pAddr );
   i = & BX_CPU_THIS_PTR iCache.entry[iCacheHash].i;
 
   pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
-  fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
 
   if ( (BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr == pAddr) &&
-       (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp == pageWriteStamp) &&
-       ((pageWriteStamp & fetchModeMask) == fetchModeMask) ) {
+       (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp == pageWriteStamp) ) {
 
     // iCache hit.  Instruction is already decoded and stored in
     // the instruction cache.
@@ -228,6 +226,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     // case we always have an iCache miss.  :^)
     bx_address remainingInPage;
     unsigned maxFetch;
+    Bit32u fetchModeMask;
 
     remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
     maxFetch = 15;
@@ -243,6 +242,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     // willing to dump all iCache entries which can hash to this page.
     // Therefore, in either case, we can keep the counter as-is and
     // replace the fetch mode bits.
+    fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
     pageWriteStamp &= 0x1fffffff;    // Clear out old fetch mode bits.
     pageWriteStamp |= fetchModeMask; // Add in new ones.
     BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
@@ -776,6 +776,21 @@ BX_CPU_C::prefetch(void)
                 pAddr));
       }
     }
+
+  Bit32u pageWriteStamp;
+  Bit32u fetchModeMask;
+  Bit32u phyPageIndex;
+
+  phyPageIndex = pAddr >> 12;
+  pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex];
+  fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
+  if ( (pageWriteStamp & ICacheFetchModeMask ) != fetchModeMask) {
+    // The current CPU mode does not match iCache entries for this
+    // physical page.
+    pageWriteStamp &= ICacheWriteStampMask; // Clear out old fetch mode bits.
+    pageWriteStamp |= fetchModeMask; // Add in new ones.
+    BX_CPU_THIS_PTR iCache.pageWriteStampTable[phyPageIndex] = pageWriteStamp;
+    }
 }
 
 
@@ -840,33 +855,6 @@ BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
   BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
                   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 }
-
-
-#if 0
-// Now a no-op.
-
-  // If control has transfered locally, it is possible the prefetch Q is
-  // still valid.  This would happen for repeat instructions, and small
-  // branches.
-  void
-BX_CPU_C::revalidate_prefetch_q(void)
-{
-#ifdef __GNUC__
-#warning "::revalidate_prefetch_q() is ifdef'd out."
-#endif
-  bx_address eipBiased;
-
-  eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-  if ( eipBiased < BX_CPU_THIS_PTR eipPageWindowSize ) {
-    // Good, EIP still within prefetch window.
-    }
-  else {
-    // EIP has branched outside the prefetch window.  Mark the
-    // prefetch info as invalid, and requiring update.
-    BX_CPU_THIS_PTR eipPageWindowSize = 0;
-    }
-}
-#endif
 
 
 #if BX_EXTERNAL_DEBUGGER

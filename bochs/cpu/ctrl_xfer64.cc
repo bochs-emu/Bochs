@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.21 2003-03-13 00:43:00 ptrumpet Exp $
+// $Id: ctrl_xfer64.cc,v 1.22 2003-05-10 22:25:54 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   Bit64u temp_RSP;
   Bit64u return_RIP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -79,7 +79,7 @@ BX_CPU_C::RETnear64(bxInstruction_c *i)
   Bit64u temp_RSP;
   Bit64u return_RIP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -171,7 +171,7 @@ BX_CPU_C::CALL_Aq(bxInstruction_c *i)
   Bit64u new_RIP;
   Bit32s disp32;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -223,7 +223,7 @@ BX_CPU_C::CALL_Eq(bxInstruction_c *i)
   Bit64u temp_RSP;
   Bit64u op1_64;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -285,7 +285,7 @@ done:
   void
 BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
   RIP += (Bit32s) i->Id();
   if (i->os32L()==0)
@@ -379,7 +379,7 @@ BX_CPU_C::JMP_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());

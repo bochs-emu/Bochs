@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.137 2003-04-22 20:21:31 sshwarts Exp $
+// $Id: cpu.h,v 1.138 2003-05-10 22:25:48 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -990,6 +990,7 @@ typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN
 #define ICacheWriteStampInvalid   0x1fffffff
 #define ICacheWriteStampMax       0x1fffffff // Decrements from here.
 #define ICacheWriteStampMask      0x1fffffff
+#define ICacheFetchModeMask       (~ICacheWriteStampMask)
 
 class bxICacheEntry_c {
   public:

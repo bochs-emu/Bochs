@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.25 2003-02-13 15:03:59 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.26 2003-05-10 22:25:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ BailBigRSP("RETnear32_Iw");
   Bit32u temp_ESP;
   Bit32u return_EIP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -102,7 +102,7 @@ BailBigRSP("RETnear32");
   Bit32u temp_ESP;
   Bit32u return_EIP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -218,7 +218,7 @@ BailBigRSP("CALL_Ad");
   Bit32u new_EIP;
   Bit32s disp32;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -279,7 +279,7 @@ BailBigRSP("CALL_Ed");
   Bit32u temp_ESP;
   Bit32u op1_32;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -356,7 +356,7 @@ BX_CPU_C::JMP_Jd(bxInstruction_c *i)
 BailBigRSP("JMP_Jd");
   Bit32u new_EIP;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
     new_EIP = EIP + (Bit32s) i->Id();
 
@@ -527,7 +527,7 @@ BailBigRSP("JMP_Ed");
   Bit32u new_EIP;
   Bit32u op1_32;
 
-  invalidate_prefetch_q();
+  //invalidate_prefetch_q();
 
     /* op1_32 is a register or memory reference */
     if (i->modC0()) {
