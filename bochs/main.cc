@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.8 2002-10-08 17:16:31 cbothamy Exp $
+// $Id: main.cc,v 1.156.2.9 2002-10-09 05:18:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1513,7 +1513,9 @@ bx_continue_after_config_interface (int argc, char *argv[])
   bx_dbg_main(argc, argv);
 #else
 
+#if BX_PLUGINS
   bx_load_plugins ();
+#endif
 
   bx_init_hardware();
 
