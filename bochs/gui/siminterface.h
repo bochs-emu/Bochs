@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.113 2004-01-05 22:18:01 cbothamy Exp $
+// $Id: siminterface.h,v 1.114 2004-01-13 19:21:21 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -328,6 +328,13 @@ typedef enum {
   BXP_USB1_ENABLED,
   BXP_USB1_IOADDR,
   BXP_USB1_IRQ,
+  BXP_PNIC_ENABLED,
+  BXP_PNIC_IOADDR,
+  BXP_PNIC_IRQ,
+  BXP_PNIC_MACADDR,
+  BXP_PNIC_ETHMOD,
+  BXP_PNIC_ETHDEV,
+  BXP_PNIC_SCRIPT,
   BXP_PRIVATE_COLORMAP,
   BXP_FULLSCREEN,
   BXP_SCREENMODE,
@@ -1284,6 +1291,15 @@ typedef struct {
   bx_param_num_c *Oirq;
   } bx_usb_options;
 
+typedef struct {
+  bx_param_bool_c *Oenabled;
+  bx_param_num_c *Oioaddr;
+  bx_param_num_c *Oirq;
+  bx_param_string_c *Omacaddr;
+  bx_param_enum_c *Oethmod;
+  bx_param_string_c *Oethdev;
+  bx_param_string_c *Oscript;
+  } bx_pnic_options;
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

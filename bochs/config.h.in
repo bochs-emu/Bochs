@@ -260,6 +260,7 @@
 #define BX_USE_P2I_SMF     1  // PCI-to-ISA bridge
 #define BX_USE_PCIVGA_SMF  1  // PCI-VGA
 #define BX_USE_PCIUSB_SMF  1  // USB hub
+#define BX_USE_PCIPNIC_SMF 1  // PCI pseudo NIC
 #define BX_USE_NE2K_SMF    1  // NE2K
 #define BX_USE_EFI_SMF     1  // External FPU IRQ
 #define BX_USE_GAME_SMF    1  // Gameport
@@ -274,6 +275,7 @@
    || !BX_USE_SER_SMF || !BX_USE_UM_SMF || !BX_USE_VGA_SMF \
    || !BX_USE_SB16_SMF || !BX_USE_DEV_SMF || !BX_USE_PCI_SMF \
    || !BX_USE_P2I_SMF || !BX_USE_PCIVGA_SMF || !BX_USE_PCIUSB_SMF \
+   || !BX_USE_PCIPNIC_SMF \
    || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF || !BX_USE_GAME_SMF)
 #error You must use SMF to have plugins
 #endif
@@ -890,6 +892,20 @@ typedef
 
 // this enables TUN/TAP packet mover; determined by configure script
 #define HAVE_TUNTAP 0
+
+
+// Pseudo PCI NIC
+#define BX_PCI_PNIC_SUPPORT 0
+
+#if (BX_PCI_PNIC_SUPPORT && !BX_PCI_SUPPORT)
+#error To enable the PCI pseudo NIC, you must also enable PCI
+#endif
+
+// Check for NE2K support, since all the networking code is ifdeffed
+// under that.  There should probably be a more generic "enable-networking"
+#if (BX_PCI_PNIC_SUPPORT && !BX_NE2K_SUPPORT)
+#error To enable the pseudo NIC, you must also enable ne2000
+#endif
 
 
 // I/O Interface to debug

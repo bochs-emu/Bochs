@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.128 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: bochs.h,v 1.129 2004-01-13 19:21:17 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -297,7 +297,8 @@ enum {
   CPU2LOG, CPU3LOG, CPU4LOG, CPU5LOG, CPU6LOG, CPU7LOG, CPU8LOG, CPU9LOG,
   CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
   UNMAPLOG, SERRLOG, BIOSLOG, PIT81LOG, PIT82LOG, IODEBUGLOG, PCI2ISALOG,
-  PLUGINLOG, EXTFPUIRQLOG , PCIVGALOG, PCIUSBLOG, VTIMERLOG, STIMERLOG
+  PLUGINLOG, EXTFPUIRQLOG , PCIVGALOG, PCIUSBLOG, VTIMERLOG, STIMERLOG,
+  PCIPNICLOG
 };
 
 class BOCHSAPI iofunctions {
@@ -633,6 +634,7 @@ typedef struct BOCHSAPI {
   // bx_cdrom_options  cdromd; 
   bx_serial_options com[BX_N_SERIAL_PORTS];
   bx_usb_options    usb[BX_N_USB_HUBS];
+  bx_pnic_options   pnic;
   bx_rom_options    rom;
   bx_vgarom_options vgarom;
   bx_rom_options    optrom[BX_N_OPTROM_IMAGES]; // Optional rom images 

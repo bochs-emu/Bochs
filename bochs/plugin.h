@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.20 2003-08-04 16:03:08 akrisak Exp $
+// $Id: plugin.h,v 1.21 2004-01-13 19:21:21 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -39,6 +39,7 @@ extern "C" {
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
 #define BX_PLUGIN_PCIVGA    "pcivga"
 #define BX_PLUGIN_PCIUSB    "pciusb"
+#define BX_PLUGIN_PCIPNIC   "pcipnic"
 #define BX_PLUGIN_GAMEPORT  "gameport"
 
 
@@ -298,6 +299,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcivga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pciusb)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ne2k)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(extfpuirq)

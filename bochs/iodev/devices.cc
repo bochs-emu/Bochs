@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.58 2003-12-26 13:53:39 vruppert Exp $
+// $Id: devices.cc,v 1.59 2004-01-13 19:21:21 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,7 +56,10 @@ bx_devices_c::bx_devices_c(void)
 #endif
 #if BX_PCI_USB_SUPPORT
     pluginPciUSBAdapter = NULL;
-#endif                               
+#endif        
+#if BX_PCI_PNIC_SUPPORT
+    pluginPciPNicAdapter = NULL;
+#endif
 #endif
   pit = NULL;
   pluginKeyboard = &stubKeyboard;
@@ -94,7 +97,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.58 2003-12-26 13:53:39 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.59 2004-01-13 19:21:21 mcb30 Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -165,6 +168,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #endif
 #if BX_PCI_USB_SUPPORT
     PLUG_load_plugin(pciusb, PLUGTYPE_OPTIONAL);
+#endif
+#if BX_PCI_PNIC_SUPPORT
+    PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
 #endif
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
@@ -290,6 +296,9 @@ bx_devices_c::reset(unsigned type)
 #endif
 #if BX_PCI_USB_SUPPORT
     pluginPciUSBAdapter->reset(type);
+#endif
+#if BX_PCI_PNIC_SUPPORT
+    pluginPciPNicAdapter->reset(type);
 #endif
   }
 #endif

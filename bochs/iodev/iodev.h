@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.37 2003-08-04 16:03:09 akrisak Exp $
+// $Id: iodev.h,v 1.38 2004-01-13 19:21:21 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -299,6 +299,7 @@ public:
   bx_devmodel_c    *pluginPci2IsaBridge;
   bx_devmodel_c    *pluginPciVgaAdapter;
   bx_devmodel_c    *pluginPciUSBAdapter;
+  bx_devmodel_c	   *pluginPciPNicAdapter;
   bx_pit_c         *pit;
   bx_keyb_stub_c   *pluginKeyboard;
   bx_dma_stub_c    *pluginDmaDevice;
@@ -417,6 +418,9 @@ private:
 #include "iodev/unmapped.h"
 #include "iodev/eth.h"
 #include "iodev/ne2k.h"
+#if BX_PCI_PNIC_SUPPORT
+#include "iodev/pcipnic.h"
+#endif
 #include "iodev/guest2host.h"
 #include "iodev/slowdown_timer.h"
 #include "iodev/extfpuirq.h"

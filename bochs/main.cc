@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.256 2004-01-05 22:18:01 cbothamy Exp $
+// $Id: main.cc,v 1.257 2004-01-13 19:21:20 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1279,6 +1279,46 @@ void bx_init_options ()
 #if !BX_WITH_WX
   bx_options.ne2k.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
 #endif
+  bx_options.pnic.Oenabled = new bx_param_bool_c (BXP_PNIC_ENABLED,
+      "Enable Pseudo NIC emulation",
+      "Enables the Pseudo NIC emulation",
+      0);
+  bx_options.pnic.Oioaddr = new bx_param_num_c (BXP_PNIC_IOADDR,
+      "Pseudo NIC I/O Address",
+      "I/O base address of the emulated Pseudo NIC device",
+      0, 0xffff,
+      0xdc00);
+  bx_options.pnic.Oioaddr->set_base (16);
+  bx_options.pnic.Oirq = new bx_param_num_c (BXP_PNIC_IRQ,
+      "Pseudo NIC Interrupt",
+      "IRQ used by the Pseudo NIC device",
+      0, 15,
+      11);
+  bx_options.pnic.Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+  bx_options.pnic.Omacaddr = new bx_param_string_c (BXP_PNIC_MACADDR,
+      "MAC Address",
+      "MAC address of the Pseudo NIC device. Don't use an address of a machine on your net.",
+      "\xfe\xfd\xde\xad\xbe\xef", 6);
+  bx_options.pnic.Omacaddr->get_options ()->set (bx_options.pnic.Omacaddr->RAW_BYTES);
+  bx_options.pnic.Omacaddr->set_separator (':');
+  bx_options.pnic.Oethmod = new bx_param_enum_c (BXP_PNIC_ETHMOD,
+      "Ethernet module",
+      "Module used for the connection to the real net.",
+       eth_module_list,
+       0,
+       0);
+  bx_options.pnic.Oethmod->set_by_name ("null");
+  bx_options.pnic.Oethdev = new bx_param_string_c (BXP_PNIC_ETHDEV,
+      "Ethernet device",
+      "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
+      "xl0", BX_PATHNAME_LEN);
+  bx_options.pnic.Oscript = new bx_param_string_c (BXP_PNIC_SCRIPT,
+      "Device configuration script",
+      "Name of the script that is executed after Bochs initializes the network interface (optional).",
+      "none", BX_PATHNAME_LEN);
+#if !BX_WITH_WX
+  bx_options.pnic.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
+#endif
   bx_param_c *ne2k_init_list[] = {
     bx_options.ne2k.Opresent,
     bx_options.ne2k.Oioaddr,
@@ -1287,6 +1327,13 @@ void bx_init_options ()
     bx_options.ne2k.Oethmod,
     bx_options.ne2k.Oethdev,
     bx_options.ne2k.Oscript,
+    bx_options.pnic.Oenabled,
+    bx_options.pnic.Oioaddr,
+    bx_options.pnic.Oirq,
+    bx_options.pnic.Omacaddr,
+    bx_options.pnic.Oethmod,
+    bx_options.pnic.Oethdev,
+    bx_options.pnic.Oscript,
     NULL
   };
   menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", ne2k_init_list);
@@ -3338,6 +3385,55 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
+  else if (!strcmp(params[0], "pnic")) {
+    int tmp[6];
+    char tmpchar[6];
+    int valid = 0;
+    int n;
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        bx_options.pnic.Oenabled->set (atol(&params[i][8]));
+	if ( bx_options.pnic.Oenabled->get() ) {
+		// Force ne2k to be enabled
+		bx_options.ne2k.Opresent->set (1);
+          }
+        }
+      else if (!strncmp(params[i], "ioaddr=", 7)) {
+        if ( (params[i][7] == '0') && (params[i][8] == 'x') )
+          bx_options.pnic.Oioaddr->set (strtoul (&params[i][7], NULL, 16));
+        else
+          bx_options.pnic.Oioaddr->set (strtoul (&params[i][7], NULL, 10));
+        bx_options.pnic.Oenabled->set (1);
+        }
+      else if (!strncmp(params[i], "irq=", 4)) {
+        bx_options.pnic.Oirq->set (atol(&params[i][4]));
+        }
+      else if (!strncmp(params[i], "mac=", 4)) {
+        n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
+                   &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
+        if (n != 6) {
+          PARSE_ERR(("%s: pnic mac address malformed.", context));
+        }
+        for (n=0;n<6;n++)
+          tmpchar[n] = (unsigned char)tmp[n];
+        bx_options.pnic.Omacaddr->set (tmpchar);
+        valid |= 0x04;
+        }
+      else if (!strncmp(params[i], "ethmod=", 7)) {
+        if (!bx_options.pnic.Oethmod->set_by_name (strdup(&params[i][7])))
+          PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
+        }
+      else if (!strncmp(params[i], "ethdev=", 7)) {
+        bx_options.pnic.Oethdev->set (strdup(&params[i][7]));
+        }
+      else if (!strncmp(params[i], "script=", 7)) {
+        bx_options.pnic.Oscript->set (strdup(&params[i][7]));
+        }
+      else {
+        PARSE_ERR(("%s: unknown parameter for pnic ignored.", context));
+        }
+      }
+    }
   else if (!strcmp(params[0], "floppy_bootsig_check")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: floppy_bootsig_check directive malformed.", context));
@@ -4150,6 +4246,29 @@ bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
 }
 
 int
+bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
+{
+  fprintf (fp, "pnic: enabled=%d", opt->Oenabled->get ());
+  if (opt->Oenabled->get ()) {
+    char *ptr = opt->Omacaddr->getptr ();
+    fprintf (fp, ", ioaddr=0x%04x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
+	     opt->Oioaddr->get (),
+	     opt->Oirq->get (),
+	     (unsigned int)(0xff & ptr[0]),
+	     (unsigned int)(0xff & ptr[1]),
+	     (unsigned int)(0xff & ptr[2]),
+	     (unsigned int)(0xff & ptr[3]),
+	     (unsigned int)(0xff & ptr[4]),
+	     (unsigned int)(0xff & ptr[5]),
+	     opt->Oethmod->get_choice(opt->Oethmod->get()),
+	     opt->Oethdev->getptr (),
+	     opt->Oscript->getptr () );
+  }
+  fprintf (fp, "\n");
+  return 0;
+}
+
+int
 bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
 {
   if (!opt->Opresent->get ()) {
@@ -4335,6 +4454,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.Oi440FXSupport->get ());
   bx_write_clock_options (fp, &bx_options.clock);
   bx_write_ne2k_options (fp, &bx_options.ne2k);
+  bx_write_pnic_options (fp, &bx_options.pnic);
   fprintf (fp, "newharddrivesupport: enabled=%d\n", bx_options.OnewHardDriveSupport->get ());
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
   bx_write_log_options (fp, &bx_options.log);
