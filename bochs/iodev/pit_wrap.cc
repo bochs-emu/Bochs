@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.18 2002-05-20 21:53:25 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.19 2002-05-21 15:07:45 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,6 +47,7 @@ bx_pit_c bx_pit;
 #define TIME_DIVIDER (1)
 #define TIME_MULTIPLIER (1)
 #define TIME_HEADSTART (1)
+#define MIN_USEC_PER_SECOND (150000)
 //USEC_ALPHA is multiplier for the past.
 //USEC_ALPHA_B is 1-USEC_ALPHA, or multiplier for the present.
 #define USEC_ALPHA ((double)(.8))
@@ -504,6 +505,7 @@ bx_pit_c::second_update_data(void) {
 
     //    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(BX_PIT_THIS s.usec_per_second,((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff));
     BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff);
+    BX_PIT_THIS s.usec_per_second = MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
     BX_PIT_THIS s.last_sec_usec = bx_pc_system.time_usec();
 #if DEBUG_REALTIME_WITH_PRINTF
     printf("Parms: ticks_per_second=%lld, usec_per_second=%lld\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
