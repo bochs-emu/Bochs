@@ -56,7 +56,7 @@ bios: biossums BIOS-bochs-latest BIOS-bochs-2-processors BIOS-bochs-4-processors
 clean:
 	@RMCOMMAND@ *.o *.a *.s rombios.bin _rombios*_.c
 	@RMCOMMAND@ as86-sym.txt ld86-sym.txt 
-	@RMCOMMAND@ rombios*.txt rombios*.sym usage
+	@RMCOMMAND@ rombios*.txt rombios*.sym usage biossums
 
 dist-clean: clean
 	@RMCOMMAND@ Makefile
