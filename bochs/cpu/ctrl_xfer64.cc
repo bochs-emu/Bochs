@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.10 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.11 2002-09-24 00:44:55 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,6 +42,8 @@ BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   Bit64u temp_RSP;
   Bit64u return_RIP;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
@@ -49,9 +51,6 @@ BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   temp_RSP = RSP;
 
   imm16 = i->Iw();
-
-  invalidate_prefetch_q();
-
 
   //if ( !can_pop(8) ) {
   //  BX_PANIC(("retnear_iw: can't pop RIP"));
@@ -79,11 +78,11 @@ BX_CPU_C::RETnear64(bxInstruction_c *i)
   Bit64u temp_RSP;
   Bit64u return_RIP;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
-
-  invalidate_prefetch_q();
 
   temp_RSP = RSP;
 
@@ -107,14 +106,14 @@ BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
   Bit64u rip, rcs_raw;
   Bit16s imm16;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
   /* ??? is imm16, number of bytes/words depending on operandsize ? */
 
   imm16 = i->Iw();
-
-  invalidate_prefetch_q();
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
@@ -139,11 +138,11 @@ BX_CPU_C::RETfar64(bxInstruction_c *i)
 {
   Bit64u rip, rcs_raw;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
-
-  invalidate_prefetch_q();
 
 #if BX_CPU_LEVEL >= 2
   if ( protected_mode() ) {
@@ -171,12 +170,13 @@ BX_CPU_C::CALL_Aq(bxInstruction_c *i)
   Bit64u new_RIP;
   Bit32s disp32;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
   disp32 = i->Id();
-  invalidate_prefetch_q();
 
   new_RIP = RIP + disp32;
 
@@ -193,13 +193,14 @@ BX_CPU_C::CALL64_Ap(bxInstruction_c *i)
   Bit16u cs_raw;
   Bit32u disp32;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
   disp32 = i->Id();
   cs_raw = i->Iw2();
-  invalidate_prefetch_q();
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, disp32);
@@ -221,29 +222,23 @@ BX_CPU_C::CALL_Eq(bxInstruction_c *i)
   Bit64u temp_RSP;
   Bit64u op1_64;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
   temp_RSP = RSP;
 
+  if (i->modC0()) {
+    op1_64 = BX_READ_64BIT_REG(i->rm());
+    }
+  else {
+    read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    }
 
-    /* op1_64 is a register or memory reference */
-    if (i->modC0()) {
-      op1_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-      }
-    invalidate_prefetch_q();
-
-    if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_RSP, 8) ) {
-      BX_PANIC(("call_ev: can't push RIP"));
-      }
-
-    push_64(BX_CPU_THIS_PTR rip);
-
-    RIP = op1_64;
+  push_64(BX_CPU_THIS_PTR rip);
+  RIP = op1_64;
 
   BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_CALL, BX_CPU_THIS_PTR rip);
 }
@@ -253,6 +248,8 @@ BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit64u op1_64;
+
+  invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -266,7 +263,6 @@ BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   /* pointer, segment address pair */
   read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
   read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
-  invalidate_prefetch_q();
 
   if ( protected_mode() ) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_64);
@@ -381,16 +377,14 @@ BX_CPU_C::JMP_Eq(bxInstruction_c *i)
   Bit64u new_RIP;
   Bit64u op1_64;
 
-  /* op1_64 is a register or memory reference */
+  invalidate_prefetch_q();
+
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
     }
   else {
-    /* pointer, segment address pair */
     read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     }
-
-  invalidate_prefetch_q();
 
   RIP = op1_64;
 
@@ -405,16 +399,14 @@ BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   Bit16u cs_raw;
   Bit64u op1_64;
 
-  /* op1_32 is a register or memory reference */
+  invalidate_prefetch_q();
+
   if (i->modC0()) {
-    /* far indirect must specify a memory address */
     BX_PANIC(("JMP_Ep(): op1 is a register"));
     }
 
-  /* pointer, segment address pair */
   read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
   read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
-  invalidate_prefetch_q();
 
   if ( protected_mode() ) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_64);
@@ -434,12 +426,12 @@ BX_CPU_C::IRET64(bxInstruction_c *i)
 {
   Bit32u rip, ecs_raw, eflags;
 
+  invalidate_prefetch_q();
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
   BX_CPU_THIS_PTR show_eip = BX_CPU_THIS_PTR rip;
 #endif
-
-  invalidate_prefetch_q();
 
 #if BX_CPU_LEVEL >= 2
   if (BX_CPU_THIS_PTR cr0.pe) {

@@ -595,6 +595,32 @@ typedef
 #define BX_SupportICache 0
 #define BX_SupportHostAsms 0
 
+
+// ========================================================
+// These are some very temporary hacks I made to the 64-bit
+// support to help Peter with debugging etc.  They will be removed
+// soon and there is no configure option for them (on purpose).
+// By default, they are not compiled in.
+
+// Set this to 1 if you want to try my 64-bit hacks to get Linux booting.
+#define KPL64Hacks 0
+
+// I set this to 1 to bail in instructions which may not be honoring
+// the 64-bit widths of RIP/RSP.  If I trip a panic, then I clean
+// the function up and remove the panic.  You don't have to use
+// these.
+#if 0
+#define BailBigRSP(s) \
+  if ( (RIP > 0xffffffff) || \
+       (RSP > 0xffffffff) ) \
+    BX_PANIC((s ": bailing due to big RSP value, mode==%u", \
+              BX_CPU_THIS_PTR cpu_mode))
+#else
+#define BailBigRSP(s) 
+#endif
+// ========================================================
+
+
 #if (BX_SUPPORT_MMX && BX_CPU_LEVEL < 5)
 #error With CPU level < 5, you must disable MMX support.
 #endif

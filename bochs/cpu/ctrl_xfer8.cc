@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.10 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: ctrl_xfer8.cc,v 1.11 2002-09-24 00:44:55 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@
   void
 BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 {
-
+BailBigRSP("JCXZ_Jb");
   if (i->as64L()) {
     if ( RCX == 0 ) {
       RIP += (Bit32s) i->Id();
@@ -94,6 +94,7 @@ BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
   void
 BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
 {
+BailBigRSP("loopne_jb");
   if (i->as64L()) {
 
     if ( ((--RCX)!=0) && (get_ZF()==0) ) {
@@ -150,6 +151,7 @@ BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
   void
 BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
 {
+BailBigRSP("loope_jb");
   if (i->as64L()) {
 
     if ( ((--RCX)!=0) && (get_ZF()) ) {
@@ -206,6 +208,7 @@ BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
   void
 BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
 {
+BailBigRSP("loop_jb");
   if (i->as64L()) {
 
     if ( ((--RCX)!=0) ) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.73 2002-09-22 22:22:16 kevinlawton Exp $
+// $Id: cpu.h,v 1.74 2002-09-24 00:44:55 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2980,5 +2980,6 @@ typedef enum _show_flags {
 
 // Can be used as LHS or RHS.
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
+
 
 #endif  // #ifndef BX_CPU_H

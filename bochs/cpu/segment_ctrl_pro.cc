@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.14 2002-09-19 19:17:20 kevinlawton Exp $
+// $Id: segment_ctrl_pro.cc,v 1.15 2002-09-24 00:44:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -561,6 +561,18 @@ BX_CPU_C::load_ss_null(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
+
+#if KPL64Hacks
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l = 1;
+#endif
 }
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.7 2002-09-15 01:00:20 kevinlawton Exp $
+// $Id: stack_pro.cc,v 1.8 2002-09-24 00:44:56 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,6 +39,7 @@
   void
 BX_CPU_C::push_16(Bit16u value16)
 {
+BailBigRSP("push_16");
   Bit32u temp_ESP;
 
 
@@ -90,6 +91,7 @@ BX_CPU_C::push_16(Bit16u value16)
   void
 BX_CPU_C::push_32(Bit32u value32)
 {
+BailBigRSP("push_32");
   /* must use StackAddrSize, and either ESP or SP accordingly */
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
     /* 32bit stack size: pushes use SS:ESP  */
@@ -152,6 +154,7 @@ BX_CPU_C::push_64(Bit64u value64)
   void
 BX_CPU_C::pop_16(Bit16u *value16_ptr)
 {
+BailBigRSP("pop_16");
   Bit32u temp_ESP;
 
 #if BX_CPU_LEVEL >= 3
@@ -185,6 +188,7 @@ BX_CPU_C::pop_16(Bit16u *value16_ptr)
   void
 BX_CPU_C::pop_32(Bit32u *value32_ptr)
 {
+BailBigRSP("pop_32");
   Bit32u temp_ESP;
 
   /* 32 bit stack mode: use SS:ESP */
@@ -237,6 +241,13 @@ BX_CPU_C::pop_64(Bit64u *value64_ptr)
   Boolean
 BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 {
+#if BX_SUPPORT_X86_64
+#if KPL64Hacks
+  if ( BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64 )
+    return(1); // SS segment is ignore in long mode, to my knowlege. (KPL)
+#endif
+#endif
+
   if ( real_mode() ) { /* code not needed ??? */
     BX_PANIC(("can_push(): called in real mode"));
     return(0); /* never gets here */
@@ -323,6 +334,13 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 BX_CPU_C::can_pop(Bit32u bytes)
 {
   Bit32u temp_ESP, expand_down_limit;
+
+#if BX_SUPPORT_X86_64
+#if KPL64Hacks
+  if ( BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64 )
+    return(1); // SS segment is ignore in long mode, to my knowlege. (KPL)
+#endif
+#endif
 
   /* ??? */
   if (real_mode()) BX_PANIC(("can_pop(): called in real mode?"));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.16 2002-09-18 05:36:47 kevinlawton Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.17 2002-09-24 00:44:55 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1607,6 +1607,19 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       //  return;
       //  }
 
+
+#if KPL64Hacks
+unsigned ssIsNull = 0;
+if ( (raw_ss_selector & 0xfffc) == 0 ) {
+  BX_INFO(("iret: SS NULL OK in LM"));
+  parse_selector(0,&ss_selector);
+  parse_descriptor(0,0,&ss_descriptor);
+  load_ss_null(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
+  ssIsNull = 1;
+  goto afterSSChecks;
+  }
+#endif
+
       parse_selector(raw_ss_selector, &ss_selector);
 
       /* selector RPL must = RPL of return CS selector,
@@ -1650,6 +1663,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         return;
         }
 
+#if KPL64Hacks
+afterSSChecks:
+#endif
 
       access_linear(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_RSP + 0,
         8, 0, BX_READ, &new_rip);
@@ -1680,9 +1696,13 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       else
         write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL());
 
-      // load SS:RSP from stack
-      // load the SS-cache with SS descriptor
-      load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
+#if KPL64Hacks
+      if (!ssIsNull) {
+        // load SS:RSP from stack
+        // load the SS-cache with SS descriptor
+        load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
+        }
+#endif
       RSP = new_rsp;
 
       validate_seg_regs();
