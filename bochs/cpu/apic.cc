@@ -1,10 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.14 2002-03-27 16:04:04 bdenney Exp $
+// $Id: apic.cc,v 1.15 2002-07-21 13:56:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
-#include <assert.h>
 
 #define LOG_THIS this->
 
@@ -359,9 +358,10 @@ void bx_local_apic_c::set_divide_configuration (Bit32u value) {
 
 void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
 {
-  assert (len == 4);
+  if (len != 4) {
+    BX_PANIC (("local apic write with len=%d (should be 4)", len));
+  }
   BX_DEBUG(("%s: write %08x to APIC address %08x", cpu->name, *data, addr));
-  //assert (!(addr & 0xf));
   addr &= 0xff0;
   switch (addr) {
     case 0x20: // local APIC id
@@ -498,7 +498,9 @@ void bx_local_apic_c::startup_msg (Bit32u vector)
 
 void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
 {
-  assert (len == 4);
+  if (len != 4) {
+    BX_PANIC (("local apic write with len=%d (should be 4)", len));
+  }
   *data = 0;  // default value for unimplemented registers
   Bit32u addr2 = addr & 0xff0;
   switch (addr2) {
