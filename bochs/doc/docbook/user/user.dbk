@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.132 2003-11-28 15:07:28 danielg4 Exp $
+$Id: user.dbk,v 1.133 2003-12-28 22:48:40 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3023,58 +3023,6 @@ The biosdetect option has currently no effect on the bios
 </para>
 </section>
 
-<section><title>diskc/diskd</title>
-<para>
-The diskc and diskd options are deprecated. Use "ataX-*: type=disk,..."
-options instead.
-</para>
-<para>
-Examples:
-<screen>
-  diskc: file=10M.img, cyl=306, heads=4, spt=17
-  diskc: file=112M.img, cyl=900, heads=15, spt=17
-  diskd: file=483.img, cyl=1024, heads=15, spt=63
-</screen>
-
-The diskc/diskd lines tell Bochs what disk image file to use as the constants
-of the emulated hard drive, and what geometry it should have.  Diskc is the
-first hard drive, and diskd is the second hard drive.  Using a raw
-hard drive is possible under on unix but WE DON'T RECOMMEND IT for safety reasons.  
-The file should be a
-disk image file, which must be exactly 512*cyl*heads*spt bytes long.  The
-geometry settings are cylinder (cyl), heads, and sectors per track (spt).  If
-you  use bximage  to create   the  image,  it  will give  you  the required
-cyl,  head, and spt information.
-
-<note><para>
-You cannot use both diskd and cdromd together.
-</para></note>
-
-</para>
-</section>
-
-<section><title>cdromd</title>
-<para>
-The cdromd option is deprecated. Use "ataX-*: type=cdrom,..." option instead.
-</para>
-<para>
-Examples:
-<screen>
-  cdromd: dev=/dev/cdrom, status=inserted         (Unix only)
-  cdromd: dev=e:, status=inserted                 (Windows only)
-  cdromd: dev=cdromimage.iso, status=inserted
-</screen>
-
-The cdromd line tells Bochs to emulate a CD-ROM device.  You cannot have
-both a diskd and a cdromd, and there is no cdromc option.  
-
-<note><para>
-You cannot use both diskd and cdromd together.
-</para></note>
-
-</para>
-</section>
-
 <section><title>newharddrivesupport</title>
 <para>
 Examples:
@@ -3484,20 +3432,41 @@ speed.</para></footnote>.
 
 </section>
 
-<section><title>pit</title>
+<section><title>clock</title>
 <para>
-Examples:
-<screen>
-  pit: realtime=0
-  pit: realtime=1
-</screen>
-The PIT is the programmable interval timer.  Bochs's PIT model was written by
-Greg Alexander.  It has a real-time option that tries to keep the PIT in sync
-with the host time.  This feature is still experimental, but it may be useful
-if you want to prevent Bochs from running too fast, for example a DOS video
-game.  Be aware that with the realtime pit option, your simulation will not be
-repeatable; this can a problem if you are debugging.
+This defines the parameters of the clock inside Bochs:
 </para>
+<para><command>sync</command></para>
+<para>
+TO BE COMPLETED (see Greg explaination in bug #536329)
+</para>
+<para><command>time0</command></para>
+<para>
+Specifies the start (boot) time of the virtual machine. Use a time 
+value as returned by the time(2) system call. If no time0 value is 
+set or if time0 equal to 1 (special case) or if time0 equal 'local', 
+the simulation will be started at the current local host time.
+If time0 equal to 2 (special case) or if time0 equal 'utc',
+the simulation will be started at the current utc time.
+</para>
+<para>
+<screen>
+Syntax:
+  clock: sync=[none|slowdown|realtime], time0=[timeValue|local|utc]
+
+Examples:
+  clock: sync=none,     time0=local       # Now (localtime)
+  clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
+  clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
+  clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
+  clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
+  clock: sync=none,     time0=1           # Now (localtime)
+  clock: sync=none,     time0=utc         # Now (utc/gmt)
+
+Default value are sync=none, time0=local
+</screen>
+</para>
+
 </section>
 
 <section><title>mouse</title>
@@ -3546,19 +3515,6 @@ Examples:
   usb1: enabled=1, ioaddr=0xFF80, irq=10
 </screen>
 Enables the i440fx PCI USB root hub. PCI support must be enabled, too.
-</para>
-</section>
-
-<section><title>time0</title>
-<para>
-Examples:
-<screen>
-  time0: 938581955
-</screen>
-Specifies the start (boot) time of the virtual machine. Use a
-time value as returned by the time(2) system call. Time
-equal to 1 is a special case which starts the virtual machine at the
-current time of the simulator host.
 </para>
 </section>
 
@@ -3663,6 +3619,93 @@ Example:
   cmosimage: cmos.img
 </screen>
 This defines image file that can be loaded into the CMOS RAM at startup.
+</para>
+</section>
+
+<section><title>diskc/diskd</title>
+<para>
+The diskc and diskd options are deprecated. Use "ataX-*: type=disk,..."
+options instead.
+</para>
+<para>
+Examples:
+<screen>
+  diskc: file=10M.img, cyl=306, heads=4, spt=17
+  diskc: file=112M.img, cyl=900, heads=15, spt=17
+  diskd: file=483.img, cyl=1024, heads=15, spt=63
+</screen>
+
+The diskc/diskd lines tell Bochs what disk image file to use as the constants
+of the emulated hard drive, and what geometry it should have.  Diskc is the
+first hard drive, and diskd is the second hard drive.  Using a raw
+hard drive is possible under on unix but WE DON'T RECOMMEND IT for safety reasons.  
+The file should be a
+disk image file, which must be exactly 512*cyl*heads*spt bytes long.  The
+geometry settings are cylinder (cyl), heads, and sectors per track (spt).  If
+you  use bximage  to create   the  image,  it  will give  you  the required
+cyl,  head, and spt information.
+
+<note><para>
+You cannot use both diskd and cdromd together.
+</para></note>
+
+</para>
+</section>
+
+<section><title>cdromd</title>
+<para>
+The cdromd option is deprecated. Use "ataX-*: type=cdrom,..." option instead.
+</para>
+<para>
+Examples:
+<screen>
+  cdromd: dev=/dev/cdrom, status=inserted         (Unix only)
+  cdromd: dev=e:, status=inserted                 (Windows only)
+  cdromd: dev=cdromimage.iso, status=inserted
+</screen>
+
+The cdromd line tells Bochs to emulate a CD-ROM device.  You cannot have
+both a diskd and a cdromd, and there is no cdromc option.  
+
+<note><para>
+You cannot use both diskd and cdromd together.
+</para></note>
+
+</para>
+</section>
+
+<section><title>pit</title>
+<para>
+The pit option is deprecated. Use the "clock" option instead.
+</para>
+<para>
+Examples:
+<screen>
+  pit: realtime=0
+  pit: realtime=1
+</screen>
+The PIT is the programmable interval timer.  Bochs's PIT model was written by
+Greg Alexander.  It has a real-time option that tries to keep the PIT in sync
+with the host time.  This feature is still experimental, but it may be useful
+if you want to prevent Bochs from running too fast, for example a DOS video
+game.  Be aware that with the realtime pit option, your simulation will not be
+repeatable; this can a problem if you are debugging.
+</para>
+</section>
+
+<section><title>time0</title>
+<para>
+The time0 option is deprecated. Use the "clock" option instead.
+</para>
+<para>
+Examples:
+<screen>
+  time0: 938581955
+</screen>
+Specifies the start (boot) time of the virtual machine. Use a
+time value as returned by the time(2) system call. Time
+equal to 1 is a special case which starts the virtual machine at the
+current time of the simulator host.
 </para>
 </section>
 
@@ -4131,8 +4174,9 @@ is not disabled, Bochs searches for a default configuration file. This is the se
 1. <command>.bochsrc</command> in the current directory
 2. <command>bochsrc</command> in the current directory
 3. <command>bochsrc.txt</command> in the current directory
-4. (Unix only) <command>.bochsrc</command> in the user's home directory
-5. (Unix only) <command>bochsrc</command> in the <emphasis>/etc</emphasis> directory
+4. (win32 only) <command>bochsrc.bxrc</command> in the current directory
+5. (Unix only) <command>.bochsrc</command> in the user's home directory
+6. (Unix only) <command>bochsrc</command> in the <emphasis>/etc</emphasis> directory
 </screen>
 </para>
 </section>
@@ -9406,7 +9450,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.132 2003-11-28 15:07:28 danielg4 Exp $
+        $Id: user.dbk,v 1.133 2003-12-28 22:48:40 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
