@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios-new-ata.c,v 1.2 2002-08-09 16:35:44 cbothamy Exp $
+// $Id: rombios-new-ata.c,v 1.3 2002-08-19 17:08:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,6 +118,7 @@
 //     http://www.cybertrails.com/~fys/rombios.htm document
 //   - should handle the translation bit (to be defined)
 //   - should handle the "don't detect" bit (to be defined)
+//   - could send the multiple-sector read/write commands
 //
 //   El-Torito
 //   - Emulate a Hard-disk (currently only diskette can be emulated) see "FIXME ElTorito Harddisk"
@@ -131,7 +132,7 @@
 //
 //   BCC Bug: find a generic way to handle the bug of #asm after an "if"  (fixed in 0.16.7)
 
-#define DEBUG_ROMBIOS      1
+#define DEBUG_ROMBIOS      0
 
 #define DEBUG_ATA          1
 #define DEBUG_INT13_HD     1
@@ -149,8 +150,8 @@
 #define BX_SUPPORT_FLOPPY 1
 #define BX_PCIBIOS       1
 
-#define BX_USE_ATADRV    0
-#define BX_ELTORITO_BOOT 0
+#define BX_USE_ATADRV    1
+#define BX_ELTORITO_BOOT 1
 
 #define BX_MAX_ATA_INTERFACES   4
 #define BX_MAX_ATA_DEVICES      (BX_MAX_ATA_INTERFACES*2)
@@ -602,7 +603,7 @@ typedef struct {
   typedef struct {
     Bit16u heads;      // # heads
     Bit16u cylinders;  // # cylinders
-    Bit16u sectors;    // # sectors / track
+    Bit16u spt;        // # sectors / track
     } chs_t;
 
   // DPTE definition
@@ -723,7 +724,7 @@ typedef struct {
     Bit16u  infos;
     Bit32u  cylinders;
     Bit32u  heads;
-    Bit32u  sectors;
+    Bit32u  spt;
     Bit32u  sector_count1;
     Bit32u  sector_count2;
     Bit16u  blksize;
@@ -875,10 +876,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.2 $";
-static char bios_date_string[] = "$Date: 2002-08-09 16:35:44 $";
+static char bios_cvs_version_string[] = "$Revision: 1.3 $";
+static char bios_date_string[] = "$Date: 2002-08-19 17:08:09 $";
 
-static char CVSID[] = "$Id: rombios-new-ata.c,v 1.2 2002-08-09 16:35:44 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios-new-ata.c,v 1.3 2002-08-19 17:08:09 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1824,10 +1825,10 @@ void ata_init( )
     write_byte(ebda_seg,&EbdaData->ata.devices[device].bitshift,0);
     write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.heads,0);
     write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.cylinders,0);
-    write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.sectors,0);
+    write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.spt,0);
     write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.heads,0);
     write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.cylinders,0);
-    write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.sectors,0);
+    write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.spt,0);
     
     write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors,0L);
     }
@@ -1934,8 +1935,8 @@ void ata_detect( )
     
     // Now we send a IDENTIFY command to ATA device 
     if(type == ATA_TYPE_ATA) {
-      Bit32u size;
-      Bit16u cylinders, heads, sectors, blksize;
+      Bit32u sectors;
+      Bit16u cylinders, heads, spt, blksize;
       Bit8u  bitshift, removable, mode;
 
       //Temporary values to do the transfer
@@ -1947,10 +1948,10 @@ void ata_detect( )
       removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
       mode      = read_byte(get_SS(),buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
       blksize   = read_word(get_SS(),buffer+10);
-      cylinders = read_word(get_SS(),buffer+108) - 1; // last sector not used... should this be  - 1 ?
+      cylinders = read_word(get_SS(),buffer+108); // last sector not used... should this be  - 1 ?
       heads     = read_word(get_SS(),buffer+110);
-      sectors   = read_word(get_SS(),buffer+112);
-      size      = read_dword(get_SS(),buffer+114);
+      spt       = read_word(get_SS(),buffer+112);
+      sectors   = read_dword(get_SS(),buffer+114);
 
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_HD);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].removable, removable);
@@ -1958,8 +1959,8 @@ void ata_detect( )
       write_word(ebda_seg,&EbdaData->ata.devices[device].blksize, blksize);
       write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.heads, heads);
       write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.cylinders, cylinders);
-      write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.sectors, sectors);
-      write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors, size);
+      write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.spt, spt);
+      write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors, sectors);
 
       bitshift = 0;
 
@@ -1973,7 +1974,7 @@ void ata_detect( )
 
       write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.heads, heads);
       write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.cylinders, cylinders);
-      write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.sectors, sectors);
+      write_word(ebda_seg,&EbdaData->ata.devices[device].lchs.spt, spt);
  
       // fill hdidmap 
       write_byte(ebda_seg,&EbdaData->ata.hdidmap[hdcount], device);
@@ -2041,12 +2042,12 @@ void ata_detect( )
 
       switch (type) {
         case ATA_TYPE_ATA:
-          printf("ATA%d %s : ",channel,slave?"slave ":"master");
+          printf("ata%d %s: ",channel,slave?" slave":"master");
           i=0; while(c=read_byte(get_SS(),model+i++)) printf("%c",c);
           printf(" ATA-%d Hard-Disk (%d MBytes)\n",version,(Bit16u)sizeinmb);
           break;
         case ATA_TYPE_ATAPI:
-          printf("ATA%d %s : ",channel,slave?"slave ":"master");
+          printf("ata%d %s: ",channel,slave?" slave":"master");
           i=0; while(c=read_byte(get_SS(),model+i++)) printf("%c",c);
           if(read_byte(ebda_seg,&EbdaData->ata.devices[device].device)==ATA_DEVICE_CDROM)
             printf(" ATAPI-%d CD-Rom/DVD-Rom\n",version);
@@ -2054,7 +2055,7 @@ void ata_detect( )
             printf(" ATAPI-%d Device\n",version);
           break;
         case ATA_TYPE_UNKNOWN:
-          printf("ATA%d %s : Unknown device\n",channel,slave?"slave ":"master");
+          printf("ata%d %s: Unknown device\n",channel,slave?" slave":"master");
           break;
         }
       }
@@ -2172,7 +2173,7 @@ Bit32u lba;
   outb(iobase1 + ATA_CB_SN, sector);
   outb(iobase1 + ATA_CB_CL, cylinder & 0x00ff);
   outb(iobase1 + ATA_CB_CH, cylinder >> 8);
-  outb(iobase1 + ATA_CB_DH, slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0 | (Bit8u) head );
+  outb(iobase1 + ATA_CB_DH, (slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0) | (Bit8u) head );
   outb(iobase1 + ATA_CB_CMD, command);
 
   while (1) {
@@ -2313,7 +2314,7 @@ Bit32u lba;
   outb(iobase1 + ATA_CB_SN, sector);
   outb(iobase1 + ATA_CB_CL, cylinder & 0x00ff);
   outb(iobase1 + ATA_CB_CH, cylinder >> 8);
-  outb(iobase1 + ATA_CB_DH, slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0 | (Bit8u) head );
+  outb(iobase1 + ATA_CB_DH, (slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0) | (Bit8u) head );
   outb(iobase1 + ATA_CB_CMD, command);
 
   while (1) {
@@ -2885,17 +2886,17 @@ cdrom_boot()
   // Remeber the media type
   switch(read_byte(ebda_seg,&EbdaData->cdemu.media)) {
     case 0x01:  // 1.2M floppy
-      write_word(ebda_seg,&EbdaData->cdemu.vdevice.sectors,15);
+      write_word(ebda_seg,&EbdaData->cdemu.vdevice.spt,15);
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.cylinders,80);
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.heads,2);
       break;
     case 0x02:  // 1.44M floppy
-      write_word(ebda_seg,&EbdaData->cdemu.vdevice.sectors,18);
+      write_word(ebda_seg,&EbdaData->cdemu.vdevice.spt,18);
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.cylinders,80);
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.heads,2);
       break;
     case 0x03:  // 2.88M floppy
-      write_word(ebda_seg,&EbdaData->cdemu.vdevice.sectors,36);
+      write_word(ebda_seg,&EbdaData->cdemu.vdevice.spt,36);
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.cylinders,80);
       write_word(ebda_seg,&EbdaData->cdemu.vdevice.heads,2);
       break;
@@ -3960,9 +3961,9 @@ int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
-  Bit16u cylinder, head, sector, segment, offset, size;
+  Bit16u cylinder, head, sector, segment, offset, size, spt;
   Bit8u  device, count, status, bitshift;
-  Bit32u lba;
+  Bit32u lba, sectors;
 
   BX_DEBUG_INT13_HD("int13_harddisk: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
 
@@ -4047,9 +4048,9 @@ ASM_END
         }
 
       // sanity check on cyl heads, sec
-      if( (cylinder >= read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders))
+      if( (cylinder >= read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders)) 
        || (head >= read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads))
-       || (sector > read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.sectors) )) {
+       || (sector > read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt) )) {
         BX_INFO("int13_harddisk: function %02x, parameters out of range %04x/%04x/%04x!\n", cylinder, head, sector);
 	goto int13_fail;
         }
@@ -4086,13 +4087,13 @@ ASM_END
       // Get logical geometry from table
       cylinder = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.cylinders);
       head     = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.heads);
-      sector   = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.sectors);
+      spt      = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.spt);
       count    = read_byte(ebda_seg, &EbdaData->ata.hdcount);
 
-      cylinder = cylinder - 1; /* 0 based - FIXME ???? was - 2*/
+      cylinder = cylinder - 2; /* 0 based , last sector not used */
       SET_AL(0);
       SET_CH(cylinder & 0xff);
-      SET_CL(((cylinder >> 2) & 0xc0) | (sector & 0x3f));
+      SET_CL(((cylinder >> 2) & 0xc0) | (spt & 0x3f));
       SET_DH(head - 1);
       SET_DL(count); /* FIXME returns 0, 1, or n hard drives */
 
@@ -4118,8 +4119,14 @@ ASM_END
     case 0x15: /* read disk drive size */
 
       // Get physical geometry from table
-      CX = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors)>>16;
-      DX = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors)&0xffff;
+      cylinder = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders);
+      head     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads);
+      spt      = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt);
+
+      // Compute sector count seen by int13
+      sectors = (Bit32u)(cylinder - 1) * (Bit32u)head * (Bit32u)spt;
+      CX = sectors >> 16;
+      DX = sectors & 0xffff;
 
       SET_AH(3);  // hard disk accessible
       goto int13_success_noah;
@@ -4196,12 +4203,12 @@ ASM_END
 
       // EDD 1.x
       if(size >= 0x1a) {
-        Bit16u   cylinders, heads, sectors, blksize;
-	Bit32u   sectcount;
+        Bit16u   cylinders, heads, spt, blksize;
+        Bit32u   sectcount;
 
         cylinders = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders);
         heads     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads);
-        sectors   = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.sectors);
+        spt       = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt);
         sectcount = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors);
         blksize   = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
 
@@ -4209,7 +4216,7 @@ ASM_END
         write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x02); // geometry is valid
         write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, cylinders);
         write_dword(DS, SI+(Bit16u)&Int13DPT->heads, heads);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sectors, sectors);
+        write_dword(DS, SI+(Bit16u)&Int13DPT->spt, spt);
         write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, sectcount);  // FIXME should be Bit64
         write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count2, 0L);  
         write_word(DS, SI+(Bit16u)&Int13DPT->blksize, blksize);  
@@ -4465,7 +4472,7 @@ int13_cdrom(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
       atacmd[5]=(lba & 0x000000ff);
       status = ata_cmd_packet(device, 12, get_SS(), atacmd, 0, count*2048L, ATA_DATA_IN, segment,offset); 
 
-      count = (Bit16u)(read_dword(ebda_seg, &EbdaData->ata.trsfbytes)>>11);
+      count = (Bit16u)(read_dword(ebda_seg, &EbdaData->ata.trsfbytes) >> 11);
       write_word(DS, SI+(Bit16u)&Int13Ext->count, count);
 
       if (status != 0) {
@@ -4549,8 +4556,8 @@ int13_cdrom_rme_end:
 
       // EDD 1.x
       if(size >= 0x1a) {
-        Bit16u   cylinders, heads, sectors, blksize;
-	Bit32u   sectcount;
+        Bit16u   cylinders, heads, spt, blksize;
+        Bit32u   sectcount;
 
         blksize   = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
 
@@ -4558,7 +4565,7 @@ int13_cdrom_rme_end:
         write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x74); // removable, media change, lockable, max values
         write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, 0xffffffff);
         write_dword(DS, SI+(Bit16u)&Int13DPT->heads, 0xffffffff);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sectors, 0xffffffff);
+        write_dword(DS, SI+(Bit16u)&Int13DPT->spt, 0xffffffff);
         write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, 0xffffffff);  // FIXME should be Bit64
         write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count2, 0xffffffff);  
         write_word(DS, SI+(Bit16u)&Int13DPT->blksize, blksize);  
@@ -4745,7 +4752,7 @@ int13_eltorito(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
       write_word(DS,SI+0x0c,read_word(ebda_seg,&EbdaData->cdemu.load_segment));
       write_word(DS,SI+0x0e,read_word(ebda_seg,&EbdaData->cdemu.sector_count));
       write_byte(DS,SI+0x10,read_byte(ebda_seg,&EbdaData->cdemu.vdevice.cylinders));
-      write_byte(DS,SI+0x11,read_byte(ebda_seg,&EbdaData->cdemu.vdevice.sectors));
+      write_byte(DS,SI+0x11,read_byte(ebda_seg,&EbdaData->cdemu.vdevice.spt));
       write_byte(DS,SI+0x12,read_byte(ebda_seg,&EbdaData->cdemu.vdevice.heads));
 
       // If we have to terminate emulation
@@ -4790,7 +4797,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit8u  device, status;
-  Bit16u vheads, vsectors, vcylinders;
+  Bit16u vheads, vspt, vcylinders;
   Bit16u head, sector, cylinder, nbsectors;
   Bit32u vlba, ilba, slba, elba;
   Bit16u before, segment, offset;
@@ -4848,7 +4855,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
 
     case 0x02: // read disk sectors
     case 0x04: // verify disk sectors
-      vsectors   = read_word(ebda_seg,&EbdaData->cdemu.vdevice.sectors); 
+      vspt       = read_word(ebda_seg,&EbdaData->cdemu.vdevice.spt); 
       vcylinders = read_word(ebda_seg,&EbdaData->cdemu.vdevice.cylinders); 
       vheads     = read_word(ebda_seg,&EbdaData->cdemu.vdevice.heads); 
 
@@ -4865,7 +4872,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       if(nbsectors==0) goto int13_success;
 
       // sanity checks sco openserver needs this!
-      if ((sector-1 >= vsectors)
+      if ((sector   >  vspt)
        || (cylinder >= vcylinders)
        || (head     >= vheads)) {
 	goto int13_fail;
@@ -4878,7 +4885,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       offset  = BX % 16;
 
       // calculate the virtual lba inside the image
-      vlba=((((Bit32u)cylinder*(Bit32u)vheads)+(Bit32u)head)*(Bit32u)vsectors)+((Bit32u)(sector-1));
+      vlba=((((Bit32u)cylinder*(Bit32u)vheads)+(Bit32u)head)*(Bit32u)vspt)+((Bit32u)(sector-1));
  
       // In advance so we don't loose the count
       SET_AL(nbsectors);
@@ -4909,14 +4916,14 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       break;
 
     case 0x08: /* read disk drive parameters */
-      vsectors=read_word(ebda_seg,&EbdaData->cdemu.vdevice.sectors); 
+      vspt=read_word(ebda_seg,&EbdaData->cdemu.vdevice.spt); 
       vcylinders=read_word(ebda_seg,&EbdaData->cdemu.vdevice.cylinders) - 1; 
       vheads=read_word(ebda_seg,&EbdaData->cdemu.vdevice.heads) - 1; 
  
       SET_AL( 0x00 );
       SET_BL( 0x00 );
       SET_CH( vcylinders & 0xff );
-      SET_CL((( vcylinders >> 2) & 0xc0) | ( vsectors  & 0x3f ));
+      SET_CL((( vcylinders >> 2) & 0xc0) | ( vspt  & 0x3f ));
       SET_DH( vheads );
       SET_DL( 0x02 );   // FIXME ElTorito Various. should send the real count of drives 1 or 2
  
@@ -6754,7 +6761,7 @@ ASM_END
 #endif // BX_ELTORITO_BOOT
 
   // return the boot segment
-  return (((Bit32u)bootdrv)<<16) + bootseg;
+  return (((Bit32u)bootdrv) << 16) + bootseg;
 }
 
   void
