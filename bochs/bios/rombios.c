@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.73 2002-10-27 21:17:03 cbothamy Exp $
+// $Id: rombios.c,v 1.74 2002-10-27 23:04:59 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -930,10 +930,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.73 $";
-static char bios_date_string[] = "$Date: 2002-10-27 21:17:03 $";
+static char bios_cvs_version_string[] = "$Revision: 1.74 $";
+static char bios_date_string[] = "$Date: 2002-10-27 23:04:59 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.73 2002-10-27 21:17:03 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.74 2002-10-27 23:04:59 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2006,12 +2006,11 @@ void ata_detect( )
       mode      = read_byte(get_SS(),buffer+96) ? ATA_MODE_PIO32 : ATA_MODE_PIO16;
       blksize   = read_word(get_SS(),buffer+10);
       
-      // FIXME : should use default geometry words 1 3 6
-      cylinders = read_word(get_SS(),buffer+108); // last sector not used... should this be  - 1 ?
-      heads     = read_word(get_SS(),buffer+110);
-      spt       = read_word(get_SS(),buffer+112);
+      cylinders = read_word(get_SS(),buffer+(1*2)); // word 1
+      heads     = read_word(get_SS(),buffer+(3*2)); // word 3
+      spt       = read_word(get_SS(),buffer+(6*2)); // word 6
 
-      sectors   = read_dword(get_SS(),buffer+114);
+      sectors   = read_dword(get_SS(),buffer+(60*2)); // word 60 and word 61
 
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_HD);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].removable, removable);
