@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.5 2002-11-19 05:47:45 bdenney Exp $
+// $Id: soundlnx.cc,v 1.5.2.1 2003-01-01 22:40:02 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,7 +28,7 @@
 
 
 #include "bochs.h"
-#if defined(linux) && BX_SUPPORT_SB16
+#if (defined(linux) || defined(__FreeBSD__)) && BX_SUPPORT_SB16
 #define LOG_THIS bx_sb16.
 
 #include <errno.h>
