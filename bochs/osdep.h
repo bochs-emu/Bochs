@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.14 2002-12-12 15:29:39 cbothamy Exp $
+// $Id: osdep.h,v 1.15 2003-01-10 22:32:46 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,6 +95,11 @@ extern "C" {
 #if !BX_HAVE_STRDUP
 #define strdup bx_strdup
   extern char *bx_strdup(const char *str);
+#endif
+
+#if !BX_HAVE_STRREV
+#define strrev bx_strrev
+  extern char *bx_strrev(char *str);
 #endif
 
 #if !BX_HAVE_SOCKLEN_T

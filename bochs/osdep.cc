@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.11 2002-12-12 15:29:33 cbothamy Exp $
+// $Id: osdep.cc,v 1.12 2003-01-10 22:32:44 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -217,6 +217,23 @@ char *bx_strdup(const char *str)
 	// but it works...
 }
 #endif  /* !BX_HAVE_STRDUP */
+
+#if !BX_HAVE_STRREV
+char *bx_strrev(char *str)
+{
+  char *p1, *p2;
+
+  if (! str || ! *str)
+    return str;
+
+  for (p1 = str, p2 = str + strlen(str) - 1; p2 > p1; ++p1, --p2) {
+    *p1 ^= *p2;
+    *p2 ^= *p1;
+    *p1 ^= *p2;
+  }
+  return str;
+}
+#endif  /* !BX_HAVE_STRREV */
 
 //////////////////////////////////////////////////////////////////////
 // Missing library functions, implemented for MacOS only
