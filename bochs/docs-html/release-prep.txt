@@ -15,7 +15,7 @@ export DIR=bochs-1.2.1
 
 source: 
   cvs export -r$TAG -d$DIR bochs
-  tar czvf bochs-$VERSION.tar.gz $DIR
+  tar czvf bochs-$VERSION.tar.gz --exclude CVS $DIR
 
 win32 makefiles:
   rm -rf $DIR
