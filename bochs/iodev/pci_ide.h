@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.3 2004-07-11 20:38:48 vruppert Exp $
+// $Id: pci_ide.h,v 1.4 2005-02-06 13:05:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -48,8 +48,10 @@ private:
 
   struct {
     Bit8u pci_conf[256];
-    Bit32u bmide_addr;
-    Bit8u bmide_regs[16];
+    Bit32u bmdma_addr;
+    Bit8u bmdma_command[2];
+    Bit8u bmdma_status[2];
+    Bit32u bmdma_dtpr[2];
     } s;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
