@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: floppy.h,v 1.7 2001-12-27 09:28:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,6 +69,8 @@ private:
     Bit8u   command_size;
     Boolean command_complete;
     Bit8u   pending_command;
+
+    Boolean pending_irq;
 
     Bit8u   result[10];
     Bit8u   result_index;
