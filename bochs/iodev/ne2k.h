@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.11 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: ne2k.h,v 1.12 2004-06-27 18:23:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,9 +37,11 @@
 #if BX_USE_NE2K_SMF
 #  define BX_NE2K_SMF  static
 #  define BX_NE2K_THIS theNE2kDevice->
+#  define BX_NE2K_THIS_PTR theNE2kDevice
 #else
 #  define BX_NE2K_SMF
 #  define BX_NE2K_THIS this->
+#  define BX_NE2K_THIS_PTR this
 #endif
 
 #define  BX_NE2K_MEMSIZ    (32*1024)
@@ -189,6 +191,11 @@ typedef struct {
     int    tx_timer_index;
     int    tx_timer_active;
 
+    // pci stuff
+    bx_bool pci_enabled;
+#if BX_PCI_SUPPORT
+    Bit8u pci_conf[256];
+#endif
 } bx_ne2k_t;
 
 
@@ -232,8 +239,16 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+#if BX_PCI_SUPPORT
+  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
+  static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
+#endif
 #if !BX_USE_NE2K_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
+#if BX_PCI_SUPPORT
+  Bit32u pci_read(Bit8u address, unsigned io_len);
+  void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
+#endif
 #endif
 };
