@@ -5,12 +5,31 @@ GZIP=@GZIP@
 if [ ! -z $1 ]; then
   DLXPATH=$1
 else
-  DLXPATH=$HOME/.bochs
+  DLXPATH=$HOME/.bochsdlx
 fi
-CONFFILE=$HOME/.bochs/bochsconf
+CONFFILE=$HOME/.bochsdlx/bochsconf
 
 makedlxdir() {
-  echo DEBUG: Creating $HOME/.bochs/bochsrc
+  echo 
+  echo ---------------------------------------------------------------
+  echo To run the DLX Linux demo, I need to create a directory called 
+  echo $DLXPATH, and copy some configuration files 
+  echo and a 10 megabyte disk image into the directory.
+  echo ---------------------------------------------------------------
+  ok='unknown'
+  while test $ok = 'unknown'; do
+    echo Is that okay? [y/n]
+    read j
+    case $j in
+	    y*) ok=1 ;;
+	    n*) ok=0 ;;
+    esac
+  done
+  if test $ok != 1; then
+    echo Aborting
+    exit 1
+  fi
+  #echo DEBUG: Creating $HOME/.bochsdlx/bochsrc
   echo DLXPATH=$DLXPATH > $CONFFILE
   . $CONFFILE
   for file in bochsrc.txt README testform.txt; do
@@ -29,6 +48,9 @@ makedlxdir() {
   fi
 }
 
+echo ---------------------------------------------------------------
+echo "            DLX Linux Demo, for Bochs x86 Emulator"
+echo ---------------------------------------------------------------
 
 echo -n "Checking for bochs binary..."
 if test ! -x $BOCHS; then
@@ -53,8 +75,8 @@ else
   echo ERROR: without $GZIP in your PATH, I cannot continue.
   exit 1
 fi
-echo -n "Checking for $HOME/.bochs directory..."
-if test -d "$HOME/.bochs"; then
+echo -n "Checking for $HOME/.bochsdlx directory..."
+if test -d "$HOME/.bochsdlx"; then
   echo "ok"
   if test -f "$CONFFILE"; then
     . $CONFFILE
@@ -62,8 +84,8 @@ if test -d "$HOME/.bochs"; then
     makedlxdir
   fi
 else
-  echo DEBUG: Creating $HOME/.bochs
-  mkdir -p $HOME/.bochs
+  #echo DEBUG: Creating $HOME/.bochsdlx
+  mkdir -p $HOME/.bochsdlx
   mkdir -p $DLXPATH
   makedlxdir
 fi
@@ -84,3 +106,13 @@ echo Running bochs
 
 # ok now try it
 $BOCHS -nocontrolpanel
+
+echo
+echo ---------------------------------------------------------------
+echo The DLX Linux demo is over.  If you want to free up the disk 
+echo space in your account, remove the .bochsdlx directory in your
+echo home directory.  Example:
+echo "   rm -rf ~/.bochsdlx"
+echo Please be careful with rm -rf because it can make a mess.
+echo ---------------------------------------------------------------
+exit 0
