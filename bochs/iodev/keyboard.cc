@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.101 2005-01-21 16:07:36 vruppert Exp $
+// $Id: keyboard.cc,v 1.102 2005-02-16 16:37:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.101 2005-01-21 16:07:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.102 2005-02-16 16:37:45 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -991,11 +991,11 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     if( value != 0 ) {
       if( value<4 ) {
         BX_KEY_THIS s.kbd_controller.current_scancodes_set = (value-1);
-        BX_INFO(("Switched to scancode set %d\n",
+        BX_INFO(("Switched to scancode set %d",
           (unsigned) BX_KEY_THIS s.kbd_controller.current_scancodes_set + 1));
         kbd_enQ(0xFA);
       } else {
-        BX_ERROR(("Received scancodes set out of range: %d\n", value ));
+        BX_ERROR(("Received scancodes set out of range: %d", value ));
         kbd_enQ(0xFF); // send ERROR
       }
     } else {
@@ -1031,7 +1031,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
 
     case 0xf0: // Select alternate scan code set
       BX_KEY_THIS s.kbd_controller.expecting_scancodes_set = 1;
-      BX_DEBUG(("Expecting scancode set info...\n"));
+      BX_DEBUG(("Expecting scancode set info..."));
       kbd_enQ(0xFA); // send ACK
       return;
       break;
@@ -1450,6 +1450,10 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
         BX_ERROR(("[mouse] Warning: Read Data command partially supported."));
         break;
 
+      case 0xbb: // OS/2 Warp 3 uses this command
+       BX_ERROR(("[mouse] ignoring 0xbb command"));
+       break;
+
       default:
         //FEh Resend
         BX_PANIC(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
@@ -1602,8 +1606,8 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_s
 #endif  /* ifdef VERBOSE_KBD_DEBUG */
 
   if( (delta_x==0) && (delta_y==0) && (delta_z==0) && (BX_KEY_THIS s.mouse.button_status == (button_state & 0x7) ) ) {
-    BX_DEBUG(("Ignoring useless mouse_motion call:\n"));
-    BX_DEBUG(("This should be fixed in the gui code.\n"));
+    BX_DEBUG(("Ignoring useless mouse_motion call:"));
+    BX_DEBUG(("This should be fixed in the gui code."));
     return;
   }
 
