@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.8 2002-11-19 05:47:44 bdenney Exp $
+// $Id: parser.y,v 1.9 2003-08-01 10:14:48 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -117,6 +117,7 @@ at the end of parser.c.  I don't know any way to ask yacc to put it at the end.
 %token <sval> BX_TOKEN_TRACEREGON
 %token <sval> BX_TOKEN_TRACEREGOFF
 %token <sval> BX_TOKEN_HELP
+%token <sval> BX_TOKEN_IVT
 %type <uval> segment_register
 %type <uval> optional_numeric
 %type <uval_range> numeric_range optional_numeric_range
@@ -508,6 +509,11 @@ info_command:
         bx_dbg_info_idt_command($3);
         free($1); free($2);
         }
+    | BX_TOKEN_INFO BX_TOKEN_IVT optional_numeric_range '\n'
+       {
+       bx_dbg_info_ivt_command($3);
+       free($1); free($2);
+       }
     | BX_TOKEN_INFO BX_TOKEN_GDT optional_numeric_range '\n'
         {
         bx_dbg_info_gdt_command($3);
