@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.18 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: debugstuff.cc,v 1.19 2002-09-23 22:10:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -107,6 +107,22 @@ BX_CPU_C::debug(Bit32u offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b));
   BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
     (unsigned) BX_CPU_THIS_PTR prev_eip));
+#if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 4
+  BX_INFO(("| CR0=0x%08x CR1=0x%08x CR2=0x%08x CR3=0x%08x",
+    BX_CPU_THIS_PTR cr0.val32,
+    0,
+    BX_CPU_THIS_PTR cr2,
+    BX_CPU_THIS_PTR cr3));
+#elif BX_CPU_LEVEL >= 4
+  BX_INFO(("| CR0=0x%08x CR1=0x%08x CR2=0x%08x",
+    BX_CPU_THIS_PTR cr0.val32,
+    0,
+    BX_CPU_THIS_PTR cr2));
+  BX_INFO(("| CR3=0x%08x CR4=0x%08x",
+    BX_CPU_THIS_PTR cr3,
+    BX_CPU_THIS_PTR cr4.getRegister()));
+#endif
+	
 
 #if 0
   /* (mch) Hack to display the area round EIP and prev_EIP */
