@@ -166,6 +166,7 @@ private:
 
 #define BX_KEY_LEFT_BRACKET  34
 #define BX_KEY_BACKSLASH     51
+#define BX_KEY_LEFT_BACKSLASH  94
 #define BX_KEY_RIGHT_BRACKET 35
 #define BX_KEY_MINUS         20
 #define BX_KEY_GRAVE         49
