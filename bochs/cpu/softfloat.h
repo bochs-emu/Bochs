@@ -49,8 +49,7 @@ typedef Bit64u float64, Float64;
 | Software IEC/IEEE floating-point class.
 *----------------------------------------------------------------------------*/
 typedef enum {
-    float_negative_zero,
-    float_positive_zero,
+    float_zero,
     float_NaN,
     float_negative_inf,
     float_positive_inf,
@@ -123,15 +122,54 @@ struct float_status_t
 typedef struct float_status_t softfloat_status_word_t;
 
 /*----------------------------------------------------------------------------
-| Returns current floating point rounding mode specified by status word
-*----------------------------------------------------------------------------*/
-int get_float_rounding_mode(float_status_t &status);
-
-/*----------------------------------------------------------------------------
 | Routine to raise any or all of the software IEC/IEEE floating-point
 | exception flags.
 *----------------------------------------------------------------------------*/
-void float_raise(float_status_t &status, int exceptions);
+
+BX_CPP_INLINE void float_raise(float_status_t &status, int flags)
+{
+    status.float_exception_flags |= flags;
+}
+
+/*----------------------------------------------------------------------------
+| Returns current floating point rounding mode specified by status word.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int get_float_rounding_mode(float_status_t &status)
+{
+    return status.float_rounding_mode;
+}
+
+/*----------------------------------------------------------------------------
+| Returns current floating point precision (floatx80 only).
+*----------------------------------------------------------------------------*/
+
+#ifdef FLOATX80
+BX_CPP_INLINE int get_float_rounding_precision(float_status_t &status)
+{
+    return status.float_rounding_precision;
+}
+#endif
+
+/*----------------------------------------------------------------------------
+| Returns current floating point NaN operands handling mode specified 
+| by status word.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int get_float_nan_handling_mode(float_status_t &status)
+{
+    return status.float_nan_handling_mode;
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the <flush-underflow-to-zero> feature is supported;
+| otherwise returns 0.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int get_flush_underflow_to_zero(float_status_t &status)
+{
+    return status.flush_underflow_to_zero;
+}
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE integer-to-floating-point conversion routines.

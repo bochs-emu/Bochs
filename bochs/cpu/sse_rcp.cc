@@ -300,8 +300,7 @@ static Float32 approximate_rcp(Float32 op)
 
   switch(op_class)
   {
-    case float_negative_zero:
-    case float_positive_zero:
+    case float_zero:
     case float_denormal:
         return packFloat32(sign, 0xFF, 0);
 
@@ -675,8 +674,7 @@ static Float32 approximate_rsqrt(Float32 op)
 
   switch(op_class)
   {
-    case float_positive_zero:
-    case float_negative_zero:
+    case float_zero:
     case float_denormal:
         return packFloat32(sign, 0xFF, 0);
 

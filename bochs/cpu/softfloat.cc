@@ -156,8 +156,7 @@ float_class_t float32_class(float32 a)
    }
 
    if(aExp == 0) {
-       if (aSig == 0)
-           return (aSign) ? float_negative_zero : float_positive_zero;
+       if (aSig == 0) return float_zero;
 
        return float_denormal;
    }
@@ -293,7 +292,7 @@ float_class_t float64_class(float64 a)
     
    if(aExp == 0) {
        if (aSig == 0) 
-           return (aSign) ? float_negative_zero : float_positive_zero;
+           return float_zero;
 
        return float_denormal;
    }
@@ -659,7 +658,7 @@ float32 float32_round_to_int(float32 a, float_status_t &status)
     aExp = extractFloat32Exp(a);
     if (0x96 <= aExp) {
         if ((aExp == 0xFF) && extractFloat32Frac(a)) {
-            return propagateFloat32NaN(a, a, status);
+            return propagateFloat32NaN(a, status);
         }
         return a;
     }
@@ -1056,7 +1055,7 @@ float32 float32_sqrt(float32 a, float_status_t &status)
     aExp = extractFloat32Exp(a);
     aSign = extractFloat32Sign(a);
     if (aExp == 0xFF) {
-        if (aSig) return propagateFloat32NaN(a, 0, status);
+        if (aSig) return propagateFloat32NaN(a, status);
         if (! aSign) return a;
         float_raise(status, float_flag_invalid);
         return float32_default_nan;
@@ -1563,7 +1562,7 @@ float64 float64_round_to_int(float64 a, float_status_t &status)
     aExp = extractFloat64Exp(a);
     if (0x433 <= aExp) {
         if ((aExp == 0x7FF) && extractFloat64Frac(a)) {
-            return propagateFloat64NaN(a, a, status);
+            return propagateFloat64NaN(a, status);
         }
         return a;
     }
@@ -1967,7 +1966,7 @@ float64 float64_sqrt(float64 a, float_status_t &status)
     aExp = extractFloat64Exp(a);
     aSign = extractFloat64Sign(a);
     if (aExp == 0x7FF) {
-        if (aSig) return propagateFloat64NaN(a, a, status);
+        if (aSig) return propagateFloat64NaN(a, status);
         if (! aSign) return a;
         float_raise(status, float_flag_invalid);
         return float64_default_nan;
@@ -2312,7 +2311,7 @@ float_class_t floatx80_class(floatx80 a)
     
    if(aExp == 0) {
        if (aSig == 0)
-           return (aSign) ? float_negative_zero : float_positive_zero;
+           return float_zero;
 
        return float_denormal;
    }
@@ -2779,13 +2778,12 @@ float32 floatx80_to_float32(floatx80 a, float_status_t &status)
 
 float64 floatx80_to_float64(floatx80 a, float_status_t &status)
 {
-    int aSign;
     Bit32s aExp;
     Bit64u aSig, zSig;
 
     aSig = extractFloatx80Frac(a);
     aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
+    int aSign = extractFloatx80Sign(a);
 
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1)) {
@@ -2800,7 +2798,7 @@ float64 floatx80_to_float64(floatx80 a, float_status_t &status)
 
 /*----------------------------------------------------------------------------
 | Rounds the extended double-precision floating-point value `a' to an integer,
-| and returns the result as an extended quadruple-precision floating-point
+| and returns the result as an extended double-precision floating-point
 | value.  The operation is performed according to the IEC/IEEE Standard for
 | Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
@@ -2816,7 +2814,7 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
     aExp = extractFloatx80Exp(a);
     if (0x403E <= aExp) {
         if ((aExp == 0x7FFF) && (Bit64u) (extractFloatx80Frac(a)<<1)) {
-            return propagateFloatx80NaN(a, a, status);
+            return propagateFloatx80NaN(a, status);
         }
         return a;
     }
@@ -3180,104 +3178,6 @@ floatx80 floatx80_div(floatx80 a, floatx80 b, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Returns the remainder of the extended double-precision floating-point value
-| `a' with respect to the corresponding value `b'.  The operation is performed
-| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-floatx80 floatx80_rem(floatx80 a, floatx80 b, float_status_t &status)
-{
-    int aSign, bSign, zSign;
-    Bit32s aExp, bExp, expDiff;
-    Bit64u aSig0, aSig1, bSig;
-    Bit64u q, term0, term1, alternateASig0, alternateASig1;
-    floatx80 z;
-
-    aSig0 = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
-    bSig = extractFloatx80Frac(b);
-    bExp = extractFloatx80Exp(b);
-    bSign = extractFloatx80Sign(b);
-
-    if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig0<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) 
-        {
-            return propagateFloatx80NaN(a, b, status);
-        }
-        goto invalid;
-    }
-    if (bExp == 0x7FFF) {
-        if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
-        return a;
-    }
-    if (bExp == 0) {
-        if (bSig == 0) {
- invalid:
-            float_raise(status, float_flag_invalid);
-            z.fraction = floatx80_default_nan_fraction;
-            z.exp = floatx80_default_nan_exp;
-            return z;
-        }
-        float_raise(status, float_flag_denormal);
-        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
-    }
-    if (aExp == 0) {
-        if ((Bit64u) (aSig0<<1) == 0) return a;
-        normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
-    }
-    bSig |= BX_CONST64(0x8000000000000000);
-    zSign = aSign;
-    expDiff = aExp - bExp;
-    aSig1 = 0;
-    if (expDiff < 0) {
-        if (expDiff < -1) return a;
-        shift128Right(aSig0, 0, 1, &aSig0, &aSig1);
-        expDiff = 0;
-    }
-    q = (bSig <= aSig0);
-    if (q) aSig0 -= bSig;
-    expDiff -= 64;
-    while (0 < expDiff) {
-        q = estimateDiv128To64(aSig0, aSig1, bSig);
-        q = (2 < q) ? q - 2 : 0;
-        mul64To128(bSig, q, &term0, &term1);
-        sub128(aSig0, aSig1, term0, term1, &aSig0, &aSig1);
-        shortShift128Left(aSig0, aSig1, 62, &aSig0, &aSig1);
-        expDiff -= 62;
-    }
-    expDiff += 64;
-    if (0 < expDiff) {
-        q = estimateDiv128To64(aSig0, aSig1, bSig);
-        q = (2 < q) ? q - 2 : 0;
-        q >>= 64 - expDiff;
-        mul64To128(bSig, q<<(64 - expDiff), &term0, &term1);
-        sub128(aSig0, aSig1, term0, term1, &aSig0, &aSig1);
-        shortShift128Left(0, bSig, 64 - expDiff, &term0, &term1);
-        while (le128(term0, term1, aSig0, aSig1)) {
-            ++q;
-            sub128(aSig0, aSig1, term0, term1, &aSig0, &aSig1);
-        }
-    }
-    else {
-        term1 = 0;
-        term0 = bSig;
-    }
-    sub128(term0, term1, aSig0, aSig1, &alternateASig0, &alternateASig1);
-    if (lt128(alternateASig0, alternateASig1, aSig0, aSig1)
-         || (eq128(alternateASig0, alternateASig1, aSig0, aSig1)
-              && (q & 1))) 
-    {
-        aSig0 = alternateASig0;
-        aSig1 = alternateASig1;
-        zSign = ! zSign;
-    }
-    return
-        normalizeRoundAndPackFloatx80(80, zSign, bExp + expDiff, aSig0, aSig1, status);
-}
-
-/*----------------------------------------------------------------------------
 | Returns the square root of the extended double-precision floating-point
 | value `a'.  The operation is performed according to the IEC/IEEE Standard
 | for Binary Floating-Point Arithmetic.
@@ -3295,7 +3195,7 @@ floatx80 floatx80_sqrt(floatx80 a, float_status_t &status)
     aExp = extractFloatx80Exp(a);
     aSign = extractFloatx80Sign(a);
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig0<<1)) return propagateFloatx80NaN(a, a, status);
+        if ((Bit64u) (aSig0<<1)) return propagateFloatx80NaN(a, status);
         if (! aSign) return a;
         goto invalid;
     }
@@ -3572,9 +3472,12 @@ int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
         float_raise(status, float_flag_denormal);
     }
 
-    if ((a.fraction == b.fraction) && ((a.exp == b.exp)
-             || ((a.fraction == 0)
-                  && ((Bit16u) ((a.exp | b.exp)<<1) == 0))))
+    if ((a.fraction == b.fraction) && (a.exp == b.exp))
+    {
+        return float_relation_equal;
+    }
+
+    if (aClass == float_zero && bClass == float_zero)
     {
         return float_relation_equal;
     }
@@ -3619,9 +3522,12 @@ int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
         float_raise(status, float_flag_denormal);
     }
 
-    if ((a.fraction == b.fraction) && ((a.exp == b.exp)
-             || ((a.fraction == 0)
-                  && ((Bit16u) ((a.exp | b.exp)<<1) == 0))))
+    if ((a.fraction == b.fraction) && (a.exp == b.exp))
+    {
+        return float_relation_equal;
+    }
+
+    if (aClass == float_zero && bClass == float_zero)
     {
         return float_relation_equal;
     }

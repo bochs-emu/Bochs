@@ -37,58 +37,6 @@ these four paragraphs for those parts of this code that are retained.
 #define int64_indefinite BX_CONST64(0x8000000000000000)
 
 /*----------------------------------------------------------------------------
-| Raises the exceptions specified by `flags'.  Floating-point traps can be
-| defined here if desired.  It is currently not possible for such a trap
-| to substitute a result value.  If traps are not implemented, this routine
-| should be simply `float_exception_flags |= flags;'
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void float_raise(float_status_t &status, int flags)
-{
-    status.float_exception_flags |= flags;
-}
-
-/*----------------------------------------------------------------------------
-| Returns current floating point rounding mode specified by status word.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_float_rounding_mode(float_status_t &status)
-{
-    return status.float_rounding_mode;
-}
-
-/*----------------------------------------------------------------------------
-| Returns current floating point precision (floatx80 only).
-*----------------------------------------------------------------------------*/
-
-#ifdef FLOATX80
-BX_CPP_INLINE int get_float_rounding_precision(float_status_t &status)
-{
-    return status.float_rounding_precision;
-}
-#endif
-
-/*----------------------------------------------------------------------------
-| Returns current floating point NaN operands handling mode specified 
-| by status word.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_float_nan_handling_mode(float_status_t &status)
-{
-    return status.float_nan_handling_mode;
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the <flush-underflow-to-zero> feature is supported;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_flush_underflow_to_zero(float_status_t &status)
-{
-    return status.flush_underflow_to_zero;
-}
-
-/*----------------------------------------------------------------------------
 | Internal canonical NaN format.
 *----------------------------------------------------------------------------*/
 
@@ -196,6 +144,19 @@ BX_CPP_INLINE commonNaNT float32ToCommonNaN(float32 a, float_status_t &status)
 BX_CPP_INLINE float32 commonNaNToFloat32(commonNaNT a)
 {
     return (((Bit32u) a.sign)<<31) | 0x7FC00000 | (a.hi>>41);
+}
+
+/*----------------------------------------------------------------------------
+| Takes single-precision floating-point NaN `a' and returns the appropriate 
+| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float32 propagateFloat32NaN(float32 a, float_status_t &status)
+{
+    if (float32_is_signaling_nan(a))
+        float_raise(status, float_flag_invalid);
+
+    return a | 0x00400000;
 }
 
 /*----------------------------------------------------------------------------
@@ -334,6 +295,19 @@ BX_CPP_INLINE commonNaNT float64ToCommonNaN(float64 a, float_status_t &status)
 BX_CPP_INLINE float64 commonNaNToFloat64(commonNaNT a)
 {
     return (((Bit64u) a.sign)<<63) | BX_CONST64(0x7FF8000000000000) | (a.hi>>12);
+}
+
+/*----------------------------------------------------------------------------
+| Takes double-precision floating-point NaN `a' and returns the appropriate 
+| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float64 propagateFloat64NaN(float64 a, float_status_t &status)
+{
+    if (float64_is_signaling_nan(a))
+        float_raise(status, float_flag_invalid);
+
+    return a | BX_CONST64(0x0008000000000000);
 }
 
 /*----------------------------------------------------------------------------
@@ -483,6 +457,22 @@ BX_CPP_INLINE floatx80 commonNaNToFloatx80(commonNaNT a)
     z.fraction = BX_CONST64(0xC000000000000000) | (a.hi>>1);
     z.exp = (((Bit16u) a.sign)<<15) | 0x7FFF;
     return z;
+}
+
+/*----------------------------------------------------------------------------
+| Takes extended double-precision floating-point  NaN  `a' and returns the 
+| appropriate NaN result. If `a' is a signaling NaN, the invalid exception 
+| is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE floatx80 propagateFloatx80NaN(floatx80 a, float_status_t &status)
+{
+    if (floatx80_is_signaling_nan(a))
+        float_raise(status, float_flag_invalid);
+
+    a.fraction |= BX_CONST64(0xC000000000000000);
+
+    return a;
 }
 
 /*----------------------------------------------------------------------------
