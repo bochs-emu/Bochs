@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.28 2002-02-07 17:38:33 bdenney Exp $
+// $Id: cdrom.cc,v 1.29 2002-03-02 11:31:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ int ReadCDSector(unsigned int hid, unsigned int tid, unsigned int lun, unsigned 
 		WaitForSingleObject(hEventSRB, 100000);
 	}
 	CloseHandle(hEventSRB);
-	return 0;
+	return (srb.SRB_TargStat == STATUS_GOOD);
 }
 
 int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
@@ -203,7 +203,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.28 2002-02-07 17:38:33 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.29 2002-03-02 11:31:18 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -320,7 +320,9 @@ cdrom_interface::insert_cdrom(char *dev)
   // I just see if I can read a sector to verify that a
   // CD is in the drive and readable.
 #ifdef WIN32
-	if(!bUseASPI) {
+	if(bUseASPI) {
+	  return ReadCDSector(hid, tid, lun, 0, buffer, BX_CD_FRAMESIZE);
+	} else {
       ReadFile(hFile, (void *) buffer, BX_CD_FRAMESIZE, (unsigned long *) &ret, NULL);
       if (ret < 0) {
          CloseHandle(hFile);
@@ -377,6 +379,11 @@ if (using_file == 0)
 		DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
 	}
 }
+#endif
+
+#if __linux__
+  if (!using_file)
+    ioctl (fd, CDROMEJECT, NULL);
 #endif
 
     close(fd);
