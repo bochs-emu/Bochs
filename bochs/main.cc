@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.87 2002-03-03 06:10:04 bdenney Exp $
+// $Id: main.cc,v 1.88 2002-03-06 09:31:54 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -815,9 +815,9 @@ void bx_init_options ()
       NULL,
       0);
   bx_options.keyboard.Okeymap = new bx_param_string_c (BXP_KEYBOARD_MAP,
-      "Keymap name",
+      "Keymap filename",
       NULL,
-      "", 10);
+      "", BX_PATHNAME_LEN);
 
  // Keyboard type
   bx_options.Okeyboard_type = new bx_param_enum_c (BXP_KBD_TYPE,

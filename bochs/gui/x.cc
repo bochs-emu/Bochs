@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.32 2002-03-05 15:42:02 grossman Exp $
+// $Id: x.cc,v 1.33 2002-03-06 09:31:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,11 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-// Keyboard Mapping Todo
-//  . Add more keymaps. For now we only have us, fr and de
-//  . The tables should be moved in separate file so it can be edited by the user
-//  . The keymap files name should contain the GUI and keymap name, eg x-us
 
 #define XK_PUBLISHING
 #define XK_TECHNICAL
@@ -88,6 +83,8 @@ static int warp_dy = 0;
 static void warp_cursor(int dx, int dy);
 static void disable_cursor();
 static void enable_cursor();
+
+static Bit32u convertStringToXKeysym (const char *string);
 
 struct {
   Pixmap bmap;
@@ -238,565 +235,6 @@ Bit32u ascii_to_key_event[0x5f] = {
   BX_KEY_RIGHT_BRACKET,
   BX_KEY_GRAVE
   };
-
-
-/* US key mapping. Also the default */
-Bit32u keymap_us[][2] = {
-  { XK_space               , BX_KEY_SPACE },
-  { XK_exclam              , BX_KEY_1 },
-  { XK_quotedbl            , BX_KEY_SINGLE_QUOTE },
-  { XK_numbersign          , BX_KEY_3 },
-  { XK_dollar              , BX_KEY_4 },
-  { XK_percent             , BX_KEY_5 },
-  { XK_ampersand           , BX_KEY_7 },
-  { XK_apostrophe          , BX_KEY_SINGLE_QUOTE },
-  { XK_parenleft           , BX_KEY_9 },
-  { XK_parenright          , BX_KEY_0 },
-  { XK_asterisk            , BX_KEY_8 },
-  { XK_plus                , BX_KEY_EQUALS },
-  { XK_comma               , BX_KEY_COMMA },
-  { XK_minus               , BX_KEY_MINUS },
-  { XK_period              , BX_KEY_PERIOD },
-  { XK_slash               , BX_KEY_SLASH },
-  { XK_0                   , BX_KEY_0 },
-  { XK_1                   , BX_KEY_1 },
-  { XK_2                   , BX_KEY_2 },
-  { XK_3                   , BX_KEY_3 },
-  { XK_4                   , BX_KEY_4 },
-  { XK_5                   , BX_KEY_5 },
-  { XK_6                   , BX_KEY_6 },
-  { XK_7                   , BX_KEY_7 },
-  { XK_8                   , BX_KEY_8 },
-  { XK_9                   , BX_KEY_9 },
-  { XK_colon               , BX_KEY_SEMICOLON },
-  { XK_semicolon           , BX_KEY_SEMICOLON },
-  { XK_less                , BX_KEY_COMMA },
-  { XK_equal               , BX_KEY_EQUALS },
-  { XK_greater             , BX_KEY_PERIOD },
-  { XK_question            , BX_KEY_SLASH },
-  { XK_at                  , BX_KEY_2 },
-  { XK_A                   , BX_KEY_A },
-  { XK_B                   , BX_KEY_B },
-  { XK_C                   , BX_KEY_C },
-  { XK_D                   , BX_KEY_D },
-  { XK_E                   , BX_KEY_E },
-  { XK_F                   , BX_KEY_F },
-  { XK_G                   , BX_KEY_G },
-  { XK_H                   , BX_KEY_H },
-  { XK_I                   , BX_KEY_I },
-  { XK_J                   , BX_KEY_J },
-  { XK_K                   , BX_KEY_K },
-  { XK_L                   , BX_KEY_L },
-  { XK_M                   , BX_KEY_M },
-  { XK_N                   , BX_KEY_N },
-  { XK_O                   , BX_KEY_O },
-  { XK_P                   , BX_KEY_P },
-  { XK_Q                   , BX_KEY_Q },
-  { XK_R                   , BX_KEY_R },
-  { XK_S                   , BX_KEY_S },
-  { XK_T                   , BX_KEY_T },
-  { XK_U                   , BX_KEY_U },
-  { XK_V                   , BX_KEY_V },
-  { XK_W                   , BX_KEY_W },
-  { XK_X                   , BX_KEY_X },
-  { XK_Y                   , BX_KEY_Y },
-  { XK_Z                   , BX_KEY_Z },
-  { XK_bracketleft         , BX_KEY_LEFT_BRACKET },
-  { XK_backslash           , BX_KEY_BACKSLASH },
-  { XK_bracketright        , BX_KEY_RIGHT_BRACKET },
-  { XK_underscore          , BX_KEY_MINUS },
-  { XK_grave               , BX_KEY_GRAVE },
-  { XK_a                   , BX_KEY_A },
-  { XK_b                   , BX_KEY_B },
-  { XK_c                   , BX_KEY_C },
-  { XK_d                   , BX_KEY_D },
-  { XK_e                   , BX_KEY_E },
-  { XK_f                   , BX_KEY_F },
-  { XK_g                   , BX_KEY_G },
-  { XK_h                   , BX_KEY_H },
-  { XK_i                   , BX_KEY_I },
-  { XK_j                   , BX_KEY_J },
-  { XK_k                   , BX_KEY_K },
-  { XK_l                   , BX_KEY_L },
-  { XK_m                   , BX_KEY_M },
-  { XK_n                   , BX_KEY_N },
-  { XK_o                   , BX_KEY_O },
-  { XK_p                   , BX_KEY_P },
-  { XK_q                   , BX_KEY_Q },
-  { XK_r                   , BX_KEY_R },
-  { XK_s                   , BX_KEY_S },
-  { XK_t                   , BX_KEY_T },
-  { XK_u                   , BX_KEY_U },
-  { XK_v                   , BX_KEY_V },
-  { XK_w                   , BX_KEY_W },
-  { XK_x                   , BX_KEY_X },
-  { XK_y                   , BX_KEY_Y },
-  { XK_z                   , BX_KEY_Z },
-  { XK_braceleft           , BX_KEY_LEFT_BRACKET },
-  { XK_bar                 , BX_KEY_BACKSLASH },
-  { XK_braceright          , BX_KEY_RIGHT_BRACKET },
-  { XK_asciitilde          , BX_KEY_GRAVE },
-  { XK_KP_1                , BX_KEY_KP_END },
-#ifdef XK_KP_End
-  { XK_KP_End              , BX_KEY_KP_END },
-#endif
-  { XK_KP_2                , BX_KEY_KP_DOWN },
-#ifdef XK_KP_Down
-  { XK_KP_Down             , BX_KEY_KP_DOWN },
-#endif
-  { XK_KP_3                , BX_KEY_KP_PAGE_DOWN },
-#ifdef XK_KP_Page_Down
-  { XK_KP_Page_Down        , BX_KEY_KP_PAGE_DOWN },
-#endif
-  { XK_KP_4                , BX_KEY_KP_LEFT },
-#ifdef XK_KP_Left
-  { XK_KP_Left             , BX_KEY_KP_LEFT },
-#endif
-  { XK_KP_5                , BX_KEY_KP_5 },
-  { XK_KP_6                , BX_KEY_KP_RIGHT },
-#ifdef XK_KP_Right
-  { XK_KP_Right            , BX_KEY_KP_RIGHT },
-#endif
-  { XK_KP_7                , BX_KEY_KP_HOME },
-#ifdef XK_KP_Home
-  { XK_KP_Home             , BX_KEY_KP_HOME },
-#endif
-  { XK_KP_8                , BX_KEY_KP_UP },
-#ifdef XK_KP_Up
-  { XK_KP_Up               , BX_KEY_KP_UP },
-#endif
-  { XK_KP_9                , BX_KEY_KP_PAGE_UP },
-#ifdef XK_KP_Page_Up
-  { XK_KP_Page_Up          , BX_KEY_KP_PAGE_UP },
-#endif
-  { XK_KP_0                , BX_KEY_KP_INSERT },
-#ifdef XK_KP_Insert
-  { XK_KP_Insert           , BX_KEY_KP_INSERT },
-#endif
-  { XK_KP_Decimal          , BX_KEY_KP_DELETE },
-#ifdef XK_KP_Delete
-  { XK_KP_Delete           , BX_KEY_KP_DELETE },
-#endif
-#ifdef XK_KP_Enter
-  { XK_KP_Enter            , BX_KEY_KP_ENTER },
-#endif
-  { XK_KP_Subtract         , BX_KEY_KP_SUBTRACT },
-  { XK_KP_Add              , BX_KEY_KP_ADD },
-  { XK_KP_Multiply         , BX_KEY_KP_MULTIPLY },
-  { XK_KP_Divide           , BX_KEY_KP_DIVIDE },
-  { XK_Up                  , BX_KEY_UP },
-  { XK_Down                , BX_KEY_DOWN },
-  { XK_Left                , BX_KEY_LEFT },
-  { XK_Right               , BX_KEY_RIGHT },
-  { XK_Delete              , BX_KEY_DELETE },
-  { XK_BackSpace           , BX_KEY_BACKSPACE },
-  { XK_Tab                 , BX_KEY_TAB },
-  { XK_Return              , BX_KEY_ENTER },
-  { XK_Escape              , BX_KEY_ESC },
-  { XK_F1                  , BX_KEY_F1 },
-  { XK_F2                  , BX_KEY_F2 },
-  { XK_F3                  , BX_KEY_F3 },
-  { XK_F4                  , BX_KEY_F4 },
-  { XK_F5                  , BX_KEY_F5 },
-  { XK_F6                  , BX_KEY_F6 },
-  { XK_F7                  , BX_KEY_F7 },
-  { XK_F8                  , BX_KEY_F8 },
-  { XK_F9                  , BX_KEY_F9 },
-  { XK_F10                 , BX_KEY_F10 },
-  { XK_F11                 , BX_KEY_F11 },
-  { XK_F12                 , BX_KEY_F12 },
-  { XK_Control_L           , BX_KEY_CTRL_L },
-  { XK_Shift_L             , BX_KEY_SHIFT_L },
-  { XK_Shift_R             , BX_KEY_SHIFT_R },
-  { XK_Caps_Lock           , BX_KEY_CAPS_LOCK },
-  { XK_Num_Lock            , BX_KEY_NUM_LOCK },
-  { XK_Alt_L               , BX_KEY_ALT_L },
-  { XK_Insert              , BX_KEY_INSERT },
-  { XK_Home                , BX_KEY_HOME },
-  { XK_End                 , BX_KEY_END },
-  { XK_Page_Up             , BX_KEY_PAGE_UP },
-  { XK_Page_Down           , BX_KEY_PAGE_DOWN },
-  { XK_Meta_L              , BX_KEY_ALT_L }, 
-  { XK_Mode_switch         , BX_KEY_ALT_R }, 
-  { XK_Multi_key           , BX_KEY_ALT_R }, 
-};
-
-/* 
-  =====================================
-  How to write your own mapping table :
-  =====================================
-
-  Just look at each key of the US Keyboard, and write down
-  what you see on your real keyboard 
-  This gives you the XK_* symbol (your keyboard) 
-  and the BX_KEY_* symbol (US keyboard)
-
-  NB : you may have to add your country specific X11 keysyms 
-  and don't forget to add a line for every symbol you can type
-  on each key
-*/
-
-/*
-US Keyboard looks like this:
-
-Top Row from left to right 
-Esc F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 
-
-2nd row from left to right
-` 1 2 3 4 5 6 7 8 9 0 - = \ Back
-
-3rd row from left to right
-Tab Q W E R T Y U I O P [ ] Enter
-
-4rd row from left to right
-Caps A S D F G H J K L ; '
-
-5rd row from left to right
-lShift l\ Z X C V B N M , . / rShift
-
-6rd row from left to right
-lCtrl lAlt Space rAlt rCtrl
-*/
-
-/* ES (Spanish) key mapping, thanks to Vicente Hernando Ara */
-Bit32u keymap_es[][2] = {
-  { XK_bar                 , BX_KEY_1 },
-  { XK_dead_acute          , BX_KEY_SINGLE_QUOTE }, 
-  { XK_periodcentered      , BX_KEY_3 },
-  { XK_slash               , BX_KEY_7 },
-  { XK_dead_diaeresis      , BX_KEY_SINGLE_QUOTE },
-  { XK_parenright          , BX_KEY_9 },
-  { XK_equal               , BX_KEY_0 },
-  { XK_parenleft           , BX_KEY_8 },
-  { XK_questiondown        , BX_KEY_EQUALS },
-  { XK_comma               , BX_KEY_COMMA },
-  { XK_apostrophe          , BX_KEY_MINUS },
-  { XK_period              , BX_KEY_PERIOD },
-  { XK_underscore          , BX_KEY_SLASH },
-  { XK_minus               , BX_KEY_SLASH },
-  { XK_Ntilde              , BX_KEY_SEMICOLON },
-  { XK_ntilde              , BX_KEY_SEMICOLON },
-  { XK_semicolon           , BX_KEY_COMMA },
-  { XK_exclamdown          , BX_KEY_EQUALS },
-  { XK_colon               , BX_KEY_PERIOD },
-  { XK_underscore          , BX_KEY_SLASH },
-  { XK_at                  , BX_KEY_2 },
-  { XK_quotedbl            , BX_KEY_2 },
-  { XK_dead_grave          , BX_KEY_LEFT_BRACKET },
-  { XK_Ccedilla            , BX_KEY_BACKSLASH },
-  { XK_plus                , BX_KEY_RIGHT_BRACKET },
-  { XK_ampersand           , BX_KEY_6 },
-  { XK_question            , BX_KEY_MINUS },
-  { XK_masculine           , BX_KEY_GRAVE },
-  { XK_backslash           , BX_KEY_GRAVE },
-#ifdef XK_EuroSign
-  { XK_EuroSign            , BX_KEY_E },
-#endif
-  { XK_dead_circumflex     , BX_KEY_LEFT_BRACKET },
-  { XK_ccedilla            , BX_KEY_BACKSLASH },
-  { XK_asterisk            , BX_KEY_RIGHT_BRACKET },
-  { XK_ordfeminine         , BX_KEY_GRAVE },
-  { XK_less                , BX_KEY_LEFT_BACKSLASH },
-  { XK_greater             , BX_KEY_LEFT_BACKSLASH },
-  { XK_Control_R           , BX_KEY_CTRL_R },
-};
-
-/* French key mapping. Applied as a diff to the default */
-Bit32u keymap_fr[][2] = {
-  { XK_twosuperior         , BX_KEY_GRAVE },
-  { XK_ampersand           , BX_KEY_1 },
-  { XK_eacute              , BX_KEY_2 },
-  { XK_asciitilde          , BX_KEY_2 },
-  { XK_quotedbl            , BX_KEY_3 },
-  { XK_numbersign          , BX_KEY_3 },
-  { XK_apostrophe          , BX_KEY_4 },
-  { XK_braceleft           , BX_KEY_4 },
-  { XK_parenleft           , BX_KEY_5 },
-  { XK_bracketleft         , BX_KEY_5 },
-  { XK_minus               , BX_KEY_6 },
-  { XK_bar                 , BX_KEY_6 },
-  { XK_egrave              , BX_KEY_7 },
-  { XK_grave               , BX_KEY_7 },
-  { XK_underscore          , BX_KEY_8 },
-  { XK_backslash           , BX_KEY_8 },
-  { XK_ccedilla            , BX_KEY_9 },
-  { XK_asciicircum         , BX_KEY_9 },
-  { XK_agrave              , BX_KEY_0 },
-  { XK_at                  , BX_KEY_0 },
-  { XK_parenright          , BX_KEY_MINUS },
-  { XK_degree              , BX_KEY_MINUS },
-  { XK_bracketright        , BX_KEY_MINUS },
-  { XK_equal               , BX_KEY_EQUALS },
-  { XK_plus                , BX_KEY_EQUALS },
-  { XK_braceright          , BX_KEY_EQUALS },
-  { XK_asterisk            , BX_KEY_BACKSLASH  },
-  { XK_mu                  , BX_KEY_BACKSLASH  },
-  { XK_A                   , BX_KEY_Q },
-  { XK_a                   , BX_KEY_Q },
-  { XK_Z                   , BX_KEY_W },
-  { XK_z                   , BX_KEY_W },
-  { XK_dead_circumflex     , BX_KEY_LEFT_BRACKET },
-  { XK_dead_diaeresis      , BX_KEY_LEFT_BRACKET },
-  { XK_dollar              , BX_KEY_RIGHT_BRACKET },
-  { XK_sterling            , BX_KEY_RIGHT_BRACKET },
-  { XK_currency            , BX_KEY_RIGHT_BRACKET },
-  { XK_Q                   , BX_KEY_A },
-  { XK_q                   , BX_KEY_A },
-  { XK_M                   , BX_KEY_SEMICOLON },
-  { XK_m                   , BX_KEY_SEMICOLON },
-  { XK_ugrave              , BX_KEY_SINGLE_QUOTE },
-  { XK_percent             , BX_KEY_SINGLE_QUOTE },
-  { XK_less                , BX_KEY_LEFT_BACKSLASH },
-  { XK_greater             , BX_KEY_LEFT_BACKSLASH },
-  { XK_W                   , BX_KEY_Z },
-  { XK_w                   , BX_KEY_Z },
-  { XK_comma               , BX_KEY_M },
-  { XK_question            , BX_KEY_M },
-  { XK_semicolon           , BX_KEY_COMMA },
-  { XK_period              , BX_KEY_COMMA },
-  { XK_colon               , BX_KEY_PERIOD },
-  { XK_slash               , BX_KEY_PERIOD },
-  { XK_exclam              , BX_KEY_SLASH },
-  { XK_section             , BX_KEY_SLASH },
-};
-
-
-// Full German key mapping, thanks to Volker Ruppert
-Bit32u keymap_de[][2] = {
-  { XK_space               , BX_KEY_SPACE },
-  { XK_exclam              , BX_KEY_1 },
-  { XK_quotedbl            , BX_KEY_2 },
-  { XK_numbersign          , BX_KEY_BACKSLASH },
-  { XK_dollar              , BX_KEY_4 },
-  { XK_percent             , BX_KEY_5 },
-  { XK_ampersand           , BX_KEY_6 },
-  { XK_apostrophe          , BX_KEY_BACKSLASH },
-  { XK_parenleft           , BX_KEY_8 },
-  { XK_parenright          , BX_KEY_9 },
-  { XK_asterisk            , BX_KEY_RIGHT_BRACKET },
-  { XK_plus                , BX_KEY_RIGHT_BRACKET },
-  { XK_comma               , BX_KEY_COMMA },
-  { XK_minus               , BX_KEY_SLASH },
-  { XK_period              , BX_KEY_PERIOD },
-  { XK_slash               , BX_KEY_7 },
-  { XK_0                   , BX_KEY_0 },
-  { XK_1                   , BX_KEY_1 },
-  { XK_2                   , BX_KEY_2 },
-  { XK_3                   , BX_KEY_3 },
-  { XK_4                   , BX_KEY_4 },
-  { XK_5                   , BX_KEY_5 },
-  { XK_6                   , BX_KEY_6 },
-  { XK_7                   , BX_KEY_7 },
-  { XK_8                   , BX_KEY_8 },
-  { XK_9                   , BX_KEY_9 },
-  { XK_colon               , BX_KEY_PERIOD },
-  { XK_semicolon           , BX_KEY_COMMA },
-  { XK_less                , BX_KEY_LEFT_BACKSLASH },
-  { XK_equal               , BX_KEY_0 },
-  { XK_greater             , BX_KEY_LEFT_BACKSLASH },
-  { XK_question            , BX_KEY_MINUS },
-  { XK_at                  , BX_KEY_Q },
-  { XK_A                   , BX_KEY_A },
-  { XK_B                   , BX_KEY_B },
-  { XK_C                   , BX_KEY_C },
-  { XK_D                   , BX_KEY_D },
-  { XK_E                   , BX_KEY_E },
-  { XK_F                   , BX_KEY_F },
-  { XK_G                   , BX_KEY_G },
-  { XK_H                   , BX_KEY_H },
-  { XK_I                   , BX_KEY_I },
-  { XK_J                   , BX_KEY_J },
-  { XK_K                   , BX_KEY_K },
-  { XK_L                   , BX_KEY_L },
-  { XK_M                   , BX_KEY_M },
-  { XK_N                   , BX_KEY_N },
-  { XK_O                   , BX_KEY_O },
-  { XK_P                   , BX_KEY_P },
-  { XK_Q                   , BX_KEY_Q },
-  { XK_R                   , BX_KEY_R },
-  { XK_S                   , BX_KEY_S },
-  { XK_T                   , BX_KEY_T },
-  { XK_U                   , BX_KEY_U },
-  { XK_V                   , BX_KEY_V },
-  { XK_W                   , BX_KEY_W },
-  { XK_X                   , BX_KEY_X },
-  { XK_Y                   , BX_KEY_Z },
-  { XK_Z                   , BX_KEY_Y },
-  { XK_bracketleft         , BX_KEY_8 },
-  { XK_backslash           , BX_KEY_MINUS },
-  { XK_bracketright        , BX_KEY_9 },
-  { XK_asciicircum         , BX_KEY_GRAVE },
-  { XK_underscore          , BX_KEY_SLASH },
-  { XK_grave               , BX_KEY_EQUALS },
-  { XK_a                   , BX_KEY_A },
-  { XK_b                   , BX_KEY_B },
-  { XK_c                   , BX_KEY_C },
-  { XK_d                   , BX_KEY_D },
-  { XK_e                   , BX_KEY_E },
-  { XK_f                   , BX_KEY_F },
-  { XK_g                   , BX_KEY_G },
-  { XK_h                   , BX_KEY_H },
-  { XK_i                   , BX_KEY_I },
-  { XK_j                   , BX_KEY_J },
-  { XK_k                   , BX_KEY_K },
-  { XK_l                   , BX_KEY_L },
-  { XK_m                   , BX_KEY_M },
-  { XK_n                   , BX_KEY_N },
-  { XK_o                   , BX_KEY_O },
-  { XK_p                   , BX_KEY_P },
-  { XK_q                   , BX_KEY_Q },
-  { XK_r                   , BX_KEY_R },
-  { XK_s                   , BX_KEY_S },
-  { XK_t                   , BX_KEY_T },
-  { XK_u                   , BX_KEY_U },
-  { XK_v                   , BX_KEY_V },
-  { XK_w                   , BX_KEY_W },
-  { XK_x                   , BX_KEY_X },
-  { XK_y                   , BX_KEY_Z },
-  { XK_z                   , BX_KEY_Y },
-  { XK_braceleft           , BX_KEY_7 },
-  { XK_bar                 , BX_KEY_LEFT_BACKSLASH },
-  { XK_braceright          , BX_KEY_0 },
-  { XK_asciitilde          , BX_KEY_RIGHT_BRACKET },
-  { XK_KP_1                , BX_KEY_KP_END },
-#ifdef XK_KP_End
-  { XK_KP_End              , BX_KEY_KP_END },
-#endif
-  { XK_KP_2                , BX_KEY_KP_DOWN },
-#ifdef XK_KP_Down
-  { XK_KP_Down             , BX_KEY_KP_DOWN },
-#endif
-  { XK_KP_3                , BX_KEY_KP_PAGE_DOWN },
-#ifdef XK_KP_Page_Down
-  { XK_KP_Page_Down        , BX_KEY_KP_PAGE_DOWN },
-#endif
-  { XK_KP_4                , BX_KEY_KP_LEFT },
-#ifdef XK_KP_Left
-  { XK_KP_Left             , BX_KEY_KP_LEFT },
-#endif
-  { XK_KP_5                , BX_KEY_KP_5 },
-  { XK_KP_6                , BX_KEY_KP_RIGHT },
-#ifdef XK_KP_Right
-  { XK_KP_Right            , BX_KEY_KP_RIGHT },
-#endif
-  { XK_KP_7                , BX_KEY_KP_HOME },
-#ifdef XK_KP_Home
-  { XK_KP_Home             , BX_KEY_KP_HOME },
-#endif
-  { XK_KP_8                , BX_KEY_KP_UP },
-#ifdef XK_KP_Up
-  { XK_KP_Up               , BX_KEY_KP_UP },
-#endif
-  { XK_KP_9                , BX_KEY_KP_PAGE_UP },
-#ifdef XK_KP_Page_Up
-  { XK_KP_Page_Up          , BX_KEY_KP_PAGE_UP },
-#endif
-  { XK_KP_0                , BX_KEY_KP_INSERT },
-#ifdef XK_KP_Insert
-  { XK_KP_Insert           , BX_KEY_KP_INSERT },
-#endif
-  { XK_KP_Decimal          , BX_KEY_KP_DELETE },
-#ifdef XK_KP_Delete
-  { XK_KP_Delete           , BX_KEY_KP_DELETE },
-#endif
-#ifdef XK_KP_Enter
-  { XK_KP_Enter            , BX_KEY_KP_ENTER },
-#endif
-  { XK_KP_Subtract         , BX_KEY_KP_SUBTRACT },
-  { XK_KP_Add              , BX_KEY_KP_ADD },
-  { XK_KP_Multiply         , BX_KEY_KP_MULTIPLY },
-  { XK_KP_Divide           , BX_KEY_KP_DIVIDE },
-  { XK_Up                  , BX_KEY_UP },
-  { XK_Down                , BX_KEY_DOWN },
-  { XK_Left                , BX_KEY_LEFT },
-  { XK_Right               , BX_KEY_RIGHT },
-  { XK_Delete              , BX_KEY_DELETE },
-  { XK_BackSpace           , BX_KEY_BACKSPACE },
-  { XK_Tab                 , BX_KEY_TAB },
-  { XK_Return              , BX_KEY_ENTER },
-  { XK_Escape              , BX_KEY_ESC },
-  { XK_F1                  , BX_KEY_F1 },
-  { XK_F2                  , BX_KEY_F2 },
-  { XK_F3                  , BX_KEY_F3 },
-  { XK_F4                  , BX_KEY_F4 },
-  { XK_F5                  , BX_KEY_F5 },
-  { XK_F6                  , BX_KEY_F6 },
-  { XK_F7                  , BX_KEY_F7 },
-  { XK_F8                  , BX_KEY_F8 },
-  { XK_F9                  , BX_KEY_F9 },
-  { XK_F10                 , BX_KEY_F10 },
-  { XK_F11                 , BX_KEY_F11 },
-  { XK_F12                 , BX_KEY_F12 },
-  { XK_Control_L           , BX_KEY_CTRL_L },
-  { XK_Shift_L             , BX_KEY_SHIFT_L },
-  { XK_Shift_R             , BX_KEY_SHIFT_R },
-  { XK_Caps_Lock           , BX_KEY_CAPS_LOCK },
-  { XK_Num_Lock            , BX_KEY_NUM_LOCK },
-  { XK_Alt_L               , BX_KEY_ALT_L },
-  { XK_Insert              , BX_KEY_INSERT },
-  { XK_Home                , BX_KEY_HOME },
-  { XK_End                 , BX_KEY_END },
-  { XK_Page_Up             , BX_KEY_PAGE_UP },
-  { XK_Page_Down           , BX_KEY_PAGE_DOWN }, // end of modified table
-  { XK_degree              , BX_KEY_GRAVE },     // additional keysyms
-  { XK_notsign             , BX_KEY_GRAVE }, 
-  { XK_onesuperior         , BX_KEY_1 }, 
-  { XK_twosuperior         , BX_KEY_2 }, 
-  { XK_section             , BX_KEY_3 }, 
-  { XK_threesuperior       , BX_KEY_3 }, 
-  { XK_onequarter          , BX_KEY_4 }, 
-  { XK_onehalf             , BX_KEY_5 }, 
-  { XK_threequarters       , BX_KEY_6 }, 
-  { XK_ssharp              , BX_KEY_MINUS }, 
-  { XK_acute               , BX_KEY_EQUALS }, 
-  { XK_cedilla             , BX_KEY_EQUALS }, 
-  { XK_Print               , BX_KEY_PRINT }, 
-  { XK_Sys_Req             , BX_KEY_PRINT }, 
-  { XK_Scroll_Lock         , BX_KEY_SCRL_LOCK }, 
-  { XK_Pause               , BX_KEY_PAUSE }, 
-  { XK_Break               , BX_KEY_PAUSE }, 
-  { XK_ISO_Left_Tab        , BX_KEY_TAB }, 
-  { XK_lstroke             , BX_KEY_W }, 
-#ifdef XK_EuroSign
-  { XK_EuroSign            , BX_KEY_E }, 
-#endif
-  { XK_paragraph           , BX_KEY_R }, 
-  { XK_tslash              , BX_KEY_T }, 
-  { XK_leftarrow           , BX_KEY_Y }, 
-  { XK_downarrow           , BX_KEY_U }, 
-  { XK_rightarrow          , BX_KEY_I }, 
-  { XK_oslash              , BX_KEY_O }, 
-  { XK_thorn               , BX_KEY_P }, 
-  { XK_udiaeresis          , BX_KEY_LEFT_BRACKET }, 
-  { XK_Udiaeresis          , BX_KEY_LEFT_BRACKET }, 
-  { XK_diaeresis           , BX_KEY_LEFT_BRACKET }, 
-  { XK_ae                  , BX_KEY_A }, 
-  { XK_eth                 , BX_KEY_D }, 
-  { XK_dstroke             , BX_KEY_F }, 
-  { XK_eng                 , BX_KEY_G }, 
-  { XK_hstroke             , BX_KEY_H }, 
-  { XK_kra                 , BX_KEY_K }, 
-  { XK_odiaeresis          , BX_KEY_SEMICOLON }, 
-  { XK_Odiaeresis          , BX_KEY_SEMICOLON }, 
-  { XK_adiaeresis          , BX_KEY_SINGLE_QUOTE }, 
-  { XK_Adiaeresis          , BX_KEY_SINGLE_QUOTE }, 
-  { XK_guillemotleft       , BX_KEY_Z }, 
-  { XK_guillemotright      , BX_KEY_X }, 
-  { XK_cent                , BX_KEY_C }, 
-  { XK_leftdoublequotemark , BX_KEY_V }, 
-  { XK_rightdoublequotemark, BX_KEY_B }, 
-  { XK_mu                  , BX_KEY_M }, 
-  { XK_horizconnector      , BX_KEY_COMMA }, 
-  { XK_periodcentered      , BX_KEY_PERIOD }, 
-  { XK_dead_belowdot       , BX_KEY_SLASH }, 
-  { XK_Meta_L              , BX_KEY_ALT_L }, 
-  { XK_Mode_switch         , BX_KEY_ALT_R }, 
-  { XK_Multi_key           , BX_KEY_ALT_R }, 
-  { XK_Control_R           , BX_KEY_CTRL_R },
-  { XK_Super_L             , BX_KEY_WIN_L },
-  { XK_Super_R             , BX_KEY_WIN_R },
-  { XK_Menu                , BX_KEY_MENU },
-};
 
 extern Bit8u graphics_snapshot[32 * 1024];
 
@@ -1072,11 +510,6 @@ if (bx_options.Oprivate_colormap->get ()) {
     BX_PANIC(("vga_x: bits_per_pixel < depth ?"));
     }
 
-  bx_keymap.addTable("us",&keymap_us,sizeof(keymap_us)/(sizeof(Bit32u)*2));
-  bx_keymap.addTable("fr",&keymap_fr,sizeof(keymap_fr)/(sizeof(Bit32u)*2));
-  bx_keymap.addTable("de",&keymap_de,sizeof(keymap_de)/(sizeof(Bit32u)*2));
-  bx_keymap.addTable("es",&keymap_es,sizeof(keymap_es)/(sizeof(Bit32u)*2));
-  bx_keymap.setDefault("us");
 }
 
   curr_background = 0;
@@ -1088,6 +521,11 @@ if (bx_options.Oprivate_colormap->get ()) {
 
 
   XFlush(bx_x_display);
+
+  // loads keymap for x11
+  if(bx_options.keyboard.OuseMapping->get()) {
+    bx_keymap.loadKeymap(convertStringToXKeysym);
+    }
 }
 
 
@@ -1369,7 +807,6 @@ bx_gui_c::flush(void)
 xkeypress(KeySym keysym, int press_release)
 {
   Bit32u key_event;
-
 
   /* Old (no mapping) behavior */
   if(!bx_options.keyboard.OuseMapping->get()){
@@ -1896,6 +1333,22 @@ static void disable_cursor ()
 static void enable_cursor ()
 {
       XUndefineCursor(bx_x_display, win);
+}
+
+/* convertStringToXKeysym is a keymap callback
+ * used when reading the keymap file.
+ * It converts a Symblic String to a GUI Constant
+ *
+ * It returns a Bit32u constant or BX_KEYMAP_UNKNOWN if it fails
+ */
+static Bit32u convertStringToXKeysym (const char *string)
+{
+    KeySym keysym=XStringToKeysym(string);
+
+    // failure, return unknown
+    if(keysym==NoSymbol) return BX_KEYMAP_UNKNOWN;
+
+    return((Bit32u)keysym);
 }
 
 #if BX_USE_IDLE_HACK

@@ -328,11 +328,10 @@ i440fxsupport: enabled=0
 # KEYBOARD_MAPPING:
 # This enables a remap of a physical localized keyboard to a 
 # virtualized us keyboard, as the PC architecture expects.
-# If enabled, the keymap must be specified and should be 
-# one of "us", "fr", "de", or "es".  More tables will be implemented.
+# If enabled, the keymap file must be specified.
 # 
 # Examples:
-#   keyboard_mapping: enabled=1, map=de
+#   keyboard_mapping: enabled=1, map=gui/keymaps/x11-pc-de.map
 #=======================================================================
 keyboard_mapping: enabled=0, map=
 
@@ -347,7 +346,6 @@ keyboard_mapping: enabled=0, map=
 #   keyboard_type: mf
 #=======================================================================
 #keyboard_type: mf
-
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
