@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.66 2002-10-04 16:47:29 cbothamy Exp $
+// $Id: rombios.c,v 1.67 2002-10-07 16:15:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -881,10 +881,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.66 $";
-static char bios_date_string[] = "$Date: 2002-10-04 16:47:29 $";
+static char bios_cvs_version_string[] = "$Revision: 1.67 $";
+static char bios_date_string[] = "$Date: 2002-10-07 16:15:07 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.66 2002-10-04 16:47:29 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.67 2002-10-07 16:15:07 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2135,6 +2135,8 @@ Bit16u device;
         }
       }
     }
+  // Enable interrupts
+  outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15);
 }
 
 // ---------------------------------------------------------------------------
@@ -2282,6 +2284,8 @@ ASM_END
       continue;
     }
   }
+  // Enable interrupts
+  outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15);
   return 0;
 }
 
@@ -2425,6 +2429,8 @@ ASM_END
       continue;
     }
   }
+  // Enable interrupts
+  outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15);
   return 0;
 }
 
@@ -2690,6 +2696,8 @@ ASM_END
     return 4;
     }
 
+  // Enable interrupts
+  outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15);
   return 0;
 }
 
@@ -4014,7 +4022,7 @@ int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   switch (GET_AH()) {
 
     case 0x00: /* disk controller reset */
-      // FIXME should send ata_reset ?
+      ata_reset (device);
       goto int13_success;
       break;
 
