@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.22 2001-06-19 14:20:24 bdenney Exp $
+ * $Id: siminterface.cc,v 1.23 2001-06-19 21:36:09 fries Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -108,7 +108,7 @@ bx_real_sim_c::get_param_string (bx_id id) {
 void init_siminterface ()
 {
   siminterface_log = new logfunctions ();
-  siminterface_log->setprefix ("[CTRL]");
+  siminterface_log->setprefix ("CTRL");
   siminterface_log->settype(CTRLLOG);
   if (SIM == NULL) 
     SIM = new bx_real_sim_c();

@@ -36,7 +36,7 @@ bx_pic_c bx_pic;
 
 bx_pic_c::bx_pic_c(void)
 {
-	setprefix("[PIC ]");
+	setprefix("PIC");
 	settype(PICLOG);
 }
 

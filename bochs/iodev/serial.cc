@@ -70,10 +70,10 @@ static int tty_id;
 
 bx_serial_c::bx_serial_c(void)
 {
-  setprefix("[SER ]");
+  setprefix("SER");
   settype(SERLOG);
 #ifdef SERIAL_ENABLE
-  tty_id = open("/dev/ptyqf",O_RDWR|O_NONBLOCK,600);
+  tty_id = open("/tmp/fifo",O_RDWR|O_NONBLOCK,600);
   tcgetattr(tty_id, &term_orig);
   bcopy((caddr_t) &term_orig, (caddr_t) &term_new, sizeof(struct termios));
   cfmakeraw(&term_new);

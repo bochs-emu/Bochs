@@ -101,7 +101,7 @@ void
 state_file::init(void)
 {
 	log = new class logfunctions();
-	log->setprefix("[STAT]");
+	log->setprefix("STAT");
 	log->settype(GENLOG);
 }
 

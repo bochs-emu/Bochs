@@ -44,7 +44,7 @@ bx_cmos_c bx_cmos;
 
 bx_cmos_c::bx_cmos_c(void)
 {
-	setprefix("[CMOS]");
+	setprefix("CMOS");
 	settype(CMOSLOG);
 	BX_DEBUG(("Init."));
 }

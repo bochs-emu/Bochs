@@ -81,7 +81,7 @@ HANDLE hFile = NULL;
 
 cdrom_interface::cdrom_interface(char *dev)
 {
-  setprefix("[CD  ]");
+  setprefix("CD");
   settype(CDLOG);
   fd = -1; // File descriptor not yet allocated
 

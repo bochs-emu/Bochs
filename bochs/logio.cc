@@ -50,7 +50,7 @@ iofunctions::init(void) {
 	n_logfn = 0;
 	init_log(stderr);
 	log = new logfunc_t(this);
-	LOG_THIS setprefix("[IO  ]");
+	LOG_THIS setprefix("IO");
 	LOG_THIS settype(IOLOG);
 	BX_DEBUG(("Init(log file: '%s').",logfn));
 }
@@ -183,7 +183,7 @@ iofunctions::~iofunctions(void)
 
 logfunctions::logfunctions(void)
 {
-	setprefix("[    ]");
+	setprefix(" ");
 	settype(GENLOG);
 	if(io == NULL && Allocio == 0) {
 		Allocio = 1;
@@ -198,7 +198,7 @@ logfunctions::logfunctions(void)
 
 logfunctions::logfunctions(iofunc_t *iofunc)
 {
-	setprefix("[    ]");
+	setprefix(" ");
 	settype(GENLOG);
 	setio(iofunc);
 	// BUG: unfortunately this can be called before the bochsrc is read,
@@ -223,7 +223,23 @@ logfunctions::setio(iofunc_t *i)
 void
 logfunctions::setprefix(char *p)
 {
-	this->prefix=strdup(p);
+	char *tmpbuf;
+	tmpbuf=strdup("[     ]");// if we ever have more than 32 chars,
+						   //  we need to rethink this
+	int len=strlen(p);
+	for(int i=1;i<len+1;i++) {
+		tmpbuf[i]=p[i-1];
+	}
+		
+	switch(len) {
+	case  1: tmpbuf[2]=' ';
+	case  2: tmpbuf[3]=' ';
+	case  3: tmpbuf[4]=' ';
+	case  4: tmpbuf[5]=' ';
+	default: tmpbuf[6]=']'; tmpbuf[7]='\0'; break;
+	}
+	
+	this->prefix=tmpbuf;
 }
 
 void

@@ -55,7 +55,7 @@ bx_keyb_c::bx_keyb_c(void)
   // constructor
   // should zero out state info here???
   memset( &s, 0, sizeof(s) );
-  BX_KEY_THIS setprefix("[KBD ]");
+  BX_KEY_THIS setprefix("KBD");
   BX_KEY_THIS settype(KBDLOG);
 }
 

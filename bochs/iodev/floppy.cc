@@ -67,7 +67,7 @@ bx_floppy_ctrl_c bx_floppy;
 
 bx_floppy_ctrl_c::bx_floppy_ctrl_c(void)
 {
-	setprefix("[FDD ]");
+	setprefix("FDD");
 	settype(FDLOG);
 	BX_DEBUG(("Init."));
 }

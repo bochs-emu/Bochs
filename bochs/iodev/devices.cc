@@ -44,7 +44,7 @@ bx_devices_c bx_devices;
   // constructor for bx_devices_c
 bx_devices_c::bx_devices_c(void)
 {
-  setprefix("[DEV ]");
+  setprefix("DEV");
   settype(DEVLOG);
   unsigned i;
 

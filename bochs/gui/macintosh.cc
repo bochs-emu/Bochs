@@ -324,7 +324,7 @@ void CreateWindows(void)
 void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 										 unsigned headerbar_y)
 {	
-	th->setprefix("[MGUI]");
+	th->setprefix("MGUI");
 	InitToolbox();
 	
 	//SouixWin = FrontWindow();

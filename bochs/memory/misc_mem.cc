@@ -44,8 +44,8 @@ BX_MEM_C::get_memory_in_k(void)
   // BX_MEM_C constructor
 BX_MEM_C::BX_MEM_C(void)
 {
-  char mem[8];
-  snprintf(mem, 8, "[MEM%d]", BX_SIM_ID);
+  char mem[6];
+  snprintf(mem, 6, "MEM%d", BX_SIM_ID);
   setprefix(mem);
   settype(MEMLOG);
 

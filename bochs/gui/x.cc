@@ -279,7 +279,7 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
   unsigned long plane_masks_return[1];
   XColor color;
 
-  th->setprefix("[XGUI]");
+  th->setprefix("XGUI");
   UNUSED(th);
 
 if (bx_options.private_colormap) {

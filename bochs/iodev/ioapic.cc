@@ -28,7 +28,7 @@ bx_io_redirect_entry_t::sprintf_self (char *buf)
 bx_ioapic_c::bx_ioapic_c () 
   : bx_generic_apic_c ()
 {
-  setprefix("[IOAP]");
+  setprefix("IOAP");
   settype(IOAPICLOG);
 }
 

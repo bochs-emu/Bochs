@@ -41,7 +41,7 @@ bx_pci_c bx_pci;
 
 bx_pci_c::bx_pci_c(void)
 {
-	setprefix("[PCI ]");
+	setprefix("PCI");
 	settype(PCILOG);
 }
 

@@ -35,7 +35,7 @@ bx_ne2k_c bx_ne2k;
 
 bx_ne2k_c::bx_ne2k_c(void)
 {
-  setprefix("[NE2K]");
+  setprefix("NE2K");
   settype(NE2KLOG);
   // nothing for now
 }

@@ -41,7 +41,7 @@ bx_dma_c bx_dma;
 
 bx_dma_c::bx_dma_c(void)
 {
-	setprefix("[DMA ]");
+	setprefix("DMA");
 	settype(DMALOG);
 	BX_DEBUG(("Init."));
 }

@@ -262,7 +262,7 @@ void terminateEmul(int reason) {
 void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
 			     tilewidth, unsigned tileheight,
 			     unsigned headerbar_y) {
-  th->setprefix("[WGUI]");
+  th->setprefix("WGUI");
   static RGBQUAD black_quad={ 0, 0, 0, 0};
   stInfo.kill = 0;
   stInfo.UIinited = FALSE;

@@ -34,7 +34,7 @@ bx_unmapped_c bx_unmapped;
 
 bx_unmapped_c::bx_unmapped_c(void)
 {
-  setprefix("[UNMP]");
+  setprefix("UNMP");
   settype(UNMAPLOG);
   s.port80 = 0x00;
   s.port8e = 0x00;

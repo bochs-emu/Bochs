@@ -64,7 +64,7 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 
 bx_hard_drive_c::bx_hard_drive_c(void)
 {
-      setprefix("[HD  ]");
+      setprefix("HD");
       settype(HDLOG);
 #if EXTERNAL_DISK_SIMULATOR
       s[0].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();

@@ -9,7 +9,7 @@ bx_generic_apic_c *apic_index[APIC_MAX_ID];
 bx_generic_apic_c::bx_generic_apic_c () 
 {
   id = APIC_UNKNOWN_ID;
-  setprefix("[APIC?]");
+  setprefix("APIC?");
   settype(APICLOG);
   hwreset ();
 }
@@ -271,10 +271,10 @@ void bx_local_apic_c::set_id (Bit8u newid) {
   sprintf (cpu->name, "CPU apicid=%02x", (Bit32u)id);
   if (id >= 0 && id <= 15) {
     char buffer[16];
-    sprintf (buffer, "[APIC%x]", id);
+    sprintf (buffer, "APIC%x", id);
     setprefix(buffer);
     settype(CPU0LOG + id);
-    sprintf (buffer, "[CPU%x]", id);
+    sprintf (buffer, "CPU%x", id);
     cpu->setprefix (buffer);
   } else {
     BX_INFO (("naming convention for apics requires id=0-15 only"));

@@ -38,7 +38,7 @@ bx_pit2_c bx_pit2;
 
 bx_pit2_c::bx_pit2_c( void )
 {
-  setprefix("[PIT ]");
+  setprefix("PIT");
   settype(PITLOG);
   s.speaker_data_on=0;
 
