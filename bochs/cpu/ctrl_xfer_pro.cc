@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.14 2002-09-15 02:23:12 kevinlawton Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.15 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@
 
 #if BX_CPU_LEVEL >= 2
   void
-BX_CPU_C::jump_protected(BxInstruction_t *i, Bit16u cs_raw, bx_address dispBig)
+BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 {
   bx_descriptor_t  descriptor;
   bx_selector_t    selector;
@@ -455,7 +455,7 @@ BX_CPU_C::jump_protected(BxInstruction_t *i, Bit16u cs_raw, bx_address dispBig)
 
 #if BX_CPU_LEVEL >= 2
   void
-BX_CPU_C::call_protected(BxInstruction_t *i, Bit16u cs_raw, bx_address dispBig)
+BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 {
   bx_selector_t cs_selector;
   Bit32u dword1, dword2;
@@ -1040,7 +1040,7 @@ BX_CPU_C::call_protected(BxInstruction_t *i, Bit16u cs_raw, bx_address dispBig)
 
 #if BX_CPU_LEVEL >= 2
   void
-BX_CPU_C::return_protected(BxInstruction_t *i, Bit16u pop_bytes)
+BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 {
   Bit16u raw_cs_selector, raw_ss_selector;
   bx_selector_t cs_selector, ss_selector;
@@ -1378,7 +1378,7 @@ BX_CPU_C::return_protected(BxInstruction_t *i, Bit16u pop_bytes)
 
 #if BX_CPU_LEVEL >= 2
   void
-BX_CPU_C::iret_protected(BxInstruction_t *i)
+BX_CPU_C::iret_protected(bxInstruction_c *i)
 {
   Bit16u raw_cs_selector, raw_ss_selector;
   bx_selector_t cs_selector, ss_selector;

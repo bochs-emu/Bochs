@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.6 2002-07-06 11:02:35 vruppert Exp $
+// $Id: bcd.cc,v 1.7 2002-09-17 22:50:51 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 
 
   void
-BX_CPU_C::DAS(BxInstruction_t *)
+BX_CPU_C::DAS(bxInstruction_c *)
 {
   Bit8u tmpCF, tmpAL;
 
@@ -72,7 +72,7 @@ BX_CPU_C::DAS(BxInstruction_t *)
 }
 
   void
-BX_CPU_C::AAA(BxInstruction_t *)
+BX_CPU_C::AAA(bxInstruction_c *)
 {
   Bit8u ALcarry;
 
@@ -93,7 +93,7 @@ BX_CPU_C::AAA(BxInstruction_t *)
 }
 
   void
-BX_CPU_C::AAS(BxInstruction_t *)
+BX_CPU_C::AAS(bxInstruction_c *)
 {
   Bit8u ALborrow;
 
@@ -115,11 +115,11 @@ BX_CPU_C::AAS(BxInstruction_t *)
 }
 
   void
-BX_CPU_C::AAM(BxInstruction_t *i)
+BX_CPU_C::AAM(bxInstruction_c *i)
 {
   Bit8u al, imm8;
 
-  imm8 = i->Ib;
+  imm8 = i->Ib();
 
   if (imm8 == 0) {
     exception(BX_DE_EXCEPTION, 0, 0);
@@ -139,12 +139,12 @@ BX_CPU_C::AAM(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::AAD(BxInstruction_t *i)
+BX_CPU_C::AAD(bxInstruction_c *i)
 {
   Bit8u al, imm8;
   Bit16u ax1, ax2;
 
-  imm8 = i->Ib;
+  imm8 = i->Ib();
 
   ax1 = AH * imm8;
   ax2 = ax1 + AL;
@@ -163,7 +163,7 @@ BX_CPU_C::AAD(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::DAA(BxInstruction_t *)
+BX_CPU_C::DAA(bxInstruction_c *)
 {
   Bit8u al;
 

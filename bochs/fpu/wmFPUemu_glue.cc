@@ -42,7 +42,7 @@ extern "C" {
 // Use this to hold a pointer to the instruction since
 // we can't pass this to the FPU emulation routines, which
 // will ultimately call routines here.
-static BxInstruction_t *fpu_iptr = NULL;
+static bxInstruction_c *fpu_iptr = NULL;
 static BX_CPU_C *fpu_cpu_ptr = NULL;
 
 i387_t *current_i387;
@@ -67,7 +67,7 @@ BX_CPU_C::fpu_init(void)
 }
 
   void
-BX_CPU_C::fpu_execute(BxInstruction_t *i)
+BX_CPU_C::fpu_execute(bxInstruction_c *i)
 {
   fpu_addr_modes addr_modes;
   void *data_address;
@@ -126,7 +126,7 @@ access_limit = 0xff;
   data_sel_off.offset = i->rm_addr;
   data_sel_off.selector = BX_CPU_THIS_PTR sregs[i->seg].selector.value;
 
-  math_emulate2(addr_modes, i->modrm, i->b1, data_address,
+  math_emulate2(addr_modes, i->modrm(), i->b1, data_address,
                 data_sel_off, entry_sel_off);
 }
 

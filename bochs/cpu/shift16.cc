@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.7 2002-09-06 21:54:58 kevinlawton Exp $
+// $Id: shift16.cc,v 1.8 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 
 
   void
-BX_CPU_C::SHLD_EwGw(BxInstruction_t *i)
+BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
@@ -44,7 +44,7 @@ BX_CPU_C::SHLD_EwGw(BxInstruction_t *i)
 
   /* op1:op2 << count.  result stored in op1 */
   if (i->b1 == 0x1a4)
-    count = i->Ib;
+    count = i->Ib();
   else // 0x1a5
     count = CL;
 
@@ -55,14 +55,14 @@ BX_CPU_C::SHLD_EwGw(BxInstruction_t *i)
     // count is 1..31
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
       read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
       }
-    op2_16 = BX_READ_16BIT_REG(i->nnn);
+    op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     temp_32 = (op1_16 << 16) | (op2_16); // double formed by op1:op2
     result_32 = temp_32 << count;
@@ -74,8 +74,8 @@ BX_CPU_C::SHLD_EwGw(BxInstruction_t *i)
     result_16 = result_32 >> 16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -94,7 +94,7 @@ BX_CPU_C::SHLD_EwGw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SHRD_EwGw(BxInstruction_t *i)
+BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("shrd_evgvib: not supported on < 386"));
@@ -104,7 +104,7 @@ BX_CPU_C::SHRD_EwGw(BxInstruction_t *i)
   unsigned count;
 
   if (i->b1 == 0x1ac)
-    count = i->Ib;
+    count = i->Ib();
   else // 0x1ad
     count = CL;
   count &= 0x1F; /* use only 5 LSB's */
@@ -114,14 +114,14 @@ BX_CPU_C::SHRD_EwGw(BxInstruction_t *i)
     // count is 1..31
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
       read_RMW_virtual_word(i->seg, i->rm_addr, &op1_16);
       }
-    op2_16 = BX_READ_16BIT_REG(i->nnn);
+    op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
     result_32 = temp_32 >> count;
@@ -133,8 +133,8 @@ BX_CPU_C::SHRD_EwGw(BxInstruction_t *i)
     result_16 = result_32;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -157,14 +157,14 @@ BX_CPU_C::SHRD_EwGw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::ROL_Ew(BxInstruction_t *i)
+BX_CPU_C::ROL_Ew(bxInstruction_c *i)
 {
 
     Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1 == 0xc1 )
-    count = i->Ib;
+    count = i->Ib();
   else if ( i->b1 == 0xd1 )
     count = 1;
   else // 0xd3
@@ -173,8 +173,8 @@ BX_CPU_C::ROL_Ew(BxInstruction_t *i)
     count &= 0x0f; // only use bottom 4 bits
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -185,8 +185,8 @@ BX_CPU_C::ROL_Ew(BxInstruction_t *i)
       result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
 
       /* now write result back to destination */
-      if (i->mod == 0xc0) {
-        BX_WRITE_16BIT_REG(i->rm, result_16);
+      if (i->mod() == 0xc0) {
+        BX_WRITE_16BIT_REG(i->rm(), result_16);
         }
       else {
         Write_RMW_virtual_word(result_16);
@@ -206,13 +206,13 @@ BX_CPU_C::ROL_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::ROR_Ew(BxInstruction_t *i)
+BX_CPU_C::ROR_Ew(bxInstruction_c *i)
 {
     Bit16u op1_16, result_16, result_b15;
   unsigned count;
 
   if ( i->b1 == 0xc1 )
-    count = i->Ib;
+    count = i->Ib();
   else if ( i->b1 == 0xd1 )
     count = 1;
   else // 0xd3
@@ -221,8 +221,8 @@ BX_CPU_C::ROR_Ew(BxInstruction_t *i)
     count &= 0x0f;  // use only 4 LSB's
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -233,8 +233,8 @@ BX_CPU_C::ROR_Ew(BxInstruction_t *i)
       result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
 
       /* now write result back to destination */
-      if (i->mod == 0xc0) {
-        BX_WRITE_16BIT_REG(i->rm, result_16);
+      if (i->mod() == 0xc0) {
+        BX_WRITE_16BIT_REG(i->rm(), result_16);
         }
       else {
         Write_RMW_virtual_word(result_16);
@@ -254,13 +254,13 @@ BX_CPU_C::ROR_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::RCL_Ew(BxInstruction_t *i)
+BX_CPU_C::RCL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1 == 0xc1 )
-    count = i->Ib;
+    count = i->Ib();
   else if ( i->b1 == 0xd1 )
     count = 1;
   else // 0xd3
@@ -269,8 +269,8 @@ BX_CPU_C::RCL_Ew(BxInstruction_t *i)
   count &= 0x1F;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -295,8 +295,8 @@ BX_CPU_C::RCL_Ew(BxInstruction_t *i)
       }
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -314,13 +314,13 @@ BX_CPU_C::RCL_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::RCR_Ew(BxInstruction_t *i)
+BX_CPU_C::RCR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1 == 0xc1 )
-    count = i->Ib;
+    count = i->Ib();
   else if ( i->b1 == 0xd1 )
     count = 1;
   else // 0xd3
@@ -329,8 +329,8 @@ BX_CPU_C::RCR_Ew(BxInstruction_t *i)
   count = count & 0x1F;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -344,8 +344,8 @@ BX_CPU_C::RCR_Ew(BxInstruction_t *i)
 		(op1_16 << (17 - count));
 
       /* now write result back to destination */
-      if (i->mod == 0xc0) {
-	BX_WRITE_16BIT_REG(i->rm, result_16);
+      if (i->mod() == 0xc0) {
+	BX_WRITE_16BIT_REG(i->rm(), result_16);
 	}
       else {
 	Write_RMW_virtual_word(result_16);
@@ -365,13 +365,13 @@ BX_CPU_C::RCR_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SHL_Ew(BxInstruction_t *i)
+BX_CPU_C::SHL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1 == 0xc1 )
-    count = i->Ib;
+    count = i->Ib();
   else if ( i->b1 == 0xd1 )
     count = 1;
   else // 0xd3
@@ -380,8 +380,8 @@ BX_CPU_C::SHL_Ew(BxInstruction_t *i)
   count &= 0x1F; /* use only 5 LSB's */
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -393,8 +393,8 @@ BX_CPU_C::SHL_Ew(BxInstruction_t *i)
     result_16 = (op1_16 << count);
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -407,13 +407,13 @@ BX_CPU_C::SHL_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SHR_Ew(BxInstruction_t *i)
+BX_CPU_C::SHR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1 == 0xc1 )
-    count = i->Ib;
+    count = i->Ib();
   else if ( i->b1 == 0xd1 )
     count = 1;
   else // 0xd3
@@ -422,8 +422,8 @@ BX_CPU_C::SHR_Ew(BxInstruction_t *i)
   count &= 0x1F; /* use only 5 LSB's */
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -436,8 +436,8 @@ BX_CPU_C::SHR_Ew(BxInstruction_t *i)
 
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -449,13 +449,13 @@ BX_CPU_C::SHR_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SAR_Ew(BxInstruction_t *i)
+BX_CPU_C::SAR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
 
   if ( i->b1 == 0xc1 )
-    count = i->Ib;
+    count = i->Ib();
   else if ( i->b1 == 0xd1 )
     count = 1;
   else // 0xd3
@@ -464,8 +464,8 @@ BX_CPU_C::SAR_Ew(BxInstruction_t *i)
   count &= 0x1F;  /* use only 5 LSB's */
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -494,8 +494,8 @@ BX_CPU_C::SAR_Ew(BxInstruction_t *i)
 
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.43 2002-09-15 15:10:21 kevinlawton Exp $
+// $Id: cpu.cc,v 1.44 2002-09-17 22:50:51 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,7 +115,7 @@ extern void REGISTER_IADDR(bx_addr addr);
 BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
   unsigned ret;
-  BxInstruction_t i;
+  bxInstruction_c i;
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;

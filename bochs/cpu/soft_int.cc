@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.8 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: soft_int.cc,v 1.9 2002-09-17 22:50:53 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,13 +40,13 @@
 
 
   void
-BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
+BX_CPU_C::BOUND_GvMa(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("BOUND_GvMa: not supported on 8086!"));
 #else
 
-  if (i->mod == 0xc0) {
+  if (i->mod() == 0xc0) {
     /* undefined opcode exception */
     BX_PANIC(("bound: op2 must be mem ref"));
     UndefinedOpcode(i);
@@ -56,7 +56,7 @@ BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
     Bit32s bound_min, bound_max;
     Bit32s op1_32;
 
-    op1_32 = BX_READ_32BIT_REG(i->nnn);
+    op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     read_virtual_dword(i->seg, i->rm_addr, (Bit32u *) &bound_min);
     read_virtual_dword(i->seg, i->rm_addr+4, (Bit32u *) &bound_max);
@@ -71,7 +71,7 @@ BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
     Bit16s bound_min, bound_max;
     Bit16s op1_16;
 
-    op1_16 = BX_READ_16BIT_REG(i->nnn);
+    op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     read_virtual_word(i->seg, i->rm_addr, (Bit16u *) &bound_min);
     read_virtual_word(i->seg, i->rm_addr+2, (Bit16u *) &bound_max);
@@ -87,7 +87,7 @@ BX_CPU_C::BOUND_GvMa(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::INT1(BxInstruction_t *i)
+BX_CPU_C::INT1(bxInstruction_c *i)
 {
   // This is an undocumented instrucion (opcode 0xf1)
   // which is useful for an ICE system.
@@ -103,7 +103,7 @@ BX_CPU_C::INT1(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::INT3(BxInstruction_t *i)
+BX_CPU_C::INT3(bxInstruction_c *i)
 {
   // INT 3 is not IOPL sensitive
 
@@ -120,7 +120,7 @@ BX_CPU_C::INT3(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::INT_Ib(BxInstruction_t *i)
+BX_CPU_C::INT_Ib(bxInstruction_c *i)
 {
   Bit8u imm8;
 
@@ -128,7 +128,7 @@ BX_CPU_C::INT_Ib(BxInstruction_t *i)
   BX_CPU_THIS_PTR show_flag |= Flag_int;
 #endif
 
-  imm8 = i->Ib;
+  imm8 = i->Ib();
 
   if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3)) {
     //BX_INFO(("int_ib: v8086: IOPL<3"));
@@ -149,7 +149,7 @@ if ( (imm8 == 0x21) && (AH == 0x4c) ) {
 
 
   void
-BX_CPU_C::INTO(BxInstruction_t *i)
+BX_CPU_C::INTO(bxInstruction_c *i)
 {
 
 #if BX_DEBUGGER

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.10 2002-09-15 01:00:19 kevinlawton Exp $
+// $Id: flag_ctrl.cc,v 1.11 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
 
 
   void
-BX_CPU_C::SAHF(BxInstruction_t *i)
+BX_CPU_C::SAHF(bxInstruction_c *i)
 {
   set_SF((AH & 0x80) >> 7);
   set_ZF((AH & 0x40) >> 6);
@@ -48,7 +48,7 @@ BX_CPU_C::SAHF(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::LAHF(BxInstruction_t *i)
+BX_CPU_C::LAHF(bxInstruction_c *i)
 {
   AH = (get_SF() ? 0x80 : 0) |
        (get_ZF() ? 0x40 : 0) |
@@ -59,19 +59,19 @@ BX_CPU_C::LAHF(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::CLC(BxInstruction_t *i)
+BX_CPU_C::CLC(bxInstruction_c *i)
 {
   set_CF(0);
 }
 
   void
-BX_CPU_C::STC(BxInstruction_t *i)
+BX_CPU_C::STC(bxInstruction_c *i)
 {
   set_CF(1);
 }
 
   void
-BX_CPU_C::CLI(BxInstruction_t *i)
+BX_CPU_C::CLI(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
@@ -96,7 +96,7 @@ BX_CPU_C::CLI(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::STI(BxInstruction_t *i)
+BX_CPU_C::STI(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
@@ -125,25 +125,25 @@ BX_CPU_C::STI(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::CLD(BxInstruction_t *i)
+BX_CPU_C::CLD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR clear_DF ();
 }
 
   void
-BX_CPU_C::STD(BxInstruction_t *i)
+BX_CPU_C::STD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR assert_DF ();
 }
 
   void
-BX_CPU_C::CMC(BxInstruction_t *i)
+BX_CPU_C::CMC(bxInstruction_c *i)
 {
   set_CF( !get_CF() );
 }
 
   void
-BX_CPU_C::PUSHF_Fv(BxInstruction_t *i)
+BX_CPU_C::PUSHF_Fv(bxInstruction_c *i)
 {
   if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL ()<3)) {
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -169,7 +169,7 @@ BX_CPU_C::PUSHF_Fv(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::POPF_Fv(BxInstruction_t *i)
+BX_CPU_C::POPF_Fv(bxInstruction_c *i)
 {
 
 #if BX_CPU_LEVEL >= 3
@@ -236,7 +236,7 @@ BX_CPU_C::POPF_Fv(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SALC(BxInstruction_t *i)
+BX_CPU_C::SALC(bxInstruction_c *i)
 {
   if ( get_CF() ) {
     AL = 0xff;

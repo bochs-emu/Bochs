@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.13 2002-09-13 22:02:11 kevinlawton Exp $
+// $Id: vm8086.cc,v 1.14 2002-09-17 22:50:53 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
 
 
   void
-BX_CPU_C::stack_return_from_v86(BxInstruction_t *i)
+BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR get_IOPL() != 3) {
     // trap to virtual 8086 monitor

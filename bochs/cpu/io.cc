@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.14 2002-09-16 20:23:38 kevinlawton Exp $
+// $Id: io.cc,v 1.15 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@
 
 
   void
-BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
+BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 {
   Bit8u value8=0;
 
@@ -109,7 +109,7 @@ BX_CPU_C::INSB_YbDX(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::INSW_YvDX(BxInstruction_t *i)
+BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
   // input word/doubleword from port to string
 {
   bx_address edi;
@@ -336,7 +336,7 @@ doIncr:
 }
 
   void
-BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
+BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 {
   unsigned seg;
   Bit8u value8;
@@ -387,7 +387,7 @@ BX_CPU_C::OUTSB_DXXb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::OUTSW_DXXv(BxInstruction_t *i)
+BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
   // output word/doubleword string to port
 {
   unsigned seg;
@@ -612,11 +612,11 @@ doIncr:
 
 
   void
-BX_CPU_C::IN_ALIb(BxInstruction_t *i)
+BX_CPU_C::IN_ALIb(bxInstruction_c *i)
 {
   Bit8u al, imm8;
 
-  imm8 = i->Ib;
+  imm8 = i->Ib();
 
   al = BX_CPU_THIS_PTR inp8(imm8);
 
@@ -624,12 +624,12 @@ BX_CPU_C::IN_ALIb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::IN_eAXIb(BxInstruction_t *i)
+BX_CPU_C::IN_eAXIb(bxInstruction_c *i)
 {
   Bit8u imm8;
 
 
-  imm8 = i->Ib;
+  imm8 = i->Ib();
 
 #if BX_CPU_LEVEL > 2
   if (i->os_32) {
@@ -649,11 +649,11 @@ BX_CPU_C::IN_eAXIb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::OUT_IbAL(BxInstruction_t *i)
+BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
 {
   Bit8u al, imm8;
 
-  imm8 = i->Ib;
+  imm8 = i->Ib();
 
   al = AL;
 
@@ -661,11 +661,11 @@ BX_CPU_C::OUT_IbAL(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::OUT_IbeAX(BxInstruction_t *i)
+BX_CPU_C::OUT_IbeAX(bxInstruction_c *i)
 {
   Bit8u imm8;
 
-  imm8 = i->Ib;
+  imm8 = i->Ib();
 
 #if BX_CPU_LEVEL > 2
   if (i->os_32) {
@@ -679,7 +679,7 @@ BX_CPU_C::OUT_IbeAX(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::IN_ALDX(BxInstruction_t *i)
+BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 {
   Bit8u al;
 
@@ -689,7 +689,7 @@ BX_CPU_C::IN_ALDX(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::IN_eAXDX(BxInstruction_t *i)
+BX_CPU_C::IN_eAXDX(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL > 2
   if (i->os_32) {
@@ -709,7 +709,7 @@ BX_CPU_C::IN_eAXDX(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::OUT_DXAL(BxInstruction_t *i)
+BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
 {
   Bit16u dx;
   Bit8u al;
@@ -721,7 +721,7 @@ BX_CPU_C::OUT_DXAL(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::OUT_DXeAX(BxInstruction_t *i)
+BX_CPU_C::OUT_DXeAX(bxInstruction_c *i)
 {
   Bit16u dx;
 

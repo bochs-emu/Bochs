@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.7 2002-09-15 01:00:19 kevinlawton Exp $
+// $Id: mult32.cc,v 1.8 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,7 @@
 
 
   void
-BX_CPU_C::MUL_EAXEd(BxInstruction_t *i)
+BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
 {
     Bit32u op1_32, op2_32, product_32h, product_32l;
     Bit64u product_64;
@@ -51,8 +51,8 @@ BX_CPU_C::MUL_EAXEd(BxInstruction_t *i)
     op1_32 = EAX;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -80,7 +80,7 @@ BX_CPU_C::MUL_EAXEd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IMUL_EAXEd(BxInstruction_t *i)
+BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
 {
     Bit32s op1_32, op2_32;
     Bit64s product_64;
@@ -89,8 +89,8 @@ BX_CPU_C::IMUL_EAXEd(BxInstruction_t *i)
     op1_32 = EAX;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -126,7 +126,7 @@ BX_CPU_C::IMUL_EAXEd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::DIV_EAXEd(BxInstruction_t *i)
+BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
 {
     Bit32u op2_32, remainder_32, quotient_32l;
     Bit64u op1_64, quotient_64;
@@ -134,8 +134,8 @@ BX_CPU_C::DIV_EAXEd(BxInstruction_t *i)
     op1_64 = (((Bit64u) EDX) << 32) + ((Bit64u) EAX);
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -165,7 +165,7 @@ BX_CPU_C::DIV_EAXEd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IDIV_EAXEd(BxInstruction_t *i)
+BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
 {
     Bit32s op2_32, remainder_32, quotient_32l;
     Bit64s op1_64, quotient_64;
@@ -173,8 +173,8 @@ BX_CPU_C::IDIV_EAXEd(BxInstruction_t *i)
     op1_64 = (((Bit64u) EDX) << 32) | ((Bit64u) EAX);
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -204,7 +204,7 @@ BX_CPU_C::IDIV_EAXEd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IMUL_GdEdId(BxInstruction_t *i)
+BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("IMUL_GdEdId() unsupported on 8086!"));
@@ -214,11 +214,11 @@ BX_CPU_C::IMUL_GdEdId(BxInstruction_t *i)
     Bit32s op2_32, op3_32, product_32;
     Bit64s product_64;
 
-    op3_32 = i->Id;
+    op3_32 = i->Id();
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -229,7 +229,7 @@ BX_CPU_C::IMUL_GdEdId(BxInstruction_t *i)
     product_64 = ((Bit64s) op2_32) * ((Bit64s) op3_32);
 
     /* now write product back to destination */
-    BX_WRITE_32BIT_REGZ(i->nnn, product_32);
+    BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
 
     /* set eflags:
      * IMUL affects the following flags: C,O
@@ -248,7 +248,7 @@ BX_CPU_C::IMUL_GdEdId(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IMUL_GdEd(BxInstruction_t *i)
+BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("IMUL_GvEv() unsupported on 8086!"));
@@ -258,21 +258,21 @@ BX_CPU_C::IMUL_GdEd(BxInstruction_t *i)
     Bit64s product_64;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
       read_virtual_dword(i->seg, i->rm_addr, (Bit32u *) &op2_32);
       }
 
-    op1_32 = BX_READ_32BIT_REG(i->nnn);
+    op1_32 = BX_READ_32BIT_REG(i->nnn());
 
     product_32 = op1_32 * op2_32;
     product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
 
     /* now write product back to destination */
-    BX_WRITE_32BIT_REGZ(i->nnn, product_32);
+    BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
 
     /* set eflags:
      * IMUL affects the following flags: C,O

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.1 2002-09-13 15:53:22 kevinlawton Exp $
+// $Id: mult64.cc,v 1.2 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -231,7 +231,7 @@ long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divisor)
 }
 
   void
-BX_CPU_C::MUL_RAXEq(BxInstruction_t *i)
+BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 {
     Bit64u op1_64, op2_64;
     Bit128u product_128;
@@ -240,8 +240,8 @@ BX_CPU_C::MUL_RAXEq(BxInstruction_t *i)
     op1_64 = RAX;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_64 = BX_READ_64BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -270,7 +270,7 @@ BX_CPU_C::MUL_RAXEq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IMUL_RAXEq(BxInstruction_t *i)
+BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
 {
     Bit64s op1_64, op2_64;
     Bit128s product_128;
@@ -279,8 +279,8 @@ BX_CPU_C::IMUL_RAXEq(BxInstruction_t *i)
     op1_64 = RAX;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_64 = BX_READ_64BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -317,7 +317,7 @@ BX_CPU_C::IMUL_RAXEq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::DIV_RAXEq(BxInstruction_t *i)
+BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
 {
     Bit64u op2_64, remainder_64, quotient_64l;
     Bit128u op1_128, quotient_128;
@@ -326,8 +326,8 @@ BX_CPU_C::DIV_RAXEq(BxInstruction_t *i)
     op1_128.hi = RDX;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_64 = BX_READ_64BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -360,7 +360,7 @@ BX_CPU_C::DIV_RAXEq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IDIV_RAXEq(BxInstruction_t *i)
+BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
 {
     Bit64s op2_64, remainder_64, quotient_64l;
     Bit128s op1_128, quotient_128;
@@ -369,8 +369,8 @@ BX_CPU_C::IDIV_RAXEq(BxInstruction_t *i)
     op1_128.hi = RDX;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_64 = BX_READ_64BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -403,7 +403,7 @@ BX_CPU_C::IDIV_RAXEq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IMUL_GqEqId(BxInstruction_t *i)
+BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("IMUL_GdEdId() unsupported on 8086!"));
@@ -413,11 +413,11 @@ BX_CPU_C::IMUL_GqEqId(BxInstruction_t *i)
     Bit64s op2_64, op3_64, product_64;
     Bit128s product_128;
 
-    op3_64 = (Bit32s) i->Id;
+    op3_64 = (Bit32s) i->Id();
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_64 = BX_READ_64BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -429,7 +429,7 @@ BX_CPU_C::IMUL_GqEqId(BxInstruction_t *i)
     long_imul(&product_128,op2_64,op3_64);
 
     /* now write product back to destination */
-    BX_WRITE_64BIT_REG(i->nnn, product_64);
+    BX_WRITE_64BIT_REG(i->nnn(), product_64);
 
     /* set eflags:
      * IMUL affects the following flags: C,O
@@ -448,7 +448,7 @@ BX_CPU_C::IMUL_GqEqId(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::IMUL_GqEq(BxInstruction_t *i)
+BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("IMUL_GvEv() unsupported on 8086!"));
@@ -458,22 +458,22 @@ BX_CPU_C::IMUL_GqEq(BxInstruction_t *i)
     Bit128s product_128;
 
     /* op2 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_64 = BX_READ_64BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
       read_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op2_64);
       }
 
-    op1_64 = BX_READ_64BIT_REG(i->nnn);
+    op1_64 = BX_READ_64BIT_REG(i->nnn());
 
     product_64 = op1_64 * op2_64;
     //product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
     long_imul(&product_128,op1_64,op2_64);
 
     /* now write product back to destination */
-    BX_WRITE_64BIT_REG(i->nnn, product_64);
+    BX_WRITE_64BIT_REG(i->nnn(), product_64);
 
     /* set eflags:
      * IMUL affects the following flags: C,O

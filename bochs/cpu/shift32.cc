@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.8 2002-09-13 17:04:13 kevinlawton Exp $
+// $Id: shift32.cc,v 1.9 2002-09-17 22:50:53 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 
 
   void
-BX_CPU_C::SHLD_EdGd(BxInstruction_t *i)
+BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -43,27 +43,27 @@ BX_CPU_C::SHLD_EdGd(BxInstruction_t *i)
   /* op1:op2 << count.  result stored in op1 */
 
   if (i->b1 == 0x1a4)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else // 0x1a5
     count = CL & 0x1f;
 
     if (!count) return; /* NOP */
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
       read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
       }
-    op2_32 = BX_READ_32BIT_REG(i->nnn);
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, result_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -82,7 +82,7 @@ BX_CPU_C::SHLD_EdGd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SHRD_EdGd(BxInstruction_t *i)
+BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("shrd_evgvib: not supported on < 386"));
@@ -91,7 +91,7 @@ BX_CPU_C::SHRD_EdGd(BxInstruction_t *i)
   unsigned count;
 
   if (i->b1 == 0x1ac)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else // 0x1ad
     count = CL & 0x1f;
 
@@ -99,20 +99,20 @@ BX_CPU_C::SHRD_EdGd(BxInstruction_t *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
       read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
       }
-    op2_32 = BX_READ_32BIT_REG(i->nnn);
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, result_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -135,22 +135,22 @@ BX_CPU_C::SHRD_EdGd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::ROL_Ed(BxInstruction_t *i)
+BX_CPU_C::ROL_Ed(bxInstruction_c *i)
 {
 
   Bit32u op1_32, result_32;
   unsigned count;
 
   if (i->b1 == 0xc1)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else if (i->b1 == 0xd1)
     count = 1;
   else // (i->b1 == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -161,8 +161,8 @@ BX_CPU_C::ROL_Ed(BxInstruction_t *i)
       result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
 
       /* now write result back to destination */
-      if (i->mod == 0xc0) {
-        BX_WRITE_32BIT_REGZ(i->rm, result_32);
+      if (i->mod() == 0xc0) {
+        BX_WRITE_32BIT_REGZ(i->rm(), result_32);
         }
       else {
         Write_RMW_virtual_dword(result_32);
@@ -182,21 +182,21 @@ BX_CPU_C::ROL_Ed(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::ROR_Ed(BxInstruction_t *i)
+BX_CPU_C::ROR_Ed(bxInstruction_c *i)
 {
     Bit32u op1_32, result_32, result_b31;
   unsigned count;
 
   if (i->b1 == 0xc1)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else if (i->b1 == 0xd1)
     count = 1;
   else // (i->b1 == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -207,8 +207,8 @@ BX_CPU_C::ROR_Ed(BxInstruction_t *i)
       result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
 
       /* now write result back to destination */
-      if (i->mod == 0xc0) {
-        BX_WRITE_32BIT_REGZ(i->rm, result_32);
+      if (i->mod() == 0xc0) {
+        BX_WRITE_32BIT_REGZ(i->rm(), result_32);
         }
       else {
         Write_RMW_virtual_dword(result_32);
@@ -228,13 +228,13 @@ BX_CPU_C::ROR_Ed(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::RCL_Ed(BxInstruction_t *i)
+BX_CPU_C::RCL_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
 
   if (i->b1 == 0xc1)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else if (i->b1 == 0xd1)
     count = 1;
   else // (i->b1 == 0xd3)
@@ -242,8 +242,8 @@ BX_CPU_C::RCL_Ed(BxInstruction_t *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -262,8 +262,8 @@ BX_CPU_C::RCL_Ed(BxInstruction_t *i)
       }
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, result_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -280,13 +280,13 @@ BX_CPU_C::RCL_Ed(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::RCR_Ed(BxInstruction_t *i)
+BX_CPU_C::RCR_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
 
   if (i->b1 == 0xc1)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else if (i->b1 == 0xd1)
     count = 1;
   else // (i->b1 == 0xd3)
@@ -294,8 +294,8 @@ BX_CPU_C::RCR_Ed(BxInstruction_t *i)
 
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -314,8 +314,8 @@ BX_CPU_C::RCR_Ed(BxInstruction_t *i)
       }
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, result_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -334,21 +334,21 @@ BX_CPU_C::RCR_Ed(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SHL_Ed(BxInstruction_t *i)
+BX_CPU_C::SHL_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
 
   if (i->b1 == 0xc1)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else if (i->b1 == 0xd1)
     count = 1;
   else // (i->b1 == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -360,8 +360,8 @@ BX_CPU_C::SHL_Ed(BxInstruction_t *i)
     result_32 = (op1_32 << count);
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, result_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -374,21 +374,21 @@ BX_CPU_C::SHL_Ed(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SHR_Ed(BxInstruction_t *i)
+BX_CPU_C::SHR_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
 
   if (i->b1 == 0xc1)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else if (i->b1 == 0xd1)
     count = 1;
   else // (i->b1 == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -400,8 +400,8 @@ BX_CPU_C::SHR_Ed(BxInstruction_t *i)
     result_32 = (op1_32 >> count);
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, result_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -413,21 +413,21 @@ BX_CPU_C::SHR_Ed(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::SAR_Ed(BxInstruction_t *i)
+BX_CPU_C::SAR_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
 
   if (i->b1 == 0xc1)
-    count = i->Ib & 0x1f;
+    count = i->Ib() & 0x1f;
   else if (i->b1 == 0xd1)
     count = 1;
   else // (i->b1 == 0xd3)
     count = CL & 0x1f;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -445,8 +445,8 @@ BX_CPU_C::SAR_Ed(BxInstruction_t *i)
       }
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, result_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);

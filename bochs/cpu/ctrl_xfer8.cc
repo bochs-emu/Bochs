@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.8 2002-09-14 17:29:47 kevinlawton Exp $
+// $Id: ctrl_xfer8.cc,v 1.9 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,12 +40,12 @@
 
 
   void
-BX_CPU_C::JCXZ_Jb(BxInstruction_t *i)
+BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 {
 
   if (i->as_64) {
     if ( RCX == 0 ) {
-      RIP += (Bit32s) i->Id;
+      RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(new_RIP);
       revalidate_prefetch_q();
       }
@@ -66,7 +66,7 @@ BX_CPU_C::JCXZ_Jb(BxInstruction_t *i)
     if ( temp_ECX == 0 ) {
       Bit32u new_EIP;
 
-      new_EIP = EIP + (Bit32s) i->Id;
+      new_EIP = EIP + (Bit32s) i->Id();
       if (i->os_32==0)
         new_EIP &= 0x0000ffff;
 #if BX_CPU_LEVEL >= 2
@@ -92,13 +92,13 @@ BX_CPU_C::JCXZ_Jb(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::LOOPNE_Jb(BxInstruction_t *i)
+BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
 {
   if (i->as_64) {
 
     if ( ((--RCX)!=0) && (get_ZF()==0) ) {
 
-      RIP += (Bit32s) i->Id;
+      RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
       revalidate_prefetch_q();
       }
@@ -121,7 +121,7 @@ BX_CPU_C::LOOPNE_Jb(BxInstruction_t *i)
     count--;
     if ( (count!=0) && (get_ZF()==0) ) {
 
-      new_EIP = EIP + (Bit32s) i->Id;
+      new_EIP = EIP + (Bit32s) i->Id();
       if (i->os_32==0)
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
@@ -148,13 +148,13 @@ BX_CPU_C::LOOPNE_Jb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::LOOPE_Jb(BxInstruction_t *i)
+BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
 {
   if (i->as_64) {
 
     if ( ((--RCX)!=0) && (get_ZF()) ) {
 
-      RIP += (Bit32s) i->Id;
+      RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
       revalidate_prefetch_q();
       }
@@ -177,7 +177,7 @@ BX_CPU_C::LOOPE_Jb(BxInstruction_t *i)
     count--;
     if ( (count!=0) && get_ZF()) {
 
-      new_EIP = EIP + (Bit32s) i->Id;
+      new_EIP = EIP + (Bit32s) i->Id();
       if (i->os_32==0)
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {
@@ -204,13 +204,13 @@ BX_CPU_C::LOOPE_Jb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::LOOP_Jb(BxInstruction_t *i)
+BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
 {
   if (i->as_64) {
 
     if ( ((--RCX)!=0) ) {
 
-      RIP += (Bit32s) i->Id;
+      RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(RIP);
       revalidate_prefetch_q();
       }
@@ -233,7 +233,7 @@ BX_CPU_C::LOOP_Jb(BxInstruction_t *i)
     count--;
     if (count != 0) {
 
-      new_EIP = EIP + (Bit32s) i->Id;
+      new_EIP = EIP + (Bit32s) i->Id();
       if (i->os_32==0)
         new_EIP &= 0x0000ffff;
       if (protected_mode()) {

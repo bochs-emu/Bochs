@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.2 2002-09-13 17:04:13 kevinlawton Exp $
+// $Id: data_xfer64.cc,v 1.3 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,33 +36,36 @@
 
 
   void
-BX_CPU_C::XCHG_RRXRAX(BxInstruction_t *i)
+BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
 {
   Bit64u temp64;
 
   temp64 = RAX;
-  RAX = BX_CPU_THIS_PTR gen_reg[i->nnn].rrx;
-  BX_CPU_THIS_PTR gen_reg[i->nnn].rrx = temp64;
+  RAX = BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx = temp64;
+  //RAX = BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx;
+  //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = temp64;
 }
 
   void
-BX_CPU_C::MOV_RRXIq(BxInstruction_t *i)
+BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[i->nnn].rrx = i->Iq;
+  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].rrx = i->Iq();
+  //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = i->Iq();
 }
 
   void
-BX_CPU_C::MOV_EqGq(BxInstruction_t *i)
+BX_CPU_C::MOV_EqGq(bxInstruction_c *i)
 {
     Bit64u op2_64;
 
     /* op2_64 is a register, op2_addr is an index of a register */
-    op2_64 = BX_READ_64BIT_REG(i->nnn);
+    op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
     /* now write op2 to op1 */
-    if (i->mod == 0xc0) {
-      BX_WRITE_64BIT_REG(i->rm, op2_64);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_64BIT_REG(i->rm(), op2_64);
       }
     else {
       write_virtual_qword(i->seg, i->rm_addr, &op2_64);
@@ -71,13 +74,13 @@ BX_CPU_C::MOV_EqGq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_GqEq(BxInstruction_t *i)
+BX_CPU_C::MOV_GqEq(bxInstruction_c *i)
 {
     Bit64u op2_64;
 
-    //BX_DEBUG (("MOV_GqEq mod=%02x nnn=%d rm=%d rm_addr=%08x seg=%d",i->mod,i->nnn,i->rm,i->rm_addr,i->seg));
-    if (i->mod == 0xc0) {
-      op2_64 = BX_READ_64BIT_REG(i->rm);
+    //BX_DEBUG (("MOV_GqEq mod=%02x nnn=%d rm=%d rm_addr=%08x seg=%d",i->mod(),i->nnn(),i->rm(),i->rm_addr,i->seg));
+    if (i->mod() == 0xc0) {
+      op2_64 = BX_READ_64BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -86,31 +89,31 @@ BX_CPU_C::MOV_GqEq(BxInstruction_t *i)
       //BX_DEBUG (("done read_virtual_qword"));
       }
 
-    BX_WRITE_64BIT_REG(i->nnn, op2_64);
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
 }
 
 
   void
-BX_CPU_C::LEA_GqM(BxInstruction_t *i)
+BX_CPU_C::LEA_GqM(bxInstruction_c *i)
 {
-  if (i->mod == 0xc0) {
+  if (i->mod() == 0xc0) {
     BX_PANIC(("LEA_GvM: op2 is a register"));
     UndefinedOpcode(i);
     return;
     }
 
     /* write effective address of op2 in op1 */
-    BX_WRITE_64BIT_REG(i->nnn, i->rm_addr);
+    BX_WRITE_64BIT_REG(i->nnn(), i->rm_addr);
 }
 
 
   void
-BX_CPU_C::MOV_ALOq(BxInstruction_t *i)
+BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
 {
   Bit8u temp_8;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from memory address */
 
@@ -127,12 +130,12 @@ BX_CPU_C::MOV_ALOq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_OqAL(BxInstruction_t *i)
+BX_CPU_C::MOV_OqAL(bxInstruction_c *i)
 {
   Bit8u temp_8;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from register */
   temp_8 = AL;
@@ -147,12 +150,12 @@ BX_CPU_C::MOV_OqAL(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::MOV_AXOq(BxInstruction_t *i)
+BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
 {
   Bit16u temp_16;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from memory address */
 
@@ -169,12 +172,12 @@ BX_CPU_C::MOV_AXOq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_OqAX(BxInstruction_t *i)
+BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
 {
   Bit16u temp_16;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from register */
   temp_16 = AX;
@@ -189,12 +192,12 @@ BX_CPU_C::MOV_OqAX(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::MOV_EAXOq(BxInstruction_t *i)
+BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
 {
   Bit32u temp_32;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from memory address */
 
@@ -211,12 +214,12 @@ BX_CPU_C::MOV_EAXOq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_OqEAX(BxInstruction_t *i)
+BX_CPU_C::MOV_OqEAX(bxInstruction_c *i)
 {
   Bit32u temp_32;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from register */
   temp_32 = EAX;
@@ -231,12 +234,12 @@ BX_CPU_C::MOV_OqEAX(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::MOV_RAXOq(BxInstruction_t *i)
+BX_CPU_C::MOV_RAXOq(bxInstruction_c *i)
 {
   Bit64u temp_64;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from memory address */
 
@@ -253,12 +256,12 @@ BX_CPU_C::MOV_RAXOq(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_OqRAX(BxInstruction_t *i)
+BX_CPU_C::MOV_OqRAX(bxInstruction_c *i)
 {
   Bit64u temp_64;
   bx_address addr;
 
-  addr = i->Iq;
+  addr = i->Iq();
 
   /* read from register */
   temp_64 = RAX;
@@ -275,15 +278,15 @@ BX_CPU_C::MOV_OqRAX(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_EqId(BxInstruction_t *i)
+BX_CPU_C::MOV_EqId(bxInstruction_c *i)
 {
     Bit64u op2_64;
 
-    op2_64 = (Bit32s) i->Id;
+    op2_64 = (Bit32s) i->Id();
 
     /* now write sum back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_64BIT_REG(i->rm, op2_64);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_64BIT_REG(i->rm(), op2_64);
       }
     else {
       write_virtual_qword(i->seg, i->rm_addr, &op2_64);
@@ -292,15 +295,15 @@ BX_CPU_C::MOV_EqId(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOVZX_GqEb(BxInstruction_t *i)
+BX_CPU_C::MOVZX_GqEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVZX_GvEb: not supported on < 386"));
 #else
   Bit8u  op2_8;
 
-  if (i->mod == 0xc0) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
+  if (i->mod() == 0xc0) {
+    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -308,20 +311,20 @@ BX_CPU_C::MOVZX_GqEb(BxInstruction_t *i)
     }
 
     /* zero extend byte op2 into qword op1 */
-    BX_WRITE_64BIT_REG(i->nnn, (Bit64u) op2_8);
+    BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_8);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
-BX_CPU_C::MOVZX_GqEw(BxInstruction_t *i)
+BX_CPU_C::MOVZX_GqEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVZX_GvEw: not supported on < 386"));
 #else
   Bit16u op2_16;
 
-  if (i->mod == 0xc0) {
-    op2_16 = BX_READ_16BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
@@ -329,20 +332,20 @@ BX_CPU_C::MOVZX_GqEw(BxInstruction_t *i)
     }
 
     /* zero extend word op2 into qword op1 */
-    BX_WRITE_64BIT_REG(i->nnn, (Bit64u) op2_16);
+    BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_16);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
-BX_CPU_C::MOVSX_GqEb(BxInstruction_t *i)
+BX_CPU_C::MOVSX_GqEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVSX_GvEb: not supported on < 386"));
 #else
   Bit8u op2_8;
 
-  if (i->mod == 0xc0) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
+  if (i->mod() == 0xc0) {
+    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -350,20 +353,20 @@ BX_CPU_C::MOVSX_GqEb(BxInstruction_t *i)
     }
 
     /* sign extend byte op2 into qword op1 */
-    BX_WRITE_64BIT_REG(i->nnn, (Bit8s) op2_8);
+    BX_WRITE_64BIT_REG(i->nnn(), (Bit8s) op2_8);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
-BX_CPU_C::MOVSX_GqEw(BxInstruction_t *i)
+BX_CPU_C::MOVSX_GqEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
 #else
   Bit16u op2_16;
 
-  if (i->mod == 0xc0) {
-    op2_16 = BX_READ_16BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
@@ -371,20 +374,20 @@ BX_CPU_C::MOVSX_GqEw(BxInstruction_t *i)
     }
 
     /* sign extend word op2 into qword op1 */
-    BX_WRITE_64BIT_REG(i->nnn, (Bit16s) op2_16);
+    BX_WRITE_64BIT_REG(i->nnn(), (Bit16s) op2_16);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
-BX_CPU_C::MOVSX_GqEd(BxInstruction_t *i)
+BX_CPU_C::MOVSX_GqEd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
 #else
   Bit32u op2_32;
 
-  if (i->mod == 0xc0) {
-    op2_32 = BX_READ_32BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2_32 = BX_READ_32BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
@@ -392,23 +395,23 @@ BX_CPU_C::MOVSX_GqEd(BxInstruction_t *i)
     }
 
     /* sign extend word op2 into qword op1 */
-    BX_WRITE_64BIT_REG(i->nnn, (Bit16s) op2_32);
+    BX_WRITE_64BIT_REG(i->nnn(), (Bit16s) op2_32);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
 
   void
-BX_CPU_C::XCHG_EqGq(BxInstruction_t *i)
+BX_CPU_C::XCHG_EqGq(bxInstruction_c *i)
 {
     Bit64u op2_64, op1_64;
 
     /* op2_64 is a register, op2_addr is an index of a register */
-    op2_64 = BX_READ_64BIT_REG(i->nnn);
+    op2_64 = BX_READ_64BIT_REG(i->nnn());
 
     /* op1_64 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_64 = BX_READ_64BIT_REG(i->rm);
-      BX_WRITE_64BIT_REG(i->rm, op2_64);
+    if (i->mod() == 0xc0) {
+      op1_64 = BX_READ_64BIT_REG(i->rm());
+      BX_WRITE_64BIT_REG(i->rm(), op2_64);
       }
     else {
       /* pointer, segment address pair */
@@ -416,12 +419,12 @@ BX_CPU_C::XCHG_EqGq(BxInstruction_t *i)
       write_RMW_virtual_qword(op2_64);
       }
 
-    BX_WRITE_64BIT_REG(i->nnn, op1_64);
+    BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }
 
 
   void
-BX_CPU_C::CMOV_GqEq(BxInstruction_t *i)
+BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   // Note: CMOV accesses a memory source operand (read), regardless
@@ -455,8 +458,8 @@ BX_CPU_C::CMOV_GqEq(BxInstruction_t *i)
       BX_PANIC(("CMOV_GdEd: default case"));
     }
 
-  if (i->mod == 0xc0) {
-    op2_64 = BX_READ_64BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
@@ -464,7 +467,7 @@ BX_CPU_C::CMOV_GqEq(BxInstruction_t *i)
     }
 
   if (condition) {
-    BX_WRITE_64BIT_REG(i->nnn, op2_64);
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
     }
 #else
   BX_PANIC(("cmov_gded called"));

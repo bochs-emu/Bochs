@@ -39,7 +39,7 @@
 
 
   void
-BX_CPU_C::ESC0(BxInstruction_t *i)
+BX_CPU_C::ESC0(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -52,7 +52,7 @@ BX_CPU_C::ESC0(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::ESC1(BxInstruction_t *i)
+BX_CPU_C::ESC1(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -65,7 +65,7 @@ BX_CPU_C::ESC1(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::ESC2(BxInstruction_t *i)
+BX_CPU_C::ESC2(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -78,7 +78,7 @@ BX_CPU_C::ESC2(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::ESC3(BxInstruction_t *i)
+BX_CPU_C::ESC3(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -95,7 +95,7 @@ BX_CPU_C::ESC3(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::ESC4(BxInstruction_t *i)
+BX_CPU_C::ESC4(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -108,7 +108,7 @@ BX_CPU_C::ESC4(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::ESC5(BxInstruction_t *i)
+BX_CPU_C::ESC5(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -121,7 +121,7 @@ BX_CPU_C::ESC5(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::ESC6(BxInstruction_t *i)
+BX_CPU_C::ESC6(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -134,7 +134,7 @@ BX_CPU_C::ESC6(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::ESC7(BxInstruction_t *i)
+BX_CPU_C::ESC7(bxInstruction_c *i)
 {
   if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
     exception(BX_NM_EXCEPTION, 0, 0);
@@ -147,7 +147,7 @@ BX_CPU_C::ESC7(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::FWAIT(BxInstruction_t *i)
+BX_CPU_C::FWAIT(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   // WAIT doesn't generate single steps on 8086.

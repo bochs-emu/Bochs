@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.11 2002-09-15 05:09:18 kevinlawton Exp $
+// $Id: string.cc,v 1.12 2002-09-17 22:50:53 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@
  */
 
   void
-BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
+BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 {
   unsigned seg;
   Bit8u temp8;
@@ -307,7 +307,7 @@ doIncr16:
 }
 
   void
-BX_CPU_C::MOVSW_XvYv(BxInstruction_t *i)
+BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
 {
   unsigned seg;
   unsigned incr;
@@ -855,7 +855,7 @@ doIncr16:
 }
 
   void
-BX_CPU_C::CMPSB_XbYb(BxInstruction_t *i)
+BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 {
   unsigned seg;
   Bit8u op1_8, op2_8, diff_8;
@@ -963,7 +963,7 @@ BX_CPU_C::CMPSB_XbYb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
+BX_CPU_C::CMPSW_XvYv(bxInstruction_c *i)
 {
   unsigned seg;
 
@@ -1202,7 +1202,7 @@ BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::SCASB_ALXb(BxInstruction_t *i)
+BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
 
@@ -1294,7 +1294,7 @@ BX_CPU_C::SCASB_ALXb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
+BX_CPU_C::SCASW_eAXXv(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
@@ -1490,7 +1490,7 @@ BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::STOSB_YbAL(BxInstruction_t *i)
+BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
 {
   Bit8u al;
 
@@ -1691,7 +1691,7 @@ doIncr16:
 }
 
   void
-BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
+BX_CPU_C::STOSW_YveAX(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 3
 #if BX_SUPPORT_X86_64
@@ -1858,7 +1858,7 @@ BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::LODSB_ALXb(BxInstruction_t *i)
+BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 {
   unsigned seg;
   Bit8u al;
@@ -1938,7 +1938,7 @@ BX_CPU_C::LODSB_ALXb(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
+BX_CPU_C::LODSW_eAXXv(bxInstruction_c *i)
 {
   unsigned seg;
 

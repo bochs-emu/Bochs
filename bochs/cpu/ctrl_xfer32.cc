@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.11 2002-09-17 14:36:39 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.12 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 
 
   void
-BX_CPU_C::RETnear32_Iw(BxInstruction_t *i)
+BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 {
   Bit16u imm16;
   Bit32u temp_ESP;
@@ -51,7 +51,7 @@ BX_CPU_C::RETnear32_Iw(BxInstruction_t *i)
   else
     temp_ESP = SP;
 
-  imm16 = i->Iw;
+  imm16 = i->Iw();
 
   invalidate_prefetch_q();
 
@@ -96,7 +96,7 @@ BX_CPU_C::RETnear32_Iw(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::RETnear32(BxInstruction_t *i)
+BX_CPU_C::RETnear32(bxInstruction_c *i)
 {
   Bit32u temp_ESP;
   Bit32u return_EIP;
@@ -141,7 +141,7 @@ BX_CPU_C::RETnear32(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::RETfar32_Iw(BxInstruction_t *i)
+BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
   Bit32u eip, ecs_raw;
   Bit16s imm16;
@@ -151,7 +151,7 @@ BX_CPU_C::RETfar32_Iw(BxInstruction_t *i)
 #endif
   /* ??? is imm16, number of bytes/words depending on operandsize ? */
 
-  imm16 = i->Iw;
+  imm16 = i->Iw();
 
   invalidate_prefetch_q();
 
@@ -178,7 +178,7 @@ done:
 }
 
   void
-BX_CPU_C::RETfar32(BxInstruction_t *i)
+BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
   Bit32u eip, ecs_raw;
 
@@ -209,7 +209,7 @@ done:
 
 
   void
-BX_CPU_C::CALL_Ad(BxInstruction_t *i)
+BX_CPU_C::CALL_Ad(bxInstruction_c *i)
 {
   Bit32u new_EIP;
   Bit32s disp32;
@@ -218,7 +218,7 @@ BX_CPU_C::CALL_Ad(BxInstruction_t *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  disp32 = i->Id;
+  disp32 = i->Id();
   invalidate_prefetch_q();
 
   new_EIP = EIP + disp32;
@@ -238,7 +238,7 @@ BX_CPU_C::CALL_Ad(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::CALL32_Ap(BxInstruction_t *i)
+BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u disp32;
@@ -247,8 +247,8 @@ BX_CPU_C::CALL32_Ap(BxInstruction_t *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  disp32 = i->Id;
-  cs_raw = i->Iw2;
+  disp32 = i->Id();
+  cs_raw = i->Iw2();
   invalidate_prefetch_q();
 
   if (protected_mode()) {
@@ -266,7 +266,7 @@ done:
 }
 
   void
-BX_CPU_C::CALL_Ed(BxInstruction_t *i)
+BX_CPU_C::CALL_Ed(bxInstruction_c *i)
 {
   Bit32u temp_ESP;
   Bit32u op1_32;
@@ -282,8 +282,8 @@ BX_CPU_C::CALL_Ed(BxInstruction_t *i)
 
 
     /* op1_32 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       read_virtual_dword(i->seg, i->rm_addr, &op1_32);
@@ -308,7 +308,7 @@ BX_CPU_C::CALL_Ed(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::CALL32_Ep(BxInstruction_t *i)
+BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u op1_32;
@@ -318,7 +318,7 @@ BX_CPU_C::CALL32_Ep(BxInstruction_t *i)
 #endif
 
     /* op1_32 is a register or memory reference */
-    if (i->mod == 0xc0) {
+    if (i->mod() == 0xc0) {
       BX_PANIC(("CALL_Ep: op1 is a register"));
       }
 
@@ -345,13 +345,13 @@ done:
 
 
   void
-BX_CPU_C::JMP_Jd(BxInstruction_t *i)
+BX_CPU_C::JMP_Jd(bxInstruction_c *i)
 {
   Bit32u new_EIP;
 
     invalidate_prefetch_q();
 
-    new_EIP = EIP + (Bit32s) i->Id;
+    new_EIP = EIP + (Bit32s) i->Id();
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
@@ -367,7 +367,7 @@ BX_CPU_C::JMP_Jd(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::JCC_Jd(BxInstruction_t *i)
+BX_CPU_C::JCC_Jd(bxInstruction_c *i)
 {
   Boolean condition = 0;
 
@@ -396,7 +396,7 @@ BX_CPU_C::JCC_Jd(BxInstruction_t *i)
   if (condition) {
     Bit32u new_EIP;
 
-    new_EIP = EIP + (Bit32s) i->Id;
+    new_EIP = EIP + (Bit32s) i->Id();
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
@@ -417,7 +417,7 @@ BX_CPU_C::JCC_Jd(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::JMP_Ap(BxInstruction_t *i)
+BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 {
   Bit32u disp32;
   Bit16u cs_raw;
@@ -425,12 +425,12 @@ BX_CPU_C::JMP_Ap(BxInstruction_t *i)
   invalidate_prefetch_q();
 
   if (i->os_32) {
-    disp32 = i->Id;
+    disp32 = i->Id();
     }
   else {
-    disp32 = i->Iw;
+    disp32 = i->Iw();
     }
-  cs_raw = i->Iw2;
+  cs_raw = i->Iw2();
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
@@ -451,14 +451,14 @@ done:
 
 
   void
-BX_CPU_C::JMP_Ed(BxInstruction_t *i)
+BX_CPU_C::JMP_Ed(bxInstruction_c *i)
 {
   Bit32u new_EIP;
   Bit32u op1_32;
 
     /* op1_32 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -485,13 +485,13 @@ BX_CPU_C::JMP_Ed(BxInstruction_t *i)
   /* Far indirect jump */
 
   void
-BX_CPU_C::JMP32_Ep(BxInstruction_t *i)
+BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u op1_32;
 
     /* op1_32 is a register or memory reference */
-    if (i->mod == 0xc0) {
+    if (i->mod() == 0xc0) {
       /* far indirect must specify a memory address */
       BX_PANIC(("JMP_Ep(): op1 is a register"));
       }
@@ -515,7 +515,7 @@ done:
 }
 
   void
-BX_CPU_C::IRET32(BxInstruction_t *i)
+BX_CPU_C::IRET32(bxInstruction_c *i)
 {
   Bit32u eip, ecs_raw, eflags;
 

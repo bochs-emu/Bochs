@@ -95,17 +95,17 @@ void BX_CPU_C::PrepareMmxInstruction(void)
 #endif
 
 /* 0F 60 */
-void BX_CPU_C::PUNPCKLBW_PqQd(BxInstruction_t *i)
+void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), result;
   Bit32u op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_32BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_32BIT_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -122,7 +122,7 @@ void BX_CPU_C::PUNPCKLBW_PqQd(BxInstruction_t *i)
   MMXUB0(result) = MMXUB0(op1);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -130,17 +130,17 @@ void BX_CPU_C::PUNPCKLBW_PqQd(BxInstruction_t *i)
 }
 
 /* 0F 61 */
-void BX_CPU_C::PUNPCKLWD_PqQd(BxInstruction_t *i)
+void BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), result;
   Bit32u op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_32BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_32BIT_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -153,7 +153,7 @@ void BX_CPU_C::PUNPCKLWD_PqQd(BxInstruction_t *i)
   MMXUW0(result) = MMXUW0(op1);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -161,17 +161,17 @@ void BX_CPU_C::PUNPCKLWD_PqQd(BxInstruction_t *i)
 }
 
 /* 0F 62 */
-void BX_CPU_C::PUNPCKLDQ_PqQd(BxInstruction_t *i)
+void BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn);
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn());
   Bit32u op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_32BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_32BIT_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -181,7 +181,7 @@ void BX_CPU_C::PUNPCKLDQ_PqQd(BxInstruction_t *i)
   MMXUD1(op1) = op2;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -189,16 +189,16 @@ void BX_CPU_C::PUNPCKLDQ_PqQd(BxInstruction_t *i)
 }
 
 /* 0F 63 */
-void BX_CPU_C::PACKSSWB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -215,7 +215,7 @@ void BX_CPU_C::PACKSSWB_PqQq(BxInstruction_t *i)
   MMXSB7(result) = SaturateWordSToByteS(MMXSW3(op2));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -223,16 +223,16 @@ void BX_CPU_C::PACKSSWB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 64 */
-void BX_CPU_C::PCMPGTB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -249,7 +249,7 @@ void BX_CPU_C::PCMPGTB_PqQq(BxInstruction_t *i)
   MMXUB7(result) = (MMXSB7(op1) > MMXSB7(op2)) ? 0xFF : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -257,16 +257,16 @@ void BX_CPU_C::PCMPGTB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 65 */
-void BX_CPU_C::PCMPGTW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -279,7 +279,7 @@ void BX_CPU_C::PCMPGTW_PqQq(BxInstruction_t *i)
   MMXUW3(result) = (MMXSW3(op1) > MMXSW3(op2)) ? 0xFFFF : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -287,16 +287,16 @@ void BX_CPU_C::PCMPGTW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 66 */
-void BX_CPU_C::PCMPGTD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -307,7 +307,7 @@ void BX_CPU_C::PCMPGTD_PqQq(BxInstruction_t *i)
   MMXUD1(result) = (MMXSD1(op1) > MMXSD1(op2)) ? 0xFFFFFFFF : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -315,16 +315,16 @@ void BX_CPU_C::PCMPGTD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 67 */
-void BX_CPU_C::PACKUSWB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -341,7 +341,7 @@ void BX_CPU_C::PACKUSWB_PqQq(BxInstruction_t *i)
   MMXUB7(result) = SaturateWordSToByteU(MMXSW3(op2));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -349,16 +349,16 @@ void BX_CPU_C::PACKUSWB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 68 */
-void BX_CPU_C::PUNPCKHBW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -375,7 +375,7 @@ void BX_CPU_C::PUNPCKHBW_PqQq(BxInstruction_t *i)
   MMXUB0(result) = MMXUB4(op1);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -383,16 +383,16 @@ void BX_CPU_C::PUNPCKHBW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 69 */
-void BX_CPU_C::PUNPCKHWD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -405,7 +405,7 @@ void BX_CPU_C::PUNPCKHWD_PqQq(BxInstruction_t *i)
   MMXUW0(result) = MMXUW2(op1);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -413,16 +413,16 @@ void BX_CPU_C::PUNPCKHWD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 6A */
-void BX_CPU_C::PUNPCKHDQ_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -433,7 +433,7 @@ void BX_CPU_C::PUNPCKHDQ_PqQq(BxInstruction_t *i)
   MMXUD0(result) = MMXUD1(op1);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -441,16 +441,16 @@ void BX_CPU_C::PUNPCKHDQ_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 6B */
-void BX_CPU_C::PACKSSDW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -463,7 +463,7 @@ void BX_CPU_C::PACKSSDW_PqQq(BxInstruction_t *i)
   MMXSW3(result) = SaturateDwordSToWordS(MMXSD1(op2));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -471,7 +471,7 @@ void BX_CPU_C::PACKSSDW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 6E */
-void BX_CPU_C::MOVD_PqEd(BxInstruction_t *i)
+void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
@@ -480,8 +480,8 @@ void BX_CPU_C::MOVD_PqEd(BxInstruction_t *i)
   MMXUD1(op) = 0;
 
   /* op is a register or memory reference */
-  if (i->mod == 0xc0) {
-    MMXUD0(op) = BX_READ_32BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -489,7 +489,7 @@ void BX_CPU_C::MOVD_PqEd(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op);
+  BX_WRITE_MMX_REG(i->nnn(), op);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -497,7 +497,7 @@ void BX_CPU_C::MOVD_PqEd(BxInstruction_t *i)
 }
 
 /* 0F 6F */
-void BX_CPU_C::MOVQ_PqQq(BxInstruction_t *i)
+void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
@@ -505,8 +505,8 @@ void BX_CPU_C::MOVQ_PqQq(BxInstruction_t *i)
   BxPackedMmxRegister op;
 
   /* op is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -514,7 +514,7 @@ void BX_CPU_C::MOVQ_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op);
+  BX_WRITE_MMX_REG(i->nnn(), op);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -522,16 +522,16 @@ void BX_CPU_C::MOVQ_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 74 */
-void BX_CPU_C::PCMPEQB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -548,7 +548,7 @@ void BX_CPU_C::PCMPEQB_PqQq(BxInstruction_t *i)
   MMXUB7(result) = (MMXUB7(op1) == MMXUB7(op2)) ? 0xFF : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -556,16 +556,16 @@ void BX_CPU_C::PCMPEQB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 75 */
-void BX_CPU_C::PCMPEQW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -578,7 +578,7 @@ void BX_CPU_C::PCMPEQW_PqQq(BxInstruction_t *i)
   MMXUW3(result) = (MMXUW3(op1) == MMXUW3(op2)) ? 0xFFFF : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -586,16 +586,16 @@ void BX_CPU_C::PCMPEQW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 76 */
-void BX_CPU_C::PCMPEQD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -606,7 +606,7 @@ void BX_CPU_C::PCMPEQD_PqQq(BxInstruction_t *i)
   MMXUD1(result) = (MMXUD1(op1) == MMXUD1(op2)) ? 0xFFFFFFFF : 0;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -614,7 +614,7 @@ void BX_CPU_C::PCMPEQD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 77 */
-void BX_CPU_C::EMMS(BxInstruction_t *i)
+void BX_CPU_C::EMMS(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
 
@@ -635,16 +635,16 @@ void BX_CPU_C::EMMS(BxInstruction_t *i)
 }
 
 /* 0F 7E */
-void BX_CPU_C::MOVD_EdPd(BxInstruction_t *i)
+void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn);
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
   /* op is a register or memory reference */
-  if (i->mod == 0xc0) {
-    BX_WRITE_32BIT_REG(i->rm, MMXUD0(op));
+  if (i->mod() == 0xc0) {
+    BX_WRITE_32BIT_REG(i->rm(), MMXUD0(op));
   }
   else {
     write_virtual_dword(i->seg, i->rm_addr, &(MMXUD0(op)));
@@ -656,16 +656,16 @@ void BX_CPU_C::MOVD_EdPd(BxInstruction_t *i)
 }
 
 /* 0F 7F */
-void BX_CPU_C::MOVQ_QqPq(BxInstruction_t *i)
+void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn);
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
   /* op is a register or memory reference */
-  if (i->mod == 0xc0) {
-    BX_WRITE_MMX_REG(i->rm, op);
+  if (i->mod() == 0xc0) {
+    BX_WRITE_MMX_REG(i->rm(), op);
   }
   else {
     write_virtual_qword(i->seg, i->rm_addr, (Bit64u *) &op);
@@ -677,16 +677,16 @@ void BX_CPU_C::MOVQ_QqPq(BxInstruction_t *i)
 }
 
 /* 0F D1 */
-void BX_CPU_C::PSRLW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -705,7 +705,7 @@ void BX_CPU_C::PSRLW_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -713,16 +713,16 @@ void BX_CPU_C::PSRLW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F D2 */
-void BX_CPU_C::PSRLD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -739,7 +739,7 @@ void BX_CPU_C::PSRLD_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -747,16 +747,16 @@ void BX_CPU_C::PSRLD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F D3 */
-void BX_CPU_C::PSRLQ_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -771,7 +771,7 @@ void BX_CPU_C::PSRLQ_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -779,16 +779,16 @@ void BX_CPU_C::PSRLQ_PqQq(BxInstruction_t *i)
 }
 
 /* 0F D5 */
-void BX_CPU_C::PMULLW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -806,7 +806,7 @@ void BX_CPU_C::PMULLW_PqQq(BxInstruction_t *i)
   MMXUW3(result) = (Bit16u)(product4 & 0xFFFF);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -814,16 +814,16 @@ void BX_CPU_C::PMULLW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F D8 */
-void BX_CPU_C::PSUBUSB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -842,7 +842,7 @@ void BX_CPU_C::PSUBUSB_PqQq(BxInstruction_t *i)
   if(MMXUB7(op1) > MMXUB7(op2)) MMXUB7(result) = MMXUB7(op1) - MMXUB7(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -850,16 +850,16 @@ void BX_CPU_C::PSUBUSB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F D9 */
-void BX_CPU_C::PSUBUSW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -874,7 +874,7 @@ void BX_CPU_C::PSUBUSW_PqQq(BxInstruction_t *i)
   if(MMXUW3(op1) > MMXUW3(op2)) MMXUW3(result) = MMXUW3(op1) - MMXUW3(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -882,16 +882,16 @@ void BX_CPU_C::PSUBUSW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F DB */
-void BX_CPU_C::PAND_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -901,7 +901,7 @@ void BX_CPU_C::PAND_PqQq(BxInstruction_t *i)
   MMXUQ(op1) &= MMXUQ(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -909,16 +909,16 @@ void BX_CPU_C::PAND_PqQq(BxInstruction_t *i)
 }
 
 /* 0F DC */
-void BX_CPU_C::PADDUSB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -935,7 +935,7 @@ void BX_CPU_C::PADDUSB_PqQq(BxInstruction_t *i)
   MMXUB7(result) = SaturateWordSToByteU(Bit16s(MMXUB7(op1)) + Bit16s(MMXUB7(op2)));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -943,16 +943,16 @@ void BX_CPU_C::PADDUSB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F DD */
-void BX_CPU_C::PADDUSW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -965,7 +965,7 @@ void BX_CPU_C::PADDUSW_PqQq(BxInstruction_t *i)
   MMXUW3(result) = SaturateDwordSToWordU(Bit32s(MMXUW3(op1)) + Bit32s(MMXUW3(op2)));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -973,16 +973,16 @@ void BX_CPU_C::PADDUSW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F DF */
-void BX_CPU_C::PANDN_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -992,7 +992,7 @@ void BX_CPU_C::PANDN_PqQq(BxInstruction_t *i)
   MMXUQ(result) = ~(MMXUQ(op1)) & MMXUQ(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1000,16 +1000,16 @@ void BX_CPU_C::PANDN_PqQq(BxInstruction_t *i)
 }
 
 /* 0F E1 */
-void BX_CPU_C::PSRAW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1037,7 +1037,7 @@ void BX_CPU_C::PSRAW_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1045,16 +1045,16 @@ void BX_CPU_C::PSRAW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F E2 */
-void BX_CPU_C::PSRAD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1076,7 +1076,7 @@ void BX_CPU_C::PSRAD_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1084,16 +1084,16 @@ void BX_CPU_C::PSRAD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F E5 */
-void BX_CPU_C::PMULHW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1111,7 +1111,7 @@ void BX_CPU_C::PMULHW_PqQq(BxInstruction_t *i)
   MMXUW3(result) = (Bit16u)(product4 >> 16);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1119,16 +1119,16 @@ void BX_CPU_C::PMULHW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F E8 */
-void BX_CPU_C::PSUBSB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1145,7 +1145,7 @@ void BX_CPU_C::PSUBSB_PqQq(BxInstruction_t *i)
   MMXSB7(result) = SaturateWordSToByteS(Bit16s(MMXSB7(op1)) - Bit16s(MMXSB7(op2)));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1153,16 +1153,16 @@ void BX_CPU_C::PSUBSB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F E9 */
-void BX_CPU_C::PSUBSW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1175,7 +1175,7 @@ void BX_CPU_C::PSUBSW_PqQq(BxInstruction_t *i)
   MMXSW3(result) = SaturateDwordSToWordS(Bit32s(MMXSW3(op1)) - Bit32s(MMXSW3(op2)));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1183,16 +1183,16 @@ void BX_CPU_C::PSUBSW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F EB */
-void BX_CPU_C::POR_PqQq(BxInstruction_t *i)
+void BX_CPU_C::POR_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1202,7 +1202,7 @@ void BX_CPU_C::POR_PqQq(BxInstruction_t *i)
   MMXUQ(op1) |= MMXUQ(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1210,16 +1210,16 @@ void BX_CPU_C::POR_PqQq(BxInstruction_t *i)
 }
 
 /* 0F EC */
-void BX_CPU_C::PADDSB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1236,7 +1236,7 @@ void BX_CPU_C::PADDSB_PqQq(BxInstruction_t *i)
   MMXSB7(result) = SaturateWordSToByteS(Bit16s(MMXSB7(op1)) + Bit16s(MMXSB7(op2)));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1244,16 +1244,16 @@ void BX_CPU_C::PADDSB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F ED */
-void BX_CPU_C::PADDSW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1266,7 +1266,7 @@ void BX_CPU_C::PADDSW_PqQq(BxInstruction_t *i)
   MMXSW3(result) = SaturateDwordSToWordS(Bit32s(MMXSW3(op1)) + Bit32s(MMXSW3(op2)));
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1274,16 +1274,16 @@ void BX_CPU_C::PADDSW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F EF */
-void BX_CPU_C::PXOR_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1293,7 +1293,7 @@ void BX_CPU_C::PXOR_PqQq(BxInstruction_t *i)
   MMXUQ(op1) ^= MMXUQ(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1301,16 +1301,16 @@ void BX_CPU_C::PXOR_PqQq(BxInstruction_t *i)
 }
 
 /* 0F F1 */
-void BX_CPU_C::PSLLW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1329,7 +1329,7 @@ void BX_CPU_C::PSLLW_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1337,16 +1337,16 @@ void BX_CPU_C::PSLLW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F F2 */
-void BX_CPU_C::PSLLD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1363,7 +1363,7 @@ void BX_CPU_C::PSLLD_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1371,16 +1371,16 @@ void BX_CPU_C::PSLLD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F F3 */
-void BX_CPU_C::PSLLQ_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1395,7 +1395,7 @@ void BX_CPU_C::PSLLQ_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1403,16 +1403,16 @@ void BX_CPU_C::PSLLQ_PqQq(BxInstruction_t *i)
 }
 
 /* 0F F5 */
-void BX_CPU_C::PMADDWD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1434,7 +1434,7 @@ void BX_CPU_C::PMADDWD_PqQq(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, result);
+  BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1442,16 +1442,16 @@ void BX_CPU_C::PMADDWD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F F8 */
-void BX_CPU_C::PSUBB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1468,7 +1468,7 @@ void BX_CPU_C::PSUBB_PqQq(BxInstruction_t *i)
   MMXUB7(op1) -= MMXUB7(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1476,16 +1476,16 @@ void BX_CPU_C::PSUBB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F F9 */
-void BX_CPU_C::PSUBW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1498,7 +1498,7 @@ void BX_CPU_C::PSUBW_PqQq(BxInstruction_t *i)
   MMXUW3(op1) -= MMXUW3(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1506,16 +1506,16 @@ void BX_CPU_C::PSUBW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F FA */
-void BX_CPU_C::PSUBD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1526,7 +1526,7 @@ void BX_CPU_C::PSUBD_PqQq(BxInstruction_t *i)
   MMXUD1(op1) -= MMXUD1(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1534,16 +1534,16 @@ void BX_CPU_C::PSUBD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F FC */
-void BX_CPU_C::PADDB_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1561,7 +1561,7 @@ void BX_CPU_C::PADDB_PqQq(BxInstruction_t *i)
   MMXUB7(op1) += MMXUB7(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1569,16 +1569,16 @@ void BX_CPU_C::PADDB_PqQq(BxInstruction_t *i)
 }
 
 /* 0F FD */
-void BX_CPU_C::PADDW_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1591,7 +1591,7 @@ void BX_CPU_C::PADDW_PqQq(BxInstruction_t *i)
   MMXUW3(op1) += MMXUW3(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1599,16 +1599,16 @@ void BX_CPU_C::PADDW_PqQq(BxInstruction_t *i)
 }
 
 /* 0F FE */
-void BX_CPU_C::PADDD_PqQq(BxInstruction_t *i)
+void BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn), op2;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
-  if (i->mod == 0xc0) {
-    op2 = BX_READ_MMX_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -1619,7 +1619,7 @@ void BX_CPU_C::PADDD_PqQq(BxInstruction_t *i)
   MMXUD1(op1) += MMXUD1(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn, op1);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1627,13 +1627,13 @@ void BX_CPU_C::PADDD_PqQq(BxInstruction_t *i)
 }
 
 /* 0F 71 GrpA 010 */
-void BX_CPU_C::PSRLW_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
+  Bit8u shift = i->Ib();
 
   if(shift > 15) MMXUQ(op1) = 0;
   else
@@ -1645,7 +1645,7 @@ void BX_CPU_C::PSRLW_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, op1);
+  BX_WRITE_MMX_REG(i->rm(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1653,13 +1653,13 @@ void BX_CPU_C::PSRLW_PqIb(BxInstruction_t *i)
 }
 
 /* 0F 71 GrpA 100 */
-void BX_CPU_C::PSRAW_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm), result;
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm()), result;
+  Bit8u shift = i->Ib();
 
   if(shift > 15) {
     MMXUW0(result) = (MMXUW0(op1) & 0x8000) ? 0xFFFF : 0;
@@ -1680,7 +1680,7 @@ void BX_CPU_C::PSRAW_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, result);
+  BX_WRITE_MMX_REG(i->rm(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1688,13 +1688,13 @@ void BX_CPU_C::PSRAW_PqIb(BxInstruction_t *i)
 }
 
 /* 0F 71 GrpA 110 */
-void BX_CPU_C::PSLLW_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
+  Bit8u shift = i->Ib();
 
   if(shift > 15) MMXUQ(op1) = 0;
   else
@@ -1706,7 +1706,7 @@ void BX_CPU_C::PSLLW_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, op1);
+  BX_WRITE_MMX_REG(i->rm(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1715,13 +1715,13 @@ void BX_CPU_C::PSLLW_PqIb(BxInstruction_t *i)
 
 
 /* 0F 72 GrpA 010 */
-void BX_CPU_C::PSRLD_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
+  Bit8u shift = i->Ib();
 
   if(shift > 31) MMXUQ(op1) = 0;
   else
@@ -1731,7 +1731,7 @@ void BX_CPU_C::PSRLD_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, op1);
+  BX_WRITE_MMX_REG(i->rm(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1739,13 +1739,13 @@ void BX_CPU_C::PSRLD_PqIb(BxInstruction_t *i)
 }
 
 /* 0F 72 GrpA 100 */
-void BX_CPU_C::PSRAD_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm), result;
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm()), result;
+  Bit8u shift = i->Ib();
 
   if(shift > 31) {
     MMXUD0(result) = (MMXUD0(op1) & 0x80000000) ? 0xFFFFFFFF : 0;
@@ -1760,7 +1760,7 @@ void BX_CPU_C::PSRAD_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, result);
+  BX_WRITE_MMX_REG(i->rm(), result);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1768,13 +1768,13 @@ void BX_CPU_C::PSRAD_PqIb(BxInstruction_t *i)
 }
 
 /* 0F 72 GrpA 110 */
-void BX_CPU_C::PSLLD_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
+  Bit8u shift = i->Ib();
 
   if(shift > 31) MMXUQ(op1) = 0;
   else
@@ -1784,7 +1784,7 @@ void BX_CPU_C::PSLLD_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, op1);
+  BX_WRITE_MMX_REG(i->rm(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1792,13 +1792,13 @@ void BX_CPU_C::PSLLD_PqIb(BxInstruction_t *i)
 }
 
 /* 0F 73 GrpA 010 */
-void BX_CPU_C::PSRLQ_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
+  Bit8u shift = i->Ib();
 
   if(shift > 63) {
     MMXUQ(op1) = 0;
@@ -1808,7 +1808,7 @@ void BX_CPU_C::PSRLQ_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, op1);
+  BX_WRITE_MMX_REG(i->rm(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);
@@ -1816,13 +1816,13 @@ void BX_CPU_C::PSRLQ_PqIb(BxInstruction_t *i)
 }
 
 /* 0F 73 GrpA 110 */
-void BX_CPU_C::PSLLQ_PqIb(BxInstruction_t *i)
+void BX_CPU_C::PSLLQ_PqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR PrepareMmxInstruction();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm);
-  Bit8u shift = i->Ib;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->rm());
+  Bit8u shift = i->Ib();
 
   if(shift > 63) {
     MMXUQ(op1) = 0;
@@ -1832,7 +1832,7 @@ void BX_CPU_C::PSLLQ_PqIb(BxInstruction_t *i)
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->rm, op1);
+  BX_WRITE_MMX_REG(i->rm(), op1);
 #else
   BX_INFO(("MMX Instructions Set Not Implemented"));
   UndefinedOpcode(i);

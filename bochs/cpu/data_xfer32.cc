@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.10 2002-09-14 17:29:47 kevinlawton Exp $
+// $Id: data_xfer32.cc,v 1.11 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,42 +36,48 @@
 
 
   void
-BX_CPU_C::XCHG_ERXEAX(BxInstruction_t *i)
+BX_CPU_C::XCHG_ERXEAX(bxInstruction_c *i)
 {
   Bit32u temp32;
 
   temp32 = EAX;
 #if BX_SUPPORT_X86_64
-  RAX = BX_CPU_THIS_PTR gen_reg[i->nnn].dword.erx;
-  BX_CPU_THIS_PTR gen_reg[i->nnn].dword.erx = temp32;
+  RAX = BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx = temp32;
+  //RAX = BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.erx;
+  //BX_CPU_THIS_PTR gen_reg[i->nnn()].dword.erx = temp32;
 #else
-  EAX = BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx;
-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx = temp32;
+  EAX = BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx;
+  BX_CPU_THIS_PTR gen_reg[(i->b1 & 7) + i->rex_b()].dword.erx = temp32;
+  //EAX = BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx;
+  //BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx = temp32;
 #endif
 }
 
   void
-BX_CPU_C::MOV_ERXId(BxInstruction_t *i)
+BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR gen_reg[i->nnn].rrx = i->Id;
+  BX_CPU_THIS_PTR gen_reg[(i->b1 & 0x07) + i->rex_b()].rrx = i->Id();
+  //BX_CPU_THIS_PTR gen_reg[i->nnn()].rrx = i->Id();
 #else
-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx = i->Id;
+  BX_CPU_THIS_PTR gen_reg[(i->b1 & 0x07) + i->rex_b()].dword.erx = i->Id();
+  //BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].dword.erx = i->Id();
 #endif
 }
 
   void
-BX_CPU_C::MOV_EdGd(BxInstruction_t *i)
+BX_CPU_C::MOV_EdGd(bxInstruction_c *i)
 {
     Bit32u op2_32;
 
     /* op2_32 is a register, op2_addr is an index of a register */
-    op2_32 = BX_READ_32BIT_REG(i->nnn);
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
     /* now write op2 to op1 */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, op2_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
       }
     else {
       write_virtual_dword(i->seg, i->rm_addr, &op2_32);
@@ -80,43 +86,43 @@ BX_CPU_C::MOV_EdGd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_GdEd(BxInstruction_t *i)
+BX_CPU_C::MOV_GdEd(bxInstruction_c *i)
 {
     Bit32u op2_32;
 
-    if (i->mod == 0xc0) {
-      op2_32 = BX_READ_32BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_32 = BX_READ_32BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
       read_virtual_dword(i->seg, i->rm_addr, &op2_32);
       }
 
-    BX_WRITE_32BIT_REGZ(i->nnn, op2_32);
+    BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
 }
 
 
   void
-BX_CPU_C::LEA_GdM(BxInstruction_t *i)
+BX_CPU_C::LEA_GdM(bxInstruction_c *i)
 {
-  if (i->mod == 0xc0) {
+  if (i->mod() == 0xc0) {
     BX_PANIC(("LEA_GvM: op2 is a register"));
     UndefinedOpcode(i);
     return;
     }
 
     /* write effective address of op2 in op1 */
-    BX_WRITE_32BIT_REGZ(i->nnn, i->rm_addr);
+    BX_WRITE_32BIT_REGZ(i->nnn(), i->rm_addr);
 }
 
 
   void
-BX_CPU_C::MOV_EAXOd(BxInstruction_t *i)
+BX_CPU_C::MOV_EAXOd(bxInstruction_c *i)
 {
   Bit32u temp_32;
   bx_address addr;
 
-  addr = i->Id;
+  addr = i->Id();
 
   /* read from memory address */
 
@@ -137,12 +143,12 @@ BX_CPU_C::MOV_EAXOd(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_OdEAX(BxInstruction_t *i)
+BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
 {
   Bit32u temp_32;
   bx_address addr;
 
-  addr = i->Id;
+  addr = i->Id();
 
   /* read from register */
   temp_32 = EAX;
@@ -159,15 +165,15 @@ BX_CPU_C::MOV_OdEAX(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_EdId(BxInstruction_t *i)
+BX_CPU_C::MOV_EdId(bxInstruction_c *i)
 {
     Bit32u op2_32;
 
-    op2_32 = i->Id;
+    op2_32 = i->Id();
 
     /* now write sum back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REGZ(i->rm, op2_32);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
       }
     else {
       write_virtual_dword(i->seg, i->rm_addr, &op2_32);
@@ -176,15 +182,15 @@ BX_CPU_C::MOV_EdId(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOVZX_GdEb(BxInstruction_t *i)
+BX_CPU_C::MOVZX_GdEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVZX_GvEb: not supported on < 386"));
 #else
   Bit8u  op2_8;
 
-  if (i->mod == 0xc0) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
+  if (i->mod() == 0xc0) {
+    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -192,20 +198,20 @@ BX_CPU_C::MOVZX_GdEb(BxInstruction_t *i)
     }
 
     /* zero extend byte op2 into dword op1 */
-    BX_WRITE_32BIT_REGZ(i->nnn, (Bit32u) op2_8);
+    BX_WRITE_32BIT_REGZ(i->nnn(), (Bit32u) op2_8);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
-BX_CPU_C::MOVZX_GdEw(BxInstruction_t *i)
+BX_CPU_C::MOVZX_GdEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVZX_GvEw: not supported on < 386"));
 #else
   Bit16u op2_16;
 
-  if (i->mod == 0xc0) {
-    op2_16 = BX_READ_16BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
@@ -213,20 +219,20 @@ BX_CPU_C::MOVZX_GdEw(BxInstruction_t *i)
     }
 
     /* zero extend word op2 into dword op1 */
-    BX_WRITE_32BIT_REGZ(i->nnn, (Bit32u) op2_16);
+    BX_WRITE_32BIT_REGZ(i->nnn(), (Bit32u) op2_16);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
-BX_CPU_C::MOVSX_GdEb(BxInstruction_t *i)
+BX_CPU_C::MOVSX_GdEb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVSX_GvEb: not supported on < 386"));
 #else
   Bit8u op2_8;
 
-  if (i->mod == 0xc0) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm,i->extend8bit);
+  if (i->mod() == 0xc0) {
+    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bit);
     }
   else {
     /* pointer, segment address pair */
@@ -234,20 +240,20 @@ BX_CPU_C::MOVSX_GdEb(BxInstruction_t *i)
     }
 
     /* sign extend byte op2 into dword op1 */
-    BX_WRITE_32BIT_REGZ(i->nnn, (Bit8s) op2_8);
+    BX_WRITE_32BIT_REGZ(i->nnn(), (Bit8s) op2_8);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
-BX_CPU_C::MOVSX_GdEw(BxInstruction_t *i)
+BX_CPU_C::MOVSX_GdEw(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
 #else
   Bit16u op2_16;
 
-  if (i->mod == 0xc0) {
-    op2_16 = BX_READ_16BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2_16 = BX_READ_16BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
@@ -255,23 +261,23 @@ BX_CPU_C::MOVSX_GdEw(BxInstruction_t *i)
     }
 
     /* sign extend word op2 into dword op1 */
-    BX_WRITE_32BIT_REGZ(i->nnn, (Bit16s) op2_16);
+    BX_WRITE_32BIT_REGZ(i->nnn(), (Bit16s) op2_16);
 #endif /* BX_CPU_LEVEL < 3 */
 }
 
 
   void
-BX_CPU_C::XCHG_EdGd(BxInstruction_t *i)
+BX_CPU_C::XCHG_EdGd(bxInstruction_c *i)
 {
     Bit32u op2_32, op1_32;
 
     /* op2_32 is a register, op2_addr is an index of a register */
-    op2_32 = BX_READ_32BIT_REG(i->nnn);
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
 
     /* op1_32 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_32 = BX_READ_32BIT_REG(i->rm);
-      BX_WRITE_32BIT_REGZ(i->rm, op2_32);
+    if (i->mod() == 0xc0) {
+      op1_32 = BX_READ_32BIT_REG(i->rm());
+      BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
       }
     else {
       /* pointer, segment address pair */
@@ -279,12 +285,12 @@ BX_CPU_C::XCHG_EdGd(BxInstruction_t *i)
       Write_RMW_virtual_dword(op2_32);
       }
 
-    BX_WRITE_32BIT_REGZ(i->nnn, op1_32);
+    BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 }
 
 
   void
-BX_CPU_C::CMOV_GdEd(BxInstruction_t *i)
+BX_CPU_C::CMOV_GdEd(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   // Note: CMOV accesses a memory source operand (read), regardless
@@ -318,8 +324,8 @@ BX_CPU_C::CMOV_GdEd(BxInstruction_t *i)
       BX_PANIC(("CMOV_GdEd: default case"));
     }
 
-  if (i->mod == 0xc0) {
-    op2_32 = BX_READ_32BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    op2_32 = BX_READ_32BIT_REG(i->rm());
     }
   else {
     /* pointer, segment address pair */
@@ -327,7 +333,7 @@ BX_CPU_C::CMOV_GdEd(BxInstruction_t *i)
     }
 
   if (condition) {
-    BX_WRITE_32BIT_REGZ(i->nnn, op2_32);
+    BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
     }
 #else
   BX_INFO(("cmov_gded called"));

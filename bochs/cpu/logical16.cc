@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.6 2002-09-06 21:54:57 kevinlawton Exp $
+// $Id: logical16.cc,v 1.7 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,17 +37,17 @@
 
 
   void
-BX_CPU_C::XOR_EwGw(BxInstruction_t *i)
+BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
 
     /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn);
+    op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -57,8 +57,8 @@ BX_CPU_C::XOR_EwGw(BxInstruction_t *i)
     result_16 = op1_16 ^ op2_16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -69,15 +69,15 @@ BX_CPU_C::XOR_EwGw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::XOR_GwEw(BxInstruction_t *i)
+BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, result_16;
 
-    op1_16 = BX_READ_16BIT_REG(i->nnn);
+    op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -87,20 +87,20 @@ BX_CPU_C::XOR_GwEw(BxInstruction_t *i)
     result_16 = op1_16 ^ op2_16;
 
     /* now write result back to destination */
-    BX_WRITE_16BIT_REG(i->nnn, result_16);
+    BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
 }
 
 
   void
-BX_CPU_C::XOR_AXIw(BxInstruction_t *i)
+BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, sum_16;
 
     op1_16 = AX;
 
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     sum_16 = op1_16 ^ op2_16;
 
@@ -111,16 +111,16 @@ BX_CPU_C::XOR_AXIw(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::XOR_EwIw(BxInstruction_t *i)
+BX_CPU_C::XOR_EwIw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
 
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -130,8 +130,8 @@ BX_CPU_C::XOR_EwIw(BxInstruction_t *i)
     result_16 = op1_16 ^ op2_16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -142,16 +142,16 @@ BX_CPU_C::XOR_EwIw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::OR_EwIw(BxInstruction_t *i)
+BX_CPU_C::OR_EwIw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
 
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -161,8 +161,8 @@ BX_CPU_C::OR_EwIw(BxInstruction_t *i)
     result_16 = op1_16 | op2_16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -173,13 +173,13 @@ BX_CPU_C::OR_EwIw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::NOT_Ew(BxInstruction_t *i)
+BX_CPU_C::NOT_Ew(bxInstruction_c *i)
 {
     Bit16u op1_16, result_16;
 
     /* op1 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -189,8 +189,8 @@ BX_CPU_C::NOT_Ew(BxInstruction_t *i)
     result_16 = ~op1_16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -199,17 +199,17 @@ BX_CPU_C::NOT_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::OR_EwGw(BxInstruction_t *i)
+BX_CPU_C::OR_EwGw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
 
     /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn);
+    op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -219,8 +219,8 @@ BX_CPU_C::OR_EwGw(BxInstruction_t *i)
     result_16 = op1_16 | op2_16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -231,16 +231,16 @@ BX_CPU_C::OR_EwGw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::OR_GwEw(BxInstruction_t *i)
+BX_CPU_C::OR_GwEw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, result_16;
 
 
-    op1_16 = BX_READ_16BIT_REG(i->nnn);
+    op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -250,20 +250,20 @@ BX_CPU_C::OR_GwEw(BxInstruction_t *i)
     result_16 = op1_16 | op2_16;
 
     /* now write result back to destination */
-    BX_WRITE_16BIT_REG(i->nnn, result_16);
+    BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_OR16);
 }
 
 
   void
-BX_CPU_C::OR_AXIw(BxInstruction_t *i)
+BX_CPU_C::OR_AXIw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, sum_16;
 
     op1_16 = AX;
 
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     sum_16 = op1_16 | op2_16;
 
@@ -276,18 +276,18 @@ BX_CPU_C::OR_AXIw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::AND_EwGw(BxInstruction_t *i)
+BX_CPU_C::AND_EwGw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
 
 
     /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn);
+    op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -297,8 +297,8 @@ BX_CPU_C::AND_EwGw(BxInstruction_t *i)
     result_16 = op1_16 & op2_16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -309,16 +309,16 @@ BX_CPU_C::AND_EwGw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::AND_GwEw(BxInstruction_t *i)
+BX_CPU_C::AND_GwEw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, result_16;
 
 
-    op1_16 = BX_READ_16BIT_REG(i->nnn);
+    op1_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op2_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op2_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op2_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -328,20 +328,20 @@ BX_CPU_C::AND_GwEw(BxInstruction_t *i)
     result_16 = op1_16 & op2_16;
 
     /* now write result back to destination */
-    BX_WRITE_16BIT_REG(i->nnn, result_16);
+    BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
 }
 
 
   void
-BX_CPU_C::AND_AXIw(BxInstruction_t *i)
+BX_CPU_C::AND_AXIw(bxInstruction_c *i)
 {
     Bit16u op1_16, op2_16, sum_16;
 
     op1_16 = AX;
 
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     sum_16 = op1_16 & op2_16;
 
@@ -352,15 +352,15 @@ BX_CPU_C::AND_AXIw(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::AND_EwIw(BxInstruction_t *i)
+BX_CPU_C::AND_EwIw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -370,8 +370,8 @@ BX_CPU_C::AND_EwIw(BxInstruction_t *i)
     result_16 = op1_16 & op2_16;
 
     /* now write result back to destination */
-    if (i->mod == 0xc0) {
-      BX_WRITE_16BIT_REG(i->rm, result_16);
+    if (i->mod() == 0xc0) {
+      BX_WRITE_16BIT_REG(i->rm(), result_16);
       }
     else {
       Write_RMW_virtual_word(result_16);
@@ -382,17 +382,17 @@ BX_CPU_C::AND_EwIw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::TEST_EwGw(BxInstruction_t *i)
+BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
 
     /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn);
+    op2_16 = BX_READ_16BIT_REG(i->nnn());
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */
@@ -407,14 +407,14 @@ BX_CPU_C::TEST_EwGw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::TEST_AXIw(BxInstruction_t *i)
+BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
     op1_16 = AX;
 
     /* op2_16 is imm16 */
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     result_16 = op1_16 & op2_16;
 
@@ -423,17 +423,17 @@ BX_CPU_C::TEST_AXIw(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::TEST_EwIw(BxInstruction_t *i)
+BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
 {
     Bit16u op2_16, op1_16, result_16;
 
 
     /* op2_16 is imm16 */
-    op2_16 = i->Iw;
+    op2_16 = i->Iw();
 
     /* op1_16 is a register or memory reference */
-    if (i->mod == 0xc0) {
-      op1_16 = BX_READ_16BIT_REG(i->rm);
+    if (i->mod() == 0xc0) {
+      op1_16 = BX_READ_16BIT_REG(i->rm());
       }
     else {
       /* pointer, segment address pair */

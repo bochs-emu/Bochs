@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.39 2002-09-17 22:14:33 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.40 2002-09-17 22:50:52 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@
 
 
   void
-BX_CPU_C::UndefinedOpcode(BxInstruction_t *i)
+BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
   BX_DEBUG(("UndefinedOpcode: %02x causes exception 6",
               (unsigned) i->b1));
@@ -53,12 +53,12 @@ BX_CPU_C::UndefinedOpcode(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::NOP(BxInstruction_t *i)
+BX_CPU_C::NOP(bxInstruction_c *i)
 {
 }
 
   void
-BX_CPU_C::HLT(BxInstruction_t *i)
+BX_CPU_C::HLT(bxInstruction_c *i)
 {
   // hack to panic if HLT comes from BIOS
   if ( BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value == 0xf000 )
@@ -94,7 +94,7 @@ BX_CPU_C::HLT(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::CLTS(BxInstruction_t *i)
+BX_CPU_C::CLTS(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("CLTS: not implemented for < 286"));
@@ -118,7 +118,7 @@ BX_CPU_C::CLTS(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::INVD(BxInstruction_t *i)
+BX_CPU_C::INVD(bxInstruction_c *i)
 {
   BX_INFO(("---------------"));
   BX_INFO(("- INVD called -"));
@@ -140,7 +140,7 @@ BX_CPU_C::INVD(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::WBINVD(BxInstruction_t *i)
+BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
   BX_INFO(("WBINVD: (ignoring)"));
 
@@ -160,7 +160,7 @@ BX_CPU_C::WBINVD(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
+BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_DdRd: not supported on < 386"));
@@ -176,7 +176,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_DdRd(): rm field not a register!"));
     }
 
@@ -188,12 +188,12 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-  val_32 = BX_READ_32BIT_REG(i->rm);
+  val_32 = BX_READ_32BIT_REG(i->rm());
   if (bx_dbg.dreg)
     BX_INFO(("MOV_DdRd: DR[%u]=%08xh unhandled",
-      (unsigned) i->nnn, (unsigned) val_32));
+      (unsigned) i->nnn(), (unsigned) val_32));
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // DR0
       BX_CPU_THIS_PTR dr0 = val_32;
       break;
@@ -212,7 +212,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_DdRd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
@@ -238,7 +238,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions (CR4.DE) on
         BX_INFO(("MOV_DdRd: access to DR5 causes #UD"));
         UndefinedOpcode(i);
@@ -291,7 +291,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
+BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_RdDd: not supported on < 386"));
@@ -303,7 +303,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_RdDd(): rm field not a register!"));
     UndefinedOpcode(i);
     }
@@ -315,9 +315,9 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
     }
 
   if (bx_dbg.dreg)
-    BX_INFO(("MOV_RdDd: DR%u not implemented yet", i->nnn));
+    BX_INFO(("MOV_RdDd: DR%u not implemented yet", i->nnn()));
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // DR0
       val_32 = BX_CPU_THIS_PTR dr0;
       break;
@@ -336,7 +336,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_RdDd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
@@ -350,7 +350,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_RdDd: access to DR5 causes #UD"));
         UndefinedOpcode(i);
@@ -363,13 +363,13 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
       BX_PANIC(("MOV_RdDd: control register index out of range"));
       val_32 = 0;
     }
-  BX_WRITE_32BIT_REGZ(i->rm, val_32);
+  BX_WRITE_32BIT_REGZ(i->rm(), val_32);
 #endif
 }
 
 #if BX_SUPPORT_X86_64
   void
-BX_CPU_C::MOV_DqRq(BxInstruction_t *i)
+BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
@@ -382,7 +382,7 @@ BX_CPU_C::MOV_DqRq(BxInstruction_t *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_DqRq(): rm field not a register!"));
     }
 
@@ -394,12 +394,12 @@ BX_CPU_C::MOV_DqRq(BxInstruction_t *i)
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-  val_64 = BX_READ_64BIT_REG(i->rm);
+  val_64 = BX_READ_64BIT_REG(i->rm());
   if (bx_dbg.dreg)
     BX_INFO(("MOV_DqRq: DR[%u]=%08xh unhandled",
-      (unsigned) i->nnn, (unsigned) val_64));
+      (unsigned) i->nnn(), (unsigned) val_64));
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // DR0
       BX_CPU_THIS_PTR dr0 = val_64;
       break;
@@ -418,7 +418,7 @@ BX_CPU_C::MOV_DqRq(BxInstruction_t *i)
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_DqRq: access to DR4 causes #UD"));
         UndefinedOpcode(i);
@@ -444,7 +444,7 @@ BX_CPU_C::MOV_DqRq(BxInstruction_t *i)
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions (CR4.DE) on
         BX_INFO(("MOV_DqRq: access to DR5 causes #UD"));
         UndefinedOpcode(i);
@@ -498,7 +498,7 @@ BX_CPU_C::MOV_DqRq(BxInstruction_t *i)
 
 #if BX_SUPPORT_X86_64
   void
-BX_CPU_C::MOV_RqDq(BxInstruction_t *i)
+BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
@@ -507,7 +507,7 @@ BX_CPU_C::MOV_RqDq(BxInstruction_t *i)
     exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_RqDq(): rm field not a register!"));
     UndefinedOpcode(i);
     }
@@ -519,9 +519,9 @@ BX_CPU_C::MOV_RqDq(BxInstruction_t *i)
     }
 
   if (bx_dbg.dreg)
-    BX_INFO(("MOV_RqDq: DR%u not implemented yet", i->nnn));
+    BX_INFO(("MOV_RqDq: DR%u not implemented yet", i->nnn()));
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // DR0
       val_64 = BX_CPU_THIS_PTR dr0;
       break;
@@ -540,7 +540,7 @@ BX_CPU_C::MOV_RqDq(BxInstruction_t *i)
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_RqDq: access to DR4 causes #UD"));
         UndefinedOpcode(i);
@@ -554,7 +554,7 @@ BX_CPU_C::MOV_RqDq(BxInstruction_t *i)
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
+      if ( (i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
         // Debug extensions on
         BX_INFO(("MOV_RqDq: access to DR5 causes #UD"));
         UndefinedOpcode(i);
@@ -567,14 +567,14 @@ BX_CPU_C::MOV_RqDq(BxInstruction_t *i)
       BX_PANIC(("MOV_RqDq: control register index out of range"));
       val_64 = 0;
     }
-  BX_WRITE_64BIT_REG(i->rm, val_64);
+  BX_WRITE_64BIT_REG(i->rm(), val_64);
 }
 #endif  // #if BX_SUPPORT_X86_64
 
 
 
   void
-BX_CPU_C::LMSW_Ew(BxInstruction_t *i)
+BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("LMSW_Ew(): not supported on 8086!"));
@@ -594,8 +594,8 @@ BX_CPU_C::LMSW_Ew(BxInstruction_t *i)
       }
     }
 
-  if (i->mod == 0xc0) {
-    msw = BX_READ_16BIT_REG(i->rm);
+  if (i->mod() == 0xc0) {
+    msw = BX_READ_16BIT_REG(i->rm());
     }
   else {
     read_virtual_word(i->seg, i->rm_addr, &msw);
@@ -615,7 +615,7 @@ BX_CPU_C::LMSW_Ew(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::SMSW_Ew(BxInstruction_t *i)
+BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("SMSW_Ew: not supported yet!"));
@@ -640,12 +640,12 @@ BX_CPU_C::SMSW_Ew(BxInstruction_t *i)
 #endif
 
 
-  if (i->mod == 0xc0) {
+  if (i->mod() == 0xc0) {
     if (i->os_32) {
-      BX_WRITE_32BIT_REGZ(i->rm, msw);  // zeros out high 16bits
+      BX_WRITE_32BIT_REGZ(i->rm(), msw);  // zeros out high 16bits
       }
     else {
-      BX_WRITE_16BIT_REG(i->rm, msw);
+      BX_WRITE_16BIT_REG(i->rm(), msw);
       }
     }
   else {
@@ -657,7 +657,7 @@ BX_CPU_C::SMSW_Ew(BxInstruction_t *i)
 
 
   void
-BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
+BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 {
   // mov general register data to control register
 #if BX_CPU_LEVEL < 3
@@ -675,7 +675,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_CdRd(): rm field not a register!"));
     }
 
@@ -688,9 +688,9 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
     return;
     }
 
-  val_32 = BX_READ_32BIT_REG(i->rm);
+  val_32 = BX_READ_32BIT_REG(i->rm());
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // CR0 (MSW)
       // BX_INFO(("MOV_CdRd:CR0: R32 = %08x @CS:EIP %04x:%04x ",
       //   (unsigned) val_32,
@@ -738,7 +738,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
+BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 {
   // mov control register data to register
 #if BX_CPU_LEVEL < 3
@@ -755,7 +755,7 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_RdCd(): rm field not a register!"));
     }
 
@@ -765,7 +765,7 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
     return;
     }
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // CR0 (MSW)
       val_32 = BX_CPU_THIS_PTR cr0.val32;
 #if 0
@@ -803,14 +803,14 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
       BX_PANIC(("MOV_RdCd: control register index out of range"));
       val_32 = 0;
     }
-  BX_WRITE_32BIT_REGZ(i->rm, val_32);
+  BX_WRITE_32BIT_REGZ(i->rm(), val_32);
 #endif
 }
 
 
 #if BX_SUPPORT_X86_64
   void
-BX_CPU_C::MOV_CqRq(BxInstruction_t *i)
+BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 {
   // mov general register data to control register
 #if BX_CPU_LEVEL < 3
@@ -828,7 +828,7 @@ BX_CPU_C::MOV_CqRq(BxInstruction_t *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_CqRq(): rm field not a register!"));
     }
 
@@ -841,9 +841,9 @@ BX_CPU_C::MOV_CqRq(BxInstruction_t *i)
     return;
     }
 
-  val_64 = BX_READ_64BIT_REG(i->rm);
+  val_64 = BX_READ_64BIT_REG(i->rm());
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // CR0 (MSW)
       // BX_INFO(("MOV_CqRq:CR0: R64 = %08x @CS:EIP %04x:%04x ",
       //   (unsigned) val_64,
@@ -899,7 +899,7 @@ BX_CPU_C::MOV_CqRq(BxInstruction_t *i)
 
 #if BX_SUPPORT_X86_64
   void
-BX_CPU_C::MOV_RqCq(BxInstruction_t *i)
+BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 {
   // mov control register data to register
 #if BX_CPU_LEVEL < 3
@@ -916,7 +916,7 @@ BX_CPU_C::MOV_RqCq(BxInstruction_t *i)
    *   reg field specifies which special register
    */
 
-  if (i->mod != 0xc0) {
+  if (i->mod() != 0xc0) {
     BX_PANIC(("MOV_RqC(): rm field not a register!"));
     }
 
@@ -927,7 +927,7 @@ BX_CPU_C::MOV_RqCq(BxInstruction_t *i)
     return;
     }
 
-  switch (i->nnn) {
+  switch (i->nnn()) {
     case 0: // CR0 (MSW)
       val_64 = BX_CPU_THIS_PTR cr0.val32;
 #if 0
@@ -965,13 +965,13 @@ BX_CPU_C::MOV_RqCq(BxInstruction_t *i)
       BX_PANIC(("MOV_RqCq: control register index out of range"));
       val_64 = 0;
     }
-  BX_WRITE_64BIT_REG(i->rm, val_64);
+  BX_WRITE_64BIT_REG(i->rm(), val_64);
 #endif
 }
 #endif  // #if BX_SUPPORT_X86_64
 
   void
-BX_CPU_C::MOV_TdRd(BxInstruction_t *i)
+BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_TdRd:"));
@@ -985,7 +985,7 @@ BX_CPU_C::MOV_TdRd(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::MOV_RdTd(BxInstruction_t *i)
+BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 3
   BX_PANIC(("MOV_RdTd:"));
@@ -999,7 +999,7 @@ BX_CPU_C::MOV_RdTd(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::LOADALL(BxInstruction_t *i)
+BX_CPU_C::LOADALL(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("undocumented LOADALL instruction not supported on 8086"));
@@ -1328,7 +1328,7 @@ BX_PANIC(("LOADALL: handle CR0.val32"));
 
 
   void
-BX_CPU_C::CPUID(BxInstruction_t *i)
+BX_CPU_C::CPUID(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   unsigned type, family, model, stepping, features;
@@ -1604,7 +1604,7 @@ BX_CPU_C::SetCR4(Bit32u val_32)
 
 
   void
-BX_CPU_C::RSM(BxInstruction_t *i)
+BX_CPU_C::RSM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
@@ -1616,7 +1616,7 @@ BX_CPU_C::RSM(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::RDTSC(BxInstruction_t *i)
+BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   Boolean tsd = BX_CPU_THIS_PTR cr4.get_TSD();
@@ -1637,7 +1637,7 @@ BX_CPU_C::RDTSC(BxInstruction_t *i)
 }
 
   void
-BX_CPU_C::RDMSR(BxInstruction_t *i)
+BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
 	invalidate_prefetch_q();
@@ -1757,7 +1757,7 @@ do_exception:
 }
 
   void
-BX_CPU_C::WRMSR(BxInstruction_t *i)
+BX_CPU_C::WRMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
 	invalidate_prefetch_q();
