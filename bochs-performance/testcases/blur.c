@@ -1,6 +1,6 @@
 /*
  *
- * $Id: blur.c,v 1.4 2002-04-16 18:16:01 bdenney Exp $
+ * $Id: blur.c,v 1.5 2002-04-16 22:40:30 bdenney Exp $
  *
  */
 
@@ -48,13 +48,16 @@ void blur_funcall()
       sum = 0;
       for (x2=x-BLUR_WINDOW_HALF; x2<=x+BLUR_WINDOW_HALF; x2++)
 	for (y2=y-BLUR_WINDOW_HALF; y2<=y+BLUR_WINDOW_HALF; y2++)
-	  blur_func (&sum, &array[x][y]);
+	  blur_func (&sum, &array[x2][y2]);
       array2[x][y] = sum;
     }
 }
 #endif
 
 #ifdef BLUR_USE_SWITCH
+/// With BLUR_USE_SWITCH, don't expect the result to match.  I had to make
+//all the cases in the switch do something slightly different, so that they
+//weren't all merged together by a compiler optimization.\n");
 void blur_switch()
 {
   int sum;
@@ -606,12 +609,12 @@ void fill_array()
       array[x][y] = (x*17+y*31)%29;
 }
 
-void dump_array (FILE *fp)
+void dump_array (FILE *fp, int ptr[MAX][MAX])
 {
   int x,y;
   for (x=0; x<MAX; x++) {
     for (y=0; y<MAX; y++) {
-      fprintf (fp, "%3d ", array[x][y]);
+      fprintf (fp, "%3d ", ptr[x][y]);
     }
     fprintf (fp, "\n");
   }
@@ -651,6 +654,9 @@ int main (int argc, char *argv[])
     blur_funcall ();
 #elif defined BLUR_USE_SWITCH
     blur_switch();
+    /// With BLUR_USE_SWITCH, don't expect the result to match.  I had to make
+    //all the cases in the switch do something slightly different, so that they
+    //weren't all merged together by a compiler optimization.\n");
 #elif defined BLUR_USE_SWITCH_CALL
     blur_switch_call();
 #elif defined BLUR_FNPTR_SWITCH
@@ -666,7 +672,7 @@ int main (int argc, char *argv[])
   //fprintf (stderr, "-----------------------------------\n");
   out = fopen ("blur.out", "w");
   assert (out != NULL);
-  dump_array (out);
+  dump_array (out, array2);
   fclose (out);
   return 0;
 }
