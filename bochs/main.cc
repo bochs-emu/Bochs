@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.81 2001-12-14 17:55:51 cbothamy Exp $
+// $Id: main.cc,v 1.82 2001-12-21 19:33:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1195,13 +1195,15 @@ parse_bochsrc(char *rcfile)
   static void
 parse_line_unformatted(char *context, char *line)
 {
+#define MAX_PARAMS_LEN 40
   char *ptr;
   unsigned i, string_i;
   char string[512];
-  char *params[40];
+  char *params[MAX_PARAMS_LEN];
   int num_params;
   Boolean inquotes = 0;
 
+  memset(params, 0, sizeof(params));
   if (line == NULL) return;
 
   // if passed nothing but whitespace, just return
@@ -1247,10 +1249,30 @@ parse_line_unformatted(char *context, char *line)
       }
     }
     string[string_i] = '\0';
+    if ( params[num_params] != NULL )
+    {
+        free(params[num_params]);
+        params[num_params] = NULL;
+    }
+    if ( num_params < MAX_PARAMS_LEN )
+    {
     params[num_params++] = strdup (string);
     ptr = strtok(NULL, ",");
   }
+    else
+    {
+        BX_PANIC (("too many parameters, max is %d\n", MAX_PARAMS_LEN));
+    }
+  }
   parse_line_formatted(context, num_params, &params[0]);
+  for (i=0; i < MAX_PARAMS_LEN; i++)
+  {
+    if ( params[i] != NULL )
+    {
+        free(params[i]);
+        params[i] = NULL;
+    }
+  }
 }
 
   static void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: state_file.cc,v 1.8 2001-10-03 13:10:37 bdenney Exp $
+// $Id: state_file.cc,v 1.9 2001-12-21 19:33:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -128,4 +128,9 @@ state_file::state_file (FILE *f)
 state_file::~state_file()
 {
   BX_DEBUG(("Exit."));
+  if ( log != NULL )
+  {
+        delete log;
+        log = NULL;
+  }
 }

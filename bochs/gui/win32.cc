@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.21 2001-12-13 18:36:29 vruppert Exp $
+// $Id: win32.cc,v 1.22 2001-12-21 19:33:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -855,7 +855,8 @@ unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
   for (unsigned i=0; i<ydim * xdim/8; i++)
     data[i] = reverse_bitorder(bmap[i]);
   SetBitmapBits(bx_bitmaps[bx_bitmap_entries].bmap, ydim * xdim/8, data);
-  free(data);
+  delete [] data;
+  data = NULL;
 
   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;

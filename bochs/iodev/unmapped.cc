@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.13 2001-10-03 13:10:38 bdenney Exp $
+// $Id: unmapped.cc,v 1.14 2001-12-21 19:33:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,11 @@ bx_unmapped_c::bx_unmapped_c(void)
 
 bx_unmapped_c::~bx_unmapped_c(void)
 {
-  // nothing for now
+    if ( bioslog != NULL )              /* DT 17.12.2001 21:32 */
+    {
+        delete bioslog;
+        bioslog = NULL;
+    }
 }
 
   void

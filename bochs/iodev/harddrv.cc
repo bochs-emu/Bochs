@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.41 2001-11-12 03:34:45 bdenney Exp $
+// $Id: harddrv.cc,v 1.42 2001-12-21 19:33:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,6 +85,8 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 
 bx_hard_drive_c::bx_hard_drive_c(void)
 {
+      s[0].hard_drive =  NULL;
+      s[1].hard_drive =  NULL;
       put("HD");
       settype(HDLOG);
 #if EXTERNAL_DISK_SIMULATOR
@@ -106,9 +108,19 @@ bx_hard_drive_c::bx_hard_drive_c(void)
 
 bx_hard_drive_c::~bx_hard_drive_c(void)
 {
-  // nothing for now
 	BX_DEBUG(("Exit."));
+  if ( s[0].hard_drive != NULL )      /* DT 17.12.2001 21:55 */
+  {
+    delete s[0].hard_drive;
+    s[0].hard_drive =  NULL;
+  }
+  if ( s[1].hard_drive != NULL )
+  {
+    delete s[1].hard_drive;
+    s[1].hard_drive =  NULL;        /* DT 17.12.2001 21:56 */
+  }
 }
+
 
 
 
@@ -116,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.41 2001-11-12 03:34:45 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.42 2001-12-21 19:33:18 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
