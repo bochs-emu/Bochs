@@ -1,0 +1,27 @@
+Index: iodev/pic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.cc,v
+retrieving revision 1.14
+diff -u -r1.14 pic.cc
+--- iodev/pic.cc	2001/11/12 03:29:18	1.14
++++ iodev/pic.cc	2001/11/19 05:59:32
+@@ -436,6 +436,19 @@
+           service_slave_pic();
+ 	  break;
+ 
++        // IRQ lowest priority commands
++        case 0xC0: // 0 7 6 5 4 3 2 1
++        case 0xC1: // 1 0 7 6 5 4 3 2
++        case 0xC2: // 2 1 0 7 6 5 4 3
++        case 0xC3: // 3 2 1 0 7 6 5 4
++        case 0xC4: // 4 3 2 1 0 7 6 5
++        case 0xC5: // 5 4 3 2 1 0 7 6
++        case 0xC6: // 6 5 4 3 2 1 0 7
++        case 0xC7: // 7 6 5 4 3 2 1 0
++          // ignore for now
++          BX_INFO(("IRQ lowest command 0x%x", value));
++          break;
++
+         default:
+           BX_PANIC(("PIC: write to port A0h = %02x", value));
+ 	} /* switch (value) */
