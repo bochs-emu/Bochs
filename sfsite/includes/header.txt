@@ -67,7 +67,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/documentation/book1.html" class="sidebar">Doc. Guide</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Help+Documents&url=http://bochs.sourceforge.net/docs-html/" class="sidebar">Old Docs</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/mailinglists.html" class="sidebar">Mailing Lists</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Discussion+Boards&url=http://sourceforge.net/forum/qmrkgroup_ideq12580" class="sidebar">Dicussion Boards</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Discussion+Boards&url=http://sourceforge.net/forum/qmrkgroup_ideq12580" class="sidebar">Discussion Boards</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SourceForge+Site+Docs&url=http://sourceforge.net/docman/qmrkgroup_ideq1" class="sidebar">SF Site Docs</a>
 
 <br><br><center><b>Feedback</b></center>
