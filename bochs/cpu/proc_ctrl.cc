@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.43 2002-09-20 03:52:58 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.44 2002-09-23 14:31:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1344,9 +1344,15 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
       // EDX: vendor ID string
       // ECX: vendor ID string
       RAX = 1; // 486 or pentium
+#if BX_SUPPORT_X86_64
+      RBX = 0x68747541; // "Auth"
+      RDX = 0x69746e65; // "enti"
+      RCX = 0x444d4163; // "cAMD"
+#else
       RBX = 0x756e6547; // "Genu"
       RDX = 0x49656e69; // "ineI"
       RCX = 0x6c65746e; // "ntel"
+#endif
       break;
 
     case 1:
@@ -1375,7 +1381,10 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [15:15] CMOV: Cond Mov/Cmp Instructions
       //   [22:16] Reserved
       //   [23:23] MMX Technology
-      //   [31:24] Reserved
+      //   [24]    FXSR: FSAVE/FXRSTOR
+      //   [25]    SSE: SSE Extensions
+      //   [26]    SSE2: SSE2 Extensions
+      //   [29]    TM: Therm Monitor
 
       features = 0; // start with none
       type = 0; // OEM
@@ -1407,7 +1416,11 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 
 #elif BX_CPU_LEVEL == 6
       family = 6;
+#if BX_SUPPORT_X86_64
+      model = 2; // Hammer returns what?
+#else
       model = 1; // Pentium Pro
+#endif
       stepping = 3; // ???
       features |= (1<<4);   // implement TSC
       features |= (1<<15);  // Implement CMOV instructions.
@@ -1578,6 +1591,8 @@ BX_CPU_C::SetCR4(Bit32u val_32)
 
 
 #if BX_SUPPORT_X86_64
+  allowMask |= (1<<9);
+  allowMask |= (1<<10);
   //  need to GPF #0 if LME=1 and PAE=0
   if (   (BX_CPU_THIS_PTR msr.lme)
       && (!(val_32 >> 5) & 1)
