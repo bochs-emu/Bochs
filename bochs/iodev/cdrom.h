@@ -47,4 +47,7 @@ public:
 private:
   int fd;
   char *path;
+
+  int using_file;
   };
+
