@@ -1131,7 +1131,8 @@ BX_CPU_C::RSM(BxInstruction_t *i)
 BX_CPU_C::RDTSC(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_PANIC(("RDTSC: not implemented yet\n"));
+  BX_ERROR(("RDTSC: not implemented yet\n"));
+  UndefinedOpcode(i);
 #else
   UndefinedOpcode(i);
 #endif
