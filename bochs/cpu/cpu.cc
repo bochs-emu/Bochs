@@ -406,6 +406,8 @@ handle_async_event:
   if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
     // I made up the bitmask above to mean HALT state.
 #if BX_SMP_PROCESSORS==1
+    BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
+    BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     // for one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
     while (1) {
