@@ -94,6 +94,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   scancodes.o \
+  serial_raw.o \
   vmware3.o \
   $(CDROM_OBJS) \
   $(SOUNDLOW_OBJS) \
@@ -144,6 +145,9 @@ libbx_sb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
 libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
 	$(LIBTOOL) --mode=link $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)
 
+libbx_serial.la: serial.lo serial_raw.lo
+	$(LIBTOOL) $(CXX) -module serial.lo serial_raw.lo -o libbx_serial.la -rpath $(PLUGIN_PATH)
+
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
@@ -166,6 +170,10 @@ bx_ne2k.dll: ne2k.o $(NETLOW_OBJS)
 
 bx_gameport.dll: gameport.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_gameport.dll gameport.o $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
+
+bx_serial.dll: serial.o serial_raw.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_serial.dll serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY)
+
 ##### end DLL section
 
 clean:

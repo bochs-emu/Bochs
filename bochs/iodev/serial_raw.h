@@ -1,7 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.2 2001-10-03 13:10:38 bdenney Exp $
+// $Id: serial_raw.h,v 1.3 2004-01-18 01:30:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
+
+#if USE_RAW_SERIAL
+
 #include <linux/serial.h>
 
 #define P_EVEN 0
@@ -21,3 +24,4 @@ class serial_raw : public logfunctions {
     int ready_receive ();
     int receive ();
 };
+#endif
