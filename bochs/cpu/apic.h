@@ -63,7 +63,6 @@ public:
   void read (Bit32u addr, void *data, unsigned len);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len) = 0;
   virtual void write(Bit32u address, Bit32u *value, unsigned len) = 0;
-  virtual void startup_msg (Bit32u vector);
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode);
   virtual bx_bool match_logical_addr (Bit8u address) = 0;
@@ -148,7 +147,7 @@ public:
   virtual char *get_name();
   virtual void write (Bit32u addr, Bit32u *data, unsigned len);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
-  virtual void startup_msg (Bit32u vector);
+  void startup_msg (Bit32u vector);
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.38 2005-02-01 21:17:51 sshwarts Exp $
+// $Id: apic.cc,v 1.39 2005-02-08 18:41:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -102,11 +102,6 @@ void bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
   }
 }
 
-void bx_generic_apic_c::startup_msg (Bit32u vector)
-{
-  BX_PANIC(("startup message sent to an I/O APIC"));
-}
-
 /* apic_mask is the bitmask of apics allowed to arbitrate here */
 int bx_generic_apic_c::apic_bus_arbitrate(Bit32u apic_mask)
 {
@@ -185,7 +180,7 @@ Bit32u bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
       mask = 0xff; 
     } else BX_PANIC(("bx_generic_apic_c::deliver: illegal physical destination %02x", dest));
   } else {
-    // logical destination. call match_logical_addr for each APIC.
+    // logical destination. call match_logical_addr for each local APIC.
     if (dest == 0) return 0;
     for (int i=0; i<BX_LOCAL_APIC_NUM; i++) {
       if (local_apic_index[i]->match_logical_addr(dest))
@@ -281,7 +276,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
   // the base class.
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   int found_focus = 0;
-  int broadcast = deliver_bitmask == BX_CPU_C::cpu_online_map;
+  int broadcast = (deliver_bitmask == BX_CPU_C::cpu_online_map);
 
   if (broadcast)
     BX_INFO(("Broadcast IPI for vector %#x delivery_mode %#x", vector, delivery_mode));
@@ -335,9 +330,8 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
 }
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
-  : bx_generic_apic_c ()
+  : bx_generic_apic_c (), cpu(mycpu)
 {
-  cpu = mycpu;
   hwreset ();
   INTR = 0;
 }
@@ -521,10 +515,9 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         BX_PANIC(("APIC: W(init timer count): count=0"));
       // This should trigger the counter to start.  If already started,
       // restart from the new start value.
-//fprintf(stderr, "APIC: W(Initial Count Register) = %u\n", *data);
+      // fprintf(stderr, "APIC: W(Initial Count Register) = %u\n", *data);
       timer_current = timer_initial;
       timer_active = true;
-//timer_divide_counter = 0; // KPL: delete this field.
       Bit32u timervec = lvt[APIC_LVT_TIMER];
       bx_bool continuous = (timervec & 0x20000) > 0;
       ticksInitial = bx_pc_system.getTicksTotal(); // Take a reading.
@@ -568,7 +561,7 @@ void bx_local_apic_c::startup_msg (Bit32u vector)
     cpu->debug_trap &= ~0x80000000;
     cpu->dword.eip = 0;
     cpu->load_seg_reg (&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
-    BX_INFO(("%s started up at 0x%x by APIC", cpu->name, cpu->dword.eip));
+    BX_INFO(("%s started up at %04X:%08X by APIC", cpu->name, vector*0x100, cpu->dword.eip));
   } else {
     BX_INFO(("%s started up by APIC, but was not halted at the time", cpu->name));
   }
