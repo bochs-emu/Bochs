@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.19 2001-10-03 13:10:37 bdenney Exp $
+// $Id: cpu.cc,v 1.20 2001-10-05 21:05:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -324,7 +324,7 @@ debugger_check:
       // return with a certain stop reason, but as a result the tracing
       // affected simulation, which is obviously bad when you're trying
       // to debug a problem.
-      bx_dbg_disassemble_current (-1);
+      bx_dbg_disassemble_current (-1, 1);  // all cpus, print time stamp
     }
 
     // BW vm mode switch support is in dbg_is_begin_instr_bpoint
