@@ -27,14 +27,13 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::push_16(Bit16u value16)
 {
   /* must use StackAddrSize, and either ESP or SP accordingly */
+#if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
     /* 32bit stack size: pushes use SS:ESP  */
-#if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, ESP, 2)) {
         BX_INFO(("push_16(): push outside stack limits"));
@@ -42,7 +41,6 @@ BX_CPU_C::push_16(Bit16u value16)
       }
     }
     else 
-#endif
     { /* real mode */
       if (ESP == 1)
         BX_PANIC(("CPU shutting down due to lack of stack space, ESP==1"));
@@ -52,6 +50,7 @@ BX_CPU_C::push_16(Bit16u value16)
     ESP -= 2;
   }
   else
+#endif
   {
     /* 16bit stack size: pushes use SS:SP  */
 #if BX_CPU_LEVEL >= 2
@@ -68,7 +67,7 @@ BX_CPU_C::push_16(Bit16u value16)
         BX_PANIC(("CPU shutting down due to lack of stack space, SP==1"));
     }
 
-    write_virtual_word(BX_SEG_REG_SS, SP-2, &value16);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (SP-2), &value16);
     SP -= 2;
   }
 }
