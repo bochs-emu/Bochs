@@ -274,7 +274,25 @@ class iofunctions {
 		  "DEV ",
 		  "MEM ",
 		  "DIS ",
-		  "GUI "
+		  "GUI ",
+		  "IOAP",
+		  "APIC",
+		  "CPU0",
+		  "CPU1",
+		  "CPU2",
+		  "CPU3",
+		  "CPU4",
+		  "CPU5",
+		  "CPU6",
+		  "CPU7",
+		  "CPU8",
+		  "CPU9",
+		  "CPUa",
+		  "CPUb",
+		  "CPUc",
+		  "CPUd",
+		  "CPUe",
+		  "CPUf",
 		};
 		return logclass[i];
 	}
@@ -303,6 +321,24 @@ class iofunctions {
 #define    MEMLOG          20
 #define    DISLOG          21
 #define    GUILOG          22
+#define    IOAPICLOG       23
+#define    APICLOG         24
+#define    CPU0LOG         25
+#define    CPU1LOG         26
+#define    CPU2LOG         27
+#define    CPU3LOG         28
+#define    CPU4LOG         29
+#define    CPU5LOG         30
+#define    CPU6LOG         31
+#define    CPU7LOG         32
+#define    CPU8LOG         33
+#define    CPU9LOG         34
+#define    CPU10LOG         35
+#define    CPU11LOG         36
+#define    CPU12LOG         37
+#define    CPU13LOG         38
+#define    CPU14LOG         39
+#define    CPU15LOG         40
 
 
 public:
