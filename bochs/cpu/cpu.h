@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.206 2005-03-15 19:00:02 sshwarts Exp $
+// $Id: cpu.h,v 1.207 2005-03-19 18:43:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2790,7 +2790,6 @@ public: // for now...
 
 #if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
-  static Bit32u cpu_online_map;
 #endif
 
 };

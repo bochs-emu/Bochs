@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.42 2005-02-25 20:53:14 sshwarts Exp $
+// $Id: apic.cc,v 1.43 2005-03-19 18:42:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -10,6 +10,8 @@
 
 bx_generic_apic_c *apic_index[APIC_MAX_ID];
 bx_local_apic_c *local_apic_index[BX_LOCAL_APIC_NUM];
+
+#define APIC_ALL_MASK 0xff
 
 bx_generic_apic_c::bx_generic_apic_c ()
 {
@@ -177,7 +179,7 @@ Bit32u bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
       // physical destination 0xff means everybody. only local APICs can
       // send this.
       BX_ASSERT (get_type () == APIC_TYPE_LOCAL_APIC);
-      mask = 0xff; 
+      mask = APIC_ALL_MASK; 
     } else BX_PANIC(("bx_generic_apic_c::deliver: illegal physical destination %02x", dest));
   } else {
     // logical destination. call match_logical_addr for each local APIC.
@@ -200,7 +202,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   // arbitrate by default
   int arbitrate = 1;
-  int broadcast = (deliver_bitmask == BX_CPU_C::cpu_online_map);
+  int broadcast = (deliver_bitmask == APIC_ALL_MASK);
   bx_bool once = 0;
   int i;
 
@@ -227,7 +229,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       return 1;
     
     case APIC_DM_EXTINT:
-      for (int i = 0; i < BX_LOCAL_APIC_NUM; i++)
+      for (i = 0; i < BX_LOCAL_APIC_NUM; i++)
         if (deliver_bitmask & (1<<i))
 	  local_apic_index[i]->bypass_irr_isr = 1;
        break;
@@ -280,7 +282,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
   // the base class.
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   int found_focus = 0;
-  int broadcast = (deliver_bitmask == BX_CPU_C::cpu_online_map);
+  int broadcast = (deliver_bitmask == APIC_ALL_MASK);
   int bit;
 
   if (broadcast)
@@ -355,7 +357,6 @@ void bx_local_apic_c::hwreset ()
      object, do not mess around with it */
   // id = APIC_UNKNOWN_ID;
   arb_id = id;
-  BX_CPU_C::cpu_online_map |= (1 << id);
 }
 
 void bx_local_apic_c::init ()
@@ -674,9 +675,9 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
 
 int bx_local_apic_c::highest_priority_int (Bit8u *array)
 {
-  int i; // scan bits from highest to lowest
-  for (i = BX_LOCAL_APIC_MAX_INTS; -- i >= 0;) if (array[i]) break;
-  return i;
+  for (int i=0; i<BX_LOCAL_APIC_MAX_INTS; i++)
+    if (array[i]) return i;
+  return -1;
 }
 
 void bx_local_apic_c::service_local_apic ()
@@ -807,10 +808,10 @@ Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
     mask = (1<<id);
     break;
   case 2:  // all including self
-    mask = BX_CPU_C::cpu_online_map;
+    mask = (APIC_ALL_MASK);
     break;
   case 3:  // all but self
-    mask = BX_CPU_C::cpu_online_map & ~(1<<id);
+    mask = (APIC_ALL_MASK) & ~(1<<id);
     break;
   default:
     BX_PANIC(("Invalid desination shorthand %#x\n", dest_shorthand));

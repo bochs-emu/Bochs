@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.14 2004-09-15 21:48:57 sshwarts Exp $
+// $Id: ioapic.cc,v 1.15 2005-03-19 18:43:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -165,7 +165,6 @@ void bx_ioapic_c::service_ioapic ()
       if (!entry->masked) {
 	// clear irr bit and deliver
 	bx_bool done = deliver (entry->dest, entry->dest_mode, entry->delivery_mode, entry->vector, entry->polarity, entry->trig_mode);
-	if (done) irr &= ~(1<<bit);
 	if (done) {
 	  irr &= ~(1<<bit);
 	  entry->delivery_status = 0;

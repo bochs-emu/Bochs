@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.101 2005-03-17 20:50:36 sshwarts Exp $
+// $Id: cpu.cc,v 1.102 2005-03-19 18:43:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,10 +53,6 @@ const bx_bool bx_parity_lookup[256] = {
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
   };
-#endif
-
-#if BX_SUPPORT_APIC
-Bit32u BX_CPU_C::cpu_online_map = 0;
 #endif
 
 #if BX_SMP_PROCESSORS==1
