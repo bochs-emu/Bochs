@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.48 2002-11-14 05:13:40 bdenney Exp $
+// $Id: wxdialog.cc,v 1.49 2002-11-16 22:44:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -2052,7 +2052,8 @@ void ParamDialog::EnableChangedRecursive (
     ParamStruct *pstrOfCheckbox)
 {
   if (list==NULL) return;
-  for (int i=0; i<list->get_size (); i++) {
+  int i;
+  for (i=0; i<list->get_size (); i++) {
     bx_param_c *param = list->get(i);
     ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
     if (pstr) {
@@ -2077,7 +2078,7 @@ void ParamDialog::EnableChangedRecursive (
     }
   }
   // if any enums changed, give them a chance to update
-  for (int i=0; i<list->get_size (); i++) {
+  for (i=0; i<list->get_size (); i++) {
     bx_param_c *param = list->get(i);
     ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
     if (pstr) {
