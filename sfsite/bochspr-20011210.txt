@@ -1,0 +1,39 @@
+DATELINE DECEMBER 10, 2001
+
+FOR IMMEDIATE RELEASE
+
+BOCHS PROJECT RELEASES USABILITY ENHANCED EMULATOR
+"Release adds easy to use configuration and networking support"
+
+December 10, 2001 (The INTERNET) - The Bochs IA-32 Emulator Project unveiled a new
+version of the popular Bochs emulator to the public today, improving on the
+stability and ground breaking improvements of Bochs 1.2.
+    Bochs 1.3 includes many major enhancements including a powerful menu-based
+configuration system and networking support for Linux and Windows NT/2000. Other
+additions in this release include support for ISO-format disk images, improved
+mouse performance, physical CD-ROM support for all versions of Windows, parallel
+port emulation, enhanced debugger, and many cpu and device model improvements. Bochs
+1.3 also adds native support for Mac OS X and Amiga MorphOS, along with improved
+support for BeOS. You can find Bochs binaries for Windows and Linux (along with the
+source code for UNIX, Linux, Windows, and Mac OS) at http://bochs.sourceforge.net .
+
+ABOUT BOCHS
+
+   Bochs is the most popular open source x86 emulator available today. Bochs
+compiles on a number of platforms including UNIX(R) and UNIX-like systems, Windows,
+and MacOS.
+   Bochs can be used for many purposes such as running Windows on other
+platforms, trying a new operating system without repartitioning your system, and
+operating system debugging. You can learn more about Bochs at
+http://bochs.sourceforge.net.
+
+---
+PRESS CONTACT:
+Timothy R. Butler
+tbutler@uninetsolutions.com
+
+----
+Trademarks Notices: Windows is a trademark of Microsoft Corp. Linux is a
+registered trademark of Linus Torvalds. UNIX is a registered trademark of The
+Open Group. All other trademarks and copyrights referred to in this announcement
+are the property of their respective owners.
