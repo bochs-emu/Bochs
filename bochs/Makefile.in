@@ -32,9 +32,9 @@ mandir          = @mandir@
 man1dir         = $(mandir)/man1
 
 
-VERSION=1.2.1
-VER_STRING=1.2.1
-REL_STRING=June 13, 2001
+VERSION=1.2.1.pre1
+VER_STRING=1.2.1.pre1
+REL_STRING=June 12, 2001
 PREFIX=/usr/local/bochs
 BOCHSDIR=$(prefix)/bochs
 VERSIONDIR=$(BOCHSDIR)/$(VERSION)

@@ -1,3 +1,43 @@
+This is called 1.2.1.pre* until it's been tested a little bit.
+I tried to bring in only minor changes, since it is a bugfix after all.
+
+
+Changes in 1.2.1 (FILL IN THE DATE):
+- more work on makefile for building RPMs
+- add build/debian directory from Rob Lemley <rjlemley@calypsoblue.org>
+  which allows us to make Debian packages!
+- optimize for speed when simulating one processor.  Now 1-processor
+  performance should be equivalent to 1.1.2.
+- increase MAX_LOGFNS since we ran out of them on an SMP simulation with
+  4 processors
+- changes to compile clean on cygwin:
+  - don't use the WIN32 snprintf define for cygwin
+  - add ssize_t definition for cygwin
+  - only compile "struct timeval tval" if select is available
+    on that platform.
+- clean up inconsistent use of BX_SUPPORT_APIC and BX_APIC_SUPPORT, which
+  caused the CPUID to report no APIC was present
+- removed configure options for external-device-models and 
+  external-cpu-memory.  These don't work and aren't going to be fixed.
+- configure allows you to choose not to use readline, even if it's found
+  on your system.
+- configure halts if X windows is selected but no X libraries are found.
+- updated rombios to version 1.13.  This fixes several problems:
+  - DOS HIMEM "A20 line" error.  This problem was apparantly caused when
+    Bryce added a function that prints the BIOS version, and he called
+    it too early in the boot process.  Now the same function is called
+    later, and it doesn't break the A20.
+  - SMP structures were getting overwritten by BCC-generated data, 
+    preventing SMP operating systems from detecting that other processors
+    were available.
+  - SMP structure had the wrong entry counts
+- very minor doc updates (typos, replace broken link to mtools info)
+- quit when the user clicks the power button, even if they have disabled
+  panics.
+- win32 now defaults to having mouse capture mode turned off.  For new users,
+  it would be distressing for their mouse cursor to disappear until they
+  pressed F12.
+
 Changes in 1.2 (6/3/2001):
 - [ #427259 ] rombios HALT calls don't print
   Fixed bios/rombios.c HALT macro so that it writes the line number of the
