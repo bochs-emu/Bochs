@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.1 2003-04-22 20:21:32 sshwarts Exp $
+// $Id: fpu.cc,v 1.2 2003-08-01 09:32:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
@@ -40,12 +40,19 @@
 // Eq = quadword integer (8 bytes) (long integer)
 
 
+#if BX_SUPPORT_FPU
+void BX_CPU_C::prepareFPU(void)
+{
+  if (BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts) {
+    exception(BX_NM_EXCEPTION, 0, 0);
+  }
+}
+#endif
 
 void BX_CPU_C::ESC0(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
@@ -55,9 +62,8 @@ void BX_CPU_C::ESC0(bxInstruction_c *i)
 
 void BX_CPU_C::ESC1(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
@@ -67,9 +73,8 @@ void BX_CPU_C::ESC1(bxInstruction_c *i)
 
 void BX_CPU_C::ESC2(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
@@ -79,9 +84,7 @@ void BX_CPU_C::ESC2(bxInstruction_c *i)
 
 void BX_CPU_C::ESC3(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
 
 #if BX_SUPPORT_FPU
   fpu_execute(i);
@@ -92,9 +95,8 @@ void BX_CPU_C::ESC3(bxInstruction_c *i)
 
 void BX_CPU_C::ESC4(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
@@ -104,9 +106,8 @@ void BX_CPU_C::ESC4(bxInstruction_c *i)
 
 void BX_CPU_C::ESC5(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
@@ -116,9 +117,8 @@ void BX_CPU_C::ESC5(bxInstruction_c *i)
 
 void BX_CPU_C::ESC6(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
@@ -128,9 +128,8 @@ void BX_CPU_C::ESC6(bxInstruction_c *i)
 
 void BX_CPU_C::ESC7(bxInstruction_c *i)
 {
-  if ( BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts ) {
-    exception(BX_NM_EXCEPTION, 0, 0);
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
   fpu_execute(i);
 #else
@@ -144,17 +143,17 @@ void BX_CPU_C::FWAIT(bxInstruction_c *i)
   // WAIT doesn't generate single steps on 8086.
   // The same goes for prefix instructions, and instructions which
   // modify segment registers. (pg4-16)
-  BX_PANIC(("WAIT: not implemented for < 386"));
+  BX_PANIC(("FWAIT: not implemented for < 386"));
 #else // BX_CPU_LEVEL >= 3
 
-  if ( BX_CPU_THIS_PTR cr0.ts && BX_CPU_THIS_PTR cr0.mp ) {
-    exception(BX_NM_EXCEPTION, 0, 0); 
-    }
+  BX_CPU_THIS_PTR prepareFPU();
+
 #if BX_SUPPORT_FPU
-  fpu_execute(i);
+  if (FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
+      exception(BX_MF_EXCEPTION, 0, 0);
 #else
   BX_INFO(("FWAIT: requred FPU, use --enable-fpu"));
 #endif
 
-#endif
+#endif // BX_CPU_LEVEL >= 3
 }

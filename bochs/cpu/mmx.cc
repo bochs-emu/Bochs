@@ -87,7 +87,7 @@ static Bit16u SelectMmxWord(BxPackedMmxRegister mmx, unsigned index)
 }
 #endif
 
-void BX_CPU_C::printMmxRegisters(void)
+void BX_CPU_C::print_state_MMX(void)
 {
   for(int i=0;i<8;i++) {
       BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
@@ -109,12 +109,11 @@ void BX_CPU_C::prepareMMX(void)
 
 void BX_CPU_C::prepareFPU2MMX(void)
 {
-  /* check SW_Summary bit for a pending FPU exceptions */
-#define FPU_SW_SUMMARY 0x0080
+  /* check floating point status word for a pending FPU exceptions */
   if(FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
     exception(BX_MF_EXCEPTION, 0, 0);
 
-  FPU_TWD = 0;
+  FPU_TAG_WORD = 0;
   FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
 }
 
@@ -689,7 +688,7 @@ void BX_CPU_C::EMMS(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX || BX_SUPPORT_3DNOW
   BX_CPU_THIS_PTR prepareMMX();
-  FPU_TWD  = 0xffff;
+  FPU_TAG_WORD  = 0xffff;
 #else
   BX_INFO(("EMMS: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);

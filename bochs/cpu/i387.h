@@ -54,14 +54,14 @@ struct i387_t {
 //         A - alignment
 
 #ifdef BX_BIG_ENDIAN
-struct BxFpuRegister {
+struct bx_fpu_reg_t {
   Bit16u alignment1, alignment2, alignment3;
   Bit16s exp;   /* Signed quantity used in internal arithmetic. */
   Bit32u sigh;
   Bit32u sigl;
 } GCC_ATTRIBUTE((aligned(16), packed));
 #else
-struct BxFpuRegister {
+struct bx_fpu_reg_t {
   Bit32u sigl;
   Bit32u sigh;
   Bit16s exp;   /* Signed quantity used in internal arithmetic. */
@@ -73,8 +73,10 @@ struct BxFpuRegister {
     (BX_CPU_THIS_PTR the_i387.st_space[index*2])
 
 #define FPU_PARTIAL_STATUS     (BX_CPU_THIS_PTR the_i387.swd)
-#define FPU_TWD                (BX_CPU_THIS_PTR the_i387.twd)
+#define FPU_TAG_WORD           (BX_CPU_THIS_PTR the_i387.twd)
 #define FPU_TOS                (BX_CPU_THIS_PTR the_i387.tos)
+
+#define FPU_SW_SUMMARY         (0x0080)		/* exception summary */
 
 
 #if BX_SUPPORT_MMX

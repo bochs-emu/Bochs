@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  errors.c                                                                 |
- |  $Id: errors.c,v 1.8 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: errors.c,v 1.9 2003-08-01 09:32:33 sshwarts Exp $
  |                                                                           |
  |  The error handling functions for wm-FPU-emu                              |
  |                                                                           |
@@ -288,12 +288,7 @@ void FPU_exception(int n)
       if ( n == EX_INTERNAL )
 	{
 	  printk("FPU emulator: Internal error type 0x%04x\n", int_type);
-	  FPU_printall();
 	}
-#ifdef PRINT_MESSAGES
-      else
-	FPU_printall();
-#endif /* PRINT_MESSAGES */
 
       /*
        * The 80486 generates an interrupt on the next non-control FPU

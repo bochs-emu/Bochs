@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.140 2003-06-08 09:55:50 vruppert Exp $
+// $Id: cpu.h,v 1.141 2003-08-01 09:32:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1438,7 +1438,7 @@ union {
   bx_regs_msr_t msr;  
 #endif
 
-#if BX_SUPPORT_FPU
+#if BX_SUPPORT_FPU || BX_SUPPORT_MMX
   i387_t the_i387;
 #endif
 
@@ -2071,11 +2071,15 @@ union {
   BX_SMF void PSLLQ_PqIb(bxInstruction_c *i);
   /* MMX */
 
+#if BX_SUPPORT_FPU
+  BX_SMF void prepareFPU(void);
+  BX_SMF void print_state_FPU(void);
+#endif
+
 #if BX_SUPPORT_MMX || BX_SUPPORT_SSE
   BX_SMF void prepareMMX(void);
-  /* cause transition from FPU to MMX technology state */
-  BX_SMF void prepareFPU2MMX(void);
-  BX_SMF void printMmxRegisters(void);
+  BX_SMF void prepareFPU2MMX(void); /* cause transition from FPU to MMX technology state */
+  BX_SMF void print_state_MMX(void);
 #endif
 
 #if BX_SUPPORT_SSE
@@ -2303,7 +2307,6 @@ union {
 #if BX_SUPPORT_FPU
   BX_SMF void fpu_execute(bxInstruction_c *i);
   BX_SMF void fpu_init(void);
-  BX_SMF void fpu_print_regs (void);
 #endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *);

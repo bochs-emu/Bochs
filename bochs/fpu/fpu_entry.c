@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.14 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.15 2003-08-01 09:32:33 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -139,7 +139,7 @@ math_emulate(fpu_addr_modes addr_modes,
   int unmasked;
   FPU_REG loaded_data;
   FPU_REG *st0_ptr;
-  u_char    loaded_tag, st0_tag;
+  u_char  loaded_tag, st0_tag;
 
   /* assuming byte is 0xd8..0xdf or 0xdb==FWAIT */
 
@@ -152,7 +152,7 @@ math_emulate(fpu_addr_modes addr_modes,
     if (FPU_partial_status & SW_Summary)
       goto do_the_FPU_interrupt;
     else
-      goto FPU_fwait_done;
+      return;
     }
 
   if (FPU_partial_status & SW_Summary) {
@@ -192,16 +192,6 @@ do_the_FPU_interrupt:
 
           /* Stack underflow has priority */
           if (NOT_EMPTY_ST0) {
-
-#ifndef USE_WITH_CPU_SIM
-              /* memory access limits checked in FPU_verify_area */
-              if (addr_modes.default_mode & PROTECTED)
-                {
-                  /* This table works for 16 and 32 bit protected mode */
-                  if (access_limit < data_sizes_16[(byte1 >> 1) & 3])
-                    math_abort(NULL, SIGSEGV);
-                }
-#endif
               unmasked = 0;  /* Do this here to stop compiler warnings. */
               switch ((byte1 >> 1) & 3)
                 {
@@ -417,14 +407,4 @@ FPU_instruction_done:
 
   if (! no_ip_update)
     FPU_instruction_address = entry_sel_off;
-
-FPU_fwait_done:
-
-#ifdef DEBUG
-  FPU_printall();
-#endif /* DEBUG */
-
-#ifdef BX_NO_BLANK_LABELS
-  if(0);
-#endif
 }

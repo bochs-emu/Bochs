@@ -255,7 +255,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   for(index = 0;index < 8; index++, twd <<= 2, tag_byte_mask <<= 1)
   {
       if(tag_byte & tag_byte_mask) {
-          BxFpuRegister *fpu_reg = (BxFpuRegister *) &(BX_FPU_REG(index));
+          bx_fpu_reg_t *fpu_reg = (bx_fpu_reg_t *) &(BX_FPU_REG(index));
 
           if (fpu_reg->exp == 0) {
               if(!(fpu_reg->sigl | fpu_reg->sigh)) twd |= FPU_TAG_ZERO;

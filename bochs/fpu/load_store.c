@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  load_store.c                                                             |
- |  $Id: load_store.c,v 1.10 2003-07-31 21:07:38 sshwarts Exp $
+ |  $Id: load_store.c,v 1.11 2003-08-01 09:32:33 sshwarts Exp $
  |                                                                           |
  | This file contains most of the code to interpret the FPU instructions     |
  | which load and store from user memory.                                    |
@@ -71,28 +71,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 
   st0_ptr = (FPU_REG*) NULL;   /* Initialized just to stop compiler warnings. */
 
-#ifndef USE_WITH_CPU_SIM
-  /* memory access limits checked in FPU_verify_area */
-  if ( addr_modes.default_mode & PROTECTED )
-    {
-      if ( addr_modes.default_mode == SEG32 )
-	{
-	  if ( access_limit < data_sizes_32[type] )
-	    math_abort(NULL,SIGSEGV);
-	}
-      else if ( addr_modes.default_mode == PM16 )
-	{
-	  if ( access_limit < data_sizes_16[type] )
-	    math_abort(NULL,SIGSEGV);
-	}
-#ifdef PARANOID
-      else
-	EXCEPTION(EX_INTERNAL|0x140);
-#endif /* PARANOID */
-    }
-#endif
-
-  switch ( type_table[type] )
+  switch (type_table[type])
     {
     case _NONE_:
       break;
@@ -119,7 +98,7 @@ int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 #endif /* PARANOID */
     }
 
-  switch ( type )
+  switch (type)
     {
     case 000:       /* fld m32real */
       clear_C1();

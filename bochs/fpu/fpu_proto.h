@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_proto.h,v 1.9 2003-07-31 18:54:48 sshwarts Exp $
+// $Id: fpu_proto.h,v 1.10 2003-08-01 09:32:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,6 @@
 /* errors.c */
 extern void Un_impl(void);
 extern void FPU_illegal(void);
-extern void FPU_printall(void);
 asmlinkage void FPU_exception(int n);
 extern int real_1op_NaN(FPU_REG *a);
 extern int real_2op_NaN(FPU_REG const *b, u_char tagb, int deststnr,

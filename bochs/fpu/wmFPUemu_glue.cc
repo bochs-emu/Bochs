@@ -129,7 +129,7 @@ static double sigh_scale_factor = pow(2.0, -31.0);
 static double sigl_scale_factor = pow(2.0, -63.0);
 
 void
-BX_CPU_C::fpu_print_regs()
+BX_CPU_C::print_state_FPU()
 {
   Bit32u reg;
   reg = i387.cwd;
@@ -188,14 +188,6 @@ fpu_verify_area(unsigned what, bx_address ptr, unsigned n)
     fpu_cpu_ptr->write_virtual_checks(seg, ptr, n);
     }
 }
-
-
-  void
-FPU_printall(void)
-{
-  BX_PANIC(("FPU_printall"));
-}
-
 
   unsigned BX_CPP_AttrRegparmN(2)
 fpu_get_user(bx_address ptr, unsigned len)
