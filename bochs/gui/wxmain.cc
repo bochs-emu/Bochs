@@ -1,6 +1,6 @@
 //
 // gui/wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.2 2002-04-10 03:40:13 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.3 2002-04-10 05:14:25 bdenney Exp $
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -143,7 +143,8 @@ IMPLEMENT_APP(MyApp)
 bool MyApp::OnInit()
 {
   //wxLog::AddTraceMask (_T("mime"));
-  siminterface_init ();
+  bx_init_siminterface ();
+  bx_init_main ();
   MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
   theFrame = frame;  // hack alert
   frame->Show( TRUE );
@@ -560,7 +561,7 @@ SimThread::Entry (void)
   //     bx_continue_after_control_panel(), which notices the
   //     kill_bochs_request and returns back to this Entry() function.
   //   - Entry() exits and the thread stops. Whew.
-  bx_continue_after_control_panel (1, argc, argv);
+  bx_continue_after_control_panel (argc, argv);
   wxLogDebug ("in SimThread, bx_continue_after_control_panel exited");
   return NULL;
 }

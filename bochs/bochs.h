@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.39.2.4 2002-04-05 06:53:39 bdenney Exp $
+// $Id: bochs.h,v 1.39.2.5 2002-04-10 05:14:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -221,13 +221,6 @@ extern Bit8u DTPageDirty[];
 #endif
 
 #define MAGIC_LOGNUM 0x12345678
-
-// Log Level defines
-#define LOGLEV_DEBUG 0
-#define LOGLEV_INFO  1
-#define LOGLEV_ERROR 2
-#define LOGLEV_PANIC 3
-#define N_LOGLEV   4
 
 typedef class logfunctions {
 	char *prefix;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.58.2.12 2002-04-08 06:28:06 bdenney Exp $
+// $Id: main.cc,v 1.58.2.13 2002-04-10 05:14:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,8 +109,7 @@ bx_options_t bx_options = {
 static void parse_line_unformatted(char *context, char *line);
 static void parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
-void bx_init_before_control_panel ();
-int bx_continue_after_control_panel (int arg, int argc, char *argv[]);
+static void bx_do_text_config_interface ();
 
 static Bit32s
 bx_param_handler (bx_param_c *param, int set, Bit32s val)
@@ -979,8 +978,21 @@ static void setupWorkingDirectory (char *path)
 }
 #endif
 
+#if !BX_WITH_WX
+// main() is the entry point for all configurations, except for
+// wxWindows.
+int main (int argc, char *argv[])
+{
+  bx_init_siminterface ();
+  bx_init_main ();
+  bx_do_text_config_interface (argc, argv);
+  bx_control_panel (BX_CPANEL_INIT);
+  bx_continue_after_control_panel (argc, argv);
+}
+#endif
+
 void
-bx_init_before_control_panel ()
+bx_init_main ()
 {
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
@@ -1015,18 +1027,11 @@ bx_init_before_control_panel ()
   getwd (cwd);
   BX_INFO (("Now my working directory is %s", cwd));
 #endif
-  // NOTE: there's no longer any implementation of -nocp or -nocontrolpanel
-  // in this wxwindows situation.
 }
 
-#if !BX_WITH_WX
-// main() is the entry point for all configurations, except for
-// wxWindows.
-int main (int argc, char *argv[])
+static void
+bx_do_text_config_interface (int argc, char *argv[])
 {
-  siminterface_init ();
-  bx_control_panel (BX_CPANEL_INIT);
-
   // detect -nocontrolpanel or -nocp argument before anything else
   int arg = 1;
   if (argc > 1 && 
@@ -1041,13 +1046,6 @@ int main (int argc, char *argv[])
   enable_control_panel = 0;
 #endif
 
-  bx_continue_after_control_panel (arg, argc, argv);
-}
-#endif
-
-int
-bx_continue_after_control_panel (int arg, int argc, char *argv[])
-{
   if (!enable_control_panel || BX_WITH_WX) {
     /* parse configuration file and command line arguments */
     char *bochsrc = bx_find_bochsrc ();
@@ -1091,10 +1089,28 @@ bx_continue_after_control_panel (int arg, int argc, char *argv[])
     // Display the pre-simulation control panel.
     SIM->set_enabled (1);
 #if !BX_WITH_WX
-// if wxwindows interface in use, don't use the text mode interface.
+// unless wxwindows interface in use, show the control panel now
     bx_control_panel (BX_CPANEL_START_MENU);
 #endif
   }
+}
+
+int
+bx_continue_after_control_panel (int argc, char *argv[])
+{
+#if BX_WITH_WX
+  // FIXME: load default bochsrc right now.  When the wxWindows interface
+  // is more complete, you will be able to load a bochsrc using the
+  // interface.
+  char *bochsrc = bx_find_bochsrc ();
+  if (bochsrc) {
+    bx_read_configuration (bochsrc);
+    free (bochsrc);
+  } else {
+    BX_PANIC (("Could not load a .bochsrc"));
+  }
+#endif
+
 
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call

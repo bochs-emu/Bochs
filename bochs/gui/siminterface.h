@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.22.2.15 2002-04-08 06:21:14 bdenney Exp $
+// $Id: siminterface.h,v 1.22.2.16 2002-04-10 05:14:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.15 2002-04-08 06:21:14 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.16 2002-04-10 05:14:24 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -162,6 +162,15 @@ typedef enum {
   BX_TOOLBAR_CONFIG,
   BX_TOOLBAR_MOUSE_EN
 } bx_toolbar_buttons;
+
+// Log level defines
+typedef enum {
+  LOGLEV_DEBUG = 0,
+  LOGLEV_INFO,
+  LOGLEV_ERROR,
+  LOGLEV_PANIC,
+  N_LOGLEV
+} bx_log_levels;
 
 ///////////////////////////////////////////////////////////////////
 // event structure for communication between simulator and gui
@@ -618,5 +627,6 @@ public:
 
 extern bx_simulator_interface_c *SIM;
 
-extern void siminterface_init ();
-extern int bx_continue_after_control_panel (int arg, int argc, char *argv[]);
+extern void bx_init_siminterface ();
+extern void bx_init_main ();
+extern int bx_continue_after_control_panel (int argc, char *argv[]);
