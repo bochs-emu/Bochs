@@ -527,19 +527,6 @@ AC_TRY_RUN([
   [ AC_MSG_RESULT(no) ]
 )
 LIBS=$OLD_LIBS
-if test "$rl_without_curses_ok" = no -a "$rl_with_curses_ok" = no; then
-  echo WARNING: readline was found but it is broken, with or without the -lcurses link option
-  exit 1
-elif test "$rl_without_curses_ok" = no; then
-  # we must add -lcurses!
-  if test "$READLINE_LIB" != ""; then
-    echo Adding -lcurses to your library list.
-    READLINE_LIB="$READLINE_LIB -lcurses"
-  fi
-else
-  true # it worked without anything special
-fi
-AC_SUBST(READLINE_LIB)
 
 AC_MSG_CHECKING(whether user wants readline)
 AC_ARG_ENABLE(readline,
@@ -580,6 +567,7 @@ if test "$want_readline" = yes; then
 else
   AC_MSG_RESULT(no)
 fi
+AC_SUBST(READLINE_LIB)
 
 AC_CHECK_HEADER(readline/history.h,
   AC_DEFINE(HAVE_READLINE_HISTORY_H)
