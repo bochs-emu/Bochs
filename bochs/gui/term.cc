@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.19 2002-09-26 02:36:04 bdenney Exp $
+// $Id: term.cc,v 1.20 2002-09-26 02:46:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -77,24 +77,6 @@ do_scan(int key_event, int shift, int ctrl, int alt)
 		bx_devices.keyboard->gen_scancode(BX_KEY_SHIFT_L|BX_KEY_RELEASED);
 }
 
-// ::SPECIFIC_INIT()
-//
-// Called from gui.cc, once upon program startup, to allow for the
-// specific GUI code (X11, BeOS, ...) to be initialized.
-//
-// th: a 'this' pointer to the gui class.  If a function external to the
-//     class needs access, store this pointer and use later.
-// argc, argv: not used right now, but the intention is to pass native GUI
-//     specific options from the command line.  (X11 options, BeOS options,...)
-//
-// tilewidth, tileheight: for optimization, graphics_tile_update() passes
-//     only updated regions of the screen to the gui code to be redrawn.
-//     These define the dimensions of a region (tile).
-// headerbar_y:  A headerbar (toolbar) is display on the top of the
-//     VGA window, showing floppy status, and other information.  It
-//     always assumes the width of the current VGA mode width, but
-//     it's height is defined by this parameter.
-
 Bit32u 
 bx_gui_c::get_sighandler_mask ()
 {
@@ -125,6 +107,24 @@ bx_gui_c::sighandler(int signo)
 		break;
 	}
 }
+
+// ::SPECIFIC_INIT()
+//
+// Called from gui.cc, once upon program startup, to allow for the
+// specific GUI code (X11, BeOS, ...) to be initialized.
+//
+// th: a 'this' pointer to the gui class.  If a function external to the
+//     class needs access, store this pointer and use later.
+// argc, argv: not used right now, but the intention is to pass native GUI
+//     specific options from the command line.  (X11 options, BeOS options,...)
+//
+// tilewidth, tileheight: for optimization, graphics_tile_update() passes
+//     only updated regions of the screen to the gui code to be redrawn.
+//     These define the dimensions of a region (tile).
+// headerbar_y:  A headerbar (toolbar) is display on the top of the
+//     VGA window, showing floppy status, and other information.  It
+//     always assumes the width of the current VGA mode width, but
+//     it's height is defined by this parameter.
 
 	void
 bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
