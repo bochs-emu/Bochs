@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.54 2002-10-13 09:40:05 vruppert Exp $
+// $Id: floppy.cc,v 1.55 2002-10-21 16:57:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,7 +88,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.54 2002-10-13 09:40:05 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.55 2002-10-21 16:57:35 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -544,7 +544,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // #if BX_DMA_FLOPPY_IO
 
     case 0x3F6: /* diskette controller (reserved) */
-      BX_DEBUG(("io_write: reserved register unsupported"));
+      BX_DEBUG(("io_write: reserved register 0x3f6 unsupported"));
       // this address shared with the hard drive controller
       BX_FD_THIS devices->hard_drive->write_handler(BX_FD_THIS devices->hard_drive, address, value, io_len);
       break;
