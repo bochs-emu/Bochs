@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.50 2002-10-25 11:44:41 bdenney Exp $
+// $Id: vga.cc,v 1.51 2002-11-07 22:02:13 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1705,7 +1705,7 @@ bx_vga_c::mem_read(Bit32u addr)
         offset = addr - 0xA0000;
         break;
       case 2: // 0xB0000 .. 0xB7FFF
-        if ((addr < 0xB0000) | (addr > 0xB7FFF)) return(0xff);
+        if ((addr < 0xB0000) || (addr > 0xB7FFF)) return(0xff);
         offset = addr - 0xB0000;
         break;
       case 3: // 0xB8000 .. 0xBFFFF
@@ -1861,7 +1861,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
         offset = addr - 0xA0000;
         break;
       case 2: // 0xB0000 .. 0xB7FFF
-        if ((addr < 0xB0000) | (addr > 0xB7FFF)) return;
+        if ((addr < 0xB0000) || (addr > 0xB7FFF)) return;
         offset = addr - 0xB0000;
         break;
       case 3: // 0xB8000 .. 0xBFFFF
