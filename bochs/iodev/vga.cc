@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.53 2002-12-10 20:09:25 vruppert Exp $
+// $Id: vga.cc,v 1.54 2002-12-24 08:20:13 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,6 +37,14 @@
 /* NOTES:
  * I take it data rotate is a true rotate with carry of bit 0 to bit 7.
  * support map mask (3c5 reg 02)
+ */
+
+/* Notes from cb
+ *
+ * It seems that the vga card should support multi bytes IO reads and write
+ * From my tests, inw(port) return port+1 * 256 + port, except for port 0x3c9
+ * (PEL data register, data cycling). More reverse engineering is needed.
+ * This would fix the gentoo bug.
  */
 
 // (mch)
