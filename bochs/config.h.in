@@ -536,6 +536,12 @@ typedef
 // word "inline" itself may now be redefined by the above #define.
 #define BX_CPP_INLINE inline
 
+#ifdef __GNUC__
+// KPL: We need to enhance this for other compilers that know about
+// aligning variables/fields.
+#define BX_CPP_AlignN(n) __attribute__ ((aligned (n)))
+#endif
+
 #define BX_DEBUGGER 0
 #define BX_DISASM   0
 
@@ -575,6 +581,7 @@ typedef
 #define BX_SupportRepeatSpeedups 0
 #define BX_SupportGlobalPages 0
 #define BX_SupportPAE 0
+#define BX_SupportICache 0
 
 #define BX_HAVE_GETENV 0
 #define BX_HAVE_SELECT 0

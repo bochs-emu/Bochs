@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.17 2002-09-18 08:00:38 kevinlawton Exp $
+// $Id: io.cc,v 1.18 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,7 +187,8 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
         // we need the A20 address.
         paddrDst = A20ADDR(paddrDst);
 
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrDst, BX_WRITE);
+        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
 
         // Check that native host access was not vetoed for that page, and
         // that the address is word aligned.
@@ -468,7 +469,8 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
         // we need the A20 address.
         paddrSrc = A20ADDR(paddrSrc);
 
-        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrSrc, BX_READ);
+        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrSrc, BX_READ);
 
         // Check that native host access was not vetoed for that page, and
         // that the address is word aligned.

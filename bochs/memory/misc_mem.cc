@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.29 2002-09-18 05:28:55 bdenney Exp $
+// $Id: misc_mem.cc,v 1.30 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.29 2002-09-18 05:28:55 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.30 2002-09-19 19:17:20 kevinlawton Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -319,7 +319,7 @@ BX_MEM_C::dbg_crc32(unsigned long (*f)(unsigned char *buf, int len),
 
 
   Bit8u *
-BX_MEM_C::getHostMemAddr(Bit32u a20Addr, unsigned op)
+BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
   // Return a host address corresponding to the guest physical memory
   // address (with A20 already applied), given that the calling
   // code will perform an 'op' operation.  This address will be
@@ -355,19 +355,29 @@ BX_MEM_C::getHostMemAddr(Bit32u a20Addr, unsigned op)
 #endif
     }
   else { // op == {BX_WRITE, BX_RW}
-    if ( (a20Addr < 0xa0000) || (a20Addr > 0xfffff) )
-      return( (Bit8u *) & vector[a20Addr] );
+    Bit8u *retAddr;
+
+    if ( (a20Addr < 0xa0000) || (a20Addr > 0xfffff) ) {
+      retAddr = (Bit8u *) & vector[a20Addr];
+      }
 #if !BX_PCI_SUPPORT
-    return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
-#else
-    else if ( (a20Addr < 0xc0000) || (!bx_options.Oi440FXSupport->get ()) 
-)
+    else
       return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
-    else if (bx_devices.pci->wr_memType (a20Addr) == 1)
+#else
+    else if ( (a20Addr < 0xc0000) || (!bx_options.Oi440FXSupport->get ()) )
+      return(NULL); // Vetoed!  Mem mapped IO (VGA) and ROMs
+    else if (bx_devices.pci->wr_memType (a20Addr) == 1) {
       // Write to ShadowRAM
-      return( (Bit8u *) & shadow[a20Addr - 0xc0000]);
+      retAddr = (Bit8u *) & shadow[a20Addr - 0xc0000];
+      }
     else
       return(NULL); // Vetoed!  ROMs
 #endif
+
+#if BX_SupportICache
+    cpu->iCache.decWriteStamp(cpu, a20Addr);
+#endif
+
+    return(retAddr);
     }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.30 2002-09-18 04:32:16 bdenney Exp $
+// $Id: init.cc,v 1.31 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.30 2002-09-18 04:32:16 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.31 2002-09-19 19:17:20 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -322,26 +322,6 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sreg_mod1or2_base32[15] = BX_SEG_REG_DS;
 #endif
 
-#if BX_DYNAMIC_TRANSLATION
-  DTWrite8vShim = NULL;
-  DTWrite16vShim = NULL;
-  DTWrite32vShim = NULL;
-  DTRead8vShim = NULL;
-  DTRead16vShim = NULL;
-  DTRead32vShim = NULL;
-  DTReadRMW8vShim = (BxDTShim_t) DTASReadRMW8vShim;
-  BX_DEBUG(( "DTReadRMW8vShim is %x", (unsigned) DTReadRMW8vShim ));
-  BX_DEBUG(( "&DTReadRMW8vShim is %x", (unsigned) &DTReadRMW8vShim ));
-  DTReadRMW16vShim = NULL;
-  DTReadRMW32vShim = NULL;
-  DTWriteRMW8vShim = (BxDTShim_t) DTASWriteRMW8vShim;
-  DTWriteRMW16vShim = NULL;
-  DTWriteRMW32vShim = NULL;
-  DTSetFlagsOSZAPCPtr = (BxDTShim_t) DTASSetFlagsOSZAPC;
-  DTIndBrHandler = (BxDTShim_t) DTASIndBrHandler;
-  DTDirBrHandler = (BxDTShim_t) DTASDirBrHandler;
-#endif
-
   mem = addrspace;
   sprintf (name, "CPU %p", this);
 
@@ -474,6 +454,10 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   bx_param_num_c::set_default_format (oldfmt);
 #endif
 
+#if BX_SupportICache
+  iCache.alloc(mem->len);
+  iCache.fetchModeMask = 0; // KPL: fixme!!!
+#endif
 }
 
 
@@ -864,10 +848,6 @@ BX_CPU_C::reset(unsigned source)
 
   // Init the Floating Point Unit
   fpu_init();
-
-#if BX_DYNAMIC_TRANSLATION
-  dynamic_init();
-#endif
 
 #if (BX_SMP_PROCESSORS > 1)
   // notice if I'm the bootstrap processor.  If not, do the equivalent of

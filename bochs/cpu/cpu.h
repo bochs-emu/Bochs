@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.63 2002-09-18 08:00:33 kevinlawton Exp $
+// $Id: cpu.h,v 1.64 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -325,6 +325,7 @@ class BX_CPU_C;
 // Anyone on the outside should use the BX_CPU macro (defined in bochs.h) 
 // instead.
 #  define BX_CPU_THIS_PTR  this->
+#  define BX_CPU_THIS      this
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
 // with normal member functions, calling a member fn pointer looks like
@@ -339,6 +340,7 @@ class BX_CPU_C;
 #else
 // static member functions.  With SMF, there is only one CPU by definition.
 #  define BX_CPU_THIS_PTR  BX_CPU(0)->
+#  define BX_CPU_THIS      BX_CPU(0)
 #  define BX_SMF           static
 #  define BX_CPU_C_PREFIX
 #  define BX_CPU_CALL_METHOD(func, args)   \
@@ -872,6 +874,71 @@ typedef void (BX_CPU_C::*BxExecutePtr_t)(bxInstruction_c *);
 #endif
 
 
+// ========== iCache =============================================
+
+#if BX_SupportICache
+
+#define BxICacheEntries 32768  // Must be a power of 2.
+#define ICacheWriteStampInvalid   0x3fffffff
+#define ICacheWriteStampMax       0x3ffffffe // Decrements from here.
+
+class bxICacheEntry_c {
+  public:
+
+  Bit32u pAddr;       // Physical address of the instruction.
+  Bit32u writeStamp;  // Generation ID.  Each write to a physical page
+                      // decrements this value.
+  bxInstruction_c i;  // The instruction decode information.
+  };
+
+class bxICache_c {
+  public:
+
+  bxICacheEntry_c entry[BxICacheEntries];
+
+  // A table (dynamically allocated) to store write-stamp
+  // generation IDs.  Each time a write occurs to a physical page,
+  // a generation ID is decremented.  Only iCache entries which have
+  // write stamps matching the physical page write stamp are valid.
+  Bit32u *pageWriteStampTable; // Allocated later.
+
+  // bit31: 1=Long Mode, 0=not Long Mode
+  // bit30: 1=CS is 32/64-bit, 0=CS is 16-bit.
+  Bit32u  fetchModeMask;
+
+  bxICache_c::bxICache_c() {
+    // Initially clear the iCache;
+    memset(this, 0, sizeof(*this));
+    pageWriteStampTable = NULL;
+    for (unsigned i=0; i<BxICacheEntries; i++) {
+      entry[i].writeStamp = ICacheWriteStampInvalid;
+      }
+    }
+
+  BX_CPP_INLINE void alloc(unsigned memSizeInBytes) {
+    pageWriteStampTable =
+        (Bit32u*) malloc(sizeof(Bit32u) * (memSizeInBytes>>12));
+    for (unsigned i=0; i<(memSizeInBytes>>12); i++) {
+      // Set each entry to MAX, to denote the 1st valid current stamp.
+      // It decrements to zero from there.
+      pageWriteStampTable[i] = ICacheWriteStampMax;
+      }
+    }
+
+  BX_CPP_INLINE void decWriteStamp(BX_CPU_C *cpu, Bit32u a20Addr);
+
+  BX_CPP_INLINE void clear(void) {
+    memset(this, 0, sizeof(*this));
+    }
+  BX_CPP_INLINE unsigned hash(Bit32u pAddr) {
+    // A pretty dumb hash function for now.
+    return pAddr & (BxICacheEntries-1);
+    }
+  BX_CPP_INLINE Bit32u createFetchModeMask(BX_CPU_C *cpu);
+  };
+#endif
+// ===============================================================
+
 
 #if BX_CPU_LEVEL < 2
   /* no GDTR or IDTR register in an 8086 */
@@ -1284,7 +1351,9 @@ union {
   // Boundaries of current page, based on EIP
   bx_address eipPageBias;
   bx_address eipPageWindowSize;
-  Bit8u *eipFetchPtr;
+  Bit8u     *eipFetchPtr;
+  Bit32u     pAddrA20Page; // Guest physical address of current instruction
+                           // page with A20() already applied.
 
 #if BX_SUPPORT_X86_64
   // for x86-64  (MODE_IA32,MODE_LONG,MODE_64)
@@ -1317,15 +1386,7 @@ union {
   // for paging
 #if BX_USE_TLB
   struct {
-    bx_TLB_entry entry[BX_TLB_SIZE]
-#ifdef __GNUC__
-        // Preferably, entries are aligned so that an access to
-        // one never crosses a cache line.  Since they are currently
-        // 16-bytes in size, align to 16 if the compiler knows how.  I only
-        // know how to do this in GCC.  (KPL)
-        __attribute__ ((aligned (16)))
-#endif
-        ;
+    bx_TLB_entry entry[BX_TLB_SIZE]  BX_CPP_AlignN(16);
 
 #if BX_USE_QUICK_TLB_INVALIDATE
 #  define BX_TLB_LPF_VALUE(lpf) (lpf | BX_CPU_THIS_PTR TLB.tlb_invalidate)
@@ -1335,6 +1396,15 @@ union {
 #endif
     } TLB;
 #endif  // #if BX_USE_TLB
+
+
+  // An instruction cache.  Each entry should be exactly 32 bytes, and
+  // this structure should be aligned on a 32-byte boundary to be friendly
+  // with the host cache lines.
+#if BX_SupportICache
+  bxICache_c iCache  BX_CPP_AlignN(32);
+#endif
+
 
   struct {
     bx_address  rm_addr; // The address offset after resolution.
@@ -2061,9 +2131,9 @@ union {
 #endif
   BX_SMF void dynamic_translate(void);
   BX_SMF void dynamic_init(void);
-  BX_SMF unsigned FetchDecode(Bit8u *, bxInstruction_c *, unsigned, Boolean);
+  BX_SMF unsigned fetchDecode(Bit8u *, bxInstruction_c *, unsigned, Boolean);
 #if BX_SUPPORT_X86_64
-  BX_SMF unsigned FetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
+  BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
 #endif
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *i);
@@ -2075,6 +2145,7 @@ union {
   BX_SMF void Resolve16Mod0Rm3(bxInstruction_c *);
   BX_SMF void Resolve16Mod0Rm4(bxInstruction_c *);
   BX_SMF void Resolve16Mod0Rm5(bxInstruction_c *);
+  BX_SMF void Resolve16Mod0Rm6(bxInstruction_c *);
   BX_SMF void Resolve16Mod0Rm7(bxInstruction_c *);
 
   BX_SMF void Resolve16Mod1or2Rm0(bxInstruction_c *);
@@ -2090,6 +2161,7 @@ union {
   BX_SMF void Resolve32Mod0Rm1(bxInstruction_c *);
   BX_SMF void Resolve32Mod0Rm2(bxInstruction_c *);
   BX_SMF void Resolve32Mod0Rm3(bxInstruction_c *);
+  BX_SMF void Resolve32Mod0Rm5(bxInstruction_c *);
   BX_SMF void Resolve32Mod0Rm6(bxInstruction_c *);
   BX_SMF void Resolve32Mod0Rm7(bxInstruction_c *);
 
@@ -2224,7 +2296,9 @@ union {
   // revalidate_prefetch_q is now a no-op, due to the newer EIP window
   // technique.
   BX_SMF BX_CPP_INLINE void revalidate_prefetch_q(void) { }
-  BX_SMF void invalidate_prefetch_q(void);
+  BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void) {
+    BX_CPU_THIS_PTR eipPageWindowSize = 0;
+    }
 
   BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length);
   BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length);
@@ -2412,6 +2486,36 @@ union {
   Boolean int_from_local_apic;
 #endif
   };
+
+
+#if BX_SupportICache
+
+BX_CPP_INLINE void bxICache_c::decWriteStamp(BX_CPU_C *cpu, Bit32u a20Addr) {
+  // Increment page write stamp, so iCache entries with older stamps
+  // are effectively invalidated.
+  Bit32u pageIndex = a20Addr >> 12;
+  if ( ! --(cpu->iCache.pageWriteStampTable[pageIndex]) ) {
+    // Take the hash of the 0th page offset.
+    unsigned iCacheHash = cpu->iCache.hash(a20Addr & 0xfffff000);
+    for (unsigned o=0; o<4096; o++) {
+      cpu->iCache.entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
+      iCacheHash = (iCacheHash + 1) % BxICacheEntries;
+      }
+    // Reset write stamp to highest value to begin the decrementing process
+    // again.
+    cpu->iCache.pageWriteStampTable[pageIndex] = ICacheWriteStampMax;
+    }
+  }
+
+BX_CPP_INLINE Bit32u bxICache_c::createFetchModeMask(BX_CPU_C *cpu) {
+  return (cpu->sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
+#if BX_SUPPORT_X86_64
+         | ((cpu->cpu_mode == BX_MODE_LONG_64)<<30)
+#endif
+         ;
+  }
+
+#endif
 
 
 #if BX_X86_DEBUGGER

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.13 2002-09-16 16:58:35 bdenney Exp $
+// $Id: segment_ctrl_pro.cc,v 1.14 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,8 +48,13 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     seg->cache.p = 1;
     seg->cache.dpl = 3;
     seg->cache.segment = 1; /* regular segment */
-    if (seg == &BX_CPU_THIS_PTR sregs[BX_SREG_CS])
+    if (seg == &BX_CPU_THIS_PTR sregs[BX_SREG_CS]) {
       seg->cache.u.segment.executable = 1; /* code segment */
+#if BX_SupportICache
+      BX_CPU_THIS_PTR iCache.fetchModeMask =
+          BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
+#endif
+      }
     else
       seg->cache.u.segment.executable = 0; /* data segment */
     seg->cache.u.segment.c_ed = 0; /* expand up */
@@ -326,6 +331,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 #endif
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl   = 0;
 #endif
+
+#if BX_SupportICache
+      BX_CPU_THIS_PTR iCache.fetchModeMask =
+          BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
+#endif
+
     }
   else { /* SS, DS, ES, FS, GS */
     seg->selector.value = new_value;
@@ -510,6 +521,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
   // (BW) Added cpl to the selector value.
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value =
     (0xfffc & BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value) | cpl;
+
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma) {
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
@@ -519,6 +531,11 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
       }
     }
+#endif
+
+#if BX_SupportICache
+  BX_CPU_THIS_PTR iCache.fetchModeMask =
+      BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
 #endif
 }
 

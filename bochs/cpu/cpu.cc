@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.46 2002-09-18 08:00:32 kevinlawton Exp $
+// $Id: cpu.cc,v 1.47 2002-09-19 19:17:19 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,7 +115,11 @@ extern void REGISTER_IADDR(bx_addr addr);
 BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
   unsigned ret;
-  bxInstruction_c i;
+  bxInstruction_c *i;
+#if BX_SupportICache==0
+  bxInstruction_c iStorage BX_CPP_AlignN(32);
+  i = &iStorage;
+#endif
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
@@ -124,6 +128,15 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 #endif
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
 #endif
+
+#if BX_USE_CPU_SMF
+  void (*resolveModRM)(bxInstruction_c *);
+  void (*execute)(bxInstruction_c *);
+#else
+  void (BX_CPU_C::*resolveModRM)(bxInstruction_c *);
+  void (BX_CPU_C::*execute)(bxInstruction_c *);
+#endif
+
 
   (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
 
@@ -215,8 +228,6 @@ async_events_processed:
 
   {
   bx_address eipBiased;
-  bx_address remainingInPage;
-  unsigned maxFetch;
   Bit8u *fetchPtr;
   Boolean is32;
 
@@ -227,29 +238,93 @@ async_events_processed:
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     }
 
-  remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-  maxFetch = 15;
-  if (remainingInPage < 15)
-    maxFetch = remainingInPage;
-  fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+#if BX_SupportICache
+  unsigned iCacheHash;
+  Bit32u pAddr, pageWriteStamp, fetchModeMask;
 
-  is32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    ret = FetchDecode64(fetchPtr, &i, maxFetch);
+  pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
+  iCacheHash = BX_CPU_THIS_PTR iCache.hash( pAddr );
+  i = & BX_CPU_THIS_PTR iCache.entry[iCacheHash].i;
+
+  pageWriteStamp = BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12];
+  fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
+  if ( (BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr == pAddr) &&
+       (BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp== pageWriteStamp) &&
+       ((pageWriteStamp & fetchModeMask) == fetchModeMask) ) {
+
+    // iCache hit.  Instruction is already decoded and stored in
+    // the instruction cache.
+
+    resolveModRM = i->ResolveModrm; // Get function pointers as early
+    execute      = i->execute;      // as possible for speculation.
+    if (resolveModRM) {
+      BX_CPU_CALL_METHOD(resolveModRM, (i));
+      }
     }
   else
 #endif
     {
-    ret = FetchDecode(fetchPtr, &i, maxFetch, is32);
+    // iCache miss.  No validated instruction with matching fetch parameters
+    // is in the iCache.  Or we're not compiling iCache support in, in which
+    // case we always have an iCache miss.  :^)
+    bx_address remainingInPage;
+    unsigned maxFetch;
+
+    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+    maxFetch = 15;
+    if (remainingInPage < 15)
+      maxFetch = remainingInPage;
+    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+
+    is32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      ret = fetchDecode64(fetchPtr, i, maxFetch);
+      }
+    else
+#endif
+      {
+      ret = fetchDecode(fetchPtr, i, maxFetch, is32);
+      }
+    if (ret==0) {
+      // Invalidate entry, since fetch-decode failed with partial updates
+      // to the i-> structure.
+#if BX_SupportICache
+      BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp =
+          ICacheWriteStampInvalid;
+#endif
+      goto boundaryFetch;
+      }
+#if BX_SupportICache
+    else {
+      // Fetch succeeded, instruction does not cross any boundaries.
+      // Set iCache entry to this instruction's physical address.
+      BX_CPU_THIS_PTR iCache.entry[iCacheHash].pAddr = pAddr;
+
+      // Make sure that this page reflects the same fetch parameters as
+      // are being used currently.  If not, reset the fetchModeMask
+      // bits.  Decrementing is not necessary, as the change in fetchModeMask
+      // bits will cause compares to fail if they are for iCache entries
+      // which have different fetch parameters.
+      if ((pageWriteStamp & 0xc0000000) != fetchModeMask) {
+        pageWriteStamp &= 0x3fffffff;    // Clear out old fetch mode bits.
+        pageWriteStamp |= fetchModeMask; // Add in new ones.
+        BX_CPU_THIS_PTR iCache.pageWriteStampTable[pAddr>>12] = pageWriteStamp;
+        }
+
+      // Set iCache entry's writeStamp to match that of the page's writeStamp.
+      BX_CPU_THIS_PTR iCache.entry[iCacheHash].writeStamp = pageWriteStamp;
+      }
+#endif
+    resolveModRM = i->ResolveModrm; // Get function pointers as early
+    execute      = i->execute;      // as possible for speculation.
+    if (resolveModRM) {
+      BX_CPU_CALL_METHOD(resolveModRM, (i));
+      }
     }
   }
 
-  if (ret) {
-    if (i.ResolveModrm) {
-      // call method on BX_CPU_C object
-      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
-      }
+
 fetch_decode_OK:
 
 #if BX_DEBUGGER
@@ -263,10 +338,10 @@ fetch_decode_OK:
     }
 #endif
 
-    if ( !(i.repUsedL() && i.repeatableL()) ) {
+    if ( !(i->repUsedL() && i->repeatableL()) ) {
       // non repeating instruction
-      RIP += i.ilen();
-      BX_CPU_CALL_METHOD(i.execute, (&i));
+      RIP += i->ilen();
+      BX_CPU_CALL_METHOD(execute, (i));
 
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
@@ -279,46 +354,46 @@ fetch_decode_OK:
 
     else {
 repeat_loop:
-      if (i.repeatableZFL()) {
+      if (i->repeatableZFL()) {
 #if BX_SUPPORT_X86_64
-        if (i.as64L()) {
+        if (i->as64L()) {
           if (RCX != 0) {
-            BX_CPU_CALL_METHOD(i.execute, (&i));
+            BX_CPU_CALL_METHOD(execute, (i));
             RCX -= 1;
             }
-          if ((i.repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-          if ((i.repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (RCX == 0) goto repeat_done;
           goto repeat_not_done;
           }
         else
 #endif
-        if (i.as32L()) {
+        if (i->as32L()) {
           if (ECX != 0) {
-            BX_CPU_CALL_METHOD(i.execute, (&i));
+            BX_CPU_CALL_METHOD(execute, (i));
             ECX -= 1;
             }
-          if ((i.repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-          if ((i.repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (ECX == 0) goto repeat_done;
           goto repeat_not_done;
           }
         else {
           if (CX != 0) {
-            BX_CPU_CALL_METHOD(i.execute, (&i));
+            BX_CPU_CALL_METHOD(execute, (i));
             CX -= 1;
             }
-          if ((i.repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-          if ((i.repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
           if (CX == 0) goto repeat_done;
           goto repeat_not_done;
           }
         }
       else { // normal repeat, no concern for ZF
 #if BX_SUPPORT_X86_64
-        if (i.as64L()) {
+        if (i->as64L()) {
           if (RCX != 0) {
-            BX_CPU_CALL_METHOD(i.execute, (&i));
+            BX_CPU_CALL_METHOD(execute, (i));
             RCX -= 1;
             }
           if (RCX == 0) goto repeat_done;
@@ -326,9 +401,9 @@ repeat_loop:
           }
         else
 #endif
-        if (i.as32L()) {
+        if (i->as32L()) {
           if (ECX != 0) {
-            BX_CPU_CALL_METHOD(i.execute, (&i));
+            BX_CPU_CALL_METHOD(execute, (i));
             ECX -= 1;
             }
           if (ECX == 0) goto repeat_done;
@@ -336,7 +411,7 @@ repeat_loop:
           }
         else { // 16bit addrsize
           if (CX != 0) {
-            BX_CPU_CALL_METHOD(i.execute, (&i));
+            BX_CPU_CALL_METHOD(execute, (i));
             CX -= 1;
             }
           if (CX == 0) goto repeat_done;
@@ -364,7 +439,7 @@ repeat_not_done:
 
 
 repeat_done:
-      RIP += i.ilen();
+      RIP += i->ilen();
 
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
@@ -440,13 +515,18 @@ debugger_check:
 
 #endif  // #if BX_DEBUGGER
     goto main_cpu_loop;
-    }
-  else {
+
+
+boundaryFetch:
     unsigned j;
     Bit8u fetchBuffer[16]; // Really only need 15
     bx_address eipBiased, remainingInPage;
     Bit8u *fetchPtr;
+#if BX_SupportICache
+    bxInstruction_c iStorage BX_CPP_AlignN(32);
 
+    i = &iStorage;
+#endif
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
     if (remainingInPage > 15) {
@@ -478,20 +558,22 @@ debugger_check:
       }
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      ret = FetchDecode64(fetchBuffer, &i, 15);
+      ret = fetchDecode64(fetchBuffer, i, 15);
       }
     else
 #endif
       {
-      ret = FetchDecode(fetchBuffer, &i, 15,
+      ret = fetchDecode(fetchBuffer, i, 15,
           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
       }
+    resolveModRM = i->ResolveModrm; // Get function pointers as early
+    execute      = i->execute;      // as possible for speculation.
     // Restore EIP since we fudged it to start at the 2nd page boundary.
     RIP = BX_CPU_THIS_PTR prev_eip;
     if (ret==0)
-      BX_PANIC(("fetchdecode: cross boundary: ret==0"));
-    if (i.ResolveModrm) {
-      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
+      BX_PANIC(("fetchDecode: cross boundary: ret==0"));
+    if (resolveModRM) {
+      BX_CPU_CALL_METHOD(resolveModRM, (i));
       }
 
 // Since we cross an instruction boundary, note that we need a prefetch()
@@ -500,7 +582,7 @@ debugger_check:
 // think about repeated instructions, etc.
 BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
     goto fetch_decode_OK;
-    }
+
 
 
 
@@ -693,7 +775,7 @@ BX_CPU_C::prefetch(void)
   // cs:eIP
   // prefetch QSIZE byte quantity aligned on corresponding boundary
   bx_address laddr;
-  Bit32u paddr;
+  Bit32u pAddr;
   bx_address temp_rip;
   Bit32u temp_limit;
   bx_address laddrPageOffset0, eipPageOffset0;
@@ -711,13 +793,13 @@ BX_CPU_C::prefetch(void)
 #if BX_SUPPORT_PAGING
   if (BX_CPU_THIS_PTR cr0.pg) {
     // aligned block guaranteed to be all in one page, same A20 address
-    paddr = itranslate_linear(laddr, CPL==3);
-    paddr = A20ADDR(paddr);
+    pAddr = itranslate_linear(laddr, CPL==3);
+    pAddr = A20ADDR(pAddr);
     }
   else
 #endif // BX_SUPPORT_PAGING
     {
-    paddr = A20ADDR(laddr);
+    pAddr = A20ADDR(laddr);
     }
 
   // check if segment boundary comes into play
@@ -730,17 +812,19 @@ BX_CPU_C::prefetch(void)
   eipPageOffset0 = RIP - (laddr - laddrPageOffset0);
   BX_CPU_THIS_PTR eipPageBias = - eipPageOffset0;
   BX_CPU_THIS_PTR eipPageWindowSize = 4096; // FIXME:
+  BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
   BX_CPU_THIS_PTR eipFetchPtr =
-      BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(paddr & 0xfffff000), BX_READ);
+      BX_CPU_THIS_PTR mem->getHostMemAddr(this, BX_CPU_THIS_PTR pAddrA20Page,
+                                          BX_READ);
 
   // Sanity checks
   if ( !BX_CPU_THIS_PTR eipFetchPtr ) {
-    if ( paddr >= BX_CPU_THIS_PTR mem->len ) {
+    if ( pAddr >= BX_CPU_THIS_PTR mem->len ) {
       BX_PANIC(("prefetch: running in bogus memory"));
       }
     else {
-      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, paddr=0x%x.",
-                paddr));
+      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%x.",
+                pAddr));
       }
     }
 }
@@ -770,11 +854,6 @@ BX_CPU_C::revalidate_prefetch_q(void)
 }
 #endif
 
-  void
-BX_CPU_C::invalidate_prefetch_q(void)
-{
-  BX_CPU_THIS_PTR eipPageWindowSize = 0;
-}
 
 #if BX_SUPPORT_X86_64
   void

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.5 2002-09-18 08:00:37 kevinlawton Exp $
+// $Id: fetchdecode64.cc,v 1.6 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ static BxExecutePtr_t BxResolve32Mod0[8] = {
   &BX_CPU_C::Resolve32Mod0Rm2,
   &BX_CPU_C::Resolve32Mod0Rm3,
   NULL, // escape to 2-byte
-  NULL, // d32, no registers used
+  &BX_CPU_C::Resolve32Mod0Rm5,
   &BX_CPU_C::Resolve32Mod0Rm6,
   &BX_CPU_C::Resolve32Mod0Rm7
   };
@@ -2012,7 +2012,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
 
 
   unsigned
-BX_CPU_C::FetchDecode64(Bit8u *iptr, bxInstruction_c *instruction,
+BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction,
                       unsigned remain)
 {
   // remain must be at least 1
@@ -2338,7 +2338,8 @@ get_32bit_displ_1:
               imm32u |= (*iptr++) << 8;
               imm32u |= (*iptr++) << 16;
               imm32u |= (*iptr++) << 24;
-              RMAddr(instruction) = imm32u;
+              //RMAddr(instruction) = imm32u;
+              instruction->modRMForm.displ32u = imm32u;
               ilen += 4;
 #if BX_DYNAMIC_TRANSLATION
               instruction->DTMemRegsUsed = 0;

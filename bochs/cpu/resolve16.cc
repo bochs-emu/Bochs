@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve16.cc,v 1.7 2002-09-18 05:36:48 kevinlawton Exp $
+// $Id: resolve16.cc,v 1.8 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,6 +64,11 @@ BX_CPU_C::Resolve16Mod0Rm4(bxInstruction_c *i)
 BX_CPU_C::Resolve16Mod0Rm5(bxInstruction_c *i)
 {
   RMAddr(i) = (Bit16u) DI;
+}
+  void
+BX_CPU_C::Resolve16Mod0Rm6(bxInstruction_c *i)
+{
+  RMAddr(i) = i->displ16u();
 }
   void
 BX_CPU_C::Resolve16Mod0Rm7(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.14 2002-09-18 08:00:42 kevinlawton Exp $
+// $Id: string.cc,v 1.15 2002-09-19 19:17:20 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -175,8 +175,10 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
         // we need the A20 address.
         paddrDst = A20ADDR(paddrDst);
 
-        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrSrc, BX_READ);
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrDst, BX_WRITE);
+        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrSrc, BX_READ);
+        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
 
         if ( hostAddrSrc && hostAddrDst ) {
           // See how many bytes can fit in the rest of this page.
@@ -472,8 +474,10 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
         // we need the A20 address.
         paddrDst = A20ADDR(paddrDst);
 
-        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrSrc, BX_READ);
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrDst, BX_WRITE);
+        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrSrc, BX_READ);
+        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
 
         if ( hostAddrSrc && hostAddrDst ) {
           // See how many dwords can fit in the rest of this page.
@@ -715,8 +719,10 @@ doIncr32:
         // we need the A20 address.
         paddrDst = A20ADDR(paddrDst);
 
-        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrSrc, BX_READ);
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrDst, BX_WRITE);
+        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrSrc, BX_READ);
+        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
 
         if ( hostAddrSrc && hostAddrDst ) {
           // See how many words can fit in the rest of this page.
@@ -1572,7 +1578,8 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
         // we need the A20 address.
         paddrDst = A20ADDR(paddrDst);
 
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(paddrDst, BX_WRITE);
+        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
 
         if ( hostAddrDst ) {
           // See how many bytes can fit in the rest of this page.
