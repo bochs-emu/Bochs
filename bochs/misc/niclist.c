@@ -2,7 +2,7 @@
 //
 // misc/niclist.c
 // by Don Becker <x-odus@iname.com>
-// $Id: niclist.c,v 1.9 2003-06-07 19:16:55 vruppert Exp $
+// $Id: niclist.c,v 1.10 2004-03-20 21:26:08 cbothamy Exp $
 //
 // This program is for win32 only.  It lists the network interface cards
 // that you can use in the "ethdev" field of the ne2k line in your bochsrc.
@@ -41,6 +41,7 @@ NIC_INFO_NT niNT[MAX_ADAPTERS];
 NIC_INFO_9X ni9X[MAX_ADAPTERS];
 
 BOOLEAN   (*PacketGetAdapterNames)(PTSTR, PULONG) = NULL;
+PCHAR   (*PacketGetVersion)() = NULL;
 
 void myexit (int code)
 {
@@ -59,6 +60,9 @@ int main(int argc, char **argv)
 	LPWSTR			wstrName;
 	LPSTR			strName, strDesc;
 	int				nAdapterCount;
+	PCHAR           dllVersion;
+	PCHAR           testString;
+	int		nDLLMajorVersion, nDLLMinorVersion;
 
 
 	// Attemp to load the WinpCap packet library
@@ -67,6 +71,7 @@ int main(int argc, char **argv)
 	{
 		// Now look up the address
 		PacketGetAdapterNames = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetAdapterNames");
+		PacketGetVersion = (PCHAR (*)())GetProcAddress(hPacket, "PacketGetVersion");
 	}
 	else {
 		printf("Could not load WinPCap driver!\n");
@@ -78,11 +83,35 @@ int main(int argc, char **argv)
 	dwVersion      = GetVersion();
 	dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
 
+        // Get DLL Version and Tokenize
+        dllVersion = PacketGetVersion();
+        nDLLMajorVersion = -1;
+        nDLLMinorVersion = -1;
+        for ( testString = strtok(dllVersion, ", ");
+              testString != NULL;
+              testString = strtok(NULL, ", ") )
+        {
+                // If Single Character, Convert
+                if ( strlen( testString ) == 1 )
+                {
+                        // Check Major First
+                        if ( nDLLMajorVersion == -1 )
+                        {
+                                nDLLMajorVersion = atoi(testString);
+                        }
+                        else if ( nDLLMinorVersion == -1 )
+                        {
+                                nDLLMinorVersion = atoi(testString);
+                        }
+                }
+        }
+
 	// Get out blob of adapter info
 	PacketGetAdapterNames(AdapterInfo,&AdapterLength);
 
-	// If this is Windows NT ...
-	if(!(dwVersion >= 0x80000000 && dwMajorVersion >= 4))
+	// If this is Windows NT ... And DLL Returns UNICODE
+	if(!(dwVersion >= 0x80000000 && dwMajorVersion >= 4) &&
+           !(nDLLMajorVersion >= 3 && nDLLMinorVersion >= 1))
 	{
 		wstrName=(LPWSTR)AdapterInfo;
 
