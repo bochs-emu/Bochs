@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.3 2001-10-03 13:34:55 bdenney Exp $
+// $Id: eth_win32.cc,v 1.4 2001-10-03 13:38:17 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,8 @@
 // rfc0826: arp
 // rfc0903: rarp
 //
+// For ethernet support under win32 to work, you must install WinPCap.
+// Download it from http://netgroup-serv.polito.it/winpcap
 
 #include <windows.h>
 #include "bochs.h"
