@@ -35,19 +35,17 @@ SHELL = /bin/sh
 @SET_MAKE@
 
 CXX = @CXX@
-CXXFLAGS = @CXXFLAGS@  @GUI_CXXFLAGS@
-
+CXXFLAGS = $(BX_INCDIRS) @CXXFLAGS@  @GUI_CXXFLAGS@
+LOCAL_CXXFLAGS =
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 X_CFLAGS = @X_CFLAGS@
-BEOS_CFLAGS = -Wno-multichar
-RFB_CFLAGS =
-SDL_CFLAGS =  
-WX_CXXFLAGS = 
 RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ..
 LIBTOOL=@LIBTOOL@
+WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
 GUI_OBJS_X11  = x.o
 GUI_OBJS_SDL = sdl.o
@@ -60,61 +58,51 @@ GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o wxmain.o wxdialog.o
-GUI_OBJS_NON_PLUGGABLE = keymap.o gui.o siminterface.o control.o
-GUI_OBJS_PLUGGABLE = @GUI_OBJS@
-GUI_OBJS_EXTERNAL =
+OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o control.o
+OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
 
-GUI_OBJS_NON_PLUGINS=@GUI_NON_PLUGINS_OBJ@
-GUI_OBJS_PLUGINS=@GUI_PLUGINS_OBJ@
-GUI_OBJS = $(GUI_OBJS_NON_PLUGINS)
-GUI_SO_OBJS = $(GUI_OBJS_PLUGINS)
-OBJS = $(GUI_OBJS_NON_PLUGINS) $(GUI_OBJS_PLUGINS) $(GUI_OBJS_EXTERNAL)
-
-BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
-LOCAL_CXXFLAGS =
+NONPLUGIN_OBJS = @GUI_NON_PLUGIN_OBJS@
+PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
 
 #
 # -------- end configurable options --------------------------
 #
 
-BX_GUI_OBJS = $(GUI_OBJS)
-
 all: libgui.a 
 
-libgui.a: $(BX_GUI_OBJS)
+plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+
+libgui.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libgui.a
-	$(LIBTOOL) $(CXX) -o libgui.a $(BX_GUI_OBJS)
+	@MAKELIB@ $(NONPLUGIN_OBJS)
+	@RANLIB@ libgui.a
 
+# standard compile rule for C++ files
 %.o: %.@CPP_SUFFIX@
-	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
+##### building plugins with libtool
 %.lo: %.@CPP_SUFFIX@
-	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
-
-%.dll: %.o
-	$(CXX) $(CXXFLAGS) -shared -o $@ $< ../dllexports.a -luser32 -lgdi32 -lcomdlg32 -lcomctl32
-
-beos.lo: beos.@CPP_SUFFIX@
-	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $(srcdir)/beos.@CPP_SUFFIX@
-beos.o: beos.@CPP_SUFFIX@
-	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $(srcdir)/beos.@CPP_SUFFIX@
-
-x.lo: x.@CPP_SUFFIX@
-	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(X_CFLAGS) $(srcdir)/x.@CPP_SUFFIX@
-x.o: x.@CPP_SUFFIX@
-	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(X_CFLAGS) $(srcdir)/x.@CPP_SUFFIX@
+	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 lib%.la: %.lo
 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
-# special rule for wx, since it has 3 files
+# special link rules for plugins that require more than one object file
 libwx.la: $(GUI_OBJS_WX:.o=.lo)
 	$(LIBTOOL) $(CXX) -module $(GUI_OBJS_WX:.o=.lo) -o libwx.la `@WX_CONFIG@ --cxxflags` -rpath $(PLUGIN_PATH)
 
-wx.dll: $(GUI_OBJS_WX)
-	$(CXX) $(CXXFLAGS) -shared -o wx.dll $(GUI_OBJS_WX) ../dllexports.a `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+#### building DLLs for win32  (tested on cygwin only)
+%.dll: %.o
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY) -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
-plugins: $(GUI_SO_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+wx.dll: $(GUI_OBJS_WX)
+	$(CXX) $(CXXFLAGS) -shared -o wx.dll $(GUI_OBJS_WX) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+
+# no need to build DLLs for beos.o
+# no need to build DLLs for x.o
+
+##### end DLL section
 
 clean:
 	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o *.dll

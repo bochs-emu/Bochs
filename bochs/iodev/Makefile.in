@@ -35,7 +35,7 @@ SHELL = /bin/sh
 @SET_MAKE@
 
 CXX = @CXX@
-CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
+CXXFLAGS = $(BX_INCDIRS) @CXXFLAGS@ @GUI_CXXFLAGS@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -43,6 +43,7 @@ RANLIB = @RANLIB@
 PLUGIN_PATH=@libdir@
 top_builddir    = ..
 LIBTOOL=@LIBTOOL@
+WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
 
 VIDEO_OBJS_VGA = vga.o
 VIDEO_OBJS_HGA = hga.o
@@ -58,13 +59,9 @@ SB16_LINUX_OBJS = sb16.o soundlnx.o
 SB16_WIN_OBJS   = sb16.o soundwin.o
 SLOWDOWN_OBJS = slowdown_timer.o
 
-BX_IODEV_OBJS_EXTERNAL =
-
-
-BX_IODEV_OBJS_NON_PLUGGABLE = \
+OBJS_THAT_CANNOT_BE_PLUGINS = \
   devices.o \
-  pit.o \
-  pit82c54.o pit_wrap.o \
+  pit.o pit82c54.o pit_wrap.o \
   @IODEBUG_OBJS@ \
   @PCI_OBJ@ \
   @NE2K_OBJS@ \
@@ -73,80 +70,70 @@ BX_IODEV_OBJS_NON_PLUGGABLE = \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
 
-BX_IODEV_OBJS_PLUGGABLE = \
+OBJS_THAT_CAN_BE_PLUGINS = \
   pic.o \
   serial.o \
   parallel.o \
   floppy.o \
-  scancodes.o \
   keyboard.o \
   $(VIDEO_OBJS) \
   biosdev.o \
   cmos.o \
   harddrv.o \
-  $(CDROM_OBJS) \
   dma.o \
   unmapped.o 
 
-BX_IODEV_OBJS_NON_PLUGINS=@BX_IODEV_NON_PLUGINS_OBJ@
+OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
+  scancodes.o \
+  $(CDROM_OBJS)
 
-BX_IODEV_OBJS_PLUGINS=@BX_IODEV_PLUGINS_OBJ@
-
-BX_IODEV_OBJS = $(BX_IODEV_OBJS_NON_PLUGINS)
-
-BX_IODEV_SO_OBJS = $(BX_IODEV_OBJS_PLUGINS)
-
-BX_OBJS     = $(BX_IODEV_OBJS_NON_PLUGINS) $(BX_IODEV_OBJS_PLUGINS) $(BX_IODEV_OBJS_EXTERNAL)
-
-BX_INCLUDES = iodev.h
+NONPLUGIN_OBJS = @IODEV_NON_PLUGIN_OBJS@
+PLUGIN_OBJS = @IODEV_PLUGIN_OBJS@
 
 all: libiodev.a 
 
+plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+
+libiodev.a: $(NONPLUGIN_OBJS)
+	@RMCOMMAND@ libiodev.a
+	@MAKELIB@ $(NONPLUGIN_OBJS)
+	@RANLIB@ libiodev.a
+
+# standard compile rule for C++ files
 %.o: %.@CPP_SUFFIX@
-	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
+##### building plugins with libtool
 %.lo: %.@CPP_SUFFIX@
-	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-# special rule for hard drive, which can have multiple objects
+lib%.la: %.lo
+	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+
+# special link rules for plugins that require more than one object file
 libharddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
 	$(LIBTOOL) $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
 
-harddrv.dll: harddrv.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o harddrv.dll harddrv.o cdrom.o ../dllexports.a
-
-# special rule for keyboard, which has 2 objects
 libkeyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) $(CXX) -module keyboard.lo scancodes.lo -o libkeyboard.la -rpath $(PLUGIN_PATH)
 
-keyboard.dll: keyboard.o scancodes.o
-	$(CXX) $(CXXFLAGS) -shared -o keyboard.dll keyboard.o scancodes.o ../dllexports.a
-
-# special rule for pit, which has 3 objects
 libpit.la: pit.lo pit82c54.lo pit_wrap.lo
 	$(LIBTOOL) $(CXX) -module pit.lo pit82c54.lo pit_wrap.lo -o libpit.la -rpath $(PLUGIN_PATH)
 
+#### building DLLs for win32  (tested on cygwin only)
+%.dll: %.o
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
+
+# special link rules for plugins that require more than one object file
+harddrv.dll: harddrv.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o harddrv.dll harddrv.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+keyboard.dll: keyboard.o scancodes.o
+	$(CXX) $(CXXFLAGS) -shared -o keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
+
 pit.dll: pit.o pit82c54.o pit_wrap.o
-	$(CXX) $(CXXFLAGS) -shared -o pit.dll pit.o pit82c54.o pit_wrap.o ../dllexports.a
-
-# default rule for linking plugins
-lib%.la: %.lo
-	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
-%.dll: %.o
-	$(CXX) $(CXXFLAGS) -shared -o $@ $< ../dllexports.a -luser32 -lgdi32 -lcomdlg32 -lcomctl32
-
-
-libiodev.a: $(BX_IODEV_OBJS)
-	$(LIBTOOL) @RMCOMMAND@ libiodev.a
-	$(LIBTOOL) $(CXX) -o $@ $(BX_IODEV_OBJS)
-
-%.dll: %.o
-	-$(CXX) $(CXXFLAGS) -shared -o $@ $< ../dllexports.a -luser32 -lgdi32 -lcomdlg32 -lcomctl32
-
-
-plugins: $(BX_IODEV_SO_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
-
-$(BX_OBJS): $(BX_INCLUDES)
+	$(CXX) $(CXXFLAGS) -shared -o pit.dll pit.o pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
+##### end DLL section
 
 clean:
 	@RMCOMMAND@ -rf .libs *.lo *.o *.la *.a *.dll
