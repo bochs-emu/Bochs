@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  get_address.c                                                            |
- |  $Id: get_address.c,v 1.3 2001-10-06 03:53:46 bdenney Exp $
+ |  $Id: get_address.c,v 1.4 2003-04-16 18:38:53 sshwarts Exp $
  |                                                                           |
  | Get the effective address from an FPU instruction.                        |
  |                                                                           |
@@ -18,6 +18,7 @@
  |    other processes using the emulator while swapping is in progress.      |
  +---------------------------------------------------------------------------*/
 
+#ifndef USE_WITH_CPU_SIM
 
 #include <linux/stddef.h>
 
@@ -444,3 +445,5 @@ void *FPU_get_address_16(u_char FPU_modrm, u32 *fpu_eip,
 
   return (void *)address ;
 }
+
+#endif

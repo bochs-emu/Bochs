@@ -119,12 +119,6 @@ BX_CPU_C::fpu_execute(bxInstruction_c *i)
   else
     addr_modes.override.operand_size = OP_SIZE_PREFIX;
 
-  // For now set access_limit to max.  It seems to be
-  // a number from 0..255 denoting how many bytes the
-  // current instruction can access according to its
-  // memory operand.  255 means >= 255.
-access_limit = 0xff;
-
   // fill in orig eip here in offset
   // fill in CS in selector
   entry_sel_off.offset = BX_CPU_THIS_PTR prev_eip;

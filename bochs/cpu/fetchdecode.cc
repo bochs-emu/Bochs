@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.47 2003-04-06 19:08:24 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.48 2003-04-16 18:38:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1713,8 +1713,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 7B */  { 0, &BX_CPU_C::BxError },
   /* 0F 7C */  { 0, &BX_CPU_C::BxError },
   /* 0F 7D */  { 0, &BX_CPU_C::BxError },
-  /* 0F 7E */  { BxAnother | BxPrefixSSE, NULL,  BxOpcodeGroupSSE_0f7e }, 
-  /* 0F 7F */  { BxAnother | BxPrefixSSE, NULL,  BxOpcodeGroupSSE_0f7f }, 
+  /* 0F 7E */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7e }, 
+  /* 0F 7F */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7f }, 
   /* 0F 80 */  { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jw },
   /* 0F 81 */  { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jw },
   /* 0F 82 */  { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jw },
@@ -2040,7 +2040,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* C0 */  { BxAnother | BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
   /* C1 */  { BxAnother | BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Ed },
   /* C2 */  { BxImmediate_Iw, &BX_CPU_C::RETnear32_Iw },
-  /* C3 */  { 0,               &BX_CPU_C::RETnear32 },
+  /* C3 */  { 0,              &BX_CPU_C::RETnear32 },
   /* C4 */  { BxAnother, &BX_CPU_C::LES_GvMp },
   /* C5 */  { BxAnother, &BX_CPU_C::LDS_GvMp },
   /* C6 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::MOV_EbIb },
@@ -2236,8 +2236,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 7B */  { 0, &BX_CPU_C::BxError },
   /* 0F 7C */  { 0, &BX_CPU_C::BxError },
   /* 0F 7D */  { 0, &BX_CPU_C::BxError },
-  /* 0F 7E */  { BxAnother | BxPrefixSSE, NULL,  BxOpcodeGroupSSE_0f7e }, 
-  /* 0F 7F */  { BxAnother | BxPrefixSSE, NULL,  BxOpcodeGroupSSE_0f7f }, 
+  /* 0F 7E */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7e }, 
+  /* 0F 7F */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7f }, 
   /* 0F 80 */  { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jd },
   /* 0F 81 */  { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jd },
   /* 0F 82 */  { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jd },

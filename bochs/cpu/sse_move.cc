@@ -853,7 +853,6 @@ void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 
   FPU_TWD  = 0;
   FPU_TOS  = 0;       
-//FPU_PARTIAL_STATUS &= 0xc7ff;
 
   BX_WRITE_MMX_REG(i->rm(), mm);
 #else
@@ -875,7 +874,6 @@ void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 
   FPU_TWD  = 0;
   FPU_TOS  = 0;
-//FPU_PARTIAL_STATUS &= 0xc7ff;
 
   BX_WRITE_XMM_REG(i->rm(), op);
 #else

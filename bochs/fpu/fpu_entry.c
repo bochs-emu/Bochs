@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_entry.c                                                              |
- |  $Id: fpu_entry.c,v 1.6 2003-04-12 21:02:07 sshwarts Exp $
+ |  $Id: fpu_entry.c,v 1.7 2003-04-16 18:38:52 sshwarts Exp $
  |                                                                           |
  | The entry functions for wm-FPU-emu                                        |
  |                                                                           |
@@ -197,13 +197,16 @@ do_the_FPU_interrupt:
 
           /* Stack underflow has priority */
           if ( NOT_EMPTY_ST0 ) {
+
+#ifndef USE_WITH_CPU_SIM
+              /* memory access limits checked in FPU_verify_area */
               if ( addr_modes.default_mode & PROTECTED )
                 {
                   /* This table works for 16 and 32 bit protected mode */
                   if ( access_limit < data_sizes_16[(byte1 >> 1) & 3] )
                     math_abort(FPU_info, SIGSEGV);
                 }
-
+#endif
               unmasked = 0;  /* Do this here to stop compiler warnings. */
               switch ( (byte1 >> 1) & 3 )
                 {

@@ -103,12 +103,12 @@ void BX_CPU_C::prepareMMX(void)
     exception(BX_UD_EXCEPTION, 0, 0);
 
   /* check SW_Summary bit for a pending FPU exceptions */
-  if(FPU_PARTIAL_STATUS & 0x0080)
+#define FPU_SW_SUMMARY 0x0080
+  if(FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
     exception(BX_MF_EXCEPTION, 0, 0);
 
   FPU_TWD = 0;
   FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
-//FPU_PARTIAL_STATUS &= 0xc7ff; 
 }
 
 #endif

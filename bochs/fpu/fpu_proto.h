@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_proto.h,v 1.5 2003-03-02 23:59:09 cbothamy Exp $
+// $Id: fpu_proto.h,v 1.6 2003-04-16 18:38:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -110,11 +110,6 @@ extern void FPU_copy_to_reg0(FPU_REG const *r, u_char tag) BX_CPP_AttrRegparmN(2
 /* fpu_trig.c */
 extern void FPU_triga(void);
 extern void FPU_trigb(void);
-/* get_address.c */
-extern void *FPU_get_address(u_char FPU_modrm, u32 *fpu_eip,
-			 struct address *addr, fpu_addr_modes addr_modes);
-extern void *FPU_get_address_16(u_char FPU_modrm, u32 *fpu_eip,
-			    struct address *addr, fpu_addr_modes addr_modes);
 /* load_store.c */
 extern int FPU_load_store(u_char type, fpu_addr_modes addr_modes,
 			    void *data_address);

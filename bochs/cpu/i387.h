@@ -14,12 +14,12 @@ struct i387_t {
     Bit32s fcs;
     Bit32s foo;
     Bit32s fos;
-    Bit32s aligment;	 
+    Bit32s align32;
     Bit64u st_space[16]; // 8*16 bytes per FP-reg (aligned) = 128 bytes
     unsigned char tos;
     unsigned char no_update;
     unsigned char rm;
-    unsigned char alimit;
+    unsigned align8;
 };
 
 // Endian  Host byte order         Guest (x86) byte order
@@ -29,11 +29,11 @@ struct i387_t {
 //
 // Legend: F - fraction/mmx
 //         E - exponent
-//         A - aligment
+//         A - alignment
 
 #ifdef BX_BIG_ENDIAN
 struct BxFpuRegister {
-  Bit16u aligment1, aligment2, aligment3;
+  Bit16u alignment1, alignment2, alignment3;
   Bit16s exp;   /* Signed quantity used in internal arithmetic. */
   Bit32u sigh;
   Bit32u sigl;
@@ -43,7 +43,7 @@ struct BxFpuRegister {
   Bit32u sigl;
   Bit32u sigh;
   Bit16s exp;   /* Signed quantity used in internal arithmetic. */
-  Bit16u aligment1, aligment2, aligment3;
+  Bit16u alignment1, alignment2, alignment3;
 } GCC_ATTRIBUTE((aligned(16), packed));
 #endif
 
@@ -148,11 +148,11 @@ typedef union {
 //
 // Legend: F - fraction/mmx
 //         E - exponent
-//         A - aligment
+//         A - alignment
 
 #ifdef BX_BIG_ENDIAN
 struct bx_mmx_reg_t {
-   Bit16u aligment1, aligment2, aligment3; 
+   Bit16u alignment1, alignment2, alignment3; 
    Bit16u exp; /* 2 byte FP-reg exponent */
    BxPackedMmxRegister packed_mmx_register;
 } GCC_ATTRIBUTE((aligned(16), packed));
@@ -160,7 +160,7 @@ struct bx_mmx_reg_t {
 struct bx_mmx_reg_t {
    BxPackedMmxRegister packed_mmx_register;
    Bit16u exp; /* 2 byte FP reg exponent */
-   Bit16u aligment1, aligment2, aligment3; 
+   Bit16u alignment1, alignment2, alignment3; 
 } GCC_ATTRIBUTE((aligned(16), packed));
 #endif
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.7 2003-04-12 21:02:07 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.8 2003-04-16 18:38:52 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -78,11 +78,6 @@ extern struct i387_t *current_i387;
 #define no_ip_update            (*(u_char *)&(i387.no_update))
 #define FPU_rm                  (*(u_char *)&(i387.rm))
 
-
-/* Number of bytes of data which can be legally accessed by the current
-   instruction. This only needs to hold a number <= 108, so a byte will do. */
-#define access_limit            (*(u_char *)&(i387.alimit))
-
 #define partial_status          (i387.swd)
 #define control_word            (i387.cwd)
 #define fpu_tag_word            (i387.twd)
@@ -92,7 +87,7 @@ extern struct i387_t *current_i387;
 #define instruction_address     (*(struct address *)&i387.fip)
 #define operand_address         (*(struct address *)&i387.foo)
 
-#define FPU_verify_area(x,y,z)	fpu_verify_area(x,y,z)
+#define FPU_verify_area(x,y,z)	fpu_verify_area((x),(y),(z))
 #define FPU_get_user(x,y)       ((x) = fpu_get_user((y), sizeof(*(y))))
 #define FPU_put_user(val,ptr)   fpu_put_user((val),(ptr),sizeof(*(ptr)))
 
