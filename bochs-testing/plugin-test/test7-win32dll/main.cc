@@ -38,15 +38,15 @@ int load_module (const char *fmt, const char *name)
 {
   char buf[512];
   sprintf (buf, fmt, name);
-  printf ("loading module from %s\n", buf);
+  printf ("loading module from VARIES{%s}\n", buf);
   HMODULE handle = LoadLibrary(buf);
-  printf ("handle is 0x%p\n", handle);
+  printf ("handle is VARIES{0x%p}\n", handle);
   if (!handle) {
     print_last_error ("LoadLibrary failed: %s\n");
     return -1;
   }
   modload_func func = (modload_func) GetProcAddress (handle, "module_init");
-  printf ("module_init function is at 0x%p\n", func);
+  printf ("module_init function is at VARIES{0x%p}\n", func);
   if (func != NULL) {
     printf ("Calling module_init\n");
     (*func)();
