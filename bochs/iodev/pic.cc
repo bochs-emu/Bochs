@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.32 2003-08-04 16:03:09 akrisak Exp $
+// $Id: pic.cc,v 1.33 2003-08-05 09:19:36 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -859,6 +859,7 @@ bx_pic_c::IAC(void)
   void
 bx_pic_c::show_pic_state(void)
 {
+#if defined(BX_DEBUGGER) && (BX_DEBUGGER == 1)
 dbg_printf("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
 dbg_printf("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
 dbg_printf("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
@@ -867,4 +868,5 @@ dbg_printf("s.slave_pic.imr = %02x\n", BX_PIC_THIS s.slave_pic.imr);
 dbg_printf("s.slave_pic.isr = %02x\n", BX_PIC_THIS s.slave_pic.isr);
 dbg_printf("s.slave_pic.irr = %02x\n", BX_PIC_THIS s.slave_pic.irr);
 dbg_printf("s.slave_pic.irq = %02x\n", BX_PIC_THIS s.slave_pic.irq);
+#endif
 }
