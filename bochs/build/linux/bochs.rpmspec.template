@@ -16,7 +16,7 @@ and other OS's, all on your workstation.
 	tar xzvf $RPM_SOURCE_DIR/bochs.tar.gz
 %build
 	cd $RPM_BUILD_DIR/bochs
-	sh .conf.x86
+	sh .conf.linux-x86
 	make
 %install
 	pwd

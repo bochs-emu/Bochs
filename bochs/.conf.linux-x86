@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# These are the steps I typically use to configure and compile Bochs
+# on a Linux x86 system with egcs
+#
+
+CC="egcs"
+CXX="c++"
+CFLAGS="-Wall -O2 -fomit-frame-pointer -pipe"
+CXXFLAGS="$CFLAGS"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --enable-fpu --enable-cdrom --enable-sb16=linux
+#./configure --enable-fpu
+#./configure
+#./configure --enable-cdrom --enable-cpu-level=4
+
+
+#./configure --enable-fpu \
+#  --enable-x86-debugger \
+#  --enable-debugger \
+#  --enable-loader \
+#  --enable-disasm
+
+#./configure --enable-fpu --enable-cdrom
+#  --enable-x86-debugger
+
+#--enable-debugger --enable-disasm
+#./configure --enable-fpu --enable-cpu-level=5 \
+#  --enable-debugger --enable-disasm
+#./configure
+
+#./configure --enable-cpu-level=5
+#./configure --enable-fpu --enable-cpu-level=4
+#./configure --enable-fpu
+#./configure --enable-debugger --enable-disasm --enable-fpu
+
+#./configure --enable-fpu
+#./configure --enable-cpu-level=3
+#./configure --enable-cpu-level=3 --enable-fpu
+#            --enable-debugger --enable-disasm
+#./configure --enable-pci
+#./configure --enable-debugger --enable-disasm
+#./configure --enable-debugger --enable-disasm --enable-loader
+#./configure --enable-dynamic=i386
+#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=0
+#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=1 --enable-time0=917385580
+#./configure --enable-ne2000
