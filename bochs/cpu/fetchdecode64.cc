@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.53 2003-05-29 19:44:59 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.54 2003-08-15 13:17:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2392,21 +2392,15 @@ BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
 ExtendedFieldCheck((rm&8) && ((rm&7)==5)); // KPL
           if (rm == 5) {
             if ((ilen+3) < remain) {
-              Bit32u imm32u;
-              imm32u = *iptr++;
-              imm32u |= (*iptr++) << 8;
-              imm32u |= (*iptr++) << 16;
-              imm32u |= (*iptr++) << 24;
+              instruction->modRMForm.displ32u = FetchDWORD(iptr);
+              iptr += 4;
               ilen += 4;
-              instruction->modRMForm.displ32u = imm32u;
 #if BX_DYNAMIC_TRANSLATION
               instruction->DTMemRegsUsed = 0;
 #endif
               goto modrm_done;
               }
-            else {
-              return(0);
-              }
+            else return(0);
             }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
@@ -2425,9 +2419,7 @@ get_8bit_displ_1:
             ilen++;
             goto modrm_done;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve64Mod1or2[rm];
@@ -2438,18 +2430,12 @@ get_8bit_displ_1:
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm32[rm]);
 get_32bit_displ_1:
         if ((ilen+3) < remain) {
-          Bit32u imm32u;
-          imm32u = *iptr++;
-          imm32u |= (*iptr++) << 8;
-          imm32u |= (*iptr++) << 16;
-          imm32u |= (*iptr++) << 24;
-          instruction->modRMForm.displ32u = imm32u;
+          instruction->modRMForm.displ32u = FetchDWORD(iptr);
+          iptr += 4;
           ilen += 4;
           goto modrm_done;
           }
-        else {
-          return(0);
-          }
+        else return(0);
         }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -2529,22 +2515,15 @@ ExtendedFieldCheck(rm&8); // KPL
 ExtendedFieldCheck((rm&8) && ((rm&7)==5)); // KPL
           if (rm == 5) {
             if ((ilen+3) < remain) {
-              Bit32u imm32u;
-              imm32u = *iptr++;
-              imm32u |= (*iptr++) << 8;
-              imm32u |= (*iptr++) << 16;
-              imm32u |= (*iptr++) << 24;
-              //RMAddr(instruction) = imm32u;
-              instruction->modRMForm.displ32u = imm32u;
+              instruction->modRMForm.displ32u = FetchDWORD(iptr);
+              iptr += 4;
               ilen += 4;
 #if BX_DYNAMIC_TRANSLATION
               instruction->DTMemRegsUsed = 0;
 #endif
               goto modrm_done;
               }
-            else {
-              return(0);
-              }
+            else return(0);
             }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
@@ -2564,9 +2543,7 @@ get_8bit_displ:
             ilen++;
             goto modrm_done;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         // (mod == 0x80) mod == 10b
 ExtendedFieldCheck(rm&8); // KPL
@@ -2578,18 +2555,12 @@ ExtendedFieldCheck(rm&8); // KPL
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod10_rm32[rm]);
 get_32bit_displ:
         if ((ilen+3) < remain) {
-          Bit32u imm32u;
-          imm32u = *iptr++;
-          imm32u |= (*iptr++) << 8;
-          imm32u |= (*iptr++) << 16;
-          imm32u |= (*iptr++) << 24;
-          instruction->modRMForm.displ32u = imm32u;
+          instruction->modRMForm.displ32u = FetchDWORD(iptr);
+          iptr += 4;
           ilen += 4;
           goto modrm_done;
           }
-        else {
-          return(0);
-          }
+        else return(0);
         }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -2785,34 +2756,25 @@ ExtendedFieldCheck(nnn&8); // KPL
       case BxImmediate_IvIw: // CALL_Ap
         if (instruction->os32L()) {
           if ((ilen+3) < remain) {
-            Bit32u imm32u;
-            ReadHostDWordFromLittleEndian(iptr, imm32u);
-            instruction->modRMForm.Id = imm32u;
+            instruction->modRMForm.Id = FetchDWORD(iptr);
+            iptr += 4;
             ilen += 4;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         else {
           if ((ilen+1) < remain) {
-            Bit16u imm16u;
-            ReadHostWordFromLittleEndian(iptr, imm16u);
-            instruction->modRMForm.Iw = imm16u;
+            instruction->modRMForm.Iw = FetchWORD(iptr);
+            iptr += 2;
             ilen += 2;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         if (imm_mode != BxImmediate_IvIw)
           break;
-        iptr++;
         // Get Iw for BxImmediate_IvIw
         if ((ilen+1) < remain) {
-          Bit16u imm16u;
-          ReadHostWordFromLittleEndian(iptr, imm16u);
-          instruction->IxIxForm.Iw2 = imm16u;
+          instruction->IxIxForm.Iw2 = FetchWORD(iptr);
           ilen += 2;
           }
         else {
@@ -2821,9 +2783,7 @@ ExtendedFieldCheck(nnn&8); // KPL
         break;
       case BxImmediate_Iq: // MOV Rx,imm64
         if ((ilen+7) < remain) {
-          Bit64u imm64u;
-          ReadHostQWordFromLittleEndian(iptr, imm64u);
-          instruction->IqForm.Iq = imm64u;
+          instruction->IqForm.Iq = FetchQWORD(iptr);
           ilen += 8;
           }
         else {
@@ -2836,43 +2796,32 @@ ExtendedFieldCheck(nnn&8); // KPL
         // there is only 64/32-bit addressing available in long-mode.
         if (instruction->as64L()) {
           if ((ilen+7) < remain) {
-            Bit64u imm64u;
-            ReadHostQWordFromLittleEndian(iptr, imm64u);
-            instruction->IqForm.Iq = imm64u;
+            instruction->IqForm.Iq = FetchQWORD(iptr);
             ilen += 8;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         else {
           if ((ilen+3) < remain) {
-            Bit32u imm32u;
-            ReadHostDWordFromLittleEndian(iptr, imm32u);
-            // Sign extend???
-            instruction->IqForm.Iq = imm32u;
+            // Sign extend ???
+            instruction->IqForm.Iq = FetchDWORD(iptr);
             ilen += 4;
             }
-          else {
-            return(0);
-            }
+          else return(0);
           }
         break;
 
       case BxImmediate_Iw:
       case BxImmediate_IwIb:
         if ((ilen+1) < remain) {
-          Bit16u imm16u;
-          imm16u = *iptr++;
-          imm16u |= (*iptr) << 8;
-          instruction->modRMForm.Iw = imm16u;
+          instruction->modRMForm.Iw = FetchWORD(iptr);
+          iptr += 2;
           ilen += 2;
           }
         else {
           return(0);
           }
         if (imm_mode == BxImmediate_Iw) break;
-        iptr++;
         if (ilen < remain) {
           instruction->IxIxForm.Ib2 = *iptr;
           ilen++;
@@ -2894,10 +2843,7 @@ ExtendedFieldCheck(nnn&8); // KPL
         break;
       case BxImmediate_BrOff16:
         if ((ilen+1) < remain) {
-          Bit16u imm16u;
-          imm16u = *iptr++;
-          imm16u |= (*iptr) << 8;
-          instruction->modRMForm.Id = (Bit16s) imm16u;
+          instruction->modRMForm.Id = (Bit16s) FetchWORD(iptr);
           ilen += 2;
           }
         else {
