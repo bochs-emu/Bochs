@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.178 2002-11-14 05:12:28 bdenney Exp $
+// $Id: main.cc,v 1.179 2002-11-15 14:47:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1553,9 +1553,8 @@ print_usage ()
 {
   fprintf(stderr, 
     "Usage: bochs [flags] [bochsrc options]\n\n"
-    "  -q               quickstart with default configuration file\n"
     "  -f configfile    specify configuration file\n"
-    "  -qf configfile   quickstart with specified configuration file\n"
+    "  -q               quick start (skip configuration interface)\n"
     "  --help           display this help and exit\n\n"
     "For information on Bochs configuration file arguments, see the\n"
 #if (!defined(WIN32)) && !BX_WITH_MACOS
@@ -1568,7 +1567,6 @@ print_usage ()
 int
 bx_init_main (int argc, char *argv[])
 {
-  bx_bool no_arg = 1;
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
   // constructors or functions called by constructors.  The macros test for
@@ -1598,17 +1596,13 @@ bx_init_main (int argc, char *argv[])
       SIM->quit_sim (0);
     }
     else if (!strcmp ("-q", argv[arg])) {
-      no_arg = 0;
       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
     }
     else if (!strcmp ("-f", argv[arg])) {
-      no_arg = 0;
-      SIM->get_param_enum(BXP_BOCHS_START)->set (BX_EDIT_START);
       if (++arg >= argc) BX_PANIC(("-f must be followed by a filename"));
       else bochsrc_filename = argv[arg];
     }
     else if (!strcmp ("-qf", argv[arg])) {
-      no_arg = 0;
       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
       if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
       else bochsrc_filename = argv[arg];
@@ -1624,7 +1618,6 @@ bx_init_main (int argc, char *argv[])
       setupWorkingDirectory (argv[0]);
       // there is no stdin/stdout so disable the text-based config interface.
       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
-      no_arg = 0;
       char cwd[MAXPATHLEN];
       getwd (cwd);
       BX_INFO (("Now my working directory is %s", cwd));
@@ -1658,7 +1651,6 @@ bx_init_main (int argc, char *argv[])
     {
       // there is no stdin/stdout so disable the text-based config interface.
       SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
-      no_arg = 0;
     }
     BX_INFO (("fixing default lib location ..."));
     // locate the lib directory within the application bundle.
@@ -1688,20 +1680,19 @@ bx_init_main (int argc, char *argv[])
 
   int norcfile = 1;
   /* always parse configuration file and command line arguments */
-  if (!no_arg) {
-    if (bochsrc_filename == NULL) bochsrc_filename = bx_find_bochsrc ();
-    if (bochsrc_filename)
-      norcfile = bx_read_configuration (bochsrc_filename);
-  }
+  if (bochsrc_filename == NULL) bochsrc_filename = bx_find_bochsrc ();
+  if (bochsrc_filename)
+    norcfile = bx_read_configuration (bochsrc_filename);
 
-#if BX_USE_CONFIG_INTERFACE
   if (norcfile) {
     // No configuration was loaded, so the current settings are unusable.
     // Switch off quick start so that we will drop into the configuration
     // interface.
+    if (SIM->get_param_enum(BXP_BOCHS_START)->get() == BX_QUICK_START) {
+      BX_ERROR (("Switching off quick start, because no configuration file was found."));
+    }
     SIM->get_param_enum(BXP_BOCHS_START)->set (BX_LOAD_START);
   }
-#endif
 
   // parse the rest of the command line.  This is done after reading the
   // configuration file so that the command line arguments can override
