@@ -1,6 +1,6 @@
 //
 // gui/wxmain.cc
-// $Id: wxmain.cc,v 1.4 2002-08-09 06:16:43 vruppert Exp $
+// $Id: wxmain.cc,v 1.5 2002-08-25 09:54:05 vruppert Exp $
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -146,7 +146,7 @@ bool MyApp::OnInit()
 {
   //wxLog::AddTraceMask (_T("mime"));
   bx_init_siminterface ();
-  bx_init_main ();
+  bx_init_main (argc, argv);
   MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
   theFrame = frame;  // hack alert
   frame->Show( TRUE );
