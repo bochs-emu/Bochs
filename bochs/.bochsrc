@@ -175,7 +175,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x368, irq=9
 #   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
 #   
-# Point this at a 10M, 20M, or 30M hard disk image file, cdrom iso file,
+# Point this at a hard disk image file, cdrom iso file,
 # or physical cdrom device.  
 # To create a hard disk image, try running bximage.  
 # It will help you choose the size and then suggest a line that 
@@ -215,7 +215,7 @@ ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
 # The DISKC option is deprecated. Use ATA* options instead.
 #
 # DISKC: file=, cyl=, heads=, spt=
-# Point this at a 10M, 20M, or 30M hard disk image file.  To create 
+# Point this at a hard disk image file.  To create 
 # a hard disk image, try running bximage.  It will help you choose the
 # size and then suggest a diskc line that works with it.
 #
@@ -309,7 +309,7 @@ log: bochsout.txt
 
 #=======================================================================
 # LOGPREFIX:
-# This handles the format of the string prepended to each log line :
+# This handles the format of the string prepended to each log line.
 # You may use those special tokens :
 #   %t : 11 decimal digits timer tick
 #   %i : 8 hexadecimal digits of cpu0 current eip
@@ -538,7 +538,7 @@ screenmode: name="sample"
 # Examples:
 # ne2k: ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
 #
-# ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
+# ioaddr, irq: You probably won't need to change ioaddr and irq, unless there
 # are IRQ conflicts.
 #
 # mac: The MAC address MUST NOT match the address of any machine on the net.
