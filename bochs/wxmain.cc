@@ -1,5 +1,7 @@
 //
 // wxmain.cc
+// $Id: wxmain.cc,v 1.1.2.11 2002-03-23 03:22:07 bdenney Exp $
+//
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
 // when it's appropriate.
