@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.224 2003-04-02 17:03:26 vruppert Exp $
+// $Id: main.cc,v 1.225 2003-05-02 16:19:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2560,6 +2560,9 @@ parse_line_formatted(char *context, int num_params, char *params[])
   int i;
 
   if (num_params < 1) return 0;
+  if (num_params < 2) {
+    PARSE_ERR(("%s: a bochsrc option needs at least one parameter", context));
+  }
 
   if (!strcmp(params[0], "#include")) {
     if (num_params != 2) {
@@ -2573,7 +2576,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     bx_read_configuration(params[1]);
     }
-  else if (params[0][0] == '#') return 0; /* comment */
   else if (!strcmp(params[0], "floppya")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "2_88=", 5)) {
