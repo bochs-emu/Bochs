@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.25 2002-03-10 20:59:11 japj Exp $
+// $Id: vga.cc,v 1.26 2002-03-13 18:33:00 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2097,8 +2097,22 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   x_tileno = (offset % BX_VGA_THIS s.vbe_xres) / X_TILESIZE;
   BX_VGA_THIS s.vga_mem_updated = 1;
   BX_VGA_THIS s.vga_tile_updated[x_tileno][y_tileno] = 1;
-        
-  BX_VGA_THIS s.vbe_memory[offset]=value;
+
+  // check for out of memory write
+  if (offset < sizeof(BX_VGA_THIS s.vbe_memory))
+  {
+    BX_VGA_THIS s.vbe_memory[offset]=value;
+  }
+  else
+  {
+    // make sure we don't flood the logfile
+    static int count=0;
+    if (count<100)
+    {
+      count ++;
+      BX_INFO(("VBE_mem_write out of video memory write at %x",offset));
+    }
+  }
 }
 
   Bit32u
@@ -2127,13 +2141,38 @@ bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
   }
   else
   {
-    // data register      
-    // FIXME: read from the data registers
+    // data register read
+    
     switch (BX_VGA_THIS s.vbe_curindex)
     {
       case VBE_DISPI_INDEX_ID: // Display Interface ID check
       {
         return VBE_DISPI_ID0;
+      } break;
+      
+      case VBE_DISPI_INDEX_XRES: // x resolution
+      {
+        return BX_VGA_THIS s.vbe_xres;
+      } break;
+
+      case VBE_DISPI_INDEX_YRES: // y resolution
+      {
+        return BX_VGA_THIS s.vbe_yres;
+      } break;
+      
+      case VBE_DISPI_INDEX_BPP: // bpp
+      {
+        return BX_VGA_THIS s.vbe_bpp;
+      } break;
+
+      case VBE_DISPI_INDEX_ENABLE: // vbe enabled
+      {
+        return BX_VGA_THIS s.vbe_enabled;
+      } break;
+      
+      case VBE_DISPI_INDEX_BANK: // current bank
+      {
+        return BX_VGA_THIS s.vbe_bank;
       } break;
 
       default:
@@ -2184,36 +2223,98 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         }
         else
         {
-          BX_INFO(("VBE known Display Interface %x",value));
+          // make sure we don't flood the logfile
+          static int count=0;
+          if (count < 100)
+          {
+            count++;
+            BX_INFO(("VBE known Display Interface %x",value));
+          }
         }
       } break;
       
       case VBE_DISPI_INDEX_XRES: // set xres
       {
-        BX_VGA_THIS s.vbe_xres=(Bit16u) value;
+        // check that we don't set xres during vbe enabled
+        if (!BX_VGA_THIS s.vbe_enabled)
+        {
+          // check for within max xres range
+          if (value <= VBE_DISPI_MAX_XRES)
+          {
+            BX_VGA_THIS s.vbe_xres=(Bit16u) value;
+          }
+          else
+          {
+            BX_INFO(("VBE set xres more then max xres (%d)",value));
+          }
+        }
+        else
+        {
+          BX_INFO(("VBE set xres during vbe enabled!"));
+        }
       } break;
       
       case VBE_DISPI_INDEX_YRES: // set yres
       {
-        BX_VGA_THIS s.vbe_yres=(Bit16u) value;
+        // check that we don't set yres during vbe enabled
+        if (!BX_VGA_THIS s.vbe_enabled)
+        {
+          // check for within max yres range
+          if (value <= VBE_DISPI_MAX_YRES)
+          {
+            BX_VGA_THIS s.vbe_yres=(Bit16u) value;
+          }
+          else
+          {
+            BX_INFO(("VBE set yres more then max yres (%d)",value));
+          }
+        }
+        else
+        {
+          BX_INFO(("VBE set yres during vbe enabled!"));
+        }
       } break;
   
       case VBE_DISPI_INDEX_BPP: // set bpp
       {
-        BX_VGA_THIS s.vbe_bpp=(Bit16u) value;
+        // check that we don't set bpp during vbe enabled
+        if (!BX_VGA_THIS s.vbe_enabled)
+        {
+          // check for correct bpp range
+          if (value == VBE_DISPI_BPP_8)
+          {
+            BX_VGA_THIS s.vbe_bpp=(Bit16u) value;
+          }
+          else
+          {
+            BX_INFO(("VBE set bpp with unknown bpp (%d)",value));
+          }
+        }
+        else
+        {
+          BX_INFO(("VBE set bpp during vbe enabled!"));
+        }
       } break;
         
       case VBE_DISPI_INDEX_BANK: // set bank
       {
-        BX_INFO(("VBE set bank to %d", BX_VGA_THIS s.vbe_bank));
-        BX_VGA_THIS s.vbe_bank=(Bit16u) value & 0xff; // FIXME lobyte = vbe bank A?
+        // check for max bank nr
+        if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024 /64))
+        {
+          BX_INFO(("VBE set bank to %d", BX_VGA_THIS s.vbe_bank));
+          BX_VGA_THIS s.vbe_bank=(Bit16u) value & 0xff; // FIXME lobyte = vbe bank A?
+        }
+        else
+        {
+          BX_INFO(("VBE set invalid bank (%d)",value));
+        }
       } break;
       
       case VBE_DISPI_INDEX_ENABLE: // enable video
       {
         if (value)
         {
-          BX_INFO(("VBE enabling x %d, y %d, bpp %d", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
+          BX_INFO(("VBE enabling x %d, y %d, bpp %d (0=8bpp)", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
           bx_gui.dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);
         }
         else

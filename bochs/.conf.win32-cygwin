@@ -14,4 +14,4 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --enable-cdrom --enable-sb16=win
+./configure --enable-cdrom --enable-sb16=win --enable-vbe

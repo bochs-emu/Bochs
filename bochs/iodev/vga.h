@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.8 2002-03-10 04:51:24 bdenney Exp $
+// $Id: vga.h,v 1.9 2002-03-13 18:33:00 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,8 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 #if BX_SUPPORT_VBE
+  #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB 4
+  
   #define VBE_DISPI_BANK_ADDRESS          0xA0000
   #define VBE_DISPI_BANK_SIZE_KB          64
   
@@ -216,7 +218,7 @@ private:
     Bit8u tile[X_TILESIZE * Y_TILESIZE];
 
 #if BX_SUPPORT_VBE    
-    Bit8u vbe_memory[1024 * 1024];
+    Bit8u vbe_memory[VBE_DISPI_TOTAL_VIDEO_MEMORY_MB *1024 * 1024];
     Bit16u  vbe_xres;
     Bit16u  vbe_yres;
     Bit16u  vbe_bpp;
