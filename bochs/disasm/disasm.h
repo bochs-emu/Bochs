@@ -223,6 +223,7 @@ private:
   };
 #endif
 
+  void dis_putc(char symbol);
   void dis_sprintf(char *fmt, ...);
   void decode_modrm();
 

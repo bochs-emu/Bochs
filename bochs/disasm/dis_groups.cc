@@ -288,10 +288,8 @@ void disassembler::Sw (unsigned attr)
 // immediate
 void disassembler::I1 (unsigned) 
 { 
-  if (intel_mode)
-    dis_sprintf ("1");
-  else
-    dis_sprintf("$1");
+  if (! intel_mode) dis_putc('$');
+  dis_putc ('1');
 }
 
 void disassembler::Ib (unsigned attr) 

@@ -239,3 +239,9 @@ void disassembler::dis_sprintf(char *fmt, ...)
 
   disbufptr += strlen(disbufptr);
 }
+
+void disassembler::dis_putc(char symbol)
+{
+  *disbufptr++ = symbol;
+  *disbufptr = 0;
+}

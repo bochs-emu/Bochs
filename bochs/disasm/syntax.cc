@@ -206,19 +206,19 @@ void disassembler::print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry)
     break;
 
   case 'X':  // movsx or movzx
-    dis_sprintf("x");
+    dis_putc('x');
     break;
 
   case 'S':  // string
     if (i32bit_opsize)
-      dis_sprintf("d");
+      dis_putc('d');
     else
-      dis_sprintf("w");
+      dis_putc('w');
     break;
 
   case 'D':
     if (i32bit_opsize)
-      dis_sprintf("d");
+      dis_putc('d');
     break;
 
   default:
@@ -226,7 +226,7 @@ void disassembler::print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry)
     break;
   }
 
-  dis_sprintf(" ");
+  dis_putc(' ');
 
   if (entry->Operand1) {
     (this->*entry->Operand1)(entry->Op1Attr);
@@ -273,55 +273,55 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
 
   switch(*disbufptr) {
   case 'B':
-    dis_sprintf("b");
+    dis_putc('b');
     break;
 
   case 'W':
-    dis_sprintf("w");
+    dis_putc('w');
     break;
 
   case 'S':
   case 'V':
     if (i32bit_opsize)
-      dis_sprintf("l");
+      dis_putc('l');
     else
-      dis_sprintf("w");
+      dis_putc('w');
     break;
 
   case 'L':
-    dis_sprintf("l");
+    dis_putc('l');
     break;
 
   case 'Q':
-    dis_sprintf("q");
+    dis_putc('q');
     break;
 
   case 'T':
-    dis_sprintf("t");
+    dis_putc('t');
     break;
 
   case 'X':
     if (entry->Op2Attr == B_SIZE)
-      dis_sprintf("b");
+      dis_putc('b');
     else if (entry->Op2Attr == W_SIZE)
-      dis_sprintf("w");
+      dis_putc('w');
     else if (entry->Op2Attr == D_SIZE)
-      dis_sprintf("l");
+      dis_putc('l');
     else
       printf("Internal disassembler error !\n");
 
     if (entry->Op1Attr == W_SIZE)
-      dis_sprintf("w");
+      dis_putc('w');
     else if (entry->Op1Attr == D_SIZE)
-      dis_sprintf("l");
+      dis_putc('l');
     else if (entry->Op1Attr == Q_SIZE)
-      dis_sprintf("q");
+      dis_putc('q');
     else if (entry->Op1Attr == V_SIZE)
     {
       if (i32bit_opsize)
-        dis_sprintf("l");
+        dis_putc('l');
       else
-        dis_sprintf("w");
+        dis_putc('w');
     }
     else
       printf("Internal disassembler error !\n");
@@ -329,7 +329,7 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
 
   case 'D':
     if (i32bit_opsize)
-      dis_sprintf("l");
+      dis_putc('l');
     break;
 
   default:
@@ -337,7 +337,7 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
     break;
   }
 
-  dis_sprintf(" ");
+  dis_putc(' ');
 
   if (entry->Operand3) {                                         
     (this->*entry->Operand3)(entry->Op3Attr);
