@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.90 2003-08-22 16:52:38 cbothamy Exp $
+// $Id: wxmain.cc,v 1.91 2003-08-23 05:34:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -530,7 +530,7 @@ MyFrame::~MyFrame ()
 void MyFrame::OnConfigNew(wxCommandEvent& WXUNUSED(event))
 {
   int answer = wxMessageBox ("This will reset all settings back to their default values.\nAre you sure you want to do this?",
-    "Are you sure?", wxYES_NO | wxCENTER);
+    "Are you sure?", wxYES_NO | wxCENTER, this);
   if (answer == wxYES) SIM->reset_all_param ();
 }
 
@@ -581,10 +581,11 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
     dev_id[bootDevices++] = BX_BOOT_CDROM;
   }
   if (bootDevices == 0) {
-    wxMessageBox( "All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, a hard drive, or a CD-ROM.", "None enabled", wxOK | wxICON_ERROR );
+    wxMessageBox( "All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, a hard drive, or a CD-ROM.",
+                  "None enabled", wxOK | wxICON_ERROR, this );
     return;
   }
-  int which = wxGetSingleChoiceIndex ("Select the device to boot from", "Boot Device", bootDevices, devices);
+  int which = wxGetSingleChoiceIndex ("Select the device to boot from", "Boot Device", bootDevices, devices, this);
   if (which<0) return;  // cancelled
   bx_param_enum_c *bootdevice = (bx_param_enum_c *) 
     SIM->get_param(BXP_BOOTDRIVE);
@@ -864,7 +865,8 @@ void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
 {
   if (SIM->get_param (BXP_CPU_EAX) == NULL) {
     // if params not initialized yet, then give up
-    wxMessageBox ("Cannot show the debugger window until the simulation has begun.", "Sim not started", wxOK | wxICON_ERROR );
+    wxMessageBox ("Cannot show the debugger window until the simulation has begun.",
+                  "Sim not started", wxOK | wxICON_ERROR, this );
     return;
   }
   if (showCpu == NULL) {
@@ -972,7 +974,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
   wxString str;
   str.Printf ("Bochs x86 Emulator version %s (wxWindows port)", VER_STRING);
-  wxMessageBox( str, "About Bochs", wxOK | wxICON_INFORMATION );
+  wxMessageBox( str, "About Bochs", wxOK | wxICON_INFORMATION, this );
 }
 
 // update the menu items, status bar, etc.
@@ -995,7 +997,7 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
       // Obviously if the user asked it to stop, they don't need to be told.
       if (popupNotify)
         wxMessageBox("Bochs simulation has stopped.", "Bochs Stopped", 
-            wxOK | wxICON_INFORMATION);
+            wxOK | wxICON_INFORMATION, this);
       break;
     case Pause: // pause
       wxLogStatus ("Pausing simulation");
@@ -1055,7 +1057,7 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
   if (sim_thread != NULL) {
         wxMessageBox (
           "Can't start Bochs simulator, because it is already running",
-          "Already Running", wxOK | wxICON_ERROR);
+          "Already Running", wxOK | wxICON_ERROR, this);
         return;
   }
   // check that display library is set to wx.  If not, give a warning and
@@ -1069,7 +1071,7 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
     "The display library was not set to wxWindows.  When you use the\n"
     "wxWindows configuration interface, you must also select the wxWindows\n"
     "display library.  I will change it to 'wx' now.",
-    "display library error", wxOK | wxICON_WARNING);
+    "display library error", wxOK | wxICON_WARNING, this);
     if (!gui_param->set_by_name ("wx")) {
       wxASSERT (0 && "Could not set display library setting to 'wx");
     }
@@ -1079,7 +1081,7 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
   if (start_bochs_times>1) {
         wxMessageBox (
         "You have already started the simulator once this session. Due to memory leaks and bugs in init code, you may get unstable behavior.",
-        "2nd time warning", wxOK | wxICON_WARNING);
+        "2nd time warning", wxOK | wxICON_WARNING, this);
   }
   num_events = 0;  // clear the queue of events for bochs to handle
   sim_thread = new SimThread (this);
@@ -1202,7 +1204,7 @@ MyFrame::HandleAskParam (BxEvent *event)
           wxString msg;
           msg.Printf ("ask param for parameter type %d is not implemented in wxWindows",
                       param->get_type ());
-          wxMessageBox( msg, "not implemented", wxOK | wxICON_ERROR );
+          wxMessageBox( msg, "not implemented", wxOK | wxICON_ERROR, this );
           return -1;
         }
   }
@@ -1420,7 +1422,8 @@ void MyFrame::editFirstCdrom ()
 {
   bx_param_c *firstcd = SIM->get_first_cdrom ();
   if (!firstcd) {
-    wxMessageBox ("No CDROM drive is enabled.  Use Edit:ATA to set one up.", "No CDROM", wxOK | wxICON_ERROR );
+    wxMessageBox ("No CDROM drive is enabled.  Use Edit:ATA to set one up.",
+                  "No CDROM", wxOK | wxICON_ERROR, this );
     return;
   }
   ParamDialog dlg (this, -1);
