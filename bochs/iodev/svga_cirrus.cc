@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.9 2005-02-10 09:48:12 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.10 2005-03-22 22:20:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -282,10 +282,16 @@ bx_svga_cirrus_c::init(void)
 #endif
   BX_CIRRUS_THIS svga_init_members();
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
-  if (BX_CIRRUS_THIS pci_enabled) {
+  if (BX_CIRRUS_THIS pci_enabled)
+  {
     BX_CIRRUS_THIS svga_init_pcihandlers();
+    BX_INFO(("CL-GD5446 PCI initialized"));
   }
+  else
 #endif
+  {
+    BX_INFO(("CL-GD5430 ISA initialized"));
+  }
 }
 
   void
@@ -1191,7 +1197,8 @@ bx_svga_cirrus_c::svga_update(void)
   unsigned xc, yc, xti, yti;
   unsigned r, c, w, h;
   int i;
-  unsigned long red, green, blue, colour;
+  Bit8u red, green, blue;
+  Bit32u colour;
   Bit8u * vid_ptr, * vid_ptr2;
   Bit8u * tile_ptr, * tile_ptr2;
   bx_svga_tileinfo_t info;
@@ -1527,7 +1534,7 @@ bx_svga_cirrus_c::svga_read_crtc(Bit32u address, unsigned index)
     case 0x26:
       return (BX_CIRRUS_THIS s.attribute_ctrl.address & 0x3f);
     default:
-      BX_ERROR(("CRTC index 0x%02x is unknown(read)", index));
+      BX_DEBUG(("CRTC index 0x%02x is unknown(read)", index));
       break;
     }
 
@@ -1591,7 +1598,7 @@ bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
       break;
 
     default:
-      BX_ERROR(("CRTC index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
+      BX_DEBUG(("CRTC index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
       return;
     }
 
@@ -1644,7 +1651,7 @@ bx_svga_cirrus_c::svga_read_sequencer(Bit32u address, unsigned index)
     case 0xf1:
       return BX_CIRRUS_THIS sequencer.reg[0x11];
     default:
-      BX_INFO (("sequencer index 0x%02x is unknown(read)", index));
+      BX_DEBUG(("sequencer index 0x%02x is unknown(read)", index));
       break;
     }
 
@@ -1758,7 +1765,7 @@ bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8u val
       value = (BX_CIRRUS_THIS sequencer.reg[0x17] & 0x38) | (value & 0xc7);
       break;
     default:
-      BX_INFO (("sequencer index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
+      BX_DEBUG(("sequencer index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
       break;
     }
 
@@ -1831,7 +1838,7 @@ bx_svga_cirrus_c::svga_read_control(Bit32u address, unsigned index)
       break;
 
     default:
-      BX_INFO (("control index 0x%02x is unknown(read)", index));
+      BX_DEBUG(("control index 0x%02x is unknown(read)", index));
       break;
     }
 
@@ -1953,7 +1960,7 @@ bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value
     case 0x38: // BLT TRANSPARENT COLOR MASK 0x00ff
     case 0x39: // BLT TRANSPARENT COLOR MASK 0xff00
     default:
-      BX_INFO (("control index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
+      BX_DEBUG(("control index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
       break;
     }
 
@@ -2279,7 +2286,7 @@ bx_svga_cirrus_c::svga_init_pcihandlers(void)
   Bit8u devfunc = 0x00;
   DEV_register_pci_handlers(BX_CIRRUS_THIS_PTR,
      pci_read_handler, pci_write_handler,
-     &devfunc, "cirrus", "PCI SVGA Cirrus");
+     &devfunc, "cirrus", "SVGA Cirrus PCI");
 
   for (i=0; i<256; i++) {
     BX_CIRRUS_THIS pci_conf[i] = 0x0;
