@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.14 2004-02-21 11:57:41 cbothamy Exp $
+$Id: development.dbk,v 1.15 2005-03-28 08:56:06 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -1610,16 +1610,171 @@ Returns the number of bytes written.
       how to make, where to submit, what happens then?
       </para>
       </section>
+<section id="cvs-release"><title>Building a Bochs release</title>
+<section><title>Preparing source files and CVS</title>
+<para>
+Update version number and strings in configure.in.
+<screen>
+VERSION="2.2.pre2"
+VER_STRING="2.2.pre2"
+REL_STRING="Build from CVS snapshot on March 25, 2005"
+</screen>
+In the README file you have to update version number and date. Add some
+information about new features if necessary.
+<screen>
+Bochs x86 Pentium+ Emulator
+Updated: : Fri Mar 25 10:33:15 CET 2005
+Version: 2.2.pre2
+</screen>
+Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
+Create a CVS tag to mark which revision of each file was used in the release.
+For prereleases I make a normal CVS tag like this:
+<screen>
+  cvs tag REL_2_2_pre2_FINAL
+</screen>
+But for a real release, I make a CVS branch tag AND a normal tag.
+<screen>
+  cvs tag REL_2_2_BASE
+  cvs tag -b REL_2_2
+</screen>
+The base tag marks where the branch split off of the main trunk.
+This is very useful in maintaining the branch since you can do diffs
+against it.
+<screen>
+   cvs diff -r REL_2_2_BASE -r HEAD
+   cvs diff -r REL_2_2_BASE -r REL_2_0
+   cvs upd -j REL_2_2_BASE -j HEAD file
+   etc.
+</screen>
+The release and all bugfix releases after it are on the REL_2_2 branch.
+When the release is actually finalized, you can do this:
+<screen>
+  cvs tag REL_2_2_FINAL
+</screen>
+Now you can start building packages based on the created release tag.
+</para>
+</section>
 
-      <section id="cvs-release"><title>life cycle of a CVS release</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
+<section><title>Building the release on win32</title>
+<para>
+These instructions require cygwin and MSVC++.
+</para>
+<para>
+In Cygwin:
+<screen>
+  sh .conf.win32-vcpp         # runs configure 
+  make win32_snap             # unzip workspace, make a win32 source ZIP
+</screen>
+Copy the source ZIP to a windows machine, if necessary.
+</para>
+<para>
+Open up Visual C++ and load the workspace file Bochs.dsw.  Check
+the Build:Set Active Project Configuration is set the way you want it.
+For releases I use "Win32 Release".
+</para>
+<para>
+To create "bochsdbg.exe" with Bochs debugger support, manually change two
+lines in config.h to turn on the debugger.
+<screen>
+#define BX_DEBUGGER 1
+#define BX_DISASM 1
+</screen>
+VC++ will rebuild bochs with debugger and overwrite bochs.exe.  To avoid
+trashing the non-debug version, move it out of the way while the debugger
+version is being built.  Then rename the debugger version to bochsdbg.exe.
+<screen>
+cd obj-release
+mv bochs.exe bochs-normal.exe
+(build again with BX_DEBUGGER=1 this time)
+mv bochs.exe bochsdbg.exe
+mv bochs-normal.exe bochs.exe
+</screen>
+</para>
+<para>
+To get the docbook installed, you need to do something like this:
+<itemizedlist>
+<listitem> <para> make dl_docbook </para> </listitem>
+<listitem> <para> copy up to date doc files </para> </listitem>
+</itemizedlist>
+Then you can do
+<screen>
+cd doc/docbook; touch */*.html
+</screen>
+Do make install_win32 into /tmp or someplace:
+<screen>
+make install_win32 prefix=/tmp/bochs-2.2.pre2
+</screen>
+This copies all the files into /tmp/bochs-2.2.pre2 and then creates a
+binary ZIP at /tmp/bochs-2.2.pre2.zip. Rename that bochs-2.2.pre2.win32-bin.zip.
+</para>
+<para>
+Now make the NSIS installer package (the current script is known to work with NSIS 2.03)
+<screen>
+cd build/win32/nsis
+</screen>
+Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and 
+then run make.
+<screen>
+unzip ~/bochs-2.2.pre2.zip
+make
+</screen>
+That gives an installer called 'Bochs-2.2.pre2.exe'. Test and upload.
+</para>
+</section>
+<section><title>Building the release on Linux</title>
+<para>
+Do a clean checkout using anonymous cvs, so that the source tarball
+will be all set up for anonymous cvs.  First I'll create a clean
+directory called "clean-anon".
+<screen>
+cvs -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs login
+cvs -z3 -d:pserver:anonymous@cvs.bochs.sourceforge.net:/cvsroot/bochs \
+  checkout -d clean-anon bochs
+</screen>
+Start with clean-anon which tracks the CVS head.  Change its sticky tag
+so that it sticks to the release tag.
+<screen>
+cp -a clean-anon bochs-2.2.pre2
+cd bochs-2.2.pre2
+cvs upd -P -r REL_2_2_pre2_FINAL
+cd ..
+tar czvf bochs-2.2.pre2.tar.gz --exclude CVS --exclude .cvsignore bochs-2.2.pre2
+</screen>
+The source TAR file bochs-2.2.pre2.tar.gz is ready to upload.
+</para>
+<para>
+The RPM will be building using the configuration in .conf.linux with
+a few parameters from build/redhat/make-rpm.  Make any last minute changes
+to .conf.linux.  Any changes will go into the source RPM.
+WARNING : do not build in /tmp/bochs-XXX...
+<screen>
+./build/redhat/make-rpm | tee ../build.txt
+</screen>
+This produces two rpm files in the current directory.  Test and upload.
+</para>
+</section>
+<section><title>Uploading files and creating a file release on SF</title>
+<para>
+When you are ready with creating release packages you have to upload them to SF
+using anonymous FTP using this location:
+<screen>
+upload.sourceforge.net/incoming
+</screen>
+Note that you cannot modify or delete files after uploading them. If you don't do
+anything with the uploaded files, they will be deleted by SF after 24 hours.
+</para>
+<para>
+To create or edit a file release you have to log in to the <command>Admin</command>
+section on the SF project page of Bochs. Then you have to go to the
+<command>File Releases</command> page and follow the instructions there.
+</para>
+</section>
+
+</section>
 
 </chapter>
 
-<chapter id="webmastering"><title>Coding</title>
+<chapter id="webmastering"><title>Webmastering</title>
 
       <section id="websites"><title>websites</title>
       <para>
