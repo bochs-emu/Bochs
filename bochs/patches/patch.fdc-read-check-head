@@ -2,7 +2,7 @@
 Patch name: patch.fdc-read-check-head
 Author: Bryce Denney
 Date: Fri Sep 28 23:20:49 EDT 2001
-RCS Id: $Id: patch.fdc-read-check-head,v 1.1 2001-09-29 03:11:58 bdenney Exp $
+RCS Id: $Id: patch.fdc-read-check-head,v 1.2 2001-09-29 03:20:47 bdenney Exp $
 
 Detailed description:
 
@@ -32,13 +32,12 @@ Instructions:
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 
-Index: iodev/floppy.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/floppy.cc,v
 retrieving revision 1.20
 diff -u -r1.20 floppy.cc
 --- iodev/floppy.cc	2001/09/26 17:35:51	1.20
-+++ iodev/floppy.cc	2001/09/29 03:08:12
++++ iodev/floppy.cc	2001/09/29 03:19:31
 @@ -735,6 +735,28 @@
        if (head > 1)
          BX_PANIC(("io: bad head #"));
@@ -47,7 +46,7 @@ diff -u -r1.20 floppy.cc
 +      // reported in the head number field.  Real floppy drives are
 +      // picky about this, as reported in SF bug #439945, (Floppy drive 
 +      // read input error checking).
-+      if (BX_FD_THIS head != (BX_FD_THIS s.command[1]>>2)&1) {
++      if (head != (BX_FD_THIS s.command[1]>>2)&1) {
 +        BX_ERROR(("head number in command[1] doesn't match head field"));
 +        BX_FD_THIS s.result_size = 7;
 +        BX_FD_THIS s.result_index = 0;
