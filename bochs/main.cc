@@ -530,7 +530,7 @@ bx_atexit(void)
 
 #if BX_DEBUGGER == 0
   for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
-    BX_CPU[cpu]->atexit();
+    if (BX_CPU[cpu]) BX_CPU[cpu]->atexit();
 #endif
 
 #if BX_PCI_SUPPORT
