@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.12 2001-11-12 18:28:07 bdenney Exp $
+// $Id: logio.cc,v 1.13 2001-11-21 00:25:15 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -342,10 +342,23 @@ logfunctions::ldebug(const char *fmt, ...)
 void
 logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 {
+  static char in_ask_already = 0;
   char buf1[1024], buf2[1024];
+  if (in_ask_already) {
+    fprintf (stderr, "logfunctions::ask() should not reenter!!\n");
+    return;
+  }
+  in_ask_already = 1;
   vsprintf (buf1, fmt, ap);
   sprintf (buf2, "%s %s", prefix, buf1);
   // FIXME: facility set to 0 because it's unknown.
+
+  // update vga screen.  This is useful because sometimes useful messages
+  // are printed on the screen just before a panic.  It's also potentially
+  // dangerous if this function calls ask again...  That's why I added
+  // the reentry check above.
+  bx_vga.timer_handler(&bx_vga);
+
   int val = SIM->LOCAL_log_msg (prefix, level, buf2);
   switch (val)
   {
@@ -383,6 +396,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       // in gui/control.cc.
       fprintf (stderr, "WARNING: LOCAL_log_msg returned unexpected value %d\n", val);
   }
+  in_ask_already = 0;
 }
 
 void
