@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.96 2003-08-17 21:48:15 cbothamy Exp $
+// $Id: rombios.c,v 1.97 2003-10-07 00:21:10 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -928,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.96 $";
-static char bios_date_string[] = "$Date: 2003-08-17 21:48:15 $";
+static char bios_cvs_version_string[] = "$Revision: 1.97 $";
+static char bios_date_string[] = "$Date: 2003-10-07 00:21:10 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.96 2003-08-17 21:48:15 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.97 2003-10-07 00:21:10 danielg4 Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -2075,13 +2075,13 @@ void ata_detect( )
 #if BX_MAX_ATA_INTERFACES > 2
   write_byte(ebda_seg,&EbdaData->ata.channels[2].iface,ATA_IFACE_ISA);
   write_word(ebda_seg,&EbdaData->ata.channels[2].iobase1,0x1e8);
-  write_word(ebda_seg,&EbdaData->ata.channels[2].iobase2,0x3e8);
+  write_word(ebda_seg,&EbdaData->ata.channels[2].iobase2,0x3e0);
   write_byte(ebda_seg,&EbdaData->ata.channels[2].irq,12);
 #endif
 #if BX_MAX_ATA_INTERFACES > 3
   write_byte(ebda_seg,&EbdaData->ata.channels[3].iface,ATA_IFACE_ISA);
   write_word(ebda_seg,&EbdaData->ata.channels[3].iobase1,0x168);
-  write_word(ebda_seg,&EbdaData->ata.channels[3].iobase2,0x368);
+  write_word(ebda_seg,&EbdaData->ata.channels[3].iobase2,0x360);
   write_byte(ebda_seg,&EbdaData->ata.channels[3].irq,11);
 #endif
 #if BX_MAX_ATA_INTERFACES > 4

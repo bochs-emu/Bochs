@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.253 2003-10-02 11:33:38 danielg4 Exp $
+// $Id: main.cc,v 1.254 2003-10-07 00:21:10 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -557,6 +557,9 @@ void bx_init_options ()
   Bit16u ata_default_ioaddr1[BX_MAX_ATA_CHANNEL] = {
     0x1f0, 0x170, 0x1e8, 0x168 
   };
+  Bit16u ata_default_ioaddr2[BX_MAX_ATA_CHANNEL] = {
+    0x3f0, 0x370, 0x3e0, 0x360 
+  };
   Bit8u ata_default_irq[BX_MAX_ATA_CHANNEL] = { 
     14, 15, 11, 9 
   };
@@ -585,7 +588,7 @@ void bx_init_options ()
       "ata:ioaddr2",
       "IO adress of ata control block",
       0, 0xffff,
-      ata_default_ioaddr1[channel] + 0x200));
+      ata_default_ioaddr2[channel]));
 
     ata[channel]->add (bx_options.ata[channel].Oirq = new bx_param_num_c ((bx_id)(BXP_ATAx_IRQ(channel)),
       "ata:irq",
