@@ -5,6 +5,7 @@
 #include "../config.h"
 
 #define PACKET_BUF_SIZE 2048
+static const Bit8u internal_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
 static const Bit8u broadcast_mac[]={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
@@ -39,19 +40,28 @@ private:
 };
 
 
-/*
 class eth_IPmaker : eth_packetmaker {
 public:
   void init(void);
-  virtual Boolean ishandler(const eth_packet& outpacket);
-  virtual Boolean sendpacket(const eth_packet& outpacket);
-  virtual Boolean getpacket(eth_packet& inpacket);
-private:
+  virtual Boolean ishandler(const eth_packet& outpacket)=0;
+  virtual Boolean sendpacket(const eth_packet& outpacket)=0;
+  virtual Boolean getpacket(eth_packet& inpacket)=0;
+
+protected:
+  Boolean sendable(const eth_packet& outpacket);
+
+  Bit32u source(const eth_packet& outpacket);
+  Bit32u destination(const eth_packet& outpacket);
+  Bit8u protocol(const eth_packet& outpacket);
+
+  const Bit8u * datagram(const eth_packet& outpacket);
+  Bit32u datalen(const eth_packet& outpacket);
+
+  //Build a header in pending, return header length in bytes.
+  Bit32u build_packet_header(Bit32u source, Bit32u dest, Bit8u protocol, Bit32u datalen);
+
   eth_packet pending;
   Boolean is_pending;
-
-  Bit32u Destination;
-  Bit32u Source;
 
   //Bit8u Version; //=4 (4 bits)
   //It better be!
@@ -92,6 +102,7 @@ private:
   //Bit32u Destination;//destination address
 };
 
+/*
 class eth_TCPmaker : eth_packetmaker {
 };
 
