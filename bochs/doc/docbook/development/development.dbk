@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.6 2002-11-19 14:33:26 ndavidg Exp $
+$Id: development.dbk,v 1.7 2002-12-13 20:06:06 bdenney Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -20,7 +20,6 @@ This is the top level file for the Bochs Developers Manual.
    <author><firstname>Kevin</firstname><surname>Lawton</surname></author>
    <author><firstname>Bryce</firstname><surname>Denney</surname></author>
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
-   <editor><firstname>Vasudeva</firstname></editor>
    </authorgroup>
 </bookinfo>
 
