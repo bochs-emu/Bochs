@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.10 2002-11-19 18:56:38 vruppert Exp $
+// $Id: eth_tap.cc,v 1.11 2002-11-20 19:06:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,6 +79,11 @@
 // host, you should be able to get Bochs talking to anyone on the internet.
 // 
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+ 
 #include "bochs.h"
 #if BX_NE2K_SUPPORT
 
