@@ -85,9 +85,9 @@ Changes to next release:
   - general
     - handle cpu reset through port 0x92
     - new memory handler API for PCI i/o and memory handling (Frank Cornelis)
-  - speaker emulation added (David N. Welton)
+  - speaker emulation for Linux (David N. Welton) and Win32 (Volker Ruppert) added
   - pci
-    - PCI slot configuration added for 5 slots (Volker Ruppert)
+    - PCI slot configuration added for 5 slots (Volker)
     - PCI irq routing, irq sharing and level sensitive irq mode implemented
     - ne2k device appears as a Realtec 8029 NIC if connected to a PCI slot
     - PCI IDE controller dummy device added
@@ -108,7 +108,8 @@ Changes to next release:
   - vga
     - VBE 8 bit DAC support added
     - VBE memory now registered using DEV_register_memory_handlers()
-    - CL-GD 54xx SVGA emulation added (Makato Suzuki)
+    - CL-GD 54xx SVGA emulation added (Makoto Suzuki)
+    - vga extension option added (choices: vbe, cirrus, none) (Volker)
   - floppy
     - raw floppy access now works on Win9x host (Ben Lunt)
   - sb16
