@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.253 2004-04-09 11:52:45 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.254 2004-06-01 07:30:33 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -827,7 +827,7 @@ AC_ARG_ENABLE(pcidev,
         AC_MSG_ERROR([PCI host device mapping requires PCI support])
       fi
       case "$target" in
-        *-pc-linux*)
+        *-linux*)
           AC_MSG_NOTICE([Linux detected as host for PCI host device mapping])
           linux_version=`uname -r`
 	  case "$linux_version" in
