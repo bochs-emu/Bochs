@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.24 2002-09-21 03:20:59 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.25 2002-09-21 04:02:51 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,7 +78,7 @@ bx_pit_c bx_pit;
 
 #define DEBUG_REALTIME_WITH_PRINTF 0
 #define BX_HAVE_GETTIMEOFDAY 1
-#define DEBUG_GETTIMEOFDAY_WITH_PRINTF 0
+#define DEBUG_GETTIMEOFDAY_WITH_PRINTF 1
 
 
 #define TIME_DIVIDER (1)
@@ -107,18 +107,9 @@ bx_pit_c bx_pit;
 #define TIME_MULT 1.193
 #define REAL_TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
 #define REAL_USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
-#if BX_USE_REALTIME_PIT
-#  define TICKS_TO_USEC(a) ( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second )
-#  define USEC_TO_TICKS(a) ( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second )
-#if 0
-#  define AHEAD_CEILING (MIN((Bit64u)(TICKS_PER_SECOND*MAX_MULT),(Bit64u)((TICKS_PER_SECOND*2)-(TICKS_PER_SECOND*MIN_MULT)-10)))
-#else
-#  define AHEAD_CEILING ((Bit64u)(TICKS_PER_SECOND*2))
-#endif
-#else
-#  define TICKS_TO_USEC(a) ( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND )
-#  define USEC_TO_TICKS(a) ( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND )
-#endif
+#define AHEAD_CEILING ((Bit64u)(TICKS_PER_SECOND*2))
+#define TICKS_TO_USEC(a) ((BX_USE_REALTIME_PIT)?( ((a)*BX_PIT_THIS s.usec_per_second)/BX_PIT_THIS s.ticks_per_second ):( ((a)*USEC_PER_SECOND)/TICKS_PER_SECOND ))
+#define USEC_TO_TICKS(a) ((BX_USE_REALTIME_PIT)?( ((a)*BX_PIT_THIS s.ticks_per_second)/BX_PIT_THIS s.usec_per_second ):( ((a)*TICKS_PER_SECOND)/USEC_PER_SECOND ))
 
 #if BX_HAVE_GETTIMEOFDAY
 Bit64u getrealtime64 (void) {
@@ -187,20 +178,20 @@ bx_pit_c::init( bx_devices_c *d )
 
   BX_PIT_THIS s.total_ticks=0;
 
-#if BX_USE_REALTIME_PIT
-  BX_PIT_THIS s.usec_per_second=USEC_PER_SECOND;
-  BX_PIT_THIS s.ticks_per_second=TICKS_PER_SECOND;
-  BX_PIT_THIS s.total_sec=0;
-  BX_PIT_THIS s.stored_delta=0;
+  if (BX_USE_REALTIME_PIT) {
+    BX_PIT_THIS s.usec_per_second=USEC_PER_SECOND;
+    BX_PIT_THIS s.ticks_per_second=TICKS_PER_SECOND;
+    BX_PIT_THIS s.total_sec=0;
+    BX_PIT_THIS s.stored_delta=0;
 #if BX_HAVE_GETTIMEOFDAY
-  BX_PIT_THIS s.last_time=((getrealtime64()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
+    BX_PIT_THIS s.last_time=((getrealtime64()*(Bit64u)TIME_MULTIPLIER/(Bit64u)TIME_DIVIDER))+(Bit64u)TIME_HEADSTART*(Bit64u)USEC_PER_SECOND;
 #else
-  BX_PIT_THIS s.last_time=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART)*USEC_PER_SECOND;
+    BX_PIT_THIS s.last_time=((time(NULL)*TIME_MULTIPLIER/TIME_DIVIDER)+TIME_HEADSTART)*USEC_PER_SECOND;
 #endif
-  BX_PIT_THIS s.max_ticks = AHEAD_CEILING;
-#else
-  BX_PIT_THIS s.total_usec=0;
-#endif
+    BX_PIT_THIS s.max_ticks = AHEAD_CEILING;
+  } else {
+    BX_PIT_THIS s.total_usec=0;
+  }
 
   BX_DEBUG(("pit: finished init"));
 
@@ -465,85 +456,85 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   }
 #endif
 
-#if BX_USE_REALTIME_PIT
+  if (BX_USE_REALTIME_PIT) {
 #if BX_HAVE_GETTIMEOFDAY
-  Bit64u real_time_delta = getrealtime64() - BX_PIT_THIS s.last_time;
-  Bit64u real_time_total = real_time_delta + BX_PIT_THIS s.total_sec;
-  Bit64u em_time_delta = (Bit64u)usec_delta + (Bit64u)BX_PIT_THIS s.stored_delta;
-  BX_PIT_THIS s.ticks_per_second = TICKS_PER_SECOND;
+    Bit64u real_time_delta = getrealtime64() - BX_PIT_THIS s.last_time;
+    Bit64u real_time_total = real_time_delta + BX_PIT_THIS s.total_sec;
+    Bit64u em_time_delta = (Bit64u)usec_delta + (Bit64u)BX_PIT_THIS s.stored_delta;
+    BX_PIT_THIS s.ticks_per_second = TICKS_PER_SECOND;
 
-  //Start out with the number of ticks we would like
-  // to have to line up with real time.
-  ticks_delta = REAL_USEC_TO_TICKS(real_time_total) - BX_PIT_THIS s.total_ticks;
-  if(REAL_USEC_TO_TICKS(real_time_total) < BX_PIT_THIS s.total_ticks) {
-    //This slows us down if we're already ahead.
-    //  probably only an issue on startup, but it solves some problems.
-    ticks_delta = 0;
-  }
-  if(ticks_delta > REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta))) {
-    //This keeps us from going too fast in relation to real time.
-    ticks_delta = REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta));
-    BX_PIT_THIS s.ticks_per_second = (Bit64u)(MAX_MULT * TICKS_PER_SECOND);
-  }
-  if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
-    //This keeps us from having too few instructions between ticks.
-    ticks_delta = em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND;
-  }
-  if(ticks_delta > BX_PIT_THIS s.timer.get_next_event_time()) {
-    //This keeps us from missing ticks.
-    ticks_delta = BX_PIT_THIS s.timer.get_next_event_time();
-  }
-
-  if(ticks_delta) {
-#if DEBUG_GETTIMEOFDAY_WITH_PRINTF
-    if(((BX_PIT_THIS s.last_time + real_time_delta) / USEC_PER_SECOND) > (BX_PIT_THIS s.last_time / USEC_PER_SECOND)) {
-      printf("useconds: %lld, expected ticks: %lld, ticks: %lld, diff: %lld\n",
-	     (Bit64u) BX_PIT_THIS s.total_sec,
-	     (Bit64u)REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec),
-	     (Bit64u)BX_PIT_THIS s.total_ticks,
-	     (Bit64u)(REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec) - BX_PIT_THIS s.total_ticks)
-	     );
-    }
-#endif
-    BX_PIT_THIS s.last_time += real_time_delta;
-    BX_PIT_THIS s.total_sec += real_time_delta;
-    BX_PIT_THIS s.last_sec_usec += em_time_delta;
-    //    BX_PIT_THIS s.total_usec += em_time_delta;
-    BX_PIT_THIS s.stored_delta = 0;
-    BX_PIT_THIS s.total_ticks += ticks_delta;
-  } else {
-    BX_PIT_THIS s.stored_delta = em_time_delta;
-  }
-
-  Bit64u a,b;
-  a=(BX_PIT_THIS s.usec_per_second);
-  b=((Bit64u)1000000 * em_time_delta / real_time_delta);
-
-  BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(a,b);
-#else
-  ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));
-  if((BX_PIT_THIS s.total_ticks + ticks_delta) < (BX_PIT_THIS s.max_ticks)) {
-    BX_PIT_THIS s.total_ticks += ticks_delta;
-  } else {
-    if(BX_PIT_THIS s.total_ticks              >= (BX_PIT_THIS s.max_ticks)) {
+    //Start out with the number of ticks we would like
+    // to have to line up with real time.
+    ticks_delta = REAL_USEC_TO_TICKS(real_time_total) - BX_PIT_THIS s.total_ticks;
+    if(REAL_USEC_TO_TICKS(real_time_total) < BX_PIT_THIS s.total_ticks) {
+      //This slows us down if we're already ahead.
+      //  probably only an issue on startup, but it solves some problems.
       ticks_delta = 0;
-    } else {
-      ticks_delta =                              (BX_PIT_THIS s.max_ticks) - BX_PIT_THIS s.total_ticks;
+    }
+    if(ticks_delta > REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta))) {
+      //This keeps us from going too fast in relation to real time.
+      ticks_delta = REAL_USEC_TO_TICKS((Bit64u)(MAX_MULT * real_time_delta));
+      BX_PIT_THIS s.ticks_per_second = (Bit64u)(MAX_MULT * TICKS_PER_SECOND);
+    }
+    if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
+      //This keeps us from having too few instructions between ticks.
+      ticks_delta = em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND;
+    }
+    if(ticks_delta > BX_PIT_THIS s.timer.get_next_event_time()) {
+      //This keeps us from missing ticks.
+      ticks_delta = BX_PIT_THIS s.timer.get_next_event_time();
+    }
+
+    if(ticks_delta) {
+#if DEBUG_GETTIMEOFDAY_WITH_PRINTF
+      if(((BX_PIT_THIS s.last_time + real_time_delta) / USEC_PER_SECOND) > (BX_PIT_THIS s.last_time / USEC_PER_SECOND)) {
+	printf("useconds: %lld, expected ticks: %lld, ticks: %lld, diff: %lld\n",
+	       (Bit64u) BX_PIT_THIS s.total_sec,
+	       (Bit64u)REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec),
+	       (Bit64u)BX_PIT_THIS s.total_ticks,
+	       (Bit64u)(REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec) - BX_PIT_THIS s.total_ticks)
+	       );
+      }
+#endif
+      BX_PIT_THIS s.last_time += real_time_delta;
+      BX_PIT_THIS s.total_sec += real_time_delta;
+      BX_PIT_THIS s.last_sec_usec += em_time_delta;
+      //    BX_PIT_THIS s.total_usec += em_time_delta;
+      BX_PIT_THIS s.stored_delta = 0;
       BX_PIT_THIS s.total_ticks += ticks_delta;
+    } else {
+      BX_PIT_THIS s.stored_delta = em_time_delta;
+    }
+
+    Bit64u a,b;
+    a=(BX_PIT_THIS s.usec_per_second);
+    b=((Bit64u)1000000 * em_time_delta / real_time_delta);
+
+    BX_PIT_THIS s.usec_per_second = ALPHA_LOWER(a,b);
+#else
+    ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));
+    if((BX_PIT_THIS s.total_ticks + ticks_delta) < (BX_PIT_THIS s.max_ticks)) {
+      BX_PIT_THIS s.total_ticks += ticks_delta;
+    } else {
+      if(BX_PIT_THIS s.total_ticks              >= (BX_PIT_THIS s.max_ticks)) {
+	ticks_delta = 0;
+      } else {
+	ticks_delta =                              (BX_PIT_THIS s.max_ticks) - BX_PIT_THIS s.total_ticks;
+	BX_PIT_THIS s.total_ticks += ticks_delta;
+      }
+    }
+    second_update_data();
+#endif
+  } else {
+    BX_PIT_THIS s.total_usec += usec_delta;
+    ticks_delta=(Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
+    BX_PIT_THIS s.total_ticks += ticks_delta;
+
+    while ((BX_PIT_THIS s.total_ticks >= 1193181) && (BX_PIT_THIS s.total_usec >= 1000000)) {
+      BX_PIT_THIS s.total_ticks -= 1193181;
+      BX_PIT_THIS s.total_usec  -= 1000000;
     }
   }
-  second_update_data();
-#endif
-#else
-  BX_PIT_THIS s.total_usec += usec_delta;
-  ticks_delta=(Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
-  BX_PIT_THIS s.total_ticks += ticks_delta;
-
-  while ((BX_PIT_THIS s.total_ticks >= 1193181) && (BX_PIT_THIS s.total_usec >= 1000000)) {
-    BX_PIT_THIS s.total_ticks -= 1193181;
-    BX_PIT_THIS s.total_usec  -= 1000000;
-  }
-#endif
 
   while(ticks_delta>0) {
     Bit32u maxchange=BX_PIT_THIS s.timer.get_next_event_time();
@@ -571,7 +562,6 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 }
 
 
-#if BX_USE_REALTIME_PIT
 void
 bx_pit_c::second_update_data(void) {
   Bit64u timediff;
@@ -639,5 +629,4 @@ bx_pit_c::second_update_data(void) {
 #endif
   }
 }
-#endif // #if BX_USE_REALTIME_PIT
 #endif // #if BX_USE_NEW_PIT

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.11 2002-09-20 23:10:55 yakovlev Exp $
+// $Id: pit_wrap.h,v 1.12 2002-09-21 04:02:51 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,7 +73,6 @@ private:
     Bit64u last_usec;
     Bit32u last_next_event_time;
     Bit64u total_ticks;
-#if BX_USE_REALTIME_PIT
     Bit64u usec_per_second;
     Bit64u ticks_per_second;
     Bit64u total_sec;
@@ -81,9 +80,7 @@ private:
     Bit64u last_sec_usec;
     Bit64u max_ticks;
     Bit64u stored_delta;
-#else
     Bit64u total_usec;
-#endif
     } s;
 
   bx_devices_c *devices;
