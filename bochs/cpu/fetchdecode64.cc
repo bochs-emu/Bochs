@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.49 2003-05-15 16:41:15 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.50 2003-05-21 15:20:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -853,9 +853,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 0A */  { 0, &BX_CPU_C::BxError },
   /* 0F 0B */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F 0C */  { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_3DNOW
   /* 0F 0D */  { 0, &BX_CPU_C::NOP   },           // 3DNow! PREFETCH
   /* 0F 0E */  { 0, &BX_CPU_C::EMMS },            // 3DNow! FEMMS
   /* 0F 0F */  { BxAnother | BxImmediate_Ib, NULL, Bx3DNowOpcodeInfo },
+#else
+  /* 0F 0D */  { 0, &BX_CPU_C::BxError },
+  /* 0F 0E */  { 0, &BX_CPU_C::BxError },
+  /* 0F 0F */  { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 10 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f10 },
   /* 0F 11 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f11 },
   /* 0F 12 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f12 },
@@ -1371,9 +1377,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 0A */  { 0, &BX_CPU_C::BxError },
   /* 0F 0B */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F 0C */  { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_3DNOW
   /* 0F 0D */  { 0, &BX_CPU_C::NOP   },           // 3DNow! PREFETCH
   /* 0F 0E */  { 0, &BX_CPU_C::EMMS },            // 3DNow! FEMMS
   /* 0F 0F */  { BxAnother | BxImmediate_Ib, NULL, Bx3DNowOpcodeInfo },
+#else
+  /* 0F 0D */  { 0, &BX_CPU_C::BxError },
+  /* 0F 0E */  { 0, &BX_CPU_C::BxError },
+  /* 0F 0F */  { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 10 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f10 },
   /* 0F 11 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f11 },
   /* 0F 12 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f12 },
@@ -1886,9 +1898,15 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 0A */  { 0, &BX_CPU_C::BxError },
   /* 0F 0B */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F 0C */  { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_3DNOW
   /* 0F 0D */  { 0, &BX_CPU_C::NOP   },           // 3DNow! PREFETCH
   /* 0F 0E */  { 0, &BX_CPU_C::EMMS },            // 3DNow! FEMMS
   /* 0F 0F */  { BxAnother | BxImmediate_Ib, NULL, Bx3DNowOpcodeInfo },
+#else
+  /* 0F 0D */  { 0, &BX_CPU_C::BxError },
+  /* 0F 0E */  { 0, &BX_CPU_C::BxError },
+  /* 0F 0F */  { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 10 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f10 },
   /* 0F 11 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f11 },
   /* 0F 12 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f12 },
@@ -2892,9 +2910,11 @@ BX_INFO(("b1 was %x", b1));
       }
     }
 
+#if BX_SUPPORT_3DNOW
   if(b1 == 0x10f) {		// 3DNow! instruction set
      instruction->execute = Bx3DNowOpcodeInfo[instruction->modRMForm.Ib].ExecutePtr;
     }
+#endif
 
   instruction->setB1(b1);
   instruction->setILen(ilen);
