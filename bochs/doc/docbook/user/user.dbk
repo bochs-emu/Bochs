@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.65 2002-11-20 18:58:48 bdenney Exp $
+$Id: user.dbk,v 1.66 2002-11-20 19:18:26 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2339,10 +2339,10 @@ Examples:
 <screen>
   romimage: file=bios/BIOS-bochs-latest, address=0xf0000
 </screen>
-You need to load a ROM BIOS into addresses 0xf0000-0xfffff.  The BIOS controls
-what the PC does when it first powers on.  Normally, you can use a precompiled
-BIOS in the source or binary distribution called
-<filename>BIOS-bochs-latest</filename>.
+The ROM BIOS controls what the PC does when it first powers on.  Normally, you
+can use a precompiled BIOS in the source or binary distribution called
+<filename>BIOS-bochs-latest</filename>.  The ROM BIOS is usually loaded
+starting at address 0xf0000, and it is exactly 64k long.
 </para>
 </section>
 
