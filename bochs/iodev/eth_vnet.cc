@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.9 2004-10-03 20:02:09 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.10 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -40,11 +40,10 @@ static const Bit8u broadcast_ipv4addr[3][4] =
   {192,168, 10,255},
 };
 
-#define IPPACKET_MAX          2048
 #define ICMP_ECHO_PACKET_MAX  128
 #define LAYER4_LISTEN_MAX  128
 
-static Bit8u    packet_buffer[IPPACKET_MAX];
+static Bit8u    packet_buffer[BX_PACKET_BUFSIZE];
 static unsigned packet_len;
 
 typedef void (*layer4_handler_t)(
@@ -110,7 +109,7 @@ public:
   bx_vnet_pktmover_c();
   void pktmover_init(
     const char *netif, const char *macaddr,
-    eth_rx_handler_t rxh, void *rxarg);
+    eth_rx_handler_t rxh, void *rxarg, char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   void guest_to_host(const Bit8u *buf, unsigned io_len);
@@ -183,10 +182,10 @@ protected:
   eth_pktmover_c *allocate(
       const char *netif, const char *macaddr,
       eth_rx_handler_t rxh,
-      void *rxarg) {
+      void *rxarg, char *script) {
     bx_vnet_pktmover_c *pktmover;
     pktmover = new bx_vnet_pktmover_c();
-    pktmover->pktmover_init(netif, macaddr, rxh, rxarg);
+    pktmover->pktmover_init(netif, macaddr, rxh, rxarg, script);
     return pktmover;
   }
 } bx_vnet_match;
@@ -246,7 +245,7 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c()
 void
 bx_vnet_pktmover_c::pktmover_init(
   const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, void *rxarg)
+  eth_rx_handler_t rxh, void *rxarg, char *script)
 {
   BX_INFO(("ne2k vnet driver"));
   this->rxh   = rxh;
@@ -678,9 +677,9 @@ bx_vnet_pktmover_c::host_to_guest_udpipv4_packet(
   unsigned target_port, unsigned source_port,
   const Bit8u *udpdata, unsigned udpdata_len)
 {
-  Bit8u ipbuf[IPPACKET_MAX];
+  Bit8u ipbuf[BX_PACKET_BUFSIZE];
 
-  if ((udpdata_len + 42U) > IPPACKET_MAX) {
+  if ((udpdata_len + 42U) > BX_PACKET_BUFSIZE) {
     BX_PANIC(("generated udp data is too long"));
     return;
   }

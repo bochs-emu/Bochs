@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.h,v 1.7 2004-09-18 12:35:13 vruppert Exp $
+// $Id: eth_packetmaker.h,v 1.8 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -10,7 +10,6 @@
 
 #ifdef ETH_ARPBACK
 
-#define PACKET_BUF_SIZE 2048
 static const Bit8u internal_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
@@ -22,7 +21,7 @@ static const Bit8u prot_tcp=6;
 
 class eth_packet {
 public:
-  Bit8u buf[PACKET_BUF_SIZE];
+  Bit8u buf[BX_PACKET_BUFSIZE];
   Bit32u len;
 };
 

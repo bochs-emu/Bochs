@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.12 2004-09-28 17:37:52 vruppert Exp $
+// $Id: config.cc,v 1.13 2004-10-07 17:38:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1293,6 +1293,9 @@ void bx_init_options ()
 #ifdef ETH_ARPBACK
     "arpback",
 #endif
+#if HAVE_VDE
+    "vde",
+#endif
     "vnet",
     NULL
   };
@@ -1378,17 +1381,15 @@ void bx_init_options ()
     bx_options.ne2k.Oethmod,
     bx_options.ne2k.Oethdev,
     bx_options.ne2k.Oscript,
-    bx_options.pnic.Oenabled,
     NULL
   };
-  menu = new bx_list_c (BXP_NE2K, "NE2K Configuration", "", netdev_init_list);
+  menu = new bx_list_c (BXP_NE2K, "Network Configuration", "", netdev_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
   bx_options.ne2k.Opresent->set_dependent_list (
       new bx_list_c (BXP_NULL, "", "", ne2k_deps_list));
   bx_param_c **pnic_dependent_list = &netdev_init_list[8];
   bx_options.pnic.Oenabled->set_dependent_list (
       new bx_list_c (BXP_NULL, "", "", pnic_dependent_list));
-  bx_options.ne2k.Opresent->set (0);
 
   // SB16 options
   bx_options.sb16.Opresent = new bx_param_bool_c (BXP_SB16_PRESENT,

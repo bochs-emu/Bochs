@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.23 2004-10-03 20:02:09 vruppert Exp $
+// $Id: eth_tap.cc,v 1.24 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -114,7 +114,6 @@
 #include <errno.h>
 
 #define BX_ETH_TAP_LOGGING 0
-#define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
 //
 //  Define the class. This is private to this module
@@ -123,7 +122,7 @@ class bx_tap_pktmover_c : public eth_pktmover_c {
 public:
   bx_tap_pktmover_c(const char *netif, const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg);
+		     void *rxarg, char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int fd;
@@ -146,8 +145,8 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg) {
-    return (new bx_tap_pktmover_c(netif, macaddr, rxh, rxarg));
+			   void *rxarg, char *script) {
+    return (new bx_tap_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_tap_match;
 
@@ -160,7 +159,8 @@ protected:
 bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif, 
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
-				       void *rxarg)
+				       void *rxarg,
+				       char *script)
 {
   int flags;
   char filename[BX_PATHNAME_LEN];
@@ -222,12 +222,11 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
   /* Execute the configuration script */
   char intname[IFNAMSIZ];
   strcpy(intname,netif);
-  char *scriptname=bx_options.ne2k.Oscript->getptr();
-  if((scriptname != NULL)
-   &&(strcmp(scriptname, "") != 0)
-   &&(strcmp(scriptname, "none") != 0)) {
-    if (execute_script(scriptname, intname) < 0)
-      BX_ERROR (("execute script '%s' on %s failed", scriptname, intname));
+  if((script != NULL)
+   &&(strcmp(script, "") != 0)
+   &&(strcmp(script, "none") != 0)) {
+    if (execute_script(script, intname) < 0)
+      BX_ERROR (("execute script '%s' on %s failed", script, intname));
     }
 
   // Start the rx poll 
@@ -269,7 +268,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 void
 bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-  Bit8u txbuf[BX_PACKET_BUFSIZ];
+  Bit8u txbuf[BX_PACKET_BUFSIZE];
   txbuf[0] = 0;
   txbuf[1] = 0;
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)  // Should be fixed for other *BSD
@@ -315,7 +314,7 @@ void bx_tap_pktmover_c::rx_timer_handler (void *this_ptr)
 void bx_tap_pktmover_c::rx_timer ()
 {
   int nbytes;
-  Bit8u buf[BX_PACKET_BUFSIZ];
+  Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
   if (fd<0) return;
   nbytes = read (fd, buf, sizeof(buf));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.14 2004-10-03 19:30:36 sshwarts Exp $
+// $Id: eth.h,v 1.15 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,8 @@
 
 #ifndef BX_ETH_H
 #define BX_ETH_H
+
+#define BX_PACKET_BUFSIZE 2048 // Enough for an ether frame
 
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 
@@ -66,13 +68,15 @@ public:
   static eth_pktmover_c *create(const char *type, const char *netif,
 				const char *macaddr,
 				eth_rx_handler_t rxh, 
-				void *rxarg);
+				void *rxarg,
+				char *script);
 protected:
   eth_locator_c(const char *type);
   virtual eth_pktmover_c *allocate(const char *netif,
 				const char *macaddr,
 				eth_rx_handler_t rxh, 
-				void *rxarg) = 0;
+				void *rxarg,
+				char *script) = 0;
 private:
   static eth_locator_c *all;
   eth_locator_c *next;

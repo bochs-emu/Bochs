@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.16 2004-10-03 20:02:09 vruppert Exp $
+// $Id: eth_arpback.cc,v 1.17 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,6 @@
 //static const Bit8u external_ip[]={ 192, 168, 0, 2, 0x00 };
 //static const Bit8u ethtype_arp[]={0x08, 0x06, 0x00};
 
-#define MAX_FRAME_SIZE 2048
 
 //
 //  Define the class. This is private to this module
@@ -85,8 +84,8 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg) {
-    return (new bx_arpback_pktmover_c(netif, macaddr, rxh, rxarg));
+			   void *rxarg, char *script) {
+    return (new bx_arpback_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_arpback_match;
 
@@ -99,7 +98,8 @@ protected:
 bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif, 
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
-				       void *rxarg)
+				       void *rxarg,
+				       char *script)
 {
   this->rx_timer_index = 
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
@@ -129,7 +129,7 @@ bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
 void
 bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-  if(io_len<MAX_FRAME_SIZE) {
+  if(io_len<BX_PACKET_BUFSIZE) {
     eth_packet barney;
     memcpy(barney.buf,buf,io_len);
     barney.len=io_len;

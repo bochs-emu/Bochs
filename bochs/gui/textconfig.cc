@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.26 2004-07-10 11:05:29 vruppert Exp $
+// $Id: textconfig.cc,v 1.27 2004-10-07 17:38:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -267,7 +267,7 @@ static char *startup_options_prompt =
 "8. Disk options\n"
 "9. Serial or Parallel port options\n"
 "10. Sound Blaster 16 options\n"
-"11. NE2000 network card options\n"
+"11. Network card options\n"
 "12. Keyboard options\n"
 "13. PCI options\n"
 "14. Other options\n"

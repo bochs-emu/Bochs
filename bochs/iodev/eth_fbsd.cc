@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.30 2004-10-03 20:02:09 vruppert Exp $
+// $Id: eth_fbsd.cc,v 1.31 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,8 +71,6 @@ extern "C" {
 
 #define BX_BPF_POLL  1000    // Poll for a frame every 250 usecs
 
-#define BX_BPF_BUFSIZ 2048   // enough for an ether frame + bpf hdr
-
 #define BX_BPF_INSNSIZ  8    // number of bpf insns
 
 // template filter for a unicast mac address and all 
@@ -104,7 +102,7 @@ public:
   bx_fbsd_pktmover_c(const char *netif, 
 		     const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg);
+		     void *rxarg, char *script);
   void sendpkt(void *buf, unsigned io_len);
 
 private:
@@ -129,8 +127,8 @@ protected:
   eth_pktmover_c *allocate(const char *netif, 
 			   const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg) {
-    return (new bx_fbsd_pktmover_c(netif, macaddr, rxh, rxarg));
+			   void *rxarg, char *script) {
+    return (new bx_fbsd_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_fbsd_match;
 
@@ -147,7 +145,8 @@ protected:
 bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif, 
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
-				       void *rxarg)
+				       void *rxarg,
+				       char *script)
 {
   char device[sizeof "/dev/bpf000"];
   int tmpfd;
@@ -186,7 +185,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   }
 
   // Set buffer size
-  v = BX_BPF_BUFSIZ;
+  v = BX_PACKET_BUFSIZE;
   if (ioctl(this->bpf_fd, BIOCSBLEN, (caddr_t)&v) < 0) {
     BX_PANIC(("eth_freebsd: could not set buffer size: %s", strerror(errno)));
     close(this->bpf_fd);
@@ -327,7 +326,7 @@ void
 bx_fbsd_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-    unsigned char rxbuf[BX_BPF_BUFSIZ]; 
+    unsigned char rxbuf[BX_PACKET_BUFSIZE]; 
   struct bpf_hdr *bhdr;
     struct bpf_stat bstat;
     static struct bpf_stat previous_bstat;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.19 2004-10-03 20:02:09 vruppert Exp $
+// $Id: eth_linux.cc,v 1.20 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,8 +68,6 @@ extern "C" {
 
 #define BX_PACKET_POLL  1000    // Poll for a frame every 1000 usecs
 
-#define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
-
 // template filter for a unicast mac address and all
 // multicast/broadcast frames
 static const struct sock_filter macfilter[] = {
@@ -99,7 +97,8 @@ public:
   bx_linux_pktmover_c(const char *netif, 
 		     const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg);
+		     void *rxarg,
+		     char *script);
   void sendpkt(void *buf, unsigned io_len);
 
 private:
@@ -124,8 +123,8 @@ protected:
   eth_pktmover_c *allocate(const char *netif, 
 			   const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg) {
-    return (new bx_linux_pktmover_c(netif, macaddr, rxh, rxarg));
+			   void *rxarg, char *script) {
+    return (new bx_linux_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_linux_match;
 
@@ -139,7 +138,8 @@ protected:
 bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif, 
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
-				       void *rxarg)
+				       void *rxarg,
+				       char *script)
 {
   struct sockaddr_ll sll;
   struct packet_mreq mr;
@@ -259,7 +259,7 @@ void
 bx_linux_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-  Bit8u rxbuf[BX_PACKET_BUFSIZ]; 
+  Bit8u rxbuf[BX_PACKET_BUFSIZE]; 
   struct sockaddr_ll sll;
   socklen_t fromlen;
 

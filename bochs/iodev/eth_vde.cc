@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.7 2004-10-03 20:02:09 vruppert Exp $
+// $Id: eth_vde.cc,v 1.8 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -55,7 +55,6 @@
 #define SWITCH_MAGIC 0xfeedface
 
 #define BX_ETH_VDE_LOGGING 0
-#define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
 int vde_alloc(char *dev,int *fdp,struct sockaddr_un *pdataout);
 
@@ -66,7 +65,7 @@ class bx_vde_pktmover_c : public eth_pktmover_c {
 public:
   bx_vde_pktmover_c(const char *netif, const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg);
+		     void *rxarg, char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int fd;
@@ -89,8 +88,8 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg) {
-    return (new bx_vde_pktmover_c(netif, macaddr, rxh, rxarg));
+			   void *rxarg, char *script) {
+    return (new bx_vde_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_vde_match;
 
@@ -103,7 +102,8 @@ protected:
 bx_vde_pktmover_c::bx_vde_pktmover_c(const char *netif, 
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
-				       void *rxarg)
+				       void *rxarg,
+				       char *script)
 {
   int flags;
   //if (strncmp (netif, "vde", 3) != 0) {
@@ -132,12 +132,11 @@ bx_vde_pktmover_c::bx_vde_pktmover_c(const char *netif,
   BX_INFO (("eth_vde: opened %s device", netif));
 
   /* Execute the configuration script */
-  char *scriptname=bx_options.ne2k.Oscript->getptr();
-  if((scriptname != NULL)
-   &&(strcmp(scriptname, "") != 0)
-   &&(strcmp(scriptname, "none") != 0)) {
-    if (execute_script(scriptname, intname) < 0)
-      BX_ERROR (("execute script '%s' on %s failed", scriptname, intname));
+  if((script != NULL)
+   &&(strcmp(script, "") != 0)
+   &&(strcmp(script, "none") != 0)) {
+    if (execute_script(script, intname) < 0)
+      BX_ERROR (("execute script '%s' on %s failed", script, intname));
     }
 
   // Start the rx poll 
@@ -218,7 +217,7 @@ void bx_vde_pktmover_c::rx_timer_handler (void *this_ptr)
 void bx_vde_pktmover_c::rx_timer ()
 {
   int nbytes;
-  Bit8u buf[BX_PACKET_BUFSIZ];
+  Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
   struct sockaddr_un datain;
   socklen_t datainsize;

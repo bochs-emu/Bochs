@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.70 2004-09-25 22:15:02 vruppert Exp $
+// $Id: ne2k.cc,v 1.71 2004-10-07 17:38:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1302,7 +1302,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.70 2004-09-25 22:15:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.71 2004-10-07 17:38:03 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
@@ -1402,7 +1402,8 @@ bx_ne2k_c::init(void)
                                               bx_options.ne2k.Oethdev->getptr (),
                                               (const char *) bx_options.ne2k.Omacaddr->getptr (),
                                               rx_handler, 
-                                              this);
+                                              this,
+                                              bx_options.ne2k.Oscript->getptr ());
 
   if (BX_NE2K_THIS ethdev == NULL) {
     BX_PANIC(("could not find eth module %s", ethmod));
@@ -1412,7 +1413,7 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
                                                 (const char *) bx_options.ne2k.Omacaddr->getptr (),
                                                 rx_handler, 
-                                                this);
+                                                this, "");
     if (BX_NE2K_THIS ethdev == NULL)
       BX_PANIC(("could not locate null module"));
   }
