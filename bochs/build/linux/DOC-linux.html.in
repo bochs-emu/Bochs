@@ -92,10 +92,10 @@ text form are shown as links.  <br>
 <table align=center border=1>
 <th>File name </th> <th> Description </th>
 <tr><td><a href="README ">@prefix@/bochs/@VERSION@/README </a></td> <td> the ReadMe file from the source distribution. </td> </tr>
-<tr><td><a href="COPYING ">@prefix/bochs/@VERSION@/COPYING </a></td> <td> copy of the LGPL license </td> </tr>
-<tr><td><a href="DOC-linux.html ">@prefix/bochs/@VERSION@/DOC-linux.html </a></td> <td> this file </td> </tr>
+<tr><td><a href="COPYING ">@prefix@/bochs/@VERSION@/COPYING </a></td> <td> copy of the LGPL license </td> </tr>
+<tr><td><a href="DOC-linux.html ">@prefix@/bochs/@VERSION@/DOC-linux.html </a></td> <td> this file </td> </tr>
 <tr><td>/usr/man/man1/* </td> <td> man pages for bochs, bochs-dlx, bochsrc, and bximage </td> </tr>
-<tr><td><a href="docs-html/index.html ">@prefix/bochs/@VERSION@/docs-html/* </a></td> <td> a local copy of all Bochs documentation ( <a href="http://bochs.sourceforge.net/docs-html">Online copy</a> )</td> </tr>
+<tr><td><a href="docs-html/index.html ">@prefix@/bochs/@VERSION@/docs-html/* </a></td> <td> a local copy of all Bochs documentation ( <a href="http://bochs.sourceforge.net/docs-html">Online copy</a> )</td> </tr>
 <tr><td><a href="CHANGES ">@prefix@/bochs/@VERSION@/CHANGES </a></td> <td> what is changed between versions </td> </tr>
 <tr><td>@prefix@/bochs/@VERSION@/BIOS-bochs-latest </td> <td> ROM BIOS image for Bochs  </td> </tr>
 <tr><td>@prefix@/bochs/@VERSION@/VGABIOS-elpin-2.40 </td> <td> VGA BIOS image for Bochs </td> </tr>
