@@ -1,0 +1,4 @@
+test12-modglobalconstr2
+
+This is kind of a stupid example, but it detects platforms that have
+problems with their global initializers, and works around it.
