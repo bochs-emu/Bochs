@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.38 2002-06-26 14:42:34 cbothamy Exp $
+// $Id: siminterface.h,v 1.39 2002-07-04 19:24:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.38 2002-06-26 14:42:34 cbothamy Exp $
+ * $Id: siminterface.h,v 1.39 2002-07-04 19:24:30 vruppert Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -436,7 +436,7 @@ public:
     BX_RAW_BYTES = 1,          // need binary text editor, like MAC addr
 	BX_IS_FILENAME = 2,        // 1=yes it's a filename, 0=not a filename.
 	                           // Some guis have a file browser.
-	BX_SAVE_FILE_DIALOG = 4,   // Use save dialog opposed to open file dialog
+	BX_SAVE_FILE_DIALOG = 4    // Use save dialog opposed to open file dialog
   } bx_string_opt_bits;
   bx_param_string_c (bx_id id,
       char *name,
