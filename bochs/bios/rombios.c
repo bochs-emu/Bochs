@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.42 2002-03-28 07:10:18 bdenney Exp $
+// $Id: rombios.c,v 1.42.4.1 2002-09-10 19:07:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1043,10 +1043,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.42 $";
-static char bios_date_string[] = "$Date: 2002-03-28 07:10:18 $";
+static char bios_cvs_version_string[] = "$Revision: 1.42.4.1 $";
+static char bios_date_string[] = "$Date: 2002-09-10 19:07:23 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.42 2002-03-28 07:10:18 bdenney Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.42.4.1 2002-09-10 19:07:23 bdenney Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -9257,9 +9257,16 @@ int19_handler:
   je  int19_fail
 
   mov dl, bl       ;; set drive so guest os find it
-  mov 4[bp], ax    ;; set cs
-  xor ax, ax
-  mov 2[bp], ax    ;; set ip
+;; bad code... change to 0000:(bootseg<<4) rather than bootseg:0
+;;  mov 4[bp], ax    ;; set cs
+;;  xor ax, ax
+;;  mov 2[bp], ax    ;; set ip
+
+  shl ax,4
+  mov 2[bp],ax
+  xor ax,ax
+  mov 4[bp],ax
+
   mov [bp], ax     ;; set bp
   mov ax, #0xaa55  ;; set ok flag
 
@@ -9773,7 +9780,10 @@ dummy_iret_handler:
 
 .org 0xfff0 ; Power-up Entry Point
   //JMPL(post)
-  jmp post
+  //jmp post
+  db 0xea
+  dw post
+  dw 0xf000
 
 .org 0xfff5 ; ASCII Date ROM was built - 8 characters in MM/DD/YY
 .ascii "06/23/99"
