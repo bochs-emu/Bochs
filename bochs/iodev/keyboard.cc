@@ -533,14 +533,9 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered\n", value));
           break;
 
         case 0xfe: // System Reset, transition to real mode
-          BX_INFO(("system reset\n"));
-          bx_pc_system.ResetSignal( PCS_SET ); /* XXX is this right? */
-	  {
-	  for (int i=0; i<BX_SMP_PROCESSORS; i++) 
-            BX_CPU(i)->reset(BX_RESET_HARDWARE);
-	  }
-          // Use bx_pc_system if necessary bx_cpu.reset_cpu();
-          // bx_pc_system.ResetSignal( PCS_SET );
+	  // software reset is not completely implemented, so for 
+	  // Bochs release 1.2, panic as the old versions did.
+	  BX_PANIC(("system reset"));
           break;
 
         default:
