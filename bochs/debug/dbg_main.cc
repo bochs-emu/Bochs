@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.78 2002-10-16 22:20:32 bdenney Exp $
+// $Id: dbg_main.cc,v 1.79 2002-10-17 15:48:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -508,11 +508,17 @@ bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     // wait for wxWindows to send another debugger command
     charptr_ret = SIM->debug_get_next_command ();
-    strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
-    strcat (tmp_buf, "\n");
-    // the returned string was allocated in wxmain.cc by "new char[]". free it.
-    delete [] charptr_ret;
-    charptr_ret = &tmp_buf[0];
+    if (charptr_ret) {
+      strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
+      strcat (tmp_buf, "\n");
+      // The returned string was allocated in wxmain.cc by "new char[]".
+      // Free it with delete[].
+      delete [] charptr_ret;
+      charptr_ret = &tmp_buf[0];
+    } else {
+      // if debug_get_next_command returned NULL, probably the GUI is
+      // shutting down
+    }
   }
 #elif HAVE_LIBREADLINE
   if (bx_infile_stack_index == 0) {
@@ -545,6 +551,7 @@ bx_get_command(void)
       else {
         // not nested, sitting at stdin prompt, user wants out
         bx_dbg_quit_command();
+	BX_PANIC (("bx_dbg_quit_command should not return, but it did"));
         }
 
       // call recursively
