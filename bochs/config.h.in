@@ -515,6 +515,7 @@ typedef unsigned int Boolean;
 
 #define BX_SUPPORT_FPU 0
 
+#define BX_HAVE_GETENV 0
 #define BX_HAVE_SELECT 0
 #define BX_HAVE_SNPRINTF 0
 #define BX_HAVE_STRTOULL 0
