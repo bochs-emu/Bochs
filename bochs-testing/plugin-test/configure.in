@@ -21,11 +21,6 @@ AC_PROG_LIBTOOL
 dnl Configure libltdl
 AC_CONFIG_SUBDIRS(libltdl)
 
-CFLAGS="$CFLAGS $INCLDL"
-CPPFLAGS="$CPPFLAGS $INCLDL"
-CXXFLAGS="$CXXFLAGS $INCLDL"
-LIBS="$LIBS $LIBLTDL"
-
 AC_MSG_CHECKING(if -no-undefined is required to build a shared library)
 LT_LDFLAGS=
 case $host in
