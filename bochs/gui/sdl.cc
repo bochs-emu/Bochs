@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.21 2002-09-24 08:50:51 bdenney Exp $
+// $Id: sdl.cc,v 1.22 2002-09-25 07:24:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,12 +48,6 @@ void we_are_here(void)
 
 static unsigned prev_cursor_x=0;
 static unsigned prev_cursor_y=0;
-
-#if 0
-#define FIX_SDL_SCANCODE(x) ((x)-8)
-#else
-#define FIX_SDL_SCANCODE(x) ((x))
-#endif
 
 #define MAX_SDL_BITMAPS 32
 struct bitmaps {
@@ -536,18 +530,18 @@ static Bit32u sdl_sym_to_bx_key (SDLKey sym)
     case SDLK_LALT:                 return BX_KEY_ALT_L;
 //  case SDLK_RMETA:                return BX_KEY_RMETA;
 //  case SDLK_LMETA:                return BX_KEY_LMETA;
-//  case SDLK_LSUPER:               return BX_KEY_LSUPER;
-//  case SDLK_RSUPER:               return BX_KEY_RSUPER;
+    case SDLK_LSUPER:               return BX_KEY_WIN_L;
+    case SDLK_RSUPER:               return BX_KEY_WIN_R;
 //  case SDLK_MODE:                 return BX_KEY_MODE;
 //  case SDLK_COMPOSE:              return BX_KEY_COMPOSE;
 
-#if 0
 /* Miscellaneous function keys */
-    case SDLK_HELP:                 return BX_KEY_HELP;
     case SDLK_PRINT:                return BX_KEY_PRINT;
-    case SDLK_SYSREQ:               return BX_KEY_SYSREQ;
-    case SDLK_BREAK:                return BX_KEY_BREAK;
+    case SDLK_BREAK:                return BX_KEY_PAUSE;
     case SDLK_MENU:                 return BX_KEY_MENU;
+#if 0
+    case SDLK_HELP:                 return BX_KEY_HELP;
+    case SDLK_SYSREQ:               return BX_KEY_SYSREQ;
     case SDLK_POWER:                return BX_KEY_POWER;
     case SDLK_EURO:                 return BX_KEY_EURO;
     case SDLK_UNDO:                 return BX_KEY_UNDO;
@@ -650,7 +644,7 @@ void bx_gui_c::handle_events(void)
 	// convert sym->bochs code
 	if( sdl_event.key.keysym.sym > SDLK_LAST ) break;
 	key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
-	BX_INFO (("sdl scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
+	BX_DEBUG (("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
 	if( key_event == BX_KEY_UNHANDLED ) break;
 	bx_devices.keyboard->gen_scancode( key_event );
 	break;
