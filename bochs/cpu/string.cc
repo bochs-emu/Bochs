@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.26 2004-11-26 19:53:04 sshwarts Exp $
+// $Id: string.cc,v 1.27 2005-02-22 18:24:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1835,6 +1835,8 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
       /* increment EDI */
       rdi += 8;
     }
+
+    RDI = rdi;
   }
   else /* 32 bit address size */
   {

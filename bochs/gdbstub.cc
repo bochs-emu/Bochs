@@ -713,8 +713,8 @@ static void debug_loop(void)
             PUTREG(buf, RDX, 8);
             PUTREG(buf, RSI, 8);
             PUTREG(buf, RDI, 8);
-            PUTREG(buf, RSP, 8);
             PUTREG(buf, RBP, 8);
+            PUTREG(buf, RSP, 8);
             PUTREG(buf, R8,  8);
             PUTREG(buf, R9,  8);
             PUTREG(buf, R10, 8);
