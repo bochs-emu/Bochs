@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.51 2004-02-12 00:56:21 cbothamy Exp $
+// $Id: init.cc,v 1.52 2004-06-18 14:11:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.51 2004-02-12 00:56:21 cbothamy Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.52 2004-06-18 14:11:06 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -866,9 +866,9 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR trace_reg = 0;
 #endif
 
-  // Init the Floating Point Unit
+  // Reset the Floating Point Unit
 #if BX_SUPPORT_FPU
-  fpu_init();
+  BX_CPU_THIS_PTR the_i387.reset();
 #endif
 
 #if (BX_SMP_PROCESSORS > 1)

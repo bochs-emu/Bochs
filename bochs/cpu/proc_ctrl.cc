@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.80 2004-06-03 17:57:29 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.81 2004-06-18 14:11:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -655,7 +655,7 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
   if (protected_mode() && CPL!=0) {
     BX_INFO(("MOV_CdRd: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  }
 
   val_32 = BX_READ_32BIT_REG(i->rm());
 

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002 Stanislav Shwartsman
+//   Copyright (c) 2004 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman <gate at fidonet.org.il>
 //
 //  This library is free software; you can redistribute it and/or
@@ -19,84 +19,163 @@
 //
 
 
-
-#ifndef BX_I387_RELATED_EXTENSIONS_H
-#define BX_I387_RELATED_EXTENSIONS_H
+#ifndef _BX_I387_RELATED_EXTENSIONS_H_
+#define _BX_I387_RELATED_EXTENSIONS_H_
 
 #if BX_SUPPORT_FPU
+
+#include "fpu/softfloat.h"
+
+#define BX_FPU_REG(index) \
+    (BX_CPU_THIS_PTR the_i387.st_space[index])
+
+#if defined(NEED_CPU_REG_SHORTCUTS)
+#define FPU_PARTIAL_STATUS     (BX_CPU_THIS_PTR the_i387.swd)
+#define FPU_CONTROL_WORD       (BX_CPU_THIS_PTR the_i387.cwd)
+#define FPU_TAG_WORD           (BX_CPU_THIS_PTR the_i387.twd)
+#define FPU_TOS                (BX_CPU_THIS_PTR the_i387.tos)
+#endif
+
+#include "fpu/tag_w.h"
+#include "fpu/status_w.h"
+#include "fpu/control_w.h"
+
+extern int FPU_tagof(const floatx80 &reg);
 
 //
 // Minimal i387 structure
 //
 struct i387_t 
 {
-    Bit32u cwd; 	// control word
-    Bit32u swd; 	// status word
-    Bit32u twd;		// tag word
-    Bit32u fip;
-    Bit32u fcs;
-    Bit32u foo; 	// last instruction opcode
-    Bit32u fos;
+    i387_t() {}
+
+public:
+    void	init();		// used by FINIT/FNINIT instructions
+    void	reset();	// called on CPU reset
+
+    int    	get_tos() const { return tos; }
+
+    int 	is_IA_masked() const { return (cwd & FPU_CW_Invalid); }
+
+    Bit16u 	get_control_word() const { return cwd; }
+    Bit16u 	get_tag_word() const { return twd; }
+    Bit16u 	get_status_word() const { return (swd & ~FPU_SW_Top & 0xFFFF) | ((tos << 11) & FPU_SW_Top); }
+    Bit16u 	get_partial_status() const { return swd; }
+
+    void   	FPU_pop ();
+    void   	FPU_push();
+
+    void   	FPU_settag (int tag, int regnr);
+    int    	FPU_gettag (int regnr);
+
+    void   	FPU_settagi(int tag, int stnr) { FPU_settag(tag, tos+stnr); }
+    int    	FPU_gettagi(int stnr) { return FPU_gettag(tos+stnr); }
+
+    void	FPU_save_reg (floatx80 reg, int tag, int regnr);
+
+    void  	FPU_save_regi(floatx80 reg, int stnr) { FPU_save_regi(reg, FPU_tagof(reg), stnr); }
+    floatx80 	FPU_read_regi(int stnr) { return st_space[(tos+stnr) & 0x07]; }
+    void  	FPU_save_regi(floatx80 reg, int tag, int stnr) { FPU_save_reg(reg, tag, (tos+stnr) & 0x07); }
+
+public:
+    Bit16u cwd; 	// control word
+    Bit16u swd; 	// status word
+    Bit16u twd;		// tag word
+    Bit16u foo; 	// last instruction opcode
+
+    bx_address fip;
+    bx_address fdp;
+    Bit16u fcs;
+    Bit16u fds;
+
+    floatx80 st_space[8];
 
     unsigned char tos;
-    unsigned char no_update;
-    unsigned char rm;
-    unsigned char align8;
-
-    Bit64u st_space[16]; // 8*16 bytes per FP-reg (aligned) = 128 bytes
+    unsigned char align1;
+    unsigned char align2;
+    unsigned char align3;
 };
 
-// Endian  Host byte order         Guest (x86) byte order
-// ======================================================
-// Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
-// Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
-//
-// Legend: F - fraction/mmx
-//         E - exponent
-//         A - alignment
+#define IS_TAG_EMPTY(i) 		\
+  ((BX_CPU_THIS_PTR the_i387.FPU_gettagi(i)) == FPU_Tag_Empty)
 
-#ifdef BX_BIG_ENDIAN
-#if defined(__MWERKS__) && defined(macintosh)
-#pragma options align=mac68k
-#endif
-struct bx_fpu_reg_t {
-  Bit16u alignment1, alignment2, alignment3;
-  Bit16s exp;   /* Signed quantity used in internal arithmetic. */
-  Bit32u sigh;
-  Bit32u sigl;
-} GCC_ATTRIBUTE((aligned(16), packed));
-#if defined(__MWERKS__) && defined(macintosh)
-#pragma options align=reset
-#endif
-#else
-struct bx_fpu_reg_t {
-  Bit32u sigl;
-  Bit32u sigh;
-  Bit16s exp;   /* Signed quantity used in internal arithmetic. */
-  Bit16u alignment1, alignment2, alignment3;
-} GCC_ATTRIBUTE((aligned(16), packed));
-#endif
+#define IS_IA_MASKED()			\
+  (BX_CPU_THIS_PTR the_i387.get_control_word() & FPU_CW_Invalid)
 
-typedef struct bx_fpu_reg_t FPU_REG;
+#define BX_READ_FPU_REG(i)		\
+  (BX_CPU_THIS_PTR the_i387.FPU_read_regi(i))
 
-#define BX_FPU_REG(index) \
-    (BX_CPU_THIS_PTR the_i387.st_space[index*2])
+#define BX_WRITE_FPU_REGISTER_AND_TAG(value, tag, i)			\
+{                                                               	\
+    BX_CPU_THIS_PTR the_i387.FPU_save_regi((value), (tag), (i));      	\
+}                                                               	
 
-#define FPU_PARTIAL_STATUS     (BX_CPU_THIS_PTR the_i387.swd)
-#define FPU_CONTROL_WORD       (BX_CPU_THIS_PTR the_i387.cwd)
-#define FPU_TAG_WORD           (BX_CPU_THIS_PTR the_i387.twd)
-#define FPU_TOS                (BX_CPU_THIS_PTR the_i387.tos)
+#define BX_WRITE_FPU_REG(value, i)					\
+{                                                               	\
+    BX_CPU_THIS_PTR the_i387.FPU_save_regi((value), (i));      		\
+}                                                               	
 
-#define FPU_SW_SUMMARY         (0x0080)		/* exception summary */
-
-#ifdef __cplusplus
-extern "C" 
+BX_CPP_INLINE int i387_t::FPU_gettag(int regnr)
 {
-#endif
-  int FPU_tagof(FPU_REG *reg) BX_CPP_AttrRegparmN(1);
-#ifdef __cplusplus
+  return (get_tag_word() >> ((regnr & 7)*2)) & 3;
 }
-#endif
+
+BX_CPP_INLINE void i387_t::FPU_settag (int tag, int regnr)
+{
+  regnr &= 7;
+  twd &= ~(3 << (regnr*2));
+  twd |= (tag & 3) << (regnr*2);
+}
+
+BX_CPP_INLINE void i387_t::FPU_push(void)
+{
+  tos--;
+}
+
+BX_CPP_INLINE void i387_t::FPU_pop(void)
+{
+  twd |= 3 << ((tos & 7)*2);
+  tos++;
+}
+
+BX_CPP_INLINE void i387_t::FPU_save_reg (floatx80 reg, int tag, int regnr)
+{
+  st_space[regnr] = reg;
+  FPU_settag(tag, regnr);
+}
+
+#include <string.h>
+
+BX_CPP_INLINE void i387_t::init()
+{
+  cwd = 0x037F;
+  swd = 0;
+  tos = 0;
+  twd = 0xFFFF;
+  foo = 0;
+  fip = 0;
+  fcs = 0;
+  fds = 0;
+  fdp = 0;
+}
+
+BX_CPP_INLINE void i387_t::reset()
+{
+  cwd = 0x0040;
+  swd = 0;
+  tos = 0;
+  twd = 0x5555;
+  foo = 0;
+  fip = 0;
+  fcs = 0;
+  fds = 0;
+  fdp = 0;
+
+  memset(st_space, 0, sizeof(floatx80)*8);
+}
+
+extern const floatx80 Const_Z;
+extern const floatx80 Const_1;
 
 #if BX_SUPPORT_MMX
 

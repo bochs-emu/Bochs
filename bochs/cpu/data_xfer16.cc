@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.29 2004-05-10 21:05:48 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.30 2004-06-18 14:11:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -316,7 +316,7 @@ BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
   //       of whether condition is true or not.  Thus, exceptions may
   //       occur even if the MOV does not take place.
 
-  bx_bool condition;
+  bx_bool condition = 0;
   Bit16u op2_16;
 
   switch (i->b1()) {
@@ -338,7 +338,6 @@ BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
     case 0x14E: condition = get_ZF() || (getB_SF() != getB_OF()); break;
     case 0x14F: condition = !get_ZF() && (getB_SF() == getB_OF()); break;
     default:
-      condition = 0;
       BX_PANIC(("CMOV_GwEw: default case"));
     }
 

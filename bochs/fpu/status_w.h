@@ -1,61 +1,72 @@
-/*---------------------------------------------------------------------------+
- |  status_w.h                                                               |
- |  $Id: status_w.h,v 1.6 2003-07-31 21:07:38 sshwarts Exp $
- |                                                                           |
- | Copyright (C) 1992,1993                                                   |
- |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
- |                       Australia.  E-mail   billm@vaxc.cc.monash.edu.au    |
- |                                                                           |
- +---------------------------------------------------------------------------*/
+/////////////////////////////////////////////////////////////////////////
+//
+//   Copyright (c) 2004 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman <gate at fidonet.org.il>
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
 
 #ifndef _STATUS_H_
 #define _STATUS_H_
 
-#include "fpu_emu.h"    /* for definition of PECULIAR_486 */
+/* Status Word */
+#define FPU_SW_Backward		(0x8000)  /* backward compatibility */
+#define FPU_SW_C3	 	(0x4000)  /* condition bit 3 */
+#define FPU_SW_Top		(0x3800)  /* top of stack */
+#define FPU_SW_C2		(0x0400)  /* condition bit 2 */
+#define FPU_SW_C1		(0x0200)  /* condition bit 1 */
+#define FPU_SW_C0		(0x0100)  /* condition bit 0 */
+#define FPU_SW_Summary   	(0x0080)  /* exception summary */
+#define FPU_SW_Stack_Fault	(0x0040)  /* stack fault */
+#define FPU_SW_Precision   	(0x0020)  /* loss of precision */
+#define FPU_SW_Underflow   	(0x0010)  /* underflow */
+#define FPU_SW_Overflow    	(0x0008)  /* overflow */
+#define FPU_SW_Zero_Div    	(0x0004)  /* divide by zero */
+#define FPU_SW_Denormal_Op   	(0x0002)  /* denormalized operand */
+#define FPU_SW_Invalid    	(0x0001)  /* invalid operation */
 
-#define SW_Backward    	(0x8000)	/* backward compatibility */
-#define SW_C3		(0x4000)	/* condition bit 3 */
-#define SW_Top		(0x3800)	/* top of stack */
-#define SW_Top_Shift 	(11)		/* shift for top of stack bits */
-#define SW_C2		(0x0400)	/* condition bit 2 */
-#define SW_C1		(0x0200)	/* condition bit 1 */
-#define SW_C0		(0x0100)	/* condition bit 0 */
-#define SW_Summary     	(0x0080)	/* exception summary */
-#define SW_Stack_Fault	(0x0040)	/* stack fault */
-#define SW_Precision   	(0x0020)	/* loss of precision */
-#define SW_Underflow   	(0x0010)	/* underflow */
-#define SW_Overflow    	(0x0008)	/* overflow */
-#define SW_Zero_Div    	(0x0004)	/* divide by zero */
-#define SW_Denorm_Op   	(0x0002)	/* denormalized operand */
-#define SW_Invalid     	(0x0001)	/* invalid operation */
+#define FPU_SW_CC (FPU_SW_C0|FPU_SW_C1|FPU_SW_C2|FPU_SW_C3)
 
-#define SW_Exc_Mask     (0x27f)  /* Status word exception bit mask */
+#define FPU_SW_Exceptions_Mask  (0x027f)  /* status word exceptions bit mask */
 
-#define COMP_A_gt_B	1
-#define COMP_A_eq_B	2
-#define COMP_A_lt_B	3
-#define COMP_No_Comp	4
-#define COMP_Denormal   0x20
-#define COMP_NaN	0x40
-#define COMP_SNaN	0x80
+/* Exception flags: */
+#define FPU_EX_Precision	(0x0020)  /* loss of precision */
+#define FPU_EX_Underflow	(0x0010)  /* underflow */
+#define FPU_EX_Overflow		(0x0008)  /* overflow */
+#define FPU_EX_Zero_Div		(0x0004)  /* divide by zero */
+#define FPU_EX_Denormal		(0x0002)  /* denormalized operand */
+#define FPU_EX_Invalid		(0x0001)  /* invalid operation */
 
-#define status_word() \
-  ((FPU_partial_status & ~SW_Top & 0xffff) | ((FPU_tos << SW_Top_Shift) & SW_Top))
+/* Special exceptions: */
+#define FPU_EX_Stack_Overflow	(0x0041|FPU_SW_C1) 	/* stack overflow */
+#define FPU_EX_Stack_Underflow	(0x0041)		/* stack underflow */
+
+/* precision control */
+#define FPU_EX_Precision_Lost_Up 	(EX_Precision | SW_C1)
+#define FPU_EX_Precision_Lost_Dn        (EX_Precision)
 
 /*
  * bbd: use do {...} while (0) structure instead of using curly brackets
  * inside parens, which most compilers do not like.
  */
-#define setcc(cc) do { \
-  FPU_partial_status &= ~(SW_C0|SW_C1|SW_C2|SW_C3); \
-  FPU_partial_status |= (cc) & (SW_C0|SW_C1|SW_C2|SW_C3); } while(0)
+#define setcc(cc) do { 				\
+  FPU_PARTIAL_STATUS &= ~(FPU_SW_CC); 		\
+  FPU_PARTIAL_STATUS |= (cc) & FPU_SW_CC; 	\
+} while(0);
 
-#ifdef PECULIAR_486
-   /* Default, this conveys no information, but an 80486 does it. */
-   /* Clear the SW_C1 bit, "other bits undefined". */
-#  define clear_C1()  { FPU_partial_status &= ~SW_C1; }
-# else
-#  define clear_C1()
-#endif /* PECULIAR_486 */
+#define clear_C1() { FPU_PARTIAL_STATUS &= ~FPU_SW_C1; }
+#define clear_C2() { FPU_PARTIAL_STATUS &= ~FPU_SW_C2; }
 
-#endif /* _STATUS_H_ */
+#endif

@@ -84,18 +84,14 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
-  Bit16u twd = BX_CPU_THIS_PTR the_i387.twd, tag_byte = 0;
-  Bit16u status_w = BX_CPU_THIS_PTR the_i387.swd;
-  Bit16u tos = BX_CPU_THIS_PTR the_i387.tos;
+  Bit16u twd = BX_CPU_THIS_PTR the_i387.get_tag_word(), tag_byte = 0;
   unsigned index;
   BxPackedXmmRegister xmm;
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
-#define SW_TOP (0x3800)
-
-  xmm.xmm16u(0) = (BX_CPU_THIS_PTR the_i387.cwd);
-  xmm.xmm16u(1) = (status_w & ~SW_TOP & 0xffff) | ((tos << 11) & SW_TOP);
+  xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
+  xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word ();
 
   if(twd & 0x0003 != 0x0003) tag_byte |= 0x0100;
   if(twd & 0x000c != 0x000c) tag_byte |= 0x0200;
@@ -256,19 +252,14 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   tag_byte_mask = 0x0100;
 
-#define FPU_TAG_VALID   0x00
-#define FPU_TAG_ZERO    0x01
-#define FPU_TAG_SPECIAL 0x02
-#define FPU_TAG_EMPTY   0x03
-
   for(index = 0;index < 8; index++, twd <<= 2, tag_byte_mask <<= 1)
   {
       if(tag_byte & tag_byte_mask) {
-          bx_fpu_reg_t *fpu_reg = (bx_fpu_reg_t *) &(BX_FPU_REG(index));
+          floatx80 &fpu_reg = BX_FPU_REG(index);
           twd = FPU_tagof(fpu_reg);
       }
       else {
-         twd |= FPU_TAG_EMPTY;
+         twd |= FPU_Tag_Empty;
       }
   }
 

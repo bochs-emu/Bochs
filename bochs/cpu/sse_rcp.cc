@@ -24,8 +24,7 @@
 
 #if BX_SUPPORT_SSE
 
-#include "softfloat.h"
-#include "softfloat-specialize.h"
+#include "fpu/softfloat-specialize.h"
 
 BX_CPP_INLINE Float32 convert_to_QNaN(Float32 op)
 {

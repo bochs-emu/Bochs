@@ -6,7 +6,7 @@
 
 CC="gcc"
 CXX="g++"
-CFLAGS="-O6 -march=pentium"
+CFLAGS="-O3 -march=pentium"
 CXXFLAGS="$CFLAGS"
 
 export CC
@@ -17,5 +17,8 @@ export CXXFLAGS
 ./configure --enable-cdrom \
             --enable-sb16=win \
 	    --enable-ne2000 \
+            --enable-pci \
 	    --enable-vbe \
-		--enable-all-optimizations
+            --enable-all-optimizations \
+            --enable-cpu-level=6 \
+            --enable-sse=2 

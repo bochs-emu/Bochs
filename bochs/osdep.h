@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.20 2004-02-08 10:22:29 cbothamy Exp $
+// $Id: osdep.h,v 1.21 2004-06-18 14:11:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,9 +68,9 @@ extern "C" {
 #undef BX_HAVE_VSNPRINTF
 #define BX_HAVE_SNPRINTF 1
 #define BX_HAVE_VSNPRINTF 1
-#else    /* ifnndef __MINGW32__ */
+#else   /* ifndef __MINGW32__ */
 #define FMT_LL "%ll"
-#endif  /* ifnndef __MINGW32__ */
+#endif  /* ifndef __MINGW32__ */
 #else    /* WIN32 */
 #define FMT_LL "%ll"
 #endif   /* WIN32 */
