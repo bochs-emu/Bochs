@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.40 2002-06-23 18:04:07 vruppert Exp $
+// $Id: floppy.cc,v 1.41 2002-07-15 20:11:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.40 2002-06-23 18:04:07 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.41 2002-07-15 20:11:33 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -478,7 +478,9 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
           case 0xc5: /* write normal data */
             BX_FD_THIS s.command_size = 9;
             break;
+          case 0x46:
           case 0x66:
+          case 0xc6:
           case 0xe6: /* read normal data */
             BX_FD_THIS s.command_size = 9;
             break;
@@ -797,8 +799,10 @@ bx_floppy_ctrl_c::floppy_command(void)
       return;
       break;
 
-    case 0x66: // read normal data, MT=0
-    case 0xe6: // read normal data, MT=1
+    case 0x46: // read normal data, MT=0, SK=0
+    case 0x66: // read normal data, MT=0, SK=1
+    case 0xc6: // read normal data, MT=1, SK=0
+    case 0xe6: // read normal data, MT=1, SK=1
     case 0x45: // write normal data, MT=0
     case 0xc5: // write normal data, MT=1
       BX_FD_THIS s.multi_track = (BX_FD_THIS s.command[0] >> 7);
@@ -939,7 +943,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.sector[drive]   = sector;
       BX_FD_THIS s.head[drive]     = head;
 
-      if ((BX_FD_THIS s.command[0] & 0x7f) == 0x66) { // read
+      if ((BX_FD_THIS s.command[0] & 0x4f) == 0x46) { // read
         floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
                     512, FROM_FLOPPY);
         BX_FD_THIS s.floppy_buffer_index = 0;
@@ -1083,7 +1087,9 @@ bx_floppy_ctrl_c::timer()
       raise_interrupt();
       break;
 
-    case 0x66: // read normal data
+    case 0x46: // read normal data
+    case 0x66:
+    case 0xc6:
     case 0xe6:
     case 0x45: // write normal data
     case 0xc5:
