@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.165 2002-10-25 12:36:42 bdenney Exp $
+// $Id: main.cc,v 1.166 2002-10-26 13:14:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,7 +66,6 @@ void   bx_close_harddrive(void);
 
 
 void bx_init_bx_dbg (void);
-void bx_emulate_hga_dumps_timer(void);
 static char *divider = "========================================================================";
 static logfunctions thePluginLog;
 logfunctions *pluginlog = &thePluginLog;
@@ -1896,16 +1895,6 @@ bx_atexit(void)
 #endif
 	return 0;
 }
-
-#if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
-  void
-bx_emulate_hga_dumps_timer(void)
-{
-  void bx_hga_set_video_memory(Bit8u *ptr);
-
-  bx_hga_set_video_memory(&bx_phy_memory[0xb0000]);
-}
-#endif
 
 #if BX_PROVIDE_MAIN
 

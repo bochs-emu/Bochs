@@ -45,9 +45,6 @@ top_builddir    = ..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../dllexports.a
 
-VIDEO_OBJS_VGA = vga.o
-VIDEO_OBJS_HGA = hga.o
-VIDEO_OBJS = @VIDEO_OBJS@
 CDROM_OBJS = @CDROM_OBJS@
 IOAPIC_OBJS = @IOAPIC_OBJS@
 
@@ -76,7 +73,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   parallel.o \
   floppy.o \
   keyboard.o \
-  $(VIDEO_OBJS) \
+  vga.o \
   biosdev.o \
   cmos.o \
   harddrv.o \

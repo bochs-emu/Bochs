@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.20 2002-10-25 11:44:40 bdenney Exp $
+// $Id: iodev.h,v 1.21 2002-10-26 13:14:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -352,11 +352,7 @@ private:
 
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
-#if BX_SUPPORT_VGA
-#  include "iodev/vga.h"
-#else
-#  include "iodev/hga.h"
-#endif
+#include "iodev/vga.h"
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
 #endif

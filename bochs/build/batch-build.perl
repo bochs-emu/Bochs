@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.8 2002-10-25 12:23:35 bdenney Exp $
+# $Id: batch-build.perl,v 1.9 2002-10-26 13:14:11 bdenney Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -92,8 +92,6 @@ add_configuration ('dc2300-vlb-ide',
   '--enable-dc2300-vlb-ide');
 add_configuration ('port-e9-hack',
   '--enable-port-e9-hack');
-add_configuration ('novga',
-  '--disable-vga');
 add_configuration ('cdrom',
   '--enable-cdrom');
 add_configuration ('gdbstub',

@@ -636,8 +636,6 @@ typedef
 #define BX_PROVIDE_DEVICE_MODELS 1
 #define BX_PROVIDE_BIOS_HOOKS    1
 
-#define BX_EMULATE_HGA_DUMPS 0
-
 #define BX_SUPPORT_VGA        1
 #define BX_SUPPORT_VBE        0
 

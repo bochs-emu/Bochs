@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.39 2002-10-25 12:28:34 bdenney Exp $
+// $Id: devices.cc,v 1.40 2002-10-26 13:14:03 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.39 2002-10-25 12:28:34 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.40 2002-10-26 13:14:03 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -173,13 +173,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
   sb16->init();
 #endif
 
-#if BX_SUPPORT_VGA
   /*--- VGA adapter ---*/
   pluginVgaDevice->init ();
-#else
-  /*--- HGA adapter ---*/
-  bx_init_hga_hardware();
-#endif
 
   /*--- 8259A PIC ---*/
   pluginPicDevice->init();
@@ -269,11 +264,7 @@ bx_devices_c::reset(unsigned type)
 #if BX_SUPPORT_SB16
   sb16->reset(type);
 #endif
-#if BX_SUPPORT_VGA
   pluginVgaDevice->reset(type);
-#else
-  // reset hga hardware?
-#endif
   pluginPicDevice->reset(type);
   pit->reset(type);
 #if BX_USE_SLOWDOWN_TIMER
