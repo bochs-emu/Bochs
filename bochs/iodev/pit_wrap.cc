@@ -195,7 +195,7 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
       return( (BX_PIT_THIS s.timer.read_OUT(2)<<5) |
               (BX_PIT_THIS s.refresh_clock_div2<<4) |
               (BX_PIT_THIS s.speaker_data_on<<1) |
-              (BX_PIT_THIS s.timer.read_GATE(2)) );
+              (BX_PIT_THIS s.timer.read_GATE(2)?1:0) );
       break;
 
     default:
