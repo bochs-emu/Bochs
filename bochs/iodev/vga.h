@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.22 2003-01-11 11:18:04 vruppert Exp $
+// $Id: vga.h,v 1.23 2003-02-09 08:25:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,6 +51,7 @@
   #define VBE_DISPI_ID1                   0xB0C1
     
   #define VBE_DISPI_BPP_8                 0x0
+  #define VBE_DISPI_BPP_4                 0x4
 // The following is not support yet, but just for reference available.  
 //  #define VBE_DISPI_BPP_RGB565            0x1
 //  #define VBE_DISPI_BPP_RGB555            0x2

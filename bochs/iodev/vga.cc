@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.60 2003-01-21 17:39:47 vruppert Exp $
+// $Id: vga.cc,v 1.61 2003-02-09 08:25:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1255,7 +1255,7 @@ bx_vga_c::update(void)
     }
 
 #if BX_SUPPORT_VBE  
-  if (BX_VGA_THIS s.vbe_enabled)
+  if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
     // specific VBE code display update code
     // this is partly copied/modified from the 320x200x8 update more below
@@ -1295,7 +1295,7 @@ bx_vga_c::update(void)
           SET_TILE_UPDATED (xti, yti, 0);
         }
       }
-    
+
     old_iWidth = iWidth;
     old_iHeight = iHeight;
     BX_VGA_THIS s.vga_mem_updated = 0;
@@ -1657,7 +1657,7 @@ bx_vga_c::mem_read(Bit32u addr)
 
 #if BX_SUPPORT_VBE  
   // if in a vbe enabled mode, read from the vbe_memory
-  if (BX_VGA_THIS s.vbe_enabled)
+  if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
         return vbe_mem_read(addr);
   }
@@ -1789,7 +1789,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 
 #if BX_SUPPORT_VBE
   // if in a vbe enabled mode, write to the vbe_memory
-  if (BX_VGA_THIS s.vbe_enabled)
+  if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
         vbe_mem_write(addr,value);
         return;
@@ -2194,8 +2194,8 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
     x1 = x0 + width  - 1;
     y1 = y0 + height - 1;
 
-    xmax = 640;
-    ymax = 480;
+    xmax = old_iWidth;
+    ymax = old_iHeight;
 #if BX_SUPPORT_VBE
     if (BX_VGA_THIS s.vbe_enabled) {
       xmax = BX_VGA_THIS s.vbe_xres;
@@ -2499,7 +2499,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         if (!BX_VGA_THIS s.vbe_enabled)
         {
           // check for correct bpp range
-          if (value == VBE_DISPI_BPP_8)
+          if ((value == VBE_DISPI_BPP_4) || (value == VBE_DISPI_BPP_8))
           {
             BX_VGA_THIS s.vbe_bpp=(Bit16u) value;
           }
@@ -2547,7 +2547,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_VGA_THIS s.vbe_visable_screen_size = (BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres) * 1;
           memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
           
-          BX_INFO(("VBE enabling x %d, y %d, bpp %d (0=8bpp)", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
+          BX_INFO(("VBE enabling x %d, y %d, bpp %d (0=8bpp, 4=4bpp)", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp));
           bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres);
         }
         else
