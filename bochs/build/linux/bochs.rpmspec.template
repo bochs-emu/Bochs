@@ -1,6 +1,6 @@
 Summary: Bochs Project X86 PC Emulator
 Name: bochs
-Version: 1.1.2
+Version: @VERSION@
 Release: 1
 License: LGPL
 Group: Applications/Emulators
@@ -24,8 +24,8 @@ and other OS's, all on your workstation.
 	make install
 %files
 	/usr/local/bin/bochs
-	/usr/local/bin/bochs-1.1.2
+	/usr/local/bin/bochs-@VERSION@
 	/usr/local/bin/bochs-docs
 	/usr/local/bin/bochs-dlx
-	/usr/local/bochs/1.1.2
+	/usr/local/bochs/@VERSION@
 	/usr/local/bochs/dlxlinux
