@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.20 2002-10-21 23:40:45 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.21 2002-10-22 13:58:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -156,8 +156,8 @@ class bx_floppy_stub_c : public bx_devmodel_c {
   virtual unsigned get_media_status(unsigned drive) {
     STUBFUNC(floppy,  get_media_status); return 0;
   }
-  virtual unsigned set_media_status(unsigned drive, unsigned statu) {
-    STUBFUNC(floppy, set_media_status);
+  virtual unsigned set_media_status(unsigned drive, unsigned status) {
+    STUBFUNC(floppy, set_media_status); return 0;
   }
 };
 
