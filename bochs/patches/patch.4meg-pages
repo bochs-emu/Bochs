@@ -1,0 +1,2047 @@
+----------------------------------------------------------------------
+Patch name: patch.4meg-pages
+Author: Farid Hajji <farid.hajji@ob.kamp.net>
+Date: not sure
+
+Detailed description:
+  see description below
+
+Apply patch to:
+  bochs 3/25/2000 snapshot
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p1 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+diff -Naur bochs-2000_0325a.orig/SUPERPAGES bochs-2000_0325a/SUPERPAGES
+--- bochs-2000_0325a.orig/SUPERPAGES	Thu Jan  1 01:00:00 1970
++++ bochs-2000_0325a/SUPERPAGES	Wed Oct 18 21:25:41 2000
+@@ -0,0 +1,87 @@
++	  -------------------------------------------------
++	  Experimental support for 4M superpages (pentium+)
++	      (C) Farid Hajji <farid.hajji@ob.kamp.net>
++	  -------------------------------------------------
++
++This distribution of Bochs has been enhanced to (partially) support
++bit 4 of CR4 (PSE-Bit) a.k.a. 4M superpages.
++
++Please be aware that this is currently _very_ experimental and not
++yet fully tested; not even fully implemented! It deserves the term
++'hack', not enhancement.
++
++To enable superpages, add --enable-superpages-hack to ./configure
++and be sure to specify --enable-cpu-level=5 or higher.
++
++CAVEATS:
++--------
++  * enable this option only if you absolutely need it. It slows
++    everthing down for reasons explained below.
++  * the bochs debugger (not the x86-debugger) doesn't support
++    superpages yet.
++  * if the pagesize is set to 4MB, no TLB is used. Actually,
++    TLBs are bypassed completely by this hack. If you rely on
++    TLBs in your code, things may break.
++
++What are superpages anyway?
++---------------------------
++
++Normally, x86 processors with paging enabled partition the physical
++memory in 4k pages that are accessed through a two-level hierarchy
++of paging directories and paging tables. 4 MB pages are an enhancement
++of pentium (and higher) processors, that are accessed directly through
++a one-level hiearchy of (combined) paging directory and page table
++entry. See http://developer.intel.com/design/pentiumii/manuals/24319202.pdf
++section 3.6 (paging) for a detailed overview.
++
++Superpages are needed by some newer kernels, like L4ka (http://www.l4ka.org/).
++Incidentally, L4ka and the template root_task was the only 4MB superpage
++software I tested right now.
++
++Technically, if CR4's bit 4 (PSE) is cleared, normal 4k page handling applies,
++as was already supported by bochs. If PSE is set, the PDE.PS flag determines
++wether the actual page is 4k (PDE.PS=0) or 4M (PDE.PS=1) in size. The 4k case
++is identical to the case with cleared PSE bit. The 4M case is different, in
++that the PDE entry specifies in Bits 31..22 the physical page base address
++(aligned on 4MB boundary). In that case, the linear address is interpreted
++differently: Bits 31..22 are as before an index in the page directory, as
++addresse by CR3 (the usual case), but all bits 21..0 of the linear address
++are now on offset to the physical page base address contained in PDE.
++
++Modifications to bochs' sources:
++--------------------------------
++
++Every change or addition to bochs' original sources related to superpages,
++is enclosed in a
++
++  #if SUPERPAGES_HACK
++  #endif // SUPERPAGES_HACK
++
++pair. SUPERPAGES_HACK is defined in configure.in which is transformed to
++configure with autoconf in the usual way (already done here).
++
++Tested with:
++------------
++  * L4ka compiled for 586 with kernel debugger, rmgr, sigma0 and the
++    template hello-world root_task. Screen shots and instructions under:
++    http://home.kamp.net/home/farid.hajji/l4ka/index.html
++  * <Please add your tests here...>
++
++TODO:
++-----
++  * test extensively with software that uses 4 MB superpages.
++  * integrate TLB handling in the 4MB case. Currently bypassed.
++  * no flags of CR4 except CR4.PSE (bit 4) are supported yet.
++
++Acknowledgements:
++-----------------
++  Many thanks to the people at contact@l4ka.org for helping me understand
++  the L4 initial bootstrap sequence. A big thanks go to Kevin Lawton
++  (kevin@mandrakesoft.com), bochs author, for his extremely clear sources
++  and his hints about the prefetch-queue.
++
++-- 
++Farid Hajji -- Unix Systems and Network Admin | Phone: +49-2131-67-555
++Broicherdorfstr. 83, D-41564 Kaarst, Germany  | farid.hajji@ob.kamp.net
++- - - - - - - - - - - - - - - - - - - - - - - + - - - - - - - - - - - -
++Murphy's Law fails only when you try to demonstrate it, and thus succeeds.
+diff -Naur bochs-2000_0325a.orig/config.h.in bochs-2000_0325a/config.h.in
+--- bochs-2000_0325a.orig/config.h.in	Tue Jan  4 21:35:34 2000
++++ bochs-2000_0325a/config.h.in	Wed Oct 18 13:49:17 2000
+@@ -25,6 +25,16 @@
+ // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
+ ///////////////////////////////////////////////////////////////////
+ 
++// Setting this to 1 will enable support for 4 MB superpages (pentium+).
++// Superpages are active, when CR4.PSE (bit 4) is set. The pagesize
++// is either 4k iff pde.ps (bit 7 of pde) is 0 or 4M iff pde.ps is 1.
++// If 4k pages, the traditional (386+) 2-level hiearchy of page directory
++// and page tables apply. If 4M pages, the new 1-level hierarchy of a
++// combined page directory/page table entry applies. In this case, we
++// currently don't use TLB (we bypass it).
++#define SUPERPAGES_HACK 1
++
++
+ // I rebuilt the code which provides timers to IO devices.
+ // Setting this to 1 will introduce a little code which
+ // will panic out if cases which shouldn't happen occur.
+diff -Naur bochs-2000_0325a.orig/configure bochs-2000_0325a/configure
+--- bochs-2000_0325a.orig/configure	Tue Jan  4 20:15:30 2000
++++ bochs-2000_0325a/configure	Wed Oct 18 13:16:10 2000
+@@ -1,7 +1,7 @@
+ #! /bin/sh
+ 
+ # Guess values for system-dependent variables and create Makefiles.
+-# Generated automatically using autoconf version 2.12 
++# Generated automatically using autoconf version 2.13 
+ # Copyright (C) 1992, 93, 94, 95, 96 Free Software Foundation, Inc.
+ #
+ # This configure script is free software; the Free Software Foundation
+@@ -16,6 +16,8 @@
+ ac_help="$ac_help
+   --enable-cpu-level                select cpu level (3,4,5)"
+ ac_help="$ac_help
++  --enable-superpages-hack          enables 4mb superpages hack"
++ac_help="$ac_help
+   --enable-dynamic                  enable dynamic translation support"
+ ac_help="$ac_help
+   --enable-ne2000                   enable limited ne2000 support"
+@@ -105,6 +107,7 @@
+ # Initialize some other variables.
+ subdirs=
+ MFLAGS= MAKEFLAGS=
++SHELL=${CONFIG_SHELL-/bin/sh}
+ # Maximum number of lines to put in a shell here document.
+ ac_max_here_lines=12
+ 
+@@ -388,7 +391,7 @@
+     verbose=yes ;;
+ 
+   -version | --version | --versio | --versi | --vers)
+-    echo "configure generated by autoconf version 2.12"
++    echo "configure generated by autoconf version 2.13"
+     exit 0 ;;
+ 
+   -with-* | --with-*)
+@@ -558,9 +561,11 @@
+ # CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ ac_cpp='$CPP $CPPFLAGS'
+ ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+-ac_link='${CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
++ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+ cross_compiling=$ac_cv_prog_cc_cross
+ 
++ac_exeext=
++ac_objext=o
+ if (echo "testing\c"; echo 1,2,3) | grep c >/dev/null; then
+   # Stardent Vistra SVR4 grep lacks -e, says ghazi@caip.rutgers.edu.
+   if (echo -n testing; echo 1,2,3) | sed s/-n/xn/ | grep xn >/dev/null; then
+@@ -582,15 +587,16 @@
+ # Extract the first word of "gcc", so it can be a program name with args.
+ set dummy gcc; ac_word=$2
+ echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+-echo "configure:586: checking for $ac_word" >&5
++echo "configure:591: checking for $ac_word" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   if test -n "$CC"; then
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+-  for ac_dir in $PATH; do
++  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
++  ac_dummy="$PATH"
++  for ac_dir in $ac_dummy; do
+     test -z "$ac_dir" && ac_dir=.
+     if test -f $ac_dir/$ac_word; then
+       ac_cv_prog_CC="gcc"
+@@ -611,16 +617,17 @@
+   # Extract the first word of "cc", so it can be a program name with args.
+ set dummy cc; ac_word=$2
+ echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+-echo "configure:615: checking for $ac_word" >&5
++echo "configure:621: checking for $ac_word" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   if test -n "$CC"; then
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
++  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
+   ac_prog_rejected=no
+-  for ac_dir in $PATH; do
++  ac_dummy="$PATH"
++  for ac_dir in $ac_dummy; do
+     test -z "$ac_dir" && ac_dir=.
+     if test -f $ac_dir/$ac_word; then
+       if test "$ac_dir/$ac_word" = "/usr/ucb/cc"; then
+@@ -655,25 +662,61 @@
+   echo "$ac_t""no" 1>&6
+ fi
+ 
++  if test -z "$CC"; then
++    case "`uname -s`" in
++    *win32* | *WIN32*)
++      # Extract the first word of "cl", so it can be a program name with args.
++set dummy cl; ac_word=$2
++echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
++echo "configure:672: checking for $ac_word" >&5
++if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
++  echo $ac_n "(cached) $ac_c" 1>&6
++else
++  if test -n "$CC"; then
++  ac_cv_prog_CC="$CC" # Let the user override the test.
++else
++  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
++  ac_dummy="$PATH"
++  for ac_dir in $ac_dummy; do
++    test -z "$ac_dir" && ac_dir=.
++    if test -f $ac_dir/$ac_word; then
++      ac_cv_prog_CC="cl"
++      break
++    fi
++  done
++  IFS="$ac_save_ifs"
++fi
++fi
++CC="$ac_cv_prog_CC"
++if test -n "$CC"; then
++  echo "$ac_t""$CC" 1>&6
++else
++  echo "$ac_t""no" 1>&6
++fi
++ ;;
++    esac
++  fi
+   test -z "$CC" && { echo "configure: error: no acceptable cc found in \$PATH" 1>&2; exit 1; }
+ fi
+ 
+ echo $ac_n "checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works""... $ac_c" 1>&6
+-echo "configure:663: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works" >&5
++echo "configure:704: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works" >&5
+ 
+ ac_ext=c
+ # CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ ac_cpp='$CPP $CPPFLAGS'
+ ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+-ac_link='${CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
++ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+ cross_compiling=$ac_cv_prog_cc_cross
+ 
+-cat > conftest.$ac_ext <<EOF
+-#line 673 "configure"
++cat > conftest.$ac_ext << EOF
++
++#line 715 "configure"
+ #include "confdefs.h"
++
+ main(){return(0);}
+ EOF
+-if { (eval echo configure:677: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:720: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   ac_cv_prog_cc_works=yes
+   # If we can't run a trivial program, we are probably using a cross compiler.
+   if (./conftest; exit) 2>/dev/null; then
+@@ -687,18 +730,24 @@
+   ac_cv_prog_cc_works=no
+ fi
+ rm -fr conftest*
++ac_ext=c
++# CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
++ac_cpp='$CPP $CPPFLAGS'
++ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
++ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
++cross_compiling=$ac_cv_prog_cc_cross
+ 
+ echo "$ac_t""$ac_cv_prog_cc_works" 1>&6
+ if test $ac_cv_prog_cc_works = no; then
+   { echo "configure: error: installation or configuration problem: C compiler cannot create executables." 1>&2; exit 1; }
+ fi
+ echo $ac_n "checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler""... $ac_c" 1>&6
+-echo "configure:697: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler" >&5
++echo "configure:746: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler" >&5
+ echo "$ac_t""$ac_cv_prog_cc_cross" 1>&6
+ cross_compiling=$ac_cv_prog_cc_cross
+ 
+ echo $ac_n "checking whether we are using GNU C""... $ac_c" 1>&6
+-echo "configure:702: checking whether we are using GNU C" >&5
++echo "configure:751: checking whether we are using GNU C" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_gcc'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -707,7 +756,7 @@
+   yes;
+ #endif
+ EOF
+-if { ac_try='${CC-cc} -E conftest.c'; { (eval echo configure:711: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
++if { ac_try='${CC-cc} -E conftest.c'; { (eval echo configure:760: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
+   ac_cv_prog_gcc=yes
+ else
+   ac_cv_prog_gcc=no
+@@ -718,11 +767,15 @@
+ 
+ if test $ac_cv_prog_gcc = yes; then
+   GCC=yes
+-  ac_test_CFLAGS="${CFLAGS+set}"
+-  ac_save_CFLAGS="$CFLAGS"
+-  CFLAGS=
+-  echo $ac_n "checking whether ${CC-cc} accepts -g""... $ac_c" 1>&6
+-echo "configure:726: checking whether ${CC-cc} accepts -g" >&5
++else
++  GCC=
++fi
++
++ac_test_CFLAGS="${CFLAGS+set}"
++ac_save_CFLAGS="$CFLAGS"
++CFLAGS=
++echo $ac_n "checking whether ${CC-cc} accepts -g""... $ac_c" 1>&6
++echo "configure:779: checking whether ${CC-cc} accepts -g" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_cc_g'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -737,32 +790,37 @@
+ fi
+ 
+ echo "$ac_t""$ac_cv_prog_cc_g" 1>&6
+-  if test "$ac_test_CFLAGS" = set; then
+-    CFLAGS="$ac_save_CFLAGS"
+-  elif test $ac_cv_prog_cc_g = yes; then
++if test "$ac_test_CFLAGS" = set; then
++  CFLAGS="$ac_save_CFLAGS"
++elif test $ac_cv_prog_cc_g = yes; then
++  if test "$GCC" = yes; then
+     CFLAGS="-g -O2"
+   else
+-    CFLAGS="-O2"
++    CFLAGS="-g"
+   fi
+ else
+-  GCC=
+-  test "${CFLAGS+set}" = set || CFLAGS="-g"
++  if test "$GCC" = yes; then
++    CFLAGS="-O2"
++  else
++    CFLAGS=
++  fi
+ fi
+ 
+-for ac_prog in $CCC c++ g++ gcc CC cxx cc++
++for ac_prog in $CCC c++ g++ gcc CC cxx cc++ cl
+ do
+ # Extract the first word of "$ac_prog", so it can be a program name with args.
+ set dummy $ac_prog; ac_word=$2
+ echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+-echo "configure:758: checking for $ac_word" >&5
++echo "configure:815: checking for $ac_word" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_CXX'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   if test -n "$CXX"; then
+   ac_cv_prog_CXX="$CXX" # Let the user override the test.
+ else
+-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+-  for ac_dir in $PATH; do
++  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
++  ac_dummy="$PATH"
++  for ac_dir in $ac_dummy; do
+     test -z "$ac_dir" && ac_dir=.
+     if test -f $ac_dir/$ac_word; then
+       ac_cv_prog_CXX="$ac_prog"
+@@ -785,21 +843,23 @@
+ 
+ 
+ echo $ac_n "checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works""... $ac_c" 1>&6
+-echo "configure:789: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works" >&5
++echo "configure:847: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works" >&5
+ 
+ ac_ext=C
+ # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ ac_cpp='$CXXCPP $CPPFLAGS'
+ ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+-ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
++ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+ cross_compiling=$ac_cv_prog_cxx_cross
+ 
+-cat > conftest.$ac_ext <<EOF
+-#line 799 "configure"
++cat > conftest.$ac_ext << EOF
++
++#line 858 "configure"
+ #include "confdefs.h"
+-main(){return(0);}
++
++int main(){return(0);}
+ EOF
+-if { (eval echo configure:803: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:863: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   ac_cv_prog_cxx_works=yes
+   # If we can't run a trivial program, we are probably using a cross compiler.
+   if (./conftest; exit) 2>/dev/null; then
+@@ -817,7 +877,7 @@
+ # CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ ac_cpp='$CPP $CPPFLAGS'
+ ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+-ac_link='${CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
++ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+ cross_compiling=$ac_cv_prog_cc_cross
+ 
+ echo "$ac_t""$ac_cv_prog_cxx_works" 1>&6
+@@ -825,12 +885,12 @@
+   { echo "configure: error: installation or configuration problem: C++ compiler cannot create executables." 1>&2; exit 1; }
+ fi
+ echo $ac_n "checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler""... $ac_c" 1>&6
+-echo "configure:829: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler" >&5
++echo "configure:889: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler" >&5
+ echo "$ac_t""$ac_cv_prog_cxx_cross" 1>&6
+ cross_compiling=$ac_cv_prog_cxx_cross
+ 
+ echo $ac_n "checking whether we are using GNU C++""... $ac_c" 1>&6
+-echo "configure:834: checking whether we are using GNU C++" >&5
++echo "configure:894: checking whether we are using GNU C++" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_gxx'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -839,7 +899,7 @@
+   yes;
+ #endif
+ EOF
+-if { ac_try='${CXX-g++} -E conftest.C'; { (eval echo configure:843: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
++if { ac_try='${CXX-g++} -E conftest.C'; { (eval echo configure:903: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
+   ac_cv_prog_gxx=yes
+ else
+   ac_cv_prog_gxx=no
+@@ -850,11 +910,15 @@
+ 
+ if test $ac_cv_prog_gxx = yes; then
+   GXX=yes
+-  ac_test_CXXFLAGS="${CXXFLAGS+set}"
+-  ac_save_CXXFLAGS="$CXXFLAGS"
+-  CXXFLAGS=
+-  echo $ac_n "checking whether ${CXX-g++} accepts -g""... $ac_c" 1>&6
+-echo "configure:858: checking whether ${CXX-g++} accepts -g" >&5
++else
++  GXX=
++fi
++
++ac_test_CXXFLAGS="${CXXFLAGS+set}"
++ac_save_CXXFLAGS="$CXXFLAGS"
++CXXFLAGS=
++echo $ac_n "checking whether ${CXX-g++} accepts -g""... $ac_c" 1>&6
++echo "configure:922: checking whether ${CXX-g++} accepts -g" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_cxx_g'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -869,20 +933,24 @@
+ fi
+ 
+ echo "$ac_t""$ac_cv_prog_cxx_g" 1>&6
+-  if test "$ac_test_CXXFLAGS" = set; then
+-    CXXFLAGS="$ac_save_CXXFLAGS"
+-  elif test $ac_cv_prog_cxx_g = yes; then
++if test "$ac_test_CXXFLAGS" = set; then
++  CXXFLAGS="$ac_save_CXXFLAGS"
++elif test $ac_cv_prog_cxx_g = yes; then
++  if test "$GXX" = yes; then
+     CXXFLAGS="-g -O2"
+   else
+-    CXXFLAGS="-O2"
++    CXXFLAGS="-g"
+   fi
+ else
+-  GXX=
+-  test "${CXXFLAGS+set}" = set || CXXFLAGS="-g"
++  if test "$GXX" = yes; then
++    CXXFLAGS="-O2"
++  else
++    CXXFLAGS=
++  fi
+ fi
+ 
+ echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
+-echo "configure:886: checking whether ${MAKE-make} sets \${MAKE}" >&5
++echo "configure:954: checking whether ${MAKE-make} sets \${MAKE}" >&5
+ set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -911,15 +979,16 @@
+ # Extract the first word of "ranlib", so it can be a program name with args.
+ set dummy ranlib; ac_word=$2
+ echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+-echo "configure:915: checking for $ac_word" >&5
++echo "configure:983: checking for $ac_word" >&5
+ if eval "test \"`echo '$''{'ac_cv_prog_RANLIB'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   if test -n "$RANLIB"; then
+   ac_cv_prog_RANLIB="$RANLIB" # Let the user override the test.
+ else
+-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+-  for ac_dir in $PATH; do
++  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
++  ac_dummy="$PATH"
++  for ac_dir in $ac_dummy; do
+     test -z "$ac_dir" && ac_dir=.
+     if test -f $ac_dir/$ac_word; then
+       ac_cv_prog_RANLIB="ranlib"
+@@ -939,7 +1008,7 @@
+ 
+ 
+ echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
+-echo "configure:943: checking how to run the C preprocessor" >&5
++echo "configure:1012: checking how to run the C preprocessor" >&5
+ # On Suns, sometimes $CPP names a directory.
+ if test -n "$CPP" && test -d "$CPP"; then
+   CPP=
+@@ -954,14 +1023,14 @@
+   # On the NeXT, cc -E runs the code through the compiler's parser,
+   # not just through cpp.
+   cat > conftest.$ac_ext <<EOF
+-#line 958 "configure"
++#line 1027 "configure"
+ #include "confdefs.h"
+ #include <assert.h>
+ Syntax Error
+ EOF
+ ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+-{ (eval echo configure:964: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+-ac_err=`grep -v '^ *+' conftest.out`
++{ (eval echo configure:1033: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
++ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+ if test -z "$ac_err"; then
+   :
+ else
+@@ -971,14 +1040,31 @@
+   rm -rf conftest*
+   CPP="${CC-cc} -E -traditional-cpp"
+   cat > conftest.$ac_ext <<EOF
+-#line 975 "configure"
++#line 1044 "configure"
+ #include "confdefs.h"
+ #include <assert.h>
+ Syntax Error
+ EOF
+ ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+-{ (eval echo configure:981: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+-ac_err=`grep -v '^ *+' conftest.out`
++{ (eval echo configure:1050: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
++ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
++if test -z "$ac_err"; then
++  :
++else
++  echo "$ac_err" >&5
++  echo "configure: failed program was:" >&5
++  cat conftest.$ac_ext >&5
++  rm -rf conftest*
++  CPP="${CC-cc} -nologo -E"
++  cat > conftest.$ac_ext <<EOF
++#line 1061 "configure"
++#include "confdefs.h"
++#include <assert.h>
++Syntax Error
++EOF
++ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
++{ (eval echo configure:1067: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
++ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+ if test -z "$ac_err"; then
+   :
+ else
+@@ -991,6 +1077,8 @@
+ rm -f conftest*
+ fi
+ rm -f conftest*
++fi
++rm -f conftest*
+   ac_cv_prog_CPP="$CPP"
+ fi
+   CPP="$ac_cv_prog_CPP"
+@@ -1004,7 +1092,7 @@
+ # Uses ac_ vars as temps to allow command line to override cache and checks.
+ # --without-x overrides everything else, but does not touch the cache.
+ echo $ac_n "checking for X""... $ac_c" 1>&6
+-echo "configure:1008: checking for X" >&5
++echo "configure:1096: checking for X" >&5
+ 
+ # Check whether --with-x or --without-x was given.
+ if test "${with_x+set}" = set; then
+@@ -1066,13 +1154,13 @@
+ 
+   # First, try using that file with no special directory specified.
+ cat > conftest.$ac_ext <<EOF
+-#line 1070 "configure"
++#line 1158 "configure"
+ #include "confdefs.h"
+ #include <$x_direct_test_include>
+ EOF
+ ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+-{ (eval echo configure:1075: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+-ac_err=`grep -v '^ *+' conftest.out`
++{ (eval echo configure:1163: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
++ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+ if test -z "$ac_err"; then
+   rm -rf conftest*
+   # We can compile using X headers with no special include directory.
+@@ -1140,14 +1228,14 @@
+   ac_save_LIBS="$LIBS"
+   LIBS="-l$x_direct_test_library $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1144 "configure"
++#line 1232 "configure"
+ #include "confdefs.h"
+ 
+ int main() {
+ ${x_direct_test_function}()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1151: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1239: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   LIBS="$ac_save_LIBS"
+ # We can link X programs with no special library path.
+@@ -1253,17 +1341,17 @@
+     case "`(uname -sr) 2>/dev/null`" in
+     "SunOS 5"*)
+       echo $ac_n "checking whether -R must be followed by a space""... $ac_c" 1>&6
+-echo "configure:1257: checking whether -R must be followed by a space" >&5
++echo "configure:1345: checking whether -R must be followed by a space" >&5
+       ac_xsave_LIBS="$LIBS"; LIBS="$LIBS -R$x_libraries"
+       cat > conftest.$ac_ext <<EOF
+-#line 1260 "configure"
++#line 1348 "configure"
+ #include "confdefs.h"
+ 
+ int main() {
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1267: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1355: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   ac_R_nospace=yes
+ else
+@@ -1279,14 +1367,14 @@
+       else
+ 	LIBS="$ac_xsave_LIBS -R $x_libraries"
+ 	cat > conftest.$ac_ext <<EOF
+-#line 1283 "configure"
++#line 1371 "configure"
+ #include "confdefs.h"
+ 
+ int main() {
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1290: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1378: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   ac_R_space=yes
+ else
+@@ -1318,7 +1406,7 @@
+     # libraries were built with DECnet support.  And karl@cs.umb.edu says
+     # the Alpha needs dnet_stub (dnet does not exist).
+     echo $ac_n "checking for dnet_ntoa in -ldnet""... $ac_c" 1>&6
+-echo "configure:1322: checking for dnet_ntoa in -ldnet" >&5
++echo "configure:1410: checking for dnet_ntoa in -ldnet" >&5
+ ac_lib_var=`echo dnet'_'dnet_ntoa | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -1326,7 +1414,7 @@
+   ac_save_LIBS="$LIBS"
+ LIBS="-ldnet  $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1330 "configure"
++#line 1418 "configure"
+ #include "confdefs.h"
+ /* Override any gcc2 internal prototype to avoid an error.  */
+ /* We use char because int might match the return type of a gcc2
+@@ -1337,7 +1425,7 @@
+ dnet_ntoa()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1341: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1429: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_lib_$ac_lib_var=yes"
+ else
+@@ -1359,7 +1447,7 @@
+ 
+     if test $ac_cv_lib_dnet_dnet_ntoa = no; then
+       echo $ac_n "checking for dnet_ntoa in -ldnet_stub""... $ac_c" 1>&6
+-echo "configure:1363: checking for dnet_ntoa in -ldnet_stub" >&5
++echo "configure:1451: checking for dnet_ntoa in -ldnet_stub" >&5
+ ac_lib_var=`echo dnet_stub'_'dnet_ntoa | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -1367,7 +1455,7 @@
+   ac_save_LIBS="$LIBS"
+ LIBS="-ldnet_stub  $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1371 "configure"
++#line 1459 "configure"
+ #include "confdefs.h"
+ /* Override any gcc2 internal prototype to avoid an error.  */
+ /* We use char because int might match the return type of a gcc2
+@@ -1378,7 +1466,7 @@
+ dnet_ntoa()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1382: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1470: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_lib_$ac_lib_var=yes"
+ else
+@@ -1407,12 +1495,12 @@
+     # The nsl library prevents programs from opening the X display
+     # on Irix 5.2, according to dickey@clark.net.
+     echo $ac_n "checking for gethostbyname""... $ac_c" 1>&6
+-echo "configure:1411: checking for gethostbyname" >&5
++echo "configure:1499: checking for gethostbyname" >&5
+ if eval "test \"`echo '$''{'ac_cv_func_gethostbyname'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 1416 "configure"
++#line 1504 "configure"
+ #include "confdefs.h"
+ /* System header to define __stub macros and hopefully few prototypes,
+     which can conflict with char gethostbyname(); below.  */
+@@ -1435,7 +1523,7 @@
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1439: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1527: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_func_gethostbyname=yes"
+ else
+@@ -1456,7 +1544,7 @@
+ 
+     if test $ac_cv_func_gethostbyname = no; then
+       echo $ac_n "checking for gethostbyname in -lnsl""... $ac_c" 1>&6
+-echo "configure:1460: checking for gethostbyname in -lnsl" >&5
++echo "configure:1548: checking for gethostbyname in -lnsl" >&5
+ ac_lib_var=`echo nsl'_'gethostbyname | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -1464,7 +1552,7 @@
+   ac_save_LIBS="$LIBS"
+ LIBS="-lnsl  $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1468 "configure"
++#line 1556 "configure"
+ #include "confdefs.h"
+ /* Override any gcc2 internal prototype to avoid an error.  */
+ /* We use char because int might match the return type of a gcc2
+@@ -1475,7 +1563,7 @@
+ gethostbyname()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1479: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1567: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_lib_$ac_lib_var=yes"
+ else
+@@ -1505,12 +1593,12 @@
+     # -lsocket must be given before -lnsl if both are needed.
+     # We assume that if connect needs -lnsl, so does gethostbyname.
+     echo $ac_n "checking for connect""... $ac_c" 1>&6
+-echo "configure:1509: checking for connect" >&5
++echo "configure:1597: checking for connect" >&5
+ if eval "test \"`echo '$''{'ac_cv_func_connect'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 1514 "configure"
++#line 1602 "configure"
+ #include "confdefs.h"
+ /* System header to define __stub macros and hopefully few prototypes,
+     which can conflict with char connect(); below.  */
+@@ -1533,7 +1621,7 @@
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1537: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1625: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_func_connect=yes"
+ else
+@@ -1554,7 +1642,7 @@
+ 
+     if test $ac_cv_func_connect = no; then
+       echo $ac_n "checking for connect in -lsocket""... $ac_c" 1>&6
+-echo "configure:1558: checking for connect in -lsocket" >&5
++echo "configure:1646: checking for connect in -lsocket" >&5
+ ac_lib_var=`echo socket'_'connect | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -1562,7 +1650,7 @@
+   ac_save_LIBS="$LIBS"
+ LIBS="-lsocket $X_EXTRA_LIBS $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1566 "configure"
++#line 1654 "configure"
+ #include "confdefs.h"
+ /* Override any gcc2 internal prototype to avoid an error.  */
+ /* We use char because int might match the return type of a gcc2
+@@ -1573,7 +1661,7 @@
+ connect()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1577: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1665: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_lib_$ac_lib_var=yes"
+ else
+@@ -1597,12 +1685,12 @@
+ 
+     # gomez@mi.uni-erlangen.de says -lposix is necessary on A/UX.
+     echo $ac_n "checking for remove""... $ac_c" 1>&6
+-echo "configure:1601: checking for remove" >&5
++echo "configure:1689: checking for remove" >&5
+ if eval "test \"`echo '$''{'ac_cv_func_remove'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 1606 "configure"
++#line 1694 "configure"
+ #include "confdefs.h"
+ /* System header to define __stub macros and hopefully few prototypes,
+     which can conflict with char remove(); below.  */
+@@ -1625,7 +1713,7 @@
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1629: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1717: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_func_remove=yes"
+ else
+@@ -1646,7 +1734,7 @@
+ 
+     if test $ac_cv_func_remove = no; then
+       echo $ac_n "checking for remove in -lposix""... $ac_c" 1>&6
+-echo "configure:1650: checking for remove in -lposix" >&5
++echo "configure:1738: checking for remove in -lposix" >&5
+ ac_lib_var=`echo posix'_'remove | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -1654,7 +1742,7 @@
+   ac_save_LIBS="$LIBS"
+ LIBS="-lposix  $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1658 "configure"
++#line 1746 "configure"
+ #include "confdefs.h"
+ /* Override any gcc2 internal prototype to avoid an error.  */
+ /* We use char because int might match the return type of a gcc2
+@@ -1665,7 +1753,7 @@
+ remove()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1669: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1757: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_lib_$ac_lib_var=yes"
+ else
+@@ -1689,12 +1777,12 @@
+ 
+     # BSDI BSD/OS 2.1 needs -lipc for XOpenDisplay.
+     echo $ac_n "checking for shmat""... $ac_c" 1>&6
+-echo "configure:1693: checking for shmat" >&5
++echo "configure:1781: checking for shmat" >&5
+ if eval "test \"`echo '$''{'ac_cv_func_shmat'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 1698 "configure"
++#line 1786 "configure"
+ #include "confdefs.h"
+ /* System header to define __stub macros and hopefully few prototypes,
+     which can conflict with char shmat(); below.  */
+@@ -1717,7 +1805,7 @@
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1721: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1809: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_func_shmat=yes"
+ else
+@@ -1738,7 +1826,7 @@
+ 
+     if test $ac_cv_func_shmat = no; then
+       echo $ac_n "checking for shmat in -lipc""... $ac_c" 1>&6
+-echo "configure:1742: checking for shmat in -lipc" >&5
++echo "configure:1830: checking for shmat in -lipc" >&5
+ ac_lib_var=`echo ipc'_'shmat | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -1746,7 +1834,7 @@
+   ac_save_LIBS="$LIBS"
+ LIBS="-lipc  $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1750 "configure"
++#line 1838 "configure"
+ #include "confdefs.h"
+ /* Override any gcc2 internal prototype to avoid an error.  */
+ /* We use char because int might match the return type of a gcc2
+@@ -1757,7 +1845,7 @@
+ shmat()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1761: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1849: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_lib_$ac_lib_var=yes"
+ else
+@@ -1790,15 +1878,15 @@
+   # libraries we check for below, so use a different variable.
+   #  --interran@uluru.Stanford.EDU, kb@cs.umb.edu.
+   echo $ac_n "checking for IceConnectionNumber in -lICE""... $ac_c" 1>&6
+-echo "configure:1794: checking for IceConnectionNumber in -lICE" >&5
++echo "configure:1882: checking for IceConnectionNumber in -lICE" >&5
+ ac_lib_var=`echo ICE'_'IceConnectionNumber | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   ac_save_LIBS="$LIBS"
+-LIBS="-lICE  $LIBS"
++LIBS="-lICE $X_EXTRA_LIBS $LIBS"
+ cat > conftest.$ac_ext <<EOF
+-#line 1802 "configure"
++#line 1890 "configure"
+ #include "confdefs.h"
+ /* Override any gcc2 internal prototype to avoid an error.  */
+ /* We use char because int might match the return type of a gcc2
+@@ -1809,7 +1897,7 @@
+ IceConnectionNumber()
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1813: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:1901: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_lib_$ac_lib_var=yes"
+ else
+@@ -1835,14 +1923,14 @@
+ 
+ 
+ echo $ac_n "checking whether byte ordering is bigendian""... $ac_c" 1>&6
+-echo "configure:1839: checking whether byte ordering is bigendian" >&5
++echo "configure:1927: checking whether byte ordering is bigendian" >&5
+ if eval "test \"`echo '$''{'ac_cv_c_bigendian'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   ac_cv_c_bigendian=unknown
+ # See if sys/param.h defines the BYTE_ORDER macro.
+ cat > conftest.$ac_ext <<EOF
+-#line 1846 "configure"
++#line 1934 "configure"
+ #include "confdefs.h"
+ #include <sys/types.h>
+ #include <sys/param.h>
+@@ -1853,11 +1941,11 @@
+ #endif
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1857: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
++if { (eval echo configure:1945: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+   rm -rf conftest*
+   # It does; now see whether it defined to BIG_ENDIAN or not.
+ cat > conftest.$ac_ext <<EOF
+-#line 1861 "configure"
++#line 1949 "configure"
+ #include "confdefs.h"
+ #include <sys/types.h>
+ #include <sys/param.h>
+@@ -1868,7 +1956,7 @@
+ #endif
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1872: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
++if { (eval echo configure:1960: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+   rm -rf conftest*
+   ac_cv_c_bigendian=yes
+ else
+@@ -1888,7 +1976,7 @@
+     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 1892 "configure"
++#line 1980 "configure"
+ #include "confdefs.h"
+ main () {
+   /* Are we little or big endian?  From Harbison&Steele.  */
+@@ -1901,7 +1989,7 @@
+   exit (u.c[sizeof (long) - 1] == 1);
+ }
+ EOF
+-if { (eval echo configure:1905: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
++if { (eval echo configure:1993: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+ then
+   ac_cv_c_bigendian=no
+ else
+@@ -1925,21 +2013,21 @@
+ fi
+ 
+ echo $ac_n "checking for inline""... $ac_c" 1>&6
+-echo "configure:1929: checking for inline" >&5
++echo "configure:2017: checking for inline" >&5
+ if eval "test \"`echo '$''{'ac_cv_c_inline'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   ac_cv_c_inline=no
+ for ac_kw in inline __inline__ __inline; do
+   cat > conftest.$ac_ext <<EOF
+-#line 1936 "configure"
++#line 2024 "configure"
+ #include "confdefs.h"
+ 
+ int main() {
+ } $ac_kw foo() {
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1943: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
++if { (eval echo configure:2031: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+   rm -rf conftest*
+   ac_cv_c_inline=$ac_kw; break
+ else
+@@ -1965,7 +2053,7 @@
+ esac
+ 
+ echo $ac_n "checking size of unsigned char""... $ac_c" 1>&6
+-echo "configure:1969: checking size of unsigned char" >&5
++echo "configure:2057: checking size of unsigned char" >&5
+ if eval "test \"`echo '$''{'ac_cv_sizeof_unsigned_char'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -1973,7 +2061,7 @@
+     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 1977 "configure"
++#line 2065 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+ main()
+@@ -1984,7 +2072,7 @@
+   exit(0);
+ }
+ EOF
+-if { (eval echo configure:1988: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
++if { (eval echo configure:2076: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+ then
+   ac_cv_sizeof_unsigned_char=`cat conftestval`
+ else
+@@ -2004,7 +2092,7 @@
+ 
+ 
+ echo $ac_n "checking size of unsigned short""... $ac_c" 1>&6
+-echo "configure:2008: checking size of unsigned short" >&5
++echo "configure:2096: checking size of unsigned short" >&5
+ if eval "test \"`echo '$''{'ac_cv_sizeof_unsigned_short'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -2012,7 +2100,7 @@
+     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 2016 "configure"
++#line 2104 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+ main()
+@@ -2023,7 +2111,7 @@
+   exit(0);
+ }
+ EOF
+-if { (eval echo configure:2027: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
++if { (eval echo configure:2115: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+ then
+   ac_cv_sizeof_unsigned_short=`cat conftestval`
+ else
+@@ -2043,7 +2131,7 @@
+ 
+ 
+ echo $ac_n "checking size of unsigned int""... $ac_c" 1>&6
+-echo "configure:2047: checking size of unsigned int" >&5
++echo "configure:2135: checking size of unsigned int" >&5
+ if eval "test \"`echo '$''{'ac_cv_sizeof_unsigned_int'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -2051,7 +2139,7 @@
+     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 2055 "configure"
++#line 2143 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+ main()
+@@ -2062,7 +2150,7 @@
+   exit(0);
+ }
+ EOF
+-if { (eval echo configure:2066: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
++if { (eval echo configure:2154: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+ then
+   ac_cv_sizeof_unsigned_int=`cat conftestval`
+ else
+@@ -2082,7 +2170,7 @@
+ 
+ 
+ echo $ac_n "checking size of unsigned long""... $ac_c" 1>&6
+-echo "configure:2086: checking size of unsigned long" >&5
++echo "configure:2174: checking size of unsigned long" >&5
+ if eval "test \"`echo '$''{'ac_cv_sizeof_unsigned_long'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -2090,7 +2178,7 @@
+     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 2094 "configure"
++#line 2182 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+ main()
+@@ -2101,7 +2189,7 @@
+   exit(0);
+ }
+ EOF
+-if { (eval echo configure:2105: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
++if { (eval echo configure:2193: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+ then
+   ac_cv_sizeof_unsigned_long=`cat conftestval`
+ else
+@@ -2121,7 +2209,7 @@
+ 
+ 
+ echo $ac_n "checking size of unsigned long long""... $ac_c" 1>&6
+-echo "configure:2125: checking size of unsigned long long" >&5
++echo "configure:2213: checking size of unsigned long long" >&5
+ if eval "test \"`echo '$''{'ac_cv_sizeof_unsigned_long_long'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+@@ -2129,7 +2217,7 @@
+     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 2133 "configure"
++#line 2221 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
+ main()
+@@ -2140,7 +2228,7 @@
+   exit(0);
+ }
+ EOF
+-if { (eval echo configure:2144: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
++if { (eval echo configure:2232: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+ then
+   ac_cv_sizeof_unsigned_long_long=`cat conftestval`
+ else
+@@ -2162,12 +2250,12 @@
+ for ac_func in select
+ do
+ echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
+-echo "configure:2166: checking for $ac_func" >&5
++echo "configure:2254: checking for $ac_func" >&5
+ if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   cat > conftest.$ac_ext <<EOF
+-#line 2171 "configure"
++#line 2259 "configure"
+ #include "confdefs.h"
+ /* System header to define __stub macros and hopefully few prototypes,
+     which can conflict with char $ac_func(); below.  */
+@@ -2190,7 +2278,7 @@
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:2194: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++if { (eval echo configure:2282: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+   rm -rf conftest*
+   eval "ac_cv_func_$ac_func=yes"
+ else
+@@ -2220,7 +2308,7 @@
+ 
+ 
+ echo $ac_n "checking for cpu level""... $ac_c" 1>&6
+-echo "configure:2224: checking for cpu level" >&5
++echo "configure:2312: checking for cpu level" >&5
+ # Check whether --enable-cpu-level or --disable-cpu-level was given.
+ if test "${enable_cpu_level+set}" = set; then
+   enableval="$enable_cpu_level"
+@@ -2281,9 +2369,30 @@
+ fi
+ 
+ 
++echo $ac_n "checking for 4mb superpages hack""... $ac_c" 1>&6
++echo "configure:2374: checking for 4mb superpages hack" >&5
++# Check whether --enable-superpages-hack or --disable-superpages-hack was given.
++if test "${enable_superpages_hack+set}" = set; then
++  enableval="$enable_superpages_hack"
++  if test "$enableval" = yes; then
++    echo "$ac_t""yes" 1>&6
++    cat >> confdefs.h <<\EOF
++#define SUPERPAGES_HACK 1
++EOF
++
++   else
++    echo "$ac_t""no" 1>&6
++   fi
++else
++  
++    echo "$ac_t""no" 1>&6
++    
++  
++fi
++
+ 
+ echo $ac_n "checking for dynamic translation support""... $ac_c" 1>&6
+-echo "configure:2287: checking for dynamic translation support" >&5
++echo "configure:2396: checking for dynamic translation support" >&5
+ # Check whether --enable-dynamic or --disable-dynamic was given.
+ if test "${enable_dynamic+set}" = set; then
+   enableval="$enable_dynamic"
+@@ -2356,7 +2465,7 @@
+ 
+ 
+ echo $ac_n "checking for NE2000 support""... $ac_c" 1>&6
+-echo "configure:2360: checking for NE2000 support" >&5
++echo "configure:2469: checking for NE2000 support" >&5
+ # Check whether --enable-ne2000 or --disable-ne2000 was given.
+ if test "${enable_ne2000+set}" = set; then
+   enableval="$enable_ne2000"
+@@ -2391,7 +2500,7 @@
+ 
+ 
+ echo $ac_n "checking for i440FX PCI support""... $ac_c" 1>&6
+-echo "configure:2395: checking for i440FX PCI support" >&5
++echo "configure:2504: checking for i440FX PCI support" >&5
+ # Check whether --enable-pci or --disable-pci was given.
+ if test "${enable_pci+set}" = set; then
+   enableval="$enable_pci"
+@@ -2426,7 +2535,7 @@
+ 
+ 
+ echo $ac_n "checking for port e9 hack""... $ac_c" 1>&6
+-echo "configure:2430: checking for port e9 hack" >&5
++echo "configure:2539: checking for port e9 hack" >&5
+ # Check whether --enable-port-e9-hack or --disable-port-e9-hack was given.
+ if test "${enable_port_e9_hack+set}" = set; then
+   enableval="$enable_port_e9_hack"
+@@ -2457,7 +2566,7 @@
+ 
+ 
+ echo $ac_n "checking for use of .cpp as suffix""... $ac_c" 1>&6
+-echo "configure:2461: checking for use of .cpp as suffix" >&5
++echo "configure:2570: checking for use of .cpp as suffix" >&5
+ # Check whether --enable-cpp or --disable-cpp was given.
+ if test "${enable_cpp+set}" = set; then
+   enableval="$enable_cpp"
+@@ -2499,7 +2608,7 @@
+ 
+ 
+ echo $ac_n "checking for Bochs internal debugger support""... $ac_c" 1>&6
+-echo "configure:2503: checking for Bochs internal debugger support" >&5
++echo "configure:2612: checking for Bochs internal debugger support" >&5
+ # Check whether --enable-debugger or --disable-debugger was given.
+ if test "${enable_debugger+set}" = set; then
+   enableval="$enable_debugger"
+@@ -2533,7 +2642,7 @@
+ 
+ 
+ echo $ac_n "checking for disassembler support""... $ac_c" 1>&6
+-echo "configure:2537: checking for disassembler support" >&5
++echo "configure:2646: checking for disassembler support" >&5
+ # Check whether --enable-disasm or --disable-disasm was given.
+ if test "${enable_disasm+set}" = set; then
+   enableval="$enable_disasm"
+@@ -2567,7 +2676,7 @@
+ 
+ 
+ echo $ac_n "checking for loader support""... $ac_c" 1>&6
+-echo "configure:2571: checking for loader support" >&5
++echo "configure:2680: checking for loader support" >&5
+ # Check whether --enable-loader or --disable-loader was given.
+ if test "${enable_loader+set}" = set; then
+   enableval="$enable_loader"
+@@ -2605,7 +2714,7 @@
+ INSTRUMENT_DIR='instrument/stubs'
+ 
+ echo $ac_n "checking for instrumentation support""... $ac_c" 1>&6
+-echo "configure:2609: checking for instrumentation support" >&5
++echo "configure:2718: checking for instrumentation support" >&5
+ # Check whether --enable-instrumentation or --disable-instrumentation was given.
+ if test "${enable_instrumentation+set}" = set; then
+   enableval="$enable_instrumentation"
+@@ -2740,7 +2849,7 @@
+ 
+ 
+ echo $ac_n "checking for VGA emulation""... $ac_c" 1>&6
+-echo "configure:2744: checking for VGA emulation" >&5
++echo "configure:2853: checking for VGA emulation" >&5
+ # Check whether --enable-vga or --disable-vga was given.
+ if test "${enable_vga+set}" = set; then
+   enableval="$enable_vga"
+@@ -2774,7 +2883,7 @@
+ 
+ 
+ echo $ac_n "checking for FPU emulation""... $ac_c" 1>&6
+-echo "configure:2778: checking for FPU emulation" >&5
++echo "configure:2887: checking for FPU emulation" >&5
+ FPU_VAR=''
+ FPU_GLUE_OBJ=''
+ # Check whether --enable-fpu or --disable-fpu was given.
+@@ -2816,7 +2925,7 @@
+ 
+ 
+ echo $ac_n "checking for x86 debugger support""... $ac_c" 1>&6
+-echo "configure:2820: checking for x86 debugger support" >&5
++echo "configure:2929: checking for x86 debugger support" >&5
+ # Check whether --enable-x86-debugger or --disable-x86-debugger was given.
+ if test "${enable_x86_debugger+set}" = set; then
+   enableval="$enable_x86_debugger"
+@@ -2852,7 +2961,7 @@
+ 
+ 
+ echo $ac_n "checking for CDROM support""... $ac_c" 1>&6
+-echo "configure:2856: checking for CDROM support" >&5
++echo "configure:2965: checking for CDROM support" >&5
+ # Check whether --enable-cdrom or --disable-cdrom was given.
+ if test "${enable_cdrom+set}" = set; then
+   enableval="$enable_cdrom"
+@@ -2894,7 +3003,7 @@
+ 
+ 
+ echo $ac_n "checking for Sound Blaster 16 support""... $ac_c" 1>&6
+-echo "configure:2898: checking for Sound Blaster 16 support" >&5
++echo "configure:3007: checking for Sound Blaster 16 support" >&5
+ # Check whether --enable-sb16 or --disable-sb16 was given.
+ if test "${enable_sb16+set}" = set; then
+   enableval="$enable_sb16"
+@@ -3188,7 +3297,7 @@
+ # Ultrix sh set writes to stderr and can't be redirected directly,
+ # and sets the high bit in the cache file unless we assign to the vars.
+ (set) 2>&1 |
+-  case `(ac_space=' '; set) 2>&1` in
++  case `(ac_space=' '; set | grep ac_space) 2>&1` in
+   *ac_space=\ *)
+     # `set' does not quote correctly, so add quotes (double-quote substitution
+     # turns \\\\ into \\, and sed turns \\ into \).
+@@ -3255,7 +3364,7 @@
+     echo "running \${CONFIG_SHELL-/bin/sh} $0 $ac_configure_args --no-create --no-recursion"
+     exec \${CONFIG_SHELL-/bin/sh} $0 $ac_configure_args --no-create --no-recursion ;;
+   -version | --version | --versio | --versi | --vers | --ver | --ve | --v)
+-    echo "$CONFIG_STATUS generated by autoconf version 2.12"
++    echo "$CONFIG_STATUS generated by autoconf version 2.13"
+     exit 0 ;;
+   -help | --help | --hel | --he | --h)
+     echo "\$ac_cs_usage"; exit 0 ;;
+@@ -3277,9 +3386,11 @@
+  s/@@/%@/; s/@@/@%/; s/@g\$/%g/' > conftest.subs <<\\CEOF
+ $ac_vpsub
+ $extrasub
++s%@SHELL@%$SHELL%g
+ s%@CFLAGS@%$CFLAGS%g
+ s%@CPPFLAGS@%$CPPFLAGS%g
+ s%@CXXFLAGS@%$CXXFLAGS%g
++s%@FFLAGS@%$FFLAGS%g
+ s%@DEFS@%$DEFS%g
+ s%@LDFLAGS@%$LDFLAGS%g
+ s%@LIBS@%$LIBS%g
+diff -Naur bochs-2000_0325a.orig/configure.in bochs-2000_0325a/configure.in
+--- bochs-2000_0325a.orig/configure.in	Tue Jan  4 20:15:25 2000
++++ bochs-2000_0325a/configure.in	Wed Oct 18 13:22:37 2000
+@@ -57,6 +57,19 @@
+   ]
+   )
+ 
++AC_MSG_CHECKING(for 4mb superpages hack)
++AC_ARG_ENABLE(superpages-hack,
++  [  --enable-superpages-hack          enable 4mb superpages hack],
++  [if test "$enableval" = yes; then
++    AC_MSG_RESULT(yes)
++    AC_DEFINE(SUPERPAGES_HACK, 1)
++   else
++    AC_MSG_RESULT(no)
++   fi],
++  [
++    AC_MSG_RESULT(no)
++    ]
++  )
+ 
+ AC_MSG_CHECKING(for dynamic translation support)
+ AC_ARG_ENABLE(dynamic,
+diff -Naur bochs-2000_0325a.orig/cpu/cpu.cc bochs-2000_0325a/cpu/cpu.cc
+--- bochs-2000_0325a.orig/cpu/cpu.cc	Sun Mar 26 05:39:07 2000
++++ bochs-2000_0325a/cpu/cpu.cc	Wed Oct 18 15:34:14 2000
+@@ -25,6 +25,8 @@
+ 
+ #include "bochs.h"
+ 
++// To add support for superpages:
++// #define SUPERPAGES_HACK 1
+ 
+ //unsigned counter[2] = { 0, 0 };
+ 
+@@ -479,7 +481,11 @@
+ //
+ //  * physical memory boundary: 1024k (1Megabyte) (increments of...)
+ //  * A20 boundary:             1024k (1Megabyte)
++#if SUPERPAGES_HACK
++//  * page boundary:            4k or 4M
++#else
+ //  * page boundary:            4k
++#endif // SUPERPAGES_HACK
+ //  * ROM boundary:             2k (dont care since we are only reading)
+ //  * segment boundary:         any
+ 
+@@ -493,12 +499,41 @@
+   Bit32u new_linear_addr;
+   Bit32u new_phy_addr;
+   Bit32u temp_eip, temp_limit;
++#if SUPERPAGES_HACK
++  Bit32u pde;
++  int maxsize;
++  Bit32u offsetmask, framemask;
++#endif // SUPERPAGES_HACK
+ 
+   temp_eip   = BX_CPU_THIS_PTR eip;
+   temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
+ 
+   new_linear_addr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + temp_eip;
++
++#if SUPERPAGES_HACK
++  // a page can be 4k or 4M, depending on the contents of PSE (bit 4 CR4)
++  // and PDE.PS flag.
++  // Especially the PDE.PS check will slow everything down, be we don't
++  // have a chance anyway...
++  if (BX_CPU_THIS_PTR cr4 & 0x00000010) {
++    BX_MEM.read_physical((BX_CPU_THIS_PTR cr3 & 0xfffff000) |
++			 (new_linear_addr & 0xffc00000) >> 20,
++			 4,
++			 &pde);
++    if (pde & 0x81) {
++      // pde is present and PS bit is 1: 4 MB pages
++      offsetmask = 0x003fffff;
++      framemask = 0xfff00000;
++    } else {
++      offsetmask = 0x00000fff;
++      framemask = 0xfffff000;
++    }
++  }
++  BX_CPU_THIS_PTR prev_linear_page = new_linear_addr & framemask;
++#else
+   BX_CPU_THIS_PTR prev_linear_page = new_linear_addr & 0xfffff000;
++#endif // SUPERPAGES_HACK
++
+   if (temp_eip > temp_limit) {
+     bx_panic("prefetch: EIP > CS.limit\n");
+     }
+@@ -512,6 +547,9 @@
+     new_phy_addr = A20ADDR(new_linear_addr);
+     }
+ 
++#if SUPERPAGES_HACK
++#warning reviewme: is BX_MEM.len affected by superpages?
++#endif
+   if ( new_phy_addr >= BX_MEM.len ) {
+     // don't take this out if dynamic translation enabled,
+     // otherwise you must make a check to see if bytesleft is 0 after
+@@ -519,9 +557,15 @@
+     bx_panic("prefetch: running in bogus memory\n");
+     }
+ 
++#if SUPERPAGES_HACK
++  // max physical address as confined by page boundary
++  BX_CPU_THIS_PTR prev_phy_page = new_phy_addr & framemask;
++  BX_CPU_THIS_PTR max_phy_addr = BX_CPU_THIS_PTR prev_phy_page | offsetmask;
++#else
+   // max physical address as confined by page boundary
+   BX_CPU_THIS_PTR prev_phy_page = new_phy_addr & 0xfffff000;
+   BX_CPU_THIS_PTR max_phy_addr = BX_CPU_THIS_PTR prev_phy_page | 0x00000fff;
++#endif // SUPERPAGES_HACK
+ 
+   // check if segment boundary comes into play
+   //if ((temp_limit - temp_eip) < 4096) {
+@@ -540,13 +584,48 @@
+ {
+   Bit32u new_linear_addr, new_linear_page, new_linear_offset;
+   Bit32u new_phy_addr;
++#if SUPERPAGES_HACK
++  Bit32u pde;
++  int maxsize;
++  Bit32u offsetmask, framemask;
++#endif // SUPERPAGES_HACK
++
++#if SUPERPAGES_HACK
++  // a page can be 4k or 4M, depending on the contents of PSE (bit 4 CR4)
++  // and PDE.PS flag.
++  // Especially the PDE.PS check will slow everything down, be we don't
++  // have a chance anyway...
++  if (BX_CPU_THIS_PTR cr4 & 0x00000010) {
++    BX_MEM.read_physical((BX_CPU_THIS_PTR cr3 & 0xfffff000) |
++			 (new_linear_addr & 0xffc00000) >> 20,
++			 4,
++			 &pde);
++    if (pde & 0x81) {
++      // pde is present and PS bit is 1: 4 MB pages
++      offsetmask = 0x003fffff;
++      framemask = 0xfff00000;
++    } else {
++      offsetmask = 0x00000fff;
++      framemask = 0xfffff000;
++    }
++  }
++#endif // SUPERPAGES_HACK
+ 
+   new_linear_addr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR eip;
+ 
++#if SUPERPAGES_HACK
++  new_linear_page = new_linear_addr & framemask;
++#else
+   new_linear_page = new_linear_addr & 0xfffff000;
++#endif // SUPERPAGES_HACK
++
+   if (new_linear_page == BX_CPU_THIS_PTR prev_linear_page) {
+     // same linear address, old linear->physical translation valid
++#if SUPERPAGES_HACK
++    new_linear_offset = new_linear_addr & offsetmask;
++#else
+     new_linear_offset = new_linear_addr & 0x00000fff;
++#endif // SUPERPAGES_HACK
+     new_phy_addr = BX_CPU_THIS_PTR prev_phy_page | new_linear_offset;
+     BX_CPU_THIS_PTR bytesleft = (BX_CPU_THIS_PTR max_phy_addr - new_phy_addr) + 1;
+     BX_CPU_THIS_PTR fetch_ptr = &BX_MEM.vector[new_phy_addr];
+diff -Naur bochs-2000_0325a.orig/cpu/paging.cc bochs-2000_0325a/cpu/paging.cc
+--- bochs-2000_0325a.orig/cpu/paging.cc	Sun Mar 26 05:39:26 2000
++++ bochs-2000_0325a/cpu/paging.cc	Wed Oct 18 20:03:14 2000
+@@ -34,8 +34,8 @@
+ 
+ #include "bochs.h"
+ 
+-
+-
++// To enable superpages (in config.h):
++// #define SUPERPAGES_HACK 1
+ 
+ #if 0
+ // X86 Registers Which Affect Paging:
+@@ -104,7 +104,7 @@
+ //   31..12: page table base address
+ //   11.. 9: available
+ //        8: G (Pentium Pro+), 0=reserved otherwise
+-//        7: PS (Pentium+), 0=reserved otherwise
++//        7: PS (Pentium+, 0=4k), 0=reserved otherwise
+ //        6: 0=reserved
+ //        5: A   (386+)
+ //        4: PCD (486+), 0=reserved otherwise
+@@ -128,6 +128,22 @@
+ //        1: R/W (386+)
+ //        0: P=1 (386+)
+ 
++// Page Table Entry format when P=1 (4-MByte Page) (Pentium+):
++// ===========================================================
++//
++//   31..22: page base address
++//   21..12: 0=reserved
++//   11.. 9: available
++//        8: G (Pentium Pro+), 0=reserved otherwise
++//        7: PS (0=4k, 1=4M)
++//        6: D
++//        5: A
++//        4: PCD
++//        3: PWT
++//        2: U/S
++//        1: R/W
++//        0: P=1
++
+ 
+ // Page Directory/Table Entry Fields Defined:
+ // ==========================================
+@@ -259,8 +275,6 @@
+ #endif
+ 
+ 
+-
+-
+ #if BX_SUPPORT_PAGING
+ 
+ #define BX_INVALID_TLB_ENTRY 0xffffffff
+@@ -459,6 +473,70 @@
+   unsigned priv_index;
+   Boolean  is_rw;
+   Bit32u   combined_access, new_combined_access;
++#if SUPERPAGES_HACK
++  Boolean  did_oldcode;
++#endif // SUPERPAGES_HACK
++
++#if SUPERPAGES_HACK
++  did_oldcode = 0;
++#endif // SUPERPAGES_HACK
++
++#if SUPERPAGES_HACK
++#if BX_CPU_LEVEL < 5
++#warning Superpages hack only for cpu level >= 5
++  goto oldcode;
++#endif // BX_CPU_LEVEL < 5
++
++  if (BX_CPU_THIS_PTR cr4 & 0x00000010) {
++    // PSE bit set (bit 4 of CR4)
++    // PS flag 7 in page directory entry specifies 4k or 4M.
++    // BW: We don't use any TLB here for now!
++
++    // Get page dir entry
++    pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
++      ((laddress & 0xffc00000) >> 20);
++    BX_MEM.read_physical(pde_addr, 4, &pde);
++    if ( (!pde & 0x01) ) {
++      // Page Directory Entry NOT present
++      error_code = 0xfffffff8;    // RSVD=1, P=0
++      goto page_fault_not_present;
++    }
++
++    // Check the PS flag of pde: PS=0 => 4k pages, PS=1 => 4M pages
++    if (pde & 0x80) {
++      // PS flag is set, 4M pages handling.
++
++      // we check privileges against priv_index[] matrix.
++      // even if we don't use TLB here, we can use priv_index[]
++      // (always initialized in TLB_init().
++      // The only difference is that bits 2,1 (u/r, r/w of page dir/table)
++      // are now taken directly from pde.
++
++      is_rw = (rw>=BX_WRITE);    // write or r-m-w
++      priv_index =
++	(BX_CPU_THIS_PTR cr0.wp<<4) |     // bit 4
++	(pl<<3)                     |     // bit 3
++	(0x06 & pde)                |     // bits 2,1 (u/s,r/w of pde only!)
++	is_rw;                            // bit 0
++      if (priv_check[priv_index]){
++	// Operation has proper privilege.
++	// Update A and D bits unconditionally.
++	pde |= 0x20 | (is_rw << 6);
++	BX_MEM.write_physical(pde_addr, 4, &pde);
++
++	// Now do the translation
++	return ((pde & 0xffc00000) | (laddress & 0x003fffff));
++      }
++      
++      // protection violation
++      error_code = 0xfffffff9;     // RSVD=1, P=1
++      goto page_fault_check;
++    }
++    // else PS=0, 4k pages old code
++  }
++ oldcode:
++  did_oldcode = 1;
++#endif // SUPERPAGES_HACK
+ 
+   lpf       = laddress & 0xfffff000; // linear page frame
+   poffset   = laddress & 0x00000fff; // physical offset
+@@ -587,9 +665,18 @@
+   page_fault_proper:
+   error_code |= (pl << 2) | (is_rw << 1);
+   BX_CPU_THIS_PTR cr2 = laddress;
++
++#if SUPERPAGES_HACK
++  // clear TLB only if oldcode was run! (no TLB in 4 MB case!!).
++  if (did_oldcode) {
++#endif // SUPERPAGES_HACK
+   // invalidate entry - we can get away without maintaining A bit in PTE
+   // if we don't maintain TLB entries without it set.
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
++#if SUPERPAGES_HACK
++  }
++#endif // SUPERPAGES_HACK
++
+   exception(BX_PF_EXCEPTION, error_code, 0);
+   return(0); // keep compiler happy
+ }
+@@ -606,6 +693,71 @@
+   Bit32u   pte, pte_addr;
+   unsigned priv_index;
+   Bit32u   combined_access;
++#if SUPERPAGES_HACK
++  Boolean  did_oldcode;
++#endif // SUPERPAGES_HACK
++
++#if SUPERPAGES_HACK
++  did_oldcode = 0;
++#endif // SUPERPAGES_HACK
++
++#if SUPERPAGES_HACK
++#if BX_CPU_LEVEL < 5
++#warning Superpages hack only for cpu level >= 5
++  goto oldcode;
++#endif // BX_CPU_LEVEL < 5
++
++  if (BX_CPU_THIS_PTR cr4 & 0x00000010) {
++    // PSE bit set (bit 4 of CR4)
++    // PS flag 7 in page directory entry specifies 4k or 4M.
++    // BW: We don't use any TLB here for now!
++
++    // Get page dir entry
++    pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
++      ((laddress & 0xffc00000) >> 20);
++    BX_MEM.read_physical(pde_addr, 4, &pde);
++    if ( (!pde & 0x01) ) {
++      // Page Directory Entry NOT present
++      error_code = 0xfffffff8;    // RSVD=1, P=0
++      goto page_fault;
++    }
++
++    // Check the PS flag of pde: PS=0 => 4k pages, PS=1 => 4M pages
++    if (pde & 0x80) {
++      // PS flag is set, 4M pages handling.
++
++      // we check privileges against priv_index[] matrix.
++      // even if we don't use TLB here, we can use priv_index[]
++      // (always initialized in TLB_init().
++      // The only difference is that bits 2,1 (u/r, r/w of page dir/table)
++      // are now taken directly from pde.
++
++      priv_index =
++	(BX_CPU_THIS_PTR cr0.wp<<4) |     // bit 4
++	(pl<<3)                     |     // bit 3
++	(0x06 & pde);                     // bits 2,1 (u/s,r/w of pde only!)
++	                                  // bit 0 always 0 in instructions.
++
++      if (priv_check[priv_index]){
++	// Operation has proper privilege.
++	// Update A bits unconditionally.
++	pde |= 0x20;
++	BX_MEM.write_physical(pde_addr, 4, &pde);
++
++	// Now do the translation
++	return ((pde & 0xffc00000) | (laddress & 0x003fffff));
++      }
++      
++      // protection violation
++      error_code = 0xfffffff9;     // RSVD=1, P=1
++      goto page_fault;
++    }
++    // else PS=0, 4k pages old code
++  }
++ oldcode:
++  did_oldcode = 1;
++#endif // SUPERPAGES_HACK
++
+ 
+   lpf       = laddress & 0xfffff000; // linear page frame
+   poffset   = laddress & 0x00000fff; // physical offset
+@@ -689,9 +841,18 @@
+ page_fault:
+   error_code |= (pl << 2);
+   BX_CPU_THIS_PTR cr2 = laddress;
++
++#if SUPERPAGES_HACK
++  // clear TLB only if oldcode was run! (no TLB in 4 MB case!!).
++  if (did_oldcode) {
++#endif // SUPERPAGES_HACK
+   // invalidate entry - we can get away without maintaining A bit in PTE
+   // if we don't maintain TLB entries without it set.
+   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
++#if SUPERPAGES_HACK
++  }
++#endif // SUPERPAGES_HACK
++
+   exception(BX_PF_EXCEPTION, error_code, 0);
+   return(0); // keep compiler happy
+ }
+@@ -705,6 +866,7 @@
+   Bit32u   lpf, ppf, poffset, TLB_index, paddress;
+   Bit32u   pde, pde_addr;
+   Bit32u   pte, pte_addr;
++  Boolean  is_4MB;
+ 
+   if (BX_CPU_THIS_PTR cr0.pg == 0) {
+     *phy = laddress;
+@@ -712,6 +874,36 @@
+     return;
+     }
+ 
++#if SUPERPAGES_HACK
++  is_4MB = 0;
++  if (BX_CPU_THIS_PTR cr4 & 0x00000010) {
++    // PSE bit set (bit 4 of CR4)
++    // Get page dir entry
++    pde_addr = (BX_CPU_THIS_PTR cr3 & 0xfffff000) |
++      ((laddress & 0xffc00000) >> 20);
++    BX_MEM.read_physical(pde_addr, 4, &pde);
++    if ( !(pde & 0x01) ) {
++      // Page Directory Entry NOT present
++      goto page_fault;
++    }
++    is_4MB = (pde & 0x80);
++  }
++#endif // SUPERPAGES_HACK
++
++#ifdef SUPERPAGES_HACK
++  lpf     = laddress & (is_4MB ? 0xfff00000 : 0xfffff000); // lpf, dir entry
++  poffset = laddress & (is_4MB ? 0x003fffff : 0x00000fff); // physical offset
++
++  // pde is already there and present... use it unconditionally
++  // depending on is_4MB, either run old code or return address now.
++  if (is_4MB) {
++    *valid = 1;
++    *phy   = (pde & 0xffc00000) | poffset;
++    return;
++  } // else 4k, run old TLB based code...
++ oldcode:
++#endif
++
+   lpf       = laddress & 0xfffff000; // linear page frame
+   poffset   = laddress & 0x00000fff; // physical offset
+   TLB_index = BX_TLB_INDEX_OF(lpf);
+@@ -764,6 +956,10 @@
+ {
+   Bit32u mod4096;
+   unsigned xlate_rw;
++#if SUPERPAGES_HACK
++  int maxsize;
++  Bit32u pde;
++#endif // SUPERPAGES_HACK
+ 
+ 
+ #if BX_X86_DEBUGGER
+@@ -798,8 +994,39 @@
+ 
+   if (BX_CPU_THIS_PTR cr0.pg) {
+     /* check for reference across multiple pages */
++
++#if SUPERPAGES_HACK
++    // a page can be 4k or 4M, depending on the contents of PSE (bit 4 CR4)
++    // and PDE.PS flag.
++    // Especially the PDE.PS check will slow everything down, but we don't
++    // have a chance anyway...
++    if (BX_CPU_THIS_PTR cr4 & 0x00000010) {
++      BX_MEM.read_physical((BX_CPU_THIS_PTR cr3 & 0xfffff000) |
++			   ((laddress & 0xffc00000) >> 20),
++			   4,
++			   &pde);
++      if (pde & 0x81) {
++	// pde is present and PS bit is 1: 4 MB pages
++	maxsize = 4194303;
++	mod4096 = laddress & 0x003fffff;
++      } else {
++	// pde not present or PS bit not set: assume 4k pages
++	// (don't generate pagefault yet, if pde not present...)
++	maxsize = 4096;
++	mod4096 = laddress & 0x00000fff;
++      }
++    } else {
++      // PDE bit not set, assume 4k pages
++      maxsize = 4096;
++      mod4096 = laddress & 0x00000fff;
++    }
++
++    if ( (mod4096 + length) <= maxsize ) {
++#else
+     mod4096 = laddress & 0x00000fff;
+     if ( (mod4096 + length) <= 4096 ) {
++#endif // SUPERPAGES_HACK
++
+       // Bit32u paddress1;
+ 
+       /* access within single page */
+@@ -819,7 +1046,13 @@
+     else {
+       // access across 2 pages
+       BX_CPU_THIS_PTR address_xlation.paddress1 = dtranslate_linear(laddress, pl, xlate_rw);
++
++#if SUPERPAGES_HACK
++      BX_CPU_THIS_PTR address_xlation.len1      = maxsize - mod4096;
++#else
+       BX_CPU_THIS_PTR address_xlation.len1      = 4096 - mod4096;
++#endif // SUPERPAGES_HACK
++
+       BX_CPU_THIS_PTR address_xlation.len2      = length - BX_CPU_THIS_PTR address_xlation.len1;
+       BX_CPU_THIS_PTR address_xlation.pages     = 2;
+ 
+@@ -898,13 +1131,6 @@
+     return;
+     }
+ }
+-
+-
+-
+-
+-
+-
+-
+ 
+ #else   // BX_SUPPORT_PAGING
+ 
+diff -Naur bochs-2000_0325a.orig/cpu/proc_ctrl.cc bochs-2000_0325a/cpu/proc_ctrl.cc
+--- bochs-2000_0325a.orig/cpu/proc_ctrl.cc	Sun Mar 26 05:39:09 2000
++++ bochs-2000_0325a/cpu/proc_ctrl.cc	Wed Oct 18 15:02:58 2000
+@@ -28,6 +28,8 @@
+ 
+ #include "bochs.h"
+ 
++// To add support for SUPERPAGES
++// #define SUPERPAGES_HACK 1
+ 
+   void
+ BX_CPU_C::UndefinedOpcode(BxInstruction_t *i)
+@@ -519,6 +521,21 @@
+         val_32);
+       UndefinedOpcode(i);
+ #else
++#if SUPERPAGES_HACK
++#if BX_CPU_LEVEL < 5
++#error "BX_CPU_LEVEL must be >= 5 for SUPERPAGES_HACK"
++#else
++      // Protected mode: #GP(0) if attempt to write a 1 to
++      // ay reserved bit of CR4 except PSE
++
++      bx_printf("MOV_CdRd: write attempt of %0x08x to CR4\n");
++      if (~val_32 | 0xffffffef) {
++	bx_printf("MOV_CdRd: (CR4) write of 0x%08x masked with 0x00000010\n",
++		 val_32);
++      }
++      BX_CPU_THIS_PTR cr4 = val_32 & 0x00000010;  // mask only with 4MB pages
++#endif // else of BX_CPU_LEVEL <= 5
++#else  // no SUPERPAGES_HACK
+       //  Protected mode: #GP(0) if attempt to write a 1 to
+       //  any reserved bit of CR4
+ 
+@@ -532,6 +549,8 @@
+       // Writes to bits in CR4 should not be 1s as CPUID
+       // returns not-supported for all of these features.
+       BX_CPU_THIS_PTR cr4 = 0;
++#endif // SUPERPAGES_HACK
++
+ #endif
+       break;
+     default:
+@@ -601,7 +620,14 @@
+       UndefinedOpcode(i);
+ #else
+       bx_printf("MOV_RdCd: read of CR4\n");
++
++#if SUPERPAGES_HACK
++      // for now, only PTE bit is relevant.
++      val_32 = BX_CPU_THIS_PTR cr4 & 0x00000010;
++#else
+       val_32 = BX_CPU_THIS_PTR cr4;
++#endif // SUPERPAGES_HACK
++
+ #endif
+       break;
+     default:
+diff -Naur bochs-2000_0325a.orig/debug/dbg_main.cc bochs-2000_0325a/debug/dbg_main.cc
+--- bochs-2000_0325a.orig/debug/dbg_main.cc	Sun Mar 26 05:40:40 2000
++++ bochs-2000_0325a/debug/dbg_main.cc	Wed Oct 18 15:07:38 2000
+@@ -27,6 +27,9 @@
+ 
+ #include "bochs.h"
+ 
++// to enable support for superpages
++// #define SUPERPAGES_HACK 1
++
+ static unsigned doit = 0;
+ 
+ #define SIM_NAME0 "bochs"
+@@ -3952,6 +3955,12 @@
+   Bit32u   lpf, ppf, poffset, TLB_index, paddress;
+   Bit32u   pde, pde_addr;
+   Bit32u   pte, pte_addr;
++
++#if SUPERPAGES_HACK
++  // Don't bx_panic() here to avoid endless recursion
++  bx_printf("dbg_lin2phys: SUPERPAGES_HACK defined\n");
++  exit(1);
++#endif // SUPERPAGES_HACK
+   
+   *tlb_valid = 0;
+ 
+diff -Naur bochs-2000_0325a.orig/debug/lexer.c bochs-2000_0325a/debug/lexer.c
+--- bochs-2000_0325a.orig/debug/lexer.c	Tue Nov  2 02:17:09 1999
++++ bochs-2000_0325a/debug/lexer.c	Wed Oct 18 13:41:47 2000
+@@ -20,6 +20,7 @@
+ 
+ /* Scanner skeleton version:
+  * $Header: /home/volker/Archiv/bochs-cvs-rsync-20110222/bochs/patches/patch.4meg-pages,v 1.1 2001-05-03 16:21:30 bdenney Exp $
++ * $FreeBSD: src/usr.bin/lex/flex.skl,v 1.4 1999/10/27 07:56:44 obrien Exp $
+  */
+ 
+ #define FLEX_SCANNER
+@@ -1272,7 +1273,7 @@
+ case 92:
+ YY_RULE_SETUP
+ #line 108 "lexer.l"
+-{ bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
++{ bxlval.ulval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
+ 	YY_BREAK
+ case 93:
+ YY_RULE_SETUP
+diff -Naur bochs-2000_0325a.orig/debug/lexer.l bochs-2000_0325a/debug/lexer.l
+--- bochs-2000_0325a.orig/debug/lexer.l	Tue Nov  2 02:17:09 1999
++++ bochs-2000_0325a/debug/lexer.l	Wed Oct 18 13:41:01 2000
+@@ -105,7 +105,7 @@
+ \/[0-9]+                           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
+ 0x[0-9a-fA-F]+  { bxlval.uval = strtoul(bxtext+2, NULL, 16); return(BX_TOKEN_NUMERIC); }
+ 0[0-7]+         { bxlval.uval = strtoul(bxtext+1, NULL, 8); return(BX_TOKEN_NUMERIC); }
+-[0-9]+L         { bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
++[0-9]+L         { bxlval.ulval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
+ [0-9]+          { bxlval.uval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_NUMERIC); }
+ $[a-zA-Z_][a-zA-Z0-9_]* { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLNAME); }
+ \n              { return('\n'); }
+diff -Naur bochs-2000_0325a.orig/main.cc bochs-2000_0325a/main.cc
+--- bochs-2000_0325a.orig/main.cc	Sun Mar 26 05:23:20 2000
++++ bochs-2000_0325a/main.cc	Wed Oct 18 13:52:49 2000
+@@ -113,6 +113,10 @@
+   int
+ main(int argc, char *argv[])
+ {
++#if SUPERPAGES_HACK
++  printf("main: Superpages hack turned on\n");
++#endif // SUPERPAGES_HACK
++
+ #if BX_DEBUGGER
+   // If using the debugger, it will take control and call
+   // bx_bochs_init() and cpu_loop()
