@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.22 2002-08-28 19:39:00 vruppert Exp $
+// $Id: dma.cc,v 1.23 2002-09-28 13:36:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.22 2002-08-28 19:39:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.23 2002-09-28 13:36:32 vruppert Exp $"));
 
   BX_DMA_THIS devices = d;
 
@@ -501,11 +501,10 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       return;
       break;
 
-    case 0x0d: // DMA-1: master disable
-    case 0xda: // DMA-2: master disable
+    case 0x0d: // DMA-1: master clear
+    case 0xda: // DMA-2: master clear
       ma_sl = (address == 0xda);
-      /* ??? */
-      BX_DEBUG(("DMA-%d: master disable", ma_sl+1));
+      BX_DEBUG(("DMA-%d: master clear", ma_sl+1));
       // writing any value to this port resets DMA controller 1 / 2
       // same action as a hardware reset
       // mask register is set (chan 0..3 disabled)
