@@ -1,3 +1,16 @@
+Changes in 2.0.2 (Upcoming)
+
+- fix possible segfault in wxWindows (Volker Ruppert)
+- fix instrumentation (Stanislav Shwartsman)
+- fix cdrom read_toc() function for *BSD (Keith Matthew Jones)
+- fix NetBSD boot from cdrom (Christophe Bothamy)
+- fix cmos checksum (Volker)
+- fix "refresh bit" behaviour in pit (Volker)
+- fix .bochsrc parsing (Volker)
+- fix vga resize/redraw problems (Volker)
+- fix compilation issues on Irix and Tru64 (Christophe)
+
+-------------------------------------------------------------------------
 Changes in 2.0.1 (January 4, 2003):
 
 - fix corrupt saved configuration files (Christophe Bothamy)
