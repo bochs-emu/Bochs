@@ -80,7 +80,8 @@ bx_options_t bx_options = {
   {NULL, 0},  // cmos path, cmos image boolean
   { 0, 0, 0, {0,0,0,0,0,0}, NULL, NULL }, // ne2k
   1,          // newHardDriveSupport
-  { 0, NULL, NULL, NULL } // load32bitOSImage hack stuff
+  { 0, NULL, NULL, NULL }, // load32bitOSImage hack stuff
+  { 0, 1, 1, 2 }  // ignore debugs, report infos and errors, crash on panics.
   };
 
 static char bochsrc_path[512];
@@ -89,7 +90,7 @@ static char logfilename[512] = "-";
 
 static void parse_line_unformatted(char *line);
 static void parse_line_formatted(int num_params, char *params[]);
-static void parse_bochsrc(void);
+static void parse_bochsrc(int argc);
 
 
 // Just for the iofunctions
@@ -239,10 +240,10 @@ logfunctions::logfunctions(void)
 		io = new iofunc_t(stderr);
 	}
 	setio(io);
-	onoff[LOGLEV_DEBUG]=0;
-	onoff[LOGLEV_ERROR]=1;
-	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
-	onoff[LOGLEV_INFO]=1;
+	// BUG: unfortunately this can be called before the bochsrc is read,
+	// which means that the bochsrc has no effect on the actions.
+	for (int i=0; i<MAX_LOGLEV; i++)
+	  onoff[i] = bx_options.log_actions[i];
 }
 
 logfunctions::logfunctions(iofunc_t *iofunc)
@@ -250,10 +251,10 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 	setprefix("[GEN ]");
 	settype(GENLOG);
 	setio(iofunc);
-	onoff[LOGLEV_DEBUG]=0;
-	onoff[LOGLEV_ERROR]=1;
-	onoff[LOGLEV_PANIC]=1; // XXX careful, disable this, and you disable panics!
-	onoff[LOGLEV_INFO]=1;
+	// BUG: unfortunately this can be called before the bochsrc is read,
+	// which means that the bochsrc has no effect on the actions.
+	for (int i=0; i<MAX_LOGLEV; i++)
+	  onoff[i] = bx_options.log_actions[i];
 }
 
 logfunctions::~logfunctions(void)
@@ -293,6 +294,8 @@ logfunctions::info(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
 	va_end(ap);
+
+	if (onoff[LOGLEV_INFO] > 1) crash ();
 }
 
 void
@@ -310,7 +313,9 @@ logfunctions::error(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
 	va_end(ap);
+	if (onoff[LOGLEV_ERROR] > 1) crash ();
 }
+
 void
 logfunctions::panic(char *fmt, ...)
 {
@@ -327,22 +332,7 @@ logfunctions::panic(char *fmt, ...)
 		va_end(ap);
 
 	}
-
-#if !BX_PANIC_IS_FATAL
-  return;
-#endif    
-
-  bx_atexit();
-
-#if !BX_DEBUGGER
-  exit(1);
-#else
-  static Boolean dbg_exit_called = 0;
-  if (dbg_exit_called == 0) {
-    dbg_exit_called = 1;
-    bx_dbg_exit(1);
-    }
-#endif
+	if (onoff[LOGLEV_PANIC] > 1) crash ();
 }
 
 void
@@ -360,10 +350,54 @@ logfunctions::ldebug(char *fmt, ...)
 	va_start(ap, fmt);
 	this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
 	va_end(ap);
+	if (onoff[LOGLEV_DEBUG] > 1) crash ();
+}
+
+void
+logfunctions::crash (void)
+{
+  bx_atexit();
+
+#if !BX_DEBUGGER
+  exit(1);
+#else
+  static Boolean dbg_exit_called = 0;
+  if (dbg_exit_called == 0) {
+    dbg_exit_called = 1;
+    bx_dbg_exit(1);
+    }
+#endif
 }
 
 iofunc_t *io = NULL;
 logfunc_t *genlog = NULL;
+
+void bx_center_print (FILE *file, char *line, int maxwidth)
+{
+  int imax;
+  imax = (maxwidth - strlen(line)) >> 1;
+  for (int i=0; i<imax; i++) fputc (' ', file);
+  fputs (line, file);
+}
+
+static char *divider = "========================================================================";
+
+void bx_print_header ()
+{
+  fprintf (stderr, "%s\n", divider);
+  char buffer[128];
+  sprintf (buffer, "Bochs x86 Emulator %s\n", VER_STRING);
+  bx_center_print (stderr, buffer, 72);
+  sprintf (buffer, "%s\n", REL_STRING);
+  bx_center_print (stderr, buffer, 72);
+  fprintf (stderr, "%s\n", divider);
+}
+
+void bx_print_footer ()
+{
+  fprintf (stderr, "%s\n", divider);
+  fprintf (stderr, "Bochs is finished.\n");
+}
 
 int
 main(int argc, char *argv[])
@@ -376,6 +410,8 @@ main(int argc, char *argv[])
   // each macro right here.  All other code can call them directly.
   SAFE_GET_IOFUNC();
   SAFE_GET_GENLOG();
+
+  bx_print_header ();
 
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
@@ -416,7 +452,7 @@ bx_bochs_init(int argc, char *argv[])
 #endif
 
   /* read the .bochsrc file */
-  parse_bochsrc();
+  parse_bochsrc(argc);
 
 //#if BX_PROVIDE_CPU_MEMORY==1
 //    else if (!strcmp(argv[n-1], "-sanity-check")) {
@@ -438,8 +474,10 @@ bx_bochs_init(int argc, char *argv[])
 
   bx_pc_system.init_ips(bx_options.ips);
 
-  if(logfilename[0]!='-')
-  	io->init_log(logfilename);
+  if(logfilename[0]!='-') {
+    BX_INFO (("all further messages will go to %s\n", logfilename));
+    io->init_log(logfilename);
+  }
 
   // set up memory and CPU objects
 #if BX_APIC_SUPPORT
@@ -540,7 +578,8 @@ bx_atexit(void)
       bx_devices.pci->print_i440fx_state();
       }
 #endif
-    BX_INFO(("bochs exited, log file was '%s'\n", logfilename));
+  BX_INFO(("bochs exited, log file was '%s'\n", logfilename));
+  bx_print_footer ();
 }
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)
@@ -556,61 +595,61 @@ bx_emulate_hga_dumps_timer(void)
 
 #if BX_PROVIDE_MAIN
   static void
-parse_bochsrc(void)
+parse_bochsrc(int argc)
 {
   FILE *fd;
   char *ret;
   char line[512];
+  Bit32u retry = 0, found = 0;
 
+  // try several possibilities for the bochsrc before giving up
+  while (!found) {
+    bochsrc_path[0] = 0;
+    switch (retry++) {
+    case 0: strcpy (bochsrc_path, ".bochsrc"); break;
+    case 1: strcpy (bochsrc_path, "bochsrc"); break;
+    case 2: strcpy (bochsrc_path, "bochsrc.txt"); break;
+    case 3:
 #if (!defined(WIN32) && !defined(macintosh))
-  char *ptr;
-
-  ptr = getenv("HOME");
-  if (!ptr) {
-    BX_PANIC(( "could not get environment variable 'HOME'.\n" ));
+      // only try this on unix
+      {
+      char *ptr = getenv("HOME");
+      if (ptr) sprintf (bochsrc_path, "%s/.bochsrc", ptr);
+      }
+#endif
+      break;
+    default:
+      // no bochsrc used.  This is still legal since they may have 
+      // everything on the command line.  However if they have no
+      // arguments then give them some friendly advice.
+      BX_INFO(( "could not find a bochsrc file\n"));
+      if (argc==1) {
+	fprintf (stderr, "%s\n", divider);
+	fprintf (stderr, "Before running Bochs, you should cd to a directory which contains\n");
+	fprintf (stderr, "a .bochsrc file and a disk image.  If you downloaded a binary package,\n");
+	fprintf (stderr, "all the necessary files are already on your disk.\n");
+#if defined(WIN32)
+	fprintf (stderr, "\nFor Windows installations, go to the dlxlinux direectory and\n");
+	fprintf (stderr, "double-click on the start.bat script.\n");
+#elif !defined(macintosh)
+	fprintf (stderr, "\nFor UNIX installations, try running \"bochs-dlx\" for a demo.  This script\n");
+	fprintf (stderr, "is basically equivalent to typing:\n");
+	fprintf (stderr, "   cd /usr/local/bochs/dlxlinux\n");
+	fprintf (stderr, "   bochs\n");
+#endif
+	exit(1);
+      }
+      return;
+    }
+    if (bochsrc_path[0]) {
+      BX_INFO (("looking for configuration in %s\n", bochsrc_path));
+      fd = fopen(bochsrc_path, "r");
+      if (fd) found = 1;
+    }
   }
+  assert (fd != NULL && bochsrc_path[0] != 0);
 
-  strcpy(bochsrc_path, ".bochsrc");
-  fd = fopen(bochsrc_path, "r");
-
-  if (!fd) {
-    BX_DEBUG(( "could not open file '%s', trying home directory.\n",
-      bochsrc_path));
-
-    strcpy(bochsrc_path, ptr);
-    strcat(bochsrc_path, "/");
-    strcat(bochsrc_path, ".bochsrc");
-
-    fd = fopen(bochsrc_path, "r");
-    if (!fd) {
-      BX_DEBUG(( "could not open file '%s'.\n", bochsrc_path ));
-      // no file used, nothing left to do.  This is now valid,
-      // as you can pass everything on the command line.
-      return;
-      }
-    }
-  BX_INFO(("using rc file '%s'.\n", bochsrc_path));
-
-#else
-  // try opening file bochsrc only in current directory for win32
-  strcpy(bochsrc_path, "bochsrc");
-  fd = fopen(bochsrc_path, "r");
-
-  if (!fd) {
-    BX_INFO(( "could not open file '%s' in current directory.\n",
-      bochsrc_path ));
-    strcpy(bochsrc_path, "bochsrc");
-    fd = fopen(bochsrc_path, "r");
-    if (!fd) {
-      BX_INFO(( "could not open file '%s' in current directory.\n",
-	bochsrc_path ));
-      return;
-      }
-    }
-  BX_INFO(("using rc file '%s'.\n", bochsrc_path));
-
-#endif  // #if (!defined(WIN32) && !defined(macintosh))
-
+  BX_INFO(("reading configuration from %s\n", bochsrc_path));
 
   do {
     ret = fgets(line, sizeof(line)-1, fd);
@@ -811,6 +850,90 @@ parse_line_formatted(int num_params, char *params[])
       }
     strcpy(logfilename, params[1]);
     }
+  else if (!strcmp(params[0], "panic")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_PANIC] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_PANIC] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_PANIC] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: panic directive malformed.\n");
+      exit(1);
+      }
+    }
+  else if (!strcmp(params[0], "error")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_ERROR] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_ERROR] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_ERROR] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: error directive malformed.\n");
+      exit(1);
+      }
+    }
+  else if (!strcmp(params[0], "info")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_INFO] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_INFO] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_INFO] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: info directive malformed.\n");
+      exit(1);
+      }
+    }
+  else if (!strcmp(params[0], "debug")) {
+    if (num_params != 2) {
+      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      exit(1);
+      }
+    if (strncmp(params[1], "action=", 7)) {
+      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      exit(1);
+      }
+    char *action = 7 + params[1];
+    if (!strcmp(action, "crash"))
+      bx_options.log_actions[LOGLEV_DEBUG] = 2;
+    else if (!strcmp (action, "report"))
+      bx_options.log_actions[LOGLEV_DEBUG] = 1;
+    else if (!strcmp (action, "ignore"))
+      bx_options.log_actions[LOGLEV_DEBUG] = 0;
+    else {
+      fprintf(stderr, ".bochsrc: debug directive malformed.\n");
+      exit(1);
+      }
+    }
   else if (!strcmp(params[0], "romimage")) {
     if (num_params != 3) {
       fprintf(stderr, ".bochsrc: romimage directive: wrong # args.\n");
@@ -884,7 +1007,7 @@ parse_line_formatted(int num_params, char *params[])
       }
     bx_options.ips = atol(params[1]);
     if (bx_options.ips < 200000) {
-      fprintf(stderr, ".bochsrc: WARNING: ips is AWEFULLY low!\n");
+      fprintf(stderr, ".bochsrc: WARNING: ips is AWFULLY low!\n");
       }
     }
 
@@ -1135,7 +1258,7 @@ bx_signal_handler( int signum)
   extern unsigned long ips_count;
 
   if (signum == SIGALRM ) {
-    printf("ips = %lu\n", ips_count);
+    BX_INFO((("ips = %lu\n", ips_count));
     ips_count = 0;
 #ifndef __MINGW32__
     signal(SIGALRM, bx_signal_handler);

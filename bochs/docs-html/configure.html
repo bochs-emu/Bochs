@@ -55,6 +55,11 @@ more obscure options.
       mean target 386, 486 or Pentium emulation.
   </td>
 <tr>
+  <td>--enable-processors={1,2,3,...,15}</td>
+  <td>1
+  <td>By changing to more than 1 processor, you enable SMP simulation.  This allows you to boot Linux and maybe other OSes in SMP mode, and bochs will simulate all the different CPUs and communication between them.  Do not expect this option to speed up your simulation!  On the contrary, it has to spend extra time simulating the different CPUs (even if they're mostly idle) and the communication between them.  Use it to try out an SMP OS if you don't have an SMP machine, or to debug your SMP OS drivers.  Click <a href="smp-simulation.html">here</a> for more details on SMP in Bochs.
+  </td>
+<tr>
   <td>--enable-cdrom</td>
   <td>no
   <td>Enable use of a real CDROM.  The cdrom emulation is always

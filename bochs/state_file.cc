@@ -111,7 +111,7 @@ state_file::state_file (const char *name, const char *options)
   UNUSED(name);
   UNUSED(options);
   init();
-  BX_INFO(( "Init(const char *, const char *).\n" ));
+  BX_DEBUG(( "Init(const char *, const char *).\n" ));
 }
 
 state_file::state_file (FILE *f)
@@ -123,5 +123,5 @@ state_file::state_file (FILE *f)
 
 state_file::~state_file()
 {
-  BX_INFO(("Exit.\n"));
+  BX_DEBUG(("Exit.\n"));
 }

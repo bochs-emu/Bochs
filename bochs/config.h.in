@@ -69,12 +69,6 @@
 // adds support for the GNU readline library in the debugger command 
 // prompt.
 
-// This switch determines if a call to bx_panic will kill the 
-// simulation or not.  Leave it on by default so that default
-// functionality stays the same, but now it's easy to change the
-// behavior to suit your taste.
-#define BX_PANIC_IS_FATAL 1
-
 // I rebuilt the code which provides timers to IO devices.
 // Setting this to 1 will introduce a little code which
 // will panic out if cases which shouldn't happen occur.

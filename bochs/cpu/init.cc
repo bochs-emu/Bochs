@@ -183,14 +183,14 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sprintf (name, "CPU %p", this);
 
   BX_INSTR_INIT();
-  BX_INFO(( "Init.\n"));
+  BX_DEBUG(( "Init.\n"));
 }
 
 
 BX_CPU_C::~BX_CPU_C(void)
 {
   BX_INSTR_SHUTDOWN();
-  BX_INFO(( "Exit.\n"));
+  BX_DEBUG(( "Exit.\n"));
 }
 
 

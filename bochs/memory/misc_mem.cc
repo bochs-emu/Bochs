@@ -79,7 +79,7 @@ BX_MEM_C::~BX_MEM_C(void)
     delete this->vector;
     }
   else {
-    BX_INFO(("(%u)   memory not freed as it wasn't allocated!\n", BX_SIM_ID));
+    BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!\n", BX_SIM_ID));
     }
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY

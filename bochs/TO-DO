@@ -9,3 +9,6 @@ SMP Bochs To Do List
     and then increment ticks by the required amount.  But check that the
     ticks are really programmed right.
   - check if #define BX_MEM(x) (bx_mem_array[x]) is the right thing
+  - allow # of processors to be defined in .bochsrc.  This requires 
+    a CMOS hack and some rombios.c code to produce the SMP config
+    structure for a variable number of processors.
