@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.70 2002-09-22 18:22:24 kevinlawton Exp $
+// $Id: cpu.h,v 1.71 2002-09-22 19:03:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1516,7 +1516,7 @@ union {
 
 #define ArithmeticalFlag(flag, lfMaskShift, eflagsBitShift) \
   BX_SMF Boolean get_##flag##Lazy(void); \
-  BX_SMF Boolean getB_##flag##(void) { \
+  BX_SMF Boolean getB_##flag(void) { \
     if ( (BX_CPU_THIS_PTR lf_flags_status & (0xf<<lfMaskShift)) == \
          ((Bit32u) (BX_LF_INDEX_KNOWN<<lfMaskShift)) ) \
       return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
