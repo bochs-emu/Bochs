@@ -1,15 +1,20 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.3 2001-09-11 14:01:55 bdenney Exp $
+$Id: user.dbk,v 1.4 2001-09-12 06:37:31 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
 -->
 
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
-<!ENTITY FIXME '<inlinegraphic format="GIF" fileref="../images/undercon.gif">'>
+
+<!-- include definitions that are common to all bochs documentation -->
+<!ENTITY % bochsdefs SYSTEM "../include/defs.sgm">
+%bochsdefs;
+
 ]>
+
 <book>
 <bookinfo>
    <title>Bochs User Manual</title>
@@ -45,92 +50,131 @@ have to be clear in our terminology to avoid confusion.  The host platform is
 the machine that runs the Bochs software.  The guest platform is the operating
 system and applications that Bochs is simulating.
 </para>
-</footnote>: x86, PPC, Alpha, Sun, MIPS, and probably more.  To do anything
-useful, the simulated Bochs machine needs to communicate with the operating
-system on the host platform (the host OS).  When you press a key in the
-Bochs window, a key event goes into the device model for the keyboard.  When
-the simulated machine reads from the simulated hard disk, Bochs reads from
-a disk image file on the host machine.  When the simulated machine sends
-a network packet to the local network, Bochs uses the host platform's network
-card to send the packet out into the real world.  These interactions between
-Bochs and the host operating system can be complicated, and are sometimes
-host-platform-specific.  (Sending a network packet in FreeBSD requires
-different code than sending the packet in Windows 95.)  The interactions
-between Bochs and the host OS are sometimes non-portable, but the core
-CPU simulation and device models are portable to any platform with a C++
-compiler.
+</footnote>, including x86, PPC, Alpha, Sun, and MIPS.  No matter what the
+host platform is, Bochs still simulates x86 software.  In other words, it
+does not depend on the native instructions of the host machine at all.
+This is both a strength and a weakness, and it's the major difference between
+Bochs and many other x86 emulation software such as plex86, VMware, etc.
+Because Bochs uses software simulation for every single x86 instruction, it
+can simulate a Windows application on an Alpha or Sun workstation.  However,
+the downside of Bochs's approach is simulation performance.  To model the
+processor accurately, Bochs must run many instructions for every simulated x86
+instruction, and this makes the simulated machine many times slower than
+the physical machine.  Commercial PC emulators (VMware, Connectix, etc.) can
+achieve much high emulation speed using a technique called 
+virtualization<footnote>
+<para>
+Virtualization takes advantage of simulating x86 instructions on an
+x86 machine, allowing large portions of the simulation to take place
+at native hardware speed.  Whenever the simulated machine talks to the
+hardware or enters certain privileged modes (such as in kernel code),
+the simulator typically takes command and simulates that code in
+software at much slower speed, just like Bochs does.
+</para>
+</footnote>, but they are neither portable to non-x86 platforms nor open
+source.  <ulink url="http://www.plex86.org">Plex86</ulink>, Kevin Lawton's
+current project, is working toward an open-source x86 simulator with
+virtualization.
+</para>
+
+<para>
+To do anything interesting in the simulated machine, Bochs needs to communicate
+with the operating system on the host platform (the host OS).  When you press a
+key in the Bochs display window, a key event goes into the device model for the
+keyboard.  When the simulated machine needs to read from the simulated hard
+disk, Bochs reads from a disk image file on the host machine.  When the
+simulated machine sends a network packet to the local network, Bochs uses the
+host platform's network card to send the packet out into the real world.  These
+interactions between Bochs and the host operating system can be complicated,
+and in some cases they are host platform specific.  Sending a network packet in
+FreeBSD requires different code than sending the packet in Windows 95, for
+example.  For this reason, certain features are supported on some host
+platforms and not others.  On Linux, Bochs can simulate a network card that
+communicates with the world, but on BeOS the simulated network card may not
+work because the communication code between the device model and the BeOS
+operating system has not been written.
 </para>
 
 <para>
 <!-- really more like Background or Bochs History, but maybe it doesn't need its own section unless it gets to 3 paras or so  -->
 
-Bochs was written by Kevin Lawton starting in &FIXME;.  It began as a 
-commercial product, which you could try out for 30 days and then buy
-for &FIXME;.  [We need a Bochs historian here. There's an interview
-out there somewhere where Kevin says why he started it and some more
-background information.]  Finally, in March 2000, Mandrakesoft bought 
-Bochs and made it open source under the GNU LGPL.  In March 2001,
-Kevin helped a few developers to move all Bochs activities from bochs.com
-to a new site at bochs.sourceforge.net.  Since then the Bochs Project has
-settled into its new home, and around release times has even hit #1 most
-active project of the week at Source Forge.
-</para>
-
-<!-- we should make it clear that Kevin is no longer working on bochs,
-but I want to get some more background.  Did he get hired by Mandrakesoft
-to do plex86 at the same time as Bochs was bought?  The last version of
-Bochs that he released was 3/25/2000, three days after the Mandrake press
-release.  -->
-
-</section>  <!-- end of Introduction:What is Bochs? section -->
-<section><title>Who uses Bochs?</title>
+Bochs was written by Kevin Lawton starting in 1994.  It began as a 
+commercial product, which ...&NEEDHELP; <footnote>
 <para>
+We need a Bochs historian to help out here.  For background, it would be
+interesting to know how much Bochs used to cost and what it was used for.  I
+thought I saw an interview out there somewhere where Kevin says why he started
+it and some more background information.
+</para>
+</footnote> Finally, in March 2000, Mandrakesoft bought Bochs and made it open
+source under the GNU LGPL.
+
+<!-- 
+we should make it clear that Kevin is no longer working on bochs,
+but I want to get some more background.  Did he get hired by Mandrakesoft
+to do plex86 at the same time as Bochs was bought?  In his linux.com interview
+Kevin said: "The only way I can move Bochs to open source is if someone
+sponsors that happening. That would be ideal, and would enable me to focus more
+on Bochs and FreeMWare, rather than be sidetracked with related consulting
+jobs."
+
+The last version of Bochs that he released was 3/25/2000, three days after the
+Mandrake press release.
+-->
+In March 2001, Kevin helped a few developers to move all Bochs activities from bochs.com to a new site at bochs.sourceforge.net.  Since then the Bochs Project has settled into its new home, and around release times has even hit #1 most active project of the week at Source Forge.  </para> </section>  <!-- end of Introduction:What is Bochs? section --> <section><title>Who uses Bochs?</title> <para> It is hard to estimate how many people have tried Bochs or use it on a regular basis, but a few statistics give an indication.  The bochs-developers mailing list, which is the primary source of news on bugs and releases, has over 300 subscribers.  The latest version has been downloaded over 40,000 times from SourceForge, not counting mirrors or CVS users.
 </para>
 
-   <para>
-      run more than one operating system without rebooting
-   </para>
-   <para>
-         OS developers use Bochs to system software without endangering
-        their development machine or rebooting.
-   </para>
-   <para>
-      students use Bochs to learn about how PC hardware works
-      hardware designers use bochs to help test new hardware
-   </para>
+<para>
+Bochs has many different uses, and different people use it for different 
+things.  Many people use it to run applications in a second operating system 
+without needing two different computers or dual-booting.  Running 
+Windows software on a non-x86 workstation or on an x86 Linux box are common
+uses.  Also, because every hardware instruction and every line of simulator
+code is accessible, Bochs is used extensively for debugging new operating
+systems and profiling.  If you were writing boot code for your home-brewed
+x86 operating system and it didn't work right, booting it in Bochs could
+give you great visibility into what is really going on.  The Bochs 
+debugger lets you simulate quickly or slowly, pausing whenever you want
+to look at the contents of memory or the CPU registers.  Or, if you 
+wanted to study which parts of a program take the most time, you could use
+Bochs to measure often pieces of the code were executed.
+</para>
+
+<para>
+Bochs has been used as a teaching tool in Operating Systems classes, in which
+students used it to learn how the PC hardware works.  As a final project the
+students had to add a new peripheral device, so they had to learn all about I/O
+ports, interrupts, and device drivers.  Also, it has been used as a 
+reference model to test x86-compatible hardware.
+</para>
+
+<para>
+There may be as many uses of Bochs as there are users.  Do you want to run 
+your old DOS games?  Or learn to program under Linux, without leaving your
+Windows desktop?  You decide.
+</para>
 </section>  <!-- end of Introduction:Who uses Bochs? section -->
+
 <section><title>Will it work for me?</title>
 <para>
-</para>
-</section>  <!-- end of Introduction:Will it work for me? section -->
-<section><title>License</title>
-<para>
-</para>
-</section>  <!-- end of Introduction:License section -->
-
-<section><title>--------------Ignore the sections after this--------------</title>
-<para>
-</para>
-</section>  <!-- end of Introduction:License section -->
-
-   <section><title>I don't know what to call this section...</title>
-
-<para>
-Bochs is a portable x86 PC emulation software package that emulates
-enough of the x86 CPU, related AT hardware, and BIOS to run DOS,
-Windows '95, Minix 2.0, and other OS's, all on your workstation.
+Bochs is very useful for some applications, and not well suited to others.
+This section tries to answer the question, "Will Bochs work for me?"
 </para>
 
 <para>
-Bochs is an open source project distributed under the GNU Lesser General
-Public License. It was originally a commercial product, but in
-March 2000 MandrakeSoft bought Bochs and committed it to Open Source.
-Here is the press release.
+The most common host platform is an Intel x86 or compatible.  Since you will be
+simulating x86 instructions on an x86 platform, you have a range of choices.
+Check the installation section for your host platform to see what 
+options Bochs supports on your platform.  Bochs will run on Windows, Linux,
+FreeBSD, OpenBSD, or BeOS.  If the most important factor is speed, you may
+want to try a virtualization product instead of Bochs (VMware, plex86).
 </para>
 
 <para>
-Bochs now compiles/runs on many platforms. See the following list for
-supported platforms and special notes:
+If you are using a non-x86 machine, then Bochs is one of the few choices for
+running x86 software.  Bochs has been known to work on Solaris (Sparc), 
+Linux (PowerPC/Alpha), MacOS (PowerPC), IRIX (MIPS), BeOS (PowerPC), Digital
+UNIX (Alpha), and AIX (PowerPC).
 </para>
 
 <table><title>Supported platforms</title>
@@ -138,11 +182,11 @@ supported platforms and special notes:
    <tbody>
    <row>
       <entry>Unix/X11</entry>
-      <entry>This is my main development platform.</entry>
+      <entry>This was Kevin's main development platform.</entry>
    </row>
    <row>
       <entry>BeOS</entry>
-      <entry>I also did this port, originally to R3/PPC using CodeWarrior.
+      <entry>Kevin Lawton also did this port, originally to R3/PPC using CodeWarrior.
       It now works on R4/x86 with egcs. Simon Huet picked up
       maintaining/reworking the BeOS GUI port. Check out Simon's 
       BeBochs page.
@@ -195,21 +239,26 @@ supported platforms and special notes:
    </row>
    </tbody>
    </tgroup>
+
 </table>
+
       <para>
-      There's more! You can find more detailed testing information on the testing status page on bochs.sourceforge.net.
+      There's more! You can find more detailed testing information on the testing status page on the &bochswebsite;.
       </para>
 
-   </section>
+</section>  <!-- end of Introduction:Will it work for me? section -->
 
-   <section><title>Licensing</title>
-      <para>
-       Bochs is released under the <ulink url="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</ulink>,
-       much thanks to <ulink url="http://www.linux-mandrake.com">MandrakeSoft</ulink>, makers
-       of the Linux-Mandrake distribution.
-      </para>
-   </section>
-</chapter>
+<section><title>License</title>
+<para>
+Bochs is distributed under the 
+<ulink url="http://www.gnu.org/copyleft/lesser.html">GNU Lesser General Public
+License</ulink> (LGPL).  It was originally a commercial product, but in
+March 2000 <ulink url="http://www.linux-mandrake.com">MandrakeSoft</ulink>
+bought Bochs and committed it to Open Source.
+</para>
+</section>  <!-- end of Introduction:License section -->
+
+</chapter>  <!-- End of Introductino to Bochs -->
 
 <!-- *************************************************************** -->
 <chapter><title>FAQ</title>
@@ -405,7 +454,7 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <!-- *************************************************************** -->
 <chapter><title>Installation</title>
-<section><title>How to get it</title>
+<section><title>Downloading Bochs</title>
     <para>
     You can get the soruce code for Bochs from the Bochs' home page at bochs.SourceForge.net.  From here you can get hold of the latest stable source along with binaries for unix and windows.  You can also use CVS software to obtain the a snapshot of the development version.
     </para>
