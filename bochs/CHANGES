@@ -58,11 +58,9 @@ More Details:
   exceptions).  Correctness of the emulation checked with heavily random 
   testing. 
 
-  TODO: 
+  Currently only 2 SSE2 opcodes still not implemented:
 
-     Close 4 last still not implemented instructions:
-
-	RSQRTSS_VssWss, RSQRTPS_VpsWps, RCPPS_VpsWps, RCPSS_VssWss
+	RSQRTSS_VssWss, RSQRTPS_VpsWps
 
 [+] Added emulation of SSE3 (PNI) instructions
 

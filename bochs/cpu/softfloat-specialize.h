@@ -76,6 +76,15 @@ BX_CPP_INLINE int get_flush_underflow_to_zero(float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
+| Returns current floating point precision.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int get_float_precision(float_status_t &status)
+{
+    return status.float_precision;
+}
+
+/*----------------------------------------------------------------------------
 | Internal canonical NaN format.
 *----------------------------------------------------------------------------*/
 

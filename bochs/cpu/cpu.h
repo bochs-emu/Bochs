@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.147 2003-10-24 20:44:43 sshwarts Exp $
+// $Id: cpu.h,v 1.148 2003-11-07 20:53:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -179,6 +179,10 @@
 #define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
 #define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].dword.erx)
 
+#define BX_WRITE_16BIT_REG(index, val) {\
+  BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
+  }
+
 #define BX_READ_16BIT_BASE_REG(var, index) {\
   var = *BX_CPU_THIS_PTR _16bit_base_reg[index];\
   }
@@ -194,9 +198,6 @@
     BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
   else \
     BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
-  }
-#define BX_WRITE_16BIT_REG(index, val) {\
-  BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
   }
 #define BX_WRITE_32BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = val; \
@@ -218,9 +219,7 @@
     BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
   }
 #define BX_WRITE_8BIT_REGx(index, ext, val) BX_WRITE_8BIT_REG(index, val)
-#define BX_WRITE_16BIT_REG(index, val) {\
-  BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
-  }
+
 #define BX_WRITE_32BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = val; \
   }

@@ -65,12 +65,11 @@ these four paragraphs for those parts of this code that are retained.
 static Bit32s roundAndPackInt32(flag zSign, Bit64u absZ, float_status_t &status)
 {
     int roundingMode;
-    flag roundNearestEven;
     Bit8s roundIncrement, roundBits;
     Bit32s z;
 
     roundingMode = get_float_rounding_mode(status);
-    roundNearestEven = (roundingMode == float_round_nearest_even);
+    int roundNearestEven = (roundingMode == float_round_nearest_even);
     roundIncrement = 0x40;
     if (! roundNearestEven) {
         if (roundingMode == float_round_to_zero) {
@@ -261,19 +260,25 @@ BX_CPP_INLINE float32 packFloat32(flag zSign, Bit16s zExp, Bit32u zSig)
 static float32 roundAndPackFloat32(flag zSign, Bit16s zExp, Bit32u zSig, float_status_t &status)
 {
     int roundingMode;
-    flag roundNearestEven;
-    Bit8s roundIncrement, roundBits;
-    flag isTiny;
+    Bit32s roundIncrement, roundBits, roundMask;
 
     roundingMode = get_float_rounding_mode(status);
-    roundNearestEven = (roundingMode == float_round_nearest_even);
-    roundIncrement = 0x40;
+    int roundNearestEven = (roundingMode == float_round_nearest_even);
+
+    if(get_float_precision(status) == 12) {
+        roundIncrement = 0x20000;
+        roundMask = 0x3FFFF;
+    } else {
+	roundIncrement = 0x40;
+	roundMask = 0x7F;
+    }
+
     if (! roundNearestEven) {
         if (roundingMode == float_round_to_zero) {
             roundIncrement = 0;
         }
         else {
-            roundIncrement = 0x7F;
+            roundIncrement = roundMask;
             if (zSign) {
                 if (roundingMode == float_round_up) roundIncrement = 0;
             }
@@ -282,7 +287,7 @@ static float32 roundAndPackFloat32(flag zSign, Bit16s zExp, Bit32u zSig, float_s
             }
         }
     }
-    roundBits = zSig & 0x7F;
+    roundBits = zSig & roundMask;
     if (0xFD <= (Bit16u) zExp) {
         if ((0xFD < zExp)
              || ((zExp == 0xFD)
@@ -292,13 +297,13 @@ static float32 roundAndPackFloat32(flag zSign, Bit16s zExp, Bit32u zSig, float_s
             return packFloat32(zSign, 0xFF, 0) - (roundIncrement == 0);
         }
         if (zExp < 0) {
-            isTiny =
+            int isTiny =
                    (status.float_detect_tininess == float_tininess_before_rounding)
                 || (zExp < -1)
                 || (zSig + roundIncrement < 0x80000000);
             shift32RightJamming(zSig, -zExp, &zSig);
             zExp = 0;
-            roundBits = zSig & 0x7F;
+            roundBits = zSig & roundMask;
             if (isTiny && roundBits) {
                 float_raise(status, float_flag_underflow);
                 if(get_flush_underflow_to_zero(status)) {
@@ -309,7 +314,7 @@ static float32 roundAndPackFloat32(flag zSign, Bit16s zExp, Bit32u zSig, float_s
         }
     }
     if (roundBits) float_raise(status, float_flag_inexact);
-    zSig = (zSig + roundIncrement)>>7;
+    zSig = ((zSig + roundIncrement) & ~roundMask) >> 7;
     zSig &= ~(((roundBits ^ 0x40) == 0) & roundNearestEven);
     if (zSig == 0) zExp = 0;
     return packFloat32(zSign, zExp, zSig);
@@ -441,12 +446,10 @@ BX_CPP_INLINE float64 packFloat64(flag zSign, Bit16s zExp, Bit64u zSig)
 static float64 roundAndPackFloat64(flag zSign, Bit16s zExp, Bit64u zSig, float_status_t &status)
 {
     int roundingMode;
-    flag roundNearestEven;
     Bit16s roundIncrement, roundBits;
-    flag isTiny;
 
     roundingMode = get_float_rounding_mode(status);
-    roundNearestEven = (roundingMode == float_round_nearest_even);
+    int roundNearestEven = (roundingMode == float_round_nearest_even);
     roundIncrement = 0x200;
     if (! roundNearestEven) {
         if (roundingMode == float_round_to_zero) {
@@ -472,7 +475,7 @@ static float64 roundAndPackFloat64(flag zSign, Bit16s zExp, Bit64u zSig, float_s
             return packFloat64(zSign, 0x7FF, 0) - (roundIncrement == 0);
         }
         if (zExp < 0) {
-            isTiny =
+            int isTiny =
                    (status.float_detect_tininess == float_tininess_before_rounding)
                 || (zExp < -1)
                 || (zSig + roundIncrement < BX_CONST64(0x8000000000000000));
@@ -519,11 +522,9 @@ static float64
 
 float32 int32_to_float32(Bit32s a, float_status_t &status)
 {
-    flag zSign;
-
     if (a == 0) return 0;
     if (a == (Bit32s) 0x80000000) return packFloat32(1, 0x9E, 0);
-    zSign = (a < 0);
+    flag zSign = (a < 0);
     return normalizeRoundAndPackFloat32(zSign, 0x9C, zSign ? -a : a, status);
 }
 
@@ -535,13 +536,12 @@ float32 int32_to_float32(Bit32s a, float_status_t &status)
 
 float64 int32_to_float64(Bit32s a)
 {
-    flag zSign;
     Bit32u absA;
     int shiftCount;
     Bit64u zSig;
 
     if (a == 0) return 0;
-    zSign = (a < 0);
+    flag zSign = (a < 0);
     absA = zSign ? -a : a;
     shiftCount = countLeadingZeros32(absA) + 21;
     zSig = absA;
@@ -556,13 +556,12 @@ float64 int32_to_float64(Bit32s a)
 
 float32 int64_to_float32(Bit64s a, float_status_t &status)
 {
-    flag zSign;
     Bit64u absA;
     int shiftCount;
     Bit32u zSig;
 
     if (a == 0) return 0;
-    zSign = (a < 0);
+    flag zSign = (a < 0);
     absA = zSign ? -a : a;
     shiftCount = countLeadingZeros64(absA) - 40;
     if (0 <= shiftCount) {
@@ -588,13 +587,11 @@ float32 int64_to_float32(Bit64s a, float_status_t &status)
 
 float64 int64_to_float64(Bit64s a, float_status_t &status)
 {
-    flag zSign;
-
     if (a == 0) return 0;
     if (a == (Bit64s) BX_CONST64(0x8000000000000000)) {
         return packFloat64(1, 0x43E, 0);
     }
-    zSign = (a < 0);
+    flag zSign = (a < 0);
     return normalizeRoundAndPackFloat64(zSign, 0x43C, zSign ? -a : a, status);
 }
 
@@ -1011,10 +1008,9 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
 
 float32 float32_add(float32 a, float32 b, float_status_t &status)
 {
-    flag aSign, bSign;
+    flag aSign = extractFloat32Sign(a);
+    flag bSign = extractFloat32Sign(b);
 
-    aSign = extractFloat32Sign(a);
-    bSign = extractFloat32Sign(b);
     if (aSign == bSign) {
         return addFloat32Sigs(a, b, aSign, status);
     }
@@ -1031,10 +1027,9 @@ float32 float32_add(float32 a, float32 b, float_status_t &status)
 
 float32 float32_sub(float32 a, float32 b, float_status_t &status)
 {
-    flag aSign, bSign;
+    flag aSign = extractFloat32Sign(a);
+    flag bSign = extractFloat32Sign(b);
 
-    aSign = extractFloat32Sign(a);
-    bSign = extractFloat32Sign(b);
     if (aSign == bSign) {
         return subFloat32Sigs(a, b, aSign, status);
     }
@@ -2034,10 +2029,9 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
 
 float64 float64_add(float64 a, float64 b, float_status_t &status)
 {
-    flag aSign, bSign;
+    flag aSign = extractFloat64Sign(a);
+    flag bSign = extractFloat64Sign(b);
 
-    aSign = extractFloat64Sign(a);
-    bSign = extractFloat64Sign(b);
     if (aSign == bSign) {
         return addFloat64Sigs(a, b, aSign, status);
     }
@@ -2054,10 +2048,9 @@ float64 float64_add(float64 a, float64 b, float_status_t &status)
 
 float64 float64_sub(float64 a, float64 b, float_status_t &status)
 {
-    flag aSign, bSign;
+    flag aSign = extractFloat64Sign(a);
+    flag bSign = extractFloat64Sign(b);
 
-    aSign = extractFloat64Sign(a);
-    bSign = extractFloat64Sign(b);
     if (aSign == bSign) {
         return subFloat64Sigs(a, b, aSign, status);
     }
