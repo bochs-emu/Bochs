@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.34 2002-05-31 09:56:58 vruppert Exp $
+// $Id: cdrom.cc,v 1.35 2002-07-29 16:42:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,7 +43,6 @@ extern "C" {
 #ifdef __linux__
 extern "C" {
 #include <sys/ioctl.h>
-//#include <linux/fs.h>
 #include <linux/cdrom.h>
 // I use the framesize in non OS specific code too
 #define BX_CD_FRAMESIZE CD_FRAMESIZE
@@ -211,7 +210,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.34 2002-05-31 09:56:58 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.35 2002-07-29 16:42:01 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -433,7 +432,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
   if (ioctl(fd, CDROMREADTOCHDR, &tochdr))
     BX_PANIC(("cdrom: read_toc: READTOCHDR failed."));
 
-  if (start_track > tochdr.cdth_trk1)
+  if ((start_track > tochdr.cdth_trk1) && (start_track != 0xaa))
     return false;
 
   buf[2] = tochdr.cdth_trk0;
@@ -511,7 +510,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bool msf, int start_track)
   if (ioctl (fd, CDIOREADTOCHEADER, &h) < 0)
     BX_PANIC(("cdrom: read_toc: READTOCHDR failed."));
 
-  if (start_track > h.ending_track)
+  if ((start_track > h.ending_track) && (start_track != 0xaa))
     return false;
 
   buf[2] = h.starting_track;
