@@ -1,0 +1,707 @@
+----------------------------------------------------------------------
+Patch name: patch.smf0
+Author: Bryce Denney
+Date: Mon May 14 01:43:24 EDT 2001
+
+Detailed description:
+With this patch, I can turn off all SMFs except for the CPU.
+I have barely tested it at all in this mode, but at least VGA, 
+floppy work.
+
+Apply patch to:
+  current cvs (5/14/2001)
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: pc_system.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/pc_system.cc,v
+retrieving revision 1.3
+diff -u -r1.3 pc_system.cc
+--- pc_system.cc	2001/05/08 17:59:38	1.3
++++ pc_system.cc	2001/05/14 08:34:51
+@@ -253,7 +253,7 @@
+ {
+   if (bx_devices.hard_drive)
+     bx_devices.hard_drive->close_harddrive();
+-  bx_printf("Last time is %d\n", BX_CMOS_THIS s.timeval);
++  bx_printf("Last time is %d\n", bx_devices.cmos->s.timeval);
+   bx_gui.exit();
+ }
+ 
+Index: debug/debug.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/debug.h,v
+retrieving revision 1.3
+diff -u -r1.3 debug.h
+--- debug/debug.h	2001/04/10 02:19:41	1.3
++++ debug/debug.h	2001/05/14 08:34:52
+@@ -326,7 +326,7 @@
+     } bx_dbg_cpu_t;
+ 
+ 
+-
++class bx_cpu_c;
+ 
+ typedef struct {
+   // call back functions specific to each simulator
+Index: iodev/cmos.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cmos.cc,v
+retrieving revision 1.2
+diff -u -r1.2 cmos.cc
+--- iodev/cmos.cc	2001/04/10 02:19:52	1.2
++++ iodev/cmos.cc	2001/05/14 08:34:52
+@@ -26,9 +26,9 @@
+ 
+ #include "bochs.h"
+ 
++bx_cmos_c bx_cmos;
+ 
+ #if BX_USE_CMOS_SMF
+-bx_cmos_c bx_cmos;
+ #define this (&bx_cmos)
+ #endif
+ 
+@@ -129,7 +129,7 @@
+       bx_panic("CMOS: image file not same size as BX_NUM_CMOS_REGS.\n");
+       }
+ 
+-    ret = read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_NUM_CMOS_REGS);
++    ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_NUM_CMOS_REGS);
+     if (ret != BX_NUM_CMOS_REGS) {
+       bx_panic("CMOS: error reading cmos file.\n");
+       }
+@@ -511,7 +511,7 @@
+   if (class_ptr->s.reg[0x0b] & 0x80)
+     return;
+ 
+-  update_clock();
++  class_ptr->update_clock();
+ 
+   // if update interrupts are enabled, trip IRQ 8, and
+   // update status register C
+Index: iodev/cmos.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/cmos.h,v
+retrieving revision 1.2
+diff -u -r1.2 cmos.h
+--- iodev/cmos.h	2001/04/10 02:19:52	1.2
++++ iodev/cmos.h	2001/05/14 08:34:52
+@@ -71,6 +71,4 @@
+   };
+ 
+ 
+-#if BX_USE_CMOS_SMF
+ extern bx_cmos_c bx_cmos;
+-#endif
+Index: iodev/devices.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/devices.cc,v
+retrieving revision 1.2
+diff -u -r1.2 devices.cc
+--- iodev/devices.cc	2001/04/10 02:19:52	1.2
++++ iodev/devices.cc	2001/05/14 08:34:52
+@@ -97,68 +97,40 @@
+ {
+   // Start with all IO port address registered to unmapped handler
+   // MUST be called first
+-#if BX_USE_UM_SMF
+   unmapped = &bx_unmapped;
+-#else
+-  unmapped = new bx_unmapped_c();
+-#endif
+   unmapped->init(this);
+ 
+ #if BX_PCI_SUPPORT
+   // PCI logic (i440FX)
+-#if BX_USE_PCI_SMF
+   pci = & bx_pci;
+-#else
+-  pci = new bx_pci_c();
+-#endif
+   pci->init(this);
+   pci->reset();
+ #endif
+ 
+ 
+   // CMOS RAM & RTC
+-#if BX_USE_CMOS_SMF
+   cmos = &bx_cmos;
+-#else
+-  cmos = new bx_cmos_c();
+-#endif
+   cmos->init(this);
+   cmos->reset();
+ 
+   /*--- HARD DRIVE ---*/
+-#if BX_USE_HD_SMF
+   hard_drive = &bx_hard_drive;
+-#else
+-  hard_drive = new bx_hard_drive_c();
+-#endif
+   hard_drive->init(this, cmos);
+ 
+   //--- FLOPPY ---
+-#if BX_USE_FD_SMF
+   floppy = &bx_floppy;
+-#else
+-  floppy = new bx_floppy_ctrl_c();
+-#endif
+   floppy->init(this, cmos);
+   floppy->reset(BX_RESET_HARDWARE);
+ 
+ #if BX_SUPPORT_SB16
+   //--- SOUND ---
+-#if BX_USE_SB16_SMF
+   sb16 = &bx_sb16;
+-#else
+-  sb16 = new bx_sb16_c();
+-#endif
+   sb16->init(this);
+ #endif
+ 
+ #if BX_SUPPORT_VGA
+   /*--- VGA adapter ---*/
+-#if BX_USE_VGA_SMF
+   vga = & bx_vga;
+-#else
+-  vga = new bx_vga_c();
+-#endif
+   vga->init(this, cmos);
+ #else
+   /*--- HGA adapter ---*/
+@@ -166,59 +138,31 @@
+ #endif
+ 
+   /*--- 8259A PIC ---*/
+-#if BX_USE_PIC_SMF
+   pic = & bx_pic;
+-#else
+-  pic = new bx_pic_c();
+-#endif
+   pic->init(this);
+ 
+   /*--- 8254 PIT ---*/
+-#if BX_USE_PIT_SMF
+   pit = & bx_pit;
+-#else
+-  pit = new bx_pit_c();
+-#endif
+   pit->init(this);
+ 
+ 
+-#if BX_USE_DMA_SMF
+   dma = &bx_dma;
+-#else
+-  dma = new bx_dma_c();
+-#endif
+   dma->init(this);
+ 
+-#if BX_USE_KEY_SMF
+   keyboard = &bx_keyboard;
+-#else
+-  keyboard = new bx_keyb_c();
+-#endif
+   keyboard->init(this, cmos);
+ 
+   /*--- PARALLEL PORT ---*/
+-#if BX_USE_PAR_SMF
+   parallel = &bx_parallel;
+-#else
+-  parallel = new bx_parallel_c();
+-#endif
+   parallel->init(this);
+ 
+   /*--- SERIAL PORT ---*/
+-#if BX_USE_SER_SMF
+   serial = &bx_serial;
+-#else
+-  serial = new bx_serial_c();
+-#endif
+   serial->init(this);
+ 
+ #if BX_NE2K_SUPPORT
+   // NE2000 NIC
+-#if BX_USE_NE2K_SMF
+   ne2k = &bx_ne2k;
+-#else
+-  ne2k = new bx_ne2k_c();
+-#endif
+   ne2k->init(this);
+ #endif  // #if BX_NE2K_SUPPORT
+ 
+@@ -231,11 +175,11 @@
+ 
+   // system hardware
+   register_io_read_handler( this,
+-                            read_handler,
++                            &read_handler,
+                             0x0092,
+                             "Port 92h System Control" );
+   register_io_write_handler(this,
+-                            write_handler,
++                            &write_handler,
+                             0x0092,
+                             "Port 92h System Control" );
+ 
+Index: iodev/dma.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/dma.cc,v
+retrieving revision 1.2
+diff -u -r1.2 dma.cc
+--- iodev/dma.cc	2001/04/10 02:19:52	1.2
++++ iodev/dma.cc	2001/05/14 08:34:56
+@@ -31,8 +31,8 @@
+ 
+ 
+ 
+-#if BX_USE_DMA_SMF
+ bx_dma_c bx_dma;
++#if BX_USE_DMA_SMF
+ #define this (&bx_dma)
+ #endif
+ 
+Index: iodev/dma.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/dma.h,v
+retrieving revision 1.2
+diff -u -r1.2 dma.h
+--- iodev/dma.h	2001/04/10 02:19:52	1.2
++++ iodev/dma.h	2001/05/14 08:34:56
+@@ -82,8 +82,6 @@
+   bx_devices_c *devices;
+   };
+ 
+-#if BX_USE_DMA_SMF
+ extern bx_dma_c bx_dma;
+-#endif
+ 
+ #endif  // #ifndef _PCDMA_H
+Index: iodev/floppy.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.cc,v
+retrieving revision 1.3
+diff -u -r1.3 floppy.cc
+--- iodev/floppy.cc	2001/04/10 02:19:53	1.3
++++ iodev/floppy.cc	2001/05/14 08:34:56
+@@ -28,8 +28,8 @@
+ 
+ 
+ 
+-#if BX_USE_FD_SMF
+ bx_floppy_ctrl_c bx_floppy;
++#if BX_USE_FD_SMF
+ #define this (&bx_floppy)
+ #endif
+ 
+Index: iodev/floppy.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.h,v
+retrieving revision 1.2
+diff -u -r1.2 floppy.h
+--- iodev/floppy.h	2001/04/10 02:19:54	1.2
++++ iodev/floppy.h	2001/05/14 08:34:56
+@@ -124,6 +124,4 @@
+   BX_FD_SMF Boolean evaluate_media(unsigned type, char *path, floppy_t *floppy);
+   };
+ 
+-#if BX_USE_FD_SMF
+ extern bx_floppy_ctrl_c bx_floppy;
+-#endif
+Index: iodev/harddrv.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
+retrieving revision 1.9
+diff -u -r1.9 harddrv.cc
+--- iodev/harddrv.cc	2001/05/08 19:55:40	1.9
++++ iodev/harddrv.cc	2001/05/14 08:35:00
+@@ -28,8 +28,8 @@
+ 
+ #define PACKET_SIZE 12
+ 
+-#if BX_USE_HD_SMF
+ bx_hard_drive_c bx_hard_drive;
++#if BX_USE_HD_SMF
+ #define this (&bx_hard_drive)
+ #endif
+ 
+Index: iodev/harddrv.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
+retrieving revision 1.3
+diff -u -r1.3 harddrv.h
+--- iodev/harddrv.h	2001/05/07 05:47:59	1.3
++++ iodev/harddrv.h	2001/05/14 08:35:01
+@@ -297,6 +297,4 @@
+   bx_devices_c *devices;
+   };
+ 
+-#if BX_USE_HD_SMF
+ extern bx_hard_drive_c bx_hard_drive;
+-#endif
+Index: iodev/iodev.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/iodev.h,v
+retrieving revision 1.2
+diff -u -r1.2 iodev.h
+--- iodev/iodev.h	2001/04/10 02:19:55	1.2
++++ iodev/iodev.h	2001/05/14 08:35:01
+@@ -57,6 +57,9 @@
+ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
+ 
+ 
++
++
++
+ #if BX_USE_DEV_SMF
+ #  define BX_DEV_SMF  static
+ #  define BX_DEV_THIS bx_devices.
+Index: iodev/keyboard.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.cc,v
+retrieving revision 1.8
+diff -u -r1.8 keyboard.cc
+--- iodev/keyboard.cc	2001/05/08 21:19:57	1.8
++++ iodev/keyboard.cc	2001/05/14 08:35:02
+@@ -40,8 +40,8 @@
+ #define MOUSE_MODE_WRAP   13
+ 
+ 
+-#if BX_USE_KEY_SMF
+ bx_keyb_c bx_keyboard;
++#if BX_USE_KEY_SMF
+ #define this (&bx_keyboard)
+ #endif
+ 
+Index: iodev/keyboard.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.h,v
+retrieving revision 1.2
+diff -u -r1.2 keyboard.h
+--- iodev/keyboard.h	2001/04/10 02:19:56	1.2
++++ iodev/keyboard.h	2001/05/14 08:35:02
+@@ -178,8 +178,6 @@
+   BX_KEY_SMF void     mouse_enQ(Bit8u   mouse_data);
+   };
+ 
+-#if BX_USE_KEY_SMF
+ extern bx_keyb_c bx_keyboard;
+-#endif
+ 
+ #endif  // #ifndef _PCKEY_H
+Index: iodev/parallel.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/parallel.cc,v
+retrieving revision 1.2
+diff -u -r1.2 parallel.cc
+--- iodev/parallel.cc	2001/04/10 02:19:56	1.2
++++ iodev/parallel.cc	2001/05/14 08:35:02
+@@ -27,8 +27,8 @@
+ 
+ 
+ 
+-#if BX_USE_PAR_SMF
+ bx_parallel_c bx_parallel;
++#if BX_USE_PAR_SMF
+ #define this (&bx_parallel)
+ #endif
+ 
+Index: iodev/parallel.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/parallel.h,v
+retrieving revision 1.2
+diff -u -r1.2 parallel.h
+--- iodev/parallel.h	2001/04/10 02:19:56	1.2
++++ iodev/parallel.h	2001/05/14 08:35:02
+@@ -56,6 +56,4 @@
+   };
+ 
+ 
+-#if BX_USE_PAR_SMF
+ extern bx_parallel_c bx_parallel;
+-#endif
+Index: iodev/pic.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.cc,v
+retrieving revision 1.2
+diff -u -r1.2 pic.cc
+--- iodev/pic.cc	2001/04/10 02:19:57	1.2
++++ iodev/pic.cc	2001/05/14 08:35:03
+@@ -26,8 +26,8 @@
+ 
+ 
+ 
+-#if BX_USE_PIC_SMF
+ bx_pic_c bx_pic;
++#if BX_USE_PIC_SMF
+ #define this (&bx_pic)
+ #endif
+ 
+Index: iodev/pic.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pic.h,v
+retrieving revision 1.2
+diff -u -r1.2 pic.h
+--- iodev/pic.h	2001/04/10 02:19:57	1.2
++++ iodev/pic.h	2001/05/14 08:35:03
+@@ -88,6 +88,4 @@
+   BX_PIC_SMF void   show_pic_state(void);
+   };
+ 
+-#if BX_USE_PIC_SMF
+ extern bx_pic_c bx_pic;
+-#endif
+Index: iodev/pit.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit.cc,v
+retrieving revision 1.3
+diff -u -r1.3 pit.cc
+--- iodev/pit.cc	2001/04/10 02:19:57	1.3
++++ iodev/pit.cc	2001/05/14 08:35:04
+@@ -122,8 +122,8 @@
+ #define BX_PIT_LATCH_MODE_16BIT 12
+ 
+ 
+-#if BX_USE_PIT_SMF
+ bx_pit_c bx_pit;
++#if BX_USE_PIT_SMF
+ #define this (&bx_pit)
+ #endif
+ 
+@@ -278,7 +278,7 @@
+ #if !BX_USE_PIT_SMF
+   bx_pit_c *class_ptr = (bx_pit_c *) this_ptr;
+ 
+-  class_ptr->write(address, value, io_len);
++  class_ptr->write(address, dvalue, io_len);
+ }
+ 
+   void
+Index: iodev/pit.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/pit.h,v
+retrieving revision 1.2
+diff -u -r1.2 pit.h
+--- iodev/pit.h	2001/04/10 02:19:58	1.2
++++ iodev/pit.h	2001/05/14 08:35:04
+@@ -91,8 +91,6 @@
+   BX_PIT_SMF void  start(unsigned timerid);
+   };
+ 
+-#if BX_USE_PIT_SMF
+ extern bx_pit_c bx_pit;
+-#endif
+ 
+ #endif  // #ifndef _BX_PIT_H
+Index: iodev/sb16.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/sb16.cc,v
+retrieving revision 1.2
+diff -u -r1.2 sb16.cc
+--- iodev/sb16.cc	2001/04/10 02:19:58	1.2
++++ iodev/sb16.cc	2001/05/14 08:35:07
+@@ -40,9 +40,9 @@
+ 
+ #define BX_SB16_OUTPUT  BX_SB16_THIS output
+ 
+-#if BX_USE_SB16_SMF
+ bx_sb16_c bx_sb16;
+-#define this NULL
++#if BX_USE_SB16_SMF
++#define this ((void *)&bx_sb16)
+ #endif
+ 
+ bx_sb16_c::bx_sb16_c(void)
+@@ -200,15 +200,15 @@
+   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
+   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
+     BX_SB16_THIS devices->register_io_read_handler(this,
+-       read_handler, addr, "SB16");
++       &read_handler, addr, "SB16");
+     BX_SB16_THIS devices->register_io_write_handler(this,
+-       write_handler, addr, "SB16");
++       &write_handler, addr, "SB16");
+     }
+   for (addr=BX_SB16_IOMPU; addr<BX_SB16_IOMPU+BX_SB16_IOMPULEN; addr++) {
+     BX_SB16_THIS devices->register_io_read_handler(this,
+-       read_handler, addr, "SB16");
++       &read_handler, addr, "SB16");
+     BX_SB16_THIS devices->register_io_write_handler(this,
+-       write_handler, addr, "SB16");
++       &write_handler, addr, "SB16");
+     }
+   /* Uncomment this if you know the consequences...
+   for (addr=BX_SB16_IOADLIB; addr<BX_SB16_IOADLIB+BX_SB16_IOADLIBLEN; addr++) {
+Index: iodev/sb16.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/sb16.h,v
+retrieving revision 1.3
+diff -u -r1.3 sb16.h
+--- iodev/sb16.h	2001/04/10 02:19:59	1.3
++++ iodev/sb16.h	2001/05/14 08:35:07
+@@ -30,7 +30,7 @@
+ #else
+ #  define BX_SB16_SMF
+ #  define BX_SB16_THIS  this->
+-#  define BX_SB16_THISU (this)
++#  define BX_SB16_THISP (this)
+ #endif
+ 
+ #if BX_USE_SOUND_VIRTUAL
+@@ -55,10 +55,10 @@
+ #define BX_SB16_IOMPULEN 4          // number of addresses covered
+ #define BX_SB16_IOADLIB 0x388       // equivalent to 0x220..0x223 and 0x228..0x229
+ #define BX_SB16_IOADLIBLEN 4        // number of addresses covered
+-#define BX_SB16_IRQ     BX_SB16_THIS currentirq
++#define BX_SB16_IRQ     bx_sb16.currentirq
+ #define BX_SB16_IRQMPU  BX_SB16_IRQ // IRQ for the MPU401 part - same value
+-#define BX_SB16_DMAL    BX_SB16_THIS currentdma8
+-#define BX_SB16_DMAH    BX_SB16_THIS currentdma16
++#define BX_SB16_DMAL    bx_sb16.currentdma8
++#define BX_SB16_DMAH    bx_sb16.currentdma16
+ 
+ /*
+    A few notes:
+@@ -306,7 +306,7 @@
+   BX_SB16_SMF Bit32u mpu_dataread();                 // read data port     3x0
+   BX_SB16_SMF void   mpu_datawrite(Bit32u value);    // write data port    3x0
+   BX_SB16_SMF void   mpu_mididata(Bit32u value);     // get a midi byte
+-  BX_SB16_SMF void   mpu_timer (void *);
++  static void   mpu_timer (void *);
+ 
+       /* The DSP part */
+   BX_SB16_SMF void   dsp_reset(Bit32u value);        // write to reset port 2x6
+@@ -324,7 +324,7 @@
+   BX_SB16_SMF void   dsp_dmadone();		     // stop a DMA transfer
+   BX_SB16_SMF void   dsp_enabledma();		     // enable the transfer
+   BX_SB16_SMF void   dsp_disabledma();		     // temporarily disable DMA
+-  BX_SB16_SMF void   dsp_dmatimer (void *);
++  static void   dsp_dmatimer (void *);
+ 
+       /* The mixer part */
+   BX_SB16_SMF Bit32u mixer_readdata(void);
+@@ -341,7 +341,7 @@
+   BX_SB16_SMF Bit32u opl_status(int chipid);
+   BX_SB16_SMF void   opl_index(Bit32u value, int chipid);
+   BX_SB16_SMF void   opl_data(Bit32u value, int chipid);
+-  BX_SB16_SMF void   opl_timer(void *);
++  static void   opl_timer(void *);
+   BX_SB16_SMF void   opl_changeop(int channum, int opernum, int byte, int value);
+   BX_SB16_SMF void   opl_settimermask(int value, int chipid);
+   BX_SB16_SMF void   opl_set4opmode(int new4opmode);
+@@ -370,8 +370,8 @@
+ 
+       /* The port IO multiplexer functions */
+ 
+-  BX_SB16_SMF Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+-  BX_SB16_SMF void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
++  static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
++  static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+ 
+ #if !BX_USE_SB16_SMF
+   Bit32u read(Bit32u address, unsigned io_len);
+@@ -405,9 +405,7 @@
+   BX_SOUND_VIRTUAL int    closewaveoutput();
+ };
+ 
+-#if BX_USE_SB16_SMF
+ extern bx_sb16_c bx_sb16;
+-#endif
+ 
+ #include "soundlnx.h"
+ #include "soundwin.h"
+Index: iodev/serial.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/serial.cc,v
+retrieving revision 1.2
+diff -u -r1.2 serial.cc
+--- iodev/serial.cc	2001/04/10 02:19:59	1.2
++++ iodev/serial.cc	2001/05/14 08:35:08
+@@ -53,8 +53,8 @@
+ };
+ #endif
+ 
+-#if BX_USE_SER_SMF
+ bx_serial_c bx_serial;
++#if BX_USE_SER_SMF
+ #define this (&bx_serial)
+ #endif
+ 
+Index: iodev/serial.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/serial.h,v
+retrieving revision 1.2
+diff -u -r1.2 serial.h
+--- iodev/serial.h	2001/04/10 02:19:59	1.2
++++ iodev/serial.h	2001/05/14 08:35:08
+@@ -168,6 +168,4 @@
+   };
+ 
+ 
+-#if BX_USE_SER_SMF
+ extern bx_serial_c bx_serial;
+-#endif
+Index: iodev/unmapped.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.cc,v
+retrieving revision 1.2
+diff -u -r1.2 unmapped.cc
+--- iodev/unmapped.cc	2001/04/10 02:20:00	1.2
++++ iodev/unmapped.cc	2001/05/14 08:35:08
+@@ -25,8 +25,8 @@
+ #include "bochs.h"
+ 
+ 
+-#if BX_USE_UM_SMF
+ bx_unmapped_c bx_unmapped;
++#if BX_USE_UM_SMF
+ #define this (&bx_unmapped)
+ #endif
+ 
+Index: iodev/unmapped.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/unmapped.h,v
+retrieving revision 1.2
+diff -u -r1.2 unmapped.h
+--- iodev/unmapped.h	2001/04/10 02:20:00	1.2
++++ iodev/unmapped.h	2001/05/14 08:35:08
+@@ -62,6 +62,4 @@
+   bx_devices_c *devices;
+   };
+ 
+-#if BX_USE_UM_SMF
+ extern bx_unmapped_c bx_unmapped;
+-#endif
+Index: iodev/vga.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/vga.cc,v
+retrieving revision 1.5
+diff -u -r1.5 vga.cc
+--- iodev/vga.cc	2001/05/03 21:14:56	1.5
++++ iodev/vga.cc	2001/05/14 08:35:10
+@@ -31,8 +31,8 @@
+ // (mch)
+ #define VGA_TRACE_FEATURE
+ 
+-#if BX_USE_VGA_SMF
+ bx_vga_c bx_vga;
++#if BX_USE_VGA_SMF
+ #define this (&bx_vga)
+ #endif
+ 
+Index: iodev/vga.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/vga.h,v
+retrieving revision 1.2
+diff -u -r1.2 vga.h
+--- iodev/vga.h	2001/04/10 02:20:01	1.2
++++ iodev/vga.h	2001/05/14 08:35:10
+@@ -189,6 +189,4 @@
+                                               unsigned *piWidth);
+   };
+ 
+-#if BX_USE_VGA_SMF
+ extern bx_vga_c bx_vga;
+-#endif
