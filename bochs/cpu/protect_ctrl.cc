@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.36 2005-03-13 18:20:26 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.37 2005-03-22 18:19:55 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -560,7 +560,7 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 
   if (descriptor.valid==0) {
     set_ZF(0);
-    BX_ERROR(("VERR: valid bit cleared"));
+    BX_INFO(("VERR: valid bit cleared"));
     return;
   }
 
@@ -569,18 +569,18 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     /* ignore DPL for readable conforming segments */
     if (descriptor.u.segment.c_ed && descriptor.u.segment.r_w) {
       set_ZF(1); /* accessible */
-      BX_ERROR(("VERR: conforming code, OK"));
+      BX_INFO(("VERR: conforming code, OK"));
       return;
     }
     if (descriptor.u.segment.r_w==0) {
       set_ZF(0); /* inaccessible */
-      BX_ERROR(("VERR: code not readable"));
+      BX_INFO(("VERR: code not readable"));
       return;
     }
     /* readable, non-conforming code segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       set_ZF(0); /* inaccessible */
-      BX_ERROR(("VERR: non-conforming code not withing priv level"));
+      BX_INFO(("VERR: non-conforming code not withing priv level"));
       return;
     }
 
@@ -589,7 +589,7 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   else { /* data segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       set_ZF(0); /* not accessible */
-      BX_ERROR(("VERR: data seg not withing priv level"));
+      BX_INFO(("VERR: data seg not withing priv level"));
       return;
     }
     set_ZF(1); /* accessible */
@@ -648,7 +648,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
   if (descriptor.valid==0) {
     set_ZF(0);
-    BX_ERROR(("VERW: valid bit cleared"));
+    BX_INFO(("VERW: valid bit cleared"));
     return;
   }
 
@@ -656,7 +656,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   if (descriptor.u.segment.r_w) { /* writable */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       set_ZF(0); /* not accessible */
-      BX_ERROR(("VERW: writable data seg not within priv level"));
+      BX_INFO(("VERW: writable data seg not within priv level"));
       return;
     }
 
@@ -665,7 +665,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   }
 
   set_ZF(0); /* not accessible */
-  BX_ERROR(("VERW: data seg not writable"));
+  BX_INFO(("VERW: data seg not writable"));
 }
 
 void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)

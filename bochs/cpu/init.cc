@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.68 2005-03-15 19:00:04 sshwarts Exp $
+// $Id: init.cc,v 1.69 2005-03-22 18:19:54 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.68 2005-03-15 19:00:04 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.69 2005-03-22 18:19:54 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -196,6 +196,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   _16bit_index_reg[6] = (Bit16u*) &empty_register;
   _16bit_index_reg[7] = (Bit16u*) &empty_register;
 
+// <TAG-INIT-CPU-START>
   // for decoding instructions: access to seg reg's via index number
   sreg_mod00_rm16[0] = BX_SEG_REG_DS;
   sreg_mod00_rm16[1] = BX_SEG_REG_DS;
@@ -279,6 +280,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
   sreg_mod1or2_base32[14] = BX_SEG_REG_DS;
   sreg_mod1or2_base32[15] = BX_SEG_REG_DS;
 #endif
+// <TAG-INIT-CPU-END>
 
   mem = addrspace;
   sprintf (name, "CPU %p", this);

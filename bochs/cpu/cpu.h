@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.207 2005-03-19 18:43:00 sshwarts Exp $
+// $Id: cpu.h,v 1.208 2005-03-22 18:19:50 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 #include "cpu/lazy_flags.h"
 #include "cpu/hostasm.h"
 
+// <TAG-DEFINES-DECODE-START>
 // segment register encoding
 #define BX_SEG_REG_ES    0
 #define BX_SEG_REG_CS    1
@@ -44,6 +45,7 @@
 // NULL now has to fit in 3 bits.
 #define BX_SEG_REG_NULL  7
 #define BX_NULL_SEG_REG(seg) ((seg) == BX_SEG_REG_NULL)
+// <TAG-DEFINES-DECODE-END>
 
 
 #ifdef BX_LITTLE_ENDIAN
@@ -641,6 +643,7 @@ typedef struct {
 
 typedef void * (*BxVoidFPtr_t)(void);
 
+// <TAG-CLASS-INSTRUCTION-START>
 class bxInstruction_c {
 public:
   // Function pointers; a function to resolve the modRM address
@@ -886,8 +889,10 @@ public:
     metaInfo |= (ilen<<23);
   }
 };
+// <TAG-CLASS-INSTRUCTION-END>
 
 
+// <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
 typedef void (*BxExecutePtr_t)(bxInstruction_c *);
 typedef void (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
@@ -895,6 +900,7 @@ typedef void (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
 typedef void (BX_CPU_C::*BxExecutePtr_t)(bxInstruction_c *);
 typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+// <TAG-TYPE-EXECUTEPTR-END>
 
 
 // ========== iCache =============================================
@@ -1152,6 +1158,7 @@ public: // for now...
   Bit16u *_16bit_index_reg[8];
   Bit32u empty_register;
 
+// <TAG-CLASS-CPU-START>
   // for decoding instructions; accessing seg reg's by index
   unsigned sreg_mod00_rm16[8];
   unsigned sreg_mod01or10_rm16[8];
@@ -1164,6 +1171,7 @@ public: // for now...
   unsigned sreg_mod0_base32[8];
   unsigned sreg_mod1or2_base32[8];
 #endif
+// <TAG-CLASS-CPU-END>
 
   // for exceptions
   jmp_buf jmp_buf_env;
@@ -1293,6 +1301,7 @@ public: // for now...
 #endif
   void init (BX_MEM_C *addrspace);
 
+// <TAG-CLASS-CPU-START>
   // prototypes for CPU instructions...
   BX_SMF void ADD_EbGb(bxInstruction_c *);
   BX_SMF void ADD_EdGd(bxInstruction_c *);
@@ -1887,26 +1896,6 @@ public: // for now...
   BX_SMF void PSLLQ_PqIb(bxInstruction_c *i);
   /* MMX */
 
-#if BX_SUPPORT_FPU
-  BX_SMF void print_state_FPU(void);
-  BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1, bx_bool = 1);
-  BX_SMF void FPU_check_pending_exceptions(void);
-  BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
-  BX_SMF void FPU_stack_overflow(void);
-  BX_SMF int  FPU_exception(int exception);
-#endif
-
-#if BX_SUPPORT_MMX || BX_SUPPORT_SSE
-  BX_SMF void prepareMMX(void);
-  BX_SMF void prepareFPU2MMX(void); /* cause transition from FPU to MMX technology state */
-  BX_SMF void print_state_MMX(void);
-#endif
-
-#if BX_SUPPORT_SSE
-  BX_SMF void prepareSSE(void);
-  BX_SMF void check_exceptionsSSE(int);
-#endif
-
 #if BX_SUPPORT_3DNOW
   BX_SMF void PFPNACC_PqQq(bxInstruction_c *i);
   BX_SMF void PI2FW_PqQq(bxInstruction_c *i);
@@ -2136,11 +2125,6 @@ public: // for now...
   BX_SMF void ADDSUBPS_VpsWps(bxInstruction_c *i);
   BX_SMF void LDDQU_VdqMdq(bxInstruction_c *i);
   /* PNI */
-
-#if BX_SUPPORT_FPU
-  BX_SMF int  fpu_save_environment(bxInstruction_c *i);
-  BX_SMF int  fpu_load_environment(bxInstruction_c *i);
-#endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *);
   BX_SMF void CMPXCHG_IBTS(bxInstruction_c *);
@@ -2399,7 +2383,6 @@ public: // for now...
 
   // mch added
   BX_SMF void INVLPG(bxInstruction_c *);
-  BX_SMF void wait_for_interrupt();
   BX_SMF void RSM(bxInstruction_c *);
 
   BX_SMF void WRMSR(bxInstruction_c *);
@@ -2408,17 +2391,13 @@ public: // for now...
   BX_SMF void RDMSR(bxInstruction_c *);
   BX_SMF void SYSENTER(bxInstruction_c *);
   BX_SMF void SYSEXIT(bxInstruction_c *);
-  BX_SMF void SetCR0(Bit32u val_32);
-#if BX_CPU_LEVEL >= 4
-  BX_SMF void SetCR4(Bit32u val_32);
-#endif
+
   BX_SMF unsigned fetchDecode(Bit8u *, bxInstruction_c *, unsigned);
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
 #endif
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *i);
-  BX_SMF void BxResolveError(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void Resolve16Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void Resolve16Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2540,6 +2519,8 @@ public: // for now...
   BX_SMF void Resolve64Mod1or2Base14(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void Resolve64Mod1or2Base15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
+  BX_SMF void BxResolveError(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+// <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER
   BX_SMF void     dbg_take_irq(void);
@@ -2787,6 +2768,38 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
+
+#if BX_SUPPORT_FPU
+  BX_SMF void print_state_FPU(void);
+  BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1, bx_bool = 1);
+  BX_SMF void FPU_check_pending_exceptions(void);
+  BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
+  BX_SMF void FPU_stack_overflow(void);
+  BX_SMF int  FPU_exception(int exception);
+#endif
+
+#if BX_SUPPORT_MMX || BX_SUPPORT_SSE
+  BX_SMF void prepareMMX(void);
+  BX_SMF void prepareFPU2MMX(void); /* cause transition from FPU to MMX technology state */
+  BX_SMF void print_state_MMX(void);
+#endif
+
+#if BX_SUPPORT_SSE
+  BX_SMF void prepareSSE(void);
+  BX_SMF void check_exceptionsSSE(int);
+#endif
+
+#if BX_SUPPORT_FPU
+  BX_SMF int  fpu_save_environment(bxInstruction_c *i);
+  BX_SMF int  fpu_load_environment(bxInstruction_c *i);
+#endif
+
+  BX_SMF void wait_for_interrupt();
+
+  BX_SMF void SetCR0(Bit32u val_32);
+#if BX_CPU_LEVEL >= 4
+  BX_SMF void SetCR4(Bit32u val_32);
+#endif
 
 #if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
@@ -3087,6 +3100,7 @@ IMPLEMENT_EFLAG_ACCESSOR_IOPL(   12)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 
+// <TAG-DEFINES-DECODE-START>
 //
 // For decoding...
 //
@@ -3146,6 +3160,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxGroup14         BxGroupN
 #define BxGroup15         BxGroupN
 #define BxGroup16         BxGroupN
+// <TAG-DEFINES-DECODE-END>
 
 #if BX_DEBUGGER
 typedef enum _show_flags {

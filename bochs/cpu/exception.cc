@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.49 2005-03-03 20:24:52 sshwarts Exp $
+// $Id: exception.cc,v 1.50 2005-03-22 18:19:54 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -432,7 +432,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
           return;
         }
         if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
-          BX_PANIC(("exception: TSS selector points to bad TSS"));
+          BX_INFO(("exception: TSS selector points to bad TSS"));
           exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
           return;
         }
