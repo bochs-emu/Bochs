@@ -1050,6 +1050,12 @@ if test "$with_rfb" = yes; then
     ])
 fi
 
+# this was added to make configure work in directories other than
+# the main $BOCHS dir.
+if test ! -d instrument; then
+  mkdir instrument
+fi
+
 AC_SUBST(RFB_LIBS)
 AC_SUBST(GUI_OBJS)
 AC_SUBST(GUI_LINK_OPTS)
