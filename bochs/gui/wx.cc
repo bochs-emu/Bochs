@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.5 2001-06-24 19:30:22 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.6 2001-06-24 19:36:33 instinc Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -61,6 +61,7 @@ private:
 class MyPanel: public wxScrolledWindow
 {
 private:
+  void HandleEvent(wxCommandEvent& event);
   wxStaticText *text1;
   BochsThread *bochsThread;
   void buildParamList (int x, int y);
@@ -69,7 +70,6 @@ public:
   MyPanel ( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
   ~MyPanel();
 
-  DECLARE_DYNAMIC_CLASS(MyPanel)
   DECLARE_EVENT_TABLE()
 };
 
@@ -177,8 +177,12 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_StartBochs, MyFrame::OnAbout)
 END_EVENT_TABLE()
 
-IMPLEMENT_DYNAMIC_CLASS(MyPanel, wxScrolledWindow)
 BEGIN_EVENT_TABLE(MyPanel, wxScrolledWindow)
+  EVT_BUTTON (ID_StartBochs, MyPanel::HandleEvent)
+  EVT_CHECKBOX (ID_Check1, MyPanel::HandleEvent)
+  EVT_CHOICE (ID_Choice1, MyPanel::HandleEvent)
+  EVT_COMBOBOX (ID_Combo1, MyPanel::HandleEvent)
+  EVT_TEXT (ID_Combo1, MyPanel::HandleEvent)
 END_EVENT_TABLE()
 
 
@@ -227,6 +231,27 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
   wxMessageBox( "This is a wxWindows' Hello world sample",
 			"About Hello World", wxOK | wxICON_INFORMATION );
+}
+
+void MyPanel::HandleEvent (wxCommandEvent& evt)
+{
+  printf ("Handle event with event id %d\n", evt.GetId ());
+  switch (evt.GetId ())
+  {
+    case ID_StartBochs:
+      if (bochsThread == NULL)
+      {
+        printf ("Starting bochs thread\n");
+	bochsThread = new BochsThread ();
+	bochsThread->Create ();
+	bochsThread->Run ();
+      } else {
+        wxMessageBox (
+	"Can't start Bochs simulator, because it is already running",
+	"Already Running", wxOK | wxICON_ERROR);
+      }
+      break;
+  }
 }
 
 void *
