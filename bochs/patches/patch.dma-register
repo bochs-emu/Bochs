@@ -13,8 +13,10 @@ Detailed description:
   * "hardwired" code in dma.cc removed
   * all DMA related code in devices.cc and iodev.h removed
   * DMA related code in pc_system.* removed except HRQ handling
-  * macros for DMA functions defined
+  * macros for DMA functions defined in bochs.h
   * floppy and SB16 code modified to use the changes described above
+
+  The changes are present in CVS now.
 
 Patch was created with:
   diff -u
@@ -552,7 +554,7 @@ diff -urN bochs/iodev/floppy.cc bochs-current/iodev/floppy.cc
 --- bochs/iodev/floppy.cc	Thu Apr 11 12:38:32 2002
 +++ bochs-current/iodev/floppy.cc	Sun Jun  2 18:34:52 2002
 @@ -90,6 +90,7 @@
- 	BX_DEBUG(("Init $Id: patch.dma-register,v 1.1 2002-06-04 18:31:27 vruppert Exp $"));
+ 	BX_DEBUG(("Init $Id: patch.dma-register,v 1.2 2002-06-19 18:27:00 vruppert Exp $"));
    BX_FD_THIS devices = d;
  
 +  BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
