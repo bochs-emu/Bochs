@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.34 2002-12-19 05:53:17 bdenney Exp $
+// $Id: fetchdecode64.cc,v 1.35 2002-12-20 07:11:29 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1691,9 +1691,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 1D */  { 0, &BX_CPU_C::BxError },
   /* 0F 1E */  { 0, &BX_CPU_C::BxError },
   /* 0F 1F */  { 0, &BX_CPU_C::BxError },
-  /* 0F 20 */  { BxAnother, &BX_CPU_C::MOV_RdCd },
+  /* 0F 20 */  { BxAnother, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 */  { BxAnother, &BX_CPU_C::MOV_RdDd },
-  /* 0F 22 */  { BxAnother, &BX_CPU_C::MOV_CdRd },
+  /* 0F 22 */  { BxAnother, &BX_CPU_C::MOV_CqRq },
   /* 0F 23 */  { BxAnother, &BX_CPU_C::MOV_DdRd },
   /* 0F 24 */  { BxAnother, &BX_CPU_C::MOV_RdTd },
   /* 0F 25 */  { 0, &BX_CPU_C::BxError },
@@ -2209,9 +2209,9 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 1D */  { 0, &BX_CPU_C::BxError },
   /* 0F 1E */  { 0, &BX_CPU_C::BxError },
   /* 0F 1F */  { 0, &BX_CPU_C::BxError },
-  /* 0F 20 */  { BxAnother, &BX_CPU_C::MOV_RdCd },
+  /* 0F 20 */  { BxAnother, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 */  { BxAnother, &BX_CPU_C::MOV_RdDd },
-  /* 0F 22 */  { BxAnother, &BX_CPU_C::MOV_CdRd },
+  /* 0F 22 */  { BxAnother, &BX_CPU_C::MOV_CqRq },
   /* 0F 23 */  { BxAnother, &BX_CPU_C::MOV_DdRd },
   /* 0F 24 */  { BxAnother, &BX_CPU_C::MOV_RdTd },
   /* 0F 25 */  { 0, &BX_CPU_C::BxError },
