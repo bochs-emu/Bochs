@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.37 2002-08-12 14:41:42 vruppert Exp $
+// $Id: win32.cc,v 1.38 2002-08-18 08:35:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -442,9 +442,8 @@ VOID UIThread(PVOID pvoid) {
     SetFocus(stInfo.simWnd);
 
     ShowCursor(!mouseCaptureMode);
-    GetWindowRect(stInfo.mainWnd, &wndRect);
-    SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-      wndRect.top + stretched_y/2 + y_edge + y_caption);
+    GetWindowRect(stInfo.simWnd, &wndRect);
+    SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
     cursorWarped();
 
     hdc = GetDC(stInfo.simWnd);
@@ -521,8 +520,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
     if ( mouseCaptureMode)
     {
       GetWindowRect(hwnd, &wndRect);
-      SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-                 wndRect.top + stretched_y/2 + y_edge + y_caption);
+      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
       cursorWarped();
     }
     bx_options.Omouse_enabled->set (mouseCaptureMode);
@@ -579,8 +577,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
       ShowCursor(!mouseCaptureMode);
       ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
       GetWindowRect(hwnd, &wndRect);
-      SetCursorPos(wndRect.left + stretched_x/2 + x_edge,
-                   wndRect.top + stretched_y/2 + y_edge + y_caption);
+      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
       cursorWarped();
       if (mouseCaptureMode)
         SetWindowText(stInfo.mainWnd, "Bochs for Windows      [Press F12 to release mouse capture]");
