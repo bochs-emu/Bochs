@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.27 2002-09-22 04:04:40 bdenney Exp $
+// $Id: wx.cc,v 1.28 2002-09-25 05:35:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -117,7 +117,7 @@ void MyPanel::OnTimer(wxCommandEvent& WXUNUSED(event))
   IFDBG_VGA(wxLogDebug ("timer"));
   if (needRefresh) {
     IFDBG_VGA(wxLogDebug ("calling refresh"));
-	Refresh (FALSE);
+    Refresh (FALSE);
   }
 }
 
@@ -438,131 +438,131 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release
   IFDBG_KEY(wxLogDebug ("fillBxKeyEvent_GTK. key code %ld, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags));
   // GTK has only 16bit key codes
   Bit16u keysym = (Bit32u) wxev.m_rawCode;
-  Bit32u bx_key = 0;
+  Bit32u key_event = 0;
   // since the GDK_* symbols are very much like the X11 symbols (possibly
   // identical), I'm using code that is copied from gui/x.cc.
   if (keysym >= GDK_space && keysym < GDK_asciitilde) {
     // use nice ASCII conversion table, based on x.cc
-    bx_key = wxAsciiKey[keysym - GDK_space];
+    key_event = wxAsciiKey[keysym - GDK_space];
   } else switch (keysym) {
       case GDK_KP_1:
 #ifdef GDK_KP_End
       case GDK_KP_End:
 #endif
-        bx_key = BX_KEY_KP_END; break;
+        key_event = BX_KEY_KP_END; break;
 
       case GDK_KP_2:
 #ifdef GDK_KP_Down
       case GDK_KP_Down:
 #endif
-        bx_key = BX_KEY_KP_DOWN; break;
+        key_event = BX_KEY_KP_DOWN; break;
 
       case GDK_KP_3:
 #ifdef GDK_KP_Page_Down
       case GDK_KP_Page_Down:
 #endif
-        bx_key = BX_KEY_KP_PAGE_DOWN; break;
+        key_event = BX_KEY_KP_PAGE_DOWN; break;
 
       case GDK_KP_4:
 #ifdef GDK_KP_Left
       case GDK_KP_Left:
 #endif
-        bx_key = BX_KEY_KP_LEFT; break;
+        key_event = BX_KEY_KP_LEFT; break;
 
       case GDK_KP_5:
       /* I get 0xFF9D (GDK_KP_Begin?) on my keyboard. -bbd */
       case GDK_KP_Begin: 
-        bx_key = BX_KEY_KP_5; break;
+        key_event = BX_KEY_KP_5; break;
 
       case GDK_KP_6:
 #ifdef GDK_KP_Right
       case GDK_KP_Right:
 #endif
-        bx_key = BX_KEY_KP_RIGHT; break;
+        key_event = BX_KEY_KP_RIGHT; break;
 
       case GDK_KP_7:
 #ifdef GDK_KP_Home
       case GDK_KP_Home:
 #endif
-        bx_key = BX_KEY_KP_HOME; break;
+        key_event = BX_KEY_KP_HOME; break;
 
       case GDK_KP_8:
 #ifdef GDK_KP_Up
       case GDK_KP_Up:
 #endif
-        bx_key = BX_KEY_KP_UP; break;
+        key_event = BX_KEY_KP_UP; break;
 
       case GDK_KP_9:
 #ifdef GDK_KP_Page_Up
       case GDK_KP_Page_Up:
 #endif
-        bx_key = BX_KEY_KP_PAGE_UP; break;
+        key_event = BX_KEY_KP_PAGE_UP; break;
 
       case GDK_KP_0:
 #ifdef GDK_KP_Insert
       case GDK_KP_Insert:
 #endif
-        bx_key = BX_KEY_KP_INSERT; break;
+        key_event = BX_KEY_KP_INSERT; break;
 
       case GDK_KP_Decimal:
 #ifdef GDK_KP_Delete
       case GDK_KP_Delete:
 #endif
-        bx_key = BX_KEY_KP_DELETE; break;
+        key_event = BX_KEY_KP_DELETE; break;
 
 #ifdef GDK_KP_Enter
       case GDK_KP_Enter:
-        bx_key = BX_KEY_KP_ENTER; break;
+        key_event = BX_KEY_KP_ENTER; break;
 #endif
 
-      case GDK_KP_Subtract: bx_key = BX_KEY_KP_SUBTRACT; break;
-      case GDK_KP_Add:      bx_key = BX_KEY_KP_ADD; break;
+      case GDK_KP_Subtract: key_event = BX_KEY_KP_SUBTRACT; break;
+      case GDK_KP_Add:      key_event = BX_KEY_KP_ADD; break;
 
-      case GDK_KP_Multiply: bx_key = BX_KEY_KP_MULTIPLY; break;
-      case GDK_KP_Divide:   bx_key = BX_KEY_KP_DIVIDE; break;
-
-
-      case GDK_Up:          bx_key = BX_KEY_UP; break;
-      case GDK_Down:        bx_key = BX_KEY_DOWN; break;
-      case GDK_Left:        bx_key = BX_KEY_LEFT; break;
-      case GDK_Right:       bx_key = BX_KEY_RIGHT; break;
+      case GDK_KP_Multiply: key_event = BX_KEY_KP_MULTIPLY; break;
+      case GDK_KP_Divide:   key_event = BX_KEY_KP_DIVIDE; break;
 
 
-      case GDK_Delete:      bx_key = BX_KEY_DELETE; break;
-      case GDK_BackSpace:   bx_key = BX_KEY_BACKSPACE; break;
-      case GDK_Tab:         bx_key = BX_KEY_TAB; break;
-      case GDK_Return:      bx_key = BX_KEY_ENTER; break;
-      case GDK_Escape:      bx_key = BX_KEY_ESC; break;
-      case GDK_F1:          bx_key = BX_KEY_F1; break;
-      case GDK_F2:          bx_key = BX_KEY_F2; break;
-      case GDK_F3:          bx_key = BX_KEY_F3; break;
-      case GDK_F4:          bx_key = BX_KEY_F4; break;
-      case GDK_F5:          bx_key = BX_KEY_F5; break;
-      case GDK_F6:          bx_key = BX_KEY_F6; break;
-      case GDK_F7:          bx_key = BX_KEY_F7; break;
-      case GDK_F8:          bx_key = BX_KEY_F8; break;
-      case GDK_F9:          bx_key = BX_KEY_F9; break;
-      case GDK_F10:         bx_key = BX_KEY_F10; break;
-      case GDK_F11:         bx_key = BX_KEY_F11; break;
-      case GDK_F12:         bx_key = BX_KEY_F12; break;
-      case GDK_Control_L:   bx_key = BX_KEY_CTRL_L; break;
-      case GDK_Shift_L:     bx_key = BX_KEY_SHIFT_L; break;
-      case GDK_Shift_R:     bx_key = BX_KEY_SHIFT_R; break;
-      case GDK_Caps_Lock:   bx_key = BX_KEY_CAPS_LOCK; break;
-      case GDK_Num_Lock:    bx_key = BX_KEY_NUM_LOCK; break;
-      case GDK_Alt_L:       bx_key = BX_KEY_ALT_L; break;
+      case GDK_Up:          key_event = BX_KEY_UP; break;
+      case GDK_Down:        key_event = BX_KEY_DOWN; break;
+      case GDK_Left:        key_event = BX_KEY_LEFT; break;
+      case GDK_Right:       key_event = BX_KEY_RIGHT; break;
 
-      case GDK_Insert:      bx_key = BX_KEY_INSERT; break;
-      case GDK_Home:        bx_key = BX_KEY_HOME; break;
-      case GDK_End:         bx_key = BX_KEY_END; break;
-      case GDK_Page_Up:     bx_key = BX_KEY_PAGE_UP; break;
-      case GDK_Page_Down:   bx_key = BX_KEY_PAGE_DOWN; break;
+
+      case GDK_Delete:      key_event = BX_KEY_DELETE; break;
+      case GDK_BackSpace:   key_event = BX_KEY_BACKSPACE; break;
+      case GDK_Tab:         key_event = BX_KEY_TAB; break;
+      case GDK_Return:      key_event = BX_KEY_ENTER; break;
+      case GDK_Escape:      key_event = BX_KEY_ESC; break;
+      case GDK_F1:          key_event = BX_KEY_F1; break;
+      case GDK_F2:          key_event = BX_KEY_F2; break;
+      case GDK_F3:          key_event = BX_KEY_F3; break;
+      case GDK_F4:          key_event = BX_KEY_F4; break;
+      case GDK_F5:          key_event = BX_KEY_F5; break;
+      case GDK_F6:          key_event = BX_KEY_F6; break;
+      case GDK_F7:          key_event = BX_KEY_F7; break;
+      case GDK_F8:          key_event = BX_KEY_F8; break;
+      case GDK_F9:          key_event = BX_KEY_F9; break;
+      case GDK_F10:         key_event = BX_KEY_F10; break;
+      case GDK_F11:         key_event = BX_KEY_F11; break;
+      case GDK_F12:         key_event = BX_KEY_F12; break;
+      case GDK_Control_L:   key_event = BX_KEY_CTRL_L; break;
+      case GDK_Shift_L:     key_event = BX_KEY_SHIFT_L; break;
+      case GDK_Shift_R:     key_event = BX_KEY_SHIFT_R; break;
+      case GDK_Caps_Lock:   key_event = BX_KEY_CAPS_LOCK; break;
+      case GDK_Num_Lock:    key_event = BX_KEY_NUM_LOCK; break;
+      case GDK_Alt_L:       key_event = BX_KEY_ALT_L; break;
+
+      case GDK_Insert:      key_event = BX_KEY_INSERT; break;
+      case GDK_Home:        key_event = BX_KEY_HOME; break;
+      case GDK_End:         key_event = BX_KEY_END; break;
+      case GDK_Page_Up:     key_event = BX_KEY_PAGE_UP; break;
+      case GDK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
 
       default:
         wxLogError( "fillBxKeyEvent_GTK(): keysym %x unhandled!", (unsigned) keysym );
         return BX_KEY_UNHANDLED;
   }
-  bxev.bx_key = bx_key | (release? BX_KEY_RELEASED : BX_KEY_PRESSED);
+  bxev.bx_key = key_event | (release? BX_KEY_RELEASED : BX_KEY_PRESSED);
   bxev.raw_scancode = false;
   return true;
 #else   // if GTK toolkit
