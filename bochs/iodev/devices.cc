@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.41 2002-11-09 20:51:40 vruppert Exp $
+// $Id: devices.cc,v 1.42 2002-11-10 08:12:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.41 2002-11-09 20:51:40 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.42 2002-11-10 08:12:12 vruppert Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -146,8 +146,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   if (bx_options.Oi440FXSupport->get ()) {
     PLUG_load_plugin(pci, PLUGTYPE_OPTIONAL);
     PLUG_load_plugin(pci2isa, PLUGTYPE_OPTIONAL);
-    pluginPciBridge->init();
-    pluginPci2IsaBridge->init();
   }
 #endif
 
