@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_emu.h                                                                |
- |  $Id: fpu_emu.h,v 1.17 2003-10-04 12:52:29 sshwarts Exp $
+ |  $Id: fpu_emu.h,v 1.18 2003-10-04 16:47:57 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1993,1994,1997                                         |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -11,6 +11,8 @@
 
 #ifndef _FPU_EMU_H_
 #define _FPU_EMU_H_
+
+#include <linux/linkage.h>
 
 /*
  * Define PECULIAR_486 to get a closer approximation to 80486 behaviour,
@@ -62,7 +64,7 @@
 
 #include "fpu_system.h"
 
-#include <linux/linkage.h>
+typedef struct bx_fpu_reg_t FPU_REG;
 
 /*
 #define RE_ENTRANT_CHECKING
@@ -94,48 +96,7 @@ struct address {
 #endif
 } GCC_ATTRIBUTE((packed));
 
-/*
- * Endian  Host byte order         Guest (x86) byte order
- * ======================================================
- * Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
- * Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
- *
- * Legend: F - fraction/mmx
- *         E - exponent
- *         A - alignment
- */
-#ifdef EMU_BIG_ENDIAN
-
-struct fpu_reg_t {
-  u16 aligment1, aligment2, aligment3;
-  s16 exp;   /* Signed quantity used in internal arithmetic. */
-  u32 sigh;
-  u32 sigl;
-} GCC_ATTRIBUTE((aligned(16), packed));
-
-#define MAKE_REG(s,e,l,h) { 0,0,0, \
-                           ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)) , h, l}
-
-#define signbyte(a) (((u_char *)(a))[6])
-
-#else
-
-struct fpu_reg_t {
-  u32 sigl;
-  u32 sigh;
-  s16 exp;   /* Signed quantity used in internal arithmetic. */
-  u16 aligment1, aligment2, aligment3;
-} GCC_ATTRIBUTE((aligned(16), packed));
-
-#define MAKE_REG(s,e,l,h) { l, h, \
-                           ((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)), 0,0,0 }
-
-#define signbyte(a) (((u_char *)(a))[9])
-
-#endif
-
 typedef void (*FUNC)(void);
-typedef struct fpu_reg_t FPU_REG;
 typedef void (*FUNC_ST0)(FPU_REG *st0_ptr, u_char st0_tag);
 
 typedef struct { u_char address_size, operand_size, segment; }
@@ -154,16 +115,33 @@ typedef struct { overrides override;
 #define PM16      (SIXTEEN | PROTECTED)
 #define SEG32     PROTECTED
 
-#define fpu_register(x)  ( * ((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * (x & 7) )))
-#define	st(x)      ( * ((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * ((FPU_tos+x) & 7) )))
+#define fpu_register(x)  ( *((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * (x & 7) )))
+#define	st(x)      ( *((FPU_REG *)(FPU_register_base + sizeof(FPU_REG) * ((FPU_tos+x) & 7) )))
 
-#define	STACK_OVERFLOW	(FPU_stackoverflow(&st_new_ptr))
 #define	NOT_EMPTY(i)	(!FPU_empty_i(i))
-
 #define	NOT_EMPTY_ST0	(st0_tag ^ TAG_Empty)
 
-/* push() does not affect the tags */
-#define push()	{ FPU_tos--; }
+/* FPU_push() does not affect the tags */
+#define FPU_push()	{ FPU_tos--; }
+
+/* register accessors */
+#ifdef EMU_BIG_ENDIAN
+
+#define MAKE_REG(s,e,l,h) { 0,0,0, \
+		((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)) , h, l}
+
+#define signbyte(x) (((u_char *)(x))[6])
+#define significand(x) (((u64 *)&((x)->sigh))[0])
+
+#else
+
+#define MAKE_REG(s,e,l,h) { l, h, \
+		((EXTENDED_Ebias+(e)) | ((SIGN_##s != 0)*0x8000)), 0,0,0 }
+
+#define signbyte(x) (((u_char *)(x))[9])
+#define significand(x) (((u64 *)&((x)->sigl))[0])
+
+#endif
 
 #define getsign(a) (signbyte(a) & 0x80)
 #define setsign(a,b) { if (b) signbyte(a) |= 0x80; else signbyte(a) &= 0x7f; }
@@ -175,14 +153,7 @@ typedef struct { overrides override;
 #define signpositive(a) ( (signbyte(a) & 0x80) == 0 )
 #define signnegative(a) (signbyte(a) & 0x80)
 
-#ifdef EMU_BIG_ENDIAN
-#define significand(x) ( ((u64 *)&((x)->sigh))[0] )
-#else
-#define significand(x) ( ((u64 *)&((x)->sigl))[0] )
-#endif
-
-BX_C_INLINE
-void reg_copy(FPU_REG const *x, FPU_REG *y)
+BX_C_INLINE void reg_copy(FPU_REG const *x, FPU_REG *y)
 {
   y->exp = x->exp;
   significand(y) = significand(x);
@@ -198,8 +169,6 @@ void reg_copy(FPU_REG const *x, FPU_REG *y)
 #define isdenormal(ptr)   (exponent(ptr) == EXP_BIAS+EXP_UNDER)
 
 /*----- Prototypes for functions written in assembler -----*/
-/* extern void reg_move(FPU_REG *a, FPU_REG *b); */
-
 asmlinkage int FPU_normalize_nuo(FPU_REG *x, int bias);
 asmlinkage int FPU_u_sub(FPU_REG const *arg1, FPU_REG const *arg2,
 			 FPU_REG *answ, u16 control_w, u_char sign,
@@ -214,8 +183,8 @@ asmlinkage int FPU_u_add(FPU_REG const *arg1, FPU_REG const *arg2,
 			 s32 expa, s32 expb);
 asmlinkage int wm_sqrt(FPU_REG *n, int dummy1, int dummy2,
 		       u16 control_w, u_char sign);
-asmlinkage u32	FPU_shrx(void *l, u32 x);
-asmlinkage u32	FPU_shrxs(void *v, u32 x);
+asmlinkage u32 FPU_shrx(void *l, u32 x);
+asmlinkage u32 FPU_shrxs(void *v, u32 x);
 asmlinkage int FPU_round(FPU_REG *arg, u32 extent, int dummy,
 			 u16 control_w, u_char sign);
 

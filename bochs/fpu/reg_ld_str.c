@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.16 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.17 2003-10-04 16:47:57 sshwarts Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -19,7 +19,6 @@
  +---------------------------------------------------------------------------*/
 
 #include "fpu_emu.h"
-
 #include "fpu_system.h"
 #include "exception.h"
 #include "reg_constant.h"
@@ -963,7 +962,7 @@ FPU_store_int64(FPU_REG *st0_ptr, u_char st0_tag, bx_address d)
       if (precision_loss)
 	set_precision_flag(precision_loss);
       if (signnegative(&t))
-	tll = - tll;
+	tll = -tll;
     }
 
   RE_ENTRANT_CHECK_OFF;
@@ -1240,7 +1239,6 @@ FPU_round_to_int(FPU_REG *r, u_char tag)
     }
 
   return eax ? PRECISION_LOST_DOWN : 0;
-
 }
 
 /*===========================================================================*/

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_aux.c                                                                |
- |  $Id: fpu_aux.c,v 1.5 2003-08-01 16:57:59 sshwarts Exp $
+ |  $Id: fpu_aux.c,v 1.6 2003-10-04 16:47:57 sshwarts Exp $
  |                                                                           |
  | Code to implement some of the FPU auxiliary instructions.                 |
  |                                                                           |
@@ -16,7 +16,6 @@
 #include "fpu_emu.h"
 #include "status_w.h"
 #include "control_w.h"
-
 
 static void fnop(void) { }
 
@@ -97,8 +96,10 @@ void fld_i_()
   int i;
   u_char tag;
 
-  if ( STACK_OVERFLOW )
-    { FPU_stack_overflow(); return; }
+  if (FPU_stackoverflow(&st_new_ptr))
+    { FPU_stack_overflow(); 
+      return; 
+    }
 
   /* fld st(i) */
   i = FPU_rm;
@@ -106,7 +107,7 @@ void fld_i_()
     {
       reg_copy(&st(i), st_new_ptr);
       tag = FPU_gettagi(i);
-      push();
+      FPU_push();
       FPU_settag0(tag);
     }
   else

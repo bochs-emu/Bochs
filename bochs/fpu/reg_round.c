@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_round.c                                                              |
- |  $Id: reg_round.c,v 1.6 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: reg_round.c,v 1.7 2003-10-04 16:47:57 sshwarts Exp $
  |                                                                           |
  | Rounding/truncation/etc for FPU basic arithmetic functions.               |
  |                                                                           |
@@ -70,7 +70,7 @@
 #define	UNMASKED_UNDERFLOW 2
 
 
-int round_up_64(FPU_REG *x, u32 extent)
+static int round_up_64(FPU_REG *x)
 {
   x->sigl ++;
   if (x->sigl == 0)
@@ -85,14 +85,12 @@ int round_up_64(FPU_REG *x, u32 extent)
   return LOST_UP;
 }
 
-
-int truncate_64(FPU_REG *x, u32 extent)
+static int truncate_64(FPU_REG *x)
 {
   return LOST_DOWN;
 }
 
-
-int round_up_53(FPU_REG *x, u32 extent)
+static int round_up_53(FPU_REG *x)
 {
   x->sigl &= 0xfffff800;
   x->sigl += 0x800;
@@ -112,15 +110,13 @@ int round_up_53(FPU_REG *x, u32 extent)
   return LOST_UP;
 }
 
-
-int truncate_53(FPU_REG *x, u32 extent)
+static int truncate_53(FPU_REG *x)
 {
   x->sigl &= 0xfffff800;
   return LOST_DOWN;
 }
 
-
-int round_up_24(FPU_REG *x, u32 extent)
+static int round_up_24(FPU_REG *x)
 {
   x->sigl = 0;
   x->sigh &= 0xffffff00;
@@ -137,14 +133,12 @@ int round_up_24(FPU_REG *x, u32 extent)
   return LOST_UP;
 }
 
-
-int truncate_24(FPU_REG *x, u32 extent)
+static int truncate_24(FPU_REG *x)
 {
   x->sigl = 0;
   x->sigh &= 0xffffff00;
   return LOST_DOWN;
 }
-
 
 int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 {
@@ -251,46 +245,46 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 		  /* Round to even. */
 		  if (x->sigl & 0x1)
 		    /* Odd */
-		    FPU_bits_lost = round_up_64(x, extent);
+		    FPU_bits_lost = round_up_64(x);
 		  else
 		    /* Even */
-		    FPU_bits_lost = truncate_64(x, extent);
+		    FPU_bits_lost = truncate_64(x);
 		}
 	      else if (extent > 0x80000000)
 		{
 		  /* Greater than half */
-		  FPU_bits_lost = round_up_64(x, extent);
+		  FPU_bits_lost = round_up_64(x);
 		}
 	      else
 		{
 		  /* Less than half */
-		  FPU_bits_lost = truncate_64(x, extent);
+		  FPU_bits_lost = truncate_64(x);
 		}
 	      break;
 
 	    case RC_CHOP:		/* Truncate */
-	      FPU_bits_lost = truncate_64(x, extent);
+	      FPU_bits_lost = truncate_64(x);
 	      break;
 	      
 	    case RC_UP:		/* Towards +infinity */
 	      if (sign == SIGN_POS)
 		{
-		  FPU_bits_lost = round_up_64(x, extent);
+		  FPU_bits_lost = round_up_64(x);
 		}
 	      else
 		{
-		  FPU_bits_lost = truncate_64(x, extent);
+		  FPU_bits_lost = truncate_64(x);
 		}
 	      break;
 
 	    case RC_DOWN:		/* Towards -infinity */
 	      if (sign != SIGN_POS)
 		{
-		  FPU_bits_lost = round_up_64(x, extent);
+		  FPU_bits_lost = round_up_64(x);
 		}
 	      else
 		{
-		  FPU_bits_lost = truncate_64(x, extent);
+		  FPU_bits_lost = truncate_64(x);
 		}
 	      break;
 
@@ -316,52 +310,52 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 		      /* Round to even. */
 		      if (x->sigl & 0x800)
 			/* Odd */
-			FPU_bits_lost = round_up_53(x, extent);
+			FPU_bits_lost = round_up_53(x);
 		      else
 			/* Even */
-			FPU_bits_lost = truncate_53(x, extent);
+			FPU_bits_lost = truncate_53(x);
 		    }
 		  else
 		    {
 		      /* Greater than half */
-		      FPU_bits_lost = round_up_53(x, extent);
+		      FPU_bits_lost = round_up_53(x);
 		    }
 		}
 	      else if (leading > 0x400)
 		{
 		  /* Greater than half */
-		  FPU_bits_lost = round_up_53(x, extent);
+		  FPU_bits_lost = round_up_53(x);
 		}
 	      else
 		{
 		  /* Less than half */
-		  FPU_bits_lost = truncate_53(x, extent);
+		  FPU_bits_lost = truncate_53(x);
 		}
 	      break;
 
 	    case RC_CHOP:		/* Truncate */
-	      FPU_bits_lost = truncate_53(x, extent);
+	      FPU_bits_lost = truncate_53(x);
 	      break;
 
 	    case RC_UP:		/* Towards +infinity */
 	      if (sign == SIGN_POS)
 		{
-		  FPU_bits_lost = round_up_53(x, extent);
+		  FPU_bits_lost = round_up_53(x);
 		}
 	      else
 		{
-		  FPU_bits_lost = truncate_53(x, extent);
+		  FPU_bits_lost = truncate_53(x);
 		}
 	      break;
 
 	    case RC_DOWN:		/* Towards -infinity */
 	      if (sign != SIGN_POS)
 		{
-		  FPU_bits_lost = round_up_53(x, extent);
+		  FPU_bits_lost = round_up_53(x);
 		}
 	      else
 		{
-		  FPU_bits_lost = truncate_53(x, extent);
+		  FPU_bits_lost = truncate_53(x);
 		}
 	      break;
 
@@ -389,52 +383,52 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
 		      /* Round to even. */
 		      if (x->sigh & 0x100)
 			/* Odd */
-			FPU_bits_lost = round_up_24(x, extent);
+			FPU_bits_lost = round_up_24(x);
 		      else
 			/* Even */
-			FPU_bits_lost = truncate_24(x, extent);
+			FPU_bits_lost = truncate_24(x);
 		    }
 		  else
 		    {
 		      /* Greater than half */
-		      FPU_bits_lost = round_up_24(x, extent);
+		      FPU_bits_lost = round_up_24(x);
 		    }
 		}
 	      else if (leading > 0x80)
 		{
 		  /* Greater than half */
-		  FPU_bits_lost = round_up_24(x, extent);
+		  FPU_bits_lost = round_up_24(x);
 		}
 	      else
 		{
 		  /* Less than half */
-		  FPU_bits_lost = truncate_24(x, extent);
+		  FPU_bits_lost = truncate_24(x);
 		}
 	      break;
 
 	    case RC_CHOP:		/* Truncate */
-	      FPU_bits_lost = truncate_24(x, extent);
+	      FPU_bits_lost = truncate_24(x);
 	      break;
 
 	    case RC_UP:		/* Towards +infinity */
 	      if (sign == SIGN_POS)
 		{
-		  FPU_bits_lost = round_up_24(x, extent);
+		  FPU_bits_lost = round_up_24(x);
 		}
 	      else
 		{
-		  FPU_bits_lost = truncate_24(x, extent);
+		  FPU_bits_lost = truncate_24(x);
 		}
 	      break;
 
 	    case RC_DOWN:		/* Towards -infinity */
 	      if (sign != SIGN_POS)
 		{
-		  FPU_bits_lost = round_up_24(x, extent);
+		  FPU_bits_lost = round_up_24(x);
 		}
 	      else
 		{
-		  FPU_bits_lost = truncate_24(x, extent);
+		  FPU_bits_lost = truncate_24(x);
 		}
 	      break;
 
@@ -550,5 +544,4 @@ int FPU_round(FPU_REG *x, u32 extent, int dummy, u16 control_w, u8 sign)
     x->exp |= 0x8000;
 
   return tag;
-
 }

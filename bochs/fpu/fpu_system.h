@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_system.h                                                             |
- |  $Id: fpu_system.h,v 1.17 2003-10-04 12:52:29 sshwarts Exp $
+ |  $Id: fpu_system.h,v 1.18 2003-10-04 16:47:57 sshwarts Exp $
  |                                                                           |
  | Copyright (C) 1992,1994,1997                                              |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
@@ -47,7 +47,7 @@ typedef Bit8u u_char;
 #define EMU_BIG_ENDIAN 1
 #else
 /* Nothing needed.  Lack of defining EMU_BIG_ENDIAN means
- * small endian
+ * little endian.
  */
 #endif
 

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_trig.c                                                               |
- |  $Id: fpu_trig.c,v 1.8 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: fpu_trig.c,v 1.9 2003-10-04 16:47:57 sshwarts Exp $
  |                                                                           |
  | Implementation of the FPU "transcendental" functions.                     |
  |                                                                           |
@@ -232,14 +232,14 @@ static void single_arg_2_error(FPU_REG *st0_ptr, u_char st0_tag)
 	      /* The masked response */
 	      /* Convert to a QNaN */
 	      st0_ptr->sigh |= 0x40000000;
-	      push();
+	      FPU_push();
 	      FPU_copy_to_reg0(st0_ptr, TAG_Special);
 	    }
 	}
       else if (isNaN)
 	{
 	  /* A QNaN */
-	  push();
+	  FPU_push();
 	  FPU_copy_to_reg0(st0_ptr, TAG_Special);
 	}
       else
@@ -250,7 +250,7 @@ static void single_arg_2_error(FPU_REG *st0_ptr, u_char st0_tag)
 	    {
 	      /* The masked response */
 	      FPU_copy_to_reg0(&CONST_QNaN, TAG_Special);
-	      push();
+	      FPU_push();
 	      FPU_copy_to_reg0(&CONST_QNaN, TAG_Special);
 	    }
 	}
@@ -327,14 +327,16 @@ static void fptan(FPU_REG *st0_ptr, u_char st0_tag)
       if (FPU_control_word & CW_Invalid)
 	{
 	  st_new_ptr = &st(-1);
-	  push();
+	  FPU_push();
 	  FPU_stack_underflow();  /* Puts a QNaN in the new st(0) */
 	}
       return;
     }
 
-  if (STACK_OVERFLOW)
-    { FPU_stack_overflow(); return; }
+  if (FPU_stackoverflow(&st_new_ptr))
+    { FPU_stack_overflow(); 
+      return; 
+    }
 
   if (st0_tag == TAG_Valid)
     {
@@ -362,14 +364,14 @@ static void fptan(FPU_REG *st0_ptr, u_char st0_tag)
 	  st0_tag = FPU_round(st0_ptr, 1, 0, FULL_PRECISION, arg_sign);
 	  FPU_settag0(st0_tag);
 	}
-      push();
+      FPU_push();
       FPU_copy_to_reg0(&CONST_1, TAG_Valid);
       return;
     }
 
   if (st0_tag == TAG_Zero)
     {
-      push();
+      FPU_push();
       FPU_copy_to_reg0(&CONST_1, TAG_Valid);
       setcc(0);
       return;
@@ -392,7 +394,7 @@ static void fptan(FPU_REG *st0_ptr, u_char st0_tag)
       if (arith_invalid(0) >= 0)
 	{
 	  st_new_ptr = &st(-1);
-	  push();
+	  FPU_push();
 	  arith_invalid(0);
 	}
       return;
@@ -408,8 +410,10 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
   u_char sign;
   register FPU_REG *st1_ptr = st0_ptr;  /* anticipate */
 
-  if (STACK_OVERFLOW)
-    {  FPU_stack_overflow(); return; }
+  if (FPU_stackoverflow(&st_new_ptr))
+    {  FPU_stack_overflow(); 
+       return; 
+    }
 
   clear_C1();
 
@@ -417,7 +421,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
     {
       s32 e;
 
-      push();
+      FPU_push();
       sign = getsign(st1_ptr);
       reg_copy(st1_ptr, st_new_ptr);
       setexponent16(st_new_ptr, exponent(st_new_ptr));
@@ -438,7 +442,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
       if (FPU_divide_by_zero(0, SIGN_NEG) < 0)
 	return;
 
-      push();
+      FPU_push();
       FPU_copy_to_reg0(&CONST_Z, TAG_Zero);
       setsign(st_new_ptr, sign);
       return;
@@ -452,7 +456,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
       if (denormal_operand() < 0)
 	return;
 
-      push();
+      FPU_push();
       sign = getsign(st1_ptr);
       FPU_to_exp16(st1_ptr, st_new_ptr);
       goto denormal_arg;
@@ -461,7 +465,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
     {
       sign = getsign(st0_ptr);
       setpositive(st0_ptr);
-      push();
+      FPU_push();
       FPU_copy_to_reg0(&CONST_INF, TAG_Special);
       setsign(st_new_ptr, sign);
       return;
@@ -471,7 +475,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
       if (real_1op_NaN(st0_ptr) < 0)
 	return;
 
-      push();
+      FPU_push();
       FPU_copy_to_reg0(st0_ptr, TAG_Special);
       return;
     }
@@ -481,7 +485,7 @@ static void fxtract(FPU_REG *st0_ptr, u_char st0_tag)
       if (FPU_control_word & EX_Invalid)
 	{
 	  FPU_stack_underflow();
-	  push();
+	  FPU_push();
 	  FPU_stack_underflow();
 	}
       else
@@ -799,14 +803,16 @@ static void fsincos(FPU_REG *st0_ptr, u_char st0_tag)
       if (FPU_control_word & CW_Invalid)
 	{
 	  st_new_ptr = &st(-1);
-	  push();
+	  FPU_push();
 	  FPU_stack_underflow();  /* Puts a QNaN in the new st(0) */
 	}
       return;
     }
 
-  if (STACK_OVERFLOW)
-    { FPU_stack_overflow(); return; }
+  if (FPU_stackoverflow(&st_new_ptr))
+    { FPU_stack_overflow(); 
+      return; 
+    }
 
   if (st0_tag == TAG_Special)
     tag = FPU_Special(st0_ptr);
@@ -824,7 +830,7 @@ static void fsincos(FPU_REG *st0_ptr, u_char st0_tag)
       if (arith_invalid(0) >= 0)
 	{
 	  /* Masked response */
-	  push();
+	  FPU_push();
 	  arith_invalid(0);
 	}
       return;
@@ -833,7 +839,7 @@ static void fsincos(FPU_REG *st0_ptr, u_char st0_tag)
   reg_copy(st0_ptr, &arg);
   if (!fsin(st0_ptr, st0_tag))
     {
-      push();
+      FPU_push();
       FPU_copy_to_reg0(&arg, st0_tag);
       f_cos(&st(0), st0_tag);
     }

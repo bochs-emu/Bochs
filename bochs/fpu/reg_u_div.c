@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_div.c                                                              |
- |  $Id: reg_u_div.c,v 1.5 2003-10-04 12:32:56 sshwarts Exp $
+ |  $Id: reg_u_div.c,v 1.6 2003-10-04 16:47:57 sshwarts Exp $
  |                                                                           |
  | Divide one FPU_REG by another and put the result in a destination FPU_REG.|
  |                                                                           |
@@ -277,4 +277,3 @@ int FPU_u_div(const FPU_REG *a, const FPU_REG *b, FPU_REG *dest,
   dest->exp --;
   return FPU_round(dest, rem, 0, control_w, sign);
 }
-
