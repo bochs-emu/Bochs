@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.99 2002-12-21 18:58:28 bdenney Exp $
+$Id: user.dbk,v 1.100 2002-12-21 19:18:56 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -75,9 +75,8 @@ the simulator typically takes control and simulates that code in
 software at much slower speed, just like Bochs does.
 </para>
 </footnote>, but they are neither portable to non-x86 platforms nor open
-source.  <ulink url="http://www.plex86.org">Plex86</ulink>, Kevin Lawton's
-current project, is working toward an open-source x86 simulator with
-virtualization.
+source.  The <ulink url="http://www.plex86.org">Plex86</ulink> project is
+working toward an open-source x86 simulator with virtualization.
 </para>
 
 <para>
@@ -102,7 +101,7 @@ operating system has not been written.
 <!-- really more like Background or Bochs History, but maybe it doesn't need its own section unless it gets to 3 paras or so  -->
 
 Bochs was written by Kevin Lawton starting in 1994.  It began as a 
-commercial product, which you could buy with source code for $25...
+commercial product, which you could buy with source code for ...
 &NEEDHELP; <footnote>
 <para>
 We need a Bochs historian to help out here.  For background, it would be
@@ -114,7 +113,7 @@ it and some more background information.
 source under the GNU LGPL.
 
 <!-- 
-we should make it clear that Kevin is no longer working on bochs,
+we should make it clear that Kevin is not the primary maintainer of Bochs,
 but I want to get some more background.  Did he get hired by Mandrakesoft
 to do plex86 at the same time as Bochs was bought?  In his linux.com interview
 Kevin said: "The only way I can move Bochs to open source is if someone
@@ -512,7 +511,7 @@ currently work with.
    <row>
       <entry>Unix/X11</entry>
       <entry>X windows has always been well supported because it was
-      Kevin's Lawton's main development platform.  Bryce Denney maintains
+      Kevin Lawton's main development platform.  Bryce Denney maintains
       the Unix/X11 platform now.  Most features and fixes (not all) are
       tried first in Unix and then ported to the others.
       </entry>
@@ -532,7 +531,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
    <row>
       <entry>BeOS</entry>
-      <entry>Kevin Lawton did this port, originally to R3/PPC using
+      <entry>Kevin Lawton wrote this port, originally to R3/PPC using
       CodeWarrior.  It now works on R4/x86 with egcs. Simon Huet picked up
       maintaining/reworking the BeOS GUI port.  In September 2001, Bernd Korz
       of Yellow Tab, Inc. 
@@ -619,7 +618,13 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      </question>
      <answer>
        <para>
-       Kevin Lawton is the primary author of bochs. There have been bug fixes, enhancements, and code contributions from some few hundred people, so it is not possible to list them all. Kevin is presently working on a PC virtualization project called <ulink url="http://www.plex86.org">plex86</ulink> and no longer maintain bochs.
+       Kevin Lawton is the primary author of bochs. There have been bug fixes,
+       enhancements, and code contributions from some few hundred people, so
+       it is not possible to list them all.  Recently, Kevin has been working
+       on a PC virtualization project called <ulink
+       url="http://www.plex86.org">plex86</ulink>.  In Fall 2002, he
+       made contributed some major CPU speedups and helped with integration
+       and debugging of the x86-64 emulation code.
        </para>
      </answer>
   </qandaentry>
@@ -629,16 +634,25 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      Who maintains bochs now?
      </para></question>
      <answer><para>
-      With Kevin's help, in April 2001, the members of the bochs-developers mailing list set up a new official bochs site hosted by <ulink url="http://sourcefourge.net">Source Forge</ulink>. The current admins on this project are Bryce Denney, Greg Alexander, and Don Becker.
+      With Kevin's help, in April 2001, the members of the bochs-developers
+      mailing list set up a new official bochs site hosted by <ulink
+      url="http://sourcefourge.net">Source Forge</ulink>. The admins on this
+      project are Greg Alexander, Don Becker, Christophe Bothamy, and Bryce
+      Denney.
      </para></answer>
   </qandaentry>
 
   <qandaentry>
      <question><para>
-     Tell me about performance when running bochs?
+     Tell me about performance when running bochs.
      </para></question>
      <answer><para>
-     Because Bochs emulates every x86 instruction and all the devices in a PC system, it does not reach high emulation speeds. Kevin reported approximately 1.5MIPS using bochs on a 400Mhz PII Linux machine. Users who have an x86 processor and want the highest emulation speeds may want to consider PC virtualization software such as plex86 (free) or VMware (commercial). 
+     Because Bochs emulates every x86 instruction and all the devices in a PC
+     system, it does not reach high emulation speeds. Kevin reported
+     approximately 1.5MIPS using bochs on a 400Mhz PII Linux machine. Users
+     who have an x86 processor and want the highest emulation speeds may want
+     to consider PC virtualization software such as plex86 (free) or VMware
+     (commercial). 
      </para></answer>
   </qandaentry>
 
