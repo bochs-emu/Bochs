@@ -2431,7 +2431,7 @@ int concat_image_t::open (const char* pathname0)
 	  BX_PANIC(("fstat() returns error!\n"));
     }
     if ((stat_buf.st_size % 512) != 0) {
-      bx_panic ("[HDD] size of disk image must be multiple of 512 bytes");
+      BX_PANIC( ("[HDD] size of disk image must be multiple of 512 bytes"));
     }
     length_table[i] = stat_buf.st_size;
     start_offset_table[i] = start_offset;
@@ -2458,7 +2458,7 @@ void concat_image_t::close ()
 off_t concat_image_t::lseek (off_t offset, int whence)
 {
   if ((offset % 512) != 0) 
-    bx_panic ("lseek HD with offset not multiple of 512");
+    BX_PANIC( ("lseek HD with offset not multiple of 512"));
   if (bx_dbg.disk)
     BX_INFO(("concat_image_t.lseek(%d)\n", whence));
   // is this offset in this disk image?
@@ -2492,7 +2492,7 @@ off_t concat_image_t::lseek (off_t offset, int whence)
   // now offset should be within the current image.
   offset -= start_offset_table[index];
   if (offset < 0 || offset >= length_table[index])
-    bx_panic ("concat_image_t.lseek to byte %ld failed\n", (long)offset);
+    BX_PANIC( ("concat_image_t.lseek to byte %ld failed\n", (long)offset));
 
   seek_was_last_op = 1;
   return ::lseek(fd, offset, whence);
@@ -2506,7 +2506,7 @@ ssize_t concat_image_t::read (void* buf, size_t count)
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
   if (!seek_was_last_op) 
-    bx_panic ("disk: no seek before read");
+    BX_PANIC( ("disk: no seek before read"));
   return ::read(fd, buf, count);
 }
 
@@ -2518,7 +2518,7 @@ ssize_t concat_image_t::write (const void* buf, size_t count)
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
   if (!seek_was_last_op) 
-    bx_panic ("disk: no seek before write");
+    BX_PANIC( ("disk: no seek before write"));
   return ::write(fd, buf, count);
 }
 #endif   /* BX_SPLIT_HD_SUPPORT */
