@@ -85,6 +85,7 @@
 #define BX_32BIT_REG_EDI 7
 
 
+#ifdef BX_IN_CPU_METHOD
 // access to 8 bit general registers
 #define AL (BX_CPU_THIS_PTR gen_reg[0].word.byte.rl)
 #define CL (BX_CPU_THIS_PTR gen_reg[1].word.byte.rl)
@@ -122,6 +123,7 @@
 
 // access to 32 bit instruction pointer
 #define EIP BX_CPU_THIS_PTR eip
+#endif //ifdef BX_IN_CPU_METHOD
 
 #define BX_READ_8BIT_REG(index)  (((index) < 4) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
@@ -502,6 +504,7 @@ public:
   void write_handler (Bit32u addr, Bit32u *data, unsigned len);
   void read_handler (Bit32u addr, Bit32u *data, unsigned len);
   static BX_CPU_C *get_cpu (Bit8u id);
+  void startup_msg (Bit32u vector);
 private:
   Bit32u apic_base_msr;
   Bit8u id;
@@ -1419,6 +1422,7 @@ public: // for now...
 
 extern BX_CPU_C       *BX_CPU[BX_SMP_PROCESSORS];
 
+#ifdef BX_IN_CPU_METHOD
 BX_SMF inline void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
 BX_SMF inline void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; };
 BX_SMF inline void BX_CPU_C_PREFIX set_CX(Bit16u cx) { CX = cx; };
@@ -1445,6 +1449,7 @@ BX_SMF inline Bit16u BX_CPU_C_PREFIX get_AX(void) { return(AX); };
 BX_SMF inline Bit16u BX_CPU_C_PREFIX get_BX(void) { return(BX); };
 BX_SMF inline Bit16u BX_CPU_C_PREFIX get_CX(void) { return(CX); };
 BX_SMF inline Bit16u BX_CPU_C_PREFIX get_DX(void) { return(DX); };
+#endif //ifdef BX_IN_CPU_METHOD
 
 
 #if BX_CPU_LEVEL >= 2
