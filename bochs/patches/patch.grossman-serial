@@ -1,10 +1,9 @@
-From grossman@juniper.net Sat Mar  2 23:34:25 2002
+----------------------------------------------------------------------
+Patch name: patch.grossman-serial
+Author: Stu Grossman <grossman@juniper.net>
 Date: Sat, 2 Mar 2002 16:31:49 -0800
-From: Stu Grossman <grossman@juniper.net>
-To: Bryce Denney <bryce@tlw.com>
-Subject: Re: [Bochs-developers] Patches for serial I/O under Linux/*BSD
 
-Bryce,
+Detailed description:
 	Here are the patches (without the serial name fix).  Let me know if you
 want me to change that.  Oh, FYI, my changes also open up the com1 terminal in
 raw mode, which makes the emulation much more accurate.  You'll also notice
@@ -18,7 +17,15 @@ would also make it possible to use remote GDB to debug the FreeBSD kernel,
 since GDB can make TCP connections.  Still got a bunch of issues to work though
 on that though.
 
-				Stu
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  current cvs (march 2 2002)
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
 
 Index: .bochsrc
 ===================================================================
