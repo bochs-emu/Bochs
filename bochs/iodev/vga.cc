@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.77 2003-06-08 16:45:24 vruppert Exp $
+// $Id: vga.cc,v 1.78 2003-06-10 16:26:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1290,14 +1290,18 @@ bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
 
+  /* no screen update necessary */
+  if (BX_VGA_THIS s.vga_mem_updated==0)
+    return;
+
   /* skip screen update when the sequencer is in reset mode */
   if (!BX_VGA_THIS s.sequencer.reset1 || !BX_VGA_THIS s.sequencer.reset2)
     return;
 
-  if (BX_VGA_THIS s.vga_mem_updated==0) {
-    /* BX_DEBUG(("update(): updated=%u enabled=%u", (unsigned) BX_VGA_THIS s.vga_mem_updated, (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled)); */
+  /* skip screen update if the vertical retrace is in progress
+     (using 72 Hz vertical frequency) */
+  if ((bx_pc_system.time_usec() % 13888) < 70)
     return;
-    }
 
 #if BX_SUPPORT_VBE  
   if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
