@@ -27,11 +27,3 @@ export CXXFLAGS
 ./configure --with-win32-vcpp --enable-cdrom --enable-sb16=win
 
 unset echo
-
-
-for i in `find . -name Makefile`; do
-  echo Removing curly brackets in $i for NMAKE.
-  mv $i $i.tmp
-  sed -e 's/{/(/g' -e 's/}/)/g' < $i.tmp > $i
-  rm -f $i.tmp
-done
