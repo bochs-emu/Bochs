@@ -85,6 +85,7 @@ struct pcidev_struct {
 	struct pci_dev *dev;
 	int pid; // send irq signals to this task
 	struct timer_list irq_timer; // for testing the irq signals
+	void *mapped_mem [PCIDEV_COUNT_RESOURCES];
 };
 
 #endif // __KERNEL__

@@ -57,6 +57,7 @@ static int pcidev_open(struct inode *inode, struct file *file)
 static int pcidev_release(struct inode *inode, struct file *file)
 {
 	struct pcidev_struct *pcidev = (struct pcidev_struct *)file->private_data;
+	int idx;
 	if (!pcidev->dev)
 		return 0;
 	if (pcidev->irq_timer.function)
@@ -67,6 +68,9 @@ static int pcidev_release(struct inode *inode, struct file *file)
 	     	pci_read_config_byte(pcidev->dev, PCI_INTERRUPT_LINE, &irq);
 		free_irq(irq, (void *)pcidev->pid);
 	}
+	for (idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++)
+		if (pcidev->mapped_mem[idx])
+			iounmap(pcidev->mapped_mem[idx]);
 	pci_release_regions(pcidev->dev);
 	kfree(file->private_data);
 	return 0;
@@ -149,14 +153,24 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		printk(KERN_INFO "pcidev: device found at %x:%x.%d\n", 
 				dev->bus->number, PCI_SLOT(dev->devfn), 
 				PCI_FUNC(dev->devfn));
-		for (idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++) {
-			__put_user(pci_resource_start(dev, idx), &find->resources[idx].start);
-			__put_user(pci_resource_end(dev, idx), &find->resources[idx].end);
-			__put_user(pci_resource_flags(dev, idx), &find->resources[idx].flags);
-		}
 		ret = pci_request_regions(dev, pcidev_name);
 		if (ret < 0)
 			break;
+		for (idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++) {
+			if (pci_resource_flags(dev, idx) & IORESOURCE_MEM) {
+				long len = pci_resource_len(dev,idx);
+				unsigned long mapped_start = (unsigned long)ioremap(pci_resource_start(dev, idx), len);
+				__put_user(mapped_start, &find->resources[idx].start);
+				__put_user(mapped_start + len - 1, &find->resources[idx].end);
+				pcidev->mapped_mem[idx] = (void *)mapped_start;
+			}
+			else {
+				pcidev->mapped_mem[idx] = NULL;
+				__put_user(pci_resource_start(dev, idx), &find->resources[idx].start);
+				__put_user(pci_resource_end(dev, idx), &find->resources[idx].end);
+			}
+			__put_user(pci_resource_flags(dev, idx), &find->resources[idx].flags);
+		}
 		pcidev->dev = dev;
 		__put_user(dev->bus->number, &find->bus);
 		__put_user(PCI_SLOT(dev->devfn), &find->device);
