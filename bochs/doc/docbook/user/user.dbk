@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.79 2002-12-05 20:23:34 bdenney Exp $
+$Id: user.dbk,v 1.80 2002-12-05 20:25:40 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2688,6 +2688,12 @@ Examples:
   display_library: sdl
 </screen>
 </para>
+
+<note><para>
+wxWindows provides both a configuration interface and a display library.
+So if you use the "wx" configuration interface, you must also use
+the "wx" display library.
+</para></note>
 
 </section>
 
@@ -6355,7 +6361,7 @@ directory called ~/win98 .
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.79 2002-12-05 20:23:34 bdenney Exp $
+        $Id: user.dbk,v 1.80 2002-12-05 20:25:40 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
@@ -6631,7 +6637,7 @@ In this case, <emphasis>/home</emphasis> is mounted on <emphasis>/dev/hda5</emph
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.79 2002-12-05 20:23:34 bdenney Exp $
+        $Id: user.dbk,v 1.80 2002-12-05 20:25:40 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
