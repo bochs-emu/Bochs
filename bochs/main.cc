@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.17 2002-10-23 19:31:38 bdenney Exp $
+// $Id: main.cc,v 1.156.2.18 2002-10-23 21:53:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,8 +104,6 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       // if after init, notify the GUI
       if (set && SIM->get_init_done ()) {
 	bx_gui->mouse_enabled_changed (val!=0);
-	// FIXME: while adding plugin support, I'm not going to bother
-	// with this function for now.
 	DEV_mouse_enabled_changed (val!=0);
       }
       break;
