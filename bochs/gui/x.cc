@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.78 2004-02-12 19:39:13 vruppert Exp $
+// $Id: x.cc,v 1.79 2004-02-15 19:46:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,6 +101,7 @@ static unsigned imDepth, imWide, imBPP;
 static int prev_x=-1, prev_y=-1;
 static int current_x=-1, current_y=-1;
 static unsigned mouse_button_state = 0;
+static bx_bool CTRL_pressed = 0;
 
 static unsigned prev_cursor_x=0;
 static unsigned prev_cursor_y=0;
@@ -145,10 +146,10 @@ static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 
 static unsigned bx_statusbar_y = 18;
 static unsigned bx_statusitem_pos[12] = {
-  0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
+  0, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600
   };
 static bx_bool bx_statusitem_active[12];
-static long bx_status_led_green;
+static long bx_status_led_green, bx_status_graytext;
 static char bx_status_info_text[32];
 
 static void headerbar_click(int x, int y);
@@ -601,12 +602,20 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 
   for (i=0; i<12; i++) bx_statusitem_active[i] = 0;
   switch (imBPP) {
-    case 16: bx_status_led_green = 0x07e0; break;
+    case 16:
+      bx_status_led_green = 0x07e0;
+      bx_status_graytext = 0x8410;
+      break;
     case 24:
-    case 32: bx_status_led_green = 0x00ff00; break;
-    default: bx_status_led_green = 0;
+    case 32:
+      bx_status_led_green = 0x00ff00;
+      bx_status_graytext = 0x808080;
+      break;
+    default:
+      bx_status_led_green = 0;
+      bx_status_graytext = 0;
   }
-  set_status_text(0, "Middle button enables mouse", 0);
+  set_status_text(0, "CTRL + 3rd button enables mouse", 0);
 
   x_init_done = true;
 
@@ -635,12 +644,12 @@ set_status_text(int element, const char *text, bx_bool active)
 
   xleft = bx_statusitem_pos[element] + 2;
   xsize = bx_statusitem_pos[element+1] - xleft;
-  if ((element < 1) || (element > BX_MAX_STATUSITEMS)) {
+  if (element < 1) {
     strcpy(bx_status_info_text, text);
     XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, dimension_y+2, xsize, bx_statusbar_y-2);
     XDrawString(bx_x_display, win, gc_headerbar, xleft, dimension_y+bx_statusbar_y-2,
                 text, strlen(text));
-  } else {
+  } else if (element <= BX_MAX_STATUSITEMS) {
     bx_statusitem_active[element] = active;
     if (active) {
       XSetForeground(bx_x_display, gc_headerbar, bx_status_led_green);
@@ -648,7 +657,7 @@ set_status_text(int element, const char *text, bx_bool active)
       XSetForeground(bx_x_display, gc_headerbar, black_pixel);
     } else {
       XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, dimension_y+2, xsize-1, bx_statusbar_y-2);
-      XSetForeground(bx_x_display, gc_headerbar, col_vals[7]);
+      XSetForeground(bx_x_display, gc_headerbar, bx_status_graytext);
     }
     XDrawString(bx_x_display, win, gc_headerbar, xleft, dimension_y+bx_statusbar_y-2,
                 text, strlen(text));
@@ -678,7 +687,7 @@ bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
   BX_DEBUG (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {
     BX_INFO(("[x] Mouse on"));
-    set_status_text(0, "Middle button disables mouse", 0);
+    set_status_text(0, "CTRL + 3rd button disables mouse", 0);
     mouse_enable_x = current_x;
     mouse_enable_y = current_y;
     disable_cursor();
@@ -686,7 +695,7 @@ bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
   } else {
     BX_INFO(("[x] Mouse off"));
-    set_status_text(0, "Middle button enables mouse", 0);
+    set_status_text(0, "CTRL + 3rd button enables mouse", 0);
     enable_cursor();
     warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
   }
@@ -789,23 +798,20 @@ bx_x_gui_c::handle_events(void)
 	  BX_DEBUG(("xxx:   x,y=(%d,%d)", current_x, current_y));
       switch (button_event->button) {
         case Button1:
-		  BX_DEBUG(("xxx:   button1"));
           mouse_button_state |= 0x01;
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
-	      BX_DEBUG(("XXX:   button2"));
-
-	      // (mch) Hack for easier mouse handling (toggle mouse enable)
-	      toggle_mouse_enable();
-
-          //mouse_button_state |= ;
-          //send_keyboard_mouse_status();
-          //mouse_update = 0;
+	  if (CTRL_pressed) {
+            toggle_mouse_enable();
+          } else {
+            mouse_button_state |= 0x04;
+            send_keyboard_mouse_status();
+            mouse_update = 0;
+          }
           break;
         case Button3:
-		  BX_DEBUG(("xxx:   button3"));
           mouse_button_state |= 0x02;
           send_keyboard_mouse_status();
           mouse_update = 0;
@@ -815,11 +821,8 @@ bx_x_gui_c::handle_events(void)
 
     case ButtonRelease:
       button_event = (XButtonEvent *) &report;
-//BX_INFO(("xxx: buttonrelease"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-//BX_INFO(("xxx:   in headerbar"));
         if (mouse_update) {
-//BX_INFO(("xxx:   mouse_update=1"));
           send_keyboard_mouse_status();
           mouse_update = 0;
           }
@@ -831,22 +834,18 @@ bx_x_gui_c::handle_events(void)
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-//BX_INFO(("xxx:   x,y=(%d,%d)", current_x, current_y));
       switch (button_event->button) {
         case Button1:
-//BX_INFO(("xxx:   button1"));
           mouse_button_state &= ~0x01;
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
-//BX_INFO(("xxx:   button2"));
-          //mouse_button_state &= ~;
-          //send_keyboard_mouse_status();
-          //mouse_update = 0;
+          mouse_button_state &= ~0x04;
+          send_keyboard_mouse_status();
+          mouse_update = 0;
           break;
         case Button3:
-//BX_INFO(("xxx:   button3"));
           mouse_button_state &= ~0x02;
           send_keyboard_mouse_status();
           mouse_update = 0;
@@ -871,34 +870,30 @@ bx_x_gui_c::handle_events(void)
       current_x = pointer_event->x;
       current_y = pointer_event->y;
       mouse_update = 1;
-//BX_INFO(("xxx: motionNotify x,y=(%d,%d)", current_x, current_y));
       break;
 
     case EnterNotify:
       enter_event = (XEnterWindowEvent *) &report;
       prev_x = current_x = enter_event->x;
       prev_y = current_y = enter_event->y;
-//BX_INFO(("xxx: enterNotify x,y=(%d,%d)", current_x, current_y));
       break;
 
     case LeaveNotify:
       leave_event = (XLeaveWindowEvent *) &report;
       prev_x = current_x = -1;
       prev_y = current_y = -1;
-//BX_INFO(("xxx: LeaveNotify x,y set to -1"));
       break;
 
     case MapNotify:
       /* screen needs redraw, since X would have tossed previous
        * requests before window mapped
        */
-//BX_INFO(("xxx: mapnotify: found"));
       //retval = 1;
       break;
 
     default:
-	  // (mch) Ignore...
-	  BX_DEBUG(("XXX: default Xevent type"));
+      // (mch) Ignore...
+      BX_DEBUG(("XXX: default Xevent type"));
       /* all events selected by StructureNotifyMask are thrown away here,
        * since nothing is done with them */
       break;
@@ -906,7 +901,7 @@ bx_x_gui_c::handle_events(void)
   } /* end while */
 
   if (mouse_update) {
-    BX_DEBUG(("XXX: bottom, send status"));
+    BX_DEBUG(("handle_events(): send mouse status"));
     send_keyboard_mouse_status();
     }
 }
@@ -961,6 +956,11 @@ bx_x_gui_c::flush(void)
 xkeypress(KeySym keysym, int press_release)
 {
   Bit32u key_event;
+
+
+  if ((keysym == XK_Control_L) || (keysym == XK_Control_R)) {
+    CTRL_pressed = !press_release;
+  }
 
   /* Old (no mapping) behavior */
   if(!bx_options.keyboard.OuseMapping->get()){
