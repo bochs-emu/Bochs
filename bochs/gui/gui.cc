@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.18.2.9 2002-04-05 06:53:48 bdenney Exp $
+// $Id: gui.cc,v 1.18.2.10 2002-04-08 06:19:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -196,7 +196,7 @@ bx_gui_c::update_drive_status_buttons (void) {
   void
 bx_gui_c::floppyA_handler(void)
 {
-#if USE_WX
+#if BX_WITH_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
   int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
@@ -218,7 +218,7 @@ bx_gui_c::floppyA_handler(void)
   void
 bx_gui_c::floppyB_handler(void)
 {
-#if USE_WX
+#if BX_WITH_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
   int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
@@ -240,7 +240,7 @@ bx_gui_c::floppyB_handler(void)
   void
 bx_gui_c::cdromD_handler(void)
 {
-#if USE_WX
+#if BX_WITH_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
   int ret = SIM->ask_param (BXP_CDROM_PATH);
@@ -343,7 +343,7 @@ bx_gui_c::snapshot_handler(void)
   }
   //FIXME
   char filename[BX_PATHNAME_LEN];
-#if USE_WX
+#if BX_WITH_WX
   int ret = SIM->ask_filename (filename, sizeof(filename), 
     "Save snapshot as...", "snapshot.txt", 
 	bx_param_string_c::BX_SAVE_FILE_DIALOG);
@@ -380,7 +380,7 @@ bx_gui_c::paste_handler(void)
   void
 bx_gui_c::config_handler(void)
 {
-#if BX_USE_CONTROL_PANEL && !USE_WX
+#if BX_USE_CONTROL_PANEL && !BX_WITH_WX
   bx_control_panel (BX_CPANEL_RUNTIME);
 #else
   BX_ERROR(( "# CONFIG callback (unimplemented)." ));
