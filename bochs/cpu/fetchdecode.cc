@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.65 2004-05-11 16:44:58 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.66 2004-08-28 08:41:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1943,8 +1943,7 @@ modrm_done:
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
         if (ilen < remain) {
-          Bit8s temp8s;
-          temp8s = *iptr;
+          Bit8s temp8s = *iptr;
           if (instruction->os32L())
             instruction->modRMForm.Id = (Bit32s) temp8s;
           else
@@ -2023,8 +2022,7 @@ modrm_done:
         break;
       case BxImmediate_BrOff8:
         if (ilen < remain) {
-          Bit8s temp8s;
-          temp8s = *iptr;
+          Bit8s temp8s = *iptr;
           instruction->modRMForm.Id = temp8s;
           ilen++;
           }

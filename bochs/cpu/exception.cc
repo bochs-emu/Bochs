@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.40 2004-07-12 19:20:55 sshwarts Exp $
+// $Id: exception.cc,v 1.41 2004-08-28 08:41:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -120,12 +120,9 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
     idtindex += BX_CPU_THIS_PTR idtr.base;
 
-    access_linear(idtindex,     4, 0,
-      BX_READ, &dword1);
-    access_linear(idtindex + 4, 4, 0,
-      BX_READ, &dword2);
-    access_linear(idtindex + 8, 4, 0,
-      BX_READ, &dword3);
+    access_linear(idtindex,     4, 0, BX_READ, &dword1);
+    access_linear(idtindex + 4, 4, 0, BX_READ, &dword2);
+    access_linear(idtindex + 8, 4, 0, BX_READ, &dword3);
 
     parse_descriptor(dword1, dword2, &gate_descriptor);
 

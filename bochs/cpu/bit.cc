@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.20 2004-08-15 20:12:05 sshwarts Exp $
+// $Id: bit.cc,v 1.21 2004-08-28 08:41:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,12 +25,12 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
+#if BX_CPU_LEVEL >= 3
 
 #if BX_SUPPORT_X86_64==0
 // Make life easier merging cpu64 and cpu code.
@@ -44,14 +44,9 @@
 #define RBP EBP
 #endif
 
-
   void
 BX_CPU_C::SETO_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETO: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_OF())
@@ -66,16 +61,11 @@ BX_CPU_C::SETO_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNO: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_OF()==0)
@@ -90,16 +80,11 @@ BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETB_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETB: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_CF())
@@ -114,16 +99,11 @@ BX_CPU_C::SETB_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNB: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_CF()==0)
@@ -138,16 +118,11 @@ BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETZ: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_ZF())
@@ -162,16 +137,11 @@ BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNZ: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_ZF()==0)
@@ -186,16 +156,11 @@ BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETBE: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_CF() || get_ZF())
@@ -210,16 +175,11 @@ BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNBE: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if ((get_CF()==0) && (get_ZF()==0))
@@ -234,16 +194,11 @@ BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETS_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETS: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_SF())
@@ -258,16 +213,11 @@ BX_CPU_C::SETS_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNL: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
   if (get_SF()==0)
@@ -282,16 +232,11 @@ BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETP_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETP: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
  
   if (get_PF())
@@ -306,16 +251,11 @@ BX_CPU_C::SETP_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNP: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
 
    if (get_PF() == 0)
@@ -330,16 +270,11 @@ BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETL_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETL: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
  
   if (getB_SF() != getB_OF())
@@ -354,16 +289,11 @@ BX_CPU_C::SETL_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNL: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
  
   if (getB_SF() == getB_OF())
@@ -378,16 +308,11 @@ BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETLE: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
  
   if (get_ZF() || (getB_SF()!=getB_OF()))
@@ -402,16 +327,11 @@ BX_CPU_C::SETLE_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
 
   void
 BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("SETNLE: not available on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u result_8;
  
   if ((get_ZF()==0) && (getB_SF()==getB_OF()))
@@ -426,17 +346,11 @@ BX_CPU_C::SETNLE_Eb(bxInstruction_c *i)
   else {
     write_virtual_byte(i->seg(), RMAddr(i), &result_8);
     }
-#endif
 }
  
   void
 BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BSF_GvEv(): not supported on < 386"));
-  UndefinedOpcode(i);
-#else
- 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
@@ -526,17 +440,11 @@ BX_CPU_C::BSF_GvEv(bxInstruction_c *i)
     /* now write result back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
   }
-#endif
 }
 
   void
 BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BSR_GvEv(): not supported on < 386"));
-  UndefinedOpcode(i);
-#else
-
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
@@ -626,7 +534,6 @@ BX_CPU_C::BSR_GvEv(bxInstruction_c *i)
     /* now write result back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
     }
-#endif
 }
 
   void
@@ -935,10 +842,6 @@ BX_CPU_C::BSWAP_RDI(bxInstruction_c *i)
   void
 BX_CPU_C::BT_EvGv(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BT_EvGv: not available on <386"));
-  UndefinedOpcode(i);
-#else
   bx_address op1_addr;
 
 #if BX_SUPPORT_X86_64
@@ -1019,16 +922,11 @@ BX_CPU_C::BT_EvGv(bxInstruction_c *i)
 
     set_CF((op1_16 >> index) & 0x01);
     }
-#endif
 }
 
   void
 BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BTS_EvGv: not available on <386"));
-  UndefinedOpcode(i);
-#else
   bx_address op1_addr;
 
 #if BX_SUPPORT_X86_64
@@ -1136,16 +1034,11 @@ BX_CPU_C::BTS_EvGv(bxInstruction_c *i)
 
     set_CF(bit_i);
     }
-#endif
 }
 
   void
 BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BTR_EvGv: not available on <386"));
-  UndefinedOpcode(i);
-#else
   bx_address op1_addr;
 
 #if BX_SUPPORT_X86_64
@@ -1153,7 +1046,6 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64, index;
     Bit64s displacement64;
-    Bit64u temp_cf;
 
     /* op2_64 is a register, op2_addr is an index of a register */
     op2_64 = BX_READ_64BIT_REG(i->nnn());
@@ -1177,7 +1069,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
 
-    temp_cf = (op1_64 >> index) & 0x01;
+    bx_bool temp_cf = (op1_64 >> index) & 0x01;
     op1_64 &= ~(((Bit64u) 1) << index);
 
     /* now write back to destination */
@@ -1189,7 +1081,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32, index, temp_cf;
+    Bit32u op1_32, op2_32, index;
     Bit32s displacement32;
 
     /* op2_32 is a register, op2_addr is an index of a register */
@@ -1214,7 +1106,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
 
-    temp_cf = (op1_32 >> index) & 0x01;
+    bx_bool temp_cf = (op1_32 >> index) & 0x01;
     op1_32 &= ~(((Bit32u) 1) << index);
 
     /* now write back to destination */
@@ -1223,7 +1115,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
     set_CF(temp_cf);
   }
   else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16, index, temp_cf;
+    Bit16u op1_16, op2_16, index;
     Bit32s displacement32;
 
     /* op2_16 is a register, op2_addr is an index of a register */
@@ -1248,7 +1140,7 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
 
-    temp_cf = (op1_16 >> index) & 0x01;
+    bx_bool temp_cf = (op1_16 >> index) & 0x01;
     op1_16 &= ~(((Bit16u) 1) << index);
 
     /* now write back to destination */
@@ -1256,16 +1148,11 @@ BX_CPU_C::BTR_EvGv(bxInstruction_c *i)
 
     set_CF(temp_cf);
     }
-#endif
 }
 
   void
 BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BTC_EvGv: not available on <386"));
-  UndefinedOpcode(i);
-#else
   bx_address op1_addr;
 
 #if BX_SUPPORT_X86_64
@@ -1273,7 +1160,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
     /* for 64 bit operand size mode */
     Bit64u op1_64, op2_64;
     Bit64s displacement64;
-    Bit64u temp_CF, index;
+    Bit64u index;
 
     op2_64 = BX_READ_64BIT_REG(i->nnn());
     index = op2_64 & 0x3f;
@@ -1289,7 +1176,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
     }
 
-    temp_CF = (op1_64 >> index) & 0x01;
+    bx_bool temp_CF = (op1_64 >> index) & 0x01;
     op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
     set_CF(temp_CF);
 
@@ -1305,7 +1192,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
-    Bit32u op1_32, op2_32, index_32, temp_CF;
+    Bit32u op1_32, op2_32, index_32;
     Bit32s displacement32;
 
     op2_32 = BX_READ_32BIT_REG(i->nnn());
@@ -1322,7 +1209,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
     }
 
-    temp_CF = (op1_32 >> index_32) & 0x01;
+    bx_bool temp_CF = (op1_32 >> index_32) & 0x01;
     op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
     set_CF(temp_CF);
 
@@ -1335,7 +1222,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       }
     }
   else { /* 16 bit operand size mode */
-    Bit16u op1_16, op2_16, index_16, temp_CF;
+    Bit16u op1_16, op2_16, index_16;
     Bit16s displacement16;
 
     op2_16 = BX_READ_16BIT_REG(i->nnn());
@@ -1352,7 +1239,7 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
     }
 
-    temp_CF = (op1_16 >> index_16) & 0x01;
+    bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
     op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
     set_CF(temp_CF);
 
@@ -1365,25 +1252,17 @@ BX_CPU_C::BTC_EvGv(bxInstruction_c *i)
       }
     set_CF(temp_CF);
   }
-#endif
 }
 
   void
 BX_CPU_C::BT_EvIb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BT_EvIb: not available on <386"));
-  UndefinedOpcode(i);
-#else
-
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
     Bit64u op1_64;
-    Bit8u  op2_8;
 
-    op2_8 = i->Ib() & 0x3f;
-    op2_8 %= 64;
+    Bit8u op2_8 = i->Ib() & 0x3f;
 
     /* op1_64 is a register or memory reference */
     if (i->modC0()) {
@@ -1401,10 +1280,8 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
   if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
     Bit32u op1_32;
-    Bit8u  op2_8;
 
-    op2_8 = i->Ib();
-    op2_8 %= 32;
+    Bit8u op2_8 = i->Ib() & 0x1f;
 
     /* op1_32 is a register or memory reference */
     if (i->modC0()) {
@@ -1419,10 +1296,8 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
   }
   else { /* 16 bit operand size mode */
     Bit16u op1_16;
-    Bit8u  op2_8;
 
-    op2_8 = i->Ib();
-    op2_8 %= 16;
+    Bit8u op2_8 = i->Ib() & 0xf;
 
     /* op1_16 is a register or memory reference */
     if (i->modC0()) {
@@ -1435,25 +1310,17 @@ BX_CPU_C::BT_EvIb(bxInstruction_c *i)
 
     set_CF((op1_16 >> op2_8) & 0x01);
     }
-#endif
 }
 
   void
 BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BTS_EvIb: not available on <386"));
-  UndefinedOpcode(i);
-#else
-
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
-    Bit64u op1_64, temp_CF;
-    Bit8u  op2_8;
+    Bit64u op1_64;
 
-    op2_8 = i->Ib();
-    op2_8 %= 64;
+    Bit8u op2_8 = i->Ib() & 0x3f;
 
     /* op1_64 is a register or memory reference */
     if (i->modC0()) {
@@ -1464,7 +1331,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
-    temp_CF = (op1_64 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
     op1_64 |= (((Bit64u) 1) << op2_8);
 
     /* now write diff back to destination */
@@ -1480,11 +1347,9 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
-    Bit32u op1_32, temp_CF;
-    Bit8u  op2_8;
+    Bit32u op1_32;
 
-    op2_8 = i->Ib();
-    op2_8 %= 32;
+    Bit8u op2_8 = i->Ib() & 0x1f;
 
     /* op1_32 is a register or memory reference */
     if (i->modC0()) {
@@ -1495,7 +1360,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
-    temp_CF = (op1_32 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
     op1_32 |= (((Bit32u) 1) << op2_8);
 
     /* now write diff back to destination */
@@ -1508,11 +1373,9 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
     set_CF(temp_CF);
   }
   else { /* 16 bit operand size mode */
-    Bit16u op1_16, temp_CF;
-    Bit8u  op2_8;
+    Bit16u op1_16;
 
-    op2_8 = i->Ib();
-    op2_8 %= 16;
+    Bit8u op2_8 = i->Ib() & 0xf;
 
     /* op1_16 is a register or memory reference */
     if (i->modC0()) {
@@ -1523,7 +1386,7 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
-    temp_CF = (op1_16 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
     op1_16 |= (((Bit16u) 1) << op2_8);
 
     /* now write diff back to destination */
@@ -1535,25 +1398,17 @@ BX_CPU_C::BTS_EvIb(bxInstruction_c *i)
       }
     set_CF(temp_CF);
   }
-#endif
 }
 
   void
 BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BTC_EvIb: not available on <386"));
-  UndefinedOpcode(i);
-#else
-
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
-    Bit64u op1_64, temp_CF;
-    Bit8u  op2_8;
+    Bit64u op1_64;
 
-    op2_8 = i->Ib();
-    op2_8 %= 64;
+    Bit8u op2_8 = i->Ib() & 0x3f;
 
     /* op1_64 is a register or memory reference */
     if (i->modC0()) {
@@ -1564,7 +1419,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
-    temp_CF = (op1_64 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
     op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
     set_CF(temp_CF);
 
@@ -1580,11 +1435,9 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
-    Bit32u op1_32, temp_CF;
-    Bit8u  op2_8;
+    Bit32u op1_32;
 
-    op2_8 = i->Ib();
-    op2_8 %= 32;
+    Bit8u op2_8 = i->Ib() & 0x1f;
 
     /* op1_32 is a register or memory reference */
     if (i->modC0()) {
@@ -1595,7 +1448,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
-    temp_CF = (op1_32 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
     op1_32 ^= (((Bit32u) 1) << op2_8);  /* toggle bit */
     set_CF(temp_CF);
 
@@ -1608,11 +1461,9 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       }
   }
   else { /* 16 bit operand size mode */
-    Bit16u op1_16, temp_CF;
-    Bit8u  op2_8;
+    Bit16u op1_16;
 
-    op2_8 = i->Ib();
-    op2_8 %= 16;
+    Bit8u op2_8 = i->Ib() & 0xf;
 
     /* op1_16 is a register or memory reference */
     if (i->modC0()) {
@@ -1623,7 +1474,7 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
-    temp_CF = (op1_16 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
     op1_16 ^= (((Bit16u) 1) << op2_8);  /* toggle bit */
     set_CF(temp_CF);
 
@@ -1635,25 +1486,17 @@ BX_CPU_C::BTC_EvIb(bxInstruction_c *i)
       Write_RMW_virtual_word(op1_16);
       }
   }
-#endif
 }
 
   void
 BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("BTR_EvIb: not available on <386"));
-  UndefinedOpcode(i);
-#else
-
 #if BX_SUPPORT_X86_64
   if (i->os64L()) { /* 64 bit operand size mode */
     /* for 64 bit operand size mode */
-    Bit64u op1_64, temp_CF;
-    Bit8u  op2_8;
+    Bit64u op1_64;
 
-    op2_8 = i->Ib();
-    op2_8 %= 64;
+    Bit8u op2_8 = i->Ib() & 0x3f;
 
     /* op1_64 is a register or memory reference */
     if (i->modC0()) {
@@ -1664,7 +1507,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
       }
 
-    temp_CF = (op1_64 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
     op1_64 &= ~(((Bit64u) 1) << op2_8);
 
     /* now write diff back to destination */
@@ -1680,11 +1523,9 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->os32L()) { /* 32 bit operand size mode */
     /* for 32 bit operand size mode */
-    Bit32u op1_32, temp_CF;
-    Bit8u  op2_8;
+    Bit32u op1_32;
 
-    op2_8 = i->Ib();
-    op2_8 %= 32;
+    Bit8u op2_8 = i->Ib() & 0x1f;
 
     /* op1_32 is a register or memory reference */
     if (i->modC0()) {
@@ -1695,7 +1536,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
       }
 
-    temp_CF = (op1_32 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
     op1_32 &= ~(((Bit32u) 1) << op2_8);
 
     /* now write diff back to destination */
@@ -1709,11 +1550,9 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
     set_CF(temp_CF);
   }
   else { /* 16 bit operand size mode */
-    Bit16u op1_16, temp_CF;
-    Bit8u  op2_8;
+    Bit16u op1_16;
 
-    op2_8 = i->Ib();
-    op2_8 %= 16;
+    Bit8u op2_8 = i->Ib() & 0xf;
 
     /* op1_16 is a register or memory reference */
     if (i->modC0()) {
@@ -1724,7 +1563,7 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
       }
 
-    temp_CF = (op1_16 >> op2_8) & 0x01;
+    bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
     op1_16 &= ~(((Bit16u) 1) << op2_8);
 
     /* now write diff back to destination */
@@ -1736,5 +1575,6 @@ BX_CPU_C::BTR_EvIb(bxInstruction_c *i)
       }
     set_CF(temp_CF);
   }
-#endif
 }
+
+#endif
