@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.42 2002-10-24 21:07:42 bdenney Exp $
+// $Id: ne2k.cc,v 1.43 2002-10-30 11:11:26 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
   put("NE2K");
   settype(NE2KLOG);
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.42 2002-10-24 21:07:42 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.43 2002-10-30 11:11:26 ptrumpet Exp $"));
   BX_NE2K_THIS s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -288,8 +288,9 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // have been initialised.
     //
     if (io_len > BX_NE2K_THIS s.remote_bytes)
-      {BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
-       return 0;
+      {
+       BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
+       //return 0;
       }
 
     //BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS s.remote_bytes));
@@ -1246,7 +1247,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.42 2002-10-24 21:07:42 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.43 2002-10-30 11:11:26 ptrumpet Exp $"));
 
 
   if (bx_options.ne2k.Ovalid->get ()) {
