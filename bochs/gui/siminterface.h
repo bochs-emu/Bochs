@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.26 2001-11-12 02:35:09 bdenney Exp $
+// $Id: siminterface.h,v 1.27 2001-11-14 00:23:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.26 2001-11-12 02:35:09 bdenney Exp $
+ * $Id: siminterface.h,v 1.27 2001-11-14 00:23:08 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -340,7 +340,7 @@ public:
   virtual int get_log_action (int mod, int level) {return -1;}
   virtual void set_log_action (int mod, int level, int action) {}
   virtual char *get_action_name (int action) {return 0;}
-  virtual char *get_log_level_name (int level) {return 0;}
+  virtual const char *get_log_level_name (int level) {return 0;}
   virtual int get_max_log_level () {return -1;}
   virtual void quit_sim (int clean) {}
   virtual int get_default_rc (char *path, int len) {return -1;}
@@ -358,7 +358,7 @@ public:
   // from the control panel.
 #define NOTIFY_CODE_LOGMSG  0x101
   virtual int LOCAL_notify (int code) {return -1;}
-  virtual int LOCAL_log_msg (char *prefix, int level, char *msg) {return -1;}
+  virtual int LOCAL_log_msg (const char *prefix, int level, char *msg) {return -1;}
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len) {return -1;}
   virtual int get_enabled () {return -1;}
   virtual void set_enabled (int enabled) {}

@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.34 2001-10-03 13:10:37 bdenney Exp $
+// $Id: siminterface.cc,v 1.35 2001-11-14 00:23:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.34 2001-10-03 13:10:37 bdenney Exp $
+ * $Id: siminterface.cc,v 1.35 2001-11-14 00:23:08 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -43,7 +43,7 @@ public:
   virtual int get_log_action (int mod, int level);
   virtual void set_log_action (int mod, int level, int action);
   virtual char *get_action_name (int action);
-  virtual char *get_log_level_name (int level);
+  virtual const char *get_log_level_name (int level);
   virtual int get_max_log_level ();
   virtual void quit_sim (int clean);
   virtual int get_default_rc (char *path, int len);
@@ -57,7 +57,7 @@ public:
   virtual void set_notify_callback (sim_interface_callback_t func);
   virtual int notify_return (int retcode);
   virtual int LOCAL_notify (int code);
-  virtual int LOCAL_log_msg (char *prefix, int level, char *msg);
+  virtual int LOCAL_log_msg (const char *prefix, int level, char *msg);
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
   virtual int get_enabled () { return enabled; }
   virtual void set_enabled (int enabled) { this->enabled = enabled; }
@@ -169,7 +169,7 @@ bx_real_sim_c::get_action_name (int action)
   return io->getaction (action);
 }
 
-char *
+const char *
 bx_real_sim_c::get_log_level_name (int level)
 {
   return io->getlevel (level);
@@ -289,10 +289,10 @@ bx_real_sim_c::LOCAL_notify (int code)
 
 // returns 0 for continue, 1 for alwayscontinue, 2 for die.
 int 
-bx_real_sim_c::LOCAL_log_msg (char *prefix, int level, char *msg)
+bx_real_sim_c::LOCAL_log_msg (const char *prefix, int level, char *msg)
 {
   //fprintf (stderr, "calling notify.\n");
-  notify_string_args[0] = prefix;
+  notify_string_args[0] = strdup(prefix);
   notify_int_args[1] = level;
   notify_string_args[2] = msg;
   int val = LOCAL_notify (NOTIFY_CODE_LOGMSG);
