@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.73 2004-07-01 22:18:20 vruppert Exp $
+// $Id: devices.cc,v 1.74 2004-07-03 08:20:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -106,7 +106,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.73 2004-07-01 22:18:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.74 2004-07-03 08:20:19 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -172,20 +172,11 @@ bx_devices_c::init(BX_MEM_C *newmem)
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();
 
-  // NE2000 NIC
-  if (bx_options.ne2k.Opresent->get ()) {
-#if BX_NE2K_SUPPORT
-    PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
-#else
-    BX_ERROR(("Bochs is not compiled with NE2K support"));
-#endif
-  }
-
   // PCI logic (i440FX)
   if (bx_options.Oi440FXSupport->get ()) {
 #if BX_PCI_SUPPORT
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
-    PLUG_load_plugin(pci2isa, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
     PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
 #if BX_PCI_VGA_SUPPORT
     PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
@@ -203,6 +194,15 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #endif
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
+#endif
+  }
+
+  // NE2000 NIC
+  if (bx_options.ne2k.Opresent->get ()) {
+#if BX_NE2K_SUPPORT
+    PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
+#else
+    BX_ERROR(("Bochs is not compiled with NE2K support"));
 #endif
   }
 
@@ -234,7 +234,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
   }
 
 #if BX_PCI_SUPPORT
-  if (pluginPciBridge) pluginPciBridge->init ();
+  pluginPciBridge->init ();
+  pluginPci2IsaBridge->init ();
 #endif
 
   /*--- VGA adapter ---*/
@@ -315,19 +316,6 @@ bx_devices_c::reset(unsigned type)
   if (bx_options.Oi440FXSupport->get ()) {
     pluginPciBridge->reset(type);
     pluginPci2IsaBridge->reset(type);
-    pluginPciIdeController->reset(type);
-#if BX_PCI_VGA_SUPPORT
-    pluginPciVgaAdapter->reset(type);
-#endif
-#if BX_PCI_DEV_SUPPORT
-    pluginPciDevAdapter->reset(type);
-#endif
-#if BX_PCI_USB_SUPPORT
-    pluginPciUSBAdapter->reset(type);
-#endif
-#if BX_PCI_PNIC_SUPPORT
-    if (pluginPciPNicAdapter) pluginPciPNicAdapter->reset(type);
-#endif
   }
 #endif
 #if BX_SUPPORT_IOAPIC
@@ -337,9 +325,6 @@ bx_devices_c::reset(unsigned type)
   pluginCmosDevice->reset(type);
   pluginDmaDevice->reset(type);
   pluginFloppyDevice->reset(type);
-#if BX_SUPPORT_SB16
-  if (pluginSB16Device) pluginSB16Device->reset(type);
-#endif
   pluginVgaDevice->reset(type);
   pluginPicDevice->reset(type);
   pit->reset(type);
@@ -347,10 +332,7 @@ bx_devices_c::reset(unsigned type)
 #if BX_IODEBUG_SUPPORT
   iodebug->reset(type);
 #endif
-#if BX_NE2K_SUPPORT
-  if (pluginNE2kDevice) pluginNE2kDevice->reset(type);
-#endif
-
+  // now reset optional plugins
   bx_reset_plugins(type);
 }
 
