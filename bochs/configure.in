@@ -523,13 +523,54 @@ if test "$want_readline" = yes; then
       fi
     ]
   )
+  AC_MSG_CHECKING(if readline works without -lcurses)
+  OLD_LIBS=$LIBS
+  LIBS="$LIBS -lreadline"
+  rl_without_curses_ok=yes
+  AC_TRY_RUN([
+    #include <stdio.h>
+    #include <readline/readline.h>
+    int main() { rl_initialize(); exit(0); }
+    ], 
+    [ AC_MSG_RESULT(yes) ],
+    [ 
+      AC_MSG_RESULT(no)
+      rl_without_curses_ok=no
+    ]
+  )
+  AC_MSG_CHECKING(if readline works with -lcurses)
+  LIBS="$LIBS -lcurses"
+  rl_with_curses_ok=yes
+  AC_TRY_RUN([
+    #include <stdio.h>
+    #include <readline/readline.h>
+    int main() { rl_initialize(); exit(0); }
+    ], 
+    [AC_MSG_RESULT(yes)],
+    [
+      AC_MSG_RESULT(no)
+      rl_with_curses_ok=no
+    ]
+  )
+  LIBS=$OLD_LIBS
+  if test "$rl_without_curses_ok" = no -a "$rl_with_curses_ok" = no; then
+    echo ERROR: readline enabled but it is broken, with or without the -lcurses link option
+    exit 1
+  elif test "$rl_without_curses_ok" = no; then
+    # we must add -lcurses!
+    if test "$READLINE_LIB" != ""; then
+      echo Adding -lcurses to your library list.
+      READLINE_LIB="$READLINE_LIB -lcurses"
+    fi
+  else
+    true # it worked without anything special
+  fi
 fi
   AC_SUBST(READLINE_LIB)
 
 AC_CHECK_HEADER(readline/history.h,
   AC_DEFINE(HAVE_READLINE_HISTORY_H)
   )
-
 
 AC_MSG_CHECKING(for loader support)
 AC_ARG_ENABLE(loader,
