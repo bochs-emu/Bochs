@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.19 2001-12-22 00:00:33 cbothamy Exp $
+// $Id: gui.h,v 1.20 2002-02-01 16:46:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -73,6 +73,7 @@ private:
   // And these are defined and used privately in gui.cc
   static void floppyA_handler(void);
   static void floppyB_handler(void);
+  static void cdromD_handler(void);
   static void reset_handler(void);
   static void power_handler(void);
   static void snapshot_handler(void);
@@ -81,8 +82,10 @@ private:
 
   Boolean floppyA_status;
   Boolean floppyB_status;
+  Boolean cdromD_status;
   unsigned floppyA_bmap_id, floppyA_eject_bmap_id, floppyA_hbar_id;
   unsigned floppyB_bmap_id, floppyB_eject_bmap_id, floppyB_hbar_id;
+  unsigned cdromD_bmap_id, cdromD_eject_bmap_id, cdromD_hbar_id;
   unsigned power_bmap_id,    power_hbar_id;
   unsigned reset_bmap_id,    reset_hbar_id;
   unsigned snapshot_bmap_id, snapshot_hbar_id;
@@ -91,8 +94,8 @@ private:
   };
 
 
-#define BX_MAX_PIXMAPS 10
-#define BX_MAX_HEADERBAR_ENTRIES 7
+#define BX_MAX_PIXMAPS 12
+#define BX_MAX_HEADERBAR_ENTRIES 8
 #define BX_HEADER_BAR_Y 32
 
 // align pixmaps towards left or right side of header bar

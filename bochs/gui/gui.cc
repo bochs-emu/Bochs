@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.24 2001-11-09 22:17:33 bdenney Exp $
+// $Id: gui.cc,v 1.25 2002-02-01 16:46:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -34,6 +34,7 @@
 #include "gui/bitmaps/power.h"
 #include "gui/bitmaps/snapshot.h"
 #include "gui/bitmaps/configbutton.h"
+#include "gui/bitmaps/cdromd.h"
 #if BX_WITH_MACOS
 #  include <Disks.h>
 #endif
@@ -66,6 +67,10 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_FLOPPYB_BMAP_X, BX_FLOPPYB_BMAP_Y);
   BX_GUI_THIS floppyB_eject_bmap_id = create_bitmap(bx_floppyb_eject_bmap,
                           BX_FLOPPYB_BMAP_X, BX_FLOPPYB_BMAP_Y);
+  BX_GUI_THIS cdromD_bmap_id = create_bitmap(bx_cdromd_bmap,
+                          BX_CDROMD_BMAP_X, BX_CDROMD_BMAP_Y);
+  BX_GUI_THIS cdromD_eject_bmap_id = create_bitmap(bx_cdromd_eject_bmap,
+                          BX_CDROMD_BMAP_X, BX_CDROMD_BMAP_Y);
   BX_GUI_THIS mouse_bmap_id = create_bitmap(bx_mouse_bmap,
                           BX_MOUSE_BMAP_X, BX_MOUSE_BMAP_Y);
   BX_GUI_THIS nomouse_bmap_id = create_bitmap(bx_nomouse_bmap,
@@ -99,6 +104,17 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
     BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_eject_bmap_id,
                           BX_GRAVITY_LEFT, floppyB_handler);
 
+  // CDROM
+  BX_GUI_THIS cdromD_status =
+    bx_devices.hard_drive->get_cd_media_status()
+    && bx_options.cdromd.Opresent->get ();
+  if (BX_GUI_THIS cdromD_status)
+    BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_bmap_id,
+                          BX_GRAVITY_LEFT, cdromD_handler);
+  else
+    BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_eject_bmap_id,
+                          BX_GRAVITY_LEFT, cdromD_handler);
+
   // Mouse button
   if (bx_options.Omouse_enabled->get ())
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS mouse_bmap_id,
@@ -131,6 +147,9 @@ bx_gui_c::update_floppy_status_buttons (void) {
   BX_GUI_THIS floppyB_status = 
       bx_devices.floppy->get_media_status (1)
       && bx_options.floppyb.Oinitial_status->get ();
+  BX_GUI_THIS cdromD_status =
+    bx_devices.hard_drive->get_cd_media_status()
+    && bx_options.cdromd.Opresent->get ();
   if (BX_GUI_THIS floppyA_status)
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
   else {
@@ -153,6 +172,11 @@ bx_gui_c::update_floppy_status_buttons (void) {
 #endif
     replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_eject_bmap_id);
     }
+  if (BX_GUI_THIS cdromD_status)
+    replace_bitmap(BX_GUI_THIS cdromD_hbar_id, BX_GUI_THIS cdromD_bmap_id);
+  else {
+    replace_bitmap(BX_GUI_THIS cdromD_hbar_id, BX_GUI_THIS cdromD_eject_bmap_id);
+    }
 }
 
   void
@@ -168,6 +192,14 @@ bx_gui_c::floppyB_handler(void)
 {
   BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
   bx_devices.floppy->set_media_status(1, BX_GUI_THIS floppyB_status);
+  BX_GUI_THIS update_floppy_status_buttons ();
+}
+
+  void
+bx_gui_c::cdromD_handler(void)
+{
+  BX_GUI_THIS cdromD_status =
+    bx_devices.hard_drive->set_cd_media_status(!BX_GUI_THIS cdromD_status);
   BX_GUI_THIS update_floppy_status_buttons ();
 }
 

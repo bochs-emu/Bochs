@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.26 2001-12-10 18:37:39 bdenney Exp $
+// $Id: cdrom.cc,v 1.27 2002-02-01 16:46:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -199,9 +199,10 @@ cdrom_interface::cdrom_interface(char *dev)
   }
   using_file=0;
 }
+
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.26 2001-12-10 18:37:39 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.27 2002-02-01 16:46:27 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -215,13 +216,14 @@ cdrom_interface::~cdrom_interface(void)
 }
 
   bool
-cdrom_interface::insert_cdrom()
+cdrom_interface::insert_cdrom(char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
   ssize_t ret;
   struct stat stat_buf;
 
   // Load CD-ROM. Returns false if CD is not ready.
+  if (dev != NULL) path = strdup(dev);
   BX_INFO (("load cdrom with path=%s", path));
 #ifdef WIN32
     char drive[256];

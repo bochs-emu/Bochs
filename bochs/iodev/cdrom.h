@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: cdrom.h,v 1.7 2002-02-01 16:46:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -35,7 +35,7 @@ public:
   void init(void);
 
   // Load CD-ROM. Returns false if CD is not ready.
-  bool insert_cdrom();
+  bool insert_cdrom(char *dev = NULL);
 
   // Logically eject the CD.
   void eject_cdrom();
