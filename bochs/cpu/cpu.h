@@ -483,6 +483,8 @@ typedef struct {
   } bx_gen_reg_t;
 #endif
 
+#include "apic.h"
+
 
 
 #if BX_USE_SMF == 0
@@ -1350,6 +1352,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 3
   BX_SMF inline Boolean protected_mode(void);
   BX_SMF inline Boolean v8086_mode(void);
+#endif
+#if BX_CPU_LEVEL >= 6
+  bx_apic_c local_apic;
 #endif
   };
 
