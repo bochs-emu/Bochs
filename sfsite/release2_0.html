@@ -33,6 +33,9 @@ allow you to compile Bochs with support for many options and load the
 pieces that you want at runtime.
 </ul> 
 
+Here is the current <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/bochs/bochs/CHANGES?rev=HEAD&content-type=text/vnd.viewcvs-markup">Change Log</a>.  As of December 18 it was about 80% complete.  
+<p>
+
 <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>The Release
 Process </b></font><BR>
 
@@ -77,6 +80,55 @@ a Pre-Release </b></font><BR>
 <th>Version</th>
 <th>Description</th>
 <th>Download</th>
+
+<tr>
+<td rowspan=6>2002-12-15</td>
+<td rowspan=6>Bochs 2.0.pre4</td>
+<td>Bochs source code</td>
+<td><a href="http://osdn.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.pre4.tar.gz">2.8meg</a></td>
+</tr>
+
+<tr>
+<td>Source RPM for Linux (all architectures)</td>
+<td><a href="http://osdn.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.pre4.src.rpm">2.8meg</a></td>
+</tr>
+
+<tr>
+<td>Binary RPM for x86 Linux.  This RPM was built on a Redhat 7.3 system.  It
+was compiled with plugins, CDROM, SB emulation, NE2000, VBE, 
+all speed optimizations, PCI, MMX, SSE, and SSE2.  The default display
+library is X11, but you can also select between SDL, term, RFB, wxWindows, 
+svgalib, or no gui using the display_library option in bochsrc.
+</td>
+<td><a href="http://osdn.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.pre4.i386.rpm">3.2meg</a></td>
+</tr>
+
+<tr>
+<td>ZIP file with Win32 binaries.  The binaries were compiled with support for
+CDROM, SB emulation, NE2000, VBE, and all speed optimizations.  There are
+two Bochs executables: bochs.exe without the debugger, and bochsdbg.exe
+which is compiled with the Bochs debugger.
+</td>
+<td><a href="http://osdn.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.pre4.win32-bin.zip">2.6meg</a></td>
+</tr>
+
+<tr>
+<td>.EXE installer package for Win32 with all the same same binaries as the ZIP.
+The NSIS installer is very new, so please test out every little feature to see
+if anything needs to be improved.  The installer work was completed by Michael
+Rich.
+</td>
+<td><a href="http://osdn.dl.sourceforge.net/sourceforge/bochs/Bochs-2.0.pre4.exe">2.6meg</a></td>
+</tr>
+
+<tr>
+<td>ZIP file with Bochs source code configured for MS VC++ 6.0 (win32).  
+Download this file if you want to rebuild Bochs in VC++ yourself, perhaps
+with different options.  You can unzip this file, load up the MS VC++ workspace
+"bochs.dsw" and just click on Build.
+</td>
+<td><a href="http://osdn.dl.sourceforge.net/sourceforge/bochs/bochs-2.0.pre4.win32-src.zip">2.3meg</a></td>
+</tr>
 
 <tr>
 <td rowspan=6>2002-12-05</td>
