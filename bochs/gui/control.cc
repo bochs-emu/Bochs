@@ -1,6 +1,10 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: control.cc,v 1.31 2001-10-03 13:10:37 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.30 2001-06-21 20:50:30 bdenney Exp $
+ * $Id: control.cc,v 1.31 2001-10-03 13:10:37 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: rombios.c,v 1.17 2001-10-03 13:10:37 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -267,7 +271,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.16 2001-09-19 15:30:44 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.17 2001-10-03 13:10:37 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: cdrom.cc,v 1.20 2001-10-03 13:10:38 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -189,7 +193,7 @@ cdrom_interface::cdrom_interface(char *dev)
 }
 void
 cdrom_interface::init(void) {
-    BX_DEBUG(("Init $Id: cdrom.cc,v 1.19 2001-08-14 05:01:49 bdenney Exp $"));
+    BX_DEBUG(("Init $Id: cdrom.cc,v 1.20 2001-10-03 13:10:38 bdenney Exp $"));
 	BX_INFO(("file = '%s'",path));
 }
 

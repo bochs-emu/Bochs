@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: init.cc,v 1.14 2001-10-03 13:10:37 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -46,7 +50,7 @@ BX_CPU_C::BX_CPU_C()
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.13 2001-08-10 18:42:24 bdenney Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.14 2001-10-03 13:10:37 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC

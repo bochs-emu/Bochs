@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: harddrv.cc,v 1.37 2001-10-03 13:10:38 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -100,7 +104,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.36 2001-09-29 02:08:11 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.37 2001-10-03 13:10:38 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 

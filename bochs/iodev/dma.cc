@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: dma.cc,v 1.11 2001-10-03 13:10:38 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -55,7 +59,7 @@ bx_dma_c::~bx_dma_c(void)
 bx_dma_c::init(bx_devices_c *d)
 {
   unsigned c;
-	BX_DEBUG(("Init $Id: dma.cc,v 1.10 2001-06-27 20:27:49 fries Exp $"));
+	BX_DEBUG(("Init $Id: dma.cc,v 1.11 2001-10-03 13:10:38 bdenney Exp $"));
 
   BX_DMA_THIS devices = d;
 

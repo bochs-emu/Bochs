@@ -1,6 +1,10 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: siminterface.cc,v 1.34 2001-10-03 13:10:37 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.33 2001-09-28 06:02:12 bdenney Exp $
+ * $Id: siminterface.cc,v 1.34 2001-10-03 13:10:37 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs

@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: devices.cc,v 1.18 2001-10-03 13:10:38 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -101,7 +105,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.17 2001-09-24 12:09:45 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.18 2001-10-03 13:10:38 bdenney Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first

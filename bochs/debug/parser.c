@@ -32,7 +32,7 @@ static char yysccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93";
 #define yyname bxname
 #define yyrule bxrule
 #define YYPREFIX "bx"
-#line 2 "parser.y"
+#line 6 "parser.y"
 #include <stdio.h>
 #include <stdlib.h>
 #include "debug.h"
@@ -40,7 +40,7 @@ static char yysccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93";
 /* %left '*' '/'*/
 /* %right*/
 /* %nonassoc UMINUS*/
-#line 12 "parser.y"
+#line 16 "parser.y"
 typedef union {
   char    *sval;
   Bit32u   uval;
@@ -691,191 +691,191 @@ yyreduce:
     switch (yyn)
     {
 case 36:
-#line 150 "parser.y"
+#line 154 "parser.y"
 {
       }
 break;
 case 37:
-#line 156 "parser.y"
+#line 160 "parser.y"
 {
 		bx_dbg_diff_memory();
 		free(yyvsp[-1].sval);
 	}
 break;
 case 38:
-#line 161 "parser.y"
+#line 165 "parser.y"
 {
 		bx_dbg_sync_memory(1);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 39:
-#line 166 "parser.y"
+#line 170 "parser.y"
 {
 		bx_dbg_sync_memory(0);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 40:
-#line 171 "parser.y"
+#line 175 "parser.y"
 {
 		bx_dbg_sync_cpu(1);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 41:
-#line 176 "parser.y"
+#line 180 "parser.y"
 {
 		bx_dbg_sync_cpu(0);
 		free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 42:
-#line 181 "parser.y"
+#line 185 "parser.y"
 {
 		free(yyvsp[-2].sval);
 		bx_dbg_fast_forward(yyvsp[-1].uval);
 	}
 break;
 case 43:
-#line 186 "parser.y"
+#line 190 "parser.y"
 {
 	}
 break;
 case 44:
-#line 189 "parser.y"
+#line 193 "parser.y"
 {
 		free(yyvsp[-4].sval);
 		bx_dbg_info_address(yyvsp[-3].uval, yyvsp[-1].uval);
         }
 break;
 case 45:
-#line 194 "parser.y"
+#line 198 "parser.y"
 {
         }
 break;
 case 46:
-#line 197 "parser.y"
+#line 201 "parser.y"
 {
         }
 break;
 case 47:
-#line 202 "parser.y"
+#line 206 "parser.y"
 { yyval.uval = 1; }
 break;
 case 48:
-#line 203 "parser.y"
+#line 207 "parser.y"
 { yyval.uval = 0; }
 break;
 case 49:
-#line 204 "parser.y"
+#line 208 "parser.y"
 { yyval.uval = 2; }
 break;
 case 50:
-#line 205 "parser.y"
+#line 209 "parser.y"
 { yyval.uval = 3; }
 break;
 case 51:
-#line 206 "parser.y"
+#line 210 "parser.y"
 { yyval.uval = 4; }
 break;
 case 52:
-#line 207 "parser.y"
+#line 211 "parser.y"
 { yyval.uval = 5; }
 break;
 case 53:
-#line 212 "parser.y"
+#line 216 "parser.y"
 {
         bx_dbg_timebp_command(0, yyvsp[-1].ulval);
 	free(yyvsp[-2].sval);
 	}
 break;
 case 54:
-#line 217 "parser.y"
+#line 221 "parser.y"
 {
         bx_dbg_timebp_command(1, yyvsp[-1].ulval);
 	free(yyvsp[-2].sval);
 	}
 break;
 case 55:
-#line 225 "parser.y"
+#line 229 "parser.y"
 {
           bx_dbg_record_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 56:
-#line 233 "parser.y"
+#line 237 "parser.y"
 {
           bx_dbg_playback_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 57:
-#line 241 "parser.y"
+#line 245 "parser.y"
 {
           bx_dbg_modebp_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 58:
-#line 246 "parser.y"
+#line 250 "parser.y"
 {
           bx_dbg_modebp_command(0);
           free(yyvsp[-1].sval);
           }
 break;
 case 59:
-#line 254 "parser.y"
+#line 258 "parser.y"
 {
           bx_dbg_show_command(yyvsp[-1].sval);
           free(yyvsp[-2].sval); free(yyvsp[-1].sval);
           }
 break;
 case 60:
-#line 259 "parser.y"
+#line 263 "parser.y"
 {
           bx_dbg_show_command(0);
           free(yyvsp[-1].sval);
           }
 break;
 case 61:
-#line 267 "parser.y"
+#line 271 "parser.y"
 {
         bx_dbg_ptime_command();
         free(yyvsp[-1].sval);
 	}
 break;
 case 62:
-#line 275 "parser.y"
+#line 279 "parser.y"
 {
         bx_dbg_trace_on_command();
         free(yyvsp[-1].sval);
 	}
 break;
 case 63:
-#line 283 "parser.y"
+#line 287 "parser.y"
 {
         bx_dbg_trace_off_command();
         free(yyvsp[-1].sval);
 	}
 break;
 case 64:
-#line 291 "parser.y"
+#line 295 "parser.y"
 {
           bx_dbg_print_stack_command(16);
           free(yyvsp[-1].sval);
 	  }
 break;
 case 65:
-#line 296 "parser.y"
+#line 300 "parser.y"
 {
           bx_dbg_print_stack_command(yyvsp[-1].uval);
           free(yyvsp[-2].sval);
 	  }
 break;
 case 66:
-#line 304 "parser.y"
+#line 308 "parser.y"
 {
           watchpoint_continue = 0;
 	  fprintf(stderr, "Will stop on watch points\n");
@@ -883,7 +883,7 @@ case 66:
           }
 break;
 case 67:
-#line 310 "parser.y"
+#line 314 "parser.y"
 {
           watchpoint_continue = 1;
           fprintf(stderr, "Will not stop on watch points (they will still be logged)\n");
@@ -891,327 +891,327 @@ case 67:
           }
 break;
 case 68:
-#line 316 "parser.y"
+#line 320 "parser.y"
 {
           bx_dbg_watch(-1, 0);
           free(yyvsp[-1].sval);
           }
 break;
 case 69:
-#line 321 "parser.y"
+#line 325 "parser.y"
 {
           bx_dbg_unwatch(-1, 0);
           free(yyvsp[-1].sval);
           }
 break;
 case 70:
-#line 326 "parser.y"
+#line 330 "parser.y"
 {
           bx_dbg_watch(1, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 71:
-#line 331 "parser.y"
+#line 335 "parser.y"
 {
           bx_dbg_unwatch(1, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 72:
-#line 336 "parser.y"
+#line 340 "parser.y"
 {
           bx_dbg_watch(0, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 73:
-#line 341 "parser.y"
+#line 345 "parser.y"
 {
           bx_dbg_unwatch(0, yyvsp[-1].uval);
           free(yyvsp[-3].sval); free(yyvsp[-2].sval);
           }
 break;
 case 74:
-#line 349 "parser.y"
+#line 353 "parser.y"
 {
 	bx_dbg_symbol_command(yyvsp[-1].sval, 0, 0);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 75:
-#line 354 "parser.y"
+#line 358 "parser.y"
 {
 	bx_dbg_symbol_command(yyvsp[-2].sval, 0, yyvsp[-1].uval);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 76:
-#line 359 "parser.y"
+#line 363 "parser.y"
 {
 	bx_dbg_symbol_command(yyvsp[-2].sval, 1, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 77:
-#line 367 "parser.y"
+#line 371 "parser.y"
 {
         bx_dbg_where_command();
         free(yyvsp[-1].sval);
         }
 break;
 case 78:
-#line 375 "parser.y"
+#line 379 "parser.y"
 {
         bx_dbg_print_string_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 79:
-#line 383 "parser.y"
+#line 387 "parser.y"
 {
         bx_dbg_continue_command();
         free(yyvsp[-1].sval);
         }
 break;
 case 80:
-#line 391 "parser.y"
+#line 395 "parser.y"
 {
         bx_dbg_stepN_command(1);
         free(yyvsp[-1].sval);
         }
 break;
 case 81:
-#line 396 "parser.y"
+#line 400 "parser.y"
 {
         bx_dbg_stepN_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 82:
-#line 404 "parser.y"
+#line 408 "parser.y"
 {
         bx_dbg_set_command(yyvsp[-3].sval, yyvsp[-2].sval, yyvsp[-1].sval);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 83:
-#line 409 "parser.y"
+#line 413 "parser.y"
 {
         bx_dbg_set_command(yyvsp[-3].sval, yyvsp[-2].sval, yyvsp[-1].sval);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 84:
-#line 414 "parser.y"
+#line 418 "parser.y"
 {
         bx_dbg_set_symbol_command(yyvsp[-3].sval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 85:
-#line 422 "parser.y"
+#line 426 "parser.y"
 {
         bx_dbg_vbreakpoint_command(0, 0, 0);
         free(yyvsp[-1].sval);
         }
 break;
 case 86:
-#line 427 "parser.y"
+#line 431 "parser.y"
 {
         bx_dbg_vbreakpoint_command(1, yyvsp[-3].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval);
         }
 break;
 case 87:
-#line 432 "parser.y"
+#line 436 "parser.y"
 {
         bx_dbg_lbreakpoint_command(0, 0);
         free(yyvsp[-1].sval);
         }
 break;
 case 88:
-#line 437 "parser.y"
+#line 441 "parser.y"
 {
         bx_dbg_lbreakpoint_command(1, yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 89:
-#line 442 "parser.y"
+#line 446 "parser.y"
 {
         bx_dbg_pbreakpoint_command(0, 0);
         free(yyvsp[-1].sval);
         }
 break;
 case 90:
-#line 447 "parser.y"
+#line 451 "parser.y"
 {
         bx_dbg_pbreakpoint_command(1, yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 91:
-#line 452 "parser.y"
+#line 456 "parser.y"
 {
         bx_dbg_pbreakpoint_command(1, yyvsp[-1].uval);
         free(yyvsp[-3].sval);
         }
 break;
 case 92:
-#line 460 "parser.y"
+#line 464 "parser.y"
 {
         bx_dbg_info_bpoints_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 93:
-#line 465 "parser.y"
+#line 469 "parser.y"
 {
         bx_dbg_info_program_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 94:
-#line 470 "parser.y"
+#line 474 "parser.y"
 {
         bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 95:
-#line 475 "parser.y"
+#line 479 "parser.y"
 {
         bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 96:
-#line 480 "parser.y"
+#line 484 "parser.y"
 {
         bx_dbg_info_registers_command(BX_INFO_CPU_REGS | BX_INFO_FPU_REGS);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 97:
-#line 485 "parser.y"
+#line 489 "parser.y"
 {
         bx_dbg_info_dirty_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
 	}
 break;
 case 98:
-#line 490 "parser.y"
+#line 494 "parser.y"
 {
         bx_dbg_info_idt_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 99:
-#line 495 "parser.y"
+#line 499 "parser.y"
 {
         bx_dbg_info_gdt_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 100:
-#line 500 "parser.y"
+#line 504 "parser.y"
 {
         bx_dbg_info_ldt_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 101:
-#line 505 "parser.y"
+#line 509 "parser.y"
 {
         bx_dbg_info_tss_command(yyvsp[-1].uval_range);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 102:
-#line 510 "parser.y"
+#line 514 "parser.y"
 {
         bx_dbg_info_linux_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 103:
-#line 515 "parser.y"
+#line 519 "parser.y"
 {
         bx_dbg_info_control_regs_command();
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 104:
-#line 520 "parser.y"
+#line 524 "parser.y"
 {
         bx_dbg_info_ne2k(-1, -1);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 105:
-#line 525 "parser.y"
+#line 529 "parser.y"
 {
         free(yyvsp[-4].sval); free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         bx_dbg_info_ne2k(yyvsp[-1].uval, -1);
         }
 break;
 case 106:
-#line 530 "parser.y"
+#line 534 "parser.y"
 {
         free(yyvsp[-6].sval); free(yyvsp[-5].sval); free(yyvsp[-4].sval); free(yyvsp[-2].sval);
         bx_dbg_info_ne2k(yyvsp[-3].uval, yyvsp[-1].uval);
         }
 break;
 case 107:
-#line 537 "parser.y"
+#line 541 "parser.y"
 { yyval.uval = EMPTY_ARG; }
 break;
 case 109:
-#line 541 "parser.y"
+#line 545 "parser.y"
 { yyval.uval_range = make_num_range (EMPTY_ARG, EMPTY_ARG); }
 break;
 case 111:
-#line 546 "parser.y"
+#line 550 "parser.y"
 {
     yyval.uval_range = make_num_range (yyvsp[0].uval, yyvsp[0].uval);
   }
 break;
 case 112:
-#line 551 "parser.y"
+#line 555 "parser.y"
 {
     yyval.uval_range = make_num_range (yyvsp[-1].uval, yyvsp[0].uval);
   }
 break;
 case 113:
-#line 556 "parser.y"
+#line 560 "parser.y"
 {
     yyval.uval_range = make_num_range (yyvsp[-2].uval, yyvsp[0].uval);
   }
 break;
 case 114:
-#line 563 "parser.y"
+#line 567 "parser.y"
 {
         bx_dbg_dump_cpu_command();
         free(yyvsp[-1].sval);
         }
 break;
 case 115:
-#line 571 "parser.y"
+#line 575 "parser.y"
 {
         bx_dbg_del_breakpoint_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 116:
-#line 579 "parser.y"
+#line 583 "parser.y"
 {
 	  bx_dbg_quit_command();
 	  free(yyvsp[-1].sval);
         }
 break;
 case 117:
-#line 588 "parser.y"
+#line 592 "parser.y"
 {
         bx_dbg_examine_command(yyvsp[-3].sval, yyvsp[-2].sval,1, yyvsp[-1].uval,1, 0);
 #if BX_NUM_SIMULATORS >= 2
@@ -1221,7 +1221,7 @@ case 117:
         }
 break;
 case 118:
-#line 596 "parser.y"
+#line 600 "parser.y"
 {
         bx_dbg_examine_command(yyvsp[-2].sval, yyvsp[-1].sval,1, 0,0, 0);
 #if BX_NUM_SIMULATORS >= 2
@@ -1231,7 +1231,7 @@ case 118:
         }
 break;
 case 119:
-#line 604 "parser.y"
+#line 608 "parser.y"
 {
         /*FIXME HanishKVC This method of hunting thro all the */
         /*      simulators may be better than using 2 calls if */
@@ -1246,7 +1246,7 @@ case 119:
         }
 break;
 case 120:
-#line 617 "parser.y"
+#line 621 "parser.y"
 {
         /*FIXME HanishKVC This method of hunting thro all the */
         /*      simulators may be better than using 2 calls if */
@@ -1261,140 +1261,140 @@ case 120:
         }
 break;
 case 121:
-#line 633 "parser.y"
+#line 637 "parser.y"
 {
         bx_dbg_setpmem_command(yyvsp[-3].uval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval);
         }
 break;
 case 122:
-#line 641 "parser.y"
+#line 645 "parser.y"
 {
         bx_dbg_query_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 123:
-#line 649 "parser.y"
+#line 653 "parser.y"
 {
         bx_dbg_take_command(yyvsp[-1].sval, 1);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 124:
-#line 654 "parser.y"
+#line 658 "parser.y"
 {
         bx_dbg_take_command(yyvsp[-2].sval, yyvsp[-1].uval);
         free(yyvsp[-3].sval); free(yyvsp[-2].sval);
         }
 break;
 case 125:
-#line 659 "parser.y"
+#line 663 "parser.y"
 {
         bx_dbg_take_command(yyvsp[-1].sval, 1);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 126:
-#line 667 "parser.y"
+#line 671 "parser.y"
 {
         bx_dbg_set_cpu_command();
         free(yyvsp[-1].sval);
         }
 break;
 case 127:
-#line 675 "parser.y"
+#line 679 "parser.y"
 {
         bx_dbg_disassemble_command(yyvsp[-1].uval_range);
         free(yyvsp[-2].sval);
         }
 break;
 case 128:
-#line 683 "parser.y"
+#line 687 "parser.y"
 {
         bx_dbg_instrument_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 129:
-#line 688 "parser.y"
+#line 692 "parser.y"
 {
         bx_dbg_instrument_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 130:
-#line 693 "parser.y"
+#line 697 "parser.y"
 {
         bx_dbg_instrument_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 131:
-#line 698 "parser.y"
+#line 702 "parser.y"
 {
         bx_dbg_instrument_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 132:
-#line 706 "parser.y"
+#line 710 "parser.y"
 {
         bx_dbg_loader_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 133:
-#line 714 "parser.y"
+#line 718 "parser.y"
 {
         bx_dbg_doit_command(yyvsp[-1].uval);
         free(yyvsp[-2].sval);
         }
 break;
 case 134:
-#line 722 "parser.y"
+#line 726 "parser.y"
 {
         bx_dbg_crc_command(yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-3].sval);
         }
 break;
 case 135:
-#line 730 "parser.y"
+#line 734 "parser.y"
 {
         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 136:
-#line 735 "parser.y"
+#line 739 "parser.y"
 {
         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 137:
-#line 740 "parser.y"
+#line 744 "parser.y"
 {
         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 138:
-#line 745 "parser.y"
+#line 749 "parser.y"
 {
         bx_dbg_maths_command(yyvsp[-3].sval, yyvsp[-2].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval); free(yyvsp[-3].sval);
         }
 break;
 case 139:
-#line 750 "parser.y"
+#line 754 "parser.y"
 {
         bx_dbg_maths_expression_command(yyvsp[-1].sval);
         free(yyvsp[-2].sval); free(yyvsp[-1].sval);
         }
 break;
 case 140:
-#line 757 "parser.y"
+#line 761 "parser.y"
 {
         bx_dbg_v2l_command(yyvsp[-3].uval, yyvsp[-1].uval);
         free(yyvsp[-4].sval);

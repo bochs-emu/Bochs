@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: keyboard.cc,v 1.34 2001-10-03 13:10:38 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -57,7 +61,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.33 2001-10-02 18:38:02 fries Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.34 2001-10-03 13:10:38 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,7 +96,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.33 2001-10-02 18:38:02 fries Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.34 2001-10-03 13:10:38 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;

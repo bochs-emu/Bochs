@@ -1,6 +1,10 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: siminterface.h,v 1.25 2001-10-03 13:10:37 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.24 2001-08-16 02:00:31 bdenney Exp $
+ * $Id: siminterface.h,v 1.25 2001-10-03 13:10:37 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions

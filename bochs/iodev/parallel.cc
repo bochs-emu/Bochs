@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: parallel.cc,v 1.8 2001-10-03 13:10:38 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -49,7 +53,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-	BX_DEBUG(("Init $Id: parallel.cc,v 1.7 2001-06-27 20:27:49 fries Exp $"));
+	BX_DEBUG(("Init $Id: parallel.cc,v 1.8 2001-10-03 13:10:38 bdenney Exp $"));
   BX_PAR_THIS devices = d;
 
 #if 0

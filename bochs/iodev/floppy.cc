@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: floppy.cc,v 1.24 2001-10-03 13:10:38 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -80,7 +84,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c(void)
   void
 bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-	BX_DEBUG(("Init $Id: floppy.cc,v 1.23 2001-10-01 17:23:45 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: floppy.cc,v 1.24 2001-10-03 13:10:38 bdenney Exp $"));
   BX_FD_THIS devices = d;
 
   BX_FD_THIS devices->register_irq(6, "Floppy Drive");
