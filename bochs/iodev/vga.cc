@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.86 2003-07-19 21:44:37 vruppert Exp $
+// $Id: vga.cc,v 1.87 2003-07-27 17:50:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1248,8 +1248,11 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
   if (needs_update) {
     BX_VGA_THIS s.vga_mem_updated = 1;
     // Mark all video as updated so the changes will go through
-    if ((BX_VGA_THIS s.graphics_ctrl.graphics_alpha) ||
-        (BX_VGA_THIS s.vbe_enabled)) {
+    if ((BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
+#if BX_SUPPORT_VBE  
+        || (BX_VGA_THIS s.vbe_enabled)
+#endif
+       ) {
       for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
         for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
           SET_TILE_UPDATED (xti, yti, 1);
