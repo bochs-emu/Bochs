@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.41 2001-12-22 00:00:33 cbothamy Exp $
+// $Id: keyboard.cc,v 1.42 2002-01-08 19:00:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.41 2001-12-22 00:00:33 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.42 2002-01-08 19:00:06 vruppert Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.41 2001-12-22 00:00:33 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.42 2002-01-08 19:00:06 vruppert Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -586,7 +586,6 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
 bx_keyb_c::gen_scancode(Bit32u   key)
 {
   unsigned char *scancode;
-  static Boolean alt_pressed = 0;
   Bit8u  i;
 
   BX_DEBUG(( "gen_scancode %lld %x", bx_pc_system.time_ticks(), key));
