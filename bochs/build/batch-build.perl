@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.3 2002-09-16 13:09:50 bdenney Exp $
+# $Id: batch-build.perl,v 1.4 2002-09-18 04:12:12 bdenney Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -33,48 +33,108 @@ EOF
 }
 
 $DEBUG=0;
+
+$TEST_STANDARD = 1;
+$TEST_GUIS = 1;
+$TEST_CPU = 1;
+$TEST_SMP = 1;
+$TEST_IODEV = 1;
+$TEST_PCI = 1;
+$TEST_X86_64 = 1;
+
 $pwd = `pwd`;
 chop $pwd;
 
 # create all the configurations that we should test.  The first argument
 # is the configuration name, which must be a valid directory name.  To be
 # safe, don't put spaces, slashes, ".", or ".." in here.
-add_configuration ('normal', 
-  '');
-add_configuration ('dbg',
-  '--enable-debugger');
+if ($TEST_STANDARD) {
+  add_configuration ('normal', 
+    '');
+  add_configuration ('dbg',
+    '--enable-debugger');
+}
+if ($TEST_GUIS) {
+  # test with various gui options
+  add_configuration ('wx',
+    '--with-wx');
+  add_configuration ('wx-d',
+    '--with-wx --enable-debugger --disable-readline');
+  add_configuration ('nogui',
+    '--with-nogui');
+  add_configuration ('nogui-d',
+    '--with-nogui --enable-debugger');
+  add_configuration ('sdl',
+    '--with-sdl');
+  add_configuration ('sdl-d',
+    '--with-sdl --enable-debugger');
+  add_configuration ('term',
+    '--with-term');
+  add_configuration ('term-d',
+    '--with-term --enable-debugger');
+  add_configuration ('rfb',
+    '--with-rfb');
+  add_configuration ('rfb-d',
+    '--with-rfb --enable-debugger');
+}
+
+if ($TEST_CPU) {
+# test with various cpu options
+add_configuration ('i386',
+  '--enable-cpu-level=3');
+add_configuration ('i486',
+  '--enable-cpu-level=4');
+add_configuration ('i586',
+  '--enable-cpu-level=5');
+add_configuration ('i686',
+  '--enable-cpu-level=6');
+add_configuration ('4meg-pages',
+  '--enable-4meg-pages');
+add_configuration ('pae',
+  '--enable-pae');
+add_configuration ('g2h-tlb',
+  '--enable-guest2host-tlb');
+add_configuration ('repeat',
+  '--enable-repeat-speedups');
+add_configuration ('globalpg',
+  '--enable-global-pages');
+add_configuration ('fetchdecode',
+  '--enable-fetchdecode-cache');
+add_configuration ('cpuopt',
+  '--enable-4meg-pages --enable-pae --enable-guest2host-tlb --enable-repeat-speedups --enable-global-pages');
+}
+
+if ($TEST_SMP) {
+# smp
 add_configuration ('smp2',
   '--enable-processors=2');
 add_configuration ('smp2-d',
-  '--enable-debugger --enable-processors=2');
+  '--enable-processors=2 --enable-debugger');
+add_configuration ('smp2-wx',
+  '--enable-processors=2 --with-wx');
+add_configuration ('smp2-wx-d',
+  '--enable-processors=2 --with-wx --enable-debugger --disable-readline');
+}
+
+if ($TEST_X86_64) {
+# test x86-64
 add_configuration ('64bit',
   '--enable-x86-64');
 add_configuration ('64bit-d',
   '--enable-x86-64 --enable-debugger');
-add_configuration ('wx',
-  '--with-wx');
-add_configuration ('wx-d',
-  '--with-wx --enable-debugger --disable-readline');
-add_configuration ('wx-64bit',
-  '--with-wx --enable-x86-64');
-add_configuration ('wx-64bit-d',
-  '--with-wx --enable-x86-64 --enable-debugger --disable-readline');
-add_configuration ('nogui',
-  '--with-nogui');
-add_configuration ('nogui-d',
-  '--with-nogui --enable-debugger');
-add_configuration ('sdl',
-  '--with-sdl');
-add_configuration ('sdl-d',
-  '--with-sdl --enable-debugger');
-add_configuration ('term',
-  '--with-term');
-add_configuration ('term-d',
-  '--with-term --enable-debugger');
-add_configuration ('rfb',
-  '--with-rfb');
-add_configuration ('rfb-d',
-  '--with-rfb --enable-debugger');
+add_configuration ('64bit-wx',
+  '--enable-x86-64 --with-wx');
+add_configuration ('64bit-wx-d',
+  '--enable-x86-64 --with-wx --enable-debugger --disable-readline');
+}
+
+if ($TEST_PCI) {
+# test pci
+add_configuration ('pci',
+  '--enable-pci');
+add_configuration ('pci-d',
+  '--enable-pci --enable-debugger');
+}
 
 my $nohup = 0;
 my $parallel = 0;
@@ -117,6 +177,10 @@ EOF
   }
   exit 1;
 }
+
+$x = 50; $y = 50;
+$xinc = 40;
+$yinc = 40;
 
 for (my $i=0; $i <= $#config_names; $i++) {
   my $name = "build-$config_names[$i]";
@@ -184,7 +248,10 @@ exit 0
 XTI_EOF
     close XTI;
     chmod 0755, "$name/xterm-init.sh";
-    $startcmd = "xterm -title $name -name $name -e ./xterm-init.sh";
+    $geometry = "-geom +$x+$y";
+    $x+=$xinc; 
+    $y+=$yinc;
+    $startcmd = "xterm -title $name -name $name $geometry -e ./xterm-init.sh";
   }
 
   $cmd = "$gotodir && $startcmd";
