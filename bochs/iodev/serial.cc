@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.21 2002-06-04 21:35:08 vruppert Exp $
+// $Id: serial.cc,v 1.22 2002-08-24 17:11:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,12 +76,13 @@ bx_serial_c::bx_serial_c(void)
 {
   put("SER");
   settype(SERLOG);
+  tty_id = -1;
 }
 
 bx_serial_c::~bx_serial_c(void)
 {
 #ifdef SERIAL_ENABLE
-  if (bx_options.com1.Opresent->get ())
+  if ((bx_options.com[0].Oenabled->get ()) && (tty_id >= 0))
     tcsetattr(tty_id, TCSAFLUSH, &term_orig);
 #endif
   // nothing for now
@@ -91,14 +92,14 @@ bx_serial_c::~bx_serial_c(void)
   void
 bx_serial_c::init(bx_devices_c *d)
 {
-  if (!bx_options.com1.Opresent->get ())
+  if (!bx_options.com[0].Oenabled->get ())
     return;
 
 #ifdef SERIAL_ENABLE
-  tty_id = open(bx_options.com1.Odev->getptr (), O_RDWR|O_NONBLOCK,600);
+  tty_id = open(bx_options.com[0].Odev->getptr (), O_RDWR|O_NONBLOCK,600);
   if (tty_id < 0)
     BX_PANIC(("open of %s (%s) failed\n",
-	      "com1", bx_options.com1.Odev->getptr ()));
+	      "com1", bx_options.com[0].Odev->getptr ()));
   BX_DEBUG(("tty_id: %d",tty_id));
   tcgetattr(tty_id, &term_orig);
   bcopy((caddr_t) &term_orig, (caddr_t) &term_new, sizeof(struct termios));

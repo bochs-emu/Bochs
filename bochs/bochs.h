@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.78 2002-08-24 10:20:34 vruppert Exp $
+// $Id: bochs.h,v 1.79 2002-08-24 17:11:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -556,7 +556,7 @@ typedef struct {
   } bx_mem_options;
 
 typedef struct {
-  bx_param_bool_c *Opresent;
+  bx_param_bool_c *Oenabled;
   bx_param_string_c *Ooutfile;
 } bx_parport_options;
 
@@ -629,10 +629,7 @@ typedef struct {
   bx_floppy_options floppyb;
   bx_disk_options   diskc;
   bx_disk_options   diskd;
-  bx_serial_options com1;
-  bx_serial_options com2;
-  bx_serial_options com3;
-  bx_serial_options com4;
+  bx_serial_options com[4];
   bx_cdrom_options  cdromd; 
   bx_rom_options    rom;
   bx_vgarom_options vgarom;

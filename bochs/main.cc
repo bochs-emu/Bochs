@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.115 2002-08-24 10:20:34 vruppert Exp $
+// $Id: main.cc,v 1.116 2002-08-24 17:11:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,10 +73,7 @@ bx_options_t bx_options = {
   { NULL, NULL, NULL, NULL },   // floppyb
   { 0, NULL, 0, 0, 0 },                   // diskc
   { 0, NULL, 0, 0, 0 },                   // diskd
-  { 0, NULL},			// com1
-  { 0, NULL},			// com2
-  { 0, NULL},			// com3
-  { 0, NULL},			// com4
+  {{ 0, NULL}, { 0, NULL}, { 0, NULL}, { 0, NULL}},	// com1 - com4
   { 0, NULL, 0 },               // cdromd
   { NULL, NULL },               // rom
   { NULL },                     // vgarom
@@ -131,22 +128,22 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
         bx_keyboard.mouse_enabled_changed (val!=0);
       }
       break;
-    case BXP_PARPORT1_PRESENT:
+    case BXP_PARPORT1_ENABLED:
       SIM->get_param (BXP_PARPORT1_OUTFILE)->set_enabled (val!=0);
       break;
-    case BXP_PARPORT2_PRESENT:
+    case BXP_PARPORT2_ENABLED:
       SIM->get_param (BXP_PARPORT2_OUTFILE)->set_enabled (val!=0);
       break;
-    case BXP_COM1_PRESENT:
+    case BXP_COM1_ENABLED:
       SIM->get_param (BXP_COM1_PATH)->set_enabled (val!=0);
       break;
-    case BXP_COM2_PRESENT:
+    case BXP_COM2_ENABLED:
       SIM->get_param (BXP_COM2_PATH)->set_enabled (val!=0);
       break;
-    case BXP_COM3_PRESENT:
+    case BXP_COM3_ENABLED:
       SIM->get_param (BXP_COM3_PATH)->set_enabled (val!=0);
       break;
-    case BXP_COM4_PRESENT:
+    case BXP_COM4_ENABLED:
       SIM->get_param (BXP_COM4_PATH)->set_enabled (val!=0);
       break;
     case BXP_SB16_PRESENT:
@@ -518,50 +515,50 @@ void bx_init_options ()
   bx_options.diskd.Opath->set ("none");
 
   // com1 options
-  bx_options.com1.Opresent = new bx_param_bool_c (BXP_COM1_PRESENT,
+  bx_options.com[0].Oenabled = new bx_param_bool_c (BXP_COM1_ENABLED,
 						  "Enable serial port #1 (COM1)",
-						  "",
-						  0);
+						  "Controls whether COM1 is installed or not",
+						  1);
 
-  bx_options.com1.Odev = new bx_param_filename_c (BXP_COM1_PATH,
+  bx_options.com[0].Odev = new bx_param_filename_c (BXP_COM1_PATH,
 						 "Pathname of the serial device for COM1",
 						 "",
 						 "", BX_PATHNAME_LEN);
-  bx_options.com1.Opresent->set_handler (bx_param_handler);
+  bx_options.com[0].Oenabled->set_handler (bx_param_handler);
 #if 0
   // com2 options
-  bx_options.com2.Opresent = new bx_param_bool_c (BXP_COM2_PRESENT,
-						  "Enable serial port #2 (COM1)",
-						  "Controls whether com2 is installed or not",
+  bx_options.com[1].Oenabled = new bx_param_bool_c (BXP_COM2_ENABLED,
+						  "Enable serial port #2 (COM2)",
+						  "Controls whether COM2 is installed or not",
 						  0);
 
-  bx_options.com2.Odev = new bx_param_filename_c (BXP_COM2_PATH,
-						 "",
+  bx_options.com[1].Odev = new bx_param_filename_c (BXP_COM2_PATH,
+						 "Pathname of the serial device for COM2",
 						 "",
 						 "", BX_PATHNAME_LEN);
-  bx_options.com2.Opresent->set_handler (bx_param_handler);
+  bx_options.com[1].Oenabled->set_handler (bx_param_handler);
   // com3 options
-  bx_options.com3.Opresent = new bx_param_bool_c (BXP_COM3_PRESENT,
-						  "Enable serial port #3 (COM1)",
-						  "",
+  bx_options.com[2].Oenabled = new bx_param_bool_c (BXP_COM3_ENABLED,
+						  "Enable serial port #3 (COM3)",
+						  "Controls whether COM3 is installed or not",
 						  0);
 
-  bx_options.com3.Odev = new bx_param_filename_c (BXP_COM3_PATH,
+  bx_options.com[2].Odev = new bx_param_filename_c (BXP_COM3_PATH,
 						 "Pathname of the serial device for COM3",
 						 "",
 						 "", BX_PATHNAME_LEN);
-  bx_options.com3.Opresent->set_handler (bx_param_handler);
+  bx_options.com[2].Oenabled->set_handler (bx_param_handler);
   // com4 options
-  bx_options.com4.Opresent = new bx_param_bool_c (BXP_COM4_PRESENT,
-						  "Enable serial port #4 (COM1)",
-						  "",
+  bx_options.com[3].Oenabled = new bx_param_bool_c (BXP_COM4_ENABLED,
+						  "Enable serial port #4 (COM4)",
+						  "Controls whether COM4 is installed or not",
 						  0);
 
-  bx_options.com4.Odev = new bx_param_filename_c (BXP_COM4_PATH,
+  bx_options.com[3].Odev = new bx_param_filename_c (BXP_COM4_PATH,
 						 "Pathname of the serial device for COM4",
 						 "",
 						 "", BX_PATHNAME_LEN);
-  bx_options.com4.Opresent->set_handler (bx_param_handler);
+  bx_options.com[3].Oenabled->set_handler (bx_param_handler);
 #endif
 
   // cdrom options
@@ -639,39 +636,39 @@ void bx_init_options ()
   bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
 
-  bx_options.par[0].Opresent = new bx_param_bool_c (BXP_PARPORT1_PRESENT,
+  bx_options.par[0].Oenabled = new bx_param_bool_c (BXP_PARPORT1_ENABLED,
       "Enable parallel port #1",
       "Enables the first parallel port",
       1);
-  bx_options.par[0].Opresent->set_handler (bx_param_handler);
+  bx_options.par[0].Oenabled->set_handler (bx_param_handler);
   bx_options.par[0].Ooutfile = new bx_param_filename_c (BXP_PARPORT1_OUTFILE,
       "Parallel port #1 output file",
       "Data written to parport#1 by the guest OS is written to this file",
       "", BX_PATHNAME_LEN);
 #if 0
-  bx_options.par[1].Opresent = new bx_param_bool_c (BXP_PARPORT2_PRESENT,
+  bx_options.par[1].Oenabled = new bx_param_bool_c (BXP_PARPORT2_ENABLED,
       "Enable parallel port #2",
       "Enables the second parallel port",
       0);
-  bx_options.par[1].Opresent->set_handler (bx_param_handler);
+  bx_options.par[1].Oenabled->set_handler (bx_param_handler);
   bx_options.par[1].Ooutfile = new bx_param_filename_c (BXP_PARPORT2_OUTFILE,
       "Parallel port #2 output file",
       "Data written to parport#2 by the guest OS is written to this file",
       "", BX_PATHNAME_LEN);
 #endif
   bx_param_c *par_ser_init_list[] = {
-    bx_options.par[0].Opresent,
+    bx_options.par[0].Oenabled,
     bx_options.par[0].Ooutfile,
-    //bx_options.par[1].Opresent,
+    //bx_options.par[1].Oenabled,
     //bx_options.par[1].Ooutfile,
-    bx_options.com1.Opresent,
-    bx_options.com1.Odev,
-    //bx_options.com2.Opresent,
-    //bx_options.com2.Odev,
-    //bx_options.com3.Opresent,
-    //bx_options.com3.Odev,
-    //bx_options.com4.Opresent,
-    //bx_options.com4.Odev,
+    bx_options.com[0].Oenabled,
+    bx_options.com[0].Odev,
+    //bx_options.com[1].Oenabled,
+    //bx_options.com[1].Odev,
+    //bx_options.com[2].Oenabled,
+    //bx_options.com[2].Odev,
+    //bx_options.com[3].Oenabled,
+    //bx_options.com[3].Odev,
     NULL
   };
   menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL, "Serial and Parallel Port Options", "serial_parallel_menu", par_ser_init_list);
@@ -1777,45 +1774,63 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
 
   else if (!strcmp(params[0], "com1")) {
-    if (num_params != 2) {
-      BX_PANIC(("%s: com1 directive malformed.", context));
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+	bx_options.com[0].Oenabled->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "dev=", 4)) {
+        bx_options.com[0].Odev->set (&params[i][4]);
+	bx_options.com[0].Oenabled->set (1);
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for com1 ignored.", context));
+        }
       }
-    if (strncmp(params[1], "dev=", 4)) {
-      BX_PANIC(("%s: com1 directive malformed.", context));
-      }
-    bx_options.com1.Odev->set (&params[1][4]);
-    bx_options.com1.Opresent->set (1);
     }
+#if 0
   else if (!strcmp(params[0], "com2")) {
-    if (num_params != 2) {
-      BX_PANIC(("%s: com2 directive malformed.", context));
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+	bx_options.com[1].Oenabled->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "dev=", 4)) {
+        bx_options.com[1].Odev->set (&params[i][4]);
+	bx_options.com[1].Oenabled->set (1);
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for com2 ignored.", context));
+        }
       }
-    if (strncmp(params[1], "dev=", 4)) {
-      BX_PANIC(("%s: com2 directive malformed.", context));
-      }
-    bx_options.com2.Odev->set (&params[1][4]);
-    bx_options.com2.Opresent->set (1);
     }
   else if (!strcmp(params[0], "com3")) {
-    if (num_params != 2) {
-      BX_PANIC(("%s: com3 directive malformed.", context));
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+	bx_options.com[2].Oenabled->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "dev=", 4)) {
+        bx_options.com[2].Odev->set (&params[i][4]);
+	bx_options.com[2].Oenabled->set (1);
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for com3 ignored.", context));
+        }
       }
-    if (strncmp(params[1], "dev=", 4)) {
-      BX_PANIC(("%s: com3 directive malformed.", context));
-      }
-    bx_options.com3.Odev->set (&params[1][4]);
-    bx_options.com3.Opresent->set (1);
     }
   else if (!strcmp(params[0], "com4")) {
-    if (num_params != 2) {
-      BX_PANIC(("%s: com4 directive malformed.", context));
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+	bx_options.com[3].Oenabled->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "dev=", 4)) {
+        bx_options.com[3].Odev->set (&params[i][4]);
+	bx_options.com[3].Oenabled->set (1);
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for com4 ignored.", context));
+        }
       }
-    if (strncmp(params[1], "dev=", 4)) {
-      BX_PANIC(("%s: com4 directive malformed.", context));
-      }
-    bx_options.com4.Odev->set (&params[1][4]);
-    bx_options.com4.Opresent->set (1);
     }
+#endif
 
   else if (!strcmp(params[0], "cdromd")) {
     if (num_params != 3) {
@@ -2190,10 +2205,14 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "parport1")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.par[0].Opresent->set (atol(&params[i][8]));
+	bx_options.par[0].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "file=", 5)) {
 	bx_options.par[0].Ooutfile->set (strdup(&params[i][5]));
+	bx_options.par[0].Oenabled->set (1);
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for parport1 ignored.", context));
         }
     }
   }
@@ -2202,10 +2221,14 @@ parse_line_formatted(char *context, int num_params, char *params[])
   else if (!strcmp(params[0], "parport2")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-	bx_options.par[1].Opresent->set (atol(&params[i][8]));
+	bx_options.par[1].Oenabled->set (atol(&params[i][8]));
         }
       else if (!strncmp(params[i], "file=", 5)) {
 	bx_options.par[1].Ooutfile->set (strdup(&params[i][5]));
+	bx_options.par[1].Oenabled->set (1);
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for parport2 ignored.", context));
         }
     }
   }
@@ -2463,9 +2486,20 @@ bx_write_cdrom_options (FILE *fp, int drive, bx_cdrom_options *opt)
 int
 bx_write_parport_options (FILE *fp, bx_parport_options *opt, int n)
 {
-  fprintf (fp, "parport%d: enabled=%d", n, opt->Opresent->get ());
-  if (opt->Opresent->get ()) {
+  fprintf (fp, "parport%d: enabled=%d", n, opt->Oenabled->get ());
+  if (opt->Oenabled->get ()) {
     fprintf (fp, ", file=\"%s\"", opt->Ooutfile->getptr ());
+  }
+  fprintf (fp, "\n");
+  return 0;
+}
+
+int
+bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
+{
+  fprintf (fp, "com%d: enabled=%d", n, opt->Oenabled->get ());
+  if (opt->Oenabled->get ()) {
+    fprintf (fp, ", dev=\"%s\"", opt->Odev->getptr ());
   }
   fprintf (fp, "\n");
   return 0;
@@ -2615,6 +2649,10 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "megs: %d\n", bx_options.memory.Osize->get ());
   bx_write_parport_options (fp, &bx_options.par[0], 1);
   //bx_write_parport_options (fp, &bx_options.par[1], 2);
+  bx_write_serial_options (fp, &bx_options.com[0], 1);
+  //bx_write_serial_options (fp, &bx_options.com[1], 2);
+  //bx_write_serial_options (fp, &bx_options.com[2], 3);
+  //bx_write_serial_options (fp, &bx_options.com[3], 4);
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
   fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "a" : (bootdrive==BX_BOOT_DISKC) ? "c" : "cdrom");

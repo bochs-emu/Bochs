@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.44 2002-08-24 10:20:35 vruppert Exp $
+// $Id: siminterface.h,v 1.45 2002-08-24 17:11:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.44 2002-08-24 10:20:35 vruppert Exp $
+ * $Id: siminterface.h,v 1.45 2002-08-24 17:11:33 vruppert Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -95,13 +95,13 @@ typedef enum {
   BXP_DISKD_HEADS,
   BXP_DISKD_SPT,
   BXP_DISKD,
-  BXP_COM1_PRESENT,
+  BXP_COM1_ENABLED,
   BXP_COM1_PATH,
-  BXP_COM2_PRESENT,
+  BXP_COM2_ENABLED,
   BXP_COM2_PATH,
-  BXP_COM3_PRESENT,
+  BXP_COM3_ENABLED,
   BXP_COM3_PATH,
-  BXP_COM4_PRESENT,
+  BXP_COM4_ENABLED,
   BXP_COM4_PATH,
   BXP_CDROM_PRESENT,
   BXP_CDROM_PATH,
@@ -151,9 +151,9 @@ typedef enum {
   BXP_SB16_LOGLEVEL,
   BXP_SB16_DMATIMER,
   BXP_SB16,
-  BXP_PARPORT1_PRESENT,
+  BXP_PARPORT1_ENABLED,
   BXP_PARPORT1_OUTFILE,
-  BXP_PARPORT2_PRESENT,
+  BXP_PARPORT2_ENABLED,
   BXP_PARPORT2_OUTFILE,
   BXP_KEYBOARD_USEMAPPING,
   BXP_KEYBOARD_MAP,
@@ -565,7 +565,7 @@ typedef struct {
   } bx_disk_options;
 
 typedef struct {
-  bx_param_bool_c *Opresent;
+  bx_param_bool_c *Oenabled;
   bx_param_string_c *Odev;
   } bx_serial_options;
 
