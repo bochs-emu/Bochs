@@ -35,7 +35,7 @@ these four paragraphs for those parts of this code that are retained.
 /*
  * Still to be fixed:
  * -----------------
- * 	* Denormals support for add/sub/compare/convert operations
+ * 	* Denormals support for add/sub/compare/convert operations (implemented)
  * 	* DAZ (denormals-are-zeroes) feature support
  * 	* Flush underflow to zero feature support (implemented)
  * 	* Floating point reciprocal and sqrt reciprocal operations

@@ -799,9 +799,15 @@ static float32 addFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     aExp = extractFloat32Exp(a);
     bSig = extractFloat32Frac(b);
     bExp = extractFloat32Exp(b);
+
+    if (((aExp == 0) && aSig) || ((bExp == 0) && bSig)) {
+        float_raise(status, float_flag_denormal);
+    }
+
     expDiff = aExp - bExp;
     aSig <<= 6;
     bSig <<= 6;
+
     if (0 < expDiff) {
         if (aExp == 0xFF) {
             if (aSig) return propagateFloat32NaN(a, b, status);
@@ -869,6 +875,11 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     aExp = extractFloat32Exp(a);
     bSig = extractFloat32Frac(b);
     bExp = extractFloat32Exp(b);
+
+    if (((aExp == 0) && aSig) || ((bExp == 0) && bSig)) {
+        float_raise(status, float_flag_denormal);
+    }
+
     expDiff = aExp - bExp;
     aSig <<= 7;
     bSig <<= 7;
@@ -1697,6 +1708,10 @@ float32 float64_to_float32(float64 a, float_status_t &status)
         if (aSig) return commonNaNToFloat32(float64ToCommonNaN(a, status));
         return packFloat32(aSign, 0xFF, 0);
     }
+    if (aExp == 0) {
+        if (aSig == 0) return packFloat32(aSign, 0, 0);
+        float_raise(status, float_flag_denormal);
+    }
     shift64RightJamming(aSig, 22, &aSig);
     zSig = aSig;
     if (aExp || zSig) {
@@ -1783,6 +1798,11 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     aExp = extractFloat64Exp(a);
     bSig = extractFloat64Frac(b);
     bExp = extractFloat64Exp(b);
+
+    if (((aExp == 0) && aSig) || ((bExp == 0) && bSig)) {
+        float_raise(status, float_flag_denormal);
+    }
+
     expDiff = aExp - bExp;
     aSig <<= 9;
     bSig <<= 9;
@@ -1853,6 +1873,11 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     aExp = extractFloat64Exp(a);
     bSig = extractFloat64Frac(b);
     bExp = extractFloat64Exp(b);
+
+    if (((aExp == 0) && aSig) || ((bExp == 0) && bSig)) {
+        float_raise(status, float_flag_denormal);
+    }
+
     expDiff = aExp - bExp;
     aSig <<= 10;
     bSig <<= 10;
