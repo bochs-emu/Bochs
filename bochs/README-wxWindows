@@ -349,23 +349,42 @@ ConfigDisksScreen:
 |                                                               |
 +---------------------------------------------------------------+
 
-EditFloppyScreen:
-+---------------------------------------------------------------+
+EditFloppyScreen:  (DONE)
++-----Configure Floppy Drive A----------------------------------+
 |                                                               |
 | Bochs can use a real floppy drive as Disk A, or use an        |
 | image file.                                                   |
 |                                                               |
-|  [X]  Physical A: drive                                       |
-|  [ ]  Physical B: drive                                       |
-|  [ ]  Disk image: [_____________________________] [Browse]    |
-|         Capacity: [1.44 MB]                                   |
+|    [X]  Physical floppy drive A:                              |
+|    [ ]  Physical floppy drive B:                              |
+|    [ ]  Disk image file: [________________________] [Browse]  |
+|                                                               |
+| What is the capacity of this disk? [1.44 MB]                  |
 |                                                               |
 | Hint: To create a disk image, choose the name and capacity    |
 | above, then click Ok.                                         |
 |                                                               |
-|                                            [ Cancel ]  [ Ok ] |
+|                                   [ Help ] [ Cancel ]  [ Ok ] |
 +---------------------------------------------------------------+
 
+EditHardDisk:
++-----Configure Hard Disk-------------------------------------------+
+|                                                                   |
+|  Disk image: [______________________________]      [Browse]       |
+|  Geometry:  cylinders [____]  heads [____]  sectors/track [____]  |
+|  Size in Megabytes: _____                                         |
+|                                                                   |
+|                                       [ Help ] [ Cancel ]  [ Ok ] |
++-------------------------------------------------------------------+
+
+EditCdrom:
++-----Configure CDROM-----------------------------------------------+
+|                                                                   |
+|  [ ] Use physical CD-ROM drive [_____________]                    |
+|  [ ] Use disk image [________________________]  [Browse]          |
+|                                                                   |
+|                                       [ Help ] [ Cancel ]  [ Ok ] |
++-------------------------------------------------------------------+
 
 ConfigVgaScreen:
 FIXME
@@ -439,4 +458,16 @@ let use choose memory ranges to display
 when debugging, maybe highlight values that change between sim steps
 
 
---------------------------------------------------------------------
+
+LogMsgAskDialog:
+---------------------------------------------------------
+Simulation Panic
+
+Context: Hard Drive
+Message: could not open hard drive image file '30M.sample'
+
+ [ ] Don't ask about future messages like this
+
+[Continue]   [Die]  [Dump Core]  [Debugger]   [Help]
+
+-------------------------------------------------------------
