@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.23 2002-04-01 21:53:23 cbothamy Exp $
+// $Id: devices.cc,v 1.24 2002-04-03 01:56:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -103,7 +103,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.23 2002-04-01 21:53:23 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.24 2002-04-03 01:56:26 bdenney Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -382,43 +382,48 @@ bx_devices_c::dma_write16(unsigned channel, Bit16u *data_word)
 #endif
 }
 
-  void
+  Boolean
 bx_devices_c::register_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s registered with IRQ=%d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
+    return false;
     }
   if (irq_handler_name[irq]) {
     BX_PANIC(("IRQ %u conflict, %s with %s", irq,
       irq_handler_name[irq], name));
+    return false;
     }
   irq_handler_name[irq] = name;
+  return true;
 }
 
-  void
+  Boolean
 bx_devices_c::unregister_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s tried to unregister IRQ %d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
+    return false;
     }
 
   if (!irq_handler_name[irq]) {
     BX_INFO(("IO device %s tried to unregister IRQ %d, not registered",
 	      name, irq));
-    return;
+    return false;
   }
 
   if (strcmp(irq_handler_name[irq], name)) {
     BX_INFO(("IRQ %u not registered to %s but to %s", irq,
       name, irq_handler_name[irq]));
-    return;
+    return false;
     }
   irq_handler_name[irq] = NULL;
+  return true;
 }
 
-  void
+  Boolean
 bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
                                         Bit32u addr, const char *name )
 {
@@ -450,16 +455,18 @@ bx_devices_c::register_io_read_handler( void *this_ptr, bx_read_handler_t f,
     if ( strcmp( io_read_handler[read_handler_id[addr]].handler_name, "Unmapped" ) ) {
       BX_INFO(("IO device address conflict(read) at IO address %Xh",
         (unsigned) addr));
-      BX_PANIC(("  conflicting devices: %s & %s",
+      BX_INFO(("  conflicting devices: %s & %s",
         io_read_handler[handle].handler_name, io_read_handler[read_handler_id[addr]].handler_name));
+      return false; // address not available, return false.
       }
     }
   read_handler_id[addr] = handle;
+  return true; // address mapped successfully
 }
 
 
 
-  void
+  Boolean
 bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
                                         Bit32u addr, const char *name )
 {
@@ -491,11 +498,13 @@ bx_devices_c::register_io_write_handler( void *this_ptr, bx_write_handler_t f,
     if ( strcmp( io_write_handler[write_handler_id[addr]].handler_name, "Unmapped" ) ) {
       BX_INFO(("IO device address conflict(write) at IO address %Xh",
         (unsigned) addr));
-      BX_PANIC(("  conflicting devices: %s & %s",
+      BX_INFO(("  conflicting devices: %s & %s",
         io_write_handler[handle].handler_name, io_write_handler[write_handler_id[addr]].handler_name));
+      return false; //unable to map iodevice.
       }
     }
   write_handler_id[addr] = handle;
+  return true; // done!
 }
 
 

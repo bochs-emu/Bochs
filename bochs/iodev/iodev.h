@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.12 2002-04-01 21:53:23 cbothamy Exp $
+// $Id: iodev.h,v 1.13 2002-04-03 01:56:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -81,10 +81,10 @@ public:
   ~bx_devices_c(void);
   void init(BX_MEM_C *);
   BX_MEM_C *mem;  // address space associated with these devices
-  void register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
-  void register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
-  void register_irq(unsigned irq, const char *name);
-  void unregister_irq(unsigned irq, const char *name);
+  Boolean register_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, const char *name );
+  Boolean register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name );
+  Boolean register_irq(unsigned irq, const char *name);
+  Boolean unregister_irq(unsigned irq, const char *name);
   void iodev_init(void);
   Bit32u inp(Bit16u addr, unsigned io_len);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len);
