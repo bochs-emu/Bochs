@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.86 2003-01-06 02:02:46 cbothamy Exp $
+// $Id: rombios.c,v 1.87 2003-01-13 12:51:17 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.86 $";
-static char bios_date_string[] = "$Date: 2003-01-06 02:02:46 $";
+static char bios_cvs_version_string[] = "$Revision: 1.87 $";
+static char bios_date_string[] = "$Date: 2003-01-13 12:51:17 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.86 2003-01-06 02:02:46 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.87 2003-01-13 12:51:17 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -5308,7 +5308,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
         goto int13_fail_noah;
         }
 
-      goto int13_success_noah;
+      goto int13_success;
       break;
 
     case 0x08: /* read disk drive parameters */
