@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.99 2003-04-02 17:03:29 vruppert Exp $
+// $Id: dbg_main.cc,v 1.100 2003-06-07 19:16:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -441,7 +441,7 @@ process_sim2:
       BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   }
   // finally, call the usual function to print the disassembly
-  dbg_printf ( "Next at t=%lld\n", bx_pc_system.time_ticks ());
+  dbg_printf ( "Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks ());
   bx_dbg_disassemble_current (-1, 0);  // all cpus, don't print time
 
   bx_dbg_user_input_loop();
@@ -767,7 +767,7 @@ bx_dbg_trace_reg_off_command(void)
 void
 bx_dbg_ptime_command(void)
 {
-  dbg_printf ( "ptime: %lld\n", bx_pc_system.time_ticks());
+  dbg_printf ( "ptime: " FMT_LL "d\n", bx_pc_system.time_ticks());
 #if BX_NUM_SIMULATORS >= 2
   dbg_printf (
 #if BX_DBG_ICOUNT_SIZE == 32
@@ -833,7 +833,7 @@ inserted:
   timebp_timer = bx_pc_system.register_timer_ticks(&bx_pc_system, bx_pc_system_c::timebp_handler, diff, 0, 1, "debug.timebp");
   }
 
-  dbg_printf ( "Time breakpoint inserted. Delta = %d\n", diff);
+  dbg_printf ( "Time breakpoint inserted. Delta = " FMT_LL "u\n", diff);
 }
 
 void
@@ -1042,7 +1042,7 @@ bx_dbg_playback_command(char* path_quoted)
   if (playback_file) {
     dbg_printf ( "Playback from '%s'\n", path_quoted);
     last_playback_time = 0;
-    dbg_printf ( "playback times relative from %lld\n",
+    dbg_printf ( "playback times relative from " FMT_LL "d\n",
         bx_pc_system.time_ticks());
     enter_playback_entry();
   } else
@@ -1283,7 +1283,7 @@ enter_playback_entry()
     return;
 
   Bit64u time;
-  if (sscanf(playback_buf, "%s %lld %x", playback_entry.command, &time, &playback_entry.argument) != 3) {
+  if (sscanf(playback_buf, "%s " FMT_LL "d %x", playback_entry.command, &time, &playback_entry.argument) != 3) {
     dbg_printf ( "Parse error in playback string '%s'\n", playback_buf);
     return;
   }
@@ -2225,7 +2225,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     BX_CPU(which_cpu)->getB_VM ());
 
     if (print_time)
-      dbg_printf ( "(%u).[%lld] ", which_cpu, bx_pc_system.time_ticks());
+      dbg_printf ( "(%u).[" FMT_LL "d] ", which_cpu, bx_pc_system.time_ticks());
     else
       dbg_printf ( "(%u) ", which_cpu);
     if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
@@ -2250,7 +2250,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     
     }
   else {
-    dbg_printf ( "(%u).[%lld] ??? (physical address not available)\n", which_cpu, bx_pc_system.time_ticks());
+    dbg_printf ( "(%u).[" FMT_LL "d] ??? (physical address not available)\n", which_cpu, bx_pc_system.time_ticks());
   }
 }
 
@@ -2319,7 +2319,7 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
   if (bx_debugger.auto_disassemble) {
     if (sim==0) {
       // print this only once
-      dbg_printf ( "Next at t=%lld\n", bx_pc_system.time_ticks ());
+      dbg_printf ( "Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks ());
     }
     bx_dbg_disassemble_current (sim, 0);  // one cpu, don't print time
   }
@@ -2328,7 +2328,7 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 #if 0
   // print the TSC value for every CPU
   for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
-    dbg_printf ("TSC[%d] = %lld\n", sim, BX_CPU(sim)->tsc);
+    dbg_printf ("TSC[%d] = " FMT_LL "d\n", sim, BX_CPU(sim)->tsc);
   }
 #endif
 }

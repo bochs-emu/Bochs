@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.95 2003-05-03 16:37:17 cbothamy Exp $
+// $Id: siminterface.cc,v 1.96 2003-06-07 19:16:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -877,7 +877,7 @@ bx_param_num_c::set (Bit64s newval)
     val.number = newval;
   }
   if ((val.number < min || val.number > max) && max != BX_MAX_BIT64U)
-    BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), val.number, min, max));
+    BX_PANIC (("numerical parameter %s was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), val.number, min, max));
   if (dependent_list != NULL) update_dependents ();
 }
 
@@ -1055,22 +1055,22 @@ bx_shadow_num_c::set (Bit64s newval)
 {
   Bit64u tmp = 0;
   if ((newval < min || newval > max) && max != BX_MAX_BIT64U)
-    BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), newval, min, max));
+    BX_PANIC (("numerical parameter %s was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), newval, min, max));
   switch (varsize) {
     case 8: 
       tmp = (*(val.p8bit) >> lowbit) & mask;
       tmp |= (newval & mask) << lowbit;
-      *(val.p8bit) = tmp;
+      *(val.p8bit) = (Bit8s)tmp;
       break;
     case 16:
       tmp = (*(val.p16bit) >> lowbit) & mask;
       tmp |= (newval & mask) << lowbit;
-      *(val.p16bit) = tmp;
+      *(val.p16bit) = (Bit16s)tmp;
       break;
     case 32:
       tmp = (*(val.p32bit) >> lowbit) & mask;
       tmp |= (newval & mask) << lowbit;
-      *(val.p32bit) = tmp;
+      *(val.p32bit) = (Bit32s)tmp;
       break;
     case 64:
       tmp = (*(val.p64bit) >> lowbit) & mask;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.60 2003-04-25 00:32:58 cbothamy Exp $
+// $Id: cdrom.cc,v 1.61 2003-06-07 19:16:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -468,7 +468,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.60 2003-04-25 00:32:58 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.61 2003-06-07 19:16:54 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -523,8 +523,8 @@ cdrom_interface::insert_cdrom(char *dev)
     }
 	if(bUseASPI) {
 		DWORD d;
-		int cdr, cnt, max;
-		int i, j, k;
+		UINT cdr, cnt, max;
+		UINT i, j, k;
 		SRB_HAInquiry sh;
 		SRB_GDEVBlock sd;
 		if (!hASPI) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.33 2003-03-02 23:59:08 cbothamy Exp $
+// $Id: pc_system.cc,v 1.34 2003-06-07 19:16:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -336,7 +336,7 @@ bx_pc_system_c::countdownEvent(void)
     if (timer[i].active) {
 #if BX_TIMER_DEBUG
       if (ticksTotal > timer[i].timeToFire)
-        BX_PANIC(("countdownEvent: ticksTotal > timeToFire[%u], D %llu", i,
+        BX_PANIC(("countdownEvent: ticksTotal > timeToFire[%u], D " FMT_LL "u", i,
                   timer[i].timeToFire-ticksTotal));
 #endif
       if (ticksTotal == timer[i].timeToFire) {
@@ -396,7 +396,7 @@ bx_pc_system_c::nullTimer(void* this_ptr)
   BX_INFO(("==================================="));
   for (unsigned i=0; i < bx_pc_system.numTimers; i++) {
     if (bx_pc_system.timer[i].active) {
-      BX_INFO(("BxTimer(%s): period=%llu, continuous=%u",
+      BX_INFO(("BxTimer(%s): period=" FMT_LL "u, continuous=%u",
                bx_pc_system.timer[i].id, bx_pc_system.timer[i].period,
                bx_pc_system.timer[i].continuous));
       }
@@ -453,7 +453,7 @@ bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bx_bool continuou
   if (i >= numTimers)
     BX_PANIC(("activate_timer_ticks: timer %u OOB", i));
   if (timer[i].period < MinAllowableTimerPeriod)
-    BX_PANIC(("activate_timer_ticks: timer[%u].period of %llu < min of %u",
+    BX_PANIC(("activate_timer_ticks: timer[%u].period of " FMT_LL "u < min of %u",
               i, timer[i].period, MinAllowableTimerPeriod));
 #endif
 
@@ -545,8 +545,8 @@ bx_pc_system_c::unregisterTimer(int timerIndex)
 
   // Reset timer fields for good measure.
   timer[i].inUse      = 0; // No longer registered.
-  timer[i].period     = Bit64s(-1); // Max value (invalid)
-  timer[i].timeToFire = Bit64s(-1); // Max value (invalid)
+  timer[i].period     = BX_MAX_BIT64S; // Max value (invalid)
+  timer[i].timeToFire = BX_MAX_BIT64S; // Max value (invalid)
   timer[i].continuous = 0;
   timer[i].funct      = NULL;
   timer[i].this_ptr   = NULL;

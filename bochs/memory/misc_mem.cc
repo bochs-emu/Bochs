@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.37 2003-04-02 17:03:34 vruppert Exp $
+// $Id: misc_mem.cc,v 1.38 2003-06-07 19:16:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
   actual_vector = new Bit8u [bytes+test_mask];
   // round address forward to nearest multiple of alignment.  Alignment 
   // MUST BE a power of two for this to work.
-  Bit64u masked = ((Bit64u) actual_vector + test_mask) & ~test_mask;
+  Bit64u masked = ((Bit64u)(actual_vector + test_mask)) & ~test_mask;
   vector = (Bit8u *)masked;
   // sanity check: no lost bits during pointer conversion
   BX_ASSERT (sizeof(masked) >= sizeof(vector));
@@ -120,7 +120,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.37 2003-04-02 17:03:34 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.38 2003-06-07 19:16:54 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -239,7 +239,7 @@ BX_MEM_C::pci_fetch_ptr(Bit32u addr)
 BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   if ( (addr + len) > this->len ) {
-    BX_INFO(("dbg_fetch_mem out of range. %p > %p",
+    BX_INFO(("dbg_fetch_mem out of range. 0x%x > 0x%x",
       addr+len, this->len));
     return(0); // error, beyond limits of memory
     }

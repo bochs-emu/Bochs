@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: make_cmos_image.cc,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: make_cmos_image.cc,v 1.4 2003-06-07 19:16:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,6 +35,7 @@ extern "C" {
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.100 2003-05-15 18:32:27 sshwarts Exp $
+// $Id: harddrv.cc,v 1.101 2003-06-07 19:16:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.100 2003-05-15 18:32:27 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.101 2003-06-07 19:16:54 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -497,7 +497,6 @@ bx_hard_drive_c::init(void)
             Bit16u cylinders = bx_options.atadevice[channel][device].Ocylinders->get();
             Bit16u heads = bx_options.atadevice[channel][device].Oheads->get();
             Bit16u spt = bx_options.atadevice[channel][device].Ospt->get();
-            Bit32u size = cylinders * heads * spt;
             Bit8u  translation = bx_options.atadevice[channel][device].Otranslation->get();
 
             Bit8u reg = 0x39 + channel/2;
@@ -794,7 +793,7 @@ if (channel == 0) {
 	      BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
 #endif
 	      if (!calculate_logical_address(channel, &logical_sector)) {
-	        BX_ERROR(("multi-sector read reached invalid sector %lu, aborting", logical_sector));
+	        BX_ERROR(("multi-sector read reached invalid sector %lu, aborting", (unsigned long)logical_sector));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	        GOTO_RETURN_VALUE ;
 	      }
@@ -806,8 +805,8 @@ if (channel == 0) {
 	      }
 	      ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
               if (ret < 512) {
-                BX_ERROR(("logical sector was %lu", logical_sector));
-                BX_ERROR(("could not read() hard drive image file at byte %lu", logical_sector*512));
+                BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
+                BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	        GOTO_RETURN_VALUE ;
 	      }
@@ -1286,7 +1285,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	    BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
 #endif
 	    if (!calculate_logical_address(channel, &logical_sector)) {
-	      BX_ERROR(("write reached invalid sector %lu, aborting", logical_sector));
+	      BX_ERROR(("write reached invalid sector %lu, aborting", (unsigned long)logical_sector));
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
             }
@@ -1295,13 +1294,13 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 #endif
 	    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
             if (ret < 0) {
-              BX_ERROR(("could not lseek() hard drive image file at byte %lu", logical_sector * 512));
+              BX_ERROR(("could not lseek() hard drive image file at byte %lu", (unsigned long)logical_sector * 512));
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
 	    }
 	    ret = BX_SELECTED_DRIVE(channel).hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
             if (ret < 512) {
-              BX_ERROR(("could not write() hard drive image file at byte %lu", logical_sector*512));
+              BX_ERROR(("could not write() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
 	    }
@@ -1985,7 +1984,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
 #endif
 	  if (!calculate_logical_address(channel, &logical_sector)) {
-	    BX_ERROR(("initial read from sector %lu out of bounds, aborting", logical_sector));
+	    BX_ERROR(("initial read from sector %lu out of bounds, aborting", (unsigned long)logical_sector));
 	    command_aborted(channel, value);
 	    break;
 	  }
@@ -2000,8 +1999,8 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  }
 	  ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
           if (ret < 512) {
-            BX_ERROR(("logical sector was %lu", logical_sector));
-            BX_ERROR(("could not read() hard drive image file at byte %lu", logical_sector*512));
+            BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
+            BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
 	    command_aborted(channel, value);
 	    break;
 	  }
@@ -2280,7 +2279,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  if (BX_SELECTED_IS_HD(channel)) {
 	    BX_DEBUG(("write cmd 0x70 (SEEK) executing"));
             if (!calculate_logical_address(channel, &logical_sector)) {
-	      BX_ERROR(("initial seek to sector %lu out of bounds, aborting", logical_sector));
+	      BX_ERROR(("initial seek to sector %lu out of bounds, aborting", (unsigned long)logical_sector));
               command_aborted(channel, value);
 	      break;
 	    }
@@ -2511,9 +2510,9 @@ bx_hard_drive_c::increment_address(Bit8u channel)
 	    off_t current_address;
 	    calculate_logical_address(channel, &current_address);
 	    current_address++;
-	    BX_SELECTED_CONTROLLER(channel).head_no = (current_address >> 24) & 0xf;
-	    BX_SELECTED_CONTROLLER(channel).cylinder_no = (current_address >> 8) & 0xffff;
-	    BX_SELECTED_CONTROLLER(channel).sector_no = (current_address) & 0xff;
+	    BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((current_address >> 24) & 0xf);
+	    BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
+	    BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
       } else {
             BX_SELECTED_CONTROLLER(channel).sector_no++;
             if (BX_SELECTED_CONTROLLER(channel).sector_no > BX_SELECTED_DRIVE(channel).hard_drive->sectors) {

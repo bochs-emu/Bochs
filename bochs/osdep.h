@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.17 2003-05-06 21:53:36 cbothamy Exp $
+// $Id: osdep.h,v 1.18 2003-06-07 19:16:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,6 +52,8 @@ extern "C" {
 #  define ssize_t long
 
 #ifndef __MINGW32__
+#define FMT_LL "%I64"
+
 // Definitions that are needed for WIN32 compilers EXCEPT FOR
 // cygwin compiling with -mno-cygwin.  e.g. VC++.
 
@@ -61,8 +63,11 @@ extern "C" {
 
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
+#else    /* ifnndef __MINGW32__ */
+#define FMT_LL "%ll"
 #endif  /* ifnndef __MINGW32__ */
-
+#else    /* WIN32 */
+#define FMT_LL "%ll"
 #endif   /* WIN32 */
 
 // Missing defines for open

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.51 2003-05-24 10:50:19 vruppert Exp $
+// $Id: ne2k.cc,v 1.52 2003-06-07 19:16:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -557,13 +557,13 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0x7:  // ISR
     value &= 0x7f;  // clear RST bit - status-only bit
     // All other values are cleared iff the ISR bit is 1
-    BX_NE2K_THIS s.ISR.pkt_rx    &= ~((value & 0x01) == 0x01);
-    BX_NE2K_THIS s.ISR.pkt_tx    &= ~((value & 0x02) == 0x02);
-    BX_NE2K_THIS s.ISR.rx_err    &= ~((value & 0x04) == 0x04);
-    BX_NE2K_THIS s.ISR.tx_err    &= ~((value & 0x08) == 0x08);
-    BX_NE2K_THIS s.ISR.overwrite &= ~((value & 0x10) == 0x10);
-    BX_NE2K_THIS s.ISR.cnt_oflow &= ~((value & 0x20) == 0x20);
-    BX_NE2K_THIS s.ISR.rdma_done &= ~((value & 0x40) == 0x40);
+    BX_NE2K_THIS s.ISR.pkt_rx    &= ~((bx_bool)((value & 0x01) == 0x01));
+    BX_NE2K_THIS s.ISR.pkt_tx    &= ~((bx_bool)((value & 0x02) == 0x02));
+    BX_NE2K_THIS s.ISR.rx_err    &= ~((bx_bool)((value & 0x04) == 0x04));
+    BX_NE2K_THIS s.ISR.tx_err    &= ~((bx_bool)((value & 0x08) == 0x08));
+    BX_NE2K_THIS s.ISR.overwrite &= ~((bx_bool)((value & 0x10) == 0x10));
+    BX_NE2K_THIS s.ISR.cnt_oflow &= ~((bx_bool)((value & 0x20) == 0x20));
+    BX_NE2K_THIS s.ISR.rdma_done &= ~((bx_bool)((value & 0x40) == 0x40));
     value = ((BX_NE2K_THIS s.ISR.rdma_done << 6) |
              (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
              (BX_NE2K_THIS s.ISR.overwrite << 4) |
@@ -1272,7 +1272,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(void)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.51 2003-05-24 10:50:19 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.52 2003-06-07 19:16:54 vruppert Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.49 2003-04-03 21:59:20 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.50 2003-06-07 19:16:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -212,7 +212,7 @@ bx_pit_c::init( void )
   BX_DEBUG(("deactivated timer."));
   if(BX_PIT_THIS s.timer.get_next_event_time()) {
     bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
+				(Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				0);
     BX_DEBUG(("activated timer."));
   }
@@ -241,7 +241,7 @@ bx_pit_c::init( void )
 
   BX_DEBUG(("pit: finished init"));
 
-  BX_DEBUG(("s.last_usec=%llu",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec="FMT_LL"d",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%d",BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
@@ -265,7 +265,7 @@ void
 bx_pit_c::handle_timer() {
   Bit64u my_time_usec = bx_virt_timer.time_usec();
   Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
-  Bit32u time_passed32 = time_passed;
+  Bit32u time_passed32 = (Bit32u)time_passed;
 
   BX_DEBUG(("pit: entering timer handler"));
 
@@ -282,13 +282,13 @@ bx_pit_c::handle_timer() {
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
       bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				  BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
+				  (Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec=%llu",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec="FMT_LL"d",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
@@ -344,7 +344,7 @@ bx_pit_c::read( Bit32u   address, unsigned int io_len )
 
     case 0x61:
       /* AT, port 61h */
-      BX_PIT_THIS s.refresh_clock_div2 = ((my_time_usec / 15) & 1);
+      BX_PIT_THIS s.refresh_clock_div2 = (bx_bool)((my_time_usec / 15) & 1);
       return( (BX_PIT_THIS s.timer.read_OUT(2)<<5) |
               (BX_PIT_THIS s.refresh_clock_div2<<4) |
               (BX_PIT_THIS s.speaker_data_on<<1) |
@@ -380,7 +380,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   Bit8u   value;
   Bit64u my_time_usec = bx_virt_timer.time_usec();
   Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
-  Bit32u time_passed32 = time_passed;
+  Bit32u time_passed32 = (Bit32u)time_passed;
 
   BX_DEBUG(("pit: entering write handler"));
 
@@ -446,13 +446,13 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
       bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
-				  BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
+				  (Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec=%llu",BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.last_usec="FMT_LL"d",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
@@ -519,7 +519,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 
     //Start out with the number of ticks we would like
     // to have to line up with real time.
-    ticks_delta = REAL_USEC_TO_TICKS(real_time_total) - BX_PIT_THIS s.total_ticks;
+    ticks_delta = (Bit32u)(REAL_USEC_TO_TICKS(real_time_total) - BX_PIT_THIS s.total_ticks);
     if(REAL_USEC_TO_TICKS(real_time_total) < BX_PIT_THIS s.total_ticks) {
       //This slows us down if we're already ahead.
       //  probably only an issue on startup, but it solves some problems.
@@ -527,12 +527,12 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     }
     if(ticks_delta + BX_PIT_THIS s.total_ticks - BX_PIT_THIS s.last_realtime_ticks > REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(BX_PIT_THIS s.last_realtime_delta)))) {
       //This keeps us from going too fast in relation to real time.
-      ticks_delta = REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(BX_PIT_THIS s.last_realtime_delta))) + BX_PIT_THIS s.last_realtime_ticks - BX_PIT_THIS s.total_ticks;
+      ticks_delta = (Bit32u)(REAL_USEC_TO_TICKS(F2I(MAX_MULT * I2F(BX_PIT_THIS s.last_realtime_delta))) + BX_PIT_THIS s.last_realtime_ticks - BX_PIT_THIS s.total_ticks);
       BX_PIT_THIS s.ticks_per_second = F2I(MAX_MULT * I2F(TICKS_PER_SECOND));
     }
     if(ticks_delta > em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND) {
       //This keeps us from having too few instructions between ticks.
-      ticks_delta = em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND;
+      ticks_delta = (Bit32u)(em_time_delta * TICKS_PER_SECOND / MIN_USEC_PER_SECOND);
     }
     if(ticks_delta > BX_PIT_THIS s.timer.get_next_event_time()) {
       //This keeps us from missing ticks.
@@ -547,10 +547,10 @@ bx_pit_c::periodic( Bit32u   usec_delta )
 	temp2 = REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec);
 	temp3 = (Bit64u)BX_PIT_THIS s.total_ticks;
 	temp4 = (Bit64u)(REAL_USEC_TO_TICKS(BX_PIT_THIS s.total_sec) - BX_PIT_THIS s.total_ticks);
-	printf("useconds: %llu, ",temp1);
-	printf("expect ticks: %llu, ",temp2);
-	printf("ticks: %llu, ",temp3);
-	printf("diff: %llu\n",temp4);
+	printf("useconds: " FMT_LL "u, ",temp1);
+	printf("expect ticks: " FMT_LL "u, ",temp2);
+	printf("ticks: " FMT_LL "u, ",temp3);
+	printf("diff: " FMT_LL "u\n",temp4);
       }
 #  endif
       BX_PIT_THIS s.last_time += real_time_delta;
@@ -641,7 +641,7 @@ bx_pit_c::second_update_data(void) {
     BX_PIT_THIS s.max_ticks = BX_MIN( (((BX_PIT_THIS s.total_sec)*(Bit64u)(TICKS_PER_SECOND))/USEC_PER_SECOND) + AHEAD_CEILING , BX_PIT_THIS s.total_ticks + (Bit64u)(TICKS_PER_SECOND*MAX_MULT) );
 
 #if DEBUG_REALTIME_WITH_PRINTF
-    printf("timediff: %llu, total_sec: %llu, total_ticks: %llu\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
+    printf("timediff: " FMT_LL "u, total_sec: " FMT_LL "u, total_ticks: " FMT_LL "u\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
 #endif
 
     tickstemp = 
@@ -656,26 +656,26 @@ bx_pit_c::second_update_data(void) {
     if(tickstemp > (TICKS_PER_SECOND*MAX_MULT)) {
 #if DEBUG_REALTIME_WITH_PRINTF
       if (tickstemp>(2*TICKS_PER_SECOND)) {
-	printf("Running WAY too slow. tps:%llu\n",tickstemp);
+	printf("Running WAY too slow. tps:" FMT_LL "u\n",tickstemp);
       } else {
-	printf("Running slow.         tps:%llu\n",tickstemp);
+	printf("Running slow.         tps:" FMT_LL "u\n",tickstemp);
       }
 #endif
       tickstemp = (Bit64u)(TICKS_PER_SECOND*MAX_MULT);
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("..................new tps:%llu\n",tickstemp);
+      printf("..................new tps:" FMT_LL "u\n",tickstemp);
 #endif
     } else if(tickstemp < (TICKS_PER_SECOND*MIN_MULT)) {
 #if DEBUG_REALTIME_WITH_PRINTF
       if(tickstemp<0) {
-        printf("Running WAY too fast. tps:%llu\n",tickstemp);
+        printf("Running WAY too fast. tps:" FMT_LL "u\n",tickstemp);
       } else {
-        printf("Running fast.         tps:%llu\n",tickstemp);
+        printf("Running fast.         tps:" FMT_LL "u\n",tickstemp);
       }
 #endif
       tickstemp = (Bit64u)(TICKS_PER_SECOND*MIN_MULT);
 #if DEBUG_REALTIME_WITH_PRINTF
-      printf("..................new tps:%llu\n",tickstemp);
+      printf("..................new tps:" FMT_LL "u\n",tickstemp);
 #endif
     }
 
@@ -686,8 +686,8 @@ bx_pit_c::second_update_data(void) {
     BX_PIT_THIS s.usec_per_second = BX_MAX(BX_PIT_THIS s.usec_per_second , MIN_USEC_PER_SECOND);
     BX_PIT_THIS s.last_sec_usec = my_time_usec;
 #if DEBUG_REALTIME_WITH_PRINTF
-    printf("Parms: ticks_per_second=%llu, usec_per_second=%llu\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
-    printf("total_usec: %llu\n", my_time_usec);
+    printf("Parms: ticks_per_second=" FMT_LL "u, usec_per_second=" FMT_LL "u\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
+    printf("total_usec: " FMT_LL "u\n", my_time_usec);
 #endif
   }
 }

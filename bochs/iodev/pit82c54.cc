@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.21 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: pit82c54.cc,v 1.22 2003-06-07 19:16:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -668,7 +668,7 @@ pit_82C54::clock(Bit8u cnum) {
 	  thisctr.count_written=0;
 	  thisctr.first_pass=1;
 	  thisctr.rw_mode=RW;
-	  thisctr.bcd_mode=BCD;
+	  thisctr.bcd_mode=(BCD > 0);
 	  thisctr.mode=M;
 	  switch(RW) {
 	  case 0x1:
