@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.65 2003-09-04 16:58:27 vruppert Exp $
+// $Id: wxdialog.cc,v 1.66 2003-09-05 22:07:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1105,15 +1105,26 @@ void ParamDialog::AddParam (
     case BXT_PARAM_NUM: {
 	bx_param_num_c *param = (bx_param_num_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
-	wxTextCtrl *textctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, normalTextSize);
-	const char *format = param->get_format ();
-	if (!format)
-	  format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
-	SetTextCtrl (textctrl, format, param->get ());
-        if (description) textctrl->SetToolTip(description);
-	sizer->Add (textctrl, 0, wxALL, 2);
-	if (!plain) sizer->Add (1, 1);  // spacer
-	pstr->u.text = textctrl;
+        if (param->get_options () & param->USE_SPIN_CONTROL) {
+          wxSpinCtrl *spinctrl = new wxSpinCtrl (context->parent, pstr->id);
+          spinctrl->SetValue (param->get ());
+          int max = (param->get_max () < (1<<24))?param->get_max ():(1<<24)-1;
+          spinctrl->SetRange (param->get_min (), SPINCTRL_FIX_MAX (max));
+          if (description) spinctrl->SetToolTip(description);
+          sizer->Add (spinctrl, 0, wxALL, 2);
+          if (!plain) sizer->Add (1, 1);  // spacer
+          pstr->u.spin = spinctrl;
+        } else {
+          wxTextCtrl *textctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, normalTextSize);
+          const char *format = param->get_format ();
+          if (!format)
+            format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
+          SetTextCtrl (textctrl, format, param->get ());
+          if (description) textctrl->SetToolTip(description);
+          sizer->Add (textctrl, 0, wxALL, 2);
+          if (!plain) sizer->Add (1, 1);  // spacer
+          pstr->u.text = textctrl;
+        }
 	idHash->Put (pstr->id, pstr);
 	paramHash->Put (pstr->param->get_id (), pstr);
         break;
@@ -1269,9 +1280,14 @@ bool ParamDialog::CopyGuiToParam ()
       case BXT_PARAM_NUM: {
         bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
 	bool valid;
+        int n;
 	wxString complaint;
 	complaint.Printf ("Invalid integer for %s.", pstr->param->get_name ());
-	int n = GetTextCtrlInt (pstr->u.text, &valid, true, complaint);
+        if (nump->get_options () & nump->USE_SPIN_CONTROL) {
+          n = pstr->u.spin->GetValue ();
+        } else {
+          n = GetTextCtrlInt (pstr->u.text, &valid, true, complaint);
+        }
         if ((n < nump->get_min ()) || (n > nump->get_max ())) {
           wxMessageBox("Numerical parameter out of range", "Error", wxOK | wxICON_ERROR, this );
           return false;

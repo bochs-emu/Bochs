@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.111 2003-09-02 19:34:48 vruppert Exp $
+// $Id: siminterface.h,v 1.112 2003-09-05 22:07:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -356,6 +356,7 @@ typedef enum {
   BXP_MENU_SOUND,
   BXP_MENU_KEYBOARD,
   BXP_MENU_MISC,
+  BXP_MENU_MISC_2,
   BXP_MENU_RUNTIME,
   BXP_MAX_IPS,
   BXP_NE2K_PRESENT,
@@ -892,7 +893,13 @@ protected:
   param_event_handler handler;
   param_enable_handler enable_handler;
   int base;
+  Bit32u options;
 public:
+  enum {
+    // When a bx_param_num_c is displayed in dialog, USE_SPIN_CONTROL controls
+    // whether a spin control should be used instead of a simple text control.
+    USE_SPIN_CONTROL = (1<<0),
+  } bx_numopt_bits;
   bx_param_num_c (bx_id id,
       char *name,
       char *description,
@@ -914,6 +921,8 @@ public:
   Bit64s get_max () { return max; }
   static Bit32u set_default_base (Bit32u val);
   static Bit32u get_default_base () { return default_base; }
+  void set_options (Bit32u options) { this->options = options; }
+  Bit32u get_options () { return options; }
 #if BX_UI_TEXT
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.51 2003-09-04 16:58:27 vruppert Exp $
+// $Id: wxdialog.h,v 1.52 2003-09-05 22:07:54 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -430,6 +430,7 @@ struct ParamStruct : public wxObject {
     wxWindow *window;
     wxChoice *choice;
     wxTextCtrl *text;
+    wxSpinCtrl *spin;
     wxCheckBox *checkbox;
     wxStaticBox *staticbox;
     wxNotebook *notebook;

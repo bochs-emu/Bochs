@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.98 2003-09-04 16:58:27 vruppert Exp $
+// $Id: wxmain.cc,v 1.99 2003-09-05 22:07:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -655,23 +655,9 @@ void MyFrame::OnEditLoadHack(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
-  dlg.SetTitle ("Other Options");
-//dlg.AddParam (SIM->get_param (BXP_SEL_DISPLAY_LIBRARY));
-//dlg.AddParam (SIM->get_param (BXP_SEL_CONFIG_INTERFACE));
-  dlg.AddParam (SIM->get_param (BXP_VGA_UPDATE_INTERVAL));
-  dlg.AddParam (SIM->get_param (BXP_LOG_PREFIX));
-  dlg.AddParam (SIM->get_param (BXP_MOUSE_ENABLED));
-  dlg.AddParam (SIM->get_param (BXP_FLOPPYSIGCHECK));
-  dlg.AddParam (SIM->get_param (BXP_FLOPPY_CMD_DELAY));
-  dlg.AddParam (SIM->get_param (BXP_NEWHARDDRIVESUPPORT));
-  dlg.AddParam (SIM->get_param (BXP_PRIVATE_COLORMAP));
-#if BX_WITH_AMIGAOS
-  dlg.AddParam (SIM->get_param (BXP_FULLSCREEN));
-  dlg.AddParam (SIM->get_param (BXP_SCREENMODE));
-#endif
-  dlg.AddParam (SIM->get_param (BXP_I440FX_SUPPORT));
-  dlg.AddParam (SIM->get_param (BXP_CMOS_IMAGE));
-  dlg.AddParam (SIM->get_param (BXP_CMOS_PATH));
+  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_MISC_2);
+  dlg.SetTitle (list->get_name ());
+  dlg.AddParam (list);
   dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.ShowModal ();
 }

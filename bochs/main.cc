@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.248 2003-09-04 16:58:27 vruppert Exp $
+// $Id: main.cc,v 1.249 2003-09-05 22:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -719,6 +719,7 @@ void bx_init_options ()
     bx_options.ata[channel].Oioaddr1->set_label ("I/O Address 1:");
     bx_options.ata[channel].Oioaddr2->set_label ("I/O Address 2:");
     bx_options.ata[channel].Oirq->set_label ("IRQ:");
+    bx_options.ata[channel].Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
 #else
     bx_options.ata[channel].Opresent->set_format ("enabled: %s");
     bx_options.ata[channel].Oioaddr1->set_format ("ioaddr1: 0x%x");
@@ -865,6 +866,7 @@ void bx_init_options ()
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
 #if BX_WITH_WX
   bx_options.memory.Osize->set_label ("Memory size (megabytes)");
+  bx_options.memory.Osize->set_options (bx_param_num_c::USE_SPIN_CONTROL);
 #else
   bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
 #endif
@@ -963,6 +965,7 @@ void bx_init_options ()
         bx_options.usb[i].Oioaddr->set_base (16);
         bx_options.usb[i].Oenabled->set_label (strdup(label));
         bx_options.usb[i].Oirq->set_label ("USB IRQ");
+        bx_options.usb[i].Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
@@ -1226,6 +1229,7 @@ void bx_init_options ()
       "IRQ used by the NE2K device",
       0, 15,
       0);
+  bx_options.ne2k.Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
   bx_options.ne2k.Omacaddr = new bx_param_string_c (BXP_NE2K_MACADDR,
       "MAC Address",
       "MAC address of the NE2K device. Don't use an address of a machine on your net.",
@@ -1523,6 +1527,29 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
+
+  bx_param_c *other_init_list2[] = {
+//    bx_options.Osel_config,
+//    bx_options.Osel_displaylib,
+      bx_options.Ovga_update_interval,
+      bx_options.log.Oprefix,
+      bx_options.Omouse_enabled,
+      bx_options.OfloppySigCheck,
+      bx_options.Ofloppy_command_delay,
+      bx_options.OnewHardDriveSupport,
+      bx_options.Oprivate_colormap,
+#if BX_WITH_AMIGAOS
+      bx_options.Ofullscreen,
+      bx_options.Oscreenmode,
+#endif
+      bx_options.Oi440FXSupport,
+      bx_options.cmos.OcmosImage,
+      bx_options.cmos.Opath,
+      NULL
+  };
+#if BX_WITH_WX
+  menu = new bx_list_c (BXP_MENU_MISC_2, "Other options", "", other_init_list2);
+#endif
 }
 
 void bx_reset_options ()
