@@ -45,6 +45,7 @@ LIBTOOL=@LIBTOOL@
 VIDEO_OBJS_VGA = vga.o
 VIDEO_OBJS_HGA = hga.o
 VIDEO_OBJS = @VIDEO_OBJS@
+CDROM_OBJS = @CDROM_OBJS@
 IOAPIC_OBJS = @IOAPIC_OBJS@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
@@ -55,8 +56,7 @@ SB16_LINUX_OBJS = sb16.o soundlnx.o
 SB16_WIN_OBJS   = sb16.o soundwin.o
 SLOWDOWN_OBJS = slowdown_timer.o
 
-BX_IODEV_OBJS_EXTERNAL = \
-  @CDROM_OBJS@
+BX_IODEV_OBJS_EXTERNAL =
 
 
 BX_IODEV_OBJS_NON_PLUGINABLE = \
@@ -83,6 +83,7 @@ BX_IODEV_OBJS_PLUGINABLE = \
   biosdev.o \
   cmos.o \
   harddrv.o \
+  $(CDROM_OBJS) \
   dma.o \
   unmapped.o 
 
@@ -106,8 +107,8 @@ all: libiodev.a plugins
 %.lo: %.cc
 	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
 
-libharddrv.la: harddrv.lo cdrom.lo
-	$(LIBTOOL) $(CXX) harddrv.lo cdrom.lo -o libharddrv.la -rpath $(PLUGIN_PATH)
+libharddrv.la: harddrv.lo $(CDROM_OBJS:.o:.lo)
+	$(LIBTOOL) $(CXX) harddrv.lo $(CDROM_OBJS:.o:.lo) -o libharddrv.la -rpath $(PLUGIN_PATH)
 	mkdir -p $(PLUGIN_PATH)
 	$(LIBTOOL) cp $@ $(PLUGIN_PATH)
 
