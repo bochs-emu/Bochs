@@ -1,5 +1,5 @@
 
-#ifdef BX_USE_SLOWDOWN_TIMER
+#if BX_USE_SLOWDOWN_TIMER
 
 class bx_slowdown_timer_c {
 

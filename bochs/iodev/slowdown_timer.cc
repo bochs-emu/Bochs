@@ -1,7 +1,7 @@
 #include "bochs.h"
 #include <errno.h>
 
-#ifdef BX_USE_SLOWDOWN_TIMER
+#if BX_USE_SLOWDOWN_TIMER
 
 #define BX_HAVE_USLEEP 1
 
