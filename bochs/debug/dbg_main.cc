@@ -950,7 +950,7 @@ bx_dbg_print_string_command(Bit32u start_addr)
       for (int i = 0; ; i++) {
 	    Bit32u paddr;
 	    Bit32u paddr_valid;
-	    Bit8u buf[0];
+	    Bit8u buf[1];
 	    bx_dbg_callback[0].xlate_linear2phy(start_addr+i, &paddr, &paddr_valid);
 	    if (paddr_valid) {
 		  if (bx_dbg_callback[0].getphymem(paddr, 1, buf)) {
@@ -1137,6 +1137,33 @@ bx_dbg_print_stack_command(int nwords)
 	}
 }
 
+#if !BX_HAVE_HASH_MAP
+
+static char *BX_HAVE_HASH_MAP_ERR = "context not implemented because BX_HAVE_HASH_MAP=0\n";
+char*
+bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
+{
+  static Boolean first = true;
+  if (first) {
+    fprintf (stderr, BX_HAVE_HASH_MAP_ERR);
+    first = false;
+  }
+  return "unknown context";
+}
+
+void
+bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
+{
+  fprintf (stderr, BX_HAVE_HASH_MAP_ERR);
+}
+
+#else   /* if BX_HAVE_HASH_MAP == 1 */
+
+/* Haven't figured out how to port this code to OSF1 cxx compiler.
+   Until a more portable solution is found, at least make it easy
+   to disable the template code:  just set BX_HAVE_HASH_MAP=0
+   in config.h */
+
 #include <hash_map.h>
 #include <set.h>
 
@@ -1215,7 +1242,7 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
       static char buf[80];
       if (base != 0) {
-	    snprintf(buf, 80, "non-zero base");
+	    bx_snprintf (buf, 80, "non-zero base");
 	    return buf;
       }
       // Look up this context
@@ -1224,17 +1251,17 @@ bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 	    // Try global context
 	    cntx = context_t::get_context(0);
 	    if (!cntx) {
-		  snprintf(buf, 80, "unknown context");
+		  bx_snprintf (buf, 80, "unknown context");
 		  return buf;
 	    }
       }
 
       symbol_entry_t* entr = cntx->get_symbol_entry(eip);
       if (!entr) {
-	    snprintf(buf, 80, "no symbol");
+	    bx_snprintf (buf, 80, "no symbol");
 	    return buf;
       }
-      snprintf(buf, 80, "%s+%x", entr->name, eip - entr->start);
+      bx_snprintf (buf, 80, "%s+%x", entr->name, eip - entr->start);
       return buf;
 }
 
@@ -1287,6 +1314,7 @@ bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset)
 	    cntx->add_symbol(sym);
       }
 }
+#endif
 
 int num_write_watchpoints = 0;
 int num_read_watchpoints = 0;
@@ -1295,7 +1323,7 @@ Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 Boolean watchpoint_continue = 0;
 
 void
-bx_dbg_watch(Boolean read, Bit32u address)
+bx_dbg_watch(int read, Bit32u address)
 {
       if (read == -1) {
 	    // print watch point info
@@ -1333,7 +1361,7 @@ bx_dbg_watch(Boolean read, Bit32u address)
 }
 
 void
-bx_dbg_unwatch(Boolean read, Bit32u address)
+bx_dbg_unwatch(int read, Bit32u address)
 {
       if (read == -1) {
 	    // unwatch all
@@ -3030,7 +3058,7 @@ bx_dbg_maths_expression_command(char *expr)
         res = data1+data2;
         fprintf(stderr," %x + %x = %x ",data1,data2,res);
         data1 = res;
-	break;
+  break;
       case '-':  
         res = data1-data2;
         fprintf(stderr," %x - %x = %x ",data1,data2,res);
@@ -3232,10 +3260,6 @@ bx_dbg_info_dirty_command(void)
       }
     }
 }
-
-
-
-
 
 //
 // Reports from various events
