@@ -447,6 +447,8 @@ Detailed change log follows.
     - bug [ #537593 ] vga font not being found fixed. If vga font not 
       found, search for a font called "-*-vga-*" (Bryce)
     - keyboard problems fixed (Bryce, Christophe)
+  - beos platform, any display library: add a nice icon to the executable
+    (Bernd Korz)
 
 - wxWindows
   - wxWindows is a cross-platform C++ user interface library which you can
