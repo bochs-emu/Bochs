@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.22 2003-03-27 15:17:40 cbothamy Exp $
+$Id: misc.txt,v 1.23 2003-04-26 13:51:11 cbothamy Exp $
 
 Testing testing....
 
@@ -517,4 +517,31 @@ Thanks, 60 000 000 seems to have done the trick (I can copy sp6 across
 anyway). My original guess of 4000000 IPS was probably a bit low :)
 
 thanks again
+
+------------------------------------------
+TAP under FreeBSD 
+
+Date: Fri, 14 Feb 2003 02:12:38 +0100
+From: Ronald Klop <ronald at echteman.nl>
+To: bochs-developers at lists.sourceforge.net
+
+I've made eth_tap.cc working under FreeBSD 4.7, because the fbsd network driver
+didn't work for me.
+It's not a very clean patch, but the changes are minimal.
+
+Some notes:
+- I found that some of the includes aren't used at all (on FreeBSD).
+- The socket which is created before /dev/tap0 is opened doesn't work, because
+tap0 is created after opening the device.
+- Maybe the eth_tap device can use a configure script like the eth_tuntap
+device, because the device must be configured after opening.
+- The padding of the ethernet frame with 2 bytes isn't needed in FreeBSD.
+- I didn't do any work to check for this in configure, because I don't know how
+configure works and don't have the time work it out now.
+- the guest os must set (maybe this can be documented somewhere):
+kldload if_tap (if tap is not compiled in the kernel)
+ifconfig tap0 inet 10.0.1.1 netmask 255.255.255.0
+sysctl net.inet.ip.forwarding=1
+sysctl net.link.ether.inet.proxyall=1
+
 
