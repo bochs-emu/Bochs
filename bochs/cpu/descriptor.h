@@ -149,7 +149,7 @@ union {
 } bx_descriptor_t;
 
 typedef struct {
-  bx_selector_t          selector;
+  bx_selector_t    selector;
   bx_descriptor_t  cache;
 } bx_segment_reg_t;
 

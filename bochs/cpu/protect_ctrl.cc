@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.34 2005-02-27 17:41:45 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.35 2005-03-04 21:03:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -383,7 +383,7 @@ BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
   /* if selector doesn't point to an LDT descriptor #GP(selector) */
   if (descriptor.valid == 0 || descriptor.segment ||
-         descriptor.type != 2) 
+         descriptor.type != BX_SYS_SEGMENT_LDT) 
   {
       BX_ERROR(("LLDT: doesn't point to an LDT descriptor!"));
       exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
@@ -716,9 +716,6 @@ void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
   BX_PANIC(("SIDT_Ms: not supported on 8086!"));
   UndefinedOpcode(i);
 #else
-
-  // ams says it works ok in v8086 mode
-  // if (v8086_mode()) BX_PANIC(("protect_ctrl: v8086 mode unsupported"));
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
