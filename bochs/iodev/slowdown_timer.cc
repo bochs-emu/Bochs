@@ -1,11 +1,32 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.13 2002-10-24 21:07:52 bdenney Exp $
+// $Id: slowdown_timer.cc,v 1.14 2003-08-19 00:10:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
+//  Copyright (C) 2002  MandrakeSoft S.A.
+//
+//    MandrakeSoft S.A.
+//    43, rue d'Aboukir
+//    75002 Paris - France
+//    http://www.linux-mandrake.com/
+//    http://www.mandrakesoft.com/
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+
 #include "bochs.h"
 #include <errno.h>
-
-#if BX_USE_SLOWDOWN_TIMER
 
 //These need to stay printfs because they are useless in the log file.
 #define BX_SLOWDOWN_PRINTF_FEEDBACK 0
@@ -24,9 +45,15 @@
 #define MAXMULT 1.5
 #define REALTIME_Q SECINUSEC
 
+#define LOG_THIS bx_slowdown_timer.
+
 bx_slowdown_timer_c bx_slowdown_timer;
 
 bx_slowdown_timer_c::bx_slowdown_timer_c() {
+  put("STIMER");
+  settype(STIMERLOG);
+
+
   s.start_time=0;
   s.start_emulated_time=0;
   s.timer_handle=BX_NULL_TIMER_HANDLE;
@@ -34,6 +61,12 @@ bx_slowdown_timer_c::bx_slowdown_timer_c() {
 
 void
 bx_slowdown_timer_c::init(void) {
+
+  // Return early if slowdown timer not selected
+  if (bx_options.clock.Osync->get () != BX_CLOCK_SYNC_SLOWDOWN)
+    return;
+
+  BX_INFO(("using 'slowdown' timer synchronization method"));
   s.MAXmultiplier=MAXMULT;
   s.Q=Qval;
 
@@ -140,6 +173,4 @@ bx_slowdown_timer_c::handle_timer() {
   }
 #endif // Diagnostic info
 }
-
-#endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.123 2003-08-04 16:03:01 akrisak Exp $
+// $Id: bochs.h,v 1.124 2003-08-19 00:10:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -305,7 +305,7 @@ enum {
   CPU2LOG, CPU3LOG, CPU4LOG, CPU5LOG, CPU6LOG, CPU7LOG, CPU8LOG, CPU9LOG,
   CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
   UNMAPLOG, SERRLOG, BIOSLOG, PIT81LOG, PIT82LOG, IODEBUGLOG, PCI2ISALOG,
-  PLUGINLOG, EXTFPUIRQLOG , PCIVGALOG, PCIUSBLOG, VTIMERLOG
+  PLUGINLOG, EXTFPUIRQLOG , PCIVGALOG, PCIUSBLOG, VTIMERLOG, STIMERLOG
 };
 
 class BOCHSAPI iofunctions {
@@ -570,8 +570,12 @@ typedef struct {
 typedef struct {
   bx_param_string_c *Opath;
   bx_param_bool_c *OcmosImage;
-  bx_param_num_c *Otime0;
   } bx_cmos_options;
+
+typedef struct {
+  bx_param_num_c   *Otime0;
+  bx_param_enum_c  *Osync;
+  } bx_clock_options;
 
 typedef struct {
   bx_param_bool_c *Opresent;
@@ -671,6 +675,7 @@ typedef struct BOCHSAPI {
 #endif
   bx_param_bool_c   *Oi440FXSupport;
   bx_cmos_options   cmos;
+  bx_clock_options  clock;
   bx_ne2k_options   ne2k;
   bx_param_bool_c   *OnewHardDriveSupport;
   bx_load32bitOSImage_t load32bitOSImage;

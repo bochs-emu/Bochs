@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.39 2003-08-15 13:18:53 sshwarts Exp $
+// $Id: cmos.cc,v 1.40 2003-08-19 00:10:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.39 2003-08-15 13:18:53 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.40 2003-08-19 00:10:38 cbothamy Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -151,10 +151,16 @@ bx_cmos_c::init(void)
   BX_CMOS_THIS s.timeval = BX_USE_SPECIFIED_TIME0;
 #endif
 
-  if (bx_options.cmos.Otime0->get () == 1)
+  // localtime
+  if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_LOCAL)
        BX_CMOS_THIS s.timeval = time(NULL);
-  else if (bx_options.cmos.Otime0->get () != 0)
-       BX_CMOS_THIS s.timeval = bx_options.cmos.Otime0->get ();
+  // utc
+  if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_UTC) {
+       BX_ERROR(("Using UTC time is not supported yet"));
+       BX_CMOS_THIS s.timeval = time(NULL);
+  }
+  else if (bx_options.clock.Otime0->get () != 0)
+       BX_CMOS_THIS s.timeval = bx_options.clock.Otime0->get ();
 
   char *tmptime;
   while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {

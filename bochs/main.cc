@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.235 2003-08-14 16:14:04 vruppert Exp $
+// $Id: main.cc,v 1.236 2003-08-19 00:10:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1067,10 +1067,6 @@ void bx_init_options ()
       "Emulated instructions per second, used to calibrate bochs emulated\ntime with wall clock time.",
       1, BX_MAX_BIT32U,
       500000);
-  bx_options.Orealtime_pit = new bx_param_bool_c (BXP_REALTIME_PIT,
-      "Enable the realtime PIT",
-      "Keeps bochs in sync with real time, but sacrifices reproducibility",
-      0);
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
@@ -1165,7 +1161,6 @@ void bx_init_options ()
     bx_options.Ovga_update_interval,
     bx_options.Omouse_enabled,
     bx_options.Oips,
-    bx_options.Orealtime_pit,
     bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS
     bx_options.Ofullscreen,
@@ -1340,6 +1335,30 @@ void bx_init_options ()
   bx_options.load32bitOSImage.OwhichOS->set_handler (bx_param_handler);
   bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
 
+  // clock
+  bx_options.clock.Otime0 = new bx_param_num_c (BXP_CLOCK_TIME0,
+      "Initial CMOS time for Bochs (1:localtime, 2:utc, other:initial time in seconds)",
+      "Initial time for Bochs CMOS clock, used if you really want two runs to be identical",
+      0, BX_MAX_BIT32U,
+      0);
+  bx_options.clock.Osync = new bx_param_enum_c (BXP_CLOCK_SYNC,
+      "clock:sync",
+      "Host to guest time synchronization method",
+      clock_sync_names,
+      BX_CLOCK_SYNC_NONE,
+      BX_CLOCK_SYNC_NONE);
+  bx_param_c *clock_init_list[] = {
+    bx_options.clock.Osync,
+    bx_options.clock.Otime0,
+    NULL
+  };
+  bx_options.clock.Osync->set_format ("sync=%s");
+  bx_options.clock.Otime0->set_format (", Initial time=%d");
+  bx_options.clock.Osync->set_ask_format ("Enter Synchronisation method: [%s] ");
+  bx_options.clock.Otime0->set_ask_format ("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
+  menu = new bx_list_c (BXP_CLOCK, "Clock parameters", "", clock_init_list);
+  menu->get_options ()->set (menu->SERIES_ASK);
+
   // other
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "Keyboard serial delay",
@@ -1372,12 +1391,6 @@ void bx_init_options ()
   deplist = new bx_list_c (BXP_NULL, 1);
   deplist->add (bx_options.cmos.Opath);
   bx_options.cmos.OcmosImage->set_dependent_list (deplist);
-
-  bx_options.cmos.Otime0 = new bx_param_num_c (BXP_CMOS_TIME0,
-      "Initial CMOS time for Bochs",
-      "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
-      0, BX_MAX_BIT32U,
-      0);
 
   // Keyboard mapping
   bx_options.keyboard.OuseMapping = new bx_param_bool_c(BXP_KEYBOARD_USEMAPPING,
@@ -1421,7 +1434,7 @@ void bx_init_options ()
       bx_options.Oi440FXSupport,
       bx_options.cmos.OcmosImage,
       bx_options.cmos.Opath,
-      bx_options.cmos.Otime0,
+      SIM->get_param (BXP_CLOCK),
       SIM->get_param (BXP_LOAD32BITOS),
       bx_options.keyboard.OuseMapping,
       bx_options.keyboard.Okeymap,
@@ -1495,7 +1508,6 @@ void bx_reset_options ()
   bx_options.Ovga_update_interval->reset();
   bx_options.Omouse_enabled->reset();
   bx_options.Oips->reset();
-  bx_options.Orealtime_pit->reset();
   bx_options.Oprivate_colormap->reset();
 #if BX_WITH_AMIGAOS
   bx_options.Ofullscreen->reset();
@@ -1540,12 +1552,15 @@ void bx_reset_options ()
   bx_options.Okeyboard_type->reset();
   bx_options.Ouser_shortcut->reset();
 
+  // Clock
+  bx_options.clock.Otime0->reset();
+  bx_options.clock.Osync->reset();
+
   // other
   bx_options.Ofloppy_command_delay->reset();
   bx_options.Oi440FXSupport->reset();
   bx_options.cmos.OcmosImage->reset();
   bx_options.cmos.Opath->reset();
-  bx_options.cmos.Otime0->reset();
   bx_options.Otext_snapshot_check->reset();
 }
 
@@ -3043,7 +3058,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
 
   // Legacy disk options emulation
-  else if (!strcmp(params[0], "diskc")) {
+  else if (!strcmp(params[0], "diskc")) { // DEPRECATED
+    BX_INFO(("WARNING: diskc directive is deprecated, use ata0-master: instead"));
     if (bx_options.atadevice[0][0].Opresent->get()) {
       PARSE_ERR(("%s: master device of ata channel 0 already defined.", context));
       }
@@ -3064,7 +3080,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
     bx_options.atadevice[0][0].Ospt->set       (atol(&params[4][4]));
     bx_options.atadevice[0][0].Opresent->set (1);
     }
-  else if (!strcmp(params[0], "diskd")) {
+  else if (!strcmp(params[0], "diskd")) { // DEPRECATED
+    BX_INFO(("WARNING: diskd directive is deprecated, use ata0-slave: instead"));
     if (bx_options.atadevice[0][1].Opresent->get()) {
       PARSE_ERR(("%s: slave device of ata channel 0 already defined.", context));
       }
@@ -3085,7 +3102,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
     bx_options.atadevice[0][1].Ospt->set       (atol( &params[4][4]));
     bx_options.atadevice[0][1].Opresent->set (1);
     }
-  else if (!strcmp(params[0], "cdromd")) {
+  else if (!strcmp(params[0], "cdromd")) { // DEPRECATED
+    BX_INFO(("WARNING: cdromd directive is deprecated, use ata0-slave: instead"));
     if (bx_options.atadevice[0][1].Opresent->get()) {
       PARSE_ERR(("%s: slave device of ata channel 0 already defined.", context));
       }
@@ -3120,7 +3138,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     } else if (!strcmp(params[1], "cdrom")) {
       bx_options.Obootdrive->set (BX_BOOT_CDROM);
     } else {
-      PARSE_ERR(("%s: boot directive with unknown boot device '%s'.  use 'a', 'c' or 'cdrom'.", context, params[1]));
+      PARSE_ERR(("%s: boot directive with unknown boot device '%s'.  use 'floppy', 'disk' or 'cdrom'.", context, params[1]));
       }
     }
 
@@ -3472,14 +3490,17 @@ parse_line_formatted(char *context, int num_params, char *params[])
       BX_ERROR(("%s: WARNING: ips is AWFULLY low!", context));
       }
     }
-  else if (!strcmp(params[0], "pit")) {
+  else if (!strcmp(params[0], "pit")) { // Deprecated
     if (num_params != 2) {
       PARSE_ERR(("%s: pit directive: wrong # args.", context));
       }
+    BX_INFO(("WARNING: pit directive is deprecated, use clock: instead"));
     if (!strncmp(params[1], "realtime=", 9)) {
       switch (params[1][9]) {
-        case '0': bx_options.Orealtime_pit->set (0); break;
-        case '1': bx_options.Orealtime_pit->set (1); break;
+        case '0': 
+          BX_INFO(("WARNING: not disabling realtime pit"));
+          break;
+        case '1': bx_options.clock.Osync->set (BX_CLOCK_SYNC_REALTIME); break;
         default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
         }
       }
@@ -3663,11 +3684,31 @@ parse_line_formatted(char *context, int num_params, char *params[])
     bx_options.cmos.Opath->set (strdup(params[1]));
     bx_options.cmos.OcmosImage->set (1);                // CMOS Image is true
     }
-  else if (!strcmp(params[0], "time0")) {
+  else if (!strcmp(params[0], "time0")) { // Deprectated
+    BX_INFO(("WARNING: time0 directive is deprecated, use clock: instead"));
     if (num_params != 2) {
       PARSE_ERR(("%s: time0 directive: wrong # args.", context));
       }
-    bx_options.cmos.Otime0->set (atoi(params[1]));
+    bx_options.clock.Otime0->set (atoi(params[1]));
+    }
+  else if (!strcmp(params[0], "clock")) {
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "sync=", 5)) {
+        bx_options.clock.Osync->set_by_name (&params[i][5]);
+        }
+      else if (!strcmp(params[i], "time0=local")) {
+        bx_options.clock.Otime0->set (BX_CLOCK_TIME0_LOCAL);
+        }
+      else if (!strcmp(params[i], "time0=utc")) {
+        bx_options.clock.Otime0->set (BX_CLOCK_TIME0_UTC);
+        }
+      else if (!strncmp(params[i], "time0=", 6)) {
+        bx_options.clock.Otime0->set (atoi(&params[i][6]));
+        }
+      else {
+        BX_ERROR(("%s: unknown parameter for clock ignored.", context));
+        }
+      }
     }
 #ifdef MAGIC_BREAKPOINT
   else if (!strcmp(params[0], "magic_break")) {
@@ -4048,6 +4089,41 @@ bx_write_loader_options (FILE *fp, bx_load32bitOSImage_t *opt)
 }
 
 int
+bx_write_clock_options (FILE *fp, bx_clock_options *opt)
+{
+  fprintf (fp, "clock: ");
+
+  switch (opt->Osync->get()) {
+    case BX_CLOCK_SYNC_NONE:
+      fprintf (fp, "sync=none");
+      break;
+    case BX_CLOCK_SYNC_REALTIME:
+      fprintf (fp, "sync=realtime");
+      break;
+    case BX_CLOCK_SYNC_SLOWDOWN:
+      fprintf (fp, "sync=slowdown");
+      break;
+    default:
+      BX_PANIC(("Unknown value for sync method"));
+  }
+
+  switch (opt->Otime0->get()) {
+    case 0: break;
+    case BX_CLOCK_TIME0_LOCAL: 
+      fprintf (fp, ", time0=local");
+      break;
+    case BX_CLOCK_TIME0_UTC: 
+      fprintf (fp, ", time0=utc");
+      break;
+    default: 
+      fprintf (fp, ", time0=%u", opt->Otime0->get());
+  }
+
+  fprintf (fp, "\n");
+  return 0;
+}
+
+int
 bx_write_log_options (FILE *fp, bx_log_options *opt)
 {
   fprintf (fp, "log: %s\n", opt->Ofilename->getptr ());
@@ -4135,7 +4211,6 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
   fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
   fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
-  fprintf (fp, "pit: realtime=%d\n", bx_options.Orealtime_pit->get ());
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
@@ -4144,7 +4219,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "screenmode: name=\"%s\"\n", bx_options.Oscreenmode->getptr ());
 #endif
   fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.Oi440FXSupport->get ());
-  fprintf (fp, "time0: %u\n", bx_options.cmos.Otime0->get ());
+  bx_write_clock_options (fp, &bx_options.clock);
   bx_write_ne2k_options (fp, &bx_options.ne2k);
   fprintf (fp, "newharddrivesupport: enabled=%d\n", bx_options.OnewHardDriveSupport->get ());
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);

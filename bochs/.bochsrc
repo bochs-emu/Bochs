@@ -219,67 +219,6 @@ ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, sp
 #ata0-slave: type=cdrom, path="drive", status=inserted
 
 #=======================================================================
-#
-# The DISKC option is deprecated. Use ATA* options instead.
-#
-# DISKC: file=, cyl=, heads=, spt=
-# Point this at a hard disk image file.  To create 
-# a hard disk image, try running bximage.  It will help you choose the
-# size and then suggest a diskc line that works with it.
-#
-# In UNIX it may be possible to use a raw device as a Bochs hard disk, 
-# but WE DON'T RECOMMEND IT.  In Windows there is no easy way.
-#
-# Examples:
-#   diskc: file=10M.sample, cyl=306, heads=4, spt=17
-#   diskc: file=20M.sample, cyl=615, heads=4, spt=17
-#   diskc: file=30M.sample, cyl=615, heads=6, spt=17
-#   diskc: file=46M.sample, cyl=940, heads=6, spt=17
-#   diskc: file=62M.sample, cyl=940, heads=8, spt=17
-#   diskc: file=112M.sample, cyl=900, heads=15, spt=17
-#   diskc: file=483M.sample, cyl=1024, heads=15, spt=63
-#=======================================================================
-#diskc: file="30M.sample", cyl=615, heads=6, spt=17
-
-#=======================================================================
-#
-# The DISKD option is deprecated. Use ATA* options instead.
-#
-# DISKD:
-# See DISKC above for syntax
-#
-# NOTE: diskd and cdromd must not be used together!
-#=======================================================================
-#diskd: file="diskd.img", cyl=615, heads=6, spt=17
-
-#=======================================================================
-#
-# The CDROMD option is deprecated. Use ATA* options instead.
-#
-# CDROMD:
-#
-# cdromd: dev=/dev/cdrom, status=inserted
-# cdromd: dev=/dev/cdrom, status=ejected
-# cdromd: dev=e:, status=ejected
-#
-# In windows, the drive letter + colon notation should be used for cdroms.
-# Depending on versions of windows and drivers, you may only be able to 
-# access the "first" cdrom in the system.  On MacOSX, use path="drive"
-# to access the physical drive.
-#
-# NOTE: diskd and cdromd must not be used together!
-#=======================================================================
-#cdromd: dev=D:, status=inserted
-#cdromd: dev=/dev/cdrom, status=inserted
-#cdromd: dev="drive", status=inserted
-
-#=======================================================================
-# NEWHARDDRIVESUPPORT: enabled=[0|1]
-# As of cvs version on 5/17/2001, newharddrivesupport is on by default.
-#=======================================================================
-#newharddrivesupport: enabled=1
-
-#=======================================================================
 # BOOT:
 # This defines your boot drive.  
 # You can either boot from 'floppy', 'disk' or 'cdrom'
@@ -293,6 +232,60 @@ ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, sp
 #=======================================================================
 #boot: floppy
 boot: disk
+
+#=======================================================================
+# IPS:
+# Emulated Instructions Per Second.  This is the number of IPS that bochs
+# is capable of running on your machine.  Read the note in config.h
+# on how to find this.  Make sure to recompile after.
+#
+# IPS is used to calibrate many time-dependent events within the bochs 
+# simulation.  For example, changing IPS affects the frequency of VGA
+# updates, the duration of time before a key starts to autorepeat, and 
+# the measurement of BogoMips and other benchmarks.
+#
+# Examples:
+# Machine                                         Mips
+# ________________________________________________________________
+# 650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66 2 to 2.5 Mips
+# 400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3  1 to 1.8 Mips
+# 166Mhz 64bit Sparc with Solaris 2.x             approx 0.75 Mips
+# 200Mhz Pentium with Linux 2.x                   approx 0.5 Mips
+#
+#=======================================================================
+ips: 1000000
+
+#=======================================================================
+# CLOCK:
+# This defines the parameters of the clock inside Bochs:
+#
+#  SYNC:
+#  TO BE COMPLETED (see Greg explaination in bug #536329)
+#
+#  TIME0:
+#  Specifies the start (boot) time of the virtual machine. Use a time 
+#  value as returned by the time(2) system call. If no time0 value is 
+#  set or if time0 equal to 1 (special case) or if time0 equal 'local', 
+#  the simulation will be started at the current local host time.
+#  If time0 equal to 2 (special case) or if time0 equal 'utc',
+#  the simulation will be started at the current utc time.
+#
+# Syntax:
+#  clock: sync=[none|slowdown|realtime], time0=[timeValue|local|utc]
+#
+# Example:
+#   clock: sync=none,     time0=local       # Now (localtime)
+#   clock: sync=slowdown, time0=315529200   # Tue Jan  1 00:00:00 1980
+#   clock: sync=none,     time0=631148400   # Mon Jan  1 00:00:00 1990
+#   clock: sync=realtime, time0=938581955   # Wed Sep 29 07:12:35 1999
+#   clock: sync=realtime, time0=946681200   # Sat Jan  1 00:00:00 2000
+#   clock: sync=none,     time0=1           # Now (localtime)
+#   clock: sync=none,     time0=utc         # Now (utc/gmt)
+# 
+# Default value are sync=none, time0=local
+#=======================================================================
+#clock: sync=none, time0=local
+
 
 #=======================================================================
 # FLOPPY_BOOTSIG_CHECK: disabled=[0|1]
@@ -493,38 +486,6 @@ keyboard_paste_delay: 100000
 floppy_command_delay: 500
 
 #=======================================================================
-# IPS:
-# Emulated Instructions Per Second.  This is the number of IPS that bochs
-# is capable of running on your machine.  Read the note in config.h
-# on how to find this.  Make sure to recompile after.
-#
-# IPS is used to calibrate many time-dependent events within the bochs 
-# simulation.  For example, changing IPS affects the frequency of VGA
-# updates, the duration of time before a key starts to autorepeat, and 
-# the measurement of BogoMips and other benchmarks.
-#
-# Examples:
-# Machine                                         Mips
-# ________________________________________________________________
-# 650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66 2 to 2.5 Mips
-# 400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3  1 to 1.8 Mips
-# 166Mhz 64bit Sparc with Solaris 2.x             approx 0.75 Mips
-# 200Mhz Pentium with Linux 2.x                   approx 0.5 Mips
-#
-#=======================================================================
-ips: 1000000
-
-#=======================================================================
-# PIT:
-# The PIT is the programmable interval timer.  It has an option that tries to
-# keep the PIT in sync with real time.  This feature is still experimental,
-# but it may be useful if you want to prevent Bochs from running too fast, for
-# example a DOS video game.  Be aware that with the realtime pit option, your
-# simulation will not be repeatable; this can a problem if you are debugging.
-#=======================================================================
-#pit: realtime=1
-
-#=======================================================================
 # mouse: Not used in any of the GUI specific modules, but the option
 #        bx_options.mouse_enabled is set to this value.  The idea,
 #        is that the GUI code should not generate mouse events when
@@ -635,22 +596,6 @@ keyboard_mapping: enabled=0, map=
 #user_shortcut: keys=ctrlaltdel
 
 #=======================================================================
-# TIME0:
-# Specifies the start (boot) time of the virtual machine. Use a time 
-# value as returned by the time(2) system call. If no time0 value is 
-# set or if time0 equal to 1 (special case), the simulation will be
-# started at the current time of the host. 
-#
-# Examples:
-#   time0: 1           # Now
-#   time0: 315529200   # Tue Jan  1 00:00:00 1980
-#   time0: 631148400   # Mon Jan  1 00:00:00 1990
-#   time0: 938581955   # Wed Sep 29 07:12:35 1999
-#   time0: 946681200   # Sat Jan  1 00:00:00 2000
-#=======================================================================
-#time0: 938581955
-
-#=======================================================================
 # other stuff
 #=======================================================================
 #magic_break: enabled=1
@@ -669,4 +614,106 @@ keyboard_mapping: enabled=0, map=
 # romimage: file=:bios:BIOS-bochs-latest, address=0xf0000
 # floppya: 1_44=[fd:], status=inserted
 #=======================================================================
+
+
+#=======================================================================
+#
+# The following directives are DEPRECATED 
+# Please convert them to the new syntax  or remove them
+#
+#=======================================================================
+
+#=======================================================================
+#
+# The DISKC option is deprecated. Use ATA* options instead.
+#
+# DISKC: file=, cyl=, heads=, spt=
+# Point this at a hard disk image file.  To create 
+# a hard disk image, try running bximage.  It will help you choose the
+# size and then suggest a diskc line that works with it.
+#
+# In UNIX it may be possible to use a raw device as a Bochs hard disk, 
+# but WE DON'T RECOMMEND IT.  In Windows there is no easy way.
+#
+# Examples:
+#   diskc: file=10M.sample, cyl=306, heads=4, spt=17
+#   diskc: file=20M.sample, cyl=615, heads=4, spt=17
+#   diskc: file=30M.sample, cyl=615, heads=6, spt=17
+#   diskc: file=46M.sample, cyl=940, heads=6, spt=17
+#   diskc: file=62M.sample, cyl=940, heads=8, spt=17
+#   diskc: file=112M.sample, cyl=900, heads=15, spt=17
+#   diskc: file=483M.sample, cyl=1024, heads=15, spt=63
+#=======================================================================
+#diskc: file="30M.sample", cyl=615, heads=6, spt=17
+
+#=======================================================================
+#
+# The DISKD option is deprecated. Use ATA* options instead.
+#
+# DISKD:
+# See DISKC above for syntax
+#
+# NOTE: diskd and cdromd must not be used together!
+#=======================================================================
+#diskd: file="diskd.img", cyl=615, heads=6, spt=17
+
+#=======================================================================
+#
+# The CDROMD option is deprecated. Use ATA* options instead.
+#
+# CDROMD:
+#
+# cdromd: dev=/dev/cdrom, status=inserted
+# cdromd: dev=/dev/cdrom, status=ejected
+# cdromd: dev=e:, status=ejected
+#
+# In windows, the drive letter + colon notation should be used for cdroms.
+# Depending on versions of windows and drivers, you may only be able to 
+# access the "first" cdrom in the system.  On MacOSX, use path="drive"
+# to access the physical drive.
+#
+# NOTE: diskd and cdromd must not be used together!
+#=======================================================================
+#cdromd: dev=D:, status=inserted
+#cdromd: dev=/dev/cdrom, status=inserted
+#cdromd: dev="drive", status=inserted
+
+#=======================================================================
+#
+# The TIME0 directive is DEPRECATED. Use the CLOCK directive instead
+#
+# TIME0:
+# Specifies the start (boot) time of the virtual machine. Use a time 
+# value as returned by the time(2) system call. If no time0 value is 
+# set or if time0 equal to 1 (special case), the simulation will be
+# started at the current time of the host. 
+#
+# Examples:
+#   time0: 1           # Now
+#   time0: 315529200   # Tue Jan  1 00:00:00 1980
+#   time0: 631148400   # Mon Jan  1 00:00:00 1990
+#   time0: 938581955   # Wed Sep 29 07:12:35 1999
+#   time0: 946681200   # Sat Jan  1 00:00:00 2000
+#=======================================================================
+#time0: 938581955
+
+#=======================================================================
+#
+# The PIT directive is DEPRECATED. Use the CLOCK directive instead
+#
+# PIT:
+# The PIT is the programmable interval timer.  It has an option that tries to
+# keep the PIT in sync with real time.  This feature is still experimental,
+# but it may be useful if you want to prevent Bochs from running too fast, for
+# example a DOS video game.  Be aware that with the realtime pit option, your
+# simulation will not be repeatable; this can a problem if you are debugging.
+#=======================================================================
+#pit: realtime=1
+
+#=======================================================================
+# NEWHARDDRIVESUPPORT: enabled=[0|1]
+# The old harddrive code is not maintened any more.
+# Default value is enabled=1
+#=======================================================================
+#newharddrivesupport: enabled=1
 

@@ -1,11 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.h,v 1.7 2002-10-24 21:07:52 bdenney Exp $
+// $Id: slowdown_timer.h,v 1.8 2003-08-19 00:10:38 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
-#if BX_USE_SLOWDOWN_TIMER
-
-class bx_slowdown_timer_c {
+class bx_slowdown_timer_c : public logfunctions {
 
 private:
   struct {
@@ -32,6 +30,4 @@ public:
 };
 
 extern bx_slowdown_timer_c bx_slowdown_timer;
-
-#endif
 

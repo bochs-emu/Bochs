@@ -1,3 +1,67 @@
+////////////////////////////////////////////////////////////////////////
+// $Id: virt_timer.cc,v 1.18 2003-08-19 00:10:38 cbothamy Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
+//
+//    MandrakeSoft S.A.
+//    43, rue d'Aboukir
+//    75002 Paris - France
+//    http://www.linux-mandrake.com/
+//    http://www.mandrakesoft.com/
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+
+/////////////////////////////////////////////////////////////////////////
+//
+//Realtime Algorithm (with gettimeofday)
+//  HAVE:
+//    Real number of usec.
+//    Emulated number of usec.
+//  WANT:
+//    Number of ticks to use.
+//    Number of emulated usec to wait until next try.
+//
+//  ticks=number of ticks needed to match total real usec.
+//  if(desired ticks > max ticks for elapsed real time)
+//     ticks = max ticks for elapsed real time.
+//  if(desired ticks > max ticks for elapsed emulated usec)
+//     ticks = max ticks for emulated usec.
+//  next wait ticks = number of ticks until next event.
+//  next wait real usec = (current ticks + next wait ticks) * usec per ticks
+//  next wait emulated usec = next wait real usec * emulated usec / real usec
+//  if(next wait emulated usec < minimum emulated usec for next wait ticks)
+//     next wait emulated usec = minimum emulated usec for next wait ticks.
+//  if(next wait emulated usec > max emulated usec wait)
+//     next wait emulated usec = max emulated usec wait.
+//
+//  How to calculate elapsed real time:
+//    store an unused time value whenever no ticks are used in a given time.
+//    add this to the current elapsed time.
+//  How to calculate elapsed emulated time:
+//    same as above.
+//  Above can be done by not updating last_usec and last_sec.
+//
+//  How to calculate emulated usec/real usec:
+//    Each time there are actual ticks:
+//      Alpha_product(old emulated usec, emulated usec);
+//      Alpha_product(old real usec, real usec);
+//    Divide resulting values.
+//
+/////////////////////////////////////////////////////////////////////////
+
 #include "bochs.h"
 
 #define BX_USE_VIRTUAL_TIMERS 1
@@ -332,7 +396,11 @@ bx_virt_timer_c::next_event_time_update(void) {
 
 void
 bx_virt_timer_c::init(void) {
-  virtual_timers_realtime = bx_options.Orealtime_pit->get ();
+  virtual_timers_realtime = (bx_options.clock.Osync->get ()==BX_CLOCK_SYNC_REALTIME);
+
+  if (virtual_timers_realtime) {
+    BX_INFO(("using 'realtime pit' synchronization method"));
+  }
 
   register_timer(this, nullTimer, (Bit32u)NullTimerInterval, 1, 1, "Null Timer");
 

@@ -62,14 +62,12 @@ NETLOW_OBJS = @NETLOW_OBJS@
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
-SLOWDOWN_OBJS = slowdown_timer.o
-
 OBJS_THAT_CANNOT_BE_PLUGINS = \
   devices.o \
   pit.o pit82c54.o pit_wrap.o \
   virt_timer.o \
+  slowdown_timer.o \
   @IODEBUG_OBJS@ \
-  @SLOWDOWN_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
 

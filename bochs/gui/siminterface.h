@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.103 2003-08-09 22:17:38 cbothamy Exp $
+// $Id: siminterface.h,v 1.104 2003-08-19 00:10:39 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -338,7 +338,9 @@ typedef enum {
   BXP_DEBUGGER_LOG_FILENAME,
   BXP_CMOS_PATH,
   BXP_CMOS_IMAGE,
-  BXP_CMOS_TIME0,
+  BXP_CLOCK,
+  BXP_CLOCK_TIME0,
+  BXP_CLOCK_SYNC,
   BXP_LOAD32BITOS_WHICH,
   BXP_LOAD32BITOS_PATH,
   BXP_LOAD32BITOS_IOLOG,
@@ -354,7 +356,6 @@ typedef enum {
   BXP_MENU_SOUND,
   BXP_MENU_MISC,
   BXP_MENU_RUNTIME,
-  BXP_SYSTEM_CLOCK_SYNC,
   BXP_MAX_IPS,
   BXP_NE2K_PRESENT,
   BXP_NE2K_IOADDR,
@@ -1189,6 +1190,14 @@ enum {
 #define BX_ATA_MODE_Z_VOLATILE  11
 #define BX_ATA_MODE_LAST        11
 
+#define BX_CLOCK_SYNC_NONE     0
+#define BX_CLOCK_SYNC_REALTIME 1
+#define BX_CLOCK_SYNC_SLOWDOWN 2
+#define BX_CLOCK_SYNC_LAST     2
+
+#define BX_CLOCK_TIME0_LOCAL     1
+#define BX_CLOCK_TIME0_UTC       2
+
 BOCHSAPI extern char *bochs_start_names[];
 BOCHSAPI extern int n_bochs_start_names;
 BOCHSAPI extern char *floppy_type_names[];
@@ -1212,6 +1221,8 @@ BOCHSAPI extern char *atadevice_biosdetect_names[];
 BOCHSAPI extern int n_atadevice_biosdetect_names;
 BOCHSAPI extern char *atadevice_translation_names[];
 BOCHSAPI extern int n_atadevice_translation_names;
+BOCHSAPI extern char *clock_sync_names[];
+BOCHSAPI extern int clock_sync_n_names;
 
 typedef struct {
   bx_param_enum_c *Odevtype;
