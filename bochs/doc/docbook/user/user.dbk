@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.64 2002-11-20 17:19:43 bdenney Exp $
+$Id: user.dbk,v 1.65 2002-11-20 18:58:48 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2894,10 +2894,10 @@ speed.</para></footnote>.
   </row>
 </thead>
   <tbody>
-<row><entry>650Mhz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5</entry></row>
-<row><entry>400Mhz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8</entry></row>
-<row><entry>166Mhz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75</entry></row>
-<row><entry>200Mhz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5</entry></row>
+<row><entry>650Mhz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
+<row><entry>400Mhz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
+<row><entry>166Mhz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75 million</entry></row>
+<row><entry>200Mhz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5 million</entry></row>
 </tbody>
 </tgroup>
 </table>
