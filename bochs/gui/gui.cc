@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.27 2002-02-12 17:09:51 vruppert Exp $
+// $Id: gui.cc,v 1.28 2002-03-06 18:17:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -230,7 +230,7 @@ bx_gui_c::snapshot_handler(void)
   Bit8u* text_snapshot = NULL;
   char *snapshot_txt;
   unsigned line_addr, txt_addr, txHeight, txWidth;
-#ifdef WIN32
+#if defined(WIN32) && !defined(__MINGW32__)
   HANDLE hMem;
 #else
   FILE *OUTPUT;
@@ -246,7 +246,7 @@ bx_gui_c::snapshot_handler(void)
         snapshot_txt[txt_addr] = text_snapshot[line_addr+j];
         txt_addr++;
       }
-#ifdef WIN32
+#if defined(WIN32) && !defined(__MINGW32__)
       snapshot_txt[txt_addr] = 13;
       txt_addr++;
 #endif
@@ -254,7 +254,7 @@ bx_gui_c::snapshot_handler(void)
       txt_addr++;
     }
     snapshot_txt[txt_addr] = 0;
-#ifdef WIN32
+#if defined(WIN32) && !defined(__MINGW32__)
     if (OpenClipboard(NULL)) {
       hMem = GlobalAlloc(GMEM_ZEROINIT, txHeight*(txWidth+2)+1);
       EmptyClipboard();
