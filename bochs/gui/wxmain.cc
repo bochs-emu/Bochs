@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.45 2002-09-13 19:51:06 bdenney Exp $
+// $Id: wxmain.cc,v 1.46 2002-09-13 21:53:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -853,6 +853,11 @@ void MyFrame::OnKillSim(wxCommandEvent& WXUNUSED(event))
   // OnSimThreadExit, which also tries to lock sim_thread_lock.
   // If we grab the lock at this level, deadlock results.
   wxLogDebug ("OnKillSim()");
+#if BX_DEBUGGER
+  // the sim_thread may be waiting for a debugger command.  If so, send
+  // it a "quit"
+  DebugCommand ("quit");
+#endif
   if (sim_thread) {
     sim_thread->Delete ();
     // Next time the simulator reaches bx_real_sim_c::periodic() it
