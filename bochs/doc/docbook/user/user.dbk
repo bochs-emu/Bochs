@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.95 2002-12-21 15:12:12 bdenney Exp $
+$Id: user.dbk,v 1.96 2002-12-21 17:20:27 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3098,6 +3098,23 @@ speed.</para></footnote>.
 </tgroup>
 </table>
 
+</section>
+
+<section><title>pit</title>
+<para>
+The PIT is the programmable interval timer.  Bochs's PIT modelw as written by
+Greg Alexander.  It has a real-time option that tries to keep the PIT in sync
+with the host time.  This feature is still experimental, but it may be useful
+if you want to prevent Bochs from running too fast, for example a DOS video
+game.  Be aware that with the realtime pit option, your simulation will not be
+repeatable; this can a problem if you are debugging.
+
+Examples:
+<screen>
+  pit: realtime=0
+  pit: realtime=1
+</screen>
+</para>
 </section>
 
 <section><title>mouse</title>
