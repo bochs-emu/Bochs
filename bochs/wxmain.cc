@@ -143,6 +143,7 @@ IMPLEMENT_APP(MyApp)
 
 bool MyApp::OnInit()
 {
+  wxLog::AddTraceMask (_T("mime"));
   siminterface_init ();
   MyFrame *frame = new MyFrame( "Bochs Control Panel", wxPoint(50,50),
   wxSize(450,340) );
@@ -295,6 +296,7 @@ MyFrame::OnSimThreadExit () {
 int 
 MyFrame::HandleAskParamString (bx_param_string_c *param)
 {
+  wxLogDebug ("HandleAskParamString start");
   bx_param_num_c *opt = param->get_options ();
   wxASSERT (opt != NULL);
   int n_opt = opt->get ();
@@ -306,9 +308,12 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
     // use file open dialog
 	long style = 
 	  (n_opt & param->BX_SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
+        wxLogDebug ("HandleAskParamString: create dialog");
 	wxFileDialog *fdialog = new wxFileDialog (this, msg, "", "", "*.*", style);
+        wxLogDebug ("HandleAskParamString: before showmodal");
 	if (fdialog->ShowModal() == wxID_OK)
 	  newval = (char *)fdialog->GetPath().c_str ();
+        wxLogDebug ("HandleAskParamString: after showmodal");
 	dialog = fdialog; // so I can delete it
   } else {
     // use simple string dialog
@@ -417,9 +422,12 @@ MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
   // response.
   switch (be->type) {
   case BX_SYNC_EVT_ASK_PARAM:
+    wxLogDebug ("before HandleAskParam");
     be->retcode = HandleAskParam (be);
+    wxLogDebug ("after HandleAskParam");
     // sync must return something; just return a copy of the event.
     sim_thread->SendSyncResponse(be);
+    wxLogDebug ("after SendSyncResponse");
 	return;
   case BX_ASYNC_EVT_SHUTDOWN_GUI:
 	wxLogDebug ("control panel is exiting\n");
