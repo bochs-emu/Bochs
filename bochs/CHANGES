@@ -1,3 +1,138 @@
+Changes in 1.3.pre1 (November 17, 2001):
+- Add new log action "ask", as in these example bochsrc lines:
+    panic: action=ask
+    error: action=ask
+  When an event occurs which is set to "ask", you get a beep and message
+  on the text terminal that asks what you want to do.  Choices are: continue,
+  continue and disable future messages from this device, quit immediately,
+  or segfault (where abort() function is available).  If compiled with
+  --enable-debugger, you can also choose to enter the debugger.
+- Parallel port emulation cleaned up by Volker Ruppert.  See .bochsrc for
+  syntax of new parport1 line in bochsrc.
+- PCI support improved by Volker Ruppert, including BIOS work.
+- the ROM BIOS now detects nonbootable disks, and prints a message on the
+  console.  Thanks to Cliff Hones for a patch that included the console
+  display code.
+- LBA support added for hard disks.  (Not tested very much.)
+- add dependencies to makefiles
+- logging code moved into a separate file, logio.cc
+- new configuration menus by Bryce Denney, which allow you to change any
+  bochsrc option using text menus, then save the configuration into
+  a new bochsrc file for later use.  You can disable the new code using
+  configure --disable-control-panel.  Also you can use the command
+  line arguments -nocp or -nocontrolpanel.
+- new PIT model by Greg Alexander which is much more complete than the
+  old one.  The new PIT is used by default, but you can switch back to 
+  the old one if you configure with --disable-new-pit.
+- new option --enable-slowdown-timer, by Greg Alexander, which kicks in if
+  Bochs simulation time starts to run faster than real time.  This helps to
+  keep the Bochs clock in sync with the real clock when the CPU is mostly
+  idle.
+- new option --enable-idle-hack, by Roland Mainz, which makes Bochs more
+  friendly toward other processes when its CPU is idle.  This only works with
+  X windows.
+- new option --enable-iodebug, by Dave Poirier, which creates an I/O
+  interface to the debugger.  This lets you write software to be emulated
+  in Bochs which can turn on instruction, register, or memory tracing
+  using I/O accesses.
+- improved detection of readline in configure script
+- configure substitutes the version number into many files, instead of
+  using sed in the makefile.  There are still a few uses of sed remaining.
+- you can now use environment variables in bochsrc values.  For example,
+  diskd: file="$BOCHS_IMG/diskd.img", cyl=615, heads=6, spt=17
+- configure with --prefix=PATH works now
+- running configure from a different directory works now
+- fix [ #433759 ] virtual address checks can overflow.
+  > Bochs has been crashing in some cases when you try to access data which
+  > overlaps the segment limit, when the segment limit is near the 32-bit
+  > boundary.  The example that came up a few times is reading/writing 4 bytes
+  > starting at 0xffffffff when the segment limit was 0xffffffff.  The
+  > condition used to compare offset+length-1 with the limit, but
+  > offset+length-1 was overflowing so the comparison went wrong.
+- cmpxchg8b patch from Michael Hohmuth <hohmuth@innocent.com>
+- fixed problems in which bochs compiled with debugger measured time 
+  differently from bochs compiled without debugger.  Also breakpoints
+  in certain places such as the start of an interrupt handler were not
+  recognized, and now they are.
+- apply patch from Thomas Fitzsimmons <fitzsim@cygnus.com> to fix compile
+  problems when BX_SUPPORT_PAGING and BX_USE_TLB are turned off
+- fix bug introduced in 1.2.1 which caused spurious exceptions.
+  See patch #439314, Exception 1 (debug) on HALT, from
+  thomas.petazzoni@meridon.com.
+- add panic in ctrl_xfer32.cc where the IRET32 implementation is broken.
+  This only happens if you are NOT in vm8086 mode or protected mode.
+  The intent is to warn people when they are getting bad emulation, and
+  encourage people to report how they got to that point.
+- applied patch from Santiago Bazerque.  See this bug report:
+  [ #463018 ] retf not removing parameters sometimes
+- fix bug [ #461730 ] IRETD causes problems if NT-flag is set
+  reported by Peter Lammich.
+- apply patch [ #455014 ] CR0 bug in 80486, described as:
+  > In the register CR0, when the bit PM is enabled, the bit 4 is 0
+  > when should be 1.
+- apply patch from Mike Rieker <mrieker@o3one.org> associated with this bug
+  report: [ #480422 ] gdt 'accessed' bit
+- in task_switch when it tried to ensure that the old TSS was paged in,
+  it actually used the new TSS address, fixed.
+
+
+----------------------------------------------------------------------
+NOT COMPLETE: I have been working through the diffs between 1.2.1 and now,
+and I'm down to cpu/arith16.cc.  Also going through the logs, down
+to dbg_main.cc.
+----------------------------------------------------------------------
+
+
+Debugger:
+- do a vga update 
+- added debugger command "info fpu" that prints the FPU registers.
+- added debugger command "info ne2k" which prints all the registers
+  of the NE2000 model
+- add ability to do register tracing and flag tracing (Dave Poirier)
+- instruction trace now includes time ticks
+
+Linux platform notes:
+- The default configuration for Linux, given in .conf.linux, now enables
+  the NE2000 model.
+- RPM build process configures with --prefix=/usr so that everything is
+  installed in /usr/bochs instead of /usr/local/bochs.
+- DLX Linux disk image is now installed so that only root can write it, to
+  avoid security problems.  When you run the bochs-dlx script, it creates a
+  local copy in your home directory and then runs it.
+
+Amiga MorphOS platform notes:
+- Bochs now compiles and works on Amiga MorphOS.  Configure with
+  --with-amigaos.  For AmigaOS only, see .bochsrc for use of fullscreeen and
+  screenmode options.  The Amiga MorphsOS is written and maintained by
+  Nicholai Benalal <nicholai@chello.se>.
+- configure with --enable-cdrom should work
+
+BeOS platform notes:
+- Bochs compiles and works on BeOS.  Configure with --with-beos.
+  Bernd Thorsten Korz <bernd.korz@insidebeos.de> maintains the BeOS port.
+- configure with --enable-cdrom should work
+
+MacOS X platform notes:
+- Bochs now compiles and works on MacOS X.  Configure with --with-carbon.
+  Emmanuel Mailliard <e.rsz@libertysurf.fr> ported the Macintosh code to the
+  Carbon API.
+- The MacOS X application is built using (gasp) mkdir, copy, and rez.
+  Surely this is not the right way, but it works.
+
+Win32 platform notes:
+- The default configuration for Win32 VC++, given in .conf.win32-vcpp,
+  now enables the NE2000 and renames all .cc files to .cpp.  This keeps VC++
+  happy but may make it hard to use CVS.
+- The default configuration for Cygwin, given in .conf.win32-cygwin, now
+  enables cdrom and SB16.
+- See "new docs" on the web site for compile instructions for VC++ and Cygwin.
+- The sources include a VC++ workspace, in addition to the old "nmake"
+  makefile.
+- new utility called niclist.exe which lists the names of all your network
+  cards (well probably you just have one).  The name must be used when
+  setting up your .bochsrc.
+
+
 Changes in 1.2.1 (June 12, 2001):
 - more work on makefile for building RPMs
 - [ #432382 ] build debian packages patch
