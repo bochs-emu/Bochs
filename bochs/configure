@@ -3073,7 +3073,7 @@ if test "${enable_apic+set}" = set; then
   if test "$enableval" = yes; then
     echo "$ac_t""yes" 1>&6
     cat >> confdefs.h <<\EOF
-#define BX_APIC_SUPPORT 1
+#define BX_SUPPORT_APIC 1
 EOF
 
     IOAPIC_OBJS='ioapic.o'
@@ -3086,7 +3086,7 @@ EOF
       exit 1
     fi
     cat >> confdefs.h <<\EOF
-#define BX_APIC_SUPPORT 0
+#define BX_SUPPORT_APIC 0
 EOF
 
     IOAPIC_OBJS=''
@@ -3099,7 +3099,7 @@ else
       # enable APIC by default, if processors>1 or if cpulevel>5
       echo "$ac_t""yes" 1>&6
       cat >> confdefs.h <<\EOF
-#define BX_APIC_SUPPORT 1
+#define BX_SUPPORT_APIC 1
 EOF
 
       IOAPIC_OBJS='ioapic.o'
@@ -3107,7 +3107,7 @@ EOF
     else
       echo "$ac_t""no" 1>&6
       cat >> confdefs.h <<\EOF
-#define BX_APIC_SUPPORT 0
+#define BX_SUPPORT_APIC 0
 EOF
 
       IOAPIC_OBJS=''
