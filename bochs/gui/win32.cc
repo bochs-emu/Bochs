@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.66 2003-10-24 18:34:16 sshwarts Exp $
+// $Id: win32.cc,v 1.67 2003-10-25 11:57:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -621,8 +621,8 @@ void SetStatusText(int Num, const char *Text)
   SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
 }
 
-LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+
   switch (iMsg) {
   case WM_CREATE:
     bx_options.Omouse_enabled->set (mouseCaptureMode);
@@ -1276,6 +1276,8 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
+  RECT R;
+
   if (fheight > 0) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
@@ -1341,13 +1343,13 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
                stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
                + y_caption, SWP_NOMOVE | SWP_NOZORDER);
-  MoveWindow(hwndTB, 0, 0, stretched_x, bx_headerbar_y, TRUE);
-  MoveWindow(hwndSB, 0, stretched_y-bx_statusbar_y, stretched_x,
+  SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+  GetClientRect(stInfo.mainWnd, &R);
+  MoveWindow(hwndSB, 0, R.bottom-bx_statusbar_y, stretched_x,
              bx_statusbar_y, TRUE);
   MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
- 
+
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
-  
 }
 
 
