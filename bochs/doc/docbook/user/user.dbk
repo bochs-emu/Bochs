@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.143 2004-02-21 11:57:42 cbothamy Exp $
+$Id: user.dbk,v 1.144 2004-02-29 11:18:52 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3638,7 +3638,7 @@ ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replacea
 ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
 
-ioaddr, irc: You probably won't need to change ioaddr and irq, unless there
+ioaddr, irq: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts.
 
 mac: The MAC address MUST NOT match the address of any machine on the net.
@@ -9555,7 +9555,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.143 2004-02-21 11:57:42 cbothamy Exp $
+        $Id: user.dbk,v 1.144 2004-02-29 11:18:52 cbothamy Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
