@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.173 2004-08-18 20:47:35 sshwarts Exp $
+// $Id: cpu.h,v 1.174 2004-08-30 21:47:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3357,7 +3357,6 @@ typedef enum _show_flags {
     BX_CPU_THIS_PTR eflags.val32 &= ~((1<<11) | (1<<0)); \
     BX_CPU_THIS_PTR eflags.val32 |= ((!!new_of)<<11) | ((!!new_cf)<<0); \
     BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0; \
-    /* could also mark other bits undefined here ? */ \
     }
 
 #endif  // #ifndef BX_CPU_H

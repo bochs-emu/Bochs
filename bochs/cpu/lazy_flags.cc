@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.24 2004-08-27 18:43:23 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.25 2004-08-30 21:47:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 bx_bool BX_CPU_C::get_CFLazy(void)
 {
@@ -228,17 +227,46 @@ bx_bool BX_CPU_C::get_CFLazy(void)
               (64 - BX_CPU_THIS_PTR oszapc.op2_64)) & 0x01;
           break;
 #endif
-        case BX_INSTR_MUL8:
+        case BX_INSTR_IMUL_AL:
+          cf = ! ((BX_CPU_THIS_PTR oszapc.op1_8 < 0x80 &&
+                   BX_CPU_THIS_PTR oszapc.op2_8 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_8 & 0x80) && 
+                  BX_CPU_THIS_PTR oszapc.op2_8 == 0xff));
+          break;
+        case BX_INSTR_IMUL16:
+        case BX_INSTR_IMUL_AX:
+          cf = ! ((BX_CPU_THIS_PTR oszapc.op1_16 < 0x8000 &&
+                   BX_CPU_THIS_PTR oszapc.op2_16 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_16 & 0x8000) && 
+                  BX_CPU_THIS_PTR oszapc.op2_16 == 0xffff));
+          break;
+        case BX_INSTR_IMUL32:
+        case BX_INSTR_IMUL_EAX:
+          cf = ! ((BX_CPU_THIS_PTR oszapc.op1_32 < 0x80000000 &&
+                   BX_CPU_THIS_PTR oszapc.op2_32 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_32 & 0x80000000) && 
+                  BX_CPU_THIS_PTR oszapc.op2_32 == 0xffffffff));
+          break;
+#if BX_SUPPORT_X86_64
+        case BX_INSTR_IMUL64:
+        case BX_INSTR_IMUL_RAX:
+          cf = ! ((BX_CPU_THIS_PTR oszapc.op1_64 < BX_CONST64(0x8000000000000000) &&
+                   BX_CPU_THIS_PTR oszapc.op2_64 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_64 & BX_CONST64(0x8000000000000000)) && 
+                  BX_CPU_THIS_PTR oszapc.op2_64 == BX_CONST64(0xffffffffffffffff)));
+          break;
+#endif
+        case BX_INSTR_MUL_AL:
           cf = (BX_CPU_THIS_PTR oszapc.op2_8 != 0);
           break;
-        case BX_INSTR_MUL16:
+        case BX_INSTR_MUL_AX:
           cf = (BX_CPU_THIS_PTR oszapc.op2_16 != 0);
           break;
-        case BX_INSTR_MUL32:
+        case BX_INSTR_MUL_EAX:
           cf = (BX_CPU_THIS_PTR oszapc.op2_32 != 0);
           break;
 #if BX_SUPPORT_X86_64
-        case BX_INSTR_MUL64:
+        case BX_INSTR_MUL_RAX:
           cf = (BX_CPU_THIS_PTR oszapc.op2_64 != 0);
           break;
 #endif
@@ -332,7 +360,9 @@ bx_bool BX_CPU_C::get_AFLazy(void)
         case BX_INSTR_SAR64:
         case BX_INSTR_SHR64:
         case BX_INSTR_SHL64:
-        case BX_INSTR_MUL64:
+        case BX_INSTR_IMUL_RAX:
+        case BX_INSTR_IMUL64:
+        case BX_INSTR_MUL_RAX:
 #endif
         case BX_INSTR_SAR8:
         case BX_INSTR_SAR16:
@@ -343,9 +373,14 @@ bx_bool BX_CPU_C::get_AFLazy(void)
         case BX_INSTR_SHL8:
         case BX_INSTR_SHL16:
         case BX_INSTR_SHL32:
-        case BX_INSTR_MUL8:
-        case BX_INSTR_MUL16:
-        case BX_INSTR_MUL32:
+        case BX_INSTR_IMUL16:
+        case BX_INSTR_IMUL32:
+        case BX_INSTR_IMUL_AL:
+        case BX_INSTR_IMUL_AX:
+        case BX_INSTR_IMUL_EAX:
+        case BX_INSTR_MUL_AL:
+        case BX_INSTR_MUL_AX:
+        case BX_INSTR_MUL_EAX:
           af = 0;
           break;
         default:
@@ -461,22 +496,37 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
           zf = (BX_CPU_THIS_PTR oszapc.result_64 == 0);
           break;
 #endif
-        case BX_INSTR_MUL8:
+        case BX_INSTR_IMUL_AL:
+        case BX_INSTR_MUL_AL:
           zf = (BX_CPU_THIS_PTR oszapc.op1_8 |
                               BX_CPU_THIS_PTR oszapc.op2_8) == 0;
           break;
-        case BX_INSTR_MUL16:
+        case BX_INSTR_IMUL_AX:
+        case BX_INSTR_MUL_AX:
           zf = (BX_CPU_THIS_PTR oszapc.op1_16 |
                               BX_CPU_THIS_PTR oszapc.op2_16) == 0;
           break;
-        case BX_INSTR_MUL32:
+        case BX_INSTR_IMUL_EAX:
+        case BX_INSTR_MUL_EAX:
           zf = (BX_CPU_THIS_PTR oszapc.op1_32 |
                               BX_CPU_THIS_PTR oszapc.op2_32) == 0;
           break;
 #if BX_SUPPORT_X86_64
-        case BX_INSTR_MUL64:
+        case BX_INSTR_IMUL_RAX:
+        case BX_INSTR_MUL_RAX:
           zf = (BX_CPU_THIS_PTR oszapc.op1_64 |
                               BX_CPU_THIS_PTR oszapc.op2_64) == 0;
+          break;
+#endif
+        case BX_INSTR_IMUL16:
+          zf = (BX_CPU_THIS_PTR oszapc.op1_16 == 0);
+          break;
+        case BX_INSTR_IMUL32:
+          zf = (BX_CPU_THIS_PTR oszapc.op1_32 == 0);
+          break;
+#if BX_SUPPORT_X86_64
+        case BX_INSTR_IMUL64:
+          zf = (BX_CPU_THIS_PTR oszapc.op1_64 == 0);
           break;
 #endif
         case BX_INSTR_BITSCAN16:
@@ -590,18 +640,33 @@ bx_bool BX_CPU_C::get_SFLazy(void)
           sf = (BX_CPU_THIS_PTR oszapc.result_64 >= BX_CONST64(0x8000000000000000));
           break;
 #endif
-        case BX_INSTR_MUL8:
+        case BX_INSTR_IMUL_AL:
+        case BX_INSTR_MUL_AL:
           sf = (BX_CPU_THIS_PTR oszapc.op2_8 >= 0x80);
           break;
-        case BX_INSTR_MUL16:
+        case BX_INSTR_IMUL_AX:
+        case BX_INSTR_MUL_AX:
           sf = (BX_CPU_THIS_PTR oszapc.op2_16 >= 0x8000);
           break;
-        case BX_INSTR_MUL32:
+        case BX_INSTR_IMUL_EAX:
+        case BX_INSTR_MUL_EAX:
           sf = (BX_CPU_THIS_PTR oszapc.op2_32 >= 0x80000000);
           break;
 #if BX_SUPPORT_X86_64
-        case BX_INSTR_MUL64:
+        case BX_INSTR_IMUL_RAX:
+        case BX_INSTR_MUL_RAX:
           sf = (BX_CPU_THIS_PTR oszapc.op2_64 >= BX_CONST64(0x8000000000000000));
+          break;
+#endif
+        case BX_INSTR_IMUL16:
+          sf = (BX_CPU_THIS_PTR oszapc.op1_16 >= 0x8000);
+          break;
+        case BX_INSTR_IMUL32:
+          sf = (BX_CPU_THIS_PTR oszapc.op1_32 >= 0x80000000);
+          break;
+#if BX_SUPPORT_X86_64
+        case BX_INSTR_IMUL64:
+          sf = (BX_CPU_THIS_PTR oszapc.op1_64 >= BX_CONST64(0x8000000000000000));
           break;
 #endif
         default:
@@ -818,17 +883,46 @@ bx_bool BX_CPU_C::get_OFLazy(void)
                       BX_CPU_THIS_PTR oszapc.result_64) & BX_CONST64(0x8000000000000000)) > 0;
           break;
 #endif
-        case BX_INSTR_MUL8:
+        case BX_INSTR_IMUL_AL:
+          of = ! ((BX_CPU_THIS_PTR oszapc.op1_8 < 0x80 &&
+                   BX_CPU_THIS_PTR oszapc.op2_8 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_8 & 0x80) && 
+                  BX_CPU_THIS_PTR oszapc.op2_8 == 0xff));
+          break;
+        case BX_INSTR_IMUL16:
+        case BX_INSTR_IMUL_AX:
+          of = ! ((BX_CPU_THIS_PTR oszapc.op1_16 < 0x8000 &&
+                   BX_CPU_THIS_PTR oszapc.op2_16 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_16 & 0x8000) && 
+                  BX_CPU_THIS_PTR oszapc.op2_16 == 0xffff));
+          break;
+        case BX_INSTR_IMUL32:
+        case BX_INSTR_IMUL_EAX:
+          of = ! ((BX_CPU_THIS_PTR oszapc.op1_32 < 0x80000000 &&
+                   BX_CPU_THIS_PTR oszapc.op2_32 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_32 & 0x80000000) && 
+                  BX_CPU_THIS_PTR oszapc.op2_32 == 0xffffffff));
+          break;
+#if BX_SUPPORT_X86_64
+        case BX_INSTR_IMUL64:
+        case BX_INSTR_IMUL_RAX:
+          of = ! ((BX_CPU_THIS_PTR oszapc.op1_64 < BX_CONST64(0x8000000000000000) &&
+                   BX_CPU_THIS_PTR oszapc.op2_64 == 0) ||
+                ((BX_CPU_THIS_PTR oszapc.op1_64 & BX_CONST64(0x8000000000000000)) && 
+                  BX_CPU_THIS_PTR oszapc.op2_64 == BX_CONST64(0xffffffffffffffff)));
+          break;
+#endif
+        case BX_INSTR_MUL_AL:
           of = (BX_CPU_THIS_PTR oszapc.op2_8 != 0);
           break;
-        case BX_INSTR_MUL16:
+        case BX_INSTR_MUL_AX:
           of = (BX_CPU_THIS_PTR oszapc.op2_16 != 0);
           break;
-        case BX_INSTR_MUL32:
+        case BX_INSTR_MUL_EAX:
           of = (BX_CPU_THIS_PTR oszapc.op2_32 != 0);
           break;
 #if BX_SUPPORT_X86_64
-        case BX_INSTR_MUL64:
+        case BX_INSTR_MUL_RAX:
           of = (BX_CPU_THIS_PTR oszapc.op2_64 != 0);
           break;
 #endif
@@ -946,17 +1040,24 @@ bx_bool BX_CPU_C::get_PFLazy(void)
           pf = bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.result_64];
           break;
 #endif
-        case BX_INSTR_MUL8:
+        case BX_INSTR_IMUL_AL:
+        case BX_INSTR_MUL_AL:
           pf = bx_parity_lookup[BX_CPU_THIS_PTR oszapc.op1_8];
           break;
-        case BX_INSTR_MUL16:
+        case BX_INSTR_IMUL_AX:
+        case BX_INSTR_IMUL16:
+        case BX_INSTR_MUL_AX:
           pf = bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.op1_16];
           break;
-        case BX_INSTR_MUL32:
-          pf = bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.op1_16];
+        case BX_INSTR_IMUL_EAX:
+        case BX_INSTR_IMUL32:
+        case BX_INSTR_MUL_EAX:
+          pf = bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.op1_32];
           break;
 #if BX_SUPPORT_X86_64
-        case BX_INSTR_MUL64:
+        case BX_INSTR_IMUL_RAX:
+        case BX_INSTR_IMUL64:
+        case BX_INSTR_MUL_RAX:
           pf = bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.op1_64];
           break;
 #endif

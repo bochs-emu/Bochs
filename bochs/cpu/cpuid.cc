@@ -122,7 +122,7 @@ static Bit32u get_std_cpuid_features()
 {
   Bit32u features = 0; // start with none
 
-      // EAX:       CPU Version Infromation
+      // EAX:       CPU Version Information
       //   [3:0]   Stepping ID
       //   [7:4]   Model: starts at 1
       //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
@@ -285,8 +285,8 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       // [22:22] AMD MMX Extensions
       // [25:28] Reserved
       // [29:29] Long Mode
-      // [30:30] AMD 3DNow Extensions
-      // [31:31] AMD 3DNow Intructions
+      // [30:30] AMD 3DNow! Extensions
+      // [31:31] AMD 3DNow! Instructions
       features = features & 0x0183F3FF;
       RDX = features | (1 << 29) | (1 << 11);
       RBX = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.12 2004-08-26 20:37:50 sshwarts Exp $
+// $Id: mult64.cc,v 1.13 2004-08-30 21:47:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -229,7 +229,7 @@ BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
     long_mul(&product_128,op1_64,op2_64);
 
     /* set EFLAGS */
-    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_MUL64);
+    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_MUL_RAX);
 
     /* now write product back to destination */
     RAX = product_128.lo;
@@ -264,20 +264,10 @@ BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
     RDX = product_128.hi;
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
-     * IMUL r/m16: condition for clearing CF & OF:
+     * IMUL r/m64: condition for clearing CF & OF:
      *   RDX:RAX = sign-extend of RAX
      */
-
-    if ( (RDX==BX_CONST64(0xffffffffffffffff)) && (RAX & BX_CONST64(0x8000000000000000)) ) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else if ( (RDX==BX_CONST64(0x0000000000000000)) && (RAX < BX_CONST64(0x8000000000000000)) ) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL_RAX);
 }
 
   void
@@ -370,7 +360,7 @@ BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
   void
 BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
 {
-    Bit64s op2_64, op3_64, product_64;
+    Bit64s op2_64, op3_64;
     Bit128s product_128;
 
     op3_64 = (Bit32s) i->Id();
@@ -384,30 +374,22 @@ BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
       read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
       }
 
-    product_64 = op2_64 * op3_64;
     long_imul(&product_128,op2_64,op3_64);
 
     /* now write product back to destination */
-    BX_WRITE_64BIT_REG(i->nnn(), product_64);
+    BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
-     * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
-     *   result exactly fits within r16
+     * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
+     *   result exactly fits within r64
      */
-
-    if (product_128.lo == product_64) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
 }
 
   void
 BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
 {
-    Bit64s op1_64, op2_64, product_64;
+    Bit64s op1_64, op2_64;
     Bit128s product_128;
 
     /* op2 is a register or memory reference */
@@ -421,24 +403,16 @@ BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
 
     op1_64 = BX_READ_64BIT_REG(i->nnn());
 
-    product_64 = op1_64 * op2_64;
     long_imul(&product_128,op1_64,op2_64);
 
     /* now write product back to destination */
-    BX_WRITE_64BIT_REG(i->nnn(), product_64);
+    BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
-     * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
-     *   result exactly fits within r16
+     * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
+     *   result exactly fits within r64
      */
-
-    if (product_128.lo == product_64) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

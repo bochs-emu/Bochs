@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.47 2004-08-26 07:58:33 vruppert Exp $
+// $Id: misc_mem.cc,v 1.48 2004-08-30 21:47:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.47 2004-08-26 07:58:33 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.48 2004-08-30 21:47:24 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -187,6 +187,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     }
 
   size = stat_buf.st_size;
+  BX_INFO(("ROM image size is %ld ...", size));
 
   if (type > 0) {
     max_size = 0x10000;
@@ -199,14 +200,14 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   }
   if (type == 0) {
     if ( (romaddress + size) != 0x100000 ) {
-      BX_PANIC(("ROM: Sytem BIOS must end at 0xfffff"));
+      BX_PANIC(("ROM: System BIOS must end at 0xfffff"));
       return;
     }
   } else {
-    if ((size % 512) != 0) {
-      BX_PANIC(("ROM: ROM image size must multiple of 512"));
-      return;
-    }
+//    if ((size % 512) != 0) {
+//      BX_PANIC(("ROM: ROM image size must be multiple of 512"));
+//      return;
+//    }
     if ((romaddress % 2048) != 0) {
       BX_PANIC(("ROM: ROM image must start at a 2k boundary"));
       return;
@@ -216,7 +217,6 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
       return;
     }
   }
-
   offset = 0;
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
@@ -230,8 +230,7 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
- 			path
-		));
+ 			path));
 }
 #endif // #if BX_PROVIDE_CPU_MEMORY
 

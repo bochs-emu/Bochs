@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.15 2004-08-26 20:37:50 sshwarts Exp $
+// $Id: mult32.cc,v 1.16 2004-08-30 21:47:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
     product_32h = (Bit32u) (product_64 >> 32);
 
     /* set EFLAGS */
-    SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_MUL32);
+    SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_MUL_EAX);
 
     /* now write product back to destination */
     RAX = product_32l;
@@ -70,8 +70,6 @@ BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
 BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
 {
     Bit32s op1_32, op2_32;
-    Bit64s product_64;
-    Bit32u product_32h, product_32l;
 
     op1_32 = EAX;
 
@@ -84,29 +82,19 @@ BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
       read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
       }
 
-    product_64  = ((Bit64s) op1_32) * ((Bit64s) op2_32);
-    product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
-    product_32h = (Bit32u) (product_64 >> 32);
+    Bit64s product_64  = ((Bit64s) op1_32) * ((Bit64s) op2_32);
+    Bit32u product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
+    Bit32u product_32h = (Bit32u) (product_64 >> 32);
 
     /* now write product back to destination */
     RAX = product_32l;
     RDX = product_32h;
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
-     * IMUL r/m16: condition for clearing CF & OF:
+     * IMUL r/m32: condition for clearing CF & OF:
      *   EDX:EAX = sign-extend of EAX
      */
-
-    if ( (EDX==0xffffffff) && (EAX & 0x80000000) ) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else if ( (EDX==0x00000000) && (EAX < 0x80000000) ) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_IMUL_EAX);
 }
 
   void
@@ -193,8 +181,7 @@ BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
   void
 BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
 {
-    Bit32s op2_32, op3_32, product_32;
-    Bit64s product_64;
+    Bit32s op2_32, op3_32;
 
     op3_32 = i->Id();
 
@@ -207,32 +194,24 @@ BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
       read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
       }
 
-    product_32 = op2_32 * op3_32;
-    product_64 = ((Bit64s) op2_32) * ((Bit64s) op3_32);
+    Bit64s product_64  = ((Bit64s) op2_32) * ((Bit64s) op3_32);
+    Bit32u product_32l = (product_64 & 0xFFFFFFFF);
+    Bit32u product_32h = (product_64 >> 32);
 
     /* now write product back to destination */
-    BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
+    BX_WRITE_32BIT_REGZ(i->nnn(), product_32l);
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
-     * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
-     *   result exactly fits within r16
+     * IMUL r32,r/m32,imm32: condition for clearing CF & OF:
+     *   result exactly fits within r32
      */
-
-    if (product_64 == product_32) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_IMUL32);
 }
-
 
   void
 BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
 {
-    Bit32s op1_32, op2_32, product_32;
-    Bit64s product_64;
+    Bit32s op1_32, op2_32;
 
     /* op2 is a register or memory reference */
     if (i->modC0()) {
@@ -245,22 +224,16 @@ BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
 
     op1_32 = BX_READ_32BIT_REG(i->nnn());
 
-    product_32 = op1_32 * op2_32;
-    product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
+    Bit64s product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
+    Bit32u product_32l = (product_64 & 0xFFFFFFFF);
+    Bit32u product_32h = (product_64 >> 32);
 
     /* now write product back to destination */
-    BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
+    BX_WRITE_32BIT_REGZ(i->nnn(), product_32l);
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
-     * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
-     *   result exactly fits within r16
+     * IMUL r32,r/m32,imm32: condition for clearing CF & OF:
+     *   result exactly fits within r32
      */
-
-    if (product_64 == product_32) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_IMUL32);
 }

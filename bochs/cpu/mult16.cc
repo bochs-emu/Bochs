@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.15 2004-08-26 20:37:50 sshwarts Exp $
+// $Id: mult16.cc,v 1.16 2004-08-30 21:47:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
     Bit16u product_16h =  product_32 >> 16;
 
     /* set EFLAGS */
-    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_MUL16);
+    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_MUL_AX);
 
     /* now write product back to destination */
     AX = product_16l;
@@ -62,8 +62,6 @@ BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
 BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
 {
     Bit16s op1_16, op2_16;
-    Bit32s product_32;
-    Bit16u product_16h, product_16l;
 
     op1_16 = AX;
 
@@ -76,29 +74,19 @@ BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
       }
 
-    product_32  = ((Bit32s) op1_16) * ((Bit32s) op2_16);
-    product_16l = (product_32 & 0xFFFF);
-    product_16h = product_32 >> 16;
+    Bit32s product_32  = ((Bit32s) op1_16) * ((Bit32s) op2_16);
+    Bit16u product_16l = (product_32 & 0xFFFF);
+    Bit16u product_16h = product_32 >> 16;
 
     /* now write product back to destination */
     AX = product_16l;
     DX = product_16h;
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
      * IMUL r/m16: condition for clearing CF & OF:
      *   DX:AX = sign-extend of AX
      */
-
-    if ( (DX==0xffff) && (AX & 0x8000) ) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else if ( (DX==0x0000) && (AX < 0x8000) ) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL_AX);
 }
 
   void
@@ -189,9 +177,7 @@ BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
   void
 BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
 {
-    Bit16u product_16l;
     Bit16s op2_16, op3_16;
-    Bit32s product_32;
 
     op3_16 = i->Iw();
 
@@ -204,32 +190,24 @@ BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
       read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
       }
 
-    product_32  = op2_16 * op3_16;
-    product_16l = (product_32 & 0xFFFF);
+    Bit32s product_32  = op2_16 * op3_16;
+    Bit16u product_16l = (product_32 & 0xFFFF);
+    Bit16u product_16h = (product_32 >> 16);
 
     /* now write product back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), product_16l);
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
      * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
      *   result exactly fits within r16
      */
-
-    if (product_32 > -32768 && product_32 < 32767) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL16);
 }
 
   void
 BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
 {
-    Bit16u product_16l;
     Bit16s op1_16, op2_16;
-    Bit32s product_32;
 
     /* op2 is a register or memory reference */
     if (i->modC0()) {
@@ -242,22 +220,16 @@ BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
 
     op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-    product_32  = op1_16 * op2_16;
-    product_16l = (product_32 & 0xFFFF);
+    Bit32s product_32  = op1_16 * op2_16;
+    Bit16u product_16l = (product_32 & 0xFFFF);
+    Bit16u product_16h = (product_32 >> 16);
 
     /* now write product back to destination */
     BX_WRITE_16BIT_REG(i->nnn(), product_16l);
 
     /* set eflags:
-     * IMUL affects the following flags: C,O
      * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
      *   result exactly fits within r16
      */
-
-    if (product_32 > -32768 && product_32 < 32767) {
-      SET_FLAGS_OxxxxC(0, 0);
-      }
-    else {
-      SET_FLAGS_OxxxxC(1, 1);
-      }
+    SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL16);
 }
