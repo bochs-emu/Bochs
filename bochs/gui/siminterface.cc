@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.31.2.14 2002-03-18 20:13:45 bdenney Exp $
+// $Id: siminterface.cc,v 1.31.2.15 2002-04-08 06:20:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.31.2.14 2002-03-18 20:13:45 bdenney Exp $
+ * $Id: siminterface.cc,v 1.31.2.15 2002-04-08 06:20:40 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -240,9 +240,19 @@ bx_real_sim_c::quit_sim (int code) {
   //FIXME!
 #endif
   BX_INFO (("quit_sim called"));
+#if BX_WITH_WX
+  // in wxWindows, the whole simulator is running in a separate thread.
+  // our only job is to end the thread as soon as possible, NOT to shut
+  // down the whole application with an exit.
   BX_CPU_THIS_PTR async_event = 1;
   BX_CPU_THIS_PTR kill_bochs_request = 1;
   // the cpu loop will exit very soon after this condition is set.
+#else
+  // just a single thread.  Use exit() to stop the application.
+  if (!code)
+    BX_PANIC (("Quit simulation command"));
+  ::exit (0);
+#endif
 }
 
 int
@@ -347,8 +357,8 @@ bx_real_sim_c::log_msg (const char *prefix, int level, char *msg)
   be->u.logmsg.msg = msg;
   //fprintf (stderr, "calling notify.\n");
   BxEvent *response = sim_to_gui_event (be);
-  //fprintf (stderr, "notify returned %d\n", val);
-  return (response == NULL) ? -1 : 0;
+  assert (response == be);
+  return response->retcode;
 }
 
 /////////////////////////////////////////////////////////////////////////
