@@ -63,16 +63,24 @@ Detailed description:
     - redrawing after bitblt operations optimized
     - some bitblt fixes
 
+  Changes by komadori (Aug 11th 2004)
+    - redrawing after framebuffer writes optimized
+    - fixed error reporting for indexed host displays
+
+  Changes by vruppert (Aug 13th 2004)
+    - new graphics API should work now all with display libraries
+      (common functions in gui.cc for guis without specific support)
+
 Patch was created with:
   diff -urN
 Apply patch to what version:
-  cvs snapshot on Aug 11th 2004
+  cvs snapshot on Aug 13th 2004
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-diff -urN ../bochs/config.h.in ./config.h.in
---- ../bochs/config.h.in	2004-08-06 17:48:19.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/config.h.in ./config.h.in
+--- /home/volker/bochs/config.h.in	2004-08-06 17:48:19.000000000 +0200
 +++ ./config.h.in	2004-08-06 18:31:07.000000000 +0200
 @@ -266,6 +266,7 @@
  #define BX_USE_NE2K_SMF    1  // NE2K
@@ -120,10 +128,10 @@ diff -urN ../bochs/config.h.in ./config.h.in
  
  // Experimental host PCI device mapping
  #define BX_SUPPORT_PCIDEV 0
-diff -urN ../bochs/configure.in ./configure.in
---- ../bochs/configure.in	2004-08-06 17:49:52.000000000 +0200
-+++ ./configure.in	2004-08-07 09:00:46.000000000 +0200
-@@ -1480,16 +1480,42 @@
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/configure.in ./configure.in
+--- /home/volker/bochs/configure.in	2004-08-11 13:05:10.000000000 +0200
++++ ./configure.in	2004-08-11 13:23:32.000000000 +0200
+@@ -1484,16 +1484,42 @@
    [if test "$enableval" = yes; then
      AC_MSG_RESULT(yes)
      AC_DEFINE(BX_SUPPORT_VBE, 1)
@@ -166,9 +174,173 @@ diff -urN ../bochs/configure.in ./configure.in
  support_fpu=1
  AC_MSG_CHECKING(for FPU emulation)
  FPU_VAR=''
-diff -urN ../bochs/gui/gui.h ./gui/gui.h
---- ../bochs/gui/gui.h	2004-04-09 17:04:53.000000000 +0200
-+++ ./gui/gui.h	2004-08-06 14:17:14.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/carbon.cc ./gui/carbon.cc
+--- /home/volker/bochs/gui/carbon.cc	2004-06-20 07:58:08.000000000 +0200
++++ ./gui/carbon.cc	2004-08-13 16:43:16.000000000 +0200
+@@ -1458,6 +1458,10 @@
+   }
+         
+   windowUpdatesPending = true;
++
++  host_xres = x;
++  host_yres = y;
++  host_bpp = bpp;
+ }
+ 
+ 
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/gui.cc ./gui/gui.cc
+--- /home/volker/bochs/gui/gui.cc	2004-07-06 21:59:10.000000000 +0200
++++ ./gui/gui.cc	2004-08-13 13:54:27.000000000 +0200
+@@ -53,15 +53,24 @@
+   put("GUI"); // Init in specific_init
+   settype(GUILOG);
+   statusitem_count = 0;
++  framebuffer = NULL;
+ }
+ 
+ bx_gui_c::~bx_gui_c()
+ {
++  if (framebuffer != NULL) {
++    delete [] framebuffer;
++  }
+ }
+ 
+   void
+ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
+ {
++  BX_GUI_THIS new_gfx_api = 0;
++  BX_GUI_THIS host_xres = 640;
++  BX_GUI_THIS host_yres = 480;
++  BX_GUI_THIS host_bpp = 8;
++
+   specific_init(argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
+ 
+   // Define some bitmaps to use in the headerbar
+@@ -169,6 +178,9 @@
+ 
+   BX_GUI_THIS charmap_updated = 0;
+ 
++  if (!BX_GUI_THIS new_gfx_api) {
++    BX_GUI_THIS framebuffer = new Bit8u[BX_MAX_XRES * BX_MAX_YRES * 4];
++  }
+   show_headerbar();
+ }
+ 
+@@ -618,3 +630,111 @@
+   *yres = 768;
+   *bpp = 32;
+ }
++
++  bx_svga_tileinfo_t *
++bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
++{
++  if (!info) {
++    info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
++    if (!info) {
++      return NULL;
++    }
++  }
++
++  BX_GUI_THIS host_pitch = BX_GUI_THIS host_xres * ((BX_GUI_THIS host_bpp + 1) >> 3);
++
++  info->bpp = BX_GUI_THIS host_bpp;
++  info->pitch = BX_GUI_THIS host_pitch;
++  switch (info->bpp) {
++    case 15:
++      info->red_shift = 15;
++      info->green_shift = 10;
++      info->blue_shift = 5;
++      info->red_mask = 0x7c00;
++      info->green_mask = 0x03e0;
++      info->blue_mask = 0x001f;
++      break;
++    case 16:
++      info->red_shift = 16;
++      info->green_shift = 11;
++      info->blue_shift = 5;
++      info->red_mask = 0xf800;
++      info->green_mask = 0x07e0;
++      info->blue_mask = 0x001f;
++      break;
++    case 24:
++    case 32:
++      info->red_shift = 24;
++      info->green_shift = 16;
++      info->blue_shift = 8;
++      info->red_mask = 0xff0000;
++      info->green_mask = 0x00ff00;
++      info->blue_mask = 0x0000ff;
++      break;
++  }
++  info->is_indexed = (BX_GUI_THIS host_bpp == 8);
++#ifdef BX_LITTLE_ENDIAN
++  info->is_little_endian = 1;
++#else
++  info->is_little_endian = 0;
++#endif
++
++  return info;
++}
++
++  Bit8u *
++bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
++                            unsigned *w, unsigned *h)
++{
++  if (x0+X_TILESIZE > BX_GUI_THIS host_xres) {
++    *w = BX_GUI_THIS host_xres - x0;
++  }
++  else {
++    *w = X_TILESIZE;
++  }
++
++  if (y0+Y_TILESIZE > BX_GUI_THIS host_yres) {
++    *h = BX_GUI_THIS host_yres - y0;
++  }
++  else {
++    *h = Y_TILESIZE;
++  }
++
++  return (Bit8u *)framebuffer + y0 * BX_GUI_THIS host_pitch +
++                  x0 * ((BX_GUI_THIS host_bpp + 1) >> 3);
++}
++
++  void
++bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
++                                        unsigned w, unsigned h)
++{
++  Bit8u tile[X_TILESIZE * Y_TILESIZE * 4];
++  Bit8u *tile_ptr, *fb_ptr;
++  Bit16u xc, yc, fb_pitch, tile_pitch;
++  Bit8u r, diffx, diffy;
++
++  diffx = (x0 % X_TILESIZE);
++  diffy = (y0 % Y_TILESIZE);
++  if (diffx > 0) {
++    x0 -= diffx;
++    w += diffx;
++  }
++  if (diffy > 0) {
++    y0 -= diffy;
++    h += diffy;
++  }
++  fb_pitch = BX_GUI_THIS host_pitch;
++  tile_pitch = X_TILESIZE * ((BX_GUI_THIS host_bpp + 1) >> 3);
++  for (yc=y0; yc<(y0+h); yc+=Y_TILESIZE) {
++    for (xc=x0; xc<(x0+w); xc+=X_TILESIZE) {
++      fb_ptr = BX_GUI_THIS framebuffer + (yc * fb_pitch + xc * ((BX_GUI_THIS host_bpp + 1) >> 3));
++      tile_ptr = &tile[0];
++      for (r=0; r<h; r++) {
++        memcpy(tile_ptr, fb_ptr, tile_pitch);
++        fb_ptr += fb_pitch;
++        tile_ptr += tile_pitch;
++      }
++      BX_GUI_THIS graphics_tile_update(tile, xc, yc);
++    }
++  }
++}
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/gui.h ./gui/gui.h
+--- /home/volker/bochs/gui/gui.h	2004-04-09 17:04:53.000000000 +0200
++++ ./gui/gui.h	2004-08-13 11:50:29.000000000 +0200
 @@ -38,6 +38,13 @@
    bx_bool split_hpanning;
  } bx_vga_tminfo_t;
@@ -187,13 +359,26 @@ diff -urN ../bochs/gui/gui.h ./gui/gui.h
                            unsigned long cursor_x, unsigned long cursor_y,
                            bx_vga_tminfo_t tm_info, unsigned rows) = 0;
    virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
-+  virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info) {return NULL;};
-+  virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h) {return NULL;};
-+  virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h) {};
++  virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
++  virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
++  virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h);
    virtual void handle_events(void) = 0;
    virtual void flush(void) = 0;
    virtual void clear_screen(void) = 0;
-@@ -155,13 +165,13 @@
+@@ -143,6 +153,12 @@
+   unsigned statusitem_count;
+   char statusitem_text[BX_MAX_STATUSITEMS][8];
+   disp_mode_t disp_mode;
++  bx_bool new_gfx_api;
++  Bit16u host_xres;
++  Bit16u host_yres;
++  Bit16u host_pitch;
++  Bit8u host_bpp;
++  Bit8u *framebuffer;
+   };
+ 
+ 
+@@ -155,13 +171,13 @@
  //      DECLARE_GUI_VIRTUAL_METHODS()
  //    };
  // Then, each method must be defined later in the file.
@@ -212,7 +397,7 @@ diff -urN ../bochs/gui/gui.h ./gui/gui.h
  virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
  virtual void handle_events(void);                                           \
  virtual void flush(void);                                                   \
-@@ -169,7 +179,7 @@
+@@ -169,7 +185,7 @@
  virtual bx_bool palette_change(unsigned index,                              \
  unsigned red, unsigned green, unsigned blue);                           \
  virtual void dimension_update(unsigned x, unsigned y, unsigned fheight=0,   \
@@ -221,7 +406,7 @@ diff -urN ../bochs/gui/gui.h ./gui/gui.h
  virtual unsigned create_bitmap(const unsigned char *bmap,                   \
  unsigned xdim, unsigned ydim);                                          \
  virtual unsigned headerbar_bitmap(unsigned bmap_id, unsigned alignment,     \
-@@ -182,6 +192,14 @@
+@@ -182,6 +198,14 @@
  virtual void exit(void);                                                    \
  /* end of DECLARE_GUI_VIRTUAL_METHODS */
  
@@ -236,9 +421,23 @@ diff -urN ../bochs/gui/gui.h ./gui/gui.h
  #define BX_MAX_PIXMAPS 16
  #define BX_MAX_HEADERBAR_ENTRIES 11
  #define BX_HEADER_BAR_Y 32
-diff -urN ../bochs/gui/rfb.cc ./gui/rfb.cc
---- ../bochs/gui/rfb.cc	2004-06-20 07:58:08.000000000 +0200
-+++ ./gui/rfb.cc	2004-08-11 11:03:33.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/macintosh.cc ./gui/macintosh.cc
+--- /home/volker/bochs/gui/macintosh.cc	2004-06-20 07:58:08.000000000 +0200
++++ ./gui/macintosh.cc	2004-08-13 16:44:14.000000000 +0200
+@@ -1137,6 +1137,10 @@
+                 width = x;
+                 height = y;
+         }
++
++  host_xres = x;
++  host_yres = y;
++  host_bpp = bpp;
+ }
+ 
+ 
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/rfb.cc ./gui/rfb.cc
+--- /home/volker/bochs/gui/rfb.cc	2004-06-20 07:58:08.000000000 +0200
++++ ./gui/rfb.cc	2004-08-13 00:18:13.000000000 +0200
 @@ -45,6 +45,7 @@
  public:
    bx_rfb_gui_c (void) {}
@@ -256,7 +455,16 @@ diff -urN ../bochs/gui/rfb.cc ./gui/rfb.cc
  static unsigned rfbDimensionX, rfbDimensionY;
  static long  rfbHeaderbarY;
  static long  rfbTileX = 0;
-@@ -793,6 +794,62 @@
+@@ -270,6 +271,8 @@
+ #endif
+   }
+   if (timeout < 0) BX_PANIC(("timeout! no client present"));
++
++  new_gfx_api = 1;
+ }
+ 
+ void rfbSetStatus(int element, bx_bool active)
+@@ -793,6 +796,62 @@
  }
  
  
@@ -319,7 +527,7 @@ diff -urN ../bochs/gui/rfb.cc ./gui/rfb.cc
  
  // ::DIMENSION_UPDATE()
  //
-@@ -1174,7 +1231,7 @@
+@@ -1174,7 +1233,7 @@
      char *newBits;
      int  i;
  
@@ -328,9 +536,9 @@ diff -urN ../bochs/gui/rfb.cc ./gui/rfb.cc
          BX_ERROR(("Dimensions out of bounds.  x=%i y=%i w=%i h=%i", x, y, width, height));
      }
      if(sGlobal != INVALID_SOCKET) {
-diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
---- ../bochs/gui/sdl.cc	2004-08-06 17:49:53.000000000 +0200
-+++ ./gui/sdl.cc	2004-08-11 10:04:52.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/sdl.cc ./gui/sdl.cc
+--- /home/volker/bochs/gui/sdl.cc	2004-08-06 17:49:53.000000000 +0200
++++ ./gui/sdl.cc	2004-08-13 00:18:30.000000000 +0200
 @@ -47,6 +47,7 @@
  public:
    bx_sdl_gui_c (void);
@@ -339,7 +547,16 @@ diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
    virtual void set_display_mode (disp_mode_t newmode);
    virtual void statusbar_setitem(int element, bx_bool active);
  };
-@@ -704,6 +705,84 @@
+@@ -284,6 +285,8 @@
+       }
+     }
+   }
++
++  new_gfx_api = 1;
+ }
+ 
+ void sdl_set_status_text(int element, const char *text, bx_bool active)
+@@ -704,6 +707,84 @@
    }
  }
  
@@ -424,9 +641,23 @@ diff -urN ../bochs/gui/sdl.cc ./gui/sdl.cc
  static Bit32u sdl_sym_to_bx_key (SDLKey sym)
  {
    switch (sym)
-diff -urN ../bochs/gui/wx.cc ./gui/wx.cc
---- ../bochs/gui/wx.cc	2004-06-20 07:58:08.000000000 +0200
-+++ ./gui/wx.cc	2004-08-07 21:10:48.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/win32.cc ./gui/win32.cc
+--- /home/volker/bochs/gui/win32.cc	2004-06-20 07:58:08.000000000 +0200
++++ ./gui/win32.cc	2004-08-13 11:14:38.000000000 +0200
+@@ -1631,6 +1631,10 @@
+   MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
+ 
+   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
++
++  host_xres = x;
++  host_yres = y;
++  host_bpp = bpp;
+ }
+ 
+ 
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/wx.cc ./gui/wx.cc
+--- /home/volker/bochs/gui/wx.cc	2004-06-20 07:58:08.000000000 +0200
++++ ./gui/wx.cc	2004-08-13 00:19:33.000000000 +0200
 @@ -66,6 +66,7 @@
  public:
    bx_wx_gui_c (void) {}
@@ -446,7 +677,16 @@ diff -urN ../bochs/gui/wx.cc ./gui/wx.cc
  static unsigned long wxCursorX = 0;
  static unsigned long wxCursorY = 0;
  static unsigned long wxFontX = 0;
-@@ -1408,12 +1409,62 @@
+@@ -909,6 +910,8 @@
+ #else
+     bx_keymap.loadKeymap(NULL);
+ #endif
++
++  new_gfx_api = 1;
+ }
+ 
+ // ::HANDLE_EVENTS()
+@@ -1408,12 +1411,62 @@
  void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
  {
    IFDBG_VGA (wxLogDebug (wxT ("graphics_tile_update")));
@@ -511,9 +751,9 @@ diff -urN ../bochs/gui/wx.cc ./gui/wx.cc
  // ::DIMENSION_UPDATE()
  //
  // Called from the simulator when the VGA mode changes it's X,Y dimensions.
-diff -urN ../bochs/gui/x.cc ./gui/x.cc
---- ../bochs/gui/x.cc	2004-06-20 07:58:09.000000000 +0200
-+++ ./gui/x.cc	2004-08-06 14:17:14.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/gui/x.cc ./gui/x.cc
+--- /home/volker/bochs/gui/x.cc	2004-06-20 07:58:09.000000000 +0200
++++ ./gui/x.cc	2004-08-13 13:57:13.000000000 +0200
 @@ -59,6 +59,7 @@
  public:
    bx_x_gui_c (void);
@@ -538,7 +778,24 @@ diff -urN ../bochs/gui/x.cc ./gui/x.cc
    int      default_depth;
    XEvent report;
    XSetWindowAttributes win_attr;
-@@ -1617,6 +1618,111 @@
+@@ -622,7 +623,6 @@
+   strcpy(bx_status_info_text, "CTRL + 3rd button enables mouse");
+ 
+   x_init_done = true;
+-
+ }
+ 
+   curr_background = 0;
+@@ -639,6 +639,8 @@
+   if(bx_options.keyboard.OuseMapping->get()) {
+     bx_keymap.loadKeymap(convertStringToXKeysym);
+     }
++
++  new_gfx_api = 1;
+ }
+ 
+   void
+@@ -1617,6 +1619,111 @@
              x_tilesize, y_size);
  }
  
@@ -617,7 +874,7 @@ diff -urN ../bochs/gui/x.cc ./gui/x.cc
 +  info->is_little_endian = (ximage->byte_order == LSBFirst);
 +
 +  return info;
-+};
++}
 +
 +  Bit8u *
 +bx_x_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
@@ -646,12 +903,21 @@ diff -urN ../bochs/gui/x.cc ./gui/x.cc
 +{
 +  XPutImage(bx_x_display, win, gc, ximage, 0, 0,
 +            x0, y0+bx_headerbar_y, w, h);
-+};
++}
  
    bx_bool
  bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
-diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
---- ../bochs/iodev/Makefile.in	2004-02-18 19:29:33.000000000 +0100
+@@ -1671,7 +1778,7 @@
+     XResizeWindow(bx_x_display, win, x, y+bx_headerbar_y+bx_statusbar_y);
+     dimension_x = x;
+     dimension_y = y;
+-    }
++  }
+ }
+ 
+ 
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/iodev/Makefile.in ./iodev/Makefile.in
+--- /home/volker/bochs/iodev/Makefile.in	2004-02-18 19:29:33.000000000 +0100
 +++ ./iodev/Makefile.in	2004-08-06 14:17:14.000000000 +0200
 @@ -95,6 +95,7 @@
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
@@ -690,10 +956,10 @@ diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
    ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
    ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
    ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
---- ../bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.cc	2004-08-11 12:30:46.000000000 +0200
-@@ -0,0 +1,3422 @@
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
+--- /home/volker/bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
++++ ./iodev/svga_cirrus.cc	2004-08-13 13:54:45.000000000 +0200
+@@ -0,0 +1,3427 @@
 +//
 +// limited PCI/ISA CLGD5446 support for Bochs
 +//
@@ -704,7 +970,6 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +// there are still many unimplemented features:
 +//
 +// - 1bpp/4bpp
-+// - painting minimal region
 +// - transparent compare not complete
 +// - some bitblt functions
 +// - ???
@@ -1002,9 +1267,10 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  BX_CIRRUS_THIS svga_needs_update_dispentire = true;
 +  BX_CIRRUS_THIS svga_needs_update_mode = false;
 +
-+  BX_CIRRUS_THIS svga_xres = 0;
-+  BX_CIRRUS_THIS svga_yres = 0;
-+  BX_CIRRUS_THIS svga_bpp = 0;
++  BX_CIRRUS_THIS svga_xres = 640;
++  BX_CIRRUS_THIS svga_yres = 480;
++  BX_CIRRUS_THIS svga_bpp = 8;
++  BX_CIRRUS_THIS svga_pitch = 640;
 +  BX_CIRRUS_THIS bank_base[0] = 0;
 +  BX_CIRRUS_THIS bank_base[1] = 0;
 +  BX_CIRRUS_THIS bank_limit[0] = 0;
@@ -1359,8 +1625,9 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          mem_write_mode4and5_16bpp(mode, offset, value);
 +        }
 +      }
-+      // FIXME
-+      BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++      BX_CIRRUS_THIS svga_needs_update_tile = true;
++      SET_TILE_UPDATED(((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
++                       (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE, 1);
 +      return;
 +    } else if ((addr >= (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256)) &&
 +               (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE))) {
@@ -1417,8 +1684,9 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          mem_write_mode4and5_16bpp(mode, offset, value);
 +        }
 +      }
-+      // FIXME
-+      BX_CIRRUS_THIS svga_needs_update_dispentire = true;
++      BX_CIRRUS_THIS svga_needs_update_tile = true;
++      SET_TILE_UPDATED(((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
++                       (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE, 1);
 +    }
 +  } else if (addr >= 0xB8000 && addr <= 0xBFFFF) {
 +    // memory-mapped I/O.
@@ -1825,7 +2093,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +  void
 +bx_svga_cirrus_c::svga_update(void)
 +{
-+  unsigned width, height, offset = 0;
++  unsigned width, height, pitch;
 +
 +  /* skip screen update when the sequencer is in reset mode or video is disabled */
 +  if (! BX_CIRRUS_THIS s.sequencer.reset1 ||
@@ -1850,8 +2118,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +  width  = BX_CIRRUS_THIS svga_xres;
 +  height = BX_CIRRUS_THIS svga_yres;
-+  offset = (BX_CIRRUS_THIS crtc.reg[0x13] << 3) |
-+           ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x10) << 7);
++  pitch = BX_CIRRUS_THIS svga_pitch;
 +
 +  if (BX_CIRRUS_THIS svga_needs_update_mode) {
 +    width  = BX_CIRRUS_THIS svga_xres;
@@ -1883,17 +2150,17 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    if (info.is_indexed) {
 +      switch (BX_CIRRUS_THIS svga_dispbpp) {
 +        case 4:
-+          BX_ERROR(("cannot draw 4bpp SVGA"));
-+          break;
-+        case 8:
 +        case 15:
 +        case 16:
 +        case 24:
 +        case 32:
++          BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
++          break;
++        case 8:
 +          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
 +            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
 +              if (GET_TILE_UPDATED (xti, yti)) {
-+                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + xc);
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
 +                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
 +                for (r=0; r<h; r++) {
 +                  vid_ptr2  = vid_ptr;
@@ -1914,7 +2181,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                      }
 +                    }
 +                  }
-+                  vid_ptr  += offset;
++                  vid_ptr  += pitch;
 +                  tile_ptr += info.pitch;
 +                }
 +                // FIXME? hardware cursor unsupported
@@ -1935,7 +2202,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
 +            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
 +              if (GET_TILE_UPDATED (xti, yti)) {
-+                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + xc);
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
 +                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
 +                for (r=0; r<h; r++) {
 +                  vid_ptr2  = vid_ptr;
@@ -1957,7 +2224,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                      }
 +                    }
 +                  }
-+                  vid_ptr  += offset;
++                  vid_ptr  += pitch;
 +                  tile_ptr += info.pitch;
 +                }
 +                draw_hardware_cursor(xc, yc, &info);
@@ -1971,7 +2238,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
 +            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
 +              if (GET_TILE_UPDATED (xti, yti)) {
-+                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc<<1));
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc<<1));
 +                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
 +                for (r=0; r<h; r++) {
 +                  vid_ptr2  = vid_ptr;
@@ -1994,7 +2261,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                      }
 +                    }
 +                  }
-+                  vid_ptr  += offset;
++                  vid_ptr  += pitch;
 +                  tile_ptr += info.pitch; 
 +                }
 +                draw_hardware_cursor(xc, yc, &info);
@@ -2008,7 +2275,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
 +            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
 +              if (GET_TILE_UPDATED (xti, yti)) {
-+                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc<<1));
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc<<1));
 +                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
 +                for (r=0; r<h; r++) {
 +                  vid_ptr2  = vid_ptr;
@@ -2031,7 +2298,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                      }
 +                    }
 +                  }
-+                  vid_ptr  += offset;
++                  vid_ptr  += pitch;
 +                  tile_ptr += info.pitch; 
 +                }
 +                draw_hardware_cursor(xc, yc, &info);
@@ -2045,7 +2312,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
 +            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
 +              if (GET_TILE_UPDATED (xti, yti)) {
-+                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + 3*xc);
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + 3*xc);
 +                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
 +                for (r=0; r<h; r++) {
 +                  vid_ptr2  = vid_ptr;
@@ -2069,7 +2336,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                      }
 +                    }
 +                  }
-+                  vid_ptr  += offset;
++                  vid_ptr  += pitch;
 +                  tile_ptr += info.pitch; 
 +                }
 +                draw_hardware_cursor(xc, yc, &info);
@@ -2083,7 +2350,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
 +            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
 +              if (GET_TILE_UPDATED (xti, yti)) {
-+                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc<<2));
++                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc<<2));
 +                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
 +                for (r=0; r<h; r++) {
 +                  vid_ptr2  = vid_ptr;
@@ -2108,7 +2375,7 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +                      }
 +                    }
 +                  }
-+                  vid_ptr  += offset;
++                  vid_ptr  += pitch;
 +                  tile_ptr += info.pitch;
 +                }
 +                draw_hardware_cursor(xc, yc, &info);
@@ -2133,12 +2400,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          {
 +            if (GET_TILE_UPDATED (xti, yti))
 +            {
-+              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + xc);
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
 +              tile_ptr = BX_CIRRUS_THIS tilemem;
 +              for (r=0; r<Y_TILESIZE; r++)
 +              {
 +                memcpy(tile_ptr,vid_ptr,X_TILESIZE);
-+                vid_ptr  += offset;
++                vid_ptr  += pitch;
 +                tile_ptr += X_TILESIZE;
 +                }
 +              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
@@ -2154,12 +2421,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          {
 +            if (GET_TILE_UPDATED (xti, yti))
 +            {
-+              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc << 1));
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc << 1));
 +              tile_ptr = BX_CIRRUS_THIS tilemem;
 +              for (r=0; r<Y_TILESIZE; r++)
 +              {
 +                memcpy(tile_ptr,vid_ptr,X_TILESIZE<<1);
-+                vid_ptr  += offset;
++                vid_ptr  += pitch;
 +                tile_ptr += X_TILESIZE << 1;
 +                }
 +              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
@@ -2175,12 +2442,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          {
 +            if (GET_TILE_UPDATED (xti, yti))
 +            {
-+              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc * 3));
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc * 3));
 +              tile_ptr = BX_CIRRUS_THIS tilemem;
 +              for (r=0; r<Y_TILESIZE; r++)
 +              {
 +                memcpy(tile_ptr,vid_ptr,X_TILESIZE*3);
-+                vid_ptr  += offset;
++                vid_ptr  += pitch;
 +                tile_ptr += X_TILESIZE * 3;
 +                }
 +              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
@@ -2196,12 +2463,12 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +          {
 +            if (GET_TILE_UPDATED (xti, yti))
 +            {
-+              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * offset + (xc << 2));
++              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc << 2));
 +              tile_ptr = BX_CIRRUS_THIS tilemem;
 +              for (r=0; r<Y_TILESIZE; r++)
 +              {
 +                memcpy(tile_ptr,vid_ptr,X_TILESIZE<<2);
-+                vid_ptr  += offset;
++                vid_ptr  += pitch;
 +                tile_ptr += X_TILESIZE << 2;
 +                }
 +              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
@@ -2348,10 +2615,14 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +    case 0x0c: // VGA (display offset 0x00ff00)
 +    case 0x0d: // VGA (display offset 0x0000ff)
 +    case 0x12: // VGA
-+    case 0x13: // VGA
 +    case 0x1A: // 0x01: interlaced video mode
-+    case 0x1B: // 0x01: offset 0x010000, 0x0c: offset 0x060000
 +    case 0x1D: // 0x80: offset 0x080000 (>=CLGD5434)
++      BX_CIRRUS_THIS svga_needs_update_mode = true;
++      break;
++
++    case 0x13: // VGA
++    case 0x1B: // 0x01: offset 0x010000, 0x0c: offset 0x060000
++      BX_CIRRUS_THIS svga_pitch = (BX_CIRRUS_THIS crtc.reg[0x13] << 3) | ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x10) << 7);
 +      BX_CIRRUS_THIS svga_needs_update_mode = true;
 +      break;
 +
@@ -4116,10 +4387,10 @@ diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +
 +#endif // BX_SUPPORT_CLGD54XX
-diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
---- ../bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.h	2004-08-10 20:30:06.000000000 +0200
-@@ -0,0 +1,239 @@
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
+--- /home/volker/bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
++++ ./iodev/svga_cirrus.h	2004-08-12 11:53:01.000000000 +0200
+@@ -0,0 +1,240 @@
 +#if BX_SUPPORT_CLGD54XX
 +
 +#if BX_USE_CIRRUS_SMF
@@ -4285,6 +4556,7 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +
 +  unsigned svga_xres;
 +  unsigned svga_yres;
++  unsigned svga_pitch;
 +  unsigned svga_bpp;
 +  unsigned svga_dispbpp;
 +
@@ -4359,8 +4631,8 @@ diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +};
 +
 +#endif // BX_SUPPORT_CLGD54XX
-diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
---- ../bochs/iodev/vga.cc	2004-08-06 17:49:55.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/iodev/vga.cc ./iodev/vga.cc
+--- /home/volker/bochs/iodev/vga.cc	2004-08-06 17:49:55.000000000 +0200
 +++ ./iodev/vga.cc	2004-08-07 09:07:14.000000000 +0200
 @@ -80,6 +80,13 @@
  
@@ -4549,8 +4821,8 @@ diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
  
    /* addr between 0xA0000 and 0xAFFFF */
  
-diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
---- ../bochs/iodev/vga.h	2004-07-21 22:39:54.000000000 +0200
+diff -urNX /home/volker/exclude-diff /home/volker/bochs/iodev/vga.h ./iodev/vga.h
+--- /home/volker/bochs/iodev/vga.h	2004-07-21 22:39:54.000000000 +0200
 +++ ./iodev/vga.h	2004-08-06 14:17:14.000000000 +0200
 @@ -79,6 +79,11 @@
  #define BX_MAX_XRES VBE_DISPI_MAX_XRES
