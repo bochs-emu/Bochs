@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.11 2002-11-07 14:02:47 shap Exp $
+// $Id: stack_pro.cc,v 1.12 2002-11-07 15:42:14 shap Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -138,12 +138,7 @@ BX_CPU_C::push_64(Bit64u value64)
 {
   /* 64bit stack size: pushes use SS:RSP, assume protected mode  */
   if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, RSP, 8)) {
-    /* FIX: I (shap) think this should be an SS_EXCEPTION similar to
-       the 32bit case above, and it used to be commented #SS(0), but
-       until somebody who groks the hammer chip can double check this
-       I am leaving this as a BX_PANIC(). If this change is correct,
-       please change the BX_PANIC to a BX_INFO(). */
-    BX_PANIC(("push_64(): push outside stack limits"));
+    BX_INFO(("push_64(): push outside stack limits"));
     exception(BX_SS_EXCEPTION, 0, 0); /* #SS(0) */
     }
 
