@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.20 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: logical16.cc,v 1.21 2004-08-11 21:26:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_Xor16)
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -86,7 +86,7 @@ BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(nnn, result_16);
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 }
 
 
@@ -100,7 +100,7 @@ BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
   sum_16 = op1_16 ^ op2_16;
   AX = sum_16;
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_XOR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_LOGIC16);
 }
 
   void
@@ -121,7 +121,7 @@ BX_CPU_C::XOR_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_XOR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 }
 
 
@@ -143,7 +143,7 @@ BX_CPU_C::OR_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_OR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 }
 
 
@@ -183,7 +183,7 @@ BX_CPU_C::OR_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(result_16);
     }
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_OR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 }
 
 
@@ -212,7 +212,7 @@ BX_CPU_C::OR_GwEw(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
 #if !defined(BX_HostAsm_Or16)
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_OR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -226,7 +226,7 @@ BX_CPU_C::OR_AXIw(bxInstruction_c *i)
   sum_16 = op1_16 | op2_16;
   AX = sum_16;
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_OR16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_LOGIC16);
 }
 
   void
@@ -264,7 +264,7 @@ BX_CPU_C::AND_EwGw(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_And16)
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -294,7 +294,7 @@ BX_CPU_C::AND_GwEw(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 
 #if !defined(BX_HostAsm_And16)
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -318,7 +318,7 @@ BX_CPU_C::AND_AXIw(bxInstruction_c *i)
   AX = result_16;
 
 #if !defined(BX_HostAsm_And16)
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -357,7 +357,7 @@ BX_CPU_C::AND_EwIw(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_And16)
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_AND16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -384,7 +384,7 @@ BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
   Bit16u result_16;
   result_16 = op1_16 & op2_16;
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_TEST16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -405,7 +405,7 @@ BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
 #else
   Bit16u result_16;
   result_16 = op1_16 & op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_TEST16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }
 
@@ -431,6 +431,6 @@ BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
 #else
   Bit16u result_16;
   result_16 = op1_16 & op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_TEST16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, result_16, BX_INSTR_LOGIC16);
 #endif
 }

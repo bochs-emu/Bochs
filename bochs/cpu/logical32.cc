@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.21 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: logical32.cc,v 1.22 2004-08-11 21:26:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ BX_CPU_C::XOR_EdGd(bxInstruction_c *i)
     Write_RMW_virtual_dword(result_32);
     }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 }
 
 
@@ -71,7 +71,7 @@ BX_CPU_C::XOR_GdEd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(nnn, result_32);
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 }
 
 
@@ -91,7 +91,7 @@ BX_CPU_C::XOR_EAXId(bxInstruction_c *i)
   EAX = sum_32;
 #endif
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_XOR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_LOGIC32);
 }
 
   void
@@ -112,7 +112,7 @@ BX_CPU_C::XOR_EdId(bxInstruction_c *i)
     Write_RMW_virtual_dword(result_32);
     }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 }
 
 
@@ -134,7 +134,7 @@ BX_CPU_C::OR_EdId(bxInstruction_c *i)
     Write_RMW_virtual_dword(result_32);
     }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 }
 
   void
@@ -173,7 +173,7 @@ BX_CPU_C::OR_EdGd(bxInstruction_c *i)
     Write_RMW_virtual_dword(result_32);
     }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 }
 
 
@@ -202,7 +202,7 @@ BX_CPU_C::OR_GdEd(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
 
 #if !defined(BX_HostAsm_Or32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }
 
@@ -222,7 +222,7 @@ BX_CPU_C::OR_EAXId(bxInstruction_c *i)
   EAX = sum_32;
 #endif
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_OR32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_LOGIC32);
 }
 
 
@@ -262,7 +262,7 @@ BX_CPU_C::AND_EdGd(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_And32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }
 
@@ -292,7 +292,7 @@ BX_CPU_C::AND_GdEd(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
 
 #if !defined(BX_HostAsm_And32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }
 
@@ -321,7 +321,7 @@ BX_CPU_C::AND_EAXId(bxInstruction_c *i)
 #endif
 
 #if !defined(BX_HostAsm_And32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }
 
@@ -361,7 +361,7 @@ BX_CPU_C::AND_EdId(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_And32)
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }
 
@@ -388,7 +388,7 @@ BX_CPU_C::TEST_EdGd(bxInstruction_c *i)
   Bit32u result_32;
   result_32 = op1_32 & op2_32;
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_TEST32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }
 
@@ -409,7 +409,7 @@ BX_CPU_C::TEST_EAXId(bxInstruction_c *i)
 #else
   Bit32u result_32;
   result_32 = op1_32 & op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_TEST32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }
 
@@ -435,6 +435,6 @@ BX_CPU_C::TEST_EdId(bxInstruction_c *i)
 #else
   Bit32u result_32;
   result_32 = op1_32 & op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_TEST32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_LOGIC32);
 #endif
 }

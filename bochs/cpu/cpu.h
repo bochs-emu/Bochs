@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.168 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: cpu.h,v 1.169 2004-08-11 21:26:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3119,114 +3119,148 @@ BX_CPU_C::set_PF_base(Bit8u val) {
     BX_CPU_THIS_PTR eflags.val32 |= val<<2;
     }
 
+// *******************
+// OSZAPC
+// *******************
 
-#define SET_FLAGS_OSZAPC_8(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszapc.op1_8 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_8 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_8 = result; \
+/* op1, op2, result */
+#define SET_FLAGS_OSZAPC_SIZE(size, lf_op1, lf_op2, lf_result, ins) { \
+    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
+    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
+    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
     BX_CPU_THIS_PTR oszapc.instr = ins; \
     BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
+}
 
-#define SET_FLAGS_OSZAPC_8_CF(op1, op2, result, ins, last_CF) { \
-    BX_CPU_THIS_PTR oszapc.op1_8 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_8 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_8 = result; \
+#define SET_FLAGS_OSZAPC_8(op1, op2, result, ins) \
+    SET_FLAGS_OSZAPC_SIZE(_8, op1, op2, result, ins)
+#define SET_FLAGS_OSZAPC_16(op1, op2, result, ins) \
+    SET_FLAGS_OSZAPC_SIZE(_16, op1, op2, result, ins)
+#define SET_FLAGS_OSZAPC_32(op1, op2, result, ins) \
+    SET_FLAGS_OSZAPC_SIZE(_32, op1, op2, result, ins)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_64(op1, op2, result, ins) \
+    SET_FLAGS_OSZAPC_SIZE(_64, op1, op2, result, ins)
+#endif
+
+/* op1 and result only */
+#define SET_FLAGS_OSZAPC_S1_SIZE(size, lf_op1, lf_result, ins) { \
+    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
+    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
+    BX_CPU_THIS_PTR oszapc.instr = ins; \
+    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+}
+
+#define SET_FLAGS_OSZAPC_S1_8(op1, result, ins) \
+    SET_FLAGS_OSZAPC_S1_SIZE(_8, op1, result, ins)
+#define SET_FLAGS_OSZAPC_S1_16(op1, result, ins) \
+    SET_FLAGS_OSZAPC_S1_SIZE(_16, op1, result, ins)
+#define SET_FLAGS_OSZAPC_S1_32(op1, result, ins) \
+    SET_FLAGS_OSZAPC_S1_SIZE(_32, op1, result, ins)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_S1_64(op1, result, ins) \
+    SET_FLAGS_OSZAPC_S1_SIZE(_64, op1, result, ins)
+#endif
+
+/* op2 and result only */
+#define SET_FLAGS_OSZAPC_S2_SIZE(size, lf_op2, lf_result, ins) { \
+    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
+    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
+    BX_CPU_THIS_PTR oszapc.instr = ins; \
+    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+}
+
+#define SET_FLAGS_OSZAPC_S2_8(op2, result, ins) \
+    SET_FLAGS_OSZAPC_S2_SIZE(_8, op2, result, ins)
+#define SET_FLAGS_OSZAPC_S2_16(op2, result, ins) \
+    SET_FLAGS_OSZAPC_S2_SIZE(_16, op2, result, ins)
+#define SET_FLAGS_OSZAPC_S2_32(op2, result, ins) \
+    SET_FLAGS_OSZAPC_S2_SIZE(_32, op2, result, ins)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_S2_64(op2, result, ins) \
+    SET_FLAGS_OSZAPC_S2_SIZE(_64, op2, result, ins)
+#endif
+
+/* op1 and op2 only */
+#define SET_FLAGS_OSZAPC_S1S2_SIZE(size, lf_op1, lf_op2, ins) { \
+    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
+    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
+    BX_CPU_THIS_PTR oszapc.instr = ins; \
+    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+}
+
+#define SET_FLAGS_OSZAPC_S1S2_8(op1, op2, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_8, op1, op2, ins)
+#define SET_FLAGS_OSZAPC_S1S2_16(op1, op2, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_16, op1, op2, ins)
+#define SET_FLAGS_OSZAPC_S1S2_32(op1, op2, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_32, op1, op2, ins)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_S1S2_64(op1, op2, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_64, op1, op2, ins)
+#endif
+
+/* result only */
+#define SET_FLAGS_OSZAPC_RESULT_SIZE(size, lf_result, ins) { \
+    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
+    BX_CPU_THIS_PTR oszapc.instr = ins; \
+    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+}
+
+#define SET_FLAGS_OSZAPC_RESULT_8(result, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_8, result, ins)
+#define SET_FLAGS_OSZAPC_RESULT_16(result, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_16, result, ins)
+#define SET_FLAGS_OSZAPC_RESULT_32(result, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_32, result, ins)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_RESULT_64(result, ins) \
+    SET_FLAGS_OSZAPC_S1S2_SIZE(_64, result, ins)
+#endif
+
+#define SET_FLAGS_OSZAPC_CF_SIZE(size, lf_op1, lf_op2, lf_result, ins, last_CF) { \
+    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
+    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
+    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
     BX_CPU_THIS_PTR oszapc.instr = ins; \
     BX_CPU_THIS_PTR oszapc.prev_CF = last_CF; \
     BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
+}
 
-#define SET_FLAGS_OSZAPC_16(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszapc.op1_16 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_16 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_16 = result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
+/* op1, op2, result and last CF */
+#define SET_FLAGS_OSZAPC_8_CF(op1, op2, result, ins, last_CF) \
+    SET_FLAGS_OSZAPC_CF_SIZE(_8, op1, op2, result, ins, last_CF)
+#define SET_FLAGS_OSZAPC_16_CF(op1, op2, result, ins, last_CF) \
+    SET_FLAGS_OSZAPC_CF_SIZE(_16, op1, op2, result, ins, last_CF)
+#define SET_FLAGS_OSZAPC_32_CF(op1, op2, result, ins, last_CF) \
+    SET_FLAGS_OSZAPC_CF_SIZE(_32, op1, op2, result, ins, last_CF)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_64_CF(op1, op2, result, ins, last_CF) \
+    SET_FLAGS_OSZAPC_CF_SIZE(_64, op1, op2, result, ins, last_CF)
+#endif
 
-#define SET_FLAGS_OSZAPC_16_CF(op1, op2, result, ins, last_CF) { \
-    BX_CPU_THIS_PTR oszapc.op1_16 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_16 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_16 = result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR oszapc.prev_CF = last_CF; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
+// *******************
+// OSZAP
+// *******************
 
-#define SET_FLAGS_OSZAPC_32(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszapc.op1_32 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_32 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_32 = result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
-
-#define SET_FLAGS_OSZAPC_32_CF(op1, op2, result, ins, last_CF) { \
-    BX_CPU_THIS_PTR oszapc.op1_32 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_32 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_32 = result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR oszapc.prev_CF = last_CF; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
-
-#define SET_FLAGS_OSZAPC_64(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszapc.op1_64 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_64 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_64 = result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
-
-#define SET_FLAGS_OSZAPC_64_CF(op1, op2, result, ins, last_CF) { \
-    BX_CPU_THIS_PTR oszapc.op1_64 = op1; \
-    BX_CPU_THIS_PTR oszapc.op2_64 = op2; \
-    BX_CPU_THIS_PTR oszapc.result_64 = result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR oszapc.prev_CF = last_CF; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
-    }
-
-
-#define SET_FLAGS_OSZAP_8(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszap.op1_8 = op1; \
-    BX_CPU_THIS_PTR oszap.op2_8 = op2; \
-    BX_CPU_THIS_PTR oszap.result_8 = result; \
+#define SET_FLAGS_OSZAP_SIZE(size, lf_op1, lf_op2, lf_result, ins) { \
+    BX_CPU_THIS_PTR oszap.op1##size = lf_op1; \
+    BX_CPU_THIS_PTR oszap.op2##size = lf_op2; \
+    BX_CPU_THIS_PTR oszap.result##size = lf_result; \
     BX_CPU_THIS_PTR oszap.instr = ins; \
     BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
-    }
+}
 
-#define SET_FLAGS_OSZAP_16(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszap.op1_16 = op1; \
-    BX_CPU_THIS_PTR oszap.op2_16 = op2; \
-    BX_CPU_THIS_PTR oszap.result_16 = result; \
-    BX_CPU_THIS_PTR oszap.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
-    }
-
-#define SET_FLAGS_OSZAP_32(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszap.op1_32 = op1; \
-    BX_CPU_THIS_PTR oszap.op2_32 = op2; \
-    BX_CPU_THIS_PTR oszap.result_32 = result; \
-    BX_CPU_THIS_PTR oszap.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
-    }
-
-#define SET_FLAGS_OSZAP_64(op1, op2, result, ins) { \
-    BX_CPU_THIS_PTR oszap.op1_64 = op1; \
-    BX_CPU_THIS_PTR oszap.op2_64 = op2; \
-    BX_CPU_THIS_PTR oszap.result_64 = result; \
-    BX_CPU_THIS_PTR oszap.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
-    }
-
-#define SET_FLAGS_OxxxxC(new_of, new_cf) { \
-    BX_CPU_THIS_PTR eflags.val32 &= ~((1<<11) | (1<<0)); \
-    BX_CPU_THIS_PTR eflags.val32 |= ((!!new_of)<<11) | ((!!new_cf)<<0); \
-    BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0; \
-    /* ??? could also mark other bits undefined here */ \
-    }
+#define SET_FLAGS_OSZAP_8(op1, op2, result, ins) \
+    SET_FLAGS_OSZAP_SIZE(_8, op1, op2, result, ins)
+#define SET_FLAGS_OSZAP_16(op1, op2, result, ins) \
+    SET_FLAGS_OSZAP_SIZE(_16, op1, op2, result, ins)
+#define SET_FLAGS_OSZAP_32(op1, op2, result, ins) \
+    SET_FLAGS_OSZAP_SIZE(_32, op1, op2, result, ins)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAP_64(op1, op2, result, ins) \
+    SET_FLAGS_OSZAP_SIZE(_64, op1, op2, result, ins)
+#endif
 
 IMPLEMENT_EFLAGS_ACCESSORS()
 IMPLEMENT_EFLAG_ACCESSOR   (DF, 10)
@@ -3241,7 +3275,9 @@ IMPLEMENT_EFLAG_ACCESSOR_IOPL(  12)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,  9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 
-
+//
+// For decoding...
+//
 
 #define BX_REPE_PREFIX  10
 #define BX_REPNE_PREFIX 11
@@ -3249,10 +3285,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 #define BX_TASK_FROM_JUMP         10
 #define BX_TASK_FROM_CALL_OR_INT  11
 #define BX_TASK_FROM_IRET         12
-
-//
-// For decoding...
-//
 
 // If the Immediate bit is set, the lowest 3 bits of the attribute
 // specify which kinds of immediate data a required by instruction.
@@ -3316,7 +3348,6 @@ typedef enum _show_flags {
 // Can be used as LHS or RHS.
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
-
 #define setEFlagsOSZAPC(flags32) {                       \
   BX_CPU_THIS_PTR eflags.val32 =                         \
     (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | \
@@ -3331,5 +3362,11 @@ typedef enum _show_flags {
   BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;           \
   }
 
+#define SET_FLAGS_OxxxxC(new_of, new_cf) { \
+    BX_CPU_THIS_PTR eflags.val32 &= ~((1<<11) | (1<<0)); \
+    BX_CPU_THIS_PTR eflags.val32 |= ((!!new_of)<<11) | ((!!new_cf)<<0); \
+    BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0; \
+    /* could also mark other bits undefined here ? */ \
+    }
 
 #endif  // #ifndef BX_CPU_H

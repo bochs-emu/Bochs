@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.23 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: logical8.cc,v 1.24 2004-08-11 21:26:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ BX_CPU_C::XOR_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_XOR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 }
 
   void
@@ -69,7 +69,7 @@ BX_CPU_C::XOR_GbEb(bxInstruction_c *i)
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_XOR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 }
 
 
@@ -83,7 +83,7 @@ BX_CPU_C::XOR_ALIb(bxInstruction_c *i)
   sum = op1 ^ op2;
   AL = sum;
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_XOR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_LOGIC8);
 }
 
 
@@ -105,7 +105,7 @@ BX_CPU_C::XOR_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_XOR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 }
 
 
@@ -128,7 +128,7 @@ BX_CPU_C::OR_EbIb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 }
 
 
@@ -168,7 +168,7 @@ BX_CPU_C::OR_EbGb(bxInstruction_c *i)
     Write_RMW_virtual_byte(result);
     }
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 }
 
 
@@ -197,7 +197,7 @@ BX_CPU_C::OR_GbEb(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
 #if !defined(BX_HostAsm_Or8)
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -222,7 +222,7 @@ BX_CPU_C::OR_ALIb(bxInstruction_c *i)
   AL = result;
 
 #if !defined(BX_HostAsm_Or8)
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_OR8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -263,7 +263,7 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_And8)
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -293,7 +293,7 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 
 #if !defined(BX_HostAsm_And8)
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -318,7 +318,7 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
   AL = result;
 
 #if !defined(BX_HostAsm_And8)
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -360,7 +360,7 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     }
 
 #if !defined(BX_HostAsm_And8)
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_AND8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -387,7 +387,7 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
   Bit8u result;
   result = op1 & op2;
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_TEST8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -409,7 +409,7 @@ BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
   Bit8u result;
   result = op1 & op2;
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_TEST8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }
 
@@ -437,6 +437,6 @@ BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
   Bit8u result;
   result = op1 & op2;
 
-  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_TEST8);
+  SET_FLAGS_OSZAPC_8(op1, op2, result, BX_INSTR_LOGIC8);
 #endif
 }

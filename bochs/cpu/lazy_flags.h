@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.7 2004-08-09 21:28:47 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.8 2004-08-11 21:26:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,54 +79,29 @@
 #define BX_INSTR_SHL16   38
 #define BX_INSTR_SHL32   39
 
-#define BX_INSTR_BSF     40
-#define BX_INSTR_BSR     41
-
 #define BX_INSTR_LOGIC8  42
 #define BX_INSTR_LOGIC16 43
 #define BX_INSTR_LOGIC32 44
-#if BX_SUPPORT_X86_64
-#define BX_INSTR_LOGIC64 45
-#endif
 
 #if BX_SUPPORT_X86_64
-#define BX_INSTR_ADD64   46
-#define BX_INSTR_SUB64   47
-#define BX_INSTR_ADC64   48
-#define BX_INSTR_SBB64   49
-#define BX_INSTR_CMP64   50
-#define BX_INSTR_INC64   51
-#define BX_INSTR_DEC64   52
-#define BX_INSTR_NEG64   53
-#define BX_INSTR_XADD64  54
-#define BX_INSTR_TEST64  55
+#define BX_INSTR_ADD64   47
+#define BX_INSTR_SUB64   48
+#define BX_INSTR_ADC64   49
+#define BX_INSTR_SBB64   50
+#define BX_INSTR_CMP64   51
+#define BX_INSTR_INC64   52
+#define BX_INSTR_DEC64   53
+#define BX_INSTR_NEG64   54
+#define BX_INSTR_XADD64  55
 #define BX_INSTR_CMPS64  56
 #define BX_INSTR_SCAS64  57
 #define BX_INSTR_SHR64   58
 #define BX_INSTR_SHL64   59
+#define BX_INSTR_LOGIC64 60
 #endif
 
-#define BX_INSTR_TEST8  BX_INSTR_LOGIC8
-#define BX_INSTR_OR8    BX_INSTR_LOGIC8
-#define BX_INSTR_AND8   BX_INSTR_LOGIC8
-#define BX_INSTR_XOR8   BX_INSTR_LOGIC8
-
-#define BX_INSTR_TEST16 BX_INSTR_LOGIC16
-#define BX_INSTR_OR16   BX_INSTR_LOGIC16
-#define BX_INSTR_AND16  BX_INSTR_LOGIC16
-#define BX_INSTR_XOR16  BX_INSTR_LOGIC16
-
-#define BX_INSTR_TEST32 BX_INSTR_LOGIC32
-#define BX_INSTR_OR32   BX_INSTR_LOGIC32
-#define BX_INSTR_AND32  BX_INSTR_LOGIC32
-#define BX_INSTR_XOR32  BX_INSTR_LOGIC32
-
-#if BX_SUPPORT_X86_64
-#define BX_INSTR_TEST32 BX_INSTR_LOGIC64
-#define BX_INSTR_OR64   BX_INSTR_LOGIC64
-#define BX_INSTR_AND64  BX_INSTR_LOGIC64
-#define BX_INSTR_XOR64  BX_INSTR_LOGIC64
-#endif
+#define BX_INSTR_BSF     61
+#define BX_INSTR_BSR     62
 
 #define BX_LF_INDEX_KNOWN   0
 #define BX_LF_INDEX_OSZAPC  1
