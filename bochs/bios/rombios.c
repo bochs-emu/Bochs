@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.76 2002-10-30 22:42:42 cbothamy Exp $
+// $Id: rombios.c,v 1.77 2002-11-04 23:56:55 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -889,10 +889,10 @@ static bx_bool        floppy_drive_exists();
 static bx_bool        floppy_drive_recal();
 static bx_bool        floppy_media_known();
 static bx_bool        floppy_media_sense();
-static void           cli();
 static bx_bool        set_enable_a20();
 static void           debugger_on();
 static void           debugger_off();
+static void           keyboard_init();
 static void           keyboard_panic();
 static void           shutdown_status_panic();
 static void           nmi_handler_msg();
@@ -930,10 +930,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.76 $";
-static char bios_date_string[] = "$Date: 2002-10-30 22:42:42 $";
+static char bios_cvs_version_string[] = "$Revision: 1.77 $";
+static char bios_date_string[] = "$Date: 2002-11-04 23:56:55 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.76 2002-10-30 22:42:42 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.77 2002-11-04 23:56:55 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1556,21 +1556,170 @@ ASM_END
     }
 }
 
+//--------------------------------------------------------------------------
+// keyboard_init
+//--------------------------------------------------------------------------
+// this file is based on LinuxBIOS implementation of keyboard.c
   void
-cli()
+keyboard_init()
 {
-ASM_START
-  cli
-ASM_END
+	Bit16u max;
+
+	/* ------------------- controller side ----------------------*/
+	/* send cmd = 0xAA, self test 8042 */
+	outb(0x64, 0xaa);
+
+	/* empty input buffer or any other command/data will be lost */
+	max=0xffff;
+	while ( (inb(0x64) & 0x02) && (max--!=0))
+		outb(0x80, 0x00);
+	if (max==0x0)
+		keyboard_panic(00);
+
+	/* empty output buffer or any other command/data will be lost */
+	max=0xffff;
+	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
+		outb(0x80, 0x01);
+	if (max==0x0)
+		keyboard_panic(01);
+
+	/* read self-test result, 0x55 should be returned form 0x60 */
+	if ((inb(0x60) != 0x55)){
+		keyboard_panic(991);
+	}
+
+	/* send cmd = 0xAA, keyboard interface test */
+	outb(0x64,0xab);
+
+	/* empty input buffer or any other command/data will be lost */
+	max=0xffff;
+	while ((inb(0x64) & 0x02) && (max--!=0))
+		outb(0x80, 0x10);
+	if (max==0x0)
+		keyboard_panic(10);
+
+	/* empty output buffer or any other command/data will be lost */
+	max=0xffff;
+	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
+		outb(0x80, 0x11);
+	if (max==0x0)
+		keyboard_panic(11);
+
+	/* read keyboard interface test result, */
+	/* 0x00 should be returned form 0x60 */
+	if ((inb(0x60) != 0x00)) {
+		keyboard_panic(992);
+	}
+
+	/* Enable Keyboard clock */
+	outb(0x64,0xae);
+	outb(0x64,0xa8);
+
+	/* ------------------- keyboard side ------------------------*/
+	/* reset kerboard and self test  (keyboard side) */
+	outb(0x60, 0xff);
+
+	/* empty inut buffer or any other command/data will be lost */
+	max=0xffff;
+	while ((inb(0x64) & 0x02) && (max--!=0))
+		outb(0x80, 0x20);
+	if (max==0x0)
+		keyboard_panic(20);
+
+	/* empty output buffer or any other command/data will be lost */
+	max=0xffff;
+	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
+		outb(0x80, 0x21);
+	if (max==0x0)
+		keyboard_panic(21);
+
+	/* keyboard should return ACK */
+	if ((inb(0x60) != 0xfa)) {
+		keyboard_panic(993);
+	}
+
+	max=0xffff;
+	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
+		outb(0x80, 0x31);
+	if (max==0x0)
+		keyboard_panic(31);
+
+	if ((inb(0x60) != 0xaa)) {
+		keyboard_panic(994);
+	}
+
+	/* Disable keyboard */
+	outb(0x60, 0xf5);
+
+	/* empty inut buffer or any other command/data will be lost */
+	max=0xffff;
+	while ((inb(0x64) & 0x02) && (max--!=0))
+		outb(0x80, 0x40);
+	if (max==0x0)
+		keyboard_panic(40);
+
+	/* empty output buffer or any other command/data will be lost */
+	max=0xffff;
+	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
+		outb(0x80, 0x41);
+	if (max==0x0)
+		keyboard_panic(41);
+
+	/* keyboard should return ACK */
+	if ((inb(0x60) != 0xfa)) {
+		keyboard_panic(995);
+	}
+
+	/* Write Keyboard Mode */
+	outb(0x64, 0x60);
+	max=0xffff;
+	while ((inb(0x64) & 0x02) && (max--!=0))
+		outb(0x80, 0x50);
+	if (max==0x0)
+		keyboard_panic(50);
+
+	/* send cmd: scan code convert, disable mouse, enable IRQ 1 */
+	outb(0x60, 0x61);
+	max=0xffff;
+	while ((inb(0x64) & 0x02) && (max--!=0))
+		outb(0x80, 0x60);
+	if (max==0x0)
+		keyboard_panic(60);
+
+	/* Enable keyboard */
+	outb(0x60, 0xf4);
+
+	/* empty inut buffer or any other command/data will be lost */
+	max=0xffff;
+	while ((inb(0x64) & 0x02) && (max--!=0))
+		outb(0x80, 0x70);
+	if (max==0x0)
+		keyboard_panic(70);
+
+	/* empty output buffer or any other command/data will be lost */
+	max=0xffff;
+	while ( ((inb(0x64) & 0x01) == 0) && (max--!=0) )
+		outb(0x80, 0x71);
+	if (max==0x0)
+		keyboard_panic(70);
+
+	/* keyboard should return ACK */
+	if ((inb(0x60) != 0xfa)) {
+		keyboard_panic(996);
+	}
+
+	outb(0x80, 0x77);
+
 }
 
 //--------------------------------------------------------------------------
 // keyboard_panic
 //--------------------------------------------------------------------------
   void
-keyboard_panic()
+keyboard_panic(status)
+  Bit16u status;
 {
-  BX_PANIC("Keyboard RESET error\n");
+  BX_PANIC("Keyboard RESET error:%04x\n",status);
 }
 
 //--------------------------------------------------------------------------
@@ -3202,7 +3351,10 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
       // +++ should probably have descriptor checks
       // +++ should have exception handlers
 
-      cli();
+ // turn off interrupts
+ASM_START
+  cli
+ASM_END
 
       prev_a20_enable = set_enable_a20(1); // enable A20 line
 
@@ -3321,6 +3473,12 @@ real_mode:
 ASM_END
 
       set_enable_a20(prev_a20_enable);
+
+ // turn back on interrupts
+ASM_START
+  sti
+ASM_END
+
       regs.u.r8.ah = 0;
       CLEAR_CF();
       break;
@@ -8352,14 +8510,9 @@ post:
   out 0xD4, al ; unmask channel 4
 
   ;; Examine CMOS shutdown status.
-  ;; 0x00 = normal startup
   mov AL, #0x0f
   out 0x70, AL
   in  AL, 0x71
-  cmp AL, #0x00
-  jz normal_post
-  cmp AL, #0x0d
-  jae normal_post
 
   ;; backup status
   mov bl, al
@@ -8371,12 +8524,22 @@ post:
   out 0x71, AL          ; set shutdown action to normal
 
   ;; Examine CMOS shutdown status.
+  mov al, bl
+
+  ;; 0x00, 0x09, 0x0D+ = normal startup
+  cmp AL, #0x00
+  jz normal_post
+  cmp AL, #0x0d
+  jae normal_post
+  cmp AL, #0x09
+  je normal_post
+
   ;; 0x05 = eoi + jmp via [0x40:0x67] jump
-  cmp bl, #0x05
+  cmp al, #0x05
   je  eoi_jmp_post
 
   ;; Examine CMOS shutdown status.
-  ;;  0x01,0x02,0x03,0x04,0x06,0x07,0x08,0x09, 0x0a, 0x0b, 0x0c = Unimplemented shutdown status.
+  ;;  0x01,0x02,0x03,0x04,0x06,0x07,0x08, 0x0a, 0x0b, 0x0c = Unimplemented shutdown status.
   push bx
   call _shutdown_status_panic
 
@@ -8506,21 +8669,7 @@ post_default_ints:
   mov  0x0482, bx
 
   /* clear the output buffer and enable keyboard */
-  in   al, 0x60
-  mov  al, #0xae
-  out  0x64, al
-  /* (mch) Keyboard self-test */
-  mov  al, #0xaa
-  out  0x64, al
-kbd_wait:
-  in   al, 0x64
-  test al, #0x01
-  jz   kbd_wait
-  in   al, 0x60
-  cmp  al, #0x55
-  je   keyboard_ok
-  call _keyboard_panic
-keyboard_ok:
+  call _keyboard_init
 
   ;; mov CMOS Equipment Byte to BDA Equipment Word
   mov  ax, 0x0410
