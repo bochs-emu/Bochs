@@ -40,6 +40,8 @@ BRANCH_PLUGINS_BASE that marks the point where the branch began.  This
 will help at merge time.
 
 TO DO:
+- Christophe suggests that we rename vga_library to display_library in bochsrc,
+  variables, comments, etc.
 - wxWindows gui as a plugin will not start up.  Normally wxWindows
   takes over your main() function and inserts its own app init code.
   We'll have to figure out what that app init code does and put it
