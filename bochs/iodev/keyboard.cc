@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.16 2002-10-23 18:51:48 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.17 2002-10-23 18:52:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,8 +86,6 @@ bx_keyb_c::bx_keyb_c(void)
   // constructor
   put("KBD");
   settype(KBDLOG);
-  // install this object as the keyboard object, so that other devices
-  // will call our keyboard methods.
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -127,7 +125,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.16 2002-10-23 18:51:48 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.17 2002-10-23 18:52:48 bdenney Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");
