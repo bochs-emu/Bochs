@@ -8,6 +8,11 @@
 
 #include "bochs.h"
 
+#ifdef OUT
+// OUT is defined in system headers on cygwin, maybe others.
+#  undef OUT
+#endif
+
 class pit_82C54 : public logfunctions {
 
 public:
