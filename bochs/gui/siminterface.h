@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.62 2002-09-15 11:21:33 bdenney Exp $
+// $Id: siminterface.h,v 1.63 2002-09-15 12:07:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1041,7 +1041,7 @@ public:
   virtual void debug_break () {}
   virtual void debug_interpret_cmd (char *cmd) {}
   virtual char *debug_get_next_command () {return NULL;}
-  virtual void debug_fputs (const char *cmd) {}
+  virtual void debug_fputs (const char *text) {}
 #endif
 };
 

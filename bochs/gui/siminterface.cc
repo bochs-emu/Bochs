@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.59 2002-09-15 11:21:33 bdenney Exp $
+// $Id: siminterface.cc,v 1.60 2002-09-15 12:07:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -551,12 +551,17 @@ char *bx_real_sim_c::debug_get_next_command ()
   return NULL;
 }
 
-void bx_real_sim_c::debug_fputs (const char *cmd)
+void bx_real_sim_c::debug_fputs (const char *text)
 {
+#if BX_WITH_WX
+  // send message to the GUI
   BxEvent *event = new BxEvent ();
   event->type = BX_ASYNC_EVT_DBG_MSG;
-  event->u.logmsg.msg = cmd;
+  event->u.logmsg.msg = text;
   sim_to_ci_event (event);
+#else
+  fputs (text, stderr);
+#endif
 }
 #endif
 

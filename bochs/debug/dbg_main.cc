@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.63 2002-09-15 11:21:33 bdenney Exp $
+// $Id: dbg_main.cc,v 1.64 2002-09-15 12:07:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -224,11 +224,7 @@ void dbg_printf (const char *fmt, ...)
   char *buf = new char[1024];
   vsprintf (buf, fmt, ap);
   va_end(ap);
-#if BX_WITH_WX
   SIM->debug_fputs (buf); // send to debugger, which will free buf when done.
-#else
-  fputs (stderr, buf);
-#endif
 }
 
   int
