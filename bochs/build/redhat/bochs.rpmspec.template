@@ -41,7 +41,7 @@ and other OS's, all on your workstation.
 	/usr/bin/bochs-docs
 	/usr/bin/bochs-dlx
 	/usr/bin/bximage
-	/usr/lib/*
+#	/usr/lib/*
 	/usr/share/bochs/*
 	/usr/share/doc/*
 	/usr/share/man/*
