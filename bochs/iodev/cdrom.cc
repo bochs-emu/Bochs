@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.40 2002-09-13 14:21:53 cbothamy Exp $
+// $Id: cdrom.cc,v 1.41 2002-09-23 01:23:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -210,7 +210,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.40 2002-09-13 14:21:53 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.41 2002-09-23 01:23:25 bdenney Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -311,7 +311,7 @@ cdrom_interface::insert_cdrom(char *dev)
 		fd=1;
 	} else {
 	  BX_INFO(("Using direct access for CDROM"));
-      hFile=CreateFile((char *)&drive,  GENERIC_READ, 0 , NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+      hFile=CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL); 
       if (hFile !=(void *)0xFFFFFFFF)
         fd=1;
 	}
