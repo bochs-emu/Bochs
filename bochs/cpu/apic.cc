@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.28 2002-12-14 08:48:20 bdenney Exp $
+// $Id: apic.cc,v 1.29 2002-12-22 15:15:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -730,8 +730,10 @@ bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
     return (1<<id);
   case 2:  // all including self
     mask = all_mask;
+    break;
   case 3:  // all but self
     mask = all_mask & ~(1<<id);
+    break;
   }
   // prune nonexistents and I/O apics from list
   for (int bit=0; bit<APIC_MAX_ID; bit++) {
