@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.48 2004-04-09 15:04:54 vruppert Exp $
+// $Id: sdl.cc,v 1.49 2004-04-09 17:54:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -444,8 +444,16 @@ void bx_sdl_gui_c::text_update(
       }
       else if (rows == 1)
       {
-        cfheight = v_panning;
+        if (!split_screen)
+        {
+          cfheight = v_panning;
+        }
       }
+    }
+    if (split_screen && (rows == 1))
+    {
+      cfheight = (res_y - tm_info.line_compare - 1) % fontheight;
+      if (cfheight == 0) cfheight = fontheight;
     }
     if (!split_screen && (y == split_textrow))
     {
@@ -549,11 +557,11 @@ void bx_sdl_gui_c::text_update(
     if (!split_screen && (y == split_textrow))
     {
       new_text = text_base;
-      rows++;
       forceUpdate = 1;
-      split_screen = 1;
       cy = 0;
       if (tm_info.split_hpanning) h_panning = 0;
+      rows = (res_y - tm_info.line_compare + fontheight - 2) / fontheight;
+      split_screen = 1;
     }
     else
     {
