@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.81 2002-11-01 15:19:40 bdenney Exp $
+// $Id: siminterface.cc,v 1.82 2002-11-08 13:18:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -609,7 +609,7 @@ bx_real_sim_c::get_first_cdrom ()
     for (int slave=0; slave<2; slave++) {
       Bit32u present = bx_options.atadevice[channel][slave].Opresent->get ();
       Bit32u type = bx_options.atadevice[channel][slave].Otype->get ();
-      if (present && type == BX_ATA_DEVICE_CDROM) {
+      if (present && (type == BX_ATA_DEVICE_CDROM)) {
 	return bx_options.atadevice[channel][slave].Omenu;
       }
     }
