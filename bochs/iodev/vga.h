@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.39 2004-06-06 17:01:18 vruppert Exp $
+// $Id: vga.h,v 1.40 2004-07-18 19:40:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,16 +111,13 @@ public:
   ~bx_vga_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
+  BX_VGA_SMF bx_bool mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);
+  BX_VGA_SMF bx_bool mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param);
   virtual Bit8u  mem_read(Bit32u addr);
-  // Note: either leave value of type Bit8u, or mask it when
-  //       used to 8 bits, in memory.cc
   virtual void   mem_write(Bit32u addr, Bit8u value);
   virtual void   trigger_timer(void *this_ptr);
 
 #if BX_SUPPORT_VBE
-  BX_VGA_SMF bx_bool vbe_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);
-  BX_VGA_SMF bx_bool vbe_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param);
-
   BX_VGA_SMF Bit8u  vbe_mem_read(Bit32u addr) BX_CPP_AttrRegparmN(1);
   BX_VGA_SMF void   vbe_mem_write(Bit32u addr, Bit8u value) BX_CPP_AttrRegparmN(2);
 #endif
@@ -164,6 +161,7 @@ private:
     struct {
       Bit8u   address;
       Bit8u   reg[0x19];
+      bx_bool write_protect;
       } CRTC;
 
     struct {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.104 2004-06-19 15:20:14 sshwarts Exp $
+// $Id: vga.cc,v 1.105 2004-07-18 19:40:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,6 +135,7 @@ bx_vga_c::init(void)
   char *argv[16];
   char *ptr;
   char string[512];
+  Bit8u io_mask[16] = {1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
 
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
@@ -147,13 +148,14 @@ bx_vga_c::init(void)
     DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
+  i = 0;
   for (addr=0x03C0; addr<=0x03CF; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
+    DEV_register_ioread_handler(this, read_handler, addr, "vga video", io_mask[i++]);
     DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
   for (addr=0x03D4; addr<=0x03D5; addr++) {
-    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
+    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 3);
     DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
@@ -162,6 +164,9 @@ bx_vga_c::init(void)
     DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
     }
 
+
+  DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
+                               theVga, 0xa0000, 0xbffff);
 
   BX_VGA_THIS s.misc_output.color_emulation  = 1;
   BX_VGA_THIS s.misc_output.enable_ram  = 1;
@@ -185,6 +190,7 @@ bx_vga_c::init(void)
   for (i=0; i<=0x18; i++)
     BX_VGA_THIS s.CRTC.reg[i] = 0;
   BX_VGA_THIS s.CRTC.address = 0;
+  BX_VGA_THIS s.CRTC.write_protect = 0;
 
   BX_VGA_THIS s.attribute_ctrl.flip_flop = 0;
   BX_VGA_THIS s.attribute_ctrl.address = 0;
@@ -307,7 +313,7 @@ bx_vga_c::init(void)
     DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
   }    
 #endif
-  DEV_register_memory_handlers(vbe_mem_read_handler, theVga, vbe_mem_write_handler,
+  DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
                                theVga, VBE_DISPI_LFB_PHYSICAL_ADDRESS,
                                VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
   BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
@@ -435,7 +441,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #endif  // !BX_USE_VGA_SMF
   bx_bool  horiz_retrace = 0, vert_retrace = 0;
   Bit64u usec;
-  Bit16u vertres;
+  Bit16u ret16, vertres;
   Bit8u retval;
 
 #if defined(VGA_TRACE_FEATURE)
@@ -444,6 +450,17 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #else
 #define RETURN return
 #endif
+
+  if (io_len == 2) {
+#if BX_USE_VGA_SMF
+    ret16 = bx_vga_c::read_handler(0, address, 1);
+    ret16 |= (bx_vga_c::read_handler(0, address+1, 1)) << 8;
+#else
+    ret16 = bx_vga_c::read(address, 1);
+    ret16 |= (bx_vga_c::read(address+1, 1) << 8;
+#endif
+    RETURN(ret16);
+    }
 
 #ifdef __OS2__
   if ( bx_options.videomode == BX_VIDEO_DIRECT )
@@ -737,8 +754,12 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 
 #if defined(VGA_TRACE_FEATURE)
   read_return:
-	BX_DEBUG(("8-bit read from %04x = %02x", (unsigned) address, ret));
-  return ret;
+    if (io_len == 1) {
+      BX_DEBUG(("8-bit read from 0x%04x = 0x%02x", (unsigned) address, ret));
+    } else {
+      BX_DEBUG(("16-bit read from 0x%04x = 0x%04x", (unsigned) address, ret));
+    }
+    return ret;
 #endif
 }
 #if defined(VGA_TRACE_FEATURE)
@@ -1218,6 +1239,18 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           (unsigned) BX_VGA_THIS s.CRTC.address));
         return;
       }
+      if (BX_VGA_THIS s.CRTC.write_protect && (BX_VGA_THIS s.CRTC.address < 0x08)) {
+        if (BX_VGA_THIS s.CRTC.address == 0x07) {
+          BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] &= ~0x10;
+          BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] |= (value & 0x10);
+          BX_VGA_THIS s.line_compare &= 0x2ff;
+          if (BX_VGA_THIS s.CRTC.reg[0x07] & 0x10) BX_VGA_THIS s.line_compare |= 0x100;
+          needs_update = 1;
+          break;
+        } else {
+          return;
+        }
+      }
       if (value != BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]) {
         BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
         switch (BX_VGA_THIS s.CRTC.address) {
@@ -1254,6 +1287,9 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             } else {
               BX_VGA_THIS s.vga_mem_updated = 1;
             }
+            break;
+          case 0x11:
+            BX_VGA_THIS s.CRTC.write_protect = ((BX_VGA_THIS s.CRTC.reg[0x11] & 0x80) > 0);
             break;
           case 0x12:
             BX_VGA_THIS s.vertical_display_end &= 0x300;
@@ -1874,6 +1910,29 @@ bx_vga_c::update(void)
 }
 
 
+  bx_bool
+bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
+                               void *data, void *param)
+{
+  Bit8u *data_ptr;
+
+#ifdef BX_LITTLE_ENDIAN
+  data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    *data_ptr = theVga->mem_read(addr);
+    addr++;
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
+  }
+  return 1;
+}
+
   Bit8u
 bx_vga_c::mem_read(Bit32u addr)
 {
@@ -1971,6 +2030,29 @@ bx_vga_c::mem_read(Bit32u addr)
     default:
       return 0;
     }
+}
+
+  bx_bool
+bx_vga_c::mem_write_handler(unsigned long addr, unsigned long len,
+                                void *data, void *param)
+{
+  Bit8u *data_ptr;
+
+#ifdef BX_LITTLE_ENDIAN
+  data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    theVga->mem_write(addr, *data_ptr);
+    addr++;
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
+  }
+  return 1;
 }
 
   void
@@ -2541,29 +2623,6 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 
 #if BX_SUPPORT_VBE
-  bx_bool
-bx_vga_c::vbe_mem_read_handler(unsigned long addr, unsigned long len,
-                               void *data, void *param)
-{
-  Bit8u *data_ptr;
-
-#ifdef BX_LITTLE_ENDIAN
-  data_ptr = (Bit8u *) data;
-#else // BX_BIG_ENDIAN
-  data_ptr = (Bit8u *) data + (len - 1);
-#endif
-  for (unsigned i = 0; i < len; i++) {
-    *data_ptr = vbe_mem_read(addr);
-    addr++;
-#ifdef BX_LITTLE_ENDIAN
-    data_ptr++;
-#else // BX_BIG_ENDIAN
-    data_ptr--;
-#endif
-  }
-  return 1;
-}
-
   Bit8u  BX_CPP_AttrRegparmN(1)
 bx_vga_c::vbe_mem_read(Bit32u addr)
 {
@@ -2585,29 +2644,6 @@ bx_vga_c::vbe_mem_read(Bit32u addr)
     return 0;
 
   return (BX_VGA_THIS s.vbe_memory[offset]);
-}
-
-  bx_bool
-bx_vga_c::vbe_mem_write_handler(unsigned long addr, unsigned long len,
-                                void *data, void *param)
-{
-  Bit8u *data_ptr;
-
-#ifdef BX_LITTLE_ENDIAN
-  data_ptr = (Bit8u *) data;
-#else // BX_BIG_ENDIAN
-  data_ptr = (Bit8u *) data + (len - 1);
-#endif
-  for (unsigned i = 0; i < len; i++) {
-    vbe_mem_write(addr, *data_ptr);
-    addr++;
-#ifdef BX_LITTLE_ENDIAN
-    data_ptr++;
-#else // BX_BIG_ENDIAN
-    data_ptr--;
-#endif
-  }
-  return 1;
 }
 
   void BX_CPP_AttrRegparmN(2)
