@@ -1,4 +1,56 @@
-Changes in 1.2 (6/3/2001):
+Changes in 1.2.1 (June 12, 2001):
+- more work on makefile for building RPMs
+- [ #432382 ] build debian packages patch
+  add build/debian directory from Rob Lemley <rjlemley@calypsoblue.org>
+  which allows us to make Debian packages!
+- optimize for speed when simulating one processor.  Now 1-processor
+  performance should be equivalent to 1.1.2.
+- [ #425640 ] sb16 assumes fpos_t is long int
+  This fixes compiles of iodev/sb16.cc on linux systems with newer libraries
+  in which fpos_t is not an integer.
+- [ #432488 ] SMP:assert "n_logfn < MAX_LOGFNS" fails
+  increase MAX_LOGFNS since we ran out of them on an SMP simulation with
+  4 processors
+- changes to compile clean on cygwin:
+  - don't use the WIN32 snprintf define for cygwin
+  - add ssize_t definition for cygwin
+  - only compile "struct timeval tval" if select is available
+    on that platform.
+- [ #432491 ] SMP: CPUID says no APIC feature
+  clean up inconsistent use of BX_SUPPORT_APIC and BX_APIC_SUPPORT, which
+  caused the CPUID to report no APIC was present
+- [ #431025 ] --enable-external-device-models broken
+  removed configure options for external-device-models and 
+  external-cpu-memory.  These don't work and aren't going to be fixed.
+- [ #429448 ] configure: -lreadline when not there
+  Now configure allows you to choose not to use readline, even if it's found
+  on your system.
+- [ #428915 ] apply extended keyboard patch
+  extended keyboard patch by Dave Poirier <eks@void-core.2y.net>
+- [ #428626 ] if no X11 found, configure&make fails
+  Now configure halts if X windows is selected but no X libraries are found.
+- updated rombios to version 1.13.  This fixes several problems:
+  - [ #430472 ] DOS HIMEM "A20 line" error
+    This problem was apparantly caused when Bryce added a function that prints
+    the BIOS version, and he called it too early in the boot process.  Now the
+    same function is called later, and it doesn't break the A20.
+  - [ #431010 ] SMP structure overwritten in v1.2
+    SMP structures were getting overwritten by BCC-generated data, 
+    preventing SMP operating systems from detecting that other processors
+    were available.
+  - [ #431016 ] bios: SMP struct has wrong entry count
+    SMP structure had the wrong entry counts
+- very minor doc updates (typos, replace broken link to mtools info)
+- quit when the user clicks the power button, even if they have disabled
+  panics.
+- win32 now defaults to having mouse capture mode turned off.  For new users,
+  it would be distressing for their mouse cursor to disappear until they
+  pressed F12.
+- [ #428222 ] vga font not installed
+  added script called "install-x11-fonts" which should help people install
+  the VGA font on X windows systems, if it isn't already there.
+
+Changes in 1.2 (June 3, 2001):
 - [ #427259 ] rombios HALT calls don't print
   Fixed bios/rombios.c HALT macro so that it writes the line number of the
   panic to the PANIC_PORT (port 0x400) and then does NOT do a halt 
@@ -47,7 +99,7 @@ Changes in 1.2 (6/3/2001):
 - added additional check for null pointer in debugger exit routine
 - added diskd to .bochsrc
 
-Changes in version 1.2-pre1 (5/25/2001):
+Changes in version 1.2-pre1 (May 25, 2001):
 - major cleanup of .bochsrc
 - major cleanup of stderr output: prints bochs version information when
   starting, and at the end it tries to print the message that caused 
@@ -91,7 +143,7 @@ Changes in version 1.2-pre1 (5/25/2001):
   become root and type "configure; make rpm".
 - applied some FreeBSD patches from Maxim Sobolev (cdrom and serial).
 
-Changes in version 1.1.2 (bugfix3, 5/16/2001):
+Changes in version 1.1.2 (bugfix3, May 16, 2001):
 - updated Elpin VGA BIOS to version 2.40, and changed pointer in .bochsrc
 - fixed .conf.x86 script so that it uses c++ instead of egcs for C++ files
 - now Makefile targets that recurse into subdirectories use double colons,
@@ -123,7 +175,7 @@ Changes in version 1.1.2 (bugfix3, 5/16/2001):
 - remove all patches from patches subdir which have already been applied.
   The remaining ones are under consideration but not applied.
 
-Changes in version 1.1.1 (bugfix2, 4/9/2001):
+Changes in version 1.1.1 (bugfix2, April 9, 2001):
 - in soundwin.cc, arg 3 should be typecast to LPWAVEFORMATEX
 - in fpu_entry.c, Bryce mistyped his own initials!
 - in configure.in and configure, define good defaults for VC++
@@ -135,7 +187,7 @@ Changes in version 1.1.1 (bugfix2, 4/9/2001):
 - in config.h.in, fixed typo in #error message
 
 
-Changes in version 1.1 (bugfix1, 4/6/2001):
+Changes in version 1.1 (bugfix1, April 6, 2001):
 
 (FIXED, patch #414360: update copyrights)
 update headers.  Change copyright to 2001, replace config.h.in header with
