@@ -51,18 +51,6 @@ static void mapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable);
 
 
 
-/*
- *  We need to set the monitor CS/DS base address so that the module pages,
- *  which are mapped starting at linear address 'laddr' into the guest address 
- *  space, reside at the same offset relative to the monitor CS base as they 
- *  reside relative to the kernel CS base in the host address space.  This way,
- *  we can execute the (non-relocatable) module code within the guest address 
- *  space ...
- */
-#define MON_BASE_FROM_LADDR(laddr) \
-    ((laddr) - monitor_pages.startOffsetPageAligned)
-
-
 static const selector_t nullSelector = { raw: 0 };
 static const descriptor_t nullDescriptor = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -126,9 +114,9 @@ initMonitor(vm_t *vm)
 
   vm->kernel_offset = hostKernelOffset();
 
-  vm->system.a20 = 1; /* start with A20 line enabled */
-  vm->system.a20AddrMask  = 0xffffffff; /* all address lines contribute */
-  vm->system.a20IndexMask = 0x000fffff; /* all address lines contribute */
+  vm->system.a20Enable = 1; /* Start with A20 line enabled. */
+  vm->system.a20AddrMask  = 0xffffffff; /* All address lines contribute. */
+  vm->system.a20IndexMask = 0x000fffff; /* All address lines contribute. */
 
   /* Initialize nexus */
   mon_memzero(vm->host.addr.nexus, 4096);
@@ -778,7 +766,7 @@ ioctlGeneric(vm_t *vm, void *inode, void *filp,
       ret = ioctlExecute(vm, &executeMsg);
       if ( hostCopyToUser((void *)arg, &executeMsg, sizeof(executeMsg)) )
         return -Plex86ErrnoEFAULT;
-      return ret; /* OK. */
+      return ret;
       }
 
     /*
@@ -803,11 +791,11 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
   guest_context_t *guest_stack_context;
   nexus_t *nexus;
   unsigned s;
-  int retval = 100;
+  int retval;
 
   if ( (vm->vmState != VMStateReady) ||
        (vm->mon_request != MonReqNone) ) {
-    retval = 1; /* Fail. */
+    retval = Plex86NoExecute_VMState; /* Fail. */
     goto handlePanic;
     }
 
@@ -817,7 +805,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
    * cosimulation.
    */
   if (executeMsg->executeMethod != Plex86ExecuteMethodNative) {
-    retval = 2; /* Fail. */
+    retval = Plex86NoExecute_Method; /* Fail. */
     goto handleFail;
     }
 
@@ -852,7 +840,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
   /* 0x8005003b */
   if ( (guest_cpu->cr0.raw & 0xe0000037) != 0x80000033 ) {
     hostPrint("plex86: guest CR0=0x%x\n", guest_cpu->cr0.raw);
-    retval = 3; /* Fail. */
+    retval = Plex86NoExecute_CR0; /* Fail. */
     goto handleFail;
     }
 
@@ -871,7 +859,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
    */
   if ( (guest_cpu->cr4.raw & 0x000007ff) != 0x00000000 ) {
     hostPrint("plex86: guest CR4=0x%x\n", guest_cpu->cr4.raw);
-    retval = 4; /* Fail. */
+    retval = Plex86NoExecute_CR4; /* Fail. */
     goto handleFail;
     }
 
@@ -881,15 +869,33 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
   if ( (guest_cpu->sreg[SRegCS].sel.fields.rpl != 3) ||
        (guest_cpu->sreg[SRegCS].sel.fields.index == 0) ||
        (guest_cpu->sreg[SRegCS].des.dpl != 3) ) {
-    retval = 5; /* Fail. */
+    retval = Plex86NoExecute_CS; /* Fail. */
     goto handleFail;
     }
 
   /* A20 line must be enabled. */
   if ( guest_cpu->a20Enable != 1 ) {
-    retval = 6; /* Fail. */
+    retval = Plex86NoExecute_A20; /* Fail. */
     goto handleFail;
     }
+
+  /* Some code not really used now, since we only support A20 being enabled. */
+  {
+  unsigned newA20Enable;
+  newA20Enable = guest_cpu->a20Enable > 0; /* Make 0 or 1. */
+  if ( newA20Enable != vm->system.a20Enable ) {
+    if ( (!newA20Enable) && guest_cpu->cr0.fields.pg ) {
+      /* A20 disabled, paging on not supported.  Well, really I have to
+       * see if it matters.  This check was in old plex86 code.
+       */
+      retval = Plex86NoExecute_A20; /* Fail. */
+      goto handleFail;
+      }
+    vm->system.a20Enable = newA20Enable;
+    vm->system.a20AddrMask  = 0xffefffff | (newA20Enable << 20);
+    vm->system.a20IndexMask = 0x000ffeff | (newA20Enable << 8);
+    }
+  }
 
   /* LDT not supported.
    * Monitor uses GDT slots 1,2,3, so guest segments can not.
@@ -902,22 +908,22 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
     if ( selector & 0xfffc ) {
       if ( (selector & 0x0007) != 3 ) {
         /* Either TI=1 (LDT usage) or RPL!=3. */
-        retval = 7; /* Fail. */
+        retval = Plex86NoExecute_Selector; /* Fail. */
         goto handleFail;
         }
       index = selector >> 3;
       if ( index <= 3 ) {
         /* Selector index field uses one of the monitor GDT slots. */
-        retval = 8; /* Fail. */
+        retval = Plex86NoExecute_Selector; /* Fail. */
         goto handleFail;
         }
       if ( index >= (MON_GDT_SIZE/8) ) {
         /* Selector index field uses a slot beyond the monitor GDT size. */
-        retval = 9; /* Fail. */
+        retval = Plex86NoExecute_Selector; /* Fail. */
         goto handleFail;
         }
       if ( guest_cpu->sreg[s].des.dpl != 3 ) {
-        retval = 10; /* Fail. */
+        retval = Plex86NoExecute_DPL; /* Fail. */
         goto handleFail;
         }
       }
@@ -935,7 +941,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
    */
   if ( (guest_cpu->eflags & (0x001b7302)) !=
        (0x00000202) ) {
-    retval = 11; /* Fail. */
+    retval = Plex86NoExecute_EFlags; /* Fail. */
     goto handleFail;
     }
 
@@ -1031,7 +1037,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
     if (!(eflags & 0x200)) {
       vm_restore_flags(eflags);
       hostPrint("ioctlExecute: EFLAGS.IF==0\n");
-      retval = 12; /* Fail. */
+      retval = 101; /* Fail. */
       goto handlePanic;
       }
 #endif
@@ -1062,17 +1068,17 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
           else {
             hostPrint("mapMonitor failed.\n");
             hostPrint("Panic w/ abort_code=%u\n", vm->abort_code);
-            retval = 100;
+            retval = 102;
             goto handlePanic;
             }
 #endif
           hostPrint("ioctlExecute: case MonReqRemapMonitor.\n");
-          retval = 13;
+          retval = 103;
           goto handlePanic;
 
         case MonReqFlushPrintBuf:
           hostPrint("ioctlExecute: case MonReqFlushPrintBuf.\n");
-          retval = 14;
+          retval = 104;
           goto handlePanic;
 
         case MonReqGuestFault:
@@ -1084,18 +1090,18 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
           executeMsg->monitorState.request = vm->mon_request;
           executeMsg->monitorState.guestFaultNo = vm->guestFaultNo;
           vm->mon_request = MonReqNone;
-          return 15;
+          return 0;
 
         case MonReqPanic:
           if (vm->abort_code)
             hostPrint("Panic w/ abort_code=%u\n", vm->abort_code);
           hostPrint("ioctlExecute: case MonReqPanic.\n");
-          retval = 16;
+          retval = 106;
           goto handlePanic;
 
         default:
           hostPrint("ioctlExecute: default case (%u).\n", vm->mon_request);
-          retval = 17;
+          retval = 107;
           goto handlePanic;
         }
       }
@@ -1112,7 +1118,7 @@ ioctlExecute(vm_t *vm, plex86IoctlExecute_t *executeMsg)
     }
 
   /* Should not get here. */
-  retval = 100;
+  retval = 108;
   goto handlePanic;
 
 handleFail:
@@ -1275,40 +1281,11 @@ hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
   return 0;
 }
 
-#if 0
-  int
-ioctlSetA20E(vm_t *vm, unsigned long val)
-{
-  unsigned prev_a20;
-
-  if ( !val && vm->host.addr.guest_cpu->cr0.fields.pg ) {
-    /* Disabling the A20 line with paging on, is not
-     * currently handled.
-     */
-    xxxprint(vm, "SetA20E: val=0, CR0.PG=1 unhandled\n");
-    return 0; /* fail */
-    }
-  val = (val > 0); /* make 0 or 1 */
-  prev_a20 = vm->system.a20;
-
-  vm->system.a20 = val;
-  vm->system.a20AddrMask  = 0xffefffff | (val << 20);
-  vm->system.a20IndexMask = 0x000ffeff | (val << 8);
-
-  if ( prev_a20 != vm->system.a20 ) {
-    /* change in A20 line enable status */
-    vm->modeChange |= ModeChangeEventPaging | ModeChangeRequestPaging;
-    }
-
-  return 1; /* OK */
-}
-#endif
 
 
-
-/* */
-/* Allocate various pages/memory needed by monitor */
-/* */
+/*
+ * Allocate various pages/memory needed by monitor.
+ */
 
   int
 allocVmPages( vm_t *vm, unsigned nmegs )
@@ -1695,17 +1672,6 @@ initShadowPaging(vm_t *vm)
 
   /* Update vpaging timestamp. */
   vm->vpaging_tsc = vm_rdtsc();
-
-#if 0
-  /* Flush TLB cache. */
-  asm volatile (
-    "movl %%cr3, %%eax\n\t"
-    "movl %%eax, %%cr3"
-    : /* no outputs */
-    : /* no inputs */
-    : "eax", "memory" /* modified */
-    );
-#endif
 
 #if 0
   /* When we remap the monitor page tables, IF guest paging is

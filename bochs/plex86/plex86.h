@@ -1,5 +1,5 @@
 /************************************************************************
- * $Id: plex86.h,v 1.2 2003-01-02 01:08:43 kevinlawton Exp $
+ * $Id: plex86.h,v 1.3 2003-01-02 17:05:06 kevinlawton Exp $
  ************************************************************************
  *
  *  plex86: run multiple x86 operating systems concurrently
@@ -33,7 +33,7 @@ typedef struct {
   selector_t   sel;
   descriptor_t des;
   unsigned     valid;
-  } guest_sreg_t;
+  } __attribute__ ((packed)) guest_sreg_t;
 
 #define SRegES    0
 #define SRegCS    1
@@ -120,7 +120,7 @@ typedef struct {
       Bit32u Reserved31_25:7;
       } __attribute__ ((packed)) fields;
     } __attribute__ ((packed)) featureFlags;
-  } cpuid_info_t;
+  } __attribute__ ((packed)) cpuid_info_t;
 
 typedef struct {
   Bit32u edi;
@@ -145,7 +145,7 @@ typedef struct {
   Bit32u cr1, cr2, cr3;
   cr4_t cr4;
   unsigned a20Enable;
-  } guest_cpu_t;
+  } __attribute__ ((packed)) guest_cpu_t;
 
 
 
@@ -174,6 +174,18 @@ typedef struct {
 #define PLEX86_EXECUTE      0x6b05
 #define PLEX86_CPUID        0x6b06
 #endif
+
+/* Reasons why plex86 could not execute the guest context in the VM. */
+#define Plex86NoExecute_Method    1
+#define Plex86NoExecute_CR0       2
+#define Plex86NoExecute_CR4       3
+#define Plex86NoExecute_CS        4
+#define Plex86NoExecute_A20       5
+#define Plex86NoExecute_Selector  6
+#define Plex86NoExecute_DPL       7
+#define Plex86NoExecute_EFlags    8
+#define Plex86NoExecute_Panic     9
+#define Plex86NoExecute_VMState  10
 
 
 /* Requests that the VM monitor makes to host-kernel space or

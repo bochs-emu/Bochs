@@ -1,47 +1,39 @@
 Fix monPrint and friends.
+monpanic breaks up into 2 monprints which hit user space twice.
 
 Could put the GDT/LDT in linear memory where the guest
-  expect them.
+  expects them.
 
 Synchronize page writes with iCache in bochs.
 
 Deal with cycle counts of guest execution in VM, and in
   bochs/plex86 shim.
 
-Make a host-null.c file to demonstrate/test the OS-specific
-  files that are needed for a host port.
-
 Deal with page_usage.  How do we update this between timeslices?
   Do we always clear it?  Maybe we should keep a log of things to
   clear (page_usage, GDT entries, PDE entries, ...) and clear those
   before returning to user space.
 
-monpanic breaks up into 2 monprints which hit user space twice.
+GDT entries for guest need to be cleared upon return from guest
+  execution, or just cleared before invocation of the guest.
 
 Task segment must be a 32-bit'er.
 
 Save/restore floating point state of host/VM.
 
-pack guest_cpu_t structure.
-
 deduct off some cycles for the IRET/int sequence.
 
-Delete use of vm->addr, and split print-nexus into parts so we can
-  use direct host or guest fields.  I don't like having implicit
-  pointer usage.
+Conditions for bochs compile using plex86:
+  - Not compiled for debug
+  - x86 host
 
-Not compiled for debug
-Compiled for BX_SMP_PROCESSORS == 1
-cpuid match
-x86 host
+paging-mon.c:  We can eliminate any code other than CPL==3.
 
-monitor uses slots 1,2,3 so guest ring3 should not
-  use these slots.
+Fix extra PDBR reload in nexus.S
 
-FIX a20 in system fields.
-FIX use of CPL in paging-mon.c.  We can eliminate any
-  code other than CPL==3.
-
+Manipulation/reading of host page tables needs to be SMP/preempt
+  compatible.  Need to do spin-lock (big kernel lock for old Linux)
+  on vma.
 
 ==================== From previous plex86 TODO file ====================
 
@@ -64,8 +56,6 @@ FIX use of CPL in paging-mon.c.  We can eliminate any
 
   - Many performance enhancements (see PERFORMANCE)
 
-  - Test and get more guests running; list in 'GUESTS'.
-
   - Allow memory to be mapped anywhere in the physical address
     space.
 
@@ -80,17 +70,5 @@ FIX use of CPL in paging-mon.c.  We can eliminate any
   - Deal with LDT
 
 
-Use monitor unmapped IO port handler rather than user space.
-
-Get rid of VM message count instrumentation spew to kernel log
-
 unallocVmPages/unreserve_guest_pages called twice,
   release & teardown.
-
-move mapMonitor to -host.c
-
-Zero out GDT when remapped.
-
-When is mapMonitor called?
-
-Fix extra PDBR reload in nexus.S

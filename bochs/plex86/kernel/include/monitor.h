@@ -396,8 +396,8 @@ typedef struct {
   struct {
     Bit64u     t0; /* TSC before excecution of guest code */
     Bit64u     cyclesElapsed; /* Cycles of guest execution */
-    unsigned   a20; /* address 20 line enabled */
-    Bit32u     a20AddrMask; /* mask to apply to phy address */
+    unsigned   a20Enable;    /* A20 line enabled? */
+    Bit32u     a20AddrMask;  /* mask to apply to phy address */
     Bit32u     a20IndexMask; /* mask to apply to phy address */
     } system;
 
@@ -495,6 +495,14 @@ void  mon_memzero(void *ptr, int size);
 void  mon_memcpy(void *dst, void *src, int size);
 void *mon_memset(void *s, unsigned c, unsigned n);
 
+/*
+ *  We need to set the monitor CS/DS base address so that the module pages,
+ *  which are mapped starting at linear address 'laddr' into the guest address
+ *  space, reside at the same offset relative to the monitor CS base as they
+ *  reside relative to the kernel CS base in the host address space.  This way,
+ *  we can execute the (non-relocatable) module code within the guest address
+ *  space ...
+ */
 #define MON_BASE_FROM_LADDR(laddr) \
     ((laddr) - monitor_pages.startOffsetPageAligned)
 
@@ -661,9 +669,6 @@ unsigned getMonPTi(vm_t *, unsigned pdi, unsigned source);
 
 #define CLI() asm volatile ("cli": : : "memory")
 #define STI() asm volatile ("sti": : : "memory")
-
-extern const selector_t nullSelector;
-extern const descriptor_t nullDescriptor;
 
 #endif  /* MONITOR Space. */
 

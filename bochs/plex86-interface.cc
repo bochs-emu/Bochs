@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.3 2003-01-02 02:11:40 kevinlawton Exp $
+//// $Id: plex86-interface.cc,v 1.4 2003-01-02 17:05:47 kevinlawton Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -49,22 +49,22 @@ openFD(void)
 {
   if (plex86State) {
     // This should be the first operation; no state should be set yet.
-    fprintf(stderr, "openFD: plex86State = 0x%x\n", plex86State);
+    fprintf(stderr, "plex86: openFD: plex86State = 0x%x\n", plex86State);
     return(0); // Error.
     }
 
   // Open a new VM.
-  fprintf(stderr, "Opening VM.\n");
-  fprintf(stderr, "Trying /dev/misc/plex86...");
+  fprintf(stderr, "plex86: opening VM.\n");
+  fprintf(stderr, "plex86: trying /dev/misc/plex86...");
   plex86FD = open("/dev/misc/plex86", O_RDWR);
   if (plex86FD < 0) {
     fprintf(stderr, "failed.\n");
     // Try the old name.
-    fprintf(stderr, "Trying /dev/plex86...");
+    fprintf(stderr, "plex86: trying /dev/plex86...");
     plex86FD = open("/dev/plex86", O_RDWR);
     if (plex86FD < 0) {
       fprintf(stderr, "failed.\n");
-      fprintf(stderr, "Did you load the kernel module?"
+      fprintf(stderr, "plex86: did you load the kernel module?"
               "  Read the toplevel README file!\n");
       perror ("open");
       return(-1); // Error.
@@ -92,7 +92,7 @@ plex86CpuInfo(BX_CPU_C *cpu)
   bochsCPUID.procSignature.raw = cpu->cpuidInfo.procSignature;
   bochsCPUID.featureFlags.raw  = cpu->cpuidInfo.featureFlags;
 
-  fprintf(stderr, "Passing guest CPUID to plex86.\n");
+  fprintf(stderr, "plex86: passing guest CPUID to plex86.\n");
   if ( ioctl(plex86FD, PLEX86_CPUID, &bochsCPUID) ) {
     perror("ioctl CPUID: ");
     return(0); // Error.
@@ -116,7 +116,7 @@ plex86AllocateMemory(unsigned nMegs)
     }
 
   // Allocate memory from the host OS for the virtual physical memory.
-  fprintf(stderr, "Allocating %dMB of physical memory in VM.\n", nMegs);
+  fprintf(stderr, "plex86: allocating %dMB of physical memory in VM.\n", nMegs);
   if (ioctl(plex86FD, PLEX86_ALLOCVPHYS, nMegs) == -1) {
     perror("ioctl ALLOCVPHYS: ");
     plex86TearDown();
@@ -125,7 +125,7 @@ plex86AllocateMemory(unsigned nMegs)
   plex86State |= Plex86StateMemAllocated;
 
   // Map guest virtual physical memory into user address space and zero it.
-  fprintf(stderr, "Mapping virtualized physical memory into monitor.\n");
+  fprintf(stderr, "plex86: mapping virtualized physical memory into monitor.\n");
   ptr = (Bit8u*) mmap(NULL, plex86MemSize, PROT_READ | PROT_WRITE,
       MAP_SHARED, plex86FD, 0);
   if (ptr == (void *) -1) {
@@ -141,7 +141,7 @@ plex86AllocateMemory(unsigned nMegs)
   // Create a memory mapping of the monitor's print buffer into
   // user memory.  This is used for efficient printing of info that
   // the monitor prints out.
-  fprintf(stderr, "Mapping monitor print buffer into user mem.\n");
+  fprintf(stderr, "plex86: mapping monitor print buffer into user mem.\n");
   plex86PrintBuffer = (Bit8u*) mmap(NULL, 4096, PROT_READ,
       MAP_SHARED, plex86FD, plex86MemSize + 0*4096);
   if (plex86PrintBuffer == (void *) -1) {
@@ -154,7 +154,7 @@ plex86AllocateMemory(unsigned nMegs)
   // Create a memory mapping of the monitor's guest_cpu structure into
   // user memory.  This is used for passing the guest_cpu state between
   // user and kernel/monitor space.
-  fprintf(stderr, "Mapping guest_cpu structure into user mem.\n");
+  fprintf(stderr, "plex86: mapping guest_cpu structure into user mem.\n");
   plex86GuestCPU = (guest_cpu_t *) mmap(NULL, 4096, PROT_READ | PROT_WRITE,
       MAP_SHARED, plex86FD, plex86MemSize + 1*4096);
   if (plex86GuestCPU == (void *) -1) {
@@ -171,21 +171,21 @@ plex86AllocateMemory(unsigned nMegs)
   unsigned
 plex86TearDown(void)
 {
-  fprintf(stderr, "plex86TearDown called.\n");
+  fprintf(stderr, "plex86: plex86TearDown called.\n");
 
-  fprintf(stderr, "Guest Fault Count (FYI):\n");
+  fprintf(stderr, "plex86: guest Fault Count (FYI):\n");
   for (unsigned f=0; f<32; f++) {
     if (faultCount[f])
-      fprintf(stderr, "FC[%u] = %u\n", f, faultCount[f]);
+      fprintf(stderr, "plex86:  FC[%u] = %u\n", f, faultCount[f]);
     }
 
   if ( plex86FD < 0 ) {
-    fprintf(stderr, "plex86TearDown: FD not open.\n");
+    fprintf(stderr, "plex86: plex86TearDown: FD not open.\n");
     return(0);
     }
 
   if ( plex86State & Plex86StateMMapPhyMem ) {
-    fprintf(stderr, "Unmapping guest physical memory.\n");
+    fprintf(stderr, "plex86: unmapping guest physical memory.\n");
     if (munmap(plex86MemPtr, plex86MemSize) != 0) {
       perror ("munmap of guest physical memory");
       return(0); // Failed.
@@ -194,7 +194,7 @@ plex86TearDown(void)
   plex86State &= ~Plex86StateMMapPhyMem;
 
   if ( plex86State & Plex86StateMMapPrintBuffer ) {
-    fprintf(stderr, "Unmapping print buffer.\n");
+    fprintf(stderr, "plex86: unmapping print buffer.\n");
     if (munmap(plex86PrintBuffer, 4096) != 0) {
       perror("munmap of print buffer.");
       return(0); // Failed.
@@ -203,7 +203,7 @@ plex86TearDown(void)
   plex86State &= ~Plex86StateMMapPrintBuffer;
 
   if ( plex86State & Plex86StateMMapGuestCPU ) {
-    fprintf(stderr, "Unmapping guest_cpu structure.\n");
+    fprintf(stderr, "plex86: unmapping guest_cpu structure.\n");
     if (munmap(plex86GuestCPU, 4096) != 0) {
       perror("munmap of guest_cpu structure.");
       return(0); // Failed.
@@ -211,7 +211,7 @@ plex86TearDown(void)
     }
   plex86State &= ~Plex86StateMMapGuestCPU;
 
-  fprintf(stderr, "Tearing down VM.\n");
+  fprintf(stderr, "plex86: tearing down VM.\n");
   if (ioctl(plex86FD, PLEX86_TEARDOWN, 0) == -1) {
     perror("ioctl TEARDOWN: ");
     return(0); // Failed.
@@ -219,11 +219,13 @@ plex86TearDown(void)
   plex86State &= ~Plex86StateMemAllocated;
 
   // Close the connection to the kernel module.
-  fprintf(stderr, "Closing VM device.\n");
+  fprintf(stderr, "plex86: closing VM device.\n");
   if (close(plex86FD) == -1) {
     perror("close of VM device\n");
     return(0); // Failed.
     }
+
+  plex86FD = -1; // File descriptor is now closed.
 
   plex86State = 0; // For good measure.
 
@@ -237,7 +239,7 @@ plex86ExecuteInVM(BX_CPU_C *cpu)
   int ret;
 
   if ( plex86State != Plex86StateReady ) {
-    fprintf(stderr, "plex86ExecuteInVM: not in ready state (0x%x)\n",
+    fprintf(stderr, "plex86: plex86ExecuteInVM: not in ready state (0x%x)\n",
             plex86State);
     BX_PANIC(("plex86ExecuteInVM: bailing"));
     return(0);
@@ -302,31 +304,65 @@ plex86ExecuteInVM(BX_CPU_C *cpu)
   plex86GuestCPU->a20Enable = BX_GET_ENABLE_A20();
 
   ret = ioctl(plex86FD, PLEX86_EXECUTE, &executeMsg);
-  if (ret < 0) {
-    fprintf(stderr, "ioctl(PLEX86_EXECUTE) returns < 0\n");
+  if (ret != 0) {
+    fprintf(stderr, "plex86: ioctl(PLEX86_EXECUTE): ");
+    switch (ret) {
+      case Plex86NoExecute_Method:
+        fprintf(stderr, "bad execute method.\n");
+        break;
+      case Plex86NoExecute_CR0:
+        fprintf(stderr, "bad CR0 value.\n");
+        break;
+      case Plex86NoExecute_CR4:
+        fprintf(stderr, "bad CR4 value.\n");
+        break;
+      case Plex86NoExecute_CS:
+        fprintf(stderr, "bad CS value.\n");
+        break;
+      case Plex86NoExecute_A20:
+        fprintf(stderr, "bad A20 enable value.\n");
+        break;
+      case Plex86NoExecute_Selector:
+        fprintf(stderr, "bad selector value.\n");
+        break;
+      case Plex86NoExecute_DPL:
+        fprintf(stderr, "bad descriptor DPL.\n");
+        break;
+      case Plex86NoExecute_EFlags:
+        fprintf(stderr, "bad EFlags.\n");
+        break;
+      case Plex86NoExecute_Panic:
+        fprintf(stderr, "panic.\n");
+        break;
+      case Plex86NoExecute_VMState:
+        fprintf(stderr, "bad VM state.\n");
+        break;
+      default:
+        fprintf(stderr, "ret = %d\n", ret);
+      }
     }
-  else
-
-  switch ( executeMsg.monitorState.request ) {
-    case MonReqFlushPrintBuf:
-      fprintf(stderr, "MonReqFlushPrintBuf:\n");
-      fprintf(stderr, "::%s\n", plex86PrintBuffer);
-      break;
-    case MonReqPanic:
-      fprintf(stderr, "MonReqPanic:\n");
-      fprintf(stderr, "::%s\n", plex86PrintBuffer);
-      break;
-    //case MonReqNone:
-    //  copyPlex86StateToBochs(cpu);
-    //  return(0); /* All OK. */
-    case MonReqGuestFault:
-      faultCount[ executeMsg.monitorState.guestFaultNo ]++;
-      copyPlex86StateToBochs(cpu);
-      return(0); /* All OK. */
-    default:
-      fprintf(stderr, "executeMsg.request = %u\n",
-              executeMsg.monitorState.request);
-      break;
+  else {
+    switch ( executeMsg.monitorState.request ) {
+      case MonReqFlushPrintBuf:
+        fprintf(stderr, "plex86: MonReqFlushPrintBuf:\n");
+        fprintf(stderr, "::%s\n", plex86PrintBuffer);
+        break;
+      case MonReqPanic:
+        fprintf(stderr, "plex86: MonReqPanic:\n");
+        fprintf(stderr, "::%s\n", plex86PrintBuffer);
+        break;
+      //case MonReqNone:
+      //  copyPlex86StateToBochs(cpu);
+      //  return(0); /* All OK. */
+      case MonReqGuestFault:
+        faultCount[ executeMsg.monitorState.guestFaultNo ]++;
+        copyPlex86StateToBochs(cpu);
+        return(0); /* All OK. */
+      default:
+        fprintf(stderr, "plex86: executeMsg.request = %u\n",
+                executeMsg.monitorState.request);
+        break;
+      }
     }
 
   plex86TearDown();
