@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.22 2004-08-19 19:42:22 vruppert Exp $
+ * $Id: bximage.c,v 1.23 2004-08-24 11:42:18 vruppert Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -38,7 +38,7 @@ typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.22 2004-08-19 19:42:22 vruppert Exp $";
+char *rcsid = "$Id: bximage.c,v 1.23 2004-08-24 11:42:18 vruppert Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -575,12 +575,12 @@ int main()
     make_image_win32 (sectors, filename, writefn_win32);
   }
   else
-#else
+#endif
   {
     make_image (sectors, filename, write_function);
   }
-#endif
-  printf ("\nI wrote " FMT_LL "d bytes to %s.\n", sectors*512, filename);
+  printf ("\nI wrote " FMT_LL "u bytes to ", sectors*512);
+  printf ("%s.\n", filename);
   printf ("\nThe following line should appear in your bochsrc:\n");
   printf ("  %s\n", bochsrc_line);
 #ifdef WIN32
