@@ -1,5 +1,5 @@
 -------------------------------------------------------------
-BOCHS TESTING FORM
+BOCHS TESTING FORM Version 0.3
 -------------------------------------------------------------
 
 Because of the variety of platforms and configurations that Bochs
@@ -19,11 +19,17 @@ multiple-choice, just put an X in the brackets.  Example: [X]
 Mail completed forms to bochs-testing@tlw.com.
 
 
+What is the date?
+[__]
+
+What is your name?
+[__]
+
 What is your email address?
 [__]
 
-Do you mind if this email address is placed on a testing results web page 
-so that people with a similar setup can write to you?
+Do you mind if your name and email address are placed on a testing results 
+web page so that people with a similar setup can write to you?
    [ ] Ok, put it on a web page
    [ ] No, keep my address private.
 
@@ -35,9 +41,10 @@ Redhat Linux 6.2 with 2.2.16 kernel.
 [__]
 
 What version of bochs are you using?
-   [ ] I compiled it from 03/25/2000 snapshot
-   [ ] I compiled it from 04/06/2001 bugfix snapshot
    [ ] I compiled it from 04/09/2001 bugfix snapshot
+   [ ] I compiled it from 04/06/2001 bugfix snapshot
+   [ ] I compiled it from 03/25/2000 snapshot
+   [ ] I compiled it from the CVS sources from date: [__]
    [ ] other source distribution from URL: [__]
    [ ] binary distribution from URL: [__]
 
@@ -55,7 +62,10 @@ If you used configure, what arguments did you give it?  If you used a
 .conf.* script, give the name of the .conf script instead.
 [__]
 
-Did it compile clean without any hacking?
+What compiler did you use?  (Please include version.)
+[__]
+
+Did Bochs compile clean without any hacking?
   [ ] Yes
   [ ] No
 
@@ -101,6 +111,7 @@ floppy disk        [X]      [ ]     [ ]     [__]
 raw floppy disk    [X]      [ ]     [ ]     [__]
 hard disk          [X]      [ ]     [ ]     [__]
 floating point     [X]      [ ]     [ ]     [__]
+mouse              [X]      [ ]     [ ]     [__]
 cdrom              [X]      [ ]     [ ]     [__]
 sb16               [X]      [ ]     [ ]     [__]
 ne2000             [X]      [ ]     [ ]     [__]
