@@ -1378,6 +1378,7 @@ public: // for now...
   BX_SMF void revalidate_prefetch_q(void);
   BX_SMF void invalidate_prefetch_q(void);
 
+  BX_SMF void check_seg_limit_scaled (char *name, Bit32u value);
   BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length);
   BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length);
   BX_SMF void write_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);

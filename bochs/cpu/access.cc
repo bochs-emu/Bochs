@@ -33,6 +33,30 @@
 #endif
 
 
+// In write_virtual_checks and read_virtual_checks, we check that the
+// segment limit is not between 0 and 4.  The reason for this restriction
+// is that the condition which is used to check for out-of-bounds reads and
+// writes is:
+//    offset > seg->cache.u.segment.limit_scaled-length+1
+// This condition works better than the previous one, which overflowed and
+// failed when offset+length-1 was larger than 0xffffffff.  However our new
+// condition can underflow if the segment limit is less than 4, but hopefully
+// nobody will want to do that.  To be safe though, I added this function
+// that will panic if anyone tries to set the segment limit less than 4.  If
+// this panic shows up in real software and we must support it, it's not hard
+// check for overflow/underflow in the condition, but it does add a few
+// instructions to a heavily used function.
+//
+// This is called whenever the segment limit is changed to a non-constant 
+// value.  If it's getting set to 0xffff or something, I didn't bother to
+// call the check function.
+void
+BX_CPU_C::check_seg_limit_scaled (char *name, Bit32u value)
+{
+  if (value >= 0 && value < 4) {
+    BX_PANIC (("segment limit (%s) is less than 4, which is not supported.  See cpu/access.cc"));
+  }
+}
 
 
   void
@@ -71,7 +95,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
         return;
 
       case 2: case 3: /* read/write */
-        if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
+        if ( offset > seg->cache.u.segment.limit_scaled-length+1 ) {
 		  BX_INFO(("write_virtual_checks(): write beyond limit, r/w"));
           exception(int_number(seg), 0, 0);
           return;
@@ -97,7 +121,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
     }
 
   else { /* real mode */
-    if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
+    if (offset > seg->cache.u.segment.limit_scaled-length+1) {
       //BX_INFO(("write_virtual_checks() SEG EXCEPTION:  %x:%x + %x",
       //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
       if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
@@ -136,7 +160,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
       case 0: case 1: /* read only */
       case 10: case 11: /* execute/read */
       case 14: case 15: /* execute/read-only, conforming */
-        if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
+        if ( offset > seg->cache.u.segment.limit_scaled-length+1 ) {
 		  BX_INFO(("read_virtual_checks(): write beyond limit"));
           exception(int_number(seg), 0, 0);
           return;
@@ -144,7 +168,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
         break;
 
       case 2: case 3: /* read/write */
-        if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
+        if ( offset > seg->cache.u.segment.limit_scaled-length+1 ) {
 		  BX_INFO(("read_virtual_checks(): write beyond limit"));
           exception(int_number(seg), 0, 0);
           return;
@@ -191,7 +215,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
     }
 
   else { /* real mode */
-    if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
+    if ( offset >  seg->cache.u.segment.limit_scaled-length+1) {
       //BX_ERROR(("read_virtual_checks() SEG EXCEPTION:  %x:%x + %x",
       //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
       if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);

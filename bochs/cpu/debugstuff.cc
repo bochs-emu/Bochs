@@ -687,7 +687,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit;
-
+  BX_CPU_THIS_PTR check_seg_limit_scaled ("CS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled);
 
   // SS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = cpu->ss.sel;
@@ -718,7 +718,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit;
-
+  BX_CPU_THIS_PTR check_seg_limit_scaled ("SS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled);
 
   // DS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = cpu->ds.sel;
@@ -749,8 +749,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit;
-
-
+  BX_CPU_THIS_PTR check_seg_limit_scaled ("DS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled);
 
   // ES:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = cpu->es.sel;
@@ -781,7 +780,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit;
-
+  BX_CPU_THIS_PTR check_seg_limit_scaled ("ES", BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled);
 
   // FS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = cpu->fs.sel;
@@ -812,7 +811,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit;
-
+  BX_CPU_THIS_PTR check_seg_limit_scaled ("FS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled);
 
   // GS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = cpu->gs.sel;
@@ -843,6 +842,7 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit;
+  BX_CPU_THIS_PTR check_seg_limit_scaled ("GS", BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled);
 
   // LDTR:
   BX_CPU_THIS_PTR ldtr.selector.value = cpu->ldtr.sel;
