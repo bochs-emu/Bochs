@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.107 2003-08-19 00:37:03 cbothamy Exp $
+// $Id: harddrv.cc,v 1.108 2003-08-24 22:44:44 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.107 2003-08-19 00:37:03 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.108 2003-08-24 22:44:44 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2286,7 +2286,7 @@ if (channel == 0) {
             BX_SELECTED_CONTROLLER(channel).status.busy  = 0;
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-            BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
+            BX_SELECTED_CONTROLLER(channel).status.drq   = 0;
             BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
             BX_SELECTED_CONTROLLER(channel).status.err   = 0;
             BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
