@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.3 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.4 2004-06-22 19:34:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,18 +97,6 @@ bx_pci_ide_c::reset(unsigned type)
   BX_PIDE_THIS s.pci_conf[0x05] = 0x00;
   BX_PIDE_THIS s.pci_conf[0x06] = 0x80;
   BX_PIDE_THIS s.pci_conf[0x07] = 0x02;
-  if (bx_options.ata[0].Opresent->get ()) {
-    BX_PIDE_THIS s.pci_conf[0x10] = 0xf1;
-    BX_PIDE_THIS s.pci_conf[0x11] = 0x01;
-    BX_PIDE_THIS s.pci_conf[0x14] = 0xf5;
-    BX_PIDE_THIS s.pci_conf[0x15] = 0x03;
-  }
-  if (bx_options.ata[1].Opresent->get ()) {
-    BX_PIDE_THIS s.pci_conf[0x18] = 0x71;
-    BX_PIDE_THIS s.pci_conf[0x19] = 0x01;
-    BX_PIDE_THIS s.pci_conf[0x1C] = 0x75;
-    BX_PIDE_THIS s.pci_conf[0x1D] = 0x03;
-  }
   BX_PIDE_THIS s.pci_conf[0x20] = 0x01;
   BX_PIDE_THIS s.pci_conf[0x21] = 0x00;
   if (bx_options.ata[0].Opresent->get ()) {
@@ -244,24 +232,16 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       oldval = BX_PIDE_THIS s.pci_conf[address+i];
       value8 = (value >> (i*8)) & 0xFF;
       switch (address+i) {
+        case 0x05:
         case 0x06:
-        case 0x12:
-        case 0x13:
-        case 0x16:
-        case 0x17:
-        case 0x1A:
-        case 0x1B:
-        case 0x1E:
-        case 0x1F:
         case 0x22:
         case 0x23:
           break;
+        case 0x04:
+          BX_PIDE_THIS s.pci_conf[address+i] = value8 & 0x05;
+          break;
         case 0x20:
           bmide_change = (value8 != oldval);
-        case 0x10:
-        case 0x14:
-        case 0x18:
-        case 0x1C:
           BX_PIDE_THIS s.pci_conf[address+i] = (value8 & 0xF0) | 0x01;
           break;
         case 0x21:
