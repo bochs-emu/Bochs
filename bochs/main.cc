@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.157 2002-10-06 02:37:27 bdenney Exp $
+// $Id: main.cc,v 1.158 2002-10-06 19:21:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1347,6 +1347,7 @@ int main (int argc, char *argv[])
   } else {
     // quit via longjmp
   }
+  SIM->set_quit_context (NULL);
   return 0;
 }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.62 2002-10-06 02:37:28 bdenney Exp $
+// $Id: wxmain.cc,v 1.63 2002-10-06 19:21:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -1389,6 +1389,7 @@ SimThread::Entry (void)
   } else {
     wxLogDebug ("in SimThread, bx_continue_after_config_interface exited by longjmp");
   }
+  SIM->set_quit_context (NULL);
   // it is possible that the whole interface has already been shut down.
   // If so, we must end immediately.
   if (!theFrame->IsClosing ()) {
