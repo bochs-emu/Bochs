@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.6 2002-09-23 07:37:07 bdenney Exp $
+# $Id: batch-build.perl,v 1.7 2002-10-25 02:50:06 bdenney Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -41,6 +41,7 @@ $TEST_SMP = 1;
 $TEST_IODEV = 1;
 $TEST_PCI = 1;
 $TEST_X86_64 = 1;
+$TEST_SSE = 1;
 
 $pwd = `pwd`;
 chop $pwd;
@@ -59,7 +60,7 @@ if ($TEST_GUIS) {
   add_configuration ('wx',
     '--with-wx');
   add_configuration ('wx-d',
-    '--with-wx --enable-debugger --disable-readline');
+    '--with-wx --enable-debugger');
   add_configuration ('nogui',
     '--with-nogui');
   add_configuration ('nogui-d',
@@ -113,7 +114,7 @@ add_configuration ('smp2-d',
 add_configuration ('smp2-wx',
   '--enable-processors=2 --with-wx');
 add_configuration ('smp2-wx-d',
-  '--enable-processors=2 --with-wx --enable-debugger --disable-readline');
+  '--enable-processors=2 --with-wx --enable-debugger');
 }
 
 if ($TEST_X86_64) {
@@ -125,7 +126,19 @@ add_configuration ('64bit-d',
 add_configuration ('64bit-wx',
   '--enable-x86-64 --with-wx');
 add_configuration ('64bit-wx-d',
-  '--enable-x86-64 --with-wx --enable-debugger --disable-readline');
+  '--enable-x86-64 --with-wx --enable-debugger');
+}
+
+if ($TEST_SSE) {
+# test SSE configurations
+add_configuration ('sse1',
+  '--enable-sse=1');
+add_configuration ('sse2',
+  '--enable-sse=2');
+add_configuration ('sse2-dbg',
+  '--enable-sse=2 --enable-debugger');
+add_configuration ('sse2-x86-64-wx-d',
+  '--enable-sse=2 --enable-x86-64 --with-wx --enable-debugger');
 }
 
 if ($TEST_PCI) {
@@ -199,6 +212,8 @@ for (my $i=0; $i <= $#config_names; $i++) {
   print BUILD <<BUILD_EOF;
 #!/bin/bash
 echo Running the configure script
+export CFLAGS='-g -O2 -Wall'
+export CXXFLAGS='-g -O2 -Wall'
 $maybe_nohup ../$configurepath $options
 if test $? != 0; then
   echo Configure failed.
