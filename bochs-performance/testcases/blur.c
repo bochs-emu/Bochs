@@ -1,3 +1,9 @@
+/*
+ *
+ * $Id: blur.c,v 1.2 2002-04-16 14:30:47 bdenney Exp $
+ *
+ */
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
