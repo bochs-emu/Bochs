@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.49 2002-09-13 17:04:11 kevinlawton Exp $
+// $Id: cpu.h,v 1.50 2002-09-13 18:15:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -376,6 +376,7 @@ typedef struct {
   BX_CPP_INLINE void    clear_##name ();                                     \
   BX_CPP_INLINE Boolean get_##name ();                                       \
   BX_CPP_INLINE void    set_##name (Bit8u val);
+  // end of DECLARE_EFLAGS_ACCESSORS
 
 #define IMPLEMENT_EFLAGS_ACCESSORS(name,bitnum)                              \
   BX_CPP_INLINE void BX_CPU_C::assert_##name () {                            \
@@ -391,7 +392,7 @@ typedef struct {
     BX_CPU_THIS_PTR eflags.val32 =                                           \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
   }
-  // end of #define
+  // end of IMPLEMENT_EFLAGS_ACCESSORS
 
 #define DECLARE_8BIT_REGISTER_ACCESSORS(name)                                \
   BX_SMF BX_CPP_INLINE Bit8u get_##name(void);                               \
@@ -406,34 +407,34 @@ typedef struct {
   BX_SMF BX_CPP_INLINE void   set_##name(Bit32u val);
 
 #define IMPLEMENT_8LBIT_REGISTER_ACCESSORS(name)                             \
-  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit8u val) {          \
+  BX_CPP_INLINE void BX_CPU_C::set_##name(Bit8u val) {                \
     BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name].word.byte.rl = val;          \
   }                                                                          \
-  BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_##name(void) {              \
+  BX_CPP_INLINE Bit8u BX_CPU_C::get_##name(void) {                    \
     return (BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name].word.byte.rl);       \
-  }                                                                          
+  }
 
 #define IMPLEMENT_8HBIT_REGISTER_ACCESSORS(name)                             \
-  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit8u val) {          \
+  BX_CPP_INLINE void BX_CPU_C::set_##name(Bit8u val) {                       \
     BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name-4].word.byte.rh = val;        \
   }                                                                          \
-  BX_SMF BX_CPP_INLINE Bit8u BX_CPU_C_PREFIX get_##name(void) {              \
+  BX_CPP_INLINE Bit8u BX_CPU_C::get_##name(void) {                           \
     return (BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name-4].word.byte.rh);     \
   }                                                                          
 
 #define IMPLEMENT_16BIT_REGISTER_ACCESSORS(name)                             \
-  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit16u val) {         \
+  BX_CPP_INLINE void BX_CPU_C::set_##name(Bit16u val) {                      \
     BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_##name].word.rx = val;              \
   }                                                                          \
-  BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_##name(void) {             \
+  BX_CPP_INLINE Bit16u BX_CPU_C::get_##name(void) {                          \
     return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_##name].word.rx);           \
   }                                                                          
 
 #define IMPLEMENT_32BIT_REGISTER_ACCESSORS(name)                             \
-  BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_##name(Bit32u val) {         \
+  BX_CPP_INLINE void BX_CPU_C::set_##name(Bit32u val) {                      \
     BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_##name].dword.erx = val;            \
   }                                                                          \
-  BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_##name(void) {             \
+  BX_CPP_INLINE Bit32u BX_CPU_C::get_##name(void) {                          \
     return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_##name].dword.erx);         \
   }                                                                          
 
@@ -2245,8 +2246,8 @@ union {
   DECLARE_32BIT_REGISTER_ACCESSORS(ESI);
   DECLARE_32BIT_REGISTER_ACCESSORS(EDI);
 
-  BX_SMF BX_CPP_INLINE Bit8u  get_CPL(void);
-  BX_SMF BX_CPP_INLINE Bit32u get_EIP(void);
+  BX_CPP_INLINE Bit8u  get_CPL(void);
+  BX_CPP_INLINE Bit32u get_EIP(void);
 
   BX_SMF BX_CPP_INLINE int which_cpu(void);
 
@@ -2311,7 +2312,7 @@ BX_SMF BX_CPP_INLINE Bit8u  BX_CPU_C_PREFIX get_CPL(void) {
    return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); 
 } 
 
-BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_EIP(void) { 
+BX_CPP_INLINE Bit32u BX_CPU_C::get_EIP(void) {
    return (BX_CPU_THIS_PTR dword.eip); 
 } 
 

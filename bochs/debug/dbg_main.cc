@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.60 2002-09-12 18:52:14 bdenney Exp $
+// $Id: dbg_main.cc,v 1.61 2002-09-13 18:15:20 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,17 +40,6 @@ extern "C" {
 #endif
 }
 #endif
-
-// define shortcuts to get register from the default CPU
-#define EBP (BX_CPU(dbg_cpu)->gen_reg[5].get_erx())
-#if BX_SUPPORT_X86_64
-#define EIP (BX_CPU(dbg_cpu)->dword.eip)
-#else
-#define EIP (BX_CPU(dbg_cpu)->eip)
-#endif
-#define ESP (BX_CPU(dbg_cpu)->gen_reg[4].get_erx ())
-#define SP  (BX_CPU(dbg_cpu)->gen_reg[4].word.rx)
-
 
 static unsigned doit = 0;
 
@@ -1001,8 +990,8 @@ bx_dbg_where_command()
 	    fprintf(stderr, "non-zero stack base\n");
 	    return;
       }
-      Bit32u bp = EBP;
-      Bit32u ip = EIP;
+      Bit32u bp = BX_CPU(dbg_cpu)->get_EBP ();
+      Bit32u ip = BX_CPU(dbg_cpu)->get_EIP ();
       fprintf(stderr, "(%d) 0x%08x\n", 0, ip);
       for (int i = 1; i < 50; i++) {
 	    // Up
@@ -1247,7 +1236,9 @@ void
 bx_dbg_print_stack_command(int nwords)
 {
 	// Get linear address for stack top
-	Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.d_b) ? ESP : SP;
+	Bit32u sp = (BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.d_b)?
+	  BX_CPU(dbg_cpu)->get_ESP ()
+	  : BX_CPU(dbg_cpu)->get_SP ();
 	Bit32u linear_sp = sp + BX_CPU(dbg_cpu)->sregs[BX_SREG_SS].cache.u.segment.base;
 	Bit8u buf[8];
 
@@ -2111,14 +2102,14 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     if( BX_CPU(dbg_cpu)->trace_reg )
 	    fprintf( stderr,
 		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
-		BX_CPU(which_cpu)->gen_reg[0].get_erx(),
-		BX_CPU(which_cpu)->gen_reg[1].get_erx(),
-		BX_CPU(which_cpu)->gen_reg[2].get_erx(),
-		BX_CPU(which_cpu)->gen_reg[3].get_erx(),
-		BX_CPU(which_cpu)->gen_reg[4].get_erx(),
-		BX_CPU(which_cpu)->gen_reg[5].get_erx(),
-		BX_CPU(which_cpu)->gen_reg[6].get_erx(),
-		BX_CPU(which_cpu)->gen_reg[7].get_erx(),
+		BX_CPU(which_cpu)->get_EAX (),
+		BX_CPU(which_cpu)->get_EBX (),
+		BX_CPU(which_cpu)->get_ECX (),
+		BX_CPU(which_cpu)->get_EDX (),
+		BX_CPU(which_cpu)->get_ESP (),
+		BX_CPU(which_cpu)->get_EBP (),
+		BX_CPU(which_cpu)->get_ESI (),
+		BX_CPU(which_cpu)->get_EDI (),
 		!!BX_CPU(which_cpu)->get_CF(),
 		!!BX_CPU(which_cpu)->get_AF(),
 		!!BX_CPU(which_cpu)->get_ZF(),
