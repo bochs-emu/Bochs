@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.104 2003-01-01 21:33:48 cbothamy Exp $
+$Id: user.dbk,v 1.105 2003-01-01 22:25:51 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -689,7 +689,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
      Is there an irc channel for bochs?
      </para></question>
      <answer><para>
-     Yes. You will usually find Bochs developers and users on irc at irc.openprojects.net:6667, channel #bochs
+     Yes. You will usually find Bochs developers and users on irc at irc.freenode.net:6667, channel #bochs
      </para></answer>
   </qandaentry>
 
