@@ -246,6 +246,7 @@ install_bin::
 	$(CAT) build/linux/README.linux-binary README > $(PREFIX)/$(VERSION)/README
 	$(CP) font/vga.pcf $(PREFIX)/$(VERSION)
 	$(CP) .bochsrc $(PREFIX)/$(VERSION)/bochsrc-sample.txt
+	$(RM) -f $(PREFIX)/latest
 	$(LN_S) $(VERSION) $(PREFIX)/latest
 
 install_man::
