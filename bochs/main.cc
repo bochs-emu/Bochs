@@ -220,6 +220,13 @@ iofunctions::out(int f, int l, char *prefix, char *fmt, ...)
 #endif
 }
 
+iofunctions::iofunctions(FILE *fs)
+{
+	init();
+	init_log(fs);
+	out( IOLOG, LOGLEV_INFO, "[IO  ]", "Output log initialized: '%s'.\n", logfn);
+}
+
 iofunctions::iofunctions(char *fn)
 {
 	init();
@@ -250,6 +257,8 @@ logfunctions::logfunctions(void)
 {
 	setprefix("[GEN ]", __FILE__, __LINE__);
 	settype(GENLOG);
+	if(io == NULL)
+		io = new iofunc_t(stderr);
 	setio(io);
 }
 
@@ -262,7 +271,7 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 
 logfunctions::~logfunctions(void)
 {
-  fprintf (stderr, "logfunctions::~logfunctions was called\n");
+  //fprintf (stderr, "logfunctions::~logfunctions was called for object at 0x%x\n", this);
 }
 
 void
@@ -377,6 +386,7 @@ main(int argc, char *argv[])
   BX_CPU.cpu_loop();
 #endif
 
+  fprintf(stderr,"genlog is at 0x%x\n",genlog);
   return(0);
 }
 
