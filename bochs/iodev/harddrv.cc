@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.65 2002-08-04 08:42:34 vruppert Exp $
+// $Id: harddrv.cc,v 1.66 2002-08-05 15:47:40 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.65 2002-08-04 08:42:34 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.66 2002-08-05 15:47:40 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -526,11 +526,12 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
 	    case 0xa0: {
 		  unsigned index = BX_SELECTED_CONTROLLER.buffer_index;
+		  unsigned increment = 0;
 
 		  // Load block if necessary
 		  if (index >= 2048) {
 			if (index > 2048)
-			      BX_PANIC(("index > 2048"));
+			      BX_PANIC(("index > 2048 : 0x%x",index));
 			switch (BX_SELECTED_HD.atapi.command) {
 			      case 0x28: // read (10)
 			      case 0xa8: // read (12)
@@ -547,9 +548,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 						BX_INFO(("READ block loaded (%d remaining) {CDROM}",
 							  BX_SELECTED_HD.cdrom.remaining_blocks));
 
-				    // one block transfered
-				    BX_SELECTED_HD.atapi.drq_bytes -= 2048;
-				    BX_SELECTED_HD.atapi.total_bytes_remaining -= 2048;
+				    // one block transfered, start at beginning
 				    index = 0;
 #else
 				    BX_PANIC(("Read with no LOWLEVEL_CDROM"));
@@ -561,21 +560,23 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 			}
 		  }
 
-		  value32 = BX_SELECTED_CONTROLLER.buffer[index];
-		  index++;
+		  value32 = BX_SELECTED_CONTROLLER.buffer[index+increment];
+		  increment++;
 		  if (io_len >= 2) {
-			value32 |= (BX_SELECTED_CONTROLLER.buffer[index] << 8);
-			index++;
+			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+increment] << 8);
+			increment++;
 		  }
 		  if (io_len == 4) {
-			value32 |= (BX_SELECTED_CONTROLLER.buffer[index] << 16);
-			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+1] << 24);
-			index += 2;
+			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+increment] << 16);
+			value32 |= (BX_SELECTED_CONTROLLER.buffer[index+increment+1] << 24);
+			increment += 2;
 		  }
-		  BX_SELECTED_CONTROLLER.buffer_index = index;
+		  BX_SELECTED_CONTROLLER.buffer_index = index + increment;
+		  BX_SELECTED_CONTROLLER.drq_index += increment;
 
-		  if (BX_SELECTED_CONTROLLER.buffer_index >= (unsigned)BX_SELECTED_HD.atapi.drq_bytes) {
+		  if (BX_SELECTED_CONTROLLER.drq_index >= (unsigned)BX_SELECTED_HD.atapi.drq_bytes) {
 			BX_SELECTED_CONTROLLER.status.drq = 0;
+			BX_SELECTED_CONTROLLER.drq_index = 0;
 
 			BX_SELECTED_HD.atapi.total_bytes_remaining -= BX_SELECTED_HD.atapi.drq_bytes;
 
@@ -592,7 +593,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 			      if (BX_SELECTED_HD.atapi.total_bytes_remaining < BX_SELECTED_CONTROLLER.byte_count) {
 				    BX_SELECTED_CONTROLLER.byte_count = BX_SELECTED_HD.atapi.total_bytes_remaining;
 			      }
-			      BX_SELECTED_HD.atapi.drq_bytes += BX_SELECTED_CONTROLLER.byte_count;
+			      BX_SELECTED_HD.atapi.drq_bytes = BX_SELECTED_CONTROLLER.byte_count;
 
 			      raise_interrupt();
 			} else {
@@ -2570,16 +2571,22 @@ bx_hard_drive_c::identify_drive(unsigned drive)
   void
 bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int alloc_length, bool lazy)
 {
-      if (BX_SELECTED_CONTROLLER.byte_count == 0)
-	    BX_PANIC(("ATAPI command with zero byte count"));
+      // BX_SELECTED_CONTROLLER.byte_count is a union of BX_SELECTED_CONTROLLER.cylinder_no;
+      // lazy is used to force a data read in the buffer at the next read.
 
       if (BX_SELECTED_CONTROLLER.byte_count == 0xffff)
         BX_SELECTED_CONTROLLER.byte_count = 0xfffe;
 
       if ((BX_SELECTED_CONTROLLER.byte_count & 1)
           && !(alloc_length <= BX_SELECTED_CONTROLLER.byte_count)) {
-        BX_ERROR(("Odd byte count to ATAPI command 0x%02x", command));
+        BX_INFO(("Odd byte count (0x%04x) to ATAPI command 0x%02x, using 0x%04x", 
+		BX_SELECTED_CONTROLLER.byte_count, command, BX_SELECTED_CONTROLLER.byte_count - 1));
+        BX_SELECTED_CONTROLLER.byte_count -= 1;
       }
+
+      if (BX_SELECTED_CONTROLLER.byte_count == 0)
+	    BX_PANIC(("ATAPI command with zero byte count"));
+
       if (alloc_length < 0)
 	    BX_PANIC(("Allocation length < 0"));
       if (alloc_length == 0)
@@ -2596,6 +2603,7 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int allo
 	    BX_SELECTED_CONTROLLER.buffer_index = 2048;
       else
 	    BX_SELECTED_CONTROLLER.buffer_index = 0;
+      BX_SELECTED_CONTROLLER.drq_index = 0;
 
       if (BX_SELECTED_CONTROLLER.byte_count > req_length)
 	    BX_SELECTED_CONTROLLER.byte_count = req_length;
@@ -2607,11 +2615,11 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u command, int req_length, int allo
       BX_SELECTED_HD.atapi.drq_bytes = BX_SELECTED_CONTROLLER.byte_count;
       BX_SELECTED_HD.atapi.total_bytes_remaining = (req_length < alloc_length) ? req_length : alloc_length;
 
-      if (lazy) {
-	    // bias drq_bytes and total_bytes_remaining
-	    BX_SELECTED_HD.atapi.drq_bytes += 2048;
-	    BX_SELECTED_HD.atapi.total_bytes_remaining += 2048;
-      }
+      // if (lazy) {
+	    // // bias drq_bytes and total_bytes_remaining
+	    // BX_SELECTED_HD.atapi.drq_bytes += 2048;
+	    // BX_SELECTED_HD.atapi.total_bytes_remaining += 2048;
+      // }
 }
 
 void
