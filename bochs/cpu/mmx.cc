@@ -1237,7 +1237,7 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1248,10 +1248,10 @@ void BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  MMXUQ(result) = ~(MMXUQ(op1)) & MMXUQ(op2);
+  MMXUQ(op1) = ~(MMXUQ(op1)) & MMXUQ(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PANDN_PqQq: required MMX, use --enable-mmx option"));
   UndefinedOpcode(i);
@@ -1925,7 +1925,7 @@ void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
   Bit16u temp = 0;
 
   /* op2 is a register or memory reference */
@@ -1946,10 +1946,10 @@ void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
   temp += abs(MMXUB6(op1) - MMXUB6(op2));
   temp += abs(MMXUB7(op1) - MMXUB7(op2));
 
-  MMXUW0(result) = (Bit64u) temp;
+  MMXUW0(op1) = (Bit64u) temp;
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #else  
   BX_INFO(("PSADBW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);

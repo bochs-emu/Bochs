@@ -838,7 +838,7 @@ void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -849,11 +849,11 @@ void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  result.xmm64u(0) = ~(op1.xmm64u(0)) & op2.xmm64u(0);
-  result.xmm64u(1) = ~(op1.xmm64u(1)) & op2.xmm64u(1);
+  op1.xmm64u(0) = ~(op1.xmm64u(0)) & op2.xmm64u(0);
+  op1.xmm64u(1) = ~(op1.xmm64u(1)) & op2.xmm64u(1);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PANDN_VdqWdq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -1575,7 +1575,7 @@ void BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
   Bit16u temp1 = 0, temp2 = 0;
 
   /* op2 is a register or memory reference */
@@ -1605,11 +1605,11 @@ void BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
   temp2 += abs(op1.xmmubyte(0xE) - op2.xmmubyte(0xE));
   temp2 += abs(op1.xmmubyte(0xF) - op2.xmmubyte(0xF));
 
-  result.xmm64u(0) = Bit64u(temp1);
-  result.xmm64u(1) = Bit64u(temp2);
+  op1.xmm64u(0) = Bit64u(temp1);
+  op1.xmm64u(1) = Bit64u(temp2);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSADBW_VdqWdq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
