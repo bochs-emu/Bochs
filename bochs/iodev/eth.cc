@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.15 2003-04-26 14:48:45 cbothamy Exp $
+// $Id: eth.cc,v 1.16 2003-04-28 13:01:09 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,6 +149,16 @@ eth_locator_c::create(const char *type, const char *netif,
   return (NULL);
 }
 
+#if (HAVE_ETHERTAP==1) || (HAVE_TUNTAP==1)
+
+extern "C" {
+#include <sys/wait.h>
+};
+
+#undef LOG_THIS
+#define LOG_THIS bx_devices.pluginNE2kDevice->
+
+// This is a utility script used for tuntap or ethertap
 int execute_script( char* scriptname, char* arg1 )
 {
   int pid,status;
@@ -178,5 +188,7 @@ int execute_script( char* scriptname, char* arg1 )
   }
   return WEXITSTATUS(status);
 }
+
+#endif // (HAVE_ETHERTAP==1) || (HAVE_TUNTAP==1)
 
 #endif /* if BX_NE2K_SUPPORT */
