@@ -1,6 +1,6 @@
 #!/bin/sh
 BROWSER=netscape
-URL=/usr/local/bochs/1.1.2/DOC-linux.html
+URL=/usr/local/bochs/@VERSION@/DOC-linux.html
 MY_PATH=/usr/local/bin/bochs-docs
 
 cat <<EOF
