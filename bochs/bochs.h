@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.58 2002-01-30 10:30:52 cbothamy Exp $
+// $Id: bochs.h,v 1.59 2002-03-03 06:03:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -609,6 +609,10 @@ typedef struct {
   bx_floppy_options floppyb;
   bx_disk_options   diskc;
   bx_disk_options   diskd;
+  bx_serial_options com1;
+  bx_serial_options com2;
+  bx_serial_options com3;
+  bx_serial_options com4;
   bx_cdrom_options  cdromd; 
   bx_rom_options    rom;
   bx_vgarom_options vgarom;

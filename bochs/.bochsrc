@@ -2,6 +2,19 @@
 # your pathname includes spaces.
 
 #=======================================================================
+# com1:
+# Specify the device to use as com1.  This can be a real serial line, or
+# a pty.  To use a pty (under X/Unix), create two windows (xterms,
+# usually).  One of them will run bochs, and the other will act as com1.
+# Find out the tty the com1 window using the `tty' command, and use that
+# as the `dev' parameter.  Then do `sleep 1000000' in the com1 window to
+# keep the shell from messing with things, and run bochs in the other
+# window.  Serial I/O to com1 (port 0x3f8) will all go to the other
+# window.
+#=======================================================================
+#com1: dev=/dev/ttyp9
+
+#=======================================================================
 # ROMIMAGE:
 # You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
 # out most of the BIOS hooks, and replace them with real BIOS

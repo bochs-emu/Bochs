@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.85 2002-01-30 10:30:52 cbothamy Exp $
+// $Id: main.cc,v 1.86 2002-03-03 06:03:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,6 +72,10 @@ bx_options_t bx_options = {
   { NULL, NULL, NULL },   // floppyb
   { 0, NULL, 0, 0, 0 },                   // diskc
   { 0, NULL, 0, 0, 0 },                   // diskd
+  { 0, NULL},			// com1
+  { 0, NULL},			// com2
+  { 0, NULL},			// com3
+  { 0, NULL},			// com4
   { 0, NULL, 0 },                         // cdromd
   { NULL, NULL },                          // rom
   { NULL },                             // vgarom
@@ -397,6 +401,47 @@ void bx_init_options ()
   menu->get_options ()->set (menu->BX_SERIES_ASK);
   bx_options.diskd.Opath->set_handler (bx_param_string_handler);
   bx_options.diskd.Opath->set ("none");
+
+  // com1 options
+  bx_options.com1.Opresent = new bx_param_bool_c (BXP_COM1_PRESENT,
+						  "com1:present",
+						  "Controls whether com1 is installed or not",
+						  0);
+
+  bx_options.com1.Odev = new bx_param_string_c (BXP_COM1_PATH,
+						 "",
+						 "Pathname of the serial device",
+						 "", BX_PATHNAME_LEN);
+  // com2 options
+  bx_options.com2.Opresent = new bx_param_bool_c (BXP_COM2_PRESENT,
+						  "com2:present",
+						  "Controls whether com2 is installed or not",
+						  0);
+
+  bx_options.com2.Odev = new bx_param_string_c (BXP_COM2_PATH,
+						 "",
+						 "Pathname of the serial device",
+						 "", BX_PATHNAME_LEN);
+  // com3 options
+  bx_options.com3.Opresent = new bx_param_bool_c (BXP_COM3_PRESENT,
+						  "com3:present",
+						  "Controls whether com3 is installed or not",
+						  0);
+
+  bx_options.com3.Odev = new bx_param_string_c (BXP_COM3_PATH,
+						 "",
+						 "Pathname of the serial device",
+						 "", BX_PATHNAME_LEN);
+  // com4 options
+  bx_options.com4.Opresent = new bx_param_bool_c (BXP_COM4_PRESENT,
+						  "com4:present",
+						  "Controls whether com4 is installed or not",
+						  0);
+
+  bx_options.com4.Odev = new bx_param_string_c (BXP_COM4_PATH,
+						 "",
+						 "Pathname of the serial device",
+						 "", BX_PATHNAME_LEN);
 
   // cdrom options
   bx_options.cdromd.Opresent = new bx_param_bool_c (BXP_CDROM_PRESENT,
@@ -1389,6 +1434,47 @@ parse_line_formatted(char *context, int num_params, char *params[])
     bx_options.diskd.Oheads->set     (atol( &params[3][6] ));
     bx_options.diskd.Ospt->set       (atol( &params[4][4] ));
     bx_options.diskd.Opresent->set (1);
+    }
+
+  else if (!strcmp(params[0], "com1")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: com1 directive malformed.", context));
+      }
+    if (strncmp(params[1], "dev=", 4)) {
+      BX_PANIC(("%s: com1 directive malformed.", context));
+      }
+    bx_options.com1.Odev->set (&params[1][4]);
+    bx_options.com1.Opresent->set (1);
+    }
+  else if (!strcmp(params[0], "com2")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: com2 directive malformed.", context));
+      }
+    if (strncmp(params[1], "dev=", 4)) {
+      BX_PANIC(("%s: com2 directive malformed.", context));
+      }
+    bx_options.com2.Odev->set (&params[1][4]);
+    bx_options.com2.Opresent->set (1);
+    }
+  else if (!strcmp(params[0], "com3")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: com3 directive malformed.", context));
+      }
+    if (strncmp(params[1], "dev=", 4)) {
+      BX_PANIC(("%s: com3 directive malformed.", context));
+      }
+    bx_options.com3.Odev->set (&params[1][4]);
+    bx_options.com3.Opresent->set (1);
+    }
+  else if (!strcmp(params[0], "com4")) {
+    if (num_params != 2) {
+      BX_PANIC(("%s: com4 directive malformed.", context));
+      }
+    if (strncmp(params[1], "dev=", 4)) {
+      BX_PANIC(("%s: com4 directive malformed.", context));
+      }
+    bx_options.com4.Odev->set (&params[1][4]);
+    bx_options.com4.Opresent->set (1);
     }
 
   else if (!strcmp(params[0], "cdromd")) {

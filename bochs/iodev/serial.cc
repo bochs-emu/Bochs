@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.17 2002-01-29 17:20:12 vruppert Exp $
+// $Id: serial.cc,v 1.18 2002-03-03 06:03:29 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,7 +52,7 @@
 #endif
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
-// #define SERIAL_ENABLE
+#define SERIAL_ENABLE
 #endif
 
 #ifdef SERIAL_ENABLE
@@ -76,8 +76,28 @@ bx_serial_c::bx_serial_c(void)
 {
   put("SER");
   settype(SERLOG);
+}
+
+bx_serial_c::~bx_serial_c(void)
+{
 #ifdef SERIAL_ENABLE
-  tty_id = open("/dev/ttyqf",O_RDWR|O_NONBLOCK,600);
+  tcsetattr(tty_id, TCSAFLUSH, &term_orig);
+#endif
+  // nothing for now
+}
+
+
+  void
+bx_serial_c::init(bx_devices_c *d)
+{
+  if (!bx_options.com1.Opresent->get ())
+    return;
+
+#ifdef SERIAL_ENABLE
+  tty_id = open(bx_options.com1.Odev->getptr (), O_RDWR|O_NONBLOCK,600);
+  if (tty_id < 0)
+    BX_PANIC(("open of %s (%s) failed\n",
+	      "com1", bx_options.com1.Odev->getptr ()));
   BX_DEBUG(("tty_id: %d",tty_id));
   tcgetattr(tty_id, &term_orig);
   bcopy((caddr_t) &term_orig, (caddr_t) &term_new, sizeof(struct termios));
@@ -93,27 +113,20 @@ bx_serial_c::bx_serial_c(void)
   term_new.c_iflag |= IGNBRK;
   term_new.c_iflag &= ~BRKINT;
 #endif    /* !def TRUE_CTLC */
+  term_new.c_iflag = 0;
+  term_new.c_oflag = 0;
+  term_new.c_cflag = CS8|CREAD|CLOCAL;
+  term_new.c_lflag = 0;
+  term_new.c_cc[VMIN] = 1;
+  term_new.c_cc[VTIME] = 0;
   //term_new.c_iflag |= IXOFF;
-  //tcsetattr(tty_id, TCSAFLUSH, &term_new);
+  tcsetattr(tty_id, TCSAFLUSH, &term_new);
 #endif   /* def SERIAL_ENABLE */
   // nothing for now
 #if USE_RAW_SERIAL
   this->raw = new serial_raw("/dev/cua0", SIGUSR1);
 #endif // USE_RAW_SERIAL
-}
 
-bx_serial_c::~bx_serial_c(void)
-{
-#ifdef SERIAL_ENABLE
-  tcsetattr(tty_id, TCSAFLUSH, &term_orig);
-#endif
-  // nothing for now
-}
-
-
-  void
-bx_serial_c::init(bx_devices_c *d)
-{
   BX_SER_THIS devices = d;
 
   BX_SER_THIS devices->register_irq(4, "Serial Port 1");
@@ -744,6 +757,7 @@ bx_serial_c::rx_timer(void)
 // declared in the CodeWarrior standard library headers. I'm just
 // leaving it commented out for the moment.
 
+  FD_ZERO(&fds);
   FD_SET(tty_id, &fds);
 
   if (BX_SER_THIS s[0].line_status.rxdata_ready == 0) {
@@ -764,7 +778,7 @@ bx_serial_c::rx_timer(void)
     if (rdy) {
 	  chbuf = data;
 #elif defined(SERIAL_ENABLE)
-    if (select(1, &fds, NULL, NULL, &tval) == 1) {
+    if (select(tty_id + 1, &fds, NULL, NULL, &tval) == 1) {
       (void) read(tty_id, &chbuf, 1);
 	  BX_DEBUG(("read: '%c'",chbuf));
 #else
