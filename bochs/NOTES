@@ -1369,3 +1369,10 @@ alpha   NetBSD 1.5                           OK    (had to rm fpu/*.S)
 
 All Linux and Solaris machines had gcc/g++.
 All Tru64 Unix machines had something called cc/cxx.
+
+---------------------------------------------------------
+Make the default be 1 processor again.  It's easy to configure for more.
+
+./configure --enable-processors=2 
+
+Linux will want --enable-fpu
