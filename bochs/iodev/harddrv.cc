@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.54 2002-04-23 07:44:34 cbothamy Exp $
+// $Id: harddrv.cc,v 1.55 2002-05-03 08:17:18 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.54 2002-04-23 07:44:34 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.55 2002-05-03 08:17:18 cbothamy Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1005,7 +1005,10 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 				    if (!LoEj && !Start) { // stop the disc
 					  BX_PANIC(("Stop disc not implemented"));
 				    } else if (!LoEj && Start) { // start the disc and read the TOC
-					  BX_PANIC(("Start disc not implemented"));
+					  // BX_PANIC(("Start disc not implemented"));
+					  BX_ERROR(("FIXME: ATAPI start disc not reading TOC"));
+					  atapi_cmd_nop();
+					  raise_interrupt();
 				    } else if (LoEj && !Start) { // Eject the disc
                                           atapi_cmd_nop();
                                           if (BX_HD_THIS s[1].cdrom.ready) {
@@ -1798,6 +1801,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 		    BX_SELECTED_CONTROLLER.status.busy = 0;
 
 	      } else {
+		BX_DEBUG(("ATAPI Device Reset on non-cd device"));
 		command_aborted(0x08);
 	      }
 	      break;
@@ -1845,6 +1849,35 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  raise_interrupt();
 	  break;
 
+	case 0x70:  // SEEK (cgs)
+	  if (BX_SELECTED_HD.device_type == IDE_DISK) {
+	    BX_DEBUG(("write cmd 0x70 (SEEK) executing"));
+            if (!calculate_logical_address(&logical_sector)) {
+	      BX_ERROR(("initial seek to sector %u out of bounds, aborting", logical_sector));
+              command_aborted(value);
+	      break;
+	    }
+            BX_SELECTED_CONTROLLER.error_register = 0;
+            BX_SELECTED_CONTROLLER.status.busy  = 0;
+            BX_SELECTED_CONTROLLER.status.drive_ready = 1;
+            BX_SELECTED_CONTROLLER.status.seek_complete = 1;
+            BX_SELECTED_CONTROLLER.status.drq   = 1;
+            BX_SELECTED_CONTROLLER.status.corrected_data = 0;
+            BX_SELECTED_CONTROLLER.status.err   = 0;
+            BX_SELECTED_CONTROLLER.buffer_index = 0;
+  	    BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS s[0]).controller.control.disable_irq));
+  	    BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS s[1]).controller.control.disable_irq));
+  	    BX_DEBUG(("SEEK completed.  error_register = %02x", BX_SELECTED_CONTROLLER.error_register));
+  	    raise_interrupt();
+  	    BX_DEBUG(("SEEK interrupt completed"));
+          } else {
+  	    BX_ERROR(("write cmd 0x70 (SEEK) not supported for non-disk"));
+  	    command_aborted(0x70); 
+  	  }
+          break;
+
+
+
 	// List all the write operations that are defined in the ATA/ATAPI spec
 	// that we don't support.  Commands that are listed here will cause a
 	// BX_ERROR, which is non-fatal, and the command will be aborted.
@@ -1874,7 +1907,6 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	case 0x42: BX_ERROR(("write cmd 0x42 (READ VERIFY SECTORS EXT) not supported"));command_aborted(0x42); break;
 	case 0x50: BX_ERROR(("write cmd 0x50 (FORMAT TRACK) not supported")); command_aborted(0x50); break;
 	case 0x51: BX_ERROR(("write cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(0x51); break;
-	case 0x70: BX_ERROR(("write cmd 0x70 (SEEK) not supported"));command_aborted(0x70); break;
 	case 0x87: BX_ERROR(("write cmd 0x87 (CFA TRANSLATE SECTOR) not supported"));command_aborted(0x87); break;
 	case 0x92: BX_ERROR(("write cmd 0x92 (DOWNLOAD MICROCODE) not supported"));command_aborted(0x92); break;
 	case 0x94: BX_ERROR(("write cmd 0x94 (STANDBY IMMEDIATE) not supported")); command_aborted(0x94); break;
@@ -1932,7 +1964,9 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  prev_control_reset = BX_SELECTED_CONTROLLER.control.reset;
 	  BX_HD_THIS s[0].controller.control.reset         = value & 0x04;
 	  BX_HD_THIS s[1].controller.control.reset         = value & 0x04;
-	  BX_SELECTED_CONTROLLER.control.disable_irq    = value & 0x02;
+	  // CGS: was: BX_SELECTED_CONTROLLER.control.disable_irq    = value & 0x02;
+	  BX_HD_THIS s[0].controller.control.disable_irq = value & 0x02;
+	  BX_HD_THIS s[1].controller.control.disable_irq = value & 0x02;
       //BX_DEBUG(( "adpater control reg: reset controller = %d",
       //  (unsigned) (BX_SELECTED_CONTROLLER.control.reset) ? 1 : 0 ));
       //BX_DEBUG(( "adpater control reg: disable_irq(14) = %d",
@@ -1986,6 +2020,8 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 		      }
 		}
 	  }
+	    BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS s[0]).controller.control.disable_irq));
+	    BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS s[1]).controller.control.disable_irq));
 	  break;
 #if 0
       // you'll need these to support second IDE controller, not needed yet.
@@ -2616,6 +2652,8 @@ bx_hard_drive_c::ready_to_send_atapi()
 void
 bx_hard_drive_c::raise_interrupt()
 {
+	BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER.control.disable_irq));
+	if (!BX_SELECTED_CONTROLLER.control.disable_irq) { BX_DEBUG(("raising interrupt")); } else { BX_DEBUG(("Not raising interrupt")); }
       if (!BX_SELECTED_CONTROLLER.control.disable_irq) {
 	    Bit32u irq = 14;  // always 1st IDE controller
 	    // for second controller, you would want irq 15
