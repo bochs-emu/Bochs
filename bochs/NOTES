@@ -1340,3 +1340,32 @@ say "static inline" instead of "extern inline".  Then if the compiler
 does not do inline, at least it doesn't export the symbol and cause a 
 conflict.  The result is a copy of the inlined function in each .c
 file.  I'm sure there are better ways.
+
+---------------------------------------------------------
+portability testing
+tag=portability-testing1
+Systems:
+bochs-intel-caldera                   OK
+bochs-intel-debian                    OK
+bochs-intel-redhat
+
+intel   Caldera OpenLinux eDesktop 2.4       OK
+intel   Debian 2.2 Linux                     OK
+intel   RedHat 7.0 Linux                     OK
+alpha   Compaq Tru64 Unix 5.1                OK
+alpha   Compaq Tru64 Unix 4.0g               OK
+intel   Kondara 2000 Linux                   OK
+alpha   Kondara 2000 Linux                   OK
+alpha   Debian 2.2 Linux                     OK
+intel   TurboLinux 6.0                       OK
+intel   Mandrake 7.0 Linux                   OK
+intel   FreeBSD 4.2                          OK
+sun4    Solaris (sunos 5.6)                  OK
+intel   SuSE 7.0 Linux                       OK
+ia64    Linux64                              OK
+alpha   SuSE 7.0 Linux                       OK
+alpha   FreeBSD 4.2                          OK
+alpha   NetBSD 1.5                           OK    (had to rm fpu/*.S)
+
+All Linux and Solaris machines had gcc/g++.
+All Tru64 Unix machines had something called cc/cxx.
