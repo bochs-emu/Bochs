@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.22.2.13 2002-04-05 06:53:48 bdenney Exp $
+// $Id: siminterface.h,v 1.22.2.14 2002-04-06 21:50:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.13 2002-04-05 06:53:48 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.14 2002-04-06 21:50:40 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -207,12 +207,12 @@ typedef union {
 // Event type: BX_ASYNC_EVT_KEY
 // (unused)
 // A key event can be sent from the GUI to the Bochs simulator.  It is
-// asynchronous.  Currently not used, but when Psyon's wxwindows gui is
-// integrated, we will need key events.
+// asynchronous.
 typedef struct {
   // what was pressed?  This is a BX_KEY_* value.  For key releases,
   // BX_KEY_RELEASED is ORed with the base BX_KEY_*.
   Bit32u bx_key;
+  Boolean raw_scancode;
 } BxKeyEvent;
 
 // Event type: BX_ASYNC_EVT_MOUSE
