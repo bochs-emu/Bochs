@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.81 2002-09-25 14:09:08 ptrumpet Exp $
+// $Id: cpu.h,v 1.82 2002-09-26 21:32:25 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2956,7 +2956,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,  8)
 #define BxImmediate_BrOff32 BxImmediate_Iv
 #if BX_SUPPORT_X86_64
 #define BxImmediate_Iq      0x000A // 64 bit override
-#define BxImmediate_Oq      BxImmediate_Iq // mov_ALOq, mov_OqAL, mov_eAXOq, mov_OqeAX
 #endif
 
 #define BxPrefix          0x0010 // bit  4

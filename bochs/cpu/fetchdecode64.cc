@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.14 2002-09-26 18:58:50 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.15 2002-09-26 21:32:26 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -624,10 +624,10 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 9D */  { 0,  &BX_CPU_C::POPF_Fv },
   /* 9E */  { 0,  &BX_CPU_C::BxError },
   /* 9F */  { 0,  &BX_CPU_C::BxError },
-  /* A0 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_ALOq },
-  /* A1 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_AXOq },
-  /* A2 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_OqAL },
-  /* A3 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_OqAX },
+  /* A0 */  { BxImmediate_O,  &BX_CPU_C::MOV_ALOq },
+  /* A1 */  { BxImmediate_O,  &BX_CPU_C::MOV_AXOq },
+  /* A2 */  { BxImmediate_O,  &BX_CPU_C::MOV_OqAL },
+  /* A3 */  { BxImmediate_O,  &BX_CPU_C::MOV_OqAX },
   /* A4 */  { BxRepeatable,  &BX_CPU_C::MOVSB_XbYb },
   /* A5 */  { BxRepeatable,  &BX_CPU_C::MOVSW_XvYv },
   /* A6 */  { BxRepeatable | BxRepeatableZF,  &BX_CPU_C::CMPSB_XbYb },
@@ -1140,10 +1140,10 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 9D */  { 0,  &BX_CPU_C::POPF_Fv },
   /* 9E */  { 0,  &BX_CPU_C::BxError },
   /* 9F */  { 0,  &BX_CPU_C::BxError },
-  /* A0 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_ALOq },
-  /* A1 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_EAXOq },
-  /* A2 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_OqAL },
-  /* A3 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_OqEAX },
+  /* A0 */  { BxImmediate_O,  &BX_CPU_C::MOV_ALOq },
+  /* A1 */  { BxImmediate_O,  &BX_CPU_C::MOV_EAXOq },
+  /* A2 */  { BxImmediate_O,  &BX_CPU_C::MOV_OqAL },
+  /* A3 */  { BxImmediate_O,  &BX_CPU_C::MOV_OqEAX },
   /* A4 */  { BxRepeatable,  &BX_CPU_C::MOVSB_XbYb },
   /* A5 */  { BxRepeatable,  &BX_CPU_C::MOVSW_XvYv },
   /* A6 */  { BxRepeatable | BxRepeatableZF,  &BX_CPU_C::CMPSB_XbYb },
@@ -1655,10 +1655,10 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 9D */  { 0,  &BX_CPU_C::POPF_Fv },
   /* 9E */  { 0,  &BX_CPU_C::BxError },
   /* 9F */  { 0,  &BX_CPU_C::BxError },
-  /* A0 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_ALOq },
-  /* A1 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_RAXOq },
-  /* A2 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_OqAL },
-  /* A3 */  { BxImmediate_Oq,  &BX_CPU_C::MOV_OqRAX },
+  /* A0 */  { BxImmediate_O,  &BX_CPU_C::MOV_ALOq },
+  /* A1 */  { BxImmediate_O,  &BX_CPU_C::MOV_RAXOq },
+  /* A2 */  { BxImmediate_O,  &BX_CPU_C::MOV_OqAL },
+  /* A3 */  { BxImmediate_O,  &BX_CPU_C::MOV_OqRAX },
   /* A4 */  { BxRepeatable,  &BX_CPU_C::MOVSB_XbYb },
   /* A5 */  { BxRepeatable,  &BX_CPU_C::MOVSW_XvYv },
   /* A6 */  { BxRepeatable | BxRepeatableZF,  &BX_CPU_C::CMPSB_XbYb },
@@ -2556,10 +2556,7 @@ modrm_done:
         if (instruction->os32L()) {
           if ((ilen+3) < remain) {
             Bit32u imm32u;
-            imm32u = *iptr++;
-            imm32u |= (*iptr++) << 8;
-            imm32u |= (*iptr++) << 16;
-            imm32u |= (*iptr) << 24;
+            ReadHostDWordFromLittleEndian(iptr, imm32u);
             instruction->modRMForm.Id = imm32u;
             ilen += 4;
             }
@@ -2570,8 +2567,7 @@ modrm_done:
         else {
           if ((ilen+1) < remain) {
             Bit16u imm16u;
-            imm16u = *iptr++;
-            imm16u |= (*iptr) << 8;
+            ReadHostWordFromLittleEndian(iptr, imm16u);
             instruction->modRMForm.Iw = imm16u;
             ilen += 2;
             }
@@ -2585,8 +2581,7 @@ modrm_done:
         // Get Iw for BxImmediate_IvIw
         if ((ilen+1) < remain) {
           Bit16u imm16u;
-          imm16u = *iptr++;
-          imm16u |= (*iptr) << 8;
+          ReadHostWordFromLittleEndian(iptr, imm16u);
           instruction->IxIxForm.Iw2 = imm16u;
           ilen += 2;
           }
@@ -2594,55 +2589,46 @@ modrm_done:
           return(0);
           }
         break;
-      //case BxImmediate_Oq: // MOV xAx,[moffset] | MOV [moffset],xAx
       case BxImmediate_Iq: // MOV Rx,imm64
         if ((ilen+7) < remain) {
           Bit64u imm64u;
-          imm64u = *iptr++;
-          imm64u |= ((Bit64u)*iptr++) << 8;
-          imm64u |= ((Bit64u)*iptr++) << 16;
-          imm64u |= ((Bit64u)*iptr++) << 24;
-          imm64u |= ((Bit64u)*iptr++) << 32;
-          imm64u |= ((Bit64u)*iptr++) << 40;
-          imm64u |= ((Bit64u)*iptr++) << 48;
-          imm64u |= ((Bit64u)*iptr) << 56;
+          ReadHostQWordFromLittleEndian(iptr, imm64u);
           instruction->IqForm.Iq = imm64u;
           ilen += 8;
           }
         else {
           return(0);
           }
-          break;
+        break;
+
       case BxImmediate_O:
-        if (instruction->as32L()) {
-          // fetch 32bit address into Id
-          if ((ilen+3) < remain) {
-            Bit32u imm32u;
-            imm32u = *iptr++;
-            imm32u |= (*iptr++) << 8;
-            imm32u |= (*iptr++) << 16;
-            imm32u |= (*iptr) << 24;
-            instruction->modRMForm.Id = imm32u;
-            ilen += 4;
+        // For instructions which embed the address in the opcode.  Note
+        // there is only 64/32-bit addressing available in long-mode.
+        if (instruction->as64L()) {
+          if ((ilen+7) < remain) {
+            Bit64u imm64u;
+            ReadHostQWordFromLittleEndian(iptr, imm64u);
+            instruction->IqForm.Iq = imm64u;
+            ilen += 8;
             }
           else {
             return(0);
             }
           }
         else {
-          // fetch 16bit address into Id
-          if ((ilen+1) < remain) {
+          if ((ilen+3) < remain) {
             Bit32u imm32u;
-            imm32u = *iptr++;
-            imm32u |= (*iptr) << 8;
-            instruction->modRMForm.Id = imm32u;
-            ilen += 2;
+            ReadHostDWordFromLittleEndian(iptr, imm32u);
+            // Sign extend???
+            instruction->IqForm.Iq = imm32u;
+            ilen += 4;
             }
           else {
             return(0);
             }
           }
         break;
+
       case BxImmediate_Iw:
       case BxImmediate_IwIb:
         if ((ilen+1) < remain) {

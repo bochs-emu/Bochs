@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.11 2002-09-24 00:44:55 kevinlawton Exp $
+// $Id: ctrl_xfer64.cc,v 1.12 2002-09-26 21:32:26 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -289,6 +289,11 @@ BX_CPU_C::JMP_Jq(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   RIP += (Bit32s) i->Id();
+  if (i->os32L()==0) {
+    // For 16-bit opSize, upper bits of RIP are cleared, as in
+    // 32-bit counterpart JMP_Jd.
+    BX_CPU_THIS_PTR dword.rip_upper = 0;
+    }
   BX_INSTR_UCNEAR_BRANCH(BX_INSTR_IS_JMP, new_RIP);
 }
 
