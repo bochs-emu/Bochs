@@ -17,3 +17,159 @@ test on several machines
 or, by working more directly with the bochs source, we can test the
 performance benefit of the "cut-and-paste native code" method on 
 a small scale.
+
+---------------------------------------------------
+Performance measurements
+
+blur.c 1.2
+-----------
+estimated 1.43 million instructions per iteration (-O2)
+  (see blur-1.2-performance.gnumeric spreadsheet for details)
+on Athlon 750 with no optimization, 4.0622 ms per iteration
+on Athlon 750 with -O2, 1.795138 ms per iteration
+on P2 350 with no optimization, 6.162224 ms per iteration
+on P2 350 with -O2, 2.5258 ms per iteration
+on Bochs with -O2 on Athlon 750, 478 ms per iteration
+
+Conclusion
+Bochs is about 270x slower than native code.
+
+Try replacing the innermost loop of blur() with a function call
+that does the same thing.  Continue to compile with -O2.
+
+if innermost loop is "sum += array[x2][y2]", 1.796 ms per iter.
+if innermost loop is "blur_func (&sum, &array[x2][y2])", 3.526978 ms per iter.
+function with three arguments: 3.784
+function with four arguments: 4.390
+function with five arguments: 4.879
+
+what is the overhead in terms of instructions?
+func_overhead(N, ARGS) for N instructions in the function, ARGS arguments
+F(N, ARGS) = ?
+  1.5*ARGS to push them onto the stack
+  1 for the call
+  1 to set %esp back to normal
+  1.5*ARGS to load it into a register and maybe save the old register value
+  2 for leave & ret
+  N instructions that the function is replacing
+  
+  = N + 4 + 3*ARGS   instructions
+
+This is ignoring the fact that some CISC instructions are much more expensive
+than others.
+
+However when you measure the time cost of the function call, it is
+much larger.
+
+Compare blur with no function call to blur with a call to a function with
+2 arguments.  1.796 ms per iter versus 3.526978 ms per iter.  The function
+was called 142884 times, so the overhead of each function call is
+12.1 microseconds.  (In 12.1 microseconds this machine can execute over
+9000 instructions.)
+
+I briefly tested the overhead of function calls of 2,3,4,5 arguments.
+This should measure the difference between NO function call (inline function)
+and a function call with N arguments.
+
+2 args: 12.1 us more than no function call
+3 args: 13.91 us more than no function call
+4 args: 18.15 us more than no function call
+5 args: 21.58 us more than no function call
+
+
+
+
+;;;;;;;;;;;blur.c revision 1.2, compiled with -O2 -S;;;;;;;;;;;;
+;; with some annotations by Bryce to figure out what is what.
+
+	.file	"blur.c"
+	.version	"01.01"
+gcc2_compiled.:
+.text
+	.align 4
+.globl blur
+	.type	 blur,@function
+blur:
+	pushl %ebp
+	movl %esp,%ebp
+	subl $36,%esp
+	pushl %edi
+	pushl %esi
+	pushl %ebx
+	movl $1,%eax
+	.p2align 4,,7
+.L20:
+	movl $1,%edi
+	leal -1(%eax),%ebx
+	movl %ebx,-28(%ebp)
+	leal 1(%eax),%ebx
+	movl %ebx,-16(%ebp)
+	sall $9,%eax
+	movl %eax,-24(%ebp)
+	movl %ebx,-8(%ebp)
+	movl -28(%ebp),%ebx
+	movl %ebx,-32(%ebp)
+	sall $9,-32(%ebp)
+	.p2align 4,,7
+.L24:
+	xorl %esi,%esi                 ; let %esi = sum
+	movl -28(%ebp),%ecx
+	leal 1(%edi),%ebx
+	movl %ebx,-20(%ebp)
+	cmpl -8(%ebp),%ecx
+	jg .L26
+
+
+	movl %ebx,-12(%ebp)
+	movl -16(%ebp),%ebx
+	movl %ebx,-4(%ebp)
+	movl -32(%ebp),%ebx
+	movl %ebx,-36(%ebp)
+	.p2align 4,,7
+.L28:
+	leal -1(%edi),%edx            ; let %edx = y2
+	cmpl -12(%ebp),%edx           ; test if y2 
+	jg .L27
+
+
+	;; build pointer in %eax to array[x2][y2]
+	movl -36(%ebp),%eax
+	addl $array,%eax
+	leal (%eax,%edx,4),%eax
+	.p2align 4,,7
+
+.L32:
+	;; innermost loop. it has precomputed the endpoint in -20(%ebp)
+	addl (%eax),%esi               ;; sum += (%eax)
+	addl $4,%eax                   ;; point %eax to next value
+	incl %edx                      ;; y2++
+	cmpl -20(%ebp),%edx            ;; if y2<=max
+	jle .L32
+
+.L27:
+	addl $512,-36(%ebp)
+	incl %ecx
+	cmpl -4(%ebp),%ecx
+	jle .L28
+
+.L26:
+	movl -24(%ebp),%ebx
+	leal (%ebx,%edi,4),%eax
+	movl %esi,array2(%eax)
+	movl -20(%ebp),%edi
+	cmpl $126,%edi
+	jle .L24
+
+	movl -16(%ebp),%eax
+	cmpl $126,%eax
+	jle .L20
+
+	leal -48(%ebp),%esp
+	popl %ebx
+	popl %esi
+	popl %edi
+	leave
+	ret
+.Lfe1:
+	.size	 blur,.Lfe1-blur
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
