@@ -329,7 +329,7 @@ Remove write watch point from physical address <i>address</i>.
 
 <h3>modebp [<i>string</i>]</h3>
 
-Insert documentation here.
+Toggles vm86 mode switch breakpoint.
 
 <h3>load-symbols [global] <i>filename</i> [<i>offset</i>]</h3>
 
@@ -344,7 +344,17 @@ The symbol file consists of zero or more lines of the format <tt>"%x
 
 <h3>show [<i>string</i>]</h3>
 
-Insert documentation here.
+<PRE>
+  Toggles show symbolic info (calls to begin with).
+  show - shows current show mode
+  show "mode" - show, when processor switch mode
+  show "int" - show, when interrupt is happens
+  show "call" - show, when call is happens
+  show "ret" - show, when iret is happens
+  show "off" - toggles off symbolic info
+  show "dbg-all" - turn on all show flags
+  show "none" - turn off all show flags
+</PRE>
 
 <p>&nbsp;
 <p>&nbsp;

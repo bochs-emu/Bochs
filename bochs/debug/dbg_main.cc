@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.71 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: dbg_main.cc,v 1.72 2002-10-04 14:57:33 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -4680,5 +4680,226 @@ static void dbg_dump_table(Boolean all)
 	       start_lina, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lina));
 }
 
-      
+void
+bx_dbg_help_command(char* command)
+{ char* p;
+
+  if (command == NULL)
+  {
+    fprintf(stderr, "help - show list of debugger commands\n");
+    fprintf(stderr, "help \"command\" - show short command description\n");
+    fprintf(stderr, "debugger commands are:\n");
+    fprintf(stderr, "help, quit, q, c, stepi, si, step, s, vbreak, v, lbreak, lb, pbreak, pb, break\n");
+    fprintf(stderr, "b, delete, del, d, xp, x, setpmem, crc, info, set, dump_cpu, set_cpu, disas\n");
+    fprintf(stderr, "disassemble, instrument, trace-on, trace-off, ptime, sb, sba, record, playback\n");
+    fprintf(stderr, "print-stack, watch, unwatch, load-symbols, show, modebp\n");
+  }
+  else
+  {
+    p = command;
+    for (; *p != 0 && *p != '\"'; p++); p++;
+    for (; *p != 0 && *p != '\"'; p++); *p = 0;
+    p = command;
+    for (; *p != 0 && *p != '\"'; p++); p++;
+
+    fprintf(stderr, "help %s\n", p);
+
+    if (strcmp(p, "help") == 0)
+    { 
+      bx_dbg_help_command(NULL);
+    }
+    else
+    if ((strcmp(p, "quit") == 0) ||
+        (strcmp(p, "q") == 0))
+    {
+      fprintf(stderr, "%s - quit debugger and execution\n", p);
+    }
+    else
+    if (strcmp(p, "c") == 0)
+    {
+      fprintf(stderr, "%s - continue executing\n", p);
+    }
+    else
+    if ((strcmp(p, "stepi") == 0) ||
+        (strcmp(p, "step") == 0) ||
+        (strcmp(p, "si") == 0) ||
+       (strcmp(p, "s") == 0))
+    {
+      fprintf(stderr, "%s [count] - execute count instructions, default is 1\n", p);
+    }
+    else
+    if ((strcmp(p, "vbreak") == 0) ||
+        (strcmp(p, "vb") == 0))
+    {
+      fprintf(stderr, "%s seg:off - set a virtual address instruction breakpoint\n", p);
+    }
+    else
+    if ((strcmp(p, "lbreak") == 0) ||
+        (strcmp(p, "lb") == 0))
+    {
+      fprintf(stderr, "%s addr - set a linear address instruction breakpoint\n", p);
+    }
+    else
+    if ((strcmp(p, "pbreak") == 0) ||
+        (strcmp(p, "break") == 0) ||
+       (strcmp(p, "pb") == 0) ||
+       (strcmp(p, "b") == 0))
+    {
+       fprintf(stderr, "%s [*] addr - set a physical address instruction preakpoint\n", p);
+    }
+    else
+    if ((strcmp(p, "delete") == 0) ||
+        (strcmp(p, "del") == 0) ||
+       (strcmp(p, "d") == 0))
+    {
+      fprintf(stderr, "%s n - delete a breakpoint\n", p);
+    }
+    else
+    if (strcmp(p, "xp") == 0)
+    {
+      fprintf(stderr, "%s /nuf addr - examine memory at physical address\n", p);
+    }
+    else
+    if (strcmp(p, "x") == 0)
+    {
+      fprintf(stderr, "%s /nuf addr - examine memory at linear address\n", p);
+    }
+    else
+    if (strcmp(p, "setpmem") == 0)
+    {
+      fprintf(stderr, "%s addr datasize val - set physical memory location of size datasize to value val\n", p);
+    }
+    else
+    if (strcmp(p, "crc") == 0)
+    {
+      fprintf(stderr, "%s addr1 addr2 - show CRC for physical memory range addr1..addr2\n", p);
+    }
+    else
+    if (strcmp(p, "info") == 0)
+    {
+      fprintf(stderr, "%s break - show information about current breakpoint status\n", p);
+      fprintf(stderr, "%s dirty - show physical pages dirtied (written to) since last display\n", p);
+      fprintf(stderr, "%s program - execution status of the program\n", p);
+      fprintf(stderr, "%s registers - list of CPU integer registers and their contents\n", p);
+    }
+    else
+    if (strcmp(p, "set") == 0)
+    {
+      fprintf(stderr, "%s $reg = val - change CPU register to value val\n", p);
+      fprintf(stderr, "%s $disassemble_size = n - tell debugger what segment size [16|32] to use\n", p);
+      fprintf(stderr, "when \"disassemble\" command is used. Default is 32\n");
+      fprintf(stderr, "%s $auto_disassemble = n - cause debugger to disassemble current instruction\n", p);
+      fprintf(stderr, "every time execution stops if n = 1. Default is 0\n");
+    }
+    else
+    if (strcmp(p, "dump_cpu") == 0)
+    {
+      fprintf(stderr, "%s - dump complete cpu state\n", p);
+    }
+    else
+    if (strcmp(p, "set_cpu") == 0)
+    {
+      fprintf(stderr, "%s - set complete cpu state\n", p);
+    }
+    else
+    if ((strcmp(p, "disassemble") == 0) ||
+        (strcmp(p, "disas") == 0))
+    {
+      fprintf(stderr, "%s start end - disassemble instructions for given linear adress\n", p);
+    }
+    else
+    if (strcmp(p, "instrument") == 0)
+    {
+      fprintf(stderr, "%s start - calls bx_instr_start()\n", p);
+      fprintf(stderr, "%s stop  - calls bx_instr_stop()\n", p);
+      fprintf(stderr, "%s reset - calls bx_instr_reset()\n", p);
+      fprintf(stderr, "%s print - calls bx_instr_print()\n", p);
+    }
+    else
+    if (strcmp(p, "trace-on") == 0)
+    {
+      fprintf(stderr, "%s - disassemble every executed instruction\n", p);
+    }
+    else
+    if (strcmp(p, "trace-off") == 0)
+    {
+      fprintf(stderr, "%s - disable tracing\n", p);
+    }
+    else
+    if (strcmp(p, "ptime") == 0)
+    {
+      fprintf(stderr, "%s - print current time (number of ticks since start of simulation)\n", p);
+    }
+    else
+    if (strcmp(p, "sb") == 0)
+    {
+      fprintf(stderr, "%s delta - insert a time breakpoint delta instruction into the future\n", p);
+    }
+    else
+    if (strcmp(p, "sba") == 0)
+    {
+      fprintf(stderr, "%s time - insert a time breakpoint at time\n", p);
+    }
+    else
+    if (strcmp(p, "record") == 0)
+    {
+      fprintf(stderr, "%s filename - record console input to file filename\n", p);
+    }
+    else
+    if (strcmp(p, "playback") == 0)
+    {
+      fprintf(stderr, "%s filename - playbackconsole input from file filename\n", p);
+    }
+    else
+    if (strcmp(p, "print-stack") == 0)
+    {
+      fprintf(stderr, "%s [num_words] - print the num_words top 16 bit words on the stack\n", p);
+    }
+    else
+    if (strcmp(p, "watch") == 0)
+    {
+      fprintf(stderr, "%s - print current watch point status\n", p);
+      fprintf(stderr, "%s stop - stop simulation whena watchpoint is encountred\n", p);
+      fprintf(stderr, "%s continue - do not stop the simulation when watch point is encountred\n", p);
+      fprintf(stderr, "%s read addr - insert a read watch point at physical address addr\n", p);
+      fprintf(stderr, "%s write addr - insert a write watch point at physical address addr\n", p);
+    }
+    else
+    if (strcmp(p, "unwatch") == 0)
+    {
+      fprintf(stderr, "%s - remove all watch points\n", p);
+      fprintf(stderr, "%s read addr - remove a read watch point at physical address addr\n", p);
+      fprintf(stderr, "%s write addr - remove a write watch point at physical address addr\n", p);
+    }
+    else
+    if (strcmp(p, "load-symbols") == 0)
+    {
+      fprintf(stderr, "%s [global] filename [offset] - load symbols from file filename\n", p);
+    }
+    else
+    if (strcmp(p, "modebp") == 0)
+    {
+      fprintf(stderr, "%s - toggles vm86 mode switch breakpoint\n", p);
+    }
+    else
+    if (strcmp(p, "show") == 0)
+    {
+      fprintf(stderr, "%s [string] - toggles show symbolic info (calls to begin with)\n", p);
+      fprintf(stderr, "%s - shows current show mode\n", p);
+      fprintf(stderr, "%s \"mode\" - show, when processor switch mode\n", p);
+      fprintf(stderr, "%s \"int\" - show, when interrupt is happens\n", p);
+      fprintf(stderr, "%s \"call\" - show, when call is happens\n", p);
+      fprintf(stderr, "%s \"ret\" - show, when iret is happens\n", p);
+      fprintf(stderr, "%s \"off\" - toggles off symbolic info\n", p);
+      fprintf(stderr, "%s \"dbg-all\" - turn on all show flags\n", p);
+      fprintf(stderr, "%s \"none\" - turn off all show flags\n", p);
+      fprintf(stderr, "%s \"tab\" - show page tables\n", p);
+    }
+    else
+    {
+      fprintf(stderr, "%s - unknow command, try help\n", p);
+    }
+  }
+  return;
+}
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.14 2002-09-15 11:21:33 bdenney Exp $
+// $Id: debug.h,v 1.15 2002-10-04 14:57:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -140,6 +140,7 @@ void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
 extern Boolean watchpoint_continue;
 void bx_dbg_linux_syscall ();
 void bx_dbg_info_ne2k(int page, int reg);
+void bx_dbg_help_command(char* command);
 
 #ifdef __cplusplus
 }
