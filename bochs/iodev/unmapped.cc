@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.19 2002-10-24 21:07:52 bdenney Exp $
+// $Id: unmapped.cc,v 1.20 2002-12-27 10:20:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -171,7 +171,7 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
 		  BX_DEBUG(("unmapped: 32-bit read from %04x = %08x", address, retval));
 		  break;
 	  default:
-		  BX_DEBUG(("unmapped: ??-bit read from %04x = %x", address, retval));
+		  BX_DEBUG(("unmapped: %d-bit read from %04x = %x", io_len * 8, address, retval));
 	  }
   return retval;
 }
@@ -293,7 +293,7 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		  BX_INFO(("unmapped: 32-bit write to %04x = %08x", address, value));
 		  break;
 	  default:
-		  BX_INFO(("unmapped: ??-bit write to %04x = %x", address, value));
+		  BX_INFO(("unmapped: %d-bit write to %04x = %x", io_len * 8, address, value));
 		  break;
 	  }
 }
