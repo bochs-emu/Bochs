@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.118 2002-08-25 15:51:45 vruppert Exp $
+// $Id: main.cc,v 1.119 2002-08-26 11:37:55 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1194,7 +1194,6 @@ bx_do_text_config_interface (int argc, char *argv[])
         || (!strncmp ("-q", argv[1], 2)))) {
     // skip the control panel
     arg++;
-    SIM->set_enabled (0);
     enable_control_panel = 0;
     if ((argc > 2) && (!strcmp(argv[1], "-qf"))) {
       bochsrc = argv[arg];
@@ -1251,7 +1250,6 @@ bx_do_text_config_interface (int argc, char *argv[])
     }
     // Display the pre-simulation control panel.
 #if !BX_WITH_WX
-    SIM->set_enabled (1);
     bx_control_panel (BX_CPANEL_START_MENU);
 #endif
   }
@@ -1320,7 +1318,7 @@ bx_read_configuration (char *rcfile)
     return -1;
   }
   // update log actions if control panel is enabled
-  if (SIM->get_enabled ()) {
+  if (enable_control_panel) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
       io->set_log_action (level, action);
@@ -1347,7 +1345,7 @@ bx_init_hardware()
   // all configuration has been read, now initialize everything.
 
 #if !BX_USE_CONTROL_PANEL
-  if (!SIM->get_enabled ()) {
+  if (!enable_control_panel) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = bx_options.log.actions[level];
       if (action == ACT_ASK) action = ACT_FATAL;
