@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.6 2004-01-18 16:42:05 cbothamy Exp $
+// $Id: fpu.cc,v 1.7 2004-01-31 13:43:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
@@ -36,6 +36,20 @@ void BX_CPU_C::prepareFPU(void)
 {
   if (BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts) {
     exception(BX_NM_EXCEPTION, 0, 0);
+  }
+}
+
+void BX_CPU_C::FPU_check_pending_exceptions(void)
+{
+  if (BX_CPU_THIS_PTR cr0.ne == 0)
+  {
+    // MSDOS compatibility external interrupt (IRQ13)
+    BX_INFO (("math_abort: MSDOS compatibility FPU exception"));
+    DEV_pic_raise_irq(13);
+  }
+  else
+  {
+    exception(BX_MF_EXCEPTION, 0, 0);
   }
 }
 #endif

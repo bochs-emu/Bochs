@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.157 2004-01-29 17:49:03 mcb30 Exp $
+// $Id: cpu.h,v 1.158 2004-01-31 13:43:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2082,6 +2082,7 @@ union {
 
 #if BX_SUPPORT_FPU
   BX_SMF void prepareFPU(void);
+  BX_SMF void FPU_check_pending_exceptions(void);
   BX_SMF void print_state_FPU(void);
 #endif
 

@@ -110,8 +110,7 @@ void BX_CPU_C::prepareMMX(void)
 void BX_CPU_C::prepareFPU2MMX(void)
 {
   /* check floating point status word for a pending FPU exceptions */
-  if(FPU_PARTIAL_STATUS & FPU_SW_SUMMARY)
-    exception(BX_MF_EXCEPTION, 0, 0);
+  FPU_check_pending_exceptions();
 
   FPU_TAG_WORD = 0;
   FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
