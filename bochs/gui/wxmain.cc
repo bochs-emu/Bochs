@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.78 2002-11-19 05:47:44 bdenney Exp $
+// $Id: wxmain.cc,v 1.79 2002-12-01 16:11:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -1182,7 +1182,8 @@ MyFrame::HandleAskParam (BxEvent *event)
   default:
     {
           wxString msg;
-          msg.Printf ("ask param for parameter type %d is not implemented in wxWindows");
+          msg.Printf ("ask param for parameter type %d is not implemented in wxWindows",
+                      param->get_type ());
           wxMessageBox( msg, "not implemented", wxOK | wxICON_ERROR );
           return -1;
         }
