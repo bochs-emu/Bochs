@@ -371,6 +371,13 @@ V6WORKSPACE_FILES=bochs.dsw bochs.dsp bochs.opt \
 v6workspace:
 	zip $(V6WORKSPACE_ZIP) $(V6WORKSPACE_FILES)
 
+########
+# the win32_snap target is used to create a ZIP of bochs sources configured
+# for VC++.  This ZIP is stuck on the website every once in a while to make
+# it easier for VC++ users to compile bochs.  First, you should
+# run "sh .conf.win32-vcpp" to configure the source code, then do
+# "make win32_snap" to unzip the workspace files and create the ZIP.
+########
 win32_snap:
 	sh .conf.win32-vcpp
 	unzip $(V6WORKSPACE_ZIP)
