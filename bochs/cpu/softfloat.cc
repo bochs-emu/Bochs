@@ -1451,9 +1451,9 @@ int float32_compare(float32 a, float32 b, float_status_t &status)
 
     flag aSign = extractFloat32Sign(a);
     flag bSign = extractFloat32Sign(b);
-    if (aSign != bSign) {
+    if (aSign != bSign)
         return (aSign) ? float_relation_less : float_relation_greater;
-    }
+    
     if (aSign ^ (a < b)) return float_relation_less;
     return float_relation_greater;
 }
@@ -1490,9 +1490,9 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
 
     flag aSign = extractFloat32Sign(a);
     flag bSign = extractFloat32Sign(b);
-    if (aSign != bSign) {
+    if (aSign != bSign) 
         return (aSign) ? float_relation_less : float_relation_greater;
-    }
+
     if (aSign ^ (a < b)) return float_relation_less;
     return float_relation_greater;
 }
@@ -2462,9 +2462,9 @@ int float64_compare(float64 a, float64 b, float_status_t &status)
 
     flag aSign = extractFloat64Sign(a);
     flag bSign = extractFloat64Sign(b);
-    if (aSign != bSign) {
+    if (aSign != bSign)
         return (aSign) ? float_relation_less : float_relation_greater;
-    }
+
     if (aSign ^ (a < b)) return float_relation_less;
     return float_relation_greater;
 }
@@ -2501,9 +2501,9 @@ int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
 
     flag aSign = extractFloat64Sign(a);
     flag bSign = extractFloat64Sign(b);
-    if (aSign != bSign) {
+    if (aSign != bSign)
         return (aSign) ? float_relation_less : float_relation_greater;
-    }
+
     if (aSign ^ (a < b)) return float_relation_less;
     return float_relation_greater;
 }
@@ -3628,7 +3628,6 @@ int floatx80_eq(floatx80 a, floatx80 b, float_status_t &status)
     return (a.fraction == b.fraction) && ((a.exp == b.exp)
              || ((a.fraction == 0)
                   && ((Bit16u) ((a.exp | b.exp)<<1) == 0)));
-
 }
 
 /*----------------------------------------------------------------------------
@@ -3769,6 +3768,96 @@ int floatx80_lt_quiet(floatx80 a, floatx80 b, float_status_t &status)
     }
     return aSign ? lt128(b.exp, b.fraction, a.exp, a.fraction)
 		        : lt128(a.exp, a.fraction, b.exp, b.fraction);
+}
+
+/*----------------------------------------------------------------------------
+| Compare  between  two extended precision  floating  point  numbers. Returns
+| 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
+| the    value    'a'   is   less   than   the   corresponding   value   `b',
+| 'float_relation_greater' if the value 'a' is greater than the corresponding
+| value `b', or 'float_relation_unordered' otherwise. 
+*----------------------------------------------------------------------------*/
+
+int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
+{
+    float_class_t aClass = floatx80_class(a);
+    float_class_t bClass = floatx80_class(b);
+
+    if (aClass == float_NaN || bClass == float_NaN) {
+        float_raise(status, float_flag_invalid);
+        return float_relation_unordered;
+    }
+
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
+    }
+
+    if ((a.fraction == b.fraction) && ((a.exp == b.exp)
+             || ((a.fraction == 0)
+                  && ((Bit16u) ((a.exp | b.exp)<<1) == 0))))
+    {
+        return float_relation_equal;
+    }
+
+    flag aSign = extractFloatx80Sign(a);
+    flag bSign = extractFloatx80Sign(b);
+    if (aSign != bSign)
+        return (aSign) ? float_relation_less : float_relation_greater;
+
+    flag less_than = 
+	aSign ? lt128(b.exp, b.fraction, a.exp, a.fraction)
+	      : lt128(a.exp, a.fraction, b.exp, b.fraction);
+
+    if (less_than) return float_relation_less;
+    return float_relation_greater;
+}
+
+/*----------------------------------------------------------------------------
+| Compare  between  two extended precision  floating  point  numbers. Returns
+| 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
+| the    value    'a'   is   less   than   the   corresponding   value   `b',
+| 'float_relation_greater' if the value 'a' is greater than the corresponding
+| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause 
+| an exception.
+*----------------------------------------------------------------------------*/
+
+int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
+{
+    float_class_t aClass = floatx80_class(a);
+    float_class_t bClass = floatx80_class(b);
+
+    if (aClass == float_NaN || bClass == float_NaN) {
+        if (floatx80_is_signaling_nan(a) || floatx80_is_signaling_nan(b))
+        {
+            float_raise(status, float_flag_invalid);
+        }
+        return float_relation_unordered;
+    }
+
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
+    }
+
+    if ((a.fraction == b.fraction) && ((a.exp == b.exp)
+             || ((a.fraction == 0)
+                  && ((Bit16u) ((a.exp | b.exp)<<1) == 0))))
+    {
+        return float_relation_equal;
+    }
+
+    flag aSign = extractFloatx80Sign(a);
+    flag bSign = extractFloatx80Sign(b);
+    if (aSign != bSign)
+        return (aSign) ? float_relation_less : float_relation_greater;
+
+    flag less_than = 
+	aSign ? lt128(b.exp, b.fraction, a.exp, a.fraction)
+	      : lt128(a.exp, a.fraction, b.exp, b.fraction);
+
+    if (less_than) return float_relation_less;
+    return float_relation_greater;
 }
 
 #endif

@@ -245,13 +245,13 @@ floatx80 float64_to_floatx80(float64, float_status_t &status);
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision conversion routines.
 *----------------------------------------------------------------------------*/
-Bit32s floatx80_to_int32(floatx80);
-Bit32s floatx80_to_int32_round_to_zero(floatx80);
-Bit64s floatx80_to_int64(floatx80);
-Bit64s floatx80_to_int64_round_to_zero(floatx80);
+Bit32s floatx80_to_int32(floatx80, float_status_t &status);
+Bit32s floatx80_to_int32_round_to_zero(floatx80, float_status_t &status);
+Bit64s floatx80_to_int64(floatx80, float_status_t &status);
+Bit64s floatx80_to_int64_round_to_zero(floatx80, float_status_t &status);
 
-float32 floatx80_to_float32(floatx80);
-float64 floatx80_to_float64(floatx80);
+float32 floatx80_to_float32(floatx80, float_status_t &status);
+float64 floatx80_to_float64(floatx80, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
@@ -269,6 +269,8 @@ int floatx80_lt(floatx80, floatx80, float_status_t &status);
 int floatx80_eq_signaling(floatx80, floatx80, float_status_t &status);
 int floatx80_le_quiet(floatx80, floatx80, float_status_t &status);
 int floatx80_lt_quiet(floatx80, floatx80, float_status_t &status);
+int floatx80_compare(floatx80, floatx80, float_status_t &status);
+int floatx80_compare_quiet(floatx80, floatx80, float_status_t &status);
 
 float_class_t floatx80_class(floatx80);
 int floatx80_is_signaling_nan(floatx80);
