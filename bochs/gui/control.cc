@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.39 2001-11-12 02:35:09 bdenney Exp $
+// $Id: control.cc,v 1.40 2001-12-08 18:06:12 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.39 2001-11-12 02:35:09 bdenney Exp $
+ * $Id: control.cc,v 1.40 2001-12-08 18:06:12 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -254,10 +254,26 @@ static char *ask_about_control_panel =
 "If you choose no, Bochs will read a bochsrc file and run as usual.\n"
 "Type yes or no: [yes] ";
 
+
+
 static char *startup_menu_prompt =
-"------------------\n"
-"Bochs Startup Menu\n"
-"------------------\n"
+"------------------------------\n"
+"Bochs Configuration: Main Menu\n"
+"------------------------------\n"
+"\n"
+"This is the Bochs Configuration Interface, where you can describe the\n"
+"machine that you want to simulate.  The first choice, \"Read options\n"
+"from...\", lets you read in a saved machine configuration from a file.\n"
+"The second choice lets you edit the present configuration.  The\n"
+"third choice saves the current configuration to a file so that you\n"
+"can use it again next time.  When you are satisfied with the config-\n"
+"uration, go ahead and start the simulation.\n"
+"\n"
+"Most people will want to read options from a file called .bochsrc,\n"
+"then immediately start the simulation.  A quick way to do this is to\n"
+"press return three times to accept the default choices (shown in\n"
+"square brackets).\n"
+"\n"
 "1. Read options from...\n"
 "2. Edit options\n"
 "3. Save options to...\n"
