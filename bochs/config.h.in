@@ -824,11 +824,6 @@ typedef
 #if !BX_SUPPORT_4MEG_PAGES
 #error "X86-64 requires Page Size Extension (PSE) !"
 #endif
-
-#if BX_SUPPORT_SEP
-#error "SYSENTER/SYSEXIT not implemented for X86-64 !"
-#endif
-
 #endif
 
 #define BX_HAVE_GETENV 0
