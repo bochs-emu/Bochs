@@ -57,7 +57,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.27 2001-06-27 20:27:49 fries Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.28 2001-08-23 13:04:14 yakovlev Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -92,7 +92,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.27 2001-06-27 20:27:49 fries Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.28 2001-08-23 13:04:14 yakovlev Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -1355,6 +1355,12 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, unsigned button_state)
 #endif  /* ifdef VERBOSE_KBD_DEBUG */
 
   b1 = (button_state & 0x0f) | 0x08; // bit3 always set
+
+  if( (delta_x==0) && (delta_y==0) && (BX_KEY_THIS s.mouse.button_status == button_state & 0x3) ) {
+    BX_DEBUG(("Ignoring useless mouse_motion call:\n"));
+    BX_DEBUG(("This should be fixed in the gui code.\n"));
+    return;
+  }
 
   BX_KEY_THIS s.mouse.button_status = button_state & 0x3;
 
