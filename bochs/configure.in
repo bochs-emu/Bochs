@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.147.2.15 2002-10-21 12:25:39 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.147.2.16 2002-10-21 20:33:14 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1534,8 +1534,8 @@ CFP=""
 OFP="-o "
 MAKELIB="ar rv \$@"
 RMCOMMAND="rm -f "
-LINK="\$(CXX) -o \$@ \$(CXXFLAGS)"
-LINK_CONSOLE="\$(CXX) -o \$@ \$(CXXFLAGS_CONSOLE)"
+LINK="\$(CXX) -o \$@ \$(CXXFLAGS) \$(LDFLAGS)"
+LINK_CONSOLE="\$(CXX) -o \$@ \$(CXXFLAGS_CONSOLE) \$(LDFLAGS)"
 EXE=""
 COMMAND_SEPARATOR="&& \\"
 CD_UP_ONE="echo done"
