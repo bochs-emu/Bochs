@@ -300,7 +300,6 @@ void
 logfunctions::info(char *fmt, ...)
 {
 	va_list ap;
-	FILE *fs;
 
 	assert (this != NULL);
 	assert (this->logio != NULL);
@@ -321,7 +320,6 @@ void
 logfunctions::error(char *fmt, ...)
 {
 	va_list ap;
-	FILE *fs;
 
 	assert (this != NULL);
 	assert (this->logio != NULL);
@@ -341,7 +339,6 @@ void
 logfunctions::panic(char *fmt, ...)
 {
 	va_list ap;
-	FILE *fs;
 
 	assert (this != NULL);
 	assert (this->logio != NULL);
@@ -361,7 +358,6 @@ void
 logfunctions::ldebug(char *fmt, ...)
 {
 	va_list ap;
-	FILE *fs;
 
 	assert (this != NULL);
 	assert (this->logio != NULL);
@@ -709,7 +705,7 @@ bx_emulate_hga_dumps_timer(void)
 char *
 bx_find_bochsrc ()
 {
-  FILE *fd;
+  FILE *fd = NULL;
   char rcfile[512];
   Bit32u retry = 0, found = 0;
   // try several possibilities for the bochsrc before giving up
@@ -764,6 +760,7 @@ parse_bochsrc(char *rcfile)
       parse_line_unformatted(rcfile, line);
       }
     } while (!feof(fd));
+  return 0;
 }
 
   static void
@@ -1404,7 +1401,7 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
   // for each level of event.
   int action_tally[N_ACT];
   int most_popular_action[N_LOGLEV];
-  int i,j,lev;
+  int i,lev;
   for (lev = 0; lev < N_LOGLEV; lev++) {
     // clear tally
     for (i=0; i<N_ACT; i++)
@@ -1434,6 +1431,7 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
       io->getaction(most_popular_action[LOGLEV_INFO]));
   fprintf (fp, "debug: action=%s\n",
       io->getaction(most_popular_action[LOGLEV_DEBUG]));
+  return 0;
 }
 
 // return values:
@@ -1462,7 +1460,7 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_disk_options (fp, 1, &bx_options.diskd);
   bx_write_cdrom_options (fp, 0, &bx_options.cdromd);
   if (bx_options.rom.path)
-    fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.path, bx_options.rom.address);
+    fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.path, (unsigned int)bx_options.rom.address);
   else
     fprintf (fp, "# no romimage\n");
   if (bx_options.vgarom.path)
@@ -1472,10 +1470,10 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "megs: %d\n", bx_options.memory.megs);
   bx_write_sb16_options (fp, &bx_options.sb16);
   fprintf (fp, "boot: %s\n", bx_options.bootdrive);
-  fprintf (fp, "vga_update_interval: %d\n", bx_options.vga_update_interval);
-  fprintf (fp, "keyboard_serial_delay: %d\n", bx_options.keyboard_serial_delay);
-  fprintf (fp, "floppy_command_delay: %d\n", bx_options.floppy_command_delay);
-  fprintf (fp, "ips: %d\n", bx_options.ips);
+  fprintf (fp, "vga_update_interval: %lu\n", bx_options.vga_update_interval);
+  fprintf (fp, "keyboard_serial_delay: %lu\n", bx_options.keyboard_serial_delay);
+  fprintf (fp, "floppy_command_delay: %lu\n", bx_options.floppy_command_delay);
+  fprintf (fp, "ips: %lu\n", bx_options.ips);
   fprintf (fp, "mouse: enabled=%d\n", bx_options.mouse_enabled);
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.private_colormap);
   fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.i440FXSupport);
