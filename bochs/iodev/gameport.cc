@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.3 2003-12-21 17:24:45 vruppert Exp $
+// $Id: gameport.cc,v 1.4 2003-12-26 13:53:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -208,7 +208,7 @@ bx_gameport_c::read(Bit32u address, unsigned io_len)
       }
     }
   } else {
-    BX_INFO(("read: joystick not present"));
+    BX_DEBUG(("read: joystick not present"));
   }
   return BX_GAMEPORT_THIS port;
 }

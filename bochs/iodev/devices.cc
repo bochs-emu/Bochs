@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.57 2003-08-19 00:10:38 cbothamy Exp $
+// $Id: devices.cc,v 1.58 2003-12-26 13:53:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.57 2003-08-19 00:10:38 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.58 2003-12-26 13:53:39 vruppert Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -148,7 +148,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
   if (is_parallel_enabled ()) 
     PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(extfpuirq, PLUGTYPE_OPTIONAL);
+#if BX_SUPPORT_GAME
   PLUG_load_plugin(gameport, PLUGTYPE_OPTIONAL);
+#endif
 
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();

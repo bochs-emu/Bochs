@@ -279,6 +279,7 @@
 #endif
 
 #define BX_SUPPORT_SB16 0
+#define BX_SUPPORT_GAME 0
 
 #if BX_SUPPORT_SB16
 // Use virtual methods for the sound output functions
