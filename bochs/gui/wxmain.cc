@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.8 2002-08-26 15:31:22 bdenney Exp $
+// $Id: wxmain.cc,v 1.9 2002-08-27 18:11:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -314,6 +314,39 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   wxMessageBox( str, "About Bochs", wxOK | wxICON_INFORMATION );
 }
 
+// update the menu items, status bar, etc.
+void MyFrame::simStatusChanged (StatusChange change, Boolean popupNotify) {
+  switch (change) {
+    case Start:  // running
+      menuConfiguration->Enable (ID_Config_New, FALSE);
+      menuConfiguration->Enable (ID_Config_Read, FALSE);
+      menuSimulate->Enable (ID_Simulate_Start, FALSE);
+      menuSimulate->Enable (ID_Simulate_PauseResume, TRUE);
+      menuSimulate->Enable (ID_Simulate_Stop, TRUE);
+      menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
+      break;
+    case Stop: // not running
+      menuSimulate->Enable (ID_Simulate_Start, TRUE);
+      menuSimulate->Enable (ID_Simulate_PauseResume, FALSE);
+      menuSimulate->Enable (ID_Simulate_Stop, FALSE);
+      menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
+      // This should only be used if the simulation stops due to error.
+      // Obviously if the user asked it to stop, they don't need to be told.
+      if (popupNotify)
+	    wxMessageBox("Bochs simulation has stopped.", "Bochs Stopped", 
+		    wxOK | wxICON_INFORMATION);
+      break;
+    case Pause: // pause
+      SetStatusText ("Pausing the Bochs simulation");
+      menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Resume");
+      break;
+    case Resume: // resume
+      SetStatusText ("Resuming the Bochs simulation");
+      menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
+      break;
+  }
+}
+
 void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
 {
   wxCriticalSectionLocker lock(sim_thread_lock);
@@ -327,7 +360,7 @@ void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
   start_bochs_times++;
   if (start_bochs_times>1) {
 	wxMessageBox (
-	"You have already started the simulator once this session. Due to memory leaks, you may get unstable behavior.",
+	"You have already started the simulator once this session. Due to memory leaks and bugs in init code, you may get unstable behavior.",
 	"2nd time warning", wxOK | wxICON_WARNING);
   }
   num_events = 0;  // clear the queue of events for bochs to handle
@@ -337,13 +370,7 @@ void MyFrame::OnStartSim(wxCommandEvent& WXUNUSED(event))
   wxLogDebug ("Simulator thread has started.");
   // set up callback for events from simulator thread
   SIM->set_notify_callback (&SimThread::SiminterfaceCallback, sim_thread);
-  // fix up menu choices
-  menuConfiguration->Enable (ID_Config_New, FALSE);
-  menuConfiguration->Enable (ID_Config_Read, FALSE);
-  menuSimulate->Enable (ID_Simulate_Start, FALSE);
-  menuSimulate->Enable (ID_Simulate_PauseResume, TRUE);
-  menuSimulate->Enable (ID_Simulate_Stop, TRUE);
-  menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
+  simStatusChanged (Start);
 }
 
 void MyFrame::OnPauseResumeSim(wxCommandEvent& WXUNUSED(event))
@@ -351,13 +378,11 @@ void MyFrame::OnPauseResumeSim(wxCommandEvent& WXUNUSED(event))
   wxCriticalSectionLocker lock(sim_thread_lock);
   if (sim_thread) {
     if (sim_thread->IsPaused ()) {
-	  SetStatusText ("Resuming the Bochs simulation");
+      simStatusChanged (Resume);
 	  sim_thread->Resume ();
-	  menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
 	} else {
-	  SetStatusText ("Pausing the Bochs simulation");
+      simStatusChanged (Pause);
 	  sim_thread->Pause ();
-	  menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Resume");
 	}
   }
 }
@@ -367,13 +392,12 @@ void MyFrame::OnKillSim(wxCommandEvent& WXUNUSED(event))
   // DON'T use a critical section here.  Delete implicitly calls
   // OnSimThreadExit, which also tries to lock sim_thread_lock.
   // If we grab the lock at this level, deadlock results.
+  wxLogDebug ("OnKillSim()");
   if (sim_thread) {
-	SetStatusText ("Killing the Bochs simulation");
-	sim_thread->Delete ();
-	menuSimulate->Enable (ID_Simulate_Start, TRUE);
-	menuSimulate->Enable (ID_Simulate_PauseResume, FALSE);
-	menuSimulate->Enable (ID_Simulate_Stop, FALSE);
-	menuSimulate->SetLabel (ID_Simulate_PauseResume, "&Pause");
+    sim_thread->Delete ();
+    // Next time the simulator reaches bx_real_sim_c::periodic() it
+    // will quit.  This is better than killing the thread because it
+    // gives it a chance to clean up after itself.
   }
 }
 
@@ -501,9 +525,9 @@ MyFrame::HandleAskParam (BxEvent *event)
   return -1;  // could not display
 }
 
-// This is called when a Sim2Cui event from the simulator thread is discovered
-// on the GUI thread's event queue.  (It got there via wxPostEvent in
-// SiminterfaceCallback2, which is executed in the simulator Thread.)
+// This is called from the wxWindows GUI thread, when a Sim2Cui event
+// is found.  (It got there via wxPostEvent in SiminterfaceCallback2, which is
+// executed in the simulator Thread.)
 void 
 MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
 {
@@ -530,12 +554,16 @@ MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
     Close (TRUE);
 	wxExit ();
 	return;
+  case BX_SYNC_EVT_LOG_ASK:
   case BX_ASYNC_EVT_LOG_MSG:
     wxLogDebug ("log msg: level=%d, prefix='%s', msg='%s'",
 	  be->u.logmsg.level,
 	  be->u.logmsg.prefix,
 	  be->u.logmsg.msg);
-    wxMutexGuiEnter();
+    if (be->type == BX_ASYNC_EVT_LOG_MSG) {
+      // don't ask for user response
+      return;
+    }
     string.Printf ("%s", be->u.logmsg.msg);
     choice = ::wxGetSingleChoiceIndex (
                string,
@@ -543,7 +571,7 @@ MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
     if (choice<0) choice = 2; // treat cancel the same as "die"
     be->retcode = choice;
     wxLogDebug ("you chose %d", choice);
-    wxMutexGuiLeave();
+    sim_thread->SendSyncResponse (be);
     return;
   default:
     wxLogDebug ("OnSim2CuiEvent: event type %d ignored", (int)be->type);
@@ -593,7 +621,6 @@ SimThread::Entry (void)
 {     
   int argc=1;
   char *argv[] = {"bochs"};
-  wxLogDebug ("in SimThread, starting at bx_continue_after_config_interface");
   // run all the rest of the Bochs simulator code.  This function will
   // run forever, unless a "kill_bochs_request" is issued.  The shutdown
   // procedure is as follows:
@@ -608,8 +635,18 @@ SimThread::Entry (void)
   //     bx_continue_after_config_interface(), which notices the
   //     kill_bochs_request and returns back to this Entry() function.
   //   - Entry() exits and the thread stops. Whew.
-  bx_continue_after_config_interface (argc, argv);
-  wxLogDebug ("in SimThread, bx_continue_after_config_interface exited");
+  wxLogDebug ("in SimThread, starting at bx_continue_after_config_interface");
+  static jmp_buf context;  // this must not go out of scope. maybe static not needed
+  if (setjmp (context) == 0) {
+	SIM->set_quit_context (&context);
+    bx_continue_after_config_interface (argc, argv);
+    wxLogDebug ("in SimThread, bx_continue_after_config_interface exited normally");
+  } else {
+    wxLogDebug ("in SimThread, bx_continue_after_config_interface exited by longjmp");
+  }
+  wxMutexGuiEnter();
+  theFrame->simStatusChanged (theFrame->Stop, true);
+  wxMutexGuiLeave();
   return NULL;
 }
 
@@ -672,14 +709,6 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
   wxevent.SetEventObject ((wxEvent *)event);
   wxLogDebug ("Sending an event to the window");
   wxPostEvent (frame, wxevent);
-  if (event->type == BX_ASYNC_EVT_LOG_MSG) {
-	// wait until the GUI thread has processed the event and changed
-	// retcode.  bbd: This is a strange case. Shouldn't this just be
-	// called a sync event?
-    event->retcode = -1;
-    while (event->retcode == -1) this->Sleep(500);
-    return event;
-  }
   // if it is an asynchronous event, return immediately
   if (async) return NULL;
   wxLogDebug ("SiminterfaceCallback2: synchronous event; waiting for response");

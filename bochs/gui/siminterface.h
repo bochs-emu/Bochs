@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.47 2002-08-26 15:31:21 bdenney Exp $
+// $Id: siminterface.h,v 1.48 2002-08-27 18:11:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -306,6 +306,7 @@ typedef enum {
   BX_SYNC_EVT_GET_PARAM,          // CUI -> simulator -> CUI
   BX_SYNC_EVT_ASK_PARAM,          // simulator -> CUI -> simulator
   BX_SYNC_EVT_TICK,               // simulator -> CUI, wait for response.
+  BX_SYNC_EVT_LOG_ASK,            // simulator -> CUI, wait for response.
   __ALL_EVENTS_BELOW_ARE_ASYNC__,
   BX_ASYNC_EVT_KEY,               // vga window -> simulator
   BX_ASYNC_EVT_MOUSE,             // vga window -> simulator
@@ -401,7 +402,7 @@ typedef struct {
 // some kind of "flow control" since the simulator will be able to produce
 // new events much faster than the gui can accept them.
 
-// Event type: BX_ASYNC_EVT_LOG_MSG
+// Event type: BX_ASYNC_EVT_LOG_MSG   (unused)
 //
 // Asynchronous event from the simulator to the CUI.  When a BX_PANIC,
 // BX_ERROR, BX_INFO, or BX_DEBUG is found in the simulator code, this 
@@ -421,11 +422,19 @@ typedef struct {
 // skip over huge bursts of log entries without allocating memory,
 // synchronizing threads, etc. for each.
 typedef struct {
-  // type is BX_EVT_LOG_MSG
   Bit8u level;
   char *prefix;
   char *msg;
 } BxLogMsgEvent;
+
+// Event type: BX_SYNC_EVT_LOG_ASK
+//
+// This is a synchronous version of BX_ASYNC_EVT_LOG_MSG, which is used
+// when the "action=ask" setting is used.  If the simulator runs into a
+// panic, it sends a synchronous BX_SYNC_EVT_LOG_ASK to the CUI to be
+// displayed.  The CUI shows a dialog that asks if the user wants to 
+// continue, quit, etc. and sends the answer back to the simulator.
+// This event also uses BxLogMsgEvent.
 
 // Event type: BX_EVT_TOOLBAR
 // Asynchronous event from the VGAW to the simulator, sent when the user
@@ -724,9 +733,12 @@ struct bx_cdrom_options
 // I'm not longer sure that having a base class is going to be of any
 // use... -Bryce
 
+#include <setjmp.h>
+
 class bx_simulator_interface_c {
 public:
   bx_simulator_interface_c ();
+  virtual void set_quit_context (jmp_buf *context) {}
   virtual int get_init_done () { return -1; }
   virtual int set_init_done (int n) {return -1;}
   virtual void get_param_id_range (int *min, int *max) {}

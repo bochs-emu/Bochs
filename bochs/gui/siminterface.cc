@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.45 2002-08-26 15:31:20 bdenney Exp $
+// $Id: siminterface.cc,v 1.46 2002-08-27 18:11:13 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -32,9 +32,12 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   bx_param_c **param_registry;
   int registry_alloc_size;
   int enabled;
+  // save context to jump to if we must quit unexpectedly
+  jmp_buf *quit_context;
 public:
   bx_real_sim_c ();
   virtual ~bx_real_sim_c ();
+  virtual void set_quit_context (jmp_buf *context) { quit_context = context; }
   virtual int get_init_done () { return init_done; }
   virtual int set_init_done (int n) { init_done = n; return 0;}
   virtual void get_param_id_range (int *min, int *max) {
@@ -136,6 +139,7 @@ bx_real_sim_c::bx_real_sim_c ()
   param_registry = new bx_param_c*  [registry_alloc_size];
   for (i=0; i<registry_alloc_size; i++)
     param_registry[i] = NULL;
+  quit_context = NULL;
 }
 
 // called by constructor of bx_param_c, so that every parameter that is
@@ -210,20 +214,11 @@ bx_real_sim_c::get_max_log_level ()
 
 void 
 bx_real_sim_c::quit_sim (int code) {
-#if 0
-  if (!code)
-    BX_PANIC (("Quit simulation command"));
-  // tell bochs to shut down (includes vga screen)
-  bx_atexit ();
-  // tell the configuration interface to shut down
-  BxEvent *event = new BxEvent ();
-  event->type = BX_ASYNC_EVT_SHUTDOWN_GUI;
-  sim_to_cui_event (event);
-  // set something that will cause the cpu loop to exit.
-  // or use setjmp/longjmp, or something.
-  //FIXME!
-#endif
   BX_INFO (("quit_sim called"));
+  // use longjmp to quit cleanly, no matter where in the stack we are.
+  //fprintf (stderr, "using longjmp() to jump directly to the quit context!\n");
+  longjmp (*quit_context, 1);
+  BX_PANIC (("in bx_real_sim_c::quit_sim, longjmp should never return"));
 #if BX_WITH_WX
   // in wxWindows, the whole simulator is running in a separate thread.
   // our only job is to end the thread as soon as possible, NOT to shut
@@ -349,7 +344,7 @@ int
 bx_real_sim_c::log_msg (const char *prefix, int level, char *msg)
 {
   BxEvent *be = new BxEvent ();
-  be->type = BX_ASYNC_EVT_LOG_MSG;
+  be->type = BX_SYNC_EVT_LOG_ASK;
   be->u.logmsg.prefix = (char *)prefix;
   be->u.logmsg.level = level;
   be->u.logmsg.msg = msg;
