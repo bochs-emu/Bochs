@@ -83,7 +83,7 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 /* 0F AE Grp15 000 */
 void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
+#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   Bit16u twd = BX_CPU_THIS_PTR the_i387.twd, tag_byte = 0;
   Bit16u status_w = BX_CPU_THIS_PTR the_i387.swd;
   Bit16u tos = BX_CPU_THIS_PTR the_i387.tos;
@@ -172,7 +172,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 /* 0F AE Grp15 001 */
 void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
+#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BxPackedXmmRegister xmm;
   Bit32u tag_byte, tag_byte_mask, twd = 0;
   unsigned index;
