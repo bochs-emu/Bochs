@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.53.2.1 2003-01-03 00:29:33 cbothamy Exp $
+// $Id: vga.cc,v 1.53.2.2 2003-01-11 22:14:25 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1025,28 +1025,6 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           break;
         case 2:
           BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue = value;
-          {
-            unsigned iHeight, iWidth;
-#if BX_SUPPORT_VBE          
-            // when we are in a vbe enabled mode, better get the width/height from the vbe settings
-            if (BX_VGA_THIS s.vbe_enabled)
-            {
-              old_iWidth = iWidth = BX_VGA_THIS s.vbe_xres;
-              old_iHeight = iHeight = BX_VGA_THIS s.vbe_yres;
-            }
-            else
-#endif            
-            {
-              // 'normal vga' operation
-              determine_screen_dimensions(&iHeight, &iWidth);
-        	    if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
-	            {
-	              bx_gui->dimension_update(iWidth, iHeight);
-	              old_iWidth = iWidth;
-	              old_iHeight = iHeight;
-	            }
-	          }
-          }
 
           needs_update = bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red<<2,
@@ -1054,6 +1032,8 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue<<2);
           if (needs_update) {
             // Mark all video as updated so the color changes will go through
+            memset(BX_VGA_THIS s.text_snapshot, 0,
+                   sizeof(BX_VGA_THIS s.text_snapshot));
             BX_VGA_THIS s.vga_mem_updated = 1;
             for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
               for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
