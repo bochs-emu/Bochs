@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.10 2001-10-06 15:19:17 bdenney Exp $
+// $Id: segment_ctrl_pro.cc,v 1.11 2001-11-13 05:11:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -274,16 +274,21 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       seg->cache = descriptor;
       seg->cache.valid             = 1;
 
-      /* now set accessed bit in descriptor */
-      dword2 |= 0x0100;
-      if (ti == 0) { /* GDT */
-        access_linear(BX_CPU_THIS_PTR gdtr.base + index*8 + 4, 4, 0,
-          BX_WRITE, &dword2);
+      /* now set accessed bit in descriptor                   */
+      /* wmr: don't bother if it's already set (thus allowing */ 
+      /* GDT to be in read-only pages like real hdwe does)    */
+
+      if (!(dword2 & 0x0100)) {
+        dword2 |= 0x0100;
+        if (ti == 0) { /* GDT */
+          access_linear(BX_CPU_THIS_PTR gdtr.base + index*8 + 4, 4, 0,
+            BX_WRITE, &dword2);
         }
-      else { /* LDT */
-        access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8 + 4, 4, 0,
-          BX_WRITE, &dword2);
+        else { /* LDT */
+         access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8 + 4, 4, 0,
+            BX_WRITE, &dword2);
         }
+      }
       return;
       }
     else {
