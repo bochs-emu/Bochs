@@ -21,6 +21,11 @@ libmodule2.la: module2.lo
 %.lo: %.cc
 	$(LIBTOOL) $(CXX) -c $<
 
+test:
+	@echo "*** Running test in `pwd`"
+	-./uselib
+	@echo "*** Test done in `pwd`"
+
 clean:
 	-libtool rm libmodule1.la module1.lo libmodule2.la module2.lo
 	rm -rf *.o uselib.exe bin lib uselib uselib.exe
