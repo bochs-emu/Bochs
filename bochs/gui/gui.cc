@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.43 2002-08-09 06:16:43 vruppert Exp $
+// $Id: gui.cc,v 1.44 2002-08-25 12:32:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -201,6 +201,7 @@ bx_gui_c::floppyA_handler(void)
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
   int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
+  if (ret < 0) return;  // cancelled
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
   unsigned new_status = bx_devices.floppy->set_media_status(0, 0);
@@ -223,6 +224,7 @@ bx_gui_c::floppyB_handler(void)
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
   int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
+  if (ret < 0) return;  // cancelled
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
   unsigned new_status = bx_devices.floppy->set_media_status(1, 0);
@@ -245,6 +247,7 @@ bx_gui_c::cdromD_handler(void)
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
   int ret = SIM->ask_param (BXP_CDROM_PATH);
+  if (ret < 0) return;  // cancelled
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
   unsigned status = bx_devices.hard_drive->set_cd_media_status(0);
@@ -404,9 +407,14 @@ bx_gui_c::userbutton_handler(void)
   int i, len;
 
   len = 0;
+#if BX_WITH_WX
+  int ret = SIM->ask_param (BXP_USER_SHORTCUT);
   user_shortcut = bx_options.Ouser_shortcut->getptr();
-  i = 0;
+  if ((ret > 0) && user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
+#else
+  user_shortcut = bx_options.Ouser_shortcut->getptr();
   if (user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
+#endif
     if (!strcmp(user_shortcut, "ctrlaltdel")) {
       shortcut[0] = BX_KEY_CTRL_L;
       shortcut[1] = BX_KEY_ALT_L;
@@ -433,6 +441,7 @@ bx_gui_c::userbutton_handler(void)
     else {
       BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
       }
+    i = 0;
     while (i < len) {
       bx_devices.keyboard->gen_scancode(shortcut[i++]);
     }
