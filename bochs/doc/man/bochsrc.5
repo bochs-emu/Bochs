@@ -17,6 +17,15 @@ home directory.
 .SH OPTIONS
 
 .TP
+.I "#include"
+This option includes another configuration file. It is
+possible to put installation defaults in a global config
+file (e.g. location of rom images).
+
+Example:
+  #include /etc/bochsrc
+
+.TP
 .I "romimage:"
 You need to load  a ROM BIOS into  F0000-FFFFF.
 The  BIOS  controls  what  the PC does when it
@@ -51,9 +60,7 @@ Example:
   vgaromimage: bios/VGABIOS-elpin-2.40
 
 .TP
-.I "floppya:"
-or
-.I "floppyb:"
+.I "floppya: \fPor \fIfloppyb:"
 
 Point  this to  the pathname of a floppy image
 file or  device.  Floppya is the  first drive,
@@ -79,6 +86,9 @@ Example:
 720K  3.5" Floppy:
   floppya: 720k=path, status=inserted
 
+360K  5.25" Floppy:
+  floppya: 360k=path, status=inserted
+
 .TP
 .I "diskc:"
 or
@@ -101,15 +111,18 @@ Example:
 
 .TP
 .I "com1:"
-Point  this at the device you want to  use
-as your com1 serial port. The "dev=" parameter indicates which device to use.
-This can be a Unix pty.  One way to use this would be to run bochs in one window
-and open a second window to use as com1.  Do a `sleep 1000000' in the com1
-window to prevent it's shell from getting in the way.  When you run bochs, all
-I/O to com1 will show up in this window.
+This defines a serial (COM) port. You can specify a device to use as com1.
+This can be a real serial line, or a pty.  To use a pty (under X/Unix),
+create two windows (xterms, usually).  One of them will run bochs, and the
+other will act as com1. Find out the tty the com1 window using the `tty'
+command, and use that as the `dev' parameter.  Then do `sleep 1000000' in
+the com1 window to keep the shell from messing with things, and run bochs in
+the other window.  Serial I/O to com1 (port 0x3f8) will all go to the other
+window.
 
-Example:
-  com1: dev=/dev/ttyp7
+Examples:
+  com1: enabled=1, dev=/dev/ttyp7
+  com1: enabled=0
 
 .TP
 .I "parport1:"
