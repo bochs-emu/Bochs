@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.64 2003-09-17 19:47:41 vruppert Exp $
+// $Id: win32.cc,v 1.65 2003-10-19 08:24:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -107,7 +107,7 @@ static RECT updated_area;
 static BOOL updated_area_valid = FALSE;
 
 // Headerbar stuff
-HWND hwndTB;
+HWND hwndTB, hwndSB;
 unsigned bx_bitmap_entries;
 struct {
   HBITMAP bmap;
@@ -121,6 +121,7 @@ static struct {
 } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
 
 static unsigned bx_headerbar_y = 0;
+static unsigned bx_statusbar_y = 0;
 static int bx_headerbar_entries;
 static unsigned bx_hb_separator;
 
@@ -479,6 +480,7 @@ VOID UIThread(PVOID pvoid) {
   HDC hdc;
   WNDCLASS wndclass;
   RECT wndRect, wndRect2;
+  long Edges[1];
 
   workerThreadID = GetCurrentThreadId();
 
@@ -530,21 +532,31 @@ VOID UIThread(PVOID pvoid) {
     SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
     SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
     ShowWindow(hwndTB, SW_SHOW);
-    GetClientRect(stInfo.mainWnd, &wndRect);
+    hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "F12 enables mouse",
+                                stInfo.mainWnd, 0x7712);
+    if (hwndSB) {
+      Edges[0] = -1;
+      SendMessage(hwndSB, SB_SETPARTS, 1, (long)&Edges);
+    }
     GetClientRect(hwndTB, &wndRect2);
-    bx_headerbar_y = wndRect2.bottom - wndRect2.top;
+    bx_headerbar_y = wndRect2.bottom;
+    GetClientRect(hwndSB, &wndRect2);
+    bx_statusbar_y = wndRect2.bottom;
     SetWindowPos(stInfo.mainWnd, NULL, 0, 0, stretched_x + x_edge * 2,
-                  stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
-                  SWP_NOMOVE|SWP_NOZORDER);
+                  stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
+                  + y_caption, SWP_NOMOVE | SWP_NOZORDER);
     UpdateWindow (stInfo.mainWnd);
+    GetClientRect(stInfo.mainWnd, &wndRect);
+    MoveWindow(hwndSB, 0, wndRect.bottom - bx_statusbar_y, wndRect.right,
+               bx_statusbar_y, TRUE);
 
     stInfo.simWnd = CreateWindow("SIMWINDOW",
                       "",
                       WS_CHILD,
                       0,
                       bx_headerbar_y,
-                      wndRect.right - wndRect.left,
-                      wndRect.bottom - wndRect.top - bx_headerbar_y,
+                      wndRect.right,
+                      wndRect.bottom - bx_headerbar_y - bx_statusbar_y,
                       stInfo.mainWnd,
                       NULL,
                       stInfo.hInstance,
@@ -596,15 +608,28 @@ VOID UIThread(PVOID pvoid) {
 }
 
 
+void SetStatusText(int Num, const char *Text)
+{
+  char StatText[MAX_PATH];
+
+  if (Num < 1) {
+    StatText[0] = ' ';  // Add space to text in first item
+  } else {
+    StatText[0] = 9;  // Center the rest
+  }
+  lstrcpy(StatText+1, Text);
+  SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
+}
+
 LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
 
   switch (iMsg) {
   case WM_CREATE:
     bx_options.Omouse_enabled->set (mouseCaptureMode);
     if (mouseCaptureMode)
-      SetWindowText(hwnd, "Bochs for Windows      [F12 to release mouse]");
+      SetStatusText(0, "Press F12 to release mouse");
     else
-      SetWindowText(hwnd, "Bochs for Windows      [F12 enables mouse]");
+      SetStatusText(0, "F12 enables mouse");
     return 0;
 
   case WM_COMMAND:
@@ -719,9 +744,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
       SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
       cursorWarped();
       if (mouseCaptureMode)
-        SetWindowText(stInfo.mainWnd, "Bochs for Windows      [Press F12 to release mouse capture]");
+        SetStatusText(0, "Press F12 to release mouse");
       else
-        SetWindowText(stInfo.mainWnd, "Bochs for Windows      [F12 enables the mouse in Bochs]");
+        SetStatusText(0, "F12 enables mouse");
     } else {
       EnterCriticalSection(&stInfo.keyCS);
       enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_PRESSED);
@@ -1314,9 +1339,11 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   }
 
   SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
-              stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
-               SWP_NOMOVE | SWP_NOZORDER);
+               stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
+               + y_caption, SWP_NOMOVE | SWP_NOZORDER);
   MoveWindow(hwndTB, 0, 0, stretched_x, bx_headerbar_y, TRUE);
+  MoveWindow(hwndSB, 0, stretched_y-bx_statusbar_y, stretched_x,
+             bx_statusbar_y, TRUE);
   MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
  
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
@@ -1431,8 +1458,11 @@ void bx_win32_gui_c::show_headerbar(void)
   if (bx_headerbar_y != (R.bottom - R.top + 1)) {
     bx_headerbar_y = R.bottom - R.top + 1;
     SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
-                 stretched_y + bx_headerbar_y + y_edge * 2 + y_caption,
-                 SWP_NOMOVE | SWP_NOZORDER);
+                 stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
+                 + y_caption, SWP_NOMOVE | SWP_NOZORDER);
+    GetClientRect(stInfo.mainWnd, &R);
+    MoveWindow(hwndSB, 0, R.bottom - bx_statusbar_y, stretched_x,
+               bx_statusbar_y, TRUE);
     MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
   }
 }
