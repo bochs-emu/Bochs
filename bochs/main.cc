@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.138 2002-09-05 15:51:03 bdenney Exp $
+// $Id: main.cc,v 1.139 2002-09-05 16:40:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1184,7 +1184,9 @@ bx_init_main (int argc, char *argv[])
 #endif
     help = 1;
   } else {
+#if !BX_WITH_WX
     bx_print_header ();
+#endif
   }
   bx_init_bx_dbg ();
   bx_init_options ();

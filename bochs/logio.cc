@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.24 2002-09-03 08:32:47 bdenney Exp $
+// $Id: logio.cc,v 1.25 2002-09-05 16:40:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -472,11 +472,13 @@ void
 logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
 {
   bx_atexit();
+#if !BX_WITH_WX
   fprintf (stderr, "%s\n", divider);
   fprintf (stderr, "Bochs is exiting with the following message:\n");
   fprintf (stderr, "%s ", prefix);
   vfprintf (stderr, fmt, ap);
   fprintf (stderr, "\n%s\n", divider);
+#endif
 #if 0 && defined(WIN32)
 #error disabled because it is not working yet!
   // wait for a keypress before quitting.  Depending on how bochs is
