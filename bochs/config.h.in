@@ -86,6 +86,9 @@
 // if NE2K is enabled, this enables the ethertap device.
 #define HAVE_ETHERTAP 0
 
+// this enables TUN/TAP interface
+#define HAVE_TUNTAP 0
+
 // I rebuilt the code which provides timers to IO devices.
 // Setting this to 1 will introduce a little code which
 // will panic out if cases which shouldn't happen occur.
