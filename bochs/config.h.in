@@ -133,15 +133,7 @@
 #define BX_USE_TLB 1
 
 #define BX_TLB_SIZE 1024
-#define BX_TLB_INDEX_OF(lpf) (((lpf) >> 12) & 0xfff)
-
-
-// experimental
-
-//#define BX_TLB_SIZE 4096
-//#define BX_TLB_INDEX_OF(lpf) ((((lpf) >> 12) + ((lpf) >> 16)  ) & 0xfff)
-//#define BX_TLB_INDEX_OF(lpf)  (((((lpf) & 0x000ff000) >> 12) + ((lpf) >> 26)) & 0xfff)
-
+#define BX_TLB_INDEX_OF(lpf) (((lpf) & 0x003ff000) >> 12)
 
 
 // Compile in support for DMA & FLOPPY IO.  You'll need this
