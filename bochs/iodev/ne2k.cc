@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.40 2002-10-06 19:38:53 vruppert Exp $
+// $Id: ne2k.cc,v 1.41 2002-10-19 08:21:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
   put("NE2K");
   settype(NE2KLOG);
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.40 2002-10-06 19:38:53 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.41 2002-10-19 08:21:24 vruppert Exp $"));
   BX_NE2K_THIS s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -97,6 +97,7 @@ bx_ne2k_c::reset(unsigned type)
     BX_NE2K_THIS s.CR.rdma_cmd  = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
+  BX_NE2K_THIS devices->pic->lower_irq(BX_NE2K_THIS s.base_irq);
 }
 
 //
@@ -1245,7 +1246,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.40 2002-10-06 19:38:53 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.41 2002-10-19 08:21:24 vruppert Exp $"));
   BX_NE2K_THIS devices = d;
 
 
