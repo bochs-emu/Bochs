@@ -13,7 +13,6 @@ export CXXFLAGS
 
 ./configure --enable-cdrom \
 	    --enable-vbe \
-	    --enable-dc2300-vlb-ide \
 	    --enable-all-optimizations
 
 unset echo

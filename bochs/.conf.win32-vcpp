@@ -12,7 +12,6 @@ set echo
 	    --enable-sb16=win \
 	    --enable-ne2000 \
 	    --enable-vbe \
-		--enable-dc2300-vlb-ide \
 	    --enable-cpp \
 		--enable-all-optimizations \
 	    --disable-readline
