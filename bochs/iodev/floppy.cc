@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.74 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: floppy.cc,v 1.75 2004-11-16 19:19:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.74 2004-06-19 15:20:11 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.75 2004-11-16 19:19:12 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -991,7 +991,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
             Bit32u bytes, Bit8u direction)
 {
-  int ret;
+  int ret = 0;
 
   if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
     BX_PANIC(("floppy_xfer: bad drive #%d", drive));

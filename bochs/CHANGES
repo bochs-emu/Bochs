@@ -169,6 +169,17 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #922034 bios not aliased at 0xFFFFF000, registers wrong after reset
+  #912666 Configure fails on Yellow Dog Linux 3.0.1
+  #922038 Unexisting memory should read back as 0xFFFFFFFF
+ #1019723 HD image
+ #1057814 Shadow RAM not aligned
+ #1057240 Invalid IRET32 implementation
+  #809682 >> PANIC << : prefetch: RIP > CS.limit
+  #618680 memory referencing problems
+  #724262 A few things (Windows 2.03, Wolfenstein)
+  #985375 Crash Mandrake 7.1
+  #913418 compiler errors with --enable-external-debugger option
   #708847 CR8 access should not panic X86-64
  #1039499 Compile error pcipnic.cc (cygwin)
   #978024 compile against wxGTK-2.5.2 fails
