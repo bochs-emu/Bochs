@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.2 2004-08-16 15:23:19 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.3 2004-08-26 16:20:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -1446,98 +1446,7 @@ bx_svga_cirrus_c::svga_update(void)
     }
   }
   else {
-    switch (BX_CIRRUS_THIS svga_bpp) {
-      case  4:
-        BX_ERROR(("cannot draw 4bpp SVGA"));
-        break;
-      case  8:
-        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-        {
-          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-          {
-            if (GET_TILE_UPDATED (xti, yti))
-            {
-              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
-              tile_ptr = BX_CIRRUS_THIS tilemem;
-              for (r=0; r<Y_TILESIZE; r++)
-              {
-                memcpy(tile_ptr,vid_ptr,X_TILESIZE);
-                vid_ptr  += pitch;
-                tile_ptr += X_TILESIZE;
-                }
-              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-              SET_TILE_UPDATED (xti, yti, 0);
-              }
-            }
-          }
-        break;
-      case 16:
-        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-        {
-          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-          {
-            if (GET_TILE_UPDATED (xti, yti))
-            {
-              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc << 1));
-              tile_ptr = BX_CIRRUS_THIS tilemem;
-              for (r=0; r<Y_TILESIZE; r++)
-              {
-                memcpy(tile_ptr,vid_ptr,X_TILESIZE<<1);
-                vid_ptr  += pitch;
-                tile_ptr += X_TILESIZE << 1;
-                }
-              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-              SET_TILE_UPDATED (xti, yti, 0);
-              }
-            }
-          }
-        break;
-      case 24:
-        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-        {
-          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-          {
-            if (GET_TILE_UPDATED (xti, yti))
-            {
-              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc * 3));
-              tile_ptr = BX_CIRRUS_THIS tilemem;
-              for (r=0; r<Y_TILESIZE; r++)
-              {
-                memcpy(tile_ptr,vid_ptr,X_TILESIZE*3);
-                vid_ptr  += pitch;
-                tile_ptr += X_TILESIZE * 3;
-                }
-              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-              SET_TILE_UPDATED (xti, yti, 0);
-              }
-            }
-          }
-        break;
-      case 32:
-        for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++)
-        {
-          for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++)
-          {
-            if (GET_TILE_UPDATED (xti, yti))
-            {
-              vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc << 2));
-              tile_ptr = BX_CIRRUS_THIS tilemem;
-              for (r=0; r<Y_TILESIZE; r++)
-              {
-                memcpy(tile_ptr,vid_ptr,X_TILESIZE<<2);
-                vid_ptr  += pitch;
-                tile_ptr += X_TILESIZE << 2;
-                }
-              bx_gui->graphics_tile_update(BX_CIRRUS_THIS tilemem, xc, yc);
-              SET_TILE_UPDATED (xti, yti, 0);
-              }
-            }
-          }
-        break;
-      default:
-        BX_PANIC(("unknown bpp %u",(unsigned)BX_CIRRUS_THIS svga_bpp));
-        break;
-      }
+    BX_PANIC(("cannot get svga tile info"));
   }
 }
 
@@ -2941,6 +2850,7 @@ bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc_static(void *this_ptr)
   void
 bx_svga_cirrus_c::svga_patterncopy()
 {
+  Bit8u color[4];
   Bit8u work_colorexp[256];
   Bit8u *src, *dst;
   Bit8u *dstc, *srcc;
@@ -2948,16 +2858,56 @@ bx_svga_cirrus_c::svga_patterncopy()
   int tilewidth;
   int patternbytes = 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
   int bltbytes = BX_CIRRUS_THIS bitblt.bltwidth * BX_CIRRUS_THIS bitblt.pixelwidth;
+  unsigned bits, bits_xor, bitmask;
+  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
-    svga_colorexpand(work_colorexp,BX_CIRRUS_THIS bitblt.src,8*8,BX_CIRRUS_THIS bitblt.pixelwidth);
-    BX_CIRRUS_THIS bitblt.src = work_colorexp;
-    BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_COLOREXPAND;
+    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
+      if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
+        color[0] = BX_CIRRUS_THIS control.shadow_reg0;
+        color[1] = BX_CIRRUS_THIS control.reg[0x10];
+        color[2] = BX_CIRRUS_THIS control.reg[0x12];
+        color[3] = BX_CIRRUS_THIS control.reg[0x14];
+        bits_xor = 0xff;
+      } else {
+        color[0] = BX_CIRRUS_THIS control.shadow_reg1;
+        color[1] = BX_CIRRUS_THIS control.reg[0x11];
+        color[2] = BX_CIRRUS_THIS control.reg[0x13];
+        color[3] = BX_CIRRUS_THIS control.reg[0x15];
+        bits_xor = 0x00;
+      }
+
+      pattern_y = 0;
+      for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
+        dst = BX_CIRRUS_THIS bitblt.dst;
+        bitmask = 0x80 >> srcskipleft;
+        bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
+        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x++) {
+          if ((bitmask & 0xff) == 0) {
+            bitmask = 0x80;
+            bits = BX_CIRRUS_THIS bitblt.src[pattern_y];
+          }
+          if (bits & bitmask) {
+            (*BX_CIRRUS_THIS bitblt.rop_handler)(
+              dst, &color[0], 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+          }
+          dst += BX_CIRRUS_THIS bitblt.pixelwidth;
+          bitmask >>= 1;
+        }
+        pattern_y = (pattern_y + 1) & 7;
+        BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
+      }
+      return;
+    } else {
+      svga_colorexpand(work_colorexp,BX_CIRRUS_THIS bitblt.src,8*8,BX_CIRRUS_THIS bitblt.pixelwidth);
+      BX_CIRRUS_THIS bitblt.src = work_colorexp;
+      BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_COLOREXPAND;
     }
+  }
   if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_PATTERNCOPY) {
     BX_ERROR(("PATTERNCOPY: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
     return;
-    }
+  }
 
   BX_DEBUG(("svga_cirrus: PATTERN COPY"));
   dst = BX_CIRRUS_THIS bitblt.dst;
@@ -2987,20 +2937,29 @@ bx_svga_cirrus_c::svga_simplebitblt()
   Bit8u work_colorexp[2048];
   int x, y;
   Bit8u *dst;
-  unsigned bits, bitmask;
+  unsigned bits, bits_xor, bitmask;
   int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
-      color[0] = BX_CIRRUS_THIS control.shadow_reg1;
-      color[1] = BX_CIRRUS_THIS control.reg[0x11];
-      color[2] = BX_CIRRUS_THIS control.reg[0x13];
-      color[3] = BX_CIRRUS_THIS control.reg[0x15];
+      if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
+        color[0] = BX_CIRRUS_THIS control.shadow_reg0;
+        color[1] = BX_CIRRUS_THIS control.reg[0x10];
+        color[2] = BX_CIRRUS_THIS control.reg[0x12];
+        color[3] = BX_CIRRUS_THIS control.reg[0x14];
+        bits_xor = 0xff;
+      } else {
+        color[0] = BX_CIRRUS_THIS control.shadow_reg1;
+        color[1] = BX_CIRRUS_THIS control.reg[0x11];
+        color[2] = BX_CIRRUS_THIS control.reg[0x13];
+        color[3] = BX_CIRRUS_THIS control.reg[0x15];
+        bits_xor = 0x00;
+      }
 
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
         dst = BX_CIRRUS_THIS bitblt.dst;
         bitmask = 0x80 >> srcskipleft;
-        bits = *BX_CIRRUS_THIS bitblt.src++;
+        bits = *BX_CIRRUS_THIS bitblt.src++ ^ bits_xor;
         for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x++) {
           if ((bitmask & 0xff) == 0) {
             bitmask = 0x80;
