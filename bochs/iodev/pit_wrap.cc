@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.16 2002-02-08 05:18:14 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.17 2002-02-08 22:27:51 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,13 +42,15 @@ bx_pit_c bx_pit;
 #  undef OUT
 #endif
 
+#define DEBUG_REALTIME_WITH_PRINTF 0
+
 #define TIME_DIVIDER (1)
 #define TIME_MULTIPLIER (1)
 #define TIME_HEADSTART (1)
 //USEC_ALPHA is multiplier for the past.
 //USEC_ALPHA_B is 1-USEC_ALPHA, or multiplier for the present.
-#define USEC_ALPHA (.8)
-#define USEC_ALPHA_B (.2)
+#define USEC_ALPHA ((double)(.8))
+#define USEC_ALPHA_B ((double)(((double)1)-USEC_ALPHA))
 #define MIN_MULT (0.9)
 #define MIN_MULT_FLOOR (0.75)
 #define MAX_MULT (1.25)
@@ -388,7 +390,7 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   Bit32u ticks_delta = 0;
 
 #if BX_USE_REALTIME_PIT
-  if(BX_PIT_THIS s.total_ticks < (2*TICKS_PER_SECOND + (TICKS_PER_SECOND * BX_PIT_THIS s.total_sec))) {
+  if(BX_PIT_THIS s.total_ticks < (MAX_MULT_CEILING*TICKS_PER_SECOND + (TICKS_PER_SECOND * BX_PIT_THIS s.total_sec))) {
     ticks_delta=(Bit32u)(USEC_TO_TICKS(usec_delta));
     BX_PIT_THIS s.total_ticks += ticks_delta;
   }
@@ -440,7 +442,9 @@ bx_pit_c::second_update_data(void) {
 
     BX_PIT_THIS s.total_sec += timediff;
 
-    //printf("timediff: %lld, total_sec: %lld, total_ticks: %lld\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
+#if DEBUG_REALTIME_WITH_PRINTF
+    printf("timediff: %lld, total_sec: %lld, total_ticks: %lld\n",timediff, BX_PIT_THIS s.total_sec, BX_PIT_THIS s.total_ticks);
+#endif
 
     tickstemp = 
       (((BX_PIT_THIS s.total_sec)*TICKS_PER_SECOND)-BX_PIT_THIS s.total_ticks)
@@ -452,20 +456,30 @@ bx_pit_c::second_update_data(void) {
 //    }
 
     if(tickstemp > (TICKS_PER_SECOND*MAX_MULT)) {
-      //printf("Running WAY too slow. tps:%lld\n",tickstemp);
+#if DEBUG_REALTIME_WITH_PRINTF
+      printf("Running WAY too slow. tps:%lld\n",tickstemp);
+#endif
       tickstemp = TICKS_PER_SECOND*MAX_MULT_CEILING;
-      //printf("..................... tps:%lld\n",tickstemp);
+#if DEBUG_REALTIME_WITH_PRINTF
+      printf("..................... tps:%lld\n",tickstemp);
+#endif
     } else if(tickstemp < (TICKS_PER_SECOND*MIN_MULT)) {
-      //printf("Running WAY too fast. tps:%lld\n",tickstemp);
+#if DEBUG_REALTIME_WITH_PRINTF
+      printf("Running WAY too fast. tps:%lld\n",tickstemp);
+#endif
       tickstemp = TICKS_PER_SECOND*MIN_MULT_FLOOR;
-      //printf("..................... tps:%lld\n",tickstemp);
+#if DEBUG_REALTIME_WITH_PRINTF
+      printf("..................... tps:%lld\n",tickstemp);
+#endif
     }
 
     BX_PIT_THIS s.ticks_per_second = tickstemp;
 
     BX_PIT_THIS s.usec_per_second = ((bx_pc_system.time_usec()-BX_PIT_THIS s.last_sec_usec)/timediff)*USEC_ALPHA_B + USEC_ALPHA*BX_PIT_THIS s.usec_per_second;
     BX_PIT_THIS s.last_sec_usec = bx_pc_system.time_usec();
-    //printf("Parms: ticks_per_second=%lld, usec_per_second=%lld\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
+#if DEBUG_REALTIME_WITH_PRINTF
+    printf("Parms: ticks_per_second=%lld, usec_per_second=%lld\n",BX_PIT_THIS s.ticks_per_second, BX_PIT_THIS s.usec_per_second);
+#endif
   }
 }
 #endif // #if BX_USE_REALTIME_PIT
