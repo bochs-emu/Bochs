@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.4 2002-10-25 11:44:37 bdenney Exp $
+// $Id: instrument.cc,v 1.5 2002-11-20 17:55:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,7 +91,7 @@ void bxInstrumentation::branch_taken(bx_address new_eip)
   }
 
   // find linear address
-  laddr = BX_CPU(cpu_id)->get_segment_base(BX_SREG_CS) + new_eip;
+  laddr = BX_CPU(cpu_id)->get_segment_base(BX_SEG_REG_CS) + new_eip;
 
   is_branch = 1;
   is_taken = 1;
