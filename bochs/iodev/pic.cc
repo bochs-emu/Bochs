@@ -352,6 +352,18 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (bx_dbg.pic)
         bx_printf("pic: setting master pic IMR to %02x\n", value);
       BX_PIC_THIS s.master_pic.imr = value;
+#if BX_APIC_SUPPORT
+      {
+	for (int bit=0; bit<8; bit++) {
+	  Bit32u n = BX_PIC_THIS devices->ioapic->ioredtbl[bit].get_even_word ();
+	  n &= ~0x10000;
+	  if (value & (1<<bit)) n |= 0x10000;
+	  BX_PIC_THIS devices->ioapic->ioredtbl[bit].set_even_word (n);
+	  bx_printf ("setting APIC mask for int %d to %d\n", bit, 
+	      (value&(1<<bit)) ? 1 : 0);
+	}
+      }
+#endif
       service_master_pic();
       return;
       break;
@@ -483,6 +495,20 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (bx_dbg.pic)
         bx_printf("pic: setting slave pic IMR to %02x\n", value);
       BX_PIC_THIS s.slave_pic.imr = value;
+#if BX_APIC_SUPPORT
+      {
+	for (int bit=0; bit<8; bit++) {
+	  Bit32u n = BX_PIC_THIS devices->ioapic->ioredtbl[bit+8].get_even_word ();
+	  n &= ~0x10000;
+	  if (value & (1<<bit)) n |= 0x10000;
+	  BX_PIC_THIS devices->ioapic->ioredtbl[bit+8].set_even_word (n);
+	  bx_printf ("setting APIC mask for int %d to %d\n", bit+8, 
+	      (value&(1<<bit)) ? 1 : 0);
+	}
+	// might have unmasked something, so give it a chance to deliver
+	BX_PIC_THIS devices->ioapic->service_ioapic ();
+      }
+#endif
       service_slave_pic();
       return;
       break;
@@ -494,6 +520,10 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
   void
 bx_pic_c::trigger_irq(unsigned irq_no)
 {
+  // forward this function call to the ioapic too
+  BX_PIC_THIS devices->ioapic->trigger_irq (irq_no, -1);
+
+#if 0
   int irq_no_bitmask;
 
 #if BX_DEBUG
@@ -514,11 +544,16 @@ bx_pic_c::trigger_irq(unsigned irq_no)
     BX_PIC_THIS s.slave_pic.irr |= irq_no_bitmask;
     service_slave_pic();
     }
+#endif
 }
 
   void
 bx_pic_c::untrigger_irq(unsigned irq_no)
 {
+  // forward this function call to the ioapic too
+  BX_PIC_THIS devices->ioapic->untrigger_irq (irq_no, -1);
+
+#if 0
   int irq_no_bitmask;
 
 #if BX_DEBUG
@@ -541,6 +576,7 @@ bx_pic_c::untrigger_irq(unsigned irq_no)
       BX_PIC_THIS s.slave_pic.irr &= ~irq_no_bitmask;
     }
   }
+#endif
 }
 
   /* */
