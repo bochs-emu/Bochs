@@ -1,0 +1,69 @@
+From peter@jazz-1.trumpet.com.au Fri Apr  5 11:11:38 2002
+Date: Fri, 5 Apr 2002 20:29:27 +1000 (EST)
+From: Peter Tattam <peter@jazz-1.trumpet.com.au>
+To: Bryce Denney <bryce@tlw.com>
+Subject: ne2k patch
+
+[Bryce turned this patch into a unified diff style thing.]
+
+
+RCS file: /cvsroot/bochs/bochs/iodev/ne2k.cc,v
+retrieving revision 1.32
+diff -u -r1.32 ne2k.cc
+--- iodev/ne2k.cc	9 Mar 2002 01:05:41 -0000	1.32
++++ iodev/ne2k.cc	5 Apr 2002 16:15:00 -0000
+@@ -287,8 +287,9 @@
+     // have been initialised.
+     //
+     if (io_len > BX_NE2K_THIS s.remote_bytes)
+-      BX_PANIC(("ne2K: dma read underrun"));
+-    
++      BX_PANIC(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
++
++    //BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS s.remote_bytes));
+     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
+     //
+     // The 8390 bumps the address and decreases the byte count
+@@ -296,6 +297,9 @@
+     // the amount of data requested by the host (io_len).
+     //
+     BX_NE2K_THIS s.remote_dma += (BX_NE2K_THIS s.DCR.wdsize + 1);
++    if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
++      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
++    }
+     // keep s.remote_bytes from underflowing
+     if (BX_NE2K_THIS s.remote_bytes > 1)
+       BX_NE2K_THIS s.remote_bytes -= (BX_NE2K_THIS s.DCR.wdsize + 1);
+@@ -337,9 +341,13 @@
+ 
+     if (BX_NE2K_THIS s.remote_bytes == 0)
+       BX_PANIC(("ne2K: dma write, byte count 0"));
+-    
++
+     chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
++    // is this right ??? asic_read uses DCR.wordsize
+     BX_NE2K_THIS s.remote_dma   += io_len;
++    if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
++      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
++    }
+ 
+     BX_NE2K_THIS s.remote_bytes -= io_len;
+     if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ)
+@@ -414,7 +422,7 @@
+   case 0x6:  // FIFO
+     return (BX_NE2K_THIS s.fifo);
+     break;
+-    
++
+   case 0x7:  // ISR
+     return ((BX_NE2K_THIS s.ISR.reset     << 7) |
+ 	    (BX_NE2K_THIS s.ISR.rdma_done << 6) |
+@@ -1135,7 +1143,7 @@
+ 
+   // Add the pkt header + CRC to the length, and work
+   // out how many 256-byte pages the frame would occupy
+-  pages = (io_len + 4 + 4)/256 + 1;
++  pages = (io_len + 4 + 4 + 255)/256;
+ 
+   if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
+     avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;    
