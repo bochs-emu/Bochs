@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.61 2003-08-28 20:04:22 vruppert Exp $
+// $Id: wxdialog.cc,v 1.62 2003-08-30 11:21:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1283,7 +1283,7 @@ void ParamDialog::AddParam (
   pstr->u.window = NULL;
   pstr->browseButton = NULL;
   int type = param_generic->get_type ();
-  char *prompt = pstr->param->get_ask_format ();
+  char *prompt = pstr->param->get_label ();
   if (!prompt) prompt = pstr->param->get_name ();
   wxASSERT (prompt != NULL);
 #define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (context->parent, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.102 2003-08-26 20:24:34 cbothamy Exp $
+// $Id: siminterface.cc,v 1.103 2003-08-30 11:21:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -800,6 +800,7 @@ bx_param_c::bx_param_c (bx_id id, char *name, char *description)
   this->description = description;
   this->text_format = default_text_format;
   this->ask_format = NULL;
+  this->label = NULL;
   this->runtime_param = 0;
   this->enabled = 1;
   SIM->register_param (id, this);

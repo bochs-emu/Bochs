@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.109 2003-08-26 20:24:35 cbothamy Exp $
+// $Id: siminterface.h,v 1.110 2003-08-30 11:21:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -838,6 +838,7 @@ class BOCHSAPI bx_param_c : public bx_object_c {
 protected:
   char *name;
   char *description;
+  char *label; // label string for text menus and gui dialogs
   const char *text_format;  // printf format string. %d for ints, %s for strings, etc.
   char *ask_format;  // format string for asking for a new value
   int runtime_param;
@@ -848,6 +849,8 @@ public:
   const char *get_format () {return text_format;}
   void set_ask_format (char *format) {ask_format = format; }
   char *get_ask_format () {return ask_format;}
+  void set_label (char *text) {label = text;}
+  char *get_label () {return label;}
   void set_runtime_param (int val) { runtime_param = val; }
   char *get_name () { return name; }
   char *get_description () { return description; }
