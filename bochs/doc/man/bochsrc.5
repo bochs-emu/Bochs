@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "29 Jun 2002" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "08 Dec 2002" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -512,6 +512,21 @@ keyboard to controller over the serial path.
 
 Example:
   keyboard_serial_delay: 200
+
+.TP
+.I "keyboard_paste_delay:"
+Approximate time in microseconds between attempts to paste
+characters to the keyboard controller. This leaves time for the
+guest os to deal with the flow of characters.  The ideal setting
+depends on how your operating system processes characters.  The
+default of 100000 usec (.1 seconds) was chosen because it works 
+consistently in Windows.
+
+If your OS is losing characters during a paste, increase the paste
+delay until it stops losing characters.
+
+Example:
+  keyboard_paste_delay: 100000
 
 .TP
 .I "floppy_command_delay:"
