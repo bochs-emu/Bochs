@@ -58,7 +58,67 @@ Changes in 2.1 (July ??, 2003):
 
 - Christophe's changes...
 - Volker's changes...
+  --------------------------------------------------------------------------
+- I/O devices
+  - vga
+    - color depth 15, 16, 24 and 32 bpp supported by VBE (based on a patch from
+      Christopher Nelson for 32 bpp on win32). Supported by sdl, x, win32 and wx.
+    - SVGA mode 0x6A (800x600x4bpp) implemented
+    - new CGA graphics modes 640x200x1bpp and 160x100x4bpp (text mode 80x100)
+    - raster operations AND, OR and XOR in write mode 2 (based on SF patch #707931)
+    - 'split screen' in standard VGA graphics mode implemented (based on
+      SF patch #707931)
+    - 'double scan' and 'double width' now handled in the VGA code
+    - more accurate emulation of the horizontal and vertical retrace
+    - changeable start address and variable line length supported by all
+      graphics modes
+    - VBE: preserve video memory feature implemented
+    - additional text mode features prepared (handled in the display library
+      code)
+  - cmos
+    - date/time change support added
+    - UIP bit implemented
+  - keyboard
+    - keyboard reset function (0xff) now resets the keyboard
+  - gameport
+    - new standard PC gameport device (real joystick connected on Linux only)
+- general
+  - fixes for compilation with MSVC (patch from Andrew Zabolotny)
+  - fixes for cross-compilation (patch from Jeroen Janssen)
+- configuration interface
+  - gui dialogs as an extension of the textconfig interface on win32 added
+    * ask dialog
+    * save text snapshot
+    * user button shortcut
+    * floppy image change
+- display libraries
+  - win32 + wx + x: new application/window icon (bochs.ico / icon_bochs.xpm)
+  - sdl + win32 + wx + x: new textmode features: variable line length,
+    char width switch, horizontal and vertical pel panning
+  - win32 + wxMSW: key event handling rewritten
+  - wxMSW: resource problems fixed - wx dll plugin works now without errors
+  - x: external font files and their installation mechanism removed
+  - term: variable line length and cursor enable/disable feature implemented
+  - rfb
+    - textmode: charmap change, better cursor emulation, variable line length
+    - headerbar works now (power, reset and user button are okay)
+    - key event handling rewritten
+    - Bochs-RFB waits up to 30 seconds for a client connection. The emulation
+      starts after connecting the client.
+  --------------------------------------------------------------------------
+
 - Peter's changes...
+- SF patches applied
+  #671873  minimal USB support (UHCI)               (Ben Lunt)
+  #729450  new keymap x11-pc-be.map                 (Wouter Verhelst)
+  #735990  Limited patches for VC++                 (???)
+  #742670  fix library dependencies in GUI plugins  (Robert Millan)
+  #742782  LFB bugfix                               (Jan L. Hauffa)
+
+- SF patches partially applied
+  #707931  Support EGA/VGA write mode 2 and others  (???)
+           already applied: disable IME, split screen, write mode 2
+
 - patches by X, Y, and Z were added...
 
 	added rombios patch by Dirk Thierbach
