@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.44 2003-04-06 19:08:28 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.45 2003-04-09 19:20:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3517,7 +3517,7 @@ ExtendedFieldCheck(nnn&8); // KPL
         }
         else {
           instruction->execute = OpcodeInfoPtr[nnn].ExecutePtr;
-          attr |= OpcodeInfoPtr[nnn].ExecutePtr;
+          attr |= OpcodeInfoPtr[nnn].Attr;
         }
       }
     }
@@ -3540,11 +3540,11 @@ ExtendedFieldCheck(nnn&8); // KPL
         if (attr & BxSplitMod11b) {
           BxOpcodeInfo_t *OpcodeInfoPtr = BxOpcodeInfo64[b1+offset].AnotherArray;
           instruction->execute = OpcodeInfoPtr[mod==0xc0].ExecutePtr;
-          attr |= OpcodeInfoPtr[mod==0xc0].ExecutePtr;
+          attr |= OpcodeInfoPtr[mod==0xc0].Attr;
         }
         else {
           instruction->execute = BxOpcodeInfo64[b1+offset].ExecutePtr;
-          attr |= BxOpcodeInfo64[b1+offset].ExecutePtr;
+          attr |= BxOpcodeInfo64[b1+offset].Attr;
         }
       }
     }
