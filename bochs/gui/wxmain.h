@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.6 2002-08-28 07:54:53 bdenney Exp $
+// $Id: wxmain.h,v 1.7 2002-08-28 15:27:26 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -25,7 +25,10 @@ enum
   ID_Config_New,
   ID_Config_Read,
   ID_Config_Save,
-  ID_Edit_Disks,
+  ID_Edit_FD_0,
+  ID_Edit_FD_1,
+  ID_Edit_HD_0,
+  ID_Edit_HD_1,
   ID_Edit_Boot,
   ID_Edit_Vga,
   ID_Edit_Memory,
@@ -69,6 +72,12 @@ enum
   ID_Filename,
   ID_FilenameText,
   ID_Browse,
+  // dialog box: HDConfigDialog
+  ID_Enable,
+  ID_Cylinders,
+  ID_Heads,
+  ID_SPT,
+  ID_Megs,
 };
 
 
@@ -117,8 +126,10 @@ public:
   void OnPauseResumeSim(wxCommandEvent& event);
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CuiEvent(wxCommandEvent& event);
+  void OnOtherEvent(wxCommandEvent& event);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
   void editFloppyConfig (int drive);
+  void editHDConfig (int drive);
   void OnToolbarClick(wxCommandEvent& event);
   int HandleAskParam (BxEvent *event);
   int HandleAskParamString (bx_param_string_c *param);

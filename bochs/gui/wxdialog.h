@@ -1,8 +1,10 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.2 2002-08-28 07:54:53 bdenney Exp $
+// $Id: wxdialog.h,v 1.3 2002-08-28 15:27:25 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
+
+#include "wx/spinctrl.h"
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
@@ -92,7 +94,7 @@ DECLARE_EVENT_TABLE()
 class FloppyConfigDialog: public wxDialog
 {
 public:
-#define FLOPPY_CONFIG_TITLE "Configure Floppy Drive %s"
+#define FLOPPY_CONFIG_TITLE "Configure %s"
 #define FLOPPY_CONFIG_INSTRS "Select the device or image to use when simulating %s."
 #define FLOPPY_CONFIG_CAP "What is the capacity of this disk?"
 #define FLOPPY_CONFIG_HINT "Hint: To create a disk image, choose the name and capacity above, then click Ok."
@@ -122,9 +124,64 @@ public:
   void SetCapacity (int cap) { capacity->SetSelection (cap); }
   int GetRadio ();
   int GetCapacity () { return capacity->GetSelection (); }
-  const char *GetFilename ();
+  char *GetFilename ();
   void SetDriveName (char *name);
   void SetValidateFunc (validateFunc_t v) { validate = v; }
   void AddRadio (char *description, char *filename);
+DECLARE_EVENT_TABLE()
+};
+
+////////////////////////////////////////////////////////////////////
+// HDConfigDialog is a modal dialog box that asks the user
+// what physical device or disk image should be used for emulation.
+//
+// +-----Configure Hard Disk-------------------------------------------+
+// |                                                                   |
+// |  [ ] Enable                                                       |
+// |  Disk image: [______________________________]      [Browse]       |
+// |  Geometry:  cylinders [____]  heads [____]  sectors/track [____]  |
+// |  Size in Megabytes: _____                                         |
+// |                                                                   |
+// |                                       [ Help ] [ Cancel ]  [ Ok ] |
+// +-------------------------------------------------------------------+
+// 
+// To use this dialog:
+// After constructor, use SetFilename(), SetGeomRange(), SetGeom() to fill in
+// the fields.  Note that SetGeomRange() should be called before SetGeom()
+// or else the text field may not accept the SetGeom() value because of its
+// default min/max setting.  Call ShowModal to display.  Return value is 0=ok
+// or -1=cancel.  Use GetFilename() and GetGeom() to retrieve values.
+//////////////////////////////////////////////////////////////////////
+
+class HDConfigDialog: public wxDialog
+{
+public:
+#define HD_CONFIG_TITLE "Configure %s"
+#define HD_CONFIG_DISKIMG "Disk image: "
+private:
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *vertSizer, *hsizer[3], *buttonSizer;
+  wxCheckBox *enable;
+  wxTextCtrl *filename;
+  wxSpinCtrl *geom[3];
+  wxTextCtrl *megs;
+  enum geomfields_t { CYL, HEADS, SPT };
+#define HD_CONFIG_GEOM_NAMES \
+  { "Geometry: cylinders", " heads ", " sectors/track " }
+#define HD_CONTROL_MEGS "Size in Megabytes: "
+  bool computeMegs;
+public:
+  HDConfigDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void SetFilename (char *f);
+  char *GetFilename ();
+  void SetDriveName (char *name);
+  void SetGeom (int n, int value);
+  int GetGeom (int n) { return geom[n]->GetValue (); }
+  void SetGeomRange (int n, int min, int max) { geom[n]->SetRange (min, max); }
+  void ComputeMegs ();
+  void SetEnable (bool val) { enable->SetValue (val); }
 DECLARE_EVENT_TABLE()
 };

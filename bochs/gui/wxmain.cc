@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.11 2002-08-28 07:54:53 bdenney Exp $
+// $Id: wxmain.cc,v 1.12 2002-08-28 15:27:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -143,6 +143,8 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
   EVT_MENU(ID_Sim2Cui_Event, MyFrame::OnSim2CuiEvent)
+  EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
+  EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
   // toolbar events
   EVT_TOOL(ID_Toolbar_FloppyA, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_FloppyB, MyFrame::OnToolbarClick)
@@ -174,7 +176,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuConfiguration->Append (ID_Quit, "&Quit");
 
   menuEdit = new wxMenu;
-  menuEdit->Append( ID_Edit_Disks, "&Disks..." );
+  menuEdit->Append( ID_Toolbar_FloppyA, "Floppy Disk &0..." );
+  menuEdit->Append( ID_Toolbar_FloppyB, "Floppy Disk &1..." );
+  menuEdit->Append( ID_Edit_HD_0, "Hard Disk 0..." );
+  menuEdit->Append( ID_Edit_HD_1, "Hard Disk 1..." );
   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
   menuEdit->Append( ID_Edit_Vga, "&VGA..." );
   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
@@ -553,6 +558,17 @@ MyFrame::OnSim2CuiEvent (wxCommandEvent& event)
   wxASSERT_MSG (0, "switch stmt should have returned");
 }
 
+void 
+MyFrame::OnOtherEvent (wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("event id=%d\n", id);
+  switch (id) {
+    case ID_Edit_HD_0: editHDConfig (0); break;
+    case ID_Edit_HD_1: editHDConfig (1); break;
+  }
+}
+
 bool
 MyFrame::editFloppyValidate (FloppyConfigDialog *dialog)
 {
@@ -573,6 +589,7 @@ void MyFrame::editFloppyConfig (int drive)
       || disktype->get_type () != BXT_PARAM_ENUM 
       || status->get_type() != BXT_PARAM_ENUM) {
     wxLogError ("floppy params have wrong type");
+    return;
   }
   dlg.AddRadio ("None/Disabled", "none");
   dlg.AddRadio ("Physical floppy drive /dev/fd0", "/dev/fd0");
@@ -587,6 +604,42 @@ void MyFrame::editFloppyConfig (int drive)
     printf ("capacity = %d (%s)\n", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
     fname->set (dlg.GetFilename ());
     disktype->set (disktype->get_min () + dlg.GetCapacity ());
+  }
+}
+
+void MyFrame::editHDConfig (int drive)
+{
+  HDConfigDialog dlg (this, -1);
+  dlg.SetDriveName (drive==0? BX_HARD_DISK0_NAME : BX_HARD_DISK1_NAME);
+  bx_list_c *list = (bx_list_c*) SIM->get_param ((drive==0)? BXP_DISKC : BXP_DISKD);
+  if (!list) { wxLogError ("HD object param is null"); return; }
+  bx_param_filename_c *fname = (bx_param_filename_c*) list->get(0);
+  bx_param_num_c *cyl = (bx_param_num_c *) list->get(1);
+  bx_param_num_c *heads = (bx_param_num_c *) list->get(2);
+  bx_param_num_c *spt = (bx_param_num_c *) list->get(3);
+  if (fname->get_type () != BXT_PARAM_STRING
+      || cyl->get_type () != BXT_PARAM_NUM 
+      || heads->get_type () != BXT_PARAM_NUM 
+      || spt->get_type() != BXT_PARAM_NUM) {
+    wxLogError ("HD params have wrong type");
+    return;
+  }
+  dlg.SetFilename (fname->getptr ());
+  dlg.SetGeomRange (0, cyl->get_min(), cyl->get_max ());
+  dlg.SetGeomRange (1, heads->get_min(), heads->get_max ());
+  dlg.SetGeomRange (2, spt->get_min(), spt->get_max ());
+  dlg.SetGeom (0, cyl->get ());
+  dlg.SetGeom (1, heads->get ());
+  dlg.SetGeom (2, spt->get ());
+  int n = dlg.ShowModal ();
+  printf ("HD config returned %d\n", n);
+  if (n==0) {
+    printf ("filename is '%s'\n", dlg.GetFilename ());
+    fname->set (dlg.GetFilename ());
+    cyl->set (dlg.GetGeom (0));
+    heads->set (dlg.GetGeom (1));
+    spt->set (dlg.GetGeom (2));
+    printf ("cyl=%d heads=%d spt=%d\n", cyl->get(), heads->get(), spt->get());
   }
 }
 

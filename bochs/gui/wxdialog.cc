@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.2 2002-08-28 07:54:53 bdenney Exp $
+// $Id: wxdialog.cc,v 1.3 2002-08-28 15:27:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -14,7 +14,7 @@
 #ifndef WX_PRECOMP
 #include "wx/wx.h"
 #endif
-#include "wx/html/htmlwin.h"
+#include "wx/spinctrl.h"
 
 #include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff
@@ -239,7 +239,7 @@ void FloppyConfigDialog::AddRadio (char *description, char *filename)
 void FloppyConfigDialog::SetDriveName (char *name)
 {
   wxString text;
-  text.Printf ("Configure Floppy %s", name);
+  text.Printf (FLOPPY_CONFIG_TITLE, name);
   SetTitle (text);
   text.Printf (FLOPPY_CONFIG_INSTRS, name);
   ChangeStaticText (vertSizer, instr, text);
@@ -305,13 +305,13 @@ void FloppyConfigDialog::SetFilename (char *f) {
   filename->SetValue (f); 
 }
 
-const char *FloppyConfigDialog::GetFilename ()
+char *FloppyConfigDialog::GetFilename ()
 {
   int n = GetRadio ();
   if (n < n_rbtns) {
     return equivalentFilename[n];
   } else {
-    return filename->GetValue ().c_str ();
+    return (char *)filename->GetValue ().c_str ();
   }
 }
 
@@ -336,7 +336,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       long style = wxOPEN;
       wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
       if (fdialog->ShowModal () == wxID_OK)
-	SetFilename (fdialog->GetPath().c_str ());
+	SetFilename ((char *)fdialog->GetPath().c_str ());
       }
       break;
     case wxCANCEL:
@@ -353,13 +353,203 @@ void FloppyConfigDialog::ShowHelp ()
   wxMessageBox("No help is available yet.", "No Help", wxOK | wxICON_ERROR );
 }
 
+//////////////////////////////////////////////////////////////////////
+// HDConfigDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   vertSizer: 
+//     enable checkbox
+//     hsizer[0]:
+//       "Disk image:"
+//       disk image text control
+//       browse button
+//     hsizer[1]:
+//       "Geometry: cylinders"
+//       geom[0] = cyl control
+//       "heads"
+//       geom[1] = heads control
+//       " sectors/track "
+//       geom[2] = spt control
+//     hsizer[2]:
+//       "Size in MB: "
+//       megs text control
+//     buttonSizer:
+//       help
+//       cancel
+//       ok
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(HDConfigDialog, wxDialog)
+  EVT_BUTTON(-1, HDConfigDialog::OnEvent)
+  EVT_CHECKBOX(-1, HDConfigDialog::OnEvent)
+  EVT_TEXT(-1, HDConfigDialog::OnEvent)
+END_EVENT_TABLE()
+
+
+HDConfigDialog::HDConfigDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  computeMegs = TRUE;
+  static char *geomNames[] = HD_CONFIG_GEOM_NAMES;
+  vertSizer = new wxBoxSizer (wxVERTICAL);
+  enable = new wxCheckBox (this, ID_Enable, "Enabled");
+  enable->SetValue (TRUE);
+  hsizer[0] = new wxBoxSizer (wxHORIZONTAL);
+  hsizer[1] = new wxBoxSizer (wxHORIZONTAL);
+  hsizer[2] = new wxBoxSizer (wxHORIZONTAL);
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  // add top level components to vertSizer
+  vertSizer->Add (enable, 0, wxTOP|wxLEFT, 30);
+  vertSizer->Add (hsizer[0], 0, wxLEFT, 30);
+  vertSizer->Add (hsizer[1], 0, wxLEFT, 30);
+  vertSizer->Add (hsizer[2], 0, wxLEFT, 30);
+  vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT|wxTOP, 10);
+  // contents of hsizer[0]
+  wxStaticText *text;
+  text = new wxStaticText (this, -1, HD_CONFIG_DISKIMG);
+  hsizer[0]->Add (text);
+  filename = new wxTextCtrl (this, ID_FilenameText);
+  filename->SetSize (300, filename->GetSize ().GetHeight ());
+  hsizer[0]->Add (filename, 1);
+  wxButton *btn = new wxButton (this, ID_Browse, "<--Browse");
+  hsizer[0]->Add (btn);
+  // contents of hsizer[1]
+  for (int i=0; i<3; i++) {
+    text = new wxStaticText (this, -1, geomNames[i]);
+    hsizer[1]->Add (text);
+    geom[i] = new wxSpinCtrl (this, ID_Cylinders+i);
+    hsizer[1]->Add (geom[i]);
+  }
+  // contents of hsizer[2]
+  text = new wxStaticText (this, ID_Megs, HD_CONTROL_MEGS);  // size in megs
+  hsizer[2]->Add (text);
+  megs = new wxTextCtrl (this, -1);
+  hsizer[2]->Add (megs);
+  // contents of buttonSizer
+  btn = new wxButton (this, wxHELP, "Help");
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxCANCEL, "Cancel");
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, "Ok");
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(vertSizer);
+  vertSizer->Fit (this);
+  wxSize size = vertSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+void HDConfigDialog::SetDriveName (char *name)
+{
+  wxString text;
+  text.Printf (HD_CONFIG_TITLE, name);
+  SetTitle (text);
+}
+
+void HDConfigDialog::SetGeom (int n, int value) {
+  printf ("setting geom[%d] to %d\n", n, value);
+  geom[n]->SetValue (value); 
+  printf ("now geom[%d] has value %d\n", n, geom[n]->GetValue ());
+  if (computeMegs) ComputeMegs ();
+}
+
+void HDConfigDialog::ComputeMegs () {
+  float meg = 512.0 
+    * geom[0]->GetValue () 
+    * geom[1]->GetValue () 
+    * geom[2]->GetValue ()
+    / (1024.0*1024.0);
+  wxString text;
+  text.Printf ("%.1f", meg);
+  megs->SetValue (text);
+}
+
+void HDConfigDialog::Init()
+{
+}
+
+void HDConfigDialog::SetFilename (char *f) {
+  if (!strcmp (f, "none")) {
+    enable->SetValue (FALSE);
+    // trick event handler into updating the state
+    printf ("sending fake ID_Enable event to OnEvent\n");
+    wxCommandEvent fakeCheckboxEvent;
+    fakeCheckboxEvent.SetId (ID_Enable);
+    OnEvent (fakeCheckboxEvent);
+  }
+  filename->SetValue (wxString (f));
+}
+
+char *HDConfigDialog::GetFilename ()
+{
+  if (enable->GetValue ())
+    return (char *)filename->GetValue().c_str ();
+  else
+    return "none";
+}
+
+void HDConfigDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("you pressed button id=%d\n", id);
+  switch (id) {
+    case ID_Cylinders:
+    case ID_Heads:
+    case ID_SPT:
+      if (computeMegs) ComputeMegs ();
+      break;
+    case ID_Enable:
+      {
+	bool en = enable->GetValue ();
+        filename->Enable (en);
+	for (int i=0; i<3; i++) geom[i]->Enable (en);
+	megs->Enable (en);
+      }
+      break;
+    case ID_Megs:
+      break;
+    case wxOK:
+      // probably should validate before allowing ok
+      EndModal (0);
+      break;
+    case ID_Browse:
+      {
+      long style = wxOPEN;
+      wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
+      if (fdialog->ShowModal () == wxID_OK)
+	SetFilename ((char *)fdialog->GetPath().c_str ());
+      }
+      break;
+    case wxCANCEL:
+      EndModal (-1);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void HDConfigDialog::ShowHelp ()
+{
+  wxMessageBox("No help is available yet.", "No Help", wxOK | wxICON_ERROR );
+}
+
 /////////////////////////////////////////////////////////////////
 // utility
 /////////////////////////////////////////////////////////////////
 
-// Unfortunately this step is necessary if you change the text.
-// Otherwise the sizer that contains the text never realizes that
-// the size has changed, and the layout is never updated.  The
+// Unfortunately this step is necessary if you change the text of
+// a wxStaticText.  Otherwise the sizer that contains the text never realizes
+// that the size has changed, and the layout is never updated.  The
 // SetItemMinSize trick was reported on comp.soft-sys.wxwindows by 
 // Dirk Birnhardt.
 void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext)
