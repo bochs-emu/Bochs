@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.34 2003-05-09 16:26:03 vruppert Exp $
+// $Id: sdl.cc,v 1.35 2003-05-10 17:03:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,6 +95,7 @@ int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 int textres_x, textres_y;
+Bit8u h_panning = 0, v_panning = 0;
 int fontwidth = 8, fontheight = 16;
 unsigned tilewidth, tileheight;
 unsigned char menufont[256][8];
@@ -272,7 +273,7 @@ void bx_sdl_gui_c::text_update(
     bx_vga_tminfo_t tm_info,
     unsigned rows)
 {
-  unsigned char font_row, *pfont_row;
+  unsigned char font_row, *pfont_row, *old_line, *new_line;
   unsigned long x,y;
   int hchars,fontrows,fontpixels;
   int fgcolor_ndx;
@@ -281,7 +282,7 @@ void bx_sdl_gui_c::text_update(
   Uint32 bgcolor;
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
-  Bit8u cs_line, mask;
+  Bit8u cs_line, mask, cfwidth, cfheight;
   bx_bool invert, forceUpdate;
 
   forceUpdate = 0;
@@ -289,6 +290,12 @@ void bx_sdl_gui_c::text_update(
   {
     forceUpdate = 1;
     charmap_updated = 0;
+  }
+  if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning))
+  {
+    forceUpdate = 1;
+    h_panning = tm_info.h_panning;
+    v_panning = tm_info.v_panning;
   }
   if( sdl_screen )
   {
@@ -300,15 +307,43 @@ void bx_sdl_gui_c::text_update(
     disp = sdl_fullscreen->pitch/4;
     buf_row = (Uint32 *)sdl_fullscreen->pixels;
   }
+  if (v_panning) rows++;
+  y = 0;
   
   do
   {
     buf = buf_row;
     hchars = textres_x;
+    if (h_panning) hchars++;
+    cfheight = fontheight;
+    if (v_panning)
+    {
+      if (y == 0)
+      {
+        cfheight -= v_panning;
+      }
+      else if (rows == 1)
+      {
+        cfheight = v_panning;
+      }
+    }
+    new_line = new_text;
+    old_line = old_text;
     x = 0;
-    y = textres_y - rows;
     do
     {
+      cfwidth = fontwidth;
+      if (h_panning)
+      {
+        if (hchars > textres_x)
+        {
+          cfwidth -= h_panning;
+        }
+        else if (hchars == 1)
+        {
+          cfwidth = h_panning;
+        }
+      }
       // check if char needs to be updated
       if(forceUpdate || (old_text[0] != new_text[0])
 	  || (old_text[1] != new_text[1])
@@ -324,13 +359,24 @@ void bx_sdl_gui_c::text_update(
 	invert = ( (y == cursor_y) && (x == cursor_x) && (tm_info.cs_start < tm_info.cs_end) );
 	
 	// Display this one char
-	fontrows = fontheight;
-	pfont_row = &vga_charmap[(new_text[0] << 5)];
+	fontrows = cfheight;
+	if (y > 0)
+	{
+	  pfont_row = &vga_charmap[(new_text[0] << 5)];
+	}
+	else
+	{
+	  pfont_row = &vga_charmap[(new_text[0] << 5) + v_panning];
+	}
 	buf_char = buf;
 	do
 	{
 	  font_row = *pfont_row++;
-	  fontpixels = fontwidth;
+	  if (hchars > textres_x)
+	  {
+	    font_row <<= h_panning;
+	  }
+	  fontpixels = cfwidth;
 	  cs_line = (fontheight - fontrows);
 	  if( (invert) && (cs_line >= tm_info.cs_start) && (cs_line <= tm_info.cs_end) )
 	    mask = 0x80;
@@ -345,7 +391,7 @@ void bx_sdl_gui_c::text_update(
 	    buf++;
 	    font_row <<= 1;
 	  } while( --fontpixels );
-	  buf -= fontwidth;
+	  buf -= cfwidth;
 	  buf += disp;
 	} while( --fontrows );
 
@@ -353,7 +399,7 @@ void bx_sdl_gui_c::text_update(
 	buf = buf_char;
       }
       // move to next char location on screen
-      buf += fontwidth;
+      buf += cfwidth;
       
       // select next char in old/new text
       new_text+=2;
@@ -364,12 +410,10 @@ void bx_sdl_gui_c::text_update(
     } while( --hchars );
 
     // go to next character row location
-    buf_row += disp * fontheight;
-    if( tm_info.line_offset > (textres_x*2) )
-    {
-      new_text+=(tm_info.line_offset - (textres_x*2));
-      old_text+=(tm_info.line_offset - (textres_x*2));
-    }
+    buf_row += disp * cfheight;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+    y++;
   } while( --rows );
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
@@ -822,13 +866,12 @@ void bx_sdl_gui_c::dimension_update(
     unsigned y,
     unsigned fheight)
 {
-  // TODO: remove this stupid check whenever the vga driver is fixed
-  if( y == 208 ) y = 200;
-
   if( fheight > 0 )
   {
     fontheight = fheight;
     fontwidth = 8;
+    textres_x = x / fontwidth;
+    textres_y = y / fontheight;
   }
 
   if( (x == res_x) && (y == res_y )) return;
@@ -876,11 +919,6 @@ void bx_sdl_gui_c::dimension_update(
   res_y = y;
   half_res_x = x/2;
   half_res_y = y/2;
-  if( fheight > 0 )
-  {
-    textres_x = x / fontwidth;
-    textres_y = y / fontheight;
-  }
   bx_gui->show_headerbar();
 }
 
