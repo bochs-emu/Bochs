@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.246 2003-08-31 10:53:59 vruppert Exp $
+// $Id: main.cc,v 1.247 2003-09-02 19:34:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -234,6 +234,8 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_TRANSLATION + device))->set_enabled (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_runtime_param (0);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_runtime_param (0);
             break;
           case BX_ATA_DEVICE_CDROM:
             SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
@@ -247,6 +249,8 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled (1);
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_TRANSLATION + device))->set_enabled (0);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_runtime_param (1);
+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_runtime_param (1);
             break;
           }
         }
@@ -1059,12 +1063,14 @@ void bx_init_options ()
       1, BX_MAX_BIT32U,
       30000);
   bx_options.Ovga_update_interval->set_handler (bx_param_handler);
+  bx_options.Ovga_update_interval->set_runtime_param (1);
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
   bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
       "Enable the mouse",
       "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
       0);
   bx_options.Omouse_enabled->set_handler (bx_param_handler);
+  bx_options.Omouse_enabled->set_runtime_param (1);
   bx_options.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
@@ -1406,6 +1412,7 @@ void bx_init_options ()
       1000, BX_MAX_BIT32U,
       100000);
   bx_options.Okeyboard_paste_delay->set_handler (bx_param_handler);
+  bx_options.Okeyboard_paste_delay->set_runtime_param (1);
   bx_options.Ofloppy_command_delay = new bx_param_num_c (BXP_FLOPPY_CMD_DELAY,
       "Floppy command delay",
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.96 2003-08-30 11:21:29 vruppert Exp $
+// $Id: wxmain.cc,v 1.97 2003-09-02 19:34:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -671,6 +671,7 @@ void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_KEYBOARD);
   dlg.SetTitle (list->get_name ());
   dlg.AddParam (list);
+  dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.ShowModal ();
 }
 
@@ -712,6 +713,7 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
   dlg.AddParam (SIM->get_param (BXP_I440FX_SUPPORT));
   dlg.AddParam (SIM->get_param (BXP_CMOS_IMAGE));
   dlg.AddParam (SIM->get_param (BXP_CMOS_PATH));
+  dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.ShowModal ();
 }
 
@@ -951,9 +953,6 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   bool canConfigure = (change == Stop);
   menuConfiguration->Enable (ID_Config_New, canConfigure);
   menuConfiguration->Enable (ID_Config_Read, canConfigure);
-#ifdef __GNUC__
-#warning For now, leave ATA devices so that you configure them during runtime. Otherwise you cannot change the CD image at runtime.
-#endif
   // only enabled ATA channels with a cdrom connected are available at runtime
   for (unsigned i=0; i<4; i++) {
     if (!SIM->get_param_bool((bx_id)(BXP_ATA0_PRESENT+i))->get ()) {
@@ -970,10 +969,8 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   menuEdit->Enable( ID_Edit_Sound, canConfigure);
   menuEdit->Enable( ID_Edit_Timing, canConfigure);
   menuEdit->Enable( ID_Edit_Network, canConfigure);
-  menuEdit->Enable( ID_Edit_Keyboard, canConfigure);
   menuEdit->Enable( ID_Edit_Serial_Parallel, canConfigure);
   menuEdit->Enable( ID_Edit_LoadHack, canConfigure);
-  menuEdit->Enable( ID_Edit_Other, canConfigure);
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can
   // only be edited if it was enabled at boot time.
@@ -1367,6 +1364,7 @@ void MyFrame::editFirstCdrom ()
   ParamDialog dlg (this, -1);
   dlg.SetTitle ("Configure CDROM");
   dlg.AddParam (firstcd);
+  dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.ShowModal ();
 }
 
@@ -1378,6 +1376,7 @@ void MyFrame::OnEditATA (wxCommandEvent& event)
   wxString str;
   str.Printf ("Configure ATA%d", channel);
   dlg.SetTitle (str);
+  dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MENU+channel)));
   dlg.ShowModal ();
 }

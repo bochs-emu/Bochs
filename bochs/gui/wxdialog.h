@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.49 2003-08-25 16:46:18 vruppert Exp $
+// $Id: wxdialog.h,v 1.50 2003-09-02 19:34:48 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -490,27 +490,6 @@ DECLARE_EVENT_TABLE()
 #endif
 
 ////////////////////////////////////////////////////////////////////////////
-// ConfigSoundDialog
-////////////////////////////////////////////////////////////////////////////
-// 
-// +--- Configure Sound -------------------------------------------+
-// |                                                               |
-// |  Bochs can emulate a Sound Blaster 16.  Would you like        |
-// |  to enable it?                                                |
-// |                                                               |
-// |           Enable [X]                                          |
-// |                                                               |
-// |   DMA timer: [_________]                                      |
-// |                                                               |
-// |   Midi mode  [ 1 ]  Output file [_________________] [Browse]  |
-// |   Wave mode  [ 1 ]  Output file [_________________] [Browse]  |
-// |   Log  mode  [ 1 ]  Output file [_________________] [Browse]  |
-// |                                                               |
-// |                                    [ Help ] [ Cancel ] [ Ok ] |
-// +---------------------------------------------------------------+
-
-
-////////////////////////////////////////////////////////////////////////////
 // ParamDialog is a general purpose dialog box that displays and edits
 // any combination of parameters.  It's always made up of a
 // wxFlexGridSizer with three columns.  Each parameter takes up one row.
@@ -573,6 +552,7 @@ private:
   bool isGeneratedId (int id);
   bool isShowing;
   int nbuttons;
+  bool runtime;
 protected:
   wxBoxSizer *mainSizer, *buttonSizer;
   // hash table that maps the ID of a wxWindows control (e.g. wxChoice,
@@ -607,6 +587,7 @@ public:
   void AddParamList (bx_id *idList, wxFlexGridSizer *sizer = NULL, bool plain = false);
   virtual void CopyParamToGui ();
   bool IsShowing () { return isShowing; }
+  void SetRuntimeFlag(bool val) { runtime = val; }
 DECLARE_EVENT_TABLE()
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.110 2003-08-30 11:21:56 vruppert Exp $
+// $Id: siminterface.h,v 1.111 2003-09-02 19:34:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -852,6 +852,7 @@ public:
   void set_label (char *text) {label = text;}
   char *get_label () {return label;}
   void set_runtime_param (int val) { runtime_param = val; }
+  int get_runtime_param () { return runtime_param; }
   char *get_name () { return name; }
   char *get_description () { return description; }
   int get_enabled () { return enabled; }
