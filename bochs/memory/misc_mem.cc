@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.54 2004-11-14 14:06:43 vruppert Exp $
+// $Id: misc_mem.cc,v 1.55 2004-11-16 18:50:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,18 +95,21 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.54 2004-11-14 14:06:43 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.55 2004-11-16 18:50:21 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
-    alloc_vector_aligned (memsize + (1 << 18), BX_MEM_VECTOR_ALIGN);
+    alloc_vector_aligned (memsize + (1 << 18) + 4096, BX_MEM_VECTOR_ALIGN);
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
     BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
-    BX_MEM_THIS rom = &BX_MEM_THIS vector[len];
+    BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
+    BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + (1 << 18)];
+    memset(BX_MEM_THIS rom, 0xff, (1 << 18));
+    memset(BX_MEM_THIS bogus, 0xff, 4096);
     for (idx = 0; idx < 1024 * 1024; idx++)
 	    BX_MEM_THIS memory_handlers[idx] = NULL;
     for (idx = 0; idx < 65; idx++)
@@ -257,11 +260,8 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   bx_bool
 BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
-  if ( (addr + len) > this->len ) {
-    BX_INFO(("dbg_fetch_mem out of range. 0x%x > 0x%x",
-      addr+len, this->len));
-    return(0); // error, beyond limits of memory
-  }
+  bx_bool ret = 1;
+
   for (; len>0; len--) {
     if ( (addr & 0xfffe0000) == 0x000a0000 )
       *buf = DEV_vga_mem_read(addr);
@@ -285,7 +285,7 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
     {
       *buf = rom[addr & 0x3ffff];
     }
-    else
+    else if (addr < this->len)
     {
       if ( (addr & 0xfffc0000) == 0x000c0000 ) {
         *buf = rom[addr - 0xc0000];
@@ -295,10 +295,15 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
         *buf = vector[addr];
       }
     }
+    else
+    {
+      *buf = 0xff;
+      ret = 0; // error, beyond limits of memory
+    }
     buf++;
     addr++;
   }
-  return(1);
+  return ret;
 }
 #endif
 
@@ -407,7 +412,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     {
       return( (Bit8u *) & rom[a20Addr & 0x3ffff]);
     }
-    else
+    else if (a20Addr < BX_MEM_THIS len)
     {
       if ( (a20Addr & 0xfffc0000) == 0x000c0000 ) {
         return( (Bit8u *) & rom[a20Addr - 0xc0000]);
@@ -417,10 +422,17 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
         return( (Bit8u *) & vector[a20Addr]);
       }
     }
+    else
+    {
+      // Error, requested addr is out of bounds.
+      return( (Bit8u *) & bogus[a20Addr & 0x0fff]);
+    }
   }
   else
   { // op == {BX_WRITE, BX_RW}
     Bit8u *retAddr;
+    if ( a20Addr >= BX_MEM_THIS len )
+      return(NULL); // Error, requested addr is out of bounds.
     if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
 #if BX_SUPPORT_PCI

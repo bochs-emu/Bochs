@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.23 2004-11-11 20:55:29 vruppert Exp $
+// $Id: memory.h,v 1.24 2004-11-16 18:50:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,7 +65,8 @@ public:
   Bit8u   *vector;   // aligned correctly
   size_t  len;
   size_t  megabytes; // (len in Megabytes)
-  Bit8u   *rom;      // 256k of memory
+  Bit8u   *rom;      // 256k rom space
+  Bit8u   *bogus;    // 4k for unexisting memory
 #if BX_DEBUGGER
   unsigned char dbg_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
   Bit32u dbg_count_dirty_pages () {
