@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.68 2004-04-10 13:40:01 vruppert Exp $
+// $Id: wx.cc,v 1.69 2004-04-10 20:58:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -1165,6 +1165,8 @@ DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int
   char bgcolor = DEV_vga_get_actl_pal_idx((color >> 4) & 0xF);
   char fgcolor = DEV_vga_get_actl_pal_idx(color & 0xF);
 
+  if (y > wxScreenY) return;
+
   for(int i = 0; i < bytes; i+=width) {
     mask = 0x80 >> fontx;
     for(int j = 0; j < width; j++) {
@@ -1215,7 +1217,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit8u cAttr, cChar;
   unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2, cs_y;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
-  Bit8u split_textrow, split_fontrow;
+  Bit8u split_textrow, split_fontrows;
   bx_bool forceUpdate = 0, gfxchar, split_screen;
 
   UNUSED(nrows);
@@ -1253,7 +1255,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   cs_y = 0;
   text_base = new_text - tm_info.start_address;
   split_textrow = (line_compare + v_panning) / wxFontY;
-  split_fontrow = ((line_compare + v_panning) % wxFontY) + 1;
+  split_fontrows = ((line_compare + v_panning) % wxFontY) + 1;
   split_screen = 0;
   do {
     hchars = text_cols;
@@ -1287,7 +1289,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       cfheight = wxFontY;
     }
     if (!split_screen && (y == split_textrow)) {
-      if (split_fontrow < cfheight) cfheight = split_fontrow;
+      if (split_fontrows < cfheight) cfheight = split_fontrows;
     }
     new_line = new_text;
     old_line = old_text;
