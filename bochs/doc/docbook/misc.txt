@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.30 2004-01-04 18:53:58 cbothamy Exp $
+$Id: misc.txt,v 1.31 2004-04-28 20:06:57 cbothamy Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -385,7 +385,11 @@ WARNING : do not build in /tmp/bochs-XXX...
 
 This produces two rpm files in the current directory.  Test and upload.
 
-------
+<!-- *************************************************************** -->
+
+Command to make a clean source tarball :
+ 
+ tar czvf bochs.tar.gz --exclude "*.sym" --exclude "*/rombios*.txt" --exclude "*.swp" --exclude "*.bak" --exclude "*.o" --exclude "*.a" --exclude "*/bios/_*" --exclude "*/bios/*.s" --exclude ".#*" --exclude "*.rej" --exclude "*.orig" --exclude "*/bochs" --exclude "*autom4te.cache*" --exclude "*.libs*" --exclude "*.opt" --exclude "*.dsp" --exclude "*.dsw" --exclude "*/bxcommit" --exclude "*/bxvhub" --exclude "*/bximage" --exclude CVS --exclude .cvsignore --exclude "*.la" --exclude "*.lo" --exclude "*/docbook/*.html" bochs
 
 <!-- *************************************************************** -->
 
