@@ -1,4 +1,4 @@
-./configure --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
+./configure --enable-cpu-level=6 --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
 
 
 
@@ -465,14 +465,6 @@ CPU has booted.
 
 unaligned read of APIC at 0xc01b4956, seems to be in sched_init function
 
-
-APIC model
-----------
-in CPUID bit 9 indicates on-chip APIC
-can be disabled by MSR
-pentium 4, local APICs and I/O APICs talked via system bus
-pentium 6, talk via APIC bus
-
 -----
 RTLINUX
 booted rtlinux
@@ -496,5 +488,40 @@ I'm sure I can chase it down since I have the code.
 
 up to "After callout 0"
 
-63701455 APIC register fee00300 not implemented
+APIC model
+----------
+in CPUID bit 9 indicates on-chip APIC
+can be disabled by MSR
+pentium 4, local APICs and I/O APICs talked via system bus
+pentium 6, talk via APIC bus
+APIC addresses are on page 7-23 of IA32-sdg-3
 
+now it's trying to contact other processors via its local APIC.
+kernel says: Asserting INIT.
+53201427 APIC 0x01 sending interrupt to destination APIC 0x02
+53201427 low word of APIC 0x01 ICR = 0xc500
+
+kernel says: Deasserting INIT.
+53207334 APIC 0x01 sending interrupt to destination APIC 0x02
+53207334 low word of APIC 0x01 ICR = 0x8500
+
+kernel says: Sending STARTUP #1.
+53214931 APIC 0x01 sending interrupt to destination APIC 0x02
+53214931 low word of APIC 0x01 ICR = 0x0602
+
+kernel says: Sending STARTUP #2.
+53233832 APIC 0x01 sending interrupt to destination APIC 0x02
+53233832 low word of APIC 0x01 ICR = 0x0602
+
+There is an APIC algorithm to determine the bootstrap processor, but
+I don't see any use in implementing it.  The ID of the bootstrap processor
+needs to be consistent with the MPC table in BIOS, which means it's
+got to be predetermined.  So it seems ok to just hardcode the APIC ID of
+the boostrap processor and make it consistent with rombios.c.  Then
+when the different processor objects are starting up, the init code
+can check if the processor is the BSP or not.  The BSP will start up at
+f000:fff0 as usual and the others will basically execute a halt as they
+wait for a SIPI from the bootstrap guy.
+
+First, however, I need to be able to compile without static member 
+functions on the CPU.
