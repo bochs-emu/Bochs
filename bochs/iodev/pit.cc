@@ -388,7 +388,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
           BX_PIT_THIS s.timer[2].input_latch_value = 0;
           BX_PIT_THIS s.timer[2].input_latch_toggle = 0;
           BX_PIT_THIS s.timer[2].bcd_mode    = bcd_mode;
-          if ( (mode!=3 && mode!=2) || bcd_mode!=0 )
+          if ( (mode!=3 && mode!=2 && mode != 0) || bcd_mode!=0 )
             bx_panic("pit: outp(43h): comm Bh, mode %02x, bcd %02x unhandled\n",
               (unsigned) mode, bcd_mode);
           break;
