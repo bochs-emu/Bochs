@@ -128,7 +128,7 @@ main(int argc, char *argv[])
 
   int processor = 0;
   while (1) {
-    // do 5 instructions in each processor
+    // do 100 instructions in each processor
     BX_CPU[processor]->cpu_loop(100);
     processor = (processor+1) % BX_SMP_PROCESSORS;
     if (processor == 0) 
