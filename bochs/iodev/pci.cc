@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.32 2004-06-29 19:24:33 vruppert Exp $
+// $Id: pci.cc,v 1.33 2004-07-04 17:07:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -456,7 +456,7 @@ bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
       }
     }
     if (*devfunc == 0x00) {
-      BX_ERROR(("Plugin '%s'not connected to a PCI slot", name));
+      BX_ERROR(("Plugin '%s' not connected to a PCI slot", name));
     }
   }
   /* check if device/function is available */

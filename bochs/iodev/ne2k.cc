@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.62 2004-07-01 22:18:20 vruppert Exp $
+// $Id: ne2k.cc,v 1.63 2004-07-04 17:07:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -117,6 +117,11 @@ bx_ne2k_c::reset(unsigned type)
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
 
+  if ((type == BX_RESET_HARDWARE) && (BX_NE2K_THIS s.pci_enabled)) {
+    pci_write_handler(BX_NE2K_THIS_PTR, 0x10, BX_NE2K_THIS s.base_address, 2);
+    BX_NE2K_THIS s.pci_conf[0x3c] = BX_NE2K_THIS s.base_irq;
+    DEV_pci_init_irq(BX_NE2K_THIS s.devfunc, BX_NE2K_THIS s.pci_conf[0x3d], BX_NE2K_THIS s.base_irq);
+  }
   set_irq_level(0);
 }
 
@@ -230,7 +235,7 @@ bx_ne2k_c::write_cr(Bit32u value)
       BX_NE2K_THIS s.remote_bytes == 0) {
     BX_NE2K_THIS s.ISR.rdma_done = 1;
     if (BX_NE2K_THIS s.IMR.rdma_inte) {
-      DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
+      set_irq_level(1);
     }
   }
 }
@@ -357,7 +362,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
 	if (BX_NE2K_THIS s.remote_bytes == 0) {
 	    BX_NE2K_THIS s.ISR.rdma_done = 1;
 	    if (BX_NE2K_THIS s.IMR.rdma_inte) {
-		DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
+              set_irq_level(1);
 	    }
 	}
     break;
@@ -411,7 +416,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     if (BX_NE2K_THIS s.remote_bytes == 0) {
       BX_NE2K_THIS s.ISR.rdma_done = 1;
       if (BX_NE2K_THIS s.IMR.rdma_inte) {
-	  DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
+        set_irq_level(1);
       }
     }
     break;
@@ -606,7 +611,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
               (BX_NE2K_THIS s.IMR.tx_inte << 1) |
               (BX_NE2K_THIS s.IMR.rx_inte));
     if (value == 0)
-      DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
+      set_irq_level(0);
     break;
 
   case 0x8:  // RSAR0
@@ -989,7 +994,7 @@ bx_ne2k_c::tx_timer(void)
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
     BX_NE2K_THIS s.ISR.pkt_tx = 1;
-    DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
+    set_irq_level(1);
   }
   BX_NE2K_THIS s.tx_timer_active = 0;
 }
@@ -1278,7 +1283,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   BX_NE2K_THIS s.ISR.pkt_rx = 1;
 
   if (BX_NE2K_THIS s.IMR.rx_inte) {
-    DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
+    set_irq_level(1);
   }
 
 }
@@ -1288,7 +1293,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.62 2004-07-01 22:18:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.63 2004-07-04 17:07:49 vruppert Exp $"));
 
   // Read in values from config file
   BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
@@ -1302,9 +1307,9 @@ bx_ne2k_c::init(void)
       (DEV_is_pci_device(BX_PLUGIN_NE2K))) {
     BX_NE2K_THIS s.pci_enabled = 1;
     strcpy(devname, "NE2000 PCI NIC");
-    Bit8u devfunc = 0x00;
+    BX_NE2K_THIS s.devfunc = 0x00;
     DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                              &devfunc, BX_PLUGIN_NE2K, devname);
+                              &BX_NE2K_THIS s.devfunc, BX_PLUGIN_NE2K, devname);
 
     for (unsigned i=0; i<256; i++)
       BX_NE2K_THIS s.pci_conf[i] = 0x0;
@@ -1317,10 +1322,7 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS s.pci_conf[0x0a] = 0x00;
     BX_NE2K_THIS s.pci_conf[0x0b] = 0x02;
     BX_NE2K_THIS s.pci_conf[0x0e] = 0x00;
-    BX_NE2K_THIS s.pci_conf[0x10] = (BX_NE2K_THIS s.base_address & 0xe0) | 0x01;
-    BX_NE2K_THIS s.pci_conf[0x11] = BX_NE2K_THIS s.base_address >> 8;
-    BX_NE2K_THIS s.pci_conf[0x3c] = BX_NE2K_THIS s.base_irq;
-    BX_NE2K_THIS s.pci_conf[0x3d] = BX_PCI_PIRQD;
+    BX_NE2K_THIS s.pci_conf[0x3d] = BX_PCI_INTA;
   }
 #endif
 
@@ -1403,16 +1405,13 @@ bx_ne2k_c::init(void)
     if (BX_NE2K_THIS ethdev == NULL)
       BX_PANIC(("could not locate null module"));
   }
-
-  // Bring the register state into power-up state
-  theNE2kDevice->reset(BX_RESET_HARDWARE);
 }
 
   void
 bx_ne2k_c::set_irq_level(bx_bool level)
 {
   if (BX_NE2K_THIS s.pci_enabled) {
-    DEV_pci_set_irq(BX_NE2K_THIS s.pci_conf[0x3d], level);
+    DEV_pci_set_irq(BX_NE2K_THIS s.devfunc, BX_NE2K_THIS s.pci_conf[0x3d], level);
   } else {
     if (level) {
       DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
@@ -1490,6 +1489,7 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       switch (address+i) {
         case 0x05:
         case 0x06:
+        case 0x3d:
           break;
         case 0x04:
           BX_NE2K_THIS s.pci_conf[address+i] = value8 & 0x01;
@@ -1498,10 +1498,14 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           baseaddr_change = (value8 != oldval);
           BX_NE2K_THIS s.pci_conf[address+i] = (value8 & 0xE0) | 0x01;
           break;
+        case 0x3c:
+          if (value8 != oldval) {
+            BX_INFO(("new irq line = %d", value8));
+            BX_NE2K_THIS s.pci_conf[address+i] = value8;
+          }
+          break;
         case 0x11:
           baseaddr_change = (value8 != oldval);
-        case 0x3c:
-          value &= 0x0f;
         default:
           BX_NE2K_THIS s.pci_conf[address+i] = value8;
           BX_DEBUG(("NE2000 PCI NIC write register 0x%02x value 0x%02x", address,

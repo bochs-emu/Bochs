@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.13 2004-07-01 22:18:20 vruppert Exp $
+// $Id: ne2k.h,v 1.14 2004-07-04 17:07:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -194,6 +194,7 @@ typedef struct {
     // pci stuff
     bx_bool pci_enabled;
 #if BX_PCI_SUPPORT
+    Bit8u devfunc;
     Bit8u pci_conf[256];
 #endif
 } bx_ne2k_t;

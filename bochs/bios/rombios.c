@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.111 2004-06-20 18:25:50 vruppert Exp $
+// $Id: rombios.c,v 1.112 2004-07-04 17:07:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -916,10 +916,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.111 $";
-static char bios_date_string[] = "$Date: 2004-06-20 18:25:50 $";
+static char bios_cvs_version_string[] = "$Revision: 1.112 $";
+static char bios_date_string[] = "$Date: 2004-07-04 17:07:47 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.111 2004-06-20 18:25:50 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.112 2004-07-04 17:07:47 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -8658,18 +8658,18 @@ pci_real_select_reg:
 pci_routing_table_structure:
   db 0x24, 0x50, 0x49, 0x52  ;; "$PIR" signature
   db 0, 1 ;; version
-  dw 32 + (4 * 16) ;; table size
+  dw 32 + (6 * 16) ;; table size
   db 0 ;; PCI interrupt router bus
-  db 0x8 ;; PCI interrupt router DevFunc
+  db 0x08 ;; PCI interrupt router DevFunc
   dw 0x0000 ;; PCI exclusive IRQs 
   dw 0x8086 ;; compatible PCI interrupt router vendor ID
-  dw 0x122e ;; compatible PCI interrupt router device ID
+  dw 0x7000 ;; compatible PCI interrupt router device ID
   dw 0,0 ;; Miniport data
   db 0,0,0,0,0,0,0,0,0,0,0 ;; reserved
-  db 0x97 ;; checksum
-  ;; first slot entry: 440FX
+  db 0x07 ;; checksum
+  ;; first slot entry PCI-to-ISA (embedded)
   db 0 ;; pci bus number
-  db 0 ;; pci device number (bit 7-3)
+  db 0x08 ;; pci device number (bit 7-3)
   db 0x60 ;; link value INTA#: pointer into PCI2ISA config space
   dw 0xdef8 ;; IRQ bitmap INTA# 
   db 0x61 ;; link value INTB#
@@ -8680,9 +8680,9 @@ pci_routing_table_structure:
   dw 0xdef8 ;; IRQ bitmap INTD#
   db 0 ;; physical slot (0 = embedded)
   db 0 ;; reserved
-  ;; second slot entry: PCI-to-ISA
+  ;; second slot entry: 1st PCI slot
   db 0 ;; pci bus number
-  db 0x08 ;; pci device number (bit 7-3)
+  db 0x10 ;; pci device number (bit 7-3)
   db 0x61 ;; link value INTA#
   dw 0xdef8 ;; IRQ bitmap INTA# 
   db 0x62 ;; link value INTB#
@@ -8691,11 +8691,11 @@ pci_routing_table_structure:
   dw 0xdef8 ;; IRQ bitmap INTC# 
   db 0x60 ;; link value INTD#
   dw 0xdef8 ;; IRQ bitmap INTD#
-  db 0 ;; physical slot (0 = embedded)
+  db 1 ;; physical slot (0 = embedded)
   db 0 ;; reserved
-  ;; 3th slot entry: PCI VGA
+  ;; third slot entry: 2nd PCI slot
   db 0 ;; pci bus number
-  db 0x10 ;; pci device number (bit 7-3)
+  db 0x18 ;; pci device number (bit 7-3)
   db 0x62 ;; link value INTA#
   dw 0xdef8 ;; IRQ bitmap INTA# 
   db 0x63 ;; link value INTB#
@@ -8704,11 +8704,11 @@ pci_routing_table_structure:
   dw 0xdef8 ;; IRQ bitmap INTC# 
   db 0x61 ;; link value INTD#
   dw 0xdef8 ;; IRQ bitmap INTD#
-  db 1 ;; physical slot (0 = embedded)
+  db 2 ;; physical slot (0 = embedded)
   db 0 ;; reserved
-  ;; 4th slot entry: a PCI device 
+  ;; 4th slot entry: 3rd PCI slot
   db 0 ;; pci bus number
-  db 0x18 ;; pci device number (bit 7-3)
+  db 0x20 ;; pci device number (bit 7-3)
   db 0x63 ;; link value INTA#
   dw 0xdef8 ;; IRQ bitmap INTA# 
   db 0x60 ;; link value INTB#
@@ -8717,7 +8717,33 @@ pci_routing_table_structure:
   dw 0xdef8 ;; IRQ bitmap INTC# 
   db 0x62 ;; link value INTD#
   dw 0xdef8 ;; IRQ bitmap INTD#
-  db 2 ;; physical slot (0 = embedded)
+  db 3 ;; physical slot (0 = embedded)
+  db 0 ;; reserved
+  ;; 5th slot entry: 4rd PCI slot
+  db 0 ;; pci bus number
+  db 0x28 ;; pci device number (bit 7-3)
+  db 0x60 ;; link value INTA#
+  dw 0xdef8 ;; IRQ bitmap INTA# 
+  db 0x61 ;; link value INTB#
+  dw 0xdef8 ;; IRQ bitmap INTB# 
+  db 0x62 ;; link value INTC#
+  dw 0xdef8 ;; IRQ bitmap INTC# 
+  db 0x63 ;; link value INTD#
+  dw 0xdef8 ;; IRQ bitmap INTD#
+  db 4 ;; physical slot (0 = embedded)
+  db 0 ;; reserved
+  ;; 6th slot entry: 5rd PCI slot
+  db 0 ;; pci bus number
+  db 0x30 ;; pci device number (bit 7-3)
+  db 0x61 ;; link value INTA#
+  dw 0xdef8 ;; IRQ bitmap INTA# 
+  db 0x62 ;; link value INTB#
+  dw 0xdef8 ;; IRQ bitmap INTB# 
+  db 0x63 ;; link value INTC#
+  dw 0xdef8 ;; IRQ bitmap INTC# 
+  db 0x60 ;; link value INTD#
+  dw 0xdef8 ;; IRQ bitmap INTD#
+  db 5 ;; physical slot (0 = embedded)
   db 0 ;; reserved
 #endif // BX_PCIBIOS
 

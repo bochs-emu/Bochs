@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.6 2004-07-01 22:18:20 vruppert Exp $
+// $Id: pciusb.cc,v 1.7 2004-07-04 17:07:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -80,7 +80,6 @@ bx_pciusb_c::init(void)
   Bit16u base_ioaddr = bx_options.usb[0].Oioaddr->get();
   Bit8u irq = bx_options.usb[0].Oirq->get();
 
-  DEV_register_irq(irq, "USB Hub #1");
   BX_USB_THIS hub[0].irq = irq;
 
   // Call our timer routine every 1mS (1,000uS)
@@ -114,6 +113,8 @@ bx_pciusb_c::reset(unsigned type)
 {
   unsigned i;
 
+  if (!bx_options.usb[0].Oenabled->get()) return;
+
   static const struct reset_vals_t {
     unsigned      addr;
     unsigned char val;
@@ -133,7 +134,7 @@ bx_pciusb_c::reset(unsigned type)
     { 0x21, (bx_options.usb[0].Oioaddr->get() >> 8) },
     { 0x22, 0x00 }, { 0x23, 0x00 },
     { 0x3c, bx_options.usb[0].Oirq->get() }, // IRQ
-    { 0x3d, BX_PCI_PIRQD },                 // INT
+    { 0x3d, BX_PCI_INTD },                  // INT
     { 0x6a, 0x01 },                 // USB clock
     { 0xc1, 0x20 }                  // PIRQ enable
 
@@ -141,6 +142,7 @@ bx_pciusb_c::reset(unsigned type)
   for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
       BX_USB_THIS hub[0].pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
+  DEV_pci_init_irq(0x0a, BX_PCI_INTD, bx_options.usb[0].Oirq->get());
 
   // reset locals
   BX_USB_THIS global_reset = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.14 2004-07-01 22:18:20 vruppert Exp $
+// $Id: pci2isa.cc,v 1.15 2004-07-04 17:07:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -98,6 +98,11 @@ bx_pci2isa_c::init(void)
   BX_P2I_THIS s.pci_conf[0x0a] = 0x01;
   BX_P2I_THIS s.pci_conf[0x0b] = 0x06;
   BX_P2I_THIS s.pci_conf[0x0e] = 0x80;
+  // irq routing registers
+  BX_P2I_THIS s.pci_conf[0x60] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x61] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x62] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x63] = 0x80;
 }
 
   void
@@ -110,10 +115,6 @@ bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.pci_conf[0x4c] = 0x4d;
   BX_P2I_THIS s.pci_conf[0x4e] = 0x03;
   BX_P2I_THIS s.pci_conf[0x4f] = 0x00;
-  BX_P2I_THIS s.pci_conf[0x60] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x61] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x62] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x63] = 0x80;
   BX_P2I_THIS s.pci_conf[0x69] = 0x02;
   BX_P2I_THIS s.pci_conf[0x70] = 0x80;
   BX_P2I_THIS s.pci_conf[0x76] = 0x0c;
@@ -136,15 +137,31 @@ bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.pci_conf[0xac] = 0x00;
   BX_P2I_THIS s.pci_conf[0xae] = 0x00;
 
+  for (unsigned i = 0; i < 4; i++) {
+    pci_write_handler(this, 0x60+i, 0x80, 1);
+  }
+
   BX_P2I_THIS s.elcr1 = 0x00;
   BX_P2I_THIS s.elcr2 = 0x00;
 }
 
   void
-bx_pci2isa_c::pci_set_irq(unsigned line, bx_bool level)
+bx_pci2isa_c::pci_init_irq(Bit8u devfunc, unsigned line, unsigned irq)
 {
-  Bit8u isa_irq =BX_P2I_THIS s.pci_conf[0x60+line-1];
-  if (isa_irq < 16) {
+  Bit8u pirq = ((devfunc >> 3) + line - 2) & 0x03;
+  BX_P2I_THIS s.pci_conf[0x60 + pirq] = irq;
+  if (irq < 16) {
+    DEV_register_irq(irq, "PIIX3 IRQ routing");
+  }
+}
+
+  void
+bx_pci2isa_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
+{
+  Bit8u pirq = ((devfunc >> 3) + line - 2) & 0x03;
+  Bit8u isa_irq = BX_P2I_THIS s.pci_conf[0x60 + pirq];
+  BX_DEBUG(("PIRQ%c -> IRQ %d = %d", pirq+65, isa_irq, level));
+  if ((isa_irq > 2) && (isa_irq < 16)) {
     if (level == 1) {
       DEV_pic_raise_irq(isa_irq);
     } else {
