@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.47 2002-08-04 08:42:34 vruppert Exp $
+// $Id: floppy.cc,v 1.48 2002-08-13 12:02:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,7 +89,7 @@ bx_floppy_ctrl_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.47 2002-08-04 08:42:34 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.48 2002-08-13 12:02:36 vruppert Exp $"));
   BX_FD_THIS devices = d;
 
   BX_REGISTER_DMA8_CHANNEL(2, bx_floppy.dma_read, bx_floppy.dma_write, "Floppy Drive");
@@ -265,7 +265,9 @@ bx_floppy_ctrl_c::reset(unsigned source)
     // drive select 0
 
     // DIR and CCR affected only by hard reset
-    BX_FD_THIS s.DIR |= 0x80; // disk changed
+    for (i=0; i<4; i++) {
+      BX_FD_THIS s.DIR[i] |= 0x80; // disk changed
+      }
     BX_FD_THIS s.data_rate = 0; /* 500 Kbps */
     }
 
@@ -371,7 +373,7 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       value = BX_FD_THIS devices->hard_drive->read_handler(BX_FD_THIS devices->hard_drive, address, io_len);
       value &= 0x7f;
       // add in diskette change line
-      value |= (BX_FD_THIS s.DIR & 0x80);
+      value |= (BX_FD_THIS s.DIR[BX_FD_THIS s.DOR & 0x03] & 0x80);
       return( value );
       break;
     default:
@@ -1148,7 +1150,7 @@ bx_floppy_ctrl_c::timer()
 reset_changeline:
   if (drive > 1) return;
   if (BX_FD_THIS s.media_present[drive])
-    BX_FD_THIS s.DIR &= ~0x80; // clear disk change line
+    BX_FD_THIS s.DIR[drive] &= ~0x80; // clear disk change line
 }
 
   void
@@ -1391,7 +1393,7 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     } else {
       bx_options.floppyb.Ostatus->set(BX_EJECTED);
     }
-    BX_FD_THIS s.DIR |= 0x80; // disk changed line
+    BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
     return(0);
     }
   else {
@@ -1409,7 +1411,7 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       } else {
         bx_options.floppyb.Ostatus->set(BX_INSERTED);
       }
-      BX_FD_THIS s.DIR |= 0x80; // disk changed line
+      BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
       return(1);
       }
     else {
