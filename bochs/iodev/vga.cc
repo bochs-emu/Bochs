@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.115 2005-02-28 21:23:34 vruppert Exp $
+// $Id: vga.cc,v 1.116 2005-03-18 14:52:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1952,7 +1952,7 @@ bx_vga_c::update(void)
     unsigned long start_address;
     unsigned long cursor_address, cursor_x, cursor_y;
     bx_vga_tminfo_t tm_info;
-
+    unsigned VDE, MSL, cols, rows, cWidth;
 
     tm_info.start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
                             BX_VGA_THIS s.CRTC.reg[13]);
@@ -1971,102 +1971,56 @@ bx_vga_c::update(void)
         tm_info.h_panning++;
     }
 
-    switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
-      case 0: // 128K @ A0000
-      case 1: // 64K @ A0000
-	iWidth = 8*80;	// TODO: should use font size
-	iHeight = 16*25;
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (old_BPP > 8) )
-	{
-	  bx_gui->dimension_update(iWidth, iHeight, 16, 8);
-	  old_iWidth = iWidth;
-	  old_iHeight = iHeight;
-          old_BPP = 8;
-	}
-        /* pass old text snapshot & new VGA memory contents */
-        start_address = 0x0;
-        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
-                         BX_VGA_THIS s.CRTC.reg[0x0f]);
-        if (cursor_address < start_address) {
-          cursor_x = 0xffff;
-          cursor_y = 0xffff;
-          }
-        else {
-          cursor_x = ((cursor_address - start_address)/2) % 80;
-          cursor_y = ((cursor_address - start_address)/2) / 80;
-          }
-        bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
-                            &BX_VGA_THIS s.vga_memory[start_address],
-                            cursor_x, cursor_y, tm_info, 25);
-        // screen updated, copy new VGA memory contents into text snapshot
-        memcpy(BX_VGA_THIS s.text_snapshot,
-               &BX_VGA_THIS s.vga_memory[start_address],
-               2*80*25);
-        BX_VGA_THIS s.vga_mem_updated = 0;
-        break;
-
-      case 2: // B0000 .. B7FFF
-      case 3: // B8000 .. BFFFF
-        unsigned VDE, MSL, rows, cWidth;
-
-        // Verticle Display End: find out how many lines are displayed
-        VDE = BX_VGA_THIS s.vertical_display_end;
-        // Maximum Scan Line: height of character cell
-        MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
-        if (MSL == 0) {
-          BX_ERROR(("character height = 1, skipping text update"));
-          return;
-        }
-        if ((MSL == 1) && (BX_VGA_THIS s.CRTC.reg[0x06] == 100)) {
-          // emulated CGA graphics mode 160x100x16 colors
-          MSL = 3;
-          rows = 100;
-          cWidth = 8;
-          iWidth = cWidth * BX_VGA_THIS s.CRTC.reg[1];
-          iHeight = 400;
-        } else {
-          rows = (VDE+1)/(MSL+1);
-          if (rows > BX_MAX_TEXT_LINES)
-            BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
-          cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
-          iWidth = cWidth * (BX_VGA_THIS s.CRTC.reg[1] + 1);
-          iHeight = VDE+1;
-        }
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) || (old_BPP > 8) )
-	{
-	  bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
-	  old_iWidth = iWidth;
-	  old_iHeight = iHeight;
-	  old_MSL = MSL;
-          old_BPP = 8;
-	}
-        // pass old text snapshot & new VGA memory contents
-        start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
-                        BX_VGA_THIS s.CRTC.reg[13]);
-        cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
-                         BX_VGA_THIS s.CRTC.reg[0x0f]);
-        if (cursor_address < start_address) {
-          cursor_x = 0xffff;
-          cursor_y = 0xffff;
-          }
-        else {
-          cursor_x = ((cursor_address - start_address)/2) % (iWidth/cWidth);
-          cursor_y = ((cursor_address - start_address)/2) / (iWidth/cWidth);
-          }
-        bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
-                            &BX_VGA_THIS s.vga_memory[start_address],
-                            cursor_x, cursor_y, tm_info, rows);
-        // screen updated, copy new VGA memory contents into text snapshot
-        memcpy(BX_VGA_THIS s.text_snapshot,
-               &BX_VGA_THIS s.vga_memory[start_address],
-               2*80*rows);
-        BX_VGA_THIS s.vga_mem_updated = 0;
-        break;
-      default:
-        BX_DEBUG(("update(): color text mode: mem map is %u",
-                 (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
-      }
+    // Verticle Display End: find out how many lines are displayed
+    VDE = BX_VGA_THIS s.vertical_display_end;
+    // Maximum Scan Line: height of character cell
+    MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
+    if (MSL == 0) {
+      BX_ERROR(("character height = 1, skipping text update"));
+      return;
     }
+    cols = BX_VGA_THIS s.CRTC.reg[1] + 1;
+    if ((MSL == 1) && (VDE == 399)) {
+      // emulated CGA graphics mode 160x100x16 colors
+      MSL = 3;
+    }
+    rows = (VDE+1)/(MSL+1);
+    if (rows > BX_MAX_TEXT_LINES) {
+      BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
+      return;
+    }
+    cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
+    iWidth = cWidth * cols;
+    iHeight = VDE+1;
+    if ((iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) || (old_BPP > 8))
+    {
+      bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
+      old_iWidth = iWidth;
+      old_iHeight = iHeight;
+      old_MSL = MSL;
+      old_BPP = 8;
+    }
+    // pass old text snapshot & new VGA memory contents
+    start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
+                    BX_VGA_THIS s.CRTC.reg[13]);
+    cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
+                     BX_VGA_THIS s.CRTC.reg[0x0f]);
+    if (cursor_address < start_address) {
+      cursor_x = 0xffff;
+      cursor_y = 0xffff;
+    } else {
+      cursor_x = ((cursor_address - start_address)/2) % (iWidth/cWidth);
+      cursor_y = ((cursor_address - start_address)/2) / (iWidth/cWidth);
+    }
+    bx_gui->text_update(&BX_VGA_THIS s.text_snapshot[start_address],
+                        &BX_VGA_THIS s.vga_memory[start_address],
+                        cursor_x, cursor_y, tm_info, rows);
+    // screen updated, copy new VGA memory contents into text snapshot
+    memcpy(&BX_VGA_THIS s.text_snapshot[start_address],
+           &BX_VGA_THIS s.vga_memory[start_address],
+           2*cols*rows);
+    BX_VGA_THIS s.vga_mem_updated = 0;
+  }
 }
 
 
