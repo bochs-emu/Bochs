@@ -256,9 +256,16 @@ keyboard_serial_delay: 250
 
 #=======================================================================
 # KEYBOARD_PASTE_DELAY:
-# Approximate time in microseconds between attemps to paste
-# characters to the keyboard controller. This leave time to the
-# guest os to deal with the flow of characters.
+# Approximate time in microseconds between attempts to paste
+# characters to the keyboard controller. This leaves time for the
+# guest os to deal with the flow of characters.  The ideal setting
+# depends on how your operating system processes characters.  The
+# default of 100000 usec (.1 seconds) was chosen because it works 
+# consistently in Windows.
+#
+# If your OS is losing characters during a paste, increase the paste
+# delay until it stops losing characters.
+#
 # Examples:
 #   keyboard_paste_delay: 100000
 #=======================================================================
