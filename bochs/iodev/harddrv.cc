@@ -325,7 +325,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	      ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
               if (ret < 512) {
                 bx_printf("logical sector was %u\n", (unsigned) logical_sector);
-                bx_panic("disk: could not read() hard drive image file\n");
+                bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
                 }
 
               BX_SELECTED_CONTROLLER.buffer_index = 0;
@@ -662,7 +662,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 	    ret = BX_SELECTED_HD.hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
             if (ret < 512)
-              bx_panic("disk: could not write() hard drive image file\n");
+              bx_panic("disk: could not write() hard drive image file at byte %d\n", logical_sector*512);
 
             BX_SELECTED_CONTROLLER.buffer_index = 0;
 
@@ -1284,7 +1284,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
           if (ret < 512) {
             bx_printf("logical sector was %u\n", (unsigned) logical_sector);
-            bx_panic("disk: could not read() hard drive image file\n");
+            bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
             }
 
           BX_SELECTED_CONTROLLER.error_register = 0;
