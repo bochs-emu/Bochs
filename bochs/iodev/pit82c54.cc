@@ -1,13 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.22 2003-06-07 19:16:54 vruppert Exp $
+// $Id: pit82c54.cc,v 1.23 2003-06-29 17:24:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * Emulator of an Intel 8254/82C54 Programmable Interval Timer.
  * Greg Alexander <yakovlev@usa.com>
- *
- * This code is not yet linked into Bochs, but has been included so
- * that you can experiment with it.  (bbd)
  *
  * 
  * Things I am unclear on (greg):
