@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.80 2002-10-06 20:19:03 vruppert Exp $
+// $Id: harddrv.cc,v 1.81 2002-10-17 07:04:45 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   char  string[5];
 
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.80 2002-10-06 20:19:03 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.81 2002-10-17 07:04:45 cbothamy Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3102,6 +3102,10 @@ int concat_image_t::open (const char* pathname0)
     int ret = fstat(fd_table[i], &stat_buf);
     if (ret) {
 	  BX_PANIC(("fstat() returns error!"));
+    }
+    if (S_ISBLK(stat_buf.st_mode)) {
+      BX_PANIC(("block devices should REALLY NOT be used with --enable-split-hd. "
+                "Please reconfigure with --disable-split-hd"));
     }
     if ((stat_buf.st_size % 512) != 0) {
       BX_PANIC(("size of disk image must be multiple of 512 bytes"));
