@@ -453,14 +453,23 @@ main(int argc, char *argv[])
     bx_load32bitOSimagehack();
     }
 
-  int processor = 0;
-  int quantum = 5;
-  while (1) {
-    // do some instructions in each processor
-    BX_CPU(processor)->cpu_loop(quantum);
-    processor = (processor+1) % BX_SMP_PROCESSORS;
-    if (processor == 0) 
-      BX_TICKN(quantum);
+  if (BX_SMP_PROCESSORS == 1) {
+    // only one processor, run as fast as possible by not messing with
+    // quantums and loops.
+    BX_CPU(0)->cpu_loop(1);
+  } else {
+    // SMP simulation: do 5 instructions on each processor, then switch
+    // to another.  I'm sure that increasing quantum speeds up overall
+    // performance.
+    int processor = 0;
+    int quantum = 5;
+    while (1) {
+      // do some instructions in each processor
+      BX_CPU(processor)->cpu_loop(quantum);
+      processor = (processor+1) % BX_SMP_PROCESSORS;
+      if (processor == 0) 
+	BX_TICKN(quantum);
+    }
   }
 #endif
 
@@ -509,9 +518,18 @@ bx_bochs_init(int argc, char *argv[])
   }
 
   // set up memory and CPU objects
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
 #endif
+
+#if BX_SMP_PROCESSORS==1
+  BX_MEM(0)->init_memory(bx_options.memory.megs * 1024*1024);
+  BX_MEM(0)->load_ROM(bx_options.rom.path, bx_options.rom.address);
+  BX_MEM(0)->load_ROM(bx_options.vgarom.path, 0xc0000);
+  BX_CPU(0)->init (BX_MEM(0));
+  BX_CPU(0)->reset(BX_RESET_HARDWARE);
+#else
+  // SMP initialization
   bx_mem_array[0] = new BX_MEM_C ();
   bx_mem_array[0]->init_memory(bx_options.memory.megs * 1024*1024);
   bx_mem_array[0]->load_ROM(bx_options.rom.path, bx_options.rom.address);
@@ -519,12 +537,12 @@ bx_bochs_init(int argc, char *argv[])
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C ();
     BX_CPU(i)->init (bx_mem_array[0]);
-#if BX_APIC_SUPPORT
     // assign apic ID from the index of this loop
+    // if !BX_SUPPORT_APIC, this will not compile.
     BX_CPU(i)->local_apic.set_id (i);
-#endif
     BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }
+#endif
 
   bx_init_debug();
 
