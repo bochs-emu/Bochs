@@ -63,19 +63,29 @@ Selects register 1: Memory monitoring range end address (exclusive)
 Enable address range memory monitoring as indicated by register 0 and 1 and clears both registers
 <p>
 
-<pre>0x8AE0</pre>
+<pre>0x8AE0 - Return to Debugger Prompt</pre>
 <p>
-If the debugger is enabled (via --enable-debugger), sending 0x8AE0 to port 0x8A00 after the device has been enabled will return the bochs to the debugger prompt.
+If the debugger is enabled (via --enable-debugger), sending 0x8AE0 to port 0x8A00 after the device has been enabled will return the bochs to the debugger prompt. Basically the same as doing CTRL+C
 <p>
 
-<pre>0x8AE2</pre>
+<pre>0x8AE2 - Instruction Trace Disable</pre>
 <p>
 If the debugger is enabled (via --enable-debugger), sending 0x8AE2 to port 0x8A00 after the device has been enabled will disable instruction tracing
 <p>
 
-<pre>0x8AE3</pre>
+<pre>0x8AE3 - Instruction Trace Enable</pre>
 <p>
 If the debugger is enabled (via --enable-debugger), sending 0x8AE3 to port 0x8A00 after the device has been enabled will enable instruction tracing
+<p>
+
+<pre>0x8AE4 - Register Trace Disable</pre>
+<p>
+If the debugger is enabled (via --enable-debugger), sending 0x8AE4 to port 0x8A00 after the device has been enabled will disable register tracing.
+<p>
+
+<pre>0x8AE5 - Register Trace Enable</pre>
+<p>
+If the debugger is enabled (via --enable-debugger), sending 0x8AE5 to port 0x8A00 after the device has been enabled will enable register tracing.  This currently output the value of all the registers for each instruction traced.  Note: instruction tracing must be enabled to view the register tracing
 <p>
 
 <pre>0x8AFF</pre>
