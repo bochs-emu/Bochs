@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.57 2002-11-07 15:32:38 shap Exp $
+$Id: user.dbk,v 1.58 2002-11-11 02:33:24 ndavidg Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -37,7 +37,7 @@ can be configured to act like a 286, 386, 486, Pentium, or Pentium Pro.
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
 VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
-simulates the whole PC environment, the the software running in the simulation
+simulates the whole PC environment, the software running in the simulation
 "believes" it is running on a real machine.  This approach allows Bochs
 to run a wide variety of software with no modification, include most popular
 x86 operating systems: Windows 95/98/NT, all Linux flavors, all BSD flavors,
@@ -2489,6 +2489,8 @@ This defines the type and characteristics of all attached ata devices:
 <row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [none|auto], only for disks on ata0 [cmos] </entry> </row>
 <row> <entry> translation </entry> <entry> type of translation done by the bios (legacy int13), only for disks </entry> <entry> [none|lba|large|rechs|auto] </entry> </row>
 <row> <entry> model </entry> <entry> string returned by identify device command </entry> </row>
+</tbody>
+</tgroup>
 </table>
 </para>
 
@@ -4686,7 +4688,7 @@ offset = sector * block_size (512)
 <footnote>
 <para>
 <ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
-<para>
+</para>
 </footnote>
 , use mke2fs to create a filesystem.
 
@@ -4793,7 +4795,7 @@ Create a grub floppy disk or use my floppy image
 <footnote>
 <para>
 Grub Floppy image : (coming soon)
-<para>
+</para>
 </footnote>
 Adapt your bochsrc
 file according to your choice. If you want install Grub on the image disk,
@@ -4821,7 +4823,7 @@ Now, you can read the official Hurd Installation Guide
 <footnote>
 <para>
 <ulink url="http://web.walfield.org/papers/hurd-installation-guide/english/hurd-install-guide.html">Hurd Installation guide</ulink>
-<para>
+</para>
 </footnote>
 .
 </para>
@@ -5630,12 +5632,15 @@ to
 <section>
         <title>Windows ME</title>
         <para>
+	</para>
+</section>
         
                 <section><title>Installing Windows ME</title>
-                <para>
-
+<para>
 This has been contributed by Sancho Roberto :
+</para>
 
+<para>
 <screen>
 Date: Sun, 21 Oct 2001 02:24:22 -0700 (PDT)
 From: Sancho Roberto (rsanchov at yahoo dot com)
@@ -5870,7 +5875,6 @@ Some bugs i've found
 
                 </para>
                 </section> <!-- end of Installing Windows ME -->
-</section>
 <section>
         <title>Windows 2000</title>
         <para>
