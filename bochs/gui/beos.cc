@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.21 2002-11-19 05:47:44 bdenney Exp $
+// $Id: beos.cc,v 1.22 2002-11-22 15:14:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,11 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
 #include "bochs.h"
 #if BX_WITH_BEOS
 
@@ -39,12 +44,6 @@
 #include <interface/Screen.h>
 #include <interface/Bitmap.h>
 #include <interface/GraphicsDefs.h>
-
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
 
 //#include "icon_bochs.h"
 #include "font/vga.bitmap.h"
