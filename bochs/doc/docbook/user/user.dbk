@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.105 2003-01-01 22:25:51 cbothamy Exp $
+$Id: user.dbk,v 1.106 2003-01-05 00:59:52 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4535,7 +4535,7 @@ Make sure there is a /dev/net/tun device.
 </note>
 </para>
 <para>
-In the same way, to use masquerading, you need a kernel wth the following options :
+In the same way, to use masquerading, you need a kernel with the following options :
 <screen>
  CONFIG_IP_NF_CONNTRACK (Connection tracking)
  CONFIG_IP_NF_IPTABLES (IP tables support)
