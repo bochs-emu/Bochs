@@ -1,4 +1,4 @@
-all: blur-no-opt blur-opcode
+all: blur-no-opt
 
 blur-no-opt: blur.c blur-opcode.c
 	gcc -S blur.c -o blur.s
