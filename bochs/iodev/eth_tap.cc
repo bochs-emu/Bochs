@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.1 2002-03-09 00:38:53 bdenney Exp $
+// $Id: eth_tap.cc,v 1.2 2002-03-09 01:04:49 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,9 +57,6 @@
 #define BX_ETH_TAP_LOGGING 1
 #define BX_PACKET_BUFSIZ 2048	// Enough for an ether frame
 
-extern int check_netdev( char *ifname );
-extern int tap_open( const char *intf_name);
-
 //
 //  Define the class. This is private to this module
 //
@@ -105,22 +102,59 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 				       void *rxarg)
 {
   int flags;
-  fd = tap_open (netif);
+  char filename[BX_PATHNAME_LEN];
+  if (strncmp (netif, "tap", 3) != 0) {
+    BX_PANIC (("eth_tap: interface name (%s) must be tap0..tap15", netif));
+  }
+  sprintf (filename, "/dev/%s", netif);
+
+  // check if the TAP devices is running, and turn on ARP.  This is based
+  // on code from the Mac-On-Linux project. http://http://www.maconlinux.org/
+  int sock = socket( AF_INET, SOCK_DGRAM, 0 );
+  if (sock < 0) {
+    BX_PANIC (("socket creation: %s", strerror(errno)));
+    return;
+  }
+  struct ifreq ifr;
+  memset( &ifr, 0, sizeof(ifr) );
+  strncpy( ifr.ifr_name, netif, sizeof(ifr.ifr_name) );
+  if( ioctl( sock, SIOCGIFFLAGS, &ifr ) < 0 ){
+    BX_PANIC (("SIOCGIFFLAGS: %s", strerror (errno)));
+    close(sock);
+    return;
+  }
+  if( !(ifr.ifr_flags & IFF_RUNNING ) ){
+    BX_PANIC (("%s device is not running", netif));
+    close(sock);
+    return;
+  }
+  if( (ifr.ifr_flags & IFF_NOARP ) ){
+    BX_INFO (("turn on ARP for %s device", netif));
+    ifr.ifr_flags &= ~IFF_NOARP;
+    if( ioctl( sock, SIOCSIFFLAGS, &ifr ) < 0 ) {
+      BX_PANIC (("SIOCSIFFLAGS: %s", strerror(errno)));
+      close(sock);
+      return;
+    }
+  }
+  close(sock);
+
+  fd = open (filename, O_RDWR);
   if (fd < 0) {
-    BX_PANIC (("tap_open failed on %s", netif));
+    BX_PANIC (("open failed on %s: %s", netif, strerror (errno)));
     return;
   }
 
-/* setup O_ASYNC, O_NONBLOCK */
-if( (flags = fcntl( fd, F_GETFL)) == -1 ) {
-  BX_PANIC (("getflags on tap device failed"));
-}
-flags |= O_NONBLOCK;
-if( fcntl( fd, F_SETFL, flags ) == -1 ) {
-  BX_PANIC (("could not set tap device flags"));
-}
+  /* set O_ASYNC flag so that we can poll with read() */
+  if ((flags = fcntl( fd, F_GETFL)) < 0) {
+    BX_PANIC (("getflags on tap device: %s", strerror (errno)));
+  }
+  flags |= O_NONBLOCK;
+  if (fcntl( fd, F_SETFL, flags ) < 0) {
+    BX_PANIC (("set tap device flags: %s", strerror (errno)));
+  }
 
-BX_INFO (("eth_tap: opened %s device", netif));
+  BX_INFO (("eth_tap: opened %s device", netif));
 
 #if BX_ETH_TAP_LOGGING
   // Start the rx poll 
@@ -167,8 +201,7 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   memcpy (txbuf+2, buf, io_len);
   unsigned int size = write (fd, txbuf, io_len+2);
   if (size != io_len+2) {
-    perror("write");
-    BX_PANIC (("write on tap device failed"));
+    BX_PANIC (("write on tap device: %s", strerror (errno)));
   } else {
     BX_INFO (("wrote %d bytes + 2 byte pad on tap", io_len));
   }
@@ -250,8 +283,3 @@ void bx_tap_pktmover_c::rx_timer ()
   }
   (*rxh)(rxarg, rxbuf, nbytes);
 }
-
-
-// still some dependence on GPL code from Mac-On-Linux.
-// I will rewrite these functions from scratch.
-#include "eth_tap_gpl.cc"

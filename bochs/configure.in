@@ -443,6 +443,10 @@ AC_ARG_ENABLE(ne2000,
     NE2K_OBJS='ne2k.o eth.o eth_null.o'
     AC_CHECK_HEADER(net/bpf.h, NE2K_OBJS="$NE2K_OBJS eth_fbsd.o")
     AC_CHECK_HEADER(netpacket/packet.h, NE2K_OBJS="$NE2K_OBJS eth_linux.o")
+    AC_CHECK_HEADER(linux/netlink.h, [
+        NE2K_OBJS="$NE2K_OBJS eth_tap.o"
+        AC_DEFINE(HAVE_ETHERTAP, 1)
+      ])
     if test "$with_win32" = yes; then
       NE2K_OBJS="$NE2K_OBJS eth_win32.o"
     fi
