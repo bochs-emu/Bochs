@@ -55,7 +55,6 @@ OBJS32 = \
 	exception.o \
 	ctrl_xfer_pro.o \
 	flag_ctrl_pro.o \
-	protect_ctrl_pro.o \
 	segment_ctrl_pro.o \
 	stack_pro.o \
 	lazy_flags.o \
@@ -103,6 +102,7 @@ OBJSXX = \
 	arith8.o \
 	stack16.o \
 	protect_ctrl.o \
+	protect_ctrl_pro.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
