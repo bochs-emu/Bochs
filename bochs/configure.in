@@ -1394,6 +1394,7 @@ if test "$with_wx" = yes; then
   if test "$pthread_ok" = yes; then
     GUI_LINK_OPTS="$PTHREAD_LIBS $GUI_LINK_OPTS"
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
     CC="$PTHREAD_CC"
   else
     echo ERROR: --with-wx requires the pthread library, which could not be found.; exit 1
