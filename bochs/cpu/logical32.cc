@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.6 2002-09-06 21:54:58 kevinlawton Exp $
+// $Id: logical32.cc,v 1.7 2002-09-13 22:20:45 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ BX_CPU_C::XOR_EdGd(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -88,7 +88,7 @@ BX_CPU_C::XOR_GdEd(BxInstruction_t *i)
     result_32 = op1_32 ^ op2_32;
 
     /* now write result back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, result_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, result_32);
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_XOR32);
 }
@@ -107,7 +107,11 @@ BX_CPU_C::XOR_EAXId(BxInstruction_t *i)
     sum_32 = op1_32 ^ op2_32;
 
     /* now write sum back to destination */
+#if BX_SUPPORT_X86_64
+    RAX = sum_32;
+#else
     EAX = sum_32;
+#endif
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_XOR32);
 }
@@ -132,7 +136,7 @@ BX_CPU_C::XOR_EdId(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -162,7 +166,7 @@ BX_CPU_C::OR_EdId(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -189,7 +193,7 @@ BX_CPU_C::NOT_Ed(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -218,7 +222,7 @@ BX_CPU_C::OR_EdGd(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -247,7 +251,7 @@ BX_CPU_C::OR_GdEd(BxInstruction_t *i)
     result_32 = op1_32 | op2_32;
 
     /* now write result back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, result_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, result_32);
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_OR32);
 }
@@ -265,7 +269,11 @@ BX_CPU_C::OR_EAXId(BxInstruction_t *i)
     sum_32 = op1_32 | op2_32;
 
     /* now write sum back to destination */
+#if BX_SUPPORT_X86_64
+    RAX = sum_32;
+#else
     EAX = sum_32;
+#endif
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_OR32);
 }
@@ -293,7 +301,7 @@ BX_CPU_C::AND_EdGd(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
@@ -322,7 +330,7 @@ BX_CPU_C::AND_GdEd(BxInstruction_t *i)
     result_32 = op1_32 & op2_32;
 
     /* now write result back to destination */
-    BX_WRITE_32BIT_REG(i->nnn, result_32);
+    BX_WRITE_32BIT_REGZ(i->nnn, result_32);
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, result_32, BX_INSTR_AND32);
 }
@@ -340,7 +348,11 @@ BX_CPU_C::AND_EAXId(BxInstruction_t *i)
     sum_32 = op1_32 & op2_32;
 
     /* now write sum back to destination */
+#if BX_SUPPORT_X86_64
+    RAX = sum_32;
+#else
     EAX = sum_32;
+#endif
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_AND32);
 }
@@ -365,7 +377,7 @@ BX_CPU_C::AND_EdId(BxInstruction_t *i)
 
     /* now write result back to destination */
     if (i->mod == 0xc0) {
-      BX_WRITE_32BIT_REG(i->rm, result_32);
+      BX_WRITE_32BIT_REGZ(i->rm, result_32);
       }
     else {
       Write_RMW_virtual_dword(result_32);
