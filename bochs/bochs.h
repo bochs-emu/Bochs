@@ -82,6 +82,8 @@ extern "C" {
 #include "debug/debug.h"
 #include "bxversion.h"
 
+#include "gui/siminterface.h"
+
 //
 // some macros to interface the CPU and memory to external environment
 // so that these functions can be redirected to the debugger when
@@ -316,6 +318,7 @@ class iofunctions {
 #define    CPU13LOG         38
 #define    CPU14LOG         39
 #define    CPU15LOG         40
+#define    CTRLLOG         41
 
 
 public:
@@ -377,6 +380,7 @@ public:
 		  "CPUd",
 		  "CPUe",
 		  "CPUf",
+		  "CTRL"
 		};
 		return logclass[i];
 	}
@@ -551,16 +555,17 @@ extern bx_devices_c   bx_devices;
 #define BX_RESET_SOFTWARE 10
 #define BX_RESET_HARDWARE 11
 
+#define BX_PATHNAME_LEN 512
 
 typedef struct {
-  char path[512];
+  char path[BX_PATHNAME_LEN];
   unsigned type;
   unsigned initial_status;
   } bx_floppy_options;
 
 typedef struct {
   Boolean present;
-  char path[512];
+  char path[BX_PATHNAME_LEN];
   unsigned int cylinders;
   unsigned int heads;
   unsigned int spt;
@@ -569,7 +574,7 @@ typedef struct {
 struct bx_cdrom_options
 {
   Boolean present;
-  char dev[512];
+  char dev[BX_PATHNAME_LEN];
   Boolean inserted;
 };
 

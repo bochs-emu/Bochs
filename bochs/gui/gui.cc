@@ -51,6 +51,7 @@ bx_gui_c::bx_gui_c(void)
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 {
   specific_init(&bx_gui, argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
+  init_siminterface ();
 
   // Define some bitmaps to use in the headerbar
   BX_GUI_THIS floppyA_bmap_id = create_bitmap(bx_floppya_bmap,
@@ -175,8 +176,7 @@ bx_gui_c::power_handler(void)
   void
 bx_gui_c::snapshot_handler(void)
 {
-  BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
-  bx_control_panel_entry ();
+  bx_control_panel_main ();
 }
 
   void
