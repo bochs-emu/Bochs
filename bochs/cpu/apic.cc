@@ -1,12 +1,15 @@
+#define BX_IN_CPU_METHOD 1
 #include "bochs.h"
 #include <assert.h>
 
-bx_apic_c::bx_apic_c(void)
+BX_CPU_C *apic_index[APIC_MAX_ID];
+
+bx_apic_c::bx_apic_c(BX_CPU_C *mycpu)
 {
-  static int apic_ids_used = 1;
+  id = APIC_UNKNOWN_ID;
+  cpu = mycpu;
   // default address for a local APIC, can be moved
   apic_base_msr = 0xfee00000;
-  id = apic_ids_used++;
   err_status = 0;
 }
 
@@ -15,14 +18,24 @@ bx_apic_c::~bx_apic_c(void)
   // nothing for now
 }
 
-  void
-bx_apic_c::init()
-{
-}
-
 Bit32u bx_apic_c::get_base (void)
 {
   return apic_base_msr;
+}
+
+void bx_apic_c::set_id (Bit8u newid) {
+  // update apic_index
+  if (id != APIC_UNKNOWN_ID) {
+    bx_assert (id < APIC_MAX_ID);
+    if (apic_index[id] != cpu)
+      bx_panic ("inconsistent APIC id table");
+    apic_index[id] = NULL;
+  }
+  id = newid;
+  if (apic_index[id] != NULL)
+    bx_panic ("duplicate APIC id assigned");
+  apic_index[id] = cpu;
+  sprintf (cpu->name, "CPU apicid=%02x", (Bit32u)id);
 }
 
 void bx_apic_c::set_base (Bit32u newbase) 
@@ -132,4 +145,10 @@ void bx_apic_c::read_handler (Bit32u addr, Bit32u *data, unsigned len)
     bx_printf ("APIC register %08x not implemented\n", addr);
   }
   bx_printf ("read from APIC address %08x = %08x\n", addr, *data);
+}
+
+BX_CPU_C 
+bx_apic_c::*get_cpu (Bit8u id)
+{
+  bx_assert (id >= 0 && id < APIC_MAX_ID);
 }
