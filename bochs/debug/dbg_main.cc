@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.101 2003-08-01 10:14:47 akrisak Exp $
+// $Id: dbg_main.cc,v 1.102 2003-08-04 09:14:01 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2627,9 +2627,11 @@ bx_dbg_info_registers_command(int which_regs_mask)
       reg = cpu.gs.sel;
       dbg_printf ( "gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
     }
-    if (which_regs_mask & BX_INFO_FPU_REGS) {
-      BX_CPU(i)->fpu_print_regs ();
-    }
+//#if BX_SUPPORT_FPU == 1
+//    if (which_regs_mask & BX_INFO_FPU_REGS) {
+//      BX_CPU(i)->fpu_print_regs ();
+//    }
+//#endif
   }
 }
 
@@ -4832,7 +4834,7 @@ bx_dbg_info_ivt_command(bx_num_range r)
     { r.to = r.from + 1L;
     }
     for (i = r.from; i < r.to; i++)
-    { BX_MEM(simulator)->dbg_fetch_mem(i * 4, sizeof(buff), buff);
+    { BX_MEM(simulator)->dbg_fetch_mem(cpu.idtr.base + i * 4, sizeof(buff), buff);
 #ifdef BX_LITTLE_ENDIAN
       seg = *(Bit16u*)(&buff[2]);
       off = *(Bit16u*)(&buff[0]);
@@ -4840,7 +4842,7 @@ bx_dbg_info_ivt_command(bx_num_range r)
       seg = (buff[3] << 8) | buff[2];
       off = (buff[1] << 8) | buff[0];
 #endif
-      dbg_printf("INT# %02x > %04X:%04X (%08X) %s\n", i, seg, off, (seg << 4) + off, bx_dbg_ivt_desc(i));
+      dbg_printf("INT# %02x > %04X:%04X (%08X) %s\n", i, seg, off, cpu.idtr.base + ((seg << 4) + off), bx_dbg_ivt_desc(i));
     }
   }
   else
