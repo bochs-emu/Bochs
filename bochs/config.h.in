@@ -430,19 +430,6 @@
 
 #endif
 
-#if BX_SUPPORT_X86_64
-typedef
-  struct {
-         Bit64u lo;
-         Bit64u hi;
-         } Bit128u;
-typedef
-  struct {
-         Bit64u lo;
-         Bit64s hi;
-         } Bit128s;
-#endif
-
 
 #define BX_MAX_UINT 4294967295
 #define BX_MAX_INT 2147483647
@@ -491,6 +478,34 @@ typedef unsigned int Boolean;
 #  define BX_LITTLE_ENDIAN
 #endif
 #endif // defined(WIN32)
+
+
+#if BX_SUPPORT_X86_64
+#ifdef BX_LITTLE_ENDIAN
+typedef
+  struct {
+         Bit64u lo;
+         Bit64u hi;
+         } Bit128u;
+typedef
+  struct {
+         Bit64u lo;
+         Bit64s hi;
+         } Bit128s;
+#else   // must be Big Endian
+typedef
+  struct {
+         Bit64u hi;
+         Bit64u lo;
+         } Bit128u;
+typedef
+  struct {
+         Bit64s hi;
+         Bit64u lo;
+         } Bit128s;
+#endif
+#endif  // #if BX_SUPPORT_X86_64
+
 
 // for now only term.cc requires a GUI sighandler.
 #define BX_GUI_SIGHANDLER (BX_WITH_TERM)
