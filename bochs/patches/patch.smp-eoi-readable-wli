@@ -1,0 +1,76 @@
+Date: Tue, 19 Mar 2002 17:52:41 -0800
+From: William Lee Irwin III <wli@holomorphy.com>
+To: bochs-developers@lists.sourceforge.net
+Subject: [Bochs-developers] 03_ignore_eoi_read
+
+Linux 2.4 uses the following to EOI in some situations:
+
+static inline void ack_APIC_irq(void)
+{
+        /*
+         * ack_APIC_irq() actually gets compiled as a single instruction:
+         * - a single rmw on Pentium/82489DX
+         * - a single write on P6+ cores (CONFIG_X86_GOOD_APIC)
+         * ... yummie.
+         */
+
+        /* Docs say use 0 for future compatibility */
+        apic_write_around(APIC_EOI, 0);
+}
+
+Where apic_write_around() is defined as follows:
+
+#ifdef CONFIG_X86_GOOD_APIC
+# define FORCE_READ_AROUND_WRITE 0
+# define apic_read_around(x)
+# define apic_write_around(x,y) apic_write((x),(y))
+#else
+# define FORCE_READ_AROUND_WRITE 1
+# define apic_read_around(x) apic_read(x)
+# define apic_write_around(x,y) apic_write_atomic((x),(y))
+#endif
+
+After unraveling all this we have 
+
+static __inline void apic_write_atomic(unsigned long reg, unsigned long v)
+{
+        xchg((volatile unsigned long *)(APIC_BASE+reg), v);
+}
+
+This is a read-modify-write operation.
+
+Now BX_CPU_C::XCHG_EdGd(BxInstruction_t *i) eventually decides to do this:
+      read_RMW_virtual_dword(i->seg, i->rm_addr, &op1_32);
+      write_RMW_virtual_dword(op2_32);
+
+which triggers the following in
+void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len):
+
+  case 0xb0: // EOI
+    BX_PANIC(("EOI register not writable"));
+    break;
+
+which I assume is not the desired outcome.
+
+What follows is a patch to ignore reads of the EOI register.
+
+Cheers,
+Bill
+
+
+--- cpu/apic.cc.orig    Tue Mar 19 17:35:21 2002
++++ cpu/apic.cc Tue Mar 19 17:37:57 2002
+@@ -471,7 +471,11 @@
+   case 0xa0: // processor priority
+     *data = get_ppr (); break;
+   case 0xb0: // EOI
+-    BX_PANIC(("EOI register not writable"));
++    /*
++     * Read-modify-write operations should operate without generating
++     * exceptions, and are used by some operating systems to EOI.
++     * The results of reads should be ignored by the OS.
++     */
+     break;
+   case 0xd0: // logical destination
+     *data = (log_dest & 0xff) << 24; break;
+
