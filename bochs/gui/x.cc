@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.48 2002-09-25 07:21:38 bdenney Exp $
+// $Id: x.cc,v 1.49 2002-10-02 02:52:24 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -841,7 +841,8 @@ send_keyboard_mouse_status(void)
   void
 bx_gui_c::flush(void)
 {
-  XFlush(bx_x_display);
+  if (bx_x_display)
+    XFlush(bx_x_display);
 }
 
 
