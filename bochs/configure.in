@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.149 2002-10-11 01:11:10 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.150 2002-10-11 13:21:13 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -126,11 +126,33 @@ AC_CHECK_FUNCS(gettimeofday, AC_DEFINE(BX_HAVE_GETTIMEOFDAY))
 AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
 #include <sys/socket.h>])
 
+dnl As of autoconf 2.53, the standard largefile test fails for Linux/gcc.
+dnl It does not put the largefiles arguments into CFLAGS, even though Linux/gcc
+dnl does need them.  Since wxWindows had already solved this exact problem,
+dnl Bryce asked Vadim Zeitlin of the wxWindows project if Bochs could grab
+dnl their largefile test, and he said it was fine.  The re-implemented
+dnl AC_SYS_LARGEFILE test can be found in aclocal.m4.
 AC_SYS_LARGEFILE
-# Warning: wxwindows uses their own macro to test for largefile usability,
-# because they found bugs in the standard autoconf test that affect Linux/gcc.
-# We may need to do something similar.  See aclocal.m4 in wxWindows sources, at
-# http://cvs.wxwindows.org/cgi-bin/viewcvs.cgi/wxWindows/aclocal.m4
+
+dnl This logic came from wxWindows as well.  Bryce added the CFLAGS and 
+dnl CXXFLAGS lines, since Bochs makefiles don't use CPPFLAGS at all.
+dnl
+dnl we need to define _FILE_OFFSET_BITS or _LARGE_FILES on the compiler command
+dnl line because otherwise the system headers risk being included before
+dnl config.h which defines these constants leading to inconsistent
+dnl sizeof(off_t) in different source files of the same program and linking
+dnl problems
+if test "x$wx_largefile" = "xyes"; then
+    if test "x$ac_cv_sys_file_offset_bits" = "x64"; then
+        BX_LARGEFILE_FLAGS="-D_FILE_OFFSET_BITS=64 -D_LARGE_FILES"
+    else 
+        BX_LARGEFILE_FLAGS="-D_LARGE_FILES"
+    fi
+    CPPFLAGS="$CPPFLAGS $BX_LARGEFILE_FLAGS"
+    CFLAGS="$CFLAGS $BX_LARGEFILE_FLAGS"
+    CXXFLAGS="$CXXFLAGS $BX_LARGEFILE_FLAGS"
+fi
+dnl ---end of largefile tests
 
 AC_MSG_CHECKING(for struct timeval)
 AC_TRY_COMPILE([#include <sys/time.h>],
