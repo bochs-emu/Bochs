@@ -13,10 +13,12 @@
 
 #define LOG_THIS bx_gui.
 
+
+
 SDL_Thread *sdl_thread;
-SDL_Surface *sdl_screen, *sdl_menuscreen;
+SDL_Surface *sdl_screen, *sdl_fullscreen;
 SDL_Event sdl_event;
-int sdl_fullscreen;
+int sdl_fullscreen_toggle;
 int sdl_grab;
 int res_x, res_y;
 int headerbar_height;
@@ -26,6 +28,7 @@ unsigned tilewidth, tileheight;
 unsigned char *font = &sdl_font8x16[0][0];
 unsigned char menufont[256][8];
 Uint32 palette[256];
+Uint32 headerbar_fg, headerbar_bg;
 Bit8u old_mousebuttons=0, new_mousebuttons=0;
 int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
@@ -39,6 +42,92 @@ int old_mousey=0, new_mousey=0;
 #endif
 
 
+
+void switch_to_windowed(void)
+{
+  SDL_Surface *tmp;
+  SDL_Rect src, dst;
+  src.x = 0; src.y = 0;
+  src.w = res_x; src.h = res_y;
+  dst.x = 0; dst.y = 0;
+
+  tmp = SDL_CreateRGBSurface(
+      SDL_SWSURFACE,
+      res_x,
+      res_y,
+      32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+      0xff000000,
+      0x00ff0000,
+      0x0000ff00,
+      0x000000ff
+#else
+      0x000000ff,
+      0x0000ff00,
+      0x00ff0000,
+      0xff000000
+#endif
+      );
+
+  SDL_BlitSurface(sdl_fullscreen,&src,tmp,&dst);
+  SDL_UpdateRect(tmp,0,0,res_x,res_y);
+  SDL_FreeSurface(sdl_fullscreen);
+  sdl_fullscreen = NULL;
+
+  sdl_screen = SDL_SetVideoMode(res_x,res_y+headerbar_height,32, SDL_SWSURFACE);
+  dst.y = headerbar_height;
+  SDL_BlitSurface(tmp,&src,sdl_screen,&dst);
+  SDL_UpdateRect(tmp,0,0,res_x,res_y+headerbar_height);
+  SDL_FreeSurface(tmp);
+
+  SDL_ShowCursor(1);
+  SDL_WM_GrabInput(SDL_GRAB_OFF);
+  bx_gui.show_headerbar();
+  sdl_grab = 0;
+}
+
+void switch_to_fullscreen(void)
+{
+  SDL_Surface *tmp;
+  SDL_Rect src, dst;
+  src.x = 0; src.y = headerbar_height;
+  src.w = res_x; src.h = res_y;
+  dst.x = 0; dst.y = 0;
+
+  tmp = SDL_CreateRGBSurface(
+      SDL_SWSURFACE,
+      res_x,
+      res_y,
+      32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+      0xff000000,
+      0x00ff0000,
+      0x0000ff00,
+      0x000000ff
+#else
+      0x000000ff,
+      0x0000ff00,
+      0x00ff0000,
+      0xff000000
+#endif
+      );
+  SDL_BlitSurface(sdl_screen,&src,tmp,&dst);
+  SDL_UpdateRect(tmp,0,0,res_x,res_y);
+  SDL_FreeSurface(sdl_screen);
+  sdl_screen = NULL;
+
+  sdl_fullscreen = SDL_SetVideoMode(res_x,res_y,32, SDL_HWSURFACE|SDL_FULLSCREEN);
+  src.y = 0;
+  SDL_BlitSurface(tmp,&src,sdl_fullscreen,&dst);
+  SDL_UpdateRect(tmp,0,0,res_x,res_y);
+  SDL_FreeSurface(tmp);
+
+  SDL_ShowCursor(0);
+  SDL_WM_GrabInput(SDL_GRAB_ON);
+  sdl_grab = 1;
+}
+
+
 void bx_gui_c::specific_init(
     bx_gui_c *th,
     int argc,
@@ -47,13 +136,13 @@ void bx_gui_c::specific_init(
     unsigned y_tilesize,
     unsigned header_bar_y)
 {
-  char videodriver[64];
   int i,j;
   Uint32 color, *buf;
 
   tilewidth = x_tilesize;
   tileheight = y_tilesize;
-  
+  headerbar_height = header_bar_y;
+
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
       menufont[i][j] = sdl_font8x8[i][j];
@@ -68,38 +157,9 @@ void bx_gui_c::specific_init(
 
   sdl_screen = NULL;
   th->dimension_update(640,480);
-  sdl_menuscreen = SDL_CreateRGBSurface(
-      SDL_SWSURFACE,
-      BX_MENU_WIDTH,
-      BX_MENU_HEIGHT,
-      32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-      0xFF000000,
-      0x00FF0000,
-      0x0000FF00,
-      0x000000FF
-#else
-      0x000000FF,
-      0x0000FF00,
-      0x00FF0000,
-      0xFF000000
-#endif
-      );
-  if( !sdl_menuscreen )
-  {
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC (("Unable allocate bochs-menu: %s",SDL_GetError()));
-  }
     
-  for(i=0;i<BX_MENU_HEIGHT;i++)
-  {
-    buf = (Uint32 *)sdl_menuscreen->pixels + i*sdl_menuscreen->pitch/4;
-    for(j=0;j<BX_MENU_WIDTH;j++)
-      *buf++ = 0x80FC5454;
-  }
-  
 
-  sdl_fullscreen = 0;
+  sdl_fullscreen_toggle = 0;
   SDL_EnableKeyRepeat(250,50);
   SDL_WM_SetCaption(
 #if BX_CPU_LEVEL < 2
@@ -134,8 +194,19 @@ void bx_gui_c::text_update(
   Uint32 fgcolor;
   Uint32 bgcolor;
   Uint32 *buf, *buf_row, *buf_char;
+  Uint32 disp;
 
-  buf_row = (Uint32 *)sdl_screen->pixels;
+  if( sdl_screen )
+  {
+    disp = sdl_screen->pitch/4;
+    buf_row = (Uint32 *)sdl_screen->pixels + headerbar_height*disp;
+  }
+  else
+  {
+    disp = sdl_fullscreen->pitch/4;
+    buf_row = (Uint32 *)sdl_fullscreen->pixels;
+  }
+  
   do
   {
     buf = buf_row;
@@ -171,7 +242,7 @@ void bx_gui_c::text_update(
 	    font_row = font_row << 1;
 	  } while( --fontpixels );
 	  buf -= fontwidth;
-	  buf += sdl_screen->pitch/4;
+	  buf += disp;
 	} while( --fontrows );
 
 	// restore output buffer ptr to start of this char
@@ -188,7 +259,7 @@ void bx_gui_c::text_update(
     } while( --hchars );
 
     // go to next character row location
-    buf_row += sdl_screen->pitch/4 * fontheight;
+    buf_row += disp * fontheight;
   } while( --rows );
 }
 
@@ -198,19 +269,34 @@ void bx_gui_c::graphics_tile_update(
     unsigned x,
     unsigned y)
 {
-  Uint32 *buf = (Uint32 *)sdl_screen->pixels + y*sdl_screen->pitch/4 + x;
-  Uint32 *buf_row, color;
+  Uint32 *buf, disp;
+  Uint32 *buf_row;
   int i,j;
   
-  for(i=0;i<tileheight;i++)
+  if( sdl_screen )
+  {
+    disp = sdl_screen->pitch/4;
+    buf = (Uint32 *)sdl_screen->pixels + (headerbar_height+y)*disp + x;
+  }
+  else
+  {
+    disp = sdl_fullscreen->pitch/4;
+    buf = (Uint32 *)sdl_fullscreen->pixels + y*disp + x;
+  }
+
+  i = tileheight;
+  if( i + y > res_y ) i = res_y - y;
+
+  do
   {
     buf_row = buf;
-    for(j=0;j<16;j++)
+    j = tilewidth;
+    do
     {
       *buf++ = palette[*snapshot++];
-    }
-    buf = buf_row + sdl_screen->pitch/4;
-  }
+    } while( --j );
+    buf = buf_row + disp;
+  } while( --i);
 }
 
 
@@ -223,12 +309,14 @@ void bx_gui_c::handle_events(void)
     switch( sdl_event.type )
     {
       case SDL_VIDEOEXPOSE:
-	SDL_UpdateRect( sdl_screen, 0,0, res_x, res_y );
+	if( sdl_fullscreen_toggle == 0 )
+	  SDL_UpdateRect( sdl_screen, 0,0, res_x, res_y+headerbar_height );
+	else
+	  SDL_UpdateRect( sdl_screen, 0,headerbar_height, res_x, res_y );
 	break;
 
       case SDL_MOUSEMOTION:
 	new_mousebuttons = ((sdl_event.motion.state & 0x01)|((sdl_event.motion.state>>1)&0x02));
-	cout << "mouse motion: x=" << sdl_event.motion.xrel << " y=" << sdl_event.motion.yrel << " buttons=" << (int)(new_mousebuttons) <<endl;
 	bx_devices.keyboard->mouse_motion(
 	    sdl_event.motion.xrel,
 	    sdl_event.motion.yrel,
@@ -240,7 +328,7 @@ void bx_gui_c::handle_events(void)
 
       case SDL_MOUSEBUTTONDOWN:
 	if( (sdl_event.button.button == SDL_BUTTON(2))
-	    && (sdl_fullscreen == 0) )
+	    && (sdl_fullscreen_toggle == 0) )
 	{
 	  if( sdl_grab == 0 )
 	  {
@@ -264,7 +352,7 @@ void bx_gui_c::handle_events(void)
 	  ((sdl_event.button.state>>1)&0x02)	|
 	  ((sdl_event.button.state<<1)&0x04)	;
 	// filter out middle button if not fullscreen
-	if( sdl_fullscreen == 0 )
+	if( sdl_fullscreen_toggle == 0 )
 	  new_mousebuttons &= 0x03;
 	// send motion information
 	bx_devices.keyboard->mouse_motion(
@@ -282,18 +370,18 @@ void bx_gui_c::handle_events(void)
 	// Windows/Fullscreen toggle-check
 	if( sdl_event.key.keysym.sym == SDLK_SCROLLOCK )
 	{
-	  SDL_WM_ToggleFullScreen( sdl_screen );
-	  sdl_fullscreen = ~sdl_fullscreen;
-	  if( sdl_fullscreen == 0 )
-	  {
-	    SDL_ShowCursor( 1 );
-	    SDL_WM_GrabInput( SDL_GRAB_OFF );
-	  }
+	  Uint32 *buf, *buf_row;
+	  Uint32 *buf2, *buf_row2;
+	  Uint32 disp, disp2;
+	  int rows, cols;
+//	  SDL_WM_ToggleFullScreen( sdl_screen );
+	  sdl_fullscreen_toggle = ~sdl_fullscreen_toggle;
+	  if( sdl_fullscreen_toggle == 0 )
+	    switch_to_windowed();
 	  else
-	  {
-	    SDL_ShowCursor( 0 );
-	    SDL_WM_GrabInput( SDL_GRAB_ON );
-	  }
+	    switch_to_fullscreen();
+	  bx_gui.show_headerbar();
+	  bx_gui.flush();
 	  break;
 	}
 
@@ -328,7 +416,10 @@ void bx_gui_c::handle_events(void)
 
 void bx_gui_c::flush(void)
 {
-  SDL_UpdateRect( sdl_screen,0,0,res_x,res_y );
+  if( sdl_screen )
+    SDL_UpdateRect( sdl_screen,0,0,res_x,res_y+headerbar_height );
+  else
+    SDL_UpdateRect( sdl_fullscreen,0,0,res_x,res_y);
 }
 
 
@@ -336,16 +427,35 @@ void bx_gui_c::clear_screen(void)
 {
   int i = res_y, j;
   Uint32 color;
-  Uint32 *buf;
+  Uint32 *buf, *buf_row;
+  Uint32 disp;
 
-  color = SDL_MapRGB( sdl_screen->format, 0,0,0 );
-  while( i-- )
+  if( sdl_screen )
   {
-    buf = (Uint32 *)sdl_screen->pixels + i*sdl_screen->pitch/4;
-    j = res_x;
-    while( j ) buf[--j] = color;
+    color = SDL_MapRGB( sdl_screen->format, 0,0,0 );
+    disp = sdl_screen->pitch/4;
+    buf = (Uint32 *)sdl_screen->pixels + headerbar_height*disp;
   }
-  SDL_UpdateRect(sdl_screen,0,0,res_x,res_y);
+  else if( sdl_fullscreen )
+  {
+    color = SDL_MapRGB( sdl_fullscreen->format, 0,0,0 );
+    disp = sdl_fullscreen->pitch/4;
+    buf = (Uint32 *)sdl_fullscreen->pixels;
+  }
+  else return;
+
+  do
+  {
+    buf_row = buf;
+    j = res_x;
+    while( j-- ) *buf++ = color;
+    buf = buf_row + disp;
+  } while( --i );
+
+  if( sdl_screen )
+    SDL_UpdateRect(sdl_screen,0,0,res_x,res_y+headerbar_height);
+  else
+    SDL_UpdateRect(sdl_fullscreen,0,0,res_x,res_y);
 }
 
 
@@ -362,7 +472,11 @@ Boolean bx_gui_c::palette_change(
 
   if( index > 255 ) return 0;
 
-  palette[index] = SDL_MapRGB( sdl_screen->format, palred, palgreen, palblue );
+  if( sdl_screen )
+    palette[index] = SDL_MapRGB( sdl_screen->format, palred, palgreen, palblue );
+  else if( sdl_fullscreen )
+    palette[index] = SDL_MapRGB( sdl_fullscreen->format, palred, palgreen, palblue );
+
   return 1;
 }
 
@@ -371,20 +485,71 @@ void bx_gui_c::dimension_update(
     unsigned x,
     unsigned y)
 {
+  int i=headerbar_height;
+
+  // TODO: remove this stupid check whenever the vga driver is fixed
+  if( y == 208 ) y = 200;
+  // TODO: remove this stupid check whenever 80x50 font is properly handled
+  if( y > x )
+  {
+    y = y>>1;
+    font = &sdl_font8x8[0][0];
+    fontheight = 8;
+    fontwidth = 8;
+  }
+  else
+  {
+    font = &sdl_font8x16[0][0];
+    fontheight = 16;
+    fontwidth = 8;
+  }
+
   if( (x == res_x) && (y == res_y )) return;
 
   if( sdl_screen )
-    SDL_FreeSurface( sdl_screen );
-  sdl_screen = SDL_SetVideoMode( x, y, 32, SDL_SWSURFACE );
-  if( !sdl_screen )
   {
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC (("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
+    SDL_FreeSurface( sdl_screen );
+    sdl_screen = NULL;
+  }
+  if( sdl_fullscreen )
+  {
+    SDL_FreeSurface( sdl_fullscreen );
+    sdl_fullscreen = NULL;
+  }
+
+  if( sdl_fullscreen_toggle == 0 )
+  {
+    sdl_screen = SDL_SetVideoMode( x, y+headerbar_height, 32, SDL_SWSURFACE );
+    if( !sdl_screen )
+    {
+      LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
+      BX_PANIC (("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
+    }
+    headerbar_fg = SDL_MapRGB(
+	sdl_screen->format,
+	BX_HEADERBAR_FG_RED,
+	BX_HEADERBAR_FG_GREEN,
+	BX_HEADERBAR_FG_BLUE );
+    headerbar_bg = SDL_MapRGB(
+	sdl_screen->format,
+	BX_HEADERBAR_BG_RED,
+	BX_HEADERBAR_BG_GREEN,
+	BX_HEADERBAR_BG_BLUE );
+  }
+  else
+  {
+    sdl_fullscreen = SDL_SetVideoMode( x, y, 32, SDL_HWSURFACE|SDL_FULLSCREEN );
+    if( !sdl_fullscreen )
+    {
+      LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
+      BX_PANIC (("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
+    }
   }
   res_x = x;
   res_y = y;
   textres_x = x / fontwidth;
   textres_y = y / fontheight;
+  bx_gui.show_headerbar();
 }
 
 
@@ -418,7 +583,25 @@ void bx_gui_c::replace_bitmap(
 
 void bx_gui_c::show_headerbar(void)
 {
-  cout << "sdl: show headerbar" << endl;
+  Uint32 *buf;
+  Uint32 *buf_row;
+  int rowsleft = headerbar_height;
+  int colsleft;
+
+  if( !sdl_screen ) return;
+  buf = (Uint32 *)sdl_screen->pixels;
+
+  do
+  {
+    colsleft = res_x;
+    buf_row = buf;
+    do
+    {
+      *buf++ = headerbar_bg;
+    } while( --colsleft );
+    buf = buf_row + sdl_screen->pitch/4;
+  } while( --rowsleft );
+  SDL_UpdateRect(sdl_screen,0,0,res_x,headerbar_height);
 }
 
 
@@ -438,8 +621,6 @@ void bx_gui_c::exit(void)
 {
   if( sdl_screen )
     SDL_FreeSurface(sdl_screen);
-  if( sdl_menuscreen )
-    SDL_FreeSurface(sdl_menuscreen);
 }
 
 
