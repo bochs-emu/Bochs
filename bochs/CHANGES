@@ -88,6 +88,7 @@ Patches applied:
 - cpu
   - fix flaw in IO bitmap permission of TSS
   - cpu resets on triple fault
+  - remove calculation on cr3 in dtranslate_linear (contributed by Conn Clark)
 - I/O devices
   - harddisks 
     - per device selectable Harddisk modes :
@@ -165,6 +166,7 @@ Patches applied:
 - general
   - fixes for compilation with MSVC (patch from Andrew Zabolotny)
   - fixes for cross-compilation (patch from Jeroen Janssen)
+  - win32 nsis installer script updates
 - configuration interface
   - wx configuration dialogs improved
   - gui dialogs as an extension of the textconfig interface on win32 added
