@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.59 2003-08-25 16:46:18 vruppert Exp $
+// $Id: wxdialog.cc,v 1.60 2003-08-26 17:25:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -153,7 +153,7 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
 
 void LogMsgAskDialog::ShowHelp ()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -352,7 +352,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
 	int cap = capacity->GetSelection ();
 	if (capacity->GetString (cap).Cmp ("none") == 0
 	    || !(cap>=0 && cap<n_floppy_type_names)) {
-	  wxMessageBox("You must choose a valid capacity for the new disk image", "Bad Capacity", wxOK | wxICON_ERROR );
+	  wxMessageBox("You must choose a valid capacity for the new disk image", "Bad Capacity", wxOK | wxICON_ERROR, this );
 	  return;
 	}
 	char name[1024];
@@ -362,7 +362,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
 	  msg.Printf ("Created a %s disk image called '%s'.",
 	      capacity->GetString (cap).c_str (), 
 	      filename->GetValue ().c_str ());
-	  wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION);
+	  wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION, this);
 	}
       }
       break;
@@ -377,7 +377,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
 
 void FloppyConfigDialog::ShowHelp ()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
 
@@ -527,7 +527,7 @@ void LogOptionsDialog::OnEvent(wxCommandEvent& event)
       BrowseTextCtrl (debuggerlogfile);
       break;
     case ID_Advanced:
-      wxMessageBox ("The advanced dialog is not implemented yet.");
+      wxMessageBox ("The advanced dialog is not implemented yet.", "Info", wxOK, this);
       break;
     case wxID_OK:
       EndModal (wxID_OK);
@@ -545,7 +545,7 @@ void LogOptionsDialog::OnEvent(wxCommandEvent& event)
 
 void LogOptionsDialog::ShowHelp ()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -782,7 +782,7 @@ void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
 
 void AdvancedLogOptionsDialog::ShowHelp ()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -984,7 +984,7 @@ void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
 
 void ConfigMemoryDialog::ShowHelp ()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
 #if BX_DEBUGGER
@@ -1467,6 +1467,10 @@ bool ParamDialog::CopyGuiToParam ()
 	wxString complaint;
 	complaint.Printf ("Invalid integer for %s.", pstr->param->get_name ());
 	int n = GetTextCtrlInt (pstr->u.text, &valid, true, complaint);
+        if ((n < nump->get_min ()) || (n > nump->get_max ())) {
+          wxMessageBox("Numerical parameter out of range", "Error", wxOK | wxICON_ERROR, this );
+          return false;
+        }
 	if (n != nump->get ()) nump->set (n);
 	break;
         }
@@ -1743,7 +1747,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
 
 void ParamDialog::ShowHelp ()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
 /////////////////////////////////////////////////////////////////
