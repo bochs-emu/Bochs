@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.273 2005-03-20 09:28:43 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.274 2005-03-21 19:15:41 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1196,9 +1196,17 @@ EXT_DEBUG_OBJS=''
 AC_ARG_ENABLE(external-debugger,
   [  --enable-external-debugger        enable external debugger support],
   [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_EXTERNAL_DEBUGGER, 1)
-    EXT_DEBUG_OBJS=extdb.o
+    case $target in
+      *-pc-windows* | *-cygwin* | *-mingw32*)
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(BX_EXTERNAL_DEBUGGER, 1)
+        EXT_DEBUG_OBJS=extdb.o
+        ;;
+      *)
+        echo "ERROR: external debugger is currently supported on win32 only"
+        exit 1
+        ;;
+    esac
    else
     AC_MSG_RESULT(no)
    fi],
@@ -1582,6 +1590,10 @@ AC_ARG_ENABLE(3dnow,
     AC_DEFINE(BX_SUPPORT_3DNOW, 0)
    fi
    ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_3DNOW, 0)
+  ]
   )
 
 support_sse=0
@@ -1616,6 +1628,11 @@ AC_ARG_ENABLE(sse,
     fi
   ]
   )
+
+if test "$support_sse" -gt 0 -a "$bx_cpu_level" -lt 6; then
+  echo "ERROR: for SSE or SSE2 support the CPU level must be set to 6"
+  exit 1
+fi
 
 if test "$support_sse" = 2; then
   AC_DEFINE(BX_SUPPORT_SSE,  2)
@@ -1803,7 +1820,7 @@ AC_ARG_ENABLE(sb16,
              AC_MSG_RESULT(win)
              DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
              ;;
-           *-macosx*)
+           *-macosx* | *-macos*)
              SOUNDLOW_OBJS='soundosx.o'
              AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
              AC_MSG_RESULT(osx)
@@ -1937,6 +1954,10 @@ if test $build_docbook = 1; then
   AC_MSG_RESULT(yes)
   BUILD_DOCBOOK_VAR=build_docbook
   INSTALL_DOCBOOK_VAR=install_docbook
+  if test "$DOCBOOK2HTML" == not_found; then
+    echo "ERROR: docbook2html must be installed to build the documentation"
+    exit 1
+  fi
 else
   AC_MSG_RESULT(no)
 fi
