@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.50 2002-04-10 23:25:49 cbothamy Exp $
+// $Id: rombios.c,v 1.51 2002-04-11 20:17:03 japj Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -172,6 +172,8 @@
 
   
 #define PANIC_PORT 0x400
+
+#define DEBUG_ROMBIOS 0
 
 // #20  is dec 20
 // #$20 is hex 20 = 32
@@ -1055,10 +1057,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.50 $";
-static char bios_date_string[] = "$Date: 2002-04-10 23:25:49 $";
+static char bios_cvs_version_string[] = "$Revision: 1.51 $";
+static char bios_date_string[] = "$Date: 2002-04-11 20:17:03 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.50 2002-04-10 23:25:49 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.51 2002-04-11 20:17:03 japj Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1068,8 +1070,6 @@ static char CVSID[] = "$Id: rombios.c,v 1.50 2002-04-10 23:25:49 cbothamy Exp $"
 #define BIOS_PRINTF_DEBUG    4
 #define BIOS_PRINTF_ALL      (BIOS_PRINTF_SCREEN | BIOS_PRINTF_DEBUG)
 #define BIOS_PRINTF_DEBHALT  (BIOS_PRINTF_SCREEN | BIOS_PRINTF_DEBUG | BIOS_PRINTF_HALT)
-
-#define DEBUG_ROMBIOS 0
 
 #if DEBUG_ROMBIOS
 #  define printf(format, p...) bios_printf(BIOS_PRINTF_DEBUG, format, ##p)
