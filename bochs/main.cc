@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.218 2003-01-13 17:55:12 cbothamy Exp $
+// $Id: main.cc,v 1.219 2003-01-28 16:56:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -747,7 +747,8 @@ void bx_init_options ()
   // initialize serial and parallel port options
 #define PAR_SER_INIT_LIST_MAX \
   ((BXP_PARAMS_PER_PARALLEL_PORT * BX_N_PARALLEL_PORTS) \
-  + (BXP_PARAMS_PER_SERIAL_PORT * BX_N_SERIAL_PORTS))
+  + (BXP_PARAMS_PER_SERIAL_PORT * BX_N_SERIAL_PORTS) \
+  + (BXP_PARAMS_PER_USB_HUB * BX_N_USB_HUBS))
   bx_param_c *par_ser_init_list[1+PAR_SER_INIT_LIST_MAX];
   bx_param_c **par_ser_ptr = &par_ser_init_list[0];
 
@@ -796,6 +797,43 @@ void bx_init_options ()
         // add to menu
         *par_ser_ptr++ = bx_options.com[i].Oenabled;
         *par_ser_ptr++ = bx_options.com[i].Odev;
+  }
+
+  // usb hubs
+  for (i=0; i<BX_N_USB_HUBS; i++) {
+        // options for USB hub
+        sprintf (name, "Enable usb hub #%d (USB%d)", i+1, i+1);
+        sprintf (descr, "Controls whether USB%d is installed or not", i+1);
+        bx_options.usb[i].Oenabled = new bx_param_bool_c (
+                BXP_USBx_ENABLED(i+1),
+                strdup(name), 
+                strdup(descr), 
+                (i==0)?1 : 0);  // only enable the first by default
+        bx_options.usb[i].Oioaddr = new bx_param_num_c (
+                BXP_USBx_IOADDR(i+1),
+                "USB ioaddr",
+                "IO base adress of USB hub",
+                0, 0xffe0,
+                (i==0)?0xff40 : 0);
+        bx_options.usb[i].Oirq = new bx_param_num_c (
+                BXP_USBx_IRQ(i+1),
+                "USB irq",
+                "IRQ of USB hub",
+                0, 15,
+                (i==0)?9 : 0);
+        deplist = new bx_list_c (BXP_NULL, 2);
+        deplist->add (bx_options.usb[i].Oioaddr);
+        deplist->add (bx_options.usb[i].Oirq);
+        bx_options.usb[i].Oenabled->set_dependent_list (deplist);
+        // add to menu
+        *par_ser_ptr++ = bx_options.usb[i].Oenabled;
+        *par_ser_ptr++ = bx_options.usb[i].Oioaddr;
+        *par_ser_ptr++ = bx_options.usb[i].Oirq;
+
+        bx_options.usb[i].Oioaddr->set_ask_format (
+          BX_WITH_WX? "I/O Address :"
+          : "Enter new ioaddr: [0x%x] ");
+        bx_options.usb[i].Oioaddr->set_base (16);
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
@@ -2924,7 +2962,26 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     }
 #endif
-
+  else if (!strcmp(params[0], "usb1")) {
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        bx_options.usb[0].Oenabled->set (atol(&params[i][8]));
+        }
+      else if (!strncmp(params[i], "ioaddr=", 7)) {
+        if ( (params[i][7] == '0') && (params[i][8] == 'x') )
+          bx_options.usb[0].Oioaddr->set (strtoul (&params[i][7], NULL, 16));
+        else
+          bx_options.usb[0].Oioaddr->set (strtoul (&params[i][7], NULL, 10));
+        bx_options.usb[0].Oenabled->set (1);
+        }
+      else if (!strncmp(params[i], "irq=", 4)) {
+        bx_options.usb[0].Oirq->set (atol(&params[i][4]));
+        }
+      else {
+        PARSE_ERR(("%s: unknown parameter for usb1 ignored.", context));
+        }
+      }
+    }
   else if (!strcmp(params[0], "floppy_bootsig_check")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: floppy_bootsig_check directive malformed.", context));
@@ -3661,6 +3718,18 @@ bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
 }
 
 int
+bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
+{
+  fprintf (fp, "usb%d: enabled=%d", n, opt->Oenabled->get ());
+  if (opt->Oenabled->get ()) {
+    fprintf (fp, ", ioaddr=0x%04x, irq=%d", opt->Oioaddr->get (),
+      opt->Oirq->get ());
+  }
+  fprintf (fp, "\n");
+  return 0;
+}
+
+int
 bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
 {
   if (!opt->Opresent->get ()) {
@@ -3786,6 +3855,7 @@ bx_write_configuration (char *rc, int overwrite)
   //bx_write_serial_options (fp, &bx_options.com[1], 2);
   //bx_write_serial_options (fp, &bx_options.com[2], 3);
   //bx_write_serial_options (fp, &bx_options.com[3], 4);
+  bx_write_usb_options (fp, &bx_options.usb[0], 1);
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
   fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "floppy" : (bootdrive==BX_BOOT_DISKC) ? "disk" : "cdrom");
