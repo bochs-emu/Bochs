@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.10 2003-09-14 20:16:25 vruppert Exp $
+// $Id: serial.h,v 1.11 2003-10-28 18:40:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -60,7 +60,6 @@ typedef struct {
   bx_bool  ls_ipending;
   bx_bool  ms_ipending;
   bx_bool  rx_ipending;
-  bx_bool  tx_ipending;
 
   int  baudrate;
   int  tx_timer_index;
