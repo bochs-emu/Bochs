@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.70 2004-06-21 10:52:50 cbothamy Exp $
+// $Id: devices.cc,v 1.71 2004-06-21 19:36:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -106,7 +106,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.70 2004-06-21 10:52:50 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.71 2004-06-21 19:36:04 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -173,7 +173,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pluginUnmapped->init ();
 
   // NE2000 NIC
-  if (bx_options.ne2k.Opresent->get ()) > {
+  if (bx_options.ne2k.Opresent->get ()) {
 #if BX_NE2K_SUPPORT
     PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
 #else
