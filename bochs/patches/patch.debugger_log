@@ -1,0 +1,318 @@
+----------------------------------------------------------------------
+Patch name: patch.debugger_log
+Author: Christophe Bothamy
+Date: 2 Dec 2002
+
+Detailed description:
+With this patch, you can define a debugger log output file.
+This implements feature request 
+[ 629068 ] make a way to log debug output to file
+
+Note: wxWindow config interface is not updated
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 2 Dec 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: .bochsrc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/.bochsrc,v
+retrieving revision 1.59
+diff -u -r1.59 .bochsrc
+--- .bochsrc	19 Nov 2002 15:06:05 -0000	1.59
++++ .bochsrc	2 Dec 2002 11:13:14 -0000
+@@ -351,6 +351,18 @@
+ debug: action=ignore
+ 
+ #=======================================================================
++# DEBUGGER_LOG:
++# Give the path of the log file you'd like Bochs to log debugger output
++# If you really don't want it, make it /dev/null. :^(
++#
++# Examples:
++#   log: ./debugger.out
++#   log: /dev/tty
++#=======================================================================
++#debugger_log: /dev/null
++debugger_log: debugout.txt
++
++#=======================================================================
+ # com1:
+ # This defines a serial (COM) port. You can specify a device to use as com1.
+ # This can be a real serial line, or a pty.  To use a pty (under X/Unix),
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.109
+diff -u -r1.109 bochs.h
+--- bochs.h	18 Nov 2002 17:16:07 -0000	1.109
++++ bochs.h	2 Dec 2002 11:13:14 -0000
+@@ -589,6 +589,7 @@
+ typedef struct {
+   bx_param_string_c *Ofilename;
+   bx_param_string_c *Oprefix;
++  bx_param_string_c *Odebugger_filename;
+ } bx_log_options;
+ 
+ typedef struct {
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.199
+diff -u -r1.199 main.cc
+--- main.cc	1 Dec 2002 14:18:37 -0000	1.199
++++ main.cc	2 Dec 2002 11:13:15 -0000
+@@ -1128,6 +1128,12 @@
+       "%t%e%d", BX_PATHNAME_LEN);
+   bx_options.log.Oprefix->set_ask_format ("Enter log prefix: [%s] ");
+ 
++  bx_options.log.Odebugger_filename = new bx_param_filename_c (BXP_DEBUGGER_LOG_FILENAME,
++      "Debugger Log filename",
++      "Pathname of debugger log file",
++      "-", BX_PATHNAME_LEN);
++  bx_options.log.Odebugger_filename->set_ask_format ("Enter debugger log filename: [%s] ");
++
+   // loader
+   bx_options.load32bitOSImage.OwhichOS = new bx_param_enum_c (BXP_LOAD32BITOS_WHICH,
+       "Which operating system?",
+@@ -1350,6 +1356,7 @@
+   // logfile
+   bx_options.log.Ofilename->reset();
+   bx_options.log.Oprefix->reset();
++  bx_options.log.Odebugger_filename->reset();
+ 
+   // loader
+   bx_options.load32bitOSImage.OwhichOS->reset();
+@@ -2884,6 +2891,12 @@
+       }
+     bx_options.log.Oprefix->set (params[1]);
+     }
++  else if (!strcmp(params[0], "debugger_log")) {
++    if (num_params != 2) {
++      PARSE_ERR(("%s: debugger_log directive has wrong # args.", context));
++      }
++    bx_options.log.Odebugger_filename->set (params[1]);
++    }
+   else if (!strcmp(params[0], "panic")) {
+     if (num_params != 2) {
+       PARSE_ERR(("%s: panic directive malformed.", context));
+@@ -3614,6 +3627,7 @@
+ {
+   fprintf (fp, "log: %s\n", opt->Ofilename->getptr ());
+   fprintf (fp, "logprefix: %s\n", opt->Oprefix->getptr ());
++  fprintf (fp, "debugger_log: %s\n", opt->Odebugger_filename->getptr ());
+   fprintf (fp, "panic: action=%s\n",
+       io->getaction(logfunctions::get_default_action (LOGLEV_PANIC)));
+   fprintf (fp, "error: action=%s\n",
+Index: debug/dbg_main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/dbg_main.cc,v
+retrieving revision 1.93
+diff -u -r1.93 dbg_main.cc
+--- debug/dbg_main.cc	21 Nov 2002 18:22:03 -0000	1.93
++++ debug/dbg_main.cc	2 Dec 2002 11:13:17 -0000
+@@ -79,6 +79,7 @@
+ static void     bx_dbg_journal_a20_event(unsigned val);
+ #endif
+ 
++static FILE *debugger_log = NULL;
+ 
+ static struct {
+ #if BX_NUM_SIMULATORS >= 2
+@@ -225,6 +226,10 @@
+   char *buf = new char[1024];
+   vsprintf (buf, fmt, ap);
+   va_end(ap);
++  if (debugger_log != NULL) {
++    fprintf(debugger_log,"%s", buf);
++    fflush(debugger_log);
++    }
+   SIM->debug_puts (buf); // send to debugger, which will free buf when done.
+ }
+ 
+@@ -349,6 +354,19 @@
+     (void) bx_nest_infile(bx_debug_rc_fname);
+     }
+ 
++  // Open debugger log file if needed
++  if (strcmp(bx_options.log.Odebugger_filename->getptr(), "-") != 0) {
++    debugger_log = fopen (bx_options.log.Odebugger_filename->getptr(), "w");
++    if (!debugger_log) {
++      BX_PANIC(("Can not open debugger log file '%s'",
++        bx_options.log.Odebugger_filename->getptr()));
++      }
++    else {
++      BX_INFO(("Using debugger log file %s",
++        bx_options.log.Odebugger_filename->getptr()));
++      }
++    }
++
+ #if BX_DISASM
+   memset(bx_disasm_ibuf, 0, sizeof(bx_disasm_ibuf));
+ #endif
+@@ -427,6 +445,9 @@
+ 
+   bx_dbg_user_input_loop();
+ 
++  if (debugger_log != NULL)
++    fclose(debugger_log);
++
+   bx_dbg_exit(0);
+   return(0); // keep compiler happy
+ }
+@@ -578,6 +599,11 @@
+     bx_dbg_exit(1);
+     }
+   tmp_buf_ptr = &tmp_buf[0];
++
++  if (debugger_log != NULL) {
++    fprintf(debugger_log, "%s", tmp_buf);
++    fflush(debugger_log);
++    }
+ 
+   // look for first non-whitespace character
+   while ( ((*tmp_buf_ptr == ' ') || (*tmp_buf_ptr == '\t')) &&
+Index: gui/siminterface.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
+retrieving revision 1.86
+diff -u -r1.86 siminterface.cc
+--- gui/siminterface.cc	21 Nov 2002 19:12:31 -0000	1.86
++++ gui/siminterface.cc	2 Dec 2002 11:13:17 -0000
+@@ -75,6 +75,8 @@
+   virtual int set_log_file (char *path);
+   virtual int get_log_prefix (char *prefix, int len);
+   virtual int set_log_prefix (char *prefix);
++  virtual int get_debugger_log_file (char *path, int len);
++  virtual int set_debugger_log_file (char *path);
+   virtual int get_floppy_options (int drive, bx_floppy_options *out);
+   virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *device = NULL);
+   virtual char *get_floppy_type_name (int type);
+@@ -371,6 +373,20 @@
+ bx_real_sim_c::set_log_prefix (char *prefix)
+ {
+   bx_options.log.Oprefix->set (prefix);
++  return 0;
++}
++
++int 
++bx_real_sim_c::get_debugger_log_file (char *path, int len)
++{
++  strncpy (path, bx_options.log.Odebugger_filename->getptr (), len);
++  return 0;
++}
++
++int 
++bx_real_sim_c::set_debugger_log_file (char *path)
++{
++  bx_options.log.Odebugger_filename->set (path);
+   return 0;
+ }
+ 
+Index: gui/siminterface.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
+retrieving revision 1.89
+diff -u -r1.89 siminterface.h
+--- gui/siminterface.h	19 Nov 2002 09:27:39 -0000	1.89
++++ gui/siminterface.h	2 Dec 2002 11:13:18 -0000
+@@ -278,6 +278,7 @@
+   BXP_NEWHARDDRIVESUPPORT,
+   BXP_LOG_FILENAME,
+   BXP_LOG_PREFIX,
++  BXP_DEBUGGER_LOG_FILENAME,
+   BXP_CMOS_PATH,
+   BXP_CMOS_IMAGE,
+   BXP_CMOS_TIME0,
+@@ -1194,6 +1195,8 @@
+   virtual int set_log_file (char *path) {return -1;}
+   virtual int get_log_prefix (char *prefix, int len) {return -1;}
+   virtual int set_log_prefix (char *prefix) {return -1;}
++  virtual int get_debugger_log_file (char *path, int len) {return -1;}
++  virtual int set_debugger_log_file (char *path) {return -1;}
+   virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}
+   virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *where = NULL) {return -1;}
+   virtual char *get_floppy_type_name (int type) {return NULL;}
+Index: gui/textconfig.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/textconfig.cc,v
+retrieving revision 1.5
+diff -u -r1.5 textconfig.cc
+--- gui/textconfig.cc	15 Nov 2002 14:38:57 -0000	1.5
++++ gui/textconfig.cc	2 Dec 2002 11:13:18 -0000
+@@ -254,15 +254,16 @@
+ "0. Return to previous menu\n"
+ "1. Log file: %s\n"
+ "2. Log prefix: %s\n"
+-"3. Log options for all devices\n"
+-"4. Log options for individual devices\n"
+-"5. Memory options\n"
+-"6. Interface options\n"
+-"7. Disk options\n"
+-"8. Serial or Parallel port options\n"
+-"9. Sound Blaster 16 options\n"
+-"10. NE2000 network card options\n"
+-"11. Other options\n"
++"3. Debug log file: %s\n"
++"4. Log options for all devices\n"
++"5. Log options for individual devices\n"
++"6. Memory options\n"
++"7. Interface options\n"
++"8. Disk options\n"
++"9. Serial or Parallel port options\n"
++"10. Sound Blaster 16 options\n"
++"11. NE2000 network card options\n"
++"12. Other options\n"
+ "\n"
+ "Please choose one: [0] ";
+ 
+@@ -452,6 +453,7 @@
+      {
+        char prompt[CI_PATH_LENGTH];
+        char oldpath[CI_PATH_LENGTH];
++       char olddebuggerpath[CI_PATH_LENGTH];
+        char oldprefix[CI_PATH_LENGTH];
+        int  retval;
+ 
+@@ -461,22 +463,26 @@
+        retval = SIM->get_log_prefix (oldprefix, CI_PATH_LENGTH);
+        assert (retval >= 0);
+        double_percent(oldprefix,CI_PATH_LENGTH);
++       retval = SIM->get_debugger_log_file (olddebuggerpath, CI_PATH_LENGTH);
++       assert (retval >= 0);
++       double_percent(olddebuggerpath,CI_PATH_LENGTH);
+ 
+-       sprintf (prompt, startup_options_prompt, oldpath, oldprefix);
+-       if (ask_uint (prompt, 0, 11, 0, &choice, 10) < 0) return -1;
++       sprintf (prompt, startup_options_prompt, oldpath, oldprefix, olddebuggerpath);
++       if (ask_uint (prompt, 0, 12, 0, &choice, 10) < 0) return -1;
+        switch (choice) {
+ 	 case 0: return 0;
+ 	 case 1: askparam (BXP_LOG_FILENAME); break;
+ 	 case 2: askparam (BXP_LOG_PREFIX); break;
+-	 case 3: bx_log_options (0); break;
+-	 case 4: bx_log_options (1); break;
+-	 case 5: do_menu (BXP_MENU_MEMORY); break;
+-	 case 6: do_menu (BXP_MENU_INTERFACE); break;
+-	 case 7: do_menu (BXP_MENU_DISK); break;
+-	 case 8: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
+-	 case 9: do_menu (BXP_SB16); break;
+-	 case 10: do_menu (BXP_NE2K); break;
+-	 case 11: do_menu (BXP_MENU_MISC); break;
++	 case 3: askparam (BXP_DEBUGGER_LOG_FILENAME); break;
++	 case 4: bx_log_options (0); break;
++	 case 5: bx_log_options (1); break;
++	 case 6: do_menu (BXP_MENU_MEMORY); break;
++	 case 7: do_menu (BXP_MENU_INTERFACE); break;
++	 case 8: do_menu (BXP_MENU_DISK); break;
++	 case 9: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
++	 case 10: do_menu (BXP_SB16); break;
++	 case 11: do_menu (BXP_NE2K); break;
++	 case 12: do_menu (BXP_MENU_MISC); break;
+ 	 default: BAD_OPTION(menu, choice);
+        }
+      }
