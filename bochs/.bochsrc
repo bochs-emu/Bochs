@@ -71,12 +71,12 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 diskc: file="../10M.vga", cyl=306, heads=4, spt=17
 
 #=======================================================================
-* CDROM
+# CDROM
 # cdromd: dev=/dev/cdrom, status=inserted
 # cdromd: dev=/dev/cdrom, status=ejected
 #=======================================================================
 #cdromd: dev=/dev/cdrom, status=ejected
-cdromd: dev=/dev/cdrom, status=inserted
+#cdromd: dev=/dev/cdrom, status=inserted
 
 #=======================================================================
 # NEWHARDDRIVESUPPORT: enabled=[0|1]
