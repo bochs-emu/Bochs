@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.11 2004-11-01 12:53:45 vruppert Exp $
+// $Id: dbg_main.cc,v 1.12 2004-11-15 10:43:39 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -5225,7 +5225,7 @@ bx_dbg_help_command(char* command)
     dbg_printf("-*- Execution control -*-\n");
     dbg_printf("    c|cont, s|step|stepi, p|n|next, modebp\n");
     dbg_printf("-*- Breakpoint management -*-\n");
-    dbg_printf("    v|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
+    dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
     dbg_printf("    bpe, bpd, d|del|delete\n");
     dbg_printf("-*- CPU and memory contents -*-\n");
     dbg_printf("    x, xp, u|disas|disassemble, r|reg|registers, setpmem, crc, info, dump_cpu,\n");
