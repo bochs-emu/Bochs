@@ -6,7 +6,7 @@ License: LGPL
 Group: Applications/Emulators
 URL:http://bochs.sourceforge.net
 Packager:Bryce Denney <bryce.denney@bigfoot.com>
-Source:bochs.tar.gz
+Source:bochs-@SEDVERSION@.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 
 %description
@@ -15,13 +15,13 @@ the x86 CPU, related AT hardware, and BIOS to run DOS, Windows '95, Minix 2.0,
 and other OS's, all on your workstation. 
 
 %prep
-	rm -rf $RPM_BUILD_DIR/bochs
-	tar xzvf $RPM_SOURCE_DIR/bochs.tar.gz
+	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
+	tar xzvf $RPM_SOURCE_DIR/bochs-@SEDVERSION@.tar.gz
 	if test "/" != $RPM_BUILD_ROOT; then
 	  rm -rf $RPM_BUILD_ROOT
 	fi
 %build
-	cd $RPM_BUILD_DIR/bochs
+	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	CONFIGURE_ARGS="--prefix /usr"
 	export CONFIGURE_ARGS
 	sh .conf.linux
@@ -30,7 +30,7 @@ and other OS's, all on your workstation.
                           # the paths in dlx bochsrc file.
 %install
 	pwd
-	cd $RPM_BUILD_DIR/bochs
+	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	for i in "" usr usr/bin usr/man usr/man/man1; do 
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
@@ -50,7 +50,7 @@ and other OS's, all on your workstation.
 	/usr/bochs/latest
 	/usr/man/man1/*
 %clean
-	rm -rf $RPM_BUILD_DIR/bochs
+	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	if test "/" != $RPM_BUILD_ROOT; then
 	  rm -rf $RPM_BUILD_ROOT
 	fi

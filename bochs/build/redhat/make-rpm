@@ -1,0 +1,82 @@
+#!/bin/bash -x
+#########################################################################
+# $Id: make-rpm,v 1.1 2001-12-08 15:59:50 bdenney Exp $
+#########################################################################
+# build/redhat/make-rpm
+#
+# This script creates an RPM from the bochs directory.  You must run 
+# it as root from the top of the source directory (where the configure
+# scripts are).  Then just run:
+#    ./build/redhat/make-rpm
+#
+#########################################################################
+
+CAT=cat
+RM=rm
+MKDIR=mkdir
+GREP=grep
+ECHO=echo
+RPM=rpm
+SED=sed
+TAR=tar
+RPMSRCPATH=/usr/src/redhat
+SOURCES=${RPMSRCPATH}/SOURCES
+SPECS=${RPMSRCPATH}/SPECS
+RPMS=${RPMSRCPATH}/RPMS
+SRPMS=${RPMSRCPATH}/SRPMS
+RPMSPEC="build/redhat/bochs.rpmspec.template"
+
+echo Reading version from configure.in script.
+VERSION='unknown'
+eval `${GREP} '^VERSION="' configure.in`
+if test $? != 0 -o "$VERSION" = unknown; then
+  echo Could not get version number from configure.in script.
+  echo Exiting.
+  exit 1
+fi
+
+# test that you are able to write in the RPM build area
+if test ! -w ${SOURCES}; then
+  echo ${SOURCES} not writable.  Maybe you aren\'t root, or the path is wrong.
+  echo Exiting.
+  exit 1
+fi
+if test ! -w ${SPECS}; then
+  echo ${SPECS} not writable.  Maybe you aren\'t root, or the path is wrong.
+  exit 1
+fi
+
+# copy the spec into SPECS.  The template is in $RPMSPEC, and we use
+# SED to substitute in the version number.
+${RM} -f /usr/src/redhat/SPECS/bochs.spec
+test $? = 0 || exit 1
+${CAT} ${RPMSPEC} | ${SED} "s/@SEDVERSION@/${VERSION}/g" > ${SPECS}/bochs.spec
+test $? = 0 || exit 1
+
+# make a TAR.GZ of the entire source directory, exactly as it is.  The
+# tar is placed in $SOURCES/bochs-$VERSION.tar.gz.  Because the current
+# directory could be named nearly anything, I copy all the contents into
+# $SOURCES/bochs-$VERSION and then build a tar in $SOURCES.
+
+${RM} -rf ${SOURCES}/bochs-${VERSION}
+test $? = 0 || exit 1
+${MKDIR} ${SOURCES}/bochs-${VERSION}
+test $? = 0 || exit 1
+${TAR} cf - * .??* | (cd ${SOURCES}/bochs-${VERSION} && tar xf -)
+test $? = 0 || exit 1
+(cd ${SOURCES}; tar czf bochs-${VERSION}.tar.gz bochs-${VERSION})
+test $? = 0 || exit 1
+${RM} -rf ${SOURCES}/bochs-${VERSION}
+test $? = 0 || exit 1
+
+# finally, start the rpm build.
+${RPM} -ba ${SPECS}/bochs.spec
+
+# print final status
+if test $? = 0; then
+  echo RPM build succeeded
+  exit 0
+else
+  echo RPM build failed.
+  exit 1
+fi
