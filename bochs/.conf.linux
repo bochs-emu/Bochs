@@ -14,7 +14,7 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --enable-fpu --enable-cdrom --enable-sb16=linux  --enable-split-hd ${CONFIGURE_ARGS}
+./configure --enable-fpu --enable-cdrom --enable-sb16=linux  --enable-split-hd  --enable-ne2000 ${CONFIGURE_ARGS}
 #./configure --enable-fpu
 #./configure
 #./configure --enable-cdrom --enable-cpu-level=4
