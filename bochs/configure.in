@@ -28,6 +28,15 @@ AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
 AC_CHECK_FUNCS(strtouq, AC_DEFINE(BX_HAVE_STRTOUQ))
 AC_CHECK_FUNCS(strdup, AC_DEFINE(BX_HAVE_STRDUP))
 
+AC_MSG_CHECKING(for struct timeval)
+AC_TRY_COMPILE([#include <sys/time.h>],
+    [struct timeval x;], 
+    [
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_HAVE_STRUCT_TIMEVAL, 1) 
+    ],
+    AC_MSG_RESULT(no))
+
 AC_MSG_CHECKING(if compiler allows empty structs)
 AC_TRY_COMPILE([], [typedef struct { } junk;], 
     AC_MSG_RESULT(yes),
