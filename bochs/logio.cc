@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.28 2002-09-13 00:15:23 kevinlawton Exp $
+// $Id: logio.cc,v 1.29 2002-09-15 11:02:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,8 +29,6 @@
 #include "bochs.h"
 #include <assert.h>
 #include "state_file.h"
-
-static char *divider = "========================================================================";
 
 // Just for the iofunctions
 
@@ -473,6 +471,7 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
 {
   bx_atexit();
 #if !BX_WITH_WX
+  static char *divider = "========================================================================";
   fprintf (stderr, "%s\n", divider);
   fprintf (stderr, "Bochs is exiting with the following message:\n");
   fprintf (stderr, "%s ", prefix);
