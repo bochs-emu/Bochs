@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.11 2005-03-27 09:46:31 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.12 2005-03-29 19:42:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -2634,14 +2634,14 @@ bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcaddr)
 bx_svga_cirrus_c::svga_setup_bitblt_videotovideo(Bit32u dstaddr,Bit32u srcaddr)
 {
   BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS vidmem + dstaddr;
-  BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS vidmem + srcaddr;
 
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) {
     BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_static;
-    }
-  else {
+    BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS vidmem + (srcaddr & ~0x07);
+  } else {
     BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_static;
-    }
+    BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS vidmem + srcaddr;
+  }
 
   (*BX_CIRRUS_THIS bitblt.bitblt_ptr)();
   svga_reset_bitblt();
@@ -2884,7 +2884,7 @@ bx_svga_cirrus_c::svga_patterncopy()
         bits_xor = 0x00;
       }
 
-      pattern_y = 0;
+      pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
         dst = BX_CIRRUS_THIS bitblt.dst;
         bitmask = 0x80 >> srcskipleft;
@@ -2920,7 +2920,6 @@ bx_svga_cirrus_c::svga_patterncopy()
   dst = BX_CIRRUS_THIS bitblt.dst;
   pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
   src = (Bit8u *)BX_CIRRUS_THIS bitblt.src;
-  src -= (pattern_y * BX_CIRRUS_THIS bitblt.pixelwidth);
   for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
     srcc = src + pattern_y * patternbytes;
     dstc = dst;
