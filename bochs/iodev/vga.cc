@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.106 2004-07-21 20:39:54 vruppert Exp $
+// $Id: vga.cc,v 1.107 2004-07-24 18:12:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,19 +33,6 @@
 #include "iodev.h"
 
 #define LOG_THIS theVga->
-
-/* NOTES:
- * I take it data rotate is a true rotate with carry of bit 0 to bit 7.
- * support map mask (3c5 reg 02)
- */
-
-/* Notes from cb
- *
- * It seems that the vga card should support multi bytes IO reads and write
- * From my tests, inw(port) return port+1 * 256 + port, except for port 0x3c9
- * (PEL data register, data cycling). More reverse engineering is needed.
- * This would fix the gentoo bug.
- */
 
 // (mch)
 #define VGA_TRACE_FEATURE
@@ -135,7 +122,7 @@ bx_vga_c::init(void)
   char *argv[16];
   char *ptr;
   char string[512];
-  Bit8u io_mask[16] = {1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
+  Bit8u io_mask[16] = {3, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
 
   unsigned addr;
   for (addr=0x03B4; addr<=0x03B5; addr++) {
@@ -302,7 +289,7 @@ bx_vga_c::init(void)
 
 #if BX_SUPPORT_VBE  
   // The following is for the vbe display extension
-  
+
   for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
     DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
     DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
@@ -1930,7 +1917,7 @@ bx_vga_c::update(void)
 
   bx_bool
 bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
-                               void *data, void *param)
+                           void *data, void *param)
 {
   Bit8u *data_ptr;
 
@@ -2070,7 +2057,7 @@ bx_vga_c::mem_read(Bit32u addr)
 
   bx_bool
 bx_vga_c::mem_write_handler(unsigned long addr, unsigned long len,
-                                void *data, void *param)
+                            void *data, void *param)
 {
   Bit8u *data_ptr;
 
@@ -3101,8 +3088,6 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_VGA_THIS s.CRTC.reg[9] = 0x00;
               BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha = 1;
               BX_VGA_THIS s.graphics_ctrl.memory_mapping = 1;
-              BX_VGA_THIS s.CRTC.reg[1] = (BX_VGA_THIS s.vbe_xres / 8) - 1;
-              BX_VGA_THIS s.CRTC.reg[19] = BX_VGA_THIS s.vbe_xres >> 2;
               BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select = 1;
               BX_VGA_THIS s.CRTC.reg[18] = (BX_VGA_THIS s.vbe_yres - 1) & 0xff;
               BX_VGA_THIS s.CRTC.reg[7] &= ~0x42;
@@ -3112,6 +3097,8 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               if ((BX_VGA_THIS s.vbe_yres - 1) & 0x0200) {
                 BX_VGA_THIS s.CRTC.reg[7] |= 0x40;
               }
+              BX_VGA_THIS s.sequencer.map_mask = 0x0f;
+              BX_VGA_THIS s.sequencer.chain_four = 1;
             }
           }
           else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS s.vbe_enabled)
