@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.46 2002-02-23 09:32:49 vruppert Exp $
+// $Id: keyboard.cc,v 1.47 2002-03-11 15:04:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.46 2002-02-23 09:32:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.47 2002-03-11 15:04:58 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.46 2002-02-23 09:32:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.47 2002-03-11 15:04:58 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -175,8 +175,14 @@ bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
   BX_KEY_THIS s.controller_Qsize = 0;
   BX_KEY_THIS s.controller_Qsource = 0;
 
+  // clear paste buffer
+  BX_KEY_THIS pastebuf = NULL;
+  BX_KEY_THIS pastebuf_len = 0;
+  BX_KEY_THIS pastebuf_ptr = 0;
+
   // mouse port installed on system board
   cmos->s.reg[0x14] |= 0x04;
+
 }
 
   // static IO port read callback handler
@@ -581,6 +587,61 @@ BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
     }
 }
 
+// service_paste_buf() transfers data from the paste buffer to the hardware
+// keyboard buffer.  It tries to transfer as many chars as possible at a
+// time, but because different chars require different numbers of scancodes
+// we have to be conservative.  Note that this process depends on the
+// keymap tables to know what chars correspond to what keys, and which
+// chars require a shift or other modifier.
+void 
+bx_keyb_c::service_paste_buf ()
+{
+  BX_DEBUG (("service_paste_buf: ptr at %d out of %d", BX_KEY_THIS pastebuf_ptr, BX_KEY_THIS pastebuf_len));
+  if (!BX_KEY_THIS pastebuf) return;
+  int fill_threshold = BX_KBD_ELEMENTS - 8;
+  while (BX_KEY_THIS pastebuf_ptr < BX_KEY_THIS pastebuf_len) {
+    if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= fill_threshold)
+      return;
+    // there room in the buffer for a keypress and a key release.
+    // send one keypress and a key release.
+    Bit8u byte = BX_KEY_THIS pastebuf[BX_KEY_THIS pastebuf_ptr];
+    BXKeyEntry *entry = bx_keymap.getKeyASCII (byte);
+    if (!entry) {
+      BX_ERROR (("paste character 0x%02x ignored", byte));
+    } else {
+      BX_DEBUG (("pasting character 0x%02x. baseKey is %04x", byte, entry->baseKey));
+      if (entry->modKey != BX_KEYMAP_UNKNOWN)
+        bx_devices.keyboard->gen_scancode(entry->modKey);
+      bx_devices.keyboard->gen_scancode(entry->baseKey);
+      bx_devices.keyboard->gen_scancode(entry->baseKey | BX_KEY_RELEASED);
+      if (entry->modKey != BX_KEYMAP_UNKNOWN)
+        bx_devices.keyboard->gen_scancode(entry->modKey | BX_KEY_RELEASED);
+    }
+    BX_KEY_THIS pastebuf_ptr++;
+  }
+  // reached end of pastebuf.  free the memory it was using.
+  free (BX_KEY_THIS pastebuf);
+  BX_KEY_THIS pastebuf = NULL;
+}
+
+// paste_bytes schedules an arbitrary number of ASCII characters to be
+// inserted into the hardware queue as it become available.  Any previous
+// paste which is still in progress will be thrown out.
+void
+bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
+{
+  BX_DEBUG (("paste_bytes: %d bytes", length));
+  if (BX_KEY_THIS pastebuf) {
+    BX_ERROR (("previous paste was not completed!  %d chars lost", 
+	  BX_KEY_THIS pastebuf_len - BX_KEY_THIS pastebuf_ptr));
+    free(BX_KEY_THIS pastebuf);
+  }
+  BX_KEY_THIS pastebuf = (Bit8u *) malloc (length);
+  memcpy (BX_KEY_THIS pastebuf, bytes, length);
+  BX_KEY_THIS pastebuf_ptr = 0;
+  BX_KEY_THIS pastebuf_len = length;
+  BX_KEY_THIS service_paste_buf ();
+}
 
   void
 bx_keyb_c::gen_scancode(Bit32u   key)
@@ -1077,6 +1138,10 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
     else {
       BX_DEBUG(("service_keyboard(): no keys waiting"));
     }
+  }
+  if (BX_KEY_THIS s.kbd_internal_buffer.num_elements == 0 ) {
+    // if queue is empty, add more data from the paste buffer, if it exists.
+    BX_KEY_THIS service_paste_buf ();
   }
   return(retval);
 }

@@ -150,6 +150,7 @@ gui.o: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h \
  ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
  ../gui/bitmaps/snapshot.h ../gui/bitmaps/configbutton.h \
+ ../gui/bitmaps/copy.h ../gui/bitmaps/paste.h \
  ../gui/bitmaps/cdromd.h
 keymap.o: keymap.@CPP_SUFFIX@ ../bochs.h keymap.h
 macintosh.o: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.22 2002-03-06 14:04:42 cbothamy Exp $
+// $Id: gui.h,v 1.23 2002-03-11 15:04:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,9 +76,12 @@ private:
   static void cdromD_handler(void);
   static void reset_handler(void);
   static void power_handler(void);
+  static void copy_handler(void);
+  static void paste_handler(void);
   static void snapshot_handler(void);
   static void config_handler(void);
   static void toggle_mouse_enable(void);
+  static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
 
   Boolean floppyA_status;
   Boolean floppyB_status;
@@ -88,14 +91,16 @@ private:
   unsigned cdromD_bmap_id, cdromD_eject_bmap_id, cdromD_hbar_id;
   unsigned power_bmap_id,    power_hbar_id;
   unsigned reset_bmap_id,    reset_hbar_id;
+  unsigned copy_bmap_id, copy_hbar_id;
+  unsigned paste_bmap_id, paste_hbar_id;
   unsigned snapshot_bmap_id, snapshot_hbar_id;
   unsigned config_bmap_id, config_hbar_id;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   };
 
 
-#define BX_MAX_PIXMAPS 12
-#define BX_MAX_HEADERBAR_ENTRIES 8
+#define BX_MAX_PIXMAPS 16
+#define BX_MAX_HEADERBAR_ENTRIES 10
 #define BX_HEADER_BAR_Y 32
 
 // align pixmaps towards left or right side of header bar

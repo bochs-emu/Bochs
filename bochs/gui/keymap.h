@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.2 2002-03-06 09:31:55 cbothamy Exp $
+// $Id: keymap.h,v 1.3 2002-03-11 15:04:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  Christophe Bothamy
@@ -39,9 +39,11 @@
 
 // Structure of an element of the keymap table
 typedef struct { 
-  Bit32u bxKey;
-  Bit32u guiKey;
-  } KeyEntry;
+  Bit32u baseKey;   // base key
+  Bit32u modKey;   // modifier key that must be held down
+  Bit32s ascii;    // ascii equivalent, if any
+  Bit32u xwinKey;  // X windows value
+  } BXKeyEntry;
 
 class bx_keymap_c : public logfunctions {
 public:
@@ -50,14 +52,15 @@ public:
 
   void   loadKeymap(Bit32u(*)(const char*));
   void   loadKeymap(Bit32u(*)(const char*),const char *filename);
+  Boolean isKeymapLoaded ();
 
-
-  Bit32u getBXKey(Bit32u key);
+  BXKeyEntry *getKeyXwin(Bit32u xwin_key);
+  BXKeyEntry *getKeyASCII(Bit8u ascii);
 
 private:
   Bit32u convertStringToBXKey(const char *);
  
-  KeyEntry *keymapTable;
+  BXKeyEntry *keymapTable;
   Bit16u   keymapCount;
   };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.31 2002-03-10 20:08:14 japj Exp $
+// $Id: gui.cc,v 1.32 2002-03-11 15:04:58 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,6 +33,8 @@
 #include "gui/bitmaps/reset.h"
 #include "gui/bitmaps/power.h"
 #include "gui/bitmaps/snapshot.h"
+#include "gui/bitmaps/copy.h"
+#include "gui/bitmaps/paste.h"
 #include "gui/bitmaps/configbutton.h"
 #include "gui/bitmaps/cdromd.h"
 #if BX_WITH_MACOS
@@ -46,8 +48,6 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
-
-
 
 bx_gui_c   bx_gui;
 
@@ -87,7 +87,9 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS power_bmap_id = create_bitmap(bx_power_bmap, BX_POWER_BMAP_X, BX_POWER_BMAP_Y);
   BX_GUI_THIS reset_bmap_id = create_bitmap(bx_reset_bmap, BX_RESET_BMAP_X, BX_RESET_BMAP_Y);
   BX_GUI_THIS snapshot_bmap_id = create_bitmap(bx_snapshot_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
-  BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
+  BX_GUI_THIS copy_bmap_id = create_bitmap(bx_copy_bmap, BX_COPY_BMAP_X, BX_COPY_BMAP_Y);
+  BX_GUI_THIS paste_bmap_id = create_bitmap(bx_paste_bmap, BX_PASTE_BMAP_X, BX_PASTE_BMAP_Y);
+  BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_CONFIG_BMAP_X, BX_CONFIG_BMAP_Y);
 
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
@@ -130,18 +132,27 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS nomouse_bmap_id,
                           BX_GRAVITY_LEFT, toggle_mouse_enable);
 
+  // These are the buttons on the right side.  They are created in order
+  // of right to left.
+
   // Power button
   BX_GUI_THIS power_hbar_id = headerbar_bitmap(BX_GUI_THIS power_bmap_id,
                           BX_GRAVITY_RIGHT, power_handler);
   // Reset button
   BX_GUI_THIS reset_hbar_id = headerbar_bitmap(BX_GUI_THIS reset_bmap_id,
                           BX_GRAVITY_RIGHT, reset_handler);
-  // Snapshot button
-  BX_GUI_THIS snapshot_hbar_id = headerbar_bitmap(BX_GUI_THIS snapshot_bmap_id,
-                          BX_GRAVITY_RIGHT, snapshot_handler);
   // Configure button
   BX_GUI_THIS config_hbar_id = headerbar_bitmap(BX_GUI_THIS config_bmap_id,
                           BX_GRAVITY_RIGHT, config_handler);
+  // Snapshot button
+  BX_GUI_THIS snapshot_hbar_id = headerbar_bitmap(BX_GUI_THIS snapshot_bmap_id,
+                          BX_GRAVITY_RIGHT, snapshot_handler);
+  // Paste button
+  BX_GUI_THIS paste_hbar_id = headerbar_bitmap(BX_GUI_THIS paste_bmap_id,
+                          BX_GRAVITY_RIGHT, paste_handler);
+  // Copy button
+  BX_GUI_THIS copy_hbar_id = headerbar_bitmap(BX_GUI_THIS copy_bmap_id,
+                          BX_GRAVITY_RIGHT, copy_handler);
 
   show_headerbar();
 }
@@ -231,60 +242,110 @@ bx_gui_c::power_handler(void)
   ::exit (1);
 }
 
+Bit32s
+bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
+{
+  Bit8u* raw_snap = NULL;
+  char *clean_snap;
+  unsigned line_addr, txt_addr, txHeight, txWidth;
+
+  bx_vga.get_text_snapshot(&raw_snap, &txHeight, &txWidth);
+  if (txHeight <= 0) return -1;
+  clean_snap = (char*) malloc(txHeight*(txWidth+2)+1);
+  txt_addr = 0;
+  for (unsigned i=0; i<txHeight; i++) {
+    line_addr = i * txWidth * 2;
+    for (unsigned j=0; j<(txWidth*2); j+=2) {
+      clean_snap[txt_addr] = raw_snap[line_addr+j];
+      txt_addr++;
+    }
+#ifdef WIN32
+    clean_snap[txt_addr] = 13;
+    txt_addr++;
+#endif
+    clean_snap[txt_addr] = 10;
+    txt_addr++;
+  }
+  clean_snap[txt_addr] = 0;
+  *snapshot = clean_snap;
+  *length = txt_addr;
+  return 0;
+}
+
+// create a text snapshot and copy to the system clipboard.  On guis that
+// we haven't figured out how to support yet, dump to a file instead.
+  void
+bx_gui_c::copy_handler(void)
+{
+  Bit32u len;
+  char *text_snapshot;
+  if (make_text_snapshot (&text_snapshot, &len) < 0) {
+    BX_INFO(( "copy button failed, mode not implemented"));
+    return;
+  }
+  // copy to clipboard using gui dependent code.
+#ifdef WIN32
+  if (OpenClipboard(NULL)) {
+    hMem = GlobalAlloc(GMEM_ZEROINIT, txHeight*(txWidth+2)+1);
+    EmptyClipboard();
+    lstrcpy((char *)hMem, snapshot_txt);
+    SetClipboardData(CF_TEXT, hMem);
+    CloseClipboard();
+    GlobalFree(hMem);
+  }
+#elif BX_WITH_X11
+  extern Display *bx_x_display;
+  // this writes data to the clipboard.
+  BX_INFO (("storing %d bytes to X windows clipboard", len));
+  XStoreBytes (bx_x_display, (char *)text_snapshot, len);
+#else
+  OUTPUT = fopen("copy.txt", "w");
+  fwrite(text_snapshot, 1, strlen(snapshot_txt), OUTPUT);
+  fclose(OUTPUT);
+#endif
+  free(text_snapshot);
+}
+
+// create a text snapshot and dump it to a file
   void
 bx_gui_c::snapshot_handler(void)
 {
-  Bit8u* text_snapshot = NULL;
-  char *snapshot_txt;
-  unsigned line_addr, txt_addr, txHeight, txWidth;
-#ifdef WIN32
-  HANDLE hMem;
-#else
-  FILE *OUTPUT;
-#endif
-
-  bx_vga.get_text_snapshot(&text_snapshot, &txHeight, &txWidth);
-  if (txHeight > 0) {
-    snapshot_txt = (char*) malloc(txHeight*(txWidth+2)+1);
-    txt_addr = 0;
-    for (unsigned i=0; i<txHeight; i++) {
-      line_addr = i * txWidth * 2;
-      for (unsigned j=0; j<(txWidth*2); j+=2) {
-        snapshot_txt[txt_addr] = text_snapshot[line_addr+j];
-        txt_addr++;
-      }
-#ifdef WIN32
-      snapshot_txt[txt_addr] = 13;
-      txt_addr++;
-#endif
-      snapshot_txt[txt_addr] = 10;
-      txt_addr++;
-    }
-    snapshot_txt[txt_addr] = 0;
-#ifdef WIN32
-    if (OpenClipboard(NULL)) {
-      hMem = GlobalAlloc(GMEM_ZEROINIT, txHeight*(txWidth+2)+1);
-      EmptyClipboard();
-      lstrcpy((char *)hMem, snapshot_txt);
-      SetClipboardData(CF_TEXT, hMem);
-      CloseClipboard();
-      GlobalFree(hMem);
-    }
-#elif BX_WITH_X11
-    extern Display *bx_x_display;
-    // this writes data to the clipboard.
-    BX_INFO (("storing %d bytes to X windows clipboard", txt_addr));
-    XStoreBytes (bx_x_display, snapshot_txt, txt_addr);
-#else
-    OUTPUT = fopen("snapshot.txt", "w");
-    fwrite(snapshot_txt, 1, strlen(snapshot_txt), OUTPUT);
-    fclose(OUTPUT);
-#endif
-    free(snapshot_txt);
-  } else {
-    BX_INFO(( "# SNAPSHOT callback (graphics mode unimplemented)." ));
+  char *text_snapshot;
+  Bit32u len;
+  if (make_text_snapshot (&text_snapshot, &len) < 0) {
+    BX_ERROR(( "copy button failed, mode not implemented"));
+    return;
   }
+  FILE *fp = fopen("snapshot.txt", "w");
+  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
+  fclose(fp);
+  free(text_snapshot);
+  // I wish I had a dialog box!!!
+  BX_INFO (("copied text snapshot to snapshot.txt"));
 }
+
+// Read ASCII chars from the system clipboard and paste them into bochs.
+// Note that paste cannot work with the key mapping tables loaded.
+  void
+bx_gui_c::paste_handler(void)
+{
+  Bit32s nbytes;
+  Bit8u *bytes;
+  if (!bx_keymap.isKeymapLoaded ()) {
+    BX_ERROR (("keyboard_mapping disabled, so paste cannot work"));
+    return;
+  }
+#if BX_WITH_X11
+  extern Display *bx_x_display;
+  bytes = (Bit8u *)XFetchBytes (bx_x_display, &nbytes);
+#else
+  BX_ERROR (("paste not implemented on this platform"));
+  return;
+#endif
+  BX_INFO (("pasting %d bytes", nbytes));
+  bx_devices.keyboard->paste_bytes (bytes, nbytes);
+}
+
 
   void
 bx_gui_c::config_handler(void)
@@ -292,7 +353,7 @@ bx_gui_c::config_handler(void)
 #if BX_USE_CONTROL_PANEL
   bx_control_panel (BX_CPANEL_RUNTIME);
 #else
-  BX_INFO(( "# CONFIG callback (unimplemented)." ));
+  BX_ERROR(( "# CONFIG callback (unimplemented)." ));
 #endif
 }
 
