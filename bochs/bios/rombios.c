@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.82 2002-11-25 21:30:51 cbothamy Exp $
+// $Id: rombios.c,v 1.83 2002-11-26 11:04:41 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -145,6 +145,7 @@
 #define DEBUG_INT13_FL     0
 #define DEBUG_INT15        0
 #define DEBUG_INT16        0
+#define DEBUG_INT1A        0
 #define DEBUG_INT74        0
 
 #define BX_CPU           3
@@ -933,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.82 $";
-static char bios_date_string[] = "$Date: 2002-11-25 21:30:51 $";
+static char bios_cvs_version_string[] = "$Revision: 1.83 $";
+static char bios_date_string[] = "$Date: 2002-11-26 11:04:41 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.82 2002-11-25 21:30:51 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.83 2002-11-26 11:04:41 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -995,6 +996,11 @@ static char CVSID[] = "$Id: rombios.c,v 1.82 2002-11-25 21:30:51 cbothamy Exp $"
 #  define BX_DEBUG_INT16(a...) BX_DEBUG(##a)
 #else
 #  define BX_DEBUG_INT16(a...)
+#endif
+#if DEBUG_INT1A
+#  define BX_DEBUG_INT1A(a...) BX_DEBUG(##a)
+#else
+#  define BX_DEBUG_INT1A(a...)
 #endif
 #if DEBUG_INT74
 #  define BX_DEBUG_INT74(a...) BX_DEBUG(##a)
@@ -1569,42 +1575,34 @@ keyboard_init()
 {
     Bit16u max;
 
-    outb(0x80, 0x00);
-
-    /* clear out buffers before testing */
+    /* ------------------- Flush buffers ------------------------*/
+    /* Wait until buffer is empty */
     max=0xffff;
-    while(--max > 0) {
-      if ((inb(0x64) & 0x02) == 0) break;
-      }
-    if (max==0x0)
-        keyboard_panic(990);
+    while ( (inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x00);
 
-    /* clear in buffers before testing */
-    max=0x100;
-    while(--max > 0) {
-      if (inb(0x64) & 0x01) {
-        inb(0x60);
-        max=0x100;
+    /* flush incoming keys */
+    max=0x1000;
+    while (--max > 0) {
+        outb(0x80, 0x00);
+        if (inb(0x64) & 0x01) {
+            inb(0x60);
+            max = 0x1000;
+            }
         }
-      }
 
     /* ------------------- controller side ----------------------*/
     /* send cmd = 0xAA, self test 8042 */
     outb(0x64, 0xaa);
 
-    /* empty input buffer or any other command/data will be lost */
+    /* Wait until buffer is empty */
     max=0xffff;
-    while ( (inb(0x64) & 0x02) && (--max>0))
-        outb(0x80, 0x00);
-    if (max==0x0)
-        keyboard_panic(00);
+    while ( (inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x00);
+    if (max==0x0) keyboard_panic(00);
 
-    /* empty output buffer or any other command/data will be lost */
+    /* Wait for data */
     max=0xffff;
-    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
-        outb(0x80, 0x01);
-    if (max==0x0)
-        keyboard_panic(01);
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x01);
+    if (max==0x0) keyboard_panic(01);
 
     /* read self-test result, 0x55 should be returned from 0x60 */
     if ((inb(0x60) != 0x55)){
@@ -1614,19 +1612,15 @@ keyboard_init()
     /* send cmd = 0xAB, keyboard interface test */
     outb(0x64,0xab);
 
-    /* empty input buffer or any other command/data will be lost */
+    /* Wait until buffer is empty */
     max=0xffff;
-    while ((inb(0x64) & 0x02) && (--max>0))
-        outb(0x80, 0x10);
-    if (max==0x0)
-        keyboard_panic(10);
+    while ((inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x10);
+    if (max==0x0) keyboard_panic(10);
 
-    /* empty output buffer or any other command/data will be lost */
+    /* Wait for data */
     max=0xffff;
-    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
-        outb(0x80, 0x11);
-    if (max==0x0)
-        keyboard_panic(11);
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x11);
+    if (max==0x0) keyboard_panic(11);
 
     /* read keyboard interface test result, */
     /* 0x00 should be returned form 0x60 */
@@ -1642,30 +1636,25 @@ keyboard_init()
     /* reset kerboard and self test  (keyboard side) */
     outb(0x60, 0xff);
 
-    /* empty inut buffer or any other command/data will be lost */
+    /* Wait until buffer is empty */
     max=0xffff;
-    while ((inb(0x64) & 0x02) && (--max>0))
-        outb(0x80, 0x20);
-    if (max==0x0)
-        keyboard_panic(20);
+    while ((inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x20);
+    if (max==0x0) keyboard_panic(20);
 
-    /* empty output buffer or any other command/data will be lost */
+    /* Wait for data */
     max=0xffff;
-    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
-        outb(0x80, 0x21);
-    if (max==0x0)
-        keyboard_panic(21);
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x21);
+    if (max==0x0) keyboard_panic(21);
 
     /* keyboard should return ACK */
     if ((inb(0x60) != 0xfa)) {
         keyboard_panic(993);
     }
 
+    /* Wait for data */
     max=0xffff;
-    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
-        outb(0x80, 0x31);
-    if (max==0x0)
-        keyboard_panic(31);
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x31);
+    if (max==0x0) keyboard_panic(31);
 
     if ((inb(0x60) != 0xaa)) {
         keyboard_panic(994);
@@ -1674,19 +1663,15 @@ keyboard_init()
     /* Disable keyboard */
     outb(0x60, 0xf5);
 
-    /* empty inut buffer or any other command/data will be lost */
+    /* Wait until buffer is empty */
     max=0xffff;
-    while ((inb(0x64) & 0x02) && (--max>0))
-        outb(0x80, 0x40);
-    if (max==0x0)
-        keyboard_panic(40);
+    while ((inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x40);
+    if (max==0x0) keyboard_panic(40);
 
-    /* empty output buffer or any other command/data will be lost */
+    /* Wait for data */
     max=0xffff;
-    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
-        outb(0x80, 0x41);
-    if (max==0x0)
-        keyboard_panic(41);
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x41);
+    if (max==0x0) keyboard_panic(41);
 
     /* keyboard should return ACK */
     if ((inb(0x60) != 0xfa)) {
@@ -1695,36 +1680,32 @@ keyboard_init()
 
     /* Write Keyboard Mode */
     outb(0x64, 0x60);
+
+    /* Wait until buffer is empty */
     max=0xffff;
-    while ((inb(0x64) & 0x02) && (--max>0))
-        outb(0x80, 0x50);
-    if (max==0x0)
-        keyboard_panic(50);
+    while ((inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x50);
+    if (max==0x0) keyboard_panic(50);
 
     /* send cmd: scan code convert, disable mouse, enable IRQ 1 */
     outb(0x60, 0x61);
+
+    /* Wait until buffer is empty */
     max=0xffff;
-    while ((inb(0x64) & 0x02) && (--max>0))
-        outb(0x80, 0x60);
-    if (max==0x0)
-        keyboard_panic(60);
+    while ((inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x60);
+    if (max==0x0) keyboard_panic(60);
 
     /* Enable keyboard */
     outb(0x60, 0xf4);
 
-    /* empty inut buffer or any other command/data will be lost */
+    /* Wait until buffer is empty */
     max=0xffff;
-    while ((inb(0x64) & 0x02) && (--max>0))
-        outb(0x80, 0x70);
-    if (max==0x0)
-        keyboard_panic(70);
+    while ((inb(0x64) & 0x02) && (--max>0)) outb(0x80, 0x70);
+    if (max==0x0) keyboard_panic(70);
 
-    /* empty output buffer or any other command/data will be lost */
+    /* Wait for data */
     max=0xffff;
-    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) )
-        outb(0x80, 0x71);
-    if (max==0x0)
-        keyboard_panic(70);
+    while ( ((inb(0x64) & 0x01) == 0) && (--max>0) ) outb(0x80, 0x71);
+    if (max==0x0) keyboard_panic(70);
 
     /* keyboard should return ACK */
     if ((inb(0x60) != 0xfa)) {
@@ -1732,7 +1713,6 @@ keyboard_init()
     }
 
     outb(0x80, 0x77);
-
 }
 
 //--------------------------------------------------------------------------
@@ -7180,6 +7160,8 @@ int1a_function(regs, ds, iret_addr)
 {
   Bit8u val8;
 
+  BX_DEBUG_INT1A("int1a: AX=%04x BX=%04x CX=%04x DX=%04x DS=%04x\n", regs.u.r16.ax, regs.u.r16.bx, regs.u.r16.cx, regs.u.r16.dx, DS);
+
   ASM_START
   sti
   ASM_END
@@ -9348,7 +9330,7 @@ int1a_normal:
 #endif
   push ds
   pusha
-  mov  ax, #0x0000
+  xor  ax, ax
   mov  ds, ax
   call _int1a_function
   popa
@@ -9361,7 +9343,7 @@ int1a_normal:
 int70_handler:
   push ds
   pusha
-  mov  ax, #0x0000
+  xor  ax, ax
   mov  ds, ax
   call _int70_function
   popa
