@@ -368,7 +368,7 @@ static void debug_loop(void)
                  
                  stub_trace_flag = 0;
                  bx_cpu.cpu_loop(-1);              
-                 bx_vga.timer();
+                 DEV_vga_refresh();
                  
                  if (buffer[1] != 0)
                    {
@@ -399,7 +399,7 @@ static void debug_loop(void)
                  BX_INFO (("stepping"));
                  stub_trace_flag = 1;
                  bx_cpu.cpu_loop(-1);
-                 bx_vga.timer();
+                 DEV_vga_refresh();
                  stub_trace_flag = 0;
                  BX_INFO (("stopped with %x", last_stop_reason));
                  buf[0] = 'S';
@@ -638,7 +638,7 @@ static void wait_for_connect(int portn)
      }
    
    memset (&sockaddr, '\000', sizeof sockaddr);
-#if 1
+#if BX_HAVE_SOCKADDR_IN_SIN_LEN
    // if you don't have sin_len change that to #if 0.  This is the subject of
    // bug [ 626840 ] no 'sin_len' in 'struct sockaddr_in'.
    sockaddr.sin_len = sizeof sockaddr;
