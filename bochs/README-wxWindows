@@ -19,7 +19,7 @@ Starting in August 2002, Bryce added lots of dialog boxes to allow you
 to set all the bochsrc parameters.  At the time of release 2.0, there
 are still some bugs but it is pretty stable and usable.
 
-Bochs should be build with wxWindows 2.3.3 or later.  It will probably
+Bochs should be built with wxWindows 2.3.3 or later.  It will probably
 not compile with 2.2.x without some work.  wxWindows 2.3.3 includes 
 a patch by Bryce Denney to allow us to get raw keycode data for several
 OSes.
