@@ -248,15 +248,18 @@ repeat_not_done:
       REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
       //BX_TICK1();
+
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event) {
-#endif
         invalidate_prefetch_q();
         goto debugger_check;
-#if BX_DEBUGGER == 0
-        }
-#endif
+      }
       goto repeat_loop;
+#else  /* if BX_DEBUGGER == 1 */
+      invalidate_prefetch_q();
+      goto debugger_check;
+#endif
+
 
 repeat_done:
       BX_CPU_THIS_PTR eip += i.ilen;
