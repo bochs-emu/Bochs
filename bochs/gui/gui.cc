@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.63 2002-12-17 03:36:53 yakovlev Exp $
+// $Id: gui.cc,v 1.64 2002-12-17 05:17:41 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_RIGHT, userbutton_handler);
 
   if(bx_options.Otext_snapshot_check->get()) {
-    bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 10000000, 1, 1, "snap_chk");
+    bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 1000000, 1, 1, "snap_chk");
   }
 
   show_headerbar();
@@ -361,25 +361,48 @@ bx_gui_c::copy_handler(void)
   void
 bx_gui_c::snapshot_checker(void * this_ptr)
 {
-  char *text_snapshot;
-  Bit32u len;
-  if (make_text_snapshot (&text_snapshot, &len) < 0) {
-    return;
-  }
   char filename[BX_PATHNAME_LEN];
   strcpy(filename,"snapchk.txt");
-  char *compare_snapshot = (char *) malloc((len+1) * sizeof(char));
   FILE *fp = fopen(filename, "rb");
   if(fp) {
+    char *text_snapshot;
+    Bit32u len;
+    if (make_text_snapshot (&text_snapshot, &len) < 0) {
+      return;
+    }
+    char *compare_snapshot = (char *) malloc((len+1) * sizeof(char));
     fread(compare_snapshot, 1, len, fp);
     fclose(fp);
-    if(!memcmp(text_snapshot,compare_snapshot,len)) {
-      BX_PASS(("Test Passed."));
+    strcpy(filename,"snapmask.txt");
+    fp=fopen(filename, "rb");
+    if(fp) {
+      char *mask_snapshot = (char *) malloc((len+1) * sizeof(char));
+      int i;
+      bx_bool flag = 1;
+      fread(mask_snapshot, 1, len, fp);
+      fclose(fp);
+      for(i=0;i<len;i++) {
+	if((text_snapshot[i] != compare_snapshot[i]) &&
+	   (compare_snapshot[i] == mask_snapshot[i])) {
+	  flag = 0;
+	  break;
+	}
+      }
+      if(flag) {
+	if(!memcmp(text_snapshot,compare_snapshot,len)) {
+	  BX_PASS(("Test Passed."));
+	} else {
+	  BX_PASS(("Test Passed with Mask."));
+	}
+      }
+    } else {
+      if(!memcmp(text_snapshot,compare_snapshot,len)) {
+	BX_PASS(("Test Passed."));
+      }
     }
+    free(compare_snapshot);
+    free(text_snapshot);
   }
-  free(compare_snapshot);
-  free(text_snapshot);
-  
 }
 
 // create a text snapshot and dump it to a file
