@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.40 2004-02-01 23:42:04 cbothamy Exp $
+// $Id: iodev.h,v 1.41 2004-02-02 21:47:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -359,6 +359,7 @@ public:
   bx_vga_stub_c  stubVga;
   bx_pci_stub_c  stubPci;
   bx_ne2k_stub_c stubNE2k;
+  bx_speaker_stub_c stubSpeaker;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
