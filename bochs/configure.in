@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.224 2003-08-22 00:57:31 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.225 2003-08-28 00:10:10 cbothamy Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1006,6 +1006,23 @@ AC_ARG_ENABLE(port-e9-hack,
   [
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_PORT_E9_HACK, 1)
+    ]
+  )
+
+
+AC_MSG_CHECKING(whether to reset on triple fault)
+AC_ARG_ENABLE(reset-on-triple-fault,
+  [  --enable-reset-on-triple-fault    reset when cpu detects a triple fault],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_RESET_ON_TRIPLE_FAULT, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_RESET_ON_TRIPLE_FAULT, 0)
+   fi],
+  [
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_RESET_ON_TRIPLE_FAULT, 1)
     ]
   )
 
