@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43 2002-10-02 05:16:01 kevinlawton Exp $
+// $Id: vga.cc,v 1.44 2002-10-05 08:04:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -279,7 +279,7 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
          BX_VGA_THIS s.CRTC.reg[9] == 0x40)
         {
         *piWidth = 640;
-        *piHeight = 352;
+        *piHeight = 350;
         }
       if (BX_VGA_THIS s.CRTC.reg[23] == 0xE3 &&
          BX_VGA_THIS s.CRTC.reg[20] == 0 &&
@@ -1212,7 +1212,7 @@ bx_vga_c::update(void)
   {
     // specific VBE code display update code
     // this is partly copied/modified from the 320x200x8 update more below
-    unsigned xti, yti;
+    unsigned xti, yti, y_tiles;
     Bit8u color;
     unsigned r, c;
     unsigned long byte_offset;
@@ -1223,8 +1223,9 @@ bx_vga_c::update(void)
 
     // incl virtual xres correction
     Bit32u start_offset = ((BX_VGA_THIS s.vbe_offset_y) * (BX_VGA_THIS s.vbe_virtual_xres)) + BX_VGA_THIS s.vbe_offset_x;
+    y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
     
-    for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+    for (yti=0; yti<y_tiles; yti++)
       for (xti=0; xti<iWidth/X_TILESIZE; xti++) 
       {
         if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) 
@@ -1268,7 +1269,7 @@ bx_vga_c::update(void)
     Bit8u color;
     unsigned bit_no, r, c;
     unsigned long byte_offset;
-    unsigned xti, yti;
+    unsigned xti, yti, y_tiles;
 
 
 //BX_DEBUG(("update: shiftreg=%u, chain4=%u, mapping=%u",
@@ -1294,8 +1295,9 @@ bx_vga_c::update(void)
 	}
 
         start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
+        y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
 
-        for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+        for (yti=0; yti<y_tiles; yti++)
           for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
             if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) {
               for (r=0; r<Y_TILESIZE; r++) {
@@ -1349,7 +1351,9 @@ bx_vga_c::update(void)
 	  old_iHeight = iHeight;
 	}
 
-        for (yti=0; yti<=iHeight/Y_TILESIZE; yti++)
+        y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+
+        for (yti=0; yti<y_tiles; yti++)
           for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
             if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) {
               for (r=0; r<Y_TILESIZE; r++) {
@@ -1380,7 +1384,7 @@ bx_vga_c::update(void)
 
         break; // case 1
 
-      case 2: // output the data eight bits at a time from the 4 bit planeBX_VGA_THIS s.
+      case 2: // output the data eight bits at a time from the 4 bit plane
               // (format for VGA mode 13 hex)
         determine_screen_dimensions(&iHeight, &iWidth);
 
@@ -1397,7 +1401,10 @@ bx_vga_c::update(void)
 	    old_iHeight = iHeight;
 	    old_iWidth = iWidth;
 	  }
-          for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+
+          y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+
+          for (yti=0; yti<y_tiles; yti++)
             for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
               if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) { // }
               // if (1) {
@@ -1432,7 +1439,9 @@ bx_vga_c::update(void)
 	  }
 
           start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
-          for (yti=0; yti<iHeight/Y_TILESIZE; yti++)
+          y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+
+          for (yti=0; yti<y_tiles; yti++)
             for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
               // if (BX_VGA_THIS s.vga_tile_updated[xti][yti]) { // }
               if (1) {
