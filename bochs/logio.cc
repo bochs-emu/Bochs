@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.16 2002-01-07 16:10:11 bdenney Exp $
+// $Id: logio.cc,v 1.17 2002-04-18 00:22:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -363,7 +363,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   vsprintf (buf1, fmt, ap);
   sprintf (buf2, "%s %s", prefix, buf1);
   // FIXME: facility set to 0 because it's unknown.
-  int val = SIM->LOCAL_log_msg (prefix, level, buf2);
+  int val = SIM->log_msg (prefix, level, buf2);
   switch (val)
   {
     case 0:   // user chose continue
@@ -398,7 +398,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
     default:
       // this happens if panics happen before the callback is initialized
       // in gui/control.cc.
-      fprintf (stderr, "WARNING: LOCAL_log_msg returned unexpected value %d\n", val);
+      fprintf (stderr, "WARNING: log_msg returned unexpected value %d\n", val);
   }
 }
 
@@ -424,7 +424,7 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
   fgets (buf, 8, stdin);
 #endif
 #if !BX_DEBUGGER
-  exit(1);
+  BX_EXIT(1);
 #else
   static Boolean dbg_exit_called = 0;
   if (dbg_exit_called == 0) {

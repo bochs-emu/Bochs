@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.42 2002-04-01 04:44:15 instinc Exp $
+// $Id: dbg_main.cc,v 1.43 2002-04-18 00:22:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -285,7 +285,7 @@ bx_dbg_main(int argc, char *argv[])
       BX_ERROR(( "%s: -rc option used, but no path specified.",
         argv[0] ));
       bx_dbg_usage();
-      exit(1);
+      BX_EXIT(1);
       }
     strncpy(bx_debug_rc_fname, argv[2], BX_MAX_PATH-1);
     i += 2; // skip past "-rc" and filename

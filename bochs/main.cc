@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.96 2002-03-29 23:37:07 instinc Exp $
+// $Id: main.cc,v 1.97 2002-04-18 00:22:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,6 +109,7 @@ bx_options_t bx_options = {
 static void parse_line_unformatted(char *context, char *line);
 static void parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
+static void bx_do_text_config_interface (int argc, char *argv[]);
 
 static Bit32s
 bx_param_handler (bx_param_c *param, int set, Bit32s val)
@@ -319,11 +320,15 @@ void bx_init_options ()
   bx_list_c *menu;
 
   // floppya
-  bx_options.floppya.Opath = new bx_param_string_c (BXP_FLOPPYA_PATH,
+  bx_options.floppya.Opath = new bx_param_filename_c (BXP_FLOPPYA_PATH,
       "Floppy A image",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
+#if BX_WITH_WX
+  bx_options.floppya.Opath->set_ask_format ("Filename of first floppy image");
+#else
   bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
+#endif
   bx_options.floppya.Otype = new bx_param_enum_c (BXP_FLOPPYA_TYPE,
       "floppya:type",
       "Type of floppy disk",
@@ -353,11 +358,15 @@ void bx_init_options ()
   bx_options.floppya.Opath->set ("none");
   bx_options.floppya.Oinitial_status->set_handler (bx_param_handler);
 
-  bx_options.floppyb.Opath = new bx_param_string_c (BXP_FLOPPYB_PATH,
+  bx_options.floppyb.Opath = new bx_param_filename_c (BXP_FLOPPYB_PATH,
       "floppyb:path",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
+#if BX_WITH_WX
+  bx_options.floppyb.Opath->set_ask_format ("Filename of second floppy image");
+#else
   bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
+#endif
   bx_options.floppyb.Otype = new bx_param_enum_c (BXP_FLOPPYB_TYPE,
       "floppyb:type",
       "Type of floppy disk",
@@ -393,7 +402,7 @@ void bx_init_options ()
       "diskc:present",
       "Controls whether diskc is installed or not",
       0);
-  bx_options.diskc.Opath = new bx_param_string_c (BXP_DISKC_PATH,
+  bx_options.diskc.Opath = new bx_param_filename_c (BXP_DISKC_PATH,
       "",
       "Pathname of the hard drive image",
       "", BX_PATHNAME_LEN);
@@ -439,7 +448,7 @@ void bx_init_options ()
       "diskd:present",
       "Controls whether diskd is installed or not",
       0);
-  bx_options.diskd.Opath = new bx_param_string_c (BXP_DISKD_PATH,
+  bx_options.diskd.Opath = new bx_param_filename_c (BXP_DISKD_PATH,
       "diskd:path",
       "Pathname of the hard drive image",
       "", BX_PATHNAME_LEN);
@@ -484,7 +493,7 @@ void bx_init_options ()
 						  "",
 						  0);
 
-  bx_options.com1.Odev = new bx_param_string_c (BXP_COM1_PATH,
+  bx_options.com1.Odev = new bx_param_filename_c (BXP_COM1_PATH,
 						 "Pathname of the serial device for COM1",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -496,7 +505,7 @@ void bx_init_options ()
 						  "Controls whether com2 is installed or not",
 						  0);
 
-  bx_options.com2.Odev = new bx_param_string_c (BXP_COM2_PATH,
+  bx_options.com2.Odev = new bx_param_filename_c (BXP_COM2_PATH,
 						 "",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -507,7 +516,7 @@ void bx_init_options ()
 						  "",
 						  0);
 
-  bx_options.com3.Odev = new bx_param_string_c (BXP_COM3_PATH,
+  bx_options.com3.Odev = new bx_param_filename_c (BXP_COM3_PATH,
 						 "Pathname of the serial device for COM3",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -518,7 +527,7 @@ void bx_init_options ()
 						  "",
 						  0);
 
-  bx_options.com4.Odev = new bx_param_string_c (BXP_COM4_PATH,
+  bx_options.com4.Odev = new bx_param_filename_c (BXP_COM4_PATH,
 						 "Pathname of the serial device for COM4",
 						 "",
 						 "", BX_PATHNAME_LEN);
@@ -530,12 +539,14 @@ void bx_init_options ()
       "CDROM is present",
       "Controls whether cdromd is installed or not",
       0);
-  bx_options.cdromd.Opath = new bx_param_string_c (BXP_CDROM_PATH,
+  bx_options.cdromd.Opath = new bx_param_filename_c (BXP_CDROM_PATH,
       "CDROM image filename",
       "Pathname of the cdrom device or image",
       "", BX_PATHNAME_LEN);
   bx_options.cdromd.Opath->set_format ("%s");
+#if BX_UI_TEXT
   bx_options.cdromd.Opath->set_ask_format ("Enter new filename, or 'none' for no CDROM: [%s] ");
+#endif
   bx_options.cdromd.Oinserted = new bx_param_enum_c (BXP_CDROM_INSERTED,
       "Is the CDROM inserted or ejected",
       "Inserted or ejected",
@@ -596,7 +607,7 @@ void bx_init_options ()
       "Enables the first parallel port",
       0);
   bx_options.par1.Oenable->set_handler (bx_param_handler);
-  bx_options.par1.Ooutfile = new bx_param_string_c (BXP_PARPORT1_OUTFILE,
+  bx_options.par1.Ooutfile = new bx_param_filename_c (BXP_PARPORT1_OUTFILE,
       "Parallel port #1 output file",
       "Data written to parport#1 by the guest OS is written to this file",
       "parport.out", BX_PATHNAME_LEN);
@@ -606,7 +617,7 @@ void bx_init_options ()
       "Enables the second parallel port",
       0);
   bx_options.par2.Oenable->set_handler (bx_param_handler);
-  bx_options.par2.Ooutfile = new bx_param_string_c (BXP_PARPORT2_OUTFILE,
+  bx_options.par2.Ooutfile = new bx_param_filename_c (BXP_PARPORT2_OUTFILE,
       "Parallel port #2 output file",
       "Data written to parport#2 by the guest OS is written to this file",
       "parport2.out", BX_PATHNAME_LEN);
@@ -629,7 +640,7 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL, "Serial and Parallel Port Options", "serial_parallel_menu", parport_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
-  bx_options.rom.Opath = new bx_param_string_c (BXP_ROM_PATH,
+  bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
       "romimage",
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
@@ -641,7 +652,7 @@ void bx_init_options ()
       0);
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
   bx_options.rom.Oaddress->set_base (16);
-  bx_options.vgarom.Opath = new bx_param_string_c (BXP_VGA_ROM_PATH,
+  bx_options.vgarom.Opath = new bx_param_filename_c (BXP_VGA_ROM_PATH,
       "vgaromimage",
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
@@ -752,15 +763,15 @@ void bx_init_options ()
       "SB16 is present",
       "to be written",
       0);
-  bx_options.sb16.Omidifile = new bx_param_string_c (BXP_SB16_MIDIFILE,
+  bx_options.sb16.Omidifile = new bx_param_filename_c (BXP_SB16_MIDIFILE,
       "Midi file",
       "to be written",
       "", BX_PATHNAME_LEN);
-  bx_options.sb16.Owavefile = new bx_param_string_c (BXP_SB16_WAVEFILE,
+  bx_options.sb16.Owavefile = new bx_param_filename_c (BXP_SB16_WAVEFILE,
       "Wave file",
       "to be written",
       "", BX_PATHNAME_LEN);
-  bx_options.sb16.Ologfile = new bx_param_string_c (BXP_SB16_LOGFILE,
+  bx_options.sb16.Ologfile = new bx_param_filename_c (BXP_SB16_LOGFILE,
       "Log file",
       "to be written",
       "", BX_PATHNAME_LEN);
@@ -800,7 +811,7 @@ void bx_init_options ()
   bx_options.sb16.Opresent->set_handler (bx_param_handler);
   bx_options.sb16.Opresent->set (0);
 
-  bx_options.log.Ofilename = new bx_param_string_c (BXP_LOG_FILENAME,
+  bx_options.log.Ofilename = new bx_param_filename_c (BXP_LOG_FILENAME,
       "log:filename",
       "Pathname of bochs log file",
       "-", BX_PATHNAME_LEN);
@@ -813,15 +824,15 @@ void bx_init_options ()
       loader_os_names,
       Load32bitOSNone,
       Load32bitOSNone);
-  bx_options.load32bitOSImage.Opath = new bx_param_string_c (BXP_LOAD32BITOS_PATH,
+  bx_options.load32bitOSImage.Opath = new bx_param_filename_c (BXP_LOAD32BITOS_PATH,
       "Pathname of OS to load",
       NULL,
       "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oiolog = new bx_param_string_c (BXP_LOAD32BITOS_IOLOG,
+  bx_options.load32bitOSImage.Oiolog = new bx_param_filename_c (BXP_LOAD32BITOS_IOLOG,
       "Pathname of I/O log file",
       NULL,
       "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oinitrd = new bx_param_string_c (BXP_LOAD32BITOS_INITRD,
+  bx_options.load32bitOSImage.Oinitrd = new bx_param_filename_c (BXP_LOAD32BITOS_INITRD,
       "Pathname of initrd",
       NULL,
       "", BX_PATHNAME_LEN);
@@ -870,7 +881,7 @@ void bx_init_options ()
       "Use a CMOS image",
       NULL,
       0);
-  bx_options.cmos.Opath = new bx_param_string_c (BXP_CMOS_PATH,
+  bx_options.cmos.Opath = new bx_param_filename_c (BXP_CMOS_PATH,
       "Pathname of CMOS image",
       NULL,
       "", BX_PATHNAME_LEN);
@@ -885,7 +896,7 @@ void bx_init_options ()
       "Use keyboard mapping",
       NULL,
       0);
-  bx_options.keyboard.Okeymap = new bx_param_string_c (BXP_KEYBOARD_MAP,
+  bx_options.keyboard.Okeymap = new bx_param_filename_c (BXP_KEYBOARD_MAP,
       "Keymap filename",
       NULL,
       "", BX_PATHNAME_LEN);
@@ -967,10 +978,22 @@ static void setupWorkingDirectory (char *path)
 }
 #endif
 
-int
-main(int argc, char *argv[])
+#if !BX_WITH_WX
+// main() is the entry point for all configurations, except for
+// wxWindows.
+int main (int argc, char *argv[])
 {
-  int arg = 1;
+  bx_init_siminterface ();
+  bx_init_main ();
+  bx_do_text_config_interface (argc, argv);
+  bx_control_panel (BX_CPANEL_INIT);
+  bx_continue_after_control_panel (argc, argv);
+}
+#endif
+
+void
+bx_init_main ()
+{
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
   // constructors or functions called by constructors.  The macros test for
@@ -982,7 +1005,7 @@ main(int argc, char *argv[])
 
   bx_print_header ();
   bx_init_bx_dbg ();
-
+  bx_init_options ();
 #if BX_WITH_CARBON
     /* "-psn" is passed if we are launched by double-clicking */
    if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 ) {
@@ -1004,12 +1027,13 @@ main(int argc, char *argv[])
   getwd (cwd);
   BX_INFO (("Now my working directory is %s", cwd));
 #endif
+}
 
-  init_siminterface ();
-  bx_control_panel (BX_CPANEL_INIT);
-  bx_init_options ();
-
+static void
+bx_do_text_config_interface (int argc, char *argv[])
+{
   // detect -nocontrolpanel or -nocp argument before anything else
+  int arg = 1;
   if (argc > 1 && 
        ((!strcmp ("-nocontrolpanel", argv[1]))
         || (!strcmp ("-nocp", argv[1])))) {
@@ -1022,8 +1046,8 @@ main(int argc, char *argv[])
   enable_control_panel = 0;
 #endif
 
-  if (!enable_control_panel) {
-    // if we don't intend to run the control panel, parse the .bochsrc now.
+  if (!enable_control_panel || BX_WITH_WX) {
+    /* parse configuration file and command line arguments */
     char *bochsrc = bx_find_bochsrc ();
     if (bochsrc)
       bx_read_configuration (bochsrc);
@@ -1045,7 +1069,7 @@ main(int argc, char *argv[])
       fprintf (stderr, "   cd /usr/local/bochs/dlxlinux\n");
       fprintf (stderr, "   bochs\n");
 #endif
-      exit(1);
+      BX_EXIT(1);
     }
   }
 
@@ -1064,8 +1088,29 @@ main(int argc, char *argv[])
     }
     // Display the pre-simulation control panel.
     SIM->set_enabled (1);
+#if !BX_WITH_WX
+// unless wxwindows interface in use, show the control panel now
     bx_control_panel (BX_CPANEL_START_MENU);
+#endif
   }
+}
+
+int
+bx_continue_after_control_panel (int argc, char *argv[])
+{
+#if BX_WITH_WX
+  // FIXME: load default bochsrc right now.  When the wxWindows interface
+  // is more complete, you will be able to load a bochsrc using the
+  // interface.
+  char *bochsrc = bx_find_bochsrc ();
+  if (bochsrc) {
+    bx_read_configuration (bochsrc);
+    free (bochsrc);
+  } else {
+    BX_PANIC (("Could not load a .bochsrc"));
+  }
+#endif
+
 
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
@@ -1092,7 +1137,8 @@ main(int argc, char *argv[])
     // only one processor, run as fast as possible by not messing with
     // quantums and loops.
     BX_CPU(0)->cpu_loop(1);
-    BX_PANIC (("cpu_loop should never return in a single-processor simulation"));
+	// for one processor, the only reason for cpu_loop to return is
+	// that kill_bochs_request was set by the GUI interface.
   } else {
     // SMP simulation: do a few instructions on each processor, then switch
     // to another.  Increasing quantum speeds up overall performance, but
@@ -1103,14 +1149,18 @@ main(int argc, char *argv[])
       // do some instructions in each processor
       BX_CPU(processor)->cpu_loop(quantum);
       processor = (processor+1) % BX_SMP_PROCESSORS;
+	  if (BX_CPU(0)->kill_bochs_request) 
+	    break;
       if (processor == 0) 
-	BX_TICKN(quantum);
+	    BX_TICKN(quantum);
     }
   }
 #endif
-
+  BX_INFO (("cpu loop quit, shutting down simulator"));
+  bx_atexit ();
   return(0);
 }
+
 
 int
 bx_read_configuration (char *rcfile)
@@ -1254,16 +1304,15 @@ bx_init_bx_dbg (void)
 }
 
 
-  void
+int
 bx_atexit(void)
 {
   static Boolean been_here = 0;
-
+  if (been_here) return 1;   // protect from reentry
+  been_here = 1;
 
 #if BX_PROVIDE_DEVICE_MODELS==1
-  if (been_here == 0) {
-    bx_pc_system.exit();
-    }
+  bx_pc_system.exit();
 #endif
 
 #if BX_DEBUGGER == 0
@@ -1276,6 +1325,7 @@ bx_atexit(void)
       bx_devices.pci->print_i440fx_state();
       }
 #endif
+	return 0;
 }
 
 #if (BX_PROVIDE_CPU_MEMORY==1) && (BX_EMULATE_HGA_DUMPS>0)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.18 2002-04-01 04:42:43 instinc Exp $
+// $Id: cpu.h,v 1.19 2002-04-18 00:22:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -819,6 +819,7 @@ public: // for now...
   Bit32u   debug_trap; // holds DR6 value to be set as well
   volatile Boolean async_event;
   volatile Boolean INTR;
+  volatile Boolean kill_bochs_request;
 
   /* wether this CPU is the BSP always set for UP */
   Boolean bsp;

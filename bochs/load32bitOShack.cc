@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: load32bitOShack.cc,v 1.8 2002-04-18 00:22:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -268,12 +268,12 @@ bx_load_kernel_image(char *path, Bit32u paddr)
            );
   if (fd < 0) {
     BX_INFO(( "load_kernel_image: couldn't open image file '%s'.", path ));
-    exit(1);
+    BX_EXIT(1);
     }
   ret = fstat(fd, &stat_buf);
   if (ret) {
     BX_INFO(( "load_kernel_image: couldn't stat image file '%s'.", path ));
-    exit(1);
+    BX_EXIT(1);
     }
 
   size = stat_buf.st_size;
@@ -282,7 +282,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   BX_MEM_C *mem = BX_MEM(0);
   if ( (paddr + size) > mem->len ) {
     BX_INFO(( "load_kernel_image: address range > physical memsize!" ));
-    exit(1);
+    BX_EXIT(1);
     }
 
   offset = 0;
@@ -290,7 +290,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
     ret = read(fd, (bx_ptr_t) &mem->vector[paddr + offset], size);
     if (ret <= 0) {
       BX_INFO(( "load_kernel_image: read failed on image" ));
-      exit(1);
+      BX_EXIT(1);
       }
     size -= ret;
     offset += ret;

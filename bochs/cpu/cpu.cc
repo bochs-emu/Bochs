@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.27 2002-04-01 13:14:37 instinc Exp $
+// $Id: cpu.cc,v 1.28 2002-04-18 00:22:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -469,6 +469,9 @@ handle_async_event:
       return;
     }
 #endif
+  } else if (BX_CPU_THIS_PTR kill_bochs_request) {
+    // setting kill_bochs_request causes the cpu loop to return ASAP.
+    return;
   }
 
 

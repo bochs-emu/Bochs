@@ -69,6 +69,7 @@ if (test "$with_sdl" != yes) && \
    (test "$with_rfb" != yes) && \
    (test "$with_amigaos" != yes) && \
    (test "$with_carbon" != yes) && \
+   (test "$with_wx" != yes) && \
    (test "$with_macos" != yes); then
   # use DEFAULT_GUI.  Set the appropriate variable.
   # DEFAULT_GUI must be set to one of the names above.  Otherwise, no
@@ -1029,6 +1030,10 @@ AC_ARG_WITH(sdl,
   [  --with-sdl                        use SDL libraries],
   )
 
+AC_ARG_WITH(wx,
+  [  --with-wx                         use wxWindows libraries],
+  )
+
 dnl // DASH is option prefix for your platform
 dnl // SLASH is directory for your platform
 dnl // CXXFP is C++ File Prefix; the flag that tells the compiler
@@ -1068,34 +1073,34 @@ if test "$with_x11" = yes; then
     exit 1
   fi
   AC_DEFINE(BX_WITH_X11, 1)
-  GUI_OBJS='$(GUI_OBJS_X11)'
+  GUI_OBJS='$(GUI_OBJS_X11) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
   INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
 elif test "$with_beos" = yes; then
   AC_MSG_RESULT(beos)
   AC_DEFINE(BX_WITH_BEOS, 1)
-  GUI_OBJS='$(GUI_OBJS_BEOS)'
+  GUI_OBJS='$(GUI_OBJS_BEOS) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_BEOS)'
 elif test "$with_sdl" = yes; then
   AC_MSG_RESULT(sdl)
   CFLAGS="$CFLAGS \`sdl-config --cflags\`"
   AC_DEFINE(BX_WITH_SDL, 1)
-  GUI_OBJS='$(GUI_OBJS_SDL)'
+  GUI_OBJS='$(GUI_OBJS_SDL) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_SDL)'
 elif test "$with_rfb" = yes; then
   AC_MSG_RESULT(rfb)
   AC_DEFINE(BX_WITH_RFB, 1)
-  GUI_OBJS='$(GUI_OBJS_RFB)'
+  GUI_OBJS='$(GUI_OBJS_RFB) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_RFB)'
 elif test "$with_amigaos" = yes; then
   AC_MSG_RESULT(amigaos)
   AC_DEFINE(BX_WITH_AMIGAOS, 1)
-  GUI_OBJS='$(GUI_OBJS_AMIGAOS)'
+  GUI_OBJS='$(GUI_OBJS_AMIGAOS) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_AMIGAOS)'
 elif test "$with_win32" = yes; then
   AC_MSG_RESULT(win32)
   AC_DEFINE(BX_WITH_WIN32, 1)
-  GUI_OBJS='$(GUI_OBJS_WIN32)'
+  GUI_OBJS='$(GUI_OBJS_WIN32) control.o'
   case $target in
     *-pc-windows*)
        GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'  # native libs for win gui
@@ -1109,24 +1114,39 @@ elif test "$with_win32" = yes; then
 elif test "$with_macos" = yes; then
   AC_MSG_RESULT(macos)
   AC_DEFINE(BX_WITH_MACOS, 1)
-  GUI_OBJS='$(GUI_OBJS_MACOS)'
+  GUI_OBJS='$(GUI_OBJS_MACOS) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_MACOS)'
 elif test "$with_carbon" = yes; then
   AC_MSG_RESULT(carbon)
   AC_DEFINE(BX_WITH_CARBON, 1)
-  GUI_OBJS='$(GUI_OBJS_CARBON)'
+  GUI_OBJS='$(GUI_OBJS_CARBON) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_CARBON)'
   PRIMARY_TARGET=bochs.app/.build   # only for carbon application
 elif test "$with_term" = yes; then
   AC_MSG_RESULT(term)
   AC_DEFINE(BX_WITH_TERM, 1)
-  GUI_OBJS='$(GUI_OBJS_TERM)'
+  GUI_OBJS='$(GUI_OBJS_TERM) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_TERM)'
   use_curses=yes
+elif test "$with_wx" = yes; then
+  AC_MSG_RESULT(wxWindows)
+  AC_DEFINE(BX_WITH_WX, 1)
+  CFLAGS="$CFLAGS `wx-config --cflags`"
+  CXXFLAGS="$CFLAGS `wx-config --cxxflags`"
+  # if gtk-config exists, then add it to the cflags.
+  gtkconf=`gtk-config --cflags`
+  if test $? = 0; then
+    # gtk-config was found and returned 0, so it must return valid output
+    CFLAGS="$CFLAGS `gtk-config --cflags`"
+    CXXFLAGS="$CXXFLAGS `gtk-config --cflags`"
+  fi
+  # wxwindows is the only one without control.o in GUI_OBJS
+  GUI_OBJS='$(GUI_OBJS_WX)'
+  GUI_LINK_OPTS='$(GUI_LINK_OPTS_WX)'
 else
   AC_MSG_RESULT(none)
   AC_DEFINE(BX_WITH_NOGUI, 1)
-  GUI_OBJS='$(GUI_OBJS_NOGUI)'
+  GUI_OBJS='$(GUI_OBJS_NOGUI) control.o'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_NOGUI)'
 fi
 
@@ -1184,32 +1204,232 @@ if test "$use_curses" = yes; then
   fi
 fi
 
+
+# The ACX_PTHREAD function was written by 
+# Steven G. Johnson <stevenj@alum.mit.edu> and 
+# Alejandro Forero Cuervo <bachue@bachue.com> 
+# I found it in the ac-archive project on Source Forge.
+
+AC_DEFUN([ACX_PTHREAD], [
+AC_REQUIRE([AC_CANONICAL_HOST])
+acx_pthread_ok=no
+
+# First, check if the POSIX threads header, pthread.h, is available.
+# If it isn't, don't bother looking for the threads libraries.
+AC_CHECK_HEADER(pthread.h, , acx_pthread_ok=noheader)
+
+# We must check for the threads library under a number of different
+# names; the ordering is very important because some systems
+# (e.g. DEC) have both -lpthread and -lpthreads, where one of the
+# libraries is broken (non-POSIX).
+
+# First of all, check if the user has set any of the PTHREAD_LIBS,
+# etcetera environment variables, and if threads linking works using
+# them:
+if test x"$PTHREAD_LIBS$PTHREAD_CFLAGS" != x; then
+	save_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+	save_LIBS="$LIBS"
+	LIBS="$PTHREAD_LIBS $LIBS"
+	AC_MSG_CHECKING([for pthread_join in LIBS=$PTHREAD_LIBS with CFLAGS=$PTHREAD_CFLAGS])
+	AC_TRY_LINK_FUNC(pthread_join, acx_pthread_ok=yes)
+	AC_MSG_RESULT($acx_pthread_ok)
+	if test x"$acx_pthread_ok" = xno; then
+		PTHREAD_LIBS=""
+		PTHREAD_CFLAGS=""
+	fi
+	LIBS="$save_LIBS"
+	CFLAGS="$save_CFLAGS"
+fi
+
+# Create a list of thread flags to try.  Items starting with a "-" are
+# C compiler flags, and other items are library names, except for "none"
+# which indicates that we try without any flags at all.
+
+acx_pthread_flags="pthreads none -Kthread -kthread lthread -pthread -pthreads -mthreads pthread --thread-safe -mt"
+
+# The ordering *is* (sometimes) important.  Some notes on the
+# individual items follow:
+
+# pthreads: AIX (must check this before -lpthread)
+# none: in case threads are in libc; should be tried before -Kthread and
+#       other compiler flags to prevent continual compiler warnings
+# -Kthread: Sequent (threads in libc, but -Kthread needed for pthread.h)
+# -kthread: FreeBSD kernel threads (preferred to -pthread since SMP-able)
+# lthread: LinuxThreads port on FreeBSD (also preferred to -pthread)
+# -pthread: Linux/gcc (kernel threads), BSD/gcc (userland threads)
+# -pthreads: Solaris/gcc
+# -mthreads: Mingw32/gcc, Lynx/gcc
+# -mt: Sun Workshop C (may only link SunOS threads [-lthread], but it
+#      doesn't hurt to check since this sometimes defines pthreads too;
+#      also defines -D_REENTRANT)
+# pthread: Linux, etcetera
+# --thread-safe: KAI C++
+
+case "${host_cpu}-${host_os}" in
+	*solaris*)
+
+	# On Solaris (at least, for some versions), libc contains stubbed
+	# (non-functional) versions of the pthreads routines, so link-based
+	# tests will erroneously succeed.  (We need to link with -pthread or
+	# -lpthread.)  (The stubs are missing pthread_cleanup_push, or rather
+	# a function called by this macro, so we could check for that, but
+	# who knows whether they'll stub that too in a future libc.)  So,
+	# we'll just look for -pthreads and -lpthread first:
+
+	acx_pthread_flags="-pthread -pthreads pthread -mt $acx_pthread_flags"
+	;;
+esac
+
+if test x"$acx_pthread_ok" = xno; then
+for flag in $acx_pthread_flags; do
+
+	case $flag in
+		none)
+		AC_MSG_CHECKING([whether pthreads work without any flags])
+		;;
+
+		-*)
+		AC_MSG_CHECKING([whether pthreads work with $flag])
+		PTHREAD_CFLAGS="$flag"
+		;;
+
+		*)
+		AC_MSG_CHECKING([for the pthreads library -l$flag])
+		PTHREAD_LIBS="-l$flag"
+		;;
+	esac
+
+	save_LIBS="$LIBS"
+	save_CFLAGS="$CFLAGS"
+	LIBS="$PTHREAD_LIBS $LIBS"
+	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+
+	# Check for various functions.  We must include pthread.h,
+	# since some functions may be macros.  (On the Sequent, we
+	# need a special flag -Kthread to make this header compile.)
+	# We check for pthread_join because it is in -lpthread on IRIX
+	# while pthread_create is in libc.  We check for pthread_attr_init
+	# due to DEC craziness with -lpthreads.  We check for
+	# pthread_cleanup_push because it is one of the few pthread
+	# functions on Solaris that doesn't have a non-functional libc stub.
+	# We try pthread_create on general principles.
+	AC_TRY_LINK([#include <pthread.h>],
+		    [pthread_t th; pthread_join(th, 0);
+		     pthread_attr_init(0); pthread_cleanup_push(0, 0);
+		     pthread_create(0,0,0,0); pthread_cleanup_pop(0); ],
+		    [acx_pthread_ok=yes])
+
+	LIBS="$save_LIBS"
+	CFLAGS="$save_CFLAGS"
+
+	AC_MSG_RESULT($acx_pthread_ok)
+	if test "x$acx_pthread_ok" = xyes; then
+		break;
+	fi
+
+	PTHREAD_LIBS=""
+	PTHREAD_CFLAGS=""
+done
+fi
+
+# Various other checks:
+if test "x$acx_pthread_ok" = xyes; then
+	save_LIBS="$LIBS"
+	LIBS="$PTHREAD_LIBS $LIBS"
+	save_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+
+	# Detect AIX lossage: threads are created detached by default
+	# and the JOINABLE attribute has a nonstandard name (UNDETACHED).
+	AC_MSG_CHECKING([for joinable pthread attribute])
+	AC_TRY_LINK([#include <pthread.h>],
+		    [int attr=PTHREAD_CREATE_JOINABLE;],
+		    ok=PTHREAD_CREATE_JOINABLE, ok=unknown)
+	if test x"$ok" = xunknown; then
+		AC_TRY_LINK([#include <pthread.h>],
+			    [int attr=PTHREAD_CREATE_UNDETACHED;],
+			    ok=PTHREAD_CREATE_UNDETACHED, ok=unknown)
+	fi
+	if test x"$ok" != xPTHREAD_CREATE_JOINABLE; then
+		AC_DEFINE(PTHREAD_CREATE_JOINABLE, $ok,
+			  [Define to the necessary symbol if this constant
+			   uses a non-standard name on your system.])
+	fi
+	AC_MSG_RESULT(${ok})
+	if test x"$ok" = xunknown; then
+		AC_MSG_WARN([we do not know how to create joinable pthreads])
+	fi
+
+	AC_MSG_CHECKING([if more special flags are required for pthreads])
+	flag=no
+	case "${host_cpu}-${host_os}" in
+		*-aix* | *-freebsd*)     flag="-D_THREAD_SAFE";;
+		*solaris* | alpha*-osf*) flag="-D_REENTRANT";;
+	esac
+	AC_MSG_RESULT(${flag})
+	if test "x$flag" != xno; then
+		PTHREAD_CFLAGS="$flag $PTHREAD_CFLAGS"
+	fi
+
+	LIBS="$save_LIBS"
+	CFLAGS="$save_CFLAGS"
+
+	# More AIX lossage: must compile with cc_r
+	AC_CHECK_PROG(PTHREAD_CC, cc_r, cc_r, ${CC})
+else
+	PTHREAD_CC="$CC"
+fi
+
+AC_SUBST(PTHREAD_LIBS)
+AC_SUBST(PTHREAD_CFLAGS)
+AC_SUBST(PTHREAD_CC)
+
+# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+if test x"$acx_pthread_ok" = xyes; then
+	ifelse([$1],,AC_DEFINE(HAVE_PTHREAD,1,[Define if you have POSIX threads libraries and header files.]),[$1])
+	:
+else
+	acx_pthread_ok=no
+	$2
+fi
+
+])dnl ACX_PTHREAD
+
+pthread_ok=no
+ACX_PTHREAD([ 
+  pthread_ok=yes
+  #echo Using PTHREAD_LIBS=$PTHREAD_LIBS
+  #echo Using PTHREAD_CFLAGS=$PTHREAD_CFLAGS
+  #echo Using PTHREAD_CC=$PTHREAD_CC
+  ])
+
+
 if test "$with_rfb" = yes; then
-  # first see if compiler takes "-pthread" argument
-  AC_MSG_CHECKING(for -pthread arg to compiler)
-  CFLAGS_SAVE="$CFLAGS"
-  CFLAGS="$CFLAGS -pthread"
-  AC_TRY_LINK([ #include <pthread.h> ],
-    [ pthread_create(0,0,0,0); ], 
-    [ 
-      # it compiles with -pthread
-      AC_MSG_RESULT(yes) 
-      CXXFLAGS="$CXXFLAGS -pthread"
-    ],
-    [
-      AC_MSG_RESULT(no)
-      # now try with -lpthread
-      CFLAGS="$CFLAGS_SAVE"
-      AC_CHECK_LIB(pthread, 
-	pthread_create,
-	[
-	  # it compiles with -lpthread
-	  RFB_LIBS='-lpthread'
-	],
-	[
-	    echo ERROR: --with-rfb requires the pthread library, which could not be found.; exit 1
-	])
-    ])
+  if test "$pthread_ok" = yes; then
+    RFB_LIBS="$PTHREAD_LIBS"
+    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+    CC="$PTHREAD_CC"
+  else
+    echo ERROR: --with-rfb requires the pthread library, which could not be found.; exit 1
+  fi
+fi
+
+if test "$with_wx" = yes; then
+  if test "$pthread_ok" = yes; then
+	GUI_LINK_OPTS="$PTHREAD_LIBS $GUI_LINK_OPTS"
+	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+	CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+	CC="$PTHREAD_CC"
+  else
+    case "$target" in
+	  *-pc-windows* | *-pc-winnt*)
+	    # pthread not needed for win32
+		;;
+	  *)
+        echo ERROR: --with-wx requires the pthread library, which could not be found.; exit 1
+    esac
+  fi
 fi
 
 # Create some subdirectories for when you run configure from some other 

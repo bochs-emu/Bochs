@@ -33,7 +33,7 @@ SHELL = /bin/sh
 @SET_MAKE@
 
 CXX = @CXX@
-CXXFLAGS = @CXXFLAGS@
+CXXFLAGS = @CXXFLAGS@  `wx-config --cxxflags`
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -53,7 +53,9 @@ GUI_OBJS_NOGUI = nogui.o
 GUI_OBJS_TERM  = term.o
 GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
-GUI_OBJS = keymap.o gui.o control.o siminterface.o @GUI_OBJS@
+GUI_OBJS_WX = wx.o wxmain.o
+GUI_OBJS = keymap.o gui.o siminterface.o @GUI_OBJS@
+
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS =
@@ -224,3 +226,5 @@ x.o: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../debug/debug.h \
  ../iodev/unmapped.h ../iodev/eth.h ../iodev/ne2k.h \
  ../iodev/guest2host.h ../iodev/slowdown_timer.h \
  ../instrument/stubs/instrument.h icon_bochs.h
+wx.o: wxmain.h
+wxmain.o: wxmain.h

@@ -40,6 +40,15 @@
 // USER CONFIGURABLE OPTIONS : EDIT ONLY OPTIONS IN THIS SECTION //
 ///////////////////////////////////////////////////////////////////
 
+
+#if 1
+// quit_sim is defined in gui/siminterface.h
+#define BX_EXIT(x)  SIM->quit_sim (x)
+#else
+// provide the real main and the usual exit.
+#define BX_EXIT(x)  ::exit(x)
+#endif
+
 #define BX_USE_CONTROL_PANEL 1
 
 // I have tested the following combinations:
@@ -340,6 +349,7 @@
 #define BX_WITH_RFB 0
 #define BX_WITH_AMIGAOS 0
 #define BX_WITH_SDL 0
+#define BX_WITH_WX 0
 
 
 // Roland Mainz's idle hack is presently specific to X11. If people try to

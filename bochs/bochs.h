@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.61 2002-03-26 13:59:35 bdenney Exp $
+// $Id: bochs.h,v 1.62 2002-04-18 00:22:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -221,13 +221,6 @@ extern Bit8u DTPageDirty[];
 #endif
 
 #define MAGIC_LOGNUM 0x12345678
-
-// Log Level defines
-#define LOGLEV_DEBUG 0
-#define LOGLEV_INFO  1
-#define LOGLEV_ERROR 2
-#define LOGLEV_PANIC 3
-#define N_LOGLEV   4
 
 typedef class logfunctions {
 	char *prefix;
@@ -463,7 +456,7 @@ typedef struct {
 
 #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 void bx_signal_handler (int signum);
-void bx_atexit(void);
+int bx_atexit(void);
 extern bx_debug_t bx_dbg;
 
 
@@ -515,6 +508,8 @@ extern bx_devices_c   bx_devices;
 
 #define BX_RESET_SOFTWARE 10
 #define BX_RESET_HARDWARE 11
+
+void bx_init_before_control_panel ();
 
 // This value controls how often each I/O device's periodic() method
 // gets called.  The timer is set up in iodev/devices.cc.

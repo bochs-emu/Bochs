@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.54 2002-04-11 00:28:55 instinc Exp $
+// $Id: keyboard.cc,v 1.55 2002-04-18 00:22:19 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.54 2002-04-11 00:28:55 instinc Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.55 2002-04-18 00:22:19 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.54 2002-04-11 00:28:55 instinc Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.55 2002-04-18 00:22:19 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -1099,6 +1099,8 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   if ( ++multiple==10)
   {
     multiple=0;
+	SIM->periodic ();
+	if (BX_CPU_THIS_PTR kill_bochs_request) return 0;
     bx_gui.handle_events();
   }
 
