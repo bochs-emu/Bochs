@@ -630,14 +630,22 @@ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 // object->*(fnptr)(arg, ...);
 // Since this is different from when SMF=1, encapsulate it in a macro.
 #  define BX_CPU_CALL_METHOD(func, args) \
-    (this->*((BxExecutePtr_t) (func))) args
+    do { \ 
+      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+      (this->*((BxExecutePtr_t) (func))) args \
+      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    } while (0)
 #else
 // static member functions.  With SMF, there is only one CPU by definition.
 #  define BX_CPU_THIS_PTR  BX_CPU(0)->
 #  define BX_SMF           static
 #  define BX_CPU_C_PREFIX
-#  define BX_CPU_CALL_METHOD(func, args) \
-    ((BxExecutePtr_t) (func)) args
+#  define BX_CPU_CALL_METHOD(func, args)   \
+    do { \
+      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    ((BxExecutePtr_t) (func)) args; \
+      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    } while (0)
 #endif
 
 typedef void (*BxDTShim_t)(void);
