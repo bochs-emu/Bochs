@@ -1,0 +1,756 @@
+----------------------------------------------------------------------
+Patch name: patch.param-tree
+Author: Bryce Denney
+Date: Mon Mar 17 00:21:53 EST 2003
+Status: Not complete
+
+Detailed description:
+
+I'm trying to organize the parameters into a tree structure instead of
+a huge flat list.  I want to get rid of the bx_id enumerated type and
+parameter id numbers entirely.  Instead of locating a parameter by its
+id number (e.g. BXP_COM2_ENABLED) which is set at compile time, it can be
+located by a string name such as "serial.1.enabled".  This string would find
+the parameter by traversing a tree of parameters that looks something like
+
+  serial
+    0
+      enabled        (was BXP_COM1_ENABLED)
+      path           (was BXP_COM1_PATH)
+    1
+      enabled        (was BXP_COM2_ENABLED)
+      path           (was BXP_COM2_PATH)
+    2
+      enabled        (was BXP_COM3_ENABLED)
+      path           (was BXP_COM3_PATH)
+    3
+      enabled        (was BXP_COM4_ENABLED)
+      path           (was BXP_COM4_PATH)
+
+This is not ready to be checked in!  I wanted to commit the patch in case
+anybody wanted to see the direction I was heading.  I added some testing
+code in main.cc, and I've converted just one parameter into tree form:
+  memory.ram.megs
+
+The old way to look up this value was with the id number
+  SIM->get_param(BXP_MEM_SIZE);
+The new way to look it up is with the string
+  SIM->get_param("memory.ram.megs");
+
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.223
+diff -u -r1.223 main.cc
+--- main.cc	13 Feb 2003 15:51:12 -0000	1.223
++++ main.cc	17 Mar 2003 05:25:02 -0000
+@@ -52,6 +52,7 @@
+ #ifndef BX_SHARE_PATH
+ #define BX_SHARE_PATH NULL
+ #endif
++void print_tree (bx_param_c *node, int level = 0);
+ 
+ 
+ int bochsrc_include_count = 0;
+@@ -344,6 +345,8 @@
+ 
+   memset (&bx_options, 0, sizeof(bx_options));
+ 
++  bx_param_c *root_param = SIM->get_param(".");
++
+   // quick start option, set by command line arg
+   new bx_param_enum_c (BXP_BOCHS_START,
+       "Bochs start types",
+@@ -735,8 +738,14 @@
+   menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "diskmenu", disk_menu_init_list);
+   menu->get_options ()->set (menu->SHOW_PARENT);
+ 
++  // memory subtree
++  bx_list_c *memory = new bx_list_c (root_param, "memory", "");
++  bx_list_c *ram = new bx_list_c (memory, "ram", "");
++  bx_list_c *rom = new bx_list_c (memory, "rom", "");
++  bx_list_c *optional_rom = new bx_list_c (memory, "optional_rom", "");
++
+   // memory options menu
+-  bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
++  bx_options.memory.Osize = new bx_param_num_c (ram,
+       "megs",
+       "Amount of RAM in megabytes",
+       1, BX_MAX_BIT32U,
+@@ -1313,6 +1322,9 @@
+   };
+   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
+   menu->get_options ()->set (menu->SHOW_PARENT);
++
++  printf ("parameter tree:\n");
++  print_tree (root_param, 0);
+ }
+ 
+ void bx_reset_options ()
+@@ -1351,7 +1363,7 @@
+   // boot & memory
+   bx_options.Obootdrive->reset();
+   bx_options.OfloppySigCheck->reset();
+-  bx_options.memory.Osize->reset();
++  SIM->get_param("memory.ram.megs")->reset ();
+ 
+   // standard ports
+   bx_options.com[0].Oenabled->reset();
+@@ -1509,8 +1521,109 @@
+ }
+ #endif
+ 
++void bx_test_params () {
++  printf ("Begin\n");
++
++  // create numeric parameter a
++  bx_param_num_c *ap = new bx_param_num_c (BXP_NULL,
++    "parameter a",
++    "description of a",
++    0,    // minimum value
++    10,   // maximum value
++    1);   // default value
++  printf ("%s is %d\n", ap->get_name(), ap->get ());
++  ap->set(10);
++  printf ("%s is %d\n", ap->get_name(), ap->get ());
++  //ap->set(11);   // causes assert because 11 is out of range
++  printf ("Resetting a to initial value.\n");
++  ap->reset ();
++  printf ("%s is %d\n", ap->get_name(), ap->get ());
++  Bit32u b = 77;
++  bx_param_num_c *bp = new bx_shadow_num_c (BXP_NULL,
++    "shadow parameter b", 
++    "description of b",
++    &b);
++  printf ("%s is %d\n", bp->get_name(), bp->get ());
++  b = 32;
++  printf ("%s is %d\n", bp->get_name(), bp->get ());
++  bp->set (45);
++  printf ("%s is %d\n", bp->get_name(), bp->get ());
++  //printf ("Resetting b to initial value.\n");
++  //bp->reset ();  // not supported on shadow params
++  printf ("%s is %d\n", bp->get_name(), bp->get ());
++  printf ("End\n");
++}
++
++void print_tree (bx_param_c *node, int level)
++{
++  int i;
++  for (i=0; i<level; i++)
++    printf ("  ");
++  if (node == NULL) {
++      printf ("NULL pointer\n");
++      return;
++  }
++  switch (node->get_type()) {
++    case BXT_PARAM_NUM:
++      printf ("%s = %d  (number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
++      break;
++    case BXT_PARAM_BOOL:
++      printf ("%s = %s  (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
++      break;
++    case BXT_PARAM:
++    case BXT_PARAM_ENUM:
++    case BXT_PARAM_STRING:
++      printf ("%s = '%s'  (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
++      break;
++    case BXT_LIST:
++      {
++	printf ("%s = \n", node->get_name ());
++	bx_list_c *list = (bx_list_c*)node;
++	for (i=0; i < list->get_size (); i++) {
++	   print_tree (list->get(i), level+1);
++	}
++	break;
++      }
++  }
++}
++
++void test_lookup (const char *pname) 
++{
++  printf ("looking up parameter '%s'\n", pname);
++  bx_param_c *param = SIM->get_param (pname);
++  print_tree (param);
++}
++
++void bx_test_param_tree () {
++  printf ("bx_test_param_tree\n");
++  bx_list_c *top = new bx_list_c (BXP_NULL, 
++      "bochs", "top level object",
++      20);
++  bx_list_c *memory = new bx_list_c (top, "memory", "", 5);
++  bx_list_c *ram = new bx_list_c (memory, "ram", "", 5);
++  new bx_param_num_c (ram, "size", "Size of RAM in megabytes",
++      1, BX_MAX_BIT32U, BX_DEFAULT_MEM_MEGS);
++  bx_list_c *rom = new bx_list_c (memory, "rom", "", 5);
++  new bx_param_num_c (rom, "address", "ROM Address",
++      0, 0xffff, 0xf000);
++  print_tree (top);
++  printf ("Finding memory size: \n");
++  test_lookup (".");
++  test_lookup ("memory.ram.size");
++  test_lookup ("memory.ram");
++  //test_lookup ("memory.ram.");  // illegal
++  //test_lookup ("memory.ram..size");  // illegal
++  printf ("bx_test_param_tree done\n");
++}
++
+ int bxmain () {
+   bx_init_siminterface ();   // create the SIM object
++  //bx_test_params ();
++  //bx_test_param_tree ();
++  //exit(0);
++
++
++
+   static jmp_buf context;
+   if (setjmp (context) == 0) {
+     SIM->set_quit_context (&context);
+@@ -2179,7 +2292,8 @@
+   }
+ 
+ #if BX_SMP_PROCESSORS==1
+-  BX_MEM(0)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
++  bx_param_num_c *memsize = SIM->get_param_num("memory.ram.megs");
++  BX_MEM(0)->init_memory(memsize->get() * 1024*1024);
+ 
+   // First load the optional ROM images
+   if (strcmp(bx_options.optrom[0].Opath->getptr (),"") !=0 )
+@@ -3286,7 +3400,7 @@
+     if (num_params != 2) {
+       PARSE_ERR(("%s: megs directive: wrong # args.", context));
+       }
+-    bx_options.memory.Osize->set (atol(params[1]));
++    SIM->get_param_num("memory.ram.megs")->set (atol(params[1]));
+     }
+   else if (!strcmp(params[0], "floppy_command_delay")) {
+     if (num_params != 2) {
+Index: gui/siminterface.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
+retrieving revision 1.94
+diff -u -r1.94 siminterface.cc
+--- gui/siminterface.cc	6 Feb 2003 23:16:55 -0000	1.94
++++ gui/siminterface.cc	17 Mar 2003 05:25:04 -0000
+@@ -10,6 +10,7 @@
+ 
+ bx_simulator_interface_c *SIM = NULL;
+ logfunctions *siminterface_log = NULL;
++bx_list_c *root_param = NULL;
+ #define LOG_THIS siminterface_log->
+ 
+ // bx_simulator_interface just defines the interface that the Bochs simulator
+@@ -51,10 +52,19 @@
+   virtual int register_param (bx_id id, bx_param_c *it);
+   virtual void reset_all_param ();
+   virtual bx_param_c *get_param (bx_id id);
++  virtual bx_param_c *get_param (const char *pname, bx_param_c *base=NULL);
++  // deprecated
+   virtual bx_param_num_c *get_param_num (bx_id id);
++  // deprecated
+   virtual bx_param_string_c *get_param_string (bx_id id);
++  // deprecated
+   virtual bx_param_bool_c *get_param_bool (bx_id id);
++  // deprecated
+   virtual bx_param_enum_c *get_param_enum (bx_id id);
++  virtual bx_param_num_c *get_param_num (const char *pname);
++  virtual bx_param_string_c *get_param_string (const char *pname);
++  virtual bx_param_bool_c *get_param_bool (const char *pname);
++  virtual bx_param_enum_c *get_param_enum (const char *pname);
+   virtual int get_n_log_modules ();
+   virtual char *get_prefix (int mod);
+   virtual int get_log_action (int mod, int level);
+@@ -145,6 +155,56 @@
+   return retval;
+ }
+ 
++// recursive function to find parameters from the path
++static
++bx_param_c *find_param (const char *full_pname, const char *rest_of_pname, bx_param_c *base)
++{
++  const char *from = rest_of_pname;
++  char component[BX_PATHNAME_LEN];
++  char *to = component;
++  // copy the first piece of pname into component, stopping at first separator
++  // or at the end of the string
++  while (*from != 0 && *from != '.') {
++    *to = *from;
++    to++;
++    from++;
++  }
++  *to = 0;
++  if (!component[0]) {
++    BX_PANIC (("find_param: found empty component in parameter name %s", full_pname));
++    // or does that mean that we're done?
++  }
++  if (base->get_type() != BXT_LIST) {
++    BX_PANIC (("find_param: base was not a list!"));
++  }
++  BX_INFO (("searching for component '%s' in list '%s'", component, base->get_name()));
++
++  // find the component in the list.
++  bx_list_c *list = (bx_list_c *)base;
++  bx_param_c *child = list->get_by_name (component);
++  // if child not found, there is nothing else that can be done. return NULL.
++  if (child == NULL) return NULL;
++  if (from[0] == 0) {
++    // that was the end of the path, we're done
++    return child;
++  }
++  // continue parsing the path
++  BX_ASSERT(from[0] == '.');
++  from++;  // skip over the separator
++  return find_param (full_pname, from, child);
++}
++
++bx_param_c *
++bx_real_sim_c::get_param (const char *pname, bx_param_c *base) 
++{
++  if (base == NULL)
++    base = root_param;
++  // to access top level object, look for parameter "."
++  if (pname[0] == '.' && pname[1] == 0)
++    return base;
++  return find_param (pname, pname, base);
++}
++
+ bx_param_num_c *
+ bx_real_sim_c::get_param_num (bx_id id) {
+   bx_param_c *generic = get_param(id);
+@@ -159,6 +219,20 @@
+   return NULL;
+ }
+ 
++bx_param_num_c *
++bx_real_sim_c::get_param_num (const char *pname) {
++  bx_param_c *generic = get_param(pname);
++  if (generic==NULL) {
++    BX_PANIC (("get_param_num(%s) could not find a parameter", pname));
++    return NULL;
++  }
++  int type = generic->get_type ();
++  if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL || type == BXT_PARAM_ENUM)
++    return (bx_param_num_c *)generic;
++  BX_PANIC (("get_param_num(%s) could not find an integer parameter with that name", pname));
++  return NULL;
++}
++
+ bx_param_string_c *
+ bx_real_sim_c::get_param_string (bx_id id) {
+   bx_param_c *generic = get_param(id);
+@@ -172,6 +246,19 @@
+   return NULL;
+ }
+ 
++bx_param_string_c *
++bx_real_sim_c::get_param_string (const char *pname) {
++  bx_param_c *generic = get_param(pname);
++  if (generic==NULL) {
++    BX_PANIC (("get_param_string(%s) could not find a parameter", pname));
++    return NULL;
++  }
++  if (generic->get_type () == BXT_PARAM_STRING)
++    return (bx_param_string_c *)generic;
++  BX_PANIC (("get_param_string(%s) could not find an integer parameter with that name", pname));
++  return NULL;
++}
++
+ bx_param_bool_c *
+ bx_real_sim_c::get_param_bool (bx_id id) {
+   bx_param_c *generic = get_param(id);
+@@ -185,6 +272,19 @@
+   return NULL;
+ }
+ 
++bx_param_bool_c *
++bx_real_sim_c::get_param_bool (const char *pname) {
++  bx_param_c *generic = get_param(pname);
++  if (generic==NULL) {
++    BX_PANIC (("get_param_bool(%s) could not find a parameter", pname));
++    return NULL;
++  }
++  if (generic->get_type () == BXT_PARAM_BOOL)
++    return (bx_param_bool_c *)generic;
++  BX_PANIC (("get_param_bool(%s) could not find a bool parameter with that name", pname));
++  return NULL;
++}
++
+ bx_param_enum_c *
+ bx_real_sim_c::get_param_enum (bx_id id) {
+   bx_param_c *generic = get_param(id);
+@@ -198,6 +298,19 @@
+   return NULL;
+ }
+ 
++bx_param_enum_c *
++bx_real_sim_c::get_param_enum (const char *pname) {
++  bx_param_c *generic = get_param(pname);
++  if (generic==NULL) {
++    BX_PANIC (("get_param_enum(%s) could not find a parameter", pname));
++    return NULL;
++  }
++  if (generic->get_type () == BXT_PARAM_ENUM)
++    return (bx_param_enum_c *)generic;
++  BX_PANIC (("get_param_enum(%s) could not find a enum parameter with that name", pname));
++  return NULL;
++}
++
+ void bx_init_siminterface ()
+ {
+   siminterface_log = new logfunctions ();
+@@ -205,6 +318,12 @@
+   siminterface_log->settype(CTRLLOG);
+   if (SIM == NULL) 
+     SIM = new bx_real_sim_c();
++  if (root_param == NULL) {
++    root_param = new bx_list_c (NULL, 
++	"bochs",
++	"list of top level bochs parameters", 
++	30);
++  }
+ }
+ 
+ bx_simulator_interface_c::bx_simulator_interface_c ()
+@@ -795,6 +914,7 @@
+   this->ask_format = NULL;
+   this->runtime_param = 0;
+   this->enabled = 1;
++  this->parent = NULL;
+   SIM->register_param (id, this);
+ }
+ 
+@@ -804,6 +924,22 @@
+   return old;
+ }
+ 
++void bx_list_c::set_parent (bx_param_c *newparent) { 
++  if (parent) {
++    // if this object already had a parent, the correct thing
++    // to do would be to remove this object from the parent's
++    // list of children.  Deleting children is currently
++    // not supported.
++    BX_PANIC (("bx_list_c::set_parent: changing from one parent to another is not supported"));
++  }
++  if (newparent) {
++    BX_ASSERT(newparent->get_type() == BXT_LIST);
++    this->parent = (bx_list_c *)newparent;
++    this->parent->add (this);
++  }
++}
++
++
+ bx_param_num_c::bx_param_num_c (bx_id id,
+     char *name,
+     char *description,
+@@ -823,6 +959,28 @@
+   set (initial_val);
+ }
+ 
++bx_param_num_c::bx_param_num_c (bx_param_c *parent,
++    char *name,
++    char *description,
++    Bit64s min, Bit64s max, Bit64s initial_val)
++  : bx_param_c (BXP_NULL, name, description)
++{
++  set_type (BXT_PARAM_NUM);
++  this->min = min;
++  this->max = max;
++  this->initial_val = initial_val;
++  this->val.number = initial_val;
++  this->handler = NULL;
++  this->base = default_base;
++  // dependent_list must be initialized before the set(),
++  // because set calls update_dependents().
++  dependent_list = NULL;
++  set (initial_val);
++  BX_ASSERT(parent->get_type() == BXT_LIST);
++  this->parent = (bx_list_c *) parent;
++  if (this->parent) this->parent->add (this);
++}
++
+ Bit32u bx_param_num_c::default_base = 10;
+ 
+ Bit32u bx_param_num_c::set_default_base (Bit32u val) {
+@@ -874,7 +1032,7 @@
+     val.number = newval;
+   }
+   if ((val.number < min || val.number > max) && max != BX_MAX_BIT64U)
+-    BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), val.number, min, max));
++    BX_PANIC (("numerical parameter '%s' was set to %lld, which is out of range %lld to %lld", get_name (), val.number, min, max));
+   if (dependent_list != NULL) update_dependents ();
+ }
+ 
+@@ -1083,6 +1241,12 @@
+   }
+ }
+ 
++void 
++bx_shadow_num_c::reset ()
++{
++  BX_PANIC (("reset not supported on bx_shadow_num_c yet"));
++}
++
+ bx_param_bool_c::bx_param_bool_c (bx_id id,
+     char *name,
+     char *description,
+@@ -1277,6 +1441,7 @@
+   this->size = 0;
+   this->maxsize = maxsize;
+   this->list = new bx_param_c*  [maxsize];
++  this->parent = NULL;
+   init ();
+ }
+ 
+@@ -1287,6 +1452,24 @@
+   this->size = 0;
+   this->maxsize = maxsize;
+   this->list = new bx_param_c*  [maxsize];
++  this->parent = NULL;
++  init ();
++}
++
++bx_list_c::bx_list_c (bx_param_c *parent, char *name, char *description, 
++    int maxsize)
++  : bx_param_c (BXP_NULL, name, description)
++{
++  set_type (BXT_LIST);
++  this->size = 0;
++  this->maxsize = maxsize;
++  this->list = new bx_param_c*  [maxsize];
++  this->parent = NULL;
++  if (parent) {
++    BX_ASSERT(parent->get_type() == BXT_LIST);
++    this->parent = (bx_list_c *)parent;
++    this->parent->add (this);
++  }
+   init ();
+ }
+ 
+@@ -1302,6 +1485,7 @@
+   for (int i=0; i<this->size; i++)
+     this->list[i] = init_list[i];
+   init ();
++  this->parent = NULL;
+ }
+ 
+ bx_list_c::~bx_list_c()
+@@ -1342,17 +1526,15 @@
+   this->choice = new bx_param_num_c (BXP_NULL,
+       "list_choice", "", 0, BX_MAX_BIT64S,
+       1);
+-  this->parent = NULL;
+ }
+ 
+ bx_list_c *
+ bx_list_c::clone ()
+ {
+-  bx_list_c *newlist = new bx_list_c (BXP_NULL, name, description, maxsize);
++  bx_list_c *newlist = new bx_list_c (get_parent(), name, description, maxsize);
+   for (int i=0; i<get_size (); i++)
+     newlist->add (get(i));
+   newlist->set_options (get_options ());
+-  newlist->set_parent (get_parent ());
+   return newlist;
+ }
+ 
+@@ -1370,5 +1552,18 @@
+ {
+   BX_ASSERT (index >= 0 && index < size);
+   return list[index];
++}
++
++bx_param_c *
++bx_list_c::get_by_name (const char *name)
++{
++  int i, imax = get_size ();
++  for (i=0; i<imax; i++) {
++    bx_param_c *p = get(i);
++    if (0 == strcmp (name, p->get_name ())) {
++      return p;
++    }
++  }
++  return NULL;
+ }
+ 
+Index: gui/siminterface.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
+retrieving revision 1.99
+diff -u -r1.99 siminterface.h
+--- gui/siminterface.h	6 Feb 2003 23:16:54 -0000	1.99
++++ gui/siminterface.h	17 Mar 2003 05:25:06 -0000
+@@ -2,6 +2,8 @@
+ // $Id: patch.param-tree,v 1.1 2003-03-17 05:29:15 bdenney Exp $
+ /////////////////////////////////////////////////////////////////////////
+ //
++// Intro to siminterface by Bryce Denney:
++//
+ // Before I can describe what this file is for, I have to make the
+ // distinction between a configuration interface (CI) and the VGA display
+ // window (VGAW).  I will try to avoid the term 'GUI' because it is unclear 
+@@ -46,18 +48,18 @@
+ // bx_floppy.s.media[2].heads = 17.  If such access is needed, then a
+ // siminterface method should be written to make the change on the CI's behalf.
+ // This separation is enforced by the fact that the CI does not even include
+-// bochs.h.  You'll notice that control.cc include osdep.h, control.h, and
+-// siminterface.h, so it doesn't know what bx_floppy or bx_cpu_c are.  I'm sure
+-// some people will say is overly restrictive and/or annoying.  When I set it
+-// up this way, we were still talking about making the CI in a seperate
++// bochs.h.  You'll notice that control.cc includes osdep.h, control.h, and
++// siminterface.h, but it doesn't know what bx_floppy or bx_cpu_c are.  I'm
++// sure some people will say is overly restrictive and/or annoying.  When I
++// set it up this way, we were still talking about making the CI in a seperate
+ // process, where direct method calls would be impossible.  Also, we have been
+-// considering turning devices into plugin modules which are dynamically 
++// considering turning devices into plugin modules which are dynamically
+ // linked.  Any direct references to something like bx_floppy.s.media[2].heads
+ // would have to be reworked before a plugin interface was possible as well.
+ //
+ // The siminterface is the glue between the CI and the simulator.  There is
+ // just one global instance of the siminterface object, which can be referred
+-// to by the global variable bx_simulator_interface_c *SIM; The base class
++// to by the global variable bx_simulator_interface_c *SIM.  The base class
+ // bx_simulator_interface_c, contains only virtual functions and it defines the
+ // interface that the CI is allowed to use.  In siminterface.cc, a class
+ // called bx_real_sim_c is defined with bx_simulator_interface_c as its parent
+@@ -777,6 +779,7 @@
+ class BOCHSAPI bx_param_c : public bx_object_c {
+   BOCHSAPI_CYGONLY static const char *default_text_format;
+ protected:
++  bx_list_c *parent;
+   char *name;
+   char *description;
+   const char *text_format;  // printf format string. %d for ints, %s for strings, etc.
+@@ -785,6 +788,7 @@
+   int enabled;
+ public:
+   bx_param_c (bx_id id, char *name, char *description);
++  bx_param_c *get_parent () { return (bx_param_c *) parent; }
+   void set_format (const char *format) {text_format = format;}
+   const char *get_format () {return text_format;}
+   void set_ask_format (char *format) {ask_format = format; }
+@@ -794,7 +798,7 @@
+   char *get_description () { return description; }
+   int get_enabled () { return enabled; }
+   virtual void set_enabled (int enabled) { this->enabled = enabled; }
+-  void reset () {}
++  virtual void reset () {}
+   int getint () {return -1;}
+   static const char* set_default_format (const char *f);
+   static const char *get_default_format () { return default_text_format; }
+@@ -832,7 +836,11 @@
+       char *name,
+       char *description,
+       Bit64s min, Bit64s max, Bit64s initial_val);
+-  void reset ();
++  bx_param_num_c (bx_param_c *parent,
++      char *name,
++      char *description,
++      Bit64s min, Bit64s max, Bit64s initial_val);
++  virtual void reset ();
+   void set_handler (param_event_handler handler);
+   virtual bx_list_c *get_dependent_list () { return dependent_list; }
+   void set_dependent_list (bx_list_c *l);
+@@ -857,7 +865,7 @@
+ // a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
+ // store the actual value with its data. Instead, it uses val.p32bit
+ // to keep a pointer to the actual data.  This is used to register
+-// existing variables as parameters, without have to access it via
++// existing variables as parameters, without having to access it via
+ // set/get methods.
+ class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
+   Bit8u varsize;   // must be 64, 32, 16, or 8
+@@ -914,6 +922,7 @@
+       Bit8u lowbit = 0);
+   virtual Bit64s get64 ();
+   virtual void set (Bit64s val);
++  virtual void reset ();
+ };
+ 
+ class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
+@@ -987,7 +996,7 @@
+       char *initial_val,
+       int maxsize=-1);
+   virtual ~bx_param_string_c ();
+-  void reset ();
++  virtual void reset ();
+   void set_handler (param_string_event_handler handler);
+   Bit32s get (char *buf, int len);
+   char *getptr () {return val; }
+@@ -1013,8 +1022,10 @@
+       int maxsize=-1);
+ };
+ 
++#define BX_DEFAULT_LIST_SIZE 6
++
+ class BOCHSAPI bx_list_c : public bx_param_c {
+-private:
++protected:
+   // just a list of bx_param_c objects.  size tells current number of
+   // objects in the list, and maxsize tells how many list items are
+   // allocated in the constructor.
+@@ -1031,8 +1042,7 @@
+   // title of the menu or series
+   bx_param_string_c *title;
+   // if the menu shows a "return to previous menu" type of choice,
+-  // this controls where that choice will go.
+-  bx_param_c *parent;
++  // "parent" controls where that choice will go.
+   void init ();
+ public:
+   enum {
+@@ -1049,19 +1059,21 @@
+     // of parameters.
+     USE_TAB_WINDOW = (1<<2)
+   } bx_listopt_bits;
+-  bx_list_c (bx_id id, int maxsize);
++  bx_list_c (bx_id id, int maxsize = BX_DEFAULT_LIST_SIZE);
+   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
+-  bx_list_c (bx_id id, char *name, char *description, int maxsize);
++  bx_list_c (bx_id id, char *name, char *description, int maxsize = BX_DEFAULT_LIST_SIZE);
++  bx_list_c (bx_param_c *parent, char *name, char *description, int maxsize = BX_DEFAULT_LIST_SIZE);
+   virtual ~bx_list_c();
+   bx_list_c *clone ();
+   void add (bx_param_c *param);
+   bx_param_c *get (int index);
++  bx_param_c *get_by_name (const char *name);
+   int get_size () { return size; }
+   bx_param_num_c *get_options () { return options; }
+   void set_options (bx_param_num_c *newopt) { options = newopt; }
+   bx_param_num_c *get_choice () { return choice; }
+   bx_param_string_c *get_title () { return title; }
+-  void set_parent (bx_param_c *newparent) { parent = newparent; }
++  void set_parent (bx_param_c *newparent);
+   bx_param_c *get_parent () { return parent; }
+ #if BX_UI_TEXT
+   virtual void text_print (FILE *);
+@@ -1206,10 +1218,19 @@
+   virtual int register_param (bx_id id, bx_param_c *it) {return -1;}
+   virtual void reset_all_param () {}
+   virtual bx_param_c *get_param (bx_id id) {return NULL;}
++  virtual bx_param_c *get_param (const char *pname, bx_param_c *base=NULL) {return NULL;}
++  // deprecated
+   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
++  // deprecated
+   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}
++  // deprecated
+   virtual bx_param_bool_c *get_param_bool (bx_id id) {return NULL;}
++  // deprecated
+   virtual bx_param_enum_c *get_param_enum (bx_id id) {return NULL;}
++  virtual bx_param_num_c *get_param_num (const char *pname) {return NULL;}
++  virtual bx_param_string_c *get_param_string (const char *pname) {return NULL;}
++  virtual bx_param_bool_c *get_param_bool (const char *pname) {return NULL;}
++  virtual bx_param_enum_c *get_param_enum (const char *pname) {return NULL;}
+   virtual int get_n_log_modules () {return -1;}
+   virtual char *get_prefix (int mod) {return 0;}
+   virtual int get_log_action (int mod, int level) {return -1;}
