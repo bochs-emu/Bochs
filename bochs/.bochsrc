@@ -52,11 +52,13 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 #floppya: file=../1.44, status=ejected
 #floppya: 1_44=/dev/fd0H1440, status=ejected
 #floppya: 1_2=../1_2, status=ejected
+floppya: 1_44=a.img, status=inserted
 
 #=======================================================================
 # FLOPPYB:
-# See FLOPPYA above
+# See FLOPPYA above for syntax
 #=======================================================================
+floppyb: 1_44=b.img, status=inserted
 
 #=======================================================================
 # DISKC: file=, cyl=, heads=, spt=
@@ -72,6 +74,14 @@ vgaromimage: bios/VGABIOS-elpin-2.40
 #   diskc: file=483M.sample, cyl=1024, heads=15, spt=63
 #=======================================================================
 diskc: file="30M.sample", cyl=615, heads=6, spt=17
+
+#=======================================================================
+# DISKD:
+# See DISKC above for syntax
+#
+# NOTE: diskd and cdromd must not be used together!
+#=======================================================================
+#diskd: file="diskd.img", cyl=615, heads=6, spt=17
 
 #=======================================================================
 # CDROM
