@@ -8,7 +8,7 @@ set echo
 
 # These really just make ./configure happy on your Unix machine.
 # They are not the options used on your Mac.
-CC="egcs"
+CC="gcc"
 CFLAGS=""
 CXX="$CC"
 CXXFLAGS="$CFLAGS"
@@ -18,6 +18,6 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --with-macos
+./configure --target=mac-macos
 
 unset echo

@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: harddrv.h,v 1.4.4.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -22,7 +26,8 @@
 
 
 typedef enum _sense {
-      SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5
+      SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
+      SENSE_UNIT_ATTENTION = 6
 } sense_t;
 
 typedef enum _asc {
@@ -152,10 +157,17 @@ typedef struct {
   union {
     Bit8u    sector_count;
     struct {
+#ifdef BX_LITTLE_ENDIAN
       unsigned c_d : 1;
       unsigned i_o : 1;
       unsigned rel : 1;
       unsigned tag : 5;
+#else  /* BX_BIG_ENDIAN */
+      unsigned tag : 5;
+      unsigned rel : 1;
+      unsigned i_o : 1;
+      unsigned c_d : 1;
+#endif
     } interrupt_reason;
   };
   Bit8u    sector_no;
@@ -252,6 +264,8 @@ public:
   ~bx_hard_drive_c(void);
   BX_HD_SMF void   close_harddrive(void);
   BX_HD_SMF void   init(bx_devices_c *d, bx_cmos_c *cmos);
+  BX_HD_SMF unsigned get_cd_media_status(void);
+  BX_HD_SMF unsigned set_cd_media_status(unsigned status);
 
 #if !BX_USE_HD_SMF
   Bit32u read(Bit32u address, unsigned io_len);
@@ -263,7 +277,7 @@ public:
 
 private:
 
-  BX_HD_SMF Bit32u calculate_logical_address();
+  BX_HD_SMF Boolean calculate_logical_address(Bit32u *sector);
   BX_HD_SMF void increment_address();
   BX_HD_SMF void identify_drive(unsigned drive);
   BX_HD_SMF void identify_ATAPI_drive(unsigned drive);

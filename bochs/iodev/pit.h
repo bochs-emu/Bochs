@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: pit.h,v 1.3.4.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -23,6 +27,9 @@
 #ifndef _BX_PIT_H
 #define _BX_PIT_H
 
+#include "config.h"
+
+#if (BX_USE_NEW_PIT==0)
 
 #if BX_USE_PIT_SMF
 #  define BX_PIT_SMF  static
@@ -75,7 +82,7 @@ private:
   void write( Bit32u   addr, Bit32u   Value, unsigned int len );
 #endif
 
-  struct {
+  struct s_type {
     bx_pit_t timer[3];
     Bit8u   speaker_data_on;
     Boolean refresh_clock_div2;
@@ -93,4 +100,5 @@ private:
 
 extern bx_pit_c bx_pit;
 
+#endif  // #if (BX_USE_NEW_PIT==0)
 #endif  // #ifndef _BX_PIT_H

@@ -1,4 +1,8 @@
 %{
+/////////////////////////////////////////////////////////////////////////
+// $Id: lexer.l,v 1.4.4.1 2002-03-17 08:51:20 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+
 #include <stdlib.h>
 #include <string.h>
 #include "debug.h"
@@ -41,6 +45,8 @@ cregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTROL_REGS); }
 r		|
 reg		|
 registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
+fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
+all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
 idt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }
 gdt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_GDT); }
 ldt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_LDT); }
@@ -78,6 +84,8 @@ loader          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOADER); }
 doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }
 trace-on        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEON); }
 trace-off       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEOFF); }
+trace-reg-on	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGON); }
+trace-reg-off	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGOFF); }
 ptime           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PTIME); }
 sb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TIMEBP); }
 sba             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TIMEBP_ABSOLUTE); }
@@ -101,6 +109,9 @@ sync-cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYNC_CPU); }
 fast-forward    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FAST_FORWARD); }
 phy2log         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PHY_2_LOG); }
 addr-info       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO_ADDRESS); }
+ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 cs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CS); }
 es              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ES); }
 ss              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SS); }

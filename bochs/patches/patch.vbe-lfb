@@ -2,7 +2,7 @@
 Patch name: VBE Linear Frame Buffer support
 Author: Jeroen Janssen
 Date:   10 March 2002
-RCS Id: $Id$
+RCS Id: $Id: patch.vbe-lfb,v 1.1 2002/03/10 20:30:25 japj Exp $
 
 Detailed description:
 This patch will (together with an update vgabios) add support for 

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  fpu_trig.c                                                               |
+ |  $Id: fpu_trig.c,v 1.3.8.1 2002-03-17 08:51:21 bdenney Exp $
  |                                                                           |
  | Implementation of the FPU "transcendental" functions.                     |
  |                                                                           |

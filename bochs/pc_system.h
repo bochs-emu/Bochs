@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: pc_system.h,v 1.5.4.1 2002-03-17 08:51:19 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -41,7 +45,7 @@ extern class bx_pc_system_c bx_pc_system;
 extern double m_ips;
 #endif
 
-class bx_pc_system_c : logfunctions {
+class bx_pc_system_c : private logfunctions {
 private:
 
   struct {
@@ -153,10 +157,13 @@ public:
 #endif
   Bit64u counter;
   int counter_timer_index;
+  Bit64u time_usec();
   Bit64u time_ticks();
 
-  void dma_write8(Bit32u phy_addr, unsigned channel);
+  void dma_write8(Bit32u phy_addr, unsigned channel, Boolean verify);
   void dma_read8(Bit32u phy_addr, unsigned channel);
+  void dma_write16(Bit32u phy_addr, unsigned channel, Boolean verify);
+  void dma_read16(Bit32u phy_addr, unsigned channel);
 
   Bit32u  inp(Bit16u addr, unsigned io_len);
   void    outp(Bit16u addr, Bit32u value, unsigned io_len);

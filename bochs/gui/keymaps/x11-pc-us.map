@@ -1,5 +1,5 @@
 # Bochs Keymap file
-# $Id: x11-pc-us.map,v 1.2 2002-03-11 15:04:58 bdenney Exp $
+# $Id: x11-pc-us.map,v 1.2.2.1 2002-03-17 08:50:20 bdenney Exp $
 # Target: PC(x86) keyboard, US keymap
 # Author: Christophe Bothamy, Bryce Denney
 #

@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: gui.h,v 1.7.2.1 2002-03-17 08:50:19 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -30,7 +34,7 @@ public:
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
   static void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
-                          unsigned rows);
+                          Bit16u cursor_state, unsigned rows);
   static void graphics_update(Bit8u *snapshot);
   static void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y);
   static void handle_events(void);
@@ -49,6 +53,7 @@ public:
 
   static void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
+  void update_floppy_status_buttons (void);
   static void     mouse_enabled_changed (Boolean val);
   static void     mouse_enabled_changed_specific (Boolean val);
   static void     exit(void);
@@ -59,30 +64,43 @@ public:
   // called when registered signal arrives
   static void sighandler (int sig);
 #endif
+#if BX_USE_IDLE_HACK
+  static void sim_is_idle(void);
+#endif
 
 
 private:
   // And these are defined and used privately in gui.cc
   static void floppyA_handler(void);
   static void floppyB_handler(void);
+  static void cdromD_handler(void);
   static void reset_handler(void);
   static void power_handler(void);
+  static void copy_handler(void);
+  static void paste_handler(void);
   static void snapshot_handler(void);
+  static void config_handler(void);
   static void toggle_mouse_enable(void);
+  static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
 
   Boolean floppyA_status;
   Boolean floppyB_status;
+  Boolean cdromD_status;
   unsigned floppyA_bmap_id, floppyA_eject_bmap_id, floppyA_hbar_id;
   unsigned floppyB_bmap_id, floppyB_eject_bmap_id, floppyB_hbar_id;
+  unsigned cdromD_bmap_id, cdromD_eject_bmap_id, cdromD_hbar_id;
   unsigned power_bmap_id,    power_hbar_id;
   unsigned reset_bmap_id,    reset_hbar_id;
+  unsigned copy_bmap_id, copy_hbar_id;
+  unsigned paste_bmap_id, paste_hbar_id;
   unsigned snapshot_bmap_id, snapshot_hbar_id;
+  unsigned config_bmap_id, config_hbar_id;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   };
 
 
-#define BX_MAX_PIXMAPS 9
-#define BX_MAX_HEADERBAR_ENTRIES 6
+#define BX_MAX_PIXMAPS 16
+#define BX_MAX_HEADERBAR_ENTRIES 10
 #define BX_HEADER_BAR_Y 32
 
 // align pixmaps towards left or right side of header bar
@@ -91,6 +109,8 @@ private:
 
 #define BX_KEY_PRESSED  0x00000000
 #define BX_KEY_RELEASED 0x80000000
+
+#define BX_KEY_UNHANDLED 0x10000000
 
 #define BX_KEY_CTRL_L   0
 #define BX_KEY_SHIFT_L  1
@@ -174,6 +194,11 @@ private:
 #define BX_KEY_ENTER         70
 #define BX_KEY_TAB           71
 
+#define BX_KEY_LEFT_BACKSLASH 72
+#define BX_KEY_PRINT         73
+#define BX_KEY_SCRL_LOCK     74
+#define BX_KEY_PAUSE         75
+
 #define BX_KEY_INSERT        76
 #define BX_KEY_DELETE        77
 #define BX_KEY_HOME          78
@@ -203,3 +228,30 @@ private:
 #define BX_KEY_KP_ENTER      99
 #define BX_KEY_KP_MULTIPLY  100
 #define BX_KEY_KP_DIVIDE    101
+
+#define BX_KEY_WIN_L        102
+#define BX_KEY_WIN_R        103
+#define BX_KEY_MENU         104
+
+#define BX_KEY_ALT_SYSREQ   105
+#define BX_KEY_CTRL_BREAK   106
+
+#define BX_KEY_INT_BACK     107
+#define BX_KEY_INT_FORWARD  108
+#define BX_KEY_INT_STOP     109
+#define BX_KEY_INT_MAIL     110
+#define BX_KEY_INT_SEARCH   111
+#define BX_KEY_INT_FAV      112
+#define BX_KEY_INT_HOME     113
+
+#define BX_KEY_POWER_MYCOMP 114
+#define BX_KEY_POWER_CALC   115
+#define BX_KEY_POWER_SLEEP  116
+#define BX_KEY_POWER_POWER  117
+#define BX_KEY_POWER_WAKE   118
+
+#define BX_KEY_NBKEYS       119
+// If you add BX_KEYs Please update 
+// - BX_KEY_NBKEYS
+// - the scancodes table in the file iodev/scancodes.cc
+// - the bx_key_symbol table in the file gui/keymap.cc

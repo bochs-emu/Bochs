@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: parser.y,v 1.2.4.1 2002-03-17 08:51:20 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +33,8 @@
 %token <sval> BX_TOKEN_QUIT
 %token <sval> BX_TOKEN_PROGRAM
 %token <sval> BX_TOKEN_REGISTERS
+%token <sval> BX_TOKEN_FPU
+%token <sval> BX_TOKEN_ALL
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_GDT
 %token <sval> BX_TOKEN_LDT
@@ -86,6 +92,8 @@
 %token <uval> BX_TOKEN_NUMERIC
 %token <ulval> BX_TOKEN_LONG_NUMERIC
 %token <sval> BX_TOKEN_INFO_ADDRESS
+%token <sval> BX_TOKEN_NE2000
+%token <sval> BX_TOKEN_PAGE
 %token <sval> BX_TOKEN_CS
 %token <sval> BX_TOKEN_ES
 %token <sval> BX_TOKEN_SS
@@ -99,6 +107,8 @@
 %token <sval> BX_TOKEN_MUL
 %token <sval> BX_TOKEN_DIV
 %token <sval> BX_TOKEN_V2L
+%token <sval> BX_TOKEN_TRACEREGON
+%token <sval> BX_TOKEN_TRACEREGOFF
 %type <uval> segment_register
 %type <uval> optional_numeric
 %type <uval_range> numeric_range optional_numeric_range
@@ -141,6 +151,8 @@ command:
     | print_string_command
     | cosim_commands
     | v2l_command
+    | trace_reg_on_command
+    | trace_reg_off_command
     | 
     | '\n'
       {
@@ -464,7 +476,17 @@ info_command:
         }
     | BX_TOKEN_INFO BX_TOKEN_REGISTERS '\n'
         {
-        bx_dbg_info_registers_command();
+        bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_FPU '\n'
+        {
+        bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_ALL '\n'
+        {
+        bx_dbg_info_registers_command(BX_INFO_CPU_REGS | BX_INFO_FPU_REGS);
         free($1); free($2);
         }
     | BX_TOKEN_INFO BX_TOKEN_DIRTY '\n'
@@ -501,6 +523,21 @@ info_command:
         {
         bx_dbg_info_control_regs_command();
         free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_NE2000 '\n'
+        {
+        bx_dbg_info_ne2k(-1, -1);
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_NE2000 BX_TOKEN_PAGE BX_TOKEN_NUMERIC '\n'
+        {
+        free($1); free($2); free($3);
+        bx_dbg_info_ne2k($4, -1);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_NE2000 BX_TOKEN_PAGE BX_TOKEN_NUMERIC BX_TOKEN_REGISTERS BX_TOKEN_NUMERIC '\n'
+        {
+        free($1); free($2); free($3); free($5);
+        bx_dbg_info_ne2k($4, $6);
         }
     ;
 
@@ -729,6 +766,22 @@ v2l_command:
         bx_dbg_v2l_command($2, $4);
         free($1);
         }
+    ;
+
+trace_reg_on_command:
+      BX_TOKEN_TRACEREGON '\n'
+        {
+	bx_dbg_trace_reg_on_command();
+	free($1);
+	}
+    ;
+
+trace_reg_off_command:
+      BX_TOKEN_TRACEREGOFF '\n'
+        {
+	bx_dbg_trace_reg_off_command();
+	free($1);
+	}
     ;
 
 %%

@@ -1,31 +1,36 @@
 ----------------------------------------------------------------------
 Patch name: win32-console.patch
 Author: Hartmut Birr <hartmut.birr@tesionmail.de>
-Date: 
+Date:
 
 Detailed description:
 Add support for text modes with 8x8 characters on win32 gui. 
 This is usefull for ROS (50 lines console).
  
 Apply patch to:
-  cvs checked out on DATE
+  bochs-1.2.1
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p1 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
---- gui/win32.cc	Fri Mar 15 17:45:10 2002
-+++ gui/win32.cc	Fri Mar 15 19:21:51 2002
-@@ -119,6 +119,9 @@
+Index: gui/win32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/win32.cc,v
+retrieving revision 1.18
+diff -u -r1.18 win32.cc
+--- gui/win32.cc	2001/11/12 18:33:28	1.18
++++ gui/win32.cc	2001/11/12 18:39:42
+@@ -116,6 +116,9 @@
  static unsigned prev_block_cursor_y = 0;
  static HBITMAP vgafont[256];
  static unsigned x_edge=0, y_edge=0, y_caption=0;
-+static int yChar = 16;
-+static HFONT hFont[3];
++static yChar = 16;
++static HFONT hFont[2];
 +static int FontId = 2;
  
  static char szAppName[] = "Bochs for Windows";
  static char szWindowName[] = "Bochs for Windows - Display";
-@@ -143,8 +146,11 @@
+@@ -140,10 +143,12 @@
  void create_vga_font(void);
  static unsigned char reverse_bitorder(unsigned char);
  void DrawBitmap (HDC, HBITMAP, int, int, DWORD, unsigned char cColor);
@@ -35,9 +40,11 @@ Instructions:
 +void InitFont(void);
 +void DestroyFont(void);
  
- 
+-
  /* Macro to convert WM_ button state to BX button state */
-@@ -303,7 +309,7 @@
+ 
+ #ifdef __MINGW32__
+@@ -281,7 +286,7 @@
  
    bx_headerbar_y = headerbar_y;
    dimension_x = 640;
@@ -46,27 +53,17 @@ Instructions:
    stretched_x = dimension_x;
    stretched_y = dimension_y;
    stretch_factor = 1;
-@@ -391,8 +397,8 @@
- 			      WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
- 			      CW_USEDEFAULT,
- 			      CW_USEDEFAULT,
--			      stretched_x + x_edge * 2,
--			      stretched_y + y_edge * 2 + y_caption,
-+			      /*stretched_x*/dimension_x + x_edge * 2,
-+			      /*stretched_y*/dimension_y + y_edge * 2 + y_caption,
- 			      NULL,
- 			      NULL,
- 			      stInfo.hInstance,
-@@ -400,6 +406,8 @@
+@@ -371,6 +376,9 @@
  
    if (stInfo.hwnd) {
      ShowWindow (stInfo.hwnd, SW_SHOW);
 +    SetWindowPos (stInfo.hwnd, NULL, 0, 0, stretched_x + x_edge * 2,
 +                  480 + y_edge * 2 + y_caption, SWP_NOMOVE|SWP_NOZORDER);
++
      UpdateWindow (stInfo.hwnd);
  
      ShowCursor(!mouseCaptureMode);
-@@ -432,6 +440,7 @@
+@@ -408,6 +416,7 @@
  
    switch (iMsg) {
    case WM_CREATE:
@@ -74,16 +71,7 @@ Instructions:
      SetTimer (hwnd, 1, 330, NULL);
      bx_options.Omouse_enabled->set (mouseCaptureMode);
      if (mouseCaptureMode)
-@@ -450,7 +459,7 @@
-       cursorWarped();
-     }
-     bx_options.Omouse_enabled->set (mouseCaptureMode);
--    
-+
-     return 0;
- 
-   case WM_PAINT:
-@@ -501,6 +510,7 @@
+@@ -477,6 +486,7 @@
    case WM_DESTROY:
      KillTimer (hwnd, 1);
      stInfo.UIinited = FALSE;
@@ -91,173 +79,95 @@ Instructions:
  
      PostQuitMessage (0);
      return 0;
-@@ -545,7 +555,7 @@
- }
+@@ -692,12 +702,21 @@
  
- 
--void enq_key_event(Bit32u key, Bit32u press_release) {	
-+void enq_key_event(Bit32u key, Bit32u press_release) {
-   if (((tail+1) % SCANCODE_BUFSIZE) == head) {
-     BX_ERROR(( "enq_scancode: buffer full"));
-     return;
-@@ -729,9 +739,15 @@
- 
+   // Number of characters on screen, variable number of rows
+   nchars = 80*nrows;
+-	
++
    if ( (prev_block_cursor_y*80 + prev_block_cursor_x) < nchars) {
      cChar = new_text[(prev_block_cursor_y*80 + prev_block_cursor_x)*2];
 -    DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
 -	              prev_block_cursor_y*16 + bx_headerbar_y, SRCCOPY, 
-+    if (yChar >= 16) {
++    if(yChar<16)
++    {
++      DrawChar(hdc, cChar, prev_block_cursor_x*8,
++	           prev_block_cursor_y*yChar + bx_headerbar_y,
++			   new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
++    }
++    else
++    {
 +      DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
 +	              prev_block_cursor_y*16 + bx_headerbar_y, SRCCOPY,
  				  new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
-+    } else {
-+      DrawChar(hdc, cChar, prev_block_cursor_x*8,
-+               prev_block_cursor_y*yChar + bx_headerbar_y,
-+               new_text[((prev_block_cursor_y*80 + prev_block_cursor_x)*2)+1]);
 +    }
    }
  
    for (i=0; i<nchars*2; i+=2) {
-@@ -742,8 +758,11 @@
- 
+@@ -709,7 +728,14 @@
        x = (i/2) % 80;
        y = (i/2) / 80;
--
+ 
 -      DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
-+      if(yChar>=16) {
-+        DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
-+      } else {
++      if(yChar<16)
++      {
 +        DrawChar(hdc, cChar, x*8, y*yChar + bx_headerbar_y, new_text[i+1]);
++      }
++      else
++      {
++        DrawBitmap(hdc, vgafont[cChar], x*8, y*16 + bx_headerbar_y, SRCCOPY, new_text[i+1]);
 +      }
      }
    }
  
-@@ -753,15 +772,22 @@
-   // now draw character at new block cursor location in reverse
-   if (((cursor_y*80 + cursor_x) < nchars ) && (cs_start <= cs_end)) {
-     cChar = new_text[(cursor_y*80 + cursor_x)*2];
--    memset(data, 0, sizeof(data));
--    for (unsigned i=0; i<16; i++) {
--      data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
--      if ((i >= cs_start) && (i <= cs_end))
--        data[i*2] = 255 - data[i*2];
--    }
--    SetBitmapBits(cursorBmp, 32, data);
--    DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16 + bx_headerbar_y,
-+    if (yChar>=16)
+@@ -722,8 +748,15 @@
+ 	//reverse background and foreground colors
+ 	char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
+ 	cAttr = ((cAttr>>4)&0xf)+((cAttr&0xf)<<4);
+-    DrawBitmap(hdc, vgafont[cChar], cursor_x*8, cursor_y*16 + bx_headerbar_y,
++    if (yChar<16)
 +    {
-+      memset(data, 0, sizeof(data));
-+      for (unsigned i=0; i<16; i++) {
-+        data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
-+        if ((i >= cs_start) && (i <= cs_end))
-+          data[i*2] = 255 - data[i*2];
-+      }
-+      SetBitmapBits(cursorBmp, 32, data);
-+      DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*16 + bx_headerbar_y,
- 	           SRCCOPY, new_text[((cursor_y*80 + cursor_x)*2)+1]);
-+    } else {
-+      char cAttr = new_text[((cursor_y*80 + cursor_x)*2)+1];
-+      cAttr = ((cAttr>>4)&0x0f) | ((cAttr&0x0f)<<4);
 +      DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar + bx_headerbar_y, cAttr);
++    }
++    else
++    {
++      DrawBitmap(hdc, vgafont[cChar], cursor_x*8, cursor_y*16 + bx_headerbar_y,
+ 	           SRCCOPY, cAttr);
 +    }
    }
  
    ReleaseDC(stInfo.hwnd, hdc);
-@@ -862,7 +888,22 @@
+@@ -811,7 +844,22 @@
      stretched_y *= 2;
      stretch_factor *= 2;
    }
 -  
-+
-+  FontId = 2;
++  FontId = 2;   // 16
 +  yChar = 16;
-+  if(y>600)
++  if (y > 480)
 +  {
-+    FontId = 0;
-+    yChar = 12;
-+    dimension_y = y * yChar / 16 + bx_headerbar_y;
-+    stretched_y = dimension_y * stretch_factor;
-+  } else if (y>480) {
-+    FontId = 1;
++    FontId = 1; // 14
 +    yChar = 14;
 +    dimension_y = y * yChar / 16 + bx_headerbar_y;
 +    stretched_y = dimension_y * stretch_factor;
 +  }
-+
-   CreateMainBitmap(stInfo.hwnd, stretched_x, stretched_y); 
++  if (y > 600)
++  {
++    FontId = 0; // 12
++    yChar = 12;
++    dimension_y = y * yChar / 16 + bx_headerbar_y;
++    stretched_y = dimension_y * stretch_factor;
++  }
    SetWindowPos(stInfo.hwnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
                stretched_y+ y_edge * 2 + y_caption,
-@@ -964,12 +1005,12 @@
-   HGDIOBJ oldObj;
- 
-   if (!headerbar_changed || !stInfo.UIinited) return;
--	
-+
-   EnterCriticalSection(&stInfo.drawCS);
--	
-+
-   oldObj = SelectObject(MemoryDC, MemoryBitmap);
-   PatBlt (MemoryDC, 0, 0, dimension_x, bx_headerbar_y, BLACKNESS);
--	
-+
-   for (unsigned i=0; i<bx_headerbar_entries; i++) {
-     if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
-       xorigin = bx_headerbar_entry[i].xorigin;
-@@ -1083,29 +1124,29 @@
- //	BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
- //		  ptOrg.y, dwRop);
- //Colors taken from Ralf Browns interrupt list.
--//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)	  
-+//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)
- //The highest background bit usually means blinking characters. No idea
- //how to implement that so for now it's just implemented as color.
- //Note: it is also possible to program the VGA controller to have the
- //high bit for the foreground color enable blinking characters.
- 
- 	const COLORREF crPal[16] = {
--	RGB(0 ,0 ,0 ), //0 black 
--	RGB(0 ,0 ,0xA8 ), //1 dark blue 
--	RGB(0 ,0xA8 ,0 ), //2 dark green 
--	RGB(0 ,0xA8 ,0xA8 ), //3 dark cyan 
--	RGB(0xA8 ,0 ,0 ), //4 dark red 
--	RGB(0xA8 ,0 ,0xA8 ), //5 dark magenta 
--	RGB(0xA8 ,0x54 ,0 ), //6 brown 
--	RGB(0xA8 ,0xA8 ,0xA8 ), //7 light gray 
--	RGB(0x54 ,0x54 ,0x54 ), //8 dark gray 
--	RGB(0x54 ,0x54 ,0xFC ), //9 light blue 
--	RGB(0x54 ,0xFC ,0x54 ), //10 green 
--	RGB(0x54 ,0xFC ,0xFC ), //11 cyan 
--	RGB(0xFC ,0x54 ,0x54 ), //12 light red 
--	RGB(0xFC ,0x54 ,0xFC ), //13 magenta 
--	RGB(0xFC ,0xFC ,0x54 ), //14 yellow 
--	RGB(0xFC ,0xFC ,0xFC ) //15 white 
-+	RGB(0 ,0 ,0 ), //0 black
-+	RGB(0 ,0 ,0xA8 ), //1 dark blue
-+	RGB(0 ,0xA8 ,0 ), //2 dark green
-+	RGB(0 ,0xA8 ,0xA8 ), //3 dark cyan
-+	RGB(0xA8 ,0 ,0 ), //4 dark red
-+	RGB(0xA8 ,0 ,0xA8 ), //5 dark magenta
-+	RGB(0xA8 ,0x54 ,0 ), //6 brown
-+	RGB(0xA8 ,0xA8 ,0xA8 ), //7 light gray
-+	RGB(0x54 ,0x54 ,0x54 ), //8 dark gray
-+	RGB(0x54 ,0x54 ,0xFC ), //9 light blue
-+	RGB(0x54 ,0xFC ,0x54 ), //10 green
-+	RGB(0x54 ,0xFC ,0xFC ), //11 cyan
-+	RGB(0xFC ,0x54 ,0x54 ), //12 light red
-+	RGB(0xFC ,0x54 ,0xFC ), //13 magenta
-+	RGB(0xFC ,0xFC ,0x54 ), //14 yellow
-+	RGB(0xFC ,0xFC ,0xFC ) //15 white
- 	};
- 
- 	COLORREF crFore = SetTextColor(MemoryDC, crPal[(cColor>>4)&0xf]);
-@@ -1177,4 +1218,105 @@
-   void
- bx_gui_c::mouse_enabled_changed_specific (Boolean val)
- {
-+}
+                SWP_NOMOVE | SWP_NOZORDER);
+@@ -1120,6 +1168,105 @@
+ }
+ #endif
+ #endif
 +
 +void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
-+               unsigned char cColor) {
++		       unsigned char cColor) {
 +  HDC hdcMem;
 +  POINT ptSize, ptOrg;
 +  HGDIOBJ oldObj;
@@ -280,39 +190,37 @@ Instructions:
 +  oldObj = SelectObject(MemoryDC, MemoryBitmap);
 +  hFontOld=(HFONT)SelectObject(MemoryDC, hFont[FontId]);
 +
-+//Colors taken from Ralf Browns interrupt list.
++  //Colors taken from Ralf Browns interrupt list.
 +//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)
 +//The highest background bit usually means blinking characters. No idea
 +//how to implement that so for now it's just implemented as color.
 +//Note: it is also possible to program the VGA controller to have the
 +//high bit for the foreground color enable blinking characters.
++	const COLORREF crPal[16] = {
++									RGB(0 ,0 ,0 ),	//0 black
++									RGB(0 ,0 ,0x80 ),	//1 dark blue
++									RGB(0 ,0x80 ,0 ),	//2 dark green
++									RGB(0 ,0x80 ,0x80 ),		//3 dark cyan
++									RGB(0x80 ,0 ,0 ),	//4 dark red
++									RGB(0x80 ,0 ,0x80 ),		//5 dark magenta
++									RGB(0x80 ,0x80 ,0 ),		//6 brown
++									RGB(0xC0 ,0xC0 ,0xC0 ),	//7 light gray
++									RGB(0x80 ,0x80 ,0x80 ),	//8 dark gray
++									RGB(0 ,0 ,0xFF ),	//9 light blue
++									RGB(0 ,0xFF ,0 ),	//10 green
++									RGB(0 ,0xFF ,0xFF ),		//11 cyan
++									RGB(0xFF ,0 ,0 ),	//12 light red
++									RGB(0xFF ,0 ,0xFF ),		//13 magenta
++									RGB(0xFF ,0xFF ,0 ),		//14 yellow
++									RGB(0xFF ,0xFF ,0xFF )};	//15 white
 +
-+  const COLORREF crPal[16] = {
-+  RGB(0 ,0 ,0 ), //0 black
-+  RGB(0 ,0 ,0x80 ), //1 dark blue
-+  RGB(0 ,0x80 ,0 ), //2 dark green
-+  RGB(0 ,0x80 ,0x80 ), //3 dark cyan
-+  RGB(0x80 ,0 ,0 ), //4 dark red
-+  RGB(0x80 ,0 ,0x80 ), //5 dark magenta
-+  RGB(0x80 ,0x80 ,0 ), //6 brown
-+  RGB(0xc0 ,0xc0 ,0xc0 ), //7 light gray
-+  RGB(0x80 ,0x80 ,0x80 ), //8 dark gray
-+  RGB(0x00 ,0x00 ,0xff ), //9 light blue
-+  RGB(0x00 ,0xff ,0x00 ), //10 green
-+  RGB(0x00 ,0xff ,0xff ), //11 cyan
-+  RGB(0xff ,0x00 ,0x00 ), //12 light red
-+  RGB(0xff ,0x00 ,0xff ), //13 magenta
-+  RGB(0xff ,0xff ,0x00 ), //14 yellow
-+  RGB(0xff ,0xff ,0xff ) //15 white
-+  };
-+
-+  COLORREF crFore = SetTextColor(MemoryDC, crPal[cColor&0xf]);
-+  COLORREF crBack = SetBkColor(MemoryDC, crPal[(cColor>>4)&0xf]);
-+  str[0]=c;
-+  str[1]=0;
-+  TextOut(MemoryDC, xStart, yStart, str, 1);
-+  SetBkColor(MemoryDC, crBack);
-+  SetTextColor(MemoryDC, crFore);
++	COLORREF crFore = SetTextColor(MemoryDC, crPal[cColor&0xf]);
++	COLORREF crBack = SetBkColor(MemoryDC, crPal[(cColor>>4)&0xf]);
++    str[0]=c;
++    str[1]=0;
++    TextOut(MemoryDC, xStart, yStart, str, 1);
++	SetBkColor(MemoryDC, crBack);
++	SetTextColor(MemoryDC, crFore);
 +
 +  SelectObject(MemoryDC, hFontOld);
 +  SelectObject(MemoryDC, oldObj);
@@ -355,4 +263,7 @@ Instructions:
 +  {
 +    DeleteObject(hFont[i]);
 +  }
- }
++}
+ 
+   void
+ bx_gui_c::mouse_enabled_changed_specific (Boolean val)

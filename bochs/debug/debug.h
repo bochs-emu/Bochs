@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: debug.h,v 1.4.4.1 2002-03-17 08:51:20 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -73,6 +77,8 @@ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 void bx_dbg_symbol_command(char* filename, Boolean global, Bit32u offset);
 void bx_dbg_trace_on_command(void);
 void bx_dbg_trace_off_command(void);
+void bx_dbg_trace_reg_on_command(void);
+void bx_dbg_trace_reg_off_command(void);
 void bx_dbg_ptime_command(void);
 void bx_dbg_timebp_command(Boolean absolute, Bit64u time);
 void bx_dbg_diff_memory(void);
@@ -105,7 +111,9 @@ void bx_dbg_pbreakpoint_command(Boolean specific, Bit32u paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
 void bx_dbg_info_program_command(void);
-void bx_dbg_info_registers_command(void);
+#define BX_INFO_CPU_REGS 1   /* choices for bx_dbg_info_registers_command */
+#define BX_INFO_FPU_REGS 2
+void bx_dbg_info_registers_command(int); 
 void bx_dbg_info_dirty_command(void);
 void bx_dbg_info_idt_command(bx_num_range);
 void bx_dbg_info_gdt_command(bx_num_range);
@@ -131,6 +139,7 @@ void bx_dbg_maths_expression_command(char *expr);
 void bx_dbg_v2l_command(unsigned seg_no, Bit32u offset);
 extern Boolean watchpoint_continue;
 void bx_dbg_linux_syscall ();
+void bx_dbg_info_ne2k(int page, int reg);
 
 #ifdef __cplusplus
 }
@@ -148,7 +157,7 @@ extern int num_read_watchpoints;
 extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 
 typedef enum {
-      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
+      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT, STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, UNUSED_STOP_TRACE, STOP_MODE_BREAK_POINT, STOP_CPU_HALTED
 } stop_reason_t;
 
 typedef enum {
@@ -403,6 +412,7 @@ void    bx_dbg_outp(Bit16u addr, Bit32u value, unsigned len);
 void    bx_dbg_raise_HLDA(void);
 Bit8u   bx_dbg_IAC(void);
 void    bx_dbg_set_INTR(Boolean b);
+void bx_dbg_disassemble_current (int which_cpu, int print_time);
 
 int bx_dbg_symbolic_output(void); /* BW */
 #endif // #ifdef __cplusplus

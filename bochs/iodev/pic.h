@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: pic.h,v 1.3.4.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -49,6 +53,7 @@ typedef struct {
   Bit8u read_reg_select;   /* 0=IRR, 1=ISR */
   Bit8u irq;               /* current IRQ number */
   Boolean INT;             /* INT request pin of PIC */
+  Boolean IRQ_line[8];     /* IRQ pins of PIC */
   struct {
     Boolean    in_init;
     Boolean    requires_4;
@@ -64,8 +69,8 @@ public:
   bx_pic_c(void);
   ~bx_pic_c(void);
   BX_PIC_SMF void   init(bx_devices_c *);
-  BX_PIC_SMF void   trigger_irq(unsigned irq_no);
-  BX_PIC_SMF void   untrigger_irq(unsigned irq_no);
+  BX_PIC_SMF void   lower_irq(unsigned irq_no);
+  BX_PIC_SMF void   raise_irq(unsigned irq_no);
   BX_PIC_SMF Bit8u  IAC(void);
 
 private:

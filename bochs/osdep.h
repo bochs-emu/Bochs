@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: osdep.h,v 1.5.2.1 2002-03-17 08:51:19 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -43,14 +47,20 @@ extern "C" {
 // Hacks for win32, but exclude MINGW32 because it doesn't need them.
 //////////////////////////////////////////////////////////////////////
 #ifdef WIN32
+
+// Definitions that are needed for all WIN32 compilers.
+#  define ssize_t long
+
 #ifndef __MINGW32__
+// Definitions that are needed for WIN32 compilers EXCEPT FOR
+// cygwin compiling with -mno-cygwin.  e.g. VC++.
+
 // always return regular file.
-#  define S_ISREG(st_mode) 1
-#  define S_ISCHR(st_mode) 0
+#  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
+#  define S_ISCHR(m)      (((m) & S_IFMT) == S_IFCHR)
 
   // VCPP includes also are missing these
 #  define off_t long
-#  define ssize_t int
 
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
@@ -70,7 +80,6 @@ extern "C" {
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
 
-
 #if !BX_HAVE_SNPRINTF
 #define snprintf bx_snprintf
   extern int bx_snprintf (char *s, size_t maxlen, const char *format, ...);
@@ -89,6 +98,11 @@ extern "C" {
 #if !BX_HAVE_STRDUP
 #define strdup bx_strdup
   extern char *bx_strdup(const char *str);
+#endif
+
+#if !BX_HAVE_SOCKLEN_T
+// needed on MacOS X 10.1
+typedef int socklen_t;
 #endif
 
 //////////////////////////////////////////////////////////////////////

@@ -1,8 +1,14 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: eth_packetmaker.h,v 1.3.2.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 
 #ifndef _ETH_PACKETMAKER_H_
 #define _ETH_PACKETMAKER_H_
 
 #include "../config.h"
+
+#ifdef ETH_ARPBACK
 
 #define PACKET_BUF_SIZE 2048
 static const Bit8u internal_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
@@ -124,5 +130,6 @@ private:
 };
 
 
+#endif // ETH_ARPBACK
 #endif // _ETH_PACKETMAKER_H_
 

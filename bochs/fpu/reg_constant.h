@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_constant.h                                                           |
+ |  $Id: reg_constant.h,v 1.2.8.1 2002-03-17 08:51:21 bdenney Exp $
  |                                                                           |
  | Copyright (C) 1992    W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |
  |                       Australia.  E-mail   billm@vaxc.cc.monash.edu.au    |

@@ -85,6 +85,9 @@
 // adds support for the GNU readline library in the debugger command 
 // prompt.
 
+// if NE2K is enabled, this enables the ethertap device.
+#define HAVE_ETHERTAP 0
+
 // I rebuilt the code which provides timers to IO devices.
 // Setting this to 1 will introduce a little code which
 // will panic out if cases which shouldn't happen occur.
@@ -192,6 +195,22 @@
 // Number of CMOS registers
 #define BX_NUM_CMOS_REGS 64
 //#define BX_NUM_CMOS_REGS 128
+
+// Use Greg Alexander's new PIT model (summer 2001) instead of the original.
+#define BX_USE_NEW_PIT 0
+#define BX_USE_REALTIME_PIT 0
+
+#define BX_USE_SLOWDOWN_TIMER 0
+#define BX_HAVE_SLEEP 0
+#define BX_HAVE_USLEEP 0
+#define BX_HAVE_NANOSLEEP 0
+#define BX_HAVE_ABORT 0
+#define BX_HAVE_SOCKLEN_T 0
+
+// This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
+// gui. If people try to enable it elsewhere, give a compile error after the
+// gui definition so that they don't waste their time trying.
+#define BX_USE_IDLE_HACK 0
 
 // Use Static Member Funtions to eliminate 'this' pointer passing
 // If you want the efficiency of 'C', you can make all the
@@ -325,10 +344,20 @@
 #define BX_WITH_BEOS 0
 #define BX_WITH_WIN32 0
 #define BX_WITH_MACOS 0
+#define BX_WITH_CARBON 0
 #define BX_WITH_NOGUI 0
 #define BX_WITH_TERM 0
 #define BX_WITH_RFB 0
+#define BX_WITH_AMIGAOS 0
+#define BX_WITH_SDL 0
 
+
+// Roland Mainz's idle hack is presently specific to X11. If people try to
+// enable it elsewhere, give a compile error so that they don't waste their
+// time trying.
+#if (BX_USE_IDLE_HACK && !BX_WITH_X11)
+#  error IDLE_HACK will only work with the X11 gui. Correct configure args and retry.
+#endif
 
 #define WORDS_BIGENDIAN 0
 
@@ -347,7 +376,7 @@
 #define BX_CONST64(x)  (x)
 #endif
 
-#if BX_WITH_WIN32
+#if defined(WIN32)
   typedef unsigned char      Bit8u;
   typedef   signed char      Bit8s;
   typedef unsigned short     Bit16u;
@@ -371,7 +400,7 @@
   typedef   signed int       Bit32s;
   typedef unsigned long long Bit64u;
   typedef   signed long long Bit64s;
-#else  // #if BX_WITH_WIN32
+#else
 
 // Unix like platforms
 
@@ -409,7 +438,7 @@
 #  error "can't find data type of 8 bytes"
 #endif
 
-#endif // BX_WITH_WIN32
+#endif
 
 #define BX_MAX_UINT 4294967295
 #define BX_MAX_INT 2147483647
@@ -428,7 +457,11 @@
 #  error "could not define bx_ptr_equiv_t to size of int*"
 #endif
 
-#if BX_WITH_MACOS == 0
+#if BX_WITH_CARBON
+typedef unsigned char Boolean;
+#elif BX_WITH_MACOS
+// don't define Boolean at all
+#else
 typedef unsigned int Boolean;
 #endif
 
@@ -438,7 +471,7 @@ typedef unsigned int Boolean;
 #  define bx_ptr_t void *
 #endif
 
-#if BX_WITH_WIN32
+#if defined(WIN32)
 #  define BX_LITTLE_ENDIAN
 #elif BX_WITH_MACOS
 #  define BX_BIG_ENDIAN
@@ -448,7 +481,7 @@ typedef unsigned int Boolean;
 #else
 #  define BX_LITTLE_ENDIAN
 #endif
-#endif // BX_WITH_WIN32
+#endif // defined(WIN32)
 
 // for now only term.cc requires a GUI sighandler.
 #define BX_GUI_SIGHANDLER (BX_WITH_TERM)
@@ -488,6 +521,7 @@ typedef unsigned int Boolean;
 #define BX_EMULATE_HGA_DUMPS 0
 
 #define BX_SUPPORT_VGA        1
+#define BX_SUPPORT_VBE        0
 
 #define BX_PROVIDE_MAIN       1
 
@@ -511,6 +545,7 @@ typedef unsigned int Boolean;
 
 #define BX_SUPPORT_FPU 0
 
+#define BX_HAVE_GETENV 0
 #define BX_HAVE_SELECT 0
 #define BX_HAVE_SNPRINTF 0
 #define BX_HAVE_STRTOULL 0
@@ -552,5 +587,8 @@ typedef unsigned int Boolean;
 #define BX_NE2K_SUPPORT 0
 #define BX_ETH_NULL_LOGGING 1
 #define BX_ETH_FBSD_LOGGING 1
+
+// I/O Interface to debug
+#define BX_IODEBUG_SUPPORT 0
 
 #endif  // _BX_CONFIG_H

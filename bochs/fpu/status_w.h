@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  status_w.h                                                               |
+ |  $Id: status_w.h,v 1.2.8.1 2002-03-17 08:51:21 bdenney Exp $
  |                                                                           |
  | Copyright (C) 1992,1993                                                   |
  |                       W. Metzenthen, 22 Parker St, Ormond, Vic 3163,      |

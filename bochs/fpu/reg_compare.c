@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_compare.c                                                            |
+ |  $Id: reg_compare.c,v 1.2.8.1 2002-03-17 08:51:21 bdenney Exp $
  |                                                                           |
  | Compare two floating point registers                                      |
  |                                                                           |

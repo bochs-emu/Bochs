@@ -25,6 +25,8 @@
 
 @SUFFIX_LINE@
 
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 SHELL = /bin/sh
 
@@ -37,7 +39,7 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
 
-BX_INCDIRS = -I.. -I../iodev
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev
 LOCAL_CXXFLAGS =
 
 #
@@ -70,7 +72,7 @@ bios-clean:
 	@RMCOMMAND@ _rombios_.c
 
 rombios.bin: rombios.c biosconfig.h
-	gcc -E rombios.c > _rombios_.c
+	gcc -E $< > _rombios_.c
 	bcc-cc1 -o rombios.s -c -D__i86__ -0 _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
 	as86 _rombios_.s -b rombios.bin -u- -w- -g -0 -j -O -l rombios.txt

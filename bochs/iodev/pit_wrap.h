@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: pit_wrap.h,v 1.1.2.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -23,23 +27,28 @@
 #ifndef _BX_PIT_WRAP_H
 #define _BX_PIT_WRAP_H
 
+#include "bochs.h"
+
+#if BX_USE_NEW_PIT
+
+#include "pit82c54.h"
 
 #if BX_USE_PIT_SMF
 #  define BX_PIT_SMF  static
-#  define BX_PIT2_THIS bx_pit2.
+#  define BX_PIT_THIS bx_pit.
 #else
 #  define BX_PIT_SMF
-#  define BX_PIT2_THIS this->
+#  define BX_PIT_THIS this->
 #endif
 
 #ifdef OUT
 #  undef OUT
 #endif
 
-class bx_pit2_c : public logfunctions {
+class bx_pit_c : public logfunctions {
 public:
-  bx_pit2_c( void );
-  ~bx_pit2_c( void );
+  bx_pit_c( void );
+  ~bx_pit_c( void );
   BX_PIT_SMF int init( bx_devices_c *);
   BX_PIT_SMF Boolean periodic( Bit32u   usec_delta );
 
@@ -55,22 +64,40 @@ private:
   void write( Bit32u   addr, Bit32u   Value, unsigned int len );
 #endif
 
-  struct {
+  struct s_type {
     pit_82C54 timer;
     Bit8u   speaker_data_on;
     Boolean refresh_clock_div2;
     int  timer_handle[3];
+    Bit64u last_usec;
+    Bit32u last_next_event_time;
+    Bit64u total_ticks;
+#if BX_USE_REALTIME_PIT
+    Bit64u usec_per_second;
+    Bit64u ticks_per_second;
+    Bit64u total_sec;
+    Bit64u last_time;
+    Bit64u last_sec_usec;
+#else
+    Bit64u total_usec;
+#endif
     } s;
 
   bx_devices_c *devices;
+
+  static void timer_handler(void *this_ptr);
+  BX_PIT_SMF void handle_timer();
 
   BX_PIT_SMF void  write_count_reg( Bit8u   value, unsigned timerid );
   BX_PIT_SMF Bit8u read_counter( unsigned timerid );
   BX_PIT_SMF void  latch( unsigned timerid );
   BX_PIT_SMF void  set_GATE(unsigned pit_id, unsigned value);
   BX_PIT_SMF void  start(unsigned timerid);
+
+  BX_PIT_SMF void  second_update_data(void);
 };
 
-extern bx_pit2_c bx_pit2;
+extern bx_pit_c bx_pit;
 
+#endif  // #if BX_USE_NEW_PIT
 #endif  // #ifndef _BX_PIT_WRAP_H

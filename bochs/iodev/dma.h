@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: dma.h,v 1.3.4.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -57,6 +61,8 @@ private:
   Bit32u   read( Bit32u   address, unsigned io_len);
   void     write(Bit32u   address, Bit32u   value, unsigned io_len);
 #endif
+  BX_DMA_SMF void control_HRQ(Boolean ma_sl);
+
   struct {
     Boolean mask[4];
     Boolean flip_flop;
@@ -77,7 +83,7 @@ private:
       Bit16u  current_count;
       Bit8u   page_reg;
       } chan[4]; /* DMA channels 0..3 */
-    } s;  // state information
+    } s[2];  // state information DMA-1 / DMA-2
 
   bx_devices_c *devices;
   };

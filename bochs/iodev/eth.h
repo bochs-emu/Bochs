@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: eth.h,v 1.5.2.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -72,9 +76,15 @@ private:
 
 // Define the known pktmover modules
 #define ETH_NULL  1
+#ifdef BX_USE_ETH_ARPBACK
+#  define ETH_ARPBACK 1
+#endif
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 #define ETH_FBSD  1
 #endif
-#if (0 && defined(linux))
+#if defined(linux)
 #define ETH_LINUX 1
+#endif
+#if defined(WIN32)
+#define ETH_WIN32 1
 #endif

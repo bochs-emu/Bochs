@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: iodev.h,v 1.6.2.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -50,6 +54,9 @@ class bx_pci_c;
 class bx_ioapic_c;
 class bx_ne2k_c;
 class bx_g2h_c;
+#if BX_IODEBUG_SUPPORT
+class bx_iodebug_c;
+#endif
 
 
 
@@ -83,6 +90,8 @@ public:
 
   void dma_write8(unsigned channel, Bit8u *data);
   void dma_read8(unsigned channel, Bit8u *data);
+  void dma_write16(unsigned channel, Bit16u *data);
+  void dma_read16(unsigned channel, Bit16u *data);
   void drq(unsigned channel, Boolean val);
   void raise_hlda(void);
   static void timer_handler(void *);
@@ -104,6 +113,9 @@ public:
   bx_sb16_c        *sb16;
   bx_ne2k_c        *ne2k;
   bx_g2h_c         *g2h;
+#if BX_IODEBUG_SUPPORT
+  bx_iodebug_c	   *iodebug;
+#endif
 
 private:
   Bit8u                 read_handler_id[0x10000];  // 64K
@@ -149,10 +161,14 @@ private:
 #include "iodev/dma.h"
 #include "iodev/floppy.h"
 #include "iodev/harddrv.h"
+#if BX_IODEBUG_SUPPORT
+#   include "iodev/iodebug.h"
+#endif
 #include "iodev/keyboard.h"
 #include "iodev/parallel.h"
 #include "iodev/pic.h"
 #include "iodev/pit.h"
+#include "iodev/pit_wrap.h"
 #include "iodev/serial.h"
 #if BX_SUPPORT_SB16
 #  include "iodev/sb16.h"
@@ -161,3 +177,4 @@ private:
 #include "iodev/eth.h"
 #include "iodev/ne2k.h"
 #include "iodev/guest2host.h"
+#include "iodev/slowdown_timer.h"

@@ -1,5 +1,9 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: control.h,v 1.4.2.2 2002-03-17 08:50:19 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 enum {
-  BX_CPANEL_START_MAIN,
+  BX_CPANEL_INIT,
   BX_CPANEL_START_MENU,
   BX_CPANEL_START_OPTS,
   BX_CPANEL_START_OPTS_MEM,
@@ -11,16 +15,7 @@ enum {
   BX_CPANEL_N_MENUS
 };
 
-
-#define CPANEL_PATH_LEN 512
-/* special return value from bx_control_panl */
+/* special return value from bx_control_panel */
 #define BX_DISABLE_CONTROL_PANEL 10 
 
 int bx_control_panel (int menu);
-
-/* functions for changing particular options */
-void bx_control_panel_init ();
-int bx_read_rc (char *rc);
-int bx_write_rc (char *rc);
-void bx_edit_log_options (int individual);
-

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/include/defs.sgm
-$Id: defs.sgm,v 1.6 2001-11-17 17:16:12 bdenney Exp $
+$Id: defs.sgm,v 1.6.4.1 2002-03-17 08:51:20 bdenney Exp $
 
 This file is included by all Bochs docbook files, so that the
 definitions can be used anywhere in the documentation.

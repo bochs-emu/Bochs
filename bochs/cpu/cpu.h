@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: cpu.h,v 1.8.2.2 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -630,14 +634,22 @@ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 // object->*(fnptr)(arg, ...);
 // Since this is different from when SMF=1, encapsulate it in a macro.
 #  define BX_CPU_CALL_METHOD(func, args) \
-    (this->*((BxExecutePtr_t) (func))) args
+    do { \
+      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+      (this->*((BxExecutePtr_t) (func))) args \
+      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    } while (0)
 #else
 // static member functions.  With SMF, there is only one CPU by definition.
 #  define BX_CPU_THIS_PTR  BX_CPU(0)->
 #  define BX_SMF           static
 #  define BX_CPU_C_PREFIX
-#  define BX_CPU_CALL_METHOD(func, args) \
-    ((BxExecutePtr_t) (func)) args
+#  define BX_CPU_CALL_METHOD(func, args)   \
+    do { \
+      BX_INSTR_OPCODE_BEGIN (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    ((BxExecutePtr_t) (func)) args; \
+      BX_INSTR_OPCODE_END (BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base + BX_CPU_THIS_PTR prev_eip); \
+    } while (0)
 #endif
 
 typedef void (*BxDTShim_t)(void);
@@ -793,6 +805,7 @@ public: // for now...
 #endif
   Bit8u stop_reason;
   Bit8u trace;
+  Bit8u trace_reg;
   Bit8u mode_break;		/* BW */
   Boolean debug_vm;		/* BW contains current mode*/
   Bit8u show_eip;		/* BW record eip at special instr f.ex eip */
@@ -1201,6 +1214,7 @@ public: // for now...
 
   BX_SMF void fpu_execute(BxInstruction_t *i);
   BX_SMF void fpu_init(void);
+  BX_SMF void fpu_print_regs (void);
 
   BX_SMF void CMPXCHG_XBTS(BxInstruction_t *);
   BX_SMF void CMPXCHG_IBTS(BxInstruction_t *);

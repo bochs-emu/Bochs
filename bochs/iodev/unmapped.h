@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: unmapped.h,v 1.3.4.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -55,7 +59,7 @@ private:
     Bit8u port80;
     Bit8u port8e;
 
-    Bit8u bios_message[BX_BIOS_MESSAGE_SIZE];
+    char bios_message[BX_BIOS_MESSAGE_SIZE];
     unsigned int bios_message_i;
     } s;  // state information
 

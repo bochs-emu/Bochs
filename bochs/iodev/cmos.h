@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: cmos.h,v 1.3.4.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -65,6 +69,8 @@ private:
 public:
   static void periodic_timer_handler(void *);
   static void one_second_timer_handler(void *);
+  BX_CMOS_SMF void periodic_timer(void);
+  BX_CMOS_SMF void one_second_timer(void);
 private:
   BX_CMOS_SMF void update_clock(void);
   BX_CMOS_SMF void CRA_change(void);

@@ -88,7 +88,7 @@ diff -urN clean/gui/bitmaps/copy.h bochs-paste/gui/bitmaps/copy.h
 +++ bochs-paste/gui/bitmaps/copy.h	Mon Mar 11 09:01:13 2002
 @@ -0,0 +1,18 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.paste,v 1.5 2002-03-11 15:03:30 bdenney Exp $
++// $Id: patch.paste,v 1.5.2.1 2002-03-17 08:51:22 bdenney Exp $
 +/////////////////////////////////////////////////////////////////////////
 +#define BX_COPY_BMAP_X 32
 +#define BX_COPY_BMAP_Y 32
@@ -110,7 +110,7 @@ diff -urN clean/gui/bitmaps/paste.h bochs-paste/gui/bitmaps/paste.h
 +++ bochs-paste/gui/bitmaps/paste.h	Mon Mar 11 09:01:13 2002
 @@ -0,0 +1,18 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.paste,v 1.5 2002-03-11 15:03:30 bdenney Exp $
++// $Id: patch.paste,v 1.5.2.1 2002-03-17 08:51:22 bdenney Exp $
 +/////////////////////////////////////////////////////////////////////////
 +#define BX_PASTE_BMAP_X 32
 +#define BX_PASTE_BMAP_Y 32
@@ -719,7 +719,7 @@ diff -urN clean/gui/keymaps/x11-pc-de.map bochs-paste/gui/keymaps/x11-pc-de.map
 -# Bochs Keymap file : X11 - i386 - German
 -# Author : Volker Ruppert
 +# Bochs Keymap file
-+# $Id: patch.paste,v 1.5 2002-03-11 15:03:30 bdenney Exp $
++# $Id: patch.paste,v 1.5.2.1 2002-03-17 08:51:22 bdenney Exp $
 +# Target: PC(x86) keyboard, US keymap
 +# Author: Volker Ruppert
  #
@@ -1183,7 +1183,7 @@ diff -urN clean/gui/keymaps/x11-pc-es.map bochs-paste/gui/keymaps/x11-pc-es.map
 -# Bochs Keymap file : X11 - i386 - Spanish
 -# Author : Vicente Hernando Ara 
 +# Bochs Keymap file
-+# $Id: patch.paste,v 1.5 2002-03-11 15:03:30 bdenney Exp $
++# $Id: patch.paste,v 1.5.2.1 2002-03-17 08:51:22 bdenney Exp $
 +# Target: PC(x86) keyboard, US keymap
 +# Author: Vicente Hernando Ara 
  #
@@ -1587,7 +1587,7 @@ diff -urN clean/gui/keymaps/x11-pc-fr.map bochs-paste/gui/keymaps/x11-pc-fr.map
 -# Bochs Keymap file : X11 - i386 - French
 -# Author : Christophe Bothamy
 +# Bochs Keymap file
-+# $Id: patch.paste,v 1.5 2002-03-11 15:03:30 bdenney Exp $
++# $Id: patch.paste,v 1.5.2.1 2002-03-17 08:51:22 bdenney Exp $
 +# Target: PC(x86) keyboard, US keymap
 +# Author: Christophe Bothamy, Bryce Denney
  #
@@ -1993,7 +1993,7 @@ diff -urN clean/gui/keymaps/x11-pc-us.map bochs-paste/gui/keymaps/x11-pc-us.map
 -# Bochs Keymap file : X11 - i386 - US
 -# Author : the Bochs team
 +# Bochs Keymap file
-+# $Id: patch.paste,v 1.5 2002-03-11 15:03:30 bdenney Exp $
++# $Id: patch.paste,v 1.5.2.1 2002-03-17 08:51:22 bdenney Exp $
 +# Target: PC(x86) keyboard, US keymap
 +# Author: Christophe Bothamy, Bryce Denney
  #

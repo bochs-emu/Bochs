@@ -100,6 +100,18 @@ Example:
   diskd: file=483.i, cyl=1024, heads=15, spt=63
 
 .TP
+.I "com1:"
+Point  this at the device you want to  use
+as your com1 serial port. The "dev=" parameter indicates which device to use.
+This can be a Unix pty.  One way to use this would be to run bochs in one window
+and open a second window to use as com1.  Do a `sleep 1000000' in the com1
+window to prevent it's shell from getting in the way.  When you run bochs, all
+I/O to com1 will show up in this window.
+
+Example:
+  com1: dev=/dev/ttyp7
+
+.TP
 .I "cdromd:"
 Point this to a pathname of a raw CD-ROM device.
 There is no cdromc option, only cdromd.
@@ -311,6 +323,15 @@ keyboard to controller over the serial path.
 
 Example:
   keyboard_serial_delay: 200
+
+.TP
+.I "keyboard_type:"
+Type of emulated keyboard sent back  to the OS
+to a "keyboard identify"  command.  It must be 
+one of "xt", "at" or "mf". 
+
+Example:
+  keyboard_type: mf
 
 .TP
 .I "floppy_command_delay:"

@@ -19,7 +19,8 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --enable-fpu
+./configure
+#./configure --enable-fpu
 #./configure
 #./configure --enable-instrumentation
 #./configure --with-nogui

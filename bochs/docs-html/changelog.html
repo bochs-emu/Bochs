@@ -4,7 +4,7 @@
   <META NAME="copyright" CONTENT="Copyright 2001 by MandrakeSoft S.A.">
   <META NAME="Author" CONTENT="Kevin Lawton">
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
-  <TITLE>ChangeLog</TITLE>
+  <TITLE>Change Log</TITLE>
 </HEAD>
 
 <BODY TEXT="#000000" BGCOLOR="#ececec"  LINK="#3333cc" VLINK="#666666">
@@ -12,20 +12,266 @@
 <CENTER><H1>ChangeLog</H1></CENTER>
 <HR>
 
-<UL>
-
-<br>
-<li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2-1.tar.gz">Version 1.2.1</a> (June 12, 2001)
+<a name="v1.3">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.3.tar.gz">Version 1.3</a> (December 10, 2001)
 </h2>
+
+<ul>
+<li> networking works on Windows and Linux platforms
+<li> emulated cdrom can now read from ISO image files, on any platform.
+<li> new PIT model by Greg Alexander which is much more complete than the
+  old one.  The new PIT is used by default, but you can switch back to 
+  the old one if you configure with --disable-new-pit.
+  (PIT = 8254 programmable interrupt timer)
+<li> new configuration menus by Bryce Denney, which allow you to change any
+  bochsrc option using text menus, then save the configuration into
+  a new bochsrc file for later use.  You can disable the new code using
+  configure --disable-control-panel.  Also you can use the command
+  line arguments -nocp or -nocontrolpanel.  Also, there is a new
+  "Config" button on the GUI that allows limited changes to the 
+  configuration at runtime, such as changing the floppy disk.
+<li> add docbook documentation directory in the sources under doc/docbook.
+  The transition from HTML to docbook documentation is still in progress.
+<li> Add new log action "ask", as shown in these example bochsrc lines:
+    panic: action=ask
+    error: action=ask
+  When an event occurs which is set to "ask", you get a beep and message
+  on the text terminal that asks what you want to do.  Choices are: continue,
+  continue and disable future messages from this device, quit immediately,
+  or segfault (where abort() function is available).  If compiled with
+  --enable-debugger, you can also choose to enter the debugger.
+<li> Parallel port emulation cleaned up by Volker Ruppert.  See .bochsrc for
+  syntax of new parport1 line in bochsrc.
+<li> PCI support improved by Volker Ruppert, including BIOS changes.  Still
+  not complete.
+<li> floppy controller returns a proper error response if you try to write
+  a read-only disk image.  For systems such as DOS that actually use the BIOS
+  services, it was also necessary to add code in int13_diskette_function to
+  recognize a write-protected error and return the correct error status code
+  (AH=3, Carry Set).
+<li> the ROM BIOS now prints panic messages to the console.  Thanks to Cliff
+  Hones for his console display code.
+<li> the ROM BIOS detects nonbootable disks (Barry Allard), and prints a message
+  on the console.  Barry Allard's patch who helped with checking the boot
+  signature.
+<li> LBA support added for hard disks.  (Not tested very much.)
+<li>X Windows specific:
+<ul>
+<li> commit patch from David Haslam <dch@sirius.clara.co.uk>
+  [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=455763">#455763</a> ] Cursor trail with DOS Edit/Minix vi
+<li> error for missing fonts now points to the documentation
+<li> new option --enable-idle-hack, by Roland Mainz, which makes Bochs more
+  friendly toward other processes when its CPU is idle.  Presently, 
+  this option is specific to X windows.
+</ul>
+
+<li>Win32 specific:
+<ul>
+<li> now Windows 95/98/ME can read the physical cdrom (Don Becker)
+<li> The default configuration for Win32 VC++, given in .conf.win32-vcpp,
+  now enables the NE2000 and renames all .cc files to .cpp.  This keeps VC++
+  happy but may make it hard to use CVS.
+<li> The default configuration for Cygwin, given in .conf.win32-cygwin, now
+  enables cdrom and SB16.
+<li> See "new docs" on the web site for compile instructions for VC++ and Cygwin.
+<li> The sources include a VC++ workspace, in addition to the old "nmake"
+  makefile.
+<li> ethernet support (emulated NE2000 card), coded by Don Becker.  This
+  implementation requires a library called WinPCap, which you can 
+  download from http://netgroup-serv.polito.it/winpcap.
+<li> new utility called niclist.exe which lists the ID number of all your network
+  cards (well probably you just have one).  The ID be used when setting up your
+  .bochsrc.
+<li> patch [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=466403">#466403</a> ] make text colors more accurate.  The author did not leave
+  his/her name.
+<li> fix GUI bug [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=452159">#452159</a> ] win32: mouse stuck if bochs win partly off screen
+  Now we center the mouse periodically, whether or not the mouse has
+  wandered outside of the window or not.
+<li> event handler recognizes the extended keycode flag
+<li> fixes for raw floppy and floppy disk images (Don Becker)
+</ul>
+
+<li>Linux specific:
+<ul>
+<li> Ethernet (emulated NE2000 card) now works in Linux!  Contributed by
+  splite@purdue.edu.  This has been tested using host OS kernel 2.2.14, and
+  works with telnet, ftp, irc, lynx, etc.  Because it is a packet filter
+  solution, you aren't able to talk to the host machine, only to other 
+  machines on the network.  
+<li> The default configuration for Linux, given in .conf.linux, now enables
+  the NE2000 model.
+<li> RPM build process configures with --prefix=/usr so that everything is
+  installed in /usr/bochs instead of /usr/local/bochs.
+<li> DLX Linux disk image is now installed so that only root can write it, to
+  avoid security problems.  When you run the bochs-dlx script, it creates a
+  local copy in your home directory and then runs it.
+<li> code that determines the capacity of a cdrom now works for both ATAPI
+  and SCSI drives (splite@purdue.edu)
+<li> applied patch from bochs@sigint.cs.purdue.edu.  The comments are:
+  > The Linux 2.4.5 CD-ROM driver sends a READ_DISC_INFO command which caused
+  > an "unrecognized ATAPI command" panic.  Looks like READ_DISC_INFO is only
+  > recognized by CD-R and CD-RW drives, so I ignore it for now.
+</ul>
+
+<li>Amiga MorphOS specific:
+<ul>
+<li> Bochs now compiles and works on Amiga MorphOS.  Configure with
+  --with-amigaos.  For AmigaOS only, see .bochsrc for use of fullscreeen and
+  screenmode options.  The Amiga MorphsOS is written and maintained by
+  Nicholai Benalal <nicholai@chello.se>.
+<li> raw cdrom supported if you configure with --enable-cdrom
+</ul>
+
+<li>BeOS specific:
+<ul>
+<li> Bochs compiles and works on BeOS.  Configure with --with-beos.
+  Bernd Thorsten Korz <bernd.korz@insidebeos.de> maintains the BeOS port.
+<li> raw cdrom supported if you configure with --enable-cdrom
+</ul>
+
+<li>MacOS X specific:
+<ul>
+<li> Bochs now compiles and works on MacOS X.  Configure with --with-carbon.
+  Emmanuel Mailliard <e.rsz@libertysurf.fr> ported the Macintosh code to the
+  Carbon API.
+<li> The MacOS X application is built using (gasp) mkdir, copy, and rez.
+  Surely this is not the right way, but it works.
+<li> raw cdrom supported if you configure with --enable-cdrom
+</ul>
+
+<li>RFB mode:
+<ul>
+<li> apply patch.rfb-mouse by MURANAKA Masaki (monaka@users.sf.net)
+  see this source forge bug [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=457968">#457968</a> ] Strange mouse motion on RFB
+<li> add a retry loop in RFB code, so that if port 5900 is not available
+  it can try 5901, etc.
+</ul>
+
+<li>Bochs Debugger:
+<ul>
+<li> do a vga update whenever you print a debugger prompt.
+<li> added debugger command "info fpu" that prints the FPU registers.  If you
+  do "info all" you get cpu and fpu registers.
+<li> added debugger command "info ne2k" which prints all the registers
+  of the NE2000 model
+<li> add ability to do register tracing and flag tracing (Dave Poirier).
+  Try the trace-reg-on and trace-reg-off commands.
+<li> instruction trace now includes time ticks
+<li> fixed problems in which bochs compiled with debugger measured time 
+  differently from bochs compiled without debugger.  Also when instruction
+  trace was enabled, breakpoints and control-C did not work.  Also,
+  breakpoints at the beginning of an interrupt handler did not work.
+</ul>
+
+<li> add dependencies to makefiles
+<li> logging code moved into a separate file, logio.cc
+<li> new option --enable-slowdown-timer, by Greg Alexander, which kicks in if
+  Bochs simulation time starts to run faster than real time.  This helps to
+  keep the Bochs clock in sync with the real clock when the CPU is mostly
+  idle.
+<li> new option --enable-iodebug, by Dave Poirier, which creates an I/O
+  interface to the debugger.  This lets you write software to be emulated
+  in Bochs which can turn on instruction, register, or memory tracing
+  using I/O accesses.
+<li> improved detection of readline in configure script
+<li> configure substitutes the version number into many files, instead of
+  using sed in the makefile.  There are still a few uses of sed remaining.
+<li> you can now use environment variables in bochsrc values.  For example,
+  diskd: file="$BOCHS_IMG/diskd.img", cyl=615, heads=6, spt=17
+<li> configure with --prefix=PATH works now
+<li> running configure from a different directory works now, thanks to 
+  a patch from Edouard G. Parmelan
+<li> fix [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=433759">#433759</a> ] virtual address checks can overflow.
+  > Bochs has been crashing in some cases when you try to access data which
+  > overlaps the segment limit, when the segment limit is near the 32-bit
+  > boundary.  The example that came up a few times is reading/writing 4 bytes
+  > starting at 0xffffffff when the segment limit was 0xffffffff.  The
+  > condition used to compare offset+length-1 with the limit, but
+  > offset+length-1 was overflowing so the comparison went wrong.
+<li> cmpxchg8b patch from Michael Hohmuth <hohmuth@innocent.com>
+<li> apply patch from Thomas Fitzsimmons <fitzsim@cygnus.com> to fix compile
+  problems when BX_SUPPORT_PAGING and BX_USE_TLB are turned off
+<li> fix bug introduced in 1.2.1 which caused spurious exceptions.
+  See patch <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=439314">#439314</a>, Exception 1 (debug) on HALT, from
+  thomas.petazzoni@meridon.com.
+<li> add panic in ctrl_xfer32.cc where the IRET32 implementation is broken.
+  This only happens if you are NOT in vm8086 mode or protected mode.
+  The intent is to warn people when they are getting bad emulation, and
+  encourage people to report how they got to that point.
+<li> apply patch from Santiago Bazerque.  See this bug report:
+  [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=463018">#463018</a> ] retf not removing parameters sometimes
+<li> fix bug [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=461730">#461730</a> ] IRETD causes problems if NT-flag is set
+  reported by Peter Lammich.
+<li> apply patch [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=455014">#455014</a> ] CR0 bug in 80486, described as:
+  > In the register CR0, when the bit PM is enabled, the bit 4 is 0
+  > when should be 1.
+<li> apply patch from Mike Rieker <mrieker@o3one.org> associated with this bug
+  report: [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=480422">#480422</a> ] gdt 'accessed' bit
+<li> in task_switch when it tried to ensure that the old TSS was paged in,
+  it actually used the new TSS address, fixed.
+<li> updated the instrumentation code, and added a working example.  To try
+  it, configure --enable-instrumentation=instrument/example1.  Then when
+  you run bochs, you will get one line for each instruction PC and for
+  each I/O access in a new file called bxevent.txt.
+<li> set a bit in the CMOS that says the processor has an FPU.  This is
+  from patch [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=455006">#455006</a> ] Device byte is not initialized aptly.
+  Author did not leave their name.
+<li> add logging code to the "null ethernet" which does not require host OS
+  support.  All this does is print the outgoing packets from the guest OS.
+<li> cleanup of log functions (Todd Fries)
+<li> add BX_ERROR for every command in ATAPI-6 that bochs does not support.
+  I still need to do add some commands from older specs that are obsolete
+  (and not listed) in ATAPI-6.  Commands that aren't in the spec will still
+  panic.
+<li> only put 0xf into the 2nd hard disk field when the cdrom is not present.
+  This is a patch from Volker Ruppert <Volker.Ruppert@t-online.de>, who
+  comments: "The fdisk command reports an unusable second harddisk if the cdrom
+  is enabled. This patch helps, but I don't know if it is the right way."
+<li> make hard disk code return error codes when data is not available instead
+  of just panicing.  In particular, if the logical sector is out of bounds
+  or the disk image cannot be read/written at the desired offset, we now
+  abort the ATA command and return an error code.  Many of the old BX_PANIC
+  messages are turned to BX_ERROR, so they will still appear in the
+  log, but now the device model will try to communicate this fact to
+  the OS instead of simply giving up.
+<li> don't blindly reject odd length atapi commands.  There are cases when
+  it's really ok according to ATA-4.
+<li> for big endian machines, reversed the bit fields in interrupt_reason.
+  This was pointed out by Nicholai Benalal.
+<li> extended keyboard improvements by Dave Poirier
+<li> major mouse patch from Dave Spring, that implements several missing 
+  mouse modes.
+<li> commit keyboard patch from David Haslam <dch@sirius.clara.co.uk>
+  posted to mailing list, that addresses the problem of each key press
+  printing ^@.  See cvs log for details.
+<li> mouse performance fixes by Greg Alexander and Robb Main
+<li> NE2000 fixes by Frode Vatvedt Fjeld, ecelca@yahoo.com, Greg Alexander,
+  and angelos@openbsd.org.
+<li> fix bug [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=468340">#468340</a> ] pic:slave: OCW3 not implemented.  Some event handling
+  code appeared in the master pic but not the slave pic.
+<li> fix compile problems in SB16 code, related to fpos_t being treated as 
+  an integer.
+<li> patch from Volker Ruppert <Volker.Ruppert@t-online.de> to fix
+  midi output file so that winamp can play it.
+<li> some cleanup of serial code by Todd Fries and Volker Ruppert, but it
+  doesn't work yet.
+
+</ul>
+
+<a name="v1.2.1">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.1.tar.gz">Version 1.2.1</a> (June 12, 2001)
+</h2>
+
 <ul>
 <li> more work on makefile for building RPMs
-<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=432382">#432382</a>  ] build debian packages patch <BR>
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=432382">#432382</a>  ] build debian packages patch <BR>
   add build/debian directory from Rob Lemley <rjlemley@calypsoblue.org>
   which allows us to make Debian packages!
 <li> optimize for speed when simulating one processor.  Now 1-processor
   performance should be equivalent to 1.1.2.
-<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=425640">#425640</a>  ] sb16 assumes fpos_t is long int <BR>
+<li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=patch&id=425640">#425640</a>  ] sb16 assumes fpos_t is long int <BR>
   This fixes compiles of iodev/sb16.cc on linux systems with newer libraries
   in which fpos_t is not an integer.
 <li> [ <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?sftype=bug&id=432488">#432488</a>  ] SMP:assert "n_logfn &lt; MAX_LOGFNS" fails <BR>
@@ -75,9 +321,9 @@
   the VGA font on X windows systems, if it isn't already there.
 </ul>
 
-<br>
-<li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.tar.gz">Version 1.2</a> (6/3/2001)
+<a name="v1.2">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.tar.gz">Version 1.2</a> (June 3, 2001)
 </h2>
 This version is the first feature release from the Bochs project on Sourceforge.
 The following list describes the changes since 1.2.pre1.
@@ -132,9 +378,9 @@ The following list describes the changes since 1.2.pre1.
 <li> added diskd to .bochsrc
   </ul>
 
-<br>
-<li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.pre1.tar.gz">Version 1.2-pre1</a> (5/25/2001)
+<a name="v1.2.pre1">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.2.pre1.tar.gz">Version 1.2-pre1</a> (May 25, 2001)
 </h2>
   This version is the first feature release from the Bochs project on Sourceforge.  It is marked "pre1" because some of the new features have not had widespread testing yet.  When more features/platforms/OSes have been tested (and bugs fixed) we will make a real 1.2 release.
   <ul>
@@ -182,9 +428,9 @@ The following list describes the changes since 1.2.pre1.
   <li> applied some FreeBSD patches from Maxim Sobolev (cdrom and serial).
   </ul>
 
-<br>
-<li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.1.2.tar.gz">Version 1.1.2 (bugfix3)</a> (5/16/2001)
+<a name="v1.1.2">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-1.1.2.tar.gz">Version 1.1.2 (bugfix3)</a> (May 16, 2001)
 </h2>
   <ul>
   <li> FPU is now compiled in by default.
@@ -221,18 +467,18 @@ The following list describes the changes since 1.2.pre1.
     The remaining ones are under consideration but not applied.
   </ul>
 
-<br>
-<li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010409-beta.tar.gz">Version 1.1.1 (bugfix2)</a> (4/9/2001)
+<a name="v1.1.1">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010409-beta.tar.gz">Version 1.1.1 (bugfix2)</a> (April 9, 2001)
 </h2>
   <ul>
   <li> fixed type error in win32 soundwin.cc, added typecast to (LPWAVEFORMATEX)
   <li> now configure --with-win32-vcpp provides correct #defines for VC++
   </ul>
 
-<br>
-<li><h2>
-<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010406-beta.tar.gz">Version 1.1 bugfix1</a> (4/6/2001)
+<a name="v1.1">
+<h2>
+<a href="http://prdownloads.sourceforge.net/bochs/bochs-bugfix-20010406-beta.tar.gz">Version 1.1 bugfix1</a> (April 6, 2001)
 </h2>
   <ul>
   <li>This was the first SourceForge release by Bryce Denney, with patches from many sources on the bochs-developers list.
@@ -263,7 +509,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="http://prdownloads.sourceforge.net/bochs/bochs-2000-03-25.tar.gz">bochs-2000_0315</a>
 </h2>
   <ul>
@@ -271,7 +517,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-2000_0104c.tar.gz">bochs-2000_0104c</a>
 </h2>
   <ul>
@@ -289,7 +535,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-991114a.tar.gz">bochs-991114a</a>
 </h2>
   <ul>
@@ -300,7 +546,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-991107c.tar.gz">bochs-991107c</a>
 </h2>
   <ul>
@@ -316,7 +562,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-991102a.tar.gz">bochs-991102a</a>
 </h2>
   <ul>
@@ -335,7 +581,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-991023a.tar.gz">bochs-991023a</a>
 </h2>
   <ul>
@@ -359,7 +605,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-991014a.tar.gz">bochs-991014a</a>
 </h2>
   <ul>
@@ -383,7 +629,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-991012a.tar.gz">bochs-991012a</a>
 </h2>
   <ul>
@@ -411,7 +657,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-991004a.tar.gz">bochs-991004a</a>
 </h2>
   <ul>
@@ -426,7 +672,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-990925a.tar.gz">bochs-990925a</a>
 </h2>
   <ul>
@@ -446,7 +692,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-990923a.tar.gz">bochs-990923a</a>
 </h2>
   <ul>
@@ -459,7 +705,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2>
+<h2>
 <a href="ftp://bochs.com/pub/bochs-990920a.tar.gz">bochs-990920a</a>
 </h2>
   <ul>
@@ -477,7 +723,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <br>
-<li><h2><font color="#000066">bochs-990907a</font></h2>
+<h2><font color="#000066">bochs-990907a</font></h2>
   <ul>
   <li> Fixed bug in rombios.c, new bios is bios/BIOS-bochs-990907a
   <li> Commented out load32bitOSImage directive in .bochsrc,
@@ -486,7 +732,7 @@ The following list describes the changes since 1.2.pre1.
   </ul>
 
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-990708a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-990708a</FONT></H2>
   <UL>
   <LI> integrated submitted mods to BeOS gui stuff
   <LI> integrated ne2k emulation (only FreeBSD low-level implemented)
@@ -556,7 +802,7 @@ The following list describes the changes since 1.2.pre1.
 
 <BR>
 <A NAME="DTTeaser"></A>
-<LI><H2><FONT COLOR="#000066">bochs-990312b</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-990312b</FONT></H2>
   <UL>
   <LI> (ftp://ftp.bochs.com/pub/DT/bochs-990312b.tar.gz)
   <LI> First teaser release with dynamic translation framework!
@@ -577,7 +823,8 @@ dttest4:     21.2Mips                  3.1Mips
 </PRE>
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-990219a</FONT></H2>
+
+<H2><FONT COLOR="#000066">bochs-990219a</FONT></H2>
   <UL>
   <LI> Converted all read-modify-write instructions to use
        RMW versions of write_virtual_xyz() & read_virtual_xyz().
@@ -602,7 +849,7 @@ dttest4:     21.2Mips                  3.1Mips
     </UL>
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-990127d</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-990127d</FONT></H2>
   <UL>
   <LI> Rehashed CPU code in preparation for dynamic translation.
     <UL>
@@ -620,7 +867,7 @@ dttest4:     21.2Mips                  3.1Mips
        caches to invalid, until they were properly loaded.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-990110b</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-990110b</FONT></H2>
   <UL>
   <LI> Fixed handling of CR0.val32 shadow to individual flags.
        Oops, I goofed in bochs-990110a.
@@ -631,7 +878,7 @@ dttest4:     21.2Mips                  3.1Mips
        Don't use this, as its not yet supported.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-990110a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-990110a</FONT></H2>
   <UL>
   <LI> Direct floppy disk access fix.  I was only checking if
        file was a character-special file.  Added check for
@@ -647,7 +894,7 @@ dttest4:     21.2Mips                  3.1Mips
   <LI> LOADLIN.EXE no longer complains about being in v86 mode.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-981229a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-981229a</FONT></H2>
   <UL>
   <LI> Changed configure option '--with-win32-vc50' to '--with-win32-vcpp'
   <LI> Changed script file '.conf.win32-vc50' to '.conf.win32-vcpp'
@@ -658,7 +905,7 @@ dttest4:     21.2Mips                  3.1Mips
     </UL>
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-981222a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-981222a</FONT></H2>
   <UL>
   <LI> Generated new bios 'bios/BIOS-bochs-981222a'
   <LI> Serial port: integrated diffs I received which implement a single
@@ -687,7 +934,7 @@ dttest4:     21.2Mips                  3.1Mips
        the IO devices use.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-981102b</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-981102b</FONT></H2>
   <UL>
   <LI>Rehashed paging.cc and TLB.  Fixed problem with dirty bit not
       being set after a read operation cached an entry in the TLB.
@@ -695,7 +942,7 @@ dttest4:     21.2Mips                  3.1Mips
       for use with OS's which have copy-on-write strategies.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-981015a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-981015a</FONT></H2>
   <UL>
   <LI>cosimulation support for verifying a 2nd CPU simulator (lot's of files touched)
   <LI>moved web pages and ftp to bochs.com
@@ -730,7 +977,7 @@ dttest4:     21.2Mips                  3.1Mips
     </UL>
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980629a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980629a</FONT></H2>
   <UL>
   <LI>much in the way of x86 validation; many x86 emulation fixes!
   <LI>you can now pass all .bochsrc options on command line
@@ -759,13 +1006,13 @@ dttest4:     21.2Mips                  3.1Mips
     </UL>
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980512a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980512a</FONT></H2>
   <UL>
   <LI>added disassembly commands to debugger interface
   <LI>fixed bx_panic() calls when using debugger
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980512a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980512a</FONT></H2>
   <UL>
   <LI>more debugger commands and features
   <LI>co-emulation debugger commands
@@ -773,7 +1020,7 @@ dttest4:     21.2Mips                  3.1Mips
   <LI>added handling of EEh (echo) from keyboard ctrl to keyboard
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980407a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980407a</FONT></H2>
   <UL>
   <LI>added some instrumentation features:
     <UL>
@@ -785,7 +1032,7 @@ dttest4:     21.2Mips                  3.1Mips
       from David Ross (dross@pobox.com).  win32 GUI code now filled out.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980331a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980331a</FONT></H2>
   <UL>
   <LI>added '--with-nogui' option to configure to run without any GUI.  Also provides
       documentation for the GUI specific functions.
@@ -804,7 +1051,7 @@ dttest4:     21.2Mips                  3.1Mips
       is not necessary if using a private colormap.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980311d</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980311d</FONT></H2>
   <UL>
   <LI>configure works with any permutation of disassembler and debugger
   <LI>fixed endian changes, messed up on 980304a
@@ -813,14 +1060,14 @@ dttest4:     21.2Mips                  3.1Mips
   <LI>got BeOS code up to speed on the cursor changes.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980304a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980304a</FONT></H2>
   <UL>
   <LI>changed BIG_ENDIAN & LITTLE_ENDIAN to use BX_ prefix
   <LI>added text mode video block cursor
   <LI>added vi package to Redhat install script
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980303a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980303a</FONT></H2>
   <UL>
   <LI>debugger command "info break" to display breakpoints
   <LI>debugger command "d[elete] xyz" to delete breakpoints
@@ -829,7 +1076,7 @@ dttest4:     21.2Mips                  3.1Mips
   <LI>rehashed CMOS RTC code so Linux works
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980224a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980224a</FONT></H2>
   <UL>
   <LI>added 32bit hardware task switching (only from jump's so far)
   <LI>fixes to floppy emulation
@@ -840,7 +1087,7 @@ dttest4:     21.2Mips                  3.1Mips
   <LI>Linux now boots!!!
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980124c</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980124c</FONT></H2>
   <UL>
   <LI>BIOS floppy read/write fix.  AH was not being set.
   <LI>moved config.h:BX_PROCESSOR_IPS to .bochsrc 'ips' directive.
@@ -854,7 +1101,7 @@ dttest4:     21.2Mips                  3.1Mips
       will fix compiles for MIPS processor based machines.
   </UL>
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-980118a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-980118a</FONT></H2>
   <UL>
   <LI>Added toolbar to top of GUI
   <LI>Floppy drive can switch between 1.44M & 1.680M formats
@@ -863,7 +1110,7 @@ dttest4:     21.2Mips                  3.1Mips
   </UL>
 
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-971216b</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-971216b</FONT></H2>
   <UL>
   <LI>Several optimizations
   <LI>Added prefetch queue
@@ -873,7 +1120,7 @@ dttest4:     21.2Mips                  3.1Mips
   </UL>
 
 <BR>
-<LI><H2><FONT COLOR="#000066">bochs-971118a</FONT></H2>
+<H2><FONT COLOR="#000066">bochs-971118a</FONT></H2>
   <UL>
   <LI>Moved all GUI specific files (X11 and BeOS) into gui/ subdir
   <LI>Put in temp fix for exception handling restoring original eSP

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_u_div.c                                                              |
+ |  $Id: reg_u_div.c,v 1.1.10.1 2002-03-17 08:51:21 bdenney Exp $
  |                                                                           |
  | Divide one FPU_REG by another and put the result in a destination FPU_REG.|
  |                                                                           |

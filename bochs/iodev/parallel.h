@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: parallel.h,v 1.3.4.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  Copyright (C) 2001  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
@@ -29,6 +33,24 @@
 #  define BX_PAR_THIS this->
 #endif
 
+typedef struct {
+  Bit8u data;
+  struct {
+    Boolean error;
+    Boolean slct;
+    Boolean pe;
+    Boolean ack;
+    Boolean busy;
+  } STATUS;
+  struct {
+    Boolean strobe;
+    Boolean autofeed;
+    Boolean init;
+    Boolean slct_in;
+    Boolean irq;
+    Boolean input;
+  } CONTROL;
+} bx_par_t;
 
 
 
@@ -40,12 +62,15 @@ public:
   BX_PAR_SMF void   init(bx_devices_c *);
 
 private:
+  FILE *output;
 
-  struct {
-    unsigned unused;  // filler for now
-    } s;
+  Boolean initmode;
+
+  bx_par_t s;
 
   bx_devices_c *devices;
+
+  static void   virtual_printer();
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

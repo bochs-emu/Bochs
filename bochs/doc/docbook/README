@@ -7,3 +7,8 @@ how to contribute to the Bochs project
 
 documentation - The Bochs Documentation Guide - contains information on how to 
 contribute to the documation of the the Bochs project
+
+images - pictures that may be reused in any of the three books.  They can
+be referenced using "../images/FILENAME".
+
+include - files to be included from other docbook files

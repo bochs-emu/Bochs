@@ -2,7 +2,7 @@
 //
 // misc/niclist.c
 // by Don Becker <x-odus@iname.com>
-// $Id: niclist.c,v 1.6 2002-02-03 06:22:21 bdenney Exp $
+// $Id: niclist.c,v 1.6.2.1 2002-03-17 08:51:21 bdenney Exp $
 //
 // This program is for win32 only.  It lists the network interface cards
 // that you can use in the "ethdev" field of the ne2k line in your bochsrc.

@@ -1,6 +1,10 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: siminterface.h,v 1.22.2.8 2002-03-17 08:50:19 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.22.2.7 2002-03-17 02:58:38 bdenney Exp $
+ * $Id: siminterface.h,v 1.22.2.8 2002-03-17 08:50:19 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -28,6 +32,7 @@ typedef enum {
   BXP_ROM_ADDRESS,
   BXP_VGA_ROM_PATH,
   BXP_KBD_SERIAL_DELAY,
+  BXP_KBD_TYPE,
   BXP_FLOPPY_CMD_DELAY,
   BXP_FLOPPYA_PATH,
   BXP_FLOPPYA_TYPE,
@@ -49,11 +54,21 @@ typedef enum {
   BXP_DISKD_HEADS,
   BXP_DISKD_SPT,
   BXP_DISKD,
+  BXP_COM1_PRESENT,
+  BXP_COM1_PATH,
+  BXP_COM2_PRESENT,
+  BXP_COM2_PATH,
+  BXP_COM3_PRESENT,
+  BXP_COM3_PATH,
+  BXP_COM4_PRESENT,
+  BXP_COM4_PATH,
   BXP_CDROM_PRESENT,
   BXP_CDROM_PATH,
   BXP_CDROM_INSERTED,
   BXP_CDROMD,
   BXP_PRIVATE_COLORMAP,
+  BXP_FULLSCREEN,
+  BXP_SCREENMODE,
   BXP_I440FX_SUPPORT,
   BXP_NEWHARDDRIVESUPPORT,
   BXP_LOG_FILENAME,
@@ -70,6 +85,7 @@ typedef enum {
   BXP_MENU_MEMORY,
   BXP_MENU_INTERFACE,
   BXP_MENU_DISK,
+  BXP_MENU_SERIAL_PARALLEL,
   BXP_MENU_SOUND,
   BXP_MENU_MISC,
   BXP_MENU_RUNTIME,
@@ -91,6 +107,13 @@ typedef enum {
   BXP_SB16_LOGLEVEL,
   BXP_SB16_DMATIMER,
   BXP_SB16,
+  BXP_PARPORT1_ENABLE,
+  BXP_PARPORT1_OUTFILE,
+  BXP_PARPORT2_ENABLE,
+  BXP_PARPORT2_OUTFILE,
+  BXP_KEYBOARD_USEMAPPING,
+  BXP_KEYBOARD_MAP,
+  BXP_KEYBOARD,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -267,6 +290,7 @@ public:
       char *description,
       char *initial_val,
       int maxsize=-1);
+  virtual ~bx_param_string_c ();
   void reset ();
   void set_handler (param_string_event_handler handler);
   Bit32s get (char *buf, int len);
@@ -312,6 +336,7 @@ public:
   } bx_listopt_bits;
   //bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
+  virtual ~bx_list_c();
   void add (bx_param_c *param);
   bx_param_c *get (int index);
   bx_param_num_c *get_options () { return options; }
@@ -343,6 +368,8 @@ extern char *floppy_bootdisk_names[];
 extern int n_floppy_bootdisk_names;
 extern char *loader_os_names[];
 extern int n_loader_os_names;
+extern char *keyboard_type_names[];
+extern int n_keyboard_type_names;
 
 typedef struct {
   bx_param_string_c *Opath;
@@ -357,6 +384,11 @@ typedef struct {
   bx_param_num_c *Oheads;
   bx_param_num_c *Ospt;
   } bx_disk_options;
+
+typedef struct {
+  bx_param_bool_c *Opresent;
+  bx_param_string_c *Odev;
+  } bx_serial_options;
 
 struct bx_cdrom_options
 {
@@ -384,7 +416,7 @@ public:
   virtual int get_log_action (int mod, int level) {return -1;}
   virtual void set_log_action (int mod, int level, int action) {}
   virtual char *get_action_name (int action) {return 0;}
-  virtual char *get_log_level_name (int level) {return 0;}
+  virtual const char *get_log_level_name (int level) {return 0;}
   virtual int get_max_log_level () {return -1;}
 
   // exiting is somewhat complicated!  The preferred way to exit bochs is
@@ -421,7 +453,7 @@ public:
   virtual BxEvent* LOCAL_notify (BxEvent *event) {return NULL;}
 
   // this "notify arg" passing is very ugly and Bryce needs to clean it up!
-  virtual int LOCAL_log_msg (char *prefix, int level, char *msg) {return -1;}
+  virtual int LOCAL_log_msg (const char *prefix, int level, char *msg) {return -1;}
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len) {return -1;}
   // called by gui.cc event handler when a button is pressed.
   virtual int vga_gui_button_pressed (bx_id param) {return -1;}

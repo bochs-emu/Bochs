@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  poly_2xm1.c                                                              |
+ |  $Id: poly_2xm1.c,v 1.3.8.1 2002-03-17 08:51:21 bdenney Exp $
  |                                                                           |
  | Function to compute 2^x-1 by a polynomial approximation.                  |
  |                                                                           |

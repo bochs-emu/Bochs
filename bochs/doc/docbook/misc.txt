@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.9 2001-11-17 17:16:35 bdenney Exp $
+$Id: misc.txt,v 1.9.4.1 2002-03-17 08:51:20 bdenney Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.

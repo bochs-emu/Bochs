@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: serial.h,v 1.4.2.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -51,8 +55,14 @@ typedef struct {
    */
   Boolean  rx_empty;
   Boolean  tx_empty;
+  Boolean  ls_interrupt;
+  Boolean  ms_interrupt;
   Boolean  rx_interrupt;
   Boolean  tx_interrupt;
+  Boolean  ls_ipending;
+  Boolean  ms_ipending;
+  Boolean  rx_ipending;
+  Boolean  tx_ipending;
 
   int  baudrate;
   int  tx_timer_index;

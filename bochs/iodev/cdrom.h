@@ -1,4 +1,8 @@
-//  Copyright (C) 2001  MandrakeSoft S.A.
+/////////////////////////////////////////////////////////////////////////
+// $Id: cdrom.h,v 1.4.2.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
 //
 //    MandrakeSoft S.A.
 //    43, rue d'Aboukir
@@ -28,9 +32,10 @@ class cdrom_interface : public logfunctions {
 public:
   cdrom_interface(char *dev);
   ~cdrom_interface(void);
+  void init(void);
 
   // Load CD-ROM. Returns false if CD is not ready.
-  bool insert_cdrom();
+  bool insert_cdrom(char *dev = NULL);
 
   // Logically eject the CD.
   void eject_cdrom();

@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_mul.c                                                                |
+ |  $Id: reg_mul.c,v 1.2.8.1 2002-03-17 08:51:21 bdenney Exp $
  |                                                                           |
  | Multiply one FPU_REG by another, put the result in a destination FPU_REG. |
  |                                                                           |

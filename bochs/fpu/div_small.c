@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  div_small.S                                                              |
+ |  $Id: div_small.c,v 1.1.10.1 2002-03-17 08:51:20 bdenney Exp $
  |                                                                           |
  | Divide a 64 bit integer by a 32 bit integer & return remainder.           |
  |                                                                           |

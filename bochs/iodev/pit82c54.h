@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: pit82c54.h,v 1.3.2.1 2002-03-17 08:50:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 /*
  * Emulator of an Intel 8254/82C54 Programmable Interval Timer.
  * Greg Alexander <yakovlev@usa.com>
@@ -6,7 +10,11 @@
  * that you can experiment with it.  (bbd)
  */
 
+#ifndef _PIT_82C54_H_
+#define _PIT_82C54_H_ 1
+
 #include "bochs.h"
+
 
 class pit_82C54 : public logfunctions {
 
@@ -37,10 +45,14 @@ private:
     BOTH_real=3
   };
 
+  enum problem_type {
+    UNL_2P_READ=1
+  };
+
   struct counter_type {
     //Chip IOs;
     bool GATE; //GATE Input value at end of cycle
-    bool OUT; //OUT output this cycle
+    bool OUTpin; //OUT output this cycle
 
     //Architected state;
     Bit32u count; //Counter value this cycle
@@ -68,11 +80,15 @@ private:
     bool first_pass; //Whether or not this is the first loaded count.
     bool state_bit_1; //Miscelaneous state bits.
     bool state_bit_2;
+    Bit32u next_change_time; //Next time something besides count changes.
+                             //0 means never.
   };
 
   counter_type counter[3];
 
   Bit8u controlword;
+
+  int seen_problems;
 
   void latch_counter(counter_type & thisctr);
 
@@ -86,23 +102,32 @@ private:
 
   void decrement (counter_type & thisctr);
 
-public:
-  void init (void);
-
-  pit_82C54 (void);
+  void decrement_multiple(counter_type & thisctr, Bit32u cycles);
 
   void clock(Bit8u cnum);
 
-  void clock_all(void);
+  void print_counter(counter_type & thisctr);
+
+public:
+  void init (void);
+  pit_82C54 (void);
+
+  void clock_all(Bit32u cycles);
+  void clock_multiple(Bit8u cnum, Bit32u cycles);
 
   Bit8u read(Bit8u address);
-
   void write(Bit8u address, Bit8u data);
 
   void set_GATE(Bit8u cnum, bool data);
+  bool read_GATE(Bit8u cnum);
 
   bool read_OUT(Bit8u cnum);
 
-  bool read_GATE(Bit8u cnum);
+  Bit32u get_clock_event_time(Bit8u cnum);
+  Bit32u get_next_event_time(void);
+
+  void print_cnum(Bit8u cnum);
 
 };
+
+#endif
