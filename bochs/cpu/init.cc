@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.43 2002-11-21 08:08:29 cbothamy Exp $
+// $Id: init.cc,v 1.44 2002-11-22 09:36:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.43 2002-11-21 08:08:29 cbothamy Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.44 2002-11-22 09:36:28 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -519,7 +519,15 @@ BX_CPU_C::reset(unsigned source)
 #endif
 #endif
 
+#if BX_SUPPORT_SSE >= 1
+  for(unsigned index=0; index < BX_XMM_REGISTERS; index++)
+  {
+    BX_CPU_THIS_PTR xmm[index].xmm64u(0) = 0;
+    BX_CPU_THIS_PTR xmm[index].xmm64u(1) = 0;
+  }
 
+  BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
+#endif
 
   /* CS (Code Segment) and descriptor cache */
   /* Note: on a real cpu, CS initially points to upper memory.  After
