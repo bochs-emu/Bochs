@@ -324,6 +324,7 @@ class iofunctions {
 #define    CPU14LOG         39
 #define    CPU15LOG         40
 #define    CTRLLOG         41
+#define    UNMAPLOG        42
 
 
 public:
