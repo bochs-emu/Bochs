@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.70 2002-11-04 05:27:25 ptrumpet Exp $
+// $Id: cpu.cc,v 1.71 2002-11-21 08:08:29 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -515,7 +515,7 @@ BX_CPU_C::handleAsyncEvent(void)
       if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
         break;
         }
-      if (BX_CPU_THIS_PTR async_event == 0) {
+      if (BX_CPU_THIS_PTR async_event == 2) {
         BX_INFO(("decode: reset detected in halt state"));
         break;
         }
