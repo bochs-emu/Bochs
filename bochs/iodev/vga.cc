@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.94 2003-12-31 10:33:27 vruppert Exp $
+// $Id: vga.cc,v 1.94.2.1 2004-02-02 22:37:48 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ static const Bit8u ccdat[16][4] = {
 
 bx_vga_c *theVga = NULL;
 
-unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0;
+unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0, old_BPP = 0;
 
   int
 libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -1471,18 +1471,19 @@ bx_vga_c::update(void)
 //  (unsigned) BX_VGA_THIS s.sequencer.chain_four,
 //  (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
 
+    determine_screen_dimensions(&iHeight, &iWidth);
+    if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (old_BPP > 8) ) {
+      bx_gui->dimension_update(iWidth, iHeight);
+      old_iWidth = iWidth;
+      old_iHeight = iHeight;
+      old_BPP = 8;
+    }
+
     switch ( BX_VGA_THIS s.graphics_ctrl.shift_reg ) {
 
       case 0:
         Bit8u attribute, palette_reg_val, DAC_regno;
         unsigned long line_compare;
-
-        determine_screen_dimensions(&iHeight, &iWidth);
-        if( (iWidth != old_iWidth) || (iHeight != old_iHeight) ) {
-          bx_gui->dimension_update(iWidth, iHeight);
-          old_iWidth = iWidth;
-          old_iHeight = iHeight;
-        }
 
         if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // CGA 640x200x2
 
@@ -1578,13 +1579,6 @@ bx_vga_c::update(void)
               // mode.  (modes 4 & 5)
 
         /* CGA 320x200x4 start */
-        determine_screen_dimensions(&iHeight, &iWidth);
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
-	{
-	  bx_gui->dimension_update(iWidth, iHeight);
-	  old_iWidth = iWidth;
-	  old_iHeight = iHeight;
-	}
 
         for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
           for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -1621,7 +1615,6 @@ bx_vga_c::update(void)
 
       case 2: // output the data eight bits at a time from the 4 bit plane
               // (format for VGA mode 13 hex)
-        determine_screen_dimensions(&iHeight, &iWidth);
 
         if ( BX_VGA_THIS s.sequencer.chain_four ) {
           unsigned long pixely, pixelx, plane;
@@ -1629,13 +1622,6 @@ bx_vga_c::update(void)
 
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
             BX_PANIC(("update: select_high_bank != 1"));
-
-	  if( (iHeight != old_iHeight) || (iWidth != old_iWidth) )
-	  {
-	    bx_gui->dimension_update(iWidth, iHeight);
-	    old_iHeight = iHeight;
-	    old_iWidth = iWidth;
-	  }
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -1661,13 +1647,6 @@ bx_vga_c::update(void)
 
         else { // chain_four == 0, modeX
           unsigned long pixely, pixelx, plane;
-
-	  if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
-	  {
-	    bx_gui->dimension_update(iWidth, iHeight);
-	    old_iWidth = iWidth;
-	    old_iHeight = iHeight;
-	  }
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -1727,11 +1706,12 @@ bx_vga_c::update(void)
       case 1: // 64K @ A0000
 	iWidth = 8*80;	// TODO: should use font size
 	iHeight = 16*25;
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (old_BPP > 8) )
 	{
 	  bx_gui->dimension_update(iWidth, iHeight, 16, 8);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
+          old_BPP = 8;
 	}
         /* pass old text snapshot & new VGA memory contents */
         start_address = 0x0;
@@ -1782,12 +1762,13 @@ bx_vga_c::update(void)
           iWidth = cWidth * (BX_VGA_THIS s.CRTC.reg[1] + 1);
           iHeight = VDE+1;
         }
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) )
+	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) || (old_BPP > 8) )
 	{
 	  bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
 	  old_iWidth = iWidth;
 	  old_iHeight = iHeight;
 	  old_MSL = MSL;
+          old_BPP = 8;
 	}
         // pass old text snapshot & new VGA memory contents
         start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) + BX_VGA_THIS s.CRTC.reg[13]);
@@ -2887,6 +2868,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
                 memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
               }
               bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
+              old_BPP = depth;
               // some test applications expect these standard VGA settings
               BX_VGA_THIS s.CRTC.reg[9] = 0x00;
               BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha = 1;
