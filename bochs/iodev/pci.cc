@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.33 2004-07-04 17:07:49 vruppert Exp $
+// $Id: pci.cc,v 1.34 2004-07-09 16:25:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -84,6 +84,11 @@ bx_pci_c::init(void)
     BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
   }
 
+  for (i=0; i < BX_N_PCI_SLOTS; i++) {
+    BX_PCI_THIS slot_used[i] = 0;  // no device connected
+  }
+  BX_PCI_THIS slots_checked = 0;
+
   // confAddr accepts dword i/o only
   DEV_register_ioread_handler(this, read_handler, 0x0CF8, "i440FX", 4);
   DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "i440FX", 4);
@@ -112,6 +117,17 @@ bx_pci_c::init(void)
   void
 bx_pci_c::reset(unsigned type)
 {
+  unsigned i;
+
+  if (!BX_PCI_THIS slots_checked) {
+    for (i=0; i<BX_N_PCI_SLOTS; i++) {
+      if (bx_options.pcislot[i].Oused->get() && !BX_PCI_THIS slot_used[i]) {
+        BX_PANIC(("Unknown plugin '%s' at PCI slot #%d", bx_options.pcislot[i].Odevname->getptr(), i+1));
+      }
+    }
+    BX_PCI_THIS slots_checked = 1;
+  }
+
   BX_PCI_THIS s.i440fx.confAddr = 0;
   BX_PCI_THIS s.i440fx.confData = 0;
 
@@ -130,7 +146,7 @@ bx_pci_c::reset(unsigned type)
   BX_PCI_THIS s.i440fx.pci_conf[0x56] = 0x00;
   BX_PCI_THIS s.i440fx.pci_conf[0x57] = 0x01;
   BX_PCI_THIS s.i440fx.pci_conf[0x58] = 0x10;
-  for (unsigned i=0x59; i<0x60; i++)
+  for (i=0x59; i<0x60; i++)
     BX_PCI_THIS s.i440fx.pci_conf[i] = 0x00;
 }
 
@@ -451,6 +467,7 @@ bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
       if (bx_options.pcislot[i].Oused->get() &&
           !strcmp(name, bx_options.pcislot[i].Odevname->getptr())) {
         *devfunc = (i + 2) << 3;
+        BX_PCI_THIS slot_used[i] = 1;
         BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
         break;
       }

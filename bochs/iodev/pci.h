@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.18 2004-07-04 17:07:49 vruppert Exp $
+// $Id: pci.h,v 1.19 2004-07-09 16:25:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,8 +77,11 @@ private:
     bx_pci_read_handler_t  read;
     bx_pci_write_handler_t write;
     void             *this_ptr;
-    } pci_handler[BX_MAX_PCI_DEVICES];
+  } pci_handler[BX_MAX_PCI_DEVICES];
   unsigned num_pci_handles;
+
+  bx_bool slot_used[BX_N_PCI_SLOTS];
+  bx_bool slots_checked;
 
   struct {
     bx_def440fx_t i440fx;
