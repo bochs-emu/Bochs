@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.62 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: vga.cc,v 1.63 2003-04-20 17:04:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1306,12 +1306,12 @@ bx_vga_c::update(void)
   // fields that effect the way video memory is serialized into screen output:
   // GRAPHICS CONTROLLER:
   //   BX_VGA_THIS s.graphics_ctrl.shift_reg:
-  //     0: output data in standard VGA format
+  //     0: output data in standard VGA format or CGA-compatible 640x200 2 color
+  //        graphics mode (mode 6)
   //     1: output data in CGA-compatible 320x200 4 color graphics mode
   //        (modes 4 & 5)
   //     2: output data 8 bits at a time from the 4 bit planes
   //        (mode 13 and variants like modeX)
-//fprintf(stderr, "# update()");
 
   // if (BX_VGA_THIS s.vga_mem_updated==0 || BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
 
@@ -1329,64 +1329,103 @@ bx_vga_c::update(void)
 
     switch ( BX_VGA_THIS s.graphics_ctrl.shift_reg ) {
 
-      case 0: // output data in serial fashion with each display plane
-              // output on its associated serial output.  Standard EGA/VGA format
+      case 0:
         Bit8u attribute, palette_reg_val, DAC_regno;
         unsigned long start_addr;
 
-        determine_screen_dimensions(&iHeight, &iWidth);
+        if (BX_VGA_THIS s.graphics_ctrl.memory_mapping == 3) { // CGA 640x200x2
+	  iWidth = 640; iHeight = 200;
+          if( (iWidth != old_iWidth) || (iHeight != old_iHeight) ) {
+            bx_gui->dimension_update(iWidth, iHeight);
+            old_iWidth = iWidth;
+            old_iHeight = iHeight;
+          }
 
-        //BX_DEBUG(("update(): Mode 12h: 640x480x16colors"));
-	if( (iWidth != old_iWidth) || (iHeight != old_iHeight) )
-	{
-	  bx_gui->dimension_update(iWidth, iHeight);
-	  old_iWidth = iWidth;
-	  old_iHeight = iHeight;
-	}
+          y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
 
-        start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
-        y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+          for (yti=0; yti<y_tiles; yti++)
+            for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                for (r=0; r<Y_TILESIZE; r++) {
+                  for (c=0; c<X_TILESIZE; c++) {
+  
+                    /* 0 or 0x2000 */
+                    byte_offset = ((yti*Y_TILESIZE + r) & 1) << 13;
+                    /* to the start of the line */
+                    byte_offset += (320 / 4) * ((yti*Y_TILESIZE + r) / 2);
+                    /* to the byte start */
+                    byte_offset += ((xti*X_TILESIZE + c) / 8);
 
-        for (yti=0; yti<y_tiles; yti++)
-          for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
-            if (GET_TILE_UPDATED (xti, yti)) {
-              for (r=0; r<Y_TILESIZE; r++) {
-                for (c=0; c<X_TILESIZE; c++) {
-                  bit_no = 7 - (c % 8);
-                  byte_offset = start_addr + (xti*X_TILESIZE+c)/8 +
-		    ((yti*Y_TILESIZE+r) * (BX_VGA_THIS s.scan_bits/8));
-                  attribute =
-                    (((BX_VGA_THIS s.vga_memory[0*65536 + byte_offset] >> bit_no) & 0x01) << 0) |
-                    (((BX_VGA_THIS s.vga_memory[1*65536 + byte_offset] >> bit_no) & 0x01) << 1) |
-                    (((BX_VGA_THIS s.vga_memory[2*65536 + byte_offset] >> bit_no) & 0x01) << 2) |
-                    (((BX_VGA_THIS s.vga_memory[3*65536 + byte_offset] >> bit_no) & 0x01) << 3);
-
-                  attribute &= BX_VGA_THIS s.attribute_ctrl.color_plane_enable;
-                  palette_reg_val = BX_VGA_THIS s.attribute_ctrl.palette_reg[attribute];
-                  if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size) {
-                    // use 4 lower bits from palette register
-                    // use 4 higher bits from color select register
-                    // 16 banks of 16-color registers
-                    DAC_regno = (palette_reg_val & 0x0f) |
-                                (BX_VGA_THIS s.attribute_ctrl.color_select << 4);
-                    }
-                  else {
-                    // use 6 lower bits from palette register
-                    // use 2 higher bits from color select register
-                    // 4 banks of 64-color registers
-                    DAC_regno = (palette_reg_val & 0x3f) |
-                                ((BX_VGA_THIS s.attribute_ctrl.color_select & 0x0c) << 4);
-                    }
-                  // DAC_regno &= video DAC mask register ???
-
-                  BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
+                    attribute = 7 - ((xti*X_TILESIZE + c) % 8);
+                    palette_reg_val = (BX_VGA_THIS s.vga_memory[byte_offset]) >> attribute;
+                    palette_reg_val &= 3;
+                    palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics << 2;
+                    // palette_reg_val |= BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity << 3;
+                    DAC_regno = BX_VGA_THIS s.attribute_ctrl.palette_reg[palette_reg_val];
+                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                   }
                 }
-              bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
-                xti*X_TILESIZE, yti*Y_TILESIZE);
-              SET_TILE_UPDATED (xti, yti, 0);
+                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
+                                           xti*X_TILESIZE, yti*Y_TILESIZE);
+                SET_TILE_UPDATED (xti, yti, 0);
               }
             }
+          }
+	else { // output data in serial fashion with each display plane
+               // output on its associated serial output.  Standard EGA/VGA format
+
+          determine_screen_dimensions(&iHeight, &iWidth);
+
+          if( (iWidth != old_iWidth) || (iHeight != old_iHeight) ) {
+            bx_gui->dimension_update(iWidth, iHeight);
+            old_iWidth = iWidth;
+            old_iHeight = iHeight;
+          }
+
+          start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
+          y_tiles = iHeight / Y_TILESIZE + ((iHeight % Y_TILESIZE) > 0);
+
+          for (yti=0; yti<y_tiles; yti++)
+            for (xti=0; xti<iWidth/X_TILESIZE; xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                for (r=0; r<Y_TILESIZE; r++) {
+                  for (c=0; c<X_TILESIZE; c++) {
+                    bit_no = 7 - (c % 8);
+                    byte_offset = start_addr + (xti*X_TILESIZE+c)/8 +
+                      ((yti*Y_TILESIZE+r) * (BX_VGA_THIS s.scan_bits/8));
+                    attribute =
+                      (((BX_VGA_THIS s.vga_memory[0*65536 + byte_offset] >> bit_no) & 0x01) << 0) |
+                      (((BX_VGA_THIS s.vga_memory[1*65536 + byte_offset] >> bit_no) & 0x01) << 1) |
+                      (((BX_VGA_THIS s.vga_memory[2*65536 + byte_offset] >> bit_no) & 0x01) << 2) |
+                      (((BX_VGA_THIS s.vga_memory[3*65536 + byte_offset] >> bit_no) & 0x01) << 3);
+
+                    attribute &= BX_VGA_THIS s.attribute_ctrl.color_plane_enable;
+                    palette_reg_val = BX_VGA_THIS s.attribute_ctrl.palette_reg[attribute];
+                    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size) {
+                      // use 4 lower bits from palette register
+                      // use 4 higher bits from color select register
+                      // 16 banks of 16-color registers
+                      DAC_regno = (palette_reg_val & 0x0f) |
+                                  (BX_VGA_THIS s.attribute_ctrl.color_select << 4);
+                      }
+                    else {
+                      // use 6 lower bits from palette register
+                      // use 2 higher bits from color select register
+                      // 4 banks of 64-color registers
+                      DAC_regno = (palette_reg_val & 0x3f) |
+                                  ((BX_VGA_THIS s.attribute_ctrl.color_select & 0x0c) << 4);
+                      }
+                    // DAC_regno &= video DAC mask register ???
+
+                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
+                    }
+                  }
+                bx_gui->graphics_tile_update(BX_VGA_THIS s.tile,
+                  xti*X_TILESIZE, yti*Y_TILESIZE);
+                SET_TILE_UPDATED (xti, yti, 0);
+                }
+              }
+          }
         break; // case 0
 
       case 1: // output the data in a CGA-compatible 320x200 4 color graphics
@@ -1667,8 +1706,6 @@ bx_vga_c::mem_read(Bit32u addr)
 //	BX_DEBUG(("8-bit memory read from %08x", addr));
 #endif
 
-// ??? should get rid of references to shift_reg in this function
-
 #ifdef __OS2__
 
 #if BX_PLUGINS
@@ -1691,10 +1728,6 @@ bx_vga_c::mem_read(Bit32u addr)
         return(0xff);
       offset = addr - 0xB8000;
 
-      if ( (BX_VGA_THIS s.graphics_ctrl.shift_reg != 1) &&
-           (BX_VGA_THIS s.graphics_ctrl.shift_reg != 2) )
-        BX_PANIC(("vga_mem_read: shift_reg = %u",
-                 (unsigned) BX_VGA_THIS s.graphics_ctrl.shift_reg));
       return(BX_VGA_THIS s.vga_memory[offset]);
       }
 
