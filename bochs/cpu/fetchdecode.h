@@ -101,7 +101,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDA[8] = {
   // DB (modrm is outside 00h - BFh) (mod != 11)
 static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDB[8] = { 
   /* 0 */  { 0,  &BX_CPU_C::FILD_DWORD_INTEGER  },
-  /* 1 */  { 0,  &BX_CPU_C::FISTTP64            },
+  /* 1 */  { 0,  &BX_CPU_C::FISTTP32            },
   /* 2 */  { 0,  &BX_CPU_C::FIST_DWORD_INTEGER  },
   /* 3 */  { 0,  &BX_CPU_C::FIST_DWORD_INTEGER  },	// FISTP
   /* 4 */  { 0,  &BX_CPU_C::BxError             },
@@ -125,7 +125,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDC[8] = {
   // DD (modrm is outside 00h - BFh) (mod != 11)
 static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8] = { 
   /* 0 */  { 0,  &BX_CPU_C::FLD_DOUBLE_REAL },
-  /* 1 */  { 0,  &BX_CPU_C::FISTTP32        },
+  /* 1 */  { 0,  &BX_CPU_C::FISTTP64        },
   /* 2 */  { 0,  &BX_CPU_C::FST_DOUBLE_REAL },
   /* 3 */  { 0,  &BX_CPU_C::FST_DOUBLE_REAL },		// FSTP_DOUBLE_REAL
   /* 4 */  { 0,  &BX_CPU_C::FRSTOR          },
