@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.17 2001-06-18 14:11:55 bdenney Exp $
+ * $Id: siminterface.cc,v 1.18 2001-06-18 22:34:03 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -482,6 +482,7 @@ bx_param_string_c::bx_param_string_c (bx_id id,
     maxsize = strlen(initial_val) + 1;
   this->val = new char[maxsize];
   this->initial_val = new char[maxsize];
+  this->handler = NULL;
   this->maxsize = maxsize;
   strncpy (this->val, initial_val, maxsize);
   strncpy (this->initial_val, initial_val, maxsize);
