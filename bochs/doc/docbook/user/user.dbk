@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.140 2004-01-17 08:33:59 danielg4 Exp $
+$Id: user.dbk,v 1.141 2004-01-17 20:50:45 danielg4 Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -5262,7 +5262,7 @@ Some of the other options in this group is probably also needed,
         Create the <replaceable>/path/to/tunconfig</replaceable> script :
         <screen>
         #!/bin/bash
-        /sbin/ifconfig $1 192.168.1.1
+        /sbin/ifconfig ${1##/*/} 192.168.1.1
         </screen>
         The script get the interface name as the first parameter. Linux
         will forward incoming packets between interfaces.
@@ -9530,7 +9530,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.140 2004-01-17 08:33:59 danielg4 Exp $
+        $Id: user.dbk,v 1.141 2004-01-17 20:50:45 danielg4 Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
