@@ -60,7 +60,12 @@ Changes to next release:
   - fixed sign-extended immediate opcodes (Stanislav)
   - fixed MOVSS/MOVSD instructions opcode names (Stanislav)
   - fixed NEG instruction opcode name (Stanislav)
-  - fixed floating point instructions arguments (Stanislav)
+  - fixed CMPXCHG8B instruction, had wrong operand size (Stanislav)
+  - fixed floating point instructions operands (Stanislav)
+  - experimental support of AT&T syntax in disassembler (Stanislav)
+
+  TODO:
+   - disassmbler X86-64 support
 
 - I/O devices
   - general

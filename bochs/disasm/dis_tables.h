@@ -1,29 +1,15 @@
 #ifndef _BX_DISASM_TABLES_
 #define _BX_DISASM_TABLES_
 
-#define BX_DISASM_NEED_SHORTCUTS
-
+// opcode table attributes
 #define _PREFIX        1
 #define _GROUPN        2
 #define _SPLIT11B      3
 #define _GRPFP         4
 #define _GRP3DNOW      5
 #define _GRPSSE        6
-#define _COND_JUMP     7
 
-struct BxDisasmOpcodeInfo_t
-{
-    const char *Opcode;
-    unsigned Attr;
-    BxDisasmPtr_t Operand1;
-    unsigned Op1Attr;
-    BxDisasmPtr_t Operand2;
-    unsigned Op2Attr;
-    BxDisasmPtr_t Operand3;
-    unsigned Op3Attr;
-    struct BxDisasmOpcodeInfo_t *AnotherArray;
-};
-
+/* ************************************************************************ */
 #define GRPSSE(n)       "(error)",  _GRPSSE, NULL, 0, NULL, 0, NULL, 0, BxDisasmGroupSSE_##n
 #define GRPN(n)         "(error)",  _GROUPN, NULL, 0, NULL, 0, NULL, 0, BxDisasmGroup##n
 #define GRPFP(n)        "(error)",  _GRPFP,  NULL, 0, NULL, 0, NULL, 0, BxDisasmFPGroup##n
@@ -45,11 +31,7 @@ struct BxDisasmOpcodeInfo_t
 #if BX_SUPPORT_X86_64
 #define PREFIX_REX      "rex",      _PREFIX, NULL, 0, NULL, 0, NULL, 0
 #endif
-
-#ifdef BX_DISASM_NEED_SHORTCUTS
-
- // no operand
-#define XX  &disassembler::XX,  0
+/* ************************************************************************ */
 
  // fpu
 #define ST0 &disassembler::ST0, 0
@@ -167,10 +149,32 @@ struct BxDisasmOpcodeInfo_t
 #define Jb  &disassembler::Jb, 0
 #define Jv  &disassembler::Jv, 0
 
+ // branch hint
+#define Cond_Jump NULL, BRANCH_HINT
+
  // jump/call far
 #define Ap  &disassembler::Ap, 0
 
-#endif
+ // no operand
+#define XX  NULL, 0
+
+//
+// Capital letters in opcode name suffix are macroses:
+//
+// B - print 'b' suffix for this instruction (in AT&T syntax mode)
+// W - print 'w' suffix for this instruction (in AT&T syntax mode)
+// L - print 'l' suffix for this instruction (in AT&T syntax mode)
+// V - print 'w' or 'l' suffix for this instruction dependent on
+//     its operands size (in AT&T syntax mode)
+// Q - print 'q' suffix for this instruction (in AT&T syntax mode)
+// O - print 'w' or 'd' suffix for this instruction dependent on
+//     its operands size (for string instructions)
+// T - print 't' suffix for this instruction (in AT&T syntax mode)
+// X - print 'bl', 'bw', "wl", "bq", "wq" or 'lq' suffix for this
+//     instruction dependent on its operands size in AT&T syntax 
+//     mode and 'x' suffix in Intel syntax mode (for movsx and 
+//     movzx instructions)
+//
 
 /* ************************************************************************ */
 /* SSE opcodes */
@@ -1006,129 +1010,129 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1407[4] = {
 /* Opcode GroupN */
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG1EbIb[8] = {
-  /* 0 */  { "add",         0, Eb, Ib, XX },
-  /* 1 */  { "or",          0, Eb, Ib, XX },
-  /* 2 */  { "adc",         0, Eb, Ib, XX },
-  /* 3 */  { "sbb",         0, Eb, Ib, XX },
-  /* 4 */  { "and",         0, Eb, Ib, XX },
-  /* 5 */  { "sub",         0, Eb, Ib, XX },
-  /* 6 */  { "xor",         0, Eb, Ib, XX },
-  /* 7 */  { "cmp",         0, Eb, Ib, XX }
+  /* 0 */  { "addB",        0, Eb, Ib, XX },
+  /* 1 */  { "orB",         0, Eb, Ib, XX },
+  /* 2 */  { "adcB",        0, Eb, Ib, XX },
+  /* 3 */  { "sbbB",        0, Eb, Ib, XX },
+  /* 4 */  { "andB",        0, Eb, Ib, XX },
+  /* 5 */  { "subB",        0, Eb, Ib, XX },
+  /* 6 */  { "xorB",        0, Eb, Ib, XX },
+  /* 7 */  { "cmpB",        0, Eb, Ib, XX }
 };
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG1EvIv[8] = {
-  /* 0 */  { "add",         0, Ev, Iv, XX },
-  /* 1 */  { "or",          0, Ev, Iv, XX },
-  /* 2 */  { "adc",         0, Ev, Iv, XX },
-  /* 3 */  { "sbb",         0, Ev, Iv, XX },
-  /* 4 */  { "and",         0, Ev, Iv, XX },
-  /* 5 */  { "sub",         0, Ev, Iv, XX },
-  /* 6 */  { "xor",         0, Ev, Iv, XX },
-  /* 7 */  { "cmp",         0, Ev, Iv, XX }
+  /* 0 */  { "addV",        0, Ev, Iv, XX },
+  /* 1 */  { "orV",         0, Ev, Iv, XX },
+  /* 2 */  { "adcV",        0, Ev, Iv, XX },
+  /* 3 */  { "sbbV",        0, Ev, Iv, XX },
+  /* 4 */  { "andV",        0, Ev, Iv, XX },
+  /* 5 */  { "subV",        0, Ev, Iv, XX },
+  /* 6 */  { "xorV",        0, Ev, Iv, XX },
+  /* 7 */  { "cmpV",        0, Ev, Iv, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG1EvIb[8] = {
-  /* 0 */  { "add",         0, Ev, sIb, XX },	// sign-extend byte 
-  /* 1 */  { "or",          0, Ev, sIb, XX },
-  /* 2 */  { "adc",         0, Ev, sIb, XX },
-  /* 3 */  { "sbb",         0, Ev, sIb, XX },
-  /* 4 */  { "and",         0, Ev, sIb, XX },
-  /* 5 */  { "sub",         0, Ev, sIb, XX },
-  /* 6 */  { "xor",         0, Ev, sIb, XX },
-  /* 7 */  { "cmp",         0, Ev, sIb, XX }
+  /* 0 */  { "addV",        0, Ev, sIb, XX },	// sign-extend byte 
+  /* 1 */  { "orV",         0, Ev, sIb, XX },
+  /* 2 */  { "adcV",        0, Ev, sIb, XX },
+  /* 3 */  { "sbbV",        0, Ev, sIb, XX },
+  /* 4 */  { "andV",        0, Ev, sIb, XX },
+  /* 5 */  { "subV",        0, Ev, sIb, XX },
+  /* 6 */  { "xorV",        0, Ev, sIb, XX },
+  /* 7 */  { "cmpV",        0, Ev, sIb, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Eb[8] = {
-  /* 0 */  { "rol",         0, Eb, Ib, XX },
-  /* 1 */  { "ror",         0, Eb, Ib, XX },
-  /* 2 */  { "rcl",         0, Eb, Ib, XX },
-  /* 3 */  { "rcr",         0, Eb, Ib, XX },
-  /* 4 */  { "shl",         0, Eb, Ib, XX },
-  /* 5 */  { "shr",         0, Eb, Ib, XX },
-  /* 6 */  { "shl",         0, Eb, Ib, XX },
-  /* 7 */  { "sar",         0, Eb, Ib, XX }
+  /* 0 */  { "rolB",        0, Eb, Ib, XX },
+  /* 1 */  { "rorB",        0, Eb, Ib, XX },
+  /* 2 */  { "rclB",        0, Eb, Ib, XX },
+  /* 3 */  { "rcrB",        0, Eb, Ib, XX },
+  /* 4 */  { "shlB",        0, Eb, Ib, XX },
+  /* 5 */  { "shrB",        0, Eb, Ib, XX },
+  /* 6 */  { "shlB",        0, Eb, Ib, XX },
+  /* 7 */  { "sarB",        0, Eb, Ib, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Eb1[8] = {
-  /* 0 */  { "rol",         0, Eb, I1, XX },
-  /* 1 */  { "ror",         0, Eb, I1, XX },
-  /* 2 */  { "rcl",         0, Eb, I1, XX },
-  /* 3 */  { "rcr",         0, Eb, I1, XX },
-  /* 4 */  { "shl",         0, Eb, I1, XX },
-  /* 5 */  { "shr",         0, Eb, I1, XX },
-  /* 6 */  { "shl",         0, Eb, I1, XX },
-  /* 7 */  { "sar",         0, Eb, I1, XX }
+  /* 0 */  { "rolB",        0, Eb, I1, XX },
+  /* 1 */  { "rorB",        0, Eb, I1, XX },
+  /* 2 */  { "rclB",        0, Eb, I1, XX },
+  /* 3 */  { "rcrB",        0, Eb, I1, XX },
+  /* 4 */  { "shlB",        0, Eb, I1, XX },
+  /* 5 */  { "shrB",        0, Eb, I1, XX },
+  /* 6 */  { "shlB",        0, Eb, I1, XX },
+  /* 7 */  { "sarB",        0, Eb, I1, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2EbCL[8] = {
-  /* 0 */  { "rol",         0, Eb, CL, XX },
-  /* 1 */  { "ror",         0, Eb, CL, XX },
-  /* 2 */  { "rcl",         0, Eb, CL, XX },
-  /* 3 */  { "rcr",         0, Eb, CL, XX },
-  /* 4 */  { "shl",         0, Eb, CL, XX },
-  /* 5 */  { "shr",         0, Eb, CL, XX },
-  /* 6 */  { "shl",         0, Eb, CL, XX },
-  /* 7 */  { "sar",         0, Eb, CL, XX }
+  /* 0 */  { "rolB",        0, Eb, CL, XX },
+  /* 1 */  { "rorB",        0, Eb, CL, XX },
+  /* 2 */  { "rclB",        0, Eb, CL, XX },
+  /* 3 */  { "rcrB",        0, Eb, CL, XX },
+  /* 4 */  { "shlB",        0, Eb, CL, XX },
+  /* 5 */  { "shrB",        0, Eb, CL, XX },
+  /* 6 */  { "shlB",        0, Eb, CL, XX },
+  /* 7 */  { "sarB",        0, Eb, CL, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Ev[8] = {
-  /* 0 */  { "rol",         0, Ev, Ib, XX },
-  /* 1 */  { "ror",         0, Ev, Ib, XX },
-  /* 2 */  { "rcl",         0, Ev, Ib, XX },
-  /* 3 */  { "rcr",         0, Ev, Ib, XX },
-  /* 4 */  { "shl",         0, Ev, Ib, XX },
-  /* 5 */  { "shr",         0, Ev, Ib, XX },
-  /* 6 */  { "shl",         0, Ev, Ib, XX },
-  /* 7 */  { "sar",         0, Ev, Ib, XX }
+  /* 0 */  { "rolV",        0, Ev, Ib, XX },
+  /* 1 */  { "rorV",        0, Ev, Ib, XX },
+  /* 2 */  { "rclV",        0, Ev, Ib, XX },
+  /* 3 */  { "rcrV",        0, Ev, Ib, XX },
+  /* 4 */  { "shlV",        0, Ev, Ib, XX },
+  /* 5 */  { "shrV",        0, Ev, Ib, XX },
+  /* 6 */  { "shlV",        0, Ev, Ib, XX },
+  /* 7 */  { "sarV",        0, Ev, Ib, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Ev1[8] = {
-  /* 0 */  { "rol",         0, Ev, I1, XX },
-  /* 1 */  { "ror",         0, Ev, I1, XX },
-  /* 2 */  { "rcl",         0, Ev, I1, XX },
-  /* 3 */  { "rcr",         0, Ev, I1, XX },
-  /* 4 */  { "shl",         0, Ev, I1, XX },
-  /* 5 */  { "shr",         0, Ev, I1, XX },
-  /* 6 */  { "shl",         0, Ev, I1, XX },
-  /* 7 */  { "sar",         0, Ev, I1, XX }
+  /* 0 */  { "rolV",        0, Ev, I1, XX },
+  /* 1 */  { "rorV",        0, Ev, I1, XX },
+  /* 2 */  { "rclV",        0, Ev, I1, XX },
+  /* 3 */  { "rcrV",        0, Ev, I1, XX },
+  /* 4 */  { "shlV",        0, Ev, I1, XX },
+  /* 5 */  { "shrV",        0, Ev, I1, XX },
+  /* 6 */  { "shlV",        0, Ev, I1, XX },
+  /* 7 */  { "sarV",        0, Ev, I1, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2EvCL[8] = {
-  /* 0 */  { "rol",         0, Ev, CL, XX },
-  /* 1 */  { "ror",         0, Ev, CL, XX },
-  /* 2 */  { "rcl",         0, Ev, CL, XX },
-  /* 3 */  { "rcr",         0, Ev, CL, XX },
-  /* 4 */  { "shl",         0, Ev, CL, XX },
-  /* 5 */  { "shr",         0, Ev, CL, XX },
-  /* 6 */  { "shl",         0, Ev, CL, XX },
-  /* 7 */  { "sar",         0, Ev, CL, XX }
+  /* 0 */  { "rolV",        0, Ev, CL, XX },
+  /* 1 */  { "rorV",        0, Ev, CL, XX },
+  /* 2 */  { "rclV",        0, Ev, CL, XX },
+  /* 3 */  { "rcrV",        0, Ev, CL, XX },
+  /* 4 */  { "shlV",        0, Ev, CL, XX },
+  /* 5 */  { "shrV",        0, Ev, CL, XX },
+  /* 6 */  { "shlV",        0, Ev, CL, XX },
+  /* 7 */  { "sarV",        0, Ev, CL, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG3Eb[8] = {
-  /* 0 */  { "test",        0, Eb, Ib, XX },
-  /* 1 */  { "test",        0, Eb, Ib, XX },
-  /* 2 */  { "not",         0, Eb, XX, XX },
-  /* 3 */  { "neg",         0, Eb, XX, XX },
-  /* 4 */  { "mul",         0, AL, Eb, XX },
-  /* 5 */  { "imul",        0, AL, Eb, XX },
-  /* 6 */  { "div",         0, AL, Eb, XX },
-  /* 7 */  { "idiv",        0, AL, Eb, XX }
+  /* 0 */  { "testB",       0, Eb, Ib, XX },
+  /* 1 */  { "testB",       0, Eb, Ib, XX },
+  /* 2 */  { "notB",        0, Eb, XX, XX },
+  /* 3 */  { "negB",        0, Eb, XX, XX },
+  /* 4 */  { "mulB",        0, AL, Eb, XX },
+  /* 5 */  { "imulB",       0, AL, Eb, XX },
+  /* 6 */  { "divB",        0, AL, Eb, XX },
+  /* 7 */  { "idivB",       0, AL, Eb, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG3Ev[8] = {
-  /* 0 */  { "test",        0,  Ev, Iv, XX },
-  /* 1 */  { "test",        0,  Ev, Iv, XX },
-  /* 2 */  { "not",         0,  Ev, XX, XX },
-  /* 3 */  { "neg",         0,  Ev, XX, XX },    
-  /* 4 */  { "mul",         0, eAX, Ev, XX },
-  /* 5 */  { "imul",        0, eAX, Ev, XX },
-  /* 6 */  { "div",         0, eAX, Ev, XX },
-  /* 7 */  { "idiv",        0, eAX, Ev, XX }
+  /* 0 */  { "testV",       0,  Ev, Iv, XX },
+  /* 1 */  { "testV",       0,  Ev, Iv, XX },
+  /* 2 */  { "notV",        0,  Ev, XX, XX },
+  /* 3 */  { "negV",        0,  Ev, XX, XX },    
+  /* 4 */  { "mulV",        0, eAX, Ev, XX },
+  /* 5 */  { "imulV",       0, eAX, Ev, XX },
+  /* 6 */  { "divV",        0, eAX, Ev, XX },
+  /* 7 */  { "idivV",       0, eAX, Ev, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG4[8] = {
-  /* 0 */  { "inc",         0, Eb, XX, XX },
-  /* 1 */  { "dec",         0, Eb, XX, XX },
+  /* 0 */  { "incB",        0, Eb, XX, XX },
+  /* 1 */  { "decB",        0, Eb, XX, XX },
   /* 2 */  { "(invalid)",   0, XX, XX, XX },
   /* 3 */  { "(invalid)",   0, XX, XX, XX },
   /* 4 */  { "(invalid)",   0, XX, XX, XX },
@@ -1138,23 +1142,23 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG4[8] = {
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG5[8] = {
-  /* 0 */  { "inc",         0, Ev, XX, XX },
-  /* 1 */  { "dec",         0, Ev, XX, XX },
-  /* 2 */  { "call",        0, Ev, XX, XX },
+  /* 0 */  { "incV",        0, Ev, XX, XX },
+  /* 1 */  { "decV",        0, Ev, XX, XX },
+  /* 2 */  { "callV",       0, Ev, XX, XX },
   /* 3 */  { "call far",    0, Mp, XX, XX },
-  /* 4 */  { "jmp",         0, Ev, XX, XX },
+  /* 4 */  { "jmpV",        0, Ev, XX, XX },
   /* 5 */  { "jmp far",     0, Mp, XX, XX },
-  /* 6 */  { "push",        0, Ev, XX, XX },
+  /* 6 */  { "pushV",       0, Ev, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG6[8] = {
-  /* 0 */  { "sldt",        0, Ew, XX, XX },
-  /* 1 */  { "str",         0, Ew, XX, XX },
-  /* 2 */  { "lldt",        0, Ew, XX, XX },
-  /* 3 */  { "ltr",         0, Ew, XX, XX },
-  /* 4 */  { "verr",        0, Ew, XX, XX },
-  /* 5 */  { "verw",        0, Ew, XX, XX },
+  /* 0 */  { "sldtW",       0, Ew, XX, XX },
+  /* 1 */  { "strW",        0, Ew, XX, XX },
+  /* 2 */  { "lldtW",       0, Ew, XX, XX },
+  /* 3 */  { "ltrW",        0, Ew, XX, XX },
+  /* 4 */  { "verrW",       0, Ew, XX, XX },
+  /* 5 */  { "verwW",       0, Ew, XX, XX },
   /* 6 */  { "(invalid)",   0, XX, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
 }; 
@@ -1175,15 +1179,15 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG8EvIb[8] = {
   /* 1 */  { "(invalid)",   0, XX, XX, XX },
   /* 2 */  { "(invalid)",   0, XX, XX, XX },
   /* 3 */  { "(invalid)",   0, XX, XX, XX },
-  /* 4 */  { "bt",          0, Ev, Ib, XX },
-  /* 5 */  { "bts",         0, Ev, Ib, XX },
-  /* 6 */  { "btr",         0, Ev, Ib, XX },
-  /* 7 */  { "btc",         0, Ev, Ib, XX }
+  /* 4 */  { "btV",         0, Ev, Ib, XX },
+  /* 5 */  { "btsV",        0, Ev, Ib, XX },
+  /* 6 */  { "btrV",        0, Ev, Ib, XX },
+  /* 7 */  { "btcV",        0, Ev, Ib, XX }
 }; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG9[8] = {
   /* 0 */  { "(invalid)",   0, XX, XX, XX },
-  /* 1 */  { "cmpxchg8b",   0, Ev, XX, XX },
+  /* 1 */  { "cmpxchg8b",   0, Mq, XX, XX },
   /* 2 */  { "(invalid)",   0, XX, XX, XX },
   /* 3 */  { "(invalid)",   0, XX, XX, XX },
   /* 4 */  { "(invalid)",   0, XX, XX, XX },
@@ -1520,98 +1524,98 @@ static BxDisasmOpcodeInfo_t BxDisasm3DNowGroup[256] = {
 
   // D8 (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupD8[8] = { 
-  /* 0 */  { "fadd",        0, Md, XX, XX },
-  /* 1 */  { "fmul",        0, Md, XX, XX },
-  /* 2 */  { "fcom",        0, Md, XX, XX },
-  /* 3 */  { "fcomp",       0, Md, XX, XX },
-  /* 4 */  { "fsub",        0, Md, XX, XX },
-  /* 5 */  { "fsubr",       0, Md, XX, XX },
-  /* 6 */  { "fdiv",        0, Md, XX, XX },
-  /* 7 */  { "fdivpr",      0, Md, XX, XX }
+  /* 0 */  { "faddL",       0, Md, XX, XX },
+  /* 1 */  { "fmulL",       0, Md, XX, XX },
+  /* 2 */  { "fcomL",       0, Md, XX, XX },
+  /* 3 */  { "fcompL",      0, Md, XX, XX },
+  /* 4 */  { "fsubL",       0, Md, XX, XX },
+  /* 5 */  { "fsubrL",      0, Md, XX, XX },
+  /* 6 */  { "fdivL",       0, Md, XX, XX },
+  /* 7 */  { "fdivprL",     0, Md, XX, XX }
 };
 
   // D9 (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupD9[8] = { 
-  /* 0 */  { "fld",         0, Md, XX, XX },
+  /* 0 */  { "fldL",        0, Md, XX, XX },
   /* 1 */  { "(invalid)",   0, XX, XX, XX },
-  /* 2 */  { "fst",         0, Md, XX, XX },
-  /* 3 */  { "fstp",        0, Md, XX, XX },
+  /* 2 */  { "fstL",        0, Md, XX, XX },
+  /* 3 */  { "fstpL",       0, Md, XX, XX },
   /* 4 */  { "fldenv",      0, Mx, XX, XX },
-  /* 5 */  { "fldcw",       0, Ew, XX, XX },
+  /* 5 */  { "fldcwW",      0, Ew, XX, XX },
   /* 6 */  { "fnstenv",     0, Mx, XX, XX },
-  /* 7 */  { "fnstcw",      0, Mw, XX, XX }
+  /* 7 */  { "fnstcwW",     0, Mw, XX, XX }
 };
 
   // DA (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDA[8] = { 
-  /* 0 */  { "fiadd",       0, Md, XX, XX },
-  /* 1 */  { "fimul",       0, Md, XX, XX },
-  /* 2 */  { "ficom",       0, Md, XX, XX },
-  /* 3 */  { "ficomp",      0, Md, XX, XX },
-  /* 4 */  { "fisub",       0, Md, XX, XX },
-  /* 5 */  { "fisubr",      0, Md, XX, XX },
-  /* 6 */  { "fidiv",       0, Md, XX, XX },
-  /* 7 */  { "fidivr",      0, Md, XX, XX }
+  /* 0 */  { "fiaddL",      0, Md, XX, XX },
+  /* 1 */  { "fimulL",      0, Md, XX, XX },
+  /* 2 */  { "ficomL",      0, Md, XX, XX },
+  /* 3 */  { "ficompL",     0, Md, XX, XX },
+  /* 4 */  { "fisubL",      0, Md, XX, XX },
+  /* 5 */  { "fisubrL",     0, Md, XX, XX },
+  /* 6 */  { "fidivL",      0, Md, XX, XX },
+  /* 7 */  { "fidivrL",     0, Md, XX, XX }
 };
 
   // DB (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDB[8] = { 
-  /* 0 */  { "fild",        0, Md, XX, XX },
-  /* 1 */  { "fisttp",      0, Md, XX, XX },
-  /* 2 */  { "fist",        0, Md, XX, XX },
-  /* 3 */  { "fistp",       0, Md, XX, XX },
+  /* 0 */  { "fildL",       0, Md, XX, XX },
+  /* 1 */  { "fisttpL",     0, Md, XX, XX },
+  /* 2 */  { "fistL",       0, Md, XX, XX },
+  /* 3 */  { "fistpL",      0, Md, XX, XX },
   /* 4 */  { "(invalid)",   0, XX, XX, XX },
-  /* 5 */  { "fld",         0, Mt, XX, XX },
+  /* 5 */  { "fldT",        0, Mt, XX, XX },
   /* 6 */  { "(invalid)",   0, XX, XX, XX },
-  /* 7 */  { "fstp",        0, Mt, XX, XX }
+  /* 7 */  { "fstpT",       0, Mt, XX, XX }
 };
 
   // DC (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDC[8] = { 
-  /* 0 */  { "fadd",        0, Mq, XX, XX },
-  /* 1 */  { "fmul",        0, Mq, XX, XX },
-  /* 2 */  { "fcom",        0, Mq, XX, XX },
-  /* 3 */  { "fcomp",       0, Mq, XX, XX },
-  /* 4 */  { "fsub",        0, Mq, XX, XX },
-  /* 5 */  { "fsubr",       0, Mq, XX, XX },
-  /* 6 */  { "fdiv",        0, Mq, XX, XX },
-  /* 7 */  { "fdivr",       0, Mq, XX, XX }
+  /* 0 */  { "faddQ",       0, Mq, XX, XX },
+  /* 1 */  { "fmulQ",       0, Mq, XX, XX },
+  /* 2 */  { "fcomQ",       0, Mq, XX, XX },
+  /* 3 */  { "fcompQ",      0, Mq, XX, XX },
+  /* 4 */  { "fsubQ",       0, Mq, XX, XX },
+  /* 5 */  { "fsubrQ",      0, Mq, XX, XX },
+  /* 6 */  { "fdivQ",       0, Mq, XX, XX },
+  /* 7 */  { "fdivrQ",      0, Mq, XX, XX }
 };
 
   // DD (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDD[8] = { 
-  /* 0 */  { "fld",         0, Mq, XX, XX },
-  /* 1 */  { "fisttp",      0, Mq, XX, XX },
-  /* 2 */  { "fst",         0, Mq, XX, XX },
-  /* 3 */  { "fstp",        0, Mq, XX, XX },
+  /* 0 */  { "fldQ",        0, Mq, XX, XX },
+  /* 1 */  { "fisttpQ",     0, Mq, XX, XX },
+  /* 2 */  { "fstQ",        0, Mq, XX, XX },
+  /* 3 */  { "fstpQ",       0, Mq, XX, XX },
   /* 4 */  { "frstor",      0, Mx, XX, XX },
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { "fnsave",      0, Mx, XX, XX },
-  /* 7 */  { "fnstsw",      0, Mw, XX, XX }
+  /* 7 */  { "fnstswW",     0, Mw, XX, XX }
 };
 
   // DE (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDE[8] = { 
-  /* 0 */  { "fiadd",       0, Mw, XX, XX },
-  /* 1 */  { "fimul",       0, Mw, XX, XX },
-  /* 2 */  { "ficom",       0, Mw, XX, XX },
-  /* 3 */  { "ficomp",      0, Mw, XX, XX },
-  /* 4 */  { "fisub",       0, Mw, XX, XX },
-  /* 5 */  { "fisubr",      0, Mw, XX, XX },
-  /* 6 */  { "fidiv",       0, Mw, XX, XX },
-  /* 7 */  { "fidivr",      0, Mw, XX, XX }
+  /* 0 */  { "fiaddW",      0, Mw, XX, XX },
+  /* 1 */  { "fimulW",      0, Mw, XX, XX },
+  /* 2 */  { "ficomW",      0, Mw, XX, XX },
+  /* 3 */  { "ficompW",     0, Mw, XX, XX },
+  /* 4 */  { "fisubW",      0, Mw, XX, XX },
+  /* 5 */  { "fisubrW",     0, Mw, XX, XX },
+  /* 6 */  { "fidivW",      0, Mw, XX, XX },
+  /* 7 */  { "fidivrW",     0, Mw, XX, XX }
 };
 
   // DF (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDF[8] = { 
-  /* 0 */  { "fild",        0, Mw, XX, XX },
-  /* 1 */  { "fisttp",      0, Mw, XX, XX },
-  /* 2 */  { "fist",        0, Mw, XX, XX },
-  /* 3 */  { "fistp",       0, Mw, XX, XX },
-  /* 4 */  { "fbld",        0, Mt, XX, XX },
-  /* 5 */  { "fild",        0, Mq, XX, XX },
-  /* 6 */  { "fbstp",       0, Mt, XX, XX },
-  /* 7 */  { "fistp",       0, Mq, XX, XX }
+  /* 0 */  { "fildW",       0, Mw, XX, XX },
+  /* 1 */  { "fisttpW",     0, Mw, XX, XX },
+  /* 2 */  { "fistW",       0, Mw, XX, XX },
+  /* 3 */  { "fistpW",      0, Mw, XX, XX },
+  /* 4 */  { "fbldT",       0, Mt, XX, XX },
+  /* 5 */  { "fildQ",       0, Mq, XX, XX },
+  /* 6 */  { "fbstpT",      0, Mt, XX, XX },
+  /* 7 */  { "fistpQ",      0, Mq, XX, XX }
 };
 
 // 512 entries for second byte of floating point instructions. (when mod==11b) 
@@ -2147,209 +2151,209 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodeInfoFP[512] = {
 
 static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   // 256 entries for single byte opcodes
-  /* 00 */  { "add",       0,  Eb,  Gb, XX },
-  /* 01 */  { "add",       0,  Ev,  Gv, XX },
-  /* 02 */  { "add",       0,  Gb,  Eb, XX },
-  /* 03 */  { "add",       0,  Gv,  Ev, XX },
-  /* 04 */  { "add",       0,  AL,  Ib, XX },
-  /* 05 */  { "add",       0, eAX,  Iv, XX },
+  /* 00 */  { "addB",      0,  Eb,  Gb, XX },
+  /* 01 */  { "addV",      0,  Ev,  Gv, XX },
+  /* 02 */  { "addB",      0,  Gb,  Eb, XX },
+  /* 03 */  { "addV",      0,  Gv,  Ev, XX },
+  /* 04 */  { "addB",      0,  AL,  Ib, XX },
+  /* 05 */  { "addV",      0, eAX,  Iv, XX },
   /* 06 */  { "push",      0,  ES,  XX, XX },
   /* 07 */  { "pop",       0,  ES,  XX, XX },
-  /* 08 */  { "or",        0,  Eb,  Gb, XX },
-  /* 09 */  { "or",        0,  Ev,  Gv, XX },
-  /* 0A */  { "or",        0,  Gb,  Eb, XX },
-  /* 0B */  { "or",        0,  Gv,  Ev, XX },
-  /* 0C */  { "or",        0,  AL,  Ib, XX },
-  /* 0D */  { "or",        0, eAX,  Iv, XX },
+  /* 08 */  { "orB",       0,  Eb,  Gb, XX },
+  /* 09 */  { "orV",       0,  Ev,  Gv, XX },
+  /* 0A */  { "orB",       0,  Gb,  Eb, XX },
+  /* 0B */  { "orV",       0,  Gv,  Ev, XX },
+  /* 0C */  { "orB",       0,  AL,  Ib, XX },
+  /* 0D */  { "orV",       0, eAX,  Iv, XX },
   /* 0E */  { "push",      0,  CS,  XX, XX },
   /* 0F */  { "(error)",   0,  XX,  XX, XX },   // 2 byte escape
-  /* 10 */  { "adc",       0,  Eb,  Gb, XX },
-  /* 11 */  { "adc",       0,  Ev,  Gv, XX },
-  /* 12 */  { "adc",       0,  Gb,  Eb, XX },
-  /* 13 */  { "adc",       0,  Gv,  Ev, XX },
-  /* 14 */  { "adc",       0,  AL,  Ib, XX },
-  /* 15 */  { "adc",       0, eAX,  Iv, XX },
+  /* 10 */  { "adcB",      0,  Eb,  Gb, XX },
+  /* 11 */  { "adcV",      0,  Ev,  Gv, XX },
+  /* 12 */  { "adcB",      0,  Gb,  Eb, XX },
+  /* 13 */  { "adcV",      0,  Gv,  Ev, XX },
+  /* 14 */  { "adcB",      0,  AL,  Ib, XX },
+  /* 15 */  { "adcV",      0, eAX,  Iv, XX },
   /* 16 */  { "push",      0,  SS,  XX, XX },
   /* 17 */  { "pop",       0,  SS,  XX, XX },
-  /* 18 */  { "sbb",       0,  Eb,  Gb, XX },
-  /* 19 */  { "sbb",       0,  Ev,  Gv, XX },
-  /* 1A */  { "sbb",       0,  Gb,  Eb, XX },
-  /* 1B */  { "sbb",       0,  Gv,  Ev, XX },
-  /* 1C */  { "sbb",       0,  AL,  Ib, XX },
-  /* 1D */  { "sbb",       0, eAX,  Iv, XX },
+  /* 18 */  { "sbbB",      0,  Eb,  Gb, XX },
+  /* 19 */  { "sbbV",      0,  Ev,  Gv, XX },
+  /* 1A */  { "sbbB",      0,  Gb,  Eb, XX },
+  /* 1B */  { "sbbV",      0,  Gv,  Ev, XX },
+  /* 1C */  { "sbbB",      0,  AL,  Ib, XX },
+  /* 1D */  { "sbbV",      0, eAX,  Iv, XX },
   /* 1E */  { "push",      0,  DS,  XX, XX },
   /* 1F */  { "pop",       0,  DS,  XX, XX },
-  /* 20 */  { "and",       0,  Eb,  Gb, XX },
-  /* 21 */  { "and",       0,  Ev,  Gv, XX },
-  /* 22 */  { "and",       0,  Gb,  Eb, XX },
-  /* 23 */  { "and",       0,  Gv,  Ev, XX },
-  /* 24 */  { "and",       0,  AL,  Ib, XX },
-  /* 25 */  { "and",       0, eAX,  Iv, XX },
+  /* 20 */  { "andB",      0,  Eb,  Gb, XX },
+  /* 21 */  { "andV",      0,  Ev,  Gv, XX },
+  /* 22 */  { "andB",      0,  Gb,  Eb, XX },
+  /* 23 */  { "andV",      0,  Gv,  Ev, XX },
+  /* 24 */  { "andB",      0,  AL,  Ib, XX },
+  /* 25 */  { "andV",      0, eAX,  Iv, XX },
   /* 26 */  { PREFIX_ES },      // ES:
   /* 27 */  { "daa",       0,  XX,  XX, XX },
-  /* 28 */  { "sub",       0,  Eb,  Gb, XX },
-  /* 29 */  { "sub",       0,  Ev,  Gv, XX },
-  /* 2A */  { "sub",       0,  Gb,  Eb, XX },
-  /* 2B */  { "sub",       0,  Gv,  Ev, XX },
-  /* 2C */  { "sub",       0,  AL,  Ib, XX },
-  /* 2D */  { "sub",       0, eAX,  Iv, XX },
+  /* 28 */  { "subB",      0,  Eb,  Gb, XX },
+  /* 29 */  { "subV",      0,  Ev,  Gv, XX },
+  /* 2A */  { "subB",      0,  Gb,  Eb, XX },
+  /* 2B */  { "subV",      0,  Gv,  Ev, XX },
+  /* 2C */  { "subB",      0,  AL,  Ib, XX },
+  /* 2D */  { "subV",      0, eAX,  Iv, XX },
   /* 2E */  { PREFIX_CS },      // CS:
   /* 2F */  { "das",       0,  XX,  XX, XX },
-  /* 30 */  { "xor",       0,  Eb,  Gb, XX },
-  /* 31 */  { "xor",       0,  Ev,  Gv, XX },
-  /* 32 */  { "xor",       0,  Gb,  Eb, XX },
-  /* 33 */  { "xor",       0,  Gv,  Ev, XX },
-  /* 34 */  { "xor",       0,  AL,  Ib, XX },
-  /* 35 */  { "xor",       0, eAX,  Iv, XX },
+  /* 30 */  { "xorB",      0,  Eb,  Gb, XX },
+  /* 31 */  { "xorV",      0,  Ev,  Gv, XX },
+  /* 32 */  { "xorB",      0,  Gb,  Eb, XX },
+  /* 33 */  { "xorV",      0,  Gv,  Ev, XX },
+  /* 34 */  { "xorB",      0,  AL,  Ib, XX },
+  /* 35 */  { "xorV",      0, eAX,  Iv, XX },
   /* 36 */  { PREFIX_SS },      // SS:
   /* 37 */  { "aaa",       0,  XX,  XX, XX },
-  /* 38 */  { "cmp",       0,  Eb,  Gb, XX },
-  /* 39 */  { "cmp",       0,  Ev,  Gv, XX },
-  /* 3A */  { "cmp",       0,  Gb,  Eb, XX },
-  /* 3B */  { "cmp",       0,  Gv,  Ev, XX },
-  /* 3C */  { "cmp",       0,  AL,  Ib, XX },
-  /* 3D */  { "cmp",       0, eAX,  Iv, XX },
+  /* 38 */  { "cmpB",      0,  Eb,  Gb, XX },
+  /* 39 */  { "cmpV",      0,  Ev,  Gv, XX },
+  /* 3A */  { "cmpB",      0,  Gb,  Eb, XX },
+  /* 3B */  { "cmpV",      0,  Gv,  Ev, XX },
+  /* 3C */  { "cmpB",      0,  AL,  Ib, XX },
+  /* 3D */  { "cmpV",      0, eAX,  Iv, XX },
   /* 3E */  { PREFIX_DS },      // DS:
   /* 3F */  { "aas",       0,  XX,  XX, XX },
-  /* 40 */  { "inc",       0, eAX,  XX, XX },
-  /* 41 */  { "inc",       0, eCX,  XX, XX },
-  /* 42 */  { "inc",       0, eDX,  XX, XX },
-  /* 43 */  { "inc",       0, eBX,  XX, XX },
-  /* 44 */  { "inc",       0, eSP,  XX, XX },
-  /* 45 */  { "inc",       0, eBP,  XX, XX },
-  /* 46 */  { "inc",       0, eSI,  XX, XX },
-  /* 47 */  { "inc",       0, eDI,  XX, XX },
-  /* 48 */  { "dec",       0, eAX,  XX, XX },
-  /* 49 */  { "dec",       0, eCX,  XX, XX },
-  /* 4A */  { "dec",       0, eDX,  XX, XX },
-  /* 4B */  { "dec",       0, eBX,  XX, XX },
-  /* 4C */  { "dec",       0, eSP,  XX, XX },
-  /* 4D */  { "dec",       0, eBP,  XX, XX },
-  /* 4E */  { "dec",       0, eSI,  XX, XX },
-  /* 4F */  { "dec",       0, eDI,  XX, XX },
-  /* 50 */  { "push",      0, eAX,  XX, XX },
-  /* 51 */  { "push",      0, eCX,  XX, XX },
-  /* 52 */  { "push",      0, eDX,  XX, XX },
-  /* 53 */  { "push",      0, eBX,  XX, XX },
-  /* 54 */  { "push",      0, eSP,  XX, XX },
-  /* 55 */  { "push",      0, eBP,  XX, XX },
-  /* 56 */  { "push",      0, eSI,  XX, XX },
-  /* 57 */  { "push",      0, eDI,  XX, XX },
-  /* 58 */  { "pop",       0, eAX,  XX, XX },
-  /* 59 */  { "pop",       0, eCX,  XX, XX },
-  /* 5A */  { "pop",       0, eDX,  XX, XX },
-  /* 5B */  { "pop",       0, eBX,  XX, XX },
-  /* 5C */  { "pop",       0, eSP,  XX, XX },
-  /* 5D */  { "pop",       0, eBP,  XX, XX },
-  /* 5E */  { "pop",       0, eSI,  XX, XX },
-  /* 5F */  { "pop",       0, eDI,  XX, XX },
+  /* 40 */  { "incV",      0, eAX,  XX, XX },
+  /* 41 */  { "incV",      0, eCX,  XX, XX },
+  /* 42 */  { "incV",      0, eDX,  XX, XX },
+  /* 43 */  { "incV",      0, eBX,  XX, XX },
+  /* 44 */  { "incV",      0, eSP,  XX, XX },
+  /* 45 */  { "incV",      0, eBP,  XX, XX },
+  /* 46 */  { "incV",      0, eSI,  XX, XX },
+  /* 47 */  { "incV",      0, eDI,  XX, XX },
+  /* 48 */  { "decV",      0, eAX,  XX, XX },
+  /* 49 */  { "decV",      0, eCX,  XX, XX },
+  /* 4A */  { "decV",      0, eDX,  XX, XX },
+  /* 4B */  { "decV",      0, eBX,  XX, XX },
+  /* 4C */  { "decV",      0, eSP,  XX, XX },
+  /* 4D */  { "decV",      0, eBP,  XX, XX },
+  /* 4E */  { "decV",      0, eSI,  XX, XX },
+  /* 4F */  { "decV",      0, eDI,  XX, XX },
+  /* 50 */  { "pushV",     0, eAX,  XX, XX },
+  /* 51 */  { "pushV",     0, eCX,  XX, XX },
+  /* 52 */  { "pushV",     0, eDX,  XX, XX },
+  /* 53 */  { "pushV",     0, eBX,  XX, XX },
+  /* 54 */  { "pushV",     0, eSP,  XX, XX },
+  /* 55 */  { "pushV",     0, eBP,  XX, XX },
+  /* 56 */  { "pushV",     0, eSI,  XX, XX },
+  /* 57 */  { "pushV",     0, eDI,  XX, XX },
+  /* 58 */  { "popV",      0, eAX,  XX, XX },
+  /* 59 */  { "popV",      0, eCX,  XX, XX },
+  /* 5A */  { "popV",      0, eDX,  XX, XX },
+  /* 5B */  { "popV",      0, eBX,  XX, XX },
+  /* 5C */  { "popV",      0, eSP,  XX, XX },
+  /* 5D */  { "popV",      0, eBP,  XX, XX },
+  /* 5E */  { "popV",      0, eSI,  XX, XX },
+  /* 5F */  { "popV",      0, eDI,  XX, XX },
   /* 60 */  { "pushad",    0,  XX,  XX, XX },
   /* 61 */  { "popad",     0,  XX,  XX, XX },
-  /* 62 */  { "bound",     0,  Gv,  Mx, XX },
-  /* 63 */  { "arpl",      0,  Ew,  Rw, XX },
+  /* 62 */  { "boundW",    0,  Gv,  Mx, XX },
+  /* 63 */  { "arplW",     0,  Ew,  Rw, XX },
   /* 64 */  { PREFIX_FS },      // FS:
   /* 65 */  { PREFIX_GS },      // GS:
   /* 66 */  { PREFIX_OPSIZE },
   /* 67 */  { PREFIX_ADDRSIZE },
-  /* 68 */  { "push",      0,  Iv,  XX, XX },
-  /* 69 */  { "imul",      0,  Gv,  Ev, Iv },
-  /* 6A */  { "push",      0, sIb,  XX, XX },   // sign extended immediate
-  /* 6B */  { "imul",      0,  Gv,  Ev, sIb },   
-  /* 6C */  { "ins",       0,  Yb,  DX, XX },
-  /* 6D */  { "ins",       0,  Yv,  DX, XX },
-  /* 6E */  { "outs",      0,  DX,  Xb, XX },
-  /* 6F */  { "outs",      0,  DX,  Xv, XX },
-  /* 70 */  { "jo",        _COND_JUMP, Jb, XX, XX },
-  /* 71 */  { "jno",       _COND_JUMP, Jb, XX, XX },
-  /* 72 */  { "jb",        _COND_JUMP, Jb, XX, XX },
-  /* 73 */  { "jnb",       _COND_JUMP, Jb, XX, XX },
-  /* 74 */  { "jz",        _COND_JUMP, Jb, XX, XX },
-  /* 75 */  { "jnz",       _COND_JUMP, Jb, XX, XX },
-  /* 76 */  { "jbe",       _COND_JUMP, Jb, XX, XX },
-  /* 77 */  { "jnbe",      _COND_JUMP, Jb, XX, XX },
-  /* 78 */  { "js",        _COND_JUMP, Jb, XX, XX },
-  /* 79 */  { "jns",       _COND_JUMP, Jb, XX, XX },
-  /* 7A */  { "jp",        _COND_JUMP, Jb, XX, XX },
-  /* 7B */  { "jnp",       _COND_JUMP, Jb, XX, XX },
-  /* 7C */  { "jl",        _COND_JUMP, Jb, XX, XX },
-  /* 7D */  { "jnl",       _COND_JUMP, Jb, XX, XX },
-  /* 7E */  { "jle",       _COND_JUMP, Jb, XX, XX },
-  /* 7F */  { "jnle",      _COND_JUMP, Jb, XX, XX },
+  /* 68 */  { "pushV",     0,  Iv,  XX, XX },
+  /* 69 */  { "imulV",     0,  Gv,  Ev, Iv },
+  /* 6A */  { "pushV",     0, sIb,  XX, XX },   // sign extended immediate
+  /* 6B */  { "imulV",     0,  Gv,  Ev, sIb },   
+  /* 6C */  { "insb",      0,  Yb,  DX, XX },
+  /* 6D */  { "insO",      0,  Yv,  DX, XX },
+  /* 6E */  { "outsb",     0,  DX,  Xb, XX },
+  /* 6F */  { "outsO",     0,  DX,  Xv, XX },
+  /* 70 */  { "jo",        0,  Jb,  XX, Cond_Jump },
+  /* 71 */  { "jno",       0,  Jb,  XX, Cond_Jump },
+  /* 72 */  { "jb",        0,  Jb,  XX, Cond_Jump },
+  /* 73 */  { "jnb",       0,  Jb,  XX, Cond_Jump },
+  /* 74 */  { "jz",        0,  Jb,  XX, Cond_Jump },
+  /* 75 */  { "jnz",       0,  Jb,  XX, Cond_Jump },
+  /* 76 */  { "jbe",       0,  Jb,  XX, Cond_Jump },
+  /* 77 */  { "jnbe",      0,  Jb,  XX, Cond_Jump },
+  /* 78 */  { "js",        0,  Jb,  XX, Cond_Jump },
+  /* 79 */  { "jns",       0,  Jb,  XX, Cond_Jump },
+  /* 7A */  { "jp",        0,  Jb,  XX, Cond_Jump },
+  /* 7B */  { "jnp",       0,  Jb,  XX, Cond_Jump },
+  /* 7C */  { "jl",        0,  Jb,  XX, Cond_Jump },
+  /* 7D */  { "jnl",       0,  Jb,  XX, Cond_Jump },
+  /* 7E */  { "jle",       0,  Jb,  XX, Cond_Jump },
+  /* 7F */  { "jnle",      0,  Jb,  XX, Cond_Jump },
   /* 80 */  { GRPN(G1EbIb) },
   /* 81 */  { GRPN(G1EvIv) },
   /* 82 */  { "(invalid)", 0,  XX,  XX, XX },
   /* 83 */  { GRPN(G1EvIb) },
-  /* 84 */  { "test",      0,  Eb,  Gb, XX },
-  /* 85 */  { "test",      0,  Ev,  Gv, XX },
-  /* 86 */  { "xchg",      0,  Eb,  Gb, XX },
-  /* 87 */  { "xchg",      0,  Ev,  Gv, XX },
-  /* 88 */  { "mov",       0,  Eb,  Gb, XX },
-  /* 89 */  { "mov",       0,  Ev,  Gv, XX },
-  /* 8A */  { "mov",       0,  Gb,  Eb, XX },
-  /* 8B */  { "mov",       0,  Gv,  Ev, XX },
-  /* 8C */  { "mov",       0,  Ew,  Sw, XX },
-  /* 8D */  { "lea",       0,  Gv,  Mv, XX },
-  /* 8E */  { "mov",       0,  Sw,  Ew, XX },
-  /* 8F */  { "pop",       0,  Ev,  XX, XX },
+  /* 84 */  { "testB",     0,  Eb,  Gb, XX },
+  /* 85 */  { "testV",     0,  Ev,  Gv, XX },
+  /* 86 */  { "xchgB",     0,  Eb,  Gb, XX },
+  /* 87 */  { "xchgV",     0,  Ev,  Gv, XX },
+  /* 88 */  { "movB",      0,  Eb,  Gb, XX },
+  /* 89 */  { "movV",      0,  Ev,  Gv, XX },
+  /* 8A */  { "movB",      0,  Gb,  Eb, XX },
+  /* 8B */  { "movV",      0,  Gv,  Ev, XX },
+  /* 8C */  { "movW",      0,  Ew,  Sw, XX },
+  /* 8D */  { "leaV",      0,  Gv,  Mv, XX },
+  /* 8E */  { "movW",      0,  Sw,  Ew, XX },
+  /* 8F */  { "popV",      0,  Ev,  XX, XX },
   /* 90 */  { "nop",       0,  XX,  XX, XX },
-  /* 91 */  { "xchg",      0, eCX, eAX, XX },
-  /* 92 */  { "xchg",      0, eDX, eAX, XX },
-  /* 93 */  { "xchg",      0, eBX, eAX, XX },
-  /* 94 */  { "xchg",      0, eSP, eAX, XX },
-  /* 95 */  { "xchg",      0, eBP, eAX, XX },
-  /* 96 */  { "xchg",      0, eSI, eAX, XX },
-  /* 97 */  { "xchg",      0, eDI, eAX, XX },
+  /* 91 */  { "xchgV",     0, eCX, eAX, XX },
+  /* 92 */  { "xchgV",     0, eDX, eAX, XX },
+  /* 93 */  { "xchgV",     0, eBX, eAX, XX },
+  /* 94 */  { "xchgV",     0, eSP, eAX, XX },
+  /* 95 */  { "xchgV",     0, eBP, eAX, XX },
+  /* 96 */  { "xchgV",     0, eSI, eAX, XX },
+  /* 97 */  { "xchgV",     0, eDI, eAX, XX },
   /* 98 */  { "cbw|cwde",  0,  XX,  XX, XX },
   /* 99 */  { "cwd|cdq",   0,  XX,  XX, XX },
-  /* 9A */  { "call",      0,  Ap,  XX, XX },
+  /* 9A */  { "call far",  0,  Ap,  XX, XX },
   /* 9B */  { "fwait",     0,  XX,  XX, XX },
   /* 9C */  { "pushf",     0,  XX,  XX, XX },
   /* 9D */  { "popf",      0,  XX,  XX, XX },
   /* 9E */  { "sahf",      0,  XX,  XX, XX },
   /* 9F */  { "lahf",      0,  XX,  XX, XX },
-  /* A0 */  { "mov",       0,  AL,  Ob, XX },
-  /* A1 */  { "mov",       0, eAX,  Ov, XX },
-  /* A2 */  { "mov",       0,  Ob,  AL, XX },
-  /* A3 */  { "mov",       0,  Ov, eAX, XX },
-  /* A4 */  { "movs",      0,  Yb,  Xb, XX },
-  /* A5 */  { "movs",      0,  Yv,  Xv, XX },
-  /* A6 */  { "cmps",      0,  Yb,  Xb, XX },
-  /* A7 */  { "cmps",      0,  Yv,  Xv, XX },
-  /* A8 */  { "test",      0,  AL,  Ib, XX },
-  /* A9 */  { "test",      0, eAX,  Iv, XX },
-  /* AA */  { "stos",      0,  Yb,  AL, XX },
-  /* AB */  { "stos",      0,  Yv, eAX, XX },
-  /* AC */  { "lods",      0,  AL,  Xb, XX },
-  /* AD */  { "lods",      0, eAX,  Xv, XX },
-  /* AE */  { "scas",      0,  Yb,  AL, XX },
-  /* AF */  { "scas",      0,  Yv, eAX, XX },
-  /* B0 */  { "mov",       0,  AL,  Ib, XX },
-  /* B1 */  { "mov",       0,  CL,  Ib, XX },
-  /* B2 */  { "mov",       0,  DL,  Ib, XX },
-  /* B3 */  { "mov",       0,  BL,  Ib, XX },
-  /* B4 */  { "mov",       0,  AH,  Ib, XX },
-  /* B5 */  { "mov",       0,  CH,  Ib, XX },
-  /* B6 */  { "mov",       0,  DH,  Ib, XX },
-  /* B7 */  { "mov",       0,  BH,  Ib, XX },
-  /* B8 */  { "mov",       0, eAX,  Iv, XX },   
-  /* B9 */  { "mov",       0, eCX,  Iv, XX },
-  /* BA */  { "mov",       0, eDX,  Iv, XX },
-  /* BB */  { "mov",       0, eBX,  Iv, XX },
-  /* BC */  { "mov",       0, eSP,  Iv, XX },
-  /* BD */  { "mov",       0, eBP,  Iv, XX },
-  /* BE */  { "mov",       0, eSI,  Iv, XX },
-  /* BF */  { "mov",       0, eDI,  Iv, XX },
+  /* A0 */  { "movB",      0,  AL,  Ob, XX },
+  /* A1 */  { "movV",      0, eAX,  Ov, XX },
+  /* A2 */  { "movB",      0,  Ob,  AL, XX },
+  /* A3 */  { "movV",      0,  Ov, eAX, XX },
+  /* A4 */  { "movsb",     0,  Yb,  Xb, XX },
+  /* A5 */  { "movsO",     0,  Yv,  Xv, XX },
+  /* A6 */  { "cmpsb",     0,  Yb,  Xb, XX },
+  /* A7 */  { "cmpsO",     0,  Yv,  Xv, XX },
+  /* A8 */  { "testB",     0,  AL,  Ib, XX },
+  /* A9 */  { "testV",     0, eAX,  Iv, XX },
+  /* AA */  { "stosb",     0,  Yb,  AL, XX },
+  /* AB */  { "stosO",     0,  Yv, eAX, XX },
+  /* AC */  { "lodsb",     0,  AL,  Xb, XX },
+  /* AD */  { "lodsO",     0, eAX,  Xv, XX },
+  /* AE */  { "scasb",     0,  Yb,  AL, XX },
+  /* AF */  { "scasO",     0,  Yv, eAX, XX },
+  /* B0 */  { "movB",      0,  AL,  Ib, XX },
+  /* B1 */  { "movB",      0,  CL,  Ib, XX },
+  /* B2 */  { "movB",      0,  DL,  Ib, XX },
+  /* B3 */  { "movB",      0,  BL,  Ib, XX },
+  /* B4 */  { "movB",      0,  AH,  Ib, XX },
+  /* B5 */  { "movB",      0,  CH,  Ib, XX },
+  /* B6 */  { "movB",      0,  DH,  Ib, XX },
+  /* B7 */  { "movB",      0,  BH,  Ib, XX },
+  /* B8 */  { "movV",      0, eAX,  Iv, XX },   
+  /* B9 */  { "movV",      0, eCX,  Iv, XX },
+  /* BA */  { "movV",      0, eDX,  Iv, XX },
+  /* BB */  { "movV",      0, eBX,  Iv, XX },
+  /* BC */  { "movV",      0, eSP,  Iv, XX },
+  /* BD */  { "movV",      0, eBP,  Iv, XX },
+  /* BE */  { "movV",      0, eSI,  Iv, XX },
+  /* BF */  { "movV",      0, eDI,  Iv, XX },
   /* C0 */  { GRPN(G2Eb) },
   /* C1 */  { GRPN(G2Ev) },
-  /* C2 */  { "retn",      0,  Iw,  XX, XX },
+  /* C2 */  { "retnW",     0,  Iw,  XX, XX },
   /* C3 */  { "retn",      0,  XX,  XX, XX },
   /* C4 */  { "les",       0,  Gv,  Mp, XX },
   /* C5 */  { "lds",       0,  Gv,  Mp, XX },
-  /* C6 */  { "mov",       0,  Eb,  Ib, XX },
-  /* C7 */  { "mov",       0,  Ev,  Iv, XX },
+  /* C6 */  { "movB",      0,  Eb,  Ib, XX },
+  /* C7 */  { "movV",      0,  Ev,  Iv, XX },
   /* C8 */  { "enter",     0,  Iw,  Ib, XX },
   /* C9 */  { "leave",     0,  XX,  XX, XX },
-  /* CA */  { "retf",      0,  Iw,  XX, XX },
+  /* CA */  { "retfW",     0,  Iw,  XX, XX },
   /* CB */  { "retf",      0,  XX,  XX, XX },
   /* CC */  { "int3",      0,  XX,  XX, XX },
   /* CD */  { "int",       0,  Ib,  XX, XX },
@@ -2375,18 +2379,18 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* E1 */  { "loope",     0,  Jb,  XX, XX },
   /* E2 */  { "loop",      0,  Jb,  XX, XX },
   /* E3 */  { "jcxz",      0,  Jb,  XX, XX },
-  /* E4 */  { "in",        0,  AL,  Ib, XX },
-  /* E5 */  { "in",        0, eAX,  Ib, XX },
-  /* E6 */  { "out",       0,  Ib,  AL, XX },
-  /* E7 */  { "out",       0,  Ib, eAX, XX },
-  /* E8 */  { "call",      0,  Jv,  XX, XX },
-  /* E9 */  { "jmp",       0,  Jv,  XX, XX },
-  /* EA */  { "jmp",       0,  Ap,  XX, XX },
-  /* EB */  { "jmp",       0,  Jb,  XX, XX },
-  /* EC */  { "in",        0,  AL,  DX, XX },
-  /* ED */  { "in",        0, eAX,  DX, XX },
-  /* EE */  { "out",       0,  DX,  AL, XX },
-  /* EF */  { "out",       0,  DX, eAX, XX },
+  /* E4 */  { "inB",       0,  AL,  Ib, XX },
+  /* E5 */  { "inV",       0, eAX,  Ib, XX },
+  /* E6 */  { "outB",      0,  Ib,  AL, XX },
+  /* E7 */  { "outV",      0,  Ib, eAX, XX },
+  /* E8 */  { "callV",     0,  Jv,  XX, XX },
+  /* E9 */  { "jmpV",      0,  Jv,  XX, XX },
+  /* EA */  { "jmp far",   0,  Ap,  XX, XX },
+  /* EB */  { "jmpB",      0,  Jb,  XX, XX },
+  /* EC */  { "inB",       0,  AL,  DX, XX },
+  /* ED */  { "inV",       0, eAX,  DX, XX },
+  /* EE */  { "outB",      0,  DX,  AL, XX },
+  /* EF */  { "outV",      0,  DX, eAX, XX },
   /* F0 */  { PREFIX_LOCK },    // LOCK:
   /* F1 */  { "int1",      0,  XX,  XX, XX },
   /* F2 */  { PREFIX_REPNE },   // REPNE:
@@ -2407,8 +2411,8 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   // 256 entries for two byte opcodes
   /* 0F 00 */  { GRPN(G6) },
   /* 0F 01 */  { GRPN(G7) },
-  /* 0F 02 */  { "lar",       0,  Gv,  Ew, XX },
-  /* 0F 03 */  { "lsl",       0,  Gv,  Ew, XX },
+  /* 0F 02 */  { "larV",      0,  Gv,  Ew, XX },
+  /* 0F 03 */  { "lslV",      0,  Gv,  Ew, XX },
   /* 0F 04 */  { "(invalid)", 0,  XX,  XX, XX },
   /* 0F 05 */  { "syscall",   0,  XX,  XX, XX },
   /* 0F 06 */  { "clts",      0,  XX,  XX, XX },
@@ -2533,86 +2537,86 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 0F 7D */  { GRPSSE(0f7d) },
   /* 0F 7E */  { GRPSSE(0f7e) },
   /* 0F 7F */  { GRPSSE(0f7f) },
-  /* 0F 80 */  { "jo",         _COND_JUMP, Jv, XX, XX },
-  /* 0F 81 */  { "jno",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 82 */  { "jb",         _COND_JUMP, Jv, XX, XX },
-  /* 0F 83 */  { "jnb",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 84 */  { "jz",         _COND_JUMP, Jv, XX, XX },
-  /* 0F 85 */  { "jnz",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 86 */  { "jbe",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 87 */  { "jnbe",       _COND_JUMP, Jv, XX, XX },
-  /* 0F 88 */  { "js",         _COND_JUMP, Jv, XX, XX },
-  /* 0F 89 */  { "jns",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 8A */  { "jp",         _COND_JUMP, Jv, XX, XX },
-  /* 0F 8B */  { "jnp",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 8C */  { "jl",         _COND_JUMP, Jv, XX, XX },
-  /* 0F 8D */  { "jnl",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 8E */  { "jle",        _COND_JUMP, Jv, XX, XX },
-  /* 0F 8F */  { "jnle",       _COND_JUMP, Jv, XX, XX },
-  /* 0F 90 */  { "seto",       0,  Eb,  XX, XX },
-  /* 0F 91 */  { "setno",      0,  Eb,  XX, XX },
-  /* 0F 92 */  { "setb",       0,  Eb,  XX, XX },
-  /* 0F 93 */  { "setnb",      0,  Eb,  XX, XX },
-  /* 0F 94 */  { "setz",       0,  Eb,  XX, XX },
-  /* 0F 95 */  { "setnz",      0,  Eb,  XX, XX },
-  /* 0F 96 */  { "setbe",      0,  Eb,  XX, XX },
-  /* 0F 97 */  { "setnbe",     0,  Eb,  XX, XX },
-  /* 0F 98 */  { "sets",       0,  Eb,  XX, XX },
-  /* 0F 99 */  { "setns",      0,  Eb,  XX, XX },
-  /* 0F 9A */  { "setp",       0,  Eb,  XX, XX },
-  /* 0F 9B */  { "setnp",      0,  Eb,  XX, XX },
-  /* 0F 9C */  { "setl",       0,  Eb,  XX, XX },
-  /* 0F 9D */  { "setnl",      0,  Eb,  XX, XX },
-  /* 0F 9E */  { "setle",      0,  Eb,  XX, XX },
-  /* 0F 9F */  { "setnle",     0,  Eb,  XX, XX },
+  /* 0F 80 */  { "jo",         0,  Jv,  XX, Cond_Jump },
+  /* 0F 81 */  { "jno",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 82 */  { "jb",         0,  Jv,  XX, Cond_Jump },
+  /* 0F 83 */  { "jnb",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 84 */  { "jz",         0,  Jv,  XX, Cond_Jump },
+  /* 0F 85 */  { "jnz",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 86 */  { "jbe",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 87 */  { "jnbe",       0,  Jv,  XX, Cond_Jump },
+  /* 0F 88 */  { "js",         0,  Jv,  XX, Cond_Jump },
+  /* 0F 89 */  { "jns",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 8A */  { "jp",         0,  Jv,  XX, Cond_Jump },
+  /* 0F 8B */  { "jnp",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 8C */  { "jl",         0,  Jv,  XX, Cond_Jump },
+  /* 0F 8D */  { "jnl",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 8E */  { "jle",        0,  Jv,  XX, Cond_Jump },
+  /* 0F 8F */  { "jnle",       0,  Jv,  XX, Cond_Jump },
+  /* 0F 90 */  { "setoB",      0,  Eb,  XX, XX },
+  /* 0F 91 */  { "setnoB",     0,  Eb,  XX, XX },
+  /* 0F 92 */  { "setbB",      0,  Eb,  XX, XX },
+  /* 0F 93 */  { "setnbB",     0,  Eb,  XX, XX },
+  /* 0F 94 */  { "setzB",      0,  Eb,  XX, XX },
+  /* 0F 95 */  { "setnzB",     0,  Eb,  XX, XX },
+  /* 0F 96 */  { "setbeB",     0,  Eb,  XX, XX },
+  /* 0F 97 */  { "setnbeB",    0,  Eb,  XX, XX },
+  /* 0F 98 */  { "setsB",      0,  Eb,  XX, XX },
+  /* 0F 99 */  { "setnsB",     0,  Eb,  XX, XX },
+  /* 0F 9A */  { "setpB",      0,  Eb,  XX, XX },
+  /* 0F 9B */  { "setnpB",     0,  Eb,  XX, XX },
+  /* 0F 9C */  { "setlB",      0,  Eb,  XX, XX },
+  /* 0F 9D */  { "setnlB",     0,  Eb,  XX, XX },
+  /* 0F 9E */  { "setleB",     0,  Eb,  XX, XX },
+  /* 0F 9F */  { "setnleB",    0,  Eb,  XX, XX },
   /* 0F A0 */  { "push",       0,  FS,  XX, XX },
   /* 0F A1 */  { "pop",        0,  FS,  XX, XX },
   /* 0F A2 */  { "cpuid",      0,  XX,  XX, XX },
-  /* 0F A3 */  { "bt",         0,  Ev,  Gv, XX },
-  /* 0F A4 */  { "shld",       0,  Ev,  Gv, Ib },
-  /* 0F A5 */  { "shld",       0,  Ev,  Gv, CL },
+  /* 0F A3 */  { "btV",        0,  Ev,  Gv, XX },
+  /* 0F A4 */  { "shldV",      0,  Ev,  Gv, Ib },
+  /* 0F A5 */  { "shldV",      0,  Ev,  Gv, CL },
   /* 0F A6 */  { "(invalid)",  0,  XX,  XX, XX },
   /* 0F A7 */  { "(invalid)",  0,  XX,  XX, XX },
   /* 0F A8 */  { "push",       0,  GS,  XX, XX },
   /* 0F A9 */  { "pop",        0,  GS,  XX, XX },
   /* 0F AA */  { "rsm",        0,  XX,  XX, XX },
-  /* 0F AB */  { "bts",        0,  Ev,  Gv, XX },
-  /* 0F AC */  { "shrd",       0,  Ev,  Gv, Ib },
-  /* 0F AD */  { "shrd",       0,  Ev,  Gv, CL },
+  /* 0F AB */  { "btsV",       0,  Ev,  Gv, XX },
+  /* 0F AC */  { "shrdV",      0,  Ev,  Gv, Ib },
+  /* 0F AD */  { "shrdV",      0,  Ev,  Gv, CL },
   /* 0F AE */  { GRPN(G15) },
-  /* 0F AF */  { "imul",       0,  Gv,  Ev, XX },
-  /* 0F B0 */  { "cmpxchg",    0,  Eb,  Gb, XX },
-  /* 0F B1 */  { "cmpxchg",    0,  Ev,  Gv, XX },
+  /* 0F AF */  { "imulV",      0,  Gv,  Ev, XX },
+  /* 0F B0 */  { "cmpxchgB",   0,  Eb,  Gb, XX },
+  /* 0F B1 */  { "cmpxchgV",   0,  Ev,  Gv, XX },
   /* 0F B2 */  { "lss",        0,  Mp,  XX, XX },
-  /* 0F B3 */  { "btr",        0,  Ev,  Gv, XX },
+  /* 0F B3 */  { "btrV",       0,  Ev,  Gv, XX },
   /* 0F B4 */  { "lfs",        0,  Mp,  XX, XX },
   /* 0F B5 */  { "lgs",        0,  Mp,  XX, XX },
-  /* 0F B6 */  { "movzx",      0,  Gv,  Eb, XX },
-  /* 0F B7 */  { "movzx",      0,  Gv,  Ew, XX },
+  /* 0F B6 */  { "movzX",      0,  Gv,  Eb, XX },
+  /* 0F B7 */  { "movzX",      0,  Gv,  Ew, XX },
   /* 0F B8 */  { "(invalid)",  0,  XX,  XX, XX },       
   /* 0F B9 */  { "ud2b",       0,  XX,  XX, XX },
   /* 0F BA */  { GRPN(G8EvIb) },
-  /* 0F BB */  { "btc",        0,  Ev,  Gv, XX },
-  /* 0F BC */  { "bsf",        0,  Gv,  Ev, XX },
-  /* 0F BD */  { "bsr",        0,  Gv,  Ev, XX },
-  /* 0F BE */  { "movsx",      0,  Gv,  Eb, XX },
-  /* 0F BF */  { "movsx",      0,  Gv,  Ew, XX },
-  /* 0F C0 */  { "xadd",       0,  Eb,  Gb, XX },
-  /* 0F C1 */  { "xadd",       0,  Ev,  Gv, XX },
+  /* 0F BB */  { "btcV",       0,  Ev,  Gv, XX },
+  /* 0F BC */  { "bsfV",       0,  Gv,  Ev, XX },
+  /* 0F BD */  { "bsrV",       0,  Gv,  Ev, XX },
+  /* 0F BE */  { "movsX",      0,  Gv,  Eb, XX },
+  /* 0F BF */  { "movsX",      0,  Gv,  Ew, XX },
+  /* 0F C0 */  { "xaddB",      0,  Eb,  Gb, XX },
+  /* 0F C1 */  { "xaddV",      0,  Ev,  Gv, XX },
   /* 0F C2 */  { GRPSSE(0fc2) },
   /* 0F C3 */  { GRPSSE(0fc3) },
   /* 0F C4 */  { GRPSSE(0fc4) },
   /* 0F C5 */  { GRPSSE(0fc5) },
   /* 0F C6 */  { GRPSSE(0fc6) },
   /* 0F C7 */  { GRPN(G9) },
-  /* 0F C8 */  { "bswap",      0, eAX,  XX, XX },
-  /* 0F C9 */  { "bswap",      0, eCX,  XX, XX },
-  /* 0F CA */  { "bswap",      0, eDX,  XX, XX },
-  /* 0F CB */  { "bswap",      0, eBX,  XX, XX },
-  /* 0F CC */  { "bswap",      0, eSP,  XX, XX },
-  /* 0F CD */  { "bswap",      0, eBP,  XX, XX },
-  /* 0F CE */  { "bswap",      0, eSI,  XX, XX },
-  /* 0F CF */  { "bswap",      0, eDI,  XX, XX },
+  /* 0F C8 */  { "bswapV",     0, eAX,  XX, XX },
+  /* 0F C9 */  { "bswapV",     0, eCX,  XX, XX },
+  /* 0F CA */  { "bswapV",     0, eDX,  XX, XX },
+  /* 0F CB */  { "bswapV",     0, eBX,  XX, XX },
+  /* 0F CC */  { "bswapV",     0, eSP,  XX, XX },
+  /* 0F CD */  { "bswapV",     0, eBP,  XX, XX },
+  /* 0F CE */  { "bswapV",     0, eSI,  XX, XX },
+  /* 0F CF */  { "bswapV",     0, eDI,  XX, XX },
   /* 0F D0 */  { GRPSSE(0fd0) },
   /* 0F D1 */  { GRPSSE(0fd1) },
   /* 0F D2 */  { GRPSSE(0fd2) },

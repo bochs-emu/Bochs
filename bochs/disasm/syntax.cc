@@ -142,6 +142,54 @@ void disassembler::set_syntax_intel()
   initialize_modrm_segregs();
 }
 
+void disassembler::print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry)
+{
+  // print opcode
+  dis_sprintf("%s", entry->Opcode);
+
+  // patch opcode
+  disbufptr --;
+
+  switch(*disbufptr) {
+  case 'B':
+  case 'W':
+  case 'V':
+  case 'L':
+  case 'Q':
+  case 'T':
+    break;
+
+  case 'X':  // movsx or movzx
+    dis_sprintf("x");
+    break;
+
+  case 'O':  // string
+    if (i32bit_opsize)
+      dis_sprintf("d");
+    else
+      dis_sprintf("w");
+    break;
+
+  default:
+    disbufptr ++;
+    break;
+  }
+
+  dis_sprintf(" ");
+
+  if (entry->Operand1) {
+    (this->*entry->Operand1)(entry->Op1Attr);
+  }
+  if (entry->Operand2) {
+    dis_sprintf(", ");
+    (this->*entry->Operand2)(entry->Op2Attr);
+  }
+  if (entry->Operand3) {
+    dis_sprintf(", ");
+    (this->*entry->Operand3)(entry->Op3Attr);
+  }
+}
+
 //////////////////
 // AT&T STYLE
 //////////////////
@@ -160,4 +208,94 @@ void disassembler::set_syntax_att()
   index_name32 = att_index_name32;
 
   initialize_modrm_segregs();
+}
+
+void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
+{
+  // print opcode
+  dis_sprintf("%s", entry->Opcode);
+
+  // patch opcode
+  disbufptr --;
+
+  switch(*disbufptr) {
+  case 'B':
+    dis_sprintf("b");
+    break;
+
+  case 'W':
+    dis_sprintf("w");
+    break;
+
+  case 'O':
+    if (i32bit_opsize)
+      dis_sprintf("d");
+    else
+      dis_sprintf("w");
+    break;
+
+  case 'V':
+    if (i32bit_opsize)
+      dis_sprintf("l");
+    else
+      dis_sprintf("w");
+    break;
+
+  case 'L':
+    dis_sprintf("l");
+    break;
+
+  case 'Q':
+    dis_sprintf("q");
+    break;
+
+  case 'T':
+    dis_sprintf("t");
+    break;
+
+  case 'X':
+    if (entry->Op2Attr == B_SIZE)
+      dis_sprintf("b");
+    else if (entry->Op2Attr == W_SIZE)
+      dis_sprintf("w");
+    else if (entry->Op2Attr == D_SIZE)
+      dis_sprintf("l");
+    else
+      printf("Internal disassembler error !\n");
+
+    if (entry->Op1Attr == W_SIZE)
+      dis_sprintf("w");
+    else if (entry->Op1Attr == D_SIZE)
+      dis_sprintf("l");
+    else if (entry->Op1Attr == Q_SIZE)
+      dis_sprintf("q");
+    else if (entry->Op1Attr == V_SIZE)
+    {
+      if (i32bit_opsize)
+        dis_sprintf("l");
+      else
+        dis_sprintf("w");
+    }
+    else
+      printf("Internal disassembler error !\n");
+    break;
+
+  default:
+    disbufptr ++;
+    break;
+  }
+
+  dis_sprintf(" ");
+
+  if (entry->Operand3) {                                         
+    (this->*entry->Operand3)(entry->Op3Attr);
+    dis_sprintf(", ");
+  }
+  if (entry->Operand2) {
+    (this->*entry->Operand2)(entry->Op2Attr);
+    dis_sprintf(", ");
+  }
+  if (entry->Operand1) {
+    (this->*entry->Operand1)(entry->Op1Attr);
+  }
 }

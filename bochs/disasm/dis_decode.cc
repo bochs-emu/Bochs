@@ -141,7 +141,7 @@ unsigned disassembler::disasm(bx_bool is_32,
           break;
 
          default:
-          printf("Internal disassembler error !");
+          printf("Internal disassembler error !\n");
           return 0;
       }
 
@@ -162,8 +162,6 @@ unsigned disassembler::disasm(bx_bool is_32,
   int attr = entry->Attr;
   while(attr) 
   {
-    if (attr == _COND_JUMP) break;
- 
     switch(attr) {
        case _GROUPN:
          entry = &(entry->AnotherArray[nnn]);
@@ -199,7 +197,7 @@ unsigned disassembler::disasm(bx_bool is_32,
          break;
 
        default:
-         printf("Internal disassembler error !");
+         printf("Internal disassembler error !\n");
          return 0;
     }
 
@@ -210,45 +208,23 @@ unsigned disassembler::disasm(bx_bool is_32,
   // print prefixes
   for(unsigned i=0;i<n_prefixes;i++)
   {
-     if (*(instr+i) == 0xF3 || *(instr+i) == 0xF2 || *(instr+i) == 0xF0) 
-       dis_sprintf("%s ", BxDisasmOpcodes[*(instr+i)].Opcode);
+    if (*(instr+i) == 0xF3 || *(instr+i) == 0xF2 || *(instr+i) == 0xF0) 
+      dis_sprintf("%s ", BxDisasmOpcodes[*(instr+i)].Opcode);
 
-     if (attr == _COND_JUMP)
-     {
-       if (*(instr+i) == 0x2E) 
-         dis_sprintf("not taken ");
-       if (*(instr+i) == 0x3E) 
-         dis_sprintf("taken ");
-     }
+    if (entry->Op3Attr == BRANCH_HINT)
+    {
+      if (*(instr+i) == 0x2E) 
+        dis_sprintf("not taken ");
+      if (*(instr+i) == 0x3E) 
+        dis_sprintf("taken ");
+    }
   }
 
-  // print opcode
-  dis_sprintf("%s ", entry->Opcode);
-
+  // print instruction disassembly
   if (intel_mode)
-  {
-    (this->*entry->Operand1)(entry->Op1Attr);
-    if (entry->Operand2 != &disassembler::XX) {
-      dis_sprintf(", ");
-      (this->*entry->Operand2)(entry->Op2Attr);
-    }
-    if (entry->Operand3 != &disassembler::XX) {
-      dis_sprintf(", ");
-      (this->*entry->Operand3)(entry->Op3Attr);
-    }
-  } 
+    print_disassembly_intel(entry);
   else
-  {
-    if (entry->Operand3 != &disassembler::XX) {                                         
-      (this->*entry->Operand3)(entry->Op3Attr);
-      dis_sprintf(", ");
-    }
-    if (entry->Operand2 != &disassembler::XX) {
-      (this->*entry->Operand2)(entry->Op2Attr);
-      dis_sprintf(", ");
-    }
-    (this->*entry->Operand1)(entry->Op1Attr);
-  }
+    print_disassembly_att  (entry);
  
   return(instruction - instruction_begin);
 }

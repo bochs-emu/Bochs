@@ -81,6 +81,17 @@ enum {
 };
 
 enum {
+	rAX_REG,
+	rCX_REG,
+	rDX_REG,
+	rBX_REG,
+	rSP_REG,
+	rBP_REG,
+	rSI_REG,
+	rDI_REG
+};
+
+enum {
 	ES_REG,
 	CS_REG,
 	SS_REG,
@@ -89,30 +100,46 @@ enum {
 	GS_REG
 };
 
-// datasize attributes
-#define X_SIZE 0x0000
-#define B_SIZE 0x0100
-#define W_SIZE 0x0200
-#define D_SIZE 0x0300
-#define V_SIZE 0x0400
-#define Q_SIZE 0x0500
-#define O_SIZE 0x0600
-#define T_SIZE 0x0700
-#define P_SIZE 0x0800
-#define S_SIZE 0x0900
-
 class disassembler;
 
 typedef void (disassembler::*BxDisasmPtr_t) (unsigned attr);
 typedef void (disassembler::*BxDisasmResolveModrmPtr_t) (unsigned attr);
+
+struct BxDisasmOpcodeInfo_t
+{
+    const char *Opcode;
+    unsigned Attr;
+    BxDisasmPtr_t Operand1;
+    unsigned Op1Attr;
+    BxDisasmPtr_t Operand2;
+    unsigned Op2Attr;
+    BxDisasmPtr_t Operand3;
+    unsigned Op3Attr;
+    struct BxDisasmOpcodeInfo_t *AnotherArray;
+};
+
+// datasize attributes
+#define X_SIZE      0x0000
+#define B_SIZE      0x0100
+#define W_SIZE      0x0200
+#define D_SIZE      0x0300
+#define V_SIZE      0x0400
+#define Q_SIZE      0x0500
+#define O_SIZE      0x0600
+#define T_SIZE      0x0700
+#define P_SIZE      0x0800
+#define S_SIZE      0x0900
+
+// branch hint attribute 
+#define BRANCH_HINT 0x1000
 
 class disassembler {
 public:
   disassembler() { set_syntax_intel(); }
   unsigned disasm(bx_bool is_32, Bit32u base, Bit32u ip, Bit8u *instr, char *disbuf);
 
-  void set_syntax_att();
   void set_syntax_intel();
+  void set_syntax_att  ();
 
 private:
   bx_bool intel_mode;
@@ -209,6 +236,9 @@ private:
   void print_memory_access32(int datasize,
           const char *seg, const char *base, const char *index, int scale, Bit32u disp);
 
+  void print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry);
+  void print_disassembly_att  (const BxDisasmOpcodeInfo_t *entry);
+
 public:
 
 /* 
@@ -278,8 +308,6 @@ public:
  * z  - A word if the effective operand size is 16 bits, or a doubleword 
  *      if the effective operand size is 32 or 64 bits.
  */
-
- void  XX (unsigned attribute) {}
 
  // fpu
  void ST0 (unsigned attribute);
