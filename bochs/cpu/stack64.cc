@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.12 2004-05-10 21:05:50 sshwarts Exp $
+// $Id: stack64.cc,v 1.13 2004-09-04 10:21:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -249,7 +249,7 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 
   level = i->Ib2();
 
-  invalidate_prefetch_q();
+//invalidate_prefetch_q();
 
   level %= 32;
 /* ??? */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.18 2004-08-31 19:43:58 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.19 2004-09-04 10:21:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,60 +49,60 @@
 #define BX_INSTR_SBB32          15
 #define BX_INSTR_SBB64          16
 
-#define BX_INSTR_COMPARE8       17
-#define BX_INSTR_COMPARE16      18
-#define BX_INSTR_COMPARE32      19
-#define BX_INSTR_COMPARE64      20
+#define BX_INSTR_INC8           17
+#define BX_INSTR_INC16          18
+#define BX_INSTR_INC32          19
+#define BX_INSTR_INC64          20
 
-#define BX_INSTR_INC8           21
-#define BX_INSTR_INC16          22
-#define BX_INSTR_INC32          23
-#define BX_INSTR_INC64          24
+#define BX_INSTR_DEC8           21
+#define BX_INSTR_DEC16          22
+#define BX_INSTR_DEC32          23
+#define BX_INSTR_DEC64          24
 
-#define BX_INSTR_DEC8           25
-#define BX_INSTR_DEC16          26
-#define BX_INSTR_DEC32          27
-#define BX_INSTR_DEC64          28
+#define BX_INSTR_NEG8           25
+#define BX_INSTR_NEG16          26
+#define BX_INSTR_NEG32          27
+#define BX_INSTR_NEG64          28
 
-#define BX_INSTR_NEG8           29
-#define BX_INSTR_NEG16          30
-#define BX_INSTR_NEG32          31
-#define BX_INSTR_NEG64          32
-
-#define BX_INSTR_LOGIC8         33
-#define BX_INSTR_LOGIC16        34
-#define BX_INSTR_LOGIC32        35
-#define BX_INSTR_LOGIC64        36
+#define BX_INSTR_LOGIC8         29
+#define BX_INSTR_LOGIC16        30
+#define BX_INSTR_LOGIC32        31
+#define BX_INSTR_LOGIC64        32
 
 //      BX_INSTR_BITSCAN8       not exists, leave number for alignment
-#define BX_INSTR_BITSCAN16      38
-#define BX_INSTR_BITSCAN32      39
-#define BX_INSTR_BITSCAN64      40
+#define BX_INSTR_BITSCAN16      34
+#define BX_INSTR_BITSCAN32      35
+#define BX_INSTR_BITSCAN64      36
 
-#define BX_INSTR_SHL8           41
-#define BX_INSTR_SHL16          42
-#define BX_INSTR_SHL32          43
-#define BX_INSTR_SHL64          44
+#define BX_INSTR_SHL8           37
+#define BX_INSTR_SHL16          38
+#define BX_INSTR_SHL32          39
+#define BX_INSTR_SHL64          40
 
-#define BX_INSTR_SHR8           45
-#define BX_INSTR_SHR16          46
-#define BX_INSTR_SHR32          47
-#define BX_INSTR_SHR64          48
+#define BX_INSTR_SHR8           41
+#define BX_INSTR_SHR16          42
+#define BX_INSTR_SHR32          43
+#define BX_INSTR_SHR64          44
 
-#define BX_INSTR_SAR8           49
-#define BX_INSTR_SAR16          50
-#define BX_INSTR_SAR32          51
-#define BX_INSTR_SAR64          52
+#define BX_INSTR_SAR8           45
+#define BX_INSTR_SAR16          46
+#define BX_INSTR_SAR32          47
+#define BX_INSTR_SAR64          48
 
-#define BX_INSTR_MUL8           53
-#define BX_INSTR_MUL16          54
-#define BX_INSTR_MUL32          55
-#define BX_INSTR_MUL64          56
+#define BX_INSTR_MUL8           49
+#define BX_INSTR_MUL16          50
+#define BX_INSTR_MUL32          51
+#define BX_INSTR_MUL64          52
 
-#define BX_INSTR_IMUL8          57
-#define BX_INSTR_IMUL16         58
-#define BX_INSTR_IMUL32         59
-#define BX_INSTR_IMUL64         60
+#define BX_INSTR_IMUL8          53
+#define BX_INSTR_IMUL16         54
+#define BX_INSTR_IMUL32         55
+#define BX_INSTR_IMUL64         56
+
+#define BX_INSTR_COMPARE8       BX_INSTR_SUB8
+#define BX_INSTR_COMPARE16      BX_INSTR_SUB16
+#define BX_INSTR_COMPARE32      BX_INSTR_SUB32
+#define BX_INSTR_COMPARE64      BX_INSTR_SUB64
 
 
 #define BX_LF_INDEX_OSZAPC  1

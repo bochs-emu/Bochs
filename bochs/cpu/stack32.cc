@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.18 2004-05-10 21:05:50 sshwarts Exp $
+// $Id: stack32.cc,v 1.19 2004-09-04 10:21:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -325,7 +325,7 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
 
   level = i->Ib2();
 
-  invalidate_prefetch_q();
+//invalidate_prefetch_q();
 
   level %= 32;
 /* ??? */
@@ -459,7 +459,7 @@ BX_CPU_C::LEAVE(bxInstruction_c *i)
 #else
   Bit32u temp_EBP;
 
-  invalidate_prefetch_q();
+//invalidate_prefetch_q();
 
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
