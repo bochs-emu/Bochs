@@ -1,13 +1,13 @@
 SUBDIRS = test1-static test2-dynamic test3-twomodules test4-interdep test5-execsymbols
 
 all:
-	for i in $(SUBDIRS); do make -C $$i all; done
+	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make all; echo Leaving $$i;); done
 
 test: all
-	for i in $(SUBDIRS); do make -C $$i test; done
+	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make test; echo Leaving $$i;); done
 
 clean:
-	for i in $(SUBDIRS); do make -C $$i clean; done
+	for i in $(SUBDIRS); do (echo Entering $$i; cd $$i; make clean; echo Leaving $$i;); done
 
 dist-clean: clean
 	rm -rf Makefile */Makefile config.h config.log config.status libtool
