@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.16 2003-06-21 12:55:19 vruppert Exp $
+// $Id: plugin.h,v 1.17 2003-07-10 20:26:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -42,7 +42,6 @@ extern "C" {
 #define BX_PLUGIN_GAMEPORT  "gameport"
 
 
-#define BX_REGISTER_DEVICE pluginRegisterDevice
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
 
 #if BX_PLUGINS
@@ -210,9 +209,6 @@ typedef void (*deviceReset_t)(unsigned);
 typedef void (*deviceLoad_t)(void);
 typedef void (*deviceSave_t)(void);
 
-BOCHSAPI void pluginRegisterDevice(deviceInitMem_t init_mem, deviceInitDev_t init_dev,
-                          deviceReset_t reset, deviceLoad_t load, 
-                          deviceSave_t save, char *name);
 BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, char *name);
 BOCHSAPI bx_bool pluginDevicePresent(char *name);
 
@@ -274,8 +270,6 @@ BOCHSAPI extern Bit8u    (*pluginWr_memType)(Bit32u addr);
 
 void plugin_abort (void);
 
-// called from bochs main (hack)
-extern int bx_load_plugins ();
 int bx_load_plugin (const char *name, plugintype_t type);
 extern void bx_init_plugins (void);
 extern void bx_reset_plugins (unsigned);

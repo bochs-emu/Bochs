@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.6 2003-05-02 12:22:45 vruppert Exp $
+// $Id: plugin.cc,v 1.7 2003-07-10 20:26:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -397,6 +397,9 @@ plugin_startup(void)
   pluginActivateTimer = builtinActivateTimer;
 
 #if BX_PLUGINS
+  pluginlog = new logfunctions();
+  pluginlog->put("PLGIN");
+  pluginlog->settype(PLUGINLOG);
   int status = lt_dlinit ();
   if (status != 0) {
     BX_ERROR (("initialization error in ltdl library (for loading plugins)"));
@@ -409,66 +412,6 @@ plugin_startup(void)
 /************************************************************************/
 /* Plugin system: Device registration                                   */
 /************************************************************************/
-
-#ifdef __GNUC__
-#warning BBD: when all plugin devices are converted to the "bx_devmodel" type with virtual functions, I intend to chop this out.
-#endif
-// (and the nasty current_plugin_context hack can go too)
-
-void pluginRegisterDevice(deviceInitMem_t init1, deviceInitDev_t init2,
-			  deviceReset_t reset, deviceLoad_t load, 
-			  deviceSave_t save, char *name)
-{
-    device_t *device;
-
-    device = (device_t *)malloc (sizeof (device_t));
-    if (!device)
-    {
-        pluginlog->panic("can't allocate device_t");
-    }
-
-    device->name = name;
-    BX_ASSERT(current_plugin_context != NULL);
-    device->plugin = current_plugin_context;
-    device->use_devmodel_interface = 0;
-    device->device_init_mem = init1;
-    device->device_init_dev = init2;
-    device->device_reset = reset;
-    device->device_load_state = load;
-    device->device_save_state = save;
-    device->next = NULL;
-
-    // Don't add every kind of device to the list.
-    switch (device->plugin->type)
-    {
-      case PLUGTYPE_CORE:
-	// Core devices are present whether or not we are using plugins, so
-	// they are managed by code iodev/devices.cc and should not be
-	// managed by the plugin system.
-	return; // Do not add core devices to the devices list.
-      case PLUGTYPE_OPTIONAL:
-      case PLUGTYPE_USER:
-      default:
-	// The plugin system will manage optional and user devices only.
-	break;
-    }
-
-    if (!devices)
-    {
-        /* Empty list, this become the first entry. */
-        devices = device;
-    }
-    else
-    {
-        /* Non-empty list.  Add to end. */
-        device_t *temp = devices;
-
-        while (temp->next)
-            temp = temp->next;
-
-        temp->next = device;
-    }
-}
 
 void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *devmodel, char *name)
 {
@@ -549,23 +492,6 @@ int bx_load_plugin (const char *name, plugintype_t type)
   char *namecopy = new char[1+strlen(name)];
   strcpy (namecopy, name);
   plugin_load (namecopy, "", type);
-  return 0;
-}
-
-/************************************************************************/
-/* Plugin system: Load ALL plugins                                      */
-/************************************************************************/
-
-int bx_load_plugins (void)
-{
-  pluginlog = new logfunctions();
-  pluginlog->put("PLGIN");
-  pluginlog->settype(PLUGINLOG);
-
-#if !BX_PLUGINS
-  pluginlog->info("plugins deactivated");
-#endif
-
   return 0;
 }
 #endif   /* end of #if BX_PLUGINS */
