@@ -29,6 +29,7 @@ Changes to next release:
   - added missed GP(0) exception when loading incorrect flags combination 
     to CR0 (Stanislav Shwartsman)
   - implemented CR8 register (aliased to APIC.TPR[7:4]) in x86-64 mode
+  - implemented NXE bit (No-Execute page protection) support for x86-64
 
 - FPU
   - totally rewritten all FPU code based on softfloat library 
@@ -190,7 +191,6 @@ Changes to next release:
  [1082584] The start of Bus mice and USB mice by Ben Lunt
  [1104695] msvc6 compatibility update (Royce Mitchell III)
 
-
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
  [1005422] Improve mouse cursol Grub when 2 buttons-mouse use (WIN32)
@@ -201,6 +201,8 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+ #1037923 Non-executable page support missed (NX bit, x86-64)
+ #1106530 wrong disassemble result 
  #1105208 drive order for boot gets saved wrong
   #661060 Problem with Win98SE
   #837377 Norton Ghost don't boot
