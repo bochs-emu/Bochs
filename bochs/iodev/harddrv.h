@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.15 2002-09-24 20:02:00 kevinlawton Exp $
+// $Id: harddrv.h,v 1.16 2002-09-30 14:19:46 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,8 +118,8 @@ class concat_image_t : public device_image_t
   private:
 #define BX_CONCAT_MAX_IMAGES 8
       int fd_table[BX_CONCAT_MAX_IMAGES];
-      ssize_t start_offset_table[BX_CONCAT_MAX_IMAGES];
-      ssize_t length_table[BX_CONCAT_MAX_IMAGES];
+      off_t start_offset_table[BX_CONCAT_MAX_IMAGES];
+      off_t length_table[BX_CONCAT_MAX_IMAGES];
       void increment_string (char *str);
       int maxfd;  // number of entries in tables that are valid
 
@@ -133,7 +133,7 @@ class concat_image_t : public device_image_t
       // the next read and write.
       int index;  // index into table
       int fd;     // fd to use for reads and writes
-      int thismin, thismax; // byte offset boundary of this image
+      off_t thismin, thismax; // byte offset boundary of this image
 };
 #endif /* BX_SPLIT_HD_SUPPORT */
 
@@ -307,7 +307,7 @@ public:
 
 private:
 
-  BX_HD_SMF Boolean calculate_logical_address(Bit8u channel, Bit32u *sector);
+  BX_HD_SMF Boolean calculate_logical_address(Bit8u channel, off_t *sector);
   BX_HD_SMF void increment_address(Bit8u channel);
   BX_HD_SMF void identify_drive(Bit8u channel);
   BX_HD_SMF void identify_ATAPI_drive(Bit8u channel);
