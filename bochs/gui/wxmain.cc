@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.24 2002-09-02 20:13:51 bdenney Exp $
+// $Id: wxmain.cc,v 1.25 2002-09-02 22:53:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -150,6 +150,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
+  EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
@@ -473,6 +474,38 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
     wxString scriptString (dlg.GetScript ());
     strncpy (buf, scriptString.c_str (), sizeof(buf));
     script->set (buf);
+  }
+}
+
+void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
+{
+  ConfigKeyboardDialog dlg (this, -1);
+  for (int i=0; i<n_keyboard_type_names; i++)
+    dlg.AddType (keyboard_type_names[i]);
+  bx_param_enum_c *type = (bx_param_enum_c*) 
+    SIM->get_param (BXP_KBD_TYPE);
+  bx_param_num_c *serdel = (bx_param_num_c*) 
+    SIM->get_param (BXP_KBD_SERIAL_DELAY);
+  bx_param_num_c *pstdel = (bx_param_num_c*) 
+    SIM->get_param (BXP_KBD_PASTE_DELAY);
+  bx_param_bool_c *enableKeymap = (bx_param_bool_c*) 
+    SIM->get_param (BXP_KEYBOARD_USEMAPPING);
+  bx_param_string_c *keymap = (bx_param_string_c*) 
+    SIM->get_param (BXP_KEYBOARD_MAP);
+  dlg.SetType (type->get ());
+  dlg.SetSerialDelay (serdel->get ());
+  dlg.SetPasteDelay (pstdel->get ());
+  dlg.SetKeymapEnable (enableKeymap->get ());
+  dlg.SetKeymap (wxString (keymap->getptr ()));
+  int n = dlg.ShowModal ();
+  if (n == wxOK) {
+    type->set (dlg.GetType ());
+    serdel->set (dlg.GetSerialDelay ());
+    pstdel->set (dlg.GetPasteDelay ());
+    enableKeymap->set (dlg.GetKeymapEnable ());
+    char buf[1024];
+    safeWxStrcpy (buf, dlg.GetKeymap (), sizeof (buf));
+    keymap->set (buf);
   }
 }
 

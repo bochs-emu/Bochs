@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.19 2002-09-02 22:12:30 bdenney Exp $
+// $Id: wxdialog.cc,v 1.20 2002-09-02 22:53:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1321,10 +1321,10 @@ void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
       {
 	// test validity of the integer fields
 	bool valid;
-	GetTextCtrlInt (biosAddr, "0x%x", &valid, true, "Invalid ROM BIOS Address");
+	GetTextCtrlInt (biosAddr, &valid, true, "Invalid ROM BIOS Address");
 	if (!valid) return;
 	for (int rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
-	  GetTextCtrlInt (romAddr[rom], "0x%x", &valid, true, "Invalid Optional ROM address");
+	  GetTextCtrlInt (romAddr[rom], &valid, true, "Invalid Optional ROM address");
 	  if (!valid) return;
 	}
       }
@@ -1342,6 +1342,144 @@ void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
 }
 
 void ConfigMemoryDialog::ShowHelp ()
+{
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// ConfigKeyboardDialog implementation
+//////////////////////////////////////////////////////////////////////
+// Structure:
+//   mainSizer:
+//     gridSizer, 3 columns:
+//       "keyboard type"
+//       type = wxChoice
+//       "ser"
+//       serialDelay = wxTextCtrl
+//       "paste"
+//       pasteDelay = wxTextCtrl
+//       "en map"
+//       enableKeymap = wxCheckBox
+//       "keyfile"
+//       mappingFile = wxTextCtrl
+//     buttonSizer:
+//       help
+//       cancel
+//       ok
+//
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(ConfigKeyboardDialog, wxDialog)
+  EVT_BUTTON(-1, ConfigKeyboardDialog::OnEvent)
+  EVT_CHECKBOX(-1, ConfigKeyboardDialog::OnEvent)
+  EVT_TEXT(-1, ConfigKeyboardDialog::OnEvent)
+END_EVENT_TABLE()
+
+
+ConfigKeyboardDialog::ConfigKeyboardDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+{
+  static char *labels[CONFIG_KEYBOARD_N_LABELS] = CONFIG_KEYBOARD_LABELS;
+  SetTitle (CONFIG_KEYBOARD_TITLE);
+  mainSizer = new wxBoxSizer (wxVERTICAL);
+  gridSizer = new wxFlexGridSizer (3);
+  mainSizer->Add (gridSizer);
+  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
+  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+
+  // box1 contents
+  wxSize textCtrlSize (300, -1);  // width=300, height=default
+#define add(x) gridSizer->Add (x, 0, wxALL, 2)
+#define addrt(x) gridSizer->Add (x, 0, wxALL|wxALIGN_RIGHT, 2)
+#define newlabel(x) new wxStaticText (this, -1, x)
+#define spacer() gridSizer->Add (1, 1);
+#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, textCtrlSize))
+  addrt (newlabel (labels[0]));
+  add (type = new wxChoice (this, -1));
+  spacer();
+  addrt (newlabel (labels[1]));
+  add (serialDelay = new wxTextCtrl (this, -1));
+  spacer ();
+  addrt (newlabel (labels[2]));
+  add (pasteDelay = new wxTextCtrl (this, -1));
+  spacer();
+  addrt (newlabel (labels[3]));
+  add (enableKeymap = new wxCheckBox (this, ID_Enable, ""));
+  spacer ();
+  addrt (newlabel (labels[4]));
+  add (mappingFile = newlongtext ());
+  add (new wxButton (this, ID_Browse, BTNLABEL_BROWSE));
+#undef add(x)
+#undef addrt(x)
+#undef newlabel(x)
+#undef spacer()
+#undef newlongtext()
+
+  // buttonSizer contents
+  wxButton *btn;
+  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  // use wxID_CANCEL because pressing ESC produces this same code
+  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton (this, wxOK, BTNLABEL_OK);
+  buttonSizer->Add (btn, 0, wxALL, 5);
+}
+
+void ConfigKeyboardDialog::Init()
+{
+  EnableChanged ();
+  // lay it out!
+  SetAutoLayout(TRUE);
+  SetSizer(mainSizer);
+  mainSizer->Fit (this);
+  wxSize size = mainSizer->GetMinSize ();
+  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
+  int margin = 5;
+  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
+  Center ();
+}
+
+void ConfigKeyboardDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId ();
+  printf ("you pressed button id=%d\n", id);
+  switch (id) {
+    case ID_Enable:
+      EnableChanged ();
+      break;
+    case ID_Browse:
+      BrowseTextCtrl (mappingFile);
+      break;
+    case wxOK:
+      {
+	// test validity of the integer fields
+	bool valid;
+	GetTextCtrlInt (serialDelay, &valid, true,
+	    "Invalid serial delay");
+	if (!valid) return;
+	GetTextCtrlInt (pasteDelay, &valid, true,
+	    "Invalid paste delay");
+	if (!valid) return;
+      }
+      EndModal (wxOK);
+      break;
+    case wxID_CANCEL:
+      EndModal (wxCANCEL);
+      break;
+    case wxHELP:
+      ShowHelp(); 
+      break;
+    default:
+      event.Skip ();
+  }
+}
+
+void ConfigKeyboardDialog::ShowHelp ()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
@@ -1406,7 +1544,6 @@ void SetTextCtrl (wxTextCtrl *ctrl, const char *format, int val) {
 }
 
 int GetTextCtrlInt (wxTextCtrl *ctrl,
-    const char *format,
     bool *valid,
     bool complain,
     wxString complaint) 
@@ -1414,13 +1551,8 @@ int GetTextCtrlInt (wxTextCtrl *ctrl,
   wxString tmp (ctrl->GetValue ());
   char buf[1024];
   strncpy (buf, tmp.c_str(), sizeof(buf));
-  int n;
-  if (sscanf (buf, format, &n) == 1) {
-    if (valid) *valid = true;
-    return n;
-  }
-  n = strtol (buf, NULL, 0);
-  if (n != -1) {
+  int n = strtol (buf, NULL, 0);
+  if (n != LONG_MIN && n != LONG_MAX) {
     if (valid) *valid = true;
     return n;
   }

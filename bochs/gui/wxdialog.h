@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.19 2002-09-02 22:12:31 bdenney Exp $
+// $Id: wxdialog.h,v 1.20 2002-09-02 22:53:39 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -23,7 +23,7 @@
 void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext);
 bool CreateImage (int harddisk, int sectors, const char *filename);
 void SetTextCtrl (wxTextCtrl *text, const char *format, int val);
-int GetTextCtrlInt (wxTextCtrl *text, const char *format, bool *valid = NULL, bool complain=false, wxString complaint = "Invalid integer!");
+int GetTextCtrlInt (wxTextCtrl *text, bool *valid = NULL, bool complain=false, wxString complaint = "Invalid integer!");
 bool BrowseTextCtrl (wxTextCtrl *text,
     wxString prompt="Choose a file",
     long style=wxOPEN);
@@ -483,8 +483,8 @@ public:
   wxString GetBios () { return biosImage->GetValue (); }
   wxString GetVgaBios () { return vgabiosImage->GetValue (); }
   wxString GetRom (int n) { return rom[n]->GetValue (); }
-  int GetBiosAddr () { return GetTextCtrlInt (biosAddr, "0x%X"); }
-  int GetRomAddr (int n) { return GetTextCtrlInt (romAddr[n], "0x%X"); }
+  int GetBiosAddr () { return GetTextCtrlInt (biosAddr); }
+  int GetRomAddr (int n) { return GetTextCtrlInt (romAddr[n]); }
 
 DECLARE_EVENT_TABLE()
 };
@@ -555,6 +555,56 @@ public:
 DECLARE_EVENT_TABLE()
 };
 
+////////////////////////////////////////////////////////////////////////////
+// ConfigKeyboardDialog
+////////////////////////////////////////////////////////////////////////////
+// ConfigKeyboardDialog allows the user to edit settings related to the
+// keyboard.
+// +--- Configure Keyboard ----------------------------------------+
+// |                                                               |
+// |           Keyboard type: [XT]                                 |
+// |   Keyboard serial delay: [_______]                            |
+// |             Paste delay: [_______]                            |
+// |                                                               |
+// |  Enable keyboard mapping: [ ]                                 |
+// |              Keymap file: [__________________] [Browse]       |
+// |                                                               |
+// |                                    [ Help ] [ Cancel ] [ Ok ] |
+// +---------------------------------------------------------------+
+//
+class ConfigKeyboardDialog: public wxDialog
+{
+private:
+#define CONFIG_KEYBOARD_TITLE "Configure Keyboard"
+#define CONFIG_KEYBOARD_LABELS { "Keyboard type:", "Keyboard serial delay:", "Paste delay:", "Enable keyboard mapping:", "Keymap file:" }
+#define CONFIG_KEYBOARD_N_LABELS 5
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *mainSizer, *buttonSizer;
+  wxFlexGridSizer *gridSizer;
+  wxChoice *type;
+  wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
+  wxCheckBox *enableKeymap;
+  void EnableChanged () {
+    if (mappingFile) mappingFile->Enable (enableKeymap->GetValue ());
+  }
+public:
+  ConfigKeyboardDialog(wxWindow* parent, wxWindowID id);
+  void OnEvent (wxCommandEvent& event);
+  int ShowModal() { Init(); return wxDialog::ShowModal(); }
+  void AddType (wxString name) { type->Append (name); }
+  void SetType (int val) { type->SetSelection (val); }
+  int GetType () { return type->GetSelection (); }
+  void SetSerialDelay (int val) { SetTextCtrl (serialDelay, "%d", val); }
+  int GetSerialDelay () { return GetTextCtrlInt (serialDelay); }
+  void SetPasteDelay (int val) { SetTextCtrl (pasteDelay, "%d", val); }
+  int GetPasteDelay () { return GetTextCtrlInt (pasteDelay); }
+  void SetKeymapEnable (bool val) { enableKeymap->SetValue (val); EnableChanged (); }
+  bool GetKeymapEnable () { return enableKeymap->GetValue (); }
+  void SetKeymap (wxString file) { mappingFile->SetValue (file); }
+  wxString GetKeymap () { return mappingFile->GetValue (); }
+DECLARE_EVENT_TABLE()
+};
 
 ////////////////////////////////////////////////////////////////////////////
 // ConfigSoundDialog
@@ -781,15 +831,8 @@ let you go right to the configure screen for that disk drive.
 +---------------------------------------------------------------+
 
 ////////////////////////////////////////////////////////////////////////////
-// ConfigKeyboardDialog
+// KeymappingDialog      
 ////////////////////////////////////////////////////////////////////////////
-keyboard related settings
-
-keyboard_mapping: enabled=1, map=US,France,Germany,Spain
-keyboard_type: xt,at,mf
-keyboard_serial_delay: 250
-paste delay
-
 more ambitious: create a button for each key on a standard keyboard, so that
 you can view/edit/load/save key mappings, produce any combination of keys 
 (esp. ones that your OS or window manager won't allow)

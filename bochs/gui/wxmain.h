@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.16 2002-09-02 20:13:52 bdenney Exp $
+// $Id: wxmain.h,v 1.17 2002-09-02 22:53:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -138,6 +138,7 @@ public:
   void OnEditBoot(wxCommandEvent& event);
   void OnEditMemory(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
+  void OnEditKeyboard(wxCommandEvent& event);
   void OnLogPrefs(wxCommandEvent& event);
   void OnOtherEvent(wxCommandEvent& event);
   static bool editFloppyValidate (FloppyConfigDialog *dialog);
