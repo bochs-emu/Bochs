@@ -20,12 +20,38 @@ Changes to next release:
 - I/O devices
   - general
     - handle cpu reset through port 0x92
+  - serial
+    - multiple serial port support added (4 ports now available)
+    - partial raw serial support on win32 (transmit data)
+  - parallel
+    - multiple parallel port support added (2 ports now available)
+
+- System BIOS
+    - turn floppy motor off 2 seconds after last read/write/recalibrate command
+      (Ben Lunt)
+
+- display libraries
+  - status bar with indicators for cdrom, floppy, harddisk and keyboard added
+    (done in rfb, sdl, win32, wx and x)
+  - 3rd (middle) mouse button now supported (sdl, win32, wx, x)
+  - CTRL key + middle mouse button now used to toggle the mouse capture mode
+    (sdl, win32, wx, x)
+  - text mode split screen feature added (sdl, win32, wx, x)
+  - new gui function returns the display library capabilities (xres, yres, bpp)
+    for the Bochs VBE support
+  - display library specific options added - currently supported:
+    rfb:   timeout (time to wait for client connection)
+    sdl:   fullscreen (startup in fullscreen mode)
+    win32: legacyF12 (use F12 to toggle mouse)
 
 - configuration interface
+  - win32: gui runtime dialogs replace textconfig runtime dialogs
+  - set default IPS to 10000000 in .bochsrc sample
+
+- configure script / compile
   - --enable-ignore-bad-msr (ignore bad MSR references) option is enabled 
     by default
   - --enable-mmx enabled by default only if cpu-level > 4
-  - set default IPS to 10000000 in .bochsrc
 
 - SF patches applied
   [894595] MSR_APICBASE always returns APIC ADDRESS 0 by Kangmo Kim
