@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.142 2002-10-02 00:09:49 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.143 2002-10-02 00:53:20 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -1497,6 +1497,7 @@ elif test "$with_wx" = yes; then
   case $target in
     *-pc-windows* | *-cygwin* | *-mingw32*)
        EXTRA_BX_OBJS="$EXTRA_BX_OBJS wxbochs_resources.o"
+	   GUI_LINK_OPTS_WX="$GUI_LINK_OPTS_WX --subsystem,windows -mwindows"
        ;;
   esac
 else
