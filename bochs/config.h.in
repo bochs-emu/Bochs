@@ -47,8 +47,8 @@
 // if simulating Linux, this provides a few more debugging options
 // such as tracing all system calls.
 
-#define USE_READLINE 0
-#define READLINE_NEEDS_HISTORY_H 0
+#define HAVE_LIBREADLINE 0
+#define HAVE_READLINE_HISTORY_H 0
 // adds support for the GNU readline library in the debugger command 
 // prompt.
 
