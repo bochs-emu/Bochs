@@ -1,0 +1,4 @@
+start
+Module name is 'AddModule'
+operate(5,12) = 17
+stop

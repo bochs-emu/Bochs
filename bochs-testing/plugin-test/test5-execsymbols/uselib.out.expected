@@ -1,0 +1,10 @@
+start
+at first, n_operations = 0
+Module name is 'AddModule'
+register_module was called by module 'module2'
+module2: operation_occurred
+operate(5,12) = 17
+module2: operation_occurred
+operate(5,17) = 22
+stop
+at end, n_operations = 2

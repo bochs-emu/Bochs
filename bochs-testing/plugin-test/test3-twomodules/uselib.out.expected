@@ -1,0 +1,7 @@
+start
+at first, n_operations = 0
+Module name is 'AddModule'
+module2: operation_occurred
+operate(5,12) = 17
+stop
+at end, n_operations = 1
