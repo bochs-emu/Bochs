@@ -7,7 +7,7 @@
 
 CC=gcc
 CXX=$CC
-CFLAGS="-Wall -O9 -mpentium -fomit-frame-pointer -pipe"
+CFLAGS="-Wall -O9 -mpentium -fomit-frame-pointer -pipe -Wno-multichar"
 CXXFLAGS=$CFLAGS
 
 export CC
@@ -17,5 +17,6 @@ export CXXFLAGS
 
 ./configure --with-sdl \
    --enable-cdrom \
-   --enable-sb16=dummy \
-   --enable-all-optimizations 
+   --enable-ne2000 \
+   --enable-all-optimizations \
+   --enable-vbe
