@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.63 2003-05-07 19:15:47 vruppert Exp $
+// $Id: x.cc,v 1.64 2003-05-11 08:29:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1069,11 +1069,11 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       bx_vga_tminfo_t tm_info, unsigned nrows)
 {
-  unsigned i, x, y, curs;
+  unsigned char *old_line, *new_line, *new_start;
+  unsigned char cChar;
+  unsigned int ncols = dimension_x / font_width;
+  unsigned int curs, hchars, i, rows, x, y;
   unsigned new_foreground, new_background;
-  Bit8u c;
-  Bit8u cs_start, cs_end;
-  unsigned nchars;
   bx_bool force_update=0;
   unsigned char cell[32];
 
@@ -1107,56 +1107,62 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
 
-  cs_start = tm_info.cs_start;
-  cs_end = tm_info.cs_end;
-
-  // Number of characters on screen, variable number of rows
-  nchars = columns*nrows;
-
   // first draw over character at original block cursor location
-  if ( (prev_block_cursor_y*columns + prev_block_cursor_x) < nchars ) {
-    curs = (prev_block_cursor_y*columns + prev_block_cursor_x)*2;
-    c = new_text[curs];
+  if ( (prev_block_cursor_y < nrows) && (prev_block_cursor_x < ncols) ) {
+    curs = prev_block_cursor_y * tm_info.line_offset + prev_block_cursor_x * 2;
+    cChar = new_text[curs];
     XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_text[curs+1] & 0x0f)]);
     XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx((new_text[curs+1] & 0xf0) >> 4)]);
 
-    XCopyPlane(bx_x_display, vgafont[c], win, gc, 0, 0, font_width, font_height,
+    XCopyPlane(bx_x_display, vgafont[cChar], win, gc, 0, 0, font_width, font_height,
                prev_block_cursor_x * font_width, prev_block_cursor_y * font_height + bx_headerbar_y, 1);
   }
 
-  for (i=0; i<nchars*2; i+=2) {
-    if ( (old_text[i]!=new_text[i]) ||
-         (old_text[i+1]!=new_text[i+1]) ||
-         (force_update) ) {
+  new_start = new_text;
+  rows = nrows;
+  y = 0;
+  do {
+    hchars = ncols;
+    new_line = new_text;
+    old_line = old_text;
+    x = 0;
+    do {
+      if ( force_update || (old_text[0] != new_text[0])
+          || (old_text[1] != new_text[1]) ) {
 
-      c = new_text[i];
-      new_foreground = new_text[i+1] & 0x0f;
-      new_background = (new_text[i+1] & 0xf0) >> 4;
+        cChar = new_text[0];
+        new_foreground = new_text[1] & 0x0f;
+        new_background = (new_text[1] & 0xf0) >> 4;
 
-      XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_foreground)]);
-      XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_background)]);
+        XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_foreground)]);
+        XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_background)]);
 
-      x = (i/2) % columns;
-      y = (i/2) / columns;
-
-      XCopyPlane(bx_x_display, vgafont[c], win, gc, 0, 0, font_width, font_height,
-                 x * font_width, y * font_height + bx_headerbar_y, 1);
+        XCopyPlane(bx_x_display, vgafont[cChar], win, gc, 0, 0, font_width, font_height,
+                   x * font_width, y * font_height + bx_headerbar_y, 1);
       }
-    }
+      x++;
+      new_text+=2;
+      old_text+=2;
+    } while (--hchars);
+    y++;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+  } while (--rows);
 
   prev_block_cursor_x = cursor_x;
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ( ( (cursor_y*columns + cursor_x) < nchars ) && (cs_start <= cs_end) ) {
-    curs = (cursor_y*columns + cursor_x)*2;
-    c = new_text[curs];
-    XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx((new_text[curs+1] & 0xf0) >> 4)]);
-    XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_text[curs+1] & 0x0f)]);
+  if ( (cursor_y < nrows) && (cursor_x < ncols ) && (tm_info.cs_start <= tm_info.cs_end) ) {
+    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    cChar = new_start[curs];
+    XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx((new_start[curs+1] & 0xf0) >> 4)]);
+    XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_start[curs+1] & 0x0f)]);
 
-    XCopyPlane(bx_x_display, vgafont[c], win, gc, 0, cs_start, font_width, cs_end - cs_start + 1,
-               cursor_x * font_width, cursor_y * font_height + bx_headerbar_y + cs_start, 1);
-    }
+    XCopyPlane(bx_x_display, vgafont[cChar], win, gc, 0, tm_info.cs_start, font_width,
+               tm_info.cs_end - tm_info.cs_start + 1, cursor_x * font_width,
+               cursor_y * font_height + bx_headerbar_y + tm_info.cs_start, 1);
+  }
 
   XFlush(bx_x_display);
 }

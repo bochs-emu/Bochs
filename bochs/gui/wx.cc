@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.55 2003-05-07 19:15:46 vruppert Exp $
+// $Id: wx.cc,v 1.56 2003-05-11 08:29:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -977,41 +977,55 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
           bx_vga_tminfo_t tm_info, unsigned nrows)
 {
   IFDBG_VGA(wxLogDebug (wxT ("text_update")));
-  //static Bit32u counter = 0;
-  //BX_INFO (("text_update executed %d times", ++counter));
 
-  Bit8u cs_start = tm_info.cs_start;
-  Bit8u cs_end = tm_info.cs_end;
-  unsigned char cChar;
+  unsigned char *old_line, *new_line, *new_start;
+  unsigned char cAttr, cChar;
   unsigned int ncols = wxScreenX / 8;
-  unsigned int nchars = ncols * nrows;
+  unsigned int hchars, rows, x, y;
   bx_bool forceUpdate = 0;
   if(charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
   }
-  if((wxCursorY * ncols + wxCursorX) < nchars) {
-    cChar = new_text[(wxCursorY * ncols + wxCursorX) * 2];
-    DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1], 1, 0);
+  if((wxCursorY < nrows) && (wxCursorX < ncols)) {
+    cChar = new_text[wxCursorY * tm_info.line_offset + wxCursorX * 2];
+    cAttr = new_text[wxCursorY * tm_info.line_offset + wxCursorX * 2 + 1];
+    DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], cAttr, 1, 0);
   }
-  
-  for(unsigned int i = 0; i < nchars * 2; i += 2) {
-    if(forceUpdate || (old_text[i] != new_text[i])
-       || (old_text[i+1] != new_text[i+1])) {
-      cChar = new_text[i];
-      int x = (i / 2) % ncols;
-      int y = (i / 2) / ncols;
-      DrawBochsBitmap(x * 8, y * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], new_text[i+1], 1, 0);
-    }
-  }
+
+  new_start = new_text;
+  rows = nrows;
+  y = 0;
+  do {
+    hchars = ncols;
+    new_line = new_text;
+    old_line = old_text;
+    x = 0;
+    do {
+      if(forceUpdate || (old_text[0] != new_text[0])
+         || (old_text[1] != new_text[1])) {
+        cChar = new_text[0];
+        cAttr = new_text[1];
+        DrawBochsBitmap(x * 8, y * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], cAttr, 1, 0);
+      }
+      x++;
+      new_text+=2;
+      old_text+=2;
+    } while (--hchars);
+    y++;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+  } while (--rows);
+
   wxCursorX = cursor_x;
   wxCursorY = cursor_y;
 
-  if(((cursor_y * ncols + cursor_x) < nchars) && (cs_start <= cs_end)) {
-    cChar = new_text[(cursor_y * ncols + cursor_x) * 2];
-    char cAttr = new_text[((cursor_y * ncols + cursor_x) * 2) + 1];
+  if((cursor_y < nrows) && (cursor_x < ncols) && (tm_info.cs_start <= tm_info.cs_end)) {
+    cChar = new_start[cursor_y * tm_info.line_offset + cursor_x * 2];
+    cAttr = new_start[cursor_y * tm_info.line_offset + cursor_x * 2 + 1];
     cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-    DrawBochsBitmap(wxCursorX * 8, wxCursorY * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5], cAttr, cs_start, cs_end);
+    DrawBochsBitmap(cursor_x * 8, cursor_y * wxFontY, 8, wxFontY, (char *)&vga_charmap[cChar<<5],
+                    cAttr, tm_info.cs_start, tm_info.cs_end);
   }
 
   thePanel->MyRefresh ();
