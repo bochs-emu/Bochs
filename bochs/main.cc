@@ -1555,8 +1555,8 @@ bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, "romimage: file=%s, address=0x%05x\n", bx_options.rom.path->getptr(), (unsigned int)bx_options.rom.address);
   else
     fprintf (fp, "# no romimage\n");
-  if (bx_options.vgarom.path)
-    fprintf (fp, "vgaromimage: %s\n", bx_options.vgarom.path);
+  if (strlen (bx_options.vgarom.path->getptr ()) < 1)
+    fprintf (fp, "vgaromimage: %s\n", bx_options.vgarom.path->getptr ());
   else
     fprintf (fp, "# no vgaromimage\n");
   fprintf (fp, "megs: %d\n", bx_options.memory.size->get ());
@@ -1565,7 +1565,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "vga_update_interval: %lu\n", bx_options.vga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %lu\n", bx_options.keyboard_serial_delay);
   fprintf (fp, "floppy_command_delay: %lu\n", bx_options.floppy_command_delay);
-  fprintf (fp, "ips: %lu\n", bx_options.ips);
+  fprintf (fp, "ips: %lu\n", bx_options.ips->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.mouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.private_colormap);
   fprintf (fp, "i440fxsupport: enabled=%d\n", bx_options.i440FXSupport);
