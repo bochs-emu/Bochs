@@ -132,7 +132,7 @@ bx_cmos_c::init(bx_devices_c *d)
       BX_CMOS_THIS panic("CMOS: image file not same size as BX_NUM_CMOS_REGS.\n");
       }
 
-    ret = read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_NUM_CMOS_REGS);
+    ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_NUM_CMOS_REGS);
     if (ret != BX_NUM_CMOS_REGS) {
       BX_CMOS_THIS panic("CMOS: error reading cmos file.\n");
       }
@@ -514,7 +514,7 @@ bx_cmos_c::one_second_timer_handler(void *this_ptr)
   if (class_ptr->s.reg[0x0b] & 0x80)
     return;
 
-  update_clock();
+  class_ptr->update_clock();
 
   // if update interrupts are enabled, trip IRQ 8, and
   // update status register C
