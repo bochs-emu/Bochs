@@ -1,26 +1,238 @@
-Index: main.cc
+----------------------------------------------------------------------
+Patch name: patch.ltdl
+Author: Bryce Denney
+Date: Wed Oct  9 09:40:48 EDT 2002
+
+Detailed description:
+
+Switch over to using Libtool's ltdl library instead of the nonportable -ldl.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: Makefile.in
 ===================================================================
-RCS file: /cvsroot/bochs/bochs/main.cc,v
-retrieving revision 1.156.2.10
-diff -u -r1.156.2.10 main.cc
---- main.cc	9 Oct 2002 07:03:32 -0000	1.156.2.10
-+++ main.cc	9 Oct 2002 07:51:46 -0000
-@@ -69,7 +69,7 @@
- void bx_init_bx_dbg (void);
- void bx_emulate_hga_dumps_timer(void);
- static char *divider = "========================================================================";
--static logfunctions thePluginLog;
-+logfunctions thePluginLog;
- logfunctions *pluginlog = &thePluginLog;
+RCS file: /cvsroot/bochs/bochs/Makefile.in,v
+retrieving revision 1.93.2.7
+diff -u -r1.93.2.7 Makefile.in
+--- Makefile.in	9 Oct 2002 06:10:35 -0000	1.93.2.7
++++ Makefile.in	9 Oct 2002 13:38:24 -0000
+@@ -161,9 +161,9 @@
  
  
+ .@CPP_SUFFIX@.o:
+-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
+ .c.o:
+-	$(CC) @DASH@c $(CFLAGS) $(FPU_FLAGS) $(BX_INCDIRS) $< @OFP@$@
++	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
+ 
+ 
+ all: @PRIMARY_TARGET@  bximage@EXE@
+@@ -192,7 +192,7 @@
+ 
+ # compile with console CXXFLAGS, not gui CXXFLAGS
+ misc/bximage.o: misc/bximage.c
+-	$(CXX) @DASH@c $(CXXFLAGS_CONSOLE) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) @CXXFP@$< @OFP@$@
+ 
+ niclist@EXE@: misc/niclist.o
+ 	@LINK@ misc/niclist.o
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure.in,v
+retrieving revision 1.147.2.7
+diff -u -r1.147.2.7 configure.in
+--- configure.in	9 Oct 2002 06:23:07 -0000	1.147.2.7
++++ configure.in	9 Oct 2002 13:38:39 -0000
+@@ -101,10 +101,27 @@
+ AC_PROG_CXX
+ AC_PROG_MAKE_SET
+ 
+-# Configure libtool, and default to shared libraries.  Libtool will only be
+-# used for compiling and linking plugins.
++dnl------------ libtool configuration
++dnl Configure libtool, and default to shared libraries.  Libtool will only be
++dnl used for compiling and linking plugins.
+ AC_DISABLE_STATIC
++dnl Enable building of the convenience library
++dnl and set LIBLTDL accordingly
++AC_LIBLTDL_CONVENIENCE
++dnl Substitute INCLTDL and LIBLTDL in the Makefiles
++AC_SUBST(INCLTDL)
++AC_SUBST(LIBLTDL)
++dnl Check for dlopen support
++AC_LIBTOOL_DLOPEN
++dnl Configure libtool
+ AC_PROG_LIBTOOL
++dnl Configure libltdl
++AC_CONFIG_SUBDIRS(libltdl)
++
++dnl add libltdl to include path.  It must be at the END, so that we don't
++dnl accidently include its config.h instead of our own.
++CFLAGS="$CFLAGS "'-I$(top_builddir)/libltdl'
++CXXFLAGS="$CXXFLAGS "'-I$(top_builddir)/libltdl'
+ 
+ AC_PATH_XTRA
+ 
+@@ -297,7 +314,7 @@
+     BX_IODEV_PLUGINS_OBJ='$(BX_IODEV_OBJS_PLUGINABLE)'
+     GUI_NON_PLUGINS_OBJ='$(GUI_OBJS_NON_PLUGINABLE)'
+     GUI_PLUGINS_OBJ='$(GUI_OBJS_PLUGINABLE)'
+-    EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -ldl"
++    EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -lltdl"
+     PLUGIN_VAR='plugin.o'
+    else
+     AC_MSG_RESULT(no)
+Index: plugin.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Attic/plugin.cc,v
+retrieving revision 1.1.2.18
+diff -u -r1.1.2.18 plugin.cc
+--- plugin.cc	9 Oct 2002 07:05:36 -0000	1.1.2.18
++++ plugin.cc	9 Oct 2002 13:38:44 -0000
+@@ -152,7 +152,7 @@
+   static time_t
+ builtinGetCMOSTimeval(void)
+ {
+-  pluginlog->panic("builtinbuiltinGetCMOSTimeval called, no CMOS plugin loaded?");
++  pluginlog->panic("builtinGetCMOSTimeval called, no CMOS plugin loaded?");
+   return 0;
+ }
+ 
+@@ -510,7 +510,7 @@
+     if (plugin->initialized)
+         plugin->plugin_fini ();
+ 
+-    dlclose (plugin->handle);
++    lt_dlclose (plugin->handle);
+     free (plugin->name);
+     free (plugin->args);
+ 
+@@ -532,7 +532,6 @@
+     return;
+ }
+ 
+-
+   void
+ plugin_load (char *name, char *args)
+ {
+@@ -549,27 +548,25 @@
+     plugin->args = args;
+     plugin->initialized = 0;
+ 
+-    plugin->handle = dlopen (name, RTLD_LAZY);
++    plugin->handle = lt_dlopen (name);
+     if (!plugin->handle)
+     {
+-      BX_PANIC (("dlopen failed: %s", dlerror ()));
++      BX_PANIC (("dlopen failed for module '%s': %s", name, lt_dlerror ()));
+       free (plugin);
+       return;
+     }
+ 
+     plugin->plugin_init =  
+       (int  (*)(struct _plugin_t *, int, char *[])) /* monster typecast */
+-      dlsym (plugin->handle, PLUGIN_INIT);
+-    if ((plug_err = dlerror ()) != NULL)
+-    {
+-        pluginlog->panic("could not find plugin_init: %s", plug_err);
++      lt_dlsym (plugin->handle, PLUGIN_INIT);
++    if (plugin->plugin_init == NULL) {
++        pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
+         plugin_abort ();
+     }
+ 
+-    plugin->plugin_fini = (void (*)(void)) dlsym (plugin->handle, PLUGIN_FINI);
+-    if ((plug_err = dlerror ()) != NULL)
+-    {
+-        pluginlog->panic("could not find plugin_fini: %s", plug_err);
++    plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, PLUGIN_FINI);
++    if (plugin->plugin_init == NULL) {
++        pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
+         plugin_abort ();
+     }
+ 
+@@ -660,6 +657,12 @@
+ 
+   pluginRegisterTimer = builtinRegisterTimer;
+   pluginActivateTimer = builtinActivateTimer;
++
++  int status = lt_dlinit ();
++  if (status != 0) {
++    BX_ERROR (("initialization error in ltdl library (for loading plugins)"));
++    BX_PANIC (("error message was: %s", lt_dlerror ()));
++  }
+ }
+ 
+ 
+@@ -777,10 +780,10 @@
+   sprintf(plugin_filename,"%s%s",PLUGIN_PATH,name);
+ 
+   plugin_load (plugin_filename, "");
+-  void *handle = dlopen (plugin_filename, RTLD_LAZY);
++  lt_dlhandle handle = lt_dlopen (plugin_filename);
+   if (!handle) {
+     pluginlog->error("could not open plugin %s", plugin_filename);
+-    pluginlog->panic("dlopen error: %s", dlerror ());
++    pluginlog->panic("dlopen error: %s", lt_dlerror ());
+   }
+   pluginlog->info("loaded plugin %s",plugin_filename);
+   return 0;
+@@ -800,17 +803,17 @@
+   plugin_startup();
+ 
+ #if BX_PLUGINS
+-  bx_load_plugin("libunmapped.so");
+-  bx_load_plugin("libbiosdev.so");
+-  bx_load_plugin("libcmos.so");
+-  bx_load_plugin("libdma.so");
+-  bx_load_plugin("libpic.so");
+-  bx_load_plugin("libvga.so");
+-  bx_load_plugin("libfloppy.so");
+-  bx_load_plugin("libparallel.so");
+-  bx_load_plugin("libserial.so");
+-  bx_load_plugin("libkeyboard.so");
+-  bx_load_plugin("libharddrv.so");
++  bx_load_plugin("libunmapped.la");
++  bx_load_plugin("libbiosdev.la");
++  bx_load_plugin("libcmos.la");
++  bx_load_plugin("libdma.la");
++  bx_load_plugin("libpic.la");
++  bx_load_plugin("libvga.la");
++  bx_load_plugin("libfloppy.la");
++  bx_load_plugin("libparallel.la");
++  bx_load_plugin("libserial.la");
++  bx_load_plugin("libkeyboard.la");
++  bx_load_plugin("libharddrv.la");
+ 
+ 
+   // quick and dirty gui plugin selection
+@@ -834,9 +837,9 @@
+   do {
+     fprintf (stderr, "--> ");
+   } while (scanf ("%d", &which) != 1 || !(which>=0 && which<imax));
+-  char soname[64];
+-  sprintf (soname, "lib%s.so", gui_names[which]);
+-  bx_load_plugin (soname);
++  char libname[64];
++  sprintf (libname, "lib%s.la", gui_names[which]);
++  bx_load_plugin (libname);
+ 
+   if (bx_gui == NULL) {
+     BX_PANIC (("No gui has been loaded.  It is not safe to continue. Exiting."));
 Index: plugin.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/Attic/plugin.h,v
 retrieving revision 1.1.2.13
 diff -u -r1.1.2.13 plugin.h
 --- plugin.h	9 Oct 2002 06:58:56 -0000	1.1.2.13
-+++ plugin.h	9 Oct 2002 07:51:46 -0000
++++ plugin.h	9 Oct 2002 13:38:44 -0000
 @@ -20,6 +20,8 @@
  #ifndef __PLUGIN_H
  #define __PLUGIN_H
@@ -39,72 +251,169 @@ diff -u -r1.1.2.13 plugin.h
      int  argc;
      char *name, *args, *argv[MAX_ARGC];
      int  (*plugin_init)(struct _plugin_t *plugin, int argc, char *argv[]);
-Index: plugin.cc
+Index: bios/Makefile.in
 ===================================================================
-RCS file: /cvsroot/bochs/bochs/Attic/plugin.cc,v
-retrieving revision 1.1.2.18
-diff -u -r1.1.2.18 plugin.cc
---- plugin.cc	9 Oct 2002 07:05:36 -0000	1.1.2.18
-+++ plugin.cc	9 Oct 2002 07:51:46 -0000
-@@ -510,7 +510,7 @@
-     if (plugin->initialized)
-         plugin->plugin_fini ();
+RCS file: /cvsroot/bochs/bochs/bios/Makefile.in,v
+retrieving revision 1.12
+diff -u -r1.12 Makefile.in
+--- bios/Makefile.in	4 Oct 2002 06:08:38 -0000	1.12
++++ bios/Makefile.in	9 Oct 2002 13:38:44 -0000
+@@ -48,7 +48,7 @@
  
--    dlclose (plugin->handle);
-+    lt_dlclose (plugin->handle);
-     free (plugin->name);
-     free (plugin->args);
  
-@@ -532,7 +532,6 @@
-     return;
- }
+ .@CPP_SUFFIX@.o:
+-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
  
--
-   void
- plugin_load (char *name, char *args)
- {
-@@ -549,25 +548,25 @@
-     plugin->args = args;
-     plugin->initialized = 0;
  
--    plugin->handle = dlopen (name, RTLD_LAZY);
-+    plugin->handle = lt_dlopen (name);
-     if (!plugin->handle)
-     {
--      BX_PANIC (("dlopen failed: %s", dlerror ()));
-+      BX_PANIC (("dlopen failed: %s", lt_dlerror ()));
-       free (plugin);
-       return;
-     }
+ bios: rombios.bin
+Index: cpu/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/Makefile.in,v
+retrieving revision 1.45.2.2
+diff -u -r1.45.2.2 Makefile.in
+--- cpu/Makefile.in	9 Oct 2002 05:14:57 -0000	1.45.2.2
++++ cpu/Makefile.in	9 Oct 2002 13:38:45 -0000
+@@ -120,7 +120,7 @@
+ all: libcpu.a
  
-     plugin->plugin_init =  
-       (int  (*)(struct _plugin_t *, int, char *[])) /* monster typecast */
--      dlsym (plugin->handle, PLUGIN_INIT);
--    if ((plug_err = dlerror ()) != NULL)
-+      lt_dlsym (plugin->handle, PLUGIN_INIT);
-+    if ((plug_err = lt_dlerror ()) != NULL)
-     {
-         pluginlog->panic("could not find plugin_init: %s", plug_err);
-         plugin_abort ();
-     }
+ .@CPP_SUFFIX@.o:
+-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
  
--    plugin->plugin_fini = (void (*)(void)) dlsym (plugin->handle, PLUGIN_FINI);
--    if ((plug_err = dlerror ()) != NULL)
-+    plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, PLUGIN_FINI);
-+    if ((plug_err = lt_dlerror ()) != NULL)
-     {
-         pluginlog->panic("could not find plugin_fini: %s", plug_err);
-         plugin_abort ();
-@@ -777,10 +776,10 @@
-   sprintf(plugin_filename,"%s%s",PLUGIN_PATH,name);
  
-   plugin_load (plugin_filename, "");
--  void *handle = dlopen (plugin_filename, RTLD_LAZY);
-+  lt_dlhandle handle = lt_dlopen (plugin_filename);
-   if (!handle) {
-     pluginlog->error("could not open plugin %s", plugin_filename);
--    pluginlog->panic("dlopen error: %s", dlerror ());
-+    pluginlog->panic("dlopen error: %s", lt_dlerror ());
-   }
-   pluginlog->info("loaded plugin %s",plugin_filename);
-   return 0;
+ libcpu.a: $(OBJS) @OBJS64@
+Index: debug/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/Makefile.in,v
+retrieving revision 1.10.2.2
+diff -u -r1.10.2.2 Makefile.in
+--- debug/Makefile.in	9 Oct 2002 05:14:57 -0000	1.10.2.2
++++ debug/Makefile.in	9 Oct 2002 13:38:47 -0000
+@@ -67,11 +67,11 @@
+ all: libdebug.a
+ 
+ .@CPP_SUFFIX@.o:
+-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
+ 
+ 
+ .c.o:
+-	$(CC) @DASH@c $(CFLAGS) $(BX_INCDIRS) @CFP@$< @OFP@$@
++	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) @CFP@$< @OFP@$@
+ 
+ 
+ 
+Index: disasm/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/disasm/Makefile.in,v
+retrieving revision 1.7.2.2
+diff -u -r1.7.2.2 Makefile.in
+--- disasm/Makefile.in	9 Oct 2002 05:14:57 -0000	1.7.2.2
++++ disasm/Makefile.in	9 Oct 2002 13:38:47 -0000
+@@ -54,7 +54,7 @@
+ all: libdisasm.a
+ 
+ .@CPP_SUFFIX@.o:
+-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
+ 
+ 
+ 
+Index: dynamic/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/dynamic/Makefile.in,v
+retrieving revision 1.4
+diff -u -r1.4 Makefile.in
+--- dynamic/Makefile.in	1 Oct 2002 23:37:49 -0000	1.4
++++ dynamic/Makefile.in	9 Oct 2002 13:38:47 -0000
+@@ -51,7 +51,7 @@
+ 
+ 
+ .@CPP_SUFFIX@.o:
+-	$(CXX) @DASH@c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
+ 
+ 
+ 
+Index: fpu/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/fpu/Makefile.in,v
+retrieving revision 1.8.2.2
+diff -u -r1.8.2.2 Makefile.in
+--- fpu/Makefile.in	9 Oct 2002 05:14:57 -0000	1.8.2.2
++++ fpu/Makefile.in	9 Oct 2002 13:38:47 -0000
+@@ -80,7 +80,7 @@
+ all: libfpu.a
+ 
+ .@CPP_SUFFIX@.o:
+-	$(CXX) @DASH@c $(CXXFLAGS) $(FPU_FLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) $(FPU_FLAGS) @CXXFP@$< @OFP@$@
+ 
+ .S.o:
+ 	$(CC) -I./stubs -D__ASSEMBLY__ $(PARANOID) -c $<
+Index: gui/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/Makefile.in,v
+retrieving revision 1.32.2.7
+diff -u -r1.32.2.7 Makefile.in
+--- gui/Makefile.in	9 Oct 2002 07:25:59 -0000	1.32.2.7
++++ gui/Makefile.in	9 Oct 2002 13:38:48 -0000
+@@ -75,10 +75,10 @@
+ BX_GUI_OBJS = $(GUI_OBJS)
+ 
+ %.o: %.cc
+-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
++	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+ 
+ %.lo: %.cc
+-	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
++	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+ 
+ all: libgui.a plugins
+ 
+@@ -87,7 +87,7 @@
+ 	$(LIBTOOL) $(CXX) -o $@ $(BX_GUI_OBJS)
+ 
+ beos.lo: beos.@CPP_SUFFIX@
+-	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $(BEOS_CFLAGS) $<
++	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BEOS_CFLAGS) $<
+ 
+ lib%.la: %.lo
+ 	$(LIBTOOL) $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+Index: iodev/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/Makefile.in,v
+retrieving revision 1.20.2.12
+diff -u -r1.20.2.12 Makefile.in
+--- iodev/Makefile.in	9 Oct 2002 07:20:07 -0000	1.20.2.12
++++ iodev/Makefile.in	9 Oct 2002 13:38:49 -0000
+@@ -102,10 +102,10 @@
+ all: libiodev.a plugins
+ 
+ %.o: %.cc
+-	$(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
++	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+ 
+ %.lo: %.cc
+-	$(LIBTOOL) $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $(BX_INCDIRS) $< -o $@
++	$(LIBTOOL) $(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+ 
+ # special rule for hard drive, which can have multiple objects
+ libharddrv.la: harddrv.lo $(CDROM_OBJS:.o:.lo)
+Index: memory/Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/memory/Makefile.in,v
+retrieving revision 1.6.2.2
+diff -u -r1.6.2.2 Makefile.in
+--- memory/Makefile.in	9 Oct 2002 05:14:58 -0000	1.6.2.2
++++ memory/Makefile.in	9 Oct 2002 13:38:49 -0000
+@@ -50,7 +50,7 @@
+ all: libmemory.a
+ 
+ .@CPP_SUFFIX@.o:
+-	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
++	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
+ 
+ 
+ libmemory.a: $(BX_OBJS)
