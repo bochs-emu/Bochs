@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #define LT_SCOPE extern /* so that ltdl.h does not export anything */
 #include <ltdl.h>
 #define MAIN_DLL_EXPORT

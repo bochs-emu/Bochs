@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
 #define MAIN_DLL_EXPORT
 #include "main.h"
 
