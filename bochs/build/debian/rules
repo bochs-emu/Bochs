@@ -52,11 +52,6 @@ install: build
 	$(MAKE) install install_dlx prefix=$(CURDIR)/debian/bochs/usr
 
 
-	# Put the font in the right place
-	mkdir -p $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc
-	gzip -c $(CURDIR)/debian/bochs/usr/share/bochs/vga.pcf > $(CURDIR)/debian/bochs/usr/lib/X11/fonts/misc/vga.pcf.gz
-
-
 # Build architecture-independent files here.
 binary-indep: build install
 # We have nothing to do by default.
