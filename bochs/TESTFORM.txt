@@ -42,7 +42,8 @@ Redhat Linux 6.2 with 2.2.16 kernel.
 
 What version of bochs are you using?
    [ ] compiled from version 1.4.1
-   [ ] compiled from version 2.0.pre1
+   [ ] compiled from version 2.0
+   [ ] compiled from version [_____]
    [ ] I compiled it from the CVS sources from date: [__]
    [ ] other source distribution from URL: [__]
    [ ] binary distribution from URL: [__]
