@@ -1,16 +1,13 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochs 1 "29 Jun 2002" "bochs @version@" "The Bochs Project"
+.TH bochs 1 "09 Dec 2002" "bochs @version@" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
 .\"SKIP_SECTION"
 .SH SYNOPSIS
 .B bochs
-.RB [\| \-q \|]
-.RB [\| \-qf
-.IR configfile \|]
-.RI \|[ bochsrc
-.IR syntax \|]
+.RI \|[ bochs_options \|]
+.RI \|[ bochsrc_options \|]
 .\"SKIP_SECTION"
 .SH DESCRIPTION
 .LP
@@ -20,15 +17,30 @@ emulator,  it  can  run  many operating systems including
 Linux and Microsoft(R) Windows(R).
 .\".\"DONT_SPLIT"
 .SH OPTIONS
+.LP
+When you run bochs without one of the following options, it
+will search for a configuration file called .bochsrc in
+the current directory and your home directory and display
+the start menu.
 .TP
 .BI \-q
-When you run bochs with this option, it will skip the start
-menu and search for a configuration file called .bochsrc in
-the current directory and your home directory.
+With this option the start menu will be skipped after loading
+the configuration file.
+.TP
+.BI \-f\ configfile
+This option specifies the name of the configuration file.
 .TP
 .BI \-qf\ configfile
 When you run bochs with this option, it will skip the start
 menu and use the specified configuration file.
+.TP
+.BI \-n
+With this option bochs doesn't load a configuration file.
+In that case the setup for the emulation must be done with
+bochsrc options on the command line or in the start menu.
+.TP
+.BI \-h,\ --help
+Print a summary of the command line options for bochs and exit.
 .LP
 You can override the settings from the configuration file 
 with command line arguments, using the  same  syntax  as the
