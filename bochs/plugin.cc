@@ -1,21 +1,16 @@
-/*
- *  plex86: run multiple x86 operating systems concurrently
- *  Copyright (C) 1999-2000  The plex86 developers team
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- */
+/////////////////////////////////////////////////////////////////////////
+// $Id: plugin.cc,v 1.1.2.35 2002-10-23 23:55:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+// This file defines the plugin and plugin-device registration functions and
+// the device registration functions.  It handles dynamic loading of modules,
+// using the LTDL library for cross-platform support.
+//
+// This file is based on the plugin.c file from plex86, but with significant
+// changes to make it work in Bochs.
+// Plex86 is Copyright (C) 1999-2000  The plex86 developers team
+//
+/////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
 #include "plugin.h"

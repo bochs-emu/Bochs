@@ -1,3 +1,19 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: extplugin.h,v 1.1.2.2 2002-10-23 23:55:39 bdenney Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+// extplugin.h
+//
+// This header file defines the types necessary to make a Bochs plugin,
+// but without mentioning all the details of Bochs internals (bochs.h).  
+// It is included by the configuration interfaces and possibly other 
+// things which are intentionally isolated from other parts of the program.
+//
+// The plugin_t struct comes from the plugin.h file from plex86.
+// Plex86 is Copyright (C) 1999-2000  The plex86 developers team
+//
+/////////////////////////////////////////////////////////////////////////
+
 #ifndef __EXTPLUGIN_H
 #define __EXTPLUGIN_H
 
