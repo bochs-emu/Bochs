@@ -46,15 +46,9 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMEN
 APIC_OBJS = @APIC_OBJS@
 EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 
-# Objects which are specific to the x86-32 compile and
-# are not used for the x86-64 compile because they have not
-# been synced yet.
-OBJS32 = \
-
-
 # Objects which are synced between the cpu and cpu64 code and
 # are used for either compile.
-OBJSXX = \
+OBJS = \
 	init.o \
 	cpu.o \
 	resolve32.o \
@@ -107,9 +101,7 @@ OBJSXX = \
 	$(EXT_DEBUG_OBJS) \
 
 	
-# Objects which are only used for x86-64 code, but which have been
-# moved to the cpu/ directory since they cause no conflict at all
-# by being here.
+# Objects which are only used for x86-64 code
 OBJS64 = \
 	arith64.o \
 	ctrl_xfer64.o \
@@ -129,14 +121,12 @@ BX_INCLUDES = ../bochs.h ../config.h
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
 
-libcpu.a: @OBJS32@ $(OBJSXX) @OBJS64@
+libcpu.a: $(OBJS) @OBJS64@
 	@RMCOMMAND@ libcpu.a
-	@MAKELIB@ @OBJS32@ $(OBJSXX) @OBJS64@
+	@MAKELIB@ $(OBJS) @OBJS64@
 	$(RANLIB) libcpu.a
 
-$(OBJS32): $(BX_INCLUDES)
-
-$(OBJSXX): $(BX_INCLUDES)
+$(OBJS): $(BX_INCLUDES)
 
 $(OBJS64_CPU): $(BX_INCLUDES)
 

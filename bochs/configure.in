@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.116 2002-09-20 15:34:51 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.117 2002-09-20 23:16:23 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -312,34 +312,22 @@ AC_ARG_ENABLE(x86-64,
   [  --enable-x86-64                   compile in support for x86-64 instructions],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    OBJS32=''
     OBJS64='$(OBJS64)'
-    CPU32LIB='cpu/libcpu.a'
-    CPU32OBJS='cpu/*.o'
     AC_DEFINE(BX_SUPPORT_X86_64, 1)
     use_x86_64=1
    else
     AC_MSG_RESULT(no)
-    OBJS32='$(OBJS32)'
     OBJS64=''
-    CPU32LIB=''
-    CPU32OBJS=''
     AC_DEFINE(BX_SUPPORT_X86_64, 0)
    fi
    ],
   [
     AC_MSG_RESULT(no)
-    OBJS32='$(OBJS32)'
     OBJS64=''
-    CPU32LIB=''
-    CPU32OBJS=''
     AC_DEFINE(BX_SUPPORT_X86_64, 0)
     ]
   )
-AC_SUBST(OBJS32)
 AC_SUBST(OBJS64)
-AC_SUBST(CPU32LIB)
-AC_SUBST(CPU32OBJS)
 
 AC_MSG_CHECKING(for cpu level)
 AC_ARG_ENABLE(cpu-level,
