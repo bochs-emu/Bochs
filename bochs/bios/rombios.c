@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.125 2005-01-02 09:45:37 vruppert Exp $
+// $Id: rombios.c,v 1.126 2005-01-27 18:03:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -912,10 +912,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.125 $";
-static char bios_date_string[] = "$Date: 2005-01-02 09:45:37 $";
+static char bios_cvs_version_string[] = "$Revision: 1.126 $";
+static char bios_date_string[] = "$Date: 2005-01-27 18:03:38 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.125 2005-01-02 09:45:37 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.126 2005-01-27 18:03:38 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3687,14 +3687,17 @@ BX_DEBUG_INT15("case 1: enable mouse\n");
         case 5: // Initialize Mouse
 BX_DEBUG_INT15("case 1 or 5:\n");
           if (regs.u.r8.al == 5) {
-            if (regs.u.r8.bh != 3)
-              BX_PANIC("INT 15h C2 AL=5, BH=%02x\n", (unsigned) regs.u.r8.bh);
+            if (regs.u.r8.bh != 3) {
+              SET_CF();
+              regs.u.r8.ah = 0x02; // invalid input
+              return;
+            }
             mouse_flags_2 = read_byte(ebda_seg, 0x0027);
             mouse_flags_2 = (mouse_flags_2 & 0x00) | regs.u.r8.bh;
             mouse_flags_1 = 0x00;
             write_byte(ebda_seg, 0x0026, mouse_flags_1);
             write_byte(ebda_seg, 0x0027, mouse_flags_2);
-            }
+          }
 
           inhibit_mouse_int_and_events(); // disable IRQ12 and packets
           ret = send_to_mouse_ctrl(0xFF); // reset mouse command
