@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: osdep.h,v 1.8 2001-10-05 06:07:00 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,10 @@ extern "C" {
 // Hacks for win32, but exclude MINGW32 because it doesn't need them.
 //////////////////////////////////////////////////////////////////////
 #ifdef WIN32
+
 #ifndef __MINGW32__
+// This is for win32 platforms EXCEPT FOR cygwin compiling with -mno-cygwin.
+
 // always return regular file.
 #  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
 #  define S_ISCHR(m)      (((m) & S_IFMT) == S_IFCHR)
@@ -74,6 +77,9 @@ extern "C" {
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
 
+#if !BX_HAVE_WSPRINTF
+#define wsprintf sprintf
+#endif
 
 #if !BX_HAVE_SNPRINTF
 #define snprintf bx_snprintf
