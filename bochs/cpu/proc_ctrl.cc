@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.20 2002-04-11 00:36:02 instinc Exp $
+// $Id: proc_ctrl.cc,v 1.21 2002-04-11 01:19:24 instinc Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,13 +33,12 @@
 #define this (BX_CPU(0))
 #endif
 
-#define EXCEPTION(x...) exception(x, __FILE__, __LINE__)
   void
 BX_CPU_C::UndefinedOpcode(BxInstruction_t *i)
 {
   BX_DEBUG(("UndefinedOpcode: %02x causes exception 6",
               (unsigned) i->b1));
-  EXCEPTION(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0, 0);
 }
 
   void
@@ -56,7 +55,7 @@ BX_CPU_C::HLT(BxInstruction_t *i)
 
   if (CPL!=0) {
     BX_INFO(("HLT(): CPL!=0"));
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
 
@@ -98,7 +97,7 @@ BX_CPU_C::CLTS(BxInstruction_t *i)
   // #GP(0) if CPL is not 0
   if (CPL!=0) {
     BX_INFO(("CLTS(): CPL!=0"));
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
 
@@ -120,7 +119,7 @@ BX_CPU_C::INVD(BxInstruction_t *i)
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
       BX_INFO(("INVD: CPL!=0"));
-      EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
   BX_INSTR_CACHE_CNTRL(BX_INSTR_INVD);
@@ -140,7 +139,7 @@ BX_CPU_C::WBINVD(BxInstruction_t *i)
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
       BX_INFO(("WBINVD: CPL!=0"));
-      EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
   BX_INSTR_CACHE_CNTRL(BX_INSTR_WBINVD);
@@ -175,7 +174,7 @@ BX_CPU_C::MOV_DdRd(BxInstruction_t *i)
   if (protected_mode() && CPL!=0) {
     BX_PANIC(("MOV_DdRd: CPL!=0"));
     /* #GP(0) if CPL is not 0 */
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
     }
 
   val_32 = BX_READ_32BIT_REG(i->rm);
@@ -290,7 +289,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
 
   if (v8086_mode()) {
     BX_INFO(("MOV_RdDd: v8086 mode causes #GP"));
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
     }
 
   if (i->mod != 0xc0) {
@@ -300,7 +299,7 @@ BX_CPU_C::MOV_RdDd(BxInstruction_t *i)
 
   if (protected_mode() && (CPL!=0)) {
     BX_INFO(("MOV_RdDd: CPL!=0 causes #GP"));
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
 
@@ -372,7 +371,7 @@ BX_CPU_C::LMSW_Ew(BxInstruction_t *i)
   if ( protected_mode() ) {
     if ( CPL != 0 ) {
       BX_INFO(("LMSW: CPL != 0, CPL=%u", (unsigned) CPL));
-      EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
     }
@@ -467,7 +466,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
   if (protected_mode() && CPL!=0) {
     BX_PANIC(("MOV_CdRd: CPL!=0"));
     /* #GP(0) if CPL is not 0 */
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
 
@@ -550,7 +549,7 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
   if (protected_mode() && CPL!=0) {
 //    BX_PANIC(("MOV_RdCd: CPL!=0"));
     /* #GP(0) if CPL is not 0 */
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
 
@@ -1137,7 +1136,7 @@ BX_CPU_C::RDTSC(BxInstruction_t *i)
     //BX_INFO(("RDTSC: returning EDX:EAX = %08x:%08x", EDX, EAX));
   } else {
     // not allowed to use RDTSC!
-    EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+    exception (BX_GP_EXCEPTION, 0, 0);
   }
 #else
   UndefinedOpcode(i);
@@ -1217,7 +1216,7 @@ BX_CPU_C::RDMSR(BxInstruction_t *i)
 #endif	/* BX_CPU_LEVEL >= 5 */
 
 do_exception:
-	EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+	exception(BX_GP_EXCEPTION, 0, 0);
 }
 
   void
@@ -1283,7 +1282,7 @@ BX_CPU_C::WRMSR(BxInstruction_t *i)
 #endif	/* BX_CPU_LEVEL >= 5 */
 
 do_exception:
-	EXCEPTION(BX_GP_EXCEPTION, 0, 0);
+	exception(BX_GP_EXCEPTION, 0, 0);
 
 }
 
