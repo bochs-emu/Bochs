@@ -1,0 +1,53 @@
+----------------------------------------------------------------------
+Patch name: patch.mingw-resources
+Author: Jeroen Janssen
+Date: 2003-08-19
+Status: not applied
+
+Detailed description:
+
+Changes the .rc (resource) files to use forware (/) style slashes
+instead of backwards style ones. 
+This allows for crosscompilation from linux using a crosscompiler.
+
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+Index: win32res.rc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/win32res.rc,v
+retrieving revision 1.4
+diff -u -r1.4 win32res.rc
+--- win32res.rc	15 Jul 2003 21:02:05 -0000	1.4
++++ win32res.rc	19 Aug 2003 16:40:03 -0000
+@@ -1,7 +1,7 @@
+ #include <windows.h>
+-#include "gui\win32res.h"
++#include "gui/win32res.h"
+ 
+-ICON_BOCHS ICON build\win32\nsis\bochs.ico
++ICON_BOCHS ICON build/win32/nsis/bochs.ico
+ 
+ ASK_DLG DIALOG 30, 30, 200, 100
+ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+Index: wxbochs.rc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/wxbochs.rc,v
+retrieving revision 1.4
+diff -u -r1.4 wxbochs.rc
+--- wxbochs.rc	13 Jul 2003 23:30:55 -0000	1.4
++++ wxbochs.rc	19 Aug 2003 16:40:03 -0000
+@@ -1,5 +1,5 @@
+ #include "config.h"
+-icon_bochs ICON build\win32\nsis\bochs.ico
++icon_bochs ICON build/win32/nsis/bochs.ico
+ #include "wx/msw/wx.rc"
+ #if BX_WITH_WIN32
+ #include "win32res.rc"
