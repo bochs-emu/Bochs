@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.14 2002-10-25 11:44:37 bdenney Exp $
+// $Id: keymap.cc,v 1.15 2003-07-12 08:17:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -21,13 +21,13 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // Todo
-//  . Currently supported only by x11. Check if other guis need mapping.
+//  . Currently supported by sdl, wxGTK and x11. Check if other guis need mapping.
 //  . Tables look-up should be optimised.
 //
 
 #include "bochs.h"
 
-// Table of bocks "BX_KEY_*" symbols
+// Table of bochs "BX_KEY_*" symbols
 // the table must be in BX_KEY_* order
 char *bx_key_symbol[BX_KEY_NBKEYS] = {
   "BX_KEY_CTRL_L",         "BX_KEY_SHIFT_L",        "BX_KEY_F1",
@@ -323,3 +323,8 @@ bx_keymap_c::findAsciiChar(Bit8u ch)
     return NULL;
 }
 
+    char *
+bx_keymap_c::getBXKeyName(Bit32u key)
+{
+    return bx_key_symbol[key & 0x7fffffff];
+}

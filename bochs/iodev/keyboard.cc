@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.78 2003-06-07 18:41:07 vruppert Exp $
+// $Id: keyboard.cc,v 1.79 2003-07-12 08:17:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.78 2003-06-07 18:41:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.79 2003-07-12 08:17:10 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -739,7 +739,7 @@ bx_keyb_c::gen_scancode(Bit32u key)
   unsigned char *scancode;
   Bit8u  i;
 
-  BX_DEBUG(( "gen_scancode(): BX_KEY %d %s", key & 0x7ffffff, (key & 0x80000000)?"released":"pressed"));
+  BX_DEBUG(( "gen_scancode(): %s %s", bx_keymap.getBXKeyName(key), (key >> 31)?"released":"pressed"));
 
   if (!BX_KEY_THIS s.kbd_controller.scancodes_translate)
 	BX_DEBUG(("keyboard: gen_scancode with scancode_translate cleared"));
