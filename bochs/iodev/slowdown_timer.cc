@@ -1,13 +1,11 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.6 2001-10-03 13:10:38 bdenney Exp $
+// $Id: slowdown_timer.cc,v 1.7 2001-10-05 13:31:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
 #include <errno.h>
 
 #if BX_USE_SLOWDOWN_TIMER
-
-#define BX_HAVE_USLEEP 1
 
 //These need to stay printfs because they are useless in the log file.
 #define BX_SLOWDOWN_PRINTF_FEEDBACK 0
