@@ -143,7 +143,7 @@ bx_pit.dll: pit.o pit82c54.o pit_wrap.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit.o pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_sb16.dll: sb16.o $(SOUNDLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_sb16.dll sb16.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+	$(CXX) $(CXXFLAGS) -shared -o bx_sb16.dll sb16.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
 ##### end DLL section
 
 clean:
