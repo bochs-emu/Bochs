@@ -1,0 +1,17 @@
+PERFORMANCE
+===========
+
+Optimize functions in util-nexus.c: mon_memzero, mon_memcpy, mon_memset
+  They could be done a lot more efficiently.
+  Perhaps make mon_memzero function specifically for pages.
+
+Pseudo devices and special guest-OS specific device drivers for
+  disk/network/video/etc and an associated architecture.  This would
+  let us pass data more quickly and prevent a lot of emulation overhead.
+  The real device emulation could plug into the same architecture as
+  the pseudo devices.
+
+
+Fix extra CR3 reload in nexus.S
+
+Alignment of routines in mon-fault.c

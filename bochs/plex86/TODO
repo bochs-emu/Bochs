@@ -1,0 +1,93 @@
+Synchronize page writes with iCache in bochs.
+
+Deal with cycle counts of guest execution in VM, and in
+  bochs/plex86 shim.
+
+Complete the CPUID info passing between bochs/plex86.
+
+Make a host-null.c file to demonstrate/test the OS-specific
+  files that are needed for a host port.
+
+Deal with page_usage.  How do we update this between timeslices?
+  Do we always clear it?  Maybe we should keep a log of things to
+  clear (page_usage, GDT entries, PDE entries, ...) and clear those
+  before returning to user space.
+
+monpanic breaks up into 2 monprints which hit user space twice.
+
+Task segment must be a 32-bit'er.
+
+Save/restore floating point state of host/VM.
+
+pack guest_cpu_t structure.
+
+deduct off some cycles for the IRET/int sequence.
+
+Delete use of vm->addr, and split print-nexus into parts so we can
+  use direct host or guest fields.  I don't like having implicit
+  pointer usage.
+
+Not compiled for debug
+Compiled for BX_SMP_PROCESSORS == 1
+cpuid match
+x86 host
+
+monitor uses slots 1,2,3 so guest ring3 should not
+  use these slots.
+
+FIX a20 in system fields.
+FIX use of CPL in paging-mon.c.  We can eliminate any
+  code other than CPL==3.
+
+
+==================== From previous plex86 TODO file ====================
+
+  This is a list of the major tasks/achievements/milestones yet to-do.
+  We should keep this list prioritized, creating sort of a road map.
+  Hopefully, this will reduce duplicate suggestions on the developers
+  channels, and let people know where we are in the development process.
+  Entries listed first have highest priority.
+
+  <NEAR-TERM>
+  - Fix plex86 on Linux 2.4.x/SMP or with 1P and LAPIC enabled.
+
+  - Save FPU state on host <--> monitor context switch.
+
+  - Special guest-specific drivers and special emulated pseudo-devices
+    for faster graphics/network/disk access.
+
+  - Allow some of the inactive guest pages be host swappable.
+    Currently, all pages are locked down.
+
+  - Many performance enhancements (see PERFORMANCE)
+
+  - Test and get more guests running; list in 'GUESTS'.
+
+  - Allow memory to be mapped anywhere in the physical address
+    space.
+
+  - Allow certain guest pages to be swap eligible by the host.
+    This means they will have to be unavailable by the guest
+    during that time.  Need a dynamic algorith for this.
+
+  - Test on 2.4 with SMP/APIC enabled on single processor machine.
+
+  - Deal with guest use of TF.
+
+  - Deal with LDT
+
+
+Use monitor unmapped IO port handler rather than user space.
+
+Get rid of VM message count instrumentation spew to kernel log
+
+unallocVmPages/unreserve_guest_pages called twice,
+  release & teardown.
+
+move mapMonitor to -host.c
+
+Zero out GDT when remapped.
+
+When is mapMonitor called?
+
+Fix extra PDBR reload in nexus.S

@@ -1,0 +1,169 @@
+dnl // Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.4)
+AC_INIT(COPYING)
+AC_CONFIG_HEADER(config.h)
+
+changequote(<<, >>)
+changequote([, ])
+
+AC_PROG_CC
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+AC_PATH_XTRA
+
+AC_C_INLINE
+AC_CHECK_SIZEOF(unsigned char, 0)
+AC_CHECK_SIZEOF(unsigned short, 0)
+AC_CHECK_SIZEOF(unsigned int, 0)
+AC_CHECK_SIZEOF(unsigned long, 0)
+AC_CHECK_SIZEOF(unsigned long long, 0)
+
+dnl When compiling with gcc, use appropriate warning level
+if test "$GCC" = "yes"; then
+  CFLAGS="$CFLAGS -Wall -Wstrict-prototypes"
+fi
+if test "$GXX" = "yes"; then
+  CXXFLAGS="$CXXFLAGS -Wall -Wstrict-prototypes"
+fi
+
+AC_ARG_WITH(WinNT,
+  [  --with-WinNT                      WinNT host],
+  )
+
+AC_ARG_WITH(BeOS,
+  [  --with-BeOS                       BeOS host],
+  )
+
+AC_ARG_WITH(Linux,
+  [  --with-Linux                      Linux host],
+  )
+
+AC_ARG_WITH(NetBSD,
+  [  --with-NetBSD                     NetBSD host],
+  )
+
+AC_ARG_WITH(FreeBSD,
+  [  --with-FreeBSD                    FreeBSD host],
+  )
+
+AC_ARG_WITH(null,
+  [  --with-null                       No real host],
+  )
+
+AC_ARG_WITH(linux-source,
+  [  --with-linux-source=dir           Linux kernel source dir],
+  [ LINUX_SRC="$withval" ],
+  [ LINUX_SRC="/lib/modules/`uname -r`/build" ]
+  )
+AC_SUBST(LINUX_SRC)
+
+AC_ARG_WITH(netbsd-source,
+  [  --with-netbsd-source=dir          NetBSD kernel source dir],
+  [ NETBSD_SRC="$withval" ],
+  [ NETBSD_SRC="/sys" ]
+  )
+AC_SUBST(NETBSD_SRC)
+
+AC_ARG_WITH(freebsd-source,
+  [  --with-freebsd-source=dir          FreeBSD kernel source dir],
+  [ FREEBSD_SRC="$withval" ],
+  [ FREEBSD_SRC="/sys" ]
+  )
+AC_SUBST(FREEBSD_SRC)
+
+dnl // make sure Linux is default host if no other chosen
+if test "$with_Linux" != yes && \
+   test "$with_BeOS" != yes && \
+   test "$with_NetBSD" != yes && \
+   test "$with_FreeBSD" != yes && \
+   test "$with_null" != yes && \
+   test "$with_WinNT" != yes; then
+  with_Linux=yes
+fi
+
+if test "$with_Linux" = yes; then
+  HOST_O=host-linux.o
+  KERNEL_TARGET=plex86.o
+  HOST_TARGET=linux-target
+  HOST_CLEAN=linux-clean
+  HOSTOS=LINUX
+  FULL_LINK=
+elif test "$with_BeOS" = yes; then
+  HOST_O=host-beos.o
+  KERNEL_TARGET=plex86
+  HOST_TARGET=
+  HOST_CLEAN=
+  HOSTOS=BEOS
+  FULL_LINK=
+elif test "$with_NetBSD" = yes; then
+  HOST_O=host-netbsd.o
+  KERNEL_TARGET=plex86.o
+  HOST_TARGET=netbsd-target
+  HOST_CLEAN=netbsd-clean
+  HOSTOS=NETBSD
+  FULL_LINK=
+elif test "$with_FreeBSD" = yes; then
+  HOST_O=host-freebsd.o
+  KERNEL_TARGET=plex86.o
+  HOST_TARGET=freebsd-target
+  HOST_CLEAN=freebsd-clean
+  HOSTOS=FREEBSD
+  FULL_LINK=
+elif test "$with_null" = yes; then
+  HOST_O=host-null.o
+  KERNEL_TARGET=plex86.o
+  HOST_TARGET=null-target
+  HOST_CLEAN=null-clean
+  HOSTOS=NULL
+  FULL_LINK='$(CC) -o a.out plex86.o'
+else
+  echo " "
+  echo "ERROR: Your system is not supported yet"
+  exit 1
+fi
+
+
+dnl // code to test if CFLAGS is set.  If not, use defaults
+AC_SUBST(HOST_O)
+AC_SUBST(KERNEL_TARGET)
+AC_SUBST(HOST_TARGET)
+AC_SUBST(HOST_CLEAN)
+AC_SUBST(HOSTOS)
+AC_SUBST(FULL_LINK)
+
+SUFFIX_LINE='.SUFFIXES: .cc'
+CPP_SUFFIX='cc'
+DASH="-"
+SLASH="/"
+CXXFP=""
+CFP=""
+OFP="-o "
+MAKELIB="ar rv \$@"
+RMCOMMAND="rm -f "
+EXE=""
+COMMAND_SEPARATOR="&& \\"
+CD_UP_ONE="echo done"
+CD_UP_TWO="echo done"
+INSTRUMENT_DIR='instrument/'
+VIDEO_OBJS='$(VIDEO_OBJS_VGA)'
+
+AC_SUBST(SUFFIX_LINE)
+AC_SUBST(CPP_SUFFIX)
+AC_SUBST(DASH)
+AC_SUBST(SLASH)
+AC_SUBST(CXXFP)
+AC_SUBST(CFP)
+AC_SUBST(OFP)
+AC_SUBST(MAKELIB)
+AC_SUBST(RMCOMMAND)
+AC_SUBST(EXE)
+AC_SUBST(COMMAND_SEPARATOR)
+AC_SUBST(CD_UP_ONE)
+AC_SUBST(CD_UP_TWO)
+
+AC_OUTPUT([
+Makefile 
+kernel/Makefile
+])
