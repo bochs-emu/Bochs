@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------
-Changes in 1.3.pre1 (November 17, 2001):
+Changes in 1.3 (December 10, 2001):
 - networking works on Windows and Linux platforms
 - emulated cdrom can now read from ISO image files, on any platform.
 - new PIT model by Greg Alexander which is much more complete than the
