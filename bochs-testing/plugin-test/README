@@ -15,10 +15,33 @@ test5-execsymbols: can a shared lib can access a symbol from the executable?
 test6-ltdlopen: use ltdl library to dlopen modules, should work on many
   platforms, but doesn't seem to work on win32.
 test7-win32dll: same as test6-ltdlopen but specific to win32 DLLs
+test8-execlass: define a C++ class in main, use it from the modules
+test9-modclass: define a C++ class in a module, use it from main
+test10-modvirtual: define an abstract interface with instantiations in modules
+test11-modglobalconstr: test if global constructors in shared libs are called
+test12-modglobalconstr2: work around lack of global constructors, if needed
 
+-----------------------------------------------------------------------
+Results of platform testing:
 
+Linux: ...
+   
+Cygwin with these environment variables (Mingw):
+  export CPPFLAGS=-mno-cygwin; 
+  export CFLAGS=-mno-cygwin
+  export CXXFLAGS=-mno-cygwin; 
+  export LDFLAGS=-mno-cygwin
+passing 1,6,7,8,9,10,11,12.
+This is how Bochs usually compiles.  This platform will support plugins.
 
+Cygwin without -mno-cygwin:
+passing: 1,2,3,4.  failing 5-12.
+This platform will NOT support plugins yet.
 
+Solaris: ...
+
+MacOS X: ...
+-----------------------------------------------------------------------
 
 
 
