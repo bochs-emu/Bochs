@@ -1,10 +1,4 @@
-To be fixed before 1.2:
-- install Tim's man pages on linux
-- various configure problems, if possible
-  - [ #429448 ] configure: -lreadline when not there
-    I don't know what's wrong, so I asked Todd for help.
-
-Changes since 1.2-pre1:
+Changes in 1.2 (6/3/2001):
 - [ #427259 ] rombios HALT calls don't print
   Fixed bios/rombios.c HALT macro so that it writes the line number of the
   panic to the PANIC_PORT (port 0x400) and then does NOT do a halt 
@@ -45,6 +39,7 @@ Changes since 1.2-pre1:
 - [ #429375 ] pthreads detection broken
 - [ #429073 ] configure: if no X11, makes bad config
 - [ #429229 ] install current .bochsrc in binary rels
+- install Tim's man pages on linux RPM
 - BIOS prints messages in log in case of boot failure
 - rewrote instructions for compiling in win32 (win32.txt)
 - fixed link in HTML changelog.html to point to the real sources on SF.
