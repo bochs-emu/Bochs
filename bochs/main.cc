@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.128 2002-08-30 21:41:29 bdenney Exp $
+// $Id: main.cc,v 1.129 2002-09-03 04:54:27 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1603,6 +1603,7 @@ bx_atexit(void)
   static Boolean been_here = 0;
   if (been_here) return 1;   // protect from reentry
   been_here = 1;
+
 
 #if BX_PROVIDE_DEVICE_MODELS==1
   bx_pc_system.exit();

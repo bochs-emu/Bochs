@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.13 2002-09-01 20:12:09 kevinlawton Exp $
+// $Id: access.cc,v 1.14 2002-09-03 04:54:28 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -386,7 +386,7 @@ accessOK:
 #endif  // BX_SupportGuest2HostTLB
 
       // all checks OK
-      access_linear(laddr, 2, CPL==3, BX_WRITE, (void *) data);
+      access_linear(laddr, 2, pl, BX_WRITE, (void *) data);
       return;
       }
     }
@@ -455,7 +455,7 @@ accessOK:
 #endif  // BX_SupportGuest2HostTLB
 
       // all checks OK
-      access_linear(laddr, 4, CPL==3, BX_WRITE, (void *) data);
+      access_linear(laddr, 4, pl, BX_WRITE, (void *) data);
       return;
       }
     }
@@ -614,7 +614,7 @@ accessOK:
 #endif  // BX_SupportGuest2HostTLB
 
       // all checks OK
-      access_linear(laddr, 4, CPL==3, BX_READ, (void *) data);
+      access_linear(laddr, 4, pl, BX_READ, (void *) data);
       return;
       }
     }
@@ -636,17 +636,61 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, Bit32u offset, Bit8u *data)
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= seg->cache.u.segment.limit_scaled) {
+      unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
       BX_INSTR_MEM_DATA(laddr, 1, BX_READ);
+      pl = (CPL==3);
 
-      // all checks OK
-#if BX_CPU_LEVEL >= 3
-      if (BX_CPU_THIS_PTR cr0.pg)
-        access_linear(laddr, 1, CPL==3, BX_RW, (void *) data);
-      else
+      if (BX_CPU_THIS_PTR cr0.pg) {
+#if BX_SupportGuest2HostTLB
+        Bit32u lpf, tlbIndex, pageOffset;
+
+        pageOffset = laddr & 0xfff;
+        tlbIndex = BX_TLB_INDEX_OF(laddr);
+        lpf = laddr & 0xfffff000;
+        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
+          Bit32u combined_access;
+
+          // See if the TLB entry privilege level allows us write access
+          // from this CPL.
+          combined_access = BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
+          if (combined_access & 1) { // TLB has seen a write already.
+            unsigned privIndex;
+            privIndex =
+#if BX_CPU_LEVEL >= 4
+              (BX_CPU_THIS_PTR cr0.wp<<4) | // bit 4
 #endif
-        {
+              (pl<<3) |                     // bit 3
+              (combined_access & 0x07);     // bit 2,1,0
+                                            // Let bit0 slide through since
+                                            // we know it's 1 (W) from the
+                                            // check above.
+            if ( priv_check[privIndex] ) {
+              // Current write access has privilege.
+              Bit32u hostPageAddr;
+              Bit8u *hostAddr;
+              hostPageAddr =
+                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
+                  0xfffffff8;
+              if (hostPageAddr) {
+                hostAddr = (Bit8u*) (hostPageAddr + pageOffset);
+                *data = *hostAddr;
+                BX_CPU_THIS_PTR address_xlation.paddress1 =
+                  BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
+                //BX_CPU_THIS_PTR address_xlation.pages = 1;
+                return;
+                }
+              }
+            }
+          }
+#endif  // BX_SupportGuest2HostTLB
+
+        // Accelerated attempt falls through to long path.  Do it the
+        // old fashioned way...
+        access_linear(laddr, 1, pl, BX_RW, (void *) data);
+        }
+      else {
         BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
         BX_INSTR_LIN_READ(laddr, laddr, 1);
         BX_INSTR_LIN_WRITE(laddr, laddr, 1);
@@ -669,17 +713,62 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, Bit32u offset, Bit16u *data)
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < seg->cache.u.segment.limit_scaled) {
+      unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
       BX_INSTR_MEM_DATA(laddr, 2, BX_READ);
+      pl = (CPL==3);
 
-      // all checks OK
-#if BX_CPU_LEVEL >= 3
-      if (BX_CPU_THIS_PTR cr0.pg)
-        access_linear(laddr, 2, CPL==3, BX_RW, (void *) data);
-      else
+      if (BX_CPU_THIS_PTR cr0.pg) {
+#if BX_SupportGuest2HostTLB
+        Bit32u lpf, tlbIndex, pageOffset;
+
+        pageOffset = laddr & 0xfff;
+        if (pageOffset <= 0xffe) { // Make sure access does not span 2 pages.
+          tlbIndex = BX_TLB_INDEX_OF(laddr);
+          lpf = laddr & 0xfffff000;
+          if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
+            Bit32u combined_access;
+            // See if the TLB entry privilege level allows us write access
+            // from this CPL.
+  
+            combined_access =
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
+            if (combined_access & 1) { // TLB has seen a write already.
+              unsigned privIndex;
+              privIndex =
+#if BX_CPU_LEVEL >= 4
+                (BX_CPU_THIS_PTR cr0.wp<<4) | // b4
 #endif
-        {
+                (pl<<3) |                     // b3
+                (combined_access & 0x07);     // b{2,1,0}
+                                              // Let b0 slide through since
+                                              // we know it's 1 (W) from the
+                                              // check above.
+              if ( priv_check[privIndex] ) {
+                // Current write access has privilege.
+                Bit32u  hostPageAddr;
+                Bit16u *hostAddr;
+                hostPageAddr =
+                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
+                    0xfffffff8;
+                if (hostPageAddr) {
+                  hostAddr = (Bit16u*) (hostPageAddr + pageOffset);
+                  *data = *hostAddr;
+                  BX_CPU_THIS_PTR address_xlation.paddress1 =
+                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
+                  BX_CPU_THIS_PTR address_xlation.pages = 1;
+                  return;
+                  }
+                }
+              }
+            }
+          }
+#endif  // BX_SupportGuest2HostTLB
+
+        access_linear(laddr, 2, pl, BX_RW, (void *) data);
+        }
+      else {
         BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
         BX_INSTR_LIN_READ(laddr, laddr, 2);
         BX_INSTR_LIN_WRITE(laddr, laddr, 2);
@@ -701,17 +790,62 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, Bit32u offset, Bit32u *data)
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
+      unsigned pl;
 accessOK:
       laddr = seg->cache.u.segment.base + offset;
       BX_INSTR_MEM_DATA(laddr, 4, BX_READ);
+      pl = (CPL==3);
 
-      // all checks OK
-#if BX_CPU_LEVEL >= 3
-      if (BX_CPU_THIS_PTR cr0.pg)
-        access_linear(laddr, 4, CPL==3, BX_RW, (void *) data);
-      else
+      if (BX_CPU_THIS_PTR cr0.pg) {
+#if BX_SupportGuest2HostTLB
+        Bit32u lpf, tlbIndex, pageOffset;
+  
+        pageOffset = laddr & 0xfff;
+        if (pageOffset <= 0xffc) { // Make sure access does not span 2 pages.
+          tlbIndex = BX_TLB_INDEX_OF(laddr);
+          lpf = laddr & 0xfffff000;
+          if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == lpf) {
+            Bit32u combined_access;
+            // See if the TLB entry privilege level allows us write access
+            // from this CPL.
+  
+            combined_access =
+                BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access;
+            if (combined_access & 1) { // TLB has seen a write already.
+              unsigned privIndex;
+              privIndex =
+#if BX_CPU_LEVEL >= 4
+                (BX_CPU_THIS_PTR cr0.wp<<4) | // b4
 #endif
-        {
+                (pl<<3) |                     // b3
+                (combined_access & 0x07);     // b{2,1,0}
+                                              // Let b0 slide through since
+                                              // we know it's 1 (W) from the
+                                              // check above.
+              if ( priv_check[privIndex] ) {
+                // Current write access has privilege.
+                Bit32u  hostPageAddr;
+                Bit32u *hostAddr;
+                hostPageAddr =
+                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].combined_access &
+                    0xfffffff8;
+                if (hostPageAddr) {
+                  hostAddr = (Bit32u*) (hostPageAddr + pageOffset);
+                  *data = *hostAddr;
+                  BX_CPU_THIS_PTR address_xlation.paddress1 =
+                    BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf | pageOffset;
+                  BX_CPU_THIS_PTR address_xlation.pages = 1;
+                  return;
+                  }
+                }
+              }
+            }
+          }
+#endif  // BX_SupportGuest2HostTLB
+
+        access_linear(laddr, 4, pl, BX_RW, (void *) data);
+        }
+      else {
         BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
         BX_INSTR_LIN_READ(laddr, laddr, 4);
         BX_INSTR_LIN_WRITE(laddr, laddr, 4);

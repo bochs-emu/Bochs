@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.25 2002-09-02 18:44:35 kevinlawton Exp $
+// $Id: cpu.h,v 1.26 2002-09-03 04:54:28 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -443,14 +443,15 @@ typedef struct BxInstruction_tag {
   // prefix stuff here...
   unsigned attr; // attribute from fetchdecode
   unsigned b1; // opcode1 byte
+  unsigned os_32, as_32; // OperandSize/AddressSize is 32bit
   unsigned rep_used;
+  unsigned seg;
   unsigned modrm; // mod-nnn-r/m byte
     unsigned mod;
     unsigned nnn;
     unsigned rm;
   Bit16u displ16u; // for 16-bit modrm forms
   Bit32u displ32u; // for 32-bit modrm forms
-  unsigned seg;
   unsigned sib; // scale-index-base (2nd modrm byte)
     unsigned scale;
     unsigned index;
@@ -463,7 +464,6 @@ typedef struct BxInstruction_tag {
   Bit8u    Ib2; // for ENTER_IwIb
   Bit16u   Iw2; // for JMP_Ap
   unsigned ilen; // instruction length
-  unsigned os_32, as_32; // OperandSize/AddressSize is 32bit
   unsigned flags_in, flags_out; // flags needed, flags modified
 
 #if BX_USE_CPU_SMF

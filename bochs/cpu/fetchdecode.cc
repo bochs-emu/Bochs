@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.7 2001-10-03 13:10:37 bdenney Exp $
+// $Id: fetchdecode.cc,v 1.8 2002-09-03 04:54:28 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1405,7 +1405,25 @@ another_byte:
   offset = instruction->os_32 << 9; // * 512
   instruction->attr = attr = BxOpcodeInfo[b1+offset].Attr;
 
-  if (attr & BxAnother) {
+  if ( !(attr & BxAnother) ) {
+    // Opcode does not require a MODRM byte.
+    // Note that a 2-byte opcode (0F XX) will jump to before
+    // the if() above after fetching the 2nd byte, so this path is
+    // taken in all cases if a modrm byte is NOT required.
+    instruction->execute = BxOpcodeInfo[b1+offset].ExecutePtr;
+#if BX_DYNAMIC_TRANSLATION
+    instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
+    instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
+#endif
+    // Simple instruction, nothing left to do.
+    if (attr == 0) {
+      instruction->b1 = b1;
+      instruction->ilen = ilen;
+      return(1);
+      }
+    }
+
+  else {
     if (attr & BxPrefix) {
       switch (b1) {
         case 0x66: // OpSize
@@ -1712,17 +1730,6 @@ modrm_done:
       instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
 #endif
       }
-    }
-  else {
-    // Opcode does not require a MODRM byte.
-    // Note that a 2-byte opcode (0F XX) will jump to before
-    // the if() above after fetching the 2nd byte, so this path is
-    // taken in all cases if a modrm byte is NOT required.
-    instruction->execute = BxOpcodeInfo[b1+offset].ExecutePtr;
-#if BX_DYNAMIC_TRANSLATION
-    instruction->DTAttr = BxDTOpcodeInfo[b1+offset].DTAttr;
-    instruction->DTFPtr = BxDTOpcodeInfo[b1+offset].DTASFPtr;
-#endif
     }
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.36 2002-09-02 18:44:35 kevinlawton Exp $
+// $Id: cpu.cc,v 1.37 2002-09-03 04:54:28 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -207,6 +207,7 @@ async_events_processed:
   Bit32u remainingInPage;
   unsigned maxFetch;
   Bit8u *fetchPtr;
+  Boolean is32;
 
   eipBiased = EIP + BX_CPU_THIS_PTR eipPageBias;
 
@@ -221,8 +222,8 @@ async_events_processed:
     maxFetch = remainingInPage;
   fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
-  ret = FetchDecode(fetchPtr, &i, maxFetch,
-                    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
+  is32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  ret = FetchDecode(fetchPtr, &i, maxFetch, is32);
   }
 
   if (ret) {
