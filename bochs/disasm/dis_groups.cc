@@ -5,7 +5,8 @@
 #include "../bx_debug/debug.h"
 #endif
 
-void disassembler::reg32 (unsigned attr)
+// 32-bit general purpose register
+void disassembler::REG32 (unsigned attr)
 {
   if (i32bit_opsize)
     dis_sprintf("%s", general_32bit_reg_name[attr]);
@@ -13,21 +14,25 @@ void disassembler::reg32 (unsigned attr)
     dis_sprintf("%s", general_16bit_reg_name[attr]);
 }
 
-void disassembler::reg16 (unsigned attr)
-{
-  dis_sprintf("%s", general_16bit_reg_name[attr]);
-}
-
-void disassembler::reg8 (unsigned attr)
+// 8-bit general purpose register
+void disassembler::REG8 (unsigned attr)
 {
   dis_sprintf("%s", general_8bit_reg_name[attr]);
 }
 
+// 16-bit general purpose register
+void disassembler::REG16 (unsigned attr)
+{
+  dis_sprintf("%s", general_16bit_reg_name[attr]);
+}
+
+// segment register
 void disassembler::OP_SEG (unsigned attr)
 {
   dis_sprintf("%s", segment_name[attr]);
 }
 
+// memory operand
 void disassembler::OP_MEM (unsigned attr)
 {
   if(mod == 3)
@@ -117,7 +122,7 @@ void disassembler::OP_Y (unsigned attr)
     dis_sprintf("%s:(%s)", segment_name[ES_REG], edi);
 }
 
-void disassembler::Ob (unsigned attr)
+void disassembler::OP_O (unsigned attr)
 {
   const char *seg;
 
@@ -126,32 +131,15 @@ void disassembler::Ob (unsigned attr)
   else
     seg = segment_name[DS_REG];
 
-  if (i32bit_addrsize) {
-    Bit32u imm32 = fetch_dword();
-    dis_sprintf("byte ptr [%s:0x%x]", seg, (unsigned) imm32);
-  }
-  else {
-    Bit16u imm16 = fetch_word();
-    dis_sprintf("byte ptr [%s:0x%x]", seg, (unsigned) imm16);
-  }
-}
-
-void disassembler::Ov (unsigned attr)
-{
-  const char *seg;
-
-  if (seg_override)
-    seg = seg_override;
-  else
-    seg = segment_name[DS_REG];
+  print_datasize(attr);
 
   if (i32bit_addrsize) {
     Bit32u imm32 = fetch_dword();
-    dis_sprintf("dword ptr [%s:0x%x]", seg, (unsigned) imm32);
+    dis_sprintf("%s:0x%x", seg, (unsigned) imm32);
   }
   else {
     Bit16u imm16 = fetch_word();
-    dis_sprintf("word ptr [%s:0x%x]",  seg, (unsigned) imm16);
+    dis_sprintf("%s:0x%x", seg, (unsigned) imm16);
   }
 }
 
@@ -227,12 +215,13 @@ void disassembler::Ap (unsigned attr)
   }
 }
 
+// general purpose register or memory operand
 void disassembler::Eb (unsigned attr) 
 {
   if (mod == 3)
     dis_sprintf("%s", general_8bit_reg_name[rm]);
   else
-    (this->*resolve_modrm)(B_MODE);
+    (this->*resolve_modrm)(B_SIZE);
 }
 
 void disassembler::Ew (unsigned attr) 
@@ -240,7 +229,7 @@ void disassembler::Ew (unsigned attr)
   if (mod == 3)
     dis_sprintf("%s", general_16bit_reg_name[rm]);
   else
-    (this->*resolve_modrm)(W_MODE);
+    (this->*resolve_modrm)(W_SIZE);
 }
 
 void disassembler::Ev (unsigned attr) 
@@ -253,7 +242,7 @@ void disassembler::Ev (unsigned attr)
       dis_sprintf("%s", general_16bit_reg_name[rm]);
   }
   else
-    (this->*resolve_modrm)(V_MODE);
+    (this->*resolve_modrm)(V_SIZE);
 }
 
 void disassembler::Ed (unsigned attr) 
@@ -261,9 +250,10 @@ void disassembler::Ed (unsigned attr)
   if (mod == 3)
     dis_sprintf("%s", general_32bit_reg_name[rm]);
   else
-    (this->*resolve_modrm)(D_MODE);
+    (this->*resolve_modrm)(D_SIZE);
 }
 
+// general purpose register
 void disassembler::Gb (unsigned attr) 
 {
   dis_sprintf("%s", general_8bit_reg_name[nnn]);
@@ -282,21 +272,25 @@ void disassembler::Gd (unsigned attr)
   dis_sprintf("%s", general_32bit_reg_name[nnn]);
 }
 
+// 32-bit general purpose register
 void disassembler::Rd (unsigned attr)
 {
   dis_sprintf("%s", general_32bit_reg_name[rm]);
 }
 
+// 16-bit general purpose register
 void disassembler::Rw (unsigned attr)
 {
   dis_sprintf("%s", general_16bit_reg_name[rm]);
 }
 
+// segment register
 void disassembler::Sw (unsigned attr) 
 {
   dis_sprintf("%s", segment_name[nnn]);
 }
 
+// immediate
 void disassembler::I1 (unsigned) 
 { 
   if (intel_mode)
@@ -337,6 +331,7 @@ void disassembler::Iv (unsigned attr)
     Iw(attr);
 }
 
+// sign extended immediate
 void disassembler::sIb(unsigned attr) 
 {
   if (i32bit_opsize)

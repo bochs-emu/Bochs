@@ -181,37 +181,39 @@ void disassembler::resolve32_mod1or2_rm4(unsigned mode)
 
 void disassembler::print_datasize(unsigned mode)
 {
+  if (!intel_mode) return;
+
   switch(mode)
   {
-    case B_MODE:
+    case B_SIZE:
       dis_sprintf("byte ptr ");
       break;
-    case W_MODE:
+    case W_SIZE:
       dis_sprintf("word ptr ");
       break;
-    case D_MODE:
+    case D_SIZE:
       dis_sprintf("dword ptr ");
       break;
-    case V_MODE:
+    case V_SIZE:
       if (i32bit_opsize)
         dis_sprintf("dword ptr ");
       else
         dis_sprintf("word ptr ");
       break;
-    case Q_MODE:
+    case Q_SIZE:
       dis_sprintf("qword ptr ");
       break;
-    case O_MODE:
+    case O_SIZE:
       dis_sprintf("dqword ptr ");
       break;
-    case T_MODE:
+    case T_SIZE:
       dis_sprintf("tbyte ptr ");
       break;
-    case P_MODE:
+    case P_SIZE:
       break;
-    case S_MODE:
+    case S_SIZE:
       break;
-    case X_MODE:
+    case X_SIZE:
       break;
   };
 }
@@ -333,7 +335,7 @@ void disassembler::print_memory_access32(int datasize,
         if (disp != 0)
           dis_sprintf("%s:0x%x(%s)", seg, (unsigned) disp, base);
         else
-          dis_sprintf("%s:[%s]", seg, base);
+          dis_sprintf("%s:(%s)", seg, base);
       }
       else
       {

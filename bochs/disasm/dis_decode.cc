@@ -105,57 +105,65 @@ unsigned disassembler::disasm(bx_bool is_32,
 
   for(;;)
   {
-          b1 = fetch_byte();
-          entry = &BxDisasmOpcodes[b1];
+    b1 = fetch_byte();
+    entry = &BxDisasmOpcodes[b1];
 
-          if (entry->Attr == _PREFIX)
-          {
-              switch(b1) {
-              case 0xf3:
-                  sse_prefix |= SSE_PREFIX_F3;
-                  break;
-              case 0xf2:
-                  sse_prefix |= SSE_PREFIX_F2;
-                  break;
-              case 0x2e:
-              case 0x36:
-              case 0x3e:
-              case 0x26:
-              case 0x64:
-              case 0x65:
-                  seg_override = entry->Opcode;
-                  break;
-              case 0x66:
-                  i32bit_opsize = !i32bit_opsize;
-                  sse_prefix |= SSE_PREFIX_66;
-                  break;
-              case 0x67:
-                  i32bit_addrsize = !i32bit_addrsize;
-                  break;
-              case 0xf0:      // lock
-                  break;
-              default:
-                  printf("Internal disassembler error !");
-                  return 0;
-            }
+    if (entry->Attr == _PREFIX)
+    {
+      switch(b1) {
+        case 0xf3:
+          sse_prefix |= SSE_PREFIX_F3;
+          break;
 
-            n_prefixes++;
-        }
-        else break;
+        case 0xf2:
+          sse_prefix |= SSE_PREFIX_F2;
+          break;
+
+        case 0x2e:
+        case 0x36:
+        case 0x3e:
+        case 0x26:
+        case 0x64:
+        case 0x65:
+          seg_override = entry->Opcode;
+          break;
+
+        case 0x66:
+          i32bit_opsize = !i32bit_opsize;
+          sse_prefix |= SSE_PREFIX_66;
+          break;
+
+        case 0x67:
+          i32bit_addrsize = !i32bit_addrsize;
+          break;
+
+        case 0xf0:      // lock
+          break;
+
+         default:
+          printf("Internal disassembler error !");
+          return 0;
+      }
+
+      n_prefixes++;
+    }
+    else break;
   }
 
   if (b1 == 0x0f)
   {
-        b1 = 0x100 | fetch_byte();
-        entry = &BxDisasmOpcodes[b1];
+    b1 = 0x100 | fetch_byte();
+    entry = &BxDisasmOpcodes[b1];
   }
 
   if (instruction_has_modrm[b1])
-        decode_modrm();
+    decode_modrm();
 
   int attr = entry->Attr;
   while(attr) 
   {
+    if (attr == _COND_JUMP) break;
+ 
     switch(attr) {
        case _GROUPN:
          entry = &(entry->AnotherArray[nnn]);
@@ -180,19 +188,14 @@ unsigned disassembler::disasm(bx_bool is_32,
          if(mod != 3)
          {
              entry = &(entry->AnotherArray[nnn]);
-         }
-         else
-         {
+         } else {
              int index = (b1-0xD8)*64 + (0x3f & modrm);
              entry = &(BxDisasmOpcodeInfoFP[index]);
          }
          break;
 
        case _GRP3DNOW:
-         {
-             int suffix = peek_byte();
-             entry = &(BxDisasm3DNowGroup[suffix]);
-         }
+         entry = &(BxDisasm3DNowGroup[peek_byte()]);
          break;
 
        default:
@@ -206,8 +209,18 @@ unsigned disassembler::disasm(bx_bool is_32,
 
   // print prefixes
   for(unsigned i=0;i<n_prefixes;i++)
-        if (*(instr+i) == 0xF3 || *(instr+i) == 0xF2 || *(instr+i) == 0xF0) 
-             dis_sprintf("%s ", BxDisasmOpcodes[*(instr+i)].Opcode);
+  {
+     if (*(instr+i) == 0xF3 || *(instr+i) == 0xF2 || *(instr+i) == 0xF0) 
+       dis_sprintf("%s ", BxDisasmOpcodes[*(instr+i)].Opcode);
+
+     if (attr == _COND_JUMP)
+     {
+       if (*(instr+i) == 0x2E) 
+         dis_sprintf("not taken ");
+       if (*(instr+i) == 0x3E) 
+         dis_sprintf("taken ");
+     }
+  }
 
   // print opcode
   dis_sprintf("%s ", entry->Opcode);
@@ -216,12 +229,12 @@ unsigned disassembler::disasm(bx_bool is_32,
   {
     (this->*entry->Operand1)(entry->Op1Attr);
     if (entry->Operand2 != &disassembler::XX) {
-        dis_sprintf(", ");
-       (this->*entry->Operand2)(entry->Op2Attr);
+      dis_sprintf(", ");
+      (this->*entry->Operand2)(entry->Op2Attr);
     }
     if (entry->Operand3 != &disassembler::XX) {
-        dis_sprintf(", ");
-        (this->*entry->Operand3)(entry->Op3Attr);
+      dis_sprintf(", ");
+      (this->*entry->Operand3)(entry->Op3Attr);
     }
   } 
   else

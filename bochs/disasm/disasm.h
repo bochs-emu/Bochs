@@ -89,16 +89,17 @@ enum {
 	GS_REG
 };
 
-#define X_MODE  0x0
-#define B_MODE  0x1
-#define W_MODE  0x2
-#define D_MODE  0x3
-#define V_MODE  0x4
-#define Q_MODE  0x5
-#define O_MODE  0x6
-#define T_MODE  0x7
-#define P_MODE  0x8
-#define S_MODE  0x9
+// datasize attributes
+#define X_SIZE 0x0000
+#define B_SIZE 0x0100
+#define W_SIZE 0x0200
+#define D_SIZE 0x0300
+#define V_SIZE 0x0400
+#define Q_SIZE 0x0500
+#define O_SIZE 0x0600
+#define T_SIZE 0x0700
+#define P_SIZE 0x0800
+#define S_SIZE 0x0900
 
 class disassembler;
 
@@ -278,71 +279,71 @@ public:
  *      if the effective operand size is 32 or 64 bits.
  */
 
- void XX (unsigned) {}
+ void  XX (unsigned attribute) {}
 
  // fpu
- void ST0 (unsigned);
- void STj (unsigned);
+ void ST0 (unsigned attribute);
+ void STj (unsigned attribute);
 
  // general/segment register
- void Rw (unsigned);
- void Rd (unsigned);
- void Sw (unsigned);
+ void  Rw (unsigned attribute);
+ void  Rd (unsigned attribute);
+ void  Sw (unsigned attribute);
 
  // control/debug register
- void Cd (unsigned);
- void Dd (unsigned);
- void Td (unsigned);
+ void  Cd (unsigned attribute);
+ void  Dd (unsigned attribute);
+ void  Td (unsigned attribute);
 
- // segment register (implicit)
- void OP_SEG (unsigned);
-
- // general purpose register 
- void reg8  (unsigned);
- void reg16 (unsigned);
- void reg32 (unsigned);
+ // segment register
+ void OP_SEG (unsigned attribute);
 
  // memory only
- void OP_MEM (unsigned);
+ void OP_MEM (unsigned attribute);
+
+ // general purpose register 
+ void REG16 (unsigned attribute);
+ void REG8  (unsigned attribute);
+ void REG32 (unsigned attribute);
 
  // string instructions
- void OP_X (unsigned);
- void OP_Y (unsigned);
+ void OP_X (unsigned attribute);
+ void OP_Y (unsigned attribute);
 
  // mmx/xmm
- void OP_P (unsigned);
- void OP_Q (unsigned);
- void OP_W (unsigned);
- void OP_V (unsigned);
-
- // immediate
- void  I1 (unsigned);
- void  Ib (unsigned);
- void  Iw (unsigned); 
- void  Id (unsigned);
- void  Iv (unsigned);
- void sIb (unsigned);
-
- void  Eb (unsigned);
- void  Ew (unsigned);
- void  Ed (unsigned);
- void  Ev (unsigned);
-
- void  Gb (unsigned);
- void  Gw (unsigned);
- void  Gv (unsigned);
- void  Gd (unsigned);
-
- // call
- void  Ap (unsigned);
+ void OP_P (unsigned attribute);
+ void OP_Q (unsigned attribute);
+ void OP_W (unsigned attribute);
+ void OP_V (unsigned attribute);
 
  // mov
- void  Ob (unsigned);
- void  Ov (unsigned);
+ void OP_O (unsigned attribute);
 
- // jump
- void  Jb (unsigned);
- void  Jv (unsigned);
+ // immediate
+ void  I1 (unsigned attribute);
+ void  Ib (unsigned attribute);
+ void  Iw (unsigned attribute); 
+ void  Id (unsigned attribute);
+ void  Iv (unsigned attribute);
+ void sIb (unsigned attribute);
+
+ // general purpose register or memory
+ void  Eb (unsigned attribute);
+ void  Ew (unsigned attribute);
+ void  Ed (unsigned attribute);
+ void  Ev (unsigned attribute);
+
+ // general purpose register
+ void  Gb (unsigned attribute);
+ void  Gv (unsigned attribute);
+ void  Gd (unsigned attribute);
+
+ // call/jump
+ void  Jb (unsigned attribute);
+ void  Jv (unsigned attribute);
+
+ // call/jmp far
+ void  Ap (unsigned attribute);
 };
 
 #endif

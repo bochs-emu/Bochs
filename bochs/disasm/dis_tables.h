@@ -9,11 +9,12 @@
 #define _GRPFP         4
 #define _GRP3DNOW      5
 #define _GRPSSE        6
+#define _COND_JUMP     7
 
 struct BxDisasmOpcodeInfo_t
 {
     const char *Opcode;
-    Bit32u Attr;
+    unsigned Attr;
     BxDisasmPtr_t Operand1;
     unsigned Op1Attr;
     BxDisasmPtr_t Operand2;
@@ -47,7 +48,7 @@ struct BxDisasmOpcodeInfo_t
 
 #ifdef BX_DISASM_NEED_SHORTCUTS
 
- // general
+ // no operand
 #define XX  &disassembler::XX,  0
 
  // fpu
@@ -72,101 +73,102 @@ struct BxDisasmOpcodeInfo_t
 #define FS  &disassembler::OP_SEG, FS_REG
 
  // 16/32-bit general purpose register 
-#define eAX &disassembler::reg32, eAX_REG
-#define eCX &disassembler::reg32, eCX_REG
-#define eDX &disassembler::reg32, eDX_REG
-#define eBX &disassembler::reg32, eBX_REG
-#define eSI &disassembler::reg32, eSI_REG
-#define eDI &disassembler::reg32, eDI_REG
-#define eBP &disassembler::reg32, eBP_REG
-#define eSP &disassembler::reg32, eSP_REG
+#define eAX &disassembler::REG32, eAX_REG
+#define eCX &disassembler::REG32, eCX_REG
+#define eDX &disassembler::REG32, eDX_REG
+#define eBX &disassembler::REG32, eBX_REG
+#define eSI &disassembler::REG32, eSI_REG
+#define eDI &disassembler::REG32, eDI_REG
+#define eBP &disassembler::REG32, eBP_REG
+#define eSP &disassembler::REG32, eSP_REG
+
+ // 16-bit general purpose register 
+#define AX  &disassembler::REG16, AX_REG
+#define DX  &disassembler::REG16, DX_REG
 
  // 8-bit general purpose register 
-#define AL  &disassembler::reg8,  AL_REG
-#define AH  &disassembler::reg8,  AH_REG
-#define BL  &disassembler::reg8,  BL_REG
-#define BH  &disassembler::reg8,  BH_REG
-#define CL  &disassembler::reg8,  CL_REG
-#define CH  &disassembler::reg8,  CH_REG
-#define DL  &disassembler::reg8,  DL_REG
-#define DH  &disassembler::reg8,  DH_REG
-
- // 8-bit general purpose register 
-#define AX  &disassembler::reg16, AX_REG
-#define DX  &disassembler::reg16, DX_REG
+#define AL  &disassembler::REG8,  AL_REG
+#define AH  &disassembler::REG8,  AH_REG
+#define BL  &disassembler::REG8,  BL_REG
+#define BH  &disassembler::REG8,  BH_REG
+#define CL  &disassembler::REG8,  CL_REG
+#define CH  &disassembler::REG8,  CH_REG
+#define DL  &disassembler::REG8,  DL_REG
+#define DH  &disassembler::REG8,  DH_REG
 
  // mmx
-#define Pd  &disassembler::OP_P,  D_MODE
-#define Pq  &disassembler::OP_P,  Q_MODE
-#define Qd  &disassembler::OP_Q,  D_MODE
-#define Qq  &disassembler::OP_Q,  Q_MODE
+#define Pd  &disassembler::OP_P,  D_SIZE
+#define Pq  &disassembler::OP_P,  Q_SIZE
+#define Qd  &disassembler::OP_Q,  D_SIZE
+#define Qq  &disassembler::OP_Q,  Q_SIZE
 
  // xmm
-#define Vd  &disassembler::OP_V,  D_MODE
-#define Vq  &disassembler::OP_V,  Q_MODE
-#define Vdq &disassembler::OP_V,  O_MODE
-#define Vss &disassembler::OP_V,  D_MODE
-#define Vsd &disassembler::OP_V,  Q_MODE
-#define Vps &disassembler::OP_V,  O_MODE
-#define Vpd &disassembler::OP_V,  O_MODE
+#define Vd  &disassembler::OP_V,  D_SIZE
+#define Vq  &disassembler::OP_V,  Q_SIZE
+#define Vdq &disassembler::OP_V,  O_SIZE
+#define Vss &disassembler::OP_V,  D_SIZE
+#define Vsd &disassembler::OP_V,  Q_SIZE
+#define Vps &disassembler::OP_V,  O_SIZE
+#define Vpd &disassembler::OP_V,  O_SIZE
 
-#define Wq  &disassembler::OP_W,  Q_MODE
-#define Wdq &disassembler::OP_W,  O_MODE
-#define Wss &disassembler::OP_W,  D_MODE
-#define Wsd &disassembler::OP_W,  Q_MODE
-#define Wps &disassembler::OP_W,  O_MODE
-#define Wpd &disassembler::OP_W,  O_MODE
+#define Wq  &disassembler::OP_W,  Q_SIZE
+#define Wdq &disassembler::OP_W,  O_SIZE
+#define Wss &disassembler::OP_W,  D_SIZE
+#define Wsd &disassembler::OP_W,  Q_SIZE
+#define Wps &disassembler::OP_W,  O_SIZE
+#define Wpd &disassembler::OP_W,  O_SIZE
 
  // string instructions
-#define Xb  &disassembler::OP_X,  B_MODE
-#define Yb  &disassembler::OP_Y,  B_MODE
-#define Xv  &disassembler::OP_X,  V_MODE
-#define Yv  &disassembler::OP_Y,  V_MODE
+#define Xb  &disassembler::OP_X,  B_SIZE
+#define Yb  &disassembler::OP_Y,  B_SIZE
+#define Xv  &disassembler::OP_X,  V_SIZE
+#define Yv  &disassembler::OP_Y,  V_SIZE
+
+ // mov
+#define Ob  &disassembler::OP_O,  B_SIZE
+#define Ov  &disassembler::OP_O,  V_SIZE
 
  // immediate
 #define I1 &disassembler::I1, 0
-#define Ib &disassembler::Ib, 0
-#define Iw &disassembler::Iw, 0
-#define Id &disassembler::Id, 0
-#define Iv &disassembler::Iv, 0
+#define Ib &disassembler::Ib, B_SIZE
+#define Iw &disassembler::Iw, W_SIZE
+#define Id &disassembler::Id, D_SIZE
+#define Iv &disassembler::Iv, V_SIZE
 
  // sign-extended immediate
 #define sIb &disassembler::sIb, 0
 
  // memory only
-#define Mb  &disassembler::OP_MEM, B_MODE
-#define Mw  &disassembler::OP_MEM, W_MODE
-#define Mv  &disassembler::OP_MEM, V_MODE
-#define Md  &disassembler::OP_MEM, D_MODE
-#define Mp  &disassembler::OP_MEM, P_MODE
-#define Mq  &disassembler::OP_MEM, Q_MODE
-#define Mt  &disassembler::OP_MEM, T_MODE
-#define Ms  &disassembler::OP_MEM, S_MODE
-#define Mx  &disassembler::OP_MEM, X_MODE
-#define Mdq &disassembler::OP_MEM, O_MODE
-#define Mps &disassembler::OP_MEM, O_MODE
-#define Mpd &disassembler::OP_MEM, O_MODE
+#define Mb  &disassembler::OP_MEM, B_SIZE
+#define Mw  &disassembler::OP_MEM, W_SIZE
+#define Mv  &disassembler::OP_MEM, V_SIZE
+#define Md  &disassembler::OP_MEM, D_SIZE
+#define Mp  &disassembler::OP_MEM, P_SIZE
+#define Mq  &disassembler::OP_MEM, Q_SIZE
+#define Mt  &disassembler::OP_MEM, T_SIZE
+#define Ms  &disassembler::OP_MEM, S_SIZE
+#define Mx  &disassembler::OP_MEM, X_SIZE
+#define Mdq &disassembler::OP_MEM, O_SIZE
+#define Mps &disassembler::OP_MEM, O_SIZE
+#define Mpd &disassembler::OP_MEM, O_SIZE
 
- // jump
+ // general purpose register
+#define Gb  &disassembler::Gb, B_SIZE
+#define Gv  &disassembler::Gv, V_SIZE
+#define Gd  &disassembler::Gd, D_SIZE
+
+ // general purpose register or memory operand
+#define Eb  &disassembler::Eb, B_SIZE
+#define Ew  &disassembler::Ew, W_SIZE
+#define Ed  &disassembler::Ed, D_SIZE
+#define Ev  &disassembler::Ev, V_SIZE
+
+ // jump/call
 #define Jb  &disassembler::Jb, 0
 #define Jv  &disassembler::Jv, 0
 
- // call
+ // jump/call far
 #define Ap  &disassembler::Ap, 0
-
- // mov
-#define Ob  &disassembler::Ob, 0
-#define Ov  &disassembler::Ov, 0
-
-#define Gb  &disassembler::Gb, 0
-#define Gw  &disassembler::Gw, 0
-#define Gv  &disassembler::Gv, 0
-#define Gd  &disassembler::Gd, 0
-
-#define Eb  &disassembler::Eb, 0
-#define Ew  &disassembler::Ew, 0
-#define Ed  &disassembler::Ed, 0
-#define Ev  &disassembler::Ev, 0
 
 #endif
 
@@ -178,826 +180,826 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f10[4] = {
   /* 66 */  { "movupd",     0, Vpd, Wpd, XX },
   /* F2 */  { "movsd",      0, Vsd, Wsd, XX },
   /* F3 */  { "movss",      0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f11[4] = {
   /* -- */  { "movups",     0, Wps, Vps, XX },
   /* 66 */  { "movupd",     0, Wpd, Vpd, XX },
   /* F2 */  { "movsd",      0, Wsd, Vsd, XX },
   /* F3 */  { "movss",      0, Wss, Vss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f12[4] = {
   /* -- */  { "movlps",     0, Vps,  Mq, XX },
   /* 66 */  { "movlpd",     0, Vpd,  Mq, XX },
   /* F2 */  { "movddup",    0, Vdq,  Wq, XX },
   /* F3 */  { "movsldup",   0, Vdq, Wdq, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f13[4] = {
   /* -- */  { "movlps",     0,  Mq, Vps, XX },
   /* 66 */  { "movlpd",     0,  Mq, Vpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };                        
+};                        
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f14[4] = {
   /* -- */  { "unpcklps",   0, Vps, Wq, XX },
   /* 66 */  { "unpcklpd",   0, Vpd, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f15[4] = {
   /* -- */  { "unpckhps",   0, Vps, Wq, XX },
   /* 66 */  { "unpckhpd",   0, Vpd, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f16[4] = {
   /* -- */  { "movhps",     0, Vps,  Mq, XX  },
   /* 66 */  { "movhpd",     0, Vpd,  Mq, XX  },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "movshdup",   0, Vdq, Wdq, XX },
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f17[4] = {
   /* -- */  { "movhps",     0, Mq, Vps, XX },
   /* 66 */  { "mpvhpd",     0, Mq, Vpd, XX },
   /* F2 */  { "(invalid)",  0, XX,  XX, XX },
   /* F3 */  { "(invalid)",  0, XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f28[4] = {
   /* -- */  { "movaps",     0, Vps, Wps, XX },
   /* 66 */  { "movapd",     0, Vpd, Wpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f29[4] = {
   /* -- */  { "movaps",     0, Wps, Vps, XX },
   /* 66 */  { "movapd",     0, Wpd, Vpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2a[4] = {
   /* -- */  { "cvtpi2ps",   0, Vps,  Qq, XX },
   /* 66 */  { "cvtpi2pd",   0, Vpd,  Qd, XX },
   /* F2 */  { "cvtsi2sd",   0, Vsd,  Ed, XX },
   /* F3 */  { "cvtsi2ss",   0, Vss,  Ed, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2b[4] = {
   /* -- */  { "movntps",    0, Mps, Vps, XX },
   /* 66 */  { "movntpd",    0, Mpd, Vpd, XX },                  
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2c[4] = {
   /* -- */  { "cvtps2pi",   0,  Pq, Wps, XX },
   /* 66 */  { "cvtpd2pi",   0,  Pq, Wpd, XX },
   /* F2 */  { "cvtsd2si",   0,  Gd, Wsd, XX },
   /* F3 */  { "cvtss2ss",   0,  Gd, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2d[4] = {
   /* -- */  { "cvtps2pi",   0,  Pq, Wps, XX },
   /* 66 */  { "cvtpd2pi",   0,  Pq, Wpd, XX },
   /* F2 */  { "cvtsd2si",   0,  Gd, Wsd, XX },
   /* F3 */  { "cvtss2si",   0,  Gd, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2e[4] = {
   /* -- */  { "ucomiss",    0, Vss, Wss, XX },
   /* 66 */  { "ucomisd",    0, Vsd, Wss, XX },                  
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2f[4] = {
   /* -- */  { "comiss",     0, Vss, Wss, XX },
   /* 66 */  { "comisd",     0, Vsd, Wsd, XX },   
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f50[4] = {
   /* -- */  { "movmskps",   0,  Gd, Vps, XX },
   /* 66 */  { "movmskpd",   0,  Ed, Vpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f51[4] = {
   /* -- */  { "sqrtps",     0, Vps, Wps, XX },
   /* 66 */  { "sqrtpd",     0, Vpd, Wpd, XX },
   /* F2 */  { "sqrtsd",     0, Vsd, Wsd, XX },
   /* F3 */  { "sqrtss",     0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f52[4] = {
   /* -- */  { "rsqrtps",    0, Vps, Wps, XX },
   /* 66 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "rsqrtss",    0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f53[4] = {
   /* -- */  { "rcpps",      0, Vps, Wps, XX },
   /* 66 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "rcpss",      0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f54[4] = {
   /* -- */  { "andps",      0, Vps, Wps, XX },
   /* 66 */  { "andpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f55[4] = {
   /* -- */  { "andnps",     0, Vps, Wps, XX },
   /* 66 */  { "andnpd",     0, Vpd, Wpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f56[4] = {
   /* -- */  { "orps",       0, Vps, Wps, XX },
   /* 66 */  { "orpd",       0, Vpd, Wpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f57[4] = {
   /* -- */  { "xorps",      0, Vps, Wps, XX },
   /* 66 */  { "xorpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f58[4] = {
   /* -- */  { "addps",      0, Vps, Wps, XX },
   /* 66 */  { "addpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "addsd",      0, Vsd, Wsd, XX },
   /* F3 */  { "addss",      0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f59[4] = {
   /* -- */  { "mulps",      0, Vps, Wps, XX },
   /* 66 */  { "mulpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "mulsd",      0, Vsd, Wsd, XX },
   /* F3 */  { "mulss",      0, Vss, Wss, XX }
-  };                   
+};                   
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5a[4] = {
   /* -- */  { "cvtps2pd",   0, Vpd, Wps, XX },
   /* 66 */  { "cvtpd2ps",   0, Vps, Wpd, XX },
   /* F2 */  { "cvtsd2ss",   0, Vss, Wsd, XX },
   /* F3 */  { "cvtss2sd",   0, Vsd, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5b[4] = {
   /* -- */  { "cvtdq2ps",   0, Vps, Wdq, XX },
   /* 66 */  { "cvtps2dq",   0, Vdq, Wps, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "cvttps2dq",  0, Vdq, Wps, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5c[4] = {
   /* -- */  { "subps",      0, Vps, Wps, XX },
   /* 66 */  { "subpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "subsd",      0, Vsd, Wsd, XX },
   /* F3 */  { "subss",      0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5d[4] = {
   /* -- */  { "minps",      0, Vps, Wps, XX },
   /* 66 */  { "minpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "minsd",      0, Vsd, Wsd, XX },
   /* F3 */  { "minss",      0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5e[4] = {
   /* -- */  { "divps",      0, Vps, Wps, XX },
   /* 66 */  { "divpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "divsd",      0, Vsd, Wsd, XX },
   /* F3 */  { "divss",      0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5f[4] = {
   /* -- */  { "maxps",      0, Vps, Wps, XX },
   /* 66 */  { "maxpd",      0, Vpd, Wpd, XX },
   /* F2 */  { "maxsd",      0, Vsd, Wsd, XX },
   /* F3 */  { "maxss",      0, Vss, Wss, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f60[4] = {
   /* -- */  { "punpcklbw",  0,  Pq, Qd, XX },
   /* 66 */  { "punpcklbw",  0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f61[4] = {
   /* -- */  { "punpcklwd",  0,  Pq, Qd, XX },
   /* 66 */  { "punpcklwd",  0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f62[4] = {
   /* -- */  { "punpckldq",  0,  Pq, Qd, XX },
   /* 66 */  { "punpckldq",  0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f63[4] = {
   /* -- */  { "packsswb",   0,  Pq, Qq, XX },
   /* 66 */  { "packsswb",   0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f64[4] = {
   /* -- */  { "pcmpgtb",    0,  Pq, Qq, XX },
   /* 66 */  { "pcmpgtb",    0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f65[4] = {
   /* -- */  { "pcmpgtw",    0,  Pq, Qq, XX },
   /* 66 */  { "pcmpgtw",    0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f66[4] = {
   /* -- */  { "pcmpgtd",    0,  Pq,  Qq, XX },
   /* 66 */  { "pcmpgtd",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f67[4] = {
   /* -- */  { "packuswb",   0,  Pq,  Qq, XX },
   /* 66 */  { "packuswb",   0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f68[4] = {
   /* -- */  { "punpckhbw",  0,  Pq, Qq, XX },
   /* 66 */  { "punpckhbw",  0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f69[4] = {
   /* -- */  { "punpckhwd",  0,  Pq, Qq, XX },
   /* 66 */  { "punpckhwd",  0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f6a[4] = {
   /* -- */  { "punpckhdq",  0,  Pq, Qq, XX },
   /* 66 */  { "punpckhdq",  0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f6b[4] = {
   /* -- */  { "packssdw",   0,  Pq,  Qq, XX },
   /* 66 */  { "packssdw",   0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f6c[4] = {
   /* -- */  { "(invalid)",  0,  XX, XX, XX },
   /* 66 */  { "punpcklqdq", 0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f6d[4] = {
   /* -- */  { "(invalid)",  0,  XX, XX, XX },
   /* 66 */  { "punpckhqdq", 0, Vdq, Wq, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f6e[4] = {
   /* -- */  { "movd",       0,  Pq, Ed, XX },
   /* 66 */  { "movd",       0, Vdq, Ed, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f6f[4] = {
   /* -- */  { "movq",       0,  Pq,  Qq, XX },
   /* 66 */  { "movdqa",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "movdqu",     0, Vdq, Wdq, XX },
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f70[4] = {
   /* -- */  { "pshufw",     0,  Pq,  Qq, Ib },
   /* 66 */  { "pshufd",     0, Vdq, Wdq, Ib },
   /* F2 */  { "pshufhw",    0,  Vq,  Wq, Ib },
   /* F3 */  { "pshuflw",    0,  Vq,  Wq, Ib }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f74[4] = {
   /* -- */  { "pcmpeqb",    0,  Pq,  Qq, XX },
   /* 66 */  { "pcmpeqb",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f75[4] = {
   /* -- */  { "pcmpeqw",    0,  Pq,  Qq, XX },
   /* 66 */  { "pcmpeqw",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f76[4] = {
   /* -- */  { "pcmpeqd",    0,  Pq,  Qq, XX },
   /* 66 */  { "pcmpeqd",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f7c[4] = {
   /* -- */  { "(invalid)",  0,  XX,  XX, XX },
   /* 66 */  { "haddpd",     0, Vpd, Wpd, XX },
   /* F2 */  { "haddps",     0, Vps, Wps, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f7d[4] = {
   /* -- */  { "(invalid)",  0,  XX,  XX, XX },
   /* 66 */  { "hsubpd",     0, Vpd, Wpd, XX },
   /* F2 */  { "hsubps",     0, Vps, Wps, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f7e[4] = {
   /* -- */  { "movd",       0,  Ed, Pq, XX },
   /* 66 */  { "movd",       0,  Ed, Vd, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "movq",       0,  Vq, Wq, XX },
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f7f[4] = {
   /* -- */  { "movq",       0,  Qq,  Pq, XX },
   /* 66 */  { "movdqa",     0, Wdq, Vdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "movdqu",     0, Wdq, Vdq, XX },
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fc2[4] = {
   /* -- */  { "cmpps",      0, Vps, Wps, Ib },
   /* 66 */  { "cmppd",      0, Vpd, Wpd, Ib },
   /* F2 */  { "cmpsd",      0, Vsd, Wsd, Ib },
   /* F3 */  { "cmpss",      0, Vss, Wss, Ib }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fc3[4] = {
   /* -- */  { "movnti",     0, Md, Gd, XX },
   /* 66 */  { "(invalid)",  0, XX, XX, XX },
   /* F2 */  { "(invalid)",  0, XX, XX, XX },
   /* F3 */  { "(invalid)",  0, XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fc4[4] = {
   /* -- */  { "pinsrw",     0,  Pq, Ed, Ib },
   /* 66 */  { "pinsrw",     0, Vdq, Ed, Ib },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fc5[4] = {
   /* -- */  { "pextrw",     0,  Pq, Ed, Ib },
   /* 66 */  { "pextrw",     0, Vdq, Ed, Ib },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fc6[4] = {
   /* -- */  { "shufps",     0, Vps, Wps, Ib },
   /* 66 */  { "shufpd",     0, Vpd, Wpd, Ib },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd0[4] = {
   /* -- */  { "(invalid)",  0,  XX,  XX, XX },
   /* 66 */  { "addsubpd",   0, Vpd, Wpd, XX },
   /* F2 */  { "addsubps",   0, Vps, Wps, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd1[4] = {
   /* -- */  { "psrlw",      0,  Pq,  Qq, XX },
   /* 66 */  { "psrlw",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd2[4] = {
   /* -- */  { "psrld",      0,  Pq,  Qq, XX },
   /* 66 */  { "psrld",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd3[4] = {
   /* -- */  { "psrlq",      0,  Pq,  Qq, XX },
   /* 66 */  { "psrlq",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd4[4] = {
   /* -- */  { "paddq",      0,  Pq,  Qq, XX },
   /* 66 */  { "paddq",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd5[4] = {
   /* -- */  { "pmullw",     0,  Pq,  Qq, XX },
   /* 66 */  { "pmullw",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd6[4] = {
   /* -- */  { "(invalid)",  0,  XX, XX, XX },
   /* 66 */  { "movq",       0,  Wq, Vq, XX },
   /* F2 */  { "movdq2q",    0,  Pq, Vq, XX },
   /* F3 */  { "movq2dq",    0, Vdq, Qq, XX },
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd7[4] = {
   /* -- */  { "pmovmskb",   0, Gd,  Pq, XX },
   /* 66 */  { "pmovmskb",   0, Gd, Vdq, XX },
   /* F2 */  { "(invalid)",  0, XX,  XX, XX },
   /* F3 */  { "(invalid)",  0, XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd8[4] = {
   /* -- */  { "psubusb",    0,  Pq,  Qq, XX },
   /* 66 */  { "psubusb",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fd9[4] = {
   /* -- */  { "psubusw",    0, Pq, Qq, XX   },
   /* 66 */  { "psubusw",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fda[4] = {
   /* -- */  { "pminub",     0,  Pq,  Qq, XX },
   /* 66 */  { "pminub",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fdb[4] = {
   /* -- */  { "pand",       0,  Pq,  Qq, XX },
   /* 66 */  { "pand",       0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fdc[4] = {
   /* -- */  { "paddusb",    0,  Pq,  Qq, XX },
   /* 66 */  { "paddusb",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fdd[4] = {
   /* -- */  { "paddusw",    0,  Pq,  Qq, XX },
   /* 66 */  { "paddusw",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fde[4] = {
   /* -- */  { "pmaxub",     0,  Pq,  Qq, XX },
   /* 66 */  { "pmaxub",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fdf[4] = {
   /* -- */  { "pandn",      0,  Pq,  Qq, XX },
   /* 66 */  { "pandn",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe0[4] = {
   /* -- */  { "pavgb",      0,  Pq,  Qq, XX },
   /* 66 */  { "pavgb",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe1[4] = {
   /* -- */  { "psraw",      0,  Pq,  Qq, XX },
   /* 66 */  { "psraw",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe2[4] = {
   /* -- */  { "psrad",      0,  Pq,  Qq, XX },
   /* 66 */  { "psrad",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe3[4] = {
   /* -- */  { "pavgw",      0,  Pq,  Qq, XX },
   /* 66 */  { "pavgw",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe4[4] = {
   /* -- */  { "pmulhuw",    0,  Pq,  Qq, XX },
   /* 66 */  { "pmulhuw",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe5[4] = {
   /* -- */  { "pmulhw",     0,  Pq,  Qq, XX },
   /* 66 */  { "pmulhw",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe6[4] = {
   /* -- */  { "(invalid)",  0,  XX,  XX, XX },
   /* 66 */  { "cvttpd2dq",  0,  Vq, Wpd, XX },
   /* F2 */  { "cvtpd2dq",   0,  Vq, Wpd, XX },
   /* F3 */  { "cvtdq2pd",   0, Vpd,  Wq, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe7[4] = {
   /* -- */  { "movntq",     0,  Mq,  Pq, XX },
   /* 66 */  { "movntdq",    0, Mdq, Vdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe8[4] = {
   /* -- */  { "psubsb",     0,  Pq,  Qq, XX },
   /* 66 */  { "psubsb",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fe9[4] = {
   /* -- */  { "psubsw",     0,  Pq,  Qq, XX },
   /* 66 */  { "psubsw",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fea[4] = {
   /* -- */  { "pminsw",     0,  Pq,  Qq, XX },
   /* 66 */  { "pminsw",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0feb[4] = {
   /* -- */  { "por",        0,  Pq,  Qq, XX },
   /* 66 */  { "por",        0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fec[4] = {
   /* -- */  { "paddsb",     0,  Pq,  Qq, XX },
   /* 66 */  { "paddsb",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fed[4] = {
   /* -- */  { "paddsw",     0,  Pq,  Qq, XX },
   /* 66 */  { "paddsw",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fee[4] = {
   /* -- */  { "pmaxuw",     0,  Pq,  Qq, XX },
   /* 66 */  { "pmaxuw",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fef[4] = {
   /* -- */  { "pxor",       0,  Pq,  Qq, XX },
   /* 66 */  { "pxor",       0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff0[4] = {
   /* -- */  { "(invalid)",  0,  XX,  XX, XX },
   /* 66 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "lddqu",      0, Vdq, Mdq, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };                        
+};                        
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff1[4] = {
   /* -- */  { "psllw",      0,  Pq,  Qq, XX },
   /* 66 */  { "psllw",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff2[4] = {
   /* -- */  { "pslld",      0,  Pq,  Qq, XX },
   /* 66 */  { "pslld",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff3[4] = {
   /* -- */  { "psllq",      0,  Pq,  Qq, XX },
   /* 66 */  { "psllq",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff4[4] = {
   /* -- */  { "pmuludq",    0,  Pq,  Qq, XX },
   /* 66 */  { "pmuludq",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff5[4] = {
   /* -- */  { "pmaddwd",    0,  Pq,  Qq, XX },
   /* 66 */  { "pmaddwd",    0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff6[4] = {
   /* -- */  { "psadbw",     0,  Pq,  Qq, XX },
   /* 66 */  { "psadbw",     0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff7[4] = {
   /* -- */  { "maskmovq",   0,  Pq,  Qq, XX },
   /* 66 */  { "maskmovdqu", 0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff8[4] = {
   /* -- */  { "psubb",      0,  Pq,  Qq, XX },
   /* 66 */  { "psubb",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ff9[4] = {
   /* -- */  { "psubw",      0,  Pq,  Qq, XX },
   /* 66 */  { "psubw",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ffa[4] = {
   /* -- */  { "psubd",      0,  Pq,  Qq, XX },
   /* 66 */  { "psubd",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ffb[4] = {
   /* -- */  { "psubq",      0,  Pq,  Qq, XX },
   /* 66 */  { "psubq",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ffc[4] = {
   /* -- */  { "paddb",      0,  Pq,  Qq, XX },
   /* 66 */  { "paddb",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ffd[4] = {
   /* -- */  { "paddw",      0,  Pq,  Qq, XX },
   /* 66 */  { "paddw",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0ffe[4] = {
   /* -- */  { "paddd",      0,  Pq,  Qq, XX },
   /* 66 */  { "paddd",      0, Vdq, Wdq, XX },
   /* F2 */  { "(invalid)",  0,  XX,  XX, XX },
   /* F3 */  { "(invalid)",  0,  XX,  XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1202[4] = {
   /* -- */  { "psrlw",      0,  Pq, Ib, XX },
   /* 66 */  { "psrlw",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1204[4] = {
   /* -- */  { "psraw",      0,  Pq, Ib, XX },
   /* 66 */  { "psraw",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1206[4] = {
   /* -- */  { "psllw",      0,  Pq, Ib, XX },
   /* 66 */  { "psllw",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1302[4] = {
   /* -- */  { "psrld",      0,  Pq, Ib, XX },
   /* 66 */  { "psrld",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1304[4] = {
   /* -- */  { "psrad",      0,  Pq, Ib, XX },
   /* 66 */  { "psrad",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1306[4] = {
   /* -- */  { "pslld",      0,  Pq, Ib, XX },
   /* 66 */  { "pslld",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1402[4] = {
   /* -- */  { "psrlq",      0,  Pq, Ib, XX },
   /* 66 */  { "psrlq",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1403[4] = {
   /* -- */  { "(invalid)",  0,  XX, XX, XX },
   /* 66 */  { "psrldq",     0, Wdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1406[4] = {
   /* -- */  { "psllq",      0,  Pq, Ib, XX },
   /* 66 */  { "psllq",      0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_G1407[4] = {
   /* -- */  { "(invalid)",  0,  XX, XX, XX },
   /* 66 */  { "pslldq",     0, Vdq, Ib, XX },
   /* F2 */  { "(invalid)",  0,  XX, XX, XX },
   /* F3 */  { "(invalid)",  0,  XX, XX, XX }
-  };
+};
 
 
 /* ************************************************************************ */
@@ -1012,7 +1014,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG1EbIb[8] = {
   /* 5 */  { "sub",         0, Eb, Ib, XX },
   /* 6 */  { "xor",         0, Eb, Ib, XX },
   /* 7 */  { "cmp",         0, Eb, Ib, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG1EvIv[8] = {
   /* 0 */  { "add",         0, Ev, Iv, XX },
@@ -1023,7 +1025,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG1EvIv[8] = {
   /* 5 */  { "sub",         0, Ev, Iv, XX },
   /* 6 */  { "xor",         0, Ev, Iv, XX },
   /* 7 */  { "cmp",         0, Ev, Iv, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG1EvIb[8] = {
   /* 0 */  { "add",         0, Ev, sIb, XX },	// sign-extend byte 
@@ -1034,7 +1036,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG1EvIb[8] = {
   /* 5 */  { "sub",         0, Ev, sIb, XX },
   /* 6 */  { "xor",         0, Ev, sIb, XX },
   /* 7 */  { "cmp",         0, Ev, sIb, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Eb[8] = {
   /* 0 */  { "rol",         0, Eb, Ib, XX },
@@ -1045,7 +1047,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG2Eb[8] = {
   /* 5 */  { "shr",         0, Eb, Ib, XX },
   /* 6 */  { "shl",         0, Eb, Ib, XX },
   /* 7 */  { "sar",         0, Eb, Ib, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Eb1[8] = {
   /* 0 */  { "rol",         0, Eb, I1, XX },
@@ -1056,7 +1058,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG2Eb1[8] = {
   /* 5 */  { "shr",         0, Eb, I1, XX },
   /* 6 */  { "shl",         0, Eb, I1, XX },
   /* 7 */  { "sar",         0, Eb, I1, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2EbCL[8] = {
   /* 0 */  { "rol",         0, Eb, CL, XX },
@@ -1067,7 +1069,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG2EbCL[8] = {
   /* 5 */  { "shr",         0, Eb, CL, XX },
   /* 6 */  { "shl",         0, Eb, CL, XX },
   /* 7 */  { "sar",         0, Eb, CL, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Ev[8] = {
   /* 0 */  { "rol",         0, Ev, Ib, XX },
@@ -1078,7 +1080,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG2Ev[8] = {
   /* 5 */  { "shr",         0, Ev, Ib, XX },
   /* 6 */  { "shl",         0, Ev, Ib, XX },
   /* 7 */  { "sar",         0, Ev, Ib, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2Ev1[8] = {
   /* 0 */  { "rol",         0, Ev, I1, XX },
@@ -1089,7 +1091,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG2Ev1[8] = {
   /* 5 */  { "shr",         0, Ev, I1, XX },
   /* 6 */  { "shl",         0, Ev, I1, XX },
   /* 7 */  { "sar",         0, Ev, I1, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG2EvCL[8] = {
   /* 0 */  { "rol",         0, Ev, CL, XX },
@@ -1100,7 +1102,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG2EvCL[8] = {
   /* 5 */  { "shr",         0, Ev, CL, XX },
   /* 6 */  { "shl",         0, Ev, CL, XX },
   /* 7 */  { "sar",         0, Ev, CL, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG3Eb[8] = {
   /* 0 */  { "test",        0, Eb, Ib, XX },
@@ -1111,7 +1113,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG3Eb[8] = {
   /* 5 */  { "imul",        0, AL, Eb, XX },
   /* 6 */  { "div",         0, AL, Eb, XX },
   /* 7 */  { "idiv",        0, AL, Eb, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG3Ev[8] = {
   /* 0 */  { "test",        0,  Ev, Iv, XX },
@@ -1122,7 +1124,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG3Ev[8] = {
   /* 5 */  { "imul",        0, eAX, Ev, XX },
   /* 6 */  { "div",         0, eAX, Ev, XX },
   /* 7 */  { "idiv",        0, eAX, Ev, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG4[8] = {
   /* 0 */  { "inc",         0, Eb, XX, XX },
@@ -1133,7 +1135,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG4[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { "(invalid)",   0, XX, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG5[8] = {
   /* 0 */  { "inc",         0, Ev, XX, XX },
@@ -1144,7 +1146,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG5[8] = {
   /* 5 */  { "jmp far",     0, Mp, XX, XX },
   /* 6 */  { "push",        0, Ev, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG6[8] = {
   /* 0 */  { "sldt",        0, Ew, XX, XX },
@@ -1155,7 +1157,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG6[8] = {
   /* 5 */  { "verw",        0, Ew, XX, XX },
   /* 6 */  { "(invalid)",   0, XX, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG7[8] = {
   /* 0 */  { "sgdt",        0, Ms, XX, XX },
@@ -1166,7 +1168,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG7[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { "lmsw",        0, Ew, XX, XX },
   /* 7 */  { "invlpg",      0, XX, XX, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG8EvIb[8] = {
   /* 0 */  { "(invalid)",   0, XX, XX, XX },
@@ -1177,7 +1179,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG8EvIb[8] = {
   /* 5 */  { "bts",         0, Ev, Ib, XX },
   /* 6 */  { "btr",         0, Ev, Ib, XX },
   /* 7 */  { "btc",         0, Ev, Ib, XX }
-  }; 
+}; 
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG9[8] = {
   /* 0 */  { "(invalid)",   0, XX, XX, XX },
@@ -1188,7 +1190,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG9[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { "(invalid)",   0, XX, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG12[8] = {
   /* 0 */  { "(invalid)",   0, XX, XX, XX },
@@ -1199,7 +1201,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG12[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { GRPSSE(G1206) },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG13[8] = {
   /* 0 */  { "(invalid)",   0, XX, XX, XX },
@@ -1210,7 +1212,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG13[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { GRPSSE(G1306) },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG14[8] = {
   /* 0 */  { "(invalid)",   0, XX, XX, XX },
@@ -1221,7 +1223,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG14[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { GRPSSE(G1406) },
   /* 7 */  { GRPSSE(G1407) } 
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupG15[8] = {
   /* 0 */  { "fxsave",      0, Mx, XX, XX },
@@ -1232,9 +1234,10 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG15[8] = {
   /* 5 */  { "lfence",      0, XX, XX, XX },
   /* 6 */  { "mfence",      0, XX, XX, XX },
   /* 7 */  { "sfence",      0, XX, XX, XX }       /* SFENCE/CFLUSH */
-  };
+};
 
-static BxDisasmOpcodeInfo_t BxDisasmGroupG16[8] = {
+static BxDisasmOpcodeInfo_t BxDisasmGroupG16[8] =
+{
   /* 0 */  { "prefetchnta", 0, Mb, XX, XX },
   /* 1 */  { "prefetcht0",  0, Mb, XX, XX },
   /* 2 */  { "prefetcht1",  0, Mb, XX, XX },
@@ -1243,7 +1246,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupG16[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { "(invalid)",   0, XX, XX, XX },
   /* 7 */  { "(invalid)",   0, XX, XX, XX }
-  };
+};
 
 /* ************************************************************************ */
 /* 3DNow! opcodes */
@@ -1525,7 +1528,7 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupD8[8] = {
   /* 5 */  { "fsubr",       0, Md, XX, XX },
   /* 6 */  { "fdiv",        0, Md, XX, XX },
   /* 7 */  { "fdivpr",      0, Md, XX, XX }
-  };
+};
 
   // D9 (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupD9[8] = { 
@@ -1537,7 +1540,7 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupD9[8] = {
   /* 5 */  { "fldcw",       0, Ew, XX, XX },
   /* 6 */  { "fnstenv",     0, Mx, XX, XX },
   /* 7 */  { "fnstcw",      0, Mw, XX, XX }
-  };
+};
 
   // DA (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDA[8] = { 
@@ -1549,7 +1552,7 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupDA[8] = {
   /* 5 */  { "fisubr",      0, Md, XX, XX },
   /* 6 */  { "fidiv",       0, Md, XX, XX },
   /* 7 */  { "fidivr",      0, Md, XX, XX }
-  };
+};
 
   // DB (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDB[8] = { 
@@ -1561,7 +1564,7 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupDB[8] = {
   /* 5 */  { "fld",         0, Mt, XX, XX },
   /* 6 */  { "(invalid)",   0, XX, XX, XX },
   /* 7 */  { "fstp",        0, Mt, XX, XX }
-  };
+};
 
   // DC (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDC[8] = { 
@@ -1573,7 +1576,7 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupDC[8] = {
   /* 5 */  { "fsubr",       0, Mq, XX, XX },
   /* 6 */  { "fdiv",        0, Mq, XX, XX },
   /* 7 */  { "fdivr",       0, Mq, XX, XX }
-  };
+};
 
   // DD (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDD[8] = { 
@@ -1585,7 +1588,7 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupDD[8] = {
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
   /* 6 */  { "fnsave",      0, Mx, XX, XX },
   /* 7 */  { "fnstsw",      0, Mw, XX, XX }
-  };
+};
 
   // DE (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDE[8] = { 
@@ -1597,7 +1600,7 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupDE[8] = {
   /* 5 */  { "fisubr",      0, Mw, XX, XX },
   /* 6 */  { "fidiv",       0, Mw, XX, XX },
   /* 7 */  { "fidivr",      0, Mw, XX, XX }
-  };
+};
 
   // DF (modrm is outside 00h - BFh) (mod != 11)
 static BxDisasmOpcodeInfo_t BxDisasmFPGroupDF[8] = { 
@@ -1605,11 +1608,11 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupDF[8] = {
   /* 1 */  { "fisttp",      0, Mw, XX, XX },
   /* 2 */  { "fist",        0, Mw, XX, XX },
   /* 3 */  { "fistp",       0, Mw, XX, XX },
-  /* 4 */  { "fbld",        0, Mb, XX, XX },
+  /* 4 */  { "fbld",        0, Mt, XX, XX },
   /* 5 */  { "fild",        0, Mq, XX, XX },
-  /* 6 */  { "fbstp",       0, Mb, XX, XX },
+  /* 6 */  { "fbstp",       0, Mt, XX, XX },
   /* 7 */  { "fistp",       0, Mq, XX, XX }
-  };
+};
 
 // 512 entries for second byte of floating point instructions. (when mod==11b) 
 static BxDisasmOpcodeInfo_t BxDisasmOpcodeInfoFP[512] = { 
@@ -2140,7 +2143,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodeInfoFP[512] = {
   /* DF FD */  { "(invalid)", 0,  XX,  XX, XX },
   /* DF FE */  { "(invalid)", 0,  XX,  XX, XX },
   /* DF FF */  { "(invalid)", 0,  XX,  XX, XX },
-  };
+};
 
 static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   // 256 entries for single byte opcodes
@@ -2246,32 +2249,32 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 63 */  { "arpl",      0,  Ew,  Rw, XX },
   /* 64 */  { PREFIX_FS },      // FS:
   /* 65 */  { PREFIX_GS },      // GS:
-  /* 66 */  { PREFIX_OPSIZE },  
+  /* 66 */  { PREFIX_OPSIZE },
   /* 67 */  { PREFIX_ADDRSIZE },
   /* 68 */  { "push",      0,  Iv,  XX, XX },
   /* 69 */  { "imul",      0,  Gv,  Ev, Iv },
   /* 6A */  { "push",      0, sIb,  XX, XX },   // sign extended immediate
   /* 6B */  { "imul",      0,  Gv,  Ev, sIb },   
-  /* 6C */  { "insb",      0,  Yb,  DX, XX },
+  /* 6C */  { "ins",       0,  Yb,  DX, XX },
   /* 6D */  { "ins",       0,  Yv,  DX, XX },
-  /* 6E */  { "outsb",     0,  DX,  Xb, XX },
+  /* 6E */  { "outs",      0,  DX,  Xb, XX },
   /* 6F */  { "outs",      0,  DX,  Xv, XX },
-  /* 70 */  { "jo",        0,  Jb,  XX, XX },
-  /* 71 */  { "jno",       0,  Jb,  XX, XX },
-  /* 72 */  { "jb",        0,  Jb,  XX, XX },
-  /* 73 */  { "jnb",       0,  Jb,  XX, XX },
-  /* 74 */  { "jz",        0,  Jb,  XX, XX },
-  /* 75 */  { "jnz",       0,  Jb,  XX, XX },
-  /* 76 */  { "jbe",       0,  Jb,  XX, XX },
-  /* 77 */  { "jnbe",      0,  Jb,  XX, XX },
-  /* 78 */  { "js",        0,  Jb,  XX, XX },
-  /* 79 */  { "jns",       0,  Jb,  XX, XX },
-  /* 7A */  { "jp",        0,  Jb,  XX, XX },
-  /* 7B */  { "jnp",       0,  Jb,  XX, XX },
-  /* 7C */  { "jl",        0,  Jb,  XX, XX },
-  /* 7D */  { "jnl",       0,  Jb,  XX, XX },
-  /* 7E */  { "jle",       0,  Jb,  XX, XX },
-  /* 7F */  { "jnle",      0,  Jb,  XX, XX },
+  /* 70 */  { "jo",        _COND_JUMP, Jb, XX, XX },
+  /* 71 */  { "jno",       _COND_JUMP, Jb, XX, XX },
+  /* 72 */  { "jb",        _COND_JUMP, Jb, XX, XX },
+  /* 73 */  { "jnb",       _COND_JUMP, Jb, XX, XX },
+  /* 74 */  { "jz",        _COND_JUMP, Jb, XX, XX },
+  /* 75 */  { "jnz",       _COND_JUMP, Jb, XX, XX },
+  /* 76 */  { "jbe",       _COND_JUMP, Jb, XX, XX },
+  /* 77 */  { "jnbe",      _COND_JUMP, Jb, XX, XX },
+  /* 78 */  { "js",        _COND_JUMP, Jb, XX, XX },
+  /* 79 */  { "jns",       _COND_JUMP, Jb, XX, XX },
+  /* 7A */  { "jp",        _COND_JUMP, Jb, XX, XX },
+  /* 7B */  { "jnp",       _COND_JUMP, Jb, XX, XX },
+  /* 7C */  { "jl",        _COND_JUMP, Jb, XX, XX },
+  /* 7D */  { "jnl",       _COND_JUMP, Jb, XX, XX },
+  /* 7E */  { "jle",       _COND_JUMP, Jb, XX, XX },
+  /* 7F */  { "jnle",      _COND_JUMP, Jb, XX, XX },
   /* 80 */  { GRPN(G1EbIb) },
   /* 81 */  { GRPN(G1EvIv) },
   /* 82 */  { "(invalid)", 0,  XX,  XX, XX },
@@ -2308,17 +2311,17 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* A1 */  { "mov",       0, eAX,  Ov, XX },
   /* A2 */  { "mov",       0,  Ob,  AL, XX },
   /* A3 */  { "mov",       0,  Ov, eAX, XX },
-  /* A4 */  { "movsb",     0,  Yb,  Xb, XX },
+  /* A4 */  { "movs",      0,  Yb,  Xb, XX },
   /* A5 */  { "movs",      0,  Yv,  Xv, XX },
-  /* A6 */  { "cmpsb",     0,  Yb,  Xb, XX },
+  /* A6 */  { "cmps",      0,  Yb,  Xb, XX },
   /* A7 */  { "cmps",      0,  Yv,  Xv, XX },
   /* A8 */  { "test",      0,  AL,  Ib, XX },
   /* A9 */  { "test",      0, eAX,  Iv, XX },
-  /* AA */  { "stosb",     0,  Yb,  AL, XX },
+  /* AA */  { "stos",      0,  Yb,  AL, XX },
   /* AB */  { "stos",      0,  Yv, eAX, XX },
-  /* AC */  { "lodsb",     0,  AL,  Xb, XX },
+  /* AC */  { "lods",      0,  AL,  Xb, XX },
   /* AD */  { "lods",      0, eAX,  Xv, XX },
-  /* AE */  { "scasb",     0,  Yb,  AL, XX },
+  /* AE */  { "scas",      0,  Yb,  AL, XX },
   /* AF */  { "scas",      0,  Yv, eAX, XX },
   /* B0 */  { "mov",       0,  AL,  Ib, XX },
   /* B1 */  { "mov",       0,  CL,  Ib, XX },
@@ -2415,8 +2418,8 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 0F 0A */  { "(invalid)", 0,  XX,  XX, XX },
   /* 0F 0B */  { "ud2a",      0,  XX,  XX, XX },
   /* 0F 0C */  { "(invalid)", 0,  XX,  XX, XX },
-  /* 0F 0D */  { "prefetch",  0,  Mb,  XX, XX },        // 3DNow!
-  /* 0F 0E */  { "femms",     0,  XX,  XX, XX },        // 3DNow!
+  /* 0F 0D */  { "prefetch",  0,  Mb,  XX, XX }, // 3DNow!
+  /* 0F 0E */  { "femms",     0,  XX,  XX, XX }, // 3DNow!
   /* 0F 0F */  { GRP3DNOW     },
   /* 0F 10 */  { GRPSSE(0f10) },
   /* 0F 11 */  { GRPSSE(0f11) },
@@ -2530,22 +2533,22 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 0F 7D */  { GRPSSE(0f7d) },
   /* 0F 7E */  { GRPSSE(0f7e) },
   /* 0F 7F */  { GRPSSE(0f7f) },
-  /* 0F 80 */  { "jo",         0,  Jv,  XX, XX },
-  /* 0F 81 */  { "jno",        0,  Jv,  XX, XX },
-  /* 0F 82 */  { "jb",         0,  Jv,  XX, XX },
-  /* 0F 83 */  { "jnb",        0,  Jv,  XX, XX },
-  /* 0F 84 */  { "jz",         0,  Jv,  XX, XX },
-  /* 0F 85 */  { "jnz",        0,  Jv,  XX, XX },
-  /* 0F 86 */  { "jbe",        0,  Jv,  XX, XX },
-  /* 0F 87 */  { "jnbe",       0,  Jv,  XX, XX },
-  /* 0F 88 */  { "js",         0,  Jv,  XX, XX },
-  /* 0F 89 */  { "jns",        0,  Jv,  XX, XX },
-  /* 0F 8A */  { "jp",         0,  Jv,  XX, XX },
-  /* 0F 8B */  { "jnp",        0,  Jv,  XX, XX },
-  /* 0F 8C */  { "jl",         0,  Jv,  XX, XX },
-  /* 0F 8D */  { "jnl",        0,  Jv,  XX, XX },
-  /* 0F 8E */  { "jle",        0,  Jv,  XX, XX },
-  /* 0F 8F */  { "jnle",       0,  Jv,  XX, XX },
+  /* 0F 80 */  { "jo",         _COND_JUMP, Jv, XX, XX },
+  /* 0F 81 */  { "jno",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 82 */  { "jb",         _COND_JUMP, Jv, XX, XX },
+  /* 0F 83 */  { "jnb",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 84 */  { "jz",         _COND_JUMP, Jv, XX, XX },
+  /* 0F 85 */  { "jnz",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 86 */  { "jbe",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 87 */  { "jnbe",       _COND_JUMP, Jv, XX, XX },
+  /* 0F 88 */  { "js",         _COND_JUMP, Jv, XX, XX },
+  /* 0F 89 */  { "jns",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 8A */  { "jp",         _COND_JUMP, Jv, XX, XX },
+  /* 0F 8B */  { "jnp",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 8C */  { "jl",         _COND_JUMP, Jv, XX, XX },
+  /* 0F 8D */  { "jnl",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 8E */  { "jle",        _COND_JUMP, Jv, XX, XX },
+  /* 0F 8F */  { "jnle",       _COND_JUMP, Jv, XX, XX },
   /* 0F 90 */  { "seto",       0,  Eb,  XX, XX },
   /* 0F 91 */  { "setno",      0,  Eb,  XX, XX },
   /* 0F 92 */  { "setb",       0,  Eb,  XX, XX },
