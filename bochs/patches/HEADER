@@ -6,7 +6,7 @@ Date:
 Detailed description:
 
 Apply patch to:
-  bochs 3-25-2000 snapshot
+  NAMEGOESHERE
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p1 < THIS_PATCH_FILE".
