@@ -378,7 +378,6 @@ v6workspace:
 # "make win32_snap" to unzip the workspace files and create the ZIP.
 ########
 win32_snap:
-	sh .conf.win32-vcpp
 	unzip $(V6WORKSPACE_ZIP)
 	make zip
 
