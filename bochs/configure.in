@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.4)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.102 2002-09-14 23:17:55 kevinlawton Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.103 2002-09-15 13:52:22 kevinlawton Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -650,7 +650,6 @@ AC_ARG_ENABLE(global-pages,
     AC_DEFINE(BX_SupportGlobalPages, 0)
     ]
   )
-AC_SUBST(BX_SupportGlobalPages)
 
 
 AC_MSG_CHECKING(for port e9 hack)
@@ -1661,13 +1660,16 @@ if test ! -d build; then mkdir build; fi
 if test ! -d build/linux; then mkdir build/linux; fi
 
 if test "$use_x86_64" = 1; then
-  # For x86-64, force support of the Physical Address Extension (PAE).
+  # For x86-64, force support of the Physical Address Extension (PAE),
+  # and Page Global Extension (PGE.
   AC_DEFINE(BX_SupportPAE, 1)
+  AC_DEFINE(BX_SupportGlobalPages, 1)
 else
   # Not an option yet for x86-32.
   AC_DEFINE(BX_SupportPAE, 0)
 fi
 AC_SUBST(BX_SupportPAE)
+AC_SUBST(BX_SupportGlobalPages)
 
 AC_SUBST(INSTALL_TARGET)
 AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
