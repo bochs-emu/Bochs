@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.32 2002-03-08 09:43:57 bdenney Exp $
+$Id: user.dbk,v 1.33 2002-03-08 17:04:03 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2623,25 +2623,35 @@ Ideas for new sections:
       </screen>
     </para>
 
-<section><title>Unix: How to make a disk image</title>
+<section><title>How to make a disk image</title>
 <para>
 This was contributed by Greg Alexander in October 2001.
 </para>
-<screen>
-0.) What you need:
+<para>
+What you need:
 
-1.) An executable version of bochs.  See "obtaining a bochs executable"
-or "compiling the bochs source"
-2.) The bximage program, included with bochs
-3.) A FreeDOS boot disk, or a boot disk from another OS capable of
+<itemizedlist>
+<listitem><para>
+An executable version of bochs.  See <link linkend="downloading">Downloading Bochs</link> and <link linkend="compiling">Compiling Bochs</link>.
+</para></listitem>
+<listitem><para>
+The bximage program, included with bochs
+</para></listitem>
+<listitem><para>
+A FreeDOS boot disk, or a boot disk from another OS capable of
 producing DOS partitions (i.e. a linux install disk.)
-4.) (optional) mtools, a program for manipulating DOS disks/images.
+</para></listitem>
+<listitem><para>
+(optional) mtools, a program for manipulating DOS disks/images.
+</para></listitem>
+</itemizedlist>
 
+</para>
 
-1.) Creating an image file.
+<screen>
+
 Run `bximage` to create a disk image file.  You will be greeted with the
 following prompt:
-
 
 ========================================================================
                                 bximage
@@ -2764,11 +2774,25 @@ partition.
 </screen>
 </section> <!-- end of Unix: How to make a disk image -->
 
-<section><title>Win32: Use winimage to manipulate disk images</title>
+<section><title>Use mtools to manipulate disk images</title>
+<para>
+Mtools is a set of programs that can read, write, and format DOS disk images.
+There are links to the Mtools main page and a Win32 port of Mtools on the
+<ulink url="http://bochs.sourceforge.net/links.html">Bochs Links page</ulink>,
+under Resources.  
+</para>
+<para>
+The mtools web site has a detailed manual.  If anyone wants to write
+instructions specific to Bochs, we can add it right here.
+</para>
+</section>
+
+<section><title>Win32 only: Use winimage to manipulate disk images</title>
 <para>
 Someone on the bochs-developers list mentioned that they use a program
 called WinImage, from <ulink url="www.winimage.com">www.winimage.com</ulink>
-to read and write disk images (floppy and hard disk).
+to read and write disk images (floppy and hard disk).  Winimage is a
+commercial product with a 30-day trial.
 </para>
 <para>
 If anyone wants to write a tutorial, send mail to &devlist; and volunteer.
