@@ -2,8 +2,9 @@
 #define BX_USE_VIRTUAL_TIMERS 0
 
 #define BX_MAX_VIRTUAL_TIMERS (15+BX_SMP_PROCESSORS)
-#define BX_NULL_VIRTUAL_TIMER_HANDLE 100000
+#define BX_NULL_VIRTUAL_TIMER_HANDLE 10000
 
+#define BX_MAX_VIRTUAL_TIME (100000)
 
 class bx_virt_timer_c {
  private:
@@ -16,14 +17,19 @@ class bx_virt_timer_c {
     bx_bool continuous; // 0=one-shot timer, 1=continuous periodicity.
     bx_timer_handler_t funct;  // A callback function for when the
                                //   timer fires.
+                               //   This function MUST return.
     void *this_ptr;            // The this-> pointer for C++ callbacks
                                //   has to be stored as well.
-#define BxMaxTimerIDLen 32
     char id[BxMaxTimerIDLen]; // String ID of timer.
   } timer[BX_MAX_VIRTUAL_TIMERS];
 
   unsigned   numTimers;  // Number of currently allocated timers.
 
+  //Variables for the timer subsystem:
+  Bit64u current_virtual_time;
+  Bit64u next_event_time;
+
+  //Variables for the time sync subsystem:
   Bit64u last_ips_time;
   Bit64u last_virtual_time;
   Bit64u last_host_time;
@@ -47,6 +53,9 @@ class bx_virt_timer_c {
   static void nullTimer(void* this_ptr);
 
 
+  Bit64u get_next_event_time(void);
+
+  void periodic(Bit64u time_passed);
 
  public:
 
@@ -56,6 +65,7 @@ class bx_virt_timer_c {
 
   //Get the current virtual time.
   //  This will return a monotonically increasing value.
+  // MUST NOT be called from within a timer interrupt.
   Bit64u time_usec_sequential(void);
 
   //Register a timer handler to go off after a given interval.
