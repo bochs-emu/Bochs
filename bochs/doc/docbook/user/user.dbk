@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.25 2001-11-17 22:04:33 bdenney Exp $
+$Id: user.dbk,v 1.26 2001-11-21 02:13:47 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2909,8 +2909,52 @@ in parallel.  This is a great idea, but it's not done at present.
              </para>
           </section>
 	  <section><title>DOS</title>
-             <para>
-             </para>
+<section><title>Accessing your CDROM</title>
+<para>
+To access your CDROM in DOS, you must download an IDE CDROM driver.  
+Bochs emulates a very generic CDROM drive, and several drivers are known to
+work.  Others don't.  This section describes how to set up your
+<filename>config.sys</filename> and <filename>autoexec.bat</filename> to enable
+the CDROM.
+</para>
+
+<para>
+The drivers that have been reported to work are
+<filename>OAKCDROM.SYS</filename> that comes with several versions of Windows
+and <filename>SBIDE.SYS</filename> version 1.21 from Creative
+Labs<footnote>
+<para>
+To get it, go to <ulink url="http://creative.com">Creative Labs web
+site</ulink>, click on Support, then click Download Files.  You get to a screen
+where you must select the operating system and the product for which you want
+the driver.  Choose DOS as the operating system, and "CD-ROM: 4x and above" as
+the product.  There are several choices, but you want
+<filename>sbide121.exe</filename> from April 15, 1997.  Version 2.0 does not
+work.  The download file is a self-extracting ZIP file, so you will need to run
+it in DOS or Windows.  If you can copy it onto the DOS floppy disk image, you
+can even boot DOS inside Bochs and run <filename>sbide121.exe</filename> to
+extract it.  The driver is called SBIDE.SYS.  </para>
+</footnote> and OAKCDROM.SYS that comes with several versions of Windows.
+Copy the driver to your boot disk, and then set up the startup files as follows.
+<para>
+<screen>
+config.sys:
+  device=himem.sys
+  device=oakcdrom.sys /D:CD001
+      -or-
+  device=sbide.sys /D:CD001 /P:1f0,14,3f6
+
+autoexec.bat:
+  mscdex.exe /M:10 /D:CD001
+</screen>
+
+<para>
+If the files mentioned in <filename>config.sys</filename> and
+<filename>autoexec.bat</filename> are not in the root directory, give the full
+pathname, like <filename>c:\windows\himem.sys</filename>.
+</para>
+
+</section>
           </section>
 	  <section><title>Windows *</title>
              <para>
