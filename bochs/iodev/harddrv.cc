@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.124 2004-08-23 09:39:45 vruppert Exp $
+// $Id: harddrv.cc,v 1.125 2004-08-24 15:15:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -161,7 +161,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.124 2004-08-23 09:39:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.125 2004-08-24 15:15:19 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3186,7 +3186,10 @@ bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int size
       // Header
       BX_SELECTED_CONTROLLER(channel).buffer[0] = (size+6) >> 8;
       BX_SELECTED_CONTROLLER(channel).buffer[1] = (size+6) & 0xff;
-      BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x70; // no media present
+      if (bx_options.atadevice[channel][BX_HD_THIS channels[channel].drive_select].Ostatus->get () == BX_INSERTED)
+        BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x12; // media present 120mm CD-ROM (CD-R) data/audio  door closed
+      else
+        BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x70; // no media present
       BX_SELECTED_CONTROLLER(channel).buffer[3] = 0; // reserved
       BX_SELECTED_CONTROLLER(channel).buffer[4] = 0; // reserved
       BX_SELECTED_CONTROLLER(channel).buffer[5] = 0; // reserved
