@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.18.2.5 2002-03-17 08:57:02 bdenney Exp $
+// $Id: gui.cc,v 1.18.2.6 2002-03-18 02:46:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -244,8 +244,22 @@ bx_gui_c::floppyB_handler(void)
   void
 bx_gui_c::cdromD_handler(void)
 {
+#if USE_WX
+  // instead of just toggling the status, call wxWindows to bring up 
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->vga_gui_button_pressed (BXP_CDROM_PATH);
+  // eject and then insert the disk.  If the new path is invalid,
+  // the status will return 0.
+  unsigned status = bx_devices.hard_drive->set_cd_media_status(0);
+  printf ("eject disk, new_status is %d\n", status);
+  status = bx_devices.hard_drive->set_cd_media_status(1);
+  printf ("insert disk, new_status is %d\n", status);
+  fflush (stdout);
+  BX_GUI_THIS cdromD_status = status;
+#else
   BX_GUI_THIS cdromD_status =
     bx_devices.hard_drive->set_cd_media_status(!BX_GUI_THIS cdromD_status);
+#endif
   BX_GUI_THIS update_floppy_status_buttons ();
 }
 
@@ -344,7 +358,15 @@ bx_gui_c::snapshot_handler(void)
     BX_ERROR(( "copy button failed, mode not implemented"));
     return;
   }
-  FILE *fp = fopen("snapshot.txt", "w");
+  //FIXME
+  char filename[BX_PATHNAME_LEN];
+#if USE_WX
+  int ret = SIM->ask_pathname (filename, sizeof(filename), "Save snapshot as...", "snapshot.txt");
+  if (ret < 0) return;  // cancelled
+#else
+  strcpy (filename, "snapshot.txt");
+#endif
+  FILE *fp = fopen(filename, "w");
   fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
   fclose(fp);
   free(text_snapshot);
