@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.110 2004-08-23 18:47:25 vruppert Exp $
+// $Id: vga.cc,v 1.111 2004-08-24 10:15:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1756,7 +1756,6 @@ bx_vga_c::update(void)
 
         if ( BX_VGA_THIS s.sequencer.chain_four ) {
           unsigned long pixely, pixelx, plane;
-          // bx_vga_dump_status();
 
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
             BX_PANIC(("update: select_high_bank != 1"));
@@ -2588,66 +2587,66 @@ bx_vga_c::get_actl_palette_idx(Bit8u index)
   void
 bx_vga_c::dump_status(void)
 {
-  BX_INFO(("s.misc_output.color_emulation = %u",
-            (unsigned) BX_VGA_THIS s.misc_output.color_emulation));
-  BX_INFO(("s.misc_output.enable_ram = %u",
-            (unsigned) BX_VGA_THIS s.misc_output.enable_ram));
-  BX_INFO(("s.misc_output.clock_select = %u",
-            (unsigned) BX_VGA_THIS s.misc_output.clock_select));
+#if BX_DEBUGGER
+  dbg_printf("s.misc_output.color_emulation = %u\n",
+            (unsigned) BX_VGA_THIS s.misc_output.color_emulation);
+  dbg_printf("s.misc_output.enable_ram = %u\n",
+            (unsigned) BX_VGA_THIS s.misc_output.enable_ram);
+  dbg_printf("s.misc_output.clock_select = %u ",
+            (unsigned) BX_VGA_THIS s.misc_output.clock_select);
   if (BX_VGA_THIS s.misc_output.clock_select == 0)
-    BX_INFO(("  25Mhz 640 horiz pixel clock"));
+    dbg_printf("(25Mhz 640 horiz pixel clock)\n");
   else
-    BX_INFO(("  28Mhz 720 horiz pixel clock"));
-  BX_INFO(("s.misc_output.select_high_bank = %u",
-            (unsigned) BX_VGA_THIS s.misc_output.select_high_bank));
-  BX_INFO(("s.misc_output.horiz_sync_pol = %u",
-            (unsigned) BX_VGA_THIS s.misc_output.horiz_sync_pol));
-  BX_INFO(("s.misc_output.vert_sync_pol = %u",
-            (unsigned) BX_VGA_THIS s.misc_output.vert_sync_pol));
+    dbg_printf("(28Mhz 720 horiz pixel clock)\n");
+  dbg_printf("s.misc_output.select_high_bank = %u\n",
+            (unsigned) BX_VGA_THIS s.misc_output.select_high_bank);
+  dbg_printf("s.misc_output.horiz_sync_pol = %u\n",
+            (unsigned) BX_VGA_THIS s.misc_output.horiz_sync_pol);
+  dbg_printf("s.misc_output.vert_sync_pol = %u ",
+            (unsigned) BX_VGA_THIS s.misc_output.vert_sync_pol);
   switch ( (BX_VGA_THIS s.misc_output.vert_sync_pol << 1) |
            BX_VGA_THIS s.misc_output.horiz_sync_pol ) {
-    case 0: BX_INFO(("  (reserved")); break;
-    case 1: BX_INFO(("  400 lines")); break;
-    case 2: BX_INFO(("  350 lines")); break;
-    case 3: BX_INFO(("  480 lines")); break;
-    default: BX_INFO(("  ???"));
+    case 1: dbg_printf("(400 lines)\n"); break;
+    case 2: dbg_printf("(350 lines)\n"); break;
+    case 3: dbg_printf("(480 lines)\n"); break;
+    default: dbg_printf("(reserved)\n");
     }
 
-  BX_INFO(("s.graphics_ctrl.odd_even = %u",
-            (unsigned) BX_VGA_THIS s.graphics_ctrl.odd_even));
-  BX_INFO(("s.graphics_ctrl.chain_odd_even = %u",
-            (unsigned) BX_VGA_THIS s.graphics_ctrl.chain_odd_even));
-  BX_INFO(("s.graphics_ctrl.shift_reg = %u",
-            (unsigned) BX_VGA_THIS s.graphics_ctrl.shift_reg));
-  BX_INFO(("s.graphics_ctrl.graphics_alpha = %u",
-            (unsigned) BX_VGA_THIS s.graphics_ctrl.graphics_alpha));
-  BX_INFO(("s.graphics_ctrl.memory_mapping = %u",
-            (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
+  dbg_printf("s.graphics_ctrl.odd_even = %u\n",
+            (unsigned) BX_VGA_THIS s.graphics_ctrl.odd_even);
+  dbg_printf("s.graphics_ctrl.chain_odd_even = %u\n",
+            (unsigned) BX_VGA_THIS s.graphics_ctrl.chain_odd_even);
+  dbg_printf("s.graphics_ctrl.shift_reg = %u\n",
+            (unsigned) BX_VGA_THIS s.graphics_ctrl.shift_reg);
+  dbg_printf("s.graphics_ctrl.graphics_alpha = %u\n",
+            (unsigned) BX_VGA_THIS s.graphics_ctrl.graphics_alpha);
+  dbg_printf("s.graphics_ctrl.memory_mapping = %u ",
+            (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
   switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
-    case 0: BX_INFO(("  A0000-BFFFF")); break;
-    case 1: BX_INFO(("  A0000-AFFFF")); break;
-    case 2: BX_INFO(("  B0000-B7FFF")); break;
-    case 3: BX_INFO(("  B8000-BFFFF")); break;
-    default: BX_INFO(("  ???"));
+    case 1: dbg_printf("(A0000-AFFFF)\n"); break;
+    case 2: dbg_printf("(B0000-B7FFF)\n"); break;
+    case 3: dbg_printf("(B8000-BFFFF)\n"); break;
+    default: dbg_printf("(A0000-BFFFF)\n"); break;
     }
 
-  BX_INFO(("s.sequencer.extended_mem = %u",
-            (unsigned) BX_VGA_THIS s.sequencer.extended_mem));
-  BX_INFO(("s.sequencer.odd_even = %u (inverted)",
-            (unsigned) BX_VGA_THIS s.sequencer.odd_even));
-  BX_INFO(("s.sequencer.chain_four = %u",
-            (unsigned) BX_VGA_THIS s.sequencer.chain_four));
+  dbg_printf("s.sequencer.extended_mem = %u\n",
+            (unsigned) BX_VGA_THIS s.sequencer.extended_mem);
+  dbg_printf("s.sequencer.odd_even = %u (inverted)\n",
+            (unsigned) BX_VGA_THIS s.sequencer.odd_even);
+  dbg_printf("s.sequencer.chain_four = %u\n",
+            (unsigned) BX_VGA_THIS s.sequencer.chain_four);
 
-  BX_INFO(("s.attribute_ctrl.video_enabled = %u",
-            (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled));
-  BX_INFO(("s.attribute_ctrl.mode_ctrl.graphics_alpha = %u",
-            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha));
-  BX_INFO(("s.attribute_ctrl.mode_ctrl.display_type = %u",
-            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type));
-  BX_INFO(("s.attribute_ctrl.mode_ctrl.internal_palette_size = %u",
-            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size));
-  BX_INFO(("s.attribute_ctrl.mode_ctrl.pixel_clock_select = %u",
-            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select));
+  dbg_printf("s.attribute_ctrl.video_enabled = %u\n",
+            (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled);
+  dbg_printf("s.attribute_ctrl.mode_ctrl.graphics_alpha = %u\n",
+            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha);
+  dbg_printf("s.attribute_ctrl.mode_ctrl.display_type = %u\n",
+            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type);
+  dbg_printf("s.attribute_ctrl.mode_ctrl.internal_palette_size = %u\n",
+            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size);
+  dbg_printf("s.attribute_ctrl.mode_ctrl.pixel_clock_select = %u\n",
+            (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select);
+#endif
 }
 
 

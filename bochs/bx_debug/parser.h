@@ -1,7 +1,3 @@
-#ifndef YYERRCODE
-#define YYERRCODE 256
-#endif
-
 #define BX_TOKEN_REG_AL 257
 #define BX_TOKEN_REG_BL 258
 #define BX_TOKEN_REG_CL 259
@@ -123,11 +119,13 @@
 #define BX_TOKEN_TRACEREGOFF 375
 #define BX_TOKEN_HELP 376
 #define BX_TOKEN_CALC 377
-#define BX_TOKEN_RSHIFT 378
-#define BX_TOKEN_LSHIFT 379
-#define BX_TOKEN_IVT 380
-#define NOT 381
-#define NEG 382
+#define BX_TOKEN_VGA 378
+#define BX_TOKEN_RSHIFT 379
+#define BX_TOKEN_LSHIFT 380
+#define BX_TOKEN_IVT 381
+#define NOT 382
+#define NEG 383
+#define comamnds 384
 typedef union {
   char    *sval;
   Bit32u   uval;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.2 2004-01-17 08:36:29 danielg4 Exp $
+// $Id: debug.h,v 1.3 2004-08-24 10:15:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -173,6 +173,7 @@ extern bx_bool watchpoint_continue;
 void bx_dbg_linux_syscall (void);
 void bx_dbg_info_ne2k(int page, int reg);
 void bx_dbg_info_pic(void);
+void bx_dbg_info_vga(void);
 void bx_dbg_help_command(char* command);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_info_ivt_command(bx_num_range);

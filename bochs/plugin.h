@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.30 2004-07-11 20:38:48 vruppert Exp $
+// $Id: plugin.h,v 1.31 2004-08-24 10:15:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -171,6 +171,7 @@ extern "C" {
 #define DEV_vga_set_update_interval(val) \
   (bx_devices.pluginVgaDevice->set_update_interval(val))
 #define DEV_vga_get_actl_pal_idx(index) (bx_devices.pluginVgaDevice->get_actl_palette_idx(index))
+#define DEV_vga_dump_status() (bx_devices.pluginVgaDevice->dump_status())
 
 ///////// PCI macros
 #define DEV_register_pci_handlers(b,c,d,e,f,g) \

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.2 2004-06-21 10:45:38 cbothamy Exp $
+// $Id: parser.y,v 1.3 2004-08-24 10:15:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -151,6 +151,7 @@
 %token <sval> BX_TOKEN_TRACEREGOFF
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
+%token <sval> BX_TOKEN_VGA
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
 %token <sval> BX_TOKEN_IVT
@@ -663,6 +664,11 @@ info_command:
     | BX_TOKEN_INFO BX_TOKEN_PIC '\n'
         {
         bx_dbg_info_pic();
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_VGA '\n'
+        {
+        bx_dbg_info_vga();
         free($1); free($2);
         }
     ;

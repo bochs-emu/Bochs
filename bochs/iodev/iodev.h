@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.49 2004-08-06 15:49:54 vruppert Exp $
+// $Id: iodev.h,v 1.50 2004-08-24 10:15:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -251,6 +251,7 @@ class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
   virtual Bit8u get_actl_palette_idx(Bit8u index) {
     return 0;
   }
+  virtual void dump_status(void) {}
 };
 
 class BOCHSAPI bx_pci_stub_c : public bx_devmodel_c {
