@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.9 2004-02-19 21:10:26 vruppert Exp $
+// $Id: svga.cc,v 1.10 2004-02-20 18:29:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -51,13 +51,14 @@ IMPLEMENT_GUI_PLUGIN_CODE(svga)
 #define LOG_THIS theGui->
 
 static unsigned res_x, res_y;
-static int fontwidth = 8, fontheight = 16;
+static unsigned fontwidth, fontheight;
 static unsigned tilewidth, tileheight;
 static unsigned char vgafont[256 * 16];
 static int clut8 = 0;
 GraphicsContext *screen = NULL;
 static int save_vga_mode;
 static int save_vga_pal[256 * 3];
+static Bit8u fontbuffer[0x2000];
 
 void keyboard_handler(int scancode, int press);
 void mouse_handler(int button, int dx, int dy, int dz, 
@@ -107,9 +108,11 @@ void bx_svga_gui_c::specific_init(
   
   screen = gl_allocatecontext();
   
+  fontwidth = 8;
+  fontheight = 16;
   dimension_update(640,400);
   create_vga_font();
-  gl_setfont(8, 16, (void *)vgafont);
+  gl_setfont(fontwidth, fontheight, (void *)vgafont);
   gl_setwritemode(FONT_COMPRESSED);
   
   keyboard_init();
@@ -135,13 +138,29 @@ void bx_svga_gui_c::text_update(
     bx_vga_tminfo_t tm_info,
     unsigned rows)
 {
-   unsigned x, y, i;
+   unsigned x, y, i, j;
    unsigned chars, cols;
    char s[] = " ";
    static unsigned int previ;
    unsigned int cursori;
    int fg, bg;
+   bx_bool force_update = 0;
    
+  if (charmap_updated) {
+    BX_INFO(("charmap update. Font Height is %d", fontheight));
+    for (unsigned c = 0; c<256; c++) {
+      if (char_changed[c]) {
+        j = c * fontheight;
+        for(i=0; i<fontheight; i++) {
+          fontbuffer[j++] = vga_charmap[(c<<5)+i];
+        }
+        char_changed[c] = 0;
+      }
+    }
+    gl_setfont(fontwidth, fontheight, (void *)fontbuffer);
+    force_update = 1;
+    charmap_updated = 0;
+  }
    cols = res_x/fontwidth;
 
    cursori = (cursor_y*cols + cursor_x) * 2;
@@ -150,7 +169,7 @@ void bx_svga_gui_c::text_update(
    
    for (i=0; i<chars*2; i+=2) {
         if (i == cursori || i == previ || old_text[i] != new_text[i] ||
-	    old_text[i+1] != new_text[i+1]) {
+	    old_text[i+1] != new_text[i+1] || force_update) {
 	    
 	s[0] = new_text[i];
 	x = (i/2) % cols;
@@ -187,7 +206,11 @@ void bx_svga_gui_c::graphics_tile_update(
     unsigned x,
     unsigned y)
 {
-   gl_putbox(x, y, tilewidth, tileheight, snapshot);
+  if ((y + tileheight) > res_y) {
+    gl_putbox(x, y, tilewidth, (res_y - y), snapshot);
+  } else {
+    gl_putbox(x, y, tilewidth, tileheight, snapshot);
+  }
 }
 
 static Bit32u vga_to_bx_key(int key)
@@ -421,14 +444,17 @@ void bx_svga_gui_c::dimension_update(
     newmode = G640x480x256;
   } else if (x == 640 && y == 400) {
     newmode = G640x400x256;
-  } else if (x == 320 && y == 200) {
-    newmode = G320x200x256;
+  } else if (x == 800 && y == 600) {
+    newmode = G800x600x256;
+  } else if (x == 1024 && y == 768) {
+    newmode = G1024x768x256;
   }
   
   if (!vga_hasmode(newmode)) {
     newmode = G640x480x256; // trying "default" mode...
   }
   
+  vga_getpalvec(0, 256, save_vga_pal);
   if (vga_setmode(newmode) != 0)
   {
       LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
@@ -438,6 +464,7 @@ void bx_svga_gui_c::dimension_update(
   gl_setcontextvga(newmode);
   gl_getcontext(screen);
   gl_setcontextvgavirtual(newmode);
+  vga_setpalvec(0, 256, save_vga_pal);
   save_vga_mode = newmode;
 
   res_x = x;
