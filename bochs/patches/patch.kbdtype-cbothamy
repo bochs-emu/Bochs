@@ -1,0 +1,121 @@
+----------------------------------------------------------------------
+Patch name: patch.kbdtype-cbothamy
+Author: Christophe Bothamy <cbbochs@free.fr>
+Date: 4 Dec 2001
+
+Detailed description:
+ . This patch adds keyboard-type configuration capability
+ . You have to add a "keyboard_type: TYPE" in the conf file.
+   TYPE can be one of "xt", "at" or "mfii"
+ . Default type is "mfii" as in current cvs
+ . Depending on this type, a different answer is returned to the
+   keyboard indentifier query. This query is used in the "keyb" 
+   msdos command 
+ . This patch is useful, at least, for french macinstoshes.  
+   The standard mac keyboards are "AT-style", whereas PC are 
+   "MFII-style" (keyboard layout is slightly different for 6 keys)
+ . I dont't know if "XT-style" is useful to anybody.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on 4 Dec 2001
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.55
+diff -r1.55 bochs.h
+595a596,599
+> #define BX_KBD_XT_TYPE        0
+> #define BX_KBD_AT_TYPE        1
+> #define BX_KBD_MFII_TYPE      2 
+> 
+610a615
+>   bx_param_enum_c   *Okeyboard_type;
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.79
+diff -r1.79 main.cc
+84a85
+>   NULL,  // default keyboard type
+710d710
+< 
+738a739,749
+> 
+>   // keyboard type
+>   bx_options.Okeyboard_type = new bx_param_enum_c (BXP_KBD_TYPE,
+>       "Keyboard type",
+>       "Keyboard type",
+>       keyboard_type_names,
+>       BX_KBD_MFII_TYPE,
+>       BX_KBD_XT_TYPE);
+>   bx_options.Okeyboard_type->set_format ("Keyboard type: %s");
+>   bx_options.Okeyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
+> 
+746a758
+>       bx_options.Okeyboard_type,
+1775a1788,1804
+>   else if (!strcmp(params[0], "keyboard_type")) {
+>     if (num_params != 2) {
+>       BX_PANIC(("%s: keyboard_type directive: wrong # args.", context));
+>       }
+>     if(strcmp(params[1],"xt")==0){
+>       bx_options.Okeyboard_type->set (BX_KBD_XT_TYPE);
+>       }
+>     else if(strcmp(params[1],"at")==0){
+>       bx_options.Okeyboard_type->set (BX_KBD_AT_TYPE);
+>       }
+>     else if(strcmp(params[1],"mfii")==0){
+>       bx_options.Okeyboard_type->set (BX_KBD_MFII_TYPE);
+>       }
+>     else{
+>       BX_PANIC(("%s: keyboard_type directive: wrong arg %s.", context,params[1]));
+>       }
+>     }
+1996a2026,2027
+>   fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get ()==BX_KBD_XT_TYPE?"xt":
+>                                        bx_options.Okeyboard_type->get ()==BX_KBD_AT_TYPE?"at":"mfii");
+Index: gui/siminterface.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
+retrieving revision 1.35
+diff -r1.35 siminterface.cc
+252a253,254
+> char *keyboard_type_names[] = { "xt", "at", "mfii", NULL };
+> int n_keyboard_tupe_names = 3;
+Index: gui/siminterface.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
+retrieving revision 1.27
+diff -r1.27 siminterface.h
+34a35
+>   BXP_KBD_TYPE,
+303a305,306
+> extern char *keyboard_type_names[];
+> extern int n_keyboard_type_names;
+Index: iodev/keyboard.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/keyboard.cc,v
+retrieving revision 1.36
+diff -r1.36 keyboard.cc
+925a926
+> 
+979,981c980,988
+<       kbd_enQ(0xFA); // AT sends ACK, MFII sends ACK+ABh+41h
+<       kbd_enQ(0xAB);
+<       kbd_enQ(0x41);
+---
+> 
+>       // XT sends nothing, AT sends ACK, MFII sends ACK+ABh+41h
+>       if (bx_options.Okeyboard_type->get() != BX_KBD_XT_TYPE) {
+>         kbd_enQ(0xFA); 
+>         if (bx_options.Okeyboard_type->get() == BX_KBD_MFII_TYPE) {
+>           kbd_enQ(0xAB);
+>           kbd_enQ(0x41);
+>           }
+>         }
