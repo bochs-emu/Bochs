@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.40 2002-10-26 13:14:03 bdenney Exp $
+// $Id: devices.cc,v 1.41 2002-11-09 20:51:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,8 +49,8 @@ bx_devices_c::bx_devices_c(void)
   settype(DEVLOG);
 
 #if BX_PCI_SUPPORT
-  pci = NULL;
-  pci2isa = NULL;
+  pluginPciBridge = &stubPci;
+  pluginPci2IsaBridge = NULL;
 #endif
   pit = NULL;
   pluginKeyboard = &stubKeyboard;
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.40 2002-10-26 13:14:03 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.41 2002-11-09 20:51:40 vruppert Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -143,10 +143,12 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
 #if BX_PCI_SUPPORT
   // PCI logic (i440FX)
-  pci = & bx_pci;
-  pci->init();
-  pci2isa = & bx_pci2isa;
-  pci2isa->init();
+  if (bx_options.Oi440FXSupport->get ()) {
+    PLUG_load_plugin(pci, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin(pci2isa, PLUGTYPE_OPTIONAL);
+    pluginPciBridge->init();
+    pluginPci2IsaBridge->init();
+  }
 #endif
 
 #if BX_SUPPORT_APIC
@@ -251,8 +253,10 @@ bx_devices_c::reset(unsigned type)
 {
   pluginUnmapped->reset(type);
 #if BX_PCI_SUPPORT
-  pci->reset(type);
-  pci2isa->reset(type);
+  if (bx_options.Oi440FXSupport->get ()) {
+    pluginPciBridge->reset(type);
+    pluginPci2IsaBridge->reset(type);
+  }
 #endif
 #if BX_SUPPORT_IOAPIC
   ioapic->reset (type);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.175 2002-11-09 14:12:09 cbothamy Exp $
+// $Id: main.cc,v 1.176 2002-11-09 20:51:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1976,7 +1976,7 @@ bx_atexit(void)
 
 #if BX_PCI_SUPPORT
   if (bx_options.Oi440FXSupport->get ()) {
-    bx_devices.pci->print_i440fx_state();
+    bx_devices.pluginPciBridge->print_i440fx_state();
     }
 #endif
 

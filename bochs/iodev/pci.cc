@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.23 2002-11-03 17:17:10 vruppert Exp $
+// $Id: pci.cc,v 1.24 2002-11-09 20:51:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,43 +24,38 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+//
+// i440FX Support - PMC/DBX
+//
 
-
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
-#define LOG_THIS bx_pci.
+#define LOG_THIS thePciBridge->
 
+bx_pci_c *thePciBridge = NULL;
 
+  int
+libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  thePciBridge = new bx_pci_c ();
+  bx_devices.pluginPciBridge = thePciBridge;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciBridge, BX_PLUGIN_PCI);
+  return(0); // Success
+}
 
-//
-// i440FX Support
-//
-
-
-bx_pci_c bx_pci;
-#if BX_USE_PCI_SMF
-#define this (&bx_pci)
-#endif
-
+  void
+libpci_LTX_plugin_fini(void)
+{
+}
 
 bx_pci_c::bx_pci_c(void)
 {
-  unsigned i;
-
   put("PCI");
   settype(PCILOG);
-
-  BX_PCI_THIS num_pci_handles = 0;
-
-  /* set unused elements to appropriate values */
-  for (i=0; i < BX_MAX_PCI_DEVICES; i++) {
-    BX_PCI_THIS pci_handler[i].read  = NULL;
-    BX_PCI_THIS pci_handler[i].write = NULL;
-    }
-
-  for (i=0; i < 0x100; i++) {
-    BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
-  }
 }
 
 bx_pci_c::~bx_pci_c(void)
@@ -75,29 +70,39 @@ bx_pci_c::init(void)
 {
   // called once when bochs initializes
 
-  if (bx_options.Oi440FXSupport->get ()) {
-    DEV_register_ioread_handler(this, read_handler, 0x0CF8, "i440FX", 4);
-    for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
-      DEV_register_ioread_handler(this, read_handler, i, "i440FX", 7);
-      }
+  BX_PCI_THIS num_pci_handles = 0;
 
-    DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "i440FX", 4);
-    for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
-      DEV_register_iowrite_handler(this, write_handler, i, "i440FX", 7);
-      }
+  /* set unused elements to appropriate values */
+  for (unsigned i=0; i < BX_MAX_PCI_DEVICES; i++) {
+    BX_PCI_THIS pci_handler[i].read  = NULL;
+    BX_PCI_THIS pci_handler[i].write = NULL;
+    }
 
-    DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                             0x00, "440FX Host bridge");
-
-    for (unsigned i=0; i<256; i++)
-      BX_PCI_THIS s.i440fx.pci_conf[i] = 0x0;
-    // readonly registers
-    BX_PCI_THIS s.i440fx.pci_conf[0x00] = 0x86;
-    BX_PCI_THIS s.i440fx.pci_conf[0x01] = 0x80;
-    BX_PCI_THIS s.i440fx.pci_conf[0x02] = 0x37;
-    BX_PCI_THIS s.i440fx.pci_conf[0x03] = 0x12;
-    BX_PCI_THIS s.i440fx.pci_conf[0x0b] = 0x06;
+  for (unsigned i=0; i < 0x100; i++) {
+    BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
   }
+
+  DEV_register_ioread_handler(this, read_handler, 0x0CF8, "i440FX", 4);
+  for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
+    DEV_register_ioread_handler(this, read_handler, i, "i440FX", 7);
+  }
+
+  DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "i440FX", 4);
+  for (unsigned i=0x0CFC; i<=0x0CFF; i++) {
+    DEV_register_iowrite_handler(this, write_handler, i, "i440FX", 7);
+  }
+
+  DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
+                            0x00, "440FX Host bridge");
+
+  for (unsigned i=0; i<256; i++)
+    BX_PCI_THIS s.i440fx.pci_conf[i] = 0x0;
+  // readonly registers
+  BX_PCI_THIS s.i440fx.pci_conf[0x00] = 0x86;
+  BX_PCI_THIS s.i440fx.pci_conf[0x01] = 0x80;
+  BX_PCI_THIS s.i440fx.pci_conf[0x02] = 0x37;
+  BX_PCI_THIS s.i440fx.pci_conf[0x03] = 0x12;
+  BX_PCI_THIS s.i440fx.pci_conf[0x0b] = 0x06;
 }
 
   void

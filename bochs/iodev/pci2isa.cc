@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.4 2002-11-03 17:17:10 vruppert Exp $
+// $Id: pci2isa.cc,v 1.5 2002-11-09 20:51:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,24 +24,33 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
-
-
-#include "bochs.h"
-#define LOG_THIS bx_pci2isa.
-
-
-
 //
 // i440FX Support - PCI-to-ISA bridge (PIIX3)
 //
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
-bx_pci2isa_c bx_pci2isa;
-#if BX_USE_P2I_SMF
-#define this (&bx_pci2isa)
-#endif
+#include "bochs.h"
+#define LOG_THIS thePci2IsaBridge->
 
+bx_pci2isa_c *thePci2IsaBridge = NULL;
+
+  int
+libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  thePci2IsaBridge = new bx_pci2isa_c ();
+  bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePci2IsaBridge, BX_PLUGIN_PCI2ISA);
+  return(0); // Success
+}
+
+  void
+libpci2isa_LTX_plugin_fini(void)
+{
+}
 
 bx_pci2isa_c::bx_pci2isa_c(void)
 {
@@ -61,34 +70,32 @@ bx_pci2isa_c::init(void)
 {
   // called once when bochs initializes
 
-  if (bx_options.Oi440FXSupport->get ()) {
-    DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                             0x08, "PIIX3 PCI-to-ISA bridge");
+  DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
+                            0x08, "PIIX3 PCI-to-ISA bridge");
 
-    DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_iowrite_handler(this, write_handler, 0x00F0, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_iowrite_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_iowrite_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_iowrite_handler(this, write_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x00F0, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 7);
 
-    DEV_register_ioread_handler(this, read_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_ioread_handler(this, read_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_ioread_handler(this, read_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_ioread_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 7);
-    DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 7);
 
-    for (unsigned i=0; i<256; i++)
-      BX_P2I_THIS s.pci_conf[i] = 0x0;
-    // readonly registers
-    BX_P2I_THIS s.pci_conf[0x00] = 0x86;
-    BX_P2I_THIS s.pci_conf[0x01] = 0x80;
-    BX_P2I_THIS s.pci_conf[0x02] = 0x00;
-    BX_P2I_THIS s.pci_conf[0x03] = 0x70;
-    BX_P2I_THIS s.pci_conf[0x0a] = 0x01;
-    BX_P2I_THIS s.pci_conf[0x0b] = 0x06;
-    BX_P2I_THIS s.pci_conf[0x0e] = 0x80;
-  }
+  for (unsigned i=0; i<256; i++)
+    BX_P2I_THIS s.pci_conf[i] = 0x0;
+  // readonly registers
+  BX_P2I_THIS s.pci_conf[0x00] = 0x86;
+  BX_P2I_THIS s.pci_conf[0x01] = 0x80;
+  BX_P2I_THIS s.pci_conf[0x02] = 0x00;
+  BX_P2I_THIS s.pci_conf[0x03] = 0x70;
+  BX_P2I_THIS s.pci_conf[0x0a] = 0x01;
+  BX_P2I_THIS s.pci_conf[0x0b] = 0x06;
+  BX_P2I_THIS s.pci_conf[0x0e] = 0x80;
 }
 
   void

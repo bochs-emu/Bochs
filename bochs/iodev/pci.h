@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.12 2002-10-25 11:44:40 bdenney Exp $
+// $Id: pci.h,v 1.13 2002-11-09 20:51:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,8 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-#if BX_PCI_SUPPORT
-
 #define BX_MAX_PCI_DEVICES 20
 
 typedef Bit32u (*bx_pci_read_handler_t)(void *, Bit8u, unsigned);
@@ -34,7 +32,7 @@ typedef void   (*bx_pci_write_handler_t)(void *, Bit8u, Bit32u, unsigned);
 
 #if BX_USE_PCI_SMF
 #  define BX_PCI_SMF  static
-#  define BX_PCI_THIS bx_pci.
+#  define BX_PCI_THIS thePciBridge->
 #else
 #  define BX_PCI_SMF
 #  define BX_PCI_THIS this->
@@ -49,19 +47,20 @@ typedef struct {
 
 
 
-class bx_pci_c : public logfunctions {
+class bx_pci_c : public bx_pci_stub_c {
 
 public:
   bx_pci_c(void);
   ~bx_pci_c(void);
-  BX_PCI_SMF void   init(void);
-  BX_PCI_SMF void   reset(unsigned type);
-  bx_bool register_pci_handlers(void *this_ptr, bx_pci_read_handler_t f1,
-                                bx_pci_write_handler_t f2, Bit8u devfunc,
-                                const char *name);
-  BX_PCI_SMF void   print_i440fx_state( );
-  BX_PCI_SMF Bit8u rd_memType (Bit32u addr);
-  BX_PCI_SMF Bit8u wr_memType (Bit32u addr);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
+  virtual bx_bool register_pci_handlers(void *this_ptr,
+                                        bx_pci_read_handler_t f1,
+                                        bx_pci_write_handler_t f2,
+                                        Bit8u devfunc, const char *name);
+  virtual void   print_i440fx_state(void);
+  virtual Bit8u rd_memType (Bit32u addr);
+  virtual Bit8u wr_memType (Bit32u addr);
 
 private:
   Bit8u pci_handler_id[0x100];  // 256 devices/functions
@@ -87,9 +86,3 @@ private:
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
   };
-
-#if BX_USE_PCI_SMF
-extern bx_pci_c bx_pci;
-#endif
-
-#endif  // #if BX_PCI_SUPPORT

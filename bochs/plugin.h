@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.4 2002-11-03 17:17:09 vruppert Exp $
+// $Id: plugin.h,v 1.5 2002-11-09 20:51:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -32,6 +32,8 @@ extern "C" {
 #define BX_PLUGIN_HARDDRV  "harddrv"
 #define BX_PLUGIN_DMA      "dma"
 #define BX_PLUGIN_PIC      "pic"
+#define BX_PLUGIN_PCI      "pci"
+#define BX_PLUGIN_PCI2ISA  "pci2isa"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
@@ -149,9 +151,9 @@ extern "C" {
 
 ///////// PCI macros
 #define DEV_register_pci_handlers(b,c,d,e,f) \
-  (bx_pci.register_pci_handlers(b,c,d,e,f))
-#define DEV_pci_rd_memtype(addr) bx_pci.rd_memType(addr)
-#define DEV_pci_wr_memtype(addr) bx_pci.wr_memType(addr)
+  (bx_devices.pluginPciBridge->register_pci_handlers(b,c,d,e,f))
+#define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
+#define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
 
 
 #if BX_HAVE_DLFCN_H
@@ -248,6 +250,14 @@ BOCHSAPI extern void     (*pluginSetHRQHackCallback)( void (*callback)(void) );
 /* === Reset stuff === */
 BOCHSAPI extern void     (*pluginResetSignal)(unsigned sig);
 
+/* === PCI stuff === */
+BOCHSAPI extern bx_bool  (*pluginRegisterPCIDevice)(void *this_ptr,
+                             Bit32u (*bx_pci_read_handler)(void *, Bit8u, unsigned),
+                             void(*bx_pci_write_handler)(void *, Bit8u, Bit32u, unsigned),
+                             Bit8u devfunc, const char *name);
+BOCHSAPI extern Bit8u    (*pluginRd_memType)(Bit32u addr);
+BOCHSAPI extern Bit8u    (*pluginWr_memType)(Bit32u addr);
+
 void plugin_abort (void);
 
 // called from bochs main (hack)
@@ -277,6 +287,8 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(vga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(floppy)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(amigaos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(beos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(carbon)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.3 2002-10-24 21:07:45 bdenney Exp $
+// $Id: pci2isa.h,v 1.4 2002-11-09 20:51:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,24 +25,22 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-#if BX_PCI_SUPPORT
-
 #if BX_USE_P2I_SMF
 #  define BX_P2I_SMF  static
-#  define BX_P2I_THIS bx_pci2isa.
+#  define BX_P2I_THIS thePci2IsaBridge->
 #else
 #  define BX_P2I_SMF
 #  define BX_P2I_THIS this->
 #endif
 
 
-class bx_pci2isa_c : public logfunctions {
+class bx_pci2isa_c : public bx_devmodel_c {
 
 public:
   bx_pci2isa_c(void);
   ~bx_pci2isa_c(void);
-  BX_PCI_SMF void   init(void);
-  BX_PCI_SMF void   reset(unsigned type);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
 
 private:
 
@@ -63,9 +61,3 @@ private:
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
   };
-
-#if BX_USE_P2I_SMF
-extern bx_pci2isa_c bx_pci2isa;
-#endif
-
-#endif  // #if BX_PCI_SUPPORT

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.21 2002-10-26 13:14:04 bdenney Exp $
+// $Id: iodev.h,v 1.22 2002-11-09 20:51:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,8 +44,6 @@
 class bx_pit_c;
 class bx_keyb_c;
 class bx_sb16_c;
-class bx_pci_c;
-class bx_pci2isa_c;
 class bx_ioapic_c;
 class bx_ne2k_c;
 class bx_g2h_c;
@@ -245,6 +243,23 @@ class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
   }
 };
 
+class BOCHSAPI bx_pci_stub_c : public bx_devmodel_c {
+  public:
+  virtual bx_bool register_pci_handlers(void *this_ptr,
+                                        Bit32u (*bx_pci_read_handler)(void *, Bit8u, unsigned),
+                                        void(*bx_pci_write_handler)(void *, Bit8u, Bit32u, unsigned),
+                                        Bit8u devfunc, const char *name) {
+    STUBFUNC(pci, register_pci_handlers); return 0;
+  }
+  virtual Bit8u rd_memType (Bit32u addr) {
+    return 0;
+  }
+  virtual Bit8u wr_memType (Bit32u addr) {
+    return 0;
+  }
+  virtual void print_i440fx_state(void) {}
+};
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -273,8 +288,8 @@ public:
 
   bx_devmodel_c    *pluginBiosDevice;
   bx_ioapic_c      *ioapic;
-  bx_pci_c         *pci;
-  bx_pci2isa_c     *pci2isa;
+  bx_pci_stub_c    *pluginPciBridge;
+  bx_devmodel_c    *pluginPci2IsaBridge;
   bx_pit_c         *pit;
   bx_keyb_stub_c   *pluginKeyboard;
   bx_dma_stub_c    *pluginDmaDevice;
@@ -302,6 +317,7 @@ public:
   bx_pic_stub_c  stubPic;
   bx_floppy_stub_c  stubFloppy;
   bx_vga_stub_c  stubVga;
+  bx_pci_stub_c  stubPci;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
@@ -350,8 +366,10 @@ private:
 
 
 
+#if BX_PCI_SUPPORT
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
+#endif
 #include "iodev/vga.h"
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
