@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.cc,v 1.11 2002-10-24 21:07:33 bdenney Exp $
+// $Id: guest2host.cc,v 1.12 2002-11-25 13:49:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ bx_g2h_c::~bx_g2h_c(void)
   void
 bx_g2h_c::init(void)
 {
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.11 2002-10-24 21:07:33 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.12 2002-11-25 13:49:56 bdenney Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     bx_devices.register_io_read_handler(&bx_g2h,
@@ -81,7 +81,7 @@ bx_g2h_c::aquire_channel(bx_g2h_callback_t f)
       }
     }
 
-  BX_INFO(("g2h: attempt to aquire channel: maxed out");
+  BX_INFO(("g2h: attempt to aquire channel: maxed out"));
   return(BX_G2H_ERROR); // No more free channels
 }
 
@@ -130,7 +130,7 @@ bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr,
     BX_PANIC(("g2h: IO write not dword."));
 
   if ( (bx_g2h.s.packet_count==0) && (val32!=BX_G2H_MAGIC) ) {
-    BX_INFO(("g2h: IO W: Not magic header.");
+    BX_INFO(("g2h: IO W: Not magic header."));
     return;
     }
   bx_g2h.s.guest_packet[bx_g2h.s.packet_count++] = val32;
