@@ -9,6 +9,10 @@ This patch will seperate the TSC from the other timers, this helps a lot
 in speeding up SMP boot and allows TSC synch to be possible. Seperation is 
 definitely necessary for writing to the TSC (e.g. via WRMSR)
 
+Minor bug fixes by Bryce:
+1. I had to move the definition of tsc into BX_CPU_C.
+2. remove duplicate case label BX_MSR_TSC in proc_ctrl.cc
+
 Patch was created with:
   cvs diff -u
 Apply patch to what version:
@@ -18,13 +22,13 @@ Instructions:
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
 
-Index: bochs-cvs/pc_system.cc
+Index: pc_system.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/pc_system.cc,v
 retrieving revision 1.23
 diff -u -r1.23 pc_system.cc
---- bochs-cvs/pc_system.cc	20 Sep 2002 15:35:44 -0000	1.23
-+++ bochs-cvs/pc_system.cc	24 Sep 2002 23:40:12 -0000
+--- pc_system.cc	20 Sep 2002 15:35:44 -0000	1.23
++++ pc_system.cc	28 Sep 2002 04:01:05 -0000
 @@ -370,6 +370,12 @@
        UNUSED(this_ptr);
  
@@ -38,28 +42,28 @@ diff -u -r1.23 pc_system.cc
  }
  
  #if BX_DEBUGGER
-Index: bochs-cvs/cpu/cpu.h
+Index: cpu/cpu.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
-retrieving revision 1.78
-diff -u -r1.78 cpu.h
---- bochs-cvs/cpu/cpu.h	24 Sep 2002 18:33:37 -0000	1.78
-+++ bochs-cvs/cpu/cpu.h	24 Sep 2002 23:40:27 -0000
-@@ -596,6 +596,7 @@
+retrieving revision 1.84
+diff -u -r1.84 cpu.h
+--- cpu/cpu.h	27 Sep 2002 09:56:40 -0000	1.84
++++ cpu/cpu.h	28 Sep 2002 04:01:09 -0000
+@@ -1390,6 +1390,7 @@
  
-   /* TODO finish of the others */
-   } bx_regs_msr_t;
+ #if BX_CPU_LEVEL >= 5
+   bx_regs_msr_t	msr;  
 +  Bit64u tsc;
  #endif
  
- typedef struct { /* bx_selector_t */
-Index: bochs-cvs/cpu/init.cc
+   i387_t the_i387;
+Index: cpu/init.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
 retrieving revision 1.32
 diff -u -r1.32 init.cc
---- bochs-cvs/cpu/init.cc	22 Sep 2002 18:22:24 -0000	1.32
-+++ bochs-cvs/cpu/init.cc	24 Sep 2002 23:40:32 -0000
+--- cpu/init.cc	22 Sep 2002 18:22:24 -0000	1.32
++++ cpu/init.cc	28 Sep 2002 04:01:10 -0000
 @@ -497,7 +497,9 @@
  #if BX_CPU_LEVEL >= 4
    BX_CPU_THIS_PTR clear_AC ();
@@ -71,13 +75,13 @@ diff -u -r1.32 init.cc
    BX_CPU_THIS_PTR inhibit_mask = 0;
    BX_CPU_THIS_PTR debug_trap = 0;
  
-Index: bochs-cvs/cpu/proc_ctrl.cc
+Index: cpu/proc_ctrl.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
-retrieving revision 1.50
-diff -u -r1.50 proc_ctrl.cc
---- bochs-cvs/cpu/proc_ctrl.cc	24 Sep 2002 13:57:37 -0000	1.50
-+++ bochs-cvs/cpu/proc_ctrl.cc	24 Sep 2002 23:40:36 -0000
+retrieving revision 1.51
+diff -u -r1.51 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	25 Sep 2002 14:09:08 -0000	1.51
++++ cpu/proc_ctrl.cc	28 Sep 2002 04:01:13 -0000
 @@ -1652,9 +1652,11 @@
    Boolean cpl = CPL;
    if ((tsd==0) || (tsd==1 && cpl==0)) {
@@ -101,7 +105,15 @@ diff -u -r1.50 proc_ctrl.cc
  		case BX_MSR_CESR:
  			/* TODO */
  			return;
-@@ -1830,6 +1831,12 @@
+@@ -1820,7 +1821,6 @@
+ 		/* These are noops on i686... */
+ 		case BX_MSR_P5_MC_ADDR:
+ 		case BX_MSR_MC_TYPE:
+-		case BX_MSR_TSC:
+ 			/* do nothing */
+ 			return;
+ 
+@@ -1830,6 +1830,12 @@
  		case BX_MSR_CTR1:
  			goto do_exception;
  #endif	/* BX_CPU_LEVEL == 5 */
@@ -114,18 +126,3 @@ diff -u -r1.50 proc_ctrl.cc
  
  		/* MSR_APICBASE
  		   0:7		Reserved
-
--- 
-function.linuxpower.ca
-
-
-
--------------------------------------------------------
-This sf.net email is sponsored by:ThinkGeek
-Welcome to geek heaven.
-http://thinkgeek.com/sf
-_______________________________________________
-bochs-developers mailing list
-bochs-developers@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/bochs-developers
-
