@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.56 2002-12-31 16:58:02 vruppert Exp $
+// $Id: vga.cc,v 1.57 2003-01-01 21:21:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -336,7 +336,7 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
       }
     else
       {
-      *piWidth = h / 2;
+      *piWidth = h;
       *piHeight = v;
       }
     }
@@ -1502,7 +1502,7 @@ bx_vga_c::update(void)
 	      for (r=0; r<Y_TILESIZE; r++) {
 		for (c=0; c<X_TILESIZE; c++) {
 		  pixely = ((yti*Y_TILESIZE) + r);
-		  pixelx = ((xti*X_TILESIZE) + c);
+		  pixelx = ((xti*X_TILESIZE) + c) / 2;
 		  plane  = (pixelx % 4);
 		  byte_offset = (plane * 65536) +
 				(pixely * (BX_VGA_THIS s.CRTC.reg[0x13]<<1))
