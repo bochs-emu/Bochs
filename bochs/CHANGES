@@ -139,6 +139,19 @@ Changes to next release:
   - patch.apic-zwane (APIC fixes) (Zwane Mwaikambo)
 
 - these S.F. bugs were closed
+  #699532 CVS (as of 2003/03/07) cannot read disk images
+  #639275 wrong more than 2GB size DVD-ROM
+  #766020 info registers / dump_cpu get old eflags
+  #655920 QuickBasic (qbx.exe) panics
+  #676188 Error BX_MAX_DIRTY_PAGE_TABLE_MEGS
+  #923821 LOCK not generating exceptions properly
+ #1007747 Wrong configure?
+ #1022577 show "call" command crashes bochs every time
+  #681849 SuSE 8.1 Compile problem
+  #660322 Install bochs 2.0 on SuSe 8,0
+ #1022587 "Unrecognized args" message wrong after invalid show command
+  #833118 TUN/TAP interface bug
+ #1022178 tuntap module mangles incoming broadcast packets
  #1028682 Report incorrect disk parameters of floppy
  #1026234 make fails on Cygwin because of missing .exe extension
  #1026241 --enable-cpp needed for .conf.win32-cygwin
