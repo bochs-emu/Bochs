@@ -103,21 +103,6 @@ device_t *devices = NULL;      /* Head of the linked list of registered devices 
 plugin_t *current_plugin_context = NULL;
 
 #if BX_PLUGINS
-// When compiling with plugins, plugin.cc will provide the pluginKeyboard
-// pointer.  At first it will point to the stub so that calls to the methods
-// will panic instead of segfaulting.  The pointer will be replaced with a real
-// bx_keyb_c object by plugin_init of the keyboard plugin.
-bx_keyb_stub_c pluginKeyboardStub;
-bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
-bx_hard_drive_stub_c pluginHardDriveStub;
-bx_hard_drive_stub_c *pluginHardDrive = &pluginHardDriveStub;
-#else
-// When plugins are turned off, the device will provide the pluginKeyboard
-// pointer instead.  It will be initialized to point to a real bx_keyb_c
-// immediately, instead of ever pointing at an instance of a stub class.
-#endif
-
-#if BX_PLUGINS
 // When compiling with plugins, plugin.cc will provide the bx_gui
 // pointer.  At first it will point to NULL.  The pointer will be replaced with
 // a real gui object by plugin_init of the specific gui module.

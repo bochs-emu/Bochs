@@ -48,7 +48,7 @@ extern "C" {
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); bx_init_plugins();}
 #define BX_RESET_DEVICES(type) {bx_devices.reset(type); bx_reset_plugins(type);}
-#define BX_LOAD_PLUGIN(name,type) {bx_load_plugin(name,type);}
+#define BX_LOAD_PLUGIN(name,type) {bx_load_plugin(#name,type);}
 
 #define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
 #define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
@@ -97,7 +97,9 @@ extern "C" {
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
 #define BX_RESET_DEVICES(type) {bx_devices.reset(type); }
-#define BX_LOAD_PLUGIN(name,type)
+// When plugins are off, BX_LOAD_PLUGIN will call the plugin_init function
+// directly.
+#define BX_LOAD_PLUGIN(name,type) {lib##name##_LTX_plugin_init(NULL,0,NULL);}
 #define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e)
 #define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e)
 #define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) bx_devices.register_default_io_read_handler(b,c,d)
@@ -351,6 +353,12 @@ extern void bx_reset_plugins (unsigned);
 // a non-mangled function symbol is available in the shared library.
 void plugin_fini(void);
 int plugin_init(plugin_t *plugin, int argc, char *argv[]);
+
+// still in extern "C"
+int libharddrv_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[]);
+void libharddrv_LTX_plugin_fini(void);
+int libkeyboard_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[]);
+void libkeyboard_LTX_plugin_fini(void);
 
 
 #ifdef __cplusplus

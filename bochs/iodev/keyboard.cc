@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.10 2002-10-17 17:29:08 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.11 2002-10-18 02:31:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,19 +51,14 @@
 #include <math.h>
 #include "scancodes.h"
 
-#if BX_PLUGINS
-#include "keyboard.h"
-#endif
-
 #define LOG_THIS  theKeyboard->
 #define VERBOSE_KBD_DEBUG 0
 
 
-#if BX_PLUGINS
 bx_keyb_c *theKeyboard = NULL;
 
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+libkeyboard_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
   // Before this plugin was loaded, pluginKeyboard pointed to a stub.
   // Now make it point to the real thing.
@@ -72,27 +67,10 @@ plugin_init(plugin_t *plugin, int argc, char *argv[])
 }
 
   void
-plugin_fini(void)
+libkeyboard_LTX_plugin_fini(void)
 {
   BX_INFO (("keyboard plugin_fini"));
 }
-#else
-// When plugins are turned off, provide the pluginKeyboard pointer which every
-// other object will use to reference this object.
-bx_keyb_c *theKeyboard = new bx_keyb_c ();
-bx_keyb_stub_c *pluginKeyboard = NULL;
-
-// NOTE: It would be possible to put pluginKeyboard in plugin.cc all the time,
-// but when I did that I had a strange linking problem.  I tried to rely on the
-// bx_keyb_c constructor to register the object.  It should have worked because
-// there was a global variable of type bx_keyb_c declared in this file!  But
-// the linker (ld 2.9.5) saw that there were no references to this file from
-// the outside, and it decided not to link it in.  So the device was never
-// registered.  I solved it by putting pluginKeyboard into this file in the
-// !plugin case, so that there are external references that force the linker to
-// link it in.
-#endif
-
 
 bx_keyb_c::bx_keyb_c(void)
 {
@@ -145,7 +123,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.10 2002-10-17 17:29:08 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.11 2002-10-18 02:31:21 bdenney Exp $"));
   Bit32u   i;
 
   BX_REGISTER_IRQ(1, "8042 Keyboard controller");

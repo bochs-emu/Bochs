@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.11 2002-10-17 21:44:42 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.12 2002-10-18 02:31:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -264,9 +264,9 @@ private:
 #include "iodev/serial.h"
 #include "iodev/dma.h"
 #include "iodev/pic.h"
-#include "iodev/keyboard.h"
 
 #endif // #if !BX_PLUGINS
+#include "iodev/keyboard.h"
 #include "iodev/harddrv.h"
 
 #if BX_SUPPORT_APIC

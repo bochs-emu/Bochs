@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.11 2002-10-17 21:44:41 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.12 2002-10-18 02:31:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,8 +38,11 @@
 
 bx_devices_c bx_devices;
 
+bx_keyb_stub_c pluginKeyboardStub;
+bx_keyb_stub_c *pluginKeyboard = &pluginKeyboardStub;
 
-
+bx_hard_drive_stub_c pluginHardDriveStub;
+bx_hard_drive_stub_c *pluginHardDrive = &pluginHardDriveStub;
 
 // constructor for bx_devices_c
 bx_devices_c::bx_devices_c(void)
@@ -55,7 +58,6 @@ bx_devices_c::bx_devices_c(void)
   floppy = NULL;
   parallel = NULL;
   serial = NULL;
-  //keyboard = NULL;
   dma = NULL;
   pic = NULL;
 #endif
@@ -88,7 +90,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.11 2002-10-17 21:44:41 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.12 2002-10-18 02:31:21 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -115,6 +117,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
     }
 
   timer_handle = BX_NULL_TIMER_HANDLE;
+
+  BX_LOAD_PLUGIN (harddrv, PLUGTYPE_CORE);
+  BX_LOAD_PLUGIN (keyboard, PLUGTYPE_CORE);
 
 #if !BX_PLUGINS 
   // Start with all IO port address registered to unmapped handler
@@ -180,11 +185,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #endif
 
   /*--- HARD DRIVE ---*/
-  BX_LOAD_PLUGIN (BX_PLUGIN_HARDDRV, PLUGTYPE_CORE);
   pluginHardDrive->init();
 
   /*--- KEYBOARD ---*/
-  BX_LOAD_PLUGIN (BX_PLUGIN_KEYBOARD, PLUGTYPE_CORE);
   pluginKeyboard->init();
 
 #if BX_SUPPORT_SB16

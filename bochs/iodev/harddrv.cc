@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.77.2.6 2002-10-17 21:44:42 bdenney Exp $
+// $Id: harddrv.cc,v 1.77.2.7 2002-10-18 02:31:21 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -91,26 +91,19 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 #define WRITE_HEAD_NO(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).head_no = _a; BX_CONTROLLER((c),1).head_no = _a; } while(0)
 #define WRITE_LBA_MODE(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).lba_mode = _a; BX_CONTROLLER((c),1).lba_mode = _a; } while(0)
 
-
-#if BX_PLUGINS
 bx_hard_drive_c *theHardDrive = NULL;
 
   int
-plugin_init(plugin_t *plugin, int argc, char *argv[])
+libharddrv_LTX_plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
   theHardDrive = new bx_hard_drive_c ();
   return(0); // Success
 }
 
   void
-plugin_fini(void)
+libharddrv_LTX_plugin_fini(void)
 {
 }
-#else
-bx_hard_drive_c *theHardDrive = new bx_hard_drive_c ();
-bx_hard_drive_stub_c *pluginHardDrive = NULL;
-#endif
-
 
 bx_hard_drive_c::bx_hard_drive_c(void)
 {
@@ -118,7 +111,6 @@ bx_hard_drive_c::bx_hard_drive_c(void)
 #if BX_PLUGINS
     // Register plugin basic entry points
     BX_REGISTER_DEVICE_DEVMODEL(this, BX_PLUGIN_HARDDRV);
-
 #endif
 
 #if DLL_HD_SUPPORT
@@ -181,7 +173,7 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.6 2002-10-17 21:44:42 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.77.2.7 2002-10-18 02:31:21 bdenney Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
