@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.49 2004-09-01 18:12:23 vruppert Exp $
+// $Id: misc_mem.cc,v 1.50 2004-09-02 18:24:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.49 2004-09-01 18:12:23 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.50 2004-09-02 18:24:50 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -212,12 +212,10 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
       BX_MEM_THIS rom_present[64] = 1;
     }
   } else {
-// This check will be enabled after an update of the vgabios files
     if ((size % 512) != 0) {
-//      close(fd);
-//      BX_PANIC(("ROM: ROM image size must be multiple of 512 (size = %ld)", size));
-//      return;
-      BX_INFO(("ROM: ROM image size must be multiple of 512 (size = %ld)", size));
+      close(fd);
+      BX_PANIC(("ROM: ROM image size must be multiple of 512 (size = %ld)", size));
+      return;
     }
     if ((romaddress % 2048) != 0) {
       close(fd);
@@ -252,6 +250,17 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     offset += ret;
     }
   close(fd);
+  Bit8u checksum = 0;
+  for (i = 0; i < stat_buf.st_size; i++) {
+    checksum += BX_MEM_THIS vector[romaddress + i];
+  }
+  if (checksum != 0) {
+    if (type < 2) {
+      BX_PANIC(( "ROM: checksum error in BIOS image: '%s'",path));
+    } else {
+      BX_ERROR(( "ROM: checksum error in BIOS image: '%s'",path));
+    }
+  }
   BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
