@@ -168,6 +168,8 @@ bx_gui_c::reset_handler(void)
 bx_gui_c::power_handler(void)
 {
   BX_PANIC(("POWER button turned off."));
+  // exit the simulator even if panic did not actually quit.
+  ::exit (1);
 }
 
   void
