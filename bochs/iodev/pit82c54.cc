@@ -159,7 +159,7 @@ private:
   }
 
 public:
-  pit_82C54 (void) {
+  void init (void) {
     Bit8u i;
     for(i=0;i<3;i++) {
       counter[i].read_state=LSByte;
@@ -180,6 +180,9 @@ public:
       counter[i].count_MSB_latched=0;
       counter[i].status_latched=0;
     }
+  }
+  pit_82C54 (void) {
+    init();
   }
 
   void clock(Bit8u cnum) {
@@ -567,6 +570,14 @@ public:
       return 0;
     } else {
       return counter[cnum].OUT;
+    }
+  }
+  bool read_GATE(Bit8u cnum) {
+    if(cnum>MAX_COUNTER) {
+      BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
+      return 0;
+    } else {
+      return counter[cnum].GATE;
     }
   }
 
