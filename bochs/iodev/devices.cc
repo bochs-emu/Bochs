@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.34.2.28 2002-10-24 12:36:58 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.29 2002-10-24 19:09:37 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.28 2002-10-24 12:36:58 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.29 2002-10-24 19:09:37 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -118,23 +118,23 @@ bx_devices_c::init(BX_MEM_C *newmem)
     }
 
 #warning CB: UNMAPPED and BIOSDEV should maybe be optional
-  BX_LOAD_PLUGIN(unmapped, PLUGTYPE_CORE);
-  BX_LOAD_PLUGIN(biosdev, PLUGTYPE_CORE);
+  PLUG_load_plugin(unmapped, PLUGTYPE_CORE);
+  PLUG_load_plugin(biosdev, PLUGTYPE_CORE);
 
 #warning these should only be loaded if they are enabled.
 #warning and they should only be optional if the init order is irrelevant
-  BX_LOAD_PLUGIN(cmos, PLUGTYPE_CORE);
-  BX_LOAD_PLUGIN(dma, PLUGTYPE_CORE);
-  BX_LOAD_PLUGIN(pic, PLUGTYPE_CORE);
-  BX_LOAD_PLUGIN(vga, PLUGTYPE_CORE);
+  PLUG_load_plugin(cmos, PLUGTYPE_CORE);
+  PLUG_load_plugin(dma, PLUGTYPE_CORE);
+  PLUG_load_plugin(pic, PLUGTYPE_CORE);
+  PLUG_load_plugin(vga, PLUGTYPE_CORE);
   /// optional plugins
-  BX_LOAD_PLUGIN(floppy, PLUGTYPE_CORE);
-  BX_LOAD_PLUGIN(harddrv, PLUGTYPE_OPTIONAL);
-  BX_LOAD_PLUGIN(keyboard, PLUGTYPE_OPTIONAL);
+  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+  PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
+  PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
   if (is_serial_enabled ())
-    BX_LOAD_PLUGIN(serial, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin(serial, PLUGTYPE_OPTIONAL);
   if (is_parallel_enabled ()) 
-    BX_LOAD_PLUGIN(parallel, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
 
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();
@@ -221,19 +221,19 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   // misc. CMOS
   Bit16u extended_memory_in_k = mem->get_memory_in_k() - 1024;
-  BX_SET_CMOS_REG(0x15, (Bit8u) BASE_MEMORY_IN_K);
-  BX_SET_CMOS_REG(0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
-  BX_SET_CMOS_REG(0x17, (Bit8u) extended_memory_in_k);
-  BX_SET_CMOS_REG(0x18, (Bit8u) (extended_memory_in_k >> 8));
-  BX_SET_CMOS_REG(0x30, (Bit8u) extended_memory_in_k);
-  BX_SET_CMOS_REG(0x31, (Bit8u) (extended_memory_in_k >> 8));
+  DEV_cmos_set_reg(0x15, (Bit8u) BASE_MEMORY_IN_K);
+  DEV_cmos_set_reg(0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
+  DEV_cmos_set_reg(0x17, (Bit8u) extended_memory_in_k);
+  DEV_cmos_set_reg(0x18, (Bit8u) (extended_memory_in_k >> 8));
+  DEV_cmos_set_reg(0x30, (Bit8u) extended_memory_in_k);
+  DEV_cmos_set_reg(0x31, (Bit8u) (extended_memory_in_k >> 8));
 
   Bit16u extended_memory_in_64k = mem->get_memory_in_k() > 16384 ? (mem->get_memory_in_k() - 16384) / 64 : 0;
-  BX_SET_CMOS_REG(0x34, (Bit8u) extended_memory_in_64k);
-  BX_SET_CMOS_REG(0x35, (Bit8u) (extended_memory_in_64k >> 8));
+  DEV_cmos_set_reg(0x34, (Bit8u) extended_memory_in_64k);
+  DEV_cmos_set_reg(0x35, (Bit8u) (extended_memory_in_64k >> 8));
 
   /* now perform checksum of CMOS memory */
-  BX_CMOS_CHECKSUM();
+  DEV_cmos_checksum();
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {
     timer_handle = bx_pc_system.register_timer( this, timer_handler,
@@ -380,8 +380,8 @@ bx_devices_c::timer()
 #if (BX_USE_NEW_PIT==0)
   if ( pit->periodic( BX_IODEV_HANDLER_PERIOD ) ) {
     // This is a hack to make the IRQ0 work
-    BX_PIC_LOWER_IRQ(0);
-    BX_PIC_RAISE_IRQ(0);
+    DEV_pic_lower_irq(0);
+    DEV_pic_raise_irq(0);
     }
 #endif
 

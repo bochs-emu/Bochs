@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.20 2002-10-24 09:54:51 cbothamy Exp $
+// $Id: keyboard.cc,v 1.67.2.21 2002-10-24 19:09:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,19 +125,19 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.20 2002-10-24 09:54:51 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.21 2002-10-24 19:09:38 bdenney Exp $"));
   Bit32u   i;
 
-  BX_REGISTER_IRQ(1, "8042 Keyboard controller");
-  BX_REGISTER_IRQ(12, "8042 Keyboard controller (PS/2 mouse)");
+  DEV_register_irq(1, "8042 Keyboard controller");
+  DEV_register_irq(12, "8042 Keyboard controller (PS/2 mouse)");
 
-  BX_REGISTER_IOREAD_HANDLER(this, read_handler,
+  DEV_register_ioread_handler(this, read_handler,
                                       0x0060, "8042 Keyboard controller", 3);
-  BX_REGISTER_IOREAD_HANDLER(this, read_handler,
+  DEV_register_ioread_handler(this, read_handler,
                                       0x0064, "8042 Keyboard controller", 3);
-  BX_REGISTER_IOWRITE_HANDLER(this, write_handler,
+  DEV_register_iowrite_handler(this, write_handler,
                                       0x0060, "8042 Keyboard controller", 3);
-  BX_REGISTER_IOWRITE_HANDLER(this, write_handler,
+  DEV_register_iowrite_handler(this, write_handler,
                                       0x0064, "8042 Keyboard controller", 3);
   BX_KEY_THIS timer_handle = bx_pc_system.register_timer( this, timer_handler,
                                  bx_options.Okeyboard_serial_delay->get(), 1, 1,
@@ -200,7 +200,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS paste_delay_changed ();
 
   // mouse port installed on system board
-  BX_SET_CMOS_REG(0x14, BX_GET_CMOS_REG(0x14) | 0x04);
+  DEV_cmos_set_reg(0x14, DEV_cmos_get_reg(0x14) | 0x04);
 
 #if BX_WITH_WX
   static Boolean first_time = 1;
@@ -318,7 +318,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
 
 //BX_DEBUG(("mouse: ___io_read aux = 0x%02x", (unsigned) val));
 
-      BX_PIC_LOWER_IRQ(12);
+      DEV_pic_lower_irq(12);
       activate_timer();
       BX_DEBUG(("READ(%02x) (from mouse) = %02x", (unsigned) address,
           (unsigned) val));
@@ -348,7 +348,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
         BX_KEY_THIS s.controller_Qsize--;
         }
 
-      BX_PIC_LOWER_IRQ(1);
+      DEV_pic_lower_irq(1);
       activate_timer();
       BX_DEBUG(("READ(%02x) = %02x", (unsigned) address,
           (unsigned) val));
@@ -1160,9 +1160,9 @@ bx_keyb_c::timer_handler(void *this_ptr)
   retval=class_ptr->periodic(1);
 
   if(retval&0x01)
-    BX_PIC_RAISE_IRQ(1);
+    DEV_pic_raise_irq(1);
   if(retval&0x02)
-    BX_PIC_RAISE_IRQ(12);
+    DEV_pic_raise_irq(12);
 }
 
   unsigned

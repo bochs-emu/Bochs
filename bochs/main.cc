@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.156.2.19 2002-10-24 03:35:21 bdenney Exp $
+// $Id: main.cc,v 1.156.2.20 2002-10-24 19:09:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -98,7 +98,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_VGA_UPDATE_INTERVAL:
       // if after init, notify the vga device to change its timer.
       if (set && SIM->get_init_done ())
-	BX_VGA_SET_UPDATE_INTERVAL (val);
+	DEV_vga_set_update_interval (val);
       break;
     case BXP_MOUSE_ENABLED:
       // if after init, notify the GUI
@@ -136,8 +136,8 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_ATA3_SLAVE_STATUS:
       if ((set) && (SIM->get_init_done ())) {
 	Bit8u device = id - BXP_ATA0_MASTER_STATUS;
-	Bit32u handle = BX_HD_GET_DEVICE_HANDLE (device/2, device%2);
-        BX_HD_SET_CD_MEDIA_STATUS(handle, val == BX_INSERTED);
+	Bit32u handle = DEV_hd_get_device_handle (device/2, device%2);
+        DEV_hd_set_cd_media_status(handle, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons ();
       }
       break;
@@ -148,7 +148,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       break;
     case BXP_FLOPPYA_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-        BX_FLOPPY_SET_MEDIA_STATUS(0, val == BX_INSERTED);
+        DEV_floppy_set_media_status(0, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons ();
       }
       break;
@@ -159,7 +159,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       break;
     case BXP_FLOPPYB_STATUS:
       if ((set) && (SIM->get_init_done ())) {
-        BX_FLOPPY_SET_MEDIA_STATUS(1, val == BX_INSERTED);
+        DEV_floppy_set_media_status(1, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons ();
       }
       break;
@@ -225,7 +225,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       if (set==1) {
         if (SIM->get_init_done ()) {
           if (empty) {
-            BX_FLOPPY_SET_MEDIA_STATUS(0, 0);
+            DEV_floppy_set_media_status(0, 0);
             bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYA_TYPE)->get_enabled()) {
@@ -233,11 +233,11 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
               bx_options.floppya.Opath->set ("none");
             }
           }
-          if ((BX_FLOPPY_PRESENT()) &&
+          if ((DEV_floppy_present()) &&
               (SIM->get_param_num(BXP_FLOPPYA_STATUS)->get () == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the disk
-            BX_FLOPPY_SET_MEDIA_STATUS(0, 0);
-            BX_FLOPPY_SET_MEDIA_STATUS(0, 1);
+            DEV_floppy_set_media_status(0, 0);
+            DEV_floppy_set_media_status(0, 1);
           }
         } else {
           SIM->get_param_num(BXP_FLOPPYA_DEVTYPE)->set_enabled (!empty);
@@ -250,7 +250,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       if (set==1) {
         if (SIM->get_init_done ()) {
           if (empty) {
-            BX_FLOPPY_SET_MEDIA_STATUS(1, 0);
+            DEV_floppy_set_media_status(1, 0);
             bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num(BXP_FLOPPYB_TYPE)->get_enabled ()) {
@@ -258,11 +258,11 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
               bx_options.floppyb.Opath->set ("none");
             }
           }
-          if ((BX_FLOPPY_PRESENT()) &&
+          if ((DEV_floppy_present()) &&
               (SIM->get_param_num(BXP_FLOPPYB_STATUS)->get () == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the disk
-            BX_FLOPPY_SET_MEDIA_STATUS(1, 0);
-            BX_FLOPPY_SET_MEDIA_STATUS(1, 1);
+            DEV_floppy_set_media_status(1, 0);
+            DEV_floppy_set_media_status(1, 1);
           }
         } else {
           SIM->get_param_num(BXP_FLOPPYB_DEVTYPE)->set_enabled (!empty);
@@ -284,10 +284,10 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
         if (SIM->get_init_done ()) {
 
           Bit8u device = id - BXP_ATA0_MASTER_PATH;
-	  Bit32u handle = BX_HD_GET_DEVICE_HANDLE(device/2, device%2);
+	  Bit32u handle = DEV_hd_get_device_handle(device/2, device%2);
 
           if (empty) {
-            BX_HD_SET_CD_MEDIA_STATUS(handle, 0);
+            DEV_hd_set_cd_media_status(handle, 0);
             bx_gui->update_drive_status_buttons ();
           } else {
             if (!SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->get ()) {
@@ -299,12 +299,12 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
               bx_options.atadevice[device/2][device%2].Opresent->set (0);
             }
           }
-          if (BX_HARD_DRIVE_PRESENT() &&
+          if (DEV_hd_present() &&
               (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_STATUS + device))->get () == BX_INSERTED) &&
               (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get () == BX_ATA_DEVICE_CDROM)) {
             // tell the device model that we removed, then inserted the cd
-            BX_HD_SET_CD_MEDIA_STATUS(handle, 0);
-            BX_HD_SET_CD_MEDIA_STATUS(handle, 1);
+            DEV_hd_set_cd_media_status(handle, 0);
+            DEV_hd_set_cd_media_status(handle, 1);
           }
         }
       }
@@ -1412,7 +1412,7 @@ int main (int argc, char *argv[]) {
     }
 #if BX_WITH_WX
     else if (!strcmp(ci_name, "wx")) {
-      BX_LOAD_PLUGIN(wx, PLUGTYPE_CORE);
+      PLUG_load_plugin(wx, PLUGTYPE_CORE);
     }
 #endif
     else {
@@ -1570,43 +1570,43 @@ Boolean load_and_init_display_lib () {
   }
 #if BX_WITH_AMIGAOS
   if (!strcmp (gui_name, "amigaos")) 
-    BX_LOAD_PLUGIN (amigaos, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (amigaos, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_BEOS
   if (!strcmp (gui_name, "beos")) 
-    BX_LOAD_PLUGIN (beos, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (beos, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_CARBON
   if (!strcmp (gui_name, "carbon")) 
-    BX_LOAD_PLUGIN (carbon, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (carbon, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_MACOS
   if (!strcmp (gui_name, "macintosh")) 
-    BX_LOAD_PLUGIN (macintosh, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (macintosh, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_NOGUI
   if (!strcmp (gui_name, "nogui")) 
-    BX_LOAD_PLUGIN (nogui, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (nogui, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_RFB
   if (!strcmp (gui_name, "rfb")) 
-    BX_LOAD_PLUGIN (rfb, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (rfb, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_SDL
   if (!strcmp (gui_name, "sdl")) 
-    BX_LOAD_PLUGIN (sdl, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (sdl, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_TERM
   if (!strcmp (gui_name, "term")) 
-    BX_LOAD_PLUGIN (term, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (term, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_WIN32
   if (!strcmp (gui_name, "win32")) 
-    BX_LOAD_PLUGIN (win32, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (win32, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_X11
   if (!strcmp (gui_name, "x")) 
-    BX_LOAD_PLUGIN (x, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin (x, PLUGTYPE_OPTIONAL);
 #endif
   BX_ASSERT (bx_gui != NULL);
   return true;
@@ -1796,8 +1796,8 @@ bx_init_hardware()
 #endif
 
 #if BX_DEBUGGER == 0
-  BX_INIT_DEVICES();
-  BX_RESET_DEVICES(BX_RESET_HARDWARE);
+  DEV_init_devices();
+  DEV_reset_devices(BX_RESET_HARDWARE);
   bx_gui->init_signal_handlers ();
   bx_pc_system.start_timers();
 #endif

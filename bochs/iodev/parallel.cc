@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.10 2002-10-24 05:32:17 bdenney Exp $
+// $Id: parallel.cc,v 1.20.4.11 2002-10-24 19:09:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -69,19 +69,19 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(void)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.10 2002-10-24 05:32:17 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.11 2002-10-24 19:09:38 bdenney Exp $"));
 
   if (bx_options.par[0].Oenabled->get ()) {
 
     /* PARALLEL PORT 1 */
 
-    BX_REGISTER_IRQ(7, "Parallel Port 1");
+    DEV_register_irq(7, "Parallel Port 1");
     BX_INFO (("parallel port 1 at 0x378"));
     for (unsigned addr=0x0378; addr<=0x037A; addr++) {
-      BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "Parallel Port 1", 7);
+      DEV_register_ioread_handler(this, read_handler, addr, "Parallel Port 1", 7);
       }
-    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0378, "Parallel Port 1", 7);
-    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x037A, "Parallel Port 1", 7);
+    DEV_register_iowrite_handler(this, write_handler, 0x0378, "Parallel Port 1", 7);
+    DEV_register_iowrite_handler(this, write_handler, 0x037A, "Parallel Port 1", 7);
 
     BX_PAR_THIS s.STATUS.error = 1;
     BX_PAR_THIS s.STATUS.slct  = 1;
@@ -121,7 +121,7 @@ bx_parallel_c::virtual_printer(void)
       fflush (BX_PAR_THIS s.output);
       }
     if (BX_PAR_THIS s.CONTROL.irq == 1) {
-      BX_PIC_RAISE_IRQ(7);
+      DEV_pic_raise_irq(7);
       }
     BX_PAR_THIS s.STATUS.ack = 0;
     BX_PAR_THIS s.STATUS.busy = 1;
@@ -174,7 +174,7 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
 	  if (BX_PAR_THIS s.STATUS.ack == 0) {
 	    BX_PAR_THIS s.STATUS.ack = 1;
             if (BX_PAR_THIS s.CONTROL.irq == 1) {
-              BX_PIC_LOWER_IRQ(7);
+              DEV_pic_lower_irq(7);
 	      }
 	    }
 	  if (BX_PAR_THIS s.initmode == 1) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.18.4.7 2002-10-22 23:48:42 bdenney Exp $
+// $Id: unmapped.cc,v 1.18.4.8 2002-10-24 19:09:39 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,8 +69,8 @@ bx_unmapped_c::~bx_unmapped_c(void)
   void
 bx_unmapped_c::init(void)
 {
-  BX_REGISTER_DEFAULT_IOREAD_HANDLER(this, read_handler, "Unmapped", 7);
-  BX_REGISTER_DEFAULT_IOWRITE_HANDLER(this, write_handler, "Unmapped", 7);
+  DEV_register_default_ioread_handler(this, read_handler, "Unmapped", 7);
+  DEV_register_default_iowrite_handler(this, write_handler, "Unmapped", 7);
 }
 
   void

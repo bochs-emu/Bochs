@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.13.4.7 2002-10-22 23:48:35 bdenney Exp $
+// $Id: macintosh.cc,v 1.13.4.8 2002-10-24 19:09:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -645,7 +645,7 @@ void UpdateWindow(WindowPtr window)
 	if (window == win)
 	{
 		box = window->portRect;
-		BX_VGA_REDRAW_AREA(box.left, box.top, box.right, box.bottom);
+		DEV_vga_redraw_area(box.left, box.top, box.right, box.bottom);
 	}
 	else if (window == backdrop)
 	{

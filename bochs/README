@@ -126,13 +126,13 @@ TO DO BEFORE RELEASE 2.0:
   not have to work that way.
   - it would be more correct to mark the devices as core, optional, etc. than
     to use a type field in the plugin struct.  The reason that the type
-    (core,optional,user) is currently passed into the BX_LOAD_PLUGIN macro and
-    placed in the plugin struct instead of letting the device code decide is:
-    devices.cc is responsible for initting and resetting devices, so I wanted
-    devices.cc to decide whether the device would be managed by the plugin
-    infrastructure (init_all, reset_all) or not.  This is not that important
-    yet, but when Volker wants to write a plugin with multiple devices, we will
-    need to sort it out.
+    (core,optional,user) is currently passed into the PLUG_load_plugin macro
+    and placed in the plugin struct instead of letting the device code decide
+    is: devices.cc is responsible for initting and resetting devices, so I
+    wanted devices.cc to decide whether the device would be managed by the
+    plugin infrastructure (init_all, reset_all) or not.  This is not that
+    important yet, but when Volker wants to write a plugin with multiple
+    devices, we will need to sort it out.
 
 - (LATER) make a way for users to replace a core plugin with one of their
   choice.
@@ -181,7 +181,7 @@ DONE:
   them at runtime.  If the detection fails, you can always write a bunch
   of --with-PACKAGE options yourself.
 - load plugins as they are needed, in main.cc and iodev/devices.cc.
-  - plugins are loaded using a macro BX_LOAD_PLUGIN(plugin_name, plugin_type).
+  - plugins are loaded using a macro PLUG_load_plugin(plugin_name, plugin_type).
     When plugins are enabled, this macro calls bx_load_plugin() in plugin.cc,
     which loads the plugin with lt_dlopen and calls its plugin_init method.
     When plugins are disabled, the code is already linked into the binary so

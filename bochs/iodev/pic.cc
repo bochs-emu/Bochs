@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.29.4.6 2002-10-22 23:48:42 bdenney Exp $
+// $Id: pic.cc,v 1.29.4.7 2002-10-24 19:09:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,15 +70,15 @@ bx_pic_c::~bx_pic_c(void)
 bx_pic_c::init(void)
 {
   /* 8259 PIC (Programmable Interrupt Controller) */
-  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x0020, "8259 PIC", 7);
-  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x0021, "8259 PIC", 7);
-  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x00A0, "8259 PIC", 7);
-  BX_REGISTER_IOREAD_HANDLER(this, read_handler, 0x00A1, "8259 PIC", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x0020, "8259 PIC", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x0021, "8259 PIC", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x00A0, "8259 PIC", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x00A1, "8259 PIC", 7);
 
-  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0020, "8259 PIC", 7);
-  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x0021, "8259 PIC", 7);
-  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x00A0, "8259 PIC", 7);
-  BX_REGISTER_IOWRITE_HANDLER(this, write_handler, 0x00A1, "8259 PIC", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0020, "8259 PIC", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x0021, "8259 PIC", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x00A0, "8259 PIC", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x00A1, "8259 PIC", 7);
 
 
   BX_PIC_THIS s.master_pic.single_PIC = 0;
@@ -620,7 +620,7 @@ bx_pic_c::lower_irq(unsigned irq_no)
 {
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
-  if (BX_IOAPIC_PRESENT())
+  if (DEV_ioapic_present())
     bx_devices.ioapic->untrigger_irq (irq_no, -1);
 #endif
 

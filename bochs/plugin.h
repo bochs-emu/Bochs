@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.1.2.34 2002-10-23 23:55:39 bdenney Exp $
+// $Id: plugin.h,v 1.1.2.35 2002-10-24 19:09:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -38,44 +38,44 @@ extern "C" {
 
 #if BX_PLUGINS
 
-#define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
-#define BX_RESET_DEVICES(type) {bx_devices.reset(type); }
-#define BX_LOAD_PLUGIN(name,type) {bx_load_plugin(#name,type);}
+#define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
+#define DEV_reset_devices(type) {bx_devices.reset(type); }
+#define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 
-#define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
-#define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
-#define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) pluginRegisterDefaultIOReadHandler(b,c,d,e)
-#define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(b,c,d,e) pluginRegisterDefaultIOWriteHandler(b,c,d,e)
+#define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
+#define DEV_register_iowrite_handler(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
+#define DEV_register_default_ioread_handler(b,c,d,e) pluginRegisterDefaultIOReadHandler(b,c,d,e)
+#define DEV_register_default_iowrite_handler(b,c,d,e) pluginRegisterDefaultIOWriteHandler(b,c,d,e)
 
-#define BX_REGISTER_IRQ(b,c) pluginRegisterIRQ(b,c)
-#define BX_UNREGISTER_IRQ(b,c) pluginUnregisterIRQ(b,c)
+#define DEV_register_irq(b,c) pluginRegisterIRQ(b,c)
+#define DEV_unregister_irq(b,c) pluginUnregisterIRQ(b,c)
 
 #else
 
-#define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
-#define BX_RESET_DEVICES(type) {bx_devices.reset(type); }
-// When plugins are off, BX_LOAD_PLUGIN will call the plugin_init function
+#define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
+#define DEV_reset_devices(type) {bx_devices.reset(type); }
+// When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
-#define BX_LOAD_PLUGIN(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
-#define BX_REGISTER_IOREAD_HANDLER(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e)
-#define BX_REGISTER_IOWRITE_HANDLER(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e)
-#define BX_REGISTER_DEFAULT_IOREAD_HANDLER(b,c,d,e) bx_devices.register_default_io_read_handler(b,c,d)
-#define BX_REGISTER_DEFAULT_IOWRITE_HANDLER(b,c,d,e) bx_devices.register_default_io_write_handler(b,c,d)
-#define BX_REGISTER_IRQ(b,c) bx_devices.register_irq(b,c)
-#define BX_UNREGISTER_IRQ(b,c) bx_devices.unregister_irq(b,c)
+#define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
+#define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e)
+#define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e)
+#define DEV_register_default_ioread_handler(b,c,d,e) bx_devices.register_default_io_read_handler(b,c,d)
+#define DEV_register_default_iowrite_handler(b,c,d,e) bx_devices.register_default_io_write_handler(b,c,d)
+#define DEV_register_irq(b,c) bx_devices.register_irq(b,c)
+#define DEV_unregister_irq(b,c) bx_devices.unregister_irq(b,c)
 
 #endif // #if BX_PLUGINS
 
-#define BX_IOAPIC_PRESENT() (bx_devices.ioapic != NULL)
+#define DEV_ioapic_present() (bx_devices.ioapic != NULL)
 
 // FIXME Do we really need pluginRegisterTimer ?
-#define BX_REGISTER_TIMER(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
+#define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 
 ///////// CMOS macros
-#define BX_GET_CMOS_REG(a) (bx_devices.pluginCmosDevice->get_reg(a))
-#define BX_SET_CMOS_REG(a,b) (bx_devices.pluginCmosDevice->set_reg(a,b))
-#define BX_CMOS_CHECKSUM() (bx_devices.pluginCmosDevice->checksum_cmos())
-#define BX_GET_CMOS_TIMEVAL() (bx_devices.pluginCmosDevice->get_timeval())
+#define DEV_cmos_get_reg(a) (bx_devices.pluginCmosDevice->get_reg(a))
+#define DEV_cmos_set_reg(a,b) (bx_devices.pluginCmosDevice->set_reg(a,b))
+#define DEV_cmos_checksum() (bx_devices.pluginCmosDevice->checksum_cmos())
+#define DEV_cmos_get_timeval() (bx_devices.pluginCmosDevice->get_timeval())
 
 ///////// keyboard macros
 #define DEV_mouse_motion(dx, dy, state) \
@@ -92,59 +92,59 @@ extern "C" {
     (bx_devices.pluginKeyboard->mouse_enabled_changed(val))
 
 ///////// hard drive macros
-#define BX_HD_READ_HANDLER(a, b, c) \
+#define DEV_hd_read_handler(a, b, c) \
     (bx_devices.pluginHardDrive->virt_read_handler(b, c))
-#define BX_HD_WRITE_HANDLER(a, b, c, d) \
+#define DEV_hd_write_handler(a, b, c, d) \
     (bx_devices.pluginHardDrive->virt_write_handler(b, c, d))
-#define BX_HD_GET_FIRST_CD_HANDLE() \
+#define DEV_hd_get_first_cd_handle() \
     (bx_devices.pluginHardDrive->get_first_cd_handle())
-#define BX_HD_GET_DEVICE_HANDLE(a,b) \
+#define DEV_hd_get_device_handle(a,b) \
     (bx_devices.pluginHardDrive->get_device_handle(a,b))
-#define BX_HD_GET_CD_MEDIA_STATUS(handle) \
+#define DEV_hd_get_cd_media_status(handle) \
     (bx_devices.pluginHardDrive->get_cd_media_status(handle))
-#define BX_HD_SET_CD_MEDIA_STATUS(handle, status) \
+#define DEV_hd_set_cd_media_status(handle, status) \
     (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
-#define BX_HD_CLOSE_HARDDRIVE()  bx_devices.pluginHardDrive->close_harddrive()
-#define BX_HARD_DRIVE_PRESENT() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
+#define DEV_hd_close_harddrive()  bx_devices.pluginHardDrive->close_harddrive()
+#define DEV_hd_present() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
 
-#define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
-#define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
-#define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
+#define DEV_bulk_io_quantum_requested() (bx_devices.bulkIOQuantumsRequested)
+#define DEV_bulk_io_quantum_transferred() (bx_devices.bulkIOQuantumsTransferred)
+#define DEV_bulk_io_host_addr() (bx_devices.bulkIOHostAddr)
 
 ///////// FLOPPY macros
-#define BX_FLOPPY_GET_MEDIA_STATUS(drive) bx_devices.pluginFloppyDevice->get_media_status(drive)
-#define BX_FLOPPY_SET_MEDIA_STATUS(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
-#define BX_FLOPPY_PRESENT() (bx_devices.pluginFloppyDevice != &bx_devices.stubFloppy)
+#define DEV_floppy_get_media_status(drive) bx_devices.pluginFloppyDevice->get_media_status(drive)
+#define DEV_floppy_set_media_status(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
+#define DEV_floppy_present() (bx_devices.pluginFloppyDevice != &bx_devices.stubFloppy)
 
 ///////// DMA macros
-#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
+#define DEV_dma_register_8bit_channel(channel, dmaRead, dmaWrite, name) \
   (bx_devices.pluginDmaDevice->registerDMA8Channel(channel, dmaRead, dmaWrite, name))
-#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
+#define DEV_dma_register_16bit_channel(channel, dmaRead, dmaWrite, name) \
   (bx_devices.pluginDmaDevice->registerDMA16Channel(channel, dmaRead, dmaWrite, name))
-#define BX_UNREGISTER_DMA_CHANNEL(channel) \
+#define DEV_dma_unregister_channel(channel) \
   (bx_devices.pluginDmaDevice->unregisterDMAChannel(channel))
-#define BX_DMA_SET_DRQ(channel, val) \
+#define DEV_dma_set_drq(channel, val) \
   (bx_devices.pluginDmaDevice->set_DRQ(channel, val))
-#define BX_DMA_GET_TC() \
+#define DEV_dma_get_tc() \
   (bx_devices.pluginDmaDevice->get_TC())
-#define BX_DMA_RAISE_HLDA() \
+#define DEV_dma_raise_hlda() \
   (bx_devices.pluginDmaDevice->raise_HLDA())
 
 ///////// PIC macros
-#define BX_PIC_LOWER_IRQ(b)  (bx_devices.pluginPicDevice->lower_irq(b))
-#define BX_PIC_RAISE_IRQ(b)  (bx_devices.pluginPicDevice->raise_irq(b))
-#define BX_PIC_IAC()         (bx_devices.pluginPicDevice->IAC())
+#define DEV_pic_lower_irq(b)  (bx_devices.pluginPicDevice->lower_irq(b))
+#define DEV_pic_raise_irq(b)  (bx_devices.pluginPicDevice->raise_irq(b))
+#define DEV_pic_iac()         (bx_devices.pluginPicDevice->IAC())
 
 ///////// VGA macros
-#define BX_VGA_MEM_READ(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
-#define BX_VGA_MEM_WRITE(addr, val) (bx_devices.pluginVgaDevice->mem_write(addr, val))
-#define BX_VGA_REDRAW_AREA(left, top, right, bottom) \
+#define DEV_vga_mem_read(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
+#define DEV_vga_mem_write(addr, val) (bx_devices.pluginVgaDevice->mem_write(addr, val))
+#define DEV_vga_redraw_area(left, top, right, bottom) \
   (bx_devices.pluginVgaDevice->redraw_area(left, top, right, bottom))
-#define BX_VGA_GET_TEXT_SNAPSHOT(rawsnap, height, width) \
+#define DEV_vga_get_text_snapshot(rawsnap, height, width) \
   (bx_devices.pluginVgaDevice->get_text_snapshot(rawsnap, height, width))
-#define BX_VGA_REFRESH() \
+#define DEV_vga_refresh() \
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
-#define BX_VGA_SET_UPDATE_INTERVAL(val) \
+#define DEV_vga_set_update_interval(val) \
   (bx_devices.pluginVgaDevice->set_update_interval(val))
 
 

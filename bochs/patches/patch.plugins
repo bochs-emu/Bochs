@@ -199,8 +199,8 @@ PLUGIN DEVICES
   - every file that can be compiled as a plugin should define BX_PLUGGABLE
     before including config.h.  This is used when building win32 DLLs.
 - in plugin.h, define macros for basically every inter-device function, 
-  for example BX_REGISTER_DMA8_CHANNEL, BX_MEM_READ_PHYSICAL, 
-  BX_HD_READ_HANDLER, etc.  The macros are used everywhere instead
+  for example DEV_dma_register_8bit_channel, BX_MEM_READ_PHYSICAL, 
+  DEV_hd_read_handler, etc.  The macros are used everywhere instead
   of the direct call to the device, because the macros are designed to
   do the right thing even if the plugin is not loaded.  This is necessary
   even for devices that will always be loaded, but we want to make them

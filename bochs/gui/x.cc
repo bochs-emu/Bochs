@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49.2.12 2002-10-23 19:31:51 bdenney Exp $
+// $Id: x.cc,v 1.49.2.13 2002-10-24 19:09:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -654,7 +654,7 @@ bx_x_gui_c::handle_events(void)
        * don't draw the window */
       expose_event = (XExposeEvent *) &report;
 
-      BX_VGA_REDRAW_AREA(
+      DEV_vga_redraw_area(
         (unsigned) expose_event->x,
         (unsigned) expose_event->y,
         (unsigned) expose_event->width,

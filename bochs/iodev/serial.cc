@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.26.2.8 2002-10-23 19:31:53 bdenney Exp $
+// $Id: serial.cc,v 1.26.2.9 2002-10-24 19:09:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -152,7 +152,7 @@ bx_serial_c::init(void)
   this->raw = new serial_raw("/dev/cua0", SIGUSR1);
 #endif // USE_RAW_SERIAL
 
-  BX_REGISTER_IRQ(4, "Serial Port 1");
+  DEV_register_irq(4, "Serial Port 1");
 
 #if defined (USE_TTY_HACK)
   tty_id = tty_alloc("Bx Serial Console, Your Window to the 8250");
@@ -254,8 +254,8 @@ bx_serial_c::init(void)
 
   for (unsigned addr=0x03F8; addr<=0x03FF; addr++) {
 	BX_DEBUG(("register read/write: 0x%04x",addr));
-    BX_REGISTER_IOREAD_HANDLER(this, read_handler, addr, "Serial Port 1", 7);
-    BX_REGISTER_IOWRITE_HANDLER(this, write_handler, addr, "Serial Port 1", 7);
+    DEV_register_ioread_handler(this, read_handler, addr, "Serial Port 1", 7);
+    DEV_register_iowrite_handler(this, write_handler, addr, "Serial Port 1", 7);
     }
 
   BX_INFO(( "com1 at 0x3f8/8 irq 4" ));
@@ -311,7 +311,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
         if ((BX_SER_THIS s[0].tx_interrupt == 0) &&
             (BX_SER_THIS s[0].ls_interrupt == 0) &&
             (BX_SER_THIS s[0].ms_interrupt == 0)) {
-          BX_PIC_LOWER_IRQ(4);
+          DEV_pic_lower_irq(4);
         }
         BX_SER_THIS s[0].rx_interrupt = 0;
         BX_SER_THIS s[0].rx_ipending = 0;
@@ -354,7 +354,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].ls_interrupt == 0) &&
           (BX_SER_THIS s[0].ms_interrupt == 0)) {
-        BX_PIC_LOWER_IRQ(4);
+        DEV_pic_lower_irq(4);
       }
 
       BX_SER_THIS s[0].tx_interrupt = 0;
@@ -398,7 +398,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].tx_interrupt == 0) &&
           (BX_SER_THIS s[0].ms_interrupt == 0)) {
-        BX_PIC_LOWER_IRQ(4);
+        DEV_pic_lower_irq(4);
       }
       BX_SER_THIS s[0].ls_interrupt = 0;
       BX_SER_THIS s[0].ls_ipending = 0;
@@ -421,7 +421,7 @@ bx_serial_c::read(Bit32u address, unsigned io_len)
       if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
           (BX_SER_THIS s[0].tx_interrupt == 0) &&
           (BX_SER_THIS s[0].ls_interrupt == 0)) {
-        BX_PIC_LOWER_IRQ(4);
+        DEV_pic_lower_irq(4);
       }
       BX_SER_THIS s[0].ms_interrupt = 0;
       BX_SER_THIS s[0].ms_ipending = 0;
@@ -496,7 +496,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if ((BX_SER_THIS s[0].rx_interrupt == 0) &&
               (BX_SER_THIS s[0].ls_interrupt == 0) &&
               (BX_SER_THIS s[0].ms_interrupt == 0)) {
-            BX_PIC_LOWER_IRQ(4);
+            DEV_pic_lower_irq(4);
           }
           BX_SER_THIS s[0].tx_interrupt = 0;
           BX_SER_THIS s[0].tx_ipending = 0;
@@ -553,7 +553,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         }
         if (gen_int == 1)
-          BX_PIC_RAISE_IRQ(4);
+          DEV_pic_raise_irq(4);
       }
       break;
 
@@ -745,7 +745,7 @@ bx_serial_c::tx_timer(void)
   }
 
   if (gen_int) {
-    BX_PIC_RAISE_IRQ(4);
+    DEV_pic_raise_irq(4);
   }
 }
 
@@ -815,7 +815,7 @@ bx_serial_c::rx_timer(void)
         BX_SER_THIS s[0].rx_empty = 0;
         if (BX_SER_THIS s[0].int_enable.rxdata_enable) {
           BX_SER_THIS s[0].rx_interrupt = 1;
-          BX_PIC_RAISE_IRQ(4);
+          DEV_pic_raise_irq(4);
         } else {
           BX_SER_THIS s[0].rx_ipending = 1;
         }

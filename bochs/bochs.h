@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.13 2002-10-23 19:31:30 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.14 2002-10-24 19:09:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,8 +95,8 @@ int bx_begin_simulation (int argc, char *argv[]);
 
 #if ((BX_DEBUGGER == 1) && (BX_NUM_SIMULATORS >= 2))
 // =-=-=-=-=-=-=- Redirected to cosimulation debugger -=-=-=-=-=-=-=
-#define BX_VGA_MEM_READ(addr)       bx_dbg_ucmem_read(addr)
-#define BX_VGA_MEM_WRITE(addr, val) bx_dbg_ucmem_write(addr, val)
+#define DEV_vga_mem_read(addr)       bx_dbg_ucmem_read(addr)
+#define DEV_vga_mem_write(addr, val) bx_dbg_ucmem_write(addr, val)
 
 #if BX_SUPPORT_A20
 #  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )

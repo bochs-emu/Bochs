@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.75.2.5 2002-10-23 19:31:46 bdenney Exp $
+// $Id: dbg_main.cc,v 1.75.2.6 2002-10-24 19:09:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -383,8 +383,8 @@ process_sim2:
 
 
   // (mch) Moved from main.cc
-  BX_INIT_DEVICES();
-  BX_RESET_DEVICES(BX_RESET_HARDWARE);
+  DEV_init_devices();
+  DEV_reset_devices(BX_RESET_HARDWARE);
   SIM->set_init_done (1);
 
   bx_gui->init_signal_handlers ();
@@ -862,7 +862,7 @@ bx_dbg_fast_forward(Bit32u num)
 	bx_debugger.fast_forward_mode = 0;
 	// bx_debugger.icount_quantum = save_icount_quantum;
 
-	BX_VGA_REFRESH();
+	DEV_vga_refresh();
 
 	printf("Copying CPU...\n");
 	bx_dbg_cpu_t cpu;
@@ -1205,7 +1205,7 @@ void bx_dbg_show_command(char* arg)
 		    printf("Turned off all bx_dbg flags\n");
 		    return;
 	    } else if(!strcmp(arg,"\"vga\"")){
-	      BX_VGA_REFRESH();
+	      DEV_vga_refresh();
 	      return;
 	    } else {
 		  printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
@@ -1668,7 +1668,7 @@ bx_dbg_continue_command(void)
   SIM->refresh_ci ();
 
   // (mch) hack
-  BX_VGA_REFRESH();
+  DEV_vga_refresh();
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
@@ -4120,7 +4120,7 @@ bx_dbg_ucmem_read(Bit32u addr)
 			  bx_dbg_exit(0);
 		  }
 
-		  value = BX_VGA_MEM_READ(addr);
+		  value = DEV_vga_mem_read(addr);
 		  bx_dbg_ucmem_report(addr, 1, BX_READ, value);
 		  bx_debugger.UCmem_journal.element[tail].op    = BX_READ;
 		  bx_debugger.UCmem_journal.element[tail].len   = 1;
@@ -4138,7 +4138,7 @@ bx_dbg_ucmem_read(Bit32u addr)
 
 		  return(value);
 	  } else {
-		  value = BX_VGA_MEM_READ(addr);
+		  value = DEV_vga_mem_read(addr);
 		  return(value);
 	  }
   }
@@ -4204,10 +4204,10 @@ bx_dbg_ucmem_write(Bit32u addr, Bit8u value)
 		  if (bx_debugger.UCmem_journal.size)
 			  bx_debugger.UCmem_journal.tail++;
 		  bx_debugger.UCmem_journal.size++;
-		  BX_VGA_MEM_WRITE(addr, value);
+		  DEV_vga_mem_write(addr, value);
 		  bx_dbg_ucmem_report(addr, 1, BX_WRITE, value);
 	  } else {
-		  BX_VGA_MEM_WRITE(addr, value);
+		  DEV_vga_mem_write(addr, value);
 	  }
   }
   else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.13 2002-10-23 19:31:49 bdenney Exp $
+// $Id: gui.cc,v 1.49.4.14 2002-10-24 19:09:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   // when that bitmap is clicked on
 
   // Floppy A:
-  BX_GUI_THIS floppyA_status = BX_FLOPPY_GET_MEDIA_STATUS(0);
+  BX_GUI_THIS floppyA_status = DEV_floppy_get_media_status(0);
   if (BX_GUI_THIS floppyA_status)
     BX_GUI_THIS floppyA_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyA_bmap_id,
                           BX_GRAVITY_LEFT, floppyA_handler);
@@ -103,7 +103,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_LEFT, floppyA_handler);
 
   // Floppy B:
-  BX_GUI_THIS floppyB_status = BX_FLOPPY_GET_MEDIA_STATUS(1);
+  BX_GUI_THIS floppyB_status = DEV_floppy_get_media_status(1);
   if (BX_GUI_THIS floppyB_status)
     BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_bmap_id,
                           BX_GRAVITY_LEFT, floppyB_handler);
@@ -112,9 +112,9 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_LEFT, floppyB_handler);
 
   // CDROM
-  if (BX_HARD_DRIVE_PRESENT()) {
-    Bit32u handle = BX_HD_GET_FIRST_CD_HANDLE();
-    BX_GUI_THIS cdromD_status = BX_HD_GET_CD_MEDIA_STATUS(handle);
+  if (DEV_hd_present()) {
+    Bit32u handle = DEV_hd_get_first_cd_handle();
+    BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
   }
 
   if (BX_GUI_THIS cdromD_status)
@@ -163,13 +163,13 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 void
 bx_gui_c::update_drive_status_buttons (void) {
   BX_GUI_THIS floppyA_status = 
-    BX_FLOPPY_GET_MEDIA_STATUS(0)
+    DEV_floppy_get_media_status(0)
     && bx_options.floppya.Ostatus->get ();
   BX_GUI_THIS floppyB_status = 
-      BX_FLOPPY_GET_MEDIA_STATUS(1)
+      DEV_floppy_get_media_status(1)
       && bx_options.floppyb.Ostatus->get ();
-  Bit32u handle = BX_HD_GET_FIRST_CD_HANDLE();
-  BX_GUI_THIS cdromD_status = BX_HD_GET_CD_MEDIA_STATUS(handle);
+  Bit32u handle = DEV_hd_get_first_cd_handle();
+  BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
   if (BX_GUI_THIS floppyA_status)
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
   else {
@@ -209,15 +209,15 @@ bx_gui_c::floppyA_handler(void)
   if (ret < 0) return;  // cancelled
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
-  unsigned new_status = BX_FLOPPY_SET_MEDIA_STATUS(0, 0);
+  unsigned new_status = DEV_floppy_set_media_status(0, 0);
   printf ("eject disk, new_status is %d\n", new_status);
-  new_status = BX_FLOPPY_SET_MEDIA_STATUS(0, 1);
+  new_status = DEV_floppy_set_media_status(0, 1);
   printf ("insert disk, new_status is %d\n", new_status);
   fflush (stdout);
   BX_GUI_THIS floppyA_status = new_status;
 #else
   BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
-  BX_FLOPPY_SET_MEDIA_STATUS(0, BX_GUI_THIS floppyA_status);
+  DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
 #endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
@@ -232,15 +232,15 @@ bx_gui_c::floppyB_handler(void)
   if (ret < 0) return;  // cancelled
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
-  unsigned new_status = BX_FLOPPY_SET_MEDIA_STATUS(1, 0);
+  unsigned new_status = DEV_floppy_set_media_status(1, 0);
   printf ("eject disk, new_status is %d\n", new_status);
-  new_status = BX_FLOPPY_SET_MEDIA_STATUS(1, 1);
+  new_status = DEV_floppy_set_media_status(1, 1);
   printf ("insert disk, new_status is %d\n", new_status);
   fflush (stdout);
   BX_GUI_THIS floppyB_status = new_status;
 #else
   BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
-  BX_FLOPPY_SET_MEDIA_STATUS(1, BX_GUI_THIS floppyB_status);
+  DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
 #endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
@@ -248,7 +248,7 @@ bx_gui_c::floppyB_handler(void)
   void
 bx_gui_c::cdromD_handler(void)
 {
-  Bit32u handle = BX_HD_GET_FIRST_CD_HANDLE();
+  Bit32u handle = DEV_hd_get_first_cd_handle();
 #if BX_WITH_WX
   // instead of just toggling the status, call wxWindows to bring up 
   // a dialog asking what disk image you want to switch to.
@@ -262,15 +262,15 @@ bx_gui_c::cdromD_handler(void)
   if (ret < 0) return;  // cancelled
   // eject and then insert the disk.  If the new path is invalid,
   // the status will return 0.
-  unsigned status = BX_HD_SET_CD_MEDIA_STATUS(handle, 0);
+  unsigned status = DEV_hd_set_cd_media_status(handle, 0);
   printf ("eject disk, new_status is %d\n", status);
-  status = BX_HD_SET_CD_MEDIA_STATUS(handle, 1);
+  status = DEV_hd_set_cd_media_status(handle, 1);
   printf ("insert disk, new_status is %d\n", status);
   fflush (stdout);
   BX_GUI_THIS cdromD_status = status;
 #else
   BX_GUI_THIS cdromD_status =
-    BX_HD_SET_CD_MEDIA_STATUS(handle, !BX_GUI_THIS cdromD_status);
+    DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
 #endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
@@ -303,7 +303,7 @@ bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
   char *clean_snap;
   unsigned line_addr, txt_addr, txHeight, txWidth;
 
-  BX_VGA_GET_TEXT_SNAPSHOT(&raw_snap, &txHeight, &txWidth);
+  DEV_vga_get_text_snapshot(&raw_snap, &txHeight, &txWidth);
   if (txHeight <= 0) return -1;
   clean_snap = (char*) malloc(txHeight*(txWidth+2)+1);
   txt_addr = 0;

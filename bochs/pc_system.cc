@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.27.2.6 2002-10-23 19:31:38 bdenney Exp $
+// $Id: pc_system.cc,v 1.27.2.7 2002-10-24 19:09:34 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -212,7 +212,7 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   BX_ERROR(( "# bx_pc_system_c::ResetSignal() called" ));
   for (int i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->reset(BX_RESET_SOFTWARE);
-  BX_RESET_DEVICES(BX_RESET_SOFTWARE);
+  DEV_reset_devices(BX_RESET_SOFTWARE);
   return(0);
 }
 
@@ -220,16 +220,16 @@ bx_pc_system_c::ResetSignal( PCS_OP operation )
   Bit8u
 bx_pc_system_c::IAC(void)
 {
-  return( BX_PIC_IAC() );
+  return( DEV_pic_iac() );
 }
 
   void
 bx_pc_system_c::exit(void)
 {
-  if (BX_HARD_DRIVE_PRESENT())
-    BX_HD_CLOSE_HARDDRIVE();
+  if (DEV_hd_present())
+    DEV_hd_close_harddrive();
 
-  BX_INFO(("Last time is %u", (unsigned) BX_GET_CMOS_TIMEVAL()));
+  BX_INFO(("Last time is %u", (unsigned) DEV_cmos_get_timeval()));
 
   if (bx_gui) bx_gui->exit();
 }

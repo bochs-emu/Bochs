@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.29.2.3 2002-10-23 19:31:53 bdenney Exp $
+// $Id: pit_wrap.cc,v 1.29.2.4 2002-10-24 19:09:38 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -371,9 +371,9 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
   }
 
   if ((BX_PIT_THIS s.timer.read_OUT(0))==1) {
-    BX_PIC_RAISE_IRQ(0);
+    DEV_pic_raise_irq(0);
   } else {
-    BX_PIC_LOWER_IRQ(0);
+    DEV_pic_lower_irq(0);
   }
 
   if(time_passed ||
@@ -534,12 +534,12 @@ bx_pit_c::periodic( Bit32u   usec_delta )
     BX_PIT_THIS s.timer.clock_all(timedelta);
     if ( (prev_timer0_out==0) ) {
       if ((BX_PIT_THIS s.timer.read_OUT(0))==1) {
-	BX_PIC_RAISE_IRQ(0);
+	DEV_pic_raise_irq(0);
         prev_timer0_out=1;
       }
     } else {
       if ((BX_PIT_THIS s.timer.read_OUT(0))==0) {
-	BX_PIC_LOWER_IRQ(0);
+	DEV_pic_lower_irq(0);
         prev_timer0_out=0;
       }
     }

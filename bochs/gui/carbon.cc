@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.11.2.8 2002-10-23 19:31:47 bdenney Exp $
+// $Id: carbon.cc,v 1.11.2.9 2002-10-24 19:09:35 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -290,7 +290,7 @@ pascal OSStatus CEvtHandleWindowEmulatorUpdate (EventHandlerCallRef nextHandler,
             NULL, sizeof(WindowRef), NULL, &myWindow);
 
 	GetWindowPortBounds(myWindow, &box);
-	BX_VGA_REDRAW_AREA(box.left, box.top, box.right, box.bottom);
+	DEV_vga_redraw_area(box.left, box.top, box.right, box.bottom);
 
 	return noErr; // Report success
 }
