@@ -1523,7 +1523,6 @@ bx_dbg_continue_command(void)
 			if (found & BX_DBG_GUARD_ICOUNT) {
 				// I expected this guard, don't stop
 			} else if (found!=0) {
-				BX_INFO(("found guard other than icount in %s..stopping", BX_CPU(cpu)->name));
 				stop = 1;
 				which = cpu;
 			} else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
