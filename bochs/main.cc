@@ -414,7 +414,7 @@ void bx_print_header ()
   char buffer[128];
   sprintf (buffer, "Bochs x86 Emulator %s\n", VER_STRING);
   bx_center_print (stderr, buffer, 72);
-  sprintf (buffer, "%s\n", REL_STRING);
+  if (REL_STRING[0]) sprintf (buffer, "%s\n", REL_STRING);
   bx_center_print (stderr, buffer, 72);
   fprintf (stderr, "%s\n", divider);
 }

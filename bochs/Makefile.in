@@ -22,7 +22,7 @@
 
 VERSION=1.1.2
 VER_STRING=cvs-snapshot
-REL_STRING=No Release Info
+REL_STRING=
 PREFIX=/usr/local/bochs
 BINPATH=/usr/local/bin
 INSTALL_LIST=bios/BIOS-* CHANGES.txt COPYING README bios/VGABIOS*
