@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-O2
-LIST=blur-no-opt blur-O2 blur-profile blur-O2-unroll blur-O2-func blur-O2-switch blur-O2-switch-call blur-O2-fnptr-switch  blur-O2-fnptr-table blur-O2-opcode-switch blur-O2-opcode-fnptr blur-O2-opcode-translated1 blur-O2-opcode-translated2 blur-O2-opcode-translated3 blur-O2-opcode-dynamic1 blur-O2-opcode-dynamic1_test
+LIST=blur-no-opt blur-O2 blur-profile blur-O2-unroll blur-O2-func blur-O2-switch blur-O2-switch-call blur-O2-fnptr-switch  blur-O2-fnptr-table blur-O2-opcode-switch blur-O2-opcode-fnptr blur-O2-opcode-translated1 blur-O2-opcode-translated2 blur-O2-opcode-translated3 blur-O2-opcode-dynamic1 blur-O2-opcode-dynamic1-test blur-O2-opcode-dynamic2 blur-O2-opcode-dynamic2-test
 
 all: $(LIST)
 
@@ -62,20 +62,33 @@ blur-O2-opcode-dynamic1: blur-opcode.c
 	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1 -o blur-O2-opcode-dynamic1 blur-opcode.c
 	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1 -o blur-O2-opcode-dynamic1.s -S blur-opcode.c
 
-blur-O2-opcode-dynamic1_test: blur-opcode.c translate1.c
-	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1_TEST -o blur-O2-opcode-dynamic1_test blur-opcode.c translate1.c
-	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1_TEST -o blur-O2-opcode-dynamic1_test.s -S blur-opcode.c
+blur-O2-opcode-dynamic1-test: blur-opcode.c translate1.c translate1-defs.h
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1_TEST -o blur-O2-opcode-dynamic1-test blur-opcode.c translate1.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE1_TEST -o blur-O2-opcode-dynamic1-test.s -S blur-opcode.c
 
 translate1.c: blur-O2-opcode-dynamic1
 	rm -rf translate1.c
 	./blur-O2-opcode-dynamic1
 	test -f translate1.c
 
+blur-O2-opcode-dynamic2: blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE2 -o blur-O2-opcode-dynamic2 blur-opcode.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE2 -o blur-O2-opcode-dynamic2.s -S blur-opcode.c
+
+blur-O2-opcode-dynamic2-test: blur-opcode.c translate2.c translate2-defs.h
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE2_TEST -o blur-O2-opcode-dynamic2-test blur-opcode.c translate2.c
+	$(CC) $(CFLAGS) -DBLUR_DYNAMIC_TRANSLATE2_TEST -o blur-O2-opcode-dynamic2-test.s -S blur-opcode.c
+
+translate2.c: blur-O2-opcode-dynamic2
+	rm -rf translate2.c
+	./blur-O2-opcode-dynamic2
+	test -f translate2.c
+
 run-all::
 	for i in $(LIST); do echo Running $$i; ./$$i; done
 
 clean::
-	rm -rf *.o *.s blur-no-opt blur-O* blur-profile gmon.out blur.out *.bb *.bbg *.da *.gcov translate1.c $(LIST)
+	rm -rf *.o *.s blur-no-opt blur-O* blur-profile gmon.out blur.out *.bb *.bbg *.da *.gcov translate1.c translate2.c $(LIST)
 
 # blur-no-opt: 11.98
 # blur-O1: 6.56
