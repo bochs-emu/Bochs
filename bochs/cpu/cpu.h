@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.193 2004-12-17 10:50:47 sshwarts Exp $
+// $Id: cpu.h,v 1.194 2005-01-28 20:50:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1506,7 +1506,6 @@ public: // for now...
   BX_SMF void PUSHAD16(bxInstruction_c *);
   BX_SMF void POPAD32(bxInstruction_c *);
   BX_SMF void POPAD16(bxInstruction_c *);
-  BX_SMF void BOUND_GvMa(bxInstruction_c *);
   BX_SMF void ARPL_EwGw(bxInstruction_c *);
   BX_SMF void PUSH_Id(bxInstruction_c *);
   BX_SMF void PUSH_Iw(bxInstruction_c *);
@@ -1514,6 +1513,9 @@ public: // for now...
   BX_SMF void INSW_YvDX(bxInstruction_c *);
   BX_SMF void OUTSB_DXXb(bxInstruction_c *);
   BX_SMF void OUTSW_DXXv(bxInstruction_c *);
+
+  BX_SMF void BOUND_GwMa(bxInstruction_c *);
+  BX_SMF void BOUND_GdMa(bxInstruction_c *);
 
   BX_SMF void TEST_EbGb(bxInstruction_c *);
   BX_SMF void TEST_EdGd(bxInstruction_c *);
@@ -1579,8 +1581,6 @@ public: // for now...
 
   BX_SMF void RETnear32(bxInstruction_c *);
   BX_SMF void RETnear16(bxInstruction_c *);
-  BX_SMF void LES_GvMp(bxInstruction_c *);
-  BX_SMF void LDS_GvMp(bxInstruction_c *);
   BX_SMF void MOV_EbIb(bxInstruction_c *);
   BX_SMF void MOV_EdId(bxInstruction_c *);
   BX_SMF void MOV_EwIw(bxInstruction_c *);
@@ -1686,9 +1686,12 @@ public: // for now...
   BX_SMF void BTC_EwGw(bxInstruction_c *);
   BX_SMF void BTC_EdGd(bxInstruction_c *);
 
+  BX_SMF void LES_GvMp(bxInstruction_c *);
+  BX_SMF void LDS_GvMp(bxInstruction_c *);
   BX_SMF void LSS_GvMp(bxInstruction_c *);
   BX_SMF void LFS_GvMp(bxInstruction_c *);
   BX_SMF void LGS_GvMp(bxInstruction_c *);
+
   BX_SMF void MOVZX_GdEb(bxInstruction_c *);
   BX_SMF void MOVZX_GwEb(bxInstruction_c *);
   BX_SMF void MOVZX_GdEw(bxInstruction_c *);

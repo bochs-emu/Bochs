@@ -27,52 +27,45 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-
-  void
-BX_CPU_C::BOUND_GvMa(bxInstruction_c *i)
+void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("BOUND: not supported on 8086!"));
-#else
-
   if (i->modC0()) {
-    BX_INFO(("BOUND: op2 must be memory reference"));
+    BX_INFO(("BOUND_GwMa: op2 must be memory reference"));
     UndefinedOpcode(i);
   }
 
-  if (i->os32L()) {
-    Bit32s bound_min, bound_max;
-    Bit32s op1_32;
+  Bit16s bound_min, bound_max;
+  Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-    op1_32 = BX_READ_32BIT_REG(i->nnn());
+  read_virtual_word(i->seg(), RMAddr(i),   (Bit16u *) &bound_min);
+  read_virtual_word(i->seg(), RMAddr(i)+2, (Bit16u *) &bound_max);
 
-    read_virtual_dword(i->seg(), RMAddr(i),   (Bit32u *) &bound_min);
-    read_virtual_dword(i->seg(), RMAddr(i)+4, (Bit32u *) &bound_max);
-
-    if (op1_32 < bound_min || op1_32 > bound_max) {
-      BX_INFO(("BOUND: fails bounds test"));
-      exception(BX_BR_EXCEPTION, 0, 0);
-    }
+  if (op1_16 < bound_min || op1_16 > bound_max) {
+    BX_INFO(("BOUND_GdMa: fails bounds test"));
+    exception(BX_BR_EXCEPTION, 0, 0);
   }
-  else {
-    Bit16s bound_min, bound_max;
-    Bit16s op1_16;
-
-    op1_16 = BX_READ_16BIT_REG(i->nnn());
-
-    read_virtual_word(i->seg(), RMAddr(i),   (Bit16u *) &bound_min);
-    read_virtual_word(i->seg(), RMAddr(i)+2, (Bit16u *) &bound_max);
-
-    if (op1_16 < bound_min || op1_16 > bound_max) {
-      BX_INFO(("BOUND: fails bounds test"));
-      exception(BX_BR_EXCEPTION, 0, 0);
-    }
-  }
-#endif
 }
 
-  void
-BX_CPU_C::INT1(bxInstruction_c *i)
+void BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_INFO(("BOUND_GdMa: op2 must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  Bit32s bound_min, bound_max;
+  Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
+
+  read_virtual_dword(i->seg(), RMAddr(i),   (Bit32u *) &bound_min);
+  read_virtual_dword(i->seg(), RMAddr(i)+4, (Bit32u *) &bound_max);
+
+  if (op1_32 < bound_min || op1_32 > bound_max) {
+    BX_INFO(("BOUND_GdMa: fails bounds test"));
+    exception(BX_BR_EXCEPTION, 0, 0);
+  }
+}
+
+void BX_CPU_C::INT1(bxInstruction_c *i)
 {
   // This is an undocumented instrucion (opcode 0xf1)
   // which is useful for an ICE system.
@@ -91,8 +84,7 @@ BX_CPU_C::INT1(bxInstruction_c *i)
                       EIP);
 }
 
-  void
-BX_CPU_C::INT3(bxInstruction_c *i)
+void BX_CPU_C::INT3(bxInstruction_c *i)
 {
   // INT 3 is not IOPL sensitive
 
@@ -107,8 +99,7 @@ BX_CPU_C::INT3(bxInstruction_c *i)
 }
 
 
-  void
-BX_CPU_C::INT_Ib(bxInstruction_c *i)
+void BX_CPU_C::INT_Ib(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_int;
@@ -132,8 +123,7 @@ if ( (imm8 == 0x21) && (AH == 0x4c) ) {
 }
 
 
-  void
-BX_CPU_C::INTO(bxInstruction_c *i)
+void BX_CPU_C::INTO(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_int;

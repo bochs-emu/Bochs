@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.24 2004-11-27 20:36:53 sshwarts Exp $
+// $Id: stack32.cc,v 1.25 2005-01-28 20:50:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,29 +209,29 @@ void BX_CPU_C::PUSHAD32(bxInstruction_c *i)
   else
     temp_ESP = SP;
 
-    if (protected_mode()) {
-      if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 32) ) {
+  if (protected_mode()) {
+    if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 32)) {
         BX_ERROR(("PUSHAD(): stack doesn't have enough room!"));
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
-        }
-      }
-    else {
-      if (temp_ESP < 32)
-        BX_PANIC(("pushad: eSP < 32"));
-      }
+    }
+  }
+  else {
+    if (temp_ESP < 32)
+      BX_PANIC(("pushad: eSP < 32"));
+  }
 
-    esp = ESP;
+  esp = ESP;
 
-    /* ??? optimize this by using virtual write, all checks passed */
-    push_32(EAX);
-    push_32(ECX);
-    push_32(EDX);
-    push_32(EBX);
-    push_32(esp);
-    push_32(EBP);
-    push_32(ESI);
-    push_32(EDI);
+  /* ??? optimize this by using virtual write, all checks passed */
+  push_32(EAX);
+  push_32(ECX);
+  push_32(EDX);
+  push_32(EBX);
+  push_32(esp);
+  push_32(EBP);
+  push_32(ESI);
+  push_32(EDI);
 #endif
 }
 
@@ -241,33 +241,33 @@ void BX_CPU_C::POPAD32(bxInstruction_c *i)
   BX_INFO(("POPAD: not supported on an 8086"));
   UndefinedOpcode(i);
 #else
-    Bit32u edi, esi, ebp, etmp, ebx, edx, ecx, eax;
+  Bit32u edi, esi, ebp, etmp, ebx, edx, ecx, eax;
 
-    if (protected_mode()) {
-      if ( !can_pop(32) ) {
-        BX_ERROR(("POPAD: not enough bytes on stack"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-        return;
-        }
-      }
+  if (protected_mode()) {
+    if ( !can_pop(32) ) {
+      BX_ERROR(("POPAD: not enough bytes on stack"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+      return;
+    }
+  }
 
-    /* ??? optimize this */
-    pop_32(&edi);
-    pop_32(&esi);
-    pop_32(&ebp);
-    pop_32(&etmp); /* value for ESP discarded */
-    pop_32(&ebx);
-    pop_32(&edx);
-    pop_32(&ecx);
-    pop_32(&eax);
+  /* ??? optimize this */
+  pop_32(&edi);
+  pop_32(&esi);
+  pop_32(&ebp);
+  pop_32(&etmp); /* value for ESP discarded */
+  pop_32(&ebx);
+  pop_32(&edx);
+  pop_32(&ecx);
+  pop_32(&eax);
 
-    EDI = edi;
-    ESI = esi;
-    EBP = ebp;
-    EBX = ebx;
-    EDX = edx;
-    ECX = ecx;
-    EAX = eax;
+  EDI = edi;
+  ESI = esi;
+  EBP = ebp;
+  EBX = ebx;
+  EDX = edx;
+  ECX = ecx;
+  EAX = eax;
 #endif
 }
 

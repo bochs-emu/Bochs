@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.32 2004-10-16 19:34:17 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.33 2005-01-28 20:50:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,11 +45,11 @@ BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
     /* op1_16 is a register or memory reference */
     if (i->modC0()) {
       op1_16 = BX_READ_16BIT_REG(i->rm());
-      }
+    }
     else {
       /* pointer, segment address pair */
       read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-      }
+    }
 
     op2_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -60,31 +60,28 @@ BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
         if (i->os32L()) {
           // if 32bit opsize, then 0xff3f is or'd into
           // upper 16bits of register
-          Bit32u op1_32;
-
-          op1_32 = BX_READ_32BIT_REG(i->rm());
+          Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
           op1_32 = (op1_32 & 0xffff0000) | op1_16;
           op1_32 |= 0xff3f0000;
           BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-          }
+        }
         else {
           BX_WRITE_16BIT_REG(i->rm(), op1_16);
-          }
         }
+      }
       else {
         Write_RMW_virtual_word(op1_16);
-        }
-      set_ZF(1);
       }
+      set_ZF(1);
+    }
     else {
       set_ZF(0);
-      }
     }
+  }
   else {
     BX_DEBUG(("ARPL: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
-    return;
-    }
+  }
 #endif
 }
 
@@ -189,7 +186,6 @@ BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
     else {
       BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
       }
-    return;
     }
 }
 
@@ -292,16 +288,16 @@ BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
   if (real_mode() || v8086_mode()) {
     BX_INFO(("SLDT: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
-    }
+  }
   else {
     Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
     if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), val16);
-      }
+    }
     else {
       write_virtual_word(i->seg(), RMAddr(i), &val16);
-      }
     }
+  }
 #endif
 }
 
@@ -316,11 +312,11 @@ BX_CPU_C::STR_Ew(bxInstruction_c *i)
     Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
     if (i->modC0()) {
       BX_WRITE_16BIT_REG(i->rm(), val16);
-      }
+    }
     else {
       write_virtual_word(i->seg(), RMAddr(i), &val16);
-      }
     }
+  }
 }
 
   void
@@ -515,8 +511,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::VERR_Ew(bxInstruction_c *i)
+void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -602,12 +597,10 @@ BX_CPU_C::VERR_Ew(bxInstruction_c *i)
       }
     set_ZF(1); /* accessible */
     BX_DEBUG(("VERR: data segment OK"));
-    return;
     }
 }
 
-  void
-BX_CPU_C::VERW_Ew(bxInstruction_c *i)
+void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -677,18 +670,14 @@ BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
   set_ZF(0); /* not accessible */
   BX_INFO(("VERW: data seg not writable"));
-  return;
 }
 
-  void
-BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
+void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("SGDT_Ms: not supported on 8086!"));
   UndefinedOpcode(i);
 #else
-  Bit16u limit_16;
-  Bit32u base_32;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -700,10 +689,8 @@ BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
   {
-    Bit64u base_64;
-
-    limit_16 = BX_CPU_THIS_PTR gdtr.limit;
-    base_64  = BX_CPU_THIS_PTR gdtr.base;
+    Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
+    Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
 
     write_virtual_word(i->seg(), RMAddr(i), &limit_16);
     write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
@@ -711,8 +698,8 @@ BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
   else
 #endif
   {
-    limit_16 = BX_CPU_THIS_PTR gdtr.limit;
-    base_32  = BX_CPU_THIS_PTR gdtr.base;
+    Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
+    Bit32u base_32  = BX_CPU_THIS_PTR gdtr.base;
 #if BX_CPU_LEVEL == 2
     base_32 |= 0xff000000; /* ??? */
 #else /* 386+ */
@@ -724,15 +711,12 @@ BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
+void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("SIDT_Ms: not supported on 8086!"));
   UndefinedOpcode(i);
 #else
-  Bit16u limit_16;
-  Bit32u base_32;
 
   // ams says it works ok in v8086 mode
   // if (v8086_mode()) BX_PANIC(("protect_ctrl: v8086 mode unsupported"));
@@ -747,10 +731,8 @@ BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
   {
-    Bit64u base_64;
-
-    limit_16 = BX_CPU_THIS_PTR idtr.limit;
-    base_64  = BX_CPU_THIS_PTR idtr.base;
+    Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
+    Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
 
     write_virtual_word(i->seg(), RMAddr(i), &limit_16);
     write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
@@ -758,8 +740,8 @@ BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
   else
 #endif
   {
-    limit_16 = BX_CPU_THIS_PTR idtr.limit;
-    base_32  = BX_CPU_THIS_PTR idtr.base;
+    Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
+    Bit32u base_32  = BX_CPU_THIS_PTR idtr.base;
 
 #if BX_CPU_LEVEL == 2
     base_32 |= 0xff000000;
@@ -774,8 +756,7 @@ BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
+void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("LGDT_Ms: not supported on 8086!"));
@@ -824,7 +805,7 @@ BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
     BX_CPU_THIS_PTR gdtr.limit = limit_16;
     BX_CPU_THIS_PTR gdtr.base = base0_31;
-    }
+  }
   else
 #endif
   {
@@ -842,8 +823,7 @@ BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
+void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
   BX_PANIC(("LIDT_Ms: not supported on 8086!"));

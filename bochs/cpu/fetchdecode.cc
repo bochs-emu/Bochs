@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.73 2004-12-11 20:51:08 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.74 2005-01-28 20:50:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -489,7 +489,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 5F */  { 0, &BX_CPU_C::POP_RX },
   /* 60 */  { 0, &BX_CPU_C::PUSHAD16 },
   /* 61 */  { 0, &BX_CPU_C::POPAD16 },
-  /* 62 */  { BxAnother, &BX_CPU_C::BOUND_GvMa },
+  /* 62 */  { BxAnother, &BX_CPU_C::BOUND_GwMa },
   /* 63 */  { BxAnother, &BX_CPU_C::ARPL_EwGw },
   /* 64 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // FS:
   /* 65 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // GS:
@@ -1037,7 +1037,7 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 5F */  { 0, &BX_CPU_C::POP_ERX },
   /* 60 */  { 0, &BX_CPU_C::PUSHAD32 },
   /* 61 */  { 0, &BX_CPU_C::POPAD32 },
-  /* 62 */  { BxAnother, &BX_CPU_C::BOUND_GvMa },
+  /* 62 */  { BxAnother, &BX_CPU_C::BOUND_GdMa },
   /* 63 */  { BxAnother, &BX_CPU_C::ARPL_EwGw },
   /* 64 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // FS:
   /* 65 */  { BxPrefix | BxAnother, &BX_CPU_C::BxError }, // GS:
