@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.71 2003-07-17 15:49:23 vruppert Exp $
+// $Id: gui.cc,v 1.72 2003-07-18 15:51:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -215,20 +215,24 @@ bx_gui_c::floppyA_handler(void)
   if (bx_options.floppya.Odevtype->get() == BX_FLOPPY_NONE)
     return; // no primary floppy device present
 #ifdef WIN32
-  // instead of just toggling the status, call win32dialog to bring up
-  // a dialog asking what disk image you want to switch to.
-  int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
-  if (ret > 0) {
-    // eject and then insert the disk.  If the new path is invalid,
-    // the status will return 0.
-    unsigned new_status = DEV_floppy_set_media_status(0, 0);
-    new_status = DEV_floppy_set_media_status(0, 1);
-    BX_GUI_THIS floppyA_status = new_status;
+  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
+              "rfb")) {
+    // instead of just toggling the status, call win32dialog to bring up
+    // a dialog asking what disk image you want to switch to.
+    int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
+    if (ret > 0) {
+      // eject and then insert the disk.  If the new path is invalid,
+      // the status will return 0.
+      unsigned new_status = DEV_floppy_set_media_status(0, 0);
+      new_status = DEV_floppy_set_media_status(0, 1);
+      BX_GUI_THIS floppyA_status = new_status;
+      BX_GUI_THIS update_drive_status_buttons ();
+    }
+    return;
   }
-#else
-    BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
-    DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
 #endif
+  BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
+  DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
@@ -238,20 +242,24 @@ bx_gui_c::floppyB_handler(void)
   if (bx_options.floppyb.Odevtype->get() == BX_FLOPPY_NONE)
     return; // no secondary floppy device present
 #ifdef WIN32
-  // instead of just toggling the status, call win32dialog to bring up
-  // a dialog asking what disk image you want to switch to.
-  int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
-  if (ret > 0) {
-    // eject and then insert the disk.  If the new path is invalid,
-    // the status will return 0.
-    unsigned new_status = DEV_floppy_set_media_status(1, 0);
-    new_status = DEV_floppy_set_media_status(1, 1);
-    BX_GUI_THIS floppyB_status = new_status;
+  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
+              "rfb")) {
+    // instead of just toggling the status, call win32dialog to bring up
+    // a dialog asking what disk image you want to switch to.
+    int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
+    if (ret > 0) {
+      // eject and then insert the disk.  If the new path is invalid,
+      // the status will return 0.
+      unsigned new_status = DEV_floppy_set_media_status(1, 0);
+      new_status = DEV_floppy_set_media_status(1, 1);
+      BX_GUI_THIS floppyB_status = new_status;
+      BX_GUI_THIS update_drive_status_buttons ();
+    }
+    return;
   }
-#else
-    BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
-    DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
 #endif
+  BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
+  DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
@@ -419,7 +427,8 @@ bx_gui_c::snapshot_handler(void)
   //FIXME
   char filename[BX_PATHNAME_LEN];
 #ifdef WIN32
-  if (1) {
+  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
+              "rfb")) {
 #else
   if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
               "wx")) {
@@ -463,7 +472,10 @@ bx_gui_c::paste_handler(void)
   void
 bx_gui_c::config_handler(void)
 {
-  SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
+  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
+              "rfb")) {
+    SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
+  }
 }
 
   void
@@ -484,7 +496,8 @@ bx_gui_c::userbutton_handler(void)
 
   len = 0;
 #ifdef WIN32
-  if (1) {
+  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
+              "rfb")) {
 #else
   if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
               "wx")) {
