@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.91 2002-12-13 20:08:55 bdenney Exp $
+$Id: user.dbk,v 1.92 2002-12-15 15:26:57 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1248,7 +1248,7 @@ boots, and you get a login prompt.  Type "root" and ENTER to log in to
 DLX linux.
 <figure>
 <title>Screenshot of Bochs running DLX Linux</title>
-<graphic format="GIF" fileref="dlxlinux-in-linux.gif">
+<graphic format="GIF" fileref="../images/dlxlinux-in-linux.gif">
 </figure>
 </para>
 
