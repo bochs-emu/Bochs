@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.10 2002-08-30 17:39:14 vruppert Exp $
+// $Id: wx.cc,v 1.11 2002-09-01 07:32:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -713,22 +713,29 @@ UpdateScreen(char *newBits, int x, int y, int width, int height)
 }
 
 static void 
-DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color)
+DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int cs_start, int cs_end)
 {
+	int j = 0;
 	char bgcolor = (color >> 4) & 0xF;
 	char fgcolor = color & 0xF;
 
+	if (cs_start <= cs_end) {
+		height = cs_end - cs_start + 1;
+		y += cs_start;
+		j = cs_start * ((width - 1) / 8 + 1);
+	}
 	char *newBits = (char *)malloc(width * height);
 	memset(newBits, 0, (width * height));
 	for(int i = 0; i < (width * height) / 8; i++) {
-		newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
-		newBits[i * 8 + 1] = (bmap[i] & 0x02) ? fgcolor : bgcolor;
-		newBits[i * 8 + 2] = (bmap[i] & 0x04) ? fgcolor : bgcolor;
-		newBits[i * 8 + 3] = (bmap[i] & 0x08) ? fgcolor : bgcolor;
-		newBits[i * 8 + 4] = (bmap[i] & 0x10) ? fgcolor : bgcolor;
-		newBits[i * 8 + 5] = (bmap[i] & 0x20) ? fgcolor : bgcolor;
-		newBits[i * 8 + 6] = (bmap[i] & 0x40) ? fgcolor : bgcolor;
-		newBits[i * 8 + 7] = (bmap[i] & 0x80) ? fgcolor : bgcolor;
+		newBits[i * 8 + 0] = (bmap[j] & 0x01) ? fgcolor : bgcolor;
+		newBits[i * 8 + 1] = (bmap[j] & 0x02) ? fgcolor : bgcolor;
+		newBits[i * 8 + 2] = (bmap[j] & 0x04) ? fgcolor : bgcolor;
+		newBits[i * 8 + 3] = (bmap[j] & 0x08) ? fgcolor : bgcolor;
+		newBits[i * 8 + 4] = (bmap[j] & 0x10) ? fgcolor : bgcolor;
+		newBits[i * 8 + 5] = (bmap[j] & 0x20) ? fgcolor : bgcolor;
+		newBits[i * 8 + 6] = (bmap[j] & 0x40) ? fgcolor : bgcolor;
+		newBits[i * 8 + 7] = (bmap[j] & 0x80) ? fgcolor : bgcolor;
+		j++;
 	}
 	UpdateScreen(newBits, x, y, width, height);
 	free(newBits);
@@ -766,7 +773,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned int nchars = ncols * nrows;
 	if((wxCursorY * ncols + wxCursorX) < nchars) {
 		cChar = new_text[(wxCursorY * ncols + wxCursorX) * 2];
-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1]);
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[((wxCursorY * ncols + wxCursorX) * 2) + 1], 1, 0);
 	}
 	
 	for(unsigned int i = 0; i < nchars * 2; i += 2) {
@@ -774,7 +781,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			cChar = new_text[i];
 			int x = (i / 2) % ncols;
 			int y = (i / 2) / ncols;
-			DrawBochsBitmap(x * 8, y * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i+1]);
+			DrawBochsBitmap(x * 8, y * 16, 8, 16, (char *)&bx_vgafont[cChar].data, new_text[i+1], 1, 0);
 		}
 	}
 	wxCursorX = cursor_x;
@@ -784,7 +791,7 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		cChar = new_text[(cursor_y * ncols + cursor_x) * 2];
 		char cAttr = new_text[((cursor_y * ncols + cursor_x) * 2) + 1];
 		cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr);
+		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr, cs_start, cs_end);
 	}
 
 	thePanel->MyRefresh ();
