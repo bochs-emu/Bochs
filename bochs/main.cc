@@ -126,7 +126,7 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 	int enable = (val != 0);
 	SIM->get_param (BXP_NE2K_IOADDR)->set_enabled (enable);
 	SIM->get_param (BXP_NE2K_IRQ)->set_enabled (enable);
-	//SIM->get_param (BXP_NE2K_MACADDR)->set_enabled (enable);
+	SIM->get_param (BXP_NE2K_MACADDR)->set_enabled (enable);
 	SIM->get_param (BXP_NE2K_ETHMOD)->set_enabled (enable);
 	SIM->get_param (BXP_NE2K_ETHDEV)->set_enabled (enable);
       }
