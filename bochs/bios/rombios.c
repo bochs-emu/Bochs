@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.85 2002-12-13 16:26:17 cbothamy Exp $
+// $Id: rombios.c,v 1.86 2003-01-06 02:02:46 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.85 $";
-static char bios_date_string[] = "$Date: 2002-12-13 16:26:17 $";
+static char bios_cvs_version_string[] = "$Revision: 1.86 $";
+static char bios_date_string[] = "$Date: 2003-01-06 02:02:46 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.85 2002-12-13 16:26:17 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.86 2003-01-06 02:02:46 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -7387,10 +7387,7 @@ ASM_END
 
   ; //FIXME BCC BUG
 ASM_START
-  ;; send EOI to slave & master PICs
-  mov  al, #0x20
-  out  #0xA0, al ;; slave  PIC EOI
-  out  #0x20, al ;; master PIC EOI
+  call eoi_both_pics
 ASM_END
 }
 
@@ -7421,10 +7418,7 @@ int74_handler:
   call far ptr[0x22]
 int74_done:
   cli
-  mov  al, #0x20
-  ;; send EOI to slave & master PICs
-  out  #0xA0, al ;; slave  PIC EOI
-  out  #0x20, al ;; master PIC EOI
+  call eoi_both_pics
   add sp, #8     ;; pop status, x, y, z
 
   pop ds          ;; restore DS
@@ -8063,14 +8057,22 @@ ebda_post:
 ;--------------------
 ; relocated here because the primary POST area isnt big enough.
 eoi_jmp_post:
-  mov al, #0x20
-  out 0xA0, al   ;; send EOI to PIC
-  out 0x20, al   ;; send EOI to PIC
+  call eoi_both_pics
 
   xor ax, ax
   mov ds, ax
 
   jmp far ptr [0x467]
+
+
+;--------------------
+eoi_both_pics:
+  mov   al, #0x20
+  out   #0xA0, al ;; slave  PIC EOI
+eoi_master_pic:
+  mov   al, #0x20
+  out   #0x20, al ;; master PIC EOI
+  ret
 
 ;--------------------
 BcdToBin:
@@ -8173,9 +8175,7 @@ int76_handler:
   mov   ax, #0x0040
   mov   ds, ax
   mov   0x008E, #0xff
-  mov   al, #0x20
-  out   #0xA0, al ;; slave  PIC EOI
-  out   #0x20, al ;; master PIC EOI
+  call  eoi_both_pics
   pop   ds
   pop   ax
   iret
@@ -8741,6 +8741,9 @@ post_default_ints:
   ;; PS/2 mouse setup
   SET_INT_VECTOR(0x74, #0xF000, #int74_handler)
 
+  ;; IRQ13 (FPU exception) setup
+  SET_INT_VECTOR(0x75, #0xF000, #int75_handler)
+
   ;; Video setup
   SET_INT_VECTOR(0x10, #0xF000, #int10_handler)
 
@@ -8863,8 +8866,17 @@ rom_scan_increment:
 
 
 .org 0xe2c3 ; NMI Handler Entry Point
+nmi:
+  ;; FIXME the NMI handler should not panic
+  ;; but iret when called from int75 (fpu exception)
   call _nmi_handler_msg
   HALT(__LINE__)
+  iret
+
+int75_handler:
+  out  0xf0, al         // clear irq13 
+  call eoi_both_pics    // clear interrupt
+  int  2                // legacy nmi call
   iret
 
 ;-------------------------------------------
@@ -9090,8 +9102,7 @@ int09_handler:
 
 int09_done:
   cli
-  mov  al, #0x20     ;; send EOI to master PIC
-  out  #0x20, al
+  call eoi_master_pic
 
 int09_finish:
   mov al, #0xAE      ;;enable keyboard
@@ -9181,8 +9192,7 @@ int0e_normal:
   push ds
   mov  ax, #0x0000 ;; segment 0000
   mov  ds, ax
-  mov  al, #0x20
-  out  0x20, al  ;; send EOI to PIC
+  call eoi_master_pic
   mov  al, 0x043e
   or   al, #0x80 ;; diskette interrupt has occurred
   mov  0x043e, al
@@ -9386,8 +9396,7 @@ int08_store_ticks:
   //CALL_EP( 0x1c << 2 )
   int #0x1c
   cli
-  mov al, #0x20
-  out 0x20, al  ; send EOI to PIC
+  call eoi_master_pic
   pop ds
   pop eax
   iret
