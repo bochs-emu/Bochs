@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.14 2002-11-20 18:20:11 bdenney Exp $
+$Id: misc.txt,v 1.15 2002-11-21 08:16:53 bdenney Exp $
 
 Testing testing....
 
@@ -55,59 +55,3 @@ see man mount, losetup, and fdisk for more info
 
 
 BOCHS Rocks!!!
-
-
------------------------------
-instructions for gdb stub
-These are from www.rtmk.org/bochs-gdb.html 
-
-Bochs and remote GDB stub
-
-This page covers how you can use Bochs with a remote GDB stub to debug your
-kernel. 
-
-Table of contents: Configurating Bochs | Running Bochs | Running GDB |
-Download Bochs with GDB stub 
-
-Configurating Bochs
-
-First you must download the Bochs package that contains the GDB stub, see
-Download Bochs with GDB stub section. 
-
-Untar the package and run the configure script with the `--enable-gdb-stub'
-argument. 
-
-  $ ./configure --enable-gdb-stub
-
-After that, just run make and you should have a Bochs binary that contain a
-GDB stub in your directory. 
-
-Running Bochs
-
-Just start Bochs as normal. Bochs will wait for GDB to connect to the stub. 
-
-Running GDB
-
-Bochs GDB stub waits for a connection on port 1234 on localhost (127.0.0.1).
-Just start GDB like this; 
-
-  $ gdb YOUR-KERNEL
-  .
-  .
-  .
-  (gdb) target remote localhost:1234
-  Remote debugging using localhost:1234
-  0x0000fff0 in ?? ()
-  (gdb) 
-
-You are now connected to the remote GDB stub in Bochs. You are now able to set
-breakpoints. Use the continue (c) command to continue the
-simulation. 
-
-Hitting ^C works. Example; 
-
-  Program received signal 0, Signal 0.
-  syscall_testsuite_result (aux=0x1f11fe4) at ../rtmk/syscalls.c:33
-  33     {
-  (gdb) 
-----------------------
