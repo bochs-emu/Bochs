@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.8.4.2 2002-10-18 19:37:10 bdenney Exp $
+// $Id: pic.h,v 1.8.4.3 2002-10-20 21:56:37 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,16 +66,16 @@ typedef struct {
   } bx_pic_t;
 
 
-class bx_pic_c : public bx_devmodel_c {
+class bx_pic_c : public bx_pic_stub_c {
 
 public:
   bx_pic_c(void);
   ~bx_pic_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
-  BX_PIC_SMF void   lower_irq(unsigned irq_no);
-  BX_PIC_SMF void   raise_irq(unsigned irq_no);
-  BX_PIC_SMF Bit8u  IAC(void);
+  virtual void   lower_irq(unsigned irq_no);
+  virtual void   raise_irq(unsigned irq_no);
+  virtual Bit8u  IAC(void);
 
 private:
   struct {

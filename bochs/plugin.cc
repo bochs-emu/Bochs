@@ -48,9 +48,6 @@ unsigned (* pluginFloppySetMediaStatus)(unsigned drive, unsigned status) = 0;
 
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
-void  (*pluginRaiseIRQ)(unsigned irq) = 0;
-void  (*pluginLowerIRQ)(unsigned irq) = 0;
-Bit8u (*pluginPicIAC)(void) = 0;
 
 void  (* pluginResetSignal)(unsigned sig) = 0;
 
@@ -148,25 +145,6 @@ builtinUnregisterIRQ(unsigned irq, const char* name)
 #else
   bx_devices.unregister_irq(irq, name);
 #endif
-}
-
-  static void
-builtinRaiseIRQ(unsigned irq)
-{
-  pluginlog->panic("builtinRaiseIRQ called, no pic plugin loaded?");
-}
-
-  static void
-builtinLowerIRQ(unsigned irq)
-{
-  pluginlog->panic("builtinLowerIRQ called, no pic plugin loaded?");
-}
-
-  static Bit8u 
-builtinPicIAC(void)
-{
-  pluginlog->panic("builtinPicIAC called, no pic plugin loaded?");
-  return 0;
 }
 
   static void
@@ -467,9 +445,6 @@ plugin_startup(void)
 
   pluginRegisterIRQ = builtinRegisterIRQ;
   pluginUnregisterIRQ = builtinUnregisterIRQ;
-  pluginRaiseIRQ = builtinRaiseIRQ;
-  pluginLowerIRQ = builtinLowerIRQ;
-  pluginPicIAC = builtinPicIAC;
 
   pluginResetSignal = builtinResetSignal;
 

@@ -74,10 +74,6 @@ extern "C" {
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
 #define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
 
-#define BX_PIC_LOWER_IRQ(b)  pluginLowerIRQ(b)
-#define BX_PIC_RAISE_IRQ(b)  pluginRaiseIRQ(b)
-#define BX_PIC_IAC()         pluginPicIAC()
-
 #else
 
 #define BX_INIT_DEVICES() {bx_devices.init(BX_MEM(0)); }
@@ -107,10 +103,6 @@ extern "C" {
 #define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
 #define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
-
-#define BX_PIC_LOWER_IRQ(b)  pluginLowerIRQ(b)
-#define BX_PIC_RAISE_IRQ(b)  pluginRaiseIRQ(b)
-#define BX_PIC_IAC()         pluginPicIAC()
 
 #endif // #if BX_PLUGINS
 
@@ -170,6 +162,11 @@ extern "C" {
 #define BX_DMA_RAISE_HLDA() \
   (bx_devices.pluginDmaDevice->raise_HLDA())
 
+///////// PIC macros
+#define BX_PIC_LOWER_IRQ(b)  (bx_devices.pluginPicDevice->lower_irq(b))
+#define BX_PIC_RAISE_IRQ(b)  (bx_devices.pluginPicDevice->raise_irq(b))
+#define BX_PIC_IAC()         (bx_devices.pluginPicDevice->IAC())
+
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
@@ -228,18 +225,13 @@ extern int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t 
 extern int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                                  const char *name, unsigned len);
 
-/* === IRQ stuff === */
-extern void  (*pluginRegisterIRQ)(unsigned irq, const char *name);
-extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
-extern void  (*pluginRaiseIRQ)(unsigned irq);
-extern void  (*pluginLowerIRQ)(unsigned irq);
-extern Bit8u (*pluginPicIAC)(void);
-
-
 /* === A20 enable line stuff === */
 extern unsigned (*pluginGetA20E)(void);
 extern void     (*pluginSetA20E)(unsigned val);
 
+/* === IRQ stuff === */
+extern void  (*pluginRegisterIRQ)(unsigned irq, const char *name);
+extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
 
 /* === Floppy stuff ===*/
 extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);

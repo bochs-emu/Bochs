@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.17 2002-10-20 20:49:05 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.18 2002-10-20 21:56:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -183,19 +183,32 @@ class bx_dma_stub_c : public bx_devmodel_c {
     void (* dmaWrite)(Bit16u *data_word),   
     const char *name
     ) {
-    STUBFUNC(dma, registerDMA16Channel);
+    STUBFUNC(dma, registerDMA16Channel); return 0;
   }
   virtual unsigned unregisterDMAChannel(unsigned channel) {
-    STUBFUNC(dma, unregisterDMAChannel);
+    STUBFUNC(dma, unregisterDMAChannel); return 0;
   }
   virtual unsigned get_TC(void) {
-    STUBFUNC(dma, get_TC);
+    STUBFUNC(dma, get_TC); return 0;
   }
   virtual void set_DRQ(unsigned channel, Boolean val) {
     STUBFUNC(dma, set_DRQ);
   }
   virtual void raise_HLDA(void) {
     STUBFUNC(dma, raise_HLDA);
+  }
+};
+
+class bx_pic_stub_c : public bx_devmodel_c {
+  public:
+  virtual void raise_irq(unsigned irq_no) {
+    STUBFUNC(pic, raise_irq); 
+  }
+  virtual void lower_irq(unsigned irq_no) {
+    STUBFUNC(pic, lower_irq); 
+  }
+  virtual Bit8u IAC(void) {
+    STUBFUNC(pic, IAC); return 0;
   }
 };
 
@@ -243,7 +256,7 @@ public:
   bx_devmodel_c *pluginBiosDevice;
   bx_cmos_stub_c *pluginCmosDevice;
   bx_dma_stub_c *pluginDmaDevice;
-  bx_devmodel_c *pluginPicDevice;
+  bx_pic_stub_c *pluginPicDevice;
   bx_devmodel_c *pluginVgaDevice;
   bx_devmodel_c *pluginFloppyDevice;
 
@@ -253,6 +266,7 @@ public:
   bx_keyb_stub_c stubKeyboard;
   bx_hard_drive_stub_c stubHardDrive;
   bx_dma_stub_c  stubDma;
+  bx_pic_stub_c  stubPic;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle

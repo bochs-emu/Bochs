@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.29.4.4 2002-10-18 19:37:10 bdenney Exp $
+// $Id: pic.cc,v 1.29.4.5 2002-10-20 21:56:36 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,9 +53,6 @@ bx_pic_c::bx_pic_c(void)
 {
   put("PIC");
   settype(PICLOG);
-  pluginRaiseIRQ = raise_irq;
-  pluginLowerIRQ = lower_irq;
-  pluginPicIAC   = IAC;
 }
 
 bx_pic_c::~bx_pic_c(void)
@@ -807,7 +804,7 @@ bx_pic_c::service_slave_pic(void)
 
           BX_PIC_THIS s.slave_pic.INT = 1;
           BX_PIC_THIS s.slave_pic.irq = irq;
-          raise_irq(2); /* request IRQ 2 on master pic */
+          BX_PIC_THIS raise_irq(2); /* request IRQ 2 on master pic */
           return;
           } /* if (unmasked_requests & ... */
         }
