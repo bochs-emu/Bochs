@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.65 2002-09-28 15:02:48 vruppert Exp $
+// $Id: rombios.c,v 1.66 2002-10-04 16:47:29 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -881,10 +881,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.65 $";
-static char bios_date_string[] = "$Date: 2002-09-28 15:02:48 $";
+static char bios_cvs_version_string[] = "$Revision: 1.66 $";
+static char bios_date_string[] = "$Date: 2002-10-04 16:47:29 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.65 2002-09-28 15:02:48 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.66 2002-10-04 16:47:29 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -3988,8 +3988,8 @@ int13_harddisk(DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, DS, ES, FLAGS;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
-  Bit16u cylinder, head, sector, segment, offset, size, spt;
-  Bit8u  device, count, status, bitshift;
+  Bit16u cylinder, head, sector, segment, offset, size, spt, count;
+  Bit8u  device, status, bitshift;
   Bit32u lba, sectors;
 
   BX_DEBUG_INT13_HD("int13_harddisk: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
