@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.61 2002-10-27 22:26:34 bdenney Exp $
+// $Id: proc_ctrl.cc,v 1.62 2002-11-08 20:26:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1456,19 +1456,19 @@ BX_CPU_C::CPUID(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_4MEG_PAGES
-      features |= (1<<3); // Support Page-Size Extension (4M pages)
+      features |= (1<<3);   // Support Page-Size Extension (4M pages)
 #endif
 
 #if BX_SupportGlobalPages
-      features |= (1<<13); // Support Global pages.
+      features |= (1<<13);  // Support Global pages.
 #endif
 
 #if BX_SupportPAE
-      features |= (1<<6); // Support PAE.
+      features |= (1<<6);   // Support PAE.
 #endif
 
 #if (BX_CPU_LEVEL >= 5)
-      features |= (1<<8); //Support CMPXCHG8B instruction
+      features |= (1<<8);   // Support CMPXCHG8B instruction
 #endif
 
 
@@ -1633,9 +1633,12 @@ BX_CPU_C::SetCR4(Bit32u val_32)
   allowMask |= (1<<5);
 #endif
 
+#if BX_SUPPORT_SSE || BX_SUPPORT_SSE2
+  allowMask |= (1<<9);   /* OSFXSR */
+#endif
 
 #if BX_SUPPORT_X86_64
-  allowMask |= (1<<9);
+  allowMask |= (1<<9);   /* OSFXSR */
   allowMask |= (1<<10);
   //  need to GPF #0 if LME=1 and PAE=0
   if (   (BX_CPU_THIS_PTR msr.lme)
