@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_ld_str.c                                                             |
- |  $Id: reg_ld_str.c,v 1.19 2004-02-11 19:40:25 sshwarts Exp $
+ |  $Id: reg_ld_str.c,v 1.20 2004-05-17 19:50:43 vruppert Exp $
  |                                                                           |
  | All of the functions which transfer data between user memory and FPU_REGs.|
  |                                                                           |
@@ -304,7 +304,7 @@ FPU_load_int32(bx_address _s, FPU_REG *loaded_data)
 
 
 /* Get a short from user memory */
-int  BX_CPP_AttrRegparmN(1)
+int  BX_CPP_AttrRegparmN(2)
 FPU_load_int16(bx_address _s, FPU_REG *loaded_data)
 {
   s16 s, negative;

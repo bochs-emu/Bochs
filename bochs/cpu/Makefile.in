@@ -63,8 +63,8 @@ OBJS = \
 	ctrl_xfer16.o \
 	mmx.o \
 	3dnow.o \
-        softfloat.o \
-        fpu.o \
+	softfloat.o \
+	fpu_emu.o \
 	sse.o \
 	sse_move.o \
 	sse_pfp.o \
