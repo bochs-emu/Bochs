@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.17 2001-10-08 00:42:52 bdenney Exp $
+// $Id: win32.cc,v 1.18 2001-11-12 18:33:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1043,7 +1043,7 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart,
 	RGB(0 ,0xA8 ,0xA8 ), //3 dark cyan 
 	RGB(0xA8 ,0 ,0 ), //4 dark red 
 	RGB(0xA8 ,0 ,0xA8 ), //5 dark magenta 
-	RGB(0xA8 ,0xA8 ,0 ), //6 brown 
+	RGB(0xA8 ,0x54 ,0 ), //6 brown 
 	RGB(0xA8 ,0xA8 ,0xA8 ), //7 light gray 
 	RGB(0x54 ,0x54 ,0x54 ), //8 dark gray 
 	RGB(0x54 ,0x54 ,0xFC ), //9 light blue 
