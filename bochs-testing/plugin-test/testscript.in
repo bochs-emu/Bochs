@@ -27,7 +27,7 @@ for dir in $subdirs; do
       if test -f $reference; then
 	cat uselib.out |
          $top_srcdir/filter-test-output |
-          diff -u $reference - > uselib.out.diffs 2>/dev/null
+          diff $reference - > uselib.out.diffs 2>/dev/null
 	if test $? != 0; then
 	  test_status="output mismatch, see $dir/uselib.out.diffs"
 	else
