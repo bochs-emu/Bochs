@@ -29,9 +29,6 @@
 #include "pit82c54.h"
 #define LOG_THIS this->
 
-#ifdef OUT
-#undef OUT
-#endif
 
 void pit_82C54::print_counter(counter_type & thisctr) {
 #if 0
@@ -83,7 +80,7 @@ void pit_82C54::print_counter(counter_type & thisctr) {
 
   void pit_82C54::set_OUT (counter_type & thisctr, bool data) {
     //This will probably have a callback, so I put it here.
-    thisctr.OUT=data;
+    thisctr.OUTpin=data;
   }
 
   void pit_82C54::set_count (counter_type & thisctr, Bit32u data) {
@@ -143,7 +140,7 @@ void pit_82C54::print_counter(counter_type & thisctr) {
       counter[i].read_state=LSByte;
       counter[i].write_state=LSByte;
       counter[i].GATE=1;
-      counter[i].OUT=1;
+      counter[i].OUTpin=1;
       counter[i].triggerGATE=0;
       counter[i].mode=4;
       counter[i].first_pass=0;
@@ -279,7 +276,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  } else {
 	    if(thisctr.GATE && (thisctr.write_state!=MSByte_multiple)) {
 	      decrement(thisctr);
-	      if(!thisctr.OUT) {
+	      if(!thisctr.OUTpin) {
 		thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 		if(!thisctr.count) {
 		  set_OUT(thisctr,1);
@@ -308,7 +305,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    }
 	  } else {
 	    decrement(thisctr);
-	    if(!thisctr.OUT) {
+	    if(!thisctr.OUTpin) {
 	      thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
 	      if(thisctr.count==0) {
 		set_OUT(thisctr,1);
@@ -331,7 +328,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    if(thisctr.inlatch==1) {
 	      BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2."));
 	    }
-	    if(!thisctr.OUT) {
+	    if(!thisctr.OUTpin) {
 	      set_OUT(thisctr,1);
 	    }
 	    if(thisctr.write_state==MSByte_multiple) {
@@ -362,7 +359,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	     || thisctr.state_bit_2) && thisctr.GATE ) {
 	    set_count(thisctr, thisctr.inlatch & 0xFFFE);
 	    thisctr.state_bit_1=thisctr.inlatch & 0x1;
-	    if( (!thisctr.OUT) || (!(thisctr.state_bit_1))) {
+	    if( (!thisctr.OUTpin) || (!(thisctr.state_bit_1))) {
 	      thisctr.next_change_time=((thisctr.count_binary/2)-1) & 0xFFFF;
 	    } else {
 	      thisctr.next_change_time=(thisctr.count_binary/2) & 0xFFFF;
@@ -371,9 +368,9 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    if(thisctr.inlatch==1) {
 	      BX_ERROR(("Count of 1 is invalid in pit mode 3."));
 	    }
-	    if(!thisctr.OUT) {
+	    if(!thisctr.OUTpin) {
 	      set_OUT(thisctr,1);
-	    } else if(thisctr.OUT && !thisctr.first_pass) {
+	    } else if(thisctr.OUTpin && !thisctr.first_pass) {
 	      set_OUT(thisctr,0);
 	    }
 	    if(thisctr.write_state==MSByte_multiple) {
@@ -385,7 +382,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    if(thisctr.GATE) {
 	      decrement(thisctr);
 	      decrement(thisctr);
-	      if( (!thisctr.OUT) || (!(thisctr.state_bit_1))) {
+	      if( (!thisctr.OUTpin) || (!(thisctr.state_bit_1))) {
 		thisctr.next_change_time=((thisctr.count_binary/2)-1) & 0xFFFF;
 	      } else {
 		thisctr.next_change_time=(thisctr.count_binary/2) & 0xFFFF;
@@ -395,7 +392,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 		thisctr.next_change_time=1;
 	      }
 	      if( (thisctr.count==2) &&
-		 ( (!thisctr.OUT) || (!(thisctr.state_bit_1)))
+		 ( (!thisctr.OUTpin) || (!(thisctr.state_bit_1)))
 		 ) {
 		thisctr.state_bit_2=1;
 		thisctr.next_change_time=1;
@@ -411,7 +408,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	break;
       case 4:
 	if(thisctr.count_written) {
-	  if(!thisctr.OUT) {
+	  if(!thisctr.OUTpin) {
 	    set_OUT(thisctr,1);
 	  }
 	  if(thisctr.null_count) {
@@ -450,7 +447,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	break;
       case 5:
 	if(thisctr.count_written) {
-	  if(!thisctr.OUT) {
+	  if(!thisctr.OUTpin) {
 	    set_OUT(thisctr,1);
 	  }
 	  if(thisctr.triggerGATE) {
@@ -590,7 +587,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 		//Do nothing because latched status has not been read.;
 	      } else {
 		thisctr.status_latch=
-		  ((thisctr.OUT & 0x1) << 7) |
+		  ((thisctr.OUTpin & 0x1) << 7) |
 		  ((thisctr.null_count & 0x1) << 6) |
 		  ((thisctr.rw_mode & 0x3) << 4) |
 		  ((thisctr.mode & 0x7) << 1) |
@@ -722,7 +719,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	    if(thisctr.null_count) {
 	      thisctr.next_change_time=1;
 	    } else {
-	      if( (!thisctr.OUT) &&
+	      if( (!thisctr.OUTpin) &&
 		  (thisctr.write_state!=MSByte_multiple)
 		  ) {
 		thisctr.next_change_time=thisctr.count_binary & 0xFFFF;
@@ -769,7 +766,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
 	  }
 	  break;
 	case 4:
-	  if(!thisctr.OUT || thisctr.null_count) {
+	  if(!thisctr.OUTpin || thisctr.null_count) {
 	    thisctr.next_change_time=1;
 	  } else {
 	    if(data && thisctr.count_written) {
@@ -800,7 +797,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles) {
       BX_ERROR(("Counter number incorrect in 82C54 read_OUT"));
       return 0;
     } else {
-      return counter[cnum].OUT;
+      return counter[cnum].OUTpin;
     }
   }
 

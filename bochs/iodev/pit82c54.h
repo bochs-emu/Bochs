@@ -11,10 +11,6 @@
 
 #include "bochs.h"
 
-#ifdef OUT
-// OUT is defined in system headers on cygwin, maybe others.
-#  undef OUT
-#endif
 
 class pit_82C54 : public logfunctions {
 
@@ -52,7 +48,7 @@ private:
   struct counter_type {
     //Chip IOs;
     bool GATE; //GATE Input value at end of cycle
-    bool OUT; //OUT output this cycle
+    bool OUTpin; //OUT output this cycle
 
     //Architected state;
     Bit32u count; //Counter value this cycle
