@@ -1057,7 +1057,7 @@ bx_find_bochsrc ()
     case 1: strcpy (rcfile, "bochsrc"); break;
     case 2: strcpy (rcfile, "bochsrc.txt"); break;
     case 3:
-#if (!defined(WIN32)) && !defined(BX_WITH_MACOS)
+#if (!defined(WIN32)) && !BX_WITH_MACOS
       // only try this on unix
       {
       char *ptr = getenv("HOME");
