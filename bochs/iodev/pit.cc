@@ -281,7 +281,7 @@ bx_pit_c::write_handler(void *this_ptr, Bit32u address, Bit32u dvalue, unsigned 
 #if !BX_USE_PIT_SMF
   bx_pit_c *class_ptr = (bx_pit_c *) this_ptr;
 
-  class_ptr->write(address, value, io_len);
+  class_ptr->write(address, dvalue, io_len);
 }
 
   void
