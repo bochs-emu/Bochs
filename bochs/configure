@@ -3999,14 +3999,14 @@ if test "${enable_iodebug+set}" = set; then
 #define BX_IODEBUG_SUPPORT 1
 EOF
 
-    IODEBUG_OBJ='iodebug.o'
+    IODEBUG_OBJS='iodebug.o'
    else
     echo "$ac_t""no" 1>&6
     cat >> confdefs.h <<\EOF
 #define BX_IODEBUG_SUPPORT 0
 EOF
 
-    IODEBUG_OBJ=''
+    IODEBUG_OBJS=''
    fi
 else
    echo "$ac_t""no" 1>&6
@@ -4715,6 +4715,7 @@ s%@IOAPIC_OBJS@%$IOAPIC_OBJS%g
 s%@APIC_OBJS@%$APIC_OBJS%g
 s%@BX_SPLIT_HD_SUPPORT@%$BX_SPLIT_HD_SUPPORT%g
 s%@NE2K_OBJS@%$NE2K_OBJS%g
+s%@IODEBUG_OBJS@%$IODEBUG_OBJS%g
 s%@PCI_OBJ@%$PCI_OBJ%g
 s%@SUFFIX_LINE@%$SUFFIX_LINE%g
 s%@CPP_SUFFIX@%$CPP_SUFFIX%g
