@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.33 2002-12-07 15:53:02 vruppert Exp $
+// $Id: cmos.cc,v 1.34 2003-01-04 00:02:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,6 +97,7 @@ bx_cmos_c::bx_cmos_c(void)
     s.reg[i] = 0;
   s.periodic_timer_index = BX_NULL_TIMER_HANDLE;
   s.one_second_timer_index = BX_NULL_TIMER_HANDLE;
+  s.uip_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_cmos_c::~bx_cmos_c(void)
@@ -108,7 +109,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.33 2002-12-07 15:53:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.34 2003-01-04 00:02:05 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 7);
@@ -125,6 +126,11 @@ bx_cmos_c::init(void)
     BX_CMOS_THIS s.one_second_timer_index =
       DEV_register_timer(this, one_second_timer_handler,
         1000000, 1,0, "cmos"); // continuous, not-active
+  }
+  if (BX_CMOS_THIS s.uip_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_CMOS_THIS s.uip_timer_index =
+      DEV_register_timer(this, uip_timer_handler,
+        244, 0, 0, "cmos"); // one-shot, not-active
   }
 
 #if BX_USE_SPECIFIED_TIME0 == 0
@@ -370,6 +376,9 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        //BX_INFO(("write reg 0x%02x: value = 0x%02x",
        //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
        BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
+       if (BX_CMOS_THIS s.cmos_mem_address == REG_IBM_PS2_CENTURY_BYTE) {
+         BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = value;
+       }
        if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x80) {
          BX_CMOS_THIS s.timeval_change = 1;
        } else {
@@ -415,7 +424,8 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
        if (dcc != 0x02) {
        BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
        }
-       BX_CMOS_THIS s.reg[REG_STAT_A] = value & 0x7f;
+       BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x80;
+       BX_CMOS_THIS s.reg[REG_STAT_A] |= (value & 0x7f);
        BX_CMOS_THIS CRA_change();
        return;
        break;
@@ -617,6 +627,24 @@ bx_cmos_c::one_second_timer()
   if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x80)
     return;
 
+  BX_CMOS_THIS s.reg[REG_STAT_A] |= 0x80; // set UIP bit
+
+  // UIP timer for updating clock & alarm functions
+  bx_pc_system.activate_timer(BX_CMOS_THIS s.uip_timer_index,
+                         244, 0);
+}
+
+  void
+bx_cmos_c::uip_timer_handler(void *this_ptr)
+{
+  bx_cmos_c *class_ptr = (bx_cmos_c *) this_ptr;
+
+  class_ptr->uip_timer();
+}
+
+  void
+bx_cmos_c::uip_timer()
+{
   update_clock();
 
   // if update interrupts are enabled, trip IRQ 8, and
@@ -650,6 +678,7 @@ bx_cmos_c::one_second_timer()
       DEV_pic_raise_irq(8);
       }
     }
+  BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x7f; // clear UIP bit
 }
 
 
@@ -710,5 +739,48 @@ bx_cmos_c::update_clock()
   void
 bx_cmos_c::update_timeval()
 {
-  BX_ERROR(("changing time and date not supported yet"));
+  struct tm time_calendar;
+  Bit8u val_bin;
+
+  // update seconds
+  val_bin =
+     ((BX_CMOS_THIS s.reg[REG_SEC] >> 4) * 10) |
+     (BX_CMOS_THIS s.reg[REG_SEC] & 0x0f);
+  time_calendar.tm_sec = val_bin;
+
+  // update minutes
+  val_bin =
+     ((BX_CMOS_THIS s.reg[REG_MIN] >> 4) * 10) |
+     (BX_CMOS_THIS s.reg[REG_MIN] & 0x0f);
+  time_calendar.tm_min = val_bin;
+
+  // update hours
+  val_bin =
+     ((BX_CMOS_THIS s.reg[REG_HOUR] >> 4) * 10) |
+     (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
+  time_calendar.tm_hour = val_bin;
+
+  // update day of the month
+  val_bin =
+     ((BX_CMOS_THIS s.reg[REG_MONTH_DAY] >> 4) * 10) |
+     (BX_CMOS_THIS s.reg[REG_MONTH_DAY] & 0x0f);
+  time_calendar.tm_mday = val_bin;
+
+  // update month
+  val_bin =
+     ((BX_CMOS_THIS s.reg[REG_MONTH] >> 4) * 10) |
+     (BX_CMOS_THIS s.reg[REG_MONTH] & 0x0f);
+  time_calendar.tm_mon = val_bin - 1;
+
+  // update year
+  val_bin =
+     ((BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] >> 4) * 10) |
+     (BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] & 0x0f);
+  val_bin = (val_bin - 19) * 100;
+  val_bin +=
+     ((BX_CMOS_THIS s.reg[REG_YEAR] >> 4) * 10) |
+     (BX_CMOS_THIS s.reg[REG_YEAR] & 0x0f);
+  time_calendar.tm_year = val_bin;
+
+  BX_CMOS_THIS s.timeval = mktime(& time_calendar);
 }
