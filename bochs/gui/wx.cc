@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.41 2002-10-05 18:27:24 bdenney Exp $
+// $Id: wx.cc,v 1.42 2002-10-07 04:49:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -142,10 +142,24 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
   needRefresh = false;
 }
 
-void MyPanel::ToggleMouse ()
+void MyPanel::ToggleMouse (bool fromToolbar)
 {
+  static bool first_enable = true;
   bx_param_bool_c *enable = SIM->get_param_bool (BXP_MOUSE_ENABLED);
   bool en = ! enable->get ();
+  bool needmutex = isSimThread();
+  if (needmutex) wxMutexGuiEnter();
+  if (fromToolbar && first_enable && en) {
+    // only show this help if you click on the toolbar.  If they already
+    // know the shortcut, don't annoy them with the message.
+    wxString msg = 
+      "You have enabled the mouse in Bochs, so now your mouse actions will\n"
+      "be sent into the simulator.  The usual mouse cursor will be trapped\n"
+      "inside the Bochs window until you press F12 or press the middle button\n"
+      "to turn mouse capture off.";
+    wxMessageBox(msg, "Mouse Capture Enabled", wxOK | wxICON_INFORMATION);
+    first_enable = false;
+  }
   enable->set (en);
   IFDBG_MOUSE (wxLogDebug ("now mouse is %sabled", en ? "en" : "dis"));
   if (en) {
@@ -156,6 +170,7 @@ void MyPanel::ToggleMouse ()
   } else {
     SetCursor (wxNullCursor);
   }
+  if (needmutex) wxMutexGuiLeave();
 }
 
 void MyPanel::OnMouse(wxMouseEvent& event)
@@ -177,7 +192,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
   )
 
   if (event.MiddleDown ()) {
-    ToggleMouse ();
+    ToggleMouse (false);
     return;
   }
 
@@ -228,7 +243,7 @@ MyPanel::MyRefresh ()
 void MyPanel::OnKeyDown(wxKeyEvent& event)
 {
   if(event.GetKeyCode() == WXK_F12) {
-    ToggleMouse ();
+    ToggleMouse (false);
     return;
   }
   wxCriticalSectionLocker lock(event_thread_lock);
@@ -769,7 +784,7 @@ void bx_gui_c::handle_events(void)
           case BX_TOOLBAR_PASTE: paste_handler (); break;
           case BX_TOOLBAR_SNAPSHOT: snapshot_handler (); break;
           case BX_TOOLBAR_CONFIG: config_handler (); break;
-          case BX_TOOLBAR_MOUSE_EN: toggle_mouse_enable (); break;
+          case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse (true); break;
           case BX_TOOLBAR_USER: userbutton_handler (); break;
           default:
             wxLogDebug ("unknown toolbar id %d", event_queue[i].u.toolbar.button);

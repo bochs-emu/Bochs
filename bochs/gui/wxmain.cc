@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.64 2002-10-07 04:00:59 bdenney Exp $
+// $Id: wxmain.cc,v 1.65 2002-10-07 04:49:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -425,7 +425,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // Omit config button because the whole wxWindows interface is like
   // one really big config button.
   //BX_ADD_TOOL(ID_Toolbar_Config, configbutton_xpm, "Runtime Configuration");
-  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, "Enable/disable mouse\nAlso, middle mouse button does the same thing.");
+  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, "Enable/disable mouse capture\nThere are also two shortcuts for this: F12 and the middle mouse button.");
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, "Keyboard shortcut");
 
   tb->Realize();
