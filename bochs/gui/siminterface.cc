@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.57 2002-09-13 19:39:37 bdenney Exp $
+// $Id: siminterface.cc,v 1.58 2002-09-13 20:02:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -527,10 +527,12 @@ void bx_real_sim_c::debug_break () {
 
 // this should only be called from the sim_thread.
 void bx_real_sim_c::debug_interpret_cmd (char *cmd) {
+#if BX_WITH_WX
   if (!isSimThread ()) {
     fprintf (stderr, "ERROR: debug_interpret_cmd called but not from sim_thread\n");
     return;
   }
+#endif
   bx_dbg_interpret_line (cmd);
 }
 
