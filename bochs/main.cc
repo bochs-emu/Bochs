@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.267 2004-02-08 11:00:46 cbothamy Exp $
+// $Id: main.cc,v 1.268 2004-02-11 23:05:41 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3937,6 +3937,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (strncmp(params[1], "enabled=", 8)) {
       PARSE_ERR(("%s: newharddrivesupport directive malformed.", context));
       }
+    BX_INFO(("WARNING: newharddrivesupport directive is deprecated and should be removed."));
     if (params[1][8] == '0')
       bx_options.OnewHardDriveSupport->set (0);
     else if (params[1][8] == '1')
