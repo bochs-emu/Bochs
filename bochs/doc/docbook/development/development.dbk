@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.9 2003-02-03 17:10:04 cbothamy Exp $
+$Id: development.dbk,v 1.10 2003-08-02 10:46:18 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -387,52 +387,8 @@ misc/sb16. You can compile it or download the
 </para>
 
 <para>
-<emphasis>misc/sb16/</emphasis> contains a C program that can be run inside the emulator, and the
-executable for DOS. It currently supports the following commands:
-</para>
-
-<para>
-&FIXME; number, six numbers, some numbers, and filename below should be in tags
-</para>
-
-<programlisting>
--i number: shows the selected emulator info string,
-        e.g. sb16ctrl -i 3 to show how many patch translations are active
-
--t six numbers: loads a translation into the translation table. The
-        numbers are:
-        OldBankMSB,OldBankLSB,OldProgram,NewBankMSB,NewBankLSB,NewProgram
-        All values can be 0..127 or 255. 255 for Old values means <emphasis>match
-        any</emphasis> and for New values means <emphasis>don't change</emphasis>,
-        e.g. sb16ctrl -t 255,255,0,255,255,32
-        to change patch 0 (Piano) to patch 32 (Acoustic Bass)
-
--r: Reset the patch translation table
-        e.g. sb16ctrl -r
-
--m some numbers: Upload the given numbers to the midi output device. Note
-        that it should be a complete midi message, and also that it is
-        subject to patch translation.
-        e.g. sb16ctrl -m 0x80,64,0
-        to send a note-off message to channel 0.
-
--f filename: Reads in a file and executes the commands in it. These have
-        the same format as the above commands, except that they don't have
-        the dash "-" in front of them.
-        Comment lines are supported and start with a hash sign "#".
-
--h: Show a brief summary of the commands.
-</programlisting>
-
-<para>
-All numbers can be valid parameters to the strtol() function, so hex and
-octal notation is fine. They have to be delimited by either commas "," or
-slashes "/", spaces are not allowed.
-</para>
-
-<para>
-The command line can have any number of commands. However, if none are given,
-"-f -" is assumed, which means commands are taken from stdin.
+See the section "Sound Blaster 16 Emulation" in the user documentation for
+information about the commands of SB16CTRL.
 </para>
 </section>
 
@@ -814,12 +770,53 @@ of one sample.
 <emphasis>format</emphasis> is a bit-coded value (see below).
 </para></listitem>
 </itemizedlist>
-</section>
 
-<section>
-<title>Format Bits</title>
 <para>
-&FIXME; Insert FORMAT BITS table here 
+<table>   
+<title>format bits</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Bit number</entry>
+<entry>Meaning</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> 0 (LSB)  </entry><entry><para> 0: unsigned data </para><para>
+                                            1: signed data </para></entry> </row>
+<row> <entry> 1..6     </entry><entry> Type of codec (see below) </entry> </row>
+<row> <entry> 7        </entry><entry><para> 0: no reference byte </para><para>
+                                             1: with reference byte </para></entry> </row>
+<row> <entry> 8..x     </entry><entry> reserved (0) </entry> </row>
+</tbody>
+</tgroup>
+</table>
+
+<table>   
+<title>codecs</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Value</entry>
+<entry>Meaning</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> 0 </entry><entry> PCM (raw data) </entry> </row>
+<row> <entry> 1 </entry><entry> reserved </entry> </row>
+<row> <entry> 2 </entry><entry> 2-bit ADPCM (Creative Labs format) </entry> </row>
+<row> <entry> 3 </entry><entry> 2.4-bit (3-bit) ADPCM (Creative Labs format) </entry> </row>
+<row> <entry> 4 </entry><entry> 4-bit ADPCM (Creative Labs format) </entry> </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+<para>
+Other codecs are not supported by the SB hardware. In fact, most applications will
+translate their data into raw data, so that in most cases the codec will be zero.
+</para>
+<para>
+The number of bytes per sample can be calculated from this as (bits / 8) * (stereo + 1).
 </para>
 </section>
 
@@ -891,13 +888,24 @@ the data stream. It will never be larger than <emphasis>BX_SB16_WAVEPACKETSIZE</
 
 <para>
 The order of bytes in the data stream is the same as that in the Wave file format:
-</para>
-</section>
 
-<section>
-<title>Sequences of Databytes Table</title>
-<para>
-&FIXME; Insert Sequences of Databytes table here
+<table>   
+<title>wave output types</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Output type</entry>
+<entry>Sequence of data bytes</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> 8 bit mono </entry><entry> Sample 1; Sample 2; Sample 3; etc. </entry> </row>
+<row> <entry> 8 bit stereo </entry><entry> Sample 1, Channel 0; Sample 1, Channel 1; Sample 2, Channel 0; Sample 2, Channel 1; etc. </entry> </row>
+<row> <entry> 16 bit mono </entry><entry> Sample 1, LSB; Sample 1, MSB; Sample 2, LSB; Sample 2, MSB; etc. </entry> </row>
+<row> <entry> 16 bit stereo </entry><entry> Sample 1, LSB, Channel 0; Sample 1, MSB, Channel 0; Sample 1, LSB, Channel 1; Sample 1, MSB, Channel 1; etc. </entry> </row>
+</tbody>
+</tgroup>
+</table>
 </para>
 
 <para>
@@ -909,7 +917,6 @@ Programmer's Manual, which can be downloaded from the Creative Labs web
 site.
 </para>
 </section>
-
 
 <section><title>int stopwaveplayback()</title>
 
