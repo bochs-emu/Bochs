@@ -33,7 +33,7 @@ plugins5 is based on plugins3, with the following changes :
  - plex86 keyboard device was marged with Bochs keyboard, as a plugin
  - plugin.cc was cleaned up
  - a device registration mechanism was set up
- - the biosdev and unmapped device were plugin-ized
+ - the biosdev and unmapped devices were plugin-ized
 
 The branch is called BRANCH_PLUGINS.  There is a normal tag called
 BRANCH_PLUGINS_BASE that marks the point where the branch began.  This

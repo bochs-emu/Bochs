@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.16 2002-10-18 20:29:20 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.17 2002-10-20 20:49:05 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -167,6 +167,38 @@ class bx_cmos_stub_c : public bx_devmodel_c {
   }
 };
 
+class bx_dma_stub_c : public bx_devmodel_c {
+  public:
+  virtual unsigned registerDMA8Channel(
+    unsigned channel,
+    void (* dmaRead)(Bit8u *data_byte),
+    void (* dmaWrite)(Bit8u *data_byte),
+    const char *name
+    ) {
+    STUBFUNC(dma, registerDMA8Channel); return 0;
+  }
+  virtual unsigned registerDMA16Channel(
+    unsigned channel,
+    void (* dmaRead)(Bit16u *data_word),
+    void (* dmaWrite)(Bit16u *data_word),   
+    const char *name
+    ) {
+    STUBFUNC(dma, registerDMA16Channel);
+  }
+  virtual unsigned unregisterDMAChannel(unsigned channel) {
+    STUBFUNC(dma, unregisterDMAChannel);
+  }
+  virtual unsigned get_TC(void) {
+    STUBFUNC(dma, get_TC);
+  }
+  virtual void set_DRQ(unsigned channel, Boolean val) {
+    STUBFUNC(dma, set_DRQ);
+  }
+  virtual void raise_HLDA(void) {
+    STUBFUNC(dma, raise_HLDA);
+  }
+};
+
 class bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
@@ -210,7 +242,7 @@ public:
   bx_devmodel_c *pluginUnmapped;
   bx_devmodel_c *pluginBiosDevice;
   bx_cmos_stub_c *pluginCmosDevice;
-  bx_devmodel_c *pluginDmaDevice;
+  bx_dma_stub_c *pluginDmaDevice;
   bx_devmodel_c *pluginPicDevice;
   bx_devmodel_c *pluginVgaDevice;
   bx_devmodel_c *pluginFloppyDevice;
@@ -220,6 +252,7 @@ public:
   bx_cmos_stub_c stubCmos;
   bx_keyb_stub_c stubKeyboard;
   bx_hard_drive_stub_c stubHardDrive;
+  bx_dma_stub_c  stubDma;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle

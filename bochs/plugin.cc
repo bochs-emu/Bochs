@@ -26,23 +26,6 @@
 #define PLUGIN_FINI  "plugin_fini"
 
 
-unsigned (* pluginRegisterDMA8Channel)(
-                unsigned channel,
-                void (* dma_read)(Bit8u *data_byte),
-                void (* dma_write)(Bit8u *data_byte),
-		const char* name
-                ) = 0;
-unsigned (* pluginRegisterDMA16Channel)(
-                unsigned channel,
-                void (* dma_read)(Bit16u *data_byte),
-                void (* dma_write)(Bit16u *data_byte),
-		const char* name
-                ) = 0;
-unsigned (* pluginUnregisterDMAChannel)(unsigned channel) = 0;
-void     (* pluginDMASetDRQ)(unsigned channel, Boolean val) = 0;
-unsigned (* pluginDMAGetTC)(void) = 0;
-void     (* pluginDMARaiseHLDA)(void) = 0;
-
 Bit32u   (* pluginHDReadHandler)(void* ptr, Bit32u address, unsigned io_len) = 0;
 void     (* pluginHDWriteHandler)(void* ptr, Bit32u address, Bit32u value, unsigned io_len) = 0;
 Bit32u   (* pluginHDGetDeviceHandle)(Bit8u, Bit8u) = 0;
@@ -100,56 +83,6 @@ plugin_t *current_plugin_context = NULL;
 /************************************************************************/
 /* Builtins declarations                                                */
 /************************************************************************/
-
-  static unsigned
-builtinRegisterDMA8Channel(
-  unsigned channel,
-  void (* dma_read)(Bit8u *data_byte),
-  void (* dma_write)(Bit8u *data_byte),
-  const char* name
-  )
-{
-  pluginlog->panic("builtinRegisterDMA8Channel called, no DMA plugin loaded?");
-  return 0;
-}
-
-  static unsigned
-builtinRegisterDMA16Channel(
-  unsigned channel,
-  void (* dma_read)(Bit16u *data_byte),
-  void (* dma_write)(Bit16u *data_byte),
-  const char* name
-  )
-{
-  pluginlog->panic("builtinRegisterDMA16Channel called, no DMA plugin loaded?");
-  return 0;
-}
-
-  static unsigned
-builtinUnregisterDMAChannel(unsigned channel)
-{
-  pluginlog->panic("builtinUnregisterDMAChannel called, no DMA plugin loaded?");
-  return 0;
-}
-
-  static void
-builtinDMASetDRQ(unsigned channel, Boolean val)
-{
-  pluginlog->panic("builtinDMASetDRQ called, no DMA plugin loaded?");
-}
-
-  static unsigned
-builtinDMAGetTC(void)
-{
-  pluginlog->panic("builtinDMAGetTC called, no DMA plugin loaded?");
-  return 0;
-}
-
-  static void     
-builtinDMARaiseHLDA(void)
-{
-  pluginlog->panic("builtinDMARaiseHLDA called, no DMA plugin loaded?");
-}
 
   static void
 builtinVGARedrawArea(unsigned x0, unsigned y0,
@@ -522,13 +455,6 @@ plugin_abort (void)
   void
 plugin_startup(void)
 {
-  pluginRegisterDMA8Channel = builtinRegisterDMA8Channel;
-  pluginRegisterDMA16Channel = builtinRegisterDMA16Channel;
-  pluginUnregisterDMAChannel = builtinUnregisterDMAChannel;
-  pluginDMASetDRQ    = builtinDMASetDRQ;
-  pluginDMAGetTC     = builtinDMAGetTC;
-  pluginDMARaiseHLDA = builtinDMARaiseHLDA;
-
   pluginVGARedrawArea  = builtinVGARedrawArea;
   pluginVGAMemRead     = builtinVGAMemRead;
   pluginVGAMemWrite    = builtinVGAMemWrite;

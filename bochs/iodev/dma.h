@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.10.4.2 2002-10-18 19:37:09 bdenney Exp $
+// $Id: dma.h,v 1.10.4.3 2002-10-20 20:49:04 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,7 +39,7 @@
 
 
 
-class bx_dma_c : public bx_devmodel_c {
+class bx_dma_c : public bx_dma_stub_c {
 public:
 
   bx_dma_c();
@@ -47,19 +47,19 @@ public:
 
   virtual void     init(void);
   virtual void     reset(unsigned type);
-  BX_DMA_SMF void     raise_HLDA(void);
-  BX_DMA_SMF void     set_DRQ(unsigned channel, Boolean val);
-  BX_DMA_SMF unsigned get_TC(void);
+  virtual void     raise_HLDA(void);
+  virtual void     set_DRQ(unsigned channel, Boolean val);
+  virtual unsigned get_TC(void);
 
-  BX_DMA_SMF unsigned registerDMA8Channel(unsigned channel,
+  virtual unsigned registerDMA8Channel(unsigned channel,
     void (* dmaRead)(Bit8u *data_byte),
     void (* dmaWrite)(Bit8u *data_byte),
     const char *name);
-  BX_DMA_SMF unsigned registerDMA16Channel(unsigned channel,
+  virtual unsigned registerDMA16Channel(unsigned channel,
     void (* dmaRead)(Bit16u *data_word),
     void (* dmaWrite)(Bit16u *data_word),
     const char *name);
-  BX_DMA_SMF unsigned unregisterDMAChannel(unsigned channel);
+  virtual unsigned unregisterDMAChannel(unsigned channel);
 
 private:
 

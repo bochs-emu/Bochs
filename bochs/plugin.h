@@ -74,16 +74,6 @@ extern "C" {
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
 #define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
 
-#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  pluginRegisterDMA8Channel(channel, dmaRead, dmaWrite, name)
-#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  pluginRegisterDMA16Channel(channel, dmaRead, dmaWrite, name)
-#define BX_UNREGISTER_DMA_CHANNEL(channel) \
-  pluginUnregisterDMAChannel(channel)
-#define BX_DMA_SET_DRQ(channel, val) pluginDMASetDRQ(channel, val)
-#define BX_DMA_GET_TC()              pluginDMAGetTC()
-#define BX_DMA_RAISE_HLDA()          pluginDMARaiseHLDA()
-
 #define BX_PIC_LOWER_IRQ(b)  pluginLowerIRQ(b)
 #define BX_PIC_RAISE_IRQ(b)  pluginRaiseIRQ(b)
 #define BX_PIC_IAC()         pluginPicIAC()
@@ -117,16 +107,6 @@ extern "C" {
 #define BX_BULK_IO_QUANTUM_REQUESTED() (bx_devices.bulkIOQuantumsRequested)
 #define BX_BULK_IO_QUANTUM_TRANSFERRED() (bx_devices.bulkIOQuantumsTransferred)
 #define BX_BULK_IO_HOST_ADDR() (bx_devices.bulkIOHostAddr)
-
-#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  pluginRegisterDMA8Channel(channel, dmaRead, dmaWrite, name)
-#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
-  pluginRegisterDMA16Channel(channel, dmaRead, dmaWrite, name)
-#define BX_UNREGISTER_DMA_CHANNEL(channel) \
-  pluginUnregisterDMAChannel(channel)
-#define BX_DMA_SET_DRQ(channel, val) pluginDMASetDRQ(channel, val)
-#define BX_DMA_GET_TC()              pluginDMAGetTC()
-#define BX_DMA_RAISE_HLDA()          pluginDMARaiseHLDA()
 
 #define BX_PIC_LOWER_IRQ(b)  pluginLowerIRQ(b)
 #define BX_PIC_RAISE_IRQ(b)  pluginRaiseIRQ(b)
@@ -175,6 +155,20 @@ extern "C" {
     (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
 #define BX_HD_CLOSE_HARDDRIVE()  bx_devices.pluginHardDrive->close_harddrive()
 #define BX_HARD_DRIVE_PRESENT() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
+
+///////// DMA macros
+#define BX_REGISTER_DMA8_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  (bx_devices.pluginDmaDevice->registerDMA8Channel(channel, dmaRead, dmaWrite, name))
+#define BX_REGISTER_DMA16_CHANNEL(channel, dmaRead, dmaWrite, name) \
+  (bx_devices.pluginDmaDevice->registerDMA16Channel(channel, dmaRead, dmaWrite, name))
+#define BX_UNREGISTER_DMA_CHANNEL(channel) \
+  (bx_devices.pluginDmaDevice->unregisterDMAChannel(channel, dmaRead, dmaWrite, name))
+#define BX_DMA_SET_DRQ(channel, val) \
+  (bx_devices.pluginDmaDevice->set_DRQ(channel, val))
+#define BX_DMA_GET_TC() \
+  (bx_devices.pluginDmaDevice->get_TC())
+#define BX_DMA_RAISE_HLDA() \
+  (bx_devices.pluginDmaDevice->raise_HLDA())
 
 
 #if BX_HAVE_DLFCN_H
@@ -246,25 +240,6 @@ extern Bit8u (*pluginPicIAC)(void);
 extern unsigned (*pluginGetA20E)(void);
 extern void     (*pluginSetA20E)(unsigned val);
 
-
-/* === DMA stuff === */
-extern unsigned (* pluginRegisterDMA8Channel)(
-  unsigned channel,
-  void (* dma_read)(Bit8u *data_byte),
-  void (* dma_write)(Bit8u *data_byte),
-  const char* name
-  );
-extern unsigned (* pluginRegisterDMA16Channel)(
-  unsigned channel,
-  void (* dma_read)(Bit16u *data_byte),
-  void (* dma_write)(Bit16u *data_byte),
-  const char* name
-  );
-extern unsigned  (* pluginUnregisterDMAChannel)(unsigned channel);
-extern void     (* pluginDMASetDRQ)(unsigned channel, Boolean val);
-extern unsigned (* pluginDMAGetTC)(void);
-extern unsigned (* pluginDMAGetTC)(void);
-extern void     (* pluginDMARaiseHLDA)(void);
 
 /* === Floppy stuff ===*/
 extern unsigned (* pluginFloppyGetMediaStatus)(unsigned drive);

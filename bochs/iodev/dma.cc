@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.23.4.4 2002-10-18 19:37:08 bdenney Exp $
+// $Id: dma.cc,v 1.23.4.5 2002-10-20 20:49:04 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,14 +55,6 @@ bx_dma_c::bx_dma_c(void)
 {
   put("DMA");
   settype(DMALOG);
-
-  pluginRegisterDMA8Channel = registerDMA8Channel;
-  pluginRegisterDMA16Channel = registerDMA16Channel;
-  pluginUnregisterDMAChannel = unregisterDMAChannel;
-  pluginUnregisterDMAChannel = unregisterDMAChannel;
-  pluginDMASetDRQ = set_DRQ;
-  pluginDMAGetTC = get_TC;
-  pluginDMARaiseHLDA = raise_HLDA;
 }
 
 bx_dma_c::~bx_dma_c(void)
@@ -137,7 +129,7 @@ bx_dma_c::get_TC(void)
 bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.4 2002-10-18 19:37:08 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.23.4.5 2002-10-20 20:49:04 cbothamy Exp $"));
 
   /* 8237 DMA controller */
 

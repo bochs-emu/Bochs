@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.15 2002-10-18 20:29:20 bdenney Exp $
+// $Id: devices.cc,v 1.34.2.16 2002-10-20 20:49:04 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.15 2002-10-18 20:29:20 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.16 2002-10-20 20:49:04 cbothamy Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -567,6 +567,7 @@ bx_devices_c::inp(Bit16u addr, unsigned io_len)
   BX_INSTR_INP(addr, io_len);
 
   handle = read_handler_id[addr];
+  // FIXME, we want to make sure that there is a default handler there
   ret = (* io_read_handler[handle].funct)(io_read_handler[handle].this_ptr,
                            (Bit32u) addr, io_len);
   BX_INSTR_INP2(addr, io_len, ret);
@@ -589,6 +590,7 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
 
   BX_DBG_IO_REPORT(addr, io_len, BX_WRITE, value);
   handle = write_handler_id[addr];
+  // FIXME, we want to make sure that there is a default handler there
   (* io_write_handler[handle].funct)(io_write_handler[handle].this_ptr,
                      (Bit32u) addr, value, io_len);
 }
