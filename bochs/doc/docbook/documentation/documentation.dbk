@@ -12,6 +12,7 @@
    <title>Bochs Documentation Manual</title>
    <authorgroup>
    <author><firstname>Michael</firstname><surname>Calabrese</surname></author>
+   <author><firstname>Bryce</firstname><surname>Denney</surname></author>
    </authorgroup>
 </bookinfo>
 <chapter><title>Layout of Bochs Documentation</title>
@@ -206,7 +207,7 @@ information in readable form already.
 </tip>
 
 <sect1>
-<title>jade and DSSSL</title>
+<title>Jade and DSSSL</title>
 <para>
 Here is what the Linux Documentation Project says about jade:
 
@@ -341,7 +342,7 @@ other people call them <replaceable>NAME</replaceable>.sgm for SGML.
 </sect2>
 </sect1>
 
-<sect1> <title>nsgmls</title>
+<sect1> <title>Nsgmls</title>
 
 <para>
 The Bochs documentation is written in SGML docbook style, so any tool which can
