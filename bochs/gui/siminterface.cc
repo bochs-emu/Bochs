@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.67 2002-09-23 17:41:42 bdenney Exp $
+// $Id: siminterface.cc,v 1.68 2002-09-24 17:57:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -364,7 +364,7 @@ bx_real_sim_c::get_floppy_options (int drive, bx_floppy_options *out)
 }
 
 int 
-bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *where = NULL)
+bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *where)
 {
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device++) {
