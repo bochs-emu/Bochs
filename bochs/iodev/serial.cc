@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.46 2004-02-28 13:10:56 vruppert Exp $
+// $Id: serial.cc,v 1.47 2004-02-28 21:28:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -71,15 +71,14 @@ bx_serial_c::bx_serial_c(void)
 
 bx_serial_c::~bx_serial_c(void)
 {
-#if USE_RAW_SERIAL
-  // nothing here yet
-#elif defined(SERIAL_ENABLE)
   for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
     if ((bx_options.com[i].Oenabled->get ()) && (s[i].tty_id >= 0))
+#if USE_RAW_SERIAL
+      delete [] BX_SER_THIS s[i].raw;
+#elif defined(SERIAL_ENABLE)
       tcsetattr(s[i].tty_id, TCSAFLUSH, &s[i].term_orig);
-  }
 #endif
-  // nothing for now
+  }
 }
 
 
@@ -686,8 +685,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         BX_SER_THIS s[port].raw->set_parity_mode(p_mode);
       }
-      if (!BX_SER_THIS s[port].line_cntl.break_cntl && new_break) {
-        BX_SER_THIS s[port].raw->transmit(C_BREAK);
+      if (BX_SER_THIS s[port].line_cntl.break_cntl != new_break) {
+        BX_SER_THIS s[port].raw->set_break(new_break);
       }
 #endif // USE_RAW_SERIAL
 
