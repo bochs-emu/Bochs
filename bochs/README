@@ -42,20 +42,6 @@ changes:
  - a device registration mechanism was set up
  - the biosdev and unmapped devices were plugin-ized
 
-TO DO BEFORE MERGE:
-
-- change to DEV_function_name() macros.
-  Bryce is writing a massive sed script to attempt this one.
-
-- clean up the diffs:
-  cvs diff -u -r BRANCH_PLUGINS_BASE2
-  - mostly done
-  - (assigned to Bryce) I removed more than he needed to from gui/Makefile.in.
-    Maybe restore sdl, rfb targets?  very minor.
-
-- copy useful information from this README into patch.plugins
-  - need platform specific notes, for example
-
 TO DO BEFORE RELEASE 2.0:
 - convert remaining devices
 
