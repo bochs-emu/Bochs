@@ -105,23 +105,54 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_int;
 #endif
 
-  Bit8u imm8 = i->Ib();
+  Bit8u vector = i->Ib();
 
-  if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3))
-    exception(BX_GP_EXCEPTION, 0, 0);
+  if (v8086_mode())
+  {
+     if (BX_CPU_THIS_PTR cr4.get_VME())
+     {
+       Bit16u io_base;
+       access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + 102, 
+            2, 0, BX_READ, &io_base);
+
+       Bit8u vme_redirection_bitmap;
+       access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + io_base - 32 + (vector >> 3),
+            1, 0, BX_READ, &vme_redirection_bitmap);
+
+       if (vme_redirection_bitmap & (1 << (vector & 7)))
+       {
+         // VME redirecion bit is set so the interrupt is not redirected
+         if (BX_CPU_THIS_PTR get_IOPL() < 3)
+         {
+           exception(BX_GP_EXCEPTION, 0, 0);
+         }
+       }
+       else {
+         // redirect interrupt through virtual-mode idt
+         v86_redirect_interrupt(vector);
+         return;
+       }
+     }
+     else  // VME is off
+     {
+       if (BX_CPU_THIS_PTR get_IOPL() < 3)
+       {
+         exception(BX_GP_EXCEPTION, 0, 0);
+       }
+     }
+  }
 
 #ifdef SHOW_EXIT_STATUS
-if ( (imm8 == 0x21) && (AH == 0x4c) ) {
-  BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x", (unsigned) AL, (unsigned) BX));
+  if ( (vector == 0x21) && (AH == 0x4c) ) {
+    BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x", (unsigned) AL, (unsigned) BX));
   }
 #endif
 
-  interrupt(imm8, 1, 0, 0);
+  interrupt(vector, 1, 0, 0);
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);
 }
-
 
 void BX_CPU_C::INTO(bxInstruction_c *i)
 {
@@ -129,13 +160,10 @@ void BX_CPU_C::INTO(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_int;
 #endif
 
-  /* ??? is this IOPL sensitive ? */
-  if (v8086_mode()) BX_PANIC(("soft_int: v8086 mode unsupported"));
-
   if (get_OF()) {
     interrupt(4, 1, 0, 0);
     BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                         EIP);
-    }
+  }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.16 2004-07-08 20:15:23 sshwarts Exp $
+// $Id: vm8086.cc,v 1.17 2005-03-09 22:01:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,8 +48,7 @@
 
 #if BX_CPU_LEVEL >= 3
 
-  void
-BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
+void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
                               Bit32u flags32)
 {
   Bit32u temp_ESP, new_esp, esp_laddr;
@@ -123,15 +122,14 @@ BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   init_v8086_mode();
 }
 
-  void
-BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
+void BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR get_IOPL() != 3) {
     // trap to virtual 8086 monitor
     BX_DEBUG(("IRET in vm86 with IOPL != 3"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
-    }
+  }
 
   if (i->os32L()) {
     Bit32u eip, ecs_raw, eflags_tmp;
@@ -169,9 +167,7 @@ BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
   }
 }
 
-
-  void
-BX_CPU_C::init_v8086_mode(void)
+void BX_CPU_C::init_v8086_mode(void)
 {
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid                  = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p                      = 1;
@@ -276,33 +272,30 @@ BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.rpl                 = 3;
 }
 
+void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
+{
+  BX_PANIC(("Redirection of interrupts through virtual-mode idt still not implemented"));
+}
 
 #endif /* BX_CPU_LEVEL >= 3 */
-
-
-
-
 
 #else  // BX_SUPPORT_V8086_MODE
 
 // non-support of v8086 mode
 
-  void
-BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32)
+void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32)
 {
   BX_INFO(("stack_return_to_v86: VM bit set in EFLAGS stack image"));
   v8086_message();
 }
 
-  void
-BX_CPU_C::stack_return_from_v86(void)
+void BX_CPU_C::stack_return_from_v86(void)
 {
   BX_INFO(("stack_return_from_v86:"));
   v8086_message();
 }
 
-  void
-BX_CPU_C::v8086_message(void)
+void BX_CPU_C::v8086_message(void)
 {
   BX_INFO(("Program compiled with BX_SUPPORT_V8086_MODE = 0"));
   BX_INFO(("You need to rerun the configure script and recompile"));
