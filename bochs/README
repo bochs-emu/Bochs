@@ -50,6 +50,9 @@ TO DO BEFORE MERGE:
 
 - (assigned to Christophe)
   apply patch patch.rename-default-iodev, or something like it
+  also should we do something about this?
+  "// FIXME, we want to make sure that there is a default handler there" 
+  in iodev/devices.cc
 
 - (assigned to Bryce)
   some plugins require multiple object files, like harddrv needs cdrom, 
@@ -62,18 +65,31 @@ TO DO BEFORE MERGE:
   Right now I think we are building a scancodes plugin, but then never
   using it.
 
-- #warnings should have #ifdef __GNUC__ or something around them so that
-  Psyon doesn't have to manually remove them.
-
 - clean up the diffs:
   cvs diff -u -r BRANCH_PLUGINS_BASE2
-
-- (assigned to Bryce)
-  write change log for BRANCH_PLUGINS
-  - Bryce is working on this in patches/patch.plugins.  It's about 80% done.
+  - mostly done
+  - (assigned to Bryce) I removed more than he needed to from gui/Makefile.in.
+    Maybe restore sdl, rfb targets?  very minor.
 
 TO DO BEFORE RELEASE 2.0:
 - convert remaining devices
+
+- (assigned to Christophe)
+  initialize some field of the keyboard in init() functions, now that
+  the memset is gone.
+
+- #warnings should have #ifdef __GNUC__ or something around them so that
+  Psyon doesn't have to manually remove them.
+
+- maybe the implementation class for each plugin device should go into the .cc
+  file instead of the header file.  If all their methods are called through
+  the stub class virtual functions, and no external file has access to
+  the real non-stub class, then maybe there is no point in letting anybody
+  else see the real class at all?  (If you do use the class you will get
+  undefined symbols when you compile for plugins anyway.)  For the hard drive,
+  we could put bx_hard_drive_stub_c in harddrv.h, and any constants or types
+  that external files might need, and then put the real class, bx_hard_drive_c,
+  at the top of harddrv.cc.
 
 - does bx_start_simulation actually need argc,argv???  Who uses this stuff?
   If it is needed, Bryce should add some arguments to SIM->begin_simulation
@@ -280,6 +296,9 @@ DONE:
       plugin_search_directory: /path/to/libs
     which would call lt_dlsetsearchpath() to add the path to LTDL's list of
     directories it will search.
+- change log for BRANCH_PLUGINS is in patches/patch.plugins.  It is 
+  pretty complete now.
+
 
 
 
