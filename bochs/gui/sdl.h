@@ -1,9 +1,9 @@
-#define BX_HEADERBAR_FG_RED	0x95
-#define BX_HEADERBAR_FG_GREEN	0x8E
-#define BX_HEADERBAR_FG_BLUE	0xFE
-#define BX_HEADERBAR_BG_RED	0x2B
-#define BX_HEADERBAR_BG_GREEN	0x29
-#define BX_HEADERBAR_BG_BLUE	0x49
+#define BX_HEADERBAR_FG_RED	0x10
+#define BX_HEADERBAR_FG_GREEN	0x10
+#define BX_HEADERBAR_FG_BLUE	0x10
+#define BX_HEADERBAR_BG_RED	0xD0
+#define BX_HEADERBAR_BG_GREEN	0xD0
+#define BX_HEADERBAR_BG_BLUE	0xD0
 
 unsigned char sdl_font8x16[256][16] = {
   {   0,   0,   0,   0,   0,   0,   0,   0,    // 0
