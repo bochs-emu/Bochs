@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.15 2002-07-21 13:56:49 bdenney Exp $
+// $Id: apic.cc,v 1.16 2002-07-23 15:32:14 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -72,7 +72,7 @@ bx_generic_apic_c::is_selected (Bit32u addr, Bit32u len)
 {
   if ((addr & ~0xfff) == get_base ()) {
     if ((addr & 0xf != 0) || (len != 4))
-      BX_INFO(("warning: misaligned or wrong-size APIC write"));
+      BX_INFO(("warning: misaligned or wrong-size APIC write. addr=%08x, len=%d", addr, len));
     return true;
   }
   return false;
