@@ -34,7 +34,7 @@ and other OS's, all on your workstation.
 	for i in "" usr usr/bin usr/man usr/man/man1; do 
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
-	make install_bin install_man install_fonts install_dlx prefix=$RPM_BUILD_ROOT/usr mandir=$RPM_BUILD_ROOT/usr/man
+	make install_bin install_man install_fonts install_dlx prefix=$RPM_BUILD_ROOT/usr
 	# fix up symlinks that point to buildroot
         cd $RPM_BUILD_ROOT/usr/bin
         rm -f bochs; ln -sf /usr/bochs/@SEDVERSION@/bochs .
