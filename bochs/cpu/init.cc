@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.34 2002-09-29 16:59:28 sshwarts Exp $
+// $Id: init.cc,v 1.35 2002-09-29 22:38:18 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,7 +166,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.34 2002-09-29 16:59:28 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.35 2002-09-29 22:38:18 kevinlawton Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -780,6 +780,9 @@ BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled
   // no change to cr0.val32
 #endif
+  BX_CPU_THIS_PTR protectedMode = 0;
+  BX_CPU_THIS_PTR v8086Mode = 0;
+  BX_CPU_THIS_PTR realMode = 1;
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr0.cd = 1; // caching disabled

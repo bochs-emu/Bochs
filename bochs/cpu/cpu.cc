@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.56 2002-09-29 15:06:58 sshwarts Exp $
+// $Id: cpu.cc,v 1.57 2002-09-29 22:38:15 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -118,7 +118,6 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   bxInstruction_c *i = &iStorage;
 
   BxExecutePtr_t execute;
-  BxExecutePtr_t resolveModRM;
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;

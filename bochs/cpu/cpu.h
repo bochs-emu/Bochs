@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.88 2002-09-29 19:21:36 kevinlawton Exp $
+// $Id: cpu.h,v 1.89 2002-09-29 22:38:15 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -382,6 +382,10 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::setEFlags(Bit32u val) {                       \
     BX_CPU_THIS_PTR eflags.val32 = val;                                      \
     BX_CPU_THIS_PTR eflags.VM_cached = val & (1<<17);                        \
+    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
+      BX_CPU_THIS_PTR v8086Mode = BX_CPU_THIS_PTR eflags.VM_cached;          \
+      BX_CPU_THIS_PTR protectedMode = ! BX_CPU_THIS_PTR v8086Mode;           \
+      }                                                                      \
     }
 
   // accessors for all eflags in bx_flags_reg_t
@@ -422,10 +426,18 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::assert_VM() {                                 \
     BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                             \
     BX_CPU_THIS_PTR eflags.VM_cached = 1;                                    \
+    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
+      BX_CPU_THIS_PTR protectedMode = 0;                                     \
+      BX_CPU_THIS_PTR v8086Mode = 1;                                         \
+      }                                                                      \
     }                                                                        \
   BX_CPP_INLINE void BX_CPU_C::clear_VM() {                                  \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                            \
     BX_CPU_THIS_PTR eflags.VM_cached = 0;                                    \
+    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
+      BX_CPU_THIS_PTR protectedMode = 1;                                     \
+      BX_CPU_THIS_PTR v8086Mode = 0;                                         \
+      }                                                                      \
     }                                                                        \
   BX_CPP_INLINE Boolean BX_CPU_C::get_VM() {                                 \
     return BX_CPU_THIS_PTR eflags.VM_cached;                                 \
@@ -437,6 +449,10 @@ typedef struct {
     BX_CPU_THIS_PTR eflags.val32 =                                           \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0); \
     BX_CPU_THIS_PTR eflags.VM_cached = val;                                  \
+    if ( BX_CPU_THIS_PTR cr0.pe) {                                           \
+      BX_CPU_THIS_PTR v8086Mode = val;                                       \
+      BX_CPU_THIS_PTR protectedMode = ! BX_CPU_THIS_PTR v8086Mode;           \
+      }                                                                      \
     }
 
 #define DECLARE_EFLAG_ACCESSOR_IOPL(bitnum)                                  \
@@ -1370,8 +1386,15 @@ union {
 
   /* Control registers */
 #if BX_CPU_LEVEL >= 2
-  bx_cr0_t  cr0;
-  Bit32u    cr1;
+  bx_cr0_t      cr0;
+
+  // Some cached values, so we don't have to do the checks in real time
+  // in code that needs them.
+  unsigned      protectedMode; // CR0.PE=1, EFLAGS.VM=0
+  unsigned      v8086Mode;     // CR0.PE=1, EFLAGS.VM=1
+  unsigned      realMode;      // CR0.PE=1
+
+  Bit32u        cr1;
   bx_address    cr2;
   bx_address    cr3;
 #endif
@@ -2618,13 +2641,9 @@ union {
 
   BX_SMF BX_CPP_INLINE int which_cpu(void);
 
-#if BX_CPU_LEVEL >= 2
   BX_SMF BX_CPP_INLINE Boolean real_mode(void);
-#endif
-#if BX_CPU_LEVEL >= 3
   BX_SMF BX_CPP_INLINE Boolean protected_mode(void);
   BX_SMF BX_CPP_INLINE Boolean v8086_mode(void);
-#endif
 #if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
   Boolean int_from_local_apic;
@@ -2731,38 +2750,20 @@ BX_SMF BX_CPP_INLINE Bit32u BX_CPU_C_PREFIX get_segment_base(unsigned seg) {
 }
 
 
-#if BX_CPU_LEVEL >= 2
-  BX_CPP_INLINE Boolean BX_CPU_C::real_mode(void) { return( !BX_CPU_THIS_PTR cr0.pe ); };
-#endif
+  BX_CPP_INLINE Boolean
+BX_CPU_C::real_mode(void) {
+  return( BX_CPU_THIS_PTR realMode );
+  };
 
-#if BX_CPU_LEVEL == 2
-  BX_CPP_INLINE Boolean BX_CPU_C::protected_mode(void) { return( BX_CPU_THIS_PTR cr0.pe ); };
-#endif
-
-
-#if BX_CPU_LEVEL >= 3
-#  if BX_SUPPORT_V8086_MODE
   BX_CPP_INLINE Boolean
 BX_CPU_C::v8086_mode(void) {
-  return (BX_CPU_THIS_PTR get_VM ());
+  return( BX_CPU_THIS_PTR v8086Mode );
   }
 
   BX_CPP_INLINE Boolean
 BX_CPU_C::protected_mode(void) {
-  return(BX_CPU_THIS_PTR cr0.pe && !BX_CPU_THIS_PTR get_VM ());
+  return( BX_CPU_THIS_PTR protectedMode );
   }
-#  else
-  BX_CPP_INLINE Boolean
-BX_CPU_C::v8086_mode(void) {
-  return(0);
-  }
-
-  BX_CPP_INLINE Boolean
-BX_CPU_C::protected_mode(void) {
-  return(BX_CPU_THIS_PTR cr0.pe);
-  }
-#  endif
-#endif
 
     BX_CPP_INLINE void
 BX_CPU_C::set_CF(Boolean val) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.53 2002-09-29 16:23:03 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.54 2002-09-29 22:38:18 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1539,9 +1539,16 @@ BX_CPU_C::SetCR0(Bit32u val_32)
 
   if (prev_pe==0 && BX_CPU_THIS_PTR cr0.pe) {
     enter_protected_mode();
+    if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("EFLAGS.VM=1, enter_PM"));
+    BX_CPU_THIS_PTR protectedMode = 1;
+    BX_CPU_THIS_PTR v8086Mode = 0;
+    BX_CPU_THIS_PTR realMode = 0;
     }
   else if (prev_pe==1 && BX_CPU_THIS_PTR cr0.pe==0) {
     enter_real_mode();
+    BX_CPU_THIS_PTR protectedMode = 0;
+    BX_CPU_THIS_PTR v8086Mode = 0;
+    BX_CPU_THIS_PTR realMode = 1;
     }
 
 #if BX_SUPPORT_X86_64
