@@ -726,7 +726,7 @@ typedef
 #error "MMX cannot be compiled without FPU support"
 #endif
 
-#if (BX_SUPPORT_SSE || BX_SUPPORT_SSE2)
+#if BX_SUPPORT_SSE
 #if (!BX_SUPPORT_FPU) || (!BX_SUPPORT_MMX)
 #error "SSE cannot be compiled without FPU+MMX support"
 #endif
@@ -737,6 +737,9 @@ typedef
 
 #if BX_CPU_LEVEL < 5
 #error X86-64 requires cpu level 6 or greater
+#endif
+#if (BX_SUPPORT_SSE<2)
+#error X86-64 requires SSE2
 #endif
 #if !BX_SupportPAE
 #error X86-64 requires Physical Address Extensions (PAE)
