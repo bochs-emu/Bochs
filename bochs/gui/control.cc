@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.30 2001-06-21 20:50:30 bdenney Exp $
+ * $Id: control.cc,v 1.30.2.1 2001-06-25 06:37:17 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -67,14 +67,6 @@ extern "C" {
 #include "osdep.h"
 #include "control.h"
 #include "siminterface.h"
-
-#define CPANEL_PATH_LEN 512
-
-/* functions for changing particular options */
-void bx_control_panel_init ();
-int bx_read_rc (char *rc);
-int bx_write_rc (char *rc);
-void bx_log_options (int individual);
 
 /******************************************************************/
 /* lots of code stolen from bximage.c */
@@ -434,8 +426,8 @@ int bx_control_panel (int menu)
        switch (choice) {
 	 case 0: return 0;
 	 case 1: askparam (BXP_LOG_FILENAME); break;
-	 case 2: bx_log_options (0); break;
-	 case 3: bx_log_options (1); break;
+	 case 2: bx_edit_log_options (0); break;
+	 case 3: bx_edit_log_options (1); break;
 	 case 4: do_menu (BXP_MENU_MEMORY); break;
 	 case 5: do_menu (BXP_MENU_INTERFACE); break;
 	 case 6: do_menu (BXP_MENU_DISK); break;
@@ -455,8 +447,8 @@ int bx_control_panel (int menu)
        case 2: do_menu (BXP_FLOPPYB); break;
        case 3: do_menu (BXP_CDROMD); break;
        case 4: askparam (BXP_IPS); break;
-       case 5: bx_log_options (0); break;
-       case 6: bx_log_options (1); break;
+       case 5: bx_edit_log_options (0); break;
+       case 6: bx_edit_log_options (1); break;
        case 7: askparam (BXP_VGA_UPDATE_INTERVAL); break;
        case 8: askparam (BXP_MOUSE_ENABLED); break;
        case 9: NOT_IMPLEMENTED (choice); break;
@@ -499,7 +491,7 @@ static char *log_options_prompt1 = "Enter the ID of the device to edit, or -1 to
 static char *log_level_choices[] = { "ignore", "report", "ask", "fatal", "no change" };
 static int log_level_n_choices_normal = 4;
 
-void bx_log_options (int individual)
+void bx_edit_log_options (int individual)
 {
   if (individual) {
     int done = 0;

@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////
 //
 // gui/wx.cc
-// $Id: wx.cc,v 1.1.2.8 2001-06-24 21:47:00 bdenney Exp $
+// $Id: wx.cc,v 1.1.2.9 2001-06-25 06:37:17 bdenney Exp $
 //
 // GUI Control Panel for Bochs, using wxWindows toolkit.
 //
@@ -20,6 +20,9 @@ extern "C" {
 #include "osdep.h"
 #include "control.h"
 #include "siminterface.h"
+
+// temporarily, include control.h.  This is used for some functions that
+// are implemented in text mode only at this point.
 
 
 // For compilers that support precompilation, includes "wx/wx.h".
@@ -45,8 +48,13 @@ public:
   virtual ExitCode Entry ();
 };
 
+class MyPanel;
+
 class MyFrame: public wxFrame
 {
+private:
+  DECLARE_EVENT_TABLE()
+  MyPanel *panel;
 public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
 
@@ -54,9 +62,9 @@ public:
   void OnAbout(wxCommandEvent& event);
   BochsThread *bochsThread;
   void StartBochsThread ();
-
-private:
-  DECLARE_EVENT_TABLE()
+  void HandleEvent(wxCommandEvent& event);
+  int ReadConfiguration (int ask_name);
+  int WriteConfiguration (int ask_name);
 };
 
 void
@@ -79,18 +87,17 @@ class MyPanel: public wxScrolledWindow
 {
 private:
   MyFrame *frame;
-  void HandleEvent(wxCommandEvent& event);
   wxStaticText *text1;
   void buildParamList (int x, int y);
-  void forAllEditors (int evt_id, wxHashTable &);
 public:
   MyPanel () {};
   MyPanel (MyFrame *frame, wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
   ~MyPanel();
+  void HandleEvent(wxCommandEvent& event);
+  void forAllEditors (int evt_id, wxHashTable &);
 
   DECLARE_EVENT_TABLE()
 };
-
 
 class BochsEventHandler: public wxEvtHandler {
 public:
@@ -184,6 +191,9 @@ enum
   ID_StartBochs,
   ID_ApplyAction,
   ID_RevertAction,
+  ID_ReadConfig,
+  ID_WriteConfig,
+  ID_WriteConfigAs,
   ID_Check1,
   ID_Choice1,
   ID_Combo1,
@@ -194,9 +204,12 @@ int wxid_count = ID_LAST_STATIC_ASSIGNED_ID;
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Quit,  MyFrame::OnQuit)
-  EVT_MENU(ID_StartBochs, MyFrame::OnAbout)
-  EVT_MENU(ID_ApplyAction, MyFrame::OnAbout)
-  EVT_MENU(ID_RevertAction, MyFrame::OnAbout)
+  EVT_MENU(ID_StartBochs, MyFrame::HandleEvent)
+  EVT_MENU(ID_ApplyAction, MyFrame::HandleEvent)
+  EVT_MENU(ID_RevertAction, MyFrame::HandleEvent)
+  EVT_MENU(ID_ReadConfig, MyFrame::HandleEvent)
+  EVT_MENU(ID_WriteConfig, MyFrame::HandleEvent)
+  EVT_MENU(ID_WriteConfigAs, MyFrame::HandleEvent)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(MyPanel, wxScrolledWindow)
@@ -233,6 +246,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
   menuFile->Append( ID_StartBochs, "&Start Bochs..." );
   menuFile->AppendSeparator();
+  menuFile->Append( ID_ReadConfig, "Read Configuration File" );
+  menuFile->Append( ID_WriteConfig, "Write Configuration" );
+  menuFile->Append( ID_WriteConfigAs, "Write Configuration As..." );
+  menuFile->AppendSeparator();
   menuFile->Append( ID_Quit, "E&xit" );
 
   wxMenuBar *menuBar = new wxMenuBar;
@@ -243,14 +260,21 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
   CreateStatusBar();
   SetStatusText( "Bochs Controls" );
   int width=500, height=3000;
-  MyPanel *panel = new MyPanel ( this, this, -1, wxPoint(0,0), wxSize(width,height) );
+  panel = new MyPanel ( this, this, -1, wxPoint(0,0), wxSize(width,height) );
   panel->SetScrollbars( 10, 10, width/10, height/10 );
 }
 
+void
+MyFrame::HandleEvent (wxCommandEvent& event)
+{
+  panel->HandleEvent (event);
+}
 
 void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
   Close( TRUE );
+  if (bochsThread != NULL)
+    bochsThread->Delete ();
 }
 
 
@@ -272,6 +296,15 @@ void MyPanel::HandleEvent (wxCommandEvent& evt)
     case ID_ApplyAction:
     case ID_RevertAction:
       forAllEditors (id, paramEditorsById);
+      break;
+    case ID_ReadConfig:
+      frame->ReadConfiguration (1);
+      break;
+    case ID_WriteConfig:
+      frame->WriteConfiguration (0);
+      break;
+    case ID_WriteConfigAs:
+      frame->WriteConfiguration (1);
       break;
     default:
       printf ("HandleEvent called with id=%d\n", id);
@@ -306,7 +339,7 @@ MyPanel::MyPanel (MyFrame *frame, wxWindow *parent, wxWindowID id, const wxPoint
   this->frame = frame;
   // the parent constructor makes this panel a child of frame, with 
   // proper size.
-  wxButton *btn1 = new wxButton (this, ID_StartBochs, "Start Bochs", wxPoint (10, 10));
+  (void) new wxButton (this, ID_StartBochs, "Start Bochs", wxPoint (10, 10));
   (void) new wxButton (this, ID_ApplyAction, "Apply", wxPoint (110, 10));
   (void) new wxButton (this, ID_RevertAction, "Revert", wxPoint (210, 10));
   //wxCheckBox *check1 = new wxCheckBox (this, ID_Check1, "Checkbox", wxPoint (10, 50));
@@ -553,4 +586,49 @@ ParamEditor::OnEvent (wxCommandEvent& evt)
   printf ("This event will be sent to %s\n", genericparam->get_name ());
   genericeditor->Action (evt);
 #endif
+}
+
+int 
+MyFrame::ReadConfiguration (int ask_name)
+{
+  char oldrc_cstr[CPANEL_PATH_LEN];
+  int found_default = 1;
+  if (SIM->get_default_rc (oldrc_cstr, CPANEL_PATH_LEN) < 0) {
+    found_default = 0;
+    oldrc_cstr[0] = 0;
+  }
+  wxString oldrc (oldrc_cstr), newrc = oldrc;
+  if (ask_name || !found_default) {
+    newrc = ::wxFileSelector ("Load which configuration file?", 
+	"", oldrc, "", "", wxOPEN);
+  }
+  if (newrc.IsEmpty () || (newrc == "none")) return 0;
+  if (SIM->read_rc (newrc.c_str ()) < 0) {
+    wxMessageBox ("Error loading configuration file");
+    return -1;
+  }
+  panel->forAllEditors (ID_RevertAction, paramEditorsById);
+  return 0;
+}
+
+int 
+MyFrame::WriteConfiguration (int ask_name)
+{
+  char oldrc_cstr[CPANEL_PATH_LEN];
+  int found_default = 1;
+  if (SIM->get_default_rc (oldrc_cstr, CPANEL_PATH_LEN) < 0) {
+    found_default = 0;
+    oldrc_cstr[0] = 0;
+  }
+  wxString oldrc (oldrc_cstr), newrc = oldrc;
+  if (ask_name || !found_default) {
+    newrc = ::wxFileSelector ("Save Configuration As", 
+	"", oldrc, "", "", wxSAVE | wxOVERWRITE_PROMPT);
+  }
+  if (newrc.IsEmpty () || (newrc == "none")) return 0;
+  if (SIM->write_rc (newrc.c_str (), 1) < 0) {
+    wxMessageBox ("Error while saving configuration file");
+    return -1;
+  }
+  return 0;
 }
