@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.15 2002-06-06 23:03:09 yakovlev Exp $
+// $Id: memory.cc,v 1.16 2002-08-17 09:23:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -245,8 +245,7 @@ inc_one:
           goto inc_one;
 
         case 0x1:   // Writes to ROM, Inhibit
-//        bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)] = *data_ptr;
-//        BX_INFO(("Writing to ROM %08x, Data %02x ! ", (unsigned) a20addr, *data_ptr));
+          BX_DEBUG(("Write to ROM ignored: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
           goto inc_one;
         default:
           BX_PANIC(("write_physical: default case"));
@@ -478,7 +477,7 @@ inc_one:
           goto inc_one;
 
         case 0x1:   // Read from ROM
-          *data_ptr = bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)];
+          *data_ptr = BX_PCI_MEM_READ(a20addr - 0xc0000);
           //BX_INFO(("Reading from ROM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
           goto inc_one;
         default:
@@ -558,7 +557,7 @@ inc_one:
                 break;
 
               case 0x1:   // Read from Shadow RAM
-                *data_ptr = bx_pci.s.i440fx.shadow[(a20addr - 0xc0000)];
+                *data_ptr = BX_PCI_MEM_READ(a20addr - 0xc0000);
                 BX_INFO(("Reading from ShadowRAM %08x, Data %02x  ", (unsigned) a20addr, *data_ptr));
                 break;
               default:

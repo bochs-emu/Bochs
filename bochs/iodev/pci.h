@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.6 2002-05-30 07:33:48 vruppert Exp $
+// $Id: pci.h,v 1.7 2002-08-17 09:23:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ typedef void   (*bx_pci_write_handler_t)(void *, Bit8u, Bit32u, unsigned);
 typedef struct {
   Bit32u confAddr;
   Bit32u confData;
-  Bit8u array[256];
+  Bit8u  pci_conf[256];
   Bit8u  shadow[4*16*4096];     // 256k of memory
   } bx_def440fx_t;
 
@@ -64,10 +64,8 @@ public:
   BX_PCI_SMF Bit32u rd_memType (Bit32u addr);
   BX_PCI_SMF Bit32u wr_memType (Bit32u addr);
   BX_PCI_SMF Bit8u* i440fx_fetch_ptr(Bit32u addr);
-
-  struct {
-    bx_def440fx_t i440fx;
-    } s;
+  BX_PCI_SMF int    load_ROM(int fd, Bit32u offset, Bit32u size);
+  BX_PCI_SMF Bit8u  mem_read(Bit32u offset);
 
 private:
   bx_devices_c *devices;
@@ -79,6 +77,10 @@ private:
     void             *this_ptr;
     } pci_handler[BX_MAX_PCI_DEVICES];
   unsigned num_pci_handles;
+
+  struct {
+    bx_def440fx_t i440fx;
+    } s;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

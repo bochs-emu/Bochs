@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.75 2002-08-09 06:16:42 vruppert Exp $
+// $Id: bochs.h,v 1.76 2002-08-17 09:23:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -153,6 +153,11 @@ extern "C" {
   BX_MEM(0)->read_physical(BX_CPU(0), phy_addr, len, ptr)
 #define BX_MEM_WRITE_PHYSICAL(addr, len, ptr) \
   BX_MEM(0)->write_physical(BX_CPU(0), phy_addr, len, ptr)
+// macros for PCI handling
+#define BX_REGISTER_PCI_HANDLERS(this_ptr, pci_read, pci_write, devfunc, name) \
+  bx_pci.register_pci_handlers(this_ptr, pci_read, pci_write, devfunc, name)
+#define BX_PCI_LOAD_ROM(fd, offset, size) bx_pci.load_ROM(fd, offset, size)
+#define BX_PCI_MEM_READ(offset) bx_pci.mem_read(offset)
 
 #if BX_SMP_PROCESSORS==1
 #define BX_CPU(x)                   (&bx_cpu)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.20 2002-07-03 17:13:29 mlerwill Exp $
+// $Id: misc_mem.cc,v 1.21 2002-08-17 09:23:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ BX_MEM_C::~BX_MEM_C(void)
   void
 BX_MEM_C::init_memory(int memsize)
 {
-	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.20 2002-07-03 17:13:29 mlerwill Exp $"));
+	BX_DEBUG(("Init $Id: misc_mem.cc,v 1.21 2002-08-17 09:23:42 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -158,12 +158,10 @@ BX_MEM_C::load_ROM(const char *path, Bit32u romaddress)
   while (size > 0) {
 #if BX_PCI_SUPPORT
     if (bx_options.Oi440FXSupport->get ())
-      ret = read(fd, (bx_ptr_t) &bx_pci.s.i440fx.shadow[romaddress - 0xC0000 + offset],
-                 size);
+      ret = BX_PCI_LOAD_ROM(fd, (romaddress - 0xC0000 + offset), size);
     else
-      ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
 #else
-    ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
+      ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[romaddress + offset], size);
 #endif
     if (ret <= 0) {
       BX_PANIC(( "ROM: read failed on BIOS image: '%s'",path));
