@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.22 2004-09-11 15:39:52 vruppert Exp $
+// $Id: serial.h,v 1.23 2004-11-27 10:09:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -66,6 +66,7 @@ extern "C" {
 #define BX_SER_MODE_FILE  1
 #define BX_SER_MODE_TERM  2
 #define BX_SER_MODE_RAW   3
+#define BX_SER_MODE_MOUSE 4
 
 enum {
   BX_SER_INT_IER,

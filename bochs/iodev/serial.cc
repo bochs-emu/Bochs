@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.57 2004-09-05 21:09:46 vruppert Exp $
+// $Id: serial.cc,v 1.58 2004-11-27 10:09:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -261,6 +261,8 @@ bx_serial_c::init(void)
 #else
         BX_PANIC(("raw serial support not present"));
 #endif
+      } else if (!strcmp(mode, "mouse")) {
+        BX_SER_THIS s[i].io_mode = BX_SER_MODE_MOUSE;
       } else if (strcmp(mode, "null")) {
         BX_PANIC(("unknown serial i/o mode"));
       }
@@ -564,6 +566,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   bx_bool new_b0, new_b1, new_b2, new_b3;
   bx_bool new_b4, new_b5, new_b6, new_b7;
   bx_bool gen_int = 0;
+  bx_bool detect_mouse = 0;
   Bit8u offset, new_wordlen;
 #if USE_RAW_SERIAL
   bx_bool mcr_changed = 0;
@@ -801,6 +804,9 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case BX_SER_MCR: /* MODEM control register */
+      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) {
+        detect_mouse = (new_b0 & new_b1);
+      }
       if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
         mcr_changed = (BX_SER_THIS s[port].modem_cntl.dtr != new_b0) |
@@ -874,6 +880,9 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         raise_interrupt(port, BX_SER_INT_MODSTAT);
       } else {
+        if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) {
+          if (detect_mouse) rx_fifo_enq(port, 'M');
+        }
         if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
           if (mcr_changed) {
@@ -1008,6 +1017,9 @@ bx_serial_c::tx_timer(void)
         BX_SER_THIS s[port].raw->transmit(BX_SER_THIS s[port].tsrbuffer);
 #endif
         break;
+      case BX_SER_MODE_MOUSE:
+        BX_INFO(("com%d: write to mouse ignored: 0x%02x", port+1, BX_SER_THIS s[port].tsrbuffer));
+        break;
     }
   }
 
@@ -1084,55 +1096,61 @@ bx_serial_c::rx_timer(void)
   }
   if ((BX_SER_THIS s[port].line_status.rxdata_ready == 0) ||
       (BX_SER_THIS s[port].fifo_cntl.enable)) {
-    if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
+    switch (BX_SER_THIS s[port].io_mode) {
+      case BX_SER_MODE_RAW:
 #if USE_RAW_SERIAL
-      int data;
-      if ((data_ready = BX_SER_THIS s[port].raw->ready_receive())) {
-        data = BX_SER_THIS s[port].raw->receive();
-        if (data < 0 ) {
-          data_ready = 0;
-          switch (data) {
-            case RAW_EVENT_BREAK:
-              BX_SER_THIS s[port].line_status.break_int = 1;
-              raise_interrupt(port, BX_SER_INT_RXLSTAT);
-              break;
-            case RAW_EVENT_FRAME:
-              BX_SER_THIS s[port].line_status.framing_error = 1;
-              raise_interrupt(port, BX_SER_INT_RXLSTAT);
-              break;
-            case RAW_EVENT_OVERRUN:
-              BX_SER_THIS s[port].line_status.overrun_error = 1;
-              raise_interrupt(port, BX_SER_INT_RXLSTAT);
-              break;
-            case RAW_EVENT_PARITY:
-              BX_SER_THIS s[port].line_status.parity_error = 1;
-              raise_interrupt(port, BX_SER_INT_RXLSTAT);
-              break;
-            case RAW_EVENT_CTS_ON:
-            case RAW_EVENT_CTS_OFF:
-            case RAW_EVENT_DSR_ON:
-            case RAW_EVENT_DSR_OFF:
-            case RAW_EVENT_RING_ON:
-            case RAW_EVENT_RING_OFF:
-            case RAW_EVENT_RLSD_ON:
-            case RAW_EVENT_RLSD_OFF:
-              raise_interrupt(port, BX_SER_INT_MODSTAT);
-              break;
+        int data;
+        if ((data_ready = BX_SER_THIS s[port].raw->ready_receive())) {
+          data = BX_SER_THIS s[port].raw->receive();
+          if (data < 0 ) {
+            data_ready = 0;
+            switch (data) {
+              case RAW_EVENT_BREAK:
+                BX_SER_THIS s[port].line_status.break_int = 1;
+                raise_interrupt(port, BX_SER_INT_RXLSTAT);
+                break;
+              case RAW_EVENT_FRAME:
+                BX_SER_THIS s[port].line_status.framing_error = 1;
+                raise_interrupt(port, BX_SER_INT_RXLSTAT);
+                break;
+              case RAW_EVENT_OVERRUN:
+                BX_SER_THIS s[port].line_status.overrun_error = 1;
+                raise_interrupt(port, BX_SER_INT_RXLSTAT);
+                break;
+              case RAW_EVENT_PARITY:
+                BX_SER_THIS s[port].line_status.parity_error = 1;
+                raise_interrupt(port, BX_SER_INT_RXLSTAT);
+                break;
+              case RAW_EVENT_CTS_ON:
+              case RAW_EVENT_CTS_OFF:
+              case RAW_EVENT_DSR_ON:
+              case RAW_EVENT_DSR_OFF:
+              case RAW_EVENT_RING_ON:
+              case RAW_EVENT_RING_OFF:
+              case RAW_EVENT_RLSD_ON:
+              case RAW_EVENT_RLSD_OFF:
+                raise_interrupt(port, BX_SER_INT_MODSTAT);
+                break;
+            }
           }
         }
-      }
-      if (data_ready) {
-        chbuf = data;
-      }
+        if (data_ready) {
+          chbuf = data;
+        }
 #endif
-    } else if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_TERM) {
+        break;
+      case BX_SER_MODE_TERM:
 #if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
-      if ((BX_SER_THIS s[port].tty_id >= 0) && (select(BX_SER_THIS s[port].tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
-        (void) read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
-        BX_DEBUG(("com%d: read: '%c'", port+1, chbuf));
-        data_ready = 1;
-      }
+        if ((BX_SER_THIS s[port].tty_id >= 0) && (select(BX_SER_THIS s[port].tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
+          (void) read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
+          BX_DEBUG(("com%d: read: '%c'", port+1, chbuf));
+          data_ready = 1;
+        }
 #endif
+        break;
+      case BX_SER_MODE_MOUSE:
+        // TODO: get data from mouse queue
+        break;
     }
     if (data_ready) {
       if (!BX_SER_THIS s[port].modem_cntl.local_loopback) {
