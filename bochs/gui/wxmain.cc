@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.52 2002-09-20 17:53:14 bdenney Exp $
+// $Id: wxmain.cc,v 1.53 2002-09-20 21:25:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -90,6 +90,7 @@ bool isSimThread () {
 class MyApp: public wxApp
 {
 virtual bool OnInit();
+virtual int OnExit();
 };
 
 // SimThread is the thread in which the Bochs simulator runs.  It is created
@@ -146,6 +147,11 @@ bool MyApp::OnInit()
     frame->OnStartSim (unusedEvent);
   }
   return TRUE;
+}
+
+int MyApp::OnExit ()
+{
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -357,8 +363,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   SetAutoLayout (TRUE);
   SetSizer (sz);
 
-  thePanel = panel;
-
 #if BX_DEBUGGER
   // create the debug log dialog box immediately so that we can write output
   // to it.
@@ -369,6 +373,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
 MyFrame::~MyFrame ()
 {
+  delete panel;
   wxLogDebug ("MyFrame destructor");
   theFrame = NULL;
 }

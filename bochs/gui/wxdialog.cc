@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.41 2002-09-20 17:53:14 bdenney Exp $
+// $Id: wxdialog.cc,v 1.42 2002-09-20 21:25:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1260,7 +1260,11 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
 
 AdvancedLogOptionsDialog::~AdvancedLogOptionsDialog()
 {
-#warning must clean up my 2d array
+  int dev, ndev = SIM->get_n_log_modules ();
+  for (dev=0; dev<ndev; dev++) {
+    delete [] action[dev];
+  }
+  delete [] action;
 }
 
 void AdvancedLogOptionsDialog::Init()
@@ -1308,10 +1312,10 @@ void AdvancedLogOptionsDialog::CopyGuiToParam () {
 void AdvancedLogOptionsDialog::SetAction (int dev, int evtype, int act) {
   // find the choice whose client data matches "act".
   int *ptr;
-  wxLogDebug ("SetAction dev=%d type=%d act=%d", dev, evtype, act);
+  //wxLogDebug ("SetAction dev=%d type=%d act=%d", dev, evtype, act);
   wxChoice *control = action[dev][evtype];
   for (int i=0; i < control->GetCount (); i++) {
-    wxLogDebug ("reading action[%d][%d]->GetClientData(%d)", dev, evtype, i);
+    //wxLogDebug ("reading action[%d][%d]->GetClientData(%d)", dev, evtype, i);
     ptr = (int*) control->GetClientData (i);
     if (ptr == NULL) continue;
     if (act == *ptr) {  // found it!
@@ -1726,6 +1730,21 @@ ParamDialog::ParamDialog(
   buttonSizer = new wxBoxSizer (wxHORIZONTAL);
 }
 
+ParamDialog::~ParamDialog()
+{
+  paramHash->BeginFind ();
+  wxNode *node;
+  while ((node = paramHash->Next ()) != NULL) {
+    // assume that no ParamStruct appears in the hash table under multiple
+    // keys.  If so, we will delete it twice and corrupt memory.
+    ParamStruct *pstr = (ParamStruct*) node->GetData ();
+    //wxLogDebug ("deleting ParamStruct id=%d for param %s", pstr->id, pstr->param->get_name ());
+    delete pstr;
+  }
+  delete idHash;
+  delete paramHash;
+}
+
 wxButton*
 ParamDialog::AddButton (int id, wxString label)
 {
@@ -1795,7 +1814,6 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
 
 
   ParamStruct *pstr = new ParamStruct ();
-  memset (pstr, 0, sizeof(*pstr));
   pstr->id = genId ();
   pstr->param = param_generic;
   int type = param_generic->get_type ();
@@ -1872,7 +1890,6 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer, b
 		pstr->browseButtonId, BTNLABEL_BROWSE);
 	    sizer->Add (pstr->browseButton, 0, wxALL, 5);
 	    idHash->Put (pstr->browseButtonId, pstr);  // register under button id
-	    paramHash->Put (pstr->param->get_id (), pstr);
 	  } else {
 	    sizer->Add (1, 1);  // spacer
 	  }
@@ -2384,6 +2401,7 @@ bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
   wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), wxString(), style);
   if (fdialog->ShowModal () == wxID_OK)
     text->SetValue (fdialog->GetPath ());
+  delete fdialog;
   return true;
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.28 2002-09-19 04:52:03 bdenney Exp $
+// $Id: wxmain.h,v 1.29 2002-09-20 21:25:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWindows .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -133,6 +133,7 @@ class MyPanel: public wxPanel
   Boolean fillBxKeyEvent_GTK (wxKeyEvent& event, BxKeyEvent& bxev, Boolean release);
 public:
   MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = "panel");
+  ~MyPanel();
   void OnKeyDown(wxKeyEvent& event);
   void OnKeyUp(wxKeyEvent& event);
   void OnTimer(wxCommandEvent& event);

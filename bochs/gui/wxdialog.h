@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.36 2002-09-20 17:53:14 bdenney Exp $
+// $Id: wxdialog.h,v 1.37 2002-09-20 21:25:09 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -723,21 +723,24 @@ DECLARE_EVENT_TABLE()
 // and make that one the default.  This is used when handling a bx_list_c
 // parameter.
 ////////////////////////////////////////////////////////////////////////////
+
+struct ParamStruct : public wxObject {
+  bx_param_c *param;
+  int id;
+  union _u_tag {
+    wxWindow *window;
+    wxChoice *choice;
+    wxTextCtrl *text;
+    wxCheckBox *checkbox;
+  } u;
+  int browseButtonId;  // only for filename params
+  wxButton *browseButton;  // only for filename params
+  ParamStruct() { param = NULL; u.window = NULL; browseButton = NULL; }
+};
+
 class ParamDialog: public wxDialog 
 {
 private:
-  struct ParamStruct : public wxObject {
-    bx_param_c *param;
-    int id;
-    union _u_tag {
-      wxWindow *window;
-      wxChoice *choice;
-      wxTextCtrl *text;
-      wxCheckBox *checkbox;
-    } u;
-    int browseButtonId;  // only for filename params
-    wxButton *browseButton;  // only for filename params
-  };
   void ShowHelp ();
   wxFlexGridSizer *gridSizer;
   wxChoice *type;
@@ -760,7 +763,7 @@ protected:
   bool CopyGuiToParam ();
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);
-  virtual ~ParamDialog() {}
+  virtual ~ParamDialog();
   void OnEvent (wxCommandEvent& event);
   wxButton* AddButton(int id, wxString label);
   virtual void AddDefaultButtons ();
