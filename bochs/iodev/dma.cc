@@ -145,8 +145,9 @@ bx_dma_c::read( Bit32u   address, unsigned io_len)
   Bit8u channel;
 
   if (io_len > 1) {
-    BX_PANIC(("io read from address %08x, len=%u",
+    BX_ERROR(("io read from address %08x, len=%u",
              (unsigned) address, (unsigned) io_len));
+	return 0xff;
     }
 
   BX_DEBUG(("read addr=%04x", (unsigned) address));
@@ -286,8 +287,9 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
       return;
       }
 
-    BX_PANIC(("io write to address %08x, len=%u",
+    BX_ERROR(("io write to address %08x, len=%u",
              (unsigned) address, (unsigned) io_len));
+	return;
     }
 
   BX_DEBUG(("dma: write: address=%04x value=%02x",

@@ -588,7 +588,7 @@ BX_CPU_C::prefetch(void)
     // don't take this out if dynamic translation enabled,
     // otherwise you must make a check to see if bytesleft is 0 after
     // a call to prefetch() in the dynamic code.
-    BX_PANIC(("prefetch: running in bogus memory"));
+    BX_ERROR(("prefetch: running in bogus memory"));
     }
 
   // max physical address as confined by page boundary

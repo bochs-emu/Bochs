@@ -347,7 +347,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
 			BX_DEBUG(( " allow_irq12 set to %u", (unsigned)
 				BX_KEY_THIS s.kbd_controller.allow_irq12));
             if ( !scan_convert )
-              BX_INFO(("keyboard: (mch) scan convert turned off"));
+              BX_ERROR(("keyboard: (mch) scan convert turned off"));
 
 	    // (mch) NT needs this
 	    BX_KEY_THIS s.kbd_controller.scan_convert = scan_convert;
@@ -384,7 +384,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         /* pass byte to keyboard */
         /* ??? should conditionally pass to mouse device here ??? */
         if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled==0) {
-          BX_INFO(("keyboard disabled & send of byte %02x to kbd",
+          BX_ERROR(("keyboard disabled & send of byte %02x to kbd",
             (unsigned) value));
           }
         kbd_ctrl_to_kbd(value);
@@ -403,7 +403,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
           BX_DEBUG(("get keyboard command byte"));
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
+			BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
             }
           command_byte =
@@ -865,7 +865,7 @@ bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
   BX_DEBUG(("mouse_enQ(%02x)", (unsigned) mouse_data));
 
   if (BX_KEY_THIS s.mouse_internal_buffer.num_elements >= BX_MOUSE_BUFF_SIZE) {
-    BX_INFO(("mouse: internal mouse buffer full, ignoring mouse data.(%02x)",
+    BX_ERROR(("mouse: internal mouse buffer full, ignoring mouse data.(%02x)",
       (unsigned) mouse_data));
     return;
     }

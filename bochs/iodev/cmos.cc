@@ -221,7 +221,7 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
   Bit8u ret8;
 
   if (io_len > 1)
-    BX_PANIC(("cmos: io read from address %08x len=%u",
+    BX_PANIC(("io read from address %08x len=%u",
              (unsigned) address, (unsigned) io_len));
 
   if (bx_dbg.cmos)
@@ -272,7 +272,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_CMOS_SMF
 
   if (io_len > 1)
-    BX_PANIC(("cmos: io write to address %08x len=%u",
+    BX_PANIC(("io write to address %08x len=%u",
              (unsigned) address, (unsigned) io_len));
 
   if (bx_dbg.cmos)
@@ -347,7 +347,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           unsigned dcc;
           dcc = (value >> 4) & 0x07;
           if (dcc != 0x02) {
-            BX_PANIC(("cmos: CRA: divider chain control 0x%x", dcc));
+            BX_PANIC(("CRA: divider chain control 0x%x", dcc));
             }
           BX_CMOS_THIS s.reg[0x0a] = value & 0x7f;
           BX_CMOS_THIS CRA_change();
@@ -382,9 +382,9 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
           // can not handle binary or 12-hour mode yet.
           if (value & 0x04)
-            BX_PANIC(("cmos: write status reg B, binary format enabled."));
+            BX_PANIC(("write status reg B, binary format enabled."));
           if ( !(value & 0x02) )
-            BX_PANIC(("cmos: write status reg B, 12 hour mode enabled."));
+            BX_PANIC(("write status reg B, 12 hour mode enabled."));
 
           value &= 0xf7; // bit3 always 0
           // Note: setting bit 7 clears bit 4
@@ -416,7 +416,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x0c: // Control Register C
         case 0x0d: // Control Register D
-          BX_ERROR(("cmos: write to control register 0x%x (read-only)",
+          BX_ERROR(("write to control register 0x%x (read-only)",
                    BX_CMOS_THIS s.cmos_mem_address));
           break;
 

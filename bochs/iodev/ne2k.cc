@@ -603,7 +603,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
 {
-  BX_INFO(("page 1 read from port %04x, len=%u", (unsigned) offset,
+  BX_DEBUG(("page 1 read from port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
   if (io_len > 1)
     BX_PANIC(("bad length! page 1 read from port %04x, len=%u", (unsigned) offset,
@@ -732,7 +732,7 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   case 0x9:
   case 0xa:
   case 0xb:
-    BX_INFO(("reserved read - page 2, 0x%02x", (unsigned) offset));
+    BX_ERROR(("reserved read - page 2, 0x%02x", (unsigned) offset));
     return (0xff);
     break;
 
@@ -785,7 +785,7 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
   // affect internal operation, but let them through for now
   // and print a warning.
   if (offset != 0)
-    BX_INFO(("page 2 write ?"));
+    BX_ERROR(("page 2 write ?"));
 
   switch (offset) {
   case 0x0:  // CR
@@ -1182,9 +1182,15 @@ bx_ne2k_c::init(bx_devices_c *d)
 						      addr, 
 						      "ne2000 NIC");
     }
-	BX_INFO(("irq %d, ioport 0x%x",
+	BX_INFO(("irq %d, ioport 0x%x, mac %02x:%02x:%02x:%02x:%02x:%02x",
 				BX_NE2K_THIS s.base_irq,
-				BX_NE2K_THIS s.base_address));
+				BX_NE2K_THIS s.base_address,
+				BX_NE2K_THIS s.physaddr[0],
+				BX_NE2K_THIS s.physaddr[1],
+				BX_NE2K_THIS s.physaddr[2],
+				BX_NE2K_THIS s.physaddr[3],
+				BX_NE2K_THIS s.physaddr[4],
+				BX_NE2K_THIS s.physaddr[5]));
     
     // Initialise the mac address area by doubling the physical address
     BX_NE2K_THIS s.macaddr[0]  = BX_NE2K_THIS s.physaddr[0];
