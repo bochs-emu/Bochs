@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.60 2002-09-26 03:01:13 bdenney Exp $
+// $Id: wxmain.cc,v 1.61 2002-09-27 19:12:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -139,7 +139,9 @@ IMPLEMENT_APP(MyApp)
 bool MyApp::OnInit()
 {
   //wxLog::AddTraceMask (_T("mime"));
+#ifdef __WXDEBUG__
   wxLog::SetActiveTarget (new wxLogStderr ());
+#endif
   bx_init_siminterface ();
   // install callback function to handle anything that occurs before the
   // simulation begins.
