@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.41 2003-06-28 08:04:31 vruppert Exp $
+// $Id: sdl.cc,v 1.42 2003-07-02 17:25:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,6 +97,7 @@ static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 static unsigned int text_cols = 80, text_rows = 25;
 Bit8u h_panning = 0, v_panning = 0;
 int fontwidth = 8, fontheight = 16;
+static unsigned vga_bpp=8;
 unsigned tilewidth, tileheight;
 unsigned char menufont[256][8];
 Uint32 palette[256];
@@ -486,16 +487,68 @@ void bx_sdl_gui_c::graphics_tile_update(
   // FIXME
   if( i<=0 ) return;
 
-  do
+  if (vga_bpp == 32)
   {
-    buf_row = buf;
-    j = tilewidth;
+    Uint32 *snapshot32 = (Uint32 *)snapshot;
     do
     {
-      *buf++ = palette[*snapshot++];
-    } while( --j );
-    buf = buf_row + disp;
-  } while( --i);
+      buf_row = buf;
+      j = tilewidth;
+      do
+      {
+        *buf++ = *snapshot32++;
+      } while( --j );
+      buf = buf_row + disp;
+    } while( --i);
+  }
+  else if (vga_bpp == 24)
+  {
+    do
+    {
+      buf_row = buf;
+      j = tilewidth;
+      do
+      {
+        buf[0] = snapshot[0];
+        buf[0] |= (snapshot[1] << 8);
+        buf[0] |= (snapshot[2] << 16);
+        buf++;
+        snapshot+=3;
+      } while( --j );
+      buf = buf_row + disp;
+    } while( --i);
+  }
+  else if (vga_bpp == 16)
+  {
+    Uint16 *snapshot16 = (Uint16 *)snapshot;
+    do
+    {
+      buf_row = buf;
+      j = tilewidth;
+      do
+      {
+        buf[0] = (snapshot16[0] & 0x001f) << 3;
+        buf[0] |= (snapshot16[0] & 0x07e0) << 5;
+        buf[0] |= (snapshot16[0] & 0xf800) << 8;
+        buf++;
+        snapshot16++;
+      } while( --j );
+      buf = buf_row + disp;
+    } while( --i);
+  }
+  else /* 8 bpp */
+  {
+    do
+    {
+      buf_row = buf;
+      j = tilewidth;
+      do
+      {
+        *buf++ = palette[*snapshot++];
+      } while( --j );
+      buf = buf_row + disp;
+    } while( --i);
+  }
 }
 
 static Bit32u sdl_sym_to_bx_key (SDLKey sym)
@@ -896,8 +949,12 @@ void bx_sdl_gui_c::dimension_update(
     unsigned fwidth,
     unsigned bpp)
 {
-  if (bpp > 8) {
-    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
+  if ((bpp == 8) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
+    vga_bpp = bpp;
+  }
+  else
+  {
+    BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   if( fheight > 0 )
   {
