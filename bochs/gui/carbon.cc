@@ -343,6 +343,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilew
 	CreateKeyMap();
 
 	gCTable = GetCTable(128);
+	BX_ASSERT (gCTable != NULL);
 	(*gCTable)->ctSeed = GetCTSeed();	
 	SetRect(&srcTextRect, 0, 0, FONT_WIDTH, FONT_HEIGHT);
 	SetRect(&srcTileRect, 0, 0, tilewidth, tileheight);
