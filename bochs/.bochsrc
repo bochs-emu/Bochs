@@ -630,6 +630,22 @@ keyboard_mapping: enabled=0, map=
 #user_shortcut: keys=ctrlaltdel
 
 #=======================================================================
+# TIME0:
+# Specifies the start (boot) time of the virtual machine. Use a time 
+# value as returned by the time(2) system call. If no time0 value is 
+# set or if time0 equal to 1 (special case), the simulation will be
+# started at the current time of the host. 
+#
+# Examples:
+#   time0: 1           # Now
+#   time0: 315529200   # Tue Jan  1 00:00:00 1980
+#   time0: 631148400   # Mon Jan  1 00:00:00 1990
+#   time0: 938581955   # Wed Sep 29 07:12:35 1999
+#   time0: 946681200   # Sat Jan  1 00:00:00 2000
+#=======================================================================
+#time0: 938581955
+
+#=======================================================================
 # other stuff
 #=======================================================================
 # magic_break
@@ -637,7 +653,6 @@ keyboard_mapping: enabled=0, map=
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 i440fxsupport: enabled=0
-#time0: 938581955
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
