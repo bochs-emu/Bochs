@@ -35,6 +35,8 @@
 
 
 
+#include "hacks.h"
+
 
 bx_gui_c   bx_gui;
 
@@ -120,9 +122,23 @@ bx_gui_c::floppyA_handler(void)
 {
   unsigned new_status;
 
+#if USE_WX
+  // instead of just toggling the status, call wxWindows to bring up 
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->vga_gui_button_pressed (GUI_BUTTON_FLOPPYA);
+  // try set status to 1.  If the path is invalid or something, the
+  // return value will be 0.
+  new_status = bx_devices.floppy->set_media_status(0, 0);
+  printf ("eject disk, new_status is %d\n", new_status);
+  new_status = bx_devices.floppy->set_media_status(0, 1);
+  printf ("insert disk, new_status is %d\n", new_status);
+  fflush (stdout);
+#else
   new_status = bx_devices.floppy->set_media_status(0, !BX_GUI_THIS floppyA_status);
+
   if (new_status == BX_GUI_THIS floppyA_status)
     return;  // no change made
+#endif
 
   BX_GUI_THIS floppyA_status = new_status;
   if (BX_GUI_THIS floppyA_status)
@@ -143,9 +159,22 @@ bx_gui_c::floppyB_handler(void)
 {
   unsigned new_status;
 
+#if USE_WX
+  // instead of just toggling the status, call wxWindows to bring up 
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->vga_gui_button_pressed (GUI_BUTTON_FLOPPYB);
+  // try set status to 1.  If the path is invalid or something, the
+  // return value will be 0.
+  new_status = bx_devices.floppy->set_media_status(1, 0);
+  printf ("eject disk, new_status is %d\n", new_status);
+  new_status = bx_devices.floppy->set_media_status(1, 1);
+  printf ("insert disk, new_status is %d\n", new_status);
+  fflush (stdout);
+#else
   new_status = bx_devices.floppy->set_media_status(1, !BX_GUI_THIS floppyB_status);
   if (new_status == BX_GUI_THIS floppyB_status)
     return;  // no change made
+#endif
 
   BX_GUI_THIS floppyB_status = new_status;
   if (BX_GUI_THIS floppyB_status)
