@@ -4,6 +4,7 @@ Brief summary :
 - New disassembler
 - 3DNow!/SSE/SSE2/PNI instruction support
 - Vmware3/Sparse/Undoable/Growing harddisk images support
+- many VGA emulation improvements (e.g. high/true color VBE modes added)
 - No more X11 vga font required
 
 Detailed change log :
