@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.22 2002-04-05 06:53:45 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.23 2002-04-05 18:10:21 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -943,7 +943,7 @@ MyPanel::convertToBXKey_MSW (wxKeyEvent& event)
 #endif
 }
 
-#if defined(__WXGTK__)
+#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
 // get those keysym definitions
 #include <gdk/gdkkeysyms.h>
 #endif
@@ -952,7 +952,7 @@ MyPanel::convertToBXKey_MSW (wxKeyEvent& event)
 Bit32u
 MyPanel::convertToBXKey_GTK (wxKeyEvent& event)
 {
-#if defined(__WXGTK__)
+#if defined (wxKEY_EVENT_HAS_RAW_CODES) && defined(__WXGTK__)
   IFDBG_KEY(wxLogDebug ("convertToBXKey_GTK. key code %d, raw codes %d %d", event.m_keyCode, event.m_rawCode1, event.m_rawCode2));
   // GTK has only 16bit key codes
   Bit16u keysym = (Bit32u) event.m_rawCode1;
