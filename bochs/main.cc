@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.211 2002-12-17 03:36:53 yakovlev Exp $
+// $Id: main.cc,v 1.212 2002-12-17 05:58:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1471,30 +1471,6 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 }
 #endif
 
-// In some situations, there is no way to display stdin/stdout.  In that case
-// running the text configure interface is useless and confusing because the
-// program will either quit instantly or freeze.  Instead just show a message
-// telling the user what they should do instead.  If the text console is
-// ok to use, this function should return true.  If not, it should display
-// a warning and return false.
-bx_bool ensure_text_console_exists ()
-{
-#if BX_WITH_SDL && defined(WIN32)
-  // insert Win32 way of displaying a message dialog
-  // win32dialog ("Please run Bochs by clicking on the ___ instead, or run from the command line with -q");
-  // return false;
-#endif
-#if BX_WITH_CARBON
-  if(!isatty(STDIN_FILENO))
-  {
-    carbonFatalDialog("Bochs was unable to load the \"bochsrc.txt\" configuration file",
-      "Copy Bochs to a directory with a valid \"bochsrc.txt\" configuration file. (Such as the dlxlinux directory) or  Run Bochs within Terminal by clicking on \"bochs.scpt\".");
-    return false;
-  }
-#endif
-  return true;
-}
-
 int bxmain () {
   bx_init_siminterface ();   // create the SIM object
   static jmp_buf context;
@@ -1507,8 +1483,6 @@ int bxmain () {
     bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
     char *ci_name = ci_param->get_choice (ci_param->get ());
     if (!strcmp(ci_name, "textconfig")) {
-      if (!ensure_text_console_exists ()) 
-	SIM->quit_sim (1);
       init_text_config_interface ();   // in textconfig.h
     }
 #if BX_WITH_WX
@@ -1519,7 +1493,9 @@ int bxmain () {
     else {
       BX_PANIC (("unsupported configuration interface '%s'", ci_name));
     }
-    SIM->configuration_interface (ci_name, CI_START);
+    int status = SIM->configuration_interface (ci_name, CI_START);
+    if (status == CI_ERR_NO_TEXT_CONSOLE)
+      BX_PANIC (("Bochs needed the text console, but it was not usable"));
     // user quit the config interface, so just quit
   } else {
     // quit via longjmp
@@ -1866,7 +1842,10 @@ bx_init_main (int argc, char *argv[])
     // Switch off quick start so that we will drop into the configuration
     // interface.
     if (SIM->get_param_enum(BXP_BOCHS_START)->get() == BX_QUICK_START) {
-      BX_ERROR (("Switching off quick start, because no configuration file was found."));
+      if (!SIM->test_for_text_console ())
+        BX_PANIC(("Unable to start Bochs without a bochsrc.txt and without a text console"));
+      else 
+        BX_ERROR (("Switching off quick start, because no configuration file was found."));
     }
     SIM->get_param_enum(BXP_BOCHS_START)->set (BX_LOAD_START);
   }

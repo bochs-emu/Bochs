@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.39 2002-12-17 03:36:53 yakovlev Exp $
+// $Id: logio.cc,v 1.40 2002-12-17 05:58:43 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,10 @@
 #include "bochs.h"
 #include <assert.h>
 #include "state_file.h"
+
+#if BX_WITH_CARBON
+#include <Carbon/Carbon.h>
+#endif
 
 // Just for the iofunctions
 
@@ -524,10 +528,59 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   in_ask_already = 0;
 }
 
+#if BX_WITH_CARBON
+/* Panic button to display fatal errors.
+  Completely self contained, can't rely on carbon.cc being available */
+static void carbonFatalDialog(const char *error, const char *exposition)
+{
+  DialogRef                     alertDialog;
+  CFStringRef                   cfError;
+  CFStringRef                   cfExposition;
+  DialogItemIndex               index;
+  AlertStdCFStringAlertParamRec alertParam = {0};
+  
+  // Init libraries
+  InitCursor();
+  // Assemble dialog
+  cfError = CFStringCreateWithCString(NULL, error, kCFStringEncodingASCII);
+  if(exposition != NULL)
+  {
+    cfExposition = CFStringCreateWithCString(NULL, exposition, kCFStringEncodingASCII);
+  }
+  else { cfExposition = NULL; }
+  alertParam.version       = kStdCFStringAlertVersionOne;
+  alertParam.defaultText   = CFSTR("Quit");
+  alertParam.position      = kWindowDefaultPosition;
+  alertParam.defaultButton = kAlertStdAlertOKButton;
+  // Display Dialog
+  CreateStandardAlert(
+    kAlertStopAlert,
+    cfError,
+    cfExposition,       /* can be NULL */
+    &alertParam,             /* can be NULL */
+    &alertDialog);
+  RunStandardAlert( alertDialog, NULL, &index);
+  // Cleanup
+  CFRelease( cfError );
+  if( cfExposition != NULL ) { CFRelease( cfExposition ); }
+}
+#endif
+
 void
 logfunctions::fatal (const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
   bx_atexit();
+#if BX_WITH_CARBON
+  if(!isatty(STDIN_FILENO) && !SIM->get_init_done())
+  {
+    char buf1[1024];
+    char buf2[1024];
+    vsprintf (buf1, fmt, ap);
+    sprintf (buf2, "Bochs startup error\n%s", buf1);
+    carbonFatalDialog(buf2,
+      "For more information, try running Bochs within Terminal by clicking on \"bochs.scpt\".");
+  }
+#endif
 #if !BX_WITH_WX
   static char *divider = "========================================================================";
   fprintf (stderr, "%s\n", divider);

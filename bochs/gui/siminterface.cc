@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.92 2002-12-17 03:36:53 yakovlev Exp $
+// $Id: siminterface.cc,v 1.93 2002-12-17 05:58:44 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -131,6 +131,7 @@ public:
     if (bx_gui != NULL)
       bx_gui->set_display_mode (newmode);
   }
+  virtual bool test_for_text_console ();
 };
 
 bx_param_c *
@@ -746,6 +747,23 @@ bool bx_real_sim_c::is_sim_thread ()
   if (is_sim_thread_func == NULL) return true;
   return (*is_sim_thread_func)();
 }
+
+// check if the text console exists.  On some platforms, if Bochs is
+// started from the "Start Menu" or by double clicking on it on a Mac,
+// there may be nothing attached to stdin/stdout/stderr.  This function
+// tests if stdin/stdout/stderr are usable and returns false if not.
+bool 
+bx_real_sim_c::test_for_text_console ()
+{
+#if BX_WITH_CARBON
+  // In a Carbon application, you have a text console if you run the app from
+  // the command line, but if you start it from the finder you don't.
+  if(!isatty(STDIN_FILENO)) return false;
+#endif
+  // default: yes
+  return true;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 // define methods of bx_param_* and family

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.96 2002-12-17 03:36:53 yakovlev Exp $
+// $Id: siminterface.h,v 1.97 2002-12-17 05:58:45 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -1157,6 +1157,10 @@ typedef struct {
 #include <setjmp.h>
 
 enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
+enum ci_return_t { 
+  CI_OK,                  // normal return value 
+  CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console
+  };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
 
 // bx_gui->set_display_mode() changes the mode between the configuration
@@ -1284,6 +1288,7 @@ public:
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode (disp_mode_t newmode) {}
+  virtual bool test_for_text_console () { return true; }
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;
