@@ -218,7 +218,7 @@ inc_one:
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;
     bx_generic_apic_c *ioapic = bx_devices.ioapic;
     if (local_apic->is_selected (a20addr, len)) {
@@ -413,7 +413,7 @@ inc_one:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;
     bx_generic_apic_c *ioapic = bx_devices.ioapic;
     if (local_apic->is_selected (addr, len)) {

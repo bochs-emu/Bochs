@@ -142,7 +142,7 @@ private:
 #else
 #  include "iodev/hga.h"
 #endif
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
 #endif
 #include "iodev/cmos.h"
