@@ -101,9 +101,9 @@ extern "C" {
 
 ///////// hard drive macros
 #define BX_HD_READ_HANDLER(a, b, c) \
-    (bx_hard_drive_c::read_handler(a, b, c))
+    (bx_devices.pluginHardDrive->virt_read_handler(b, c))
 #define BX_HD_WRITE_HANDLER(a, b, c, d) \
-    (bx_hard_drive_c::write_handler(a, b, c, d))
+    (bx_devices.pluginHardDrive->virt_write_handler(b, c, d))
 #define BX_HD_GET_FIRST_CD_HANDLE() \
     (bx_devices.pluginHardDrive->get_first_cd_handle())
 #define BX_HD_GET_DEVICE_HANDLE(a,b) \

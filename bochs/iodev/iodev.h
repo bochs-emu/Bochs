@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.21 2002-10-22 13:58:11 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.22 2002-10-22 17:25:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -148,6 +148,15 @@ class bx_hard_drive_stub_c : public bx_devmodel_c {
   }
   virtual unsigned set_cd_media_status(Bit32u handle, unsigned status) {
     STUBFUNC(HD, set_cd_media_status); return 0;
+  }
+  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) 
+  {
+    STUBFUNC(HD, virt_read_handler); return 0;
+  }
+  virtual void   virt_write_handler(Bit32u address,
+      Bit32u value, unsigned io_len) 
+  {
+    STUBFUNC(HD, virt_write_handler);
   }
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.16.2.3 2002-10-17 21:44:42 bdenney Exp $
+// $Id: harddrv.h,v 1.16.2.4 2002-10-22 17:25:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -297,6 +297,14 @@ public:
   virtual unsigned get_cd_media_status(Bit32u handle);
   virtual unsigned set_cd_media_status(Bit32u handle, unsigned status);
 
+  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) {
+    return read_handler (this, address, io_len);
+  }
+  virtual void virt_write_handler(Bit32u address, 
+      Bit32u value, unsigned io_len)
+  {
+    write_handler(this, address, value, io_len);
+  }
 #if !BX_USE_HD_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
