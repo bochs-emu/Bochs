@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------+
  |  reg_add_sub.c                                                            |
- |  $Id: reg_add_sub.c,v 1.6 2003-05-15 16:11:29 sshwarts Exp $
+ |  $Id: reg_add_sub.c,v 1.7 2003-05-24 15:04:55 vruppert Exp $
  |                                                                           |
  | Functions to add or subtract two registers and put the result in a third. |
  |                                                                           |
@@ -399,7 +399,7 @@ int add_sub_specials(FPU_REG const *a, u_char taga, u_char signa,
     if (tag == TW_Infinity) return tag;
         
     /* no adjustment needed for real indefinite result */
-    if (dest->exp & 0x7FFF == 0x7FFF)
+    if ((dest->exp & 0x7FFF) == 0x7FFF)
         if (dest->sigh == 0xC0000000)
             if (dest->sigl == 0)
                 return tag;
