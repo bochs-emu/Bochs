@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.27 2002-09-04 08:59:13 kevinlawton Exp $
+// $Id: cpu.h,v 1.28 2002-09-04 20:23:54 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1451,9 +1451,11 @@ public: // for now...
   BX_SMF void write_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);
   BX_SMF void write_virtual_word(unsigned seg, Bit32u offset, Bit16u *data);
   BX_SMF void write_virtual_dword(unsigned seg, Bit32u offset, Bit32u *data);
+  BX_SMF void write_virtual_qword(unsigned seg, Bit32u offset, Bit64u *data);
   BX_SMF void read_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);
   BX_SMF void read_virtual_word(unsigned seg, Bit32u offset, Bit16u *data);
   BX_SMF void read_virtual_dword(unsigned seg, Bit32u offset, Bit32u *data);
+  BX_SMF void read_virtual_qword(unsigned seg, Bit32u offset, Bit64u *data);
 
   BX_SMF void read_RMW_virtual_byte(unsigned seg, Bit32u offset, Bit8u *data);
   BX_SMF void read_RMW_virtual_word(unsigned seg, Bit32u offset, Bit16u *data);
