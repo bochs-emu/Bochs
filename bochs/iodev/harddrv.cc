@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.66 2002-08-05 15:47:40 cbothamy Exp $
+// $Id: harddrv.cc,v 1.67 2002-08-07 08:53:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.66 2002-08-05 15:47:40 cbothamy Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.67 2002-08-07 08:53:01 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1134,8 +1134,12 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 						      case 0x0e: // CD-ROM audio control
 						      case 0x2a: // CD-ROM capabilities & mech. status
 						      case 0x3f: // all
-							    BX_PANIC(("cdrom: MODE SENSE (chg), code=%x",
+							    BX_ERROR(("cdrom: MODE SENSE (chg), code=%x",
+								      " not implemented yet",
 								     PageCode));
+							    atapi_cmd_error(SENSE_ILLEGAL_REQUEST,
+									    ASC_INV_FIELD_IN_CMD_PACKET);
+							    raise_interrupt();
 							    break;
 
 						      default:
@@ -1425,6 +1429,11 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 			      case 0xba: // scan
 			      case 0xbb: // set cd speed
 			      case 0x4e: // stop play/scan
+			        BX_ERROR(("ATAPI command 0x%x not implemented yet",
+			                  atapi_command));
+			        atapi_cmd_error(SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET);
+			        raise_interrupt();
+			        break;
 			      default:
 				    BX_PANIC(("Unknown ATAPI command 0x%x (%d)",
 					     atapi_command, atapi_command));
