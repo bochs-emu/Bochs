@@ -1713,8 +1713,6 @@ bx_hard_drive_c::close_harddrive(void)
 }
 
 
-#define assert(i) do { if (!((i))) BX_PANIC(("assertion on line %d", __LINE__)); } while (0)
-
   Bit32u
 bx_hard_drive_c::calculate_logical_address()
 {
@@ -1791,13 +1789,13 @@ bx_hard_drive_c::identify_ATAPI_drive(unsigned drive)
 	BX_SELECTED_HD.id_drive[23+i] = (firmware[i*2] << 8) |
 	      firmware[i*2 + 1];
   }
-  assert((23+i) == 27);
+  BX_ASSERT((23+i) == 27);
   
   for (i = 0; i < strlen((char *) model_no)/2; i++) {
 	BX_SELECTED_HD.id_drive[27+i] = (model_no[i*2] << 8) |
 	      model_no[i*2 + 1];
   }
-  assert((27+i) == 47);
+  BX_ASSERT((27+i) == 47);
 
   BX_SELECTED_HD.id_drive[47] = 0;
   BX_SELECTED_HD.id_drive[48] = 0;
@@ -1903,14 +1901,14 @@ bx_hard_drive_c::identify_drive(unsigned drive)
 	BX_SELECTED_HD.id_drive[23+i] = (firmware[i*2] << 8) |
 	      firmware[i*2 + 1];
   }
-  assert((23+i) == 27);
+  BX_ASSERT((23+i) == 27);
 
   char* model = "Conner Peripherals 540MB - CFA540A      ";
   for (i = 0; i < strlen(model)/2; i++) {
 	BX_SELECTED_HD.id_drive[27+i] = (model[i*2] << 8) |
 	      model[i*2 + 1];
   }
-  assert((27+i) == 47);
+  BX_ASSERT((27+i) == 47);
 
   BX_SELECTED_HD.id_drive[47] = 0x8080; // multiple mode identification
   BX_SELECTED_HD.id_drive[48] = 0;
@@ -2392,7 +2390,7 @@ void concat_image_t::increment_string (char *str)
   // find the last character of the string, and increment it.
   char *p = str;
   while (*p != 0) p++;
-  assert (p>str);  // choke on zero length strings
+  BX_ASSERT (p>str);  // choke on zero length strings
   p--;  // point to last character of the string
   ++(*p);  // increment to next ascii code.
   BX_DEBUG(("concat_image.increment string returning '%s'\n", str));
