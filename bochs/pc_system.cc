@@ -433,7 +433,7 @@ bx_pc_system_c::timebp_handler(void* this_ptr)
       BX_DEBUG(( "Time breakpoint triggered" ));
 
       if (timebp_queue_size > 1) {
-	    long long new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
+	    Bit64s new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
 	    bx_pc_system.activate_timer_ticks(timebp_timer, new_diff, 1);
       }
       timebp_queue_size--;
