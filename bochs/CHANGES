@@ -6,7 +6,7 @@ TO DO LIST:
 - check logs in iodev (Christophe is working on this)
 - check logs in main directory
   - (DONE) check logs of configure.in
-  - Makefile.in
+  - (DONE) Makefile.in
   - main.cc
 - check logs in documentation (Christophe is working on this)
   - (DONE) Makefile, Makefile.in logs
@@ -14,13 +14,18 @@ TO DO LIST:
   Bug fixes in a newly added feature are not necessary to list.  They
   are just part of the new feature.
 - when we're nearly done, add last name to the first reference to each person
+- the docbook docs have a changelog, or at least a link to a changelog.
+  Update this link to point to our latest changes.  If docbook is referring
+  to docs-html, figure out some other way to do it.
 ------------------------
 
 
 Changes in 2.0 (December 2002):
 
 - configure script/compile/porting to other OSes/installation
-  - added plugin architecture (Bryce, Christophe, Volker)
+  - added plugin architecture
+    - plugin code written by Bryce, Christophe, Volker based on
+      plex86's plugin code by Kevin.  Testing help from Psyon and Br'fin.
     - Plugins are shared libraries that can be loaded on demand.  Example:
       the serial device is implemented as a plugin.  In UNIX, the
       serial plugin is called libbx_serial.so.  When Bochs reads its
@@ -31,6 +36,10 @@ Changes in 2.0 (December 2002):
       Cygwin using dlltool.
     - the Linux binary RPMs are built with plugin support
     - to compile with plugins, configure with --enable-plugins
+    - the LTDL_LIBRARY_PATH variable tells Bochs where its plugins can be
+      found.  Bochs has a compile-time default for this variable which is
+      correct if you do a make install.  You would only need to set the
+      variable if the default is wrong.
   - allow many display libraries to be configured and compiled at
     a time.  For example --with-win32 --with-sdl --with-rfb.
     Also, we added an experimental option --with-all-libs which
@@ -41,8 +50,9 @@ Changes in 2.0 (December 2002):
     source file all the time, which has the potential to simplify the
     configure script and makefiles.  At present we only take advantage
     of this capability in the win32 VC++ workspace. (Bryce)
-  - the MacOS9 port has been updated so that it works again (Christophe)
-  - better support for FHS standard (Robert Millan, Volker)
+  - the MacOS9 port has been updated so that it works again.  It had
+    not been updated in at least 2 years, maybe more.  (Christophe)
+  - improve support for FHS standard (Robert Millan, Volker)
     See patches 551811 and 650066.
   - keep separate CFLAGS and CXXFLAGS for Bochs (usually a graphical
     program) and console programs such as bximage and niclist.  Some
@@ -60,6 +70,13 @@ Changes in 2.0 (December 2002):
   - fix cdrom detection on BeOS (Bryce)
   - fix nmake makefile generation (Psyon)
   - improved pthread detection function from ac-archive project on SF
+  - add installer package for Windows, using Nullsoft
+  - on MacOSX, add startup script that creates a text console and then
+    runs Bochs.  Also add make target to create a DMG disk image (Br'fin)
+  - do not restart the font server on Unix, if they already had vga.pcf
+    installed.  On several modern machines, if you restart the font 
+    server the user has to restart X windows. (Bryce)
+
 
 FIXME: new configure options--should be added in the appropriate sections but
 I'm listing them here to remind us about them: 
@@ -130,6 +147,8 @@ documentation
     a new configuration file, so that leftover parameters from a
     previous configuration do not affect the new configuration.  Also, 
     you can request a reset using the configuration interface. (Volker, Bryce)
+  - you can use #include in the bochsrc to read configuration from other 
+    files (Volker)
 
 - CPU
   - speed optimizations (Kevin)
@@ -149,7 +168,8 @@ documentation
     i386 opcode description there is no error present. (Volker)
   - use accessors methods for CFLAGS and several other registers, so that
     the implementation can be changed transparently later (Bryce, Stanislav)
-
+  - add support for 4meg pages (Kevin)
+  
 - FPU
   - fixed bug [ 452275 ] fprem emulation bug (Volker)
 
@@ -297,6 +317,9 @@ wxWindows
   text and graphics modes, text mode cursor size, and mouse (Volker, Bryce)
 - To compile Bochs with wxWindows, you should install wxWindows 2.3.3
   or later.  Then configure Bochs with --with-wx.
+- if you have multiple versions of wxWindows installed (e.g. a debug
+  and a release version), you can set $WX_CONFIG before configuring 
+  to select between them. (Bryce)
 
 - configuration interface
   - wxWindows config interface now allows you to change every bochsrc
@@ -345,6 +368,7 @@ wxWindows
     with Bochs's definition.  See bug [ 618388 ] Unable to boot under MacOS X
     Exceptions: When talking to the Carbon library, you must use Boolean.
     Also, siminterface.h uses standard "bool" instead of bx_bool.
+  - many Carbon interface improvements (Br'fin)
 
 - Bochs debugger
   - [ 609616 ] remote GDB stub
@@ -536,7 +560,6 @@ bug [ 549821 ] warning proc_ctrl.cc line 1273: left-shift count >= type width
 
 
 
-feature [ 621298 ] id descending order by default
 feature [ 427349 ] win32 installer package
 feature [ 617963 ] "Plugin" devices
 feature [ 650366 ] bochs1.4.1, 2.0 2 b ported 2 OS X on G4?
