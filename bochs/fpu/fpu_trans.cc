@@ -233,7 +233,7 @@ void BX_CPU_C::FPREM1(bxInstruction_c *i)
   }
 
   float_status_t status = 
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   Bit64u quotient;
 
@@ -276,7 +276,7 @@ void BX_CPU_C::FPREM(bxInstruction_c *i)
   }
 
   float_status_t status = 
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   Bit64u quotient;
 

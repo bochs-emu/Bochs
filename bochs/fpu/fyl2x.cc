@@ -339,7 +339,7 @@ invalid:
         }
 
         return
-            normalizeRoundAndPackFloatx80(80, aSign ^ bSign, zExp, zSig0, zSig1, status);
+            roundAndPackFloatx80(80, aSign ^ bSign, zExp, zSig0, zSig1, status);
     }
 
     /* ******************************** */
