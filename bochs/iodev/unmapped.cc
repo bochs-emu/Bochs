@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.15 2002-04-01 21:53:23 cbothamy Exp $
+// $Id: unmapped.cc,v 1.16 2002-07-29 12:44:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -237,6 +237,25 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    // address, value));
       break;
     
+    case 0x8900: // Shutdown port, could be moved in a PM device
+                 // or a host <-> guest communication device 
+      switch (value) {
+        case 'S': if (BX_UM_THIS s.shutdown == 0) BX_UM_THIS s.shutdown = 1; break;
+        case 'h': if (BX_UM_THIS s.shutdown == 1) BX_UM_THIS s.shutdown = 2; break;
+        case 'u': if (BX_UM_THIS s.shutdown == 2) BX_UM_THIS s.shutdown = 3; break;
+        case 't': if (BX_UM_THIS s.shutdown == 3) BX_UM_THIS s.shutdown = 4; break;
+        case 'd': if (BX_UM_THIS s.shutdown == 4) BX_UM_THIS s.shutdown = 5; break;
+        case 'o': if (BX_UM_THIS s.shutdown == 5) BX_UM_THIS s.shutdown = 6; break;
+        case 'w': if (BX_UM_THIS s.shutdown == 6) BX_UM_THIS s.shutdown = 7; break;
+        case 'n': if (BX_UM_THIS s.shutdown == 7) BX_UM_THIS s.shutdown = 8; break;
+	default :  BX_UM_THIS s.shutdown = 0; break;
+        }
+      if (BX_UM_THIS s.shutdown == 8) {
+        BX_INFO(("Shutdown port: shutdown requested"));
+        BX_CPU(0)->kill_bochs_request = 2;
+        }
+      break;
+
     case 0xfedc:
       bx_dbg.debugger = (value > 0);
 		BX_DEBUG(( "DEBUGGER = %u", (unsigned) bx_dbg.debugger));

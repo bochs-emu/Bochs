@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.7 2002-04-01 21:57:51 cbothamy Exp $
+// $Id: unmapped.h,v 1.8 2002-07-29 12:44:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,7 @@ private:
   struct {
     Bit8u port80;
     Bit8u port8e;
+    Bit8u shutdown;
     } s;  // state information
 
   bx_devices_c *devices;
