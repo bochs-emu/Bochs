@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.12 2002-09-01 20:12:09 kevinlawton Exp $
+// $Id: pc_system.h,v 1.13 2002-09-30 16:43:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,9 @@ extern double m_ips;
 class bx_pc_system_c : private logfunctions {
 private:
 
+  //
+  // Timer oriented private fields.
+  //
   struct {
     Bit64u  period;
     Bit64u  remaining;
@@ -59,14 +62,23 @@ private:
     } timer[BX_MAX_TIMERS];
   unsigned   num_timers;
   Bit64u     num_cpu_ticks_in_period;
+  Bit64u     num_cpu_ticks_left;
+  Bit64u     counter;
+  int        counter_timer_index;
+  static const Bit64u COUNTER_INTERVAL;
   void       expire_ticks(void);
 
 #if !defined(PROVIDE_M_IPS)
   double     m_ips; // Millions of Instructions Per Second
 #endif
+  Bit64u ticks_remaining(int index)
+  {
+	return timer[index].remaining;
+  }
+  static void counter_timer_handler(void* this_ptr);
+  void   timer_handler(void);
 
 public:
-  Bit64u     num_cpu_ticks_left;
 
   Boolean HRQ;     // Hold Request
   //Boolean INTR;    // Interrupt
@@ -97,8 +109,17 @@ public:
   Bit8u  IAC(void);
 
   bx_pc_system_c(void);
+
+  Bit32u  inp(Bit16u addr, unsigned io_len);
+  void    outp(Bit16u addr, Bit32u value, unsigned io_len);
+  void    set_enable_a20(Bit8u value);
+  Boolean get_enable_a20(void);
+  void    exit(void);
+
+  //
+  // Timer oriented public methods:
+  //
   void   init_ips(Bit32u ips);
-  void   timer_handler(void);
   int    register_timer( void *this_ptr, bx_timer_handler_t, Bit32u useconds,
                          Boolean continuous, Boolean active);
   void   start_timers(void);
@@ -134,28 +155,18 @@ public:
       }
     }
 
-  Bit64u ticks_remaining(int index)
-  {
-	return timer[index].remaining;
-  }
-
-  static const Bit64u COUNTER_INTERVAL;
   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks, Boolean continuous, Boolean active);
   void activate_timer_ticks(unsigned index, Bit64u instructions, Boolean continuous);
-  static void counter_timer_handler(void* this_ptr);
-  static void wait_for_event();
-#if BX_DEBUGGER
-  static void timebp_handler(void* this_ptr);
-#endif
-  Bit64u counter;
-  int counter_timer_index;
   Bit64u time_usec();
   Bit64u time_ticks();
 
-  Bit32u  inp(Bit16u addr, unsigned io_len);
-  void    outp(Bit16u addr, Bit32u value, unsigned io_len);
-  void    set_enable_a20(Bit8u value);
-  Boolean get_enable_a20(void);
-  void    exit(void);
+  static BX_CPP_INLINE Bit64u  getNumCpuTicksLeftNextEvent(void) {
+    return bx_pc_system.num_cpu_ticks_left;
+    }
+#if BX_DEBUGGER
+  static void timebp_handler(void* this_ptr);
+#endif
 
+//???
+//static void wait_for_event();
   };

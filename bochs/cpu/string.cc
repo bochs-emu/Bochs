@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.16 2002-09-24 04:43:59 kevinlawton Exp $
+// $Id: string.cc,v 1.17 2002-09-30 16:43:59 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -212,8 +212,8 @@ BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
             byteCount = bytesFitSrc;
           if (byteCount > bytesFitDst)
             byteCount = bytesFitDst;
-          if (byteCount > bx_pc_system.num_cpu_ticks_left)
-            byteCount = bx_pc_system.num_cpu_ticks_left;
+          if (byteCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
+            byteCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
 
           // If after all the restrictions, there is anything left to do...
           if (byteCount) {
@@ -528,8 +528,8 @@ BX_CPU_C::MOVSW_XvYv(bxInstruction_c *i)
             dwordCount = dwordsFitSrc;
           if (dwordCount > dwordsFitDst)
             dwordCount = dwordsFitDst;
-          if (dwordCount > bx_pc_system.num_cpu_ticks_left)
-            dwordCount = bx_pc_system.num_cpu_ticks_left;
+          if (dwordCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
+            dwordCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
 
           // If after all the restrictions, there is anything left to do...
           if (dwordCount) {
@@ -786,8 +786,8 @@ doIncr32:
             wordCount = wordsFitSrc;
           if (wordCount > wordsFitDst)
             wordCount = wordsFitDst;
-          if (wordCount > bx_pc_system.num_cpu_ticks_left)
-            wordCount = bx_pc_system.num_cpu_ticks_left;
+          if (wordCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
+            wordCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
 
           // If after all the restrictions, there is anything left to do...
           if (wordCount) {
@@ -1648,8 +1648,8 @@ BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
           // source or dest pages.
           if (byteCount > bytesFitDst)
             byteCount = bytesFitDst;
-          if (byteCount > bx_pc_system.num_cpu_ticks_left)
-            byteCount = bx_pc_system.num_cpu_ticks_left;
+          if (byteCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
+            byteCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
 
           // If after all the restrictions, there is anything left to do...
           if (byteCount) {
