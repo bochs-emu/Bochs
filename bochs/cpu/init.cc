@@ -33,7 +33,7 @@
 #define BX_STEPPING_ID   0
 
 BX_CPU_C::BX_CPU_C()
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
    : local_apic (this)
 #endif
 {
@@ -46,7 +46,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   local_apic.init ();
 #endif
   setprefix("[CPU ]");

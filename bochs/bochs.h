@@ -497,7 +497,7 @@ typedef struct {
 #ifdef MAGIC_BREAKPOINT
   Boolean magic_break_enabled;
 #endif /* MAGIC_BREAKPOINT */
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   Boolean apic;
   Boolean ioapic;
 #endif

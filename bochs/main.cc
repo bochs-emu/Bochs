@@ -579,7 +579,7 @@ bx_init_hardware()
   }
 
   // set up memory and CPU objects
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
 #endif
 
@@ -599,7 +599,7 @@ bx_init_hardware()
     BX_CPU(i) = new BX_CPU_C ();
     BX_CPU(i)->init (bx_mem_array[0]);
     // assign apic ID from the index of this loop
-    // if !BX_APIC_SUPPORT, this will not compile.
+    // if !BX_SUPPORT_APIC, this will not compile.
     BX_CPU(i)->local_apic.set_id (i);
     BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }

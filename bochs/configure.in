@@ -253,7 +253,7 @@ AC_ARG_ENABLE(apic,
   [  --enable-apic                   enable APIC support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_APIC_SUPPORT, 1)
+    AC_DEFINE(BX_SUPPORT_APIC, 1)
     IOAPIC_OBJS='ioapic.o'
     APIC_OBJS='apic.o'
    else
@@ -263,7 +263,7 @@ AC_ARG_ENABLE(apic,
       echo "ERROR: With processors > 1 you must use --enable-apic"
       exit 1
     fi
-    AC_DEFINE(BX_APIC_SUPPORT, 0)
+    AC_DEFINE(BX_SUPPORT_APIC, 0)
     IOAPIC_OBJS=''
     APIC_OBJS=''
    fi
@@ -272,12 +272,12 @@ AC_ARG_ENABLE(apic,
     if test "$bx_procs" -gt 1 -o "$bx_cpu_level" -gt 5; then
       # enable APIC by default, if processors>1 or if cpulevel>5
       AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_APIC_SUPPORT, 1)
+      AC_DEFINE(BX_SUPPORT_APIC, 1)
       IOAPIC_OBJS='ioapic.o'
       APIC_OBJS='apic.o'
     else
       AC_MSG_RESULT(no)
-      AC_DEFINE(BX_APIC_SUPPORT, 0)
+      AC_DEFINE(BX_SUPPORT_APIC, 0)
       IOAPIC_OBJS=''
       APIC_OBJS=''
      fi

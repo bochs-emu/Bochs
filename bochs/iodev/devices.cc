@@ -112,7 +112,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pci->reset();
 #endif
 
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   // I/O APIC 82093AA
   ioapic = & bx_ioapic;
   ioapic->init ();
@@ -297,7 +297,7 @@ bx_devices_c::timer()
   if (retval & 0x02)
     pic->trigger_irq(12);
 
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   // update local APIC timers
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->local_apic.periodic (TIMER_DELTA);

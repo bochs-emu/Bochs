@@ -359,7 +359,7 @@ process_sim2:
 
   // call init routines for each CPU+mem simulator
   // initialize for SMP. one memory, multiple processors.
-#if BX_APIC_SUPPORT
+#if BX_SUPPORT_APIC
   memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
 #endif
 
@@ -379,7 +379,7 @@ process_sim2:
     BX_CPU(i) = new BX_CPU_C ();
     BX_CPU(i)->init (BX_MEM(0));
     // assign apic ID from the index of this loop
-    // if !BX_APIC_SUPPORT, this will not compile.
+    // if !BX_SUPPORT_APIC, this will not compile.
     BX_CPU(i)->local_apic.set_id (i);
     BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }
@@ -2822,7 +2822,7 @@ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_GS, val);
     }
   else if ( !strcmp(symbol, "cpu") ) {
-#if ((BX_SMP_PROCESSORS>1) && (BX_APIC_SUPPORT))
+#if ((BX_SMP_PROCESSORS>1) && (BX_SUPPORT_APIC))
       if ((val > BX_SMP_PROCESSORS) 
 	  || (val >= APIC_MAX_ID) 
 	  || (apic_index[val] == NULL)) {
