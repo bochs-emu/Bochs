@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.15 2002-08-11 18:42:10 vruppert Exp $
+// $Id: term.cc,v 1.16 2002-08-12 12:00:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -35,6 +35,17 @@ extern "C" {
 };
 
 #define LOG_THIS bx_gui.
+
+static short curses_color[8] = {
+  /* 0 */ COLOR_BLACK,
+  /* 1 */ COLOR_BLUE,
+  /* 2 */ COLOR_GREEN,
+  /* 3 */ COLOR_CYAN,
+  /* 4 */ COLOR_RED,
+  /* 5 */ COLOR_MAGENTA,
+  /* 6 */ COLOR_YELLOW,
+  /* 7 */ COLOR_WHITE
+};
 
 static void
 do_scan(int key_event, int shift, int ctrl, int alt)
@@ -129,11 +140,12 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth,
 
 	UNUSED(bochs_icon_bits);  // global variable
 
-	// XXX log should be different from stderr, otherwise terminal mode really
-	//     ends up having fun
-	//BX_INFO(("[TERM] Moving Log to another tty"));
-	//bio->init_log("/dev/ttyp5");
-	//BX_INFO(("[TERM] Moved Log to another tty"));
+	// the ask menu causes trouble
+	LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
+	// logfile should be different from stderr, otherwise terminal mode
+	// really ends up having fun
+	if (!strcmp(bx_options.log.Ofilename->getptr(), "-"))
+		BX_PANIC(("cannot log to stderr in term mode"));
 
 	initscr();
 	start_color();
@@ -358,7 +370,7 @@ do_char(int character,int alt)
 	void
 bx_gui_c::handle_events(void)
 {
-	unsigned int character;
+	int character;
 	while((character = getch()) != ERR) {
 		BX_DEBUG(("scancode(0x%x)",character));
 		do_char(character,0);
@@ -393,21 +405,21 @@ bx_gui_c::clear_screen(void)
 int
 get_color_pair(Bit8u vga_attr)
 {
-	static int colortbl[8] = {0, 4, 2, 6, 1, 5, 3, 7};
 	int term_attr;
 
-	term_attr = colortbl[vga_attr & 0x07];
-	term_attr |= (colortbl[(vga_attr & 0x70) >> 4] << 3);
+	term_attr = curses_color[vga_attr & 0x07];
+	term_attr |= (curses_color[(vga_attr & 0x70) >> 4] << 3);
 	return term_attr;
 }
 
-int
+chtype
 get_term_char(Bit8u vga_char)
 {
 	int term_char;
 
 	switch (vga_char) {
 		case 0x00: term_char = ' '; break;
+		case 0x04: term_char = ACS_DIAMOND; break;
 		case 0x18: term_char = ACS_UARROW; break;
 		case 0x19: term_char = ACS_DARROW; break;
 		case 0x1a: term_char = ACS_RARROW; break;
@@ -435,7 +447,7 @@ get_term_char(Bit8u vga_char)
 		case 0xc5:
 		case 0xce: term_char = ACS_PLUS; break;
 		case 0xb0:
-		case 0xb1:
+		case 0xb1: term_char = ACS_CKBOARD; break;
 		case 0xb2: term_char = ACS_BOARD; break;
 		case 0xdb: term_char = ACS_BLOCK; break;
 		default: term_char = vga_char;
@@ -468,7 +480,7 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	Bit16u cursor_state, unsigned nrows)
 {
 	UNUSED(cursor_state);
-	int term_attr;
+	chtype ch;
 
 	unsigned ncols = 4000/nrows/2;
 	// XXX There has GOT to be a better way of doing this
@@ -478,13 +490,12 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			if (has_colors()) {
 				color_set(get_color_pair(new_text[i+1]), NULL);
 			}
-			if ((new_text[i+1] & 0x08) > 0) attron(A_BOLD);
-			mvaddch((i/2)/ncols,(i/2)%ncols,get_term_char(new_text[i]));
-			if ((new_text[i+1] & 0x08) > 0) attroff(A_BOLD);
+			ch = get_term_char(new_text[i]);
+			if ((new_text[i+1] & 0x08) > 0) ch |= A_BOLD;
+			if ((new_text[i+1] & 0x80) > 0) ch |= A_REVERSE;
+			mvaddch((i/2)/ncols,(i/2)%ncols, ch);
 		}
 	}
-
-	//mvcur(0,0,cursor_y,cursor_x);
 
 	if(cursor_x>0)
 		cursor_x--;
@@ -493,12 +504,12 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		cursor_y--;
 	}
 	if (has_colors()) {
-		term_attr = get_color_pair(new_text[(cursor_y*80+cursor_x)*2+1]);
-		color_set(term_attr, NULL);
+		color_set(get_color_pair(new_text[(cursor_y*80+cursor_x)*2+1]), NULL);
 	}
-	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) attron(A_BOLD);
-	mvaddch(cursor_y,cursor_x,get_term_char(new_text[(cursor_y*80+cursor_x)*2]));
-	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) attroff(A_BOLD);
+	ch = get_term_char(new_text[(cursor_y*80+cursor_x)*2]);
+	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) ch |= A_BOLD;
+	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x80) > 0) ch |= A_REVERSE;
+	mvaddch(cursor_y, cursor_x, ch);
 }
 
   int
