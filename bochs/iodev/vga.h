@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.37 2004-02-22 13:03:02 vruppert Exp $
+// $Id: vga.h,v 1.38 2004-05-04 20:41:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,8 +66,9 @@
   #define VBE_DISPI_DISABLED              0x00
   #define VBE_DISPI_ENABLED               0x01
   #define VBE_DISPI_GETCAPS               0x02
-  #define VBE_DISPI_NOCLEARMEM            0x80
+  #define VBE_DISPI_8BIT_DAC              0x20
   #define VBE_DISPI_LFB_ENABLED           0x40
+  #define VBE_DISPI_NOCLEARMEM            0x80
 
   #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
 
@@ -271,6 +272,7 @@ private:
     Bit8u   vbe_bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
     bx_bool vbe_lfb_enabled;
     bx_bool vbe_get_capabilities;
+    bx_bool vbe_8bit_dac;
 #endif    
     } s;  // state information
 

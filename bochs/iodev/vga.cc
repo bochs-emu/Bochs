@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.101 2004-04-25 07:16:09 vruppert Exp $
+// $Id: vga.cc,v 1.102 2004-05-04 20:41:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -323,6 +323,7 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.vbe_line_byte_width=640;
   BX_VGA_THIS s.vbe_lfb_enabled=0;
   BX_VGA_THIS s.vbe_get_capabilities=0;
+  BX_VGA_THIS s.vbe_8bit_dac=0;
   bx_gui->get_capabilities(&max_xres, &max_yres,
                            &max_bpp);
   if (max_xres > VBE_DISPI_MAX_XRES) {
@@ -1078,10 +1079,21 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         case 2:
           BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue = value;
 
-          needs_update |= bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
-            BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red<<2,
-            BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].green<<2,
-            BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue<<2);
+#if BX_SUPPORT_VBE
+          if (BX_VGA_THIS s.vbe_8bit_dac) {
+            needs_update |= bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
+              BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red,
+              BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].green,
+              BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue);
+          } else {
+#endif
+            needs_update |= bx_gui->palette_change(BX_VGA_THIS s.pel.write_data_register,
+              BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red<<2,
+              BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].green<<2,
+              BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue<<2);
+#if BX_SUPPORT_VBE
+          }
+#endif
           break;
         }
 
@@ -2630,6 +2642,7 @@ bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_VGA_SMF
+  Bit16u retval;
 
 //  BX_INFO(("VBE_read %x (len %x)", address, io_len));
 
@@ -2679,8 +2692,12 @@ bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
 
       case VBE_DISPI_INDEX_ENABLE: // vbe enabled
       {
-        return BX_VGA_THIS s.vbe_enabled |
-               (BX_VGA_THIS s.vbe_get_capabilities << 1);
+        retval = BX_VGA_THIS s.vbe_enabled;
+	if (BX_VGA_THIS s.vbe_get_capabilities)
+          retval |= VBE_DISPI_GETCAPS;
+	if (BX_VGA_THIS s.vbe_8bit_dac)
+          retval |= VBE_DISPI_8BIT_DAC;
+        return retval;
       } break;
       
       case VBE_DISPI_INDEX_BANK: // current bank
@@ -2735,6 +2752,8 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  
+  bx_bool new_vbe_8bit_dac;
+  unsigned i;
 
 //  BX_INFO(("VBE_write %x = %x (len %x)", address, value, io_len));
   
@@ -2873,10 +2892,8 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
         case VBE_DISPI_INDEX_ENABLE: // enable video
         {
-          if (value & VBE_DISPI_ENABLED)
+          if ((value & VBE_DISPI_ENABLED) && !BX_VGA_THIS s.vbe_enabled)
           {
-            if (BX_VGA_THIS s.vbe_enabled) break;
-
             unsigned depth=0;
 
             // setup virtual resolution to be the same as current reso      
@@ -2962,13 +2979,38 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               }
             }
           }
-          else
+          else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS s.vbe_enabled)
           {
-            if (BX_VGA_THIS s.vbe_enabled) BX_INFO(("VBE disabling"));
+            BX_INFO(("VBE disabling"));
             BX_VGA_THIS s.vbe_lfb_enabled=0;
           }     
           BX_VGA_THIS s.vbe_enabled=(bx_bool)(value & VBE_DISPI_ENABLED);
           BX_VGA_THIS s.vbe_get_capabilities=(bx_bool)((value & VBE_DISPI_GETCAPS) != 0);
+          new_vbe_8bit_dac=(bx_bool)((value & VBE_DISPI_8BIT_DAC) != 0);
+          if (new_vbe_8bit_dac != BX_VGA_THIS s.vbe_8bit_dac)
+          {
+            if (new_vbe_8bit_dac)
+            {
+              for (i=0; i<256; i++)
+              {
+                BX_VGA_THIS s.pel.data[i].red <<= 2;
+                BX_VGA_THIS s.pel.data[i].green <<= 2;
+                BX_VGA_THIS s.pel.data[i].blue <<= 2;
+              }
+              BX_INFO(("DAC in 8 bit mode"));
+            }
+            else
+            {
+              for (i=0; i<256; i++)
+              {
+                BX_VGA_THIS s.pel.data[i].red >>= 2;
+                BX_VGA_THIS s.pel.data[i].green >>= 2;
+                BX_VGA_THIS s.pel.data[i].blue >>= 2;
+              }
+              BX_INFO(("DAC in standard mode"));
+            }
+            BX_VGA_THIS s.vbe_8bit_dac=new_vbe_8bit_dac;
+          }
         } break;
 
         case VBE_DISPI_INDEX_X_OFFSET:
