@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.24 2003-10-04 20:48:13 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.25 2003-12-29 21:20:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -299,7 +299,6 @@ BX_CPU_C::CMOV_GdEd(bxInstruction_c *i)
   bx_bool condition;
   Bit32u op2_32;
 
-
   switch (i->b1()) {
     // CMOV opcodes:
     case 0x140: condition = get_OF(); break;
@@ -335,7 +334,7 @@ BX_CPU_C::CMOV_GdEd(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
     }
 #else
-  BX_INFO(("cmov_gded called"));
+  BX_INFO(("CMOV_GdEd: -enable-cpu-level=6 required"));
   UndefinedOpcode(i);
 #endif
 }

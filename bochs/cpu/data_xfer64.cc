@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.14 2003-10-04 20:48:13 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.15 2003-12-29 21:20:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -295,9 +295,6 @@ BX_CPU_C::MOV_EqId(bxInstruction_c *i)
   void
 BX_CPU_C::MOVZX_GqEb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEb: not supported on < 386"));
-#else
   Bit8u  op2_8;
 
   if (i->modC0()) {
@@ -310,15 +307,11 @@ BX_CPU_C::MOVZX_GqEb(bxInstruction_c *i)
 
     /* zero extend byte op2 into qword op1 */
     BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_8);
-#endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
 BX_CPU_C::MOVZX_GqEw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVZX_GvEw: not supported on < 386"));
-#else
   Bit16u op2_16;
 
   if (i->modC0()) {
@@ -331,15 +324,11 @@ BX_CPU_C::MOVZX_GqEw(bxInstruction_c *i)
 
     /* zero extend word op2 into qword op1 */
     BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_16);
-#endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
 BX_CPU_C::MOVSX_GqEb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEb: not supported on < 386"));
-#else
   Bit8u op2_8;
 
   if (i->modC0()) {
@@ -352,15 +341,11 @@ BX_CPU_C::MOVSX_GqEb(bxInstruction_c *i)
 
     /* sign extend byte op2 into qword op1 */
     BX_WRITE_64BIT_REG(i->nnn(), (Bit8s) op2_8);
-#endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
 BX_CPU_C::MOVSX_GqEw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
-#else
   Bit16u op2_16;
 
   if (i->modC0()) {
@@ -373,15 +358,11 @@ BX_CPU_C::MOVSX_GqEw(bxInstruction_c *i)
 
     /* sign extend word op2 into qword op1 */
     BX_WRITE_64BIT_REG(i->nnn(), (Bit16s) op2_16);
-#endif /* BX_CPU_LEVEL < 3 */
 }
 
   void
 BX_CPU_C::MOVSX_GqEd(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_PANIC(("MOVSX_GvEw: not supported on < 386"));
-#else
   Bit32u op2_32;
 
   if (i->modC0()) {
@@ -394,7 +375,6 @@ BX_CPU_C::MOVSX_GqEd(bxInstruction_c *i)
 
     /* sign extend word op2 into qword op1 */
     BX_WRITE_64BIT_REG(i->nnn(), (Bit32s) op2_32);
-#endif /* BX_CPU_LEVEL < 3 */
 }
 
 
@@ -420,18 +400,15 @@ BX_CPU_C::XCHG_EqGq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }
 
-
   void
 BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   // Note: CMOV accesses a memory source operand (read), regardless
   //       of whether condition is true or not.  Thus, exceptions may
   //       occur even if the MOV does not take place.
 
   bx_bool condition;
   Bit64u op2_64;
-
 
   switch (i->b1()) {
     // CMOV opcodes:
@@ -453,7 +430,7 @@ BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
     case 0x14F: condition = !get_ZF() && (getB_SF() == getB_OF()); break;
     default:
       condition = 0;
-      BX_PANIC(("CMOV_GdEd: default case"));
+      BX_PANIC(("CMOV_GqEq: default case"));
     }
 
   if (i->modC0()) {
@@ -464,11 +441,8 @@ BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
     }
 
-  if (condition) {
+  if (condition)
     BX_WRITE_64BIT_REG(i->nnn(), op2_64);
-    }
-#else
-  BX_PANIC(("cmov_gded called"));
-#endif
 }
+
 #endif /* if BX_SUPPORT_X86_64 */
