@@ -3688,7 +3688,7 @@ mp_config_table:
   db 0x50, 0x43, 0x4d, 0x50  ;; "PCMP" signature
   dw (mp_config_end-mp_config_table)  ;; table length
   db 4 ;; spec rev
-  db 0x80 ;; checksum
+  db 0x57 ;; checksum
   db 0x42, 0x42, 0x44, 0x43, 0x50, 0x55, 0x20, 0x20 ;; OEM id = "BBDCPU  "
   db 0x30, 0x2e, 0x31, 0x20 ;; vendor id = "0.1         "
   db 0x20, 0x20, 0x20, 0x20 
@@ -3704,36 +3704,36 @@ mp_config_proc0:
   db 0 ;; entry type=processor
   db 1 ;; local APIC id
   db 0x11 ;; local APIC version number
-  db 1 ;; cpu flags
-  dw 0,0 ;; cpu signature
-  dw 0,0 ;; feature flags
+  db 3 ;; cpu flags
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
   dw 0,0 ;; reserved
   dw 0,0 ;; reserved
 mp_config_proc1:
   db 0 ;; entry type=processor
   db 2 ;; local APIC id
   db 0x11 ;; local APIC version number
-  db 0 ;; cpu flags
-  dw 0,0 ;; cpu signature
-  dw 0,0 ;; feature flags
+  db 1 ;; cpu flags
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
   dw 0,0 ;; reserved
   dw 0,0 ;; reserved
 mp_config_proc2:
   db 0 ;; entry type=processor
   db 3 ;; local APIC id
   db 0x11 ;; local APIC version number
-  db 0 ;; cpu flags
-  dw 0,0 ;; cpu signature
-  dw 0,0 ;; feature flags
+  db 1 ;; cpu flags
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
   dw 0,0 ;; reserved
   dw 0,0 ;; reserved
 mp_config_proc3:
   db 0 ;; entry type=processor
   db 4 ;; local APIC id
   db 0x11 ;; local APIC version number
-  db 0 ;; cpu flags
-  dw 0,0 ;; cpu signature
-  dw 0,0 ;; feature flags
+  db 1 ;; cpu flags
+  db 0,6,0,0 ;; cpu signature
+  dw 0x201,0 ;; feature flags
   dw 0,0 ;; reserved
   dw 0,0 ;; reserved
 mp_config_end:
@@ -3741,10 +3741,10 @@ mp_config_end:
 
 mp_floating_pointer_structure:
 db 0x5f, 0x4d, 0x50, 0x5f   ; "_MP_" signature
-dw 0, mp_config_table ;; pointer to MP configuration table
+dw mp_config_table, 0xf ;; pointer to MP configuration table
 db 1     ;; length of this struct in 16-bit byte chunks
 db 4     ;; MP spec revision
-db 0xd0  ;; checksum
+db 0xc1  ;; checksum
 db 0     ;; MP feature byte 1.  value 0 means look at the config table
 db 0,0,0,0     ;; MP feature bytes 2-5.
 #endif  /* BX_SIMULATE_SMP */
