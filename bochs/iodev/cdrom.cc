@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.33 2002-04-18 18:17:45 bdenney Exp $
+// $Id: cdrom.cc,v 1.34 2002-05-31 09:56:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,10 +43,18 @@ extern "C" {
 #ifdef __linux__
 extern "C" {
 #include <sys/ioctl.h>
-#include <linux/fs.h>
+//#include <linux/fs.h>
 #include <linux/cdrom.h>
 // I use the framesize in non OS specific code too
 #define BX_CD_FRAMESIZE CD_FRAMESIZE
+}
+#endif
+
+#ifdef __GNU__
+extern "C" {
+#include <sys/ioctl.h>
+#define BX_CD_FRAMESIZE 2048
+#define CD_FRAMESIZE 2048
 }
 #endif
 
@@ -203,7 +211,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.33 2002-04-18 18:17:45 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.34 2002-05-31 09:56:58 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -642,7 +650,8 @@ cdrom_interface::capacity()
   // non-ATAPI drives.  This is based on Keith Jones code below.
   // <splite@purdue.edu> 21 June 2001
 
-  int i, dtrk, dtrk_lba, num_sectors;
+  int i, dtrk_lba, num_sectors;
+  int dtrk = 0;
   struct cdrom_tochdr td;
   struct cdrom_tocentry te;
 
