@@ -83,29 +83,23 @@ What works right now (September 2002):
   Both dialog boxes are updated periodically during simulation.
 
 To do:
+- the power button has always "turned off" the power.  Make it also
+  turn ON the power.  I think a few little green LEDs are in order.
+- floppy config screen: on win32, both not present and ejected are selected
+  at first.
 - log events
-  - allow viewing of current log messages.  Maybe this is a dialog that
+  - Later: allow viewing of current log messages.  Maybe this is a dialog that
     we append to, or maybe it should periodically display the last 1K of the
-    log file (might be faster in high volume situations)
-  - be able to enable/disable each type of event from each device.
-  - should we allow multiple log files with different settings? for example
-    dump cpu events to cpulog.txt and keyboard events to keyboardlog.txt?
+    log file (might be faster in high volume situations).
+  - Later: should we allow multiple log files with different settings? for
+    example dump cpu events to cpulog.txt and keyboard events to
+    keyboardlog.txt?
 - debugger
   - bug: it's possible to make the GUI stop responding to mouse and keyboard
     input if you click the continue button in the debugger twice in very
     close succession.  I don't know why yet.
   - probably the layout will be similar to BFE at first
   - need to show disassembly of the next instruction to be executed
-  - have a text box where you can type debugger commands, and a scrolling
-    log window where the commands and their result is displayed.
-    To implement this, write a varargs function to be used for all
-    text output of the debugger in dbg_main.cc.  With a text debugger,
-    this will map onto stdout/stderr.  When configured for wxWindows, the
-    output of this function will be sent via events to the wxWindows 
-    interface.
-    I have a scrolling debug log box, and a blank to type commands into.
-    Now make the commands go to the actual debugger.  (Enter handling would
-    be nice.)  And redirect the debugger's text output back to the dialog.
 - clean up the biggest memory leaks and init/cleanup code.  The gui allows you
   to kill the simulator and restart, but it doesn't do well after the first
   time.  Valgrind should help with memory leak debugging, though until
@@ -260,3 +254,100 @@ seems to be in ReadMailcap, src/unix/mimetypes.cpp in wxwindows sources
 src/unix/mimetype.cpp:2312
 
 SOLUTION: compile with -pthread on every compile and link line.
+
+
+
+----------------------------------------------
+Suggested solution for putting sizers inside a scrolled window
+
+From: Thaddaeus Frogley (codemonkey_uk@users.sourceforge.net)
+Subject: RE: Using sizers inside of a scrolled window 
+Newsgroups: comp.soft-sys.wxwindows
+Date: 2001-10-02 02:41:04 PST 
+
+I have solved that same problem (scrolled windows / sizers) like so:
+
+In the constructor for your wxFrame derived class,
+
+//create a scrolling window
+myScrolledWindow = new wxScrolledWindow(this, -1);
+
+//in the scolling window, create a panel
+myMainPanel = new wxPanel(myScrolledWindow, -1);        
+
+//place controls in the panel, laying them out with sizers
+
+//...
+
+myMainPanel->SetAutoLayout( TRUE );
+myMainPanel->SetSizer( sizer );
+sizer->Fit( myMainPanel );
+sizer->SetSizeHints( myMainPanel );
+
+//set the scroll bars lengths based on the size of the inner panel
+wxSize size = myMainPanel->GetBestSize();
+myScrolledWindow->SetScrollbars( 1, 1, size.GetWidth(), size.GetHeight() );
+
+//calculate the size of the window, and set it appropriately
+size.Set(size.GetWidth()+16,size.GetHeight()+16);
+        
+//Get the physical size of the display in pixels.
+int displaySizeX,displaySizeY;
+wxDisplaySize(&displaySizeX,&displaySizeY);
+
+//clamp window size to % of screen
+if (size.GetWidth()>displaySizeX*0.75){
+        size.SetWidth(displaySizeX*0.75);
+}
+if (size.GetHeight()>displaySizeY*0.75){
+        size.SetHeight(displaySizeY*0.75);
+}
+
+SetClientSize(size);
+
+
+
+-----------------
+How to make wxChoice as wide as the longest string in the choice box?
+
+From: Vadim Zeitlin (Vadim.zeitlin@dptmaths.ens-cachan.fr)
+Subject: Re: wxChoice 
+Newsgroups: comp.soft-sys.wxwindows
+Date: 2001-09-18 04:41:07 PST 
+
+
+On Sat, 15 Sep 2001 15:39:45 +0200 Merlijn Blaauw <merlijn@student-kmt.hku.nl> wrote:
+
+MB> Also, I 
+MB> would like the widget's parent window to change size (width) to fit the 
+MB> widget's new content aswell.
+
+ You'll have to do it manually by calculating the length of the string you
+add to the control (use wxClientDC(combobox) and set correct font before
+calling GetTextExtent()!) and resizing the control to be slightly larger
+(yes, I know it's not nice at all but I don't see any other way to do it).
+
+ Regards,
+VZ
+
+---------
+Hold on, this is even better!
+
+From: Yann Rouillard (Y.Rouillard@exeter.ac.uk)
+Subject: wxChoice and wxADJUST_MINSIZE 
+Newsgroups: comp.soft-sys.wxwindows
+Date: 2002-07-18 08:28:31 PST 
+
+I am trying to use a wxChoice widget in a little panel. The text length of
+the choices in the wxChoice can change so I used the wxADJUST_MINSIZE to
+have its width correctly set. 
+
+> the manual for wxSizer::Add() says:
+Finally, you can also specify wxADJUST_MINSIZE flag to make the minimal size of
+the control dynamically adjust to the value returned by its GetBestSize()
+method - this allows, for example, for correct relayouting of a static text
+control even if its text is changed during run-time.
+
+relayouting?  sounds like s/size/layout/g gone wrong.
+
+Call Add() with wxADJUST_MINSIZE flag!
