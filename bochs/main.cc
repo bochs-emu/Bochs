@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.100 2002-05-04 16:00:40 cbothamy Exp $
+// $Id: main.cc,v 1.101 2002-05-25 13:16:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -583,8 +583,8 @@ void bx_init_options ()
   bx_options.Obootdrive->set_ask_format ("Boot from floppy drive, hard drive or cdrom ? [%s] ");
 
   bx_options.OfloppySigCheck = new bx_param_bool_c (BXP_FLOPPYSIGCHECK,
-      "Flopppy Boot Signature Check",
-      "Checks for the 0xaa55 signature on floppy boot device.",
+      "Skip Floppy Boot Signature Check",
+      "Skips check for the 0xaa55 signature on floppy boot device.",
       0);
 
   // disk menu
@@ -2361,7 +2361,7 @@ bx_write_configuration (char *rc, int overwrite)
   bx_write_sb16_options (fp, &bx_options.sb16);
   int bootdrive = bx_options.Obootdrive->get ();
   fprintf (fp, "boot: %s\n", (bootdrive==BX_BOOT_FLOPPYA) ? "a" : (bootdrive==BX_BOOT_DISKC) ? "c" : "cdrom");
-  fprintf (fp, "floppy_bootsig_check: enabled=%d\n", bx_options.OfloppySigCheck->get ());
+  fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get ());
   fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
