@@ -784,6 +784,10 @@ CD_UP_TWO="echo done"
 
 if test "$with_x11" = yes; then
   AC_MSG_RESULT(X windows)
+  if test "$no_x" = yes; then
+    echo ERROR: X windows gui was selected, but X windows libraries were not found.
+    exit 1
+  fi
   AC_DEFINE(BX_WITH_X11, 1)
   GUI_OBJS='$(GUI_OBJS_X11)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
