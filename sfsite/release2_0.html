@@ -1,0 +1,76 @@
+<HTML>
+<HEAD>
+<TITLE>bochs: The Open Source IA-32 Emulation Project (About Bochs 2.0)</TITLE>
+
+<!--#include virtual="includes/header.txt" -->
+
+ <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
+
+<BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Bochs 2.0 is
+ Coming!</b></font><BR>
+
+This page describes the latest progress as we move toward releasing Bochs 2.0.
+Please check it periodically, because it will change regularly.
+<p>
+
+<BR><font face="arial, helvetica" color="#1e029a" size="4"><b>What's new?
+</b></font><BR>
+Our last release was Bochs 1.4.1 on June 23 of this year.  Since then there
+has been a LOT of development activity, especially since mid-August.  Here's
+a summary.
+<ul>
+<li> CPU optimizations boost simulation speed by around 2x. (Kevin Lawton)
+<li> Bochs now supports up to 8 hard drives, or 8 CDROMs, or any combination
+(Christophe Bothamy)
+<li> wxWindows interface has grown so that you can edit all bochsrc 
+parameters using menus and dialog boxes (Bryce Denney)
+<li> Bochs can now emulate the AMD x86-64 instruction set used in their Hammer processor (Peter Tattam)
+<li> Bochs can now emulate MMX instructions (Stanislav Shwartzman).
+<li> Remote GDB stub support (Johan Rydberg, Stu Grossman)
+<li> IN PROGRESS: Stanislav is currently working on SSE/SSE2 support.
+<li> IN PROGRESS: Christophe and Bryce are working on plugin support, so that
+you can compile in support for many more options and enable them at runtime.
+For example, you could compile in support for 4 different gui libraries 
+(X11, SDL, RFB, wxWindows) and select between them in your bochsrc.
+</ul> 
+
+
+<BR><font face="arial, helvetica" color="#1e029a" size="4"><b>The Release
+Process </b></font><BR>
+Before the 2.0 release is finalized, a few things need to happen.  First, the
+developers will declare a feature freeze, during which only bug fixes will be
+added to the CVS.  This has not begun quite yet because there are a few
+important features (e.g. plugins, SSE) that aren't quite ready to be merged into
+the main trunk. <p>
+
+When the feature freeze begins, we can focus on testing Bochs
+in all sorts of configurations, fixing bugs, updating documentation, and
+cleaning things up.  This will last until we have some confidence that the most
+critical bugs have been fixed or worked around, and that Bochs will compile and
+work on all supported platforms.  The documentation should cover all the new
+features and options. <p>
+
+During this time, the Source Forge bug/feature/patch trackers are very important
+and very useful.  Any bug that we intend to fix before the 2.0 release should be
+marked with Group="to be fixed in v2.0".  At the time of release, there will be
+no more open bugs, features, or patches marked for v2.0.  All items that are
+marked for v2.0 will be either fixed (and closed), or postponed by changing
+their Group marking to something else like "long range goal".  Using
+the bug database helps to ensure that nothing important gets forgotten. 
+When you're looking at the Source Forge database, you can click on the Group
+box and select just the items that are selected for v2.0.
+<p>
+
+Click to see <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Report+a+Bug&url=http://sourceforge.net/tracker/qmrkgroup_ideq12580ampatideq112580">Bug Reports</a>.  <br>
+Click to see <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Request+a+Feature&url=http://sourceforge.net/tracker/qmrkatideq362580ampgroup_ideq12580ampfunceqbrowse">Feature Requests</a>.  <br>
+Click to see <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Patches&url=http://sourceforge.net/tracker/qmrkatideq312580ampgroup_ideq12580ampfunceqbrowse">Patches</a>.  <br>
+
+ <!--#include virtual="includes/footer.txt" -->
+
+
+Last Modified on <!--#flastmod file="index.html" --> by Bryce<BR>
+
+ <!--#include virtual="includes/cright.txt" -->
+
+</BODY>
+</HTML>
