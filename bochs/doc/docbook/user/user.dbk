@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.12 2001-11-10 00:41:25 bdenney Exp $
+$Id: user.dbk,v 1.13 2001-11-12 21:51:10 vasudeva Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -321,8 +321,8 @@ top of every source code file in the Bochs distribution:
      Is there a developer's email list for bochs?
      </para></question>
      <answer><para>
-     Yes.  For instructions on joining, go to
-     <ulink url="developers.html">Developers email-list.</ulink>
+     Yes.  For instructions on joining, refer to 
+     <xref linkend="ch07" />
      </para></answer>
   </qandaentry>
 
@@ -1968,7 +1968,6 @@ and 0 turns it off.
 <chapter><title>Using Bochs</title>
     <para>
       Resources for users
-        bochs-developers mailing list, archive
 	testing status page: tells what has been tried and who got it working
 	SourceForge
 	  look for bug reports
@@ -1984,6 +1983,41 @@ and 0 turns it off.
 	Keyboard mapping problems
 	[...]
     </para>
+</chapter>
+
+<chapter id="ch07">
+<title>Developer's Mailing List</title>
+    <para>
+        To provide a forum for the development of the Bochs x86 PC emulation software, and to keep interested parties apprised of developments, there is a developer's email list available to anyone willing to join. After joining, you may email to bochs-developers@lists.sourceforge.net. Please note that your email will be sent to EVERYONE on the list.
+    </para>
+    <para>
+        How to subscribe to the bochs-developers mailing list:
+</para>
+<para>Subscribe via the web:
+</para>
+<orderedlist>
+<listitem><para>Go to the bochs-developers info page.
+</para>
+</listitem>
+<listitem><para>Type your email address and a password into the blanks and click Subscribe.
+</para>
+</listitem>
+<listitem><para>In a few minutes you will receive a confirmation email.  Follow the directions to complete the subscription process.
+</para>
+</listitem>
+</orderedlist>
+
+<para>
+        Subscribe via email:
+</para>
+<orderedlist numeration="arabic">
+<listitem><para>Send an email to bochs-developers-request@lists.sourceforge.net with the subject line "subscribe".  (Don't forget the "-request" part or your subscribe message will go to 300 people.)
+</para>
+</listitem>
+<listitem><para>In a few minutes you will receive a confirmation email.  Follow the directions to complete the subscription process.
+</para>
+</listitem>
+</orderedlist>
 </chapter>
 
 <chapter><title>Tips and Techniques</title>
