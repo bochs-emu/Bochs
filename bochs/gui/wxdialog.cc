@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.60 2003-08-26 17:25:26 vruppert Exp $
+// $Id: wxdialog.cc,v 1.61 2003-08-28 20:04:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1528,6 +1528,8 @@ void ParamDialog::EnableChanged ()
     ParamStruct *pstr = (ParamStruct*) node->GetData ();
     if (pstr->param->get_type () == BXT_PARAM_BOOL)
       EnableChanged (pstr);
+    if (pstr->param->get_type () == BXT_PARAM_ENUM)
+      EnumChanged (pstr);
     // special cases that can't be handled in the usual way
   }
 }
