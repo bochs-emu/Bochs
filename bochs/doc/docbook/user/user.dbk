@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.154 2004-11-18 19:35:23 vruppert Exp $
+$Id: user.dbk,v 1.155 2004-11-24 20:18:36 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -60,7 +60,7 @@ This is both a strength and a weakness, and it's the major difference between
 Bochs and many other x86 emulation software such as plex86, VMware, etc.
 Because Bochs uses software simulation for every single x86 instruction, it
 can simulate a Windows application on an Alpha or Sun workstation.  However,
-the downside of Bochs's approach is simulation performance.  To model the
+the downside of Bochs' approach is simulation performance.  To model the
 processor accurately, Bochs must run many instructions for every simulated x86
 instruction, and this makes the simulated machine many times slower than
 the physical machine.  Commercial PC emulators (VMware, Connectix, etc.) can
@@ -143,7 +143,7 @@ counting any mirror website or CVS users.
 Bochs has many possible uses, and different people use it for different 
 things.  Many people use it to run applications in a second operating system 
 without needing two different computers or dual-booting.  Running 
-Windows software on a non-x86 workstation or on an x86 UNIX box are common
+Windows software on a non-x86 workstation or on an x86 Unix box are common
 uses.  Also, because every hardware instruction and every line of simulator
 code is accessible, Bochs is used extensively for debugging new operating
 systems.  If you were writing boot code for your home-brewed
@@ -243,7 +243,7 @@ you may want to try a virtualization product instead of Bochs (VMware, plex86).
 If you are using a non-x86 machine, then Bochs is one of the few choices for
 running x86 software.  Bochs has been known to work on Solaris (Sparc), 
 GNU/Linux (PowerPC/Alpha), MacOS (PowerPC), IRIX (MIPS), BeOS (PowerPC), Digital
-UNIX (Alpha), and AIX (PowerPC).
+Unix (Alpha), and AIX (PowerPC).
 </para>
 
 <para>
@@ -427,7 +427,7 @@ currently work with.
   <row>
     <entry>Mouse</entry>
     <entry>Yes</entry>
-    <entry>Emulates a PS/2 mouse with 2 buttons.
+    <entry>Emulates a PS/2 mouse with 3 buttons.
     </entry>
   </row>
   <row>
@@ -648,7 +648,7 @@ Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed i
 
     <row>
       <entry>OS/2</entry>
-      <entry> Nick Behnken used PE2LX to translate David Ross's Win32
+      <entry> Nick Behnken used PE2LX to translate David Ross' Win32
       port to an OS/2 program.  This hasn't been updated in more than
       a year, and Nick Behnken's page seems to be inactive.
       Also, Craig Ballantyne ported bochs to OS/2, but his web page has
@@ -945,11 +945,11 @@ You can download CVS software and documentation from
 <para>
 When you have CVS installed, the first step is to do a login and checkout.  The
 initial checkout command is long and ugly, but usually you only have to do it
-once.  The example below shows the CVS checkout process in UNIX.  On the
+once.  The example below shows the CVS checkout process in Unix.  On the
 Windows platform, you can download a CVS client from cvshome.com, or
 use CVS within Cygwin<footnote>
 <para>
-Cygwin is an open source UNIX-like environment for Windows platforms,
+Cygwin is an open source Unix-like environment for Windows platforms,
 available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 </para>
 </footnote>.
@@ -1891,25 +1891,16 @@ In Bochs 1.3 and before, the X11 gui was always the default.
 
     <row>
       <entry>--with-rfb</entry>
-      <entry>Use RFB protocol to talk to AT&amp;T's <ulink
-      url="http://www.uk.research.att.com/vnc/">VNC Viewer</ulink>.  The RFB
-      code was written by Don Becker <email>x-odus@iname.com</email>,
-      who has a Bochs-RFB web page on his site, 
-      <ulink url="http://www.psyon.org/bochs-rfb/">http://www.psyon.org/bochs-rfb</ulink>.
-      RFB mode has been tested in Linux and Win32.
+      <entry>
+        Enable support for the RFB protocol to talk to AT&amp;T's
+        <ulink url="http://www.realvnc.com/">VNC Viewer</ulink>.
+        Refer to <xref linkend="compile-rfb"> for details.
       </entry>
-      </row>
+    </row>
     <row>
       <entry>--with-sdl</entry>
-      <entry>This option enables Dave Poirier's SDL gui interface.  To
-      compile with SDL, you must first install the SDL library
-      from <ulink url="http://libsdl.org/">libsdl.org</ulink>.  You
-      can either get the source code and compile it yourself, or install
-      the development libraries for your platform (already compiled).
-      SDL is available for many platforms including Win32, Linux, IRIX,
-      MacOS, MacOS X, and BeOS.
-      </entry>
-      </row>
+      <entry>Enable support for the SDL GUI interface; see <xref linkend="compile-sdl">.</entry>
+    </row>
     <row>
       <entry>--with-beos</entry>
       <entry>Use BeOS GUI.  The configure script will run natively
@@ -2320,8 +2311,8 @@ turn it off.
       expect this option to speed up your simulation!  On the contrary, it has
       to spend extra time simulating the different CPUs (even if they're mostly
       idle) and the communication between them.  Use it to try out an SMP OS if
-      you don't have an SMP machine, or to debug SMP OS drivers.  Click
-      <link linkend="SMP">here</link> for more details on SMP in Bochs.
+      you don't have an SMP machine, or to debug SMP OS drivers. Refer to
+      <xref linkend="SMP"> for more details on SMP in Bochs.
       </entry>
     </row>
     <row>
@@ -2382,7 +2373,7 @@ turn it off.
       time(NULL) call, relating to the time you want bochs to start the CMOS
       clock from.  For instance, '--enable-time0=917385580'.  If you use this
       option but don't provide a value, configure uses a default value.  Note
-      that the time0 option in .bochsrc will override this value.  Without this
+      that the <link linkend="bochsopt-time0">time0 option</link> in .bochsrc will override this value.  Without this
       option, the CMOS clock uses a time0 based on the value of time(NULL),
       which is probably what you want.
       </entry>
@@ -2657,8 +2648,8 @@ Mac developer helps to clean it up.
 
 <para>
 On MacOS X the default GUI is the Carbon interface, but you can also try other
-Bochs GUIs.  Use --enable-x11 for X windows, --enable-rfb for VNC/RFB, or
---enable-sdl for SDL.
+Bochs GUIs.  Use --with-x11 for X windows, --with-rfb for VNC/RFB, or
+--with-sdl for SDL.
 </para>
 </section>
 
@@ -2686,39 +2677,47 @@ the configure shortcut script, <filename>.conf.amigaos</filename>.
 </para>
 </section> <!-- end Amiga/MorphOS -->
 
-<section><title>Compiling with the RFB interface</title>
+<section id="compile-rfb"><title>Compiling with the RFB interface</title>
 <para>
-Don Becker's RFB interface allows you to view the Bochs display with the
-AT&amp;T's <ulink url="http://www.uk.research.att.com/vnc/">VNC Viewer</ulink>.
-The protocol used between a VNC server and a VNC viewer is called RFB.
-Because the RFB code in Bochs is written with portable network socket and POSIX
-thread code, it can be compiled on many platforms.  No additional libraries
-are required.  To try it, type:
+  The RFB code was written by Don Becker <email>x-odus@iname.com</email>,
+  who has a Bochs-RFB web page on his site,
+  <ulink url="http://www.psyon.org/bochs-rfb/">http://www.psyon.org/bochs-rfb/</ulink>.
+</para>
+<para>
+  This interface allows you to view the Bochs display with
+  AT&amp;T's <ulink url="http://www.realvnc.com/">VNC Viewer</ulink>.
+  The protocol used between a VNC server and a VNC viewer is called RFB.
+  Because the RFB code in Bochs is written with portable network socket
+  and POSIX thread code, it can be compiled on many platforms and has
+  been tested in Linux and Win32. No additional libraries are required.
+  To try it, type:
 <screen>
   configure --with-rfb
   make
 </screen>
 </para>
-</section>
+</section><!-- end compile-rfb -->
 
-<section><title>Compiling with the SDL interface</title>
+<section id="compile-sdl"><title>Compiling with the SDL interface</title>
 <para>
-Dave Poirier has written an SDL interface for Bochs.  Simple DirectMedia
-Layer, or SDL, is a cross-platform multimedia library distributed from
-<ulink url="http://libsdl.org">libsdl.org</ulink>.  SDL supports 
-Win32, Linux, IRIX, MacOS, MacOS X, BeOS, and AmigaOS.
+  Dave Poirier has written an SDL interface for Bochs. Simple DirectMedia
+  Layer, or SDL, is a cross-platform multimedia library distributed from
+  <ulink url="http://libsdl.org/">libsdl.org</ulink>. SDL is available
+  for many platforms including Win32, Linux, IRIX, MacOS, MacOS X, BeOS,
+  and AmigaOS.
 </para>
-
 <para>
-To compile Bochs with the SDL interface you need to download the SDL
-development library.  Either get the development library for your platform,
-or download the sources and compile it yourself.  Then, go into the 
-Bochs directory and type:
+  To compile Bochs with SDL, you must first install the SDL library
+  from <ulink url="http://libsdl.org/">libsdl.org</ulink>. You
+  can either get the source code and compile it yourself, or install
+  the development libraries for your platform (already compiled).
+  Then, go into the Bochs directory and type:
 <screen>
   configure --with-sdl
   make
 </screen>
 </para>
+
 <note><para>
 This has only been tested on Linux at the time this documentation was written.
 </para></note>
@@ -2744,7 +2743,7 @@ Here's the procedure:
 - Select Build:Build Bochs.exe
 </screen>
 </para>
-</section>
+</section><!-- end compile-sdl -->
 
 <section><title>Building an RPM on Linux</title>
 <para>
@@ -2836,7 +2835,7 @@ A collection of disk images  of different operating systems can be found at
 <ulink url="http://bochs.sourceforge.net/diskimages.html"></ulink>. Some disk
 images are the size of a floppy disk (1 meg compressed) and others are gigantic
 (160 meg compressed). If you want to create a disk image yourself, please see
-the section <link linkend="diskimagehowto">How to make a disk image</link>.
+<xref linkend="diskimagehowto">.
 </para>
 
 <para> &FIXME; This should be completed </para>
@@ -2847,7 +2846,6 @@ the section <link linkend="diskimagehowto">How to make a disk image</link>.
   - BIOS/VGABIOS, what do they do?
   - disk images
     - (DONE) where to find one pre-made
-    - (DONE) make a blank one with bximage
     - grab one from a real hard disk
 </screen>
 </para>
@@ -3080,9 +3078,9 @@ You have to tell the type of the attached device. For Bochs version2.0, it can b
 <para>
 You have to point the "path" at a hard disk image file, cdrom iso file,
 or physical cdrom device.
-To create a hard disk image, try running bximage.
-It will help you choose the size and then suggest a line that
-works with it.
+To create a hard disk image, try running bximage (see
+<xref linkend="diskimagehowto">). It will help you choose the size and
+then suggest a line that works with it.
 </para>
 
 <para>
@@ -3207,7 +3205,7 @@ The check is enabled by default.
 <section><title>config_interface</title>
 <para>
 The configuration interface is a series of menus or dialog boxes that
-allows you to edit all the settings that control Bochs's behavior.
+allows you to edit all the settings that control Bochs' behavior.
 There are two choices of configuration interface: a text mode version
 called "textconfig" and a graphical version called "wx".  The text
 mode version uses stdin/stdout and is always available.  The graphical
@@ -3284,8 +3282,8 @@ the "wx" display library.
 Examples:
 <screen>
   log: bochsout.txt
-  log: /dev/tty               (unix only)
-  log: /dev/null              (unix only)
+  log: /dev/tty               (Unix only)
+  log: /dev/null              (Unix only)
 </screen>
 Give the path of the log file you'd like Bochs debug and misc. verbage to be
 written to.   If you really don't want it, make it /dev/null.
@@ -3313,7 +3311,7 @@ Default is %t%e%d
 </para>
 </section>
 
-<section><title>debug/info/error/panic</title>
+<section id="bochsopt-debug-info-error-panic"><title>debug/info/error/panic</title>
 <para>
 Examples:
 <screen>
@@ -3363,7 +3361,7 @@ just a configuration problem like "could not find hard drive image."
 Examples:
 <screen>
   debugger_log: debugger.out
-  debugger_log: /dev/null              (unix only)
+  debugger_log: /dev/null              (Unix only)
   debugger_log: -
 </screen>
 Give the path of the log file you'd like Bochs to log debugger output.
@@ -3625,7 +3623,7 @@ enabled.  The hardware emulation  itself is not disabled  by this. You  can
 turn the mouse on  by  setting enabled to  1,  or  turn  it  off  by  setting
 enabled to 0. Unless  you  have  a  particular reason  for enabling  the  mouse
 by default, it is recommended that you leave it off. You can also toggle the
-mouse usage at runtime (middle mouse button on X11 and SDL, F12 on Win32).
+mouse usage at runtime (see <link linkend="headerbar">headerbar</link>).
 </para>
 </section>
 
@@ -3887,8 +3885,9 @@ This defines image file that can be loaded into the CMOS RAM at startup.
 
 <section><title>diskc/diskd</title>
 <para>
-The diskc and diskd options are deprecated. Use "ataX-*: type=disk,..."
-options instead.
+The diskc and diskd options are deprecated. Use
+<link linkend="bochsopt-ata-master-slave">ataX-*: type=disk,... option</link>
+instead.
 </para>
 <para>
 Examples:
@@ -3901,12 +3900,12 @@ Examples:
 The diskc/diskd lines tell Bochs what disk image file to use as the constants
 of the emulated hard drive, and what geometry it should have.  Diskc is the
 first hard drive, and diskd is the second hard drive.  Using a raw
-hard drive is possible under on unix but WE DON'T RECOMMEND IT for safety reasons.  
+hard drive is possible under Unix but WE DON'T RECOMMEND IT for safety reasons.
 The file should be a
 disk image file, which must be exactly 512*cyl*heads*spt bytes long.  The
 geometry settings are cylinder (cyl), heads, and sectors per track (spt).  If
-you  use bximage  to create   the  image,  it  will give  you  the required
-cyl,  head, and spt information.
+you use bximage (see <xref linkend="diskimagehowto">) to create an image, it
+will give you the required cyl, head, and spt information.
 
 <note><para>
 You cannot use both diskd and cdromd together.
@@ -3917,7 +3916,9 @@ You cannot use both diskd and cdromd together.
 
 <section><title>cdromd</title>
 <para>
-The cdromd option is deprecated. Use "ataX-*: type=cdrom,..." option instead.
+The cdromd option is deprecated. Use
+<link linkend="bochsopt-ata-master-slave">ataX-*: type=cdrom,... option</link>
+instead.
 </para>
 <para>
 Examples:
@@ -3927,11 +3928,10 @@ Examples:
   cdromd: dev=cdromimage.iso, status=inserted
 </screen>
 
-The cdromd line tells Bochs to emulate a CD-ROM device.  You cannot have
-both a diskd and a cdromd, and there is no cdromc option.  
+The cdromd line tells Bochs to emulate a CD-ROM device.
 
 <note><para>
-You cannot use both diskd and cdromd together.
+You cannot use both diskd and cdromd together, and there is no cdromc option.
 </para></note>
 
 </para>
@@ -3939,7 +3939,7 @@ You cannot use both diskd and cdromd together.
 
 <section><title>pit</title>
 <para>
-The pit option is deprecated. Use the "clock" option instead.
+The pit option is deprecated. Use the <link linkend="bochsopt-clock">clock option</link> instead.
 </para>
 <para>
 Examples:
@@ -3947,7 +3947,7 @@ Examples:
   pit: realtime=0
   pit: realtime=1
 </screen>
-The PIT is the programmable interval timer.  Bochs's PIT model was written by
+The PIT is the programmable interval timer.  Bochs' PIT model was written by
 Greg Alexander.  It has a real-time option that tries to keep the PIT in sync
 with the host time.  This feature is still experimental, but it may be useful
 if you want to prevent Bochs from running too fast, for example a DOS video
@@ -3956,12 +3956,12 @@ repeatable; this can a problem if you are debugging.
 </para>
 </section>
 
-<section><title>time0</title>
+<section id="bochsopt-time0"><title>time0</title>
 <para>
-The time0 option is deprecated. Use the "clock" option instead.
+The time0 option is deprecated. Use the <link linkend="bochsopt-clock">clock option</link> instead.
 </para>
 <para>
-Examples:
+Example:
 <screen>
   time0: 938581955
 </screen>
@@ -4447,7 +4447,7 @@ is not disabled, Bochs searches for a default configuration file. This is the se
 <para>
 The configuration interface 'textconfig' is the text mode version of the Bochs
 configuration system. It is a series of menus (using stdin/stdout) that allows
-you to edit all the settings that control Bochs's behavior. If you do not write
+you to edit all the settings that control Bochs' behavior. If you do not write
 a config_interface line, Bochs will choose it as the default for you (unless Bochs
 is compiled for wxWidgets only).
 </para>
@@ -4518,13 +4518,14 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 </para>
 </listitem>
 <listitem>
-<para>mouse button (keyboard shortcut: Ctrl+3rd mouse button)</para>
+<para>mouse button</para>
 <para>
   Here you can enable the creation of mouse events by the host. Once mouse
   events are captured, you cannot reach the button anymore, in order to disable
   capturing again. In this case, use "Ctrl+3rd mouse button" to disable it.
 </para>
-<para>&FIXME; what if user only has 2 button mouse?</para>
+<para>&FIXME; Support for 2 button mouse to toggle the capture mode not yet complete.
+  Some display libraries still don't support the new feature.</para>
 </listitem>
 <listitem>
 <para>user button</para>
@@ -4607,16 +4608,56 @@ file yet.
 </section>
 </chapter>
 
-<chapter id="common-problems"><title>Common problems and what to do about them (Troubleshooting)</title>
-    <para>
+<chapter id="common-problems">
+  <title>Common problems and what to do about them (Troubleshooting)</title>
+  <para>
+    &FIXME;
     <screen>
-        What's a panic?  How to report it to bug tracker, how to make
-          it non-fatal.
-        Mouse behavior, enabling and disabling
-        Keyboard mapping problems
-        [...]
+      How to report a panic to the bug tracker?
+      Keyboard mapping problems
+      [...]
     </screen>
+  </para>
+
+  <section>
+    <title>Bochs panics! What can I do?</title>
+    <para>
+      Bochs does a very good job in emulating an x86 compatible computer, however,
+      it does not (yet) include a full (100%) emulation of every possible instruction,
+      (BIOS) function call or (hardware) device. Thus, in case something unusual
+      happens, either a not-so-common call to some (BIOS) function or device by
+      some software running inside of it, Bochs has two possibilities to react:
+      If the command doesn't look important (mainly happens only to non-implemented
+      functions in the BIOS), a notice is logged to the <link linkend="bochsopt-log">log file</link>
+      and the emulation continues. If, however, the command looks important, Bochs
+      panics, because the software being emulated might depend on the successful
+      execution of the given instruction or behaviour of the device.
     </para>
+    <para>
+      A panic does not always mean that the software won't run inside of Bochs,
+      as the software might just be probing the computer for the presence of some
+      instruction/device, and in case it is not found, it simply won't be used at
+      all, by the software.
+    </para>
+    <para>
+      You can tell Bochs what to do in case of a panic, by re-configuring the
+      <link linkend="bochsopt-debug-info-error-panic">panic option</link>. If
+      you change the action to "ask", Bochs reports what has happend and asks
+      you what to do. The appearance of the "ask" feature depends on the display
+      library used and the platform. Some display libraries don't support it at all.
+    </para>
+  </section>
+
+  <section id="mouse-toggle">
+    <title>Mouse behavior, enabling and disabling</title>
+    <para>
+      Refer to <xref linkend="headerbar"> for information on how to enable or
+      disable the mouse inside of Bochs at run-time. 
+    </para>
+    <para>
+      &FIXME; Mouse behavior
+    </para>
+  </section>
 </chapter>
 
 <chapter id="mailinglist">
@@ -4795,7 +4836,7 @@ Create a flat image
 </title>
 
 <para>
-Option 1: Using the unix dd utility :
+Option 1: Using the Unix dd utility :
 </para>
 
 <para>
@@ -4910,9 +4951,9 @@ I wrote 10321920 bytes to teaching.img.
 </para>
 
 <para>
-The following line should appear in your bochsrc:
+The following line should appear in your <filename>bochsrc</filename>:
 <screen>
-  diskc: file="teaching.img", cyl=20, heads=16, spt=63
+  <link linkend="bochsopt-ata-master-slave">ata0-master</link>: type=disk, path="teaching.img", mode=flat, cylinders=20, heads=16, spt=63
 </screen>
 </para>
 
@@ -5148,13 +5189,14 @@ blank) very quickly after you have stopped typing.  The reason is that Bochs
 simulates everything as fast as it can.  If the CPU is very busy (running
 instructions nonstop), simulated time goes by slowly.  If the CPU is idle (just
 waiting for you to type, for example), simulated time speeds up dramatically.
-In any case, If the screen saver blanks out the screen, just press a key (try
+In any case, if the screen saver blanks out the screen, just press a key (try
 shift or control) to restore the screen.
 </para>
 
 <para>
-There are two strategies to fix this problem.  One is to increase the "ips"
-setting in your configuration file.  This will cause the simulation time
+There are two strategies to fix this problem.  One is to increase the
+<link linkend="bochsopt-ips">ips setting</link> in your configuration file.
+This will cause the simulation time
 to pass more slowly.  The other strategy is to enable the experimental
 realtime PIT, which tries to keep Bochs in sync with real time. See the bochsrc
 option <link linkend="bochsopt-clock">clock</link>.
@@ -6536,22 +6578,20 @@ The usual rules and tricks of the installed OS still apply (ie 1024 cylinders bo
 <section id="enter-special-keys"><title>How to enter special key combination</title>
 <para>
 Your window manager may trap the key combination you want to enter
-in Bochs guest OS, for example ctrl-alt-del. Here is a work-around:
+in Bochs guest OS, for example <keycombo action="simul"><keycap>control</keycap><keycap>alt</keycap><keycap>delete</keycap></keycombo>. Here is a work-around:
 </para>
 <para>
-press and hold CTRL+ALT, move your mouse cursor outside of the Bochs
-window.  Release them, move the cursor back in the Bochs window and
-press DEL.
+Press and hold <keycombo action="simul"><keycap>control</keycap><keycap>alt</keycap></keycombo>,
+move your mouse cursor outside of the Bochs window.  Release them, move
+the cursor back in the Bochs window and press <keycap>delete</keycap>.
 </para>
 <para>
 This should work for any key combination. 
 </para>
 <para>
-You can also define one
-user key combination (up to three keys from "alt", "bksp", "ctrl", "del", 
-"esc", "f1", "f4", "tab", "win") in your configuration file.
-This key combination is sent to the guest os when you press the user short-cut
-gui button.
+You can also define one <link linkend="bochsopt-user-shortcut">user key combination</link>
+in your configuration file.  This key combination is sent to the guest OS
+when you press the user button in the <link linkend="headerbar">headerbar</link>.
 </para>
 </section>
 
@@ -7196,7 +7236,7 @@ before writing new data. If no disk space is available, a panic will occur.
 <para>
     The redolog is dynamically created at runtime, when
     Bochs starts, and is deleted when Bochs closes (win32)
-    or just after it has been created (unix).
+    or just after it has been created (Unix).
 </para>
 <para>
     All writes go to the redolog, reads are done from the 
@@ -7802,7 +7842,7 @@ or any later version published by the Free Software Foundation.
 
           <section id="guest-dos"><title>DOS</title>
 <para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install or use MS-DOS, OS2, DR-DOS, or any other DOS as a guest OS in Bochs.</para>
+<xref linkend="thirdparty"> before you install or use MS-DOS, OS/2, DR-DOS, or any other DOS as a guest OS in Bochs.</para>
 <section><title>Accessing your CDROM</title>
 <para>
 To access your CDROM in DOS, you must download an IDE CDROM driver.  
@@ -10012,7 +10052,7 @@ DO NOT have OSR5 look for the card, as Bochs may likely crash. (It did in versio
 
 <para>
 You can also configure a printer, if you want.  Using the spoolpipe utility that I wrote
-(which can be found in Bochs's misc directory), you can print from OSR5 through the parallel 
+(which can be found in Bochs' misc directory), you can print from OSR5 through the parallel 
 port, and you'll hardly notice
 that the printing is going through an extra layer of operating system!  
 (You could also set up a printer using network printing, if the printer is not on the host machine...)
