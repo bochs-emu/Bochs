@@ -345,7 +345,7 @@ do_another_FPU_instruction:
 		  unmasked &= ~0xff;
 		  break;
 		case 1:
-		  loaded_tag = FPU_load_int32((u32 *)data_address, &loaded_data);
+		  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);
 		  break;
 		case 2:
 		  unmasked = FPU_load_double((double *)data_address,
@@ -849,7 +849,7 @@ do_the_FPU_interrupt:
                   unmasked &= ~0xff;
                   break;
                 case 1:
-                  loaded_tag = FPU_load_int32((u32 *)data_address, &loaded_data);
+                  loaded_tag = FPU_load_int32((s32 *)data_address, &loaded_data);
                   break;
                 case 2:
                   unmasked = FPU_load_double((double *)data_address,
