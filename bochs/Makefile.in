@@ -25,7 +25,7 @@
 # the following rules:
 #   use $(VAR) not ${VAR}
 
-VERSION=1.1.x
+VERSION=1.2.x
 VER_STRING=cvs-snapshot
 REL_STRING=
 PREFIX=/usr/local/bochs
@@ -38,7 +38,7 @@ MV=mv
 LN_S=ln -sf
 DLXLINUX_TAR=dlxlinux1.tar.gz
 DLXLINUX_TAR_URL=http://bochs.sourceforge.net/guestos/$(DLXLINUX_TAR)
-DLXLINUX_ROMFILE=BIOS-bochs-2001_0517
+DLXLINUX_ROMFILE=BIOS-bochs-2001_0524
 GUNZIP=gunzip
 WGET=wget
 SED=sed
