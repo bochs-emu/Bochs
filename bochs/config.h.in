@@ -58,7 +58,10 @@
 
 #define BX_APIC_SUPPORT 0
 // include in APIC models, required for a multiprocessor system.
-// May not compile with BX_APIC_SUPPORT=0, I haven't tried.
+
+#if (BX_SMP_PROCESSORS>1 && !BX_APIC_SUPPORT)
+#error For multiprocessor simulation, BX_APIC_SUPPORT is required.
+#endif
 
 #define BX_DEBUG_LINUX 0
 // if simulating Linux, this provides a few more debugging options

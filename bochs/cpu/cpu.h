@@ -1520,7 +1520,13 @@ public: // for now...
 #endif
 
 
+#if BX_SMP_PROCESSORS==1
+// single processor simulation, so there's one of everything
+extern BX_CPU_C       bx_cpu;
+#else
+// multiprocessor simulation, we need an array of cpus and memories
 extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
+#endif
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 

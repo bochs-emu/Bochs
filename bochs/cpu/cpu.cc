@@ -60,8 +60,15 @@ const Boolean bx_parity_lookup[256] = {
 #endif
 
 
+#if BX_SMP_PROCESSORS==1
+// single processor simulation, so there's one of everything
+BX_CPU_C    bx_cpu;
+BX_MEM_C    bx_mem;
+#else
+// multiprocessor simulation, we need an array of cpus and memories
 BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
 BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
+#endif
 
 
 

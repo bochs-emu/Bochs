@@ -144,9 +144,15 @@ extern "C" {
 #define BX_INTR                     bx_pc_system.INTR
 #define BX_SET_INTR(b)              bx_pc_system.set_INTR(b)
 #define BX_CPU_C                    bx_cpu_c
-#define BX_CPU(x)                   (bx_cpu_array[x])
 #define BX_MEM_C                    bx_mem_c
+#if BX_SMP_PROCESSORS==1
+#define BX_CPU(x)                   (&bx_cpu)
+#define BX_MEM(x)                   (&bx_mem)
+#else
+#define BX_CPU(x)                   (bx_cpu_array[x])
 #define BX_MEM(x)                   (bx_mem_array[x])
+#endif
+
 #define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 

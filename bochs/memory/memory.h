@@ -27,7 +27,7 @@
 #if BX_USE_MEM_SMF
 // if static member functions on, then there is only one memory
 #  define BX_MEM_SMF  static
-#  define BX_MEM_THIS bx_mem_array[0]->
+#  define BX_MEM_THIS BX_MEM(0)->
 #else
 #  define BX_MEM_SMF
 #  define BX_MEM_THIS this->
@@ -64,8 +64,14 @@ public:
   };
 
 #if BX_PROVIDE_CPU_MEMORY==1
+
+#if BX_SMP_PROCESSORS==1
+extern BX_MEM_C    bx_mem;
+#else
 extern BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
-#endif
+#endif  /* BX_SMP_PROCESSORS */
+
+#endif  /* BX_PROVIDE_CPU_MEMORY==1 */
 
 #if BX_DEBUGGER
 #  define BX_DBG_DIRTY_PAGE(page) BX_MEM(0)->dbg_dirty_pages[page] = 1;
