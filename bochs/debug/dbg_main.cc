@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.43 2002-04-18 00:22:19 bdenney Exp $
+// $Id: dbg_main.cc,v 1.44 2002-07-08 11:49:47 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -359,8 +359,6 @@ process_sim2:
   // initialize hardware
   bx_init_hardware();   // doesn't this duplicate things?
 
-  SIM->set_init_done (1);
-
 #if BX_NUM_SIMULATORS >= 2
   bx_debugger.compare_at_sync.cpu    = 0;
   bx_debugger.compare_at_sync.memory = 0;
@@ -407,6 +405,8 @@ process_sim2:
 
   // (mch) Moved from main.cc
   bx_devices.init(BX_MEM(0));
+  SIM->set_init_done (1);
+
   bx_gui.init_signal_handlers ();
   bx_pc_system.start_timers();
 
