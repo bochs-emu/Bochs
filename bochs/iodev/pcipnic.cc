@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.1 2004-01-13 19:21:21 mcb30 Exp $
+// $Id: pcipnic.cc,v 1.2 2004-02-10 23:47:31 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -105,21 +105,45 @@ bx_pcipnic_c::init(void)
   // FIXME: eth_tuntap.cc rips script straight from ne2k options...
   //
   bx_options.ne2k.Oscript->set ( bx_options.pnic.Oscript->getptr() );
+#if BX_PLUGINS
+  plugin_t *anIter;
+  for (anIter = plugins; (anIter != NULL) && strcmp(anIter->name, "ne2k"); anIter = anIter->next);
+  BX_ASSERT(anIter != NULL);
+  BX_PNIC_THIS ethdev = (*(eth_pktmover_c *(*)
+                           (const char *, const char *, const char *, eth_rx_handler_t, void *))
+                        lt_dlsym(anIter->handle, "_ZN13eth_locator_c6createEPKcS1_S1_PFvPvPKvjES2_"))
+                                             (ethmod,
+                                              bx_options.pnic.Oethdev->getptr (),
+                                              (const char *) bx_options.pnic.Omacaddr->getptr (),
+                                              rx_handler, 
+                                              this);
+#else
   BX_PNIC_THIS ethdev = eth_locator_c::create(ethmod,
                                               bx_options.pnic.Oethdev->getptr (),
                                               (const char *) bx_options.pnic.Omacaddr->getptr (),
                                               rx_handler, 
                                               this);
+#endif
 
   if (BX_PNIC_THIS ethdev == NULL) {
     BX_PANIC(("could not find eth module %s", ethmod));
     // if they continue, use null.
     BX_INFO(("could not find eth module %s - using null instead", ethmod));
 
+#if BX_PLUGINS
+  BX_PNIC_THIS ethdev = (*(eth_pktmover_c *(*)
+                           (const char *, const char *, const char *, eth_rx_handler_t, void *))
+                        lt_dlsym(anIter->handle, "_ZN13eth_locator_c6createEPKcS1_S1_PFvPvPKvjES2_"))
+                                               ("null", NULL,
+                                                (const char *) bx_options.pnic.Omacaddr->getptr (),
+                                                rx_handler, 
+                                                this);
+#else
     BX_PNIC_THIS ethdev = eth_locator_c::create("null", NULL,
                                                 (const char *) bx_options.pnic.Omacaddr->getptr (),
                                                 rx_handler, 
                                                 this);
+#endif
     if (BX_PNIC_THIS ethdev == NULL)
       BX_PANIC(("could not locate null module"));
   }

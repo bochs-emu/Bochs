@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.64 2004-02-02 21:47:26 vruppert Exp $
+// $Id: devices.cc,v 1.65 2004-02-10 23:47:29 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.64 2004-02-02 21:47:26 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.65 2004-02-10 23:47:29 danielg4 Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -194,8 +194,10 @@ bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_PCI_DEV_SUPPORT
     PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
 #endif
-#if BX_PCI_PNIC_SUPPORT
+#if BX_PCI_PNIC_SUPPORT && BX_NE2K_SUPPORT
+  if (bx_options.ne2k.Opresent->get ()) {
     PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
+  }
 #endif
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
