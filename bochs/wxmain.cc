@@ -1,6 +1,6 @@
 //
 // wxmain.cc
-// $Id: wxmain.cc,v 1.1.2.16 2002-03-25 04:01:09 bdenney Exp $
+// $Id: wxmain.cc,v 1.1.2.17 2002-03-25 04:31:48 bdenney Exp $
 //
 // Main program for wxWindows.  This does not replace main.cc by any means.
 // It just provides the program entry point, and calls functions in main.cc
@@ -296,6 +296,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
   // create a MyPanel that covers the whole frame
   panel = new MyPanel (this, -1);
+  panel->SetBackgroundColour (wxColour (0,0,0));
   wxGridSizer *sz = new wxGridSizer (1, 1);
   sz->Add (panel, 0, wxGROW);
   SetAutoLayout (TRUE);
@@ -1073,8 +1074,14 @@ void bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		DrawBochsBitmap(wxCursorX * 8, wxCursorY * 16, 8, 16, (char *)&bx_vgafont[cChar].data, cAttr);
 	}
 
+#if defined(__WXMSW__)
+	// For some reason, on windows the postevent trick does not
+	// cause a paint event.
+	thePanel->Refresh(FALSE);
+#else
 	wxPaintEvent event;
 	wxPostEvent (thePanel, event);
+#endif
 }
 
 
