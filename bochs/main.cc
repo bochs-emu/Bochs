@@ -280,18 +280,18 @@ void bx_init_options ()
   bx_options.diskc.Ocylinders = new bx_param_num_c (BXP_DISKC_CYLINDERS,
       "diskc:cylinders",
       "Number of cylinders",
-      1, 65535,
-      1);
+      0, 65535,
+      0);
   bx_options.diskc.Oheads = new bx_param_num_c (BXP_DISKC_HEADS,
       "diskc:heads",
       "Number of heads",
-      1, 65535,
-      1);
+      0, 65535,
+      0);
   bx_options.diskc.Ospt = new bx_param_num_c (BXP_DISKC_SPT,
       "diskc:spt",
       "Number of sectors per track",
-      1, 65535,
-      1);
+      0, 65535,
+      0);
   bx_options.diskc.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
   bx_options.diskc.Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
   bx_options.diskc.Oheads->set_ask_format ("Enter number of heads: [%d] ");
@@ -326,18 +326,18 @@ void bx_init_options ()
   bx_options.diskd.Ocylinders = new bx_param_num_c (BXP_DISKD_CYLINDERS,
       "diskd:cylinders",
       "Number of cylinders",
-      1, 65535,
-      1);
+      0, 65535,
+      0);
   bx_options.diskd.Oheads = new bx_param_num_c (BXP_DISKD_HEADS,
       "diskd:heads",
       "Number of heads",
-      1, 65535,
-      1);
+      0, 65535,
+      0);
   bx_options.diskd.Ospt = new bx_param_num_c (BXP_DISKD_SPT,
       "diskd:spt",
       "Number of sectors per track",
-      1, 65535,
-      1);
+      0, 65535,
+      0);
   bx_options.diskd.Opath->set_ask_format ("Enter new filename, or none for no disk: [%s] ");
   bx_options.diskd.Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
   bx_options.diskd.Oheads->set_ask_format ("Enter number of heads: [%d] ");
