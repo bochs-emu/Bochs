@@ -53,7 +53,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="<!--#include virtual="release.txt" -->" class="sidebar">Download Current</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=See+All+Releases&url=http://sourceforge.net/project/showfiles.phpqmrkgroup_ideq12580" class="sidebar">See All Releases</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="diskimages.html" class="sidebar">Disk Images</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/diskimages.html" class="sidebar">Disk Images</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580" class="sidebar">Anonymous CVS</a>
 
 
@@ -62,7 +62,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+FAQ&url=http://bochs.sourceforge.net/docs-html/faq.html" class="sidebar">Bochs FAQ</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Help+Documents&url=http://bochs.sourceforge.net/docs-html/" class="sidebar">Documentation</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/alldocs.html" class="sidebar">New Docs (in progress)</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="mailinglists.html" class="sidebar">Mailing Lists</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/mailinglists.html" class="sidebar">Mailing Lists</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Discussion+Boards&url=http://sourceforge.net/forum/qmrkgroup_ideq12580" class="sidebar">Dicussion Boards</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/cgi-bin/status2.pl" class="sidebar">Testing Status</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SourceForge+Site+Docs&url=http://sourceforge.net/docman/qmrkgroup_ideq1" class="sidebar">SF Site Docs</a>
@@ -75,19 +75,19 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 
 <br><br><center><b>Development</b></center>
 
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="getinvolved.html" class="sidebar">Get Involved</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/getinvolved.html" class="sidebar">Get Involved</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Source+Code&url=http://bochs.sourceforge.net/cgi-bin/lxr/source" class="sidebar">View the Source</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Patches&url=http://sourceforge.net/tracker/qmrkatideq312580ampgroup_ideq12580ampfunceqbrowse" class="sidebar">Patches</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="techdata.html" class="sidebar">Tech Specs Pages</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/techdata.html" class="sidebar">Tech Specs Pages</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580" class="sidebar">CVS Write Access</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Status&url=http://bochs.sourceforge.net/docs-html/cvs-status.html" class="sidebar">CVS Status</a>
 
 <br><br><center><b>Resources</b></center>
 
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="news.html" class="sidebar">Bochs History</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="links.html" class="sidebar">Bochs Links</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="related.html" class="sidebar">Related Links</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="screenshots.html" class="sidebar">Screen Shots</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/news.html" class="sidebar">Bochs History</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/links.html" class="sidebar">Bochs Links</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/related.html" class="sidebar">Related Links</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/screenshots.html" class="sidebar">Screen Shots</a>
 
 </font>
 </td><td colspan="2" valign="top">
