@@ -1413,6 +1413,21 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  }
           break;
 
+        case 0xef: // set features
+	  switch(BX_SELECTED_CONTROLLER.features) {
+	    case 0x02: // Enable and
+	    case 0x82: //  Disable write cache.
+	    case 0xAA: // Enable and
+	    case 0x55: //  Disable look-ahead cache.
+	      bx_printf("disk: SET FEATURES subcommand not supported by disk.\n");
+	      command_aborted(value);
+	    break;
+
+	    default:
+	      bx_panic("disk: SET FEATURES with unknown subcommand: 0x%02x\n", (unsigned) BX_SELECTED_CONTROLLER.features );
+	  }
+	  break;
+
         case 0x40: //
           if (bx_options.newHardDriveSupport) {
 	    if (BX_SELECTED_HD.device_type != IDE_DISK)
