@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.20 2004-09-04 19:37:37 sshwarts Exp $
+// $Id: stack32.cc,v 1.21 2004-09-26 20:29:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -319,7 +319,6 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
   BX_PANIC(("ENTER_IwIb: not supported by 8086!"));
 #else
   Bit32u frame_ptr32;
-  Bit16u frame_ptr16;
   Bit8u level;
   static Bit8u first_time = 1;
 
@@ -333,6 +332,7 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
     BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
     first_time = 0;
   }
+
 //if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os32L()==0) {
 //  BX_INFO(("enter(): stacksize!=opsize: I'm unsure of the code for this"));
 //  BX_PANIC(("         The Intel manuals are a mess on this one!"));
@@ -425,13 +425,13 @@ BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
         }
       }
     else { /* 16bit opsize */
+      Bit16u frame_ptr16 = frame_ptr32;
+
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* 32bit stacksize */
-        frame_ptr16 = frame_ptr32;
         ESP -= 2;
         write_virtual_word(BX_SEG_REG_SS, ESP, &frame_ptr16);
         }
       else {
-        frame_ptr16 = frame_ptr32;
         SP -= 2;
         write_virtual_word(BX_SEG_REG_SS, SP, &frame_ptr16);
         }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.13 2004-09-04 10:21:28 sshwarts Exp $
+// $Id: stack64.cc,v 1.14 2004-09-26 20:29:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -257,27 +257,27 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
     BX_ERROR(("enter() with level > 0. The emulation of this instruction may not be complete.  This warning will be printed only once per bochs run."));
     first_time = 0;
   }
+
 //if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b && i->os64L()==0) {
 //  BX_INFO(("enter(): stacksize!=opsize: I'm unsure of the code for this"));
 //  BX_PANIC(("         The Intel manuals are a mess on this one!"));
 //  }
 
-    {
-    Bit64u bytes_to_push, temp_RSP;
+  Bit64u bytes_to_push, temp_RSP;
 
-    if (level == 0) {
-      bytes_to_push = 8 + i->Iw();
-      }
-    else { /* level > 0 */
-      bytes_to_push = 8 + (level-1)*8 + 8 + i->Iw();
-      }
-
-    temp_RSP = RSP;
-    if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_RSP, bytes_to_push) ) {
-      BX_ERROR(("ENTER: not enough room on stack!"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-      }
+  if (level == 0) {
+    bytes_to_push = 8 + i->Iw();
     }
+  else { /* level > 0 */
+    bytes_to_push = 8 + level*8 + i->Iw();
+    }
+
+  temp_RSP = RSP;
+  if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_RSP, bytes_to_push))
+  {
+    BX_ERROR(("ENTER: not enough room on stack!"));
+    exception(BX_SS_EXCEPTION, 0, 0);
+  }
 
   push_64(RBP);
 
@@ -292,16 +292,16 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
       read_virtual_qword(BX_SEG_REG_SS, RBP, &temp64);
       ESP -= 8;
       write_virtual_qword(BX_SEG_REG_SS, RSP, &temp64);
-      } /* while (--level) */
+    } /* while (--level) */
 
     /* push(frame pointer) */
     RSP -= 8;
     write_virtual_qword(BX_SEG_REG_SS, RSP, &frame_ptr64);
-    } /* if (level > 0) ... */
+  } /* if (level > 0) ... */
 
   RBP = frame_ptr64;
 
-  RSP = RSP - i->Iw();
+  RSP -= RSP - i->Iw();
 }
 
   void
@@ -311,12 +311,9 @@ BX_CPU_C::LEAVE64(bxInstruction_c *i)
   RSP = RBP;
 
   // restore frame pointer
-  {
   Bit64u temp64;
-
   pop_64(&temp64);
   RBP = temp64;
-  }
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

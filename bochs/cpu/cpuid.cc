@@ -122,47 +122,6 @@ static Bit32u get_std_cpuid_features()
 {
   Bit32u features = 0; // start with none
 
-      // EAX:       CPU Version Information
-      //   [3:0]   Stepping ID
-      //   [7:4]   Model: starts at 1
-      //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
-      //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-      //   [31:14] Reserved
-      // EBX:      
-      //   [7:0]   Brand ID
-      //   [15:8]  CFLUSH cache line size (value*8 = cache line size in bytes)
-      //   [23:16] Number of logical processors in one physical processor
-      //   [31:24] Local Apic ID
-      // ECX:       Feature Flags::Extended
-      //   [0:0]   PNI
-      //   [3:3]   MONITOR/MWAIT
-      //   [7:7]   Enchanced Intel Speedstep Technology
-      // EDX:       Feature Flags
-      //   [0:0]   FPU on chip
-      //   [1:1]   VME: Virtual-8086 Mode enhancements
-      //   [2:2]   DE: Debug Extensions (I/O breakpoints)
-      //   [3:3]   PSE: Page Size Extensions
-      //   [4:4]   TSC: Time Stamp Counter
-      //   [5:5]   MSR: RDMSR and WRMSR support
-      //   [6:6]   PAE: Physical Address Extensions
-      //   [7:7]   MCE: Machine Check Exception
-      //   [8:8]   CXS: CMPXCHG8B instruction
-      //   [9:9]   APIC: APIC on Chip
-      //   [10:10] Reserved
-      //   [11:11] SYSENTER/SYSEXIT support
-      //   [12:12] MTRR: Memory Type Range Reg
-      //   [13:13] PGE/PTE Global Bit
-      //   [14:14] MCA: Machine Check Architecture
-      //   [15:15] CMOV: Cond Mov/Cmp Instructions
-      //   [22:16] Reserved
-      //   [23:23] MMX Technology
-      //   [24]    FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-      //   [25]    SSE: SSE Extensions
-      //   [26]    SSE2: SSE2 Extensions
-      //   [28]    Reserved
-      //   [29]    TM: Therm Monitor
-      //   [31:30] Reserved
-
 #if BX_SUPPORT_FPU
       features |= 0x01;
 #endif
@@ -243,6 +202,53 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       break;
 
     case 1:
+      // EAX:       CPU Version Information
+      //   [3:0]   Stepping ID
+      //   [7:4]   Model: starts at 1
+      //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
+      //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
+      //   [31:14] Reserved
+      // EBX:      
+      //   [7:0]   Brand ID
+      //   [15:8]  CFLUSH cache line size (value*8 = cache line size in bytes)
+      //   [23:16] Number of logical processors in one physical processor
+      //   [31:24] Local Apic ID
+      // ECX:       Feature Flags::Extended
+      //   [0:0]   PNI
+      //   [2:1]   Reserved
+      //   [3:3]   MONITOR/MWAIT
+      //   [4:4]   CPL qualified debug store available
+      //   [6:5]   Reserved
+      //   [7:7]   Enchanced Intel Speedstep Technology
+      //   [8:8]   TM2: Thermal Monitor 2
+      //   [12:9]  Reserved
+      //   [13:13] CMPXCHG16B
+      //   [31:14] Reserved
+      // EDX:       Feature Flags
+      //   [0:0]   FPU on chip
+      //   [1:1]   VME: Virtual-8086 Mode enhancements
+      //   [2:2]   DE: Debug Extensions (I/O breakpoints)
+      //   [3:3]   PSE: Page Size Extensions
+      //   [4:4]   TSC: Time Stamp Counter
+      //   [5:5]   MSR: RDMSR and WRMSR support
+      //   [6:6]   PAE: Physical Address Extensions
+      //   [7:7]   MCE: Machine Check Exception
+      //   [8:8]   CXS: CMPXCHG8B instruction
+      //   [9:9]   APIC: APIC on Chip
+      //   [10:10] Reserved
+      //   [11:11] SYSENTER/SYSEXIT support
+      //   [12:12] MTRR: Memory Type Range Reg
+      //   [13:13] PGE/PTE Global Bit
+      //   [14:14] MCA: Machine Check Architecture
+      //   [15:15] CMOV: Cond Mov/Cmp Instructions
+      //   [22:16] Reserved
+      //   [23:23] MMX Technology
+      //   [24]    FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+      //   [25]    SSE: SSE Extensions
+      //   [26]    SSE2: SSE2 Extensions
+      //   [28]    Hyper Threading Technology
+      //   [29]    TM: Thermal Monitor
+      //   [31:30] Reserved
       RAX = get_cpu_version_information();
       RBX = 0; // still not implemented
       RCX = get_extended_cpuid_features ();

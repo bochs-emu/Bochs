@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.42 2004-08-18 21:38:50 sshwarts Exp $
+// $Id: arith32.cc,v 1.43 2004-09-26 20:29:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -436,8 +436,7 @@ BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
 BX_CPU_C::CWDE(bxInstruction_c *i)
 {
   /* CBW: no flags are effected */
-  Bit32u temp = (Bit16s) AX;
-  RAX = temp;
+  RAX = (Bit16s) AX;
 }
 
   void
