@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.47 2002-02-01 16:46:27 vruppert Exp $
+// $Id: harddrv.cc,v 1.48 2002-02-03 20:49:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.47 2002-02-01 16:46:27 vruppert Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.48 2002-02-03 20:49:43 vruppert Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -990,7 +990,16 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 				    } else if (!LoEj && Start) { // start the disc and read the TOC
 					  BX_PANIC(("Start disc not implemented"));
 				    } else if (LoEj && !Start) { // Eject the disc
-					  BX_PANIC(("Eject the disc not implemented"));
+                                          atapi_cmd_nop();
+                                          if (BX_HD_THIS s[1].cdrom.ready) {
+#ifdef LOWLEVEL_CDROM
+                                            BX_HD_THIS s[1].cdrom.cd->eject_cdrom();
+#endif
+                                            BX_HD_THIS s[1].cdrom.ready = 0;
+                                            bx_options.cdromd.Oinserted->set(BX_EJECTED);
+                                            bx_gui.update_floppy_status_buttons();
+                                          }
+                                          raise_interrupt();
 				    } else { // Load the disc
 					  // My guess is that this command only closes the tray, that's a no-op for us
 					  atapi_cmd_nop();
@@ -2652,11 +2661,17 @@ bx_hard_drive_c::set_cd_media_status(unsigned status)
       BX_HD_THIS s[1].cdrom.ready = 1;
       BX_HD_THIS s[1].cdrom.capacity = BX_HD_THIS s[1].cdrom.cd->capacity();
       bx_options.cdromd.Oinserted->set(BX_INSERTED);
+      BX_SELECTED_HD.sense.sense_key = SENSE_UNIT_ATTENTION;
+      BX_SELECTED_HD.sense.asc = 0;
+      BX_SELECTED_HD.sense.ascq = 0;
+      raise_interrupt();
       }
     else {		    
+#endif
       BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS s[1].cdrom.ready = 0;
       bx_options.cdromd.Oinserted->set(BX_EJECTED);
+#ifdef LOWLEVEL_CDROM
       }
 #endif
     }

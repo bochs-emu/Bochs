@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.8 2002-02-01 16:46:27 vruppert Exp $
+// $Id: harddrv.h,v 1.9 2002-02-03 20:49:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,7 +26,8 @@
 
 
 typedef enum _sense {
-      SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5
+      SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
+      SENSE_UNIT_ATTENTION = 6
 } sense_t;
 
 typedef enum _asc {
