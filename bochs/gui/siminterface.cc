@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.85 2002-11-19 09:27:38 bdenney Exp $
+// $Id: siminterface.cc,v 1.86 2002-11-21 19:12:31 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -817,7 +817,7 @@ bx_param_num_c::set (Bit64s newval)
     // just set the value.  This code does not check max/min.
     val.number = newval;
   }
-  if (val.number < min || val.number > max) 
+  if ((val.number < min || val.number > max) && max != BX_MAX_BIT64U)
     BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), val.number, min, max));
   if (dependent_list != NULL) update_dependents ();
 }
@@ -995,7 +995,7 @@ void
 bx_shadow_num_c::set (Bit64s newval)
 {
   Bit64u tmp = 0;
-  if (newval < min || newval > max)
+  if ((newval < min || newval > max) && max != BX_MAX_BIT64U)
     BX_PANIC (("numerical parameter %s was set to %lld, which is out of range %lld to %lld", get_name (), newval, min, max));
   switch (varsize) {
     case 8: 
