@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.27 2002-10-25 12:36:42 bdenney Exp $
+// $Id: debugstuff.cc,v 1.28 2002-10-27 15:15:12 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -514,12 +514,16 @@ BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   cpu->tr6 = 0;
   cpu->tr7 = 0;
 
+#if BX_CPU_LEVEL >= 2
   // cr0:32=pg,cd,nw,am,wp,ne,ts,em,mp,pe
   cpu->cr0 = BX_CPU_THIS_PTR cr0.val32;
   cpu->cr1 = 0;
   cpu->cr2 = BX_CPU_THIS_PTR cr2;
   cpu->cr3 = BX_CPU_THIS_PTR cr3;
+#endif
+#if BX_CPU_LEVEL >= 4
   cpu->cr4 = BX_CPU_THIS_PTR cr4.getRegister();
+#endif
 
   cpu->inhibit_mask = BX_CPU_THIS_PTR inhibit_mask;
 
@@ -907,12 +911,14 @@ BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   // BX_CPU_THIS_PTR tr7 = cpu->tr7;
 
 
+#if BX_CPU_LEVEL >= 2
   // cr0, cr1, cr2, cr3, cr4
   SetCR0(cpu->cr0);
   BX_CPU_THIS_PTR cr1 = cpu->cr1;
   BX_CPU_THIS_PTR cr2 = cpu->cr2;
   BX_CPU_THIS_PTR cr3 = cpu->cr3;
-#if BX_CPU_LEVEL >= 5
+#endif
+#if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.setRegister(cpu->cr4);
 #endif
 
