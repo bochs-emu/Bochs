@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.79 2003-06-30 18:53:12 vruppert Exp $
+// $Id: vga.cc,v 1.80 2003-07-01 16:07:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2857,7 +2857,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
         case VBE_DISPI_INDEX_ENABLE: // enable video
         {
-          if (value)
+          if (value & VBE_DISPI_ENABLED)
           {
             unsigned depth=0;
 
@@ -2870,7 +2870,6 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_VGA_THIS s.vbe_offset_y=0;
             BX_VGA_THIS s.vbe_virtual_start=0;
 
-            // FIXME: VBE allows for *not* clearing the screen when setting a mode
             switch((BX_VGA_THIS s.vbe_bpp))
             {
               // Default pixel sizes
@@ -2882,7 +2881,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
                 break;
 
               case VBE_DISPI_BPP_4: 
-                BX_VGA_THIS s.vbe_bpp_multiplier = 0;
+                BX_VGA_THIS s.vbe_bpp_multiplier = 1;
                 BX_VGA_THIS s.vbe_line_byte_width = BX_VGA_THIS s.vbe_virtual_xres;
                 BX_VGA_THIS s.vbe_visable_screen_size = ((BX_VGA_THIS s.vbe_xres) * (BX_VGA_THIS s.vbe_yres));
                 depth=4;
@@ -2912,15 +2911,20 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
             BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, BX_VGA_THIS s.vbe_bpp, BX_VGA_THIS s.vbe_visable_screen_size));
 
-            memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
-
-            bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
+            if (depth > 4)
+            {
+              if ((value & VBE_DISPI_NOCLEARMEM) == 0)
+              {
+                memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visable_screen_size);
+              }
+              bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
+            }
           }
           else
           {
             BX_INFO(("VBE disabling"));
           }     
-          BX_VGA_THIS s.vbe_enabled=(bx_bool) value; 
+          BX_VGA_THIS s.vbe_enabled=(bx_bool)(value & VBE_DISPI_ENABLED);
         } break;
 
         case VBE_DISPI_INDEX_X_OFFSET:

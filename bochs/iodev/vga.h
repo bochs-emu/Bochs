@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.31 2003-06-30 18:53:12 vruppert Exp $
+// $Id: vga.h,v 1.32 2003-07-01 16:07:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,6 +59,8 @@
 
   #define VBE_DISPI_DISABLED              0x00
   #define VBE_DISPI_ENABLED               0x01
+  #define VBE_DISPI_NOCLEARMEM            0x80
+
   #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
 
   
