@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.18 2002-09-02 20:13:43 bdenney Exp $
+// $Id: wxdialog.cc,v 1.19 2002-09-02 22:12:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -15,6 +15,7 @@
 #include <wx/wx.h>
 #endif
 #include <wx/spinctrl.h>
+#include <wx/config.h>
 
 #include "config.h"              // definitions based on configure script
 #include "osdep.h"               // workarounds for missing stuff
@@ -337,12 +338,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       EndModal (wxOK);
       break;
     case ID_Browse:
-      {
-      long style = wxOPEN;
-      wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
-      if (fdialog->ShowModal () == wxID_OK)
-	SetFilename (fdialog->GetPath().c_str ());
-      }
+      BrowseTextCtrl (filename);
       break;
     case ID_Create:
       {
@@ -548,12 +544,7 @@ void HDConfigDialog::OnEvent(wxCommandEvent& event)
       EndModal (wxOK);
       break;
     case ID_Browse:
-      {
-      long style = wxOPEN;
-      wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
-      if (fdialog->ShowModal () == wxID_OK)
-	SetFilename (fdialog->GetPath().c_str ());
-      }
+      BrowseTextCtrl (filename);
       break;
     case wxID_CANCEL:
       EndModal (wxCANCEL);
@@ -753,12 +744,7 @@ void CdromConfigDialog::OnEvent(wxCommandEvent& event)
       EndModal (wxOK);
       break;
     case ID_Browse:
-      {
-      long style = wxOPEN;
-      wxFileDialog *fdialog = new wxFileDialog (this, filename->GetValue (), "", "", "*.*", style);
-      if (fdialog->ShowModal () == wxID_OK)
-	SetFilename (fdialog->GetPath().c_str ());
-      }
+      BrowseTextCtrl (filename);
       break;
     case wxID_CANCEL:
       EndModal (wxCANCEL);
@@ -1309,14 +1295,36 @@ void ConfigMemoryDialog::OnEvent(wxCommandEvent& event)
   int id = event.GetId ();
   printf ("you pressed button id=%d\n", id);
   switch (id) {
+    case ID_Browse:
+      {
+	// There are several browse buttons.  Figure out which one was
+	// pressed, and which text control is next to it.
+	wxTextCtrl *text = NULL;
+	wxObject *source = event.GetEventObject ();
+	for (int i=0; i<CONFIG_MEMORY_N_BROWSES; i++) {
+	  if (source == browseBtn[i]) {
+	    switch (i) {
+	      case 0: text = biosImage; break;
+	      case 1: text = vgabiosImage; break;
+	      case 2: case 3: case 4: case 5:
+		text = rom[i-2];
+		break;
+	    }
+	    break;
+	  }
+	}
+	if (!text) return;  // not recognized from browse button array
+	BrowseTextCtrl (text);
+      }
+      break;
     case wxOK:
       {
 	// test validity of the integer fields
 	bool valid;
-	GetTextCtrlInt (biosAddr, "0x%x", true, &valid);
+	GetTextCtrlInt (biosAddr, "0x%x", &valid, true, "Invalid ROM BIOS Address");
 	if (!valid) return;
 	for (int rom=0; rom<CONFIG_MEMORY_N_ROMS; rom++) {
-	  GetTextCtrlInt (romAddr[rom], "0x%x", true, &valid);
+	  GetTextCtrlInt (romAddr[rom], "0x%x", &valid, true, "Invalid Optional ROM address");
 	  if (!valid) return;
 	}
       }
@@ -1397,7 +1405,12 @@ void SetTextCtrl (wxTextCtrl *ctrl, const char *format, int val) {
   ctrl->SetValue (tmp);
 }
 
-int GetTextCtrlInt (wxTextCtrl *ctrl, const char *format, bool complain, bool *valid) {
+int GetTextCtrlInt (wxTextCtrl *ctrl,
+    const char *format,
+    bool *valid,
+    bool complain,
+    wxString complaint) 
+{
   wxString tmp (ctrl->GetValue ());
   char buf[1024];
   strncpy (buf, tmp.c_str(), sizeof(buf));
@@ -1406,14 +1419,26 @@ int GetTextCtrlInt (wxTextCtrl *ctrl, const char *format, bool complain, bool *v
     if (valid) *valid = true;
     return n;
   }
+  n = strtol (buf, NULL, 0);
+  if (n != -1) {
+    if (valid) *valid = true;
+    return n;
+  }
   if (valid) *valid = false;
   if (complain) {
-    wxMessageBox("Invalid integer!", "Invalid", wxOK | wxICON_ERROR );
+    wxMessageBox(complaint, "Invalid", wxOK | wxICON_ERROR );
     ctrl->SetFocus ();
   }
   return -1;
 }
 
+bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
+  // try to configure the dialog to show hidden files
+  wxConfig::Get() -> Write(wxT("/wxWindows/wxFileDialog/ShowHidden"), true);
+  wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), wxString(), style);
+  if (fdialog->ShowModal () == wxID_OK)
+    text->SetValue (fdialog->GetPath ());
+}
 
 
 #ifdef TEST_DIALOG

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.18 2002-09-02 20:13:49 bdenney Exp $
+// $Id: wxdialog.h,v 1.19 2002-09-02 22:12:31 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -23,7 +23,10 @@
 void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext);
 bool CreateImage (int harddisk, int sectors, const char *filename);
 void SetTextCtrl (wxTextCtrl *text, const char *format, int val);
-int GetTextCtrlInt (wxTextCtrl *text, const char *format, bool complain=false, bool *valid = NULL);
+int GetTextCtrlInt (wxTextCtrl *text, const char *format, bool *valid = NULL, bool complain=false, wxString complaint = "Invalid integer!");
+bool BrowseTextCtrl (wxTextCtrl *text,
+    wxString prompt="Choose a file",
+    long style=wxOPEN);
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
@@ -474,14 +477,14 @@ public:
   void SetBios (wxString filename) { biosImage->SetValue (filename); }
   void SetVgaBios (wxString filename) { vgabiosImage->SetValue (filename); }
   void SetRom (int n, wxString filename) { rom[n]->SetValue (filename); }
-  void SetBiosAddr (int addr) { SetTextCtrl (biosAddr, "0x%05x", addr); }
-  void SetRomAddr (int n, int addr) { SetTextCtrl (romAddr[n], "0x%05x", addr); }
+  void SetBiosAddr (int addr) { SetTextCtrl (biosAddr, "0x%05X", addr); }
+  void SetRomAddr (int n, int addr) { SetTextCtrl (romAddr[n], "0x%05X", addr); }
   int GetSize () { return megs->GetValue (); }
   wxString GetBios () { return biosImage->GetValue (); }
   wxString GetVgaBios () { return vgabiosImage->GetValue (); }
   wxString GetRom (int n) { return rom[n]->GetValue (); }
-  int GetBiosAddr () { return GetTextCtrlInt (biosAddr, "0x%x"); }
-  int GetRomAddr (int n) { return GetTextCtrlInt (romAddr[n], "0x%x"); }
+  int GetBiosAddr () { return GetTextCtrlInt (biosAddr, "0x%X"); }
+  int GetRomAddr (int n) { return GetTextCtrlInt (romAddr[n], "0x%X"); }
 
 DECLARE_EVENT_TABLE()
 };
