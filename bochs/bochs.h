@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.137 2004-02-22 18:51:36 vruppert Exp $
+// $Id: bochs.h,v 1.138 2004-06-04 22:06:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -685,6 +685,8 @@ typedef struct BOCHSAPI {
   } bx_options_t;
 
 BOCHSAPI extern bx_options_t bx_options;
+
+void bx_init_options();
 
 void bx_center_print (FILE *file, char *line, int maxwidth);
 
