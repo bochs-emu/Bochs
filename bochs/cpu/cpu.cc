@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.58 2002-10-01 04:13:12 ptrumpet Exp $
+// $Id: cpu.cc,v 1.59 2002-10-03 05:14:50 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -470,6 +470,16 @@ debugger_check:
     }
 
 #endif  // #if BX_DEBUGGER
+#if BX_GDBSTUB
+    {
+      unsigned int reason;
+      if ((reason = bx_gdbstub_check(EIP)) != GDBSTUB_STOP_NO_REASON)
+  	{
+	  return;
+        }
+    }
+#endif
+
     goto main_cpu_loop;
 
 
