@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.44 2002-01-29 17:20:11 vruppert Exp $
+// $Id: keyboard.cc,v 1.45 2002-02-21 20:26:48 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.44 2002-01-29 17:20:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.45 2002-02-21 20:26:48 bdenney Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.44 2002-01-29 17:20:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.45 2002-02-21 20:26:48 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -339,6 +339,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_KEY_SMF
   Bit8u   command_byte;
+  static int kbd_initialized=0;
 
   if (io_len > 1)
     BX_PANIC(("kbd: io write to address %08x, len=%u",
@@ -479,6 +480,12 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
           break;
         case 0xaa: // motherboard controller self test
           BX_DEBUG(("Self Test"));
+	  if( kbd_initialized == 0 )
+	  {
+	    BX_KEY_THIS s.controller_Qsize = 0;
+	    BX_KEY_THIS s.kbd_controller.outb = 0;
+	    kbd_initialized++;
+	  }
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
 		BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
