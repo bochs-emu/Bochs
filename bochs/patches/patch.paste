@@ -1,0 +1,1143 @@
+diff -urN clean/gui/Makefile.in bochs-paste/gui/Makefile.in
+--- clean/gui/Makefile.in	Wed Mar  6 10:58:25 2002
++++ bochs-paste/gui/Makefile.in	Mon Mar 11 09:01:13 2002
+@@ -150,6 +150,7 @@
+  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h \
+  ../gui/bitmaps/reset.h ../gui/bitmaps/power.h \
+  ../gui/bitmaps/snapshot.h ../gui/bitmaps/configbutton.h \
++ ../gui/bitmaps/copy.h ../gui/bitmaps/paste.h \
+  ../gui/bitmaps/cdromd.h
+ keymap.o: keymap.@CPP_SUFFIX@ ../bochs.h keymap.h
+ macintosh.o: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+diff -urN clean/gui/bitmaps/copy.h bochs-paste/gui/bitmaps/copy.h
+--- clean/gui/bitmaps/copy.h	Wed Dec 31 19:00:00 1969
++++ bochs-paste/gui/bitmaps/copy.h	Mon Mar 11 09:01:13 2002
+@@ -0,0 +1,18 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.paste,v 1.1 2002-03-11 14:29:01 bdenney Exp $
++/////////////////////////////////////////////////////////////////////////
++#define BX_COPY_BMAP_X 32
++#define BX_COPY_BMAP_Y 32
++
++static unsigned char bx_copy_bmap[(BX_COPY_BMAP_X*BX_COPY_BMAP_Y)] = {
++  0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00,
++  0x80, 0x60, 0x4e, 0x02, 0x80, 0x90, 0x52, 0x02, 0x80, 0x90, 0x52, 0x02,
++  0x00, 0x6f, 0x8e, 0x03, 0x00, 0x00, 0x02, 0x02, 0xf8, 0x3f, 0x02, 0x02,
++  0x08, 0x20, 0xc0, 0x01, 0xe8, 0x2b, 0x00, 0x00, 0x08, 0x20, 0x00, 0x00,
++  0xe8, 0x2e, 0x00, 0x00, 0x08, 0x20, 0x00, 0x00, 0xe8, 0x39, 0x00, 0x00,
++  0x08, 0x24, 0x00, 0x00, 0x88, 0x20, 0x00, 0x00, 0xe8, 0xaf, 0xff, 0x03,
++  0x08, 0xa0, 0x00, 0x02, 0xf8, 0xbf, 0xbe, 0x02, 0x00, 0x80, 0x00, 0x02,
++  0x80, 0x88, 0xee, 0x02, 0x80, 0x90, 0x00, 0x02, 0x00, 0xbf, 0x9e, 0x03,
++  0x00, 0x90, 0x40, 0x02, 0x00, 0x88, 0x08, 0x02, 0x00, 0x80, 0xfe, 0x02,
++  0x00, 0x80, 0x00, 0x02, 0x00, 0x80, 0xff, 0x03, 0x00, 0x00, 0x00, 0x00,
++  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, };
+diff -urN clean/gui/bitmaps/paste.h bochs-paste/gui/bitmaps/paste.h
+--- clean/gui/bitmaps/paste.h	Wed Dec 31 19:00:00 1969
++++ bochs-paste/gui/bitmaps/paste.h	Mon Mar 11 09:01:13 2002
+@@ -0,0 +1,18 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.paste,v 1.1 2002-03-11 14:29:01 bdenney Exp $
++/////////////////////////////////////////////////////////////////////////
++#define BX_PASTE_BMAP_X 32
++#define BX_PASTE_BMAP_Y 32
++
++static unsigned char bx_paste_bmap[(BX_PASTE_BMAP_X*BX_PASTE_BMAP_Y)] = {
++  0x00, 0x00, 0x00, 0x00, 0xe0, 0x01, 0x10, 0x00, 0x20, 0x9a, 0x93, 0x03,
++  0x20, 0x66, 0x78, 0x04, 0xe0, 0xa5, 0xd3, 0x07, 0x20, 0x24, 0x54, 0x00,
++  0x20, 0xd8, 0x93, 0x03, 0x00, 0x80, 0x01, 0x00, 0x00, 0xc0, 0x02, 0x00,
++  0x00, 0x7c, 0x3f, 0x00, 0xc0, 0x83, 0xc1, 0x03, 0x20, 0x02, 0x40, 0x04,
++  0x20, 0x01, 0x80, 0x04, 0x20, 0x01, 0x80, 0x04, 0xa0, 0xff, 0xff, 0x05,
++  0x20, 0x00, 0x00, 0x04, 0x20, 0x00, 0x00, 0x04, 0x20, 0xf8, 0x3f, 0x04,
++  0x20, 0x08, 0x20, 0x04, 0x20, 0xe8, 0x2b, 0x04, 0x20, 0x08, 0x20, 0x04,
++  0x20, 0xe8, 0x2e, 0x04, 0x20, 0x08, 0x20, 0x04, 0x20, 0xe8, 0x39, 0x04,
++  0x20, 0x08, 0x24, 0x04, 0x20, 0x88, 0x20, 0x04, 0x20, 0xe8, 0x2f, 0x04,
++  0x20, 0x08, 0x20, 0x04, 0x20, 0xf8, 0x3f, 0x04, 0x20, 0x00, 0x00, 0x04,
++  0xc0, 0xff, 0xff, 0x03, 0x00, 0x00, 0x00, 0x00, };
+diff -urN clean/gui/gui.cc bochs-paste/gui/gui.cc
+--- clean/gui/gui.cc	Mon Mar 11 09:00:24 2002
++++ bochs-paste/gui/gui.cc	Mon Mar 11 09:01:13 2002
+@@ -33,6 +33,8 @@
+ #include "gui/bitmaps/reset.h"
+ #include "gui/bitmaps/power.h"
+ #include "gui/bitmaps/snapshot.h"
++#include "gui/bitmaps/copy.h"
++#include "gui/bitmaps/paste.h"
+ #include "gui/bitmaps/configbutton.h"
+ #include "gui/bitmaps/cdromd.h"
+ #if BX_WITH_MACOS
+@@ -47,8 +49,6 @@
+ #include <windows.h>
+ #endif
+ 
+-
+-
+ bx_gui_c   bx_gui;
+ 
+ #define BX_GUI_THIS bx_gui.
+@@ -87,7 +87,9 @@
+   BX_GUI_THIS power_bmap_id = create_bitmap(bx_power_bmap, BX_POWER_BMAP_X, BX_POWER_BMAP_Y);
+   BX_GUI_THIS reset_bmap_id = create_bitmap(bx_reset_bmap, BX_RESET_BMAP_X, BX_RESET_BMAP_Y);
+   BX_GUI_THIS snapshot_bmap_id = create_bitmap(bx_snapshot_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
+-  BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
++  BX_GUI_THIS copy_bmap_id = create_bitmap(bx_copy_bmap, BX_COPY_BMAP_X, BX_COPY_BMAP_Y);
++  BX_GUI_THIS paste_bmap_id = create_bitmap(bx_paste_bmap, BX_PASTE_BMAP_X, BX_PASTE_BMAP_Y);
++  BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_CONFIG_BMAP_X, BX_CONFIG_BMAP_Y);
+ 
+ 
+   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
+@@ -130,18 +132,27 @@
+     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS nomouse_bmap_id,
+                           BX_GRAVITY_LEFT, toggle_mouse_enable);
+ 
++  // These are the buttons on the right side.  They are created in order
++  // of right to left.
++
+   // Power button
+   BX_GUI_THIS power_hbar_id = headerbar_bitmap(BX_GUI_THIS power_bmap_id,
+                           BX_GRAVITY_RIGHT, power_handler);
+   // Reset button
+   BX_GUI_THIS reset_hbar_id = headerbar_bitmap(BX_GUI_THIS reset_bmap_id,
+                           BX_GRAVITY_RIGHT, reset_handler);
+-  // Snapshot button
+-  BX_GUI_THIS snapshot_hbar_id = headerbar_bitmap(BX_GUI_THIS snapshot_bmap_id,
+-                          BX_GRAVITY_RIGHT, snapshot_handler);
+   // Configure button
+   BX_GUI_THIS config_hbar_id = headerbar_bitmap(BX_GUI_THIS config_bmap_id,
+                           BX_GRAVITY_RIGHT, config_handler);
++  // Snapshot button
++  BX_GUI_THIS snapshot_hbar_id = headerbar_bitmap(BX_GUI_THIS snapshot_bmap_id,
++                          BX_GRAVITY_RIGHT, snapshot_handler);
++  // Paste button
++  BX_GUI_THIS paste_hbar_id = headerbar_bitmap(BX_GUI_THIS paste_bmap_id,
++                          BX_GRAVITY_RIGHT, paste_handler);
++  // Copy button
++  BX_GUI_THIS copy_hbar_id = headerbar_bitmap(BX_GUI_THIS copy_bmap_id,
++                          BX_GRAVITY_RIGHT, copy_handler);
+ 
+   show_headerbar();
+ }
+@@ -231,68 +242,114 @@
+   ::exit (1);
+ }
+ 
+-  void
+-bx_gui_c::snapshot_handler(void)
++Bit32s
++bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
+ {
+-  Bit8u* text_snapshot = NULL;
+-  char *snapshot_txt;
++  Bit8u* raw_snap = NULL;
++  char *clean_snap;
+   unsigned line_addr, txt_addr, txHeight, txWidth;
+-#ifdef WIN32
+-  HANDLE hMem;
+-#else
+-  FILE *OUTPUT;
+-#endif
+ 
+-  bx_vga.get_text_snapshot(&text_snapshot, &txHeight, &txWidth);
+-  if (txHeight > 0) {
+-    snapshot_txt = (char*) malloc(txHeight*(txWidth+2)+1);
+-    txt_addr = 0;
+-    for (unsigned i=0; i<txHeight; i++) {
+-      line_addr = i * txWidth * 2;
+-      for (unsigned j=0; j<(txWidth*2); j+=2) {
+-        snapshot_txt[txt_addr] = text_snapshot[line_addr+j];
+-        txt_addr++;
+-      }
+-#ifdef WIN32
+-      snapshot_txt[txt_addr] = 13;
+-      txt_addr++;
+-#endif
+-      snapshot_txt[txt_addr] = 10;
++  bx_vga.get_text_snapshot(&raw_snap, &txHeight, &txWidth);
++  if (txHeight <= 0) return -1;
++  clean_snap = (char*) malloc(txHeight*(txWidth+2)+1);
++  txt_addr = 0;
++  for (unsigned i=0; i<txHeight; i++) {
++    line_addr = i * txWidth * 2;
++    for (unsigned j=0; j<(txWidth*2); j+=2) {
++      clean_snap[txt_addr] = raw_snap[line_addr+j];
+       txt_addr++;
+     }
+-    snapshot_txt[txt_addr] = 0;
+ #ifdef WIN32
+-    if (OpenClipboard(NULL)) {
+-      hMem = GlobalAlloc(GMEM_ZEROINIT, txHeight*(txWidth+2)+1);
+-      EmptyClipboard();
+-      lstrcpy((char *)hMem, snapshot_txt);
+-      SetClipboardData(CF_TEXT, hMem);
+-      CloseClipboard();
+-      GlobalFree(hMem);
+-    }
++    clean_snap[txt_addr] = 13;
++    txt_addr++;
++#endif
++    clean_snap[txt_addr] = 10;
++    txt_addr++;
++  }
++  clean_snap[txt_addr] = 0;
++  *snapshot = clean_snap;
++  *length = txt_addr;
++  return 0;
++}
++
++// create a text snapshot and copy to the system clipboard.  On guis that
++// we haven't figured out how to support yet, dump to a file instead.
++  void
++bx_gui_c::copy_handler(void)
++{
++  Bit32u len;
++  char *text_snapshot;
++  if (make_text_snapshot (&text_snapshot, &len) < 0) {
++    BX_INFO(( "copy button failed, mode not implemented"));
++    return;
++  }
++  // copy to clipboard using gui dependent code.
++#ifdef WIN32
++  if (OpenClipboard(NULL)) {
++    hMem = GlobalAlloc(GMEM_ZEROINIT, txHeight*(txWidth+2)+1);
++    EmptyClipboard();
++    lstrcpy((char *)hMem, snapshot_txt);
++    SetClipboardData(CF_TEXT, hMem);
++    CloseClipboard();
++    GlobalFree(hMem);
++  }
+ #elif BX_WITH_X11
+-    extern Display *bx_x_display;
+-    // this writes data to the clipboard.
+-    BX_INFO (("storing %d bytes to X windows clipboard", txt_addr));
+-    XStoreBytes (bx_x_display, snapshot_txt, txt_addr);
++  extern Display *bx_x_display;
++  // this writes data to the clipboard.
++  BX_INFO (("storing %d bytes to X windows clipboard", len));
++  XStoreBytes (bx_x_display, (char *)text_snapshot, len);
+ #else
+-    OUTPUT = fopen("snapshot.txt", "w");
+-    fwrite(snapshot_txt, 1, strlen(snapshot_txt), OUTPUT);
+-    fclose(OUTPUT);
++  OUTPUT = fopen("copy.txt", "w");
++  fwrite(text_snapshot, 1, strlen(snapshot_txt), OUTPUT);
++  fclose(OUTPUT);
+ #endif
+-    free(snapshot_txt);
+-  } else {
+-    BX_INFO(( "# SNAPSHOT callback (graphics mode unimplemented)." ));
++  free(text_snapshot);
++}
++
++// create a text snapshot and dump it to a file
++  void
++bx_gui_c::snapshot_handler(void)
++{
++  char *text_snapshot;
++  Bit32u len;
++  if (make_text_snapshot (&text_snapshot, &len) < 0) {
++    BX_ERROR(( "copy button failed, mode not implemented"));
++    return;
+   }
++  FILE *fp = fopen("snapshot.txt", "w");
++  fwrite(text_snapshot, 1, strlen(text_snapshot), fp);
++  fclose(fp);
++  free(text_snapshot);
++  // I wish I had a dialog box!!!
++  BX_INFO (("copied text snapshot to snapshot.txt"));
+ }
+ 
++// Read ASCII chars from the system clipboard and paste them into bochs.
++// Note that paste cannot work with the key mapping tables loaded.
++  void
++bx_gui_c::paste_handler(void)
++{
++  Bit32s nbytes;
++  Bit8u *bytes;
++#if BX_WITH_X11
++  extern Display *bx_x_display;
++  bytes = (Bit8u *)XFetchBytes (bx_x_display, &nbytes);
++#else
++  BX_ERROR (("paste not implemented on this platform"));
++  return;
++#endif
++  BX_INFO (("pasting %d bytes", nbytes));
++  bx_devices.keyboard->paste_bytes (bytes, nbytes);
++}
++
++
+   void
+ bx_gui_c::config_handler(void)
+ {
+ #if BX_USE_CONTROL_PANEL
+   bx_control_panel (BX_CPANEL_RUNTIME);
+ #else
+-  BX_INFO(( "# CONFIG callback (unimplemented)." ));
++  BX_ERROR(( "# CONFIG callback (unimplemented)." ));
+ #endif
+ }
+ 
+diff -urN clean/gui/gui.h bochs-paste/gui/gui.h
+--- clean/gui/gui.h	Wed Mar  6 10:58:25 2002
++++ bochs-paste/gui/gui.h	Mon Mar 11 09:01:13 2002
+@@ -76,9 +76,12 @@
+   static void cdromD_handler(void);
+   static void reset_handler(void);
+   static void power_handler(void);
++  static void copy_handler(void);
++  static void paste_handler(void);
+   static void snapshot_handler(void);
+   static void config_handler(void);
+   static void toggle_mouse_enable(void);
++  static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
+ 
+   Boolean floppyA_status;
+   Boolean floppyB_status;
+@@ -88,14 +91,16 @@
+   unsigned cdromD_bmap_id, cdromD_eject_bmap_id, cdromD_hbar_id;
+   unsigned power_bmap_id,    power_hbar_id;
+   unsigned reset_bmap_id,    reset_hbar_id;
++  unsigned copy_bmap_id, copy_hbar_id;
++  unsigned paste_bmap_id, paste_hbar_id;
+   unsigned snapshot_bmap_id, snapshot_hbar_id;
+   unsigned config_bmap_id, config_hbar_id;
+   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
+   };
+ 
+ 
+-#define BX_MAX_PIXMAPS 12
+-#define BX_MAX_HEADERBAR_ENTRIES 8
++#define BX_MAX_PIXMAPS 16
++#define BX_MAX_HEADERBAR_ENTRIES 10
+ #define BX_HEADER_BAR_Y 32
+ 
+ // align pixmaps towards left or right side of header bar
+diff -urN clean/gui/keymap.cc bochs-paste/gui/keymap.cc
+--- clean/gui/keymap.cc	Wed Mar  6 09:04:42 2002
++++ bochs-paste/gui/keymap.cc	Mon Mar 11 09:01:13 2002
+@@ -81,7 +81,7 @@
+     put("KMAP");
+ 
+     keymapCount = 0;
+-    keymapTable = (KeyEntry *)NULL;
++    keymapTable = (BXKeyEntry *)NULL;
+ 
+ }
+ 
+@@ -89,7 +89,7 @@
+ {
+     if(keymapTable != NULL) {
+       free(keymapTable);
+-      keymapTable = (KeyEntry *)NULL;
++      keymapTable = (BXKeyEntry *)NULL;
+       }
+     keymapCount = 0;
+ }
+@@ -102,87 +102,140 @@
+     }
+ }
+ 
++
++///////////////////
++// I'll add these to the keymap object in a minute.
++static char *lineptr = NULL;
++static int lineCount;
++
++static void
++init_parse ()
++{
++  lineCount = 0;
++}
++
++static void
++init_parse_line (char *line_to_parse)
++{
++  // chop off newline
++  lineptr = line_to_parse;
++  char *nl;
++  if( (nl = strchr(line_to_parse,'\n')) != NULL) {
++    *nl = 0;
++  }
++}
++
++static Bit32s
++get_next_word (char *output)
++{
++  char *copyp = output;
++  // find first nonspace
++  while (*lineptr && isspace (*lineptr))
++    lineptr++;
++  if (!*lineptr) 
++    return -1;  // nothing but spaces until end of line
++  if (*lineptr == '#')
++    return -1;  // nothing but a comment
++  // copy nonspaces into the output
++  while (*lineptr && !isspace (*lineptr))
++    *copyp++ = *lineptr++;
++  *copyp=0;  // null terminate the copy
++  // there must be at least one nonspace, since that's why we stopped the
++  // first loop!
++  BX_ASSERT (copyp != output);
++  return 0;
++}
++
++static Bit32s
++get_next_keymap_line (FILE *fp, char *bxsym, char *modsym, Bit32s *ascii, char *xwinsym)
++{
++  char line[256];
++  char buf[256];
++  line[0] = 0;
++  while (1) {
++    lineCount++;
++    if (!fgets(line, sizeof(line)-1, fp)) return -1;  // EOF
++    init_parse_line (line);
++    if (get_next_word (bxsym) >= 0) {
++      modsym[0] = 0;
++      char *p;
++      if ((p = strchr (bxsym, '+')) != NULL) {
++	*p = 0;  // truncate bxsym.
++	p++;  // move one char beyond the +
++	strcpy (modsym, p);  // copy the rest to modsym
++      }
++      BX_ASSERT (get_next_word (buf) >= 0);
++      if (buf[0] == '\'' && buf[2] == '\'' && buf[3]==0) {
++	*ascii = (Bit32s) buf[1];
++      } else if (!strcmp(buf, "space")) {
++	*ascii = ' ';
++      } else if (!strcmp(buf, "return")) {
++	*ascii = '\n';
++      } else if (!strcmp(buf, "tab")) {
++	*ascii = '\t';
++      } else if (!strcmp(buf, "none")) {
++	*ascii = -1;
++      } else {
++	BX_PANIC (("keymap line %d: ascii equivalent is \"%s\" but it must be char constant like 'x', or one of space,tab,return,none", lineCount, buf));
++      }
++      BX_ASSERT (get_next_word (xwinsym) >= 0);
++      return 0;
++    }
++    // no words on this line, keep reading.
++  }
++}
++
+     void
+ bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* filename)
+ {
+     FILE   *keymapFile;
+-    char   line[256], c, *p, *bxSymbol, *guiSymbol;
+-    Bit32u bxKey, guiKey;
+-    Bit16u lineCount=0;
++    char   line[256], c, *p;
++    char baseSym[256], modSym[256], xwinSym[256];
++    Bit32s ascii;
++    Bit32u baseKey, modKey, xwinKey;
+ 
+     if((keymapFile = fopen(filename,"r"))==NULL) {
+       BX_PANIC(("Can not open keymap file '%s'.",filename));
+       }
+     
+     BX_INFO(("Loading keymap from '%s'",filename));
++    init_parse ();
+ 
+     // Read keymap file one line at a time
+     while(1) {
+-      fgets(line, sizeof(line)-1, keymapFile);
+-      lineCount++;
++      if (get_next_keymap_line (keymapFile, 
++	    baseSym, modSym, &ascii, xwinSym) < 0) { break; }
+ 
+-      // End of file
+-      if(feof(keymapFile)) break;
++      BX_DEBUG (("bxsym='%s', modSym='%s', ascii=%d, guisym='%s'", baseSym, modSym, ascii, xwinSym));
+ 
+-      // silently drop till end of line
+-      if( (p=strchr(line,'\n')) == NULL) {
+-        do {
+-          c = fgetc(keymapFile);
+-          } while((c!='\n')&&(c!=0));
+-        }
+-      else {
+-        *p = 0;
+-        }
+-
+-      // drop comments
+-      p = strchr(line,'#');
+-      if (p!=NULL) *p = 0;
+-
+-      // If string is empty
+-      p = line; while (*p!=0 && *p==' ') p++;
+-      if (*p==0) continue;
+-
+-      // Parse line, find '=', split line
+-      p = strchr(line,'=');
+-      if (p==NULL) {
+-        BX_INFO(("line %d: Unknown format",lineCount));
+-        continue;
+-        }
+-      else {
+-        *p = 0;
+-        guiSymbol = p+1;
+-        }
+-
+-      // Find first and last char of gui key symbol
+-      while (*guiSymbol==' ') guiSymbol++;
+-      p=guiSymbol; while (*p!=0 && *p!=' ') p++; *p=0;
+-
+-      // Find first and last char of BX_KEY
+-      bxSymbol=line; while (*bxSymbol==' ') bxSymbol++;
+-      p=bxSymbol; while (*p!=0 && *p!=' ') p++; *p=0;
+-
+-      // Here we have the two symbols
+-      bxKey = convertStringToBXKey(bxSymbol);
+-      guiKey = stringToSymbol(guiSymbol);
++      // convert X_KEY_* symbols to values
++      baseKey = convertStringToBXKey(baseSym);
++      if (strncmp ("XK_", xwinSym, 3) != 0) {
++	BX_PANIC (("keymap line %d: X windows symbol '%s' must start with XK_", lineCount, xwinSym));
++      }
++      modKey = convertStringToBXKey(modSym);
++      xwinKey = stringToSymbol(xwinSym + 3);  // skip over the "XK_"
+       
+       // Check if data is valid
+-      if( bxKey==BX_KEYMAP_UNKNOWN ) {
+-        BX_INFO(("line %d: Ignoring unknown BX_KEY constant '%s'",lineCount,bxSymbol));
++      if( baseKey==BX_KEYMAP_UNKNOWN ) {
++        BX_PANIC (("line %d: unknown BX_KEY constant '%s'",lineCount,baseSym));
+         continue;
+         }
+ 
+-      if( guiKey==BX_KEYMAP_UNKNOWN ) {
+-        BX_INFO(("line %d: Ignoring unknown GUI constant '%s'",lineCount,guiSymbol));
++      if( xwinKey==BX_KEYMAP_UNKNOWN ) {
++        BX_PANIC (("line %d: unknown GUI constant '%s'",lineCount,xwinSym));
+         continue;
+         }
+ 
+-      keymapTable=(KeyEntry*)realloc(keymapTable,(keymapCount+1) * sizeof(KeyEntry));
++      keymapTable=(BXKeyEntry*)realloc(keymapTable,(keymapCount+1) * sizeof(BXKeyEntry));
+       
+       if(keymapTable==NULL) 
+         BX_PANIC(("Can not allocate memory for keymap table."));
+ 
+-      keymapTable[keymapCount].bxKey=bxKey;
+-      keymapTable[keymapCount].guiKey=guiKey;
++      keymapTable[keymapCount].baseKey=baseKey;
++      keymapTable[keymapCount].modKey=modKey;
++      keymapTable[keymapCount].ascii=ascii;
++      keymapTable[keymapCount].xwinKey=xwinKey;
+       
+       keymapCount++;
+       }
+@@ -208,19 +261,40 @@
+     return BX_KEYMAP_UNKNOWN;
+ }
+ 
+-    Bit32u
+-bx_keymap_c::getBXKey(Bit32u key)
++    BXKeyEntry *
++bx_keymap_c::getKeyXwin(Bit32u key)
++{
++    Bit16u i;
++
++    // We look through the keymap table to find the searched key
++    for (i=0; i<keymapCount; i++) {
++      if (keymapTable[i].xwinKey == key) {
++	BX_DEBUG (("key 0x%02x matches xwinKey for entry #%d", key, i));
++        return &keymapTable[i];
++        }
++      }
++    BX_DEBUG (("key %02x matches no entries", key));
++
++    // Return default
++    return NULL;
++}
++
++    BXKeyEntry *
++bx_keymap_c::getKeyASCII(Bit8u ch)
+ {
+     Bit16u i;
++    BX_DEBUG (("getKeyASCII (0x%02x)", ch));
+ 
+     // We look through the keymap table to find the searched key
+     for (i=0; i<keymapCount; i++) {
+-      if (keymapTable[i].guiKey == key) {
+-        return keymapTable[i].bxKey;
++      if (keymapTable[i].ascii == ch) {
++	BX_DEBUG (("key %02x matches ascii for entry #%d", ch, i));
++        return &keymapTable[i];
+         }
+       }
++    BX_DEBUG (("key 0x%02x matches no entries", ch));
+ 
+     // Return default
+-    return BX_KEY_UNHANDLED;
++    return NULL;
+ }
+ 
+diff -urN clean/gui/keymap.h bochs-paste/gui/keymap.h
+--- clean/gui/keymap.h	Wed Mar  6 04:31:55 2002
++++ bochs-paste/gui/keymap.h	Mon Mar 11 09:01:13 2002
+@@ -39,9 +39,11 @@
+ 
+ // Structure of an element of the keymap table
+ typedef struct { 
+-  Bit32u bxKey;
+-  Bit32u guiKey;
+-  } KeyEntry;
++  Bit32u baseKey;   // base key
++  Bit32u modKey;   // modifier key that must be held down
++  Bit32s ascii;    // ascii equivalent, if any
++  Bit32u xwinKey;  // X windows value
++  } BXKeyEntry;
+ 
+ class bx_keymap_c : public logfunctions {
+ public:
+@@ -52,12 +54,13 @@
+   void   loadKeymap(Bit32u(*)(const char*),const char *filename);
+ 
+ 
+-  Bit32u getBXKey(Bit32u key);
++  BXKeyEntry *getKeyXwin(Bit32u xwin_key);
++  BXKeyEntry *getKeyASCII(Bit8u ascii);
+ 
+ private:
+   Bit32u convertStringToBXKey(const char *);
+  
+-  KeyEntry *keymapTable;
++  BXKeyEntry *keymapTable;
+   Bit16u   keymapCount;
+   };
+ 
+diff -urN clean/gui/keymaps/convertmap.pl bochs-paste/gui/keymaps/convertmap.pl
+--- clean/gui/keymaps/convertmap.pl	Wed Dec 31 19:00:00 1969
++++ bochs-paste/gui/keymaps/convertmap.pl	Mon Mar 11 09:23:44 2002
+@@ -0,0 +1,10 @@
++#!/usr/bin/perl
++
++while (<STDIN>)
++{
++  chop;
++  s/^ *//;
++  if (/^#/ || /^ *$/) { print "$_\n"; next;}
++  ($key, $equals, $xksym) = split (/ +/);
++  printf ("%-45s %-10s %s\n", $key, 'none', "XK_$xksym");
++}
+diff -urN clean/gui/keymaps/x11-pc-us.map bochs-paste/gui/keymaps/x11-pc-us.map
+--- clean/gui/keymaps/x11-pc-us.map	Wed Mar  6 04:31:55 2002
++++ bochs-paste/gui/keymaps/x11-pc-us.map	Mon Mar 11 09:23:44 2002
+@@ -1,172 +1,204 @@
+-# Bochs Keymap file : X11 - i386 - US
+-# Author : the Bochs team
++# Bochs Keymap file
++# $Id: patch.paste,v 1.1 2002-03-11 14:29:01 bdenney Exp $
++# Target: PC(x86) keyboard, US keymap
++# Author: Christophe Bothamy, Bryce Denney
+ #
+-# Format :
+-#   Bochs key symbol = X11 key symbol (without XK_ prefix) 
++# The keymap file describes the layout of a keyboard, and how it translates
++# into Bochs key codes.
+ #
+-   BX_KEY_0                  =   0
+-   BX_KEY_0                  =   parenright
+-   BX_KEY_1                  =   1
+-   BX_KEY_1                  =   exclam
+-   BX_KEY_2                  =   2
+-   BX_KEY_2                  =   at
+-   BX_KEY_3                  =   3
+-   BX_KEY_3                  =   numbersign
+-   BX_KEY_4                  =   4
+-   BX_KEY_4                  =   dollar
+-   BX_KEY_5                  =   5
+-   BX_KEY_5                  =   percent
+-   BX_KEY_6                  =   6
+-   BX_KEY_7                  =   7
+-   BX_KEY_7                  =   ampersand
+-   BX_KEY_8                  =   8
+-   BX_KEY_8                  =   asterisk
+-   BX_KEY_9                  =   9
+-   BX_KEY_9                  =   parenleft
+-   BX_KEY_A                  =   A
+-   BX_KEY_A                  =   a
+-   BX_KEY_B                  =   B
+-   BX_KEY_B                  =   b
+-   BX_KEY_C                  =   C
+-   BX_KEY_C                  =   c
+-   BX_KEY_D                  =   D
+-   BX_KEY_D                  =   d
+-   BX_KEY_E                  =   E
+-   BX_KEY_E                  =   e
+-   BX_KEY_F                  =   F
+-   BX_KEY_F                  =   f
+-   BX_KEY_G                  =   G
+-   BX_KEY_G                  =   g
+-   BX_KEY_H                  =   H
+-   BX_KEY_H                  =   h
+-   BX_KEY_I                  =   I
+-   BX_KEY_I                  =   i
+-   BX_KEY_J                  =   J
+-   BX_KEY_J                  =   j
+-   BX_KEY_K                  =   K
+-   BX_KEY_K                  =   k
+-   BX_KEY_L                  =   L
+-   BX_KEY_L                  =   l
+-   BX_KEY_M                  =   M
+-   BX_KEY_M                  =   m
+-   BX_KEY_N                  =   N
+-   BX_KEY_N                  =   n
+-   BX_KEY_O                  =   O
+-   BX_KEY_O                  =   o
+-   BX_KEY_P                  =   P
+-   BX_KEY_P                  =   p
+-   BX_KEY_Q                  =   Q
+-   BX_KEY_Q                  =   q
+-   BX_KEY_R                  =   R
+-   BX_KEY_R                  =   r
+-   BX_KEY_S                  =   S
+-   BX_KEY_S                  =   s
+-   BX_KEY_T                  =   T
+-   BX_KEY_T                  =   t
+-   BX_KEY_U                  =   U
+-   BX_KEY_U                  =   u
+-   BX_KEY_V                  =   V
+-   BX_KEY_V                  =   v
+-   BX_KEY_W                  =   W
+-   BX_KEY_W                  =   w
+-   BX_KEY_X                  =   X
+-   BX_KEY_X                  =   x
+-   BX_KEY_Y                  =   Y
+-   BX_KEY_Y                  =   y
+-   BX_KEY_Z                  =   Z
+-   BX_KEY_Z                  =   z
+-   BX_KEY_F1                 =   F1
+-   BX_KEY_F2                 =   F2
+-   BX_KEY_F3                 =   F3
+-   BX_KEY_F4                 =   F4
+-   BX_KEY_F5                 =   F5
+-   BX_KEY_F6                 =   F6
+-   BX_KEY_F7                 =   F7
+-   BX_KEY_F8                 =   F8
+-   BX_KEY_F9                 =   F9
+-   BX_KEY_F10                =   F10
+-   BX_KEY_F11                =   F11
+-   BX_KEY_F12                =   F12
+-   BX_KEY_ALT_L              =   Alt_L
+-   BX_KEY_ALT_L              =   Meta_L
+-   BX_KEY_ALT_R              =   Mode_switch
+-   BX_KEY_ALT_R              =   Multi_key
+-   BX_KEY_BACKSLASH          =   backslash
+-   BX_KEY_BACKSLASH          =   bar
+-   BX_KEY_BACKSPACE          =   BackSpace
+-   BX_KEY_CAPS_LOCK          =   Caps_Lock
+-   BX_KEY_COMMA              =   comma
+-   BX_KEY_COMMA              =   less
+-   BX_KEY_CTRL_L             =   Control_L
+-   BX_KEY_CTRL_R             =   Control_R
+-   BX_KEY_DELETE             =   Delete
+-   BX_KEY_DOWN               =   Down
+-   BX_KEY_END                =   End
+-   BX_KEY_ENTER              =   Return
+-   BX_KEY_EQUALS             =   equal
+-   BX_KEY_EQUALS             =   plus
+-   BX_KEY_ESC                =   Escape
+-   BX_KEY_GRAVE              =   asciitilde
+-   BX_KEY_GRAVE              =   grave
+-   BX_KEY_HOME               =   Home
+-   BX_KEY_INSERT             =   Insert
+-   BX_KEY_KP_5               =   KP_5
+-   BX_KEY_KP_5               =   KP_Begin
+-   BX_KEY_KP_ADD             =   KP_Add
+-   BX_KEY_KP_DELETE          =   KP_Decimal
+-   BX_KEY_KP_DELETE          =   KP_Delete
+-   BX_KEY_KP_DIVIDE          =   KP_Divide
+-   BX_KEY_KP_DOWN            =   KP_2
+-   BX_KEY_KP_DOWN            =   KP_Down
+-   BX_KEY_KP_END             =   KP_1
+-   BX_KEY_KP_END             =   KP_End
+-   BX_KEY_KP_ENTER           =   KP_Enter
+-   BX_KEY_KP_HOME            =   KP_7
+-   BX_KEY_KP_HOME            =   KP_Home
+-   BX_KEY_KP_INSERT          =   KP_0
+-   BX_KEY_KP_INSERT          =   KP_Insert
+-   BX_KEY_KP_LEFT            =   KP_4
+-   BX_KEY_KP_LEFT            =   KP_Left
+-   BX_KEY_KP_MULTIPLY        =   KP_Multiply
+-   BX_KEY_KP_PAGE_DOWN       =   KP_3
+-   BX_KEY_KP_PAGE_DOWN       =   KP_Page_Down
+-   BX_KEY_KP_PAGE_UP         =   KP_9
+-   BX_KEY_KP_PAGE_UP         =   KP_Page_Up
+-   BX_KEY_KP_RIGHT           =   KP_6
+-   BX_KEY_KP_RIGHT           =   KP_Right
+-   BX_KEY_KP_SUBTRACT        =   KP_Subtract
+-   BX_KEY_KP_UP              =   KP_8
+-   BX_KEY_KP_UP              =   KP_Up
+-   BX_KEY_LEFT               =   Left
+-   BX_KEY_LEFT_BRACKET       =   braceleft
+-   BX_KEY_LEFT_BRACKET       =   bracketleft
+-   BX_KEY_MENU               =   Menu
+-   BX_KEY_MINUS              =   minus
+-   BX_KEY_MINUS              =   underscore
+-   BX_KEY_NUM_LOCK           =   Num_Lock
+-   BX_KEY_PAGE_DOWN          =   Page_Down
+-   BX_KEY_PAGE_UP            =   Page_Up
+-   BX_KEY_PAUSE              =   Break
+-   BX_KEY_PAUSE              =   Pause
+-   BX_KEY_PERIOD             =   greater
+-   BX_KEY_PERIOD             =   period
+-   BX_KEY_PRINT              =   Print
+-   BX_KEY_PRINT              =   Sys_Req
+-   BX_KEY_RIGHT              =   Right
+-   BX_KEY_RIGHT_BRACKET      =   braceright
+-   BX_KEY_RIGHT_BRACKET      =   bracketright
+-   BX_KEY_SCRL_LOCK          =   Scroll_Lock
+-   BX_KEY_SEMICOLON          =   colon
+-   BX_KEY_SEMICOLON          =   semicolon
+-   BX_KEY_SHIFT_L            =   Shift_L
+-   BX_KEY_SHIFT_R            =   Shift_R
+-   BX_KEY_SINGLE_QUOTE       =   apostrophe
+-   BX_KEY_SINGLE_QUOTE       =   quotedbl
+-   BX_KEY_SLASH              =   question
+-   BX_KEY_SLASH              =   slash
+-   BX_KEY_SPACE              =   space
+-   BX_KEY_TAB                =   ISO_Left_Tab
+-   BX_KEY_TAB                =   Tab
+-   BX_KEY_UP                 =   Up
+-   BX_KEY_WIN_L              =   Super_L
+-   BX_KEY_WIN_R              =   Super_R
++# Format:
++#  BX_Keysym                ASCII_equivalent      Xwin_Keysym
++#
++# Or, for keys that require modifiers:
++#  BX_Keysym+BX_Modifier    ASCII_equivalent    Xwin_Keysym
++#
++# BX_Keysym and BX_Modifier must be present in the bx_key_symbol[] list in
++# gui/keymap.cc.  The BX_Modifier is usually a shift key press, but it
++# could be any key.  Presently a maximum of one modifier is supported, but this
++# could be changed in keymap.h (structure def has only one slot for modifier),
++# keymap.cc (parsing code), and iodev/keyboard.cc (simulate keypresses for >1
++# modifier).
++#
++# The ASCII_equivalent must be either apostrophe + one character + apostrophe,
++# or one of these keywords: space, return, tab, backslash, apostrophe, none.
++# This format is designed to look like a char constant in C, but it's a very
++# simple parser.  There's no concept of backslash being an escape char.  The
++# backslash and apostrophe entries are provided for aesthetic purposes only: no
++# C++ programmer wants to see '\' or '''. The parser doesn't care, but they are
++# ugly.
++#
++# Xwin_Keysym is the X windows equivalent of the key combination.  These
++# codes should match whatever you find in /usr/X11R6/include/X11/keysymdef.h.
++# If you're running X windows, Bochs will take each of these Xwin_Keysyms,
++# pull off the XK_ in front, and use XStringToKeysym() to change them into
++# numerical codes.  If this lookup fails, you will get a panic and you need
++# to edit the keymap file.
++#
++
++BX_KEY_0                                      '0'        XK_0
++BX_KEY_0+BX_KEY_SHIFT_L                       ')'        XK_parenright
++BX_KEY_1                                      '1'        XK_1
++BX_KEY_1+BX_KEY_SHIFT_L                       '!'        XK_exclam
++BX_KEY_2                                      '2'        XK_2
++BX_KEY_2+BX_KEY_SHIFT_L                       '@'        XK_at
++BX_KEY_3                                      '3'        XK_3
++BX_KEY_3+BX_KEY_SHIFT_L                       '#'        XK_numbersign
++BX_KEY_4                                      '4'        XK_4
++BX_KEY_4+BX_KEY_SHIFT_L                       '$'        XK_dollar
++BX_KEY_5                                      '5'        XK_5
++BX_KEY_5+BX_KEY_SHIFT_L                       '%'        XK_percent
++BX_KEY_6                                      '6'        XK_6
++BX_KEY_6+BX_KEY_SHIFT_L                       '^'        XK_asciicircum
++BX_KEY_7                                      '7'        XK_7
++BX_KEY_7+BX_KEY_SHIFT_L                       '&'        XK_ampersand
++BX_KEY_8                                      '8'        XK_8
++BX_KEY_8+BX_KEY_SHIFT_L                       '*'        XK_asterisk
++BX_KEY_9                                      '9'        XK_9
++BX_KEY_9+BX_KEY_SHIFT_L                       '('        XK_parenleft
++BX_KEY_A+BX_KEY_SHIFT_L                       'A'        XK_A
++BX_KEY_A                                      'a'        XK_a
++BX_KEY_B+BX_KEY_SHIFT_L                       'B'        XK_B
++BX_KEY_B                                      'b'        XK_b
++BX_KEY_C+BX_KEY_SHIFT_L                       'C'        XK_C
++BX_KEY_C                                      'c'        XK_c
++BX_KEY_D+BX_KEY_SHIFT_L                       'D'        XK_D
++BX_KEY_D                                      'd'        XK_d
++BX_KEY_E+BX_KEY_SHIFT_L                       'E'        XK_E
++BX_KEY_E                                      'e'        XK_e
++BX_KEY_F+BX_KEY_SHIFT_L                       'F'        XK_F
++BX_KEY_F                                      'f'        XK_f
++BX_KEY_G+BX_KEY_SHIFT_L                       'G'        XK_G
++BX_KEY_G                                      'g'        XK_g
++BX_KEY_H+BX_KEY_SHIFT_L                       'H'        XK_H
++BX_KEY_H                                      'h'        XK_h
++BX_KEY_I+BX_KEY_SHIFT_L                       'I'        XK_I
++BX_KEY_I                                      'i'        XK_i
++BX_KEY_J+BX_KEY_SHIFT_L                       'J'        XK_J
++BX_KEY_J                                      'j'        XK_j
++BX_KEY_K+BX_KEY_SHIFT_L                       'K'        XK_K
++BX_KEY_K                                      'k'        XK_k
++BX_KEY_L+BX_KEY_SHIFT_L                       'L'        XK_L
++BX_KEY_L                                      'l'        XK_l
++BX_KEY_M+BX_KEY_SHIFT_L                       'M'        XK_M
++BX_KEY_M                                      'm'        XK_m
++BX_KEY_N+BX_KEY_SHIFT_L                       'N'        XK_N
++BX_KEY_N                                      'n'        XK_n
++BX_KEY_O+BX_KEY_SHIFT_L                       'O'        XK_O
++BX_KEY_O                                      'o'        XK_o
++BX_KEY_P+BX_KEY_SHIFT_L                       'P'        XK_P
++BX_KEY_P                                      'p'        XK_p
++BX_KEY_Q+BX_KEY_SHIFT_L                       'Q'        XK_Q
++BX_KEY_Q                                      'q'        XK_q
++BX_KEY_R+BX_KEY_SHIFT_L                       'R'        XK_R
++BX_KEY_R                                      'r'        XK_r
++BX_KEY_S+BX_KEY_SHIFT_L                       'S'        XK_S
++BX_KEY_S                                      's'        XK_s
++BX_KEY_T+BX_KEY_SHIFT_L                       'T'        XK_T
++BX_KEY_T                                      't'        XK_t
++BX_KEY_U+BX_KEY_SHIFT_L                       'U'        XK_U
++BX_KEY_U                                      'u'        XK_u
++BX_KEY_V+BX_KEY_SHIFT_L                       'V'        XK_V
++BX_KEY_V                                      'v'        XK_v
++BX_KEY_W+BX_KEY_SHIFT_L                       'W'        XK_W
++BX_KEY_W                                      'w'        XK_w
++BX_KEY_X+BX_KEY_SHIFT_L                       'X'        XK_X
++BX_KEY_X                                      'x'        XK_x
++BX_KEY_Y+BX_KEY_SHIFT_L                       'Y'        XK_Y
++BX_KEY_Y                                      'y'        XK_y
++BX_KEY_Z+BX_KEY_SHIFT_L                       'Z'        XK_Z
++BX_KEY_Z                                      'z'        XK_z
++BX_KEY_F1                                     none       XK_F1
++BX_KEY_F2                                     none       XK_F2
++BX_KEY_F3                                     none       XK_F3
++BX_KEY_F4                                     none       XK_F4
++BX_KEY_F5                                     none       XK_F5
++BX_KEY_F6                                     none       XK_F6
++BX_KEY_F7                                     none       XK_F7
++BX_KEY_F8                                     none       XK_F8
++BX_KEY_F9                                     none       XK_F9
++BX_KEY_F10                                    none       XK_F10
++BX_KEY_F11                                    none       XK_F11
++BX_KEY_F12                                    none       XK_F12
++BX_KEY_ALT_L                                  none       XK_Alt_L
++BX_KEY_ALT_L                                  none       XK_Meta_L
++BX_KEY_ALT_R                                  none       XK_Mode_switch
++BX_KEY_ALT_R                                  none       XK_Multi_key
++BX_KEY_BACKSLASH                              backslash  XK_backslash
++BX_KEY_BACKSLASH+BX_KEY_SHIFT_L               '|'        XK_bar
++BX_KEY_BACKSPACE                              none       XK_BackSpace
++BX_KEY_CAPS_LOCK                              none       XK_Caps_Lock
++BX_KEY_COMMA                                  ','        XK_comma
++BX_KEY_COMMA+BX_KEY_SHIFT_L                   '<'        XK_less
++BX_KEY_CTRL_L                                 none       XK_Control_L
++BX_KEY_CTRL_R                                 none       XK_Control_R
++BX_KEY_DELETE                                 none       XK_Delete
++BX_KEY_DOWN                                   none       XK_Down
++BX_KEY_END                                    none       XK_End
++BX_KEY_ENTER                                  return     XK_Return
++BX_KEY_EQUALS                                 '='        XK_equal
++BX_KEY_EQUALS+BX_KEY_SHIFT_L                  '+'        XK_plus
++BX_KEY_ESC                                    none       XK_Escape
++BX_KEY_GRAVE+BX_KEY_SHIFT_L                   '~'        XK_asciitilde
++BX_KEY_GRAVE                                  '`'        XK_grave
++BX_KEY_HOME                                   none       XK_Home
++BX_KEY_INSERT                                 none       XK_Insert
++BX_KEY_KP_5                                   none       XK_KP_5
++BX_KEY_KP_5                                   none       XK_KP_Begin
++BX_KEY_KP_ADD                                 none       XK_KP_Add
++BX_KEY_KP_DELETE                              none       XK_KP_Decimal
++BX_KEY_KP_DELETE                              none       XK_KP_Delete
++BX_KEY_KP_DIVIDE                              none       XK_KP_Divide
++BX_KEY_KP_DOWN                                none       XK_KP_2
++BX_KEY_KP_DOWN                                none       XK_KP_Down
++BX_KEY_KP_END                                 none       XK_KP_1
++BX_KEY_KP_END                                 none       XK_KP_End
++BX_KEY_KP_ENTER                               none       XK_KP_Enter
++BX_KEY_KP_HOME                                none       XK_KP_7
++BX_KEY_KP_HOME                                none       XK_KP_Home
++BX_KEY_KP_INSERT                              none       XK_KP_0
++BX_KEY_KP_INSERT                              none       XK_KP_Insert
++BX_KEY_KP_LEFT                                none       XK_KP_4
++BX_KEY_KP_LEFT                                none       XK_KP_Left
++BX_KEY_KP_MULTIPLY                            none       XK_KP_Multiply
++BX_KEY_KP_PAGE_DOWN                           none       XK_KP_3
++BX_KEY_KP_PAGE_DOWN                           none       XK_KP_Page_Down
++BX_KEY_KP_PAGE_UP                             none       XK_KP_9
++BX_KEY_KP_PAGE_UP                             none       XK_KP_Page_Up
++BX_KEY_KP_RIGHT                               none       XK_KP_6
++BX_KEY_KP_RIGHT                               none       XK_KP_Right
++BX_KEY_KP_SUBTRACT                            none       XK_KP_Subtract
++BX_KEY_KP_UP                                  none       XK_KP_8
++BX_KEY_KP_UP                                  none       XK_KP_Up
++BX_KEY_LEFT                                   none       XK_Left
++BX_KEY_LEFT_BRACKET+BX_KEY_SHIFT_L            '{'        XK_braceleft
++BX_KEY_LEFT_BRACKET                           '['        XK_bracketleft
++BX_KEY_MENU                                   none       XK_Menu
++BX_KEY_MINUS                                  '-'        XK_minus
++BX_KEY_MINUS+BX_KEY_SHIFT_L                   '_'        XK_underscore
++BX_KEY_NUM_LOCK                               none       XK_Num_Lock
++BX_KEY_PAGE_DOWN                              none       XK_Page_Down
++BX_KEY_PAGE_UP                                none       XK_Page_Up
++BX_KEY_PAUSE                                  none       XK_Break
++BX_KEY_PAUSE                                  none       XK_Pause
++BX_KEY_PERIOD+BX_KEY_SHIFT_L                  '>'        XK_greater
++BX_KEY_PERIOD                                 '.'        XK_period
++BX_KEY_PRINT                                  none       XK_Print
++BX_KEY_PRINT                                  none       XK_Sys_Req
++BX_KEY_RIGHT                                  none       XK_Right
++BX_KEY_RIGHT_BRACKET+BX_KEY_SHIFT_L           '}'        XK_braceright
++BX_KEY_RIGHT_BRACKET                          ']'        XK_bracketright
++BX_KEY_SCRL_LOCK                              none       XK_Scroll_Lock
++BX_KEY_SEMICOLON+BX_KEY_SHIFT_L               ':'        XK_colon
++BX_KEY_SEMICOLON                              ';'        XK_semicolon
++BX_KEY_SHIFT_L                                none       XK_Shift_L
++BX_KEY_SHIFT_R                                none       XK_Shift_R
++BX_KEY_SINGLE_QUOTE                           apostrophe XK_apostrophe
++BX_KEY_SINGLE_QUOTE+BX_KEY_SHIFT_L            '"'        XK_quotedbl
++BX_KEY_SLASH+BX_KEY_SHIFT_L                   '?'        XK_question
++BX_KEY_SLASH                                  '/'        XK_slash
++BX_KEY_SPACE                                  space      XK_space
++BX_KEY_TAB                                    none       XK_ISO_Left_Tab
++BX_KEY_TAB                                    tab        XK_Tab
++BX_KEY_UP                                     none       XK_Up
++BX_KEY_WIN_L                                  none       XK_Super_L
++BX_KEY_WIN_R                                  none       XK_Super_R
+diff -urN clean/gui/x.cc bochs-paste/gui/x.cc
+--- clean/gui/x.cc	Wed Mar  6 10:58:26 2002
++++ bochs-paste/gui/x.cc	Mon Mar 11 09:01:13 2002
+@@ -935,11 +935,15 @@
+       break;
+       }
+     }
+-  else /* use mapping */
+-   if((key_event=bx_keymap.getBXKey(keysym))==BX_KEY_UNHANDLED){
+-        BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
+-        return;
++  else {
++   /* use mapping */
++   BXKeyEntry *entry = bx_keymap.getKeyXwin (keysym);
++   if (!entry) {
++     BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
++     return;
+    }
++   key_event = entry->baseKey;
++ }
+ 
+   if (press_release)
+     key_event |= BX_KEY_RELEASED;
+diff -urN clean/iodev/keyboard.cc bochs-paste/iodev/keyboard.cc
+--- clean/iodev/keyboard.cc	Wed Mar  6 10:58:27 2002
++++ bochs-paste/iodev/keyboard.cc	Mon Mar 11 09:24:05 2002
+@@ -175,8 +175,14 @@
+   BX_KEY_THIS s.controller_Qsize = 0;
+   BX_KEY_THIS s.controller_Qsource = 0;
+ 
++  // clear paste buffer
++  BX_KEY_THIS pastebuf = NULL;
++  BX_KEY_THIS pastebuf_len = 0;
++  BX_KEY_THIS pastebuf_ptr = 0;
++
+   // mouse port installed on system board
+   cmos->s.reg[0x14] |= 0x04;
++
+ }
+ 
+   // static IO port read callback handler
+@@ -581,6 +587,61 @@
+     }
+ }
+ 
++// service_paste_buf() transfers data from the paste buffer to the hardware
++// keyboard buffer.  It tries to transfer as many chars as possible at a
++// time, but because different chars require different numbers of scancodes
++// we have to be conservative.  Note that this process depends on the
++// keymap tables to know what chars correspond to what keys, and which
++// chars require a shift or other modifier.
++void 
++bx_keyb_c::service_paste_buf ()
++{
++  BX_DEBUG (("service_paste_buf: ptr at %d out of %d", BX_KEY_THIS pastebuf_ptr, BX_KEY_THIS pastebuf_len));
++  if (!BX_KEY_THIS pastebuf) return;
++  int fill_threshold = BX_KBD_ELEMENTS - 8;
++  while (BX_KEY_THIS pastebuf_ptr < BX_KEY_THIS pastebuf_len) {
++    if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= fill_threshold)
++      return;
++    // there room in the buffer for a keypress and a key release.
++    // send one keypress and a key release.
++    Bit8u byte = BX_KEY_THIS pastebuf[BX_KEY_THIS pastebuf_ptr];
++    BXKeyEntry *entry = bx_keymap.getKeyASCII (byte);
++    if (!entry) {
++      BX_ERROR (("paste character 0x%02x ignored", byte));
++    } else {
++      BX_DEBUG (("pasting character 0x%02x. baseKey is %04x", byte, entry->baseKey));
++      if (entry->modKey != BX_KEYMAP_UNKNOWN)
++        bx_devices.keyboard->gen_scancode(entry->modKey);
++      bx_devices.keyboard->gen_scancode(entry->baseKey);
++      bx_devices.keyboard->gen_scancode(entry->baseKey | BX_KEY_RELEASED);
++      if (entry->modKey != BX_KEYMAP_UNKNOWN)
++        bx_devices.keyboard->gen_scancode(entry->modKey | BX_KEY_RELEASED);
++    }
++    BX_KEY_THIS pastebuf_ptr++;
++  }
++  // reached end of pastebuf.  free the memory it was using.
++  free (BX_KEY_THIS pastebuf);
++  BX_KEY_THIS pastebuf = NULL;
++}
++
++// paste_bytes schedules an arbitrary number of ASCII characters to be
++// inserted into the hardware queue as it become available.  Any previous
++// paste which is still in progress will be thrown out.
++void
++bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
++{
++  BX_DEBUG (("paste_bytes: %d bytes", length));
++  if (BX_KEY_THIS pastebuf) {
++    BX_ERROR (("previous paste was not completed!  %d chars lost", 
++	  BX_KEY_THIS pastebuf_len - BX_KEY_THIS pastebuf_ptr));
++    free(BX_KEY_THIS pastebuf);
++  }
++  BX_KEY_THIS pastebuf = (Bit8u *) malloc (length);
++  memcpy (BX_KEY_THIS pastebuf, bytes, length);
++  BX_KEY_THIS pastebuf_ptr = 0;
++  BX_KEY_THIS pastebuf_len = length;
++  BX_KEY_THIS service_paste_buf ();
++}
+ 
+   void
+ bx_keyb_c::gen_scancode(Bit32u   key)
+@@ -1077,6 +1138,10 @@
+     else {
+       BX_DEBUG(("service_keyboard(): no keys waiting"));
+     }
++  }
++  if (BX_KEY_THIS s.kbd_internal_buffer.num_elements == 0 ) {
++    // if queue is empty, add more data from the paste buffer, if it exists.
++    BX_KEY_THIS service_paste_buf ();
+   }
+   return(retval);
+ }
+diff -urN clean/iodev/keyboard.h bochs-paste/iodev/keyboard.h
+--- clean/iodev/keyboard.h	Wed Mar  6 10:58:27 2002
++++ bochs-paste/iodev/keyboard.h	Mon Mar 11 09:24:05 2002
+@@ -53,6 +53,8 @@
+   ~bx_keyb_c(void);
+   BX_KEY_SMF void     init(bx_devices_c *d, bx_cmos_c *cmos);
+   BX_KEY_SMF void     gen_scancode(Bit32u   scancode);
++  BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
++  BX_KEY_SMF void     service_paste_buf ();
+   BX_KEY_SMF Bit8u    get_kbd_enable(void);
+   BX_KEY_SMF void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
+   BX_KEY_SMF void     mouse_enabled_changed(bool enabled);
+@@ -180,6 +182,16 @@
+     } s; // State information for saving/loading
+ 
+   bx_devices_c *devices;
++
++  // The paste buffer does NOT exist in the hardware.  It is a bochs
++  // construction that allows the user to "paste" arbitrary length sequences of
++  // keystrokes into the emulated machine.  Since the hardware buffer is only
++  // 16 bytes, a very amount of data can be added to the hardware buffer at a
++  // time.  The paste buffer keeps track of the bytes that have not yet been
++  // pasted.
++  Bit8u *pastebuf;   // ptr to bytes to be pasted, or NULL if none in progress
++  Bit32u pastebuf_len; // length of pastebuf
++  Bit32u pastebuf_ptr; // ptr to next byte to be added to hw buffer
+ 
+   BX_KEY_SMF void     resetinternals(Boolean powerup);
+   BX_KEY_SMF void     set_kbd_clock_enable(Bit8u   value);
