@@ -41,16 +41,19 @@ Bryce has been developing in linux, where a "configure --with-wx;make"
 should work fine.
 
 To build in MS VC++:
-- in cygwin, do "sh .conf.win32-vcpp".  If you want different configure
-  options from the default, edit .conf.win32-vcpp first.
-- in cygwin, do "unzip build/win32/wxworkspace.zip", or use winzip.  Now
-  you should have bochs.dsw and bochs.dsp in the main directory.
-- open up bochs.dsw, the workspace file.
+- edit .conf.win32-vcpp and add "--with-wx" to the configure line. 
+  If you want different configure options from what you see, change them
+  too.
+- in cygwin, do "sh .conf.win32-vcpp" to run configure
+- unzip build/win32/wxworkspace.zip into the main directory.
+  For cygwin: unzip build/win32/wxworkspace.zip
+  or use winzip or whatever else.
+- open up bochs.dsw, the workspace file
 - edit project settings so that VC++ can find the wxWindows include
   files and libraries on your system.  I installed them in
   d:/wx/wx232/include and d:/wx/wx232/lib.  Specifically, edit
-  - Project>Settings>C/C++>Preprocessor: include directories.
-  - Project>Settings>Link>Input: additional library path.
+  - Project>Settings>C/C++>Category=Preprocessor: include directories.
+  - Project>Settings>Link>Category=Input: additional library path.
 - build
 
 Note that the project is set up for wxWindows 2.3.2, and the only 
