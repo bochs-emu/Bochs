@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.8 2002-09-08 04:08:14 kevinlawton Exp $
+// $Id: arith16.cc,v 1.9 2002-09-13 22:31:02 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,11 @@ BX_CPU_C::INC_RX(BxInstruction_t *i)
 {
   Bit16u rx;
 
+#if BX_SUPPORT_X86_64
+  rx = ++ BX_CPU_THIS_PTR gen_reg[i->nnn].word.rx;
+#else
   rx = ++ BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
+#endif
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_INC16);
 }
 
@@ -47,7 +51,11 @@ BX_CPU_C::DEC_RX(BxInstruction_t *i)
 {
   Bit16u rx;
 
+#if BX_SUPPORT_X86_64
+  rx = -- BX_CPU_THIS_PTR gen_reg[i->nnn].word.rx;
+#else
   rx = -- BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
+#endif
   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_DEC16);
 }
 

@@ -65,7 +65,6 @@ OBJS32 = \
 	data_xfer32.o \
 	stack32.o \
 	ctrl_xfer8.o \
-	arith16.o \
 	data_xfer16.o \
 	bit.o \
 	flag_ctrl.o \
@@ -103,6 +102,7 @@ OBJSXX = \
 	vm8086.o \
 	logical8.o \
 	logical32.o \
+	arith16.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been
