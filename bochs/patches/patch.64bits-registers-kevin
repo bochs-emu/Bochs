@@ -1,0 +1,590 @@
+----------------------------------------------------------------------
+Patch name: patch.64bits-registers-kevin
+Author: Kevin Lawton
+Date: August 20th, 2002
+
+Detailed description:
+
+ In response to some developers list talk about extending bochs to
+ x86-64 (AMD's "Hammer"), I took the 1st step to extending the
+ 8 general registers to 64 bits. The upper dwords are unused
+ at the moment.
+
+ There weren't many needed changes. These mods work fine
+ for me. I tested only on a small endian machine (x86), but
+ coded the one endian dependent part (in "cpu.h") for
+ big endian. Someone with a big-endian machine, please test.
+
+ Behaviour shouldn't change at all with these mods. If these
+ test OK for all, might want to commit them.
+
+ -Kevin
+
+ Some quick notes on these mods for the curious.
+
+ The width of the registers went to 64 bits, of course.
+ I decided also to increase the height of the register
+ file to 64 registers from 8.  X86-64 only increased
+ to 16 general registers, but spare ones can be used for
+ scratch calculations - especially if the decode/execute
+ logic is changed to a pseudo-op / threaded interpreter
+ model as was discussed on this list.
+
+ Maybe 32 is enough.  It's only one #define for now.  Anyways,
+ for kicks, I went through on paper, a pseudo-op format which
+ would be dense enough and yet flexible enough.  I think the key
+ is to keep it simple and dense - which translated to CISC-like -
+ especially for x86 only architectures (x86-32/64).
+
+ A simple threaded interpreter model, with each 32-bit pseudo-op
+ having some bits for the handler routine (actually just an offset
+ of a GNU "goto" target from a reference goto), and some operand bits
+ to express things like source & dest registers etc looks reasonable.
+ Other data can be loaded and operated on in the scratch registers.
+
+ Also, I think a new model can be shimmed into the old one, such
+ that initially very few instructions would be implemented by
+ the model - most would fall back to the original code.  Then
+ the new model can be filled out at will.
+
+ -Kevin
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on August 20th, 2002
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: debug/dbg_main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/debug/dbg_main.cc,v
+retrieving revision 1.47
+diff -u -r1.47 dbg_main.cc
+--- debug/dbg_main.cc	5 Aug 2002 16:35:08 -0000	1.47
++++ debug/dbg_main.cc	20 Aug 2002 10:37:01 -0000
+@@ -25,10 +25,10 @@
+ //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ 
+ // define shortcuts to get register from the default CPU
+-#define EBP (BX_CPU(dbg_cpu)->gen_reg[5].erx)
++#define EBP (BX_CPU(dbg_cpu)->regFile[5].dwords.low.val32)
+ #define EIP (BX_CPU(dbg_cpu)->eip)
+-#define ESP (BX_CPU(dbg_cpu)->gen_reg[4].erx)
+-#define SP  (BX_CPU(dbg_cpu)->gen_reg[4].word.rx)
++#define ESP (BX_CPU(dbg_cpu)->regFile[4].dwords.low.val32)
++#define SP  (BX_CPU(dbg_cpu)->regFile[4].dwords.low.words.low.val16)
+ 
+ extern "C" {
+ #include <signal.h>
+@@ -2085,14 +2085,14 @@
+     if( BX_CPU(dbg_cpu)->trace_reg )
+ 	    fprintf( stderr,
+ 		"eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
+-		BX_CPU(which_cpu)->gen_reg[0],
+-		BX_CPU(which_cpu)->gen_reg[1],
+-		BX_CPU(which_cpu)->gen_reg[2],
+-		BX_CPU(which_cpu)->gen_reg[3],
+-		BX_CPU(which_cpu)->gen_reg[4],
+-		BX_CPU(which_cpu)->gen_reg[5],
+-		BX_CPU(which_cpu)->gen_reg[6],
+-		BX_CPU(which_cpu)->gen_reg[7],
++		BX_CPU(which_cpu)->regFile[0].dwords.low.val32,
++		BX_CPU(which_cpu)->regFile[1].dwords.low.val32,
++		BX_CPU(which_cpu)->regFile[2].dwords.low.val32,
++		BX_CPU(which_cpu)->regFile[3].dwords.low.val32,
++		BX_CPU(which_cpu)->regFile[4].dwords.low.val32,
++		BX_CPU(which_cpu)->regFile[5].dwords.low.val32,
++		BX_CPU(which_cpu)->regFile[6].dwords.low.val32,
++		BX_CPU(which_cpu)->regFile[7].dwords.low.val32,
+ 		!!BX_CPU(which_cpu)->get_CF(),
+ 		!!BX_CPU(which_cpu)->get_AF(),
+ 		!!BX_CPU(which_cpu)->get_ZF(),
+Index: fpu/wmFPUemu_glue.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/fpu/wmFPUemu_glue.cc,v
+retrieving revision 1.9
+diff -u -r1.9 wmFPUemu_glue.cc
+--- fpu/wmFPUemu_glue.cc	15 Sep 2001 06:55:14 -0000	1.9
++++ fpu/wmFPUemu_glue.cc	20 Aug 2002 10:37:01 -0000
+@@ -172,7 +172,7 @@
+ {
+ // define to set AX in the current CPU -- not ideal.
+ #undef AX
+-#define AX (fpu_cpu_ptr->gen_reg[0].word.rx)
++#define AX (fpu_cpu_ptr->regFile[0].dwords.low.words.low.val16)
+   AX = val16;
+ #undef AX
+ //BX_DEBUG(( "fpu_set_ax(0x%04x)", (unsigned) val16));
+Index: cpu/arith16.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/arith16.cc,v
+retrieving revision 1.6
+diff -u -r1.6 arith16.cc
+--- cpu/arith16.cc	3 Oct 2001 13:10:37 -0000	1.6
++++ cpu/arith16.cc	20 Aug 2002 10:37:01 -0000
+@@ -38,7 +38,7 @@
+ {
+   Bit16u rx;
+ 
+-  rx = ++ BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
++  rx = ++ BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.words.low.val16;
+   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_INC16);
+ }
+ 
+@@ -47,7 +47,7 @@
+ {
+   Bit16u rx;
+ 
+-  rx = -- BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
++  rx = -- BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.words.low.val16;
+   SET_FLAGS_OSZAP_16(0, 0, rx, BX_INSTR_DEC16);
+ }
+ 
+Index: cpu/arith32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/arith32.cc,v
+retrieving revision 1.7
+diff -u -r1.7 arith32.cc
+--- cpu/arith32.cc	17 Nov 2001 22:22:03 -0000	1.7
++++ cpu/arith32.cc	20 Aug 2002 10:37:01 -0000
+@@ -38,7 +38,7 @@
+ {
+   Bit32u erx;
+ 
+-  erx = ++ BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].erx;
++  erx = ++ BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.val32;
+   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_INC32);
+ }
+ 
+@@ -47,7 +47,7 @@
+ {
+   Bit32u erx;
+ 
+-  erx = -- BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].erx;
++  erx = -- BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.val32;
+   SET_FLAGS_OSZAP_32(0, 0, erx, BX_INSTR_DEC32);
+ }
+ 
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.22
+diff -u -r1.22 cpu.h
+--- cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
++++ cpu/cpu.h	20 Aug 2002 10:37:01 -0000
+@@ -99,49 +99,49 @@
+ */
+ 
+ // access to 8 bit general registers
+-#define AL (BX_CPU_THIS_PTR gen_reg[0].word.byte.rl)
+-#define CL (BX_CPU_THIS_PTR gen_reg[1].word.byte.rl)
+-#define DL (BX_CPU_THIS_PTR gen_reg[2].word.byte.rl)
+-#define BL (BX_CPU_THIS_PTR gen_reg[3].word.byte.rl)
+-#define AH (BX_CPU_THIS_PTR gen_reg[0].word.byte.rh)
+-#define CH (BX_CPU_THIS_PTR gen_reg[1].word.byte.rh)
+-#define DH (BX_CPU_THIS_PTR gen_reg[2].word.byte.rh)
+-#define BH (BX_CPU_THIS_PTR gen_reg[3].word.byte.rh)
++#define AL (BX_CPU_THIS_PTR regFile[0].dwords.low.words.low.bytes.low)
++#define CL (BX_CPU_THIS_PTR regFile[1].dwords.low.words.low.bytes.low)
++#define DL (BX_CPU_THIS_PTR regFile[2].dwords.low.words.low.bytes.low)
++#define BL (BX_CPU_THIS_PTR regFile[3].dwords.low.words.low.bytes.low)
++#define AH (BX_CPU_THIS_PTR regFile[0].dwords.low.words.low.bytes.high)
++#define CH (BX_CPU_THIS_PTR regFile[1].dwords.low.words.low.bytes.high)
++#define DH (BX_CPU_THIS_PTR regFile[2].dwords.low.words.low.bytes.high)
++#define BH (BX_CPU_THIS_PTR regFile[3].dwords.low.words.low.bytes.high)
+ 
+ 
+ // access to 16 bit general registers
+-#define AX (BX_CPU_THIS_PTR gen_reg[0].word.rx)
+-#define CX (BX_CPU_THIS_PTR gen_reg[1].word.rx)
+-#define DX (BX_CPU_THIS_PTR gen_reg[2].word.rx)
+-#define BX (BX_CPU_THIS_PTR gen_reg[3].word.rx)
+-#define SP (BX_CPU_THIS_PTR gen_reg[4].word.rx)
+-#define BP (BX_CPU_THIS_PTR gen_reg[5].word.rx)
+-#define SI (BX_CPU_THIS_PTR gen_reg[6].word.rx)
+-#define DI (BX_CPU_THIS_PTR gen_reg[7].word.rx)
++#define AX (BX_CPU_THIS_PTR regFile[0].dwords.low.words.low.val16)
++#define CX (BX_CPU_THIS_PTR regFile[1].dwords.low.words.low.val16)
++#define DX (BX_CPU_THIS_PTR regFile[2].dwords.low.words.low.val16)
++#define BX (BX_CPU_THIS_PTR regFile[3].dwords.low.words.low.val16)
++#define SP (BX_CPU_THIS_PTR regFile[4].dwords.low.words.low.val16)
++#define BP (BX_CPU_THIS_PTR regFile[5].dwords.low.words.low.val16)
++#define SI (BX_CPU_THIS_PTR regFile[6].dwords.low.words.low.val16)
++#define DI (BX_CPU_THIS_PTR regFile[7].dwords.low.words.low.val16)
+ 
+ // access to 16 bit instruction pointer
+ #define IP (* (Bit16u *) (((Bit8u *) &BX_CPU_THIS_PTR eip) + BX_REG16_OFFSET))
+ 
+ 
+ // accesss to 32 bit general registers
+-#define EAX BX_CPU_THIS_PTR gen_reg[0].erx
+-#define ECX BX_CPU_THIS_PTR gen_reg[1].erx
+-#define EDX BX_CPU_THIS_PTR gen_reg[2].erx
+-#define EBX BX_CPU_THIS_PTR gen_reg[3].erx
+-#define ESP BX_CPU_THIS_PTR gen_reg[4].erx
+-#define EBP BX_CPU_THIS_PTR gen_reg[5].erx
+-#define ESI BX_CPU_THIS_PTR gen_reg[6].erx
+-#define EDI BX_CPU_THIS_PTR gen_reg[7].erx
++#define EAX BX_CPU_THIS_PTR regFile[0].dwords.low.val32
++#define ECX BX_CPU_THIS_PTR regFile[1].dwords.low.val32
++#define EDX BX_CPU_THIS_PTR regFile[2].dwords.low.val32
++#define EBX BX_CPU_THIS_PTR regFile[3].dwords.low.val32
++#define ESP BX_CPU_THIS_PTR regFile[4].dwords.low.val32
++#define EBP BX_CPU_THIS_PTR regFile[5].dwords.low.val32
++#define ESI BX_CPU_THIS_PTR regFile[6].dwords.low.val32
++#define EDI BX_CPU_THIS_PTR regFile[7].dwords.low.val32
+ 
+ // access to 32 bit instruction pointer
+ #define EIP BX_CPU_THIS_PTR eip
+ 
+ 
+ #define BX_READ_8BIT_REG(index)  (((index) < 4) ? \
+-  (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
+-  (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
+-#define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
+-#define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].erx)
++  (BX_CPU_THIS_PTR regFile[index].dwords.low.words.low.bytes.low) : \
++  (BX_CPU_THIS_PTR regFile[(index)-4].dwords.low.words.low.bytes.high))
++#define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR regFile[index].dwords.low.words.low.val16)
++#define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR regFile[index].dwords.low.val32)
+ 
+ #define BX_READ_16BIT_BASE_REG(var, index) {\
+   var = *BX_CPU_THIS_PTR _16bit_base_reg[index];\
+@@ -153,15 +153,15 @@
+ 
+ #define BX_WRITE_8BIT_REG(index, val) {\
+   if ((index) < 4) \
+-    BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
++    BX_CPU_THIS_PTR regFile[index].dwords.low.words.low.bytes.low = val; \
+   else \
+-    BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
++    BX_CPU_THIS_PTR regFile[(index)-4].dwords.low.words.low.bytes.high = val; \
+   }
+ #define BX_WRITE_16BIT_REG(index, val) {\
+-  BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
++  BX_CPU_THIS_PTR regFile[index].dwords.low.words.low.val16 = val; \
+   }
+ #define BX_WRITE_32BIT_REG(index, val) {\
+-  BX_CPU_THIS_PTR gen_reg[index].erx = val; \
++  BX_CPU_THIS_PTR regFile[index].dwords.low.val32 = val; \
+   }
+ 
+ 
+@@ -527,37 +527,45 @@
+ 
+ 
+ #ifdef BX_BIG_ENDIAN
+-typedef struct {
+-  union {
+-    Bit32u erx;
+-    struct {
+-      Bit16u word_filler;
+-      union {
+-        Bit16u rx;
+-        struct {
+-          Bit8u rh;
+-          Bit8u rl;
+-          } byte;
+-        };
+-      } word;
+-    };
+-  } bx_gen_reg_t;
++typedef union {
++  Bit64u val64;
++  struct {
++    Bit32u high;
++    union {
++      Bit32u val32;
++      struct {
++        Bit16u high;
++        union {
++          Bit16u val16;
++          struct {
++            Bit8u high;
++            Bit8u low;
++            } bytes;
++          } low;
++        } words;
++      } low;
++    } dwords;
++  } regFileEntry_t;
+ #else
+-typedef struct {
+-  union {
+-    Bit32u erx;
+-    struct {
+-      union {
+-        Bit16u rx;
+-        struct {
+-          Bit8u rl;
+-          Bit8u rh;
+-          } byte;
+-        };
+-      Bit16u word_filler;
+-      } word;
+-    };
+-  } bx_gen_reg_t;
++typedef union {
++  Bit64u val64;
++  struct {
++    union {
++      Bit32u val32;
++      struct {
++        union {
++          Bit16u val16;
++          struct {
++            Bit8u low;
++            Bit8u high;
++            } bytes;
++          } low;
++        Bit16u high;
++        } words;
++      } low;
++    Bit32u high;
++    } dwords;
++  } regFileEntry_t;
+ #endif
+ 
+ 
+@@ -713,16 +721,20 @@
+ 
+   char name[64];
+ 
+-  // General register set
+-  // eax: accumulator
+-  // ebx: base
+-  // ecx: count
+-  // edx: data
+-  // ebp: base pointer
+-  // esi: source index
+-  // edi: destination index
+-  // esp: stack pointer
+-  bx_gen_reg_t  gen_reg[8];
++  // Register File.  1st 8 match with x86 general register set.  The
++  //   remaining ones are available for the interpreter.
++  // regFile[0] (eax): accumulator
++  // regFile[1] (ebx): base
++  // regFile[2] (ecx): count
++  // regFile[3] (edx): data
++  // regFile[4] (ebp): base pointer
++  // regFile[5] (esi): source index
++  // regFile[6] (edi): destination index
++  // regFile[7] (esp): stack pointer
++  // regFile[8 .. RegFileHeight-1] : working registers for interpreter
++
++#define RegFileHeight 64
++  regFileEntry_t regFile[RegFileHeight];
+ 
+   Bit32u eip;    // instruction pointer
+ #if BX_CPU_LEVEL > 0
+@@ -731,27 +743,6 @@
+   // each fetch/execute cycle.
+   Bit32u prev_eip;
+ #endif
+-  // A few pointer to functions for use by the dynamic translation
+-  // code.  Keep them close to the gen_reg declaration, so I can
+-  // use an 8bit offset to access them.
+-
+-#if BX_DYNAMIC_TRANSLATION
+-  BxDTShim_t DTWrite8vShim;
+-  BxDTShim_t DTWrite16vShim;
+-  BxDTShim_t DTWrite32vShim;
+-  BxDTShim_t DTRead8vShim;
+-  BxDTShim_t DTRead16vShim;
+-  BxDTShim_t DTRead32vShim;
+-  BxDTShim_t DTReadRMW8vShim;
+-  BxDTShim_t DTReadRMW16vShim;
+-  BxDTShim_t DTReadRMW32vShim;
+-  BxDTShim_t DTWriteRMW8vShim;
+-  BxDTShim_t DTWriteRMW16vShim;
+-  BxDTShim_t DTWriteRMW32vShim;
+-  BxDTShim_t DTSetFlagsOSZAPCPtr;
+-  BxDTShim_t DTIndBrHandler;
+-  BxDTShim_t DTDirBrHandler;
+-#endif
+ 
+   // status and control flags register set
+   Bit32u   lf_flags_status;
+@@ -826,7 +817,7 @@
+   // for accessing registers by index number
+   Bit16u *_16bit_base_reg[8];
+   Bit16u *_16bit_index_reg[8];
+-  Bit32u empty_register;
++  regFileEntry_t empty_register;
+ 
+   // for decoding instructions; accessing seg reg's by index
+   unsigned sreg_mod00_rm16[8];
+Index: cpu/data_xfer16.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/data_xfer16.cc,v
+retrieving revision 1.6
+diff -u -r1.6 data_xfer16.cc
+--- cpu/data_xfer16.cc	3 Oct 2001 13:10:37 -0000	1.6
++++ cpu/data_xfer16.cc	20 Aug 2002 10:37:01 -0000
+@@ -37,7 +37,7 @@
+   void
+ BX_CPU_C::MOV_RXIw(BxInstruction_t *i)
+ {
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx = i->Iw;
++  BX_WRITE_16BIT_REG(i->b1 & 0x07, i->Iw);
+ }
+ 
+   void
+@@ -46,8 +46,8 @@
+   Bit16u temp16;
+ 
+   temp16 = AX;
+-  AX = BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx;
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx = temp16;
++  AX = BX_READ_16BIT_REG(i->b1 & 0x07);
++  BX_WRITE_16BIT_REG(i->b1 & 0x07, temp16);
+ }
+ 
+ 
+Index: cpu/data_xfer32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/data_xfer32.cc,v
+retrieving revision 1.6
+diff -u -r1.6 data_xfer32.cc
+--- cpu/data_xfer32.cc	3 Oct 2001 13:10:37 -0000	1.6
++++ cpu/data_xfer32.cc	20 Aug 2002 10:37:01 -0000
+@@ -41,14 +41,14 @@
+   Bit32u temp32;
+ 
+   temp32 = EAX;
+-  EAX = BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].erx;
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].erx = temp32;
++  EAX = BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.val32;
++  BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.val32 = temp32;
+ }
+ 
+   void
+ BX_CPU_C::MOV_ERXId(BxInstruction_t *i)
+ {
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].erx = i->Id;
++  BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.val32 = i->Id;
+ }
+ 
+   void
+Index: cpu/data_xfer8.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/data_xfer8.cc,v
+retrieving revision 1.5
+diff -u -r1.5 data_xfer8.cc
+--- cpu/data_xfer8.cc	3 Oct 2001 13:10:37 -0000	1.5
++++ cpu/data_xfer8.cc	20 Aug 2002 10:37:01 -0000
+@@ -37,13 +37,13 @@
+   void
+ BX_CPU_C::MOV_RLIb(BxInstruction_t *i)
+ {
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x03].word.byte.rl = i->Ib;
++  BX_CPU_THIS_PTR regFile[i->b1 & 0x03].dwords.low.words.low.bytes.low = i->Ib;
+ }
+ 
+   void
+ BX_CPU_C::MOV_RHIb(BxInstruction_t *i)
+ {
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x03].word.byte.rh = i->Ib;
++  BX_CPU_THIS_PTR regFile[i->b1 & 0x03].dwords.low.words.low.bytes.high = i->Ib;
+ }
+ 
+ 
+Index: cpu/init.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
+retrieving revision 1.16
+diff -u -r1.16 init.cc
+--- cpu/init.cc	5 Jun 2002 21:51:30 -0000	1.16
++++ cpu/init.cc	20 Aug 2002 10:37:01 -0000
+@@ -63,26 +63,26 @@
+      you can assume there's always a base & index register used.  For
+      modes which don't really use them, point to an empty (zeroed) register.
+    */
+-  empty_register = 0;
++  empty_register.val64 = 0;
+ 
+   // 16bit address mode base register, used for mod-rm decoding
+ 
+-  _16bit_base_reg[0] = &gen_reg[BX_16BIT_REG_BX].word.rx;
+-  _16bit_base_reg[1] = &gen_reg[BX_16BIT_REG_BX].word.rx;
+-  _16bit_base_reg[2] = &gen_reg[BX_16BIT_REG_BP].word.rx;
+-  _16bit_base_reg[3] = &gen_reg[BX_16BIT_REG_BP].word.rx;
++  _16bit_base_reg[0] = &regFile[BX_16BIT_REG_BX].dwords.low.words.low.val16;
++  _16bit_base_reg[1] = &regFile[BX_16BIT_REG_BX].dwords.low.words.low.val16;
++  _16bit_base_reg[2] = &regFile[BX_16BIT_REG_BP].dwords.low.words.low.val16;
++  _16bit_base_reg[3] = &regFile[BX_16BIT_REG_BP].dwords.low.words.low.val16;
+   _16bit_base_reg[4] = (Bit16u*) &empty_register;
+   _16bit_base_reg[5] = (Bit16u*) &empty_register;
+-  _16bit_base_reg[6] = &gen_reg[BX_16BIT_REG_BP].word.rx;
+-  _16bit_base_reg[7] = &gen_reg[BX_16BIT_REG_BX].word.rx;
++  _16bit_base_reg[6] = &regFile[BX_16BIT_REG_BP].dwords.low.words.low.val16;
++  _16bit_base_reg[7] = &regFile[BX_16BIT_REG_BX].dwords.low.words.low.val16;
+ 
+   // 16bit address mode index register, used for mod-rm decoding
+-  _16bit_index_reg[0] = &gen_reg[BX_16BIT_REG_SI].word.rx;
+-  _16bit_index_reg[1] = &gen_reg[BX_16BIT_REG_DI].word.rx;
+-  _16bit_index_reg[2] = &gen_reg[BX_16BIT_REG_SI].word.rx;
+-  _16bit_index_reg[3] = &gen_reg[BX_16BIT_REG_DI].word.rx;
+-  _16bit_index_reg[4] = &gen_reg[BX_16BIT_REG_SI].word.rx;
+-  _16bit_index_reg[5] = &gen_reg[BX_16BIT_REG_DI].word.rx;
++  _16bit_index_reg[0] = &regFile[BX_16BIT_REG_SI].dwords.low.words.low.val16;
++  _16bit_index_reg[1] = &regFile[BX_16BIT_REG_DI].dwords.low.words.low.val16;
++  _16bit_index_reg[2] = &regFile[BX_16BIT_REG_SI].dwords.low.words.low.val16;
++  _16bit_index_reg[3] = &regFile[BX_16BIT_REG_DI].dwords.low.words.low.val16;
++  _16bit_index_reg[4] = &regFile[BX_16BIT_REG_SI].dwords.low.words.low.val16;
++  _16bit_index_reg[5] = &regFile[BX_16BIT_REG_DI].dwords.low.words.low.val16;
+   _16bit_index_reg[6] = (Bit16u*) &empty_register;
+   _16bit_index_reg[7] = (Bit16u*) &empty_register;
+ 
+Index: cpu/stack16.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/stack16.cc,v
+retrieving revision 1.7
+diff -u -r1.7 stack16.cc
+--- cpu/stack16.cc	3 Oct 2001 13:10:37 -0000	1.7
++++ cpu/stack16.cc	20 Aug 2002 10:37:01 -0000
+@@ -39,7 +39,7 @@
+   void
+ BX_CPU_C::PUSH_RX(BxInstruction_t *i)
+ {
+-  push_16( BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx );
++  push_16( BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.words.low.val16 );
+ }
+ 
+   void
+@@ -48,7 +48,7 @@
+   Bit16u rx;
+ 
+   pop_16(&rx);
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].word.rx = rx;
++  BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.words.low.val16 = rx;
+ }
+ 
+   void
+Index: cpu/stack32.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/stack32.cc,v
+retrieving revision 1.8
+diff -u -r1.8 stack32.cc
+--- cpu/stack32.cc	5 Mar 2002 15:50:17 -0000	1.8
++++ cpu/stack32.cc	20 Aug 2002 10:37:01 -0000
+@@ -63,7 +63,7 @@
+   void
+ BX_CPU_C::PUSH_ERX(BxInstruction_t *i)
+ {
+-  push_32(BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].erx);
++  push_32(BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.val32);
+ }
+ 
+   void
+@@ -72,7 +72,7 @@
+   Bit32u erx;
+ 
+   pop_32(&erx);
+-  BX_CPU_THIS_PTR gen_reg[i->b1 & 0x07].erx = erx;
++  BX_CPU_THIS_PTR regFile[i->b1 & 0x07].dwords.low.val32 = erx;
+ }
+ 
+ 
