@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "main.h"
 #include "modules.h"
 
@@ -20,6 +21,7 @@ public:
 };
 
 GPS_Receiver theReceiver("BochsStarGPS 4.0", "Bochs Project", 9.5);
+int *test_global_initializers = new int;
 
 int n_operations = 0;
 
@@ -27,6 +29,10 @@ class DeviceInterface* module_init ()
 {
   printf ("module2 init for main version %s\n", version_string);
   register_module ("module2");
+  if (test_global_initializers == NULL) {
+    printf ("ERROR! Global initializers were not executed in module2.\n");
+    printf ("This program will probably crash right now.\n");
+  }
   theReceiver.addFeature ("High Accuracy");
   theReceiver.addFeature ("Low Power");
   theReceiver.addFeature ("Pentium Emulation");

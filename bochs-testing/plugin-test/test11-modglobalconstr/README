@@ -8,10 +8,10 @@ This is the description from test10-modvirtual:
 > operate on this object using the DeviceInterface class.
 
 In test11, I have changed only one thing.  Module2's class is created 
-in a global constructor.  Global constructors SHOULD be called when
+by a global constructor.  Global constructors SHOULD be called when
 the module loads, but if your C++ compile/link process is broken or
-libtool uses the args, then sometimes global constructors in shared
-libs are NOT loaded.
+libtool uses the wrong link args, then sometimes global constructors in 
+shared libs are NOT loaded.
 
 If test10 succeeds, but test11 fails, then you will know that your
 platform does not call global constructors on shared libraries
