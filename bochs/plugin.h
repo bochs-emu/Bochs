@@ -29,6 +29,8 @@ extern "C" {
 #define BX_PLUGIN_CMOS     "CMOS RAM"
 #define BX_PLUGIN_VGA      "VGA"
 #define BX_PLUGIN_FLOPPY   "FLOPPY"
+#define BX_PLUGIN_PARALLEL "PARALLEL"
+#define BX_PLUGIN_SERIAL   "SERIAL"
 
 #define BX_REGISTER_DEVICE pluginRegisterDevice
 

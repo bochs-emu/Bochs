@@ -64,8 +64,6 @@ BX_IODEV_OBJS_NON_PLUGINABLE = \
   scancodes.o \
   @IODEBUG_OBJS@ \
   \
-  parallel.o \
-  serial.o \
   dma.o \
   @PCI_OBJ@ \
   @NE2K_OBJS@ \
@@ -76,6 +74,8 @@ BX_IODEV_OBJS_NON_PLUGINABLE = \
   $(IOAPIC_OBJS)
 
 BX_IODEV_OBJS_PLUGINABLE = \
+  serial.o \
+  parallel.o \
   floppy.o \
   $(VIDEO_OBJS) \
   biosdev.o \

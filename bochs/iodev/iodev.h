@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.4 2002-10-07 17:50:51 cbothamy Exp $
+// $Id: iodev.h,v 1.18.4.5 2002-10-07 22:15:42 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,13 +44,13 @@ class bx_floppy_ctrl_c;
 class bx_cmos_c;
 class bx_vga_c;
 class bx_unmapped_c;
+class bx_parallel_c;
+class bx_serial_c;
 #endif
 
 class bx_pit_c;
 class bx_keyb_c;
 class bx_dma_c;
-class bx_serial_c;
-class bx_parallel_c;
 class bx_pic_c;
 class bx_hard_drive_c;
 class bx_sb16_c;
@@ -117,9 +117,9 @@ public:
   bx_cmos_c        *cmos;
   bx_vga_c         *vga;
   bx_floppy_ctrl_c *floppy;
-#endif
-  bx_serial_c      *serial;
   bx_parallel_c    *parallel;
+  bx_serial_c      *serial;
+#endif
   bx_pic_c         *pic;
   bx_hard_drive_c  *hard_drive;
   bx_sb16_c        *sb16;
@@ -194,6 +194,8 @@ private:
 #endif
 
 #include "iodev/floppy.h"
+#include "iodev/parallel.h"
+#include "iodev/serial.h"
 
 #endif // #if !BX_PLUGINS
 
@@ -203,11 +205,9 @@ private:
 #   include "iodev/iodebug.h"
 #endif
 #include "iodev/keyboard.h"
-#include "iodev/parallel.h"
 #include "iodev/pic.h"
 #include "iodev/pit.h"
 #include "iodev/pit_wrap.h"
-#include "iodev/serial.h"
 #if BX_SUPPORT_SB16
 #  include "iodev/sb16.h"
 #endif

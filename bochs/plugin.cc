@@ -684,6 +684,8 @@ int bx_load_plugins (void)
   bx_load_plugin("cmos.so");
   bx_load_plugin("vga.so");
   bx_load_plugin("floppy.so");
+  bx_load_plugin("parallel.so");
+  bx_load_plugin("serial.so");
 
   // quick and dirty gui plugin selection
   fprintf (stderr, 

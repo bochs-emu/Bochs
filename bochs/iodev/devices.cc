@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.5 2002-10-07 17:50:50 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.6 2002-10-07 22:15:42 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,6 +53,8 @@ bx_devices_c::bx_devices_c(void)
   cmos = NULL;
   vga = NULL;
   floppy = NULL;
+  parallel = NULL;
+  serial = NULL;
 #endif
 
   dma = NULL;
@@ -64,8 +66,6 @@ bx_devices_c::bx_devices_c(void)
 
   pit = NULL;
   keyboard = NULL;
-  serial = NULL;
-  parallel = NULL;
   pic = NULL;
   hard_drive = NULL;
   sb16 = NULL;
@@ -89,7 +89,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.5 2002-10-07 17:50:50 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.6 2002-10-07 22:15:42 cbothamy Exp $"));
   mem = newmem;
 
   devices=this;
@@ -168,6 +168,14 @@ bx_devices_c::init(BX_MEM_C *newmem)
   floppy = &bx_floppy;
   floppy->init(this);
 
+  /*--- PARALLEL PORT ---*/
+  parallel = &bx_parallel;
+  parallel->init(this);
+
+  /*--- SERIAL PORT ---*/
+  serial = &bx_serial;
+  serial->init(this);
+
 #endif
 
   /*--- HARD DRIVE ---*/
@@ -199,14 +207,6 @@ bx_devices_c::init(BX_MEM_C *newmem)
   iodebug = &bx_iodebug;
   iodebug->init(this);
 #endif
-
-  /*--- PARALLEL PORT ---*/
-  parallel = &bx_parallel;
-  parallel->init(this);
-
-  /*--- SERIAL PORT ---*/
-  serial = &bx_serial;
-  serial->init(this);
 
 #if BX_NE2K_SUPPORT
   // NE2000 NIC
@@ -281,6 +281,8 @@ bx_devices_c::reset(unsigned type)
 #endif
 
   floppy->reset(type);
+  parallel->reset(type);
+  serial->reset(type);
 #endif
 
   hard_drive->reset(type);
@@ -296,8 +298,6 @@ bx_devices_c::reset(unsigned type)
 #if BX_IODEBUG_SUPPORT
   iodebug->reset(type);
 #endif
-  parallel->reset(type);
-  serial->reset(type);
 #if BX_NE2K_SUPPORT
   ne2k->reset(type);
 #endif
