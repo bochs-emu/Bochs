@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.6 2004-06-29 19:24:34 vruppert Exp $
+// $Id: pcipnic.cc,v 1.7 2004-07-13 17:45:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -30,6 +30,8 @@
 #define LOG_THIS thePNICDevice->
 
 bx_pcipnic_c* thePNICDevice = NULL;
+
+const Bit8u pnic_iomask[16] = {2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   int
 libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -66,33 +68,14 @@ bx_pcipnic_c::init(void)
 
   if (!bx_options.pnic.Oenabled->get()) return;
 
-  Bit16u base_ioaddr = bx_options.pnic.Oioaddr->get();
-  Bit8u irq = bx_options.pnic.Oirq->get();
   memcpy ( BX_PNIC_THIS s.macaddr, bx_options.pnic.Omacaddr->getptr(),
 	   sizeof( BX_PNIC_THIS s.macaddr ) );
 
-  DEV_register_irq(irq, "PNIC");
-  BX_PNIC_THIS s.irq = irq;
-
-  // Call our timer routine every 1mS (1,000uS)
-  // Continuous and active
-  /*  BX_PNIC_THIS s.timer_index =
-      bx_pc_system.register_timer(this, pnic_timer_handler, 1000, 1,1, "pnic.timer"); */
-
-  for ( unsigned addr = base_ioaddr;
-        addr <= (unsigned)( base_ioaddr + PNIC_MAX_REG );
-	addr++ ) {
-    BX_DEBUG(("register read/write: 0x%04x", addr));
-    DEV_register_ioread_handler(this, read_handler, addr, "PNIC", 7);
-    DEV_register_iowrite_handler(this, write_handler, addr, "PNIC", 7);
-  }
-  BX_PNIC_THIS s.base_ioaddr = base_ioaddr;
-
-  Bit8u devfunc = 0x00;
+  BX_PNIC_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this,
                             pci_read_handler,
                             pci_write_handler,
-                            &devfunc, BX_PLUGIN_PCIPNIC,
+                            &BX_PNIC_THIS s.devfunc, BX_PLUGIN_PCIPNIC,
                             "Experimental PCI Pseudo NIC");
 
   for (unsigned i=0; i<256; i++) {
@@ -149,6 +132,11 @@ bx_pcipnic_c::init(void)
       BX_PANIC(("could not locate null module"));
   }
 
+  BX_PNIC_THIS s.base_ioaddr = 0;
+
+  Bit16u base_ioaddr = bx_options.pnic.Oioaddr->get();
+  Bit8u irq = bx_options.pnic.Oirq->get();
+
   BX_INFO( ( "pnic at 0x%04x-0x%04x irq %d",
 	     base_ioaddr, base_ioaddr + PNIC_MAX_REG, irq ) );
 }
@@ -179,7 +167,7 @@ bx_pcipnic_c::reset(unsigned type)
     { 0x21, ( bx_options.pnic.Oioaddr->get() >> 8) },
     { 0x22, 0x00 }, { 0x23, 0x00 },
     { 0x3c, bx_options.pnic.Oirq->get() }, // IRQ
-    { 0x3d, 0x04 },                 // INT
+    { 0x3d, BX_PCI_INTA },                 // INT
     { 0x6a, 0x01 },                 // PNIC clock
     { 0xc1, 0x20 }                  // PIRQ enable
 
@@ -197,8 +185,20 @@ bx_pcipnic_c::reset(unsigned type)
   BX_PNIC_THIS s.recvQueueLength = 0;
   BX_PNIC_THIS s.irqEnabled = 0;
 
+  // This should be done by the PCI BIOS
+  DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
+                      &BX_PNIC_THIS s.base_ioaddr,
+                      &BX_PNIC_THIS s.pci_conf[0x20],
+                      16, &pnic_iomask[0], "PNIC");
+  DEV_pci_init_irq(BX_PNIC_THIS s.devfunc, BX_PNIC_THIS s.pci_conf[0x3d], bx_options.pnic.Oirq->get());
   // Deassert IRQ
-  DEV_pic_lower_irq ( BX_PNIC_THIS s.irq );
+  set_irq_level(0);
+}
+
+  void
+bx_pcipnic_c::set_irq_level(bx_bool level)
+{
+  DEV_pci_set_irq(BX_PNIC_THIS s.devfunc, BX_PNIC_THIS s.pci_conf[0x3d], level);
 }
 
 
@@ -222,7 +222,7 @@ bx_pcipnic_c::read(Bit32u address, unsigned io_len)
   UNUSED(this_ptr);
 #endif // !BX_USE_PCIPNIC_SMF
   Bit32u val = 0x0;
-  Bit8u  offset,port;
+  Bit8u  offset;
 
   BX_DEBUG(("register read from address 0x%04x - ", (unsigned) address));
 
@@ -283,7 +283,7 @@ bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_PCIPNIC_SMF
-  Bit8u  offset,port;
+  Bit8u  offset;
 
   BX_DEBUG(("register write to address 0x%04x - ", (unsigned) address));
 
@@ -432,61 +432,51 @@ bx_pcipnic_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif // !BX_USE_PCIPNIC_SMF
   
-  if (io_len > 4 || io_len == 0) {
-    BX_ERROR(("Experimental PNIC PCI write register 0x%02x, len=%u !",
-	      (unsigned) address, (unsigned) io_len));
+  Bit8u value8, oldval;
+  bx_bool baseaddr_change = 0;
+
+  if (((address >= 0x10) && (address < 0x20)) ||
+      ((address > 0x23) && (address < 0x34)))
     return;
-  }
-  
+
   // This odd code is to display only what bytes actually were written.
   char szTmp[9];
   char szTmp2[3];
   szTmp[0] = '\0';
   szTmp2[0] = '\0';
-  for (unsigned i=0; i<io_len; i++) {
-    const Bit8u value8 = (value >> (i*8)) & 0xFF;
-    switch (address+i) {
-      case 0x20: // Base address
-        BX_PNIC_THIS s.pci_conf[address+i] = (value8 & 0xe0) | 0x01;
-        sprintf(szTmp2, "%02x", (value8 & 0xe0) | 0x01);
-        break;
-      case 0x10: // Reserved
-      case 0x11: //
-      case 0x12: //
-      case 0x13: //
-      case 0x14: //
-      case 0x15: //
-      case 0x16: //
-      case 0x17: //
-      case 0x18: //
-      case 0x19: //
-      case 0x1a: //
-      case 0x1b: //
-      case 0x1c: //
-      case 0x1d: //
-      case 0x1e: //
-      case 0x1f: //
-      case 0x22: // Always 0
-      case 0x23: //
-      case 0x24: // Reserved
-      case 0x25: //
-      case 0x26: //
-      case 0x27: //
-      case 0x30: // Oh, no, you're not writing to rom_base!
-      case 0x31: //
-      case 0x32: //
-      case 0x33: //
-      case 0x3d: //
-      case 0x05: // disallowing write to command hi-byte
-      case 0x06: // disallowing write to status lo-byte (is that expected?)
-        strcpy(szTmp2, "..");
-        break;
-      default:
-        BX_PNIC_THIS s.pci_conf[address+i] = value8;
-        sprintf(szTmp2, "%02x", value8);
+  if (io_len <= 4) {
+    for (unsigned i=0; i<io_len; i++) {
+      value8 = (value >> (i*8)) & 0xFF;
+      oldval = BX_PNIC_THIS s.pci_conf[address+i];
+      switch (address+i) {
+        case 0x3d: //
+        case 0x05: // disallowing write to command hi-byte
+        case 0x06: // disallowing write to status lo-byte (is that expected?)
+          strcpy(szTmp2, "..");
+          break;
+        case 0x3c:
+          if (value8 != oldval) {
+            BX_INFO(("new irq line = %d", value8));
+            BX_PNIC_THIS s.pci_conf[address+i] = value8;
+          }
+          break;
+        case 0x20:
+        case 0x21:
+          baseaddr_change = (value8 != oldval);
+        default:
+          BX_PNIC_THIS s.pci_conf[address+i] = value8;
+          sprintf(szTmp2, "%02x", value8);
+      }
+      strrev(szTmp2);
+      strcat(szTmp, szTmp2);
     }
-    strrev(szTmp2);
-    strcat(szTmp, szTmp2);
+    if (baseaddr_change) {
+      DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
+                          &BX_PNIC_THIS s.base_ioaddr,
+                          &BX_PNIC_THIS s.pci_conf[0x20],
+                          16, &pnic_iomask[0], "PNIC");
+      BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
+    }
   }
   strrev(szTmp);
   BX_DEBUG(("Experimental PNIC PCI write register 0x%02x value 0x%s", address, szTmp));
@@ -551,7 +541,7 @@ bx_pcipnic_c::exec_command(void)
       BX_PNIC_THIS s.recvQueueLength --;
     }
     if ( ! BX_PNIC_THIS s.recvQueueLength ) {
-      DEV_pic_lower_irq ( BX_PNIC_THIS s.irq );
+      set_irq_level(0);
     }
     status = PNIC_STATUS_OK;
     break;
@@ -571,15 +561,15 @@ bx_pcipnic_c::exec_command(void)
     enabled = *((Bit8u*)data);
     BX_PNIC_THIS s.irqEnabled = enabled;
     if ( enabled && BX_PNIC_THIS s.recvQueueLength ) {
-      DEV_pic_raise_irq ( BX_PNIC_THIS s.irq );
+      set_irq_level(1);
     } else {
-      DEV_pic_lower_irq ( BX_PNIC_THIS s.irq );
+      set_irq_level(0);
     }
     status = PNIC_STATUS_OK;
     break;
 
   case PNIC_CMD_FORCE_IRQ :
-    DEV_pic_raise_irq ( BX_PNIC_THIS s.irq );
+    set_irq_level(1);
     status = PNIC_STATUS_OK;
     break;
 
@@ -640,7 +630,7 @@ bx_pcipnic_c::rx_frame(const void *buf, unsigned io_len)
 
   // Generate interrupt if enabled
   if ( BX_PNIC_THIS s.irqEnabled ) {
-    DEV_pic_raise_irq ( BX_PNIC_THIS s.irq );
+    set_irq_level(1);
   }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.h,v 1.2 2004-03-26 03:22:46 mcb30 Exp $
+// $Id: pcipnic.h,v 1.3 2004-07-13 17:45:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -24,9 +24,11 @@
 #if BX_USE_PCIPNIC_SMF
 #  define BX_PNIC_SMF  static
 #  define BX_PNIC_THIS thePNICDevice->
+#  define BX_PNIC_THIS_PTR thePNICDevice
 #else
 #  define BX_PNIC_SMF
 #  define BX_PNIC_THIS this->
+#  define BX_PNIC_THIS_PTR this
 #endif
 
 #define PNIC_DATA_SIZE	4096
@@ -34,8 +36,7 @@
 
 typedef struct {
 
-  Bit16u	base_ioaddr;
-  Bit8u		irq;
+  Bit32u	base_ioaddr;
   Bit8u		macaddr[6];
   Bit8u		irqEnabled;
 
@@ -50,6 +51,7 @@ typedef struct {
   Bit8u		recvRing[PNIC_RECV_RINGS][PNIC_DATA_SIZE]; // Receive buffer
   Bit16u	recvRingLength[PNIC_RECV_RINGS];
 
+  Bit8u devfunc;
   Bit8u pci_conf[256];
 
 } bx_pnic_t;
@@ -66,6 +68,8 @@ public:
 private:
 
   bx_pnic_t s;
+
+  static void set_irq_level(bx_bool level);
 
   static void pnic_timer_handler(void *);
   void pnic_timer(void);
