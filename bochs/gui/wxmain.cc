@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.86 2002-12-25 17:13:45 vruppert Exp $
+// $Id: wxmain.cc,v 1.87 2002-12-30 17:04:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -1010,10 +1010,17 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
 #ifdef __GNUC__
 #warning For now, leave ATA devices so that you configure them during runtime. Otherwise you cannot change the CD image at runtime.
 #endif
-  //menuEdit->Enable (ID_Edit_ATA0, canConfigure);
-  //menuEdit->Enable (ID_Edit_ATA1, canConfigure);
-  //menuEdit->Enable (ID_Edit_ATA2, canConfigure);
-  //menuEdit->Enable (ID_Edit_ATA3, canConfigure);
+  // only enabled ATA channels with a cdrom connected are available at runtime
+  for (unsigned i=0; i<4; i++) {
+    if (!SIM->get_param_bool((bx_id)(BXP_ATA0_PRESENT+i))->get ()) {
+      menuEdit->Enable (ID_Edit_ATA0+i, canConfigure);
+    } else {
+      if ( (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE+i*2))->get () != BX_ATA_DEVICE_CDROM) &&
+           (SIM->get_param_num((bx_id)(BXP_ATA0_SLAVE_TYPE+i*2))->get () != BX_ATA_DEVICE_CDROM) ) {
+        menuEdit->Enable (ID_Edit_ATA0+i, canConfigure);
+      }
+    }
+  }
   menuEdit->Enable( ID_Edit_Boot, canConfigure);
   menuEdit->Enable( ID_Edit_Memory, canConfigure);
   menuEdit->Enable( ID_Edit_Speed, canConfigure);
