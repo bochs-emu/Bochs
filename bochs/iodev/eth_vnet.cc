@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.7 2004-09-18 12:35:13 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.8 2004-10-01 17:14:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -768,6 +768,7 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   unsigned dhcpmsgtype = 0;
   bx_bool found_serverid = false;
   bx_bool found_leasetime = false;
+  bx_bool found_guest_ipaddr = false;
   Bit32u leasetime = BX_MAX_BIT32U;
   const Bit8u *dhcpreqparams = NULL;
   unsigned dhcpreqparams_len = 0;
@@ -839,6 +840,13 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
       leasetime = get_net4(&extdata[0]);
       found_leasetime = true;
       break;
+    case BOOTPOPT_REQUESTED_IP_ADDRESS:
+      if (extlen != 4)
+        break;
+      if (!memcmp(extdata,default_guest_ipv4addr,4)) {
+        found_guest_ipaddr = true;
+      }
+      break;
     default:
       BX_ERROR(("extcode %d not supported yet", extcode));
       break;
@@ -877,7 +885,7 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   case DHCPREQUEST:
     BX_INFO(("dhcp server: DHCPREQUEST"));
     // check ciaddr.
-    if (found_serverid || (!memcmp(&data[12],default_guest_ipv4addr,4))) {
+    if (found_serverid || found_guest_ipaddr || (!memcmp(&data[12],default_guest_ipv4addr,4))) {
       *replyopts ++ = BOOTPOPT_DHCP_MESSAGETYPE;
       *replyopts ++ = 1;
       *replyopts ++ = DHCPACK;
