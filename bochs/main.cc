@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.177 2002-11-11 17:09:50 cbothamy Exp $
+// $Id: main.cc,v 1.178 2002-11-14 05:12:28 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1444,6 +1444,87 @@ int bxmain () {
 }
 
 #if defined(__WXMSW__)
+#define MAX_ARGLEN 128
+
+// win32 applications get the whole command line in one long string.
+// This function is used to split up the string into argc and argv,
+// so that the command line can be used on win32 just like on every
+// other platform.
+int split_string_into_argv (
+  char *string,
+  int *argc_out,
+  char **argv,
+  int max_argv) 
+{
+  char *buf0 = new char[strlen(string)+1];
+  strcpy (buf0, string);
+  char *buf = buf0;
+  int in_double_quote = 0, in_single_quote = 0;
+  for (int i=0; i<max_argv; i++) 
+    argv[i] = NULL;
+  argv[0] = new char[6];
+  strcpy (argv[0], "bochs");
+  int argc = 1;
+  argv[argc] = new char[MAX_ARGLEN];
+  char *outp = &argv[argc][0];
+  // trim leading and trailing spaces
+  while (*buf==' ') buf++;
+  char *p;
+  char *last_nonspace = buf;
+  for (p=buf; *p; p++) {
+    if (*p!=' ') last_nonspace = p;
+  }
+  *(last_nonspace+1) = 0;
+  p = buf;
+  while (*p) {
+    fprintf (stderr, "parsing '%c' with singlequote=%d, dblquote=%d", *p, in_single_quote, in_double_quote);
+    switch (*p) {
+      case ' ':
+		if (in_double_quote || in_single_quote) 
+		  goto do_default;
+        *outp = 0;
+        fprintf (stderr, "completed arg %d = '%s'", argc, argv[argc]);
+        argc++;
+		if (argc >= max_argv) {
+		  fprintf (stderr, "too many arguments. Increase MAX_ARGUMENTS");
+		  return -1;
+		}
+		argv[argc] = new char[MAX_ARGLEN];
+        outp = &argv[argc][0];
+		while (*p==' ') p++;
+        break;
+      case '"':
+		if (in_single_quote) goto do_default;
+	    in_double_quote = !in_double_quote;
+		p++;
+		break;
+      case '\'':
+		if (in_double_quote) goto do_default;
+	    in_single_quote = !in_single_quote;
+        p++;
+		break;
+	  do_default:
+      default:
+	    if (outp-&argv[argc][0] >= MAX_ARGLEN) {
+		  fprintf (stderr, "command line arg %d exceeded max size %d", argc, MAX_ARGLEN);
+		  return -1;
+		}
+        *(outp++) = *(p++);
+    }
+  }
+  if (in_single_quote) {
+	fprintf (stderr, "end of string with mismatched single quote (')");
+	return -1;
+  }
+  if (in_double_quote) {
+	fprintf (stderr, "end of string with mismatched double quote (\")");
+	return -1;
+  }
+  *argc_out = argc + 1;
+  return 0;
+}
+
+
 extern "C" int WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
@@ -1453,13 +1534,9 @@ extern "C" int WinMain(
   bx_startup_flags.hPrevInstance = hPrevInstance;
   bx_startup_flags.m_lpCmdLine = m_lpCmdLine;
   bx_startup_flags.nCmdShow = nCmdShow;
-#ifdef __GNUC__
-#warning should split m_lpCmdLine and fill argc,argv for real.
-#endif
-  // make fake argc,argv.
-  bx_startup_flags.argc=1;
-  static char *my_argv[] = {"bochs"};
-  bx_startup_flags.argv=my_argv;
+  int max_argv = 20;
+  bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
+  split_string_into_argv (m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
   return bxmain ();
 }
 #else
