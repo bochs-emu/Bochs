@@ -46,6 +46,7 @@ CAT=cat
 RM=rm
 MV=mv
 LN_S=ln -sf
+RPMSPEC=build/redhat/bochs.rpmspec.template 
 DLXLINUX_TAR=dlxlinux2.tar.gz
 DLXLINUX_TAR_URL=http://bochs.sourceforge.net/guestos/$(DLXLINUX_TAR)
 DLXLINUX_ROMFILE=BIOS-bochs-latest
@@ -287,7 +288,7 @@ rpm:: dist-clean
 	test -w $(SOURCES)
 	test -w $(SPECS)
 	rm -f /usr/src/redhat/SPECS/bochs.spec
-	$(CAT) build/linux/bochs.rpmspec.template | $(SED) "s/@VERSION@/$(VERSION)/g" > $(SPECS)/bochs.spec
+	$(CAT) $(RPMSPEC) | $(SED) "s/@VERSION@/$(VERSION)/g" > $(SPECS)/bochs.spec
 	$(RM) -rf $(SOURCES)/bochs
 	$(MKDIR) $(SOURCES)/bochs
 	$(TAR) cf - * .??* | (cd $(SOURCES)/bochs && tar xf -)
