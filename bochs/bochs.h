@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.54 2001-11-12 02:35:09 bdenney Exp $
+// $Id: bochs.h,v 1.55 2001-11-12 18:28:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -250,12 +250,12 @@ public:
 	logfunctions(class iofunctions *);
 	~logfunctions(void);
 
-	void info(char *fmt, ...);
-	void error(char *fmt, ...);
-	void panic(char *fmt, ...);
-	void ldebug(char *fmt, ...);
-	void fatal (char *prefix, char *fmt, va_list ap);
-	void ask (int level, char *prefix, char *fmt, va_list ap);
+	void info(const char *fmt, ...);
+	void error(const char *fmt, ...);
+	void panic(const char *fmt, ...);
+	void ldebug(const char *fmt, ...);
+	void fatal (const char *prefix, const char *fmt, va_list ap);
+	void ask (int level, const char *prefix, const char *fmt, va_list ap);
 	void put(char *);
 	void settype(int);
 	void setio(class iofunctions *);
@@ -331,20 +331,20 @@ public:
 	iofunctions(void);
 	iofunctions(FILE *);
 	iofunctions(int);
-	iofunctions(char *);
+	iofunctions(const char *);
 	~iofunctions(void);
 
-	void out(int facility, int level, char *pre, char *fmt, va_list ap);
+	void out(int facility, int level, const char *pre, const char *fmt, va_list ap);
 
-	void init_log(char *fn);
+	void init_log(const char *fn);
 	void init_log(int fd);
 	void init_log(FILE *fs);
 	int get_n_logfns () { return n_logfn; }
 	logfunc_t *get_logfn (int index) { return logfn_list[index]; }
 	void add_logfn (logfunc_t *fn);
 	void set_log_action (int loglevel, int action);
-	char *getlevel(int i) {
-		static char *loglevel[4] = {
+	const char *getlevel(int i) {
+		static const char *loglevel[4] = {
 			"DEBUG",
 			"INFO",
 			"ERROR",

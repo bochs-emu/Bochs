@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.11 2001-10-07 00:35:35 bdenney Exp $
+// $Id: logio.cc,v 1.12 2001-11-12 18:28:07 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ iofunctions::set_log_action (int loglevel, int action)
 }
 
 void
-iofunctions::init_log(char *fn)
+iofunctions::init_log(const char *fn)
 {
 	assert (magic==MAGIC_LOGNUM);
 	// use newfd/newfn so that we can log the message to the OLD log
@@ -128,7 +128,7 @@ iofunctions::init_log(int fd)
 //    fmt and ap retained for direct printinf from iofunctions only!
 
 void
-iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
+iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 {
 	char c=' ';
 	assert (magic==MAGIC_LOGNUM);
@@ -166,7 +166,7 @@ iofunctions::iofunctions(FILE *fs)
 	init_log(fs);
 }
 
-iofunctions::iofunctions(char *fn)
+iofunctions::iofunctions(const char *fn)
 {
 	init();
 	init_log(fn);
@@ -261,7 +261,7 @@ logfunctions::settype(int t)
 }
 
 void
-logfunctions::info(char *fmt, ...)
+logfunctions::info(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -281,7 +281,7 @@ logfunctions::info(char *fmt, ...)
 }
 
 void
-logfunctions::error(char *fmt, ...)
+logfunctions::error(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -300,7 +300,7 @@ logfunctions::error(char *fmt, ...)
 }
 
 void
-logfunctions::panic(char *fmt, ...)
+logfunctions::panic(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -321,7 +321,7 @@ logfunctions::panic(char *fmt, ...)
 }
 
 void
-logfunctions::ldebug(char *fmt, ...)
+logfunctions::ldebug(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -340,7 +340,7 @@ logfunctions::ldebug(char *fmt, ...)
 }
 
 void
-logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
+logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 {
   char buf1[1024], buf2[1024];
   vsprintf (buf1, fmt, ap);
@@ -386,7 +386,7 @@ logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
 }
 
 void
-logfunctions::fatal (char *prefix, char *fmt, va_list ap)
+logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
 {
   static int fatal_reentry = 0;
   if (fatal_reentry) return;
