@@ -40,6 +40,8 @@
 #define BX_INSTR_IS_JMP   13
 #define BX_INSTR_IS_INT   14
 
+void bx_instr_init ();
+void bx_instr_shutdown ();
 void bx_instr_opcode_begin(Bit32u linear);
 void bx_instr_opcode_end(Bit32u linear);
 void bx_instr_fetch_byte(Bit8u val8);
@@ -56,6 +58,8 @@ void bx_instr_far_branch(unsigned what, Bit32u new_cs, Bit32u new_eip);
 void bx_instr_lin_read(Bit32u lin, Bit32u phy, unsigned len);
 void bx_instr_lin_write(Bit32u lin, Bit32u phy, unsigned len);
 
+#define BX_INSTR_INIT()                      bx_instr_init ();
+#define BX_INSTR_SHUTDOWN()                  bx_instr_shutdown ();
 #define BX_INSTR_OPCODE_BEGIN(linear)        bx_instr_opcode_begin(linear)
 #define BX_INSTR_OPCODE_END(linear)          bx_instr_opcode_end(linear)
 #define BX_INSTR_FETCH_BYTE(val8)            bx_instr_fetch_byte(val8)
@@ -100,8 +104,6 @@ void bx_instr_print(void);
 #endif
 
 // rest are no-ops
-#define BX_INSTR_INIT()
-#define BX_INSTR_SHUTDOWN()
 #define BX_INSTR_OPCODE_BYTE1(b)
 #define BX_INSTR_OPCODE_BYTE2(b)
 #define BX_INSTR_OPCODE_G1EbIb(nnn)
