@@ -57,8 +57,13 @@ extern "C" {
   extern int bx_snprintf (char *s, size_t maxlen, const char *format, ...);
 #endif
 
-#if !BX_HAVE_STRTOULL
-#define strtoull bx_strtoull
+#if BX_HAVE_STRTOULL
+  // great, just use the usual function
+#elif BX_HAVE_STRTOUQ
+  // they have strtouq and not strtoull
+  #define strtoull strtouq
+#else
+  #define strtoull bx_strtoull
   extern Bit64u bx_strtoull (const char *nptr, char **endptr, int baseignore);
 #endif
 

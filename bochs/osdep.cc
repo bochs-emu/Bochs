@@ -54,7 +54,7 @@ int bx_snprintf (char *s, size_t maxlen, const char *format, ...)
 #endif  /* !BX_HAVE_SNPRINTF */
 
 
-#if !BX_HAVE_STRTOULL
+#if (!BX_HAVE_STRTOULL && !BX_HAVE_STRTOUQ)
 /* taken from glibc-2.2.2: strtod.c, and stripped down a lot.  There are 
    still a few leftover references to decimal points and exponents, 
    but it works for bases 10 and 16 */
