@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.24 2002-08-01 07:23:11 cbothamy Exp $
+// $Id: proc_ctrl.cc,v 1.25 2002-08-10 12:06:26 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -366,7 +366,7 @@ BX_CPU_C::LMSW_Ew(BxInstruction_t *i)
   Bit16u msw;
   Bit32u cr0;
 
-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
+  if (v8086_mode()) BX_PANIC(("proc_ctrl: LMSW in v8086 mode unsupported"));
 
   if ( protected_mode() ) {
     if ( CPL != 0 ) {
@@ -448,7 +448,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
   Bit32u val_32;
 
 
-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
+/*  if (v8086_mode()) BX_PANIC(("proc_ctrl: MOV_CdRd in v8086 mode unsupported"));*/
 
   /* NOTES:
    *   32bit operands always used
@@ -463,7 +463,7 @@ BX_CPU_C::MOV_CdRd(BxInstruction_t *i)
 
   invalidate_prefetch_q();
 
-  if (protected_mode() && CPL!=0) {
+  if ((protected_mode() || v8086_mode()) && CPL!=0) {
     BX_PANIC(("MOV_CdRd: CPL!=0"));
     /* #GP(0) if CPL is not 0 */
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -531,7 +531,7 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
 #else
   Bit32u val_32;
 
-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
+/*  if (v8086_mode()) BX_PANIC(("proc_ctrl: MOV_RdCd in v8086 mode unsupported"));*/
 
   /* NOTES:
    *   32bit operands always used
@@ -544,9 +544,8 @@ BX_CPU_C::MOV_RdCd(BxInstruction_t *i)
     BX_PANIC(("MOV_RdCd(): rm field not a register!"));
     }
 
-  if (protected_mode() && CPL!=0) {
-//    BX_PANIC(("MOV_RdCd: CPL!=0"));
-    /* #GP(0) if CPL is not 0 */
+  if ((protected_mode() || v8086_mode()) && CPL!=0) {
+    BX_INFO(("MOV_RdCd: CPL!=0"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
     }
@@ -633,7 +632,7 @@ BX_CPU_C::LOADALL(BxInstruction_t *i)
   Bit16u base_15_0, limit;
   Bit8u  base_23_16, access;
 
-  if (v8086_mode()) BX_PANIC(("proc_ctrl: v8086 mode unsupported"));
+  if (v8086_mode()) BX_PANIC(("proc_ctrl: LOADALL in v8086 mode unsupported"));
 
 #if BX_CPU_LEVEL > 2
   BX_PANIC(("loadall: not implemented for 386"));
