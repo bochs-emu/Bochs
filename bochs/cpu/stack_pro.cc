@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.12 2002-11-07 15:42:14 shap Exp $
+// $Id: stack_pro.cc,v 1.13 2003-02-26 00:59:31 ptrumpet Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -137,10 +137,12 @@ BailBigRSP("push_32");
 BX_CPU_C::push_64(Bit64u value64)
 {
   /* 64bit stack size: pushes use SS:RSP, assume protected mode  */
+#if BX_IGNORE_THIS
   if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, RSP, 8)) {
     BX_INFO(("push_64(): push outside stack limits"));
     exception(BX_SS_EXCEPTION, 0, 0); /* #SS(0) */
     }
+#endif
 
   write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
   RSP -= 8;
