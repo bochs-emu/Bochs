@@ -307,7 +307,7 @@ BX_CPU_C::SLDT_Ew(BxInstruction_t *i)
 
   if (real_mode()) {
     /* not recognized in real address mode */
-    BX_PANIC(("SLDT_Ew: encountered in real mode.\n"));
+    BX_ERROR(("SLDT_Ew: encountered in real mode.\n"));
     UndefinedOpcode(i);
     }
   else {
