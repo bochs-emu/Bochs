@@ -12,3 +12,4 @@
 #define IDPATH      2210
 #define IDBROWSE    2220
 #define IDSTATUS    2230
+#define IDCREATE    2240

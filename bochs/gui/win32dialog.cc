@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.7 2003-08-31 17:12:20 vruppert Exp $
+// $Id: win32dialog.cc,v 1.8 2003-09-01 17:47:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
@@ -23,6 +23,32 @@ HWND GetBochsWindow()
     hwnd = GetForegroundWindow();
   }
   return hwnd;
+}
+
+BOOL CreateImage(HWND hDlg, int sectors, const char *filename)
+{
+  if (sectors < 1) {
+    MessageBox(hDlg, "The disk size is invalid.", "Invalid size", MB_ICONERROR);
+    return FALSE;
+  }
+  if (lstrlen(filename) < 1) {
+    MessageBox(hDlg, "You must type a file name for the new disk image.", "Bad filename", MB_ICONERROR);
+    return FALSE;
+  }
+  int ret = SIM->create_disk_image (filename, sectors, 0);
+  if (ret == -1) {  // already exists
+    int answer = MessageBox(hDlg, "File exists.  Do you want to overwrite it?",
+                            "File exists", MB_YESNO);
+    if (answer == IDYES)
+      ret = SIM->create_disk_image (filename, sectors, 1);
+    else 
+      return FALSE;
+  }
+  if (ret == -2) {
+    MessageBox(hDlg, "I could not create the disk image. Check for permission problems or available disk space.", "Failed", MB_ICONERROR);
+    return FALSE;
+  }
+  return TRUE;
 }
 
 static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -96,17 +122,22 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 {
   static bx_param_filename_c *param;
   static bx_param_enum_c *status;
+  static bx_param_enum_c *disktype;
   static char origpath[MAX_PATH];
+  char mesg[MAX_PATH];
   char path[MAX_PATH];
   char *title;
+  int cap;
 
   switch (msg) {
     case WM_INITDIALOG:
       param = (bx_param_filename_c *)lParam;
       if (param->get_id() == BXP_FLOPPYA_PATH) {
         status = SIM->get_param_enum(BXP_FLOPPYA_STATUS);
+        disktype = SIM->get_param_enum(BXP_FLOPPYA_DEVTYPE);
       } else {
         status = SIM->get_param_enum(BXP_FLOPPYB_STATUS);
+        disktype = SIM->get_param_enum(BXP_FLOPPYB_DEVTYPE);
       }
       if (status->get() == BX_INSERTED) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
@@ -125,7 +156,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
         case IDBROWSE:
-          if (AskFilename(param) > 0) {
+          if (AskFilename(hDlg, param) > 0) {
             SetWindowText(GetDlgItem(hDlg, IDPATH), param->getptr());
             SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
           }
@@ -150,6 +181,14 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           param->set(origpath);
           EndDialog(hDlg, -1);
           break;
+        case IDCREATE:
+          GetWindowText(GetDlgItem(hDlg, IDPATH), path, MAX_PATH);
+          cap = disktype->get() - disktype->get_min();
+          if (CreateImage(hDlg, floppy_type_n_sectors[cap], path)) {
+            wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[cap], path);
+            MessageBox(hDlg, mesg, "Image created", MB_OK);
+          }
+          break;
     }
   }
   return FALSE;
@@ -161,7 +200,7 @@ void LogAskDialog(BxEvent *event)
                                   (DLGPROC)LogAskProc, (LPARAM)event);
 }
 
-int AskFilename(bx_param_filename_c *param)
+int AskFilename(HWND hwnd, bx_param_filename_c *param)
 {
   OPENFILENAME ofn;
   int ret;
@@ -172,7 +211,7 @@ int AskFilename(bx_param_filename_c *param)
   title = param->get_label();
   if (!title) title = param->get_name();
   ofn.lStructSize = sizeof(OPENFILENAME);
-  ofn.hwndOwner = GetBochsWindow();
+  ofn.hwndOwner = hwnd;
   ofn.hInstance   = NULL;
   ofn.lpstrCustomFilter = NULL;
   ofn.nMaxCustFilter = 0;
