@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control.cc,v 1.52 2002-08-04 08:42:34 vruppert Exp $
+// $Id: control.cc,v 1.53 2002-08-07 07:24:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.52 2002-08-04 08:42:34 vruppert Exp $
+ * $Id: control.cc,v 1.53 2002-08-07 07:24:32 vruppert Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -623,7 +623,7 @@ int bx_read_rc (char *rc)
   char newrc[CPANEL_PATH_LEN];
   while (1) {
     if (ask_string ("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc) < 0) return -1;
-    if (!strcmp (newrc, "none")) return 0;
+    if (!strcmp (newrc, "none")) return -1;
     if (SIM->read_rc (newrc) >= 0) return 0;
     fprintf (stderr, "The file '%s' could not be found.\n", newrc);
   }
