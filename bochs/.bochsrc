@@ -2,6 +2,62 @@
 # your pathname includes spaces.
 
 #=======================================================================
+# CONFIG_INTERFACE
+#
+# The configuration interface is a series of menus or dialog boxes that
+# allows you to change all the settings that control Bochs's behavior.
+# There are two choices of configuration interface: a text mode version
+# called "control" and a graphical version called "wx".  The text
+# mode version uses stdin/stdout and is always compiled in.  The graphical
+# version is only available when you use "--with-wx" on the configure 
+# command.  If you do not write a config_interface line, Bochs will 
+# choose a default for you.
+#
+# NOTE: if you use the "wx" configuration interface, you must also use
+# the "wx" VGA library.
+#=======================================================================
+#config_interface: control
+#config_interface: wx
+
+#=======================================================================
+# VGA_LIBRARY
+#
+# The VGA library is what displays the Bochs VGA screen.  Bochs has a
+# selection of about 10 different VGA screen implementations for different
+# platforms.  If you run configure with multiple --with-* options, the
+# vga_library command lets you choose which one you want to run with.
+# If you do not write a vga_library line, Bochs will choose a default for
+# you.
+#
+# The choices are: 
+#   x              use X windows interface, cross platform
+#   win32          use native win32 libraries
+#   carbon         use Carbon library (for MacOS X)
+#   beos           use native BeOS libraries
+#   macintosh      use MacOS pre-10
+#   amigaos        use native AmigaOS libraries
+#   sdl            use SDL library, cross platform
+#   term           text only, uses curses/ncurses library, cross platform
+#   rfb            provides an interface to AT&T's VNC viewer, cross platform
+#   wx             use wxWindows library, cross platform
+#   nogui          no VGA screen
+#
+# NOTE: if you use the "wx" configuration interface, you must also use
+# the "wx" VGA library.
+#=======================================================================
+#vga_library: amigaos
+#vga_library: beos
+#vga_library: carbon
+#vga_library: macintosh
+#vga_library: nogui
+#vga_library: rfb
+#vga_library: sdl
+#vga_library: term
+#vga_library: win32
+#vga_library: wx
+#vga_library: x
+
+#=======================================================================
 # ROMIMAGE:
 # You now need to load a ROM BIOS into F0000-FFFFF.  I've wiped
 # out most of the BIOS hooks, and replace them with real BIOS
