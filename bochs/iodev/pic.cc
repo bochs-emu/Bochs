@@ -285,6 +285,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
           BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0x60));
+          BX_PIC_THIS s.master_pic.irr &= ~(1 << (value-0x60));
           service_master_pic();
 	  break;
 
@@ -428,6 +429,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
           BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0x60));
+          BX_PIC_THIS s.slave_pic.irr &= ~(1 << (value-0x60));
           service_slave_pic();
 	  break;
 
