@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.121 2003-05-03 16:37:14 cbothamy Exp $
+// $Id: bochs.h,v 1.122 2003-07-28 13:55:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -334,15 +334,15 @@ public:
 	void add_logfn (logfunc_t *fn);
 	void set_log_action (int loglevel, int action);
 	const char *getlevel(int i) {
-		static const char *loglevel[5] = {
+		static const char *loglevel[N_LOGLEV] = {
 			"DEBUG",
 			"INFO",
 			"ERROR",
 			"PANIC",
 			"PASS"
 		};
-                if (i>=0 && i<4) return loglevel[i];
-		else return "?";
+                if (i>=0 && i<N_LOGLEV) return loglevel[i];
+                else return "?";
 	}
 	char *getaction(int i) {
 	   static char *name[] = { "ignore", "report", "ask", "fatal" };
