@@ -1,0 +1,57 @@
+? buildbochs/config.log
+? buildbochs/confdefs.h
+? buildbochs/config.cache
+? buildbochs/conftestdir
+Index: buildbochs/config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.16
+diff -u -r1.16 config.h.in
+--- buildbochs/config.h.in	2001/05/24 01:07:08	1.16
++++ buildbochs/config.h.in	2001/06/05 03:48:06
+@@ -183,7 +183,7 @@
+ // This defaults to 1 since it should improve performance, but when
+ // SMP mode is enabled, it will be turned off by configure.
+ 
+-#define BX_USE_CPU_SMF 1
++#define BX_USE_CPU_SMF 0
+ 
+ // Use static member functions in IO DEVice emulation modules.
+ // For efficiency, use C like functions for IO handling,
+@@ -195,21 +195,21 @@
+ //   0 = Use nonstatic member functions (use only if you need
+ //       multiple instances of a device class
+ 
+-#define BX_USE_HD_SMF   1  // Hard drive
+-#define BX_USE_CMOS_SMF 1  // CMOS
+-#define BX_USE_DMA_SMF  1  // DMA
+-#define BX_USE_FD_SMF   1  // Floppy
+-#define BX_USE_KEY_SMF  1  // Keyboard
+-#define BX_USE_PAR_SMF  1  // Parallel
+-#define BX_USE_PIC_SMF  1  // PIC
+-#define BX_USE_PIT_SMF  1  // PIT
+-#define BX_USE_SER_SMF  1  // Serial
+-#define BX_USE_UM_SMF   1  // Unmapped
+-#define BX_USE_VGA_SMF  1  // VGA
+-#define BX_USE_SB16_SMF 1  // Sound (SB 16)
+-#define BX_USE_DEV_SMF  1  // System Devices (port92)
+-#define BX_USE_PCI_SMF  1  // PCI
+-#define BX_USE_NE2K_SMF 1  // NE2K
++#define BX_USE_HD_SMF   0  // Hard drive
++#define BX_USE_CMOS_SMF 0  // CMOS
++#define BX_USE_DMA_SMF  0  // DMA
++#define BX_USE_FD_SMF   0  // Floppy
++#define BX_USE_KEY_SMF  0  // Keyboard
++#define BX_USE_PAR_SMF  0  // Parallel
++#define BX_USE_PIC_SMF  0  // PIC
++#define BX_USE_PIT_SMF  0  // PIT
++#define BX_USE_SER_SMF  0  // Serial
++#define BX_USE_UM_SMF   0  // Unmapped
++#define BX_USE_VGA_SMF  0  // VGA
++#define BX_USE_SB16_SMF 0  // Sound (SB 16)
++#define BX_USE_DEV_SMF  0  // System Devices (port92)
++#define BX_USE_PCI_SMF  0  // PCI
++#define BX_USE_NE2K_SMF 0  // NE2K
+ 
+ #define BX_SUPPORT_SB16 0
+ 

@@ -1,0 +1,16 @@
+Index: buildbochs/config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.16
+diff -u -r1.16 config.h.in
+--- buildbochs/config.h.in	2001/05/24 01:07:08	1.16
++++ buildbochs/config.h.in	2001/06/05 03:43:51
+@@ -183,7 +183,7 @@
+ // This defaults to 1 since it should improve performance, but when
+ // SMP mode is enabled, it will be turned off by configure.
+ 
+-#define BX_USE_CPU_SMF 1
++#define BX_USE_CPU_SMF 0
+ 
+ // Use static member functions in IO DEVice emulation modules.
+ // For efficiency, use C like functions for IO handling,

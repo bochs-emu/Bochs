@@ -1,0 +1,16 @@
+Index: buildbochs/pc_system.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/pc_system.cc,v
+retrieving revision 1.7
+diff -u -r1.7 pc_system.cc
+--- buildbochs/pc_system.cc	2001/05/30 18:56:01	1.7
++++ buildbochs/pc_system.cc	2001/06/05 16:32:00
+@@ -242,7 +242,7 @@
+   UNUSED( operation );
+   // Reset the processor.
+ 
+-  BX_ERROR(( "# bx_pc_system_c::ResetSignal() called" ));
++  BX_PANIC(( "# bx_pc_system_c::ResetSignal() called" ));
+   for (int i=0; i<BX_SMP_PROCESSORS; i++)
+     BX_CPU(i)->reset(BX_RESET_SOFTWARE);
+   return(0);

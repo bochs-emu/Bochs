@@ -1,0 +1,20 @@
+? buildbochs/config.log
+? buildbochs/confdefs.h
+? buildbochs/config.cache
+? buildbochs/conftestdir
+Index: buildbochs/bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.15
+diff -u -r1.15 bochs.h
+--- buildbochs/bochs.h	2001/05/24 14:08:54	1.15
++++ buildbochs/bochs.h	2001/06/05 03:48:38
+@@ -390,7 +390,7 @@
+   ((io==NULL)? (io=new iofunc_t("/dev/stderr")) : io)
+ #define SAFE_GET_GENLOG() \
+   ((genlog==NULL)? (genlog=new logfunc_t(SAFE_GET_IOFUNC())) : genlog)
+-/* #define NO_LOGGING */
++#define NO_LOGGING
+ #ifndef NO_LOGGING
+ 
+ #define BX_INFO(x)  (LOG_THIS info) x

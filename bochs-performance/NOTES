@@ -1,0 +1,106 @@
+Collect a number of different binaries compiled with different options,
+all based on 1.2.pre1.  Develop some process, such as booting linux,
+compressing some big file, and then rebooting that takes a while.
+Time how long each binary takes to execute that task.
+
+Problems with reboot!
+1.2.pre1 didn't actually do reboot right!!!!!!!!!
+what a pain, all these binaries are compiled by hand.
+Maybe I can make a script to compile them all again.
+patch -p0 <<EOF
+wefji
+wefj
+EOF
+rm main.cc; cvs upd main.cc
+etc.
+
+
+bochs000: 1.2, no args
+bochs001: 1.2, no args, change CPU SMF=0
+bochs002: 1.2, no args, change all SMFs=0
+bochs004: 1.2, --with-nogui
+bochs005: 1.2, --enable-debugger
+bochs006: 1.2, --enable-cdrom --enable-sb16=linux --enable-debugger
+bochs007: 1.2, NO_LOGGING defined in bochs.h
+bocsh008: 1.2, no compile args
+bocsh008a: 1.2, -O2 -fomit-frame-pointer
+bocsh008b: 1.2, -O6 -fomit-frame-pointer
+bochs010: 1.2, --enable-processors=2
+bochs011: 1.2, --enable-processors=2 --enable-debugger
+bochs015: 1.2, --enable-processors=4
+bochs016: 1.2, --enable-processors=4 --enable-debugger
+bochs020: 1.1.2, no args
+bochs021: 1.1.2, --enable-debugger
+bochs030: 3/25/2000, --enable-fpu
+bochs031: 3/25/2000, --enable-fpu --enable-debugger
+
+
+First Results
+bochs000	22.26user 0.33system 0:23.70elapsed 
+bochs001	21.44user 0.26system 0:22.09elapsed 
+bochs002	21.90user 0.21system 0:22.42elapsed 
+bochs004	21.49user 0.23system 0:21.86elapsed 
+bochs005	21.63user 0.29system 0:22.25elapsed 
+bochs006	30.05user 0.33system 0:30.99elapsed 
+bochs007	21.38user 0.23system 0:21.95elapsed 
+bochs008	34.15user 0.32system 0:34.85elapsed 
+bochs008a	21.07user 0.24system 0:21.69elapsed 
+bochs008b	21.50user 0.33system 0:22.13elapsed 
+bochs010	23.51user 0.36system 0:24.19elapsed 
+bochs011	31.10user 0.38system 0:31.86elapsed 
+bochs015	26.82user 0.24system 0:27.43elapsed 
+bochs020	23.59user 0.44system 0:26.18elapsed 
+bochs021	29.27user 0.45system 0:30.29elapsed 
+bochs030	17.55user 0.33system 0:18.17elapsed 
+bochs031	21.69user 0.33system 0:22.49elapsed 
+
+
+../bochs000	21.76user 0.26system 0:22.28elapsed
+../bochs001	21.41user 0.26system 0:21.89elapsed
+../bochs002	21.91user 0.26system 0:22.35elapsed
+../bochs004	21.49user 0.21system 0:21.88elapsed
+../bochs005	21.70user 0.35system 0:22.44elapsed
+../bochs006	29.99user 0.51system 0:31.17elapsed
+../bochs007	21.29user 0.27system 0:21.96elapsed
+../bochs008	34.32user 0.29system 0:34.95elapsed
+../bochs008a	21.13user 0.25system 0:21.73elapsed
+../bochs008b	21.66user 0.29system 0:22.28elapsed
+../bochs010	23.69user 0.29system 0:24.25elapsed
+../bochs011	31.18user 0.50system 0:32.03elapsed
+../bochs015	27.21user 0.27system 0:27.82elapsed
+../bochs016	35.36user 0.44system 0:36.15elapsed
+../bochs020	21.82user 0.31system 0:22.45elapsed
+../bochs021	29.34user 0.44system 0:30.13elapsed
+../bochs030	17.69user 0.25system 0:18.27elapsed
+../bochs031	21.80user 0.29system 0:22.58elapsed
+
+name           seconds   Percent performance of 3/25/2000 snapshot
+../bochs000	22.28	 82.00     1.2: no args
+../bochs001	21.89	 83.46     1.2: turn off SMF for CPU only, improvement
+../bochs002	22.35	 81.74     1.2: turn off SMF for all, reduction!!
+../bochs004	21.88	 83.50     1.2: nogui
+../bochs005	22.44	 81.41     1.2: debugger
+../bochs006	32.58	 56.08     1.2: cdrom, sb16, debugger
+../bochs006a	22.80	 80.13     1.2: cdrom
+../bochs006b	23.03	 79.33     1.2: sb16
+../bochs006c	23.49	 77.78     1.2: cdrom, sb16
+../bochs006d	22.59	 80.87     1.2: none
+../bochs006e	31.21	 58.53     1.2: cdrom, debugger
+../bochs006f	30.73	 59.45     1.2: sb16, debugger
+../bochs007	21.96	 83.19     1.2: no logging helped a tiny bit
+../bochs008	34.95	 52.27     1.2: without optimization, bad
+../bochs008a	21.73	 84.07     1.2: -O2 without -g good
+../bochs008b	22.28	 82.00     1.2: -O6 didn't help a bit
+../bochs010	24.25	 75.34     1.2: 2 processors
+../bochs011	32.03	 57.04     1.2: 2 processors + debugger
+../bochs015	27.82	 65.67     1.2: 4 processors
+../bochs016	36.15	 50.53     1.2: 4 processors + debugger
+../bochs020	17.94   101.84     1.1.2: no args
+../bochs021	22.44    81.42     1.1.2: debugger
+../bochs030	18.27	100.00     3/25: no args
+../bochs031	22.58	 80.91     3/25: debugger
+../bochs091	20.91    87.37     cvs, never exit cpu_loop
+../bochs092	19.03    96.01     cvs, use bx_mem and bx_cpu instead of array
+../bochs093	                   cvs, use bx_mem and bx_cpu instead of array
+
+

@@ -1,0 +1,16 @@
+Index: buildbochs/bochs.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bochs.h,v
+retrieving revision 1.15
+diff -u -r1.15 bochs.h
+--- buildbochs/bochs.h	2001/05/24 14:08:54	1.15
++++ buildbochs/bochs.h	2001/06/05 06:46:28
+@@ -378,7 +378,7 @@
+ 	void set_log_action (int loglevel, int action);
+ protected:
+ 	int n_logfn;
+-#define MAX_LOGFNS 32
++#define MAX_LOGFNS 64
+ 	logfunc_t *logfn_list[MAX_LOGFNS];
+ 	char *logfn;
+ };

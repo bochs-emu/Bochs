@@ -1,0 +1,30 @@
+###############################################################
+# bochsrc.txt file for DLX Linux disk image.
+###############################################################
+
+# how much memory the emulated machine will have
+megs: 32
+
+# filename of ROM images
+romimage: file=/usr/local/bochs/latest/BIOS-bochs-latest, address=0xf0000
+vgaromimage: /usr/local/bochs/latest/VGABIOS-elpin-2.40
+
+# what disk images will be used 
+floppya: 1_44=floppya.img, status=inserted
+floppyb: 1_44=floppyb.img, status=inserted
+newharddrivesupport: enabled=1
+
+# 1. workload
+#diskc: file=workload.img, cyl=306, heads=4, spt=17
+# or 2. editing
+diskc: file=normal.img, cyl=306, heads=4, spt=17
+diskd: file=workload.img, cyl=306, heads=4, spt=17
+
+# choose the boot disk.
+boot: c
+
+# where do we send log messages?
+log: bochsout.txt
+
+# disable the mouse, since DLX is text only
+mouse: enabled=0

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+list=`echo ../bochs*`
+list="../bochs091 ../bochs092 ../bochs093 ../bochs094"
+
+for i in $list; do
+  echo Executing with binary: $i
+  cat <<EOF | time $i
+c
+q
+EOF
+  echo Done with binary: $i
+done
