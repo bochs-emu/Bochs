@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.18 2002-08-17 14:01:07 vruppert Exp $
+// $Id: term.cc,v 1.19 2002-09-26 02:36:04 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -497,9 +497,11 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	for(int i=0;i<4001;i+=2) {
 		if ((old_text[i] != new_text[i]) ||
 		    (old_text[i+1] != new_text[i+1])) {
+#if BX_HAVE_COLOR_SET
 			if (has_colors()) {
 				color_set(get_color_pair(new_text[i+1]), NULL);
 			}
+#endif
 			ch = get_term_char(&new_text[i]);
 			if ((new_text[i+1] & 0x08) > 0) ch |= A_BOLD;
 			if ((new_text[i+1] & 0x80) > 0) ch |= A_REVERSE;
@@ -513,9 +515,11 @@ bx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 		cursor_x=79;
 		cursor_y--;
 	}
+#if BX_HAVE_COLOR_SET
 	if (has_colors()) {
 		color_set(get_color_pair(new_text[(cursor_y*80+cursor_x)*2+1]), NULL);
 	}
+#endif
 	ch = get_term_char(&new_text[(cursor_y*80+cursor_x)*2]);
 	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x08) > 0) ch |= A_BOLD;
 	if ((new_text[(cursor_y*80+cursor_x)*2+1] & 0x80) > 0) ch |= A_REVERSE;
