@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.34 2002-03-23 01:38:29 bdenney Exp $
+$Id: user.dbk,v 1.35 2002-03-24 02:05:49 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2580,6 +2580,218 @@ and 0 turns it off.
 
 </section> <!--end of bochsrc section-->
 
+<section id="keymap"><title>How to write your own keymap table (X windows)</title>
+<para>
+Christophe Bothamy wrote the keymapping code for Bochs, and provided this
+documentation for how to create new keymaps.  Keymapping is currently 
+implemented for X windows only, so there are several references to X-specific
+values in this section.
+</para>
+<screen>
+  The standard US Keyboard looks like this:
+
+          -------------------------------------------
+  Top row Esc F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 
+          -------------------------------------------
+  2nd row ` 1 2 3 4 5 6 7 8 9 0 - = \ Back
+          -------------------------------------------
+  3rd row Tab Q W E R T Y U I O P [ ] Enter
+          -------------------------------------------
+  4rd row Caps A S D F G H J K L ; '
+          -------------------------------------------
+  5rd row lShift l\ Z X C V B N M , . / rShift
+          -------------------------------------------
+  6rd row lCtrl lAlt Space rAlt rCtrl
+          -------------------------------------------
+</screen>  
+
+<para>
+Each key of the US keyboard maps to a Bochs constant named
+BX_KEY_<replaceable>symbol</replaceable>. You can find the current list of
+BX_KEY_<replaceable>symbol</replaceable> in 
+<link linkend="bx-key-table">The BX_KEY table</link>. Please note that there
+is only one BX_KEY_<replaceable>symbol</replaceable> for each physical key.
+</para>
+
+<para>
+  Now, for each key of the US keyboard, look which symbols
+  you can type on your real keyboard. Each symbol maps
+  to a X11 XK_<replaceable>symbol</replaceable> constant.  You will find in 
+  <filename>X11/keysymdef.h</filename> the list of all possible XK_<replaceable>symbol</replaceable>
+  on your system.
+  Alternatively, you can use a small utility called "xev"
+  that prints out the symbol names of a pressed key. Note
+  that the symbol name given by xev does not contain de
+  XK_ prefix.
+  Don't forget to add a line for every symbol you can type
+  on each key.
+  </para>
+
+<para>
+  So now, you know for each Bochs key symbol, the associated
+  set of X11 symbols.
+  </para>
+
+<para>
+  You can then create your own map file. Keymap files are
+  found in the "gui/keymaps" directory.
+  Create a file containing each pair of BX_KEY_<replaceable>symbol</replaceable>
+  and XK_<replaceable>symbol</replaceable> separated with a '='. 
+  You have to remove to XK_ prefix.
+  </para>
+
+<para>
+  For example :
+<screen>
+  BX_KEY_A = a
+  BX_KEY_A = A
+  ...
+  BX_KEY_TAB = Tab
+  BX_KEY_TAB = Iso_Left_Tab
+  ...
+  </screen>
+  </para>
+
+<para>
+  Or you can copy the x11-i386-us.map file and modify the 
+  existing entries to suit your needs.
+  In that case, you will have to add your country specific 
+  X11 symbols.
+  </para>
+
+<table id="bx-key-table"><title>BX_KEY constants</title>
+<tgroup cols=2 align=center colsep=1 rowsep=1>
+<thead>
+  <row>
+    <entry> BX_KEY constant </entry>
+    <entry> Keyboard Symbol </entry>
+  </row>
+</thead>
+<tbody>
+
+<row><entry>BX_KEY_CTRL_L</entry><entry> left Ctrl </entry></row>
+<row><entry>BX_KEY_SHIFT_L</entry><entry> left Shift </entry></row>
+<row><entry>BX_KEY_F1</entry><entry> F1 </entry></row>
+<row><entry>BX_KEY_F2</entry><entry> F2 </entry></row>
+<row><entry>BX_KEY_F3</entry><entry> F3 </entry></row>
+<row><entry>BX_KEY_F4</entry><entry> F4 </entry></row>
+<row><entry>BX_KEY_F5</entry><entry> F5 </entry></row>
+<row><entry>BX_KEY_F6</entry><entry> F6 </entry></row>
+<row><entry>BX_KEY_F7</entry><entry> F7 </entry></row>
+<row><entry>BX_KEY_F8</entry><entry> F8 </entry></row>
+<row><entry>BX_KEY_F9</entry><entry> F9 </entry></row>
+<row><entry>BX_KEY_F10</entry><entry> F10 </entry></row>
+<row><entry>BX_KEY_F11</entry><entry> F11 </entry></row>
+<row><entry>BX_KEY_F12</entry><entry> F12 </entry></row>
+<row><entry>BX_KEY_CTRL_R</entry><entry> right Ctrl </entry></row>
+<row><entry>BX_KEY_SHIFT_R</entry><entry> right Shift </entry></row>
+<row><entry>BX_KEY_CAPS_LOCK</entry><entry> CapsLock </entry></row>
+<row><entry>BX_KEY_NUM_LOCK</entry><entry> NumLock </entry></row>
+<row><entry>BX_KEY_ALT_L</entry><entry> left Alt </entry></row>
+<row><entry>BX_KEY_ALT_R</entry><entry> right Alt </entry></row>
+<row><entry>BX_KEY_A</entry><entry> A </entry></row>
+<row><entry>BX_KEY_B</entry><entry> B </entry></row>
+<row><entry>BX_KEY_C</entry><entry> C </entry></row>
+<row><entry>BX_KEY_D</entry><entry> D </entry></row>
+<row><entry>BX_KEY_E</entry><entry> E </entry></row>
+<row><entry>BX_KEY_F</entry><entry> F </entry></row>
+<row><entry>BX_KEY_G</entry><entry> G </entry></row>
+<row><entry>BX_KEY_H</entry><entry> H </entry></row>
+<row><entry>BX_KEY_I</entry><entry> I </entry></row>
+<row><entry>BX_KEY_J</entry><entry> J </entry></row>
+<row><entry>BX_KEY_K</entry><entry> K </entry></row>
+<row><entry>BX_KEY_L</entry><entry> L </entry></row>
+<row><entry>BX_KEY_M</entry><entry> M </entry></row>
+<row><entry>BX_KEY_N</entry><entry> N </entry></row>
+<row><entry>BX_KEY_O</entry><entry> O </entry></row>
+<row><entry>BX_KEY_P</entry><entry> P </entry></row>
+<row><entry>BX_KEY_Q</entry><entry> Q </entry></row>
+<row><entry>BX_KEY_R</entry><entry> R </entry></row>
+<row><entry>BX_KEY_S</entry><entry> S </entry></row>
+<row><entry>BX_KEY_T</entry><entry> T </entry></row>
+<row><entry>BX_KEY_U</entry><entry> U </entry></row>
+<row><entry>BX_KEY_V</entry><entry> V </entry></row>
+<row><entry>BX_KEY_W</entry><entry> W </entry></row>
+<row><entry>BX_KEY_X</entry><entry> X </entry></row>
+<row><entry>BX_KEY_Y</entry><entry> Y </entry></row>
+<row><entry>BX_KEY_Z</entry><entry> Z </entry></row>
+<row><entry>BX_KEY_0</entry><entry> 0 </entry></row>
+<row><entry>BX_KEY_1</entry><entry> 1 </entry></row>
+<row><entry>BX_KEY_2</entry><entry> 2 </entry></row>
+<row><entry>BX_KEY_3</entry><entry> 3 </entry></row>
+<row><entry>BX_KEY_4</entry><entry> 4 </entry></row>
+<row><entry>BX_KEY_5</entry><entry> 5 </entry></row>
+<row><entry>BX_KEY_6</entry><entry> 6 </entry></row>
+<row><entry>BX_KEY_7</entry><entry> 7 </entry></row>
+<row><entry>BX_KEY_8</entry><entry> 8 </entry></row>
+<row><entry>BX_KEY_9</entry><entry> 9 </entry></row>
+<row><entry>BX_KEY_ESC</entry><entry> Esc </entry></row>
+<row><entry>BX_KEY_SPACE</entry><entry> SpaceBar </entry></row>
+<row><entry>BX_KEY_SINGLE_QUOTE</entry><entry> ' </entry></row>
+<row><entry>BX_KEY_COMMA</entry><entry> , </entry></row>
+<row><entry>BX_KEY_PERIOD</entry><entry> . </entry></row>
+<row><entry>BX_KEY_SLASH</entry><entry> / </entry></row>
+<row><entry>BX_KEY_SEMICOLON</entry><entry> ; </entry></row>
+<row><entry>BX_KEY_EQUALS</entry><entry> = </entry></row>
+<row><entry>BX_KEY_LEFT_BRACKET</entry><entry> [ </entry></row>
+<row><entry>BX_KEY_BACKSLASH</entry><entry> \ </entry></row>
+<row><entry>BX_KEY_RIGHT_BRACKET</entry><entry> ] </entry></row>
+<row><entry>BX_KEY_MINUS</entry><entry> - </entry></row>
+<row><entry>BX_KEY_GRAVE</entry><entry> ` </entry></row>
+<row><entry>BX_KEY_BACKSPACE</entry><entry> BackSpace </entry></row>
+<row><entry>BX_KEY_ENTER</entry><entry> Enter </entry></row>
+<row><entry>BX_KEY_TAB</entry><entry> Tab </entry></row>
+<row><entry>BX_KEY_LEFT_BACKSLASH</entry><entry> left \ </entry></row>
+<row><entry>BX_KEY_PRINT</entry><entry> PrintScreen </entry></row>
+<row><entry>BX_KEY_SCRL_LOCK</entry><entry> ScrollLock </entry></row>
+<row><entry>BX_KEY_PAUSE</entry><entry> Pause </entry></row>
+<row><entry>BX_KEY_INSERT</entry><entry> Ins </entry></row>
+<row><entry>BX_KEY_DELETE</entry><entry> Del </entry></row>
+<row><entry>BX_KEY_HOME</entry><entry> Home </entry></row>
+<row><entry>BX_KEY_END</entry><entry> End </entry></row>
+<row><entry>BX_KEY_PAGE_UP</entry><entry> PageUo </entry></row>
+<row><entry>BX_KEY_PAGE_DOWN</entry><entry> PageDown </entry></row>
+<row><entry>BX_KEY_KP_ADD</entry><entry> Numeric Keypad + </entry></row>
+<row><entry>BX_KEY_KP_SUBTRACT</entry><entry> Numeric Keypad - </entry></row>
+<row><entry>BX_KEY_KP_END</entry><entry> Numeric Keypad 1 </entry></row>
+<row><entry>BX_KEY_KP_DOWN</entry><entry> Numeric Keypad 2 </entry></row>
+<row><entry>BX_KEY_KP_PAGE_DOWN</entry><entry> Numeric Keypad 3 </entry></row>
+<row><entry>BX_KEY_KP_LEFT</entry><entry> Numeric Keypad 4 </entry></row>
+<row><entry>BX_KEY_KP_5</entry><entry> Numeric Keypad 5 </entry></row>
+<row><entry>BX_KEY_KP_RIGHT</entry><entry> Numeric Keypad 6 </entry></row>
+<row><entry>BX_KEY_KP_HOME</entry><entry> Numeric Keypad 7 </entry></row>
+<row><entry>BX_KEY_KP_UP</entry><entry> Numeric Keypad 8 </entry></row>
+<row><entry>BX_KEY_KP_PAGE_UP</entry><entry> Numeric Keypad 9 </entry></row>
+<row><entry>BX_KEY_KP_INSERT</entry><entry> Numeric Keypad 0 </entry></row>
+<row><entry>BX_KEY_KP_DELETE</entry><entry> Numeric Keypad . </entry></row>
+<row><entry>BX_KEY_KP_ENTER</entry><entry> Numeric Keypad Enter </entry></row>
+<row><entry>BX_KEY_KP_MULTIPLY</entry><entry> Numeric Keypad * </entry></row>
+<row><entry>BX_KEY_KP_DIVIDE</entry><entry> Numeric Keypad / </entry></row>
+<row><entry>BX_KEY_UP</entry><entry> UpArrow </entry></row>
+<row><entry>BX_KEY_DOWN</entry><entry> DownArrow </entry></row>
+<row><entry>BX_KEY_LEFT</entry><entry> LeftArrow </entry></row>
+<row><entry>BX_KEY_RIGHT</entry><entry> RightArrow </entry></row>
+<row><entry>BX_KEY_WIN_L</entry><entry> Left Windows </entry></row>
+<row><entry>BX_KEY_WIN_R</entry><entry> Right Windows </entry></row>
+<row><entry>BX_KEY_MENU</entry><entry> Menu </entry></row>
+<row><entry>BX_KEY_ALT_SYSREQ</entry><entry> Alt-Sysreq </entry></row>
+<row><entry>BX_KEY_CTRL_BREAK</entry><entry> Ctrl-Break </entry></row>
+<row><entry>BX_KEY_INT_BACK</entry><entry> Internet - back </entry></row>
+<row><entry>BX_KEY_INT_FORWARD</entry><entry> Internet - forward </entry></row>
+<row><entry>BX_KEY_INT_STOP</entry><entry> Internet - stop </entry></row>
+<row><entry>BX_KEY_INT_MAIL</entry><entry> Internet - mail </entry></row>
+<row><entry>BX_KEY_INT_SEARCH</entry><entry> Internet - search </entry></row>
+<row><entry>BX_KEY_INT_FAV</entry><entry> Internet - fovorites </entry></row>
+<row><entry>BX_KEY_INT_HOME</entry><entry> Internet - home </entry></row>
+<row><entry>BX_KEY_POWER_MYCOMP</entry><entry> Powerkeys - my computer </entry></row>
+<row><entry>BX_KEY_POWER_CALC</entry><entry> Powerkeys - calculator </entry></row>
+<row><entry>BX_KEY_POWER_SLEEP</entry><entry> Powerkeys - sleep </entry></row>
+<row><entry>BX_KEY_POWER_POWER</entry><entry> Powerkeys - power </entry></row>
+<row><entry>BX_KEY_POWER_WAKE</entry><entry> Powerkeys - wake </entry></row>
+
+</tbody>
+</table>
+</section>
 
 </chapter>
 
