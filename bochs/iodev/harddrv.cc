@@ -325,7 +325,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	      ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
               if (ret < 512) {
                 bx_printf("logical sector was %u\n", (unsigned) logical_sector);
-                bx_panic("disk: could not read() hard drive image file\n");
+                bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
                 }
 
               BX_SELECTED_CONTROLLER.buffer_index = 0;
@@ -489,18 +489,10 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       value8 = BX_SELECTED_CONTROLLER.error_register;
       goto return_value8;
       break;
-
     case 0x1f2: // hard disk sector count / interrupt reason
-      if (BX_SELECTED_CONTROLLER.current_command==0x20 ||
-          BX_SELECTED_CONTROLLER.current_command==0x21 ||
-          BX_SELECTED_CONTROLLER.current_command==0x30 ||
-          BX_SELECTED_CONTROLLER.current_command==0xa0) {
-        value8 = BX_SELECTED_CONTROLLER.sector_count;
-        goto return_value8;
-        }
-      bx_panic("disk: IO read(0x1f2): current command not read/write\n");
+      value8 = BX_SELECTED_CONTROLLER.sector_count;
+      goto return_value8;
       break;
-
     case 0x1f3: // sector number
       value8 = BX_SELECTED_CONTROLLER.sector_no;
       goto return_value8;
@@ -662,7 +654,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 	    ret = BX_SELECTED_HD.hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
             if (ret < 512)
-              bx_panic("disk: could not write() hard drive image file\n");
+              bx_panic("disk: could not write() hard drive image file at byte %d\n", logical_sector*512);
 
             BX_SELECTED_CONTROLLER.buffer_index = 0;
 
@@ -1284,7 +1276,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  ret = BX_SELECTED_HD.hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER.buffer, 512);
           if (ret < 512) {
             bx_printf("logical sector was %u\n", (unsigned) logical_sector);
-            bx_panic("disk: could not read() hard drive image file\n");
+            bx_panic("disk: could not read() hard drive image file at byte %d\n", logical_sector*512);
             }
 
           BX_SELECTED_CONTROLLER.error_register = 0;
