@@ -40,6 +40,8 @@ BX_CPU_C::BX_CPU_C()
   // in case of SMF, you cannot reference any member data
   // in the constructor because the only access to it is via
   // global variables which aren't initialized quite yet.
+  setprefix("[CPU ]");
+  settype (CPU0LOG);
 }
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
@@ -49,7 +51,6 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
 #if BX_SUPPORT_APIC
   local_apic.init ();
 #endif
-  setprefix("[CPU ]");
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
 
