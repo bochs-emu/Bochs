@@ -123,7 +123,7 @@ libpit.la: pit.lo pit82c54.lo pit_wrap.lo
 
 # special link rules for plugins that require more than one object file
 harddrv.dll: harddrv.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o harddrv.dll harddrv.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
+	$(CXX) $(CXXFLAGS) -shared -o harddrv.dll harddrv.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
 keyboard.dll: keyboard.o scancodes.o
 	$(CXX) $(CXXFLAGS) -shared -o keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
