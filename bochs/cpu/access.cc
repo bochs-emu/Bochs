@@ -54,7 +54,7 @@ void
 BX_CPU_C::check_seg_limit_scaled (char *name, Bit32u value)
 {
   if (value >= 0 && value < 4) {
-    BX_PANIC (("segment limit (%s) is less than 4, which is not supported.  See cpu/access.cc"));
+    BX_PANIC (("segment limit (value=%d, context=%s) is less than 4, which is not supported.  See cpu/access.cc", value, name));
   }
 }
 
