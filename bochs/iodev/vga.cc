@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.84 2003-07-17 07:55:56 vruppert Exp $
+// $Id: vga.cc,v 1.85 2003-07-18 18:31:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -404,7 +404,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #endif
 
 #if !defined(VGA_TRACE_FEATURE)
-    BX_DEBUG(("vga_io_read(%04x)!", (unsigned) address));
+    BX_DEBUG(("io read from 0x%04x", (unsigned) address));
 #endif
 
   if ( (address >= 0x03b0) && (address <= 0x03bf) &&
@@ -458,14 +458,14 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 
     case 0x03c0: /* */
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) {
-        //BX_INFO(("vga_io_read: 3c0: flip_flop = 0"));
+        //BX_INFO(("io read: 0x3c0: flip_flop = 0"));
         retval =
           (BX_VGA_THIS s.attribute_ctrl.video_enabled << 5) |
           BX_VGA_THIS s.attribute_ctrl.address;
         RETURN(retval);
         }
       else {
-        BX_ERROR(("io_read: 0x3c0: flip_flop != 0"));
+        BX_ERROR(("io read: 0x3c0: flip_flop != 0"));
         return(0);
         }
       break;
@@ -503,14 +503,14 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
           RETURN(BX_VGA_THIS s.attribute_ctrl.color_select);
           break;
         default:
-          BX_INFO(("vga_io_read: 3c1: address %02xh?",
+          BX_INFO(("io read: 0x3c1: unknown register 0x%02x",
             (unsigned) BX_VGA_THIS s.attribute_ctrl.address));
           RETURN(0);
         }
       break;
 
     case 0x03c2: /* Input Status 0 */
-      BX_DEBUG(("io read 3c2: input status #0: ignoring"));
+      BX_DEBUG(("io read 0x3c2: input status #0: ignoring"));
       RETURN(0);
       break;
 
@@ -525,11 +525,11 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
     case 0x03c5: /* Sequencer Registers 00..04 */
       switch (BX_VGA_THIS s.sequencer.index) {
         case 0: /* sequencer: reset */
-          BX_DEBUG(("read 0x3c5: sequencer reset"));
+          BX_DEBUG(("io read 0x3c5: sequencer reset"));
           RETURN(BX_VGA_THIS s.sequencer.reset1 | (BX_VGA_THIS s.sequencer.reset2<<1));
           break;
         case 1: /* sequencer: clocking mode */
-          BX_DEBUG(("read 0x3c5: sequencer clocking mode"));
+          BX_DEBUG(("io read 0x3c5: sequencer clocking mode"));
           RETURN(BX_VGA_THIS s.sequencer.reg1);
           break;
         case 2: /* sequencer: map mask register */
@@ -547,7 +547,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
           break;
 
         default:
-          BX_DEBUG(("io read 3c5: index %u unhandled",
+          BX_DEBUG(("io read 0x3c5: index %u unhandled",
             (unsigned) BX_VGA_THIS s.sequencer.index));
           RETURN(0);
         }
@@ -639,9 +639,9 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
             ((BX_VGA_THIS s.graphics_ctrl.read_mode & 0x01) << 3) |
             ((BX_VGA_THIS s.graphics_ctrl.write_mode & 0x03) << 0);
 
-if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
-    BX_VGA_THIS s.graphics_ctrl.shift_reg)
-  	BX_DEBUG(("read 3cf: reg 05 = %02x", (unsigned) retval));
+          if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
+              BX_VGA_THIS s.graphics_ctrl.shift_reg)
+            BX_DEBUG(("io read 0x3cf: reg 05 = 0x%02x", (unsigned) retval));
           RETURN(retval);
           break;
         case 6: /* Miscellaneous */
@@ -659,7 +659,7 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
           break;
         default:
           /* ??? */
-          BX_DEBUG(("io read: 3cf: index %u unhandled",
+          BX_DEBUG(("io read: 0x3cf: index %u unhandled",
             (unsigned) BX_VGA_THIS s.graphics_ctrl.index));
           RETURN(0);
         }
@@ -672,7 +672,7 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
     case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* CRTC Registers (color emulation modes) */
       if (BX_VGA_THIS s.CRTC.address > 0x18) {
-        BX_DEBUG(("read: invalid CRTC register 0x%02x",
+        BX_DEBUG(("io read: invalid CRTC register 0x%02x",
           (unsigned) BX_VGA_THIS s.CRTC.address));
         RETURN(0);
       }
@@ -682,7 +682,7 @@ if (BX_VGA_THIS s.graphics_ctrl.odd_even ||
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03cb: /* not sure but OpenBSD reads it a lot */
     default:
-      BX_INFO(("*** io read from vga port %x", (unsigned) address));
+      BX_INFO(("io read from vga port 0x%02x", (unsigned) address));
       RETURN(0); /* keep compiler happy */
     }
 
@@ -746,11 +746,11 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 	      default:
 		    BX_PANIC(("Weird VGA write size"));
 	}
-#endif
-
-#if !defined(VGA_TRACE_FEATURE)
-    BX_DEBUG(("vga_io_write(%04x)=%02x!", (unsigned) address,
-      (unsigned) value);
+#else
+  if (io_len == 1) {
+    BX_DEBUG(("io write to 0x%04x = 0x%02x", (unsigned) address,
+      (unsigned) value));
+  }
 #endif
 
   if (io_len == 2) {
@@ -796,7 +796,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
       BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address] = value;
 #if !defined(VGA_TRACE_FEATURE)
       BX_DEBUG(("mono CRTC Reg[%u] = %02x",
-          (unsigned) BX_VGA_THIS s.CRTC.address, (unsigned) value);
+          (unsigned) BX_VGA_THIS s.CRTC.address, (unsigned) value));
 #endif
       break;
 
@@ -812,7 +812,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         BX_VGA_THIS s.attribute_ctrl.video_enabled = (value >> 5) & 0x01;
 #if !defined(VGA_TRACE_FEATURE)
         BX_DEBUG(("io write 3c0: video_enabled = %u",
-                  (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled);
+                  (unsigned) BX_VGA_THIS s.attribute_ctrl.video_enabled));
 #endif
         if (BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
           bx_gui->clear_screen();
@@ -868,23 +868,25 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
               bx_gui->set_text_charmap(
                 & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
             }
+            needs_update = 1;
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: mode control: %02x h",
-                (unsigned) value);
+                (unsigned) value));
 #endif
             break;
           case 0x11: // Overscan Color Register
             BX_VGA_THIS s.attribute_ctrl.overscan_color = (value & 0x3f);
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: overscan color = %02x",
-                        (unsigned) value);
+                        (unsigned) value));
 #endif
             break;
           case 0x12: // Color Plane Enable Register
             BX_VGA_THIS s.attribute_ctrl.color_plane_enable = (value & 0x0f);
+            needs_update = 1;
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: color plane enable = %02x",
-                        (unsigned) value);
+                        (unsigned) value));
 #endif
             break;
           case 0x13: // Horizontal Pixel Panning Register
@@ -892,14 +894,15 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             needs_update = 1;
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: horiz pel panning = %02x",
-                        (unsigned) value);
+                        (unsigned) value));
 #endif
             break;
           case 0x14: // Color Select Register
             BX_VGA_THIS s.attribute_ctrl.color_select = (value & 0x0f);
+            needs_update = 1;
 #if !defined(VGA_TRACE_FEATURE)
             BX_DEBUG(("io write 3c0: color select = %02x",
-                        (unsigned) BX_VGA_THIS s.attribute_ctrl.color_select);
+                        (unsigned) BX_VGA_THIS s.attribute_ctrl.color_select));
 #endif
             break;
           default:
@@ -920,17 +923,17 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 #if !defined(VGA_TRACE_FEATURE)
         BX_DEBUG(("io write 3c2:"));
         BX_DEBUG(("  color_emulation (attempted) = %u",
-                  (value >> 0) & 0x01 );
+                  (value >> 0) & 0x01));
         BX_DEBUG(("  enable_ram = %u",
-                  (unsigned) BX_VGA_THIS s.misc_output.enable_ram);
+                  (unsigned) BX_VGA_THIS s.misc_output.enable_ram));
         BX_DEBUG(("  clock_select = %u",
-                  (unsigned) BX_VGA_THIS s.misc_output.clock_select);
+                  (unsigned) BX_VGA_THIS s.misc_output.clock_select));
         BX_DEBUG(("  select_high_bank = %u",
-                  (unsigned) BX_VGA_THIS s.misc_output.select_high_bank);
+                  (unsigned) BX_VGA_THIS s.misc_output.select_high_bank));
         BX_DEBUG(("  horiz_sync_pol = %u",
-                  (unsigned) BX_VGA_THIS s.misc_output.horiz_sync_pol);
+                  (unsigned) BX_VGA_THIS s.misc_output.horiz_sync_pol));
         BX_DEBUG(("  vert_sync_pol = %u",
-                  (unsigned) BX_VGA_THIS s.misc_output.vert_sync_pol);
+                  (unsigned) BX_VGA_THIS s.misc_output.vert_sync_pol));
 #endif
       break;
 
@@ -938,7 +941,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
       // bit0: enables VGA display if set
 #if !defined(VGA_TRACE_FEATURE)
       BX_DEBUG(("io write 3c3: (ignoring) VGA enable = %u",
-                  (unsigned) (value & 0x01) );
+                  (unsigned) (value & 0x01) ));
 #endif
       break;
 
@@ -961,6 +964,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             BX_VGA_THIS s.charmap_address = 0;
             bx_gui->set_text_charmap(
               & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+            BX_VGA_THIS s.vga_mem_updated = 1;
           }
           BX_VGA_THIS s.sequencer.reset1 = (value >> 0) & 0x01;
           BX_VGA_THIS s.sequencer.reset2 = (value >> 1) & 0x01;
@@ -968,7 +972,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         case 1: /* sequencer: clocking mode */
 #if !defined(VGA_TRACE_FEATURE)
           BX_DEBUG(("io write 3c5=%02x: clocking mode reg: ignoring",
-                      (unsigned) value);
+                      (unsigned) value));
 #endif
           BX_VGA_THIS s.sequencer.reg1 = value & 0x3f;
           BX_VGA_THIS s.x_dotclockdiv2 = ((value & 0x08) > 0);
@@ -988,6 +992,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             BX_VGA_THIS s.charmap_address = (charmap1 << 13);
             bx_gui->set_text_charmap(
               & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+            BX_VGA_THIS s.vga_mem_updated = 1;
             }
           if (charmap2 != charmap1)
             BX_INFO(("char map select: #2=%d (unused)", charmap2));
@@ -1000,11 +1005,11 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 #if !defined(VGA_TRACE_FEATURE)
           BX_DEBUG(("io write 3c5: index 4:"));
           BX_DEBUG(("  extended_mem %u",
-              (unsigned) BX_VGA_THIS s.sequencer.extended_mem);
+              (unsigned) BX_VGA_THIS s.sequencer.extended_mem));
           BX_DEBUG(("  odd_even %u",
-              (unsigned) BX_VGA_THIS s.sequencer.odd_even);
+              (unsigned) BX_VGA_THIS s.sequencer.odd_even));
           BX_DEBUG(("  chain_four %u",
-              (unsigned) BX_VGA_THIS s.sequencer.chain_four);
+              (unsigned) BX_VGA_THIS s.sequencer.chain_four));
 #endif
           break;
         default:
@@ -1018,7 +1023,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
       if (BX_VGA_THIS s.pel.mask != 0xff)
         BX_DEBUG(("io write 3c6: PEL mask=0x%02x != 0xFF", value));
       // BX_VGA_THIS s.pel.mask should be and'd with final value before
-      // indexing into color registerBX_VGA_THIS s.
+      // indexing into color register BX_VGA_THIS s.pel.data[]
       break;
 
     case 0x03c7: // PEL address, read mode
@@ -1126,13 +1131,13 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           BX_VGA_THIS s.graphics_ctrl.memory_mapping = (value >> 2) & 0x03;
 #if !defined(VGA_TRACE_FEATURE)
           BX_DEBUG(("memory_mapping set to %u",
-              (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
+              (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
           BX_DEBUG(("graphics mode set to %u",
-              (unsigned) BX_VGA_THIS s.graphics_ctrl.graphics_alpha);
+              (unsigned) BX_VGA_THIS s.graphics_ctrl.graphics_alpha));
           BX_DEBUG(("odd_even mode set to %u",
-              (unsigned) BX_VGA_THIS s.graphics_ctrl.odd_even);
+              (unsigned) BX_VGA_THIS s.graphics_ctrl.odd_even));
           BX_DEBUG(("io write: 3cf: reg 06: value = %02xh",
-                (unsigned) value);
+                (unsigned) value));
 #endif
           if (prev_memory_mapping != BX_VGA_THIS s.graphics_ctrl.memory_mapping)
             needs_update = 1;
