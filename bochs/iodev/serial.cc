@@ -590,7 +590,6 @@ bx_serial_c::tx_timer(void)
     BX_SER_THIS raw->transmit(BX_SER_THIS s[0].txbuffer);
 #endif
 #if defined(SERIAL_ENABLE)
-# warning serial enable write
     { char *s = (char *)(BX_SER_THIS s[0].txbuffer);
 	BX_DEBUG(("write: '%c'",(bx_ptr_t) & s));
 	}
@@ -655,7 +654,6 @@ bx_serial_c::rx_timer(void)
     if (rdy) {
 	  chbuf = data;
 #elif defined(SERIAL_ENABLE)
-# warning serial_enable read
     if (select(1, &fds, NULL, NULL, &tval) == 1) {
       (void) read(tty_id, &chbuf, 1);
 	  BX_DEBUG(("read: '%c'",chbuf));
