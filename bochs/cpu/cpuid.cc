@@ -357,9 +357,9 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
     case 0x80000000:
       // max function supported.
       RAX = 0x80000004;
-      RBX = 0x756e6547; // "Genu"
-      RDX = 0x49656e69; // "ineI"
-      RCX = 0x6c65746e; // "ntel"
+      RBX = 0;
+      RCX = 0;
+      RDX = 0;
       break;
 
     case 0x80000001:    // Reserved
@@ -376,19 +376,19 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RAX = 0x20202020; // "    "
       RBX = 0x20202020; // "    "
       RCX = 0x20202020; // "    "
-      RCX = 0x6E492020; // "  In"
+      RDX = 0x6E492020; // "  In"
       break;
     case 0x80000003:
       RAX = 0x286C6574; // "tel("
       RBX = 0x50202952; // "R) P"
       RCX = 0x69746E65; // "enti"
-      RCX = 0x52286D75; // "um(R"
+      RDX = 0x52286D75; // "um(R"
       break;
     case 0x80000004:
       RAX = 0x20342029; // ") 4 "
       RBX = 0x20555043; // "CPU "
       RCX = 0x20202020; // "    "
-      RCX = 0x00202020; // "    "
+      RDX = 0x00202020; // "    "
       break;
 #endif
 
