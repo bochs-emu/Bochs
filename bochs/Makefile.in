@@ -341,7 +341,7 @@ clean:
 
 local-dist-clean: clean
 	@RMCOMMAND@ config.h config.status config.log config.cache
-	@RMCOMMAND@ `find . -name '*.dsp' -o -name '*.dsw' -o -name '*.opt'`
+	@RMCOMMAND@ .dummy `find . -name '*.dsp' -o -name '*.dsw' -o -name '*.opt'`
 
 all-clean: clean
 	cd iodev @COMMAND_SEPARATOR@
