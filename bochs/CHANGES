@@ -13,6 +13,7 @@ Changes to next release:
   - fixed bug in float to integer SSE/SSE2 convert instructions
   - fixed BCD instructions implementation
   - speed optimizations in MMX and CPU core (sshwarts and psychosmur)
+  - fix MSR_APICBASE always returning APIC ADDRESS 0 (Kangmo Kim)
 
 - FPU
   - fixed #NM exception on when FPU is disabled for FPU opcodes
@@ -20,6 +21,7 @@ Changes to next release:
 - I/O devices
   - general
     - handle cpu reset through port 0x92
+  - speaker emulation added (David N. Welton)
   - serial
     - multiple serial port support added (4 ports now available)
     - partial raw serial support on win32 (transmit data)
