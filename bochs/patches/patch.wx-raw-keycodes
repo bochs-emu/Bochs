@@ -11,29 +11,35 @@ m_rawCode2.  On supported wxWindows ports, these two fields will be filled with
 the raw key information from the underlying graphic toolkit.  On unsupported
 ports, the value in m_rawCode1 and 2 will be unpredictable.
 
-The only toolkits supported by this patch are wxMSW and wxGTK.
+The only ports supported by this patch are wxMSW and wxGTK.
 
 wxGTK:
-I added a few lines in src/gtk/window.cpp that copy the GTK keyval into
-m_rawCode1 and set m_rawCode2 to zero.  The application can then compare
-m_rawCode1 against the GTK key symbols such as GDK_C, GDK_colon, GDK_Alt_L,
-etc.  See <gdk/gdkkeysyms.h> for the complete list.
+I added a few lines in src/gtk/window.cpp to copy the GTK keyval into
+m_rawCode1 and set m_rawCode2 to zero.  When an application receives
+the key event, it can compare m_rawCode1 against the GTK key symbols
+such as GDK_C, GDK_colon, GDK_Alt_L, etc.  See <gdk/gdkkeysyms.h> for the
+complete list of GTK key symbols.
 
 wxMSW:
-I added a few lines in src/msw/window.cpp that copy the lparam and wparam
-value from the WM_KEYUP or WM_KEYDOWN events into m_rawCode1 and m_rawCode2,
-respectively.  The application can then decode raw key information from
-the raw code fields.
+In the MSW port of wxWindows, wxWindowMSW::CreateKeyEvent is used to
+create key events.  The lParam of the keydown/keyup event was already
+passed into this method, so I added the wParam.  Then in CreateKeyEvent
+I added two lines to fill in the m_rawCode1 and m_rawCode2 fields, as
+follows:
+ 	event.m_rawCode1 = (wxUint32) wParam;
+ 	event.m_rawCode2 = (wxUint32) lParam;
 
-It is trivial to add support for other toolkits.  Just find the code that
-fills in the wxKeyEvent structure, and set m_rawCode1 and m_rawCode2.
-For GTK and MSW ports, look in src/gtk/window.cpp and src/msw/window.cpp.  I
-haven't looked at the others.
+Other wxWindows ports:
+It is trivial to add support for other wxWindows ports.  Just find the method
+that fills in the wxKeyEvent structure, and set m_rawCode1 and m_rawCode2 to
+the platform-specific value from the raw key event.  For GTK and MSW ports,
+look in src/gtk/window.cpp and src/msw/window.cpp.  I haven't looked at the
+other ports.
 
 Patch was created with:
   diff -ur between two directories
 Apply patch to what version:
-  wxWindows 2.3.2, GTK version
+  wxWindows 2.3.2
 Instructions:
   To patch, go to main wxGTK-2.3.2 directory.
   Type "patch -p1 < THIS_PATCH_FILE".
@@ -89,15 +95,76 @@ diff -u -r wxGTK-2.3.2-orig/src/gtk/window.cpp wxGTK-2.3.2/src/gtk/window.cpp
      event.m_x = x;
      event.m_y = y;
      event.SetEventObject( win );
-diff -u -r wxGTK-2.3.2-orig/src/msw/window.cpp wxGTK-2.3.2/src/msw/window.cpp
---- wxGTK-2.3.2-orig/src/msw/window.cpp.orig	Sat Apr  6 14:05:34 2002
-+++ wxGTK-2.3.2/src/msw/window.cpp	Sat Apr  6 14:14:00 2002
-@@ -3852,6 +3852,8 @@
+diff -urb wx232-orig/include/wx/msw/window.h wx232/include/wx/msw/window.h
+--- wx232-orig/include/wx/msw/window.h	Wed Nov  7 13:29:52 2001
++++ wx232/include/wx/msw/window.h	Sat Apr  6 15:44:14 2002
+@@ -452,7 +452,7 @@
+ #endif // wxUSE_TOOLTIPS
+ 
+     // the helper functions used by HandleChar/KeyXXX methods
+-    wxKeyEvent CreateKeyEvent(wxEventType evType, int id, WXLPARAM lp) const;
++    wxKeyEvent CreateKeyEvent(wxEventType evType, int id, WXLPARAM lp, WXWPARAM wp) const;
+ 
+ private:
+     // common part of all ctors
+diff -urb wx232-orig/src/msw/treectrl.cpp wx232/src/msw/treectrl.cpp
+--- wx232-orig/src/msw/treectrl.cpp	Sat Dec  1 12:26:28 2001
++++ wx232/src/msw/treectrl.cpp	Sat Apr  6 15:52:42 2002
+@@ -2105,7 +2105,7 @@
+                 // not too bad
+                 event.m_evtKey = CreateKeyEvent(wxEVT_KEY_DOWN,
+                                                 wxCharCodeMSWToWX(info->wVKey),
+-                                                0);
++                                                0, 0);
+ 
+                 // a separate event for Space/Return
+                 if ( !wxIsCtrlDown() && !wxIsShiftDown() &&
+diff -urb wx232-orig/src/msw/window.cpp wx232/src/msw/window.cpp
+--- wx232-orig/src/msw/window.cpp	Sun Dec  9 10:30:18 2001
++++ wx232/src/msw/window.cpp	Sat Apr  6 15:46:50 2002
+@@ -3779,7 +3779,8 @@
+ // HandleChar and HandleKeyDown/Up
+ wxKeyEvent wxWindowMSW::CreateKeyEvent(wxEventType evType,
+                                        int id,
+-                                       WXLPARAM lParam) const
++                                       WXLPARAM lParam,
++									   WXWPARAM wParam) const
+ {
+     wxKeyEvent event(evType);
+     event.SetId(GetId());
+@@ -3789,6 +3790,8 @@
+ 
+     event.m_eventObject = (wxWindow *)this; // const_cast
+     event.m_keyCode = id;
++	event.m_rawCode1 = (wxUint32) wParam;
++	event.m_rawCode2 = (wxUint32) lParam;
+     event.SetTimestamp(s_currentMsg.time);
+ 
+     // translate the position to client coords
+@@ -3847,7 +3850,7 @@
+ 
+     if ( id != -1 )
+     {
+-        wxKeyEvent event(CreateKeyEvent(wxEVT_CHAR, id, lParam));
++        wxKeyEvent event(CreateKeyEvent(wxEVT_CHAR, id, lParam, wParam));
+         if ( ctrlDown )
          {
              event.m_controlDown = TRUE;
-         }
-+		event.m_rawCode1 = (wxUint32) lParam;
-+		event.m_rawCode2 = (wxUint32) wParam;
+@@ -3872,7 +3875,7 @@
  
+     if ( id != -1 ) // VZ: does this ever happen (FIXME)?
+     {
+-        wxKeyEvent event(CreateKeyEvent(wxEVT_KEY_DOWN, id, lParam));
++        wxKeyEvent event(CreateKeyEvent(wxEVT_KEY_DOWN, id, lParam, wParam));
+         if ( GetEventHandler()->ProcessEvent(event) )
+         {
+             return TRUE;
+@@ -3894,7 +3897,7 @@
+ 
+     if ( id != -1 ) // VZ: does this ever happen (FIXME)?
+     {
+-        wxKeyEvent event(CreateKeyEvent(wxEVT_KEY_UP, id, lParam));
++        wxKeyEvent event(CreateKeyEvent(wxEVT_KEY_UP, id, lParam, wParam));
          if ( GetEventHandler()->ProcessEvent(event) )
              return TRUE;
+     }
