@@ -107,7 +107,9 @@ cdrom_interface::insert_cdrom()
 
   // Load CD-ROM. Returns false if CD is not ready.
 #ifdef WIN32
-    hFile=CreateFile((char *)"\\\\.\\e:",  GENERIC_READ, 0 , NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+    char drive[256];
+    sprintf(drive, "\\\\.\\%s", path);
+    hFile=CreateFile((char *)&drive,  GENERIC_READ, 0 , NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
 	//printf("%s", path);
     //hFile=CreateFile(path,  GENERIC_READ, 0 , NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
     if (hFile !=(void *)0xFFFFFFFF)
