@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.73 2003-06-30 18:53:12 vruppert Exp $
+// $Id: x.cc,v 1.74 2003-07-03 17:57:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1276,18 +1276,16 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   unsigned color, offset;
   Bit8u b0, b1, b2, b3;
 
+  Bit16u *tile16 = (Bit16u *)tile;
   switch (vga_bpp) {
     case 32:  // 32 bits per pixel
-      for (y=0; y<y_tilesize; y++) {
-        for (x=0; x<x_tilesize; x++) {
-          offset = imWide*y + 4*x;
-          if (ximage->byte_order == LSBFirst) {
-            ximage->data[offset + 0] = tile[(y*x_tilesize + x)*4];
-            ximage->data[offset + 1] = tile[(y*x_tilesize + x)*4 + 1];
-            ximage->data[offset + 2] = tile[(y*x_tilesize + x)*4 + 2];
-            ximage->data[offset + 3] = tile[(y*x_tilesize + x)*4 + 3];
-            }
-          else { // MSBFirst
+      if (ximage->byte_order == LSBFirst) {
+        memcpy(&ximage->data[0], tile, x_tilesize*y_tilesize*4);
+        }
+      else { // MSBFirst
+        for (y=0; y<y_tilesize; y++) {
+          for (x=0; x<x_tilesize; x++) {
+            offset = imWide*y + 4*x;
             ximage->data[offset + 0] = tile[(y*x_tilesize + x)*4 + 3];
             ximage->data[offset + 1] = tile[(y*x_tilesize + x)*4 + 2];
             ximage->data[offset + 2] = tile[(y*x_tilesize + x)*4 + 1];
@@ -1349,9 +1347,9 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
               break;
             case 24:  // 24 bits per pixel
               offset = imWide*y + 3*x;
-              b0 = tile[(y*x_tilesize + x)*2] << 3;
-              b1 = ((tile[(y*x_tilesize + x)*2] & 0xE0) >> 3) | (tile[(y*x_tilesize + x)*2 + 1] << 5);
-              b2 = tile[(y*x_tilesize + x)*2 + 1] & 0xF8;
+              b0 = (tile16[y*x_tilesize + x] & 0x001f) << 3;
+              b1 = (tile16[y*x_tilesize + x] & 0x07e0) >> 3;
+              b2 = (tile16[y*x_tilesize + x] & 0xF800) >> 8;
               if (ximage->byte_order == LSBFirst) {
                 ximage->data[offset + 0] = b0;
                 ximage->data[offset + 1] = b1;
@@ -1365,9 +1363,9 @@ bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
               break;
             case 32:  // 32 bits per pixel
               offset = imWide*y + 4*x;
-              b0 = tile[(y*x_tilesize + x)*2] << 3;
-              b1 = ((tile[(y*x_tilesize + x)*2] & 0xE0) >> 3) | (tile[(y*x_tilesize + x)*2 + 1] << 5);
-              b2 = tile[(y*x_tilesize + x)*2 + 1] & 0xF8;
+              b0 = (tile16[y*x_tilesize + x] & 0x001f) << 3;
+              b1 = (tile16[y*x_tilesize + x] & 0x07e0) >> 3;
+              b2 = (tile16[y*x_tilesize + x] & 0xF800) >> 8;
               if (ximage->byte_order == LSBFirst) {
                 ximage->data[offset + 0] = b0;
                 ximage->data[offset + 1] = b1;
@@ -1483,10 +1481,10 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
   void
 bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  if (bpp > imBPP) {
-    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
-  } else {
+  if ((bpp <= imBPP) && ((bpp == 8) || (bpp == 16) || (bpp == 24) || (bpp == 32))) {
     vga_bpp = bpp;
+  } else {
+    BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   if (fheight > 0) {
     font_height = fheight;
