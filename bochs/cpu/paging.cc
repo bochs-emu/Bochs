@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.23 2002-09-16 20:23:38 kevinlawton Exp $
+// $Id: paging.cc,v 1.24 2002-09-16 21:01:55 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -871,11 +871,7 @@ BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
 #else // 486+
     combined_access  = (pde & pte) & 0x06; // U/S and R/W
 #if BX_SupportGlobalPages
-<<<<<<< paging.cc
-    if (BX_CPU_THIS_PTR cr4.get_PGE()) // PGE==1
-=======
-    if (BX_CPU_THIS_PTR cr4.get_PGE ())
->>>>>>> 1.22
+    if (BX_CPU_THIS_PTR cr4.get_PGE())
       combined_access |= (pte & 0x100); // G
 #endif
 #endif
@@ -985,144 +981,7 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 #warning "Fix dbg_xlate_linear2phy for 64-bit and new features."
 #endif
 
-<<<<<<< paging.cc
-=======
-    priv_index =
-#if BX_CPU_LEVEL >= 4
-      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
-#endif
-      (pl<<3) |                      // bit 3
-      (combined_access & 0x06);      // bit 2,1
-                                     // bit 0 always 0 (fetch==read)
 
-    if (!priv_check[priv_index]) {
-      error_code = 0x00000001; // RSVD=0, P=1
-      goto page_fault_access;
-      }
-
-    // make up the physical frame number
-    ppf = (pde & 0xFFC00000) | (laddr & 0x003FF000);
-
-    // Update PDE if A/D bits if needed.
-    if ( (pde & 0x20)==0 ) {
-      pde |= 0x20; // Update A and possibly D bits
-      BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-      }
-    }
-
-  // Else normal 4Kbyte page...
-  else
-#endif
-    {
-    Bit32u   pte, pte_addr;
-
-#if (BX_CPU_LEVEL < 6)
-  // update PDE if A bit was not set before
-  if ( !(pde & 0x20) ) {
-    pde |= 0x20;
-    BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-    }
-#endif
-
-    // Get page table entry
-    pte_addr = (pde & 0xfffff000) |
-               ((laddr & 0x003ff000) >> 10);
-    BX_CPU_THIS_PTR mem->readPhysicalPage(this, pte_addr, 4, &pte);
-
-    if ( !(pte & 0x01) ) {
-      // Page Table Entry NOT present
-      error_code = 0x00000000; // RSVD=0, P=0
-      goto page_fault_not_present;
-      }
-
-    // 386 and 486+ have different bahaviour for combining
-    // privilege from PDE and PTE.
-#if BX_CPU_LEVEL == 3
-    combined_access  = (pde | pte) & 0x04; // U/S
-    combined_access |= (pde & pte) & 0x02; // R/W
-#else // 486+
-    combined_access  = (pde & pte) & 0x06; // U/S and R/W
-#if BX_SupportGlobalPages
-    if (BX_CPU_THIS_PTR cr4.get_PGE ())
-      combined_access |= (pte & 0x100); // G
-#endif
-#endif
-
-    priv_index =
-#if BX_CPU_LEVEL >= 4
-      (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
-#endif
-      (pl<<3) |                      // bit 3
-      (combined_access & 0x06);      // bit 2,1
-                                     // bit 0 always 0 (fetch==read)
-
-    if (!priv_check[priv_index]) {
-      error_code = 0x00000001; // RSVD=0, P=1
-      goto page_fault_access;
-      }
-
-    ppf = pte & 0xfffff000;
-
-#if (BX_CPU_LEVEL >= 6)
-    // update PDE if A bit was not set before
-    if ( !(pde & 0x20) ) {
-      pde |= 0x20;
-      BX_CPU_THIS_PTR mem->writePhysicalPage(this, pde_addr, 4, &pde);
-      }
-#endif
-
-    // Update PTE if A/D bits if needed.
-    if ( (pte & 0x20)==0 ) {
-      pte |= 0x20; // Update A and possibly D bits
-      BX_CPU_THIS_PTR mem->writePhysicalPage(this, pte_addr, 4, &pte);
-      }
-    }
-
-  // Calculate physical memory address and fill in TLB cache entry
-  paddress = ppf | poffset;
-
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_TLB_LPF_VALUE(lpf);
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
-
-// 1 << ((W<<1) | U)
-// b0: Read  Sys   OK
-// b1: Read  User  OK
-// b2: Write Sys   OK
-// b3: Write User  OK
-  if ( combined_access & 4 ) { // User
-    accessBits = 0x3; // User priv; read from {user,sys} OK.
-    }
-  else { // System
-    accessBits = 0x1; // System priv; read from {sys} OK.
-    }
-#if BX_SupportGlobalPages
-  accessBits |= combined_access & 0x100; // Global bit
-#endif
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
-
-#if BX_SupportGuest2HostTLB
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
-    (Bit32u) BX_CPU_THIS_PTR mem->getHostMemAddr(A20ADDR(ppf), BX_READ);
-#endif
-
-  return(paddress);
-
-
-page_fault_access:
-page_fault_not_present:
-
-  error_code |= (pl << 2);
-  BX_CPU_THIS_PTR cr2 = laddr;
-  // Invalidate TLB entry.
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
-  exception(BX_PF_EXCEPTION, error_code, 0);
-  return(0); // keep compiler happy
-}
-
-
-#if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION
-
->>>>>>> 1.22
   void
 BX_CPU_C::dbg_xlate_linear2phy(Bit32u laddr, Bit32u *phy, Boolean *valid)
 {
