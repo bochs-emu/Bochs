@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.117 2002-09-20 23:16:23 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.118 2002-09-22 01:56:18 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
@@ -103,6 +103,7 @@ AC_CHECK_FUNCS(sleep, AC_DEFINE(BX_HAVE_SLEEP))
 AC_CHECK_FUNCS(usleep, AC_DEFINE(BX_HAVE_USLEEP))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
 AC_CHECK_FUNCS(abort, AC_DEFINE(BX_HAVE_ABORT))
+AC_CHECK_FUNCS(gettimeofday, AC_DEFINE(BX_HAVE_GETTIMEOFDAY))
 AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
 #include <sys/socket.h>])
 
@@ -1332,6 +1333,7 @@ case "$target" in
     COMMAND_SEPARATOR=""
     CD_UP_ONE="cd .."
     CD_UP_TWO="cd ..\.."
+    have_gettimeofday=0  # even though it may exist in build environment
     AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     AC_DEFINE(inline, __inline)
     AC_DEFINE(BX_NO_EMPTY_STRUCTS, 1)
@@ -1340,6 +1342,7 @@ case "$target" in
     AC_DEFINE(BX_HAVE_STRTOULL, 0)
     AC_DEFINE(BX_HAVE_STRTOUQ, 0)
     AC_DEFINE(HAVE_LIBREADLINE, 0)
+    AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
     ;;
 esac
 

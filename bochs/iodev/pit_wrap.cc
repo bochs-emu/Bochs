@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.25 2002-09-21 04:02:51 yakovlev Exp $
+// $Id: pit_wrap.cc,v 1.26 2002-09-22 01:56:18 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,7 +77,6 @@ bx_pit_c bx_pit;
 #endif
 
 #define DEBUG_REALTIME_WITH_PRINTF 0
-#define BX_HAVE_GETTIMEOFDAY 1
 #define DEBUG_GETTIMEOFDAY_WITH_PRINTF 1
 
 
