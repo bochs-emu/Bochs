@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.18.4.25 2002-10-24 03:31:02 bdenney Exp $
+// $Id: iodev.h,v 1.18.4.26 2002-10-24 03:47:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -268,27 +268,27 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
+  bx_devmodel_c    *pluginBiosDevice;
+  bx_ioapic_c      *ioapic;
   bx_pci_c         *pci;
   bx_pci2isa_c     *pci2isa;
   bx_pit_c         *pit;
-  bx_ioapic_c      *ioapic;
+  bx_keyb_stub_c   *pluginKeyboard;
+  bx_dma_stub_c    *pluginDmaDevice;
+  bx_floppy_stub_c *pluginFloppyDevice;
+  bx_cmos_stub_c   *pluginCmosDevice;
+  bx_devmodel_c    *pluginSerialDevice;
+  bx_devmodel_c    *pluginParallelDevice;
+  bx_devmodel_c    *pluginUnmapped;
+  bx_vga_stub_c    *pluginVgaDevice;
+  bx_pic_stub_c    *pluginPicDevice;
+  bx_hard_drive_stub_c *pluginHardDrive;
   bx_sb16_c        *sb16;
   bx_ne2k_c        *ne2k;
   bx_g2h_c         *g2h;
 #if BX_IODEBUG_SUPPORT
   bx_iodebug_c	   *iodebug;
 #endif
-  bx_keyb_stub_c *pluginKeyboard;
-  bx_hard_drive_stub_c *pluginHardDrive;
-  bx_devmodel_c *pluginSerialDevice;
-  bx_devmodel_c *pluginParallelDevice;
-  bx_devmodel_c *pluginUnmapped;
-  bx_devmodel_c *pluginBiosDevice;
-  bx_cmos_stub_c *pluginCmosDevice;
-  bx_dma_stub_c *pluginDmaDevice;
-  bx_pic_stub_c *pluginPicDevice;
-  bx_vga_stub_c *pluginVgaDevice;
-  bx_floppy_stub_c *pluginFloppyDevice;
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
