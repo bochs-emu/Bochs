@@ -54,6 +54,7 @@ and other OS's, all on your workstation.
 	#   error: cannot remove /usr/share/doc - directory not empty
 
 %files -f file.list.%{pkg_name}
+%defattr(-, root, root)
 	/usr/bin/bochs
 	/usr/bin/bochs-docs
 	/usr/bin/bochs-dlx
