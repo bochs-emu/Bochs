@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.11 2001-11-08 06:44:23 bdenney Exp $
+$Id: user.dbk,v 1.12 2001-11-10 00:41:25 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1549,16 +1549,19 @@ windows.
 
 <chapter><title>Setup</title>
    <section><title>What does Bochs need?</title>
-        <para>
-        bochsrc, BIOS, VGABIOS, VGA font, disk images.
-	table of bochsrc options and what they do
-	BIOS/VGABIOS, what do they do?
-	VGA font, how to install it
-	disk images
-	  where to find one pre-made
-	  make a blank one with bximage
-	  grab one from a real hard disk
-          </para>
+     <para> &FIXME; </para>
+      <para>
+	<screen>
+        - bochsrc, BIOS, VGABIOS, VGA font, disk images.
+	- (DONE) table of bochsrc options and what they do
+	- BIOS/VGABIOS, what do they do?
+	- VGA font, how to install it
+	- disk images
+	  - where to find one pre-made
+	  - make a blank one with bximage
+	  - grab one from a real hard disk
+      </screen>
+      </para>
    </section>
    <section>
    <title>bochsrc</title>
