@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.51 2001-10-06 22:31:31 bdenney Exp $
+// $Id: bochs.h,v 1.52 2001-10-07 00:58:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -603,8 +603,6 @@ typedef struct {
   bx_param_num_c    *Okeyboard_serial_delay;
   bx_param_num_c    *Ofloppy_command_delay;
   bx_param_num_c    *Oips;
-  bx_param_num_c    *Omax_ips;
-  bx_param_bool_c   *Osystem_clock_sync;
   bx_param_bool_c   *Omouse_enabled;
   bx_param_bool_c   *Oprivate_colormap;
 #if BX_WITH_AMIGAOS
