@@ -1,3 +1,7 @@
+Zwane sent another version to the list at 
+Mon, 25 Mar 2002 11:47:38 +0200 (SAST)
+which should correct the compile problems when apic is disabled.
+
 Updated so that it applies cleanly in cvs as of March 25.  -Bryce
 
 Notes by Bryce:
@@ -29,22 +33,17 @@ Cheers,
 PS this is just the infrastructure, i haven't done all the registers, most 
 notably the MTRR stuff.
 
-
-Index: cpu/apic.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/apic.cc,v
-retrieving revision 1.12
-diff -u -r1.12 apic.cc
---- cpu/apic.cc	25 Mar 2002 01:58:34 -0000	1.12
-+++ cpu/apic.cc	25 Mar 2002 09:32:58 -0000
-@@ -34,6 +34,14 @@
+diff -ur /tmp/bochs-1.4.pre2/cpu/apic.cc bochs-1.4.pre2/cpu/apic.cc
+--- /tmp/bochs-1.4.pre2/cpu/apic.cc	Wed Oct  3 15:10:38 2001
++++ bochs-1.4.pre2/cpu/apic.cc	Mon Mar 25 12:06:48 2002
+@@ -27,6 +27,14 @@
  {
  }
  
 +void bx_local_apic_c::update_msr_apicbase(Bit32u newbase)
 +{
 +  Bit64u val64;
-+  val64 = newbase << 12;	/* push the APIC base address to bits 12:31 */
++  val64 = newbase << 12;	/* push the APIC base address to bits 12:35 */
 +  val64 += cpu->msr.apicbase & 0x0900;	/* don't modify other apicbase or reserved bits */
 +  cpu->msr.apicbase = val64;
 +}
@@ -52,7 +51,7 @@ diff -u -r1.12 apic.cc
  void bx_generic_apic_c::set_base (Bit32u newbase)
  {
    BX_INFO(("relocate APIC id=%d to %8x", id, newbase));
-@@ -291,7 +299,8 @@
+@@ -247,7 +255,8 @@
    BX_INFO(("local apic in %s initializing", 
        (cpu && cpu->name) ? cpu->name : "?"));
    // default address for a local APIC, can be moved
@@ -61,14 +60,10 @@ diff -u -r1.12 apic.cc
 +  update_msr_apicbase(base_addr);
    err_status = 0;
    log_dest = 0;
-   dest_format = 0xf;
-Index: cpu/cpu.h
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
-retrieving revision 1.16
-diff -u -r1.16 cpu.h
---- cpu/cpu.h	25 Mar 2002 01:58:34 -0000	1.16
-+++ cpu/cpu.h	25 Mar 2002 09:33:01 -0000
+   dest_format = 0xff;
+diff -ur /tmp/bochs-1.4.pre2/cpu/cpu.h bochs-1.4.pre2/cpu/cpu.h
+--- /tmp/bochs-1.4.pre2/cpu/cpu.h	Wed Oct  3 21:53:48 2001
++++ bochs-1.4.pre2/cpu/cpu.h	Mon Mar 25 12:08:32 2002
 @@ -195,9 +195,43 @@
  #define BX_MF_EXCEPTION  16
  #define BX_AC_EXCEPTION  17
@@ -135,15 +130,16 @@ diff -u -r1.16 cpu.h
  
  typedef struct { /* bx_selector_t */
    Bit16u value;   /* the 16bit value of the selector */
-@@ -528,6 +574,7 @@
-   Bit8u id;
- #define APIC_UNKNOWN_ID 0xff
- #define APIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC
-+#define APIC_BASE_ADDR	0xfee00000  // default APIC address
- public:
-   bx_generic_apic_c ();
-   virtual ~bx_generic_apic_c ();
-@@ -578,7 +625,6 @@
+@@ -521,6 +567,8 @@
+   APIC_TYPE_LOCAL_APIC
+ } bx_apic_type_t;
+ 
++#define APIC_BASE_ADDR	0xfee00000	// default APIC address
++
+ #if BX_SUPPORT_APIC
+ class bx_generic_apic_c : public logfunctions {
+ protected:
+@@ -577,7 +625,6 @@
    Bit32u timer_initial, timer_current, timer_divconf;
    Boolean timer_active;  // internal state, not accessible from bus
    Bit32u timer_divide_counter, timer_divide_factor;
@@ -151,15 +147,15 @@ diff -u -r1.16 cpu.h
    Bit32u icr_high, icr_low;
    Bit32u err_status;
  #define APIC_ERR_ILLEGAL_ADDR    0x80
-@@ -618,6 +664,7 @@
+@@ -616,6 +663,7 @@
    Bit8u get_apr ();
    void periodic (Bit32u usec_delta);
    void set_divide_configuration (Bit32u value);
 +  virtual void update_msr_apicbase(Bit32u newaddr);
-   virtual void set_arb_id (int newid);
    };
  
-@@ -756,6 +803,10 @@
+ #define APIC_MAX_ID 16
+@@ -753,6 +801,10 @@
    Bit32u    cr4;
  #endif
  
@@ -170,7 +166,7 @@ diff -u -r1.16 cpu.h
    // pointer to the address space that this processor uses.
    BX_MEM_C *mem;
  
-@@ -768,6 +819,8 @@
+@@ -765,6 +817,8 @@
    volatile Boolean async_event;
    volatile Boolean INTR;
  
@@ -179,13 +175,9 @@ diff -u -r1.16 cpu.h
    // for accessing registers by index number
    Bit16u *_16bit_base_reg[8];
    Bit16u *_16bit_index_reg[8];
-Index: cpu/init.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
-retrieving revision 1.14
-diff -u -r1.14 init.cc
---- cpu/init.cc	3 Oct 2001 13:10:37 -0000	1.14
-+++ cpu/init.cc	25 Mar 2002 09:33:02 -0000
+diff -ur /tmp/bochs-1.4.pre2/cpu/init.cc bochs-1.4.pre2/cpu/init.cc
+--- /tmp/bochs-1.4.pre2/cpu/init.cc	Wed Oct  3 15:10:38 2001
++++ bochs-1.4.pre2/cpu/init.cc	Mon Mar 25 12:06:48 2002
 @@ -554,7 +554,11 @@
    BX_CPU_THIS_PTR cr4 = 0;
  #endif
@@ -213,13 +205,9 @@ diff -u -r1.14 init.cc
      BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
      debug_trap |= 0x80000000;
      async_event = 1;
-Index: cpu/proc_ctrl.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
-retrieving revision 1.17
-diff -u -r1.17 proc_ctrl.cc
---- cpu/proc_ctrl.cc	18 Nov 2001 16:32:40 -0000	1.17
-+++ cpu/proc_ctrl.cc	25 Mar 2002 09:33:03 -0000
+diff -ur /tmp/bochs-1.4.pre2/cpu/proc_ctrl.cc bochs-1.4.pre2/cpu/proc_ctrl.cc
+--- /tmp/bochs-1.4.pre2/cpu/proc_ctrl.cc	Sun Nov 18 18:32:40 2001
++++ bochs-1.4.pre2/cpu/proc_ctrl.cc	Mon Mar 25 12:06:48 2002
 @@ -1147,23 +1147,143 @@
  BX_CPU_C::RDMSR(BxInstruction_t *i)
  {
@@ -372,3 +360,13 @@ diff -u -r1.17 proc_ctrl.cc
  }
  
  #if BX_X86_DEBUGGER
+
+-- 
+rants	: http://function.linuxpower.ca
+		
+
+
+_______________________________________________
+bochs-developers mailing list
+bochs-developers@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/bochs-developers
