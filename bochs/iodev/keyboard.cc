@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.75 2003-03-02 23:59:11 cbothamy Exp $
+// $Id: keyboard.cc,v 1.76 2003-04-25 00:23:21 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.75 2003-03-02 23:59:11 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.76 2003-04-25 00:23:21 cbothamy Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1017,7 +1017,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       if( value<4 ) {
         BX_KEY_THIS s.kbd_controller.current_scancodes_set = (value-1);
         BX_INFO(("Switched to scancode set %d\n",
-          (unsigned) BX_KEY_THIS s.kbd_controller.current_scancodes_set));
+          (unsigned) BX_KEY_THIS s.kbd_controller.current_scancodes_set + 1));
         kbd_enQ(0xFA);
         } 
       else {
