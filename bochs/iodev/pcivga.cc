@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.2 2003-01-23 19:31:28 vruppert Exp $
+// $Id: pcivga.cc,v 1.3 2004-06-09 22:05:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -109,7 +109,7 @@ bx_pcivga_c::reset(unsigned type)
     unsigned      addr;
     unsigned char val;
   } reset_vals[] = {
-      { 0x04, 0x01 }, { 0x05, 0x00 },	// command_io
+      { 0x04, 0x03 }, { 0x05, 0x00 },	// command_io + command_mem
       { 0x06, 0x00 }, { 0x07, 0x02 }	// status_devsel_medium
   };
   for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {

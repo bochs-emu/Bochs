@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.1 2004-06-09 20:55:58 vruppert Exp $
+// $Id: pci_ide.h,v 1.2 2004-06-09 22:05:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -28,9 +28,11 @@
 #if BX_USE_PIDE_SMF
 #  define BX_PIDE_SMF  static
 #  define BX_PIDE_THIS thePciIdeController->
+#  define BX_PIDE_THIS_PTR thePciIdeController
 #else
 #  define BX_PIDE_SMF
 #  define BX_PIDE_THIS this->
+#  define BX_PIDE_THIS_PTR this
 #endif
 
 

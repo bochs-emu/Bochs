@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.1 2004-06-09 20:55:58 vruppert Exp $
+// $Id: pci_ide.cc,v 1.2 2004-06-09 22:05:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -274,10 +274,10 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
     }
     if (bmide_change) {
       if (BX_PIDE_THIS s.bmide_addr > 0) {
-        DEV_unregister_ioread_handler_range(this, read_handler,
+        DEV_unregister_ioread_handler_range(BX_PIDE_THIS_PTR, read_handler,
                                             BX_PIDE_THIS s.bmide_addr,
                                             BX_PIDE_THIS s.bmide_addr + 0x0F, 7);
-        DEV_unregister_iowrite_handler_range(this, write_handler,
+        DEV_unregister_iowrite_handler_range(BX_PIDE_THIS_PTR, write_handler,
                                              BX_PIDE_THIS s.bmide_addr,
                                              BX_PIDE_THIS s.bmide_addr + 0x0F, 7);
       }
@@ -285,10 +285,12 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
                                   (BX_PIDE_THIS s.pci_conf[0x21] << 8);
       BX_INFO(("new BM-IDE address: 0x%04x", BX_PIDE_THIS s.bmide_addr));
       if (BX_PIDE_THIS s.bmide_addr > 0) {
-        DEV_register_ioread_handler_range(this, read_handler, BX_PIDE_THIS s.bmide_addr,
+        DEV_register_ioread_handler_range(BX_PIDE_THIS_PTR, read_handler,
+                                          BX_PIDE_THIS s.bmide_addr,
                                           BX_PIDE_THIS s.bmide_addr + 0x0F,
                                           "PIIX3 PCI IDE controller", 7);
-        DEV_register_iowrite_handler_range(this, write_handler, BX_PIDE_THIS s.bmide_addr,
+        DEV_register_iowrite_handler_range(BX_PIDE_THIS_PTR, write_handler,
+                                           BX_PIDE_THIS s.bmide_addr,
                                            BX_PIDE_THIS s.bmide_addr + 0x0F,
                                            "PIIX3 PCI IDE controller", 7);
       }
