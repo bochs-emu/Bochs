@@ -33,8 +33,6 @@ CC = @CC@
 CXX = @CXX@
 CFLAGS = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 CXXFLAGS = @CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
-TAR = @TAR@
-GZIP = @GZIP@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -184,9 +182,6 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	-rm -f libbochs_cpu.a
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
-
-tar: dist-clean
-	(NAME=`pwd | sed -e 's/.*\///'`; cd ..; $(TAR) cf - $$NAME | $(GZIP) > $$NAME.tar.gz; cd $$NAME; ls -l ../$$NAME.tar.gz)
 
 clean:
 	@RMCOMMAND@ *.o
