@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.5 2005-02-09 18:25:57 vruppert Exp $
+// $Id: speaker.cc,v 1.6 2005-02-12 08:59:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -126,6 +126,7 @@ DWORD WINAPI BeepThread(LPVOID)
   threadActive = TRUE;
   Beep(beep_info.frequency, beep_info.msec);
   threadActive = FALSE;
+  return 0;
 }
 
 #endif
