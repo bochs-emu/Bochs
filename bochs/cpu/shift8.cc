@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.18 2004-08-27 20:13:32 sshwarts Exp $
+// $Id: shift8.cc,v 1.19 2004-09-04 19:37:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -134,7 +134,6 @@ BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count &= 0x1F;
   count %= 9;
 
   /* op1 is a register or memory reference */
@@ -187,7 +186,6 @@ BX_CPU_C::RCR_Eb(bxInstruction_c *i)
   else // 0xd2
     count = CL;
 
-  count &= 0x1F;
   count %= 9;
 
   /* op1 is a register or memory reference */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.23 2004-08-27 20:13:32 sshwarts Exp $
+// $Id: shift16.cc,v 1.24 2004-09-04 19:37:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -256,7 +256,6 @@ BX_CPU_C::RCL_Ew(bxInstruction_c *i)
   else // 0xd3
     count = CL;
 
-  count &= 0x1F;
   count %= 17;
 
     /* op1 is a register or memory reference */
@@ -313,7 +312,6 @@ BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   else // 0xd3
     count = CL;
 
-  count = count & 0x1F;
   count %= 17;
 
     /* op1 is a register or memory reference */

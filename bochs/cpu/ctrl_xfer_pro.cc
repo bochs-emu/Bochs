@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.25 2004-05-10 21:05:48 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.26 2004-09-04 19:37:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1376,11 +1376,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     /* check ES, DS, FS, GS for validity */
     validate_seg_regs();
-
-    return;
     }
-
-  return;
 }
 #endif
 
