@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.174 2002-11-21 03:50:59 bdenney Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.175 2002-11-21 17:40:14 bdenney Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -84,7 +84,6 @@ AC_MSG_RESULT($ADD_FLAGS)
 
 dnl // make sure X Windows is default if no other chosen
 if (test "$with_sdl" != yes) && \
-   (test "$with_svga" != yes) && \
    (test "$with_x11" != yes) && \
    (test "$with_beos" != yes) && \
    (test "$with_win32" != yes) && \
@@ -267,15 +266,6 @@ if test "$with_all_libs" = yes; then
     AC_CHECK_HEADER([SDL/SDL_main.h], [], [ can_compile_sdl=0 ])
     if test $can_compile_sdl = 1; then
       with_sdl=yes
-    fi
-  fi
-
-  if test "$with_svga" != yes; then
-    can_compile_svga=1
-    AC_CHECK_HEADER([vga.h], [], [ can_compile_svga=0 ])
-    AC_CHECK_HEADER([vgagl.h], [], [ can_compile_svga=0 ])
-    if test $can_compile_svga = 1; then
-      with_svga=yes
     fi
   fi
 
@@ -1558,10 +1548,6 @@ AC_ARG_WITH(sdl,
   [  --with-sdl                        use SDL libraries],
   )
 
-AC_ARG_WITH(svga,
-  [  --with-svga                        use SVGALib libraries],
-  )
-
 AC_ARG_WITH(wx,
   [  --with-wx                         use wxWindows libraries],
   )
@@ -1672,17 +1658,6 @@ if test "$with_sdl" = yes; then
   GUI_CFLAGS="$GUI_CFLAGS \`sdl-config --cflags\`"
   GUI_CXXFLAGS="$GUI_CXXFLAGS \`sdl-config --cflags\`"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
-fi
-
-if test "$with_svga" = yes; then
-  display_libs="$display_libs svga"
-  AC_DEFINE(BX_WITH_SVGA, 1)
-  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SVGA)"
-  # GUI_*FLAGS are added to the compilation of every bochs file, not just
-  # the files in gui/*.cc.
-  GUI_CFLAGS="$GUI_CFLAGS"
-  GUI_CXXFLAGS="$GUI_CXXFLAGS"
-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SVGA)"
 fi
 
 if test "$with_rfb" = yes; then
