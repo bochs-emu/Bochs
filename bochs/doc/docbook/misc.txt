@@ -1,66 +1,8 @@
-$Id: misc.txt,v 1.3 2001-10-31 20:53:18 bdenney Exp $
+$Id: misc.txt,v 1.4 2001-11-13 00:01:57 bdenney Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
 
---------------------------------------------------------------------------
-From Volker.Ruppert@t-online.de Wed Oct 31 14:48:58 2001
-Date: Sat, 13 Oct 2001 21:43:02 +0200
-From: Volker Ruppert <Volker.Ruppert@t-online.de>
-To: Bryce Denney <bryce@tlw.com>
-Subject: Bochs documentation: loop device
-
-    [ The following text is in the "iso-8859-1" character set. ]
-    [ Your display is set for the "US-ASCII" character set.  ]
-    [ Some characters may be displayed incorrectly. ]
-
-Hello Bryce,
-
-today I have made some tests with the loop device, because I want to exchange 
-files with the bochs disk images. This part of the bochs documentation is 
-still missing. This is what I found out:
-
-1.  In the bochs documentation appears the term "loopback". That's not O.K.,
-    because the loopback device is a network device. To prevent a mistake, it
-    should be renamed.
-
-2.  Using Floppy images is easy, because there is no partition table:
-
-    losetup /dev/loop0 /usr/local/bochs/dlxlinux/floppya.img
-
-    Now you can use the image like a real floppy:
-
-    - format           : mkfs.minix /dev/loop0
-    - filesystem check : fsck.minix /dev/loop0
-    - mount            : mount /dev/loop0 -o loop /mnt/floppy
-
-    Before you want to restart bochs you must do this:
-
-    losetup -d /dev/loop0
-
-    Don't forget to umount before.
-
-3.  If you want access to a harddisk image, you have to calculate the size of
-    the first cylinder. This value is the offset argument for losetup.
-
-    offset = bytes per sector * sectors per cylinder
-
-    The command for dlxlinux image looks like this:
-
-    losetup /dev/loop0 /usr/local/bochs/dlxlinux/hd10meg.img -o 8704
-
-    For images created by bximage you must use the value 32256.
-
-4.  The harddisk image access doesn't work if the image contains more than
-    one partition.
-
-5.  I have made this tests with linux and I don't know how
-    this could be done with other operating systems.
-
--- 
-Bye
-
-Volker
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
@@ -91,7 +33,7 @@ following prompt:
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-         $Id: misc.txt,v 1.3 2001-10-31 20:53:18 bdenney Exp $
+         $Id: misc.txt,v 1.4 2001-11-13 00:01:57 bdenney Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.13 2001-11-12 21:51:10 vasudeva Exp $
+$Id: user.dbk,v 1.14 2001-11-13 00:01:57 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2022,10 +2022,63 @@ and 0 turns it off.
 
 <chapter><title>Tips and Techniques</title>
     <para>
-	Mount disk image in loopback
-        Using two hard disks
-	[...]
+      <screen>
+Ideas:
+- Using two hard disks
+      </screen>
     </para>
+
+<section> <title>Linux: Mounting a disk image using the loop device</title>
+<para>
+This section was contributed by Volker Ruppert.  It describes how to
+access a floppy or hard disk image within Linux using the loop device.
+Why would you want to do this?  Let's say you have made a small Linux 
+disk image for Bochs, and you want to install some more software on it.
+You have already downloaded the software onto your real system, so now
+you want to transfer it to the Bochs disk image.  A fast way to transfer
+the files is to mount the disk image using the loop device.
+</para>
+<para>
+Here is what Volker writes:
+<screen>
+Today I have made some tests with the loop device, because I want to exchange 
+files with the bochs disk images.  This is what I found out:
+
+1.  Using Floppy images is easy, because there is no partition table:
+
+    losetup /dev/loop0 /usr/local/bochs/dlxlinux/floppya.img
+
+    Now you can use the image like a real floppy:
+
+    - format           : mkfs.minix /dev/loop0
+    - filesystem check : fsck.minix /dev/loop0
+    - mount            : mount /dev/loop0 -o loop /mnt/floppy
+
+    Before you want to restart bochs you must do this:
+
+    losetup -d /dev/loop0
+
+    Don't forget to umount before.
+
+2.  If you want access to a harddisk image, you have to calculate the size of
+    the first cylinder. This value is the offset argument for losetup.
+
+    offset = bytes per sector * sectors per cylinder
+
+    The command for dlxlinux image looks like this:
+
+    losetup /dev/loop0 /usr/local/bochs/dlxlinux/hd10meg.img -o 8704
+
+    For images created by bximage you must use the value 32256.
+
+3.  The harddisk image access doesn't work if the image contains more than
+    one partition.
+
+4.  I have made this tests with linux and I don't know how
+    this could be done with other operating systems.
+</screen>
+</para>
+</section>
 </chapter>
 <chapter><title>Guest operating systems</title>
 	<section><title>Linux</title>
