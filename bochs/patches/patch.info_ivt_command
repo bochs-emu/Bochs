@@ -40,7 +40,7 @@ diff -u -r1.100 dbg_main.cc
 +static char* bx_dbg_ivt_desc(int intnum)
 +{ char* ret = "";
 +  switch (intnum)
-+  { case 0x00 : ret = "DEVIDE ERROR"                        ; break;
++  { case 0x00 : ret = "DIVIDE ERROR"                        ; break;
 +    case 0x01 : ret = "SINGLE STEP"                         ; break;
 +    case 0x02 : ret = "NON-MASKABLE INTERRUPT"              ; break;
 +    case 0x03 : ret = "BREAKPOINT"                          ; break;
