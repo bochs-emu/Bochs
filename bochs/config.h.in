@@ -611,11 +611,13 @@ typedef unsigned int Boolean;
 #define BX_FLOPPY1_NAME "Floppy Disk B:"
 #define BX_HARD_DISK0_NAME "Hard Disk C:"
 #define BX_HARD_DISK1_NAME "Hard Disk D:"
+#define BX_CDROM_NAME "CD-ROM D:"
 #else
 #define BX_FLOPPY0_NAME "Floppy Disk 0"
 #define BX_FLOPPY1_NAME "Floppy Disk 1"
 #define BX_HARD_DISK0_NAME "Hard Disk 0"
 #define BX_HARD_DISK1_NAME "Hard Disk 1"
+#define BX_CDROM_NAME "CD-ROM"
 #endif
 
 #endif  // _BX_CONFIG_H
