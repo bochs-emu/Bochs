@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.258 2004-08-06 15:49:52 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.259 2004-08-11 11:05:10 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -73,6 +73,10 @@ case "$target" in
   *-amigaos* | *-morphos*)
     DEFAULT_GUI=amigaos               # amigaos or morphos defaults to amigaos gui
     ;;
+  *-solaris*)
+    ADD_FLAGS="-D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -D__EXTENSIONS__"      # required for correct function prototypes
+    DEFAULT_GUI=x11
+    ;;
   *)
     DEFAULT_GUI=x11
     ;;
@@ -80,7 +84,7 @@ esac
 if test "${ADD_FLAGS:+set}" = set; then
       CFLAGS="$CFLAGS $ADD_FLAGS"
       CXXFLAGS="$CXXFLAGS $ADD_FLAGS"
-	  CPPFLAGS="$CPPFLAGS $ADD_FLAGS"
+      CPPFLAGS="$CPPFLAGS $ADD_FLAGS"
 fi
 
 AC_MSG_CHECKING(for standard CFLAGS on this platform)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.121 2004-06-19 15:20:12 sshwarts Exp $
+// $Id: harddrv.cc,v 1.122 2004-08-11 11:05:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -161,7 +161,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.121 2004-06-19 15:20:12 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.122 2004-08-11 11:05:11 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3730,7 +3730,7 @@ inline off_t sparse_image_t::get_physical_offset()
  return physical_offset;
 }
 
-inline void sparse_image_t::set_virtual_page(uint32 new_virtual_page)
+void sparse_image_t::set_virtual_page(uint32 new_virtual_page)
 {
  position_virtual_page = new_virtual_page;
 

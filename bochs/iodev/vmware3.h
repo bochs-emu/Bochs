@@ -85,6 +85,8 @@ class vmware3_image_t : public device_image_t
 #pragma options align=reset
 #endif
 
+      struct COW_Image;
+      friend struct COW_Image;
       struct COW_Image {
           int fd;
           COW_Header header;

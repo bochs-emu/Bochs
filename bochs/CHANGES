@@ -50,6 +50,7 @@ Changes to next release:
   - serial
     - multiple serial port support added (4 ports now available)
     - partial raw serial support on win32 (transmit data)
+    - serial port i/o mode option added (modes: null, file, term, raw)
   - parallel
     - multiple parallel port support added (2 ports now available)
   - vga
@@ -88,6 +89,7 @@ Changes to next release:
   - --enable-ignore-bad-msr (ignore bad MSR references) option is enabled 
     by default
   - --enable-mmx enabled by default only if cpu-level > 4
+  - fixes for Solaris SunPro (Robin Kay)
 
 - SF patches applied
   [894595] MSR_APICBASE always returns APIC ADDRESS 0 by Kangmo Kim

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.17 2004-02-09 22:23:48 danielg4 Exp $
+// $Id: sb16.h,v 1.18 2004-08-11 11:05:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -258,6 +258,8 @@ private:
   enum bx_sb16_fm_mode {single, adlib, dual, opl3, fminit};
 
   // the variables common to all FM emulations
+  struct bx_sb16_opl_struct;
+  friend struct bx_sb16_opl_struct;
   struct bx_sb16_opl_struct {
     bx_sb16_fm_mode mode;
     // modes: single: one OPL2 (OPL3 disabled), 

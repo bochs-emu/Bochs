@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.12 2004-07-06 19:59:10 vruppert Exp $
+// $Id: plugin.cc,v 1.13 2004-08-11 11:05:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -28,7 +28,7 @@
 #define PLUGIN_FILENAME_FORMAT "bx_%s.dll"
 #endif
 
-
+extern "C" {
 
 void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
@@ -631,4 +631,6 @@ void bx_reset_plugins(unsigned signal)
         device->devmodel->reset (signal);
       }
     }
+}
+
 }
