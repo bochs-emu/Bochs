@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.14 2001-12-22 13:30:10 vruppert Exp $
+// $Id: sb16.cc,v 1.15 2002-01-05 10:30:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -263,8 +263,12 @@ void bx_sb16_c::dsp_dmatimer (void *this_ptr)
   if ( (bx_options.sb16.Owavemode->get () != 1) ||
        ( (This->dsp.dma.chunkindex + 1 < BX_SOUND_OUTPUT_WAVEPACKETSIZE) &&
 	 (This->dsp.dma.count > 0) ) ||
-       (This->output->waveready() == BX_SOUND_OUTPUT_OK) )
-    bx_pc_system.set_DRQ(BX_SB16_DMAL, 1);
+       (This->output->waveready() == BX_SOUND_OUTPUT_OK) ) {
+    if (DSP.dma.bits == 8)
+      bx_pc_system.set_DRQ(BX_SB16_DMAL, 1);
+    else
+      bx_pc_system.set_DRQ(BX_SB16_DMAH, 1);
+    }
 }
 
 void bx_sb16_c::opl_timer (void *this_ptr)
@@ -1192,7 +1196,7 @@ void bx_sb16_c::dma_read16(Bit16u *data_word)
     writelog( WAVELOG(5), "Received 16-bit DMA %4x, %d remaining ",
 	      *data_word, DSP.dma.count);
 
-  DSP.dma.count -= 2;
+  DSP.dma.count--;
 
   dsp_getsamplebyte(*data_word & 0xff);
   dsp_getsamplebyte(*data_word >> 8);
@@ -1207,7 +1211,7 @@ void bx_sb16_c::dma_write16(Bit16u *data_word)
 
   bx_pc_system.set_DRQ(BX_SB16_DMAH, 0);  // the timer will raise it again
 
-  DSP.dma.count -= 2;
+  DSP.dma.count--;
 
   byte1 = dsp_putsamplebyte();
   byte2 = dsp_putsamplebyte();
