@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.67 2002-11-20 20:13:35 bdenney Exp $
+$Id: user.dbk,v 1.68 2002-11-20 20:19:34 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -391,7 +391,14 @@ currently work with.
   <row>
     <entry>Mouse</entry>
     <entry>Yes</entry>
-    <entry>Emulates a PS/2 mouse with 3 buttons.
+    <entry>Emulates a PS/2 mouse with 2 buttons.
+    </entry>
+  </row>
+  <row>
+    <entry>Sound Blaster</entry>
+    <entry>Yes</entry>
+    <entry>Emulates a Sound Blaster 16 card.  On Windows, Linux, and FreeBSD
+    you can send the output to your host computer's sound system.
     </entry>
   </row>
   <row>
