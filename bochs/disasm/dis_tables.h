@@ -1532,8 +1532,8 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupD9[8] = {
   /* 3 */  { "fstp",        0, Md, XX, XX },
   /* 4 */  { "fldenv",      0, Mx, XX, XX },
   /* 5 */  { "fldcw",       0, Ew, XX, XX },
-  /* 6 */  { "fstenv",      0, Mx, XX, XX },
-  /* 7 */  { "fstcw",       0, Mw, XX, XX }
+  /* 6 */  { "fnstenv",     0, Mx, XX, XX },
+  /* 7 */  { "fnstcw",      0, Mw, XX, XX }
   };
 
   // DA (modrm is outside 00h - BFh) (mod != 11)
@@ -1580,8 +1580,8 @@ static BxDisasmOpcodeInfo_t BxDisasmFPGroupDD[8] = {
   /* 3 */  { "fstp",        0, Mq, XX, XX },
   /* 4 */  { "frstor",      0, Mx, XX, XX },
   /* 5 */  { "(invalid)",   0, XX, XX, XX },
-  /* 6 */  { "fsave",       0, Mx, XX, XX },
-  /* 7 */  { "fstsw",       0, Mw, XX, XX }
+  /* 6 */  { "fnsave",      0, Mx, XX, XX },
+  /* 7 */  { "fnstsw",      0, Mw, XX, XX }
   };
 
   // DE (modrm is outside 00h - BFh) (mod != 11)
@@ -1841,8 +1841,8 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodeInfoFP[512] = {
   /* DA DF */  { "fcmovnu",   0, STj, STj, XX },
   /* DB E0 */  { "feni   (287 only)", 0, XX, XX, XX },
   /* DB E1 */  { "fdisi  (287 only)", 0, XX, XX, XX },
-  /* DB E2 */  { "fclex",     0,  XX,  XX, XX },
-  /* DB E3 */  { "finit",     0,  XX,  XX, XX },
+  /* DB E2 */  { "fnclex",    0,  XX,  XX, XX },
+  /* DB E3 */  { "fninit",    0,  XX,  XX, XX },
   /* DB E4 */  { "fsetpm (287 only)", 0, XX, XX, XX },
   /* DB E5 */  { "(invalid)", 0,  XX,  XX, XX },
   /* DB E6 */  { "(invalid)", 0,  XX,  XX, XX },
@@ -2103,7 +2103,7 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodeInfoFP[512] = {
   /* DE DD */  { "(invalid)", 0,  XX,  XX, XX },
   /* DE DE */  { "(invalid)", 0,  XX,  XX, XX },
   /* DE DF */  { "(invalid)", 0,  XX,  XX, XX },
-  /* DF E0 */  { "fstsw",     0,  AX,  XX, XX },
+  /* DF E0 */  { "fnstsw",    0,  AX,  XX, XX },
   /* DE E1 */  { "(invalid)", 0,  XX,  XX, XX },
   /* DE E2 */  { "(invalid)", 0,  XX,  XX, XX },
   /* DE E3 */  { "(invalid)", 0,  XX,  XX, XX },

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.150 2003-12-27 13:50:05 sshwarts Exp $
+// $Id: cpu.h,v 1.151 2003-12-28 18:58:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1889,7 +1889,7 @@ union {
   BX_SMF void FISTP_DWORD_INTEGER(bxInstruction_c *);
   BX_SMF void FISTP_QWORD_INTEGER(bxInstruction_c *);
   
-  BX_SMF void FSTENV(bxInstruction_c *);
+  BX_SMF void FNSTENV(bxInstruction_c *);
   BX_SMF void FNSTCW(bxInstruction_c *);
   BX_SMF void FNSTSW(bxInstruction_c *);
   BX_SMF void FNSTSW_AX(bxInstruction_c *);
@@ -1901,7 +1901,7 @@ union {
 
   // save restore
   BX_SMF void FRSTOR(bxInstruction_c *);
-  BX_SMF void FSAVE(bxInstruction_c *);
+  BX_SMF void FNSAVE(bxInstruction_c *);
 
   // add
   BX_SMF void FADD_ST0_STj(bxInstruction_c *);
@@ -2011,7 +2011,7 @@ union {
   BX_SMF void FSCALE(bxInstruction_c *);
   BX_SMF void FSIN(bxInstruction_c *);
   BX_SMF void FCOS(bxInstruction_c *);
-  BX_SMF void FCLEX(bxInstruction_c *);
+  BX_SMF void FNCLEX(bxInstruction_c *);
   BX_SMF void FNINIT(bxInstruction_c *);
   BX_SMF void FFREE_STi(bxInstruction_c *);
 #endif

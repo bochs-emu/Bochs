@@ -80,7 +80,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupD9[8] = {
   /* 3 */  { 0,  &BX_CPU_C::FSTP_SINGLE_REAL  },
   /* 4 */  { 0,  &BX_CPU_C::FLDENV            },
   /* 5 */  { 0,  &BX_CPU_C::FLDCW             },
-  /* 6 */  { 0,  &BX_CPU_C::FSTENV            },
+  /* 6 */  { 0,  &BX_CPU_C::FNSTENV           },
   /* 7 */  { 0,  &BX_CPU_C::FNSTCW            }
   };
 
@@ -128,7 +128,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8] = {
   /* 3 */  { 0,  &BX_CPU_C::FSTP_DOUBLE_REAL },
   /* 4 */  { 0,  &BX_CPU_C::FRSTOR           },
   /* 5 */  { 0,  &BX_CPU_C::BxError          },
-  /* 6 */  { 0,  &BX_CPU_C::FSAVE            },
+  /* 6 */  { 0,  &BX_CPU_C::FNSAVE           },
   /* 7 */  { 0,  &BX_CPU_C::FNSTSW           }
   };
 
@@ -391,7 +391,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DB DF */  { 0,  &BX_CPU_C::FCMOVNU_ST0_STj  },
   /* DB E0 */  { 0,  &BX_CPU_C::FNOP             },     // feni  (287 only)
   /* DB E1 */  { 0,  &BX_CPU_C::FNOP             },     // fdisi (287 only)
-  /* DB E2 */  { 0,  &BX_CPU_C::FCLEX            },
+  /* DB E2 */  { 0,  &BX_CPU_C::FNCLEX           },
   /* DB E3 */  { 0,  &BX_CPU_C::FNINIT           },
   /* DB E4 */  { 0,  &BX_CPU_C::FNOP             },     // fsetpm (287 only)
   /* DB E5 */  { 0,  &BX_CPU_C::BxError          },
