@@ -284,6 +284,7 @@
 #define BX_WITH_WIN32 0
 #define BX_WITH_MACOS 0
 #define BX_WITH_NOGUI 0
+#define BX_WITH_TERM 0
 
 
 #define WORDS_BIGENDIAN 0

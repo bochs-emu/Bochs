@@ -44,6 +44,7 @@ GUI_OBJS_BEOS = beos.o
 GUI_OBJS_WIN32 = win32.o
 GUI_OBJS_MACOS = macintosh.o
 GUI_OBJS_NOGUI = nogui.o
+GUI_OBJS_TERM  = term.o
 GUI_OBJS = gui.o @GUI_OBJS@
 
 BX_INCDIRS = -I.. -I../iodev -I../@INSTRUMENT_DIR@
