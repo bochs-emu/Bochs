@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.37 2002-02-15 22:58:06 yakovlev Exp $
+// $Id: dbg_main.cc,v 1.38 2002-03-12 09:16:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1520,6 +1520,7 @@ bx_dbg_continue_command(void)
 
 #if BX_NUM_SIMULATORS >= 2
   bx_guard.interrupt_requested = 0;
+  bx_guard.special_unwind_stack = 0;
   while (1) {
     if ( !bx_dbg_cosimulateN(bx_debugger.icount_quantum) )
       break;
@@ -1533,6 +1534,7 @@ bx_dbg_continue_command(void)
 
 
   bx_guard.interrupt_requested = 0;
+  bx_guard.special_unwind_stack = 0;
 	int stop = 0;
 	int which = -1;
 	while (!stop) {
@@ -1608,6 +1610,7 @@ bx_dbg_stepN_command(bx_dbg_icount_t count)
 
 #if BX_NUM_SIMULATORS >= 2
   bx_guard.interrupt_requested = 0;
+  bx_guard.special_unwind_stack = 0;
   bx_dbg_cosimulateN(count);
 #else
   // single CPU
