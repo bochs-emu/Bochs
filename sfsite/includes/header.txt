@@ -5,7 +5,7 @@ A:visited {color: blue; text-decoration: none}
 A:active {color: blue; text-decoration: none}
 A:hover {color: blue; text-decoration: underline}
 
-INPUT {border-bottom:thin solid black;border-right:thin solid black;border-top:thin solid black;border-left:thin solid black; font-size: 7pt; font-family:Verdana, Arial Helvetica}
+INPUT {border-bottom:thin solid black;border-right:thin solid black;border-top:thin solid black;border-left:thin solid black; border-width: thin; font-size: 7pt; font-family:Verdana, Arial Helvetica}
 
 .sidebar {font-family:Verdana, Arial, Helvetica; color: #000000}
 A.sidebar:link {color: #000000; font-style: normal; text-decoration: none}
