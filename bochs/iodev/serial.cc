@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.26.2.1 2002-10-07 22:15:42 cbothamy Exp $
+// $Id: serial.cc,v 1.26.2.2 2002-10-08 08:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,10 +82,6 @@ static int tty_id;
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
-  bx_serial_c        *serial;
-
-  serial = &bx_serial;
-
   return(0); // Success
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.43.2.3 2002-10-07 16:43:34 bdenney Exp $
+// $Id: vga.cc,v 1.43.2.4 2002-10-08 08:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,10 +59,6 @@ vgaRefresh(void)
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
-  bx_vga_c        *vga;
-
-  vga = &bx_vga;
-
   return(0); // Success
 }
 

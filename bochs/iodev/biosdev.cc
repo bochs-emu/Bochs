@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.4.6.2 2002-10-07 12:55:30 cbothamy Exp $
+// $Id: biosdev.cc,v 1.4.6.3 2002-10-08 08:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,10 +55,6 @@ bx_biosdev_c bx_biosdev;
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
-  bx_biosdev_c        *biosdev;
-
-  biosdev = &bx_biosdev;
-
   return(0); // Success
 }
 

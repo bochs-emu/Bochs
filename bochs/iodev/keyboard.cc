@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.67.2.3 2002-10-08 08:24:26 bdenney Exp $
+// $Id: keyboard.cc,v 1.67.2.4 2002-10-08 08:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,10 +67,6 @@ bx_keyb_c bx_keyboard;
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
-  bx_keyb_c        *kbd;
-
-  kbd = &bx_keyboard;
-
   return(0); // Success
 }
 
@@ -88,7 +84,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.3 2002-10-08 08:24:26 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.4 2002-10-08 08:29:08 bdenney Exp $"));
 #if BX_PLUGINS
   pluginMouseMotion = bx_keyboard.mouse_motion;
   pluginGenScancode = bx_keyboard.gen_scancode;
@@ -138,7 +134,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.3 2002-10-08 08:24:26 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.67.2.4 2002-10-08 08:29:08 bdenney Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;

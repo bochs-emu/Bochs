@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.20.4.1 2002-10-07 22:15:42 cbothamy Exp $
+// $Id: parallel.cc,v 1.20.4.2 2002-10-08 08:29:08 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,10 +51,6 @@ bx_parallel_c bx_parallel;
   int
 plugin_init(plugin_t *plugin, int argc, char *argv[])
 {
-  bx_parallel_c        *parallel;
-
-  parallel = &bx_parallel;
-
   return(0); // Success
 }
 
@@ -90,7 +86,7 @@ bx_parallel_c::~bx_parallel_c(void)
   void
 bx_parallel_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.1 2002-10-07 22:15:42 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.20.4.2 2002-10-08 08:29:08 bdenney Exp $"));
   BX_PAR_THIS devices = d;
 
   if (bx_options.par[0].Oenabled->get ()) {
