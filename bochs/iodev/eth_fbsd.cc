@@ -45,6 +45,7 @@
 //
 
 #include "bochs.h"
+#ifdef ETH_FBSD
 #define LOG_THIS this->
 
 extern "C" {
@@ -282,3 +283,5 @@ bx_fbsd_pktmover_c::rx_timer(void)
     }
   }  
 }
+#endif
+

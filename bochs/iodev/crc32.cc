@@ -14,7 +14,7 @@ void CRC_Generator::init(void) {
     int j;
     crc32_table[i]=reflect(i,8) << 24;
     for(j=0; j<8; j++)
-      crc32_table[i] = (crc32_table[i]<<1)^(crc_table[i] & (1<<31) ? POLYNOMIAL : 0);
+      crc32_table[i] = (crc32_table[i]<<1)^(crc32_table[i] & (1<<31) ? POLYNOMIAL : 0);
     crc32_table[i] = reflect(crc32_table[i], 32);
   }
 }

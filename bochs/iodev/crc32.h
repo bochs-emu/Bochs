@@ -5,6 +5,8 @@
 #ifndef _CRC_32_H_
 #define _CRC_32_H_
 
+#include "bochs.h"
+
 class CRC_Generator {
 private:
   Bit32u crc32_table[256];
@@ -13,7 +15,7 @@ public:
   void init(void);
   CRC_Generator();
   Bit32u get_CRC(Bit8u * buf, Bit32u buflen);
-}
+};
 
 #endif //_CRC_32_H_
 
