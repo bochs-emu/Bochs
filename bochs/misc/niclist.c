@@ -2,7 +2,7 @@
 //
 // misc/niclist.c
 // by Don Becker <x-odus@iname.com>
-// $Id: niclist.c,v 1.5 2002-02-03 06:19:42 bdenney Exp $
+// $Id: niclist.c,v 1.6 2002-02-03 06:22:21 bdenney Exp $
 //
 // This program is for win32 only.  It lists the network interface cards
 // that you can use in the "ethdev" field of the ne2k line in your bochsrc.
@@ -16,158 +16,135 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct _Adapter {
-	char description[256];
-	char device[512];
-} ADAPTER;
+#define MAX_ADAPTERS 10
+#define	NIC_BUFFER_SIZE 2048
+
+
+// declare our NT/9X structures to hold the adapter name and descriptions
+typedef struct {
+	LPWSTR	wstrName;
+	LPSTR	strDesc;
+} NIC_INFO_NT;
+
+typedef struct {
+	LPSTR	strName;
+	LPSTR	strDesc;
+} NIC_INFO_9X;
+
+// declare an array of structures to hold our adapter information
+NIC_INFO_NT niNT[MAX_ADAPTERS];
+NIC_INFO_9X ni9X[MAX_ADAPTERS];
 
 BOOLEAN   (*PacketGetAdapterNames)(PTSTR, PULONG) = NULL;
 
-int HexDump(long start, unsigned char *buf, int len)
-{
-   int i;
-
-   if( !buf )
-   {
-      return( 0 );
-   }
-
-   if( len == 0L )
-   {
-      return( 0 );
-   }
-
-   while( len > 0L )
-   {
-      printf( "%6.6X: ", start );
-      for( i = 0; i < 8; ++i )
-      {
-         if( len - i > 0 )
-         {
-            printf( " %2.2X", buf[ i ] & 0xFF );
-         }
-         else
-         {
-            printf( "   " );
-         }
-      }
-
-      printf( " :" );
-
-      for( i = 8; i < 16; ++i )
-      {
-         if( len - i > 0 )
-         {
-            printf( " %2.2X", buf[ i ] & 0xFF );
-         }
-         else
-         {
-            printf( "   " );
-         }
-      }
-
-      printf( "    " );
-
-      for( i = 0; i < 16; ++i )
-      {
-         if( len - i > 0 )
-         {
-            if( isprint( buf[ i ] ) )
-            {
-               printf( "%c", buf[ i ] );
-            }
-            else
-            {
-               printf( "%c", '.' );
-            }
-         }
-         else
-         {
-            printf( "%c", '.' );
-         }
-      }
-
-
-      printf( "\n" );
-
-      len -= 16;
-      start += 16L;
-      buf += 16;
-   }
-
-   return( 0 );
-}
 
 int main(int argc, char **argv)
 {
-	int i, n;
-	char          AdapterInfo[1024];
-	char          *device, *desc, *brk;
-	unsigned long AdapterLength;
-	ADAPTER       Adapters[20];
+	int i;
 	HINSTANCE     hPacket;
 	DWORD         dwVersion, dwMajorVersion;
-	char          *split, *end;
-	int           splitlen = 0;
-	int           endlen = 0;
+	char			AdapterInfo[NIC_BUFFER_SIZE] = { '\0','\0' };
+	unsigned long	AdapterLength = NIC_BUFFER_SIZE;
+	LPWSTR			wstrName;
+	LPSTR			strName, strDesc;
+	int				nAdapterCount;
 
+
+	// Attemp to load the WinpCap packet library
 	hPacket = LoadLibrary("PACKET.DLL");
-    if(hPacket) {
+    if(hPacket)
+	{
+		// Now look up the address
 		PacketGetAdapterNames = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetAdapterNames");
-	} else {
+	}
+	else {
 		printf("Could not load WinPCap driver!\n");
 		printf ("You can download them for free from\n");
 		printf ("http://netgroup-serv.polito.it/winpcap\n");
 		return 1;
 	}
-	
+
 	dwVersion      = GetVersion();
 	dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
-	if(!(dwVersion >= 0x80000000 && dwMajorVersion >= 4)) {
-		// Windows NT
-		split    = "\0\0";
-		splitlen = 2;
-		end      = "\0\0\0\0";
-		endlen   = 4;
-	} else {
-		// Windows 9x
-		split    = "\0";
-		splitlen = 1;
-		end      = "\0\0";
-		endlen   = 2;
-	}
 
-	PacketGetAdapterNames((char *)AdapterInfo, &AdapterLength);
-	device = AdapterInfo;
+	// Get out blob of adapter info
+	PacketGetAdapterNames(AdapterInfo,&AdapterLength);
 
-	brk = device;
-	i = 0;
-	while(memcmp(brk, end, endlen) != 0) {
-		while(memcmp(brk, split, splitlen) != 0) {
-			strncat(Adapters[i].device, brk, 1);
-			brk += splitlen;
+	// If this is Windows NT ...
+	if(!(dwVersion >= 0x80000000 && dwMajorVersion >= 4))
+	{
+		wstrName=(LPWSTR)AdapterInfo;
+
+		// Obtain Names
+		nAdapterCount = 0;
+		while ((*wstrName))
+		{
+			// store pointer to name
+			niNT[nAdapterCount].wstrName=wstrName;
+			wstrName += lstrlenW(wstrName) +1;
+			nAdapterCount++;
 		}
-		i++;
-		if(memcmp(brk, end, endlen) == 0) break;
-		brk += splitlen;
-	}
-	n = i;
-	brk += endlen;
-	desc = brk;
 
-	i = 0;
-	brk = desc;
-	while(*brk != '\0' && *(brk+1) != '\0') {
-		while(*brk != '\0') brk++;
-		brk++;
-		strcpy(Adapters[i].description, desc);
-		i++;
-		desc = brk;
-	}
-	n = i;
+		strDesc = (LPSTR)++wstrName;
 
-	for(i = 0; i < n; i++) {
-		printf("%s\n  %s\n\n", Adapters[i].description, Adapters[i].device);
+		// Obtain descriptions ....
+		for(i=0;i<nAdapterCount;i++)
+		{
+			// store pointer to description
+			niNT[i].strDesc=strDesc;
+			strDesc += lstrlen(strDesc) +1;
+
+			// ... and display adapter info
+			printf("\n%d: %s\n",i+1,niNT[i].strDesc);
+			wprintf(L"     Device: %s",niNT[i].wstrName);
+		}
+
+		if(i)
+		{
+			printf("\n\nExample config for bochsrc:\n");
+			wprintf(L"ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=win32, ethdev=%s",niNT[0].wstrName);
+			printf("\n");
+		}
+
 	}
+	else
+	{
+		// Windows 9x
+		strName=(LPSTR)AdapterInfo;
+
+		// Obtain Names
+		nAdapterCount = 0;
+		while ((*strName))
+		{
+			// store pointer to name
+			ni9X[nAdapterCount].strName=strName;
+			strName += lstrlen(strName) +1;
+			nAdapterCount++;
+		}
+
+		strDesc = (LPSTR)++strName;
+
+		// Obtain descriptions ....
+		for(i=0;i<nAdapterCount;i++)
+		{
+			// store pointer to description
+			ni9X[i].strDesc=strDesc;
+			strDesc += lstrlen(strDesc) +1;
+
+			// ... and display adapter info
+			printf("\n%d: %s\n",i+1,ni9X[i].strDesc);
+			printf("     Device: %s",ni9X[i].strName);
+		}
+
+		if(i)
+		{
+			printf("\n\nExample config for bochsrc:\n");
+			printf("ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=win32, ethdev=%s",ni9X[0].strName);
+			printf("\n");
+		}
+
+		printf("\n");
+	}
+
 	return 0;
 }
