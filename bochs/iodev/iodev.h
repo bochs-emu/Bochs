@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.29 2003-01-28 16:57:00 vruppert Exp $
+// $Id: iodev.h,v 1.30 2003-02-17 03:58:29 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -405,6 +405,7 @@ private:
 #include "iodev/pic.h"
 #include "iodev/pit.h"
 #include "iodev/pit_wrap.h"
+#include "iodev/virt_timer.h"
 #include "iodev/serial.h"
 #if BX_SUPPORT_SB16
 #  include "iodev/sb16.h"
