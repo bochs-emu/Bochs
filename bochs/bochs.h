@@ -243,8 +243,6 @@ class iofunctions {
 		  "PIT ",
 		  "SB16",
 		  "SER ",
-		  "SNDL",
-		  "SNDW",
 		  "VGA ",
 		  "ST  ",
 		  "DEV ",
@@ -273,14 +271,12 @@ class iofunctions {
 #define    PITLOG          14
 #define    SB16LOG         15
 #define    SERLOG          16
-#define    SNDLLOG         17
-#define    SNDWLOG         18
-#define    VGALOG          19
-#define    STLOG           20   // state_file.cc
-#define    DEVLOG          21
-#define    MEMLOG          22
-#define    DISLOG          23
-#define    GUILOG          24
+#define    VGALOG          17
+#define    STLOG           18   // state_file.cc
+#define    DEVLOG          19
+#define    MEMLOG          20
+#define    DISLOG          21
+#define    GUILOG          22
 
 
 public:
