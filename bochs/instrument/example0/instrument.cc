@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.5 2002-09-28 17:09:04 sshwarts Exp $
+// $Id: instrument.cc,v 1.6 2002-09-29 16:05:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,6 +26,7 @@
 
 
 #include "bochs.h"
+#include "cpu/cpu.h"
 
 
 // maximum size of an instruction
@@ -37,7 +38,7 @@
 // Use this variable to turn on/off collection of instrumentation data
 // If you are not using the debugger to turn this on/off, then possibly
 // start this at 1 instead of 0.
-static Boolean active = 0;
+static Boolean active = 1;
 
 
 static struct instruction_t {
@@ -46,8 +47,6 @@ static struct instruction_t {
   unsigned nprefixes;
   Bit8u    opcode[MAX_OPCODE_SIZE];
   Boolean  is32;
-  Bit32u   linear_iaddr;
-  Bit32u   phy_iaddr;
   unsigned num_data_accesses;
   struct {
     bx_address laddr; // linear address
@@ -66,13 +65,10 @@ static logfunctions *instrument_log = new logfunctions ();
 
 void bx_instr_reset(unsigned cpu)
 {
-  for(int i=0;i<BX_SMP_PROCESSORS;i++) 
-  {
-    instruction[cpu].valid = 0;
-    instruction[cpu].nprefixes = 0;
-    instruction[cpu].num_data_accesses = 0;
-    instruction[cpu].is_branch = 0;
-  }
+  instruction[cpu].valid = 0;
+  instruction[cpu].nprefixes = 0;
+  instruction[cpu].num_data_accesses = 0;
+  instruction[cpu].is_branch = 0;
 }
 
 void bx_instr_new_instruction(unsigned cpu)
@@ -89,7 +85,7 @@ void bx_instr_new_instruction(unsigned cpu)
     char disasm_tbuf[512];	// buffer for instruction disassembly
     unsigned length = i->opcode_size, n;
 
-    bx_disassemble.disasm(i->is32, i->opcode, disasm_tbuf);
+    bx_disassemble.disasm(i->is32, 0, i->opcode, disasm_tbuf);
  
     if(length != 0)	
     {
@@ -97,7 +93,7 @@ void bx_instr_new_instruction(unsigned cpu)
       fprintf(stderr, "CPU: %d: %s\n", cpu, disasm_tbuf);
       fprintf(stderr, "LEN: %d\tPREFIX: %d\tBYTES: ", length, i->nprefixes);
       for(n=0;n<length;n++) fprintf(stderr, "%02x", i->opcode[n]);
-      if(instruction[cpu].is_branch) 
+      if(i->is_branch) 
       {
         fprintf(stderr, "\tBRANCH ");
 
@@ -190,7 +186,7 @@ void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, Boolean is32)
   instruction[cpu].opcode_size = len;
 }
 
-void bx_instr_fetch_decode_completed(unsigned cpu, BxInstruction_t *i)
+void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i)
 {
   if(active) 
   {
@@ -241,9 +237,11 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
   }
 }
 
-void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len)
+void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 {
   unsigned index;
+  bx_address phy;
+  Boolean page_valid;
 
   if(!active)
   {
@@ -259,36 +257,20 @@ void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned le
     return;
   }
 
-  index = instruction[cpu].num_data_accesses;
-  instruction[cpu].data_access[index].paddr = A20ADDR(phy);
-  instruction[cpu].data_access[index].laddr = lin;
-  instruction[cpu].data_access[index].op   = BX_READ;
-  instruction[cpu].data_access[index].size = len;
-  instruction[cpu].num_data_accesses++;
-}
+  BX_CPU(cpu)->dbg_xlate_linear2phy(lin, &phy, &page_valid);
+  phy = A20ADDR(phy);
 
-void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned len)
-{
-  unsigned index;
-
-  if(!active)
+  // If linear translation doesn't exist, a paging exception will occur.
+  // Invalidate physical address data for now.
+  if (!page_valid) 
   {
-    return;
-  }
-  if (!instruction[cpu].valid)
-  {
-    return;
-  }
-
-  if (instruction[cpu].num_data_accesses >= MAX_DATA_ACCESSES) 
-  {
-    return;
+    phy = 0;
   }
 
   index = instruction[cpu].num_data_accesses;
-  instruction[cpu].data_access[index].paddr = A20ADDR(phy);
   instruction[cpu].data_access[index].laddr = lin;
-  instruction[cpu].data_access[index].op   = BX_WRITE;
-  instruction[cpu].data_access[index].size = len;
+  instruction[cpu].data_access[index].paddr = phy;
+  instruction[cpu].data_access[index].op    = rw;
+  instruction[cpu].data_access[index].size  = size;
   instruction[cpu].num_data_accesses++;
 }

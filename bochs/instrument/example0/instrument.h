@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.5 2002-09-28 17:09:04 sshwarts Exp $
+// $Id: instrument.h,v 1.6 2002-09-29 16:05:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,6 +49,8 @@
 
 #if BX_INSTRUMENTATION
 
+class bxInstruction_c;
+
 // called from the CPU core
 
 void bx_instr_reset(unsigned cpu);
@@ -60,7 +62,7 @@ void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address new_eip);
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address new_eip);
 
 void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, Boolean is32);
-void bx_instr_fetch_decode_completed(unsigned cpu, BxInstruction_t *i);
+void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i);
 
 void bx_instr_prefix_as(unsigned cpu);
 void bx_instr_prefix_os(unsigned cpu);
@@ -79,8 +81,7 @@ void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector);
 void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip);
 
-void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len);
-void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned len);
+void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw);
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)
@@ -132,11 +133,11 @@ void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned l
 #  define BX_INSTR_REPEAT_ITERATION(cpu_id)
 
 /* memory access */
-#  define BX_INSTR_LIN_READ(cpu_id, lin, phy, len)      bx_instr_lin_read(cpu_id, lin, phy, len)
-#  define BX_INSTR_LIN_WRITE(cpu_id, lin, phy, len)     bx_instr_lin_write(cpu_id, lin, phy, len)
+#  define BX_INSTR_LIN_READ(cpu_id, lin, phy, len)
+#  define BX_INSTR_LIN_WRITE(cpu_id, lin, phy, len)
 
 #  define BX_INSTR_MEM_CODE(cpu_id, linear, size)
-#  define BX_INSTR_MEM_DATA(cpu_id, linear, size, rw)
+#  define BX_INSTR_MEM_DATA(cpu_id, linear, size, rw)  bx_instr_mem_data(cpu_id, linear, size, rw)
 
 /* called from memory object */
 #  define BX_INSTR_PHY_WRITE(addr, len)
