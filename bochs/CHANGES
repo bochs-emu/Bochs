@@ -157,7 +157,8 @@ Patches applied:
   - keyboard
     - keyboard reset function (0xff) now resets the keyboard
   - gameport
-    - new standard PC gameport device (real joystick connected on Linux only)
+    - new standard PC gameport device (real joystick connected on Linux and
+      win32 only)
   - serial
     - FIFO emulation (UART type 16550A) implemented
 - general
@@ -217,7 +218,8 @@ Patches applied:
 
 - SF patches partially applied
   #707931  Support EGA/VGA write mode 2 and others                     (???)
-           already applied: disable IME, split screen, write mode 2
+           already applied: disable IME, split screen, write mode 2,
+           BIOS INT16h/AH=05h
   #856506  Patch to fix compile-time iodev/cd-rom.cc error             (alden.dima at nist.gov)
            Correct patch provided in SF bug report #843433
   #856510  Missing patch file for 856506                               (alden.dima at nist.gov)
