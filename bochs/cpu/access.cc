@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.41 2003-10-24 18:34:14 sshwarts Exp $
+// $Id: access.cc,v 1.42 2003-10-24 20:06:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1194,7 +1194,7 @@ accessOK:
 
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::readVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
+BX_CPU_C::read_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 {
   // Read Double Quadword.
   Bit64u *qwords = (Bit64u*) data;
@@ -1204,18 +1204,18 @@ BX_CPU_C::readVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::readVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
+BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
   if (offset & 0xf) {
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  readVirtualDQword(s, offset, data);
+  read_virtual_dqword(s, offset, data);
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::writeVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
+BX_CPU_C::write_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 {
   // Write Double Quadword.
   Bit64u *qwords = (Bit64u*) data;
@@ -1224,14 +1224,13 @@ BX_CPU_C::writeVirtualDQword(unsigned s, bx_address offset, Bit8u *data)
   write_virtual_qword(s, offset+Host2ndDWordOffset, &qwords[1]);
 }
 
-
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::writeVirtualDQwordAligned(unsigned s, bx_address offset, Bit8u *data)
+BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
   if (offset & 0xf) {
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  writeVirtualDQword(s, offset, data);
+  write_virtual_dqword(s, offset, data);
 }
