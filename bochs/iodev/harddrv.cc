@@ -95,7 +95,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.31 2001-09-19 15:10:38 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.32 2001-09-19 15:30:44 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -568,13 +568,21 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       goto return_value8;
 
     case 0x1f6: // hard disk drive and head register
-      value8 = (1 << 7) | // extended data field for ECC
-               (0 << 7) | // 1=LBA mode, 0=CHSmode
+      // b7 Extended data field for ECC
+      // b6/b5: Used to be sector size.  00=256,01=512,10=1024,11=128
+      //   Since 512 was always used, bit 6 was taken to mean LBA mode:
+      //     b6 1=LBA mode, 0=CHS mode
+      //     b5 1
+      // b4: DRV
+      // b3..0 HD3..HD0
+      value8 = (1 << 7) |
+               ((BX_SELECTED_CONTROLLER.lba_mode>0) << 6) |
                (1 << 5) | // 01b = 512 sector size
                (BX_HD_THIS drive_select << 4) |
                (BX_SELECTED_CONTROLLER.head_no << 0);
       goto return_value8;
       break;
+//BX_CONTROLLER(0).lba_mode
 
     case 0x1f7: // Hard Disk Status
     case 0x3f6: // Hard Disk Alternate Status
@@ -1268,13 +1276,15 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	  break;
 
     case 0x1f6: // hard disk drive and head register
-      // b7 1
-      // b6 1=LBA mode, 0=CHS mode (LBA not supported)
-      // b5 1
+      // b7 Extended data field for ECC
+      // b6/b5: Used to be sector size.  00=256,01=512,10=1024,11=128
+      //   Since 512 was always used, bit 6 was taken to mean LBA mode:
+      //     b6 1=LBA mode, 0=CHS mode
+      //     b5 1
       // b4: DRV
       // b3..0 HD3..HD0
-      if ( (value & 0xe0) != 0xa0 ) // 101xxxxx
-        BX_INFO(("IO write 1f6 (%02x): not 101xxxxxb", (unsigned) value));
+      if ( (value & 0xa0) != 0xa0 ) // 1x1xxxxx
+        BX_INFO(("IO write 1f6 (%02x): not 1x1xxxxxb", (unsigned) value));
       BX_HD_THIS drive_select = (value >> 4) & 0x01;
       WRITE_HEAD_NO(value & 0xf);
       if (BX_SELECTED_CONTROLLER.lba_mode == 0 && ((value >> 6) & 1) == 1)
@@ -1730,11 +1740,13 @@ bx_hard_drive_c::calculate_logical_address()
 {
       Bit32u logical_sector;
 
-      if (BX_SELECTED_CONTROLLER.lba_mode)
+      if (BX_SELECTED_CONTROLLER.lba_mode) {
+            //bx_printf ("disk: calculate: %d %d %d\n", ((Bit32u)BX_SELECTED_CONTROLLER.head_no), ((Bit32u)BX_SELECTED_CONTROLLER.cylinder_no), (Bit32u)BX_SELECTED_CONTROLLER.sector_no);
 	    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER.head_no) << 24 |
 		  ((Bit32u)BX_SELECTED_CONTROLLER.cylinder_no) << 8 |
 		  (Bit32u)BX_SELECTED_CONTROLLER.sector_no;
-      else
+            //bx_printf ("disk: result: %u\n", logical_sector);
+      } else
 	    logical_sector = (BX_SELECTED_CONTROLLER.cylinder_no * BX_SELECTED_HD.hard_drive->heads *
 			      BX_SELECTED_HD.hard_drive->sectors) +
 		  (BX_SELECTED_CONTROLLER.head_no * BX_SELECTED_HD.hard_drive->sectors) +

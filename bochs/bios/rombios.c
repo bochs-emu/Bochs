@@ -267,7 +267,7 @@ static void           keyboard_panic();
 static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
-static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.15 2001-08-15 04:56:00 bdenney Exp $";
+static char bios_version_string[] = "BIOS Version is $Id: rombios.c,v 1.16 2001-09-19 15:30:44 bdenney Exp $";
 
 #define DEBUG_ROMBIOS 0
 
@@ -1350,6 +1350,7 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
 {
   Bit8u scan_code, ascii_code, shift_flags;
 
+
   switch (GET_AH()) {
     case 0x00: /* read keyboard input */
 
@@ -1518,6 +1519,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   //
   // DS has been set to F000 before call
   //
+
 
   scancode = GET_AL();
 
@@ -1707,6 +1709,56 @@ printf("int74_function: make_farcall=1\n");
 
 
 
+  void
+outLBA(cylinder,hd_heads,head,hd_sectors,sector,dl)
+  Bit16u cylinder;
+  Bit16u hd_heads;
+  Bit16u head;
+  Bit16u hd_sectors;
+  Bit16u sector;
+  Bit16u dl;
+{
+#asm
+  	push	bp
+  	mov 	bp, sp
+	push	eax
+	push	ebx
+	push	edx
+	xor	eax,eax
+	mov	ax,4[bp]
+	xor	ebx,ebx
+	mov	bl,6[bp]
+	imul	ebx
+	add	al,8[bp]
+	adc	ah,#0
+	mov	bl,10[bp]
+	imul	ebx
+	add	al,12[bp]
+	adc	ah,#0
+	dec	eax
+	mov	dx,#0x1f3
+	out	dx,al
+	mov	dx,#0x1f4
+	mov	al,ah
+	out	dx,al
+	shr	eax,#16
+	mov	dx,#0x1f5
+	out	dx,al
+	and	ah,#0xf
+	mov	bl,14[bp]
+	and	bl,#1
+	shl	bl,#4
+	or	ah,bl
+	or	ah,#0xe0
+	mov	al,ah
+	mov	dx,#0x01f6
+	out	dx,al
+	pop	edx
+	pop	ebx
+	pop	eax
+  	pop	bp
+#endasm
+}
 
 
   void
@@ -1723,6 +1775,7 @@ int13_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit8u    sector_count;
   unsigned int i;
   Bit16u   tempbx;
+  Bit16u   lba;
 
   write_byte(0x0040, 0x008e, 0);  // clear completion flag
 
@@ -1810,10 +1863,6 @@ printf("int13_f01\n");
       if ( (num_sectors > 128) || (num_sectors == 0) )
         panic("int13_function(): num_sectors out of range!");
 
-
-      if (head > 15)
-        panic("hard drive BIOS:(read/verify) head > 15");
-
       if ( GET_AH() == 0x04 ) {
         SET_AH(0);
         set_disk_ret_status(0);
@@ -1826,10 +1875,17 @@ printf("int13_f01\n");
         panic("hard drive BIOS:(read/verify) BUSY bit set");
         }
       outb(0x01f2, num_sectors);
-      outb(0x01f3, sector);
-      outb(0x01f4, cylinder & 0x00ff);
-      outb(0x01f5, cylinder >> 8);
-      outb(0x01f6, 0xa0 | ((drive&1)<<4) | (head & 0x0f));
+      /* activate LBA? (tomv) */
+      if (hd_heads > 15) {
+printf("CHS: %x %x %x\n", cylinder, head, sector);
+	outLBA(cylinder,hd_heads,head,hd_sectors,sector,drive);
+        }
+      else {
+        outb(0x01f3, sector);
+        outb(0x01f4, cylinder & 0x00ff);
+        outb(0x01f5, cylinder >> 8);
+        outb(0x01f6, 0xa0 | ((drive & 0x01)<<4) | (head & 0x0f));
+        }
       outb(0x01f7, 0x20);
 
       while (1) {
@@ -1948,19 +2004,24 @@ printf("int13_f03\n");
       if ( (num_sectors > 128) || (num_sectors == 0) )
         panic("int13_function(): num_sectors out of range!");
 
-      if (head > 15)
-        panic("hard drive BIOS:(read) head > 15");
-
       status = inb(0x1f7);
       if (status & 0x80) {
         panic("hard drive BIOS:(read) BUSY bit set");
         }
 // should check for Drive Ready Bit also in status reg
       outb(0x01f2, num_sectors);
-      outb(0x01f3, sector);
-      outb(0x01f4, cylinder & 0x00ff);
-      outb(0x01f5, cylinder >> 8);
-      outb(0x01f6, 0xa0 | ((drive&1)<<4) | (head & 0x0f));
+
+      /* activate LBA? (tomv) */
+      if (hd_heads > 15) {
+printf("CHS (write): %x %x %x\n", cylinder, head, sector);
+	outLBA(cylinder,hd_heads,head,hd_sectors,sector,GET_DL());
+        }
+      else {
+        outb(0x01f3, sector);
+        outb(0x01f4, cylinder & 0x00ff);
+        outb(0x01f5, cylinder >> 8);
+        outb(0x01f6, 0xa0 | ((GET_DL() & 0x01)<<4) | (head & 0x0f));
+        }
       outb(0x01f7, 0x30);
 
       // wait for busy bit to turn off after seeking
@@ -4386,7 +4447,7 @@ int16_key_found:
 
 
 ;-------------------------------------------------
-;- INT09h : Keyboard Harware Service Entry Point -
+;- INT09h : Keyboard Hardware Service Entry Point -
 ;-------------------------------------------------
 .org 0xe987
 int09_handler:
