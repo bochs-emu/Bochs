@@ -42,12 +42,16 @@ version include:
 
 <BR><BR>
 <B>BOCHS SOURCE</B><BR>
-Because Bochs is a cross-platform application, it is distributed as source code
-in a TAR file.  The primary file to download contains the Bochs sources,
-documentation, and the custom BIOS file.  If you are using a UNIX platform,
-this is all you need.  For Windows or Mac, because you cannot run the configure
-script on your machine to generate Makefiles, you will also need to grab a
-package of Makefiles, which are distributed separately.
+Because Bochs is a cross-platform application, it can be compiled for
+many platforms in addition to the ones for which binaries are provided.
+If your platforms can run the configure script, you can get the tarball.
+If you're running Linux and your system can read RPMs, you can try 
+installing from a source RPM.  If you're compiling for Win32 with 
+Microsoft VC++, the ZIP file contains sources that have already been 
+configured for you so you can go directly to the compile step.  For
+detailed compile instructions see the 
+<a href="/doc/docbook/user/book1.htm">User Guide</a> in the new
+documentation.
 
 <UL>
 <li><IMG SRC="/icons/compressed.gif" ALT="[TAR.GZ]"> <A HREF="http://prdownloads.sourceforge.net/bochs/bochs-1.3.pre1.tar.gz">GZIPPED TARBALL file containing source code (1.1meg)</A></li>
