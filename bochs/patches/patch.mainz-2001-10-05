@@ -1,0 +1,223 @@
+From Roland.Mainz@informatik.med.uni-giessen.de Fri Oct  5 12:54:42 2001
+Date: Fri, 05 Oct 2001 12:23:15 +0200
+From: Roland Mainz <Roland.Mainz@informatik.med.uni-giessen.de>
+To: Bochs developers mailinglist <bochs-developers@lists.sourceforge.net>
+Subject: [Bochs-developers] Build failures and |const char *| vs. |char
+    *|-warnings...
+
+
+Hi !
+
+----
+
+Attached is a patch to get Bochs 1.2.1 compiling with the Sun Workshop 6
+compiler suite...
+
+Plain - out the box - the build fails with:
+-- snip --
+"pic.cc", line 503: Error: Badly formed constant expression.
+"pic.cc", line 533: Error: Badly formed constant expression.
+-- snip --
+It looks that the preprocessor expects an integer in these cases and not
+a string...
+
+
+Additionally I added some fixes to get rid of the Zillion compiler
+warnings like "Warning: String literal converted to char* in
+assignment."(=|const char *| vs. |char *|) ...
+
+----
+
+Bye,
+Roland
+
+-- 
+  __ .  . __
+ (o.\ \/ /.o) Roland.Mainz@informatik.med.uni-giessen.de
+  \__\/\/__/  gisburn@informatik.med.uni-giessen.de
+  /O /==\ O\  MPEG specialist, C&&JAVA&&Sun&&Unix programmer
+ (;O/ \/ \O;) TEL +49 641 99-41370 FAX +49 641 99-41359
+    [ Part 2: "Attached Text" ]
+
+--- original/bochs-1.2.1/bochs.h	Tue Jun 12 16:16:42 2001
++++ bochs-1.2.1/bochs.h	Fri Oct  5 12:05:40 2001
+@@ -248,12 +248,12 @@
+ 	logfunctions(class iofunctions *);
+ 	~logfunctions(void);
+ 
+-	void info(char *fmt, ...);
+-	void error(char *fmt, ...);
+-	void panic(char *fmt, ...);
+-	void ldebug(char *fmt, ...);
+-	void fatal (char *prefix, char *fmt, va_list ap);
+-	void setprefix(char *);
++	void info(const char *fmt, ...);
++	void error(const char *fmt, ...);
++	void panic(const char *fmt, ...);
++	void ldebug(const char *fmt, ...);
++	void fatal (const char *prefix, const char *fmt, va_list ap);
++	void setprefix(const char *);
+ 	void settype(int);
+ 	void setio(class iofunctions *);
+ 	void setonoff(int loglev, int value) { onoff[loglev] = value; }
+@@ -265,8 +265,8 @@
+ 	class logfunctions *log;
+ 	void init(void);
+ 	void flush(void);
+-	char *getlevel(int i) {
+-		static char *loglevel[] = {
++	const char *getlevel(int i) {
++		static const char *loglevel[] = {
+ 			"DEBUG",
+ 			"INFO",
+ 			"ERROR",
+@@ -275,8 +275,8 @@
+ 		return loglevel[i];
+ 	}
+ 
+-	char *getclass(int i) {
+-		char *logclass[] = {
++	const char *getclass(int i) {
++		const char *logclass[] = {
+ 		  "IO  ",
+ 		  "FD  ",
+ 		  "GEN ",
+@@ -370,12 +370,12 @@
+ 	iofunctions(void);
+ 	iofunctions(FILE *);
+ 	iofunctions(int);
+-	iofunctions(char *);
++	iofunctions(const char *);
+ 	~iofunctions(void);
+ 
+-	void out(int facility, int level, char *pre, char *fmt, va_list ap);
++	void out(int facility, int level, const char *pre, const char *fmt, va_list ap);
+ 
+-	void init_log(char *fn);
++	void init_log(const char *fn);
+ 	void init_log(int fd);
+ 	void init_log(FILE *fs);
+ 	int get_n_logfns () { return n_logfn; }
+--- original/bochs-1.2.1/main.cc	Tue Jun 12 16:46:10 2001
++++ bochs-1.2.1/main.cc	Fri Oct  5 12:05:46 2001
+@@ -139,7 +139,7 @@
+ }
+ 
+ void
+-iofunctions::init_log(char *fn)
++iofunctions::init_log(const char *fn)
+ {
+ 	assert (magic==MAGIC_LOGNUM);
+ 	// use newfd/newfn so that we can log the message to the OLD log
+@@ -195,7 +195,7 @@
+ //    fmt and ap retained for direct printinf from iofunctions only!
+ 
+ void
+-iofunctions::out(int f, int l, char *prefix, char *fmt, va_list ap)
++iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
+ {
+ 	assert (magic==MAGIC_LOGNUM);
+ 	assert (this != NULL);
+@@ -222,7 +222,7 @@
+ 	init_log(fs);
+ }
+ 
+-iofunctions::iofunctions(char *fn)
++iofunctions::iofunctions(const char *fn)
+ {
+ 	init();
+ 	init_log(fn);
+@@ -289,7 +289,7 @@
+ }
+ 
+ void
+-logfunctions::setprefix(char *p)
++logfunctions::setprefix(const char *p)
+ {
+ 	this->prefix=strdup(p);
+ }
+@@ -301,7 +301,7 @@
+ }
+ 
+ void
+-logfunctions::info(char *fmt, ...)
++logfunctions::info(const char *fmt, ...)
+ {
+ 	va_list ap;
+ 	FILE *fs;
+@@ -319,7 +319,7 @@
+ }
+ 
+ void
+-logfunctions::error(char *fmt, ...)
++logfunctions::error(const char *fmt, ...)
+ {
+ 	va_list ap;
+ 	FILE *fs;
+@@ -336,7 +336,7 @@
+ }
+ 
+ void
+-logfunctions::panic(char *fmt, ...)
++logfunctions::panic(const char *fmt, ...)
+ {
+ 	va_list ap;
+ 	FILE *fs;
+@@ -353,7 +353,7 @@
+ }
+ 
+ void
+-logfunctions::ldebug(char *fmt, ...)
++logfunctions::ldebug(const char *fmt, ...)
+ {
+ 	va_list ap;
+ 	FILE *fs;
+@@ -370,7 +370,7 @@
+ }
+ 
+ void
+-logfunctions::fatal (char *prefix, char *fmt, va_list ap)
++logfunctions::fatal(const char *prefix, const char *fmt, va_list ap)
+ {
+   static int fatal_reentry = 0;
+   if (fatal_reentry) return;
+--- original/bochs-1.2.1/iodev/harddrv.cc	Tue Jun 12 17:17:11 2001
++++ bochs-1.2.1/iodev/harddrv.cc	Fri Oct  5 12:13:36 2001
+@@ -1775,7 +1775,7 @@
+   for (i = 1; i <= 9; i++)
+ 	BX_SELECTED_HD.id_drive[i] = 0;
+ 
+-  char* serial_number = " VT00001\0\0\0\0\0\0\0\0\0\0\0\0";
++  const char* serial_number = " VT00001\0\0\0\0\0\0\0\0\0\0\0\0";
+   for (i = 0; i < 10; i++) {
+ 	BX_SELECTED_HD.id_drive[10+i] = (serial_number[i*2] << 8) |
+ 	      serial_number[i*2 + 1];
+@@ -1784,7 +1784,7 @@
+   for (i = 20; i <= 22; i++)
+ 	BX_SELECTED_HD.id_drive[i] = 0;
+ 
+-  char* firmware = "ALPHA1  ";
++  const char* firmware = "ALPHA1  ";
+   for (i = 0; i < strlen(firmware)/2; i++) {
+ 	BX_SELECTED_HD.id_drive[23+i] = (firmware[i*2] << 8) |
+ 	      firmware[i*2 + 1];
+--- original/bochs-1.2.1/iodev/pic.cc	Tue Jun 12 17:23:08 2001
++++ bochs-1.2.1/iodev/pic.cc	Fri Oct  5 11:49:16 2001
+@@ -499,7 +499,7 @@
+ 
+   int irq_no_bitmask;
+ 
+-#if BX_DEBUG
++#ifndef NO_LOGGING
+   if ( irq_no > 15 )
+     BX_PANIC(("trigger_irq: irq out of range\n"));
+ #endif
+@@ -529,7 +529,7 @@
+ 
+   int irq_no_bitmask;
+ 
+-#if BX_DEBUG
++#ifndef NO_LOGGING
+   if ( irq_no > 15 )
+     BX_PANIC(("untrigger_irq: irq out of range\n"));
+ #endif
