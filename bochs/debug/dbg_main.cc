@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.31 2001-10-04 15:34:33 instinc Exp $
+// $Id: dbg_main.cc,v 1.32 2001-10-05 21:03:53 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -413,7 +413,6 @@ process_sim2:
   signal(SIGINT, bx_debug_ctrlc_handler);
 
   bx_dbg_user_input_loop();
-
 
   bx_dbg_exit(0);
   return(0); // keep compiler happy
@@ -2019,7 +2018,7 @@ bx_dbg_compare_sim_memory(void)
 #endif
 
 
-void bx_dbg_disassemble_current (int which_cpu)
+void bx_dbg_disassemble_current (int which_cpu, int print_time)
 {
   Bit32u phy;
   Boolean valid;
@@ -2027,7 +2026,7 @@ void bx_dbg_disassemble_current (int which_cpu)
   if (which_cpu < 0) {
     // iterate over all of them.
     for (int i=0; i<BX_NUM_SIMULATORS; i++)
-      bx_dbg_disassemble_current (i);
+      bx_dbg_disassemble_current (i, print_time);
     return;
   }
 
@@ -2040,16 +2039,18 @@ void bx_dbg_disassemble_current (int which_cpu)
     ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
 				 bx_disasm_ibuf, bx_disasm_tbuf);
 
+    if (print_time)
+      fprintf (stderr, "(%u).[%lld] ", which_cpu, bx_pc_system.time_ticks());
+    else
+      fprintf (stderr, "(%u) ", which_cpu);
     if (BX_CPU(which_cpu)->guard_found.is_32bit_code) {
-      fprintf(stderr, "(%u).[%lld] %04x:%08x (%s): ", which_cpu,
-	      bx_pc_system.time_ticks(),
+      fprintf(stderr, "%04x:%08x (%s): ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
 	      (unsigned) BX_CPU(which_cpu)->guard_found.eip,
 	      bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SREG_CS].cache.u.segment.base));
       }
     else {
-      fprintf(stderr, "(%u).[%lld] %04x:%04x: ", which_cpu,
-	      bx_pc_system.time_ticks(),
+      fprintf(stderr, "%04x:%04x: ", 
 	      (unsigned) BX_CPU(which_cpu)->guard_found.cs,
 	      (unsigned) BX_CPU(which_cpu)->guard_found.eip);
       }
@@ -2155,11 +2156,8 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 
 #if BX_DISASM
   if (bx_debugger.auto_disassemble) {
-    // if tracing is on for this cpu, we've already printed the disassembly
-    // for the instruction that's about to be executed.  So omit the 
-    // disassembly here.  (experiment)
-    if (! BX_CPU(sim)->trace)
-      bx_dbg_disassemble_current (sim);
+    fprintf (stderr, "Next instruction:\n");
+    bx_dbg_disassemble_current (sim, 0);  // one cpu, don't print time
   }
 #endif  // #if BX_DISASM
   }
