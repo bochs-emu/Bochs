@@ -352,22 +352,41 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 
       //      printf("horiz = %d, vert = %d\n", BX_VGA_THIS s.horiz_tick, BX_VGA_THIS s.vert_tick);
 
-      if (BX_VGA_THIS s.horiz_tick >= 100) { // ??? bogus # 100
-        BX_VGA_THIS s.horiz_tick = 0;
-        horiz_retrace = 1;
-        }
-      else {
-        BX_VGA_THIS s.horiz_tick++;
-        horiz_retrace = 0;
-        }
-      if (BX_VGA_THIS s.vert_tick >= 100) { // ??? bogus # 100
-        BX_VGA_THIS s.vert_tick = 0;
-        vert_retrace = 1;
-        }
-      else {
-        BX_VGA_THIS s.vert_tick++;
-        vert_retrace = 0;
-        }
+      if(BX_VGA_THIS s.misc_output.clock_select == 0){ // 25.175 clock 112.5% the length of 28.32
+	if (BX_VGA_THIS s.horiz_tick >= 112) {
+	  BX_VGA_THIS s.horiz_tick = 0;
+	  horiz_retrace = 1;
+	}
+	else {
+	  BX_VGA_THIS s.horiz_tick++;
+	  horiz_retrace = 0;
+	}
+	if (BX_VGA_THIS s.vert_tick >= 112) {
+	  BX_VGA_THIS s.vert_tick = 0;
+	  vert_retrace = 1;
+	}
+	else {
+	  BX_VGA_THIS s.vert_tick++;
+	  vert_retrace = 0;
+	}
+      }else{ // clock_select 1 is assumed to be the 28.32 clock in XF86_VGA16
+	if (BX_VGA_THIS s.horiz_tick >= 100) { // ??? bogus # 100
+	  BX_VGA_THIS s.horiz_tick = 0;
+	  horiz_retrace = 1;
+	}
+	else {
+	  BX_VGA_THIS s.horiz_tick++;
+	  horiz_retrace = 0;
+	}
+	if (BX_VGA_THIS s.vert_tick >= 100) { // ??? bogus # 100
+	  BX_VGA_THIS s.vert_tick = 0;
+	  vert_retrace = 1;
+	}
+	else {
+	  BX_VGA_THIS s.vert_tick++;
+	  vert_retrace = 0;
+	}
+      } // probably add more clock modes here for diffrent resolutions
 
       retval = 0;
       if (horiz_retrace || vert_retrace)
