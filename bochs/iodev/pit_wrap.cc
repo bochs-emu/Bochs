@@ -24,7 +24,7 @@
 
 #include "bochs.h"
 
-#ifdef BX_USE_NEW_PIT
+#if BX_USE_NEW_PIT
 
 #include "pit_wrap.h"
 #define LOG_THIS bx_pit.
@@ -259,4 +259,4 @@ bx_pit_c::periodic( Bit32u   usec_delta )
   return(want_interrupt);
 }
 
-#endif // #ifdef BX_USE_NEW_PIT
+#endif // #if BX_USE_NEW_PIT

@@ -25,7 +25,7 @@
 
 #include "bochs.h"
 
-#ifdef BX_USE_NEW_PIT
+#if BX_USE_NEW_PIT
 
 #include "pit82c54.h"
 
@@ -78,5 +78,5 @@ private:
 
 extern bx_pit_c bx_pit;
 
-#endif  // #ifdef BX_USE_NEW_PIT
+#endif  // #if BX_USE_NEW_PIT
 #endif  // #ifndef _BX_PIT_WRAP_H

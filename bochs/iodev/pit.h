@@ -25,7 +25,7 @@
 
 #include "config.h"
 
-#ifndef BX_USE_NEW_PIT
+#if (BX_USE_NEW_PIT==0)
 
 #if BX_USE_PIT_SMF
 #  define BX_PIT_SMF  static
@@ -96,5 +96,5 @@ private:
 
 extern bx_pit_c bx_pit;
 
-#endif  // #ifndef BX_USE_NEW_PIT
+#endif  // #if (BX_USE_NEW_PIT==0)
 #endif  // #ifndef _BX_PIT_H
