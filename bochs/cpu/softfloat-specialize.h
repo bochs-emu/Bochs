@@ -66,16 +66,6 @@ BX_CPP_INLINE int get_float_nan_handling_mode(float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the <denormals-are-zeroes> feature is supported;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_DAZ(float_status_t &status)
-{
-    return status.denormals_are_zeroes;
-}
-
-/*----------------------------------------------------------------------------
 | Returns 1 if the <flush-underflow-to-zero> feature is supported;
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
@@ -107,7 +97,7 @@ typedef struct {
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-flag float32_is_nan(float32 a)
+int float32_is_nan(float32 a)
 {
     return (0xFF000000 < (Bit32u) (a<<1));
 }
@@ -117,7 +107,7 @@ flag float32_is_nan(float32 a)
 | NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-flag float32_is_signaling_nan(float32 a)
+int float32_is_signaling_nan(float32 a)
 {
     return (((a>>22) & 0x1FF) == 0x1FE) && (a & 0x003FFFFF);
 }
@@ -199,7 +189,7 @@ static float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status)
 | otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-flag float64_is_nan(float64 a)
+int float64_is_nan(float64 a)
 {
     return (BX_CONST64(0xFFE0000000000000) < (Bit64u) (a<<1));
 }
@@ -209,7 +199,7 @@ flag float64_is_nan(float64 a)
 | NaN; otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-flag float64_is_signaling_nan(float64 a)
+int float64_is_signaling_nan(float64 a)
 {
     return (((a>>51) & 0xFFF) == 0xFFE) && (a & BX_CONST64(0x0007FFFFFFFFFFFF));
 }

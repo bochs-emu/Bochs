@@ -766,7 +766,7 @@ float64 float32_to_float64(float32 a, float_status_t &status)
         return packFloat64(aSign, 0x7FF, 0);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat64(aSign, 0, 0);
+        if (aSig == 0) return packFloat64(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
         --aExp;
@@ -852,16 +852,10 @@ static float32 addFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     bExp = extractFloat32Exp(b);
 
     if ((aExp == 0) && aSig) {
-        if (get_DAZ(status)) {
-            aSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
-        if (get_DAZ(status)) {
-            bSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
 
     expDiff = aExp - bExp;
@@ -937,16 +931,10 @@ static float32 subFloat32Sigs(float32 a, float32 b, flag zSign, float_status_t &
     bExp = extractFloat32Exp(b);
 
     if ((aExp == 0) && aSig) {
-        if (get_DAZ(status)) {
-            aSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
-        if (get_DAZ(status)) {
-            bSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
 
     expDiff = aExp - bExp;
@@ -1085,12 +1073,12 @@ float32 float32_mul(float32 a, float32 b, float_status_t &status)
         return packFloat32(zSign, 0xFF, 0);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat32(zSign, 0, 0);
+        if (aSig == 0) return packFloat32(zSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
     }
     if (bExp == 0) {
-        if (bSig == 0 || get_DAZ(status)) return packFloat32(zSign, 0, 0);
+        if (bSig == 0) return packFloat32(zSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(bSig, &bExp, &bSig);
     }
@@ -1139,12 +1127,10 @@ float32 float32_div(float32 a, float32 b, float_status_t &status)
         return packFloat32(zSign, 0, 0);
     }
     if (bExp == 0) {
-        if (bSig == 0 || get_DAZ(status)) {
-            if (aExp == 0) {
-                if (aSig == 0 || get_DAZ(status)) {
-                    float_raise(status, float_flag_invalid);
-                    return float32_default_nan;
-                }
+        if (bSig == 0) {
+            if ((aExp | aSig) == 0) {
+                float_raise(status, float_flag_invalid);
+                return float32_default_nan;
             }
             float_raise(status, float_flag_divbyzero);
             return packFloat32(zSign, 0xFF, 0);
@@ -1153,7 +1139,7 @@ float32 float32_div(float32 a, float32 b, float_status_t &status)
         normalizeFloat32Subnormal(bSig, &bExp, &bSig);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat32(zSign, 0, 0);
+        if (aSig == 0) return packFloat32(zSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
     }
@@ -1205,7 +1191,7 @@ float32 float32_rem(float32 a, float32 b, float_status_t &status)
         return a;
     }
     if (bExp == 0) {
-        if (bSig == 0 || get_DAZ(status)) {
+        if (bSig == 0) {
             float_raise(status, float_flag_invalid);
             return float32_default_nan;
         }
@@ -1213,7 +1199,7 @@ float32 float32_rem(float32 a, float32 b, float_status_t &status)
         normalizeFloat32Subnormal(bSig, &bExp, &bSig);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat32(aSign, 0, 0);
+        if (aSig == 0) return packFloat32(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
     }
@@ -1295,14 +1281,12 @@ float32 float32_sqrt(float32 a, float_status_t &status)
         return float32_default_nan;
     }
     if (aSign) {
-        if (aExp == 0) {
-            if (aSig == 0 || get_DAZ(status)) return packFloat32(aSign, 0, 0);
-        }
+        if ((aExp | aSig) == 0) return a;
         float_raise(status, float_flag_invalid);
         return float32_default_nan;
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return 0;
+        if (aSig == 0) return 0;
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
     }
@@ -1348,13 +1332,9 @@ int float32_eq(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     return (a == b) || ((Bit32u) ((a | b)<<1) == 0);
@@ -1377,13 +1357,9 @@ int float32_le(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat32Sign(a);
@@ -1408,13 +1384,9 @@ int float32_lt(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal)
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat32Sign(a);
@@ -1440,13 +1412,9 @@ int float32_eq_signaling(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal)
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     return (a == b) || ((Bit32u) ((a | b)<<1) == 0);
@@ -1473,13 +1441,9 @@ int float32_le_quiet(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat32Sign(a);
@@ -1509,13 +1473,9 @@ int float32_lt_quiet(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal)
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat32Sign(a);
@@ -1545,8 +1505,7 @@ int float32_unordered(float32 a, float32 b, float_status_t &status)
 
     if (aClass == float_denormal || bClass == float_denormal) 
     {
-        if (! get_DAZ(status))
-            float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }
 
     return 0;
@@ -1570,13 +1529,9 @@ int float32_compare(float32 a, float32 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     if ((a == b) || ((Bit32u) ((a | b)<<1) == 0)) return float_relation_equal;
@@ -1613,13 +1568,9 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     if ((a == b) || ((Bit32u) ((a | b)<<1) == 0)) return float_relation_equal;
@@ -1816,7 +1767,7 @@ float32 float64_to_float32(float64 a, float_status_t &status)
         return packFloat32(aSign, 0xFF, 0);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat32(aSign, 0, 0);
+        if (aSig == 0) return packFloat32(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
     }
     shift64RightJamming(aSig, 22, &aSig);
@@ -1907,16 +1858,10 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     bExp = extractFloat64Exp(b);
 
     if ((aExp == 0) && aSig) {
-        if (get_DAZ(status)) {
-            aSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
-        if (get_DAZ(status)) {
-            bSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
 
     expDiff = aExp - bExp;
@@ -1991,16 +1936,10 @@ static float64 subFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     bExp = extractFloat64Exp(b);
 
     if ((aExp == 0) && aSig) {
-        if (get_DAZ(status)) {
-            aSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
     if ((bExp == 0) && bSig) {
-        if (get_DAZ(status)) {
-            bSig = 0;
-        }
-        else float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }    
 
     expDiff = aExp - bExp;
@@ -2137,12 +2076,12 @@ float64 float64_mul(float64 a, float64 b, float_status_t &status)
         return packFloat64(zSign, 0x7FF, 0);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat64(zSign, 0, 0);
+        if (aSig == 0) return packFloat64(zSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(aSig, &aExp, &aSig);
     }
     if (bExp == 0) {
-        if (bSig == 0 || get_DAZ(status)) return packFloat64(zSign, 0, 0);
+        if (bSig == 0) return packFloat64(zSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(bSig, &bExp, &bSig);
     }
@@ -2193,12 +2132,10 @@ float64 float64_div(float64 a, float64 b, float_status_t &status)
         return packFloat64(zSign, 0, 0);
     }
     if (bExp == 0) {
-        if (bSig == 0 || get_DAZ(status)) {
-            if (aExp == 0) {
-                if (aSig == 0 || get_DAZ(status)) {
-                    float_raise(status, float_flag_invalid);
-                    return float64_default_nan;
-                }
+        if (bSig == 0) {
+            if ((aExp | aSig) == 0) {
+                float_raise(status, float_flag_invalid);
+                return float64_default_nan;
             }
             float_raise(status, float_flag_divbyzero);
             return packFloat64(zSign, 0x7FF, 0);
@@ -2207,7 +2144,7 @@ float64 float64_div(float64 a, float64 b, float_status_t &status)
         normalizeFloat64Subnormal(bSig, &bExp, &bSig);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat64(zSign, 0, 0);
+        if (aSig == 0) return packFloat64(zSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(aSig, &aExp, &aSig);
     }
@@ -2263,7 +2200,7 @@ float64 float64_rem(float64 a, float64 b, float_status_t &status)
         return a;
     }
     if (bExp == 0) {
-        if (bSig == 0 || get_DAZ(status)) {
+        if (bSig == 0) {
             float_raise(status, float_flag_invalid);
             return float64_default_nan;
         }
@@ -2271,7 +2208,7 @@ float64 float64_rem(float64 a, float64 b, float_status_t &status)
         normalizeFloat64Subnormal(bSig, &bExp, &bSig);
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return packFloat64(aSign, 0, 0);
+        if (aSig == 0) return packFloat64(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(aSig, &aExp, &aSig);
     }
@@ -2341,14 +2278,12 @@ float64 float64_sqrt(float64 a, float_status_t &status)
         return float64_default_nan;
     }
     if (aSign) {
-        if (aExp == 0) {
-            if (aSig == 0 || get_DAZ(status)) return packFloat64(aSign, 0, 0);
-        }
+        if ((aExp | aSig) == 0) return a;
         float_raise(status, float_flag_invalid);
         return float64_default_nan;
     }
     if (aExp == 0) {
-        if (aSig == 0 || get_DAZ(status)) return 0;
+        if (aSig == 0) return 0;
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(aSig, &aExp, &aSig);
     }
@@ -2391,13 +2326,9 @@ int float64_eq(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     return (a == b) || ((Bit64u) ((a | b)<<1) == 0);
@@ -2420,13 +2351,9 @@ int float64_le(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat64Sign(a);
@@ -2451,13 +2378,9 @@ int float64_lt(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat64Sign(a);
@@ -2483,13 +2406,9 @@ int float64_eq_signaling(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     return (a == b) || ((Bit64u) ((a | b)<<1) == 0);
@@ -2516,13 +2435,9 @@ int float64_le_quiet(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat64Sign(a);
@@ -2552,13 +2467,9 @@ int float64_lt_quiet(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     flag aSign = extractFloat64Sign(a);
@@ -2588,8 +2499,7 @@ int float64_unordered(float64 a, float64 b, float_status_t &status)
 
     if (aClass == float_denormal || bClass == float_denormal) 
     {
-        if (! get_DAZ(status))
-            float_raise(status, float_flag_denormal);
+        float_raise(status, float_flag_denormal);
     }
 
     return 0;
@@ -2613,13 +2523,9 @@ int float64_compare(float64 a, float64 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     if ((a == b) || ((Bit64u) ((a | b)<<1) == 0)) return float_relation_equal;
@@ -2656,13 +2562,9 @@ int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal) {
-        if (get_DAZ(status)) a = 0;
-        else float_raise(status, float_flag_denormal);
-    }
-    if (bClass == float_denormal) {
-        if (get_DAZ(status)) b = 0;
-        else float_raise(status, float_flag_denormal);
+    if (aClass == float_denormal || bClass == float_denormal) 
+    {
+        float_raise(status, float_flag_denormal);
     }
 
     if ((a == b) || ((Bit64u) ((a | b)<<1) == 0)) return float_relation_equal;
