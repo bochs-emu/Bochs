@@ -51,8 +51,8 @@ EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
 # been synced yet.
 OBJS32 = \
 	paging.o \
-	string.o \
 	$(EXT_DEBUG_OBJS) \
+
 
 # Objects which are synced between the cpu and cpu64 code and
 # are used for either compile.
@@ -104,6 +104,7 @@ OBJSXX = \
 	segment_ctrl_pro.o \
 	io.o \
 	bit.o \
+	string.o \
 
 	
 # Objects which are only used for x86-64 code, but which have been

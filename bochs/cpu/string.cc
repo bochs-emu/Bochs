@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.10 2002-09-12 18:10:42 bdenney Exp $
+// $Id: string.cc,v 1.11 2002-09-15 05:09:18 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,6 +34,12 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
+#if BX_SUPPORT_X86_64==0
+#define RSI ESI
+#define RDI EDI
+#define RAX EAX
+#endif
+
 
 
 /* MOVSB ES:[EDI], DS:[ESI]   DS may be overridden
@@ -54,6 +60,33 @@ BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rsi, rdi;
+
+    rsi = RSI;
+    rdi = RDI;
+
+    read_virtual_byte(seg, rsi, &temp8);
+
+    write_virtual_byte(BX_SEG_REG_ES, rdi, &temp8);
+
+    if (BX_CPU_THIS_PTR get_DF ()) {
+      /* decrement RSI, RDI */
+      rsi--;
+      rdi--;
+      }
+    else {
+      /* increment RSI, RDI */
+      rsi++;
+      rdi++;
+      }
+
+    RSI = rsi;
+    RDI = rdi;
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
     Bit32u esi, edi;
 
@@ -75,8 +108,10 @@ BX_CPU_C::MOVSB_XbYb(BxInstruction_t *i)
       edi++;
       }
 
-    ESI = esi;
-    EDI = edi;
+    // zero extension of RSI/RDI
+
+    RSI = esi;
+    RDI = edi;
     }
 
   else
@@ -285,15 +320,104 @@ BX_CPU_C::MOVSW_XvYv(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+
+    Bit64u rsi, rdi;
+
+    rsi = RSI;
+    rdi = RDI;
+
+    if (i->os_64) {
+      Bit64u  temp64;
+      read_virtual_qword(seg, rsi, &temp64);
+
+      write_virtual_qword(BX_SEG_REG_ES, rdi, &temp64);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement RSI */
+        rsi -= 8;
+        rdi -= 8;
+        }
+      else {
+        /* increment ESI */
+        rsi += 8;
+        rdi += 8;
+        }
+      } /* if (i->os_64) ... */
+    else
+    if (i->os_32) {
+      Bit32u  temp32;
+      read_virtual_dword(seg, rsi, &temp32);
+
+      write_virtual_dword(BX_SEG_REG_ES, rdi, &temp32);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement RSI */
+        rsi -= 4;
+        rdi -= 4;
+        }
+      else {
+        /* increment ESI */
+        rsi += 4;
+        rdi += 4;
+        }
+      } /* if (i->os_32) ... */
+    else { /* 16 bit opsize mode */
+      Bit16u  temp16;
+
+      read_virtual_word(seg, rsi, &temp16);
+
+      write_virtual_word(BX_SEG_REG_ES, rdi, &temp16);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement RSI */
+        rsi -= 2;
+        rdi -= 2;
+        }
+      else {
+        /* increment RSI */
+        rsi += 2;
+        rdi += 2;
+        }
+      }
+
+    RSI = rsi;
+    RDI = rdi;
+    }
+
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
-    Bit32u  temp32;
 
     Bit32u esi, edi;
 
     esi = ESI;
     edi = EDI;
 
+#if BX_SUPPORT_X86_64
+    if (i->os_64) {
+      Bit64u  temp64;
+      read_virtual_qword(seg, esi, &temp64);
+
+      write_virtual_qword(BX_SEG_REG_ES, edi, &temp64);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        esi -= 8;
+        edi -= 8;
+        }
+      else {
+        /* increment ESI */
+        esi += 8;
+        edi += 8;
+        }
+      } /* if (i->os_32) ... */
+    else
+#endif  // #if BX_SUPPORT_X86_64
     if (i->os_32) {
+
+      Bit32u  temp32;
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -500,8 +624,10 @@ doIncr32:
         }
       }
 
-    ESI = esi;
-    EDI = edi;
+    // zero extension of RSI/RDI
+
+    RSI = esi;
+    RDI = edi;
     }
 
   else
@@ -743,6 +869,37 @@ BX_CPU_C::CMPSB_XbYb(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rsi, rdi;
+
+    rsi = RSI;
+    rdi = RDI;
+
+    read_virtual_byte(seg, rsi, &op1_8);
+
+    read_virtual_byte(BX_SEG_REG_ES, rdi, &op2_8);
+
+    diff_8 = op1_8 - op2_8;
+
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_CMPS8);
+
+    if (BX_CPU_THIS_PTR get_DF ()) {
+      /* decrement RSI */
+      rsi--;
+      rdi--;
+      }
+    else {
+      /* increment RSI */
+      rsi++;
+      rdi++;
+      }
+
+    RDI = rdi;
+    RSI = rsi;
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
     Bit32u esi, edi;
 
@@ -768,8 +925,10 @@ BX_CPU_C::CMPSB_XbYb(BxInstruction_t *i)
       edi++;
       }
 
-    EDI = edi;
-    ESI = esi;
+    // zero extension of RSI/RDI
+
+    RDI = edi;
+    RSI = esi;
     }
   else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -817,15 +976,121 @@ BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rsi, rdi;
+
+    rsi = RSI;
+    rdi = RDI;
+
+
+    if (i->os_64) {
+      Bit64u op1_64, op2_64, diff_64;
+
+      read_virtual_qword(seg, rsi, &op1_64);
+
+      read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
+
+      diff_64 = op1_64 - op2_64;
+
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_CMPS64);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        rsi -= 8;
+        rdi -= 8;
+        }
+      else {
+        /* increment ESI */
+        rsi += 8;
+        rdi += 8;
+        }
+      }
+    else
+    if (i->os_32) {
+      Bit32u op1_32, op2_32, diff_32;
+
+      read_virtual_dword(seg, rsi, &op1_32);
+
+      read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
+
+      diff_32 = op1_32 - op2_32;
+
+      SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_CMPS32);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        rsi -= 4;
+        rdi -= 4;
+        }
+      else {
+        /* increment ESI */
+        rsi += 4;
+        rdi += 4;
+        }
+      }
+    else { /* 16 bit opsize */
+      Bit16u op1_16, op2_16, diff_16;
+
+      read_virtual_word(seg, rsi, &op1_16);
+
+      read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
+
+      diff_16 = op1_16 - op2_16;
+
+      SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_CMPS16);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        rsi -= 2;
+        rdi -= 2;
+        }
+      else {
+        /* increment ESI */
+        rsi += 2;
+        rdi += 2;
+        }
+      }
+
+
+    RDI = rdi;
+    RSI = rsi;
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
-    Bit32u op1_32, op2_32, diff_32;
     Bit32u esi, edi;
 
     esi = ESI;
     edi = EDI;
 
 
+#if BX_SUPPORT_X86_64
+    if (i->os_64) {
+      Bit64u op1_64, op2_64, diff_64;
+      read_virtual_qword(seg, esi, &op1_64);
+
+      read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
+
+      diff_64 = op1_64 - op2_64;
+
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_CMPS64);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        esi -= 8;
+        edi -= 8;
+        }
+      else {
+        /* increment ESI */
+        esi += 8;
+        edi += 8;
+        }
+      }
+    else
+#endif  // #if BX_SUPPORT_X86_64
     if (i->os_32) {
+      Bit32u op1_32, op2_32, diff_32;
       read_virtual_dword(seg, esi, &op1_32);
 
       read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
@@ -869,8 +1134,10 @@ BX_CPU_C::CMPSW_XvYv(BxInstruction_t *i)
       }
 
 
-    EDI = edi;
-    ESI = esi;
+    // zero extension of RSI/RDI
+
+    RDI = edi;
+    RSI = esi;
     }
   else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -941,6 +1208,35 @@ BX_CPU_C::SCASB_ALXb(BxInstruction_t *i)
 
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rdi;
+
+    rdi = RDI;
+
+    op1_8 = AL;
+
+    read_virtual_byte(BX_SEG_REG_ES, rdi, &op2_8);
+
+    diff_8 = op1_8 - op2_8;
+
+    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SCAS8);
+
+
+    if (BX_CPU_THIS_PTR get_DF ()) {
+      /* decrement ESI */
+      rdi--;
+      }
+    else {
+      /* increment ESI */
+      rdi++;
+      }
+
+    RDI = rdi;
+    }
+
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
     Bit32u edi;
 
@@ -964,7 +1260,9 @@ BX_CPU_C::SCASB_ALXb(BxInstruction_t *i)
       edi++;
       }
 
-    EDI = edi;
+    // zero extension of RDI
+
+    RDI = edi;
     }
 
   else
@@ -999,11 +1297,102 @@ BX_CPU_C::SCASB_ALXb(BxInstruction_t *i)
 BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rdi;
+
+    rdi = RDI;
+
+    if (i->os_64) {
+      Bit64u op1_64, op2_64, diff_64;
+
+      op1_64 = RAX;
+      read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
+
+      diff_64 = op1_64 - op2_64;
+
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SCAS64);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement EDI */
+        rdi -= 8;
+        }
+      else {
+        /* increment EDI */
+        rdi += 8;
+        }
+      }
+    else
+    if (i->os_32) {
+      Bit32u op1_32, op2_32, diff_32;
+
+      op1_32 = EAX;
+      read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
+
+      diff_32 = op1_32 - op2_32;
+
+      SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SCAS32);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement EDI */
+        rdi -= 4;
+        }
+      else {
+        /* increment EDI */
+        rdi += 4;
+        }
+      }
+    else { /* 16 bit opsize */
+      Bit16u op1_16, op2_16, diff_16;
+
+      op1_16 = AX;
+      read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
+
+      diff_16 = op1_16 - op2_16;
+
+      SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SCAS16);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        rdi -= 2;
+        }
+      else {
+        /* increment ESI */
+        rdi += 2;
+        }
+      }
+
+    RDI = rdi;
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
     Bit32u edi;
 
     edi = EDI;
 
+#if BX_SUPPORT_X86_64
+    if (i->os_64) {
+      Bit64u op1_64, op2_64, diff_64;
+
+      op1_64 = RAX;
+      read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
+
+      diff_64 = op1_64 - op2_64;
+
+      SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SCAS64);
+
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        edi -= 8;
+        }
+      else {
+        /* increment ESI */
+        edi += 8;
+        }
+      }
+    else
+#endif  // #if BX_SUPPORT_X86_64
     if (i->os_32) {
       Bit32u op1_32, op2_32, diff_32;
 
@@ -1043,7 +1432,9 @@ BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
         }
       }
 
-    EDI = edi;
+    // zero extension of RDI
+
+    RDI = edi;
     }
   else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -1102,6 +1493,30 @@ BX_CPU_C::SCASW_eAXXv(BxInstruction_t *i)
 BX_CPU_C::STOSB_YbAL(BxInstruction_t *i)
 {
   Bit8u al;
+
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rdi;
+
+    rdi = RDI;
+
+    al = AL;
+    write_virtual_byte(BX_SEG_REG_ES, rdi, &al);
+
+    if (BX_CPU_THIS_PTR get_DF ()) {
+      /* decrement EDI */
+      rdi--;
+      }
+    else {
+      /* increment EDI */
+      rdi++;
+      }
+
+    RDI = rdi;
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
+  {
   Bit32u edi;
   unsigned incr;
 
@@ -1114,7 +1529,8 @@ BX_CPU_C::STOSB_YbAL(BxInstruction_t *i)
     { /* 16bit address size */
     edi = DI;
     }
-  al  = AL;
+
+  al = AL;
 
 
 #if BX_SupportRepeatSpeedups
@@ -1254,32 +1670,111 @@ doIncr16:
 #endif
 #endif
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
-      edi -= incr;
-      }
-    else {
-      /* increment EDI */
-      edi += incr;
-      }
+
+  if (BX_CPU_THIS_PTR get_DF ()) {
+    /* decrement EDI */
+    edi -= incr;
+    }
+  else {
+    /* increment EDI */
+    edi += incr;
+    }
 
 #if BX_CPU_LEVEL >= 3
   if (i->as_32)
-    EDI = edi;
+    // zero extension of RDI
+    RDI = edi;
   else
 #endif
     DI = edi;
+  }
 }
 
   void
 BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rdi;
+
+    rdi = RDI;
+
+    if (i->os_64) {
+        Bit64u rax;
+
+        rax = RAX;
+        write_virtual_qword(BX_SEG_REG_ES, rdi, &rax);
+
+        if (BX_CPU_THIS_PTR get_DF ()) {
+          /* decrement EDI */
+          rdi -= 8;
+          }
+        else {
+          /* increment EDI */
+          rdi += 8;
+          }
+      } /* if (i->os_64) ... */
+    else
+    if (i->os_32) {
+        Bit32u eax;
+
+        eax = EAX;
+        write_virtual_dword(BX_SEG_REG_ES, rdi, &eax);
+
+        if (BX_CPU_THIS_PTR get_DF ()) {
+          /* decrement EDI */
+          rdi -= 4;
+          }
+        else {
+          /* increment EDI */
+          rdi += 4;
+          }
+      } /* if (i->os_32) ... */
+    else { /* 16 bit opsize mode */
+        Bit16u ax;
+
+        ax = AX;
+        write_virtual_word(BX_SEG_REG_ES, rdi, &ax);
+
+        if (BX_CPU_THIS_PTR get_DF ()) {
+          /* decrement EDI */
+          rdi -= 2;
+          }
+        else {
+          /* increment EDI */
+          rdi += 2;
+          }
+      }
+
+    RDI = rdi;
+    }
+
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
     Bit32u edi;
 
     edi = EDI;
 
+#if BX_SUPPORT_X86_64
+    if (i->os_64) {
+        Bit64u rax;
+
+        rax = RAX;
+        write_virtual_qword(BX_SEG_REG_ES, edi, &rax);
+
+        if (BX_CPU_THIS_PTR get_DF ()) {
+          /* decrement EDI */
+          edi -= 8;
+          }
+        else {
+          /* increment EDI */
+          edi += 8;
+          }
+      } /* if (i->os_4) ... */
+    else
+#endif  // #if BX_SUPPORT_X86_64
     if (i->os_32) {
         Bit32u eax;
 
@@ -1311,7 +1806,9 @@ BX_CPU_C::STOSW_YveAX(BxInstruction_t *i)
           }
       }
 
-    EDI = edi;
+    // zero extension of RDI
+
+    RDI = edi;
     }
 
   else
@@ -1374,6 +1871,28 @@ BX_CPU_C::LODSB_ALXb(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rsi;
+
+    rsi = RSI;
+
+    read_virtual_byte(seg, rsi, &al);
+
+    AL = al;
+    if (BX_CPU_THIS_PTR get_DF ()) {
+      /* decrement ESI */
+      rsi--;
+      }
+    else {
+      /* increment ESI */
+      rsi++;
+      }
+
+    RSI = rsi;
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
     Bit32u esi;
 
@@ -1391,7 +1910,9 @@ BX_CPU_C::LODSB_ALXb(BxInstruction_t *i)
       esi++;
       }
 
-    ESI = esi;
+    // zero extension of RSI
+
+    RSI = esi;
     }
   else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -1429,17 +1950,91 @@ BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
     }
 
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (i->as_64) {
+    Bit64u rsi;
+
+    rsi = RSI;
+
+    if (i->os_64) {
+      Bit64u rax;
+
+      read_virtual_qword(seg, rsi, &rax);
+
+      RAX = rax;
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        rsi -= 8;
+        }
+      else {
+        /* increment ESI */
+        rsi += 8;
+        }
+      } /* if (i->os_64) ... */
+    else
+    if (i->os_32) {
+      Bit32u eax;
+
+      read_virtual_dword(seg, rsi, &eax);
+
+      RAX = eax;
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        rsi -= 4;
+        }
+      else {
+        /* increment ESI */
+        rsi += 4;
+        }
+      } /* if (i->os_32) ... */
+    else { /* 16 bit opsize mode */
+      Bit16u ax;
+      read_virtual_word(seg, rsi, &ax);
+
+      AX = ax;
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        rsi -= 2;
+        }
+      else {
+        /* increment ESI */
+        rsi += 2;
+        }
+      }
+
+    RSI = rsi;
+    }
+  else
+#endif  // #if BX_SUPPORT_X86_64
   if (i->as_32) {
     Bit32u esi;
 
     esi = ESI;
 
+#if BX_SUPPORT_X86_64
+    if (i->os_64) {
+      Bit64u rax;
+
+      read_virtual_qword(seg, esi, &rax);
+
+      RAX = rax;
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        /* decrement ESI */
+        esi -= 8;
+        }
+      else {
+        /* increment ESI */
+        esi += 8;
+        }
+      } /* if (i->os_64) ... */
+    else
+#endif  // #if BX_SUPPORT_X86_64
     if (i->os_32) {
       Bit32u eax;
 
       read_virtual_dword(seg, esi, &eax);
 
-      EAX = eax;
+      RAX = eax;
       if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         esi -= 4;
@@ -1464,7 +2059,9 @@ BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
         }
       }
 
-    ESI = esi;
+    // zero extension of RSI
+
+    RSI = esi;
     }
   else
 #endif /* BX_CPU_LEVEL >= 3 */
@@ -1479,7 +2076,7 @@ BX_CPU_C::LODSW_eAXXv(BxInstruction_t *i)
 
       read_virtual_dword(seg, si, &eax);
 
-      EAX = eax;
+      RAX = eax;
       if (BX_CPU_THIS_PTR get_DF ()) {
         /* decrement ESI */
         si -= 4;
