@@ -1,4 +1,4 @@
-// $Id: devices.cc,v 1.34.2.21 2002-10-21 23:40:45 cbothamy Exp $
+// $Id: devices.cc,v 1.34.2.22 2002-10-23 16:00:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.21 2002-10-21 23:40:45 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.34.2.22 2002-10-23 16:00:40 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -121,7 +121,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   BX_LOAD_PLUGIN(pic, PLUGTYPE_CORE);
   BX_LOAD_PLUGIN(vga, PLUGTYPE_CORE);
   /// optional plugins
-  BX_LOAD_PLUGIN(floppy, PLUGTYPE_OPTIONAL);
+  BX_LOAD_PLUGIN(floppy, PLUGTYPE_CORE);
   BX_LOAD_PLUGIN(harddrv, PLUGTYPE_OPTIONAL);
   BX_LOAD_PLUGIN(keyboard, PLUGTYPE_OPTIONAL);
   if (is_serial_enabled ())
@@ -129,23 +129,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
   if (is_parallel_enabled ()) 
     BX_LOAD_PLUGIN(parallel, PLUGTYPE_OPTIONAL);
 
-
   // Start with registering the default (unmapped) handler
   pluginUnmapped->init ();
-
-  // BIOS log 
-  pluginBiosDevice->init ();
-
-  // CMOS RAM & RTC
-  pluginCmosDevice->init ();
-
-#if BX_SUPPORT_VGA
-  /*--- VGA adapter ---*/
-  pluginVgaDevice->init ();
-#else
-  /*--- HGA adapter ---*/
-  bx_init_hga_hardware();
-#endif
 
 #if BX_PCI_SUPPORT
   // PCI logic (i440FX)
@@ -161,17 +146,34 @@ bx_devices_c::init(BX_MEM_C *newmem)
     ioapic->init ();
 #endif
 
+  // BIOS log 
+  pluginBiosDevice->init ();
+
+  // CMOS RAM & RTC
+  pluginCmosDevice->init ();
+
   /*--- 8237 DMA ---*/
   pluginDmaDevice->init();
 
-  /*--- 8259A PIC ---*/
-  pluginPicDevice->init();
+  //--- FLOPPY ---
+  pluginFloppyDevice->init();
 
 #if BX_SUPPORT_SB16
   //--- SOUND ---
   sb16 = &bx_sb16;
   sb16->init();
 #endif
+
+#if BX_SUPPORT_VGA
+  /*--- VGA adapter ---*/
+  pluginVgaDevice->init ();
+#else
+  /*--- HGA adapter ---*/
+  bx_init_hga_hardware();
+#endif
+
+  /*--- 8259A PIC ---*/
+  pluginPicDevice->init();
 
   /*--- 8254 PIT ---*/
   pit = & bx_pit;
@@ -241,11 +243,10 @@ bx_devices_c::reset(unsigned type)
   pci->reset(type);
   pci2isa->reset(type);
 #endif
-
-
-#  if BX_SUPPORT_IOAPIC
-    ioapic->reset (type);
-#  endif
+#if BX_SUPPORT_IOAPIC
+  ioapic->reset (type);
+#endif
+  pluginFloppyDevice->reset(type);
 
 #if !BX_PLUGINS 
 
