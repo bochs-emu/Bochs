@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.200 2003-01-30 18:37:05 cbothamy Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.201 2003-02-21 14:40:59 cisc Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -70,8 +70,8 @@ case "$target" in
     ADD_FLAGS="-Wno-multichar"
     DEFAULT_GUI=beos                  # beos defaults to beos
     ;;
-  *-amigaos*)
-    DEFAULT_GUI=amigaos               # amigaos defaults to amigaos
+  *-amigaos* | *-morphos*)
+    DEFAULT_GUI=amigaos               # amigaos or morphos defaults to amigaos gui
     ;;
   *)
     DEFAULT_GUI=x11
@@ -272,8 +272,8 @@ if test "$with_all_libs" = yes; then
   if test "$with_amigaos" != yes; then
     can_compile_amigaos=1
     AC_CHECK_HEADER([proto/intuition.h], [], [ can_compile_amigaos=0 ])
-    AC_CHECK_HEADER([intuition/IntuitionBase.h], [], [ can_compile_amigaos=0 ])
-    AC_CHECK_HEADER([cybergraphics/cybergraphics.h], [], [ can_compile_amigaos=0 ])
+    AC_CHECK_HEADER([intuition/intuitionbase.h], [], [ can_compile_amigaos=0 ])
+    AC_CHECK_HEADER([cybergraphx/cybergraphics.h], [], [ can_compile_amigaos=0 ])
     AC_CHECK_HEADER([devices/trackdisk.h], [], [ can_compile_amigaos=0 ])
     if test $can_compile_amigaos = 1; then
       with_amigaos=yes
@@ -1442,7 +1442,7 @@ AC_ARG_ENABLE(cdrom,
 if test "$bx_cdrom" = 1; then
     AC_MSG_RESULT(yes)
     CDROM_OBJS='cdrom.o'
-    if test "$can_compile_amigaos" = yes; then
+    if test "$with_amigaos" = yes; then
       # use the amiga cdrom file instead.
       CDROM_OBJS="cdrom_amigaos.o"
     elif test "$can_use_osx_cdrom" = yes; then
@@ -1642,7 +1642,7 @@ AC_ARG_WITH(rfb,
   )
 
 AC_ARG_WITH(amigaos,
-  [  --with-amigaos                    use MorphOS (Amiga)],
+  [  --with-amigaos                    use AmigaOS (or MorphOS) GUI],
   )
 
 AC_ARG_WITH(sdl,
