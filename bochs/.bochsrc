@@ -386,7 +386,7 @@ debugger_log: -
 # Other serial modes are 'null' (no input/output), 'file' (output to a file
 # specified as the 'dev' parameter), 'raw' (use the real serial port - under
 # construction for win32) and 'mouse' (standard serial mouse - requires
-# mouse option setting 'type=serial')
+# mouse option setting 'type=serial' or 'type=serial_wheel')
 #
 # Examples:
 #   com1: enabled=1, mode=null
@@ -512,8 +512,9 @@ floppy_command_delay: 500
 # You can also toggle the mouse usage at runtime (control key + middle
 # mouse button on X11, SDL, wxWidgets and Win32).
 # With the new mouse type option you can select the type of mouse to emulate.
-# The default value is 'ps2'. The other choices are 'imps2' (under
-# construction) and 'serial' (one com port requires setting 'mode=mouse').
+# The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
+# on PS/2), 'serial' and 'serial_wheel' (one com port requires setting
+# 'mode=mouse').
 #
 # Examples:
 #   mouse: enabled=1

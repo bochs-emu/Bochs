@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.53 2004-12-02 21:34:25 vruppert Exp $
+// $Id: iodev.h,v 1.54 2004-12-05 20:23:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,7 +97,7 @@ class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
   public:
   virtual ~bx_keyb_stub_c () {}
   // stubs for bx_keyb_c methods
-  virtual void mouse_motion(int delta_x, int delta_y, unsigned button_state) {
+  virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state) {
     STUBFUNC(keyboard, mouse_motion);
   }
   virtual void gen_scancode(Bit32u key) {
@@ -306,7 +306,7 @@ class BOCHSAPI bx_speaker_stub_c : public bx_devmodel_c {
 
 class BOCHSAPI bx_serial_stub_c : public bx_devmodel_c {
   public:
-  virtual void serial_mouse_enq(int delta_x, int delta_y, unsigned button_state) {
+  virtual void serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
     STUBFUNC(serial, serial_mouse_enq);
   }
 };

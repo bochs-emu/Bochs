@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.25 2004-11-30 21:03:16 vruppert Exp $
+// $Id: keyboard.h,v 1.26 2004-12-05 20:23:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,9 +46,10 @@
 #define MOUSE_MODE_REMOTE 12
 #define MOUSE_MODE_WRAP   13
 
-#define MOUSE_TYPE_PS2    0
-#define MOUSE_TYPE_IMPS2  1
-#define MOUSE_TYPE_SERIAL 2
+#define MOUSE_TYPE_PS2          0
+#define MOUSE_TYPE_IMPS2        1
+#define MOUSE_TYPE_SERIAL       2
+#define MOUSE_TYPE_SERIAL_WHEEL 3
 
 class bx_keyb_c : public bx_keyb_stub_c {
 public:
@@ -60,7 +61,7 @@ public:
   // override stubs from bx_keyb_stub_c
   virtual void     gen_scancode(Bit32u key);
   virtual void     paste_bytes(Bit8u *data, Bit32s length);
-  virtual void     mouse_motion(int delta_x, int delta_y, unsigned button_state);
+  virtual void     mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
   // update the paste delay based on bx_options.Okeyboard_paste_delay
   virtual void     paste_delay_changed ();
@@ -166,7 +167,9 @@ private:
       Bit8u button_status;
       Bit16s delayed_dx;
       Bit16s delayed_dy;
+      Bit16s delayed_dz;
       Bit8u im_request;
+      bx_bool im_mode;
       } mouse;
 
     struct {
@@ -228,7 +231,7 @@ private:
   BX_KEY_SMF void     kbd_enQ_imm(Bit8u val);
   BX_KEY_SMF void     activate_timer(void);
   BX_KEY_SMF void     controller_enQ(Bit8u data, unsigned source);
-  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3) BX_CPP_AttrRegparmN(3);
+  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
   BX_KEY_SMF void     mouse_enQ(Bit8u mouse_data);
 
   static void   timer_handler(void *);

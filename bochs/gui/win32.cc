@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.86 2004-08-22 16:22:09 vruppert Exp $
+// $Id: win32.cc,v 1.87 2004-12-05 20:23:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,9 +34,10 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
-#include "iodev.h"
+#include "iodev/iodev.h"
 #if BX_WITH_WIN32
 
+#include "zmouse.h"
 #include "win32res.h"
 #include "font/vga.bitmap.h"
 // windows.h is included by bochs.h
@@ -78,6 +79,7 @@ struct QueueEvent {
   Bit32u key_event;
   int mouse_x;
   int mouse_y;
+  int mouse_z;
   int mouse_button_state;
 };
 QueueEvent* deq_key_event(void);
@@ -85,9 +87,9 @@ QueueEvent* deq_key_event(void);
 static QueueEvent keyevents[SCANCODE_BUFSIZE];
 static unsigned head=0, tail=0;
 static int mouse_button_state = 0;
-static int ms_xdelta=0, ms_ydelta=0;
-static int ms_lastx=0, ms_lasty=0;
-static int ms_savedx=0, ms_savedy=0;
+static int ms_xdelta=0, ms_ydelta=0, ms_zdelta=0;
+static int ms_lastx=0, ms_lasty=0, ms_lastz=0;
+static int ms_savedx=0, ms_savedy=0, ms_savedz=0;
 static BOOL mouseCaptureMode, mouseCaptureNew, mouseToggleReq;
 static unsigned long workerThread = 0;
 static DWORD workerThreadID = 0;
@@ -457,7 +459,7 @@ Bit32u win32_to_bx_key[2][0x100] =
   void bx_signal_handler(int);
 #endif
 
-static void processMouseXY( int x, int y, int windows_state, int implied_state_change)
+static void processMouseXY( int x, int y, int z, int windows_state, int implied_state_change)
 {
   int bx_state;
   int old_bx_state;
@@ -477,8 +479,10 @@ static void processMouseXY( int x, int y, int windows_state, int implied_state_c
   }
   ms_ydelta=ms_savedy-y;
   ms_xdelta=x-ms_savedx;
+  ms_zdelta=z-ms_savedz;
   ms_lastx=x;
   ms_lasty=y;
+  ms_lastz=z;
   if ( bx_state!=mouse_button_state)
   {
     EnterCriticalSection( &stInfo.keyCS);
@@ -495,7 +499,8 @@ static void resetDelta()
   EnterCriticalSection( &stInfo.mouseCS);
   ms_savedx=ms_lastx;
   ms_savedy=ms_lasty;
-  ms_ydelta=ms_xdelta=0;
+  ms_savedz=ms_lastz;
+  ms_ydelta=ms_xdelta=ms_zdelta=0;
   LeaveCriticalSection( &stInfo.mouseCS);
 }
 
@@ -509,6 +514,7 @@ static void cursorWarped()
   ms_lasty=stretched_y/2;
   ms_savedx=ms_lastx;
   ms_savedy=ms_lasty;
+  ms_savedz=ms_lastz;
   LeaveCriticalSection( &stInfo.mouseCS);
 }
 
@@ -983,7 +989,13 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_MOUSEMOVE:
     if (!mouseModeChange) {
-      processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 0);
+      processMouseXY( LOWORD(lParam), HIWORD(lParam), 0, wParam, 0);
+    }
+    return 0;
+
+  case WM_MOUSEWHEEL:
+    if (!mouseModeChange) {
+      processMouseXY( 0, 0, HIWORD(wParam), 0, 0);
     }
     return 0;
 
@@ -998,11 +1010,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       } else if (mouseModeChange && (iMsg == WM_LBUTTONUP)) {
         mouseModeChange = FALSE;
       } else {
-        processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 1);
+        processMouseXY( LOWORD(lParam), HIWORD(lParam), 0, wParam, 1);
       }
       return 0;
     }
-    processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 1);
+    processMouseXY( LOWORD(lParam), HIWORD(lParam), 0, wParam, 1);
     return 0;
 
   case WM_MBUTTONDOWN:
@@ -1015,7 +1027,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     } else if (mouseModeChange && (iMsg == WM_MBUTTONUP)) {
       mouseModeChange = FALSE;
     } else {
-      processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 4);
+      processMouseXY( LOWORD(lParam), HIWORD(lParam), 0, wParam, 4);
     }
     return 0;
 
@@ -1030,11 +1042,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       } else if (mouseModeChange && (iMsg == WM_RBUTTONUP)) {
         mouseModeChange = FALSE;
       } else {
-        processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 2);
+        processMouseXY( LOWORD(lParam), HIWORD(lParam), 0, wParam, 2);
       }
       return 0;
     }
-    processMouseXY( LOWORD(lParam), HIWORD(lParam), wParam, 2);
+    processMouseXY( LOWORD(lParam), HIWORD(lParam), 0, wParam, 2);
     return 0;
 
   case WM_CLOSE:
@@ -1130,7 +1142,7 @@ void enq_key_event(Bit32u key, Bit32u press_release)
 void enq_mouse_event(void)
 {
   EnterCriticalSection( &stInfo.mouseCS);
-  if ( ms_xdelta || ms_ydelta)
+  if ( ms_xdelta || ms_ydelta || ms_zdelta)
   {
     if (((tail+1) % SCANCODE_BUFSIZE) == head) {
       BX_ERROR(( "enq_scancode: buffer full" ));
@@ -1140,6 +1152,7 @@ void enq_mouse_event(void)
     current.key_event=MOUSE_MOTION;
     current.mouse_x=ms_xdelta;
     current.mouse_y=ms_ydelta;
+    current.mouse_z=ms_zdelta;
     current.mouse_button_state=mouse_button_state;
     resetDelta();
     tail = (tail + 1) % SCANCODE_BUFSIZE;
@@ -1185,12 +1198,12 @@ void bx_win32_gui_c::handle_events(void) {
     key = queue_event->key_event;
     if ( key==MOUSE_MOTION)
     {
-      DEV_mouse_motion( queue_event->mouse_x,
-        queue_event->mouse_y, queue_event->mouse_button_state);
+      DEV_mouse_motion_ext( queue_event->mouse_x,
+        queue_event->mouse_y, queue_event->mouse_z, queue_event->mouse_button_state);
     }
     // Check for mouse buttons first
     else if ( key & MOUSE_PRESSED) {
-      DEV_mouse_motion( 0, 0, LOWORD(key));
+      DEV_mouse_motion_ext( 0, 0, 0, LOWORD(key));
     }
     else if (key & HEADERBAR_CLICKED) {
       headerbar_click(LOWORD(key));

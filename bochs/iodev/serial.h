@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.24 2004-12-02 21:34:26 vruppert Exp $
+// $Id: serial.h,v 1.25 2004-12-05 20:23:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -197,14 +197,16 @@ public:
   ~bx_serial_c(void);
   virtual void   init(void);
   virtual void   reset(unsigned type);
-  virtual void   serial_mouse_enq(int delta_x, int delta_y, unsigned button_state);
+  virtual void   serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
 private:
   bx_serial_t s[BX_SERIAL_MAXDEV];
 
+  int   detect_mouse;
   int   mouse_port;
   int   mouse_delayed_dx;
   int   mouse_delayed_dy;
+  int   mouse_delayed_dz;
   struct {
     int     num_elements;
     Bit8u   buffer[BX_MOUSE_BUFF_SIZE];
