@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.131 2002-09-03 06:22:53 bdenney Exp $
+// $Id: main.cc,v 1.132 2002-09-03 08:42:23 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,36 +94,6 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
         bx_keyboard.mouse_enabled_changed (val!=0);
       }
       break;
-    case BXP_PARPORT1_ENABLED:
-      SIM->get_param (BXP_PARPORT1_OUTFILE)->set_enabled (val!=0);
-      break;
-    case BXP_PARPORT2_ENABLED:
-      SIM->get_param (BXP_PARPORT2_OUTFILE)->set_enabled (val!=0);
-      break;
-    case BXP_COM1_ENABLED:
-      SIM->get_param (BXP_COM1_PATH)->set_enabled (val!=0);
-      break;
-    case BXP_COM2_ENABLED:
-      SIM->get_param (BXP_COM2_PATH)->set_enabled (val!=0);
-      break;
-    case BXP_COM3_ENABLED:
-      SIM->get_param (BXP_COM3_PATH)->set_enabled (val!=0);
-      break;
-    case BXP_COM4_ENABLED:
-      SIM->get_param (BXP_COM4_PATH)->set_enabled (val!=0);
-      break;
-    case BXP_SB16_PRESENT:
-      if (set) {
-	int enable = (val != 0);
-	SIM->get_param (BXP_SB16_MIDIFILE)->set_enabled (enable);
-	SIM->get_param (BXP_SB16_WAVEFILE)->set_enabled (enable);
-	SIM->get_param (BXP_SB16_LOGFILE)->set_enabled (enable);
-	SIM->get_param (BXP_SB16_MIDIMODE)->set_enabled (enable);
-	SIM->get_param (BXP_SB16_WAVEMODE)->set_enabled (enable);
-	SIM->get_param (BXP_SB16_LOGLEVEL)->set_enabled (enable);
-	SIM->get_param (BXP_SB16_DMATIMER)->set_enabled (enable);
-      }
-      break;
     case BXP_NE2K_VALID:
       if (set) {
 	int enable = (val != 0);
@@ -142,9 +112,6 @@ bx_param_handler (bx_param_c *param, int set, Bit32s val)
 	SIM->get_param (BXP_LOAD32BITOS_IOLOG)->set_enabled (enable);
 	SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
       }
-      break;
-    case BXP_CMOS_IMAGE:
-      SIM->get_param (BXP_CMOS_PATH)->set_enabled (val);
       break;
     case BXP_CDROM_STATUS:
       if ((set) && (SIM->get_init_done ())) {
@@ -297,6 +264,8 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
 void bx_init_options ()
 {
   bx_list_c *menu;
+  bx_list_c *deplist;
+  char name[1024], descr[1024];
 
   memset (&bx_options, 0, sizeof(bx_options));
   bx_options.log.actions[0] = ACT_IGNORE;
@@ -488,53 +457,6 @@ void bx_init_options ()
   bx_options.diskd.Opath->set_handler (bx_param_string_handler);
   bx_options.diskd.Opath->set ("none");
 
-  // com1 options
-  bx_options.com[0].Oenabled = new bx_param_bool_c (BXP_COM1_ENABLED,
-						  "Enable serial port #1 (COM1)",
-						  "Controls whether COM1 is installed or not",
-						  1);
-
-  bx_options.com[0].Odev = new bx_param_filename_c (BXP_COM1_PATH,
-						 "Pathname of the serial device for COM1",
-						 "",
-						 "", BX_PATHNAME_LEN);
-  bx_options.com[0].Oenabled->set_handler (bx_param_handler);
-#if 0
-  // com2 options
-  bx_options.com[1].Oenabled = new bx_param_bool_c (BXP_COM2_ENABLED,
-						  "Enable serial port #2 (COM2)",
-						  "Controls whether COM2 is installed or not",
-						  0);
-
-  bx_options.com[1].Odev = new bx_param_filename_c (BXP_COM2_PATH,
-						 "Pathname of the serial device for COM2",
-						 "",
-						 "", BX_PATHNAME_LEN);
-  bx_options.com[1].Oenabled->set_handler (bx_param_handler);
-  // com3 options
-  bx_options.com[2].Oenabled = new bx_param_bool_c (BXP_COM3_ENABLED,
-						  "Enable serial port #3 (COM3)",
-						  "Controls whether COM3 is installed or not",
-						  0);
-
-  bx_options.com[2].Odev = new bx_param_filename_c (BXP_COM3_PATH,
-						 "Pathname of the serial device for COM3",
-						 "",
-						 "", BX_PATHNAME_LEN);
-  bx_options.com[2].Oenabled->set_handler (bx_param_handler);
-  // com4 options
-  bx_options.com[3].Oenabled = new bx_param_bool_c (BXP_COM4_ENABLED,
-						  "Enable serial port #4 (COM4)",
-						  "Controls whether COM4 is installed or not",
-						  0);
-
-  bx_options.com[3].Odev = new bx_param_filename_c (BXP_COM4_PATH,
-						 "Pathname of the serial device for COM4",
-						 "",
-						 "", BX_PATHNAME_LEN);
-  bx_options.com[3].Oenabled->set_handler (bx_param_handler);
-#endif
-
   // cdrom options
   bx_options.cdromd.Opresent = new bx_param_bool_c (BXP_CDROM_PRESENT,
       "CDROM is present",
@@ -568,7 +490,7 @@ void bx_init_options ()
   bx_options.cdromd.Ostatus->set_handler (bx_param_handler);
 
   bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
-      "New Hard Drive Support",
+      "New hard drive support",
       "Enables new features found on newer hard drives.",
       1);
 
@@ -610,42 +532,64 @@ void bx_init_options ()
   bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
 
-  bx_options.par[0].Oenabled = new bx_param_bool_c (BXP_PARPORT1_ENABLED,
-      "Enable parallel port #1",
-      "Enables the first parallel port",
-      1);
-  bx_options.par[0].Oenabled->set_handler (bx_param_handler);
-  bx_options.par[0].Ooutfile = new bx_param_filename_c (BXP_PARPORT1_OUTFILE,
-      "Parallel port #1 output file",
-      "Data written to parport#1 by the guest OS is written to this file",
-      "", BX_PATHNAME_LEN);
-#if 0
-  bx_options.par[1].Oenabled = new bx_param_bool_c (BXP_PARPORT2_ENABLED,
-      "Enable parallel port #2",
-      "Enables the second parallel port",
-      0);
-  bx_options.par[1].Oenabled->set_handler (bx_param_handler);
-  bx_options.par[1].Ooutfile = new bx_param_filename_c (BXP_PARPORT2_OUTFILE,
-      "Parallel port #2 output file",
-      "Data written to parport#2 by the guest OS is written to this file",
-      "", BX_PATHNAME_LEN);
-#endif
-  bx_param_c *par_ser_init_list[] = {
-    bx_options.par[0].Oenabled,
-    bx_options.par[0].Ooutfile,
-    //bx_options.par[1].Oenabled,
-    //bx_options.par[1].Ooutfile,
-    bx_options.com[0].Oenabled,
-    bx_options.com[0].Odev,
-    //bx_options.com[1].Oenabled,
-    //bx_options.com[1].Odev,
-    //bx_options.com[2].Oenabled,
-    //bx_options.com[2].Odev,
-    //bx_options.com[3].Oenabled,
-    //bx_options.com[3].Odev,
-    NULL
-  };
-  menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL, "Serial and Parallel Port Options", "serial_parallel_menu", par_ser_init_list);
+  // initialize serial and parallel port options
+  int max = (BXP_PARAMS_PER_PARALLEL_PORT * BX_N_PARALLEL_PORTS)
+	        + (BXP_PARAMS_PER_SERIAL_PORT * BX_N_SERIAL_PORTS);
+  bx_param_c *par_ser_init_list[1+max];
+  bx_param_c **par_ser_ptr = &par_ser_init_list[0];
+
+  // parallel ports
+  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+	sprintf (name, "Enable parallel port #%d", i+1);
+	bx_options.par[i].Oenabled = new bx_param_bool_c (
+		BXP_PARPORTx_ENABLED(i+1), 
+		strdup(name), 
+		"",
+		(i==0)? 1 : 0);  // only enable #1 by default
+	sprintf (name, "Parallel port #%d output file", i+1);
+	sprintf (descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
+	bx_options.par[i].Ooutfile = new bx_param_filename_c (
+		BXP_PARPORTx_OUTFILE(i+1), 
+		strdup(name), 
+		strdup(descr),
+		"", BX_PATHNAME_LEN);
+	deplist = new bx_list_c (BXP_NULL, 1);
+	deplist->add (bx_options.par[i].Ooutfile);
+	bx_options.par[i].Oenabled->set_dependent_list (deplist);
+	// add to menu
+	*par_ser_ptr++ = bx_options.par[i].Oenabled;
+	*par_ser_ptr++ = bx_options.par[i].Ooutfile;
+  }
+
+  // serial ports
+  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+	// options for COM port
+	sprintf (name, "Enable serial port #%d (COM%d)", i+1, i+1);
+	sprintf (descr, "Controls whether COM%d is installed or not", i+1);
+	bx_options.com[i].Oenabled = new bx_param_bool_c (
+		BXP_COMx_ENABLED(i+1),
+		strdup(name), 
+		strdup(descr), 
+		(i==0)?1 : 0);  // only enable the first by default
+	sprintf (name, "Pathname of the serial device for COM%d", i+1);
+	bx_options.com[i].Odev = new bx_param_filename_c (
+		BXP_COMx_PATH(i+1),
+		strdup(name), 
+		"",
+		"", BX_PATHNAME_LEN);
+	deplist = new bx_list_c (BXP_NULL, 1);
+	deplist->add (bx_options.com[i].Odev);
+	bx_options.com[i].Oenabled->set_dependent_list (deplist);
+	// add to menu
+	*par_ser_ptr++ = bx_options.com[i].Oenabled;
+	*par_ser_ptr++ = bx_options.com[i].Odev;
+  }
+  // add final NULL at the end, and build the menu
+  *par_ser_ptr = NULL;
+  menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL,
+	  "Serial and Parallel Port Options",
+	  "serial_parallel_menu",
+	  par_ser_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
 
   bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
@@ -883,17 +827,21 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_SB16, "SB16 Configuration", "", sb16_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
-  bx_options.sb16.Opresent->set_handler (bx_param_handler);
-  bx_options.sb16.Opresent->set (0);
+  // sb16_dependent_list is a null-terminated list including all the
+  // sb16 fields except for the "present" field.  These will all be enabled/
+  // disabled according to the value of the present field.
+  bx_param_c **sb16_dependent_list = &sb16_init_list[1];
+  bx_options.sb16.Opresent->set_dependent_list (
+      new bx_list_c (BXP_NULL, "", "", sb16_dependent_list));
 
   bx_options.log.Ofilename = new bx_param_filename_c (BXP_LOG_FILENAME,
-      "log:filename",
+      "Log filename",
       "Pathname of bochs log file",
       "-", BX_PATHNAME_LEN);
   bx_options.log.Ofilename->set_ask_format ("Enter log filename: [%s] ");
 
   bx_options.log.Oprefix = new bx_param_string_c (BXP_LOG_PREFIX,
-      "logprefix:prefix",
+      "Log output prefix",
       "Prefix prepended to log output",
       "%t%e%d", BX_PATHNAME_LEN);
   bx_options.log.Oprefix->set_ask_format ("Enter log prefix: [%s] ");
@@ -939,23 +887,23 @@ void bx_init_options ()
 
   // other
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
-      "keyboard_serial_delay",
+      "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
       1, BX_MAX_INT,
       20000);
   bx_options.Okeyboard_paste_delay = new bx_param_num_c (BXP_KBD_PASTE_DELAY,
-      "keyboard_paste_delay",
+      "Keyboard paste delay",
       "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
       1000, BX_MAX_INT,
       100000);
   bx_options.Okeyboard_paste_delay->set_handler (bx_param_handler);
   bx_options.Ofloppy_command_delay = new bx_param_num_c (BXP_FLOPPY_CMD_DELAY,
-      "floppy_command_delay",
+      "Floppy command delay",
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
       1, BX_MAX_INT,
       50000);
   bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
-      "i440FXSupport",
+      "PCI i440FX Support",
       "Controls whether to emulate PCI I440FX",
       0);
   bx_options.cmos.OcmosImage = new bx_param_bool_c (BXP_CMOS_IMAGE,
@@ -966,6 +914,10 @@ void bx_init_options ()
       "Pathname of CMOS image",
       NULL,
       "", BX_PATHNAME_LEN);
+  deplist = new bx_list_c (BXP_NULL, 1);
+  deplist->add (bx_options.cmos.Opath);
+  bx_options.cmos.OcmosImage->set_dependent_list (deplist);
+
   bx_options.cmos.Otime0 = new bx_param_num_c (BXP_CMOS_TIME0,
       "Initial CMOS time for Bochs",
       "Start time for Bochs CMOS clock, used if you really want two runs to be identical (cosimulation)",
@@ -981,6 +933,9 @@ void bx_init_options ()
       "Keymap filename",
       NULL,
       "", BX_PATHNAME_LEN);
+  deplist = new bx_list_c (BXP_NULL, 1);
+  deplist->add (bx_options.keyboard.Okeymap);
+  bx_options.keyboard.OuseMapping->set_dependent_list (deplist);
 
  // Keyboard type
   bx_options.Okeyboard_type = new bx_param_enum_c (BXP_KBD_TYPE,
@@ -1015,8 +970,6 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
   menu->get_options ()->set (menu->BX_SHOW_PARENT);
-  bx_options.cmos.OcmosImage->set_handler (bx_param_handler);
-  bx_options.cmos.OcmosImage->set (0);
 
 
 
