@@ -20,7 +20,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-// stupid define shortcuts to get register from the default CPU
+// define shortcuts to get register from the default CPU
 #define EBP (BX_CPU(dbg_cpu)->gen_reg[5].erx)
 #define EIP (BX_CPU(dbg_cpu)->eip)
 #define ESP (BX_CPU(dbg_cpu)->gen_reg[4].erx)
@@ -359,7 +359,9 @@ process_sim2:
 
   // call init routines for each CPU+mem simulator
   // initialize for SMP. one memory, multiple processors.
+#if BX_APIC_SUPPORT
   memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
+#endif
   BX_MEM(0) = new BX_MEM_C ();
   BX_MEM(0)->init_memory(bx_options.memory.megs * 1024*1024);
   BX_MEM(0)->load_ROM(bx_options.rom.path, bx_options.rom.address);
@@ -367,7 +369,9 @@ process_sim2:
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C ();
     BX_CPU(i)->init (BX_MEM(0));
+#if BX_APIC_SUPPORT
     BX_CPU(i)->local_apic.set_id (i);
+#endif
     BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }
 #if BX_NUM_SIMULATORS > 1
@@ -2804,11 +2808,15 @@ bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_GS, val);
     }
   else if ( !strcmp(symbol, "cpu") ) {
-      if ((val >= APIC_MAX_ID) || (apic_index[val] == NULL)) {
-        fprintf (stderr, "invalid cpu id number\n");
+#if ((BX_SMP_PROCESSORS>1) && (BX_APIC_SUPPORT))
+      if ((val > BX_SMP_PROCESSORS) 
+	  || (val >= APIC_MAX_ID) 
+	  || (apic_index[val] == NULL)) {
+        fprintf (stderr, "invalid cpu id number %d\n", val);
         return;
       }
       dbg_cpu = val;
+#endif
     }
   else if ( !strcmp(symbol, "synchronous_dma") ) {
     bx_guard.async.dma = !val;

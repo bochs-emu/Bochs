@@ -85,6 +85,15 @@
 #define BX_32BIT_REG_EDI 7
 
 
+#if defined(NEED_CPU_REG_SHORTCUTS)
+
+/* WARNING: 
+   Only BX_CPU_C member functions can use these shortcuts safely!
+   Functions that use the shortcuts outside of BX_CPU_C might work 
+   when BX_USE_CPU_SMF=1 but will fail when BX_USE_CPU_SMF=0
+   (for example in SMP mode).
+*/
+
 // access to 8 bit general registers
 #define AL (BX_CPU_THIS_PTR gen_reg[0].word.byte.rl)
 #define CL (BX_CPU_THIS_PTR gen_reg[1].word.byte.rl)
@@ -122,6 +131,7 @@
 
 // access to 32 bit instruction pointer
 #define EIP BX_CPU_THIS_PTR eip
+
 
 #define BX_READ_8BIT_REG(index)  (((index) < 4) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
@@ -161,6 +171,9 @@
 #ifndef CPL
 #define CPL  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
 #endif
+
+
+#endif  // defined(NEED_CPU_REG_SHORTCUTS)
 
 #define BX_DE_EXCEPTION   0 // Divide Error (fault)
 #define BX_DB_EXCEPTION   1 // Debug (fault/trap)
@@ -504,6 +517,7 @@ typedef enum {
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
 
+#if BX_APIC_SUPPORT
 class bx_generic_apic_c : public logfunctions {
 protected:
   Bit32u base_addr;
@@ -602,6 +616,7 @@ public:
 
 #define APIC_MAX_ID 16
 extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
+#endif // if BX_APIC_SUPPORT
 
 
 #if BX_USE_CPU_SMF == 0
@@ -1507,6 +1522,8 @@ public: // for now...
 
 extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 
+#if defined(NEED_CPU_REG_SHORTCUTS)
+
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_AX(Bit16u ax) { AX = ax; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_BX(Bit16u bx) { BX = bx; };
 BX_SMF BX_CPP_INLINE void BX_CPU_C_PREFIX set_CX(Bit16u cx) { CX = cx; };
@@ -1533,6 +1550,8 @@ BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_AX(void) { return(AX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_BX(void) { return(BX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_CX(void) { return(CX); };
 BX_SMF BX_CPP_INLINE Bit16u BX_CPU_C_PREFIX get_DX(void) { return(DX); };
+
+#endif
 
 
 #if BX_CPU_LEVEL >= 2

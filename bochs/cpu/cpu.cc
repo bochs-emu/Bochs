@@ -23,6 +23,7 @@
 
 
 
+#define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -612,10 +613,10 @@ extern unsigned int dbg_show_mask;
 BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                     Bit32u is_32)
 {
-  guard_found.cs  = cs;
-  guard_found.eip = eip;
-  guard_found.laddr = laddr;
-  guard_found.is_32bit_code = is_32;
+  BX_CPU_THIS_PTR guard_found.cs  = cs;
+  BX_CPU_THIS_PTR guard_found.eip = eip;
+  BX_CPU_THIS_PTR guard_found.laddr = laddr;
+  BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
 
   // BW mode switch breakpoint
   // instruction which generate exceptions never reach the end of the
@@ -640,12 +641,12 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
 #if BX_DBG_SUPPORT_VIR_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
-      if (guard_found.icount!=0) {
+      if (BX_CPU_THIS_PTR guard_found.icount!=0) {
         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
           if ( (bx_guard.iaddr.vir[i].cs  == cs) &&
                (bx_guard.iaddr.vir[i].eip == eip) ) {
-            guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
-            guard_found.iaddr_index = i;
+            BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
+            BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint
             }
           }
@@ -654,11 +655,11 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 #endif
 #if BX_DBG_SUPPORT_LIN_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
-      if (guard_found.icount!=0) {
+      if (BX_CPU_THIS_PTR guard_found.icount!=0) {
         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
-          if ( bx_guard.iaddr.lin[i].addr == guard_found.laddr ) {
-            guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
-            guard_found.iaddr_index = i;
+          if ( bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr ) {
+            BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
+            BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint
             }
           }
@@ -669,13 +670,13 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       Bit32u phy;
       Boolean valid;
-      dbg_xlate_linear2phy(guard_found.laddr,
+      dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr,
                               &phy, &valid);
-      if ( (guard_found.icount!=0) && valid ) {
+      if ( (BX_CPU_THIS_PTR guard_found.icount!=0) && valid ) {
         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
           if ( bx_guard.iaddr.phy[i].addr == phy ) {
-            guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
-            guard_found.iaddr_index = i;
+            BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+            BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint
             }
           }
@@ -691,16 +692,16 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                   Bit32u is_32)
 {
-  guard_found.icount++;
+  BX_CPU_THIS_PTR guard_found.icount++;
 
   // see if debugger requesting icount guard
   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
-    if (guard_found.icount >= bx_guard.icount) {
-      guard_found.cs  = cs;
-      guard_found.eip = eip;
-      guard_found.laddr = laddr;
-      guard_found.is_32bit_code = is_32;
-      guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
+    if (BX_CPU_THIS_PTR guard_found.icount >= bx_guard.icount) {
+      BX_CPU_THIS_PTR guard_found.cs  = cs;
+      BX_CPU_THIS_PTR guard_found.eip = eip;
+      BX_CPU_THIS_PTR guard_found.laddr = laddr;
+      BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
+      BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
       return(1);
       }
     }
@@ -708,7 +709,7 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   // convenient point to see if user typed Ctrl-C
   if (bx_guard.interrupt_requested &&
       (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
-    guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
+    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
     return(1);
     }
 
