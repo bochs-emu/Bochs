@@ -54,7 +54,7 @@ RCS file: /cvsroot/bochs/bochs/config.h.in,v
 retrieving revision 1.55
 diff -u -r1.55 config.h.in
 --- config.h.in	30 Aug 2002 06:47:21 -0000	1.55
-+++ config.h.in	1 Sep 2002 02:12:43 -0000
++++ config.h.in	1 Sep 2002 03:16:27 -0000
 @@ -559,6 +559,7 @@
  
  #define BX_SUPPORT_FPU 0
@@ -69,7 +69,7 @@ RCS file: /cvsroot/bochs/bochs/configure.in,v
 retrieving revision 1.89
 diff -u -r1.89 configure.in
 --- configure.in	26 Aug 2002 19:06:59 -0000	1.89
-+++ configure.in	1 Sep 2002 02:13:01 -0000
++++ configure.in	1 Sep 2002 03:16:45 -0000
 @@ -545,6 +545,24 @@
  AC_SUBST(PCI_OBJ)
  
@@ -101,7 +101,7 @@ RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
 retrieving revision 1.22
 diff -u -r1.22 cpu.h
 --- cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
-+++ cpu/cpu.h	1 Sep 2002 02:13:07 -0000
++++ cpu/cpu.h	1 Sep 2002 03:16:52 -0000
 @@ -519,7 +519,6 @@
    typedef struct {
      Bit32u lpf; // linear page frame
@@ -116,7 +116,7 @@ RCS file: /cvsroot/bochs/bochs/cpu/paging.cc,v
 retrieving revision 1.9
 diff -u -r1.9 paging.cc
 --- cpu/paging.cc	19 Jun 2002 15:49:07 -0000	1.9
-+++ cpu/paging.cc	1 Sep 2002 02:13:10 -0000
++++ cpu/paging.cc	1 Sep 2002 03:16:55 -0000
 @@ -46,7 +46,6 @@
  
  
@@ -589,3 +589,56 @@ diff -u -r1.9 paging.cc
    BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
    exception(BX_PF_EXCEPTION, error_code, 0);
    return(0); // keep compiler happy
+Index: cpu/proc_ctrl.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/proc_ctrl.cc,v
+retrieving revision 1.25
+diff -u -r1.25 proc_ctrl.cc
+--- cpu/proc_ctrl.cc	10 Aug 2002 12:06:26 -0000	1.25
++++ cpu/proc_ctrl.cc	1 Sep 2002 03:16:58 -0000
+@@ -497,23 +497,29 @@
+       BX_INSTR_TLB_CNTRL(BX_INSTR_MOV_CR3, val_32);
+       break;
+     case 4: // CR4
++      {
+ #if BX_CPU_LEVEL == 3
+       BX_PANIC(("MOV_CdRd: write to CR4 of 0x%08x on 386",
+         val_32));
+       UndefinedOpcode(i);
+ #else
++      Bit32u allowMask = 0;
+       //  Protected mode: #GP(0) if attempt to write a 1 to
+       //  any reserved bit of CR4
+ 
+-      if (val_32 & ~ 0x10) { // support CR4<PSE> (to allow 4M pages)
++#if BX_SUPPORT_4MEG_PAGES
++      allowMask |= 0x00000010;
++#endif
++
++      if (val_32 & ~allowMask) {
+         BX_INFO(("MOV_CdRd: (CR4) write of 0x%08x not supported!",
+           val_32));
+         }
+-      // Only allow writes of 0 to CR4 for now.
+-      // Writes to bits in CR4 should not be 1s as CPUID
+-      // returns not-supported for all of these features.
+-      BX_CPU_THIS_PTR cr4 = val_32 & 0x10;
++
++      val_32 = val_32 & allowMask; // Screen out unsupported bits.
++      BX_CPU_THIS_PTR cr4 = val_32;
+ #endif
++      }
+       break;
+     default:
+       BX_PANIC(("MOV_CdRd: control register index out of range"));
+@@ -1038,7 +1044,10 @@
+ #else
+       BX_PANIC(("CPUID: not implemented for > 6"));
+ #endif
++
++#if BX_SUPPORT_4MEG_PAGES
+       features |= 8; // support page-size extension (4m pages)
++#endif
+ 
+       EAX = (family <<8) | (model<<4) | stepping;
+       EBX = ECX = 0; // reserved
