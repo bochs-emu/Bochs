@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.31 2002-09-16 19:17:51 vruppert Exp $
+// $Id: devices.cc,v 1.32 2002-09-22 02:29:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,7 +85,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.31 2002-09-16 19:17:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.32 2002-09-22 02:29:59 bdenney Exp $"));
   mem = newmem;
 
   /* no read / write handlers defined */
@@ -173,7 +173,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pit->init(this);
 
 #if BX_USE_SLOWDOWN_TIMER
-  bx_slowdown_timer.init();
+  bx_slowdown_timer.init(this);
 #endif
 
   keyboard = &bx_keyboard;
