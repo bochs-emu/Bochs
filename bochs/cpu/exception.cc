@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.47 2005-02-27 17:41:27 sshwarts Exp $
+// $Id: exception.cc,v 1.48 2005-03-01 20:55:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,7 +387,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
           (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
         return;
-      }
+    }
 
     // if software interrupt, then gate descripor DPL must be >= CPL,
     // else #GP(vector * 8 + 2 + EXT)
@@ -459,7 +459,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 
         // instruction pointer must be in CS limit, else #GP(0)
         if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_ERROR(("exception(): eIP > CS.limit"));
+          BX_ERROR(("exception(): EIP > CS.limit"));
           exception(BX_GP_EXCEPTION, 0, 0);
         }
 
@@ -519,7 +519,14 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
           bx_selector_t   ss_selector;
           int bytes;
 
+          int is_v8086_mode = v8086_mode();
+
           BX_DEBUG(("interrupt(): INTERRUPT TO INNER PRIVILEGE"));
+
+          if (is_v8086_mode && cs_descriptor.dpl != 0) {
+            // if code segment DPL != 0 then #GP(new code segment selector)
+            exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
+          }
 
           // check selector and descriptor for new stack in current TSS
           get_SS_ESP_from_TSS(cs_descriptor.dpl,
@@ -556,8 +563,8 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
           // descriptor must indicate writable data segment,
           // else #TS(SS selector + EXT)
           if (ss_descriptor.valid==0 ||
-              ss_descriptor.segment==0  ||
-              ss_descriptor.u.segment.executable==1  ||
+              ss_descriptor.segment==0 ||
+              ss_descriptor.u.segment.executable==1 ||
               ss_descriptor.u.segment.r_w==0)
           {
             BX_PANIC(("interrupt(): SS not writable data segment"));
@@ -577,7 +584,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
               bytes = 24;
             else
               bytes = 20;
-            if (v8086_mode())
+            if (is_v8086_mode)
               bytes += 16;
           }
           else {
@@ -586,25 +593,22 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
               bytes = 12;
             else
               bytes = 10;
-            if (v8086_mode()) {
+            if (is_v8086_mode) {
               bytes += 8;
               BX_PANIC(("interrupt: int/trap gate VM"));
             }
           }
 
-          // 486,Pentium books
-          // new stack must have room for 10/12 bytes, else #SS(0) 486 book
-          // PPro+
-          // new stack must have room for 10/12 bytes, else #SS(seg selector)
+          // new stack must have enough room, else #SS(seg selector)
           if ( !can_push(&ss_descriptor, ESP_for_cpl_x, bytes) )
           {
-            BX_PANIC(("interrupt(): new stack doesn't have room for %u bytes", (unsigned) bytes));
+            BX_DEBUG(("interrupt(): new stack doesn't have room for %u bytes", (unsigned) bytes));
             exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
           }
 
           // IP must be within CS segment boundaries, else #GP(0)
           if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
-            BX_PANIC(("interrupt(): gate eIP > CS.limit"));
+            BX_DEBUG(("interrupt(): gate EIP > CS.limit"));
             exception(BX_GP_EXCEPTION, 0, 0);
           }
 
@@ -628,8 +632,6 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
           EIP = gate_dest_offset;
           
           Bit32u eflags = read_eflags();
-          Bit16u flags = read_flags();
-          int is_v8086_mode = v8086_mode();
           
           // if INTERRUPT GATE set IF to 0
           if ( !(gate_descriptor.type & 1) ) // even is int-gate
@@ -639,22 +641,32 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
           BX_CPU_THIS_PTR clear_RF ();
           BX_CPU_THIS_PTR clear_NT ();
 
-          if (gate_descriptor.type>=14) { // 386 int/trap gate
-            if (is_v8086_mode) {
+          if (is_v8086_mode)
+          {
+            if (gate_descriptor.type>=14) { // 386 int/trap gate
               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
               push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0;
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0;
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0;
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
+            }
+            else {
+              push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+              push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+              push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+              push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
             }
 
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
+            BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
+          }
+
+          if (gate_descriptor.type>=14) { // 386 int/trap gate
             // push long pointer to old stack onto new stack
             push_32(old_SS);
             push_32(old_ESP);
@@ -669,16 +681,13 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
             if ( is_error_code )
               push_32(error_code);
           }
-          else { // 286 int/trap gate
-            if (is_v8086_mode) {
-              BX_PANIC(("286 int/trap gate, VM"));
-            }
+          else {                          // 286 int/trap gate
             // push long pointer to old stack onto new stack
             push_16(old_SS);
             push_16(old_ESP); // ignores upper 16bits
 
             // push FLAGS
-            push_16(flags);
+            push_16(eflags);  // ignores upper 16bits
 
             // push return address onto new stack
             push_16(old_CS);
@@ -692,6 +701,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
         }
 
         if (v8086_mode()) {
+            // if code segment DPL != 0 then #GP(new code segment selector)
           exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
         }
 
@@ -729,7 +739,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
             exception(BX_SS_EXCEPTION, 0, 0);
           }
 
-          // eIP must be in CS limit else #GP(0)
+          // EIP must be in CS limit else #GP(0)
           if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
             BX_ERROR(("interrupt(): IP > cs descriptor limit"));
             exception(BX_GP_EXCEPTION, 0, 0);

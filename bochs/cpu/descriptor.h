@@ -88,7 +88,7 @@ typedef struct
 #define BX_386_INTERRUPT_GATE          (0xe)
 #define BX_386_TRAP_GATE               (0xf)
 
-  union {
+union {
   struct {
     bx_bool executable;    /* 1=code, 0=data or stack segment */
     bx_bool c_ed;          /* for code: 1=conforming,
@@ -143,8 +143,8 @@ typedef struct
   struct {
     bx_address  base;      /* 286=24 386+ =32/64 bit LDT base */
     Bit16u  limit;         /* 286+ =16 bit LDT limit */
-    } ldt;
-  } u;
+  } ldt;
+} u;
 
 } bx_descriptor_t;
 
