@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.9 2002-12-14 21:24:55 bdenney Exp $
+# $Id: Makefile.in,v 1.10 2002-12-15 13:14:27 cbothamy Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -39,13 +39,13 @@ SSH=ssh -x
 all: $(SECTION_HTML)
 
 user/book1.html: $(srcdir)/user/user.dbk
-	-mkdir user
+	-mkdir -p user
 	$(DOCBOOK2HTML) -o user $(srcdir)/user/user.dbk
 documentation/book1.html: $(srcdir)/documentation/documentation.dbk
-	-mkdir documentation
+	-mkdir -p documentation
 	$(DOCBOOK2HTML) -o documentation $(srcdir)/documentation/documentation.dbk 
 development/book1.html: $(srcdir)/development/development.dbk
-	-mkdir development
+	-mkdir -p development
 	$(DOCBOOK2HTML) -o development $(srcdir)/development/development.dbk
 
 fixperm::
