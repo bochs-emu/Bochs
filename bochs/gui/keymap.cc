@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.9 2002-09-16 16:58:59 bdenney Exp $
+// $Id: keymap.cc,v 1.10 2002-09-25 13:01:30 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -171,7 +171,10 @@ get_next_keymap_line (FILE *fp, char *bxsym, char *modsym, Bit32s *ascii, char *
 	p++;  // move one char beyond the +
 	strcpy (modsym, p);  // copy the rest to modsym
       }
-      BX_ASSERT (get_next_word (buf) >= 0);
+      if (get_next_word (buf) < 0) {
+	BX_PANIC (("keymap line %d: expected 3 columns", lineCount));
+	return -1;
+      }
       if (buf[0] == '\'' && buf[2] == '\'' && buf[3]==0) {
 	*ascii = (Bit32s) buf[1];
       } else if (!strcmp(buf, "space")) {
@@ -189,7 +192,10 @@ get_next_keymap_line (FILE *fp, char *bxsym, char *modsym, Bit32s *ascii, char *
       } else {
 	BX_PANIC (("keymap line %d: ascii equivalent is \"%s\" but it must be char constant like 'x', or one of space,tab,return,none", lineCount, buf));
       }
-      BX_ASSERT (get_next_word (xwinsym) >= 0);
+      if (get_next_word (xwinsym) < 0) {
+        BX_PANIC (("keymap line %d: expected 3 columns", lineCount));
+	return -1;
+      }
       return 0;
     }
     // no words on this line, keep reading.
