@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.99.2.8 2002-10-08 22:45:15 bdenney Exp $
+// $Id: bochs.h,v 1.99.2.9 2002-10-09 05:12:57 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,12 +126,6 @@ extern "C" {
 #else
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
-/*
- * this macros are defined in plugin.h
-#define BX_VGA_MEM_READ(addr) (bx_devices.vga->mem_read(addr))
-#define BX_VGA_MEM_WRITE(addr, val) bx_devices.vga->mem_write(addr, val)
-*/
-
 #if BX_SUPPORT_A20
 #  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
 #else
@@ -492,8 +486,6 @@ extern bx_debug_t bx_dbg;
 enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
 
 #include "pc_system.h"
-
-class bx_devices_c;  // forward decl needed for plugin.h
 #include "plugin.h"
 #include "gui/gui.h"
 #include "gui/control.h"

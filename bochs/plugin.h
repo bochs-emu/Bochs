@@ -20,6 +20,7 @@
 #ifndef __PLUGIN_H
 #define __PLUGIN_H
 
+class bx_devices_c;
 extern logfunctions  *pluginlog;
 
 #ifdef __cplusplus
