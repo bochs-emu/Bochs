@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.119 2004-02-22 18:51:37 vruppert Exp $
+// $Id: siminterface.h,v 1.120 2004-05-30 08:28:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -852,6 +852,7 @@ protected:
   char *label; // label string for text menus and gui dialogs
   const char *text_format;  // printf format string. %d for ints, %s for strings, etc.
   char *ask_format;  // format string for asking for a new value
+  char *group_name;  // name of the group the param belongs to
   int runtime_param;
   int enabled;
 public:
@@ -864,6 +865,8 @@ public:
   char *get_label () {return label;}
   void set_runtime_param (int val) { runtime_param = val; }
   int get_runtime_param () { return runtime_param; }
+  void set_group (char *group) {group_name = group;}
+  char *get_group () {return group_name;}
   char *get_name () { return name; }
   char *get_description () { return description; }
   int get_enabled () { return enabled; }
@@ -1141,7 +1144,11 @@ public:
     // When a bx_list_c is displayed in a dialog, the list name is used as the
     // label of the group box if USE_BOX_TITLE is set. This is only necessary if
     // more than one list appears in a dialog box.
-    USE_BOX_TITLE = (1<<3)
+    USE_BOX_TITLE = (1<<3),
+    // When a bx_list_c is displayed as a menu, SHOW_GROUP_NAME controls whether
+    // or not the name of group the item belongs to is added to the name of the
+    // item (used in the runtime menu).
+    SHOW_GROUP_NAME = (1<<4)
   } bx_listopt_bits;
   bx_list_c (bx_id id, int maxsize);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.22 2004-02-03 22:40:33 vruppert Exp $
+// $Id: textconfig.cc,v 1.23 2004-05-30 08:28:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -287,15 +287,12 @@ static char *runtime_menu_prompt =
 "7. (not implemented)\n"
 "8. Log options for all devices\n"
 "9. Log options for individual devices\n"
-"10. VGA Update Interval: %d\n"
-"11. Mouse: %s\n"
-"12. Keyboard paste delay: %d\n"
-"13. Userbutton shortcut: %s\n"
-"14. Instruction tracing: off (doesn't exist yet)\n"
-"15. Continue simulation\n"
-"16. Quit now\n"
+"10. Instruction tracing: off (doesn't exist yet)\n"
+"11. Misc runtime options\n"
+"12. Continue simulation\n"
+"13. Quit now\n"
 "\n"
-"Please choose one:  [15] ";
+"Please choose one:  [12] ";
 #endif
 
 #define NOT_IMPLEMENTED(choice) \
@@ -468,7 +465,7 @@ int bx_config_interface (int menu)
      choice = RuntimeOptionsDialog();
 #else
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
-     if (ask_uint (prompt, 1, 16, 15, &choice, 10) < 0) return -1;
+     if (ask_uint (prompt, 1, 13, 12, &choice, 10) < 0) return -1;
 #endif
      switch (choice) {
        case 1: 
@@ -498,13 +495,10 @@ int bx_config_interface (int menu)
 	       break;
        case 8: bx_log_options (0); break;
        case 9: bx_log_options (1); break;
-       case 10: askparam (BXP_VGA_UPDATE_INTERVAL); break;
-       case 11: askparam (BXP_MOUSE_ENABLED); break;
-       case 12: askparam (BXP_KBD_PASTE_DELAY); break;
-       case 13: askparam (BXP_USER_SHORTCUT); break;
-       case 14: NOT_IMPLEMENTED (choice); break;
-       case 15: fprintf (stderr, "Continuing simulation\n"); return 0;
-       case 16:
+       case 10: NOT_IMPLEMENTED (choice); break;
+       case 11: askparam (BXP_MENU_RUNTIME); break;
+       case 12: fprintf (stderr, "Continuing simulation\n"); return 0;
+       case 13:
 	 fprintf (stderr, "You chose quit on the configuration interface.\n");
          bx_user_quit = 1;
 	 SIM->quit_sim (1);
@@ -962,6 +956,8 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
       assert (list[i] != NULL);
       fprintf (fpout, "%d. ", i+1);
       if (list[i]->get_enabled ()) {
+        if ((options->get () & SHOW_GROUP_NAME) && (list[i]->get_group () != NULL))
+          fprintf (fpout, "%s ", list[i]->get_group ());
         list[i]->text_print (fpout);
 	fprintf (fpout, "\n");
       } else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.275 2004-05-23 10:46:59 vruppert Exp $
+// $Id: main.cc,v 1.276 2004-05-30 08:28:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1421,7 +1421,9 @@ void bx_init_options ()
   bx_options.sb16.Ologlevel->set_options (bx_param_num_c::USE_SPIN_CONTROL);
 #endif
   bx_options.sb16.Odmatimer->set_runtime_param (1);
+  bx_options.sb16.Odmatimer->set_group ("SB16");
   bx_options.sb16.Ologlevel->set_runtime_param (1);
+  bx_options.sb16.Ologlevel->set_group ("SB16");
   bx_param_c *sb16_init_list[] = {
     bx_options.sb16.Opresent,
     bx_options.sb16.Omidimode,
@@ -1642,6 +1644,17 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_MISC_2, "Other options", "", other_init_list2);
 #endif
+  bx_param_c *runtime_init_list[] = {
+      bx_options.Ovga_update_interval,
+      bx_options.Omouse_enabled,
+      bx_options.Okeyboard_paste_delay,
+      bx_options.Ouser_shortcut,
+      bx_options.sb16.Odmatimer,
+      bx_options.sb16.Ologlevel,
+      NULL
+  };
+  menu = new bx_list_c (BXP_MENU_RUNTIME, "Misc runtime options", "", runtime_init_list);
+  menu->get_options ()->set (menu->SHOW_PARENT | menu->SHOW_GROUP_NAME);
 }
 
 void bx_reset_options ()
