@@ -1,0 +1,286 @@
+----------------------------------------------------------------------
+Patch name: patch.floppy-volker
+Author: Volker.Ruppert@t-online.de
+Date: Don Dez 28 17:29:00 CET 2001
+
+Detailed description:
+
+  This patch contains the second set of changes to bochs floppy support.
+  The changes are checked in, so you can use this file to revert them if
+  they cause trouble.
+
+  * floppy command 'format track' implemented
+  * read and write operations with MT=0 are working now
+    (function 'increment_sector()' updated)
+  * result code of floppy command 'get status' fixed
+  * flag FS_MS_DIO is not set while the 'configure' floppy command is pending
+
+Patch was created with:
+  diff -u
+Apply patch to what version:
+  cvs checked out on DATE
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+--- ../bochs/iodev/floppy.cc	Thu Dec 27 10:30:31 2001
++++ iodev/floppy.cc	Fri Dec 28 17:06:26 2001
+@@ -462,9 +462,14 @@
+           case 0x4a: /* read ID */
+             BX_FD_THIS s.command_size = 2;
+             break;
++          case 0x4d: /* format track */
++            BX_FD_THIS s.command_size = 6;
++            break;
++          case 0x45:
+           case 0xc5: /* write normal data */
+             BX_FD_THIS s.command_size = 9;
+             break;
++          case 0x66:
+           case 0xe6: /* read normal data */
+             BX_FD_THIS s.command_size = 9;
+             break;
+@@ -577,8 +582,8 @@
+ 
+     case 0x04: // get status
+       drive = (BX_FD_THIS s.command[1] & 0x03);
+-      BX_FD_THIS s.result[0] = 
+-	  BX_FD_THIS s.media[drive].write_protected ? 0x40 : 0x00;
++      BX_FD_THIS s.result[0] = 0x28 | (BX_FD_THIS s.head[drive]<<2) | drive
++        | (BX_FD_THIS s.media[drive].write_protected ? 0x40 : 0x00);
+       BX_FD_THIS s.result_size = 1;
+       BX_FD_THIS s.result_index = 0;
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+@@ -678,7 +683,7 @@
+       BX_FD_THIS s.result_size = 0;
+       BX_FD_THIS s.result_index = 0;
+       BX_FD_THIS s.pending_command = 0;
+-      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
++      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_BUSY;
+       return;
+       break;
+ 
+@@ -712,9 +717,77 @@
+       return;
+       break;
+ 
++    case 0x4d: // format track
++        drive = BX_FD_THIS s.command[1] & 0x03;
++        BX_FD_THIS s.DOR &= 0xfc;
++        BX_FD_THIS s.DOR |= drive;
++
++        motor_on = (BX_FD_THIS s.DOR>>(drive+4)) & 0x01;
++        if (motor_on == 0)
++          BX_PANIC(("floppy_command(): format track: motor not on"));
++        BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
++        sector_size = BX_FD_THIS s.command[2];
++        BX_FD_THIS s.format_count = BX_FD_THIS s.command[3];
++        BX_FD_THIS s.format_fillbyte = BX_FD_THIS s.command[5];
++        if (drive > 1)
++          BX_PANIC(("format track: bad drive #%d", drive));
++
++        if (sector_size != 0x02) { // 512 bytes
++          BX_PANIC(("format track: sector_size not 512"));
++          }
++        if (BX_FD_THIS s.format_count != BX_FD_THIS s.media[drive].sectors_per_track) {
++          BX_PANIC(("format track: wrong number of sectors/track"));
++          }
++        if ( BX_FD_THIS s.media_present[drive] == 0 ) {
++          // media not in drive, return error
++          BX_INFO(("attempt to format track with media not present"));
++          BX_FD_THIS s.result_size = 7;
++          BX_FD_THIS s.result_index = 0;
++          BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
++          BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
++          BX_FD_THIS s.result[1] = 0x25; // 0010 0101
++          BX_FD_THIS s.result[2] = 0x31; // 0011 0001
++          // 4 result bytes are unused
++          BX_FD_THIS s.pending_command = 0;
++          BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
++          BX_FD_THIS devices->pic->trigger_irq(6);
++          BX_FD_THIS s.pending_irq = 1;
++          return;
++          }
++        if (BX_FD_THIS s.media[drive].write_protected) {
++          // media write-protected, return error
++          BX_INFO(("attempt to format track with media write-protected"));
++          BX_FD_THIS s.result_size = 7;
++          BX_FD_THIS s.result_index = 0;
++          BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
++          BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
++          BX_FD_THIS s.result[1] = 0x27; // 0010 0111
++          BX_FD_THIS s.result[2] = 0x31; // 0011 0001
++          // 4 result bytes are unused
++          BX_FD_THIS s.pending_command = 0;
++          BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
++          BX_FD_THIS devices->pic->trigger_irq(6);
++          BX_FD_THIS s.pending_irq = 1;
++          return;
++          }
++
++      /* 4 header bytes per sector are required */
++      BX_FD_THIS s.format_count <<= 2;
+ 
+-    case 0xe6: // read normal data
+-    case 0xc5: // write normal data
++      bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 1);
++
++      /* data reg not ready, controller busy */
++      BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
++      BX_FD_THIS s.pending_command = 0x4d; /* format track pending */
++      BX_DEBUG(("format track"));
++      return;
++      break;
++
++    case 0x66: // read normal data, MT=0
++    case 0xe6: // read normal data, MT=1
++    case 0x45: // write normal data, MT=0
++    case 0xc5: // write normal data, MT=1
++      BX_FD_THIS s.multi_track = (BX_FD_THIS s.command[0] >> 7);
+       if ( (BX_FD_THIS s.DOR & 0x08) == 0 )
+         BX_PANIC(("read/write command with DMA and int disabled"));
+       drive = BX_FD_THIS s.command[1] & 0x03;
+@@ -744,7 +817,7 @@
+ 
+       // check that head number in command[1] bit two matches the head
+       // reported in the head number field.  Real floppy drives are
+-      // picky about this, as reported in SF bug #439945, (Floppy drive 
++      // picky about this, as reported in SF bug #439945, (Floppy drive
+       // read input error checking).
+       if (head != (BX_FD_THIS s.command[1]>>2)&1) {
+         BX_ERROR(("head number in command[1] doesn't match head field"));
+@@ -854,7 +927,7 @@
+       BX_FD_THIS s.sector[drive]   = sector;
+       BX_FD_THIS s.head[drive]     = head;
+ 
+-      if (BX_FD_THIS s.command[0] == 0xe6) { // read
++      if ((BX_FD_THIS s.command[0] & 0x7f) == 0x66) { // read
+         floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+                     512, FROM_FLOPPY);
+         BX_FD_THIS s.floppy_buffer_index = 0;
+@@ -866,7 +939,7 @@
+         BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
+         return;
+         }
+-      else if (BX_FD_THIS s.command[0] == 0xc5) { // write
++      else if ((BX_FD_THIS s.command[0] & 0x7f) == 0x45) { // write
+         BX_FD_THIS s.floppy_buffer_index = 0;
+ 
+         bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 1);
+@@ -1001,8 +1074,10 @@
+       BX_FD_THIS s.pending_irq = 1;
+       break;
+ 
+-    case 0xc5: // write normal data
+-    case 0xe6: // read normal data
++    case 0x66: // read normal data
++    case 0xe6:
++    case 0x45: // write normal data
++    case 0xc5:
+       BX_FD_THIS s.pending_command = 0;
+       /* read ready, busy */
+       BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | (1 << drive);
+@@ -1096,10 +1171,56 @@
+   Bit8u drive;
+   Bit32u logical_sector;
+ 
++  drive = BX_FD_THIS s.DOR & 0x03;
++  if (BX_FD_THIS s.pending_command == 0x4d) { // format track in progress
++    --BX_FD_THIS s.format_count;
++    switch (3 - (BX_FD_THIS s.format_count & 0x03)) {
++      case 0:
++        BX_FD_THIS s.cylinder[drive] = *data_byte;
++        break;
++      case 1:
++        if (*data_byte != BX_FD_THIS s.head[drive])
++          BX_ERROR(("head number does not match head field"));
++        break;
++      case 2:
++        BX_FD_THIS s.sector[drive] = *data_byte;
++        break;
++      case 3:
++        if (*data_byte != 2) BX_ERROR(("sector size code not 2"));
++        BX_DEBUG(("formatting cylinder %u head %u sector %u",
++                  BX_FD_THIS s.cylinder[drive], BX_FD_THIS s.head[drive],
++                  BX_FD_THIS s.sector[drive]));
++        for (unsigned i = 0; i < 512; i++) {
++          BX_FD_THIS s.floppy_buffer[i] = BX_FD_THIS s.format_fillbyte;
++          }
++        logical_sector = (BX_FD_THIS s.cylinder[drive] * 2 * BX_FD_THIS s.media[drive].sectors_per_track) +
++                         (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
++                         (BX_FD_THIS s.sector[drive] - 1);
++        floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
++                    512, TO_FLOPPY);
++        break;
++      }
++    if ((BX_FD_THIS s.format_count == 0) || (bx_pc_system.TC)) {
++      BX_FD_THIS s.format_count = 0;
++      BX_FD_THIS s.pending_command = 0;
++      BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY | (1 << drive);
++      BX_FD_THIS s.result_size = 7;
++      BX_FD_THIS s.result_index = 0;
++      BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
++      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
++      BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
++      BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
++      // 4 result bytes are unused
++      BX_FD_THIS devices->pic->trigger_irq(6);
++      BX_FD_THIS s.pending_irq = 1;
++      bx_pc_system.set_DRQ(FLOPPY_DMA_CHAN, 0);
++      }
++    return;
++    }
++
+   BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
+ 
+   if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+-    drive = BX_FD_THIS s.DOR & 0x03;
+     logical_sector = (BX_FD_THIS s.cylinder[drive] * 2 * BX_FD_THIS s.media[drive].sectors_per_track) +
+                      (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
+                      (BX_FD_THIS s.sector[drive] - 1);
+@@ -1171,17 +1292,22 @@
+   // ??? calculation depends on base_count being multiple of 512
+   BX_FD_THIS s.sector[drive] ++;
+   if (BX_FD_THIS s.sector[drive] > BX_FD_THIS s.media[drive].sectors_per_track) {
+-    BX_FD_THIS s.sector[drive] -= BX_FD_THIS s.media[drive].sectors_per_track;
+-    BX_FD_THIS s.head[drive] ++;
+-    if (BX_FD_THIS s.head[drive] > 1) {
+-      BX_FD_THIS s.head[drive] = 0;
+-      BX_FD_THIS s.cylinder[drive] ++;
+-      if (BX_FD_THIS s.cylinder[drive] >= BX_FD_THIS s.media[drive].tracks) {
+-        // Set to 1 past last possible cylinder value.
+-        // I notice if I set it to tracks-1, prama linux won't boot.
+-        BX_FD_THIS s.cylinder[drive] = BX_FD_THIS s.media[drive].tracks;
+-        BX_INFO(("increment_sector: clamping cylinder to max"));
++    BX_FD_THIS s.sector[drive] = 1;
++    if (BX_FD_THIS s.multi_track) {
++      BX_FD_THIS s.head[drive] ++;
++      if (BX_FD_THIS s.head[drive] > 1) {
++        BX_FD_THIS s.head[drive] = 0;
++        BX_FD_THIS s.cylinder[drive] ++;
+         }
++      }
++    else {
++      BX_FD_THIS s.cylinder[drive] ++;
++      }
++    if (BX_FD_THIS s.cylinder[drive] >= BX_FD_THIS s.media[drive].tracks) {
++      // Set to 1 past last possible cylinder value.
++      // I notice if I set it to tracks-1, prama linux won't boot.
++      BX_FD_THIS s.cylinder[drive] = BX_FD_THIS s.media[drive].tracks;
++      BX_INFO(("increment_sector: clamping cylinder to max"));
+       }
+     }
+ }
+--- ../bochs/iodev/floppy.h	Thu Dec 27 10:28:53 2001
++++ iodev/floppy.h	Fri Dec 28 13:59:47 2001
+@@ -70,7 +70,10 @@
+     Boolean command_complete;
+     Bit8u   pending_command;
+ 
++    Boolean multi_track;
+     Boolean pending_irq;
++    Bit8u   format_count;
++    Bit8u   format_fillbyte;
+ 
+     Bit8u   result[10];
+     Bit8u   result_index;
