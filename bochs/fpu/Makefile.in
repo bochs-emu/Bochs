@@ -81,7 +81,7 @@ dist-clean: clean
 f2xm1.o: f2xm1.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../config.h \
   softfloat-specialize.h softfloat-macros.h softfloat-round-pack.h
 ferr.o: ferr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/lazy_flags.h \
+  ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h ../cpu/lazy_flags.h \
   ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -93,14 +93,14 @@ fpatan.o: fpatan.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../config.h \
 fprem.o: fprem.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../config.h \
   softfloat-specialize.h softfloat-round-pack.h softfloat-macros.h
 fpu_arith.o: fpu_arith.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h
 fpu.o: fpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/lazy_flags.h \
+  ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h ../cpu/lazy_flags.h \
   ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -115,7 +115,7 @@ fpu.o: fpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
   ../iodev/gameport.h
 fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
@@ -123,7 +123,7 @@ fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h softfloatx80.h \
   softfloat.h softfloat-specialize.h
 fpu_const.o: fpu_const.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
@@ -131,7 +131,7 @@ fpu_const.o: fpu_const.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h softfloatx80.h \
   softfloat.h softfloat-specialize.h
 fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
@@ -139,7 +139,7 @@ fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h 
   ../gui/keymap.h ../instrument/stubs/instrument.h softfloatx80.h \
   softfloat.h softfloat-specialize.h
 fpu_misc.o: fpu_misc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
@@ -150,7 +150,7 @@ fpu_tags.o: fpu_tags.@CPP_SUFFIX@ softfloat.h ../config.h softfloat-specialize.h
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h
 fpu_trans.o: fpu_trans.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \

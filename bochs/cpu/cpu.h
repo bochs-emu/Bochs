@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.198 2005-02-16 21:26:49 sshwarts Exp $
+// $Id: cpu.h,v 1.199 2005-02-27 17:41:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
 
 
 #ifndef BX_CPU_H
@@ -635,114 +636,10 @@ typedef struct {
 #endif
 
   /* TODO finish of the others */
-  } bx_regs_msr_t;
+} bx_regs_msr_t;
 #endif
 
-typedef struct { /* bx_selector_t */
-  Bit16u value;   /* the 16bit value of the selector */
-#if BX_CPU_LEVEL >= 2
-    /* the following fields are extracted from the value field in protected
-       mode only.  They're used for sake of efficiency */
-  Bit16u index;   /* 13bit index extracted from value in protected mode */
-  Bit8u  ti;      /* table indicator bit extracted from value */
-  Bit8u  rpl;     /* RPL extracted from value */
-#endif
-  } bx_selector_t;
-
-
-
-typedef struct {
-
-#define SegValidCache 0x1
-#define SegAccessROK  0x2
-#define SegAccessWOK  0x4
-  bx_bool valid;         // Holds above values, Or'd together.  Used to
-                         // hold only 0 or 1.
-
-  bx_bool p;             /* present */
-  Bit8u   dpl;           /* descriptor privilege level 0..3 */
-  bx_bool segment;       /* 0 = system/gate, 1 = data/code segment */
-  Bit8u   type;          /* For system & gate descriptors, only
-                          *  0 = invalid descriptor (reserved)
-                          *  1 = 286 available Task State Segment (TSS)
-                          *  2 = LDT descriptor
-                          *  3 = 286 busy Task State Segment (TSS)
-                          *  4 = 286 call gate
-                          *  5 = task gate
-                          *  6 = 286 interrupt gate
-                          *  7 = 286 trap gate
-                          *  8 = (reserved)
-                          *  9 = 386 available TSS
-                          * 10 = (reserved)
-                          * 11 = 386 busy TSS
-                          * 12 = 386 call gate
-                          * 13 = (reserved)
-                          * 14 = 386 interrupt gate
-                          * 15 = 386 trap gate */
-  union {
-  struct {
-    bx_bool executable;    /* 1=code, 0=data or stack segment */
-    bx_bool c_ed;          /* for code: 1=conforming,
-                              for data/stack: 1=expand down */
-    bx_bool r_w;           /* for code: readable?, for data/stack: writeable? */
-    bx_bool a;             /* accessed? */
-    bx_address  base;      /* base address: 286=24bits, 386=32bits, long=64 */
-    Bit32u  limit;         /* limit: 286=16bits, 386=20bits */
-    Bit32u  limit_scaled;  /* for efficiency, this contrived field is set to
-                            * limit for byte granular, and
-                            * (limit << 12) | 0xfff for page granular seg's
-                            */
-#if BX_CPU_LEVEL >= 3
-    bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
-    bx_bool d_b;           /* default size: 0=16bit, 1=32bit */
-#if BX_SUPPORT_X86_64
-    bx_bool l;             /* long mode: 0=compat, 1=64 bit */
-#endif
-    bx_bool avl;           /* available for use by system */
-#endif
-    } segment;
-  struct {
-    Bit8u   word_count;    /* 5bits (0..31) #words to copy from caller's stack
-                            * to called procedure's stack.  (call gates only)*/
-    Bit16u  dest_selector;
-    Bit16u  dest_offset;
-    } gate286;
-  struct {                 // type 5: Task Gate Descriptor
-    Bit16u  tss_selector;  // TSS segment selector
-    } taskgate;
-#if BX_CPU_LEVEL >= 3
-  struct {
-    Bit8u   dword_count;   /* 5bits (0..31) #dwords to copy from caller's stack
-                            * to called procedure's stack.  (call gates only)*/
-    Bit16u  dest_selector;
-    Bit32u  dest_offset;
-    } gate386;
-#endif
-  struct {
-    Bit32u  base;          /* 24 bit 286 TSS base  */
-    Bit16u  limit;         /* 16 bit 286 TSS limit */
-    } tss286;
-#if BX_CPU_LEVEL >= 3
-  struct {
-    bx_address  base;      /* 32/64 bit 386 TSS base */
-    Bit32u  limit;         /* 20 bit 386 TSS limit */
-    Bit32u  limit_scaled;  // Same notes as for 'segment' field
-    bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
-    bx_bool avl;           /* available for use by system */
-    } tss386;
-#endif
-  struct {
-    bx_address  base;  /* 286=24 386+ =32/64 bit LDT base */
-    Bit16u  limit; /* 286+ =16 bit LDT limit */
-    } ldt;
-    } u;
-
-  } bx_descriptor_t;
-
-typedef struct {
-  bx_selector_t          selector;
-  bx_descriptor_t  cache;
-  } bx_segment_reg_t;
+#include "descriptor.h"
 
 typedef void * (*BxVoidFPtr_t)(void);
 
@@ -793,13 +690,13 @@ public:
         Bit32u   Id;
         Bit16u   Iw;
         Bit8u    Ib;
-        };
+      };
 
       union {
         Bit16u displ16u; // for 16-bit modrm forms
         Bit32u displ32u; // for 32-bit modrm forms
-        };
-      } modRMForm;
+      };
+    } modRMForm;
 
     struct {
       Bit32u dummy;
@@ -807,13 +704,13 @@ public:
         Bit32u   Id;
         Bit16u   Iw;
         Bit8u    Ib;
-        };
+      };
       union {
         Bit32u   Id2; // Not used (for alignment)
         Bit16u   Iw2;
         Bit8u    Ib2;
-        };
-      } IxIxForm;
+      };
+    } IxIxForm;
 
     struct {
       // For opcodes which don't use modRM, but which encode the
@@ -824,47 +721,47 @@ public:
         Bit32u   Id;
         Bit16u   Iw;
         Bit8u    Ib;
-        };
+      };
       Bit32u dummy;
-      } IxForm;
+    } IxForm;
 
 #if BX_SUPPORT_X86_64
     // Form: [opcode/Iq].  These opcode never use a modrm sequence.
     struct {
       Bit32u opcodeReg;
       Bit64u   Iq;  // for MOV Rx,imm64
-      } IqForm;
+    } IqForm;
 #endif
-    };
+  };
 
   BX_CPP_INLINE unsigned opcodeReg() {
     // The opcodeReg form (low 3 bits of the opcode byte (extended
     // by REX.B on x86-64) can be accessed by IxForm or IqForm.  They
     // are aligned in the same place, so it doesn't matter.
     return IxForm.opcodeReg;
-    }
+  }
   BX_CPP_INLINE unsigned modrm() { return (modRMForm.modRMData>>20) & 0xff; }
   BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData & 0xc0; }
   BX_CPP_INLINE unsigned modC0()
-    {
+  {
     // This is a cheaper way to test for modRM instructions where
     // the mod field is 0xc0.  FetchDecode flags this condition since
     // it is quite common to be tested for.
     return metaInfo & (1<<22);
-    }
+  }
   BX_CPP_INLINE unsigned nnn() {
-      return (modRMForm.modRMData >> 8) & 0xf;
-      }
+    return (modRMForm.modRMData >> 8) & 0xf;
+  }
   BX_CPP_INLINE unsigned rm()  { return modRMForm.modRMData & 0xf; }
   BX_CPP_INLINE unsigned sibScale()  {
-      return (modRMForm.modRMData >> 4) & 0x3;
-      }
+    return (modRMForm.modRMData >> 4) & 0x3;
+  }
   BX_CPP_INLINE unsigned sibIndex() {
-      return (modRMForm.modRMData >> 16) & 0xf;
-      }
+    return (modRMForm.modRMData >> 16) & 0xf;
+  }
   BX_CPP_INLINE unsigned sibBase()  {
-      return (modRMForm.modRMData >> 12) & 0xf;
-      }
+    return (modRMForm.modRMData >> 12) & 0xf;
+  }
   BX_CPP_INLINE Bit32u   displ32u() { return modRMForm.displ32u; }
   BX_CPP_INLINE Bit16u   displ16u() { return modRMForm.displ16u; }
   BX_CPP_INLINE Bit32u   Id()  { return modRMForm.Id; }
@@ -885,114 +782,113 @@ public:
                                   unsigned os32, unsigned as32,
                                   unsigned os64, unsigned as64,
                                   unsigned extend8bit, unsigned repUsed) {
-      metaInfo = seg | (os32<<4) | (as32<<5) |
+    metaInfo = seg | (os32<<4) | (as32<<5) |
                  (os64<<6) | (as64<<7) | (extend8bit<<8) | (repUsed<<9);
-      }
+  }
   BX_CPP_INLINE unsigned seg(void) {
-      return metaInfo & 7;
-      }
+    return metaInfo & 7;
+  }
   BX_CPP_INLINE void setSeg(unsigned val) {
-      metaInfo = (metaInfo & ~7) | val;
-      }
+    metaInfo = (metaInfo & ~7) | val;
+  }
 
   BX_CPP_INLINE unsigned os32L(void) {
-      return metaInfo & (1<<4);
-      }
+    return metaInfo & (1<<4);
+  }
   BX_CPP_INLINE unsigned os32B(void) {
-      return (metaInfo >> 4) & 1;
-      }
+    return (metaInfo >> 4) & 1;
+  }
   BX_CPP_INLINE void setOs32B(unsigned bit) {
-      metaInfo = (metaInfo & ~(1<<4)) | (bit<<4);
-      }
+    metaInfo = (metaInfo & ~(1<<4)) | (bit<<4);
+  }
   BX_CPP_INLINE void assertOs32(void) {
-      metaInfo |= (1<<4);
-      }
+    metaInfo |= (1<<4);
+  }
 
   BX_CPP_INLINE unsigned as32L(void) {
-      return metaInfo & (1<<5);
-      }
+    return metaInfo & (1<<5);
+  }
   BX_CPP_INLINE unsigned as32B(void) {
-      return (metaInfo >> 5) & 1;
-      }
+    return (metaInfo >> 5) & 1;
+  }
   BX_CPP_INLINE void setAs32B(unsigned bit) {
-      metaInfo = (metaInfo & ~(1<<5)) | (bit<<5);
-      }
+    metaInfo = (metaInfo & ~(1<<5)) | (bit<<5);
+  }
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned os64L(void) {
-      return metaInfo & (1<<6);
-      }
+    return metaInfo & (1<<6);
+  }
   BX_CPP_INLINE void setOs64B(unsigned bit) {
-      metaInfo = (metaInfo & ~(1<<6)) | (bit<<6);
-      }
+    metaInfo = (metaInfo & ~(1<<6)) | (bit<<6);
+  }
   BX_CPP_INLINE void assertOs64(void) {
-      metaInfo |= (1<<6);
-      }
+    metaInfo |= (1<<6);
+  }
 #else
   BX_CPP_INLINE unsigned os64L(void) { return 0; }
 #endif
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned as64L(void) {
-      return metaInfo & (1<<7);
-      }
+    return metaInfo & (1<<7);
+  }
   BX_CPP_INLINE void setAs64B(unsigned bit) {
-      metaInfo = (metaInfo & ~(1<<7)) | (bit<<7);
-      }
+    metaInfo = (metaInfo & ~(1<<7)) | (bit<<7);
+  }
 #else
   BX_CPP_INLINE unsigned as64L(void) { return 0; }
 #endif
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned extend8bitL(void) {
-      return metaInfo & (1<<8);
-      }
+    return metaInfo & (1<<8);
+  }
   BX_CPP_INLINE void assertExtend8bit(void) {
-      metaInfo |= (1<<8);
-      }
+    metaInfo |= (1<<8);
+  }
 #endif
 
   BX_CPP_INLINE unsigned repUsedL(void) {
-      return metaInfo & (3<<9);
-      }
+    return metaInfo & (3<<9);
+  }
   BX_CPP_INLINE unsigned repUsedValue(void) {
-      return (metaInfo >> 9) & 3;
-      }
+    return (metaInfo >> 9) & 3;
+  }
   BX_CPP_INLINE void setRepUsed(unsigned value) {
-      metaInfo = (metaInfo & ~(3<<9)) | (value<<9);
-      }
-
+    metaInfo = (metaInfo & ~(3<<9)) | (value<<9);
+  }
   BX_CPP_INLINE void setRepAttr(unsigned value) {
-      // value is expected to be masked, and only contain bits
-      // for BxRepeatable and BxRepeatableZF.  We don't need to
-      // keep masking out these bits before we add in new ones,
-      // since the fetch process won't start with repeatable attributes
-      // and then delete them.
-      metaInfo |= value;
-      }
+    // value is expected to be masked, and only contain bits
+    // for BxRepeatable and BxRepeatableZF.  We don't need to
+    // keep masking out these bits before we add in new ones,
+    // since the fetch process won't start with repeatable attributes
+    // and then delete them.
+    metaInfo |= value;
+  }
   BX_CPP_INLINE unsigned repeatableL(void) {
-      return metaInfo & (1<<11);
-      }
+    return metaInfo & (1<<11);
+  }
   BX_CPP_INLINE unsigned repeatableZFL(void) {
-      return metaInfo & (1<<12);
-      }
+    return metaInfo & (1<<12);
+  }
 
   BX_CPP_INLINE unsigned b1(void) {
-      return (metaInfo >> 13) & 0x1ff;
-      }
+    return (metaInfo >> 13) & 0x1ff;
+  }
   BX_CPP_INLINE void setB1(unsigned b1) {
-      metaInfo = (metaInfo & ~(0x1ff<<13)) | (b1<<13);
-      }
+    metaInfo = (metaInfo & ~(0x1ff<<13)) | (b1<<13);
+  }
 
   // Note this is the highest field, and thus needs no masking.
   // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
   BX_CPP_INLINE unsigned ilen(void) {
-      return metaInfo >> 23;
-      }
+    return metaInfo >> 23;
+  }
   BX_CPP_INLINE void setILen(unsigned ilen) {
-      metaInfo |= (ilen<<23);
-      }
-  };
+    metaInfo |= (ilen<<23);
+  }
+};
 
 
 #if BX_USE_CPU_SMF
@@ -1007,15 +903,6 @@ typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN
 // ========== iCache =============================================
 #if BX_SUPPORT_ICACHE
 #include "icache.h"
-#endif
-
-#if BX_CPU_LEVEL < 2
-  /* no GDTR or IDTR register in an 8086 */
-#else
-typedef struct {
-  bx_address             base;      /* base address: 24bits=286,32bits=386,64bits=x86-64 */
-  Bit16u                 limit;     /* limit, 16bits */
-  } bx_global_segment_reg_t;
 #endif
 
 #if BX_USE_TLB

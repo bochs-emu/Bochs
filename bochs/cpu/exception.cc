@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.46 2005-02-23 18:00:03 sshwarts Exp $
+// $Id: exception.cc,v 1.47 2005-02-27 17:41:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -131,11 +131,11 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     }
 
     switch (gate_descriptor.type) {
-      //case 5: // task gate
-      //case 6: // 286 interrupt gate
-      //case 7: // 286 trap gate
-      case 14: // 386 interrupt gate
-      case 15: // 386 trap gate
+      //case BX_TASK_GATE:
+      //case BX_286_INTERRUPT_GATE:
+      //case BX_286_TRAP_GATE:
+      case BX_386_INTERRUPT_GATE:
+      case BX_386_TRAP_GATE:
         break;
       default:
         BX_DEBUG(("interrupt(): gate.type(%u) != {5,6,7,14,15}",
@@ -376,11 +376,11 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     }
 
     switch (gate_descriptor.type) {
-      case  5: // task gate
-      case  6: // 286 interrupt gate
-      case  7: // 286 trap gate
-      case 14: // 386 interrupt gate
-      case 15: // 386 trap gate
+      case BX_TASK_GATE:
+      case BX_286_INTERRUPT_GATE:
+      case BX_286_TRAP_GATE:
+      case BX_386_INTERRUPT_GATE:
+      case BX_386_TRAP_GATE:
         break;
       default:
         BX_DEBUG(("interrupt(): gate.type(%u) != {5,6,7,14,15}",
@@ -403,7 +403,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     }
 
     switch (gate_descriptor.type) {
-      case 5: // 286/386 task gate
+      case BX_TASK_GATE:
         // examine selector to TSS, given in task gate descriptor
         raw_tss_selector = gate_descriptor.u.taskgate.tss_selector;
         parse_selector(raw_tss_selector, &tss_selector);
@@ -465,10 +465,10 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 
         return;
 
-      case  6: // 286 interrupt gate
-      case  7: // 286 trap gate
-      case 14: // 386 interrupt gate
-      case 15: // 386 trap gate
+      case BX_286_INTERRUPT_GATE:
+      case BX_286_TRAP_GATE:
+      case BX_386_INTERRUPT_GATE:
+      case BX_386_TRAP_GATE:
         if ( gate_descriptor.type >= 14 ) { // 386 gate
           gate_dest_selector = gate_descriptor.u.gate386.dest_selector;
           gate_dest_offset   = gate_descriptor.u.gate386.dest_offset;

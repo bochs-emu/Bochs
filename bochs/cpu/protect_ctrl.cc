@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.33 2005-01-28 20:50:48 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.34 2005-02-27 17:41:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,37 +156,36 @@ BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
     }
   else { /* system or gate segment */
     switch (descriptor.type) {
-      case 1: /* available TSS */
-      case 2: /* LDT */
-      case 3: /* busy TSS */
-      case 4: /* 286 call gate */
-      case 5: /* task gate */
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_LDT:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+      case BX_286_CALL_GATE:
+      case BX_TASK_GATE:
 #if BX_CPU_LEVEL >= 3
-      case 9:  /* available 32bit TSS */
-      case 11: /* busy 32bit TSS */
-      case 12: /* 32bit call gate */
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+      case BX_386_CALL_GATE:
 #endif
         break;
       default: /* rest not accepted types to LAR */
         set_ZF(0);
         BX_DEBUG(("lar(): not accepted type"));
         return;
-        break;
-      }
+    }
 
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       set_ZF(0);
       return;
-      }
+    }
     set_ZF(1);
     if (i->os32L()) {
       /* masked by 00FxFF00, where x is undefined ? */
       BX_WRITE_32BIT_REGZ(i->nnn(), dword2 & 0x00ffff00);
-      }
+    }
     else {
       BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
-      }
     }
+  }
 }
 
   void
@@ -232,25 +231,25 @@ BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   if ((dword2 & 0x00001000) == 0) { // system segment
     Bit32u type = (dword2 >> 8) & 0x0000000f;
     switch (type) {
-      case 1: // 16bit TSS
-      case 3: // 16bit TSS
-      case 2: // LDT
-      case 9: // 32bit TSS    G00A
-      case 11:// 32bit TSS    G00A
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+      case BX_SYS_SEGMENT_LDT:
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
         limit32 = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
         if (dword2 & 0x00800000)
           limit32 = (limit32 << 12) | 0x00000fff;
         if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
           set_ZF(0);
           return;
-          }
+        }
         goto lsl_ok;
         break;
       default:
         set_ZF(0);
         return;
-      }
     }
+  }
   else { // data & code segment
     limit32 = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
     if (dword2 & 0x00800000)
@@ -258,14 +257,14 @@ BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
     if ((dword2 & 0x00000c00) == 0x00000c00) {
       // conforming code segment, no check done
       goto lsl_ok;
-      }
+    }
 
     if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
       set_ZF(0);
       return;
-      }
-    goto lsl_ok;
     }
+    goto lsl_ok;
+  }
 
 lsl_ok:
   /* all checks pass, limit32 is now byte granular, write to op1 */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.96 2005-02-26 12:00:22 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.97 2005-02-27 17:41:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1812,7 +1812,7 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR set_IF(0);
   BX_CPU_THIS_PTR set_RF(0);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr & BX_SELECTOR_RPL_MASK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = BX_CPU_THIS_PTR sysenter_cs_msr >> 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 0;
@@ -1827,7 +1827,7 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;          // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr + 8;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 0;
