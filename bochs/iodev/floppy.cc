@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.61 2003-02-06 23:16:56 cbothamy Exp $
+// $Id: floppy.cc,v 1.62 2003-06-20 16:28:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,7 +101,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.61 2003-02-06 23:16:56 cbothamy Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.62 2003-06-20 16:28:00 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -775,10 +775,11 @@ bx_floppy_ctrl_c::floppy_command(void)
           BX_PANIC(("floppy_command(): format track: bad drive #%d", drive));
 
         if (sector_size != 0x02) { // 512 bytes
-          BX_PANIC(("format track: sector_size not 512"));
+          BX_PANIC(("format track: sector size %d not supported", 128<<sector_size));
           }
         if (BX_FD_THIS s.format_count != BX_FD_THIS s.media[drive].sectors_per_track) {
-          BX_PANIC(("format track: wrong number of sectors/track"));
+          BX_PANIC(("format track: %d sectors/track requested (%d expected)",
+                    BX_FD_THIS s.format_count, BX_FD_THIS s.media[drive].sectors_per_track));
           }
         if ( BX_FD_THIS s.media_present[drive] == 0 ) {
           // media not in drive, return error
@@ -870,7 +871,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         }
 
       if (sector_size != 0x02) { // 512 bytes
-        BX_PANIC(("sector_size not 512"));
+        BX_PANIC(("read/write command: sector size %d not supported", 128<<sector_size));
         }
       if ( cylinder >= BX_FD_THIS s.media[drive].tracks ) {
         BX_PANIC(("io: norm r/w parms out of range: sec#%02xh cyl#%02xh eot#%02xh head#%02xh",
@@ -1143,7 +1144,7 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
         BX_FD_THIS s.sector[drive] = *data_byte;
         break;
       case 3:
-        if (*data_byte != 2) BX_ERROR(("sector size code not 2"));
+        if (*data_byte != 2) BX_ERROR(("dma_read: sector size %d not supported", 128<<(*data_byte)));
         BX_DEBUG(("formatting cylinder %u head %u sector %u",
                   BX_FD_THIS s.cylinder[drive], BX_FD_THIS s.head[drive],
                   BX_FD_THIS s.sector[drive]));
