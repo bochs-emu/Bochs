@@ -700,23 +700,28 @@ AC_ARG_ENABLE(hga-dumps,
 
 PRIMARY_TARGET='bochs'
 
+AC_MSG_CHECKING(for external device models)
 AC_ARG_ENABLE(external-device-models,
   [  --enable-external-device-models   use external hardware device models],
   [
+    AC_MSG_RESULT(yes)
     AC_DEFINE(BX_PROVIDE_DEVICE_MODELS, 0)
     IODEV_LIB_VAR=''
     PRIMARY_TARGET='libbochs_cpu.a'
     ],
   [
+    AC_MSG_RESULT(no)
     AC_DEFINE(BX_PROVIDE_DEVICE_MODELS, 1)
     IODEV_LIB_VAR='iodev/libiodev.a'
     ]
   )
 AC_SUBST(IODEV_LIB_VAR)
 
+AC_MSG_CHECKING(for external cpu memory)
 AC_ARG_ENABLE(external-cpu-memory,
   [  --enable-external-cpu-memory      use external CPU+memory simulation environment],
   [
+    AC_MSG_RESULT(yes)
     AC_DEFINE(BX_PROVIDE_CPU_MEMORY, 0)
     NONINLINE_VAR='$(EXTERN_ENVIRONMENT_OBJS)'
     INLINE_VAR=''
@@ -724,6 +729,7 @@ AC_ARG_ENABLE(external-cpu-memory,
     EXTERNAL_DEPENDENCY='libbochs.a: iodev/libiodev.a $(EXTERN_ENVIRONMENT_OBJS)'
     ],
   [
+    AC_MSG_RESULT(no)
     AC_DEFINE(BX_PROVIDE_CPU_MEMORY, 1)
     NONINLINE_VAR='$(NONINLINE_OBJS)'
     ]
