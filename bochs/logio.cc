@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.47 2004-09-19 18:38:08 vruppert Exp $
+// $Id: logio.cc,v 1.48 2004-10-05 18:59:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -515,6 +515,9 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       // instruction, it should notice the user interrupt and return to
       // the debugger.
       bx_guard.interrupt_requested = 1;
+/*
+      // Russ Cox's CPU panic debug patch from Oct 2003 -> 
+      //       caused compilation errors when BX_DEBUGGER enabled
 
       // actually, if this is a panic, it's very likely the caller will
       // not be able to cope gracefully if we return and try to keep
@@ -533,6 +536,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       in_ask_already = 0;
       BX_CPU_THIS_PTR ispanic = 1;
       longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+*/
       break;
 #endif
     default:
