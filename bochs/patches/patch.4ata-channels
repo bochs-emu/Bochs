@@ -5,6 +5,10 @@ Date: 14 september 2002
 
 Detailed description:
 
+I merged Bryce's patch and mine. Here are the descriptions of both :
+
+----------------------------------------------------------------------
+
 This patch adds 4 ata channels support for Bochs. Features :
  - number of active channels defined at boot-time config
  - new options in bochsrc
@@ -15,6 +19,97 @@ You'll want to use BIOS-bochs-new-ata to be able to access new
 devices from the bios.
 
 I have not split "harddrv.cc" in simpler files yet.
+
+----------------------------------------------------------------------
+
+This patch applies on top of Christophe Bothamy's 4ata-channels patch.
+I'm keeping a separate patch in case Christophe wants to make revisions
+to his patch without my changes getting in the way.
+
+I have just been working on the configuration interface part, in both the
+text interface and wxWindows.
+
+- set default I/O address for all ata channels, even the ones which are
+  disabled by default.  It's easier to configure from scratch if we have
+  reasonable defaults already.  (I know many options default to zero instead
+  of reasonable defaults, but I don't like that either.)
+- eliminate huge initialization lists atachannel_init_list[][] and
+  atadevice_init_list[][] by creating the bx_list_c and calling the add()
+  method from inside a loop.
+- fix bugs in the bochsrc output code (extra or missing comma problems)
+- Also I'm using a trick: since the dependent_list and the menus contain almost
+  the same items, I build just one list at first.  Then since I need to add a
+  few more items to the dependent list (but I don't want them to show on the
+  menu) I call bx_list_c::clone() to make a copy to use as the dependent list.
+  Example:
+    BXP_ATA0 menu: 
+      BXP_ATA0_PRESENT, BXP_ATA0_IOADDR1, BXP_ATA0_IOADDR2, BXP_ATA0_IRQ
+    dependent list for BXP_ATA0_PRESENT:
+      BXP_ATA0_PRESENT, BXP_ATA0_IOADDR1, BXP_ATA0_IOADDR2, BXP_ATA0_IRQ,
+      BXP_ATA0_MASTER_PRESENT, BXP_ATA0_SLAVE_PRESENT
+- the ata devices have both a "present" boolean parameter and a "type" enum
+  parameter.  I removed the "none" value in the type enum, because it was
+  the same as having present=false.  This made the enable/disable logic
+  somewhat easier.
+- Now the ATA channel present parameters have a dependent_list which includes
+  both the ATA channel parameters and also the ATA device parameters that are
+  on that channel.  This way, when you disable the ATA channel, the devices on
+  the channel will be disabled too.  I am using the dependent_list instead of
+  the callback function that calls set_enable because it allows wxWindows to do
+  the enable/disables without any special code to handle each case.
+- a few changes relating to bx_param_num_c::update_dependents():
+  - don't allow a parameter to disable itself.  This allows the "present" param
+    to be included in its own dependency list without danger of disabling
+    itself forever.
+  - before, if a param with dependents had a value of zero, it would disable
+    its dependent parameters.  Now it will also disable its dependents
+    if the param itself is disabled.
+  - when a parameter with dependents is enabled/disabled, it now calls 
+    update_dependents() as well.  Before this only happened when the value was
+    changed.
+- in wxdialog.cc, I've added equivalent logic in EnableChanged and EnumChanged
+  so that the wxWindows dialogs follow the same dependency rules.  It doesn't
+  work in quite the same way because the text interface changes the params
+  immediately while the wxWindows interface only changes the params when Ok
+  is pressed, but it is very similar.
+- in wxWindows, replace the Edit Hard Disk and Edit Cdrom menu items with ATA
+  Controller items.
+- in ParamDialog, I now add the wxStaticText label for each parameter to 
+  the ParamStruct.  If the param is enabled/disabled, the label will be
+  changed as well.  Esp. since gtk wxCheckboxes do not change visibly when
+  disabled, having the label change to grey is good.
+- in the selection of boot disk, I didn't check for all possibilities of
+  hard disks and cdroms.  If you want to boot from a hard disk, you should
+  make it ata0-master, and if you want to boot from a cdrom, you should
+  make it ata0-slave.  This is just a wxwindows limitation, because Christophe
+  says the BIOS would be able to boot a hard disk on ata3-slave if that 
+  was the first one, but I think we can live with it for now.
+- add clone() method of bx_list_c, which makes a copy.
+
+I could not use the dependent_list trick to handle the "type" field of
+the ATA devices.  When type=disk, it's supposed to enable cylinders, heads,
+and spt, but when type=cdrom, it's supposed to disable C/H/S and enable the
+inserted/ejected param instead.  There's currently no way to do this with
+dependent_list, so I left this behavior in the bx_param_handler callback 
+function.
+
+The problem with using callback functions to handle the enabling of other
+parameters (and the reason that I've been moving away from them for this
+purpose) is that in a GUI dialog box, you don't want to change any parameter
+value until the user presses "Ok".  If callback functions control the enabling
+of other parameters, I cannot know which parts of the dialog to enable/disable
+without modifying the parameter with set().  
+
+Possible solutions:
+1) have the dialog box code remember the old value of every param, to be able
+to implement Cancel.
+2) in each param structure, remember the new value and the previous value.
+Then if the user presses cancel, I can revert each param back to its previous
+value.
+3) for special cases such as enabling C/H/S when type=disk, duplicate
+the enable/disable code in each implementation of the user interface.
+
+#3 is what I've done in ParamDialog::EnumChanged.
 
 Patch was created with:
   cvs diff -u
@@ -30,7 +125,7 @@ RCS file: /cvsroot/bochs/bochs/misc/bximage.c,v
 retrieving revision 1.10
 diff -u -r1.10 bximage.c
 --- misc/bximage.c	5 Sep 2002 16:50:03 -0000	1.10
-+++ misc/bximage.c	14 Sep 2002 07:27:49 -0000
++++ misc/bximage.c	22 Sep 2002 20:46:02 -0000
 @@ -261,7 +261,7 @@
      printf ("  total size=%.2f megabytes\n", (float)sectors*512.0/1024.0/1024.0);
      if (ask_string ("\nWhat should I name the image?\n[c.img] ", "c.img", filename) < 0)
@@ -43,11 +138,11 @@ diff -u -r1.10 bximage.c
 Index: bochs.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/bochs.h,v
-retrieving revision 1.93
-diff -u -r1.93 bochs.h
---- bochs.h	13 Sep 2002 00:15:23 -0000	1.93
-+++ bochs.h	14 Sep 2002 07:27:50 -0000
-@@ -483,6 +483,7 @@
+retrieving revision 1.95
+diff -u -r1.95 bochs.h
+--- bochs.h	21 Sep 2002 11:38:12 -0000	1.95
++++ bochs.h	22 Sep 2002 20:46:03 -0000
+@@ -491,6 +491,7 @@
  
  
  
@@ -55,7 +150,7 @@ diff -u -r1.93 bochs.h
  #define BX_FLOPPY_NONE   10 // floppy not present
  #define BX_FLOPPY_1_2    11 // 1.2M  5.25"
  #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
-@@ -490,6 +491,7 @@
+@@ -498,6 +499,7 @@
  #define BX_FLOPPY_720K   14 // 720K  3.5"
  #define BX_FLOPPY_360K   15 // 360K  5.25"
  #define BX_FLOPPY_LAST   15 // last one
@@ -63,7 +158,7 @@ diff -u -r1.93 bochs.h
  
  
  #define BX_READ    0
-@@ -541,6 +543,13 @@
+@@ -549,6 +551,13 @@
  #define BX_PATHNAME_LEN 512
  
  typedef struct {
@@ -77,7 +172,7 @@ diff -u -r1.93 bochs.h
    bx_param_string_c *Opath;
    bx_param_num_c *Oaddress;
    } bx_rom_options;
-@@ -625,10 +634,12 @@
+@@ -630,10 +639,12 @@
  typedef struct {
    bx_floppy_options floppya;
    bx_floppy_options floppyb;
@@ -96,11 +191,11 @@ diff -u -r1.93 bochs.h
 Index: config.h.in
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/config.h.in,v
-retrieving revision 1.65
-diff -u -r1.65 config.h.in
---- config.h.in	12 Sep 2002 07:16:35 -0000	1.65
-+++ config.h.in	14 Sep 2002 07:27:50 -0000
-@@ -268,6 +268,13 @@
+retrieving revision 1.72
+diff -u -r1.72 config.h.in
+--- config.h.in	22 Sep 2002 16:11:11 -0000	1.72
++++ config.h.in	22 Sep 2002 20:46:04 -0000
+@@ -270,6 +270,13 @@
  // [[Provide example of partitioning]]
  #define BX_SPLIT_HD_SUPPORT 0
  
@@ -117,10 +212,10 @@ diff -u -r1.65 config.h.in
 Index: main.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/main.cc,v
-retrieving revision 1.141
-diff -u -r1.141 main.cc
---- main.cc	9 Sep 2002 07:19:23 -0000	1.141
-+++ main.cc	14 Sep 2002 07:27:52 -0000
+retrieving revision 1.143
+diff -u -r1.143 main.cc
+--- main.cc	20 Sep 2002 18:14:25 -0000	1.143
++++ main.cc	22 Sep 2002 20:46:06 -0000
 @@ -113,9 +113,18 @@
  	SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
        }
@@ -142,24 +237,10 @@ diff -u -r1.141 main.cc
          bx_gui.update_drive_status_buttons ();
        }
        break;
-@@ -144,6 +153,67 @@
+@@ -144,6 +153,42 @@
      case BXP_KBD_PASTE_DELAY:
        if (set) bx_keyboard.paste_delay_changed ();
        break;
-+    case BXP_ATA0_PRESENT:
-+    case BXP_ATA1_PRESENT:
-+    case BXP_ATA2_PRESENT:
-+    case BXP_ATA3_PRESENT:
-+      if (set) {
-+        int channel = id - BXP_ATA0_PRESENT;
-+	int enable = (val != 0);
-+
-+	SIM->get_param ((bx_id)(BXP_ATA0_IOADDR1 + channel))->set_enabled (enable);
-+	SIM->get_param ((bx_id)(BXP_ATA0_IOADDR2 + channel))->set_enabled (enable);
-+	SIM->get_param ((bx_id)(BXP_ATA0_IRQ + channel))->set_enabled (enable);
-+        }
-+      break;
-+
 +    case BXP_ATA0_MASTER_TYPE:
 +    case BXP_ATA0_SLAVE_TYPE:
 +    case BXP_ATA1_MASTER_TYPE:
@@ -171,17 +252,6 @@ diff -u -r1.141 main.cc
 +      if (set) {
 +        int device = id - BXP_ATA0_MASTER_TYPE;
 +	switch (val) {
-+          case BX_ATA_DEVICE_NONE:
-+            SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_CYLINDERS + device))->set_enabled (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_HEADS + device))->set_enabled (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_SPT + device))->set_enabled (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_enabled (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled (0);
-+            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_TRANSLATION + device))->set_enabled (0);
-+            break;
 +          case BX_ATA_DEVICE_DISK:
 +            SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
 +            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
@@ -210,7 +280,7 @@ diff -u -r1.141 main.cc
      default:
        BX_PANIC (("bx_param_handler called with unknown id %d", id));
        return -1;
-@@ -153,12 +223,14 @@
+@@ -153,12 +198,14 @@
  
  char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int maxlen)
  {
@@ -226,7 +296,7 @@ diff -u -r1.141 main.cc
      case BXP_FLOPPYA_PATH:
        if (set==1) {
          if (SIM->get_init_done ()) {
-@@ -209,46 +281,44 @@
+@@ -209,46 +256,44 @@
          }
        }
        break;
@@ -297,7 +367,15 @@ diff -u -r1.141 main.cc
      case BXP_SCREENMODE:
        if (set==1) {
  	BX_INFO (("Screen mode changed to %s", val));
-@@ -374,127 +444,301 @@
+@@ -260,7 +305,6 @@
+   return val;
+ }
+ 
+-
+ void bx_init_options ()
+ {
+   int i;
+@@ -370,127 +414,229 @@
    bx_options.floppyb.Otype->set_handler (bx_param_handler);
    bx_options.floppyb.Ostatus->set_handler (bx_param_handler);
  
@@ -339,7 +417,28 @@ diff -u -r1.141 main.cc
 -    bx_options.diskc.Oheads,
 -    bx_options.diskc.Ospt,
 -    NULL
--  };
++  // disk options
++
++  // FIXME use descr and name
++  char *s_atachannel[] = {
++    "ATA channel 0",
++    "ATA channel 1",
++    "ATA channel 2",
++    "ATA channel 3",
++    };
++  char *s_atadevice[4][2] = {
++    { "Master ATA device on channel 0",
++      "Slave ATA device on channel 0" },
++    { "Master ATA device on channel 1",
++    "Slave ATA device on channel 1" },
++    { "Master ATA device on channel 2",
++    "Slave ATA device on channel 2" },
++    { "Master ATA device on channel 3",
++    "Slave ATA device on channel 3" }
++    };
++  Bit16u ata_default_ioaddr1[BX_MAX_ATA_CHANNEL] = {
++    0x1f0, 0x170, 0x1e8, 0x168 
+   };
 -  menu = new bx_list_c (BXP_DISKC, "Hard disk 0", "All options for hard disk 0", diskc_init_list);
 -  menu->get_options ()->set (menu->BX_SERIES_ASK);
 -  // if path is the word "none", then do not ask the other options and
@@ -385,151 +484,8 @@ diff -u -r1.141 main.cc
 -    bx_options.diskd.Oheads,
 -    bx_options.diskd.Ospt,
 -    NULL
-+  // disk options
-+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
-+
-+    bx_options.ata[channel].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_PRESENT+channel),
-+      "ata:present",                                
-+      "Controls whether ata channel is installed or not",
-+      0);
-+
-+    bx_options.ata[channel].Oioaddr1 = new bx_param_num_c ((bx_id)(BXP_ATA0_IOADDR1+channel),
-+      "ata:ioaddr1",
-+      "IO adress of ata command block",
-+      0, 0xffff,
-+      0);
-+
-+    bx_options.ata[channel].Oioaddr2 = new bx_param_num_c ((bx_id)(BXP_ATA0_IOADDR2+channel),
-+      "ata:ioaddr2",
-+      "IO adress of ata control block",
-+      0, 0xffff,
-+      0);
-+
-+    bx_options.ata[channel].Oirq = new bx_param_num_c ((bx_id)(BXP_ATA0_IRQ+channel),
-+      "ata:irq",
-+      "IRQ of ata ",
-+      0, 15,
-+      0);
-+
-+    for (Bit8u slave=0; slave<2; slave++) {
-+
-+      bx_options.atadevice[channel][slave].Otype = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_TYPE+channel*2+slave),
-+          "ata-device:type",
-+          "Type of ATA device",
-+          atadevice_type_names,
-+          BX_ATA_DEVICE_NONE,
-+          BX_ATA_DEVICE_NONE);
-+
-+      bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_MASTER_PRESENT+channel*2+slave),
-+        "ata-device:present",                                
-+        "Controls whether ata device is installed or not",  
-+        0);
-+
-+      bx_options.atadevice[channel][slave].Opath = new bx_param_filename_c ((bx_id)(BXP_ATA0_MASTER_PATH+channel*2+slave),
-+          "ata-device:path",
-+          "Pathname of the image",
-+          "", BX_PATHNAME_LEN);
-+
-+      bx_options.atadevice[channel][slave].Ocylinders = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_CYLINDERS+channel*2+slave),
-+          "ata-device:cylinders",
-+          "Number of cylinders",
-+          0, 65535,
-+          0);
-+      bx_options.atadevice[channel][slave].Oheads = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_HEADS+channel*2+slave),
-+          "ata-device:heads",
-+          "Number of heads",
-+          0, 65535,
-+          0);
-+      bx_options.atadevice[channel][slave].Ospt = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_SPT+channel*2+slave),
-+          "ata-device:spt",
-+          "Number of sectors per track",
-+          0, 65535,
-+          0);
-+      
-+      bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_STATUS+channel*2+slave),
-+       "ata-device:status",
-+       "Inserted or ejected",
-+       atadevice_status_names,
-+       BX_INSERTED,
-+       BX_EJECTED);
-+
-+      bx_options.atadevice[channel][slave].Omodel = new bx_param_string_c ((bx_id)(BXP_ATA0_MASTER_MODEL+channel*2+slave),
-+       "ata-device:model",
-+       "Model name",
-+       "Generic 1234", 40);
-+
-+      bx_options.atadevice[channel][slave].Obiosdetect = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT+channel*2+slave),
-+       "ata-device:biosdetect",
-+       "Type of bios detection",
-+       atadevice_biosdetect_names,
-+       BX_ATA_BIOSDETECT_AUTO,
-+       BX_ATA_BIOSDETECT_NONE);
-+
-+      bx_options.atadevice[channel][slave].Otranslation = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_TRANSLATION+channel*2+slave),
-+       "How the ata-disk translation is done by the bios",
-+       "Type of translation",
-+       atadevice_translation_names,
-+       BX_ATA_TRANSLATION_LBA,
-+       BX_ATA_TRANSLATION_NONE);
-+
-+      }
-+    }
-+
-+  // Set initial values (enabled, std ports & irq) for first ata interface
-+  bx_options.ata[0].Opresent->set_initial_val(1);
-+  bx_options.ata[0].Oioaddr1->set_initial_val(0x1f0);
-+  bx_options.ata[0].Oioaddr2->set_initial_val(0x3f0);
-+  bx_options.ata[0].Oirq->set_initial_val(14);
-+
-+  // FIXME use descr and name
-+  char *s_atachannel[] = {
-+    "ATA channel 0",
-+    "ATA channel 1",
-+    "ATA channel 2",
-+    "ATA channel 3",
-+    };
-+  char *s_atadevice[][2] = {
-+    "Master ATA device on channel 0",
-+    "Slave ATA device on channel 0",
-+    "Master ATA device on channel 1",
-+    "Slave ATA device on channel 1",
-+    "Master ATA device on channel 2",
-+    "Slave ATA device on channel 2",
-+    "Master ATA device on channel 3",
-+    "Slave ATA device on channel 3",
-+    };
-+
-+  bx_param_c *atachannel_init_list[BX_MAX_ATA_CHANNEL][5] = {
-+    { bx_options.ata[0].Opresent,
-+      bx_options.ata[0].Oioaddr1,
-+      bx_options.ata[0].Oioaddr2,
-+      bx_options.ata[0].Oirq,
-+      NULL
-+    },
-+#if BX_MAX_ATA_CHANNEL>1
-+    { bx_options.ata[1].Opresent,
-+      bx_options.ata[1].Oioaddr1,
-+      bx_options.ata[1].Oioaddr2,
-+      bx_options.ata[1].Oirq,
-+      NULL
-+    },
-+#endif
-+#if BX_MAX_ATA_CHANNEL>2
-+    { bx_options.ata[2].Opresent,
-+      bx_options.ata[2].Oioaddr1,
-+      bx_options.ata[2].Oioaddr2,
-+      bx_options.ata[2].Oirq,
-+      NULL
-+    },
-+#endif
-+#if BX_MAX_ATA_CHANNEL>3
-+    { bx_options.ata[3].Opresent,
-+      bx_options.ata[3].Oioaddr1,
-+      bx_options.ata[3].Oioaddr2,
-+      bx_options.ata[3].Oirq,
-+      NULL
-+    },
-+#endif
++  Bit8u ata_default_irq[BX_MAX_ATA_CHANNEL] = { 
++    14, 15, 12, 11 
    };
 -  menu = new bx_list_c (BXP_DISKD, "Hard disk 1", "All options for hard disk 1", diskd_init_list);
 -  menu->get_options ()->set (menu->BX_SERIES_ASK);
@@ -548,101 +504,7 @@ diff -u -r1.141 main.cc
 -  bx_options.cdromd.Opath->set_format ("%s");
 -#if BX_UI_TEXT
 -  bx_options.cdromd.Opath->set_ask_format ("Enter new filename, or 'none' for no CDROM: [%s] ");
-+  bx_param_c *atadevice_init_list[BX_MAX_ATA_CHANNEL*2][10] = {
-+    { bx_options.atadevice[0][0].Otype,
-+      bx_options.atadevice[0][0].Opath,
-+      bx_options.atadevice[0][0].Ocylinders,
-+      bx_options.atadevice[0][0].Oheads,
-+      bx_options.atadevice[0][0].Ospt,
-+      bx_options.atadevice[0][0].Ostatus,
-+      bx_options.atadevice[0][0].Omodel,
-+      bx_options.atadevice[0][0].Obiosdetect,
-+      bx_options.atadevice[0][0].Otranslation,
-+      NULL
-+    },
-+    { bx_options.atadevice[0][1].Otype,
-+      bx_options.atadevice[0][1].Opath,
-+      bx_options.atadevice[0][1].Ocylinders,
-+      bx_options.atadevice[0][1].Oheads,
-+      bx_options.atadevice[0][1].Ospt,
-+      bx_options.atadevice[0][1].Ostatus,
-+      bx_options.atadevice[0][1].Omodel,
-+      bx_options.atadevice[0][1].Obiosdetect,
-+      bx_options.atadevice[0][1].Otranslation,
-+      NULL
-+    },
-+#if BX_MAX_ATA_CHANNEL>1
-+    { bx_options.atadevice[1][0].Otype,
-+      bx_options.atadevice[1][0].Opath,
-+      bx_options.atadevice[1][0].Ocylinders,
-+      bx_options.atadevice[1][0].Oheads,
-+      bx_options.atadevice[1][0].Ospt,
-+      bx_options.atadevice[1][0].Ostatus,
-+      bx_options.atadevice[1][0].Omodel,
-+      bx_options.atadevice[1][0].Obiosdetect,
-+      bx_options.atadevice[1][0].Otranslation,
-+      NULL
-+    },
-+    { bx_options.atadevice[1][1].Otype,
-+      bx_options.atadevice[1][1].Opath,
-+      bx_options.atadevice[1][1].Ocylinders,
-+      bx_options.atadevice[1][1].Oheads,
-+      bx_options.atadevice[1][1].Ospt,
-+      bx_options.atadevice[1][1].Ostatus,
-+      bx_options.atadevice[1][1].Omodel,
-+      bx_options.atadevice[1][1].Obiosdetect,
-+      bx_options.atadevice[1][1].Otranslation,
-+      NULL
-+    },
-+#endif
-+#if BX_MAX_ATA_CHANNEL>2
-+    { bx_options.atadevice[2][0].Otype,
-+      bx_options.atadevice[2][0].Opath,
-+      bx_options.atadevice[2][0].Ocylinders,
-+      bx_options.atadevice[2][0].Oheads,
-+      bx_options.atadevice[2][0].Ospt,
-+      bx_options.atadevice[2][0].Ostatus,
-+      bx_options.atadevice[2][0].Omodel,
-+      bx_options.atadevice[2][0].Obiosdetect,
-+      bx_options.atadevice[2][0].Otranslation,
-+      NULL
-+    },
-+    { bx_options.atadevice[2][1].Otype,
-+      bx_options.atadevice[2][1].Opath,
-+      bx_options.atadevice[2][1].Ocylinders,
-+      bx_options.atadevice[2][1].Oheads,
-+      bx_options.atadevice[2][1].Ospt,
-+      bx_options.atadevice[2][1].Ostatus,
-+      bx_options.atadevice[2][1].Omodel,
-+      bx_options.atadevice[2][1].Obiosdetect,
-+      bx_options.atadevice[2][1].Otranslation,
-+      NULL
-+    },
-+#endif
-+#if BX_MAX_ATA_CHANNEL>3
-+    { bx_options.atadevice[3][0].Otype,
-+      bx_options.atadevice[3][0].Opath,
-+      bx_options.atadevice[3][0].Ocylinders,
-+      bx_options.atadevice[3][0].Oheads,
-+      bx_options.atadevice[3][0].Ospt,
-+      bx_options.atadevice[3][0].Ostatus,
-+      bx_options.atadevice[3][0].Omodel,
-+      bx_options.atadevice[3][0].Obiosdetect,
-+      bx_options.atadevice[3][0].Otranslation,
-+      NULL
-+    },
-+    { bx_options.atadevice[3][1].Otype,
-+      bx_options.atadevice[3][1].Opath,
-+      bx_options.atadevice[3][1].Ocylinders,
-+      bx_options.atadevice[3][1].Oheads,
-+      bx_options.atadevice[3][1].Ospt,
-+      bx_options.atadevice[3][1].Ostatus,
-+      bx_options.atadevice[3][1].Omodel,
-+      bx_options.atadevice[3][1].Obiosdetect,
-+      bx_options.atadevice[3][1].Otranslation,
-+      NULL
-+    },
- #endif
+-#endif
 -  bx_options.cdromd.Ostatus = new bx_param_enum_c (BXP_CDROM_STATUS,
 -      "Is the CDROM inserted or ejected",
 -      "Inserted or ejected",
@@ -655,45 +517,194 @@ diff -u -r1.141 main.cc
 -    bx_options.cdromd.Opath,
 -    bx_options.cdromd.Ostatus,
 -    NULL
-   };
+-  };
 -  menu = new bx_list_c (BXP_CDROMD, "CDROM", "Options for the CDROM", cdromd_init_list);
 -  menu->get_options ()->set (menu->BX_SERIES_ASK);
 -  bx_options.cdromd.Opath->set_handler (bx_param_string_handler);
 -  bx_options.cdromd.Opath->set ("none");
 -  bx_options.cdromd.Ostatus->set_handler (bx_param_handler);
-+  
++  bx_list_c *ata[BX_MAX_ATA_CHANNEL];
++
 +  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 +
-+    bx_options.ata[channel].Opresent->set_ask_format ("Channel is enabled: [%s] ");
-+    bx_options.ata[channel].Oioaddr1->set_ask_format ("Enter new ioaddr1: [0x%x] ");
-+    bx_options.ata[channel].Oioaddr2->set_ask_format ("Enter new ioaddr2: [0x%x] ");
-+    bx_options.ata[channel].Oirq->set_ask_format ("Enter new irq: [%d] ");
++    ata[channel] = new bx_list_c ((bx_id)(BXP_ATA0+channel), s_atachannel[channel], s_atachannel[channel], 8);
++    ata[channel]->get_options ()->set (ata[channel]->BX_SERIES_ASK);
++
++    ata[channel]->add (bx_options.ata[channel].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_PRESENT+channel),
++      "ata:present",                                
++      "Controls whether ata channel is installed or not",
++      0));
++
++    ata[channel]->add (bx_options.ata[channel].Oioaddr1 = new bx_param_num_c ((bx_id)(BXP_ATA0_IOADDR1+channel),
++      "ata:ioaddr1",
++      "IO adress of ata command block",
++      0, 0xffff,
++      ata_default_ioaddr1[channel]));
++
++    ata[channel]->add (bx_options.ata[channel].Oioaddr2 = new bx_param_num_c ((bx_id)(BXP_ATA0_IOADDR2+channel),
++      "ata:ioaddr2",
++      "IO adress of ata control block",
++      0, 0xffff,
++      ata_default_ioaddr1[channel] + 0x200));
++
++    ata[channel]->add (bx_options.ata[channel].Oirq = new bx_param_num_c ((bx_id)(BXP_ATA0_IRQ+channel),
++      "ata:irq",
++      "IRQ of ata ",
++      0, 15,
++      ata_default_irq[channel]));
++
++    // all items in the ata[channel] menu depend on the present flag.
++    // The menu list is complete, but a few dependent_list items will
++    // be added later.  Use clone() to make a copy of the dependent_list
++    // so that it can be changed without affecting the menu.
++    bx_options.ata[channel].Opresent->set_dependent_list (
++	ata[channel]->clone());
++
++    for (Bit8u slave=0; slave<2; slave++) {
++
++      menu = bx_options.atadevice[channel][slave].Omenu = new bx_list_c ((bx_id)(BXP_ATA0_MASTER+channel*2+slave),
++	  s_atadevice[channel][slave], 
++          s_atadevice[channel][slave],
++	  12 /* list max size */);
++      menu->get_options ()->set (menu->BX_SERIES_ASK);
++
++      menu->add (bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATA0_MASTER_PRESENT+channel*2+slave),
++        "ata-device:present",                                
++        "Controls whether ata device is installed or not",  
++        0));
++
++      menu->add (bx_options.atadevice[channel][slave].Otype = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_TYPE+channel*2+slave),
++          "ata-device:type",
++          "Type of ATA device",
++          atadevice_type_names,
++          BX_ATA_DEVICE_DISK,
++          BX_ATA_DEVICE_DISK));
++
++      menu->add (bx_options.atadevice[channel][slave].Opath = new bx_param_filename_c ((bx_id)(BXP_ATA0_MASTER_PATH+channel*2+slave),
++          "ata-device:path",
++          "Pathname of the image",
++          "", BX_PATHNAME_LEN));
++
++      menu->add (bx_options.atadevice[channel][slave].Ocylinders = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_CYLINDERS+channel*2+slave),
++          "ata-device:cylinders",
++          "Number of cylinders",
++          0, 65535,
++          0));
++      menu->add (bx_options.atadevice[channel][slave].Oheads = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_HEADS+channel*2+slave),
++          "ata-device:heads",
++          "Number of heads",
++          0, 65535,
++          0));
++      menu->add (bx_options.atadevice[channel][slave].Ospt = new bx_param_num_c ((bx_id)(BXP_ATA0_MASTER_SPT+channel*2+slave),
++          "ata-device:spt",
++          "Number of sectors per track",
++          0, 65535,
++          0));
++      
++      menu->add (bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_STATUS+channel*2+slave),
++       "ata-device:status",
++       "Inserted or ejected",
++       atadevice_status_names,
++       BX_INSERTED,
++       BX_EJECTED));
++
++      menu->add (bx_options.atadevice[channel][slave].Omodel = new bx_param_string_c ((bx_id)(BXP_ATA0_MASTER_MODEL+channel*2+slave),
++       "ata-device:model",
++       "Model name",
++       "Generic 1234", 40));
++
++      menu->add (bx_options.atadevice[channel][slave].Obiosdetect = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT+channel*2+slave),
++       "ata-device:biosdetect",
++       "Type of bios detection",
++       atadevice_biosdetect_names,
++       BX_ATA_BIOSDETECT_AUTO,
++       BX_ATA_BIOSDETECT_NONE));
++
++      menu->add (bx_options.atadevice[channel][slave].Otranslation = new bx_param_enum_c ((bx_id)(BXP_ATA0_MASTER_TRANSLATION+channel*2+slave),
++       "How the ata-disk translation is done by the bios",
++       "Type of translation",
++       atadevice_translation_names,
++       BX_ATA_TRANSLATION_LBA,
++       BX_ATA_TRANSLATION_NONE));
++
++      bx_options.atadevice[channel][slave].Opresent->set_dependent_list (
++	  menu->clone ());
++      // the menu and all items on it depend on the Opresent flag
++      bx_options.atadevice[channel][slave].Opresent->get_dependent_list()->add(menu);
++      // the present flag depends on the ATA channel's present flag
++      bx_options.ata[channel].Opresent->get_dependent_list()->add (
++	  bx_options.atadevice[channel][slave].Opresent);
++      }
++    }
++
++  // Enable first ata interface by default, disable the others.
++  bx_options.ata[0].Opresent->set_initial_val(1);
++
++  // now that the dependence relationships are established, call set() on
++  // the ata device present params to set all enables correctly.
++  for (i=0; i<BX_MAX_ATA_CHANNEL; i++)
++    bx_options.ata[i].Opresent->set (i==0);
++
++  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
++
++    bx_options.ata[channel].Opresent->set_ask_format (
++	BX_WITH_WX? "Enable?"
++	: "Channel is enabled: [%s] ");
++    bx_options.ata[channel].Oioaddr1->set_ask_format (
++	BX_WITH_WX? "I/O Address 1:"
++	: "Enter new ioaddr1: [0x%x] ");
++    bx_options.ata[channel].Oioaddr2->set_ask_format (
++	BX_WITH_WX? "I/O Address 2:"
++	: "Enter new ioaddr2: [0x%x] ");
++    bx_options.ata[channel].Oirq->set_ask_format (
++	BX_WITH_WX? "IRQ:"
++	: "Enter new IRQ: [%d] ");
++#if !BX_WITH_WX
 +    bx_options.ata[channel].Opresent->set_format ("enabled: %s");
 +    bx_options.ata[channel].Oioaddr1->set_format (", ioaddr1: 0x%x");
 +    bx_options.ata[channel].Oioaddr2->set_format (", ioaddr2: 0x%x");
 +    bx_options.ata[channel].Oirq->set_format (", irq: %d");
++#endif
 +    bx_options.ata[channel].Oioaddr1->set_base (16);
 +    bx_options.ata[channel].Oioaddr2->set_base (16);
 +
-+    menu = new bx_list_c ((bx_id)(BXP_ATA0+channel), s_atachannel[channel], s_atachannel[channel], atachannel_init_list[channel]);
-+    menu->get_options ()->set (menu->BX_SERIES_ASK);
-+
-+    bx_options.ata[channel].Opresent->set_handler (bx_param_handler);
-+
 +    for (Bit8u slave=0; slave<2; slave++) {
 +
-+      bx_options.atadevice[channel][slave].Otype->set_ask_format ("Enter type of ATA device or 'none' for no device: [%s] ");
-+      bx_options.atadevice[channel][slave].Opath->set_ask_format ("Enter new filename: [%s] ");
-+      bx_options.atadevice[channel][slave].Ocylinders->set_ask_format ("Enter number of cylinders: [%d] ");
-+      bx_options.atadevice[channel][slave].Oheads->set_ask_format ("Enter number of heads: [%d] ");
-+      bx_options.atadevice[channel][slave].Ospt->set_ask_format ("Enter number of sectors per track: [%d] ");
-+      bx_options.atadevice[channel][slave].Ostatus->set_ask_format ("Is the device inserted or ejected? [%s] ");
-+      bx_options.atadevice[channel][slave].Omodel->set_ask_format ("Enter new model name: [%s]");
-+      bx_options.atadevice[channel][slave].Otranslation->set_ask_format ("Enter translation type: [%s]");
-+      bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format ("Enter bios detection type: [%s]");
++      bx_options.atadevice[channel][slave].Opresent->set_ask_format (
++	  BX_WITH_WX? "Enable?"
++	  : "Device is enabled: [%s] ");
++      bx_options.atadevice[channel][slave].Otype->set_ask_format (
++	  BX_WITH_WX? "Type of ATA device:"
++	  : "Enter type of ATA device, disk or cdrom: [%s] ");
++      bx_options.atadevice[channel][slave].Opath->set_ask_format (
++	  BX_WITH_WX? "Path or physical device name:"
++	  : "Enter new filename: [%s] ");
++      bx_options.atadevice[channel][slave].Ocylinders->set_ask_format (
++	  BX_WITH_WX? "Cylinders:"
++	  : "Enter number of cylinders: [%d] ");
++      bx_options.atadevice[channel][slave].Oheads->set_ask_format (
++	  BX_WITH_WX? "Heads:"
++	  : "Enter number of heads: [%d] ");
++      bx_options.atadevice[channel][slave].Ospt->set_ask_format (
++	  BX_WITH_WX? "Sectors per track:"
++	  : "Enter number of sectors per track: [%d] ");
++      bx_options.atadevice[channel][slave].Ostatus->set_ask_format (
++	  BX_WITH_WX? "Inserted?"
++	  : "Is the device inserted or ejected? [%s] ");
++      bx_options.atadevice[channel][slave].Omodel->set_ask_format (
++	  BX_WITH_WX? "Model name:"
++	  : "Enter new model name: [%s]");
++      bx_options.atadevice[channel][slave].Otranslation->set_ask_format (
++	  BX_WITH_WX? "Translation type:"
++	  : "Enter translation type: [%s]");
++      bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format (
++	  BX_WITH_WX? "BIOS Detection:"
++	  : "Enter bios detection type: [%s]");
 +
-+      bx_options.atadevice[channel][slave].Otype->set_format ("%s");
-+      bx_options.atadevice[channel][slave].Opath->set_format (" on %s");
++#if !BX_WITH_WX
++      bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
++      bx_options.atadevice[channel][slave].Otype->set_format (", %s");
++      bx_options.atadevice[channel][slave].Opath->set_format (" on '%s'");
 +      bx_options.atadevice[channel][slave].Ocylinders->set_format (", %d cylinders");
 +      bx_options.atadevice[channel][slave].Oheads->set_format (", %d heads");
 +      bx_options.atadevice[channel][slave].Ospt->set_format (", %d sectors/track");
@@ -701,13 +712,9 @@ diff -u -r1.141 main.cc
 +      bx_options.atadevice[channel][slave].Omodel->set_format (", model '%s'");
 +      bx_options.atadevice[channel][slave].Otranslation->set_format (", translation '%s'");
 +      bx_options.atadevice[channel][slave].Obiosdetect->set_format (", biosdetect '%s'");
-+
-+      menu = new bx_list_c ((bx_id)(BXP_ATA0_MASTER+channel*2+slave), s_atadevice[channel][slave], 
-+               s_atadevice[channel][slave], atadevice_init_list[channel*2+slave]);
-+      menu->get_options ()->set (menu->BX_SERIES_ASK);
++#endif
 +
 +      bx_options.atadevice[channel][slave].Otype->set_handler (bx_param_handler);
-+      bx_options.atadevice[channel][slave].Otype->set(BX_ATA_DEVICE_NONE);
 +      
 +      bx_options.atadevice[channel][slave].Ostatus->set_handler (bx_param_handler);
 +      bx_options.atadevice[channel][slave].Opath->set_handler (bx_param_string_handler);
@@ -716,7 +723,7 @@ diff -u -r1.141 main.cc
  
    bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
        "New hard drive support",
-@@ -519,9 +763,27 @@
+@@ -515,9 +661,27 @@
    bx_param_c *disk_menu_init_list[] = {
      SIM->get_param (BXP_FLOPPYA),
      SIM->get_param (BXP_FLOPPYB),
@@ -747,7 +754,7 @@ diff -u -r1.141 main.cc
      SIM->get_param (BXP_NEWHARDDRIVESUPPORT),
      SIM->get_param (BXP_BOOTDRIVE),
      SIM->get_param (BXP_FLOPPYSIGCHECK),
-@@ -994,19 +1256,26 @@
+@@ -990,19 +1154,26 @@
    bx_options.floppyb.Odevtype->reset();
    bx_options.floppyb.Otype->reset();
    bx_options.floppyb.Ostatus->reset();
@@ -787,7 +794,7 @@ diff -u -r1.141 main.cc
    bx_options.OnewHardDriveSupport->reset();
  
    // boot & memory
-@@ -1826,7 +2095,168 @@
+@@ -1822,7 +1993,168 @@
        }
      }
  
@@ -869,7 +876,7 @@ diff -u -r1.141 main.cc
 +      }
 +
 +    if (bx_options.atadevice[channel][slave].Opresent->get()) {
-+      BX_PANIC(("%s: %s device of ata channel %d already defined.", slave?"slave":"master",channel));
++      BX_PANIC(("%s: %s device of ata channel %d already defined.", context, slave?"slave":"master",channel));
 +      }
 +
 +    for (i=1; i<num_params; i++) {
@@ -956,7 +963,7 @@ diff -u -r1.141 main.cc
      if (num_params != 5) {
        BX_PANIC(("%s: diskc directive malformed.", context));
        }
-@@ -1836,13 +2266,18 @@
+@@ -1832,13 +2164,18 @@
          strncmp(params[4], "spt=", 4)) {
        BX_PANIC(("%s: diskc directive malformed.", context));
        }
@@ -980,7 +987,7 @@ diff -u -r1.141 main.cc
      if (num_params != 5) {
        BX_PANIC(("%s: diskd directive malformed.", context));
        }
-@@ -1852,11 +2287,47 @@
+@@ -1848,11 +2185,47 @@
          strncmp(params[4], "spt=", 4)) {
        BX_PANIC(("%s: diskd directive malformed.", context));
        }
@@ -1033,7 +1040,7 @@ diff -u -r1.141 main.cc
      }
  
    else if (!strcmp(params[0], "com1")) {
-@@ -1918,35 +2389,6 @@
+@@ -1914,35 +2287,6 @@
      }
  #endif
  
@@ -1069,7 +1076,7 @@ diff -u -r1.141 main.cc
    else if (!strcmp(params[0], "floppy_bootsig_check")) {
      if (num_params != 2) {
        BX_PANIC(("%s: floppy_bootsig_check directive malformed.", context));
-@@ -2507,15 +2949,11 @@
+@@ -2503,15 +2847,11 @@
      if(!strncmp(params[1], "keys=", 4)) {
        bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
        }
@@ -1086,7 +1093,7 @@ diff -u -r1.141 main.cc
  }
  
  static char *fdtypes[] = {
-@@ -2540,32 +2978,64 @@
+@@ -2536,32 +2876,64 @@
  }
  
  int 
@@ -1106,7 +1113,7 @@ diff -u -r1.141 main.cc
 +  fprintf (fp, "ata%d: enabled=%d", channel, opt->Opresent->get());
 +
 +  if (opt->Opresent->get()) {
-+    fprintf (fp, ", ioaddr1=0x%x ioaddr2=0x%x, irq=%d", opt->Oioaddr1->get(), 
++    fprintf (fp, ", ioaddr1=0x%x, ioaddr2=0x%x, irq=%d", opt->Oioaddr1->get(), 
 +      opt->Oioaddr2->get(), opt->Oirq->get());
 +    }
 +
@@ -1126,7 +1133,7 @@ diff -u -r1.141 main.cc
 +    fprintf (fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
 +
 +    if (opt->Otype->get() == BX_ATA_DEVICE_DISK) {
-+      fprintf (fp, ", type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d",
++      fprintf (fp, "type=disk, path=\"%s\", cylinders=%d, heads=%d, spt=%d",
 +          opt->Opath->getptr(), opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
 +
 +      switch(opt->Otranslation->get()) {
@@ -1142,7 +1149,7 @@ diff -u -r1.141 main.cc
 +        }
 +      }
 +    else if (opt->Otype->get() == BX_ATA_DEVICE_CDROM) {
-+      fprintf (fp, ", type=cdrom, path=\"%s\", status=%s", 
++      fprintf (fp, "type=cdrom, path=\"%s\", status=%s", 
 +        opt->Opath->getptr(), 
 +        opt->Ostatus->get ()==BX_EJECTED ? "ejected" : "inserted");
 +      }
@@ -1159,7 +1166,7 @@ diff -u -r1.141 main.cc
 +        break;
 +      }
 +    if (strlen(opt->Omodel->getptr())>0) {
-+        fprintf (fp, " model=\"%s\"", opt->Omodel->getptr());
++        fprintf (fp, ", model=\"%s\"", opt->Omodel->getptr());
 +      }
 +
 +    fprintf (fp, "\n");
@@ -1170,7 +1177,7 @@ diff -u -r1.141 main.cc
    return 0;
  }
  
-@@ -2713,9 +3183,11 @@
+@@ -2682,9 +3054,11 @@
    // the structs like bx_floppy_options::print or something.
    bx_write_floppy_options (fp, 0, &bx_options.floppya);
    bx_write_floppy_options (fp, 1, &bx_options.floppyb);
@@ -1188,10 +1195,10 @@ diff -u -r1.141 main.cc
 Index: .bochsrc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/.bochsrc,v
-retrieving revision 1.47
-diff -u -r1.47 .bochsrc
---- .bochsrc	24 Aug 2002 17:11:32 -0000	1.47
-+++ .bochsrc	14 Sep 2002 07:27:52 -0000
+retrieving revision 1.48
+diff -u -r1.48 .bochsrc
+--- .bochsrc	20 Sep 2002 13:23:45 -0000	1.48
++++ .bochsrc	22 Sep 2002 20:46:06 -0000
 @@ -84,6 +84,79 @@
  floppyb: 1_44=b.img, status=inserted
  
@@ -1301,10 +1308,10 @@ diff -u -r1.47 .bochsrc
 Index: gui/control.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/control.cc,v
-retrieving revision 1.60
-diff -u -r1.60 control.cc
---- gui/control.cc	6 Sep 2002 16:43:23 -0000	1.60
-+++ gui/control.cc	14 Sep 2002 07:27:53 -0000
+retrieving revision 1.61
+diff -u -r1.61 control.cc
+--- gui/control.cc	20 Sep 2002 18:14:27 -0000	1.61
++++ gui/control.cc	22 Sep 2002 20:46:07 -0000
 @@ -302,19 +302,22 @@
  "---------------------\n"
  "1. Floppy disk 0: %s\n"
@@ -1439,10 +1446,10 @@ diff -u -r1.60 control.cc
 Index: gui/gui.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/gui.cc,v
-retrieving revision 1.46
-diff -u -r1.46 gui.cc
---- gui/gui.cc	8 Sep 2002 07:56:09 -0000	1.46
-+++ gui/gui.cc	14 Sep 2002 07:27:53 -0000
+retrieving revision 1.48
+diff -u -r1.48 gui.cc
+--- gui/gui.cc	21 Sep 2002 19:38:47 -0000	1.48
++++ gui/gui.cc	22 Sep 2002 20:46:07 -0000
 @@ -108,9 +108,9 @@
                            BX_GRAVITY_LEFT, floppyB_handler);
  
@@ -1468,7 +1475,7 @@ diff -u -r1.46 gui.cc
    if (BX_GUI_THIS floppyA_status)
      replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
    else {
-@@ -243,6 +242,7 @@
+@@ -243,22 +242,29 @@
    void
  bx_gui_c::cdromD_handler(void)
  {
@@ -1476,7 +1483,14 @@ diff -u -r1.46 gui.cc
  #if BX_WITH_WX
    // instead of just toggling the status, call wxWindows to bring up 
    // a dialog asking what disk image you want to switch to.
-@@ -250,15 +250,15 @@
+-  int ret = SIM->ask_param (BXP_CDROM_PATH);
++  // BBD: for now, find the first cdrom and call ask_param on that.
++  // Since we could have multiple cdroms now, maybe we should be adding
++  // one cdrom button for each?
++  bx_param_c *cdrom = SIM->get_first_cdrom ();
++  if (cdrom == NULL)
++    return;  // no cdrom found
++  int ret = SIM->ask_param (cdrom->get_id ());
    if (ret < 0) return;  // cancelled
    // eject and then insert the disk.  If the new path is invalid,
    // the status will return 0.
@@ -1495,70 +1509,14 @@ diff -u -r1.46 gui.cc
  #endif
    BX_GUI_THIS update_drive_status_buttons ();
  }
-Index: gui/siminterface.cc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
-retrieving revision 1.58
-diff -u -r1.58 siminterface.cc
---- gui/siminterface.cc	13 Sep 2002 20:02:07 -0000	1.58
-+++ gui/siminterface.cc	14 Sep 2002 07:27:54 -0000
-@@ -66,7 +66,7 @@
-   virtual int get_log_prefix (char *prefix, int len);
-   virtual int set_log_prefix (char *prefix);
-   virtual int get_floppy_options (int drive, bx_floppy_options *out);
--  virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
-+  virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *device = NULL);
-   virtual char *get_floppy_type_name (int type);
-   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
-   virtual BxEvent* sim_to_ci_event (BxEvent *event);
-@@ -325,10 +325,20 @@
- }
- 
- int 
--bx_real_sim_c::get_cdrom_options (int drive, bx_cdrom_options *out)
-+bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *where = NULL)
- {
--  BX_ASSERT (drive == 0);
--  *out = bx_options.cdromd;
-+  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-+    for (Bit8u device=0; device<2; device++) {
-+      if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
-+        if (level==0) {
-+          *out = bx_options.atadevice[channel][device];
-+	  if (where != NULL) *where=(channel*2)+device;
-+          return 1;
-+          }
-+        else level--;
-+	}
-+      }
-+    }
-   return 0;
- }
- 
-@@ -343,6 +353,14 @@
- int n_loader_os_names = 3;
- char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
- int n_keyboard_type_names = 3;
-+char *atadevice_type_names[] = { "none", "disk", "cdrom", NULL };
-+int n_atadevice_type_names = 3;
-+char *atadevice_status_names[] = { "ejected", "inserted", NULL };
-+int n_atadevice_status_names = 2;
-+char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
-+int n_atadevice_biosdetect_names = 3;
-+char *atadevice_translation_names[] = { "none", "lba", "large", NULL };
-+int n_atadevice_translation_names = 3;
- 
- char *
- bx_real_sim_c::get_floppy_type_name (int type)
- 
 Index: gui/siminterface.h
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
-retrieving revision 1.61
-diff -u -r1.61 siminterface.h
---- gui/siminterface.h	13 Sep 2002 19:39:38 -0000	1.61
-+++ gui/siminterface.h	14 Sep 2002 07:27:55 -0000
-@@ -124,12 +124,12 @@
+retrieving revision 1.69
+diff -u -r1.69 siminterface.h
+--- gui/siminterface.h	20 Sep 2002 17:56:22 -0000	1.69
++++ gui/siminterface.h	22 Sep 2002 20:46:08 -0000
+@@ -128,12 +128,12 @@
    BXP_ROM_ADDRESS,
    BXP_VGA_ROM_PATH,
    BXP_OPTROM1_PATH,
@@ -1574,7 +1532,7 @@ diff -u -r1.61 siminterface.h
    BXP_OPTROM4_ADDRESS,
    BXP_KBD_SERIAL_DELAY,
    BXP_KBD_PASTE_DELAY,
-@@ -145,18 +145,116 @@
+@@ -149,18 +149,114 @@
    BXP_FLOPPYB_TYPE,
    BXP_FLOPPYB_STATUS,
    BXP_FLOPPYB,
@@ -1590,7 +1548,6 @@ diff -u -r1.61 siminterface.h
 -  BXP_DISKD_HEADS,
 -  BXP_DISKD_SPT,
 -  BXP_DISKD,
-+  
 +  BXP_ATA0,
 +  BXP_ATA1,
 +  BXP_ATA2,
@@ -1699,11 +1656,10 @@ diff -u -r1.61 siminterface.h
 +  BXP_ATA2_SLAVE_TRANSLATION,
 +  BXP_ATA3_MASTER_TRANSLATION,
 +  BXP_ATA3_SLAVE_TRANSLATION,
-+
  #define BXP_PARAMS_PER_SERIAL_PORT 2
    BXP_COM1_ENABLED,
    BXP_COM1_PATH,
-@@ -166,10 +264,6 @@
+@@ -170,10 +266,6 @@
    BXP_COM3_PATH,
    BXP_COM4_ENABLED,
    BXP_COM4_PATH,
@@ -1714,7 +1670,31 @@ diff -u -r1.61 siminterface.h
    BXP_PRIVATE_COLORMAP,
    BXP_FULLSCREEN,
    BXP_SCREENMODE,
-@@ -691,6 +785,7 @@
+@@ -670,11 +762,12 @@
+   char *get_name () { return name; }
+   char *get_description () { return description; }
+   int get_enabled () { return enabled; }
+-  void set_enabled (int enabled) { this->enabled = enabled; }
++  virtual void set_enabled (int enabled) { this->enabled = enabled; }
+   void reset () {}
+   int getint () {return -1;}
+   static const char* set_default_format (const char *f);
+   static const char *get_default_format () { return default_text_format; }
++  virtual bx_list_c *get_dependent_list () { return NULL; }
+ #if BX_UI_TEXT
+   virtual void text_print (FILE *fp) {}
+   virtual int text_ask (FILE *fpin, FILE *fpout) {return -1;}
+@@ -709,14 +802,16 @@
+       Bit32s min, Bit32s max, Bit32s initial_val);
+   void reset ();
+   void set_handler (param_event_handler handler);
+-  bx_list_c *get_dependent_list () { return dependent_list; }
++  virtual bx_list_c *get_dependent_list () { return dependent_list; }
+   void set_dependent_list (bx_list_c *l) {
+     dependent_list = l; 
+     update_dependents ();
+   }
++  virtual void set_enabled (int enabled);
    virtual Bit32s get ();
    virtual void set (Bit32s val);
    void set_base (int base) { this->base = base; }
@@ -1722,14 +1702,31 @@ diff -u -r1.61 siminterface.h
    int get_base () { return base; }
    Bit32s get_min () { return min; }
    Bit32s get_max () { return max; }
-@@ -908,6 +1003,20 @@
+@@ -897,13 +992,16 @@
+   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
+   bx_list_c (bx_id id, char *name, char *description, int maxsize);
+   virtual ~bx_list_c();
++  bx_list_c *clone ();
+   void add (bx_param_c *param);
+   bx_param_c *get (int index);
+   int get_size () { return size; }
+   bx_param_num_c *get_options () { return options; }
++  void set_options (bx_param_num_c *newopt) { options = newopt; }
+   bx_param_num_c *get_choice () { return choice; }
+   bx_param_string_c *get_title () { return title; }
+-  void set_parent (bx_param_c *parent);
++  void set_parent (bx_param_c *newparent) { parent = newparent; }
++  bx_param_c *get_parent () { return parent; }
+ #if BX_UI_TEXT
+   virtual void text_print (FILE *);
+   virtual int text_ask (FILE *fpin, FILE *fpout);
+@@ -922,6 +1020,19 @@
  #define BX_FLOPPY_LAST   15 // last legal value of floppy type
  #define BX_FLOPPY_GUESS  20 // decide based on image size
  
-+#define BX_ATA_DEVICE_NONE      0
-+#define BX_ATA_DEVICE_DISK      1
-+#define BX_ATA_DEVICE_CDROM     2
-+#define BX_ATA_DEVICE_LAST      2
++#define BX_ATA_DEVICE_DISK      0
++#define BX_ATA_DEVICE_CDROM     1
++#define BX_ATA_DEVICE_LAST      1
 +
 +#define BX_ATA_BIOSDETECT_NONE      0
 +#define BX_ATA_BIOSDETECT_AUTO      1
@@ -1743,7 +1740,7 @@ diff -u -r1.61 siminterface.h
  extern char *floppy_type_names[];
  extern int floppy_type_n_sectors[];
  extern int n_floppy_type_names;
-@@ -919,6 +1028,14 @@
+@@ -933,6 +1044,14 @@
  extern int n_loader_os_names;
  extern char *keyboard_type_names[];
  extern int n_keyboard_type_names;
@@ -1758,9 +1755,11 @@ diff -u -r1.61 siminterface.h
  
  typedef struct {
    bx_param_enum_c *Odevtype;
-@@ -929,24 +1046,22 @@
+@@ -942,25 +1061,24 @@
+   } bx_floppy_options;
  
  typedef struct {
++  bx_list_c *Omenu;
    bx_param_bool_c *Opresent;
 +  bx_param_enum_c *Otype;
    bx_param_string_c *Opath;
@@ -1789,7 +1788,15 @@ diff -u -r1.61 siminterface.h
  
  ////////////////////////////////////////////////////////////////////
  // base class simulator interface, contains just virtual functions.
-@@ -992,7 +1107,7 @@
+@@ -982,6 +1100,7 @@
+   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
+   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}
+   virtual bx_param_bool_c *get_param_bool (bx_id id) {return NULL;}
++  virtual bx_param_enum_c *get_param_enum (bx_id id) {return NULL;}
+   virtual int get_n_log_modules () {return -1;}
+   virtual char *get_prefix (int mod) {return 0;}
+   virtual int get_log_action (int mod, int level) {return -1;}
+@@ -1008,7 +1127,7 @@
    virtual int get_log_prefix (char *prefix, int len) {return -1;}
    virtual int set_log_prefix (char *prefix) {return -1;}
    virtual int get_floppy_options (int drive, bx_floppy_options *out) {return -1;}
@@ -1798,13 +1805,723 @@ diff -u -r1.61 siminterface.h
    virtual char *get_floppy_type_name (int type) {return NULL;}
  
    // The CI calls set_notify_callback to register its event handler function.
+@@ -1043,6 +1162,8 @@
+   // changed.  The CI will reread the parameters and change its display if it's
+   // appropriate.  Maybe later: mention which params have changed to save time.
+   virtual void refresh_ci () {}
++  // return first cdrom in ATA interface
++  bx_param_c *get_first_cdrom () {return NULL;}
+ #if BX_DEBUGGER
+   // for debugger: same behavior as pressing control-C
+   virtual void debug_break () {}
+Index: gui/siminterface.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
+retrieving revision 1.64
+diff -u -r1.64 siminterface.cc
+--- gui/siminterface.cc	20 Sep 2002 17:56:21 -0000	1.64
++++ gui/siminterface.cc	22 Sep 2002 20:46:09 -0000
+@@ -50,6 +50,7 @@
+   virtual bx_param_num_c *get_param_num (bx_id id);
+   virtual bx_param_string_c *get_param_string (bx_id id);
+   virtual bx_param_bool_c *get_param_bool (bx_id id);
++  virtual bx_param_enum_c *get_param_enum (bx_id id);
+   virtual int get_n_log_modules ();
+   virtual char *get_prefix (int mod);
+   virtual int get_log_action (int mod, int level);
+@@ -72,7 +73,7 @@
+   virtual int get_log_prefix (char *prefix, int len);
+   virtual int set_log_prefix (char *prefix);
+   virtual int get_floppy_options (int drive, bx_floppy_options *out);
+-  virtual int get_cdrom_options (int drive, bx_cdrom_options *out);
++  virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *device = NULL);
+   virtual char *get_floppy_type_name (int type);
+   virtual void set_notify_callback (sim_interface_callback_t func, void *arg);
+   virtual BxEvent* sim_to_ci_event (BxEvent *event);
+@@ -84,6 +85,7 @@
+   virtual void periodic ();
+   virtual int create_disk_image (const char *filename, int sectors, Boolean overwrite);
+   virtual void refresh_ci ();
++  bx_param_c *get_first_cdrom ();
+ #if BX_DEBUGGER
+   virtual void debug_break ();
+   virtual void debug_interpret_cmd (char *cmd);
+@@ -143,6 +145,19 @@
+   return NULL;
+ }
+ 
++bx_param_enum_c *
++bx_real_sim_c::get_param_enum (bx_id id) {
++  bx_param_c *generic = get_param(id);
++  if (generic==NULL) {
++    BX_PANIC (("get_param_enum(%u) could not find a parameter", id));
++    return NULL;
++  }
++  if (generic->get_type () == BXT_PARAM_ENUM)
++    return (bx_param_enum_c *)generic;
++  BX_PANIC (("get_param_enum %u could not find a enum parameter with that id", id));
++  return NULL;
++}
++
+ void bx_init_siminterface ()
+ {
+   siminterface_log = new logfunctions ();
+@@ -340,10 +355,20 @@
+ }
+ 
+ int 
+-bx_real_sim_c::get_cdrom_options (int drive, bx_cdrom_options *out)
++bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *where = NULL)
+ {
+-  BX_ASSERT (drive == 0);
+-  *out = bx_options.cdromd;
++  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
++    for (Bit8u device=0; device<2; device++) {
++      if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
++        if (level==0) {
++          *out = bx_options.atadevice[channel][device];
++	  if (where != NULL) *where=(channel*2)+device;
++          return 1;
++          }
++        else level--;
++	}
++      }
++    }
+   return 0;
+ }
+ 
+@@ -358,6 +383,14 @@
+ int n_loader_os_names = 3;
+ char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
+ int n_keyboard_type_names = 3;
++char *atadevice_type_names[] = { "hard disk", "cdrom", NULL };
++int n_atadevice_type_names = 2;
++char *atadevice_status_names[] = { "ejected", "inserted", NULL };
++int n_atadevice_status_names = 2;
++char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
++int n_atadevice_biosdetect_names = 3;
++char *atadevice_translation_names[] = { "none", "lba", "large", NULL };
++int n_atadevice_translation_names = 3;
+ 
+ char *
+ bx_real_sim_c::get_floppy_type_name (int type)
+@@ -533,6 +566,23 @@
+   // the event will be freed by the recipient
+ }
+ 
++bx_param_c *
++bx_real_sim_c::get_first_cdrom ()
++{
++  for (int channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
++    if (!bx_options.ata[channel].Opresent->get ())
++      continue;
++    for (int slave=0; slave<2; slave++) {
++      Bit32u present = bx_options.atadevice[channel][slave].Opresent->get ();
++      Bit32u type = bx_options.atadevice[channel][slave].Otype->get ();
++      if (present && type == BX_ATA_DEVICE_CDROM) {
++	return bx_options.atadevice[channel][slave].Omenu;
++      }
++    }
++  }
++  return NULL;
++}
++
+ #if BX_DEBUGGER
+ 
+ // this can be safely called from either thread.
+@@ -688,12 +738,22 @@
+ void bx_param_num_c::update_dependents ()
+ {
+   if (dependent_list) {
+-    int en = val.number? 1 : 0;
+-    for (int i=0; i<dependent_list->get_size (); i++)
+-      dependent_list->get (i)->set_enabled (en);
++    int en = val.number && enabled;
++    for (int i=0; i<dependent_list->get_size (); i++) {
++      bx_param_c *param = dependent_list->get (i);
++      if (param != this)
++	param->set_enabled (en);
++    }
+   }
+ }
+ 
++void
++bx_param_num_c::set_enabled (int en)
++{
++  bx_param_c::set_enabled (en);
++  update_dependents ();
++}
++
+ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
+     char *name,
+     char *description,
+@@ -1042,6 +1102,17 @@
+   this->parent = NULL;
+ }
+ 
++bx_list_c *
++bx_list_c::clone ()
++{
++  bx_list_c *newlist = new bx_list_c (BXP_NULL, name, description, maxsize);
++  for (int i=0; i<get_size (); i++)
++    newlist->add (get(i));
++  newlist->set_options (get_options ());
++  newlist->set_parent (get_parent ());
++  return newlist;
++}
++
+ void
+ bx_list_c::add (bx_param_c *param)
+ {
+@@ -1058,8 +1129,3 @@
+   return list[index];
+ }
+ 
+-void
+-bx_list_c::set_parent (bx_param_c *parent)
+-{
+-  this->parent = parent;
+-}
+Index: gui/wxdialog.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/wxdialog.cc,v
+retrieving revision 1.42
+diff -u -r1.42 wxdialog.cc
+--- gui/wxdialog.cc	20 Sep 2002 21:25:09 -0000	1.42
++++ gui/wxdialog.cc	22 Sep 2002 20:46:11 -0000
+@@ -1709,6 +1709,7 @@
+ BEGIN_EVENT_TABLE(ParamDialog, wxDialog)
+   EVT_BUTTON(-1, ParamDialog::OnEvent)
+   EVT_CHECKBOX(-1, ParamDialog::OnEvent)
++  EVT_CHOICE(-1, ParamDialog::OnEvent)
+   EVT_TEXT(-1, ParamDialog::OnEvent)
+ END_EVENT_TABLE()
+ 
+@@ -1817,14 +1818,14 @@
+   pstr->id = genId ();
+   pstr->param = param_generic;
+   int type = param_generic->get_type ();
+-#define ADD_LABEL(x) sizer->Add (new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
++  char *prompt = pstr->param->get_ask_format ();
++  if (!prompt) prompt = pstr->param->get_name ();
++  wxASSERT (prompt != NULL);
++#define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (this, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
+   switch (type) {
+     case BXT_PARAM_BOOL: {
+ 	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	wxCheckBox *ckbx = new wxCheckBox (this, pstr->id, "");
+ 	ckbx->SetValue (param->get ());
+ 	sizer->Add (ckbx);
+@@ -1836,10 +1837,7 @@
+       }
+     case BXT_PARAM_NUM: {
+ 	bx_param_num_c *param = (bx_param_num_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	wxTextCtrl *textctrl = new wxTextCtrl (this, pstr->id, "");
+ 	const char *format = param->get_format ();
+ 	if (!format)
+@@ -1854,10 +1852,7 @@
+       }
+     case BXT_PARAM_ENUM: {
+ 	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	wxChoice *choice = new wxChoice (this, pstr->id);
+ 	sizer->Add (choice);
+ 	if (!plain) sizer->Add (1, 1);  // spacer
+@@ -1874,10 +1869,7 @@
+       }
+     case BXT_PARAM_STRING: {
+ 	bx_param_string_c *param = (bx_param_string_c*) param_generic;
+-	if (!plain) {
+-	  char *prompt = param->get_name ();
+-	  ADD_LABEL (prompt);
+-	}
++	if (!plain) ADD_LABEL (prompt);
+ 	bool isFilename = param->get_options ()->get () & param->BX_IS_FILENAME;
+ 	wxTextCtrl *txtctrl = new wxTextCtrl (this, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : wxDefaultSize);
+ 	txtctrl->SetValue (param->getptr ());
+@@ -1901,20 +1893,24 @@
+       }
+     case BXT_LIST: {
+       bx_list_c *list = (bx_list_c*) param_generic;
+-      wxStaticBox *box = new wxStaticBox (this, -1, list->get_name ());
++      wxStaticBox *box = new wxStaticBox (this, -1, prompt);
+       wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
+       wxFlexGridSizer *gridSz = new wxFlexGridSizer (3);
+-      boxsz->Add (gridSz, 1, wxGROW|wxALL, 20);
++      boxsz->Add (gridSz, 1, wxGROW|wxALL, 10);
+       // put all items in the list inside the boxsz sizer.
+       for (int i=0; i<list->get_size (); i++) {
+         bx_param_c *child = list->get (i);
+ 	AddParam (child, gridSz);
+       }
+       // add the boxsz to mainSizer
+-      mainSizer->Add (boxsz, 0, wxALL, 10);
++      mainSizer->Add (boxsz, 0, wxALL|wxGROW, 10);
+       // clear gridSizer variable so that any future parameters force
+       // creation of a new one.
+       gridSizer = NULL;
++      // add to hashes
++      pstr->u.staticbox = box;
++      idHash->Put (pstr->id, pstr);
++      paramHash->Put (pstr->param->get_id (), pstr);
+       break;
+       }
+     default:
+@@ -1974,26 +1970,108 @@
+     ParamStruct *pstr = (ParamStruct*) node->GetData ();
+     if (pstr->param->get_type () == BXT_PARAM_BOOL)
+       EnableChanged (pstr);
++    // special cases that can't be handled in the usual way
+   }
+ }
+ 
+ void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
+ {
++  wxLogDebug ("EnableChanged on checkbox %s", pstrOfCheckbox->param->get_name ());
+   bx_param_bool_c *enableParam = (bx_param_bool_c*) pstrOfCheckbox->param;
+   wxASSERT (enableParam->get_type () == BXT_PARAM_BOOL); // or we wouldn't be here
+-  // if nothing depends on this "enableParam", then we're done
+-  bx_list_c *list = enableParam->get_dependent_list ();
+-  if (list == NULL) return;
+-  // Now we know the object has dependents. Step through the list of
+-  // dependents, use the paramHash table to find their ParamStruct,
+-  // and enable/disable them as needed.
+   bool en = pstrOfCheckbox->u.checkbox->GetValue ();
++  EnableChangedRecursive (enableParam->get_dependent_list (), en, pstrOfCheckbox);
++}
++
++void ParamDialog::EnableChangedRecursive (
++    bx_list_c *list,
++    bool en,
++    ParamStruct *pstrOfCheckbox)
++{
++  if (list==NULL) return;
+   for (int i=0; i<list->get_size (); i++) {
+     bx_param_c *param = list->get(i);
+     ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
+     if (pstr) {
++      if (param == pstrOfCheckbox->param) {
++	wxLogDebug ("not setting enable on checkbox '%s' that triggered the enable change", pstrOfCheckbox->param->get_name ());
++	continue;
++      }
+       wxLogDebug ("setting enable for param '%s' to %d", pstr->param->get_name (), en?1:0);
+-      pstr->u.window->Enable (en);
++      if (en != pstr->u.window->IsEnabled ()) {
++	EnableParam (pstr->param->get_id (), en);
++	//pstr->u.window->Enable (en);
++	//if (pstr->browseButton) pstr->browseButton->Enable (en);
++	//if (pstr->label) pstr->label->Enable (en);
++	bx_list_c *deps = pstr->param->get_dependent_list ();
++	if (deps) {
++	  wxLogDebug ("recursing on dependent list of %s", list->get_name ());
++	  wxASSERT (pstr->param->get_type () == BXT_PARAM_BOOL);
++          bool dep_en = pstr->u.window->IsEnabled () && pstr->u.checkbox->GetValue ();
++	  EnableChangedRecursive (deps, dep_en, pstr);
++	}
++      }
++    }
++  }
++  // if any enums changed, give them a chance to update
++  for (int i=0; i<list->get_size (); i++) {
++    bx_param_c *param = list->get(i);
++    ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
++    if (pstr) {
++      if (pstr->param->get_type () == BXT_PARAM_ENUM)
++	EnumChanged (pstr);
++    }
++  }
++}
++
++void ParamDialog::EnableParam (int param_id, bool enabled)
++{
++  ParamStruct *pstr = (ParamStruct*) paramHash->Get (param_id);
++  if (!pstr) return;
++  if (pstr->label) pstr->label->Enable (enabled);
++  if (pstr->browseButton) pstr->browseButton->Enable (enabled);
++  if (pstr->u.window) pstr->u.window->Enable (enabled);
++}
++
++void ParamDialog::EnumChanged (ParamStruct *pstr)
++{
++  wxLogDebug ("EnumChanged");
++  int id = pstr->param->get_id ();
++  switch (id) {
++    case BXP_ATA0_MASTER_TYPE:
++    case BXP_ATA0_SLAVE_TYPE:
++    case BXP_ATA1_MASTER_TYPE:
++    case BXP_ATA1_SLAVE_TYPE:
++    case BXP_ATA2_MASTER_TYPE:
++    case BXP_ATA2_SLAVE_TYPE:
++    case BXP_ATA3_MASTER_TYPE:
++    case BXP_ATA3_SLAVE_TYPE: {
++      int delta = id - BXP_ATA0_MASTER_TYPE;
++      // find out if "present" checkbox is checked
++      bx_id present_id = (bx_id) (BXP_ATA0_MASTER_PRESENT+delta);
++      ParamStruct *present = (ParamStruct*) paramHash->Get (present_id);
++      wxASSERT (present && present->param->get_type () == BXT_PARAM_BOOL);
++      if (!present->u.checkbox->GetValue ())
++	break;  // device not enabled, leave it alone
++      if (!present->u.checkbox->IsEnabled ())
++	break;  // enable button for the device is not enabled
++      wxASSERT (pstr->param->get_type () == BXT_PARAM_ENUM);
++      int type = pstr->u.choice->GetSelection ();
++      if (type == BX_ATA_DEVICE_DISK) {
++	// enable cylinders, heads, spt
++	wxLogDebug ("enabling disk parameters");
++	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 1);
++	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 1);
++	EnableParam (BXP_ATA0_MASTER_SPT+delta, 1);
++	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 0);
++      } else {
++	// enable inserted
++	wxLogDebug ("enabling cdrom parameters");
++	EnableParam (BXP_ATA0_MASTER_CYLINDERS+delta, 0);
++	EnableParam (BXP_ATA0_MASTER_HEADS+delta, 0);
++	EnableParam (BXP_ATA0_MASTER_SPT+delta, 0);
++	EnableParam (BXP_ATA0_MASTER_STATUS+delta, 1);
++      }
+     }
+   }
+ }
+@@ -2041,7 +2119,7 @@
+ void ParamDialog::OnEvent(wxCommandEvent& event)
+ {
+   int id = event.GetId ();
+-  //wxLogMessage ("event was from id=%d", id);
++  wxLogMessage ("event was from id=%d", id);
+   if (isGeneratedId (id)) {
+     ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
+     if (pstr == NULL) {
+@@ -2050,10 +2128,13 @@
+     }
+     if (id == pstr->id) {
+       IFDBG_DLG (wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ()));
+-      if (pstr->param->get_type () == BXT_PARAM_BOOL) {
+-	// we know that a wxCheckBox changed state.  We don't yet know
+-	// if that checkbox was enabling anything.
+-	EnableChanged (pstr);
++      switch (pstr->param->get_type ()) {
++	case BXT_PARAM_BOOL:
++	  EnableChanged (pstr);
++	  break;
++	case BXT_PARAM_ENUM:
++	  EnumChanged (pstr);
++	  break;
+       }
+       return;
+     }
+Index: gui/wxdialog.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/wxdialog.h,v
+retrieving revision 1.39
+diff -u -r1.39 wxdialog.h
+--- gui/wxdialog.h	22 Sep 2002 04:52:55 -0000	1.39
++++ gui/wxdialog.h	22 Sep 2002 20:46:12 -0000
+@@ -728,11 +728,13 @@
+ struct ParamStruct : public wxObject {
+   bx_param_c *param;
+   int id;
++  wxStaticText *label;
+   union _u_tag {
+     wxWindow *window;
+     wxChoice *choice;
+     wxTextCtrl *text;
+     wxCheckBox *checkbox;
++    wxStaticBox *staticbox;
+   } u;
+   int browseButtonId;  // only for filename params
+   wxButton *browseButton;  // only for filename params
+@@ -760,6 +762,9 @@
+   // map parameter ID (BXP_*) onto ParamStruct.
+   wxHashTable *paramHash;
+   virtual void EnableChanged ();
++  void EnableParam (int param_id, bool enabled);
++  void EnumChanged (ParamStruct *pstr);
++  void EnableChangedRecursive (bx_list_c *list, bool en, ParamStruct *pstrOfCheckbox);
+   void EnableChanged (ParamStruct *pstr);
+   bool CopyGuiToParam ();
+ public:
+Index: gui/wxmain.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/wxmain.h,v
+retrieving revision 1.29
+diff -u -r1.29 wxmain.h
+--- gui/wxmain.h	20 Sep 2002 21:25:09 -0000	1.29
++++ gui/wxmain.h	22 Sep 2002 20:46:12 -0000
+@@ -28,9 +28,11 @@
+   ID_Config_Save,
+   ID_Edit_FD_0,
+   ID_Edit_FD_1,
+-  ID_Edit_HD_0,
+-  ID_Edit_HD_1,
+-  ID_Edit_Cdrom,
++  ID_Edit_ATA0,
++  ID_Edit_ATA1,
++  ID_Edit_ATA2,
++  ID_Edit_ATA3,
++  ID_Edit_Cdrom,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
+   ID_Edit_Boot,
+   ID_Edit_Memory,
+   ID_Edit_Sound,
+@@ -197,8 +199,7 @@
+ #endif
+   static bool editFloppyValidate (FloppyConfigDialog *dialog);
+   void editFloppyConfig (int drive);
+-  void editHDConfig (int drive);
+-  void editCdromConfig ();
++  void editATAConfig (int channel);
+   void OnToolbarClick(wxCommandEvent& event);
+   int HandleAskParam (BxEvent *event);
+   int HandleAskParamString (bx_param_string_c *param);
+Index: gui/wxmain.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/wxmain.cc,v
+retrieving revision 1.55
+diff -u -r1.55 wxmain.cc
+--- gui/wxmain.cc	22 Sep 2002 04:36:09 -0000	1.55
++++ gui/wxmain.cc	22 Sep 2002 20:46:15 -0000
+@@ -168,9 +168,10 @@
+   EVT_MENU(ID_Simulate_PauseResume, MyFrame::OnPauseResumeSim)
+   EVT_MENU(ID_Simulate_Stop, MyFrame::OnKillSim)
+   EVT_MENU(ID_Sim2CI_Event, MyFrame::OnSim2CIEvent)
+-  EVT_MENU(ID_Edit_HD_0, MyFrame::OnOtherEvent)
+-  EVT_MENU(ID_Edit_HD_1, MyFrame::OnOtherEvent)
+-  EVT_MENU(ID_Edit_Cdrom, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA0, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA1, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA2, MyFrame::OnOtherEvent)
++  EVT_MENU(ID_Edit_ATA3, MyFrame::OnOtherEvent)
+   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
+   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
+   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
+@@ -279,9 +280,10 @@
+   menuEdit = new wxMenu;
+   menuEdit->Append( ID_Edit_FD_0, "Floppy Disk &0..." );
+   menuEdit->Append( ID_Edit_FD_1, "Floppy Disk &1..." );
+-  menuEdit->Append( ID_Edit_HD_0, "Hard Disk 0..." );
+-  menuEdit->Append( ID_Edit_HD_1, "Hard Disk 1..." );
+-  menuEdit->Append( ID_Edit_Cdrom, "Cdrom..." );
++  menuEdit->Append( ID_Edit_ATA0, "ATA Controller 0..." );
++  menuEdit->Append( ID_Edit_ATA1, "ATA Controller 1..." );
++  menuEdit->Append( ID_Edit_ATA2, "ATA Controller 2..." );
++  menuEdit->Append( ID_Edit_ATA3, "ATA Controller 3..." );
+   menuEdit->Append( ID_Edit_Boot, "&Boot..." );
+   menuEdit->Append( ID_Edit_Memory, "&Memory..." );
+   menuEdit->Append( ID_Edit_Sound, "&Sound..." );
+@@ -402,24 +404,22 @@
+   int bootDevices = 0;
+   wxString devices[MAX_BOOT_DEVICES];
+   int dev_id[MAX_BOOT_DEVICES];
+-  bx_param_bool_c *floppy = (bx_param_bool_c *)
+-    SIM->get_param (BXP_FLOPPYA_DEVTYPE);
+-  bx_param_bool_c *hd = (bx_param_bool_c *)
+-    SIM->get_param (BXP_DISKC_PRESENT);
+-  bx_param_bool_c *cdrom = (bx_param_bool_c *)
+-    SIM->get_param (BXP_CDROM_PRESENT);
+-  wxASSERT (floppy->get_type () == BXT_PARAM_ENUM
+-      && hd->get_type () == BXT_PARAM_BOOL
+-      && cdrom->get_type () == BXT_PARAM_BOOL);
++  bx_param_enum_c *floppy = SIM->get_param_enum (BXP_FLOPPYA_DEVTYPE);
++  bx_param_bool_c *ata0_mpres = SIM->get_param_bool (BXP_ATA0_MASTER_PRESENT);
++  bx_param_enum_c *ata0_mtype = SIM->get_param_enum (BXP_ATA0_MASTER_TYPE);
++  bx_param_bool_c *ata0_spres = SIM->get_param_bool (BXP_ATA0_SLAVE_PRESENT);
++  bx_param_enum_c *ata0_stype = SIM->get_param_enum (BXP_ATA0_SLAVE_TYPE);
+   if (floppy->get () != BX_FLOPPY_NONE) {
+     devices[bootDevices] = wxT("First floppy drive");
+     dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
+   }
+-  if (hd->get ()) {
++#warning wxwindows interface will only allow booting from hard disk if it is on ATA0 master
++  if (ata0_mpres->get() && ata0_mtype->get() == BX_ATA_DEVICE_DISK) {
+     devices[bootDevices] = wxT("First hard drive");
+     dev_id[bootDevices++] = BX_BOOT_DISKC;
+   }
+-  if (cdrom->get ()) {
++#warning wxwindows interface will only allow booting from cdrom if it is on ATA0 slave
++  if (ata0_spres->get() && ata0_stype->get() == BX_ATA_DEVICE_CDROM) {
+     devices[bootDevices] = wxT("CD-ROM drive");
+     dev_id[bootDevices++] = BX_BOOT_CDROM;
+   }
+@@ -834,8 +834,11 @@
+   bool canConfigure = (change == Stop);
+   menuConfiguration->Enable (ID_Config_New, canConfigure);
+   menuConfiguration->Enable (ID_Config_Read, canConfigure);
+-  menuEdit->Enable (ID_Edit_HD_0, canConfigure);
+-  menuEdit->Enable (ID_Edit_HD_1, canConfigure);
++#warning For now, leave ATA devices so that you configure them during runtime. Otherwise you cannot change the CD image at runtime.
++  //menuEdit->Enable (ID_Edit_ATA0, canConfigure);
++  //menuEdit->Enable (ID_Edit_ATA1, canConfigure);
++  //menuEdit->Enable (ID_Edit_ATA2, canConfigure);
++  //menuEdit->Enable (ID_Edit_ATA3, canConfigure);
+   menuEdit->Enable( ID_Edit_Boot, canConfigure);
+   menuEdit->Enable( ID_Edit_Memory, canConfigure);
+   menuEdit->Enable( ID_Edit_Sound, canConfigure);
+@@ -853,8 +856,12 @@
+   menuEdit->Enable (ID_Edit_FD_0, canConfigure || param->get_enabled ());
+   param = SIM->get_param(BXP_FLOPPYB);
+   menuEdit->Enable (ID_Edit_FD_1, canConfigure || param->get_enabled ());
+-  param = SIM->get_param(BXP_CDROMD);
+-  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || param->get_enabled ());
++  /*
++  // this menu item removed, since you can configure the cdrom from the
++  // ATA controller menu items instead.
++  param = SIM->get_first_cdrom ();
++  menuEdit->Enable (ID_Edit_Cdrom, canConfigure || (param&&param->get_enabled ()));
++  */
+ }
+ 
+ void MyFrame::OnStartSim(wxCommandEvent& event)
+@@ -1152,9 +1159,12 @@
+   int id = event.GetId ();
+   wxLogMessage ("event id=%d", id);
+   switch (id) {
+-    case ID_Edit_HD_0: editHDConfig (0); break;
+-    case ID_Edit_HD_1: editHDConfig (1); break;
+-    case ID_Edit_Cdrom: editCdromConfig (); break;
++    case ID_Edit_ATA0: 
++    case ID_Edit_ATA1: 
++    case ID_Edit_ATA2: 
++    case ID_Edit_ATA3: 
++      editATAConfig (id - ID_Edit_ATA0);
++      break;
+   }
+ }
+ 
+@@ -1217,106 +1227,14 @@
+   }
+ }
+ 
+-void MyFrame::editHDConfig (int drive)
+-{
+-  HDConfigDialog dlg (this, -1);
+-  dlg.SetDriveName (drive==0? BX_HARD_DISK0_NAME : BX_HARD_DISK1_NAME);
+-  bx_list_c *list = (bx_list_c*) SIM->get_param ((drive==0)? BXP_DISKC : BXP_DISKD);
+-  if (!list) { wxLogError ("HD object param is null"); return; }
+-  bx_param_filename_c *fname = (bx_param_filename_c*) list->get(0);
+-  bx_param_num_c *cyl = (bx_param_num_c *) list->get(1);
+-  bx_param_num_c *heads = (bx_param_num_c *) list->get(2);
+-  bx_param_num_c *spt = (bx_param_num_c *) list->get(3);
+-  bx_param_bool_c *present = (bx_param_bool_c *)
+-    SIM->get_param (drive==0? BXP_DISKC_PRESENT : BXP_DISKD_PRESENT);
+-  wxASSERT (fname->get_type () == BXT_PARAM_STRING
+-      && cyl->get_type () == BXT_PARAM_NUM 
+-      && heads->get_type () == BXT_PARAM_NUM 
+-      && spt->get_type() == BXT_PARAM_NUM
+-      && present->get_type() == BXT_PARAM_BOOL);
+-  dlg.SetFilename (fname->getptr ());
+-  dlg.SetGeomRange (0, cyl->get_min(), cyl->get_max ());
+-  dlg.SetGeomRange (1, heads->get_min(), heads->get_max ());
+-  dlg.SetGeomRange (2, spt->get_min(), spt->get_max ());
+-  dlg.SetGeom (0, cyl->get ());
+-  dlg.SetGeom (1, heads->get ());
+-  dlg.SetGeom (2, spt->get ());
+-  dlg.SetEnable (present->get ());
+-  int n = dlg.ShowModal ();
+-  wxLogMessage ("HD config returned %d", n);
+-  if (n==wxID_OK) {
+-    char filename[1024];
+-    wxString fn (dlg.GetFilename ());
+-    strncpy (filename, fn.c_str (), sizeof (filename));
+-    wxLogMessage ("filename is '%s'", filename);
+-    fname->set (filename);
+-    cyl->set (dlg.GetGeom (0));
+-    heads->set (dlg.GetGeom (1));
+-    spt->set (dlg.GetGeom (2));
+-    present->set (dlg.GetEnable ());
+-    wxLogMessage ("present=%d cyl=%d heads=%d spt=%d", present->get (), cyl->get(), heads->get(), spt->get());
+-    if (drive==1 && present->get ()) {
+-      // check that diskD and cdrom are not enabled at the same time
+-      bx_param_bool_c *cdromd = (bx_param_bool_c*)
+-	SIM->get_param(BXP_CDROM_PRESENT);
+-      if (cdromd->get ()) {
+-	wxString msg;
+-	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
+-	    BX_HARD_DISK1_NAME, BX_CDROM_NAME, BX_CDROM_NAME);
+-	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
+-	cdromd->set (0);
+-      }
+-    }
+-  }
+-}
+-
+-void MyFrame::editCdromConfig ()
++void MyFrame::editATAConfig (int channel)
+ {
+-  CdromConfigDialog dlg (this, -1);
+-  dlg.SetDriveName (BX_CDROM_NAME);
+-  bx_param_filename_c *fname = 
+-    (bx_param_filename_c*) SIM->get_param(BXP_CDROM_PATH);
+-  bx_param_bool_c *present =
+-    (bx_param_bool_c*) SIM->get_param(BXP_CDROM_PRESENT);
+-  bx_param_enum_c *status =
+-    (bx_param_enum_c*) SIM->get_param(BXP_CDROM_STATUS);
+-  wxASSERT (fname->get_type () == BXT_PARAM_STRING
+-      && present->get_type () == BXT_PARAM_BOOL
+-      && status->get_type () == BXT_PARAM_ENUM);
+-#if defined(__linux__)
+-  dlg.AddRadio ("Physical CD-ROM drive /dev/cdrom", "/dev/cdrom");
+-#elif defined (WIN32)
+-  dlg.AddRadio ("Physical CD-ROM drive D:", "D:");
+-#else
+-  // add your favorite operating system here
+-#endif
+-  dlg.SetEnable (present->get () ? TRUE : FALSE);
+-  dlg.SetFilename (fname->getptr ());
+-  dlg.SetEjected (status->get () == BX_EJECTED);
+-  int n = dlg.ShowModal ();
+-  wxLogMessage ("cdrom config returned %d", n);
+-  if (n==wxID_OK) {
+-    char filename[1024];
+-    wxString fn (dlg.GetFilename ());
+-    strncpy (filename, fn.c_str (), sizeof(filename));
+-    fname->set (filename);
+-    present->set (dlg.GetEnable ());
+-    status->set (dlg.GetEjected () ? BX_EJECTED : BX_INSERTED);
+-    wxLogMessage ("filename is '%s'", filename);
+-    wxLogMessage ("enabled=%d ejected=%d", present->get(), status->get());
+-    // cdrom and hard disk D cannot both be enabled.
+-    if (present->get ()) {
+-      bx_param_bool_c *diskd = (bx_param_bool_c*)
+-	SIM->get_param(BXP_DISKD_PRESENT);
+-      if (diskd->get ()) {
+-	wxString msg;
+-	msg.Printf ("You cannot have both %s and %s enabled. Disabling %s.",
+-	    BX_CDROM_NAME, BX_HARD_DISK1_NAME, BX_HARD_DISK1_NAME);
+-	wxMessageBox( msg, "Device conflict", wxOK | wxICON_ERROR );
+-	diskd->set (0);
+-      }
+-    }
+-  }
++  ParamDialog dlg (this, -1);
++  dlg.SetTitle ("Configure ATA0");
++  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0+channel)));
++  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MASTER+channel*2)));
++  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_SLAVE+channel*2)));
++  dlg.ShowModal ();
+ }
+ 
+ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 Index: iodev/harddrv.cc
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/iodev/harddrv.cc,v
-retrieving revision 1.71
-diff -u -r1.71 harddrv.cc
---- iodev/harddrv.cc	12 Sep 2002 06:49:04 -0000	1.71
-+++ iodev/harddrv.cc	14 Sep 2002 07:27:57 -0000
+retrieving revision 1.72
+diff -u -r1.72 harddrv.cc
+--- iodev/harddrv.cc	16 Sep 2002 16:58:36 -0000	1.72
++++ iodev/harddrv.cc	22 Sep 2002 20:46:16 -0000
 @@ -56,76 +56,99 @@
  #endif
  
@@ -5639,7 +6356,7 @@ diff -u -r1.71 harddrv.cc
 +  Bit32u
 +bx_hard_drive_c::get_device_handle(Bit8u channel, Bit8u device)
 +{
-+  BX_INFO(("get_device_handle %d %d",channel, device));
++  BX_DEBUG(("get_device_handle %d %d",channel, device));
 +  if ((channel < BX_MAX_ATA_CHANNEL) && (device < 2)) {
 +    return ((channel*2) + device);
 +    }
@@ -5745,7 +6462,7 @@ RCS file: /cvsroot/bochs/bochs/iodev/harddrv.h,v
 retrieving revision 1.13
 diff -u -r1.13 harddrv.h
 --- iodev/harddrv.h	12 Sep 2002 06:49:04 -0000	1.13
-+++ iodev/harddrv.h	14 Sep 2002 07:27:57 -0000
++++ iodev/harddrv.h	22 Sep 2002 20:46:16 -0000
 @@ -184,7 +184,6 @@
      Boolean err;
      } status;
