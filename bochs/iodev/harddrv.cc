@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.118 2004-02-08 18:38:26 vruppert Exp $
+// $Id: harddrv.cc,v 1.119 2004-02-09 18:59:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -130,6 +130,7 @@ bx_hard_drive_c::bx_hard_drive_c(void)
       put("HD");
       settype(HDLOG);
     }
+    iolight_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 
@@ -160,7 +161,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.118 2004-02-08 18:38:26 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.119 2004-02-09 18:59:49 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -253,6 +254,7 @@ bx_hard_drive_c::init(void)
 	  // If not present
       BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
       BX_HD_THIS channels[channel].drives[device].statusbar_id = -1;
+      BX_HD_THIS channels[channel].drives[device].iolight_counter = 0;
       if (!bx_options.atadevice[channel][device].Opresent->get()) {
         continue;
         }
@@ -597,6 +599,11 @@ bx_hard_drive_c::init(void)
     BX_INFO(("Floppy boot signature check is %sabled", bx_options.OfloppySigCheck->get() ? "dis" : "en"));
     }
 
+  // register timer for HD/CD i/o light
+  if (BX_HD_THIS iolight_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_HD_THIS iolight_timer_index =
+      DEV_register_timer(this, iolight_timer_handler, 100000, 0,0, "HD/CD i/o light");
+  }
 }
 
   void
@@ -608,6 +615,28 @@ bx_hard_drive_c::reset(unsigned type)
   }
 }
 
+  void
+bx_hard_drive_c::iolight_timer_handler(void *this_ptr)
+{
+  bx_hard_drive_c *class_ptr = (bx_hard_drive_c *) this_ptr;
+
+  class_ptr->iolight_timer();
+}
+
+  void
+bx_hard_drive_c::iolight_timer()
+{
+  for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+    for (unsigned device=0; device<2; device++) {
+      if (BX_HD_THIS channels[channel].drives[device].iolight_counter > 0) {
+        if (--BX_HD_THIS channels[channel].drives[device].iolight_counter)
+          bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+        else
+          bx_gui->statusbar_setitem(BX_HD_THIS channels[channel].drives[device].statusbar_id, 0);
+      }
+    }
+  }
+}
 
 #define GOTO_RETURN_VALUE  if(io_len==4){\
                              goto return_value32;\
@@ -820,6 +849,11 @@ if (channel == 0) {
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	        GOTO_RETURN_VALUE ;
 	      }
+              /* set status bar conditions for device */
+              if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+                bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+              BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+              bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
 	      ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
               if (ret < 512) {
                 BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
@@ -887,6 +921,11 @@ if (channel == 0) {
 				    if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
 				      BX_PANIC(("Read with CDROM not ready"));
 				    } 
+                                    /* set status bar conditions for device */
+                                    if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+                                      bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+                                      BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+                                      bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
 				    BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(BX_SELECTED_CONTROLLER(channel).buffer,
 									BX_SELECTED_DRIVE(channel).cdrom.next_lba);
 				    BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
@@ -1313,6 +1352,11 @@ if (channel == 0) {
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
 	    }
+            /* set status bar conditions for device */
+            if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+              bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+            BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+            bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
 	    ret = BX_SELECTED_DRIVE(channel).hard_drive->write((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
             if (ret < 512) {
               BX_ERROR(("could not write() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
@@ -2017,6 +2061,11 @@ if (channel == 0) {
 	    command_aborted(channel, value);
 	    break;
 	  }
+          /* set status bar conditions for device */
+          if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+            bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+          BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+          bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
 	  ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) BX_SELECTED_CONTROLLER(channel).buffer, 512);
           if (ret < 512) {
             BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
