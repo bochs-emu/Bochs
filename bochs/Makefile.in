@@ -25,21 +25,29 @@
 # the following rules:
 #   use $(VAR) not ${VAR}
 
-VERSION=1.2
-VER_STRING=1.2
-REL_STRING=June 3, 2001
+prefix          = @prefix@
+exec_prefix     = @exec_prefix@
+bindir          = @bindir@
+mandir          = @mandir@
+man1dir         = $(mandir)/man1
+
+
+VERSION=1.2.1
+VER_STRING=1.2.1
+REL_STRING=June 13, 2001
 PREFIX=/usr/local/bochs
-MANPATH=/usr/man
+BOCHSDIR=$(prefix)/bochs
+VERSIONDIR=$(BOCHSDIR)/$(VERSION)
 MAN_PAGE_LIST=bochs bochsrc bximage bochs-dlx
-BINPATH=/usr/local/bin
-INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bximage
+INSTALL_LIST=bios/BIOS-* CHANGES COPYING README bios/VGABIOS* bochs bximage install-x11-fonts
 INSTALL_LIST_SED=DOC-linux.html
-BOCHS_SCRIPTS=bochs-dlx bochs-docs
+BOCHS_SCRIPTS=bochs-docs
 CP=cp
 CAT=cat
 RM=rm
 MV=mv
 LN_S=ln -sf
+RPMSPEC=build/redhat/bochs.rpmspec.template 
 DLXLINUX_TAR=dlxlinux2.tar.gz
 DLXLINUX_TAR_URL=http://bochs.sourceforge.net/guestos/$(DLXLINUX_TAR)
 DLXLINUX_ROMFILE=BIOS-bochs-latest
@@ -229,54 +237,59 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
 
-install: all install_bin install_man install_dlx
+install: all install_bin install_man install_fonts
+
+install_fonts::
+	$(VERSIONDIR)/install-x11-fonts
 
 install_bin::
-	-mkdir $(PREFIX)
-	-mkdir $(PREFIX)/$(VERSION)
-	test -d $(PREFIX)/$(VERSION)
-	test -w $(PREFIX)/$(VERSION)
-	for i in $(BOCHS_SCRIPTS); do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(BINPATH)/$$i; $(CHMOD) 755 $(BINPATH)/$$i; done
-	for i in $(INSTALL_LIST_SED); do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(PREFIX)/$(VERSION)/$$i; $(CHMOD) 644 $(PREFIX)/$(VERSION)/$$i; done
-	for i in $(INSTALL_LIST); do /bin/cp $$i $(PREFIX)/$(VERSION); done
-	$(LN_S) $(PREFIX)/$(VERSION)/bochs $(BINPATH)/bochs
-	$(LN_S) $(PREFIX)/$(VERSION)/bximage $(BINPATH)/bximage
-	$(CP) -r docs-html $(PREFIX)/$(VERSION)
-	$(RM) -f $(PREFIX)/$(VERSION)/README
-	$(CAT) build/linux/README.linux-binary README > $(PREFIX)/$(VERSION)/README
-	$(CP) font/vga.pcf $(PREFIX)/$(VERSION)
-	$(CP) .bochsrc $(PREFIX)/$(VERSION)/bochsrc-sample.txt
-	$(RM) -f $(PREFIX)/latest
-	$(LN_S) $(VERSION) $(PREFIX)/latest
+	-mkdir $(BOCHSDIR)
+	-mkdir $(VERSIONDIR)
+	test -d $(VERSIONDIR)
+	test -w $(VERSIONDIR)
+	for i in bochs-docs; do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(bindir)/$$i; $(CHMOD) 755 $(bindir)/$$i; done
+	for i in $(INSTALL_LIST_SED); do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(VERSIONDIR)/$$i; $(CHMOD) 644 $(VERSIONDIR)/$$i; done
+	for i in $(INSTALL_LIST); do /bin/cp $$i $(VERSIONDIR); done
+	$(LN_S) $(VERSIONDIR)/bochs $(bindir)/bochs
+	$(LN_S) $(VERSIONDIR)/bximage $(bindir)/bximage
+	$(CP) -r docs-html $(VERSIONDIR)
+	$(RM) -f $(VERSIONDIR)/README
+	$(CAT) build/linux/README.linux-binary README > $(VERSIONDIR)/README
+	$(CP) font/vga.pcf $(VERSIONDIR)
+	$(CP) .bochsrc $(VERSIONDIR)/bochsrc-sample.txt
+	$(RM) -f $(BOCHSDIR)/latest
+	$(LN_S) $(VERSION) $(BOCHSDIR)/latest
 
 install_man::
-	for i in $(MAN_PAGE_LIST); do cat doc/man/$$i.1 | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(MANPATH)/man1/$$i.1; chmod 644 $(MANPATH)/man1/$$i.1; done
+	for i in $(MAN_PAGE_LIST); do cat doc/man/$$i.1 | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(man1dir)/$$i.1; chmod 644 $(man1dir)/$$i.1; done
 
 install_dlx::
 	$(RM) -f $(DLXLINUX_TAR)
 	$(WGET) $(DLXLINUX_TAR_URL)
-	$(RM) -rf $(PREFIX)/dlxlinux
-	$(GUNZIP) -c $(DLXLINUX_TAR) | (cd $(PREFIX); tar -xvf -)
+	$(RM) -rf $(BOCHSDIR)/dlxlinux
+	$(GUNZIP) -c $(DLXLINUX_TAR) | (cd $(BOCHSDIR); tar -xvf -)
 	$(RM) -f $(DLXLINUX_TAR)
-	test -d $(PREFIX)/dlxlinux
-	(cd $(PREFIX)/dlxlinux; $(MV) bochsrc.txt bochsrc.txt.orig; $(SED) -e "s/1\.1\.2/$(VERSION)/g"< bochsrc.txt.orig > bochsrc.txt; rm -f bochsrc.txt.orig)
-	$(CHOWN) -R root.root $(PREFIX)/dlxlinux
-	$(CHMOD) 777 $(PREFIX)/dlxlinux
-	$(CHMOD) 666 $(PREFIX)/dlxlinux/*
-	$(CHMOD) 644 $(PREFIX)/dlxlinux/README
+	test -d $(BOCHSDIR)/dlxlinux
+	(cd $(BOCHSDIR)/dlxlinux; $(MV) bochsrc.txt bochsrc.txt.orig; $(SED) -e "s/1\.1\.2/$(VERSION)/g"< bochsrc.txt.orig > bochsrc.txt; rm -f bochsrc.txt.orig)
+	$(CHOWN) -R root.root $(BOCHSDIR)/dlxlinux
+	$(CHMOD) 777 $(BOCHSDIR)/dlxlinux
+	$(CHMOD) 666 $(BOCHSDIR)/dlxlinux/*
+	$(CHMOD) 644 $(BOCHSDIR)/dlxlinux/README
+	for i in bochs-dlx; do cat build/linux/$$i | $(SED) -e 's/@VERSION@/$(VERSION)/g' > $(bindir)/$$i; $(CHMOD) 755 $(bindir)/$$i; done
 
-erase_install::
-	$(RM) -rf $(PREFIX)/$(VERSION)
-	$(RM) -rf $(PREFIX)/dlxlinux
-	$(RM) -rf $(PREFIX)/latest
-	-$(RMDIR) $(PREFIX)
-	for i in $(MAN_PAGE_LIST); do $(RM) -f $(MANPATH)/man1/$$i.1; done
+uninstall::
+	$(RM) -rf $(VERSIONDIR)
+	$(RM) -rf $(BOCHSDIR)/dlxlinux
+	$(RM) -rf $(BOCHSDIR)/latest
+	-$(RMDIR) $(BOCHSDIR)
+	for i in bochs bximage bochs-dlx $(BOCHS_SCRIPTS); do rm -f /usr/local/bin/$$i; done
+	for i in $(MAN_PAGE_LIST); do $(RM) -f $(man1dir)/$$i.1; done
 
 rpm:: dist-clean
 	test -w $(SOURCES)
 	test -w $(SPECS)
 	rm -f /usr/src/redhat/SPECS/bochs.spec
-	$(CAT) build/linux/bochs.rpmspec.template | $(SED) "s/@VERSION@/$(VERSION)/g" > $(SPECS)/bochs.spec
+	$(CAT) $(RPMSPEC) | $(SED) "s/@VERSION@/$(VERSION)/g" > $(SPECS)/bochs.spec
 	$(RM) -rf $(SOURCES)/bochs
 	$(MKDIR) $(SOURCES)/bochs
 	$(TAR) cf - * .??* | (cd $(SOURCES)/bochs && tar xf -)
