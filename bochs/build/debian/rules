@@ -50,7 +50,9 @@ install: build
 	#$(MAKE) install_bin prefix=$(CURDIR)/debian/bochs/usr/local
 	#$(MAKE) install_man prefix=$(CURDIR)/debian/bochs/usr/local
 	#$(MAKE) install_dlx prefix=$(CURDIR)/debian/bochs/usr/local
-	$(MAKE) install prefix=$(CURDIR)/debian/bochs/usr
+	$(MAKE) unpack_dlx   # with normal prefix so that dlxlinux
+	                     # bochsrc.txt file gets right pathnames
+	$(MAKE) install_bin install_man install_fonts install_dlx prefix=$(CURDIR)/debian/bochs/usr
 
 
 	# Put the font in the right place
