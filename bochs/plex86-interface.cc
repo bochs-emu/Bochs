@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.1 2003-01-01 17:34:09 kevinlawton Exp $
+//// $Id: plex86-interface.cc,v 1.2 2003-01-02 01:09:50 kevinlawton Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -39,37 +39,30 @@ static void copyPlex86StateToBochs(BX_CPU_C *cpu);
 static void copyBochsDescriptorToPlex86(descriptor_t *, bx_descriptor_t *);
 static void copyPlex86DescriptorToBochs(BX_CPU_C *,
                                         bx_descriptor_t *, descriptor_t *);
+static int  openFD(void);
 
 static unsigned faultCount[32];
 
 
   int
-plex86Open(void)
+openFD(void)
 {
-  cpuid_info_t bochsCPUID;
-
   if (plex86State) {
     // This should be the first operation; no state should be set yet.
-    fprintf(stderr, "plex86Open: plex86State = 0x%x\n", plex86State);
-    return(-1); // Error.
+    fprintf(stderr, "openFD: plex86State = 0x%x\n", plex86State);
+    return(0); // Error.
     }
 
   // Open a new VM.
   fprintf(stderr, "Opening VM.\n");
   fprintf(stderr, "Trying /dev/misc/plex86...");
   plex86FD = open("/dev/misc/plex86", O_RDWR);
-  if (plex86FD >= 0) {
-    fprintf(stderr, "OK.\n");
-    }
-  else {
+  if (plex86FD < 0) {
     fprintf(stderr, "failed.\n");
     // Try the old name.
     fprintf(stderr, "Trying /dev/plex86...");
     plex86FD = open("/dev/plex86", O_RDWR);
-    if (plex86FD >= 0) {
-      fprintf(stderr, "OK.\n");
-      }
-    else {
+    if (plex86FD < 0) {
       fprintf(stderr, "failed.\n");
       fprintf(stderr, "Did you load the kernel module?"
               "  Read the toplevel README file!\n");
@@ -77,18 +70,37 @@ plex86Open(void)
       return(-1); // Error.
       }
     }
+  fprintf(stderr, "OK.\n");
+  return(1); // OK.
+}
 
-  fprintf(stderr, "Zeroing guest CPUID info (complete this).\n");
-  memset(&bochsCPUID, 0, sizeof(bochsCPUID));
-// xxx Fill in CPUID info here.
+  unsigned
+plex86CpuInfo(BX_CPU_C *cpu)
+{
+  cpuid_info_t bochsCPUID;
+
+  if (plex86FD < 0) {
+    // If the plex86 File Descriptor has not been opened yet.
+    if ( !openFD() ) {
+      return(0); // Error.
+      }
+    }
+
+  bochsCPUID.vendorDWord0 = cpu->cpuidInfo.vendorDWord0;
+  bochsCPUID.vendorDWord1 = cpu->cpuidInfo.vendorDWord1;
+  bochsCPUID.vendorDWord2 = cpu->cpuidInfo.vendorDWord2;
+  bochsCPUID.procSignature.raw = cpu->cpuidInfo.procSignature;
+  bochsCPUID.featureFlags.raw  = cpu->cpuidInfo.featureFlags;
+fprintf(stderr, "CPUID.family passing as %u\n",
+bochsCPUID.procSignature.fields.family);
 
   fprintf(stderr, "Passing guest CPUID to plex86.\n");
   if ( ioctl(plex86FD, PLEX86_CPUID, &bochsCPUID) ) {
     perror("ioctl CPUID: ");
-    return(-1); // Error.
+    return(0); // Error.
     }
 
-  return(plex86FD); // File descriptor is return val.
+  return(1); // OK.
 }
 
   Bit8u *
@@ -99,8 +111,10 @@ plex86AllocateMemory(unsigned nMegs)
   plex86MemSize = nMegs * 1024 * 1024;
 
   if (plex86FD < 0) {
-    fprintf(stderr, "plex86AllocateMemory: FD not open.\n");
-    return(0);
+    // If the plex86 File Descriptor has not been opened yet.
+    if ( !openFD() ) {
+      return(0);
+      }
     }
 
   // Allocate memory from the host OS for the virtual physical memory.

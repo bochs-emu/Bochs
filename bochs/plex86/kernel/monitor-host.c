@@ -1242,9 +1242,9 @@ ioctlAllocVPhys(vm_t *vm, unsigned long arg)
 
 hostPrint("plex86: vm_t size is %u\n", sizeof(vm_t));
   /* Do not allow duplicate allocation.  The file descriptor must be
-   * opened, and the guest CPUID info filled in by this point.
+   * opened.  The guest CPUID info can be filled in later.
    */
-  if ( vm->vmState != (VMStateFDOpened | VMStateGuestCPUID) )
+  if ( (vm->vmState & ~VMStateGuestCPUID) != VMStateFDOpened )
     return -Plex86ErrnoEBUSY;
 
   if (vm->pages.guest_n_megs != 0)
@@ -1565,15 +1565,13 @@ getCpuCapabilities(void)
     :
     : "cc"
     );
-  hostCpuIDInfo.maxval = eax;
   if (eax < 1)
     return(0); /* not enough capabilities */
 
-  /* Copy vendor string */
-  * (Bit32u*) &hostCpuIDInfo.vendorID[0] = ebx;
-  * (Bit32u*) &hostCpuIDInfo.vendorID[4] = edx;
-  * (Bit32u*) &hostCpuIDInfo.vendorID[8] = ecx;
-  hostCpuIDInfo.vendorID[12] = 0;
+  /* Copy vendor string. */
+  hostCpuIDInfo.vendorDWord0 = ebx;
+  hostCpuIDInfo.vendorDWord1 = edx;
+  hostCpuIDInfo.vendorDWord2 = ecx;
 
   /* CPUID w/ EAX==1: Processor Signature & Feature Flags */
   asm volatile (

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.h,v 1.1 2003-01-01 17:34:09 kevinlawton Exp $
+//// $Id: plex86-interface.h,v 1.2 2003-01-02 01:09:50 kevinlawton Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -34,7 +34,7 @@ extern unsigned     plex86MemSize;
 extern Bit8u       *plex86PrintBuffer;
 extern guest_cpu_t *plex86GuestCPU;
 
-extern int      plex86Open(void);
+extern unsigned plex86CpuInfo(BX_CPU_C *cpu);
 extern unsigned char * plex86AllocateMemory(unsigned nMegs);
 extern unsigned plex86TearDown(void);
 extern unsigned plex86ExecuteInVM(BX_CPU_C *cpu);

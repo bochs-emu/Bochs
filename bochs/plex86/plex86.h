@@ -1,5 +1,5 @@
 /************************************************************************
- * $Id: plex86.h,v 1.1 2003-01-01 17:32:04 kevinlawton Exp $
+ * $Id: plex86.h,v 1.2 2003-01-02 01:08:43 kevinlawton Exp $
  ************************************************************************
  *
  *  plex86: run multiple x86 operating systems concurrently
@@ -80,8 +80,9 @@ typedef union {
   } __attribute__ ((packed)) cr4_t;
 
 typedef struct {
-  Bit32u maxval; /* maximum val to pass to CPUID instruction */
-  Bit8u  vendorID[12+1]; /* 12 packed Vendor ID string bytes plus null */
+  Bit32u vendorDWord0;
+  Bit32u vendorDWord1;
+  Bit32u vendorDWord2;
   union {
     Bit32u raw;
     struct {
