@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.13 2001-06-11 20:51:15 bdenney Exp $
+ * $Id: control.cc,v 1.14 2001-06-11 21:03:05 bdenney Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -224,122 +224,122 @@ ask_string (char *prompt, char *the_default, char *out)
 /******************************************************************/
 
 static char *ask_about_control_panel =
-"\n\
-This version of Bochs has a prototype configuration interface.  Would\n\
-you like to try it?\n\
-\n\
-If you choose yes, you can use a menu to choose configuration options.\n\
-If you choose no, Bochs will read a bochsrc file and run as usual.\n\
-Type yes or no: [yes] ";
+"\n"
+"This version of Bochs has a prototype configuration interface.  Would\n"
+"you like to try it?\n"
+"\n"
+"If you choose yes, you can use a menu to choose configuration options.\n"
+"If you choose no, Bochs will read a bochsrc file and run as usual.\n"
+"Type yes or no: [yes] ";
 
 static char *startup_menu_prompt =
-"------------------\n\
-Bochs Startup Menu\n\
-------------------\n\
-1. Read options from...\n\
-2. Edit options\n\
-3. Save options to...\n\
-4. Begin simulation\n\
-5. Quit now\n\
-\n\
-Please choose one: [%d] ";
+"------------------\n"
+"Bochs Startup Menu\n"
+"------------------\n"
+"1. Read options from...\n"
+"2. Edit options\n"
+"3. Save options to...\n"
+"4. Begin simulation\n"
+"5. Quit now\n"
+"\n"
+"Please choose one: [%d] ";
 
 static char *startup_options_prompt =
-"------------------\n\
-Bochs Options Menu\n\
-------------------\n\
-0. Return to previous menu\n\
-1. Log file: %s\n\
-2. Log options for all devices\n\
-3. Log options for individual devices\n\
-4. Boot options\n\
-5. Interface options\n\
-6. Disk options\n\
-7. Sound options\n\
-8. Other options\n\
-\n\
-Please choose one: [0] ";
+"------------------\n"
+"Bochs Options Menu\n"
+"------------------\n"
+"0. Return to previous menu\n"
+"1. Log file: %s\n"
+"2. Log options for all devices\n"
+"3. Log options for individual devices\n"
+"4. Boot options\n"
+"5. Interface options\n"
+"6. Disk options\n"
+"7. Sound options\n"
+"8. Other options\n"
+"\n"
+"Please choose one: [0] ";
 
 static char *startup_boot_options_prompt =
-"------------------\n\
-Bochs Boot Options\n\
-------------------\n\
-0. Return to previous menu\n\
-1. Memory in Megabytes: %d\n\
-2. VGA ROM image: %s\n\
-3. ROM image: %s\n\
-4. ROM address: 0x%05x\n\
-\n\
-Please choose one: [0] ";
+"------------------\n"
+"Bochs Boot Options\n"
+"------------------\n"
+"0. Return to previous menu\n"
+"1. Memory in Megabytes: %d\n"
+"2. VGA ROM image: %s\n"
+"3. ROM image: %s\n"
+"4. ROM address: 0x%05x\n"
+"\n"
+"Please choose one: [0] ";
 
 static char *startup_interface_options =
-"------------------\n\
-Bochs Interface Options\n\
-------------------\n\
-0. Return to previous menu\n\
-1. VGA Update Interval: %d\n\
-2. Mouse: %s\n\
-3. Emulated instructions per second (IPS): %d\n\
-4. Private Colormap: %s\n\
-\n\
-Please choose one: [0] ";
+"------------------\n"
+"Bochs Interface Options\n"
+"------------------\n"
+"0. Return to previous menu\n"
+"1. VGA Update Interval: %d\n"
+"2. Mouse: %s\n"
+"3. Emulated instructions per second (IPS): %d\n"
+"4. Private Colormap: %s\n"
+"\n"
+"Please choose one: [0] ";
 
 static char *startup_disk_options_prompt =
-"------------------\n\
-Bochs Disk Options\n\
-------------------\n\
-0. Return to previous menu\n\
-1. Floppy disk 0: %s\n\
-2. Floppy disk 1: %s\n\
-3. Hard disk 0: %s\n\
-4. Hard disk 1: %s\n\
-5. CDROM: %s\n\
-6. New Hard Drive Support: %s\n\
-7. Boot from: %s\n\
-%s\n\
-Please choose one: [0] ";
+"------------------\n"
+"Bochs Disk Options\n"
+"------------------\n"
+"0. Return to previous menu\n"
+"1. Floppy disk 0: %s\n"
+"2. Floppy disk 1: %s\n"
+"3. Hard disk 0: %s\n"
+"4. Hard disk 1: %s\n"
+"5. CDROM: %s\n"
+"6. New Hard Drive Support: %s\n"
+"7. Boot from: %s\n"
+"%s\n"
+"Please choose one: [0] ";
 
 static char *startup_sound_options_prompt =
-"------------------\n\
-Bochs Sound Options\n\
-------------------\n\
-0. Return to previous menu\n\
-1. Sound Blaster 16: disabled\n\
-2. MIDI mode: 1, \n\
-3. MIDI output file: /dev/midi00\n\
-4. Wave mode: 1\n\
-5. Wave output file: dev/dsp\n\
-6. SB16 log level: 2\n\
-7. SB16 log file: sb16.log\n\
-8. DMA Timer: 600000\n\
-\n\
-Please choose one: [0] ";
+"------------------\n"
+"Bochs Sound Options\n"
+"------------------\n"
+"0. Return to previous menu\n"
+"1. Sound Blaster 16: disabled\n"
+"2. MIDI mode: 1, \n"
+"3. MIDI output file: /dev/midi00\n"
+"4. Wave mode: 1\n"
+"5. Wave output file: dev/dsp\n"
+"6. SB16 log level: 2\n"
+"7. SB16 log file: sb16.log\n"
+"8. DMA Timer: 600000\n"
+"\n"
+"Please choose one: [0] ";
 
 static char *startup_misc_options_prompt =
-"---------------------------\n\
-Bochs Miscellaneous Options\n\
----------------------------\n\
-1. Keyboard Serial Delay: 250\n\
-2. Floppy command delay: 500\n\
-To be added someday: magic_break, ne2k, load32bitOSImage,i440fxsupport,time0
-\n\
-Please choose one: [0] ";
+"---------------------------\n"
+"Bochs Miscellaneous Options\n"
+"---------------------------\n"
+"1. Keyboard Serial Delay: 250\n"
+"2. Floppy command delay: 500\n"
+"To be added someday: magic_break, ne2k, load32bitOSImage,i440fxsupport,time0"
+"\n"
+"Please choose one: [0] ";
 
 static char *runtime_menu_prompt =
-"---------------------\n\
-Bochs Runtime Options\n\
----------------------\n\
-1. Floppy disk 0 (example:a.img, 1.44MB, inserted)\n\
-2. Floppy disk 1 (example:b.img, 1.44MB, inserted)\n\
-3. Emulated instructions per second (IPS)\n\
-4. Logging options\n\
-5. VGA Update Interval\n\
-6. Mouse: enabled\n\
-7. Instruction tracing: off (doesn't exist yet)\n\
-8. Continue simulation\n\
-9. Quit now\n\
-\n\
-Please choose one:  [8] ";
+"---------------------\n"
+"Bochs Runtime Options\n"
+"---------------------\n"
+"1. Floppy disk 0 (example:a.img, 1.44MB, inserted)\n"
+"2. Floppy disk 1 (example:b.img, 1.44MB, inserted)\n"
+"3. Emulated instructions per second (IPS)\n"
+"4. Logging options\n"
+"5. VGA Update Interval\n"
+"6. Mouse: enabled\n"
+"7. Instruction tracing: off (doesn't exist yet)\n"
+"8. Continue simulation\n"
+"9. Quit now\n"
+"\n"
+"Please choose one:  [8] ";
 
 char *menu_prompt_list[BX_CPANEL_N_MENUS] = {
   ask_about_control_panel,
