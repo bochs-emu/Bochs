@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.89 2002-09-29 22:38:15 kevinlawton Exp $
+// $Id: cpu.h,v 1.90 2002-09-30 22:18:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1180,6 +1180,7 @@ public:
   void set_base (Bit32u newbase);
   void set_id (Bit8u newid);
   Bit8u get_id () { return id; }
+  static void reset_all_ids ();
   virtual char *get_name();
   Boolean is_selected (Bit32u addr, Bit32u len);
   void read (Bit32u addr, void *data, unsigned len);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.152 2002-09-29 16:58:54 sshwarts Exp $
+// $Id: main.cc,v 1.153 2002-09-30 22:18:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1587,7 +1587,7 @@ bx_init_hardware()
 
   // set up memory and CPU objects
 #if BX_SUPPORT_APIC
-  memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
+  bx_generic_apic_c::reset_all_ids ();
 #endif
 
 #if BX_SMP_PROCESSORS==1

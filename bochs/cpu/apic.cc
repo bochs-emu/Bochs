@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.18 2002-09-25 01:50:14 bdenney Exp $
+// $Id: apic.cc,v 1.19 2002-09-30 22:18:52 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -56,9 +56,18 @@ void bx_generic_apic_c::set_id (Bit8u newid) {
     apic_index[id] = NULL;
   }
   id = newid;
-  if (apic_index[id] != NULL)
-    BX_PANIC(("duplicate APIC id assigned"));
-  apic_index[id] = this;
+  if (id != APIC_UNKNOWN_ID) {
+    if (apic_index[id] != NULL)
+      BX_PANIC(("duplicate APIC id assigned"));
+    apic_index[id] = this;
+  }
+}
+
+void bx_generic_apic_c::reset_all_ids () {
+  for (int i=0; i<APIC_MAX_ID; i++) {
+    if (apic_index[i]) 
+      apic_index[i]->set_id (APIC_UNKNOWN_ID);
+  }
 }
 
 char *
@@ -97,7 +106,7 @@ bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
   bytes[3] = (value >> 24) & 0xff;
   Bit8u *p1 = bytes+(addr&3);
   Bit8u *p2 = (Bit8u *)data;
-  for (int i=0; i<len; i++) {
+  for (unsigned i=0; i<len; i++) {
     if (bx_dbg.apic)
       BX_INFO(("apic: Copying byte %02x", (unsigned int) *p1));
     *p2++ = *p1++;
@@ -268,7 +277,6 @@ bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   : bx_generic_apic_c ()
 {
-  char buffer[16];
   cpu = mycpu;
   hwreset ();
 }
