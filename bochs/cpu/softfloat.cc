@@ -1881,7 +1881,7 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     if (0 < expDiff) {
         if (aExp == 0x7FF) {
             if (aSig) return propagateFloat64NaN(a, b, status);
-            if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
+            if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
             return a;
         }
         if ((aExp == 0) && aSig) {
@@ -1900,7 +1900,7 @@ static float64 addFloat64Sigs(float64 a, float64 b, flag zSign, float_status_t &
     else if (expDiff < 0) {
         if (bExp == 0x7FF) {
             if (bSig) return propagateFloat64NaN(a, b, status);
-            if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
+            if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
             return packFloat64(zSign, 0x7FF, 0);
         }
         if ((bExp == 0) && bSig) {
