@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.91 2005-02-03 18:43:23 sshwarts Exp $
+// $Id: win32.cc,v 1.92 2005-03-23 20:46:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -636,7 +636,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   create_vga_font();
 
   bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+
-    256*sizeof(RGBQUAD)];
+    259*sizeof(RGBQUAD)]; // 256 + 3 entries for 16 bpp mode
   bitmap_info->bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
   bitmap_info->bmiHeader.biWidth=x_tilesize;
   // Height is negative for top-down bitmap
@@ -653,7 +653,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   cmap_index=bitmap_info->bmiColors;
   // start out with all color map indeces pointing to Black
   cmap_index[0] = black_quad;
-  for (i=1; i<256; i++) {
+  for (i=1; i<259; i++) {
     cmap_index[i] = cmap_index[0];
   }
 
@@ -1553,9 +1553,16 @@ bx_win32_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 
 bx_bool bx_win32_gui_c::palette_change(unsigned index, unsigned red,
                                  unsigned green, unsigned blue) {
-  cmap_index[index].rgbRed = red;
-  cmap_index[index].rgbBlue = blue;
-  cmap_index[index].rgbGreen = green;
+  if ((current_bpp == 16) && (index < 3)) {
+    cmap_index[256+index].rgbRed = red;
+    cmap_index[256+index].rgbBlue = blue;
+    cmap_index[256+index].rgbGreen = green;
+    return 0;
+  } else {
+    cmap_index[index].rgbRed = red;
+    cmap_index[index].rgbBlue = blue;
+    cmap_index[index].rgbGreen = green;
+  }
   return(1);
 }
 
@@ -1647,7 +1654,6 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     return;
   dimension_x = x;
   dimension_y = y;
-  current_bpp = bpp;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
   stretch_factor = 1;
@@ -1663,18 +1669,28 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     static RGBQUAD red_mask   = {0x00, 0xF8, 0x00, 0x00};
     static RGBQUAD green_mask = {0xE0, 0x07, 0x00, 0x00};
     static RGBQUAD blue_mask  = {0x1F, 0x00, 0x00, 0x00};
+    bitmap_info->bmiColors[256] = bitmap_info->bmiColors[0];
+    bitmap_info->bmiColors[257] = bitmap_info->bmiColors[1];
+    bitmap_info->bmiColors[258] = bitmap_info->bmiColors[2];
     bitmap_info->bmiColors[0] = red_mask;
     bitmap_info->bmiColors[1] = green_mask;
     bitmap_info->bmiColors[2] = blue_mask;
   }
   else
   {
+    if (current_bpp == 16)
+    {
+      bitmap_info->bmiColors[0] = bitmap_info->bmiColors[256];
+      bitmap_info->bmiColors[1] = bitmap_info->bmiColors[257];
+      bitmap_info->bmiColors[2] = bitmap_info->bmiColors[258];
+    }
     bitmap_info->bmiHeader.biCompression = BI_RGB;
     if (bpp == 15)
     {
       bitmap_info->bmiHeader.biBitCount = 16;
     }
   }
+  current_bpp = bpp;
 
   SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
                stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
