@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.149 2004-09-26 19:20:21 vruppert Exp $
+$Id: user.dbk,v 1.150 2004-09-29 16:48:56 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2681,62 +2681,6 @@ fpu/fpu_system.h, you could try --disable-fpu.
 
 
 </section> <!-- end of Compiling Bochs -->
-
-<section id="vgafont"><title>Installing the VGA font (X windows only)</title>
-<para>
-This description is obsolete in Bochs 2.1, since Bochs no longer requires
-an external font. Now a changeable internal font is used.
-</para>
-<para>
-In text mode, Bochs requires your X server to have access to the
-VGA font.  If you don't already have it, you must install it.  The
-file is in the source directory, called <filename>font/vga.pcf</filename>.
-If the VGA font is not installed properly, you will get an error when you
-start Bochs: "Could not open vga font".
-</para>
-<para>
-There are two options; you may install the VGA font in a global place, or
-in a local directory.  You may need to install it locally if you don't have
-root access.  
-</para>
-
-<section><title>Option 1: Installing VGA font in global font directory</title>
-
-<para>
-The commands below show how to copy the VGA font from the source directory
-into the X windows font directory.
-</para>
-<screen>
-   # NOTE1: Make sure your DISPLAY variable points to local machine.
-   # NOTE2: These steps require root privileges.
-   # NOTE3: Your X11 fonts path will vary on different systems. For example:
-   #        Solaris 2.x /usr/openwin/lib/X11/fonts
-   #        Linux       /usr/lib/X11/fonts/
-   root# cp font/vga.pcf font-path-here/misc
-   root# compress font-path-here/misc/vga.pcf
-   root# mkfontdir font-path-here/misc
-   root# xset fp rehash
-   root# /etc/rc.d/init.d/xfs restart     (Restart your X font server)
-</screen>
-
-<para>
-The command to restart the X font server is given for Redhat systems, but
-it will vary between different machines, and might not even be necessary at
-all.  If you cannot figure out how to restart your font server, you can
-just reboot.
-</para>
-</section> <!-- end of option 1 -->
-
-<section><title>Option 2: Installing VGA font in local font directory</title>
-<screen>
-   # NOTE1: Make sure your DISPLAY variable points to local machine.
-   # NOTE2: The "xset" command needs to be run for each X session (you may
-   # add it to your ~/.xinitrc ).
-   user-> mkfontdir bochs-YYMMDD/font
-   user-> xset fp+ [full-path]/bochs-YYMMDD/font
-</screen>
-</section> <!--end of option 2 -->
-</section> <!--end of installing vga font-->
 
 </chapter>
 
@@ -6368,7 +6312,7 @@ Interesting Facts:
 </para>
 
 <section><title>Instructions to setup Bochs VBE in Windows Guest OS</title>
-<para>This section was written by Stanislav Shwartsman.</para>
+<para>This was contributed by Martin Bochnig in February 2004.</para>
 <screen>
 Instructions for Win95/98:
 ==========================
@@ -6387,6 +6331,9 @@ Here is how I did it :
 800x600 and 1024x768 in 16 and 24 bpp modes here.
 I did not try 32bpp.
 
+</screen>
+<para>This was contributed by Stanislav Shwartsman in September 2004.</para>
+<screen>
 Instructions for Win2000/XP:
 ============================
 
@@ -9639,7 +9586,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.149 2004-09-26 19:20:21 vruppert Exp $
+        $Id: user.dbk,v 1.150 2004-09-29 16:48:56 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
