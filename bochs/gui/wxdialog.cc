@@ -1,10 +1,11 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.47 2002-10-24 21:06:47 bdenney Exp $
+// $Id: wxdialog.cc,v 1.48 2002-11-14 05:13:40 bdenney Exp $
 /////////////////////////////////////////////////////////////////
-//
-// misc/wxdialog.cc
-// This is a testbed for wxWindows dialog box experiments.
-//
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 // For compilers that support precompilation, includes <wx/wx.h>.
 #include <wx/wxprec.h>
