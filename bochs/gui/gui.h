@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.31.4.1 2002-10-07 16:43:34 bdenney Exp $
+// $Id: gui.h,v 1.31.4.2 2002-10-07 19:59:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,7 +30,7 @@ public:
   bx_gui_c (void);
   // Define the following functions in the module for your
   // particular GUI (x.cc, beos.cc, ...)
-  virtual void specific_init(bx_gui_c *th, int argc, char **argv,
+  virtual void specific_init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,

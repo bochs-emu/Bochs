@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.23.2.2 2002-10-07 16:43:34 bdenney Exp $
+// $Id: sdl.cc,v 1.23.2.3 2002-10-07 19:59:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ public:
   bx_sdl_gui_c (void);
   // Define the following functions in the module for your
   // particular GUI (x.cc, beos.cc, ...)
-  virtual void specific_init(bx_gui_c *th, int argc, char **argv,
+  virtual void specific_init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
@@ -213,7 +213,6 @@ bx_sdl_gui_c::bx_sdl_gui_c ()
 }
 
 void bx_sdl_gui_c::specific_init(
-    bx_gui_c *th,
     int argc,
     char **argv,
     unsigned x_tilesize,
@@ -222,7 +221,7 @@ void bx_sdl_gui_c::specific_init(
 {
   int i,j;
 
-  th->put("SDL");
+  put("SDL");
 
   tilewidth = x_tilesize;
   tileheight = y_tilesize;
@@ -245,7 +244,7 @@ void bx_sdl_gui_c::specific_init(
   atexit(SDL_Quit);
 
   sdl_screen = NULL;
-  th->dimension_update(640,480);
+  dimension_update(640,480);
 
   sdl_fullscreen_toggle = 0;
 

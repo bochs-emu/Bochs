@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.16 2002-04-20 07:19:35 vruppert Exp $
+// $Id: nogui.cc,v 1.16.4.1 2002-10-07 19:59:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,8 +46,6 @@
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, BeOS, ...) to be initialized.
 //
-// th: a 'this' pointer to the gui class.  If a function external to the
-//     class needs access, store this pointer and use later.
 // argc, argv: not used right now, but the intention is to pass native GUI
 //     specific options from the command line.  (X11 options, BeOS options,...)
 //
@@ -60,11 +58,10 @@
 //     it's height is defined by this parameter.
 
   void
-bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
-  th->put("NGUI");
-  UNUSED(th);
+  put("NGUI");
   UNUSED(argc);
   UNUSED(argv);
   UNUSED(tilewidth);

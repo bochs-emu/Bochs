@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.49.2.4 2002-10-07 16:43:34 bdenney Exp $
+// $Id: x.cc,v 1.49.2.5 2002-10-07 19:59:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ public:
   bx_x11_gui_c (void);
   // Define the following functions in the module for your
   // particular GUI (x.cc, beos.cc, ...)
-  virtual void specific_init(bx_gui_c *th, int argc, char **argv,
+  virtual void specific_init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
@@ -319,7 +319,7 @@ bx_x11_gui_c::bx_x11_gui_c () {
 }
 
   void
-bx_x11_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_x11_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   unsigned i;
@@ -350,8 +350,7 @@ bx_x11_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewi
   unsigned long plane_masks_return[1];
   XColor color;
 
-  th->put("XGUI");
-  UNUSED(th);
+  put("XGUI");
 
   x_tilesize = tilewidth;
   y_tilesize = tileheight;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.35.2.1 2002-10-07 06:32:49 bdenney Exp $
+// $Id: wx.cc,v 1.35.2.2 2002-10-07 19:59:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWindows VGA display for Bochs.  wx.cc implements a custom
@@ -698,13 +698,13 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, Boolean release)
 //////////////////////////////////////////////////////////////
 
   void
-bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   int b,i,j;
   unsigned char fc, vc;
 
-  th->put("WX  ");
+  put("WX  ");
   if (bx_options.Oprivate_colormap->get ()) {
     BX_INFO(("private_colormap option ignored."));
   }

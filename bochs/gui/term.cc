@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.21.4.2 2002-10-07 16:43:34 bdenney Exp $
+// $Id: term.cc,v 1.21.4.3 2002-10-07 19:59:11 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ public:
   bx_term_gui_c (void) {}
   // Define the following functions in the module for your
   // particular GUI (x.cc, beos.cc, ...)
-  virtual void specific_init(bx_gui_c *th, int argc, char **argv,
+  virtual void specific_init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y);
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
@@ -148,8 +148,6 @@ bx_term_gui_c::sighandler(int signo)
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, BeOS, ...) to be initialized.
 //
-// th: a 'this' pointer to the gui class.  If a function external to the
-//     class needs access, store this pointer and use later.
 // argc, argv: not used right now, but the intention is to pass native GUI
 //     specific options from the command line.  (X11 options, BeOS options,...)
 //
@@ -162,11 +160,10 @@ bx_term_gui_c::sighandler(int signo)
 //     it's height is defined by this parameter.
 
 	void
-bx_term_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+bx_term_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 	unsigned headerbar_y)
 {
-	th->put("TGUI");
-	UNUSED(th);
+	put("TGUI");
 	UNUSED(argc);
 	UNUSED(argv);
 	UNUSED(tilewidth);

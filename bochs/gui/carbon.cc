@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.11.2.1 2002-10-07 06:32:49 bdenney Exp $
+// $Id: carbon.cc,v 1.11.2.2 2002-10-07 19:59:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -648,8 +648,6 @@ void CreateWindows(void)
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, BeOS, ...) to be initialized.
 //
-// th: a 'this' pointer to the gui class.  If a function external to the
-//     class needs access, store this pointer and use later.
 // argc, argv: not used right now, but the intention is to pass native GUI
 //     specific options from the command line.  (X11 options, BeOS options,...)
 //
@@ -661,13 +659,13 @@ void CreateWindows(void)
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+void bx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 										 unsigned headerbar_y)
 {	
-	th->put("MGUI");
+	put("MGUI");
 	InitToolbox();
 	
-	thisGUI = th;
+	thisGUI = this;
 	gheaderbar_y = headerbar_y;
 	
 	CreateKeyMap();

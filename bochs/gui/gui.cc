@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.49.4.4 2002-10-07 16:43:34 bdenney Exp $
+// $Id: gui.cc,v 1.49.4.5 2002-10-07 19:59:10 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ bx_gui_c::bx_gui_c(void)
   void
 bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 {
-  specific_init(bx_gui, argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
+  specific_init(argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
 
   // Define some bitmaps to use in the headerbar
   BX_GUI_THIS floppyA_bmap_id = create_bitmap(bx_floppya_bmap,

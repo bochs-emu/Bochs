@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.17.4.1 2002-10-07 06:32:49 bdenney Exp $
+// $Id: beos.cc,v 1.17.4.2 2002-10-07 19:59:09 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -190,7 +190,7 @@ static BBitmap *vgafont[256];
 static bx_gui_c *bx_gui_c_ptr;
 
   void
-bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv,
+bx_gui_c::specific_init(int argc, char **argv,
                         unsigned tilewidth, unsigned tileheight,
                         unsigned header_bar_y)
 {
@@ -205,11 +205,11 @@ bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv,
   char *window_name = "Bochs 80386+ emulator, http://world.std.com/~bochs";
 #endif
 
-  bx_gui_c_ptr = th;
+  bx_gui_c_ptr = this;
 UNUSED(argc);
 UNUSED(argv);
 UNUSED(window_name);
-  th->put("BGUI");
+  put("BGUI");
 
 if (bx_options.Oprivate_colormap->get ()) {
   BX_INFO(( "BeOS: private_colormap option not handled yet."));
