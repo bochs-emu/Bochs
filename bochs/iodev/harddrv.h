@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.27 2005-02-08 18:32:14 vruppert Exp $
+// $Id: harddrv.h,v 1.28 2005-02-15 20:46:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -757,16 +757,6 @@ private:
     } channels[BX_MAX_ATA_CHANNEL];
 
   int iolight_timer_index;
-
-#if BX_PDC20230C_VLBIDE_SUPPORT
-// pdc20630c is only available for 1st ata channel
-  struct pdc20630c_t {
-    bx_bool prog_mode;
-    Bit8u   prog_count;
-    Bit32u  p1f3_value;
-    Bit32u  p1f4_value;
-    } pdc20230c;
-#endif
 
   };
 #endif // INCLUDE_ONLY_SPARSE_HEADER

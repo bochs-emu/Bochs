@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.129 2005-02-08 18:32:03 vruppert Exp $
+// $Id: harddrv.cc,v 1.130 2005-02-15 20:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,20 +44,6 @@
 #endif
 
 #define LOG_THIS theHardDrive->
-
-// WARNING: dangerous options!
-// These options provoke certain kinds of errors for testing purposes when they
-// are set to a nonzero value.  DO NOT ENABLE THEM when using any disk image
-// you care about.
-#define TEST_READ_BEYOND_END 0
-#define TEST_WRITE_BEYOND_END 0
-#ifdef __GNUC__
-#  if TEST_READ_BEYOND_END || TEST_WRITE_BEYOND_END
-#    warning BEWARE: Dangerous options are enabled in harddrv.cc. If you are not trying to provoke hard drive errors you should disable them right now.
-#  endif
-#endif
-// end of dangerous options.
-
 
 #define INDEX_PULSE_CYCLE 10
 
@@ -163,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.129 2005-02-08 18:32:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.130 2005-02-15 20:46:20 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -450,14 +436,6 @@ bx_hard_drive_c::init(void)
     }
   }
 
-#if BX_PDC20230C_VLBIDE_SUPPORT
-      BX_HD_THIS pdc20230c.prog_mode = 0;
-      BX_HD_THIS pdc20230c.prog_count = 0;
-      BX_HD_THIS pdc20230c.p1f3_value = 0;
-      BX_HD_THIS pdc20230c.p1f4_value = 0;
-#endif
-
-
   // generate CMOS values for hard drive if not using a CMOS image
   if (!bx_options.cmos.OcmosImage->get ()) {
     DEV_cmos_set_reg(0x12, 0x00); // start out with: no drive 0, no drive 1
@@ -692,64 +670,6 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
     }
   }
 
-#if BX_PDC20230C_VLBIDE_SUPPORT
-// pdc20230c is only available for first ata channel
-if (channel == 0) {
-
-  // Detect the switch to programming mode
-  if (!BX_HD_THIS pdc20230c.prog_mode) {
-    switch (port) {
-      case 0x02:
-        if ((BX_HD_THIS pdc20230c.prog_count == 0) || (BX_HD_THIS pdc20230c.prog_count > 2)) {
-          BX_HD_THIS pdc20230c.prog_count++;
-        }
-	else {
-          BX_HD_THIS pdc20230c.prog_count=0;
-	}
-	break;
-      case 0x16:
-        if ((BX_HD_THIS pdc20230c.prog_count == 1) || (BX_HD_THIS pdc20230c.prog_count == 2)) {
-	  BX_HD_THIS pdc20230c.prog_count++;
-	}
-	else {
-          BX_HD_THIS pdc20230c.prog_count=0;
-	}
-	break;
-      default:
-	BX_HD_THIS pdc20230c.prog_count=0;
-    }
-
-    if (BX_HD_THIS pdc20230c.prog_count == 5) {
-      BX_HD_THIS pdc20230c.prog_mode = 1;
-      BX_SELECTED_CONTROLLER(channel).sector_count &= 0x7f;
-      BX_INFO(("Promise VLB-IDE DC2300: Switching to Programming mode"));
-    }
-  }
-
-  // Returns value when in programming mode
-  if (BX_HD_THIS pdc20230c.prog_mode) {
-    switch (port) {
-      case 0x05:
-	// Leave programming mode
-        BX_HD_THIS pdc20230c.prog_mode = 0;
-        BX_INFO(("Promise VLB-IDE DC2300: Leaving Programming mode"));
-	// Value will be sent be normal code
-        break;
-      case 0x03:
-	// Special programming register
-        value32 = BX_HD_THIS pdc20230c.p1f3_value;
-        GOTO_RETURN_VALUE ;
-        break;
-      case 0x04:
-	// Special programming register
-        value32 = BX_HD_THIS pdc20230c.p1f4_value;
-        GOTO_RETURN_VALUE ;
-        break;
-    }
-  }
-}
-#endif
-
   switch (port) {
     case 0x00: // hard disk data (16bit) 0x1f0
       if (BX_SELECTED_CONTROLLER(channel).status.drq == 0) {
@@ -830,9 +750,6 @@ if (channel == 0) {
               BX_SELECTED_CONTROLLER(channel).status.drq = 1;
               BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
 
-#if TEST_READ_BEYOND_END==1
-	      BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
-#endif
 	      if (!calculate_logical_address(channel, &logical_sector)) {
 	        BX_ERROR(("multi-sector read reached invalid sector %lu, aborting", (unsigned long)logical_sector));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
@@ -1238,26 +1155,6 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
   }
 
-#if BX_PDC20230C_VLBIDE_SUPPORT
-// pdc20230c is only available for first ata channel
-if (channel == 0) {
-  BX_HD_THIS pdc20230c.prog_count = 0;
-
-  if (BX_HD_THIS pdc20230c.prog_mode != 0) {
-    switch (port) {
-      case 0x03:
-	BX_HD_THIS pdc20230c.p1f3_value = value;
-	return;
-        break;
-      case 0x04:
-	BX_HD_THIS pdc20230c.p1f4_value = value;
-	return;
-        break;
-    }
-  }
-}
-#endif
-
   if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom)) {
 	switch (io_len) {
 	      case 1:
@@ -1330,17 +1227,11 @@ if (channel == 0) {
             off_t logical_sector;
             off_t ret;
 
-#if TEST_WRITE_BEYOND_END==1
-	    BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
-#endif
 	    if (!calculate_logical_address(channel, &logical_sector)) {
 	      BX_ERROR(("write reached invalid sector %lu, aborting", (unsigned long)logical_sector));
 	      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
 	      return;
             }
-#if TEST_WRITE_BEYOND_END==2
-	    logical_sector += 100000;
-#endif
 	    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
             if (ret < 0) {
               BX_ERROR(("could not lseek() hard drive image file at byte %lu", (unsigned long)logical_sector * 512));
@@ -2107,17 +1998,11 @@ if (channel == 0) {
 		break;
 	  }
 
-#if TEST_READ_BEYOND_END==2
-	  BX_SELECTED_CONTROLLER(channel).cylinder_no += 100000;
-#endif
 	  if (!calculate_logical_address(channel, &logical_sector)) {
 	    BX_ERROR(("initial read from sector %lu out of bounds, aborting", (unsigned long)logical_sector));
 	    command_aborted(channel, value);
 	    break;
 	  }
-#if TEST_READ_BEYOND_END==3
-	  logical_sector += 100000;
-#endif
 	  ret=BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
           if (ret < 0) {
             BX_ERROR (("could not lseek() hard drive image file, aborting"));
