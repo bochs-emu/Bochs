@@ -2,7 +2,7 @@
 Patch name: patch.svga_cirrus
 Author: m_suzu_abc@yahoo.co.jp
 Date: 2 Jan. 2004
-Status:
+Status: Proposed
 
 Detailed description:
   An implementation of PCI/ISA SVGA card.
@@ -37,22 +37,25 @@ Detailed description:
     modified to avoid confliction.
     modified access rights from private to protected.
 
-  Changes by vruppert (June 5th 2004)
+  Changes by vruppert (June 6th 2004)
     - updated for current CVS
     - PCI host bridge is now a core plugin and initialized earlier
     - plugin version works now (CLGD54xx included in the vga plugin)
+    - fixed possible floating point exception in vga mem_write()
+    - detect device conflicts in config.h
+    - return device ID (CRTC reg 0x27)
 
 Patch was created with:
-  diff -ur
+  diff -urN
 Apply patch to what version:
-  cvs snapshot on 5 Jun. 2004
+  cvs snapshot on June 6th 2004
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-diff -urNX ~/exclude-diff ~/bochs/config.h.in ./config.h.in
---- ~/bochs/config.h.in	2004-04-11 20:20:00.000000000 +0200
-+++ ./config.h.in	2004-06-05 18:31:53.000000000 +0200
+diff -urN ../bochs/config.h.in ./config.h.in
+--- ../bochs/config.h.in	2004-04-11 20:20:00.000000000 +0200
++++ ./config.h.in	2004-06-06 14:10:13.000000000 +0200
 @@ -696,7 +696,7 @@
  #define BX_PCI_SUPPORT 0
  
@@ -62,7 +65,7 @@ diff -urNX ~/exclude-diff ~/bochs/config.h.in ./config.h.in
  
  // Experimental host PCI device mapping
  #define BX_PCI_DEV_SUPPORT 0
-@@ -712,6 +712,11 @@
+@@ -712,6 +712,19 @@
  #error To enable USB, you must also enable PCI
  #endif
  
@@ -71,12 +74,20 @@ diff -urNX ~/exclude-diff ~/bochs/config.h.in ./config.h.in
 +// SVGA CLGD54xx on PCI
 +#define BX_SUPPORT_SVGA_CIRRUS_PCI 0
 +
++#if (BX_SUPPORT_SVGA_CIRRUS && BX_SUPPORT_VBE)
++#error With SVGA Cirrus support, you must disable Bochs VBE support
++#endif
++
++#if (BX_SUPPORT_SVGA_CIRRUS_PCI && BX_PVI_VGA_SUPPORT)
++#error With SVGA Cirrus PCI support, you must disable PCI VGA support
++#endif
++
  // Promise VLBIDE DC2300 Support
  #define BX_PDC20230C_VLBIDE_SUPPORT 0
  
-diff -urNX ~/exclude-diff ~/bochs/iodev/devices.cc ./iodev/devices.cc
---- ~/bochs/iodev/devices.cc	2004-04-09 11:21:04.000000000 +0200
-+++ ./iodev/devices.cc	2004-06-05 18:40:47.000000000 +0200
+diff -urN ../bochs/iodev/devices.cc ./iodev/devices.cc
+--- ../bochs/iodev/devices.cc	2004-04-09 11:21:04.000000000 +0200
++++ ./iodev/devices.cc	2004-06-06 13:09:58.000000000 +0200
 @@ -183,7 +183,7 @@
    // PCI logic (i440FX)
    if (bx_options.Oi440FXSupport->get ()) {
@@ -97,9 +108,9 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/devices.cc ./iodev/devices.cc
    /*--- VGA adapter ---*/
    pluginVgaDevice->init ();
  
-diff -urNX ~/exclude-diff ~/bochs/iodev/Makefile.in ./iodev/Makefile.in
---- ~/bochs/iodev/Makefile.in	2004-02-18 19:29:33.000000000 +0100
-+++ ./iodev/Makefile.in	2004-06-05 18:26:07.000000000 +0200
+diff -urN ../bochs/iodev/Makefile.in ./iodev/Makefile.in
+--- ../bochs/iodev/Makefile.in	2004-02-18 19:29:33.000000000 +0100
++++ ./iodev/Makefile.in	2004-06-06 13:09:58.000000000 +0200
 @@ -95,6 +95,7 @@
  OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
    scancodes.o \
@@ -137,10 +148,10 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/Makefile.in ./iodev/Makefile.in
    ../bxversion.h ../gui/siminterface.h ../state_file.h ../cpu/cpu.h \
    ../cpu/lazy_flags.h ../cpu/i387.h ../memory/memory.h ../pc_system.h \
    ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-diff -urNX ~/exclude-diff ~/bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
---- ~/bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.cc	2004-06-05 18:27:17.000000000 +0200
-@@ -0,0 +1,2708 @@
+diff -urN ../bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
+--- ../bochs/iodev/svga_cirrus.cc	1970-01-01 01:00:00.000000000 +0100
++++ ./iodev/svga_cirrus.cc	2004-06-06 13:57:16.000000000 +0200
+@@ -0,0 +1,2709 @@
 +//
 +// limited PCI/ISA CLGD5446 support.
 +//
@@ -1160,6 +1171,7 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +      break;
 +    case 0x1B:
 +    case 0x1D:
++    case 0x27:
 +      break;
 +    default:
 +      BX_ERROR(("CRTC index 0x%02x is unknown(read)", index));
@@ -2849,9 +2861,9 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/svga_cirrus.cc ./iodev/svga_cirrus.cc
 +
 +
 +#endif // BX_SUPPORT_SVGA_CIRRUS
-diff -urNX ~/exclude-diff ~/bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
---- ~/bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./iodev/svga_cirrus.h	2004-06-05 18:12:04.000000000 +0200
+diff -urN ../bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
+--- ../bochs/iodev/svga_cirrus.h	1970-01-01 01:00:00.000000000 +0100
++++ ./iodev/svga_cirrus.h	2004-06-06 13:09:58.000000000 +0200
 @@ -0,0 +1,222 @@
 +#if BX_SUPPORT_SVGA_CIRRUS
 +
@@ -3075,9 +3087,9 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/svga_cirrus.h ./iodev/svga_cirrus.h
 +};
 +
 +#endif // BX_SUPPORT_SVGA_CIRRUS
-diff -urNX ~/exclude-diff ~/bochs/iodev/vga.cc ./iodev/vga.cc
---- ~/bochs/iodev/vga.cc	2004-05-04 22:41:52.000000000 +0200
-+++ ./iodev/vga.cc	2004-06-05 18:31:32.000000000 +0200
+diff -urN ../bochs/iodev/vga.cc ./iodev/vga.cc
+--- ../bochs/iodev/vga.cc	2004-05-04 22:41:52.000000000 +0200
++++ ./iodev/vga.cc	2004-06-06 14:19:06.000000000 +0200
 @@ -93,6 +93,13 @@
  
  unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0, old_BPP = 0;
@@ -3100,12 +3112,12 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/vga.cc ./iodev/vga.cc
  
  bx_vga_c::bx_vga_c(void)
  {
-@@ -135,33 +143,11 @@
+@@ -135,33 +143,13 @@
    char *argv[16];
    char *ptr;
    char string[512];
 -
-+#if !BX_SUPPORT_SVGA_CIRRUS
++#if BX_SUPPORT_VBE  
    unsigned addr;
 -  for (addr=0x03B4; addr<=0x03B5; addr++) {
 -    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
@@ -3131,13 +3143,15 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/vga.cc ./iodev/vga.cc
 -    DEV_register_ioread_handler(this, read_handler, addr, "vga video", 1);
 -    DEV_register_iowrite_handler(this, write_handler, addr, "vga video", 3);
 -    }
++#endif
  
++#if !BX_SUPPORT_SVGA_CIRRUS
 +  BX_VGA_THIS init_iohandlers(read_handler,write_handler);
 +#endif // !BX_SUPPORT_SVGA_CIRRUS
  
    BX_VGA_THIS s.misc_output.color_emulation  = 1;
    BX_VGA_THIS s.misc_output.enable_ram  = 1;
-@@ -281,11 +267,9 @@
+@@ -281,11 +269,9 @@
      }
    }
  
@@ -3152,24 +3166,15 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/vga.cc ./iodev/vga.cc
  
    /* video card with BIOS ROM */
    DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00); 
-@@ -296,7 +280,8 @@
+@@ -296,7 +282,7 @@
  
  #if BX_SUPPORT_VBE  
    // The following is for the vbe display extension
 -  
 +
-+#if !BX_SUPPORT_SVGA_CIRRUS
    for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
      DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
      DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-@@ -307,6 +292,7 @@
-     DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-   }    
- #endif
-+#endif // !BX_SUPPORT_SVGA_CIRRUS
-   BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
-   BX_VGA_THIS s.vbe_xres=640;
-   BX_VGA_THIS s.vbe_yres=480;
 @@ -347,6 +333,47 @@
  }
  
@@ -3218,19 +3223,55 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/vga.cc ./iodev/vga.cc
  bx_vga_c::reset(unsigned type)
  {
  }
-diff -urNX ~/exclude-diff ~/bochs/iodev/vga.h ./iodev/vga.h
---- ~/bochs/iodev/vga.h	2004-05-04 22:41:53.000000000 +0200
-+++ ./iodev/vga.h	2004-06-05 18:12:04.000000000 +0200
-@@ -24,7 +24,7 @@
- //  License along with this library; if not, write to the Free Software
- //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+@@ -2082,20 +2109,22 @@
  
--#if BX_SUPPORT_VBE
-+#if BX_SUPPORT_VBE || BX_SUPPORT_SVGA_CIRRUS
-   #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB 4
+       // 320 x 200 256 color mode: chained pixel representation
+       BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536] = value;
+-      offset -= start_addr;
+-      x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE/2);
+-      if (BX_VGA_THIS s.y_doublescan) {
+-        y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE/2);
+-      } else {
+-        y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
++      if (BX_VGA_THIS s.line_offset > 0) {
++        offset -= start_addr;
++        x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE/2);
++        if (BX_VGA_THIS s.y_doublescan) {
++          y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE/2);
++        } else {
++          y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
++        }
++        BX_VGA_THIS s.vga_mem_updated = 1;
++        SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+       }
+-      BX_VGA_THIS s.vga_mem_updated = 1;
+-      SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+       return;
+-      }
+-
+     }
  
-   #define VBE_DISPI_BANK_ADDRESS          0xA0000
-@@ -130,7 +130,9 @@
++  }
++
+   /* addr between 0xA0000 and 0xAFFFF */
+   switch (BX_VGA_THIS s.graphics_ctrl.write_mode) {
+     unsigned i;
+diff -urN ../bochs/iodev/vga.h ./iodev/vga.h
+--- ../bochs/iodev/vga.h	2004-05-04 22:41:53.000000000 +0200
++++ ./iodev/vga.h	2004-06-06 14:15:32.000000000 +0200
+@@ -79,6 +79,11 @@
+ #define BX_MAX_XRES VBE_DISPI_MAX_XRES
+ #define BX_MAX_YRES VBE_DISPI_MAX_YRES
+ 
++#elif BX_SUPPORT_SVGA_CIRRUS
++
++#define BX_MAX_XRES 1024
++#define BX_MAX_YRES 768
++
+ #else
+ 
+ #define BX_MAX_XRES 800
+@@ -130,7 +135,9 @@
                                     unsigned *txWidth);
    virtual Bit8u  get_actl_palette_idx(Bit8u index);
  
@@ -3241,7 +3282,7 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/vga.h ./iodev/vga.h
  
    static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
    static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-@@ -300,9 +302,15 @@
+@@ -300,9 +307,15 @@
    static void   timer_handler(void *);
    BX_VGA_SMF void   timer(void);
  
@@ -3258,9 +3299,9 @@ diff -urNX ~/exclude-diff ~/bochs/iodev/vga.h ./iodev/vga.h
 +libvga_set_smf_pointer(bx_vga_c *theVga_ptr);
 +#include "iodev/svga_cirrus.h"
 +#endif // BX_SUPPORT_SVGA_CIRRUS
-diff -urNX ~/exclude-diff ~/bochs/Makefile.in ./Makefile.in
---- ~/bochs/Makefile.in	2004-06-05 10:44:54.000000000 +0200
-+++ ./Makefile.in	2004-06-05 18:12:04.000000000 +0200
+diff -urN ../bochs/Makefile.in ./Makefile.in
+--- ../bochs/Makefile.in	2004-06-05 10:44:54.000000000 +0200
++++ ./Makefile.in	2004-06-06 13:09:58.000000000 +0200
 @@ -108,7 +108,7 @@
  GUI_LINK_OPTS_AMIGAOS = 
  GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
