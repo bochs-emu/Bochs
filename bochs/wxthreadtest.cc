@@ -3,7 +3,7 @@
 // Bryce Denney
 //
 // Compile with:
-//   c++ -g `wx-config --cxxflags --libs` threadtest.cc -o threadtest
+//   c++ -g `wx-config --cxxflags --libs` wxthreadtest.cc -o wxthreadtest
 //
 // I have been using this file to learn how to use wxwindows threads safely
 // and test out new ideas in a controlled environment.  The most important
@@ -81,6 +81,25 @@ public:
 };
 
 
+class MyPanel: public wxPanel
+{
+public:
+  MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = "panel")
+      : wxPanel (parent, id, pos, size, style, name)
+    { wxLogDebug ("MyPanel constructor"); }
+  void OnKeyDown(wxKeyEvent& event)
+  { wxLogDebug ("OnKeyDown"); }
+  void OnKeyUp(wxKeyEvent& event)
+  { wxLogDebug ("OnKeyUp"); }
+private:
+  DECLARE_EVENT_TABLE()
+};
+
+BEGIN_EVENT_TABLE(MyPanel, wxPanel)
+  EVT_KEY_DOWN(MyPanel::OnKeyDown)
+  EVT_KEY_UP(MyPanel::OnKeyUp)
+END_EVENT_TABLE()
+
 class MyFrame: public wxFrame
 {
 public:
@@ -99,6 +118,7 @@ void OnUserEvent(wxCommandEvent& event);
 //int HandleVgaGuiButton (int which);
 private:
 BochsThread *bochs_thread;
+MyPanel *panel;
 wxStaticText *text1, *text2;
 
 DECLARE_EVENT_TABLE()
@@ -185,15 +205,23 @@ wxSize& size)
   CreateStatusBar();
   SetStatusText( "Welcome to wxWindows!" );
   // try to create some static text labels
-  text1 = new wxStaticText (this, -1, "Text#1");
-  text2 = new wxStaticText (this, -1, "Text#2");
+  panel = new MyPanel (this, -1);
+  text1 = new wxStaticText (panel, -1, "Text#1");
+  text2 = new wxStaticText (panel, -1, "Text#2");
   text2->SetBackgroundColour (wxColour (255, 0, 0));
   text2->Clear ();
   wxGridSizer *sz = new wxGridSizer (1, 2);
   sz->Add (text1, 0, wxALIGN_CENTER);
   sz->Add (text2, 0, wxALIGN_CENTER );
-  SetAutoLayout (TRUE);  // required or sizer does nothing
-  SetSizer (sz);
+  // stick those labels onto a panel
+  panel->SetSizer (sz);
+  panel->SetAutoLayout (TRUE);  // required or sizer does nothing
+  panel->SetBackgroundColour (wxColour (255, 0, 0));
+  // now the panel needs to be in the frame or you won't see much at all
+  wxGridSizer *frame_sz = new wxGridSizer (1, 1);
+  frame_sz->Add (panel, 0, wxGROW | wxALIGN_CENTER);
+  SetSizer (frame_sz);
+  SetAutoLayout (TRUE);
 }
 
 void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
