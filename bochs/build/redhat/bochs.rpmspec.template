@@ -14,6 +14,8 @@ Bochs is a portable x86 PC emulation software package that emulates enough of
 the x86 CPU, related AT hardware, and BIOS to run DOS, Windows '95, Minix 2.0,
 and other OS's, all on your workstation. 
 
+%define pkg_name bochs
+
 %prep
 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	tar xzvf $RPM_SOURCE_DIR/bochs-@SEDVERSION@.tar.gz
@@ -35,18 +37,21 @@ and other OS's, all on your workstation.
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
 	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
+	# build file list on the fly
+	cd $RPM_BUILD_ROOT
+	find . -type d | sed '1,2d;s,^\.,\%attr(-\,root\,root) \%dir ,' > \
+	  $RPM_BUILD_DIR/file.list.%{pkg_name}
+	find . -type f | sed -e 's,^\.,\%attr(-\,root\,root) ,' \
+	  -e '/\/etc\//s|^|%config|' >> \
+	  $RPM_BUILD_DIR/file.list.%{pkg_name}
+	find . -type l | sed 's,^\.,\%attr(-\,root\,root) ,' >> \
+	  $RPM_BUILD_DIR/file.list.%{pkg_name}
 
-%files
-	/usr/bin/bochs
-	/usr/bin/bochs-docs
-	/usr/bin/bochs-dlx
-	/usr/bin/bximage
-	/usr/lib/bochs-@SEDVERSION@/plugins/*
-	/usr/share/bochs/*
-	/usr/share/doc/*
-	%{_mandir}/*
+%files -f file.list.%{pkg_name}
+
 %clean
 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
+	rm -rf $RPM_BUILD_DIR/file.list.%{pkg_name}
 	if test "/" != $RPM_BUILD_ROOT; then
 	  rm -rf $RPM_BUILD_ROOT
 	fi
