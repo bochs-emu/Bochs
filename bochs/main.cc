@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.58.2.13 2002-04-10 05:14:25 bdenney Exp $
+// $Id: main.cc,v 1.58.2.14 2002-04-10 05:39:56 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1308,23 +1308,19 @@ int
 bx_atexit(void)
 {
   static Boolean been_here = 0;
-  printf ("bx_atexit: been_here = %d\n", been_here);
   if (been_here) return 1;   // protect from reentry
   been_here = 1;
 
 #if BX_PROVIDE_DEVICE_MODELS==1
-  printf ("shutting down device models\n");
   bx_pc_system.exit();
 #endif
 
 #if BX_DEBUGGER == 0
-  printf ("shutting down processors\n");
   for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
 #endif
 
 #if BX_PCI_SUPPORT
-    printf ("shutting down PCI\n");
     if (bx_options.Oi440FXSupport->get ()) {
       bx_devices.pci->print_i440fx_state();
       }
