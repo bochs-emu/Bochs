@@ -1,0 +1,497 @@
+----------------------------------------------------------------------
+Patch name: patch.floppy-160k-180k-320k-benlunt
+Author: Ben Lunt, updated by Christophe Bothamy
+Date: Thu Feb  6 18:59:39 CET 2003
+Status: Proposed 
+
+Detailed description:
+
+This patch adds support for 160k, 180k and 320k floppies.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on Thu Feb  6 18:59:39 CET 2003
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: .bochsrc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/.bochsrc,v
+retrieving revision 1.64
+diff -u -r1.64 .bochsrc
+--- .bochsrc	21 Dec 2002 17:10:08 -0000	1.64
++++ .bochsrc	6 Feb 2003 17:55:20 -0000
+@@ -120,6 +120,9 @@
+ #   floppya: 1_2=path, status=ejected              (1.2M  5.25" floppy)
+ #   floppya: 720k=path, status=inserted            (720K  3.5" floppy)
+ #   floppya: 360k=path, status=inserted            (360K  5.25" floppy)
++#   floppya: 320k=path, status=inserted            (320K  5.25" floppy)
++#   floppya: 180k=path, status=inserted            (180K  5.25" floppy)
++#   floppya: 160k=path, status=inserted            (160K  5.25" floppy)
+ #
+ # The path should be the name of a disk image file.  On unix, you can use
+ # a raw device name such as /dev/fd0 on Linux.  On WinNT and Win2k, use
+Index: main.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/main.cc,v
+retrieving revision 1.221
+diff -u -r1.221 main.cc
+--- main.cc	5 Feb 2003 18:19:03 -0000	1.221
++++ main.cc	6 Feb 2003 17:55:21 -0000
+@@ -1876,14 +1876,14 @@
+     BX_INFO (("LTDL_LIBRARY_PATH is set to '%s'", getenv("LTDL_LIBRARY_PATH")));
+   } else {
+     BX_INFO (("LTDL_LIBRARY_PATH not set. using compile time default '%s'", 
+-	  BX_PLUGIN_PATH));
++        BX_PLUGIN_PATH));
+     setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
+   }
+   if (getenv("BXSHARE") != NULL) {
+     BX_INFO (("BXSHARE is set to '%s'", getenv("BXSHARE")));
+   } else {
+     BX_INFO (("BXSHARE not set. using compile time default '%s'", 
+-	  BX_SHARE_PATH));
++        BX_SHARE_PATH));
+     setenv("BXSHARE", BX_SHARE_PATH, 1);
+   }
+ #else
+@@ -2594,6 +2594,19 @@
+         bx_options.floppya.Opath->set (&params[i][5]);
+         bx_options.floppya.Otype->set (BX_FLOPPY_360K);
+         }
++      // use CMOS reserved types?
++      else if (!strncmp(params[i], "160k=", 5)) {
++        bx_options.floppya.Opath->set (&params[i][5]);
++        bx_options.floppya.Otype->set (BX_FLOPPY_160K);
++        }
++      else if (!strncmp(params[i], "180k=", 5)) {
++        bx_options.floppya.Opath->set (&params[i][5]);
++        bx_options.floppya.Otype->set (BX_FLOPPY_180K);
++        }
++      else if (!strncmp(params[i], "320k=", 5)) {
++        bx_options.floppya.Opath->set (&params[i][5]);
++        bx_options.floppya.Otype->set (BX_FLOPPY_320K);
++        }
+       else if (!strncmp(params[i], "status=ejected", 14)) {
+         bx_options.floppya.Ostatus->set (BX_EJECTED);
+         }
+@@ -2665,6 +2678,19 @@
+         bx_options.floppyb.Opath->set (&params[i][5]);
+         bx_options.floppyb.Otype->set (BX_FLOPPY_360K);
+         }
++      // use CMOS reserved types?
++      else if (!strncmp(params[i], "160k=", 5)) {
++        bx_options.floppyb.Opath->set (&params[i][5]);
++        bx_options.floppyb.Otype->set (BX_FLOPPY_160K);
++        }
++      else if (!strncmp(params[i], "180k=", 5)) {
++        bx_options.floppyb.Opath->set (&params[i][5]);
++        bx_options.floppyb.Otype->set (BX_FLOPPY_180K);
++        }
++      else if (!strncmp(params[i], "320k=", 5)) {
++        bx_options.floppyb.Opath->set (&params[i][5]);
++        bx_options.floppyb.Otype->set (BX_FLOPPY_320K);
++        }
+       else if (!strncmp(params[i], "status=ejected", 14)) {
+         bx_options.floppyb.Ostatus->set (BX_EJECTED);
+         }
+@@ -3284,9 +3310,9 @@
+       }
+     if (!strncmp(params[1], "realtime=", 9)) {
+       switch (params[1][9]) {
+-	case '0': bx_options.Orealtime_pit->set (0); break;
+-	case '1': bx_options.Orealtime_pit->set (1); break;
+-	default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
++        case '0': bx_options.Orealtime_pit->set (0); break;
++        case '1': bx_options.Orealtime_pit->set (1); break;
++        default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
+         }
+       }
+     else PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
+@@ -3633,8 +3659,9 @@
+ }
+ 
+ static char *fdtypes[] = {
+-  "none", "1_2", "1_44", "2_88", "720k", "360k"
++  "none", "1_2", "1_44", "2_88", "720k", "360k", "160k", "180k", "320k"
+ };
++
+ 
+ int 
+ bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)
+Index: bios/rombios.c
+===================================================================
+RCS file: /cvsroot/bochs/bochs/bios/rombios.c,v
+retrieving revision 1.90
+diff -u -r1.90 rombios.c
+--- bios/rombios.c	18 Jan 2003 19:20:52 -0000	1.90
++++ bios/rombios.c	6 Feb 2003 17:55:25 -0000
+@@ -6094,6 +6094,35 @@
+ 
+   // for now cheat and get drive type from CMOS,
+   // assume media is same as drive type
++
++  // ** config_data **
++  // Bitfields for diskette media control:
++  // Bit(s)  Description (Table M0028)
++  //  7-6  last data rate set by controller
++  //        00=500kbps, 01=300kbps, 10=250kbps, 11=1Mbps
++  //  5-4  last diskette drive step rate selected
++  //        00=0Ch, 01=0Dh, 10=0Eh, 11=0Ah
++  //  3-2  {data rate at start of operation}
++  //  1-0  reserved
++
++  // ** media_state **
++  // Bitfields for diskette drive media state:
++  // Bit(s)  Description (Table M0030)
++  //  7-6  data rate
++  //    00=500kbps, 01=300kbps, 10=250kbps, 11=1Mbps
++  //  5  double stepping required (e.g. 360kB in 1.2MB)
++  //  4  media type established
++  //  3  drive capable of supporting 4MB media
++  //  2-0  on exit from BIOS, contains
++  //    000 trying 360kB in 360kB
++  //    001 trying 360kB in 1.2MB
++  //    010 trying 1.2MB in 1.2MB
++  //    011 360kB in 360kB established
++  //    100 360kB in 1.2MB established
++  //    101 1.2MB in 1.2MB established
++  //    110 reserved
++  //    111 all other formats/drives
++
+   drive_type = inb_cmos(0x10);
+   if (drive == 0)
+     drive_type >>= 4;
+@@ -6108,7 +6137,7 @@
+   else if ( drive_type == 2 ) {
+     // 1.2 MB 5.25" drive
+     config_data = 0x00; // 0000 0000
+-    media_state = 0x25; // 0010 0101
++    media_state = 0x25; // 0010 0101   // need double stepping??? (bit 5)
+     retval = 1;
+     }
+   else if ( drive_type == 3 ) {
+@@ -6129,6 +6158,27 @@
+     media_state = 0xD7; // 1101 0111
+     retval = 1;
+     }
++  //
++  // Extended floppy size uses special cmos setting 
++  else if ( drive_type == 6 ) {
++    // 160k 5.25" drive
++    config_data = 0x00; // 0000 0000
++    media_state = 0x27; // 0010 0111
++    retval = 1;
++    }
++  else if ( drive_type == 7 ) {
++    // 180k 5.25" drive
++    config_data = 0x00; // 0000 0000
++    media_state = 0x27; // 0010 0111
++    retval = 1;
++    }
++  else if ( drive_type == 8 ) {
++    // 320k 5.25" drive
++    config_data = 0x00; // 0000 0000
++    media_state = 0x27; // 0010 0111
++    retval = 1;
++    }
++
+   else {
+     // not recognized
+     config_data = 0x00; // 0000 0000
+@@ -6796,7 +6846,7 @@
+ BX_DEBUG_INT13_FL("floppy f08\n");
+       drive = GET_DL();
+ 
+-      if (drive>1) {
++      if (drive > 1) {
+         AX = 0;
+         BX = 0;
+         CX = 0;
+@@ -6820,7 +6870,6 @@
+       else
+         drive_type &= 0x0f;
+ 
+-
+       SET_BH(0);
+       SET_BL(drive_type);
+       SET_AH(0);
+@@ -6858,6 +6907,21 @@
+           SET_DH(1); // max head #
+           break;
+ 
++        case 6: // 160k, 5.25"
++          CX = 0x2708; // 40 tracks, 8 sectors
++          SET_DH(0); // max head #
++          break;
++
++        case 7: // 180k, 5.25"
++          CX = 0x2709; // 40 tracks, 9 sectors
++          SET_DH(0); // max head #
++          break;
++
++        case 8: // 320k, 5.25"
++          CX = 0x2708; // 40 tracks, 8 sectors
++          SET_DH(1); // max head #
++          break;
++
+         default: // ?
+           BX_PANIC("floppy: int13: bad floppy type\n");
+         }
+@@ -9457,6 +9521,10 @@
+ 
+ .org 0xfef3 ; Initial Interrupt Vector Offsets Loaded by POST
+ 
++
++.org 0xff00
++.ascii "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
++
+ ;------------------------------------------------
+ ;- IRET Instruction for Dummy Interrupt Handler -
+ ;------------------------------------------------
+@@ -9468,9 +9536,6 @@
+   HALT(__LINE__)
+   iret
+ 
+-.org 0xff00
+-.ascii "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
+-
+ .org 0xfff0 ; Power-up Entry Point
+   jmp 0xf000:post;
+ 
+@@ -9784,7 +9849,7 @@
+ #endif  // if (BX_SMP_PROCESSORS==...)
+ 
+ mp_config_end:   // this label used to find length of mp structure
+-  db 0
++ db 0
+ 
+ #if (BX_SMP_PROCESSORS>1)
+ .align 16
+Index: gui/siminterface.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.cc,v
+retrieving revision 1.93
+diff -u -r1.93 siminterface.cc
+--- gui/siminterface.cc	17 Dec 2002 05:58:44 -0000	1.93
++++ gui/siminterface.cc	6 Feb 2003 17:55:26 -0000
+@@ -435,9 +435,11 @@
+ 
+ char *bochs_start_names[] = { "quick", "load", "edit", "run" };
+ int n_bochs_start_names = 3;
+-char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", NULL };
+-int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9 };
+-int n_floppy_type_names = 6;
++
++char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", NULL };
++int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8 };
++int n_floppy_type_names = 9;
++
+ char *floppy_status_names[] = { "ejected", "inserted", NULL };
+ int n_floppy_status_names = 2;
+ char *floppy_bootdisk_names[] = { "floppy", "hard","cdrom", NULL };
+Index: gui/siminterface.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/gui/siminterface.h,v
+retrieving revision 1.98
+diff -u -r1.98 siminterface.h
+--- gui/siminterface.h	28 Jan 2003 16:56:59 -0000	1.98
++++ gui/siminterface.h	6 Feb 2003 17:55:26 -0000
+@@ -1095,7 +1095,11 @@
+ #define BX_FLOPPY_2_88   13 // 2.88M 3.5"
+ #define BX_FLOPPY_720K   14 // 720K  3.5"
+ #define BX_FLOPPY_360K   15 // 360K  5.25"
+-#define BX_FLOPPY_LAST   15 // last legal value of floppy type
++#define BX_FLOPPY_160K   16 // 160K  5.25"
++#define BX_FLOPPY_180K   17 // 180K  5.25"
++#define BX_FLOPPY_320K   18 // 320K  5.25"
++#define BX_FLOPPY_LAST   18 // last legal value of floppy type
++
+ #define BX_FLOPPY_GUESS  20 // decide based on image size
+ 
+ #define BX_ATA_DEVICE_DISK      0
+Index: iodev/floppy.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/iodev/floppy.cc,v
+retrieving revision 1.60
+diff -u -r1.60 floppy.cc
+--- iodev/floppy.cc	11 Dec 2002 15:45:10 -0000	1.60
++++ iodev/floppy.cc	6 Feb 2003 17:55:27 -0000
+@@ -149,6 +149,21 @@
+     case BX_FLOPPY_2_88:
+       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x50);
+       break;
++
++    // use CMOS reserved types
++    case BX_FLOPPY_160K:
++      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x60);
++      BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 6"));
++      break;
++    case BX_FLOPPY_180K:
++      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x70);
++      BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 7"));
++      break;
++    case BX_FLOPPY_320K:
++      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x80);
++      BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 8"));
++      break;
++
+     default:
+       BX_PANIC(("unknown floppya type"));
+     }
+@@ -200,6 +215,21 @@
+     case BX_FLOPPY_2_88:
+       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x05);
+       break;
++
++    // use CMOS reserved types
++    case BX_FLOPPY_160K:
++      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x06);
++      BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 6"));
++      break;
++    case BX_FLOPPY_180K:
++      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x07);
++      BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 7"));
++      break;
++    case BX_FLOPPY_320K:
++      DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x08);
++      BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 8"));
++      break;
++
+     default:
+       BX_PANIC(("unknown floppyb type"));
+     }
+@@ -223,9 +253,10 @@
+ 
+ 
+   /* CMOS Equipment Byte register */
+-  if (BX_FD_THIS s.num_supported_floppies > 0)
++  if (BX_FD_THIS s.num_supported_floppies > 0) {
+     DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e) |
+                           ((BX_FD_THIS s.num_supported_floppies-1) << 6) | 1);
++  }
+   else
+     DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e));
+ 
+@@ -829,7 +860,7 @@
+ 
+         BX_INFO(("attempt to read/write sector %u,"
+                      " sectors/track=%u with media not present", 
+-		     (unsigned) sector,
++                     (unsigned) sector,
+                      (unsigned) BX_FD_THIS s.media[drive].sectors_per_track));
+         BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
+         BX_FD_THIS s.status_reg1 = 0x25; // 0010 0101
+@@ -872,7 +903,8 @@
+       if (cylinder != BX_FD_THIS s.cylinder[drive])
+         BX_DEBUG(("io: cylinder request != current cylinder"));
+ 
+-      logical_sector = (cylinder * 2 * BX_FD_THIS s.media[drive].sectors_per_track) +
++        // original assumed all floppies had two sides...now it does not  *delete this comment line*
++        logical_sector = (cylinder * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
+                        (head * BX_FD_THIS s.media[drive].sectors_per_track) +
+                        (sector - 1);
+ 
+@@ -1072,11 +1104,14 @@
+       }
+     else { // more data to transfer
+       Bit32u logical_sector;
+-      logical_sector = (BX_FD_THIS s.cylinder[drive] * 2 *
++
++      // original assumed all floppies had two sides...now it does not  *delete this comment line*
++      logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads *
+                         BX_FD_THIS s.media[drive].sectors_per_track) +
+                        (BX_FD_THIS s.head[drive] *
+                         BX_FD_THIS s.media[drive].sectors_per_track) +
+                        (BX_FD_THIS s.sector[drive] - 1);
++
+       floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+                   512, FROM_FLOPPY);
+       }
+@@ -1115,7 +1150,8 @@
+         for (unsigned i = 0; i < 512; i++) {
+           BX_FD_THIS s.floppy_buffer[i] = BX_FD_THIS s.format_fillbyte;
+           }
+-        logical_sector = (BX_FD_THIS s.cylinder[drive] * 2 * BX_FD_THIS s.media[drive].sectors_per_track) +
++        // original assumed all floppies had two sides...now it does not *delete this comment line*
++        logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
+                          (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
+                          (BX_FD_THIS s.sector[drive] - 1);
+         floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+@@ -1134,7 +1170,8 @@
+   BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
+ 
+   if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+-    logical_sector = (BX_FD_THIS s.cylinder[drive] * 2 * BX_FD_THIS s.media[drive].sectors_per_track) +
++    // original assumed all floppies had two sides...now it does not *delete this comment line*
++    logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
+                      (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
+                      (BX_FD_THIS s.sector[drive] - 1);
+   if ( BX_FD_THIS s.media[drive].write_protected ) {
+@@ -1362,8 +1399,8 @@
+     // maybe replace with code that sets ret to -1 if the disk is not available
+     ret = 0;
+ //  } else {
+-	// put code here for disk images
+-//	ret = fstat(media->fd, &stat_buf);
++//      put code here for disk images
++//      ret = fstat(media->fd, &stat_buf);
+ //  }
+ #else
+   // unix
+@@ -1377,6 +1414,26 @@
+   if ( S_ISREG(stat_buf.st_mode) ) {
+     // regular file
+     switch (type) {
++      // use CMOS reserved types
++      case BX_FLOPPY_160K: // 160K 5.25"
++        media->type              = BX_FLOPPY_160K;
++        media->sectors_per_track = 8;
++        media->tracks            = 40;
++        media->heads             = 1;
++        break;
++      case BX_FLOPPY_180K: // 180K 5.25"
++        media->type              = BX_FLOPPY_180K;
++        media->sectors_per_track = 9;
++        media->tracks            = 40;
++        media->heads             = 1;
++        break;
++      case BX_FLOPPY_320K: // 320K 5.25"
++        media->type              = BX_FLOPPY_320K;
++        media->sectors_per_track = 8;
++        media->tracks            = 40;
++        media->heads             = 2;
++        break;
++
+       case BX_FLOPPY_360K: // 360K 5.25"
+         media->type              = BX_FLOPPY_360K;
+         media->sectors_per_track = 9;
+@@ -1441,6 +1498,26 @@
+     // character or block device
+     // assume media is formatted to typical geometry for drive
+     switch (type) {
++      // use CMOS reserved types
++      case BX_FLOPPY_160K: // 160K 5.25"
++        media->type              = BX_FLOPPY_160K;
++        media->sectors_per_track = 8;
++        media->tracks            = 40;
++        media->heads             = 1;
++        break;
++      case BX_FLOPPY_180K: // 180K 5.25"
++        media->type              = BX_FLOPPY_180K;
++        media->sectors_per_track = 9;
++        media->tracks            = 40;
++        media->heads             = 1;
++        break;
++      case BX_FLOPPY_320K: // 320K 5.25"
++        media->type              = BX_FLOPPY_320K;
++        media->sectors_per_track = 8;
++        media->tracks            = 40;
++        media->heads             = 2;
++        break;
++
+       case BX_FLOPPY_360K: // 360K 5.25"
+         media->type              = BX_FLOPPY_360K;
+         media->sectors_per_track = 9;
