@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.29 2002-09-13 19:39:38 bdenney Exp $
+// $Id: wxdialog.h,v 1.30 2002-09-13 22:03:05 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -647,14 +647,14 @@ protected:
   wxHashTable *idHash;
   // map parameter ID (BXP_*) onto ParamStruct.
   wxHashTable *paramHash;
-  void EnableChanged ();
+  virtual void EnableChanged ();
   void EnableChanged (ParamStruct *pstr);
   bool CommitChanges ();
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);
   virtual ~ParamDialog() {}
   void OnEvent (wxCommandEvent& event);
-  void AddButton(int id, wxString label);
+  wxButton* AddButton(int id, wxString label);
   virtual void AddDefaultButtons ();
   void BeginParamGrid (wxFlexGridSizer *gs = NULL) { gridSizer = gs; }
   virtual void Init ();  // called automatically by ShowModal()
@@ -755,6 +755,8 @@ class CpuRegistersDialog : public ParamDialog
 #define CPU_REGS_MAX_FLAGS 17
   bx_id flagid[CPU_REGS_MAX_FLAGS];
   int nflags;
+  wxButton *contButton, *stopButton, *stepButton, *commitButton;
+  void stateChanged (bool simRunning);
 public:
   CpuRegistersDialog(wxWindow* parent, wxWindowID id);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }

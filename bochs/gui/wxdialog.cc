@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.33 2002-09-13 19:51:06 bdenney Exp $
+// $Id: wxdialog.cc,v 1.34 2002-09-13 22:03:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1401,11 +1401,13 @@ ParamDialog::ParamDialog(
   buttonSizer = new wxBoxSizer (wxHORIZONTAL);
 }
 
-void ParamDialog::AddButton (int id, wxString label)
+wxButton*
+ParamDialog::AddButton (int id, wxString label)
 {
   wxButton *btn = new wxButton (this, id, label);
   buttonSizer->Add (btn, 0, wxALL, 5);
   nbuttons++;
+  return btn;
 }
 
 // add the standard HELP, CANCEL, OK buttons.
@@ -1848,10 +1850,10 @@ CpuRegistersDialog::CpuRegistersDialog(
   // add buttons
 #if BX_DEBUGGER
   // only show these if debugger is enabled
-  AddButton (ID_Debug_Continue, BTNLABEL_DEBUG_CONTINUE);
-  AddButton (ID_Debug_Stop, BTNLABEL_DEBUG_STOP);
-  AddButton (ID_Debug_Step, BTNLABEL_DEBUG_STEP);
-  AddButton (ID_Debug_Commit, BTNLABEL_DEBUG_COMMIT);
+  contButton = AddButton (ID_Debug_Continue, BTNLABEL_DEBUG_CONTINUE);
+  stopButton = AddButton (ID_Debug_Stop, BTNLABEL_DEBUG_STOP);
+  stepButton = AddButton (ID_Debug_Step, BTNLABEL_DEBUG_STEP);
+  //commitButton = AddButton (ID_Debug_Commit, BTNLABEL_DEBUG_COMMIT);
 #endif
   AddButton (ID_Close, BTNLABEL_DEBUG_CLOSE);
 }
@@ -1892,6 +1894,15 @@ CpuRegistersDialog::Init ()
     flagsSizer->SetItemMinSize (pstr->u.text, size.GetWidth(), size.GetHeight());
   }
   ParamDialog::Init ();
+  stateChanged (false);
+}
+
+void
+CpuRegistersDialog::stateChanged (bool simRunning)
+{
+  contButton->Enable (!simRunning);
+  stepButton->Enable (!simRunning);
+  stopButton->Enable (simRunning);
 }
 
 // How am I going to communicate with the debugger?
@@ -1912,10 +1923,6 @@ CpuRegistersDialog::Init ()
 // bx_guard.interrupt_requested = 1, just like the SIGINT handler in
 // debug/dbg_main.cc does.
 // 
-//
-//
-//
-//
 // input loop model is good.  Create a debugger input loop, possibly in
 // siminterface.
 // in the simulation thread.  This loop waits for a command from the 
@@ -1933,9 +1940,11 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
     case ID_Debug_Stop:
       wxLogDebug ("wxWindows triggered a break");
       theFrame->DebugBreak ();
+      stateChanged (false);
       break;
     case ID_Debug_Continue:
       theFrame->DebugCommand ("continue");
+      stateChanged (true);
       break;
     case ID_Debug_Step:
       theFrame->DebugCommand ("step 1");
