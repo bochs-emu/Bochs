@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.72 2003-07-18 15:51:02 vruppert Exp $
+// $Id: gui.cc,v 1.73 2003-12-18 20:04:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -221,11 +221,6 @@ bx_gui_c::floppyA_handler(void)
     // a dialog asking what disk image you want to switch to.
     int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
     if (ret > 0) {
-      // eject and then insert the disk.  If the new path is invalid,
-      // the status will return 0.
-      unsigned new_status = DEV_floppy_set_media_status(0, 0);
-      new_status = DEV_floppy_set_media_status(0, 1);
-      BX_GUI_THIS floppyA_status = new_status;
       BX_GUI_THIS update_drive_status_buttons ();
     }
     return;
@@ -248,11 +243,6 @@ bx_gui_c::floppyB_handler(void)
     // a dialog asking what disk image you want to switch to.
     int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
     if (ret > 0) {
-      // eject and then insert the disk.  If the new path is invalid,
-      // the status will return 0.
-      unsigned new_status = DEV_floppy_set_media_status(1, 0);
-      new_status = DEV_floppy_set_media_status(1, 1);
-      BX_GUI_THIS floppyB_status = new_status;
       BX_GUI_THIS update_drive_status_buttons ();
     }
     return;

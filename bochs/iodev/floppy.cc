@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.68 2003-12-10 22:14:01 vruppert Exp $
+// $Id: floppy.cc,v 1.69 2003-12-18 20:04:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.68 2003-12-10 22:14:01 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.69 2003-12-18 20:04:49 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1320,8 +1320,16 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     if (evaluate_media(type, path, & BX_FD_THIS s.media[drive])) {
       BX_FD_THIS s.media_present[drive] = 1;
       if (drive == 0) {
+#define MED (BX_FD_THIS s.media[0])
+        BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppya.Opath->getptr(),
+        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+#undef MED
         bx_options.floppya.Ostatus->set(BX_INSERTED);
       } else {
+#define MED (BX_FD_THIS s.media[1])
+        BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppyb.Opath->getptr(),
+        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+#undef MED
         bx_options.floppyb.Ostatus->set(BX_INSERTED);
       }
       BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
