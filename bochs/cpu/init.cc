@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.27 2002-09-14 19:21:40 kevinlawton Exp $
+// $Id: init.cc,v 1.28 2002-09-15 11:01:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,7 +157,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit32s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.27 2002-09-14 19:21:40 kevinlawton Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.28 2002-09-15 11:01:36 bdenney Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -376,7 +376,7 @@ void BX_CPU_C::init(BX_MEM_C *addrspace)
     DEFPARAM_NORMAL (CR3, cr3);
 #endif
 #if BX_CPU_LEVEL >= 4
-    DEFPARAM_NORMAL (CR4, cr4);
+    DEFPARAM_NORMAL (CR4, cr4.registerValue);
 #endif
 #endif  // #if BX_SUPPORT_X86_64==0
 
