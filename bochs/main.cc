@@ -906,6 +906,14 @@ parse_line_formatted(int num_params, char *params[])
   void
 bx_signal_handler( int signum)
 {
+#if BX_GUI_SIGHANDLER
+  // GUI signal handler gets first priority, if the mask says it's wanted
+  if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
+    bx_gui.sighandler (signum);
+    return;
+  }
+#endif
+
 #if BX_SHOW_IPS
   extern unsigned long ips_count;
 
@@ -918,13 +926,6 @@ bx_signal_handler( int signum)
 #endif
     return;
     }
-#endif
-
-#if BX_GUI_SIGHANDLER
-  if ((1<<signum) & bx_gui.get_sighandler_mask ()) {
-    bx_gui.sighandler (signum);
-    return;
-  }
 #endif
 
   bx_panic("SIGNAL %u caught\n", signum);
