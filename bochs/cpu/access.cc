@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.54 2005-03-12 19:34:17 sshwarts Exp $
+// $Id: access.cc,v 1.55 2005-03-30 19:55:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       else exception(BX_GP_EXCEPTION, 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
-      // Mark cache as being OK type for succeeding writes.  See notes above.
+      // Mark cache as being OK type for succeeding writes. See notes above.
       seg->cache.valid |= SegAccessWOK;
     }
   }
@@ -169,12 +169,12 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
             || (length-1 > seg->cache.u.segment.limit_scaled))
         {
-          BX_INFO(("read_virtual_checks(): write beyond limit"));
+          BX_INFO(("read_virtual_checks(): read beyond limit"));
           exception(int_number(seg), 0, 0);
           return;
         }
         if (seg->cache.u.segment.limit_scaled >= 7) {
-          // Mark cache as being OK type for succeeding writes.  See notes for
+          // Mark cache as being OK type for succeeding reads. See notes for
           // write checks; similar code.
           seg->cache.valid |= SegAccessROK;
         }
@@ -184,13 +184,13 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
             || (length-1 > seg->cache.u.segment.limit_scaled)) 
         {
-          BX_INFO(("read_virtual_checks(): write beyond limit"));
+          BX_INFO(("read_virtual_checks(): read beyond limit"));
           exception(int_number(seg), 0, 0);
           return;
         }
         if (seg->cache.u.segment.limit_scaled >= 7)
         {
-          // Mark cache as being OK type for succeeding writes.  See notes for
+          // Mark cache as being OK type for succeeding reads. See notes for
           // write checks; similar code.
           seg->cache.valid |= SegAccessROK;
         }
@@ -204,7 +204,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if ((offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
         {
-          BX_INFO(("read_virtual_checks(): write beyond limit"));
+          BX_INFO(("read_virtual_checks(): read beyond limit"));
           exception(int_number(seg), 0, 0);
           return;
         }
@@ -218,7 +218,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if ((offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
         {
-          BX_INFO(("read_virtual_checks(): write beyond limit"));
+          BX_INFO(("read_virtual_checks(): read beyond limit"));
           exception(int_number(seg), 0, 0);
           return;
         }
@@ -227,10 +227,9 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       case 8: case 9: /* execute only */
       case 12: case 13: /* execute only, conforming */
         /* can't read or write an execute-only segment */
-                BX_INFO(("read_virtual_checks(): execute only"));
+        BX_INFO(("read_virtual_checks(): execute only"));
         exception(int_number(seg), 0, 0);
         return;
-        break;
     }
     return;
   }
@@ -242,11 +241,10 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       else exception(BX_GP_EXCEPTION, 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
-      // Mark cache as being OK type for succeeding writes.  See notes for
+      // Mark cache as being OK type for succeeding reads. See notes for
       // write checks; similar code.
       seg->cache.valid |= SegAccessROK;
     }
-    return;
   }
 }
 

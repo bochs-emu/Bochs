@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.36 2005-03-29 22:18:13 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.37 2005-03-30 19:56:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,12 +32,42 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-void BX_CPU_C::debug(Bit32u offset)
+void BX_CPU_C::debug(bx_address offset)
 {
+  static const char *cpu_mode_name[] = {
+     "real mode",
+     "v8086 mode",
+     "protected mode",
+     "compatibility mode",
+     "long mode"
+  };
+
+  if (BX_CPU_THIS_PTR cpu_mode < 5)
+    BX_INFO(("%s", cpu_mode_name[BX_CPU_THIS_PTR cpu_mode]));
+  BX_INFO(("CS.d_b = %u bit",
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
+  BX_INFO(("SS.d_b = %u bit",
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16));
+
+#if BX_SUPPORT_X86_64
+  BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
+          (unsigned) (RAX >> 32), (unsigned) EAX,
+          (unsigned) (RBX >> 32), (unsigned) EBX));
+  BX_INFO(("| RCX=%08x%08x  RDX=%08x%08x",
+          (unsigned) (RCX >> 32), (unsigned) ECX,
+          (unsigned) (RDX >> 32), (unsigned) EDX));
+  BX_INFO(("| RSP=%08x%08x  RBP=%08x%08x",
+          (unsigned) (RSP >> 32), (unsigned) ESP,
+          (unsigned) (RBP >> 32), (unsigned) EBP));
+  BX_INFO(("| RSI=%08x%08x  RDI=%08x%08x",
+          (unsigned) (RSI >> 32), (unsigned) ESI,
+          (unsigned) (RDI >> 32), (unsigned) EDI));
+#else
   BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x",
           (unsigned) EAX, (unsigned) EBX, (unsigned) ECX, (unsigned) EDX));
   BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x",
           (unsigned) ESP, (unsigned) EBP, (unsigned) ESI, (unsigned) EDI));
+#endif
   BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s",
     BX_CPU_THIS_PTR get_IOPL (),
     BX_CPU_THIS_PTR get_OF()          ? "OV" : "NV",
@@ -50,6 +80,15 @@ void BX_CPU_C::debug(Bit32u offset)
     BX_CPU_THIS_PTR get_CF()          ? "CY" : "NC"));
   BX_INFO(("| SEG selector     base    limit G D"));
   BX_INFO(("| SEG sltr(index|ti|rpl)     base    limit G D"));
+  BX_INFO(("|  CS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b));
   BX_INFO(("|  DS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index,
@@ -59,6 +98,15 @@ void BX_CPU_C::debug(Bit32u offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.d_b));
+  BX_INFO(("|  SS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b));
   BX_INFO(("|  ES:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index,
@@ -86,41 +134,39 @@ void BX_CPU_C::debug(Bit32u offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
-  BX_INFO(("|  SS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b));
-  BX_INFO(("|  CS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b));
+
+#if BX_SUPPORT_X86_64
+  BX_INFO(("| RIP=%08x%08x (%08x%08x)", 
+    (unsigned) BX_CPU_THIS_PTR dword.rip_upper, (unsigned) EIP,
+    (unsigned) (BX_CPU_THIS_PTR prev_eip >> 32), 
+    (unsigned) (BX_CPU_THIS_PTR prev_eip & 0xffffffff)));
+  BX_INFO(("| CR0=0x%08x CR1=0x%x CR2=0x%08x%08x",
+    (unsigned) (BX_CPU_THIS_PTR cr0.val32), 0,
+    (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
+    (unsigned) (BX_CPU_THIS_PTR cr2 & 0xffffffff)));
+  BX_INFO(("| CR3=0x%08x%08x CR4=0x%08x",
+    (unsigned) (BX_CPU_THIS_PTR cr3 >> 32),
+    (unsigned) (BX_CPU_THIS_PTR cr3 & 0xffffffff),
+    BX_CPU_THIS_PTR cr4.getRegister()));
+#else
   BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
     (unsigned) BX_CPU_THIS_PTR prev_eip));
+
 #if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 4
-  BX_INFO(("| CR0=0x%08x CR1=0x%08x CR2=0x%08x CR3=0x%08x",
-    BX_CPU_THIS_PTR cr0.val32,
-    0,
+  BX_INFO(("| CR0=0x%08x CR1=%x CR2=0x%08x CR3=0x%08x",
+    BX_CPU_THIS_PTR cr0.val32, 0,
     BX_CPU_THIS_PTR cr2,
     BX_CPU_THIS_PTR cr3));
 #elif BX_CPU_LEVEL >= 4
-  BX_INFO(("| CR0=0x%08x CR1=0x%08x CR2=0x%08x",
-    BX_CPU_THIS_PTR cr0.val32,
-    0,
+  BX_INFO(("| CR0=0x%08x CR1=%x CR2=0x%08x",
+    BX_CPU_THIS_PTR cr0.val32, 0,
     BX_CPU_THIS_PTR cr2));
   BX_INFO(("| CR3=0x%08x CR4=0x%08x",
     BX_CPU_THIS_PTR cr3,
     BX_CPU_THIS_PTR cr4.getRegister()));
 #endif
+
+#endif // BX_SUPPORT_X86_64
 
 
 #if 0
@@ -131,7 +177,7 @@ void BX_CPU_C::debug(Bit32u offset)
     Bit8u data;
     BX_CPU_THIS_PTR read_virtual_byte(BX_SEG_REG_CS, EIP + i, &data);
     sprintf(buf+strlen(buf), "%02x ", data);
-    }
+  }
   BX_INFO((buf));
 
   sprintf(buf, "%04x:%08x  ", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR prev_eip);
@@ -139,7 +185,7 @@ void BX_CPU_C::debug(Bit32u offset)
     Bit8u data;
     BX_CPU_THIS_PTR read_virtual_byte(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_eip + i, &data);
     sprintf(buf+strlen(buf), "%02x ", data);
-    }
+  }
   BX_INFO((buf));
 #endif
 
@@ -168,6 +214,9 @@ void BX_CPU_C::debug(Bit32u offset)
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
         Base, 
         EIP, instr_buf, char_buf);
+#if BX_SUPPORT_X86_64
+    isize = 16;
+#endif
     for (unsigned j=0; j<isize; j++)
       BX_INFO((">> %02x", (unsigned) instr_buf[j]));
     BX_INFO((">> : %s", char_buf));
@@ -998,20 +1047,5 @@ bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
 
 void BX_CPU_C::atexit(void)
 {
-  static const char *cpu_mode_name[] = {
-     "real mode",
-     "v8086 mode",
-     "protected mode",
-     "compatibility mode",
-     "long mode"
-  };
-
-  if (BX_CPU_THIS_PTR cpu_mode < 5)
-    BX_INFO(("%s", cpu_mode_name[BX_CPU_THIS_PTR cpu_mode]));
-  BX_INFO(("CS.d_b = %u bit",
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
-  BX_INFO(("SS.d_b = %u bit",
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16));
-
   debug(BX_CPU_THIS_PTR prev_eip);
 }
