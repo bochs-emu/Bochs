@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.110 2004-05-31 13:11:27 vruppert Exp $
+// $Id: rombios.c,v 1.111 2004-06-20 18:25:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,6 +137,7 @@
 #define DEBUG_INT16        0
 #define DEBUG_INT1A        0
 #define DEBUG_INT74        0
+#define DEBUG_APM          0
 
 #define BX_CPU           3
 #define BX_USE_PS2_MOUSE 1
@@ -145,6 +146,7 @@
 #define BX_SUPPORT_FLOPPY 1
 #define BX_FLOPPY_ON_CNT 37   // 2 seconds
 #define BX_PCIBIOS       1
+#define BX_APM           1
 
 #define BX_USE_ATADRV    1
 #define BX_ELTORITO_BOOT 1
@@ -226,17 +228,6 @@ MACRO HALT
   ;; with a message such as "BIOS panic at rombios.c, line 4091".
   ;; However, users can choose to make panics non-fatal and continue.
   mov dx,#PANIC_PORT
-  mov ax,#?1
-  out dx,ax
-MEND
-
-MACRO HALT2
-  ;; the HALT macro is called with the line number of the HALT call.
-  ;; The line number is then sent to the PANIC_PORT, causing Bochs/Plex
-  ;; to print a BX_PANIC message.  This will normally halt the simulation
-  ;; with a message such as "BIOS panic at rombios.c, line 4091".
-  ;; However, users can choose to make panics non-fatal and continue.
-  mov dx,#PANIC_PORT2
   mov ax,#?1
   out dx,ax
 MEND
@@ -925,10 +916,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.110 $";
-static char bios_date_string[] = "$Date: 2004-05-31 13:11:27 $";
+static char bios_cvs_version_string[] = "$Revision: 1.111 $";
+static char bios_date_string[] = "$Date: 2004-06-20 18:25:50 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.110 2004-05-31 13:11:27 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.111 2004-06-20 18:25:50 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1543,15 +1534,12 @@ bios_printf(action, s)
     }
 
   if (action & BIOS_PRINTF_HALT) {
-    // freeze in a busy loop.  If I do a HLT instruction, then in versions
-    // 1.3.pre1 and earlier, it will panic without ever updating the VGA
-    // display, so the panic message will not be visible.  By waiting
-    // forever, you are certain to see the panic message on screen.
-    // After a few more versions have passed, we can turn this back into
-    // a halt or something.
-    // do {} while (1);
+    // freeze in a busy loop.  
 ASM_START
-    HALT2(__LINE__)
+    cli
+ halt2_loop:
+    hlt
+    jmp halt2_loop
 ASM_END
     }
 }
@@ -8344,6 +8332,19 @@ int76_handler:
   pop   ax
   iret
 
+
+;--------------------
+#if BX_APM
+use32 386
+#define APM_PROT32
+#include "apmbios.S"
+use16 386
+
+#define APM_REAL
+#include "apmbios.S"
+
+#endif
+
 ;--------------------
 #if BX_PCIBIOS
 use32 386
@@ -9560,6 +9561,10 @@ int11_handler:
 .org 0xf859 ; INT 15h System Services Entry Point
 int15_handler:
   pushf
+#if BX_APM
+  cmp ah, #0x53
+  je apm_call
+#endif
   push  ds
   push  es
   pushad
@@ -9570,6 +9575,10 @@ int15_handler:
   popf
   //JMPL(iret_modify_cf)
   jmp iret_modify_cf
+#if BX_APM
+apm_call:
+  jmp _apmreal_entry
+#endif
 
 ;; Protected mode IDT descriptor
 ;;
