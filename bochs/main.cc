@@ -570,11 +570,8 @@ parse_bochsrc(void)
       // as you can pass everything on the command line.
       return;
       }
-    else
-      BX_INFO(("using rc file '%s'.\n", bochsrc_path));
     }
-  else
-    BX_INFO(("using rc file '%s'.\n", bochsrc_path));
+  BX_INFO(("using rc file '%s'.\n", bochsrc_path));
 
 #else
   // try opening file bochsrc only in current directory for win32
@@ -584,8 +581,16 @@ parse_bochsrc(void)
   if (!fd) {
     BX_INFO(( "could not open file '%s' in current directory.\n",
       bochsrc_path ));
-    exit(1);
+    strcpy(bochsrc_path, "bochsrc");
+    fd = fopen(bochsrc_path, "r");
+    if (!fd) {
+      BX_INFO(( "could not open file '%s' in current directory.\n",
+	bochsrc_path ));
+      return;
+      }
     }
+  BX_INFO(("using rc file '%s'.\n", bochsrc_path));
+
 #endif  // #if (!defined(WIN32) && !defined(macintosh))
 
 

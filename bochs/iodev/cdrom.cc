@@ -458,7 +458,7 @@ cdrom_interface::capacity()
  
   }
 #else
-  BX_WARN(( "capacity: your OS is not supported yet.\n" ));
+  BX_INFO(( "capacity: your OS is not supported yet.\n" ));
   return(0);
 #endif
 }

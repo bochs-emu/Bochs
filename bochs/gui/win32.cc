@@ -325,7 +325,7 @@ void bx_gui_c::specific_init(bx_gui_c *th, int argc, char **argv, unsigned
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 
   if (bx_options.private_colormap)
-    BX_WARN(( "private_colormap option ignored.\n"));
+    BX_INFO(( "private_colormap option ignored.\n"));
 }
 
 

@@ -201,7 +201,7 @@ UNUSED(window_name);
   th->setprefix("[BGUI]");
 
 if (bx_options.private_colormap) {
-  BX_WARN(( "BeOS: private_colormap option not handled yet.\n"));
+  BX_INFO(( "BeOS: private_colormap option not handled yet.\n"));
   }
 
   x_tilesize = tilewidth;
