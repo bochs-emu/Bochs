@@ -3427,6 +3427,7 @@ lt_dlsym (handle, symbol)
       strcat(sym, symbol);
 
       /* try "modulename_LTX_symbol" */
+      LTDEBUG_PRINTF(("dlsym looking for '%s'\n", sym));
       address = handle->loader->find_sym (data, handle->module, sym);
       if (address)
 	{
@@ -3450,6 +3451,7 @@ lt_dlsym (handle, symbol)
       strcpy(sym, symbol);
     }
 
+  LTDEBUG_PRINTF(("dlsym looking for '%s'\n", sym));
   address = handle->loader->find_sym (data, handle->module, sym);
   if (sym != lsym)
     {
