@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.62 2002-09-23 16:19:21 vruppert Exp $
+// $Id: keyboard.cc,v 1.63 2002-09-24 22:50:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_keyb_c::bx_keyb_c(void)
   memset( &s, 0, sizeof(s) );
   BX_KEY_THIS put("KBD");
   BX_KEY_THIS settype(KBDLOG);
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.62 2002-09-23 16:19:21 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.63 2002-09-24 22:50:51 cbothamy Exp $"));
 }
 
 bx_keyb_c::~bx_keyb_c(void)
@@ -110,7 +110,7 @@ bx_keyb_c::resetinternals(Boolean powerup)
   void
 bx_keyb_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.62 2002-09-23 16:19:21 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.63 2002-09-24 22:50:51 cbothamy Exp $"));
   Bit32u   i;
 
   BX_KEY_THIS devices = d;
@@ -683,7 +683,7 @@ bx_keyb_c::service_paste_buf ()
     BX_KEY_THIS pastebuf_ptr++;
   }
   // reached end of pastebuf.  free the memory it was using.
-  delete [] BX_KEY_THIS pastebuf;
+  free(BX_KEY_THIS pastebuf);
   BX_KEY_THIS pastebuf = NULL;
 }
 
