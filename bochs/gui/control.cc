@@ -1,6 +1,6 @@
 /*
  * gui/control.cc
- * $Id: control.cc,v 1.6 2001-06-09 21:29:07 bdenney Exp $
+ * $Id: control.cc,v 1.7 2001-06-10 03:53:43 yakovlev Exp $
  *
  * This is code for a text-mode control panel.  Note that this file
  * does NOT include bochs.h.  Instead, it does all of its contact with
@@ -64,6 +64,8 @@ extern "C" {
 #include <string.h>
 #include <assert.h>
 }
+#include "config.h"
+#include "osdep.h"
 #include "control.h"
 #include "siminterface.h"
 
