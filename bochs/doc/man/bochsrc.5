@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "08 Dec 2002" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "26 Mar 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -136,6 +136,16 @@ Examples:
   vgaromimage: file=bios/VGABIOS-elpin-2.40
   vgaromimage: file=bios/VGABIOS-lgpl-latest
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+
+.TP
+.I "vga:"
+Here you can specify the display extension to be used. With the value 'none'
+you can use standard VGA with no extension. Other supported values are 'vbe'
+for Bochs VBE and 'cirrus' for Cirrus SVGA support.
+
+Examples:
+  vga: extension=cirrus
+  vga: extension=vbe
 
 .TP
 .I "floppya: \fPor \fIfloppyb:"
@@ -591,9 +601,9 @@ it off. You can also toggle the mouse usage at runtime
 (control key + middle mouse button).
 With the mouse type option you can select the type of mouse to emulate.
 The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-on PS/2), 'serial', 'serial_wheel' (one com port requires setting
-'mode=mouse') and 'usb' (3-button mouse on USB port #1 - requires PCI and
-USB support).
+on PS/2), 'serial', 'serial_wheel' (one com port requires setting 'mode=mouse')
+and 'usb' (3-button mouse - one of the USB ports must be connected with
+the 'mouse' device - requires PCI and USB support).
 
 Examples:
   mouse: enabled=0
@@ -613,10 +623,14 @@ Example:
 
 .TP
 .I "i440fxsupport:"
-Enables limited i440fx PCI chipset support.
+This option controls the presence of the i440FX PCI chipset. You can
+also specify the devices connected to PCI slots. Up to 5 slots are
+available now. These devices are currently supported: ne2k, pcivga,
+pcidev and pcipnic. If Bochs is compiled with Cirrus SVGA support
+you'll have the additional choice 'cirrus'.
 
 Example:
-  i440fxsupport: enabled=1
+  i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
 
 .TP
 .I "pcidev:"
@@ -655,11 +669,19 @@ be other restrictions too.  To be safe, just use the b0:c4... address.
 ethmod:
 The ethmod value defines which low level OS specific module to be used
 to access pysical ethernet interface. Current implemented values include
- - fbsd : ethernet on freebsd and openbsd
- - linux : ethernet on linux
- - win32 : ethernet on win32
- - tap : ethernet through a linux tap interface
+ - fbsd   : ethernet on freebsd and openbsd
+ - linux  : ethernet on linux
+ - win32  : ethernet on win32
+ - tap    : ethernet through a linux tap interface
  - tuntap : ethernet through a linux tuntap interface
+
+If you don't want to make connections to any physical networks,
+you can use the following 'ethmod's to simulate a virtual network.
+ - null   : All packets are discarded, but logged to a few files
+ - arpback: ARP is simulated (disabled by default)
+ - vnet   : ARP, ICMP-echo(ping) and DHCP are simulated
+            The virtual host uses 192.168.10.1
+            DHCP assignes 192.168.10.2 to the guest
 
 ethdev:
 The ethdev value is the name of the network interface on your host
@@ -720,12 +742,14 @@ Example:
 
 .TP
 .I "usb1:"
-Controls the presence of the USB root hub which is a part of the i440FX PCI
-chipset. If you enable USB and use the mouse option 'type=usb' you'll have
-a 3-button mouse connected to port #1. PCI support must be enabled, too.
+This option controls the presence of the USB root hub which is a part
+of the i440FX PCI chipset. With the portX option you can connect devices
+to the hub (currently supported: 'mouse' and 'keypad'). If you connect
+the mouse to one of the ports and use the mouse option 'type=usb' you'll
+have a 3-button USB mouse.
 
 Example:
-  usb1: enabled=1, ioaddr=0xFF80
+  usb1: enabled=1, ioaddr=0xFF80, port1=mouse, port2=keypad
 
 .TP
 .I "pit:"
