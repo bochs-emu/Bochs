@@ -816,7 +816,7 @@ AC_ARG_ENABLE(sb16,
          AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_output_c)
          AC_MSG_RESULT(dummy)
          ;;
-       linux)
+       freebsd|linux)
          SB16_OBJS='$(SB16_LINUX_OBJS)'
          AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
          AC_MSG_RESULT(linux)
