@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.46 2002-08-02 05:41:04 vruppert Exp $
+// $Id: dbg_main.cc,v 1.47 2002-08-05 16:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -357,7 +357,7 @@ process_sim2:
   bx_parse_cmdline (1, bochs_argc, bochs_argv);
 
   // initialize hardware
-  bx_init_hardware();   // doesn't this duplicate things?
+  bx_init_hardware();
 
 #if BX_NUM_SIMULATORS >= 2
   bx_debugger.compare_at_sync.cpu    = 0;
@@ -366,31 +366,6 @@ process_sim2:
 
   // call init routines for each CPU+mem simulator
   // initialize for SMP. one memory, multiple processors.
-#if BX_SUPPORT_APIC
-  memset(apic_index, 0, sizeof(apic_index[0]) * APIC_MAX_ID);
-#endif
-
-#if BX_SMP_PROCESSORS==1
-  BX_MEM(0)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
-  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
-  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
-  BX_CPU(0)->init (BX_MEM(0));
-  BX_CPU(0)->reset(BX_RESET_HARDWARE);
-#else
-  // SMP initialization
-  bx_mem_array[0] = new BX_MEM_C ();
-  bx_mem_array[0]->init_memory(bx_options.memory.Osize->get () * 1024*1024);
-  bx_mem_array[0]->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get ());
-  bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000);
-  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i) = new BX_CPU_C ();
-    BX_CPU(i)->init (BX_MEM(0));
-    // assign apic ID from the index of this loop
-    // if !BX_SUPPORT_APIC, this will not compile.
-    BX_CPU(i)->local_apic.set_id (i);
-    BX_CPU(i)->reset(BX_RESET_HARDWARE);
-  }
-#endif
 
 #if BX_NUM_SIMULATORS > 1
 #error cosimulation not supported until SMP stuff settles
