@@ -26,6 +26,7 @@ deduct off some cycles for the IRET/int sequence.
 Conditions for bochs compile using plex86:
   - Not compiled for debug
   - x86 host
+  - Not PCI supported (for now).
 
 paging-mon.c:  We can eliminate any code other than CPL==3.
 

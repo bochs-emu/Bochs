@@ -145,11 +145,9 @@ MODULE_LICENSE("GPL"); /* Close enough.  Keeps kernel from complaining. */
 /* Structures / Variables                                               */
 /************************************************************************/
 
-static int retrieve_vm_pages(Bit32u *page, int max_pages, void *addr,
-                             unsigned size);
-static unsigned retrieve_phy_pages(Bit32u *page, int max_pages, void *addr,
-                                   unsigned size);
-static int retrieve_monitor_pages(void);
+static int      retrieve_monitor_pages(void);
+static unsigned retrievePhyPages(Bit32u *page, int max_pages, void *addr,
+                                 unsigned size);
 
 
 
@@ -188,6 +186,9 @@ static struct proc_dir_entry plex86_proc_entry = {
   };
 #endif
 
+#if CONFIG_X86_PAE
+#  error "CONFIG_X86_PAE defined for this kernel, but unhandled in plex86"
+#endif
 
 /************************************************************************/
 /* Main kernel module code                                              */
@@ -483,7 +484,6 @@ plex86_read_procmem(char *buf, char **start, off_t offset,
 }
 
 
-#warning "Consolidate retrieve_XYZ() functions?"
   int
 retrieve_monitor_pages(void)
 {
@@ -495,89 +495,42 @@ retrieve_monitor_pages(void)
    * virtual address space unused after the end of the module.
    */
 #ifdef THIS_MODULE
-  void *start_addr = THIS_MODULE;
-  unsigned size    = THIS_MODULE->size;
+  Bit32u   driverStartAddr = (Bit32u) THIS_MODULE;
+  unsigned size            = THIS_MODULE->size;
 #else
-  void *start_addr = &mod_use_count_;
-  unsigned size    = 0x10000000;  /* Actual size determined below */
+  Bit32u   driverStartAddr = (Bit32u) &mod_use_count_;
+  unsigned size            = 0;  /* Actual size determined below */
 #endif
+  Bit32u   driverStartAddrPageAligned = driverStartAddr & ~0xfff;
 
-  int n_pages;
+  int    nPages;
 
-  n_pages = retrieve_vm_pages(monitor_pages.page, PLEX86_MAX_MONITOR_PAGES,
-                              start_addr, size);
-  if (n_pages == 0) {
-    printk(KERN_ERR "plex86: retrieve_vm_pages returned error.\n");
+  if (driverStartAddr != driverStartAddrPageAligned) {
+    /* Pretend this kernel module starts at the beginning of the page. */
+    /* If size is known, we have to add the extra offset from the beginning
+     * of the page.
+     */
+    if (size)
+      size += (driverStartAddr & 0xfff);
+    }
+
+  nPages = retrievePhyPages(monitor_pages.page, PLEX86_MAX_MONITOR_PAGES,
+                            (void *) driverStartAddrPageAligned, size);
+  if (nPages == 0) {
+    printk(KERN_ERR "plex86: retrieve_monitor_pages: retrieve returned error.\n");
     return( 0 ); /* Error. */
     }
-  printk(KERN_WARNING "plex86: %u monitor pages located\n", n_pages);
+  printk(KERN_WARNING "plex86: %u monitor pages located\n", nPages);
 
-  monitor_pages.startOffset = (Bit32u)start_addr;
-  monitor_pages.startOffsetPageAligned = monitor_pages.startOffset & 0xfffff000;
-  monitor_pages.n_pages    = n_pages;
-  return( n_pages );
+  monitor_pages.startOffset            = driverStartAddr;
+  monitor_pages.startOffsetPageAligned = driverStartAddrPageAligned;
+  monitor_pages.n_pages                = nPages;
+  return( 1 ); /* OK. */
 }
 
-  int
-retrieve_vm_pages(Bit32u *page, int max_pages, void *addr, unsigned size)
-{
-  /*  
-   * Grrr.  There doesn't seem to be an exported mechanism to retrieve
-   * the physical pages underlying a vmalloc()'ed area.  We do it the
-   * hard way ... 
-   */
-  pageEntry_t *host_pgd;
-  Bit32u host_cr3;
-  Bit32u start_addr;
-  int n_pages;
-  int i;
-
-  start_addr = ((Bit32u)addr) & 0xfffff000;
-  n_pages = BytesToPages( (((Bit32u)addr) - start_addr) + size );
-
-  if (!addr) {
-    printk(KERN_WARNING "plex86: retrieve_vm_pages: addr NULL!\n");
-    return 0;
-    }
-
-  if ( n_pages > max_pages ) {
-    printk(KERN_WARNING "plex86: retrieve_vm_pages: not enough pages!\n");
-    printk(KERN_WARNING "plex86: npages(%u) > max_pages(%u)\n",
-           n_pages, max_pages);
-    return 0;
-    }
-
-  asm volatile ("movl %%cr3, %0" : "=r" (host_cr3));
-  host_pgd = (pageEntry_t *)(phys_to_virt(host_cr3 & ~0xfff));
-
-  for (i = 0; i < n_pages; i++) {
-    Bit32u virt_addr = start_addr + i*PAGESIZE + KERNEL_OFFSET;
-    pageEntry_t *pde = host_pgd + (virt_addr >> 22);
-    pageEntry_t *pte = (pageEntry_t *)phys_to_virt(pde->fields.base << 12)
-                       + ((virt_addr >> 12) & 0x3ff);
-
-    /* If page isn't present, assume end of area. */
-    if ( !pde->fields.P || ! pte->fields.P ) {
-      n_pages = i;
-      break;
-      }
-    
-    /* Abort if our page list is too small */
-    if (i >= max_pages) {
-      printk(KERN_WARNING "plex86: page list is too small!\n");
-      printk(KERN_WARNING "plex86: n_pages=%u, max_pages=%u\n",
-           n_pages, max_pages);
-      return 0;
-      }
-
-    page[i] = pte->fields.base;
-    }
-
-  return n_pages;
-}
 
   unsigned
-retrieve_phy_pages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
+retrievePhyPages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
 {
   /*  
    * Grrr.  There doesn't seem to be an exported mechanism to retrieve
@@ -586,27 +539,37 @@ retrieve_phy_pages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
    */
   pageEntry_t *host_pgd;
   Bit32u host_cr3;
-  /*Bit32u start_addr = (Bit32u)addr & ~(PAGESIZE-1); */
-  /*int n_pages = ((Bit32u)addr + size - start_addr + PAGESIZE-1) >> 12; */
-  int i;
-  Bit8u *addr;
+  Bit32u addr; // start_addr;
   unsigned n_pages;
+  int i;
 
-  addr = (Bit8u *) addr_v;
-  if ( ((Bit32u)addr) & 0xfff ) {
-    printk(KERN_ERR "plex86: retrieve_phy_pages: not aligned!\n");
+  addr = (Bit32u) addr_v;
+  if ( addr & 0xfff ) {
+    printk(KERN_ERR "plex86: retrievePhyPages: not page aligned!\n");
     return 0;
     }
-  n_pages = BytesToPages(size);
+
   if (!addr) {
-    printk(KERN_ERR "plex86: retrieve_phy_pages: addr NULL!\n");
+    printk(KERN_ERR "plex86: retrievePhyPages: addr NULL!\n");
     return 0;
     }
 
-  if ( n_pages > max_pages ) {
-    printk(KERN_ERR "plex86: retrieve_phy_pages: n=%u > max=%u\n",
-       n_pages, max_pages);
-    return 0;
+  if (size == 0) {
+    /* Size unknown.  Determine by cycling through page tables until
+     * we find one which is not present.  We will assume that means
+     * the end of the data structure.  Set the number of pages to
+     * cycle through, to one more than the maximum requested.  This
+     * way we'll look through enough pages.
+     */
+    n_pages = max_pages + 1;
+    }
+  else {
+    n_pages = BytesToPages(size);
+    if ( n_pages > max_pages ) {
+      printk(KERN_ERR "plex86: retrievePhyPages: n=%u > max=%u\n",
+         n_pages, max_pages);
+      return 0;
+      }
     }
 
   asm volatile ("movl %%cr3, %0" : "=r" (host_cr3));
@@ -614,24 +577,58 @@ retrieve_phy_pages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
 
   for (i = 0; i < n_pages; i++) {
     Bit32u laddr;
-    pageEntry_t *pde;
-    pageEntry_t *pte;
+    unsigned long lpage;
+    pgd_t *pgdPtr; pmd_t *pmdPtr; pte_t *ptePtr;
+    pgd_t  pgdVal; pmd_t  pmdVal; pte_t  pteVal;
 
     laddr = KERNEL_OFFSET + ((Bit32u) addr);
-    pde = host_pgd + (laddr >> 22);
-    pte = ((pageEntry_t *)phys_to_virt(pde->fields.base << 12))
-          + ((laddr >> 12) & 0x3ff);
-    if ( !pde->fields.P ) {
-      printk(KERN_ERR "plex86: retrieve_phy_pages: "
+
+    lpage = VMALLOC_VMADDR(laddr);
+
+    /* About to traverse the page tables.  We need to lock others
+     * out of them briefly.  Newer Linux versions can do a fine-grained
+     * lock on the page tables themselves.  Older ones have to do
+     * a "big kernel lock".
+     */
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,3,10)
+    spin_lock(&init_mm.page_table_lock);
+#else
+    lock_kernel(); /* Big kernel lock. */
+#endif
+    pgdPtr = pgd_offset(&init_mm, lpage);
+    pmdPtr = pmd_offset(pgdPtr, lpage);
+    ptePtr = pte_offset(pmdPtr, lpage);
+
+    pgdVal = *pgdPtr;
+    pmdVal = *pmdPtr;
+    pteVal = *ptePtr;
+
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,3,10)
+    spin_unlock(&init_mm.page_table_lock);
+#else
+    unlock_kernel(); /* Big kernel unlock. */
+#endif
+
+    if ( !(pgdVal.pgd & 1) ||
+         !(pmdVal.pmd & 1) ||
+         !(pteVal.pte_low & 1) ) {
+      if (size == 0)
+        return i; /* Report number of pages until area ended. */
+      printk(KERN_ERR "plex86: retrievePhyPages: "
                       "PDE.P==0: i=%u, n=%u laddr=0x%x\n", i, n_pages, laddr);
+      return 0; /* Error, ran into unmapped page in memory range. */
+      }
+
+    /* Abort if our page list is too small. */
+    if (i >= max_pages) {
+      printk(KERN_WARNING "plex86: page list is too small!\n");
+      printk(KERN_WARNING "plex86: n_pages=%u, max_pages=%u\n",
+           n_pages, max_pages);
       return 0;
       }
-    if ( !pte->fields.P ) {
-      printk(KERN_ERR "plex86: retrieve_phy_pages: "
-                      "PTE.P==0: i=%u, n=%u laddr=0x%x\n", i, n_pages, laddr);
-      return 0;
-      }
-    page[i] = pte->fields.base;
+    /* Get physical page address for this virtual page address. */
+    page[i] = pte_val(pteVal) >> 12;
+    /* Increment to the next virtual page address. */
     addr += 4096;
     }
   return(n_pages);
@@ -730,7 +727,7 @@ hostFreePage(void *ptr)
   unsigned
 hostGetAllocedMemPhyPages(Bit32u *page, int max_pages, void *ptr, unsigned size)
 {
-  return( retrieve_phy_pages(page, max_pages, ptr, size) );
+  return( retrievePhyPages(page, max_pages, ptr, size) );
 }
 
   Bit32u

@@ -149,3 +149,10 @@ hostCopyToUser(void *to, void *from, unsigned long len)
 {
   return 0;
 }
+
+  int
+hostMMap(vm_t *vm, void *iV, void *fV, void *vmaV, 
+         unsigned pagesN, Bit32u *pagesArray)
+{
+  return 0;
+}
