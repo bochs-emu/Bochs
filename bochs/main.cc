@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.229 2003-07-10 20:26:05 vruppert Exp $
+// $Id: main.cc,v 1.230 2003-07-15 21:02:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -360,7 +360,7 @@ void bx_init_options ()
       "Floppy A image",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
-#if BX_WITH_WX
+#if BX_WITH_WX || defined(WIN32)
   bx_options.floppya.Opath->set_ask_format ("Filename of first floppy image");
 #else
   bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
@@ -407,7 +407,7 @@ void bx_init_options ()
       "floppyb:path",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
-#if BX_WITH_WX
+#if BX_WITH_WX || defined(WIN32)
   bx_options.floppyb.Opath->set_ask_format ("Filename of second floppy image");
 #else
   bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");

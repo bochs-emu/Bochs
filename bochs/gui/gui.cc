@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.69 2003-05-27 18:19:12 vruppert Exp $
+// $Id: gui.cc,v 1.70 2003-07-15 21:02:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -212,48 +212,42 @@ bx_gui_c::update_drive_status_buttons (void) {
   void
 bx_gui_c::floppyA_handler(void)
 {
-  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
-              "wx")) {
-    // instead of just toggling the status, call wxWindows to bring up 
-    // a dialog asking what disk image you want to switch to.
-    int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
-    if (ret < 0) return;  // cancelled
+#ifdef WIN32
+  // instead of just toggling the status, call win32dialog to bring up
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
+  if (ret > 0) {
     // eject and then insert the disk.  If the new path is invalid,
     // the status will return 0.
     unsigned new_status = DEV_floppy_set_media_status(0, 0);
-    printf ("eject disk, new_status is %d\n", new_status);
     new_status = DEV_floppy_set_media_status(0, 1);
-    printf ("insert disk, new_status is %d\n", new_status);
-    fflush (stdout);
     BX_GUI_THIS floppyA_status = new_status;
-  } else {
+  }
+#else
     BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
     DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
-  }
+#endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
   void
 bx_gui_c::floppyB_handler(void)
 {
-  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
-              "wx")) {
-    // instead of just toggling the status, call wxWindows to bring up 
-    // a dialog asking what disk image you want to switch to.
-    int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
-    if (ret < 0) return;  // cancelled
+#ifdef WIN32
+  // instead of just toggling the status, call win32dialog to bring up
+  // a dialog asking what disk image you want to switch to.
+  int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
+  if (ret > 0) {
     // eject and then insert the disk.  If the new path is invalid,
     // the status will return 0.
     unsigned new_status = DEV_floppy_set_media_status(1, 0);
-    printf ("eject disk, new_status is %d\n", new_status);
     new_status = DEV_floppy_set_media_status(1, 1);
-    printf ("insert disk, new_status is %d\n", new_status);
-    fflush (stdout);
     BX_GUI_THIS floppyB_status = new_status;
-  } else {
+  }
+#else
     BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
     DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
-  }
+#endif
   BX_GUI_THIS update_drive_status_buttons ();
 }
 

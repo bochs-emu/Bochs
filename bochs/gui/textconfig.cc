@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.12 2003-06-07 19:16:53 vruppert Exp $
+// $Id: textconfig.cc,v 1.13 2003-07-15 21:02:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interfac.  Note that this file
@@ -683,7 +683,11 @@ config_interface_notify_callback (void *unused, BxEvent *event)
         sparam = (bx_param_string_c *)param;
         opts = sparam->get_options()->get();
         if (opts & sparam->IS_FILENAME) {
-          event->retcode = AskFilename((bx_param_filename_c *)sparam);
+          if (param->get_id() == BXP_NULL) {
+            event->retcode = AskFilename((bx_param_filename_c *)sparam);
+          } else {
+            event->retcode = FloppyDialog((bx_param_filename_c *)sparam);
+          }
           return event;
         } else {
           event->retcode = AskString(sparam);
