@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.2 2001-10-03 13:10:38 bdenney Exp $
+// $Id: instrument.cc,v 1.3 2002-09-29 16:50:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,389 +25,201 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #include "bochs.h"
+#include "cpu/cpu.h"
 
-static logfunctions *instr_logfn = NULL;
-#define LOG_THIS instr_logfn->
-static FILE *logfd = NULL;
-
-#if 0
-// possible types passed to BX_INSTR_TLB_CNTRL()
-#define BX_INSTR_MOV_CR3     10
-#define BX_INSTR_INVLPG      11
-#define BX_INSTR_TASKSWITCH  12
-
-// possible types passed to BX_INSTR_CACHE_CNTRL()
-#define BX_INSTR_INVD      20
-#define BX_INSTR_WBINVD    21
-#endif
+bxInstrumentation icpu[BX_SMP_PROCESSORS];
 
 
-// called from the CPU core
-  void
-bx_instr_cnear_branch_taken(Bit32u new_eip)
+void bxInstrumentation::bx_instr_reset()
 {
-  UNUSED(new_eip);
+  valid = is_branch = 0;
+  nprefixes = num_data_accesses = 0;
+  active = 1;
 }
 
-  void
-bx_instr_cnear_branch_not_taken(void)
+void bxInstrumentation::bx_instr_new_instruction()
 {
-}
-
-  void
-bx_instr_ucnear_branch(unsigned what, Bit32u new_eip)
-{
-  UNUSED(what);
-  UNUSED(new_eip);
-}
-
-  void
-bx_instr_far_branch(unsigned what, Bit32u new_cs, Bit32u new_eip)
-{
-  UNUSED(what);
-  UNUSED(new_eip);
-  UNUSED(new_cs);
-}
-
-  void
-bx_instr_opcode_byte1(Bit8u opcode)
-{
-  UNUSED(opcode);
-}
-
-  void
-bx_instr_opcode_byte2(Bit8u opcode)
-{
-  UNUSED(opcode);
-}
-
-  void
-bx_instr_opcode_g1ebib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g1eviv(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g1evib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2ebib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2evib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2eb1(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2ev1(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2ebcl(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g2evcl(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g3eb(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g3ev(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g4(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g5(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g6(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g7(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_opcode_g8evib(unsigned nnn)
-{
-  UNUSED(nnn);
-}
-
-  void
-bx_instr_mem_code(Bit32u linear, unsigned size)
-{
-  UNUSED(linear);
-  UNUSED(size);
-}
-
-  void
-bx_instr_mem_data(Bit32u linear, unsigned size, unsigned rw)
-{
-  UNUSED(linear);
-  UNUSED(size);
-  UNUSED(rw);
-}
-
-  void
-bx_instr_opcode_begin(Bit32u linear)
-{
-  Bit32u cs = BX_CPU(0)->sregs[BX_SEG_REG_CS].selector.value;
-  Bit32u eip = BX_CPU(0)->prev_eip;
-  fprintf (logfd, "pc %04x:%08x\n", cs, eip);
-  fflush (logfd);
-}
-
-  void
-bx_instr_opcode_end(Bit32u linear)
-{
-  UNUSED(linear);
-}
-
-  void
-bx_instr_exception(unsigned vector)
-{
-  UNUSED(vector);
-}
-
-  void
-bx_instr_tlb_cntrl(unsigned what, Bit32u newval)
-{
-  UNUSED(what);
-  UNUSED(newval);
-}
-
-  void
-bx_instr_cache_cntrl(unsigned what)
-{
-  UNUSED(what);
-}
-
-  void
-bx_instr_hwinterrupt(unsigned vector, Bit32u cs, Bit32u eip)
-{
-  UNUSED(vector);
-  UNUSED(cs);
-  UNUSED(eip);
-}
-
-  void
-bx_instr_init(void)
-{
-  instr_logfn = new logfunctions ();
-  instr_logfn->put ("INST");
-  logfd = fopen ("bxevent.txt", "w");
-  if (!logfd) {
-    BX_PANIC (("could not open bxevent.txt"));
-    // if they continue through the panic, just log to stderr
-    logfd = stderr;
+  if (!active)
+  {
+    return;
   }
-  fprintf (logfd, "# Instrument init\n");
+
+  if (valid)
+  {
+    char disasm_tbuf[512];	// buffer for instruction disassembly
+    unsigned length = opcode_size, n;
+    bx_disassemble.disasm(is32, 0, opcode, disasm_tbuf);
+    if(length != 0)	
+    {
+      fprintf(stderr, "----------------------------------------------------------\n");
+      fprintf(stderr, "CPU: %d: %s\n", cpu_id, disasm_tbuf);
+      fprintf(stderr, "LEN: %d\tPREFIX: %d\tBYTES: ", length, nprefixes);
+      for(n=0;n<length;n++) fprintf(stderr, "%02x", opcode[n]);
+      if(is_branch) 
+      {
+        fprintf(stderr, "\tBRANCH ");
+
+        if(is_taken) 
+          fprintf(stderr, "TARGET %08x (TAKEN)", target_linear);
+        else
+          fprintf(stderr, "(NOT TAKEN)");
+      }   
+      fprintf(stderr, "\n");
+      for(n=0;n < num_data_accesses;n++)
+      {
+         fprintf(stderr, "MEM ACCESS: %08x (linear) %08x (physical) %s SIZE: %d\n",
+                      data_access[n].laddr, 
+                      data_access[n].paddr,
+                      data_access[n].op == BX_READ ? "RD":"WR",
+                      data_access[n].size);
+      }
+      fprintf(stderr, "\n");
+    }
+  }
+
+  valid = is_branch = 0;
+  nprefixes = num_data_accesses = 0;
 }
 
-  void
-bx_instr_shutdown(void)
+void bxInstrumentation::branch_taken(bx_address new_eip)
 {
-  fprintf (logfd, "# Instrument shutdown\n");
+  Bit32u laddr;
+
+  if (!active || !valid) {
+    return; 
+  }
+
+  // find linear address
+  laddr = BX_CPU(cpu_id)->get_segment_base(BX_SREG_CS) + new_eip;
+
+  is_branch = 1;
+  is_taken = 1;
+  target_linear = laddr;
 }
 
-  void
-bx_instr_opcode_repeating(void)
+void bxInstrumentation::bx_instr_cnear_branch_taken(bx_address new_eip) 
 {
+  branch_taken(new_eip);
 }
 
-
-// called from bochs debugger if you type "instrument start"
-  void
-bx_instr_start(void)
+void bxInstrumentation::bx_instr_cnear_branch_not_taken()
 {
-  fprintf (logfd, "# Instrument start\n");
-}
+  if (!active || !valid) {
+    return; 
+  }
 
-// called from bochs debugger if you type "instrument stop"
-  void
-bx_instr_stop(void)
-{
-  fprintf (logfd, "# Instrument stop\n");
+  is_branch = 1;
+  is_taken = 0;
 }
 
-// called from bochs debugger if you type "instrument reset"
-  void
-bx_instr_reset(void)
-{
-  fprintf (logfd, "# Instrument reset\n");
+void bxInstrumentation::bx_instr_ucnear_branch(unsigned what, bx_address new_eip) {
+  branch_taken(new_eip);
 }
 
-// called from bochs debugger if you type "instrument print"
-  void
-bx_instr_print(void)
-{
-  fprintf (logfd, "# Instrument print\n");
+void bxInstrumentation::bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_address new_eip) {
+  branch_taken(new_eip);
 }
 
-  void
-bx_instr_prefix_as(void)
+void bxInstrumentation::bx_instr_opcode(Bit8u *opcode, unsigned len, Boolean is32)
 {
-}
-  void
-bx_instr_prefix_os(void)
-{
-}
-  void
-bx_instr_prefix_rep(void)
-{
-}
-  void
-bx_instr_prefix_repne(void)
-{
-}
-  void
-bx_instr_prefix_lock(void)
-{
-}
-  void
-bx_instr_prefix_cs(void)
-{
-}
-  void
-bx_instr_prefix_ss(void)
-{
-}
-  void
-bx_instr_prefix_ds(void)
-{
-}
-  void
-bx_instr_prefix_es(void)
-{
-}
-  void
-bx_instr_prefix_fs(void)
-{
-}
-  void
-bx_instr_prefix_gs(void)
-{
+  if (!active) 
+  {
+    return;
+  }
+
+  for(int i=0;i<len;i++) 
+  {
+    opcode[i] = opcode[i];
+  }
+  
+  is32 = is32;
+  opcode_size = len;
 }
 
-  void
-bx_instr_modrm32(unsigned modrm)
+void bxInstrumentation::bx_instr_fetch_decode_completed(const bxInstruction_c *i)
 {
-  UNUSED(modrm);
+  if(active) 
+  {
+    valid = 1; 
+  }
 }
 
-  void
-bx_instr_sib32(unsigned sib)
+#define PROCESS_PREFIX(name)                         \
+  void bxInstrumentation::bx_instr_prefix_##name()   \
+  {                                                  \
+     if(active) nprefixes++;        \
+  }
+
+PROCESS_PREFIX(as);
+PROCESS_PREFIX(os);
+PROCESS_PREFIX(rep);
+PROCESS_PREFIX(repne);
+PROCESS_PREFIX(lock);
+PROCESS_PREFIX(cs);
+PROCESS_PREFIX(ss);
+PROCESS_PREFIX(ds);
+PROCESS_PREFIX(es);
+PROCESS_PREFIX(fs);
+PROCESS_PREFIX(gs);
+PROCESS_PREFIX(extend8b);
+
+void bxInstrumentation::bx_instr_interrupt(unsigned vector)
 {
-  UNUSED(sib);
+  if(active)
+  {
+    fprintf(stderr, "CPU %u: interrupt %02xh\n", cpu_id, vector);
+  }
 }
 
-  void
-bx_instr_modrm16(unsigned modrm)
+void bxInstrumentation::bx_instr_exception(unsigned vector)
 {
-  UNUSED(modrm);
+  if(active)
+  {
+    fprintf(stderr, "CPU %u: exception %02xh\n", cpu_id, vector);
+  }
 }
 
-  void
-bx_instr_iret(void)
+void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_address eip)
 {
+  if(active)
+  {
+    fprintf(stderr, "CPU %u: hardware interrupt %02xh\n", cpu_id, vector);
+  }
 }
 
-  void
-bx_instr_debug_prompt(void)
+void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigned rw)
 {
-}
+  bx_address phy;
+  Boolean page_valid;
 
-  void
-bx_instr_fetch_byte(Bit8u val8)
-{
-}
-  void
-bx_instr_fetch_word(Bit16u val16)
-{
-}
-  void
-bx_instr_fetch_dword(Bit32u val32)
-{
-}
-  void
-bx_instr_phy_write(Bit32u addr, unsigned len)
-{
-}
-  void
-bx_instr_phy_read(Bit32u addr, unsigned len)
-{
-}
-  void
-bx_instr_interrupt(unsigned vector)
-{
-}
-  void
-bx_instr_inp(Bit16u addr, unsigned len)
-{
-}
-  void
-bx_instr_outp(Bit16u addr, unsigned len)
-{
-}
-  void
-bx_instr_inp2(Bit16u addr, unsigned len, unsigned val)
-{
-  fprintf (logfd, "in %d %04x %04x\n", len, addr, val);
-}
-  void
-bx_instr_outp2(Bit16u addr, unsigned len, unsigned val)
-{
-  fprintf (logfd, "out %d %04x %04x\n", len, addr, val);
-}
-void bx_instr_lin_read(Bit32u lin, Bit32u phy, unsigned len)
-{
-}
-void bx_instr_lin_write(Bit32u lin, Bit32u phy, unsigned len)
-{
+  if(!active)
+  {
+    return;
+  }
+  if (!valid)
+  {
+    return;
+  }
+
+  if (num_data_accesses >= MAX_DATA_ACCESSES) 
+  {
+    return;
+  }
+
+  BX_CPU(cpu_id)->dbg_xlate_linear2phy(lin, &phy, &page_valid);
+  phy = A20ADDR(phy);
+
+  // If linear translation doesn't exist, a paging exception will occur.
+  // Invalidate physical address data for now.
+  if (!page_valid) 
+  {
+    phy = 0;
+  }
+
+  data_access[num_data_accesses].laddr = lin;
+  data_access[num_data_accesses].paddr = phy;
+  data_access[num_data_accesses].op    = rw;
+  data_access[num_data_accesses].size  = size;
+  num_data_accesses++;
 }
