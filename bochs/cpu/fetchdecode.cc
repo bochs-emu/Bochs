@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.10 2002-09-13 23:59:24 kevinlawton Exp $
+// $Id: fetchdecode.cc,v 1.11 2002-09-17 04:20:42 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1942,8 +1942,6 @@ BX_INFO(("b1 was %x", b1));
 
   instruction->b1 = b1;
   instruction->ilen = ilen;
-  //instruction->flags_in  = 0; // for now
-  //instruction->flags_out = 0; // for now
   return(1);
 }
 
