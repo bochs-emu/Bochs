@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.55 2002-12-28 11:49:17 vruppert Exp $
+// $Id: vga.cc,v 1.56 2002-12-31 16:58:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -319,6 +319,11 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
         *piWidth = h;
         *piHeight = v;
         }
+      }
+    else if ((h >= 640) && (v >= 480)) {
+      *piWidth = h;
+      *piHeight = v;
+      BX_VGA_THIS s.scan_bits = BX_VGA_THIS s.CRTC.reg[19] << 4;
       }
     }
   else if ( BX_VGA_THIS s.graphics_ctrl.shift_reg == 2 )
