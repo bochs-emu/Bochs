@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.11 2002-10-25 11:44:40 bdenney Exp $
+// $Id: parallel.h,v 1.12 2004-01-27 21:38:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,12 @@
 #  define BX_PAR_THIS this->
 #endif
 
+#define BX_PARPORT_MAXDEV   2
+
+#define BX_PAR_DATA  0
+#define BX_PAR_STAT  1
+#define BX_PAR_CTRL  2
+
 typedef struct {
   Bit8u data;
   struct {
@@ -50,6 +56,7 @@ typedef struct {
     bx_bool irq;
     bx_bool input;
   } CONTROL;
+  Bit8u IRQ;
   FILE *output;
   bx_bool initmode;
 } bx_par_t;
@@ -65,9 +72,9 @@ public:
   virtual void   reset(unsigned type);
 
 private:
-  bx_par_t s;
+  bx_par_t s[BX_PARPORT_MAXDEV];
 
-  static void   virtual_printer();
+  static void   virtual_printer(Bit8u port);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

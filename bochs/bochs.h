@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.132 2004-01-19 21:45:21 cbothamy Exp $
+// $Id: bochs.h,v 1.133 2004-01-27 21:38:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -627,7 +627,7 @@ typedef struct {
 
 #define BX_N_OPTROM_IMAGES 4
 #define BX_N_SERIAL_PORTS 4
-#define BX_N_PARALLEL_PORTS 1
+#define BX_N_PARALLEL_PORTS 2
 #define BX_N_USB_HUBS 1
 
 typedef struct BOCHSAPI {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.260 2004-01-18 00:18:44 vruppert Exp $
+// $Id: main.cc,v 1.261 2004-01-27 21:38:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1632,6 +1632,8 @@ void bx_init_options ()
 
 void bx_reset_options ()
 {
+  Bit8u i;
+
   // drives
   bx_options.floppya.Opath->reset();
   bx_options.floppya.Odevtype->reset();
@@ -1670,10 +1672,14 @@ void bx_reset_options ()
   bx_options.memory.Osize->reset();
 
   // standard ports
-  bx_options.com[0].Oenabled->reset();
-  bx_options.com[0].Odev->reset();
-  bx_options.par[0].Oenabled->reset();
-  bx_options.par[0].Ooutfile->reset();
+  for (i=0; i<BX_N_SERIAL_PORTS; i++) {
+    bx_options.com[i].Oenabled->reset();
+    bx_options.com[i].Odev->reset();
+    }
+  for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
+    bx_options.par[i].Oenabled->reset();
+    bx_options.par[i].Ooutfile->reset();
+    }
 
   // rom images
   bx_options.rom.Opath->reset();
@@ -3857,7 +3863,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
   }
 
-#if 0
   else if (!strcmp(params[0], "parport2")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
@@ -3872,7 +3877,6 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
     }
   }
-#endif
 
   else if (!strcmp(params[0], "i440fxsupport")) {
     if (num_params != 2) {
