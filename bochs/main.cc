@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.185 2002-11-18 17:16:07 vruppert Exp $
+// $Id: main.cc,v 1.186 2002-11-19 08:54:32 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1632,7 +1632,7 @@ bx_init_main (int argc, char *argv[])
   bx_init_bx_dbg ();
   bx_init_options ();
 
-  if (!BX_WITH_WX) bx_print_header ();
+  bx_print_header ();
 
   SIM->get_param_enum(BXP_BOCHS_START)->set (BX_RUN_START);
 
