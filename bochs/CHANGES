@@ -1,3 +1,14 @@
+Changes in 2.0.1 (January x, 2003):
+
+- fix currupt saved configuration files (Christophe)
+- fix missing break statements in apic, pointed out by Shai Fultheim (Bryce)
+- fix compiling sb16 under FreeBSD (Volker)
+- updates to the documentation (Volker)
+- fix text mode colors 8 to 15 (Volker)
+- fix FPU integer load bug (Volker)
+- stop pasting on hardware reset (Volker)
+
+-------------------------------------------------------------------------
 Changes in 2.0 (December 21, 2002):
 
 Since the change log is hundreds of lines long, here is a very brief summary.
