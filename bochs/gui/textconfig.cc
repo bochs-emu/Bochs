@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.20 2004-01-29 18:50:33 vruppert Exp $
+// $Id: textconfig.cc,v 1.21 2004-02-01 01:40:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -460,8 +460,12 @@ int bx_config_interface (int menu)
      char prompt[1024];
      bx_floppy_options floppyop;
      bx_atadevice_options cdromop;
+#ifdef WIN32
+     choice = RuntimeOptionsDialog();
+#else
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
      if (ask_uint (prompt, 1, 16, 15, &choice, 10) < 0) return -1;
+#endif
      switch (choice) {
        case 1: 
          SIM->get_floppy_options (0, &floppyop);
@@ -498,6 +502,7 @@ int bx_config_interface (int menu)
        case 15: fprintf (stderr, "Continuing simulation\n"); return 0;
        case 16:
 	 fprintf (stderr, "You chose quit on the configuration interface.\n");
+         bx_user_quit = 1;
 	 SIM->quit_sim (1);
 	 return -1;
        default: fprintf (stderr, "Menu choice %d not implemented.\n", choice);
@@ -649,7 +654,7 @@ config_interface_notify_callback (void *unused, BxEvent *event)
         opts = sparam->get_options()->get();
         if (opts & sparam->IS_FILENAME) {
           if (param->get_id() == BXP_NULL) {
-            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam);
+            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, "txt");
           } else {
             event->retcode = FloppyDialog((bx_param_filename_c *)sparam);
           }
@@ -658,6 +663,9 @@ config_interface_notify_callback (void *unused, BxEvent *event)
           event->retcode = AskString(sparam);
           return event;
         }
+      } else if (param->get_type() == BXT_LIST) {
+        event->retcode = Cdrom1Dialog();
+        return event;
       }
 #endif
       event->u.param.param->text_ask (stdin, stderr);

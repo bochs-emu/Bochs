@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.73 2003-12-18 20:04:48 vruppert Exp $
+// $Id: gui.cc,v 1.74 2004-02-01 01:40:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -257,30 +257,25 @@ bx_gui_c::floppyB_handler(void)
 bx_gui_c::cdromD_handler(void)
 {
   Bit32u handle = DEV_hd_get_first_cd_handle();
-  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
-              "wx")) {
-    // instead of just toggling the status, call wxWindows to bring up 
+#ifdef WIN32
+  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
+              "rfb")) {
+    // instead of just toggling the status, call win32dialog to bring up 
     // a dialog asking what disk image you want to switch to.
-    // BBD: for now, find the first cdrom and call ask_param on that.
-    // Since we could have multiple cdroms now, maybe we should be adding
-    // one cdrom button for each?
+    // This code handles the first cdrom only. The cdrom drives #2, #3 and
+    // #4 are handled in the win32 runtime dialog.
     bx_param_c *cdrom = SIM->get_first_cdrom ();
     if (cdrom == NULL)
       return;  // no cdrom found
     int ret = SIM->ask_param (cdrom->get_id ());
-    if (ret < 0) return;  // cancelled
-    // eject and then insert the disk.  If the new path is invalid,
-    // the status will return 0.
-    unsigned status = DEV_hd_set_cd_media_status(handle, 0);
-    printf ("eject disk, new_status is %d\n", status);
-    status = DEV_hd_set_cd_media_status(handle, 1);
-    printf ("insert disk, new_status is %d\n", status);
-    fflush (stdout);
-    BX_GUI_THIS cdromD_status = status;
-  } else {
-    BX_GUI_THIS cdromD_status =
-      DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
+    if (ret > 0) {
+      BX_GUI_THIS update_drive_status_buttons ();
+    }
+    return;
   }
+#endif
+  BX_GUI_THIS cdromD_status =
+    DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
   BX_GUI_THIS update_drive_status_buttons ();
 }
 
