@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.44 2002-09-13 19:39:38 bdenney Exp $
+// $Id: wxmain.cc,v 1.45 2002-09-13 19:51:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
@@ -695,11 +695,13 @@ void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
 void
 MyFrame::DebugBreak ()
 {
+#if BX_DEBUGGER
   if (debugCommand) {
     delete debugCommand;
     debugCommand = NULL;
   }
   SIM->debug_break ();
+#endif
 }
 
 void
