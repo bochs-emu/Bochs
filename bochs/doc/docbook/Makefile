@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile,v 1.4 2001-06-15 00:40:42 bdenney Exp $
+# $Id: Makefile,v 1.5 2001-06-16 00:23:33 m2calabr Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -22,7 +22,7 @@ REMOTE_HOST=shell.sf.net
 # path of preexisting install in, on the remote server.  Each section
 # will go into a subdirectory of $REMOTE_PATH, as in
 # $REMOTE_PATH/user.
-REMOTE_PATH=/home/groups/b/bo/bochs/htdocs/tmp/docbooktest
+REMOTE_PATH=/home/groups/b/bo/bochs/htdocs/doc/docbook
 
 # -x means don't try to forward X authorization, it won't work for SF
 SSH=ssh -x
