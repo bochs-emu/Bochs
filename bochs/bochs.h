@@ -431,5 +431,14 @@ int bx_bochs_init(int argc, char *argv[]);
 
 #include "instrument.h"
 
+#if BX_HAVE_SNPRINTF
+#define SNPRINTF0(buf,siz,fmt) snprintf(buf,siz,fmt)
+#define SNPRINTF1(buf,siz,fmt,a1) snprintf(buf,siz,fmt,a1)
+#define SNPRINTF2(buf,siz,fmt,a1,a2) snprintf(buf,siz,fmt,a2)
+#else
+#define SNPRINTF0(buf,siz,fmt) sprintf(buf,fmt)
+#define SNPRINTF1(buf,siz,fmt,a1) sprintf(buf,fmt,a1)
+#define SNPRINTF2(buf,siz,fmt,a1,a2) sprintf(buf,fmt,a2)
+#endif
 
 #endif  /* BX_BOCHS_H */
