@@ -66,9 +66,9 @@ public:
     void   	FPU_settagi(int tag, int stnr);
     int    	FPU_gettagi(int stnr);
 
+    floatx80 	FPU_read_regi(int stnr) { return st_space[(tos+stnr) & 7]; }
     void  	FPU_save_regi(floatx80 reg, int tag, int stnr);
     void  	FPU_save_regi(floatx80 reg, int stnr) { FPU_save_regi(reg, FPU_tagof(reg), stnr); }
-    floatx80 	FPU_read_regi(int stnr) { return st_space[(tos+stnr) & 7]; }
 
 public:
     Bit16u cwd; 	// control word
@@ -231,47 +231,15 @@ typedef union bx_packed_mmx_reg_t {
 #define MMXUB6(reg) (reg.mmxubyte(6))
 #define MMXUB7(reg) (reg.mmxubyte(7))
 
-// Endian  Host byte order         Guest (x86) byte order
-// ======================================================
-// Little  FFFFFFFFEEAAAAAA        FFFFFFFFEEAAAAAA
-// Big     AAAAAAEEFFFFFFFF        FFFFFFFFEEAAAAAA
-//
-// Legend: F - fraction/mmx
-//         E - exponent
-//         A - alignment
-
-#ifdef BX_BIG_ENDIAN
-#if defined(__MWERKS__) && defined(macintosh)
-#pragma options align=mac68k
-#endif
-struct bx_mmx_reg_t {
-   Bit32u alignment2;
-   Bit16u alignment1;
-   Bit16u exp; /* 2 byte FP-reg exponent */
-   BxPackedMmxRegister packed_mmx_register;
-} GCC_ATTRIBUTE((aligned(16), packed));
-#if defined(__MWERKS__) && defined(macintosh)
-#pragma options align=reset
-#endif
-#else
-struct bx_mmx_reg_t {
-   BxPackedMmxRegister packed_mmx_register;
-   Bit16u exp; /* 2 byte FP reg exponent */
-   Bit16u alignment1;
-   Bit32u alignment2;
-} GCC_ATTRIBUTE((aligned(16), packed));
-#endif
-
-#define BX_MMX_REG(index) 						\
-    (((bx_mmx_reg_t*)(BX_CPU_THIS_PTR the_i387.st_space))[index])
+#define BX_MMX_REG(index) (BX_FPU_REG(index).fraction)
 
 #define BX_READ_MMX_REG(index) 						\
-    ((BX_MMX_REG(index)).packed_mmx_register)
+    (*((const BxPackedMmxRegister*)(&(BX_MMX_REG(index)))))
 
 #define BX_WRITE_MMX_REG(index, value)            			\
 {                                 					\
-   (BX_MMX_REG(index)).packed_mmx_register = value;			\
-   (BX_MMX_REG(index)).exp = 0xffff;       				\
+   (BX_FPU_REG(index)).fraction = MMXUQ(value);				\
+   (BX_FPU_REG(index)).exp = 0xffff;       				\
 }                                                      
 
 #endif 		/* BX_SUPPORT_MMX */
