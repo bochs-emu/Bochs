@@ -20,6 +20,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include "bochs.h"
+#if BX_WITH_SVGA
+
 #include <stdlib.h>
 #include </usr/include/vga.h>
 #include <vgagl.h>
@@ -27,7 +30,6 @@
 #include <vgamouse.h>
 
 #include "font/vga.bitmap.h"
-#include "bochs.h"
 #include "icon_bochs.h"
 
 class bx_svga_gui_c : public bx_gui_c {
@@ -484,3 +486,5 @@ void bx_svga_gui_c::exit(void)
     keyboard_close();
     mouse_close();
 }
+
+#endif /* if BX_WITH_SVGA */
