@@ -38,7 +38,7 @@ BX_CPU_C::BX_CPU_C(BX_MEM_C *addrspace)
 {
   // BX_CPU_C constructor
 
-  INTR = 0;
+  BX_CPU_THIS_PTR set_INTR (0);
   local_apic.init ();
 
   bx_printf("(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
@@ -541,7 +541,7 @@ BX_CPU_C::reset(unsigned source)
 
 
   BX_CPU_THIS_PTR EXT = 0;
-  BX_INTR = 0;
+  //BX_INTR = 0;
 
   TLB_init();
 
