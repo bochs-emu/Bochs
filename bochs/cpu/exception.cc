@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.17 2002-09-23 15:26:05 bdenney Exp $
+// $Id: exception.cc,v 1.18 2002-09-24 08:29:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,7 +236,7 @@ BX_CPU_THIS_PTR save_esp = ESP;
 
       // load new RSP values from TSS
 
-      load_ss_null(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
+      load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
       RSP = RSP_for_cpl_x;
 

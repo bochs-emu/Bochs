@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.48 2002-09-24 00:44:56 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.49 2002-09-24 08:29:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1775,13 +1775,14 @@ BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
 
 		default:
-#if KPL64Hacks
-			BX_INFO(("RDMSR: Unknown register %#x", ECX));
-      return;
+#if BX_IGNORE_BAD_MSR
+                        BX_ERROR(("RDMSR: Unknown register %#x", ECX));
+                        return;
 #else
 			BX_PANIC(("RDMSR: Unknown register %#x", ECX));
 #endif
 			goto do_exception;
+#endif
 
 	}
 #endif	/* BX_CPU_LEVEL >= 5 */
@@ -1880,13 +1881,14 @@ BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
 
 		default:
-#if KPL64Hacks
-			BX_INFO(("WRMSR: Unknown register %#x", ECX));
-      return;
+#if BX_IGNORE_BAD_MSR
+                        BX_ERROR(("WRMSR: Unknown register %#x", ECX));
+                        return;
 #else
 			BX_PANIC(("WRMSR: Unknown register %#x", ECX));
 #endif
 			goto do_exception;
+#endif
 
 	}
 #endif	/* BX_CPU_LEVEL >= 5 */

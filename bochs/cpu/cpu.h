@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.74 2002-09-24 00:44:55 kevinlawton Exp $
+// $Id: cpu.h,v 1.75 2002-09-24 08:29:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2494,9 +2494,6 @@ union {
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl);
   BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl);
-#if BX_SUPPORT_X86_64
-  BX_SMF void    load_ss_null(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl);
-#endif
   BX_SMF void    fetch_raw_descriptor(bx_selector_t *selector,
                                Bit32u *dword1, Bit32u *dword2, Bit8u exception);
   BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value);

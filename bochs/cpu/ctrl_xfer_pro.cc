@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.17 2002-09-24 00:44:55 kevinlawton Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.18 2002-09-24 08:29:05 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1637,30 +1637,32 @@ if ( (raw_ss_selector & 0xfffc) == 0 ) {
 
       parse_descriptor(dword1, dword2, &ss_descriptor);
 
-      /* AR byte must indicate a writable data segment,
-       * else #GP(SS selector) */
-      if ( ss_descriptor.valid==0 ||
-           ss_descriptor.segment==0  ||
-           ss_descriptor.u.segment.executable  ||
-           ss_descriptor.u.segment.r_w==0 ) {
-        BX_PANIC(("iret: SS AR byte not writable code segment"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        return;
-        }
+      if (raw_ss_selector != 0) {
+        /* AR byte must indicate a writable data segment,
+         * else #GP(SS selector) */
+        if ( ss_descriptor.valid==0 ||
+             ss_descriptor.segment==0  ||
+             ss_descriptor.u.segment.executable  ||
+             ss_descriptor.u.segment.r_w==0 ) {
+          BX_PANIC(("iret: SS AR byte not writable code segment"));
+          exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+          return;
+          }
 
-      /* stack segment DPL must equal the RPL of the return CS selector,
-       * else #GP(SS selector) */
-      if ( ss_descriptor.dpl != cs_selector.rpl ) {
-        BX_PANIC(("iret: SS.dpl != CS selector RPL"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        return;
-        }
+        /* stack segment DPL must equal the RPL of the return CS selector,
+         * else #GP(SS selector) */
+        if ( ss_descriptor.dpl != cs_selector.rpl ) {
+          BX_PANIC(("iret: SS.dpl != CS selector RPL"));
+          exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+          return;
+          }
 
-      /* SS must be present, else #NP(SS selector) */
-      if ( ss_descriptor.p==0 ) {
-        BX_PANIC(("iret: SS not present!"));
-        exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        return;
+        /* SS must be present, else #NP(SS selector) */
+        if ( ss_descriptor.p==0 ) {
+          BX_PANIC(("iret: SS not present!"));
+          exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+          return;
+          }
         }
 
 #if KPL64Hacks

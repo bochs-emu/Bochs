@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.15 2002-09-24 00:44:56 kevinlawton Exp $
+// $Id: segment_ctrl_pro.cc,v 1.16 2002-09-24 08:29:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,13 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+
+#define INIT_64_DESCRIPTOR(descriptor)            \
+{                                                    \
+  (descriptor).u.segment.base = 0;                  \
+  (descriptor).u.segment.limit_scaled = 0xffffffff; \
+  (descriptor).valid = 1; \
+}
 
 
 
@@ -337,6 +344,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
           BX_CPU_THIS_PTR iCache.createFetchModeMask(BX_CPU_THIS);
 #endif
 
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      INIT_64_DESCRIPTOR(seg->cache);
+      }
+#endif
+
     }
   else { /* SS, DS, ES, FS, GS */
     seg->selector.value = new_value;
@@ -353,8 +366,6 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   seg->cache.u.segment.base = new_value << 4;
 #endif
 }
-
-
 
 
 #if BX_CPU_LEVEL >= 2
@@ -400,6 +411,12 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 #endif
     temp->u.segment.avl          =  (dword2 & 0x00100000) > 0;
     temp->u.segment.base         |= (dword2 & 0xFF000000);
+
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      INIT_64_DESCRIPTOR(*temp);
+      }
+#endif
     if (temp->u.segment.g) {
       if ( (temp->u.segment.executable==0) && (temp->u.segment.c_ed) )
         temp->u.segment.limit_scaled = (temp->u.segment.limit << 12);
@@ -526,6 +543,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
   if (BX_CPU_THIS_PTR msr.lma) {
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
+      INIT_64_DESCRIPTOR(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
       }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
@@ -546,37 +564,20 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
 
-  if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0 )
-    BX_PANIC(("load_ss(): null selector passed"));
-
-  if ( !BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid ) {
-    BX_PANIC(("load_ss(): invalid selector/descriptor passed."));
-    }
-}
-
 #if BX_SUPPORT_X86_64
-  void
-BX_CPU_C::load_ss_null(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
-{
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
-
-#if KPL64Hacks
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l = 1;
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    INIT_64_DESCRIPTOR(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
+    }
+  else{
 #endif
+    if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0 )
+      BX_PANIC(("load_ss(): null selector passed"));
+
+    if ( !BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid ) {
+      BX_PANIC(("load_ss(): invalid selector/descriptor passed."));
+      }
+  }
 }
-#endif
-
-
 
 #if BX_CPU_LEVEL >= 2
   void
