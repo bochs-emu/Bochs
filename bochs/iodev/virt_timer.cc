@@ -238,8 +238,15 @@ bx_virt_timer_c::unregisterTimer(int timerID) {
   BX_ASSERT(timerID >= 0);
   BX_ASSERT(timerID < BX_MAX_VIRTUAL_TIMERS);
 
+  if (timer[i].active) {
+    BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[i].id));
+    return(0); // Fail.
+    }
+
+
   //No need to prevent doing this to unused timers.
   timer[timerID].inUse = 0;
+  return(1);
 }
 
 void
