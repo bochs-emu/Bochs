@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.12 2002-03-16 13:20:58 vruppert Exp $
+// $Id: sdl.cc,v 1.13 2002-03-17 12:34:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,6 +62,13 @@ struct bitmaps {
   void (*cb)(void);
 };
 
+static struct {
+  unsigned bmp_id;
+  unsigned alignment;
+} hb_entry[BX_MAX_HEADERBAR_ENTRIES];
+
+unsigned bx_headerbar_entries = 0;
+
 SDL_Thread *sdl_thread;
 SDL_Surface *sdl_screen, *sdl_fullscreen;
 SDL_Event sdl_event;
@@ -69,7 +76,8 @@ int sdl_fullscreen_toggle;
 int sdl_grab;
 int res_x, res_y;
 int headerbar_height;
-int headerbar_offset;
+static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
+static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 int textres_x, textres_y;
 int fontwidth = 8, fontheight = 16;
 unsigned tilewidth, tileheight;
@@ -729,26 +737,26 @@ unsigned bx_gui_c::headerbar_bitmap(
     unsigned alignment,
     void (*f)(void))
 {
-  if( bmap_id >= n_sdl_bitmaps ) return 0;
+  unsigned hb_index;
 
-  sdl_bitmaps[bmap_id]->dst.x = headerbar_offset;
-  headerbar_offset += sdl_bitmaps[bmap_id]->src.w;
-  sdl_bitmaps[bmap_id]->cb = f;
-  if( sdl_screen )
-  {
-    SDL_BlitSurface(
-	sdl_bitmaps[bmap_id]->surface,
-	&sdl_bitmaps[bmap_id]->src,
-	sdl_screen,
-	&sdl_bitmaps[bmap_id]->dst);
-    SDL_UpdateRect(
-	sdl_screen,
-	sdl_bitmaps[bmap_id]->dst.x,
-	sdl_bitmaps[bmap_id]->dst.y,
-	sdl_bitmaps[bmap_id]->src.w,
-	sdl_bitmaps[bmap_id]->src.h);
+  if( bmap_id >= (unsigned)n_sdl_bitmaps ) return 0;
+
+  if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
+    BX_PANIC(("too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
+
+  bx_headerbar_entries++;
+  hb_index = bx_headerbar_entries - 1;
+
+  hb_entry[hb_index].bmp_id = bmap_id;
+  hb_entry[hb_index].alignment = alignment;
+  if (alignment == BX_GRAVITY_LEFT) {
+    sdl_bitmaps[bmap_id]->dst.x = bx_bitmap_left_xorigin;
+    bx_bitmap_left_xorigin += sdl_bitmaps[bmap_id]->src.w;
+  } else {
+    bx_bitmap_right_xorigin += sdl_bitmaps[bmap_id]->src.w;
+    sdl_bitmaps[bmap_id]->dst.x = bx_bitmap_right_xorigin;
   }
-  return bmap_id;
+  return hb_index;
 }
 
 
@@ -756,10 +764,27 @@ void bx_gui_c::replace_bitmap(
     unsigned hbar_id,
     unsigned bmap_id)
 {
-  sdl_bitmaps[bmap_id]->dst.x = sdl_bitmaps[hbar_id]->dst.x;
-  sdl_bitmaps[bmap_id]->cb = sdl_bitmaps[hbar_id]->cb;
-  sdl_bitmaps[hbar_id]->dst.x = -1;
-  sdl_bitmaps[hbar_id]->cb = NULL;
+  SDL_Rect hb_dst;
+
+  hb_entry[hbar_id].bmp_id = bmap_id;
+  if( sdl_bitmaps[bmap_id]->dst.x != -1 )
+  {
+    hb_dst = sdl_bitmaps[bmap_id]->dst;
+    if (hb_entry[hbar_id].alignment == BX_GRAVITY_RIGHT) {
+      hb_dst.x = res_x - hb_dst.x;
+    }
+    SDL_BlitSurface(
+        sdl_bitmaps[bmap_id]->surface,
+        &sdl_bitmaps[bmap_id]->src,
+        sdl_screen,
+        &hb_dst);
+    SDL_UpdateRect(
+        sdl_screen,
+        hb_dst.x,
+        sdl_bitmaps[bmap_id]->dst.y,
+        sdl_bitmaps[bmap_id]->src.w,
+        sdl_bitmaps[bmap_id]->src.h );
+  }
 }
 
 
@@ -770,7 +795,9 @@ void bx_gui_c::show_headerbar(void)
   Uint32 disp;
   int rowsleft = headerbar_height;
   int colsleft;
-  int bitmapscount = n_sdl_bitmaps;
+  int bitmapscount = bx_headerbar_entries;
+  unsigned current_bmp;
+  SDL_Rect hb_dst;
 
   if( !sdl_screen ) return;
   disp = sdl_screen->pitch/4;
@@ -793,19 +820,24 @@ void bx_gui_c::show_headerbar(void)
   // go thru the bitmaps and display the active ones
   while( bitmapscount-- )
   {
-    if( sdl_bitmaps[bitmapscount]->dst.x != -1 )
+    current_bmp = hb_entry[bitmapscount].bmp_id;
+    if( sdl_bitmaps[current_bmp]->dst.x != -1 )
     {
+      hb_dst = sdl_bitmaps[current_bmp]->dst;
+      if (hb_entry[bitmapscount].alignment == BX_GRAVITY_RIGHT) {
+        hb_dst.x = res_x - hb_dst.x;
+      }
       SDL_BlitSurface(
-	  sdl_bitmaps[bitmapscount]->surface,
-	  &sdl_bitmaps[bitmapscount]->src,
+	  sdl_bitmaps[current_bmp]->surface,
+	  &sdl_bitmaps[current_bmp]->src,
 	  sdl_screen,
-	  &sdl_bitmaps[bitmapscount]->dst);
+	  &hb_dst);
       SDL_UpdateRect(
 	  sdl_screen,
-	  sdl_bitmaps[bitmapscount]->dst.x,
-	  sdl_bitmaps[bitmapscount]->dst.y,
-	  sdl_bitmaps[bitmapscount]->src.w,
-	  sdl_bitmaps[bitmapscount]->src.h );
+	  hb_dst.x,
+	  sdl_bitmaps[current_bmp]->dst.y,
+	  sdl_bitmaps[current_bmp]->src.w,
+	  sdl_bitmaps[current_bmp]->src.h );
     }
   }
 }
