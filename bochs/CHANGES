@@ -112,7 +112,20 @@ Changes to next release:
   [867045] fix for compiler errors on VC++ by m_suzu
   [838601] support for the over 2GB disk size with MSVC++
 
+- SF patches partially applied
+  [896733] Lazy flags, for more instructions, only 1 src op
+
 - these S.F. bugs were closed
+  #651510 bximage won't create larger than 2GB
+  #759206 bximage fails on Win32 for hd images over 2Gb
+  #759210 Bochs fails on image files over 2Gb on Win32
+  #799785 bximage doesn't work
+  #903345 Problem compiling harddrv.cc
+  #933303 Bochs cannot lseek() HD images > 2GB on W32 platforms
+  #888438 bximage crashes...(hacked fix included)
+  #871720 bximage 2GB file size limit
+  #930368 Can't create big hard drives (>2 GB)
+  #912496 IDIV can cause simulator divide error
   #522111 Host os SIGILL, booting grub from hd
  #1005052 DMA Controller Model Problem
   #552939 Bochs window doesn't resize when win311
