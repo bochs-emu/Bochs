@@ -43,6 +43,7 @@ Changes to next release:
   - general
     - handle cpu reset through port 0x92
   - speaker emulation added (David N. Welton)
+  - PCI IDE controller dummy device added
   - serial
     - multiple serial port support added (4 ports now available)
     - partial raw serial support on win32 (transmit data)
@@ -50,6 +51,7 @@ Changes to next release:
     - multiple parallel port support added (2 ports now available)
   - vga
     - VBE 8 bit DAC support added
+    - VBE memory now registered using DEV_register_memory_handlers()
   - floppy
     - raw floppy access now works on Win9x host (Ben Lunt)
 
@@ -58,6 +60,7 @@ Changes to next release:
     (Ben Lunt)
   - int13_cdrom / 32 bit register update fixes for FreeBSD cdrom boot
     (Fabrice Bellard)
+  - APM and system shutdown support (Fabrice Bellard)
 
 - display libraries
   - status bar with indicators for cdrom, floppy, harddisk and keyboard added
