@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.25 2002-02-01 16:46:27 vruppert Exp $
+// $Id: gui.cc,v 1.26 2002-02-04 20:31:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -227,7 +227,24 @@ bx_gui_c::power_handler(void)
   void
 bx_gui_c::snapshot_handler(void)
 {
-  BX_INFO(( "# SNAPSHOT callback (unimplemented)." ));
+  Bit8u* text_snapshot = NULL;
+  unsigned line_addr, txHeight, txWidth;
+  FILE *OUTPUT;
+
+  bx_vga.get_text_snapshot(&text_snapshot, &txHeight, &txWidth);
+  if (txHeight > 0) {
+    OUTPUT = fopen("snapshot.txt", "w");
+    for (unsigned i=0; i<txHeight; i++) {
+      line_addr = i * txWidth * 2;
+      for (unsigned j=0; j<(txWidth*2); j+=2) {
+        if (OUTPUT) fputc(text_snapshot[line_addr+j], OUTPUT);
+      }
+      fprintf(OUTPUT, "\n");
+    }
+    fclose(OUTPUT);
+  } else {
+    BX_INFO(( "# SNAPSHOT callback (graphics mode unimplemented)." ));
+  }
 }
 
   void

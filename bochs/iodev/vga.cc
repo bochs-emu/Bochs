@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.21 2002-01-24 20:30:45 vruppert Exp $
+// $Id: vga.cc,v 1.22 2002-02-04 20:31:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1822,7 +1822,25 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     }
 }
 
+  void
+bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
+                                                   unsigned *txWidth)
+{
+  unsigned VDE, MSL;
 
+  if (!BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+    *text_snapshot = &BX_VGA_THIS s.text_snapshot[0];
+    VDE = bx_vga.s.CRTC.reg[0x12] |
+          ((bx_vga.s.CRTC.reg[0x07]<<7)&0x100) |
+          ((bx_vga.s.CRTC.reg[0x07]<<3)&0x200);
+    MSL = bx_vga.s.CRTC.reg[0x09] & 0x1f;
+    *txHeight = (VDE+1)/(MSL+1);
+    *txWidth = BX_VGA_THIS s.CRTC.reg[1] + 1;
+  } else {
+    *txHeight = 0;
+    *txWidth = 0;
+  }
+}
 
   void
 bx_vga_c::dump_status(void)
