@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.7 2001-06-11 20:27:23 bdenney Exp $
+ * $Id: siminterface.h,v 1.8 2001-06-11 20:48:12 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -48,8 +48,6 @@ struct bx_cdrom_options
   int inserted;
 };
 
-
-typedef char *string_list_t[0];
 
 class bx_simulator_interface_c {
   int init_done;
