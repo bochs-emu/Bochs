@@ -23,6 +23,9 @@ void we_are_here(void)
 }
 #endif
 
+static unsigned prev_cursor_x=0;
+static unsigned prev_cursor_y=0;
+
 struct bitmaps {
   SDL_Surface *surface;
   SDL_Rect src,dst;
@@ -204,13 +207,19 @@ void bx_gui_c::text_update(
   char *oldText = (char *)old_text;
   char *newText = (char *)new_text;
   unsigned char font_row, *pfont_row;
-  int hchars,fontrows,fontpixels,x,y;
+  unsigned long x,y;
+  int hchars,fontrows,fontpixels;
   int fgcolor_ndx;
   int bgcolor_ndx;
   Uint32 fgcolor;
   Uint32 bgcolor;
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
+  Bit8u cs_start, cs_end, cs_line, mask;
+  Boolean invert;
+
+  cs_start = cursor_state >> 8;
+  cs_end = cursor_state & 0xff;
 
   if( sdl_screen )
   {
@@ -227,11 +236,15 @@ void bx_gui_c::text_update(
   {
     buf = buf_row;
     hchars = textres_x;
+    x = 0;
+    y = 25 - rows;
     do
     {
       // check if char needs to be updated
       if( (old_text[0] != new_text[0])
-	  || (old_text[1] != new_text[1]) )
+	  || (old_text[1] != new_text[1])
+	  || ((y == cursor_y) && (x == cursor_x))
+	  || ((y == prev_cursor_y) && (x == prev_cursor_x)) )
       {
 
 	// Get Foreground/Background pixel colors
@@ -239,6 +252,7 @@ void bx_gui_c::text_update(
 	bgcolor_ndx = (new_text[1] >> 4) & 0x07;
 	fgcolor = palette[fgcolor_ndx];
 	bgcolor = palette[bgcolor_ndx];
+	invert = ( (y == cursor_y) && (x == cursor_x) && (cs_start < cs_end) );
 	
 	// Display this one char
 	fontrows = fontheight;
@@ -248,9 +262,14 @@ void bx_gui_c::text_update(
 	{
 	  font_row = *pfont_row++;
 	  fontpixels = fontwidth;
+	  cs_line = (16 - fontrows);
+	  if( (invert) && (cs_line >= cs_start) && (cs_line <= cs_end) )
+	    mask = 0x80;
+	  else
+	    mask = 0x00;
 	  do
 	  {
-	    if( (font_row & 0x80) == 0 )
+	    if( (font_row & 0x80) == mask )
 	      *buf = bgcolor;
 	    else
 	      *buf = fgcolor;
@@ -270,6 +289,7 @@ void bx_gui_c::text_update(
       // select next char in old/new text
       new_text+=2;
       old_text+=2;
+      x++;
 	
     // process one entire horizontal row
     } while( --hchars );
@@ -277,6 +297,8 @@ void bx_gui_c::text_update(
     // go to next character row location
     buf_row += disp * fontheight;
   } while( --rows );
+  prev_cursor_x = cursor_x;
+  prev_cursor_y = cursor_y;
 }
 
 
