@@ -2,6 +2,7 @@
 Patch name: patch.sparsedisk-justinsb
 Author: Justin SB
 Date: 27 Jan 2003
+Status: Obsolete, replaced by patch.harddisk-modes
 
 Detailed description:
 
@@ -1076,7 +1077,7 @@ diff -u -r1.17 bximage.c
 -/* 
 +/*
   * misc/bximage.c
-  * $Id: patch.sparsedisk-justinsb,v 1.1 2003-01-29 18:20:19 cbothamy Exp $
+  * $Id: patch.sparsedisk-justinsb,v 1.2 2003-03-04 21:05:38 cbothamy Exp $
   *
 @@ -16,6 +16,18 @@
  #endif
@@ -1095,7 +1096,7 @@ diff -u -r1.17 bximage.c
 +#endif // BX_SPARSE_HD_SUPPORT
 +
  char *EOF_ERR = "ERROR: End of input";
- char *rcsid = "$Id: patch.sparsedisk-justinsb,v 1.1 2003-01-29 18:20:19 cbothamy Exp $";
+ char *rcsid = "$Id: patch.sparsedisk-justinsb,v 1.2 2003-03-04 21:05:38 cbothamy Exp $";
  char *divider = "========================================================================";
 @@ -190,12 +202,41 @@
    return 0;
