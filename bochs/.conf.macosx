@@ -23,3 +23,5 @@ export LDFLAGS
 	    --enable-all-optimizations
 
 unset echo
+
+exit 0
