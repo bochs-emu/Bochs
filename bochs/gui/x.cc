@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.21 2001-10-03 13:10:37 bdenney Exp $
+// $Id: x.cc,v 1.22 2001-10-11 13:03:35 yakovlev Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -548,7 +548,7 @@ load_font(void)
 
   /* Load font and get font information structure. */
   if ((font_info = XLoadQueryFont(bx_x_display,"vga")) == NULL) {
-    BX_PANIC(("Could not open vga font"));
+    BX_PANIC(("Could not open vga font. See docs-html/install.html"));
     }
 }
 
