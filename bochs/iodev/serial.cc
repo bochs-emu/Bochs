@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.50 2004-03-09 21:58:37 vruppert Exp $
+// $Id: serial.cc,v 1.51 2004-03-09 22:17:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -762,7 +762,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_SER_THIS s[port].modem_cntl.out1 = new_b2;
       BX_SER_THIS s[port].modem_cntl.out2 = new_b3;
 
-      if (new_b7 != BX_SER_THIS s[port].modem_cntl.local_loopback) {
+      if (new_b4 != BX_SER_THIS s[port].modem_cntl.local_loopback) {
         BX_SER_THIS s[port].modem_cntl.local_loopback = new_b4;
         if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
           /* transition to loopback mode */
