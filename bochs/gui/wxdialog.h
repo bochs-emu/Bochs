@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.12 2002-08-30 07:03:50 bdenney Exp $
+// $Id: wxdialog.h,v 1.13 2002-08-31 00:35:25 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -330,6 +330,119 @@ open for debate.  Whoever writes the wxwindows code for any of these
 screens gets several thousand votes!
 
 
+
+Idea for large configuration dialog, based on Netscape's Edit:Preferences
+dialog box.  Here's a sketch of a dialog with all the components that can be
+configured in a list on the left, and the details of the selected component
+on the right.  This is a pretty familiar structure that's used in a lot of
+applications these days.  In the first sketch, "IDE Interface" is selected on
+the left, and the details of the IDE devices are shown on the right.
+
++-----Configure Bochs-------------------------------------------------------+
+|                                                                           |
+|  +--------------------+  +-- IDE Controller ---------------------------+  |
+|  | |-CPU              |  |                                             |  |
+|  | |                  |  | Master device:                              |  |
+|  | |-Memory           |  |   [X] Enable Hard Disk 0                    |  |
+|  | |                  |  |                                             |  |
+|  | |-Video            |  | Slave device (choose one):                  |  |
+|  | |                  |  |   [ ] No slave device                       |  |
+|  | |-Floppy disks     |  |   [ ] Hard Disk 1                           |  |
+|  | | |-Drive 0        |  |   [X] CD-ROM                                |  |
+|  | | |-Drive 1        |  |                                             |  |
+|  | |                  |  +---------------------------------------------+  |
+|  |***IDE controller***|                                                   |
+|  | | |-Hard Drive 0   |                                                   |
+|  | | |-CD-ROM drive   |                                                   |
+|  | |                  |                                                   |
+|  | |-Keyboard         |                                                   |
+|  | |                  |                                                   |
+|  | |-Networking       |                                                   |
+|  | |                  |                                                   |
+|  | |-Sound            |                                                   |
+|  |                    |                                                   |
+|  +--------------------+                                                   |
+|                                                     [Help] [Cancel] [Ok]  |
++---------------------------------------------------------------------------+
+
+If you click on Hard Drive 0 in the component list (left), then the
+whole right panel changes to show the details of the hard drive.
+
++-----Configure Bochs-------------------------------------------------------+
+|                                                                           |
+|  +--------------------+   +---- Configure Hard Drive 0 ----------------+  |
+|  | |-CPU              |   |                                            |  |
+|  | |                  |   |  [X] Enabled                               |  |
+|  | |-Memory           |   |                                            |  |
+|  | |                  |   +--------------------------------------------+  |
+|  | |-Video            |                                                   |
+|  | |                  |   +---- Disk Image ----------------------------+  |
+|  | |-Floppy disks     |   |                                            |  |
+|  | | |-Drive 0        |   |  File name: [___________________] [Browse] |  |
+|  | | |-Drive 1        |   |  Geometry: cylinders [____]                |  |
+|  | |                  |   |            heads [____]                    |  |
+|  | |-IDE controller   |   |            sectors/track [____]            |  |
+|  | |***Hard Drive 0***|   |                                            |  |
+|  | | |-CD-ROM drive   |   |  Size in Megabytes: 38.2                   |  |
+|  | |                  |   |       [Enter size/Compute Geometry]        |  |
+|  | |-Keyboard         |   |                                            |  |
+|  | |                  |   |                             [Create Image] |  |
+|  | |-Networking       |   +--------------------------------------------+  |
+|  | |                  |                                                   |
+|  | |-Sound            |                                                   |
+|  |                    |                                                   |
+|  +--------------------+                                                   |
+|                                                     [Help] [Cancel] [Ok]  |
++---------------------------------------------------------------------------+
+
+Or if you choose the CD-ROM, you get to edit the settings for it.
+
++---- Configure Bochs ------------------------------------------------------+
+|                                                                           |
+|  +--------------------+  +-- CD-ROM Device ----------------------------+  |
+|  | |-CPU              |  |                                             |  |
+|  | |                  |  |  [ ] Enable Emulated CD-ROM                 |  |
+|  | |-Memory           |  |                                             |  |
+|  | |                  |  +---------------------------------------------+  |
+|  | |-Video            |                                                   |
+|  | |                  |  +-- CD-ROM Media -----------------------------+  |
+|  | |-Floppy disks     |  |                                             |  |
+|  | | |-Drive 0        |  |  Bochs can use a physical CD-ROM drive as   |  |
+|  | | |-Drive 1        |  |  the data source, or use an image file.     |  |
+|  | |                  |  |                                             |  |
+|  | |-IDE controller   |  |   [X]  Ejected                              |  |
+|  | | |-Hard Drive 0   |  |   [ ]  Physical CD-ROM drive /dev/cdrom     |  |
+|  |*****CD-ROM drive***|  |   [ ]  Disk image file: [________] [Browse] |  |
+|  | |                  |  |                                             |  |
+|  | |-Keyboard         |  +---------------------------------------------+  |
+|  | |                  |                                                   |
+|  | |-Networking       |                                                   |
+|  | |                  |                                                   |
+|  | |-Sound            |                                                   |
+|  |                    |                                                   |
+|  +--------------------+                                                   |
+|                                                     [Help] [Cancel] [Ok]  |
++---------------------------------------------------------------------------+
+
+The CD-ROM media can still be configured.  In this context we can just show the
+Media section.  The same code can be written to serve both purposes.  This is
+the dialog that would appear when you click the CD-ROM button on the toolbar
+at runtime.
+
++-- CD-ROM Media -----------------------------+
+|                                             |
+|  Bochs can use a physical CD-ROM drive as   |
+|  the data source, or use an image file.     |
+|                                             |
+|   [X]  Ejected                              |
+|   [ ]  Physical CD-ROM drive /dev/cdrom     |
+|   [ ]  Disk image file: [________] [Browse] |
+|                                             |
+|                                             |
+|                       [Help] [Cancel] [Ok]  |
++---------------------------------------------+
+
+
 ////////////////////////////////////////////////////////////////////////////
 // ChooseConfigDialog
 ////////////////////////////////////////////////////////////////////////////
@@ -480,6 +593,13 @@ you can view/edit/load/save key mappings, produce any combination of keys
 choose IPS
 select starting time for CMOS clock
 turn on real time PIT or not
+
+This dialog can easily allow people to tune the IPS setting, or
+various other speed-related values, at runtime.  If you're running
+some time-sensitive program you could adjust IPS until it's the right
+speed, or if Bochs is wasting all of your CPU's cycles you could turn
+a dial to some periodic delays to allow other processes a chance to
+complete.
 
 ////////////////////////////////////////////////////////////////////////////
 // OtherOptionsDialog
