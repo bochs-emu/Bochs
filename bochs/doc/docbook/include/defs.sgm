@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/include/defs.sgm
-$Id: defs.sgm,v 1.4 2001-09-16 06:42:20 bdenney Exp $
+$Id: defs.sgm,v 1.5 2001-11-13 06:57:33 bdenney Exp $
 
 This file is included by all Bochs docbook files, so that the
 definitions can be used anywhere in the documentation.
@@ -21,6 +21,7 @@ draft mode.
 
 <!ENTITY bochswebsite '<ulink url="http://bochs.sourceforge.net">Bochs web site</ulink>'>
 <!ENTITY bochs-sf-net '<ulink url="http://bochs.sourceforge.net">bochs.sourceforge.net</ulink>'>
+<!ENTITY devlist '<link linkend="mailinglist">bochs-developers mailing list</link>'>
 <!ENTITY bochsdir '<varname>$BOCHS</varname>'>
 <!ENTITY Makefile '<filename>Makefile</filename>'>
 
