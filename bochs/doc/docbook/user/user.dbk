@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.66 2002-11-20 19:18:26 bdenney Exp $
+$Id: user.dbk,v 1.67 2002-11-20 20:13:35 bdenney Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -337,6 +337,13 @@ currently work with.
     <entry>VGA</entry>
     <entry>Yes</entry>
     <entry>VGA color graphics emulation in a window
+    </entry>
+  </row>
+  <row>
+    <entry>VESA (Display) Support</entry>
+    <entry>Yes</entry>
+    <entry>Currently resolutions up to 1024x768x8pp are supported (so no
+    16/24/32 modes). You must enable vbe and use the LGPL'ed VGABIOS.
     </entry>
   </row>
   <row>
