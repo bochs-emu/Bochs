@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.216 2002-12-24 09:14:54 cbothamy Exp $
+// $Id: main.cc,v 1.217 2003-01-10 20:33:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2393,6 +2393,7 @@ parse_line_unformatted(char *context, char *line)
   char *params[MAX_PARAMS_LEN];
   int num_params;
   bx_bool inquotes = 0;
+  bx_bool comment = 0;
 
   memset(params, 0, sizeof(params));
   if (line == NULL) return 0;
@@ -2410,12 +2411,15 @@ parse_line_unformatted(char *context, char *line)
     ptr = strtok(line, " ");
   else
     ptr = strtok(line, ":");
-  while (ptr) {
+  while ((ptr) && (!comment)) {
     string_i = 0;
     for (i=0; i<strlen(ptr); i++) {
       if (ptr[i] == '"')
         inquotes = !inquotes;
-      else {
+      else if ((ptr[i] == '#') && (strncmp(line+i, "#include", 8)) && !inquotes) {
+        comment = 1;
+        break;
+      } else {
 #if BX_HAVE_GETENV
         // substitute environment variables.
         if (ptr[i] == '$') {
@@ -2449,6 +2453,7 @@ parse_line_unformatted(char *context, char *line)
       }
     }
     string[string_i] = '\0';
+    if (string_i == 0) break;
     if ( params[num_params] != NULL )
     {
         free(params[num_params]);
