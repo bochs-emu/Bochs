@@ -109,6 +109,7 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
 
   if (v8086_mode())
   {
+#if BX_CPU_LEVEL >= 4
      if (BX_CPU_THIS_PTR cr4.get_VME())
      {
        Bit16u io_base;
@@ -134,6 +135,7 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
        }
      }
      else  // VME is off
+#endif
      {
        if (BX_CPU_THIS_PTR get_IOPL() < 3)
        {

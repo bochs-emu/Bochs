@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.53 2005-03-03 20:24:51 sshwarts Exp $
+// $Id: access.cc,v 1.54 2005-03-12 19:34:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,11 +58,6 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 #endif
   if (protected_mode()) {
     if (seg->cache.valid==0) {
-      BX_ERROR(("seg = %s", BX_CPU_THIS_PTR strseg(seg)));
-      BX_ERROR(("seg->selector.value = %04x", (unsigned) seg->selector.value));
-      BX_ERROR(("write_virtual_checks: valid bit = 0"));
-      BX_ERROR(("CS: %04x", (unsigned) BX_CPU_THIS_PTR sregs[1].selector.value));
-      BX_ERROR(("IP: %04x", (unsigned) BX_CPU_THIS_PTR prev_eip));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -126,9 +121,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
     if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
           || (length-1 > seg->cache.u.segment.limit_scaled))
     {
-      //BX_INFO(("write_virtual_checks() SEG EXCEPTION:  %x:%x + %x",
-      //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length));
-      if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
+      if (seg == & BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]) exception(BX_SS_EXCEPTION, 0, 0);
       else exception(BX_GP_EXCEPTION, 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
@@ -157,13 +150,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 #endif
   if (protected_mode()) {
     if (seg->cache.valid==0) {
-      BX_ERROR(("seg = %s", BX_CPU_THIS_PTR strseg(seg)));
-      BX_ERROR(("seg->selector.value = %04x", (unsigned) seg->selector.value));
-      //BX_ERROR(("read_virtual_checks: valid bit = 0"));
-      //BX_ERROR(("CS: %04x", (unsigned)
-      //   BX_CPU_THIS_PTR sregs[1].selector.value));
-      //BX_ERROR(("IP: %04x", (unsigned) BX_CPU_THIS_PTR prev_eip));
-      //debug(EIP);
+      BX_ERROR(("seg[%s]->selector.value = %04x", 
+         BX_CPU_THIS_PTR strseg(seg), (unsigned) seg->selector.value));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -250,7 +238,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
     if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
         || (length-1 > seg->cache.u.segment.limit_scaled))
     {
-      if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
+      if (seg == & BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]) exception(BX_SS_EXCEPTION, 0, 0);
       else exception(BX_GP_EXCEPTION, 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
