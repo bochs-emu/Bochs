@@ -234,6 +234,119 @@ explained what I was seeing.
 
 
 
+-------------
+tracking some kind of deadlock bug in Linux.
+seems to be in ReadMailcap, src/unix/mimetypes.cpp in wxwindows sources
+src/unix/mimetype.cpp:2312
+
+from line 2571
+if ( lhs.Contains (wxT("test")))
+    {
+    if ( ! rhs.IsEmpty() )
+	{
+	if ( wxSystem(rhs) == 0 ) {
+	    // ok, test passed
+	    test_passed = TRUE;
+	    wxLogTrace(TRACE_MIME,
+		       wxT("Test '%s' for mime type '%s' succeeded."),
+		       rhs.c_str(), strType.c_str());
+
+    }
+    else {
+	    test_passed = FALSE;
+	    wxLogTrace(TRACE_MIME,
+		       wxT("Test '%s' for mime type '%s' failed."),
+		       rhs.c_str(), strType.c_str());
+	}
+    }
+    verbfound = FALSE;
+    }
+
+it's calling wxSystem (rhs) where rhs= {m_pchData = 0x81e7cec "test %{encapsulation}=entity", 
+  static npos = 4294967195}
+
+0x407418b8 in system (line=0x81e7cec "test %{encapsulation}=entity")
+    at wrapsyscall.c:120
+
+pthread_setcanceltype (type=1, oldtype=0xbfffef64) at internals.h:339
+339     internals.h: No such file or directory.
+        in internals.h
+40      cancel.c: No such file or directory.
+        in cancel.c
+__libc_system (line=0x81e7cec "test %{encapsulation}=entity")
+    at ../sysdeps/posix/system.c:46
+55      in ../sysdeps/posix/system.c
+__sigaction (sig=2, act=0xbfffeebc, oact=0xbfffee30)
+    at ../sysdeps/unix/sysv/linux/i386/sigaction.c:58
+58      ../sysdeps/unix/sysv/linux/i386/sigaction.c: No such file or directory.
+        in ../sysdeps/unix/sysv/linux/i386/sigaction.c
+__errno_location () at internals.h:339
+__sigaction (sig=2, act=0xbfffeebc, oact=0xbfffee30)
+    at ../sysdeps/unix/sysv/linux/i386/sigaction.c:63
+63      ../sysdeps/unix/sysv/linux/i386/sigaction.c: No such file or directory.
+        in ../sysdeps/unix/sysv/linux/i386/sigaction.c
+__libc_system (line=0x81e7cec "test %{encapsulation}=entity")
+    at ../sysdeps/posix/system.c:57
+57      ../sysdeps/posix/system.c: No such file or directory.
+        in ../sysdeps/posix/system.c
+118     ../sysdeps/unix/sysv/linux/bits/sigset.h: No such file or directory.
+        in ../sysdeps/unix/sysv/linux/bits/sigset.h
+__errno_location () at internals.h:339
+339     internals.h: No such file or directory.
+        in internals.h
+__libc_system (line=0x81e7cec "test %{encapsulation}=entity")
+    at ../sysdeps/posix/system.c:75
+75      ../sysdeps/posix/system.c: No such file or directory.
+        in ../sysdeps/posix/system.c
+__sigprocmask (how=0, set=0xbfffed24, oset=0xbfffeca4)
+    at ../sysdeps/unix/sysv/linux/sigprocmask.c:44
+44      ../sysdeps/unix/sysv/linux/sigprocmask.c: No such file or directory.
+        in ../sysdeps/unix/sysv/linux/sigprocmask.c
+__libc_waitpid (pid=29099, stat_loc=0xbfffec90, options=0)
+    at ../sysdeps/unix/sysv/linux/waitpid.c:26
+26      ../sysdeps/unix/sysv/linux/waitpid.c: No such file or directory.
+        in ../sysdeps/unix/sysv/linux/waitpid.c
+pthread_setcanceltype (type=0, oldtype=0x0) at internals.h:339
+339     internals.h: No such file or directory.
+        in internals.h
+
+this one returned after I stepped for a long time.
+
+
+Ok this is bizarre.
+I turned off the SIGINT handler so that I could get back into gdb after
+a problem occurs.  Also I added wxLog::AddTraceMask (_T("mime"));
+to MyApp::OnInit() so that I'd see more details as it's parsing the
+mailcap.
+
+diff -u -r1.58.2.9 main.cc
+--- main.cc     18 Mar 2002 20:03:51 -0000      1.58.2.9
++++ main.cc     19 Mar 2002 15:20:58 -0000
+@@ -1134,7 +1134,8 @@
+ // if not using debugger, then we can take control of SIGINT.
+//  // If using debugger, it needs control of this.
+//   #if BX_DEBUGGER==0
+//   -  signal(SIGINT, bx_signal_handler);
+//   +  // disable signal handler so that gdb can get it
+//   +  //signal(SIGINT, bx_signal_handler);
+//    #endif
+//     
+//      #if BX_SHOW_IPS
+
+Now what happens is that when I try to create that file-open dialog,
+it runs to a certain point and stops forever
+[Trace] 10:05:21: (mime) --- Parsing mailcap file '/etc/mailcap' ---
+[Trace] 10:05:21: (mime) In Add to Mime data 'audio/mod' with 1 entries and 0 exts ---
+[Trace] 10:05:21: (mime) In Add to Mime data 'image/*' with 1 entries and 0 exts ---
+[Trace] 10:05:21: (mime) In Add to Mime data 'video/*' with 1 entries and 0 exts ---
+[Trace] 10:05:21: (mime) In Add to Mime data 'video/mpeg' with 1 entries and 0 exts ---
+
+Then, if I press Control C to get into debugger, and then continue, it
+continues through the ReadMailcap and successfully shows the dialog.
+
+
+
+
 -------------------------------------------------------------
 Bochs x86 Pentium Emulator
 Upated: Mon Mar 11 12:30:24  2002
