@@ -919,6 +919,9 @@ COMMAND_SEPARATOR="&& \\"
 CD_UP_ONE="echo done"
 CD_UP_TWO="echo done"
 
+INSTALL_TARGET=install_unix
+INSTALL_LIST_FOR_PLATFORM=
+
 if test "$with_x11" = yes; then
   AC_MSG_RESULT(X windows)
   if test "$no_x" = yes; then
@@ -928,11 +931,13 @@ if test "$with_x11" = yes; then
   AC_DEFINE(BX_WITH_X11, 1)
   GUI_OBJS='$(GUI_OBJS_X11)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_X)'
+  INSTALL_LIST_FOR_PLATFORM='$(INSTALL_LIST_X11)'
 elif test "$with_win32" = yes; then
   AC_MSG_RESULT(win32)
   AC_DEFINE(BX_WITH_WIN32, 1)
   GUI_OBJS='$(GUI_OBJS_WIN32)'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32)'
+  INSTALL_TARGET='install_win32'
 elif test "$with_beos" = yes; then
   AC_MSG_RESULT(beos)
   AC_DEFINE(BX_WITH_BEOS, 1)
@@ -952,6 +957,7 @@ elif test "$with_win32_vcpp" = yes; then
   AC_MSG_RESULT(win32-vcpp)
   AC_DEFINE(BX_WITH_WIN32, 1)
   GUI_OBJS='$(GUI_OBJS_WIN32)'
+  INSTALL_TARGET='install_win32'
   GUI_LINK_OPTS='$(GUI_LINK_OPTS_WIN32_VCPP)'
 
   CC="cl"
@@ -1050,6 +1056,8 @@ if test ! -d instrument; then
   mkdir instrument
 fi
 
+AC_SUBST(INSTALL_TARGET)
+AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
 AC_SUBST(RFB_LIBS)
 AC_SUBST(GUI_OBJS)
 AC_SUBST(GUI_LINK_OPTS)
