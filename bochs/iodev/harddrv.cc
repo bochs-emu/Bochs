@@ -95,7 +95,7 @@ bx_hard_drive_c::~bx_hard_drive_c(void)
 bx_hard_drive_c::init(bx_devices_c *d, bx_cmos_c *cmos)
 {
   BX_HD_THIS devices = d;
-	BX_DEBUG(("Init $Id: harddrv.cc,v 1.30 2001-09-15 13:35:42 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: harddrv.cc,v 1.31 2001-09-19 15:10:38 bdenney Exp $"));
 
   /* HARD DRIVE 0 */
 
@@ -1605,7 +1605,7 @@ BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 	      }
         // non-standard commands
         case 0xf0: // Exabyte enable nest command
-	  BX_INFO(("Not implemented command"));
+	  BX_INFO(("Not implemented command 0xf0: exabyte enable nest"));
           command_aborted(value);
           break;
 
