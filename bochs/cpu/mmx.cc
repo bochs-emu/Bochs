@@ -1408,7 +1408,7 @@ void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
 
   if (i->modC0()) {
-    BX_PANIC(("MOVNTQ_MqPq: must be memory reference"));
+    BX_INFO(("MOVNTQ_MqPq: must be memory reference"));
     UndefinedOpcode(i);
   }
 

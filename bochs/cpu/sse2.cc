@@ -1259,7 +1259,7 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
 
   if (i->modC0()) {
-    BX_PANIC(("MOVNTI_MdGd: must be memory reference"));
+    BX_INFO(("MOVNTI_MdGd: must be memory reference"));
     UndefinedOpcode(i);
   }
 

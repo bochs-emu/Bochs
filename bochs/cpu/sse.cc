@@ -264,7 +264,14 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BX_PANIC(("MOVNTPS_MdqVps: SSE instruction still not implemented"));
+  if (i->modC0()) {
+    BX_INFO(("MOVNTPS_MdqVps: must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  BxPackedXmmRegister val128 = BX_READ_XMM_REG(i->nnn());
+  writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *)(&val128));
+
 #else
   BX_INFO(("MOVNTPS_MdqVps: SSE not supported in current configuration"));
   UndefinedOpcode(i);
