@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.150 2004-09-29 16:48:56 vruppert Exp $
+$Id: user.dbk,v 1.151 2004-10-10 07:31:22 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3593,12 +3593,9 @@ address.  For the ethertap module, you must use fe:fd:00:00:00:01.  There may
 be other restrictions too.  To be safe, just use the b0:c4... address.
 
 ethmod: The ethmod value defines which low level OS specific module to be 
-used to access pysical ethernet interface. Current implemented values include :
- - fbsd : ethernet on freebsd and openbsd
- - linux : ethernet on linux
- - win32 : ethernet on win32
- - tap : ethernet through a linux tap interface
- - tuntap : ethernet through a linux tuntap interface
+used to access physical ethernet interface. You can also specify a network
+simulator or a module with no input/output ("null"). See the table below for
+currently supported values.
 
 ethdev: The ethdev value is the name of the network interface on your host
 platform.  On UNIX machines, you can get the name by running ifconfig.  On
@@ -3614,6 +3611,103 @@ Bochs execution. The network interface name is supplied to the script
 as first parameter
 </screen>
 </para>
+
+<para>
+The following table shows the available ethernet modules with description,
+whether the "ethdev" and "script" parameters are used or not and the Bochs
+version where this module was added.
+</para>
+<table><title>Ethernet modules</title>
+<tgroup cols="5" align="left" colsep="1" rowsep="1">
+<thead>
+  <row>
+    <entry>Module</entry>
+    <entry>Description</entry>
+    <entry>ethdev</entry>
+    <entry>script</entry>
+    <entry>Bochs version</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>arpback</entry>
+    <entry>ARP simulator - disabled by default.
+    </entry>
+    <entry>No</entry>
+    <entry>No</entry>
+    <entry>1.3</entry>
+  </row>
+  <row>
+    <entry>fbsd</entry>
+    <entry>FreeBSD / OpenBSD packetmover.
+    </entry>
+    <entry>Yes</entry>
+    <entry>No</entry>
+    <entry>1.0</entry>
+  </row>
+  <row>
+    <entry>linux</entry>
+    <entry>Linux packetmover - 'root' privileges required,
+    no connection to the host machine.
+    </entry>
+    <entry>Yes</entry>
+    <entry>No</entry>
+    <entry>1.3</entry>
+  </row>
+  <row>
+    <entry>null</entry>
+    <entry>Null packetmover. All packets are discarded, but logged to a
+    few files.
+    </entry>
+    <entry>No</entry>
+    <entry>No</entry>
+    <entry>1.0</entry>
+  </row>
+  <row>
+    <entry>tap</entry>
+    <entry>TAP packetmover.
+    </entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+    <entry>1.4</entry>
+  </row>
+  <row>
+    <entry>tuntap</entry>
+    <entry>TUN/TAP packetmover - see <link linkend="config-tuntap">
+    Configuring and using a tuntap network interface</link>.
+    </entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+    <entry>2.0</entry>
+  </row>
+  <row>
+    <entry>vde</entry>
+    <entry>VDE packetmover - disabled by default.
+    </entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+    <entry>2.2</entry>
+  </row>
+  <row>
+    <entry>vnet</entry>
+    <entry>ARP, ping (ICMP-echo) and DHCP simulator. The virtual host uses
+    192.168.10.1. DHCP assigns 192.168.10.2 to the guest.
+    </entry>
+    <entry>No</entry>
+    <entry>No</entry>
+    <entry>2.2</entry>
+  </row>
+  <row>
+    <entry>win32</entry>
+    <entry>Win32 packetmover - WinPCap driver required.
+    </entry>
+    <entry>Yes</entry>
+    <entry>No</entry>
+    <entry>1.3</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
 </section>
 
 <section><title>keyboard_mapping</title>
@@ -4935,18 +5029,21 @@ option <link linkend="bochsopt-clock">clock</link>.
 </section>
 
 
-<section id="loop-device-usage"> <title>Linux: Mounting a disk image using the loop device</title>
+<section id="loop-device-usage"><title>Mounting a disk image using the loop device</title>
+
 <para>
-This section was contributed by Volker Ruppert.  It describes how to
-access a floppy or hard disk image within Linux using the loop device.
-Why would you want to do this?  Let's say you have made a small Linux 
-disk image for Bochs, and you want to install some more software on it.
-You have already downloaded the software onto your real system, so now
+This section describes how to access a floppy or hard disk image within Linux
+using the loop device. Why would you want to do this?  Let's say you have made
+a small Linux disk image for Bochs, and you want to install some more software
+on it. You have already downloaded the software onto your real system, so now
 you want to transfer it to the Bochs disk image.  A fast way to transfer
 the files is to mount the disk image using the loop device.
 </para>
+
+<section><title>...on Linux</title>
+
 <para>
-Here is what Volker writes:
+This section was contributed by Volker Ruppert.
 <screen>
 Today I have made some tests with the loop device, because I want to exchange 
 files with the bochs disk images.  This is what I found out:
@@ -4981,11 +5078,54 @@ files with the bochs disk images.  This is what I found out:
 3.  The hard disk image access doesn't work if the image contains more than
     one partition.
 
-4.  I have made this tests with linux and I don't know how
+4.  I have made this tests with Linux and I don't know how
     this could be done with other operating systems.
 </screen>
 </para>
-</section>  <!-- end of Linux: Mounting a disk image using the loop device -->
+
+</section>
+
+<section><title>...on FreeBSD</title>
+
+<para>
+This section was contributed by Alexander Schuch.
+</para>
+<para>
+The following example mounts a Windows 95 hard disk image called "Windows 95 B
+(2031-16-63)" into the FreeBSD file system.  It is specific to FreeBSD 5.x; for
+hints on how to do the same task on FreeBSD 4.x, or for more information in
+general, check the proper section of the FreeBSD handbook:
+<ulink url="http://www.freebsd.org/doc/en/books/handbook/disks-virtual.html">Network, Memory, and File-Backed File Systems</ulink>.
+You can use the same procedure for mounting floppy disk images.
+</para>
+
+<para>
+<screen>
+# mdconfig -a -t vnode -f "Windows 95 B (2031-16-63)"
+# mount -t msdosfs /dev/md0s1 /mnt
+</screen>
+If you already have other md devices configured, you need to substitute md0s1
+with, for example, md6s1.
+</para>
+
+<para>
+Once you are done working with the image, unmount the md device and detach it.
+<screen>
+# umount /mnt
+# mdconfig -d -u 0
+</screen>
+And again, if there are other md devices configured, use the proper device
+number.  In case you forgot the number, just ask mdconfig, like:
+<screen>
+# mdconfig -l
+md7
+# mdconfig -d -u 7
+</screen>
+</para>
+
+</section>
+
+</section>  <!-- end of Mounting a disk image using the loop device -->
 
 <section id="SMP"><title>Simulating a Symmetric Multiprocessor (SMP) Machine</title>
 <para>
@@ -9586,7 +9726,7 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.150 2004-09-29 16:48:56 vruppert Exp $
+        $Id: user.dbk,v 1.151 2004-10-10 07:31:22 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
