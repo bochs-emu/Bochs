@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.21 2002-09-03 05:32:49 bdenney Exp $
+// $Id: wxdialog.h,v 1.22 2002-09-03 08:53:41 bdenney Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWindows dialogs for Bochs
@@ -556,57 +556,6 @@ DECLARE_EVENT_TABLE()
 };
 
 ////////////////////////////////////////////////////////////////////////////
-// ConfigKeyboardDialog
-////////////////////////////////////////////////////////////////////////////
-// ConfigKeyboardDialog allows the user to edit settings related to the
-// keyboard.
-// +--- Configure Keyboard ----------------------------------------+
-// |                                                               |
-// |           Keyboard type: [XT]                                 |
-// |   Keyboard serial delay: [_______]                            |
-// |             Paste delay: [_______]                            |
-// |                                                               |
-// |  Enable keyboard mapping: [ ]                                 |
-// |              Keymap file: [__________________] [Browse]       |
-// |                                                               |
-// |                                    [ Help ] [ Cancel ] [ Ok ] |
-// +---------------------------------------------------------------+
-//
-class ConfigKeyboardDialog: public wxDialog
-{
-private:
-#define CONFIG_KEYBOARD_TITLE "Configure Keyboard"
-#define CONFIG_KEYBOARD_LABELS { "Keyboard type:", "Keyboard serial delay:", "Paste delay:", "Enable keyboard mapping:", "Keymap file:" }
-#define CONFIG_KEYBOARD_N_LABELS 5
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
-  wxBoxSizer *mainSizer, *buttonSizer;
-  wxFlexGridSizer *gridSizer;
-  wxChoice *type;
-  wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
-  wxCheckBox *enableKeymap;
-  void EnableChanged () {
-    if (mappingFile) mappingFile->Enable (enableKeymap->GetValue ());
-  }
-public:
-  ConfigKeyboardDialog(wxWindow* parent, wxWindowID id);
-  void OnEvent (wxCommandEvent& event);
-  int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void AddType (wxString name) { type->Append (name); }
-  void SetType (int val) { type->SetSelection (val); }
-  int GetType () { return type->GetSelection (); }
-  void SetSerialDelay (int val) { SetTextCtrl (serialDelay, "%d", val); }
-  int GetSerialDelay () { return GetTextCtrlInt (serialDelay); }
-  void SetPasteDelay (int val) { SetTextCtrl (pasteDelay, "%d", val); }
-  int GetPasteDelay () { return GetTextCtrlInt (pasteDelay); }
-  void SetKeymapEnable (bool val) { enableKeymap->SetValue (val); EnableChanged (); }
-  bool GetKeymapEnable () { return enableKeymap->GetValue (); }
-  void SetKeymap (wxString file) { mappingFile->SetValue (file); }
-  wxString GetKeymap () { return mappingFile->GetValue (); }
-DECLARE_EVENT_TABLE()
-};
-
-////////////////////////////////////////////////////////////////////////////
 // ConfigSoundDialog
 ////////////////////////////////////////////////////////////////////////////
 // 
@@ -643,19 +592,6 @@ DECLARE_EVENT_TABLE()
 class ParamDialog: public wxDialog 
 {
 private:
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
-  wxBoxSizer *mainSizer, *buttonSizer;
-  wxFlexGridSizer *gridSizer;
-  wxChoice *type;
-  wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
-  wxCheckBox *enableKeymap;
-  void EnableChanged ();
-  // hash table that maps the ID of a wxWindows control (e.g. wxChoice,
-  // wxTextCtrl) to the associated ParamStruct object.  Data in the hash table
-  // is of ParamStruct*.
-  wxHashTable *hash;
-
   struct ParamStruct : public wxObject {
     bx_param_c *param;
     int id;
@@ -668,7 +604,21 @@ private:
     int browseButtonId;  // only for filename params
     wxButton *browseButton;  // only for filename params
   };
-
+  void Init ();  // called automatically by ShowModal()
+  void ShowHelp ();
+  wxBoxSizer *mainSizer, *buttonSizer;
+  wxFlexGridSizer *gridSizer;
+  wxChoice *type;
+  wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
+  wxCheckBox *enableKeymap;
+  void EnableChanged ();
+  void EnableChanged (ParamStruct *pstr);
+  // hash table that maps the ID of a wxWindows control (e.g. wxChoice,
+  // wxTextCtrl) to the associated ParamStruct object.  Data in the hash table
+  // is of ParamStruct*.
+  wxHashTable *idHash;
+  // map parameter ID (BXP_*) onto ParamStruct.
+  wxHashTable *paramHash;
   int genId ();
   bool isGeneratedId (int id);
   bool CommitChanges ();

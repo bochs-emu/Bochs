@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.21 2002-09-03 05:32:49 bdenney Exp $
+// $Id: wxdialog.cc,v 1.22 2002-09-03 08:53:41 bdenney Exp $
 /////////////////////////////////////////////////////////////////
 //
 // misc/wxdialog.cc
@@ -1094,15 +1094,16 @@ void LogOptionsDialog::Init()
 
 void LogOptionsDialog::SetAction (int evtype, int a) {
   // find the choice whose client data matches "a".
-  int i = 0;
   int *ptr;
-  wxLogDebug ("SetAction type=%d a=%d", evtype, a);
-  while ((ptr = (int*) action[evtype]->GetClientData (i)) != NULL) {
+  //wxLogDebug ("SetAction type=%d a=%d", evtype, a);
+  for (int i=0; i < action[evtype]->GetCount (); i++) {
+    //wxLogDebug ("reading action[%d]->GetClientData(%d)", evtype, i);
+    ptr = (int*) action[evtype]->GetClientData (i);
+    if (ptr == NULL) continue;
     if (a == *ptr) {  // found it!
       action[evtype]->SetSelection (i);
       return;
     }
-    i++;
   }
   // this can happen if one of the choices that is excluded by
   // LOG_OPTS_EXCLUDE() is used, for example.
@@ -1347,143 +1348,6 @@ void ConfigMemoryDialog::ShowHelp ()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
 }
 
-
-//////////////////////////////////////////////////////////////////////
-// ConfigKeyboardDialog implementation
-//////////////////////////////////////////////////////////////////////
-// Structure:
-//   mainSizer:
-//     gridSizer, 3 columns:
-//       "keyboard type"
-//       type = wxChoice
-//       "ser"
-//       serialDelay = wxTextCtrl
-//       "paste"
-//       pasteDelay = wxTextCtrl
-//       "en map"
-//       enableKeymap = wxCheckBox
-//       "keyfile"
-//       mappingFile = wxTextCtrl
-//     buttonSizer:
-//       help
-//       cancel
-//       ok
-//
-
-// all events go to OnEvent method
-BEGIN_EVENT_TABLE(ConfigKeyboardDialog, wxDialog)
-  EVT_BUTTON(-1, ConfigKeyboardDialog::OnEvent)
-  EVT_CHECKBOX(-1, ConfigKeyboardDialog::OnEvent)
-  EVT_TEXT(-1, ConfigKeyboardDialog::OnEvent)
-END_EVENT_TABLE()
-
-
-ConfigKeyboardDialog::ConfigKeyboardDialog(
-    wxWindow* parent,
-    wxWindowID id)
-  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
-    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
-{
-  static char *labels[CONFIG_KEYBOARD_N_LABELS] = CONFIG_KEYBOARD_LABELS;
-  SetTitle (CONFIG_KEYBOARD_TITLE);
-  mainSizer = new wxBoxSizer (wxVERTICAL);
-  gridSizer = new wxFlexGridSizer (3);
-  mainSizer->Add (gridSizer);
-  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
-  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
-
-  // box1 contents
-#define add(x) gridSizer->Add (x, 0, wxALL, 2)
-#define addrt(x) gridSizer->Add (x, 0, wxALL|wxALIGN_RIGHT, 2)
-#define newlabel(x) new wxStaticText (this, -1, x)
-#define spacer() gridSizer->Add (1, 1);
-#define newlongtext() (new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize))
-  addrt (newlabel (labels[0]));
-  add (type = new wxChoice (this, -1));
-  spacer();
-  addrt (newlabel (labels[1]));
-  add (serialDelay = new wxTextCtrl (this, -1));
-  spacer ();
-  addrt (newlabel (labels[2]));
-  add (pasteDelay = new wxTextCtrl (this, -1));
-  spacer();
-  addrt (newlabel (labels[3]));
-  add (enableKeymap = new wxCheckBox (this, ID_Enable, ""));
-  spacer ();
-  addrt (newlabel (labels[4]));
-  add (mappingFile = newlongtext ());
-  add (new wxButton (this, ID_Browse, BTNLABEL_BROWSE));
-#undef add(x)
-#undef addrt(x)
-#undef newlabel(x)
-#undef spacer()
-#undef newlongtext()
-
-  // buttonSizer contents
-  wxButton *btn;
-  btn = new wxButton (this, wxHELP, BTNLABEL_HELP);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxOK, BTNLABEL_OK);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-}
-
-void ConfigKeyboardDialog::Init()
-{
-  EnableChanged ();
-  // lay it out!
-  SetAutoLayout(TRUE);
-  SetSizer(mainSizer);
-  mainSizer->Fit (this);
-  wxSize size = mainSizer->GetMinSize ();
-  printf ("minsize is %d,%d\n", size.GetWidth(), size.GetHeight ());
-  int margin = 5;
-  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
-  Center ();
-}
-
-void ConfigKeyboardDialog::OnEvent(wxCommandEvent& event)
-{
-  int id = event.GetId ();
-  printf ("you pressed button id=%d\n", id);
-  switch (id) {
-    case ID_Enable:
-      EnableChanged ();
-      break;
-    case ID_Browse:
-      BrowseTextCtrl (mappingFile);
-      break;
-    case wxOK:
-      {
-	// test validity of the integer fields
-	bool valid;
-	GetTextCtrlInt (serialDelay, &valid, true,
-	    "Invalid serial delay");
-	if (!valid) return;
-	GetTextCtrlInt (pasteDelay, &valid, true,
-	    "Invalid paste delay");
-	if (!valid) return;
-      }
-      EndModal (wxOK);
-      break;
-    case wxID_CANCEL:
-      EndModal (wxCANCEL);
-      break;
-    case wxHELP:
-      ShowHelp(); 
-      break;
-    default:
-      event.Skip ();
-  }
-}
-
-void ConfigKeyboardDialog::ShowHelp ()
-{
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR );
-}
-
 /////////////////////////////////////////////////////////////////
 // ParamDialog
 /////////////////////////////////////////////////////////////////
@@ -1501,7 +1365,8 @@ ParamDialog::ParamDialog(
   : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
-  hash = new wxHashTable (wxKEY_INTEGER);
+  idHash = new wxHashTable (wxKEY_INTEGER);
+  paramHash = new wxHashTable (wxKEY_INTEGER);
 
   // top level objects
   mainSizer = new wxBoxSizer (wxVERTICAL);
@@ -1523,7 +1388,7 @@ ParamDialog::ParamDialog(
 
 void ParamDialog::Init()
 {
-  //EnableChanged ();
+  EnableChanged ();
   mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
   // lay it out!
   SetAutoLayout(TRUE);
@@ -1568,7 +1433,8 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
 	sizer->Add (ckbx);
 	sizer->Add (1, 1);  // spacer
 	pstr->u.checkbox = ckbx;
-	hash->Put (pstr->id, pstr);
+	idHash->Put (pstr->id, pstr);
+	paramHash->Put (pstr->param->get_id (), pstr);
         break;
       }
     case BXT_PARAM_NUM: {
@@ -1583,7 +1449,8 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
 	sizer->Add (textctrl);
 	sizer->Add (1, 1);  // spacer
 	pstr->u.text = textctrl;
-	hash->Put (pstr->id, pstr);
+	idHash->Put (pstr->id, pstr);
+	paramHash->Put (pstr->param->get_id (), pstr);
         break;
       }
     case BXT_PARAM_ENUM: {
@@ -1600,7 +1467,8 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
 	  choice->Append (ptr);
 	choice->SetSelection (param->get() - param->get_min ());
 	pstr->u.choice = choice;
-	hash->Put (pstr->id, pstr);
+	idHash->Put (pstr->id, pstr);
+	paramHash->Put (pstr->param->get_id (), pstr);
         break;
       }
     case BXT_PARAM_STRING: {
@@ -1617,12 +1485,14 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
 	  pstr->browseButton = new wxButton (this, 
 	      pstr->browseButtonId, BTNLABEL_BROWSE);
 	  sizer->Add (pstr->browseButton, 0, wxALL, 5);
-	  hash->Put (pstr->browseButtonId, pstr);  // register under button id
+	  idHash->Put (pstr->browseButtonId, pstr);  // register under button id
+	paramHash->Put (pstr->param->get_id (), pstr);
 	} else {
 	  sizer->Add (1, 1);  // spacer
 	}
 	pstr->u.text = txtctrl;
-	hash->Put (pstr->id, pstr);
+	idHash->Put (pstr->id, pstr);
+	paramHash->Put (pstr->param->get_id (), pstr);
         break;
       }
     case BXT_LIST: {
@@ -1651,9 +1521,9 @@ void ParamDialog::AddParam (bx_param_c *param_generic, wxFlexGridSizer *sizer)
 bool ParamDialog::CommitChanges ()
 {
   // loop through all the parameters
-  hash->BeginFind ();
+  idHash->BeginFind ();
   wxNode *node;
-  while ((node = hash->Next ()) != NULL) {
+  while ((node = idHash->Next ()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData ();
     wxLogDebug ("commit changes for param %s", pstr->param->get_name ());
     int type = pstr->param->get_type ();
@@ -1692,19 +1562,56 @@ bool ParamDialog::CommitChanges ()
   return true;
 }
 
+void ParamDialog::EnableChanged ()
+{
+  idHash->BeginFind ();
+  wxNode *node;
+  while ((node = idHash->Next ()) != NULL) {
+    ParamStruct *pstr = (ParamStruct*) node->GetData ();
+    if (pstr->param->get_type () == BXT_PARAM_BOOL)
+      EnableChanged (pstr);
+  }
+}
+
+void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
+{
+  bx_param_bool_c *enableParam = (bx_param_bool_c*) pstrOfCheckbox->param;
+  wxASSERT (enableParam->get_type () == BXT_PARAM_BOOL); // or we wouldn't be here
+  // if nothing depends on this "enableParam", then we're done
+  bx_list_c *list = enableParam->get_dependent_list ();
+  if (list == NULL) return;
+  // Now we know the object has dependents. Step through the list of
+  // dependents, use the paramHash table to find their ParamStruct,
+  // and enable/disable them as needed.
+  bool en = pstrOfCheckbox->u.checkbox->GetValue ();
+  for (int i=0; i<list->get_size (); i++) {
+    bx_param_c *param = list->get(i);
+    ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
+    if (pstr) {
+      wxLogDebug ("setting enable for param '%s' to %d", pstr->param->get_name (), en?1:0);
+      pstr->u.window->Enable (en);
+    }
+  }
+}
+
 void ParamDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
   printf ("event was from id=%d\n", id);
   if (isGeneratedId (id)) {
     wxWindow *window = (wxWindow*)event.GetEventObject ();
-    ParamStruct *pstr = (ParamStruct*) hash->Get (id);
+    ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
     if (pstr == NULL) {
       wxLogDebug ("ParamStruct not found for id=%d", id);
       return;
     }
     if (id == pstr->id) {
       wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ());
+      if (pstr->param->get_type () == BXT_PARAM_BOOL) {
+	// we know that a wxCheckBox changed state.  We don't yet know
+	// if that checkbox was enabling anything.
+	EnableChanged (pstr);
+      }
       return;
     }
     if (id == pstr->browseButtonId) {
