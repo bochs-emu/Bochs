@@ -135,7 +135,7 @@ BX_INCLUDES = bochs.h config.h osdep.h
 	$(CXX) @DASH@c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
 
 
-all: @PRIMARY_TARGET@
+all: @PRIMARY_TARGET@  bximage@EXE@
 
 
 @EXTERNAL_DEPENDENCY@
@@ -156,6 +156,10 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 	        $(SIMX86_LINK_FLAGS) \
 		$(READLINE_LIB)
 
+bximage@EXE@: misc/bximage.c
+	$(CC) @DASH@c $(CFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+
+bximage.o: misc/bximage.o
 
 $(BX_OBJS): $(BX_INCLUDES)
 
