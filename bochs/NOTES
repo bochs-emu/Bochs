@@ -1,6 +1,7 @@
-./configure --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
+./configure --enable-cpu-level=6 --enable-fpu
+This ^^^ is the minimal config line to allow SMP.
 
-
+./configure --enable-cpu-level=6 --enable-debugger --enable-disasm --enable-fpu
 
 my disk image is a duplicate of debussy's 212MB disk
 12 heads
@@ -403,6 +404,68 @@ hit 8 times then it crashes
 The Bochs pit.cc model does not support mode 0 in timer 2.
 Any reason why not?
 
+changed CPU_LEVEL to 6, pentium pro.  This (with my SMP rombios) 
+gets me into the SMP initialization.  Add stub device at 
+APIC I/O addresses.
+
+hard to read all the debug output as it flashes by
+step to 50 million and see what is happening. no luck.
+per-CPU timeslice cutoff: 1.58 usecs.
+CPU15: Intel Pentium Pro stepping 03
+Getting VERSION: ffffffff
+Getting VERSION: ffffffff
+Getting LVT0: ffffffff
+Getting LVT1: ffffffff
+setup_APIC_clock() called
+calibrating APIC timer...
+... 181501 CPU clocks in 1 timer chip tick
+... 0 APIC bus clocks in 1 timer chip tick
+... CPU clock speed is 18.1501 MHz
+... system bus clock speed is 0 MHz
+CPU map: 8003
+Booting processor 0 eip 2000
+Setting warm reset code and vector
+1.
+2.
+3.
+Asserting INIT.
+Deasserting INIT.
+After Startup.
+Before Callout 0.
+After Callout 0
+--- then freezes for 5 seconds! waiting for processor to start up via APIC.
+--- Finally it says:
+Not responding.
+CPU has booted.
+Booting processor 1 eip 2000
+Setting warm reset code and vector
+1.
+2.
+3.
+Asserting INIT.
+Deasserting INIT.
+After Startup.
+Before Callout 1.
+After Callout 1.
+Not responding.
+CPU has booted.
+Before bogomips.
+Total of 3 processors activated (18.07 BogoMIPS).
+Before bogocount - setting activated=1.
+Boot done.
+enabling symmetric IO mode... ...done.
+ENABLING IO-APIC IRQs
+no explicit IRQ entries, using default mptable
+...changing IO-APIC physical APIC ID to 2...
+Kernel panic: could not set ID
+
+--- then freezes for 5 seconds! waiting for processor to start up via APIC.
+--- Finally it says:
+Not responding.
+CPU has booted.
+
+unaligned read of APIC at 0xc01b4956, seems to be in sched_init function
+
 -----
 RTLINUX
 booted rtlinux
@@ -422,3 +485,844 @@ this function to see what's up.
 I know it's not that the TSC returns the same value each time or something,
 but I'm sure it behaves differently from a clock in a real system.
 I'm sure I can chase it down since I have the code.
+
+
+up to "After callout 0"
+
+APIC model
+----------
+in CPUID bit 9 indicates on-chip APIC
+can be disabled by MSR
+pentium 4, local APICs and I/O APICs talked via system bus
+pentium 6, talk via APIC bus
+APIC addresses are on page 7-23 of IA32-sdg-3
+
+now it's trying to contact other processors via its local APIC.
+kernel says: Asserting INIT.
+53201427 APIC 0x01 sending interrupt to destination APIC 0x02
+53201427 low word of APIC 0x01 ICR = 0xc500
+
+kernel says: Deasserting INIT.
+53207334 APIC 0x01 sending interrupt to destination APIC 0x02
+53207334 low word of APIC 0x01 ICR = 0x8500
+
+kernel says: Sending STARTUP #1.
+53214931 APIC 0x01 sending interrupt to destination APIC 0x02
+53214931 low word of APIC 0x01 ICR = 0x0602
+
+kernel says: Sending STARTUP #2.
+53233832 APIC 0x01 sending interrupt to destination APIC 0x02
+53233832 low word of APIC 0x01 ICR = 0x0602
+
+There is an APIC algorithm to determine the bootstrap processor, but
+I don't see any use in implementing it.  The ID of the bootstrap processor
+needs to be consistent with the MPC table in BIOS, which means it's
+got to be predetermined.  So it seems ok to just hardcode the APIC ID of
+the boostrap processor and make it consistent with rombios.c.  Then
+when the different processor objects are starting up, the init code
+can check if the processor is the BSP or not.  The BSP will start up at
+f000:fff0 as usual and the others will basically execute a halt as they
+wait for a SIPI from the bootstrap guy.
+
+First, however, I need to be able to compile without static member 
+functions on the CPU.
+
+I have it compiling without static member functions (it took some work),
+but now I have crashes instead.  Specifically, the debugger uses structures
+it calls "callbacks" which are filled with function pointers.  These 
+function pointers point to C++ methods, but somehow the compiler allows
+them to be called without a This pointer, leading to crashes the first time
+you try something like "EAX = 0".
+
+I can't see that plex86 is using this debugger, so I expect nobody is.
+This means it's not a total waste of time to clean it up in the way that
+makes most sense to me.  What C++ structure will I need to implement
+the multiprocessor simulation with debugging?  Instead of a single BX_CPU
+object, there will be several.  I think to make SMF=0 work at all I'll
+need to redo the callback structure in a C++ way.
+
+BX_CPU_C is the type
+BX_CPU is used everywhere as the CPU object.
+But in the SMP model, you need to specify WHICH cpu you're talking about.
+In the debugger it would be acceptable to have a "current" CPU, and commands
+that apply to a particular cpu would automatically go to the current one.
+What other references to BX_CPU are outside of methods?
+
+I'm about to change BX_CPU into an array of BX_CPUs, and I fear
+the resulting explosion of broken things that were never really object
+oriented to begin with.  But it will be worth it when the APIC model can
+actually tell the other cpus to boot up.
+
+Here's a strategy: make BX_CPU an array and start ripping, without being
+constrained by keeping BX_USE_SMF=1 alive.  I hate it anyway.  Then maybe
+it will be clear how to make BX_USE_SMF=1 work again with stupid macros.
+
+What about this debug callback thing?  What's the point?  Replace each
+call of a callback with a call of the real object.  In the debugger, define
+a variable that is the "current" CPU that the user is interested in.
+
+Make both the CPU and the memory space an array.  The CPU structure will
+have a pointer to its memory space.  This allows cosimulation to still 
+happen (cpu0 with mem0, cpu1 with mem1) with any number of processors,
+and also SMP (cpu0 with mem0, cpu1 with mem0, etc.).
+
+How will the CPU loop work here?  It was written for one CPU of course,
+and runs until a breakpoint or asynchronous event.  But now I will need
+several multiple processors to have a chance to run their own CPU loop.
+One conceptually simple solution is to let each CPU run one instruction,
+then switch to another CPU.  Can I do this with existing guards, or
+will I need to recode cpu_loop?
+
+Which processor should receive asynchronous events?  On page 7-15 of
+sdg3, it shows that all external interrupts go to the I/O APIC.  The
+I/O APIC must forward them to the correct processor, once it has been 
+configured.  First worry about how to give each processor a chance to 
+execute instructions.
+
+Added a "bx_guard_found_t" struct pointer inside every CPU.  The 
+alternative was an array of them, but they need to be written within
+the BX_CPU_C methods, which wouldn't know where in the array to find
+it.
+
+Debugging SMP infinite loop.  stop at floppy_drive_recal.
+in good sim:
+  vbreak 0xf000:0x24d6
+  s 133000
+  s 1000
+in bad sim:
+oops: step doesn't notice breakpoints.
+
+in sync until 883100
+dies before 884200
+
+The difference occurs here: (output from show "dbg-all")
+< 132700 interrupt(): vector = 9, INT = 0, EXT = 1
+< 132703 keyboard: 8-bit write to 0064 = ad
+< 132703 KBD: keyboard disabled
+< 132705 keyboard: 8-bit read from 0064 = 1c
+< 132711 pic: IO write to 0020 = 0b
+< 132712 pic: IO read from 0020
+< 132712 pic: read master ISR = 02
+< 132716 pic: IO write to 0020 = 20
+
+changed pc_system because the interrupt was getting sent only to cpu0.
+next problem is when it goes into protected mode.  
+in bad sim:
+33000683 exception(0e h) just after enable_paging ()
+
+try to get a trace of the instructions before the exception, since
+they caused the exception.
+vbreak 0x10:0x0010002f
+c
+set $cpu=2
+trace-on
+c
+This was caused by FPU code which was hardcoded to BX_CPU[0].  When Linux
+tested for an FPU, the results were written to BX_CPU[0] instead of the
+bootstrap cpu.  Fixed.
+Now I'm having trouble in the multiprocessor simulation with fpu_check
+failing.  It worked fine before.  I get
+Checking 386/387 coupling... general protection fault: 0000
+CPU:2
+EIP 0x10:0xc01b0120
+Another BX_CPU[0] problem in the FPU code. Hopefully no more.
+
+time_init() problem in multiprocessor sim that doesn't happen in the other
+Stop in time_init and again at end.
+vbreak 0x10:0xc01b1f54
+vbreak 0x10:0xc01b1fc6
+it does reach end of time_init. where the crash then?
+can't interrupt trace output with ^C (?)
+
+fixed lack of BX_TICK1 calls when all processors halted.
+added code so that APIC startup message brings the target processor
+out of halt, sets its CS:IP to vector*0x1000.
+Now problem is:  jump_protected: gate type 0 unsupported
+supported gate types 
+1,3,4,5,9,11,12
+
+1=286 available TSS
+3=Busy 286 TSS
+4=286 call gate
+5=task gate
+9=386 available TSS
+11=Busy 386 TSS
+12=386 call gate
+
+this is the instruction, in processor #0, and it's exactly what should
+be going on.  It should jump to the start of the kernel.
+jmp 0010:00100000
+Step through the trampoline code and watch.
+JMP_Ap -> jump_protected (ctrl_xfer_pro.cc)
+a far call or far jmp can only access a segment descriptor for a 
+conforming code segment, nonconforming code segment, call gate, task gate,
+or TSS.  So what is this one?
+segment is 0x10
+check that gdtr+16 points to the right thing before the jump
+huh? cpu#0 has
+gdtr:base=0xff53f0, limit=0xff
+idtr:base=0xf000ff, limit=0x53f0
+could this be mapped to a real gdt?
+
+ok, the problem was that I jumped to 0000:2000 but it should have been
+0200:0000.  In real mode, they're the same, but then it needed to reference
+data using 0x0200:offset too.  Now the second processor boots, but I'm
+getting a nonzero write to CR4, which is causing a panic.
+panic: MOV_CdRd: (CR4) write of 0x10
+eip=0xc010016e
+Indeed, in kernel startup code the first CPU skips the code in
+head.S that says:
+        movl %cr4,%eax          # Turn on 4Mb pages
+	orl $16,%eax
+	movl %eax,%cr4
+bochs does not support 4mb pages.  Do I need to implement it, or can Linux
+do without?  Linux can do without for now, if I use "mem=nopentium".
+Later, if I feel like it (and understand paging well enough), implement 
+4mb pages.
+
+next problem is lack of an IOAPIC.
+I'll need to create a model for one, then modify BIOS code to use the 
+new APIC instead of the simple PIC.
+
+I changed the MP config so that it knows about one ISA bus, id=0, and
+16 interrupts which go from the ISA to the I/O APIC, then to processor 0.
+Now it boots all 4, attempts to set up the I/O APIC, etc.
+
+
+MP-BIOS bug: 8254 timer not connected to IO-APIC
+trying to set up timer as ExtINT...failed.
+trying to set up timer as BP IRQ...works.
+number of MP IRQ sources: 16
+number of IO-APIC #4 registers: 256.
+IO APIC #4....
+... register #00: FFFFFFFF
+physical APIC id: 0F
+register #01: FFFFFFFF
+max redirection entries: 00FF
+IO APIC version: 00FF
+register #02: FFFFFFFF
+arbitration: 0F
+IRQ redirection table:
+NR Log Phy Mask Trig IRR Pol Stat Dest Deli Vect:
+all these are 0xFF because the I/O APIC doesn't exist!
+Setting commenced=1, go go go
+
+trying to make the I/O apic receive interrupts correctly.
+stop at timer_irq_works, then break on first 
+of timer_interrupt, apic_timer_interrupt, or return of timer_irq_works
+
+vbreak 0x10:0xc01b41cc
+c
+get into GDB
+
+b ioapic.cc:148
+c
+
+vbreak 0x10:0xc010c9a4
+vbreak 0x10:0xc0109444
+vbreak 0x10:0xc01b420b
+vbreak 0x10:0xc0111ca4
+
+
+Interrupt Descriptor Table (0xc01bc000):
+IDT[0x00]=32-Bit Trap Gate target=0010:c0107bf8, DPL=0
+IDT[0x01]=32-Bit Trap Gate target=0010:c0107c7c, DPL=0
+IDT[0x02]=32-Bit Trap Gate target=0010:c0107c88, DPL=0
+IDT[0x03]=32-Bit Trap Gate target=0010:c0107c94, DPL=3
+IDT[0x04]=32-Bit Trap Gate target=0010:c0107ca0, DPL=3
+IDT[0x05]=32-Bit Trap Gate target=0010:c0107cac, DPL=3
+IDT[0x06]=32-Bit Trap Gate target=0010:c0107cb8, DPL=0
+IDT[0x07]=32-Bit Trap Gate target=0010:c0107c40, DPL=0
+IDT[0x08]=32-Bit Trap Gate target=0010:c0107cdc, DPL=0
+IDT[0x09]=32-Bit Trap Gate target=0010:c0107cc4, DPL=0
+IDT[0x0a]=32-Bit Trap Gate target=0010:c0107ce8, DPL=0
+IDT[0x0b]=32-Bit Trap Gate target=0010:c0107cf4, DPL=0
+IDT[0x0c]=32-Bit Trap Gate target=0010:c0107d00, DPL=0
+IDT[0x0d]=32-Bit Trap Gate target=0010:c0107d0c, DPL=0
+IDT[0x0e]=32-Bit Trap Gate target=0010:c0107d24, DPL=0
+IDT[0x0f]=32-Bit Trap Gate target=0010:c0107d30, DPL=0
+IDT[0x10]=32-Bit Trap Gate target=0010:c0107c34, DPL=0
+IDT[0x11]=32-Bit Trap Gate target=0010:c0107d18, DPL=0
+IDT[0x12]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x13]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x14]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x15]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x16]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x17]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x18]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x19]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x1a]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x1b]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x1c]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x1d]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x1e]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x1f]=32-Bit Interrupt Gate target=0010:c0100220, DPL=0
+IDT[0x20]=32-Bit Interrupt Gate target=0010:c0108ad4, DPL=0
+IDT[0x21]=32-Bit Interrupt Gate target=0010:c0108adc, DPL=0
+IDT[0x22]=32-Bit Interrupt Gate target=0010:c0108ae4, DPL=0
+IDT[0x23]=32-Bit Interrupt Gate target=0010:c0108aec, DPL=0
+IDT[0x24]=32-Bit Interrupt Gate target=0010:c0108af4, DPL=0
+IDT[0x25]=32-Bit Interrupt Gate target=0010:c0108afc, DPL=0
+IDT[0x26]=32-Bit Interrupt Gate target=0010:c0108b04, DPL=0
+IDT[0x27]=32-Bit Interrupt Gate target=0010:c0108b0c, DPL=0
+IDT[0x28]=32-Bit Interrupt Gate target=0010:c0108b14, DPL=0
+IDT[0x29]=32-Bit Interrupt Gate target=0010:c0108b1c, DPL=0
+IDT[0x2a]=32-Bit Interrupt Gate target=0010:c0108b24, DPL=0
+IDT[0x2b]=32-Bit Interrupt Gate target=0010:c0108b2c, DPL=0
+IDT[0x2c]=32-Bit Interrupt Gate target=0010:c0108b34, DPL=0
+IDT[0x2d]=32-Bit Interrupt Gate target=0010:c0108b40, DPL=0
+IDT[0x2e]=32-Bit Interrupt Gate target=0010:c0108b4c, DPL=0
+IDT[0x2f]=32-Bit Interrupt Gate target=0010:c0108b58, DPL=0
+IDT[0x30]=32-Bit Interrupt Gate target=0010:c01093a4, DPL=0
+IDT[0x31]=32-Bit Interrupt Gate target=0010:c01093c4, DPL=0
+IDT[0x32]=32-Bit Interrupt Gate target=0010:c0108b7c, DPL=0
+IDT[0x33]=32-Bit Interrupt Gate target=0010:c0108b88, DPL=0
+IDT[0x34]=32-Bit Interrupt Gate target=0010:c0108b94, DPL=0
+IDT[0x35]=32-Bit Interrupt Gate target=0010:c0108ba0, DPL=0
+IDT[0x36]=32-Bit Interrupt Gate target=0010:c0108bac, DPL=0
+IDT[0x37]=32-Bit Interrupt Gate target=0010:c0108bb8, DPL=0
+IDT[0x38]=32-Bit Interrupt Gate target=0010:c0108bc4, DPL=0
+IDT[0x39]=32-Bit Interrupt Gate target=0010:c0108bd0, DPL=0
+IDT[0x3a]=32-Bit Interrupt Gate target=0010:c0108bdc, DPL=0
+IDT[0x3b]=32-Bit Interrupt Gate target=0010:c0108be8, DPL=0
+IDT[0x3c]=32-Bit Interrupt Gate target=0010:c0108bf4, DPL=0
+IDT[0x3d]=32-Bit Interrupt Gate target=0010:c0108c00, DPL=0
+IDT[0x3e]=32-Bit Interrupt Gate target=0010:c0108c0c, DPL=0
+IDT[0x3f]=32-Bit Interrupt Gate target=0010:c0108c18, DPL=0
+IDT[0x40]=32-Bit Interrupt Gate target=0010:c01093e4, DPL=0
+IDT[0x41]=32-Bit Interrupt Gate target=0010:c0109444, DPL=0
+IDT[0x42]=32-Bit Interrupt Gate target=0010:c0108c3c, DPL=0
+IDT[0x43]=32-Bit Interrupt Gate target=0010:c0108c48, DPL=0
+IDT[0x44]=32-Bit Interrupt Gate target=0010:c0108c54, DPL=0
+IDT[0x45]=32-Bit Interrupt Gate target=0010:c0108c60, DPL=0
+IDT[0x46]=32-Bit Interrupt Gate target=0010:c0108c6c, DPL=0
+IDT[0x47]=32-Bit Interrupt Gate target=0010:c0108c78, DPL=0
+IDT[0x48]=32-Bit Interrupt Gate target=0010:c0108c84, DPL=0
+IDT[0x49]=32-Bit Interrupt Gate target=0010:c0108c90, DPL=0
+IDT[0x4a]=32-Bit Interrupt Gate target=0010:c0108c9c, DPL=0
+IDT[0x4b]=32-Bit Interrupt Gate target=0010:c0108ca8, DPL=0
+IDT[0x4c]=32-Bit Interrupt Gate target=0010:c0108cb4, DPL=0
+IDT[0x4d]=32-Bit Interrupt Gate target=0010:c0108cc0, DPL=0
+IDT[0x4e]=32-Bit Interrupt Gate target=0010:c0108ccc, DPL=0
+IDT[0x4f]=32-Bit Interrupt Gate target=0010:c0108cd8, DPL=0
+IDT[0x50]=32-Bit Interrupt Gate target=0010:c0109404, DPL=0
+IDT[0x51]=32-Bit Interrupt Gate target=0010:c0108ad4, DPL=0
+IDT[0x52]=32-Bit Interrupt Gate target=0010:c0108cfc, DPL=0
+IDT[0x53]=32-Bit Interrupt Gate target=0010:c0108d08, DPL=0
+IDT[0x54]=32-Bit Interrupt Gate target=0010:c0108d14, DPL=0
+IDT[0x55]=32-Bit Interrupt Gate target=0010:c0108d20, DPL=0
+IDT[0x56]=32-Bit Interrupt Gate target=0010:c0108d2c, DPL=0
+IDT[0x57]=32-Bit Interrupt Gate target=0010:c0108d38, DPL=0
+IDT[0x58]=32-Bit Interrupt Gate target=0010:c0108d44, DPL=0
+IDT[0x59]=32-Bit Interrupt Gate target=0010:c0108d50, DPL=0
+IDT[0x5a]=32-Bit Interrupt Gate target=0010:c0108d5c, DPL=0
+IDT[0x5b]=32-Bit Interrupt Gate target=0010:c0108d68, DPL=0
+IDT[0x5c]=32-Bit Interrupt Gate target=0010:c0108d74, DPL=0
+IDT[0x5d]=32-Bit Interrupt Gate target=0010:c0108d80, DPL=0
+IDT[0x5e]=32-Bit Interrupt Gate target=0010:c0108d8c, DPL=0
+IDT[0x5f]=32-Bit Interrupt Gate target=0010:c0108d98, DPL=0
+IDT[0x60]=32-Bit Interrupt Gate target=0010:c0108da4, DPL=0
+IDT[0x61]=32-Bit Interrupt Gate target=0010:c0108db0, DPL=0
+IDT[0x62]=32-Bit Interrupt Gate target=0010:c0108dbc, DPL=0
+IDT[0x63]=32-Bit Interrupt Gate target=0010:c0108dc8, DPL=0
+IDT[0x64]=32-Bit Interrupt Gate target=0010:c0108dd4, DPL=0
+IDT[0x65]=32-Bit Interrupt Gate target=0010:c0108de0, DPL=0
+IDT[0x66]=32-Bit Interrupt Gate target=0010:c0108dec, DPL=0
+IDT[0x67]=32-Bit Interrupt Gate target=0010:c0108df8, DPL=0
+IDT[0x68]=32-Bit Interrupt Gate target=0010:c0108e04, DPL=0
+IDT[0x69]=32-Bit Interrupt Gate target=0010:c0108e10, DPL=0
+IDT[0x6a]=32-Bit Interrupt Gate target=0010:c0108e1c, DPL=0
+IDT[0x6b]=32-Bit Interrupt Gate target=0010:c0108e28, DPL=0
+IDT[0x6c]=32-Bit Interrupt Gate target=0010:c0108e34, DPL=0
+IDT[0x6d]=32-Bit Interrupt Gate target=0010:c0108e40, DPL=0
+IDT[0x6e]=32-Bit Interrupt Gate target=0010:c0108e4c, DPL=0
+IDT[0x6f]=32-Bit Interrupt Gate target=0010:c0108e58, DPL=0
+IDT[0x70]=32-Bit Interrupt Gate target=0010:c0108e64, DPL=0
+IDT[0x71]=32-Bit Interrupt Gate target=0010:c0108e70, DPL=0
+IDT[0x72]=32-Bit Interrupt Gate target=0010:c0108e7c, DPL=0
+IDT[0x73]=32-Bit Interrupt Gate target=0010:c0108e88, DPL=0
+IDT[0x74]=32-Bit Interrupt Gate target=0010:c0108e94, DPL=0
+IDT[0x75]=32-Bit Interrupt Gate target=0010:c0108ea0, DPL=0
+IDT[0x76]=32-Bit Interrupt Gate target=0010:c0108eac, DPL=0
+IDT[0x77]=32-Bit Interrupt Gate target=0010:c0108eb8, DPL=0
+IDT[0x78]=32-Bit Interrupt Gate target=0010:c0108ec4, DPL=0
+IDT[0x79]=32-Bit Interrupt Gate target=0010:c0108ed0, DPL=0
+IDT[0x7a]=32-Bit Interrupt Gate target=0010:c0108edc, DPL=0
+IDT[0x7b]=32-Bit Interrupt Gate target=0010:c0108ee8, DPL=0
+IDT[0x7c]=32-Bit Interrupt Gate target=0010:c0108ef4, DPL=0
+IDT[0x7d]=32-Bit Interrupt Gate target=0010:c0108f00, DPL=0
+IDT[0x7e]=32-Bit Interrupt Gate target=0010:c0108f0c, DPL=0
+IDT[0x7f]=32-Bit Interrupt Gate target=0010:c0108f18, DPL=0
+IDT[0x80]=32-Bit Trap Gate target=0010:c0107af4, DPL=3
+IDT[0x81]=32-Bit Interrupt Gate target=0010:c0108f30, DPL=0
+IDT[0x82]=32-Bit Interrupt Gate target=0010:c0108f3c, DPL=0
+IDT[0x83]=32-Bit Interrupt Gate target=0010:c0108f48, DPL=0
+IDT[0x84]=32-Bit Interrupt Gate target=0010:c0108f54, DPL=0
+IDT[0x85]=32-Bit Interrupt Gate target=0010:c0108f60, DPL=0
+IDT[0x86]=32-Bit Interrupt Gate target=0010:c0108f6c, DPL=0
+IDT[0x87]=32-Bit Interrupt Gate target=0010:c0108f78, DPL=0
+IDT[0x88]=32-Bit Interrupt Gate target=0010:c0108f84, DPL=0
+IDT[0x89]=32-Bit Interrupt Gate target=0010:c0108f90, DPL=0
+IDT[0x8a]=32-Bit Interrupt Gate target=0010:c0108f9c, DPL=0
+IDT[0x8b]=32-Bit Interrupt Gate target=0010:c0108fa8, DPL=0
+IDT[0x8c]=32-Bit Interrupt Gate target=0010:c0108fb4, DPL=0
+IDT[0x8d]=32-Bit Interrupt Gate target=0010:c0108fc0, DPL=0
+IDT[0x8e]=32-Bit Interrupt Gate target=0010:c0108fcc, DPL=0
+IDT[0x8f]=32-Bit Interrupt Gate target=0010:c0108fd8, DPL=0
+IDT[0x90]=32-Bit Interrupt Gate target=0010:c0108fe4, DPL=0
+IDT[0x91]=32-Bit Interrupt Gate target=0010:c0108ff0, DPL=0
+IDT[0x92]=32-Bit Interrupt Gate target=0010:c0108ffc, DPL=0
+IDT[0x93]=32-Bit Interrupt Gate target=0010:c0109008, DPL=0
+IDT[0x94]=32-Bit Interrupt Gate target=0010:c0109014, DPL=0
+IDT[0x95]=32-Bit Interrupt Gate target=0010:c0109020, DPL=0
+IDT[0x96]=32-Bit Interrupt Gate target=0010:c010902c, DPL=0
+IDT[0x97]=32-Bit Interrupt Gate target=0010:c0109038, DPL=0
+IDT[0x98]=32-Bit Interrupt Gate target=0010:c0109044, DPL=0
+IDT[0x99]=32-Bit Interrupt Gate target=0010:c0109050, DPL=0
+IDT[0x9a]=32-Bit Interrupt Gate target=0010:c010905c, DPL=0
+IDT[0x9b]=32-Bit Interrupt Gate target=0010:c0109068, DPL=0
+IDT[0x9c]=32-Bit Interrupt Gate target=0010:c0109074, DPL=0
+IDT[0x9d]=32-Bit Interrupt Gate target=0010:c0109080, DPL=0
+IDT[0x9e]=32-Bit Interrupt Gate target=0010:c010908c, DPL=0
+IDT[0x9f]=32-Bit Interrupt Gate target=0010:c0109098, DPL=0
+IDT[0xa0]=32-Bit Interrupt Gate target=0010:c01090a4, DPL=0
+IDT[0xa1]=32-Bit Interrupt Gate target=0010:c01090ac, DPL=0
+IDT[0xa2]=32-Bit Interrupt Gate target=0010:c01090b4, DPL=0
+IDT[0xa3]=32-Bit Interrupt Gate target=0010:c01090bc, DPL=0
+IDT[0xa4]=32-Bit Interrupt Gate target=0010:c01090c4, DPL=0
+IDT[0xa5]=32-Bit Interrupt Gate target=0010:c01090cc, DPL=0
+IDT[0xa6]=32-Bit Interrupt Gate target=0010:c01090d4, DPL=0
+IDT[0xa7]=32-Bit Interrupt Gate target=0010:c01090dc, DPL=0
+IDT[0xa8]=32-Bit Interrupt Gate target=0010:c01090e4, DPL=0
+IDT[0xa9]=32-Bit Interrupt Gate target=0010:c01090ec, DPL=0
+IDT[0xaa]=32-Bit Interrupt Gate target=0010:c01090f4, DPL=0
+IDT[0xab]=32-Bit Interrupt Gate target=0010:c01090fc, DPL=0
+IDT[0xac]=32-Bit Interrupt Gate target=0010:c0109104, DPL=0
+IDT[0xad]=32-Bit Interrupt Gate target=0010:c010910c, DPL=0
+IDT[0xae]=32-Bit Interrupt Gate target=0010:c0109114, DPL=0
+IDT[0xaf]=32-Bit Interrupt Gate target=0010:c010911c, DPL=0
+IDT[0xb0]=32-Bit Interrupt Gate target=0010:c0109124, DPL=0
+IDT[0xb1]=32-Bit Interrupt Gate target=0010:c010912c, DPL=0
+IDT[0xb2]=32-Bit Interrupt Gate target=0010:c0109134, DPL=0
+IDT[0xb3]=32-Bit Interrupt Gate target=0010:c010913c, DPL=0
+IDT[0xb4]=32-Bit Interrupt Gate target=0010:c0109144, DPL=0
+IDT[0xb5]=32-Bit Interrupt Gate target=0010:c010914c, DPL=0
+IDT[0xb6]=32-Bit Interrupt Gate target=0010:c0109154, DPL=0
+IDT[0xb7]=32-Bit Interrupt Gate target=0010:c010915c, DPL=0
+IDT[0xb8]=32-Bit Interrupt Gate target=0010:c0109164, DPL=0
+IDT[0xb9]=32-Bit Interrupt Gate target=0010:c010916c, DPL=0
+IDT[0xba]=32-Bit Interrupt Gate target=0010:c0109174, DPL=0
+IDT[0xbb]=32-Bit Interrupt Gate target=0010:c010917c, DPL=0
+IDT[0xbc]=32-Bit Interrupt Gate target=0010:c0109184, DPL=0
+IDT[0xbd]=32-Bit Interrupt Gate target=0010:c010918c, DPL=0
+IDT[0xbe]=32-Bit Interrupt Gate target=0010:c0109194, DPL=0
+IDT[0xbf]=32-Bit Interrupt Gate target=0010:c010919c, DPL=0
+IDT[0xc0]=32-Bit Interrupt Gate target=0010:c01091a4, DPL=0
+IDT[0xc1]=32-Bit Interrupt Gate target=0010:c01091ac, DPL=0
+IDT[0xc2]=32-Bit Interrupt Gate target=0010:c01091b4, DPL=0
+IDT[0xc3]=32-Bit Interrupt Gate target=0010:c01091bc, DPL=0
+IDT[0xc4]=32-Bit Interrupt Gate target=0010:c01091c4, DPL=0
+IDT[0xc5]=32-Bit Interrupt Gate target=0010:c01091cc, DPL=0
+IDT[0xc6]=32-Bit Interrupt Gate target=0010:c01091d4, DPL=0
+IDT[0xc7]=32-Bit Interrupt Gate target=0010:c01091dc, DPL=0
+IDT[0xc8]=32-Bit Interrupt Gate target=0010:c01091e4, DPL=0
+IDT[0xc9]=32-Bit Interrupt Gate target=0010:c01091ec, DPL=0
+IDT[0xca]=32-Bit Interrupt Gate target=0010:c01091f4, DPL=0
+IDT[0xcb]=32-Bit Interrupt Gate target=0010:c01091fc, DPL=0
+IDT[0xcc]=32-Bit Interrupt Gate target=0010:c0109204, DPL=0
+IDT[0xcd]=32-Bit Interrupt Gate target=0010:c010920c, DPL=0
+IDT[0xce]=32-Bit Interrupt Gate target=0010:c0109214, DPL=0
+IDT[0xcf]=32-Bit Interrupt Gate target=0010:c010921c, DPL=0
+IDT[0xd0]=32-Bit Interrupt Gate target=0010:c0109224, DPL=0
+IDT[0xd1]=32-Bit Interrupt Gate target=0010:c010922c, DPL=0
+IDT[0xd2]=32-Bit Interrupt Gate target=0010:c0109234, DPL=0
+IDT[0xd3]=32-Bit Interrupt Gate target=0010:c010923c, DPL=0
+IDT[0xd4]=32-Bit Interrupt Gate target=0010:c0109244, DPL=0
+IDT[0xd5]=32-Bit Interrupt Gate target=0010:c010924c, DPL=0
+IDT[0xd6]=32-Bit Interrupt Gate target=0010:c0109254, DPL=0
+IDT[0xd7]=32-Bit Interrupt Gate target=0010:c010925c, DPL=0
+IDT[0xd8]=32-Bit Interrupt Gate target=0010:c0109264, DPL=0
+IDT[0xd9]=32-Bit Interrupt Gate target=0010:c010926c, DPL=0
+IDT[0xda]=32-Bit Interrupt Gate target=0010:c0109274, DPL=0
+IDT[0xdb]=32-Bit Interrupt Gate target=0010:c010927c, DPL=0
+IDT[0xdc]=32-Bit Interrupt Gate target=0010:c0109284, DPL=0
+IDT[0xdd]=32-Bit Interrupt Gate target=0010:c010928c, DPL=0
+IDT[0xde]=32-Bit Interrupt Gate target=0010:c0109294, DPL=0
+IDT[0xdf]=32-Bit Interrupt Gate target=0010:c010929c, DPL=0
+IDT[0xe0]=32-Bit Interrupt Gate target=0010:c01092a4, DPL=0
+IDT[0xe1]=32-Bit Interrupt Gate target=0010:c01092ac, DPL=0
+IDT[0xe2]=32-Bit Interrupt Gate target=0010:c01092b4, DPL=0
+IDT[0xe3]=32-Bit Interrupt Gate target=0010:c01092bc, DPL=0
+IDT[0xe4]=32-Bit Interrupt Gate target=0010:c01092c4, DPL=0
+IDT[0xe5]=32-Bit Interrupt Gate target=0010:c01092cc, DPL=0
+IDT[0xe6]=32-Bit Interrupt Gate target=0010:c01092d4, DPL=0
+IDT[0xe7]=32-Bit Interrupt Gate target=0010:c01092dc, DPL=0
+IDT[0xe8]=32-Bit Interrupt Gate target=0010:c01092e4, DPL=0
+IDT[0xe9]=32-Bit Interrupt Gate target=0010:c01092ec, DPL=0
+IDT[0xea]=32-Bit Interrupt Gate target=0010:c01092f4, DPL=0
+IDT[0xeb]=32-Bit Interrupt Gate target=0010:c01092fc, DPL=0
+IDT[0xec]=32-Bit Interrupt Gate target=0010:c0109304, DPL=0
+IDT[0xed]=32-Bit Interrupt Gate target=0010:c010930c, DPL=0
+IDT[0xee]=32-Bit Interrupt Gate target=0010:c0109314, DPL=0
+IDT[0xef]=32-Bit Interrupt Gate target=0010:c010931c, DPL=0
+IDT[0xf0]=32-Bit Interrupt Gate target=0010:c0109324, DPL=0
+IDT[0xf1]=32-Bit Interrupt Gate target=0010:c010932c, DPL=0
+IDT[0xf2]=32-Bit Interrupt Gate target=0010:c0109334, DPL=0
+IDT[0xf3]=32-Bit Interrupt Gate target=0010:c010933c, DPL=0
+IDT[0xf4]=32-Bit Interrupt Gate target=0010:c0109344, DPL=0
+IDT[0xf5]=32-Bit Interrupt Gate target=0010:c010934c, DPL=0
+IDT[0xf6]=32-Bit Interrupt Gate target=0010:c0109354, DPL=0
+IDT[0xf7]=32-Bit Interrupt Gate target=0010:c010935c, DPL=0
+IDT[0xf8]=32-Bit Interrupt Gate target=0010:c0109364, DPL=0
+IDT[0xf9]=32-Bit Interrupt Gate target=0010:c010936c, DPL=0
+IDT[0xfa]=32-Bit Interrupt Gate target=0010:c0109374, DPL=0
+IDT[0xfb]=32-Bit Interrupt Gate target=0010:c010937c, DPL=0
+IDT[0xfc]=32-Bit Interrupt Gate target=0010:c0109384, DPL=0
+IDT[0xfd]=32-Bit Interrupt Gate target=0010:c010938c, DPL=0
+IDT[0xfe]=32-Bit Interrupt Gate target=0010:c0109394, DPL=0
+IDT[0xff]=32-Bit Interrupt Gate target=0010:c0109424, DPL=0
+
+
+it hits end of timer_irq_works first, in other words it doesn't work.
+
+working on booting up with the APIC in charge of interrupts.  I probably
+need to modify the bios calls so that they write to the APIC
+instead of the lowly PIC.
+
+Problems with no keyboard for a while, but then I discovered that 
+in the PIC model, interrupt 0 went to vector 8, interrupt 8 goes to
+vector 0x70.  Who would have thought!?
+For now I'm redirecting PIC commands to the APIC so that I don't 
+have to reprogram the rombios.  This gets it all the way into Linux
+until Calibrating delay loop, but apparantly the timer interrupt is 
+not getting set up within linux.
+
+getting closer!
+
+Once I had success in getting the I/O APIC and local APICs to boot SMP
+until they got to disk detection (hda), then they would say "lost interrupt"
+every 2 minutes or so.  I'm trying to implement the irr/isr business 
+described in the DevGuide3, but having trouble with interrupts that
+are acknowledged but never EOI'd.  After tracing it, it turns out that
+this particular interrupt that was never EOId was triggered by the
+I/O APIC -> local APIC -> cpu path, but then went to a vector 0x51 that
+ended up in do_8259A_IRQ, clearly intended for a pic.  Well the fact is
+that I have stuck all the external interrupts onto the PIC and also the
+I/O APIC.  I did this because of the linux bootup message:
+
+MP-BIOS bug: 8254 timer not connected to IO-APIC
+ 
+So I connected it!  I made the PIC code run as usual, and also call up 
+the I/O APIC whenever the I/O devices called pic->trigger_irq.  But this
+was failing too.  I think the IOAPIC was interrupting the processor
+before linux wanted it to, because it was in logical mode with
+all 0's in the destination.  So even though the interrupt was unmasked,
+this should not have delivered the interrupt.  I worked on deliver
+very recently to try to improve this.
+
+implement local apic interrupts to self, all but self, etc. and maybe
+this will be fixed.
+
+The timer interrupt seems to be fine, and everything looks good until
+hda: lost interrupt.
+ida is using int14. break on int14s and look what's going on.
+vbreak 0x10:0xc0108b4c
+
+It does look like some int14s are coming through and being 
+acknowledged.  So I'm not sure what the driver needs and isn't getting.
+Possible that the timer is taking so many cycles in this simulation that
+it's got no halted time left for other interrupts?  I don't think so though.
+
+got a new message: ide0: unexpected interrupt, status=0x41, count=1
+
+Try breaking in the function that says hda: lost interrupt.
+ide_timer_expiry
+vbreak 0x10:0xc014f44c
+ide_probe_init
+vbreak 0x10:0xc015bf18
+
+but it's never breaking there.
+
+from tracing on a working (old) version of bochs, I see that the driver
+for the semi-IDE hard drive has the following interrupt patterns:
+
+"disk: Interrupt masked {DISK}" many times, very close together
+a long break, like 50million ticks
+disk: Raising interrupt {DISK}     one time only
+10million tick break
+disk: Interrupt masked {DISK}  three times (every 4 million or so)
+then a 40 million tick break
+then lots of disk: Raising interrupt {DISK} as it reads the partition 
+table and mounts disks.
+
+
+
+step to second Raising interrupt (harddrv.cc:2222) and then tracing the
+two simulations.
+
+Before it reached the second "raising interrupt" it set up an IOAPIC
+entry[14] with vector 0xb1, but destination was 0, dest_mode=1.  This
+means that the IOAPIC would not forward any such interrupts.
+
+The IOAPIC received the int14, but I didn't see if it delivered the
+interrupt to the processor or the pic did.
+
+right after "raising interrupt" it is in various ide functions. I'm not
+sure how.  stepped outware until ide_do_request, where we were apparantly
+at this line (ide.c:1216):
+    if (hwif->irq != masked_irq)
+      enable_irq(hwif->irq);
+within enable_irq, it finds that the depth==1, so it calls enable_8259A_irq.
+Here's the difference!
+in the SMP simulation, it called enable_edge_ioapic_irq instead!
+ha!
+
+Tracing the ioapic code......
+
+enable_edge_ioapic_irq:
+c010dc9c: 53: push EBX
+c010dc9d: 8b5c2408: mov EBX, |MOD1|REG3|RM4| |SS0|IND4|BASE4| SS:[ESP + 08]
+c010dca1: 89da: mov |MOD3|REG3|RM2| EDX, EBX
+c010dca3: c1e205: shl |MOD3|REG4|RM2| EDX, #05
+c010dca6: 8b8a00a01bc0: mov ECX, |MOD2|REG1|RM2| DS:[EDX + c01ba000]
+c010dcac: 89c8: mov |MOD3|REG1|RM0| EAX, ECX
+c010dcae: 83e00c: and |MOD3|REG4|RM0| EAX, #0c
+c010dcb1: 83f804: cmp |MOD3|REG7|RM0| EAX, #04
+c010dcb4: 7515: jnz +#15
+c010dcb6: 83c908: or |MOD3|REG1|RM1| ECX, #08
+c010dcb9: 898a00a01bc0: mov |MOD2|REG1|RM2| DS:[EDX + c01ba000], ECX
+c010dcbf: 8b049de08519c0: mov EAX, |MOD0|REG0|RM4| |SS2|IND3|BASE5| DS:[c01985e0 + EBX<<2]
+c010dcc6: e841f7ffff: call fffff741
+c010dccb: 53: push EBX
+c010dccc: e873fcffff: call fffffc73
+c010dcd1: 83c404: add |MOD3|REG0|RM4| ESP, #04
+c010dcd4: 5b: pop EBX
+c010dcd5: c3: ret_near
+
+it skipped over the send_IPI_self crap from the inline function self_IPI,
+then goes right to enable_IO_APIC_irq.
+
+Note: ioapic really has 8 bit id field. in phys mode only 59:56 are used
+but in logical mode all 8 are used.  I fixed my model for next time.  It
+went and enabled entry[14] on the I/O APIC, but I have a feeling it will
+never trigger the CPU because the ioapic model doesn't have memory!
+
+The important feature that the I/O APIC is missing is that it remembers
+interrupts that occur when the int is unmasked but there is no 
+destination APIC to send to.  Linux requires this!
+
+Tracing the 8259 PIC code......
+Haven't traced the "enable_8259A_irq" route too much, but I see that it
+ends up pretty quickly in do_ide0_request.  I wonder if the IOAPIC code
+ever gets there...  return from ide_get_queue, unplug_device???, then
+IRQ0x0e_interrupt.  So the PIC's mask bit for int14 just went off, and
+it signalled an interrupt, unlike my dumb IOAPIC.
+
+
+
+need to understand use of timers on bochs linux.  Esp. if I expect to use
+time commands to measure performance or something.  And make the local APIC
+timer actually work, since I recall that is used for system/user time
+profiling.
+
+
+Who's who?
+kpl: obviously Kevin Lawton <kevin@mandrakesoft.com>
+mch: worked on I/O devices, break points, etc.
+HanishKVC: worked on debugger
+bbd: that's me.
+
+Timing:
+register_timer uses units of microseconds.
+
+I'm using 500000 instructions per second, so each tick is 2 microseconds.
+Therefore, to implement the vga_update_interval of 300000 microseconds, it
+must wait 150000 instructions between updates.  And it does.  The only
+time this is computed is when registering the timer, which is correct.  
+After that, everything is in units of ticks.
+
+The local apic counter is supposed to count on the bus clock, which 
+in a real machine would be usually slower than the CPU clock.  For now,
+do like the PIT does: bx_devices calls the member function "periodic"
+every TIMER_DELTA (100 usec).  The periodic function for the local APIC
+will decrement the counter by TIMER_DELTA and trigger some interrupt
+if the counter has gone down to zero.  I think this makes the local APIC
+counter go down at a rate of 1 MHz.
+
+With settings: ips: 500000
+Linux says:
+calibrating APIC timer...
+...6050 CPU clocks in 1 timer chip tick
+...48320 APIC bus clocks in 1 timer chip tick
+...CPU block speed is .6050 MHz
+...system bus clock speed is 4.8320 MHz
+
+With settings: ips: 600000
+3.58 bogomips
+Linux says:
+calibrating APIC timer...
+...7259 CPU clocks in 1 timer chip tick
+...48480 APIC bus clocks in 1 timer chip tick
+...CPU block speed is .7259 MHz
+...system bus clock speed is 4.8320 MHz
+
+With settings: ips: 1000000
+6.00 bogomips
+Linux says:
+calibrating APIC timer...
+...12099 CPU clocks in 1 timer chip tick
+...48480 APIC bus clocks in 1 timer chip tick
+...CPU clock speed is 1.2099 MHz
+...system bus clock speed is 4.8480 MHz
+
+ips		bogomips	cpu clk speed	bus clk speed
+500000  	?               0.6050 MHz      4.8320 MHz
+600000		3.58		0.7259 MHz	4.8320 MHz
+1000000		6.00		1.2099 MHz	4.8480 MHz
+10000000	60.42		12.099 MHz	4.8480 MHz
+
+for 10mips mode, here's how it got the APIC clocks per timer chip tick:
+((APIC count after) - (APIC count before)) * APIC_DIVISOR / LOOPS
+= ((0x03b9a1b0-0x03b92b54)) * 16 / 10
+= 30300 * 16 / 10
+= 48480
+
+But what I thought would happen is this:
+in bx_devices, TIMER_DELTA=100.
+That means that the bx_devices::timer handler is called once every 100 usec.
+Every 100 usec (seems to be 1000 instructions or 1000 ticks) it calls
+local_apic.periodic (100) and tells it to decrement its counter by 100.
+On average, that implies that the counter will decrement 1 per microsecond.
+That means its count rate is 1/1e-6 = 1e6 or 1 MHz.
+
+Fixed a bug in APIC divide-down factor.  Now it says the
+CPU is running at 12MHz and the bus at 1.2 MHz.  It should actually be
+1.0 MHz but this is pretty close.  Probably if I reduced timer delta, it
+would get closer. 
+
+Tried with TIMER_DELTA=10.  However it had no effect!  Went from 1.2000 MHz to
+1.952MHz for bus clock speed.  I think it is good enough now anyway.
+
+I compiled a stupid program called work, and I'm testing how long it takes
+on the SMP bochs thing.  The first line of the input file controls how many
+iterations will be done.  With iterations=12 it took around 8.5 bochs seconds
+or several minutes of my time.  
+work &
+With iterations=10:  5.17user, 0.00system, 5.12elapsed 100%CPU
+With iterations=8:  2.80user, 0.01system, 2.78elapsed 100%CPU
+
+iterations=8, try two at once.
+work & work &
+
+
+------
+NOTES: Porting to occs
+- no snprintf, made a macro
+- comment out sigcontext
+- no strtoull defined
+- yacc didn't ever put 
+    extern YYSTYPE bxlval;
+  into parser.h.  Instead it just put
+    extern YYSTYPE yylval;
+  To fix this, I put
+    #define bxlval yylval 
+  into lexer.l after the #includes
+  see debug-source.tar.gz
+
+- undefined bxtext, yylval, bx_flush_buffer, bxlex
+  I can take care of it with four defines in debug.h
+  #define bxlval yylval
+  #define bxtext yytext
+  #define bxlex yylex
+  #define bx_flush_buffer(x) /* does not exist */
+
+
+damn it never did work.
+I tried stripping the libraries to save more space, but then
+it said all sorts of C++ symbols were missing.
+
+remove aligned tag on the i387_t structure.  surely that's not
+portable.
+
+major problems with yacc and flex on occs.
+known to work with flex 2.5.4 and yacc 1.9
+
+my god, %ld seems to not be supported on OSF1, can it be?
+
+linux booted up to "calibrating delay loop"
+crashes sith segfault, apparantly in FPU_div
+stack trace:
+
+#0  FPU_div (flags=64, rm=536868936, control_w=895) at reg_divide.c:76
+#1  0x120096120 in math_emulate2 (addr_modes={override = {
+        address_size = 0 '\000', operand_size = 0 '\000', segment = 39 '\''}, 
+      default_mode = 4 '\004'}, FPU_modrm=53 '5', byte1=0 '\000', 
+    data_address=0x0, data_sel_off={offset = -1071936440, selector = 24, 
+      opcode = -1400897536, empty = -341016576}, entry_sel_off={
+      offset = -1071971976, selector = 70582288, opcode = 888669237, 
+      empty = -332072956}) at fpu_entry.c:959
+#2  0x120094a70 in bx_cpu_c::fpu_execute (this=0x40, i=0x1ffff848)
+    at wmFPUemu_glue.cc:123
+#3  0x120095230 in bx_cpu_c::ESC4 (this=0x1440c5f60, i=0x11ffff8f0)
+    at fpu.cc:104
+#4  0x120048b50 in bx_cpu_c::cpu_loop (this=0x1440c5f60, 
+    max_instr_count=536868936) at cpu.cc:268
+#5  0x120080cc0 in bx_dbg_continue_command () at dbg_main.cc:1428
+#6  0x12008cd80 in bxparse () at parser.y:382
+#7  0x12007e1f0 in bx_dbg_user_input_loop () at dbg_main.cc:448
+#8  0x12007deb8 in bx_dbg_main (argc=1074182344, argv=0x11ffffae8)
+    at dbg_main.cc:388
+#9  0x12002b5e0 in main (argc=64, argv=0x1ffff848) at main.cc:119
+
+the "b" pointer points outside of allowed address
+flags=64
+REV=16
+run again, break at first FPU_div
+first FPU_div.  
+flags&REV = false, goes to 59
+flags&LOADED = false, goes to 69
+b=&st(rm) returns 0xf1, which points to crap
+confusing because of -O2 I expect
+or maybe it returns 0x1400837a0, {sigl = 0, sigh = 0, exp = 0}
+this one finishes ok.
+
+second FPU_div, flags=64
+flags&REV=false, to 59
+flags&LOADED=true, to 64
+b is (FPU_REG *)rm, 0x1ffff848.  this is illegal address.
+calls getsign(b), crashes.
+what is rm? passed into FPU_div as 2nd argument (int!)
+
+the problem is that a pointer was cast as an int. On this machine
+pointers are 8 bytes, ints are 4 bytes!
+
+There are typecasts to FPU_REG* in the following places.
+These could crash any 64-bit machine.
+
+fpu_entry.c:713:          tag = FPU_tagof((FPU_REG *)((u_char *)S387->st_space + 10*regnr));
+reg_add_sub.c:151:      b = (FPU_REG *)rm;
+reg_divide.c:47:          a = (FPU_REG *)rm;
+reg_divide.c:64:          b = (FPU_REG *)rm;
+reg_divide.c:149:       return real_2op_NaN((FPU_REG *)rm, flags & 0x0f, 0, st0_ptr);
+reg_ld_str.c:1316:  fpu_reg_p = (FPU_REG *) (register_base+offset);
+reg_ld_str.c:1325:  fpu_reg_p = (FPU_REG *) register_base;
+reg_ld_str.c:1435:  fpu_reg_p = (FPU_REG *) (register_base+offset);
+reg_ld_str.c:1444:  fpu_reg_p = (FPU_REG *) register_base;
+
+Fix reg_add_sub.c and reg_divide.c!
+What is &st(rm)?  it uses rm as an integer
+
+rm can be an integer offset of an array, or a pointer.  This is hideous.
+Try this: send it as a pointer instead, and if it's supposed to be an 
+integer cast it to an integer.
+
+add snprintf
+add strtoull
+----- end of occs notes
+
+I worked really hard to get a correct strtoull compiled in, but it 
+doesn't really do the right thing.  Try
+  sb 123412341234L
+and then step into bx_dbg_timebp_command.  It thinks the diff is negative,
+when it certainly shouldn't be.  By the time you are in bx_dbg_timebp_command,
+the correctly-parsed 64-bit number is gone.
