@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.31 2002-09-23 15:39:53 bdenney Exp $
+// $Id: logio.cc,v 1.32 2002-09-25 18:35:06 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -242,7 +242,11 @@ int logfunctions::default_onoff[N_LOGLEV] = {
   ACT_IGNORE,  // ignore debug
   ACT_REPORT,  // report info
   ACT_REPORT,  // report error
-  ACT_FATAL    // die on panic
+#if BX_WITH_WX
+  ACT_ASK      // on panic, ask user what to do
+#else
+  ACT_FATAL    // on panic, quit
+#endif
 };
 
 logfunctions::logfunctions(void)
@@ -435,18 +439,19 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
   int val = SIM->log_msg (prefix, level, buf1);
   switch (val)
   {
-    case 0:   // user chose continue
+    case BX_LOG_ASK_CHOICE_CONTINUE:
       break;
-    case 1:   // user said continue, and don't ask for this facility again.
+    case BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS:
+      // user said continue, and don't "ask" for this facility again.
       setonoff (level, ACT_REPORT);
       break;
-    case 2:   // user chose die
+    case BX_LOG_ASK_CHOICE_DIE:
       in_ask_already = 0;  // because fatal will longjmp out
       fatal (prefix, fmt, ap);
       // should never get here
       BX_PANIC (("in ask(), fatal() should never return!"));
       break;
-    case 3: // user chose abort
+    case BX_LOG_ASK_CHOICE_DUMP_CORE:
       fprintf (stderr, "User chose to dump core...\n");
 #if BX_HAVE_ABORT
       abort ();
@@ -460,7 +465,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       exit (0);
 #endif
 #if BX_DEBUGGER
-    case 4:
+    case BX_LOG_ASK_CHOICE_ENTER_DEBUG:
       // user chose debugger.  To "drop into the debugger" we just set the
       // interrupt_requested bit and continue execution.  Before the next
       // instruction, it should notice the user interrupt and return to
@@ -509,7 +514,8 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap)
     bx_dbg_exit(1);
     }
 #endif
-  BX_PANIC (("fatal() should never return return, but it just did"));
+  // not safe to use BX_* log functions in here.
+  fprintf (stderr, "fatal() should never return, but it just did\n");
 }
 
 iofunc_t *io = NULL;
