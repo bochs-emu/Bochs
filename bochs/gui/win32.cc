@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.71 2003-12-14 09:51:58 vruppert Exp $
+// $Id: win32.cc,v 1.72 2004-02-07 14:34:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,6 +46,7 @@ class bx_win32_gui_c : public bx_gui_c {
 public:
   bx_win32_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
+  virtual void statusbar_setitem(int element, bx_bool active);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -124,6 +125,11 @@ static unsigned bx_headerbar_y = 0;
 static unsigned bx_statusbar_y = 0;
 static int bx_headerbar_entries;
 static unsigned bx_hb_separator;
+
+// Status Bar stuff
+#define SIZE_OF_SB_ELEMENT        30
+#define SIZE_OF_SB_FIRST_ELEMENT 192
+long SB_Edges[BX_MAX_STATUSITEMS+2];
 
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
@@ -648,7 +654,6 @@ VOID UIThread(PVOID pvoid) {
   HDC hdc;
   WNDCLASS wndclass;
   RECT wndRect, wndRect2;
-  long Edges[1];
 
   workerThreadID = GetCurrentThreadId();
 
@@ -703,8 +708,12 @@ VOID UIThread(PVOID pvoid) {
     hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "F12 enables mouse",
                                 stInfo.mainWnd, 0x7712);
     if (hwndSB) {
-      Edges[0] = -1;
-      SendMessage(hwndSB, SB_SETPARTS, 1, (long)&Edges);
+      int elements;
+      SB_Edges[0] = SIZE_OF_SB_FIRST_ELEMENT + SIZE_OF_SB_ELEMENT;   // F12 Mouse
+      for (elements = 1; elements < (BX_MAX_STATUSITEMS+1); elements++)
+        SB_Edges[elements] = SB_Edges[elements-1] + SIZE_OF_SB_ELEMENT;
+      SB_Edges[elements] = -1;
+      SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+2, (long)&SB_Edges);
     }
     GetClientRect(hwndTB, &wndRect2);
     bx_headerbar_y = wndRect2.bottom;
@@ -775,7 +784,6 @@ VOID UIThread(PVOID pvoid) {
   _endthread();
 }
 
-
 void SetStatusText(int Num, const char *Text)
 {
   char StatText[MAX_PATH];
@@ -787,6 +795,18 @@ void SetStatusText(int Num, const char *Text)
   }
   lstrcpy(StatText+1, Text);
   SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
+  UpdateWindow(hwndSB);
+}
+
+void 
+bx_win32_gui_c::statusbar_setitem(int element, bx_bool active)
+{
+  if (element < BX_MAX_STATUSITEMS) {
+    if (active)
+      SetStatusText(element+1, statusitem_text[element]);
+    else
+      SetStatusText(element+1, "");
+  }
 }
 
 LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {

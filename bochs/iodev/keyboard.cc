@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.82 2003-11-11 18:18:36 vruppert Exp $
+// $Id: keyboard.cc,v 1.83 2004-02-07 14:34:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.82 2003-11-11 18:18:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.83 2004-02-07 14:34:34 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -202,6 +202,11 @@ bx_keyb_c::init(void)
 
   // mouse port installed on system board
   DEV_cmos_set_reg(0x14, DEV_cmos_get_reg(0x14) | 0x04);
+
+  // add keyboard LEDs to the statusbar
+  BX_KEY_THIS statusbar_id[0] = bx_gui->register_statusitem("NUM");
+  BX_KEY_THIS statusbar_id[1] = bx_gui->register_statusitem("CAPS");
+  BX_KEY_THIS statusbar_id[2] = bx_gui->register_statusitem("SCRL");
 
 #if BX_WITH_WX
   static bx_bool first_time = 1;
@@ -996,6 +1001,9 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     BX_KEY_THIS s.kbd_internal_buffer.led_status = value;
     BX_DEBUG(("LED status set to %02x",
       (unsigned) BX_KEY_THIS s.kbd_internal_buffer.led_status));
+    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[0], value & 0x02);
+    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[1], value & 0x04);
+    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[2], value & 0x01);
     kbd_enQ(0xFA); // send ACK %%%
     return;
     }

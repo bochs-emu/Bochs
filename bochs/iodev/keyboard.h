@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.22 2003-07-13 19:51:21 vruppert Exp $
+// $Id: keyboard.h,v 1.23 2004-02-07 14:34:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -228,6 +228,7 @@ private:
   static void   timer_handler(void *);
   void   timer(void);
   int    timer_handle;
+  int    statusbar_id[3];
   };
 
 

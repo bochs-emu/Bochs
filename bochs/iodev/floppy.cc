@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.69 2003-12-18 20:04:49 vruppert Exp $
+// $Id: floppy.cc,v 1.70 2004-02-07 14:34:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.69 2003-12-18 20:04:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.70 2004-02-07 14:34:34 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -198,8 +198,12 @@ bx_floppy_ctrl_c::init(void)
     default:
       BX_PANIC(("unknown floppya type"));
     }
-  if (BX_FD_THIS s.device_type[0] != BX_FLOPPY_NONE)
+  if (BX_FD_THIS s.device_type[0] != BX_FLOPPY_NONE) {
     BX_FD_THIS s.num_supported_floppies++;
+    BX_FD_THIS s.statusbar_id[0] = bx_gui->register_statusitem("A:");
+  } else {
+    BX_FD_THIS s.statusbar_id[0] = -1;
+  }
 
   if (bx_options.floppya.Otype->get () != BX_FLOPPY_NONE) {
     if ( bx_options.floppya.Ostatus->get () == BX_INSERTED) {
@@ -264,8 +268,12 @@ bx_floppy_ctrl_c::init(void)
     default:
       BX_PANIC(("unknown floppyb type"));
     }
-  if (BX_FD_THIS s.device_type[1] != BX_FLOPPY_NONE)
+  if (BX_FD_THIS s.device_type[1] != BX_FLOPPY_NONE) {
     BX_FD_THIS s.num_supported_floppies++;
+    BX_FD_THIS s.statusbar_id[1] = bx_gui->register_statusitem("B:");
+  } else {
+    BX_FD_THIS s.statusbar_id[1] = -1;
+  }
 
   if (bx_options.floppyb.Otype->get () != BX_FLOPPY_NONE) {
     if ( bx_options.floppyb.Ostatus->get () == BX_INSERTED) {
@@ -280,7 +288,6 @@ bx_floppy_ctrl_c::init(void)
 #undef MED
       }
     }
-
 
 
   /* CMOS Equipment Byte register */
@@ -471,6 +478,11 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3F2: /* diskette controller digital output register */
       motor_on_drive1 = value & 0x20;
       motor_on_drive0 = value & 0x10;
+      /* set status bar conditions for Floppy 0 and Floppy 1 */
+      if (BX_FD_THIS s.statusbar_id[0] >= 0)
+        bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[0], motor_on_drive0);
+      if (BX_FD_THIS s.statusbar_id[1] >= 0)
+        bx_gui->statusbar_setitem(BX_FD_THIS s.statusbar_id[1], motor_on_drive1);
       dma_and_interrupt_enable = value & 0x08;
       if (!dma_and_interrupt_enable)
         BX_DEBUG(("DMA and interrupt capabilities disabled"));

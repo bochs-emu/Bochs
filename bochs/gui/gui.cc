@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.75 2004-02-01 23:48:57 cbothamy Exp $
+// $Id: gui.cc,v 1.76 2004-02-07 14:34:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,6 +51,7 @@ bx_gui_c::bx_gui_c(void)
 {
   put("GUI"); // Init in specific_init
   settype(GUILOG);
+  statusitem_count = 0;
 }
 
 bx_gui_c::~bx_gui_c()
@@ -597,4 +598,16 @@ bx_gui_c::beep_on(float frequency)
 bx_gui_c::beep_off()
 {
   BX_INFO(( "GUI Beep OFF"));
+}
+
+int
+bx_gui_c::register_statusitem(const char *text)
+{
+  if (statusitem_count < BX_MAX_STATUSITEMS) {
+    strncpy(statusitem_text[statusitem_count], text, 8);
+    statusitem_text[statusitem_count][7] = 0;
+    return statusitem_count++;
+  } else {
+   return -1;
+  }
 }

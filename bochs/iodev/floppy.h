@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.16 2002-11-30 09:39:29 vruppert Exp $
+// $Id: floppy.h,v 1.17 2004-02-07 14:34:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -114,6 +114,7 @@ private:
     Bit8u    DIR[4]; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed
+    int      statusbar_id[2]; // IDs of the status LEDs
     } s;  // state information
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
