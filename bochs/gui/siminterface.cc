@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.21 2001-06-19 05:01:46 bdenney Exp $
+ * $Id: siminterface.cc,v 1.22 2001-06-19 14:20:24 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -463,18 +463,25 @@ bx_param_num_c::reset ()
 Bit32s 
 bx_param_num_c::get ()
 {
-  if (handler)
-    val = (*handler)(this, 0, val);
-  return val;
+  if (handler) {
+    // the handler can decide what value to return and/or do some side effect
+    return (*handler)(this, 0, val);
+  } else {
+    // just return the value
+    return val;
+  }
 }
 
 void
 bx_param_num_c::set (Bit32s newval)
 {
-  if (handler)
+  if (handler) {
+    // the handler can override the new value and/or perform some side effect
     val = (*handler)(this, 1, newval);
-  else
+  } else {
+    // just set the value.  This code does not check max/min.
     val = newval;
+  }
 }
 
 bx_param_string_c::bx_param_string_c (bx_id id,
