@@ -28,6 +28,10 @@
 %token <sval> BX_TOKEN_QUIT
 %token <sval> BX_TOKEN_PROGRAM
 %token <sval> BX_TOKEN_REGISTERS
+%token <sval> BX_TOKEN_IDT
+%token <sval> BX_TOKEN_GDT
+%token <sval> BX_TOKEN_LDT
+%token <sval> BX_TOKEN_TSS
 %token <sval> BX_TOKEN_DIRTY
 %token <sval> BX_TOKEN_LINUX
 %token <sval> BX_TOKEN_CONTROL_REGS
@@ -467,6 +471,26 @@ info_command:
         bx_dbg_info_dirty_command();
         free($1); free($2);
 	}
+    | BX_TOKEN_INFO BX_TOKEN_IDT '\n'
+        {
+        bx_dbg_info_idt_command();
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_GDT '\n'
+        {
+        bx_dbg_info_gdt_command();
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_LDT '\n'
+        {
+        bx_dbg_info_ldt_command();
+        free($1); free($2);
+        }
+    | BX_TOKEN_INFO BX_TOKEN_TSS '\n'
+        {
+        bx_dbg_info_tss_command();
+        free($1); free($2);
+        }
     | BX_TOKEN_INFO BX_TOKEN_LINUX '\n'
         {
         bx_dbg_info_linux_command();
