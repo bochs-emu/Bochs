@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.33 2002-01-30 10:30:52 cbothamy Exp $
+// $Id: rombios.c,v 1.34 2002-02-06 08:45:51 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,7 +116,7 @@
 //   - Implement remaining int13_cdemu functions (as defined by El-Torito specs)
 //   - Implement int13 for cdrom with 2048bytes sector-size (as defined by El-Torito specs)
 //   - cdrom drive is hardcoded to ide 0 device 1 in several places
-//   - find out why Win98 DOES NOT boot
+//   - find out why OAK driver init makes "unit ready test" fail. see FIXME Win98
 
 #define BX_CPU           3
 #define BX_USE_PS2_MOUSE 1
@@ -925,7 +925,6 @@ void   atapio_rep_indword( /* unsigned */ /* int */ addrDataReg,
 void   atapio_rep_outdword( /* unsigned */ /* int */ addrDataReg,
                               /* unsigned */ /* int */ bufSeg, /* unsigned */ /* int */ bufOff,
                               /* unsigned */ /* int */ dwordCnt );
-
 void   atareg_init(  );
 Bit16u atareg_config( /* void */ );
 Bit16u atareg_reset( /* int */ skipFlag, /* int */ devRtrn );
@@ -955,11 +954,11 @@ Bit16u atareg_pio_data_out( /* int */ dev, /* int */ cmd,
                              /* unsigned */ /* int */ cyl, /* int */ head, /* int */ sect,
                              /* unsigned */ seg, /* unsigned */ off,
                              /* int */ numSect, /* int */ multiCnt );
-Bit16u atareg_packet( /* int */ dev,
+Bit16u etareg_packet( /* int */ dev,
                        /* unsigned */ /* int */ cpbc,
                        /* unsigned */ /* int */ cpseg, /* unsigned */ /* int */ cpoff,
                        /* int */ dir,
-                       /* Bit32u */ dpbc,
+                       /* Bit32u */ dpbc, /* Bit16u */ head, /* Bit16u */ tail,
                        /* unsigned */ /* int */ dpseg, /* unsigned */ /* int */ dpoff );
 
 void   atatmr_init(  );
@@ -981,16 +980,22 @@ void   atasub_xfer_delay( /* void */ );
 void  ata_clear_buffer(bufseg,bufoff,size);
 Bit8u atapi_get_sense(device);
 Bit8u atapi_test_ready(device);
-Bit8u atapi_read_sectors(device,count,lba,bufseg,bufoff);
+Bit8u atapi_read_sectors2048(device,count,lba,bufseg,bufoff);
+Bit8u atapi_read_sector512(device,lba,head,tail,bufseg,bufoff);
+Bit8u atapi_read_sectors(device,count,lba,head,tail,bufseg,bufoff);
 void  ata_read_atapi_device_types( );
 void  ata_show_devices( );
 
+Bit8u  cdemu_isactive();
+Bit8u  cdemu_emulated_drive();
+Bit16u cdemu_boot();
+
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.33 $";
-static char bios_date_string[] = "$Date: 2002-01-30 10:30:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.34 $";
+static char bios_date_string[] = "$Date: 2002-02-06 08:45:51 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.33 2002-01-30 10:30:52 cbothamy Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.34 2002-02-06 08:45:51 cbothamy Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1010,7 +1015,6 @@ static char CVSID[] = "$Id: rombios.c,v 1.33 2002-01-30 10:30:52 cbothamy Exp $"
 #  define printf(format, p...)
 #  define panic(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
 #endif
-
 
 #define SET_AL(val8) AX = ((AX & 0xff00) | (val8))
 #define SET_BL(val8) BX = ((BX & 0xff00) | (val8))
@@ -1457,7 +1461,7 @@ UDIV16(a, b)
 //  mov  ax, ds
 //#endasm
 //}
-
+//
 //  void
 //set_DS(ds_selector)
 //  Bit16u ds_selector;
@@ -3300,14 +3304,18 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit8u  device, status;
   Bit16u vheads, vsectors, vcylinders;
   Bit16u head, sector, cylinder, nbsectors;
-  Bit32u vlba, ilba, llba, alba;
-  Bit8u  buffer[2048];
+  Bit32u vlba, ilba, alba, rlba;
+  Bit16u roff;
   Bit16u segment,offset;
+  Bit16u error;
 
   printf("BIOS: int13 cdemu: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  // printf("BIOS: int13 cdemu: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), get_DS(), ES, DI, SI);
   
   /* at this point, we are emulating a floppy/harddisk */
   // FIXME Harddisk emulation is not implemented
+
+  device=read_byte(ebda_seg,&EbdaData->cdemu_data.device);
 
   set_disk_ret_status(0x00);
 
@@ -3322,8 +3330,15 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   
   switch (GET_AH()) {
 
-    // all those functions return SUCCESS
     case 0x00: /* disk controller reset */
+      atareg_reset(0,device);
+      SET_AH(0x00);
+      set_disk_ret_status(0x00);
+      CLEAR_CF(); /* successful */
+      return;
+      break;
+
+    // all those functions return SUCCESS
     case 0x09: /* initialize drive parameters */
     case 0x0c: /* seek to specified cylinder */
     case 0x0d: /* alternate disk reset */  // FIXME should really reset ?
@@ -3362,7 +3377,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       vcylinders=read_word(ebda_seg,&EbdaData->cdemu_data.vcylinders); 
       vheads=read_word(ebda_seg,&EbdaData->cdemu_data.vheads); 
 
-      ilba=read_dword(ebda_seg,&EbdaData->cdemu_data.ilba); 
+      ilba=read_dword(ebda_seg,&EbdaData->cdemu_data.ilba);
 
       sector = GET_CL() & 0x003f;
       cylinder = (GET_CL() & 0x00c0) << 2 | GET_CH();
@@ -3370,35 +3385,36 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       nbsectors = GET_AL();
       segment = ES;
       offset = BX;
-      //while(offset>=16) {
-      //  offset-=16;
-      //  segment+=1;
-      //  }
 
-      // calculate the virtual lba
-      vlba=(((((Bit32u)cylinder*vheads)+head)*vsectors)+sector - 1);
+      segment=ES+(BX/16);
+      offset=BX%16;
+
+      // calculate the virtual lba inside the image
+      //vlba=(((((Bit32u)cylinder*vheads)+head)*vsectors)+sector - 1);
+      vlba=(Bit32u)cylinder;
+      vlba*=(Bit32u)vheads;
+      vlba+=(Bit32u)head;
+      vlba*=(Bit32u)vsectors;
+      vlba+=(Bit32u)(sector-1);
       
       // In advance so we don't loose the count
       SET_AL(nbsectors);
 
-      device=read_byte(ebda_seg,&EbdaData->cdemu_data.device);
-
-      llba=0;
       while(nbsectors>0) {
-        alba=ilba+((Bit16u)(vlba&0x0000ffff)/4);  // FIXME should allow bigger image size - needs compiler helper function
-        if(alba!=llba) {
-   
-          if(atapi_read_sectors(device,1,alba,get_SS(),buffer)!=0) {
-            SET_AH(0x02);
-            set_disk_ret_status(0x02);
-            SET_AL(0);
-            SET_CF(); /* error */
-            return;
-            }
-          llba=alba;
-          }
 
-        memcpyd(segment, offset,get_SS(),buffer+(((Bit16u)(vlba&0x0000ffff)%4)*512),128);
+        // calculate the absolute lba on CD = image lba + virtual lba
+        rlba=(Bit16u)vlba/4;             // FIXME should allow bigger image size - needs compiler helper function
+        roff=(Bit16u)vlba%4;             // This is the relative 512bytes block in 2048bytes block;
+
+        alba=ilba+rlba;
+
+        if((error=atapi_read_sector512(device,alba,roff*512,(3-roff)*512,segment,offset))!=0) {
+          SET_AH(0x02);
+          set_disk_ret_status(0x02);
+          SET_AL(0);
+          SET_CF(); /* error */
+          return;
+          }
 
         offset+=512;
         vlba++;
@@ -3431,13 +3447,15 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
 
       SET_AH(0);
       set_disk_ret_status(0);
+      DI = 0xefc7;
+      ES = 0xf000;
       CLEAR_CF(); /* successful */
       return;
       break;
 
     case 0x15: /* read disk drive size */
       // FIXME if we want to emulate a harddisk
-      SET_AH(0x02);
+      SET_AH(0x01);
       set_disk_ret_status(0x00); 
       CLEAR_CF(); 
       return;
@@ -3485,7 +3503,7 @@ int13_cdemu(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
       break;
 
     default:
-      panic("case 0x%x found in int13_function()", (unsigned) GET_AH());
+      panic("case 0x%x found in int13_cdemu()", (unsigned) GET_AH());
       break;
     }
 }
@@ -3681,6 +3699,7 @@ int13_diskette_function(DI, SI, BP, SP, BX, DX, CX, AX, ES, FLAGS)
   Bit16u es, last_addr;
 
   printf("BIOS: int13 diskette: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
+  // printf("BIOS: int13 diskette: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), get_DS(), ES, DI, SI);
 
   ah = GET_AH();
 
@@ -4328,6 +4347,11 @@ printf("floppy f15\n");
       else {
         SET_AH(1); // drive present, does not support change line
         }
+
+#if BX_ELTORITO_BOOT
+      if((cdemu_isactive()!=00)&&(cdemu_emulated_drive()==drive))
+        DX+=0x0001;
+#endif
       return;
 
     case 0x16: // get diskette change line status
@@ -5228,6 +5252,61 @@ Bit8u  data;
       outb( regAddr, data );
    }
    write_byte(ebda_seg,&EbdaData->atadrv_data.pio_last_write[ addr ], data);
+}
+
+//*********************************************************
+// FIXME assembly code should boost perfs
+void atapio_repinb( /* unsigned int */ addr , /* Bit16u */ count )
+Bit16u addr,count;
+{
+   Bit16u ebda_seg=read_word(0x40,0x0E);
+   Bit16u pio_memory_seg=read_word(ebda_seg,&EbdaData->atadrv_data.pio_memory_seg);
+   Bit16u regAddr=read_word(ebda_seg,&EbdaData->atadrv_data.pio_reg_addrs[ addr ]);
+
+   if(count==0) return;
+
+   if ( pio_memory_seg )
+   {
+     while(count-->0)
+     {
+        read_byte(pio_memory_seg,regAddr);
+     }
+   }
+   else
+   {
+     while(count-->0)
+     {
+        inb(regAddr);
+     }
+   }
+}
+
+//*********************************************************
+// FIXME assembly code should boost perfs
+void atapio_repoutb( /* unsigned int */ addr, /* unsigned char */ data , /* Bit16u */ count)
+Bit16u addr,count;
+Bit8u  data;
+{
+   Bit16u ebda_seg=read_word(0x40,0x0E);
+   Bit16u pio_memory_seg=read_word(ebda_seg,&EbdaData->atadrv_data.pio_memory_seg);
+   Bit16u regAddr=read_word(ebda_seg,&EbdaData->atadrv_data.pio_reg_addrs[ addr ]);
+
+   if(count==0) return;
+
+   if ( pio_memory_seg )
+   {
+     while(count-->0)
+     {
+        write_byte(pio_memory_seg, regAddr,data);
+     }
+   }
+   else
+   {
+     while(count-->0)
+     {
+        outb( regAddr, data);
+     }
+   }
 }
 
 //*********************************************************
@@ -6811,8 +6890,9 @@ Bit16u atareg_packet( /* int */ dev,
                 /* unsigned int */ cpseg, /* unsigned int */ cpoff,
                 /* int */ dir,
                 /* long */ dpbc,
+                /* unsigned int */ head, /* unsigned int */ tail,
                 /* unsigned int */ dpseg, /* unsigned int */ dpoff )
-Bit16u dev, cpbc, cpseg, cpoff, dpseg, dpoff;
+Bit16u dev, cpbc, cpseg, cpoff, dpseg, dpoff, head, tail;
 int dir; // signed ! */
 Bit32u dpbc;
 {
@@ -6830,6 +6910,9 @@ Bit32u dpbc;
    Bit8u  highCyl;
    Bit16u byteCnt;
    Bit16u wordCnt;
+   Bit16u realCnt;
+   Bit16u headCnt;
+   Bit16u tailCnt;
    Bit16u ndx;
    Bit32u dpaddr;
 
@@ -7170,7 +7253,13 @@ Bit32u dpbc;
       // transfer the data and update the i/o buffer address
       // and the number of bytes transfered.
 
+      headCnt = head;
+      tailCnt = tail;
+
       wordCnt = ( byteCnt >> 1 ) + ( byteCnt & 0x0001 );
+
+      // take out head and tail
+      realCnt = wordCnt - ((headCnt + tailCnt)>>1);
 
       totalBytesXfer=read_dword(ebda_seg,&EbdaData->atadrv_data.reg_cmd_info.totalBytesXfer);
       totalBytesXfer += ( wordCnt << 1 );
@@ -7178,10 +7267,19 @@ Bit32u dpbc;
 
       dpseg = (unsigned int) ( dpaddr >> 4 );
       dpoff = (unsigned int) ( dpaddr & 0x0000000fL );
+
       if ( dir )
-         atapio_rep_outword( CB_DATA, dpseg, dpoff, wordCnt );
+      {
+         atapio_repoutb(CB_DATA,0x00,headCnt);
+         atapio_rep_outword( CB_DATA, dpseg, dpoff, realCnt );
+         atapio_repoutb(CB_DATA,0x00,tailCnt);
+      }
       else
-         atapio_rep_inword( CB_DATA, dpseg, dpoff, wordCnt );
+      {
+         atapio_repinb(CB_DATA,headCnt);
+         atapio_rep_inword( CB_DATA, dpseg, dpoff, realCnt );
+         atapio_repinb(CB_DATA,tailCnt);
+      }
       dpaddr = dpaddr + byteCnt;
 
       DELAY400NS;    // delay so device can get the status updated
@@ -7289,11 +7387,15 @@ atapi_get_sense(device)
   //write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0001);
   atacmd[0]=0x03;    
   atacmd[4]=0x20;    
-  if(atareg_packet(device,12,get_SS(),atacmd,0, 128, get_SS(), buffer)!=0)
+  if(atareg_packet(device,12,get_SS(),atacmd,0, 128L, 0,0, get_SS(), buffer)!=0)
     return 2;
   if((buffer[0]&0x7e)==0x70){
+    // FIXME Win98 is failing here after AOK driver inits
+    if((buffer[2]&0x0f)==2)return(0); // this is a ack. have to look why it's failing
+
     return buffer[2]&0x0f;
     }
+
   return 0;
 }
 
@@ -7308,39 +7410,58 @@ atapi_test_ready(device)
   // No OPERATION
   ata_clear_buffer(get_SS(),atacmd,12);
   //write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0001);
-  if(atareg_packet(device,12,get_SS(),atacmd,0, 128, get_SS(), buffer)!=0)
+  if(atareg_packet(device,12,get_SS(),atacmd,0, 128L, 0,0, get_SS(), buffer)!=0)
     return 0x0f;
   return atapi_get_sense(device);
 }
 
+
   Bit8u 
-atapi_read_sectors(device,count,lba,bufseg,bufoff)
+atapi_read_sectors2048(device,count,lba,bufseg,bufoff)
   Bit16u device,bufseg,bufoff,count;
+  Bit32u lba;
+{
+  return (atapi_read_sectors(device,count,lba,0,0,bufseg,bufoff));
+}
+
+  Bit8u 
+atapi_read_sector512(device,lba,head,tail,bufseg,bufoff)
+  Bit16u device,bufseg,bufoff,head,tail;
+  Bit32u lba;
+{
+  return (atapi_read_sectors(device,1,lba,head,tail,bufseg,bufoff));
+}
+
+  Bit8u 
+atapi_read_sectors(device,count,lba,head,tail,bufseg,bufoff)
+  Bit16u device,bufseg,bufoff,count,head,tail;
   Bit32u lba;
 // Take care, the buffer should be big enough
 {
   Bit16u ebda_seg = read_word(0x0040, 0x000E);
   Bit8u  atacmd[12];
-  Bit8u  i;
+  Bit16u status;
 
   // test if unit ready
-  if(atapi_test_ready(device)!=0) return 1;
+  if((status=atapi_test_ready(device))!=0) {
+    return 1;
+    }
   //write_word(ebda_seg,&EbdaData->atadrv_data.reg_atapi_delay_flag,0x0001);
 
   ata_clear_buffer(get_SS(),atacmd,12);
   atacmd[0]=0x28;  // READ command
   atacmd[7]=(count&0xff00)>>8;  // Sectors
   atacmd[8]=(count&0x00ff);  // Sectors
-  atacmd[2]=(lba&0xff000000)>>24; //
+  atacmd[2]=(lba&0xff000000)>>24;
   atacmd[3]=(lba&0x00ff0000)>>16;
   atacmd[4]=(lba&0x0000ff00)>>8;
   atacmd[5]=(lba&0x000000ff);
 
-  if(atareg_packet(device,12,get_SS(),atacmd,0, 2048L, bufseg, bufoff)!=0)
+  if(atareg_packet(device,12,get_SS(),atacmd,0, 2048L, head, tail, bufseg, bufoff)!=0)
     return 2;
 
   // Check if all sectors read
-  if(read_dword(ebda_seg,&EbdaData->atadrv_data.reg_cmd_info.totalBytesXfer)!=(Bit32u)count*2048L)
+  if(read_dword(ebda_seg,&EbdaData->atadrv_data.reg_cmd_info.totalBytesXfer)!=((Bit32u)count*2048L))
     return 3;
 }
 
@@ -7472,6 +7593,15 @@ cdemu_emulated_drive()
   return(read_byte(ebda_seg,&EbdaData->cdemu_data.emulated_drive));
 }
 
+  void
+cdemu_bootfailed( code )
+  Bit16u code;
+{
+  bios_printf(BIOS_PRINTF_SCREEN, "CDROM boot failure code : %04x\n",code);
+  
+  return;
+}
+
 static char isotag[6]="CD001";
 static char eltorito[24]="EL TORITO SPECIFICATION";
 //
@@ -7497,7 +7627,7 @@ cdemu_boot()
     return 2;
 
   // Read the Boot Record Volume Descriptor
-  if(atapi_read_sectors(1,1,0x11L,get_SS(),buffer)!=0)
+  if(atapi_read_sectors2048(1,1,0x11L,get_SS(),buffer)!=0)
     return 3;
 
   // Validity checks
@@ -7512,7 +7642,7 @@ cdemu_boot()
   lba=buffer[0x4A]*0x1000000+buffer[0x49]*0x10000+buffer[0x48]*0x100+buffer[0x47];
 
   // And we read the Boot Catalog
-  if(atapi_read_sectors(1,1,lba,get_SS(),buffer)!=0)
+  if(atapi_read_sectors2048(1,1,lba,get_SS(),buffer)!=0)
     return 7;
  
   // Validation entry
@@ -7556,7 +7686,7 @@ cdemu_boot()
   // And we read the image in the buffer
   memoffset=0;
   while(nbsectors>0) {
-    if(atapi_read_sectors(1,1,lba,get_SS(),buffer)!=0)
+    if(atapi_read_sectors2048(1,1,lba,get_SS(),buffer)!=0)
       return 12;
     
     cdoffset=0;
@@ -7669,7 +7799,6 @@ carry_set:
 ;- INT13h (relocated) -
 ;----------------------
 int13_relocated:
-  pushf
 #if BX_ELTORITO_BOOT
   push  ax
   push  bx
@@ -7709,6 +7838,7 @@ int13_legacy:
 
 #endif // BX_ELTORITO_BOOT
 
+  pushf
   test  dl, #0x80
   jz    int13_floppy
 
@@ -7734,13 +7864,20 @@ int13_cdemu:
   pop   cx
   pop   bx
   pop   ax
-  ;; pushf already done
+
+  push  ds
+  push  ss
+  pop   ds
+
+  pushf
   push  es
   pusha
   call  _int13_cdemu
   popa
   pop   es
   popf
+
+  pop   ds
   jmp iret_modify_cf
 #endif // BX_ELTORITO_BOOT
 
@@ -7767,6 +7904,7 @@ int19_relocated:
   mov  al, #0x3d
   out  0x70, al
   in   al, 0x71
+
   cmp  al, #0x03
   je   int19_usecdrom
   cmp  al, #0x02
@@ -7780,6 +7918,11 @@ int19_usecdrom:
   mov  dl, ah      ;; high byte is emulated device. (boot code at 0x07C0 needs it)
   cmp  al, #0x00   ;; Did we fail ?
   je   int19_eltorito_checked
+  push dx
+  push ax
+  call _cdemu_bootfailed
+  pop  ax
+  pop  dx
   stc
 
 int19_eltorito_checked:
@@ -7827,7 +7970,6 @@ int19_loaded:
 
   ;; dl contains real or emulated boot disk (0x00 or 0x80)
   ;; if dh=xxxx xx0x, boot from floppy/harddisk.  if dh=xxxx xx1x, boot from cdrom
-  push  dx
   call _boot_from_msg
 
   ;; restore dx
