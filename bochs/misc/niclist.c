@@ -2,7 +2,7 @@
 //
 // misc/niclist.c
 // by Don Becker <x-odus@iname.com>
-// $Id: niclist.c,v 1.3 2001-10-31 16:03:23 bdenney Exp $
+// $Id: niclist.c,v 1.4 2001-10-31 16:54:10 bdenney Exp $
 //
 // This program is for win32 only.  It lists the network interface cards
 // that you can use in the "ethdev" field of the ne2k line in your bochsrc.
@@ -116,6 +116,8 @@ int main(int argc, char **argv)
 		PacketGetAdapterNames = (BOOLEAN (*)(PTSTR, PULONG))GetProcAddress(hPacket, "PacketGetAdapterNames");
 	} else {
 		printf("Could not load WinPCap driver!\n");
+		printf ("You can download them for free from\n");
+		printf ("http://netgroup-serv.polito.it/winpcap\n");
 		return 1;
 	}
 	
