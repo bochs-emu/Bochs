@@ -138,7 +138,7 @@ open_screen(void)
 {
 
   	int id = INVALID_ID;
-    extern Boolean amigawin;
+
     char *scrmode;
     struct DrawInfo *screen_drawinfo = NULL;
 
@@ -152,8 +152,7 @@ open_screen(void)
     struct Hook screenreqhook = { 0, 0, (ULONG(*)())&GATEDispatcherFunc, (ULONG(*)())screenreqfunc, 0 };
 
 
-
-    if(!amigawin)
+    if(bx_options.Ofullscreen->get ())
     {
     if (smr = (ScreenModeRequester *)AllocAslRequestTags(ASL_ScreenModeRequest,
         ASLSM_DoWidth, TRUE,
@@ -367,9 +366,7 @@ bx_gui_c::flush(void)
   void
 bx_gui_c::clear_screen(void)
 {
-    extern Boolean amigawin;
-
-    if(d > 8 || amigawin)
+    if(d > 8 || !bx_options.Ofullscreen->get ())
     	SetAPen(window->RPort, black);
     else
     	SetAPen(window->RPort, 0); /*should be ok to clear with the first pen in the map*/
@@ -434,7 +431,6 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
 {
 
   Bit8u *ptr;
-  extern Boolean amigawin;
                     
   	ptr = (Bit8u *)(cmap+index);
 
@@ -443,7 +439,7 @@ bx_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned 
   	*ptr = green; ptr++;
   	*ptr = blue;
 
-  if(d > 8 || amigawin)
+  if(d > 8 || !bx_options.Ofullscreen->get ())
   {
   	if(pmap[index] != -1)
   		ReleasePen(window->WScreen->ViewPort.ColorMap, pmap[index]);
@@ -476,9 +472,7 @@ bx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   void
 bx_gui_c::dimension_update(unsigned x, unsigned y)
 {
-    	extern Boolean amigawin;
-
-        if(amigawin && (x != w || y != h))    
+        if(!bx_options.Ofullscreen->get () && (x != w || y != h))
         {
             ChangeWindowBox(window, window->LeftEdge, window->TopEdge, x + bx_borderleft + bx_borderright, y + bx_bordertop + bx_borderbottom + bx_headerbar_y);
         	 w = x;
@@ -492,8 +486,6 @@ bx_gui_c::dimension_update(unsigned x, unsigned y)
   unsigned
 bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
-    extern Boolean amigawin;
-
     int i = 0;
     Bit8u *a;
 
@@ -509,7 +501,7 @@ bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
     bx_header_image[bx_image_entries].ImageData   = (UWORD *)bmap;
     bx_header_image[bx_image_entries].NextImage	   = NULL;
     bx_header_image[bx_image_entries].PlanePick   = 0x1;
-    if(d > 8 || amigawin)
+    if(d > 8 || !bx_options.Ofullscreen->get ())
     	bx_header_image[bx_image_entries].PlaneOnOff  = 0x2;
 
     /*we need to reverse the bitorder for this to work*/
@@ -568,9 +560,7 @@ return(bx_headerbar_entries - 1);
   void
 bx_gui_c::show_headerbar(void)
 {
-    extern Boolean amigawin;
-
-    if(d > 8 || amigawin)
+    if(d > 8 || !bx_options.Ofullscreen->get ())
     	SetAPen(window->RPort, white);
     else
         SetAPen(window->RPort, 0);

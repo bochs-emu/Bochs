@@ -81,7 +81,7 @@ bx_options_t bx_options = {
   NULL,    // system clock sync
   NULL,    // default mouse_enabled
   NULL,       // default private_colormap
-#if BX_USE_AMIGAOS
+#if BX_WITH_AMIGAOS
   NULL,       // full screen mode
   NULL,       // screen mode
 #endif
@@ -493,7 +493,7 @@ void bx_init_options ()
       "Sync with system clock",
       "This option slows down bochs if it starts to run ahead of the system clock",
       0);
-#if BX_USE_AMIGAOS
+#if BX_WITH_AMIGAOS
   bx_options.Ofullscreen = new bx_param_bool_c (BXP_FULLSCREEN,
       "Use full screen mode",
       "When enabled, bochs occupies the whole screen instead of just a window.",
@@ -511,7 +511,7 @@ void bx_init_options ()
     bx_options.Omax_ips,
     bx_options.Osystem_clock_sync,
     bx_options.Oprivate_colormap,
-#if BX_USE_AMIGAOS
+#if BX_WITH_AMIGAOS
     bx_options.Ofullscreen,
     bx_options.Oscreenmode,
 #endif
@@ -1431,7 +1431,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     }
   else if (!strcmp(params[0], "fullscreen")) {
-#if BX_USE_AMIGAOS
+#if BX_WITH_AMIGAOS
     if (num_params != 2) {
       BX_PANIC(("%s: fullscreen directive malformed.", context));
       }
@@ -1446,7 +1446,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
 #endif
     }
   else if (!strcmp(params[0], "screenmode")) {
-#if BX_USE_AMIGAOS
+#if BX_WITH_AMIGAOS
     if (num_params != 2) {
       BX_PANIC(("%s: screenmode directive malformed.", context));
       }
@@ -1824,7 +1824,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "system_clock_sync: enabled=%d\n", bx_options.Osystem_clock_sync->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
-#if BX_USE_AMIGAOS
+#if BX_WITH_AMIGAOS
   fprintf (fp, "fullscreen: enabled=%d\n", bx_options.Ofullscreen->get ());
   fprintf (fp, "screenmode: name=\"%s\"\n", bx_options.Oscreenmode->getptr ());
 #endif
