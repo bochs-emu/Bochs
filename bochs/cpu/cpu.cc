@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.61.2.1 2002-10-08 17:16:32 cbothamy Exp $
+// $Id: cpu.cc,v 1.61.2.2 2002-10-21 15:19:25 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1018,7 +1018,7 @@ BX_CPU_C::dbg_take_irq(void)
   if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () ) {
     if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
       // normal return from setjmp setup
-      vector = BX_IAC(); // may set INTR with next interrupt
+      vector = BX_PIC_IAC(); // may set INTR with next interrupt
       BX_CPU_THIS_PTR errorno = 0;
       BX_CPU_THIS_PTR EXT   = 1; // external event
       BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
