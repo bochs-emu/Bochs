@@ -25,8 +25,6 @@
 #ifndef BX_CPU_APIC_H
 #  define BX_CPU_APIC_H 1
 
-#if BX_SUPPORT_APIC
-
 typedef enum {
   APIC_TYPE_NONE,
   APIC_TYPE_IOAPIC,
@@ -42,6 +40,8 @@ typedef enum {
 #endif
 
 #define IOAPIC_VERSION_ID 0x00170011  // same version as 82093 IOAPIC
+
+#if BX_SUPPORT_APIC
 
 class BOCHSAPI bx_generic_apic_c : public logfunctions {
 protected:

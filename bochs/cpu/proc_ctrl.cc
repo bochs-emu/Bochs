@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.81 2004-06-18 14:11:07 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.82 2004-09-21 20:19:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1262,15 +1262,29 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
 void BX_CPU_C::SetCR0(Bit32u val_32)
 {
+  bx_bool pe = val_32 & 0x01;
+  bx_bool nw = (val_32 >> 29) & 0x01;
+  bx_bool cd = (val_32 >> 30) & 0x01;
+  bx_bool pg = (val_32 >> 31) & 0x01;
+
+  if (pg && !pe) {
+    BX_INFO(("SetCR0: GP(0) when attempt to set CR0.PG with CR0.PE cleared !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  if (nw && !cd) {
+    BX_INFO(("SetCR0: GP(0) when attempt to set CR0.NW with CR0.CD cleared !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
-  bx_bool prev_pe, prev_pg;
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
 
-  prev_pe = BX_CPU_THIS_PTR cr0.pe;
-  prev_pg = BX_CPU_THIS_PTR cr0.pg;
+  bx_bool prev_pe = BX_CPU_THIS_PTR cr0.pe;
+  bx_bool prev_pg = BX_CPU_THIS_PTR cr0.pg;
 
-  BX_CPU_THIS_PTR cr0.pe = val_32 & 0x01;
+  BX_CPU_THIS_PTR cr0.pe = pe;
   BX_CPU_THIS_PTR cr0.mp = (val_32 >> 1) & 0x01;
   BX_CPU_THIS_PTR cr0.em = (val_32 >> 2) & 0x01;
   BX_CPU_THIS_PTR cr0.ts = (val_32 >> 3) & 0x01;
@@ -1279,10 +1293,10 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
   BX_CPU_THIS_PTR cr0.ne = (val_32 >> 5)  & 0x01;
   BX_CPU_THIS_PTR cr0.wp = (val_32 >> 16) & 0x01;
   BX_CPU_THIS_PTR cr0.am = (val_32 >> 18) & 0x01;
-  BX_CPU_THIS_PTR cr0.nw = (val_32 >> 29) & 0x01;
-  BX_CPU_THIS_PTR cr0.cd = (val_32 >> 30) & 0x01;
+  BX_CPU_THIS_PTR cr0.nw = nw;
+  BX_CPU_THIS_PTR cr0.cd = cd;
 #endif
-  BX_CPU_THIS_PTR cr0.pg = (val_32 >> 31) & 0x01;
+  BX_CPU_THIS_PTR cr0.pg = pg;
 
   // handle reserved bits behaviour
 #if BX_CPU_LEVEL == 3
