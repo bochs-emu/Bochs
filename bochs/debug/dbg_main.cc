@@ -1084,6 +1084,34 @@ void bx_dbg_show_command(char* arg)
 		    /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
 		    printf("Turned on all bx_dbg flags\n");
 		    return;
+	    } else if(!strcmp(arg,"\"none\"")){
+		    bx_dbg.floppy = 0;
+		    bx_dbg.keyboard = 0;
+		    bx_dbg.video = 0;
+		    bx_dbg.disk = 0;
+		    bx_dbg.pit = 0;
+		    bx_dbg.pic = 0;
+		    bx_dbg.bios = 0;
+		    bx_dbg.cmos = 0;
+		    bx_dbg.a20 = 0;
+		    bx_dbg.interrupts = 0;
+		    bx_dbg.exceptions = 0;
+		    bx_dbg.unsupported = 0;
+		    bx_dbg.temp = 0;
+		    bx_dbg.reset = 0;
+		    bx_dbg.mouse = 0;
+		    bx_dbg.io = 0;
+		    bx_dbg.debugger = 0;
+		    bx_dbg.xms = 0;
+		    bx_dbg.v8086 = 0;
+		    bx_dbg.paging = 0;
+		    bx_dbg.creg = 0;
+		    bx_dbg.dreg = 0;
+		    bx_dbg.dma = 0;
+		    bx_dbg.unsupported_io = 0;
+		    /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
+		    printf("Turned off all bx_dbg flags\n");
+		    return;
 	    } else {
 		  printf("Unrecognized arg: %s ('mode' 'int' 'call' 'ret' 'dbg-all' are valid)\n",arg);
 		  return;
