@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: make-dmg.sh,v 1.1.2.2 2003-01-04 19:43:00 bdenney Exp $
+# $Id: make-dmg.sh,v 1.1.2.3 2003-01-22 02:38:59 bdenney Exp $
 #
 # Make a DMG of Bochs.  This script must be run from the main source 
 # directory, e.g. "./build/macosx/make-dmg.sh".  If you haven't run
@@ -11,7 +11,7 @@
 #
 
 #VERSION=@VERSION@    # substituted in with configure script
-VERSION=2.0.1
+VERSION=2.0.2
 BUILDROOT=./_dmg_top
 INSTALL_PREFIX=$BUILDROOT/Bochs-${VERSION}
 DMG=./Bochs-${VERSION}.dmg
