@@ -9,9 +9,17 @@ blur: blur.c
 	gcc -O2 -pg -fprofile-arcs -ftest-coverage blur.c -o blur-profile
 	gcc -O2 -DBLUR_USE_FUNCTION_CALL -o blur-O2-func blur.c
 	gcc -O2 -DBLUR_USE_FUNCTION_CALL -o blur-O2-func.s -S blur.c
+	gcc -O2 -DBLUR_USE_SWITCH -o blur-O2-switch blur.c
+	gcc -O2 -DBLUR_USE_SWITCH -o blur-O2-switch.s -S blur.c
+	gcc -O2 -DBLUR_USE_SWITCH_CALL -o blur-O2-switch-call blur.c
+	gcc -O2 -DBLUR_USE_SWITCH_CALL -o blur-O2-switch-call.s -S blur.c
+	gcc -O2 -DBLUR_FNPTR_SWITCH -o blur-O2-fnptr-switch blur.c
+	gcc -O2 -DBLUR_FNPTR_SWITCH -o blur-O2-fnptr-switch.s -S blur.c
+	gcc -O2 -DBLUR_FNPTR_TABLE -o blur-O2-fnptr-table blur.c
+	gcc -O2 -DBLUR_FNPTR_TABLE -o blur-O2-fnptr-table.s -S blur.c
 
 clean::
-	rm -rf *.o *.s blur-no-opt blur-O*
+	rm -rf *.o *.s blur-no-opt blur-O* blur-profile gmon.out blur.out *.bb *.bbg *.da *.gcov
 
 # blur-no-opt: 11.98
 # blur-O1: 6.56
