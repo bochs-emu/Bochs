@@ -952,7 +952,7 @@ bx_atexit(void)
     if (bx_options.Oi440FXSupport->get ()) {
       bx_devices.pci->print_i440fx_state();
       }
-#endif'
+#endif
 	return 0;
 }
 
