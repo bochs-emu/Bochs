@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.12 2001-10-03 13:10:38 bdenney Exp $
+// $Id: pic.cc,v 1.13 2001-11-11 00:45:42 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -400,8 +400,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         else if (special_mask == 0x03) { /* set specific mask */
           BX_PIC_THIS s.slave_pic.special_mask = 1;
           service_slave_pic();
-          BX_ERROR(("slave: OCW3 not implemented (%02x)",
-            (unsigned) value));
+	  BX_ERROR(("Congratulations, you found a test case for bug [ #468340 ] pic:slave: OCW3 not implemented.  The bug has been fixed, but Bryce needs a way to test it.  Please report exactly how you got to this point.  It is perfectly safe to continue."));
           }
         return;
         }
@@ -625,6 +624,13 @@ bx_pic_c::service_slave_pic(void)
     return;
     }
 
+  if (BX_PIC_THIS s.master_pic.special_mask) {
+    /* all priorities may be enabled.  check all IRR bits except ones
+     * which have corresponding ISR bits set
+     */
+    lowest_priority_irq = 8;
+    }
+  else {
   /* Find the highest priority IRQ that is enabled due to current ISR */
   isr = BX_PIC_THIS s.slave_pic.isr;
   if (isr) {
@@ -637,11 +643,17 @@ bx_pic_c::service_slave_pic(void)
     }
   else
     lowest_priority_irq = 8;
+  }
 
 
   /* now, see if there are any higher priority requests */
   if ((unmasked_requests = (BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr)) ) {
     for (irq=0; irq<lowest_priority_irq; irq++) {
+      /* for special mode, since we're looking at all IRQ's, skip if
+       * current IRQ is already in-service
+       */
+      if ( BX_PIC_THIS s.slave_pic.special_mask && ((BX_PIC_THIS s.slave_pic.isr >> irq) & 0x01) )
+        continue;
       if (unmasked_requests & (1 << irq)) {
         if (bx_dbg.pic)
           BX_DEBUG(("slave: signalling IRQ(%u)",
