@@ -9,4 +9,4 @@ uselib.out.expected::
 	-./uselib | ${top_srcdir}/filter-test-output > uselib.out.expected
 
 clean-common::
-	rm -rf .libs *.o *.lo *.la *.dll uselib uselib.exe bin lib uselib.out uselib.out.diffs *.def *.exp
+	rm -rf .libs *.o *.lo *.la *.dll uselib uselib.exe bin lib uselib.out uselib.out.diffs *.def *.exp core
