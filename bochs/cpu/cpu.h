@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.44 2002-09-12 20:00:24 sshwarts Exp $
+// $Id: cpu.h,v 1.45 2002-09-12 20:51:48 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -628,7 +628,7 @@ typedef struct {
         };
       } word;
     };
-   BX_CPP_INLINE get_erx() { return erx; }
+   BX_CPP_INLINE Bit32u get_erx() { return erx; }
   } bx_gen_reg_t;
 #else
 typedef struct {
@@ -645,7 +645,7 @@ typedef struct {
       Bit16u word_filler;
       } word;
     };
-   BX_CPP_INLINE get_erx() { return erx; }
+   BX_CPP_INLINE Bit32u get_erx() { return erx; }
   } bx_gen_reg_t;
 #endif
 
