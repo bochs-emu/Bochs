@@ -105,8 +105,13 @@ bx_cmos_c::init(bx_devices_c *d)
   else if (bx_options.cmos.time0 != 0)
           BX_CMOS_THIS s.timeval = bx_options.cmos.time0;
 
-  BX_INFO(("Setting initial clock to: %s",
-    ctime(&(BX_CMOS_THIS s.timeval)) ));
+  char *tmptime;
+  while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
+		BX_PANIC(("Out of memory."));
+  }
+  tmptime[strlen(tmptime)-1]='\0';
+
+  BX_INFO(("Setting initial clock to: %s", tmptime));
 
   update_clock();
 
