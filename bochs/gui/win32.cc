@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.44.2.6 2002-10-21 20:32:34 bdenney Exp $
+// $Id: win32.cc,v 1.44.2.7 2002-10-22 22:44:36 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,12 +79,12 @@ QueueEvent* deq_key_event(void);
 
 static QueueEvent keyevents[SCANCODE_BUFSIZE];
 static unsigned head=0, tail=0;
-static unsigned mouse_button_state = 0;
+static int mouse_button_state = 0;
 static int ms_xdelta=0, ms_ydelta=0;
 static int ms_lastx=0, ms_lasty=0;
 static int ms_savedx=0, ms_savedy=0;
 static BOOL mouseCaptureMode;
-static unsigned long workerThread = NULL;
+static unsigned long workerThread = 0;
 static DWORD workerThreadID = 0;
 
 // Graphics screen stuff
@@ -95,7 +95,6 @@ static HBITMAP MemoryBitmap = NULL;
 static HDC MemoryDC = NULL;
 static RECT updated_area;
 static BOOL updated_area_valid = FALSE;
-static Bit32u *VideoBits;
 
 // Textmode cursor
 HBITMAP cursorBmp;
@@ -115,7 +114,7 @@ static struct {
 } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
 
 static unsigned bx_headerbar_y = 0;
-static unsigned bx_headerbar_entries;
+static int bx_headerbar_entries;
 static unsigned bx_hb_separator;
 
 // Misc stuff
@@ -284,7 +283,7 @@ void terminateEmul(int reason) {
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-void bx_win32_gui_c::specific_init(argc, char **argv, unsigned
+void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
 			     tilewidth, unsigned tileheight,
 			     unsigned headerbar_y) {
   put("WGUI");
@@ -517,7 +516,6 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) 
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
   RECT wndRect;
-  POINT ptCursorPos;
 
   switch (iMsg) {
   case WM_CREATE:
@@ -795,18 +793,18 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char data[64];
   BOOL forceUpdate = FALSE;
 
-  if (bx_gui.charmap_updated) {
+  if (charmap_updated) {
     for (unsigned c = 0; c<256; c++) {
-      if (bx_gui.char_changed[c]) {
+      if (char_changed[c]) {
         memset(data, 0, sizeof(data));
         for (unsigned i=0; i<32; i++)
-          data[i*2] = bx_gui.vga_charmap[c*32+i];
+          data[i*2] = vga_charmap[c*32+i];
         SetBitmapBits(vgafont[c], 64, data);
-        bx_gui.char_changed[c] = 0;
+        char_changed[c] = 0;
       }
     }
     forceUpdate = TRUE;
-    bx_gui.charmap_updated = 0;
+    charmap_updated = 0;
   }
 
   cs_start = (cursor_state >> 8) & 0x3f;
