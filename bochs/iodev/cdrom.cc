@@ -553,24 +553,6 @@ cdrom_interface::capacity()
   
     return(buf.st_size);
   }
-#elif __linux__
-  {
-  // I just looked through the Linux kernel source to see
-  // what it does with the ATAPI capacity command, and reversed
-  // that process here.
-  uint32 nr_sects;
-
-  if (fd < 0) {
-    BX_PANIC(("cdrom: capacity: file not open."));
-    }
-  if (ioctl(fd, BLKGETSIZE, &nr_sects) != 0) {
-    BX_PANIC(("cdrom: ioctl(BLKGETSIZE) failed"));
-    }
-  nr_sects /= (CD_FRAMESIZE / 512);
-
-  BX_DEBUG(( "capacity: %u", nr_sects));
-  return(nr_sects);
-  }
 #elif defined(__OpenBSD__)
   {
   // We just read the disklabel, imagine that...
@@ -584,6 +566,57 @@ cdrom_interface::capacity()
 
   BX_DEBUG(( "capacity: %u", lp.d_secperunit ));
   return(lp.d_secperunit);
+  }
+#elif defined(__linux__)
+  {
+  // Read the TOC to get the data size, since BLKGETSIZE doesn't work on
+  // non-ATAPI drives.  This is based on Keith Jones code below.
+  // <splite@purdue.edu> 21 June 2001
+
+  int i, dtrk, dtrk_lba, num_sectors;
+  struct cdrom_tochdr td;
+  struct cdrom_tocentry te;
+
+  if (fd < 0)
+    BX_PANIC(("cdrom: capacity: file not open."));
+
+  if (ioctl(fd, CDROMREADTOCHDR, &td) < 0)
+    BX_PANIC(("cdrom: ioctl(CDROMREADTOCHDR) failed"));
+
+  num_sectors = -1;
+  dtrk_lba = -1;
+
+  for (i = td.cdth_trk0; i <= td.cdth_trk1; i++) {
+    te.cdte_track = i;
+    te.cdte_format = CDROM_LBA;
+    if (ioctl(fd, CDROMREADTOCENTRY, &te) < 0)
+      BX_PANIC(("cdrom: ioctl(CDROMREADTOCENTRY) failed"));
+
+    if (dtrk_lba != -1) {
+      num_sectors = te.cdte_addr.lba - dtrk_lba;
+      break;
+    }
+    if (te.cdte_ctrl & CDROM_DATA_TRACK) {
+      dtrk = i;
+      dtrk_lba = te.cdte_addr.lba;
+    }
+  }
+
+  if (num_sectors < 0) {
+    if (dtrk_lba != -1) {
+      te.cdte_track = CDROM_LEADOUT;
+      te.cdte_format = CDROM_LBA;
+      if (ioctl(fd, CDROMREADTOCENTRY, &te) < 0)
+        BX_PANIC(("cdrom: ioctl(CDROMREADTOCENTRY) failed"));
+      num_sectors = te.cdte_addr.lba - dtrk_lba;
+    } else
+      BX_PANIC(("cdrom: no data track found"));
+  }
+
+  BX_INFO(("cdrom: Data track %d, length %d", dtrk, num_sectors));
+
+  return(num_sectors);
+
   }
 #elif defined(__FreeBSD__)
   {
