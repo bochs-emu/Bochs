@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.129 2005-02-05 23:10:52 vruppert Exp $
+// $Id: rombios.c,v 1.130 2005-02-13 08:47:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -913,10 +913,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.129 $";
-static char bios_date_string[] = "$Date: 2005-02-05 23:10:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.130 $";
+static char bios_date_string[] = "$Date: 2005-02-13 08:47:30 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.129 2005-02-05 23:10:52 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.130 2005-02-13 08:47:30 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -5569,8 +5569,14 @@ int13_cdemu(DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS)
         case 0x03: SET_BL( 0x06 ); break;
         }
 
-      DI = read_word(0x00, 0x1e*4); // INT vector 0x1E
-      ES = read_word(0x00, 0x1e*4+2);
+ASM_START
+      push bp
+      mov  bp, sp
+      mov ax, #diskette_param_table2
+      mov _int13_cdemu.DI+2[bp], ax
+      mov _int13_cdemu.ES+2[bp], cs
+      pop  bp
+ASM_END
       goto int13_success;
       break;
 
@@ -7141,8 +7147,14 @@ BX_DEBUG_INT13_FL("floppy f08\n");
         }
 
       /* set es & di to point to 11 byte diskette param table in ROM */
-      DI = read_word(0x00, 0x1e*4); // INT vector 0x1E
-      ES = read_word(0x00, 0x1e*4+2);
+ASM_START
+      push bp
+      mov  bp, sp
+      mov ax, #diskette_param_table2
+      mov _int13_diskette_function.DI+2[bp], ax
+      mov _int13_diskette_function.ES+2[bp], cs
+      pop  bp
+ASM_END
       CLEAR_CF(); // success
       /* disk status not changed upon success */
       return;
