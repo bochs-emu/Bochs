@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.49 2004-04-09 17:54:20 vruppert Exp $
+// $Id: sdl.cc,v 1.50 2004-04-10 16:35:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -364,19 +364,17 @@ void bx_sdl_gui_c::text_update(
     bx_vga_tminfo_t tm_info,
     unsigned nrows)
 {
-  unsigned char *pfont_row, *old_line, *new_line;
-  unsigned char *text_base;
-  unsigned long cy, x, y;
-  unsigned int curs, hchars, offset, hpanning_orig;
-  int rows,fontrows,fontpixels;
-  int fgcolor_ndx;
-  int bgcolor_ndx;
+  Bit8u *pfont_row, *old_line, *new_line, *text_base;
+  unsigned int cs_y, x, y;
+  unsigned int curs, hchars, offset;
+  Bit8u fontline, fontpixels, fontrows;
+  int rows, fgcolor_ndx, bgcolor_ndx;
   Uint32 fgcolor;
   Uint32 bgcolor;
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
   Bit16u font_row, mask;
-  Bit8u cs_line, cfwidth, cfheight, split_fontrow, split_textrow;
+  Bit8u cfstart, cfwidth, cfheight, split_fontrows, split_textrow;
   bx_bool cursor_visible, gfxcharw9, invert, forceUpdate, split_screen;
 
   UNUSED(nrows);
@@ -392,7 +390,6 @@ void bx_sdl_gui_c::text_update(
     h_panning = tm_info.h_panning;
     v_panning = tm_info.v_panning;
   }
-  hpanning_orig = h_panning;
   if(tm_info.line_compare != line_compare)
   {
     forceUpdate = 1;
@@ -424,10 +421,10 @@ void bx_sdl_gui_c::text_update(
   rows = text_rows;
   if (v_panning) rows++;
   y = 0;
-  cy = 0;
+  cs_y = 0;
   text_base = new_text - tm_info.start_address;
-  split_textrow = (tm_info.line_compare + v_panning) / fontheight;
-  split_fontrow = ((tm_info.line_compare + v_panning) % fontheight) + 1;
+  split_textrow = (line_compare + v_panning) / fontheight;
+  split_fontrows = ((line_compare + v_panning) % fontheight) + 1;
   split_screen = 0;
 
   do
@@ -436,33 +433,38 @@ void bx_sdl_gui_c::text_update(
     hchars = text_cols;
     if (h_panning) hchars++;
     cfheight = fontheight;
-    if (v_panning)
+    cfstart = 0;
+    if (split_screen)
+    {
+      if (rows == 1)
+      {
+        cfheight = (res_y - line_compare - 1) % fontheight;
+        if (cfheight == 0) cfheight = fontheight;
+      }
+    }
+    else if (v_panning)
     {
       if (y == 0)
       {
         cfheight -= v_panning;
+        cfstart = v_panning;
       }
       else if (rows == 1)
       {
-        if (!split_screen)
-        {
-          cfheight = v_panning;
-        }
+        cfheight = v_panning;
       }
-    }
-    if (split_screen && (rows == 1))
-    {
-      cfheight = (res_y - tm_info.line_compare - 1) % fontheight;
-      if (cfheight == 0) cfheight = fontheight;
     }
     if (!split_screen && (y == split_textrow))
     {
-      if (split_fontrow < cfheight) cfheight = split_fontrow;
+      if ((split_fontrows - cfstart) < cfheight)
+      {
+        cfheight = split_fontrows - cfstart;
+      }
     }
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = cy * tm_info.line_offset;
+    offset = cs_y * tm_info.line_offset;
     do
     {
       cfwidth = fontwidth;
@@ -492,15 +494,14 @@ void bx_sdl_gui_c::text_update(
 
 	// Display this one char
 	fontrows = cfheight;
+	fontline = cfstart;
 	if (y > 0)
 	{
 	  pfont_row = &vga_charmap[(new_text[0] << 5)];
-	  cs_line = 0;
 	}
 	else
 	{
-	  pfont_row = &vga_charmap[(new_text[0] << 5) + v_panning];
-	  cs_line = v_panning;
+	  pfont_row = &vga_charmap[(new_text[0] << 5) + cfstart];
 	}
 	buf_char = buf;
 	do
@@ -519,7 +520,7 @@ void bx_sdl_gui_c::text_update(
 	    font_row <<= h_panning;
 	  }
 	  fontpixels = cfwidth;
-	  if( (invert) && (cs_line >= tm_info.cs_start) && (cs_line <= tm_info.cs_end) )
+	  if( (invert) && (fontline >= tm_info.cs_start) && (fontline <= tm_info.cs_end) )
 	    mask = 0x100;
 	  else
 	    mask = 0x00;
@@ -534,7 +535,7 @@ void bx_sdl_gui_c::text_update(
 	  } while( --fontpixels );
 	  buf -= cfwidth;
 	  buf += disp;
-	  cs_line++;
+	  fontline++;
 	} while( --fontrows );
 
 	// restore output buffer ptr to start of this char
@@ -558,20 +559,20 @@ void bx_sdl_gui_c::text_update(
     {
       new_text = text_base;
       forceUpdate = 1;
-      cy = 0;
+      cs_y = 0;
       if (tm_info.split_hpanning) h_panning = 0;
-      rows = (res_y - tm_info.line_compare + fontheight - 2) / fontheight;
+      rows = ((res_y - line_compare + fontheight - 2) / fontheight) + 1;
       split_screen = 1;
     }
     else
     {
       new_text = new_line + tm_info.line_offset;
       old_text = old_line + tm_info.line_offset;
-      cy++;
+      cs_y++;
       y++;
     }
   } while( --rows );
-  h_panning = hpanning_orig;
+  h_panning = tm_info.h_panning;
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
 }
