@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.7 2002-04-03 21:07:14 bdenney Exp $
+// $Id: keymap.cc,v 1.8 2002-09-03 05:40:59 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -200,7 +200,6 @@ get_next_keymap_line (FILE *fp, char *bxsym, char *modsym, Bit32s *ascii, char *
 bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* filename)
 {
     FILE   *keymapFile;
-    char   line[256], c, *p;
     char baseSym[256], modSym[256], xwinSym[256]; 
     Bit32s ascii;
     Bit32u baseKey, modKey, xwinKey;
