@@ -63,8 +63,8 @@ Changes to next release:
   [899972] data xfer performance patch V 2.0.4
   [904549] imul gives incorrect result in long mode
   [877510] amd64 fixes...
-  [903465] SEGV in iodev/ne2k.cc line 1211 on Alpha architecture
-  [903332] copy the bximage result to clipboard, etc
+  [903465] SEGV in iodev/ne2k.cc line 1211 on Alpha architecture by Christian Lestrade
+  [903332] copy the bximage result to clipboard, etc by Lukewarm
 
 
 - these S.F. bugs were closed 
