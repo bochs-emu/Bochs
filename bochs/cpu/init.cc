@@ -670,6 +670,6 @@ BX_CPU_C::sanity_checks(void)
   void
 BX_CPU_C::set_INTR(Boolean value)
 {
-  this->INTR = value;
+  BX_CPU_THIS_PTR INTR = value;
   BX_CPU_THIS_PTR async_event = 1;
 }

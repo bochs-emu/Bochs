@@ -604,9 +604,8 @@ extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
 #  define BX_SMF
 #  define BX_CPU_C_PREFIX  BX_CPU_C::
 #else
-#error BX_USE_SMF==1 has been temporarily broken by SMP changes
-   // static member functions, use direct access
-#  define BX_CPU_THIS_PTR  BX_CPU.
+   // static member functions, reference through global variable.
+#  define BX_CPU_THIS_PTR  BX_CPU(0)->
 #  define BX_SMF           static
 #  define BX_CPU_C_PREFIX
 #endif
