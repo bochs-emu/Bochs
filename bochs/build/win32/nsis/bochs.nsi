@@ -1,0 +1,400 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; $Id: bochs.nsi,v 1.1 2002-11-21 03:08:35 bdenney Exp $
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Setup Script for NSIS Installer
+;
+; Created: Michael Rich (istan)
+;
+; Based on Example Script by Joost Verburg
+; also original BOCHS script by Robert (segra)
+; 
+
+!define VER_MAJOR 2
+!define VER_MINOR 0
+!define VER_REV   pre2
+
+!define NAME "Bochs ${VER_MAJOR}.${VER_MINOR}.${VER_REV}"
+
+!verbose 3
+!include "WinMessages.nsh"
+!include "ModernUI.nsh"
+!verbose 4
+
+!define CURRENTPAGE $9
+
+!define TEMP1 $R0
+!define TEMP2 $R1
+
+!define SRCDIR bochs-${VER_MAJOR}.${VER_MINOR}.${VER_REV}
+!define PGDIR "$SMPROGRAMS\Bochs ${VER_MAJOR}.${VER_MINOR}.${VER_REV}"
+
+;--------------------------------
+
+  ;General
+  Name "${NAME}"
+  OutFile Bochs-${VER_MAJOR}.${VER_MINOR}.${VER_REV}.exe
+  SetOverwrite on
+
+  ;User interface
+  !insertmacro MUI_INTERFACE "modern2.exe" "bochs.ico" "bochs.ico" "modern.bmp" "smooth"
+
+  ;License dialog
+  LicenseText "Scroll down to see the rest of the agreement."
+  LicenseData ${SRCDIR}\COPYING.txt
+
+  ;Component-select dialog
+  ComponentText "Check the components you want to install and uncheck the components you don't want to install. Click Next to continue."
+
+  ; Installation Types
+  InstType "Normal"
+  InstType "Full (with DLX Linux demo)"
+
+  ;Folder-select dialog
+  InstallDir $PROGRAMFILES\Bochs-${VER_MAJOR}.${VER_MINOR}.${VER_REV}
+  DirText "Setup will install ${NAME} in the following folder.$\r$\n$\r$\nTo install in this folder, click Install. To install in a different folder, click Browse and select another folder." " "
+
+  ;Uninstaller
+  UninstallText "This will uninstall ${NAME} from your system."
+
+;--------------------------------
+;Installer Sections
+
+Section "Bochs Program (required)" SecCore
+  SectionIn 1 2 RO
+
+  SetOutPath "$INSTDIR"
+
+  File "${SRCDIR}\bochs.exe"
+  File "${SRCDIR}\bochsdbg.exe"
+  File "${SRCDIR}\bochsrc-sample.txt"
+  File "${SRCDIR}\bximage.exe"
+  File "${SRCDIR}\CHANGES.txt"
+  File "${SRCDIR}\COPYING.txt"
+  File "${SRCDIR}\DOC-win32.htm"
+  File "${SRCDIR}\niclist.exe"
+  File "${SRCDIR}\README.txt"
+  File "${SRCDIR}\sb16ctrl.exe"
+  File "${SRCDIR}\sb16ctrl.txt"
+  File "bochs.ico"
+  File "penguin.ico"
+
+  ; Install keymaps
+  SetOutPath "$INSTDIR\keymaps"
+  File "${SRCDIR}\keymaps\*.*"
+
+SectionEnd
+
+Section "ROM Images (required)" SecROMs
+  SectionIn 1 2 RO
+
+  SetOutPath "$INSTDIR"
+
+  File "${SRCDIR}\BIOS-bochs-2-processors"
+  File "${SRCDIR}\BIOS-bochs-4-processors"
+  File "${SRCDIR}\BIOS-bochs-latest"
+
+  File "${SRCDIR}\VGABIOS-elpin-2.40"
+  File "${SRCDIR}\VGABIOS-elpin-LICENSE.txt"
+  File "${SRCDIR}\VGABIOS-lgpl-latest"
+  File "${SRCDIR}\VGABIOS-lgpl-README"
+SectionEnd
+
+Section "Documentation in HTML" SecDocs
+  SectionIn 1 2 
+  SetOutPath "$INSTDIR\docs-html"
+  File "${SRCDIR}\docs-html\*.*"
+SectionEnd
+
+Section "DLX Linux Demo" SecDLX
+  SectionIn 2
+
+  SetOutPath "$INSTDIR\dlxlinux"
+  File "${SRCDIR}\dlxlinux\*.*"
+
+  ; Fix up the path to the Bochs executable
+  FileOpen $1 "$INSTDIR\dlxlinux\run.bat" w
+  FileWrite $1 "cd $INSTDIR\dlxlinux$\r$\n"
+  FileWrite $1 "..\bochs -q$\r$\n"
+  FileClose $1
+SectionEnd
+
+Section "Add Bochs to the Start Menu and Desktop" SecIcons
+  SectionIn 1 2
+  
+  ; Set the Program Group as output to ensure it exists
+  SetOutPath "${PGDIR}"
+
+  ; Change the output back to the install folder so the "Start In" paths get set properly
+  SetOutPath "$INSTDIR"
+
+  CreateShortCut "${PGDIR}\${NAME}.lnk" "$INSTDIR\Bochs.exe" "" "$INSTDIR\bochs.ico" "0"
+
+  CreateShortCut "${PGDIR}\Readme.lnk" \
+                 "$INSTDIR\Readme.txt"
+
+  CreateShortCut "${PGDIR}\Bochs Sample Setup.lnk" \
+                 "$INSTDIR\bochsrc-sample.txt"
+
+  CreateShortCut "${PGDIR}\Disk Image Creation Tool.lnk" \
+                 "$INSTDIR\bximage.exe"
+
+  CreateShortCut "${PGDIR}\NIC Lister.lnk" \
+                 "$INSTDIR\niclist.exe"
+
+  WriteINIStr "${PGDIR}\Help.url" \
+	      "InternetShortcut" "URL" "file://$INSTDIR/docs-html/index.html"
+
+  WriteINIStr "${PGDIR}\Home Page.url" \
+	      "InternetShortcut" "URL" "http://bochs.sourceforge.net/"
+
+  CreateShortCut "${PGDIR}\${NAME} Folder.lnk" \
+                 "$INSTDIR"
+
+  CreateShortCut "${PGDIR}\Uninstall Bochs.lnk" \
+                 "$INSTDIR\Uninstall.exe"
+
+; Create shortcut to DLX Linux if it was installed
+IfFileExists "$INSTDIR\dlxlinux\*.*" 0 no
+  CreateShortCut "${PGDIR}\DLX Linux.lnk" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\penguin.ico" "0"
+
+  ; Add a link to the DLX demo to the desktop
+  CreateShortCut "$DESKTOP\${NAME} Linux Demo.lnk" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\bochs.ico" "0"
+no:
+
+
+SectionEnd
+
+Section "Bochs Shell Extensions" SecExtention
+  SectionIn 1 2
+  
+  ; back up old value of .bxr
+  ReadRegStr $1 HKCR ".bxr" ""
+
+  StrCmp $1 "" Label1
+    StrCmp $1 "BOCHSFile" Label1
+    WriteRegStr HKCR ".bxr" "backup_val" $1
+
+  Label1:
+  WriteRegStr HKCR ".bxr" "" "BOCHSFile"
+  WriteRegStr HKCR "BOCHSFile" "" "${NAME} Disk Image"
+  WriteRegStr HKCR "BOCHSFile\DefaultIcon" "" "$INSTDIR\bochs.ico,0"
+  ;WriteRegStr HKCR "BOCHSFile\shell" "" "open"
+  ;WriteRegStr HKCR "BOCHSFile\shell\open\command" "" '$INSTDIR\Bochs.exe -nocp "%1"'
+SectionEnd
+
+
+Section ""
+
+  ;Invisible section to display the Finish header
+  !insertmacro MUI_FINISHHEADER SetHeader
+  
+SectionEnd
+
+Section -post
+  ; Register Uninstaller
+  WriteRegStr HKLM "SOFTWARE\${NAME}" "" $INSTDIR
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayName" "${NAME} (remove only)"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayIcon" "$INSTDIR\bochs.ico,0"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+
+  ; Write the uninstaller
+  WriteUninstaller "$INSTDIR\Uninstall.exe"
+SectionEnd
+
+;--------------------------------
+;Installer Functions
+
+Function .onInitDialog
+
+  !insertmacro MUI_INNERDIALOG_INIT
+
+    !insertmacro MUI_INNERDIALOG_START 1
+      !insertmacro MUI_INNERDIALOG_TEXT 1033 1040 "If you accept all the terms of the agreement, choose I Agree to continue. If you choose Cancel, Setup will close. You must accept the agreement to install ${NAME}."
+    !insertmacro MUI_INNERDIALOG_STOP 1
+
+    !insertmacro MUI_INNERDIALOG_START 2
+      !insertmacro MUI_INNERDIALOG_TEXT 1033 1042 "Description"
+      !insertmacro MUI_INNERDIALOG_TEXT 1033 1043 "Hover your mouse over a component to see it's description."
+    !insertmacro MUI_INNERDIALOG_STOP 2
+
+    !insertmacro MUI_INNERDIALOG_START 3
+      !insertmacro MUI_INNERDIALOG_TEXT 1033 1041 "Destination Folder"
+      !insertmacro MUI_INNERDIALOG_STOP 3
+
+  !insertmacro MUI_INNERDIALOG_END
+
+FunctionEnd
+
+Function .onNextPage
+
+  !insertmacro MUI_NEXTPAGE_OUTER
+  !insertmacro MUI_NEXTPAGE SetHeader
+  
+FunctionEnd
+
+Function .onPrevPage
+
+  !insertmacro MUI_PREVPAGE
+
+FunctionEnd
+
+Function SetHeader
+
+  !insertmacro MUI_HEADER_INIT
+
+    !insertmacro MUI_HEADER_START 1
+       !insertmacro MUI_HEADER_TEXT 1033 "License Agreement" "Please review the license terms before installing ${NAME}."
+    !insertmacro MUI_HEADER_STOP 1
+
+    !insertmacro MUI_HEADER_START 2
+      !insertmacro MUI_HEADER_TEXT 1033 "Choose Components" "Choose the components you want to install."
+    !insertmacro MUI_HEADER_STOP 2
+
+    !insertmacro MUI_HEADER_START 3
+      !insertmacro MUI_HEADER_TEXT 1033 "Choose Install Location" "Choose the folder in which to install ${NAME} in."
+    !insertmacro MUI_HEADER_STOP 3
+
+    !insertmacro MUI_HEADER_START 4
+      !insertmacro MUI_HEADER_TEXT 1033 "Installing" "Please wait while ${NAME} is being installed."
+    !insertmacro MUI_HEADER_STOP 4
+
+    !insertmacro MUI_HEADER_START 5
+      !insertmacro MUI_HEADER_TEXT 1033 "Finished" "Setup was completed successfully."
+    !insertmacro MUI_HEADER_STOP 5
+
+  !insertmacro MUI_HEADER_END
+
+FunctionEnd
+
+Function .onMouseOverSection
+
+  !insertmacro MUI_DESCRIPTION_INIT
+
+    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecCore} "Installs the core ${NAME} applications."
+    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecROMs} "BIOS and Video ROMs required by ${NAME}."
+    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecDLX} "An image of DLX Linux with a batch file for quickly loading it."
+    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecDocs} "Documentation for configuring and running ${NAME}."
+    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecIcons} "Installs icons and program menu items for quickly running ${NAME}."
+    !insertmacro MUI_DESCRIPTION_TEXT 1033 ${SecExtention} "Adds the ability to double-click and run the disk image directly in ${NAME}."
+
+ !insertmacro MUI_DESCRIPTION_END
+
+FunctionEnd
+
+Function .onUserAbort
+
+  !insertmacro MUI_ABORTWARNING 1033 "Are you sure you want to quit ${NAME} Setup?"
+  !insertmacro MUI_ABORTWARNING_END
+  
+FunctionEnd
+
+Function .onInstSuccess
+  MessageBox MB_YESNO|MB_ICONQUESTION \
+	     "Would you like to see a list of changes?" \
+	     IDNO NoChanges
+		ExecShell open '$INSTDIR\CHANGES.TXT'
+  NoChanges:
+  MessageBox MB_YESNO|MB_ICONQUESTION \
+             "Setup has completed. Read readme now?" \
+             IDNO NoReadme
+    ExecShell open '$INSTDIR\readme.txt'
+
+  NoReadme:
+  DetailPrint "Thank you for installing Bochs, think inside the bochs."
+FunctionEnd
+
+;--------------------------------
+;Uninstaller Section
+
+Section "Uninstall"
+
+  ReadRegStr $1 HKCR ".bxr" ""
+
+  StrCmp $1 "BOCHSFile" 0 NoOwn ; only do this if we own it
+    ReadRegStr $1 HKCR ".bxr" "backup_val"
+    StrCmp $1 "" 0 RestoreBackup ; if backup == "" then delete the whole key
+      DeleteRegKey HKCR ".bxr"
+    Goto NoOwn
+    RestoreBackup:
+      WriteRegStr HKCR ".bxr" "" $1
+      DeleteRegValue HKCR ".bxr" "backup_val"
+  NoOwn:
+
+  DeleteRegKey HKCR "BOCHSFile"
+  DeleteRegKey HKLM "SOFTWARE\${NAME}"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
+
+  Delete "${PGDIR}\*.lnk"
+  Delete "${PGDIR}\*.url"
+  RMDir "${PGDIR}"
+
+  Delete "$DESKTOP\${NAME} Linux Demo.lnk"
+
+  Delete "$INSTDIR\bochs.exe"
+  Delete "$INSTDIR\Uninstall.exe"
+
+  Delete "$INSTDIR\BIOS-bochs-2-processors"
+  Delete "$INSTDIR\BIOS-bochs-4-processors"
+  Delete "$INSTDIR\BIOS-bochs-latest"
+  Delete "$INSTDIR\bochs.exe"
+  Delete "$INSTDIR\bochsdbg.exe"
+  Delete "$INSTDIR\bochsrc-sample.txt"
+  Delete "$INSTDIR\bximage.exe"
+  Delete "$INSTDIR\CHANGES.txt"
+  Delete "$INSTDIR\COPYING.txt"
+  Delete "$INSTDIR\DOC-win32.htm"
+  Delete "$INSTDIR\niclist.exe"
+  Delete "$INSTDIR\README.txt"
+  Delete "$INSTDIR\sb16ctrl.exe"
+  Delete "$INSTDIR\sb16ctrl.txt"
+  Delete "$INSTDIR\VGABIOS-elpin-2.40"
+  Delete "$INSTDIR\VGABIOS-elpin-LICENSE.txt"
+  Delete "$INSTDIR\VGABIOS-lgpl-0.3a"
+  Delete "$INSTDIR\VGABIOS-lgpl-README"
+  Delete "$INSTDIR\bochs.ico"
+  Delete "$INSTDIR\penguin.ico"
+  Delete "$INSTDIR\dlxlinux\*.*"
+  Delete "$INSTDIR\docs-html\*.*"
+  Delete "$INSTDIR\keymaps\*.*"
+
+  RMDIR "$INSTDIR\keymaps"
+  RMDIR "$INSTDIR\dlxlinux"
+  RMDIR "$INSTDIR\docs-html"
+  RMDIR "$INSTDIR"
+
+  !insertmacro MUI_FINISHHEADER un.SetHeader
+ 
+SectionEnd
+
+;--------------------------------
+;Uninstaller Functions
+
+Function un.onNextPage
+
+  !insertmacro MUI_NEXTPAGE_OUTER
+  !insertmacro MUI_NEXTPAGE un.SetHeader
+  
+FunctionEnd
+
+Function un.SetHeader
+
+  !insertmacro MUI_HEADER_INIT
+
+    !insertmacro MUI_HEADER_START 1
+      !insertmacro MUI_HEADER_TEXT 1033 "Uninstall ${NAME}" "Remove ${NAME} from your system."
+    !insertmacro MUI_HEADER_STOP 1
+
+    !insertmacro MUI_HEADER_START 2
+      !insertmacro MUI_HEADER_TEXT 1033 "Uninstalling" "Please wait while ${NAME} is being uninstalled."
+    !insertmacro MUI_HEADER_STOP 2
+
+    !insertmacro MUI_HEADER_START 3
+      !insertmacro MUI_HEADER_TEXT 1033 "Finished" "${NAME} has been removed from your system."
+    !insertmacro MUI_HEADER_STOP 3
+
+  !insertmacro MUI_HEADER_END
+
+FunctionEnd
+
+;eof
