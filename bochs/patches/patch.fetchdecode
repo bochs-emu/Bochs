@@ -1,0 +1,448 @@
+----------------------------------------------------------------------
+Patch name: patch.fetchdecode
+Author: Greg Alexander (yakovlev)
+        Patch created by Bryce Denney
+Date: early June 2002
+
+Detailed description:
+
+Check in FETCHDECODE Caching.
+Specific changes from the patch:
+
+1.) renamed fdcache_eip to fdcache_ip, as it is using
+the RIP instead of the EIP.
+
+2.) added a Boolean array fdcache_is32 which uses is32
+to determine icache hits.  Otherwise we could run 32-bit
+code as 16-bit or vice versa.
+Modified Files:
+   config.h.in cpu/cpu.cc cpu/cpu.h memory/memory.cc
+
+[This patch also includes the addition of the linked list and the fixes 
+to it.  I tried to get everything associated with Greg's fetchdecode
+changes.  I created it by doing cvs diff between June 2 and June 7, 2002
+in the cpu directory.  -Bryce]
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+
+
+
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.48
+retrieving revision 1.50
+diff -u -r1.48 -r1.50
+--- config.h.in	18 Apr 2002 01:00:53 -0000	1.48
++++ config.h.in	5 Jun 2002 03:59:30 -0000	1.50
+@@ -546,6 +546,17 @@
+ #define BX_DYNAMIC_CPU_I386    0
+ #define BX_DYNAMIC_CPU_SPARC   0
+ 
++// caching of fetchdecode() calls
++#define BX_FETCHDECODE_CACHE 0
++
++#if BX_FETCHDECODE_CACHE
++  // The number of entries. MUST be a power of 2
++  #define BX_FDCACHE_SIZE 0x0800
++  #define BX_FDCACHE_MASK (BX_FDCACHE_SIZE-1)
++  #define BX_FDCACHE_RPN_SIZE (0x0080)
++  #define BX_FDCACHE_RPN_MASK (BX_FDCACHE_RPN_SIZE-1)
++#endif // BX_FETCHDECODE_CACHE
++
+ #define BX_SUPPORT_FPU 0
+ 
+ #define BX_HAVE_GETENV 0
+Index: cpu/cpu.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.cc,v
+retrieving revision 1.28
+retrieving revision 1.32
+diff -u -r1.28 -r1.32
+--- cpu/cpu.cc	18 Apr 2002 00:22:19 -0000	1.28
++++ cpu/cpu.cc	6 Jun 2002 23:03:09 -0000	1.32
+@@ -37,7 +37,12 @@
+ 
+ //unsigned counter[2] = { 0, 0 };
+ 
++#if BX_FETCHDECODE_CACHE
++  static unsigned long bx_fdcache_sel;
++  static unsigned long bx_fdcache_ip;
+ 
++  static Bit32u new_phy_addr;
++#endif // BX_FETCHDECODE_CACHE
+ 
+ #if BX_SIM_ID == 0   // only need to define once
+ // This array defines a look-up table for the even parity-ness
+@@ -106,11 +111,16 @@
+ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
+ {
+   unsigned ret;
+-  BxInstruction_t i;
++  BxInstruction_t *i;
+   unsigned maxisize;
+   Bit8u *fetch_ptr;
+   Boolean is_32;
+ 
++#if !BX_FETCHDECODE_CACHE
++  BxInstruction_t bxinstruction_dummy;
++  i = &bxinstruction_dummy;
++#endif // #if BX_FETCHDECODE_CACHE
++
+ #if BX_DEBUGGER
+   BX_CPU_THIS_PTR break_point = 0;
+ #ifdef MAGIC_BREAKPOINT
+@@ -214,18 +224,96 @@
+     }
+   fetch_ptr = BX_CPU_THIS_PTR fetch_ptr;
+ 
++#if BX_FETCHDECODE_CACHE
++  bx_fdcache_ip = new_phy_addr;
++  bx_fdcache_sel = bx_fdcache_ip & BX_FDCACHE_MASK;
++
++  i = &(BX_CPU_THIS_PTR fdcache_i[bx_fdcache_sel]);
++
++  if ((BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] == bx_fdcache_ip) &&
++      (BX_CPU_THIS_PTR fdcache_is32[bx_fdcache_sel] == is_32)) {
++    // HIT! ;^)
++    ret = 1; // success!
++    new_phy_addr += i->ilen;
++  } else {
++    // MISS :'(
++    if(BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] != 0xFFFFFFFF) {
++      Bit32u next_ptr=BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next;
++      Bit32u prev_ptr=BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].prev;
++      if(next_ptr != 0xFFFFFFFF) {
++        BX_CPU_THIS_PTR fdcache_rpn_list[next_ptr].prev=prev_ptr;
++      }
++      if(prev_ptr != 0xFFFFFFFF) {
++        BX_CPU_THIS_PTR fdcache_rpn_list[prev_ptr].next=next_ptr;
++      } else {
++        Bit32u temp_rpn_sel = ((BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel])>>12) & BX_FDCACHE_RPN_MASK;
++        BX_CPU_THIS_PTR fdcache_rpn_start[temp_rpn_sel] = next_ptr;
++      }
++    }
++#endif // #if BX_FETCHDECODE_CACHE
++
+   maxisize = 16;
+-  if (BX_CPU_THIS_PTR bytesleft < 16)
++  if (BX_CPU_THIS_PTR bytesleft < 16) {
+     maxisize = BX_CPU_THIS_PTR bytesleft;
+-  ret = FetchDecode(fetch_ptr, &i, maxisize, is_32);
++    }
++  ret = FetchDecode(fetch_ptr, i, maxisize, is_32);
++
++#if BX_FETCHDECODE_CACHE
++    // The instruction straddles a page boundary.
++    // Not storing such instructions in the cache is probably the
++    //   easiest way to handle them  
++
++  //FIXME: These should not be necessary.
++    BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next = 0xFFFFFFFF;
++    BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].prev = 0xFFFFFFFF;
++
++    if (ret) {
++      Bit32u rpn,rpn_sel,old_rpn;
++     //FIXME: Leaving because will be needed when above are removed.
++      BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].prev = 0xFFFFFFFF;
++      BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] = bx_fdcache_ip;
++      BX_CPU_THIS_PTR fdcache_is32[bx_fdcache_sel] = is_32;
++      new_phy_addr += i->ilen;
++
++      rpn=bx_fdcache_ip>>12;
++      rpn_sel=rpn & BX_FDCACHE_RPN_MASK;
++      old_rpn=BX_CPU_THIS_PTR fdcache_rpn[rpn_sel];
++
++      if(old_rpn == 0xFFFFFFFF) {
++        BX_CPU_THIS_PTR fdcache_rpn[rpn_sel] = rpn;
++        BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel] = bx_fdcache_sel;
++       //FIXME: Leaving because will be needed when above are removed.
++	BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next=0xFFFFFFFF;
++      } else if (old_rpn != rpn) {
++        Bit32u index = BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel];
++        for(;index!=0xFFFFFFFF;index=BX_CPU_THIS_PTR fdcache_rpn_list[index].next) {
++          BX_CPU_THIS_PTR fdcache_ip[index] = 0xFFFFFFFF;
++        }
++        BX_CPU_THIS_PTR fdcache_rpn[rpn_sel] = rpn;
++        BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel] = bx_fdcache_sel;
++       //FIXME: Leaving because will be needed when above are removed.
++        BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next=0xFFFFFFFF;
++
++      } else { // add to the head of the list
++        Bit32u index = BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel];
++        BX_CPU_THIS_PTR fdcache_rpn_list[bx_fdcache_sel].next=index;
++        BX_CPU_THIS_PTR fdcache_rpn_list[index].prev = bx_fdcache_sel;
++        BX_CPU_THIS_PTR fdcache_rpn_start[rpn_sel] = bx_fdcache_sel;
++      }
++    } else {
++      // Invalidate cache!
++      BX_CPU_THIS_PTR fdcache_ip[bx_fdcache_sel] = 0xFFFFFFFF;
++    }
++  }
++#endif // #if BX_FETCHDECODE_CACHE
+ 
+   if (ret) {
+-    if (i.ResolveModrm) {
++    if (i->ResolveModrm) {
+       // call method on BX_CPU_C object
+-      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
++      BX_CPU_CALL_METHOD(i->ResolveModrm, (i));
+       }
+-    BX_CPU_THIS_PTR fetch_ptr += i.ilen;
+-    BX_CPU_THIS_PTR bytesleft -= i.ilen;
++    BX_CPU_THIS_PTR fetch_ptr += i->ilen;
++    BX_CPU_THIS_PTR bytesleft -= i->ilen;
+ fetch_decode_OK:
+ 
+ #if BX_DEBUGGER
+@@ -239,34 +327,34 @@
+     }
+ #endif
+ 
+-    if (i.rep_used && (i.attr & BxRepeatable)) {
++    if (i->rep_used && (i->attr & BxRepeatable)) {
+ repeat_loop:
+-      if (i.attr & BxRepeatableZF) {
+-        if (i.as_32) {
++      if (i->attr & BxRepeatableZF) {
++        if (i->as_32) {
+           if (ECX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             ECX -= 1;
+             }
+-          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
+-          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
++          if ((i->rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
++          if ((i->rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+           if (ECX == 0) goto repeat_done;
+           goto repeat_not_done;
+           }
+         else {
+           if (CX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             CX -= 1;
+             }
+-          if ((i.rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
+-          if ((i.rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
++          if ((i->rep_used==0xf3) && (get_ZF()==0)) goto repeat_done;
++          if ((i->rep_used==0xf2) && (get_ZF()!=0)) goto repeat_done;
+           if (CX == 0) goto repeat_done;
+           goto repeat_not_done;
+           }
+         }
+       else { // normal repeat, no concern for ZF
+-        if (i.as_32) {
++        if (i->as_32) {
+           if (ECX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             ECX -= 1;
+             }
+           if (ECX == 0) goto repeat_done;
+@@ -274,7 +362,7 @@
+           }
+         else { // 16bit addrsize
+           if (CX != 0) {
+-            BX_CPU_CALL_METHOD(i.execute, (&i));
++            BX_CPU_CALL_METHOD(i->execute, (i));
+             CX -= 1;
+             }
+           if (CX == 0) goto repeat_done;
+@@ -302,12 +390,12 @@
+ 
+ 
+ repeat_done:
+-      BX_CPU_THIS_PTR eip += i.ilen;
++      BX_CPU_THIS_PTR eip += i->ilen;
+       }
+     else {
+       // non repeating instruction
+-      BX_CPU_THIS_PTR eip += i.ilen;
+-      BX_CPU_CALL_METHOD(i.execute, (&i));
++      BX_CPU_THIS_PTR eip += i->ilen;
++      BX_CPU_CALL_METHOD(i->execute, (i));
+       }
+ 
+     BX_CPU_THIS_PTR prev_eip = EIP; // commit new EIP
+@@ -410,17 +498,22 @@
+     for (; j<16; j++) {
+       FetchBuffer[j] = *temp_ptr++;
+       }
+-    ret = FetchDecode(FetchBuffer, &i, 16, is_32);
++    ret = FetchDecode(FetchBuffer, i, 16, is_32);
+     if (ret==0)
+       BX_PANIC(("fetchdecode: cross boundary: ret==0"));
+-    if (i.ResolveModrm) {
+-      BX_CPU_CALL_METHOD(i.ResolveModrm, (&i));
++    if (i->ResolveModrm) {
++      BX_CPU_CALL_METHOD(i->ResolveModrm, (i));
+       }
+-    remain = i.ilen - remain;
++    remain = i->ilen - remain;
+ 
+     // note: eip has already been advanced to beginning of page
+     BX_CPU_THIS_PTR fetch_ptr = fetch_ptr + remain;
+     BX_CPU_THIS_PTR bytesleft -= remain;
++
++    #if BX_FETCHDECODE_CACHE
++      new_phy_addr += remain;
++    #endif // BX_FETCHDECODE_CACHE
++
+     //BX_CPU_THIS_PTR eip += remain;
+     BX_CPU_THIS_PTR eip = BX_CPU_THIS_PTR prev_eip;
+     goto fetch_decode_OK;
+@@ -603,7 +696,9 @@
+   // cs:eIP
+   // prefetch QSIZE byte quantity aligned on corresponding boundary
+   Bit32u new_linear_addr;
++#if !BX_FETCHDECODE_CACHE
+   Bit32u new_phy_addr;
++#endif // !BX_FETCHDECODE_CACHE
+   Bit32u temp_eip, temp_limit;
+ 
+   temp_eip   = BX_CPU_THIS_PTR eip;
+@@ -664,7 +759,9 @@
+ BX_CPU_C::revalidate_prefetch_q(void)
+ {
+   Bit32u new_linear_addr, new_linear_page, new_linear_offset;
++#if !BX_FETCHDECODE_CACHE
+   Bit32u new_phy_addr;
++#endif // !BX_FETCHDECODE_CACHE
+ 
+   new_linear_addr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base + BX_CPU_THIS_PTR eip;
+ 
+Index: cpu/cpu.h
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/cpu.h,v
+retrieving revision 1.19
+retrieving revision 1.22
+diff -u -r1.19 -r1.22
+--- cpu/cpu.h	18 Apr 2002 00:22:19 -0000	1.19
++++ cpu/cpu.h	5 Jun 2002 21:51:30 -0000	1.22
+@@ -1582,6 +1582,23 @@
+   bx_local_apic_c local_apic;
+   Boolean int_from_local_apic;
+ #endif
++
++  #if BX_FETCHDECODE_CACHE
++    Bit32u fdcache_ip[BX_FDCACHE_SIZE]; // will store operation's IP
++    // NOTE: This struct should really be aligned!
++    BxInstruction_t fdcache_i[BX_FDCACHE_SIZE]; // stores decoded instruction
++    Boolean fdcache_is32[BX_FDCACHE_SIZE]; //32 or 16-bit mode?
++
++    struct list_node{
++      Bit32u next;
++      Bit32u prev;
++    };
++    Bit32u fdcache_rpn[BX_FDCACHE_RPN_SIZE]; //rpn cache used for invalidates.
++    list_node fdcache_rpn_list[BX_FDCACHE_SIZE]; //linked list of entries with the same rpn.
++    Bit32u fdcache_rpn_start[BX_FDCACHE_RPN_SIZE]; //start of rpn linked lists.
++
++  #endif // #if BX_FETCHDECODE_CACHE
++
+   };
+ 
+ 
+Index: cpu/init.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/cpu/init.cc,v
+retrieving revision 1.15
+retrieving revision 1.16
+diff -u -r1.15 -r1.16
+--- cpu/init.cc	27 Mar 2002 16:04:05 -0000	1.15
++++ cpu/init.cc	5 Jun 2002 21:51:30 -0000	1.16
+@@ -50,7 +50,7 @@
+ 
+ void BX_CPU_C::init(BX_MEM_C *addrspace)
+ {
+-  BX_DEBUG(( "Init $Id: init.cc,v 1.15 2002/03/27 16:04:05 bdenney Exp $"));
++  BX_DEBUG(( "Init $Id: init.cc,v 1.16 2002/06/05 21:51:30 yakovlev Exp $"));
+   // BX_CPU_C constructor
+   BX_CPU_THIS_PTR set_INTR (0);
+ #if BX_SUPPORT_APIC
+@@ -184,6 +184,19 @@
+   DTSetFlagsOSZAPCPtr = (BxDTShim_t) DTASSetFlagsOSZAPC;
+   DTIndBrHandler = (BxDTShim_t) DTASIndBrHandler;
+   DTDirBrHandler = (BxDTShim_t) DTASDirBrHandler;
++#endif
++
++#if BX_FETCHDECODE_CACHE
++  {
++    int n;
++    for(n=0;n<BX_FDCACHE_SIZE;n++) {
++      fdcache_ip[n]=0xFFFFFFFF;
++    }
++    for(n=0;n<BX_FDCACHE_RPN_SIZE;n++) {
++      fdcache_rpn[n]=0xFFFFFFFF;
++      fdcache_rpn_start[n]=0xFFFFFFFF;
++    }
++  }
+ #endif
+ 
+   mem = addrspace;
+Index: memory/memory.cc
+===================================================================
+RCS file: /cvsroot/bochs/bochs/memory/memory.cc,v
+retrieving revision 1.11
+retrieving revision 1.15
+diff -u -r1.11 -r1.15
+--- memory/memory.cc	3 Apr 2002 16:48:15 -0000	1.11
++++ memory/memory.cc	6 Jun 2002 23:03:09 -0000	1.15
+@@ -48,6 +48,48 @@
+ 
+   a20addr = A20ADDR(addr);
+   BX_INSTR_PHY_WRITE(a20addr, len);
++
++#if BX_FETCHDECODE_CACHE
++  // NOTE: This piece should be put, if possible, where a write to the memory
++  //   takes place.
++  // Here it trashes cache even for writes that would end up to ROM
++
++  // Invalidate instruction cache for written addresses
++  // Instructions can be up to 16 bytes long, so I have to trash up to 15 bytes
++  //   before write address (costly!)
++  // I think it would NOT be safe to invalidate up to the last instruction
++  //   before the write because there COULD be programs which use
++  //   jump-in-the-middle-of-an-instruction schemes (esp. copyprotection
++  //   schemes)
++
++
++  Bit32u rpn_start = addr >> 12;
++  Bit32u rpn_end = (addr+len-1) >> 12;
++  Bit32u rpn = rpn_start;
++  for(;rpn<=rpn_end;rpn++) {
++    Bit32u rpn_sel = rpn & BX_FDCACHE_RPN_MASK;
++    Bit32u old_rpn = cpu->fdcache_rpn[rpn_sel];
++    if(rpn==old_rpn) {
++      Bit32u index = cpu->fdcache_rpn_start[rpn_sel];
++     //FIXME: We shouldn't need to and this with BX_FDCACHE_MASK
++      for(;index!=0xFFFFFFFF;index=cpu->fdcache_rpn_list[index & BX_FDCACHE_MASK].next) {
++	cpu->fdcache_ip[index] = 0xFFFFFFFF;
++       //FIXME: This shouldn't be necessary.
++        cpu->fdcache_rpn_list[index].prev = 0xFFFFFFFF;
++      }
++      cpu->fdcache_rpn[rpn_sel] = 0xFFFFFFFF;
++//      cpu->fdcache_rpn_start[rpn_sel] = 0xFFFFFFFF;
++    }
++  }
++
++  //unsigned long bx_fdcache_idx = addr - 15;
++  //for (int count = 15+len; count > 0; --count) {
++  //  if (cpu->fdcache_ip[bx_fdcache_idx & BX_FDCACHE_MASK] == bx_fdcache_idx) {
++  //    cpu->fdcache_ip[bx_fdcache_idx & BX_FDCACHE_MASK] = 0xFFFFFFFF;
++  //  }
++  //  ++bx_fdcache_idx;
++  //}
++#endif // #if BX_FETCHDECODE_CACHE
+ 
+ #if BX_DEBUGGER
+   // (mch) Check for physical write break points, TODO
