@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.16 2001-10-03 13:10:38 bdenney Exp $
+// $Id: eth_fbsd.cc,v 1.17 2001-10-03 14:53:22 fries Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,7 +158,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   } while (this->bpf_fd == -1);
   
   if (this->bpf_fd == -1) {
-    BX_ERROR(("eth_freebsd: could not open packet filter"));
+    BX_PANIC(("eth_freebsd: could not open packet filter"));
     return;
   }
 

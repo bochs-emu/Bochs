@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: eth_linux.cc,v 1.4 2001-10-03 14:53:22 fries Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,9 +144,9 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   //
   if ((this->fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1) {
     if (errno == EACCES)
-      BX_INFO(("eth_linux: must be root or have CAP_NET_RAW capability to open socket"));
+      BX_PANIC(("eth_linux: must be root or have CAP_NET_RAW capability to open socket"));
     else
-      BX_INFO(("eth_linux: could not open socket"));
+      BX_PANIC(("eth_linux: could not open socket"));
     this->fd = -1;
     return;
   }
@@ -156,7 +156,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   memset(&ifr, 0, sizeof(ifr));
   strcpy(ifr.ifr_name, netif);
   if (ioctl(this->fd, SIOCGIFINDEX, &ifr) == -1) {
-    BX_INFO(("eth_linux: could not get index for interface %s\n", netif));
+    BX_PANIC(("eth_linux: could not get index for interface %s\n", netif));
     close(fd);
     this->fd = -1;
     return;
@@ -170,7 +170,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   sll.sll_family = AF_PACKET;
   sll.sll_ifindex = this->ifindex;
   if (bind(fd, (struct sockaddr *)&sll, (socklen_t)sizeof(sll)) == -1) {
-    BX_INFO(("eth_linux: could not bind to interface %s\n", netif));
+    BX_PANIC(("eth_linux: could not bind to interface %s\n", netif));
     close(fd);
     this->fd = -1;
     return;
@@ -182,7 +182,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   mr.mr_ifindex = this->ifindex;
   mr.mr_type = PACKET_MR_PROMISC;
   if (setsockopt(this->fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (void *)&mr, (socklen_t)sizeof(mr)) == -1) {
-    BX_INFO(("eth_linux: could not enable promisc mode: %s\n", strerror(errno)));
+    BX_PANIC(("eth_linux: could not enable promisc mode: %s\n", strerror(errno)));
     close(this->fd);
     this->fd = -1;
     return;
@@ -190,7 +190,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
 
   // Set up non-blocking i/o
   if (fcntl(this->fd, F_SETFL, O_NONBLOCK) == -1) {
-    BX_INFO(("eth_linux: could not set non-blocking i/o on socket"));
+    BX_PANIC(("eth_linux: could not set non-blocking i/o on socket"));
     close(this->fd);
     this->fd = -1;
     return;
@@ -207,9 +207,9 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   this->filter[3].k = (macaddr[0] & 0xff) << 8 | (macaddr[1] & 0xff);
   fp.len = BX_LSF_ICNT;
   fp.filter = this->filter;
-BX_INFO(("eth_linux: fp.len=%d fp.filter=%lx", fp.len, fp.filter));
+  BX_INFO(("eth_linux: fp.len=%d fp.filter=%lx", fp.len, fp.filter));
   if (setsockopt(this->fd, SOL_SOCKET, SO_ATTACH_FILTER, &fp, sizeof(fp)) < 0) {
-    BX_INFO(("eth_linux: could not set socket filter: %s", strerror(errno)));
+    BX_PANIC(("eth_linux: could not set socket filter: %s", strerror(errno)));
     close(this->fd);
     this->fd = -1;
     return;
