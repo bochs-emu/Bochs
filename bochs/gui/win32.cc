@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.54 2003-05-11 15:07:53 vruppert Exp $
+// $Id: win32.cc,v 1.55 2003-05-12 19:53:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -944,14 +944,19 @@ void bx_win32_gui_c::clear_screen(void) {
 
 void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			   unsigned long cursor_x, unsigned long cursor_y,
-                           bx_vga_tminfo_t tm_info, unsigned nrows) {
+                           bx_vga_tminfo_t tm_info, unsigned nrows)
+{
   HDC hdc;
-  unsigned char cChar;
-  unsigned i, x, y;
-  Bit8u cs_start, cs_end;
-  unsigned nchars, ncols;
   unsigned char data[64];
+  unsigned char *old_line, *new_line, *new_start;
+  unsigned char cAttr, cChar;
+  unsigned int ncols = dimension_x / 8;
+  unsigned int hchars, rows, x, y;
   BOOL forceUpdate = FALSE;
+
+  if (!stInfo.UIinited) return;
+
+  EnterCriticalSection(&stInfo.drawCS);
 
   if (charmap_updated) {
     for (unsigned c = 0; c<256; c++) {
@@ -967,69 +972,67 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
 
-  cs_start = tm_info.cs_start;
-  cs_end = tm_info.cs_end;
-
-  if (!stInfo.UIinited) return;
-
-  EnterCriticalSection(&stInfo.drawCS);
-
   hdc = GetDC(stInfo.simWnd);
 
-  ncols = dimension_x/8;
-
-  // Number of characters on screen, variable number of rows
-  nchars = ncols*nrows;
-
-  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars) {
-    cChar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
+  if ( (prev_block_cursor_y < nrows) && (prev_block_cursor_x < ncols)) {
+    cChar = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2];
+    cAttr = new_text[prev_block_cursor_y*tm_info.line_offset + prev_block_cursor_x*2 + 1];
     if (yChar >= 14) {
       DrawBitmap(hdc, vgafont[cChar], prev_block_cursor_x*8,
-	              prev_block_cursor_y*yChar, SRCCOPY,
-				  new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1]);
+                 prev_block_cursor_y*yChar, SRCCOPY, cAttr);
     } else {
       DrawChar(hdc, cChar, prev_block_cursor_x*8,
-               prev_block_cursor_y*yChar,
-               new_text[((prev_block_cursor_y*ncols + prev_block_cursor_x)*2)+1], 1, 0);
+               prev_block_cursor_y*yChar, cAttr, 1, 0);
     }
   }
 
-  for (i=0; i<nchars*2; i+=2) {
-    if (forceUpdate || (old_text[i] != new_text[i]) ||
-	(old_text[i+1] != new_text[i+1])) {
-
-      cChar = new_text[i];
-
-      x = (i/2) % ncols;
-      y = (i/2) / ncols;
-      if(yChar>=14) {
-        DrawBitmap(hdc, vgafont[cChar], x*8, y*yChar, SRCCOPY, new_text[i+1]);
-      } else {
-        DrawChar(hdc, cChar, x*8, y*yChar, new_text[i+1], 1, 0);
+  new_start = new_text;
+  rows = nrows;
+  y = 0;
+  do {
+    hchars = ncols;
+    new_line = new_text;
+    old_line = old_text;
+    x = 0;
+    do {
+      if (forceUpdate || (old_text[0] != new_text[0])
+          || (old_text[1] != new_text[1])) {
+        cChar = new_text[0];
+        cAttr = new_text[1];
+        if(yChar>=14) {
+          DrawBitmap(hdc, vgafont[cChar], x*8, y*yChar, SRCCOPY, cAttr);
+        } else {
+          DrawChar(hdc, cChar, x*8, y*yChar, cAttr, 1, 0);
+        }
       }
-    }
-  }
+      x++;
+      new_text+=2;
+      old_text+=2;
+    } while (--hchars);
+    y++;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+  } while (--rows);
 
   prev_block_cursor_x = cursor_x;
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if (((cursor_y*ncols + cursor_x) < nchars ) && (cs_start <= cs_end)) {
-    cChar = new_text[(cursor_y*ncols + cursor_x)*2];
-    if (yChar>=14)
-    {
+  if ((cursor_y < nrows ) && (cursor_x < ncols) && (tm_info.cs_start <= tm_info.cs_end)) {
+    cChar = new_start[cursor_y * tm_info.line_offset + cursor_x * 2];
+    cAttr = new_start[cursor_y * tm_info.line_offset + cursor_x * 2 + 1];
+    if (yChar>=14) {
       memset(data, 0, sizeof(data));
       for (unsigned i=0; i<32; i++) {
         data[i*2] = reverse_bitorder(bx_vgafont[cChar].data[i]);
-        if ((i >= cs_start) && (i <= cs_end))
+        if ((i >= tm_info.cs_start) && (i <= tm_info.cs_end))
           data[i*2] = 255 - data[i*2];
       }
       SetBitmapBits(cursorBmp, 64, data);
       DrawBitmap(hdc, cursorBmp, cursor_x*8, cursor_y*yChar,
-	         SRCCOPY, new_text[((cursor_y*ncols + cursor_x)*2)+1]);
+                 SRCCOPY, cAttr);
     } else {
-      char cAttr = new_text[((cursor_y*ncols + cursor_x)*2)+1];
-      DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar, cAttr, cs_start, cs_end);
+      DrawChar(hdc, cChar, cursor_x*8, cursor_y*yChar, cAttr, tm_info.cs_start, tm_info.cs_end);
     }
   }
 
