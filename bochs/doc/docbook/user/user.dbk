@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.58 2002-11-11 02:33:24 ndavidg Exp $
+$Id: user.dbk,v 1.59 2002-11-11 12:48:03 cbothamy Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3991,7 +3991,7 @@ Some of the other options in this group is probably also needed,
         <note>
         <para>
         The configuration assumes the default policy is
-        ACCEPT (can be examined by doing '<command>/sbin/iptables -L</command>'.
+        ACCEPT (can be examined by doing '<command>/sbin/iptables -L</command>')
         </para>
         </note>
         <note><para> The iptables package must be installed. </para> </note>
@@ -4135,7 +4135,7 @@ From here, you may use the following commands:
 </section>
 
 <section>
-<title>Info</title>
+<title>Info commands</title>
 <para>
 <screen>
   info program      Execution status of the program
@@ -5613,9 +5613,54 @@ to
                         </para>
         </section>
         <section>
-                <title>32 bits disk access support and Promise DC23000 VLB</title>
+                <title>VLB-IDE support</title>
                         <para>
-+ 		  &FIXME;
+                You can enable Bochs VLB-IDE 
+                <footnote>
+                <para>
+                Unfortunately, don't expect any performance increase if you enable VLB-IDE support.
+                </para>
+                </footnote>
+                support
+                <footnote>
+                <para>
+                This used to be the only way to get 32 bits disk acess from Win95. 
+                Now that Volker Ruppert has fixed that bug, this VLB-IDE feature is almost useless.
+                </para>
+                </footnote>
+                by configuring with Promise DC2300 VLB 
+                (with <command>./configure --enable-dc2300-vlb-ide</command>)
+                or Tekram DC280E VLB support
+                <footnote>
+                <para>
+                Tekram DC280E VLB support may need an additional patch applied to the source tree
+                (found in patches/patch.tekram-dc280e-vlb-ide)
+                </para>
+                </footnote>
+                (with <command>./configure --enable-dc280e-vlb-ide</command>).
+                After recompiling bochs (see instructions on compiling <xref linkend="compiling">),
+                you may install Win95 specific drivers for those cards.
+                        </para>
+                        <para>
+                Those drivers can be found on the net. Look for the following files:
+                <itemizedlist>
+                      <listitem>
+                      <para>
+                      <ulink url="ftp://ftp.pipeline.com.au/drivers/hard_drive_controllers/P2300W95.ZIP"> 
+                      ftp://ftp.pipeline.com.au/drivers/hard_drive_controllers/P2300W95.ZIP 
+                      </ulink>
+                      for Promise DC2300
+                      </para>
+                      </listitem>
+                      <listitem>
+                      <para>
+                      <ulink url="http://www.tekram.com.tw/Storageftp/IDE/DC-2X0/DC-280X/DC-280E/Driver%26AP/DC280EU.ZIP">
+                      http://www.tekram.com.tw/Storageftp/IDE/DC-2X0/DC-280X/DC-280E/Driver%26AP/DC280EU.ZIP 
+                      </ulink>
+                      for Tekram DC280E
+                      </para>
+                      </listitem>
+                </itemizedlist>
                         </para>
         </section>
 </section>
