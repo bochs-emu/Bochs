@@ -1,0 +1,184 @@
+----------------------------------------------------------------------
+Patch name: patch.config-ext-debugger
+Author: Bryce Denney
+Date: Jul 23 10:33 
+
+Detailed description:
+I attempted to set up a configure script to go along with Peter Tattam's
+external debugger DLL.  I think it was right at the time, but it should be
+tested again.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------
+Index: Makefile.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/Makefile.in,v
+retrieving revision 1.72
+diff -u -r1.72 Makefile.in
+--- Makefile.in	4 Jul 2002 19:01:14 -0000	1.72
++++ Makefile.in	23 Jul 2002 15:32:54 -0000
+@@ -145,6 +145,7 @@
+ DYNAMIC_LIB    = dynamic/libdynamic.a
+ INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
+ FPU_LIB        = fpu/libfpu.a
++EXT_DEBUG_LIB  = @EXT_DEBUG_LIB@
+ READLINE_LIB   = @READLINE_LIB@
+ EXTRA_LINK_OPTS = @EXTRA_LINK_OPTS@
+ 
+@@ -168,6 +169,7 @@
+            cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+            @DISASM_VAR@ @INSTRUMENT_VAR@ @DYNAMIC_VAR@ $(BX_OBJS) \
+            $(SIMX86_OBJS) \
++	   $(EXT_DEBUG_LIB) \
+            $(FPU_LIB)
+ 	@LINK@ $(BX_OBJS) \
+                 $(SIMX86_OBJS) \
+@@ -179,6 +181,7 @@
+ 		$(MCH_LINK_FLAGS) \
+ 	        $(SIMX86_LINK_FLAGS) \
+ 		$(READLINE_LIB) \
++		$(EXT_DEBUG_LIB) \
+ 		$(EXTRA_LINK_OPTS)
+ 
+ bximage@EXE@: misc/bximage.o
+@@ -242,6 +245,11 @@
+ 	cd fpu @COMMAND_SEPARATOR@
+ 	$(MAKE) $(MDEFINES) libfpu.a
+ 	@CD_UP_ONE@
++
++libextdb.a::
++	@RMCOMMAND@ libextdb.a
++	@MAKELIB@ $(OBJS)
++	$(RANLIB) libextdb.a
+ 
+ libbochs.a:
+ 	-rm -f libbochs.a
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure.in,v
+retrieving revision 1.83
+diff -u -r1.83 configure.in
+--- configure.in	16 Jul 2002 12:08:38 -0000	1.83
++++ configure.in	23 Jul 2002 15:32:56 -0000
+@@ -603,6 +603,21 @@
+   )
+ AC_SUBST(DEBUGGER_VAR)
+ 
++AC_MSG_CHECKING(for external debugger)
++AC_ARG_ENABLE(external-debugger,
++  [  --enable-external-debugger        enable external debugger support],
++  [if test "$enableval" = yes; then
++    AC_MSG_RESULT(yes)
++    AC_DEFINE(BX_EXTERNAL_DEBUGGER, 1)
++    EXT_DEBUG_LIB=libextdb.a
++   else
++    AC_MSG_RESULT(no)
++   fi],
++  [
++    AC_MSG_RESULT(no)
++  ])
++AC_SUBST(BX_EXTERNAL_DEBUGGER)
++
+ AC_MSG_CHECKING(for disassembler support)
+ AC_ARG_ENABLE(disasm,
+   [  --enable-disasm                   compile in support for disassembler],
+@@ -1021,6 +1036,7 @@
+ AC_SUBST(NONINLINE_VAR)
+ AC_SUBST(INLINE_VAR)
+ AC_SUBST(EXTERNAL_DEPENDENCY)
++AC_SUBST(EXT_DEBUG_LIB)
+ 
+ 
+ AC_ARG_WITH(x11,
+Index: configure
+===================================================================
+RCS file: /cvsroot/bochs/bochs/configure,v
+retrieving revision 1.82
+diff -u -r1.82 configure
+--- configure	16 Jul 2002 12:10:05 -0000	1.82
++++ configure	23 Jul 2002 15:33:08 -0000
+@@ -855,6 +855,7 @@
+   --enable-port-e9-hack             writes to port e9 go to console
+   --enable-cpp                      use .cpp as C++ suffix
+   --enable-debugger                 compile in support for Bochs internal debugger
++  --enable-external-debugger        enable external debugger support
+   --enable-disasm                   compile in support for disassembler
+   --enable-readline                 use readline library, if available
+   --enable-loader                   support calling external loader from debugger
+@@ -8931,6 +8932,31 @@
+ fi;
+ 
+ 
++echo "$as_me:$LINENO: checking for external debugger" >&5
++echo $ECHO_N "checking for external debugger... $ECHO_C" >&6
++# Check whether --enable-external-debugger or --disable-external-debugger was given.
++if test "${enable_external_debugger+set}" = set; then
++  enableval="$enable_external_debugger"
++  if test "$enableval" = yes; then
++    echo "$as_me:$LINENO: result: yes" >&5
++echo "${ECHO_T}yes" >&6
++    cat >>confdefs.h <<\_ACEOF
++#define BX_EXTERNAL_DEBUGGER 1
++_ACEOF
++
++    EXT_DEBUG_LIB=libextdb.a
++   else
++    echo "$as_me:$LINENO: result: no" >&5
++echo "${ECHO_T}no" >&6
++   fi
++else
++
++    echo "$as_me:$LINENO: result: no" >&5
++echo "${ECHO_T}no" >&6
++
++fi;
++
++
+ echo "$as_me:$LINENO: checking for disassembler support" >&5
+ echo $ECHO_N "checking for disassembler support... $ECHO_C" >&6
+ # Check whether --enable-disasm or --disable-disasm was given.
+@@ -9884,6 +9910,7 @@
+ 
+ 
+ 
++
+ # Check whether --with-x11 or --without-x11 was given.
+ if test "${with_x11+set}" = set; then
+   withval="$with_x11"
+@@ -11628,6 +11655,7 @@
+ s,@SUFFIX_LINE@,$SUFFIX_LINE,;t t
+ s,@CPP_SUFFIX@,$CPP_SUFFIX,;t t
+ s,@DEBUGGER_VAR@,$DEBUGGER_VAR,;t t
++s,@BX_EXTERNAL_DEBUGGER@,$BX_EXTERNAL_DEBUGGER,;t t
+ s,@DISASM_VAR@,$DISASM_VAR,;t t
+ s,@READLINE_LIB@,$READLINE_LIB,;t t
+ s,@BX_LOADER_OBJS@,$BX_LOADER_OBJS,;t t
+@@ -11643,6 +11671,7 @@
+ s,@NONINLINE_VAR@,$NONINLINE_VAR,;t t
+ s,@INLINE_VAR@,$INLINE_VAR,;t t
+ s,@EXTERNAL_DEPENDENCY@,$EXTERNAL_DEPENDENCY,;t t
++s,@EXT_DEBUG_LIB@,$EXT_DEBUG_LIB,;t t
+ s,@PTHREAD_CC@,$PTHREAD_CC,;t t
+ s,@PTHREAD_LIBS@,$PTHREAD_LIBS,;t t
+ s,@PTHREAD_CFLAGS@,$PTHREAD_CFLAGS,;t t
+Index: config.h.in
+===================================================================
+RCS file: /cvsroot/bochs/bochs/config.h.in,v
+retrieving revision 1.50
+diff -u -r1.50 config.h.in
+--- config.h.in	5 Jun 2002 03:59:30 -0000	1.50
++++ config.h.in	23 Jul 2002 15:33:09 -0000
+@@ -515,6 +515,7 @@
+ #define BX_CPP_INLINE inline
+ 
+ #define BX_DEBUGGER 0
++#define BX_EXTERNAL_DEBUGGER 0
+ #define BX_DISASM   0
+ 
+ #define BX_PROVIDE_CPU_MEMORY    1
