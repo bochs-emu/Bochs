@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.16 2004-11-02 16:10:02 sshwarts Exp $
+// $Id: stack16.cc,v 1.17 2004-11-02 20:39:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,7 +116,7 @@ BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL < 2
-  BX_INFO(("POPAD not supported on an 8086"));
+  BX_INFO(("POPA not supported on an 8086"));
   UndefinedOpcode(i);
 #else /* 286+ */
 
@@ -124,7 +124,7 @@ BX_CPU_C::POPAD16(bxInstruction_c *i)
 
     if (protected_mode()) {
       if ( !can_pop(16) ) {
-        BX_ERROR(("POPAD: not enough bytes on stack"));
+        BX_ERROR(("POPA: not enough bytes on stack"));
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
         }

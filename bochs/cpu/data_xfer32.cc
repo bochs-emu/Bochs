@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.31 2004-09-13 20:48:11 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.32 2004-11-02 20:39:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,9 +80,8 @@ BX_CPU_C::MOV_GdEGd(bxInstruction_c *i)
 BX_CPU_C::MOV_GdEEd(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a memory operand, Ed.
-
-  BX_CLEAR_64BIT_HIGH(i->nnn());
   read_virtual_dword(i->seg(), RMAddr(i), &BX_READ_32BIT_REG(i->nnn()));
+  BX_CLEAR_64BIT_HIGH(i->nnn());
 }
 
   void
@@ -101,8 +100,6 @@ BX_CPU_C::LEA_GdM(bxInstruction_c *i)
   void
 BX_CPU_C::MOV_EAXOd(bxInstruction_c *i)
 {
-  BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RAX);
-
   /* read from memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
     read_virtual_dword(i->seg(), i->Id(), &EAX);
@@ -110,6 +107,8 @@ BX_CPU_C::MOV_EAXOd(bxInstruction_c *i)
   else {
     read_virtual_dword(BX_SEG_REG_DS, i->Id(), &EAX);
   }
+
+  BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RAX);
 }
 
   void
