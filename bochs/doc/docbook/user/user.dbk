@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.120 2003-07-16 12:49:52 vruppert Exp $
+$Id: user.dbk,v 1.121 2003-08-01 16:09:53 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2649,6 +2649,16 @@ settings you need to change.
 </para>
 
 <para>
+The syntax used for bochsrc can also be used as command line arguments for Bochs.
+If you have any spaces in your command line arguments, they should be enclosed
+in single quotes, for example:
+<screen>
+  bochs 'boot:a' 'floppya: 1_44=a.img, status=inserted'
+</screen>
+For other arguments, see section <link linkend="commandline">Command line arguments</link>.
+</para>
+
+<para>
 Starting with version 1.3, you can use environment variables in
 the bochsrc file, for example: 
 <screen>
@@ -2814,7 +2824,7 @@ This defines the type and characteristics of all attached ata devices:
 <row> 
   <entry> mode  </entry> 
   <entry> image type, only valid for disks </entry> 
-  <entry> [flat | concat | external | dll | sparse | vmware3 | undoable | growable | volatile | z-undoable | z-volatile]</entry> 
+  <entry> [flat | concat | external | dll | sparse | vmware3 | undoable | growing | volatile | z-undoable | z-volatile]</entry> 
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -2901,7 +2911,7 @@ vmware3 : vmware3 disk support
 undoable : flat file with commitable redolog
 </para></listitem>
 <listitem><para>
-growable : growing file
+growing : growing file
 </para></listitem>
 <listitem><para>
 volatile : flat file with volatile redolog
@@ -3983,6 +3993,37 @@ SourceForge
     </screen>
     </para>
     
+<section id="commandline"><title>Command line arguments</title>
+<para>
+The following table shows the arguments that can be used on the command line.
+For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
+<table>   
+<title>command line arguments</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Argument</entry>
+<entry>Description</entry>
+</row>
+</thead>
+<tbody>
+<row> <entry> -q          </entry><entry> quick start (skip configuration interface) </entry> </row>
+<row> <entry> -f filename </entry><entry> specify configuration file </entry> </row>
+<row> <entry> -n          </entry><entry> don't try to load a configuration file </entry> </row>
+<row> <entry> --help      </entry><entry> display help message and exit </entry> </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+<para>
+These arguments are handled directly after starting Bochs. The next step is to load
+a default or specified configuration file (unless disabled with -n). Then the rest
+of the command line (bochsrc options) is parsed. This is done after reading the
+configuration file so that the command line arguments can override the settings
+from the file.
+</para>
+</section>
+
 </chapter>
 
 <chapter id="common-problems"><title>Common problems and what to do about them (Troubleshooting)</title>
@@ -4189,7 +4230,7 @@ hd to create :
 
 
 What kind of image should I create?
-Please type flat, sparse or growable. [flat] 
+Please type flat, sparse or growing. [flat] 
 
 
 We want to create a simple flat image, so accept the default
@@ -5815,7 +5856,7 @@ ata0-master: type=disk, mode=flat, path=10M.sample, cylinders=306, heads=4, spt=
        <entry> 
        </entry>
  </row>
- <row> <entry> growable </entry> <entry>  one growing file </entry> 
+ <row> <entry> growing </entry> <entry>  one growing file </entry> 
        <entry> 
        </entry>
  </row>
@@ -5894,7 +5935,7 @@ disk accesses are _VERY_ slow.
 </para>
 </section>
 
-<section><title>growable</title>
+<section><title>growing</title>
 <para>
 </para>
 </section>
@@ -5939,7 +5980,7 @@ $ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
-      $Id: user.dbk,v 1.120 2003-07-16 12:49:52 vruppert Exp $
+      $Id: user.dbk,v 1.121 2003-08-01 16:09:53 vruppert Exp $
 ========================================================================
 
 What is the flat image name?
@@ -7358,7 +7399,7 @@ Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
 
 What kind of image should I create?
-Please type flat, sparse or growable. [flat] 
+Please type flat, sparse or growing. [flat] 
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 1
@@ -7672,7 +7713,7 @@ Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
 
 What kind of image should I create?
-Please type flat, sparse or growable. [flat] 
+Please type flat, sparse or growing. [flat] 
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 1000
@@ -8366,14 +8407,14 @@ linux-$ ./bximage
 ========================================================================
                                 bximage
                   Disk Image Creation Tool for Bochs
-        $Id: user.dbk,v 1.120 2003-07-16 12:49:52 vruppert Exp $
+        $Id: user.dbk,v 1.121 2003-08-01 16:09:53 vruppert Exp $
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
 
 What kind of image should I create?
-Please type flat, sparse or growable. [flat] 
+Please type flat, sparse or growing. [flat] 
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 2048
