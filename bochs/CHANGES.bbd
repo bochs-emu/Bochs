@@ -1,12 +1,16 @@
 
 RCS file: /home/cvsroot/bochs/.bochsrc,v
 Working file: .bochsrc
-head: 1.5
+head: 1.6
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.5
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.6
+	REL-smpbochs-03-30-2000: 1.5
+	ported-to-dec-osf1-gcc: 1.5
+	local-APIC-timers-tick: 1.5
 	smp-linux-boots: 1.4
 	added-ioapic: 1.4
 	all-processors-boot: 1.4
@@ -16,8 +20,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.2
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 5;	selected revisions: 5
+total revisions: 6;	selected revisions: 6
 description:
+----------------------------
+revision 1.6
+date: 2001/04/02 22:34:29;  author: bryce;  state: Exp;  lines: +1 -1
+- boot a
 ----------------------------
 revision 1.5
 date: 2001/03/31 02:16:52;  author: bryce;  state: Exp;  lines: +2 -2
@@ -51,7 +59,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 keyword substitution: kv
 total revisions: 1;	selected revisions: 1
 description:
@@ -69,7 +81,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -94,7 +110,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -119,7 +139,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -144,7 +168,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -169,7 +197,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -194,7 +226,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -219,7 +255,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -244,7 +284,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -269,7 +313,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -293,7 +341,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -313,15 +365,23 @@ date: 2001/03/19 17:33:14;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/CHANGES.bbd,v
 Working file: CHANGES.bbd
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/03/31 02:41:33;  author: bryce;  state: Exp;  lines: +382 -14
+*** empty log message ***
 ----------------------------
 revision 1.1
 date: 2001/03/31 02:13:44;  author: bryce;  state: Exp;
@@ -335,7 +395,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -355,12 +419,16 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/Makefile.in,v
 Working file: Makefile.in
-head: 1.4
+head: 1.8
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.4
+	REL-smpbochs-04-03-2000: 1.8
+	portability-testing1: 1.8
+	REL-smpbochs-03-30-2000: 1.4
+	ported-to-dec-osf1-gcc: 1.8
+	local-APIC-timers-tick: 1.6
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -370,8 +438,28 @@ symbolic names:
 	working-on-smp-03-21pm: 1.2
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 4;	selected revisions: 4
+total revisions: 8;	selected revisions: 8
 description:
+----------------------------
+revision 1.8
+date: 2001/04/02 21:28:58;  author: bryce;  state: Exp;  lines: +3 -2
+- for systems that don't have strtoull, I included one.  Unfortunately
+  the only command that uses long long string conversion loses the
+  64-bit value before it gets used.  I can't explain it yet.
+----------------------------
+revision 1.7
+date: 2001/04/02 05:59:41;  author: bryce;  state: Exp;  lines: +9 -9
+- now use target:: for the subdirectories so that a simple "make" command
+  tries to recompile all the subdirs.
+----------------------------
+revision 1.6
+date: 2001/04/02 01:54:31;  author: bryce;  state: Exp;  lines: +1 -1
+- do dist-clean before tar
+----------------------------
+revision 1.5
+date: 2001/03/31 20:04:12;  author: bryce;  state: Exp;  lines: +8 -1
+- add make tar command. unfortunately dist-clean erases the makefile
+  and you'd like it to do dist-clean before tar. Hm.
 ----------------------------
 revision 1.4
 date: 2001/03/31 02:08:01;  author: bryce;  state: Exp;  lines: +4 -3
@@ -393,12 +481,16 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/NOTES,v
 Working file: NOTES
-head: 1.10
+head: 1.18
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.10
+	REL-smpbochs-04-03-2000: 1.18
+	portability-testing1: 1.16
+	REL-smpbochs-03-30-2000: 1.10
+	ported-to-dec-osf1-gcc: 1.15
+	local-APIC-timers-tick: 1.12
 	smp-linux-boots: 1.9
 	added-ioapic: 1.8
 	all-processors-boot: 1.7
@@ -407,8 +499,40 @@ symbolic names:
 	before-using-SMF=0: 1.4
 	working-on-smp-03-21pm: 1.2
 keyword substitution: kv
-total revisions: 10;	selected revisions: 10
+total revisions: 18;	selected revisions: 18
 description:
+----------------------------
+revision 1.18
+date: 2001/04/03 17:30:28;  author: bryce;  state: Exp;  lines: +7 -0
+*** empty log message ***
+----------------------------
+revision 1.17
+date: 2001/04/03 16:06:39;  author: bryce;  state: Exp;  lines: +29 -0
+*** empty log message ***
+----------------------------
+revision 1.16
+date: 2001/04/03 07:49:54;  author: bryce;  state: Exp;  lines: +14 -0
+*** empty log message ***
+----------------------------
+revision 1.15
+date: 2001/04/02 21:29:19;  author: bryce;  state: Exp;  lines: +10 -0
+*** empty log message ***
+----------------------------
+revision 1.14
+date: 2001/04/02 18:49:04;  author: bryce;  state: Exp;  lines: +103 -0
+*** empty log message ***
+----------------------------
+revision 1.13
+date: 2001/04/02 05:58:59;  author: bryce;  state: Exp;  lines: +11 -0
+*** empty log message ***
+----------------------------
+revision 1.12
+date: 2001/04/02 01:54:35;  author: bryce;  state: Exp;  lines: +77 -0
+*** empty log message ***
+----------------------------
+revision 1.11
+date: 2001/03/31 20:09:07;  author: bryce;  state: Exp;  lines: +1 -1
+*** empty log message ***
 ----------------------------
 revision 1.10
 date: 2001/03/30 23:31:20;  author: bryce;  state: Exp;  lines: +9 -2
@@ -453,12 +577,16 @@ date: 2001/03/21 00:27:37;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/README,v
 Working file: README
-head: 1.3
+head: 1.5
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.5
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.4
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -468,8 +596,16 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 3;	selected revisions: 3
+total revisions: 5;	selected revisions: 5
 description:
+----------------------------
+revision 1.5
+date: 2001/04/03 17:32:42;  author: bryce;  state: Exp;  lines: +105 -77
+*** empty log message ***
+----------------------------
+revision 1.4
+date: 2001/04/01 16:03:48;  author: bryce;  state: Exp;  lines: +1 -1
+- fix typo
 ----------------------------
 revision 1.3
 date: 2001/03/31 02:18:03;  author: bryce;  state: Exp;  lines: +2 -2
@@ -484,14 +620,36 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 - entered bochs version 2000-03-25
 =============================================================================
 
-RCS file: /home/cvsroot/bochs/bochs.h,v
-Working file: bochs.h
-head: 1.4
+RCS file: /home/cvsroot/bochs/TO-DO,v
+Working file: TO-DO
+head: 1.1
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.4
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+keyword substitution: kv
+total revisions: 1;	selected revisions: 1
+description:
+----------------------------
+revision 1.1
+date: 2001/04/02 22:52:16;  author: bryce;  state: Exp;
+*** empty log message ***
+=============================================================================
+
+RCS file: /home/cvsroot/bochs/bochs.h,v
+Working file: bochs.h
+head: 1.8
+branch:
+locks: strict
+access list:
+symbolic names:
+	REL-smpbochs-04-03-2000: 1.8
+	portability-testing1: 1.8
+	REL-smpbochs-03-30-2000: 1.4
+	ported-to-dec-osf1-gcc: 1.7
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -501,8 +659,27 @@ symbolic names:
 	working-on-smp-03-21pm: 1.2
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 4;	selected revisions: 4
+total revisions: 8;	selected revisions: 8
 description:
+----------------------------
+revision 1.8
+date: 2001/04/02 22:34:48;  author: bryce;  state: Exp;  lines: +1 -0
+- add comments
+----------------------------
+revision 1.7
+date: 2001/04/02 19:36:50;  author: bryce;  state: Exp;  lines: +3 -11
+- include new header osdep.h in which I will put all new OS-dependent stuff
+----------------------------
+revision 1.6
+date: 2001/04/02 18:51:39;  author: bryce;  state: Exp;  lines: +9 -0
+- for systems without snprintf, use macro to redirect to sprintf.
+  Better would be to include the real glibc snprintf function.
+----------------------------
+revision 1.5
+date: 2001/04/02 05:57:10;  author: bryce;  state: Exp;  lines: +1 -0
+- in the SMP cpu loop, it was executing instructions and then incrementing
+  the tick by only one.  Now it ticks by the same number as the number
+  of instructions.
 ----------------------------
 revision 1.4
 date: 2001/03/31 02:34:29;  author: bryce;  state: Exp;  lines: +5 -1
@@ -528,7 +705,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -548,12 +729,16 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/config.h.in,v
 Working file: config.h.in
-head: 1.10
+head: 1.17
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.10
+	REL-smpbochs-04-03-2000: 1.17
+	portability-testing1: 1.17
+	REL-smpbochs-03-30-2000: 1.10
+	ported-to-dec-osf1-gcc: 1.13
+	local-APIC-timers-tick: 1.11
 	smp-linux-boots: 1.8
 	added-ioapic: 1.8
 	all-processors-boot: 1.7
@@ -563,8 +748,43 @@ symbolic names:
 	working-on-smp-03-21pm: 1.3
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 10;	selected revisions: 10
+total revisions: 17;	selected revisions: 17
 description:
+----------------------------
+revision 1.17
+date: 2001/04/03 07:49:39;  author: bryce;  state: Exp;  lines: +13 -2
+- create bx_ptr_equiv_t, an integer the same size as a pointer
+----------------------------
+revision 1.16
+date: 2001/04/03 07:33:00;  author: bryce;  state: Exp;  lines: +6 -5
+- check for size of a pointer, to create bx_ptr_equiv_t
+- check if compiler allows empty structs
+- check if comipler allows __attribute__
+- check if we can #include <hash_map.h>, to enable contexts in debugger
+----------------------------
+revision 1.15
+date: 2001/04/03 05:16:11;  author: bryce;  state: Exp;  lines: +11 -1
+- added switches for BX_USE_GCC_ATTRIBUTES and BX_CONTEXT_SUPPORT.  They
+  default to off.  Eventually, add a configure.in test to turn them
+  on if appropriate.
+----------------------------
+revision 1.14
+date: 2001/04/02 22:34:48;  author: bryce;  state: Exp;  lines: +1 -1
+- add comments
+----------------------------
+revision 1.13
+date: 2001/04/02 21:28:58;  author: bryce;  state: Exp;  lines: +1 -0
+- for systems that don't have strtoull, I included one.  Unfortunately
+  the only command that uses long long string conversion loses the
+  64-bit value before it gets used.  I can't explain it yet.
+----------------------------
+revision 1.12
+date: 2001/04/02 18:51:59;  author: bryce;  state: Exp;  lines: +1 -0
+- add defined for having snprintf
+----------------------------
+revision 1.11
+date: 2001/03/31 20:02:24;  author: bryce;  state: Exp;  lines: +2 -2
+- use autoconf style defines for readline library switch
 ----------------------------
 revision 1.10
 date: 2001/03/31 02:14:46;  author: bryce;  state: Exp;  lines: +17 -6
@@ -613,12 +833,16 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/configure,v
 Working file: configure
-head: 1.2
+head: 1.10
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.10
+	portability-testing1: 1.9
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.7
+	local-APIC-timers-tick: 1.5
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -628,8 +852,53 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 10;	selected revisions: 10
 description:
+----------------------------
+revision 1.10
+date: 2001/04/03 17:32:33;  author: bryce;  state: Exp;  lines: +198 -222
+- I did AC_LANG_SAVE twice instead of SAVE...RESTORE
+- move number of processors before cpu level
+- move readline somewhere earlier
+- default cpu level=5 like bochs release
+- fpu support is off, like bochs release
+----------------------------
+revision 1.9
+date: 2001/04/03 08:08:23;  author: bryce;  state: Exp;  lines: +4 -4
+- fixed syntax of configure.in
+----------------------------
+revision 1.8
+date: 2001/04/03 07:33:00;  author: bryce;  state: Exp;  lines: +209 -34
+- check for size of a pointer, to create bx_ptr_equiv_t
+- check if compiler allows empty structs
+- check if comipler allows __attribute__
+- check if we can #include <hash_map.h>, to enable contexts in debugger
+----------------------------
+revision 1.7
+date: 2001/04/02 21:28:58;  author: bryce;  state: Exp;  lines: +83 -25
+- for systems that don't have strtoull, I included one.  Unfortunately
+  the only command that uses long long string conversion loses the
+  64-bit value before it gets used.  I can't explain it yet.
+----------------------------
+revision 1.6
+date: 2001/04/02 18:52:15;  author: bryce;  state: Exp;  lines: +83 -25
+- add check for snprintf
+----------------------------
+revision 1.5
+date: 2001/04/02 02:11:41;  author: bryce;  state: Exp;  lines: +9 -7
+- enable FPU by default, to be consistent with 2 processors and SMP
+----------------------------
+revision 1.4
+date: 2001/04/02 01:55:09;  author: bryce;  state: Exp;  lines: +17 -13
+- define HAVE_LIBREADLINE when readline found
+----------------------------
+revision 1.3
+date: 2001/03/31 20:06:18;  author: bryce;  state: Exp;  lines: +562 -161
+- I got autoconf so now I can fix up the configuration options.  Added
+  cpu-level 6, as the default.
+- added --enable-processors=N.  it warns you unless you use 1, 2, or 4.
+- added --enable-apic.  warns you if apic is off but processors>1.
+- if debugger selected, it warns you to turn on disasm too
 ----------------------------
 revision 1.2
 date: 2001/03/26 16:19:34;  author: bryce;  state: Exp;  lines: +12 -2
@@ -642,12 +911,16 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/configure.in,v
 Working file: configure.in
-head: 1.1
+head: 1.9
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.9
+	portability-testing1: 1.8
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.6
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -657,8 +930,53 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 9;	selected revisions: 9
 description:
+----------------------------
+revision 1.9
+date: 2001/04/03 17:32:33;  author: bryce;  state: Exp;  lines: +69 -58
+- I did AC_LANG_SAVE twice instead of SAVE...RESTORE
+- move number of processors before cpu level
+- move readline somewhere earlier
+- default cpu level=5 like bochs release
+- fpu support is off, like bochs release
+----------------------------
+revision 1.8
+date: 2001/04/03 08:08:24;  author: bryce;  state: Exp;  lines: +3 -3
+- fixed syntax of configure.in
+----------------------------
+revision 1.7
+date: 2001/04/03 07:33:00;  author: bryce;  state: Exp;  lines: +26 -0
+- check for size of a pointer, to create bx_ptr_equiv_t
+- check if compiler allows empty structs
+- check if comipler allows __attribute__
+- check if we can #include <hash_map.h>, to enable contexts in debugger
+----------------------------
+revision 1.6
+date: 2001/04/02 21:28:58;  author: bryce;  state: Exp;  lines: +1 -0
+- for systems that don't have strtoull, I included one.  Unfortunately
+  the only command that uses long long string conversion loses the
+  64-bit value before it gets used.  I can't explain it yet.
+----------------------------
+revision 1.5
+date: 2001/04/02 18:52:15;  author: bryce;  state: Exp;  lines: +1 -0
+- add check for snprintf
+----------------------------
+revision 1.4
+date: 2001/04/02 02:11:41;  author: bryce;  state: Exp;  lines: +4 -2
+- enable FPU by default, to be consistent with 2 processors and SMP
+----------------------------
+revision 1.3
+date: 2001/04/02 01:55:09;  author: bryce;  state: Exp;  lines: +1 -0
+- define HAVE_LIBREADLINE when readline found
+----------------------------
+revision 1.2
+date: 2001/03/31 20:06:18;  author: bryce;  state: Exp;  lines: +116 -8
+- I got autoconf so now I can fix up the configuration options.  Added
+  cpu-level 6, as the default.
+- added --enable-processors=N.  it warns you unless you use 1, 2, or 4.
+- added --enable-apic.  warns you if apic is off but processors>1.
+- if debugger selected, it warns you to turn on disasm too
 ----------------------------
 revision 1.1
 date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
@@ -672,7 +990,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -705,7 +1027,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -730,7 +1056,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -755,7 +1085,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -775,12 +1109,16 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/main.cc,v
 Working file: main.cc
-head: 1.4
+head: 1.7
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.4
+	REL-smpbochs-04-03-2000: 1.7
+	portability-testing1: 1.7
+	REL-smpbochs-03-30-2000: 1.4
+	ported-to-dec-osf1-gcc: 1.7
+	local-APIC-timers-tick: 1.6
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -790,8 +1128,22 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 4;	selected revisions: 4
+total revisions: 7;	selected revisions: 7
 description:
+----------------------------
+revision 1.7
+date: 2001/04/02 05:57:10;  author: bryce;  state: Exp;  lines: +4 -3
+- in the SMP cpu loop, it was executing instructions and then incrementing
+  the tick by only one.  Now it ticks by the same number as the number
+  of instructions.
+----------------------------
+revision 1.6
+date: 2001/04/02 01:55:25;  author: bryce;  state: Exp;  lines: +11 -11
+- added comments to initialization of bx_options
+----------------------------
+revision 1.5
+date: 2001/03/31 20:52:33;  author: bryce;  state: Exp;  lines: +1 -1
+- made comment consistent with code
 ----------------------------
 revision 1.4
 date: 2001/03/30 14:31:12;  author: bryce;  state: Exp;  lines: +22 -7
@@ -811,14 +1163,72 @@ date: 2001/03/19 17:36:43;  author: bryce;  state: Exp;
 - entered bochs version 2000-03-25
 =============================================================================
 
-RCS file: /home/cvsroot/bochs/pc_system.cc,v
-Working file: pc_system.cc
-head: 1.6
+RCS file: /home/cvsroot/bochs/osdep.cc,v
+Working file: osdep.cc
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.6
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+keyword substitution: kv
+total revisions: 2;	selected revisions: 2
+description:
+----------------------------
+revision 1.2
+date: 2001/04/02 21:28:58;  author: bryce;  state: Exp;  lines: +147 -0
+- for systems that don't have strtoull, I included one.  Unfortunately
+  the only command that uses long long string conversion loses the
+  64-bit value before it gets used.  I can't explain it yet.
+----------------------------
+revision 1.1
+date: 2001/04/02 19:37:45;  author: bryce;  state: Exp;
+- OS-dependent functions and settings
+=============================================================================
+
+RCS file: /home/cvsroot/bochs/osdep.h,v
+Working file: osdep.h
+head: 1.3
+branch:
+locks: strict
+access list:
+symbolic names:
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	ported-to-dec-osf1-gcc: 1.2
+keyword substitution: kv
+total revisions: 3;	selected revisions: 3
+description:
+----------------------------
+revision 1.3
+date: 2001/04/02 22:35:05;  author: bryce;  state: Exp;  lines: +13 -4
+- put the correct "ifdef __cplusplus" structure around things
+----------------------------
+revision 1.2
+date: 2001/04/02 21:28:58;  author: bryce;  state: Exp;  lines: +8 -0
+- for systems that don't have strtoull, I included one.  Unfortunately
+  the only command that uses long long string conversion loses the
+  64-bit value before it gets used.  I can't explain it yet.
+----------------------------
+revision 1.1
+date: 2001/04/02 19:37:45;  author: bryce;  state: Exp;
+- OS-dependent functions and settings
+=============================================================================
+
+RCS file: /home/cvsroot/bochs/pc_system.cc,v
+Working file: pc_system.cc
+head: 1.7
+branch:
+locks: strict
+access list:
+symbolic names:
+	REL-smpbochs-04-03-2000: 1.7
+	portability-testing1: 1.7
+	REL-smpbochs-03-30-2000: 1.6
+	ported-to-dec-osf1-gcc: 1.7
+	local-APIC-timers-tick: 1.7
 	smp-linux-boots: 1.5
 	added-ioapic: 1.4
 	all-processors-boot: 1.4
@@ -828,8 +1238,13 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 6;	selected revisions: 6
+total revisions: 7;	selected revisions: 7
 description:
+----------------------------
+revision 1.7
+date: 2001/04/02 01:56:08;  author: bryce;  state: Exp;  lines: +0 -20
+- removed wait_for_event() since it was #ifed out anyway.  I haven't
+  studied WHY it was removed.
 ----------------------------
 revision 1.6
 date: 2001/03/31 02:33:40;  author: bryce;  state: Exp;  lines: +2 -1
@@ -866,7 +1281,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -897,7 +1316,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -922,7 +1345,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -947,7 +1374,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -972,7 +1403,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -996,7 +1431,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 keyword substitution: b
 total revisions: 1;	selected revisions: 1
 description:
@@ -1014,7 +1453,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 keyword substitution: b
 total revisions: 1;	selected revisions: 1
 description:
@@ -1032,7 +1475,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1057,7 +1504,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.4
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.4
+	ported-to-dec-osf1-gcc: 1.4
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -1098,7 +1549,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1123,7 +1578,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1148,7 +1607,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1173,7 +1636,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1198,7 +1665,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1223,7 +1694,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.10
+	REL-smpbochs-04-03-2000: 1.10
+	portability-testing1: 1.10
+	REL-smpbochs-03-30-2000: 1.10
+	ported-to-dec-osf1-gcc: 1.10
+	local-APIC-timers-tick: 1.10
 	smp-linux-boots: 1.8
 	added-ioapic: 1.7
 	all-processors-boot: 1.6
@@ -1292,7 +1767,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1317,7 +1796,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -1336,12 +1819,16 @@ date: 2001/03/19 18:01:14;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/cpu/Makefile.in,v
 Working file: cpu/Makefile.in
-head: 1.2
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1351,8 +1838,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/03/31 20:07:19;  author: bryce;  state: Exp;  lines: +3 -1
+- added apic.o, only when --enable-apic is on
 ----------------------------
 revision 1.2
 date: 2001/03/23 15:05:39;  author: bryce;  state: Exp;  lines: +2 -1
@@ -1370,7 +1861,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -1407,12 +1902,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/cpu/apic.cc,v
 Working file: cpu/apic.cc
-head: 1.9
+head: 1.11
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.9
+	REL-smpbochs-04-03-2000: 1.11
+	portability-testing1: 1.11
+	REL-smpbochs-03-30-2000: 1.9
+	ported-to-dec-osf1-gcc: 1.10
+	local-APIC-timers-tick: 1.10
 	smp-linux-boots: 1.7
 	added-ioapic: 1.6
 	all-processors-boot: 1.5
@@ -1420,8 +1919,21 @@ symbolic names:
 	cpu-and-mem-are-arrays: 1.3
 	before-using-SMF=0: 1.2
 keyword substitution: kv
-total revisions: 9;	selected revisions: 9
+total revisions: 11;	selected revisions: 11
 description:
+----------------------------
+revision 1.11
+date: 2001/04/03 07:49:05;  author: bryce;  state: Exp;  lines: +5 -1
+- get_cpu was very broken; it didn't return anything, was static, and had
+  the wrong return type.
+- be sure to return something even after a bx_panic. compiler doesn't
+  know bx_panic is fatal.
+----------------------------
+revision 1.10
+date: 2001/04/02 01:58:30;  author: bryce;  state: Exp;  lines: +92 -20
+- implemented local APIC timer, both periodic and one-shot modes.  The
+  "periodic" method of bx_local_apic_c is called once per 100 usec
+  (see TIMER_DELTA in iodev/bx_devices.cc).
 ----------------------------
 revision 1.9
 date: 2001/03/31 02:34:12;  author: bryce;  state: Exp;  lines: +53 -31
@@ -1515,7 +2027,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1542,7 +2058,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1580,7 +2100,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1618,7 +2142,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1656,7 +2184,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1694,7 +2226,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1727,12 +2263,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/cpu/cpu.cc,v
 Working file: cpu/cpu.cc
-head: 1.6
+head: 1.11
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.6
+	REL-smpbochs-04-03-2000: 1.11
+	portability-testing1: 1.11
+	REL-smpbochs-03-30-2000: 1.6
+	ported-to-dec-osf1-gcc: 1.10
+	local-APIC-timers-tick: 1.8
 	smp-linux-boots: 1.5
 	added-ioapic: 1.4
 	all-processors-boot: 1.3
@@ -1742,8 +2282,36 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 6;	selected revisions: 6
+total revisions: 11;	selected revisions: 11
 description:
+----------------------------
+revision 1.11
+date: 2001/04/03 05:12:35;  author: bryce;  state: Exp;  lines: +7 -4
+- moved #if lines around to make it clearer what happens around
+  goto_debugger_check.
+----------------------------
+revision 1.10
+date: 2001/04/02 06:03:30;  author: bryce;  state: Exp;  lines: +0 -1
+- remove line that prints cs:ip at every main loop
+----------------------------
+revision 1.9
+date: 2001/04/02 05:58:31;  author: bryce;  state: Exp;  lines: +3 -2
+- something about the location CHECK_MAX_INSTRUCTIONS macro was causing
+  incorrect simulation and crashes.  I moved it to the debugger_check
+  area instead.
+----------------------------
+revision 1.8
+date: 2001/04/02 02:08:03;  author: bryce;  state: Exp;  lines: +23 -14
+- do NOT tick once per instruction in cpu_loop because in the SMP loops
+  that does too many ticks.  Instead, let the outer loop update ticks
+  after each processor has stepped through a few instructions.
+- use a macro CHECK_MAX_INSTRUCTIONS to stop the cpu_loop early if
+  max_instr_count reaches zero.  This is only compiled in when the
+  debugger is off.
+----------------------------
+revision 1.7
+date: 2001/03/31 20:49:08;  author: bryce;  state: Exp;  lines: +5 -0
+- added conditionals around the local APIC call
 ----------------------------
 revision 1.6
 date: 2001/03/30 14:29:51;  author: bryce;  state: Exp;  lines: +16 -19
@@ -1793,12 +2361,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/cpu/cpu.h,v
 Working file: cpu/cpu.h
-head: 1.9
+head: 1.12
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.9
+	REL-smpbochs-04-03-2000: 1.12
+	portability-testing1: 1.12
+	REL-smpbochs-03-30-2000: 1.9
+	ported-to-dec-osf1-gcc: 1.10
+	local-APIC-timers-tick: 1.10
 	smp-linux-boots: 1.8
 	added-ioapic: 1.7
 	all-processors-boot: 1.6
@@ -1808,8 +2380,27 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 9;	selected revisions: 9
+total revisions: 12;	selected revisions: 12
 description:
+----------------------------
+revision 1.12
+date: 2001/04/03 07:49:05;  author: bryce;  state: Exp;  lines: +2 -1
+- get_cpu was very broken; it didn't return anything, was static, and had
+  the wrong return type.
+- be sure to return something even after a bx_panic. compiler doesn't
+  know bx_panic is fatal.
+----------------------------
+revision 1.11
+date: 2001/04/03 05:11:40;  author: bryce;  state: Exp;  lines: +2 -2
+- accidently had a "nested comment" because the expression
+    cpu/*.cc
+  looks like a start of comment.
+----------------------------
+revision 1.10
+date: 2001/04/02 01:58:30;  author: bryce;  state: Exp;  lines: +12 -2
+- implemented local APIC timer, both periodic and one-shot modes.  The
+  "periodic" method of bx_local_apic_c is called once per 100 usec
+  (see TIMER_DELTA in iodev/bx_devices.cc).
 ----------------------------
 revision 1.9
 date: 2001/03/30 14:29:51;  author: bryce;  state: Exp;  lines: +1 -1
@@ -1908,7 +2499,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1946,7 +2541,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -1984,7 +2583,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2022,7 +2625,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2060,7 +2667,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2098,7 +2709,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2136,7 +2751,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2169,12 +2788,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/cpu/debugstuff.cc,v
 Working file: cpu/debugstuff.cc
-head: 1.4
+head: 1.5
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.4
+	REL-smpbochs-04-03-2000: 1.5
+	portability-testing1: 1.5
+	REL-smpbochs-03-30-2000: 1.4
+	ported-to-dec-osf1-gcc: 1.5
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.4
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -2184,8 +2807,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 4;	selected revisions: 4
+total revisions: 5;	selected revisions: 5
 description:
+----------------------------
+revision 1.5
+date: 2001/04/02 18:53:12;  author: bryce;  state: Exp;  lines: +2 -0
+- comment out references to bx_callback, which is no longer used
 ----------------------------
 revision 1.4
 date: 2001/03/29 20:49:41;  author: bryce;  state: Exp;  lines: +1 -1
@@ -2221,7 +2848,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2259,7 +2890,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2297,7 +2932,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -2339,7 +2978,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2385,7 +3028,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2423,7 +3070,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2456,12 +3107,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/cpu/init.cc,v
 Working file: cpu/init.cc
-head: 1.6
+head: 1.7
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.6
+	REL-smpbochs-04-03-2000: 1.7
+	portability-testing1: 1.7
+	REL-smpbochs-03-30-2000: 1.6
+	ported-to-dec-osf1-gcc: 1.7
+	local-APIC-timers-tick: 1.7
 	smp-linux-boots: 1.6
 	added-ioapic: 1.5
 	all-processors-boot: 1.4
@@ -2471,8 +3126,14 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 6;	selected revisions: 6
+total revisions: 7;	selected revisions: 7
 description:
+----------------------------
+revision 1.7
+date: 2001/03/31 20:08:31;  author: bryce;  state: Exp;  lines: +6 -0
+- added #if BX_APIC_SUPPORT where necessary
+- code that halts all but bootstrap processor is conditional on
+  BX_SMP_PROCESSORS>1.
 ----------------------------
 revision 1.6
 date: 2001/03/29 20:55:22;  author: bryce;  state: Exp;  lines: +2 -2
@@ -2520,7 +3181,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2558,7 +3223,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2596,7 +3265,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2634,7 +3307,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -2659,7 +3336,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2697,7 +3378,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2735,7 +3420,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2773,7 +3462,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2811,7 +3504,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2849,7 +3546,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -2887,7 +3588,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -2924,12 +3629,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/cpu/proc_ctrl.cc,v
 Working file: cpu/proc_ctrl.cc
-head: 1.6
+head: 1.7
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.6
+	REL-smpbochs-04-03-2000: 1.7
+	portability-testing1: 1.7
+	REL-smpbochs-03-30-2000: 1.6
+	ported-to-dec-osf1-gcc: 1.7
+	local-APIC-timers-tick: 1.7
 	smp-linux-boots: 1.6
 	added-ioapic: 1.6
 	all-processors-boot: 1.6
@@ -2939,8 +3648,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.3
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 6;	selected revisions: 6
+total revisions: 7;	selected revisions: 7
 description:
+----------------------------
+revision 1.7
+date: 2001/04/02 02:08:56;  author: bryce;  state: Exp;  lines: +0 -18
+- remove wait_for_interrupt, which was #if0'd away
 ----------------------------
 revision 1.6
 date: 2001/03/27 17:07:59;  author: bryce;  state: Exp;  lines: +50 -50
@@ -2987,7 +3700,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3025,7 +3742,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3063,7 +3784,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3101,7 +3826,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3139,7 +3868,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3177,7 +3910,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3215,7 +3952,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3253,7 +3994,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3291,7 +4036,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3329,7 +4078,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3367,7 +4120,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3405,7 +4162,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3443,7 +4204,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3481,7 +4246,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3519,7 +4288,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3557,7 +4330,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3590,12 +4367,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/debug/.cvsignore,v
 Working file: debug/.cvsignore
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -3604,8 +4385,15 @@ symbolic names:
 	before-using-SMF=0: 1.1
 	working-on-smp-03-21pm: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 03:53:03;  author: bryce;  state: Exp;  lines: +0 -3
+- distribute lexer.c, parser.c, and parser.h again, since everybody has
+  a different version of them all.  Then only someone who wants to
+  edit parser.y or lexer.l will have to have the right version of
+  yacc and flex installed.
 ----------------------------
 revision 1.1
 date: 2001/03/19 18:01:14;  author: bryce;  state: Exp;
@@ -3619,7 +4407,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -3648,7 +4440,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -3668,12 +4464,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/debug/dbg_main.cc,v
 Working file: debug/dbg_main.cc
-head: 1.10
+head: 1.17
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.10
+	REL-smpbochs-04-03-2000: 1.17
+	portability-testing1: 1.17
+	REL-smpbochs-03-30-2000: 1.10
+	ported-to-dec-osf1-gcc: 1.15
+	local-APIC-timers-tick: 1.12
 	smp-linux-boots: 1.9
 	added-ioapic: 1.8
 	all-processors-boot: 1.8
@@ -3683,8 +4483,43 @@ symbolic names:
 	working-on-smp-03-21pm: 1.4
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 10;	selected revisions: 10
+total revisions: 17;	selected revisions: 17
 description:
+----------------------------
+revision 1.17
+date: 2001/04/03 07:31:15;  author: bryce;  state: Exp;  lines: +6 -6
+- use BX_HAVE_HASH_MAP instead of BX_CONTEXT_SUPPORT
+----------------------------
+revision 1.16
+date: 2001/04/03 05:15:06;  author: bryce;  state: Exp;  lines: +40 -12
+- removed a zero-length array (?)
+- put #if BX_CONTEXT_SUPPORT...#endif around the context code that uses
+  templates.  Is it even possible to make portable C++ template code?
+- bx_dbg_watch and bx_dbg_unwatch had a Boolean arg called read,
+  but the parser was calling it with -1, 0, and 1.  Changed to int.
+----------------------------
+revision 1.15
+date: 2001/04/02 19:48:21;  author: bryce;  state: Exp;  lines: +4 -4
+- call bx_snprintf instead of snprintf, and the configure and osdep.h
+  will take care of it.
+----------------------------
+revision 1.14
+date: 2001/04/02 18:51:42;  author: bryce;  state: Exp;  lines: +4 -4
+- for systems without snprintf, use macro to redirect to sprintf.
+  Better would be to include the real glibc snprintf function.
+----------------------------
+revision 1.13
+date: 2001/04/02 06:01:06;  author: bryce;  state: Exp;  lines: +1 -1
+- tick by quantum, not by 1.
+----------------------------
+revision 1.12
+date: 2001/04/02 02:09:27;  author: bryce;  state: Exp;  lines: +7 -4
+- fix #ifs related to readline library
+- add comments about ticks and stop flag
+----------------------------
+revision 1.11
+date: 2001/03/31 20:08:55;  author: bryce;  state: Exp;  lines: +2 -2
+- use autoconf style #defines to decide whether to use readline.
 ----------------------------
 revision 1.10
 date: 2001/03/31 00:35:40;  author: bryce;  state: Exp;  lines: +6 -4
@@ -3750,12 +4585,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/debug/debug.h,v
 Working file: debug/debug.h
-head: 1.6
+head: 1.8
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.6
+	REL-smpbochs-04-03-2000: 1.8
+	portability-testing1: 1.8
+	REL-smpbochs-03-30-2000: 1.6
+	ported-to-dec-osf1-gcc: 1.6
+	local-APIC-timers-tick: 1.6
 	smp-linux-boots: 1.6
 	added-ioapic: 1.6
 	all-processors-boot: 1.6
@@ -3765,8 +4604,16 @@ symbolic names:
 	working-on-smp-03-21pm: 1.3
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 6;	selected revisions: 6
+total revisions: 8;	selected revisions: 8
 description:
+----------------------------
+revision 1.8
+date: 2001/04/03 05:13:25;  author: bryce;  state: Exp;  lines: +6 -7
+- attempted to make range with 64-bit signed types
+----------------------------
+revision 1.7
+date: 2001/04/02 21:46:54;  author: bryce;  state: Exp;  lines: +1 -0
+- include osdep.h even when compiling the parser .c files
 ----------------------------
 revision 1.6
 date: 2001/03/26 17:26:08;  author: bryce;  state: Exp;  lines: +2 -3
@@ -3801,17 +4648,26 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 - entered bochs version 2000-03-25
 =============================================================================
 
-RCS file: /home/cvsroot/bochs/debug/Attic/lexer.c,v
+RCS file: /home/cvsroot/bochs/debug/lexer.c,v
 Working file: debug/lexer.c
-head: 1.2
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 03:53:03;  author: bryce;  state: Exp;  lines: +345 -298
+- distribute lexer.c, parser.c, and parser.h again, since everybody has
+  a different version of them all.  Then only someone who wants to
+  edit parser.y or lexer.l will have to have the right version of
+  yacc and flex installed.
 ----------------------------
 revision 1.2
 date: 2001/03/19 17:46:11;  author: bryce;  state: dead;  lines: +1 -1
@@ -3824,12 +4680,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/debug/lexer.l,v
 Working file: debug/lexer.l
-head: 1.3
+head: 1.4
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.4
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -3839,8 +4699,14 @@ symbolic names:
 	working-on-smp-03-21pm: 1.3
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 3;	selected revisions: 3
+total revisions: 4;	selected revisions: 4
 description:
+----------------------------
+revision 1.4
+date: 2001/04/02 21:29:00;  author: bryce;  state: Exp;  lines: +1 -1
+- for systems that don't have strtoull, I included one.  Unfortunately
+  the only command that uses long long string conversion loses the
+  64-bit value before it gets used.  I can't explain it yet.
 ----------------------------
 revision 1.3
 date: 2001/03/21 00:26:52;  author: bryce;  state: Exp;  lines: +5 -0
@@ -3859,12 +4725,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/debug/linux.cc,v
 Working file: debug/linux.cc
-head: 1.2
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -3873,8 +4743,12 @@ symbolic names:
 	before-using-SMF=0: 1.1
 	working-on-smp-03-21pm: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 04:55:48;  author: bryce;  state: Exp;  lines: +1 -1
+- forgot to initialize i counter
 ----------------------------
 revision 1.2
 date: 2001/03/31 00:34:45;  author: bryce;  state: Exp;  lines: +5 -3
@@ -3892,7 +4766,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -3916,7 +4794,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -3941,7 +4823,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -3958,17 +4844,30 @@ date: 2001/03/19 17:51:54;  author: bryce;  state: Exp;
 - perl script to make a table of syscalls, and its output from linux 2.2.14
 =============================================================================
 
-RCS file: /home/cvsroot/bochs/debug/Attic/parser.c,v
+RCS file: /home/cvsroot/bochs/debug/parser.c,v
 Working file: debug/parser.c
-head: 1.2
+head: 1.4
 branch:
 locks: strict
 access list:
 symbolic names:
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 4;	selected revisions: 4
 description:
+----------------------------
+revision 1.4
+date: 2001/04/03 03:56:26;  author: bryce;  state: Exp;  lines: +98 -98
+- removed duplicate symbols
+----------------------------
+revision 1.3
+date: 2001/04/03 03:53:03;  author: bryce;  state: Exp;  lines: +483 -377
+- distribute lexer.c, parser.c, and parser.h again, since everybody has
+  a different version of them all.  Then only someone who wants to
+  edit parser.y or lexer.l will have to have the right version of
+  yacc and flex installed.
 ----------------------------
 revision 1.2
 date: 2001/03/19 17:49:19;  author: bryce;  state: dead;  lines: +0 -0
@@ -3979,17 +4878,26 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 - entered bochs version 2000-03-25
 =============================================================================
 
-RCS file: /home/cvsroot/bochs/debug/Attic/parser.h,v
+RCS file: /home/cvsroot/bochs/debug/parser.h,v
 Working file: debug/parser.h
-head: 1.2
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 03:53:03;  author: bryce;  state: Exp;  lines: +80 -72
+- distribute lexer.c, parser.c, and parser.h again, since everybody has
+  a different version of them all.  Then only someone who wants to
+  edit parser.y or lexer.l will have to have the right version of
+  yacc and flex installed.
 ----------------------------
 revision 1.2
 date: 2001/03/19 17:49:19;  author: bryce;  state: dead;  lines: +0 -0
@@ -4002,12 +4910,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/debug/parser.y,v
 Working file: debug/parser.y
-head: 1.4
+head: 1.5
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.4
+	REL-smpbochs-04-03-2000: 1.5
+	portability-testing1: 1.5
+	REL-smpbochs-03-30-2000: 1.4
+	ported-to-dec-osf1-gcc: 1.4
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.4
 	added-ioapic: 1.4
 	all-processors-boot: 1.4
@@ -4017,8 +4929,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.3
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 4;	selected revisions: 4
+total revisions: 5;	selected revisions: 5
 description:
+----------------------------
+revision 1.5
+date: 2001/04/03 03:55:56;  author: bryce;  state: Exp;  lines: +0 -2
+- remove duplicates that caused trouble on some versions of yacc
 ----------------------------
 revision 1.4
 date: 2001/03/22 15:50:06;  author: bryce;  state: Exp;  lines: +38 -15
@@ -4046,7 +4962,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4071,7 +4991,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4095,7 +5019,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4119,7 +5047,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4139,12 +5071,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/disasm/dis_decode.cc,v
 Working file: disasm/dis_decode.cc
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4154,8 +5090,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:10:38;  author: bryce;  state: Exp;  lines: +0 -19
+- removed "goto done" where it was unreachable
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -4169,7 +5109,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4194,7 +5138,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4219,7 +5167,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4244,7 +5196,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4269,7 +5225,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4294,7 +5254,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4319,7 +5283,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4344,7 +5312,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4369,7 +5341,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4394,7 +5370,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4419,7 +5399,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4444,7 +5428,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4469,7 +5457,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4494,7 +5486,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4519,7 +5515,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4544,7 +5544,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4569,7 +5573,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4594,7 +5602,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4619,7 +5631,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4644,7 +5660,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4669,7 +5689,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4694,7 +5718,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4719,7 +5747,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4744,7 +5776,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4769,7 +5805,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4794,7 +5834,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4819,7 +5863,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4844,7 +5892,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4869,7 +5921,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4894,7 +5950,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4918,7 +5978,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4943,7 +6007,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4968,7 +6036,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -4993,7 +6065,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5018,7 +6094,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5043,7 +6123,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5068,7 +6152,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5093,7 +6181,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5117,7 +6209,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5142,7 +6238,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5167,7 +6267,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5192,7 +6296,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5212,12 +6320,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/control_w.h,v
 Working file: fpu/control_w.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5227,8 +6339,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5237,12 +6358,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/div_Xsig.S,v
 Working file: fpu/div_Xsig.S
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5252,8 +6377,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +12 -12
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5267,7 +6401,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5292,7 +6430,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5317,7 +6459,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5337,12 +6483,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/errors.c,v
 Working file: fpu/errors.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5352,8 +6502,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +5 -5
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5362,12 +6521,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/exception.h,v
 Working file: fpu/exception.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5377,8 +6540,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +3 -3
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5392,7 +6564,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -5422,12 +6598,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_arith.c,v
 Working file: fpu/fpu_arith.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5437,8 +6617,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +12 -12
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5447,12 +6636,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_asm.h,v
 Working file: fpu/fpu_asm.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5462,8 +6655,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5477,7 +6679,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5497,12 +6703,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_emu.h,v
 Working file: fpu/fpu_emu.h
-head: 1.1
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5512,8 +6722,25 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 07:42:28;  author: bryce;  state: Exp;  lines: +5 -0
+- on machines with 64-bit pointers, I was getting type errors when
+  casting a pointer to a Bit32u.  Now I cast it to a bx_ptr_equiv_t
+  which is an integer type chosen to be the same size as a pointer.
+  Once it's in integer land, it doesn't get worried about the
+  64 bit->32 bit precision change anymore.
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +8 -7
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5522,12 +6749,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_entry.c,v
 Working file: fpu/fpu_entry.c
-head: 1.1
+head: 1.5
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.5
+	portability-testing1: 1.5
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5537,8 +6768,41 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 5;	selected revisions: 5
 description:
+----------------------------
+revision 1.5
+date: 2001/04/03 07:43:08;  author: bryce;  state: Exp;  lines: +2 -2
+- the first arg of FPU_load_int32 is a (s32 *) but I was casting to
+  a (u32 *) instead.
+----------------------------
+revision 1.4
+date: 2001/04/03 05:41:25;  author: bryce;  state: Exp;  lines: +3 -0
+- applied patch 402992 from sourceforge, except for the lines that
+  include config.h in linux/*/*.h.
+- if NO_BLANK_LABELS is defined, put some dummy code into
+  fpu_entry.c
+- in status_w.h, fpu_etc.c, do a "NO_PAREN_AROUND_BRACES" definition
+  of setcc(cc).  I think I can do this better without two different macros.
+- if NO_EMPTY_STRUCTS, then put a dummy entry into the empty struct
+----------------------------
+revision 1.3
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +18 -17
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +8 -8
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5547,12 +6811,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_etc.c,v
 Working file: fpu/fpu_etc.c
-head: 1.1
+head: 1.4
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5562,8 +6830,32 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 4;	selected revisions: 4
 description:
+----------------------------
+revision 1.4
+date: 2001/04/03 07:40:50;  author: bryce;  state: Exp;  lines: +0 -12
+- reverted to 1.2 because I solved the paren-around-braces problem
+  in the header file in a much cleaner way.
+----------------------------
+revision 1.3
+date: 2001/04/03 05:41:25;  author: bryce;  state: Exp;  lines: +12 -0
+- applied patch 402992 from sourceforge, except for the lines that
+  include config.h in linux/*/*.h.
+- if NO_BLANK_LABELS is defined, put some dummy code into
+  fpu_entry.c
+- in status_w.h, fpu_etc.c, do a "NO_PAREN_AROUND_BRACES" definition
+  of setcc(cc).  I think I can do this better without two different macros.
+- if NO_EMPTY_STRUCTS, then put a dummy entry into the empty struct
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5572,12 +6864,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_proto.h,v
 Working file: fpu/fpu_proto.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5587,8 +6883,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +2 -2
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5597,12 +6902,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_system.h,v
 Working file: fpu/fpu_system.h
-head: 1.1
+head: 1.5
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.5
+	portability-testing1: 1.5
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5612,8 +6921,40 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 5;	selected revisions: 5
 description:
+----------------------------
+revision 1.5
+date: 2001/04/03 08:44:49;  author: bryce;  state: Exp;  lines: +1 -1
+- renamed NO_EMPTY_STRUCTS to BX_NO_EMPTY_STRUCTS
+----------------------------
+revision 1.4
+date: 2001/04/03 05:41:25;  author: bryce;  state: Exp;  lines: +3 -1
+- applied patch 402992 from sourceforge, except for the lines that
+  include config.h in linux/*/*.h.
+- if NO_BLANK_LABELS is defined, put some dummy code into
+  fpu_entry.c
+- in status_w.h, fpu_etc.c, do a "NO_PAREN_AROUND_BRACES" definition
+  of setcc(cc).  I think I can do this better without two different macros.
+- if NO_EMPTY_STRUCTS, then put a dummy entry into the empty struct
+----------------------------
+revision 1.3
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +8 -6
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +2 -0
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5627,7 +6968,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5647,12 +6992,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/fpu_trig.c,v
 Working file: fpu/fpu_trig.c
-head: 1.1
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5662,8 +7011,26 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +16 -16
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +3 -3
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5672,12 +7039,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/get_address.c,v
 Working file: fpu/get_address.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5687,8 +7058,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +2 -2
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5697,12 +7077,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/load_store.c,v
 Working file: fpu/load_store.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5712,8 +7096,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +3 -3
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5727,7 +7120,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5752,7 +7149,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5772,12 +7173,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/poly.h,v
 Working file: fpu/poly.h
-head: 1.1
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5787,8 +7192,23 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 14:57:22;  author: bryce;  state: Exp;  lines: +4 -4
+- changed from "extern inline" to "static inline" so that if the compiler
+  does NOT inline the functions, you don't get duplicate symbols between
+  the different .c files that included the header.
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +2 -2
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5797,12 +7217,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/poly_2xm1.c,v
 Working file: fpu/poly_2xm1.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5812,8 +7236,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5822,12 +7255,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/poly_atan.c,v
 Working file: fpu/poly_atan.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5837,8 +7274,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5847,12 +7293,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/poly_l2.c,v
 Working file: fpu/poly_l2.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5862,8 +7312,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +2 -2
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5872,12 +7331,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/poly_sin.c,v
 Working file: fpu/poly_sin.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5887,8 +7350,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +3 -3
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5897,12 +7369,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/poly_tan.c,v
 Working file: fpu/poly_tan.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5912,8 +7388,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5927,7 +7412,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5952,7 +7441,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5972,12 +7465,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_add_sub.c,v
 Working file: fpu/reg_add_sub.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -5987,8 +7484,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +6 -5
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -5997,12 +7503,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_compare.c,v
 Working file: fpu/reg_compare.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6012,8 +7522,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +4 -4
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6022,12 +7541,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_constant.c,v
 Working file: fpu/reg_constant.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6037,8 +7560,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +1 -1
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6047,12 +7579,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_constant.h,v
 Working file: fpu/reg_constant.h
-head: 1.1
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6062,8 +7598,26 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +1 -1
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6077,7 +7631,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6097,12 +7655,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_divide.c,v
 Working file: fpu/reg_divide.c
-head: 1.1
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6112,8 +7674,26 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
+----------------------------
+revision 1.2
+date: 2001/04/02 18:26:19;  author: bryce;  state: Exp;  lines: +13 -12
+- fixed bugs in which a pointer was cast to an int before going into a function.
+  On some 64-bit machines (maybe all), int is only 32 bits, so the pointer is
+  corrupted by being cast to int and then back to a pointer.  Instead, change
+  these arguments to pointers.  Then when an int needs to be passed, use a
+  macro REGNO2PTR(n) to cast the int to a pointer.  This should be safe for
+  64-bit systems.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6122,12 +7702,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_ld_str.c,v
 Working file: fpu/reg_ld_str.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6137,8 +7721,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +7 -7
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6147,12 +7740,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_mul.c,v
 Working file: fpu/reg_mul.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6162,8 +7759,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6177,7 +7783,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6202,7 +7812,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6222,12 +7836,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_round.S,v
 Working file: fpu/reg_round.S
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6237,8 +7855,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +14 -14
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6252,7 +7879,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6272,12 +7903,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_u_add.S,v
 Working file: fpu/reg_u_add.S
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6287,8 +7922,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +2 -2
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6297,12 +7941,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_u_add.c,v
 Working file: fpu/reg_u_add.c
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6312,8 +7960,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 07:39:39;  author: bryce;  state: Exp;  lines: +1 -1
+- someone complained that extent was not initialized, so I set it to 0.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6322,12 +7974,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_u_div.S,v
 Working file: fpu/reg_u_div.S
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6337,8 +7993,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +12 -12
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6352,7 +8017,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6372,12 +8041,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_u_mul.S,v
 Working file: fpu/reg_u_mul.S
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6387,8 +8060,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +4 -4
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6402,7 +8084,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6422,12 +8108,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/reg_u_sub.S,v
 Working file: fpu/reg_u_sub.S
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6437,8 +8127,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +4 -4
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
@@ -6452,7 +8151,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6477,7 +8180,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6502,7 +8209,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6527,7 +8238,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6552,7 +8267,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6572,12 +8291,16 @@ date: 2001/03/17 06:10:57;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/status_w.h,v
 Working file: fpu/status_w.h
-head: 1.1
+head: 1.4
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6587,8 +8310,32 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 4;	selected revisions: 4
 description:
+----------------------------
+revision 1.4
+date: 2001/04/03 07:39:21;  author: bryce;  state: Exp;  lines: +2 -8
+- replaced the NO_PAREN_AROUND_BRACES solution with a setcc which
+  should be legal anywhere, using the do{...}while(0) construct.
+----------------------------
+revision 1.3
+date: 2001/04/03 05:41:25;  author: bryce;  state: Exp;  lines: +6 -0
+- applied patch 402992 from sourceforge, except for the lines that
+  include config.h in linux/*/*.h.
+- if NO_BLANK_LABELS is defined, put some dummy code into
+  fpu_entry.c
+- in status_w.h, fpu_etc.c, do a "NO_PAREN_AROUND_BRACES" definition
+  of setcc(cc).  I think I can do this better without two different macros.
+- if NO_EMPTY_STRUCTS, then put a dummy entry into the empty struct
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +3 -3
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -6602,7 +8349,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6622,12 +8373,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/wmFPUemu_glue.cc,v
 Working file: fpu/wmFPUemu_glue.cc
-head: 1.3
+head: 1.4
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -6637,8 +8392,16 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 3;	selected revisions: 3
+total revisions: 4;	selected revisions: 4
 description:
+----------------------------
+revision 1.4
+date: 2001/04/03 07:42:28;  author: bryce;  state: Exp;  lines: +9 -9
+- on machines with 64-bit pointers, I was getting type errors when
+  casting a pointer to a Bit32u.  Now I cast it to a bx_ptr_equiv_t
+  which is an integer type chosen to be the same size as a pointer.
+  Once it's in integer land, it doesn't get worried about the
+  64 bit->32 bit precision change anymore.
 ----------------------------
 revision 1.3
 date: 2001/03/27 17:11:45;  author: bryce;  state: Exp;  lines: +9 -6
@@ -6666,7 +8429,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6691,7 +8458,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6711,12 +8482,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/wm_sqrt.S,v
 Working file: fpu/wm_sqrt.S
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6726,8 +8501,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:48;  author: bryce;  state: Exp;  lines: +7 -7
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -6741,7 +8525,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6761,12 +8549,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/stubs/asm/desc.h,v
 Working file: fpu/stubs/asm/desc.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6776,8 +8568,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:51;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -6791,7 +8592,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6811,12 +8616,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/stubs/asm/sigcontext.h,v
 Working file: fpu/stubs/asm/sigcontext.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6826,8 +8635,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/02 18:29:20;  author: bryce;  state: Exp;  lines: +4 -0
+- commented out sigcontext struct definition, conflicted on occs
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -6841,7 +8654,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6866,7 +8683,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6886,12 +8707,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/stubs/linux/kernel.h,v
 Working file: fpu/stubs/linux/kernel.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6901,8 +8726,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:52;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -6911,12 +8745,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/fpu/stubs/linux/linkage.h,v
 Working file: fpu/stubs/linux/linkage.h
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6926,8 +8764,17 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:08:52;  author: bryce;  state: Exp;  lines: +1 -1
+- some preprocessors don't allow junk after the #endif, and there
+  were hundreds of instances of junk after the endif here.  Added
+  comments around the junk.
+- the __attribute__((packed)) stuff at the end of a struct definition
+  is gcc-only.  Changed into a macro GCC_ATTRIBUTE(x) which can be
+  defined away when the compiler doesn't understand __attribute__.
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -6941,7 +8788,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6966,7 +8817,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -6991,7 +8846,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7016,7 +8875,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7041,7 +8904,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7066,7 +8933,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7090,7 +8961,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7115,7 +8990,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7140,7 +9019,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7165,7 +9048,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7190,7 +9077,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7215,7 +9106,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7235,12 +9130,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/gui/nogui.cc,v
 Working file: gui/nogui.cc
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7250,8 +9149,13 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/02 22:37:28;  author: bryce;  state: Exp;  lines: +1 -1
+- this was obviously not tested, because it was missing a comma on an
+  argument list!
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -7265,7 +9169,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7290,7 +9198,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7315,7 +9227,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7340,7 +9256,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7365,7 +9285,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7390,7 +9314,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7415,7 +9343,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7440,7 +9372,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7465,7 +9401,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7490,7 +9430,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7515,7 +9459,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7540,7 +9488,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7564,7 +9516,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7589,7 +9545,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7614,7 +9574,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7639,7 +9603,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7658,12 +9626,16 @@ date: 2001/03/19 18:01:14;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/iodev/Makefile.in,v
 Working file: iodev/Makefile.in
-head: 1.2
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.1
@@ -7673,8 +9645,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/03/31 20:07:29;  author: bryce;  state: Exp;  lines: +2 -1
+- added ioapic.o, only when --enable-apic is on
 ----------------------------
 revision 1.2
 date: 2001/03/29 00:36:13;  author: bryce;  state: Exp;  lines: +2 -1
@@ -7692,7 +9668,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7717,7 +9697,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7742,7 +9726,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7767,7 +9755,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7787,12 +9779,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/iodev/devices.cc,v
 Working file: iodev/devices.cc
-head: 1.3
+head: 1.4
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.4
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.2
@@ -7802,8 +9798,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 3;	selected revisions: 3
+total revisions: 4;	selected revisions: 4
 description:
+----------------------------
+revision 1.4
+date: 2001/04/02 02:09:52;  author: bryce;  state: Exp;  lines: +7 -0
+- in timer handler, call local_apic.periodic on each cpu
 ----------------------------
 revision 1.3
 date: 2001/03/29 00:36:13;  author: bryce;  state: Exp;  lines: +7 -0
@@ -7826,7 +9826,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7851,7 +9855,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7876,7 +9884,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7901,7 +9913,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7926,7 +9942,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7951,7 +9971,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -7976,7 +10000,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8001,7 +10029,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8026,7 +10058,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8051,7 +10087,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8071,12 +10111,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/iodev/harddrv.cc,v
 Working file: iodev/harddrv.cc
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8086,8 +10130,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 05:43:37;  author: bryce;  state: Exp;  lines: +15 -0
+- applied patch 403004 from sourceforge
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -8101,7 +10149,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8126,7 +10178,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.2
 	added-ioapic: 1.1
 keyword substitution: kv
@@ -8172,7 +10228,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.1
 keyword substitution: kv
@@ -8213,7 +10273,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.2
@@ -8242,12 +10306,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/iodev/keyboard.cc,v
 Working file: iodev/keyboard.cc
-head: 1.2
+head: 1.5
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.5
+	portability-testing1: 1.5
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -8257,8 +10325,23 @@ symbolic names:
 	working-on-smp-03-21pm: 1.2
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 5;	selected revisions: 5
 description:
+----------------------------
+revision 1.5
+date: 2001/04/03 05:55:52;  author: bryce;  state: Exp;  lines: +14 -0
+- applied patch 403027 from sourceforge, Greg Alexander.  This patch adds
+  a "read data" command to the mouse.  Also he changed a mouse panic into
+  a printf, as I had done in revision 1.2.
+----------------------------
+revision 1.4
+date: 2001/04/03 05:53:22;  author: bryce;  state: Exp;  lines: +0 -14
+- reverted patch 403018 from sourceforge so that I could do patch
+  403027 (context diff, much safer!) instead.
+----------------------------
+revision 1.3
+date: 2001/04/03 05:48:50;  author: bryce;  state: Exp;  lines: +14 -0
+- applied patch 403018 from sourceforge
 ----------------------------
 revision 1.2
 date: 2001/03/19 17:40:54;  author: bryce;  state: Exp;  lines: +1 -1
@@ -8277,7 +10360,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8302,7 +10389,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8327,7 +10418,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8352,7 +10447,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8377,7 +10476,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8402,7 +10505,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -8433,7 +10540,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8458,7 +10569,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.5
+	REL-smpbochs-04-03-2000: 1.5
+	portability-testing1: 1.5
+	REL-smpbochs-03-30-2000: 1.5
+	ported-to-dec-osf1-gcc: 1.5
+	local-APIC-timers-tick: 1.5
 	smp-linux-boots: 1.3
 	added-ioapic: 1.2
 	all-processors-boot: 1.1
@@ -8508,7 +10623,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8533,7 +10652,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -8567,7 +10690,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8592,7 +10719,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8617,7 +10748,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8637,12 +10772,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/iodev/serial.cc,v
 Working file: iodev/serial.cc
-head: 1.1
+head: 1.2
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.2
+	portability-testing1: 1.2
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8652,8 +10791,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 1;	selected revisions: 1
+total revisions: 2;	selected revisions: 2
 description:
+----------------------------
+revision 1.2
+date: 2001/04/03 07:45:56;  author: bryce;  state: Exp;  lines: +1 -1
+- chbuf was not initialized
 ----------------------------
 revision 1.1
 date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
@@ -8667,7 +10810,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8692,7 +10839,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8717,7 +10868,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8742,7 +10897,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8767,7 +10926,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8792,7 +10955,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8817,7 +10984,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8837,12 +11008,16 @@ date: 2001/03/17 06:10:58;  author: bryce;  state: Exp;
 
 RCS file: /home/cvsroot/bochs/iodev/vga.cc,v
 Working file: iodev/vga.cc
-head: 1.2
+head: 1.3
 branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.2
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.2
+	ported-to-dec-osf1-gcc: 1.2
+	local-APIC-timers-tick: 1.2
 	smp-linux-boots: 1.2
 	added-ioapic: 1.2
 	all-processors-boot: 1.2
@@ -8852,8 +11027,12 @@ symbolic names:
 	working-on-smp-03-21pm: 1.1
 	original-03-25-2000: 1.1
 keyword substitution: kv
-total revisions: 2;	selected revisions: 2
+total revisions: 3;	selected revisions: 3
 description:
+----------------------------
+revision 1.3
+date: 2001/04/03 05:27:01;  author: bryce;  state: Exp;  lines: +4 -1
+- applied patch 402991 from sourceforge
 ----------------------------
 revision 1.2
 date: 2001/03/26 16:57:56;  author: bryce;  state: Exp;  lines: +2 -2
@@ -8872,7 +11051,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8897,7 +11080,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8921,7 +11108,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -8946,7 +11137,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.8
+	REL-smpbochs-04-03-2000: 1.8
+	portability-testing1: 1.8
+	REL-smpbochs-03-30-2000: 1.8
+	ported-to-dec-osf1-gcc: 1.8
+	local-APIC-timers-tick: 1.8
 	smp-linux-boots: 1.8
 	added-ioapic: 1.7
 	all-processors-boot: 1.6
@@ -9003,7 +11198,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.4
+	REL-smpbochs-04-03-2000: 1.4
+	portability-testing1: 1.4
+	REL-smpbochs-03-30-2000: 1.4
+	ported-to-dec-osf1-gcc: 1.4
+	local-APIC-timers-tick: 1.4
 	smp-linux-boots: 1.4
 	added-ioapic: 1.4
 	all-processors-boot: 1.4
@@ -9042,7 +11241,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.3
+	REL-smpbochs-04-03-2000: 1.3
+	portability-testing1: 1.3
+	REL-smpbochs-03-30-2000: 1.3
+	ported-to-dec-osf1-gcc: 1.3
+	local-APIC-timers-tick: 1.3
 	smp-linux-boots: 1.3
 	added-ioapic: 1.3
 	all-processors-boot: 1.3
@@ -9076,7 +11279,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9100,7 +11307,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9125,7 +11336,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9150,7 +11365,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9175,7 +11394,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9200,7 +11423,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9225,7 +11452,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9250,7 +11481,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9275,7 +11510,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9300,7 +11539,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9325,7 +11568,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1
@@ -9350,7 +11597,11 @@ branch:
 locks: strict
 access list:
 symbolic names:
-	smp-bochs-03-30-2000: 1.1
+	REL-smpbochs-04-03-2000: 1.1
+	portability-testing1: 1.1
+	REL-smpbochs-03-30-2000: 1.1
+	ported-to-dec-osf1-gcc: 1.1
+	local-APIC-timers-tick: 1.1
 	smp-linux-boots: 1.1
 	added-ioapic: 1.1
 	all-processors-boot: 1.1

@@ -1,0 +1,424 @@
+./configure --enable-pci --enable-port-e9-hack --enable-debugger --enable-disasm --enable-fpu --enable-vga 
+
+
+
+my disk image is a duplicate of debussy's 212MB disk
+12 heads
+35 sectors
+989 cylinders
+
+so I think hda1 should start at 512*35 bytes from the start.
+
+I made a bootable linux hard disk image!
+learn how to use his debugger
+
+
+add readline library support to debugger.
+
+leart to read segment selector and find the program's code
+segment selector: bits 31-3=index, bit 2 is 0=GDT/1=LDT. 
+bits 1-0=privilege level.  See p.72 of Intel Developers Guide vol3.
+
+example 0x23:  index=4, GDT, privilege=3.
+gdtr=0xc01a1300
+
+look at gdtr+(8*4)=0xc01a1320.  0x0000ffff 0x00cffa00
+limit(15:0)=0xffff
+
+base(31:24)=00
+granularity (G)=1
+Ddefault operation size (D/B)=1
+available for use by system software AVL=0
+seg limit(19:16)=f
+segment present (P)=1
+descriptor privilege level=3
+descriptor type (S)=1
+base address(15:0)=0
+base address(23:16)=0
+type=0xa
+
+
+
+in kernel if CS ends with bits 00, in user mode if CS ends with bits 11
+
+for getpid.c, kernel is running at
+0010:c0107b4d
+user mode is at
+0023:400a2d07
+
+0023:400a2d00: mov EAX, 0x14
+0023:400a2d05: int 0x80
+0010:c0107ae8: push EAX
+
+this must be int 0x80 handler, but I haven't figured out where that
+address comes from.  IDT+(0x80-1)*8=0xc28003f8
+
+interrupt gate= 0x00108eac  0xc0108e00
+segment selector=0x0010
+offset=0xc0108eac
+
+it says idtr.base+vector*8 is 0x107ae8, 0xc010ef00
+so it jumps to 0010:c010107a, which is the address of the
+system_call kernel symbol.
+
+from include/asm-i386/segment.h,
+#define __KERNEL_CS     0x10
+#define __KERNEL_DS     0x18
+#define __USER_CS       0x23
+#define __USER_DS       0x2B
+
+How does the processor keep different user processes apart, when USER_CS
+is a constant?  I would have expected that each process would get a different
+user segment.
+
+See task state segment, task register, etc.
+
+running three different getpid() loops in different processes.
+see what's different about them.  step to ret_near just after returning
+from the getpid system call.  eax is the process id, so it's obviously
+different for the different processes.  Other than that, only the
+TR and CR3 differ.  TR=task register, CR3 contains the the paging index 
+base or something
+
+1:
+  eax:0x11
+  tr:s=0x100, dl=0xe2d400eb, dh=0xc10089e4, valid=1
+  cr3:0x1e4d000
+
+2:
+  eax:0xe
+  tr:s=0xe0, dl=0xc2d400eb, dh=0xc10089e7, valid=1
+  cr3:0x1eb0000
+
+for task #1, tr=0x100
+look in gdtr+0x100 bytes:  
+tss=0xe2d400eb 0xc1008be4
+granularity=0
+available=0
+present=1
+descriptor privilege level=00
+type=1011 = busy
+base=0xc1e7e2d4
+limit 0xeb
+
+for task #2, tr=0xe0
+look in gdtr+0xe0 bytes:
+tss=0xc2d400eb 0xc1008be7
+granularity=0
+available=0
+present=1
+descriptor privilege level=00
+type=1011 = busy
+base=0xc1e7c2d4
+limit 0xeb
+
+Rebooted, now I have a different TSS
+TSS=0x42d400eb 0xc1008bd7
+granularity=0
+available=0
+present=1
+descriptor privilege level=00
+type=1011 = busy
+base=0xc1d742d4
+limit=0xeb
+
+List the TSS
+0xc1d742d4 : 0x00000000 prev task link / ?
+             0xc1d76000 esp0
+	     0x00000018 ss0
+	     0x00000000 esp1
+0xc1d742e4 : 0x00000000 ss1
+             0x00000000 esp2
+	     0x00000000 ss2
+	     0x01d79000 cr3
+0xc1d742f4 : 0xc0110c3d eip
+             0x00000000 eflags
+	     0x00000000 eax
+	     0x00000000 ecx
+0xc1d74304 : 0x00000000 edx
+             0x00000000 ebx
+	     0xc1d75f8c esp
+	     0x00000000 ebp
+0xc1d74314 : 0x00000000 esi
+             0x00000000 edi
+	     0x00000000 es
+	     0x00000000 cs
+0xc1d74324 : 0x00000000 ds
+             0x00000000 ss
+	     0x00000000 fs
+	     0x00000000 gs
+0xc1d74334 : 0x00000068 ldt segment selector
+             0x01b40000 I/O map base address
+
+The LDT segment selector agrees with the ldtr register (=0x68)
+Look in gdtr+0x68 to see the LDT descriptor.
+0x41d00007 0xc000821a
+granularity=0
+d/b=0
+available=0
+present=1
+DPL=0
+S=0 (system)
+type=0010=LDT
+base=c01a41d0
+limit=7
+
+This LDT has limit of 7 bytes, so there's only one entry!
+here it is: 0x00107a90 0xc010ec00
+type=1100=32-bit call gate
+privilege=3
+base=0xc0000010
+limit=7a90
+I'm not sure this is right.
+Could I make a debugger command that decodes some of this stuff for me?
+If in linux, it could tell you if you're in kernel code or user code,
+and if user code, what task you're in.  Writing such a thing would speed
+up the process of knowing what's going on, and it would help me to 
+understand the GDT, LDT, TSS stuff.
+
+user mode:
+ldtr=0x68
+tr=0xe0
+gdtr=0xc01a1300
+idtr=0xc2800000
+
+kernel mode:
+ldtr=0x68
+tr=0xe0
+g
+
+if processor in user mode, how do I find the task structure?
+does esp get changed by the int80?
+yes
+
+I need to inderstand the implications of the int 0x80.  Int80 is listed
+in the IDT as:  0x00107ae8 0xc010ef00
+This is a trap gate!
+segment=0x0010
+offset=0xc0107ae8   (linux system call)
+present=1
+dpl=11
+type=1111=32-bit trap gate
+
+before the trap gate:
+eax:0x14 ebx:0x400fd414 ecx:0x80483d0 edx:0x400fa494 ebp:0xbffffed8 esi:0xbfffff24 edi:0x1 esp:0xbffffed0 eflags:0x207 eip:0x400a2d05
+cs:s=0x23, dl=0xffff, dh=0xcffa00, valid=1
+ss:s=0x2b, dl=0xffff, dh=0xcff300, valid=1
+ds:s=0x2b, dl=0xffff, dh=0xcff300, valid=1
+es:s=0x2b, dl=0xffff, dh=0xcff300, valid=1
+fs:s=0x0, dl=0x0, dh=0x0, valid=0
+gs:s=0x0, dl=0x0, dh=0x0, valid=0
+ldtr:s=0x68, dl=0x41d00007, dh=0xc000821a, valid=1
+tr:s=0xe0, dl=0xc2d400eb, dh=0xc10089e7, valid=1
+gdtr:base=0xc01a1300, limit=0x205f
+idtr:base=0xc2800000, limit=0x7ff
+dr0:0x0 dr1:0x0 dr2:0x0 dr3:0x0 dr6:0xffff0ff0 dr7:0x400 tr3:0x0 tr4:0x0 tr5:0x0 tr6:0x0 tr7:0x0 cr0:0x8005003b cr1:0x0 cr2:0x400345bc cr3:0x1eb0000 cr4:0x0 inhibit_mask:0
+
+after the trap gate:
+all same except:
+  esp:0xc1e7dfec
+  eip:0xc0107ae8
+  cs:s=0x10, dl=0xffff, dh=0xcf9a00, valid=1
+  ss:s=0x18, dl=0xffff, dh=0xcf9300, valid=1
+
+so the big question is: where did these values come from?
+TR didn't change so it's not from a different task or something.
+answer on page 5-14 of IS32-devel-3.
+The segment selector and stack pointer for the stack is obtained from 
+the TSS of the currently executing task.  The stack pointer & 0xffffe000
+is the process structure, which I would like to find.
+
+Use GDTR+TR to find the TSS.  Look in TSS+something to find the
+stored value of EIP and ESP for privilege level 0.  That should
+be where the processor will look when the int 0x80 trap occurs.
+gdtr+tr is 0xc01a13e0, so
+TSS descriptor=0xc2d400eb 0xc1008be7
+see page 6-7
+DPL=0
+base address=0xc1e7c2d4
+limit=0xeb
+
+It would be nice to have an info command that lists the contents of the IDT
+and decodes this stuff.  Same with GDT, TSS, everything!
+
+Now look in the TSS to see the CS:EIP and SS:ESP.  Page 199.
+SS0 at TSS+8  = 0x18
+ESP0 at TSS+4 = 0xc1e7e000
+CS at TSS+76  = 0   (wierd)
+EIP at TSS+32 = 0xc0107ad4
+
+Maybe CS is unnecessary because it comes from trap gate instead.
+ESP is loaded from 0xc1e7e000, but when the int 0x80 is done, 
+esp=0xc1e7dfec.  I guess that's because SS,ESP,EFLAGS,CS,EIP,Error code
+were pushed onto the stack.  I'll look for them.
+
+0xc1e7dfec:  0x400a2d07   IP of instruction after the trap
+             0x00000023   CS
+	     0x00000207   EFLAGS
+	     0xbffffed0   SP
+0xc1e7dffc:  0x0000002b   SS
+
+So, in kernel code we quickly find current, the pointer to the task_struct.
+take ESP from TSS+4, and it with 0xffffe000 to get 0xc1e7c000.  Then 
+get offsets from the linux task_struct definition.  For example, pid
+seems to be at 0xc1e7c000+92.
+
+
+
+
+SMP THOUGHTS:
+from IA32-3:p.217: 
+atomic operations
+bus locking
+cache coherency management
+serializing instructions
+APIC (advanced programmable interrupt controller)
+
+automatic locking instructions:
+- xchg that references memory
+- testing and setting the Busy flag of a TSS descriptor
+- testing and setting the Accessed flag of a segment descriptor
+- updating page-directory and page-table entries
+- when interrupt controller uses the data base to send the interrupt 
+  vector to the processor
+
+software controlled locking:
+- bit test and modify instructions (BTS, BTR, BTC)
+- exchange (xadd, cmpxchg, cmpxchg8b)
+- single-operand arithmetic and logical instructions (inc, dec, not, neg)
+- some 2-operand arithmetic and logical instructions (add, adc, sub, 
+  sbb, and, or, xor)
+
+First linux problem with SMP Bochs: 
+SMP motherboard not detected. Using dummy APIC emulation.
+to fix this, I need to create a MP Floating Pointer Structure as
+described in the MP spec appendix E.
+offset 0x0c mp feature bytes 2-5
+offset 0x08 mp feature byte 1, checksum, spec_rev=4, length=0x01
+offset 0x04 physical address pointer of MP configuration table, or all 0s
+offset 0x00 "_MP_"
+
+Where can I put this?
+
+--------------------
+trying to build a new ROM, but the one I build always crashes. Why?
+(0) f000:e259: ff2e6400: jmp DS:0064
+in the crashing one, it jumps to 0000:0000!  Why?
+start up, s 132789, then one more step and it dies
+
+before:
+eax            0xf000           61440
+ecx            0xc              12
+edx            0xf023           61475
+ebx            0x307            775
+esp            0xfffe           0xfffe    
+ebp            0x0              0x0       
+esi            0x0              0
+edi            0x500            1280
+eip            0xe250           0xe250    
+eflags         0x202            514
+cs             0xf000           61440
+ss             0x0              0
+ds             0x9fc0           40896
+es             0xc000           49152
+fs             0x0              0
+gs             0x0              0
+
+data segment has been trashed by junk code at f000:3768 ...
+pop ds:[SI]
+
+when it should call hard_drive_post it's jumping to crap
+ip is f000:37f0
+in the good code, after iret, out 0xa1,al you get the hard_drive_post code.
+
+(0) f000:e9c8: b0ae: mov AL, #ae
+(0) f000:e9ca: e664: out #64, AL
+(0) f000:e9cc: 58: pop AX
+(0) f000:e9cd: cf: iret
+(0) f000:e251: e6a1: out #a1, AL
+(0) f000:e253: e84458: call 5844
+(0) f000:3a9a: b00a: mov AL, #0a
+(0) f000:3a9c: baf603: mov DX, #03f6
+(0) f000:3a9f: ee: out DX, AL
+(0) f000:3aa0: b80000: mov AX, #0000
+
+in bad code, the call goes to nowhere
+(0) f000:e9bc: b0ae: mov AL, #ae
+(0) f000:e9be: e664: out #64, AL
+(0) f000:e9c0: 58: pop AX
+(0) f000:e9c1: cf: iret
+(0) f000:e248: e6a1: out #a1, AL
+(0) f000:e24a: e8a355: call 55a3
+(0) f000:37f0: d8: fsub *** Es() unfinished ***
+(0) f000:37f4: a2: mov *** ObAL() unfinished ***
+(0) f000:37f7: a2: mov *** ObAL() unfinished ***
+(0) f000:37fa: a2: mov *** ObAL() unfinished ***
+
+it should have called 0xf000:37e6 but it went to f000:37f0
+
+looking at the symbol table output from as86, I can see that
+as early as int74_handler, the code is not loaded into the
+same location that the assembler thinks.
+int64_handler is at 0x36dd.  But when it's loaded, it shows up at
+0x36d3.
+
+inhibit_mouse_int_and_events should be at 0x1082
+but in the rom it's at 0x107e.  only off by 4 here.  keep 
+going earlier.
+
+I think real_mode is still in the right spot, 
+00000835 ---A- real_mode
+<bochs:38> disas 0xf0835 
+000f0835: 2e0f01: CS: lidt *** Ms() unfinished ***
+
+check around the !BCC_ENDASM  at line 1225 of rombios.s
+wierd things are happening there.
+
+starting from 
+000f084e: 44: inc ESP
+000f084f: 44: inc ESP
+000f0850: 8a4612: mov AL, |MOD1|REG0|RM6| DS:[ESI + 12]
+000f0853: 0c00: or AL, #00
+000f0855: 30e4: xor |MOD3|REG4|RM4| AH, AH
+000f0857: 894612: mov |MOD1|REG0|RM6| DS:[ESI + 12], EAX
+
+
+The problem was an old version of as86/ld86.  Use the ones in 
+/dante2/bochs/bin instead of the system ones which should
+be used only for compiling the linux kernel.
+--------------------------------
+back to SMP
+I fooled linux into thinking it was a SMP system, so now it's trying
+to boot the other processors.  Work on the MP structure, then start
+slapping down processors and APICs.
+
+Before today, I compiled with SMP but then continued to boot from
+the same old kernel on the hard disk.  Bochs does not boot if Linux
+is compiled for PentiumPro because of TSC errors.
+
+timer problems now
+breakpoint at pit.cc:304
+hit 8 times then it crashes
+
+The Bochs pit.cc model does not support mode 0 in timer 2.
+Any reason why not?
+
+-----
+RTLINUX
+booted rtlinux
+insmod rtl.o
+insmod rtl_time.o: divide error, and now it's listed as
+  initializing, permanently
+insmod rtl_sched.o: can't get a clock for processor 0
+
+I think the divide by zero is occurring near the end of
+do_calibration, maybe in the line 
+
+scaler_pentium_to_hrtime = muldiv (1 << 27, 1000000000 , pps);
+rtl-time.s: 18504
+this is based looking for assembly that maches the disassembled code at
+0xc280a44c where the fault occurred.  Maybe add some printks to
+this function to see what's up.
+I know it's not that the TSC returns the same value each time or something,
+but I'm sure it behaves differently from a clock in a real system.
+I'm sure I can chase it down since I have the code.
