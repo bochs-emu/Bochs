@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.37 2004-08-18 20:47:35 sshwarts Exp $
+// $Id: arith16.cc,v 1.38 2004-08-18 21:29:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -154,12 +154,9 @@ BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(sum_16);
     }
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, 
+	       (temp_CF) ? BX_INSTR_ADC16 : BX_INSTR_ADD16);
 }
-
 
   void
 BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
@@ -180,10 +177,8 @@ BX_CPU_C::ADC_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, 
+	       (temp_CF) ? BX_INSTR_ADC16 : BX_INSTR_ADD16);
 }
 
   void
@@ -199,10 +194,8 @@ BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
 
   AX = sum_16;
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, 
+	       (temp_CF) ? BX_INSTR_ADC16 : BX_INSTR_ADD16);
 }
 
   void
@@ -224,10 +217,8 @@ BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
     Write_RMW_virtual_word(diff_16);
     }
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, 
+	       (temp_CF) ? BX_INSTR_SBB16 : BX_INSTR_SUB16);
 }
 
   void
@@ -249,10 +240,8 @@ BX_CPU_C::SBB_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), diff_16);
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, 
+	       (temp_CF) ? BX_INSTR_SBB16 : BX_INSTR_SUB16);
 }
 
   void
@@ -267,10 +256,8 @@ BX_CPU_C::SBB_AXIw(bxInstruction_c *i)
 
   AX = diff_16;
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, 
+	       (temp_CF) ? BX_INSTR_SBB16 : BX_INSTR_SUB16);
 }
 
   void
@@ -292,12 +279,9 @@ BX_CPU_C::SBB_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(diff_16);
     }
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SBB16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, 
+	       (temp_CF) ? BX_INSTR_SBB16 : BX_INSTR_SUB16);
 }
-
 
   void
 BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
@@ -568,10 +552,8 @@ BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
     Write_RMW_virtual_word(sum_16);
     }
 
-  if (temp_CF)
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADC16);
-  else
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, 
+	       (temp_CF) ? BX_INSTR_ADC16 : BX_INSTR_ADD16);
 }
 
   void
