@@ -82,7 +82,9 @@ void bx_external_debugger(BX_CPU_C *cpu)
      regs.cr1 = cpu->cr1;
      regs.cr2 = cpu->cr2;
      regs.cr3 = cpu->cr3;
+#if BX_CPU_LEVEL >= 4
      regs.cr4 = cpu->cr4.getRegister();
+#endif
      //regs.cr5 = cpu->cr5;
      //regs.cr6 = cpu->cr6;
      //regs.cr7 = cpu->cr7;
