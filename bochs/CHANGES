@@ -17,6 +17,8 @@ Changes to next release:
   - fetchdecode fixes for AMD64 and 3DNow!
   - change BX_PANIC messages to BX_INFO when behaviour exactly 
     matches Intel docs
+  - EIP > CS.limit case should always cause #GP(0), even in real mode.
+    Fixed all jump, call and ret instructions for 16/32 modes
   - fixed using invalid segment register for MOV instruction (h.johansson)
   - fixed ET bit mismatch between CR0 and SMSW instruction
   - fixed possible simulator #DIVZERO fault when executing IDIV instruction

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.34 2004-11-02 17:31:14 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.35 2004-11-02 18:05:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,12 +34,9 @@
 
 void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 {
-BailBigRSP("RETnear32_Iw");
   Bit16u imm16;
   Bit32u temp_ESP;
   Bit32u return_EIP;
-
-  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -77,15 +74,15 @@ BailBigRSP("RETnear32_Iw");
 
     EIP = return_EIP;
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
-      ESP += 4 + imm16; /* ??? should it be 2*imm16 ? */
+      ESP += 4 + imm16;
     else
       SP  += 4 + imm16;
   }
   else {
     pop_32(&return_EIP);
-    EIP = return_EIP;
+    branch_near32(return_EIP);
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) /* 32bit stack */
-      ESP += imm16; /* ??? should it be 2*imm16 ? */
+      ESP += imm16;
     else
       SP  += imm16;
   }
@@ -95,11 +92,8 @@ BailBigRSP("RETnear32_Iw");
 
 void BX_CPU_C::RETnear32(bxInstruction_c *i)
 {
-BailBigRSP("RETnear32");
   Bit32u temp_ESP;
   Bit32u return_EIP;
-
-  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -134,7 +128,7 @@ BailBigRSP("RETnear32");
   }
   else {
     pop_32(&return_EIP);
-    EIP = return_EIP;
+    branch_near32(return_EIP);
   }
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, EIP);
@@ -210,12 +204,10 @@ BailBigRSP("CALL_Ad");
 
   Bit32u new_EIP = EIP + i->Id();
 
-  if ( protected_mode() ) {
-    if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      BX_ERROR(("call_ad: offset outside of CS limits"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
+  if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
+    BX_ERROR(("call_ad: offset outside of CS limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   /* push 32 bit EA of next instruction */
   push_32(EIP);
@@ -243,6 +235,7 @@ BailBigRSP("CALL32_Ap");
     BX_CPU_THIS_PTR call_protected(i, cs_raw, disp32);
     goto done;
     }
+
   push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_32(EIP);
   EIP = disp32;
@@ -255,10 +248,7 @@ done:
 
 void BX_CPU_C::CALL_Ed(bxInstruction_c *i)
 {
-BailBigRSP("CALL_Ed");
   Bit32u op1_32;
-
-  //invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -271,13 +261,10 @@ BailBigRSP("CALL_Ed");
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     }
 
-  if (protected_mode()) {
-    if (op1_32 >
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-    {
-      BX_ERROR(("call_ed: IP out of CS limits!"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("call_ed: IP out of CS limits!"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   push_32(EIP);

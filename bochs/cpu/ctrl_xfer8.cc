@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.16 2004-11-02 16:10:01 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.17 2004-11-02 18:05:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,22 +67,10 @@ BailBigRSP("JCXZ_Jb");
       temp_ECX = CX;
 
     if ( temp_ECX == 0 ) {
-      Bit32u new_EIP;
-
-      new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os32L()==0)
-        new_EIP &= 0x0000ffff;
-#if BX_CPU_LEVEL >= 2
-      if (protected_mode()) {
-        if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-          BX_ERROR(("jcxz_jb: offset outside of CS limits"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-          }
-        }
-#endif
-      EIP = new_EIP;
+      Bit32u new_EIP = EIP + (Bit32s) i->Id();
+      if (i->os32L()==0) new_EIP &= 0x0000ffff;
+      branch_near32(new_EIP);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-      revalidate_prefetch_q();
       }
 #if BX_INSTRUMENTATION
     else {
@@ -100,7 +88,6 @@ BailBigRSP("loopne_jb");
   if (i->as64L()) {
 
     if ( ((--RCX)!=0) && (get_ZF()==0) ) {
-
       RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
@@ -114,7 +101,7 @@ BailBigRSP("loopne_jb");
   else
 #endif
    {
-    Bit32u count, new_EIP;
+    Bit32u count;
 
 #if BX_CPU_LEVEL >= 3
     if (i->as32L())
@@ -125,20 +112,11 @@ BailBigRSP("loopne_jb");
 
     count--;
     if ( (count!=0) && (get_ZF()==0) ) {
-
-      new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os32L()==0)
-        new_EIP &= 0x0000ffff;
-      if (protected_mode()) {
-        if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_ERROR(("loopne_jb: offset outside of CS limits"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-          }
-        }
-      EIP = new_EIP;
+      Bit32u new_EIP = EIP + (Bit32s) i->Id();
+      if (i->os32L()==0) new_EIP &= 0x0000ffff;
+      branch_near32(new_EIP);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-      revalidate_prefetch_q();
-      }
+    }
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
@@ -171,8 +149,8 @@ BailBigRSP("loope_jb");
     }
   else
 #endif
-   {
-    Bit32u count, new_EIP;
+ {
+    Bit32u count;
 
 #if BX_CPU_LEVEL >= 3
     if (i->as32L())
@@ -183,20 +161,11 @@ BailBigRSP("loope_jb");
 
     count--;
     if ( (count!=0) && get_ZF()) {
-
-      new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os32L()==0)
-        new_EIP &= 0x0000ffff;
-      if (protected_mode()) {
-        if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_ERROR(("loope_jb: offset outside of CS limits"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-          }
-        }
-      EIP = new_EIP;
+      Bit32u new_EIP = EIP + (Bit32s) i->Id();
+      if (i->os32L()==0) new_EIP &= 0x0000ffff;
+      branch_near32(new_EIP);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-      revalidate_prefetch_q();
-      }
+    }
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
@@ -229,8 +198,8 @@ BailBigRSP("loop_jb");
     }
   else
 #endif
-   {
-    Bit32u count, new_EIP;
+ {
+    Bit32u count;
 
 #if BX_CPU_LEVEL >= 3
     if (i->as32L())
@@ -241,19 +210,11 @@ BailBigRSP("loop_jb");
 
     count--;
     if (count != 0) {
-      new_EIP = EIP + (Bit32s) i->Id();
-      if (i->os32L()==0)
-        new_EIP &= 0x0000ffff;
-      if (protected_mode()) {
-        if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-          BX_ERROR(("loop_jb: offset outside of CS limits"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-          }
-        }
-      EIP = new_EIP;
+      Bit32u new_EIP = EIP + (Bit32s) i->Id();
+      if (i->os32L()==0) new_EIP &= 0x0000ffff;
+      branch_near32(new_EIP);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-      revalidate_prefetch_q();
-      }
+    }
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
