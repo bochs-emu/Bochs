@@ -69,6 +69,23 @@ BX_MEM_C    *BX_MEM[BX_ADDRESS_SPACES];
 extern void REGISTER_IADDR(Bit32u addr);
 #endif
 
+#if BX_DEBUGGER==0
+
+// The CHECK_MAX_INSTRUCTIONS macro is equivalent to the ICOUNT
+// guard in the debugger.  For SMP, I needed the same functionality
+// as ICOUNT but didn't want to have to enable every debugger feature.
+// So the macro is defined ONLY when the debugger is off.
+// 
+// If maximum instructions have been executed, return.  A count less
+// than zero means run forever.
+#define CHECK_MAX_INSTRUCTIONS(count) \
+  if (count >= 0) {                   \
+    count--; if (count == 0) return;  \
+  }
+#else
+#define CHECK_MAX_INSTRUCTIONS(count)  /* not needed in debugger*/
+#endif
+
 #if BX_DYNAMIC_TRANSLATION == 0
   void
 BX_CPU_C::cpu_loop(Bit32s max_instr_count)
@@ -230,7 +247,8 @@ repeat_not_done:
 #ifdef REGISTER_IADDR
       REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
-      BX_TICK1();
+      //BX_TICK1();
+      CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event) {
 #endif
@@ -245,6 +263,7 @@ repeat_done:
       BX_CPU_THIS_PTR eip += i.ilen;
       }
     else {
+      // non repeating instruction
       BX_CPU_THIS_PTR eip += i.ilen;
       BxExecutePtr_t func = i.execute;
       (this->*func) (&i);
@@ -255,7 +274,8 @@ repeat_done:
 #ifdef REGISTER_IADDR
     REGISTER_IADDR(BX_CPU_THIS_PTR eip + BX_CPU_THIS_PTR sregs[BX_SREG_CS].cache.u.segment.base);
 #endif
-    BX_TICK1();
+    //BX_TICK1();
+    CHECK_MAX_INSTRUCTIONS(max_instr_count);
 
 debugger_check:
 
@@ -301,17 +321,6 @@ debugger_check:
 	  return;
     }
 #endif
-
-    // if maximum instructions have been executed, return.  This is 
-    // equivalent to the icount in the bx_guard structure, but is not
-    // specific to the debugger code.
-    if (max_instr_count < 0) {
-      // no limit on number of instructions
-    } else {
-      max_instr_count--;
-      if (max_instr_count == 0)
-	return;
-    }
 
 #if BX_DEBUGGER
     {
@@ -384,7 +393,7 @@ handle_async_event:
       // interrupt ends the HALT condition
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
-      bx_printf ("halt condition has been cleared in %s\n", name);
+      //bx_printf ("halt condition has been cleared in %s\n", name);
     } else {
       // HALT condition remains, return so other CPUs have a chance
 #if BX_DEBUGGER
