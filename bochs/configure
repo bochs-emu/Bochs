@@ -3599,6 +3599,26 @@ EOF
   COMMAND_SEPARATOR=""
   CD_UP_ONE="cd .."
   CD_UP_TWO="cd ..\.."
+  cat >> confdefs.h <<\EOF
+#define BX_64BIT_CONSTANTS_USE_LL 0
+EOF
+
+  cat >> confdefs.h <<\EOF
+#define inline __inline
+EOF
+
+  cat >> confdefs.h <<\EOF
+#define BX_NO_EMPTY_STRUCTS 1
+EOF
+
+  cat >> confdefs.h <<\EOF
+#define BX_NO_ATTRIBUTES 1
+EOF
+
+  cat >> confdefs.h <<\EOF
+#define BX_HAVE_HASH_MAP 0
+EOF
+
 elif test "$with_macos" = yes; then
   cat >> confdefs.h <<\EOF
 #define BX_WITH_MACOS 1

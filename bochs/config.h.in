@@ -367,7 +367,7 @@
 #elif SIZEOF_INT_P == 8
   typedef Bit64u bx_ptr_equiv_t;
 #else
-#  error "could define bx_ptr_equiv_t to size of int*"
+#  error "could not define bx_ptr_equiv_t to size of int*"
 #endif
 
 

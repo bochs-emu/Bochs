@@ -665,6 +665,11 @@ elif test "$with_win32_vcpp" = yes; then
   COMMAND_SEPARATOR=""
   CD_UP_ONE="cd .."
   CD_UP_TWO="cd ..\.."
+  AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
+  AC_DEFINE(inline, __inline)
+  AC_DEFINE(BX_NO_EMPTY_STRUCTS, 1)
+  AC_DEFINE(BX_NO_ATTRIBUTES, 1)
+  AC_DEFINE(BX_HAVE_HASH_MAP, 0)
 elif test "$with_macos" = yes; then
   AC_DEFINE(BX_WITH_MACOS, 1)
   AC_DEFINE(BX_HAVE_STRDUP, 0)
