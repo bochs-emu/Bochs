@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.15 2002-11-10 10:14:55 vruppert Exp $
+// $Id: floppy.h,v 1.16 2002-11-30 09:39:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -127,6 +127,8 @@ private:
   BX_FD_SMF void   floppy_command(void);
   BX_FD_SMF void   floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer, Bit32u bytes, Bit8u direction);
   BX_FD_SMF void   raise_interrupt(void);
+  BX_FD_SMF void   enter_idle_phase(void);
+  BX_FD_SMF void   enter_result_phase(void);
   static void   timer_handler(void *);
 
 public:
