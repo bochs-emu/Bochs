@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.h
- * $Id: siminterface.h,v 1.20 2001-06-21 19:57:21 bdenney Exp $
+ * $Id: siminterface.h,v 1.21 2001-06-21 21:24:05 bdenney Exp $
  *
  * Interface to the simulator, currently only used by control.cc.
  * The base class bx_simulator_interface_c, contains only virtual functions
@@ -349,6 +349,8 @@ public:
   virtual int LOCAL_notify (int code) {return -1;}
   virtual int LOCAL_log_msg (char *prefix, int level, char *msg) {return -1;}
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len) {return -1;}
+  virtual int get_enabled () {return -1;}
+  virtual void set_enabled (int enabled) {}
 };
 
 extern bx_simulator_interface_c *SIM;

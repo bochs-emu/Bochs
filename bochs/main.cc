@@ -715,11 +715,23 @@ main(int argc, char *argv[])
   int read_rc_already = 0;
   init_siminterface ();
   bx_init_options ();
+
 #if BX_USE_CONTROL_PANEL
-  // Display the pre-simulation control panel.
-  if ((bx_control_panel (BX_CPANEL_START_MAIN)) != BX_DISABLE_CONTROL_PANEL)
-    read_rc_already = 1;
+  if (argc > 1 && (!strcmp ("-nocontrolpanel", argv[1]))) {
+    // skip the control panel
+    argc++;
+    SIM->set_enabled (0);
+  } else {
+    // Display the pre-simulation control panel.
+    if ((bx_control_panel (BX_CPANEL_START_MAIN)) == BX_DISABLE_CONTROL_PANEL)
+      SIM->set_enabled (0);
+    else {
+      SIM->set_enabled (1);
+      read_rc_already = 1;
+    }
+  }
 #endif
+
   if (!read_rc_already) {
     /* parse configuration file and command line arguments */
     char *bochsrc = bx_find_bochsrc ();
@@ -822,8 +834,12 @@ bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-  for (int level=0; level<N_LOGLEV; level++)
-    io->set_log_action (level, bx_options.log.actions[level]);
+  for (int level=0; level<N_LOGLEV; level++) {
+    int action = bx_options.log.actions[level];
+    if (!SIM->get_enabled () && action == ACT_ASK)
+      action = ACT_FATAL;
+    io->set_log_action (level, action);
+  }
 
   bx_pc_system.init_ips(bx_options.Oips->get ());
 

@@ -1,6 +1,6 @@
 /*
  * gui/siminterface.cc
- * $Id: siminterface.cc,v 1.29 2001-06-21 20:50:30 bdenney Exp $
+ * $Id: siminterface.cc,v 1.30 2001-06-21 21:24:05 bdenney Exp $
  *
  * Defines the actual link between bx_simulator_interface_c methods
  * and the simulator.  This file includes bochs.h because it needs
@@ -25,6 +25,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   int init_done;
   bx_param_c **param_registry;
   int registry_alloc_size;
+  int enabled;
 public:
   bx_real_sim_c ();
   virtual int get_init_done () { return init_done; }
@@ -54,6 +55,8 @@ public:
   virtual int LOCAL_notify (int code);
   virtual int LOCAL_log_msg (char *prefix, int level, char *msg);
   virtual int log_msg_2 (char *prefix, int *level, char *msg, int len);
+  virtual int get_enabled () { return enabled; }
+  virtual void set_enabled (int enabled) { this->enabled = enabled; }
 };
 
 bx_param_c *

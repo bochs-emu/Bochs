@@ -328,7 +328,6 @@ logfunctions::ldebug(char *fmt, ...)
 void
 logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
 {
-#if BX_USE_CONTROL_PANEL
   char buf1[1024], buf2[1024];
   vsprintf (buf1, fmt, ap);
   sprintf (buf2, "%s %s", prefix, buf1);
@@ -344,7 +343,6 @@ logfunctions::ask (int level, char *prefix, char *fmt, va_list ap)
     case 2:   // user chose die
       fatal (prefix, fmt, ap);
   }
-#endif
 }
 
 void
