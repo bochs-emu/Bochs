@@ -33,6 +33,8 @@ CC = @CC@
 CXX = @CXX@
 CFLAGS = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 CXXFLAGS = @CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
+TAR = @TAR@
+GZIP = @GZIP@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -90,6 +92,7 @@ DISASM_LIB     = disasm/libdisasm.a
 DYNAMIC_LIB    = dynamic/libdynamic.a
 INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
 FPU_LIB        = fpu/libfpu.a
+READLINE_LIB   = @READLINE_LIB@
 
 BX_OBJS = @NONINLINE_VAR@
 
@@ -118,7 +121,8 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 		$(FPU_LIB) \
 		$(GUI_LINK_OPTS) \
 		$(MCH_LINK_FLAGS) \
-	        $(SIMX86_LINK_FLAGS)
+	        $(SIMX86_LINK_FLAGS) \
+		$(READLINE_LIB)
 
 
 $(BX_OBJS): $(BX_INCLUDES)
@@ -178,6 +182,9 @@ libbochs_cpu.a: @DEBUGGER_VAR@ $(BX_OBJS)
 	-rm -f libbochs_cpu.a
 	ar rv libbochs_cpu.a $(BX_OBJS)
 	$(RANLIB) libbochs_cpu.a
+
+tar:
+	(NAME=`pwd | sed -e 's/.*\///'`; cd ..; $(TAR) cf - $$NAME | $(GZIP) > $$NAME.tar.gz; cd $$NAME; ls -l ../$$NAME.tar.gz)
 
 clean:
 	@RMCOMMAND@ *.o
