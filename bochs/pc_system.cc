@@ -101,7 +101,7 @@ bx_pc_system_c::set_HRQ(Boolean val)
 {
   HRQ = val;
   if (val)
-    BX_CPU[0].async_event = 1;
+    BX_CPU[0]->async_event = 1;
   else
     HLDA = 0; // ??? needed?
 }
@@ -128,7 +128,7 @@ bx_pc_system_c::dma_write8(Bit32u phy_addr, unsigned channel)
 
   UNUSED(channel);
   bx_devices.dma_write8(channel, &data_byte);
-  BX_MEM[0].write_physical(phy_addr, 1, &data_byte);
+  BX_MEM[0]->write_physical(phy_addr, 1, &data_byte);
 
   BX_DBG_DMA_REPORT(phy_addr, 1, BX_WRITE, data_byte);
 }
@@ -142,7 +142,7 @@ bx_pc_system_c::dma_read8(Bit32u phy_addr, unsigned channel)
   Bit8u data_byte;
 
   UNUSED(channel);
-  BX_MEM[0].read_physical(phy_addr, 1, &data_byte);
+  BX_MEM[0]->read_physical(phy_addr, 1, &data_byte);
   bx_devices.dma_read8(channel, &data_byte);
 
   BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
@@ -154,7 +154,9 @@ bx_pc_system_c::dma_read8(Bit32u phy_addr, unsigned channel)
 bx_pc_system_c::set_INTR(Boolean value)
 {
   INTR = value;
-  BX_CPU[0].set_INTR(value);
+#warning set_INTR only for bootstrap processor
+  int cpu = BX_BOOTSTRAP_PROCESSOR;
+    BX_CPU[cpu]->set_INTR(value);
 }
 #endif
 
