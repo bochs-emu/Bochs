@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.12 2002-10-25 11:44:40 bdenney Exp $
+// $Id: iodebug.cc,v 1.13 2002-10-26 03:53:22 bdenney Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include "bochs.h"
@@ -41,13 +41,13 @@ bx_iodebug_c::~bx_iodebug_c( void )
 
 
 
-int bx_iodebug_c::init( void )
+void bx_iodebug_c::init(void)
 {
   int i;
 
-  BX_IODEBUG_THIS devices->register_io_read_handler(this, read_handler, 0x8A00,"BOCHS IODEBUG");
-  BX_IODEBUG_THIS devices->register_io_write_handler(this, write_handler, 0x8A00,"BOCHS IODEBUG");
-  BX_IODEBUG_THIS devices->register_io_write_handler(this, write_handler, 0x8A01,"BOCHS IODEBUG");
+  DEV_register_ioread_handler(this, read_handler, 0x8A00,"BOCHS IODEBUG", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x8A00,"BOCHS IODEBUG", 7);
+  DEV_register_iowrite_handler(this, write_handler, 0x8A01,"BOCHS IODEBUG", 7);
 //  fprintf( stderr, "IODEBUG initialized\n");
 
   bx_iodebug_s.enabled = 0;
@@ -56,11 +56,9 @@ int bx_iodebug_c::init( void )
     bx_iodebug_s.monitored_mem_areas_start[i] = 0;
     bx_iodebug_s.monitored_mem_areas_end[i] = 0;
   }
-
-  return(1);
 }
 
-int bx_iodebug_c::reset(unsigned type)
+void bx_iodebug_c::reset(unsigned type)
 {
 }
 
@@ -218,7 +216,7 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
     fprintf( stderr,
              "IODEBUG write to monitored memory area: %2i\tby EIP:\t\t%08X\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
 	     area,
-	     cpu->eip,
+	     cpu->get_EIP(),
 	     bx_iodebug_s.monitored_mem_areas_start[area],
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned int)addr);
@@ -276,7 +274,7 @@ void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
     fprintf( stderr,
              "IODEBUG read to monitored memory area: %2i\tby EIP:\t\t%08X\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
 	     area,
-	     cpu->eip,
+	     cpu->get_EIP(),
 	     bx_iodebug_s.monitored_mem_areas_start[area],
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned int)addr);
