@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.85 2004-07-29 20:15:17 sshwarts Exp $
+// $Id: cpu.cc,v 1.86 2004-07-29 20:30:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -251,7 +251,6 @@ printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
     BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get function pointers early.
     if (ret==0) {
 #if BX_SUPPORT_ICACHE
-BX_INFO((" ... fetchdecode returned zero, leave entry invalid"));
       i = &iStorage;	// Leave entry invalid
 #endif
       boundaryFetch(i);
