@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usage.cc,v 1.3 2001-10-03 13:10:37 bdenney Exp $
+// $Id: usage.cc,v 1.4 2003-10-07 01:44:34 danielg4 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 
