@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.77 2004-02-01 23:48:57 cbothamy Exp $
+// $Id: x.cc,v 1.78 2004-02-12 19:39:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,6 +63,7 @@ public:
 #endif
   virtual void beep_on(float frequency);
   virtual void beep_off();
+  virtual void statusbar_setitem(int element, bx_bool active);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -142,10 +143,17 @@ static unsigned bx_headerbar_entries = 0;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 
+static unsigned bx_statusbar_y = 18;
+static unsigned bx_statusitem_pos[12] = {
+  0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
+  };
+static bx_bool bx_statusitem_active[12];
+static long bx_status_led_green;
+static char bx_status_info_text[32];
+
 static void headerbar_click(int x, int y);
 static void send_keyboard_mouse_status(void);
-
-
+static void set_status_text(int element, const char *text, bx_bool active);
 
 
 Bit32u ascii_to_key_event[0x5f] = {
@@ -591,6 +599,15 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
     BX_PANIC(("vga_x: bits_per_pixel < depth ?"));
     }
 
+  for (i=0; i<12; i++) bx_statusitem_active[i] = 0;
+  switch (imBPP) {
+    case 16: bx_status_led_green = 0x07e0; break;
+    case 24:
+    case 32: bx_status_led_green = 0x00ff00; break;
+    default: bx_status_led_green = 0;
+  }
+  set_status_text(0, "Middle button enables mouse", 0);
+
   x_init_done = true;
 
 }
@@ -611,6 +628,45 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
     }
 }
 
+  void
+set_status_text(int element, const char *text, bx_bool active)
+{
+  int xleft, xsize;
+
+  xleft = bx_statusitem_pos[element] + 2;
+  xsize = bx_statusitem_pos[element+1] - xleft;
+  if ((element < 1) || (element > BX_MAX_STATUSITEMS)) {
+    strcpy(bx_status_info_text, text);
+    XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, dimension_y+2, xsize, bx_statusbar_y-2);
+    XDrawString(bx_x_display, win, gc_headerbar, xleft, dimension_y+bx_statusbar_y-2,
+                text, strlen(text));
+  } else {
+    bx_statusitem_active[element] = active;
+    if (active) {
+      XSetForeground(bx_x_display, gc_headerbar, bx_status_led_green);
+      XFillRectangle(bx_x_display, win, gc_headerbar, xleft, dimension_y+2, xsize-1, bx_statusbar_y-2);
+      XSetForeground(bx_x_display, gc_headerbar, black_pixel);
+    } else {
+      XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, dimension_y+2, xsize-1, bx_statusbar_y-2);
+      XSetForeground(bx_x_display, gc_headerbar, col_vals[7]);
+    }
+    XDrawString(bx_x_display, win, gc_headerbar, xleft, dimension_y+bx_statusbar_y-2,
+                text, strlen(text));
+    XSetForeground(bx_x_display, gc_headerbar, black_pixel);
+  }
+}
+
+  void 
+bx_x_gui_c::statusbar_setitem(int element, bx_bool active)
+{
+  if (element < 0) {
+    for (unsigned i = 0; i < statusitem_count; i++) {
+      set_status_text(i+1, statusitem_text[i], active);
+    }
+  } else if ((unsigned)element < statusitem_count) {
+    set_status_text(element+1, statusitem_text[element], active);
+  }
+}
 
 // This is called whenever the mouse_enabled parameter changes.  It
 // can change because of a gui event such as clicking on the mouse-enable
@@ -622,6 +678,7 @@ bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
   BX_DEBUG (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {
     BX_INFO(("[x] Mouse on"));
+    set_status_text(0, "Middle button disables mouse", 0);
     mouse_enable_x = current_x;
     mouse_enable_y = current_y;
     disable_cursor();
@@ -629,6 +686,7 @@ bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
   } else {
     BX_INFO(("[x] Mouse off"));
+    set_status_text(0, "Middle button enables mouse", 0);
     enable_cursor();
     warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
   }
@@ -1557,10 +1615,10 @@ bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned 
     if ( XGetWMNormalHints(bx_x_display, win, &hints, &supplied_return) &&
          supplied_return & PMaxSize ) {
       hints.max_width = hints.min_width = x;
-      hints.max_height = hints.min_height = y+bx_headerbar_y;
+      hints.max_height = hints.min_height = y+bx_headerbar_y+bx_statusbar_y;
       XSetWMNormalHints(bx_x_display, win, &hints);
       }
-    XResizeWindow(bx_x_display, win, x, y+bx_headerbar_y);
+    XResizeWindow(bx_x_display, win, x, y+bx_headerbar_y+bx_statusbar_y);
     dimension_x = x;
     dimension_y = y + bx_headerbar_y;
     }
@@ -1573,8 +1631,9 @@ bx_x_gui_c::show_headerbar(void)
   unsigned xorigin;
   int xleft, xright;
 
-  // clear header bar area to white
+  // clear header bar and status bar area to white
   XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,0, dimension_x, bx_headerbar_y);
+  XFillRectangle(bx_x_display, win, gc_headerbar_inv, 0,dimension_y, dimension_x, bx_statusbar_y);
 
   xleft = 0;
   xright = dimension_x;
@@ -1592,6 +1651,18 @@ bx_x_gui_c::show_headerbar(void)
       0,0, bx_headerbar_entry[i].xdim, bx_headerbar_entry[i].ydim,
               xorigin, 0, 1);
     }
+  for (unsigned i=0; i<12; i++) {
+    xleft = bx_statusitem_pos[i];
+    if (i > 0) {
+      XDrawLine(bx_x_display, win, gc_inv, xleft, dimension_y+1, xleft,
+                dimension_y+bx_statusbar_y);
+      if (i <= statusitem_count) {
+        set_status_text(i, statusitem_text[i-1], bx_statusitem_active[i]);
+      }
+    } else {
+      set_status_text(0, bx_status_info_text, 0);
+    }
+  }
 }
 
 
