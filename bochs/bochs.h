@@ -313,6 +313,7 @@ class iofunctions {
 #define    CTRLLOG         41
 #define    UNMAPLOG        42
 #define    SERRLOG         43
+#define    BIOSLOG         42
 
 
 public:

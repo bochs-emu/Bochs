@@ -31,11 +31,15 @@ bx_unmapped_c bx_unmapped;
 #define this (&bx_unmapped)
 #endif
 
+logfunctions *bioslog;
 
 bx_unmapped_c::bx_unmapped_c(void)
 {
   put("UNMP");
   settype(UNMAPLOG);
+  bioslog = new logfunctions ();
+  bioslog->put("BIOS");
+  bioslog->settype (BIOSLOG);
   s.port80 = 0x00;
   s.port8e = 0x00;
 
@@ -243,11 +247,11 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  BX_UM_THIS s.bios_message_i = BX_BIOS_MESSAGE_SIZE-1;
         BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i] = 0;
 	BX_UM_THIS s.bios_message_i = 0;
-        BX_PANIC((BX_UM_THIS s.bios_message));
+        bioslog->panic((BX_UM_THIS s.bios_message));
 	break;
       }
     case 0x0400:
-      BX_PANIC(("BIOS panic at rombios.c, line %d", value));
+      bioslog->panic("BIOS panic at rombios.c, line %d", value);
       break;
     case 0xfedc:
       bx_dbg.debugger = (value > 0);
@@ -261,12 +265,12 @@ bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if ( BX_UM_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
         BX_UM_THIS s.bios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        BX_INFO(("BIOS message: %s", BX_UM_THIS s.bios_message));
+        bioslog->info("BIOS message: %s", BX_UM_THIS s.bios_message);
         }
       else if ((value & 0xff) == '\n') {
         BX_UM_THIS s.bios_message[ BX_UM_THIS s.bios_message_i - 1 ] = 0;
         BX_UM_THIS s.bios_message_i = 0;
-        BX_INFO(("BIOS message: %s", BX_UM_THIS s.bios_message));
+        bioslog->info("BIOS message: %s", BX_UM_THIS s.bios_message);
         }
       break;
 
