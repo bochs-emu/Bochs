@@ -33,23 +33,11 @@
 BX_CPU_C::BX_CPU_C(void)
 {
   // BX_CPU_C constructor
-  char cpu[6];
-  snprintf(cpu, 7, "[CPU%d]",BX_SIM_ID);
+  char cpu[8];
+  snprintf(cpu, 8, "[CPU%d]",BX_SIM_ID);
 
-  // XXX !!! Warning !!! This class appears to be initialized first, so I am
-  //                     using this fact to initialize logging here.
-  //                     It is highly likely this is a bad assumption.
-  //                     How do I do this the 'right' way?
-
-  io = new iofunc_t("/dev/stderr");
-  genlog = new logfunc_t();
-  genlog->setio(io);
-
-  // end !!! Warning !!!
-
-  BX_CPU_THIS_PTR setio(io);
+  BX_CPU_THIS_PTR setio(SAFE_GET_IOFUNC());
   BX_CPU_THIS_PTR setprefix(cpu, __FILE__, __LINE__);
-
   BX_CPU_THIS_PTR info( "(%u)BX_CPU_C::BX_CPU_C(void) called\n", BX_SIM_ID);
 
   /* hack for the following fields.  Its easier to decode mod-rm bytes if
@@ -604,7 +592,7 @@ BX_CPU_C::sanity_checks(void)
        ch != ((ECX >> 8) & 0xFF) ||
        dh != ((EDX >> 8) & 0xFF) ||
        bh != ((EBX >> 8) & 0xFF) ) {
-    bx_panic("problems using BX_READ_8BIT_REG()!\n");
+    BX_CPU_THIS_PTR panic("problems using BX_READ_8BIT_REG()!\n");
     }
 
   ax = AX;
@@ -624,7 +612,7 @@ BX_CPU_C::sanity_checks(void)
        bp != (EBP & 0xFFFF) ||
        si != (ESI & 0xFFFF) ||
        di != (EDI & 0xFFFF) ) {
-    bx_panic("problems using BX_READ_16BIT_REG()!\n");
+    BX_CPU_THIS_PTR panic("problems using BX_READ_16BIT_REG()!\n");
     }
 
 
@@ -639,11 +627,11 @@ BX_CPU_C::sanity_checks(void)
 
 
   if (sizeof(Bit8u)  != 1  ||  sizeof(Bit8s)  != 1)
-    bx_panic("data type Bit8u or Bit8s is not of length 1 byte!\n");
+    BX_CPU_THIS_PTR panic("data type Bit8u or Bit8s is not of length 1 byte!\n");
   if (sizeof(Bit16u) != 2  ||  sizeof(Bit16s) != 2)
-    bx_panic("data type Bit16u or Bit16s is not of length 2 bytes!\n");
+    BX_CPU_THIS_PTR panic("data type Bit16u or Bit16s is not of length 2 bytes!\n");
   if (sizeof(Bit32u) != 4  ||  sizeof(Bit32s) != 4)
-    bx_panic("data type Bit32u or Bit32s is not of length 4 bytes!\n");
+    BX_CPU_THIS_PTR panic("data type Bit32u or Bit32s is not of length 4 bytes!\n");
 
   fprintf(stderr, "#(%u)all sanity checks passed!\n", BX_SIM_ID);
 }

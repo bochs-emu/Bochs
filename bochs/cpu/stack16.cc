@@ -71,7 +71,7 @@ BX_CPU_C::POP_Ew(BxInstruction_t *i)
 BX_CPU_C::PUSHAD16(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 2
-  bx_panic("PUSHAD: not supported on an 8086\n");
+  BX_CPU_THIS_PTR panic("PUSHAD: not supported on an 8086\n");
 #else
   Bit32u temp_ESP;
   Bit16u sp;
@@ -85,7 +85,7 @@ BX_CPU_C::PUSHAD16(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 16) ) {
-        bx_panic("PUSHA(): stack doesn't have enough room!\n");
+        BX_CPU_THIS_PTR panic("PUSHA(): stack doesn't have enough room!\n");
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
         }
@@ -94,7 +94,7 @@ BX_CPU_C::PUSHAD16(BxInstruction_t *i)
 #endif
       {
       if (temp_ESP < 16)
-        bx_panic("pushad: eSP < 16\n");
+        BX_CPU_THIS_PTR panic("pushad: eSP < 16\n");
       }
 
     sp = SP;
@@ -115,14 +115,14 @@ BX_CPU_C::PUSHAD16(BxInstruction_t *i)
 BX_CPU_C::POPAD16(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 2
-  bx_panic("POPAD not supported on an 8086\n");
+  BX_CPU_THIS_PTR panic("POPAD not supported on an 8086\n");
 #else /* 286+ */
 
     Bit16u di, si, bp, tmp, bx, dx, cx, ax;
 
     if (protected_mode()) {
       if ( !can_pop(16) ) {
-        bx_panic("pop_a: not enough bytes on stack\n");
+        BX_CPU_THIS_PTR panic("pop_a: not enough bytes on stack\n");
         exception(BX_SS_EXCEPTION, 0, 0);
         return;
         }
@@ -152,7 +152,7 @@ BX_CPU_C::POPAD16(BxInstruction_t *i)
 BX_CPU_C::PUSH_Iw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 2
-  bx_panic("PUSH_Iv: not supported on 8086!\n");
+  BX_CPU_THIS_PTR panic("PUSH_Iv: not supported on 8086!\n");
 #else
 
     Bit16u imm16;

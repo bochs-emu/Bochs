@@ -204,7 +204,7 @@ BX_CPU_C::IDIV_AXEw(BxInstruction_t *i)
 BX_CPU_C::IMUL_GwEwIw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 2
-  bx_panic("IMUL_GvEvIv() unsupported on 8086!\n");
+  BX_CPU_THIS_PTR panic("IMUL_GvEvIv() unsupported on 8086!\n");
 #else
 
 
@@ -249,7 +249,7 @@ BX_CPU_C::IMUL_GwEwIw(BxInstruction_t *i)
 BX_CPU_C::IMUL_GwEw(BxInstruction_t *i)
 {
 #if BX_CPU_LEVEL < 3
-  bx_panic("IMUL_GvEv() unsupported on 8086!\n");
+  BX_CPU_THIS_PTR panic("IMUL_GvEv() unsupported on 8086!\n");
 #else
 
     Bit16u product_16l;

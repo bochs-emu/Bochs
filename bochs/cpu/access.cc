@@ -39,18 +39,18 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
 
   if ( protected_mode() ) {
     if ( seg->cache.valid==0 ) {
-      genlog->info("seg = %s\n", BX_CPU_THIS_PTR strseg(seg));
-      genlog->info("seg->selector.value = %04x\n", (unsigned) seg->selector.value);
-      genlog->info("write_virtual_checks: valid bit = 0\n");
-genlog->info("CS: %04x\n", (unsigned) BX_CPU_THIS_PTR sregs[1].selector.value);
-genlog->info("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip);
+      BX_CPU_THIS_PTR info("seg = %s\n", BX_CPU_THIS_PTR strseg(seg));
+      BX_CPU_THIS_PTR info("seg->selector.value = %04x\n", (unsigned) seg->selector.value);
+      BX_CPU_THIS_PTR info("write_virtual_checks: valid bit = 0\n");
+BX_CPU_THIS_PTR info("CS: %04x\n", (unsigned) BX_CPU_THIS_PTR sregs[1].selector.value);
+BX_CPU_THIS_PTR info("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip);
 debug(BX_CPU_THIS_PTR eip);
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
 
     if (seg->cache.p == 0) { /* not present */
-genlog->info("write_virtual_checks(): segment not present\n");
+BX_CPU_THIS_PTR info("write_virtual_checks(): segment not present\n");
       exception(int_number(seg), 0, 0);
       return;
       }
@@ -62,13 +62,13 @@ genlog->info("write_virtual_checks(): segment not present\n");
       case 10: case 11: // execute/read
       case 12: case 13: // execute only, conforming
       case 14: case 15: // execute/read-only, conforming
-genlog->info("write_virtual_checks(): no write access to seg\n");
+BX_CPU_THIS_PTR info("write_virtual_checks(): no write access to seg\n");
         exception(int_number(seg), 0, 0);
         return;
 
       case 2: case 3: /* read/write */
         if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
-genlog->info("write_virtual_checks(): write beyond limit, r/w\n");
+BX_CPU_THIS_PTR info("write_virtual_checks(): write beyond limit, r/w\n");
           exception(int_number(seg), 0, 0);
           return;
           }
@@ -82,7 +82,7 @@ genlog->info("write_virtual_checks(): write beyond limit, r/w\n");
         if ( (offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) ||
              ((upper_limit - offset) < (length - 1)) ) {
-genlog->info("write_virtual_checks(): write beyond limit, r/w ED\n");
+BX_CPU_THIS_PTR info("write_virtual_checks(): write beyond limit, r/w ED\n");
           exception(int_number(seg), 0, 0);
           return;
           }
@@ -94,7 +94,7 @@ genlog->info("write_virtual_checks(): write beyond limit, r/w ED\n");
 
   else { /* real mode */
     if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
-      //genlog->info("write_virtual_checks() SEG EXCEPTION:  %x:%x + %x\n",
+      //BX_CPU_THIS_PTR info("write_virtual_checks() SEG EXCEPTION:  %x:%x + %x\n",
       //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length);
       if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
       else exception(BX_GP_EXCEPTION, 0, 0);
@@ -111,19 +111,19 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset,
 
   if ( protected_mode() ) {
     if ( seg->cache.valid==0 ) {
-      genlog->info("seg = %s\n", BX_CPU_THIS_PTR strseg(seg));
-      genlog->info("seg->selector.value = %04x\n", (unsigned) seg->selector.value);
-      //genlog->info("read_virtual_checks: valid bit = 0\n");
-      //genlog->info("CS: %04x\n", (unsigned)
+      BX_CPU_THIS_PTR info("seg = %s\n", BX_CPU_THIS_PTR strseg(seg));
+      BX_CPU_THIS_PTR info("seg->selector.value = %04x\n", (unsigned) seg->selector.value);
+      //BX_CPU_THIS_PTR info("read_virtual_checks: valid bit = 0\n");
+      //BX_CPU_THIS_PTR info("CS: %04x\n", (unsigned)
       //   BX_CPU_THIS_PTR sregs[1].selector.value);
-      //genlog->info("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip);
+      //BX_CPU_THIS_PTR info("IP: %04x\n", (unsigned) BX_CPU_THIS_PTR prev_eip);
       //debug(BX_CPU_THIS_PTR eip);
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
       }
 
     if (seg->cache.p == 0) { /* not present */
-genlog->info("read_virtual_checks(): segment not present\n");
+BX_CPU_THIS_PTR info("read_virtual_checks(): segment not present\n");
       exception(int_number(seg), 0, 0);
       return;
       }
@@ -133,7 +133,7 @@ genlog->info("read_virtual_checks(): segment not present\n");
       case 10: case 11: /* execute/read */
       case 14: case 15: /* execute/read-only, conforming */
         if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
-genlog->info("read_virtual_checks(): write beyond limit\n");
+BX_CPU_THIS_PTR info("read_virtual_checks(): write beyond limit\n");
           exception(int_number(seg), 0, 0);
           return;
           }
@@ -141,7 +141,7 @@ genlog->info("read_virtual_checks(): write beyond limit\n");
 
       case 2: case 3: /* read/write */
         if ( (offset+length-1) > seg->cache.u.segment.limit_scaled ) {
-genlog->info("read_virtual_checks(): write beyond limit\n");
+BX_CPU_THIS_PTR info("read_virtual_checks(): write beyond limit\n");
           exception(int_number(seg), 0, 0);
           return;
           }
@@ -155,7 +155,7 @@ genlog->info("read_virtual_checks(): write beyond limit\n");
         if ( (offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) ||
              ((upper_limit - offset) < (length - 1)) ) {
-genlog->info("read_virtual_checks(): write beyond limit\n");
+BX_CPU_THIS_PTR info("read_virtual_checks(): write beyond limit\n");
           exception(int_number(seg), 0, 0);
           return;
           }
@@ -169,7 +169,7 @@ genlog->info("read_virtual_checks(): write beyond limit\n");
         if ( (offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) ||
              ((upper_limit - offset) < (length - 1)) ) {
-genlog->info("read_virtual_checks(): write beyond limit\n");
+BX_CPU_THIS_PTR info("read_virtual_checks(): write beyond limit\n");
           exception(int_number(seg), 0, 0);
           return;
           }
@@ -178,7 +178,7 @@ genlog->info("read_virtual_checks(): write beyond limit\n");
       case 8: case 9: /* execute only */
       case 12: case 13: /* execute only, conforming */
         /* can't read or write an execute-only segment */
-genlog->info("read_virtual_checks(): execute only\n");
+BX_CPU_THIS_PTR info("read_virtual_checks(): execute only\n");
         exception(int_number(seg), 0, 0);
         return;
         break;
@@ -188,7 +188,7 @@ genlog->info("read_virtual_checks(): execute only\n");
 
   else { /* real mode */
     if ( (offset + length - 1)  >  seg->cache.u.segment.limit_scaled) {
-      //genlog->info("read_virtual_checks() SEG EXCEPTION:  %x:%x + %x\n",
+      //BX_CPU_THIS_PTR info("read_virtual_checks() SEG EXCEPTION:  %x:%x + %x\n",
       //  (unsigned) seg->selector.value, (unsigned) offset, (unsigned) length);
       if (seg == & BX_CPU_THIS_PTR sregs[2]) exception(BX_SS_EXCEPTION, 0, 0);
       else exception(BX_GP_EXCEPTION, 0, 0);
@@ -210,7 +210,7 @@ BX_CPU_C::strseg(bx_segment_reg_t *seg)
   else if (seg == &BX_CPU_THIS_PTR sregs[4]) return("FS");
   else if (seg == &BX_CPU_THIS_PTR sregs[5]) return("GS");
   else {
-    genlog->info("undefined segment passed to strseg()!\n");
+    BX_CPU_THIS_PTR info("undefined segment passed to strseg()!\n");
     return("??");
     }
 }

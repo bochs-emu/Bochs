@@ -175,11 +175,11 @@ BX_CPU_C::IDIV_ALEb(BxInstruction_t *i)
   quotient_8l = quotient_16 & 0xFF;
 
   if (quotient_16 != quotient_8l) {
-genlog->info("quotient_16: %04x, remainder_8: %02x, quotient_8l: %02x\n",
+BX_CPU_THIS_PTR info("quotient_16: %04x, remainder_8: %02x, quotient_8l: %02x\n",
   (unsigned) quotient_16, (unsigned) remainder_8, (unsigned) quotient_8l);
 AL = quotient_8l;
 AH = remainder_8;
-genlog->info("AH: %02x, AL: %02x\n", (unsigned) AH, (unsigned) AL);
+BX_CPU_THIS_PTR info("AH: %02x, AL: %02x\n", (unsigned) AH, (unsigned) AL);
     exception(BX_DE_EXCEPTION, 0, 0);
     }
 

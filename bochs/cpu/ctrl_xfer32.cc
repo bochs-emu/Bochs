@@ -52,7 +52,7 @@ BX_CPU_C::RETnear32_Iw(BxInstruction_t *i)
 
     if (protected_mode()) {
       if ( !can_pop(4) ) {
-        bx_panic("retnear_iw: can't pop EIP\n");
+        BX_CPU_THIS_PTR panic("retnear_iw: can't pop EIP\n");
         /* ??? #SS(0) -or #GP(0) */
         }
 
@@ -67,7 +67,7 @@ BX_CPU_C::RETnear32_Iw(BxInstruction_t *i)
 
       /* Pentium book says imm16 is number of words ??? */
       if ( !can_pop(4 + imm16) ) {
-        bx_panic("retnear_iw: can't release bytes from stack\n");
+        BX_CPU_THIS_PTR panic("retnear_iw: can't release bytes from stack\n");
         /* #GP(0) -or #SS(0) ??? */
         }
 
@@ -109,7 +109,7 @@ BX_CPU_C::RETnear32(BxInstruction_t *i)
 
     if (protected_mode()) {
       if ( !can_pop(4) ) {
-        bx_panic("retnear: can't pop EIP\n");
+        BX_CPU_THIS_PTR panic("retnear: can't pop EIP\n");
         /* ??? #SS(0) -or #GP(0) */
         }
 
@@ -117,7 +117,7 @@ BX_CPU_C::RETnear32(BxInstruction_t *i)
         4, CPL==3, BX_READ, &return_EIP);
 
       if ( return_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        bx_panic("retnear: EIP > limit\n");
+        BX_CPU_THIS_PTR panic("retnear: EIP > limit\n");
         //exception(BX_GP_EXCEPTION, 0, 0);
         }
       BX_CPU_THIS_PTR eip = return_EIP;
@@ -221,7 +221,7 @@ BX_CPU_C::CALL_Ad(BxInstruction_t *i)
 
   if ( protected_mode() ) {
     if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      bx_panic("call_av: offset outside of CS limits\n");
+      BX_CPU_THIS_PTR panic("call_av: offset outside of CS limits\n");
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -294,7 +294,7 @@ __LINE__);
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 4) ) {
-        bx_panic("call_ev: can't push EIP\n");
+        BX_CPU_THIS_PTR panic("call_ev: can't push EIP\n");
         }
       }
 
@@ -317,7 +317,7 @@ BX_CPU_C::CALL32_Ep(BxInstruction_t *i)
 
     /* op1_32 is a register or memory reference */
     if (i->mod == 0xc0) {
-      bx_panic("CALL_Ep: op1 is a register\n");
+      BX_CPU_THIS_PTR panic("CALL_Ep: op1 is a register\n");
       }
 
     /* pointer, segment address pair */
@@ -355,7 +355,7 @@ BX_CPU_C::JMP_Jd(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-      bx_panic("jmp_jv: offset outside of CS limits\n");
+      BX_CPU_THIS_PTR panic("jmp_jv: offset outside of CS limits\n");
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -399,7 +399,7 @@ BX_CPU_C::JCC_Jd(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        bx_panic("jo_routine: offset outside of CS limits\n");
+        BX_CPU_THIS_PTR panic("jo_routine: offset outside of CS limits\n");
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
@@ -471,7 +471,7 @@ BX_CPU_C::JMP_Ed(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
   if (protected_mode()) {
     if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      bx_panic("jmp_ev: IP out of CS limits!\n");
+      BX_CPU_THIS_PTR panic("jmp_ev: IP out of CS limits!\n");
       exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
@@ -493,7 +493,7 @@ BX_CPU_C::JMP32_Ep(BxInstruction_t *i)
     /* op1_32 is a register or memory reference */
     if (i->mod == 0xc0) {
       /* far indirect must specify a memory address */
-      bx_panic("JMP_Ep(): op1 is a register\n");
+      BX_CPU_THIS_PTR panic("JMP_Ep(): op1 is a register\n");
       }
 
     /* pointer, segment address pair */

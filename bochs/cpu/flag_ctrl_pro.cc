@@ -110,7 +110,7 @@ else if (BX_CPU_THIS_PTR eflags.tf && (eflags_raw&0x0100))
     BX_CPU_THIS_PTR eflags.vm = (eflags_raw >> 17) & 0x01;
 #if BX_SUPPORT_V8086_MODE == 0
     if (BX_CPU_THIS_PTR eflags.vm)
-      bx_panic("write_eflags: VM bit set: BX_SUPPORT_V8086_MODE==0\n");
+      BX_CPU_THIS_PTR panic("write_eflags: VM bit set: BX_SUPPORT_V8086_MODE==0\n");
 #endif
     }
   if (change_RF) {

@@ -47,7 +47,7 @@ BX_CPU_C::JCXZ_Jb(BxInstruction_t *i)
 #if BX_CPU_LEVEL >= 2
     if (protected_mode()) {
       if ( new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled ) {
-        bx_panic("jcxz_jb: offset outside of CS limits\n");
+        BX_CPU_THIS_PTR panic("jcxz_jb: offset outside of CS limits\n");
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
@@ -85,7 +85,7 @@ BX_CPU_C::LOOPNE_Jb(BxInstruction_t *i)
       new_EIP &= 0x0000ffff;
     if (protected_mode()) {
       if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-        bx_panic("loopne_jb: offset outside of CS limits\n");
+        BX_CPU_THIS_PTR panic("loopne_jb: offset outside of CS limits\n");
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
@@ -125,7 +125,7 @@ BX_CPU_C::LOOPE_Jb(BxInstruction_t *i)
       new_EIP &= 0x0000ffff;
     if (protected_mode()) {
       if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-        bx_panic("loope_jb: offset outside of CS limits\n");
+        BX_CPU_THIS_PTR panic("loope_jb: offset outside of CS limits\n");
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }
@@ -165,7 +165,7 @@ BX_CPU_C::LOOP_Jb(BxInstruction_t *i)
       new_EIP &= 0x0000ffff;
     if (protected_mode()) {
       if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-        bx_panic("loop_jb: offset outside of CS limits\n");
+        BX_CPU_THIS_PTR panic("loop_jb: offset outside of CS limits\n");
         exception(BX_GP_EXCEPTION, 0, 0);
         }
       }

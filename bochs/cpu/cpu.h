@@ -674,6 +674,7 @@ public: // for now...
   // constructors & destructors...
   BX_CPU_C(void);
   ~BX_CPU_C(void);
+  init (void);
 
   // prototypes for CPU instructions...
   BX_SMF void ADD_EbGb(BxInstruction_t *);
@@ -1129,6 +1130,8 @@ public: // for now...
   BX_SMF void dynamic_init(void);
   BX_SMF unsigned FetchDecode(Bit8u *, BxInstruction_t *, unsigned, Boolean);
   BX_SMF void UndefinedOpcode(BxInstruction_t *);
+  BX_SMF void BxError(BxInstruction_t *i);
+  BX_SMF void BxResolveError(BxInstruction_t *i);
 
   BX_SMF void Resolve16Mod0Rm0(BxInstruction_t *);
   BX_SMF void Resolve16Mod0Rm1(BxInstruction_t *);
