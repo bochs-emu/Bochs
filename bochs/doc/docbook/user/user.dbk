@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.71 2002-11-20 21:11:01 bdenney Exp $
+$Id: user.dbk,v 1.72 2002-11-20 23:30:13 ndavidg Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -259,7 +259,7 @@ top of every source code file in the Bochs distribution:
 
 </section>  <!-- end of Introduction: Bochs License section -->
 
-<section><title>Third Party Software Licensing and Temporary Files</title>
+<section><title id="thirdparty">Third Party Software Licensing and Temporary Files</title>
 
 <para>
 Before you install or use any Operating System, BIOS, or other software package
@@ -3625,7 +3625,7 @@ write to bochs-announce-request or bochs-developers-request.  Don't forget the
 
 <chapter><title>Tips and Techniques</title>
 
-<section><title>How to make a disk image</title>
+<section><title id="diskimagehowto">How to make a disk image</title>
 <para>
 This was contributed by Greg Alexander in October 2001.
 </para>
@@ -5132,6 +5132,8 @@ or any later version published by the Free Software Foundation.
           </section> <!-- The Hurd -->
 
           <section><title>DOS</title>
+<para>You must read the message regarding software licenses in 
+<xref linkend="thirdparty"> before you install or use MS-DOS, OS2, DR-DOS, or any other DOS as a guest OS in Bochs.</para>
 <section><title>Accessing your CDROM</title>
 <para>
 To access your CDROM in DOS, you must download an IDE CDROM driver.  
@@ -5184,6 +5186,9 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 
 <section><title>How to Install Windows 95 with floppies</title>
 <para>Using Windows95 for PCs without Windows, 1.44M floppy distribution</para>
+
+<para>You must read the message regarding software licenses in 
+<xref linkend="thirdparty"> before you install Windows 95 as a guest OS in Bochs.</para>
 
 <para>Preparing for the install</para>
 
@@ -5913,6 +5918,8 @@ to
 	</para>
         
                 <section><title>Installing Windows ME</title>
+<para>You must read the message regarding software licenses in 
+<xref linkend="thirdparty"> before you install Windows 95 as a guest OS in Bochs.</para>
 <para>
 This has been contributed by Sancho Roberto :
 </para>
@@ -6138,7 +6145,7 @@ Some bugs i've found
 
 - MSDOS Scandisk freeze
 - Hw detection is very problematic
-- If bochs is visible when it switchs from text mode to grafic mode,
+- If bochs is visible when it switchs from text mode to graphic mode,
   the size of the window is correct. But if Bochs is minimized when
   doing so, the size of the Bochs window is incorrect. It does not
   take into account the height of the top banner (the one with the 
@@ -6155,11 +6162,22 @@ Some bugs i've found
 </section>
 <section>
         <title>Windows 2000</title>
+<para>You must read the message regarding software licenses in 
+<xref linkend="thirdparty"> before you install Windows 2000 as a guest OS in Bochs.</para>
         <para>
         </para>
+
 </section>
 <section>
+<title>Windows 2000 Server</title>
+<para>You must read the message regarding software licenses in 
+<xref linkend="thirdparty"> before you install Windows 2000 Server as a guest OS in Bochs.</para>
+</section>
+
+<section>
         <title>Windows XP</title>
+<para>You must read the message regarding software licenses in 
+<xref linkend="thirdparty"> before you install Windows XP as a guest OS in Bochs.</para>
         <para>
         </para>
 </section>
