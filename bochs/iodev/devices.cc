@@ -65,6 +65,9 @@ bx_devices_c::bx_devices_c(void)
   sb16 = NULL;
   ne2k = NULL;
   g2h = NULL;
+#if BX_IODEBUG_SUPPORT
+  iodebug = NULL;
+#endif
 
   num_read_handles = 0;
   num_write_handles = 0;
@@ -98,7 +101,7 @@ bx_devices_c::~bx_devices_c(void)
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
-  BX_DEBUG(("Init $Id: devices.cc,v 1.15 2001-08-31 16:06:32 fries Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.16 2001-09-14 14:55:59 instinc Exp $"));
   mem = newmem;
   // Start with all IO port address registered to unmapped handler
   // MUST be called first
@@ -166,6 +169,11 @@ bx_devices_c::init(BX_MEM_C *newmem)
 
   keyboard = &bx_keyboard;
   keyboard->init(this, cmos);
+
+#if BX_IODEBUG_SUPPORT
+  iodebug = &bx_iodebug;
+  iodebug->init(this);
+#endif
 
   /*--- PARALLEL PORT ---*/
   parallel = &bx_parallel;

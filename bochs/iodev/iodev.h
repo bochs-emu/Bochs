@@ -50,6 +50,9 @@ class bx_pci_c;
 class bx_ioapic_c;
 class bx_ne2k_c;
 class bx_g2h_c;
+#if BX_IODEBUG_SUPPORT
+class bx_iodebug_c;
+#endif
 
 
 
@@ -104,6 +107,9 @@ public:
   bx_sb16_c        *sb16;
   bx_ne2k_c        *ne2k;
   bx_g2h_c         *g2h;
+#if BX_IODEBUG_SUPPORT
+  bx_iodebug_c	   *iodebug;
+#endif
 
 private:
   Bit8u                 read_handler_id[0x10000];  // 64K
@@ -149,6 +155,9 @@ private:
 #include "iodev/dma.h"
 #include "iodev/floppy.h"
 #include "iodev/harddrv.h"
+#if BX_IODEBUG_SUPPORT
+#   include "iodev/iodebug.h"
+#endif
 #include "iodev/keyboard.h"
 #include "iodev/parallel.h"
 #include "iodev/pic.h"

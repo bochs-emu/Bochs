@@ -62,6 +62,7 @@ BX_HW_IODEV_OBJS = \
   dma.o \
   floppy.o \
   harddrv.o \
+  @IODEBUG_OBJS@ \
   keyboard.o \
   parallel.o \
   serial.o \
